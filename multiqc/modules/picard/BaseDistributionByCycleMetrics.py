@@ -7,33 +7,10 @@ import os
 import re
 
 from multiqc.plots import linegraph
+from .util import read_sample_name
 
 # Initialise the logger
 log = logging.getLogger(__name__)
-
-def read_sample_name(line_iter, clean_fn):
-    """
-    Consumes lines from the provided line_iter and parses those lines
-    as a header for the picard base distribution file.  The header
-    file is assumed to contain a line with both 'INPUT' and
-    'BaseDistributionByCycle'.
-
-    If the header parses correctly, the sample name is returned.  If
-    the header does not parse correctly, None is returned.
-    """
-    try:
-        while True:
-            new_line = next(line_iter)
-            new_line = new_line.strip()
-            if 'BaseDistributionByCycle' in new_line and 'INPUT' in new_line:
-                # Pull sample name from input
-                fn_search = re.search(r"INPUT=?\s*(\[?[^\s]+\]?)", new_line, flags=re.IGNORECASE)
-                if fn_search:
-                    s_name = os.path.basename(fn_search.group(1).strip('[]'))
-                    s_name = clean_fn(s_name)
-                    return s_name
-    except StopIteration:
-        return None
 
 def read_base_distrib_data(line_iter):
     """
@@ -98,7 +75,7 @@ def parse_reports(self):
             # read through the header of the file to obtain the
             # sample name
             clean_fn = lambda n: self.clean_s_name(n, f['root'])
-            s_name = read_sample_name(lines, clean_fn)
+            s_name = read_sample_name(lines, clean_fn, 'BaseDistributionByCycle')
             assert s_name is not None
 
             # pull out the data

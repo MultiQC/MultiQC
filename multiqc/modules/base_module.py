@@ -332,6 +332,10 @@ class BaseMultiqcModule(object):
     def write_data_file(self, data, fn, sort_cols=False, data_format=None):
         """ Saves raw data to a dictionary for downstream use, then redirects
         to report.write_data_file() to create the file in the report directory """
+        i = 1
+        base_fn = fn
+        while fn in report.saved_raw_data:
+            fn = '{}_{}'.format(base_fn, i)
         report.saved_raw_data[fn] = data
         util_functions.write_data_file(data, fn, sort_cols, data_format)
 

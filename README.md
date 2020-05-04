@@ -141,8 +141,8 @@ Code contributions from:
 [@chuan-wang](https://github.com/chuan-wang),
 [@cpavanrun](https://github.com/cpavanrun),
 [@dakl](https://github.com/dakl),
-[@elizabethcook21](https://github.com/elizabethcook21),
 [@ehsueh](https://github.com/ehsueh),
+[@elizabethcook21](https://github.com/elizabethcook21),
 [@epruesse](https://github.com/epruesse),
 [@florianduclot](https://github.com/florianduclot/),
 [@guillermo-carrasco](https://github.com/guillermo-carrasco),
@@ -151,24 +151,25 @@ Code contributions from:
 [@joachimwolff](https://github.com/joachimwolff),
 [@jrderuiter](https://github.com/jrderuiter),
 [@lpantano](https://github.com/lpantano),
+[@m-ish](https://github.com/m-ish),
 [@matthdsm](https://github.com/matthdsm),
 [@MaxUlysse](https://github.com/MaxUlysse),
 [@mlusignan](https://github.com/mlusignan),
 [@moonso](https://github.com/moonso),
 [@noirot](https://github.com/noirot),
-[@remiolsen](https://github.com/remiolsen),
+[@nservant](https://github.com/nservant),
 [@rdali](https://github.com/rdali),
+[@remiolsen](https://github.com/remiolsen),
 [@rlegendre](https://github.com/rlegendre),
 [@robinandeer](https://github.com/robinandeer),
 [@Rotholandus](https://github.com/Rotholandus),
 [@sachalau](https://github.com/sachalau/),
 [@smeds](https://github.com/smeds/),
+[@ssjunnebo](https://github.com/ssjunnebo)
 [@t-neumann](https://github.com/t-neumann),
 [@vladsaveliev](https://github.com/vladsaveliev),
 [@winni2k](https://github.com/winni2k),
 [@wkretzsch](https://github.com/wkretzsch),
-[@nservant](https://github.com/nservant),
-[@m-ish](https://github.com/m-ish)
 
 and many others. Thanks for your support!
 
