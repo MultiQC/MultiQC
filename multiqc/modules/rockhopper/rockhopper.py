@@ -70,10 +70,7 @@ class MultiqcModule(BaseMultiqcModule):
 
         # Parse rockhopper output line-by-line since there may be many genomes
         lines = f['f'].split('\n')
-        i = 0 
-        while i < len(lines):
-
-            line = lines[i]
+        for i, line in enumerate(lines):
             
             # Get sample name
             if line.startswith('Aligning sequencing reads from file:'):
