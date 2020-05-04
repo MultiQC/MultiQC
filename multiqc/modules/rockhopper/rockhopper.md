@@ -1,5 +1,4 @@
 ---
----
 Name: Rockhopper
 URL: https://cs.wellesley.edu/~btjaden/Rockhopper/index.html
 Description: >
