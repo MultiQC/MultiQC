@@ -46,6 +46,7 @@ class MultiqcModule(BaseMultiqcModule):
 
         # Plots
         self.read_count_barplot()
+        self.rate_barplot()
         self.snp_count_barplot()
 
     def parse_data(self, f):
@@ -128,7 +129,27 @@ class MultiqcModule(BaseMultiqcModule):
             plot = bargraph.plot(self.sexdet_data, cats, config)
         )
 
-    def snp_count_barplot(self):
+    def snp_rate_barplot(self):
+        """ Make a bar plot showing relative coverage on X and Y chr
+        """
+        cats = OrderedDict()
+        cats['RateX'] = { 'name': 'Relative coverage on X' }
+        cats['RateY'] = { 'name': 'Relative coverage on Y' }
+
+        config = {
+            'id': 'sexdeterrmine-rate-plot',
+            'title': 'SexDetErrmine: Relative coverage',
+            'ylab': '# Reads'
+        }
+
+        self.add_section(
+            name = 'Relative Coverage',
+            anchor = 'sexdeterrmine-rates',
+            description = 'The coverage on the X and Y chromosome, relative to coverage on the Autosomes.',
+            plot = bargraph.plot(self.sexdet_data, cats, config)
+        )
+        
+      def snp_count_barplot(self):
         """ Make a bar plot showing read counts on Autosomal, X and Y chr
         """
         cats = OrderedDict()
@@ -148,3 +169,4 @@ class MultiqcModule(BaseMultiqcModule):
             description = 'Total number of SNP positions. When supplied with a BED file, this includes only positions specified there.',
             plot = bargraph.plot(self.sexdet_data, cats, config)
         )
+
