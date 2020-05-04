@@ -80,6 +80,8 @@ to break. If you haven't already, **you need to switch to Python 3 now**.
     * Single sample view in the _"Junction saturation"_ plot now works with the toolbox properly _(rename, hide, highlight)_ ([#1133](https://github.com/ewels/MultiQC/issues/1133))
 * **RNASeQC2**
     * Updated to handle the parsing metric files from the [newer rewrite of RNA-SeqQC](https://github.com/broadinstitute/rnaseqc).
+* **Samblaster**
+    * Improved parsing to handle variable whitespace ([#1176](https://github.com/ewels/MultiQC/issues/1176))
 * **Samtools**
     * Removes hardcoding of general stats column names. This allows column names to indicate when a module has been run twice ([https://github.com/ewels/MultiQC/issues/1076](https://github.com/ewels/MultiQC/issues/1076)).
     * Added an observed over expected read count plot for `idxstats` ([#1118](https://github.com/ewels/MultiQC/issues/1118))
