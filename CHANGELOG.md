@@ -37,6 +37,9 @@ to break. If you haven't already, **you need to switch to Python 3 now**.
     * Buttons control the report toolbox Show/Hide tool, filtering your samples
     * Allows reports to be pre-configured based on a supplied list of sample names at report-generation time.
 * Line graphs can now have `Log10` buttons (same functionality as bar graphs)
+* Importing and running `multiqc` in a script is now a _little_ Better
+    * `multiqc.run` now returns the `report` and `config` as well as the exit code. This means that you can explore the MultiQC run time a little in the Python environment.
+    * Much more refactoring is needed to make MultiQC as useful in Python scripts as it could be. Watch this space.
 
 #### New Modules:
 
