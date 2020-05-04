@@ -244,6 +244,22 @@ deeptools/plotPCAData:
 deeptools/plotProfile:
     contents: 'bin labels'
     num_lines: 1
+dragen/vc_metrics:
+    fn: '*.vc_metrics.csv'
+dragen/ploidy_estimation_metrics:
+    fn: '*.ploidy_estimation_metrics.csv'
+dragen/wgs_contig_mean_cov:
+    fn_re: '.*\.wgs_contig_mean_cov_?(tumor|normal)?\.csv'
+dragen/wgs_coverage_metrics:
+    fn_re: '.*\.wgs_coverage_metrics_?(tumor|normal)?\.csv'
+dragen/wgs_fine_hist:
+    fn_re: '.*\.wgs_fine_hist_?(tumor|normal)?\.csv'
+dragen/fragment_length_hist:
+    fn: '*.fragment_length_hist.csv'
+dragen/mapping_metrics:
+    fn: '*.mapping_metrics.csv'
+    contents: 'Number of unique reads (excl. duplicate marked reads)'
+    num_lines: 50
 fastp:
     fn: '*fastp.json'
 fastq_screen:

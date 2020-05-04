@@ -47,6 +47,7 @@ MultiQC Modules:
     Salmon: modules/salmon.md
     STAR: modules/star.md
     TopHat: modules/tophat.md
+    DRAGEN: modules/dragen.md
   Post-alignment:
     Bamtools: modules/bamtools.md
     Bcftools: modules/bcftools.md

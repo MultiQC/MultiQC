@@ -262,6 +262,10 @@ module_order:
         module_tag:
             - Methylation
             - DNA
+    - mosdepth:
+        module_tag:
+            - DNA
+            - RNA
     - phantompeakqualtools:
         module_tag:
             - chip
@@ -360,6 +364,10 @@ module_order:
             - DNA
             - RNA
             - umi
+    - dragen:
+        module_tag:
+            - DNA
+            - RNA
     - dedup:
         module_tag:
             - DNA
@@ -534,10 +542,6 @@ module_order:
             - DNA
             - RNA
     - minionqc:
-        module_tag:
-            - DNA
-            - RNA
-    - mosdepth:
         module_tag:
             - DNA
             - RNA
