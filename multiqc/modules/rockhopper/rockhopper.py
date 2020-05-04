@@ -132,7 +132,7 @@ class MultiqcModule(BaseMultiqcModule):
             'min':0,
             'scale':'Blues',
             'modify': lambda x: x * config.read_count_multiplier,
-            'shared_key':'mapped_reads',
+            'shared_key': 'read_count',
             'hidden':True
         }
         headers['rRNA-sense'] = {
