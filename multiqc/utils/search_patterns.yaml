@@ -461,7 +461,7 @@ rna_seqc/correlation:
     fn_re: 'corrMatrix(Pearson|Spearman)\.txt'
 rockhopper:
     fn: 'summary.txt'
-    contents: 'Analyzing transcripts...'
+    contents: 'Number of gene-pairs predicted to be part of the same operon'
     max_filesize: 500000
 rsem:
     - fn: '*.cnt'
