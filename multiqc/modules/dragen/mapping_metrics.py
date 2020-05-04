@@ -74,11 +74,11 @@ class DragenMappingMetics(BaseMultiqcModule):
         self.general_stats_addcols(data_by_sample, genstats_headers, namespace=NAMESPACE)
 
         self.add_section(
-            name='Mapping metrics per RG',
+            name='Mapping metrics',
             anchor='dragen-mapping-metrics',
             description="""
-            Mapping metrics, similar to the metrics computed by the samtools-stats command. 
-            Shown on per read group level. To see per-sample level metrics, refer to the general 
+            Mapping metrics, similar to the metrics computed by the samtools-stats command.
+            Shown on per read group level. To see per-sample level metrics, refer to the general
             stats table.
             """,
             plot=table.plot(data_by_rg, own_tabl_headers, pconfig={'namespace': NAMESPACE})
@@ -88,7 +88,7 @@ class DragenMappingMetics(BaseMultiqcModule):
         self.__map_pair_dup_read_chart(data_by_rg)
 
     def __map_pair_dup_read_chart(self, data_by_sample):
-        chart_data = [dict(), dict()]
+        chart_data = dict()
         for sample_id, data in data_by_sample.items():
             if data['Not properly paired reads (discordant)'] + data['Properly paired reads']\
                     + data['Singleton reads (itself mapped; mate unmapped)']\
@@ -102,23 +102,22 @@ class DragenMappingMetics(BaseMultiqcModule):
                 log.warning("sum of unique/duplicate/unmapped reads not matching total, "
                             "skipping mapping/duplicates percentages plot for: {}".format(sample_id))
                 continue
-            chart_data[0][sample_id] = data
-            chart_data[1][sample_id] = data
+            chart_data[sample_id] = data
         self.add_section(
-            name='Mapped/paired/duplicated per RG',
+            name='Mapped / paired / duplicated',
             anchor='dragen-mapped-paired-duplicated',
             description='Distribution of reads based on pairing, duplication and mapping.',
-            plot=bargraph.plot(chart_data, [
+            plot=bargraph.plot([chart_data, chart_data], [
+            {
+                'Number of unique & mapped reads (excl. duplicate marked reads)': {'color': '#437bb1', 'name': 'Unique'},
+                'Number of duplicate marked reads':                               {'color': '#f5a742', 'name': 'Duplicated'},
+                'Unmapped reads':                                                 {'color': '#b1084c', 'name': 'Unmapped'},
+            },
             {
                 'Properly paired reads':                          {'color': '#099109', 'name': 'Paired, properly'},
                 'Not properly paired reads (discordant)':         {'color': '#c27a0e', 'name': 'Paired, discordant'},
                 'Singleton reads (itself mapped; mate unmapped)': {'color': '#912476', 'name': 'Singleton'},
                 'Unmapped reads':                                 {'color': '#b1084c', 'name': 'Unmapped'},
-            },
-            {
-                'Number of unique & mapped reads (excl. duplicate marked reads)': {'color': '#437bb1', 'name': 'Unique'},
-                'Number of duplicate marked reads':                               {'color': '#f5a742', 'name': 'Duplicated'},
-                'Unmapped reads':                                                 {'color': '#b1084c', 'name': 'Unmapped'},
             },
             ], {
                 'id': 'mapping_dup_percentage_plot',
@@ -126,16 +125,16 @@ class DragenMappingMetics(BaseMultiqcModule):
                 'ylab': 'Reads',
                 'cpswitch_counts_label': 'Reads',
                 'data_labels': [
-                {
-                    'name': 'Paired vs. discordant vs. signleton',
-                    'ylab': 'Reads',
-                    'cpswitch_counts_label': 'Reads',
-                 },
-                {
-                    'name': 'Unique vs duplicated vs unmapped',
-                    'ylab': 'Reads',
-                    'cpswitch_counts_label': 'Reads',
-                 },
+                    {
+                        'name': 'Unique vs duplicated vs unmapped',
+                        'ylab': 'Reads',
+                        'cpswitch_counts_label': 'Reads',
+                    },
+                    {
+                        'name': 'Paired vs. discordant vs. singleton',
+                        'ylab': 'Reads',
+                        'cpswitch_counts_label': 'Reads',
+                    }
                 ]
             })
         )
