@@ -75,7 +75,6 @@ class MultiqcModule(BaseMultiqcModule):
             # Get sample name
             if line.startswith('Aligning sequencing reads from file:'):
                 s_name = line.split(':')[1].strip()
-                log.info(s_name)
                 s_name = self.clean_s_name(s_name,f['root'])
 
             elif line.startswith('Aligning sequencing reads from files:'):
