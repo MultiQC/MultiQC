@@ -25,6 +25,9 @@ pandoc_template: null
 read_count_multiplier: 0.000001
 read_count_prefix: 'M'
 read_count_desc: 'millions'
+long_read_count_multiplier: 0.001
+long_read_count_prefix: 'K'
+long_read_count_desc: 'thousands'
 base_count_multiplier: 0.000001
 base_count_prefix: 'Mb'
 base_count_desc: 'millions'
@@ -93,6 +96,9 @@ sample_names_ignore: []
 sample_names_ignore_re: []
 sample_names_rename_buttons: []
 sample_names_rename: []
+show_hide_buttons: []
+show_hide_patterns: []
+show_hide_mode: []
 no_version_check: false
 log_filesize_limit: 10000000
 report_readerrors: false
@@ -256,6 +262,10 @@ module_order:
         module_tag:
             - Methylation
             - DNA
+    - mosdepth:
+        module_tag:
+            - DNA
+            - RNA
     - phantompeakqualtools:
         module_tag:
             - chip
@@ -276,6 +286,9 @@ module_order:
         module_tag:
             - RNA
     - rna_seqc:
+        module_tag:
+            - RNA
+    - rockhopper:
         module_tag:
             - RNA
     - rsem:
@@ -315,6 +328,9 @@ module_order:
     - happy:
         module_tag:
             - DNA
+    - mirtop:
+        module_tag:
+            - miRNA
 
     # Post-alignment processing
     - homer:
@@ -351,6 +367,10 @@ module_order:
             - DNA
             - RNA
             - umi
+    - dragen:
+        module_tag:
+            - DNA
+            - RNA
     - dedup:
         module_tag:
             - DNA
@@ -401,6 +421,9 @@ module_order:
             - DNA
             - WGS
     - stacks:
+        module_tag:
+            - DNA
+    - varscan2:
         module_tag:
             - DNA
 
@@ -485,6 +508,10 @@ module_order:
         module_tag:
             - RNA
             - DNA
+    - sickle:
+        module_tag:
+            - RNA
+            - DNA
     - skewer:
         module_tag:
             - RNA
@@ -513,11 +540,11 @@ module_order:
         module_tag:
             - RNA
             - DNA
-    - minionqc:
+    - pycoqc:
         module_tag:
             - DNA
             - RNA
-    - mosdepth:
+    - minionqc:
         module_tag:
             - DNA
             - RNA
@@ -540,6 +567,11 @@ module_order:
             - RNA
             - DNA
             - methylation
+    - ivar:
+        module_tag:
+            - RNA
+            - epidemiology
+            - virus
     - flash:
         module_tag:
             - DNA

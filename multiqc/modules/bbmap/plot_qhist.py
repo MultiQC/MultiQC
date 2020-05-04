@@ -60,6 +60,7 @@ def plot_qhist(samples, file_type, **plot_args):
             'title': 'BBTools: ' + plot_args['plot_title'],
             'xmax': xmax,
             'xlab': 'Position in read',
+            'ylab': 'Quality score',
             'data_labels': [
                 {'name': 'Linear', 'ylab': 'Quality score'},
                 {'name': 'Logarithmic', 'ylab': 'Log score'},

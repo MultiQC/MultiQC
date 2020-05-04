@@ -182,7 +182,7 @@ bowtie2:
         - 'HiC-Pro'
     shared: true
 busco:
-    fn: 'short_summary_*'
+    fn: 'short_summary*'
     contents: 'BUSCO version is:'
     num_lines: 1
 custom_content:
@@ -244,6 +244,22 @@ deeptools/plotPCAData:
 deeptools/plotProfile:
     contents: 'bin labels'
     num_lines: 1
+dragen/vc_metrics:
+    fn: '*.vc_metrics.csv'
+dragen/ploidy_estimation_metrics:
+    fn: '*.ploidy_estimation_metrics.csv'
+dragen/wgs_contig_mean_cov:
+    fn_re: '.*\.wgs_contig_mean_cov_?(tumor|normal)?\.csv'
+dragen/wgs_coverage_metrics:
+    fn_re: '.*\.wgs_coverage_metrics_?(tumor|normal)?\.csv'
+dragen/wgs_fine_hist:
+    fn_re: '.*\.wgs_fine_hist_?(tumor|normal)?\.csv'
+dragen/fragment_length_hist:
+    fn: '*.fragment_length_hist.csv'
+dragen/mapping_metrics:
+    fn: '*.mapping_metrics.csv'
+    contents: 'Number of unique reads (excl. duplicate marked reads)'
+    num_lines: 50
 fastp:
     fn: '*fastp.json'
 fastq_screen:
@@ -259,7 +275,10 @@ featurecounts:
     shared: true
 fgbio/groupreadsbyumi:
     contents: 'fraction_gt_or_eq_family_size'
-    num_lines: 1
+    num_lines: 3
+fgbio/errorratebyreadposition:
+    contents: 'read_number	position	bases_total	errors	error_rate	a_to_c_error_rate	a_to_g_error_rate	a_to_t_error_rate	c_to_a_error_rate	c_to_g_error_rate	c_to_t_error_rate'
+    num_lines: 3
 flash/log:
     contents: '[FLASH]'
     shared: true
@@ -321,6 +340,9 @@ interop/summary:
     contents: 'Level,Yield,Projected Yield,Aligned,Error Rate,Intensity C1,%>=Q30'
 interop/index-summary:
     contents: 'Total Reads,PF Reads,% Read Identified (PF),CV,Min,Max'
+ivar/trim:
+    contents: 'Number of references'
+    num_lines: 8
 jellyfish:
     fn: '*_jf.hist'
 kallisto:
@@ -347,6 +369,8 @@ methylQA:
 minionqc:
     fn: 'summary.yaml'
     contents: 'total.gigabases'
+mirtop:
+    fn: '*_mirtop_stats.log'
 mirtrace/summary:
     fn: 'mirtrace-results.json'
 mirtrace/length:
@@ -397,13 +421,25 @@ picard/markdups:
     contents: 'DuplicationMetrics'
     shared: true
 picard/oxogmetrics:
-    contents: 'CollectOxoGMetrics'
+    contents: 'OxoGMetrics'
     shared: true
 picard/pcr_metrics:
     contents: 'TargetedPcrMetrics'
     shared: true
+picard/quality_by_cycle:
+    contents_re: '[Qq]uality[Bb]y[Cc]ycle'
+    contents: 'MEAN_QUALITY'
+    shared: true
+picard/quality_score_distribution:
+    contents_re: '[Qq]uality[Ss]core[Dd]istribution'
+    contents: 'COUNT_OF_Q'
+    shared: true
+picard/quality_yield_metrics:
+    contents: 'QualityYieldMetrics'
+    shared: true
 picard/rnaseqmetrics:
-    contents_re: 'Collect[Rr]na[Ss]eq[Mm]etrics'
+    contents_re: '[Rr]na[Ss]eq[Mm]etrics'
+    contents: '## METRICS CLASS'
     shared: true
 picard/rrbs_metrics:
     contents: 'RrbsSummaryMetrics'
@@ -426,6 +462,9 @@ preseq/real_counts:
     fn: '*preseq_real_counts*'
 prokka:
     contents: 'contigs:'
+    num_lines: 2
+pycoqc:
+    contents: '"pycoqc":'
     num_lines: 2
 qorts:
     contents: 'BENCHMARK_MinutesOnSamIteration'
@@ -459,6 +498,10 @@ rna_seqc/coverage:
     fn_re: 'meanCoverageNorm_(high|medium|low)\.txt'
 rna_seqc/correlation:
     fn_re: 'corrMatrix(Pearson|Spearman)\.txt'
+rockhopper:
+    fn: 'summary.txt'
+    contents: 'Number of gene-pairs predicted to be part of the same operon'
+    max_filesize: 500000
 rsem:
     - fn: '*.cnt'
 rseqc/bam_stat:
@@ -509,6 +552,9 @@ seqyclean:
     fn: '*_SummaryStatistics.tsv'
 sexdeterrmine:
     fn: 'sexdeterrmine.json'
+sickle:
+    contents_re: 'FastQ \w*\s?records kept: .*'
+    num_lines: 2
 skewer:
     contents: 'maximum error ratio allowed (-r):'
     shared: true
@@ -579,6 +625,15 @@ tophat:
 trimmomatic:
     contents: 'Trimmomatic'
     shared: true
+varscan2/mpileup2snp:
+    contents: 'Only SNPs will be reported'
+    num_lines: 3
+varscan2/mpileup2indel:
+    contents: 'Only indels will be reported'
+    num_lines: 3
+varscan2/mpileup2cns:
+    contents: 'Only variants will be reported'
+    num_lines: 3
 vcftools/relatedness2:
     fn: '*.relatedness2'
 vcftools/tstv_by_count:

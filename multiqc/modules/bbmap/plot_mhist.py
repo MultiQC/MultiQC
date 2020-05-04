@@ -56,6 +56,7 @@ def plot_mhist(samples, file_type, **plot_args):
             'id': 'bbmap-' + file_type + '_plot',
             'title': 'BBTools: ' + plot_args['plot_title'],
             'xlab': 'Location in read',
+            'ylab': 'Proportion',
             'data_labels': [
                 {'name': 'Read 1', 'ylab': 'Proportion'},
                 {'name': 'Read 2', 'ylab': 'Proportion'},
