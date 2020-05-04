@@ -497,6 +497,10 @@ module_order:
         module_tag:
             - RNA
             - DNA
+    - sickle:
+        module_tag:
+            - RNA
+            - DNA
     - skewer:
         module_tag:
             - RNA

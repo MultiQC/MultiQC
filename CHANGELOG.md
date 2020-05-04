@@ -49,6 +49,8 @@ to break. If you haven't already, **you need to switch to Python 3 now**.
     * Combining multiple VCF files into one coherent report and format for downstream analysis.
 * **Picard** - new submodules for `QualityByCycleMetrics`, `QualityScoreDistributionMetrics` & `QualityYieldMetrics`
     * See [#1116](https://github.com/ewels/MultiQC/issues/1114)
+* [**Sickle**](https://github.com/najoshi/sickle)
+    * A windowed adaptive trimming tool for FASTQ files using quality
 * [**VarScan2**](https://github.com/dkoboldt/varscan)
     * Variant calling and somatic mutation/CNV detection for next-generation sequencing data
 
@@ -96,6 +98,7 @@ to break. If you haven't already, **you need to switch to Python 3 now**.
 ## [MultiQC v1.8](https://github.com/ewels/MultiQC/releases/tag/v1.8) - 2019-11-20
 
 #### New Modules:
+
 * [**fgbio**](http://fulcrumgenomics.github.io/fgbio/)
     * Process family size count hist data from `GroupReadsByUmi`
 * [**biobambam2**](https://github.com/gt1/biobambam2)

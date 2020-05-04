@@ -29,6 +29,7 @@ MultiQC Modules:
     minionqc: modules/minionqc.md
     pycoQC: modules/pycoqc.md
     SeqyClean: modules/seqyclean.md
+    Sickle: modules/sickle.md
     Skewer: modules/skewer.md
     SortMeRNA: modules/sortmerna.md
     Trimmomatic: modules/trimmomatic.md

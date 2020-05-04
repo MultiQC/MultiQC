@@ -154,6 +154,7 @@ setup(
             'sargasso = multiqc.modules.sargasso:MultiqcModule',
             'seqyclean = multiqc.modules.seqyclean:MultiqcModule',
             'sexdeterrmine = multiqc.modules.sexdeterrmine:MultiqcModule',
+            'sickle = multiqc.modules.sickle:MultiqcModule',
             'skewer = multiqc.modules.skewer:MultiqcModule',
             'slamdunk = multiqc.modules.slamdunk:MultiqcModule',
             'snpeff = multiqc.modules.snpeff:MultiqcModule',

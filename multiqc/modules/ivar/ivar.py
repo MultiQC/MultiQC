@@ -81,6 +81,8 @@ class MultiqcModule(BaseMultiqcModule):
                 primers[ primer_match.group(1) ] = int(primer_match.group(2))
 
         if parsed_data is not None and len(parsed_data) > 0:
+            if f['s_name'] in self.ivar_data:
+                log.debug("Duplicate sample name found! Overwriting: {}".format(f['s_name']))
             self.ivar_data[f['s_name']] = parsed_data
             self.add_data_source(f, section='trimming')
 
