@@ -460,9 +460,9 @@ rna_seqc/coverage:
 rna_seqc/correlation:
     fn_re: 'corrMatrix(Pearson|Spearman)\.txt'
 rockhopper:
-    - fn: 'summary.txt'
-    - contents: 'Analyzing transcripts...'
-    - max_filesize: 500000
+    fn: 'summary.txt'
+    contents: 'Analyzing transcripts...'
+    max_filesize: 500000
 rsem:
     - fn: '*.cnt'
 rseqc/bam_stat:
