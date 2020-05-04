@@ -72,12 +72,19 @@ class MultiqcModule(BaseMultiqcModule):
         for k in metrics_dict:
             metrics_dict[k] = float(metrics_dict[k])
 
-        # Compute not removed from given values
+        # Compute (not) removed from given values
         metrics_dict['not_removed'] = (
             metrics_dict['total_reads']
                 - metrics_dict['reverse_removed']
                 - metrics_dict['forward_removed']
                 - metrics_dict['merged_removed']
+        )
+
+
+        metrics_dict['reads_removed'] = (
+            metrics_dict['reverse_removed']
+                + metrics_dict['forward_removed']
+                + metrics_dict['merged_removed']
         )
 
         # Add all in the main data_table
@@ -106,6 +113,11 @@ class MultiqcModule(BaseMultiqcModule):
             'max': 100,
             'scale': 'OrRd',
             'format': '{:,.2f}',
+        }
+        headers['reads_removed'] = {
+            'title': 'Reads Removed',
+            'description': 'Non-unique reads removed after deduplication',
+            'min': 0,
         }
         self.general_stats_addcols(self.dedup_data, headers)
 
