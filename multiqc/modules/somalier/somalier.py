@@ -63,7 +63,7 @@ class MultiqcModule(BaseMultiqcModule):
                     self.somalier_data[s_name] = parsed_data[s_name]
 
         # parse somalier ancestry files
-        for f in self.find_log_files('somalier/ancestry', filehandles=True):
+        for f in self.find_log_files('somalier/somalier-ancestry', filehandles=True):
             log.debug("Parsing report {} ...".format(f))
             self.parse_somalier_ancestry(f)
 
