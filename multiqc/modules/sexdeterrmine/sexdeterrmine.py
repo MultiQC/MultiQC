@@ -150,7 +150,7 @@ class MultiqcModule(BaseMultiqcModule):
             plot = scatter.plot(self.sexdet_data, cats, config)
         )
 
-      def snp_count_barplot(self):
+    def snp_count_barplot(self):
         """ Make a bar plot showing read counts on Autosomal, X and Y chr
         """
         cats = OrderedDict()
