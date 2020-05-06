@@ -398,6 +398,7 @@ class MultiqcModule(BaseMultiqcModule):
         if len(data) > 0:
             pconfig = {
                 'id': 'somalier_relatedness_plot',
+                'title': 'Somalier: Sample Shared Allele Rates (IBS)',
                 'xlab': 'IBS0 (no alleles shared)',
                 'ylab': 'IBS2 (both alleles shared)',
             }
@@ -441,6 +442,7 @@ class MultiqcModule(BaseMultiqcModule):
         if len(data) > 0:
             pconfig = {
                 'id': 'somalier_relatedness_heatmap_plot',
+                'title': 'Somalier: Sample Relatedness',
                 'xlab': 'Sample A',
                 'ylab': 'Sample B',
             }
@@ -475,6 +477,7 @@ class MultiqcModule(BaseMultiqcModule):
         if len(data) > 0:
             pconfig = {
                 'id': 'somalier_het_check_plot',
+                'title': 'Somalier: Sample Observed Heterozigosity',
                 'xlab': 'Mean depth',
                 'ylab': 'Standard deviation of allele-balance',
             }
@@ -502,6 +505,7 @@ class MultiqcModule(BaseMultiqcModule):
         if len(data) > 0:
             pconfig = {
                 'id': 'somalier_sex_check_plot',
+                'title': 'Somalier: Sample Predicted Sex',
                 'xlab': 'Sex from pedigree',
                 'ylab': 'Scaled mean depth on X',
                 'categories': ["Female", "Male", "Unknown"]
@@ -546,6 +550,7 @@ class MultiqcModule(BaseMultiqcModule):
         if len(data) > 0:
             pconfig = {
                 'id' : 'somalier_ancestry_barplot',
+                'title': 'Somalier: Sample Predicted Ancestry Proportions',
                 'cpswitch_c_active' : False,
                 'hide_zero_cats' : False,
                 'ylab' : 'Predicted Ancestry'
@@ -595,6 +600,7 @@ class MultiqcModule(BaseMultiqcModule):
         if len(data) > 0:
             pconfig = {
                 'id' : 'somalier_ancestry_pca_plot',
+                'title': 'Somalier: Sample Predicted Ancestry',
                 'xlab': 'PC1',
                 'ylab': 'PC2',
                 'marker_size': 5,
