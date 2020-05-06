@@ -8,6 +8,7 @@ import logging
 import json
 
 from multiqc.plots import bargraph
+from multiqc.plots import scatter
 from multiqc.modules.base_module import BaseMultiqcModule
 
 # Initialise the logger
@@ -46,7 +47,7 @@ class MultiqcModule(BaseMultiqcModule):
 
         # Plots
         self.read_count_barplot()
-        self.rate_barplot()
+        self.snp_rate_scatterplot()
         self.snp_count_barplot()
 
     def parse_data(self, f):
@@ -129,8 +130,8 @@ class MultiqcModule(BaseMultiqcModule):
             plot = bargraph.plot(self.sexdet_data, cats, config)
         )
 
-    def snp_rate_barplot(self):
-        """ Make a bar plot showing relative coverage on X and Y chr
+    def snp_rate_scatterplot(self):
+        """ Make a scatter plot showing relative coverage on X and Y chr
         """
         cats = OrderedDict()
         cats['RateX'] = { 'name': 'Relative coverage on X' }
@@ -145,10 +146,10 @@ class MultiqcModule(BaseMultiqcModule):
         self.add_section(
             name = 'Relative Coverage',
             anchor = 'sexdeterrmine-rates',
-            description = 'The coverage on the X and Y chromosome, relative to coverage on the Autosomes.',
-            plot = bargraph.plot(self.sexdet_data, cats, config)
+            description = 'The coverage on the X vs Y chromosome, relative to coverage on the Autosomes.',
+            plot = scatter.plot(self.sexdet_data, cats, config)
         )
-        
+
       def snp_count_barplot(self):
         """ Make a bar plot showing read counts on Autosomal, X and Y chr
         """
