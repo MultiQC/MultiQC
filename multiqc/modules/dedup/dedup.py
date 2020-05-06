@@ -72,19 +72,13 @@ class MultiqcModule(BaseMultiqcModule):
         for k in metrics_dict:
             metrics_dict[k] = float(metrics_dict[k])
 
-        # Compute (not) removed from given values
-        metrics_dict['not_removed'] = (
-            metrics_dict['total_reads']
+        # Compute (not) removed _mapped_ reads from given values as dedup only affects mapped reads
+
+        metrics_dict['mapped_after_dedup'] = (
+            metrics_dict['mapped_reads']
                 - metrics_dict['reverse_removed']
                 - metrics_dict['forward_removed']
                 - metrics_dict['merged_removed']
-        )
-
-
-        metrics_dict['reads_removed'] = (
-            metrics_dict['reverse_removed']
-                + metrics_dict['forward_removed']
-                + metrics_dict['merged_removed']
         )
 
         # Add all in the main data_table
@@ -114,9 +108,9 @@ class MultiqcModule(BaseMultiqcModule):
             'scale': 'OrRd',
             'format': '{:,.2f}',
         }
-        headers['reads_removed'] = {
-            'title': 'Reads Removed',
-            'description': 'Non-unique reads removed after deduplication',
+        headers['mapped_after_dedup'] = {
+            'title': 'Post-DeDup Mapped Reads',
+            'description': 'Unique mapping reads after deduplication',
             'min': 0,
         }
         self.general_stats_addcols(self.dedup_data, headers)
@@ -126,7 +120,7 @@ class MultiqcModule(BaseMultiqcModule):
 
         # Specify the order of the different possible categories
         keys = OrderedDict()
-        keys['not_removed'] = { 'name': 'Not Removed' }
+        keys['mapped_after_dedup'] = { 'name': 'Unique Retained' }
         keys['reverse_removed'] = { 'name': 'Reverse Removed' }
         keys['forward_removed'] =   { 'name': 'Forward Removed' }
         keys['merged_removed'] =   { 'name': 'Merged Removed' }
