@@ -398,12 +398,12 @@ class QcModule(Submodule, metaclass=ABCMeta):
 
         for sample_id, num_fails in fails.items():
             self.atropos_general_data[sample_id][
-                "percent_fails_{}".format(self.get_phase)
+                "percent_fails_{}".format(self.get_phase())
             ] = (num_fails * 100 / len(self.qc_sections))
 
-        parent.intro += ADD_LISTENERS.format(phase=self.get_phase)
+        parent.intro += ADD_LISTENERS.format(phase=self.get_phase())
         parent.intro += PASSFAILS.format(
-            phase=self.get_phase, statuses=json.dumps(simplify(statuses))
+            phase=self.get_phase(), statuses=json.dumps(simplify(statuses))
         )
 
 
@@ -762,7 +762,7 @@ class QcSection(Section, metaclass=ABCMeta):
         be the min of the read1 and read2 statuses.
         """
         stat1, stat2 = [
-            self.compute_statistic(context, data)
+            self.compute_statistic(context, data) if data else None
             for data in (sample_data1, sample_data2)
         ]
         return self.get_status_for_pair(context, stat1, stat2)
@@ -880,30 +880,30 @@ class PerBaseQuality(QcSection):
         return hist_to_means(data)
 
 
-class PerTileQuality(QcSection):
-    # TODO
-
-    @property
-    def name(self):
-        return "tile_sequence_qualities"
-
-    @property
-    def display(self):
-        return "Per Tile Sequence Quality Scores"
-
-    @property
-    def anchor(self):
-        return "atropos_tile_sequence_qualities"
-
-    @property
-    def default_thresholds(self):
-        return
-
-    def compute_statistic(self, context, data):
-        pass
-
-    def get_plot_config(self, context, **kwargs):
-        pass
+# class PerTileQuality(QcSection):
+#     # TODO
+#
+#     @property
+#     def name(self):
+#         return "tile_sequence_qualities"
+#
+#     @property
+#     def display(self):
+#         return "Per Tile Sequence Quality Scores"
+#
+#     @property
+#     def anchor(self):
+#         return "atropos_tile_sequence_qualities"
+#
+#     @property
+#     def default_thresholds(self):
+#         return
+#
+#     def compute_statistic(self, context, data):
+#         pass
+#
+#     def get_plot_config(self, context, **kwargs):
+#         pass
 
 
 class PerSequenceQuality(QcSection):
@@ -999,10 +999,10 @@ class PerBaseContent(QcSection):
     <h5><span class="s_name"><em class="text-muted">rollover for sample name</em></span></h5>
     <div class="atropos_seq_heatmap_key">
         Position: <span id="atropos_seq_heatmap_{phase}_{read}_key_pos">-</span>
-        <div><span id="atropos_seq_heatmap_{phase}_{read}_key_t"> %T: <span>-</span></span></div>
-        <div><span id="atropos_seq_heatmap_{phase}_{read}_key_c"> %C: <span>-</span></span></div>
         <div><span id="atropos_seq_heatmap_{phase}_{read}_key_a"> %A: <span>-</span></span></div>
+        <div><span id="atropos_seq_heatmap_{phase}_{read}_key_c"> %C: <span>-</span></span></div>
         <div><span id="atropos_seq_heatmap_{phase}_{read}_key_g"> %G: <span>-</span></span></div>
+        <div><span id="atropos_seq_heatmap_{phase}_{read}_key_t"> %T: <span>-</span></span></div>
     </div>
     <div id="atropos_seq_heatmap_{phase}_{read}_div" class="atropos-overlay-plot">
         <div id="atropos_seq_{phase}_{read}" class="hc-plot">
@@ -1025,8 +1025,9 @@ class PerBaseContent(QcSection):
         return max_diff
 
     def get_sample_plot_data(self, context, data):
+        cols = tuple(col.lower() for col in data["columns"])
         return dict(
-            (pos, dict(zip(("a", "c", "g", "t"), row[:4])))
+            (pos, dict(zip(cols, row)))
             for pos, row in data["rows"].items()
         )
 
