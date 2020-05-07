@@ -6,7 +6,6 @@ from __future__ import print_function
 from collections import OrderedDict
 import logging
 import json
-import sys
 
 from multiqc.plots import bargraph
 from multiqc.plots import scatter
