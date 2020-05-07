@@ -6,6 +6,7 @@ from __future__ import print_function
 from collections import OrderedDict
 import logging
 import json
+import sys
 
 from multiqc.plots import bargraph
 from multiqc.plots import scatter
@@ -133,22 +134,31 @@ class MultiqcModule(BaseMultiqcModule):
     def snp_rate_scatterplot(self):
         """ Make a scatter plot showing relative coverage on X and Y chr
         """
-        cats = OrderedDict()
-        cats['RateX'] = { 'name': 'Relative coverage on X' }
-        cats['RateY'] = { 'name': 'Relative coverage on Y' }
+        data = OrderedDict()
+        for sample in self.sexdet_data:
+            try:
+                data[sample] = {'x': self.sexdet_data[sample]['RateX'], 'y': self.sexdet_data[sample]['RateY']}
+            except KeyError:
+                pass
 
         config = {
             'id': 'sexdeterrmine-rate-plot',
             'title': 'SexDetErrmine: Relative coverage',
-            'ylab': '# Reads'
+            'ylab': 'Relative Cov. on Y',
+            'xlab': 'Relative Cov. on X',
+            'xmax': 1.8,
+            'ymax': 1.2
         }
+
+        print (data, file=sys.stderr)
 
         self.add_section(
             name = 'Relative Coverage',
             anchor = 'sexdeterrmine-rates',
             description = 'The coverage on the X vs Y chromosome, relative to coverage on the Autosomes.',
-            plot = scatter.plot(self.sexdet_data, cats, config)
+            plot = scatter.plot(data, config)
         )
+
 
     def snp_count_barplot(self):
         """ Make a bar plot showing read counts on Autosomal, X and Y chr
