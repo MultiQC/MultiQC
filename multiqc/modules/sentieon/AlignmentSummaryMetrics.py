@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 
-""" MultiQC submodule to parse output from Sentieon AlignmentSummaryMetrics 
-(based on the Picard module of the same name """
+""" MultiQC submodule to parse output from Sentieon AlignmentSummaryMetrics
+ (based on the Picard module of the same name) """
 
 from collections import OrderedDict
 import logging
@@ -21,7 +21,7 @@ def parse_reports(self):
     self.sentieon_alignment_metrics = dict()
 
     # Go through logs and find Metrics
-    for f in self.find_log_files('sentieon/alignment_metrics', 
+    for f in self.find_log_files('sentieon/alignment_metrics',
                                  filehandles=True):
         parsed_data = dict()
         s_name = None
@@ -41,7 +41,8 @@ def parse_reports(self):
                 elif keys:
                     vals = l.strip("\n").split("\t")
                     if len(vals) == len(keys):
-                        # Ignore the FIRST_OF_PAIR / SECOND_OF_PAIR data to simplify
+                        # Ignore the FIRST_OF_PAIR / SECOND_OF_PAIR data 
+                        # to simplify things
                         if vals[0] == 'PAIR' or vals[0] == 'UNPAIRED':
                             for i, k in enumerate(keys):
                                 try:
@@ -60,7 +61,7 @@ def parse_reports(self):
         # Manipulate sample names if multiple baits found
         for s_name in parsed_data.keys():
             if s_name in self.sentieon_alignment_metrics:
-                log.debug("Duplicate sample name found in {}! 
+                log.debug("Duplicate sample name found in {}!
                           Overwriting: {}".format(f['fn'], s_name))
             self.add_data_source(f, s_name, section='AlignmentSummaryMetrics')
             self.sentieon_alignment_metrics[s_name] = parsed_data[s_name]
@@ -92,8 +93,6 @@ def parse_reports(self):
             self.general_stats_data[s_name].update(
                 self.sentieon_alignment_metrics[s_name])
 
-
-
         # Make the bar plot of alignment read count
         pdata = dict()
         for s_name in self.sentieon_alignment_metrics.keys():
@@ -120,12 +119,12 @@ def parse_reports(self):
             'cpswitch_counts_label': 'Number of Reads',
         }
 
-        self.add_section (
-            name = 'Alignment Summary',
-            anchor = 'sentieon-alignmentsummary',
-            description = ("Please note that Sentieon's read counts are 
+        self.add_section(
+            name='Alignment Summary',
+            anchor='sentieon-alignmentsummary',
+            description=("Please note that Sentieon's read counts are
                            divided by two for paired-end data.",)
-            plot = bargraph.plot(pdata, keys, pconfig)
+            plot=bargraph.plot(pdata, keys, pconfig)
         )
 
     # Return the number of detected samples to the parent module
