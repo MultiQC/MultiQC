@@ -94,6 +94,8 @@ to break. If you haven't already, **you need to switch to Python 3 now**.
     * Added an observed over expected read count plot for `idxstats` ([#1118](https://github.com/ewels/MultiQC/issues/1118))
 * **sortmerna**
     * Fix the bug for the latest sortmerna version 4.2.0 ([#1121](https://github.com/ewels/MultiQC/issues/1121))
+* **sexdeterrmine**
+    * Added a scatter plot of relative X- vs Y-coverage to the generated report.
 
 #### Bug Fixes:
 
