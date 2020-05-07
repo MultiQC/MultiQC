@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 
-""" MultiQC submodule to parse output from Sentieon AlignmentSummaryMetrics (based on the Picard module of the same name """
+""" MultiQC submodule to parse output from Sentieon AlignmentSummaryMetrics 
+(based on the Picard module of the same name """
 
 from collections import OrderedDict
 import logging
@@ -12,6 +13,7 @@ from multiqc.plots import bargraph
 # Initialise the logger
 log = logging.getLogger(__name__)
 
+
 def parse_reports(self):
     """ Find Sentieon AlignmentSummaryMetrics reports and parse their data """
 
@@ -19,7 +21,8 @@ def parse_reports(self):
     self.sentieon_alignment_metrics = dict()
 
     # Go through logs and find Metrics
-    for f in self.find_log_files('sentieon/alignment_metrics', filehandles=True):
+    for f in self.find_log_files('sentieon/alignment_metrics', 
+                                 filehandles=True):
         parsed_data = dict()
         s_name = None
         keys = None
@@ -38,7 +41,7 @@ def parse_reports(self):
                 elif keys:
                     vals = l.strip("\n").split("\t")
                     if len(vals) == len(keys):
-                        # Ignore the FIRST_OF_PAIR / SECOND_OF_PAIR data to simplify things
+                        # Ignore the FIRST_OF_PAIR / SECOND_OF_PAIR data to simplify
                         if vals[0] == 'PAIR' or vals[0] == 'UNPAIRED':
                             for i, k in enumerate(keys):
                                 try:
@@ -57,17 +60,20 @@ def parse_reports(self):
         # Manipulate sample names if multiple baits found
         for s_name in parsed_data.keys():
             if s_name in self.sentieon_alignment_metrics:
-                log.debug("Duplicate sample name found in {}! Overwriting: {}".format(f['fn'], s_name))
+                log.debug("Duplicate sample name found in {}! 
+                          Overwriting: {}".format(f['fn'], s_name))
             self.add_data_source(f, s_name, section='AlignmentSummaryMetrics')
             self.sentieon_alignment_metrics[s_name] = parsed_data[s_name]
 
     # Filter to strip out ignored sample names
-    self.sentieon_alignment_metrics = self.ignore_samples(self.sentieon_alignment_metrics)
+    self.sentieon_alignment_metrics = self.ignore_samples(
+        self.sentieon_alignment_metrics)
 
     if len(self.sentieon_alignment_metrics) > 0:
 
         # Write parsed data to a file
-        self.write_data_file(self.sentieon_alignment_metrics, 'multiqc_sentieon_AlignmentSummaryMetrics')
+        self.write_data_file(self.sentieon_alignment_metrics,
+                             'multiqc_sentieon_AlignmentSummaryMetrics')
 
         # Add to general stats table
         self.general_stats_headers['PCT_PF_READS_ALIGNED'] = {
@@ -83,7 +89,8 @@ def parse_reports(self):
         for s_name in self.sentieon_alignment_metrics:
             if s_name not in self.general_stats_data:
                 self.general_stats_data[s_name] = dict()
-            self.general_stats_data[s_name].update( self.sentieon_alignment_metrics[s_name] )
+            self.general_stats_data[s_name].update(
+                self.sentieon_alignment_metrics[s_name])
 
 
 
@@ -91,7 +98,8 @@ def parse_reports(self):
         pdata = dict()
         for s_name in self.sentieon_alignment_metrics.keys():
             pdata[s_name] = dict()
-            # Sentieon reports both reads for PE data. Divide it by two as most people will expect # clusters
+            # Sentieon reports both reads for PE data.
+            # Divide it by two as most people will expect # clusters
             if self.sentieon_alignment_metrics[s_name]['CATEGORY'] == 'PAIR':
                 pdata[s_name]['total_reads'] = self.sentieon_alignment_metrics[s_name]['TOTAL_READS'] / 2
                 pdata[s_name]['aligned_reads'] = self.sentieon_alignment_metrics[s_name]['PF_READS_ALIGNED'] / 2
@@ -115,7 +123,8 @@ def parse_reports(self):
         self.add_section (
             name = 'Alignment Summary',
             anchor = 'sentieon-alignmentsummary',
-            description = "Please note that Sentieon's read counts are divided by two for paired-end data.",
+            description = ("Please note that Sentieon's read counts are 
+                           divided by two for paired-end data.",)
             plot = bargraph.plot(pdata, keys, pconfig)
         )
 
