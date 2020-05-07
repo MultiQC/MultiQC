@@ -47,8 +47,8 @@ class MultiqcModule(BaseMultiqcModule):
         self.addSummaryMetrics()
 
         # Plots
-        self.read_count_barplot()
         self.snp_rate_scatterplot()
+        self.read_count_barplot()
         self.snp_count_barplot()
 
     def parse_data(self, f):
