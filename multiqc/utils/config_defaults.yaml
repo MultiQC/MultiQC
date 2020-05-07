@@ -374,7 +374,6 @@ module_order:
     - sentieon:
         module_tag:
             - DNA
-            - RNA
     - prokka:
         module_tag:
             - prokarytotic
