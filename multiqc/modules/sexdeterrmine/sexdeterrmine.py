@@ -149,8 +149,6 @@ class MultiqcModule(BaseMultiqcModule):
             'ymax': 1.2
         }
 
-        print (data, file=sys.stderr)
-
         self.add_section(
             name = 'Relative Coverage',
             anchor = 'sexdeterrmine-rates',
