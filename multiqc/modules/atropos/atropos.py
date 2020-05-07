@@ -694,7 +694,8 @@ class TrimmedLength(Section):
             "id": "atropos_trimmed_length_plot_{seq}_{side}_{read}".format(
                 seq=seq, side=side, read=read
             ),
-            "title": "Lengths of Trimmed Sequences<br/>Seq={seq}, Side={side}, Read={read}".format(
+            "title": "Atropos: Lengths of Trimmed Sequences<br/>Seq={seq}, "
+                     "Side={side}, Read={read}".format(
                 seq=seq, side=side, read=read
             ),
             "ylab": "Counts",
@@ -828,7 +829,7 @@ class PerBaseQuality(QcSection):
             "id": "atropos_base_qualities_plot_{phase}_{read}".format(
                 phase=context["phase"], read=read
             ),
-            "title": "Mean Quality Scores: Read {}".format(read),
+            "title": "Atropos: Mean Quality Scores Read {}".format(read),
             "ylab": "Phred Score",
             "xlab": "Position (bp)",
             "ymin": 0,
@@ -944,7 +945,7 @@ class PerSequenceQuality(QcSection):
             "id": "atropos_qualities_plot_{phase}_{read}".format(
                 phase=context["phase"], read=read
             ),
-            "title": "Per Sequence Quality Scores: Read {}".format(read),
+            "title": "Atropos: Per Sequence Quality Scores Read {}".format(read),
             "ylab": "Count",
             "xlab": "Mean Sequence Quality (Phred Score)",
             "ymin": 0,
@@ -1154,7 +1155,7 @@ class PerSequenceGC(QcSection):
             "id": "atropos_gc_plot_{phase}_{read}".format(
                 phase=context["phase"], read=read
             ),
-            "title": "Per Sequence GC Content: Read {}".format(read),
+            "title": "Atropos: Per Sequence GC Content Read {}".format(read),
             "ylab": "Count",
             "xlab": "%GC",
             "ymin": 0,
@@ -1259,7 +1260,7 @@ class PerBaseN(QcSection):
             "id": "atropos_per_base_N_content_plot_{phase}_{read}".format(
                 phase=context["phase"], read=read
             ),
-            "title": "Per Base N Content: Read {}".format(read),
+            "title": "Atropos: Per Base N Content Read {}".format(read),
             "ylab": "Percentage N-Count",
             "xlab": "Position in Read (bp)",
             "yCeiling": 100,
@@ -1351,7 +1352,7 @@ See the <a href="#general_stats">General Statistics Table</a>.</p>"""
             "id": "atropos_lengths_plot_{phase}_{read}".format(
                 phase=context["phase"], read=read
             ),
-            "title": "Sequence Length Distribution: Read {}".format(read),
+            "title": "Atropos: Sequence Length Distribution Read {}".format(read),
             "ylab": "Read Count",
             "xlab": "Sequence Length (bp)",
             "ymin": 0,
