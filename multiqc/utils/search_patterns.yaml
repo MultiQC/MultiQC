@@ -404,8 +404,12 @@ somalier/somalier-ancestry:
     fn: '*.somalier-ancestry.tsv'
 somalier/samples:
     fn: '*.samples.tsv'
+    contents: '#family_id'
+    num_lines: 5
 somalier/pairs:
     fn: '*.pairs.tsv'
+    contents: 'hom_concordance'
+    num_lines: 5
 phantompeakqualtools/out:
     fn: '*.spp.out'
 picard/alignment_metrics:

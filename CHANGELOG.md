@@ -58,6 +58,8 @@ to break. If you haven't already, **you need to switch to Python 3 now**.
     * RNA-seq tool for bacteria, includes bar plot showing where features map.
 * [**Sickle**](https://github.com/najoshi/sickle)
     * A windowed adaptive trimming tool for FASTQ files using quality
+* [**Somalier**](https://github.com/brentp/somalier)
+    * Relatedness checking and QC for BAM/CRAM/VCF for cancer,DNA,BS-Seq,exome, etc.
 * [**VarScan2**](https://github.com/dkoboldt/varscan)
     * Variant calling and somatic mutation/CNV detection for next-generation sequencing data
 
@@ -124,8 +126,6 @@ to break. If you haven't already, **you need to switch to Python 3 now**.
     * Relative coverage and error rate of X and Y chromosomes
 * [**SNPsplit**](https://github.com/FelixKrueger/SNPsplit)
     * Allele-specific alignment sorting
-* [**somalier**](https://github.com/brentp/somalier)
-    * relatedness checking and QC for BAM/CRAM/VCF for cancer,DNA,BS-Seq,exome, etc.
 
 #### Module updates:
 * **bcl2fastq**
