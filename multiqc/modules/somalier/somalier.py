@@ -3,17 +3,13 @@
 """ MultiQC module to parse output from somalier """
 
 from __future__ import print_function
-from collections import OrderedDict
-import logging
-import csv
-
-import random
-from collections import defaultdict
+from collections import OrderedDict, defaultdict
 from math import isnan, isinf
-from multiqc import config
-from multiqc.plots import bargraph
-from multiqc.plots import heatmap
-from multiqc.plots import scatter
+import csv
+import logging
+import random
+
+from multiqc.plots import bargraph, heatmap, scatter
 from multiqc.utils import mqc_colour
 from multiqc.modules.base_module import BaseMultiqcModule
 
@@ -29,9 +25,12 @@ class MultiqcModule(BaseMultiqcModule):
     def __init__(self):
 
         # Initialise the parent object
-        super(MultiqcModule, self).__init__(name='somalier', anchor='somalier',
-        href='https://github.com/brentp/somalier',
-        info="calculates genotype :: pedigree correspondence checks from sketches derived from BAM/CRAM or VCF")
+        super(MultiqcModule, self).__init__(
+            name='Somalier',
+            anchor='somalier',
+            href='https://github.com/brentp/somalier',
+            info="calculates genotype :: pedigree correspondence checks from sketches derived from BAM/CRAM or VCF"
+        )
 
         # Find and load any somalier reports
         self.somalier_data = dict()
@@ -51,7 +50,8 @@ class MultiqcModule(BaseMultiqcModule):
                             log.debug("Duplicate sample name found! Overwriting: {}".format(s_name))
                     self.add_data_source(f, s_name)
                     self.somalier_data[s_name] = parsed_data[s_name]
-        # parse somalier CSV files # TODO: CSV or TSV?
+
+        # parse somalier CSV files
         for f in self.find_log_files('somalier/pairs'):
             parsed_data = self.parse_somalier_pairs_tsv(f)
             if parsed_data is not None:
@@ -64,7 +64,6 @@ class MultiqcModule(BaseMultiqcModule):
 
         # parse somalier ancestry files
         for f in self.find_log_files('somalier/somalier-ancestry', filehandles=True):
-            log.debug("Parsing report {} ...".format(f))
             self.parse_somalier_ancestry(f)
 
         # Filter to strip out ignored sample names
@@ -139,7 +138,8 @@ class MultiqcModule(BaseMultiqcModule):
                 for i, v in enumerate(s):
                     if i not in s_name_idx: # Skip if (i == 0 or 1); i.e. sample_a, sample_b
                         if (isnan(float(v)) or isinf(float(v))):
-                            log.info("Found Inf or NaN value. Overwriting with -2.") # TODO: find better solution
+                             # TODO: find better solution
+                            log.debug("Found Inf or NaN value. Overwriting with -2.")
                             v = -2
                         try:
                             # add the pattern as a suffix to key
@@ -147,7 +147,6 @@ class MultiqcModule(BaseMultiqcModule):
                         except ValueError:
                             # add the pattern as a suffix to key
                             parsed_data[s_name][headers[i]] = v
-                            
 
         if len(parsed_data) == 0:
             return None
@@ -172,7 +171,7 @@ class MultiqcModule(BaseMultiqcModule):
                 # use _prob substring to identify ancestry cats and add to object
                 if "_prob" in c:
                     self.somalier_ancestry_cats.append(c.replace("_prob", ''))
-            
+
             # parse rows of tsv file
             for row in reader:
                 # only background has given_ancestry
@@ -187,7 +186,7 @@ class MultiqcModule(BaseMultiqcModule):
                         elif "PC" in k and v is not None:
                             d[k] = float(v)
                         # else: do nothing
-                    
+
                     # extract predicted ancestry and probability
                     # for general stats table
                     d["ancestry"] = row["predicted_ancestry"]
@@ -203,8 +202,12 @@ class MultiqcModule(BaseMultiqcModule):
             # check that something was parsed:
             if len(parsed_data) > 0:
                 # add background principal components
-                self.somalier_background_pcs["background_pcs"] = {"PC1":bg_pc1, "PC2":bg_pc2, "ancestry":bg_ancestry}
-                
+                self.somalier_background_pcs["background_pcs"] = {
+                    "PC1": bg_pc1,
+                    "PC2": bg_pc2,
+                    "ancestry": bg_ancestry
+                }
+
                 # cycle over keys, i.e. sample names
                 # safely add new data to object data
                 # warn when overwriting
@@ -224,12 +227,12 @@ class MultiqcModule(BaseMultiqcModule):
 
     def somalier_general_stats_table(self):
         """Add data to general stats table
-        
+
         Take the parsed stats from the somalier report and add it to the
         basic stats table at the top of the report """
 
         headers = OrderedDict()
-        
+
         headers['phenotype'] = {
             'title': 'Phenotype',
             'description': 'Sample\'s phenotype from pedigree info',
@@ -278,16 +281,19 @@ class MultiqcModule(BaseMultiqcModule):
             'title': 'HetVar',
             'description': 'Heterozygous variants',
             'hidden': True,
+            'shared_key': 'variant_count'
         }
         headers['n_hom_ref'] = {
             'title': 'HomRefVar',
             'description': 'Homozygous reference variants',
             'hidden': True,
+            'shared_key': 'variant_count'
         }
         headers['n_hom_alt'] = {
             'title': 'HomAltVar',
             'description': 'Homozygous alternate variants',
             'hidden': True,
+            'shared_key': 'variant_count'
         }
         headers['n_unknown'] = {
             'title': 'NA sites',
@@ -343,21 +349,25 @@ class MultiqcModule(BaseMultiqcModule):
             'title': 'HetVar X',
             'description': 'Heterozygous variants on X chromosome',
             'hidden': True,
+            'shared_key': 'variant_count_xy'
         }
         headers['X_hom_ref'] = {
             'title': 'HomRefVar X',
             'description': 'Homozygous reference variants on X chromosome',
             'hidden': True,
+            'shared_key': 'variant_count_xy'
         }
         headers['X_hom_alt'] = {
             'title': 'HomAltVar X',
             'description': 'Homozygous alternate variants on X chromosome',
             'hidden': True,
+            'shared_key': 'variant_count_xy'
         }
         headers['X_n'] = {
             'title': 'Sites X',
             'description': 'Total sites on X chromosome',
             'hidden': True,
+            'shared_key': 'variant_count_xy'
         }
         headers['X_depth_mean'] = {
             'title': 'Mean depth X',
@@ -369,6 +379,7 @@ class MultiqcModule(BaseMultiqcModule):
             'title': 'Sites Y',
             'description': 'Total sites on Y chromosome',
             'hidden': True,
+            'shared_key': 'variant_count_xy'
         }
         headers['Y_depth_mean'] = {
             'title': 'Mean depth Y',
@@ -405,17 +416,20 @@ class MultiqcModule(BaseMultiqcModule):
 
             self.add_section (
                 name = 'Relatedness',
-                anchor = 'somalier-relatedness-plot',
-                description = """Shared allele rates between sample pairs.  Points are coloured by degree of expected-relatedness:
+                anchor = 'somalier-relatedness',
+                description = """
+                Shared allele rates between sample pairs.
+                Points are coloured by degree of expected-relatedness:
                 <span style="color: #6DA4CA;">less than 0.25</span>,
                 <span style="color: #FAA051;">0.25 - 0.5</span>,
-                <span style="color: #2B9F2B;">greather than 0.5</span>.""",
+                <span style="color: #2B9F2B;">greather than 0.5</span>.
+                """,
                 plot = scatter.plot(data, pconfig)
             )
 
     def somalier_relatedness_heatmap_plot(self):
         # inspiration: MultiQC/modules/vcftools/relatedness2.py
-        
+
         data = []
         labels = set()
         rels = defaultdict(dict)
@@ -429,7 +443,7 @@ class MultiqcModule(BaseMultiqcModule):
 
         # impose alphabetical order and avoid json serialisation errors in utils.report
         labels = sorted(labels)
-        
+
         for x in labels:
             line = []
             for y in labels:
@@ -449,8 +463,8 @@ class MultiqcModule(BaseMultiqcModule):
 
             self.add_section (
                 name = 'Relatedness Heatmap',
-                anchor = 'somalier-relatedness-heatmap-plot',
-                description = """Heatmap displaying relatedness of sample pairs.""",
+                anchor = 'somalier-relatedness-heatmap',
+                description = "Heatmap displaying relatedness of sample pairs.",
                 plot = heatmap.plot(
                     data = data,
                     xcats = labels,
@@ -458,7 +472,7 @@ class MultiqcModule(BaseMultiqcModule):
                     pconfig = pconfig,
                 )
             )
-    
+
     def somalier_het_check_plot(self):
         """plot the het_check scatter plot"""
         # empty dictionary to add sample names, and dictionary of values
@@ -485,9 +499,8 @@ class MultiqcModule(BaseMultiqcModule):
             self.add_section (
                 name = 'Heterozigosity',
                 description = "Standard devation of heterozygous allele balance against mean depth.",
-                helptext = """A high standard deviation in allele balance suggests contamination.
-                """,
-                anchor = 'somalier-hetcheck-plot',
+                helptext = "A high standard deviation in allele balance suggests contamination.",
+                anchor = 'somalier-hetcheck',
                 plot = scatter.plot(data, pconfig)
             )
 
@@ -514,11 +527,9 @@ class MultiqcModule(BaseMultiqcModule):
             self.add_section(
                 name = 'Sex',
                 description = "Predicted sex against scaled depth on X",
-                helptext = """
-                Higher values of depth, low values suggest male.
-                """,
-                anchor='somalier-sexcheck-plot',
-                plot=scatter.plot(data, pconfig)
+                helptext = "Higher values of depth, low values suggest male.",
+                anchor = 'somalier-sexcheck',
+                plot = scatter.plot(data, pconfig)
             )
 
     def somalier_ancestry_barplot(self):
@@ -526,7 +537,7 @@ class MultiqcModule(BaseMultiqcModule):
         c_scale = mqc_colour.mqc_colour_scale(name="Paired").colours
         cats = OrderedDict()
         anc_cats = self.somalier_ancestry_cats
-        
+
         # use Paired color scale, unless number of categories exceed colors
         if (len(anc_cats) <= len(c_scale)):
             for i in range(len(anc_cats)):
@@ -541,7 +552,7 @@ class MultiqcModule(BaseMultiqcModule):
             cats = None
 
         for s_name, d in self.somalier_data.items():
-            # ensure that only relevant items are added, 
+            # ensure that only relevant items are added,
             # i.e. only ancestry category values
             ls = {k:v for k,v in d.items() if (k in self.somalier_ancestry_cats)}
             if len(ls) > 0: # only add dict, if it contains values
@@ -551,25 +562,27 @@ class MultiqcModule(BaseMultiqcModule):
             pconfig = {
                 'id' : 'somalier_ancestry_barplot',
                 'title': 'Somalier: Sample Predicted Ancestry Proportions',
-                'cpswitch_c_active' : False,
-                'hide_zero_cats' : False,
-                'ylab' : 'Predicted Ancestry'
+                'cpswitch_c_active': False,
+                'hide_zero_cats': False,
+                'ylab': 'Predicted Ancestry'
             }
 
             self.add_section(
                 name = "Ancestry Barplot",
                 description = "Predicted ancestries of samples.",
-                helptext = """Shows the percentwise predicted probability of each 
+                helptext = """
+                Shows the percentwise predicted probability of each
                 ancestry. A sample might contain traces of several ancestries.
                 If the number of samples is too high, the plot is rendered as a
-                non-interactive flat image.""",
-                anchor = "somalier-ancestry-barplot",
+                non-interactive flat image.
+                """,
+                anchor = "somalier-ancestry",
                 plot = bargraph.plot(data=data, cats=cats, pconfig=pconfig)
             )
 
     def somalier_ancestry_pca_plot(self):
         data = OrderedDict()
-      
+
         # cycle over samples and add PC coordinates to data dict
         for s_name, d in self.somalier_data.items():
             if 'PC1' in d and 'PC2' in d:
@@ -589,11 +602,14 @@ class MultiqcModule(BaseMultiqcModule):
             ancestry_colors = dict(zip(cats, c_scale[:len(cats)]))
             default_background_color = 'rgb(255,192,203,1)'
 
-            background = [{'x': pc1,
-                        'y': pc2,
-                        'color': ancestry_colors.get(ancestry, default_background_color),
-                        'name': ancestry}
-                        for pc1, pc2, ancestry in zip(d['PC1'], d['PC2'], d['ancestry'])]
+            background = [
+                {
+                    'x': pc1,
+                    'y': pc2,
+                    'color': ancestry_colors.get(ancestry, default_background_color),
+                    'name': ancestry
+                } for pc1, pc2, ancestry in zip(d['PC1'], d['PC2'], d['ancestry'])
+            ]
             data["background"] = background
 
         # generate section and plot
@@ -610,13 +626,13 @@ class MultiqcModule(BaseMultiqcModule):
             self.add_section(
                 name = "Ancestry PCA",
                 description = "Principal components of samples against background PCs.",
-                helptext = """Sample PCs are plotted against background PCs from the
+                helptext = """
+                Sample PCs are plotted against background PCs from the
                 background data supplied to somalier.
-                Color indicates predicted ancestry of sample. Data points in close 
+                Color indicates predicted ancestry of sample. Data points in close
                 proximity are predicted to be of similar ancestry. Consider whether
-                the samples cluster as expected.""",
-                anchor = "somalier-ancestry-pca-plot",
+                the samples cluster as expected.
+                """,
+                anchor = "somalier-ancestry-pca",
                 plot = scatter.plot(data, pconfig)
             )
-
-
