@@ -270,6 +270,10 @@ module_order:
         module_tag:
             - Methylation
             - DNA
+    - mosdepth:
+        module_tag:
+            - DNA
+            - RNA
     - phantompeakqualtools:
         module_tag:
             - chip
@@ -290,6 +294,9 @@ module_order:
         module_tag:
             - RNA
     - rna_seqc:
+        module_tag:
+            - RNA
+    - rockhopper:
         module_tag:
             - RNA
     - rsem:
@@ -368,6 +375,10 @@ module_order:
             - DNA
             - RNA
             - umi
+    - dragen:
+        module_tag:
+            - DNA
+            - RNA
     - dedup:
         module_tag:
             - DNA
@@ -418,6 +429,9 @@ module_order:
             - DNA
             - WGS
     - stacks:
+        module_tag:
+            - DNA
+    - varscan2:
         module_tag:
             - DNA
 
@@ -502,6 +516,10 @@ module_order:
         module_tag:
             - RNA
             - DNA
+    - sickle:
+        module_tag:
+            - RNA
+            - DNA
     - skewer:
         module_tag:
             - RNA
@@ -538,10 +556,6 @@ module_order:
         module_tag:
             - DNA
             - RNA
-    - mosdepth:
-        module_tag:
-            - DNA
-            - RNA
     - multivcfanalyzer:
         module_tag:
             - DNA
@@ -561,6 +575,11 @@ module_order:
             - RNA
             - DNA
             - methylation
+    - ivar:
+        module_tag:
+            - RNA
+            - epidemiology
+            - virus
     - flash:
         module_tag:
             - DNA

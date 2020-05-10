@@ -205,7 +205,7 @@ export_plots, plots_flat, plots_interactive, lint, make_pdf, no_megaqc_upload, c
     parsed variables on to a vanilla python function.
     """
     # Use keyword arguments in case things get rearranged in the future
-    sys_exit_code = run(
+    multiqc_run = run(
         analysis_dir=analysis_dir,
         dirs=dirs,
         dirs_depth=dirs_depth,
@@ -244,7 +244,7 @@ export_plots, plots_flat, plots_interactive, lint, make_pdf, no_megaqc_upload, c
     )
 
     # End execution using the exit code returned from MultiQC
-    sys.exit(sys_exit_code)
+    sys.exit(multiqc_run['sys_exit_code'])
 
 # Main function that runs MultQC. Available to use within an interactive Python environment
 def run(
@@ -884,5 +884,14 @@ def run(
     # Move the log file into the data directory
     log.move_tmp_log(logger)
 
-    # Return the appropriate error code (eg. 1 if a module broke, 0 on success)
-    return sys_exit_code
+    # Return the running information from the run:
+    #
+    # * report instance
+    # * config instance
+    # * appropriate error code (eg. 1 if a module broke, 0 on success)
+    #
+    return {
+        'report': report,
+        'config': config,
+        'sys_exit_code': sys_exit_code
+    }

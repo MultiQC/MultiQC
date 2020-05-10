@@ -171,7 +171,6 @@ Code contributions from:
 [@winni2k](https://github.com/winni2k),
 [@wkretzsch](https://github.com/wkretzsch),
 
-
 and many others. Thanks for your support!
 
 MultiQC is released under the GPL v3 or later licence.
