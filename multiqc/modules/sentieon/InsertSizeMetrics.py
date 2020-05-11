@@ -50,7 +50,7 @@ def parse_reports(self):
 
             if s_name is not None:
                 if ('InsertSizeMetricAlgo' in line and
-                    '#SentieonCommandLine' in line):
+                        '#SentieonCommandLine' in line):
                     if s_name in self.sentieon_insertSize_data:
                         log.debug("Duplicate sample name found in {}!\
                              Overwriting: {}".format(f['fn'], s_name))
