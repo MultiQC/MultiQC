@@ -215,6 +215,13 @@ class datatable (object):
 
                 self.headers_in_order[headers[idx][k]['placement']].append((idx, k))
 
+        # Skip any data that is not used in the table
+        # Would be ignored for making the table anyway, but can affect whether a beeswarm plot is used
+        for idx, d in enumerate(data):
+            for s_name in list(d.keys()):
+                if not any ( h in data[idx][s_name].keys() for h in hs for hs in headers):
+                    del(data[idx][s_name])
+
         # Assign to class
         self.data = data
         self.headers = headers
