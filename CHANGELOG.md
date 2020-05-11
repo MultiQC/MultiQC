@@ -59,7 +59,7 @@ to break. If you haven't already, **you need to switch to Python 3 now**.
 * [**Sickle**](https://github.com/najoshi/sickle)
     * A windowed adaptive trimming tool for FASTQ files using quality
 * [**Somalier**](https://github.com/brentp/somalier)
-    * Relatedness checking and QC for BAM/CRAM/VCF for cancer,DNA,BS-Seq,exome, etc.
+    * Relatedness checking and QC for BAM/CRAM/VCF for cancer, DNA, BS-Seq, exome, etc.
 * [**VarScan2**](https://github.com/dkoboldt/varscan)
     * Variant calling and somatic mutation/CNV detection for next-generation sequencing data
 
