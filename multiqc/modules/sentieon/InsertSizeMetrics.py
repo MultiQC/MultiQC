@@ -1,11 +1,11 @@
 #!/usr/bin/env python
 
-""" MultiQC submodule to parse output from Sentieon InsertSizeMetrics (based on the Picard module of the same name """
+""" MultiQC submodule to parse output from Sentieon InsertSizeMetrics (based
+ on the Picard module of the same name """
 
 from collections import OrderedDict
 import logging
 import os
-import re
 
 from multiqc import config
 from multiqc.plots import linegraph
@@ -46,16 +46,15 @@ def parse_reports(self):
                 # Pull sample name from filename
                 s_name = os.path.basename(f['s_name'])
                 s_name = self.clean_s_name(s_name, f['root'])
-            
+
             if s_name is not None:
-                #print s_name
                 if 'InsertSizeMetricAlgo' in l and '#SentieonCommandLine' in l:
                     if s_name in self.sentieon_insertSize_data:
                         log.debug("Duplicate sample name found in {}! Overwriting: {}".format(f['fn'], s_name))
                     self.add_data_source(f, s_name, section='InsertSizeMetrics')
                     keys = f['f'].readline().strip("\n").split("\t")
                     vals = f['f'].readline().strip("\n").split("\t")
-                    self.sentieon_insertSize_samplestats[s_name] = {'total_count': 0, 'meansum':0, 'total_pairs':0 }
+                    self.sentieon_insertSize_samplestats[s_name] = {'total_count': 0, 'meansum': 0, 'total_pairs': 0 }
                     orientation_idx = keys.index('PAIR_ORIENTATION')
                     while len(vals) == len(keys):
                         pair_orientation = vals[orientation_idx]
@@ -72,7 +71,7 @@ def parse_reports(self):
                                 except ValueError:
                                     self.sentieon_insertSize_data[rowkey][k] = vals[i]
                             except IndexError:
-                                pass # missing data
+                                pass  # missing data
                         # Add to mean sums
                         rp = self.sentieon_insertSize_data[rowkey]['READ_PAIRS']
                         mis = self.sentieon_insertSize_data[rowkey]['MEAN_INSERT_SIZE']
@@ -145,7 +144,7 @@ def parse_reports(self):
         for s_name in self.sentieon_insertSize_samplestats:
             if s_name not in self.general_stats_data:
                 self.general_stats_data[s_name] = dict()
-            self.general_stats_data[s_name].update( self.sentieon_insertSize_samplestats[s_name] )
+            self.general_stats_data[s_name].update(self.sentieon_insertSize_samplestats[s_name])
 
         # Section with histogram plot
         if len(self.sentieon_insertSize_histogram) > 0:
@@ -153,7 +152,7 @@ def parse_reports(self):
             data_percent = {}
             for s_name, data in self.sentieon_insertSize_histogram.items():
                 data_percent[s_name] = OrderedDict()
-                total = float( sum( data.values() ) )
+                total = float(sum(data.values()))
                 for k, v in data.items():
                     data_percent[s_name][k] = (v/total)*100
 
@@ -180,11 +179,11 @@ def parse_reports(self):
                     {'name': 'Percentages', 'ylab': 'Percentage of Counts'}
                 ]
             }
-            self.add_section (
-                name = 'Insert Size',
-                anchor = 'sentieon-insertsize',
-                description = 'Plot shows the number of reads at a given insert size. Reads with different orientations are summed.',
-                plot = linegraph.plot([self.sentieon_insertSize_histogram, data_percent], pconfig)
+            self.add_section(
+                name='Insert Size',
+                anchor='sentieon-insertsize',
+                description='Plot shows the number of reads at a given insert size. Reads with different orientations are summed.',
+                plot=linegraph.plot([self.sentieon_insertSize_histogram, data_percent], pconfig)
             )
 
 
