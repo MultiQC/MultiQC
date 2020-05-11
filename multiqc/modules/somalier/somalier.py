@@ -351,16 +351,14 @@ class MultiqcModule(BaseMultiqcModule):
             'hidden': True
         }
         headers['ab_mean'] = {
-            'title': 'Genot depth std',
+            'title': 'Allele balance',
             'description': 'Mean allele balance',
             'scale': 'RdYlGn',
-            'suffix': ' X'
         }
         headers['ab_std'] = {
-            'title': 'Genot depth std',
+            'title': 'Allele balance std',
             'description': 'Standard deviation of allele balance',
             'scale': 'RdYlGn',
-            'suffix': ' X',
             'hidden': True
         }
         headers['p_middling_ab'] = {
@@ -534,13 +532,13 @@ class MultiqcModule(BaseMultiqcModule):
         if len(data) > 0:
             pconfig = {
                 'id': 'somalier_het_check_plot',
-                'title': 'Somalier: Sample Observed Heterozigosity',
+                'title': 'Somalier: Sample Observed Heterozygosity',
                 'xlab': 'Mean depth',
                 'ylab': 'Standard deviation of allele-balance',
             }
 
             self.add_section (
-                name = 'Heterozigosity',
+                name = 'Heterozygosity',
                 description = "Standard devation of heterozygous allele balance against mean depth.",
                 helptext = "A high standard deviation in allele balance suggests contamination.",
                 anchor = 'somalier-hetcheck',
