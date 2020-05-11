@@ -235,6 +235,10 @@ function plot_graph(target, ds, max_num){
 
   // If log status is not set and button is there, check whether it's active by default
   var config = mqc_plots[target]['config'];
+  if(config === undefined){
+    mqc_plots[target]['config'] = {};
+    config = {};
+  }
   if (config['ytype'] === undefined){
     var log_btn = $('.hc_switch_group button[data-action="set_log"][data-target="'+target+'"]');
     console.log(log_btn);
