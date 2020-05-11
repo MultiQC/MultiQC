@@ -26,12 +26,12 @@ def parse_reports(self):
     for f in self.find_log_files('sentieon/insertsize', filehandles=True):
         s_name = None
         in_hist = False
-        for l in f['f']:
+        for line in f['f']:
 
             # Catch the histogram values
             if s_name is not None and in_hist is True:
                 try:
-                    sections = l.split("\t")
+                    sections = line.split("\t")
                     ins = int(sections[0])
                     tot_count = sum([int(x) for x in sections[1:]])
                     self.sentieon_insertSize_histogram[s_name][ins] = tot_count
@@ -43,13 +43,14 @@ def parse_reports(self):
                     in_hist = False
 
             # New log starting
-            if s_name is None and 'InsertSizeMetricAlgo' in l:
+            if s_name is None and 'InsertSizeMetricAlgo' in line:
                 # Pull sample name from filename
                 s_name = os.path.basename(f['s_name'])
                 s_name = self.clean_s_name(s_name, f['root'])
 
             if s_name is not None:
-                if 'InsertSizeMetricAlgo' in l and '#SentieonCommandLine' in l:
+                if ('InsertSizeMetricAlgo' in line and
+                    '#SentieonCommandLine' in line):
                     if s_name in self.sentieon_insertSize_data:
                         log.debug("Duplicate sample name found in {}!\
                              Overwriting: {}".format(f['fn'], s_name))
@@ -96,9 +97,9 @@ def parse_reports(self):
 
                         vals = f['f'].readline().strip("\n").split("\t")
 
-                    # Skip lines on to histogram (variables used in subsequent loops)
-                    l = f['f'].readline().strip("\n")
-                    l = f['f'].readline().strip("\n")
+                    # Skip lines on to histogram (variable used in later loops)
+                    line = f['f'].readline().strip("\n")
+                    line = f['f'].readline().strip("\n")
 
                     self.sentieon_insertSize_histogram[s_name] = OrderedDict()
                     in_hist = True
