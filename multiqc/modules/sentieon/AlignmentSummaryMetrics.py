@@ -61,7 +61,7 @@ def parse_reports(self):
         # Manipulate sample names if multiple baits found
         for s_name in parsed_data.keys():
             if s_name in self.sentieon_alignment_metrics:
-                log.debug("Duplicate sample name found in {}!
+                log.debug("Duplicate sample name found in {}!\
                           Overwriting: {}".format(f['fn'], s_name))
             self.add_data_source(f, s_name, section='AlignmentSummaryMetrics')
             self.sentieon_alignment_metrics[s_name] = parsed_data[s_name]
@@ -100,18 +100,12 @@ def parse_reports(self):
             # Sentieon reports both reads for PE data.
             # Divide it by two as most people will expect # clusters
             if self.sentieon_alignment_metrics[s_name]['CATEGORY'] == 'PAIR':
-                (pdata[s_name]['total_reads']=
-                 self.sentieon_alignment_metrics[s_name]['TOTAL_READS']/2)
-                (pdata[s_name]['aligned_reads']=
-                 self.sentieon_alignment_metrics[s_name]['PF_READS_ALIGNED']
-                 /2)
+                pdata[s_name]['total_reads']=self.sentieon_alignment_metrics[s_name]['TOTAL_READS']/2
+                pdata[s_name]['aligned_reads']=self.sentieon_alignment_metrics[s_name]['PF_READS_ALIGNED']/2
             else:
-                (pdata[s_name]['total_reads']=
-                 self.sentieon_alignment_metrics[s_name]['TOTAL_READS'])
-                (pdata[s_name]['aligned_reads']=
-                 self.sentieon_alignment_metrics[s_name]['PF_READS_ALIGNED'])
-            (pdata[s_name]['unaligned_reads']=pdata[s_name]['total_reads']
-             -pdata[s_name]['aligned_reads'])
+                pdata[s_name]['total_reads']=self.sentieon_alignment_metrics[s_name]['TOTAL_READS']
+                pdata[s_name]['aligned_reads']=self.sentieon_alignment_metrics[s_name]['PF_READS_ALIGNED']
+                pdata[s_name]['unaligned_reads']=pdata[s_name]['total_reads']-pdata[s_name]['aligned_reads']
 
         keys = OrderedDict()
         keys['aligned_reads'] = {'name': 'Aligned Reads'}
@@ -128,8 +122,7 @@ def parse_reports(self):
         self.add_section(
             name='Alignment Summary',
             anchor='sentieon-alignmentsummary',
-            description=("Please note that Sentieon's read counts are
-                         divided by two for paired-end data.",)
+            description="Please note that Sentieon's read counts are divided by two for paired-end data.",
             plot=bargraph.plot(pdata, keys, pconfig)
         )
 
