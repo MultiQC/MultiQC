@@ -240,18 +240,11 @@ class MultiqcModule(BaseMultiqcModule):
             'description': 'Most probable ancestry background',
             'scale': False
         }
-        headers['p_ancestry'] = {
-            'title': 'P(Ancestry)',
-            'description': 'Ancestry probablitty',
-            'max': 1,
-            'min': 0,
-            'scale': "RdYlGn",
-            'format': '{:,.2f}'
-        }
         headers['gt_depth_mean'] = {
             'title': 'Sites depth',
             'description': 'Mean depth of genotyped sites',
-            'scale': 'RdYlGn'
+            'scale': 'RdYlGn',
+            'suffix': ' X'
         }
         self.general_stats_addcols(self.somalier_data, headers)
 
@@ -275,25 +268,23 @@ class MultiqcModule(BaseMultiqcModule):
         headers['paternal_id'] = {
             'title': 'Father ID',
             'description': 'ID of sample\'s father ',
-            'scale': False,
-            'format': '<code>{}</code>'
+            'scale': False
         }
         headers['maternal_id'] = {
             'title': 'Mother ID',
             'description': 'ID of sample\'s mother',
-            'scale': False,
-            'format': '<code>{}</code>'
+            'scale': False
         }
         headers['family_id'] = {
             'title': 'Family ID',
             'description': 'ID of sample\'s family',
-            'scale': False,
-            'format': '<code>{}</code>'
+            'scale': False
         }
         headers['sex'] = {
             'title': 'Inferred sex',
             'description': 'Sample\'s inferred sex',
-            'scale': False
+            'scale': False,
+            'hidden': True
         }
         headers['ancestry'] = {
             'title': 'Ancestry',
@@ -311,51 +302,66 @@ class MultiqcModule(BaseMultiqcModule):
         headers['n_het'] = {
             'title': 'HetVar',
             'description': 'Heterozygous variants',
-            'shared_key': 'variant_count'
+            'shared_key': 'variant_count',
+            'format': '{:,.0f}'
         }
         headers['n_hom_ref'] = {
             'title': 'HomRefVar',
             'description': 'Homozygous reference variants',
-            'shared_key': 'variant_count'
+            'shared_key': 'variant_count',
+            'format': '{:,.0f}',
+            'hidden': True
         }
         headers['n_hom_alt'] = {
             'title': 'HomAltVar',
             'description': 'Homozygous alternate variants',
-            'shared_key': 'variant_count'
+            'shared_key': 'variant_count',
+            'format': '{:,.0f}',
+            'hidden': True
         }
         headers['n_unknown'] = {
             'title': 'NA sites',
             'description': 'Unknown sites',
+            'format': '{:,.0f}'
         }
         headers['depth_mean'] = {
             'title': 'Mean depth',
             'description': 'Mean depth of all sites',
             'scale': 'RdYlGn',
+            'suffix': ' X',
+            'hidden': True
         }
         headers['depth_sd'] = {
             'title': 'Depth std',
             'description': 'Depth\'s standard deviation of all sites',
             'scale': 'RdYlGn',
+            'hidden': True
         }
         headers['gt_depth_mean'] = {
             'title': 'Sites depth',
             'description': 'Mean depth of genotyped sites',
             'scale': 'RdYlGn',
+            'suffix': ' X'
         }
         headers['gt_depth_sd'] = {
             'title': 'Genot depth std',
             'description': 'Depth\'s standard deviation of genotype sites',
             'scale': 'RdYlGn',
+            'suffix': ' X',
+            'hidden': True
         }
         headers['ab_mean'] = {
             'title': 'Genot depth std',
             'description': 'Mean allele balance',
             'scale': 'RdYlGn',
+            'suffix': ' X'
         }
         headers['ab_std'] = {
             'title': 'Genot depth std',
             'description': 'Standard deviation of allele balance',
             'scale': 'RdYlGn',
+            'suffix': ' X',
+            'hidden': True
         }
         headers['p_middling_ab'] = {
             'title': 'Prop XXX sites',
@@ -363,42 +369,53 @@ class MultiqcModule(BaseMultiqcModule):
             'max': 1,
             'min': 0,
             'scale': "RdYlGn",
-            'format': '{:,.2f}',
+            'format': '{:,.2f}'
         }
         headers['X_het'] = {
             'title': 'HetVar X',
             'description': 'Heterozygous variants on X chromosome',
-            'shared_key': 'variant_count_xy'
+            'shared_key': 'variant_count_xy',
+            'format': '{:,.0f}'
         }
         headers['X_hom_ref'] = {
             'title': 'HomRefVar X',
             'description': 'Homozygous reference variants on X chromosome',
-            'shared_key': 'variant_count_xy'
+            'shared_key': 'variant_count_xy',
+            'format': '{:,.0f}',
+            'hidden': True
         }
         headers['X_hom_alt'] = {
             'title': 'HomAltVar X',
             'description': 'Homozygous alternate variants on X chromosome',
-            'shared_key': 'variant_count_xy'
+            'shared_key': 'variant_count_xy',
+            'format': '{:,.0f}',
+            'hidden': True
         }
         headers['X_n'] = {
             'title': 'Sites X',
             'description': 'Total sites on X chromosome',
-            'shared_key': 'variant_count_xy'
+            'shared_key': 'variant_count_xy',
+            'format': '{:,.0f}',
+            'hidden': True
         }
         headers['X_depth_mean'] = {
             'title': 'Mean depth X',
             'description': 'Mean depth of sites on X chromosome',
             'scale': 'RdYlGn',
+            'suffix': ' X'
         }
         headers['Y_n'] = {
             'title': 'Sites Y',
             'description': 'Total sites on Y chromosome',
-            'shared_key': 'variant_count_xy'
+            'shared_key': 'variant_count_xy',
+            'format': '{:,.0f}',
+            'hidden': True
         }
         headers['Y_depth_mean'] = {
             'title': 'Mean depth Y',
             'description': 'Mean depth of sites on Y chromosome',
             'scale': 'RdYlGn',
+            'suffix': ' X'
         }
 
         t_config = {
