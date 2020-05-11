@@ -96,7 +96,7 @@ def parse_reports(self):
 
                         vals = f['f'].readline().strip("\n").split("\t")
 
-                    # Skip lines on to histogram
+                    # Skip lines on to histogram (variables used in subsequent loops)
                     l = f['f'].readline().strip("\n")
                     l = f['f'].readline().strip("\n")
 
