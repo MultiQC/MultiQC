@@ -99,22 +99,17 @@ def parse_reports(self):
             # Sentieon reports both reads for PE data.
             # Divide it by two as most people will expect # clusters
             if self.sentieon_alignment_metrics[s_name]['CATEGORY'] == 'PAIR':
-                pdata[s_name][
-                    'total_reads'] = self.sentieon_alignment_metrics[
-                        s_name]['TOTAL_READS']/2
-                pdata[s_name][
-                    'aligned_reads'] = self.sentieon_alignment_metrics[
-                        s_name]['PF_READS_ALIGNED']/2
+                pdata[s_name]['total_reads'] = (
+                 self.sentieon_alignment_metrics[s_name]['TOTAL_READS']/2)
+                pdata[s_name]['aligned_reads'] = (
+                 self.sentieon_alignment_metrics[s_name]['PF_READS_ALIGNED']/2)
             else:
-                pdata[s_name][
-                    'total_reads'] = self.sentieon_alignment_metrics[
-                        s_name]['TOTAL_READS']
-                pdata[s_name][
-                    'aligned_reads'] = self.sentieon_alignment_metrics[
-                        s_name]['PF_READS_ALIGNED']
-                pdata[s_name][
-                    'unaligned_reads'] = pdata[s_name]['total_reads']-pdata[
-                        s_name]['aligned_reads']
+                pdata[s_name]['total_reads'] = (
+                 self.sentieon_alignment_metrics[s_name]['TOTAL_READS'])
+                pdata[s_name]['aligned_reads'] = (
+                 self.sentieon_alignment_metrics[s_name]['PF_READS_ALIGNED'])
+                pdata[s_name]['unaligned_reads'] = (
+                 pdata[s_name]['total_reads']-pdata[s_name]['aligned_reads'])
 
         keys = OrderedDict()
         keys['aligned_reads'] = {'name': 'Aligned Reads'}
@@ -131,7 +126,7 @@ def parse_reports(self):
         self.add_section(
             name='Alignment Summary',
             anchor='sentieon-alignmentsummary',
-            description="Please note that Sentieon's read counts are divided\
+            description="Please note that Sentieon's read counts are divided \
                  by two for paired-end data.",
             plot=bargraph.plot(pdata, keys, pconfig)
         )
