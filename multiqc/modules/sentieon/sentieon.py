@@ -17,6 +17,7 @@ from . import InsertSizeMetrics
 # Initialise the logger
 log = logging.getLogger(__name__)
 
+
 class MultiqcModule(BaseMultiqcModule):
     """ Sentieon-dnaseq produces many outputs. This module deals with 3 Picard
     equivalents which do not transfer well to MultiQC. The code for each script
@@ -27,8 +28,8 @@ class MultiqcModule(BaseMultiqcModule):
 
         # Initialise the parent object
         super(MultiqcModule, self).__init__(name='Sentieon', anchor='sentieon',
-        href='https://www.sentieon.com/products/',
-        info="is a suite of QC tools.")
+                                            href='https://www.sentieon.com/products/',
+                                            info="is a suite of QC tools.")
 
         # Set up class objects to hold parsed data
         self.general_stats_headers = OrderedDict()
