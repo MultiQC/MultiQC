@@ -33,7 +33,7 @@ def parse_reports(self):
                 try:
                     sections = l.split("\t")
                     ins = int(sections[0])
-                    tot_count = sum( [int(x) for x in sections[1:]] )
+                    tot_count = sum([int(x) for x in sections[1:]])
                     self.sentieon_insertSize_histogram[s_name][ins] = tot_count
                     self.sentieon_insertSize_samplestats[s_name]['total_count'] += tot_count
                 except ValueError:
@@ -67,7 +67,7 @@ def parse_reports(self):
                             except ValueError:
                                 try:
                                     self.sentieon_insertSize_data[rowkey][k] = float(vals[i].replace(',','.'))
-                                    log.debug("Switching commas for points in '{}': {} - {}".format(f['fn'], vals[i], vals[i].replace(',','.')))
+                                    log.debug("Switching commas for points in '{}': {} - {}".format(f['fn'], vals[i], vals[i].replace(',', '.')))
                                 except ValueError:
                                     self.sentieon_insertSize_data[rowkey][k] = vals[i]
                             except IndexError:
@@ -81,8 +81,8 @@ def parse_reports(self):
                         vals = f['f'].readline().strip("\n").split("\t")
 
                     # Skip lines on to histogram
-                    l = f['f'].readline().strip("\n")
-                    l = f['f'].readline().strip("\n")
+                    line = f['f'].readline().strip("\n")
+                    line = f['f'].readline().strip("\n")
 
                     self.sentieon_insertSize_histogram[s_name] = OrderedDict()
                     in_hist = True
@@ -107,7 +107,6 @@ def parse_reports(self):
             if j > (self.sentieon_insertSize_samplestats[s_name]['total_count'] / 2):
                 self.sentieon_insertSize_samplestats[s_name]['summed_median'] = idx
                 break
-
 
     # Filter to strip out ignored sample names
     self.sentieon_insertSize_data = self.ignore_samples(self.sentieon_insertSize_data)
@@ -185,7 +184,6 @@ def parse_reports(self):
                 description='Plot shows the number of reads at a given insert size. Reads with different orientations are summed.',
                 plot=linegraph.plot([self.sentieon_insertSize_histogram, data_percent], pconfig)
             )
-
 
     # Return the number of detected samples to the parent module
     return len(self.sentieon_insertSize_data)
