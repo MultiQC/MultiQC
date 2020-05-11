@@ -193,7 +193,7 @@ class MultiqcModule(BaseMultiqcModule):
 
         self.add_section (
             name = 'Rockhopper',
-            anchor = 'rockhopper',
+            anchor = 'rockhopper_reads_counts',
             description = """
             This plot shows the number of reads mapped to
             different regions of the genome, accounting for
