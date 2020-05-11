@@ -27,9 +27,10 @@ class MultiqcModule(BaseMultiqcModule):
     def __init__(self):
 
         # Initialise the parent object
-        super(MultiqcModule, self).__init__(name='Sentieon', anchor='sentieon',
-                                            href='https://www.sentieon.com/products/',
-                                            info="is a suite of QC tools.")
+        super(MultiqcModule, self).__init__(
+            name='Sentieon', anchor='sentieon',
+            href='https://www.sentieon.com/products/',
+            info="is a suite of QC tools.")
 
         # Set up class objects to hold parsed data
         self.general_stats_headers = OrderedDict()
@@ -39,23 +40,27 @@ class MultiqcModule(BaseMultiqcModule):
         # Call submodule functions
         n['AlignmentMetrics'] = AlignmentSummaryMetrics.parse_reports(self)
         if n['AlignmentMetrics'] > 0:
-            log.info("Found {} AlignmentSummaryMetrics reports".format(n['AlignmentMetrics']))
+            log.info("Found {} AlignmentSummaryMetrics reports".format(
+                n['AlignmentMetrics']))
 
         n['GcBiasMetrics'] = GcBiasMetrics.parse_reports(self)
         if n['GcBiasMetrics'] > 0:
-            log.info("Found {} GcBiasMetrics reports".format(n['GcBiasMetrics']))
+            log.info("Found {} GcBiasMetrics reports".format(
+                n['GcBiasMetrics']))
 
         n['InsertSizeMetrics'] = InsertSizeMetrics.parse_reports(self)
         if n['InsertSizeMetrics'] > 0:
-            log.info("Found {} InsertSizeMetrics reports".format(n['InsertSizeMetrics']))
-
+            log.info("Found {} InsertSizeMetrics reports".format(
+                n['InsertSizeMetrics']))
 
         # Exit if we didn't find anything
         if sum(n.values()) == 0:
             raise UserWarning
 
-        # Add to the General Stats table (has to be called once per MultiQC module)
-        self.general_stats_addcols(self.general_stats_data, self.general_stats_headers)
+        # Add to the General Stats table (has to be called once per
+        # MultiQC module)
+        self.general_stats_addcols(
+            self.general_stats_data, self.general_stats_headers)
 
     # Helper functions
     def multiply_hundred(self, val):
