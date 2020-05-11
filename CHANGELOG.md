@@ -71,6 +71,10 @@ to break. If you haven't already, **you need to switch to Python 3 now**.
     * Updated log search pattern to match new format in v4 with auto-lineage detection option ([#1163](https://github.com/ewels/MultiQC/issues/1163))
 * **DamageProfiler**
     * Removes redundant typo in init name. This makes referring to the module's column consistent with other modules when customising general stats table.
+* **DeDup**
+    * Updates plots to make compatible with 0.12.6
+    * Fixes reporting errors - barplot total represents _mapped_ reads, not total reads in BAM file 
+    * New: Adds 'Post-DeDup Mapped Reads' column to general stats table.
 * **fgbio**
     * New: Plot error rate by read position from `ErrorRateByReadPosition`
     * GroupReadsByUmi plot can now be toggled to show relative percents ([#1147](https://github.com/ewels/MultiQC/pull/1147))
