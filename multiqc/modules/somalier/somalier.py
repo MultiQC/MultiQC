@@ -9,7 +9,7 @@ import csv
 import logging
 import random
 
-from multiqc.plots import bargraph, heatmap, scatter
+from multiqc.plots import bargraph, heatmap, scatter, table
 from multiqc.utils import mqc_colour
 from multiqc.modules.base_module import BaseMultiqcModule
 
@@ -77,8 +77,11 @@ class MultiqcModule(BaseMultiqcModule):
         # Write parsed report data to a file
         self.write_data_file(self.somalier_data, 'multiqc_somalier')
 
-        # Basic Stats Table
+        # General Stats Table
         self.somalier_general_stats_table()
+
+        # Somalier Stats Table
+        self.somalier_stats_table()
 
         # Relatedness plot
         self.somalier_relatedness_plot()
@@ -232,41 +235,70 @@ class MultiqcModule(BaseMultiqcModule):
         basic stats table at the top of the report """
 
         headers = OrderedDict()
+        headers['ancestry'] = {
+            'title': 'Ancestry',
+            'description': 'Most probable ancestry background',
+            'scale': False
+        }
+        headers['p_ancestry'] = {
+            'title': 'P(Ancestry)',
+            'description': 'Ancestry probablitty',
+            'max': 1,
+            'min': 0,
+            'scale': "RdYlGn",
+            'format': '{:,.2f}'
+        }
+        headers['gt_depth_mean'] = {
+            'title': 'Sites depth',
+            'description': 'Mean depth of genotyped sites',
+            'scale': 'RdYlGn'
+        }
+        self.general_stats_addcols(self.somalier_data, headers)
+
+
+    def somalier_stats_table(self):
+        """Add data to somalier stats table
+
+        Bigger table within the somalier module, showing more stats """
+
+        headers = OrderedDict()
 
         headers['phenotype'] = {
             'title': 'Phenotype',
             'description': 'Sample\'s phenotype from pedigree info',
-            'hidden': True,
         }
         headers['original_pedigree_sex'] = {
             'title': 'Sex',
             'description': 'Sample\'s sex from pedigree info',
-            'hidden': True,
+            'scale': False
         }
         headers['paternal_id'] = {
             'title': 'Father ID',
             'description': 'ID of sample\'s father ',
-            'hidden': True,
+            'scale': False,
+            'format': '<code>{}</code>'
         }
         headers['maternal_id'] = {
             'title': 'Mother ID',
             'description': 'ID of sample\'s mother',
-            'hidden': True,
+            'scale': False,
+            'format': '<code>{}</code>'
         }
         headers['family_id'] = {
             'title': 'Family ID',
             'description': 'ID of sample\'s family',
-            'hidden': True,
+            'scale': False,
+            'format': '<code>{}</code>'
         }
         headers['sex'] = {
             'title': 'Inferred sex',
             'description': 'Sample\'s inferred sex',
-            'hidden': True,
+            'scale': False
         }
         headers['ancestry'] = {
             'title': 'Ancestry',
             'description': 'Most probable ancestry background',
-            'hidden': False,
+            'scale': False
         }
         headers['p_ancestry'] = {
             'title': 'P(Ancestry)',
@@ -275,66 +307,55 @@ class MultiqcModule(BaseMultiqcModule):
             'min': 0,
             'scale': "RdYlGn",
             'format': '{:,.2f}',
-            'hidden': False,
         }
         headers['n_het'] = {
             'title': 'HetVar',
             'description': 'Heterozygous variants',
-            'hidden': True,
             'shared_key': 'variant_count'
         }
         headers['n_hom_ref'] = {
             'title': 'HomRefVar',
             'description': 'Homozygous reference variants',
-            'hidden': True,
             'shared_key': 'variant_count'
         }
         headers['n_hom_alt'] = {
             'title': 'HomAltVar',
             'description': 'Homozygous alternate variants',
-            'hidden': True,
             'shared_key': 'variant_count'
         }
         headers['n_unknown'] = {
             'title': 'NA sites',
             'description': 'Unknown sites',
-            'hidden': True,
         }
         headers['depth_mean'] = {
             'title': 'Mean depth',
             'description': 'Mean depth of all sites',
             'scale': 'RdYlGn',
-            'hidden': True,
         }
         headers['depth_sd'] = {
             'title': 'Depth std',
             'description': 'Depth\'s standard deviation of all sites',
             'scale': 'RdYlGn',
-            'hidden': True,
         }
         headers['gt_depth_mean'] = {
             'title': 'Sites depth',
             'description': 'Mean depth of genotyped sites',
             'scale': 'RdYlGn',
-            'hidden': False,
         }
         headers['gt_depth_sd'] = {
             'title': 'Genot depth std',
             'description': 'Depth\'s standard deviation of genotype sites',
             'scale': 'RdYlGn',
-            'hidden': True,
         }
         headers['ab_mean'] = {
             'title': 'Genot depth std',
             'description': 'Mean allele balance',
             'scale': 'RdYlGn',
-            'hidden': True,
         }
         headers['ab_std'] = {
             'title': 'Genot depth std',
             'description': 'Standard deviation of allele balance',
             'scale': 'RdYlGn',
-            'hidden': True,
         }
         headers['p_middling_ab'] = {
             'title': 'Prop XXX sites',
@@ -343,52 +364,57 @@ class MultiqcModule(BaseMultiqcModule):
             'min': 0,
             'scale': "RdYlGn",
             'format': '{:,.2f}',
-            'hidden': True,
         }
         headers['X_het'] = {
             'title': 'HetVar X',
             'description': 'Heterozygous variants on X chromosome',
-            'hidden': True,
             'shared_key': 'variant_count_xy'
         }
         headers['X_hom_ref'] = {
             'title': 'HomRefVar X',
             'description': 'Homozygous reference variants on X chromosome',
-            'hidden': True,
             'shared_key': 'variant_count_xy'
         }
         headers['X_hom_alt'] = {
             'title': 'HomAltVar X',
             'description': 'Homozygous alternate variants on X chromosome',
-            'hidden': True,
             'shared_key': 'variant_count_xy'
         }
         headers['X_n'] = {
             'title': 'Sites X',
             'description': 'Total sites on X chromosome',
-            'hidden': True,
             'shared_key': 'variant_count_xy'
         }
         headers['X_depth_mean'] = {
             'title': 'Mean depth X',
             'description': 'Mean depth of sites on X chromosome',
             'scale': 'RdYlGn',
-            'hidden': True,
         }
         headers['Y_n'] = {
             'title': 'Sites Y',
             'description': 'Total sites on Y chromosome',
-            'hidden': True,
             'shared_key': 'variant_count_xy'
         }
         headers['Y_depth_mean'] = {
             'title': 'Mean depth Y',
             'description': 'Mean depth of sites on Y chromosome',
             'scale': 'RdYlGn',
-            'hidden': True,
         }
 
-        self.general_stats_addcols(self.somalier_data, headers)
+        t_config = {
+            'id': 'somalier_stats',
+            'namespace': 'Somalier',
+            'title': 'Somalier: Statistics',
+            'no_beeswarm': True,
+            'raw_data_fn': 'multiqc_somalier_stats'
+        }
+
+        self.add_section (
+            name = 'Statistics',
+            anchor = 'somalier-stats',
+            description = "Various statistics from the somalier report.",
+            plot = table.plot(self.somalier_data, headers, t_config)
+        )
 
     def somalier_relatedness_plot(self):
         data = dict()
