@@ -45,7 +45,7 @@ def parse_reports(self):
                         cov_col = None
 
                 if ('#SentieonCommandLine' in l and '--algo GCBias'
-                    in l and 'Summary' not in s_name):
+                        in l and 'Summary' not in s_name):
                     if s_name in self.sentieon_GCbias_data:
                         log.debug("Duplicate sample name found in {}!
                                   Overwriting: {}".format(f['fn'], s_name))
@@ -59,10 +59,10 @@ def parse_reports(self):
                     cov_col = s.index('NORMALIZED_COVERAGE')
 
                 if ('#SentieonCommandLine' in l and '--algo GCBias' in l and
-                    'Summary' in s_name):
+                        'Summary' in s_name):
                     if s_name in self.sentieon_GCbiasSummary_data:
-                        log.debug("Duplicate sample name found in {}! Overwriting:
-                                  {}".format(f['fn'], s_name))
+                        log.debug("Duplicate sample name found in {}!
+                                  Overwriting: {}".format(f['fn'], s_name))
                     self.add_data_source(f, s_name,
                                          section='GcBiasSummaryMetrics')
                     self.sentieon_GCbiasSummary_data[s_name] = dict()
@@ -114,9 +114,9 @@ def parse_reports(self):
             name='GC Coverage Bias',
             anchor='sentieon-gcbias',
             description='This plot shows bias in coverage across regions of '
-                          'the genome with varying GC content. A perfect library '
-                          'would be a flat line at <code>y = 1</code>.',
-            plot=linegraph.plot(self.sentieon_GCbias_data,pconfig)
+                         'the genome with varying GC content. A perfect '
+                         'library would be a flat line at <code>y = 1</code>.',
+            plot=linegraph.plot(self.sentieon_GCbias_data, pconfig)
         )
 
     if len(self.sentieon_GCbiasSummary_data) > 0:
