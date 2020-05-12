@@ -96,6 +96,7 @@ to break. If you haven't already, **you need to switch to Python 3 now**.
 * **Samtools**
     * Removes hardcoding of general stats column names. This allows column names to indicate when a module has been run twice ([https://github.com/ewels/MultiQC/issues/1076](https://github.com/ewels/MultiQC/issues/1076)).
     * Added an observed over expected read count plot for `idxstats` ([#1118](https://github.com/ewels/MultiQC/issues/1118))
+    * Added additional (by default hidden) column for `flagstat` that displays number total number of reads in a bam
 * **sortmerna**
     * Fix the bug for the latest sortmerna version 4.2.0 ([#1121](https://github.com/ewels/MultiQC/issues/1121))
 
