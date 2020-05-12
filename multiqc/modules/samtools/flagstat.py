@@ -39,7 +39,7 @@ class FlagstatReportMixin():
             flagstats_headers = dict()
             flagstats_headers['flagstat_total'] = {
                 'title': '{} Total Reads'.format(config.read_count_prefix),
-                'description': 'Total Mapped in the bam file ({})'.format(config.read_count_desc),
+                'description': 'Total reads in the bam file ({})'.format(config.read_count_desc),
                 'min': 0,
                 'modify': lambda x: x * config.read_count_multiplier,
                 'shared_key': 'read_count',
