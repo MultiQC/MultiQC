@@ -260,6 +260,7 @@ class MultiqcModule(BaseMultiqcModule):
         headers['phenotype'] = {
             'title': 'Phenotype',
             'description': 'Sample\'s phenotype from pedigree info',
+            'hidden': True
         }
         headers['original_pedigree_sex'] = {
             'title': 'Sex',
@@ -269,17 +270,20 @@ class MultiqcModule(BaseMultiqcModule):
         headers['paternal_id'] = {
             'title': 'Father ID',
             'description': 'ID of sample\'s father ',
-            'scale': False
+            'scale': False,
+            'hidden': True
         }
         headers['maternal_id'] = {
             'title': 'Mother ID',
             'description': 'ID of sample\'s mother',
-            'scale': False
+            'scale': False,
+            'hidden': True
         }
         headers['family_id'] = {
             'title': 'Family ID',
             'description': 'ID of sample\'s family',
-            'scale': False
+            'scale': False,
+            'hidden': True
         }
         headers['sex'] = {
             'title': 'Inferred sex',
