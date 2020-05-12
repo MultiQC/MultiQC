@@ -30,7 +30,8 @@ class MultiqcModule(BaseMultiqcModule):
         super(MultiqcModule, self).__init__(
             name='Sentieon', anchor='sentieon',
             href='https://www.sentieon.com/products/',
-            info="is a suite of QC tools.")
+            info="contains a suite of QC tools. The ones represented in this \
+                  module are analogues of Picard QC metrics.")
 
         # Set up class objects to hold parsed data
         self.general_stats_headers = OrderedDict()
