@@ -434,8 +434,19 @@ class MultiqcModule(BaseMultiqcModule):
 
     def somalier_relatedness_plot(self):
         data = dict()
-        blue_cutoff = 0.125
-        orange_cutoff = 0.5
+        alpha = 0.6
+        relatedness_colours = {
+            0: ['Unrelated', 'rgba(74, 124, 182, {})'.format(alpha)],
+            0.49: ['Sib-sib', 'rgba(243, 123, 40, {})'.format(alpha)],
+            0.5: ['Parent-child', 'rgba(159, 84, 47, {})'.format(alpha)]
+        }
+
+        # Get index colour scale
+        cscale = mqc_colour.mqc_colour_scale()
+        extra_colours = cscale.get_colours("Dark2")
+        extra_colours = _make_col_alpha(extra_colours, alpha)
+
+        extra_colour_idx = 0
         for s_name, d in self.somalier_data.items():
             if 'ibs0' in d and 'ibs2' in d:
                 data[s_name] = {
@@ -443,12 +454,24 @@ class MultiqcModule(BaseMultiqcModule):
                     'y': d['ibs2']
                 }
             if 'relatedness' in d:
-                if d['expected_relatedness'] < blue_cutoff:
-                    data[s_name]['color'] = 'rgba(109, 164, 202, 0.6)'
-                elif d['expected_relatedness'] < orange_cutoff:
-                    data[s_name]['color'] = 'rgba(250, 160, 81, 0.6)'
-                else:
-                    data[s_name]['color'] = 'rgba(43, 159, 43, 0.6)'
+                relatedness = d['expected_relatedness']
+                # -1 is not the same family, 0 is same family but unreleaed
+                # @brentp says he usually bundles them together
+                if relatedness == -1:
+                    relatedness = 0
+
+                # New unique value that we've not seen before
+                if relatedness not in relatedness_colours:
+                    relatedness_colours[relatedness] = [
+                        str(relatedness),
+                        extra_colours[extra_colour_idx]
+                    ]
+                    extra_colour_idx += 0
+                    if extra_colour_idx > len(extra_colours):
+                        extra_colour_idx = 0
+
+                # Assign colour
+                data[s_name]['color'] = relatedness_colours[relatedness][1]
 
         if len(data) > 0:
             pconfig = {
@@ -459,16 +482,17 @@ class MultiqcModule(BaseMultiqcModule):
                 'marker_line_width': 0
             }
 
+            colours_legend = ''
+            for val in sorted(relatedness_colours.keys()):
+                name, col_rgb = relatedness_colours[val]
+                colours_legend += "<span style=\"color:{}\">{}</span>, ".format(col_rgb.replace(str(alpha), "1.0"), name, val)
+
             self.add_section (
                 name = 'Relatedness',
                 anchor = 'somalier-relatedness',
                 description = """
                 Shared allele rates between sample pairs.
-                Points are coloured by degree of expected-relatedness:
-                &nbsp; <span style="color: #6DA4CA;">(&lt; {blue})</span>,
-                &nbsp; <span style="color: #FAA051;">(&ge; {blue}, &lt; {orange})</span>,
-                &nbsp; <span style="color: #2B9F2B;">(&ge; {orange})</span>.
-                """.format(blue=blue_cutoff, orange=orange_cutoff),
+                Points are coloured by degree of expected-relatedness: {}""".format(colours_legend),
                 plot = scatter.plot(data, pconfig)
             )
 
@@ -648,11 +672,7 @@ class MultiqcModule(BaseMultiqcModule):
             default_background_color = 'rgb(255,192,203,0.3)'
 
             # Make colours semi-transparent
-            ancestry_colors_alpha = 0.3
-            for key in ancestry_colors:
-                col_srgb = spectra.html(ancestry_colors[key])
-                cols_rgb = [ c * 255.0 for c in col_srgb.clamped_rgb ]
-                ancestry_colors[key] = 'rgba({},{},{},{})'.format(*cols_rgb, ancestry_colors_alpha)
+            ancestry_colors = dict(zip(ancestry_colors.keys(), _make_col_alpha(ancestry_colors.values(), 0.3)))
 
             background = [
                 {
@@ -688,3 +708,12 @@ class MultiqcModule(BaseMultiqcModule):
                 anchor = "somalier-ancestry-pca",
                 plot = scatter.plot(data, pconfig)
             )
+
+def _make_col_alpha(cols, alpha):
+    """ Take a HTML colour value and return a rgba string with alpha """
+    cols_return = []
+    for col in cols:
+        col_srgb = spectra.html(col)
+        cols_rgb = [ c * 255.0 for c in col_srgb.clamped_rgb ]
+        cols_return.append('rgba({},{},{},{})'.format(*cols_rgb, alpha))
+    return cols_return
