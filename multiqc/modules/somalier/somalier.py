@@ -8,6 +8,7 @@ from math import isnan, isinf
 import csv
 import logging
 import random
+import spectra
 
 from multiqc.plots import bargraph, heatmap, scatter, table
 from multiqc.utils import mqc_colour
@@ -433,6 +434,8 @@ class MultiqcModule(BaseMultiqcModule):
 
     def somalier_relatedness_plot(self):
         data = dict()
+        blue_cutoff = 0.125
+        orange_cutoff = 0.5
         for s_name, d in self.somalier_data.items():
             if 'ibs0' in d and 'ibs2' in d:
                 data[s_name] = {
@@ -440,12 +443,12 @@ class MultiqcModule(BaseMultiqcModule):
                     'y': d['ibs2']
                 }
             if 'relatedness' in d:
-                if d['expected_relatedness'] < 0.125:
-                    data[s_name]['color'] = 'rgba(109, 164, 202, 0.9)'
-                elif d['expected_relatedness'] < 0.5:
-                    data[s_name]['color'] = 'rgba(250, 160, 81, 0.8)'
+                if d['expected_relatedness'] < blue_cutoff:
+                    data[s_name]['color'] = 'rgba(109, 164, 202, 0.6)'
+                elif d['expected_relatedness'] < orange_cutoff:
+                    data[s_name]['color'] = 'rgba(250, 160, 81, 0.6)'
                 else:
-                    data[s_name]['color'] = 'rgba(43, 159, 43, 0.8)'
+                    data[s_name]['color'] = 'rgba(43, 159, 43, 0.6)'
 
         if len(data) > 0:
             pconfig = {
@@ -453,6 +456,7 @@ class MultiqcModule(BaseMultiqcModule):
                 'title': 'Somalier: Sample Shared Allele Rates (IBS)',
                 'xlab': 'IBS0 (no alleles shared)',
                 'ylab': 'IBS2 (both alleles shared)',
+                'marker_line_width': 0
             }
 
             self.add_section (
@@ -461,10 +465,10 @@ class MultiqcModule(BaseMultiqcModule):
                 description = """
                 Shared allele rates between sample pairs.
                 Points are coloured by degree of expected-relatedness:
-                <span style="color: #6DA4CA;">less than 0.25</span>,
-                <span style="color: #FAA051;">0.25 - 0.5</span>,
-                <span style="color: #2B9F2B;">greather than 0.5</span>.
-                """,
+                &nbsp; <span style="color: #6DA4CA;">(&lt; {blue})</span>,
+                &nbsp; <span style="color: #FAA051;">(&ge; {blue}, &lt; {orange})</span>,
+                &nbsp; <span style="color: #2B9F2B;">(&ge; {orange})</span>.
+                """.format(blue=blue_cutoff, orange=orange_cutoff),
                 plot = scatter.plot(data, pconfig)
             )
 
@@ -630,7 +634,7 @@ class MultiqcModule(BaseMultiqcModule):
                 data[s_name] = {
                     'x': d['PC1'],
                     'y': d['PC2'],
-                    'color' : "rgba(0, 0, 0, 1)",
+                    'color' : "rgba(0, 0, 0, 0.6)",
                 }
 
         # add background
@@ -641,7 +645,14 @@ class MultiqcModule(BaseMultiqcModule):
             c_scale = mqc_colour.mqc_colour_scale(name="Paired").colours
             cats = self.somalier_ancestry_cats
             ancestry_colors = dict(zip(cats, c_scale[:len(cats)]))
-            default_background_color = 'rgb(255,192,203,1)'
+            default_background_color = 'rgb(255,192,203,0.3)'
+
+            # Make colours semi-transparent
+            ancestry_colors_alpha = 0.3
+            for key in ancestry_colors:
+                col_srgb = spectra.html(ancestry_colors[key])
+                cols_rgb = [ c * 255.0 for c in col_srgb.clamped_rgb ]
+                ancestry_colors[key] = 'rgba({},{},{},{})'.format(*cols_rgb, ancestry_colors_alpha)
 
             background = [
                 {
