@@ -24,7 +24,7 @@ class BaseMultiqcModule(object):
         # Custom options from user config that can overwrite base module values
         mod_cust_config = getattr(self, 'mod_cust_config', {})
         self.name = mod_cust_config.get('name', name)
-        self.anchor = report.save_htmlid( mod_cust_config.get('anchor', anchor) )
+        self.anchor = mod_cust_config.get('anchor', anchor)
         target = mod_cust_config.get('target', target)
         href = mod_cust_config.get('href', href)
         info = mod_cust_config.get('info', info)
@@ -32,6 +32,9 @@ class BaseMultiqcModule(object):
         extra = mod_cust_config.get('extra', extra)
         # Specific module level config to overwrite (e.g. config.bcftools, config.fastqc)
         config.update({anchor: mod_cust_config.get('custom_config', {})})
+
+        # Sanitise anchor ID and check for duplicates
+        self.anchor = report.save_htmlid(self.anchor)
 
         # See if we have a user comment in the config
         if self.anchor in config.section_comments:
@@ -148,6 +151,11 @@ class BaseMultiqcModule(object):
             else:
                 sl = len(self.sections) + 1
                 anchor = '{}-section-{}'.format(self.anchor, sl)
+
+        # Append custom module anchor to the section if set
+        mod_cust_config = getattr(self, 'mod_cust_config', {})
+        if 'anchor' in mod_cust_config:
+            anchor = '{}_{}'.format(mod_cust_config['anchor'], anchor)
 
         # Sanitise anchor ID and check for duplicates
         anchor = report.save_htmlid(anchor)
