@@ -340,11 +340,20 @@ class BaseMultiqcModule(object):
     def write_data_file(self, data, fn, sort_cols=False, data_format=None):
         """ Saves raw data to a dictionary for downstream use, then redirects
         to report.write_data_file() to create the file in the report directory """
+
+        # Append custom module anchor if set
+        mod_cust_config = getattr(self, 'mod_cust_config', {})
+        if 'anchor' in mod_cust_config:
+            fn = '{}_{}'.format(fn, mod_cust_config['anchor'])
+
+        # Generate a unique filename if the file already exists (running module multiple times)
         i = 1
         base_fn = fn
         while fn in report.saved_raw_data:
             fn = '{}_{}'.format(base_fn, i)
             i += 1
+
+        # Save the file
         report.saved_raw_data[fn] = data
         util_functions.write_data_file(data, fn, sort_cols, data_format)
 
