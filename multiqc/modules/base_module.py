@@ -336,6 +336,7 @@ class BaseMultiqcModule(object):
         base_fn = fn
         while fn in report.saved_raw_data:
             fn = '{}_{}'.format(base_fn, i)
+            i += 1
         report.saved_raw_data[fn] = data
         util_functions.write_data_file(data, fn, sort_cols, data_format)
 
