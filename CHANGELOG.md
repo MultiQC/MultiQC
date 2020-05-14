@@ -40,6 +40,7 @@ to break. If you haven't already, **you need to switch to Python 3 now**.
 * Importing and running `multiqc` in a script is now a _little_ Better
     * `multiqc.run` now returns the `report` and `config` as well as the exit code. This means that you can explore the MultiQC run time a little in the Python environment.
     * Much more refactoring is needed to make MultiQC as useful in Python scripts as it could be. Watch this space.
+* If a custom module `anchor` is set using `module_order` it is now prefixed to module _section_ IDs.
 
 #### New Modules:
 
