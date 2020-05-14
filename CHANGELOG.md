@@ -114,6 +114,7 @@ to break. If you haven't already, **you need to switch to Python 3 now**.
 * Heatmap plotting function is now compatible with MultiQC toolbox `hide` and `highlight` ([#1136](https://github.com/ewels/MultiQC/issues/1136))
 * Plot config `logswitch_active` now works as advertised
 * When running MultiQC modules several times, multiple data files are now created instead of overwriting one another ([#1175](https://github.com/ewels/MultiQC/issues/1175))
+* Fixed minor bug where tables could report negative numbers of columns in their header text
 
 ## [MultiQC v1.8](https://github.com/ewels/MultiQC/releases/tag/v1.8) - 2019-11-20
 
