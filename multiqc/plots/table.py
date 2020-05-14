@@ -233,7 +233,7 @@ def make_table (dt):
                 hidden_cols -= 1
             t_headers.pop(rid, None)
             t_modal_headers.pop(rid, None)
-            logger.debug('Removing header {} from general stats table, as no data'.format(k))
+            logger.debug('Removing header {} from table, as no data'.format(k))
 
     #
     # Put everything together

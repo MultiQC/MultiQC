@@ -147,12 +147,12 @@ class MultiqcModule(BaseMultiqcModule):
         # Write out to the report
         if len(self.bismark_data['alignment']) > 0:
             self.write_data_file(self.bismark_data['alignment'], 'multiqc_bismark_alignment', sort_cols=True)
-            log.info("Found {} bismark alignment reports".format(len(self.bismark_data['alignment'])))
+            log.info("Found {} alignment reports".format(len(self.bismark_data['alignment'])))
             self.bismark_alignment_chart()
 
         if len(self.bismark_data['dedup']) > 0:
             self.write_data_file(self.bismark_data['dedup'], 'multiqc_bismark_dedup', sort_cols=True)
-            log.info("Found {} bismark dedup reports".format(len(self.bismark_data['dedup'])))
+            log.info("Found {} dedup reports".format(len(self.bismark_data['dedup'])))
             self.bismark_dedup_chart()
 
         if len(self.bismark_data['alignment']) > 0:
@@ -160,7 +160,7 @@ class MultiqcModule(BaseMultiqcModule):
 
         if len(self.bismark_data['methextract']) > 0:
             self.write_data_file(self.bismark_data['methextract'], 'multiqc_bismark_methextract', sort_cols=True)
-            log.info("Found {} bismark methextract reports".format(len(self.bismark_data['methextract'])))
+            log.info("Found {} methextract reports".format(len(self.bismark_data['methextract'])))
             self.bismark_methlyation_chart()
 
         if len(self.bismark_mbias_data['meth']['CpG_R1']) > 0:

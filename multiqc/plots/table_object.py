@@ -219,7 +219,7 @@ class datatable (object):
         # Would be ignored for making the table anyway, but can affect whether a beeswarm plot is used
         for idx, d in enumerate(data):
             for s_name in list(d.keys()):
-                if not any ( h in data[idx][s_name].keys() for h in hs for hs in headers):
+                if not any ( h in data[idx][s_name].keys() for h in headers[idx]):
                     del(data[idx][s_name])
 
         # Assign to class
@@ -232,7 +232,7 @@ class datatable (object):
            Returns a list of triplets: (idx, key, header_info)
         """
         res = list()
-        #Scan through self.headers_in_order and just bolt on the actual header info
+        # Scan through self.headers_in_order and just bolt on the actual header info
         for bucket in sorted(self.headers_in_order):
             for idx, k in self.headers_in_order[bucket]:
                 res.append( (idx, k, self.headers[idx][k]) )
