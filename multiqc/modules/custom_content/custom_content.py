@@ -235,7 +235,7 @@ def custom_module_classes():
             parsed_modules.append( MultiqcModule(module_id, mod) )
             if mod['config'].get('plot_type') == 'html':
                 log.info("{}: Found 1 sample (html)".format(module_id))
-            if mod['config'].get('plot_type') == 'image':
+            elif mod['config'].get('plot_type') == 'image':
                 log.info("{}: Found 1 sample (image)".format(module_id))
             else:
                 log.info("{}: Found {} samples ({})".format(module_id, len(mod['data']), mod['config'].get('plot_type')))
