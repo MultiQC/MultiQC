@@ -7,8 +7,7 @@ from collections import OrderedDict
 import logging
 import json
 
-from multiqc.plots import bargraph
-from multiqc.plots import scatter
+from multiqc.plots import bargraph, scatter
 from multiqc.modules.base_module import BaseMultiqcModule
 
 # Initialise the logger
