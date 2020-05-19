@@ -149,12 +149,13 @@ class MultiqcModule(BaseMultiqcModule):
             'ymax': 1.2
         }
 
-        self.add_section(
-            name = 'Relative Coverage',
-            anchor = 'sexdeterrmine-rates',
-            description = 'The coverage on the X vs Y chromosome, relative to coverage on the Autosomes.',
-            plot = scatter.plot(data, config)
-        )
+        if len(data) > 0:
+            self.add_section(
+                name = 'Relative Coverage',
+                anchor = 'sexdeterrmine-rates',
+                description = 'The coverage on the X vs Y chromosome, relative to coverage on the Autosomes.',
+                plot = scatter.plot(data, config)
+            )
 
 
     def snp_count_barplot(self):
@@ -177,4 +178,3 @@ class MultiqcModule(BaseMultiqcModule):
             description = 'Total number of SNP positions. When supplied with a BED file, this includes only positions specified there.',
             plot = bargraph.plot(self.sexdet_data, cats, config)
         )
-
