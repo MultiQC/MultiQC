@@ -143,9 +143,7 @@ class MultiqcModule(BaseMultiqcModule):
             'id': 'sexdeterrmine-rate-plot',
             'title': 'SexDetErrmine: Relative coverage',
             'ylab': 'Relative Cov. on Y',
-            'xlab': 'Relative Cov. on X',
-            'xmax': 1.8,
-            'ymax': 1.2
+            'xlab': 'Relative Cov. on X'
         }
 
         if len(data) > 0:
