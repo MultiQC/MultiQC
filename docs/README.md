@@ -82,6 +82,7 @@ MultiQC Modules:
     Picard: modules/picard.md
     Preseq: modules/preseq.md
     Prokka: modules/prokka.md
+    PURPLE: modules/purple.md
     QoRTs: modules/qorts.md
     Qualimap: modules/qualimap.md
     Quast: modules/quast.md
