@@ -367,7 +367,7 @@ class MultiqcModule(BaseMultiqcModule):
             'hidden': True
         }
         headers['p_middling_ab'] = {
-            'title': 'Prop XXX sites',
+            'title': 'Allele balance < 0.2, > 0.8',
             'description': 'Proportion of sites with allele balance < 0.2 or > 0.8',
             'max': 1,
             'min': 0,
