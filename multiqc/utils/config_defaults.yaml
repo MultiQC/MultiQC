@@ -257,6 +257,7 @@ module_order:
     - purple:
         module_tag:
             - DNA
+            - cancer
     - conpair:
         module_tag:
             - WGS
