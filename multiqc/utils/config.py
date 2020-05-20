@@ -194,14 +194,14 @@ def load_sample_names(snames_file):
                     if num_cols is None:
                         num_cols = len(s)
                     elif num_cols != len(s):
-                        logger.warn("Inconsistent number of columns found in sample names file (skipping line): '{}'".format(l.strip()))
+                        logger.warning("Inconsistent number of columns found in sample names file (skipping line): '{}'".format(l.strip()))
                     # Parse the line
                     if len(sample_names_rename_buttons) == 0:
                         sample_names_rename_buttons = s
                     else:
                         sample_names_rename.append(s)
                 elif len(l.strip()) > 0:
-                    logger.warn("Sample names file line did not have columns (must use tabs): {}".format(l.strip()))
+                    logger.warning("Sample names file line did not have columns (must use tabs): {}".format(l.strip()))
     except (IOError, AttributeError) as e:
         logger.error("Error loading sample names file: {}".format(e))
     logger.debug("Found {} sample renaming patterns".format(len(sample_names_rename_buttons)))

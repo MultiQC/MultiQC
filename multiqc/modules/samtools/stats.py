@@ -165,7 +165,7 @@ class StatsReportMixin():
             if read_sum == expected_total:
                 bedgraph_data[sample_id] = data
             else:
-                log.warn("sum of mapped/unmapped reads not matching total, "
+                log.warning("sum of mapped/unmapped reads not matching total, "
                          "skipping samtools plot for: {}".format(sample_id))
         self.add_section (
             name = 'Percent Mapped',

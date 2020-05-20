@@ -86,11 +86,11 @@ class BaseMultiqcModule(object):
             sp_key = self.name
             logwarn = "Depreciation Warning: {} - Please use new style for find_log_files()".format(self.name)
             if len(report.files[self.name]) > 0:
-                logger.warn(logwarn)
+                logger.warning(logwarn)
             else:
                 logger.debug(logwarn)
         elif not isinstance(sp_key, str):
-            logger.warn("Did not understand find_log_files() search key")
+            logger.warning("Did not understand find_log_files() search key")
             return
 
         for f in report.files[sp_key]:

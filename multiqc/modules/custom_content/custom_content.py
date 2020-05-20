@@ -74,7 +74,7 @@ def custom_module_classes():
             continue
 
         # We should have had something by now
-        log.warn("Found section '{}' in config for under custom_data, but no data or search patterns.".format(c_id))
+        log.warning("Found section '{}' in config for under custom_data, but no data or search patterns.".format(c_id))
 
     # Now go through each of the file search patterns
     bm = BaseMultiqcModule()
@@ -330,7 +330,7 @@ def _find_file_header(f):
         hconfig = yaml.safe_load("\n".join(hlines))
         assert(isinstance(hconfig, dict))
     except yaml.YAMLError as e:
-        log.warn("Could not parse comment file header for MultiQC custom content: {}".format(f['fn']))
+        log.warning("Could not parse comment file header for MultiQC custom content: {}".format(f['fn']))
         log.debug(e)
     except AssertionError:
         log.debug("Custom Content comment file header looked wrong: {}".format(hconfig))
@@ -410,7 +410,7 @@ def _parse_txt(f, conf):
             if ncols is None:
                 ncols = len(sections)
             elif ncols != len(sections):
-                log.warn("Inconsistent number of columns found in {}! Skipping..".format(f['fn']))
+                log.warning("Inconsistent number of columns found in {}! Skipping..".format(f['fn']))
                 return (None, conf)
 
     # Convert values to floats if we can

@@ -50,10 +50,10 @@ class MultiqcModule(BaseMultiqcModule):
         try:
             parsed_json = json.load(f['f'])
             if 'metrics' not in parsed_json and 'metadata' not in parsed_json:
-                log.warn("No MTNUCRATIO JSON: '{}'".format(f['fn']))
+                log.warning("No MTNUCRATIO JSON: '{}'".format(f['fn']))
                 return None
         except JSONDecodeError as e:
-            log.warn("Could not parse mtnucratio JSON: '{}'".format(f['fn']))
+            log.warning("Could not parse mtnucratio JSON: '{}'".format(f['fn']))
             log.debug(e)
             return None
 

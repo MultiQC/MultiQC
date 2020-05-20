@@ -94,7 +94,7 @@ class MultiqcModule(BaseMultiqcModule):
         if reads_processed and nohits_pct:
             parsed_data['No hits']['counts'] = {'one_hit_one_library': int((nohits_pct/100.0) * float(reads_processed)) }
         else:
-            log.warn("Couldn't find number of reads with no hits for '{}'".format(f['s_name']))
+            log.warning("Couldn't find number of reads with no hits for '{}'".format(f['s_name']))
 
         self.num_orgs = max(len(parsed_data), self.num_orgs)
         return parsed_data

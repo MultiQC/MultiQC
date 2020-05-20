@@ -141,7 +141,7 @@ class MultiqcModule(BaseMultiqcModule):
         try:
             parsed_json = json.load(f['f'])
         except:
-            log.warn("Could not parse fastp JSON: '{}'".format(f['fn']))
+            log.warning("Could not parse fastp JSON: '{}'".format(f['fn']))
             return None
 
         # Fetch a sample name from the command
@@ -151,7 +151,7 @@ class MultiqcModule(BaseMultiqcModule):
             if v == '-i':
                 s_name = self.clean_s_name(cmd[i+1], f['root'])
         if s_name == 'fastp':
-            log.warn('Could not parse sample name from fastp command: {}'.format(f['fn']))
+            log.warning('Could not parse sample name from fastp command: {}'.format(f['fn']))
 
         self.add_data_source(f, s_name)
         self.fastp_data[s_name] = {}

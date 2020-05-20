@@ -323,7 +323,7 @@ def run(
             response = urlopen('http://multiqc.info/version.php?v={}'.format(config.short_version), timeout=5)
             remote_version = response.read().decode('utf-8').strip()
             if version.StrictVersion(re.sub('[^0-9\.]','', remote_version)) > version.StrictVersion(re.sub('[^0-9\.]','', config.short_version)):
-                logger.warn('MultiQC Version {} now available!'.format(remote_version))
+                logger.warning('MultiQC Version {} now available!'.format(remote_version))
             else:
                 logger.debug('Latest MultiQC version is {}'.format(remote_version))
         except Exception as e:
@@ -402,8 +402,8 @@ def run(
 
     # Throw a warning if we are running on Python 2
     if sys.version_info[0] < 3:
-        logger.warn("You are running MultiQC with Python {}.{}.{}".format(sys.version_info[0], sys.version_info[1], sys.version_info[2]))
-        logger.warn("Please upgrade! MultiQC will soon drop support for Python < 3.6")
+        logger.warning("You are running MultiQC with Python {}.{}.{}".format(sys.version_info[0], sys.version_info[1], sys.version_info[2]))
+        logger.warning("Please upgrade! MultiQC will soon drop support for Python < 3.6")
     else:
         logger.debug("Running Python {}".format(sys.version.replace("\n", ' ')))
 
@@ -608,7 +608,7 @@ def run(
 
     # Did we find anything?
     if len(report.modules_output) == 0:
-        logger.warn("No analysis results found. Cleaning up..")
+        logger.warning("No analysis results found. Cleaning up..")
         shutil.rmtree(tmp_dir)
         logger.info("MultiQC complete")
         # Exit with an error code if a module broke
