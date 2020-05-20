@@ -535,7 +535,7 @@ class MultiqcModule(BaseMultiqcModule):
                 ('all_cpg', 'a_c'), ('q40_cpg', 'q_c'),
                 ('all_cpg_botgc', 'a_c_b'), ('q40_cpg_botgc', 'q_c_b'),
                 ('all_cpg_topgc', 'a_c_t'), ('q40_cpg_topgc', 'q_c_t')]
-                   
+
         pd = OrderedDict()
         for sid, dd in self.mdata['qc_cv'].items():
             pd[sid] = OrderedDict()
@@ -853,7 +853,7 @@ class MultiqcModule(BaseMultiqcModule):
         Returns:
             No returns, generates Retenion vs. Base Position in Read chart
         '''
-        
+
         pd = [dict([(sid, dd['1']) for sid, dd in self.mdata['cpg_retention_readpos'].items() if 'no_data_available' not in dd.keys()]),
               dict([(sid, dd['2']) for sid, dd in self.mdata['cpg_retention_readpos'].items() if 'no_data_available' not in dd.keys()]),
               dict([(sid, dd['1']) for sid, dd in self.mdata['cph_retention_readpos'].items() if 'no_data_available' not in dd.keys()]),

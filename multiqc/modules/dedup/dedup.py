@@ -8,6 +8,7 @@ import logging
 import json
 
 from multiqc.plots import bargraph
+from multiqc.utils import config
 from multiqc.modules.base_module import BaseMultiqcModule
 
 # Initialise the logger
@@ -27,7 +28,10 @@ class MultiqcModule(BaseMultiqcModule):
         self.dedup_data = dict()
 
         for f in self.find_log_files('dedup',filehandles=True):
-            self.parseJSON(f)
+            try:
+                self.parseJSON(f)
+            except KeyError:
+                logging.warn("Error loading file {}".format(f['fn']))
 
         # Filter to strip out ignored sample names
         self.dedup_data = self.ignore_samples(self.dedup_data)
@@ -72,12 +76,26 @@ class MultiqcModule(BaseMultiqcModule):
         for k in metrics_dict:
             metrics_dict[k] = float(metrics_dict[k])
 
-        # Compute not removed from given values
-        metrics_dict['not_removed'] = (
-            metrics_dict['total_reads']
-                - metrics_dict['reverse_removed']
-                - metrics_dict['forward_removed']
-                - metrics_dict['merged_removed']
+        # Compute (not) removed _mapped_ reads from given values as dedup only affects mapped reads
+        # Keep legacy behaviour in case "mapped_reads" cannot be found for <= v0.12.6
+        if 'mapped_reads' in metrics_dict:
+            metrics_dict['mapped_after_dedup'] = (
+                metrics_dict['mapped_reads']
+                    - metrics_dict['reverse_removed']
+                    - metrics_dict['forward_removed']
+                    - metrics_dict['merged_removed']
+            )
+        else:
+            metrics_dict['not_removed'] = (
+                metrics_dict['total_reads']
+                    - metrics_dict['reverse_removed']
+                    - metrics_dict['forward_removed']
+                    - metrics_dict['merged_removed']
+            )
+        metrics_dict['reads_removed'] = (
+            metrics_dict['reverse_removed']
+            + metrics_dict['forward_removed']
+            + metrics_dict['merged_removed']
         )
 
         # Add all in the main data_table
@@ -87,6 +105,10 @@ class MultiqcModule(BaseMultiqcModule):
     def dedup_general_stats_table(self):
         """ Take the parsed stats from the DeDup report and add it to the
         basic stats table at the top of the report """
+
+        ancient_read_count_prefix = getattr(config, 'ancient_read_count_prefix', 'K')
+        ancient_read_count_desc = getattr(config, 'ancient_read_count_desc', 'thousands')
+        ancient_read_count_multiplier = getattr(config, 'ancient_read_count_multiplier',  0.001)
 
         headers = OrderedDict()
         headers['dup_rate'] = {
@@ -107,6 +129,21 @@ class MultiqcModule(BaseMultiqcModule):
             'scale': 'OrRd',
             'format': '{:,.2f}',
         }
+        headers['reads_removed'] = {
+            'title': '{} Reads Removed'.format(ancient_read_count_prefix),
+            'description': 'Non-unique reads removed after deduplication ({})'.format(ancient_read_count_desc),
+            'modify': lambda x: x * ancient_read_count_multiplier,
+            'shared_key': 'read_count',
+            'min': 0,
+            'hidden': True
+        }
+        headers['mapped_after_dedup'] = {
+            'title': '{} Post-DeDup Mapped Reads'.format(ancient_read_count_prefix),
+            'description': 'Unique mapping reads after deduplication ({})'.format(ancient_read_count_desc),
+            'modify': lambda x: x * ancient_read_count_multiplier,
+            'shared_key': 'read_count',
+            'min': 0,
+        }
         self.general_stats_addcols(self.dedup_data, headers)
 
     def dedup_alignment_plot (self):
@@ -114,18 +151,18 @@ class MultiqcModule(BaseMultiqcModule):
 
         # Specify the order of the different possible categories
         keys = OrderedDict()
+        keys['mapped_after_dedup'] = { 'name': 'Unique Retained' }
         keys['not_removed'] = { 'name': 'Not Removed' }
         keys['reverse_removed'] = { 'name': 'Reverse Removed' }
-        keys['forward_removed'] =   { 'name': 'Forward Removed' }
-        keys['merged_removed'] =   { 'name': 'Merged Removed' }
+        keys['forward_removed'] = { 'name': 'Forward Removed' }
+        keys['merged_removed'] = { 'name': 'Merged Removed' }
 
         # Config for the plot
         config = {
             'id': 'dedup_rates',
             'title': 'DeDup: Deduplicated Reads',
             'ylab': '# Reads',
-            'cpswitch_counts_label': 'Number of Reads',
-            'hide_zero_cats': False
+            'cpswitch_counts_label': 'Number of Reads'
         }
 
         return bargraph.plot(self.dedup_data, keys, config)

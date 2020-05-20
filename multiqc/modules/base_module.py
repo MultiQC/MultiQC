@@ -24,7 +24,7 @@ class BaseMultiqcModule(object):
         # Custom options from user config that can overwrite base module values
         mod_cust_config = getattr(self, 'mod_cust_config', {})
         self.name = mod_cust_config.get('name', name)
-        self.anchor = report.save_htmlid( mod_cust_config.get('anchor', anchor) )
+        self.anchor = mod_cust_config.get('anchor', anchor)
         target = mod_cust_config.get('target', target)
         href = mod_cust_config.get('href', href)
         info = mod_cust_config.get('info', info)
@@ -32,6 +32,9 @@ class BaseMultiqcModule(object):
         extra = mod_cust_config.get('extra', extra)
         # Specific module level config to overwrite (e.g. config.bcftools, config.fastqc)
         config.update({anchor: mod_cust_config.get('custom_config', {})})
+
+        # Sanitise anchor ID and check for duplicates
+        self.anchor = report.save_htmlid(self.anchor)
 
         # See if we have a user comment in the config
         if self.anchor in config.section_comments:
@@ -149,13 +152,18 @@ class BaseMultiqcModule(object):
                 sl = len(self.sections) + 1
                 anchor = '{}-section-{}'.format(self.anchor, sl)
 
+        # Append custom module anchor to the section if set
+        mod_cust_config = getattr(self, 'mod_cust_config', {})
+        if 'anchor' in mod_cust_config:
+            anchor = '{}_{}'.format(mod_cust_config['anchor'], anchor)
+
+        # Sanitise anchor ID and check for duplicates
+        anchor = report.save_htmlid(anchor)
+
         # Skip if user has a config to remove this module section
         if anchor in config.remove_sections:
             logger.debug("Skipping section '{}' because specified in user config".format(anchor))
             return
-
-        # Sanitise anchor ID and check for duplicates
-        anchor = report.save_htmlid(anchor)
 
         # See if we have a user comment in the config
         if anchor in config.section_comments:
@@ -332,6 +340,20 @@ class BaseMultiqcModule(object):
     def write_data_file(self, data, fn, sort_cols=False, data_format=None):
         """ Saves raw data to a dictionary for downstream use, then redirects
         to report.write_data_file() to create the file in the report directory """
+
+        # Append custom module anchor if set
+        mod_cust_config = getattr(self, 'mod_cust_config', {})
+        if 'anchor' in mod_cust_config:
+            fn = '{}_{}'.format(fn, mod_cust_config['anchor'])
+
+        # Generate a unique filename if the file already exists (running module multiple times)
+        i = 1
+        base_fn = fn
+        while fn in report.saved_raw_data:
+            fn = '{}_{}'.format(base_fn, i)
+            i += 1
+
+        # Save the file
         report.saved_raw_data[fn] = data
         util_functions.write_data_file(data, fn, sort_cols, data_format)
 

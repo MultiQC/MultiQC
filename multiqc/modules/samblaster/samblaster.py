@@ -69,7 +69,12 @@ class MultiqcModule(BaseMultiqcModule):
         """ Go through log file looking for samblaster output.
         If the
         Grab the name from the RG tag of the preceding bwa command """
-        dups_regex = "samblaster: (Removed|Marked) (\d+) of (\d+) \((\d+.\d+)%\) read ids as duplicates"
+
+        # Should capture the following:
+        # samblaster: Marked     1134898 of   43791982 (2.592%) total read ids as duplicates using 753336k \
+        # memory in 1M1S(60.884S) CPU seconds and 3M53S(233S) wall time.
+        dups_regex = r"samblaster: (Removed|Marked)\s+(\d+)\s+of\s+(\d+) \((\d+.\d+)%\)\s*(total)?\s*read ids as duplicates"
+
         input_file_regex = "samblaster: Opening (\S+) for read."
         rgtag_name_regex = "\\\\tID:(\S*?)\\\\t"
         data = {}
