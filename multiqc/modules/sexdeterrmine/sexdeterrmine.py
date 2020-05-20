@@ -150,9 +150,11 @@ class MultiqcModule(BaseMultiqcModule):
             self.add_section(
                 name = 'Relative Coverage',
                 anchor = 'sexdeterrmine-rates',
-                description = '''The coverage on the X vs Y chromosome, relative to coverage on the Autosomes. 
-                                    Males are expected to have a roughly equal X- and Y-rates, while females are expected to have a Y-rate of 0 and an X-rate of 1.
-                                    Placement between the two clusters can be indicative of contamination, while placement with higher than expected X- and/or Y-rates can be indicative of sex chromosome aneuploidy.''',
+                description = 'The coverage on the X vs Y chromosome, relative to coverage on the Autosomes.',
+                helptext = '''
+                Males are expected to have a roughly equal X- and Y-rates, while females are expected to have a Y-rate of 0 and an X-rate of 1.
+                Placement between the two clusters can be indicative of contamination, while placement with higher than expected X- and/or Y-rates can be indicative of sex chromosome aneuploidy.
+                ''',
                 plot = scatter.plot(data, config)
             )
 
