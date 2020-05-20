@@ -194,7 +194,7 @@ def make_table (dt):
                                     if 'lt' in cmp and float(cmp['lt']) > float(val):
                                         cmatches[ftype] = True
                                 except:
-                                    logger.warn("Not able to apply table conditional formatting to '{}' ({})".format(val, cmp))
+                                    logger.warning("Not able to apply table conditional formatting to '{}' ({})".format(val, cmp))
                 # Apply HTML in order of config keys
                 bgcol = None
                 for cfc in config.table_cond_formatting_colours:
