@@ -87,11 +87,11 @@ def parse_reports(self,
                     # Skip - No reads
                     try:
                         if parsed_data['READ_PAIRS_EXAMINED'] == 0 and parsed_data['UNPAIRED_READS_EXAMINED'] == 0:
-                            log.warn("Skipping MarkDuplicates sample '{}' as log contained no reads".format(s_name))
+                            log.warning("Skipping MarkDuplicates sample '{}' as log contained no reads".format(s_name))
                             continue
                     # Skip - Missing essential fields
                     except KeyError:
-                        log.warn("Skipping MarkDuplicates sample '{}' as missing essential fields".format(s_name))
+                        log.warning("Skipping MarkDuplicates sample '{}' as missing essential fields".format(s_name))
                         continue
 
                     # Recompute PERCENT_DUPLICATION and ESTIMATED_LIBRARY_SIZE
@@ -271,7 +271,7 @@ def estimateLibrarySize(d):
         M = 100.0;
 
         if uniqueReadPairs >= readPairs or f(m * uniqueReadPairs, uniqueReadPairs, readPairs) < 0:
-            logging.warn("Picard recalculation of ESTIMATED_LIBRARY_SIZE skipped - metrics look wrong")
+            logging.warning("Picard recalculation of ESTIMATED_LIBRARY_SIZE skipped - metrics look wrong")
             return None
 
         # find value of M, large enough to act as other side for bisection method

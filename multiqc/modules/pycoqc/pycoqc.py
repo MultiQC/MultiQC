@@ -54,7 +54,7 @@ class MultiqcModule(BaseMultiqcModule):
         try:
             return yaml.load(f, Loader=yaml.FullLoader)
         except Exception as e:
-            log.warn("Could not parse YAML for '{}': \n  {}".format(f, e))
+            log.warning("Could not parse YAML for '{}': \n  {}".format(f, e))
             return None
 
     def parse_data(self):

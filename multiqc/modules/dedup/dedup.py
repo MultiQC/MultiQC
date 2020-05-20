@@ -31,7 +31,7 @@ class MultiqcModule(BaseMultiqcModule):
             try:
                 self.parseJSON(f)
             except KeyError:
-                logging.warn("Error loading file {}".format(f['fn']))
+                logging.warning("Error loading file {}".format(f['fn']))
 
         # Filter to strip out ignored sample names
         self.dedup_data = self.ignore_samples(self.dedup_data)

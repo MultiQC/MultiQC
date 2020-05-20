@@ -54,7 +54,7 @@ class MultiqcModule(BaseMultiqcModule):
             data = json.load(f['f'])
         except Exception as e:
             log.debug(e)
-            log.warn("Could not parse SexDeterrmine JSON: '{}'".format(f['fn']))
+            log.warning("Could not parse SexDeterrmine JSON: '{}'".format(f['fn']))
             return
 
         # Parse JSON data to a dict

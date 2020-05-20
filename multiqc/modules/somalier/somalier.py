@@ -134,7 +134,7 @@ class MultiqcModule(BaseMultiqcModule):
                 try:
                     s_name_idx = [headers.index("sample_a"), headers.index("sample_b")]
                 except ValueError:
-                    log.warn("Could not find sample name in somalier output: {}".format(f['fn']))
+                    log.warning("Could not find sample name in somalier output: {}".format(f['fn']))
                     return None
             else:
                 s_name = '*'.join([s[idx] for idx in s_name_idx]) # not safe to hard code, but works
@@ -227,7 +227,7 @@ class MultiqcModule(BaseMultiqcModule):
                     except KeyError:
                         self.somalier_data[s_name] = parsed_data[s_name]
         else:
-            log.warn("Detected empty file: {}".format(f['fn']))
+            log.warning("Detected empty file: {}".format(f['fn']))
 
     def somalier_general_stats_table(self):
         """Add data to general stats table

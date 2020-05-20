@@ -103,7 +103,7 @@ class MultiqcModule(BaseMultiqcModule):
             parsed_json = json.load(f['f'])
         except Exception as e:
             print(e)
-            log.warn("Could not parse DamageProfiler JSON: '{}'".format(f['fn']))
+            log.warning("Could not parse DamageProfiler JSON: '{}'".format(f['fn']))
             return None
 
         #Get sample name from JSON first
