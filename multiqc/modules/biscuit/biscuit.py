@@ -408,6 +408,7 @@ class MultiqcModule(BaseMultiqcModule):
             'smooth_points': 1000, # limit number of points / smooth data
             'tt_label': '<strong>IS{point.x}:</strong> {point.y:.2f}',
             'xlab': 'Insert Size',
+            'ylab': '% of Mapped Reads',
             'data_labels': [{'name': 'Percent of Reads', 'ylab':'% of Mapped Reads'},
                             {'name': 'Millions of Reads', 'ylab':'Millions of Mapped Reads'}]
         }
@@ -729,6 +730,7 @@ class MultiqcModule(BaseMultiqcModule):
             'xLabelFormat': '{value}X',
             'tt_label': '<strong>{point.x}X:</strong> {point.y:.2f}M',
             'xlab': 'Coverage',
+            'ylab': 'Millions of Bases',
             'data_labels': [{'name': 'All Bases', 'ylab': 'Millions of Bases'},
                             {'name': 'Q40 Bases', 'ylab': 'Millions of Bases'},
                             {'name': 'All CpGs', 'ylab': 'Millions of CpGs'},
@@ -863,6 +865,7 @@ class MultiqcModule(BaseMultiqcModule):
             'id': 'biscuit_retention_cytosine',
             'title': 'BISCUIT: Retention vs. Base Position in Read',
             'xlab': 'Position in Read',
+            'ylab': 'CpG Retention Rate (%)',
             'ymin': 0,
             'ymax': 100,
             'yMinRange': 0,
