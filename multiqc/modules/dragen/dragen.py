@@ -1,5 +1,7 @@
 from __future__ import absolute_import
 
+import os
+
 from .mapping_metrics import DragenMappingMetics
 from .fragment_length import DragenFragmentLength
 from .ploidy_estimation_metrics import DragenPloidyEstimationMetrics
@@ -7,13 +9,15 @@ from .vc_metrics import DragenVCMetrics
 from .coverage_per_contig import DragenCoveragePerContig
 from .coverage_metrics import DragenCoverageMetrics
 from .coverage_hist import DragenCoverageHist
+from .fastqc_metrics import DragenFastQcMetrics
 
 import logging
 log = logging.getLogger(__name__)
 
 
 class MultiqcModule(DragenMappingMetics, DragenFragmentLength, DragenPloidyEstimationMetrics,
-                    DragenVCMetrics, DragenCoveragePerContig, DragenCoverageMetrics, DragenCoverageHist):
+                    DragenVCMetrics, DragenCoveragePerContig, DragenCoverageMetrics, 
+                    DragenCoverageHist, DragenFastQcMetrics):
     """ DRAGEN provides a number of differrent pipelines and outputs, including base calling, DNA and RNA alignment,
     post-alignment processing and variant calling, covering virtually all stages of typical NGS data processing.
     However, it can be treated as a fast aligner with additional features on top, as users will unlikely use any
@@ -37,6 +41,10 @@ class MultiqcModule(DragenMappingMetics, DragenFragmentLength, DragenPloidyEstim
             info=(" is a Bio-IT Platform that provides ultra-rapid secondary analysis of sequencing data"
                   " using field-programmable gate array technology (FPGA)."))
 
+        self.css = { 'assets/css/multiqc_fastqc.css' : os.path.join(os.path.dirname(__file__), '..', 'fastqc', 'assets', 'css', 'multiqc_fastqc.css') }
+        self.js = { 'assets/js/multiqc_fastqc.js' : os.path.join(os.path.dirname(__file__), 'assets', 'js', 'multiqc_fastqc.js') }
+        self.intro += '<script type="application/json" class="fastqc_passfails">["DRAGEN", {"per_base_sequence_content": {"TEST": "pass"}}]</script>'
+
         samples_found = set()
         samples_found |= self.add_vc_metrics()
         # <output prefix>.vc_metrics.csv                   - a dedicated table and the total number of Variants into the general stats table
@@ -44,15 +52,15 @@ class MultiqcModule(DragenMappingMetics, DragenFragmentLength, DragenPloidyEstim
         samples_found |= self.add_ploidy_estimation_metrics()
         # <output prefix>.ploidy_estimation_metrics.csv    - add just Ploidy estimation into gen stats
 
-        samples_found |= self.add_coverage_hist()
+        #samples_found |= self.add_coverage_hist()
         # <output prefix>.wgs_fine_hist_normal.csv         - coverage distribution and cumulative coverage plots
         # <output prefix>.wgs_fine_hist_tumor.csv          - same
 
-        samples_found |= self.add_coverage_metrics()
+        #samples_found |= self.add_coverage_metrics()
         # <output prefix>.wgs_coverage_metrics_normal.csv  - general stats table and a dedicated table
         # <output prefix>.wgs_coverage_metrics_tumor.csv   - same
 
-        samples_found |= self.add_coverage_per_contig()
+        #samples_found |= self.add_coverage_per_contig()
         # <output prefix>.wgs_contig_mean_cov_normal.csv   - a histogram like in mosdepth, with each chrom as a category on X axis, plus a category for autosomal chromosomes average
         # <output prefix>.wgs_contig_mean_cov_tumor.csv    - same
 
@@ -61,6 +69,9 @@ class MultiqcModule(DragenMappingMetics, DragenFragmentLength, DragenPloidyEstim
 
         samples_found |= self.add_fragment_length_hist()
         # <output prefix>.fragment_length_hist.csv         - a histogram plot
+
+        samples_found |= self.add_fastqc_metrics()
+        # <output prefix>.fastqc_metrics.csv               - various plots to replicate output from Babraham's FastQC
 
         if len(samples_found) == 0:
             raise UserWarning
