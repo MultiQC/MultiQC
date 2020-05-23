@@ -66,16 +66,56 @@ class MultiqcModule(BaseMultiqcModule):
             'read_avg_retention_rate': {}
         }
 
+        # NB: Cleaning filenames like this means that some MultiQC functionality, like -s / --fullnames doesn't work.
+        # However, because some of the parsing relies on cleaned filenames, the above options break the
+        # module if we use the centralised MultiQC functions.
+        file_suffixes = [
+            # General statistics
+            '.txt',
+            '_mapq_table',
+            '_strand_table',
+            '_isize_table',
+            # Duplicate reporting
+            '_dup_report',
+            # Uniformity
+            '_cv_table',
+            # Base coverage
+            '_covdist_all_base_botgc_table',
+            '_covdist_all_base_table',
+            '_covdist_all_base_topgc_table',
+            '_covdist_q40_base_botgc_table',
+            '_covdist_q40_base_table',
+            '_covdist_q40_base_topgc_table',
+            # CpG coverage
+            '_covdist_all_cpg_botgc_table',
+            '_covdist_all_cpg_table',
+            '_covdist_all_cpg_topgc_table',
+            '_covdist_q40_cpg_botgc_table',
+            '_covdist_q40_cpg_table',
+            '_covdist_q40_cpg_topgc_table',
+            # Cytosine retention
+            '_CpGRetentionByReadPos',
+            '_CpHRetentionByReadPos',
+            '_totalBaseConversionRate',
+            '_totalReadConversionRate'
+        ]
+
         # Find and parse alignment reports
         for k in self.mdata:
             for f in self.find_log_files('biscuit/{}'.format(k)):
+
+                s_name = f['fn']
+                for suffix in file_suffixes:
+                    s_name = s_name.replace(suffix, '')
+                s_name = self.clean_s_name(s_name, f['root'])
+
                 # Add source file to multiqc_sources.txt
-                self.add_data_source(f, section=k)
+                self.add_data_source(f, s_name=s_name, section=k)
 
-                if f['s_name'] in self.mdata[k]:
-                    log.debug('Duplicate sample name found in {}! Overwriting: {}'.format(f['fn'], f['s_name']))
+                if s_name in self.mdata[k]:
+                    log.debug('Duplicate sample name found in {}! Overwriting: {}'.format(f['fn'], s_name))
 
-                self.mdata[k][f['s_name']] = getattr(self, 'parse_logs_{}'.format(k))(f['f'], f['fn'])
+                self.mdata[k][s_name] = getattr(self, 'parse_logs_{}'.format(k))(f['f'], f['fn'])
 
         for k in self.mdata:
             self.mdata[k] = self.ignore_samples(self.mdata[k])
@@ -516,7 +556,8 @@ class MultiqcModule(BaseMultiqcModule):
         pconfig = {
             'id': 'biscuit_dup_report',
             'table_title': 'BISCUIT: Duplicate Rates',
-            'sortRows': False
+            'sortRows': False,
+            'save_file': True
         }
 
         if len(pd) > 0:
@@ -1035,7 +1076,8 @@ class MultiqcModule(BaseMultiqcModule):
         pconfig = {
             'id': 'biscuit_retention',
             'table_title': 'BISCUIT: Cytosine Retention',
-            'sortRows': False
+            'sortRows': False,
+            'save_file': True
         }
 
         self.add_section(
