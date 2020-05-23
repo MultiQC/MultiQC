@@ -193,6 +193,33 @@ fn_clean_exts:
     - '.selfSM'
     - '.extendedFrags'
     - '_SummaryStatistics'
+    # BISCUIT - General statistics
+    - '_mapq_table'
+    - '_strand_table'
+    - '_isize_table'
+    # BISCUIT - Duplicate reporting
+    - '_dup_report'
+    # BISCUIT - Uniformity
+    - '_cv_table'
+    # BISCUIT - Base coverage
+    - '_covdist_all_base_botgc_table'
+    - '_covdist_all_base_table'
+    - '_covdist_all_base_topgc_table'
+    - '_covdist_q40_base_botgc_table'
+    - '_covdist_q40_base_table'
+    - '_covdist_q40_base_topgc_table'
+    # BISCUIT - CpG coverage
+    - '_covdist_all_cpg_botgc_table'
+    - '_covdist_all_cpg_table'
+    - '_covdist_all_cpg_topgc_table'
+    - '_covdist_q40_cpg_botgc_table'
+    - '_covdist_q40_cpg_table'
+    - '_covdist_q40_cpg_topgc_table'
+    # BISCUIT - Cytosine retention
+    - '_CpGRetentionByReadPos'
+    - '_CpHRetentionByReadPos'
+    - '_totalBaseConversionRate'
+    - '_totalReadConversionRate'
 
 # These are removed after the above, only if sample names
 # start or end with this string. Again, removed in order.
