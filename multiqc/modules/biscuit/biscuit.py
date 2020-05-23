@@ -107,19 +107,19 @@ class MultiqcModule(BaseMultiqcModule):
         pd = {}
 
         # Calculate % aligned
-        for sid, dd in self.mdata['align_mapq'].items():
+        for s_name, dd in self.mdata['align_mapq'].items():
             if len(dd) > 0:
                 total = sum([int(_) for _ in dd.values()])
-                pd[sid] = {'aligned': 100.0 * float(total - int(dd['unmapped'])) / total}
+                pd[s_name] = {'aligned': 100.0 * float(total - int(dd['unmapped'])) / total}
 
         # Caclulate % duplicated
-        for sid, dd in self.mdata['dup_report'].items():
-            if sid not in pd:
-                pd[sid] = {}
+        for s_name, dd in self.mdata['dup_report'].items():
+            if s_name not in pd:
+                pd[s_name] = {}
             if 'all' in dd and dd['all'] != -1:
-                pd[sid]['dup_all'] = dd['all']
+                pd[s_name]['dup_all'] = dd['all']
             if 'q40' in dd and dd['q40'] != -1:
-                pd[sid]['dup_q40'] = dd['q40']
+                pd[s_name]['dup_q40'] = dd['q40']
 
         pheader = OrderedDict()
         pheader['dup_q40'] = {
@@ -325,9 +325,11 @@ class MultiqcModule(BaseMultiqcModule):
 
         pd1 = {}
         pd2 = {}
-        for sid, dd in self.mdata['align_strand'].items():
-            pd1[sid] = dd['read1']
-            pd2[sid] = dd['read2']
+        for s_name, dd in self.mdata['align_strand'].items():
+            if len(dd['read1']) > 0:
+                pd1[s_name] = dd['read1']
+            if len(dd['read2']) > 0:
+                pd2[s_name] = dd['read2']
 
         pheader = OrderedDict([
             ('ff', {'color': '#F53855', 'name': 'ff: Waston-Aligned, Waston-Bisulfite Conversion'}),
@@ -349,20 +351,21 @@ class MultiqcModule(BaseMultiqcModule):
 
         # TODO: When PBAT mode is implemented, add comment in help text about
         #       how to interpret PBAT mode results
-        self.add_section(
-            name = 'Mapping Strand Distribution',
-            anchor = 'biscuit-strands',
-            description = 'For primary alignments, shows the number of reads mapped to each strand.',
-            helptext = '''
-                Most bisulfite libraries typically map Read 1 to the parent
-                strand (`ff`, `rr`) and Read 2 to the daughter / synthesized
-                strand (`fr`, `rf`).
+        if max(len(pd1), len(pd2)) > 0:
+            self.add_section(
+                name = 'Mapping Strand Distribution',
+                anchor = 'biscuit-strands',
+                description = 'For primary alignments, shows the number of reads mapped to each strand.',
+                helptext = '''
+                    Most bisulfite libraries typically map Read 1 to the parent
+                    strand (`ff`, `rr`) and Read 2 to the daughter / synthesized
+                    strand (`fr`, `rf`).
 
-                Note that PBAT and many single-cell / low input
-                libraries may not follow this assumption.
-            ''',
-            plot = bargraph.plot([pd1, pd2], [pheader, pheader], pconfig)
-        )
+                    Note that PBAT and many single-cell / low input
+                    libraries may not follow this assumption.
+                ''',
+                plot = bargraph.plot([pd1, pd2], [pheader, pheader], pconfig)
+            )
 
 
     ########################################
@@ -403,10 +406,10 @@ class MultiqcModule(BaseMultiqcModule):
 
         pd_p = {}
         pd_r = {}
-        for sid, dd in self.mdata['align_isize'].items():
+        for s_name, dd in self.mdata['align_isize'].items():
             if 'no_data_available' not in dd.keys():
-                pd_p[sid] = dd['percent']
-                pd_r[sid] = { ins: cnt * config.read_count_multiplier for ins, cnt in dd['readcnt'].items() }
+                pd_p[s_name] = dd['percent']
+                pd_r[s_name] = { ins: cnt * config.read_count_multiplier for ins, cnt in dd['readcnt'].items() }
 
         pconfig = {
             'id': 'biscuit_isize',
@@ -492,7 +495,7 @@ class MultiqcModule(BaseMultiqcModule):
             No returns, generates Duplicate Rates chart
         '''
 
-        pd = dict([(sid, dd) for sid, dd in self.mdata['dup_report'].items() if dd['all'] != -1])
+        pd = dict([(s_name, dd) for s_name, dd in self.mdata['dup_report'].items() if dd['all'] != -1])
 
         pheader = OrderedDict()
         pheader['all'] = {
@@ -513,20 +516,20 @@ class MultiqcModule(BaseMultiqcModule):
         pconfig = {
             'id': 'biscuit_dup_report',
             'table_title': 'BISCUIT: Duplicate Rates',
-            'save_file': True,
             'sortRows': False
         }
 
-        self.add_section(
-            name = 'Duplicate Rates',
-            anchor = 'biscuit-dup-report',
-            description = 'Shows the percentage of total reads that are duplicates.',
-            helptext = '''
-                `MAPQ >= 40` shows the duplicate rate for just the reads reads
-                with an alignment quality score of `MAPQ >= 40`.
-            ''',
-            plot = table.plot(pd, pheader, pconfig)
-        )
+        if len(pd) > 0:
+            self.add_section(
+                name = 'Duplicate Rates',
+                anchor = 'biscuit-dup-report',
+                description = 'Shows the percentage of total reads that are duplicates.',
+                helptext = '''
+                    `MAPQ >= 40` shows the duplicate rate for just the reads reads
+                    with an alignment quality score of `MAPQ >= 40`.
+                ''',
+                plot = table.plot(pd, pheader, pconfig)
+            )
 
     ########################################
     ####      Depths and Uniformity     ####
@@ -597,13 +600,15 @@ class MultiqcModule(BaseMultiqcModule):
         ]
 
         pd = OrderedDict()
-        for sid, dd in self.mdata['qc_cv'].items():
-            pd[sid] = OrderedDict()
+        for s_name, dd in self.mdata['qc_cv'].items():
+            data = OrderedDict()
             for cat, key in cats:
                 if cat in dd:
                     if dd[cat]['mu'] != -1:
-                        pd[sid]['mu_'+key] = dd[cat]['mu']
-                        pd[sid]['cv_'+key] = dd[cat]['cv']
+                        data['mu_'+key] = dd[cat]['mu']
+                        data['cv_'+key] = dd[cat]['cv']
+            if len(data) > 0:
+                pd[s_name] = data
 
         shared_mean = {'min': 0, 'format': '{:,3f}', 'minRange': 10}
         shared_cofv = {'min': 0, 'format': '{:,3f}', 'minRange': 50}
@@ -641,26 +646,27 @@ class MultiqcModule(BaseMultiqcModule):
             'sortRows': False
         }
 
-        self.add_section(
-            name = 'Sequencing Depth Statistics',
-            anchor = 'biscuit-seq-depth',
-            description = '''
-                Shows the sequence depth mean and uniformity measured by the Coefficient of Variation
-                (`CoV`, defined as `stddev/mean`).
-            ''',
-            helptext = '''
-                The plot shows coverage across different selections:
+        if len(pd) > 0:
+            self.add_section(
+                name = 'Sequencing Depth Statistics',
+                anchor = 'biscuit-seq-depth',
+                description = '''
+                    Shows the sequence depth mean and uniformity measured by the Coefficient of Variation
+                    (`CoV`, defined as `stddev/mean`).
+                ''',
+                helptext = '''
+                    The plot shows coverage across different selections:
 
-                * _Genome_ (Gen.) - Statistics for all bases across the entire genome
-                * _CpGs_ - Statistics for CpGs
-                * _All_ - Statistics for any mapped bases/CpGs
-                * _Q40_ - Statistics only those bases/CpGs with mapping quality `MAPQ >= 40`
-                * _High GC_ - Bases / CpGs that overlap with the top 10% of 100bp windows for GC-content
-                * _Low GC_ - Bases / CpGs that overlap with the bottom 10% of 100bp windows for GC-content
+                    * _Genome_ (Gen.) - Statistics for all bases across the entire genome
+                    * _CpGs_ - Statistics for CpGs
+                    * _All_ - Statistics for any mapped bases/CpGs
+                    * _Q40_ - Statistics only those bases/CpGs with mapping quality `MAPQ >= 40`
+                    * _High GC_ - Bases / CpGs that overlap with the top 10% of 100bp windows for GC-content
+                    * _Low GC_ - Bases / CpGs that overlap with the bottom 10% of 100bp windows for GC-content
 
-            ''',
-            plot = beeswarm.plot(pd, pheader, pconfig)
-        )
+                ''',
+                plot = beeswarm.plot(pd, pheader, pconfig)
+            )
 
     ########################################
     #### Base Coverage and CpG Coverage ####
@@ -923,10 +929,10 @@ class MultiqcModule(BaseMultiqcModule):
         '''
 
         pd = [
-            dict([(sid, dd['1']) for sid, dd in self.mdata['cpg_retention_readpos'].items() if 'no_data_available' not in dd.keys()]),
-            dict([(sid, dd['2']) for sid, dd in self.mdata['cpg_retention_readpos'].items() if 'no_data_available' not in dd.keys()]),
-            dict([(sid, dd['1']) for sid, dd in self.mdata['cph_retention_readpos'].items() if 'no_data_available' not in dd.keys()]),
-            dict([(sid, dd['2']) for sid, dd in self.mdata['cph_retention_readpos'].items() if 'no_data_available' not in dd.keys()])
+            dict([(s_name, dd['1']) for s_name, dd in self.mdata['cpg_retention_readpos'].items() if 'no_data_available' not in dd.keys()]),
+            dict([(s_name, dd['2']) for s_name, dd in self.mdata['cpg_retention_readpos'].items() if 'no_data_available' not in dd.keys()]),
+            dict([(s_name, dd['1']) for s_name, dd in self.mdata['cph_retention_readpos'].items() if 'no_data_available' not in dd.keys()]),
+            dict([(s_name, dd['2']) for s_name, dd in self.mdata['cph_retention_readpos'].items() if 'no_data_available' not in dd.keys()])
         ]
 
         pconfig = {
@@ -997,16 +1003,16 @@ class MultiqcModule(BaseMultiqcModule):
         '''
 
         mdata_byread = {}
-        for sid, dd in self.mdata['read_avg_retention_rate'].items():
-            mdata_byread[sid] = dd
+        for s_name, dd in self.mdata['read_avg_retention_rate'].items():
+            mdata_byread[s_name] = dd
 
         mdata_bybase = {}
-        for sid, dd in self.mdata['base_avg_retention_rate'].items():
-            mdata_bybase[sid] = dd
+        for s_name, dd in self.mdata['base_avg_retention_rate'].items():
+            mdata_bybase[s_name] = dd
 
         pdata = {}
-        for sid, dd in mdata_byread.items():
-            pdata[sid] = dict(list(dd.items()) + list(mdata_bybase[sid].items()))
+        for s_name, dd in mdata_byread.items():
+            pdata[s_name] = dict(list(dd.items()) + list(mdata_bybase[s_name].items()))
 
         shared = {
             'format':'{:,.2f}',
