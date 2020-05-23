@@ -70,8 +70,9 @@ to break. If you haven't already, **you need to switch to Python 3 now**.
 #### Module updates:
 
 * **BISCUIT**
+    * Major rewrite to work with new BISCUIT QC script (BISCUIT `v0.3.16+`)
+        * This change breaks backwards-compatability with previous BISCUIT versions. If you are unable to upgrade BISCUIT, please use MultiQC v1.8.
     * Fixed error when missing data in log files ([#1101](https://github.com/ewels/MultiQC/issues/1101))
-    * Overhauled module to work with new BISCUIT QC script (see BISCUIT v0.3.16+)
 * **bcl2fastq**
     * Samples with multiple library preps (i.e barcodes) will now be handled correctly ([#1094](https://github.com/ewels/MultiQC/issues/1094))
 * **BUSCO**
