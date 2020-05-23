@@ -89,66 +89,55 @@ biobloomtools:
 biscuit/align_mapq:
     fn: '*_mapq_table.txt'
     contents: 'BISCUITqc Mapping Quality Table'
+    num_lines: 3
 biscuit/align_strand:
     fn: '*_strand_table.txt'
     contents: 'BISCUITqc Strand Table'
+    num_lines: 3
 biscuit/align_isize:
     fn: '*_isize_table.txt'
     contents: 'BISCUITqc Insert Size Table'
+    num_lines: 3
 biscuit/dup_report:
     fn: '*_dup_report.txt'
     contents: 'BISCUITqc Read Duplication Table'
+    num_lines: 3
 biscuit/qc_cv:
     fn: '*_cv_table.txt'
     contents: 'BISCUITqc Uniformity Table'
+    num_lines: 3
 biscuit/covdist_all_base_botgc:
     fn: '*_covdist_all_base_botgc_table.txt'
-    contents: 'BISCUITqc Depth Distribution - All Bot GC Bases'
 biscuit/covdist_all_base:
     fn: '*_covdist_all_base_table.txt'
-    contents: 'BISCUITqc Depth Distribution - All Bases'
 biscuit/covdist_all_base_topgc:
     fn: '*_covdist_all_base_topgc_table.txt'
-    contents: 'BISCUITqc Depth Distribution - All Top GC Bases'
 biscuit/covdist_q40_base_botgc:
     fn: '*_covdist_q40_base_botgc_table.txt'
-    contents: 'BISCUITqc Depth Distribution - Q40 Bot GC Bases'
 biscuit/covdist_q40_base:
     fn: '*_covdist_q40_base_table.txt'
-    contents: 'BISCUITqc Depth Distribution - Q40 Bases'
 biscuit/covdist_q40_base_topgc:
     fn: '*_covdist_q40_base_topgc_table.txt'
-    contents: 'BISCUITqc Depth Distribution - Q40 Top GC Bases'
 biscuit/covdist_all_cpg_botgc:
     fn: '*_covdist_all_cpg_botgc_table.txt'
-    contents: 'BISCUITqc Depth Distribution - All Bot GC CpGs'
 biscuit/covdist_all_cpg:
     fn: '*_covdist_all_cpg_table.txt'
-    contents: 'BISCUITqc Depth Distribution - All CpGs'
 biscuit/covdist_all_cpg_topgc:
     fn: '*_covdist_all_cpg_topgc_table.txt'
-    contents: 'BISCUITqc Depth Distribution - All Top GC CpGs'
 biscuit/covdist_q40_cpg_botgc:
     fn: '*_covdist_q40_cpg_botgc_table.txt'
-    contents: 'BISCUITqc Depth Distribution - Q40 Bot GC CpGs'
 biscuit/covdist_q40_cpg:
     fn: '*_covdist_q40_cpg_table.txt'
-    contents: 'BISCUITqc Depth Distribution - Q40 CpGs'
 biscuit/covdist_q40_cpg_topgc:
     fn: '*_covdist_q40_cpg_topgc_table.txt'
-    contents: 'BISCUITqc Depth Distribution - Q40 Top GC CpGs'
 biscuit/cpg_retention_readpos:
     fn: '*_CpGRetentionByReadPos.txt'
-    contents: 'BISCUITqc CpG Retention by Read Position Table'
 biscuit/cph_retention_readpos:
     fn: '*_CpHRetentionByReadPos.txt'
-    contents: 'BISCUITqc CpH Retention by Read Position Table'
 biscuit/base_avg_retention_rate:
     fn: '*_totalBaseConversionRate.txt'
-    contents: 'BISCUITqc Conversion Rate by Base Average Table'
 biscuit/read_avg_retention_rate:
     fn: '*_totalReadConversionRate.txt'
-    contents: 'BISCUITqc Conversion Rate by Read Average Table'
 bismark/align:
     fn: '*_[SP]E_report.txt'
 bismark/dedup:
