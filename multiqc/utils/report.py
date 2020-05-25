@@ -79,7 +79,7 @@ def get_filelist(run_module_names):
         ]
         unrecognised_keys = [y for x in sps for y in x.keys() if y not in expected_sp_keys]
         if len(unrecognised_keys) > 0:
-            logger.warn("Unrecognised search pattern keys for '{}': {}".format(key, ', '.join(unrecognised_keys)))
+            logger.warning("Unrecognised search pattern keys for '{}': {}".format(key, ', '.join(unrecognised_keys)))
 
         # Split search patterns according to speed of execution.
         if any([x for x in sps if 'contents_re' in x]):
@@ -183,7 +183,7 @@ def get_filelist(run_module_names):
                 # Sanity check - make sure that we're not just running in the installation directory
                 if len(filenames) > 0 and all([fn in filenames for fn in multiqc_installation_dir_files]):
                     logger.error("Error: MultiQC is running in source code directory! {}".format(root))
-                    logger.warn("Please see the docs for how to use MultiQC: https://multiqc.info/docs/#running-multiqc")
+                    logger.warning("Please see the docs for how to use MultiQC: https://multiqc.info/docs/#running-multiqc")
                     dirnames[:] = []
                     filenames[:] = []
                     continue
@@ -376,7 +376,21 @@ def save_htmlid(html_id, skiplint=False):
 def compress_json(data):
     """ Take a Python data object. Convert to JSON and compress using lzstring """
     json_string = json.dumps(data).encode('utf-8', 'ignore').decode('utf-8')
-    # JSON.parse() doesn't handle `NaN`, but it does handle `null`.
-    json_string = json_string.replace('NaN', 'null');
+    json_string = sanitise_json(json_string)
     x = lzstring.LZString()
     return x.compressToBase64(json_string)
+
+def sanitise_json(json_string):
+    """
+    The Python json module uses a bunch of values which are valid JavaScript
+    but invalid JSON. These crash the browser when parsing the JSON.
+    Nothing in the MultiQC front-end uses these values, so instead we just
+    do a find-and-replace for them and switch them with `null`, which works fine.
+
+    Side effect: Any string values that include the word "Infinity"
+    (case-sensitive) will have it switched for "null". Hopefully that doesn't happen
+    a lot, otherwise we'll have to do this in a more complicated manner.
+    """
+    json_string = re.sub(r'\bNaN\b', 'null', json_string)
+    json_string = re.sub(r'\b-?Infinity\b', 'null', json_string)
+    return json_string

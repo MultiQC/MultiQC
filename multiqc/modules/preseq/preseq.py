@@ -263,7 +263,7 @@ def _get_counts_in_1x(data_is_basepairs):
             if genome_size in presets:
                 genome_size = presets[genome_size]
             else:
-                log.warn('The size for genome ' + genome_size + ' is unknown to MultiQC, ' +
+                log.warning('The size for genome ' + genome_size + ' is unknown to MultiQC, ' +
                          'please specify it explicitly or choose one of the following: ' +
                          ', '.join(presets.keys()) + '. Falling back to molecule counts.')
                 genome_size = None

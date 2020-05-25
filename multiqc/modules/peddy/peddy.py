@@ -130,7 +130,7 @@ class MultiqcModule(BaseMultiqcModule):
                     try:
                         s_name_idx = [headers.index("sample_a"), headers.index("sample_b")]
                     except ValueError:
-                        log.warn("Could not find sample name in Peddy output: {}".format(f['fn']))
+                        log.warning("Could not find sample name in Peddy output: {}".format(f['fn']))
                         return None
             else:
                 s_name = '-'.join([s[idx] for idx in s_name_idx])

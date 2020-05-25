@@ -27,7 +27,7 @@ def check_mods_docs_readme():
         if os.environ.get('GITHUB_WORKSPACE') is not None:
             readme_fn = os.path.join( os.environ.get('GITHUB_WORKSPACE'), 'MultiQC', 'docs', 'README.md')
         if not os.path.isfile(readme_fn):
-            logger.warn("Can't check docs readme in lint test as file doesn't exist: {}".format(readme_fn))
+            logger.warning("Can't check docs readme in lint test as file doesn't exist: {}".format(readme_fn))
             return None
     with open(readme_fn) as f:
         fm = next(yaml.load_all(f, Loader=yaml.SafeLoader))

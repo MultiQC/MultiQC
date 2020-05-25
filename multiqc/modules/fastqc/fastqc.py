@@ -56,7 +56,7 @@ class MultiqcModule(BaseMultiqcModule):
             try:
                 fqc_zip = zipfile.ZipFile(os.path.join(f['root'], f['fn']))
             except Exception as e:
-                log.warn("Couldn't read '{}' - Bad zip file".format(f['fn']))
+                log.warning("Couldn't read '{}' - Bad zip file".format(f['fn']))
                 log.debug("Bad zip file error:\n{}".format(e))
                 continue
             # FastQC zip files should have just one directory inside, containing report
@@ -528,6 +528,7 @@ class MultiqcModule(BaseMultiqcModule):
             'id': 'fastqc_per_sequence_gc_content_plot',
             'title': 'FastQC: Per Sequence GC Content',
             'xlab': '% GC',
+            'ylab': 'Percentage',
             'ymin': 0,
             'xmax': 100,
             'xmin': 0,
@@ -546,7 +547,7 @@ class MultiqcModule(BaseMultiqcModule):
         theoretical_gc_name = None
         for f in self.find_log_files('fastqc/theoretical_gc'):
             if theoretical_gc_raw is not None:
-                log.warn("Multiple FastQC Theoretical GC Content files found, now using {}".format(f['fn']))
+                log.warning("Multiple FastQC Theoretical GC Content files found, now using {}".format(f['fn']))
             theoretical_gc_raw = f['f']
             theoretical_gc_name = f['fn']
         if theoretical_gc_raw is None:
@@ -561,7 +562,7 @@ class MultiqcModule(BaseMultiqcModule):
                     with io.open (tgc_path, "r", encoding='utf-8') as f:
                         theoretical_gc_raw = f.read()
                 except IOError:
-                    log.warn("Couldn't open FastQC Theoretical GC Content file {}".format(tgc_path))
+                    log.warning("Couldn't open FastQC Theoretical GC Content file {}".format(tgc_path))
                     theoretical_gc_raw = None
         if theoretical_gc_raw is not None:
             theoretical_gc = list()

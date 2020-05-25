@@ -24,12 +24,37 @@ Supported commands:
 * `RrbsSummaryMetrics`
 * `ValidateSamFile`
 * `VariantCallingMetrics`
+* `QualityByCycleMetrics`
+* `QualityScoreDistributionMetrics`
+* `QualityYieldMetrics`
+
+#### MarkDuplicates
+If a `BAM` file contains multiple read groups, Picard MarkDuplicates generates a report
+with multiple metric lines, one for each "library".
+
+By default, MultiQC will sum the values for every library it finds and recompute the
+`PERCENT_DUPLICATION` and `ESTIMATED_LIBRARY_SIZE` fields, giving a single set of results
+for each `BAM` file.
+
+If instead you would prefer each library to be treated as a separate sample, you can do so
+by setting the following MultiQC config:
+
+```yaml
+picard_config:
+    markdups_merge_multiple_libraries: False
+```
+
+This prevents the merge and recalculation and appends the library name to the sample name.
+
+This behaviour is present in MultiQC since version 1.9. Before this, only the metrics from the
+first library were taken and all others were ignored.
 
 #### InsertSizeMetrics
 By default, the insert size plot is smoothed to contain a maximum of 500 data points per sample.
 This is to prevent the MultiQC report from being very large with big datasets.
 If you would like to customise this value to get a better resolution you can set the following
 MultiQC config values, with the new maximum number of points:
+
 ```yaml
 picard_config:
     insertsize_smooth_points: 10000

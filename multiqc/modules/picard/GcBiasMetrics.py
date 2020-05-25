@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 
-""" MultiQC submodule to parse output from Picard InsertSizeMetrics """
+""" MultiQC submodule to parse output from Picard GcBiasMetrics """
 
 import logging
 import os
@@ -13,7 +13,7 @@ log = logging.getLogger(__name__)
 
 
 def parse_reports(self):
-    """ Find Picard InsertSizeMetrics reports and parse their data """
+    """ Find Picard GcBiasMetrics reports and parse their data """
 
     # Set up vars
     self.picard_GCbias_data = dict()
@@ -58,7 +58,7 @@ def parse_reports(self):
                     cov_col = s.index('NORMALIZED_COVERAGE')
 
                 if 'GcBiasSummaryMetrics' in l and '## METRICS CLASS' in l:
-                    if s_name in self.picard_GCbias_data:
+                    if s_name in self.picard_GCbiasSummary_data:
                         log.debug("Duplicate sample name found in {}! Overwriting: {}".format(f['fn'], s_name))
                     self.add_data_source(f, s_name, section='GcBiasSummaryMetrics')
                     self.picard_GCbiasSummary_data[s_name] = dict()

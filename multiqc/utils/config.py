@@ -194,17 +194,40 @@ def load_sample_names(snames_file):
                     if num_cols is None:
                         num_cols = len(s)
                     elif num_cols != len(s):
-                        logger.warn("Inconsistent number of columns found in sample names file (skipping line): '{}'".format(l.strip()))
+                        logger.warning("Inconsistent number of columns found in sample names file (skipping line): '{}'".format(l.strip()))
                     # Parse the line
                     if len(sample_names_rename_buttons) == 0:
                         sample_names_rename_buttons = s
                     else:
                         sample_names_rename.append(s)
                 elif len(l.strip()) > 0:
-                    logger.warn("Sample names file line did not have columns (must use tabs): {}".format(l.strip()))
+                    logger.warning("Sample names file line did not have columns (must use tabs): {}".format(l.strip()))
     except (IOError, AttributeError) as e:
         logger.error("Error loading sample names file: {}".format(e))
     logger.debug("Found {} sample renaming patterns".format(len(sample_names_rename_buttons)))
+
+def load_show_hide(sh_file):
+    global show_hide_buttons, show_hide_patterns, show_hide_mode
+    if sh_file:
+        try:
+            with open(sh_file, 'r') as f:
+                logger.debug("Loading sample renaming config settings from: {}".format(sh_file))
+                for l in f:
+                    s = l.strip().split("\t")
+                    if len(s) >= 3 and s[1] in ["show", "hide"]:
+                        show_hide_buttons.append(s[0])
+                        show_hide_mode.append(s[1])
+                        show_hide_patterns.append(s[2:])
+        except (AttributeError) as e:
+            logger.error("Error loading show patterns file: {}".format(e))
+
+    # Prepend a "Show all" button if we have anything
+    # Do this outside of the file load block in case it was set in the config
+    if len(show_hide_buttons) > 0:
+        logger.debug("Found {} show/hide patterns".format(len(show_hide_buttons)))
+        show_hide_buttons.insert(0, 'Show all')
+        show_hide_mode.insert(0, 'hide')
+        show_hide_patterns.insert(0, [])
 
 def update(u):
     return update_dict(globals(), u)
