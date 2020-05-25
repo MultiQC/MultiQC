@@ -513,7 +513,7 @@ module_order:
             - RNA
             - DNA
     - kraken2:
-        module_Tag:
+        module_tag:
             - DNA
             - Metagenomics
     - trimmomatic:
