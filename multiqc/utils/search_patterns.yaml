@@ -337,7 +337,7 @@ kallisto:
 kat:
     fn: '*.dist_analysis.json'
 kraken2:
-    contents_re: '^\s*[\d\.]+\t\d+\t\d+\t\S+\t\d+\s+.+'
+    contents_re: '^\s{1,2}(\d{1,2}\.\d{1,2})\t(\d+)\t(\d+)\t([\dUDKPCOFGS-]{1,3})\t(\d+)\s+(.+)'
     num_lines: 2
 leehom:
     contents: 'Adapter dimers/chimeras'

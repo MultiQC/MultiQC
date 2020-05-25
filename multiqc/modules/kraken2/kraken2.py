@@ -78,7 +78,7 @@ class MultiqcModule(BaseMultiqcModule):
         """
 
         # Search regexes for stats
-        k2_regex = re.compile(r"([\d\.]+)\t(\d+)\t(\d+)\t(\S+)\t(\d+)(\s+)(.+)")
+        k2_regex = re.compile(r"^\s{1,2}(\d{1,2}\.\d{1,2})\t(\d+)\t(\d+)\t([\dUDKPCOFGS-]{1,3})\t(\d+)(\s+)(.+)")
         data = []
         for l in f['f']:
             match = k2_regex.search(l)
@@ -104,24 +104,27 @@ class MultiqcModule(BaseMultiqcModule):
         # Use percentages instead of counts so that deeply-sequences samples
         # are not unfairly over-represented
         for s_name, data in self.kraken2_raw_data.items():
+            total_guess_count = None
             for row in data:
 
-                # Skip anything that doesn't fit a tax level
-                if row['rank_code'] == '-':
+                # Convenience vars that are easier to read
+                rank_code = row['rank_code']
+                classif = row['classif']
+
+                # Skip anything that doesn't exactly fit a tax rank level
+                if row['rank_code'] == '-' or any(c.isdigit() for c in row['rank_code']):
                     continue
 
-                # Remove numbers from rank code if present
-                rank_code = re.sub('/\d/', '', row['rank_code'])
-
                 # Calculate the total read count using percentages
-                if rank_code == 'U':
+                # We use either unclassified or the first domain encountered, to try to use the largest proportion of reads = most accurate guess
+                if rank_code == 'U' or (rank_code == 'D' and row['counts_rooted'] > total_guess_count):
                     self.kraken2_sample_total_readcounts[s_name] = round(float(row['counts_rooted']) / (row['percent'] / 100.0))
+                    total_guess_count = row['counts_rooted']
 
                 if rank_code not in self.kraken2_total_pct:
                     self.kraken2_total_pct[rank_code] = dict()
                     self.kraken2_total_counts[rank_code] = dict()
 
-                classif = row['classif']
                 if classif not in self.kraken2_total_pct[rank_code]:
                     self.kraken2_total_pct[rank_code][classif] = 0
                     self.kraken2_total_counts[rank_code][classif] = 0
@@ -191,6 +194,11 @@ class MultiqcModule(BaseMultiqcModule):
                         counts_shown[s_name] += row['counts_rooted']
                 rank_data[s_name]['other'] = self.kraken2_sample_total_readcounts[s_name] - counts_shown[s_name]
 
+                # This should never happen... But it does sometimes if the total read count is a bit off
+                if rank_data[s_name]['other'] < 0:
+                    log.debug("Found negative 'other' count for {} ({}): {}".format(s_name, t_ranks[rank_code], rank_data[s_name]['other']))
+                    rank_data[s_name]['other'] = 0
+
             rank_cats['other'] = { 'name': 'Other', 'color': '#cccccc' }
             rank_cats['U'] = { 'name': 'Unclassified', 'color': '#d4949c' }
 
@@ -212,6 +220,8 @@ class MultiqcModule(BaseMultiqcModule):
 
                 The category _"Other"_ shows the difference between the above total read count and the sum of the read counts
                 in the top 5 taxa shown + unclassified. This should cover all taxa _not_ in the top 5, +/- any rounding errors.
+
+                Note that any taxon that does not exactly fit a taxon rank (eg. `-` or `G2`) is ignored.
             """,
             plot = bargraph.plot(pd, cats, pconfig)
         )
