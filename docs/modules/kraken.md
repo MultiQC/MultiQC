@@ -8,7 +8,7 @@ Description: >
 
 The MultiQC module supports outputs from both Kraken and Kraken 2.
 
-It works with report files that look like the following:
+It works with report files generated using the `--report` flag, that look like the following:
 
 ```ts
 11.66	98148	98148	U	0	unclassified
