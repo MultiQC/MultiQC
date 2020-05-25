@@ -512,7 +512,7 @@ module_order:
         module_tag:
             - RNA
             - DNA
-    - kraken2:
+    - kraken:
         module_tag:
             - DNA
             - Metagenomics

@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 
-""" MultiQC module to parse output from KRAKEN2 """
+""" MultiQC module to parse output from kraken """
 
 from __future__ import print_function
 from collections import OrderedDict
@@ -16,35 +16,35 @@ from multiqc.modules.base_module import BaseMultiqcModule
 log = logging.getLogger(__name__)
 
 class MultiqcModule(BaseMultiqcModule):
-    """ Kraken2 module """
+    """ Kraken module """
 
     def __init__(self):
 
         # Initialise the parent object
         super(MultiqcModule, self).__init__(
-            name = 'Kraken 2',
-            anchor = 'kraken2',
-            href = "https://ccb.jhu.edu/software/kraken2/",
+            name = 'Kraken',
+            anchor = 'kraken',
+            href = "https://ccb.jhu.edu/software/kraken/",
             info = "is a taxonomic classification tool that uses exact k-mer matches to find the lowest common ancestor (LCA) of a given sequence."
         )
 
-        # Find and load any kraken2 reports
-        self.kraken2_raw_data = dict()
-        for f in self.find_log_files('kraken2', filehandles=True):
+        # Find and load any kraken reports
+        self.kraken_raw_data = dict()
+        for f in self.find_log_files('kraken', filehandles=True):
             self.parse_logs(f)
 
         # Filter to strip out ignored sample names
-        self.kraken2_raw_data = self.ignore_samples(self.kraken2_raw_data)
+        self.kraken_raw_data = self.ignore_samples(self.kraken_raw_data)
 
-        if len(self.kraken2_raw_data) == 0:
+        if len(self.kraken_raw_data) == 0:
             raise UserWarning
 
-        log.info("Found {} reports".format(len(self.kraken2_raw_data)))
+        log.info("Found {} reports".format(len(self.kraken_raw_data)))
 
         # Sum counts across all samples, so that we can pick top 5
-        self.kraken2_total_pct = dict()
-        self.kraken2_total_counts = dict()
-        self.kraken2_sample_total_readcounts = dict()
+        self.kraken_total_pct = dict()
+        self.kraken_total_counts = dict()
+        self.kraken_sample_total_readcounts = dict()
         self.sum_sample_counts()
 
         self.top_five_barplot()
@@ -52,7 +52,7 @@ class MultiqcModule(BaseMultiqcModule):
 
     def parse_logs(self, f):
         """
-        Parses a Kraken2 report output file
+        Parses a kraken report output file
 
         1. Percentage of fragments covered by the clade rooted at this taxon
         2. Number of fragments covered by the clade rooted at this taxon
@@ -94,16 +94,16 @@ class MultiqcModule(BaseMultiqcModule):
                 }
                 data.append(row)
 
-        self.kraken2_raw_data[f['s_name']] = data
+        self.kraken_raw_data[f['s_name']] = data
 
     def sum_sample_counts(self):
-        """ Sum counts across all samples for Kraken2 data """
+        """ Sum counts across all samples for kraken data """
 
         # Sum the percentages for each taxa across all samples
         # Allows us to pick top-5 for each rank
         # Use percentages instead of counts so that deeply-sequences samples
         # are not unfairly over-represented
-        for s_name, data in self.kraken2_raw_data.items():
+        for s_name, data in self.kraken_raw_data.items():
             total_guess_count = None
             for row in data:
 
@@ -118,18 +118,18 @@ class MultiqcModule(BaseMultiqcModule):
                 # Calculate the total read count using percentages
                 # We use either unclassified or the first domain encountered, to try to use the largest proportion of reads = most accurate guess
                 if rank_code == 'U' or (rank_code == 'D' and row['counts_rooted'] > total_guess_count):
-                    self.kraken2_sample_total_readcounts[s_name] = round(float(row['counts_rooted']) / (row['percent'] / 100.0))
+                    self.kraken_sample_total_readcounts[s_name] = round(float(row['counts_rooted']) / (row['percent'] / 100.0))
                     total_guess_count = row['counts_rooted']
 
-                if rank_code not in self.kraken2_total_pct:
-                    self.kraken2_total_pct[rank_code] = dict()
-                    self.kraken2_total_counts[rank_code] = dict()
+                if rank_code not in self.kraken_total_pct:
+                    self.kraken_total_pct[rank_code] = dict()
+                    self.kraken_total_counts[rank_code] = dict()
 
-                if classif not in self.kraken2_total_pct[rank_code]:
-                    self.kraken2_total_pct[rank_code][classif] = 0
-                    self.kraken2_total_counts[rank_code][classif] = 0
-                self.kraken2_total_pct[rank_code][classif] += row['percent']
-                self.kraken2_total_counts[rank_code][classif] += row['counts_rooted']
+                if classif not in self.kraken_total_pct[rank_code]:
+                    self.kraken_total_pct[rank_code][classif] = 0
+                    self.kraken_total_counts[rank_code][classif] = 0
+                self.kraken_total_pct[rank_code][classif] += row['percent']
+                self.kraken_total_counts[rank_code][classif] += row['counts_rooted']
 
     def top_five_barplot(self):
         """ Add a bar plot showing the top-5 from each taxa rank """
@@ -161,7 +161,7 @@ class MultiqcModule(BaseMultiqcModule):
 
             # Loop through the summed tax percentages to get the top 5 across all samples
             try:
-                sorted_pct = sorted(self.kraken2_total_pct[rank_code].items(), key=lambda x: x[1], reverse=True)
+                sorted_pct = sorted(self.kraken_total_pct[rank_code].items(), key=lambda x: x[1], reverse=True)
             except KeyError:
                 # Taxa rank not found in this sample
                 continue
@@ -173,7 +173,7 @@ class MultiqcModule(BaseMultiqcModule):
                     break
                 rank_cats[classif] = {'name': classif}
                 # Pull out counts for this rank + classif from each sample
-                for s_name, d in self.kraken2_raw_data.items():
+                for s_name, d in self.kraken_raw_data.items():
                     if s_name not in rank_data:
                         rank_data[s_name] = dict()
                     if s_name not in counts_shown:
@@ -187,12 +187,12 @@ class MultiqcModule(BaseMultiqcModule):
                                 counts_shown[s_name] += row['counts_rooted']
 
             # Add in unclassified reads and "other" - we presume from other species etc.
-            for s_name, d in self.kraken2_raw_data.items():
+            for s_name, d in self.kraken_raw_data.items():
                 for row in d:
                     if row['rank_code'] == 'U':
                         rank_data[s_name]['U'] = row['counts_rooted']
                         counts_shown[s_name] += row['counts_rooted']
-                rank_data[s_name]['other'] = self.kraken2_sample_total_readcounts[s_name] - counts_shown[s_name]
+                rank_data[s_name]['other'] = self.kraken_sample_total_readcounts[s_name] - counts_shown[s_name]
 
                 # This should never happen... But it does sometimes if the total read count is a bit off
                 if rank_data[s_name]['other'] < 0:
@@ -216,7 +216,7 @@ class MultiqcModule(BaseMultiqcModule):
 
                 The total number of reads is approximated by dividing the number of `unclassified` reads by the percentage of
                 the library that they account for.
-                Note that this is only an approximation, and that Kraken2 percentages don't always add to exactly 100%.
+                Note that this is only an approximation, and that kraken percentages don't always add to exactly 100%.
 
                 The category _"Other"_ shows the difference between the above total read count and the sum of the read counts
                 in the top 5 taxa shown + unclassified. This should cover all taxa _not_ in the top 5, +/- any rounding errors.
