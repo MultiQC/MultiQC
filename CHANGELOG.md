@@ -51,6 +51,8 @@ to break. If you haven't already, **you need to switch to Python 3 now**.
     * Illumina Bio-IT Platform that uses FPGA for secondary NGS analysis
 * [**iVar**](https://github.com/andersen-lab/ivar)
     * Added support for iVar: a computational package that contains functions broadly useful for viral amplicon-based sequencing.
+* [**Kraken**](https://ccb.jhu.edu/software/kraken2/)
+    * K-mer matching tool for taxonomic classification. Module plots bargraph of counts for top-5 hits across each taxa rank.
 * [**miRTop**](https://github.com/miRTop/mirtop)
     * Command line tool to annotate miRNAs with a standard mirna/isomir naming (mirGFF3)
     * Module started by [@oneillkza](https://github.com/oneillkza/) and completed by [@FlorianThibord](https://github.com/FlorianThibord/)

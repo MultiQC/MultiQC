@@ -66,6 +66,7 @@ MultiQC Modules:
     HiCExplorer: modules/hicexplorer.md
     HOMER: modules/homer.md
     HTSeq: modules/htseq.md
+    Kraken: modules/kraken.md
     MACS2: modules/macs2.md
     Methyl QA: modules/methylQA.md
     mosdepth: modules/mosdepth.md
