@@ -1053,7 +1053,10 @@ class MultiqcModule(BaseMultiqcModule):
 
         pdata = {}
         for s_name, dd in mdata_byread.items():
-            pdata[s_name] = dict(list(dd.items()) + list(mdata_bybase[s_name].items()))
+            try:
+                pdata[s_name] = dict(list(dd.items()) + list(mdata_bybase[s_name].items()))
+            except KeyError:
+                log.warning("Couldn't find sample when making avg_retention_rate plot: '{}'".format(s_name))
 
         shared = {
             'format':'{:,.2f}',
