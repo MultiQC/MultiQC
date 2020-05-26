@@ -61,7 +61,11 @@ def custom_module_classes():
 
         # Data supplied in with config (eg. from a multiqc_config.yaml file in working directory)
         if 'data' in f:
-            cust_mods[c_id]['data'].update( f['data'] )
+            try:
+                cust_mods[c_id]['data'].update( f['data'] )
+            except ValueError:
+                # HTML plot type doesn't have a data sample-id key, so just take the whole chunk of data
+                cust_mods[c_id]['data'] = f['data']
             cust_mods[c_id]['config'].update( { k:v for k, v in f.items() if k is not 'data' } )
             cust_mods[c_id]['config']['id'] = cust_mods[c_id]['config'].get('id', c_id)
             continue

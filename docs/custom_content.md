@@ -80,6 +80,8 @@ The file format can also be JSON:
 }
 ```
 
+Note that if you're using `plot_type: html` then `data` just takes a string, with no sample keys.
+
 For maximum compatibility with other tools, you can also use comma-separated or tab-separated files.
 Include commented header lines with plot configuration in YAML format:
 
