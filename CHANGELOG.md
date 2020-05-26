@@ -44,6 +44,9 @@ to break. If you haven't already, **you need to switch to Python 3 now**.
     * Prefixed to module _section_ IDs
     * Appended to files saved in `multiqc_data`
     * Should help to prevent duplicates requiring `-1` suffixes when running a module multiple times
+* New heatmap plot config options `xcats_samples` and `ycats_samples`
+    * If set to `False`, the report toolbox options (_highlight_, _rename_, _show/hide_) do not affect that axis.
+    * Means that the _Show only matching samples_ report toolbox option works on FastQC Status Checks, for example  ([#1172](https://github.com/ewels/MultiQC/issues/1172))
 
 #### New Modules:
 
