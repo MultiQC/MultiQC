@@ -79,6 +79,8 @@ to break. If you haven't already, **you need to switch to Python 3 now**.
     * Samples with multiple library preps (i.e barcodes) will now be handled correctly ([#1094](https://github.com/ewels/MultiQC/issues/1094))
 * **BUSCO**
     * Updated log search pattern to match new format in v4 with auto-lineage detection option ([#1163](https://github.com/ewels/MultiQC/issues/1163))
+* **Cutadapt**
+    * New bar plot showing the proportion of reads filtered out for different criteria (eg. _too short_, _too many Ns_) ([#1198](https://github.com/ewels/MultiQC/issues/1198))
 * **DamageProfiler**
     * Removes redundant typo in init name. This makes referring to the module's column consistent with other modules when customising general stats table.
 * **DeDup**

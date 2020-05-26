@@ -3,11 +3,12 @@
 """ MultiQC module to parse output from Cutadapt """
 
 from __future__ import print_function
+from collections import OrderedDict
+from distutils.version import StrictVersion
 import logging
 import re
-from distutils.version import StrictVersion
 
-from multiqc.plots import linegraph
+from multiqc.plots import bargraph, linegraph
 from multiqc.modules.base_module import BaseMultiqcModule
 
 # Initialise the logger
@@ -52,6 +53,9 @@ class MultiqcModule(BaseMultiqcModule):
         # Basic Stats Table
         self.cutadapt_general_stats_table()
 
+        # Bar plot with number of reads trimmed
+        self.cutadapt_filtered_barplot()
+
         # Trimming Length Profiles
         self.cutadapt_length_trimmed_plot()
 
@@ -65,7 +69,18 @@ class MultiqcModule(BaseMultiqcModule):
                 'bp_written': "Total written \(filtered\):\s*([\d,]+) bp",
                 'quality_trimmed': "Quality-trimmed:\s*([\d,]+) bp",
                 'r_processed': "Total reads processed:\s*([\d,]+)",
-                'r_with_adapters': "Reads with adapters:\s*([\d,]+)"
+                'pairs_processed': "Total read pairs processed:\s*([\d,]+)",
+                'r_with_adapters': "Reads with adapters:\s*([\d,]+)",
+                'r1_with_adapters': "Read 1 with adapter:\s*([\d,]+)",
+                'r2_with_adapters': "Read 2 with adapter:\s*([\d,]+)",
+                'r_too_short': "Reads that were too short:\s*([\d,]+)",
+                'pairs_too_short': "Pairs that were too short:\s*([\d,]+)",
+                'r_too_long': "Reads that were too long:\s*([\d,]+)",
+                'pairs_too_long': "Pairs that were too long:\s*([\d,]+)",
+                'r_too_many_N': "Reads with too many N:\s*([\d,]+)",
+                'pairs_too_many_N': "Pairs with too many N:\s*([\d,]+)",
+                'r_written': "Reads written \(passing filters\):\s*([\d,]+)",
+                'pairs_written': "Pairs written \(passing filters\):\s*([\d,]+)",
             },
             '1.6': {
                 'r_processed': "Processed reads:\s*([\d,]+)",
@@ -149,12 +164,11 @@ class MultiqcModule(BaseMultiqcModule):
 
         # Calculate a few extra numbers of our own
         for s_name, d in self.cutadapt_data.items():
+            # Percent trimmed
             if 'bp_processed' in d and 'bp_written' in d:
                 self.cutadapt_data[s_name]['percent_trimmed'] = (float(d['bp_processed'] - d['bp_written']) / d['bp_processed']) * 100
             elif 'bp_processed' in d and 'bp_trimmed' in d:
                 self.cutadapt_data[s_name]['percent_trimmed'] = ((float(d.get('bp_trimmed', 0)) + float(d.get('quality_trimmed', 0))) / d['bp_processed']) * 100
-
-
 
     def cutadapt_general_stats_table(self):
         """ Take the parsed stats from the Cutadapt report and add it to the
@@ -162,7 +176,7 @@ class MultiqcModule(BaseMultiqcModule):
 
         headers = {}
         headers['percent_trimmed'] = {
-            'title': '% Trimmed',
+            'title': '% BP Trimmed',
             'description': '% Total Base Pairs trimmed',
             'max': 100,
             'min': 0,
@@ -171,6 +185,35 @@ class MultiqcModule(BaseMultiqcModule):
         }
         self.general_stats_addcols(self.cutadapt_data, headers)
 
+    def cutadapt_filtered_barplot(self):
+        """ Bar plot showing proportion of reads trimmed """
+
+        pconfig = {
+            'id': 'cutadapt_filtered_reads_plot',
+            'title': 'Cutadapt: Filtered Reads',
+            'ylab': 'Counts'
+        }
+
+        # We just use all categories. If a report is generated with a mixture
+        # of SE and PE data then this means quite a lot of categories.
+        # Usually, only a single data type is used though - in that case
+        # any categories with 0 across all samples will be ignored.
+        cats = OrderedDict()
+        cats['pairs_written'] = { 'name': 'Pairs passing filters' }
+        cats['r_written'] = { 'name': 'Reads passing filters' }
+        cats['pairs_too_short'] = { 'name': 'Pairs that were too short' }
+        cats['r_too_short'] = { 'name': 'Reads that were too short' }
+        cats['pairs_too_long'] = { 'name': 'Pairs that were too long' }
+        cats['r_too_long'] = { 'name': 'Reads that were too long' }
+        cats['pairs_too_many_N'] = { 'name': 'Pairs with too many N' }
+        cats['r_too_many_N'] = { 'name': 'Reads with too many N' }
+
+        self.add_section(
+            name = 'Filtered Reads',
+            anchor = 'cutadapt_filtered_reads',
+            description = 'This plot shows the number of reads (SE) / pairs (PE) removed by Cutadapt.',
+            plot = bargraph.plot(self.cutadapt_data, cats, pconfig)
+        )
 
     def cutadapt_length_trimmed_plot (self):
         """ Generate the trimming length plot """
@@ -183,8 +226,10 @@ class MultiqcModule(BaseMultiqcModule):
             'xDecimals': False,
             'ymin': 0,
             'tt_label': '<b>{point.x} bp trimmed</b>: {point.y:.0f}',
-            'data_labels': [{'name': 'Counts', 'ylab': 'Count'},
-                            {'name': 'Obs/Exp', 'ylab': 'Observed / Expected'}]
+            'data_labels': [
+                {'name': 'Counts', 'ylab': 'Count'},
+                {'name': 'Obs/Exp', 'ylab': 'Observed / Expected'}
+            ]
         }
 
         self.add_section(
