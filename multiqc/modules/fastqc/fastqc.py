@@ -982,34 +982,35 @@ class MultiqcModule(BaseMultiqcModule):
             ],
             'decimalPlaces': 1,
             'legend': False,
-            'datalabels': False
+            'datalabels': False,
+            'xcats_samples': False
         }
 
         self.add_section (
             name = 'Status Checks',
             anchor = 'fastqc_status_checks',
             description = '''
-            Status for each FastQC section showing whether results seem entirely normal (green),
-            slightly abnormal (orange) or very unusual (red).
+                Status for each FastQC section showing whether results seem entirely normal (green),
+                slightly abnormal (orange) or very unusual (red).
             ''',
             helptext = '''
-            FastQC assigns a status for each section of the report.
-            These give a quick evaluation of whether the results of the analysis seem
-            entirely normal (green), slightly abnormal (orange) or very unusual (red).
+                FastQC assigns a status for each section of the report.
+                These give a quick evaluation of whether the results of the analysis seem
+                entirely normal (green), slightly abnormal (orange) or very unusual (red).
 
-            It is important to stress that although the analysis results appear to give a pass/fail result,
-            these evaluations must be taken in the context of what you expect from your library.
-            A 'normal' sample as far as FastQC is concerned is random and diverse.
-            Some experiments may be expected to produce libraries which are biased in particular ways.
-            You should treat the summary evaluations therefore as pointers to where you should concentrate
-            your attention and understand why your library may not look random and diverse.
+                It is important to stress that although the analysis results appear to give a pass/fail result,
+                these evaluations must be taken in the context of what you expect from your library.
+                A 'normal' sample as far as FastQC is concerned is random and diverse.
+                Some experiments may be expected to produce libraries which are biased in particular ways.
+                You should treat the summary evaluations therefore as pointers to where you should concentrate
+                your attention and understand why your library may not look random and diverse.
 
-            Specific guidance on how to interpret the output of each module can be found in the relevant
-            report section, or in the [FastQC help](https://www.bioinformatics.babraham.ac.uk/projects/fastqc/Help/3%20Analysis%20Modules/).
+                Specific guidance on how to interpret the output of each module can be found in the relevant
+                report section, or in the [FastQC help](https://www.bioinformatics.babraham.ac.uk/projects/fastqc/Help/3%20Analysis%20Modules/).
 
-            In this heatmap, we summarise all of these into a single heatmap for a quick overview.
-            Note that not all FastQC sections have plots in MultiQC reports, but all status checks
-            are shown in this heatmap.
+                In this heatmap, we summarise all of these into a single heatmap for a quick overview.
+                Note that not all FastQC sections have plots in MultiQC reports, but all status checks
+                are shown in this heatmap.
             ''',
             plot = heatmap.plot(data, list(status_cats.values()), s_names, pconfig)
         )

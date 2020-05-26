@@ -518,6 +518,8 @@ pconfig = {
     'min': None,                   # Minimum value (default: auto)
     'max': None,                   # Maximum value (default: auto)
     'square': True,                # Force the plot to stay square? (Maintain aspect ratio)
+    'xcats_samples': True,         # Is the x-axis sample names? Set to False to prevent report toolbox from affecting.
+    'ycats_samples': True,         # Is the y-axis sample names? Set to False to prevent report toolbox from affecting.
     'colstops': []                 # Scale colour stops. See below.
     'reverseColors': False,        # Reverse the order of the colour axis
     'decimalPlaces': 2,            # Number of decimal places for tooltip
