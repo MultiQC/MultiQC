@@ -79,7 +79,7 @@ def get_filelist(run_module_names):
         ]
         unrecognised_keys = [y for x in sps for y in x.keys() if y not in expected_sp_keys]
         if len(unrecognised_keys) > 0:
-            logger.warn("Unrecognised search pattern keys for '{}': {}".format(key, ', '.join(unrecognised_keys)))
+            logger.warning("Unrecognised search pattern keys for '{}': {}".format(key, ', '.join(unrecognised_keys)))
 
         # Split search patterns according to speed of execution.
         if any([x for x in sps if 'contents_re' in x]):
@@ -183,7 +183,7 @@ def get_filelist(run_module_names):
                 # Sanity check - make sure that we're not just running in the installation directory
                 if len(filenames) > 0 and all([fn in filenames for fn in multiqc_installation_dir_files]):
                     logger.error("Error: MultiQC is running in source code directory! {}".format(root))
-                    logger.warn("Please see the docs for how to use MultiQC: https://multiqc.info/docs/#running-multiqc")
+                    logger.warning("Please see the docs for how to use MultiQC: https://multiqc.info/docs/#running-multiqc")
                     dirnames[:] = []
                     filenames[:] = []
                     continue

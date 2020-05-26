@@ -89,69 +89,55 @@ biobloomtools:
 biscuit/align_mapq:
     fn: '*_mapq_table.txt'
     contents: 'BISCUITqc Mapping Quality Table'
+    num_lines: 3
 biscuit/align_strand:
     fn: '*_strand_table.txt'
     contents: 'BISCUITqc Strand Table'
+    num_lines: 3
 biscuit/align_isize:
-    fn: '*_isize_score_table.txt'
-    contents: 'BISCUITqc Insert Size, Score Table'
-biscuit/covdist_cpg:
-    fn: '*_covdist_cpg_table.txt'
-    contents: 'BISCUITqc CpG Depth Distribution (All)'
-biscuit/covdist_cpg_q40:
-    fn: '*_covdist_cpg_q40_table.txt'
-    contents: 'BISCUITqc CpG Depth Distribution (Q40)'
-biscuit/covdist_cpg_q40_botgc:
-    fn: '*_covdist_cpg_q40_botgc_table.txt'
-    contents: 'BISCUITqc CpG Depth Distribution (low GC, Q40)'
-biscuit/covdist_cpg_q40_topgc:
-    fn: '*_covdist_cpg_q40_topgc_table.txt'
-    contents: 'BISCUITqc CpG Depth Distribution (high GC, Q40)'
-biscuit/covdist:
-    fn: '*_covdist_table.txt'
-    contents: 'BISCUITqc Depth Distribution (All)'
-biscuit/covdist_q40:
-    fn: '*_covdist_q40_table.txt'
-    contents: 'BISCUITqc Depth Distribution (Q40)'
-biscuit/covdist_q40_botgc:
-    fn: '*_covdist_q40_botgc_table.txt'
-    contents: 'BISCUITqc Depth Distribution (low GC, Q40)'
-biscuit/covdist_q40_topgc:
-    fn: '*_covdist_q40_topgc_table.txt'
-    contents: 'BISCUITqc Depth Distribution (high GC, Q40)'
-biscuit/qc_cv:
-    fn: '*_all_cv_table.txt'
-    contents: 'BISCUITqc Uniformity Table'
-biscuit/qc_cpg_cv:
-    fn: '*_cpg_cv_table.txt'
-    contents: 'BISCUITqc CpG Uniformity Table'
-biscuit/qc_cpg_dist:
-    fn: '*_cpg_dist_table.txt'
-    contents: 'BISCUITqc CpG Distribution Table'
+    fn: '*_isize_table.txt'
+    contents: 'BISCUITqc Insert Size Table'
+    num_lines: 3
 biscuit/dup_report:
     fn: '*_dup_report.txt'
     contents: 'BISCUITqc Read Duplication Table'
-biscuit/markdup_report:
-    fn: '*_markdup_report.txt'
-    contents: '[mark_dup] parsed'
-biscuit/retention_cph_readpos:
-    fn: '*_CpHRetentionByReadPos.txt'
-    contents: 'BISCUITqc CpH Retention by Read Position Table'
-biscuit/retention_cpg_readpos:
+    num_lines: 3
+biscuit/qc_cv:
+    fn: '*_cv_table.txt'
+    contents: 'BISCUITqc Uniformity Table'
+    num_lines: 3
+biscuit/covdist_all_base_botgc:
+    fn: '*_covdist_all_base_botgc_table.txt'
+biscuit/covdist_all_base:
+    fn: '*_covdist_all_base_table.txt'
+biscuit/covdist_all_base_topgc:
+    fn: '*_covdist_all_base_topgc_table.txt'
+biscuit/covdist_q40_base_botgc:
+    fn: '*_covdist_q40_base_botgc_table.txt'
+biscuit/covdist_q40_base:
+    fn: '*_covdist_q40_base_table.txt'
+biscuit/covdist_q40_base_topgc:
+    fn: '*_covdist_q40_base_topgc_table.txt'
+biscuit/covdist_all_cpg_botgc:
+    fn: '*_covdist_all_cpg_botgc_table.txt'
+biscuit/covdist_all_cpg:
+    fn: '*_covdist_all_cpg_table.txt'
+biscuit/covdist_all_cpg_topgc:
+    fn: '*_covdist_all_cpg_topgc_table.txt'
+biscuit/covdist_q40_cpg_botgc:
+    fn: '*_covdist_q40_cpg_botgc_table.txt'
+biscuit/covdist_q40_cpg:
+    fn: '*_covdist_q40_cpg_table.txt'
+biscuit/covdist_q40_cpg_topgc:
+    fn: '*_covdist_q40_cpg_topgc_table.txt'
+biscuit/cpg_retention_readpos:
     fn: '*_CpGRetentionByReadPos.txt'
-    contents: 'BISCUITqc CpG Retention by Read Position Table'
-biscuit/retention_dist:
-    fn: '*_CpGRetentionDist.txt'
-    contents: 'BISCUITqc Retention Distribution Table'
-biscuit/retention_dist_byread:
-    fn: '*_freqOfTotalRetentionPerRead.txt'
-    contents: 'BISCUITqc Frequency of Total Retention per Read Table'
-biscuit/retention_rate_bybase:
+biscuit/cph_retention_readpos:
+    fn: '*_CpHRetentionByReadPos.txt'
+biscuit/base_avg_retention_rate:
     fn: '*_totalBaseConversionRate.txt'
-    contents: 'BISCUITqc Conversion Rate by Base Average Table'
-biscuit/retention_rate_byread:
+biscuit/read_avg_retention_rate:
     fn: '*_totalReadConversionRate.txt'
-    contents: 'BISCUITqc Conversion Rate by Read Average Table'
 bismark/align:
     fn: '*_[SP]E_report.txt'
 bismark/dedup:
@@ -350,6 +336,9 @@ kallisto:
     shared: true
 kat:
     fn: '*.dist_analysis.json'
+kraken:
+    contents_re: '^\s{1,2}(\d{1,2}\.\d{1,2})\t(\d+)\t(\d+)\t([\dUDKPCOFGS-]{1,3})\t(\d+)\s+(.+)'
+    num_lines: 2
 leehom:
     contents: 'Adapter dimers/chimeras'
     shared: true
@@ -400,6 +389,16 @@ peddy/sex_check:
     fn: '*.sex_check.csv'
 peddy/background_pca:
     fn: '*.background_pca.json'
+somalier/somalier-ancestry:
+    fn: '*.somalier-ancestry.tsv'
+somalier/samples:
+    fn: '*.samples.tsv'
+    contents: '#family_id'
+    num_lines: 5
+somalier/pairs:
+    fn: '*.pairs.tsv'
+    contents: 'hom_concordance'
+    num_lines: 5
 phantompeakqualtools/out:
     fn: '*.spp.out'
 picard/alignment_metrics:

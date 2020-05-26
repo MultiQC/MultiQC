@@ -39,7 +39,7 @@ def parse_reports(self):
             d['bam_file'] = s_name_regex.group(1)
             s_name = self.clean_s_name(d['bam_file'], f['root'])
         else:
-            log.warn("Couldn't find an input filename in genome_results file {}/{}".format(f['root'], f['fn']))
+            log.warning("Couldn't find an input filename in genome_results file {}/{}".format(f['root'], f['fn']))
             return None
 
         # Check for and 'fix' European style decimal places / thousand separators

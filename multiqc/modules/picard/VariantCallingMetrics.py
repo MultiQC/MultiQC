@@ -26,7 +26,7 @@ def parse_reports(parent_module):
         derive_data(data)
 
         # Write parsed data to a file
-        parent_module.write_data_file(data, 'multiqc_picard_varientCalling')
+        parent_module.write_data_file(data, 'multiqc_picard_variantCalling')
 
         parent_module.general_stats_headers['DBSNP_TITV'] = {
             'title': 'TiTV ratio (known)',

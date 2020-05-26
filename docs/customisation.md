@@ -262,6 +262,7 @@ use the following config:
 module_order:
     - fastqc:
         name: 'FastQC (trimmed)'
+        anchor: 'fastqc_trimmed'
         info: 'This section of the report shows FastQC results after adapter trimming.'
         target: ''
         path_filters:
@@ -269,6 +270,7 @@ module_order:
     - cutadapt
     - fastqc:
         name: 'FastQC (raw)'
+        anchor: 'fastqc_raw'
         path_filters:
             - '*_1_fastqc.zip'
 ```
@@ -276,6 +278,15 @@ module_order:
 Note that if you change the `name` then you will get multiples of columns in the
 _General Statistics_ table. If unchanged, the topmost module may overwrite output from
 the first iteration.
+
+If you set a custom `anchor`, then this can be used for other configuration options.
+For example, using the anchors above and the `report_section_order` described below:
+
+```yaml
+report_section_order:
+    fastqc_trimmed:
+        before: fastqc_raw
+```
 
 > NB: Currently, you can not list a module name in both `top_modules` and `module_order`.
 > Let me know if this is a problem..

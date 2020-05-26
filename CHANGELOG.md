@@ -40,6 +40,10 @@ to break. If you haven't already, **you need to switch to Python 3 now**.
 * Importing and running `multiqc` in a script is now a _little_ Better
     * `multiqc.run` now returns the `report` and `config` as well as the exit code. This means that you can explore the MultiQC run time a little in the Python environment.
     * Much more refactoring is needed to make MultiQC as useful in Python scripts as it could be. Watch this space.
+* If a custom module `anchor` is set using `module_order`, it's now used a bit more:
+    * Prefixed to module _section_ IDs
+    * Appended to files saved in `multiqc_data`
+    * Should help to prevent duplicates requiring `-1` suffixes when running a module multiple times
 
 #### New Modules:
 
@@ -47,6 +51,8 @@ to break. If you haven't already, **you need to switch to Python 3 now**.
     * Illumina Bio-IT Platform that uses FPGA for secondary NGS analysis
 * [**iVar**](https://github.com/andersen-lab/ivar)
     * Added support for iVar: a computational package that contains functions broadly useful for viral amplicon-based sequencing.
+* [**Kraken**](https://ccb.jhu.edu/software/kraken2/)
+    * K-mer matching tool for taxonomic classification. Module plots bargraph of counts for top-5 hits across each taxa rank.
 * [**miRTop**](https://github.com/miRTop/mirtop)
     * Command line tool to annotate miRNAs with a standard mirna/isomir naming (mirGFF3)
     * Module started by [@oneillkza](https://github.com/oneillkza/) and completed by [@FlorianThibord](https://github.com/FlorianThibord/)
@@ -58,11 +64,17 @@ to break. If you haven't already, **you need to switch to Python 3 now**.
     * RNA-seq tool for bacteria, includes bar plot showing where features map.
 * [**Sickle**](https://github.com/najoshi/sickle)
     * A windowed adaptive trimming tool for FASTQ files using quality
+* [**Somalier**](https://github.com/brentp/somalier)
+    * Relatedness checking and QC for BAM/CRAM/VCF for cancer, DNA, BS-Seq, exome, etc.
 * [**VarScan2**](https://github.com/dkoboldt/varscan)
     * Variant calling and somatic mutation/CNV detection for next-generation sequencing data
 
 #### Module updates:
 
+* **BISCUIT**
+    * Major rewrite to work with new BISCUIT QC script (BISCUIT `v0.3.16+`)
+        * This change breaks backwards-compatability with previous BISCUIT versions. If you are unable to upgrade BISCUIT, please use MultiQC v1.8.
+    * Fixed error when missing data in log files ([#1101](https://github.com/ewels/MultiQC/issues/1101))
 * **bcl2fastq**
     * Samples with multiple library preps (i.e barcodes) will now be handled correctly ([#1094](https://github.com/ewels/MultiQC/issues/1094))
 * **BUSCO**
@@ -71,7 +83,7 @@ to break. If you haven't already, **you need to switch to Python 3 now**.
     * Removes redundant typo in init name. This makes referring to the module's column consistent with other modules when customising general stats table.
 * **DeDup**
     * Updates plots to make compatible with 0.12.6
-    * Fixes reporting errors - barplot total represents _mapped_ reads, not total reads in BAM file 
+    * Fixes reporting errors - barplot total represents _mapped_ reads, not total reads in BAM file
     * New: Adds 'Post-DeDup Mapped Reads' column to general stats table.
 * **fgbio**
     * New: Plot error rate by read position from `ErrorRateByReadPosition`
@@ -99,6 +111,8 @@ to break. If you haven't already, **you need to switch to Python 3 now**.
     * Added additional (by default hidden) column for `flagstat` that displays number total number of reads in a bam
 * **sortmerna**
     * Fix the bug for the latest sortmerna version 4.2.0 ([#1121](https://github.com/ewels/MultiQC/issues/1121))
+* **sexdeterrmine**
+    * Added a scatter plot of relative X- vs Y-coverage to the generated report.
 
 #### Bug Fixes:
 
@@ -109,6 +123,8 @@ to break. If you haven't already, **you need to switch to Python 3 now**.
 * Heatmap plotting function is now compatible with MultiQC toolbox `hide` and `highlight` ([#1136](https://github.com/ewels/MultiQC/issues/1136))
 * Plot config `logswitch_active` now works as advertised
 * When running MultiQC modules several times, multiple data files are now created instead of overwriting one another ([#1175](https://github.com/ewels/MultiQC/issues/1175))
+* Fixed minor bug where tables could report negative numbers of columns in their header text
+* Replaced deprecated 'warn()' with 'warning()' of the logging module
 
 ## [MultiQC v1.8](https://github.com/ewels/MultiQC/releases/tag/v1.8) - 2019-11-20
 
@@ -195,7 +211,6 @@ to break. If you haven't already, **you need to switch to Python 3 now**.
     * Fixed a bug where `tstv_by_qual.py` produced invalid json from infinity-values.
 * **snpEff**
     * Added plot of effects
-
 
 #### New MultiQC Features:
 * Added some installation docs for windows

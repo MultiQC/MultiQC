@@ -91,7 +91,7 @@ def parse_reports(self):
             try:
                 data[s_name]['CCG_OXIDATION_ERROR_RATE'] = self.picard_OxoGMetrics_data[s_name]['CCG']['OXIDATION_ERROR_RATE']
             except KeyError:
-                log.warn("Couldn't find picard CCG oxidation error rate for {}".format(s_name))
+                log.warning("Couldn't find picard CCG oxidation error rate for {}".format(s_name))
 
         self.general_stats_headers['CCG_OXIDATION_ERROR_RATE'] = {
             'title': 'CCG Oxidation',
