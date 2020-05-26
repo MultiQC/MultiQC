@@ -36,7 +36,7 @@ The report section name and description will be automatically based on the filen
 
 ## MultiQC-specific data file
 If you can choose exactly how your data output looks, then the easiest way to parse it
-is to use a MultiQC-specific format. If the filename ends in `*_mqc.(yaml|json|txt|csv|out)`
+is to use a MultiQC-specific format. If the filename ends in `*_mqc.(yaml|yml|json|txt|csv|tsv|log|out|png|jpg|jpeg|html)`
 then it will be found by any standard MultiQC installation with no additional customisation
 required (v0.9 onwards).
 
@@ -98,6 +98,18 @@ Category_1    374
 Category_2    229
 Category_3    39
 Category_4    253
+```
+
+You can easily inject custom HTML snippets by ending the filename with `_mqc.html` - again the
+embedded config works in a similar way, but with a HTML comment:
+
+```html
+<!--
+id: 'custom-html'
+section_name: 'Custom HTML'
+description: 'This section is created using a custom HTML file'
+-->
+<p>Some custom HTML content here.</p>
 ```
 
 If no configuration is given, MultiQC will do its best to guess how to visualise your data appropriately.

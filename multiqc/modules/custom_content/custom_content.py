@@ -8,6 +8,7 @@ from collections import defaultdict, OrderedDict
 import logging
 import json
 import os
+import re
 import yaml
 
 from multiqc import config
@@ -118,6 +119,14 @@ def custom_module_classes():
                         'description': 'Embedded image <code>{}</code>'.format(f['fn']),
                         'data': img_html
                     }
+                elif f_extension == '.html':
+                    parsed_data = {
+                        'id': f['s_name'],
+                        'description': False,
+                        'plot_type': 'html',
+                        'data': f['f']
+                    }
+                    parsed_data.update( _find_html_file_header(f) )
                 if parsed_data is not None:
                     c_id = parsed_data.get('id', k)
                     if len(parsed_data.get('data', {})) > 0:
@@ -340,6 +349,19 @@ def _find_file_header(f):
         log.debug("Custom Content comment file header looked wrong: {}".format(hconfig))
     else:
         return hconfig
+
+def _find_html_file_header(f):
+    """ Look for a HTML comment config at the start of a custom content HTML file """
+    if f['f'].lstrip().startswith('<!--'):
+        match = re.search(r"^\<\!\-\-((?:.|\n|\r)*?)-->", f['f'].lstrip())
+        if match:
+            comment = match.group(1)
+            try:
+                return yaml_ordered_load(comment)
+            except Exception as e:
+                log.debug("Found Custom Content HTML comment, but couldn't load as YAML: {}".format(e), exc_info=True)
+                log.debug("Comment:\n{}".format(comment))
+    return {}
 
 def _guess_file_format(f):
     """

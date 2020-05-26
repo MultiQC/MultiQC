@@ -50,7 +50,8 @@ class BaseMultiqcModule(object):
             mname = '<a href="{}" target="_blank">{}</a>'.format(href, target)
         else:
             mname = target
-        self.intro = '<p>{} {}</p>{}'.format( mname, info, extra )
+        if info is not False:
+            self.intro = '<p>{} {}</p>{}'.format( mname, info, extra )
 
         # Format the markdown strings
         if autoformat:

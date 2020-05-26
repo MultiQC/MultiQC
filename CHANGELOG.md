@@ -47,6 +47,9 @@ to break. If you haven't already, **you need to switch to Python 3 now**.
 * New heatmap plot config options `xcats_samples` and `ycats_samples`
     * If set to `False`, the report toolbox options (_highlight_, _rename_, _show/hide_) do not affect that axis.
     * Means that the _Show only matching samples_ report toolbox option works on FastQC Status Checks, for example  ([#1172](https://github.com/ewels/MultiQC/issues/1172))
+* Improve Custom Content for HTML files - now just end your HTML filename with `_mqc.html`
+    * Native handling of HTML snippets as files, no MultiQC config or YAML file required.
+    * Also with embedded custom content configuration at the start of the file as a HTML comment.
 
 #### New Modules:
 

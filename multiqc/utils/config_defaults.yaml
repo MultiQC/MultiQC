@@ -140,6 +140,7 @@ fn_clean_exts:
     - '.png'
     - '.jpg'
     - '.jpeg'
+    - '.html'
     - 'Log.final'
     - 'ReadsPerGene'
     - '.flagstat'
@@ -237,7 +238,7 @@ fn_ignore_files:
     - '*.vcf'
     - '*.txt.gz'
     - '*.pdf'
-    - '*.html'
+    - '*[!_][!m][!q][!c].html'
     - '*.md5'
 
 # Favourite modules that should appear at the top in preference
