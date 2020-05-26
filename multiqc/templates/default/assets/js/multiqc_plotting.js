@@ -308,7 +308,8 @@ function plot_xy_line_graph(target, ds){
     config['tt_label'] = '{point.x}: {point.y:.2f}';
     if(config['categories']){
       config['tt_formatter'] = function(){
-        return '<div style="background-color:'+this.series.color+'; display:inline-block; height: 10px; width: 10px; border:1px solid #333;"></div> <span style="text-decoration:underline; font-weight:bold;">'+this.series.name+'</span><br><strong>'+this.key+':</strong> '+this.y;
+        yval = Highcharts.numberFormat(this.y, (config['tt_decimals'] == undefined ? 0 : config['tt_decimals'])) + ( config['tt_suffix'] || '');
+        return '<div style="background-color:'+this.series.color+'; display:inline-block; height: 10px; width: 10px; border:1px solid #333;"></div> <span style="text-decoration:underline; font-weight:bold;">'+this.series.name+'</span><br><strong>'+this.key+':</strong> '+yval;
       }
     }
   }

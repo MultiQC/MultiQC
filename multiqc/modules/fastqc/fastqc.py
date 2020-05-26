@@ -754,8 +754,10 @@ class MultiqcModule(BaseMultiqcModule):
             'ymax': 100 if max_dupval <= 100.0 else None,
             'ymin': 0,
             'yMinTickInterval': 0.1,
+            'yLabelFormat': '{value:.0f}%',
             'colors': self.get_status_cols('sequence_duplication_levels'),
-            'tt_label': '<b>{point.x}</b>: {point.y:.1f}%',
+            'tt_decimals': 2,
+            'tt_suffix': '%'
         }
 
         self.add_section (

@@ -234,6 +234,8 @@ config = {
     'xLabelFormat': '{value}',   # Format string for the axis labels
     'yLabelFormat': '{value}',   # Format string for the axis labels
     'tt_label': '{point.x}: {point.y:.2f}', # Use to customise tooltip label, eg. '{point.x} base pairs'
+    'tt_decimals': None,         # Tooltip decimals when categories = True (when false use tt_label)
+    'tt_suffix': None,           # Tooltip suffix when categories = True (when false use tt_label)
     'pointFormat': None,         # Replace the default HTML for the entire tooltip label
     'click_func': function(){},  # Javascript function to be called when a point is clicked
     'cursor': None               # CSS mouse cursor type. Defaults to pointer when 'click_func' specified
