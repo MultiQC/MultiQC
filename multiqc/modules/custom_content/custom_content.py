@@ -79,7 +79,7 @@ def custom_module_classes():
             continue
 
         # We should have had something by now
-        log.warning("Found section '{}' in config for under custom_data, but no data or search patterns.".format(c_id))
+        log.warning("Found section '{}' in config for custom_data, but no data or search patterns.".format(c_id))
 
     # Now go through each of the file search patterns
     bm = BaseMultiqcModule()
