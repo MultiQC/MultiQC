@@ -8,6 +8,7 @@ from collections import defaultdict, OrderedDict
 import logging
 import json
 import os
+import re
 import yaml
 
 from multiqc import config
@@ -61,7 +62,11 @@ def custom_module_classes():
 
         # Data supplied in with config (eg. from a multiqc_config.yaml file in working directory)
         if 'data' in f:
-            cust_mods[c_id]['data'].update( f['data'] )
+            try:
+                cust_mods[c_id]['data'].update( f['data'] )
+            except ValueError:
+                # HTML plot type doesn't have a data sample-id key, so just take the whole chunk of data
+                cust_mods[c_id]['data'] = f['data']
             cust_mods[c_id]['config'].update( { k:v for k, v in f.items() if k is not 'data' } )
             cust_mods[c_id]['config']['id'] = cust_mods[c_id]['config'].get('id', c_id)
             continue
@@ -74,7 +79,7 @@ def custom_module_classes():
             continue
 
         # We should have had something by now
-        log.warn("Found section '{}' in config for under custom_data, but no data or search patterns.".format(c_id))
+        log.warning("Found section '{}' in config for custom_data, but no data or search patterns.".format(c_id))
 
     # Now go through each of the file search patterns
     bm = BaseMultiqcModule()
@@ -114,6 +119,13 @@ def custom_module_classes():
                         'description': 'Embedded image <code>{}</code>'.format(f['fn']),
                         'data': img_html
                     }
+                elif f_extension == '.html':
+                    parsed_data = {
+                        'id': f['s_name'],
+                        'plot_type': 'html',
+                        'data': f['f']
+                    }
+                    parsed_data.update( _find_html_file_header(f) )
                 if parsed_data is not None:
                     c_id = parsed_data.get('id', k)
                     if len(parsed_data.get('data', {})) > 0:
@@ -235,7 +247,7 @@ def custom_module_classes():
             parsed_modules.append( MultiqcModule(module_id, mod) )
             if mod['config'].get('plot_type') == 'html':
                 log.info("{}: Found 1 sample (html)".format(module_id))
-            if mod['config'].get('plot_type') == 'image':
+            elif mod['config'].get('plot_type') == 'image':
                 log.info("{}: Found 1 sample (image)".format(module_id))
             else:
                 log.info("{}: Found {} samples ({})".format(module_id, len(mod['data']), mod['config'].get('plot_type')))
@@ -266,7 +278,8 @@ class MultiqcModule(BaseMultiqcModule):
             name = modname,
             anchor = mod['config'].get('section_anchor', c_id),
             href = mod['config'].get('section_href'),
-            info = mod['config'].get('description')
+            info = mod['config'].get('description'),
+            extra = mod['config'].get('extra')
         )
 
         pconfig = mod['config'].get('pconfig', {})
@@ -330,12 +343,25 @@ def _find_file_header(f):
         hconfig = yaml.safe_load("\n".join(hlines))
         assert(isinstance(hconfig, dict))
     except yaml.YAMLError as e:
-        log.warn("Could not parse comment file header for MultiQC custom content: {}".format(f['fn']))
+        log.warning("Could not parse comment file header for MultiQC custom content: {}".format(f['fn']))
         log.debug(e)
     except AssertionError:
         log.debug("Custom Content comment file header looked wrong: {}".format(hconfig))
     else:
         return hconfig
+
+def _find_html_file_header(f):
+    """ Look for a HTML comment config at the start of a custom content HTML file """
+    if f['f'].lstrip().startswith('<!--'):
+        match = re.search(r"^\<\!\-\-((?:.|\n|\r)*?)-->", f['f'].lstrip())
+        if match:
+            comment = match.group(1)
+            try:
+                return yaml_ordered_load(comment)
+            except Exception as e:
+                log.debug("Found Custom Content HTML comment, but couldn't load as YAML: {}".format(e), exc_info=True)
+                log.debug("Comment:\n{}".format(comment))
+    return {}
 
 def _guess_file_format(f):
     """
@@ -410,7 +436,7 @@ def _parse_txt(f, conf):
             if ncols is None:
                 ncols = len(sections)
             elif ncols != len(sections):
-                log.warn("Inconsistent number of columns found in {}! Skipping..".format(f['fn']))
+                log.warning("Inconsistent number of columns found in {}! Skipping..".format(f['fn']))
                 return (None, conf)
 
     # Convert values to floats if we can

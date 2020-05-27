@@ -63,7 +63,7 @@ class MultiqcModule(BaseMultiqcModule):
     def parse_log(self, f):
         filecount = 1
         if f['s_name'] in self.happy_seen:
-            log.warn("Duplicate sample name found in {}! Overwriting: {}".format(f['root'], f['s_name']))
+            log.warning("Duplicate sample name found in {}! Overwriting: {}".format(f['root'], f['s_name']))
             filecount = 0
         else:
             self.happy_seen.add(f['s_name'])

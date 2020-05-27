@@ -107,9 +107,9 @@ Make a reference to this in the YAML frontmatter at the top of
 `docs/README.md` - this allows the website to find the file to build
 the documentation.
 
-### Readme and Changelog
-Last but not least, remember to add your new module to the main `README.md`
-file and `CHANGELOG.md`, so that people know that it's there. Feel free to
+### Changelog
+Last but not least, remember to add your new module to the `CHANGELOG.md`,
+so that people know that it's there. Feel free to
 add your name to the list of credits at the bottom of the readme.
 
 ### MultiqcModule Class
@@ -499,6 +499,9 @@ that should be used to allow users to change the multiplier for read counts: `re
 Similar config options apply for base pairs: `base_count_multiplier`, `base_count_prefix` and
 `base_count_desc`.
 
+And for the read count of long reads: `long_read_count_multiplier`, `long_read_count_prefix` and
+`long_read_count_desc`.
+
 A third parameter can be passed to this function, `namespace`. This is usually
 not needed - MultiQC automatically takes the name of the module that is calling
 the function and uses this. However, sometimes it can be useful to overwrite this.
@@ -551,27 +554,28 @@ To do this, use the `self.add_section()` helper function:
 
 ```python
 self.add_section (
-    name = 'First Module Section',
-    anchor = 'mymod-first',
-    description = 'My amazing module output, from the first section',
-    helptext = "If you're not sure _how_ to interpret the data, we can help!",
-    plot = bargraph.plot(data)
-)
-self.add_section (
     name = 'Second Module Section',
     anchor = 'mymod-second',
     plot = linegraph.plot(data2)
 )
 self.add_section (
+    name = 'First Module Section',
+    anchor = 'mymod-first',
+    description = 'My amazing module output, from the first section',
+    helptext = "If you're not sure _how_ to interpret the data, we can help!",
+    extra = '<blockquote>Some extra custom HTML to put under the description</blockquote>',
+    plot = bargraph.plot(data)
+)
+self.add_section (
     content = '<p>Some custom HTML.</p>'
 )
 ```
+
 These will automatically be labelled and linked in the navigation (unless
 the module has only one section or `name` is not specified).
 
 Note that `description` and `helptext` are processed as Markdown by default.
 This can be disabled by passing `autoformat=False` to the function.
-
 
 ## Step 6 - Plot some data
 Ok, you have some data, now the fun bit - visualising it! Each of the plot

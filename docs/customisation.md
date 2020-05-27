@@ -98,6 +98,54 @@ sample_names_rename:
     - ["SRR1067510_1", "Sample_3", "MYBESTSAMP_3"]
 ```
 
+## Show / Hide samples buttons
+
+It is possible to filter which samples are visible through the [report toolbox](#hiding-samples),
+but it can be desirable to embed such patterns into the report so that they can be shared
+with others. One example can be to add filters for batches, to easily scan if certain
+quality metrics overlap between these batches.
+
+It's possible to supply a file with one or more patterns to filter samples on using the
+`--sample-filters` command line option. This file should be a tab-delimited file with each
+row containing the button name, whether the pattern should be hidden (`hide`) or shown (`show`)
+and the patterns to be applied (all subsequent columns).
+
+For example, to filter on read pair groups, you could use the following file:
+
+```tsv
+Read Group 1	show	_R1
+Read Group 2	show	_R2
+```
+
+To filter on controls and sample groups you could use:
+
+```tsv
+Controls	show	input_
+Conditions	show	group_1_	group_2_	group_3_
+```
+
+MultiQC automatically adds an `Show all` button at the start, which reverts back to showing all samples.
+
+If you prefer, you can also add these buttons using a MultiQC config file:
+
+```yaml
+show_hide_buttons:
+  - Read Group 1
+  - Read Group 2
+  - Controls
+  - Conditions
+show_hide_mode:
+  - show
+  - show
+  - show
+  - show
+show_hide_patterns:
+  - _R1
+  - _R2
+  - input_
+  - [ "group_1_", "group_2_", "group_3_" ]
+```
+
 ## Module and section comments
 Sometimes you may want to add a custom comment above specific sections in the report. You can
 do this with the config option `section_comments` as follows:
@@ -214,6 +262,7 @@ use the following config:
 module_order:
     - fastqc:
         name: 'FastQC (trimmed)'
+        anchor: 'fastqc_trimmed'
         info: 'This section of the report shows FastQC results after adapter trimming.'
         target: ''
         path_filters:
@@ -221,6 +270,7 @@ module_order:
     - cutadapt
     - fastqc:
         name: 'FastQC (raw)'
+        anchor: 'fastqc_raw'
         path_filters:
             - '*_1_fastqc.zip'
 ```
@@ -228,6 +278,15 @@ module_order:
 Note that if you change the `name` then you will get multiples of columns in the
 _General Statistics_ table. If unchanged, the topmost module may overwrite output from
 the first iteration.
+
+If you set a custom `anchor`, then this can be used for other configuration options.
+For example, using the anchors above and the `report_section_order` described below:
+
+```yaml
+report_section_order:
+    fastqc_trimmed:
+        before: fastqc_raw
+```
 
 > NB: Currently, you can not list a module name in both `top_modules` and `module_order`.
 > Let me know if this is a problem..
@@ -477,6 +536,12 @@ base_count_prefix: 'Mb'
 base_count_desc: 'millions'
 ```
 
+And for long reads:
+```yaml
+long_read_count_multiplier: 0.001
+long_read_count_prefix: 'K'
+long_read_count_desc: 'thousands'
+```
 
 ## Number formatting
 By default, the interactive HighCharts plots in MultiQC reports use spaces for thousand

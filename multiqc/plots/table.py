@@ -194,7 +194,7 @@ def make_table (dt):
                                     if 'lt' in cmp and float(cmp['lt']) > float(val):
                                         cmatches[ftype] = True
                                 except:
-                                    logger.warn("Not able to apply table conditional formatting to '{}' ({})".format(val, cmp))
+                                    logger.warning("Not able to apply table conditional formatting to '{}' ({})".format(val, cmp))
                 # Apply HTML in order of config keys
                 bgcol = None
                 for cfc in config.table_cond_formatting_colours:
@@ -229,9 +229,11 @@ def make_table (dt):
 
         # Remove header if we don't have any filled cells for it
         if sum([len(rows) for rows in t_rows.values()]) == 0:
+            if header.get('hidden', False) is True:
+                hidden_cols -= 1
             t_headers.pop(rid, None)
             t_modal_headers.pop(rid, None)
-            logger.debug('Removing header {} from general stats table, as no data'.format(k))
+            logger.debug('Removing header {} from table, as no data'.format(k))
 
     #
     # Put everything together
@@ -274,9 +276,20 @@ def make_table (dt):
         # "Showing x of y columns" text
         row_visibilities = [ all(t_rows_empty[s_name].values()) for s_name in t_rows_empty ]
         visible_rows = [ x for x in row_visibilities if not x ]
+
+        # Visible rows
+        t_showing_rows_txt = 'Showing <sup id="{tid}_numrows" class="mqc_table_numrows">{nvisrows}</sup>/<sub>{nrows}</sub> rows'.format(tid=table_id, nvisrows=len(visible_rows), nrows=len(t_rows))
+
+        # How many columns are visible?
+        ncols_vis = (len(t_headers) + 1) - hidden_cols
+        t_showing_cols_txt = ''
+        if len(t_headers) > 1:
+            t_showing_cols_txt = ' and <sup id="{tid}_numcols" class="mqc_table_numcols">{ncols_vis}</sup>/<sub>{ncols}</sub> columns'.format(tid=table_id, ncols_vis=ncols_vis, ncols=len(t_headers))
+
+        # Build table header text
         html += """
-        <small id="{tid}_numrows_text" class="mqc_table_numrows_text">Showing <sup id="{tid}_numrows" class="mqc_table_numrows">{nvisrows}</sup>/<sub>{nrows}</sub> rows and <sup id="{tid}_numcols" class="mqc_table_numcols">{ncols_vis}</sup>/<sub>{ncols}</sub> columns.</small>
-        """.format(tid=table_id, nvisrows=len(visible_rows), nrows=len(t_rows), ncols_vis = (len(t_headers)+1)-hidden_cols, ncols=len(t_headers))
+        <small id="{tid}_numrows_text" class="mqc_table_numrows_text">{rows}{cols}.</small>
+        """.format(tid=table_id, rows=t_showing_rows_txt, cols=t_showing_cols_txt)
 
     # Build the table itself
     collapse_class = 'mqc-table-collapse' if len(t_rows) > 10 and config.collapse_tables else ''

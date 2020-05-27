@@ -95,10 +95,10 @@ class MultiqcModule(BaseMultiqcModule):
         try:
             assert data['Unique'] + data['Multi'] == data['Alignable']
         except AssertionError:
-            log.warn("Unique + Multimapping read counts != alignable reads! '{}'".format(f['fn']))
+            log.warning("Unique + Multimapping read counts != alignable reads! '{}'".format(f['fn']))
             return None
         except KeyError:
-            log.warn("Error parsing RSEM counts file '{}'".format(f['fn']))
+            log.warning("Error parsing RSEM counts file '{}'".format(f['fn']))
             return None
 
         # Save parsed data

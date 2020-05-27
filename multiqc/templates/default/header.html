@@ -81,6 +81,17 @@ was generated and the button that launches the welcome tour.
 </p>
 {% endif %}
 
+
+{% if config.show_hide_buttons | length > 0 %}
+<p id="mqc_hide_switches_txt">Show/Hide samples:
+  <span class="btn-group btn-group-sm" role="group" id="mqc_hide_switches">
+    {% for sn_t in config.show_hide_buttons %}
+      <button type="button" class="btn btn-primary mqc_hide_switches {% if loop.index == 1 %}active{% endif %}" data-index="{{ loop.index - 1 }}">{{ sn_t }}</button>
+    {%- endfor %}
+  </span>
+</p>
+{% endif %}
+
 <hr id="mqc_header_hr">
 
 <div class="alert alert-info alert-dismissible hidden-print" id="mqc_welcome" style="display: none;">

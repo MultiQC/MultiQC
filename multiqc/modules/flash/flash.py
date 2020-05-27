@@ -22,11 +22,11 @@ class MultiqcModule(BaseMultiqcModule):
     def __init__(self):
         # Initialise the parent object
         super(MultiqcModule, self).__init__(
-            name='FLASh',
-            anchor='flash',
-            href="https://ccb.jhu.edu/software/FLASH/",
-            info="is a very fast and accurate software tool to merge paired-end reads from"\
-            " next-generation sequencing experiments.")
+            name = 'FLASh',
+            anchor = 'flash',
+            href = "https://ccb.jhu.edu/software/FLASH/",
+            info = "is a very fast and accurate software tool to merge paired-end reads from next-generation sequencing experiments."
+        )
 
         # Find all log files with flash msgs
         self.flash_data = OrderedDict()
@@ -152,6 +152,10 @@ class MultiqcModule(BaseMultiqcModule):
         """Barplot of combined pairs"""
         cats = OrderedDict()
         cats = {
+            'combopairs': {
+                'name': 'Combined pairs',
+                'color': '#191970'
+            },
             'inniepairs': {
                 'name': 'Combined innie pairs',
                 'color': '#191970'
@@ -169,10 +173,16 @@ class MultiqcModule(BaseMultiqcModule):
                 'color': '#ffd700'
             }
         }
-        splotconfig = {'id': 'flash_combo_stats_plot',
-                       'title': 'FLASh: Read combination statistics',
-                       'ylab': 'Number of read pairs',
-                       'hide_zero_cats': False }
+        splotconfig = {
+            'id': 'flash_combo_stats_plot',
+            'title': 'FLASh: Read combination statistics',
+            'ylab': 'Number of read pairs'
+        }
+        # Only plot the combopairs category if we don't have inniepairs and outiepairs
+        for s_name, d in data.items():
+            if (d['inniepairs'] > 0 or d['outiepairs'] > 0) and d['combopairs'] > 0:
+                del data[s_name]['combopairs']
+
         return bargraph.plot(data, cats, splotconfig)
 
     @staticmethod
@@ -221,13 +231,16 @@ class MultiqcModule(BaseMultiqcModule):
             tot = sum(val.values(), 0)
             rel_data[key] = {k: v / tot for k, v in val.items()}
         fplotconfig = {
+            'id': 'flash_freqpoly_plot',
+            'title': 'FLASh: Frequency of merged read lengths',
+            'xlab': 'Merged Read Length',
+            'ylab': 'Frequency',
             'data_labels': [
                 {'name': 'Absolute', 'ylab': 'Frequency', 'xlab': 'Merged Read Length'},
                 {'name': 'Relative', 'ylab': 'Relative Frequency', 'xlab': 'Merged Read Length'}
-                ],
-            'id': 'flash_freqpoly_plot', 'title': 'FLASh: Frequency of merged read lengths',
+            ],
             'colors': dict(zip(data.keys(), MultiqcModule.get_colors(len(data))))
-            }
+        }
         return linegraph.plot([data, rel_data], fplotconfig)
 
     def hist_results(self):
@@ -245,10 +258,11 @@ class MultiqcModule(BaseMultiqcModule):
             log.info("Found %d histogram reports", len(self.hist_data))
 
             self.add_section(
-                name='Frequency polygons of merged read lengths',
-                anchor='flash-histogram',
-                description='This plot is made from the numerical histograms output by FLASh.',
-                plot=self.freqpoly_plot(self.hist_data))
+                name = 'Frequency polygons of merged read lengths',
+                anchor = 'flash-histogram',
+                description = 'This plot is made from the numerical histograms output by FLASh.',
+                plot = self.freqpoly_plot(self.hist_data)
+            )
 
         except UserWarning:
             pass

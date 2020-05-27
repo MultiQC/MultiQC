@@ -4,6 +4,7 @@
 
 from collections import OrderedDict
 import logging
+import os
 
 from multiqc import config
 from multiqc.modules.base_module import BaseMultiqcModule
@@ -45,6 +46,9 @@ class MultiqcModule(BaseMultiqcModule):
                 'bam_stat'
             ]
 
+        # Add self.js to be included in template
+        self.js = { 'assets/js/multiqc_rseqc.js' : os.path.join(os.path.dirname(__file__), 'assets', 'js', 'multiqc_rseqc.js') }
+
         # Call submodule functions
         for sm in rseqc_sections:
             try:
@@ -55,7 +59,7 @@ class MultiqcModule(BaseMultiqcModule):
                 if n[sm] > 0:
                     log.info("Found {} {} reports".format(n[sm], sm))
             except (ImportError, AttributeError):
-                log.warn("Could not find RSeQC Section '{}'".format(sm))
+                log.warning("Could not find RSeQC Section '{}'".format(sm))
 
         # Exit if we didn't find anything
         if sum(n.values()) == 0:

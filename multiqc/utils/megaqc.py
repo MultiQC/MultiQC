@@ -57,7 +57,7 @@ def multiqc_dump_json(report):
                 json.dumps(d, cls=MQCJSONEncoder, ensure_ascii=False) # Test that exporting to JSON works
                 exported_data.update(d)
             except (TypeError, KeyError, AttributeError):
-                log.warn("Couldn't export data key '{}.{}'".format(s, k))
+                log.warning("Couldn't export data key '{}.{}'".format(s, k))
         # Get the absolute paths of analysis directories
         exported_data['config_analysis_dir_abs'] = list()
         for d in exported_data.get('config_analysis_dir', []):

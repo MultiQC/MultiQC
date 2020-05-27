@@ -37,6 +37,7 @@ class IdxstatsReportMixin():
             keys = list()
             pdata = dict()
             pdata_norm = dict()
+            pdata_obs_exp = dict()
             xy_counts = dict()
             # Count the total mapped reads for every chromosome
             chrs_mapped = defaultdict(lambda:0)
@@ -48,9 +49,9 @@ class IdxstatsReportMixin():
                 log.info('Setting idxstats cutoff to: {}%'.format(cutoff*100.0))
             for s_name in self.samtools_idxstats:
                 for chrom in self.samtools_idxstats[s_name]:
-                    chrs_mapped[chrom] += self.samtools_idxstats[s_name][chrom]
-                    sample_mapped[s_name] += self.samtools_idxstats[s_name][chrom]
-                    total_mapped += self.samtools_idxstats[s_name][chrom]
+                    chrs_mapped[chrom] += self.samtools_idxstats[s_name][chrom][0]
+                    sample_mapped[s_name] += self.samtools_idxstats[s_name][chrom][0]
+                    total_mapped += self.samtools_idxstats[s_name][chrom][0]
             req_reads = float(total_mapped)*cutoff
             chr_always = getattr(config, 'samtools_idxstats_always', [])
             if len(chr_always) > 0:
@@ -74,7 +75,7 @@ class IdxstatsReportMixin():
                         if chrom not in chr_ignore and chrom not in keys:
                             keys.append(chrom)
                     # Collect X and Y counts if we have them
-                    mapped = self.samtools_idxstats[s_name][chrom]
+                    mapped = self.samtools_idxstats[s_name][chrom][0]
                     if xchr is not False :
                         if str(xchr) == str(chrom):
                             x_count = mapped
@@ -95,13 +96,20 @@ class IdxstatsReportMixin():
             for s_name in self.samtools_idxstats:
                 pdata[s_name] = OrderedDict()
                 pdata_norm[s_name] = OrderedDict()
+                pdata_obs_exp[s_name] = OrderedDict()
+                genome_size = float(sum([stats[1] for stats in self.samtools_idxstats[s_name].values()]))
                 for k in keys:
+
                     try:
-                        pdata[s_name][k] = self.samtools_idxstats[s_name][k]
-                        pdata_norm[s_name][k] = float(self.samtools_idxstats[s_name][k]) / sample_mapped[s_name]
+                        pdata[s_name][k] = self.samtools_idxstats[s_name][k][0]
+                        pdata_norm[s_name][k] = float(self.samtools_idxstats[s_name][k][0]) / sample_mapped[s_name]
+                        chrom_size = float(self.samtools_idxstats[s_name][k][1])
+                        expected_count = (chrom_size / genome_size) * float(sample_mapped[s_name])
+                        pdata_obs_exp[s_name][k] = float(pdata[s_name][k]) / expected_count
                     except (KeyError, ZeroDivisionError):
                         pdata[s_name][k] = 0
                         pdata_norm[s_name][k] = 0
+                        pdata_obs_exp[s_name][k] = 0
 
             # X/Y ratio plot
             if len(xy_counts) > 0:
@@ -129,11 +137,13 @@ class IdxstatsReportMixin():
                 'title': 'Samtools idxstats: Mapped reads per contig',
                 'ylab': '# mapped reads',
                 'xlab': 'Chromosome Name',
+                'logswitch': True,
                 'categories': True,
                 'tt_label': '<strong>{point.category}:</strong> {point.y:.2f}',
                 'data_labels': [
                     {'name': 'Normalised Counts', 'ylab': 'Fraction of total count'},
-                    {'name': 'Counts', 'ylab': '# mapped reads'}
+                    {'name': 'Observed over Expected Counts', 'ylab': 'log10 ( Observed over expected counts )'},
+                    {'name': 'Raw Counts', 'ylab': '# mapped reads'}
                 ]
             }
             self.add_section (
@@ -141,7 +151,7 @@ class IdxstatsReportMixin():
                 anchor = 'samtools-idxstats',
                 description = 'The <code>samtools idxstats</code> tool counts the number of mapped reads per chromosome / contig. ' +
                     'Chromosomes with &lt; {}% of the total aligned reads are omitted from this plot.'.format(cutoff*100),
-                plot = linegraph.plot([pdata_norm, pdata], pconfig)
+                plot = linegraph.plot([pdata_norm, pdata_obs_exp, pdata], pconfig)
             )
 
         # Return the number of logs that were found
@@ -158,7 +168,7 @@ def parse_single_report(f):
     for l in f.splitlines():
         s = l.split("\t")
         try:
-            parsed_data[s[0]] = int(s[2])
+            parsed_data[s[0]] = [int(s[2]), int(s[1])]
         except (IndexError, ValueError):
             pass
     return parsed_data
