@@ -168,9 +168,13 @@ class MultiqcModule(BaseMultiqcModule):
         self.result_data['aligned_total'] = aligned_total
         self.result_data['unaligned_total'] = unaligned_total
         self.result_data['reads_total'] = reads_total
-        self.result_data['discarded_total'] = reads_total - self.result_data['retained']
+        if self.__collapsed:
+            self.result_data['discarded_total'] = reads_total - self.result_data['retained'] - self.result_data['full-length_cp'] - self.result_data['truncated_cp']
+            self.result_data['retained_reads'] = self.result_data['retained'] - self.result_data['singleton_m1'] - self.result_data['singleton_m2'] - self.result_data['full-length_cp'] - self.result_data['truncated_cp']
+        else:
+            self.result_data['discarded_total'] = reads_total - self.result_data['retained']
+            self.result_data['retained_reads'] = self.result_data['retained'] - self.result_data['singleton_m1'] - self.result_data['singleton_m2']
 
-        self.result_data['retained_reads'] = self.result_data['retained'] - self.result_data['singleton_m1'] - self.result_data['singleton_m2']
         try:
             self.result_data['percent_aligned'] = float(self.result_data['aligned']) * 100.0 / float(self.result_data['total'])
         except ZeroDivisionError:
