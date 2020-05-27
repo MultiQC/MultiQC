@@ -273,6 +273,7 @@ section_anchor: <id>    # Used in report section #soft-links
 section_name: <id>      # Nice name used for the report section header
 section_href: null      # External URL for the data, to find more information
 description: null       # Introductory text to be printed under the section header
+section_extra: null     # Custom HTML to add after the section description
 file_format: null       # File format of the data (eg. csv / tsv)
 plot_type: null         # The plot type to visualise the data with.
                         # generalstats | table | bargraph | linegraph | scatter | heatmap | beeswarm

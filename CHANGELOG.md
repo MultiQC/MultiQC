@@ -139,6 +139,7 @@ to break. If you haven't already, **you need to switch to Python 3 now**.
 * Fixed bug where numeric custom content sample names could trigger a `TypeError` ([#1091](https://github.com/ewels/MultiQC/issues/1091))
 * Fixed custom content bug HTML data in a config file would trigger a `ValueError` ([#1071](https://github.com/ewels/MultiQC/issues/1071))
 * Replaced deprecated 'warn()' with 'warning()' of the logging module
+* Custom content now supports `section_extra` config key to add custom HTML after description.
 
 ## [MultiQC v1.8](https://github.com/ewels/MultiQC/releases/tag/v1.8) - 2019-11-20
 

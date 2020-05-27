@@ -122,7 +122,6 @@ def custom_module_classes():
                 elif f_extension == '.html':
                     parsed_data = {
                         'id': f['s_name'],
-                        'description': False,
                         'plot_type': 'html',
                         'data': f['f']
                     }
@@ -279,7 +278,8 @@ class MultiqcModule(BaseMultiqcModule):
             name = modname,
             anchor = mod['config'].get('section_anchor', c_id),
             href = mod['config'].get('section_href'),
-            info = mod['config'].get('description')
+            info = mod['config'].get('description'),
+            extra = mod['config'].get('extra')
         )
 
         pconfig = mod['config'].get('pconfig', {})
