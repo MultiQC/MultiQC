@@ -331,6 +331,9 @@ ivar/trim:
     num_lines: 8
 jellyfish:
     fn: '*_jf.hist'
+kaiju:
+    contents_re: 'file\tpercent\treads\ttaxon_id\ttaxon_name'
+    num_lines: 1
 kallisto:
     contents: '[quant] finding pseudoalignments for the reads'
     shared: true

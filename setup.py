@@ -125,6 +125,7 @@ setup(
             'interop = multiqc.modules.interop:MultiqcModule',
             'ivar = multiqc.modules.ivar:MultiqcModule',
             'jellyfish = multiqc.modules.jellyfish:MultiqcModule',
+            'kaiju = multiqc.modules.kaiju:MultiqcModule',
             'kallisto = multiqc.modules.kallisto:MultiqcModule',
             'kat = multiqc.modules.kat:MultiqcModule',
             'kraken = multiqc.modules.kraken:MultiqcModule',

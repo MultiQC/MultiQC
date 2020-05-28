@@ -513,6 +513,10 @@ module_order:
         module_tag:
             - RNA
             - DNA
+    - kaiju:
+        module_tag:
+            - DNA
+            - Metagenomics
     - kraken:
         module_tag:
             - DNA

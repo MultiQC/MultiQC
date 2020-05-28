@@ -52,7 +52,8 @@ to break. If you haven't already, **you need to switch to Python 3 now**.
     * Also with embedded custom content configuration at the start of the file as a HTML comment.
 
 #### New Modules:
-
+* [**Kaiju**] (http://kaiju.binf.ku.dk/)
+    * Fast and sensitive taxonomic classification for metagenomics
 * [**DRAGEN**](https://www.illumina.com/products/by-type/informatics-products/dragen-bio-it-platform.html)
     * Illumina Bio-IT Platform that uses FPGA for secondary NGS analysis
 * [**iVar**](https://github.com/andersen-lab/ivar)
