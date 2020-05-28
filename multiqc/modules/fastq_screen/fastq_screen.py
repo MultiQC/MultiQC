@@ -309,6 +309,12 @@ class MultiqcModule(BaseMultiqcModule):
             'data_labels': []
         }
 
+        cats = OrderedDict()
+        cats['original_top_strand'] = { 'name': 'Original top strand', 'color': '#80cdc1' }
+        cats['complementary_to_original_top_strand'] = { 'name': 'Complementary to original top strand', 'color': '#018571' }
+        cats['complementary_to_original_bottom_strand'] = { 'name': 'Complementary to original bottom strand', 'color': '#a6611a' }
+        cats['original_bottom_strand'] = { 'name': 'Original bottom strand', 'color': '#dfc27d' }
+
         # Pull out the data that we want
         pdata_unsorted = {}
         org_counts = {}
@@ -331,22 +337,20 @@ class MultiqcModule(BaseMultiqcModule):
 
         # Show tabbed bar plots, sorted by total read count
         pdata = []
+        pcats = []
         for org in sorted(org_counts, key=org_counts.get, reverse=True):
             if org_counts[org] > 0:
                 pconfig['data_labels'].append(org)
                 pdata.append(pdata_unsorted[org])
+                pcats.append(cats)
 
         if len(pdata) == 0:
             return None
 
-        cats = OrderedDict()
-        cats['original_top_strand'] = { 'name': 'Original top strand', 'color': '#80cdc1' }
-        cats['complementary_to_original_top_strand'] = { 'name': 'Complementary to original top strand', 'color': '#018571' }
-        cats['complementary_to_original_bottom_strand'] = { 'name': 'Complementary to original bottom strand', 'color': '#a6611a' }
-        cats['original_bottom_strand'] = { 'name': 'Original bottom strand', 'color': '#dfc27d' }
+
 
         self.add_section(
             name = 'Bisulfite Reads',
             anchor = 'fastq_screen_bisulfite',
-            plot = bargraph.plot(pdata, cats, pconfig)
+            plot = bargraph.plot(pdata, pcats, pconfig)
         )
