@@ -137,32 +137,37 @@ class MultiqcModule(BaseMultiqcModule):
         headers['Num. of queries'] = {
             'title': 'Number of reads in sample',
             'description': 'Number of reads in sample',
-            'format': '{:d}'
+            'format': '{:d}',
+            'scale': 'Purples'
         }
         headers['Total reads'] = {
             'title': 'Mapped reads',
             'description': 'Number of mapped reads',
-            'format': '{:d}'
+            'format': '{:d}',
+            'scale': 'PuBu'
         }
         headers['Mappability'] = {
             'title': "% Metagenomic Mappability",
             'description': 'Percentage of mapped reads',
             'suffix': '%',
             'max': 100,
-            'format': '{:,.2f}'
+            'format': '{:,.2f}',
+            'scale': 'RdYlGn'
         }
         headers['Taxonomic assignment success'] = {
             'title': "% Taxonomic assignment success",
             'description': 'Percentage of mapped reads assigned to a taxonomic node',
             'suffix': '%',
             'max': 100,
-            'format': '{:,.2f}'
+            'format': '{:,.2f}',
+            'scale': 'RdYlGn'
         }
         headers['Assig. Taxonomy'] = {
             'title': 'Assig. Taxonomy',
             'description': 'Number of reads assigned to a Taxonomic node',
             'format': '{:d}',
-            'hidden': True
+            'hidden': True,
+            'scale': 'Greens'
         }
         config = {
             'namespace': 'malt'
