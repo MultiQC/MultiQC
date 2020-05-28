@@ -86,8 +86,9 @@ class MultiqcModule(BaseMultiqcModule):
         cats['Total reads'] = {'name': 'Mapped reads'}
         cats['Non mapped'] = {'name': 'Non Mapped reads'}
         config = {
-            'id': 'malt-mappability',
-            'title': 'MALT: Metagenomic Mappability'
+            'id': 'malt-mappability-plot',
+            'title': 'MALT: Metagenomic Mappability',
+            'ylab': 'Samples',
         }
         self.add_section(
             name='Metagenomic Mappability',
@@ -110,8 +111,9 @@ class MultiqcModule(BaseMultiqcModule):
                 data[samp]['Assig. Taxonomy']
         cats = ['Assig. Taxonomy', "No Assig. Taxonomy"]
         config = {
-            'id': 'malt-taxonomic-success',
-            'title': 'MALT: Taxonomic assignment success'
+            'id': 'malt-taxonomic-success-plot',
+            'title': 'MALT: Taxonomic assignment success',
+            'ylab': 'Samples',
         }
         self.add_section(
             name='Taxonomic assignment success',
