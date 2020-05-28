@@ -14,6 +14,7 @@ import inspect
 import lzstring
 import mimetypes
 import os
+import time
 import re
 import yaml
 
@@ -53,6 +54,7 @@ def get_filelist(run_module_names):
     # Prep search patterns
     spatterns = [{},{},{},{},{},{},{}]
     epatterns = [{}, {}]
+    search_times = defaultdict()
     ignored_patterns = []
     for key, sps in config.sp.items():
         mod_name = key.split('/', 1)[0]
@@ -132,6 +134,7 @@ def get_filelist(run_module_names):
         # Test file for each search pattern
         for patterns in spatterns:
             for key, sps in patterns.items():
+                start = time.time()
                 for sp in sps:
                     if search_file (sp, f, key):
                         # Check that we shouldn't exclude this file
@@ -140,10 +143,12 @@ def get_filelist(run_module_names):
                             files[key].append(f)
                         # Don't keep searching this file for other modules
                         if not sp.get('shared', False):
+                            search_times[key] = search_times.get(key, 0) + (time.time() - start)
                             return
                         # Don't look at other patterns for this module
                         else:
                             break
+                search_times[key] = search_times.get(key, 0) + (time.time() - start)
 
     # Go through the analysis directories and get file list
     multiqc_installation_dir_files = ['LICENSE', 'CHANGELOG.md', 'Dockerfile', 'MANIFEST.in', '.gitmodules', 'README.md', 'CSP.txt', 'setup.py', '.gitignore']
@@ -195,6 +200,14 @@ def get_filelist(run_module_names):
     with click.progressbar(searchfiles, label="Searching {} files..".format(len(searchfiles))) as sfiles:
         for sf in sfiles:
             add_file(sf[0], sf[1])
+
+    if getattr(config, 'profile_search_times', False):
+        total_search_time = 0
+        for key in sorted(search_times, key=search_times.get, reverse=True):
+            print('{} - {}'.format(search_times[key], key))
+            total_search_time += search_times[key]
+            print("==========\nTOTAL: {}\n===========".format(total_search_time))
+
 
 def search_file (pattern, f, module_key):
     """

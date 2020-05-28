@@ -257,8 +257,6 @@ fastqc/theoretical_gc:
     fn: '*fastqc_theoretical_gc*'
 featurecounts:
     fn: '*.summary'
-    contents: Status
-    num_lines: 10
 fgbio/groupreadsbyumi:
     contents: 'fraction_gt_or_eq_family_size'
     num_lines: 3
