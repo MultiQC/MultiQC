@@ -46,8 +46,9 @@ to break. If you haven't already, **you need to switch to Python 3 now**.
     * Should help to prevent duplicates requiring `-1` suffixes when running a module multiple times
 * New heatmap plot config options `xcats_samples` and `ycats_samples`
     * If set to `False`, the report toolbox options (_highlight_, _rename_, _show/hide_) do not affect that axis.
-    * Means that the _Show only matching samples_ report toolbox option works on FastQC Status Checks, for example  ([#1172](https://github.com/ewels/MultiQC/issues/1172))
-
+    * Means that the _Show only matching samples_ report toolbox option works on FastQC Status Checks, for example ([#1172](https://github.com/ewels/MultiQC/issues/1172))
+* Report header time and analysis paths can now be hidden
+    * New config options `show_analysis_paths` and `show_analysis_time` ([#1113](https://github.com/ewels/MultiQC/issues/1113))
 #### New Custom Content features
 
 * Improve support for HTML files - now just end your HTML filename with `_mqc.html`
