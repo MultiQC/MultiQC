@@ -516,6 +516,10 @@ module_order:
         module_tag:
             - DNA
             - Metagenomics
+    - malt:
+        module_tag:
+            - DNA
+            - Metagenomics
     - trimmomatic:
         module_tag:
             - RNA

@@ -352,6 +352,9 @@ longranger/invocation:
     max_filesize: 2048
 macs2:
     fn: '*_peaks.xls'
+malt:
+    contents: 'MaltRun - Aligns sequences using MALT (MEGAN alignment tool)'
+    num_lines: 2
 methylQA:
     fn: '*.report'
     shared: true

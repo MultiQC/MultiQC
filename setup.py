@@ -48,37 +48,39 @@ if sys.version_info[0:2] < (3, 6):
     markdown_version = '<3.2'
 
 install_requires = [
-        'matplotlib' + matplotlib_version,
-        'networkx' + networkx_version,
-        'numpy' + numpy_version,
-        'click',
-        'coloredlogs',
-        'future>0.14.0',
-        'jinja2' + jinja2_version,
-        'lzstring',
-        'markdown' + markdown_version,
-        'pyyaml>=4',
-        'requests',
-        'simplejson',
-        'spectra>=0.0.10',
-    ]
+    'matplotlib' + matplotlib_version,
+    'networkx' + networkx_version,
+    'numpy' + numpy_version,
+    'click',
+    'coloredlogs',
+    'future>0.14.0',
+    'jinja2' + jinja2_version,
+    'lzstring',
+    'markdown' + markdown_version,
+    'pyyaml>=4',
+    'requests',
+    'simplejson',
+    'spectra>=0.0.10',
+]
 
 setup(
-    name = 'multiqc',
-    version = version,
-    author = 'Phil Ewels',
-    author_email = 'phil.ewels@scilifelab.se',
-    description = "Create aggregate bioinformatics analysis reports across many samples and tools",
-    long_description = __doc__,
-    keywords = ['bioinformatics', 'biology', 'sequencing', 'NGS', 'next generation sequencing', 'quality control'],
-    url = 'http://multiqc.info',
-    download_url = 'https://github.com/ewels/MultiQC/tarball/{}'.format(dl_version),
-    license = 'GPLv3',
-    packages = find_packages(),
-    include_package_data = True,
-    zip_safe = False,
-    install_requires = install_requires,
-    entry_points = {
+    name='multiqc',
+    version=version,
+    author='Phil Ewels',
+    author_email='phil.ewels@scilifelab.se',
+    description="Create aggregate bioinformatics analysis reports across many samples and tools",
+    long_description=__doc__,
+    keywords=['bioinformatics', 'biology', 'sequencing', 'NGS',
+              'next generation sequencing', 'quality control'],
+    url='http://multiqc.info',
+    download_url='https://github.com/ewels/MultiQC/tarball/{}'.format(
+        dl_version),
+    license='GPLv3',
+    packages=find_packages(),
+    include_package_data=True,
+    zip_safe=False,
+    install_requires=install_requires,
+    entry_points={
         "console_scripts": [
             "multiqc=multiqc.__main__:multiqc",
         ],
@@ -99,7 +101,7 @@ setup(
             'clipandmerge = multiqc.modules.clipandmerge:MultiqcModule',
             'clusterflow = multiqc.modules.clusterflow:MultiqcModule',
             'conpair = multiqc.modules.conpair:MultiqcModule',
-            'custom_content = multiqc.modules.custom_content:custom_module_classes', # special case
+            'custom_content = multiqc.modules.custom_content:custom_module_classes',  # special case
             'cutadapt = multiqc.modules.cutadapt:MultiqcModule',
             'damageprofiler = multiqc.modules.damageprofiler:MultiqcModule',
             'dedup = multiqc.modules.dedup:MultiqcModule',
@@ -131,6 +133,7 @@ setup(
             'leehom = multiqc.modules.leehom:MultiqcModule',
             'longranger = multiqc.modules.longranger:MultiqcModule',
             'macs2 = multiqc.modules.macs2:MultiqcModule',
+            'malt = multiqc.modules.malt:MultiqcModule',
             'methylQA = multiqc.modules.methylQA:MultiqcModule',
             'minionqc = multiqc.modules.minionqc:MultiqcModule',
             'mirtop = multiqc.modules.mirtop:MultiqcModule',
@@ -183,19 +186,19 @@ setup(
             'geo = multiqc.templates.geo',
         ],
         # 'multiqc.cli_options.v1': [
-            # 'my-new-option = myplugin.cli:new_option'
+        # 'my-new-option = myplugin.cli:new_option'
         # ],
         # 'multiqc.hooks.v1': [
-            # 'before_config = myplugin.hooks:before_config',
-            # 'config_loaded = myplugin.hooks:config_loaded',
-            # 'execution_start = myplugin.hooks:execution_start',
-            # 'before_modules = myplugin.hooks:before_modules',
-            # 'after_modules = myplugin.hooks:after_modules',
-            # 'before_report_generation = myplugin.hooks:before_report_generation',
-            # 'execution_finish = myplugin.hooks:execution_finish',
+        # 'before_config = myplugin.hooks:before_config',
+        # 'config_loaded = myplugin.hooks:config_loaded',
+        # 'execution_start = myplugin.hooks:execution_start',
+        # 'before_modules = myplugin.hooks:before_modules',
+        # 'after_modules = myplugin.hooks:after_modules',
+        # 'before_report_generation = myplugin.hooks:before_report_generation',
+        # 'execution_finish = myplugin.hooks:execution_finish',
         # ]
     },
-    classifiers = [
+    classifiers=[
         'Development Status :: 4 - Beta',
         'Environment :: Console',
         'Environment :: Web Environment',
