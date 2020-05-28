@@ -172,3 +172,4 @@ class MultiqcModule(BaseMultiqcModule):
             plot=table.plot(data, headers, config)
         )
         self.general_stats_addcols(data, headers)
+        self.write_data_file(data, 'multiqc_malt')
