@@ -26,10 +26,10 @@ class BaseMultiqcModule(object):
         self.name = mod_cust_config.get('name', name)
         self.anchor = mod_cust_config.get('anchor', anchor)
         target = mod_cust_config.get('target', target)
-        href = mod_cust_config.get('href', href)
-        info = mod_cust_config.get('info', info)
+        self.href = mod_cust_config.get('href', href)
+        self.info = mod_cust_config.get('info', info)
         self.comment = mod_cust_config.get('comment', comment)
-        extra = mod_cust_config.get('extra', extra)
+        self.extra = mod_cust_config.get('extra', extra)
         # Specific module level config to overwrite (e.g. config.bcftools, config.fastqc)
         config.update({anchor: mod_cust_config.get('custom_config', {})})
 
@@ -40,18 +40,18 @@ class BaseMultiqcModule(object):
         if self.anchor in config.section_comments:
             self.comment = config.section_comments[self.anchor]
 
-        if info is None:
-            info = ''
-        if extra is None:
-            extra = ''
+        if self.info is None:
+            self.info = ''
+        if self.extra is None:
+            self.extra = ''
         if target is None:
             target = self.name
-        if href is not None:
-            mname = '<a href="{}" target="_blank">{}</a>'.format(href, target)
+        if self.href is not None:
+            self.mname = '<a href="{}" target="_blank">{}</a>'.format(self.href, target)
         else:
-            mname = target
-        if href or info or extra:
-            self.intro = '<p>{} {}</p>{}'.format( mname, info, extra )
+            self.mname = target
+        if self.href or self.info or self.extra:
+            self.intro = '<p>{} {}</p>{}'.format( self.mname, self.info, self.extra )
 
         # Format the markdown strings
         if autoformat:
