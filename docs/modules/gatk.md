@@ -14,7 +14,7 @@ Supported tools:
 - `BaseRecalibrator`
 - `VariantEval`
 
-#### BaseRecalibrator
+### BaseRecalibrator
 [BaseRecalibrator](https://software.broadinstitute.org/gatk/documentation/tooldocs/current/org_broadinstitute_gatk_tools_walkers_bqsr_BaseRecalibrator.php)
 is a tool for detecting systematic errors in read base quality scores of aligned high-throughput
 sequencing reads. It outputs a base quality score recalibration table that can be used in
