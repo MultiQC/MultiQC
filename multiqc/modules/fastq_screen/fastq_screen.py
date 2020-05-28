@@ -61,38 +61,38 @@ class MultiqcModule(BaseMultiqcModule):
     def parse_fqscreen(self, f):
         """ Parse the FastQ Screen output into a 3D dict """
         parsed_data = OrderedDict()
-        reads_processed = None
         nohits_pct = None
+        headers = None
         for l in f['f']:
+            # Skip comment lines
+            if l.startswith('#'):
+                continue
             if l.startswith('%Hit_no_genomes:') or l.startswith('%Hit_no_libraries:'):
                 nohits_pct = float(l.split(':', 1)[1])
                 parsed_data['No hits'] = {'percentages': {'one_hit_one_library': nohits_pct }}
             else:
-                fqs = re.search(r"^(\S+)\s+(\d+)\s+(\d+)\s+([\d\.]+)\s+(\d+)\s+([\d\.]+)\s+(\d+)\s+([\d\.]+)\s+(\d+)\s+([\d\.]+)\s+(\d+)\s+([\d\.]+)$", l)
-                if fqs:
-                    org = fqs.group(1)
-                    parsed_data[org] = {'percentages':{}, 'counts':{}}
-                    reads_processed = int(fqs.group(2))
-                    parsed_data[org]['counts']['reads_processed'] = int(fqs.group(2))
-                    parsed_data[org]['counts']['unmapped'] = int(fqs.group(3))
-                    parsed_data[org]['percentages']['unmapped'] = float(fqs.group(4))
-                    parsed_data[org]['counts']['one_hit_one_library'] = int(fqs.group(5))
-                    parsed_data[org]['percentages']['one_hit_one_library'] = float(fqs.group(6))
-                    parsed_data[org]['counts']['multiple_hits_one_library'] = int(fqs.group(7))
-                    parsed_data[org]['percentages']['multiple_hits_one_library'] = float(fqs.group(8))
-                    parsed_data[org]['counts']['one_hit_multiple_libraries'] = int(fqs.group(9))
-                    parsed_data[org]['percentages']['one_hit_multiple_libraries'] = float(fqs.group(10))
-                    parsed_data[org]['counts']['multiple_hits_multiple_libraries'] = int(fqs.group(11))
-                    parsed_data[org]['percentages']['multiple_hits_multiple_libraries'] = float(fqs.group(12))
-                    # Can't use #Reads in subset as varies. #Reads_processed should be same for all orgs in a sample
-                    parsed_data['total_reads'] = int(fqs.group(2))
+                s = l.split("\t")
+                if len(s) == 12:
+                    if headers is None:
+                        headers = s
+                    else:
+                        # Can't use #Reads in subset as varies. #Reads_processed should be same for all orgs in a sample
+                        parsed_data['total_reads'] = int(s[1])
+                        # Loop through all columns
+                        parsed_data[s[0]] = {'percentages':{}, 'counts':{}}
+                        for idx, h in enumerate(headers):
+                            if idx == 0:
+                                continue
+                            dtype = 'percentages' if h.startswith('%') else 'counts'
+                            field = h.replace('%', '').replace('#', '').replace('genomes', 'libraries').replace('genome', 'library').lower()
+                            parsed_data[s[0]][dtype][field] = float(s[idx])
 
         if len(parsed_data) == 0:
             return None
 
         # Calculate no hits counts
-        if reads_processed is not None and nohits_pct is not None:
-            parsed_data['No hits']['counts'] = {'one_hit_one_library': int((nohits_pct/100.0) * float(reads_processed)) }
+        if parsed_data.get('total_reads') is not None and nohits_pct is not None:
+            parsed_data['No hits']['counts'] = {'one_hit_one_library': int((nohits_pct/100.0) * float(parsed_data['total_reads'])) }
         else:
             log.warning("Couldn't find number of reads with no hits for '{}'".format(f['s_name']))
 

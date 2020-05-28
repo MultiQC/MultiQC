@@ -98,6 +98,7 @@ to break. If you haven't already, **you need to switch to Python 3 now**.
     * Handle edge-case where a FastQC report was for an empty file with 0 reads ([#1129](https://github.com/ewels/MultiQC/issues/1129))
 * **FastQ Screen**
     * Don't skip plotting `% No Hits` even if it's `0%` ([#1126](https://github.com/ewels/MultiQC/issues/1126))
+    * Refactor parsing code. Avoids error with `-0.00 %Unmapped` ([#1126](https://github.com/ewels/MultiQC/issues/1126))
 * **fgbio**
     * New: Plot error rate by read position from `ErrorRateByReadPosition`
     * GroupReadsByUmi plot can now be toggled to show relative percents ([#1147](https://github.com/ewels/MultiQC/pull/1147))
