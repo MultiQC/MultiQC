@@ -95,6 +95,7 @@ to break. If you haven't already, **you need to switch to Python 3 now**.
     * New: Adds 'Post-DeDup Mapped Reads' column to general stats table.
 * **FastQC**
     * Fixed tooltip text in _Sequence Duplication Levels_ plot ([#1092](https://github.com/ewels/MultiQC/issues/1092))
+    * Handle edge-case where a FastQC report was for an empty file with 0 reads ([#1129](https://github.com/ewels/MultiQC/issues/1129))
 * **fgbio**
     * New: Plot error rate by read position from `ErrorRateByReadPosition`
     * GroupReadsByUmi plot can now be toggled to show relative percents ([#1147](https://github.com/ewels/MultiQC/pull/1147))

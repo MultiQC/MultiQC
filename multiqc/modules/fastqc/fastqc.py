@@ -199,15 +199,26 @@ class MultiqcModule(BaseMultiqcModule):
         data = dict()
         for s_name in self.fastqc_data:
             bs = self.fastqc_data[s_name]['basic_statistics']
-            data[s_name] = {
-                'percent_gc': bs['%GC'],
-                'avg_sequence_length': bs['avg_sequence_length'],
-                'total_sequences': bs['Total Sequences'],
-            }
             try:
+                # FastQC reports with 0 reads will trigger a KeyError here
+                data[s_name] = {
+                    'percent_gc': bs['%GC'],
+                    'avg_sequence_length': bs['avg_sequence_length'],
+                    'total_sequences': bs['Total Sequences'],
+                }
+            except KeyError:
+                log.warning("Sample had zero reads: '{}'".format(s_name))
+                data[s_name] = {
+                    'percent_gc': 0,
+                    'avg_sequence_length': 0,
+                    'total_sequences': 0,
+                }
+            try:
+                # Older versions of FastQC don't have this
                 data[s_name]['percent_duplicates'] = 100 - bs['total_deduplicated_percentage']
             except KeyError:
-                pass # Older versions of FastQC don't have this
+                pass
+
             # Add count of fail statuses
             num_statuses = 0
             num_fails = 0
@@ -215,11 +226,19 @@ class MultiqcModule(BaseMultiqcModule):
                 num_statuses += 1
                 if s == 'fail':
                     num_fails += 1
-            data[s_name]['percent_fails'] = (float(num_fails)/float(num_statuses))*100.0
+            try:
+                data[s_name]['percent_fails'] = (float(num_fails)/float(num_statuses))*100.0
+            except KeyError:
+                # If we had no reads then we have no sample in data
+                pass
 
         # Are sequence lengths interesting?
         seq_lengths = [x['avg_sequence_length'] for x in data.values()]
-        hide_seq_length = False if max(seq_lengths) - min(seq_lengths) > 10 else True
+        try:
+            hide_seq_length = False if max(seq_lengths) - min(seq_lengths) > 10 else True
+        except ValueError:
+            # Zero reads
+            hide_seq_length = True
 
         headers = OrderedDict()
         headers['percent_duplicates'] = {
@@ -519,7 +538,10 @@ class MultiqcModule(BaseMultiqcModule):
                 data_norm[s_name] = dict()
                 total = sum( [ c for c in data[s_name].values() ] )
                 for gc, count in data[s_name].items():
-                    data_norm[s_name][gc] = (count / total) * 100
+                    try:
+                        data_norm[s_name][gc] = (count / total) * 100
+                    except ZeroDivisionError:
+                        data_norm[s_name][gc] = 0
         if len(data) == 0:
             log.debug('per_sequence_gc_content not found in FastQC reports')
             return None
