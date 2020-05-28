@@ -46,32 +46,32 @@ class MultiqcModule(DragenMappingMetics, DragenFragmentLength, DragenPloidyEstim
         self.intro += '<script type="application/json" class="fastqc_passfails">["DRAGEN", {"per_base_sequence_content": {"TEST": "pass"}}]</script>'
 
         samples_found = set()
+        samples_found |= self.add_mapping_metrics()
+        # <output prefix>.mapping_metrics.csv              - general stats table, a dedicated table, and a few barplots
+
+        samples_found |= self.add_fastqc_metrics()
+        # <output prefix>.fastqc_metrics.csv               - various plots to replicate output from Babraham's FastQC
+
         samples_found |= self.add_vc_metrics()
         # <output prefix>.vc_metrics.csv                   - a dedicated table and the total number of Variants into the general stats table
 
         samples_found |= self.add_ploidy_estimation_metrics()
         # <output prefix>.ploidy_estimation_metrics.csv    - add just Ploidy estimation into gen stats
 
-        #samples_found |= self.add_coverage_hist()
-        # <output prefix>.wgs_fine_hist_normal.csv         - coverage distribution and cumulative coverage plots
-        # <output prefix>.wgs_fine_hist_tumor.csv          - same
-
-        #samples_found |= self.add_coverage_metrics()
+        samples_found |= self.add_coverage_metrics()
         # <output prefix>.wgs_coverage_metrics_normal.csv  - general stats table and a dedicated table
         # <output prefix>.wgs_coverage_metrics_tumor.csv   - same
 
-        #samples_found |= self.add_coverage_per_contig()
+        samples_found |= self.add_coverage_hist()
+        # <output prefix>.wgs_fine_hist_normal.csv         - coverage distribution and cumulative coverage plots
+        # <output prefix>.wgs_fine_hist_tumor.csv          - same
+
+        samples_found |= self.add_coverage_per_contig()
         # <output prefix>.wgs_contig_mean_cov_normal.csv   - a histogram like in mosdepth, with each chrom as a category on X axis, plus a category for autosomal chromosomes average
         # <output prefix>.wgs_contig_mean_cov_tumor.csv    - same
 
-        samples_found |= self.add_mapping_metrics()
-        # <output prefix>.mapping_metrics.csv              - general stats table, a dedicated table, and a few barplots
-
         samples_found |= self.add_fragment_length_hist()
         # <output prefix>.fragment_length_hist.csv         - a histogram plot
-
-        samples_found |= self.add_fastqc_metrics()
-        # <output prefix>.fastqc_metrics.csv               - various plots to replicate output from Babraham's FastQC
 
         if len(samples_found) == 0:
             raise UserWarning

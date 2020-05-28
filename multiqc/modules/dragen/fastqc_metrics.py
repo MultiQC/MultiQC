@@ -10,7 +10,7 @@ from collections import OrderedDict, defaultdict
 from multiqc import config
 from multiqc.modules.base_module import BaseMultiqcModule
 from multiqc.modules.dragen.utils import Metric
-from multiqc.plots import linegraph, bargraph, heatmap, table
+from multiqc.plots import linegraph, bargraph, heatmap, table, boxplot
 from multiqc.utils import report
 
 # Initialise the logger
@@ -41,6 +41,7 @@ class DragenFastQcMetrics(BaseMultiqcModule):
         log.info('Found time metrics for {} samples'.format(len(self.fastqc_data)))
 
         # Now add each section in order
+        self.positional_quality_range_plot()
         self.positional_mean_quality_plot()
         self.per_seq_quality_plot()
         self.n_content_plot()
@@ -49,11 +50,54 @@ class DragenFastQcMetrics(BaseMultiqcModule):
         self.seq_length_dist_plot()
         self.sequence_content_plot()
         self.adapter_content_plot()
-        
-        for s_name, s_data in sorted(self.fastqc_data.items()):
-            self.positional_quality_table(s_name, s_data)
 
         return self.fastqc_data.keys()
+    
+    def positional_quality_range_plot(self):
+        """STUFF"""
+
+        data = OrderedDict()
+        GROUP = "POSITIONAL QUALITY"
+
+        for s_name in sorted(self.fastqc_data):
+            data[s_name] = defaultdict(float)
+
+            sorted_keys = sortPosQualTableKeys(self.fastqc_data[s_name][GROUP])
+            for key in sorted_keys:
+                value = int(self.fastqc_data[s_name][GROUP][key])
+                parts = key.split()
+                pos = int(parts[1])
+                quantile = int(parts[2][:-1])
+                qv = int(value)
+            
+                try:
+                    data[s_name][pos][quantile] = qv
+                except:
+                    data[s_name][pos] = OrderedDict()
+                    data[s_name][pos][quantile] = qv
+
+        pconfig = {
+            'id': 'fastqc_per_base_sequence_quality_plot',
+            'title': 'DRAGEN-QC: Per-Position Quality Range',
+            'ylab': 'Phred Quality Score',
+            'xlab': 'Position (bp)',
+            'ymin': 0,
+            'ymax': 43,
+            'tt_label': '<b>Base {point.x}</b>: {point.y:.2f}',
+            #'colors': self.get_status_cols('per_base_sequence_quality'),
+            'yPlotBands': [
+                {'from': 28, 'to': 100, 'color': '#c3e6c3'},
+                {'from': 20, 'to': 28, 'color': '#e6dcc3'},
+                {'from': 0, 'to': 20, 'color': '#e6c3c3'},
+            ]
+        }
+
+        self.add_section(
+            name='Per-Position Quality Score Ranges',
+            anchor='fastqc_pos_qual_ranges',
+            description='The range of quality value across each base position in each sample or read',
+            plot=boxplot.plot(data, pconfig)
+        )
 
     def positional_mean_quality_plot(self):
         """ Create the HTML for the positional mean-quality score plot """
@@ -102,7 +146,7 @@ class DragenFastQcMetrics(BaseMultiqcModule):
         pconfig = {
             'id': 'fastqc_per_base_sequence_quality_plot',
             'title': 'DRAGEN-QC: Per-Position Quality Scores',
-            'ylab': 'Phred Score',
+            'ylab': 'Phred Quality Score',
             'xlab': 'Position (bp)',
             'ymin': 0,
             'xDecimals': False,
@@ -116,7 +160,7 @@ class DragenFastQcMetrics(BaseMultiqcModule):
         }
 
         self.add_section (
-            name = 'Per-Position Quality Scores',
+            name = 'Per-Position Mean Quality Scores',
             anchor = 'fastqc_per_base_sequence_quality',
             description = 'The mean quality value across each base position in the read.',
             helptext = '''
@@ -163,7 +207,7 @@ class DragenFastQcMetrics(BaseMultiqcModule):
             'id': 'dragenqc_per_sequence_quality_scores_plot',
             'title': 'DRAGEN-QC: Per-Sequence Quality Scores',
             'ylab': 'Count',
-            'xlab': 'Mean Sequence Quality (Phred Score)',
+            'xlab': 'Mean Sequence Quality (Phred Quality Score)',
             'ymin': 0,
             'xmin': 0,
             'xDecimals': False,
@@ -345,7 +389,7 @@ class DragenFastQcMetrics(BaseMultiqcModule):
         pconfig = {
             'id': 'fastqc_gc_content_mean_sequence_quality_plot',
             'title': 'DRAGEN-QC: GC Content Mean Quality Scores',
-            'ylab': 'Phred Score',
+            'ylab': 'Phred Quality Score',
             'xlab': 'Position (bp)',
             'ymin': 0,
             'xDecimals': False,
@@ -606,48 +650,6 @@ class DragenFastQcMetrics(BaseMultiqcModule):
             plot = linegraph.plot(data, pconfig)
         )
 
-    def positional_quality_table(self, s_name, s_data):
-        """STUFF"""
-
-        data = OrderedDict()
-        GROUP = "POSITIONAL QUALITY"
-
-        sorted_keys = sortPosQualTableKeys(s_data[GROUP])
-        cols = set()
-        for key in sorted_keys:
-            value = int(s_data[GROUP][key])
-            parts = key.split()
-            row = int(parts[1])
-            col = parts[2][:-1]
-            cols.add(int(col))
-            try:
-                data[row][col] = int(value)
-            except:
-                data[row] = OrderedDict()
-                data[row][col] = value
-
-        headers = OrderedDict()
-        for col in sorted(cols):
-            headers[col] = {
-                'title': "{}%".format(col),
-                'description': 'Positional QV at the {} percentile'.format(col),
-                'suffix': '',
-                'max': 45,
-                'format': '{:,.0f}' # No decimal places please
-            }
-
-        pconfig = {
-            'namespace': 'My Module',
-            'min': 0,
-            'scale': 'RdYlGn'
-        }
-
-        self.add_section(
-            name='Positional Base-Quality Quantile for {}'.format(s_name),
-            anchor='fastqc_pos_qual_table_{}'.format(s_name),
-            description='A table of per-position or positional-range base QVs by quantile, for sample {}'.format(s_name),
-            plot=table.plot(data, headers, pconfig)
-        )
 
 def parse_fastqc_metrics_file(f):
     """
