@@ -327,9 +327,17 @@ class MultiqcModule(BaseMultiqcModule):
         if section_name == '' or section_name is None:
             section_name = 'Custom Content'
 
+        section_description = mod['config'].get('description', '')
+
         pconfig = mod['config'].get('pconfig', {})
         if pconfig.get('title') is None:
             pconfig['title'] = section_name
+
+        # Don't use exactly the same title / description text as the main module
+        if section_name == self.name:
+            section_name = None
+        if section_description == self.info:
+            section_description = ''
 
         plot = None
         content = None
@@ -377,11 +385,10 @@ class MultiqcModule(BaseMultiqcModule):
         else:
             log.warning("Error - custom content plot type '{}' not recognised for content ID {}".format(mod['config'].get('plot_type'), c_id))
 
-        section_name
         self.add_section(
             name = section_name,
             anchor = c_id,
-            description = mod['config'].get('description', ''),
+            description = section_description,
             plot = plot,
             content = content
         )
