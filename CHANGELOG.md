@@ -99,6 +99,8 @@ to break. If you haven't already, **you need to switch to Python 3 now**.
 * **FastQ Screen**
     * Don't skip plotting `% No Hits` even if it's `0%` ([#1126](https://github.com/ewels/MultiQC/issues/1126))
     * Refactor parsing code. Avoids error with `-0.00 %Unmapped` ([#1126](https://github.com/ewels/MultiQC/issues/1126))
+    * New plot for _Bisulfite Reads_, if data is present
+    * Categories in main plot are now sorted by the total read count and hidden if 0 across all samples
 * **fgbio**
     * New: Plot error rate by read position from `ErrorRateByReadPosition`
     * GroupReadsByUmi plot can now be toggled to show relative percents ([#1147](https://github.com/ewels/MultiQC/pull/1147))

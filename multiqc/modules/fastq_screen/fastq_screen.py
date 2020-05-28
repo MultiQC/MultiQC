@@ -46,13 +46,27 @@ class MultiqcModule(BaseMultiqcModule):
 
         log.info("Found {} reports".format(len(self.fq_screen_data)))
 
+        # Check whether we have a consistent number of organisms across all samples
+        num_orgs = set([len(orgs) for orgs in self.fq_screen_data.values()])
+
         # Section 1 - Alignment Profiles
-        # Posh plot only works for around 20 samples, 8 organisms.
-        if len(self.fq_screen_data) * self.num_orgs <= 160 and not config.plots_force_flat and not getattr(config, 'fastqscreen_simpleplot', False):
-            self.add_section( content = self.fqscreen_plot() )
+        # Posh plot only works for around 20 samples, 8 organisms. If all samples have the same number of organisms.
+        if len(num_orgs) == 1 and len(self.fq_screen_data) * self.num_orgs <= 160 and not config.plots_force_flat and not getattr(config, 'fastqscreen_simpleplot', False):
+            self.add_section(
+                name = 'Mapped Reads',
+                anchor = 'fastq_screen_mapped_reads',
+                content = self.fqscreen_plot()
+            )
         # Use simpler plot that works with many samples
         else:
-            self.add_section( plot = self.fqscreen_simple_plot() )
+            self.add_section(
+                name = 'Mapped Reads',
+                anchor = 'fastq_screen_mapped_reads',
+                plot = self.fqscreen_simple_plot()
+            )
+
+        # Section 2 - Optional bisfulfite plot
+        self.fqscreen_bisulfite_plot()
 
         # Write the total counts and percentages to files
         self.write_data_file(self.parse_csv(), 'multiqc_fastq_screen')
@@ -63,6 +77,7 @@ class MultiqcModule(BaseMultiqcModule):
         parsed_data = OrderedDict()
         nohits_pct = None
         headers = None
+        bs_headers = None
         for l in f['f']:
             # Skip comment lines
             if l.startswith('#'):
@@ -71,7 +86,9 @@ class MultiqcModule(BaseMultiqcModule):
                 nohits_pct = float(l.split(':', 1)[1])
                 parsed_data['No hits'] = {'percentages': {'one_hit_one_library': nohits_pct }}
             else:
-                s = l.split("\t")
+                s = l.strip().split("\t")
+
+                # Regular FastQ Screen table section
                 if len(s) == 12:
                     if headers is None:
                         headers = s
@@ -85,6 +102,21 @@ class MultiqcModule(BaseMultiqcModule):
                                 continue
                             dtype = 'percentages' if h.startswith('%') else 'counts'
                             field = h.replace('%', '').replace('#', '').replace('genomes', 'libraries').replace('genome', 'library').lower()
+                            parsed_data[s[0]][dtype][field] = float(s[idx])
+
+                # Optional Bisulfite table section
+                elif len(s) == 9:
+                    if bs_headers is None:
+                        bs_headers = s
+                    else:
+                        # Loop through all columns
+                        parsed_data[s[0]]['bisulfite_percentages'] = {}
+                        parsed_data[s[0]]['bisulfite_counts'] = {}
+                        for idx, h in enumerate(bs_headers):
+                            if idx == 0:
+                                continue
+                            dtype = 'bisulfite_percentages' if h.startswith('%') else 'bisulfite_counts'
+                            field = h.replace('%', '').replace('#', '').lower()
                             parsed_data[s[0]][dtype][field] = float(s[idx])
 
         if len(parsed_data) == 0:
@@ -219,8 +251,8 @@ class MultiqcModule(BaseMultiqcModule):
         each species, stacked. """
 
         # First, sum the different types of alignment counts
-        data = OrderedDict()
-        cats = OrderedDict()
+        data = {}
+        org_counts = {}
         for s_name in sorted(self.fq_screen_data):
             data[s_name] = OrderedDict()
             sum_alignments = 0
@@ -237,12 +269,18 @@ class MultiqcModule(BaseMultiqcModule):
                 except KeyError:
                     pass
                 sum_alignments += data[s_name][org]
-                if org not in cats and org != 'No hits':
-                    cats[org] = { 'name': org }
+                org_counts[org] = org_counts.get(org, 0) + data[s_name][org]
 
             # Calculate hits in multiple genomes
             if 'total_reads' in self.fq_screen_data[s_name]:
                 data[s_name]['Multiple Genomes'] = self.fq_screen_data[s_name]['total_reads'] - sum_alignments
+
+        # Sort the categories by the total read counts
+        cats = OrderedDict()
+        for org in sorted(org_counts, key=org_counts.get, reverse=True):
+            if org not in cats and org != 'No hits':
+                cats[org] = { 'name': org }
+
 
         # Strip empty dicts
         for s_name in list(data.keys()):
@@ -253,10 +291,62 @@ class MultiqcModule(BaseMultiqcModule):
             'id': 'fastq_screen_plot',
             'title': 'FastQ Screen: Mapped Reads',
             'cpswitch_c_active': False,
-            'hide_zero_cats': False,
             'ylab': 'Percentages'
         }
         cats['Multiple Genomes'] = { 'name': 'Multiple Genomes', 'color': '#820000' }
         cats['No hits'] = { 'name': 'No hits', 'color': '#cccccc' }
 
         return bargraph.plot(data, cats, pconfig)
+
+    def fqscreen_bisulfite_plot(self):
+        """ Make a stacked barplot for the bisulfite data, if we have any """
+
+        pconfig = {
+            'id': 'fastq_screen_bisulfite_plot',
+            'title': 'FastQ Screen: Bisulfite Mapping Strand Orientation',
+            'hide_zero_cats': False,
+            'ylab': 'Percentages',
+            'data_labels': []
+        }
+
+        # Pull out the data that we want
+        pdata_unsorted = {}
+        org_counts = {}
+        max_count = 0
+        for s_name, d in self.fq_screen_data.items():
+            for org, dd in d.items():
+                if org not in pdata_unsorted:
+                    pdata_unsorted[org] = {}
+                    org_counts[org] = 0
+                try:
+                    pdata_unsorted[org][s_name] = dd['bisulfite_counts']
+                    total_counts = sum([c for c in dd['bisulfite_counts'].values()])
+                    org_counts[org] += total_counts
+                    max_count = max(max_count, total_counts)
+                except (TypeError, KeyError):
+                    pass
+
+        # Consistent y-max across all genomes
+        pconfig['ymax'] = max_count
+
+        # Show tabbed bar plots, sorted by total read count
+        pdata = []
+        for org in sorted(org_counts, key=org_counts.get, reverse=True):
+            if org_counts[org] > 0:
+                pconfig['data_labels'].append(org)
+                pdata.append(pdata_unsorted[org])
+
+        if len(pdata) == 0:
+            return None
+
+        cats = OrderedDict()
+        cats['original_top_strand'] = { 'name': 'Original top strand', 'color': '#80cdc1' }
+        cats['complementary_to_original_top_strand'] = { 'name': 'Complementary to original top strand', 'color': '#018571' }
+        cats['complementary_to_original_bottom_strand'] = { 'name': 'Complementary to original bottom strand', 'color': '#a6611a' }
+        cats['original_bottom_strand'] = { 'name': 'Original bottom strand', 'color': '#dfc27d' }
+
+        self.add_section(
+            name = 'Bisulfite Reads',
+            anchor = 'fastq_screen_bisulfite',
+            plot = bargraph.plot(pdata, cats, pconfig)
+        )
