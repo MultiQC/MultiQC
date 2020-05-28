@@ -206,7 +206,7 @@ def get_filelist(run_module_names):
         for key in sorted(search_times, key=search_times.get, reverse=True):
             print('{} - {}'.format(search_times[key], key))
             total_search_time += search_times[key]
-            print("==========\nTOTAL: {}\n===========".format(total_search_time))
+        print("==========\nTOTAL: {}\n===========".format(total_search_time))
 
 
 def search_file (pattern, f, module_key):
