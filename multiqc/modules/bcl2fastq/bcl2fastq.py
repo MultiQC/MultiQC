@@ -145,7 +145,12 @@ class MultiqcModule(BaseMultiqcModule):
         except ValueError:
             log.warning('Could not parse file as json: {}'.format(myfile["fn"]))
             return
-        runId = content["RunId"]
+        try:
+            runId = content["RunId"]
+        except KeyError:
+            # Probably not a bcl2fastq file
+            return
+
         if runId not in self.bcl2fastq_data:
             self.bcl2fastq_data[runId] = dict()
         run_data = self.bcl2fastq_data[runId]

@@ -11,7 +11,6 @@ afterqc:
     contents: 'allow_mismatch_in_poly'
 bamtools/stats:
     contents: 'Stats for BAM file(s):'
-    shared: true
     num_lines: 10
 bbmap/stats:
     contents: '#Name	Reads	ReadsPct'
@@ -75,11 +74,11 @@ bbmap/statsfile:
     num_lines: 1
 bcftools/stats:
     contents: 'This file was produced by bcftools stats'
-    shared: true
+    num_lines: 100
 bcl2fastq:
-    - fn: 'Stats.json'
-      contents: 'DemuxResults'
-    - num_lines: 300
+    fn: 'Stats.json'
+    contents: 'ReadInfosForLanes'
+    num_lines: 50
 biobambam2/bamsormadup:
     contents: '# bamsormadup'
     num_lines: 2
@@ -150,6 +149,7 @@ bismark/bam2nuc:
     fn: '*.nucleotide_stats.txt'
 bowtie1:
     contents: '# reads processed:'
+    num_lines: 500
     exclude_fn:
         # Tophat log files
         - 'bowtie.left_kept_reads.log'
@@ -160,13 +160,12 @@ bowtie1:
         - 'bowtie.right_kept_reads.m2g_um.log'
         - 'bowtie.right_kept_reads.m2g_um_seg1.log'
         - 'bowtie.right_kept_reads.m2g_um_seg2.log'
-    shared: true
 bowtie2:
     contents: 'reads; of these:'
+    num_lines: 500
     exclude_contents:
         - 'bisulfite'
         - 'HiC-Pro'
-    shared: true
 busco:
     fn: 'short_summary*'
     contents: 'BUSCO version is:'
@@ -191,8 +190,8 @@ conpair/contamination:
     num_lines: 3
 cutadapt:
     contents: 'This is cutadapt'
+    num_lines: 10
     # contents: 'cutadapt version' # Use this instead if using very old versions of cutadapt (eg. v1.2)
-    shared: true
 damageprofiler:
     fn: '*dmgprof.json'
 dedup:
@@ -258,7 +257,8 @@ fastqc/theoretical_gc:
     fn: '*fastqc_theoretical_gc*'
 featurecounts:
     fn: '*.summary'
-    shared: true
+    contents: Status
+    num_lines: 10
 fgbio/groupreadsbyumi:
     contents: 'fraction_gt_or_eq_family_size'
     num_lines: 3
@@ -267,15 +267,15 @@ fgbio/errorratebyreadposition:
     num_lines: 3
 flash/log:
     contents: '[FLASH]'
-    shared: true
+    num_lines: 10
 flash/hist:
     fn: '*flash*.hist'
 flexbar:
     contents: 'Flexbar - flexible barcode and adapter removal'
-    shared: true
+    num_lines: 20
 gatk/varianteval:
     contents: '#:GATKTable:TiTvVariantEvaluator'
-    shared: true
+    num_lines: 2000
 gatk/base_recalibrator:
     contents: '#:GATKTable:Arguments:Recalibration'
     num_lines: 3
@@ -286,6 +286,7 @@ goleft_indexcov/ped:
 happy:
     fn: '*.summary.csv'
     contents: 'Type,Filter,TRUTH'
+    num_lines: 5
 htseq:
     contents: '__too_low_aQual'
 hicexplorer:
@@ -306,7 +307,7 @@ hicpro/assplit:
     fn: '*.assplit.stat'
 hisat2:
     contents: 'HISAT2 summary stats:'
-    shared: true
+    num_lines: 10
 homer/findpeaks:
     contents: '# HOMER Peaks'
     num_lines: 3
@@ -324,8 +325,10 @@ homer/FreqDistribution:
     fn: 'petag.FreqDistribution_1000.txt'
 interop/summary:
     contents: 'Level,Yield,Projected Yield,Aligned,Error Rate,Intensity C1,%>=Q30'
+    num_lines: 50
 interop/index-summary:
     contents: 'Total Reads,PF Reads,% Read Identified (PF),CV,Min,Max'
+    num_lines: 50
 ivar/trim:
     contents: 'Number of references'
     num_lines: 8
@@ -333,7 +336,7 @@ jellyfish:
     fn: '*_jf.hist'
 kallisto:
     contents: '[quant] finding pseudoalignments for the reads'
-    shared: true
+    num_lines: 500
 kat:
     fn: '*.dist_analysis.json'
 kraken:
@@ -341,7 +344,7 @@ kraken:
     num_lines: 2
 leehom:
     contents: 'Adapter dimers/chimeras'
-    shared: true
+    num_lines: 20
 longranger/summary:
     fn: '*summary.csv'
     contents: 'longranger_version,instrument_ids,gems_detected,mean_dna_per_gem,bc_on_whitelist,bc_mean_qscore,n50_linked_reads_per_molecule'
@@ -349,15 +352,15 @@ longranger/summary:
 longranger/invocation:
     fn: '_invocation'
     contents: 'call PHASER_SVCALLER_CS('
-    max_filesize: 2048
+    num_lines: 20
 macs2:
     fn: '*_peaks.xls'
 methylQA:
     fn: '*.report'
-    shared: true
 minionqc:
     fn: 'summary.yaml'
     contents: 'total.gigabases'
+    num_lines: 200
 mirtop:
     fn: '*_mirtop_stats.log'
 mirtrace/summary:
@@ -403,55 +406,55 @@ phantompeakqualtools/out:
     fn: '*.spp.out'
 picard/alignment_metrics:
     contents: 'AlignmentSummaryMetrics'
-    shared: true
+    num_lines: 100
 picard/basedistributionbycycle:
     contents: 'BaseDistributionByCycleMetrics'
-    shared: true
+    num_lines: 100
 picard/gcbias:
     contents: 'GcBias'
-    shared: true
+    num_lines: 100
 picard/hsmetrics:
     contents: 'HsMetrics'
-    shared: true
+    num_lines: 100
 picard/insertsize:
     contents: 'InsertSizeMetrics'
-    shared: true
+    num_lines: 100
 picard/markdups:
     contents: 'DuplicationMetrics'
-    shared: true
+    num_lines: 100
 picard/oxogmetrics:
     contents: 'OxoGMetrics'
-    shared: true
+    num_lines: 100
 picard/pcr_metrics:
     contents: 'TargetedPcrMetrics'
-    shared: true
+    num_lines: 100
 picard/quality_by_cycle:
     contents_re: '[Qq]uality[Bb]y[Cc]ycle'
     contents: 'MEAN_QUALITY'
-    shared: true
+    num_lines: 100
 picard/quality_score_distribution:
     contents_re: '[Qq]uality[Ss]core[Dd]istribution'
     contents: 'COUNT_OF_Q'
-    shared: true
+    num_lines: 100
 picard/quality_yield_metrics:
     contents: 'QualityYieldMetrics'
-    shared: true
+    num_lines: 100
 picard/rnaseqmetrics:
     contents_re: '[Rr]na[Ss]eq[Mm]etrics'
     contents: '## METRICS CLASS'
-    shared: true
+    num_lines: 100
 picard/rrbs_metrics:
     contents: 'RrbsSummaryMetrics'
-    shared: true
+    num_lines: 100
 picard/sam_file_validation:
     fn: '*[Vv]alidate[Ss]am[Ff]ile*'
 picard/variant_calling_metrics:
-    fn: '*.variant_calling_detail_metrics'
-    contents: 'CollectVariantCallingMetrics'
-    shared: true
+    - fn: '*.variant_calling_detail_metrics'
+    - contents: 'CollectVariantCallingMetrics'
+      num_lines: 100
 picard/wgs_metrics:
     contents: 'CollectWgsMetrics'
-    shared: true
+    num_lines: 100
 preseq:
     - contents: 'EXPECTED_DISTINCT'
       num_lines: 2
@@ -484,15 +487,14 @@ qualimap/rnaseq/coverage:
     fn: 'coverage_profile_along_genes_(total).txt'
 quast:
     fn: 'report.tsv'
-    shared: true
 rna_seqc/metrics_v1:
     fn: '*metrics.tsv'
     contents: 'Sample	Note	'
-    shared: true
+    num_lines: 50
 rna_seqc/metrics_v2:
     fn: '*metrics.tsv'
     contents: 'High Quality Ambiguous Alignment Rate'
-    shared: true
+    num_lines: 50
 rna_seqc/coverage:
     fn_re: 'meanCoverageNorm_(high|medium|low)\.txt'
 rna_seqc/correlation:
@@ -502,7 +504,7 @@ rockhopper:
     contents: 'Number of gene-pairs predicted to be part of the same operon'
     max_filesize: 500000
 rsem:
-    - fn: '*.cnt'
+    fn: '*.cnt'
 rseqc/bam_stat:
     contents: 'Proper-paired reads map to different chrom:'
     max_filesize: 500000
@@ -533,18 +535,18 @@ salmon/fld:
     fn: 'flenDist.txt'
 samblaster:
     contents: 'samblaster: Version'
-    shared: true
+    num_lines: 10
 samtools/stats:
     contents: 'This file was produced by samtools stats'
-    shared: true
+    num_lines: 10
 samtools/flagstat:
     contents: 'in total (QC-passed reads + QC-failed reads)'
-    shared: true
+    num_lines: 10
 samtools/idxstats:
     fn: '*idxstat*'
 samtools/rmdup:
     contents: '[bam_rmdup'
-    shared: true
+    num_lines: 10
 sargasso:
     fn: 'overall_filtering_summary.txt'
 seqyclean:
@@ -556,7 +558,7 @@ sickle:
     num_lines: 2
 skewer:
     contents: 'maximum error ratio allowed (-r):'
-    shared: true
+    num_lines: 50
 slamdunk/summary:
     contents: '# slamdunk summary'
     num_lines: 1
@@ -577,7 +579,7 @@ slamdunk/tcperutrpos:
     num_lines: 1
 snpeff:
     contents: 'SnpEff_version'
-    max_filesize: 5000000
+    num_lines: 20
 snpsplit/old:
     contents: 'Writing allele-flagged output file to:'
     num_lines: 2
@@ -585,17 +587,13 @@ snpsplit/new:
     fn: '*SNPsplit_report.yaml'
 sortmerna:
     contents: 'Minimal SW score based on E-value'
-    shared: true
+    num_lines: 100
 stacks/gstacks:
     fn: 'gstacks.log.distribs'
-    contents: 'BEGIN effective_coverages_per_sample'
 stacks/populations:
     fn: 'populations.log.distribs'
-    contents: 'BEGIN missing_samples_per_loc_prefilters'
 stacks/sumstats:
     fn: '*.sumstats_summary.tsv'
-    contents: '# Pop ID	Private	Num_Indv	Var	StdErr	P	Var'
-    max_filesize: 1000000
 star:
     fn: '*Log.final.out'
 star/genecounts:
@@ -620,10 +618,9 @@ theta2:
     fn: '*.BEST.results'
 tophat:
     fn: '*align_summary.txt'
-    shared: true
 trimmomatic:
     contents: 'Trimmomatic'
-    shared: true
+    num_lines: 100
 varscan2/mpileup2snp:
     contents: 'Only SNPs will be reported'
     num_lines: 3
