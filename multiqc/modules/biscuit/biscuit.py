@@ -372,9 +372,9 @@ class MultiqcModule(BaseMultiqcModule):
                 pd2[s_name] = dd['read2']
 
         pheader = OrderedDict([
-            ('ff', {'color': '#F53855', 'name': 'ff: Waston-Aligned, Waston-Bisulfite Conversion'}),
-            ('fr', {'color': '#E37B40', 'name': 'fr: Waston-Aligned, Crick-Bisulfite Conversion' }),
-            ('rf', {'color': '#46B29D', 'name': 'rf: Crick-Aligned, Waston-Bisulfite Conversion' }),
+            ('ff', {'color': '#F53855', 'name': 'ff: Watson-Aligned, Watson-Bisulfite Conversion'}),
+            ('fr', {'color': '#E37B40', 'name': 'fr: Watson-Aligned, Crick-Bisulfite Conversion' }),
+            ('rf', {'color': '#46B29D', 'name': 'rf: Crick-Aligned, Watson-Bisulfite Conversion' }),
             ('rr', {'color': '#324D5C', 'name': 'rr: Crick-Aligned, Crick-Bisulfite Conversion'  })
         ])
 
