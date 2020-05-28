@@ -91,7 +91,7 @@ class MultiqcModule(BaseMultiqcModule):
             return None
 
         # Calculate no hits counts
-        if reads_processed and nohits_pct:
+        if reads_processed is not None and nohits_pct is not None:
             parsed_data['No hits']['counts'] = {'one_hit_one_library': int((nohits_pct/100.0) * float(reads_processed)) }
         else:
             log.warning("Couldn't find number of reads with no hits for '{}'".format(f['s_name']))
