@@ -59,6 +59,20 @@ class VariantEvalMixin():
                 'scale': 'Blues',
                 'shared_key': 'titv_ratio'
             }
+            varianteval_headers['called_titv'] = {
+                'title': 'TiTV ratio (called)',
+                'description': "TiTV ratio from variants found in '{}'".format(titv_ref),
+                'min': 0,
+                'scale': 'Blues',
+                'shared_key': 'titv_ratio'
+            }
+            varianteval_headers['filtered_titv'] = {
+                'title': 'TiTV ratio (filtered)',
+                'description': "TiTV ratio from variants NOT found in '{}'".format(titv_ref),
+                'min': 0,
+                'scale': 'Blues',
+                'shared_key': 'titv_ratio'
+            }
             self.general_stats_addcols(self.gatk_varianteval, varianteval_headers, 'GATK VariantEval')
 
             # Variant Counts plot
@@ -100,55 +114,91 @@ def parse_single_report(f):
                 headers = l.split()
                 while in_CompOverlap:
                     l = f.readline().strip("\n")
-                    d = dict()
-                    try:
-                        for i, s in enumerate(l.split()):
-                            d[headers[i]] = s
-                        if d['Novelty'] == 'all':
-                            data['reference'] = d.get('CompFeatureInput', d['CompRod'])
-                            data['comp_rate'] = float(d['compRate'])
-                            data['concordant_rate'] = float(d['concordantRate'])
-                            data['eval_variants'] = int(d['nEvalVariants'])
-                            data['novel_sites'] = int(d['novelSites'])
-                        elif d['Novelty'] == 'known':
-                            data['known_sites'] = int(d['nEvalVariants'])
-                    except KeyError:
+                    if len(l) < len(headers):
                         in_CompOverlap = False
+                        break
+                    d = dict()
+                    for i, s in enumerate(l.split()):
+                        d[headers[i]] = s
+                    if d.get('Novelty') == 'all' or d.get('Filter') == 'raw':
+                        if 'CompFeatureInput' in d:
+                            data['reference'] = d['CompFeatureInput']
+                        if 'CompRod' in d:
+                            data['reference'] = d['CompRod']
+                        if 'compRate' in d:
+                            data['comp_rate'] = float(d['compRate'])
+                        if 'concordantRate' in d:
+                            data['concordant_rate'] = float(d['concordantRate'])
+                        if 'nEvalVariants' in d:
+                            data['eval_variants'] = int(d['nEvalVariants'])
+                        if 'novelSites' in d:
+                            data['novel_sites'] = int(d['novelSites'])
+                    elif d.get('Novelty') == 'known':
+                        if 'nEvalVariants' in d:
+                            data['known_sites'] = int(d['nEvalVariants'])
+
             elif in_CountVariants:
                 headers = l.split()
                 while in_CountVariants:
                     l = f.readline().strip("\n")
-                    d = dict()
-                    try:
-                        for i, s in enumerate(l.split()):
-                            d[headers[i]] = s
-                        if d['Novelty'] == 'all':
-                            data['snps'] = int(d['nSNPs'])
-                            data['mnps'] = int(d['nMNPs'])
-                            data['insertions'] = int(d['nInsertions'])
-                            data['deletions'] = int(d['nDeletions'])
-                            data['complex'] = int(d['nComplex'])
-                            data['symbolic'] = int(d['nSymbolic'])
-                            data['mixed'] = int(d['nMixed'])
-                            data['nocalls'] = int(d['nNoCalls'])
-                    except KeyError:
+                    if len(l) < len(headers):
                         in_CountVariants = False
+                        break
+                    d = dict()
+                    for i, s in enumerate(l.split()):
+                        d[headers[i]] = s
+                    if d.get('Novelty') == 'all' or d.get('Filter') == 'raw':
+                        if 'nSNPs' in d:
+                            data['snps'] = int(d['nSNPs'])
+                        if 'nMNPs' in d:
+                            data['mnps'] = int(d['nMNPs'])
+                        if 'nInsertions' in d:
+                            data['insertions'] = int(d['nInsertions'])
+                        if 'nDeletions' in d:
+                            data['deletions'] = int(d['nDeletions'])
+                        if 'nComplex' in d:
+                            data['complex'] = int(d['nComplex'])
+                        if 'nSymbolic' in d:
+                            data['symbolic'] = int(d['nSymbolic'])
+                        if 'nMixed' in d:
+                            data['mixed'] = int(d['nMixed'])
+                        if 'nNoCalls' in d:
+                            data['nocalls'] = int(d['nNoCalls'])
             elif in_TiTv:
                 headers = l.split()
                 data['titv_reference'] = 'unknown'
                 while in_TiTv:
                     l = f.readline().strip("\n")
-                    d = dict()
-                    try:
-                        for i, s in enumerate(l.split()):
-                            d[headers[i]] = s
-                        if d['Novelty'] == 'known':
-                            data['titv_reference'] = d.get('CompFeatureInput', d['CompRod'])
-                            data['known_titv'] = float(d['tiTvRatio'])
-                        elif d['Novelty'] == 'novel':
-                            data['novel_titv'] = float(d['tiTvRatio'])
-                    except KeyError:
+                    if len(l) < len(headers):
                         in_TiTv = False
+                        break
+                    d = dict()
+                    for i, s in enumerate(l.split()):
+                        d[headers[i]] = s
+                    if d.get('Novelty') == 'known':
+                        if 'CompFeatureInput' in d:
+                            data['titv_reference'] = d['CompFeatureInput']
+                        if 'CompRod' in d:
+                            data['titv_reference'] = d['CompRod']
+                        if 'tiTvRatio' in d:
+                            data['known_titv'] = float(d['tiTvRatio'])
+                    elif d.get('Novelty') == 'novel':
+                        if 'tiTvRatio' in d:
+                            data['novel_titv'] = float(d['tiTvRatio'])
+                    elif d.get('Filter') == 'called':
+                        if 'CompFeatureInput' in d:
+                            data['titv_reference'] = d['CompFeatureInput']
+                        if 'CompRod' in d:
+                            data['titv_reference'] = d['CompRod']
+                        if 'tiTvRatio' in d:
+                            data['called_titv'] = float(d['tiTvRatio'])
+                    elif d.get('Filter') == 'filtered':
+                        if 'CompFeatureInput' in d:
+                            data['titv_reference'] = d['CompFeatureInput']
+                        if 'CompRod' in d:
+                            data['titv_reference'] = d['CompRod']
+                        if 'tiTvRatio' in d:
+                            data['filtered_titv'] = float(d['tiTvRatio'])
 
     return data
 

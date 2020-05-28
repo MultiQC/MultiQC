@@ -100,6 +100,8 @@ to break. If you haven't already, **you need to switch to Python 3 now**.
     * GroupReadsByUmi plot can now be toggled to show relative percents ([#1147](https://github.com/ewels/MultiQC/pull/1147))
 * **FLASh**
     * Logs not reporting innie and outine uncombined pairs now plot combined pairs instead ([#1173](https://github.com/ewels/MultiQC/issues/1173))
+* **GATK**
+    * Made parsing for VariantEval more tolerant, so that it will work with output from the tool when run in different modes ([#1158](https://github.com/ewels/MultiQC/issues/1158))
 * **MTNucRatioCalculator**
     * Fixed misleading value suffix in general stats table
 * **Picard MarkDuplicates**
