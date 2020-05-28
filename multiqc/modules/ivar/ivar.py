@@ -146,9 +146,10 @@ class MultiqcModule(BaseMultiqcModule):
         if self.ivar_primers is not None:
             pconfig = {
                 'id': 'ivar-primer-count-heatmap',
+                'title': 'iVar: Number of primers found for each sample',
                 'decimalPlaces': 0,
                 'square': False,
-                'title': 'iVar: Number of primers found for each sample'
+                'xcats_samples': False
             }
 
             self.add_section (

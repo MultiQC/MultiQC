@@ -44,6 +44,12 @@ to break. If you haven't already, **you need to switch to Python 3 now**.
     * Prefixed to module _section_ IDs
     * Appended to files saved in `multiqc_data`
     * Should help to prevent duplicates requiring `-1` suffixes when running a module multiple times
+* New heatmap plot config options `xcats_samples` and `ycats_samples`
+    * If set to `False`, the report toolbox options (_highlight_, _rename_, _show/hide_) do not affect that axis.
+    * Means that the _Show only matching samples_ report toolbox option works on FastQC Status Checks, for example  ([#1172](https://github.com/ewels/MultiQC/issues/1172))
+* Improve Custom Content for HTML files - now just end your HTML filename with `_mqc.html`
+    * Native handling of HTML snippets as files, no MultiQC config or YAML file required.
+    * Also with embedded custom content configuration at the start of the file as a HTML comment.
 
 #### New Modules:
 
@@ -89,9 +95,21 @@ to break. If you haven't already, **you need to switch to Python 3 now**.
     * Updates plots to make compatible with 0.12.6
     * Fixes reporting errors - barplot total represents _mapped_ reads, not total reads in BAM file
     * New: Adds 'Post-DeDup Mapped Reads' column to general stats table.
+* **FastQC**
+    * Fixed tooltip text in _Sequence Duplication Levels_ plot ([#1092](https://github.com/ewels/MultiQC/issues/1092))
+    * Handle edge-case where a FastQC report was for an empty file with 0 reads ([#1129](https://github.com/ewels/MultiQC/issues/1129))
+* **FastQ Screen**
+    * Don't skip plotting `% No Hits` even if it's `0%` ([#1126](https://github.com/ewels/MultiQC/issues/1126))
+    * Refactor parsing code. Avoids error with `-0.00 %Unmapped` ([#1126](https://github.com/ewels/MultiQC/issues/1126))
+    * New plot for _Bisulfite Reads_, if data is present
+    * Categories in main plot are now sorted by the total read count and hidden if 0 across all samples
 * **fgbio**
     * New: Plot error rate by read position from `ErrorRateByReadPosition`
     * GroupReadsByUmi plot can now be toggled to show relative percents ([#1147](https://github.com/ewels/MultiQC/pull/1147))
+* **FLASh**
+    * Logs not reporting innie and outine uncombined pairs now plot combined pairs instead ([#1173](https://github.com/ewels/MultiQC/issues/1173))
+* **GATK**
+    * Made parsing for VariantEval more tolerant, so that it will work with output from the tool when run in different modes ([#1158](https://github.com/ewels/MultiQC/issues/1158))
 * **MTNucRatioCalculator**
     * Fixed misleading value suffix in general stats table
 * **Picard MarkDuplicates**
@@ -128,7 +146,11 @@ to break. If you haven't already, **you need to switch to Python 3 now**.
 * Plot config `logswitch_active` now works as advertised
 * When running MultiQC modules several times, multiple data files are now created instead of overwriting one another ([#1175](https://github.com/ewels/MultiQC/issues/1175))
 * Fixed minor bug where tables could report negative numbers of columns in their header text
+* Fixed bug where numeric custom content sample names could trigger a `TypeError` ([#1091](https://github.com/ewels/MultiQC/issues/1091))
+* Fixed custom content bug HTML data in a config file would trigger a `ValueError` ([#1071](https://github.com/ewels/MultiQC/issues/1071))
 * Replaced deprecated 'warn()' with 'warning()' of the logging module
+* Custom content now supports `section_extra` config key to add custom HTML after description.
+* Barplots with `ymax` set now ignore this when you click the _Percentages_ tab.
 
 ## [MultiQC v1.8](https://github.com/ewels/MultiQC/releases/tag/v1.8) - 2019-11-20
 
