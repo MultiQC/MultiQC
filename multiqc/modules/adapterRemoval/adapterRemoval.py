@@ -64,7 +64,7 @@ class MultiqcModule(BaseMultiqcModule):
         # add data to Basic Stats Table
         self.adapter_removal_stats_table()
 
-        self.adapter_removal_retained_chart()
+        self.adapter_removal_quality_filtering_chart()
         self.adapter_removal_length_dist_plot()
 
     def parse_settings_file(self, f):
@@ -125,19 +125,30 @@ class MultiqcModule(BaseMultiqcModule):
 
         # biological/technical relevance is not clear -> skip
         if self.__read_type == 'single' and self.__collapsed:
-            log.warning("Case single-end and collapse is not " \
-                        "implemented -> File %s skipped" % self.s_name)
+            log.warning("Case single-end and collapse is not implemented -> File {} skipped".format(self.s_name))
             raise UserWarning
 
     def set_trim_stat(self, trim_data):
-        required = ['total', 'unaligned', 'aligned', 'discarded_m1', 'singleton_m1', 'retained', 'discarded_m2', 'singleton_m2',
-                    'full-length_cp', 'truncated_cp']
-        data_pattern = {'total': 0,
-                        'unaligned': 1,
-                        'aligned': 2,
-                        'discarded_m1': 3,
-                        'singleton_m1': 4,
-                        'retained': 6}
+        required = [
+            'total',
+            'unaligned',
+            'aligned',
+            'discarded_m1',
+            'singleton_m1',
+            'retained',
+            'discarded_m2',
+            'singleton_m2',
+            'full-length_cp',
+            'truncated_cp'
+        ]
+        data_pattern = {
+            'total': 0,
+            'unaligned': 1,
+            'aligned': 2,
+            'discarded_m1': 3,
+            'singleton_m1': 4,
+            'retained': 6
+        }
 
         if self.__read_type == 'paired':
             data_pattern['discarded_m2'] = 5
@@ -225,18 +236,9 @@ class MultiqcModule(BaseMultiqcModule):
     def adapter_removal_stats_table(self):
 
         headers = OrderedDict()
-        headers['percent_aligned'] = {
-                'title': '% Trimmed',
-                'description': '% trimmed reads',
-                'max': 100,
-                'min': 0,
-                'suffix': '%',
-                'scale': 'RdYlGn-rev',
-                'shared_key': 'percent_aligned',
-        }
-        headers['aligned_total'] = {
-                'title': '{} Reads Trimmed'.format(config.read_count_prefix),
-                'description': 'Total trimmed reads ({})'.format(config.read_count_desc),
+        headers['retained_reads'] = {
+                'title': '{} Reads Retained'.format(config.read_count_prefix),
+                'description': 'Retained reads ({})'.format(config.read_count_desc),
                 'modify': lambda x: x * config.read_count_multiplier,
                 'min': 0,
                 'scale': 'PuBu',
@@ -244,11 +246,11 @@ class MultiqcModule(BaseMultiqcModule):
         }
         self.general_stats_addcols(self.adapter_removal_data, headers)
 
-    def adapter_removal_retained_chart(self):
+    def adapter_removal_quality_filtering_chart(self):
 
         pconfig = {
-            'title': 'Adapter Removal: Discarded Reads',
-            'id': 'ar_retained_plot',
+            'id': 'adapter_removal_quality_filtering_plot',
+            'title': 'Adapter Removal: Quality Filtering',
             'ylab': '# Reads',
             'hide_zero_cats': False,
             'cpswitch_counts_label': 'Number of Reads'
@@ -275,7 +277,7 @@ class MultiqcModule(BaseMultiqcModule):
 
         self.add_section(
             name='Retained and Discarded Paired-End Collapsed',
-            anchor='adapter_removal_retained_plot',
+            anchor='adapter_removal_quality_filtering',
             description='The number of retained and discarded reads.',
             plot=bargraph.plot(self.adapter_removal_data, cats_pec, pconfig)
         )
