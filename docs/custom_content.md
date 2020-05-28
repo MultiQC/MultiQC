@@ -227,6 +227,17 @@ And work with the following data file:
 # [...]
 ```
 
+This kind of customisation should work with most Custom Content types.
+For example, using an image called `some_science_mqc.jpeg` gives us a report section `some_science`,
+which we can then add a nicer name and description to:
+
+```yaml
+custom_data:
+    some_science:
+        section_name: 'Some real science'
+        description: 'This description comes from multiqc_config.yaml and helps to annotate the Custom Content image.'
+```
+
 As mentioned above - if no configuration is given, MultiQC will do its best to guess how to visualise
 your data appropriately. To see examples of typical file structures which are understood, see the
 [test data](https://github.com/ewels/MultiQC_TestData/tree/master/data/custom_content/no_config)

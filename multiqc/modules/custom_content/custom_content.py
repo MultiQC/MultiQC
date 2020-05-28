@@ -52,6 +52,7 @@ def custom_module_classes():
 
     # First - find files using patterns described in the config
     config_data = getattr(config, 'custom_data', {})
+    mod_cust_config = {}
     for k,f in config_data.items():
 
         # Check that we have a dictionary
@@ -78,8 +79,8 @@ def custom_module_classes():
             search_patterns.append(c_id)
             continue
 
-        # We should have had something by now
-        log.warning("Found section '{}' in config for custom_data, but no data or search patterns.".format(c_id))
+        # Must just be configuration for a separate custom-content class
+        mod_cust_config[c_id] = f
 
     # Now go through each of the file search patterns
     bm = BaseMultiqcModule()
@@ -116,7 +117,6 @@ def custom_module_classes():
                         'id': f['s_name'],
                         'plot_type': 'image',
                         'section_name': f['s_name'].replace('_', ' ').replace('-', ' ').replace('.', ' '),
-                        'description': 'Embedded image <code>{}</code>'.format(f['fn']),
                         'data': img_html
                     }
                 elif f_extension == '.html':
@@ -246,9 +246,14 @@ def custom_module_classes():
         else:
             # Is this file asking to be a sub-section under a parent section?
             mod_id = mod['config'].get('parent_id', c_id)
+            # If we have any custom configuration from a MultiQC config file, update here
+            if mod_id in mod_cust_config:
+                mod['config'].update(mod_cust_config[mod_id])
+            # We've not seen this module section before (normal for most custom content)
             if mod_id not in parsed_modules:
                 parsed_modules[mod_id] = MultiqcModule(mod_id, mod)
             else:
+                # New sub-section
                 parsed_modules[mod_id].update_init(c_id, mod)
             parsed_modules[mod_id].add_cc_section(c_id, mod)
             if mod['config'].get('plot_type') == 'html':
