@@ -112,6 +112,10 @@ class MultiqcModule(BaseMultiqcModule):
                             # add to the dictionary the key as the corrsponding item from the header and the value from the list
                             parsed_data[s_name][headers[i]] = v
 
+                # Rename some column titles that can be variably named (See issue #1112)
+                if 'FREEMIX(alpha)' in parsed_data[s_name]:
+                    parsed_data[s_name]['FREEMIX'] = parsed_data[s_name]['FREEMIX(alpha)']
+
         # else return the dictionary
         return parsed_data
 

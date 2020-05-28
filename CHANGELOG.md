@@ -133,6 +133,8 @@ to break. If you haven't already, **you need to switch to Python 3 now**.
     * Fix the bug for the latest sortmerna version 4.2.0 ([#1121](https://github.com/ewels/MultiQC/issues/1121))
 * **sexdeterrmine**
     * Added a scatter plot of relative X- vs Y-coverage to the generated report.
+* **VerifyBAMID**
+    * Allow files with column header `FREEMIX(alpha)` ([#1112](https://github.com/ewels/MultiQC/issues/1112))
 
 #### Bug Fixes:
 
