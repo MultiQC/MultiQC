@@ -18,7 +18,7 @@ class VariantEvalMixin():
         self.gatk_varianteval = dict()
         for f in self.find_log_files('gatk/varianteval', filehandles=True):
             parsed_data = parse_single_report(f['f'])
-            if len(parsed_data) > 0:
+            if len(parsed_data) > 1:
                 if f['s_name'] in self.gatk_varianteval:
                     log.debug("Duplicate sample name found! Overwriting: {}".format(f['s_name']))
                 self.add_data_source(f, section='varianteval')
@@ -105,7 +105,7 @@ def parse_single_report(f):
                         for i, s in enumerate(l.split()):
                             d[headers[i]] = s
                         if d['Novelty'] == 'all':
-                            data['reference'] = d['CompRod']
+                            data['reference'] = d.get('CompFeatureInput', d['CompRod'])
                             data['comp_rate'] = float(d['compRate'])
                             data['concordant_rate'] = float(d['concordantRate'])
                             data['eval_variants'] = int(d['nEvalVariants'])
@@ -143,7 +143,7 @@ def parse_single_report(f):
                         for i, s in enumerate(l.split()):
                             d[headers[i]] = s
                         if d['Novelty'] == 'known':
-                            data['titv_reference'] = d['CompRod']
+                            data['titv_reference'] = d.get('CompFeatureInput', d['CompRod'])
                             data['known_titv'] = float(d['tiTvRatio'])
                         elif d['Novelty'] == 'novel':
                             data['novel_titv'] = float(d['tiTvRatio'])
