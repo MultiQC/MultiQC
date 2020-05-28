@@ -16,7 +16,7 @@ log = logging.getLogger(__name__)
 
 
 class MultiqcModule(DragenMappingMetics, DragenFragmentLength, DragenPloidyEstimationMetrics,
-                    DragenVCMetrics, DragenCoveragePerContig, DragenCoverageMetrics, 
+                    DragenVCMetrics, DragenCoveragePerContig, DragenCoverageMetrics,
                     DragenCoverageHist, DragenFastQcMetrics):
     """ DRAGEN provides a number of differrent pipelines and outputs, including base calling, DNA and RNA alignment,
     post-alignment processing and variant calling, covering virtually all stages of typical NGS data processing.
@@ -41,8 +41,10 @@ class MultiqcModule(DragenMappingMetics, DragenFragmentLength, DragenPloidyEstim
             info=(" is a Bio-IT Platform that provides ultra-rapid secondary analysis of sequencing data"
                   " using field-programmable gate array technology (FPGA)."))
 
-        self.css = { 'assets/css/multiqc_fastqc.css' : os.path.join(os.path.dirname(__file__), '..', 'fastqc', 'assets', 'css', 'multiqc_fastqc.css') }
-        self.js = { 'assets/js/multiqc_fastqc.js' : os.path.join(os.path.dirname(__file__), 'assets', 'js', 'multiqc_fastqc.js') }
+        self.css = {'assets/css/multiqc_fastqc.css': os.path.join(os.path.dirname(
+            __file__), '..', 'fastqc', 'assets', 'css', 'multiqc_fastqc.css')}
+        self.js = {
+            'assets/js/multiqc_fastqc.js': os.path.join(os.path.dirname(__file__), 'assets', 'js', 'multiqc_fastqc.js')}
         self.intro += '<script type="application/json" class="fastqc_passfails">["DRAGEN", {"per_base_sequence_content": {"TEST": "pass"}}]</script>'
 
         samples_found = set()

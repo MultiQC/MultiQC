@@ -21,6 +21,7 @@ log = logging.getLogger(__name__)
 N_QV = 2
 ADAPTER_SEQS = ['AGATCGGAAGAG', 'ATGGAATTCTCG', 'CTGTCTCTTATA']
 
+
 class DragenFastQcMetrics(BaseMultiqcModule):
     """
     Rendering ALL THE THINGS!
@@ -52,7 +53,7 @@ class DragenFastQcMetrics(BaseMultiqcModule):
         self.adapter_content_plot()
 
         return self.fastqc_data.keys()
-    
+
     def positional_quality_range_plot(self):
         """STUFF"""
 
@@ -69,7 +70,7 @@ class DragenFastQcMetrics(BaseMultiqcModule):
                 pos = int(parts[1])
                 quantile = int(parts[2][:-1])
                 qv = int(value)
-            
+
                 try:
                     data[s_name][pos][quantile] = qv
                 except:
@@ -84,7 +85,7 @@ class DragenFastQcMetrics(BaseMultiqcModule):
             'ymin': 0,
             'ymax': 43,
             'tt_label': '<b>Base {point.x}</b>: {point.y:.2f}',
-            #'colors': self.get_status_cols('per_base_sequence_quality'),
+            # 'colors': self.get_status_cols('per_base_sequence_quality'),
             'yPlotBands': [
                 {'from': 28, 'to': 100, 'color': '#c3e6c3'},
                 {'from': 20, 'to': 28, 'color': '#e6dcc3'},
@@ -102,9 +103,9 @@ class DragenFastQcMetrics(BaseMultiqcModule):
     def positional_mean_quality_plot(self):
         """ Create the HTML for the positional mean-quality score plot """
 
-        base_dict  = {"A":{}, "C":{}, "G":{}, "T":{}, "N":{}}
+        base_dict = {"A": {}, "C": {}, "G": {}, "T": {}, "N": {}}
 
-        AVG_GROUP   = "POSITIONAL BASE MEAN QUALITY"
+        AVG_GROUP = "POSITIONAL BASE MEAN QUALITY"
         COUNT_GROUP = "POSITIONAL BASE CONTENT"
 
         data = dict()
@@ -118,7 +119,7 @@ class DragenFastQcMetrics(BaseMultiqcModule):
                 avgs[base][pos] = float(value)
 
             # Parse matching per-base and total counts by position
-            counts =  copy.deepcopy(base_dict)
+            counts = copy.deepcopy(base_dict)
             totals = defaultdict(int)
             for key, value in self.fastqc_data[s_name][COUNT_GROUP].items():
                 parts = key.split()
@@ -151,7 +152,7 @@ class DragenFastQcMetrics(BaseMultiqcModule):
             'ymin': 0,
             'xDecimals': False,
             'tt_label': '<b>Base {point.x}</b>: {point.y:.2f}',
-            #'colors': self.get_status_cols('per_base_sequence_quality'),
+            # 'colors': self.get_status_cols('per_base_sequence_quality'),
             'yPlotBands': [
                 {'from': 28, 'to': 100, 'color': '#c3e6c3'},
                 {'from': 20, 'to': 28, 'color': '#e6dcc3'},
@@ -159,11 +160,11 @@ class DragenFastQcMetrics(BaseMultiqcModule):
             ]
         }
 
-        self.add_section (
-            name = 'Per-Position Mean Quality Scores',
-            anchor = 'fastqc_per_base_sequence_quality',
-            description = 'The mean quality value across each base position in the read.',
-            helptext = '''
+        self.add_section(
+            name='Per-Position Mean Quality Scores',
+            anchor='fastqc_per_base_sequence_quality',
+            description='The mean quality value across each base position in the read.',
+            helptext='''
             To enable multiple samples to be plotted on the same graph, only the mean quality
             scores are plotted (unlike the box plots seen in FastQC reports).
 
@@ -175,7 +176,7 @@ class DragenFastQcMetrics(BaseMultiqcModule):
             The quality of calls on most platforms will degrade as the run progresses, so it is
             common to see base calls falling into the orange area towards the end of a read._
             ''',
-            plot = linegraph.plot(data, pconfig)
+            plot=linegraph.plot(data, pconfig)
         )
 
     def per_seq_quality_plot(self):
@@ -211,7 +212,7 @@ class DragenFastQcMetrics(BaseMultiqcModule):
             'ymin': 0,
             'xmin': 0,
             'xDecimals': False,
-            #'colors': self.get_status_cols('per_sequence_quality_scores'),
+            # 'colors': self.get_status_cols('per_sequence_quality_scores'),
             'tt_label': '<b>Phred {point.x}</b>: {point.y} reads',
             'xPlotBands': [
                 {'from': 28, 'to': 100, 'color': '#c3e6c3'},
@@ -219,18 +220,18 @@ class DragenFastQcMetrics(BaseMultiqcModule):
                 {'from': 0, 'to': 20, 'color': '#e6c3c3'},
             ]
         }
-        self.add_section (
-            name = 'Per-Sequence Quality Scores',
-            anchor = 'dragenqc_per_sequence_quality_scores',
-            description = 'The number of reads with average quality scores. Shows if a subset of reads has poor quality.',
-            helptext = '''
+        self.add_section(
+            name='Per-Sequence Quality Scores',
+            anchor='dragenqc_per_sequence_quality_scores',
+            description='The number of reads with average quality scores. Shows if a subset of reads has poor quality.',
+            helptext='''
             From the [FastQC help](http://www.bioinformatics.babraham.ac.uk/projects/fastqc/Help/3%20Analysis%20Modules/3%20Per%20Sequence%20Quality%20Scores.html):
             _The per sequence quality score report allows you to see if a subset of your
             sequences have universally low quality values. It is often the case that a
             subset of sequences will have universally poor quality, however these should
             represent only a small percentage of the total sequences._
             ''',
-            plot = linegraph.plot(data, pconfig)
+            plot=linegraph.plot(data, pconfig)
         )
 
     def n_content_plot(self):
@@ -274,7 +275,7 @@ class DragenFastQcMetrics(BaseMultiqcModule):
             'ymin': 0,
             'xmin': 0,
             'xDecimals': False,
-            #'colors': self.get_status_cols('per_base_n_content'),
+            # 'colors': self.get_status_cols('per_base_n_content'),
             'tt_label': '<b>Base {point.x}</b>: {point.y:.2f}%',
             'yPlotBands': [
                 {'from': 20, 'to': 100, 'color': '#e6c3c3'},
@@ -283,11 +284,11 @@ class DragenFastQcMetrics(BaseMultiqcModule):
             ]
         }
 
-        self.add_section (
-            name = 'Per-Position N Content',
-            anchor = 'dragenqc_per_base_n_content',
-            description = 'The percentage of base calls at each position for which an `N` was called.',
-            helptext = '''
+        self.add_section(
+            name='Per-Position N Content',
+            anchor='dragenqc_per_base_n_content',
+            description='The percentage of base calls at each position for which an `N` was called.',
+            helptext='''
             From the [FastQC help](http://www.bioinformatics.babraham.ac.uk/projects/fastqc/Help/3%20Analysis%20Modules/6%20Per%20Base%20N%20Content.html):
             _If a sequencer is unable to make a base call with sufficient confidence then it will
             normally substitute an `N` rather than a conventional base call. This graph shows the
@@ -297,7 +298,7 @@ class DragenFastQcMetrics(BaseMultiqcModule):
             it suggests that the analysis pipeline was unable to interpret the data well enough to
             make valid base calls._
             ''',
-            plot = linegraph.plot(data, pconfig)
+            plot=linegraph.plot(data, pconfig)
         )
 
     def gc_content_plot(self):
@@ -323,7 +324,7 @@ class DragenFastQcMetrics(BaseMultiqcModule):
                 data[s_name][pct] = value
 
             data_norm[s_name] = dict()
-            total = sum( [ c for c in data[s_name].values() ] )
+            total = sum([c for c in data[s_name].values()])
             for gc, count in data[s_name].items():
                 if total > 0:
                     data_norm[s_name][gc] = (count / total) * 100
@@ -341,19 +342,19 @@ class DragenFastQcMetrics(BaseMultiqcModule):
             'xmin': 0,
             'yDecimals': False,
             'tt_label': '<b>{point.x}% GC</b>: {point.y}',
-            #'colors': self.get_status_cols('per_sequence_gc_content'),
+            # 'colors': self.get_status_cols('per_sequence_gc_content'),
             'data_labels': [
                 {'name': 'Percentages', 'ylab': 'Percentage'},
                 {'name': 'Counts', 'ylab': 'Count'}
             ]
         }
 
-        self.add_section (
-            name = 'Per-Sequence GC Content',
-            anchor = 'dragenqc_per_sequence_gc_content',
-            description = '''The average GC content of reads. Normal random library typically have a
+        self.add_section(
+            name='Per-Sequence GC Content',
+            anchor='dragenqc_per_sequence_gc_content',
+            description='''The average GC content of reads. Normal random library typically have a
             roughly normal distribution of GC content.''',
-            helptext = '''
+            helptext='''
             From the [FastQC help](http://www.bioinformatics.babraham.ac.uk/projects/fastqc/Help/3%20Analysis%20Modules/5%20Per%20Sequence%20GC%20Content.html):
             _This module measures the GC content across the whole length of each sequence
             in a file and compares it to a modelled normal distribution of GC content._
@@ -369,9 +370,9 @@ class DragenFastQcMetrics(BaseMultiqcModule):
             be flagged as an error by the module since it doesn't know what your genome's
             GC content should be._
             ''',
-            plot = linegraph.plot([data_norm, data], pconfig)
+            plot=linegraph.plot([data_norm, data], pconfig)
         )
-    
+
     def gc_content_mean_quality_plot(self):
         """ Create the HTML for the positional mean-quality score plot """
 
@@ -394,7 +395,7 @@ class DragenFastQcMetrics(BaseMultiqcModule):
             'ymin': 0,
             'xDecimals': False,
             'tt_label': '<b>Base {point.x}</b>: {point.y:.2f}',
-            #'colors': self.get_status_cols('per_base_sequence_quality'),
+            # 'colors': self.get_status_cols('per_base_sequence_quality'),
             'yPlotBands': [
                 {'from': 28, 'to': 100, 'color': '#c3e6c3'},
                 {'from': 20, 'to': 28, 'color': '#e6dcc3'},
@@ -402,11 +403,11 @@ class DragenFastQcMetrics(BaseMultiqcModule):
             ]
         }
 
-        self.add_section (
-            name = 'GC Content Mean Quality Scores',
-            anchor = 'fastqc_gc_content_mean_sequence_quality',
-            description = 'The mean quality value across each base position in the read.',
-            helptext = '''
+        self.add_section(
+            name='GC Content Mean Quality Scores',
+            anchor='fastqc_gc_content_mean_sequence_quality',
+            description='The mean quality value across each base position in the read.',
+            helptext='''
             To enable multiple samples to be plotted on the same graph, only the mean quality
             scores are plotted (unlike the box plots seen in FastQC reports).
 
@@ -418,7 +419,7 @@ class DragenFastQcMetrics(BaseMultiqcModule):
             The quality of calls on most platforms will degrade as the run progresses, so it is
             common to see base calls falling into the orange area towards the end of a read._
             ''',
-            plot = linegraph.plot(data, pconfig)
+            plot=linegraph.plot(data, pconfig)
         )
 
     def seq_length_dist_plot(self):
@@ -453,10 +454,10 @@ class DragenFastQcMetrics(BaseMultiqcModule):
             desc = 'All samples have sequences within a single length bin ({}bp).'.format(lengths)
             if len(seq_lengths) > 1:
                 desc += ' See the <a href="#general_stats">General Statistics Table</a>.'
-            self.add_section (
-                name = 'Sequence Length Distribution',
-                anchor = 'dragenqc_sequence_length_distribution',
-                description = '<div class="alert alert-info">{}</div>'.format(desc)
+            self.add_section(
+                name='Sequence Length Distribution',
+                anchor='dragenqc_sequence_length_distribution',
+                description='<div class="alert alert-info">{}</div>'.format(desc)
             )
         else:
             pconfig = {
@@ -467,15 +468,15 @@ class DragenFastQcMetrics(BaseMultiqcModule):
                 'ymin': 0,
                 'yMinTickInterval': 0.1,
                 'xDecimals': False,
-                #'colors': self.get_status_cols('sequence_length_distribution'),
+                # 'colors': self.get_status_cols('sequence_length_distribution'),
                 'tt_label': '<b>{point.x} bp</b>: {point.y}',
             }
-            self.add_section (
-                name = 'Sequence Length Distribution',
-                anchor = 'dragenqc_sequence_length_distribution',
-                description = '''The distribution of fragment sizes (read lengths) found.
+            self.add_section(
+                name='Sequence Length Distribution',
+                anchor='dragenqc_sequence_length_distribution',
+                description='''The distribution of fragment sizes (read lengths) found.
                     See the [FastQC help](http://www.bioinformatics.babraham.ac.uk/projects/fastqc/Help/3%20Analysis%20Modules/7%20Sequence%20Length%20Distribution.html)''',
-                plot = linegraph.plot(data, pconfig)
+                plot=linegraph.plot(data, pconfig)
             )
 
     def sequence_content_plot(self):
@@ -499,7 +500,7 @@ class DragenFastQcMetrics(BaseMultiqcModule):
                     data[s_name][avg_pos] = dict()
 
                 # Store the current count and add it to the total
-                data[s_name][avg_pos][base] = value                    
+                data[s_name][avg_pos][base] = value
                 totals[avg_pos] += value
 
             # Use the accumulated totals to normalize each bin to a percentage
@@ -546,11 +547,11 @@ class DragenFastQcMetrics(BaseMultiqcModule):
             d=json.dumps([self.anchor.replace('-', '_'), data]),
         )
 
-        self.add_section (
-            name = 'Per-Position Sequence Content',
-            anchor = 'fastqc_per_base_sequence_content',
-            description = 'The proportion of each base position for which each of the four normal DNA bases has been called.',
-            helptext = '''
+        self.add_section(
+            name='Per-Position Sequence Content',
+            anchor='fastqc_per_base_sequence_content',
+            description='The proportion of each base position for which each of the four normal DNA bases has been called.',
+            helptext='''
             To enable multiple samples to be shown in a single plot, the base composition data
             is shown as a heatmap. The colours represent the balance between the four bases:
             an even distribution should give an even muddy brown colour. Hover over the plot
@@ -574,13 +575,12 @@ class DragenFastQcMetrics(BaseMultiqcModule):
             by trimming and in most cases doesn't seem to adversely affect the downstream
             analysis._
             ''',
-            content = html
+            content=html
         )
 
-    
     def adapter_content_plot(self):
         """ Create the epic HTML for the FastQC adapter content plot"""
-            
+
         # Prep the data
         data = dict()
         COUNT_GROUP = "POSITIONAL BASE CONTENT"
@@ -628,12 +628,12 @@ class DragenFastQcMetrics(BaseMultiqcModule):
             ],
         }
 
-        self.add_section (
-            name = 'Adapter Content',
-            anchor = 'fastqc_adapter_content',
-            description = '''The cumulative percentage count of the proportion of your
+        self.add_section(
+            name='Adapter Content',
+            anchor='fastqc_adapter_content',
+            description='''The cumulative percentage count of the proportion of your
             library which has seen each of the adapter sequences at each position.''',
-            helptext = '''
+            helptext='''
             Note that only samples with &ge; 0.1% adapter contamination are shown.
 
             There may be several lines per sample, as one is shown for each adapter
@@ -647,7 +647,7 @@ class DragenFastQcMetrics(BaseMultiqcModule):
             right through to the end of the read so the percentages you see will only
             increase as the read length goes on._
             ''',
-            plot = linegraph.plot(data, pconfig)
+            plot=linegraph.plot(data, pconfig)
         )
 
 
@@ -695,6 +695,7 @@ def parse_fastqc_metrics_file(f):
 
     return data
 
+
 def average_from_range(metric_range):
     if "-" in metric_range:
         start, end = metric_range.split('-')
@@ -703,24 +704,29 @@ def average_from_range(metric_range):
         avg_pos = int(metric_range)
     return avg_pos
 
+
 def average_pos_from_metric(metric):
     parts = metric.split()
     metric_range = parts[1]
     return average_from_range(metric_range)
+
 
 def average_pos_from_size(metric):
     parts = metric.split()
     len_range = parts[0].split('bp')[0]
     return average_from_range(len_range)
 
+
 def percentage_from_content_metric(metric):
     parts = metric.split()
-    pct   = int(parts[0].split("%")[0])
+    pct = int(parts[0].split("%")[0])
     return pct
+
 
 def base_from_content_metric(metric):
     parts = metric.split()
     return parts[1]
+
 
 def pos_qual_table_cmp(key):
     parts = key.split()
@@ -729,8 +735,10 @@ def pos_qual_table_cmp(key):
 
     return (pos * 1000 + pct)
 
+
 def sortPosQualTableKeys(data_dict):
     return sorted(data_dict.keys(), key=pos_qual_table_cmp)
+
 
 def generateGcModel(read_length):
     models = {}
@@ -741,4 +749,3 @@ def generateGcModel(read_length):
         claimed[pct+1] += 1
 
     return claimed
-

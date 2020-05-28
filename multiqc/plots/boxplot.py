@@ -30,13 +30,16 @@ letters = 'abcdefghijklmnopqrstuvwxyz'
 # Load the template so that we can access its configuration
 # Do this lazily to mitigate import-spaghetti when running unit tests
 _template_mod = None
+
+
 def get_template_mod():
     global _template_mod
     if not _template_mod:
         _template_mod = config.avail_templates[config.template].load()
     return _template_mod
 
-def plot (data, pconfig=None):
+
+def plot(data, pconfig=None):
     """ Plot a box-and-whisker plot
     :param data: 2D dict, first keys as read positions, then as quantile:QV pairs
     :param pconfig: optional dict with config key:value pairs. See CONTRIBUTING.md
@@ -48,6 +51,7 @@ def plot (data, pconfig=None):
     # Make a plot
     return matplotlib_boxplot(data, pconfig)
 
+
 def mock_data(data):
     res = []
     res += [data[10]] * 10
@@ -57,11 +61,13 @@ def mock_data(data):
     res += [data[90]] * 10
     return res
 
+
 def mock_dataset(data):
     res = []
     for key in sorted(data.keys()):
-        res.append( mock_data(data[key]) )
+        res.append(mock_data(data[key]))
     return res
+
 
 def matplotlib_boxplot(plotdata, pconfig=None):
     """
@@ -91,8 +97,8 @@ def matplotlib_boxplot(plotdata, pconfig=None):
         pids.append(pid)
 
     html = '<p class="text-info"><small><span class="glyphicon glyphicon-picture" aria-hidden="true"></span> ' + \
-          'Flat image plot. Toolbox functions such as highlighting / hiding samples will not work ' + \
-          '(see the <a href="http://multiqc.info/docs/#flat--interactive-plots" target="_blank">docs</a>).</small></p>'
+        'Flat image plot. Toolbox functions such as highlighting / hiding samples will not work ' + \
+        '(see the <a href="http://multiqc.info/docs/#flat--interactive-plots" target="_blank">docs</a>).</small></p>'
     html += '<div class="mqc_mplplot_plotgroup" id="{}">'.format(pconfig['id'])
 
     # Buttons to cycle through different datasets
@@ -105,7 +111,8 @@ def matplotlib_boxplot(plotdata, pconfig=None):
                 name = pconfig['data_labels'][k]['name']
             except:
                 name = k+1
-            html += '<button class="btn btn-default btn-sm {a}" data-target="#{pid}">{n}</button>\n'.format(a=active, pid=pid, n=name)
+            html += '<button class="btn btn-default btn-sm {a}" data-target="#{pid}">{n}</button>\n'.format(
+                a=active, pid=pid, n=name)
         html += '</div>\n\n'
 
     # Go through datasets creating plots
@@ -177,9 +184,9 @@ def matplotlib_boxplot(plotdata, pconfig=None):
 
         # X axis categories, if specified
         if 'categories' in pconfig:
-            axes.set_xticks([i for i,v in enumerate(pconfig['categories'])])
+            axes.set_xticks([i for i, v in enumerate(pconfig['categories'])])
             axes.set_xticklabels(pconfig['categories'])
-        
+
         # Axis lines
         xlim = axes.get_xlim()
         axes.plot([xlim[0], xlim[1]], [0, 0], linestyle='-', color='#dedede', linewidth=2)
@@ -193,18 +200,21 @@ def matplotlib_boxplot(plotdata, pconfig=None):
         if 'yPlotBands' in pconfig:
             xlim = axes.get_xlim()
             for pb in pconfig['yPlotBands']:
-                axes.barh(pb['from'], xlim[1], height = pb['to']-pb['from'], left=xlim[0], color=pb['color'], linewidth=0, zorder=0, align='edge')
+                axes.barh(pb['from'], xlim[1], height=pb['to']-pb['from'], left=xlim[0],
+                          color=pb['color'], linewidth=0, zorder=0, align='edge')
         if 'xPlotBands' in pconfig:
             ylim = axes.get_ylim()
             for pb in pconfig['xPlotBands']:
-                axes.bar(pb['from'], ylim[1], width = pb['to']-pb['from'], bottom=ylim[0], color=pb['color'], linewidth=0, zorder=0, align='edge')
+                axes.bar(pb['from'], ylim[1], width=pb['to']-pb['from'], bottom=ylim[0],
+                         color=pb['color'], linewidth=0, zorder=0, align='edge')
 
         # Tight layout - makes sure that legend fits in and stuff
         if len(pdata) <= 15:
-            axes.legend(loc='lower center', bbox_to_anchor=(0, -0.22, 1, .102), ncol=5, mode='expand', fontsize=8, frameon=False)
-            plt.tight_layout(rect=[0,0.08,1,0.92])
+            axes.legend(loc='lower center', bbox_to_anchor=(0, -0.22, 1, .102),
+                        ncol=5, mode='expand', fontsize=8, frameon=False)
+            plt.tight_layout(rect=[0, 0.08, 1, 0.92])
         else:
-            plt.tight_layout(rect=[0,0,1,0.92])
+            plt.tight_layout(rect=[0, 0, 1, 0.92])
 
         # Should this plot be hidden on report load?
         hidediv = ''
@@ -228,7 +238,8 @@ def matplotlib_boxplot(plotdata, pconfig=None):
             fig.savefig(img_buffer, format='png', bbox_inches='tight')
             b64_img = base64.b64encode(img_buffer.getvalue()).decode('utf8')
             img_buffer.close()
-            html += '<div class="mqc_mplplot" id="{}"{}><img src="data:image/png;base64,{}" /></div>'.format(pid, hidediv, b64_img)
+            html += '<div class="mqc_mplplot" id="{}"{}><img src="data:image/png;base64,{}" /></div>'.format(
+                pid, hidediv, b64_img)
 
         # Save to a file and link <img>
         else:
@@ -237,11 +248,9 @@ def matplotlib_boxplot(plotdata, pconfig=None):
 
         plt.close(fig)
 
-
     # Close wrapping div
     html += '</div>'
 
     report.num_mpl_plots += 1
 
     return html
-
