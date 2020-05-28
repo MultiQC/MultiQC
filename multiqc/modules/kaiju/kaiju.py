@@ -1,14 +1,12 @@
 #!/usr/bin/env python
 
-""" MultiQC module to parse output from Bismark """
+""" MultiQC module to parse output from Kaiju """
 
-from __future__ import print_function
 from collections import OrderedDict
 import logging
-import re
 
 from multiqc import config
-from multiqc.plots import beeswarm, linegraph, bargraph
+from multiqc.plots import bargraph
 from multiqc.modules.base_module import BaseMultiqcModule
 
 # Initialise the logger
@@ -79,7 +77,7 @@ class MultiqcModule(BaseMultiqcModule):
         return taxo_rank, parsed_data
 
     def kaiju_stats_table(self):
-        """ Take the parsed stats from the Bismark reports and add them to the
+        """ Take the parsed stats from the Kaiju reports and add them to the
         basic stats table at the top of the report """
         headers = {}
         general_data ={}
