@@ -446,9 +446,9 @@ picard/rrbs_metrics:
 picard/sam_file_validation:
     fn: '*[Vv]alidate[Ss]am[Ff]ile*'
 picard/variant_calling_metrics:
-    fn: '*.variant_calling_detail_metrics'
-    contents: 'CollectVariantCallingMetrics'
-    shared: true
+    - fn: '*.variant_calling_detail_metrics'
+    - contents: 'CollectVariantCallingMetrics'
+      shared: true
 picard/wgs_metrics:
     contents: 'CollectWgsMetrics'
     shared: true
@@ -502,7 +502,7 @@ rockhopper:
     contents: 'Number of gene-pairs predicted to be part of the same operon'
     max_filesize: 500000
 rsem:
-    - fn: '*.cnt'
+    fn: '*.cnt'
 rseqc/bam_stat:
     contents: 'Proper-paired reads map to different chrom:'
     max_filesize: 500000
