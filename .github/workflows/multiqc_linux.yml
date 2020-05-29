@@ -41,6 +41,11 @@ jobs:
     - name: All modules / Custom report filename
       run: multiqc --lint test_data/data/modules/ --filename full_report.html
 
+    - name: Filter out all filenames (confirm no report)
+      run: |
+        multiqc test_data/data/modules/ --filename all_ignored.html --ignore-samples '*'
+        [[ ! -f all_ignored.html ]]
+
     - name: File-list input of dirs
       run: |
         cd test_data
