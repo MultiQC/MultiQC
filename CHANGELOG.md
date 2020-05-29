@@ -49,6 +49,7 @@ to break. If you haven't already, **you need to switch to Python 3 now**.
     * Means that the _Show only matching samples_ report toolbox option works on FastQC Status Checks, for example ([#1172](https://github.com/ewels/MultiQC/issues/1172))
 * Report header time and analysis paths can now be hidden
     * New config options `show_analysis_paths` and `show_analysis_time` ([#1113](https://github.com/ewels/MultiQC/issues/1113))
+* New search pattern key `skip: true` to skip specific searches when modules look for a lot of different files (eg. Picard).
 * New `--profile-runtime` command line option (`config.profile_runtime`) to give analysis of how long the report takes to be generated
     * Plots of the file search results and durations are added to the end of the MultiQC report as a special module called _Run Time_
     * A summary of the time taken for the major stages of MultiQC execution are printed to the command line log.

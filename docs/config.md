@@ -313,6 +313,28 @@ described below will have limited practical benefit.
 In other words, if you're running with 15 RNAseq samples, you may as well save yourself
 some time and stick with the defaults.
 
+### Profile your MultiQC run time
+
+As of version 1.9, MultiQC has a command line option to profile what it spends its time
+doing: `--profile-runtime` (`config.profile_runtime`). Whilst you're working with writing
+your pipeline / setting up your analysis, you can specify and MultiQC will add a section
+to the bottom of your report describing how much time it spent searching files and
+what it did with those files. You'll also get a breakdown in the command-line log
+of how long the different steps of MultiQC execution took:
+
+```
+[INFO   ]         multiqc : MultiQC complete
+[INFO   ]         multiqc : Run took 35.28 seconds
+[INFO   ]         multiqc :  - 31.01s: Searching files
+[INFO   ]         multiqc :  - 1.75s: Running modules
+[INFO   ]         multiqc :  - 0.96s: Compressing report data
+[INFO   ]         multiqc : For more information, see the 'Run Time' section in multiqc_report.html
+```
+
+If MultiQC is finishing in a few seconds or minutes, you probably don't need to do anything.
+If you are working with huge numbers of files then it may be worth looking into these
+results to see if you can speed up MultiQC. The documentation below explains how to do this.
+
 ### Be picky with which modules are run
 
 Probably the easiest way to speed up MultiQC is to only use the modules that you
