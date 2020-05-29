@@ -25,7 +25,7 @@ class TagDirReportMixin():
         self.parse_FreqDistribution_data()
         self.homer_stats_table_tagInfo()
 
-        return sum([len(v) for v in self.tagdir_data.values()])
+        return sum([len(v) for k, v in self.tagdir_data.items() if k != 'header'])
 
 
     def parse_gc_content(self):
