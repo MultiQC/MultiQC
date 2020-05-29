@@ -71,6 +71,10 @@ class MultiqcModule(BaseMultiqcModule):
 
 
     def parse_logs(self, file_type, root, s_name, fn, f, **kw):
+
+        if self.is_ignore_sample(s_name):
+            return False
+
         log.debug("Parsing %s/%s", root, fn)
         if not file_type in file_types:
             log.error("Unknown output type '%s'. Error in config?", file_type)
