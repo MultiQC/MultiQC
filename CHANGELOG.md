@@ -53,6 +53,9 @@ to break. If you haven't already, **you need to switch to Python 3 now**.
 * New `--profile-runtime` command line option (`config.profile_runtime`) to give analysis of how long the report takes to be generated
     * Plots of the file search results and durations are added to the end of the MultiQC report as a special module called _Run Time_
     * A summary of the time taken for the major stages of MultiQC execution are printed to the command line log.
+* New table config option `only_defined_headers`
+    * Defaults to `true`, set to `false` to also show any data columns that are not defined as headers
+    * Useful as allows table-wide defaults to be set with column-specific overrides
 
 
 #### New Custom Content features

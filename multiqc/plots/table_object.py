@@ -38,18 +38,33 @@ class datatable (object):
                 keys = headers[idx].keys()
                 assert len(keys) > 0
             except (IndexError, AttributeError, AssertionError):
+                pconfig['only_defined_headers'] = False
+
+            # Add header keys from the data
+            if pconfig.get('only_defined_headers', True) is False:
+
+                # Get the keys from the data
                 keys = list()
                 for samp in d.values():
                     for k in samp.keys():
                         if k not in keys:
                             keys.append(k)
+
+                # If we don't have a headers dict for this data set yet, create one
                 try:
                     headers[idx]
                 except IndexError:
                     headers.append(list)
-                headers[idx] = OrderedDict()
+                    headers[idx] = OrderedDict()
+                else:
+                    # Convert the existing headers into an OrderedDict (eg. if parsed from a config)
+                    od_tuples = [(key, headers[idx][key]) for key in headers[idx].keys()]
+                    headers[idx] = OrderedDict(od_tuples)
+
+                # Create empty header configs for each new data key
                 for k in keys:
-                    headers[idx][k] = {}
+                    if k not in headers[idx]:
+                        headers[idx][k] = {}
 
             # Ensure that keys are strings, not numeric
             keys = [str(k) for k in keys]
