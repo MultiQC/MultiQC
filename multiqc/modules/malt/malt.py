@@ -1,6 +1,9 @@
+#!/usr/bin/env python
+""" MultiQC module to parse output from MALT """
+from __future__ import print_function
 from collections import OrderedDict
 from multiqc import config
-from multiqc.plots import bargraph, beeswarm, table
+from multiqc.plots import bargraph
 from multiqc.modules.base_module import BaseMultiqcModule
 
 import logging
@@ -21,15 +24,15 @@ class MultiqcModule(BaseMultiqcModule):
         )
 
         # Find and load Malt reports
-        self.malt_raw_data = dict()
+        self.malt_data = dict()
 
         for f in self.find_log_files('malt', filehandles=True):
             self.parse_logs(f)
 
-        if len(self.malt_raw_data) == 0:
+        if len(self.malt_data) == 0:
             raise UserWarning
 
-        log.info("Found {} reports".format(len(self.malt_raw_data)))
+        log.info("Found {} reports".format(len(self.malt_data)))
 
         self.malt_general_stats()
         self.mappability_barplot()
@@ -37,51 +40,42 @@ class MultiqcModule(BaseMultiqcModule):
 
     def parse_logs(self, f):
         """Parses a Malt log file"""
-        data = {}
-        mappability = {}
-        taxo_success = {}
         reading = False
+        keys = [
+            "Total reads",
+            "Assig. Taxonomy",
+            "Num. of queries",
+            "Aligned queries",
+            "Num. alignments",
+        ]
         for line in f['f']:
             line = line.rstrip()
             if line.startswith("+++++ Aligning file:") and reading == False:
                 reading = True
-                sample = line.split()[-1]
-                sample = self.clean_s_name(sample, f['root'])
-                data[sample] = {}
-                continue
-            if line.startswith("Total reads:") and reading:
-                data[sample]["Total reads"] = int(
-                    line.split()[-1].replace(",", ""))
-                continue
-            if line.startswith("Assig. Taxonomy:") and reading:
-                data[sample]['Assig. Taxonomy'] = int(
-                    line.split()[-1].replace(",", ""))
-                continue
-            if line.startswith("Num. of queries:") and reading:
-                data[sample]["Num. of queries"] = int(
-                    line.split()[-1].replace(",", ""))
-                continue
-            if line.startswith("Aligned queries:") and reading:
-                data[sample]["Aligned queries"] = int(
-                    line.split()[-1].replace(",", ""))
-                continue
-            if line.startswith("Num. alignments:") and reading:
-                reading = False
-                data[sample]['num. alignments'] = int(
-                    line.split()[-1].replace(",", ""))
-                continue
-            self.malt_raw_data = data
-            # self.general_stats_addcols(data)
+                s_name = line.split()[-1]
+                s_name = self.clean_s_name(s_name, f['root'])
+                if s_name in self.malt_data:
+                    log.debug("Duplicate sample name found! Overwriting: {}".format(s_name))
+                self.malt_data[s_name] = {}
+            elif reading:
+                for k in keys:
+                    if line.startswith(k):
+                        self.malt_data[s_name][k] = int(line.split()[-1].replace(",", ""))
+                        if k == 'Num. alignments':
+                            try:
+                                self.malt_data[s_name]['Non mapped'] = self.malt_data[s_name]["Num. of queries"] - self.malt_data[s_name]['Total reads']
+                                self.malt_data[s_name]['No Assig. Taxonomy'] = self.malt_data[s_name]["Total reads"] - self.malt_data[s_name]['Assig. Taxonomy']
+                                self.malt_data[s_name]['Mappability'] = (float(self.malt_data[s_name]['Total reads']) / float(self.malt_data[s_name]["Num. of queries"]))*100.0
+                                self.malt_data[s_name]['Taxonomic assignment success'] = (float(self.malt_data[s_name]['Assig. Taxonomy']) / float(self.malt_data[s_name]['Total reads']))*100.0
+                            except KeyError:
+                                pass
+                            reading = False
 
     def mappability_barplot(self):
         """Mappability barplot
 
         Mappability = (Total reads / Num. of queries) * 100
         """
-        data = self.malt_raw_data
-        for samp in data:
-            data[samp]['Non mapped'] = data[samp]["Num. of queries"] - \
-                data[samp]['Total reads']
         cats = OrderedDict()
         cats['Total reads'] = {'name': 'Mapped reads'}
         cats['Non mapped'] = {'name': 'Non Mapped reads'}
@@ -94,7 +88,7 @@ class MultiqcModule(BaseMultiqcModule):
             name='Metagenomic Mappability',
             anchor='malt-mappability',
             description='Number of mapped reads.',
-            plot=bargraph.plot(data, cats, config)
+            plot=bargraph.plot(self.malt_data, cats, config)
         )
 
     def taxonomic_assignation_barplot(self):
@@ -102,10 +96,6 @@ class MultiqcModule(BaseMultiqcModule):
 
         Taxonomic assignment success = (Assig. Taxonomy / Total reads) * 100
         """
-        data = self.malt_raw_data
-        for samp in data:
-            data[samp]['No Assig. Taxonomy'] = data[samp]["Total reads"] - \
-                data[samp]['Assig. Taxonomy']
         cats = ['Assig. Taxonomy', "No Assig. Taxonomy"]
         config = {
             'id': 'malt-taxonomic-success-plot',
@@ -116,17 +106,11 @@ class MultiqcModule(BaseMultiqcModule):
             name='Taxonomic assignment success',
             anchor='malt-taxonomic-success',
             description='Shows the number of mapped reads assigned to a taxonomic node.',
-            plot=bargraph.plot(data, cats, config)
+            plot=bargraph.plot(self.malt_data, cats, config)
         )
 
     def malt_general_stats(self):
         """MALT General Statistics table"""
-        data = self.malt_raw_data
-        for samp in data:
-            data[samp]['Mappability'] = (
-                data[samp]['Total reads'] / data[samp]["Num. of queries"])*100
-            data[samp]['Taxonomic assignment success'] = (
-                data[samp]['Assig. Taxonomy']/data[samp]['Total reads'])*100
         headers = OrderedDict()
         headers['Taxonomic assignment success'] = {
             'title': "% Tax assigned",
@@ -164,4 +148,4 @@ class MultiqcModule(BaseMultiqcModule):
             'shared_key': 'read_count',
             'modify': lambda x: x * config.read_count_multiplier,
         }
-        self.general_stats_addcols(data, headers)
+        self.general_stats_addcols(self.malt_data, headers)
