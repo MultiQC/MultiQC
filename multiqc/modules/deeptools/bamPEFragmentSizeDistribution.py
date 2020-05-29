@@ -22,6 +22,8 @@ class bamPEFragmentSizeDistributionMixin():
             if len(parsed_data) > 0:
                 self.add_data_source(f, section='bamPEFragmentSizeDistribution')
 
+        self.deeptools_bamPEFragmentSizeDistribution = self.ignore_samples(self.deeptools_bamPEFragmentSizeDistribution)
+
         if len(self.deeptools_bamPEFragmentSizeDistribution) > 0:
             config = {
                 'id': 'fragment_size_distribution_plot',
