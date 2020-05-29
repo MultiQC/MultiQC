@@ -35,7 +35,7 @@ class MultiqcModule(BaseMultiqcModule):
             self.parse_conpair_logs(f)
 
         # Filter to strip out ignored sample names
-        self.conpair_concordance_data = self.ignore_samples(self.conpair_data)
+        self.conpair_data = self.ignore_samples(self.conpair_data)
 
         if len(self.conpair_data) == 0:
             raise UserWarning
