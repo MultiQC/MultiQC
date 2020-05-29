@@ -77,9 +77,9 @@ bcftools/stats:
     contents: 'This file was produced by bcftools stats'
     shared: true
 bcl2fastq:
-    - fn: 'Stats.json'
-      contents: 'DemuxResults'
-    - num_lines: 300
+    fn: 'Stats.json'
+    contents: 'DemuxResults'
+    num_lines: 300
 biobambam2/bamsormadup:
     contents: '# bamsormadup'
     num_lines: 2
