@@ -48,20 +48,20 @@ if sys.version_info[0:2] < (3, 6):
     markdown_version = '<3.2'
 
 install_requires = [
-        'matplotlib' + matplotlib_version,
-        'networkx' + networkx_version,
-        'numpy' + numpy_version,
-        'click',
-        'coloredlogs',
-        'future>0.14.0',
-        'jinja2' + jinja2_version,
-        'lzstring',
-        'markdown' + markdown_version,
-        'pyyaml>=4',
-        'requests',
-        'simplejson',
-        'spectra>=0.0.10',
-    ]
+    'matplotlib' + matplotlib_version,
+    'networkx' + networkx_version,
+    'numpy' + numpy_version,
+    'click',
+    'coloredlogs',
+    'future>0.14.0',
+    'jinja2' + jinja2_version,
+    'lzstring',
+    'markdown' + markdown_version,
+    'pyyaml>=4',
+    'requests',
+    'simplejson',
+    'spectra>=0.0.10',
+]
 
 setup(
     name = 'multiqc',
@@ -131,6 +131,7 @@ setup(
             'leehom = multiqc.modules.leehom:MultiqcModule',
             'longranger = multiqc.modules.longranger:MultiqcModule',
             'macs2 = multiqc.modules.macs2:MultiqcModule',
+            'malt = multiqc.modules.malt:MultiqcModule',
             'methylQA = multiqc.modules.methylQA:MultiqcModule',
             'minionqc = multiqc.modules.minionqc:MultiqcModule',
             'mirtop = multiqc.modules.mirtop:MultiqcModule',
@@ -182,18 +183,19 @@ setup(
             'gathered = multiqc.templates.gathered',
             'geo = multiqc.templates.geo',
         ],
-        # 'multiqc.cli_options.v1': [
-            # 'my-new-option = myplugin.cli:new_option'
-        # ],
-        # 'multiqc.hooks.v1': [
-            # 'before_config = myplugin.hooks:before_config',
-            # 'config_loaded = myplugin.hooks:config_loaded',
-            # 'execution_start = myplugin.hooks:execution_start',
-            # 'before_modules = myplugin.hooks:before_modules',
-            # 'after_modules = myplugin.hooks:after_modules',
-            # 'before_report_generation = myplugin.hooks:before_report_generation',
-            # 'execution_finish = myplugin.hooks:execution_finish',
-        # ]
+## See https://multiqc.info/docs/#multiqc-plugins for documentation
+#       'multiqc.cli_options.v1': [
+#           'my-new-option = myplugin.cli:new_option'
+#       ],
+#       'multiqc.hooks.v1': [
+#           'before_config = myplugin.hooks:before_config',
+#           'config_loaded = myplugin.hooks:config_loaded',
+#           'execution_start = myplugin.hooks:execution_start',
+#           'before_modules = myplugin.hooks:before_modules',
+#           'after_modules = myplugin.hooks:after_modules',
+#           'before_report_generation = myplugin.hooks:before_report_generation',
+#           'execution_finish = myplugin.hooks:execution_finish',
+#       ]
     },
     classifiers = [
         'Development Status :: 4 - Beta',

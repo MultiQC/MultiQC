@@ -92,6 +92,8 @@ to break. If you haven't already, **you need to switch to Python 3 now**.
     * Relatedness checking and QC for BAM/CRAM/VCF for cancer, DNA, BS-Seq, exome, etc.
 * [**VarScan2**](https://github.com/dkoboldt/varscan)
     * Variant calling and somatic mutation/CNV detection for next-generation sequencing data
+* [**MALT**](https://uni-tuebingen.de/fakultaeten/mathematisch-naturwissenschaftliche-fakultaet/fachbereiche/informatik/lehrstuehle/algorithms-in-bioinformatics/software/malt/)
+    * Megan Alignment Tool: Metagenomics alignment tool.
 
 #### Module updates:
 

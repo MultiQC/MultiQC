@@ -48,6 +48,7 @@ MultiQC Modules:
     STAR: modules/star.md
     TopHat: modules/tophat.md
     DRAGEN: modules/dragen.md
+    MALT: modules/malt.md
   Post-alignment:
     Bamtools: modules/bamtools.md
     Bcftools: modules/bcftools.md
