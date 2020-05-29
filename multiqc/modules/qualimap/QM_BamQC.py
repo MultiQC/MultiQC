@@ -42,6 +42,7 @@ def parse_reports(self):
     self.qualimap_bamqc_gc_by_species = dict()  # {'HUMAN': data_dict, 'MOUSE': data_dict}
     for f in self.find_log_files('qualimap/bamqc/gc_dist', filehandles=True):
         parse_gc_dist(self, f)
+    self.qualimap_bamqc_gc_content_dist = self.ignore_samples(self.qualimap_bamqc_gc_content_dist)
     self.qualimap_bamqc_gc_by_species = self.ignore_samples(self.qualimap_bamqc_gc_by_species)
 
     num_parsed = max(
