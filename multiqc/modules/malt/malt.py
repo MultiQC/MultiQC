@@ -31,7 +31,7 @@ class MultiqcModule(BaseMultiqcModule):
 
         log.info("Found {} reports".format(len(self.malt_raw_data)))
 
-        self.malt_summary_table()
+        self.malt_general_stats()
         self.mappability_barplot()
         self.taxonomic_assignation_barplot()
 
@@ -93,10 +93,7 @@ class MultiqcModule(BaseMultiqcModule):
         self.add_section(
             name='Metagenomic Mappability',
             anchor='malt-mappability',
-            description='Number of mapped reads',
-            helptext="""
-                Mappability = (Assig. Taxonomy / Num. of queries) * 100
-            """,
+            description='Number of mapped reads.',
             plot=bargraph.plot(data, cats, config)
         )
 
@@ -118,15 +115,12 @@ class MultiqcModule(BaseMultiqcModule):
         self.add_section(
             name='Taxonomic assignment success',
             anchor='malt-taxonomic-success',
-            description='Number of mapped reads assigned to a taxonomic node',
-            helptext="""
-                Taxonomic assignment success = (Assig. Taxonomy / Total Reads) * 100
-            """,
+            description='Shows the number of mapped reads assigned to a taxonomic node.',
             plot=bargraph.plot(data, cats, config)
         )
 
-    def malt_summary_table(self):
-        """MALT summary table"""
+    def malt_general_stats(self):
+        """MALT General Statistics table"""
         data = self.malt_raw_data
         for samp in data:
             data[samp]['Mappability'] = (
@@ -134,49 +128,40 @@ class MultiqcModule(BaseMultiqcModule):
             data[samp]['Taxonomic assignment success'] = (
                 data[samp]['Assig. Taxonomy']/data[samp]['Total reads'])*100
         headers = OrderedDict()
-        headers['Num. of queries'] = {
-            'title': 'Number of reads in sample',
-            'description': 'Number of reads in sample',
-            'format': '{:d}',
-            'scale': 'Purples'
-        }
-        headers['Total reads'] = {
-            'title': 'Mapped reads',
-            'description': 'Number of mapped reads',
-            'format': '{:d}',
-            'scale': 'PuBu'
-        }
-        headers['Mappability'] = {
-            'title': "% Metagenomic Mappability",
-            'description': 'Percentage of mapped reads',
-            'suffix': '%',
-            'max': 100,
-            'format': '{:,.2f}',
-            'scale': 'RdYlGn'
-        }
         headers['Taxonomic assignment success'] = {
-            'title': "% Taxonomic assignment success",
+            'title': "% Tax assigned",
             'description': 'Percentage of mapped reads assigned to a taxonomic node',
             'suffix': '%',
             'max': 100,
-            'format': '{:,.2f}',
             'scale': 'RdYlGn'
         }
         headers['Assig. Taxonomy'] = {
-            'title': 'Assig. Taxonomy',
-            'description': 'Number of reads assigned to a Taxonomic node',
-            'format': '{:d}',
-            'hidden': True,
-            'scale': 'Greens'
+            'title': '{} Tax assigned'.format(config.read_count_prefix),
+            'description': 'Number of reads assigned to a Taxonomic node ({})'.format(config.read_count_desc),
+            'scale': 'Greens',
+            'shared_key': 'read_count',
+            'modify': lambda x: x * config.read_count_multiplier,
+            'hidden': True
         }
-        config = {
-            'namespace': 'malt'
+        headers['Mappability'] = {
+            'title': "% Metagenomic Mapped",
+            'description': 'Percentage of mapped reads',
+            'suffix': '%',
+            'max': 100,
+            'scale': 'RdYlGn'
         }
-        self.add_section(
-            name='MALT summary table',
-            anchor='malt-summary-table',
-            description='MALT summary statistics table',
-            plot=table.plot(data, headers, config)
-        )
+        headers['Total reads'] = {
+            'title': '{} Mapped'.format(config.read_count_prefix),
+            'description': 'Number of mapped reads ({})'.format(config.read_count_desc),
+            'scale': 'PuBu',
+            'shared_key': 'read_count',
+            'modify': lambda x: x * config.read_count_multiplier,
+        }
+        headers['Num. of queries'] = {
+            'title': '{} Reads'.format(config.read_count_prefix),
+            'description': 'Number of reads in sample ({})'.format(config.read_count_desc),
+            'scale': 'Purples',
+            'shared_key': 'read_count',
+            'modify': lambda x: x * config.read_count_multiplier,
+        }
         self.general_stats_addcols(data, headers)
-        self.write_data_file(data, 'multiqc_malt')

@@ -64,23 +64,21 @@ install_requires = [
 ]
 
 setup(
-    name='multiqc',
-    version=version,
-    author='Phil Ewels',
-    author_email='phil.ewels@scilifelab.se',
-    description="Create aggregate bioinformatics analysis reports across many samples and tools",
-    long_description=__doc__,
-    keywords=['bioinformatics', 'biology', 'sequencing', 'NGS',
-              'next generation sequencing', 'quality control'],
-    url='http://multiqc.info',
-    download_url='https://github.com/ewels/MultiQC/tarball/{}'.format(
-        dl_version),
-    license='GPLv3',
-    packages=find_packages(),
-    include_package_data=True,
-    zip_safe=False,
-    install_requires=install_requires,
-    entry_points={
+    name = 'multiqc',
+    version = version,
+    author = 'Phil Ewels',
+    author_email = 'phil.ewels@scilifelab.se',
+    description = "Create aggregate bioinformatics analysis reports across many samples and tools",
+    long_description = __doc__,
+    keywords = ['bioinformatics', 'biology', 'sequencing', 'NGS', 'next generation sequencing', 'quality control'],
+    url = 'http://multiqc.info',
+    download_url = 'https://github.com/ewels/MultiQC/tarball/{}'.format(dl_version),
+    license = 'GPLv3',
+    packages = find_packages(),
+    include_package_data = True,
+    zip_safe = False,
+    install_requires = install_requires,
+    entry_points = {
         "console_scripts": [
             "multiqc=multiqc.__main__:multiqc",
         ],
@@ -101,7 +99,7 @@ setup(
             'clipandmerge = multiqc.modules.clipandmerge:MultiqcModule',
             'clusterflow = multiqc.modules.clusterflow:MultiqcModule',
             'conpair = multiqc.modules.conpair:MultiqcModule',
-            'custom_content = multiqc.modules.custom_content:custom_module_classes',  # special case
+            'custom_content = multiqc.modules.custom_content:custom_module_classes', # special case
             'cutadapt = multiqc.modules.cutadapt:MultiqcModule',
             'damageprofiler = multiqc.modules.damageprofiler:MultiqcModule',
             'dedup = multiqc.modules.dedup:MultiqcModule',
@@ -185,20 +183,21 @@ setup(
             'gathered = multiqc.templates.gathered',
             'geo = multiqc.templates.geo',
         ],
-        # 'multiqc.cli_options.v1': [
-        # 'my-new-option = myplugin.cli:new_option'
-        # ],
-        # 'multiqc.hooks.v1': [
-        # 'before_config = myplugin.hooks:before_config',
-        # 'config_loaded = myplugin.hooks:config_loaded',
-        # 'execution_start = myplugin.hooks:execution_start',
-        # 'before_modules = myplugin.hooks:before_modules',
-        # 'after_modules = myplugin.hooks:after_modules',
-        # 'before_report_generation = myplugin.hooks:before_report_generation',
-        # 'execution_finish = myplugin.hooks:execution_finish',
-        # ]
+## See https://multiqc.info/docs/#multiqc-plugins for documentation
+#       'multiqc.cli_options.v1': [
+#           'my-new-option = myplugin.cli:new_option'
+#       ],
+#       'multiqc.hooks.v1': [
+#           'before_config = myplugin.hooks:before_config',
+#           'config_loaded = myplugin.hooks:config_loaded',
+#           'execution_start = myplugin.hooks:execution_start',
+#           'before_modules = myplugin.hooks:before_modules',
+#           'after_modules = myplugin.hooks:after_modules',
+#           'before_report_generation = myplugin.hooks:before_report_generation',
+#           'execution_finish = myplugin.hooks:execution_finish',
+#       ]
     },
-    classifiers=[
+    classifiers = [
         'Development Status :: 4 - Beta',
         'Environment :: Console',
         'Environment :: Web Environment',
