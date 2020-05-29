@@ -75,6 +75,11 @@ class MultiqcModule(BaseMultiqcModule):
 
         dist_data, cov_data, xmax, perchrom_avg_data = self.parse_cov_dist()
 
+        # Filter out any samples from --ignore-samples
+        dist_data = self.ignore_samples(dist_data)
+        cov_data = self.ignore_samples(cov_data)
+        perchrom_avg_data = self.ignore_samples(perchrom_avg_data)
+
         # No samples found
         num_samples = max(
             len(dist_data),
