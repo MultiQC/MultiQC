@@ -42,6 +42,9 @@ class MultiqcModule(BaseMultiqcModule):
 
         self.seqyclean_data = self.ignore_samples(self.seqyclean_data)
 
+        if len(self.seqyclean_data) == 0:
+            raise UserWarning
+
         log.info("Found {} logs".format(len(self.seqyclean_data)))
 
         # Adding the bar plots
