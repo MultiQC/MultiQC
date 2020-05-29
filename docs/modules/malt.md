@@ -12,4 +12,4 @@ and procudes three MultiQC sections:
 
 - A MALT summary statistics table
 - A Mappability bargraph
-- A Taxonomic assignment sucess bargraph
+- A Taxonomic assignment success bargraph
