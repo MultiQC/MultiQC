@@ -162,6 +162,9 @@ def custom_module_classes():
                     if k == 'custom_content':
                         c_id = s_name
 
+                    # Merge with config from a MultiQC config file if we have it
+                    m_config.update(mod_cust_config.get(c_id, {}))
+
                     # Add information about the file to the config dict
                     if 'files' not in m_config:
                         m_config['files'] = dict()
@@ -247,6 +250,7 @@ def custom_module_classes():
             # Is this file asking to be a sub-section under a parent section?
             mod_id = mod['config'].get('parent_id', c_id)
             # If we have any custom configuration from a MultiQC config file, update here
+            # This is done earlier for tsv files too, but we do it here so that it overwrites what was in the file
             if mod_id in mod_cust_config:
                 mod['config'].update(mod_cust_config[mod_id])
             # We've not seen this module section before (normal for most custom content)

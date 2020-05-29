@@ -62,8 +62,9 @@ to break. If you haven't already, **you need to switch to Python 3 now**.
     * Also with embedded custom content configuration at the start of the file as a HTML comment.
 * Add ability to group custom-content files into report sections
     * Use the new `parent_id`, `parent_name` and `parent_description` config keys to group content together like a regular module ([#1008](https://github.com/ewels/MultiQC/issues/1008))
-* Images and other 'blunt' Custom Content data types can now be configured using `custom_data`
-    * Allows you to set descriptions and nicer titles for images in reports ([#1026](https://github.com/ewels/MultiQC/issues/1026))
+* Custom Content files can now be configured using `custom_data`, without giving search patterns or data
+    * Allows you to set descriptions and nicer titles for images and other 'blunt' data types in reports ([#1026](https://github.com/ewels/MultiQC/issues/1026))
+    * Allows configuration of custom content separately from files themselves (`tsv`, `csv`, `txt` formats) ([#1205](https://github.com/ewels/MultiQC/issues/1205))
 
 #### New Modules:
 
