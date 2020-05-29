@@ -29,6 +29,8 @@ class MultiqcModule(BaseMultiqcModule):
         for f in self.find_log_files('malt', filehandles=True):
             self.parse_logs(f)
 
+        self.malt_data = self.ignore_samples(self.malt_data)
+
         if len(self.malt_data) == 0:
             raise UserWarning
 
@@ -56,6 +58,7 @@ class MultiqcModule(BaseMultiqcModule):
                 s_name = self.clean_s_name(s_name, f['root'])
                 if s_name in self.malt_data:
                     log.debug("Duplicate sample name found! Overwriting: {}".format(s_name))
+                self.add_data_source(f, s_name=s_name)
                 self.malt_data[s_name] = {}
             elif reading:
                 for k in keys:
