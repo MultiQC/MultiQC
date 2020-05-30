@@ -21,9 +21,12 @@ class MultiqcModule(BaseMultiqcModule):
     def __init__(self):
 
         # Initialise the parent object
-        super(MultiqcModule, self).__init__(name='Kallisto', anchor='kallisto',
-        href="http://pachterlab.github.io/kallisto/",
-        info="is a program for quantifying abundances of transcripts from RNA-Seq data.")
+        super(MultiqcModule, self).__init__(
+            name = 'Kallisto',
+            anchor = 'kallisto',
+            href = "http://pachterlab.github.io/kallisto/",
+            info = "is a program for quantifying abundances of transcripts from RNA-Seq data."
+        )
 
         # Find and load any Kallisto reports
         self.kallisto_data = dict()
