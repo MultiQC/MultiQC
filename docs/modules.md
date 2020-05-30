@@ -109,8 +109,7 @@ the documentation.
 
 ### Changelog
 Last but not least, remember to add your new module to the `CHANGELOG.md`,
-so that people know that it's there. Feel free to
-add your name to the list of credits at the bottom of the readme.
+so that people know that it's there.
 
 ### MultiqcModule Class
 If you've copied one of the other entry point statements, it will have
