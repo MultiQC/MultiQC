@@ -72,14 +72,16 @@ to break. If you haven't already, **you need to switch to Python 3 now**.
 
 #### New Modules:
 
-* [**Kaiju**](http://kaiju.binf.ku.dk/)
-    * Fast and sensitive taxonomic classification for metagenomics
 * [**DRAGEN**](https://www.illumina.com/products/by-type/informatics-products/dragen-bio-it-platform.html)
     * Illumina Bio-IT Platform that uses FPGA for secondary NGS analysis
 * [**iVar**](https://github.com/andersen-lab/ivar)
     * Added support for iVar: a computational package that contains functions broadly useful for viral amplicon-based sequencing.
+* [**Kaiju**](http://kaiju.binf.ku.dk/)
+    * Fast and sensitive taxonomic classification for metagenomics
 * [**Kraken**](https://ccb.jhu.edu/software/kraken2/)
     * K-mer matching tool for taxonomic classification. Module plots bargraph of counts for top-5 hits across each taxa rank. General stats summary.
+* [**MALT**](https://uni-tuebingen.de/fakultaeten/mathematisch-naturwissenschaftliche-fakultaet/fachbereiche/informatik/lehrstuehle/algorithms-in-bioinformatics/software/malt/)
+    * Megan Alignment Tool: Metagenomics alignment tool.
 * [**miRTop**](https://github.com/miRTop/mirtop)
     * Command line tool to annotate miRNAs with a standard mirna/isomir naming (mirGFF3)
     * Module started by [@oneillkza](https://github.com/oneillkza/) and completed by [@FlorianThibord](https://github.com/FlorianThibord/)
@@ -95,8 +97,6 @@ to break. If you haven't already, **you need to switch to Python 3 now**.
     * Relatedness checking and QC for BAM/CRAM/VCF for cancer, DNA, BS-Seq, exome, etc.
 * [**VarScan2**](https://github.com/dkoboldt/varscan)
     * Variant calling and somatic mutation/CNV detection for next-generation sequencing data
-* [**MALT**](https://uni-tuebingen.de/fakultaeten/mathematisch-naturwissenschaftliche-fakultaet/fachbereiche/informatik/lehrstuehle/algorithms-in-bioinformatics/software/malt/)
-    * Megan Alignment Tool: Metagenomics alignment tool.
 
 #### Module updates:
 
