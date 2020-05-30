@@ -32,11 +32,11 @@ class MultiqcModule(BaseMultiqcModule):
         for f in self.find_log_files('kaiju', filehandles=True):
             taxo_rank, parsed_data = self.parse_kaiju2table_report(f)
             if taxo_rank is not None and parsed_data is not None:
-                #One report can have several samples, raise error if sample already viewed with this taxonomic rank
-                snames = parsed_data.keys()
-                for samp in snames :
-                    if taxo_rank in self.kaiju_data and samp in self.kaiju_data[taxo_rank].keys() :
-                        log.debug("Duplicate sample found in logs at {} rank! Overwriting sample: {}".format(taxo_rank, samp))
+                # One report can have several samples, raise error if sample already viewed with this taxonomic rank
+                s_names = parsed_data.keys()
+                for s_name in s_names:
+                    if taxo_rank in self.kaiju_data and s_name in self.kaiju_data[taxo_rank].keys() :
+                        log.debug("Duplicate sample found in logs at {} rank! Overwriting sample: {}".format(taxo_rank, s_name))
                 self.add_data_source(f)
                 if taxo_rank in self.kaiju_data.keys() :
                     self.kaiju_data[taxo_rank].update(parsed_data)
@@ -48,11 +48,14 @@ class MultiqcModule(BaseMultiqcModule):
             self.kaiju_data[taxo_rank] = self.ignore_samples(self.kaiju_data[taxo_rank])
             self.write_data_file(self.kaiju_data[taxo_rank], 'multiqc_kaiju_'+taxo_rank)
 
+        # Number of samples found
+        num_samples = max([len(taxo_rank) for taxo_rank in self.kaiju_data.values()])
+
         # no file found
-        if len(self.kaiju_data) == 0:
+        if num_samples == 0:
             raise UserWarning
 
-        log.info("Found {} reports".format(len(self.kaiju_data)))
+        log.info("Found {} reports".format(num_samples))
 
         self.kaiju_stats_table()
         self.kaiju_taxo_rank_plot()
