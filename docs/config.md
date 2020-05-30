@@ -139,9 +139,21 @@ For example, to truncate all sample names to 5 characters for just Kallisto:
 ```yaml
 extra_fn_clean_exts:
     - type: regex_keep
-      module: kallisto
       pattern: '^.{5}'
+      module: kallisto
 ```
+
+You can also supply a list of multiple module anchors if you wish:
+
+```yaml
+extra_fn_clean_exts:
+    - type: regex_keep
+      pattern: '^.{5}'
+      module:
+        - kallisto
+        - cutadapt
+```
+
 
 ### Clashing sample names
 This process of cleaning sample names can sometimes result in exact duplicates.

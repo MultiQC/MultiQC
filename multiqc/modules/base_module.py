@@ -221,8 +221,11 @@ class BaseMultiqcModule(object):
             # Split then take first section to remove everything after these matches
             for ext in config.fn_clean_exts:
                 # Check if this config is limited to a module
-                if 'module' in ext and ext.get('module') != self.anchor:
-                    continue
+                if 'module' in ext:
+                    if type(ext['module']) is str:
+                        ext['module'] = [ext['module']]
+                    if not any([m == self.anchor for m in ext['module']]):
+                        continue
 
                 # Go through different filter types
                 if type(ext) is str:
