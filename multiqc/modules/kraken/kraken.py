@@ -163,28 +163,16 @@ class MultiqcModule(BaseMultiqcModule):
                 # No species-level data found etc
                 pass
 
+        top_one_hkey = '% {}'.format(top_five[0])
+
         # Column headers
         headers = OrderedDict()
-
-        # Get table data
-        tdata = {}
-        for s_name, d in self.kraken_raw_data.items():
-            tdata[s_name] = {}
-            for row in d:
-                if row['rank_code'] == 'U':
-                    tdata[s_name]['% Unclassified'] = row['percent']
-                if row['rank_code'] == top_rank_code and row['classif'] in top_five:
-                    tdata[s_name]['% Top 5'] = row['percent'] + tdata[s_name].get('% Top 5', 0)
-                if row['rank_code'] == top_rank_code and row['classif'] == top_five[0]:
-                    tdata[s_name]['% {}'.format(row['classif'])] = row['percent']
-                    headers['% {}'.format(row['classif'])] = {
-                        'title': '% {}'.format(row['classif']),
-                        'description': 'Percentage of reads that were {} - {}'.format(top_rank_name, row['classif']),
-                        'suffix': '%',
-                        'max': 100
-                    }
-
-        # Remaining header config
+        headers[top_one_hkey] = {
+            'title': top_one_hkey,
+            'description': 'Percentage of reads that were {} - {}'.format(top_rank_name, top_five[0]),
+            'suffix': '%',
+            'max': 100
+        }
         headers['% Top 5'] = {
             'title': '% Top 5 {}'.format(top_rank_name),
             'description': 'Percentage of reads that were classified by one of the top 5 {} ({})'.format(top_rank_name, ', '.join(top_five)),
@@ -197,6 +185,21 @@ class MultiqcModule(BaseMultiqcModule):
             'suffix': '%',
             'max': 100
         }
+
+        # Get table data
+        tdata = {}
+        for s_name, d in self.kraken_raw_data.items():
+            tdata[s_name] = {}
+            for row in d:
+                if row['rank_code'] == 'U':
+                    tdata[s_name]['% Unclassified'] = row['percent']
+                if row['rank_code'] == top_rank_code and row['classif'] in top_five:
+                    tdata[s_name]['% Top 5'] = row['percent'] + tdata[s_name].get('% Top 5', 0)
+                if row['rank_code'] == top_rank_code and row['classif'] == top_five[0]:
+                    tdata[s_name][top_one_hkey] = row['percent']
+
+            if top_one_hkey not in tdata[s_name]:
+                tdata[s_name][top_one_hkey] = 0
 
         self.general_stats_addcols(tdata, headers)
 
