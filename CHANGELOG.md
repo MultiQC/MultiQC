@@ -8,6 +8,9 @@
 
 #### Module updates
 
+* **MALT**
+    * Fix y-axis labelling in bargraphs
+
 #### Bug Fixes
 
 
