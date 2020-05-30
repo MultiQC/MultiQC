@@ -49,7 +49,11 @@ class MultiqcModule(BaseMultiqcModule):
             self.write_data_file(self.kaiju_data[taxo_rank], 'multiqc_kaiju_'+taxo_rank)
 
         # Number of samples found
-        num_samples = max([len(taxo_rank) for taxo_rank in self.kaiju_data.values()])
+        try:
+            num_samples = max([len(taxo_rank) for taxo_rank in self.kaiju_data.values()])
+        except ValueError:
+            # No log files so didn't get any taxo_ranks
+            raise UserWarning
 
         # no file found
         if num_samples == 0:
