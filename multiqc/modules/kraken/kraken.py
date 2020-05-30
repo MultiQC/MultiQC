@@ -169,21 +169,24 @@ class MultiqcModule(BaseMultiqcModule):
         headers = OrderedDict()
         headers[top_one_hkey] = {
             'title': top_one_hkey,
-            'description': 'Percentage of reads that were {} - {}'.format(top_rank_name, top_five[0]),
+            'description': 'Percentage of reads that were the top {} over all samples - {}'.format(top_rank_name, top_five[0]),
             'suffix': '%',
-            'max': 100
+            'max': 100,
+            'scale': 'PuBuGn'
         }
         headers['% Top 5'] = {
             'title': '% Top 5 {}'.format(top_rank_name),
             'description': 'Percentage of reads that were classified by one of the top 5 {} ({})'.format(top_rank_name, ', '.join(top_five)),
             'suffix': '%',
-            'max': 100
+            'max': 100,
+            'scale': 'PuBu'
         }
         headers['% Unclassified'] = {
             'title': '% Unclassified',
             'description': 'Percentage of reads that were unclassified',
             'suffix': '%',
-            'max': 100
+            'max': 100,
+            'scale': 'OrRd'
         }
 
         # Get table data
