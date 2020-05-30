@@ -56,7 +56,8 @@ to break. If you haven't already, **you need to switch to Python 3 now**.
 * New table config option `only_defined_headers`
     * Defaults to `true`, set to `false` to also show any data columns that are not defined as headers
     * Useful as allows table-wide defaults to be set with column-specific overrides
-
+* New `module` key allowed for `config.extra_fn_clean_exts` and `config.fn_clean_exts`
+    * Limits the action of the sample name cleaning pattern to one specific MultiQC module ([#905](https://github.com/ewels/MultiQC/issues/905))
 
 #### New Custom Content features
 

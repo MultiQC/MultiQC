@@ -66,6 +66,14 @@ extra_fn_clean_exts:
     - '.fastq'
 ```
 
+The above is equivalent to the more explicit:
+
+```yaml
+extra_fn_clean_exts:
+    - type: 'truncate'
+      pattern: '.fastq'
+```
+
 This rule would produce the following sample names:
 
 ```
@@ -119,6 +127,20 @@ This rule would produce the following sample names:
 
 ```
 merged.recalibrated.XZY97.alignment.bam  ->  XZY97
+```
+
+#### `module`
+
+This key will tell MultiQC to only apply the pattern to a specific MultiQC module.
+This should be a string that matches the module's `anchor` - the `#module` bit when you click the main module heading in the sidebar (remove the `#`).
+
+For example, to truncate all sample names to 5 characters for just Kallisto:
+
+```yaml
+extra_fn_clean_exts:
+    - type: regex_keep
+      module: kallisto
+      pattern: '^.{5}'
 ```
 
 ### Clashing sample names

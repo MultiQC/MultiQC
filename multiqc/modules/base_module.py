@@ -220,22 +220,29 @@ class BaseMultiqcModule(object):
         if config.fn_clean_sample_names:
             # Split then take first section to remove everything after these matches
             for ext in config.fn_clean_exts:
+                # Check if this config is limited to a module
+                if 'module' in ext and ext.get('module') != self.anchor:
+                    continue
+
+                # Go through different filter types
                 if type(ext) is str:
                     ext = {'type': 'truncate', 'pattern': ext}
-                if ext['type'] == 'truncate':
+                if ext.get('type') == 'truncate':
                     s_name = s_name.split(ext['pattern'], 1)[0]
-                elif ext['type'] in ('remove', 'replace'):
+                elif ext.get('type') in ('remove', 'replace'):
                     if ext['type'] == 'replace':
                         logger.warning("use 'config.fn_clean_sample_names.remove' instead "
                                        "of 'config.fn_clean_sample_names.replace' [deprecated]")
                     s_name = s_name.replace(ext['pattern'], '')
-                elif ext['type'] == 'regex':
+                elif ext.get('type') == 'regex':
                     s_name = re.sub(ext['pattern'], '', s_name)
-                elif ext['type'] == 'regex_keep':
+                elif ext.get('type') == 'regex_keep':
                     match = re.search(ext['pattern'], s_name)
                     s_name = match.group() if match else s_name
+                elif ext.get('type') is None:
+                    logger.error('config.fn_clean_exts config was missing "type" key: {}'.format(ext))
                 else:
-                    logger.error('Unrecognised config.fn_clean_exts type: {}'.format(ext['type']))
+                    logger.error('Unrecognised config.fn_clean_exts type: {}'.format(ext.get('type')))
             # Trim off characters at the end of names
             for chrs in config.fn_clean_trim:
                 if s_name.endswith(chrs):
