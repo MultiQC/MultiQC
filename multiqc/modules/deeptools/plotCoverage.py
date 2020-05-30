@@ -35,6 +35,9 @@ class plotCoverageMixin():
             if len(parsed_data) > 0:
                 self.add_data_source(f, section='plotCoverage')
 
+        self.deeptools_plotCoverageStdout = self.ignore_samples(self.deeptools_plotCoverageStdout)
+        self.deeptools_plotCoverageOutRawCounts = self.ignore_samples(self.deeptools_plotCoverageOutRawCounts)
+
         if len(self.deeptools_plotCoverageStdout) > 0:
             header = OrderedDict()
             header["min"] = {

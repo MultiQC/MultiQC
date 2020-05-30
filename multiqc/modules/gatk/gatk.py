@@ -25,10 +25,12 @@ class MultiqcModule(BaseMultiqcModule, BaseRecalibratorMixin, VariantEvalMixin):
 
         # Initialise the parent object
         super(MultiqcModule, self).__init__(
-            name='GATK', anchor='gatk', target='GATK',
+            name='GATK',
+            anchor='gatk',
+            target='GATK',
             href='https://www.broadinstitute.org/gatk/',
-            info=(" is a toolkit offering a wide variety of tools with a "
-                  "primary focus on variant discovery and genotyping."))
+            info=" is a toolkit offering a wide variety of tools with a primary focus on variant discovery and genotyping."
+        )
 
         # Set up class objects to hold parsed data
         self.general_stats_headers = OrderedDict()

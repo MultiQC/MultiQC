@@ -77,9 +77,9 @@ bcftools/stats:
     contents: 'This file was produced by bcftools stats'
     shared: true
 bcl2fastq:
-    - fn: 'Stats.json'
-      contents: 'DemuxResults'
-    - num_lines: 300
+    fn: 'Stats.json'
+    contents: 'DemuxResults'
+    num_lines: 300
 biobambam2/bamsormadup:
     contents: '# bamsormadup'
     num_lines: 2
@@ -172,7 +172,7 @@ busco:
     contents: 'BUSCO version is:'
     num_lines: 1
 custom_content:
-    fn_re: '.+_mqc\.(yaml|yml|json|txt|csv|tsv|log|out|png|jpg|jpeg)'
+    fn_re: '.+_mqc\.(yaml|yml|json|txt|csv|tsv|log|out|png|jpg|jpeg|html)'
 clipandmerge:
     contents: 'ClipAndMerge ('
     num_lines: 5
@@ -331,6 +331,9 @@ ivar/trim:
     num_lines: 8
 jellyfish:
     fn: '*_jf.hist'
+kaiju:
+    contents_re: 'file\tpercent\treads\ttaxon_id\ttaxon_name'
+    num_lines: 1
 kallisto:
     contents: '[quant] finding pseudoalignments for the reads'
     shared: true
@@ -352,6 +355,9 @@ longranger/invocation:
     max_filesize: 2048
 macs2:
     fn: '*_peaks.xls'
+malt:
+    contents: 'MaltRun - Aligns sequences using MALT (MEGAN alignment tool)'
+    num_lines: 2
 methylQA:
     fn: '*.report'
     shared: true
@@ -446,6 +452,7 @@ picard/rrbs_metrics:
 picard/sam_file_validation:
     fn: '*[Vv]alidate[Ss]am[Ff]ile*'
 picard/variant_calling_metrics:
+    # This looks wrong but I think it's intentional - tests fail if I "fix" it
     fn: '*.variant_calling_detail_metrics'
     contents: 'CollectVariantCallingMetrics'
     shared: true
@@ -502,7 +509,7 @@ rockhopper:
     contents: 'Number of gene-pairs predicted to be part of the same operon'
     max_filesize: 500000
 rsem:
-    - fn: '*.cnt'
+    fn: '*.cnt'
 rseqc/bam_stat:
     contents: 'Proper-paired reads map to different chrom:'
     max_filesize: 500000

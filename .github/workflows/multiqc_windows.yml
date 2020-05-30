@@ -63,8 +63,3 @@ jobs:
       run: |
         cd test_data\MultiQC_TestData-master
         multiqc -m star -o testsmultiqc_report_dev -t default_dev -k json --file-list data\special_cases\file_list.txt
-
-    - name: Empty directory
-      run: |
-        mkdir empty_dir
-        multiqc -f empty_dir

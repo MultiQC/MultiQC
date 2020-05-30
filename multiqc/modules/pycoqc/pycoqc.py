@@ -32,9 +32,13 @@ class MultiqcModule(BaseMultiqcModule):
             if data:
                 self.pycoqc_data[f['s_name']] = data
 
+        self.pycoqc_data = self.ignore_samples(self.pycoqc_data)
+
         # Stop if we didn't find anything
         if len(self.pycoqc_data) == 0:
             raise UserWarning
+
+        log.info("Found {} reports".format(len(self.pycoqc_data)))
 
         self.parse_data()
 

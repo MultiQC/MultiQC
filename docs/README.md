@@ -48,6 +48,7 @@ MultiQC Modules:
     STAR: modules/star.md
     TopHat: modules/tophat.md
     DRAGEN: modules/dragen.md
+    MALT: modules/malt.md
   Post-alignment:
     Bamtools: modules/bamtools.md
     Bcftools: modules/bcftools.md
@@ -66,6 +67,7 @@ MultiQC Modules:
     HiCExplorer: modules/hicexplorer.md
     HOMER: modules/homer.md
     HTSeq: modules/htseq.md
+    Kaiju: modules/kaiju.md
     Kraken: modules/kraken.md
     MACS2: modules/macs2.md
     Methyl QA: modules/methylQA.md

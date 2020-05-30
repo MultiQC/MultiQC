@@ -25,6 +25,18 @@ Note that if `intro_text` is `None` the template will display the default
 introduction sentence. Set this to `False` to hide this, or set it to a
 string to use your own text.
 
+### Report time and analysis paths
+It's not always appropriate to include the file paths that MultiQC was run with
+in a report, for example if sharing reports with others outside your organisation.
+
+If you wish, you can disable the analysis paths and/or time in the report header
+with the following config parameters:
+
+```yaml
+show_analysis_paths: False
+show_analysis_time: False
+```
+
 ## Report Logo
 To add your own custom logo to reports, you can add the following
 three lines to your MultiQC configuration file:

@@ -35,8 +35,12 @@ class MultiqcModule(BaseMultiqcModule):
                 self.hicexplorer_data[s_name] = parsed_data
                 self.add_data_source(f, s_name=s_name)
 
+        self.hicexplorer_data = self.ignore_samples(self.hicexplorer_data)
+
         if len(self.hicexplorer_data) == 0:
             raise UserWarning
+
+        log.info("Found {} reports".format(len(self.hicexplorer_data)))
 
         self.write_data_file(self.hicexplorer_data, 'multiqc_hicexplorer')
 

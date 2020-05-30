@@ -22,6 +22,8 @@ class plotProfileMixin():
             if len(parsed_data) > 0:
                 self.add_data_source(f, section='plotProfile')
 
+        self.deeptools_plotProfile = self.ignore_samples(self.deeptools_plotProfile)
+
         if len(self.deeptools_plotProfile) > 0:
 
             # Try to do plot bands but don't crash if the labels aren't as we expect

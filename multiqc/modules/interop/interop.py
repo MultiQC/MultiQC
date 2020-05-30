@@ -28,9 +28,15 @@ class MultiqcModule(BaseMultiqcModule):
             if max(len(parsed_data['summary']), len(parsed_data['details'])) > 0:
                 self.indexSummary[f['s_name']] = parsed_data
 
+        self.runSummary = self.ignore_samples(self.runSummary)
+        self.indexSummary = self.ignore_samples(self.indexSummary)
+
         # No samples
-        if max(len(self.runSummary), len(self.indexSummary)) == 0:
+        num_samples = max(len(self.runSummary), len(self.indexSummary))
+        if num_samples == 0:
             raise UserWarning
+
+        log.info("Found {} reports".format(num_samples))
 
         # Create report Sections
         if len(self.runSummary) > 0:
