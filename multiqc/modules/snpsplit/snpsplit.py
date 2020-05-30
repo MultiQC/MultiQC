@@ -34,6 +34,9 @@ class MultiqcModule(BaseMultiqcModule):
             parsed_log = self.parse_old_snpsplit_log(f)
             self._save_parsed(parsed_log, f)
 
+        # Filter --ignore-samples
+        self.snpsplit_data = self.ignore_samples(self.snpsplit_data)
+
         if len(self.snpsplit_data) == 0:
             raise UserWarning
         log.info("Found {} reports".format(len(self.snpsplit_data)))
@@ -47,7 +50,7 @@ class MultiqcModule(BaseMultiqcModule):
     def _save_parsed(self, parsed, f):
         s_name = self.clean_s_name(parsed[0], f['root'])
         if s_name in self.snpsplit_data:
-            log.warning("Replacing duplicate sample {}".format(s_name))
+            log.debug("Replacing duplicate sample {}".format(s_name))
         self.snpsplit_data[s_name] = parsed[1]
         self.add_data_source(f, s_name=s_name)
 

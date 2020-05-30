@@ -23,6 +23,9 @@ class bamPEFragmentSizeTableMixin():
 
             if len(parsed_data) > 0:
                 self.add_data_source(f, section='bamPEFragmentSize')
+
+        self.deeptools_bamPEFragmentSize = self.ignore_samples(self.deeptools_bamPEFragmentSize)
+
         if len(self.deeptools_bamPEFragmentSize) > 0:
             headersSE = OrderedDict()
             headersSE["Reads Sampled"] = {

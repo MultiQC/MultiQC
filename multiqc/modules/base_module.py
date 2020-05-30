@@ -273,15 +273,18 @@ class BaseMultiqcModule(object):
                 newdata = dict()
             else:
                 return data
-            for k,v in data.items():
-                # Match ignore glob patterns
-                glob_match = any( fnmatch.fnmatch(k, sn) for sn in config.sample_names_ignore )
-                re_match = any( re.match(sn, k) for sn in config.sample_names_ignore_re )
-                if not glob_match and not re_match:
-                    newdata[k] = v
+            for s_name,v in data.items():
+                if not self.is_ignore_sample(s_name):
+                    newdata[s_name] = v
             return newdata
         except (TypeError, AttributeError):
             return data
+
+    def is_ignore_sample(self, s_name):
+        """ Should a sample name be ignored? """
+        glob_match = any( fnmatch.fnmatch(s_name, sn) for sn in config.sample_names_ignore )
+        re_match = any( re.match(sn, s_name) for sn in config.sample_names_ignore_re )
+        return glob_match or re_match
 
     def general_stats_addcols(self, data, headers=None, namespace=None):
         """ Helper function to add to the General Statistics variable.
