@@ -1,5 +1,16 @@
 # MultiQC Version History
 
+## MultiQC v1.10dev
+
+#### New MultiQC Features
+
+#### New Modules
+
+#### Module updates
+
+#### Bug Fixes
+
+
 ## [MultiQC v1.9](https://github.com/ewels/MultiQC/releases/tag/v1.9) - 2020-05-30
 
 #### Dropped official support for Python 2
