@@ -140,6 +140,7 @@ to break. If you haven't already, **you need to switch to Python 3 now**.
 * **QualiMap**
     * Fixed QualiMap mean coverage calculation [#1082](https://github.com/ewels/MultiQC/issues/1082), [#1077](https://github.com/ewels/MultiQC/issues/1082)
 * **RSeqC**
+    * Support added for output from `geneBodyCoverage2.py` script ([#844](https://github.com/ewels/MultiQC/issues/844))
     * Single sample view in the _"Junction saturation"_ plot now works with the toolbox properly _(rename, hide, highlight)_ ([#1133](https://github.com/ewels/MultiQC/issues/1133))
 * **RNASeQC2**
     * Updated to handle the parsing metric files from the [newer rewrite of RNA-SeqQC](https://github.com/broadinstitute/rnaseqc).
