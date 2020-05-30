@@ -78,9 +78,6 @@ class MultiqcModule(BaseMultiqcModule):
         # Write parsed report data to a file
         self.write_data_file(self.somalier_data, 'multiqc_somalier')
 
-        # General Stats Table
-        self.somalier_general_stats_table()
-
         # Somalier Stats Table
         self.somalier_stats_table()
 
@@ -228,27 +225,6 @@ class MultiqcModule(BaseMultiqcModule):
                         self.somalier_data[s_name] = parsed_data[s_name]
         else:
             log.warning("Detected empty file: {}".format(f['fn']))
-
-    def somalier_general_stats_table(self):
-        """Add data to general stats table
-
-        Take the parsed stats from the somalier report and add it to the
-        basic stats table at the top of the report """
-
-        headers = OrderedDict()
-        headers['ancestry'] = {
-            'title': 'Ancestry',
-            'description': 'Most probable ancestry background',
-            'scale': False
-        }
-        headers['gt_depth_mean'] = {
-            'title': 'Sites depth',
-            'description': 'Mean depth of genotyped sites',
-            'scale': 'RdYlGn',
-            'suffix': ' X'
-        }
-        self.general_stats_addcols(self.somalier_data, headers)
-
 
     def somalier_stats_table(self):
         """Add data to somalier stats table

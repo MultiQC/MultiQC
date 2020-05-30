@@ -14,6 +14,7 @@ import inspect
 import lzstring
 import mimetypes
 import os
+import time
 import re
 import yaml
 
@@ -41,6 +42,21 @@ num_hc_plots = 0
 num_mpl_plots = 0
 saved_raw_data = dict()
 last_found_file = None
+runtimes = {
+    'total': 0,
+    'total_sp': 0,
+    'total_mods': 0,
+    'total_compression': 0,
+    'sp': defaultdict(),
+    'mods': defaultdict()
+}
+file_search_stats = {
+    'skipped_symlinks': 0,
+    'skipped_not_a_file': 0,
+    'skipped_ignore_pattern': 0,
+    'skipped_filesize_limit': 0,
+    'skipped_no_match': 0,
+}
 
 # Make a dict of discovered files for each seach key
 searchfiles = list()
@@ -53,6 +69,7 @@ def get_filelist(run_module_names):
     # Prep search patterns
     spatterns = [{},{},{},{},{},{},{}]
     epatterns = [{}, {}]
+    runtimes['sp'] = defaultdict()
     ignored_patterns = []
     for key, sps in config.sp.items():
         mod_name = key.split('/', 1)[0]
@@ -71,6 +88,7 @@ def get_filelist(run_module_names):
             'contents_re',
             'num_lines',
             'shared',
+            'skip',
             'max_filesize',
             'exclude_fn',
             'exclude_fn_re',
@@ -80,6 +98,11 @@ def get_filelist(run_module_names):
         unrecognised_keys = [y for x in sps for y in x.keys() if y not in expected_sp_keys]
         if len(unrecognised_keys) > 0:
             logger.warning("Unrecognised search pattern keys for '{}': {}".format(key, ', '.join(unrecognised_keys)))
+
+        # Check if we are skipping this search key
+        if any([x.get('skip') for x in sps]):
+            logger.warn('Skipping search pattern: {}'.format(key))
+            continue
 
         # Split search patterns according to speed of execution.
         if any([x for x in sps if 'contents_re' in x]):
@@ -112,13 +135,15 @@ def get_filelist(run_module_names):
 
         # Check that this is a file and not a pipe or anything weird
         if not os.path.isfile(os.path.join(root, fn)):
-            return None
+            file_search_stats['skipped_not_a_file'] += 1
+            return False
 
         # Check that we don't want to ignore this file
         i_matches = [n for n in config.fn_ignore_files if fnmatch.fnmatch(fn, n)]
         if len(i_matches) > 0:
             logger.debug("Ignoring file as matched an ignore pattern: {}".format(fn))
-            return None
+            file_search_stats['skipped_ignore_pattern'] += 1
+            return False
 
         # Limit search to small files, to avoid 30GB FastQ files etc.
         try:
@@ -127,28 +152,39 @@ def get_filelist(run_module_names):
             logger.debug("Couldn't read file when checking filesize: {}".format(fn))
         else:
             if f['filesize'] > config.log_filesize_limit:
+                file_search_stats['skipped_filesize_limit'] += 1
                 return False
 
         # Test file for each search pattern
+        file_matched = False
         for patterns in spatterns:
             for key, sps in patterns.items():
+                start = time.time()
                 for sp in sps:
                     if search_file (sp, f, key):
                         # Check that we shouldn't exclude this file
                         if not exclude_file(sp, f):
                             # Looks good! Remember this file
                             files[key].append(f)
+                            file_search_stats[key] = file_search_stats.get(key, 0) + 1
+                            file_matched = True
                         # Don't keep searching this file for other modules
                         if not sp.get('shared', False):
-                            return
+                            runtimes['sp'][key] = runtimes['sp'].get(key, 0) + (time.time() - start)
+                            return True
                         # Don't look at other patterns for this module
                         else:
                             break
+                runtimes['sp'][key] = runtimes['sp'].get(key, 0) + (time.time() - start)
+
+        return file_matched
 
     # Go through the analysis directories and get file list
     multiqc_installation_dir_files = ['LICENSE', 'CHANGELOG.md', 'Dockerfile', 'MANIFEST.in', '.gitmodules', 'README.md', 'CSP.txt', 'setup.py', '.gitignore']
+    total_sp_starttime = time.time()
     for path in config.analysis_dir:
         if os.path.islink(path) and config.ignore_symlinks:
+            file_search_stats['skipped_symlinks'] += 1
             continue
         elif os.path.isfile(path):
             searchfiles.append([os.path.basename(path), os.path.dirname(path)])
@@ -191,10 +227,14 @@ def get_filelist(run_module_names):
                 # Search filenames in this directory
                 for fn in filenames:
                     searchfiles.append([fn, root])
+
     # Search through collected files
     with click.progressbar(searchfiles, label="Searching {} files..".format(len(searchfiles))) as sfiles:
         for sf in sfiles:
-            add_file(sf[0], sf[1])
+            if not add_file(sf[0], sf[1]):
+                file_search_stats['skipped_no_match'] += 1
+
+    runtimes['total_sp'] = time.time() - total_sp_starttime
 
 def search_file (pattern, f, module_key):
     """

@@ -24,6 +24,8 @@ class estimateReadFilteringMixin():
             if len(parsed_data) > 0:
                 self.add_data_source(f, section='estimateReadFiltering')
 
+        self.deeptools_estimateReadFiltering = self.ignore_samples(self.deeptools_estimateReadFiltering)
+
         if len(self.deeptools_estimateReadFiltering) > 0:
             header = OrderedDict()
             header["M Entries"] = {

@@ -234,6 +234,8 @@ config = {
     'xLabelFormat': '{value}',   # Format string for the axis labels
     'yLabelFormat': '{value}',   # Format string for the axis labels
     'tt_label': '{point.x}: {point.y:.2f}', # Use to customise tooltip label, eg. '{point.x} base pairs'
+    'tt_decimals': None,         # Tooltip decimals when categories = True (when false use tt_label)
+    'tt_suffix': None,           # Tooltip suffix when categories = True (when false use tt_label)
     'pointFormat': None,         # Replace the default HTML for the entire tooltip label
     'click_func': function(){},  # Javascript function to be called when a point is clicked
     'cursor': None               # CSS mouse cursor type. Defaults to pointer when 'click_func' specified
@@ -364,6 +366,7 @@ This can set global options for the table (eg. a title) and can also hold
 default values to customise the output of all table columns.
 
 The default header keys are:
+
 ```python
 single_header = {
     'namespace': '',                # Name for grouping. Prepends desc and is in Config Columns modal
@@ -383,7 +386,9 @@ single_header = {
     'hidden': False                 # Set to True to hide the column on page load
 }
 ```
+
 A third parameter can be specified with settings for the whole table:
+
 ```python
 table_config = {
     'namespace': '',                         # Name for grouping. Prepends desc and is in Config Columns modal
@@ -392,14 +397,18 @@ table_config = {
     'save_file': False,                      # Whether to save the table data to a file
     'raw_data_fn':'multiqc_<table_id>_table' # File basename to use for raw data file
     'sortRows': True                         # Whether to sort rows alphabetically
+    'only_defined_headers': True             # Only show columns that are defined in the headers config
     'col1_header': 'Sample Name'             # The header used for the first column
     'no_beeswarm': False    # Force a table to always be plotted (beeswarm by default if many rows)
 }
 ```
-Header keys such as `max`, `min` and `scale` can also be specified in the table config.
-These will then be applied to all columns.
 
-A very basic example is shown below:
+Most of the header keys can also be specified in the table config
+(`namespace`, `scale`, `format`, `colour`, `hidden`, `max`, `min`, `ceiling`, `floor`, `minRange`, `shared_key`, `modify`).
+These will then be applied to all columns prior to applying column-specific heading config.
+
+A very basic example of creating a table is shown below:
+
 ```python
 data = {
     'sample 1': {
@@ -416,6 +425,7 @@ table_html = table.plot(data)
 
 A more complicated version with ordered columns, defaults and column-specific
 settings (eg. no decimal places):
+
 ```python
 data = {
     'sample 1': {
@@ -518,6 +528,8 @@ pconfig = {
     'min': None,                   # Minimum value (default: auto)
     'max': None,                   # Maximum value (default: auto)
     'square': True,                # Force the plot to stay square? (Maintain aspect ratio)
+    'xcats_samples': True,         # Is the x-axis sample names? Set to False to prevent report toolbox from affecting.
+    'ycats_samples': True,         # Is the y-axis sample names? Set to False to prevent report toolbox from affecting.
     'colstops': []                 # Scale colour stops. See below.
     'reverseColors': False,        # Reverse the order of the colour axis
     'decimalPlaces': 2,            # Number of decimal places for tooltip

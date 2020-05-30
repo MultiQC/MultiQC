@@ -64,6 +64,9 @@ class MultiqcModule(BaseMultiqcModule):
                     self.qorts_data[s_name] = dict()
             else:
                 for i, s_name in enumerate(s_names):
+                    # Hack to get around Java localisation with commas for decimal places
+                    if ',' in s[i+1] and '.' not in s[i+1]:
+                        s[i+1] = s[i+1].replace(',', '.')
                     self.qorts_data[s_name][s[0]] = float(s[i+1])
         # Add some extra fields
         for i, s_name in enumerate(s_names):

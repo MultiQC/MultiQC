@@ -22,6 +22,8 @@ class plotCorrelationMixin():
             if len(parsed_data) > 0:
                 self.add_data_source(f, section='plotCorrelation')
 
+        self.deeptools_plotCorrelationData = self.ignore_samples(self.deeptools_plotCorrelationData)
+
         if len(self.deeptools_plotCorrelationData) > 0:
             config = {
                 'id': 'deeptools_correlation_plot',

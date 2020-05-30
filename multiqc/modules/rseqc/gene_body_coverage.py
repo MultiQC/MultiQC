@@ -25,12 +25,17 @@ def parse_reports(self):
     # Go through files and parse data
     for f in self.find_log_files('rseqc/gene_body_coverage'):
 
+        # geneBodyCoverage.py
         # RSeQC >= v2.4
+        # NB: Capitilisation
         if f['f'].startswith('Percentile'):
             keys = []
             nrows = 0
             for l in f['f'].splitlines():
-                s = l.split()
+                s = l.split("\t")
+                # Check that this is the right file type (detection by capitilisation is pretty weak!)
+                if len(s) < 3:
+                    break
                 if len(keys) == 0:
                     keys = s[1:]
                 else:
@@ -45,22 +50,27 @@ def parse_reports(self):
             if nrows == 0:
                 log.warning("Empty geneBodyCoverage file found: {}".format(f['fn']))
 
-
+        # geneBodyCoverage2.py
+        #   AND
+        # geneBodyCoverage.py
         # RSeQC < v2.4
-        elif f['f'].startswith('Total reads'):
-            if f['s_name'].endswith('.geneBodyCoverage'):
-                f['s_name'] = f['s_name'][:-17]
+        if f['f'].startswith('Total reads') or f['f'].startswith('percentile'):
             if f['s_name'] in self.gene_body_cov_hist_counts:
                 log.debug("Duplicate sample name found! Overwriting: {}".format(f['s_name']))
             self.add_data_source(f, section='gene_body_coverage')
             self.gene_body_cov_hist_counts[f['s_name']] = OrderedDict()
             nrows = 0
             for l in f['f'].splitlines():
-                s = l.split()
+                s = l.split("\t")
+                # Check that this is the right file type (detection by capitilisation is pretty weak!)
+                if len(s) > 2:
+                    break
                 try:
                     nrows += 1
                     self.gene_body_cov_hist_counts[f['s_name']][int(s[0])] = float(s[1])
-                except:
+                except (IndexError, ValueError):
+                    # Header lines don't use tabs, so get IndexError.
+                    # Other unexpected weird stuff will not play nicely with int() and float()
                     pass
             if nrows == 0:
                 del self.gene_body_cov_hist_counts[f['s_name']]
@@ -104,4 +114,3 @@ def parse_reports(self):
 
     # Return number of samples found
     return len(self.gene_body_cov_hist_counts)
-
