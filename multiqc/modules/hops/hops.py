@@ -15,9 +15,9 @@ log = logging.getLogger(__name__)
 class MultiqcModule(BaseMultiqcModule):
     def __init__(self):
         # Initialise the parent object
-        super(MultiqcModule, self).__init__(name='My Module', anchor='mymod',
+        super(MultiqcModule, self).__init__(name='HOPS', anchor='hops',
         href="https://www.https://github.com/rhuebler/HOPS/",
-        info=" Ancient DNA characteristics screening tool of metagenomic aligner MALT.")
+        info="Screening tool for ancient DNA characteristics from the metagenomic aligner MALT.")
 
         # Find and load any HOPS post-processing JSONs
         self.hops_data = dict()
@@ -77,15 +77,10 @@ class MultiqcModule(BaseMultiqcModule):
         for t in self.hops_data[samples[0]]:
             taxa.append(t)
 
-
         levels = []
-
 
         for s in samples:
             levels.append(self.hops_data[s].values())
-
-        log.info(levels)
-
 
         pconfig = {
             'id': 'hops-heatmap',
@@ -97,13 +92,14 @@ class MultiqcModule(BaseMultiqcModule):
             'square': False,
             'colstops': [
                 [1, '#ffffff'],
-                [2, '#ffeda0'],
-                [3, '#feb24c'],
-                [4, '#f03b20'],
+                [2, '#ffff33'],
+                [3, '#ff7f00'],
+                [4, '#e41a1c'],
             ],
-            'decimalPlaces': 1,
-            'legend': True,
-            'datalabels': False
+            'decimalPlaces': 0,
+            'legend': False,
+            'datalabels': False,
+            'ycats_samples': True,
         }
 
         # Heatmaps expect data in the structure of a list of lists. Then, a 
@@ -112,11 +108,11 @@ class MultiqcModule(BaseMultiqcModule):
         # https://multiqc.info/docs/#heatmaps
 
         self.add_section (
-            name = 'HOPS: Potential Candidates',
+            name = 'Potential Candidates',
             anchor = 'hops_heatmap',
             description = '''
-            HOPS heatmap indicating different levels of possible candidates for
-            downstream aDNA analysis.
+            Heatmap of potential 'truly ancient' candidate taxa, with different 
+            levels of the strength of candidacy.
             ''',
             helptext = '''
             HOPS assigns a category based on how many ancient DNA 
@@ -125,7 +121,10 @@ class MultiqcModule(BaseMultiqcModule):
             from reference), orange (has typical aDNA damage pattern), to
             red (both small edit distance and damage pattern). A red category
             will typically indicates a good candidate for further investigation
-            for ownstream analysis
+            for downstream analysis.
+
+            If data includes many samples, expand plot for full sample list on 
+            x-axis.
             ''',
             ## TODO
             plot = heatmap.plot(levels, xcats = taxa, ycats = samples, pconfig = pconfig)
