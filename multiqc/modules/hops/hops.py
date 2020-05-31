@@ -17,7 +17,7 @@ class MultiqcModule(BaseMultiqcModule):
         # Initialise the parent object
         super(MultiqcModule, self).__init__(name='HOPS', anchor='hops',
         href="https://www.https://github.com/rhuebler/HOPS/",
-        info="Screening tool for ancient DNA characteristics from the metagenomic aligner MALT.")
+        info="is a screening tool for ancient DNA characteristics of output from the metagenomic aligner MALT.")
 
         # Find and load any HOPS post-processing JSONs
         self.hops_data = dict()
@@ -111,8 +111,14 @@ class MultiqcModule(BaseMultiqcModule):
             name = 'Potential Candidates',
             anchor = 'hops_heatmap',
             description = '''
-            Heatmap of potential 'truly ancient' candidate taxa, with different 
-            levels of the strength of candidacy.
+            Heatmap of candidate taxa for downstream aDNA analysis, with 
+            intensity representing additive categories of possible 'positive' 
+            hits. Large numbers of samples can result in Y-axis label overlap, 
+            drag down to view all. 
+
+            Yellow: Edit Distance. 
+            Orange: Damage. 
+            Red: Edit Distance and Damage.
             ''',
             helptext = '''
             HOPS assigns a category based on how many ancient DNA 
@@ -126,6 +132,5 @@ class MultiqcModule(BaseMultiqcModule):
             If data includes many samples, expand plot for full sample list on 
             x-axis.
             ''',
-            ## TODO
             plot = heatmap.plot(levels, xcats = taxa, ycats = samples, pconfig = pconfig)
         )
