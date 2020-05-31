@@ -35,7 +35,7 @@ class MultiqcModule(BaseMultiqcModule):
 
         log.info("Found {} samples".format(len(self.hops_data)))
 
-        #self.hops_heatmap(self.hops_data)
+        self.hops_heatmap()
 
     def parseJSON(self, f):
         """ Parse the JSON output from HOPS and save the summary statistics """
@@ -57,7 +57,7 @@ class MultiqcModule(BaseMultiqcModule):
             for t in parsed_json[s]:
                 self.hops_data[s_name][t] = parsed_json[s][t][0]
     
-    def hops_heatmap(self, hops_data):
+    def hops_heatmap(self):
         """ Heatmap showing all statuses for every sample """
         heatmap_numbers = {
             'none': 1,
@@ -65,6 +65,27 @@ class MultiqcModule(BaseMultiqcModule):
             'damage_only': 3,
             'edit_and_damage': 4
         }
+
+        # Prep nested dict to heatmap valid input 
+        samples = []
+
+        for s in self.hops_data:
+            samples.append(s)
+
+        # As all samples always have same taxa, will take from the first
+        taxa = []
+        for t in self.hops_data[samples[0]]:
+            taxa.append(t)
+
+
+        levels = []
+
+
+        for s in samples:
+            levels.append(self.hops_data[s].values())
+
+        log.info(levels)
+
 
         pconfig = {
             'id': 'hops-heatmap',
@@ -107,5 +128,5 @@ class MultiqcModule(BaseMultiqcModule):
             for ownstream analysis
             ''',
             ## TODO
-            plot = heatmap.plot(self.hops_data, xcats = None,ycats = None, pconfig = pconfig)
+            plot = heatmap.plot(levels, xcats = taxa, ycats = samples, pconfig = pconfig)
         )
