@@ -350,6 +350,11 @@ module_order:
             - RNA
             - DNA
             - chip
+    - hops:
+        module_tag:
+            - DNA
+            - Metagenomics
+            - ancient
     - macs2:
         module_tag:
             - chip
@@ -528,6 +533,7 @@ module_order:
         module_tag:
             - DNA
             - Metagenomics
+            - ancient
     - trimmomatic:
         module_tag:
             - RNA

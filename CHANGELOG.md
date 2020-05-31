@@ -6,6 +6,9 @@
 
 #### New Modules
 
+* [**HOPS**]()
+  * Post-alignment ancient DNA analysis tool for MALT
+
 #### Module updates
 
 #### Bug Fixes

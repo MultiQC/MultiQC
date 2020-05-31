@@ -121,6 +121,7 @@ setup(
             'hicup = multiqc.modules.hicup:MultiqcModule',
             'hisat2 = multiqc.modules.hisat2:MultiqcModule',
             'homer = multiqc.modules.homer:MultiqcModule',
+            'hops = multiqc.modules.hops:MultiqcModule',
             'htseq = multiqc.modules.htseq:MultiqcModule',
             'interop = multiqc.modules.interop:MultiqcModule',
             'ivar = multiqc.modules.ivar:MultiqcModule',
