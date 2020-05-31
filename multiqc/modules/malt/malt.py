@@ -57,15 +57,13 @@ class MultiqcModule(BaseMultiqcModule):
                 s_name = line.split()[-1]
                 s_name = self.clean_s_name(s_name, f['root'])
                 if s_name in self.malt_data:
-                    log.debug(
-                        "Duplicate sample name found! Overwriting: {}".format(s_name))
+                    log.debug("Duplicate sample name found! Overwriting: {}".format(s_name))
                 self.add_data_source(f, s_name=s_name)
                 self.malt_data[s_name] = {}
             elif reading:
                 for k in keys:
                     if line.startswith(k):
-                        self.malt_data[s_name][k] = int(
-                            line.split()[-1].replace(",", ""))
+                        self.malt_data[s_name][k] = int(line.split()[-1].replace(",", ""))
                         if k == 'Num. alignments':
                             try:
                                 self.malt_data[s_name]['Non mapped'] = self.malt_data[s_name]["Num. of queries"] - self.malt_data[s_name]['Total reads']
