@@ -85,7 +85,7 @@ class MultiqcModule(BaseMultiqcModule):
         config = {
             'id': 'malt-mappability-plot',
             'title': 'MALT: Metagenomic Mappability',
-            'ylab': 'Samples',
+            'ylab': 'Read Counts',
         }
         self.add_section(
             name='Metagenomic Mappability',
@@ -103,7 +103,7 @@ class MultiqcModule(BaseMultiqcModule):
         config = {
             'id': 'malt-taxonomic-success-plot',
             'title': 'MALT: Taxonomic assignment success',
-            'ylab': 'Samples',
+            'ylab': 'Read Counts',
         }
         self.add_section(
             name='Taxonomic assignment success',
