@@ -5,7 +5,6 @@ Description: >
     This tool performs screening of output from the ancient DNA optimised 
     BLAST-replacement tool MALT, to identify taxa that have expected ancient 
     DNA characteristics.
-
 ---
 
 This module takes the JSON output of the HOPS postprocessing R script (Version 
