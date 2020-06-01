@@ -8,7 +8,8 @@ Description: >
 
 ---
 
-This module takes the JSON output of the HOPS postprocessing R script, to
-recreate the possible positives heatmap, with the heat intensity representing
-the number of 'ancient DNA characteristics' categories that a particular
-taxa has.
+This module takes the JSON output of the HOPS postprocessing R script (Version 
+\>= 0.34). to recreate the possible positives heatmap, with the heat intensity
+representing the number of 'ancient DNA characteristics' categories (small
+edit distance, damage, both edit distance and aDNA damage) that a particular 
+taxon has.

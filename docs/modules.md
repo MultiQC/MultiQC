@@ -43,12 +43,14 @@ for any pull-requests.
 MultiQC modules are Python submodules - as such, they need their own
 directory in `/multiqc/` with an `__init__.py` file. The directory should
 share its name with the module. To follow common practice, the module
-code usually then goes in a separate python file (also with the same name)
-which is then imported by `__init__.py`:
+code itself usually then goes in a separate python file (also with the same
+name, i.e. `multiqc/<my_mod>/<my_mod>.py`) which is then imported by the
+ `__init__.py` file with:
 ```python
 from __future__ import absolute_import
 from .modname import MultiqcModule
 ```
+
 
 ### Entry points
 Once your submodule files are in place, you need to tell MultiQC that they
@@ -112,12 +114,13 @@ Last but not least, remember to add your new module to the `CHANGELOG.md`,
 so that people know that it's there.
 
 ### MultiqcModule Class
-If you've copied one of the other entry point statements, it will have
-ended in `:MultiqcModule` - this tells MultiQC to try to execute a class or
-function called `MultiqcModule`.
+If you've copied one of the other entry point statements, it will have ended 
+in `:MultiqcModule` - this tells MultiQC to try to execute a class or function 
+called `MultiqcModule`.
 
 To use the helper functions bundled with MultiQC, you should extend this
-class from `multiqc.modules.base_module.BaseMultiqcModule`. This will give
+class from `multiqc.modules.base_module.BaseMultiqcModule` in your
+module code file (i.e. `multiqc/<my_mod>/<my_mod>.py`). This will give
 you access to a number of functions on the `self` namespace. For example:
 ```python
 from multiqc.modules.base_module import BaseMultiqcModule
@@ -139,7 +142,8 @@ analysis module credits and description in the report.
 
 ### Logging
 Last thing - MultiQC modules have a standardised way of producing output,
-so you shouldn't really use `print()` statements for your `Hello World` ;)
+so you shouldn't really use `print()` statements for your `Hello World` in
+your module code ;).
 
 Instead, use the `logger` module as follows:
 ```python
@@ -398,7 +402,7 @@ self.add_data_source(f=None, s_name=None, source=None, module=None, section=None
 
 ## Step 3 - Adding to the general statistics table
 Now that you have your parsed data, you can start inserting it into the
-MultiQC report. At the top of ever report is the 'General Statistics'
+MultiQC report. At the top of every report is the 'General Statistics'
 table. This contains metrics from all modules, allowing cross-module
 comparison.
 

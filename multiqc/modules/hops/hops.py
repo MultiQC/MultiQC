@@ -2,7 +2,6 @@
 
 from __future__ import print_function
 from collections import OrderedDict
-from itertools import chain
 import logging
 import json
 
@@ -17,7 +16,7 @@ class MultiqcModule(BaseMultiqcModule):
         # Initialise the parent object
         super(MultiqcModule, self).__init__(name='HOPS', anchor='hops',
         href="https://www.https://github.com/rhuebler/HOPS/",
-        info="is a screening tool for ancient DNA characteristics of output from the metagenomic aligner MALT.")
+        info="is an ancient DNA characteristics screening tool of output from the metagenomic aligner MALT.")
 
         # Find and load any HOPS post-processing JSONs
         self.hops_data = dict()
@@ -35,6 +34,9 @@ class MultiqcModule(BaseMultiqcModule):
 
         log.info("Found {} samples".format(len(self.hops_data)))
 
+        # This type of data isn't 'summarise-able' for general stats, so 
+        # skipping straight to heatmap. We also won't write data file to the
+        # multiqc_data directory because it would be exactly same as input JSON. 
         self.hops_heatmap()
 
     def parseJSON(self, f):
@@ -42,12 +44,12 @@ class MultiqcModule(BaseMultiqcModule):
 
         try:
             parsed_json = json.load(f['f'])
-            # Check for Keys existing
         except JSONDecodeError as e:
             log.debug("Could not parse HOPS JSON: '{}'".format(f['fn']))
             log.debug(e)
             return None
         
+        # Convert JSON to dict for easier manipulation
         for s in parsed_json: 
             s_name = self.clean_s_name(s, f['root'])
             if s_name in self.hops_data: 
@@ -66,19 +68,17 @@ class MultiqcModule(BaseMultiqcModule):
             'edit_and_damage': 4
         }
 
-        # Prep nested dict to heatmap valid input 
         samples = []
-
         for s in self.hops_data:
             samples.append(s)
 
-        # As all samples always have same taxa, will take from the first
+        # As all samples always have same taxa, will take from the first sample
         taxa = []
         for t in self.hops_data[samples[0]]:
             taxa.append(t)
 
+        # Get values from named list into a list of lists required for heatmap
         levels = []
-
         for s in samples:
             levels.append(self.hops_data[s].values())
 
@@ -102,19 +102,14 @@ class MultiqcModule(BaseMultiqcModule):
             'ycats_samples': True,
         }
 
-        # Heatmaps expect data in the structure of a list of lists. Then, a 
-        # list of sample names for the x-axis, and optionally for the y-axis 
-        # (defaults to the same as the x-axis).
-        # https://multiqc.info/docs/#heatmaps
-
         self.add_section (
             name = 'Potential Candidates',
             anchor = 'hops_heatmap',
             description = '''
             Heatmap of candidate taxa for downstream aDNA analysis, with 
             intensity representing additive categories of possible 'positive' 
-            hits. Large numbers of samples can result in Y-axis label overlap, 
-            drag down to view all. 
+            hits. Note that large numbers of samples can result in Y-axis label 
+            overlap, drag down to view all. 
 
             Yellow: Edit Distance. 
             Orange: Damage. 
@@ -127,10 +122,10 @@ class MultiqcModule(BaseMultiqcModule):
             from reference), orange (has typical aDNA damage pattern), to
             red (both small edit distance and damage pattern). A red category
             will typically indicates a good candidate for further investigation
-            for downstream analysis.
+            in downstream analysis.
 
             If data includes many samples, expand plot for full sample list on 
-            x-axis.
+            Y-axis.
             ''',
             plot = heatmap.plot(levels, xcats = taxa, ycats = samples, pconfig = pconfig)
         )
