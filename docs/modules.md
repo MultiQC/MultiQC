@@ -120,7 +120,7 @@ called `MultiqcModule`.
 
 To use the helper functions bundled with MultiQC, you should extend this
 class from `multiqc.modules.base_module.BaseMultiqcModule` in your
-module code file (i.e. `multiqc/<my_mod>/<my_mod>.py`). This will give
+module code file (i.e. `multiqc/modname/modname.py`). This will give
 you access to a number of functions on the `self` namespace. For example:
 ```python
 from multiqc.modules.base_module import BaseMultiqcModule
