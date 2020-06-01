@@ -465,6 +465,8 @@ prokka:
 pycoqc:
     contents: '"pycoqc":'
     num_lines: 2
+qc3C:
+    fn: '*.qc3C.json'
 qorts:
     contents: 'BENCHMARK_MinutesOnSamIteration'
     num_lines: 100

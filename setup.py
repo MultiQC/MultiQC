@@ -144,6 +144,7 @@ setup(
             'preseq = multiqc.modules.preseq:MultiqcModule',
             'prokka = multiqc.modules.prokka:MultiqcModule',
             'pycoqc = multiqc.modules.pycoqc:MultiqcModule',
+            'qc3C = multiqc.modules.qc3C:MultiqcModule',
             'qorts = multiqc.modules.qorts:MultiqcModule',
             'qualimap = multiqc.modules.qualimap:MultiqcModule',
             'quast = multiqc.modules.quast:MultiqcModule',
