@@ -75,7 +75,7 @@ class MultiqcModule(BaseMultiqcModule):
         # As all samples always have same taxa, will take from the first sample
         taxa = []
         for t in self.hops_data[samples[0]]:
-            taxa.append(t)
+            taxa.append( t.replace('_', ' ') )
 
         # Get values from named list into a list of lists required for heatmap
         levels = []
