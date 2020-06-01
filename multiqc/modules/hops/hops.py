@@ -111,9 +111,9 @@ class MultiqcModule(BaseMultiqcModule):
             hits. Note that large numbers of samples can result in Y-axis label 
             overlap, drag down to view all. 
 
-            Yellow: Edit Distance. 
-            Orange: Damage. 
-            Red: Edit Distance and Damage.
+            * Yellow: Edit Distance. 
+            * Orange: Damage. 
+            * Red: Edit Distance and Damage.
             ''',
             helptext = '''
             HOPS assigns a category based on how many ancient DNA 
