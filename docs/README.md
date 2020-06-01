@@ -65,6 +65,7 @@ MultiQC Modules:
     goleft_indexcov: modules/goleft_indexcov.md
     Hap.py: modules/happy.md
     HiCExplorer: modules/hicexplorer.md
+    HOPS: modules/hops.md
     HOMER: modules/homer.md
     HTSeq: modules/htseq.md
     Kaiju: modules/kaiju.md

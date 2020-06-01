@@ -322,6 +322,8 @@ homer/tagInfo:
     fn: 'tagInfo.txt'
 homer/FreqDistribution:
     fn: 'petag.FreqDistribution_1000.txt'
+hops:
+    fn: 'heatmap_overview_Wevid.json'
 interop/summary:
     contents: 'Level,Yield,Projected Yield,Aligned,Error Rate,Intensity C1,%>=Q30'
 interop/index-summary:
