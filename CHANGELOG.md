@@ -10,6 +10,8 @@
 
 * **MALT**
     * Fix y-axis labelling in bargraphs
+* **Picard**
+    * Fix `HsMetrics` bait percentage columns ([#1212](https://github.com/ewels/MultiQC/issues/1212))
 
 #### Bug Fixes
 
