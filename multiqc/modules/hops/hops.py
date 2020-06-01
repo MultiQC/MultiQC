@@ -34,9 +34,9 @@ class MultiqcModule(BaseMultiqcModule):
 
         log.info("Found {} samples".format(len(self.hops_data)))
 
-        # This type of data isn't 'summarise-able' for general stats, so 
+        # This type of data isn't 'summarise-able' for general stats, so
         # skipping straight to heatmap. We also won't write data file to the
-        # multiqc_data directory because it would be exactly same as input JSON. 
+        # multiqc_data directory because it would be exactly same as input JSON.
         self.hops_heatmap()
 
     def parseJSON(self, f):
@@ -48,17 +48,17 @@ class MultiqcModule(BaseMultiqcModule):
             log.debug("Could not parse HOPS JSON: '{}'".format(f['fn']))
             log.debug(e)
             return None
-        
+
         # Convert JSON to dict for easier manipulation
-        for s in parsed_json: 
+        for s in parsed_json:
             s_name = self.clean_s_name(s, f['root'])
-            if s_name in self.hops_data: 
+            if s_name in self.hops_data:
                 log.debug("Duplicate sample name found! Overwriting: {}".format(s_name))
             self.add_data_source(f, s_name=s_name)
             self.hops_data[s_name] = {}
             for t in parsed_json[s]:
                 self.hops_data[s_name][t] = parsed_json[s][t]
-    
+
     def hops_heatmap(self):
         """ Heatmap showing all statuses for every sample """
         heatmap_numbers = {
@@ -91,10 +91,10 @@ class MultiqcModule(BaseMultiqcModule):
             'max': 1,
             'square': False,
             'colstops': [
-                [1, '#ffffff'],
-                [2, '#ffff33'],
-                [3, '#ff7f00'],
-                [4, '#e41a1c'],
+                [1, '#ededed'],
+                [2, '#FFFFC5'],
+                [3, '#F2B26C'],
+                [4, '#AD2A2B'],
             ],
             'decimalPlaces': 0,
             'legend': False,
@@ -102,30 +102,36 @@ class MultiqcModule(BaseMultiqcModule):
             'xcats_samples': False,
         }
 
+        extra_warning = ''
+        if len(self.hops_data) > 20:
+            extra_warning = '''
+            <div class="alert alert-warning">
+                Large numbers of samples can result in Y-axis labels
+                overlapping. Drag the handle at the bottom of the plot down
+                to expand and see all samples names.
+            </div>
+                '''
+
         self.add_section (
             name = 'Potential Candidates',
             anchor = 'hops_heatmap',
             description = '''
-            Heatmap of candidate taxa for downstream aDNA analysis, with 
-            intensity representing additive categories of possible 'positive' 
-            hits. Note that large numbers of samples can result in Y-axis label 
-            overlap, drag down to view all. 
-
-            * Yellow: Edit Distance. 
-            * Orange: Damage. 
-            * Red: Edit Distance and Damage.
-            ''',
+            Heatmap of candidate taxa for downstream aDNA analysis, with
+            intensity representing additive categories of possible 'positive'
+            hits.
+            ''' + extra_warning,
             helptext = '''
-            HOPS assigns a category based on how many ancient DNA 
-            characteristics a given node (i.e. taxon) in a sample has. This goes
-            from grey (no characteristics detected), yellow (small edit distance
-            from reference), orange (has typical aDNA damage pattern), to
-            red (both small edit distance and damage pattern). A red category
-            will typically indicates a good candidate for further investigation
-            in downstream analysis.
+            HOPS assigns a category based on how many ancient DNA
+            characteristics a given node (i.e. taxon) in a sample has.
+            The colours indicate the following:
 
-            If data includes many samples, expand plot for full sample list on 
-            Y-axis.
+            * <span style="background-color: #ededed; padding:0.2rem 1rem;">**Grey**</span> - No characteristics detected
+            * <span style="background-color: #FFFFC5; padding:0.2rem 1rem;">**Yellow**</span> - Small edit distance from reference
+            * <span style="background-color: #F2B26C; padding:0.2rem 1rem;">**Orange**</span> - Typical aDNA damage pattern
+            * <span style="background-color: #AD2a2B; padding:0.2rem 1rem;">**Red**</span> - Small edit distance _and_ aDNA damage pattern
+
+            A red category typically indicates a good candidate for further investigation
+            in downstream analysis.
             ''',
             plot = heatmap.plot(levels, xcats = taxa, ycats = samples, pconfig = pconfig)
         )
