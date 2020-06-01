@@ -6,7 +6,7 @@
 
 #### New Modules
 
-* [**HOPS**]()
+* [**HOPS**](https://www.github.com/rhubler/HOPS)
   * Post-alignment ancient DNA analysis tool for MALT
 
 #### Module updates
