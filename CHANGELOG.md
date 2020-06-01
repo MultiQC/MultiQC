@@ -8,6 +8,8 @@
 
 #### Module updates
 
+* **featureCounts**
+    * Add support for output from [Rsubread](https://bioconductor.org/packages/release/bioc/html/Rsubread.html) ([#1022](https://github.com/ewels/MultiQC/issues/1022))
 * **MALT**
     * Fix y-axis labelling in bargraphs
 * **Picard**
