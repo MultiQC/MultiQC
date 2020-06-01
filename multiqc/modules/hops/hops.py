@@ -99,7 +99,7 @@ class MultiqcModule(BaseMultiqcModule):
             'decimalPlaces': 0,
             'legend': False,
             'datalabels': False,
-            'ycats_samples': True,
+            'xcats_samples': False,
         }
 
         self.add_section (
