@@ -44,7 +44,7 @@ MultiQC modules are Python submodules - as such, they need their own
 directory in `/multiqc/` with an `__init__.py` file. The directory should
 share its name with the module. To follow common practice, the module
 code itself usually then goes in a separate python file (also with the same
-name, i.e. `multiqc/<my_mod>/<my_mod>.py`) which is then imported by the
+name, i.e. `multiqc/modname/modname.py`) which is then imported by the
  `__init__.py` file with:
 ```python
 from __future__ import absolute_import
