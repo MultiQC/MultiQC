@@ -57,7 +57,7 @@ class MultiqcModule(BaseMultiqcModule):
             self.add_data_source(f, s_name=s_name)
             self.hops_data[s_name] = {}
             for t in parsed_json[s]:
-                self.hops_data[s_name][t] = parsed_json[s][t][0]
+                self.hops_data[s_name][t] = parsed_json[s][t]
     
     def hops_heatmap(self):
         """ Heatmap showing all statuses for every sample """
