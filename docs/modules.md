@@ -30,7 +30,7 @@ writing new MultiQC modules (especially during pull-request reviews).
 To help with this, you can run with the `--lint` flag, which will give explicit
 warnings about anything that is not optimally configured. For example:
 
-```
+```bash
 multiqc --lint test_data
 ```
 
@@ -39,12 +39,38 @@ so you will need to pass all lint tests for those checks to pass. This is requir
 for any pull-requests.
 
 ## Initial setup
+
+### MultiQC file structure
+
+The source code for MultiQC is separated into different folders.
+Most of the files you won't have to touch - the relevant files that
+you will need to edit or create are as follows:
+
+```console
+├── docs
+│   ├── README.md
+│   └── modules
+│       └── <your_module>.md
+├── multiqc
+│   ├── modules
+│   |   └── <your_module>
+│   │       ├── __init__.py
+│   │       └── <your_module>.py
+│   └── utils
+│       └── search_patterns.yaml
+├── CHANGELOG.md
+└── setup.py
+```
+
+These files are described in more detail below.
+
 ### Submodule
 MultiQC modules are Python submodules - as such, they need their own
 directory in `/multiqc/` with an `__init__.py` file. The directory should
 share its name with the module. To follow common practice, the module
 code usually then goes in a separate python file (also with the same name)
 which is then imported by `__init__.py`:
+
 ```python
 from __future__ import absolute_import
 from .modname import MultiqcModule
@@ -55,6 +81,7 @@ Once your submodule files are in place, you need to tell MultiQC that they
 are available as an analysis module. This is done within `setup.py` using
 [entry points](http://setuptools.readthedocs.io/en/latest/setuptools.html#dynamic-discovery-of-services-and-plugins).
 In `setup.py` you will see some code that looks like this:
+
 ```python
 entry_points = {
     'multiqc.modules.v1': [
@@ -63,10 +90,12 @@ entry_points = {
     ]
 }
 ```
+
 Copy one of the existing module lines and change it to use your module name.
 The order is irrelevant, so stick to alphabetical if in doubt.
 Once this is done, you will need to update your installation of MultiQC:
-```
+
+```bash
 pip install -e .
 ```
 
@@ -90,7 +119,7 @@ repository.
 This docs file should be placed in `docs/modules/<your_module_name>.md` and
 should have the following structure:
 
-```
+```markdown
 ---
 Name: Tool Name
 URL: http://www.amazing-bfx-tool.com
@@ -103,7 +132,7 @@ Your documentation goes here. Feel free to use markdown and write whatever
 you think would be helpful. Please avoid using heading levels 1 to 3.
 ```
 
-Make a reference to this in the YAML frontmatter at the top of
+Make a reference to this in the YAML _frontmatter_ list at the top of
 `docs/README.md` - this allows the website to find the file to build
 the documentation.
 
@@ -167,10 +196,7 @@ files. You can do this by searching for a filename fragment, or a string
 within the file. It's possible to search for both (a match on either
 will return the file) and also to have multiple strings possible.
 
-First, add your default patterns to:
-```
-MULTIQC_ROOT/multiqc/utils/search_patterns.yaml
-```
+First, add your default patterns to `multiqc/utils/search_patterns.yaml`
 
 Each search has a yaml key, with one or more search criteria.
 
@@ -228,6 +254,7 @@ myothermod:
 
 You can also supply a list of different patterns for a single log file type if needed.
 If any of the patterns are matched, the file will be returned:
+
 ```yaml
 mymod:
     - fn: 'mylog.txt'
@@ -235,6 +262,7 @@ mymod:
 ```
 
 You can use _AND_ logic by specifying keys within a single list item. For example:
+
 ```yaml
 mymod:
     fn: 'mylog.txt'
@@ -245,6 +273,7 @@ myothermod:
     - fn: 'another.txt'
       contents: 'What are these files anyway?'
 ```
+
 Here, a file must have the filename `mylog.txt` _and_ contain the string `mystring`.
 
 You can match subsets of files by using `exclude_` keys as follows:
@@ -259,6 +288,7 @@ myothermod:
         - 'trimmed'
         - 'sorted'
 ```
+
 Note that the `exclude_` patterns can have either a single value or a list of values.
 They are always considered using OR logic - any matches will reject the file.
 
@@ -268,12 +298,14 @@ their own conventions.
 
 Once your strings are added, you can find files in your module with the
 base function `self.find_log_files()`, using the key you set in the YAML:
+
 ```python
 self.find_log_files('mymod')
 ```
 
 This function yields a dictionary with various information about each matching
 file. The `f` key contains the contents of the matching file:
+
 ```python
 # Find all files for mymod
 for myfile in self.find_log_files('mymod'):
@@ -285,12 +317,14 @@ for myfile in self.find_log_files('mymod'):
 
 If `filehandles=True` is specified, the `f` key contains a file handle
 instead:
+
 ```python
 for f in self.find_log_files('mymod', filehandles=True):
     # f['f'] is now a filehandle instead of contents
     for l in f['f']:
         print( l )
 ```
+
 This is good if the file is large, as Python doesn't read the entire
 file into memory in one go.
 
@@ -349,6 +383,7 @@ Note that this function should be used _after_ cleaning the sample name with
 If your module cannot find any matching files, it needs to raise an
 exception of type `UserWarning`. This tells the core MultiQC program
 that no modules were found. For example:
+
 ```python
 if len(self.mod_data) == 0:
     raise UserWarning
@@ -396,6 +431,7 @@ is typically written immediately after the above warning.
 
 If you've used the `self.find_log_files` function, writing to the sources file
 is as simple as passing the log file variable to the `self.add_data_source` function:
+
 ```python
 for f in self.find_log_files('mymod'):
     self.add_data_source(f)
@@ -404,6 +440,7 @@ for f in self.find_log_files('mymod'):
 If you have different files for different sections of the module, or are
 customising the sample name, you can tweak the fields. The default arguments
 are as shown:
+
 ```python
 self.add_data_source(f=None, s_name=None, source=None, module=None, section=None)
 ```
@@ -434,6 +471,7 @@ self.general_stats_addcols(data)
 
 To give more informative table headers and configure things like
 data scales and colour schemes, you can supply an extra dict:
+
 ```python
 headers = OrderedDict()
 headers['first_col'] = {
@@ -453,6 +491,7 @@ self.general_stats_addcols(data, headers)
 ```
 
 Here are all options for headers, with defaults:
+
 ```python
 headers['name'] = {
     'namespace': '',                # Module name. Auto-generated for core modules in General Statistics.
@@ -469,6 +508,7 @@ headers['name'] = {
     'placement' : 1000.0,           # Alter the default ordering of columns in the table
 }
 ```
+
 * `namespace`
   * This prepends the column title in the mouse hover: _Namespace: Title_.
   * The 'Configure Columns' modal displays this under the 'Group' column.
@@ -517,7 +557,6 @@ A third parameter can be passed to this function, `namespace`. This is usually
 not needed - MultiQC automatically takes the name of the module that is calling
 the function and uses this. However, sometimes it can be useful to overwrite this.
 
-
 ### Table colour scales
 Colour scales are taken from [ColorBrewer2](http://colorbrewer2.org/).
 Colour scales can be reversed by adding the suffix `-rev` to the name. For example, `RdYlGn-rev`.
@@ -561,7 +600,20 @@ when being written to tab-separated files.
 
 ## Step 5 - Create report sections
 Great! It's time to start creating sections of the report with more information.
-To do this, use the `self.add_section()` helper function:
+To do this, use the `self.add_section()` helper function.
+This supports the following arguments:
+
+* `name`: Name of the section, used for the title
+* `anchor`: The URL anchor - must be unique, used when clicking the name in the side-nav
+* `description`: A very short descriptive text to go above the plot (markdown).
+* `comment`: A comment to add under the description. Big and blue text, mostly for users to customise the report (markdown).
+* `helptext`: Longer help text explaining what users should look for (markdown).
+* `plot`: Results from one of the MultiQC plotting functions
+* `content`: Any custom HTML
+* `autoformat`: Default `True`. Automatically format the `description`, `comment` and `helptext` strings.
+* `autoformat_type`: Default `markdown`. Autoformat text type. Currently only `markdown` supported.
+
+For example:
 
 ```python
 self.add_section (
@@ -573,8 +625,16 @@ self.add_section (
     name = 'First Module Section',
     anchor = 'mymod-first',
     description = 'My amazing module output, from the first section',
-    helptext = "If you're not sure _how_ to interpret the data, we can help!",
-    extra = '<blockquote>Some extra custom HTML to put under the description</blockquote>',
+    helptext = """
+        If you're not sure _how_ to interpret the data, we can help!
+        Most modules use multi-line strings for these text blocks,
+        with triple quotation marks.
+
+        * Markdown
+        * Lists
+        * Are
+        * `Great`
+    """,
     plot = bargraph.plot(data)
 )
 self.add_section (
@@ -582,11 +642,8 @@ self.add_section (
 )
 ```
 
-These will automatically be labelled and linked in the navigation (unless
-the module has only one section or `name` is not specified).
-
-Note that `description` and `helptext` are processed as Markdown by default.
-This can be disabled by passing `autoformat=False` to the function.
+If a module has more than one section, these will automatically be labelled and linked
+in the left side-bar navigation (unless `name` is not specified).
 
 ## Step 6 - Plot some data
 Ok, you have some data, now the fun bit - visualising it! Each of the plot
@@ -627,7 +684,6 @@ options under the same top-level name for clarity.
 Finally, don't forget to document the usage of your module-specific configuration
 in `docs/modules/mymodule.md` so that people know how to use it.
 
-
 ### Profiling Performance
 It's important that MultiQC runs quickly and efficiently, especially on big
 projects with large numbers of samples. The recommended method to check this is
@@ -638,6 +694,7 @@ python -m cProfile -o multiqc_profile.prof /path/to/MultiQC/scripts/multiqc -f .
 ```
 
 You can create a `.bashrc` alias to make this easier to run:
+
 ```bash
 alias profile_multiqc='python -m cProfile -o multiqc_profile.prof /path/to/MultiQC/scripts/multiqc '
 profile_multiqc -f .
@@ -647,6 +704,7 @@ MultiQC should run as normal, but produce the additional binary file `multiqc_pr
 This can then be visualised with software such as [SnakeViz](https://jiffyclub.github.io/snakeviz/).
 
 To install SnakeViz and visualise the results, do the following:
+
 ```bash
 pip install snakeviz
 snakeviz multiqc_profile.prof
@@ -655,7 +713,6 @@ snakeviz multiqc_profile.prof
 A web page should open where you can explore the execution times of different nested functions.
 It's a good idea to run MultiQC with a comparable number of results from other tools (eg. FastQC)
 to have a reference to compare against for how long the code should take to run.
-
 
 ### Adding Custom CSS / Javascript
 If you would like module-specific CSS and / or JavaScript added to the template,
