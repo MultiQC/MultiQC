@@ -333,6 +333,18 @@ self.yourdata = self.ignore_samples(self.yourdata)
 This will remove any dictionary keys where the sample name matches
 a user pattern.
 
+If your data structure is not in the `sample_name: data` format then
+you can check each sample name individually using the
+`self.is_ignore_sample()` function:
+
+```python
+if self.is_ignore_sample(f['s_name']):
+    print("We will not use this sample!")
+```
+
+Note that this function should be used _after_ cleaning the sample name with
+`self.clean_s_name()`.
+
 ### No files found
 If your module cannot find any matching files, it needs to raise an
 exception of type `UserWarning`. This tells the core MultiQC program
