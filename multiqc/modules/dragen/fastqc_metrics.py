@@ -385,7 +385,10 @@ class DragenFastQcMetrics(BaseMultiqcModule):
             for key, value in self.fastqc_data[s_name][GROUP].items():
                 parts = key.split()
                 pct = int(parts[0][:-1])
-                data[s_name][pct] = float(value)
+                try:
+                    data[s_name][pct] = float(value)
+                except:
+                    continue
 
         pconfig = {
             'id': 'fastqc_gc_content_mean_sequence_quality_plot',
