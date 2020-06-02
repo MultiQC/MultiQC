@@ -17,6 +17,8 @@
     * Fix y-axis labelling in bargraphs
 * **Picard**
     * Fix `HsMetrics` bait percentage columns ([#1212](https://github.com/ewels/MultiQC/issues/1212))
+* **PycoQC**
+    * Log10 x-axis for _Read Length_ plot ([#1214](https://github.com/ewels/MultiQC/issues/1214))
 
 #### Bug Fixes
 
