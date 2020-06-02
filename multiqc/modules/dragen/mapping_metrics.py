@@ -323,8 +323,9 @@ def parse_mapping_metrics_file(f):
             data['Secondary alignments pct'] = data['Secondary alignments'] / data['Total alignments'] * 100.0
         # adding some missing bases percentages
         if data['Total bases'] > 0:
-            data['Q30 bases (excl. dups & clipped bases) pct'] = data['Q30 bases (excl. dups & clipped bases)'] / \
-                data['Total bases'] * 100.0
+            if 'Q30 bases (excl. dups & clipped bases) pct' in data:
+                data['Q30 bases (excl. dups & clipped bases) pct'] = data['Q30 bases (excl. dups & clipped bases)'] / \
+                    data['Total bases'] * 100.0
             data['Mapped bases R1 pct'] = data['Mapped bases R1'] / data['Total bases'] * 100.0
             data['Mapped bases R2 pct'] = data['Mapped bases R2'] / data['Total bases'] * 100.0
 

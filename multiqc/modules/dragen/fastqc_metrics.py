@@ -67,7 +67,7 @@ class DragenFastQcMetrics(BaseMultiqcModule):
             for key in sorted_keys:
                 value = int(self.fastqc_data[s_name][GROUP][key])
                 parts = key.split()
-                pos = int(parts[1])
+                pos = average_from_range(parts[1])
                 quantile = int(parts[2][:-1])
                 qv = int(value)
 
@@ -113,8 +113,10 @@ class DragenFastQcMetrics(BaseMultiqcModule):
             # Parse our per-base, per-position average qualities into a dictionary
             avgs = copy.deepcopy(base_dict)
             for key, value in self.fastqc_data[s_name][AVG_GROUP].items():
+                if value == "NA":
+                    continue
                 parts = key.split()
-                pos = parts[1]
+                pos = average_from_range(parts[1])
                 base = parts[2].upper()
                 avgs[base][pos] = float(value)
 
@@ -123,7 +125,7 @@ class DragenFastQcMetrics(BaseMultiqcModule):
             totals = defaultdict(int)
             for key, value in self.fastqc_data[s_name][COUNT_GROUP].items():
                 parts = key.split()
-                pos = parts[1]
+                pos = average_from_range(parts[1])
                 base = parts[2].upper()
                 counts[base][pos] = int(value)
                 totals[pos] += int(value)
@@ -132,7 +134,9 @@ class DragenFastQcMetrics(BaseMultiqcModule):
             qv_sums = defaultdict(int)
             for base, pos_data in counts.items():
                 for pos, count in pos_data.items():
-                    if base == "N":
+                    if count == 0:
+                        continue
+                    elif base == "N":
                         qv_sums[pos] += count * N_QV
                     else:
                         qv_sums[pos] += int(round(count * avgs[base][pos]))
@@ -315,7 +319,7 @@ class DragenFastQcMetrics(BaseMultiqcModule):
             max_len = 0
             for metric, value in self.fastqc_data[s_name][LEN_GROUP].items():
                 if int(value) > 0:
-                    pos = int(metric.split()[0][:-2])
+                    pos = average_from_range(metric.split()[0][:-2])
                     max_len = max(pos, max_len)
 
             group_data = self.fastqc_data[s_name][GC_GROUP]
@@ -593,7 +597,7 @@ class DragenFastQcMetrics(BaseMultiqcModule):
             totals = defaultdict(int)
             for key, value in self.fastqc_data[s_name][COUNT_GROUP].items():
                 parts = key.split()
-                pos = int(parts[1])
+                pos = average_from_range(parts[1])
                 totals[pos] += int(value)
 
             adps = defaultdict(int)
@@ -602,7 +606,7 @@ class DragenFastQcMetrics(BaseMultiqcModule):
                 seq = parts[0].split("'")[1]
                 if seq not in ADAPTER_SEQS:
                     continue
-                pos = int(parts[1][:-2])
+                pos = average_from_range(parts[1][:-2])
                 adps[pos] += int(value)
 
             data[s_name] = dict()
@@ -733,7 +737,7 @@ def base_from_content_metric(metric):
 
 def pos_qual_table_cmp(key):
     parts = key.split()
-    pos = int(parts[1])
+    pos = average_from_range(parts[1])
     pct = int(parts[2][:-1])
 
     return (pos * 1000 + pct)
