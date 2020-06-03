@@ -691,16 +691,26 @@ in `docs/modules/mymodule.md` so that people know how to use it.
 ### Profiling Performance
 It's important that MultiQC runs quickly and efficiently, especially on big
 projects with large numbers of samples. The recommended method to check this is
-by using `cProfile` to profile the code execution. To do this, run MultiQC as follows:
+by using `cProfile` to profile the code execution.
+
+To do this, first find out where your copy of MultiQC is located:
+
+```console
+$ which multiqc
+/Users/you/anaconda/envs/myenv/bin/multiqc
+```
+
+Then run MultiQC with this path and the `cProfile` module as follows
+(the flags at the end can be any regular MultiQC flags):
 
 ```bash
-python -m cProfile -o multiqc_profile.prof /path/to/MultiQC/scripts/multiqc -f .
+python -m cProfile -o multiqc_profile.prof /Users/you/anaconda/envs/myenv/bin/multiqc -f .
 ```
 
 You can create a `.bashrc` alias to make this easier to run:
 
 ```bash
-alias profile_multiqc='python -m cProfile -o multiqc_profile.prof /path/to/MultiQC/scripts/multiqc '
+alias profile_multiqc='python -m cProfile -o multiqc_profile.prof /Users/you/anaconda/envs/myenv/bin/multiqc '
 profile_multiqc -f .
 ```
 
