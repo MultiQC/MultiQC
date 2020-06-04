@@ -102,8 +102,8 @@ class MultiqcModule(BaseMultiqcModule):
             general_data = self.kaiju_data["phylum"]
             general_taxo_rank = "Phylum"
         else:
-            general_data = self.kaiju_data[sorted(self.kaiju_data.keys())[0]]
-            general_taxo_rank = sorted(self.kaiju_data.keys())[0].capitalize()
+            general_data = self.kaiju_data[sorted(self.kaiju_data)[0]]
+            general_taxo_rank = sorted(self.kaiju_data)[0].capitalize()
 
         headers['percentage_assigned'] = {
             'title': '% Reads assigned {}'.format(general_taxo_rank),
