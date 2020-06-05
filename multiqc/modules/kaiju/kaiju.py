@@ -46,7 +46,6 @@ class MultiqcModule(BaseMultiqcModule):
         # Filters to strip out ignored sample names
         for taxo_rank in self.kaiju_data.keys():
             self.kaiju_data[taxo_rank] = self.ignore_samples(self.kaiju_data[taxo_rank])
-            self.write_data_file(self.kaiju_data[taxo_rank], 'multiqc_kaiju_'+taxo_rank)
 
         # Number of samples found
         try:
@@ -235,6 +234,7 @@ class MultiqcModule(BaseMultiqcModule):
             rank_cats['not assigned'] = { 'name': 'Cannot be assigned', 'color': '#cccccc' }
             rank_cats['unclassified'] = { 'name': 'Unclassified', 'color': '#d4949c'}
 
+            self.write_data_file(rank_data, 'multiqc_kaiju_'+rank_name)
             cats.append(rank_cats)
             pd.append(rank_data)
 
