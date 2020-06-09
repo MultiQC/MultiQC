@@ -704,6 +704,10 @@ def parse_fastqc_metrics_file(f):
 
 
 def average_from_range(metric_range):
+    if metric_range.startswith('>='):
+        metric_range = metric_range[2:]
+    if metric_range.endswith('+'):
+        metric_range = metric_range[:-1]
     if "-" in metric_range:
         start, end = metric_range.split('-')
         avg_pos = (int(end) + int(start)) / 2.0
