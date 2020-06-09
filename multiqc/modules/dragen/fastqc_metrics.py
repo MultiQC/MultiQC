@@ -78,7 +78,7 @@ class DragenFastQcMetrics(BaseMultiqcModule):
                     data[s_name][pos][quantile] = qv
 
         pconfig = {
-            'id': 'fastqc_per_base_sequence_quality_plot',
+            'id': 'fastqc_per_base_sequence_quality_range_plot',
             'title': 'DRAGEN-QC: Per-Position Quality Range',
             'ylab': 'Phred Quality Score',
             'xlab': 'Position (bp)',
@@ -341,6 +341,7 @@ class DragenFastQcMetrics(BaseMultiqcModule):
             'id': 'dragenqc_per_sequence_gc_content_plot',
             'title': 'DRAGEN-QC: Per-Sequence GC Content',
             'xlab': '% GC',
+            'ylab': 'Count',
             'ymin': 0,
             'xmax': 100,
             'xmin': 0,
