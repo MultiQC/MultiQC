@@ -51,9 +51,6 @@ class MultiqcModule(DragenMappingMetics, DragenFragmentLength, DragenPloidyEstim
         samples_found |= self.add_mapping_metrics()
         # <output prefix>.mapping_metrics.csv              - general stats table, a dedicated table, and a few barplots
 
-        samples_found |= self.add_fastqc_metrics()
-        # <output prefix>.fastqc_metrics.csv               - various plots to replicate output from Babraham's FastQC
-
         samples_found |= self.add_vc_metrics()
         # <output prefix>.vc_metrics.csv                   - a dedicated table and the total number of Variants into the general stats table
 
@@ -74,6 +71,9 @@ class MultiqcModule(DragenMappingMetics, DragenFragmentLength, DragenPloidyEstim
 
         samples_found |= self.add_fragment_length_hist()
         # <output prefix>.fragment_length_hist.csv         - a histogram plot
+
+        samples_found |= self.add_fastqc_metrics()
+        # <output prefix>.fastqc_metrics.csv               - various plots to replicate output from Babraham's FastQC
 
         if len(samples_found) == 0:
             raise UserWarning
