@@ -311,20 +311,30 @@ def parse_mapping_metrics_file(f):
     # adding some missing values that we wanna report for consistency
     for data in itertools.chain(data_by_readgroup.values(), data_by_phenotype.values()):
         # fixing when deduplication wasn't performed
-        if data['Number of duplicate marked reads'] == 'NA':
+        if 'Number of duplicate marked reads' in data and data['Number of duplicate marked reads'] == 'NA':
             data['Number of duplicate marked reads'] = 0
-        if data['Number of duplicate marked and mate reads removed'] == 'NA':
+
+        if 'Number of duplicate marked and mate reads removed' in data and \
+                data['Number of duplicate marked and mate reads removed'] == 'NA':
             data['Number of duplicate marked and mate reads removed'] = 0
-        if data['Number of unique reads (excl. duplicate marked reads)'] == 'NA':
+
+        if 'Number of unique reads (excl. duplicate marked reads)' in data and \
+                data['Number of unique reads (excl. duplicate marked reads)'] == 'NA':
             data['Number of unique reads (excl. duplicate marked reads)'] = data['Mapped reads']
+
         # adding alignment percentages
-        if data['Total alignments'] > 0:
+        if 'Total alignments' in data and data['Total alignments'] > 0 and 'Secondary alignments' in data:
             data['Secondary alignments pct'] = data['Secondary alignments'] / data['Total alignments'] * 100.0
+
         # adding some missing bases percentages
-        if data['Total bases'] > 0:
-            data['Q30 bases (excl. dups & clipped bases) pct'] = data['Q30 bases (excl. dups & clipped bases)'] / data['Total bases'] * 100.0
-            data['Mapped bases R1 pct'] = data['Mapped bases R1'] / data['Total bases'] * 100.0
-            data['Mapped bases R2 pct'] = data['Mapped bases R2'] / data['Total bases'] * 100.0
+        if 'Total bases' in data and data['Total bases'] > 0:
+            if 'Q30 bases (excl. dups & clipped bases)' in data:
+                data['Q30 bases (excl. dups & clipped bases) pct'] = data['Q30 bases (excl. dups & clipped bases)'] / \
+                                                                     data['Total bases'] * 100.0
+            if 'Mapped bases R1' in data:
+                data['Mapped bases R1 pct'] = data['Mapped bases R1'] / data['Total bases'] * 100.0
+            if 'Mapped bases R2' in data:
+                data['Mapped bases R2 pct'] = data['Mapped bases R2'] / data['Total bases'] * 100.0
 
     return data_by_readgroup, data_by_phenotype
 

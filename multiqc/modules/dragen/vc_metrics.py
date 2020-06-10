@@ -201,26 +201,44 @@ def parse_vc_metrics_file(f):
 
     # adding few more metrics: total insertions, deletions and indels numbers
     for data in [prefilter_data, postfilter_data]:
-        data['Insertions'] = data['Insertions (Hom)'] + data['Insertions (Het)']
-        data['Deletions']  = data['Deletions (Hom)']  + data['Deletions (Het)']
-        data['Indels']     = data['Insertions']       + data['Deletions']
-        if data['Total'] != 0:
-            data['Insertions pct'] = data['Insertions'] / data['Total'] * 100.0
-            data['Deletions pct']  = data['Deletions']  / data['Total'] * 100.0
-            data['Indels pct']     = data['Indels']     / data['Total'] * 100.0
+        if 'Insertions (Hom)' in data and 'Insertions (Het)' in data:
+            data['Insertions'] = data['Insertions (Hom)'] + data['Insertions (Het)']
+
+        if 'Deletions (Hom)' in data and 'Deletions (Het)' in data:
+            data['Deletions'] = data['Deletions (Hom)']  + data['Deletions (Het)']
+
+        if 'Insertions' in data and 'Deletions' in data:
+            data['Indels'] = data['Insertions'] + data['Deletions']
+
+        if 'Total' in data and data['Total'] != 0:
+            if 'Insertions' in data:
+                data['Insertions pct'] = data['Insertions'] / data['Total'] * 100.0
+            if 'Deletions' in data:
+                data['Deletions pct'] = data['Deletions'] / data['Total'] * 100.0
+            if 'Indels' in data:
+                data['Indels pct'] = data['Indels'] / data['Total'] * 100.0
 
     data = postfilter_data
     data.update(summary_data)
+
     # we are not really interested in all the details of pre-filtered variants, however
     # it would be nice to report how much we filtered out
-    data['Filtered vars']     = prefilter_data['Total']  - data['Total']
-    data['Filtered SNPs']     = prefilter_data['SNPs']   - data['SNPs']
-    data['Filtered indels']   = prefilter_data['Indels'] - data['Indels']
-    if prefilter_data['Total'] != 0:
-        data['Filtered vars pct']   = data['Filtered vars']   / prefilter_data['Total'] * 100.0
-    if prefilter_data['SNPs'] != 0:
-        data['Filtered SNPs pct']   = data['Filtered SNPs']   / prefilter_data['SNPs'] * 100.0
-    if prefilter_data['Indels'] != 0:
+    if 'Total' in data and 'Total' in prefilter_data:
+        data['Filtered vars'] = prefilter_data['Total'] - data['Total']
+
+    if 'SNPs' in data and 'SNPs' in prefilter_data:
+        data['Filtered SNPs'] = prefilter_data['SNPs'] - data['SNPs']
+
+    if 'Indels' in data and 'Indels' in prefilter_data:
+        data['Filtered indels'] = prefilter_data['Indels'] - data['Indels']
+
+    if 'Total' in prefilter_data and prefilter_data['Total'] != 0 and 'Filtered vars' in data:
+        data['Filtered vars pct'] = data['Filtered vars'] / prefilter_data['Total'] * 100.0
+
+    if 'SNPs' in prefilter_data and prefilter_data['SNPs'] != 0 and 'Filtered SNPs' in data:
+        data['Filtered SNPs pct'] = data['Filtered SNPs'] / prefilter_data['SNPs'] * 100.0
+
+    if 'Indels' in prefilter_data and prefilter_data['Indels'] != 0 and 'Filtered indels' in data:
         data['Filtered indels pct'] = data['Filtered indels'] / prefilter_data['Indels'] * 100.0
 
     return data
