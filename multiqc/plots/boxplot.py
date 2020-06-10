@@ -129,7 +129,7 @@ def matplotlib_boxplot(plotdata, pconfig=None):
         # Go through data series
         n_boxes = len(pdata)
         mock_ds = mock_dataset(pdata)
-        box = axes.boxplot(mock_ds, whis=25.0, patch_artist=True)
+        box = axes.boxplot(mock_ds, whis='range', patch_artist=True)
 
         for patch in box['boxes']:
             patch.set_facecolor("yellow")
