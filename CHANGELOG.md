@@ -3,6 +3,7 @@
 ## MultiQC v1.10dev
 
 #### New MultiQC Features
+* `--sample-filters` now also accepts `show_re` and `hide_re` in addition to `show` and `hide`. The `_re` options use regex, while the "normal" options use globbing.
 
 #### New Modules
 
