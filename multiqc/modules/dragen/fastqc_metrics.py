@@ -31,15 +31,14 @@ class DragenFastQcMetrics(BaseMultiqcModule):
         data_by_sample = dict()
 
         for f in self.find_log_files('dragen/fastqc_metrics'):
-            data = parse_fastqc_metrics_file(f)
+            data_by_mate = parse_fastqc_metrics_file(f)
+            if f['s_name'] in data_by_sample:
+                log.debug('Duplicate sample name found! Overwriting: {}'.format(f['s_name']))
             self.add_data_source(f, section='stats')
-            data_by_sample.update(data)
+            data_by_sample.update(data_by_mate)
 
         # Filter to strip out ignored sample names:
         self.fastqc_data = self.ignore_samples(data_by_sample)
-        if not self.fastqc_data:
-            return
-        log.info('Found time metrics for {} samples'.format(len(self.fastqc_data)))
 
         # Now add each section in order
         self.positional_quality_range_plot()
@@ -78,7 +77,7 @@ class DragenFastQcMetrics(BaseMultiqcModule):
                     data[s_name][pos][quantile] = qv
 
         pconfig = {
-            'id': 'fastqc_per_base_sequence_quality_plot',
+            'id': 'fastqc_per_base_sequence_quality_range_plot',
             'title': 'DRAGEN-QC: Per-Position Quality Range',
             'ylab': 'Phred Quality Score',
             'xlab': 'Position (bp)',
@@ -341,6 +340,7 @@ class DragenFastQcMetrics(BaseMultiqcModule):
             'id': 'dragenqc_per_sequence_gc_content_plot',
             'title': 'DRAGEN-QC: Per-Sequence GC Content',
             'xlab': '% GC',
+            'ylab': 'Count',
             'ymin': 0,
             'xmax': 100,
             'xmin': 0,
@@ -677,9 +677,9 @@ def parse_fastqc_metrics_file(f):
     r1_name = "{}_R1".format(f['s_name'])
     r2_name = "{}_R2".format(f['s_name'])
 
-    data = {}
-    data[r1_name] = defaultdict(lambda: defaultdict(int))
-    data[r2_name] = defaultdict(lambda: defaultdict(int))
+    data_by_sample = {}
+    data_by_sample[r1_name] = defaultdict(lambda: defaultdict(int))
+    data_by_sample[r2_name] = defaultdict(lambda: defaultdict(int))
     for line in f['f'].splitlines():
         group, mate, metric, value = line.split(',')
         try:
@@ -688,26 +688,26 @@ def parse_fastqc_metrics_file(f):
             pass
 
         # Store each value by group and by metric
+        assert mate in ['Read1', 'Read2']
         if mate == "Read1":
             s_name = r1_name
         elif mate == "Read2":
             s_name = r2_name
-
-        data[s_name][group][metric] = value
+        data_by_sample[s_name][group][metric] = value
 
     # Delete empty mate groups so we don't generate empty datasets
     for s_name in [r1_name, r2_name]:
-        if len(data[s_name]) == 0:
-            del data[s_name]
+        if len(data_by_sample[s_name]) == 0:
+            del data_by_sample[s_name]
 
-    return data
+    return data_by_sample
 
 
 def average_from_range(metric_range):
-    if metric_range.startswith('>='):
-        metric_range = metric_range[2:]
-    if metric_range.endswith('+'):
-        metric_range = metric_range[:-1]
+    if '+' in metric_range:
+        metric_range = metric_range.replace('+', '')
+    if '>=' in metric_range:
+        metric_range = metric_range.replace('>=', '')
     if "-" in metric_range:
         start, end = metric_range.split('-')
         avg_pos = (int(end) + int(start)) / 2.0
