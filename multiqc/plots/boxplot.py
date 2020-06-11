@@ -6,6 +6,7 @@ import base64
 import logging
 import random
 import io
+import os
 
 from collections import OrderedDict
 from multiqc.utils import config, report
