@@ -50,27 +50,24 @@ class MultiqcModule(BaseMultiqcModule):
         # Parse correlation matrices
         self.rna_seqc_pearson = None
         self.rna_seqc_spearman = None
+        num_correlation_samples = 0
         for f in self.find_log_files('rna_seqc/correlation'):
-            self.parse_correlation(f)
-        # TODO: self.rna_seqc_pearson and self.rna_seqc_spearman are trickier to filter
+            num_correlation_samples += self.parse_correlation(f)
 
         # Work out the maximum number of samples that we have across all reports
         num_found = max(
             len(self.rna_seqc_metrics),
             len(self.rna_seqc_norm_high_cov),
             len(self.rna_seqc_norm_medium_cov),
-            len(self.rna_seqc_norm_low_cov)
+            len(self.rna_seqc_norm_low_cov),
+            num_correlation_samples
         )
-        if self.rna_seqc_pearson is not None:
-            num_found += 1
-        if self.rna_seqc_spearman is not None:
-            num_found += 1
 
         # Stop here if we didn't find anything
         if num_found == 0:
             raise UserWarning
 
-        log.info("Found {} samples".format(len(self.rna_seqc_metrics)))
+        log.info("Found {} samples".format(num_found))
 
         # Write metrics to a file
         self.write_data_file(self.rna_seqc_metrics, 'multiqc_rna_seqc')
@@ -138,6 +135,7 @@ class MultiqcModule(BaseMultiqcModule):
             if s_names is None:
                 s_names = s
                 for s_name in s_names:
+                    s_name = self.clean_s_name(s_name, f['root'])
                     data[s_name] = dict()
             else:
                 for i, v in enumerate(s):
@@ -160,10 +158,22 @@ class MultiqcModule(BaseMultiqcModule):
                 s_names = [ x for x in s if x != '' ]
             else:
                 data.append(s[1:])
+
+        # Filter for ignored sample names
+        filtered_s_names = list()
+        filtered_data = list()
+        for idx, s_name in enumerate(s_names):
+            s_name = self.clean_s_name(s_name, f['root'])
+            if not self.is_ignore_sample(s_name):
+                filtered_s_names.append(s_name)
+                filtered_data.append(data[idx])
+
         if f['fn'] == 'corrMatrixPearson.txt':
-            self.rna_seqc_pearson = (s_names, data)
+            self.rna_seqc_pearson = (filtered_s_names, filtered_data)
         elif f['fn'] == 'corrMatrixSpearman.txt':
-            self.rna_seqc_spearman = (s_names, data)
+            self.rna_seqc_spearman = (filtered_s_names, filtered_data)
+
+        return len(filtered_s_names)
 
 
     def rnaseqc_general_stats(self):

@@ -15,12 +15,15 @@ subtitle: null
 intro_text: null
 report_comment: null
 report_header_info: null
+show_analysis_paths: True
+show_analysis_time: True
 config_file: null
 custom_logo: null
 custom_logo_url: null
 custom_logo_title: null
 simple_output: false
 template: 'default'
+profile_runtime: false
 pandoc_template: null
 read_count_multiplier: 0.000001
 read_count_prefix: 'M'
@@ -347,6 +350,11 @@ module_order:
             - RNA
             - DNA
             - chip
+    - hops:
+        module_tag:
+            - DNA
+            - Metagenomics
+            - ancient
     - macs2:
         module_tag:
             - chip
@@ -516,10 +524,19 @@ module_order:
         module_tag:
             - RNA
             - DNA
+    - kaiju:
+        module_tag:
+            - DNA
+            - Metagenomics
     - kraken:
         module_tag:
             - DNA
             - Metagenomics
+    - malt:
+        module_tag:
+            - DNA
+            - Metagenomics
+            - ancient
     - trimmomatic:
         module_tag:
             - RNA

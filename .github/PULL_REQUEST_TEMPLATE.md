@@ -1,17 +1,14 @@
+<!--
 Many thanks to contributing to MultiQC!
+Please fill in the appropriate checklist below (delete whatever is not relevant).
+-->
 
-Please fill in the appropriate checklist below (delete whatever is not relevant). These are the most common things I request on pull requests (PRs).
-
-## If this PR is _not_ a new module
  - [ ] This comment contains a description of changes (with reason)
  - [ ] `CHANGELOG.md` has been updated
- - [ ] (optional but recommended): https://github.com/ewels/MultiQC_TestData contains test data for this change
 
-## If this PR is for a new module
- - [ ] There is example tool output for tools in the https://github.com/ewels/MultiQC_TestData repository
+<!-- If this PR is for a NEW module - delete if not -->
+ - [ ] There is example tool output for tools in the https://github.com/ewels/MultiQC_TestData repository or attached to this PR
  - [ ] Code is tested and works locally (including with `--lint` flag)
- - [ ] `CHANGELOG.md` is updated
- - [ ] `README.md` is updated
  - [ ] `docs/README.md` is updated with link to below
  - [ ] `docs/modulename.md` is created
  - [ ] Everything that can be represented with a plot instead of a table is a plot

@@ -52,6 +52,7 @@ def custom_module_classes():
 
     # First - find files using patterns described in the config
     config_data = getattr(config, 'custom_data', {})
+    mod_cust_config = {}
     for k,f in config_data.items():
 
         # Check that we have a dictionary
@@ -78,8 +79,8 @@ def custom_module_classes():
             search_patterns.append(c_id)
             continue
 
-        # We should have had something by now
-        log.warning("Found section '{}' in config for custom_data, but no data or search patterns.".format(c_id))
+        # Must just be configuration for a separate custom-content class
+        mod_cust_config[c_id] = f
 
     # Now go through each of the file search patterns
     bm = BaseMultiqcModule()
@@ -116,7 +117,6 @@ def custom_module_classes():
                         'id': f['s_name'],
                         'plot_type': 'image',
                         'section_name': f['s_name'].replace('_', ' ').replace('-', ' ').replace('.', ' '),
-                        'description': 'Embedded image <code>{}</code>'.format(f['fn']),
                         'data': img_html
                     }
                 elif f_extension == '.html':
@@ -161,6 +161,9 @@ def custom_module_classes():
                     # Guess c_id if no information known
                     if k == 'custom_content':
                         c_id = s_name
+
+                    # Merge with config from a MultiQC config file if we have it
+                    m_config.update(mod_cust_config.get(c_id, {}))
 
                     # Add information about the file to the config dict
                     if 'files' not in m_config:
@@ -211,8 +214,8 @@ def custom_module_classes():
         raise UserWarning
 
     # Go through each data type
-    parsed_modules = list()
-    for module_id, mod in cust_mods.items():
+    parsed_modules = OrderedDict()
+    for c_id, mod in cust_mods.items():
 
         # General Stats
         if mod['config'].get('plot_type') == 'generalstats':
@@ -238,24 +241,36 @@ def custom_module_classes():
             # Add namespace and description if not specified
             for m_id in gsheaders:
                 if 'namespace' not in gsheaders[m_id]:
-                    gsheaders[m_id]['namespace'] = mod['config'].get('namespace', module_id)
+                    gsheaders[m_id]['namespace'] = mod['config'].get('namespace', c_id)
 
             bm.general_stats_addcols(mod['data'], gsheaders)
 
         # Initialise this new module class and append to list
         else:
-            parsed_modules.append( MultiqcModule(module_id, mod) )
-            if mod['config'].get('plot_type') == 'html':
-                log.info("{}: Found 1 sample (html)".format(module_id))
-            elif mod['config'].get('plot_type') == 'image':
-                log.info("{}: Found 1 sample (image)".format(module_id))
+            # Is this file asking to be a sub-section under a parent section?
+            mod_id = mod['config'].get('parent_id', c_id)
+            # If we have any custom configuration from a MultiQC config file, update here
+            # This is done earlier for tsv files too, but we do it here so that it overwrites what was in the file
+            if mod_id in mod_cust_config:
+                mod['config'].update(mod_cust_config[mod_id])
+            # We've not seen this module section before (normal for most custom content)
+            if mod_id not in parsed_modules:
+                parsed_modules[mod_id] = MultiqcModule(mod_id, mod)
             else:
-                log.info("{}: Found {} samples ({})".format(module_id, len(mod['data']), mod['config'].get('plot_type')))
+                # New sub-section
+                parsed_modules[mod_id].update_init(c_id, mod)
+            parsed_modules[mod_id].add_cc_section(c_id, mod)
+            if mod['config'].get('plot_type') == 'html':
+                log.info("{}: Found 1 sample (html)".format(c_id))
+            elif mod['config'].get('plot_type') == 'image':
+                log.info("{}: Found 1 sample (image)".format(c_id))
+            else:
+                log.info("{}: Found {} samples ({})".format(c_id, len(mod['data']), mod['config'].get('plot_type')))
 
     # Sort sections if we have a config option for order
     mod_order = getattr(config, 'custom_content', {}).get('order', [])
-    sorted_modules = [parsed_mod for parsed_mod in parsed_modules if parsed_mod.anchor not in mod_order ]
-    sorted_modules.extend([parsed_mod for mod_id in mod_order for parsed_mod in parsed_modules if parsed_mod.anchor == mod_id ])
+    sorted_modules = [parsed_mod for parsed_mod in parsed_modules.values() if parsed_mod.anchor not in mod_order ]
+    sorted_modules.extend([parsed_mod for mod_id in mod_order for parsed_mod in parsed_modules.values() if parsed_mod.anchor == mod_id ])
 
     # If we only have General Stats columns then there are no module outputs
     if len(sorted_modules) == 0:
@@ -269,7 +284,13 @@ class MultiqcModule(BaseMultiqcModule):
 
     def __init__(self, c_id, mod):
 
-        modname = mod['config'].get('section_name', c_id.replace('_', ' ').title())
+        modname = c_id.replace('_', ' ').title()
+        mod_info = mod['config'].get('description')
+        if 'parent_name' in mod['config']:
+            modname = mod['config']['parent_name']
+            mod_info = mod['config'].get('parent_description')
+        elif 'section_name' in mod['config']:
+            modname = mod['config']['section_name']
         if modname == '' or modname is None:
             modname = 'Custom Content'
 
@@ -278,48 +299,81 @@ class MultiqcModule(BaseMultiqcModule):
             name = modname,
             anchor = mod['config'].get('section_anchor', c_id),
             href = mod['config'].get('section_href'),
-            info = mod['config'].get('description'),
+            info = mod_info,
             extra = mod['config'].get('extra')
         )
 
+        # Don't repeat the Custom Content name in the subtext
+        if self.info or self.extra:
+            self.intro = '<p>{}</p>{}'.format(self.info, self.extra)
+
+    def update_init(self, c_id, mod):
+        """
+        This function runs when we have already initialised a module
+        and this is a subsequent file that will be another subsection.
+
+        So most info should already be initialised properly.
+        We check if anything is empty and if we have it set in this file
+        we set it here.
+        """
+
+        if self.info is None or self.info == '':
+            self.info = mod['config'].get('parent_description')
+        if self.extra is None or self.info == '':
+            self.extra = mod['config'].get('extra', None)
+        # This needs overwriting again as it has already run on init
+        if self.info or self.extra:
+            self.intro = '<p>{}</p>{}'.format(self.info, self.extra)
+
+    def add_cc_section(self, c_id, mod):
+
+        section_name = mod['config'].get('section_name', c_id.replace('_', ' ').title())
+        if section_name == '' or section_name is None:
+            section_name = 'Custom Content'
+
+        section_description = mod['config'].get('description', '')
+
         pconfig = mod['config'].get('pconfig', {})
         if pconfig.get('title') is None:
-            pconfig['title'] = modname
+            pconfig['title'] = section_name
+
+        plot = None
+        content = None
 
         # Table
         if mod['config'].get('plot_type') == 'table':
             pconfig['sortRows'] = pconfig.get('sortRows', False)
             headers = mod['config'].get('headers')
-            self.add_section( plot = table.plot(mod['data'], headers, pconfig) )
-            self.write_data_file( mod['data'], "multiqc_{}".format(modname.lower().replace(' ', '_')) )
+            plot = table.plot(mod['data'], headers, pconfig)
+            self.write_data_file( mod['data'], "multiqc_{}".format(section_name.lower().replace(' ', '_')) )
 
         # Bar plot
         elif mod['config'].get('plot_type') == 'bargraph':
-            self.add_section( plot = bargraph.plot(mod['data'], mod['config'].get('categories'), pconfig) )
+            plot = bargraph.plot(mod['data'], mod['config'].get('categories'), pconfig)
 
         # Line plot
         elif mod['config'].get('plot_type') == 'linegraph':
-            self.add_section( plot = linegraph.plot(mod['data'], pconfig) )
+            plot = linegraph.plot(mod['data'], pconfig)
 
         # Scatter plot
         elif mod['config'].get('plot_type') == 'scatter':
-            self.add_section( plot = scatter.plot(mod['data'], pconfig) )
+            plot = scatter.plot(mod['data'], pconfig)
 
         # Heatmap
         elif mod['config'].get('plot_type') == 'heatmap':
-            self.add_section( plot = heatmap.plot(mod['data'], mod['config'].get('xcats'), mod['config'].get('ycats'), pconfig) )
+            plot = heatmap.plot(mod['data'], mod['config'].get('xcats'), mod['config'].get('ycats'), pconfig)
 
         # Beeswarm plot
         elif mod['config'].get('plot_type') == 'beeswarm':
-            self.add_section( plot = beeswarm.plot(mod['data'], pconfig) )
+            plot = beeswarm.plot(mod['data'], pconfig)
 
         # Raw HTML
         elif mod['config'].get('plot_type') == 'html':
-            self.add_section( content = mod['data'] )
+            content = mod['data']
 
         # Raw image file as html
         elif mod['config'].get('plot_type') == 'image':
-            self.add_section( content = mod['data'] )
+            content = mod['data']
 
         # Not supplied
         elif mod['config'].get('plot_type') == None:
@@ -328,6 +382,20 @@ class MultiqcModule(BaseMultiqcModule):
         # Not recognised
         else:
             log.warning("Error - custom content plot type '{}' not recognised for content ID {}".format(mod['config'].get('plot_type'), c_id))
+
+        # Don't use exactly the same title / description text as the main module
+        if section_name == self.name:
+            section_name = None
+        if section_description == self.info:
+            section_description = ''
+
+        self.add_section(
+            name = section_name,
+            anchor = c_id,
+            description = section_description,
+            plot = plot,
+            content = content
+        )
 
 
 def _find_file_header(f):

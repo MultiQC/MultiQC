@@ -118,6 +118,15 @@ $(function () {
       var stack_type = (action == 'set_percent') ? 'percent' : 'normal';
       mqc_plots[target]['config']['stacking'] = stack_type;
       mqc_plots[target]['config']['ytype'] = 'linear';
+      // Workaround for manually set y-axis maximums on the % stacked plot
+      if (action == 'set_percent'){
+        mqc_plots[target]['config']['old_ymax'] = mqc_plots[target]['config']['ymax'];
+        delete mqc_plots[target]['config']['ymax'];
+      } else {
+        if('old_ymax' in mqc_plots[target]['config']){
+          mqc_plots[target]['config']['ymax'] = mqc_plots[target]['config']['old_ymax'];
+        }
+      }
       plot_graph(target);
       var ylab = $(this).data('ylab');
       if(ylab != undefined){

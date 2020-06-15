@@ -227,12 +227,40 @@ And work with the following data file:
 # [...]
 ```
 
+This kind of customisation should work with most Custom Content types.
+For example, using an image called `some_science_mqc.jpeg` gives us a report section `some_science`,
+which we can then add a nicer name and description to:
+
+```yaml
+custom_data:
+    some_science:
+        section_name: 'Some real science'
+        description: 'This description comes from multiqc_config.yaml and helps to annotate the Custom Content image.'
+```
+
 As mentioned above - if no configuration is given, MultiQC will do its best to guess how to visualise
 your data appropriately. To see examples of typical file structures which are understood, see the
 [test data](https://github.com/ewels/MultiQC_TestData/tree/master/data/custom_content/no_config)
 used to develop this code.
 
 # Configuration
+
+## Grouping sections and subsections
+If you have multiple content types that you would like to group together with MultiQC sub-sections,
+you can do so using the following keys:
+
+```yaml
+parent_id: custom_section
+parent_name: 'Some grouped data'
+parent_description: 'This parent section contains one or more sub-sections below it'
+```
+
+Any custom-content files that share the same `parent_id` will be grouped.
+
+Note that some things, such as `parent_name` are taken from the first file that MultiQC finds
+with this `parent_id`. So it's a good idea to specify this in every file.
+`parent_description` and `extra` is taken from the first file where it is set.
+
 ## Order of sections
 If you have multiple different Custom Content sections, their order will be random
 and may vary between runs. To avoid this, you can specify an order in your MultiQC
