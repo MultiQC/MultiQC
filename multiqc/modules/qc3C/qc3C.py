@@ -905,7 +905,7 @@ class MultiqcModule(BaseMultiqcModule):
             log.warning("Could not parse qc3C JSON: '{}'".format(f['fn']))
             return
 
-        s_name = self.clean_s_name(os.basename(f['root']), os.dirname(f['root']))
+        s_name = self.clean_s_name(os.path.basename(f['root']), os.path.dirname(f['root']))
         if s_name in self.qc3c_data:
             log.debug("Duplicate sample name found! Overwriting: {}".format(f['s_name']))
 
@@ -1044,5 +1044,5 @@ class MultiqcModule(BaseMultiqcModule):
             self.add_data_source(f, s_name, section=analysis_mode)
 
         except KeyError as ex:
-            log.error("The entry '{}' was not found in the qc3C JSON file '{}'".format(str(ex), os.path.join(f['root'], f['fn'])))
+            log.error("The entry {} was not found in the qc3C JSON file '{}'".format(str(ex), os.path.join(f['root'], f['fn'])))
             return
