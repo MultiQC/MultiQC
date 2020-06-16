@@ -313,10 +313,8 @@ def parse_mapping_metrics_file(f):
         # fixing when deduplication wasn't performed
         if data.get('Number of duplicate marked reads', 'NA') == 'NA':
             data['Number of duplicate marked reads'] = 0
-
         if data.get('Number of duplicate marked and mate reads removed', 'NA') == 'NA':
             data['Number of duplicate marked and mate reads removed'] = 0
-
         if data.get('Number of unique reads (excl. duplicate marked reads)', 'NA') == 'NA':
             data['Number of unique reads (excl. duplicate marked reads)'] = data['Mapped reads']
 
@@ -326,16 +324,9 @@ def parse_mapping_metrics_file(f):
 
         # adding some missing bases percentages
         if exist_and_number(data, 'Total bases') and data['Total bases'] > 0:
-
-            if exist_and_number(data, 'Q30 bases (excl. dups & clipped bases)'):
-                data['Q30 bases (excl. dups & clipped bases) pct'] = \
-                    data['Q30 bases (excl. dups & clipped bases)'] / data['Total bases'] * 100.0
-
-            if exist_and_number(data, 'Mapped bases R1'):
-                data['Mapped bases R1 pct'] = data['Mapped bases R1'] / data['Total bases'] * 100.0
-
-            if exist_and_number(data, 'Mapped bases R2'):
-                data['Mapped bases R2 pct'] = data['Mapped bases R2'] / data['Total bases'] * 100.0
+            for m in ['Q30 bases (excl. dups & clipped bases)', 'Mapped bases R1', 'Mapped bases R2']:
+                if exist_and_number(data, m):
+                    data[m + ' pct'] = data[m] / data['Total bases'] * 100.0
 
     return data_by_readgroup, data_by_phenotype
 
