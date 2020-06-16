@@ -11,6 +11,8 @@
 
 #### Module updates
 
+* **DRAGEN**
+    * Fix issue where missing out fields could crash the module ([#1223](https://github.com/ewels/MultiQC/issues/1223))
 * **featureCounts**
     * Add support for output from [Rsubread](https://bioconductor.org/packages/release/bioc/html/Rsubread.html) ([#1022](https://github.com/ewels/MultiQC/issues/1022))
 * **Kaiju**
