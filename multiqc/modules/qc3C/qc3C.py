@@ -625,131 +625,138 @@ of interest.
             if s_name in self.qc3c_data:
                 log.debug("Duplicate sample name found! Overwriting: {}".format(f['s_name']))
 
-        analysis_mode = parsed['mode']
+        try:
+            analysis_mode = parsed['mode']
 
-        if analysis_mode == 'bam':
+            if analysis_mode == 'bam':
 
-            # set some variables to shorten the lines below
-            inf = parsed['classification']['informative']
-            uninf = parsed['classification']['uninformative']
-            n_cis_pairs = parsed['n_cis_pairs']
-            n_accepted_pairs = parsed['n_accepted_pairs']
-            n_paired_reads = n_accepted_pairs * 2
+                # set some variables to shorten the lines below
+                inf = parsed['classification']['informative']
+                uninf = parsed['classification']['uninformative']
+                n_cis_pairs = parsed['n_cis_pairs']
+                n_accepted_pairs = parsed['n_accepted_pairs']
+                n_paired_reads = n_accepted_pairs * 2
 
-            self.qc3c_data['bam'][s_name] = {'qc3C_version': parsed['runtime_info']['qc3C_version'],
-                                             'run_timestamp': parsed['runtime_info']['run_timestamp'],
-                                             'mode': parsed['mode'],
-                                             'enzymes': ', '.join(parsed['input_args']['enzymes']),
-                                             'seed': parsed['input_args']['seed'],
-                                             'sample_rate': _none_to(parsed['input_args']['sample_rate'], 1),
-                                             'max_obs': _none_to(parsed['input_args']['max_obs'], -1),
-                                             'n_skipped_reads': parsed['n_skipped_reads'],
-                                             'n_unmapped_reads': parsed['n_unmapped'],
-                                             'n_analysed_reads': parsed['n_analysed_reads'],
-                                             'n_low_mapq_reads': parsed['n_low_mapq'],
-                                             'n_ref_len_reads': parsed['n_ref_len'],
-                                             'n_secondary_reads': parsed['n_secondary'],
-                                             'n_supplementary_reads': parsed['n_supplementary'],
-                                             'n_weak_mapping_reads': parsed['n_weak_mapping'],
-                                             'n_ref_term_reads': parsed['n_ref_term'],
-                                             'n_accepted_reads': parsed['n_accepted_reads'],
-                                             'obs_insert_mean': parsed['obs_insert_mean'],
-                                             'obs_insert_median': parsed['obs_insert_median'],
-                                             'mean_readlen': parsed['mean_readlen'],
-                                             'n_analysed_pairs': parsed['n_analysed_pairs'],
-                                             'n_accepted_pairs': parsed['n_accepted_pairs'],
-                                             'p_trans_pairs': parsed['n_trans_pairs'] / n_accepted_pairs * 100,
-                                             'p_cis_pairs': n_cis_pairs / n_accepted_pairs * 100,
-                                             'unobs_fraction': parsed['unobs_fraction'] * 100,
-                                             'p_cs_start': parsed['digest_stats']['cs_start'] / n_paired_reads * 100,
-                                             'p_cs_term': parsed['digest_stats']['cs_term'] / n_paired_reads * 100,
-                                             'p_cs_full': parsed['digest_stats']['cs_full'] / n_paired_reads * 100,
-                                             'p_read_thru': parsed['digest_stats']['read_thru'] / n_paired_reads * 100,
-                                             'p_is_split':  parsed['digest_stats']['is_split'] / n_paired_reads * 100,
-                                             'adj_read_thru': parsed['digest_stats']['read_thru'] /
-                                                              n_paired_reads * 100 * 1/(1-parsed['unobs_fraction']),
-                                             'p_short_inserts': parsed['n_short_inserts'] / n_accepted_pairs * 100,
-                                             'n_informative_fr': inf['fr'],
-                                             'n_informative_rf': inf['rf'],
-                                             'n_informative_ffrr': inf['ffrr'],
-                                             'n_uninformative_religation': uninf['religation'],
-                                             'n_uninformative_dangling_ends': uninf['dangling_ends'],
-                                             'n_uninformative_self_circle': uninf['self_circle'],
-                                             'n_uninformative_ffrr': uninf['ffrr'],
-                                             'p_informative_fr': inf['fr'] / n_cis_pairs * 100,
-                                             'p_informative_rf': inf['rf'] / n_cis_pairs * 100,
-                                             'p_informative_ffrr': inf['ffrr'] / n_cis_pairs * 100,
-                                             'p_uninformative_religation': uninf['religation'] / n_cis_pairs * 100,
-                                             'p_uninformative_dangling_ends': uninf['dangling_ends'] / n_cis_pairs * 100,
-                                             'p_uninformative_self_circle': uninf['self_circle'] / n_cis_pairs * 100,
-                                             'p_uninformative_ffrr': uninf['ffrr'] / n_cis_pairs * 100,
-                                             'n_1kb': parsed['separation_bins']['counts'][0],
-                                             'n_5kb': parsed['separation_bins']['counts'][1],
-                                             'n_10kb': parsed['separation_bins']['counts'][2],
-                                             'p_1kb_vs_accepted': parsed['separation_bins']['vs_accepted'][0],
-                                             'p_5kb_vs_accepted': parsed['separation_bins']['vs_accepted'][1],
-                                             'p_10kb_vs_accepted': parsed['separation_bins']['vs_accepted'][2],
-                                             'p_1kb_vs_cis': parsed['separation_bins']['vs_all_cis'][0],
-                                             'p_5kb_vs_cis': parsed['separation_bins']['vs_all_cis'][1],
-                                             'p_10kb_vs_cis': parsed['separation_bins']['vs_all_cis'][2],
-                                             }
+                self.qc3c_data['bam'][s_name] = {'qc3C_version': parsed['runtime_info']['qc3C_version'],
+                                                 'run_timestamp': parsed['runtime_info']['run_timestamp'],
+                                                 'mode': parsed['mode'],
+                                                 'enzymes': ', '.join(parsed['input_args']['enzymes']),
+                                                 'seed': parsed['input_args']['seed'],
+                                                 'sample_rate': _none_to(parsed['input_args']['sample_rate'], 1),
+                                                 'max_obs': _none_to(parsed['input_args']['max_obs'], -1),
+                                                 'n_skipped_reads': parsed['n_skipped_reads'],
+                                                 'n_unmapped_reads': parsed['n_unmapped'],
+                                                 'n_analysed_reads': parsed['n_analysed_reads'],
+                                                 'n_low_mapq_reads': parsed['n_low_mapq'],
+                                                 'n_ref_len_reads': parsed['n_ref_len'],
+                                                 'n_secondary_reads': parsed['n_secondary'],
+                                                 'n_supplementary_reads': parsed['n_supplementary'],
+                                                 'n_weak_mapping_reads': parsed['n_weak_mapping'],
+                                                 'n_ref_term_reads': parsed['n_ref_term'],
+                                                 'n_accepted_reads': parsed['n_accepted_reads'],
+                                                 'obs_insert_mean': parsed['obs_insert_mean'],
+                                                 'obs_insert_median': parsed['obs_insert_median'],
+                                                 'mean_readlen': parsed['mean_readlen'],
+                                                 'n_analysed_pairs': parsed['n_analysed_pairs'],
+                                                 'n_accepted_pairs': parsed['n_accepted_pairs'],
+                                                 'p_trans_pairs': parsed['n_trans_pairs'] / n_accepted_pairs * 100,
+                                                 'p_cis_pairs': n_cis_pairs / n_accepted_pairs * 100,
+                                                 'unobs_fraction': parsed['unobs_fraction'] * 100,
+                                                 'p_cs_start': parsed['digest_stats']['cs_start'] / n_paired_reads * 100,
+                                                 'p_cs_term': parsed['digest_stats']['cs_term'] / n_paired_reads * 100,
+                                                 'p_cs_full': parsed['digest_stats']['cs_full'] / n_paired_reads * 100,
+                                                 'p_read_thru': parsed['digest_stats']['read_thru'] / n_paired_reads * 100,
+                                                 'p_is_split':  parsed['digest_stats']['is_split'] / n_paired_reads * 100,
+                                                 'adj_read_thru': parsed['digest_stats']['read_thru'] /
+                                                                  n_paired_reads * 100 * 1/(1-parsed['unobs_fraction']),
+                                                 'p_short_inserts': parsed['n_short_inserts'] / n_accepted_pairs * 100,
+                                                 'n_informative_fr': inf['fr'],
+                                                 'n_informative_rf': inf['rf'],
+                                                 'n_informative_ffrr': inf['ffrr'],
+                                                 'n_uninformative_religation': uninf['religation'],
+                                                 'n_uninformative_dangling_ends': uninf['dangling_ends'],
+                                                 'n_uninformative_self_circle': uninf['self_circle'],
+                                                 'n_uninformative_ffrr': uninf['ffrr'],
+                                                 'p_informative_fr': inf['fr'] / n_cis_pairs * 100,
+                                                 'p_informative_rf': inf['rf'] / n_cis_pairs * 100,
+                                                 'p_informative_ffrr': inf['ffrr'] / n_cis_pairs * 100,
+                                                 'p_uninformative_religation': uninf['religation'] / n_cis_pairs * 100,
+                                                 'p_uninformative_dangling_ends': uninf['dangling_ends'] / n_cis_pairs * 100,
+                                                 'p_uninformative_self_circle': uninf['self_circle'] / n_cis_pairs * 100,
+                                                 'p_uninformative_ffrr': uninf['ffrr'] / n_cis_pairs * 100,
+                                                 'n_1kb': parsed['separation_bins']['counts'][0],
+                                                 'n_5kb': parsed['separation_bins']['counts'][1],
+                                                 'n_10kb': parsed['separation_bins']['counts'][2],
+                                                 'p_1kb_vs_accepted': parsed['separation_bins']['vs_accepted'][0],
+                                                 'p_5kb_vs_accepted': parsed['separation_bins']['vs_accepted'][1],
+                                                 'p_10kb_vs_accepted': parsed['separation_bins']['vs_accepted'][2],
+                                                 'p_1kb_vs_cis': parsed['separation_bins']['vs_all_cis'][0],
+                                                 'p_5kb_vs_cis': parsed['separation_bins']['vs_all_cis'][1],
+                                                 'p_10kb_vs_cis': parsed['separation_bins']['vs_all_cis'][2],
+                                                 }
 
-            from itertools import zip_longest
-            fhist = {}
-            for x, y in zip_longest(parsed['separation_histogram']['mid_points'],
-                                    parsed['separation_histogram']['counts']):
-                fhist[float(x)] = float(y)
-            self.qc3c_data['bam'][s_name]['frag_hist'] = fhist
+                from itertools import zip_longest
+                fhist = {}
+                for x, y in zip_longest(parsed['separation_histogram']['mid_points'],
+                                        parsed['separation_histogram']['counts']):
+                    fhist[float(x)] = float(y)
+                self.qc3c_data['bam'][s_name]['frag_hist'] = fhist
 
-        elif analysis_mode == 'kmer':
+            elif analysis_mode == 'kmer':
 
-            for k in 'raw_fraction', 'adj_fraction', 'unobs_fraction':
-                parsed[k] = np.array(parsed[k]).mean() * 100
+                for k in 'raw_fraction', 'adj_fraction', 'unobs_fraction':
+                    parsed[k] = np.array(parsed[k]).mean() * 100
 
-            self.qc3c_data['kmer'][s_name] = {'qc3C_version': parsed['runtime_info']['qc3C_version'],
-                                              'run_timestamp': parsed['runtime_info']['run_timestamp'],
-                                              'mode': parsed['mode'],
-                                              'kmer_size': parsed['input_args']['kmer_size'],
-                                              'enzymes': ', '.join(parsed['input_args']['enzymes']),
-                                              'seed': parsed['input_args']['seed'],
-                                              'sample_rate': _none_to(parsed['input_args']['sample_rate'], 1),
-                                              'max_freq': parsed['input_args']['max_coverage'],
-                                              'mean_insert': parsed['input_args']['mean_insert'],
-                                              'max_freq_quantile': parsed['input_args']['max_freq_quantile'],
-                                              'max_obs': _none_to(parsed['input_args']['max_obs'], -1),
-                                              'n_skipped': parsed['n_parsed_reads'] - parsed['n_analysed_reads'],
-                                              'n_analysed_reads': parsed['n_analysed_reads'],
-                                              'n_too_short': parsed['n_too_short'],
-                                              'n_no_flank': parsed['n_no_flank'],
-                                              'n_ambiguous': parsed['n_ambiguous'],
-                                              'n_high_cov': parsed['n_high_cov'],
-                                              'n_accepted_reads': parsed['n_accepted_reads'],
-                                              'n_without_junc': parsed['n_without_junc'],
-                                              'n_with_junc': parsed['n_with_junc'],
-                                              'mean_readlen': parsed['mean_readlen'],
-                                              'n_cs_start': parsed['cs_start'],
-                                              'raw_fraction': parsed['raw_fraction'],
-                                              'adj_fraction': parsed['adj_fraction'],
-                                              'unobs_fraction': parsed['unobs_fraction'],
-                                              }
+                self.qc3c_data['kmer'][s_name] = {'qc3C_version': parsed['runtime_info']['qc3C_version'],
+                                                  'run_timestamp': parsed['runtime_info']['run_timestamp'],
+                                                  'mode': parsed['mode'],
+                                                  'kmer_size': parsed['input_args']['kmer_size'],
+                                                  'enzymes': ', '.join(parsed['input_args']['enzymes']),
+                                                  'seed': parsed['input_args']['seed'],
+                                                  'sample_rate': _none_to(parsed['input_args']['sample_rate'], 1),
+                                                  'max_freq': parsed['input_args']['max_coverage'],
+                                                  'mean_insert': parsed['input_args']['mean_insert'],
+                                                  'max_freq_quantile': parsed['input_args']['max_freq_quantile'],
+                                                  'max_obs': _none_to(parsed['input_args']['max_obs'], -1),
+                                                  'n_skipped': parsed['n_parsed_reads'] - parsed['n_analysed_reads'],
+                                                  'n_analysed_reads': parsed['n_analysed_reads'],
+                                                  'n_too_short': parsed['n_too_short'],
+                                                  'n_no_flank': parsed['n_no_flank'],
+                                                  'n_ambiguous': parsed['n_ambiguous'],
+                                                  'n_high_cov': parsed['n_high_cov'],
+                                                  'n_accepted_reads': parsed['n_accepted_reads'],
+                                                  'n_without_junc': parsed['n_without_junc'],
+                                                  'n_with_junc': parsed['n_with_junc'],
+                                                  'mean_readlen': parsed['mean_readlen'],
+                                                  'n_cs_start': parsed['cs_start'],
+                                                  'raw_fraction': parsed['raw_fraction'],
+                                                  'adj_fraction': parsed['adj_fraction'],
+                                                  'unobs_fraction': parsed['unobs_fraction'],
+                                                  }
 
-        # include the junction frequencies (1 or many depending on digest)
-        self.qc3c_data[analysis_mode][s_name].update(parsed['junction_frequency'])
+            # include the junction frequencies (1 or many depending on digest)
+            self.qc3c_data[analysis_mode][s_name].update(parsed['junction_frequency'])
 
-        # calculate the degeneracy of junction sequences per enzymatic combination (5p end =/= 3p end)
-        # this can vary due to ambiguous bases in restriction site
-        degen_count = {'{}/{}'.format(v['enz5p'], v['enz3p']): 4**v['junction'].count('N')
-                       for k, v in parsed['digestion']['junctions'].items()}
-        # sort these by "enzyme combo + junction"
-        degen_count = OrderedDict(sorted(degen_count.items(), key=lambda x: x[0]))
-        # get a palette for this series
-        cols = color_picker(list(degen_count.values()))
-        # sort these in accordance with that above
-        juncs = np.sort(np.array([(k.split(' ')[0], k) for k in parsed['junction_frequency']],
-                                 dtype=np.dtype([('a', 'S100'), ('b', 'S100')])))
+            # calculate the degeneracy of junction sequences per enzymatic combination (5p end =/= 3p end)
+            # this can vary due to ambiguous bases in restriction site
+            degen_count = {'{}/{}'.format(v['enz5p'], v['enz3p']): 4**v['junction'].count('N')
+                           for k, v in parsed['digestion']['junctions'].items()}
+            # sort these by "enzyme combo + junction"
+            degen_count = OrderedDict(sorted(degen_count.items(), key=lambda x: x[0]))
+            # get a palette for this series
+            cols = color_picker(list(degen_count.values()))
+            # sort these in accordance with that above
+            juncs = np.sort(np.array([(k.split(' ')[0], k) for k in parsed['junction_frequency']],
+                                     dtype=np.dtype([('a', 'S100'), ('b', 'S100')])))
 
-        # keep a record of how these should be colored per sample
-        self.digest_junctions[analysis_mode][s_name] = \
-            [{'name': juncs[i][1].decode(), 'color': cols[i]} for i in range(len(juncs))]
+            # keep a record of how these should be colored per sample
+            self.digest_junctions[analysis_mode][s_name] = \
+                [{'name': juncs[i][1].decode(), 'color': cols[i]} for i in range(len(juncs))]
 
-        self.add_data_source(f, s_name, section=analysis_mode)
+            self.add_data_source(f, s_name, section=analysis_mode)
+
+        except KeyError as ex:
+            import os
+            log.error('An error ocurred while parsing qc3C JSON file {}'
+                      .format(os.path.join(f['root'], f['fn'])))
+            raise UserWarning(ex)
