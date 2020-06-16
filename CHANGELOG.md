@@ -8,6 +8,8 @@
 
 * [**HOPS**](https://www.github.com/rhubler/HOPS)
   * Post-alignment ancient DNA analysis tool for MALT
+* [**qc3C**](https://github.com/cerebis/qc3C)
+  * Reference-free QC of Hi-C sequencing data
 
 #### Module updates
 
