@@ -1,19 +1,21 @@
+#!/usr/bin/env python
+
+""" MultiQC module to parse output from qc3C """
+
 from __future__ import print_function
+from collections import OrderedDict, defaultdict
+import itertools
 import json
 import logging
 import numpy as np
 import os
 import re
-from collections import OrderedDict, defaultdict
-from itertools import zip_longest
+
 from multiqc.modules.base_module import BaseMultiqcModule
 from multiqc.plots import table, bargraph, linegraph
-from os.path import dirname, basename
 
 log = logging.getLogger(__name__)
 
-
-#
 # A 64 color palette defined in four gradient blocks. Red->Yellow, Yellow->Green, Green->Blue, Blue->Deep Blue
 # The method color_picker uses these to sample a gradient with varying sparseness
 
@@ -65,9 +67,12 @@ class MultiqcModule(BaseMultiqcModule):
 
     def __init__(self):
         # Initialise the parent object
-        super(MultiqcModule, self).__init__(name='qc3C', anchor='qc3C',
-                                            href="http://github.com/cerebis/qc3C",
-                                            info="provides reference-free and BAM based quality control for Hi-C data")
+        super(MultiqcModule, self).__init__(
+            name = 'qc3C',
+            anchor = 'qc3C',
+            href = "http://github.com/cerebis/qc3C",
+            info = "provides reference-free and BAM based quality control for Hi-C data"
+        )
 
         self.qc3c_data = defaultdict(dict)
         self.digest_junctions = defaultdict(dict)
@@ -82,165 +87,206 @@ class MultiqcModule(BaseMultiqcModule):
         n_reports = len(self.qc3c_data['kmer']) + len(self.qc3c_data['bam'])
         if n_reports == 0:
             raise UserWarning('No reports found')
+
         log.info("Found {} reports".format(n_reports))
 
         if len(self.qc3c_data['bam']) > 0:
 
             self.write_data_file(self.qc3c_data['bam'], 'multiqc_qc3c_bam')
-            log.info('Found {} BAM analysis reports'.format(len(self.qc3c_data['bam'])))
+            log.debug('Found {} BAM analysis reports'.format(len(self.qc3c_data['bam'])))
 
             self.add_section(
-                name='BAM mode runtime details',
-                anchor='bam-runtime-parameters',
-                description="""This table includes user specified input options, observed 
-                read-length and estimated insert size""",
-                plot=self.bam_runtime_table())
+                name = 'BAM mode runtime details',
+                anchor = 'qc3C-bam-runtime-parameters',
+                description = "This table includes user specified input options, observed read-length and estimated insert size",
+                plot = self.bam_runtime_table()
+            )
 
             self.add_section(
-                name='BAM mode read-pair breakdown',
-                anchor='bam-hic-fraction',
-                description="""This table details various alignment features which are potentially of interest to 
-researchers attempting to assess the quality of a Hi-C library.
-
-Here, the **adjusted fraction of read-through** events can be taken as a estimate of the fraction of Hi-C read-pairs
-within the library.
-
-* _trans_ (inter-reference) and _cis_ (intra-reference) pairs.
-* The fraction of _cis_ pairs whose separation is less than 1000 bp.
-* The fraction of total insert extent which was unobserable.
-* The fraction of accepted reads whose alignment began with a cutsite.
-* The fraction of accepted reads whose alignment ended in a cutsite.
-* The fraction of accepted reads which fully aligned and ended in a cutsite.
-* The fraction of reads which contained a suspected read-through event (across a junction)
-* The fraction of read-through events whose 3-prime end further aligned elsewhere.
-* The fraction of read-through events adjusted for unobservable extent.
+                name = 'BAM mode read-pair breakdown',
+                anchor = 'qc3C-bam-hic-fraction',
+                description = """
+                    This table details various alignment features which are potentially of interest to
+                    researchers attempting to assess the quality of a Hi-C library.
                 """,
-                plot=self.bam_signal_table())
+                helptext = """
+                    Here, the **adjusted fraction of read-through** events can be taken as a estimate of the fraction of Hi-C read-pairs
+                    within the library.
+
+                    * _trans_ (inter-reference) and _cis_ (intra-reference) pairs.
+                    * The fraction of _cis_ pairs whose separation is less than 1000 bp.
+                    * The fraction of total insert extent which was unobserable.
+                    * The fraction of accepted reads whose alignment began with a cutsite.
+                    * The fraction of accepted reads whose alignment ended in a cutsite.
+                    * The fraction of accepted reads which fully aligned and ended in a cutsite.
+                    * The fraction of reads which contained a suspected read-through event (across a junction)
+                    * The fraction of read-through events whose 3-prime end further aligned elsewhere.
+                    * The fraction of read-through events adjusted for unobservable extent.
+                """,
+                plot = self.bam_signal_table()
+            )
 
             self.add_section(
-                name='BAM mode read parsing',
-                anchor='bam-acceptance-plot',
-                description="""This figure displays a breakdown of proportion of parsed reads rejected due to various 
-                criteria and the proportion that were accepted.""",
-                plot=self.bam_acceptance_plot())
+                name = 'BAM mode read parsing',
+                anchor = 'qc3C-bam-acceptance-plot',
+                description = """
+                    This figure displays a breakdown of proportion of parsed reads rejected due to various
+                    criteria and the proportion that were accepted.
+                """,
+                plot = self.bam_acceptance_plot()
+            )
 
             self.add_section(
-                name='BAM mode HiCPro categories',
-                anchor='bam-hicpro-table',
-                description="""This table details the read-pair categorisation devised by 
-[HiC-Pro](https://github.com/nservant/HiC-Pro).
-
-As the field has moved from 6-cutter to 4-cutter enzymes, and subsequently dual-enzyme digests, the higher density of 
-sites has made this framework less useful, since it has become increasingly easy to satisfy the intervening site
-criteria.""",
-                plot=self.bam_hicpro_table())
-
-            self.add_section(
-                name='BAM mode HiC-Pro validation',
-                anchor='bam-valid-plot',
-                description="""A visualisation of the read-pair categories devised by 
-[HiC-Pro](https://github.com/nservant/HiC-Pro).
-
-As the field has moved from 6-cutter to 4-cutter enzymes, and subsequently dual-enzyme digests, the higher density of 
-sites has made this framework less useful, since it has become increasingly easy to satisfy the intervening site
-criteria.""",
-                plot=self.bam_valid_plot())
+                name = 'BAM mode HiCPro categories',
+                anchor = 'qc3C-bam-hicpro-table',
+                description = """
+                    This table details the read-pair categorisation devised by
+                    [HiC-Pro](https://github.com/nservant/HiC-Pro).
+                """,
+                helptext = """
+                    As the field has moved from 6-cutter to 4-cutter enzymes, and subsequently dual-enzyme digests, the higher density of
+                    sites has made this framework less useful, since it has become increasingly easy to satisfy the intervening site
+                    criteria.
+                """,
+                plot = self.bam_hicpro_table()
+            )
 
             self.add_section(
-                name='BAM mode junction breakdown',
-                anchor='bam-junction-plot',
-                description="""This figure displays the frequency at which a library's possible junction sequences 
-are actually observed in the reads. 
-
-For simple single-enzyme digests, there is only one possible junction sequence, while for dual-enzyme (Phase) or 
-digests with ambiguous sites (Arima), the number of possible junction sequences increases.
-                
-How efficiently the more complicated library protocols are at producing hybrid junctions is possibly just a point 
-of interest.
-
-**Note:** in BAM mode, the counts **are** controlled for false positives, in the sense that read alignments must 
-terminate at a cutsite, but the read sequence must continue and contain the observed junction.""",
-                plot=self.bam_junction_plot())
-
-            self.add_section(
-                name='BAM mode long-range pairs',
-                anchor='bam-longrange-table',
-                description="""This table details the coarse binning of read-pairs based on separation distance. Only 
-pairs which mapped to the same reference (_cis_ pairs) are considered and therefore, for fragmented references, there 
-will exist a negative bias against long-range pairs.
-                
-Ideally, Hi-C proximity ligation should produce many pairs which are greater than 1000 bp apart.""",
-                plot=self.bam_longrange_table())
+                name = 'BAM mode HiC-Pro validation',
+                anchor = 'qc3C-bam-valid-plot',
+                description = """
+                    A visualisation of the read-pair categories devised by
+                    [HiC-Pro](https://github.com/nservant/HiC-Pro).
+                """,
+                helptext = """
+                    As the field has moved from 6-cutter to 4-cutter enzymes, and subsequently dual-enzyme digests, the higher density of
+                    sites has made this framework less useful, since it has become increasingly easy to satisfy the intervening site
+                    criteria.
+                """,
+                plot = self.bam_valid_plot()
+            )
 
             self.add_section(
-                name='BAM mode distribution of fragment separation',
-                anchor='bam-fragment-histogram',
-                description="""This figure displays the full histogram of read-pair separation. The horizontal axis 
-follows a log10 scale to accomodate very large separations. The inferred insert size for each library is represented 
-by a grey and dashed vertical line. 
-                
-A characteristic of Hi-C libraries, is the presence of a large peak below 1000 bp. qc3C attributes this to regular and 
-undesirable shotgun pairs creeping through the Hi-C protocol. The peak is used by qc3C to infer the insert size, which 
-is later employed to estimate unobservable extent of inserts.
+                name = 'BAM mode junction breakdown',
+                anchor = 'qc3C-bam-junction-plot',
+                description = """
+                    This figure displays the frequency at which a library's possible junction sequences
+                    are actually observed in the reads.
+                """,
+                helptext = """
+                    For simple single-enzyme digests, there is only one possible junction sequence, while for dual-enzyme (Phase) or
+                    digests with ambiguous sites (Arima), the number of possible junction sequences increases.
 
-**Note:** this value can be significantly smaller than what a sequencing facility might quote the experimentally
-determined insert size to be. This discrepancy can be explained by the failure to account for the additional adapter
-sequence when fragments are assessed during library preparation.""",
-                plot=self.bam_fragment_histogram())
+                    How efficiently the more complicated library protocols are at producing hybrid junctions is possibly just a point
+                    of interest.
+
+                    **Note:** in BAM mode, the counts **are** controlled for false positives, in the sense that read alignments must
+                    terminate at a cutsite, but the read sequence must continue and contain the observed junction.
+                """,
+                plot = self.bam_junction_plot()
+            )
+
+            self.add_section(
+                name = 'BAM mode long-range pairs',
+                anchor = 'qc3C-bam-longrange-table',
+                description = "This table details the coarse binning of read-pairs based on separation distance.",
+                helptext = """
+                    Only pairs which mapped to the same reference (_cis_ pairs) are considered and therefore, for
+                    fragmented references, there will exist a negative bias against long-range pairs.
+
+                    Ideally, Hi-C proximity ligation should produce many pairs which are greater than 1000 bp apart.
+                """,
+                plot = self.bam_longrange_table()
+            )
+
+            self.add_section(
+                name = 'BAM mode distribution of fragment separation',
+                anchor = 'qc3C-bam-fragment-histogram',
+                description = """
+                    This figure displays the full histogram of read-pair separation. The horizontal axis
+                    follows a log10 scale to accomodate very large separations. The inferred insert size for each library is represented
+                    by a grey and dashed vertical line.
+                """,
+                helptext = """
+                    A characteristic of Hi-C libraries, is the presence of a large peak below 1000 bp. qc3C attributes this to regular and
+                    undesirable shotgun pairs creeping through the Hi-C protocol. The peak is used by qc3C to infer the insert size, which
+                    is later employed to estimate unobservable extent of inserts.
+
+                    **Note:** this value can be significantly smaller than what a sequencing facility might quote the experimentally
+                    determined insert size to be. This discrepancy can be explained by the failure to account for the additional adapter
+                    sequence when fragments are assessed during library preparation.
+                """,
+                plot = self.bam_fragment_histogram()
+            )
 
         if len(self.qc3c_data['kmer']) > 0:
 
             self.write_data_file(self.qc3c_data['kmer'], 'multiqc_qc3c_kmer')
-            log.info('Found {} k-mer analysis reports'.format(len(self.qc3c_data['kmer'])))
+            log.debug('Found {} k-mer analysis reports'.format(len(self.qc3c_data['kmer'])))
 
             self.add_section(
-                name='K-mer mode runtime details',
-                anchor='kmer-runtime-parameters',
-                description="""This table includes user specified input options, observed 
-                read-length and k-mer high coverage cutoff.""",
-                plot=self.kmer_runtime_table())
+                name = 'K-mer mode runtime details',
+                anchor = 'qc3C-kmer-runtime-parameters',
+                description = """
+                    This table includes user specified input options, observed
+                    read-length and k-mer high coverage cutoff.
+                """,
+                plot = self.kmer_runtime_table()
+            )
 
             self.add_section(
-                name='K-mer mode Hi-C fraction',
-                anchor='kmer-hic-fraction',
-                description="""This table lists the inferred proportion of Hi-C proximity ligation fragments. 
-                
-Here, **Mean adjusted Hi-C fraction** represents the best estimate of the proportion of a library's read-pairs which are 
-a product of proximity ligation. This figure is arrived at by correcting the raw estimate for the fraction of insert
-extent which was not observable. 
+                name = 'K-mer mode Hi-C fraction',
+                anchor = 'qc3C-kmer-hic-fraction',
+                description = "This table lists the inferred proportion of Hi-C proximity ligation fragments.",
+                helptext = """
+                    Here, **Mean adjusted Hi-C fraction** represents the best estimate of the proportion of a library's read-pairs which are
+                    a product of proximity ligation. This figure is arrived at by correcting the raw estimate for the fraction of insert
+                    extent which was not observable.
 
-The observable extent is limited by the length of reads relative to the supplied insert size, as well as a further 
-constraint on flanking sequence around any suspected junction sequence.""",
-                plot=self.kmer_signal_table())
-
-            self.add_section(
-                name='K-mer mode read parsing',
-                anchor='kmer-acceptance-plot',
-                description="""This figure displays a breakdown of proportion of parsed reads rejected due to various 
-                criteria and the proportion that were accepted.""",
-                plot=self.kmer_acceptance_plot())
+                    The observable extent is limited by the length of reads relative to the supplied insert size, as well as a further
+                    constraint on flanking sequence around any suspected junction sequence.
+                """,
+                plot = self.kmer_signal_table()
+            )
 
             self.add_section(
-                name='K-mer mode junction proportion',
-                anchor='kmer-signal-plot',
-                description="""This figure displays the proportion of reads which contained a putative junction
-                sequence. The raw proportion of Hi-C reads cannot be greater than this value.""",
-                plot=self.kmer_signal_plot())
+                name = 'K-mer mode read parsing',
+                anchor = 'qc3C-kmer-acceptance-plot',
+                description = """
+                    This figure displays a breakdown of proportion of parsed reads rejected due to various
+                    criteria and the proportion that were accepted.
+                """,
+                plot = self.kmer_acceptance_plot()
+            )
 
             self.add_section(
-                name='K-mer mode junction breakdown',
-                anchor='kmer-junction-plot',
-                description="""This figure displays the frequency at which a library's possible junction sequences 
-are actually observed in the reads. 
+                name = 'K-mer mode junction proportion',
+                anchor = 'qc3C-kmer-signal-plot',
+                description = """
+                    This figure displays the proportion of reads which contained a putative junction
+                    sequence. The raw proportion of Hi-C reads cannot be greater than this value.
+                """,
+                plot = self.kmer_signal_plot()
+            )
 
-For simple single-enzyme digests, there is only one possible junction sequence, while for dual-enzyme (Phase) or 
-digests with ambiguous sites (Arima), the number of possible junction sequences increases.
-                
-How efficiently the more complicated library protocols are at producing hybrid junctions is possibly just a point 
-of interest.
+            self.add_section(
+                name = 'K-mer mode junction breakdown',
+                anchor = 'qc3C-kmer-junction-plot',
+                description = """
+                    This figure displays the frequency at which a library's possible junction sequences
+                    are actually observed in the reads.
+                """,
+                helptext = """
+                    For simple single-enzyme digests, there is only one possible junction sequence, while for dual-enzyme (Phase) or
+                    digests with ambiguous sites (Arima), the number of possible junction sequences increases.
 
-**Note:** in k-mer mode, the counts are not controlled for false positives.""",
-                plot=self.kmer_junction_plot())
+                    How efficiently the more complicated library protocols are at producing hybrid junctions is possibly just a point
+                    of interest.
+
+                    **Note:** in k-mer mode, the counts are not controlled for false positives.
+                """,
+                plot = self.kmer_junction_plot()
+            )
 
     @staticmethod
     def _drop_time(s):
@@ -255,87 +301,159 @@ of interest.
 
     def bam_runtime_table(self):
 
-        config = {'id': 'bam_runtime_table',
-                  'namespace': 'qc3C',
-                  'col1_header': 'Sample'}
+        config = {
+            'id': 'qc3C_bam_runtime_table',
+            'namespace': 'qc3C',
+            'col1_header': 'Sample'
+        }
 
         headers = OrderedDict({
-            'run_timestamp': {'title': 'Date',
-                              'description': "Analysis time stamp",
-                              'modify': MultiqcModule._drop_time},
-            'mode': {'title': 'Run Mode',
-                     'description': 'Analysis mode used'},
-            'min_mapq': {'title': 'Min MapQ',
-                         'description': 'Minimum accepted mapping quality',
-                         'min': 0, 'format': '{:d}', 'scale': False},
-            'enzymes': {'title': 'Digest',
-                        'description': 'Enzymes used in digest'},
-            'seed': {'title': 'Seed',
-                     'description': 'Random seed',
-                     'format': '{:d}', 'scale': False},
-            'max_obs': {'title': 'Max obs',
-                        'description': 'User specified maximum number of observations',
-                        'min': 0, 'format': '{:,d}', 'scale': 'OrRd',
-                        'modify': lambda x: 'n/a' if x == -1 else x},
-            'n_accepted_pairs': {'title': 'Accepted pairs',
-                                 'description': 'Number of pairs accepted for analysis',
-                                 'min': 0, 'format': '{:,d}', 'scale': 'BuGn'},
-            'sample_rate': {'title': 'Sample rate',
-                            'description': 'Sub-sampling probability',
-                            'min': 0, 'max': 1, 'format': '{:g}', 'scale': 'Greys'},
-            'obs_insert_mean': {'title': 'Insert mean',
-                                'description': 'Estimated mean insert size',
-                                'min': 0, 'format': '{:,.0f}', 'suffix': 'bp', 'scale': 'Purples'},
-            'obs_insert_median': {'title': 'Insert median',
-                                  'description': 'Estimated median insert size',
-                                  'min': 0, 'format': '{:,.0f}', 'suffix': 'bp', 'scale': 'Greens'},
-            'mean_readlen': {'title': 'Read length',
-                             'description': 'Observed average read length',
-                             'format': '{:,.0f}', 'suffix': 'bp', 'scale': 'Blues'},
+            'run_timestamp': {
+                'title': 'Date',
+                'description': "Analysis time stamp",
+                'modify': MultiqcModule._drop_time
+            },
+            'mode': {
+                'title': 'Run Mode',
+                'description': 'Analysis mode used'
+            },
+            'min_mapq': {
+                'title': 'Min MapQ',
+                'description': 'Minimum accepted mapping quality',
+                'min': 0,
+                'format': '{:d}',
+                'scale': False
+            },
+            'enzymes': {
+                'title': 'Digest',
+                'description': 'Enzymes used in digest'
+            },
+            'seed': {
+                'title': 'Seed',
+                'description': 'Random seed',
+                'format': '{:d}',
+                'scale': False
+            },
+            'max_obs': {
+                'title': 'Max obs',
+                'description': 'User specified maximum number of observations',
+                'min': 0,
+                'format': '{:,d}',
+                'scale': 'OrRd',
+                'modify': lambda x: 'n/a' if x == -1 else x
+            },
+            'n_accepted_pairs': {
+                'title': 'Accepted pairs',
+                'description': 'Number of pairs accepted for analysis',
+                'min': 0,
+                'format': '{:,d}',
+                'scale': 'BuGn'
+            },
+            'sample_rate': {
+                'title': 'Sample rate',
+                'description': 'Sub-sampling probability',
+                'min': 0,
+                'max': 1,
+                'format': '{:g}',
+                'scale': 'Greys'
+            },
+            'obs_insert_mean': {
+                'title': 'Insert mean',
+                'description': 'Estimated mean insert size',
+                'min': 0,
+                'format': '{:,.0f}',
+                'suffix': 'bp',
+                'scale': 'Purples'
+            },
+            'obs_insert_median': {
+                'title': 'Insert median',
+                'description': 'Estimated median insert size',
+                'min': 0,
+                'format': '{:,.0f}',
+                'suffix': 'bp',
+                'scale': 'Greens'
+            },
+            'mean_readlen': {
+                'title': 'Read length',
+                'description': 'Observed average read length',
+                'format': '{:,.0f}',
+                'suffix': 'bp',
+                'scale': 'Blues'
+            },
         })
         return table.plot(self.qc3c_data['bam'], headers, config)
 
     def bam_longrange_table(self):
-        config = {'id': 'bam_longrange_table',
-                  'namespace': 'qc3C',
-                  }
+        config = {
+            'id': 'qc3C_bam_longrange_table',
+            'namespace': 'qc3C',
+        }
 
         headers = OrderedDict({
-            'n_1kb': {'title': 'Pairs >1000 bp',
-                      'description': 'Number of pairs with >1kbp separation',
-                      'min': 0, 'format': '{:,d}', 'scale': 'Purples'},
-            'n_5kb': {'title': 'Pairs >5000 bp',
-                      'description': 'Number of pairs with >5kbp separation',
-                      'min': 0, 'format': '{:,d}', 'scale': 'Blues'},
-            'n_10kb': {'title': 'Pairs >10000 bp',
-                       'description': 'Number of pairs with >10kbp separation',
-                       'min': 0, 'format': '{:,d}', 'scale': 'Greens'},
-            'p_1kb_vs_accepted': {'title': '% >1000 bp',
-                                 'description': 'Fraction of pairs with >1kbp separation vs all accepted pairs',
-                                 'min': 0, 'max': 100, 'suffix': '%', 'scale': 'Purples'},
-            'p_5kb_vs_accepted': {'title': '% >5000 bp',
-                                 'description': 'Fraction of pairs with >5kbp separation vs all accepted pairs',
-                                 'min': 0, 'max': 100, 'suffix': '%', 'scale': 'Blues'},
-            'p_10kb_vs_accepted': {'title': '% >10000 bp',
-                                  'description': 'Fraction of pairs with >10kbp separation vs all accepted pairs',
-                                  'min': 0, 'max': 100, 'suffix': '%', 'scale': 'Greens'},
-            })
+            'n_1kb': {
+                'title': 'Pairs >1000 bp',
+                'description': 'Number of pairs with >1kbp separation',
+                'min': 0,
+                'format': '{:,d}',
+                'scale': 'Purples'
+            },
+            'n_5kb': {
+                'title': 'Pairs >5000 bp',
+                'description': 'Number of pairs with >5kbp separation',
+                'min': 0,
+                'format': '{:,d}',
+                'scale': 'Blues'
+            },
+            'n_10kb': {
+                'title': 'Pairs >10000 bp',
+                'description': 'Number of pairs with >10kbp separation',
+                'min': 0,
+                'format': '{:,d}',
+                'scale': 'Greens'
+            },
+            'p_1kb_vs_accepted': {
+                'title': '% >1000 bp',
+                'description': 'Fraction of pairs with >1kbp separation vs all accepted pairs',
+                'min': 0,
+                'max': 100,
+                'suffix': '%',
+                'scale': 'Purples'
+            },
+            'p_5kb_vs_accepted': {
+                'title': '% >5000 bp',
+                'description': 'Fraction of pairs with >5kbp separation vs all accepted pairs',
+                'min': 0,
+                'max': 100,
+                'suffix': '%',
+                'scale': 'Blues'
+            },
+            'p_10kb_vs_accepted': {
+                'title': '% >10000 bp',
+                'description': 'Fraction of pairs with >10kbp separation vs all accepted pairs',
+                'min': 0,
+                'max': 100,
+                'suffix': '%',
+                'scale': 'Greens'
+            },
+        })
 
         return table.plot(self.qc3c_data['bam'], headers, config)
 
     def bam_longrange_plot(self):
-        config = {'id': 'bam_longrange_plot',
-                  'namespace': 'qc3C',
-                  'title': 'qc3C: BAM mode long-range pairs',
-                  'ylab': 'Number of Reads',
-                  'stacking': None,
-                  'cpswitch': False,
-                  'tt_percentages': False,
-                  'tt_suffix': '%',
-                  'data_labels': [
-                      {'name': 'vs Accepted', 'hide_zero_cats': False},
-                      {'name': 'vs Mapped', 'hide_zero_cats': False}
-                  ]}
+        config = {
+            'id': 'qc3C_bam_longrange_plot',
+            'namespace': 'qc3C',
+            'title': 'qc3C: BAM mode long-range pairs',
+            'ylab': 'Number of Reads',
+            'stacking': None,
+            'cpswitch': False,
+            'tt_percentages': False,
+            'tt_suffix': '%',
+            'data_labels': [
+                {'name': 'vs Accepted', 'hide_zero_cats': False},
+                {'name': 'vs Mapped', 'hide_zero_cats': False}
+            ]
+        }
 
         categories = [
             OrderedDict({
@@ -353,12 +471,14 @@ of interest.
         return bargraph.plot([self.qc3c_data['bam'], self.qc3c_data['bam']], categories, config)
 
     def bam_acceptance_plot(self):
-        config = {'id': 'bam_acceptance_plot',
-                  'namespace': 'qc3C',
-                  'title': 'qc3C: BAM mode read parsing results',
-                  'ylab': 'Number of Reads',
-                  'hide_zero_cats': False,
-                  'cpswitch_counts_label': 'Number of Reads'}
+        config = {
+            'id': 'qc3C_bam_acceptance_plot',
+            'namespace': 'qc3C',
+            'title': 'qc3C: BAM mode read parsing results',
+            'ylab': 'Number of Reads',
+            'hide_zero_cats': False,
+            'cpswitch_counts_label': 'Number of Reads'
+        }
 
         categories = OrderedDict({
             'n_skipped_reads': {'name': 'Skipped', 'color': rev_8[0]},
@@ -374,78 +494,168 @@ of interest.
 
     def bam_signal_table(self):
 
-        config = {'id': 'bam_signal_table',
-                  'namespace': 'qc3C',
-                  'hide_zero_cats': False,
-                  'col1_header': 'Sample'}
+        config = {
+            'id': 'qc3C_bam_signal_table',
+            'namespace': 'qc3C',
+            'hide_zero_cats': False,
+            'col1_header': 'Sample'
+        }
 
         headers = OrderedDict({
-            'p_trans_pairs': {'title': 'Trans pairs',
-                              'description': 'Fraction of pairs mapping between reference sequences',
-                              'min': 0, 'max': 100, 'suffix': '%', 'scale': 'Greens'},
-            'p_cis_pairs': {'title': 'Cis pairs',
-                            'description': 'Fraction of pairs mapping to the same reference sequence',
-                            'min': 0, 'max': 100, 'suffix': '%', 'scale': 'Greens'},
-            'p_short_inserts': {'title': 'Short range',
-                                'description': 'Fraction of pairs with small separation (< 1000bp)',
-                                'min': 0, 'max': 100, 'suffix': '%', 'scale': 'Reds'},
-            'unobs_fraction': {'title': 'Unobservable extent',
-                               'description': 'Estimated fraction of total fragment extent that was unobservable',
-                               'min': 0, 'max': 100, 'suffix': '%', 'scale': 'Reds'},
-            'p_cs_start': {'title': 'CS start',
-                           'description': 'Fraction of aligned reads that began with a cutsite',
-                           'min': 0, 'max': 100, 'suffix': '%', 'scale': 'Greens'},
-            'p_cs_term': {'title': 'CS term',
-                          'description': 'Fraction of reads where the alignment ends in a cutsite',
-                          'min': 0, 'max': 100, 'suffix': '%', 'scale': 'Greens'},
-            'p_cs_full': {'title': 'CS full',
-                          'description': 'Fraction of reads fully aligned and ending in a cutsite',
-                          'min': 0, 'max': 100, 'suffix': '%', 'scale': 'Greens'},
-            'p_read_thru': {'title': 'Read-thru',
-                            'description': 'Fraction of reads whose alignments end in a cutsite and '
-                                           'whose sequence continues for the full junction',
-                            'min': 0, 'max': 100, 'suffix': '%', 'scale': 'Greens'},
-            'p_is_split': {'title': 'Split',
-                           'description': 'Fraction of read-thru reads further split aligned',
-                           'min': 0, 'max': 100, 'suffix': '%', 'scale': 'Greens'},
-            'adj_read_thru': {'title': 'Adj read-thru',
-                              'description': 'Fraction of read-thru events adjusted for unobservable extent',
-                              'min': 0, 'max': 100, 'suffix': '%', 'scale': 'Greens'},
+            'p_trans_pairs': {
+                'title': 'Trans pairs',
+                'description': 'Fraction of pairs mapping between reference sequences',
+                'min': 0,
+                'max': 100,
+                'suffix': '%',
+                'scale': 'Greens'
+            },
+            'p_cis_pairs': {
+                'title': 'Cis pairs',
+                'description': 'Fraction of pairs mapping to the same reference sequence',
+                'min': 0,
+                'max': 100,
+                'suffix': '%',
+                'scale': 'Greens'
+            },
+            'p_short_inserts': {
+                'title': 'Short range',
+                'description': 'Fraction of pairs with small separation (< 1000bp)',
+                'min': 0,
+                'max': 100,
+                'suffix': '%',
+                'scale': 'Reds'
+            },
+            'unobs_fraction': {
+                'title': 'Unobservable extent',
+                'description': 'Estimated fraction of total fragment extent that was unobservable',
+                'min': 0,
+                'max': 100,
+                'suffix': '%',
+                'scale': 'Reds'
+            },
+            'p_cs_start': {
+                'title': 'CS start',
+                'description': 'Fraction of aligned reads that began with a cutsite',
+                'min': 0,
+                'max': 100,
+                'suffix': '%',
+                'scale': 'Greens'
+            },
+            'p_cs_term': {
+                'title': 'CS term',
+                'description': 'Fraction of reads where the alignment ends in a cutsite',
+                'min': 0,
+                'max': 100,
+                'suffix': '%',
+                'scale': 'Greens'
+            },
+            'p_cs_full': {
+                'title': 'CS full',
+                'description': 'Fraction of reads fully aligned and ending in a cutsite',
+                'min': 0,
+                'max': 100,
+                'suffix': '%',
+                'scale': 'Greens'
+            },
+            'p_read_thru': {
+                'title': 'Read-thru',
+                'description': 'Fraction of reads whose alignments end in a cutsite and whose sequence continues for the full junction',
+                'min': 0,
+                'max': 100,
+                'suffix': '%',
+                'scale': 'Greens'
+            },
+            'p_is_split': {
+                'title': 'Split',
+                'description': 'Fraction of read-thru reads further split aligned',
+                'min': 0,
+                'max': 100,
+                'suffix': '%',
+                'scale': 'Greens'
+            },
+            'adj_read_thru': {
+                'title': 'Adj read-thru',
+                'description': 'Fraction of read-thru events adjusted for unobservable extent',
+                'min': 0,
+                'max': 100,
+                'suffix': '%',
+                'scale': 'Greens'
+            },
         })
         return table.plot(self.qc3c_data['bam'], headers, config)
 
     def bam_hicpro_table(self):
 
-        config = {'id': 'bam_hicpro_table',
-                  'namespace': 'qc3C',
-                  'hide_zero_cats': False,
-                  'col1_header': 'Sample'}
+        config = {
+            'id': 'qc3C_bam_hicpro_table',
+            'namespace': 'qc3C',
+            'hide_zero_cats': False,
+            'col1_header': 'Sample'
+        }
 
         headers = OrderedDict({
-            'p_informative_fr': {'title': "Valid FR",
-                                 'min': 0, 'max': 100, 'suffix': '%', 'scale': 'Greens'},
-            'p_informative_rf': {'title': "Valid RF",
-                                 'min': 0, 'max': 100, 'suffix': '%', 'scale': 'Greens'},
-            'p_informative_ffrr': {'title': "Valid FF|RR",
-                                   'min': 0, 'max': 100, 'suffix': '%', 'scale': 'Greens'},
-            'p_uninformative_religation': {'title': "Religation",
-                                           'min': 0, 'max': 100, 'suffix': '%', 'scale': 'Blues'},
-            'p_uninformative_dangling_ends': {'title': "Dangling End",
-                                              'min': 0, 'max': 100, 'suffix': '%', 'scale': 'Reds'},
-            'p_uninformative_self_circle': {'title': "Self-circle",
-                                            'min': 0, 'max': 100, 'suffix': '%', 'scale': 'Reds'},
-            'p_uninformative_ffrr': {'title': "Invalid FF|RR",
-                                     'min': 0, 'max': 100, 'suffix': '%', 'scale': 'Reds'},
+            'p_informative_fr': {
+                'title': "Valid FR",
+                'min': 0,
+                'max': 100,
+                'suffix': '%',
+                'scale': 'Greens'
+            },
+            'p_informative_rf': {
+                'title': "Valid RF",
+                'min': 0,
+                'max': 100,
+                'suffix': '%',
+                'scale': 'Greens'
+            },
+            'p_informative_ffrr': {
+                'title': "Valid FF|RR",
+                'min': 0,
+                'max': 100,
+                'suffix': '%',
+                'scale': 'Greens'
+            },
+            'p_uninformative_religation': {
+                'title': "Religation",
+                'min': 0,
+                'max': 100,
+                'suffix': '%',
+                'scale': 'Blues'
+            },
+            'p_uninformative_dangling_ends': {
+                'title': "Dangling End",
+                'min': 0,
+                'max': 100,
+                'suffix': '%',
+                'scale': 'Reds'
+            },
+            'p_uninformative_self_circle': {
+                'title': "Self-circle",
+                'min': 0,
+                'max': 100,
+                'suffix': '%',
+                'scale': 'Reds'
+            },
+            'p_uninformative_ffrr': {
+                'title': "Invalid FF|RR",
+                'min': 0,
+                'max': 100,
+                'suffix': '%',
+                'scale': 'Reds'
+            },
         })
         return table.plot(self.qc3c_data['bam'], headers, config)
 
     def bam_valid_plot(self):
-        config = {'id': 'bam_valid_plot',
-                  'namespace': 'qc3C',
-                  'title': 'qc3C: BAM mode valid vs invalid HiC-Pro categories',
-                  'ylab': 'Number of Reads',
-                  'hide_zero_cats': False,
-                  'cpswitch_counts_label': 'Number of Reads'}
+        config = {
+            'id': 'qc3C_bam_valid_plot',
+            'namespace': 'qc3C',
+            'title': 'qc3C: BAM mode valid vs invalid HiC-Pro categories',
+            'ylab': 'Number of Reads',
+            'hide_zero_cats': False,
+            'cpswitch_counts_label': 'Number of Reads'
+        }
 
         categories = OrderedDict({
             'n_informative_fr': {'name': "Valid FR", 'color': '#41ab5d'},
@@ -459,12 +669,14 @@ of interest.
         return bargraph.plot(self.qc3c_data['bam'], categories, config)
 
     def bam_junction_plot(self):
-        config = {'id': 'bam_junction_plot',
-                  'namespace': 'qc3C',
-                  'title': 'qc3C: K-mer mode putative ligation product frequency',
-                  'ylab': 'Number of reads',
-                  'hide_zero_cats': False,
-                  'use_legend': False}
+        config = {
+            'id': 'qc3C_bam_junction_plot',
+            'namespace': 'qc3C',
+            'title': 'qc3C: K-mer mode putative ligation product frequency',
+            'ylab': 'Number of reads',
+            'hide_zero_cats': False,
+            'use_legend': False
+        }
 
         categories = OrderedDict()
         for v in self.digest_junctions['bam'].values():
@@ -477,21 +689,23 @@ of interest.
 
         median_lines = []
         for smpl in self.qc3c_data['bam']:
-            median_lines.append({'value': self.qc3c_data['bam'][smpl]['obs_insert_median'],
-                                 'color': '#D8E2DC',
-                                 'width': 2,
-                                 'dashStyle': 'ShortDashDot'
-                                 })
+            median_lines.append({
+                'value': self.qc3c_data['bam'][smpl]['obs_insert_median'],
+                'color': '#D8E2DC',
+                'width': 2,
+                'dashStyle': 'ShortDashDot'
+            })
 
-        config = {'id': 'bam_fragment_histogram',
-                  'title': 'qc3C: BAM mode distribution of pair separation',
-                  'namespace': 'qc3C',
-                  'xLog': True,
-                  'xPlotLines': median_lines,
-                  'xlab': 'log10 [Separation] (bp)',
-                  'ylab': 'Density',
-                  'tt_label': 'x:{point.x:.1f}, y:{point.y:.4f}'
-                  }
+        config = {
+            'id': 'qc3C_bam_fragment_histogram',
+            'title': 'qc3C: BAM mode distribution of pair separation',
+            'namespace': 'qc3C',
+            'xLog': True,
+            'xPlotLines': median_lines,
+            'xlab': 'log10 [Separation] (bp)',
+            'ylab': 'Density',
+            'tt_label': 'x:{point.x:.1f}, y:{point.y:.4f}'
+        }
 
         data = {}
         for smpl in self.qc3c_data['bam']:
@@ -501,76 +715,141 @@ of interest.
 
     def kmer_runtime_table(self):
 
-        config = {'id': 'kmer_runtime_table',
-                  'namespace': 'qc3C',
-                  'col1_header': 'Sample'}
+        config = {
+            'id': 'qc3C_kmer_runtime_table',
+            'namespace': 'qc3C',
+            'col1_header': 'Sample'
+        }
 
         headers = OrderedDict({
-            'run_timestamp': {'title': 'Date',
-                              'description': "Analysis time stamp",
-                              'modify': MultiqcModule._drop_time},
-            'mode': {'title': 'Run Mode',
-                     'description': 'Analysis mode used'},
-            'kmer_size': {'title': 'k',
-                          'description': 'Library k-mer size',
-                          'min': 0, 'format': '{:d}', 'scale': False},
-            'enzymes': {'title': 'Digest',
-                        'description': 'Enzymes used in digest'},
-            'seed': {'title': 'Seed',
-                     'description': 'Random seed',
-                     'format': '{:d}', 'scale': False},
-            'max_obs': {'title': 'Max obs',
-                        'description': 'User specified maximum number of observations',
-                        'min': 0, 'format': '{:,d}', 'scale': 'OrRd',
-                        'modify': lambda x: 'n/a' if x == -1 else x},
-            'n_accepted_reads': {'title': 'Accepted reads',
-                                 'description': 'Number of reads accepted for analysis',
-                                 'min': 0, 'format': '{:,d}', 'scale': 'BuGn'},
-            'sample_rate': {'title': 'Sample rate',
-                            'description': 'Sub-sampling probability',
-                            'min': 0, 'max': 1, 'format': '{:g}', 'scale': 'Greys'},
-            'max_freq_quantile': {'title': 'Quantile',
-                                  'description': 'Quantile cut-off for low-pass k-mer frequency filter',
-                                  'min': 0, 'max': 1, 'format': '{:g}', 'scale': 'Purples'},
-            'max_freq': {'title': 'Max freq',
-                         'description': 'Maximum k-mer frequency after quantile filtering',
-                         'min': 0, 'format': '{:,d}', 'scale': 'Blues'},
-            'mean_insert': {'title': 'Insert size',
-                            'description': 'User-specified insert size',
-                            'min': 0, 'format': '{:,.0f}', 'suffix': 'bp', 'scale': 'Greens'},
-            'mean_readlen': {'title': 'Read length',
-                             'description': 'Observed average read length',
-                             'format': '{:,.0f}', 'suffix': 'bp', 'scale': 'Blues'},
+            'run_timestamp': {
+                'title': 'Date',
+                'description': "Analysis time stamp",
+                'modify': MultiqcModule._drop_time
+            },
+            'mode': {
+                'title': 'Run Mode',
+                'description': 'Analysis mode used'
+            },
+            'kmer_size': {
+                'title': 'k',
+                'description': 'Library k-mer size',
+                'min': 0,
+                'format': '{:d}',
+                'scale': False
+            },
+            'enzymes': {
+                'title': 'Digest',
+                'description': 'Enzymes used in digest'
+            },
+            'seed': {
+                'title': 'Seed',
+                'description': 'Random seed',
+                'format': '{:d}',
+                'scale': False
+            },
+            'max_obs': {
+                'title': 'Max obs',
+                'description': 'User specified maximum number of observations',
+                'min': 0,
+                'format': '{:,d}',
+                'scale': 'OrRd',
+                'modify': lambda x: 'n/a' if x == -1 else x
+            },
+            'n_accepted_reads': {
+                'title': 'Accepted reads',
+                'description': 'Number of reads accepted for analysis',
+                'min': 0,
+                'format': '{:,d}',
+                'scale': 'BuGn'
+            },
+            'sample_rate': {
+                'title': 'Sample rate',
+                'description': 'Sub-sampling probability',
+                'min': 0,
+                'max': 1,
+                'format': '{:g}',
+                'scale': 'Greys'
+            },
+            'max_freq_quantile': {
+                'title': 'Quantile',
+                'description': 'Quantile cut-off for low-pass k-mer frequency filter',
+                'min': 0,
+                'max': 1,
+                'format': '{:g}',
+                'scale': 'Purples'
+            },
+            'max_freq': {
+                'title': 'Max freq',
+                'description': 'Maximum k-mer frequency after quantile filtering',
+                'min': 0,
+                'format': '{:,d}',
+                'scale': 'Blues'
+            },
+            'mean_insert': {
+                'title': 'Insert size',
+                'description': 'User-specified insert size',
+                'min': 0,
+                'format': '{:,.0f}',
+                'suffix': 'bp',
+                'scale': 'Greens'
+            },
+            'mean_readlen': {
+                'title': 'Read length',
+                'description': 'Observed average read length',
+                'format': '{:,.0f}',
+                'suffix': 'bp',
+                'scale': 'Blues'
+            },
         })
         return table.plot(self.qc3c_data['kmer'], headers, config)
 
     def kmer_signal_table(self):
 
-        config = {'id': 'kmer_signal_table',
-                  'namespace': 'qc3C',
-                  'col1_header': 'Sample'}
+        config = {
+            'id': 'qc3C_kmer_signal_table',
+            'namespace': 'qc3C',
+            'col1_header': 'Sample'
+        }
 
         headers = OrderedDict({
-            'unobs_fraction': {'title': 'Unobservable extent',
-                               'description': 'Estimated mean of the unobservable portion of fragments',
-                               'shared_key': 'unobs_mean',
-                               'min': 0, 'max': 100, 'suffix': '%', 'scale': 'Reds'},
-            'raw_fraction': {'title': 'Mean raw Hi-C fraction',
-                             'description': 'Estimated mean of Hi-C fraction from only the observable extent',
-                             'min': 0, 'max': 100, 'suffix': '%', 'scale': 'Greens'},
-            'adj_fraction': {'title': 'Mean adjusted Hi-C fraction',
-                             'description': 'Estimated mean of Hi-C fraction adjusted for unobservable extent',
-                             'min': 0, 'max': 100, 'suffix': '%', 'scale': 'Greens'},
+            'unobs_fraction': {
+                'title': 'Unobservable extent',
+                'description': 'Estimated mean of the unobservable portion of fragments',
+                'shared_key': 'unobs_mean',
+                'min': 0,
+                'max': 100,
+                'suffix': '%',
+                'scale': 'Reds'
+            },
+            'raw_fraction': {
+                'title': 'Mean raw Hi-C fraction',
+                'description': 'Estimated mean of Hi-C fraction from only the observable extent',
+                'min': 0,
+                'max': 100,
+                'suffix': '%',
+                'scale': 'Greens'
+            },
+            'adj_fraction': {
+                'title': 'Mean adjusted Hi-C fraction',
+                'description': 'Estimated mean of Hi-C fraction adjusted for unobservable extent',
+                'min': 0,
+                'max': 100,
+                'suffix': '%',
+                'scale': 'Greens'
+            },
         })
         return table.plot(self.qc3c_data['kmer'], headers, config)
 
     def kmer_acceptance_plot(self):
-        config = {'id': 'kmer_acceptance_plot',
-                  'namespace': 'qc3C',
-                  'title': 'qc3C: K-mer mode read parsing results',
-                  'ylab': 'Number of Reads',
-                  'hide_zero_cats': False,
-                  'cpswitch_counts_label': 'Number of Reads'}
+        config = {
+            'id': 'qc3C_kmer_acceptance_plot',
+            'namespace': 'qc3C',
+            'title': 'qc3C: K-mer mode read parsing results',
+            'ylab': 'Number of Reads',
+            'hide_zero_cats': False,
+            'cpswitch_counts_label': 'Number of Reads'
+        }
 
         categories = OrderedDict({
             'n_skipped': {'name': 'Skipped', 'color': rev_8[0]},
@@ -583,12 +862,14 @@ of interest.
         return bargraph.plot(self.qc3c_data['kmer'], categories, config)
 
     def kmer_signal_plot(self):
-        config = {'id': 'kmer_signal_plot',
-                  'namespace': 'qc3C',
-                  'title': 'qc3C: K-mer mode signal content',
-                  'ylab': 'Number of Reads',
-                  'hide_zero_cats': False,
-                  'cpswitch_counts_label': 'Number of Reads'}
+        config = {
+            'id': 'qc3C_kmer_signal_plot',
+            'namespace': 'qc3C',
+            'title': 'qc3C: K-mer mode signal content',
+            'ylab': 'Number of Reads',
+            'hide_zero_cats': False,
+            'cpswitch_counts_label': 'Number of Reads'
+        }
 
         categories = OrderedDict({
             'n_without_junc': {'name': 'Without junc', 'color': '#ef3b2c'},
@@ -597,12 +878,14 @@ of interest.
         return bargraph.plot(self.qc3c_data['kmer'], categories, config)
 
     def kmer_junction_plot(self):
-        config = {'id': 'kmer_frequency_plot',
-                  'namespace': 'qc3C',
-                  'title': 'qc3C: K-mer mode putative ligation product frequency',
-                  'ylab': 'Number of Reads',
-                  'hide_zero_cats': False,
-                  'use_legend': False}
+        config = {
+            'id': 'qc3C_kmer_frequency_plot',
+            'namespace': 'qc3C',
+            'title': 'qc3C: K-mer mode putative ligation product frequency',
+            'ylab': 'Number of Reads',
+            'hide_zero_cats': False,
+            'use_legend': False
+        }
 
         categories = OrderedDict()
         for _cat in self.digest_junctions['kmer'].values():
@@ -622,10 +905,9 @@ of interest.
             log.warning("Could not parse qc3C JSON: '{}'".format(f['fn']))
             return
 
-        s_name = self.clean_s_name(basename(f['root']), dirname(f['root']))
-        if parsed is not None:
-            if s_name in self.qc3c_data:
-                log.debug("Duplicate sample name found! Overwriting: {}".format(f['s_name']))
+        s_name = self.clean_s_name(os.basename(f['root']), os.dirname(f['root']))
+        if s_name in self.qc3c_data:
+            log.debug("Duplicate sample name found! Overwriting: {}".format(f['s_name']))
 
         try:
             analysis_mode = parsed['mode']
@@ -639,67 +921,66 @@ of interest.
                 n_accepted_pairs = parsed['n_accepted_pairs']
                 n_paired_reads = n_accepted_pairs * 2
 
-                self.qc3c_data['bam'][s_name] = {'qc3C_version': parsed['runtime_info']['qc3C_version'],
-                                                 'run_timestamp': parsed['runtime_info']['run_timestamp'],
-                                                 'mode': parsed['mode'],
-                                                 'enzymes': ', '.join(parsed['input_args']['enzymes']),
-                                                 'seed': parsed['input_args']['seed'],
-                                                 'sample_rate': _none_to(parsed['input_args']['sample_rate'], 1),
-                                                 'max_obs': _none_to(parsed['input_args']['max_obs'], -1),
-                                                 'n_skipped_reads': parsed['n_skipped_reads'],
-                                                 'n_unmapped_reads': parsed['n_unmapped'],
-                                                 'n_analysed_reads': parsed['n_analysed_reads'],
-                                                 'n_low_mapq_reads': parsed['n_low_mapq'],
-                                                 'n_ref_len_reads': parsed['n_ref_len'],
-                                                 'n_secondary_reads': parsed['n_secondary'],
-                                                 'n_supplementary_reads': parsed['n_supplementary'],
-                                                 'n_weak_mapping_reads': parsed['n_weak_mapping'],
-                                                 'n_ref_term_reads': parsed['n_ref_term'],
-                                                 'n_accepted_reads': parsed['n_accepted_reads'],
-                                                 'obs_insert_mean': parsed['obs_insert_mean'],
-                                                 'obs_insert_median': parsed['obs_insert_median'],
-                                                 'mean_readlen': parsed['mean_readlen'],
-                                                 'n_analysed_pairs': parsed['n_analysed_pairs'],
-                                                 'n_accepted_pairs': parsed['n_accepted_pairs'],
-                                                 'p_trans_pairs': parsed['n_trans_pairs'] / n_accepted_pairs * 100,
-                                                 'p_cis_pairs': n_cis_pairs / n_accepted_pairs * 100,
-                                                 'unobs_fraction': parsed['unobs_fraction'] * 100,
-                                                 'p_cs_start': parsed['digest_stats']['cs_start'] / n_paired_reads * 100,
-                                                 'p_cs_term': parsed['digest_stats']['cs_term'] / n_paired_reads * 100,
-                                                 'p_cs_full': parsed['digest_stats']['cs_full'] / n_paired_reads * 100,
-                                                 'p_read_thru': parsed['digest_stats']['read_thru'] / n_paired_reads * 100,
-                                                 'p_is_split':  parsed['digest_stats']['is_split'] / n_paired_reads * 100,
-                                                 'adj_read_thru': parsed['digest_stats']['read_thru'] /
-                                                                  n_paired_reads * 100 * 1/(1-parsed['unobs_fraction']),
-                                                 'p_short_inserts': parsed['n_short_inserts'] / n_accepted_pairs * 100,
-                                                 'n_informative_fr': inf['fr'],
-                                                 'n_informative_rf': inf['rf'],
-                                                 'n_informative_ffrr': inf['ffrr'],
-                                                 'n_uninformative_religation': uninf['religation'],
-                                                 'n_uninformative_dangling_ends': uninf['dangling_ends'],
-                                                 'n_uninformative_self_circle': uninf['self_circle'],
-                                                 'n_uninformative_ffrr': uninf['ffrr'],
-                                                 'p_informative_fr': inf['fr'] / n_cis_pairs * 100,
-                                                 'p_informative_rf': inf['rf'] / n_cis_pairs * 100,
-                                                 'p_informative_ffrr': inf['ffrr'] / n_cis_pairs * 100,
-                                                 'p_uninformative_religation': uninf['religation'] / n_cis_pairs * 100,
-                                                 'p_uninformative_dangling_ends': uninf['dangling_ends'] / n_cis_pairs * 100,
-                                                 'p_uninformative_self_circle': uninf['self_circle'] / n_cis_pairs * 100,
-                                                 'p_uninformative_ffrr': uninf['ffrr'] / n_cis_pairs * 100,
-                                                 'n_1kb': parsed['separation_bins']['counts'][0],
-                                                 'n_5kb': parsed['separation_bins']['counts'][1],
-                                                 'n_10kb': parsed['separation_bins']['counts'][2],
-                                                 'p_1kb_vs_accepted': parsed['separation_bins']['vs_accepted'][0],
-                                                 'p_5kb_vs_accepted': parsed['separation_bins']['vs_accepted'][1],
-                                                 'p_10kb_vs_accepted': parsed['separation_bins']['vs_accepted'][2],
-                                                 'p_1kb_vs_cis': parsed['separation_bins']['vs_all_cis'][0],
-                                                 'p_5kb_vs_cis': parsed['separation_bins']['vs_all_cis'][1],
-                                                 'p_10kb_vs_cis': parsed['separation_bins']['vs_all_cis'][2],
-                                                 }
+                self.qc3c_data['bam'][s_name] = {
+                    'qc3C_version': parsed['runtime_info']['qc3C_version'],
+                    'run_timestamp': parsed['runtime_info']['run_timestamp'],
+                    'mode': parsed['mode'],
+                    'enzymes': ', '.join(parsed['input_args']['enzymes']),
+                    'seed': parsed['input_args']['seed'],
+                    'sample_rate': _none_to(parsed['input_args']['sample_rate'], 1),
+                    'max_obs': _none_to(parsed['input_args']['max_obs'], -1),
+                    'n_skipped_reads': parsed['n_skipped_reads'],
+                    'n_unmapped_reads': parsed['n_unmapped'],
+                    'n_analysed_reads': parsed['n_analysed_reads'],
+                    'n_low_mapq_reads': parsed['n_low_mapq'],
+                    'n_ref_len_reads': parsed['n_ref_len'],
+                    'n_secondary_reads': parsed['n_secondary'],
+                    'n_supplementary_reads': parsed['n_supplementary'],
+                    'n_weak_mapping_reads': parsed['n_weak_mapping'],
+                    'n_ref_term_reads': parsed['n_ref_term'],
+                    'n_accepted_reads': parsed['n_accepted_reads'],
+                    'obs_insert_mean': parsed['obs_insert_mean'],
+                    'obs_insert_median': parsed['obs_insert_median'],
+                    'mean_readlen': parsed['mean_readlen'],
+                    'n_analysed_pairs': parsed['n_analysed_pairs'],
+                    'n_accepted_pairs': parsed['n_accepted_pairs'],
+                    'p_trans_pairs': parsed['n_trans_pairs'] / n_accepted_pairs * 100,
+                    'p_cis_pairs': n_cis_pairs / n_accepted_pairs * 100,
+                    'unobs_fraction': parsed['unobs_fraction'] * 100,
+                    'p_cs_start': parsed['digest_stats']['cs_start'] / n_paired_reads * 100,
+                    'p_cs_term': parsed['digest_stats']['cs_term'] / n_paired_reads * 100,
+                    'p_cs_full': parsed['digest_stats']['cs_full'] / n_paired_reads * 100,
+                    'p_read_thru': parsed['digest_stats']['read_thru'] / n_paired_reads * 100,
+                    'p_is_split':  parsed['digest_stats']['is_split'] / n_paired_reads * 100,
+                    'adj_read_thru': parsed['digest_stats']['read_thru'] / n_paired_reads * 100 * 1/(1-parsed['unobs_fraction']),
+                    'p_short_inserts': parsed['n_short_inserts'] / n_accepted_pairs * 100,
+                    'n_informative_fr': inf['fr'],
+                    'n_informative_rf': inf['rf'],
+                    'n_informative_ffrr': inf['ffrr'],
+                    'n_uninformative_religation': uninf['religation'],
+                    'n_uninformative_dangling_ends': uninf['dangling_ends'],
+                    'n_uninformative_self_circle': uninf['self_circle'],
+                    'n_uninformative_ffrr': uninf['ffrr'],
+                    'p_informative_fr': inf['fr'] / n_cis_pairs * 100,
+                    'p_informative_rf': inf['rf'] / n_cis_pairs * 100,
+                    'p_informative_ffrr': inf['ffrr'] / n_cis_pairs * 100,
+                    'p_uninformative_religation': uninf['religation'] / n_cis_pairs * 100,
+                    'p_uninformative_dangling_ends': uninf['dangling_ends'] / n_cis_pairs * 100,
+                    'p_uninformative_self_circle': uninf['self_circle'] / n_cis_pairs * 100,
+                    'p_uninformative_ffrr': uninf['ffrr'] / n_cis_pairs * 100,
+                    'n_1kb': parsed['separation_bins']['counts'][0],
+                    'n_5kb': parsed['separation_bins']['counts'][1],
+                    'n_10kb': parsed['separation_bins']['counts'][2],
+                    'p_1kb_vs_accepted': parsed['separation_bins']['vs_accepted'][0],
+                    'p_5kb_vs_accepted': parsed['separation_bins']['vs_accepted'][1],
+                    'p_10kb_vs_accepted': parsed['separation_bins']['vs_accepted'][2],
+                    'p_1kb_vs_cis': parsed['separation_bins']['vs_all_cis'][0],
+                    'p_5kb_vs_cis': parsed['separation_bins']['vs_all_cis'][1],
+                    'p_10kb_vs_cis': parsed['separation_bins']['vs_all_cis'][2],
+                }
 
                 fhist = {}
-                for x, y in zip_longest(parsed['separation_histogram']['mid_points'],
-                                        parsed['separation_histogram']['counts']):
+                for x, y in itertools.zip_longest(parsed['separation_histogram']['mid_points'], parsed['separation_histogram']['counts']):
                     fhist[float(x)] = float(y)
                 self.qc3c_data['bam'][s_name]['frag_hist'] = fhist
 
@@ -708,54 +989,60 @@ of interest.
                 for k in 'raw_fraction', 'adj_fraction', 'unobs_fraction':
                     parsed[k] = np.array(parsed[k]).mean() * 100
 
-                self.qc3c_data['kmer'][s_name] = {'qc3C_version': parsed['runtime_info']['qc3C_version'],
-                                                  'run_timestamp': parsed['runtime_info']['run_timestamp'],
-                                                  'mode': parsed['mode'],
-                                                  'kmer_size': parsed['input_args']['kmer_size'],
-                                                  'enzymes': ', '.join(parsed['input_args']['enzymes']),
-                                                  'seed': parsed['input_args']['seed'],
-                                                  'sample_rate': _none_to(parsed['input_args']['sample_rate'], 1),
-                                                  'max_freq': parsed['input_args']['max_coverage'],
-                                                  'mean_insert': parsed['input_args']['mean_insert'],
-                                                  'max_freq_quantile': parsed['input_args']['max_freq_quantile'],
-                                                  'max_obs': _none_to(parsed['input_args']['max_obs'], -1),
-                                                  'n_skipped': parsed['n_parsed_reads'] - parsed['n_analysed_reads'],
-                                                  'n_analysed_reads': parsed['n_analysed_reads'],
-                                                  'n_too_short': parsed['n_too_short'],
-                                                  'n_no_flank': parsed['n_no_flank'],
-                                                  'n_ambiguous': parsed['n_ambiguous'],
-                                                  'n_high_cov': parsed['n_high_cov'],
-                                                  'n_accepted_reads': parsed['n_accepted_reads'],
-                                                  'n_without_junc': parsed['n_without_junc'],
-                                                  'n_with_junc': parsed['n_with_junc'],
-                                                  'mean_readlen': parsed['mean_readlen'],
-                                                  'n_cs_start': parsed['cs_start'],
-                                                  'raw_fraction': parsed['raw_fraction'],
-                                                  'adj_fraction': parsed['adj_fraction'],
-                                                  'unobs_fraction': parsed['unobs_fraction'],
-                                                  }
+                self.qc3c_data['kmer'][s_name] = {
+                    'qc3C_version': parsed['runtime_info']['qc3C_version'],
+                    'run_timestamp': parsed['runtime_info']['run_timestamp'],
+                    'mode': parsed['mode'],
+                    'kmer_size': parsed['input_args']['kmer_size'],
+                    'enzymes': ', '.join(parsed['input_args']['enzymes']),
+                    'seed': parsed['input_args']['seed'],
+                    'sample_rate': _none_to(parsed['input_args']['sample_rate'], 1),
+                    'max_freq': parsed['input_args']['max_coverage'],
+                    'mean_insert': parsed['input_args']['mean_insert'],
+                    'max_freq_quantile': parsed['input_args']['max_freq_quantile'],
+                    'max_obs': _none_to(parsed['input_args']['max_obs'], -1),
+                    'n_skipped': parsed['n_parsed_reads'] - parsed['n_analysed_reads'],
+                    'n_analysed_reads': parsed['n_analysed_reads'],
+                    'n_too_short': parsed['n_too_short'],
+                    'n_no_flank': parsed['n_no_flank'],
+                    'n_ambiguous': parsed['n_ambiguous'],
+                    'n_high_cov': parsed['n_high_cov'],
+                    'n_accepted_reads': parsed['n_accepted_reads'],
+                    'n_without_junc': parsed['n_without_junc'],
+                    'n_with_junc': parsed['n_with_junc'],
+                    'mean_readlen': parsed['mean_readlen'],
+                    'n_cs_start': parsed['cs_start'],
+                    'raw_fraction': parsed['raw_fraction'],
+                    'adj_fraction': parsed['adj_fraction'],
+                    'unobs_fraction': parsed['unobs_fraction'],
+            }
 
             # include the junction frequencies (1 or many depending on digest)
             self.qc3c_data[analysis_mode][s_name].update(parsed['junction_frequency'])
 
             # calculate the degeneracy of junction sequences per enzymatic combination (5p end =/= 3p end)
             # this can vary due to ambiguous bases in restriction site
-            degen_count = {'{}/{}'.format(v['enz5p'], v['enz3p']): 4**v['junction'].count('N')
-                           for k, v in parsed['digestion']['junctions'].items()}
+            degen_count = {
+                '{}/{}'.format(v['enz5p'], v['enz3p']): 4**v['junction'].count('N')
+                for k, v in parsed['digestion']['junctions'].items()
+            }
             # sort these by "enzyme combo + junction"
             degen_count = OrderedDict(sorted(degen_count.items(), key=lambda x: x[0]))
             # get a palette for this series
             cols = color_picker(list(degen_count.values()))
             # sort these in accordance with that above
-            juncs = np.sort(np.array([(k.split(' ')[0], k) for k in parsed['junction_frequency']],
-                                     dtype=np.dtype([('a', 'S100'), ('b', 'S100')])))
+            juncs = np.sort(
+                np.array(
+                    [(k.split(' ')[0], k) for k in parsed['junction_frequency']],
+                    dtype=np.dtype([('a', 'S100'), ('b', 'S100')])
+                )
+            )
 
             # keep a record of how these should be colored per sample
-            self.digest_junctions[analysis_mode][s_name] = \
-                [{'name': juncs[i][1].decode(), 'color': cols[i]} for i in range(len(juncs))]
+            self.digest_junctions[analysis_mode][s_name] = [ {'name': juncs[i][1].decode(), 'color': cols[i]} for i in range(len(juncs)) ]
 
             self.add_data_source(f, s_name, section=analysis_mode)
 
         except KeyError as ex:
-            log.error('The entry {} was not found in the qc3C JSON file {}'
-                      .format(str(ex), os.path.join(f['root'], f['fn'])))
+            log.error("The entry '{}' was not found in the qc3C JSON file '{}'".format(str(ex), os.path.join(f['root'], f['fn'])))
+            return
