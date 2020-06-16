@@ -1,12 +1,14 @@
 from __future__ import print_function
-from multiqc.modules.base_module import BaseMultiqcModule
+import json
+import logging
+import numpy as np
+import os
+import re
 from collections import OrderedDict, defaultdict
+from itertools import zip_longest
+from multiqc.modules.base_module import BaseMultiqcModule
 from multiqc.plots import table, bargraph, linegraph
 from os.path import dirname, basename
-import numpy as np
-import json
-import re
-import logging
 
 log = logging.getLogger(__name__)
 
@@ -618,7 +620,7 @@ of interest.
             parsed = json.load(f['f'])
         except json.JSONDecodeError:
             log.warning("Could not parse qc3C JSON: '{}'".format(f['fn']))
-            return None
+            return
 
         s_name = self.clean_s_name(basename(f['root']), dirname(f['root']))
         if parsed is not None:
@@ -695,7 +697,6 @@ of interest.
                                                  'p_10kb_vs_cis': parsed['separation_bins']['vs_all_cis'][2],
                                                  }
 
-                from itertools import zip_longest
                 fhist = {}
                 for x, y in zip_longest(parsed['separation_histogram']['mid_points'],
                                         parsed['separation_histogram']['counts']):
@@ -756,7 +757,5 @@ of interest.
             self.add_data_source(f, s_name, section=analysis_mode)
 
         except KeyError as ex:
-            import os
-            log.error('An error ocurred while parsing qc3C JSON file {}'
-                      .format(os.path.join(f['root'], f['fn'])))
-            raise UserWarning(ex)
+            log.error('The entry {} was not found in the qc3C JSON file {}'
+                      .format(str(ex), os.path.join(f['root'], f['fn'])))
