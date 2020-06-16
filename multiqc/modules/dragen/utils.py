@@ -127,6 +127,3 @@ def make_headers(parsed_metric_ids, metrics):
 
 def exist_and_number(data, *metrics):
     return all(isinstance(data.get(m, None), int) or isinstance(data.get(m, None), float) for m in metrics)
-
-
-
