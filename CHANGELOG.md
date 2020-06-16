@@ -11,11 +11,13 @@
 
 #### Module updates
 
-* **Kaiju**
-    * Rework barplot, add top 5 taxons
-
+* **DRAGEN**
+    * Fix issue where missing out fields could crash the module ([#1223](https://github.com/ewels/MultiQC/issues/1223))
 * **featureCounts**
     * Add support for output from [Rsubread](https://bioconductor.org/packages/release/bioc/html/Rsubread.html) ([#1022](https://github.com/ewels/MultiQC/issues/1022))
+* **Kaiju**
+    * Fixed bug affecting inputs with taxa levels other than Phylum ([#1217](https://github.com/ewels/MultiQC/issues/1217))
+    * Rework barplot, add top 5 taxons ([#1219](https://github.com/ewels/MultiQC/issues/1219))
 * **MALT**
     * Fix y-axis labelling in bargraphs
 * **Picard**

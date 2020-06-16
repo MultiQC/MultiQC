@@ -414,7 +414,7 @@ def run(
     # Throw a warning if we are running on Python 2
     if sys.version_info[0] < 3:
         logger.warning("You are running MultiQC with Python {}.{}.{}".format(sys.version_info[0], sys.version_info[1], sys.version_info[2]))
-        logger.warning("Please upgrade! MultiQC will soon drop support for Python < 3.6")
+        logger.warning("Please upgrade! MultiQC no longer officially supports Python < 3.6")
     else:
         logger.debug("Running Python {}".format(sys.version.replace("\n", ' ')))
 

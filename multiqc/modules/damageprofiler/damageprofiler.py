@@ -260,7 +260,7 @@ class MultiqcModule(BaseMultiqcModule):
 
         config = {
             'id': 'threeprime_misinc_plot',
-            'title': 'DamageProfiler: 3P G>A misincorporation plot',
+            'title': 'DamageProfiler: 3\' G>A misincorporation plot',
             'ylab': '% G to A substituted',
             'xlab': 'Nucleotide position from 3\'',
             'tt_label': '{point.y:.2f} % G>A misincorporations at nucleotide position {point.x}',

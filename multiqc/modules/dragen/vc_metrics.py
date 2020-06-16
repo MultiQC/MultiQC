@@ -5,7 +5,7 @@ import re
 from multiqc.modules.base_module import BaseMultiqcModule
 from multiqc.plots import table
 
-from .utils import make_headers, Metric
+from .utils import make_headers, Metric, exist_and_number
 
 # Initialise the logger
 import logging
@@ -201,26 +201,47 @@ def parse_vc_metrics_file(f):
 
     # adding few more metrics: total insertions, deletions and indels numbers
     for data in [prefilter_data, postfilter_data]:
-        data['Insertions'] = data['Insertions (Hom)'] + data['Insertions (Het)']
-        data['Deletions']  = data['Deletions (Hom)']  + data['Deletions (Het)']
-        data['Indels']     = data['Insertions']       + data['Deletions']
-        if data['Total'] != 0:
-            data['Insertions pct'] = data['Insertions'] / data['Total'] * 100.0
-            data['Deletions pct']  = data['Deletions']  / data['Total'] * 100.0
-            data['Indels pct']     = data['Indels']     / data['Total'] * 100.0
+        if exist_and_number(data, 'Insertions (Hom)', 'Insertions (Het)'):
+            data['Insertions'] = data['Insertions (Hom)'] + data['Insertions (Het)']
+
+        if exist_and_number(data, 'Deletions (Hom)', 'Deletions (Het)'):
+            data['Deletions'] = data['Deletions (Hom)'] + data['Deletions (Het)']
+
+        if exist_and_number(data, 'Insertions', 'Deletions'):
+            data['Indels'] = data['Insertions'] + data['Deletions']
+
+        if exist_and_number(data, 'Total') and data['Total'] != 0:
+            if exist_and_number(data, 'Insertions'):
+                data['Insertions pct'] = data['Insertions'] / data['Total'] * 100.0
+            if exist_and_number(data, 'Deletions'):
+                data['Deletions pct'] = data['Deletions'] / data['Total'] * 100.0
+            if exist_and_number(data, 'Indels'):
+                data['Indels pct'] = data['Indels'] / data['Total'] * 100.0
 
     data = postfilter_data
     data.update(summary_data)
+
     # we are not really interested in all the details of pre-filtered variants, however
     # it would be nice to report how much we filtered out
-    data['Filtered vars']     = prefilter_data['Total']  - data['Total']
-    data['Filtered SNPs']     = prefilter_data['SNPs']   - data['SNPs']
-    data['Filtered indels']   = prefilter_data['Indels'] - data['Indels']
-    if prefilter_data['Total'] != 0:
-        data['Filtered vars pct']   = data['Filtered vars']   / prefilter_data['Total'] * 100.0
-    if prefilter_data['SNPs'] != 0:
-        data['Filtered SNPs pct']   = data['Filtered SNPs']   / prefilter_data['SNPs'] * 100.0
-    if prefilter_data['Indels'] != 0:
+    if exist_and_number(data, 'Total') and exist_and_number(prefilter_data, 'Total'):
+        data['Filtered vars'] = prefilter_data['Total'] - data['Total']
+
+    if exist_and_number(data, 'SNPs') and exist_and_number(prefilter_data, 'SNPs'):
+        data['Filtered SNPs'] = prefilter_data['SNPs'] - data['SNPs']
+
+    if exist_and_number(data, 'Indels') and exist_and_number(prefilter_data, 'Indels'):
+        data['Filtered indels'] = prefilter_data['Indels'] - data['Indels']
+
+    if exist_and_number(prefilter_data, 'Total') and exist_and_number(data, 'Filtered vars') \
+             and prefilter_data['Total'] != 0:
+        data['Filtered vars pct'] = data['Filtered vars'] / prefilter_data['Total'] * 100.0
+
+    if exist_and_number(prefilter_data, 'SNPs') and exist_and_number(data, 'Filtered SNPs') \
+             and prefilter_data['SNPs'] != 0:
+        data['Filtered SNPs pct'] = data['Filtered SNPs'] / prefilter_data['SNPs'] * 100.0
+
+    if exist_and_number(prefilter_data, 'Indels') and exist_and_number(data, 'Filtered Indels') \
+             and prefilter_data['Indels'] != 0:
         data['Filtered indels pct'] = data['Filtered indels'] / prefilter_data['Indels'] * 100.0
 
     return data
