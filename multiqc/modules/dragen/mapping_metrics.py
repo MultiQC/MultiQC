@@ -7,7 +7,7 @@ import re
 from collections import defaultdict
 from multiqc.modules.base_module import BaseMultiqcModule
 from multiqc.plots import bargraph, table
-from .utils import make_headers, Metric
+from .utils import make_headers, Metric, exist_and_number
 
 # Initialise the logger
 import logging
@@ -311,29 +311,30 @@ def parse_mapping_metrics_file(f):
     # adding some missing values that we wanna report for consistency
     for data in itertools.chain(data_by_readgroup.values(), data_by_phenotype.values()):
         # fixing when deduplication wasn't performed
-        if 'Number of duplicate marked reads' in data and data['Number of duplicate marked reads'] == 'NA':
+        if data.get('Number of duplicate marked reads', 'NA') == 'NA':
             data['Number of duplicate marked reads'] = 0
 
-        if 'Number of duplicate marked and mate reads removed' in data and \
-                data['Number of duplicate marked and mate reads removed'] == 'NA':
+        if data.get('Number of duplicate marked and mate reads removed', 'NA') == 'NA':
             data['Number of duplicate marked and mate reads removed'] = 0
 
-        if 'Number of unique reads (excl. duplicate marked reads)' in data and \
-                data['Number of unique reads (excl. duplicate marked reads)'] == 'NA':
+        if data.get('Number of unique reads (excl. duplicate marked reads)', 'NA') == 'NA':
             data['Number of unique reads (excl. duplicate marked reads)'] = data['Mapped reads']
 
         # adding alignment percentages
-        if 'Total alignments' in data and data['Total alignments'] > 0 and 'Secondary alignments' in data:
+        if exist_and_number(data, 'Total alignments', 'Secondary alignments') and data['Total alignments'] > 0:
             data['Secondary alignments pct'] = data['Secondary alignments'] / data['Total alignments'] * 100.0
 
         # adding some missing bases percentages
-        if 'Total bases' in data and data['Total bases'] > 0:
-            if 'Q30 bases (excl. dups & clipped bases)' in data:
-                data['Q30 bases (excl. dups & clipped bases) pct'] = data['Q30 bases (excl. dups & clipped bases)'] / \
-                                                                     data['Total bases'] * 100.0
-            if 'Mapped bases R1' in data:
+        if exist_and_number(data, 'Total bases') and data['Total bases'] > 0:
+
+            if exist_and_number(data, 'Q30 bases (excl. dups & clipped bases)'):
+                data['Q30 bases (excl. dups & clipped bases) pct'] = \
+                    data['Q30 bases (excl. dups & clipped bases)'] / data['Total bases'] * 100.0
+
+            if exist_and_number(data, 'Mapped bases R1'):
                 data['Mapped bases R1 pct'] = data['Mapped bases R1'] / data['Total bases'] * 100.0
-            if 'Mapped bases R2' in data:
+
+            if exist_and_number(data, 'Mapped bases R2'):
                 data['Mapped bases R2 pct'] = data['Mapped bases R2'] / data['Total bases'] * 100.0
 
     return data_by_readgroup, data_by_phenotype

@@ -123,3 +123,10 @@ def make_headers(parsed_metric_ids, metrics):
                 genstats_headers[metric.id] = dict(col, hidden=metric.in_genstats == 'hid')
 
     return genstats_headers, own_tabl_headers
+
+
+def exist_and_number(data, *metrics):
+    return all(isinstance(data.get(m, None), int) or isinstance(data.get(m, None), float) for m in metrics)
+
+
+
