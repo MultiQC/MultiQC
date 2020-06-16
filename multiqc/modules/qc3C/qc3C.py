@@ -88,43 +88,102 @@ class MultiqcModule(BaseMultiqcModule):
             log.info('Found {} BAM analysis reports'.format(len(self.qc3c_data['bam'])))
 
             self.add_section(
-                name='qc3C BAM: Runtime details',
+                name='BAM mode runtime details',
                 anchor='bam-runtime-parameters',
+                description="""This table includes user specified input options, observed 
+                read-length and estimated insert size""",
                 plot=self.bam_runtime_table())
 
             self.add_section(
-                name='qc3C BAM: Read-pair breakdown',
+                name='BAM mode read-pair breakdown',
                 anchor='bam-hic-fraction',
+                description="""This table details various alignment features which are potentially of interest to 
+researchers attempting to assess the quality of a Hi-C library.
+
+Here, the **adjusted fraction of read-through** events can be taken as a estimate of the fraction of Hi-C read-pairs
+within the library.
+
+* _trans_ (inter-reference) and _cis_ (intra-reference) pairs.
+* The fraction of _cis_ pairs whose separation is less than 1000 bp.
+* The fraction of total insert extent which was unobserable.
+* The fraction of accepted reads whose alignment began with a cutsite.
+* The fraction of accepted reads whose alignment ended in a cutsite.
+* The fraction of accepted reads which fully aligned and ended in a cutsite.
+* The fraction of reads which contained a suspected read-through event (across a junction)
+* The fraction of read-through events whose 3-prime end further aligned elsewhere.
+* The fraction of read-through events adjusted for unobservable extent.
+                """,
                 plot=self.bam_signal_table())
 
             self.add_section(
-                name='qc3C BAM: HiCPro categories',
-                anchor='bam_hicpro_table',
-                plot=self.bam_hicpro_table())
-
-            self.add_section(
-                name='qc3C BAM: Read parsing',
+                name='BAM mode read parsing',
                 anchor='bam-acceptance-plot',
+                description="""This figure displays a breakdown of proportion of parsed reads rejected due to various 
+                criteria and the proportion that were accepted.""",
                 plot=self.bam_acceptance_plot())
 
             self.add_section(
-                name='qc3C BAM: Pair validation',
+                name='BAM mode HiCPro categories',
+                anchor='bam-hicpro-table',
+                description="""This table details the read-pair categorisation devised by 
+[HiC-Pro](https://github.com/nservant/HiC-Pro).
+
+As the field has moved from 6-cutter to 4-cutter enzymes, and subsequently dual-enzyme digests, the higher density of 
+sites has made this framework less useful, since it has become increasingly easy to satisfy the intervening site
+criteria.""",
+                plot=self.bam_hicpro_table())
+
+            self.add_section(
+                name='BAM mode HiC-Pro validation',
                 anchor='bam-valid-plot',
+                description="""A visualisation of the read-pair categories devised by 
+[HiC-Pro](https://github.com/nservant/HiC-Pro).
+
+As the field has moved from 6-cutter to 4-cutter enzymes, and subsequently dual-enzyme digests, the higher density of 
+sites has made this framework less useful, since it has become increasingly easy to satisfy the intervening site
+criteria.""",
                 plot=self.bam_valid_plot())
 
             self.add_section(
-                name='qc3C BAM: Breakdown of possible duplication products',
+                name='BAM mode junction breakdown',
                 anchor='bam-junction-plot',
+                description="""This figure displays the frequency at which a library's possible junction sequences 
+are actually observed in the reads. 
+
+For simple single-enzyme digests, there is only one possible junction sequence, while for dual-enzyme (Phase) or 
+digests with ambiguous sites (Arima), the number of possible junction sequences increases.
+                
+How efficiently the more complicated library protocols are at producing hybrid junctions is possibly just a point 
+of interest.
+
+**Note:** in BAM mode, the counts **are** controlled for false positives, in the sense that read alignments must 
+terminate at a cutsite, but the read sequence must continue and contain the observed junction.""",
                 plot=self.bam_junction_plot())
 
             self.add_section(
-                name='qc3C BAM: Long-range pairs',
+                name='BAM mode long-range pairs',
                 anchor='bam-longrange-table',
+                description="""This table details the coarse binning of read-pairs based on separation distance. Only 
+pairs which mapped to the same reference (_cis_ pairs) are considered and therefore, for fragmented references, there 
+will exist a negative bias against long-range pairs.
+                
+Ideally, Hi-C proximity ligation should produce many pairs which are greater than 1000 bp apart.""",
                 plot=self.bam_longrange_table())
 
             self.add_section(
-                name='qc3C BAM: Distribution of fragment separation',
+                name='BAM mode distribution of fragment separation',
                 anchor='bam-fragment-histogram',
+                description="""This figure displays the full histogram of read-pair separation. The horizontal axis 
+follows a log10 scale to accomodate very large separations. The inferred insert size for each library is represented 
+by a grey and dashed vertical line. 
+                
+A characteristic of Hi-C libraries, is the presence of a large peak below 1000 bp. qc3C attributes this to regular and 
+undesirable shotgun pairs creeping through the Hi-C protocol. The peak is used by qc3C to infer the insert size, which 
+is later employed to estimate unobservable extent of inserts.
+
+**Note:** this value can be significantly smaller than what a sequencing facility might quote the experimentally
+determined insert size to be. This discrepancy can be explained by the failure to account for the additional adapter
+sequence when fragments are assessed during library preparation.""",
                 plot=self.bam_fragment_histogram())
 
         if len(self.qc3c_data['kmer']) > 0:
@@ -133,28 +192,52 @@ class MultiqcModule(BaseMultiqcModule):
             log.info('Found {} k-mer analysis reports'.format(len(self.qc3c_data['kmer'])))
 
             self.add_section(
-                name='qc3C K-mer: Runtime details',
+                name='K-mer mode runtime details',
                 anchor='kmer-runtime-parameters',
+                description="""This table includes user specified input options, observed 
+                read-length and k-mer high coverage cutoff.""",
                 plot=self.kmer_runtime_table())
 
             self.add_section(
-                name='qc3C K-mer: Estimated Hi-C fraction',
+                name='K-mer mode Hi-C fraction',
                 anchor='kmer-hic-fraction',
+                description="""This table lists the inferred proportion of Hi-C proximity ligation fragments. 
+                
+Here, **Mean adjusted Hi-C fraction** represents the best estimate of the proportion of a library's read-pairs which are 
+a product of proximity ligation. This figure is arrived at by correcting the raw estimate for the fraction of insert
+extent which was not observable. 
+
+The observable extent is limited by the length of reads relative to the supplied insert size, as well as a further 
+constraint on flanking sequence around any suspected junction sequence.""",
                 plot=self.kmer_signal_table())
 
             self.add_section(
-                name='qc3C K-mer: Read parsing',
+                name='K-mer mode read parsing',
                 anchor='kmer-acceptance-plot',
+                description="""This figure displays a breakdown of proportion of parsed reads rejected due to various 
+                criteria and the proportion that were accepted.""",
                 plot=self.kmer_acceptance_plot())
 
             self.add_section(
-                name='qc3C K-mer: Raw proportion of junction-containing reads',
+                name='K-mer mode junction proportion',
                 anchor='kmer-signal-plot',
+                description="""This figure displays the proportion of reads which contained a putative junction
+                sequence. The raw proportion of Hi-C reads cannot be greater than this value.""",
                 plot=self.kmer_signal_plot())
 
             self.add_section(
-                name='qc3C K-mer: Breakdown of possible duplication products',
+                name='K-mer mode junction breakdown',
                 anchor='kmer-junction-plot',
+                description="""This figure displays the frequency at which a library's possible junction sequences 
+are actually observed in the reads. 
+
+For simple single-enzyme digests, there is only one possible junction sequence, while for dual-enzyme (Phase) or 
+digests with ambiguous sites (Arima), the number of possible junction sequences increases.
+                
+How efficiently the more complicated library protocols are at producing hybrid junctions is possibly just a point 
+of interest.
+
+**Note:** in k-mer mode, the counts are not controlled for false positives.""",
                 plot=self.kmer_junction_plot())
 
     @staticmethod
@@ -217,22 +300,22 @@ class MultiqcModule(BaseMultiqcModule):
         headers = OrderedDict({
             'n_1kb': {'title': 'Pairs >1000 bp',
                       'description': 'Number of pairs with >1kbp separation',
-                      'min': 0, 'format': '{:,d}'},
+                      'min': 0, 'format': '{:,d}', 'scale': 'Purples'},
             'n_5kb': {'title': 'Pairs >5000 bp',
                       'description': 'Number of pairs with >5kbp separation',
-                      'min': 0, 'format': '{:,d}'},
+                      'min': 0, 'format': '{:,d}', 'scale': 'Blues'},
             'n_10kb': {'title': 'Pairs >10000 bp',
                        'description': 'Number of pairs with >10kbp separation',
-                       'min': 0, 'format': '{:,d}'},
-            '_1kb_vs_accepted': {'title': '% >1000 bp',
+                       'min': 0, 'format': '{:,d}', 'scale': 'Greens'},
+            'p_1kb_vs_accepted': {'title': '% >1000 bp',
                                  'description': 'Fraction of pairs with >1kbp separation vs all accepted pairs',
-                                 'min': 0, 'max': 100, 'suffix': '%'},
-            '_5kb_vs_accepted': {'title': '% >5000 bp',
+                                 'min': 0, 'max': 100, 'suffix': '%', 'scale': 'Purples'},
+            'p_5kb_vs_accepted': {'title': '% >5000 bp',
                                  'description': 'Fraction of pairs with >5kbp separation vs all accepted pairs',
-                                 'min': 0, 'max': 100, 'suffix': '%'},
-            '_10kb_vs_accepted': {'title': '% >10000 bp',
+                                 'min': 0, 'max': 100, 'suffix': '%', 'scale': 'Blues'},
+            'p_10kb_vs_accepted': {'title': '% >10000 bp',
                                   'description': 'Fraction of pairs with >10kbp separation vs all accepted pairs',
-                                  'min': 0, 'max': 100, 'suffix': '%'},
+                                  'min': 0, 'max': 100, 'suffix': '%', 'scale': 'Greens'},
             })
 
         return table.plot(self.qc3c_data['bam'], headers, config)
@@ -240,6 +323,8 @@ class MultiqcModule(BaseMultiqcModule):
     def bam_longrange_plot(self):
         config = {'id': 'bam_longrange_plot',
                   'namespace': 'qc3C',
+                  'title': 'qc3C: BAM mode long-range pairs',
+                  'ylab': 'Number of Reads',
                   'stacking': None,
                   'cpswitch': False,
                   'tt_percentages': False,
@@ -251,14 +336,14 @@ class MultiqcModule(BaseMultiqcModule):
 
         categories = [
             OrderedDict({
-                '_1kb_vs_accepted': {'name': '>1000 bp', 'color': '#EF476F'},
-                '_5kb_vs_accepted': {'name': '>5000 bp', 'color': '#06D6A0'},
-                '_10kb_vs_accepted': {'name': '>10000 bp', 'color': '#118AB2'}
+                'p_1kb_vs_accepted': {'name': '>1000 bp', 'color': '#EF476F'},
+                'p_5kb_vs_accepted': {'name': '>5000 bp', 'color': '#06D6A0'},
+                'p_10kb_vs_accepted': {'name': '>10000 bp', 'color': '#118AB2'}
             }),
             OrderedDict({
-                '_1kb_vs_cis': {'name': '>1000 bp', 'color': '#EF476F'},
-                '_5kb_vs_cis': {'name': '>5000 bp', 'color': '#06D6A0'},
-                '_10kb_vs_cis': {'name': '>10000 bp', 'color': '#118AB2'},
+                'p_1kb_vs_cis': {'name': '>1000 bp', 'color': '#EF476F'},
+                'p_5kb_vs_cis': {'name': '>5000 bp', 'color': '#06D6A0'},
+                'p_10kb_vs_cis': {'name': '>10000 bp', 'color': '#118AB2'},
             })
         ]
 
@@ -267,6 +352,7 @@ class MultiqcModule(BaseMultiqcModule):
     def bam_acceptance_plot(self):
         config = {'id': 'bam_acceptance_plot',
                   'namespace': 'qc3C',
+                  'title': 'qc3C: BAM mode read parsing results',
                   'ylab': 'Number of Reads',
                   'hide_zero_cats': False,
                   'cpswitch_counts_label': 'Number of Reads'}
@@ -300,7 +386,7 @@ class MultiqcModule(BaseMultiqcModule):
             'p_short_inserts': {'title': 'Short range',
                                 'description': 'Fraction of pairs with small separation (< 1000bp)',
                                 'min': 0, 'max': 100, 'suffix': '%', 'scale': 'Reds'},
-            'unobs_fraction': {'title': 'Unobserved extent',
+            'unobs_fraction': {'title': 'Unobservable extent',
                                'description': 'Estimated fraction of total fragment extent that was unobservable',
                                'min': 0, 'max': 100, 'suffix': '%', 'scale': 'Reds'},
             'p_cs_start': {'title': 'CS start',
@@ -320,7 +406,7 @@ class MultiqcModule(BaseMultiqcModule):
                            'description': 'Fraction of read-thru reads further split aligned',
                            'min': 0, 'max': 100, 'suffix': '%', 'scale': 'Greens'},
             'adj_read_thru': {'title': 'Adj read-thru',
-                              'description': 'Fraction of read-thru events adjusted for unobserved extent',
+                              'description': 'Fraction of read-thru events adjusted for unobservable extent',
                               'min': 0, 'max': 100, 'suffix': '%', 'scale': 'Greens'},
         })
         return table.plot(self.qc3c_data['bam'], headers, config)
@@ -353,6 +439,7 @@ class MultiqcModule(BaseMultiqcModule):
     def bam_valid_plot(self):
         config = {'id': 'bam_valid_plot',
                   'namespace': 'qc3C',
+                  'title': 'qc3C: BAM mode valid vs invalid HiC-Pro categories',
                   'ylab': 'Number of Reads',
                   'hide_zero_cats': False,
                   'cpswitch_counts_label': 'Number of Reads'}
@@ -371,6 +458,8 @@ class MultiqcModule(BaseMultiqcModule):
     def bam_junction_plot(self):
         config = {'id': 'bam_junction_plot',
                   'namespace': 'qc3C',
+                  'title': 'qc3C: K-mer mode putative ligation product frequency',
+                  'ylab': 'Number of reads',
                   'hide_zero_cats': False,
                   'use_legend': False}
 
@@ -392,6 +481,7 @@ class MultiqcModule(BaseMultiqcModule):
                                  })
 
         config = {'id': 'bam_fragment_histogram',
+                  'title': 'qc3C: BAM mode distribution of pair separation',
                   'namespace': 'qc3C',
                   'xLog': True,
                   'xPlotLines': median_lines,
@@ -457,7 +547,7 @@ class MultiqcModule(BaseMultiqcModule):
                   'col1_header': 'Sample'}
 
         headers = OrderedDict({
-            'unobs_fraction': {'title': 'Unobserved extent',
+            'unobs_fraction': {'title': 'Unobservable extent',
                                'description': 'Estimated mean of the unobservable portion of fragments',
                                'shared_key': 'unobs_mean',
                                'min': 0, 'max': 100, 'suffix': '%', 'scale': 'Reds'},
@@ -465,7 +555,7 @@ class MultiqcModule(BaseMultiqcModule):
                              'description': 'Estimated mean of Hi-C fraction from only the observable extent',
                              'min': 0, 'max': 100, 'suffix': '%', 'scale': 'Greens'},
             'adj_fraction': {'title': 'Mean adjusted Hi-C fraction',
-                             'description': 'Estimated mean of Hi-C fraction adjusted for unobserved extent',
+                             'description': 'Estimated mean of Hi-C fraction adjusted for unobservable extent',
                              'min': 0, 'max': 100, 'suffix': '%', 'scale': 'Greens'},
         })
         return table.plot(self.qc3c_data['kmer'], headers, config)
@@ -473,6 +563,7 @@ class MultiqcModule(BaseMultiqcModule):
     def kmer_acceptance_plot(self):
         config = {'id': 'kmer_acceptance_plot',
                   'namespace': 'qc3C',
+                  'title': 'qc3C: K-mer mode read parsing results',
                   'ylab': 'Number of Reads',
                   'hide_zero_cats': False,
                   'cpswitch_counts_label': 'Number of Reads'}
@@ -490,6 +581,7 @@ class MultiqcModule(BaseMultiqcModule):
     def kmer_signal_plot(self):
         config = {'id': 'kmer_signal_plot',
                   'namespace': 'qc3C',
+                  'title': 'qc3C: K-mer mode signal content',
                   'ylab': 'Number of Reads',
                   'hide_zero_cats': False,
                   'cpswitch_counts_label': 'Number of Reads'}
@@ -503,6 +595,8 @@ class MultiqcModule(BaseMultiqcModule):
     def kmer_junction_plot(self):
         config = {'id': 'kmer_frequency_plot',
                   'namespace': 'qc3C',
+                  'title': 'qc3C: K-mer mode putative ligation product frequency',
+                  'ylab': 'Number of Reads',
                   'hide_zero_cats': False,
                   'use_legend': False}
 
@@ -590,12 +684,12 @@ class MultiqcModule(BaseMultiqcModule):
                                              'n_1kb': parsed['separation_bins']['counts'][0],
                                              'n_5kb': parsed['separation_bins']['counts'][1],
                                              'n_10kb': parsed['separation_bins']['counts'][2],
-                                             '_1kb_vs_accepted': parsed['separation_bins']['vs_accepted'][0],
-                                             '_5kb_vs_accepted': parsed['separation_bins']['vs_accepted'][1],
-                                             '_10kb_vs_accepted': parsed['separation_bins']['vs_accepted'][2],
-                                             '_1kb_vs_cis': parsed['separation_bins']['vs_all_cis'][0],
-                                             '_5kb_vs_cis': parsed['separation_bins']['vs_all_cis'][1],
-                                             '_10kb_vs_cis': parsed['separation_bins']['vs_all_cis'][2],
+                                             'p_1kb_vs_accepted': parsed['separation_bins']['vs_accepted'][0],
+                                             'p_5kb_vs_accepted': parsed['separation_bins']['vs_accepted'][1],
+                                             'p_10kb_vs_accepted': parsed['separation_bins']['vs_accepted'][2],
+                                             'p_1kb_vs_cis': parsed['separation_bins']['vs_all_cis'][0],
+                                             'p_5kb_vs_cis': parsed['separation_bins']['vs_all_cis'][1],
+                                             'p_10kb_vs_cis': parsed['separation_bins']['vs_all_cis'][2],
                                              }
 
             from itertools import zip_longest
