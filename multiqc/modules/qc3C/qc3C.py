@@ -75,6 +75,8 @@ class MultiqcModule(BaseMultiqcModule):
         )
 
         self.qc3c_data = defaultdict(dict)
+        # additional members for conditional plotting of per-genotype junction frequency
+        self.do_digest_plot = False
         self.digest_junctions = defaultdict(dict)
 
         for f in self.find_log_files('qc3C', filehandles=True):
@@ -98,7 +100,9 @@ class MultiqcModule(BaseMultiqcModule):
             self.add_section(
                 name = 'BAM mode runtime details',
                 anchor = 'qc3C-bam-runtime-parameters',
-                description = "This table includes user specified input options, observed read-length and estimated insert size",
+                description = """
+                    This table includes user specified input options, observed read-length and estimated insert size.
+                """,
                 plot = self.bam_runtime_table()
             )
 
@@ -110,8 +114,8 @@ class MultiqcModule(BaseMultiqcModule):
                     researchers attempting to assess the quality of a Hi-C library.
                 """,
                 helptext = """
-                    Here, the **adjusted fraction of read-through** events can be taken as a estimate of the fraction of Hi-C read-pairs
-                    within the library.
+                    Here, the **adjusted fraction of read-through** events can be taken as a estimate of the fraction of 
+                    Hi-C read-pairs within the library.
 
                     * _trans_ (inter-reference) and _cis_ (intra-reference) pairs.
                     * The fraction of _cis_ pairs whose separation is less than 1000 bp.
@@ -136,20 +140,22 @@ class MultiqcModule(BaseMultiqcModule):
                 plot = self.bam_acceptance_plot()
             )
 
-            self.add_section(
-                name = 'BAM mode HiCPro categories',
-                anchor = 'qc3C-bam-hicpro-table',
-                description = """
-                    This table details the read-pair categorisation devised by
-                    [HiC-Pro](https://github.com/nservant/HiC-Pro).
-                """,
-                helptext = """
-                    As the field has moved from 6-cutter to 4-cutter enzymes, and subsequently dual-enzyme digests, the higher density of
-                    sites has made this framework less useful, since it has become increasingly easy to satisfy the intervening site
-                    criteria.
-                """,
-                plot = self.bam_hicpro_table()
-            )
+            # the following table is disabled to simplify report, as it is redundant consider the plot that follows.
+            #
+            # self.add_section(
+            #     name = 'BAM mode HiCPro categories',
+            #     anchor = 'qc3C-bam-hicpro-table',
+            #     description = """
+            #         This table details the read-pair categorisation devised by
+            #         [HiC-Pro](https://github.com/nservant/HiC-Pro).
+            #     """,
+            #     helptext = """
+            #         As the field has moved from 6-cutter to 4-cutter enzymes, and subsequently dual-enzyme digests,
+            #         the higher density of sites has made this framework less useful, since it has become increasingly
+            #         easy to satisfy the intervening site criteria.
+            #     """,
+            #     plot = self.bam_hicpro_table()
+            # )
 
             self.add_section(
                 name = 'BAM mode HiC-Pro validation',
@@ -159,32 +165,44 @@ class MultiqcModule(BaseMultiqcModule):
                     [HiC-Pro](https://github.com/nservant/HiC-Pro).
                 """,
                 helptext = """
-                    As the field has moved from 6-cutter to 4-cutter enzymes, and subsequently dual-enzyme digests, the higher density of
-                    sites has made this framework less useful, since it has become increasingly easy to satisfy the intervening site
-                    criteria.
+                    As the field has moved from 6-cutter to 4-cutter enzymes, and subsequently dual-enzyme digests, the 
+                    higher density of sites has made this framework less useful, since it has become increasingly easy 
+                    to satisfy the intervening site criteria.
                 """,
                 plot = self.bam_valid_plot()
             )
 
-            self.add_section(
-                name = 'BAM mode junction breakdown',
-                anchor = 'qc3C-bam-junction-plot',
-                description = """
-                    This figure displays the frequency at which a library's possible junction sequences
-                    are actually observed in the reads.
-                """,
-                helptext = """
-                    For simple single-enzyme digests, there is only one possible junction sequence, while for dual-enzyme (Phase) or
-                    digests with ambiguous sites (Arima), the number of possible junction sequences increases.
-
-                    How efficiently the more complicated library protocols are at producing hybrid junctions is possibly just a point
-                    of interest.
-
-                    **Note:** in BAM mode, the counts **are** controlled for false positives, in the sense that read alignments must
-                    terminate at a cutsite, but the read sequence must continue and contain the observed junction.
-                """,
-                plot = self.bam_junction_plot()
-            )
+            if self.do_digest_plot:
+                self.add_section(
+                    name = 'BAM mode junction breakdown',
+                    anchor = 'qc3C-bam-junction-plot',
+                    description = """
+                        This figure displays the frequency at which a library's possible junction sequences
+                        are actually observed in the reads. (_Trivial single-digests are ignored_)
+                    """,
+                    helptext = """
+                        For trivial single-enzyme digests, there is only one possible junction sequence and so the 
+                        result for these experiments are not plotted. For dual-enzyme (such as Phase Genomics) there are 
+                        four potential junctions, while for dual-enzyme digests with one ambiguous site (such as Arima 
+                        Genomics) there are 16 possible junction sequences.
+    
+                        How efficiently the more complicated library protocols are at producing hybrid junctions is 
+                        possibly just a point of interest.
+                        
+                        Junctions are named for which enzymes was responsible for creating the 5' and 3' ends.
+                        E.g. `Sau3AI/MluCI` would involve two different enzymes, while `Sau3AI/Sau3AI` only one, as 
+                        would be the case in a single-enzyme digest. Proceeding the name is the actual junction 
+                        sequence.
+                        
+                        The junctions are grouped by their 5' and then 3' enzyme, while the color spectrum used across 
+                        each bar aims to emphasise these enzymatic sources.
+    
+                        **Note:** in BAM mode, the counts **are** controlled for false positives, in the sense that read 
+                        alignments must terminate at a cutsite, but the read sequence must continue and contain the 
+                        observed junction.
+                    """,
+                    plot = self.bam_junction_plot()
+                )
 
             self.add_section(
                 name = 'BAM mode long-range pairs',
@@ -204,17 +222,18 @@ class MultiqcModule(BaseMultiqcModule):
                 anchor = 'qc3C-bam-fragment-histogram',
                 description = """
                     This figure displays the full histogram of read-pair separation. The horizontal axis
-                    follows a log10 scale to accomodate very large separations. The inferred insert size for each library is represented
-                    by a grey and dashed vertical line.
+                    follows a log10 scale to accomodate very large separations. The inferred insert size for each 
+                    library is represented by a grey and dashed vertical line.
                 """,
                 helptext = """
-                    A characteristic of Hi-C libraries, is the presence of a large peak below 1000 bp. qc3C attributes this to regular and
-                    undesirable shotgun pairs creeping through the Hi-C protocol. The peak is used by qc3C to infer the insert size, which
-                    is later employed to estimate unobservable extent of inserts.
+                    A characteristic of Hi-C libraries, is the presence of a large peak below 1000 bp. qc3C attributes 
+                    this to regular and undesirable shotgun pairs creeping through the Hi-C protocol. The peak is used 
+                    by qc3C to infer the insert size, which is later employed to estimate unobservable extent of 
+                    inserts.
 
-                    **Note:** this value can be significantly smaller than what a sequencing facility might quote the experimentally
-                    determined insert size to be. This discrepancy can be explained by the failure to account for the additional adapter
-                    sequence when fragments are assessed during library preparation.
+                    **Note:** this value can be significantly smaller than what a sequencing facility might quote the 
+                    experimentally determined insert size to be. This discrepancy can be explained by the failure to 
+                    account for the additional adapter sequence when fragments are assessed during library preparation.
                 """,
                 plot = self.bam_fragment_histogram()
             )
@@ -239,12 +258,12 @@ class MultiqcModule(BaseMultiqcModule):
                 anchor = 'qc3C-kmer-hic-fraction',
                 description = "This table lists the inferred proportion of Hi-C proximity ligation fragments.",
                 helptext = """
-                    Here, **Mean adjusted Hi-C fraction** represents the best estimate of the proportion of a library's read-pairs which are
-                    a product of proximity ligation. This figure is arrived at by correcting the raw estimate for the fraction of insert
-                    extent which was not observable.
+                    Here, **Mean adjusted Hi-C fraction** represents the best estimate of the proportion of a library's 
+                    read-pairs which are a product of proximity ligation. This figure is arrived at by correcting the 
+                    raw estimate for the fraction of insert extent which was not observable.
 
-                    The observable extent is limited by the length of reads relative to the supplied insert size, as well as a further
-                    constraint on flanking sequence around any suspected junction sequence.
+                    The observable extent is limited by the length of reads relative to the supplied insert size, as 
+                    well as a further constraint on flanking sequence around any suspected junction sequence.
                 """,
                 plot = self.kmer_signal_table()
             )
@@ -269,24 +288,35 @@ class MultiqcModule(BaseMultiqcModule):
                 plot = self.kmer_signal_plot()
             )
 
-            self.add_section(
-                name = 'K-mer mode junction breakdown',
-                anchor = 'qc3C-kmer-junction-plot',
-                description = """
-                    This figure displays the frequency at which a library's possible junction sequences
-                    are actually observed in the reads.
-                """,
-                helptext = """
-                    For simple single-enzyme digests, there is only one possible junction sequence, while for dual-enzyme (Phase) or
-                    digests with ambiguous sites (Arima), the number of possible junction sequences increases.
-
-                    How efficiently the more complicated library protocols are at producing hybrid junctions is possibly just a point
-                    of interest.
-
+            if self.do_digest_plot:
+                self.add_section(
+                    name = 'K-mer mode junction breakdown',
+                    anchor = 'qc3C-kmer-junction-plot',
+                    description = """
+                        This figure displays the frequency at which a library's possible junction sequences
+                        are actually observed in the reads. (_Trivial single-digests are ignored_)
+                    """,
+                    helptext = """
+                        For trivial single-enzyme digests, there is only one possible junction sequence and so the 
+                        result for these experiments are not plotted. For dual-enzyme (such as Phase Genomics) there are 
+                        four potential junctions, while for dual-enzyme digests with one ambiguous site (such as Arima 
+                        Genomics) there are 16 possible junction sequences.
+    
+                        How efficiently the more complicated library protocols are at producing hybrid junctions is 
+                        possibly just a point of interest.
+    
+                        Junctions are named for which enzymes was responsible for creating the 5' and 3' ends.
+                        E.g. `Sau3AI/MluCI` would involve two different enzymes, while `Sau3AI/Sau3AI` only one, as 
+                        would be the case in a single-enzyme digest. Proceeding the name is the actual junction 
+                        sequence.
+                        
+                        The junctions are grouped by their 5' and then 3' enzyme, while the color spectrum used across 
+                        each bar aims to emphasise these enzymatic sources.
+                        
                     **Note:** in k-mer mode, the counts are not controlled for false positives.
-                """,
-                plot = self.kmer_junction_plot()
-            )
+                    """,
+                    plot = self.kmer_junction_plot()
+                )
 
     @staticmethod
     def _drop_time(s):
@@ -311,11 +341,13 @@ class MultiqcModule(BaseMultiqcModule):
             'run_timestamp': {
                 'title': 'Date',
                 'description': "Analysis time stamp",
-                'modify': MultiqcModule._drop_time
+                'modify': MultiqcModule._drop_time,
+                'hidden': True
             },
             'mode': {
                 'title': 'Run Mode',
-                'description': 'Analysis mode used'
+                'description': 'Analysis mode used',
+                'hidden': True
             },
             'min_mapq': {
                 'title': 'Min MapQ',
@@ -332,7 +364,8 @@ class MultiqcModule(BaseMultiqcModule):
                 'title': 'Seed',
                 'description': 'Random seed',
                 'format': '{:d}',
-                'scale': False
+                'scale': False,
+                'hidden': True
             },
             'max_obs': {
                 'title': 'Max obs',
@@ -481,14 +514,14 @@ class MultiqcModule(BaseMultiqcModule):
         }
 
         categories = OrderedDict({
-            'n_skipped_reads': {'name': 'Skipped', 'color': rev_8[0]},
-            'n_unmapped_reads': {'name': 'Unmapped', 'color': rev_8[1]},
-            'n_low_mapq_reads': {'name': 'Low mapq', 'color': rev_8[2]},
-            'n_secondary_reads': {'name': 'Secondary', 'color': rev_8[3]},
-            'n_supplementary_reads': {'name': 'Supplementary', 'color': rev_8[4]},
-            'n_weak_mapping_reads': {'name': 'Weak mapping', 'color': rev_8[5]},
-            'n_ref_term_reads': {'name': 'Truncated', 'color': rev_8[6]},
             'n_accepted_reads': {'name': 'Accepted', 'color': rev_8[-1]},
+            'n_ref_term_reads': {'name': 'Truncated', 'color': rev_8[6]},
+            'n_weak_mapping_reads': {'name': 'Weak mapping', 'color': rev_8[5]},
+            'n_supplementary_reads': {'name': 'Supplementary', 'color': rev_8[4]},
+            'n_secondary_reads': {'name': 'Secondary', 'color': rev_8[3]},
+            'n_low_mapq_reads': {'name': 'Low mapq', 'color': rev_8[2]},
+            'n_unmapped_reads': {'name': 'Unmapped', 'color': rev_8[1]},
+            'n_skipped_reads': {'name': 'Skipped', 'color': rev_8[0]},
         })
         return bargraph.plot(self.qc3c_data['bam'], categories, config)
 
@@ -725,18 +758,21 @@ class MultiqcModule(BaseMultiqcModule):
             'run_timestamp': {
                 'title': 'Date',
                 'description': "Analysis time stamp",
-                'modify': MultiqcModule._drop_time
+                'modify': MultiqcModule._drop_time,
+                'hidden': True
             },
             'mode': {
                 'title': 'Run Mode',
-                'description': 'Analysis mode used'
+                'description': 'Analysis mode used',
+                'hidden': True
             },
             'kmer_size': {
                 'title': 'k',
                 'description': 'Library k-mer size',
                 'min': 0,
                 'format': '{:d}',
-                'scale': False
+                'scale': False,
+                'hidden': True
             },
             'enzymes': {
                 'title': 'Digest',
@@ -746,7 +782,8 @@ class MultiqcModule(BaseMultiqcModule):
                 'title': 'Seed',
                 'description': 'Random seed',
                 'format': '{:d}',
-                'scale': False
+                'scale': False,
+                'hidden': True
             },
             'max_obs': {
                 'title': 'Max obs',
@@ -852,12 +889,12 @@ class MultiqcModule(BaseMultiqcModule):
         }
 
         categories = OrderedDict({
-            'n_skipped': {'name': 'Skipped', 'color': rev_8[0]},
-            'n_too_short': {'name': 'Too short', 'color': rev_8[1]},
-            'n_no_flank': {'name': 'No flank', 'color': rev_8[2]},
-            'n_ambiguous': {'name': 'Ambiguous', 'color': rev_8[3]},
-            'n_high_cov': {'name': 'High cov', 'color': rev_8[4]},
             'n_accepted_reads': {'name': 'Accepted', 'color': rev_8[-1]},
+            'n_high_cov': {'name': 'High cov', 'color': rev_8[4]},
+            'n_ambiguous': {'name': 'Ambiguous', 'color': rev_8[3]},
+            'n_no_flank': {'name': 'No flank', 'color': rev_8[2]},
+            'n_too_short': {'name': 'Too short', 'color': rev_8[1]},
+            'n_skipped': {'name': 'Skipped', 'color': rev_8[0]},
         })
         return bargraph.plot(self.qc3c_data['kmer'], categories, config)
 
@@ -868,12 +905,14 @@ class MultiqcModule(BaseMultiqcModule):
             'title': 'qc3C: K-mer mode signal content',
             'ylab': 'Number of Reads',
             'hide_zero_cats': False,
-            'cpswitch_counts_label': 'Number of Reads'
+            'cpswitch': False,
+            'cpswitch_c_active': False,
+            'cpswitch_counts_label': 'Number of Reads',
         }
 
         categories = OrderedDict({
-            'n_without_junc': {'name': 'Without junc', 'color': '#ef3b2c'},
             'n_with_junc': {'name': 'With junc', 'color': '#41ab5d'},
+            'n_without_junc': {'name': 'Without junc', 'color': '#ef3b2c'},
         })
         return bargraph.plot(self.qc3c_data['kmer'], categories, config)
 
@@ -1017,29 +1056,35 @@ class MultiqcModule(BaseMultiqcModule):
                     'unobs_fraction': parsed['unobs_fraction'],
             }
 
-            # include the junction frequencies (1 or many depending on digest)
-            self.qc3c_data[analysis_mode][s_name].update(parsed['junction_frequency'])
+            # if any experiment contains a digest tht is non-trivial and produces
+            # more than one possible junction sequence, prepare the supporting data
+            # to render the junction frequency plot
+            if len(parsed['junction_frequency']) > 1:
+                self.do_digest_plot = True
+                log.info('Enabled junction frequency plot for non-trivial digest: {}'.format(f['root']))
+                # include the junction frequencies (1 or many depending on digest)
+                self.qc3c_data[analysis_mode][s_name].update(parsed['junction_frequency'])
 
-            # calculate the degeneracy of junction sequences per enzymatic combination (5p end =/= 3p end)
-            # this can vary due to ambiguous bases in restriction site
-            degen_count = {
-                '{}/{}'.format(v['enz5p'], v['enz3p']): 4**v['junction'].count('N')
-                for k, v in parsed['digestion']['junctions'].items()
-            }
-            # sort these by "enzyme combo + junction"
-            degen_count = OrderedDict(sorted(degen_count.items(), key=lambda x: x[0]))
-            # get a palette for this series
-            cols = color_picker(list(degen_count.values()))
-            # sort these in accordance with that above
-            juncs = np.sort(
-                np.array(
-                    [(k.split(' ')[0], k) for k in parsed['junction_frequency']],
-                    dtype=np.dtype([('a', 'S100'), ('b', 'S100')])
+                # calculate the degeneracy of junction sequences per enzymatic combination (5p end =/= 3p end)
+                # this can vary due to ambiguous bases in restriction site
+                degen_count = {
+                    '{}/{}'.format(v['enz5p'], v['enz3p']): 4**v['junction'].count('N')
+                    for k, v in parsed['digestion']['junctions'].items()
+                }
+                # sort these by "enzyme combo + junction"
+                degen_count = OrderedDict(sorted(degen_count.items(), key=lambda x: x[0]))
+                # get a palette for this series
+                cols = color_picker(list(degen_count.values()))
+                # sort these in accordance with that above
+                juncs = np.sort(
+                    np.array(
+                        [(k.split(' ')[0], k) for k in parsed['junction_frequency']],
+                        dtype=np.dtype([('a', 'S100'), ('b', 'S100')])
+                    )
                 )
-            )
 
-            # keep a record of how these should be colored per sample
-            self.digest_junctions[analysis_mode][s_name] = [ {'name': juncs[i][1].decode(), 'color': cols[i]} for i in range(len(juncs)) ]
+                # keep a record of how these should be colored per sample
+                self.digest_junctions[analysis_mode][s_name] = [ {'name': juncs[i][1].decode(), 'color': cols[i]} for i in range(len(juncs)) ]
 
             self.add_data_source(f, s_name, section=analysis_mode)
 
