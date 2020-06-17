@@ -338,36 +338,36 @@ class MultiqcModule(BaseMultiqcModule):
         }
 
         headers = OrderedDict({
-            'run_timestamp': {
+            'b_run_timestamp': {
                 'title': 'Date',
                 'description': "Analysis time stamp",
                 'modify': MultiqcModule._drop_time,
                 'hidden': True
             },
-            'mode': {
+            'b_mode': {
                 'title': 'Run Mode',
                 'description': 'Analysis mode used',
                 'hidden': True
             },
-            'min_mapq': {
+            'b_min_mapq': {
                 'title': 'Min MapQ',
                 'description': 'Minimum accepted mapping quality',
                 'min': 0,
                 'format': '{:d}',
                 'scale': False
             },
-            'enzymes': {
+            'b_enzymes': {
                 'title': 'Digest',
                 'description': 'Enzymes used in digest'
             },
-            'seed': {
+            'b_seed': {
                 'title': 'Seed',
                 'description': 'Random seed',
                 'format': '{:d}',
                 'scale': False,
                 'hidden': True
             },
-            'max_obs': {
+            'b_max_obs': {
                 'title': 'Max obs',
                 'description': 'User specified maximum number of observations',
                 'min': 0,
@@ -375,14 +375,14 @@ class MultiqcModule(BaseMultiqcModule):
                 'scale': 'OrRd',
                 'modify': lambda x: 'n/a' if x == -1 else x
             },
-            'n_accepted_pairs': {
+            'b_n_accepted_pairs': {
                 'title': 'Accepted pairs',
                 'description': 'Number of pairs accepted for analysis',
                 'min': 0,
                 'format': '{:,d}',
                 'scale': 'BuGn'
             },
-            'sample_rate': {
+            'b_sample_rate': {
                 'title': 'Sample rate',
                 'description': 'Sub-sampling probability',
                 'min': 0,
@@ -390,7 +390,7 @@ class MultiqcModule(BaseMultiqcModule):
                 'format': '{:g}',
                 'scale': 'Greys'
             },
-            'obs_insert_mean': {
+            'b_obs_insert_mean': {
                 'title': 'Insert mean',
                 'description': 'Estimated mean insert size',
                 'min': 0,
@@ -398,7 +398,7 @@ class MultiqcModule(BaseMultiqcModule):
                 'suffix': 'bp',
                 'scale': 'Purples'
             },
-            'obs_insert_median': {
+            'b_obs_insert_median': {
                 'title': 'Insert median',
                 'description': 'Estimated median insert size',
                 'min': 0,
@@ -406,7 +406,7 @@ class MultiqcModule(BaseMultiqcModule):
                 'suffix': 'bp',
                 'scale': 'Greens'
             },
-            'mean_readlen': {
+            'b_mean_readlen': {
                 'title': 'Read length',
                 'description': 'Observed average read length',
                 'format': '{:,.0f}',
@@ -423,28 +423,28 @@ class MultiqcModule(BaseMultiqcModule):
         }
 
         headers = OrderedDict({
-            'n_1kb': {
+            'b_n_1kb': {
                 'title': 'Pairs >1000 bp',
                 'description': 'Number of pairs with >1kbp separation',
                 'min': 0,
                 'format': '{:,d}',
                 'scale': 'Purples'
             },
-            'n_5kb': {
+            'b_n_5kb': {
                 'title': 'Pairs >5000 bp',
                 'description': 'Number of pairs with >5kbp separation',
                 'min': 0,
                 'format': '{:,d}',
                 'scale': 'Blues'
             },
-            'n_10kb': {
+            'b_n_10kb': {
                 'title': 'Pairs >10000 bp',
                 'description': 'Number of pairs with >10kbp separation',
                 'min': 0,
                 'format': '{:,d}',
                 'scale': 'Greens'
             },
-            'p_1kb_vs_accepted': {
+            'b_p_1kb_vs_accepted': {
                 'title': '% >1000 bp',
                 'description': 'Fraction of pairs with >1kbp separation vs all accepted pairs',
                 'min': 0,
@@ -452,7 +452,7 @@ class MultiqcModule(BaseMultiqcModule):
                 'suffix': '%',
                 'scale': 'Purples'
             },
-            'p_5kb_vs_accepted': {
+            'b_p_5kb_vs_accepted': {
                 'title': '% >5000 bp',
                 'description': 'Fraction of pairs with >5kbp separation vs all accepted pairs',
                 'min': 0,
@@ -460,7 +460,7 @@ class MultiqcModule(BaseMultiqcModule):
                 'suffix': '%',
                 'scale': 'Blues'
             },
-            'p_10kb_vs_accepted': {
+            'b_p_10kb_vs_accepted': {
                 'title': '% >10000 bp',
                 'description': 'Fraction of pairs with >10kbp separation vs all accepted pairs',
                 'min': 0,
@@ -490,14 +490,14 @@ class MultiqcModule(BaseMultiqcModule):
 
         categories = [
             OrderedDict({
-                'p_1kb_vs_accepted': {'name': '>1000 bp', 'color': '#EF476F'},
-                'p_5kb_vs_accepted': {'name': '>5000 bp', 'color': '#06D6A0'},
-                'p_10kb_vs_accepted': {'name': '>10000 bp', 'color': '#118AB2'}
+                'b_p_1kb_vs_accepted': {'name': '>1000 bp', 'color': '#EF476F'},
+                'b_p_5kb_vs_accepted': {'name': '>5000 bp', 'color': '#06D6A0'},
+                'b_p_10kb_vs_accepted': {'name': '>10000 bp', 'color': '#118AB2'}
             }),
             OrderedDict({
-                'p_1kb_vs_cis': {'name': '>1000 bp', 'color': '#EF476F'},
-                'p_5kb_vs_cis': {'name': '>5000 bp', 'color': '#06D6A0'},
-                'p_10kb_vs_cis': {'name': '>10000 bp', 'color': '#118AB2'},
+                'b_p_1kb_vs_cis': {'name': '>1000 bp', 'color': '#EF476F'},
+                'b_p_5kb_vs_cis': {'name': '>5000 bp', 'color': '#06D6A0'},
+                'b_p_10kb_vs_cis': {'name': '>10000 bp', 'color': '#118AB2'},
             })
         ]
 
@@ -514,14 +514,14 @@ class MultiqcModule(BaseMultiqcModule):
         }
 
         categories = OrderedDict({
-            'n_accepted_reads': {'name': 'Accepted', 'color': rev_8[-1]},
-            'n_ref_term_reads': {'name': 'Truncated', 'color': rev_8[6]},
-            'n_weak_mapping_reads': {'name': 'Weak mapping', 'color': rev_8[5]},
-            'n_supplementary_reads': {'name': 'Supplementary', 'color': rev_8[4]},
-            'n_secondary_reads': {'name': 'Secondary', 'color': rev_8[3]},
-            'n_low_mapq_reads': {'name': 'Low mapq', 'color': rev_8[2]},
-            'n_unmapped_reads': {'name': 'Unmapped', 'color': rev_8[1]},
-            'n_skipped_reads': {'name': 'Skipped', 'color': rev_8[0]},
+            'b_n_accepted_reads': {'name': 'Accepted', 'color': rev_8[-1]},
+            'b_n_ref_term_reads': {'name': 'Truncated', 'color': rev_8[6]},
+            'b_n_weak_mapping_reads': {'name': 'Weak mapping', 'color': rev_8[5]},
+            'b_n_supplementary_reads': {'name': 'Supplementary', 'color': rev_8[4]},
+            'b_n_secondary_reads': {'name': 'Secondary', 'color': rev_8[3]},
+            'b_n_low_mapq_reads': {'name': 'Low mapq', 'color': rev_8[2]},
+            'b_n_unmapped_reads': {'name': 'Unmapped', 'color': rev_8[1]},
+            'b_n_skipped_reads': {'name': 'Skipped', 'color': rev_8[0]},
         })
         return bargraph.plot(self.qc3c_data['bam'], categories, config)
 
@@ -535,7 +535,7 @@ class MultiqcModule(BaseMultiqcModule):
         }
 
         headers = OrderedDict({
-            'p_trans_pairs': {
+            'b_p_trans_pairs': {
                 'title': 'Trans pairs',
                 'description': 'Fraction of pairs mapping between reference sequences',
                 'min': 0,
@@ -543,7 +543,7 @@ class MultiqcModule(BaseMultiqcModule):
                 'suffix': '%',
                 'scale': 'Greens'
             },
-            'p_cis_pairs': {
+            'b_p_cis_pairs': {
                 'title': 'Cis pairs',
                 'description': 'Fraction of pairs mapping to the same reference sequence',
                 'min': 0,
@@ -551,7 +551,7 @@ class MultiqcModule(BaseMultiqcModule):
                 'suffix': '%',
                 'scale': 'Greens'
             },
-            'p_short_inserts': {
+            'b_p_short_inserts': {
                 'title': 'Short range',
                 'description': 'Fraction of pairs with small separation (< 1000bp)',
                 'min': 0,
@@ -559,7 +559,7 @@ class MultiqcModule(BaseMultiqcModule):
                 'suffix': '%',
                 'scale': 'Reds'
             },
-            'unobs_fraction': {
+            'b_unobs_fraction': {
                 'title': 'Unobservable extent',
                 'description': 'Estimated fraction of total fragment extent that was unobservable',
                 'min': 0,
@@ -567,7 +567,7 @@ class MultiqcModule(BaseMultiqcModule):
                 'suffix': '%',
                 'scale': 'Reds'
             },
-            'p_cs_start': {
+            'b_p_cs_start': {
                 'title': 'CS start',
                 'description': 'Fraction of aligned reads that began with a cutsite',
                 'min': 0,
@@ -575,7 +575,7 @@ class MultiqcModule(BaseMultiqcModule):
                 'suffix': '%',
                 'scale': 'Greens'
             },
-            'p_cs_term': {
+            'b_p_cs_term': {
                 'title': 'CS term',
                 'description': 'Fraction of reads where the alignment ends in a cutsite',
                 'min': 0,
@@ -583,7 +583,7 @@ class MultiqcModule(BaseMultiqcModule):
                 'suffix': '%',
                 'scale': 'Greens'
             },
-            'p_cs_full': {
+            'b_p_cs_full': {
                 'title': 'CS full',
                 'description': 'Fraction of reads fully aligned and ending in a cutsite',
                 'min': 0,
@@ -591,7 +591,7 @@ class MultiqcModule(BaseMultiqcModule):
                 'suffix': '%',
                 'scale': 'Greens'
             },
-            'p_read_thru': {
+            'b_p_read_thru': {
                 'title': 'Read-thru',
                 'description': 'Fraction of reads whose alignments end in a cutsite and whose sequence continues for the full junction',
                 'min': 0,
@@ -599,7 +599,7 @@ class MultiqcModule(BaseMultiqcModule):
                 'suffix': '%',
                 'scale': 'Greens'
             },
-            'p_is_split': {
+            'b_p_is_split': {
                 'title': 'Split',
                 'description': 'Fraction of read-thru reads further split aligned',
                 'min': 0,
@@ -607,7 +607,7 @@ class MultiqcModule(BaseMultiqcModule):
                 'suffix': '%',
                 'scale': 'Greens'
             },
-            'adj_read_thru': {
+            'b_adj_read_thru': {
                 'title': 'Adj read-thru',
                 'description': 'Fraction of read-thru events adjusted for unobservable extent',
                 'min': 0,
@@ -628,49 +628,49 @@ class MultiqcModule(BaseMultiqcModule):
         }
 
         headers = OrderedDict({
-            'p_informative_fr': {
+            'b_p_informative_fr': {
                 'title': "Valid FR",
                 'min': 0,
                 'max': 100,
                 'suffix': '%',
                 'scale': 'Greens'
             },
-            'p_informative_rf': {
+            'b_p_informative_rf': {
                 'title': "Valid RF",
                 'min': 0,
                 'max': 100,
                 'suffix': '%',
                 'scale': 'Greens'
             },
-            'p_informative_ffrr': {
+            'b_p_informative_ffrr': {
                 'title': "Valid FF|RR",
                 'min': 0,
                 'max': 100,
                 'suffix': '%',
                 'scale': 'Greens'
             },
-            'p_uninformative_religation': {
+            'b_p_uninformative_religation': {
                 'title': "Religation",
                 'min': 0,
                 'max': 100,
                 'suffix': '%',
                 'scale': 'Blues'
             },
-            'p_uninformative_dangling_ends': {
+            'b_p_uninformative_dangling_ends': {
                 'title': "Dangling End",
                 'min': 0,
                 'max': 100,
                 'suffix': '%',
                 'scale': 'Reds'
             },
-            'p_uninformative_self_circle': {
+            'b_p_uninformative_self_circle': {
                 'title': "Self-circle",
                 'min': 0,
                 'max': 100,
                 'suffix': '%',
                 'scale': 'Reds'
             },
-            'p_uninformative_ffrr': {
+            'b_p_uninformative_ffrr': {
                 'title': "Invalid FF|RR",
                 'min': 0,
                 'max': 100,
@@ -691,13 +691,13 @@ class MultiqcModule(BaseMultiqcModule):
         }
 
         categories = OrderedDict({
-            'n_informative_fr': {'name': "Valid FR", 'color': '#41ab5d'},
-            'n_informative_rf': {'name': "Valid RF", 'color': '#74c476'},
-            'n_informative_ffrr': {'name': "Valid FF|RR", 'color': '#a1d99b'},
-            'n_uninformative_religation': {'name': "Religation", 'color': '#fcbba1'},
-            'n_uninformative_dangling_ends': {'name': "Dangling End", 'color': '#fc9272'},
-            'n_uninformative_self_circle': {'name': "Self-circle", 'color': '#fb6a4a'},
-            'n_uninformative_ffrr': {'name': "Invalid FF|RR", 'color': '#ef3b2c'},
+            'b_n_informative_fr': {'name': "Valid FR", 'color': '#41ab5d'},
+            'b_n_informative_rf': {'name': "Valid RF", 'color': '#74c476'},
+            'b_n_informative_ffrr': {'name': "Valid FF|RR", 'color': '#a1d99b'},
+            'b_n_uninformative_religation': {'name': "Religation", 'color': '#fcbba1'},
+            'b_n_uninformative_dangling_ends': {'name': "Dangling End", 'color': '#fc9272'},
+            'b_n_uninformative_self_circle': {'name': "Self-circle", 'color': '#fb6a4a'},
+            'b_n_uninformative_ffrr': {'name': "Invalid FF|RR", 'color': '#ef3b2c'},
         })
         return bargraph.plot(self.qc3c_data['bam'], categories, config)
 
@@ -723,7 +723,7 @@ class MultiqcModule(BaseMultiqcModule):
         median_lines = []
         for smpl in self.qc3c_data['bam']:
             median_lines.append({
-                'value': self.qc3c_data['bam'][smpl]['obs_insert_median'],
+                'value': self.qc3c_data['bam'][smpl]['b_obs_insert_median'],
                 'color': '#D8E2DC',
                 'width': 2,
                 'dashStyle': 'ShortDashDot'
@@ -755,18 +755,18 @@ class MultiqcModule(BaseMultiqcModule):
         }
 
         headers = OrderedDict({
-            'run_timestamp': {
+            'k_run_timestamp': {
                 'title': 'Date',
                 'description': "Analysis time stamp",
                 'modify': MultiqcModule._drop_time,
                 'hidden': True
             },
-            'mode': {
+            'k_mode': {
                 'title': 'Run Mode',
                 'description': 'Analysis mode used',
                 'hidden': True
             },
-            'kmer_size': {
+            'k_kmer_size': {
                 'title': 'k',
                 'description': 'Library k-mer size',
                 'min': 0,
@@ -774,18 +774,18 @@ class MultiqcModule(BaseMultiqcModule):
                 'scale': False,
                 'hidden': True
             },
-            'enzymes': {
+            'k_enzymes': {
                 'title': 'Digest',
                 'description': 'Enzymes used in digest'
             },
-            'seed': {
+            'k_seed': {
                 'title': 'Seed',
                 'description': 'Random seed',
                 'format': '{:d}',
                 'scale': False,
                 'hidden': True
             },
-            'max_obs': {
+            'k_max_obs': {
                 'title': 'Max obs',
                 'description': 'User specified maximum number of observations',
                 'min': 0,
@@ -793,14 +793,14 @@ class MultiqcModule(BaseMultiqcModule):
                 'scale': 'OrRd',
                 'modify': lambda x: 'n/a' if x == -1 else x
             },
-            'n_accepted_reads': {
+            'k_n_accepted_reads': {
                 'title': 'Accepted reads',
                 'description': 'Number of reads accepted for analysis',
                 'min': 0,
                 'format': '{:,d}',
                 'scale': 'BuGn'
             },
-            'sample_rate': {
+            'k_sample_rate': {
                 'title': 'Sample rate',
                 'description': 'Sub-sampling probability',
                 'min': 0,
@@ -808,7 +808,7 @@ class MultiqcModule(BaseMultiqcModule):
                 'format': '{:g}',
                 'scale': 'Greys'
             },
-            'max_freq_quantile': {
+            'k_max_freq_quantile': {
                 'title': 'Quantile',
                 'description': 'Quantile cut-off for low-pass k-mer frequency filter',
                 'min': 0,
@@ -816,14 +816,14 @@ class MultiqcModule(BaseMultiqcModule):
                 'format': '{:g}',
                 'scale': 'Purples'
             },
-            'max_freq': {
+            'k_max_freq': {
                 'title': 'Max freq',
                 'description': 'Maximum k-mer frequency after quantile filtering',
                 'min': 0,
                 'format': '{:,d}',
                 'scale': 'Blues'
             },
-            'mean_insert': {
+            'k_mean_insert': {
                 'title': 'Insert size',
                 'description': 'User-specified insert size',
                 'min': 0,
@@ -831,7 +831,7 @@ class MultiqcModule(BaseMultiqcModule):
                 'suffix': 'bp',
                 'scale': 'Greens'
             },
-            'mean_readlen': {
+            'k_mean_readlen': {
                 'title': 'Read length',
                 'description': 'Observed average read length',
                 'format': '{:,.0f}',
@@ -850,7 +850,7 @@ class MultiqcModule(BaseMultiqcModule):
         }
 
         headers = OrderedDict({
-            'unobs_fraction': {
+            'k_unobs_fraction': {
                 'title': 'Unobservable extent',
                 'description': 'Estimated mean of the unobservable portion of fragments',
                 'shared_key': 'unobs_mean',
@@ -859,7 +859,7 @@ class MultiqcModule(BaseMultiqcModule):
                 'suffix': '%',
                 'scale': 'Reds'
             },
-            'raw_fraction': {
+            'k_raw_fraction': {
                 'title': 'Mean raw Hi-C fraction',
                 'description': 'Estimated mean of Hi-C fraction from only the observable extent',
                 'min': 0,
@@ -867,7 +867,7 @@ class MultiqcModule(BaseMultiqcModule):
                 'suffix': '%',
                 'scale': 'Greens'
             },
-            'adj_fraction': {
+            'k_adj_fraction': {
                 'title': 'Mean adjusted Hi-C fraction',
                 'description': 'Estimated mean of Hi-C fraction adjusted for unobservable extent',
                 'min': 0,
@@ -889,12 +889,12 @@ class MultiqcModule(BaseMultiqcModule):
         }
 
         categories = OrderedDict({
-            'n_accepted_reads': {'name': 'Accepted', 'color': rev_8[-1]},
-            'n_high_cov': {'name': 'High cov', 'color': rev_8[4]},
-            'n_ambiguous': {'name': 'Ambiguous', 'color': rev_8[3]},
-            'n_no_flank': {'name': 'No flank', 'color': rev_8[2]},
-            'n_too_short': {'name': 'Too short', 'color': rev_8[1]},
-            'n_skipped': {'name': 'Skipped', 'color': rev_8[0]},
+            'k_n_accepted_reads': {'name': 'Accepted', 'color': rev_8[-1]},
+            'k_n_high_cov': {'name': 'High cov', 'color': rev_8[4]},
+            'k_n_ambiguous': {'name': 'Ambiguous', 'color': rev_8[3]},
+            'k_n_no_flank': {'name': 'No flank', 'color': rev_8[2]},
+            'k_n_too_short': {'name': 'Too short', 'color': rev_8[1]},
+            'k_n_skipped': {'name': 'Skipped', 'color': rev_8[0]},
         })
         return bargraph.plot(self.qc3c_data['kmer'], categories, config)
 
@@ -911,8 +911,8 @@ class MultiqcModule(BaseMultiqcModule):
         }
 
         categories = OrderedDict({
-            'n_with_junc': {'name': 'With junc', 'color': '#41ab5d'},
-            'n_without_junc': {'name': 'Without junc', 'color': '#ef3b2c'},
+            'k_n_with_junc': {'name': 'With junc', 'color': '#41ab5d'},
+            'k_n_without_junc': {'name': 'Without junc', 'color': '#ef3b2c'},
         })
         return bargraph.plot(self.qc3c_data['kmer'], categories, config)
 
@@ -961,61 +961,61 @@ class MultiqcModule(BaseMultiqcModule):
                 n_paired_reads = n_accepted_pairs * 2
 
                 self.qc3c_data['bam'][s_name] = {
-                    'qc3C_version': parsed['runtime_info']['qc3C_version'],
-                    'run_timestamp': parsed['runtime_info']['run_timestamp'],
-                    'mode': parsed['mode'],
-                    'enzymes': ', '.join(parsed['input_args']['enzymes']),
-                    'seed': parsed['input_args']['seed'],
-                    'sample_rate': _none_to(parsed['input_args']['sample_rate'], 1),
-                    'max_obs': _none_to(parsed['input_args']['max_obs'], -1),
-                    'n_skipped_reads': parsed['n_skipped_reads'],
-                    'n_unmapped_reads': parsed['n_unmapped'],
-                    'n_analysed_reads': parsed['n_analysed_reads'],
-                    'n_low_mapq_reads': parsed['n_low_mapq'],
-                    'n_ref_len_reads': parsed['n_ref_len'],
-                    'n_secondary_reads': parsed['n_secondary'],
-                    'n_supplementary_reads': parsed['n_supplementary'],
-                    'n_weak_mapping_reads': parsed['n_weak_mapping'],
-                    'n_ref_term_reads': parsed['n_ref_term'],
-                    'n_accepted_reads': parsed['n_accepted_reads'],
-                    'obs_insert_mean': parsed['obs_insert_mean'],
-                    'obs_insert_median': parsed['obs_insert_median'],
-                    'mean_readlen': parsed['mean_readlen'],
-                    'n_analysed_pairs': parsed['n_analysed_pairs'],
-                    'n_accepted_pairs': parsed['n_accepted_pairs'],
-                    'p_trans_pairs': parsed['n_trans_pairs'] / n_accepted_pairs * 100,
-                    'p_cis_pairs': n_cis_pairs / n_accepted_pairs * 100,
-                    'unobs_fraction': parsed['unobs_fraction'] * 100,
-                    'p_cs_start': parsed['digest_stats']['cs_start'] / n_paired_reads * 100,
-                    'p_cs_term': parsed['digest_stats']['cs_term'] / n_paired_reads * 100,
-                    'p_cs_full': parsed['digest_stats']['cs_full'] / n_paired_reads * 100,
-                    'p_read_thru': parsed['digest_stats']['read_thru'] / n_paired_reads * 100,
-                    'p_is_split':  parsed['digest_stats']['is_split'] / n_paired_reads * 100,
-                    'adj_read_thru': parsed['digest_stats']['read_thru'] / n_paired_reads * 100 * 1/(1-parsed['unobs_fraction']),
-                    'p_short_inserts': parsed['n_short_inserts'] / n_accepted_pairs * 100,
-                    'n_informative_fr': inf['fr'],
-                    'n_informative_rf': inf['rf'],
-                    'n_informative_ffrr': inf['ffrr'],
-                    'n_uninformative_religation': uninf['religation'],
-                    'n_uninformative_dangling_ends': uninf['dangling_ends'],
-                    'n_uninformative_self_circle': uninf['self_circle'],
-                    'n_uninformative_ffrr': uninf['ffrr'],
-                    'p_informative_fr': inf['fr'] / n_cis_pairs * 100,
-                    'p_informative_rf': inf['rf'] / n_cis_pairs * 100,
-                    'p_informative_ffrr': inf['ffrr'] / n_cis_pairs * 100,
-                    'p_uninformative_religation': uninf['religation'] / n_cis_pairs * 100,
-                    'p_uninformative_dangling_ends': uninf['dangling_ends'] / n_cis_pairs * 100,
-                    'p_uninformative_self_circle': uninf['self_circle'] / n_cis_pairs * 100,
-                    'p_uninformative_ffrr': uninf['ffrr'] / n_cis_pairs * 100,
-                    'n_1kb': parsed['separation_bins']['counts'][0],
-                    'n_5kb': parsed['separation_bins']['counts'][1],
-                    'n_10kb': parsed['separation_bins']['counts'][2],
-                    'p_1kb_vs_accepted': parsed['separation_bins']['vs_accepted'][0],
-                    'p_5kb_vs_accepted': parsed['separation_bins']['vs_accepted'][1],
-                    'p_10kb_vs_accepted': parsed['separation_bins']['vs_accepted'][2],
-                    'p_1kb_vs_cis': parsed['separation_bins']['vs_all_cis'][0],
-                    'p_5kb_vs_cis': parsed['separation_bins']['vs_all_cis'][1],
-                    'p_10kb_vs_cis': parsed['separation_bins']['vs_all_cis'][2],
+                    'b_qc3C_version': parsed['runtime_info']['qc3C_version'],
+                    'b_run_timestamp': parsed['runtime_info']['run_timestamp'],
+                    'b_mode': parsed['mode'],
+                    'b_enzymes': ', '.join(parsed['input_args']['enzymes']),
+                    'b_seed': parsed['input_args']['seed'],
+                    'b_sample_rate': _none_to(parsed['input_args']['sample_rate'], 1),
+                    'b_max_obs': _none_to(parsed['input_args']['max_obs'], -1),
+                    'b_n_skipped_reads': parsed['n_skipped_reads'],
+                    'b_n_unmapped_reads': parsed['n_unmapped'],
+                    'b_n_analysed_reads': parsed['n_analysed_reads'],
+                    'b_n_low_mapq_reads': parsed['n_low_mapq'],
+                    'b_n_ref_len_reads': parsed['n_ref_len'],
+                    'b_n_secondary_reads': parsed['n_secondary'],
+                    'b_n_supplementary_reads': parsed['n_supplementary'],
+                    'b_n_weak_mapping_reads': parsed['n_weak_mapping'],
+                    'b_n_ref_term_reads': parsed['n_ref_term'],
+                    'b_n_accepted_reads': parsed['n_accepted_reads'],
+                    'b_obs_insert_mean': parsed['obs_insert_mean'],
+                    'b_obs_insert_median': parsed['obs_insert_median'],
+                    'b_mean_readlen': parsed['mean_readlen'],
+                    'b_n_analysed_pairs': parsed['n_analysed_pairs'],
+                    'b_n_accepted_pairs': parsed['n_accepted_pairs'],
+                    'b_p_trans_pairs': parsed['n_trans_pairs'] / n_accepted_pairs * 100,
+                    'b_p_cis_pairs': n_cis_pairs / n_accepted_pairs * 100,
+                    'b_unobs_fraction': parsed['unobs_fraction'] * 100,
+                    'b_p_cs_start': parsed['digest_stats']['cs_start'] / n_paired_reads * 100,
+                    'b_p_cs_term': parsed['digest_stats']['cs_term'] / n_paired_reads * 100,
+                    'b_p_cs_full': parsed['digest_stats']['cs_full'] / n_paired_reads * 100,
+                    'b_p_read_thru': parsed['digest_stats']['read_thru'] / n_paired_reads * 100,
+                    'b_p_is_split':  parsed['digest_stats']['is_split'] / n_paired_reads * 100,
+                    'b_adj_read_thru': parsed['digest_stats']['read_thru'] / n_paired_reads * 100 * 1/(1-parsed['unobs_fraction']),
+                    'b_p_short_inserts': parsed['n_short_inserts'] / n_accepted_pairs * 100,
+                    'b_n_informative_fr': inf['fr'],
+                    'b_n_informative_rf': inf['rf'],
+                    'b_n_informative_ffrr': inf['ffrr'],
+                    'b_n_uninformative_religation': uninf['religation'],
+                    'b_n_uninformative_dangling_ends': uninf['dangling_ends'],
+                    'b_n_uninformative_self_circle': uninf['self_circle'],
+                    'b_n_uninformative_ffrr': uninf['ffrr'],
+                    'b_p_informative_fr': inf['fr'] / n_cis_pairs * 100,
+                    'b_p_informative_rf': inf['rf'] / n_cis_pairs * 100,
+                    'b_p_informative_ffrr': inf['ffrr'] / n_cis_pairs * 100,
+                    'b_p_uninformative_religation': uninf['religation'] / n_cis_pairs * 100,
+                    'b_p_uninformative_dangling_ends': uninf['dangling_ends'] / n_cis_pairs * 100,
+                    'b_p_uninformative_self_circle': uninf['self_circle'] / n_cis_pairs * 100,
+                    'b_p_uninformative_ffrr': uninf['ffrr'] / n_cis_pairs * 100,
+                    'b_n_1kb': parsed['separation_bins']['counts'][0],
+                    'b_n_5kb': parsed['separation_bins']['counts'][1],
+                    'b_n_10kb': parsed['separation_bins']['counts'][2],
+                    'b_p_1kb_vs_accepted': parsed['separation_bins']['vs_accepted'][0],
+                    'b_p_5kb_vs_accepted': parsed['separation_bins']['vs_accepted'][1],
+                    'b_p_10kb_vs_accepted': parsed['separation_bins']['vs_accepted'][2],
+                    'b_p_1kb_vs_cis': parsed['separation_bins']['vs_all_cis'][0],
+                    'b_p_5kb_vs_cis': parsed['separation_bins']['vs_all_cis'][1],
+                    'b_p_10kb_vs_cis': parsed['separation_bins']['vs_all_cis'][2],
                 }
 
                 fhist = {}
@@ -1029,31 +1029,31 @@ class MultiqcModule(BaseMultiqcModule):
                     parsed[k] = np.array(parsed[k]).mean() * 100
 
                 self.qc3c_data['kmer'][s_name] = {
-                    'qc3C_version': parsed['runtime_info']['qc3C_version'],
-                    'run_timestamp': parsed['runtime_info']['run_timestamp'],
-                    'mode': parsed['mode'],
-                    'kmer_size': parsed['input_args']['kmer_size'],
-                    'enzymes': ', '.join(parsed['input_args']['enzymes']),
-                    'seed': parsed['input_args']['seed'],
-                    'sample_rate': _none_to(parsed['input_args']['sample_rate'], 1),
-                    'max_freq': parsed['input_args']['max_coverage'],
-                    'mean_insert': parsed['input_args']['mean_insert'],
-                    'max_freq_quantile': parsed['input_args']['max_freq_quantile'],
-                    'max_obs': _none_to(parsed['input_args']['max_obs'], -1),
-                    'n_skipped': parsed['n_parsed_reads'] - parsed['n_analysed_reads'],
-                    'n_analysed_reads': parsed['n_analysed_reads'],
-                    'n_too_short': parsed['n_too_short'],
-                    'n_no_flank': parsed['n_no_flank'],
-                    'n_ambiguous': parsed['n_ambiguous'],
-                    'n_high_cov': parsed['n_high_cov'],
-                    'n_accepted_reads': parsed['n_accepted_reads'],
-                    'n_without_junc': parsed['n_without_junc'],
-                    'n_with_junc': parsed['n_with_junc'],
-                    'mean_readlen': parsed['mean_readlen'],
-                    'n_cs_start': parsed['cs_start'],
-                    'raw_fraction': parsed['raw_fraction'],
-                    'adj_fraction': parsed['adj_fraction'],
-                    'unobs_fraction': parsed['unobs_fraction'],
+                    'k_qc3C_version': parsed['runtime_info']['qc3C_version'],
+                    'k_run_timestamp': parsed['runtime_info']['run_timestamp'],
+                    'k_mode': parsed['mode'],
+                    'k_kmer_size': parsed['input_args']['kmer_size'],
+                    'k_enzymes': ', '.join(parsed['input_args']['enzymes']),
+                    'k_seed': parsed['input_args']['seed'],
+                    'k_sample_rate': _none_to(parsed['input_args']['sample_rate'], 1),
+                    'k_max_freq': parsed['input_args']['max_coverage'],
+                    'k_mean_insert': parsed['input_args']['mean_insert'],
+                    'k_max_freq_quantile': parsed['input_args']['max_freq_quantile'],
+                    'k_max_obs': _none_to(parsed['input_args']['max_obs'], -1),
+                    'k_n_skipped': parsed['n_parsed_reads'] - parsed['n_analysed_reads'],
+                    'k_n_analysed_reads': parsed['n_analysed_reads'],
+                    'k_n_too_short': parsed['n_too_short'],
+                    'k_n_no_flank': parsed['n_no_flank'],
+                    'k_n_ambiguous': parsed['n_ambiguous'],
+                    'k_n_high_cov': parsed['n_high_cov'],
+                    'k_n_accepted_reads': parsed['n_accepted_reads'],
+                    'k_n_without_junc': parsed['n_without_junc'],
+                    'k_n_with_junc': parsed['n_with_junc'],
+                    'k_mean_readlen': parsed['mean_readlen'],
+                    'k_n_cs_start': parsed['cs_start'],
+                    'k_raw_fraction': parsed['raw_fraction'],
+                    'k_adj_fraction': parsed['adj_fraction'],
+                    'k_unobs_fraction': parsed['unobs_fraction'],
             }
 
             # if any experiment contains a digest tht is non-trivial and produces
