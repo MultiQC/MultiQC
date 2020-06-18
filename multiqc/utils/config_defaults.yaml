@@ -379,6 +379,10 @@ module_order:
         module_tag:
             - DNA
             - RNA
+    - dragen_fastqc:
+        module_tag:
+            - DNA
+            - RNA
     - dedup:
         module_tag:
             - DNA

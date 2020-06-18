@@ -72,7 +72,7 @@ class MultiqcModule(DragenMappingMetics, DragenFragmentLength, DragenPloidyEstim
         samples_found |= self.add_fragment_length_hist()
         # <output prefix>.fragment_length_hist.csv         - a histogram plot
 
-        samples_found |= self.add_fastqc_metrics()
+        #samples_found |= self.add_fastqc_metrics()
         # <output prefix>.fastqc_metrics.csv               - various plots to replicate output from Babraham's FastQC
 
         if len(samples_found) == 0:
