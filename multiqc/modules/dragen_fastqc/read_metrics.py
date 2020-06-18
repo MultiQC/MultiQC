@@ -147,4 +147,3 @@ class DragenReadMetrics(BaseMultiqcModule):
                     See the [FastQC help](http://www.bioinformatics.babraham.ac.uk/projects/fastqc/Help/3%20Analysis%20Modules/7%20Sequence%20Length%20Distribution.html)''',
                 plot=linegraph.plot(data, pconfig)
             )
-

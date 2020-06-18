@@ -22,6 +22,7 @@ log = logging.getLogger(__name__)
 
 N_QV = 2
 
+
 class DragenBaseMetrics(BaseMultiqcModule):
     """
     Rendering ALL THE THINGS!
@@ -162,4 +163,3 @@ class DragenBaseMetrics(BaseMultiqcModule):
             ''',
             plot=linegraph.plot(data, pconfig)
         )
-

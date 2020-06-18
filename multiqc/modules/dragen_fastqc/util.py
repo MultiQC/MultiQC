@@ -90,4 +90,3 @@ def pos_qual_table_cmp(key):
 
 def sortPosQualTableKeys(data_dict):
     return sorted(data_dict.keys(), key=pos_qual_table_cmp)
-

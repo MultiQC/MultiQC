@@ -37,7 +37,6 @@ class DragenContentMetrics(BaseMultiqcModule):
 
         return self.fastqc_data.keys()
 
-
     def n_content_plot(self):
         """ Create the HTML for the per base N content plot """
 
@@ -275,4 +274,3 @@ class DragenContentMetrics(BaseMultiqcModule):
             ''',
             plot=linegraph.plot(data, pconfig)
         )
-

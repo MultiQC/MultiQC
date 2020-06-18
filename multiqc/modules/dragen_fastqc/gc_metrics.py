@@ -36,7 +36,6 @@ class DragenGcMetrics(BaseMultiqcModule):
 
         return self.fastqc_data.keys()
 
-
     def gc_content_plot(self):
         """ Create the HTML for the FastQC GC content plot """
 
@@ -161,4 +160,3 @@ class DragenGcMetrics(BaseMultiqcModule):
             ''',
             plot=linegraph.plot(data, pconfig)
         )
-
