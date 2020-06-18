@@ -42,6 +42,10 @@ class DragenFragmentLength(BaseMultiqcModule):
                     rg = rg + ' (' + sn + ')'
                 data_by_rg[rg] = d
 
+        # Exit early if we have no valid data, such as from FastQcOnly runs
+        if not data_by_rg:
+            return set()
+
         smooth_points = 300
         self.add_section(
             name='Fragment length hist',

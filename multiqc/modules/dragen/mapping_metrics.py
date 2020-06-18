@@ -85,6 +85,17 @@ class DragenMappingMetics(BaseMultiqcModule):
             plot=table.plot(data_by_rg, own_tabl_headers, pconfig={'namespace': NAMESPACE})
         )
 
+        # Skip adding the barplot if it's not informative, such as if all
+        #  reads are unmapped due to a FastQcOnly workflow
+        all_unmapped = True
+        unmapped_key = "Unmapped reads pct"
+        for rg, data in data_by_rg.items():
+            if unmapped_key in data and data[unmapped_key] < 100.0:
+                all_unmapped = False
+
+        if all_unmapped:
+            return set()
+
         # Make bargraph plots of mapped, dupped and paired reads
         self.__map_pair_dup_read_chart(data_by_rg)
 
