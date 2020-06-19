@@ -9,7 +9,6 @@ from .vc_metrics import DragenVCMetrics
 from .coverage_per_contig import DragenCoveragePerContig
 from .coverage_metrics import DragenCoverageMetrics
 from .coverage_hist import DragenCoverageHist
-from .fastqc_metrics import DragenFastQcMetrics
 
 import logging
 log = logging.getLogger(__name__)
@@ -17,7 +16,7 @@ log = logging.getLogger(__name__)
 
 class MultiqcModule(DragenMappingMetics, DragenFragmentLength, DragenPloidyEstimationMetrics,
                     DragenVCMetrics, DragenCoveragePerContig, DragenCoverageMetrics,
-                    DragenCoverageHist, DragenFastQcMetrics):
+                    DragenCoverageHist):
     """ DRAGEN provides a number of differrent pipelines and outputs, including base calling, DNA and RNA alignment,
     post-alignment processing and variant calling, covering virtually all stages of typical NGS data processing.
     However, it can be treated as a fast aligner with additional features on top, as users will unlikely use any
@@ -40,12 +39,6 @@ class MultiqcModule(DragenMappingMetics, DragenFragmentLength, DragenPloidyEstim
             href='https://www.illumina.com/products/by-type/informatics-products/dragen-bio-it-platform.html',
             info=(" is a Bio-IT Platform that provides ultra-rapid secondary analysis of sequencing data"
                   " using field-programmable gate array technology (FPGA)."))
-
-        self.css = {'assets/css/multiqc_fastqc.css': os.path.join(os.path.dirname(
-            __file__), '..', 'fastqc', 'assets', 'css', 'multiqc_fastqc.css')}
-        self.js = {
-            'assets/js/multiqc_fastqc.js': os.path.join(os.path.dirname(__file__), 'assets', 'js', 'multiqc_fastqc.js')}
-        self.intro += '<script type="application/json" class="fastqc_passfails">["DRAGEN", {"per_base_sequence_content": {"TEST": "pass"}}]</script>'
 
         samples_found = set()
         samples_found |= self.add_mapping_metrics()
@@ -71,9 +64,6 @@ class MultiqcModule(DragenMappingMetics, DragenFragmentLength, DragenPloidyEstim
 
         samples_found |= self.add_fragment_length_hist()
         # <output prefix>.fragment_length_hist.csv         - a histogram plot
-
-        #samples_found |= self.add_fastqc_metrics()
-        # <output prefix>.fastqc_metrics.csv               - various plots to replicate output from Babraham's FastQC
 
         if len(samples_found) == 0:
             raise UserWarning
