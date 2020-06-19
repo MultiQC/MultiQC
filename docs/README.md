@@ -16,6 +16,7 @@ MultiQC Modules:
     Cluster Flow: modules/clusterflow.md
     Cutadapt: modules/cutadapt.md
     ClipAndMerge: modules/clipandmerge.md
+    DRAGEN-FastQc: modules/dragen_fastqc.md
     FastQ Screen: modules/fastq_screen.md
     FastQC: modules/fastqc.md
     Fastp: modules/fastp.md
