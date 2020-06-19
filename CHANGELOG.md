@@ -49,6 +49,8 @@ to break. If you haven't already, **you need to switch to Python 3 now**.
 
 * [**DRAGEN**](https://www.illumina.com/products/by-type/informatics-products/dragen-bio-it-platform.html)
     * Illumina Bio-IT Platform that uses FPGA for secondary NGS analysis
+* [**DRAGEN-FastQc**](https://www.illumina.com/products/by-type/informatics-products/dragen-bio-it-platform.html)
+    * A fast and accurate replacement for FastQC, available through Illumina's Bio-IT Platform
 * [**iVar**](https://github.com/andersen-lab/ivar)
     * Added support for iVar: a computational package that contains functions broadly useful for viral amplicon-based sequencing.
 * [**miRTop**](https://github.com/miRTop/mirtop)
