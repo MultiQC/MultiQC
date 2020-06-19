@@ -949,7 +949,11 @@ class MultiqcModule(BaseMultiqcModule):
             return y if x is None else y
 
         try:
-            parsed = json.load(f['f'])
+            parsed = [json.loads(_l) for _l in f['f']]
+            if len(parsed) > 1:
+                log.warning('Multiple records encountered in qc3C JSON file {}. Only the last report will be used'
+                            .format(os.path.join(f['root'], f['fn'])))
+            parsed = parsed[-1]
         except json.JSONDecodeError:
             log.warning("Could not parse qc3C JSON: '{}'".format(f['fn']))
             return
@@ -1100,5 +1104,6 @@ class MultiqcModule(BaseMultiqcModule):
             self.add_data_source(f, s_name, section=analysis_mode)
 
         except KeyError as ex:
-            log.error("The entry {} was not found in the qc3C JSON file '{}'".format(str(ex), os.path.join(f['root'], f['fn'])))
+            log.error("The entry {} was not found in the qc3C JSON file '{}'"
+                      .format(str(ex), os.path.join(f['root'], f['fn'])))
             return
