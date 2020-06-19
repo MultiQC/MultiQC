@@ -221,19 +221,24 @@ class MultiqcModule(BaseMultiqcModule):
                 name = 'BAM mode distribution of fragment separation',
                 anchor = 'qc3C-bam-fragment-histogram',
                 description = """
-                    This figure displays the full histogram of read-pair separation. The horizontal axis
-                    follows a log10 scale to accomodate very large separations. The inferred insert size for each 
-                    library is represented by a grey and dashed vertical line.
+                    This figure displays the a normalised histogram of read-pair separation binned uniformly in 
+                    log-space. 
+                    
+                    Due to the binning strategy, the x-axis is log-scaled and visually accommodates pair separations up 
+                    to 1 million bp. The inferred insert size for each library is represented by a dashed, grey vertical 
+                    line. The y-axis is log-scaled by default, allowing the density attributed to long-range pairs to be 
+                    more easily seen.
                 """,
                 helptext = """
                     A characteristic of Hi-C libraries, is the presence of a large peak below 1000 bp. qc3C attributes 
-                    this to regular and undesirable shotgun pairs creeping through the Hi-C protocol. The peak is used 
+                    this to regular (and undesirable) shotgun pairs creeping through the Hi-C protocol. The peak is used 
                     by qc3C to infer the insert size, which is later employed to estimate unobservable extent of 
                     inserts.
 
-                    **Note:** this value can be significantly smaller than what a sequencing facility might quote the 
-                    experimentally determined insert size to be. This discrepancy can be explained by the failure to 
-                    account for the additional adapter sequence when fragments are assessed during library preparation.
+                    **Note:** the inferred insert size can be significantly smaller than what a sequencing facility 
+                    might report the experimentally determined insert size to be. This discrepancy can be explained by 
+                    the failure to account for the additional adapter sequence when fragments are assessed during 
+                    library preparation.
                 """,
                 plot = self.bam_fragment_histogram()
             )
@@ -733,11 +738,16 @@ class MultiqcModule(BaseMultiqcModule):
             'id': 'qc3C_bam_fragment_histogram',
             'title': 'qc3C: BAM mode distribution of pair separation',
             'namespace': 'qc3C',
+            'cpswitch_counts_label': 'Density',
+            'logswitch': True,
+            'logswitch_active': True,
+            'logswitch_label': 'Log10 [Density]',
             'xLog': True,
+            # 'yLog': True,
             'xPlotLines': median_lines,
-            'xlab': 'log10 [Separation] (bp)',
+            'xlab': 'Log10 [Separation]',
             'ylab': 'Density',
-            'tt_label': 'x:{point.x:.1f}, y:{point.y:.4f}'
+            'tt_label': 'x:{point.x:.0f} bp, y:{point.y:.8f}'
         }
 
         data = {}
@@ -1019,7 +1029,8 @@ class MultiqcModule(BaseMultiqcModule):
                 }
 
                 fhist = {}
-                for x, y in itertools.zip_longest(parsed['separation_histogram']['mid_points'], parsed['separation_histogram']['counts']):
+                for x, y in itertools.zip_longest(parsed['separation_histogram']['mid_points'],
+                                                  parsed['separation_histogram']['counts']):
                     fhist[float(x)] = float(y)
                 self.qc3c_data['bam'][s_name]['frag_hist'] = fhist
 
