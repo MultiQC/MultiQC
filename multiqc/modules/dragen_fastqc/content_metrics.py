@@ -39,30 +39,32 @@ class DragenContentMetrics(BaseMultiqcModule):
 
     def n_content_plot(self):
         """ Create the HTML for the per base N content plot """
-
         data = dict()
         totals = defaultdict(int)
         non_n = defaultdict(int)
         GROUP = "POSITIONAL BASE CONTENT"
-        for s_name in self.fastqc_data:
-            # Count total bases
-            total_group_data = self.fastqc_data[s_name][GROUP]
-            for metric, value in total_group_data.items():
-                avg_pos = average_pos_from_metric(metric)
-                totals[avg_pos] += value
-                base = metric.split()[2]
-                if base != "N":
-                    non_n[avg_pos] += value
+        for s_name in sorted(self.fastqc_data):
+            for mate in sorted(self.fastqc_data[s_name]):
 
-            # Convert Total and Non-N counts into N%
-            data[s_name] = dict()
-            for pos, count in totals.items():
-                if count == 0:
-                    continue
-                non_n_count = non_n[pos]
-                n_count = count - non_n_count
-                n_frac = 100.0 * n_count / float(count)
-                data[s_name][pos] = n_frac
+                # Count total bases
+                total_group_data = self.fastqc_data[s_name][mate][GROUP]
+                for metric, value in total_group_data.items():
+                    avg_pos = average_pos_from_metric(metric)
+                    totals[avg_pos] += value
+                    base = metric.split()[2]
+                    if base != "N":
+                        non_n[avg_pos] += value
+
+                # Convert Total and Non-N counts into N%
+                r_name = "{}_{}".format(s_name, mate)
+                data[r_name] = dict()
+                for pos, count in totals.items():
+                    if count == 0:
+                        continue
+                    non_n_count = non_n[pos]
+                    n_count = count - non_n_count
+                    n_frac = 100.0 * n_count / float(count)
+                    data[r_name][pos] = n_frac
 
         if len(data) == 0:
             log.debug('per_base_n_content not found in DRAGEN FastQC reports')
@@ -110,35 +112,37 @@ class DragenContentMetrics(BaseMultiqcModule):
         # Prep the data
         data = dict()
         GROUP = "POSITIONAL BASE CONTENT"
-        for s_name in sorted(self.fastqc_data.keys()):
-            data[s_name] = dict()
-            group_data = self.fastqc_data[s_name][GROUP]
+        for s_name in sorted(self.fastqc_data):
+            for mate in sorted(self.fastqc_data[s_name]):
+                r_name = "{}_{}".format(s_name, mate)
+                data[r_name] = dict()
+                group_data = self.fastqc_data[s_name][mate][GROUP]
 
-            totals = defaultdict(int)
-            for metric, value in group_data.items():
-                parts = metric.split()
-                #avg_pos = average_from_range(parts[1])
-                avg_pos = parts[1]
-                base = parts[-2].lower()
+                totals = defaultdict(int)
+                for metric, value in group_data.items():
+                    parts = metric.split()
+                    #avg_pos = average_from_range(parts[1])
+                    avg_pos = parts[1]
+                    base = parts[-2].lower()
 
-                if avg_pos not in data[s_name]:
-                    data[s_name][avg_pos] = dict()
+                    if avg_pos not in data[r_name]:
+                        data[r_name][avg_pos] = dict()
 
-                # Store the current count and add it to the total
-                data[s_name][avg_pos][base] = value
-                totals[avg_pos] += value
+                    # Store the current count and add it to the total
+                    data[r_name][avg_pos][base] = value
+                    totals[avg_pos] += value
 
-            # Use the accumulated totals to normalize each bin to a percentage
-            for pos, total in totals.items():
-                if total == 0:
-                    del data[s_name][pos]
-                    continue
-                for base in "acgt":
-                    try:
-                        data[s_name][pos][base] = (float(data[s_name][pos][base])/float(total)) * 100.0
-                    except:
-                        pass
-                data[s_name][pos]["base"] = pos
+                # Use the accumulated totals to normalize each bin to a percentage
+                for pos, total in totals.items():
+                    if total == 0:
+                        del data[r_name][pos]
+                        continue
+                    for base in "acgt":
+                        try:
+                            data[r_name][pos][base] = (float(data[r_name][pos][base])/float(total)) * 100.0
+                        except:
+                            pass
+                    data[r_name][pos]["base"] = pos
 
         if len(data) == 0:
             log.debug('sequence_content not found in FastQC reports')
@@ -210,30 +214,32 @@ class DragenContentMetrics(BaseMultiqcModule):
         data = dict()
         COUNT_GROUP = "POSITIONAL BASE CONTENT"
         ADP_GROUP = "SEQUENCE POSITIONS"
-        for s_name in sorted(self.fastqc_data.keys()):
+        for s_name in sorted(self.fastqc_data):
+            for mate in sorted(self.fastqc_data[s_name]):
 
-            totals = defaultdict(int)
-            for key, value in self.fastqc_data[s_name][COUNT_GROUP].items():
-                parts = key.split()
-                pos = average_from_range(parts[1])
-                totals[pos] += int(value)
+                totals = defaultdict(int)
+                for key, value in self.fastqc_data[s_name][mate][COUNT_GROUP].items():
+                    parts = key.split()
+                    pos = average_from_range(parts[1])
+                    totals[pos] += int(value)
 
-            adps = defaultdict(int)
-            for key, value in self.fastqc_data[s_name][ADP_GROUP].items():
-                parts = key.split()
-                seq = parts[0].split("'")[1]
-                if seq not in ADAPTER_SEQS:
-                    continue
-                pos = average_from_range(parts[1][:-2])
-                adps[pos] += int(value)
+                adps = defaultdict(int)
+                for key, value in self.fastqc_data[s_name][mate][ADP_GROUP].items():
+                    parts = key.split()
+                    seq = parts[0].split("'")[1]
+                    if seq not in ADAPTER_SEQS:
+                        continue
+                    pos = average_from_range(parts[1][:-2])
+                    adps[pos] += int(value)
 
-            data[s_name] = dict()
-            cumsum = 0
-            for pos, adp_count in sorted(adps.items()):
-                total = totals[pos]
-                cumsum += adp_count
-                if total > 0 and cumsum > 0:
-                    data[s_name][pos] = 100.0 * cumsum / total
+                r_name = "{}_{}".format(s_name, mate)
+                data[r_name] = dict()
+                cumsum = 0
+                for pos, adp_count in sorted(adps.items()):
+                    total = totals[pos]
+                    cumsum += adp_count
+                    if total > 0 and cumsum > 0:
+                        data[r_name][pos] = 100.0 * cumsum / total
 
         pconfig = {
             'id': 'fastqc_adapter_content_plot',

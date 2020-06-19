@@ -4,6 +4,10 @@ from __future__ import print_function
 import re
 from collections import defaultdict
 
+_R1 = "Read1"
+_R2 = "Read2"
+_VALID_MATES = [_R1, _R2]
+
 
 def parse_fastqc_metrics_file(f):
     """
@@ -20,13 +24,10 @@ def parse_fastqc_metrics_file(f):
     READ BASE CONTENT,Read1,0% A Reads,1997
     ...
     """
-    f['s_name'] = re.search(r'(.*).fastqc_metrics.csv', f['fn']).group(1)
-    r1_name = "{}_R1".format(f['s_name'])
-    r2_name = "{}_R2".format(f['s_name'])
+    s_name = re.search(r'(.*).fastqc_metrics.csv', f['fn']).group(1)
+    f['s_name'] = s_name
+    data_by_sample = initialize_dataset(s_name)
 
-    data_by_sample = {}
-    data_by_sample[r1_name] = defaultdict(lambda: defaultdict(int))
-    data_by_sample[r2_name] = defaultdict(lambda: defaultdict(int))
     for line in f['f'].splitlines():
         group, mate, metric, value = line.split(',')
         try:
@@ -35,19 +36,23 @@ def parse_fastqc_metrics_file(f):
             pass
 
         # Store each value by group and by metric
-        assert mate in ['Read1', 'Read2']
-        if mate == "Read1":
-            s_name = r1_name
-        elif mate == "Read2":
-            s_name = r2_name
-        data_by_sample[s_name][group][metric] = value
+        assert mate in _VALID_MATES
+        data_by_sample[s_name][mate][group][metric] = value
 
     # Delete empty mate groups so we don't generate empty datasets
-    for s_name in [r1_name, r2_name]:
-        if len(data_by_sample[s_name]) == 0:
-            del data_by_sample[s_name]
+    for mate, mate_data in data_by_sample[s_name].items():
+        if len(mate_data) == 0:
+            del data_by_sample[s_name][mate]
 
     return data_by_sample
+
+
+def initialize_dataset(s_name):
+    data = dict()
+    data[s_name] = dict()
+    for mate in _VALID_MATES:
+        data[s_name][mate] = defaultdict(lambda: defaultdict(int))
+    return data
 
 
 def average_from_range(metric_range):

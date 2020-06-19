@@ -40,23 +40,24 @@ class DragenBaseMetrics(BaseMultiqcModule):
 
         data = OrderedDict()
         GROUP = "POSITIONAL QUALITY"
-
         for s_name in sorted(self.fastqc_data):
-            data[s_name] = defaultdict(float)
+            for mate in sorted(self.fastqc_data[s_name]):
+                r_name = "{}_{}".format(s_name, mate)
+                data[r_name] = defaultdict(float)
 
-            sorted_keys = sortPosQualTableKeys(self.fastqc_data[s_name][GROUP])
-            for key in sorted_keys:
-                value = int(self.fastqc_data[s_name][GROUP][key])
-                parts = key.split()
-                pos = average_from_range(parts[1])
-                quantile = int(parts[2][:-1])
-                qv = int(value)
+                sorted_keys = sortPosQualTableKeys(self.fastqc_data[s_name][mate][GROUP])
+                for key in sorted_keys:
+                    value = int(self.fastqc_data[s_name][mate][GROUP][key])
+                    parts = key.split()
+                    pos = average_from_range(parts[1])
+                    quantile = int(parts[2][:-1])
+                    qv = int(value)
 
-                try:
-                    data[s_name][pos][quantile] = qv
-                except:
-                    data[s_name][pos] = OrderedDict()
-                    data[s_name][pos][quantile] = qv
+                    try:
+                        data[r_name][pos][quantile] = qv
+                    except:
+                        data[r_name][pos] = OrderedDict()
+                        data[r_name][pos][quantile] = qv
 
         pconfig = {
             'id': 'fastqc_per_base_sequence_quality_range_plot',
@@ -90,44 +91,46 @@ class DragenBaseMetrics(BaseMultiqcModule):
         COUNT_GROUP = "POSITIONAL BASE CONTENT"
 
         data = dict()
-        for s_name in self.fastqc_data:
-            # Parse our per-base, per-position average qualities into a dictionary
-            avgs = copy.deepcopy(base_dict)
-            for key, value in self.fastqc_data[s_name][AVG_GROUP].items():
-                if value == "NA":
-                    continue
-                parts = key.split()
-                pos = average_from_range(parts[1])
-                base = parts[2].upper()
-                avgs[base][pos] = float(value)
-
-            # Parse matching per-base and total counts by position
-            counts = copy.deepcopy(base_dict)
-            totals = defaultdict(int)
-            for key, value in self.fastqc_data[s_name][COUNT_GROUP].items():
-                parts = key.split()
-                pos = average_from_range(parts[1])
-                base = parts[2].upper()
-                counts[base][pos] = int(value)
-                totals[pos] += int(value)
-
-            # Use the the count and averages to recompute total QVs
-            qv_sums = defaultdict(int)
-            for base, pos_data in counts.items():
-                for pos, count in pos_data.items():
-                    if count == 0:
+        for s_name in sorted(self.fastqc_data):
+            for mate in sorted(self.fastqc_data[s_name]):
+                # Parse our per-base, per-position average qualities into a dictionary
+                avgs = copy.deepcopy(base_dict)
+                for key, value in self.fastqc_data[s_name][mate][AVG_GROUP].items():
+                    if value == "NA":
                         continue
-                    elif base == "N":
-                        qv_sums[pos] += count * N_QV
-                    else:
-                        qv_sums[pos] += int(round(count * avgs[base][pos]))
+                    parts = key.split()
+                    pos = average_from_range(parts[1])
+                    base = parts[2].upper()
+                    avgs[base][pos] = float(value)
 
-            # Compute the positional, base-agnostic mean QV
-            data[s_name] = dict()
-            for pos, qv_sum in qv_sums.items():
-                total = totals[pos]
-                if total > 0:
-                    data[s_name][int(pos)] = qv_sum / total
+                # Parse matching per-base and total counts by position
+                counts = copy.deepcopy(base_dict)
+                totals = defaultdict(int)
+                for key, value in self.fastqc_data[s_name][mate][COUNT_GROUP].items():
+                    parts = key.split()
+                    pos = average_from_range(parts[1])
+                    base = parts[2].upper()
+                    counts[base][pos] = int(value)
+                    totals[pos] += int(value)
+
+                # Use the the count and averages to recompute total QVs
+                qv_sums = defaultdict(int)
+                for base, pos_data in counts.items():
+                    for pos, count in pos_data.items():
+                        if count == 0:
+                            continue
+                        elif base == "N":
+                            qv_sums[pos] += count * N_QV
+                        else:
+                            qv_sums[pos] += int(round(count * avgs[base][pos]))
+
+                # Compute the positional, base-agnostic mean QV
+                r_name = "{}_{}".format(s_name, mate)
+                data[r_name] = dict()
+                for pos, qv_sum in qv_sums.items():
+                    total = totals[pos]
+                    if total > 0:
+                        data[r_name][int(pos)] = qv_sum / total
 
         pconfig = {
             'id': 'fastqc_per_base_sequence_quality_plot',

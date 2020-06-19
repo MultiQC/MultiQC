@@ -43,26 +43,28 @@ class DragenGcMetrics(BaseMultiqcModule):
         data_norm = dict()
         LEN_GROUP = "READ LENGTHS"
         GC_GROUP = "READ GC CONTENT"
-        for s_name in self.fastqc_data:
-            data[s_name] = defaultdict(float)
+        for s_name in sorted(self.fastqc_data):
+            for mate in sorted(self.fastqc_data[s_name]):
+                r_name = "{}_{}".format(s_name, mate)
 
-            # First figure out the baseline
-            max_len = 0
-            for metric, value in self.fastqc_data[s_name][LEN_GROUP].items():
-                if int(value) > 0:
-                    pos = average_from_range(metric.split()[0][:-2])
-                    max_len = max(pos, max_len)
+                # First figure out the baseline
+                max_len = 0
+                for metric, value in self.fastqc_data[s_name][mate][LEN_GROUP].items():
+                    if int(value) > 0:
+                        pos = average_from_range(metric.split()[0][:-2])
+                        max_len = max(pos, max_len)
 
-            group_data = self.fastqc_data[s_name][GC_GROUP]
-            for metric, value in self.fastqc_data[s_name][GC_GROUP].items():
-                pct = percentage_from_content_metric(metric)
-                data[s_name][pct] = value
+                data[r_name] = defaultdict(float)
+                group_data = self.fastqc_data[s_name][mate][GC_GROUP]
+                for metric, value in self.fastqc_data[s_name][mate][GC_GROUP].items():
+                    pct = percentage_from_content_metric(metric)
+                    data[r_name][pct] = value
 
-            data_norm[s_name] = dict()
-            total = sum([c for c in data[s_name].values()])
-            for gc, count in data[s_name].items():
-                if total > 0:
-                    data_norm[s_name][gc] = (count / total) * 100
+                data_norm[r_name] = dict()
+                total = sum([c for c in data[r_name].values()])
+                for gc, count in data[r_name].items():
+                    if total > 0:
+                        data_norm[r_name][gc] = (count / total) * 100
 
         if len(data) == 0:
             log.debug('per_sequence_gc_content not found in FastQC reports')
@@ -113,18 +115,19 @@ class DragenGcMetrics(BaseMultiqcModule):
         """ Create the HTML for the positional mean-quality score plot """
 
         GROUP = "READ GC CONTENT QUALITY"
-
         data = dict()
-        for s_name in self.fastqc_data:
-            data[s_name] = dict()
+        for s_name in sorted(self.fastqc_data):
+            for mate in sorted(self.fastqc_data[s_name]):
+                r_name = "{}_{}".format(s_name, mate)
+                data[r_name] = dict()
 
-            for key, value in self.fastqc_data[s_name][GROUP].items():
-                parts = key.split()
-                pct = int(parts[0][:-1])
-                try:
-                    data[s_name][pct] = float(value)
-                except:
-                    continue
+                for key, value in self.fastqc_data[s_name][mate][GROUP].items():
+                    parts = key.split()
+                    pct = int(parts[0][:-1])
+                    try:
+                        data[r_name][pct] = float(value)
+                    except:
+                        continue
 
         pconfig = {
             'id': 'fastqc_gc_content_mean_sequence_quality_plot',

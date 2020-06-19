@@ -43,19 +43,21 @@ class DragenReadMetrics(BaseMultiqcModule):
         GROUP = "READ MEAN QUALITY"
         MAX_QV = 64
         max_non_zero = 0
-        for s_name in self.fastqc_data:
-            data[s_name] = dict()
-            group_data = self.fastqc_data[s_name][GROUP]
-            for qv in range(MAX_QV):
-                metric = "Q{0} Reads".format(qv)
-                count = group_data[metric]
-                if count > 0:
-                    max_non_zero = max(qv, max_non_zero)
-                data[s_name][qv] = count
+        for s_name in sorted(self.fastqc_data):
+            for mate in sorted(self.fastqc_data[s_name]):
+                r_name = "{}_{}".format(s_name, mate)
+                data[r_name] = dict()
+                group_data = self.fastqc_data[s_name][mate][GROUP]
+                for qv in range(MAX_QV):
+                    metric = "Q{0} Reads".format(qv)
+                    count = group_data[metric]
+                    if count > 0:
+                        max_non_zero = max(qv, max_non_zero)
+                    data[r_name][qv] = count
 
-        for s_name in data:
+        for r_name in data:
             for qv in range(max_non_zero+2, MAX_QV):
-                del data[s_name][qv]
+                del data[r_name][qv]
 
         if len(data) == 0:
             log.debug('per_seq_quality not found in DRAGEN FastQC reports')
@@ -99,20 +101,22 @@ class DragenReadMetrics(BaseMultiqcModule):
         multiple_lenths = False
         avg_to_range = dict()
         GROUP = "READ LENGTHS"
-        for s_name in self.fastqc_data:
-            data[s_name] = dict()
+        for s_name in sorted(self.fastqc_data):
+            for mate in sorted(self.fastqc_data[s_name]):
+                r_name = "{}_{}".format(s_name, mate)
+                data[r_name] = dict()
 
-            group_data = self.fastqc_data[s_name][GROUP]
-            for metric, value in group_data.items():
-                if value > 0:
-                    avg_pos = average_pos_from_size(metric)
-                    data[s_name][avg_pos] = value
-                    avg_to_range[avg_pos] = metric.split('bp')[0]
+                group_data = self.fastqc_data[s_name][mate][GROUP]
+                for metric, value in group_data.items():
+                    if value > 0:
+                        avg_pos = average_pos_from_size(metric)
+                        data[r_name][avg_pos] = value
+                        avg_to_range[avg_pos] = metric.split('bp')[0]
 
-            seq_lengths.update([avg_to_range[k] for k in data[s_name].keys()])
+                seq_lengths.update([avg_to_range[k] for k in data[r_name].keys()])
 
-            if len(set(data[s_name].keys())) > 1:
-                multiple_lenths = True
+                if len(set(data[r_name].keys())) > 1:
+                    multiple_lenths = True
 
         if len(data) == 0:
             log.debug('sequence_length_distribution not found in FastQC reports')
