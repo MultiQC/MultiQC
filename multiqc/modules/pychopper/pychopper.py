@@ -20,7 +20,7 @@ class MultiqcModule(BaseMultiqcModule):
         # Initialise the parent object
         super(MultiqcModule, self).__init__(name='Pychopper', anchor='pychopper',
                 href='https://github.com/nanoporetech/pychopper',
-        info="is a tool to identify, orient, trim and rescue full length Nanopore cDNA reads")
+        info="is a tool to identify, orient, trim and rescue full length Nanopore cDNA reads.")
         
         # Parse stats file
         self.pychopper_data = {}
@@ -45,8 +45,8 @@ class MultiqcModule(BaseMultiqcModule):
 
         headers = OrderedDict()
         headers['ftp'] = {
-            'title' : 'Full length Transp.',
-            'description' : 'Percentage of full length transposons in the cDNA reads',
+            'title' : 'Full-Length Transcripts',
+            'description' : 'Percentage of full length trankripts in the cDNA reads',
             'suffix' : '%',
             'max': 100,
             'min': 0,
@@ -62,15 +62,10 @@ class MultiqcModule(BaseMultiqcModule):
             name = "cDNA Read Classification",
             description = (
                 """
-                This plot shows the read categories identified by porechopper: 
-                    - Full length transcripts (primers found at both ends),
-                    - Rescued reads (Splitted fusion reads)
-                    - Unusable (No primer sequences on both ends)
-                """
-            ),
-            helptext = (
-                """
-                TODO: Add helptext here
+                This plot shows the cDNA read categories identified by Pychopper </br>
+                    - <b> Primers found: </b> Full length transcripts with correct primers at both ends </br>
+                    - <b> Rescued reads: </b> Split fusion reads </br>
+                    - <b> Unusable: </b> Reads without correct primer combinations
                 """
             ),
             anchor = 'pychopper_classification',
@@ -80,12 +75,7 @@ class MultiqcModule(BaseMultiqcModule):
             name = "cDNA Strand Orientation",
             description = (
                 """
-                This plot shows the idientfied orientation of full length transcripts
-                """
-            ),
-            helptext = (
-                """
-                TODO: Add helptext here
+                This plot shows the strand orientation of full length transcripts.
                 """
             ),
             anchor = 'pychopper_orientation',
@@ -121,7 +111,7 @@ class MultiqcModule(BaseMultiqcModule):
             'id': 'pychopper_orientation',
             'title': 'Pychopper: Strand Orientation',
             'ylab': 'Count',
-            'xlab': 'Values',
+            'cpswitch_c_active': False,  
             'xDecimals': False,
             'ymin': 0
         }

@@ -9,6 +9,9 @@
 * [**HOPS**](https://www.github.com/rhubler/HOPS)
   * Post-alignment ancient DNA analysis tool for MALT
 
+* [**Pychopper**](https://github.com/nanoporetech/pychopper)
+  * Identify, orient and trim full length Nanopore cDNA reads
+
 #### Module updates
 
 * **DRAGEN**
