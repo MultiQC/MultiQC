@@ -710,7 +710,7 @@ class MultiqcModule(BaseMultiqcModule):
         config = {
             'id': 'qc3C_bam_junction_plot',
             'namespace': 'qc3C',
-            'title': 'qc3C: K-mer mode putative ligation product frequency',
+            'title': 'qc3C: BAM mode read-thru ligation product frequency',
             'ylab': 'Number of reads',
             'hide_zero_cats': False,
             'use_legend': False
@@ -900,6 +900,8 @@ class MultiqcModule(BaseMultiqcModule):
 
         categories = OrderedDict({
             'k_n_accepted_reads': {'name': 'Accepted', 'color': rev_8[-1]},
+            'k_n_low_cov': {'name': 'Low cov', 'color': rev_8[6]},
+            'k_n_zero_cov': {'name': 'Zero cov', 'color': rev_8[5]},
             'k_n_high_cov': {'name': 'High cov', 'color': rev_8[4]},
             'k_n_ambiguous': {'name': 'Ambiguous', 'color': rev_8[3]},
             'k_n_no_flank': {'name': 'No flank', 'color': rev_8[2]},
@@ -1061,6 +1063,8 @@ class MultiqcModule(BaseMultiqcModule):
                     'k_n_no_flank': parsed['n_no_flank'],
                     'k_n_ambiguous': parsed['n_ambiguous'],
                     'k_n_high_cov': parsed['n_high_cov'],
+                    'k_n_low_cov': parsed['n_low_cov'],
+                    'k_n_zero_cov': parsed['n_zero_cov'],
                     'k_n_accepted_reads': parsed['n_accepted_reads'],
                     'k_n_without_junc': parsed['n_without_junc'],
                     'k_n_with_junc': parsed['n_with_junc'],
