@@ -28,6 +28,7 @@ MultiQC Modules:
     leeHom: modules/leehom.md
     minionqc: modules/minionqc.md
     pycoQC: modules/pycoqc.md
+    Pychopper: modules/pychopper.md
     SeqyClean: modules/seqyclean.md
     Sickle: modules/sickle.md
     Skewer: modules/skewer.md

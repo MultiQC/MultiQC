@@ -63,9 +63,15 @@ class MultiqcModule(BaseMultiqcModule):
             description = (
                 """
                 This plot shows the cDNA read categories identified by Pychopper </br>
-                    - <b> Primers found: </b> Full length transcripts with correct primers at both ends </br>
-                    - <b> Rescued reads: </b> Split fusion reads </br>
-                    - <b> Unusable: </b> Reads without correct primer combinations
+                """
+            ),
+            helptext = (
+                """
+                There are three possible cases:
+
+                * **Primers found**: Full length transcripts with correct primers at both ends.
+                * **Rescued reads**: Split fusion reads.
+                * **Unusable**: Reads without correct primer combinations.
                 """
             ),
             anchor = 'pychopper_classification',
@@ -78,6 +84,12 @@ class MultiqcModule(BaseMultiqcModule):
                 This plot shows the strand orientation of full length transcripts.
                 """
             ),
+            helptext = (
+                """
+                Nanopore cDNA reads are always read forward. To estimate their original strand, 
+                Pychopper searches for the location of the start and end primers and assigns the reads accordingly.
+                """
+            ),
             anchor = 'pychopper_orientation',
             plot = self.plot_orientation()
         )
@@ -87,12 +99,11 @@ class MultiqcModule(BaseMultiqcModule):
         """ Generate the cDNA read classification plot """
 
         pconfig = {
-            'id': 'pychopper_classification',
-            'title': 'Pychopper: Read classification'
-     #       'ylab': 'Sample',
-     #       'xlab': 'X-Axis',
-     #       'xDecimals': False,
-     #       'ymin': 0
+            'id': 'pychopper_classification_plot',
+            'title': 'Pychopper: Read classification',
+            'ylab': '',
+            'xDecimals': False,
+            'ymin': 0
         }
 
         data_classification = {}
@@ -100,7 +111,6 @@ class MultiqcModule(BaseMultiqcModule):
             data_classification[sample] = {}
             data_classification[sample]=self.pychopper_data[sample]['Classification']
         
-        print(data_classification)
         cats = ['Primers_found', 'Rescue', 'Unusable']
         return bargraph.plot(data_classification, cats, pconfig)
     
@@ -108,9 +118,9 @@ class MultiqcModule(BaseMultiqcModule):
         """ Generate the transcript strand orientation plot """
 
         pconfig = {
-            'id': 'pychopper_orientation',
+            'id': 'pychopper_orientation_plot',
             'title': 'Pychopper: Strand Orientation',
-            'ylab': 'Count',
+            'ylab': '',
             'cpswitch_c_active': False,  
             'xDecimals': False,
             'ymin': 0
@@ -121,7 +131,6 @@ class MultiqcModule(BaseMultiqcModule):
             data_orientation[sample] = {}
             data_orientation[sample]=self.pychopper_data[sample]['Strand']
 
-        print(data_orientation)
         cats = ['+', '-']
         return bargraph.plot(data_orientation, cats, pconfig)
 
