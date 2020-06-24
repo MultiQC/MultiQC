@@ -34,6 +34,9 @@ class MultiqcModule(BaseMultiqcModule):
                     self.pychopper_data[sample][category] = {}
                 self.pychopper_data[sample][category][name] = float(value)
 
+        # Filter to strip out ignored sample names
+        self.pychopper_data = self.ignore_samples(self.pychopper_data)
+
         # Raise user warning if no data found
         if len(self.pychopper_data) == 0:
             raise UserWarning
