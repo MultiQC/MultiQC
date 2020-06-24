@@ -34,8 +34,12 @@ class MultiqcModule(BaseMultiqcModule):
                     self.pychopper_data[sample][category] = {}
                 self.pychopper_data[sample][category][name] = float(value)
 
+        # Raise user warning if no data found
+        if len(self.pychopper_data) == 0:
+            raise UserWarning
+        
         log.info("Found {} reports".format(len(self.pychopper_data)))
-         
+
         # Add to general statistics table:
         # Percentage of full length transcripts
         data_general_stats={}
