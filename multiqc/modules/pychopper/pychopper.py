@@ -33,6 +33,8 @@ class MultiqcModule(BaseMultiqcModule):
                 if category not in self.pychopper_data[sample]:
                     self.pychopper_data[sample][category] = {}
                 self.pychopper_data[sample][category][name] = float(value)
+
+        log.info("Found {} reports".format(len(self.pychopper_data)))
          
         # Add to general statistics table:
         # Percentage of full length transcripts
