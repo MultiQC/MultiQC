@@ -68,7 +68,7 @@ def custom_module_classes():
             except ValueError:
                 # HTML plot type doesn't have a data sample-id key, so just take the whole chunk of data
                 cust_mods[c_id]['data'] = f['data']
-            cust_mods[c_id]['config'].update( { k:v for k, v in f.items() if k is not 'data' } )
+            cust_mods[c_id]['config'].update( { k:v for k, v in f.items() if k != 'data' } )
             cust_mods[c_id]['config']['id'] = cust_mods[c_id]['config'].get('id', c_id)
             continue
 
