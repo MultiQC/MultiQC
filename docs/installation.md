@@ -196,7 +196,7 @@ environment in your local system interacting with Python inside the image.
 This can give rise to `ImportError` errors for `numpy` and other packages.
 
 The giveaway for when this is the problem is that traceback will list python package paths which
-are on your system and look different that of MultiQC inside the container (`"/usr/lib/python3.8/site-packages/multiqc/`).
+are on your system and look different that of MultiQC inside the container (eg. `/usr/lib/python3.8/site-packages/multiqc/`).
 
 To fix this, run the command `export PYTHONNOUSERSITE=1` before running MultiQC.
 This variable [tells Python](https://docs.python.org/3/using/cmdline.html#envvar-PYTHONNOUSERSITE)
