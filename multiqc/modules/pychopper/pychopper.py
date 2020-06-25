@@ -54,8 +54,8 @@ class MultiqcModule(BaseMultiqcModule):
 
         headers = OrderedDict()
         headers['ftp'] = {
-            'title' : 'Full-Length Transcripts',
-            'description' : 'Percentage of full length trankripts in the cDNA reads',
+            'title' : 'Full-Length cDNA',
+            'description' : 'Percentage of full length cDNA reads with correct primers at both ends',
             'suffix' : '%',
             'max': 100,
             'min': 0,
@@ -78,7 +78,7 @@ class MultiqcModule(BaseMultiqcModule):
                 """
                 There are three possible cases:
 
-                * **Primers found**: Full length transcripts with correct primers at both ends.
+                * **Primers found**: Full length cDNA reads with correct primers at both ends.
                 * **Rescued reads**: Split fusion reads.
                 * **Unusable**: Reads without correct primer combinations.
                 """
@@ -90,7 +90,7 @@ class MultiqcModule(BaseMultiqcModule):
             name = "cDNA Strand Orientation",
             description = (
                 """
-                This plot shows the strand orientation of full length transcripts.
+                This plot shows the strand orientation of full length cDNA reads
                 """
             ),
             helptext = (
@@ -124,7 +124,7 @@ class MultiqcModule(BaseMultiqcModule):
         return bargraph.plot(data_classification, cats, pconfig)
     
     def plot_orientation(self):
-        """ Generate the transcript strand orientation plot """
+        """ Generate the read strand orientation plot """
 
         pconfig = {
             'id': 'pychopper_orientation_plot',
