@@ -50,16 +50,27 @@ class MultiqcModule(BaseMultiqcModule):
         self.write_data_file(self.happy_snv_data, 'multiqc_happy_snv_data', data_format="json")
 
         self.add_section(
-            name = "hap.py",
-            anchor = "happy-plot",
+            name = "Hap.py indel",
+            anchor = "happy-indel-plot",
             description = 'The default shown fields should give the best overview of quality, but there are many other hidden fields available.',
             helptext = '''
                 No plots are generated, as hap.py is generally run on single control samples (NA12878, etc.)
 
                 Ideally, precision, recall and F1 Score should all be as close to 1 as possible.
             ''',
-            plot_indel = table.plot(self.happy_indel_data, self.gen_headers())
-#             plot_snv = table.plot(self.happy_snv_data, self.gen_headers())
+            plot = table.plot(self.happy_indel_data, self.gen_headers())
+        )
+        
+        self.add_section(
+            name = "Hap.py SNV",
+            anchor = "happy-snv-plot",
+            description = 'The default shown fields should give the best overview of quality, but there are many other hidden fields available.',
+            helptext = '''
+                No plots are generated, as hap.py is generally run on single control samples (NA12878, etc.)
+
+                Ideally, precision, recall and F1 Score should all be as close to 1 as possible.
+            ''',
+            plot = table.plot(self.happy_snv_data, self.gen_headers())
         )
 
     def parse_log(self, f):
