@@ -35,7 +35,7 @@ class MultiqcModule(BaseMultiqcModule):
 
         self.happy_raw_sample_names = set()
         self.happy_indel_data = dict()
-        self.happy_snv_data = dict()
+        self.happy_snp_data = dict()
 
         for f in self.find_log_files("happy", filehandles=True):
             self.parse_log(f)
@@ -47,7 +47,7 @@ class MultiqcModule(BaseMultiqcModule):
         log.info("Found {} reports".format(len(self.happy_raw_sample_names)))
 
         self.write_data_file(self.happy_indel_data, 'multiqc_happy_indel_data', data_format="json")
-        self.write_data_file(self.happy_snv_data, 'multiqc_happy_snv_data', data_format="json")
+        self.write_data_file(self.happy_snp_data, 'multiqc_happy_snp_data', data_format="json")
 
         self.add_section(
             name = "Hap.py indel",
@@ -62,15 +62,15 @@ class MultiqcModule(BaseMultiqcModule):
         )
         
         self.add_section(
-            name = "Hap.py SNV",
-            anchor = "happy-snv-plot",
+            name = "Hap.py SNP",
+            anchor = "happy-snp-plot",
             description = 'The default shown fields should give the best overview of quality, but there are many other hidden fields available.',
             helptext = '''
                 No plots are generated, as hap.py is generally run on single control samples (NA12878, etc.)
 
                 Ideally, precision, recall and F1 Score should all be as close to 1 as possible.
             ''',
-            plot = table.plot(self.happy_snv_data, self.gen_headers())
+            plot = table.plot(self.happy_snp_data, self.gen_headers())
         )
 
     def parse_log(self, f):
@@ -90,11 +90,11 @@ class MultiqcModule(BaseMultiqcModule):
                     self.happy_indel_data[row_id] = {"sample_id": f['s_name']}
                 for fn in rdr.fieldnames:
                     self.happy_indel_data[row_id][fn] = row[fn]
-            elif row["Type"] == 'SNV':
-                if row_id not in self.happy_snv_data:
-                    self.happy_snv_data[row_id] = {"sample_id": f['s_name']}
+            elif row["Type"] == 'SNP':
+                if row_id not in self.happy_snp_data:
+                    self.happy_snp_data[row_id] = {"sample_id": f['s_name']}
                 for fn in rdr.fieldnames:
-                    self.happy_snv_data[row_id][fn] = row[fn]
+                    self.happy_snp_data[row_id][fn] = row[fn]
 
     def gen_headers(self):
         h = OrderedDict()
