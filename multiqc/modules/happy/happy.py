@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 
 """MultiQC module to parse output from OUS variant calling pipeline"""
+# C:\Users\ratka\Documents\STP\Addenbrookes\DNAnexus\MultiQC\happy_multiqc.py
 
 from __future__ import print_function
 from collections import OrderedDict
@@ -33,7 +34,8 @@ class MultiqcModule(BaseMultiqcModule):
         )
 
         self.happy_raw_sample_names = set()
-        self.happy_data = dict()
+        self.happy_indel_data = dict()
+        self.happy_snv_data = dict()
 
         for f in self.find_log_files("happy", filehandles=True):
             self.parse_log(f)
@@ -44,7 +46,8 @@ class MultiqcModule(BaseMultiqcModule):
 
         log.info("Found {} reports".format(len(self.happy_raw_sample_names)))
 
-        self.write_data_file(self.happy_data, 'multiqc_happy_data', data_format="json")
+        self.write_data_file(self.happy_indel_data, 'multiqc_happy_indel_data', data_format="json")
+        self.write_data_file(self.happy_snv_data, 'multiqc_happy_snv_data', data_format="json")
 
         self.add_section(
             name = "hap.py",
@@ -55,7 +58,8 @@ class MultiqcModule(BaseMultiqcModule):
 
                 Ideally, precision, recall and F1 Score should all be as close to 1 as possible.
             ''',
-            plot = table.plot(self.happy_data, self.gen_headers())
+            plot = table.plot(self.happy_indel_data, self.gen_headers())
+            plot = table.plot(self.happy_snv_data, self.gen_headers())
         )
 
     def parse_log(self, f):
@@ -70,10 +74,16 @@ class MultiqcModule(BaseMultiqcModule):
         rdr = csv.DictReader(f['f'])
         for row in rdr:
             row_id = "{}_{}_{}".format(f['s_name'], row["Type"], row["Filter"])
-            if row_id not in self.happy_data:
-                self.happy_data[row_id] = {"sample_id": f['s_name']}
-            for fn in rdr.fieldnames:
-                self.happy_data[row_id][fn] = row[fn]
+            if row["Type"] == 'INDEL':
+                if row_id not in self.happy_indel_data:
+                    self.happy_indel_data[row_id] = {"sample_id": f['s_name']}
+                for fn in rdr.fieldnames:
+                    self.happy_indel_data[row_id][fn] = row[fn]
+            elif row["Type"] == 'SNV':
+                if row_id not in self.happy_snv_data:
+                    self.happy_snv_data[row_id] = {"sample_id": f['s_name']}
+                for fn in rdr.fieldnames:
+                    self.happy_snv_data[row_id][fn] = row[fn]
 
     def gen_headers(self):
         h = OrderedDict()
