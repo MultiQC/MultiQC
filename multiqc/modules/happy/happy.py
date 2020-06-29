@@ -27,7 +27,7 @@ class MultiqcModule(BaseMultiqcModule):
     def __init__(self):
         """ MultiQC module for processing hap.py output logs """
         super(MultiqcModule, self).__init__(
-            name='hap.py',
+            name='Hap.py',
             anchor='happy',
             href='https://github.com/Illumina/hap.py',
             info="is a set of programs based on htslib to benchmark variant calls against gold standard truth datasets."
@@ -50,7 +50,7 @@ class MultiqcModule(BaseMultiqcModule):
         self.write_data_file(self.happy_snp_data, 'multiqc_happy_snp_data', data_format="json")
 
         self.add_section(
-            name = "Hap.py indel",
+            name = "Happy INDEL",
             anchor = "happy-indel-plot",
             description = 'The default shown fields should give the best overview of quality, but there are many other hidden fields available.',
             helptext = '''
@@ -62,7 +62,7 @@ class MultiqcModule(BaseMultiqcModule):
         )
         
         self.add_section(
-            name = "Hap.py SNP",
+            name = "Happy SNP",
             anchor = "happy-snp-plot",
             description = 'The default shown fields should give the best overview of quality, but there are many other hidden fields available.',
             helptext = '''
