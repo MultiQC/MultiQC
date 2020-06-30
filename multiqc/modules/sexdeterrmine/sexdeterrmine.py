@@ -7,7 +7,7 @@ from collections import OrderedDict
 import logging
 import json
 
-from multiqc.plots import bargraph
+from multiqc.plots import bargraph, scatter
 from multiqc.modules.base_module import BaseMultiqcModule
 
 # Initialise the logger
@@ -45,6 +45,7 @@ class MultiqcModule(BaseMultiqcModule):
         self.addSummaryMetrics()
 
         # Plots
+        self.snp_rate_scatterplot()
         self.read_count_barplot()
         self.snp_count_barplot()
 
@@ -53,7 +54,7 @@ class MultiqcModule(BaseMultiqcModule):
             data = json.load(f['f'])
         except Exception as e:
             log.debug(e)
-            log.warn("Could not parse SexDeterrmine JSON: '{}'".format(f['fn']))
+            log.warning("Could not parse SexDeterrmine JSON: '{}'".format(f['fn']))
             return
 
         # Parse JSON data to a dict
@@ -127,6 +128,36 @@ class MultiqcModule(BaseMultiqcModule):
             description = 'The number of reads covering positions on the autosomes, X and Y chromosomes.',
             plot = bargraph.plot(self.sexdet_data, cats, config)
         )
+
+    def snp_rate_scatterplot(self):
+        """ Make a scatter plot showing relative coverage on X and Y chr
+        """
+        data = OrderedDict()
+        for sample in self.sexdet_data:
+            try:
+                data[sample] = {'x': self.sexdet_data[sample]['RateX'], 'y': self.sexdet_data[sample]['RateY']}
+            except KeyError:
+                pass
+
+        config = {
+            'id': 'sexdeterrmine-rate-plot',
+            'title': 'SexDetErrmine: Relative coverage',
+            'ylab': 'Relative Cov. on Y',
+            'xlab': 'Relative Cov. on X'
+        }
+
+        if len(data) > 0:
+            self.add_section(
+                name = 'Relative Coverage',
+                anchor = 'sexdeterrmine-rates',
+                description = 'The coverage on the X vs Y chromosome, relative to coverage on the Autosomes.',
+                helptext = '''
+                Males are expected to have a roughly equal X- and Y-rates, while females are expected to have a Y-rate of 0 and an X-rate of 1.
+                Placement between the two clusters can be indicative of contamination, while placement with higher than expected X- and/or Y-rates can be indicative of sex chromosome aneuploidy.
+                ''',
+                plot = scatter.plot(data, config)
+            )
+
 
     def snp_count_barplot(self):
         """ Make a bar plot showing read counts on Autosomal, X and Y chr

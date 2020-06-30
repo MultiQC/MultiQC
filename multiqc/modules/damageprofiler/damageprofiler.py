@@ -103,7 +103,7 @@ class MultiqcModule(BaseMultiqcModule):
             parsed_json = json.load(f['f'])
         except Exception as e:
             print(e)
-            log.warn("Could not parse DamageProfiler JSON: '{}'".format(f['fn']))
+            log.warning("Could not parse DamageProfiler JSON: '{}'".format(f['fn']))
             return None
 
         #Get sample name from JSON first
@@ -260,7 +260,7 @@ class MultiqcModule(BaseMultiqcModule):
 
         config = {
             'id': 'threeprime_misinc_plot',
-            'title': 'DamageProfiler: 3P G>A misincorporation plot',
+            'title': 'DamageProfiler: 3\' G>A misincorporation plot',
             'ylab': '% G to A substituted',
             'xlab': 'Nucleotide position from 3\'',
             'tt_label': '{point.y:.2f} % G>A misincorporations at nucleotide position {point.x}',

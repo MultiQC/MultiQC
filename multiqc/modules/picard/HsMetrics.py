@@ -151,6 +151,7 @@ def parse_reports(self):
             'min': 0,
             'format': '{:,.0f}',
             'scale': 'Blues',
+            'suffix': ' X'
         }
         try:
             covs = config.picard_config['general_stats_target_coverage']
@@ -163,7 +164,7 @@ def parse_reports(self):
         for c in covs:
             self.general_stats_headers['PCT_TARGET_BASES_{}X'.format(c)] = {
                 'id': 'picard_target_bases_{}X'.format(c),
-                'title': 'Target Bases {}X'.format(c),
+                'title': '% Target Bases {}X'.format(c),
                 'description': 'Percent of target bases with coverage &ge; {}X'.format(c),
                 'max': 100,
                 'min': 0,
@@ -253,23 +254,44 @@ def _get_table_headers(data):
             'GC_DROPOUT'
         ]
 
+    title_cleanup = [
+        ('CVG', 'coverage'),
+        ('UQ', 'unique'),
+        ('ON_', 'On-'),
+        ('OFF_', 'Off-'),
+        ('NEAR_', 'Near-'),
+        ('_', ' '),
+        ('PCT', ''),
+    ]
     headers = OrderedDict()
     for h in FIELD_DESCRIPTIONS:
-        
+
         # Skip anything not listed in the above default / config for this table
         if h not in HsMetrics_table_cols:
             continue
 
         # Set up the configuration for each column
         if h not in headers:
+
+            # Generate a nice string for the column title
+            h_title = h
+            for s,r in title_cleanup:
+                h_title = h_title.replace(s, r)
+
             headers[h] = {
-                'title': h.replace("_", " ").lower().capitalize(),
+                'title': h_title.strip().lower().capitalize(),
                 'description' : FIELD_DESCRIPTIONS[h] if h in FIELD_DESCRIPTIONS else None,
                 'scale': 'RdYlGn',
                 'min': 0,
                 'namespace': 'HsMetrics'
             }
-            if h.find("READS") > -1:
+            if h.find("PCT") > -1:
+                headers[h]['title'] = '% {}'.format( headers[h]['title'])
+                headers[h]['modify'] = lambda x: x * 100.0
+                headers[h]['max'] = 100
+                headers[h]['suffix'] = '%'
+
+            elif h.find("READS") > -1:
                 headers[h]['title'] = "{} {}".format(config.read_count_prefix, headers[h]['title'])
                 headers[h]['modify'] = lambda x: x * config.read_count_multiplier
                 headers[h]['shared_key'] = "read_count"
@@ -278,6 +300,9 @@ def _get_table_headers(data):
                 headers[h]['title'] = "{} {}".format(config.base_count_prefix, headers[h]['title'])
                 headers[h]['modify'] = lambda x: x * config.base_count_multiplier
                 headers[h]['shared_key'] = 'base_count'
+
+            # Manual capitilisation for some strings
+            headers[h]['title'] = headers[h]['title'].replace('Pf', 'PF').replace('snp', 'SNP')
 
             if h in HsMetrics_table_cols_hidden:
                 headers[h]['hidden'] = True

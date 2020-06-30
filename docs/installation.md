@@ -161,8 +161,8 @@ docker run -v `pwd`:`pwd` -w `pwd` ewels/multiqc
 ```
 
 By default, docker will use the `:latest` tag. For MultiQC, this is set to be the most recent release.
-To use the most recent development code, use `ewels/MultiQC::dev`.
-You can also specify specific versions, eg: `ewels/MultiQC:1.3`.
+To use the most recent development code, use `ewels/multiqc::dev`.
+You can also specify specific versions, eg: `ewels/multiqc:1.9`.
 
 You can also specify additional MultiQC parameters as normal:
 
@@ -172,6 +172,35 @@ docker run -v `pwd`:`pwd` -w `pwd` ewels/multiqc . --title "My amazing report" -
 
 Note that all files on the command line (eg. config files) must be mounted in the docker container to be accessible.
 For more help, look into [the Docker documentation](https://docs.docker.com/engine/reference/commandline/run/)
+
+## Using Singularity
+
+Although there is no dedicated Singularity image available for MultiQC, you can use the above Docker container.
+
+First, build a singularity container image from the docker image (where `1.9` is the MultiQC version):
+
+```bash
+singularity build multiqc-1.9.sif docker://ewels/multiqc:1.9
+```
+
+Then, use `singularity run` to run the image with the normal MultiQC arguments:
+
+```bash
+singularity run multiqc-1.9.sif my_results/ --title "Report made using Singularity"
+```
+
+### Import errors with Singularity
+
+Sometimes, Singularity can be over-ambitious with sharing file paths which can result in the Python
+environment in your local system interacting with Python inside the image.
+This can give rise to `ImportError` errors for `numpy` and other packages.
+
+The giveaway for when this is the problem is that traceback will list python package paths which
+are on your system and look different that of MultiQC inside the container (eg. `/usr/lib/python3.8/site-packages/multiqc/`).
+
+To fix this, run the command `export PYTHONNOUSERSITE=1` before running MultiQC.
+This variable [tells Python](https://docs.python.org/3/using/cmdline.html#envvar-PYTHONNOUSERSITE)
+not to add site-packages to the system path when loading, which should avoid the conflicts.
 
 ## Python 2
 

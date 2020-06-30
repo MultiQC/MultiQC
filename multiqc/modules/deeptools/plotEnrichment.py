@@ -24,6 +24,8 @@ class plotEnrichmentMixin():
             if len(parsed_data) > 0:
                 self.add_data_source(f, section='plotEnrichment')
 
+        self.deeptools_plotEnrichment = self.ignore_samples(self.deeptools_plotEnrichment)
+
         if len(self.deeptools_plotEnrichment) > 0:
             dCounts = OrderedDict()
             dPercents = OrderedDict()

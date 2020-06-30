@@ -35,6 +35,47 @@ def parse_reports(self,
     except (AttributeError, KeyError):
         merge_multiple_libraries = True
 
+    # Function to save results at end of table
+    def save_table_results(s_name, base_s_name, keys, parsed_data, recompute_merged_metrics):
+        # No data
+        if len(keys) == 0 or len(parsed_data) == 0:
+            return
+
+        # User has requested each library is kept separate
+        # Update the sample name to append the library name
+        if not merge_multiple_libraries and len(parsed_data) > 0:
+            s_name = '{} - {}'.format(s_name, parsed_data['LIBRARY'])
+
+        # Skip - No reads
+        try:
+            if parsed_data['READ_PAIRS_EXAMINED'] == 0 and parsed_data['UNPAIRED_READS_EXAMINED'] == 0:
+                log.warning("Skipping MarkDuplicates sample '{}' as log contained no reads".format(s_name))
+                return
+        # Skip - Missing essential fields
+        except KeyError:
+            log.warning("Skipping MarkDuplicates sample '{}' as missing essential fields".format(s_name))
+            return
+
+        # Recompute PERCENT_DUPLICATION and ESTIMATED_LIBRARY_SIZE
+        if recompute_merged_metrics:
+            parsed_data['PERCENT_DUPLICATION'] = calculatePercentageDuplication(parsed_data)
+            parsed_data['ESTIMATED_LIBRARY_SIZE'] = estimateLibrarySize(parsed_data)
+
+        # Save the data
+        if s_name in self.picard_dupMetrics_data:
+            log.debug("Duplicate sample name found in {}! Overwriting: {}".format(f['fn'], s_name))
+        self.picard_dupMetrics_data[s_name] = parsed_data
+        self.add_data_source(f, s_name, section='DuplicationMetrics')
+
+        # End of metrics table - reset for next sample
+        if len(vals) < 6:
+            return True
+
+        # On to the next library if not merging
+        else:
+            s_name = base_s_name
+            parsed_data = {}
+
     # Go through logs and find Metrics
     for f in self.find_log_files(log_key, filehandles=True):
         s_name = f['s_name']
@@ -74,65 +115,39 @@ def parse_reports(self,
 
                 # End of the METRICS table, or multiple libraries and we're not merging them
                 if len(vals) < 6 or (not merge_multiple_libraries and len(parsed_data) > 0):
-
-                    # No data
-                    if len(keys) == 0 or len(parsed_data) == 0:
-                        break
-
-                    # User has requested each library is kept separate
-                    # Update the sample name to append the library name
-                    if not merge_multiple_libraries and len(parsed_data) > 0:
-                        s_name = '{} - {}'.format(s_name, parsed_data['LIBRARY'])
-
-                    # Skip - No reads
-                    try:
-                        if parsed_data['READ_PAIRS_EXAMINED'] == 0 and parsed_data['UNPAIRED_READS_EXAMINED'] == 0:
-                            log.warn("Skipping MarkDuplicates sample '{}' as log contained no reads".format(s_name))
-                            continue
-                    # Skip - Missing essential fields
-                    except KeyError:
-                        log.warn("Skipping MarkDuplicates sample '{}' as missing essential fields".format(s_name))
-                        continue
-
-                    # Recompute PERCENT_DUPLICATION and ESTIMATED_LIBRARY_SIZE
-                    if recompute_merged_metrics:
-                        parsed_data['PERCENT_DUPLICATION'] = calculatePercentageDuplication(parsed_data)
-                        parsed_data['ESTIMATED_LIBRARY_SIZE'] = estimateLibrarySize(parsed_data)
-
-                    # Save the data
-                    if s_name in self.picard_dupMetrics_data:
-                        log.debug("Duplicate sample name found in {}! Overwriting: {}".format(f['fn'], s_name))
-                    self.picard_dupMetrics_data[s_name] = parsed_data
-                    self.add_data_source(f, s_name, section='DuplicationMetrics')
-
-                    # End of metrics table - stop parsing
-                    if len(vals) < 6:
-                        break
-
-                    # On to the next library if not merging
-                    else:
-                        s_name = base_s_name
+                    if save_table_results(s_name, base_s_name, keys, parsed_data, recompute_merged_metrics):
+                        # Reset for next file if returned True
+                        s_name = f['s_name']
+                        base_s_name = f['s_name']
                         parsed_data = {}
+                        keys = None
+                        in_stats_block = False
+                        recompute_merged_metrics = False
 
                 #
                 # Parse the column values
                 #
-                for i, k in enumerate(keys):
+                if keys and vals and len(keys) == len(vals):
+                    for i, k in enumerate(keys):
 
-                    # More than one library present and merging stats
-                    if k in parsed_data:
-                        recompute_merged_metrics = True
-                        try:
-                            parsed_data[k] += float(vals[i])
-                        except (ValueError, TypeError):
-                            parsed_data[k] += " / " + vals[i]
+                        # More than one library present and merging stats
+                        if k in parsed_data:
+                            recompute_merged_metrics = True
+                            try:
+                                parsed_data[k] += float(vals[i])
+                            except (ValueError, TypeError):
+                                parsed_data[k] += " / " + vals[i]
 
-                    # First library
-                    else:
-                        try:
-                            parsed_data[k] = float(vals[i])
-                        except ValueError:
-                            parsed_data[k] = vals[i]
+                        # First library
+                        else:
+                            try:
+                                parsed_data[k] = float(vals[i])
+                            except ValueError:
+                                parsed_data[k] = vals[i]
+
+        # Files with no extra lines after last library
+        if in_stats_block:
+            save_table_results(s_name, base_s_name, keys, parsed_data, recompute_merged_metrics)
 
     #
     # Filter to strip out ignored sample names
@@ -271,7 +286,7 @@ def estimateLibrarySize(d):
         M = 100.0;
 
         if uniqueReadPairs >= readPairs or f(m * uniqueReadPairs, uniqueReadPairs, readPairs) < 0:
-            logging.warn("Picard recalculation of ESTIMATED_LIBRARY_SIZE skipped - metrics look wrong")
+            logging.warning("Picard recalculation of ESTIMATED_LIBRARY_SIZE skipped - metrics look wrong")
             return None
 
         # find value of M, large enough to act as other side for bisection method

@@ -59,17 +59,27 @@ was generated and the button that launches the welcome tour.
 
 <div class="alert alert-warning mqc_loading_warning" style="display:none;"><span class="glyphicon glyphicon-time"></span> &nbsp;Loading report..</div>
 
+{% if config.show_analysis_time or config.show_analysis_paths %}
 <div id="analysis_dirs_wrapper">
-  <p>Report generated on {{ config.creation_date }} based on data in:
-  {% if config.analysis_dir | length == 1 %}<code class="mqc_analysis_path">{{ config.analysis_dir[0] }}</code>
-  {% else %}
-  <ul>
-    {% for d in config.analysis_dir %}
-    <li><code class="mqc_analysis_path">{{ d }}</code></li>
-    {%  endfor %}
-  </ul>
+  <p>Report
+  {% if config.show_analysis_time %}
+    generated on {{ config.creation_date }}
+  {% endif %}
+  {% if config.show_analysis_paths %}
+    based on data in:
+    {% if config.analysis_dir | length == 1 %}
+      <code class="mqc_analysis_path">{{ config.analysis_dir[0] }}</code></p>
+    {% else %}
+      </p>
+      <ul>
+        {% for d in config.analysis_dir %}
+        <li><code class="mqc_analysis_path">{{ d }}</code></li>
+        {%  endfor %}
+      </ul>
+    {% endif %}
   {% endif %}
 </div>
+{% endif %}
 
 {% if config.sample_names_rename_buttons | length > 0 %}
 <p id="mqc_sname_switches_txt">Change sample names:

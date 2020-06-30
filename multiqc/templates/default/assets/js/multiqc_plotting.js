@@ -118,6 +118,15 @@ $(function () {
       var stack_type = (action == 'set_percent') ? 'percent' : 'normal';
       mqc_plots[target]['config']['stacking'] = stack_type;
       mqc_plots[target]['config']['ytype'] = 'linear';
+      // Workaround for manually set y-axis maximums on the % stacked plot
+      if (action == 'set_percent'){
+        mqc_plots[target]['config']['old_ymax'] = mqc_plots[target]['config']['ymax'];
+        delete mqc_plots[target]['config']['ymax'];
+      } else {
+        if('old_ymax' in mqc_plots[target]['config']){
+          mqc_plots[target]['config']['ymax'] = mqc_plots[target]['config']['old_ymax'];
+        }
+      }
       plot_graph(target);
       var ylab = $(this).data('ylab');
       if(ylab != undefined){
@@ -235,9 +244,12 @@ function plot_graph(target, ds, max_num){
 
   // If log status is not set and button is there, check whether it's active by default
   var config = mqc_plots[target]['config'];
+  if(config === undefined){
+    mqc_plots[target]['config'] = {};
+    config = {};
+  }
   if (config['ytype'] === undefined){
     var log_btn = $('.hc_switch_group button[data-action="set_log"][data-target="'+target+'"]');
-    console.log(log_btn);
     if(log_btn.length && log_btn.hasClass('active')){
       config['ytype'] = 'logarithmic';
     }
@@ -305,7 +317,8 @@ function plot_xy_line_graph(target, ds){
     config['tt_label'] = '{point.x}: {point.y:.2f}';
     if(config['categories']){
       config['tt_formatter'] = function(){
-        return '<div style="background-color:'+this.series.color+'; display:inline-block; height: 10px; width: 10px; border:1px solid #333;"></div> <span style="text-decoration:underline; font-weight:bold;">'+this.series.name+'</span><br><strong>'+this.key+':</strong> '+this.y;
+        yval = Highcharts.numberFormat(this.y, (config['tt_decimals'] == undefined ? 0 : config['tt_decimals'])) + ( config['tt_suffix'] || '');
+        return '<div style="background-color:'+this.series.color+'; display:inline-block; height: 10px; width: 10px; border:1px solid #333;"></div> <span style="text-decoration:underline; font-weight:bold;">'+this.series.name+'</span><br><strong>'+this.key+':</strong> '+yval;
       }
     }
   }
@@ -1193,6 +1206,8 @@ function plot_heatmap(target, ds){
   var config = mqc_plots[target]['config'];
 
   if(config['square'] === undefined){ config['square'] = true; }
+  if(config['xcats_samples'] === undefined){ config['xcats_samples'] = true; }
+  if(config['ycats_samples'] === undefined){ config['ycats_samples'] = true; }
 
   // Make a clone of the data, so that we can mess with it,
   // while keeping the original data in tact
@@ -1204,25 +1219,29 @@ function plot_heatmap(target, ds){
 
   // Rename samples
   if(window.mqc_rename_f_texts.length > 0){
-    for (i=0; i < xcats.length; i++) {
-      $.each(window.mqc_rename_f_texts, function(idx, f_text){
-        if(window.mqc_rename_regex_mode){
-          var re = new RegExp(f_text,"g");
-          xcats[i] = xcats[i].replace(re, window.mqc_rename_t_texts[idx]);
-        } else {
-          xcats[i] = xcats[i].replace(f_text, window.mqc_rename_t_texts[idx]);
-        }
-      });
+    if(config['xcats_samples']){
+      for (i=0; i < xcats.length; i++) {
+        $.each(window.mqc_rename_f_texts, function(idx, f_text){
+          if(window.mqc_rename_regex_mode){
+            var re = new RegExp(f_text,"g");
+            xcats[i] = xcats[i].replace(re, window.mqc_rename_t_texts[idx]);
+          } else {
+            xcats[i] = xcats[i].replace(f_text, window.mqc_rename_t_texts[idx]);
+          }
+        });
+      }
     }
-    for (i=0; i < ycats.length; i++) {
-      $.each(window.mqc_rename_f_texts, function(idx, f_text){
-        if(window.mqc_rename_regex_mode){
-          var re = new RegExp(f_text,"g");
-          ycats[i] = ycats[i].replace(re, window.mqc_rename_t_texts[idx]);
-        } else {
-          ycats[i] = ycats[i].replace(f_text, window.mqc_rename_t_texts[idx]);
-        }
-      });
+    if(config['ycats_samples']){
+      for (i=0; i < ycats.length; i++) {
+        $.each(window.mqc_rename_f_texts, function(idx, f_text){
+          if(window.mqc_rename_regex_mode){
+            var re = new RegExp(f_text,"g");
+            ycats[i] = ycats[i].replace(re, window.mqc_rename_t_texts[idx]);
+          } else {
+            ycats[i] = ycats[i].replace(f_text, window.mqc_rename_t_texts[idx]);
+          }
+        });
+      }
     }
   }
 
@@ -1254,30 +1273,34 @@ function plot_heatmap(target, ds){
       var new_xcats = [], new_ycats = [];
       var xidx = 0, yidx = 0;
       for (hl = window.mqc_highlight_f_texts.length; hl >= 0; hl--){
-        for (i=0; i < xcats.length; i++) {
-          if(xcat_hl[i] == hl){
-            new_xcats.push(xcats[i])
-            for (j=0; j < data.length; j++) {
-              // data[j] element is [x,y,val], get "x"
-              if(data[j][0] == i){ newdata[j][0] = xidx; }
+        if(config['xcats_samples']){
+          for (i=0; i < xcats.length; i++) {
+            if(xcat_hl[i] == hl){
+              new_xcats.push(xcats[i])
+              for (j=0; j < data.length; j++) {
+                // data[j] element is [x,y,val], get "x"
+                if(data[j][0] == i){ newdata[j][0] = xidx; }
+              }
+              xidx += 1;
             }
-            xidx += 1;
           }
         }
-        for (i=0; i < ycats.length; i++) {
-          if(ycat_hl[i] == hl){
-            new_ycats.push(ycats[i])
-            for (j=0; j < data.length; j++) {
-              // data[j] element is [x,y,val], get "y"
-              if(data[j][1] == i){ newdata[j][1] = yidx; }
+        if(config['ycats_samples']){
+          for (i=0; i < ycats.length; i++) {
+            if(ycat_hl[i] == hl){
+              new_ycats.push(ycats[i])
+              for (j=0; j < data.length; j++) {
+                // data[j] element is [x,y,val], get "y"
+                if(data[j][1] == i){ newdata[j][1] = yidx; }
+              }
+              yidx += 1;
             }
-            yidx += 1;
           }
         }
       }
       data = newdata;
-      xcats = new_xcats;
-      ycats = new_ycats;
+      if(config['xcats_samples']){ xcats = new_xcats; }
+      if(config['ycats_samples']){ ycats = new_ycats; }
     }
   }
 
@@ -1287,65 +1310,69 @@ function plot_heatmap(target, ds){
   $('#'+target).closest('.hc-plot-wrapper').show();
   if(window.mqc_hide_f_texts.length > 0){
     var remove = Array();
-    var i = xcats.length;
-    var xhidden = 0;
-    // iterate over x-categories (columns)
-    while (i--) {
-      var match = false;
-      for (j = 0; j < window.mqc_hide_f_texts.length; j++) {
-        var f_text = window.mqc_hide_f_texts[j];
-        if(window.mqc_hide_regex_mode){
-          if(xcats[i].match(f_text)){ match = true; }
-        } else {
-          if(xcats[i].indexOf(f_text) > -1){ match = true; }
+    if(config['xcats_samples']){
+      var i = xcats.length;
+      var xhidden = 0;
+      // iterate over x-categories (columns)
+      while (i--) {
+        var match = false;
+        for (j = 0; j < window.mqc_hide_f_texts.length; j++) {
+          var f_text = window.mqc_hide_f_texts[j];
+          if(window.mqc_hide_regex_mode){
+            if(xcats[i].match(f_text)){ match = true; }
+          } else {
+            if(xcats[i].indexOf(f_text) > -1){ match = true; }
+          }
         }
-      }
-      if(window.mqc_hide_mode == 'show'){
-        match = !match;
-      }
-      // modify data if "i" is match for "hiding":
-      // mark elements from "i"-th column (x) for removal,
-      // shift "x" of elements from "i+" columns to the left
-      if(match){
-        xcats.splice(i, 1);
-        for (n=0; n < data.length; n++) {
-          // data[n] element is [x,y,val], get "x"
-          let x = data[n][0];
-          if (x == i){ remove.push(n); }
-          else if(x > i){ data[n][0]  = x - 1; }
+        if(window.mqc_hide_mode == 'show'){
+          match = !match;
         }
-        xhidden += 1;
+        // modify data if "i" is match for "hiding":
+        // mark elements from "i"-th column (x) for removal,
+        // shift "x" of elements from "i+" columns to the left
+        if(match){
+          xcats.splice(i, 1);
+          for (n=0; n < data.length; n++) {
+            // data[n] element is [x,y,val], get "x"
+            let x = data[n][0];
+            if (x == i){ remove.push(n); }
+            else if(x > i){ data[n][0]  = x - 1; }
+          }
+          xhidden += 1;
+        }
       }
     }
-    var i = ycats.length;
-    var yhidden = 0;
-    // iterate over y-categories (rows)
-    while (i--) {
-      var match = false;
-      for (j = 0; j < window.mqc_hide_f_texts.length; j++) {
-        var f_text = window.mqc_hide_f_texts[j];
-        if(window.mqc_hide_regex_mode){
-          if(ycats[i].match(f_text)){ match = true; }
-        } else {
-          if(ycats[i].indexOf(f_text) > -1){ match = true; }
+    if(config['ycats_samples']){
+      var i = ycats.length;
+      var yhidden = 0;
+      // iterate over y-categories (rows)
+      while (i--) {
+        var match = false;
+        for (j = 0; j < window.mqc_hide_f_texts.length; j++) {
+          var f_text = window.mqc_hide_f_texts[j];
+          if(window.mqc_hide_regex_mode){
+            if(ycats[i].match(f_text)){ match = true; }
+          } else {
+            if(ycats[i].indexOf(f_text) > -1){ match = true; }
+          }
         }
-      }
-      if(window.mqc_hide_mode == 'show'){
-        match = !match;
-      }
-      // modify data if "i" is match for "hiding"
-      // mark elements from "i"-th row (y) for removal,
-      // shift "y" of elements from "i+" rows up
-      if(match){
-        ycats.splice(i, 1);
-        for (n=0; n < data.length; n++) {
-          // data[n] element is [x,y,val], get "y"
-          let y = data[n][1];
-          if (y == i){
-            if(remove.indexOf(n) < 0){ remove.push(n); }
-          } else if(y > i){ data[n][1] = y - 1; }
+        if(window.mqc_hide_mode == 'show'){
+          match = !match;
         }
-        yhidden += 1;
+        // modify data if "i" is match for "hiding"
+        // mark elements from "i"-th row (y) for removal,
+        // shift "y" of elements from "i+" rows up
+        if(match){
+          ycats.splice(i, 1);
+          for (n=0; n < data.length; n++) {
+            // data[n] element is [x,y,val], get "y"
+            let y = data[n][1];
+            if (y == i){
+              if(remove.indexOf(n) < 0){ remove.push(n); }
+            } else if(y > i){ data[n][1] = y - 1; }
+          }
+          yhidden += 1;
+        }
       }
     }
     // Remove the data values that matched
@@ -1372,31 +1399,35 @@ function plot_heatmap(target, ds){
   if(window.mqc_highlight_f_texts.length > 0){
     $('.mqc_heatmap_sortHighlight').attr('disabled', false);
     var highlight_cells = Array();
-    for (i=0; i < xcats.length; i++) {
-      $.each(window.mqc_highlight_f_texts, function(idx, f_text){
-        if(f_text == ''){ return true; }
-        if((window.mqc_highlight_regex_mode && xcats[i].match(f_text)) || (!window.mqc_highlight_regex_mode && xcats[i].indexOf(f_text) > -1)){
-          for (n=0; n < data.length; n++) {
-            highlight_cells[idx] = ( typeof highlight_cells[idx] != 'undefined' && highlight_cells[idx] instanceof Array ) ? highlight_cells[idx] : [];
-            // data[n] element is [x,y,val], get "x"
-            if (data[n][0] == i){ highlight_cells[idx].push(n); }
-          }
-        }
-      });
-    }
-    for (i=0; i < ycats.length; i++) {
-      $.each(window.mqc_highlight_f_texts, function(idx, f_text){
-        if(f_text == ''){ return true; }
-        if((window.mqc_highlight_regex_mode && ycats[i].match(f_text)) || (!window.mqc_highlight_regex_mode && ycats[i].indexOf(f_text) > -1)){
-          for (n=0; n < data.length; n++) {
-            // data[n] element is [x,y,val], get "y"
-            if (data[n][1] == i){
+    if(config['ycats_samples']){
+      for (i=0; i < xcats.length; i++) {
+        $.each(window.mqc_highlight_f_texts, function(idx, f_text){
+          if(f_text == ''){ return true; }
+          if((window.mqc_highlight_regex_mode && xcats[i].match(f_text)) || (!window.mqc_highlight_regex_mode && xcats[i].indexOf(f_text) > -1)){
+            for (n=0; n < data.length; n++) {
               highlight_cells[idx] = ( typeof highlight_cells[idx] != 'undefined' && highlight_cells[idx] instanceof Array ) ? highlight_cells[idx] : [];
-              if(highlight_cells[idx].indexOf(n) < 0){ highlight_cells[idx].push(n); }
+              // data[n] element is [x,y,val], get "x"
+              if (data[n][0] == i){ highlight_cells[idx].push(n); }
             }
           }
-        }
-      });
+        });
+      }
+    }
+    if(config['ycats_samples']){
+      for (i=0; i < ycats.length; i++) {
+        $.each(window.mqc_highlight_f_texts, function(idx, f_text){
+          if(f_text == ''){ return true; }
+          if((window.mqc_highlight_regex_mode && ycats[i].match(f_text)) || (!window.mqc_highlight_regex_mode && ycats[i].indexOf(f_text) > -1)){
+            for (n=0; n < data.length; n++) {
+              // data[n] element is [x,y,val], get "y"
+              if (data[n][1] == i){
+                highlight_cells[idx] = ( typeof highlight_cells[idx] != 'undefined' && highlight_cells[idx] instanceof Array ) ? highlight_cells[idx] : [];
+                if(highlight_cells[idx].indexOf(n) < 0){ highlight_cells[idx].push(n); }
+              }
+            }
+          }
+        });
+      }
     }
     // Give highlighted cells a border
     for (var idx in highlight_cells){

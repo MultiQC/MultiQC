@@ -58,7 +58,7 @@ class MultiqcModule(BaseMultiqcModule):
         try:
             parsed_json = json.load(f['f'])
         except:
-            log.warn("Could not parse AfterQC JSON: '{}'".format(f['fn']))
+            log.warning("Could not parse AfterQC JSON: '{}'".format(f['fn']))
             return None
 
         # AfterQC changed the name of their summary key at some point
@@ -67,7 +67,7 @@ class MultiqcModule(BaseMultiqcModule):
         elif 'afterqc_main_summary' in parsed_json:
             summaryk = 'afterqc_main_summary'
         else:
-            log.warn("AfterQC JSON did not have a 'summary' or 'afterqc_main_summary' key, skipping: '{}'".format(f['fn']))
+            log.warning("AfterQC JSON did not have a 'summary' or 'afterqc_main_summary' key, skipping: '{}'".format(f['fn']))
             return None
 
         s_name = f['s_name']
