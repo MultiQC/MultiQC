@@ -111,7 +111,7 @@ class StatsReportMixin():
                 'modify': lambda x: x * config.read_count_multiplier,
                 'shared_key': 'read_count'
             }
-            self.general_stats_addcols(self.samtools_stats, stats_headers, 'Samtools Stats')
+            self.general_stats_addcols(self.samtools_stats, stats_headers)
 
             # Make bargraph plot of mapped/unmapped reads
             self.alignment_section(self.samtools_stats)
@@ -165,7 +165,7 @@ class StatsReportMixin():
             if read_sum == expected_total:
                 bedgraph_data[sample_id] = data
             else:
-                log.warn("sum of mapped/unmapped reads not matching total, "
+                log.warning("sum of mapped/unmapped reads not matching total, "
                          "skipping samtools plot for: {}".format(sample_id))
         self.add_section (
             name = 'Percent Mapped',

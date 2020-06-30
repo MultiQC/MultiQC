@@ -22,6 +22,8 @@ class plotPCAMixin():
             if len(parsed_data) > 0:
                 self.add_data_source(f, section='plotPCA')
 
+        self.deeptools_plotPCAData = self.ignore_samples(self.deeptools_plotPCAData)
+
         if len(self.deeptools_plotPCAData) > 0:
             config = {
                 'id': 'deeptools_pca_plot',

@@ -25,7 +25,7 @@ class TagDirReportMixin():
         self.parse_FreqDistribution_data()
         self.homer_stats_table_tagInfo()
 
-        return sum([len(v) for v in self.tagdir_data.values()])
+        return sum([len(v) for k, v in self.tagdir_data.items() if k != 'header'])
 
 
     def parse_gc_content(self):
@@ -411,7 +411,7 @@ class TagDirReportMixin():
 
         pconfig = {
             'id': 'petagRestrictionDistribution',
-            'title': 'Restriction Distribution',
+            'title': 'HOMER: Restriction Distribution',
             'ylab': 'Reads',
             'xlab': 'Distance from cut site (bp)',
             'data_labels': [
@@ -436,7 +436,7 @@ class TagDirReportMixin():
         pconfig = {
             'id': 'tagLengthDistribution',
             'cpswitch': True,
-            'title': 'Tag Length Distribution',
+            'title': 'HOMER: Tag Length Distribution',
             'ylab': 'Fraction of Tags',
             'xlab': 'Tag Length (bp)'
         }
@@ -449,7 +449,7 @@ class TagDirReportMixin():
 
         pconfig = {
             'id': 'homer-tag-directory-gc-content',
-            'title': 'Homer: Tag Directory Per Sequence GC Content',
+            'title': 'HOMER: Tag Directory Per Sequence GC Content',
             'smooth_points': 200,
             'smooth_points_sumcounts': False,
             'ylab': 'Normalized Count',
@@ -473,7 +473,7 @@ class TagDirReportMixin():
         ensembl = list(range(1,23)).append([ "X", "Y", "MT"])
         pconfig = {
             'id': 'tagInfo',
-            'title': 'Homer: Tag Info Distribution',
+            'title': 'HOMER: Tag Info Distribution',
             'ylab': 'Tags',
             'cpswitch_counts_label': 'Number of Tags'
         }
@@ -504,7 +504,7 @@ class TagDirReportMixin():
                     pass
         pconfig = {
             'id': 'FreqDistribution',
-            'title': 'Frequency Distribution',
+            'title': 'HOMER: Frequency Distribution',
             'ylab': 'Fraction of Reads',
             'xlab': 'Log10(Distance between regions)',
             'data_labels': ['Reads', 'Percent'],

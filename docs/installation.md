@@ -30,7 +30,7 @@ Once conda is installed, you can create a Python environment with the following 
 
 ```bash
 conda create --name py3.7 python=3.7
-conda activate py3.6
+conda activate py3.7
 ```
 
 You'll want to add the `conda activate py3.7` line to your `.bashrc` file so
@@ -78,7 +78,7 @@ If you'd rather not use either of these tools, you can clone the code and instal
 ```bash
 git clone https://github.com/ewels/MultiQC.git
 cd MultiQC
-python setup.py install
+pip install .
 ```
 
 `git` not installed? No problem - just download the flat files:
@@ -87,15 +87,19 @@ python setup.py install
 curl -LOk https://github.com/ewels/MultiQC/archive/master.zip
 unzip master.zip
 cd MultiQC-master
-python setup.py install
+pip install .
 ```
+
+Note that it is _not_ recommended to use the command `python setup.py install`
+as this has been superseded by `pip` and does not correctly handle some package
+management, such as pre-releases.
 
 ## Updating MultiQC
 You can update MultiQC from [PyPI](https://pypi.python.org/pypi/multiqc)
 at any time by running the following command:
 
 ```bash
-pip --update multiqc
+pip install --upgrade multiqc
 ```
 
 To update the development version, use:
@@ -109,7 +113,7 @@ If you cloned the `git` repo, just pull the latest changes and install:
 ```bash
 cd MultiQC
 git pull
-python setup.py install
+pip install .
 ```
 
 If you downloaded the flat files, just repeat the installation procedure.
@@ -137,11 +141,12 @@ multiqc.run("/path/to/dir")
 
 ## Installing on Windows
 MultiQC is has primarily been designed for us on Unix systems (Linux, Mac OSX).
-However, it _should_ work on Windows too. Indeed, automated continuous integration
-tests run using AppVeyor to check compatability at https://ci.appveyor.com/project/ewels/multiqc
-(see test config [here](https://github.com/ewels/MultiQC/blob/master/appveyor.yml)).
+However, it _should_ work on Windows too. Indeed, automated
+[continuous integration tests](https://github.com/ewels/MultiQC/actions)
+run using GitHub Actions to check compatibility (see test config
+[here](https://github.com/ewels/MultiQC/blob/master/.github/workflows/multiqc_windows.yml)).
 
-Note that support for the base `multiqc` command was improved in version 1.8.
+Note that support for using the base `multiqc` command was improved in MultiQC version 1.8.
 
 
 ## Using the Docker container
@@ -156,8 +161,8 @@ docker run -v `pwd`:`pwd` -w `pwd` ewels/multiqc
 ```
 
 By default, docker will use the `:latest` tag. For MultiQC, this is set to be the most recent release.
-To use the most recent development code, use `ewels/MultiQC::dev`.
-You can also specify specific versions, eg: `ewels/MultiQC:1.3`.
+To use the most recent development code, use `ewels/multiqc::dev`.
+You can also specify specific versions, eg: `ewels/multiqc:1.9`.
 
 You can also specify additional MultiQC parameters as normal:
 
@@ -168,6 +173,57 @@ docker run -v `pwd`:`pwd` -w `pwd` ewels/multiqc . --title "My amazing report" -
 Note that all files on the command line (eg. config files) must be mounted in the docker container to be accessible.
 For more help, look into [the Docker documentation](https://docs.docker.com/engine/reference/commandline/run/)
 
+## Using Singularity
+
+Although there is no dedicated Singularity image available for MultiQC, you can use the above Docker container.
+
+First, build a singularity container image from the docker image (where `1.9` is the MultiQC version):
+
+```bash
+singularity build multiqc-1.9.sif docker://ewels/multiqc:1.9
+```
+
+Then, use `singularity run` to run the image with the normal MultiQC arguments:
+
+```bash
+singularity run multiqc-1.9.sif my_results/ --title "Report made using Singularity"
+```
+
+### Import errors with Singularity
+
+Sometimes, Singularity can be over-ambitious with sharing file paths which can result in the Python
+environment in your local system interacting with Python inside the image.
+This can give rise to `ImportError` errors for `numpy` and other packages.
+
+The giveaway for when this is the problem is that traceback will list python package paths which
+are on your system and look different that of MultiQC inside the container (eg. `/usr/lib/python3.8/site-packages/multiqc/`).
+
+To fix this, run the command `export PYTHONNOUSERSITE=1` before running MultiQC.
+This variable [tells Python](https://docs.python.org/3/using/cmdline.html#envvar-PYTHONNOUSERSITE)
+not to add site-packages to the system path when loading, which should avoid the conflicts.
+
+## Python 2
+
+As of MultiQC version 1.9, **Python 2 is no longer officially supported**.
+Automatic CI tests will no longer run with Python 2 and Python 2 specific workarounds
+are no longer guaranteed.
+
+Whilst it may be possible to continue using MultiQC with Python 2 for a short time by
+pinning dependencies, MultiQC compatibility for Python 2 will now slowly drift and start
+to break. If you haven't already, **you need to switch to Python 3 now**.
+
+Python 2 had its [official sunset date](https://www.python.org/doc/sunset-python-2/)
+on January 1st 2020, meaning that it will no longer be developed by the Python community.
+Part of the [python.org statement](https://www.python.org/doc/sunset-python-2/) reads:
+
+> That means that we will not improve it anymore after that day,
+> even if someone finds a security problem in it.
+> You should upgrade to Python 3 as soon as you can.
+
+[Very many Python packages no longer support Python 2](https://python3statement.org/)
+and it whilst the MultiQC code is currently compatible with both Python 2 and Python 3,
+it is increasingly difficult to maintain compatibility with the dependency packages it
+uses, such as MatPlotLib, numpy and more.
 
 ## Using MultiQC through Galaxy
 

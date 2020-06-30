@@ -24,30 +24,34 @@ class BaseMultiqcModule(object):
         # Custom options from user config that can overwrite base module values
         mod_cust_config = getattr(self, 'mod_cust_config', {})
         self.name = mod_cust_config.get('name', name)
-        self.anchor = report.save_htmlid( mod_cust_config.get('anchor', anchor) )
+        self.anchor = mod_cust_config.get('anchor', anchor)
         target = mod_cust_config.get('target', target)
-        href = mod_cust_config.get('href', href)
-        info = mod_cust_config.get('info', info)
+        self.href = mod_cust_config.get('href', href)
+        self.info = mod_cust_config.get('info', info)
         self.comment = mod_cust_config.get('comment', comment)
-        extra = mod_cust_config.get('extra', extra)
+        self.extra = mod_cust_config.get('extra', extra)
         # Specific module level config to overwrite (e.g. config.bcftools, config.fastqc)
         config.update({anchor: mod_cust_config.get('custom_config', {})})
+
+        # Sanitise anchor ID and check for duplicates
+        self.anchor = report.save_htmlid(self.anchor)
 
         # See if we have a user comment in the config
         if self.anchor in config.section_comments:
             self.comment = config.section_comments[self.anchor]
 
-        if info is None:
-            info = ''
-        if extra is None:
-            extra = ''
+        if self.info is None:
+            self.info = ''
+        if self.extra is None:
+            self.extra = ''
         if target is None:
             target = self.name
-        if href is not None:
-            mname = '<a href="{}" target="_blank">{}</a>'.format(href, target)
+        if self.href is not None:
+            self.mname = '<a href="{}" target="_blank">{}</a>'.format(self.href, target)
         else:
-            mname = target
-        self.intro = '<p>{} {}</p>{}'.format( mname, info, extra )
+            self.mname = target
+        if self.href or self.info or self.extra:
+            self.intro = '<p>{} {}</p>{}'.format( self.mname, self.info, self.extra )
 
         # Format the markdown strings
         if autoformat:
@@ -78,16 +82,16 @@ class BaseMultiqcModule(object):
         if isinstance(sp_key, dict):
             report.files[self.name] = list()
             for sf in report.searchfiles:
-                if report.search_file(sp_key, {'fn': sf[0], 'root': sf[1]}):
+                if report.search_file(sp_key, {'fn': sf[0], 'root': sf[1]}, module_key=None):
                     report.files[self.name].append({'fn': sf[0], 'root': sf[1]})
             sp_key = self.name
             logwarn = "Depreciation Warning: {} - Please use new style for find_log_files()".format(self.name)
             if len(report.files[self.name]) > 0:
-                logger.warn(logwarn)
+                logger.warning(logwarn)
             else:
                 logger.debug(logwarn)
         elif not isinstance(sp_key, str):
-            logger.warn("Did not understand find_log_files() search key")
+            logger.warning("Did not understand find_log_files() search key")
             return
 
         for f in report.files[sp_key]:
@@ -149,13 +153,18 @@ class BaseMultiqcModule(object):
                 sl = len(self.sections) + 1
                 anchor = '{}-section-{}'.format(self.anchor, sl)
 
+        # Append custom module anchor to the section if set
+        mod_cust_config = getattr(self, 'mod_cust_config', {})
+        if 'anchor' in mod_cust_config:
+            anchor = '{}_{}'.format(mod_cust_config['anchor'], anchor)
+
+        # Sanitise anchor ID and check for duplicates
+        anchor = report.save_htmlid(anchor)
+
         # Skip if user has a config to remove this module section
         if anchor in config.remove_sections:
             logger.debug("Skipping section '{}' because specified in user config".format(anchor))
             return
-
-        # Sanitise anchor ID and check for duplicates
-        anchor = report.save_htmlid(anchor)
 
         # See if we have a user comment in the config
         if anchor in config.section_comments:
@@ -211,22 +220,32 @@ class BaseMultiqcModule(object):
         if config.fn_clean_sample_names:
             # Split then take first section to remove everything after these matches
             for ext in config.fn_clean_exts:
+                # Check if this config is limited to a module
+                if 'module' in ext:
+                    if type(ext['module']) is str:
+                        ext['module'] = [ext['module']]
+                    if not any([m == self.anchor for m in ext['module']]):
+                        continue
+
+                # Go through different filter types
                 if type(ext) is str:
                     ext = {'type': 'truncate', 'pattern': ext}
-                if ext['type'] == 'truncate':
+                if ext.get('type') == 'truncate':
                     s_name = s_name.split(ext['pattern'], 1)[0]
-                elif ext['type'] in ('remove', 'replace'):
+                elif ext.get('type') in ('remove', 'replace'):
                     if ext['type'] == 'replace':
                         logger.warning("use 'config.fn_clean_sample_names.remove' instead "
                                        "of 'config.fn_clean_sample_names.replace' [deprecated]")
                     s_name = s_name.replace(ext['pattern'], '')
-                elif ext['type'] == 'regex':
+                elif ext.get('type') == 'regex':
                     s_name = re.sub(ext['pattern'], '', s_name)
-                elif ext['type'] == 'regex_keep':
+                elif ext.get('type') == 'regex_keep':
                     match = re.search(ext['pattern'], s_name)
                     s_name = match.group() if match else s_name
+                elif ext.get('type') is None:
+                    logger.error('config.fn_clean_exts config was missing "type" key: {}'.format(ext))
                 else:
-                    logger.error('Unrecognised config.fn_clean_exts type: {}'.format(ext['type']))
+                    logger.error('Unrecognised config.fn_clean_exts type: {}'.format(ext.get('type')))
             # Trim off characters at the end of names
             for chrs in config.fn_clean_trim:
                 if s_name.endswith(chrs):
@@ -264,15 +283,18 @@ class BaseMultiqcModule(object):
                 newdata = dict()
             else:
                 return data
-            for k,v in data.items():
-                # Match ignore glob patterns
-                glob_match = any( fnmatch.fnmatch(k, sn) for sn in config.sample_names_ignore )
-                re_match = any( re.match(sn, k) for sn in config.sample_names_ignore_re )
-                if not glob_match and not re_match:
-                    newdata[k] = v
+            for s_name,v in data.items():
+                if not self.is_ignore_sample(s_name):
+                    newdata[s_name] = v
             return newdata
         except (TypeError, AttributeError):
             return data
+
+    def is_ignore_sample(self, s_name):
+        """ Should a sample name be ignored? """
+        glob_match = any( fnmatch.fnmatch(s_name, sn) for sn in config.sample_names_ignore )
+        re_match = any( re.match(sn, s_name) for sn in config.sample_names_ignore_re )
+        return glob_match or re_match
 
     def general_stats_addcols(self, data, headers=None, namespace=None):
         """ Helper function to add to the General Statistics variable.
@@ -332,6 +354,20 @@ class BaseMultiqcModule(object):
     def write_data_file(self, data, fn, sort_cols=False, data_format=None):
         """ Saves raw data to a dictionary for downstream use, then redirects
         to report.write_data_file() to create the file in the report directory """
+
+        # Append custom module anchor if set
+        mod_cust_config = getattr(self, 'mod_cust_config', {})
+        if 'anchor' in mod_cust_config:
+            fn = '{}_{}'.format(fn, mod_cust_config['anchor'])
+
+        # Generate a unique filename if the file already exists (running module multiple times)
+        i = 1
+        base_fn = fn
+        while fn in report.saved_raw_data:
+            fn = '{}_{}'.format(base_fn, i)
+            i += 1
+
+        # Save the file
         report.saved_raw_data[fn] = data
         util_functions.write_data_file(data, fn, sort_cols, data_format)
 

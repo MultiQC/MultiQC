@@ -21,7 +21,7 @@ class MultiqcModule(BaseMultiqcModule):
         """
 
         # Initialise the parent object
-        super(MultiqcModule, self).__init__(name='DamageProfiler:',
+        super(MultiqcModule, self).__init__(name='DamageProfiler',
         anchor='damageprofiler',
         href='https://github.com/Integrative-Transcriptomics/DamageProfiler',
         info="a tool to determine damage patterns on ancient DNA.")
@@ -47,7 +47,7 @@ class MultiqcModule(BaseMultiqcModule):
 
         if len(self.summary_metrics_data) == 0:
             raise UserWarning
-        
+
         # Write parsed report data to a file
         self.write_data_file(self.summary_metrics_data, 'multiqc_damageprofiler_metrics')
 
@@ -62,7 +62,7 @@ class MultiqcModule(BaseMultiqcModule):
                 name = '3P misincorporation plot',
                 description = '3\' misincorporation plot for G>A substitutions',
                 helptext = '''
-                This plot shows the frequency of G>A substitutions at the 3' read ends. Typically, one would observe high substitution percentages for ancient DNA, whereas modern DNA does not show these in higher extents.  
+                This plot shows the frequency of G>A substitutions at the 3' read ends. Typically, one would observe high substitution percentages for ancient DNA, whereas modern DNA does not show these in higher extents.
                 ''',
                 plot = self.threeprime_plot()
             )
@@ -71,7 +71,7 @@ class MultiqcModule(BaseMultiqcModule):
                 name = '5P misincorporation plot',
                 description = '5\' misincorporation plot for C>T substitutions',
                 helptext = '''
-                This plot shows the frequency of C>T substitutions at the 5' read ends. Typically, one would observe high substitution percentages for ancient DNA, whereas modern DNA does not show these in higher extents.  
+                This plot shows the frequency of C>T substitutions at the 5' read ends. Typically, one would observe high substitution percentages for ancient DNA, whereas modern DNA does not show these in higher extents.
                 ''',
                 plot = self.fiveprime_plot()
             )
@@ -92,7 +92,7 @@ class MultiqcModule(BaseMultiqcModule):
                 ''',
                 plot = self.lgdistplot(self.lgdist_rv_data, 'Reverse')
             )
-        
+
 
 
 
@@ -103,7 +103,7 @@ class MultiqcModule(BaseMultiqcModule):
             parsed_json = json.load(f['f'])
         except Exception as e:
             print(e)
-            log.warn("Could not parse DamageProfiler JSON: '{}'".format(f['fn']))
+            log.warning("Could not parse DamageProfiler JSON: '{}'".format(f['fn']))
             return None
 
         #Get sample name from JSON first
@@ -231,7 +231,7 @@ class MultiqcModule(BaseMultiqcModule):
 
         config = {
             'id': 'length-distribution-{}'.format(orientation),
-            'title': 'DamageProfiler: Read length distribution: {} '.format(orientation),
+            'title': 'DamageProfiler: Read length distribution - {} '.format(orientation),
             'ylab': 'Number of reads',
             'xlab': 'Readlength (bp)',
             'xDecimals': False,
@@ -260,7 +260,7 @@ class MultiqcModule(BaseMultiqcModule):
 
         config = {
             'id': 'threeprime_misinc_plot',
-            'title': 'DamageProfiler: 3P G>A misincorporation plot',
+            'title': 'DamageProfiler: 3\' G>A misincorporation plot',
             'ylab': '% G to A substituted',
             'xlab': 'Nucleotide position from 3\'',
             'tt_label': '{point.y:.2f} % G>A misincorporations at nucleotide position {point.x}',

@@ -24,7 +24,7 @@ MultiQC was written by Phil Ewels (http://phil.ewels.co.uk) at SciLifeLab Sweden
 from setuptools import setup, find_packages
 import sys
 
-version = '1.8'
+version = '1.10dev'
 dl_version = 'master' if 'dev' in version else 'v{}'.format(version)
 
 print("""-----------------------------------
@@ -35,33 +35,33 @@ print("""-----------------------------------
 
 # Set version requirements according to what version of Python we're running
 networkx_version = ''
+numpy_version = ''
 matplotlib_version = '>=2.1.1'
+jinja2_version = '>=2.9'
+markdown_version = ''
 if sys.version_info[0:2] < (3, 6):
-    # MatPlotLib v3 dropped Python 2 support. Version 3.1 onwards only supports Python 3.5+
+    # Lots of tools have dropped Python 3 support, so limit their versions
     matplotlib_version += ',<3.0.0'
+    numpy_version = '<1.17'
     networkx_version = '<2.3'
-else:
-    # Unlike pip, setuptools install_requires will install pre-releases!
-    # Matplotlib often ships these and they very often break
-    # Pinning a maximum version prevents this, but can make dependency management more difficult, sorry!
-    # See: https://github.com/pypa/setuptools/issues/855
-    matplotlib_version += ',<3.1.2'
+    jinja2_version += ',<3.0'
+    markdown_version = '<3.2'
 
 install_requires = [
-        'click',
-        'coloredlogs',
-        'future>0.14.0',
-        'jinja2>=2.9',
-        'lzstring',
-        'markdown',
-        'matplotlib' + matplotlib_version,
-        'networkx' + networkx_version,
-        'numpy',
-        'pyyaml>=4',
-        'requests',
-        'simplejson',
-        'spectra>=0.0.10',
-    ]
+    'matplotlib' + matplotlib_version,
+    'networkx' + networkx_version,
+    'numpy' + numpy_version,
+    'click',
+    'coloredlogs',
+    'future>0.14.0',
+    'jinja2' + jinja2_version,
+    'lzstring',
+    'markdown' + markdown_version,
+    'pyyaml>=4',
+    'requests',
+    'simplejson',
+    'spectra>=0.0.10',
+]
 
 setup(
     name = 'multiqc',
@@ -91,8 +91,8 @@ setup(
             'bcl2fastq = multiqc.modules.bcl2fastq:MultiqcModule',
             'biobambam2 = multiqc.modules.biobambam2:MultiqcModule',
             'biobloomtools = multiqc.modules.biobloomtools:MultiqcModule',
-            'bismark = multiqc.modules.bismark:MultiqcModule',
             'biscuit = multiqc.modules.biscuit:MultiqcModule',
+            'bismark = multiqc.modules.bismark:MultiqcModule',
             'bowtie1 = multiqc.modules.bowtie1:MultiqcModule',
             'bowtie2 = multiqc.modules.bowtie2:MultiqcModule',
             'busco = multiqc.modules.busco:MultiqcModule',
@@ -102,9 +102,10 @@ setup(
             'custom_content = multiqc.modules.custom_content:custom_module_classes', # special case
             'cutadapt = multiqc.modules.cutadapt:MultiqcModule',
             'damageprofiler = multiqc.modules.damageprofiler:MultiqcModule',
-            'disambiguate = multiqc.modules.disambiguate:MultiqcModule',
             'dedup = multiqc.modules.dedup:MultiqcModule',
             'deeptools = multiqc.modules.deeptools:MultiqcModule',
+            'disambiguate = multiqc.modules.disambiguate:MultiqcModule',
+            'dragen = multiqc.modules.dragen:MultiqcModule',
             'fastp = multiqc.modules.fastp:MultiqcModule',
             'fastq_screen = multiqc.modules.fastq_screen:MultiqcModule',
             'fastqc = multiqc.modules.fastqc:MultiqcModule',
@@ -116,32 +117,41 @@ setup(
             'goleft_indexcov = multiqc.modules.goleft_indexcov:MultiqcModule',
             'happy = multiqc.modules.happy:MultiqcModule',
             'hicexplorer = multiqc.modules.hicexplorer:MultiqcModule',
-            'hicup = multiqc.modules.hicup:MultiqcModule',
             'hicpro = multiqc.modules.hicpro:MultiqcModule',
+            'hicup = multiqc.modules.hicup:MultiqcModule',
             'hisat2 = multiqc.modules.hisat2:MultiqcModule',
             'homer = multiqc.modules.homer:MultiqcModule',
+            'hops = multiqc.modules.hops:MultiqcModule',
             'htseq = multiqc.modules.htseq:MultiqcModule',
             'interop = multiqc.modules.interop:MultiqcModule',
+            'ivar = multiqc.modules.ivar:MultiqcModule',
             'jellyfish = multiqc.modules.jellyfish:MultiqcModule',
+            'kaiju = multiqc.modules.kaiju:MultiqcModule',
             'kallisto = multiqc.modules.kallisto:MultiqcModule',
             'kat = multiqc.modules.kat:MultiqcModule',
+            'kraken = multiqc.modules.kraken:MultiqcModule',
             'leehom = multiqc.modules.leehom:MultiqcModule',
             'longranger = multiqc.modules.longranger:MultiqcModule',
             'macs2 = multiqc.modules.macs2:MultiqcModule',
+            'malt = multiqc.modules.malt:MultiqcModule',
             'methylQA = multiqc.modules.methylQA:MultiqcModule',
-            'mirtrace = multiqc.modules.mirtrace:MultiqcModule',
             'minionqc = multiqc.modules.minionqc:MultiqcModule',
+            'mirtop = multiqc.modules.mirtop:MultiqcModule',
+            'mirtrace = multiqc.modules.mirtrace:MultiqcModule',
             'mosdepth = multiqc.modules.mosdepth:MultiqcModule',
             'mtnucratio = multiqc.modules.mtnucratio:MultiqcModule',
+            'multivcfanalyzer = multiqc.modules.multivcfanalyzer:MultiqcModule',
             'peddy = multiqc.modules.peddy:MultiqcModule',
             'phantompeakqualtools = multiqc.modules.phantompeakqualtools:MultiqcModule',
             'picard = multiqc.modules.picard:MultiqcModule',
             'preseq = multiqc.modules.preseq:MultiqcModule',
             'prokka = multiqc.modules.prokka:MultiqcModule',
+            'pycoqc = multiqc.modules.pycoqc:MultiqcModule',
             'qorts = multiqc.modules.qorts:MultiqcModule',
             'qualimap = multiqc.modules.qualimap:MultiqcModule',
             'quast = multiqc.modules.quast:MultiqcModule',
             'rna_seqc = multiqc.modules.rna_seqc:MultiqcModule',
+            'rockhopper = multiqc.modules.rockhopper:MultiqcModule',
             'rsem = multiqc.modules.rsem:MultiqcModule',
             'rseqc = multiqc.modules.rseqc:MultiqcModule',
             'salmon = multiqc.modules.salmon:MultiqcModule',
@@ -151,9 +161,12 @@ setup(
             'sentieon = multiqc.modules.sentieon:MultiqcModule',
             'seqyclean = multiqc.modules.seqyclean:MultiqcModule',
             'sexdeterrmine = multiqc.modules.sexdeterrmine:MultiqcModule',
+            'sickle = multiqc.modules.sickle:MultiqcModule',
             'skewer = multiqc.modules.skewer:MultiqcModule',
             'slamdunk = multiqc.modules.slamdunk:MultiqcModule',
             'snpeff = multiqc.modules.snpeff:MultiqcModule',
+            'snpsplit = multiqc.modules.snpsplit:MultiqcModule',
+            'somalier = multiqc.modules.somalier:MultiqcModule',
             'sortmerna = multiqc.modules.sortmerna:MultiqcModule',
             'stacks = multiqc.modules.stacks:MultiqcModule',
             'star = multiqc.modules.star:MultiqcModule',
@@ -161,6 +174,7 @@ setup(
             'theta2 = multiqc.modules.theta2:MultiqcModule',
             'tophat = multiqc.modules.tophat:MultiqcModule',
             'trimmomatic = multiqc.modules.trimmomatic:MultiqcModule',
+            'varscan2 = multiqc.modules.varscan2:MultiqcModule',
             'vcftools = multiqc.modules.vcftools:MultiqcModule',
             'verifybamid = multiqc.modules.verifybamid:MultiqcModule'
         ],
@@ -169,20 +183,22 @@ setup(
             'default_dev = multiqc.templates.default_dev',
             'sections = multiqc.templates.sections',
             'simple = multiqc.templates.simple',
+            'gathered = multiqc.templates.gathered',
             'geo = multiqc.templates.geo',
         ],
-        # 'multiqc.cli_options.v1': [
-            # 'my-new-option = myplugin.cli:new_option'
-        # ],
-        # 'multiqc.hooks.v1': [
-            # 'before_config = myplugin.hooks:before_config',
-            # 'config_loaded = myplugin.hooks:config_loaded',
-            # 'execution_start = myplugin.hooks:execution_start',
-            # 'before_modules = myplugin.hooks:before_modules',
-            # 'after_modules = myplugin.hooks:after_modules',
-            # 'before_report_generation = myplugin.hooks:before_report_generation',
-            # 'execution_finish = myplugin.hooks:execution_finish',
-        # ]
+## See https://multiqc.info/docs/#multiqc-plugins for documentation
+#       'multiqc.cli_options.v1': [
+#           'my-new-option = myplugin.cli:new_option'
+#       ],
+#       'multiqc.hooks.v1': [
+#           'before_config = myplugin.hooks:before_config',
+#           'config_loaded = myplugin.hooks:config_loaded',
+#           'execution_start = myplugin.hooks:execution_start',
+#           'before_modules = myplugin.hooks:before_modules',
+#           'after_modules = myplugin.hooks:after_modules',
+#           'before_report_generation = myplugin.hooks:before_report_generation',
+#           'execution_finish = myplugin.hooks:execution_finish',
+#       ]
     },
     classifiers = [
         'Development Status :: 4 - Beta',

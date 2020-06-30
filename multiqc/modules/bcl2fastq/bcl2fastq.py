@@ -143,7 +143,7 @@ class MultiqcModule(BaseMultiqcModule):
         try:
             content = json.loads(myfile["f"])
         except ValueError:
-            log.warn('Could not parse file as json: {}'.format(myfile["fn"]))
+            log.warning('Could not parse file as json: {}'.format(myfile["fn"]))
             return
         runId = content["RunId"]
         if runId not in self.bcl2fastq_data:
@@ -174,7 +174,7 @@ class MultiqcModule(BaseMultiqcModule):
             run_data[lane]["unknown_barcodes"] = unknown_barcode
 
             for demuxResult in conversionResult.get("DemuxResults", []):
-                if demuxResult["SampleName"] == demuxResult["SampleName"]:
+                if demuxResult["SampleName"] == demuxResult["SampleId"]:
                     sample = demuxResult["SampleName"]
                 else:
                     sample = "{}-{}".format(demuxResult["SampleId"], demuxResult["SampleName"])

@@ -24,12 +24,37 @@ Supported commands:
 * `RrbsSummaryMetrics`
 * `ValidateSamFile`
 * `VariantCallingMetrics`
+* `QualityByCycleMetrics`
+* `QualityScoreDistributionMetrics`
+* `QualityYieldMetrics`
+
+#### MarkDuplicates
+If a `BAM` file contains multiple read groups, Picard MarkDuplicates generates a report
+with multiple metric lines, one for each "library".
+
+By default, MultiQC will sum the values for every library it finds and recompute the
+`PERCENT_DUPLICATION` and `ESTIMATED_LIBRARY_SIZE` fields, giving a single set of results
+for each `BAM` file.
+
+If instead you would prefer each library to be treated as a separate sample, you can do so
+by setting the following MultiQC config:
+
+```yaml
+picard_config:
+    markdups_merge_multiple_libraries: False
+```
+
+This prevents the merge and recalculation and appends the library name to the sample name.
+
+This behaviour is present in MultiQC since version 1.9. Before this, only the metrics from the
+first library were taken and all others were ignored.
 
 #### InsertSizeMetrics
 By default, the insert size plot is smoothed to contain a maximum of 500 data points per sample.
 This is to prevent the MultiQC report from being very large with big datasets.
 If you would like to customise this value to get a better resolution you can set the following
 MultiQC config values, with the new maximum number of points:
+
 ```yaml
 picard_config:
     insertsize_smooth_points: 10000
@@ -51,6 +76,7 @@ The coverage levels available for WgsMetrics are
 1, 5, 10, 15, 20, 25, 30, 40, 50, 60, 70, 80, 90 and 100X.
 
 To customise this, add the following to your MultiQC config:
+
 ```yaml
 picard_config:
     general_stats_target_coverage:
@@ -60,8 +86,30 @@ picard_config:
 
 #### ValidateSamFile Search Pattern
 Generally, Picard adds identifiable content to the output of function calls. This is not the case for ValidateSamFile. In order to identify logs the MultiQC Picard submodule `ValidateSamFile` will search for filenames that contain 'validatesamfile' or 'ValidateSamFile'. One can customise the used search pattern by overwriting the `picard/sam_file_validation` pattern in your MultiQC config. For example:
+
 ```yaml
 sp:
     picard/sam_file_validation:
         fn: '*[Vv]alidate[Ss]am[Ff]ile*'
 ```
+
+#### HsMetrics
+
+Note that the _Target Region Coverage_ plot is generated using the `PCT_TARGET_BASES_` table columns from the HsMetrics output (not immediately obvious when looking at the log files).
+
+You can customise the columns shown in the HsMetrics table with the config keys `HsMetrics_table_cols` and `HsMetrics_table_cols_hidden`. For example:
+
+```yaml
+picard_config:
+    HsMetrics_table_cols:
+        - NEAR_BAIT_BASES
+        - OFF_BAIT_BASES
+        - ON_BAIT_BASES
+    HsMetrics_table_cols_hidden:
+        - MAX_TARGET_COVERAGE
+        - MEAN_BAIT_COVERAGE
+        - MEAN_TARGET_COVERAGE
+```
+
+Only values listed in `HsMetrics_table_cols` will be included in the table.
+Anything listed in `HsMetrics_table_cols_hidden` will be hidden by default.

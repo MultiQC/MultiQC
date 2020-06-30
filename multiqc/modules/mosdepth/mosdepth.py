@@ -75,6 +75,11 @@ class MultiqcModule(BaseMultiqcModule):
 
         dist_data, cov_data, xmax, perchrom_avg_data = self.parse_cov_dist()
 
+        # Filter out any samples from --ignore-samples
+        dist_data = self.ignore_samples(dist_data)
+        cov_data = self.ignore_samples(cov_data)
+        perchrom_avg_data = self.ignore_samples(perchrom_avg_data)
+
         # No samples found
         num_samples = max(
             len(dist_data),
@@ -93,8 +98,9 @@ class MultiqcModule(BaseMultiqcModule):
                 helptext=genome_fraction_helptext,
                 plot=linegraph.plot(dist_data, {
                     'id': 'mosdepth-coverage-dist-id',
+                    'title': 'Mosdepth: Coverage Distribution',
                     'xlab': 'Coverage (X)',
-                    'ylab': '% bases in genome/regions covered by least X reads',
+                    'ylab': '% bases in genome/regions covered by at least X reads',
                     'ymax': 100,
                     'xmax': xmax,
                     'tt_label': '<b>{point.x}X</b>: {point.y:.2f}%',
@@ -109,6 +115,7 @@ class MultiqcModule(BaseMultiqcModule):
                 helptext=coverage_histogram_helptext,
                 plot=linegraph.plot(cov_data, {
                     'id': 'mosdepth-coverage-plot-id',
+                    'title': 'Mosdepth: Coverage Depth',
                     'xlab': 'Coverage (X)',
                     'ylab': '% bases in genome/regions covered at X reads',
                     'ymax': 100,
@@ -124,10 +131,11 @@ class MultiqcModule(BaseMultiqcModule):
                 description='Average coverage per contig or chromosome',
                 plot=linegraph.plot(perchrom_avg_data, {
                     'id': 'mosdepth-coverage-per-contig',
+                    'title': 'Mosdepth: Coverage per contig',
                     'xlab': 'region',
                     'ylab': 'average coverage',
                     'categories': True,
-                    'tt_label': '<b>{point.x}X</b>: {point.y:.2f}%',
+                    'tt_label': '<b>{point.x}</b>: {point.y:.1f}x',
                     'smooth_points': 500,
                 })
             )

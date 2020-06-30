@@ -25,27 +25,30 @@ class BaseRecalibratorMixin():
             '#:GATKTable:RecalTable2:': 'recal_table_2',
         }
         samples_kept = {rt_type: set() for rt_type in recal_table_type}
-        self.gatk_base_recalibrator = {recal_type:
-                                           {table_name: {}
-                                            for table_name
-                                            in report_table_headers.values()}
-                                       for recal_type in recal_table_type}
+        self.gatk_base_recalibrator = {
+            recal_type: {
+                table_name: {} for table_name in report_table_headers.values()
+            } for recal_type in recal_table_type
+        }
 
         for f in self.find_log_files('gatk/base_recalibrator', filehandles=True):
+
+            # Check that we're not ignoring this sample name
+            if self.is_ignore_sample(f['s_name']):
+                continue
+
             parsed_data = self.parse_report(f['f'].readlines(), report_table_headers)
             rt_type = determine_recal_table_type(parsed_data)
             if len(parsed_data) > 0:
                 if f['s_name'] in samples_kept[rt_type]:
                     log.debug("Duplicate sample name found! Overwriting: {}".format(f['s_name']))
-                else:
-                    samples_kept[rt_type].add(f['s_name'])
+                samples_kept[rt_type].add(f['s_name'])
 
                 self.add_data_source(f, section='base_recalibrator')
                 for table_name, sample_tables in parsed_data.items():
-                    self.gatk_base_recalibrator[rt_type][table_name][
-                        f['s_name']] = sample_tables
+                    self.gatk_base_recalibrator[rt_type][table_name][f['s_name']] = sample_tables
 
-        # Filter to strip out ignored sample names
+        # Filter to strip out ignored sample names. Again.
         for rt_type in recal_table_type:
             for table_name, sample_tables in self.gatk_base_recalibrator[rt_type].items():
                 self.gatk_base_recalibrator[rt_type][table_name] = self.ignore_samples(
@@ -108,7 +111,7 @@ class BaseRecalibratorMixin():
         plot = linegraph.plot(
             sample_data,
             pconfig = {
-                'title': "Observed Quality Score Counts",
+                'title': "GATK: Observed Quality Score Counts",
                 'id': 'gatk-base-recalibrator-quality-scores-plot',
                 'xlab': 'Observed Quality Score',
                 'ylab': 'Count',
