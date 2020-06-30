@@ -60,7 +60,7 @@ class MultiqcModule(BaseMultiqcModule):
 
                 Ideally, precision, recall and F1 Score should all be as close to 1 as possible.
             ''',
-            plot = table.plot(self.happy_indel_data, indel_headers())
+            plot = table.plot(self.happy_indel_data, indel_headers)
         )
         
         self.add_section(
@@ -72,7 +72,7 @@ class MultiqcModule(BaseMultiqcModule):
 
                 Ideally, precision, recall and F1 Score should all be as close to 1 as possible.
             ''',
-            plot = table.plot(self.happy_snp_data, snp_headers())
+            plot = table.plot(self.happy_snp_data, snp_headers)
         )
 
     def parse_log(self, f):
