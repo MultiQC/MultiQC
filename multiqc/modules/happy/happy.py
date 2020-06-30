@@ -1,7 +1,6 @@
 #!/usr/bin/env python
 
 """MultiQC module to parse output from OUS variant calling pipeline"""
-# C:\Users\ratka\Documents\STP\Addenbrookes\DNAnexus\MultiQC\happy_multiqc.py
 
 from __future__ import print_function
 from collections import OrderedDict
