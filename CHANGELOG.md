@@ -9,6 +9,9 @@
 * [**HOPS**](https://www.github.com/rhubler/HOPS)
   * Post-alignment ancient DNA analysis tool for MALT
 
+* [**GffCompare**]](https://ccb.jhu.edu/software/stringtie/gffcompare.shtml) 
+    * GffCompare can annotate and estimate accuracy of one or more GFF files compared with a reference annotation. 
+
 #### Module updates
 
 * **DRAGEN**

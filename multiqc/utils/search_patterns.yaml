@@ -279,6 +279,10 @@ gatk/varianteval:
 gatk/base_recalibrator:
     contents: '#:GATKTable:Arguments:Recalibration'
     num_lines: 3
+gffcompare:
+    fn: '*.stats'
+    contents: '#gffcompare*'
+    num_lines: 2
 goleft_indexcov/roc:
     fn: '*-indexcov.roc'
 goleft_indexcov/ped:

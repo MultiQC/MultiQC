@@ -62,6 +62,7 @@ MultiQC Modules:
     featureCounts: modules/featureCounts.md
     fgbio: modules/fgbio.md
     GATK: modules/gatk.md
+    GffCompare: modules/gffcompare.md
     goleft_indexcov: modules/goleft_indexcov.md
     Hap.py: modules/happy.md
     HiCExplorer: modules/hicexplorer.md

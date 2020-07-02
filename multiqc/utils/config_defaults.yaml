@@ -315,6 +315,9 @@ module_order:
     - goleft_indexcov:
         module_tag:
             - DNA
+    - gffcompare:
+        module_tag:
+            - RNA
     - disambiguate:
         module_tag:
             - RNA
