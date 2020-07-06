@@ -281,7 +281,7 @@ gatk/base_recalibrator:
     num_lines: 3
 gffcompare:
     fn: '*.stats'
-    contents: '#gffcompare*'
+    contents: '# gffcompare'
     num_lines: 2
 goleft_indexcov/roc:
     fn: '*-indexcov.roc'
