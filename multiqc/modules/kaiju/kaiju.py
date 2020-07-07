@@ -44,9 +44,11 @@ class MultiqcModule(BaseMultiqcModule):
                     self.kaiju_data[taxo_rank] = parsed_data
 
         # Filters to strip out ignored sample names
+        all_samples_name=[]
         for taxo_rank in self.kaiju_data.keys():
             self.kaiju_data[taxo_rank] = self.ignore_samples(self.kaiju_data[taxo_rank])
-
+            all_samples_name.extend(self.kaiju_data[taxo_rank].keys())
+        self.all_s_name = set(all_samples_name)
         # Number of samples found
         try:
             num_samples = max([len(taxo_rank) for taxo_rank in self.kaiju_data.values()])
@@ -100,6 +102,7 @@ class MultiqcModule(BaseMultiqcModule):
         # are not unfairly over-represented
 
         for rank_name, data in self.kaiju_data.items():
+
             for s_name, samples_values in data.items():
                 #perform sum at first level only
                 if rank_name not in self.kaiju_total_pct:
@@ -158,7 +161,6 @@ class MultiqcModule(BaseMultiqcModule):
             'max': 100,
             'scale': 'OrRd'
         }
-        # Get table data TODO !!!
         tdata = {}
         for s_name, d in self.kaiju_sample_total_readcounts.items():
             tdata[s_name] = {}
@@ -196,12 +198,8 @@ class MultiqcModule(BaseMultiqcModule):
             rank_cats = OrderedDict()
             rank_data = dict()
             # Loop through the summed tax percentages to get the top 5 across all samples
-            try:
-                top_five_sorted_pct = sorted(self.kaiju_total_pct[rank_name].items(), key=lambda x: x[1], reverse=True)[0:5]
 
-            except KeyError:
-                # Taxa rank not found in this sample
-                continue
+            top_five_sorted_pct = sorted(self.kaiju_total_pct[rank_name].items(), key=lambda x: x[1], reverse=True)[0:5]
 
             #retrieve top five counts
             counts_shown = {}
@@ -220,18 +218,26 @@ class MultiqcModule(BaseMultiqcModule):
                         counts_shown[s_name] += d["assigned"][classif]['count']
 
             # Add in unclassified/cannot assigned/other
-            for s_name, d in self.kaiju_data[rank_name].items():
-                rank_data[s_name]["not assigned"] = d["cannot be assigned"]["count"]
-                rank_data[s_name]["unclassified"] = d["unclassified"]["count"]
-                rank_data[s_name]['other'] = self.kaiju_sample_total_readcounts[s_name] - counts_shown[s_name] - d["cannot be assigned"]["count"] - d["unclassified"]["count"]
+            for s_name in self.all_s_name :
+                if s_name in self.kaiju_data[rank_name] :
+                    d = self.kaiju_data[rank_name][s_name]
+                    rank_data[s_name]["not assigned"] = d["cannot be assigned"]["count"]
+                    rank_data[s_name]["unclassified"] = d["unclassified"]["count"]
+                    rank_data[s_name]['other'] = self.kaiju_sample_total_readcounts[s_name] - counts_shown[s_name] - d["cannot be assigned"]["count"] - d["unclassified"]["count"]
+                    # This should never happen... But it does sometimes if the total read count is a bit off
+                    if rank_data[s_name]['other'] < 0:
+                        log.debug("Found negative 'other' count for {} ({}): {}".format(s_name, rank_name, rank_data[s_name]['other']))
+                        rank_data[s_name]['other'] = 0
 
-                # This should never happen... But it does sometimes if the total read count is a bit off
-                if rank_data[s_name]['other'] < 0:
-                    log.debug("Found negative 'other' count for {} ({}): {}".format(s_name, rank_name, rank_data[s_name]['other']))
-                    rank_data[s_name]['other'] = 0
+                else :
+                    rank_data[s_name] = dict()
+                    rank_data[s_name]['other']=0
+                    rank_data[s_name]['missing info'] = self.kaiju_sample_total_readcounts[s_name] - self.kaiju_sample_unclassified[s_name]
+                    rank_data[s_name]["unclassified"] = self.kaiju_sample_unclassified[s_name]
 
             rank_cats['other'] = { 'name': 'Other', 'color': '#a65628'}
             rank_cats['not assigned'] = { 'name': 'Cannot be assigned', 'color': '#cccccc' }
+            rank_cats['missing info'] = { 'name': 'Missing info', 'color': '#979a9a'}
             rank_cats['unclassified'] = { 'name': 'Unclassified', 'color': '#d4949c'}
 
             self.write_data_file(rank_data, 'multiqc_kaiju_'+rank_name)
