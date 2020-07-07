@@ -26,7 +26,7 @@ class MultiqcModule(BaseMultiqcModule):
 
         # Set up data structures
         self.kaiju_data = { }
-        self.taxonomic_ranks = ["phylum","class","order","family","genus","species"]
+        self.taxonomic_ranks = ["species", "genus", "family", "order", "class", "phylum"]
 
         # Find and parse kaiju2table report
         for f in self.find_log_files('kaiju', filehandles=True):
