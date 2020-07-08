@@ -176,26 +176,28 @@ such as number of dataseries and command line flags.
 Note that both plot types should come out looking pretty much identical. If
 you spot something that's missing in the flat image plots, let me know.
 
-
 ## Line graphs
 This base function works much like the above, but for two-dimensional
-data, to produce line graphs. It expects a dictionary in the following format:
+data, to produce line graphs. It expects a dictionary with sample identifiers,
+each containing numeric `x:y` points. For example:
+
 ```python
 from multiqc.plots import linegraph
 data = {
     'sample 1': {
         '<x val 1>': '<y val 1>',
-        '<x val 2>': '<y val 2>',
+        '<x val 2>': '<y val 2>'
     },
     'sample 2': {
         '<x val 1>': '<y val 1>',
-        '<x val 2>': '<y val 2>',
+        '<x val 2>': '<y val 2>'
     }
 }
 html_content = linegraph.plot(data)
 ```
 
-Additionally, a config dict can be supplied. The defaults are as follows:
+Additionally, a configuration dict can be supplied. The defaults are as follows:
+
 ```python
 from multiqc.plots import linegraph
 config = {
@@ -253,8 +255,24 @@ html_content = linegraph.plot(data, config)
 ### Switching datasets
 You can also have a single plot with buttons to switch between different
 datasets. To do this, just supply a list of data dicts instead (same
-formats as described above). Also add the following config options to
-supply names to the buttons and graph labels:
+formats as described above). For example:
+
+```python
+data = [
+    {
+        'sample 1': { '<x val 1>': '<y val 1>', '<x val 2>': '<y val 2>' },
+        'sample 2': { '<x val 1>': '<y val 1>', '<x val 2>': '<y val 2>' }
+    },
+    {
+        'sample 1': { '<x val 1>': '<y val 1>', '<x val 2>': '<y val 2>' },
+        'sample 2': { '<x val 1>': '<y val 1>', '<x val 2>': '<y val 2>' }
+    }
+]
+```
+
+You'll also want to add the following configuration options to
+give names to the buttons and graph labels:
+
 ```python
 config = {
     'data_labels': [
@@ -263,9 +281,9 @@ config = {
     ]
 }
 ```
+
 All of these config values are optional, the function will default
-to sensible values if things are missing. See the cutadapt module
-plots for an example of this in action.
+to sensible values if things are missing.
 
 ### Additional data series
 Sometimes, it's good to be able to specify specific data series manually.
@@ -274,6 +292,7 @@ be a dict (as below). For multiple lines, use a list of dicts. For multiple
 dataset plots, use a list of list of dicts.
 
 For example, to add a dotted `x = y` reference line:
+
 ```python
 from multiqc.plots import linegraph
 config = {
@@ -291,12 +310,9 @@ config = {
 html_content = linegraph.plot(data, config)
 ```
 
-
-
 ## Scatter Plots
 Scatter plots work in almost exactly the same way as line plots. Most (if not all)
-config options are shared between the two. The data structure is similar but
-not identical:
+config options are shared between the two. The data structure is similar but not identical:
 
 ```python
 from multiqc.plots import scatter
@@ -313,9 +329,12 @@ data = {
 html_content = scatter.plot(data)
 ```
 
+Note that you must use the keys `x` and `y` for each data point.
+
 If you want more than one data point per sample, you can supply a list of
 dictionaries instead. You can also optionally specify point colours and
 sample name suffixes (these are appended to the sample name):
+
 ```python
 data = {
     'sample 1': [
@@ -336,6 +355,7 @@ the browser and be impossible to interpret.
 
 See the above docs about line plots for most config options. The scatter plot
 has a handful of unique ones in addition:
+
 ```python
 pconfig = {
     'marker_colour': 'rgba(124, 181, 236, .5)', # string, base colour of points (recommend rgba / semi-transparent)
