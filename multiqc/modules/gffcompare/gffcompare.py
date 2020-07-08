@@ -7,7 +7,7 @@ import logging
 import os
 from collections import OrderedDict
 
-from multiqc.plots import linegraph, bargraph
+from multiqc.plots import scatter, bargraph
 from multiqc.modules.base_module import BaseMultiqcModule
 
 # Initialise the logger
@@ -23,8 +23,8 @@ class MultiqcModule(BaseMultiqcModule):
         info="is a tool to compare, merge and annotate one or more GFF files with a reference annotation in GFF format.")
 
         # Parse stats file
-        # Everything is hardcoded, needs to be adjusted if output should change. 
-        # I hope there are no other versions of gffcompare that produce different output formats
+        # Everything is hardcoded with linenumbers, needs to be adjusted if output should change. 
+        # Other versions of GffCompare with different ouptut formats might not work.
         self.gffcompare_data = {}
         for f in self.find_log_files('gffcompare'):
             #print(f)
@@ -55,6 +55,8 @@ class MultiqcModule(BaseMultiqcModule):
 
             ## Accuracy metrics (Sensitivity/Precision)
             self.gffcompare_data[sample]['accuracy'] = {}
+            self.gffcompare_data[sample]['missed'] = {}
+            self.gffcompare_data[sample]['novel'] = {}
             for line in lines[10:16]:
                 split = line.replace("|", "").replace("Intron chain", "Intron_chain").split()
                 self.gffcompare_data[sample]['accuracy'][split[0]] = {}
@@ -67,12 +69,12 @@ class MultiqcModule(BaseMultiqcModule):
             self.gffcompare_data[sample]['counts']['matching_loci'] = [int(s) for s in lines[19].replace("(", " ").split() if s.isdigit()][0]
 
             ## Additional count data
-            self.gffcompare_data[sample]['counts']['missed_exons'] = [int(s) for s in lines[21].replace("/", " ").split() if s.isdigit()]
-            self.gffcompare_data[sample]['counts']['novel_exons'] = [int(s) for s in lines[22].replace("/", " ").split() if s.isdigit()]
-            self.gffcompare_data[sample]['counts']['missed_introns'] = [int(s) for s in lines[23].replace("/", " ").split() if s.isdigit()]
-            self.gffcompare_data[sample]['counts']['novel_introns'] = [int(s) for s in lines[24].replace("/", " ").split() if s.isdigit()]
-            self.gffcompare_data[sample]['counts']['missed_loci'] = [int(s) for s in lines[25].replace("/", " ").split() if s.isdigit()]
-            self.gffcompare_data[sample]['counts']['novel_loci'] = [int(s) for s in lines[26].replace("/", " ").split() if s.isdigit()]
+            self.gffcompare_data[sample]['missed']['Exons'] = [int(s) for s in lines[21].replace("/", " ").split() if s.isdigit()]
+            self.gffcompare_data[sample]['novel']['Exons'] = [int(s) for s in lines[22].replace("/", " ").split() if s.isdigit()]
+            self.gffcompare_data[sample]['missed']['Introns'] = [int(s) for s in lines[23].replace("/", " ").split() if s.isdigit()]
+            self.gffcompare_data[sample]['novel']['Introns'] = [int(s) for s in lines[24].replace("/", " ").split() if s.isdigit()]
+            self.gffcompare_data[sample]['missed']['Loci'] = [int(s) for s in lines[25].replace("/", " ").split() if s.isdigit()]
+            self.gffcompare_data[sample]['novel']['Loci'] = [int(s) for s in lines[26].replace("/", " ").split() if s.isdigit()]
 
         print(self.gffcompare_data)
 
@@ -90,12 +92,12 @@ class MultiqcModule(BaseMultiqcModule):
         # Write data file
         self.write_data_file(self.gffcompare_data, 'multiqc_gffcompare')
 
-        # Report sections
+        # Report sectionsq
         self.add_section (
             name = "Gffcompare comparison accuracy",
             description = (
                 """
-                This plot shows the cDNA read categories identified by Pychopper </br>
+                Accuracy values for comparison of 
                 """
             ),
             helptext = (
@@ -109,59 +111,124 @@ class MultiqcModule(BaseMultiqcModule):
             anchor = 'gffcompare_accuracy',
             plot = self.plot_accuracy()
         )
+
         self.add_section (
-            name = "GffCompare  Strand Orientation",
+            name = "Gffcompare novel loci",
             description = (
                 """
-                This plot shows the strand orientation of full length cDNA reads
+                Comparison of samples with new loci
                 """
             ),
             helptext = (
                 """
-                Nanopore cDNA reads are always read forward. To estimate their original strand, 
-                Pychopper searches for the location of the start and end primers and assigns the reads accordingly.
+                There are three possible cases:
+                * **Primers found**: Full length cDNA reads with correct primers at both ends.
+                * **Rescued reads**: Split fusion reads.
+                * **Unusable**: Reads without correct primer combinations.
                 """
             ),
-            anchor = 'pychopper_orientation',
-            plot = self.plot_orientation()
+            anchor = 'gffcompare_novel',
+            plot = self.plot_novel()
         )
 
+        self.add_section (
+            name = "Gffcompare missed loci",
+            description = (
+                """
+                Accuracy values for comparison of 
+                """
+            ),
+            helptext = (
+                """
+                There are three possible cases:
+                * **Primers found**: Full length cDNA reads with correct primers at both ends.
+                * **Rescued reads**: Split fusion reads.
+                * **Unusable**: Reads without correct primer combinations.
+                """
+            ),
+            anchor = 'gffcompare_missed',
+            plot = self.plot_missed()
+        )
+
+
     # Plotting functions
-    def plot_classification(self):
-        """ Generate the cDNA read classification plot """
-
+    def plot_accuracy(self):
+        """ Generate GffCompare accuracy plot"""
+        
+        datasets = ['Base', 'Exon', 'Intron', 'Intron_chain', 'Transcript', 'Locus']
+        
         pconfig = {
-            'id': 'pychopper_classification_plot',
-            'title': 'Pychopper: Read classification',
-            'ylab': '',
-            'xDecimals': False,
-            'ymin': 0
+            'id': 'gffcompare_accuracy_plot',
+            'title': 'GffCompare: Accuracy values',
+            'ylab': 'Precision',
+            'xlab': 'Sensitivity',
+            'ymin': 0,
+            'ymax': 1,
+            'xmin': 0,
+            'xmax': 1,
+            'data_labels' : [{'name' : x} for x in datasets]
         }
 
-        data_classification = {}
-        for sample in self.pychopper_data.keys():
-            data_classification[sample] = {}
-            data_classification[sample]=self.pychopper_data[sample]['Classification']
+        data_classification = [{
+                sample: {
+                    'x' : self.gffcompare_data[sample]['accuracy'][dataset]['sensitivity']/100,
+                    'y' : self.gffcompare_data[sample]['accuracy'][dataset]['precision']/100,
+                    'name' : dataset 
+                }
+            for sample in self.gffcompare_data.keys()
+            }
+        for dataset in datasets
+        ]
+                        
+        print(data_classification)
+        return scatter.plot(data_classification, pconfig)
 
-        cats = ['Primers_found', 'Rescue', 'Unusable']
-        return bargraph.plot(data_classification, cats, pconfig)
+    # Plot number of novel and missing transcripts
+    def plot_novel(self):
+        """ Generate GffCompare novel elements plot"""
 
-    def plot_orientation(self):
-        """ Generate the read strand orientation plot """
-
+        cats = ['novel', 'found']
+        datasets = ['Exons', 'Introns', 'Loci']
         pconfig = {
-            'id': 'pychopper_orientation_plot',
-            'title': 'Pychopper: Strand Orientation',
-            'ylab': '',
-            'cpswitch_c_active': False,  
-            'xDecimals': False,
-            'ymin': 0
+            'ymin': 0,    
+            'data_labels': datasets
         }
 
-        data_orientation = {}
-        for sample in self.pychopper_data.keys():
-            data_orientation[sample] = {}
-            data_orientation[sample]=self.pychopper_data[sample]['Strand']
+        data_novel = [{
+                sample:{
+                    'novel' : self.gffcompare_data[sample]['novel'][dataset][0],
+                    'found' : (self.gffcompare_data[sample]['novel'][dataset][1] -
+                        self.gffcompare_data[sample]['novel'][dataset][0])
+                }
+            for sample in self.gffcompare_data.keys()
+            }
+        for dataset in datasets
+        ]
+        
+        print(data_novel)
+        return bargraph.plot(data_novel, cats, pconfig)
+        
+    
+    def plot_missed(self):
+        """ Generate GffCompare missed elements plot"""
 
-        cats = ['+', '-']
-        return bargraph.plot(data_orientation, cats, pconfig)
+        cats = ['missed', 'found']
+        datasets = ['Exons', 'Introns', 'Loci']
+        pconfig = {
+            'ymin': 0,    
+            'data_labels': datasets
+        }
+
+        data_missed = [{
+                sample:{
+                    'missed' : self.gffcompare_data[sample]['missed'][dataset][0],
+                    'found' : (self.gffcompare_data[sample]['missed'][dataset][1] -
+                        self.gffcompare_data[sample]['missed'][dataset][0])
+                }
+            for sample in self.gffcompare_data.keys()
+            }
+        for dataset in datasets
+        ]
+        
+        print(data_missed)
+        return bargraph.plot(data_missed, cats, pconfig)
