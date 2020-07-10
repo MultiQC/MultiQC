@@ -53,109 +53,126 @@ class MultiqcModule(BaseMultiqcModule):
             raise UserWarning
         log.info("Found {} reports".format(len(data_by_sample)))
 
-        self._general_stats_table(data_by_sample)
-        self._purple_stats_table(data_by_sample)
+        headers = _make_table_headers()
 
-    def _general_stats_table(self, data_by_sample):
-        headers = OrderedDict()
-        headers['QCStatus'] = {
-            'title': 'PURPLE QC',
-            'description': 'PURPLE QC status (PASS, FAIL_SEGMENT, FAIL_GENDER, FAIL_DELETED_GENES).',
-            'scale': False
-        }
-        self.general_stats_addcols(data_by_sample, headers)
-
-    def _purple_stats_table(self, data_by_sample):
-        headers = OrderedDict()
-        headers['QCStatus'] = {
-            'title': 'PURPLE QC',
-            'description': 'PURPLE QC status (PASS, FAIL_SEGMENT, FAIL_GENDER, FAIL_DELETED_GENES).',
-            'scale': False
-        }
-        headers['ploidy'] = {
-            'title': 'Ploidy',
-            'description': 'Average ploidy of the tumor sample after adjusting for purity',
-            'scale': 'RdYlGn',
-            'min': 0,
-        }
-        headers['purity'] = {
-            'title': 'Purity',
-            'description': 'Purity of tumor in the sample',
-            'scale': 'RdYlGn',
-            'min': 0,
-            'max': 100,
-            'suffix': '%',
-            'modify': lambda x: float(x) * 100.0,
-        }
-        headers['gender'] = {
-            'title': 'Gender',
-            'description': 'One of MALE, FEMALE or MALE_KLINEFELTER',
-            'scale': False
-        }
-        headers['status'] = {
-            'title': 'Ploidy status',
-            'description': 'One of NORMAL, HIGHLY_DIPLOID, SOMATIC or NO_TUMOR',
-            'scale': False
-        }
-        headers['polyclonalProportion'] = {
-            'title': 'Polyclonal',
-            'description': 'Polyclonal proportion. Proportion of copy number regions that are more than 0.25 from a whole copy number',
-            'scale': 'RdYlGn',
-            'min': 0,
-            'max': 100,
-            'suffix': '%',
-            'modify': lambda x: float(x) * 100.0,
-        }
-        headers['wholeGenomeDuplication'] = {
-            'title': 'WGD',
-            'description': 'Whole genome duplication. True if more than 10 autosomes have major allele ploidy > 1.5',
-            'scale': False
-        }
-        headers['msIndelsPerMb'] = {
-            'title': 'MS indel per Mb',
-            'description': 'Microsatellite indels per mega base',
-            'scale': 'RdYlGn',
-            'hidden': True,
-        }
-        headers['msStatus'] = {
-            'title': 'MS status',
-            'description': 'Microsatellite status. One of MSI, MSS or UNKNOWN if somatic variants not supplied',
-            'scale': False
-        }
-        headers['tml'] = {
-            'title': 'TML',
-            'description': 'Tumor mutational load',
-            'scale': 'RdYlGn',
-            'hidden': True,
-        }
-        headers['tmlStatus'] = {
-            'title': 'TML status',
-            'description': 'Tumor mutational load status. One of HIGH, LOW or UNKNOWN if somatic variants not supplied',
-            'scale': False
-        }
-        headers['tmbPerMb'] = {
-            'title': 'TMB per Mb',
-            'description': 'Tumor mutational burden per mega base',
-            'scale': 'RdYlGn',
-            'hidden': True,
-        }
-        headers['tmbStatus'] = {
-            'title': 'TMB status',
-            'description': 'Tumor mutational burden status. One of HIGH, LOW or UNKNOWN if somatic variants not supplied',
-            'scale': False
-        }
         self.add_section (
             name='PURPLE summary',
             anchor='purple-summary',
-            description="PURPLE summary. See details at the "
-                        "<a href=https://github.com/hartwigmedical/hmftools/tree/master/purity-ploidy-estimator#purity-file>"
-                        "documentation</a>.",
+            description="""
+            PURPLE summary. See details at the 
+            <a href=https://github.com/hartwigmedical/hmftools/tree/master/purity-ploidy-estimator#purity-file>
+            documentation</a>.""",
             plot=table.plot(data_by_sample, headers, {
                 'id': 'purple_summary',
                 'namespace': 'PURPLE',
                 'title': 'PURPLE summary',
             })
         )
+
+        self.general_stats_addcols(data_by_sample, {k: v for k, v in headers.items() if k == 'QCStatus'})
+
+
+def _make_table_headers():
+    headers = OrderedDict()
+    headers['QCStatus'] = {
+        'title': 'QC Status',
+        'description': """
+            PURPLE QC status (1) PASS, '
+            (2) FAIL_SEGMENT (removed samples with more than 220 copy number segments unsupported 
+            at either end by SV breakpoints. This step was added to remove samples with extreme GC bias, 
+            with differences in depth of up to or in excess of 10x between high and low GC regions. 
+            GC normalisation is unreliable when the corrections are so extreme so we filter.), 
+            (3) FAIL_GENDER (If the AMBER and COBALT gender are inconsistent, we use the COBALT gender but 
+            fail the sample), 
+            (4) FAIL_DELETED_GENES (We fail any sample with more than 280 deleted genes. This QC step was 
+            added after observing that in a handful of samples with high MB scale positive GC bias we 
+            sometimes systematically underestimate the copy number in high GC regions. This can lead us to 
+            incorrectly infer homozygous loss of entire chromosomes, particularly on chromosome 17 and 19.).
+            """,
+        'scale': False
+    }
+    headers['ploidy'] = {
+        'title': 'Ploidy',
+        'description': 'Average ploidy of the tumor sample after adjusting for purity',
+        'scale': 'RdYlGn',
+        'min': 0,
+    }
+    headers['purity'] = {
+        'title': 'Purity',
+        'description': 'Purity of tumor in the sample',
+        'scale': 'RdYlGn',
+        'min': 0,
+        'max': 100,
+        'suffix': '%',
+        'modify': lambda x: float(x) * 100.0,
+    }
+    headers['gender'] = {
+        'title': 'Gender',
+        'description': 'One of MALE, FEMALE or MALE_KLINEFELTER',
+        'scale': False
+    }
+    headers['status'] = {
+        'title': 'Ploidy status',
+        'description': """
+            One of (1) NORMAL (could fix the purity using coverage and BAF alone), 
+            (2) HIGHLY_DIPLOID (the fitted purity solution is highly diploid (> 95%) with a large 
+            range of potential solutions, but somatic variants are unable to help either because they 
+            were not supplied or because their implied purity was too low), 
+            (3) SOMATIC (somatic variants have improved the otherwise highly diploid solution), or 
+            (4) NO_TUMOR (PURPLE failed to find any aneuploidy and somatic variants were supplied but 
+            there were fewer than 300 with observed VAF > 0.1).
+            """,
+        'scale': False
+    }
+    headers['polyclonalProportion'] = {
+        'title': 'Polyclonal',
+        'description': 'Polyclonal proportion. Proportion of copy number regions that are more than 0.25 '
+                       'from a whole copy number',
+        'scale': 'RdYlGn',
+        'min': 0,
+        'max': 100,
+        'suffix': '%',
+        'modify': lambda x: float(x) * 100.0,
+    }
+    headers['wholeGenomeDuplication'] = {
+        'title': 'WGD',
+        'description': 'Whole genome duplication. True if more than 10 autosomes have major allele ploidy > 1.5',
+        'scale': False
+    }
+    headers['msIndelsPerMb'] = {
+        'title': 'MS indel per Mb',
+        'description': 'Microsatellite indels per mega base',
+        'scale': 'RdYlGn',
+        'hidden': True,
+    }
+    headers['msStatus'] = {
+        'title': 'MS status',
+        'description': 'Microsatellite status. One of MSI, MSS or UNKNOWN if somatic variants not supplied',
+        'scale': False
+    }
+    headers['tml'] = {
+        'title': 'TML',
+        'description': 'Tumor mutational load',
+        'scale': 'RdYlGn',
+        'hidden': True,
+    }
+    headers['tmlStatus'] = {
+        'title': 'TML status',
+        'description': 'Tumor mutational load status. One of HIGH, LOW or UNKNOWN if somatic variants not supplied',
+        'scale': False
+    }
+    headers['tmbPerMb'] = {
+        'title': 'TMB per Mb',
+        'description': 'Tumor mutational burden per mega base',
+        'scale': 'RdYlGn',
+        'hidden': True,
+    }
+    headers['tmbStatus'] = {
+        'title': 'TMB status',
+        'description': 'Tumor mutational burden status. One of HIGH, LOW or UNKNOWN if somatic variants not supplied',
+        'scale': False
+    }
+    return headers
 
 
 def _parse_purple_qc(f):
