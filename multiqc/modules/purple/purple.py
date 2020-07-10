@@ -24,9 +24,10 @@ class MultiqcModule(BaseMultiqcModule):
             name='PURPLE',
             anchor='purple',
             href="https://github.com/hartwigmedical/hmftools/tree/master/purity-ploidy-estimator",
-            info="""is a purity ploidy estimator. It combines B-allele frequency (BAF) from AMBER,
-                    read depth ratios from COBALT, somatic variants and structural variants to estimate the
-                    purity and copy number profile of a tumor sample, as well as the MSI and the TMB status."""
+            info="""It combines B-allele frequency (BAF), read depth ratios, somatic variants and 
+                    structural variant breakpoints to estimate the purity and copy number profile 
+                    of a tumor sample, and also predicts gender, the MSI status, tumor mutational 
+                    load and burden, clonality and the whole genome duplication status."""
         )
 
         data_by_sample = defaultdict(dict)
@@ -66,29 +67,45 @@ class MultiqcModule(BaseMultiqcModule):
                 'id': 'purple_summary',
                 'namespace': 'PURPLE',
                 'title': 'PURPLE summary',
-            })
+            }),
+            helptext="""
+            <ol>
+            <b>QC status</b>. Can fail for the following 3 reasons:
+            <li>FAIL_SEGMENT: removed samples with more than 220 copy number segments unsupported 
+            at either end by SV breakpoints. This step was added to remove samples with extreme GC bias, 
+            with differences in depth of up to or in excess of 10x between high and low GC regions. 
+            GC normalisation is unreliable when the corrections are so extreme so we filter.
+            <li>FAIL_GENDER: if the AMBER and COBALT gender are inconsistent, we use the COBALT gender but 
+            fail the sample.
+            <li>FAIL_DELETED_GENES: we fail any sample with more than 280 deleted genes. This QC step was 
+            added after observing that in a handful of samples with high MB scale positive GC bias we 
+            sometimes systematically underestimate the copy number in high GC regions. This can lead us to 
+            incorrectly infer homozygous loss of entire chromosomes, particularly on chromosomes 17 and 19.
+            </ol>
+
+            <ol>
+            <b>Ploidy status</b>. Reflects how we have determined the purity of the sample:
+            <li>NORMAL: could fix the purity using coverage and BAF alone
+            <li>HIGHLY_DIPLOID: the fitted purity solution is highly diploid (> 95%) with a large 
+            range of potential solutions, but somatic variants are unable to help either because they 
+            were not supplied or because their implied purity was too low.
+            <li>SOMATIC: somatic variants have improved the otherwise highly diploid solution
+            <li>NO_TUMOR: PURPLE failed to find any aneuploidy and somatic variants were supplied but 
+            there were fewer than 300 with observed VAF > 0.1.
+            </ol>
+            """
         )
 
-        self.general_stats_addcols(data_by_sample, {k: v for k, v in headers.items() if k == 'QCStatus'})
+        gen_stat_cols = {k: v for k, v in headers.items() if k in ['ploidy', 'purity']}
+        self.general_stats_addcols(data_by_sample, gen_stat_cols)
 
 
 def _make_table_headers():
     headers = OrderedDict()
     headers['QCStatus'] = {
         'title': 'QC Status',
-        'description': """
-            PURPLE QC status (1) PASS, '
-            (2) FAIL_SEGMENT (removed samples with more than 220 copy number segments unsupported 
-            at either end by SV breakpoints. This step was added to remove samples with extreme GC bias, 
-            with differences in depth of up to or in excess of 10x between high and low GC regions. 
-            GC normalisation is unreliable when the corrections are so extreme so we filter.), 
-            (3) FAIL_GENDER (If the AMBER and COBALT gender are inconsistent, we use the COBALT gender but 
-            fail the sample), 
-            (4) FAIL_DELETED_GENES (We fail any sample with more than 280 deleted genes. This QC step was 
-            added after observing that in a handful of samples with high MB scale positive GC bias we 
-            sometimes systematically underestimate the copy number in high GC regions. This can lead us to 
-            incorrectly infer homozygous loss of entire chromosomes, particularly on chromosome 17 and 19.).
-            """,
+        'description': 'One of PASS, FAIL_SEGMENT, FAIL_GENDER, or FAIL_DELETED_GENES. '
+                       'For details, use the help button.',
         'scale': False
     }
     headers['ploidy'] = {
@@ -113,15 +130,7 @@ def _make_table_headers():
     }
     headers['status'] = {
         'title': 'Ploidy status',
-        'description': """
-            One of (1) NORMAL (could fix the purity using coverage and BAF alone), 
-            (2) HIGHLY_DIPLOID (the fitted purity solution is highly diploid (> 95%) with a large 
-            range of potential solutions, but somatic variants are unable to help either because they 
-            were not supplied or because their implied purity was too low), 
-            (3) SOMATIC (somatic variants have improved the otherwise highly diploid solution), or 
-            (4) NO_TUMOR (PURPLE failed to find any aneuploidy and somatic variants were supplied but 
-            there were fewer than 300 with observed VAF > 0.1).
-            """,
+        'description': 'One of NORMAL, HIGHLY_DIPLOID, SOMATIC, or NO_TUMOR. For details, use the help button.',
         'scale': False
     }
     headers['polyclonalProportion'] = {
@@ -152,24 +161,26 @@ def _make_table_headers():
     }
     headers['tml'] = {
         'title': 'TML',
-        'description': 'Tumor mutational load',
+        'description': 'Tumor mutational load (# of missense variants in sample)',
         'scale': 'RdYlGn',
         'hidden': True,
     }
     headers['tmlStatus'] = {
         'title': 'TML status',
-        'description': 'Tumor mutational load status. One of HIGH, LOW or UNKNOWN if somatic variants not supplied',
+        'description': 'Tumor mutational load status (# of missense variants in sample). One of HIGH, LOW or UNKNOWN '
+                       'if somatic variants not supplied',
         'scale': False
     }
     headers['tmbPerMb'] = {
         'title': 'TMB per Mb',
-        'description': 'Tumor mutational burden per mega base',
+        'description': 'Tumor mutational burden (# of passing variants) per mega base',
         'scale': 'RdYlGn',
         'hidden': True,
     }
     headers['tmbStatus'] = {
         'title': 'TMB status',
-        'description': 'Tumor mutational burden status. One of HIGH, LOW or UNKNOWN if somatic variants not supplied',
+        'description': 'Tumor mutational burden (# of passing variants per Mb) status. One of HIGH, LOW or UNKNOWN '
+                       'if somatic variants not supplied',
         'scale': False
     }
     return headers

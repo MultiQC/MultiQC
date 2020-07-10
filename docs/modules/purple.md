@@ -1,11 +1,11 @@
 ---
 Name: PURPLE
-URL: https://github.com/brentp/somalier
+URL: https://github.com/hartwigmedical/hmftools/tree/master/purity-ploidy-estimator
 Description: >
-    PURPLE is a purity and ploidy estimator
+    A purity, ploidy and copy number estimator for whole genome tumor data
 ---
 
-It combines B-allele frequency (BAF) from AMBER, read depth ratios
-from COBALT, somatic variants and structural variants to estimate the
-purity and copy number profile of a tumor sample, , as well as the MSI
-and the TMB status.
+It combines B-allele frequency (BAF), read depth ratios, somatic variants and 
+structural variant breakpoints to estimate the purity and copy number profile 
+of a tumor sample, and also predicts gender, the MSI status, tumor mutational 
+load and burden, clonality and the whole genome duplication status.

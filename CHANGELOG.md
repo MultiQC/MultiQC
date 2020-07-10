@@ -8,6 +8,8 @@
 
 * [**HOPS**](https://www.github.com/rhubler/HOPS)
   * Post-alignment ancient DNA analysis tool for MALT
+* [**PURPLE**](https://github.com/hartwigmedical/hmftools/tree/master/purity-ploidy-estimator)
+  * A purity, ploidy and copy number estimator for whole genome tumor data
 
 #### Module updates
 
