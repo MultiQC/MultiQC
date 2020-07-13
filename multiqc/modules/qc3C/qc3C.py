@@ -1043,7 +1043,10 @@ class MultiqcModule(BaseMultiqcModule):
             elif analysis_mode == 'kmer':
 
                 for k in 'raw_fraction', 'adj_fraction', 'unobs_fraction':
-                    parsed[k] = np.array(parsed[k]).mean() * 100
+                    if parsed[k] is None:
+                        parsed[k] = 'Error - adjusted value would exceed 100'
+                    else:
+                        parsed[k] = np.array(parsed[k]).mean() * 100
 
                 self.qc3c_data['kmer'][s_name] = {
                     'k_qc3C_version': parsed['runtime_info']['qc3C_version'],
