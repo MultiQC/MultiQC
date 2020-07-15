@@ -24,6 +24,11 @@
 * **PycoQC**
     * Log10 x-axis for _Read Length_ plot ([#1214](https://github.com/ewels/MultiQC/issues/1214))
 
+#### New Custom Content features
+
+* General Stats custom content now gives a log message
+* If `id` is not set in `JSON` or `YAML` files, it defaults to the sample name instead of just `custom_content`
+
 #### Bug Fixes
 
 

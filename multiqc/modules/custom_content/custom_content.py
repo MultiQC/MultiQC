@@ -101,6 +101,7 @@ def custom_module_classes():
                         log.warning("Error parsing YAML file '{}' (probably invalid YAML)".format(f['fn']))
                         log.debug("YAML error: {}".format(e), exc_info=True)
                         break
+                    parsed_data['id'] = parsed_data.get('id', f['s_name'])
                 elif f_extension == '.json':
                     try:
                         # Use OrderedDict for objects so that column order is honoured
@@ -109,6 +110,7 @@ def custom_module_classes():
                         log.warning("Error parsing JSON file '{}' (probably invalid JSON)".format(f['fn']))
                         log.warning("JSON error: {}".format(e))
                         break
+                    parsed_data['id'] = parsed_data.get('id', f['s_name'])
                 elif f_extension == '.png' or f_extension == '.jpeg' or f_extension == '.jpg':
                     image_string = base64.b64encode(f['f'].read()).decode('utf-8')
                     image_format = 'png' if f_extension == '.png' else 'jpg'
@@ -242,7 +244,7 @@ def custom_module_classes():
             for m_id in gsheaders:
                 if 'namespace' not in gsheaders[m_id]:
                     gsheaders[m_id]['namespace'] = mod['config'].get('namespace', c_id)
-
+            log.info("{}: Found {} General Statistics columns".format(c_id, len(mod['data'])))
             bm.general_stats_addcols(mod['data'], gsheaders)
 
         # Initialise this new module class and append to list
