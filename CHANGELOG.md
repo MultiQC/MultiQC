@@ -28,6 +28,7 @@
 
 * General Stats custom content now gives a log message
 * If `id` is not set in `JSON` or `YAML` files, it defaults to the sample name instead of just `custom_content`
+* Data from `JSON` or `YAML` now has `data` keys (sample names) run through the `clean_s_name()` function to apply sample name cleanup
 
 #### Bug Fixes
 
