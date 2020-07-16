@@ -102,13 +102,16 @@ class MultiqcModule(BaseMultiqcModule):
             ),
             helptext = (
                 """
-                Sensitivity (also known as recall) is the True Positive Rate where True Positives are query features which agree with corresponding reference annotation features.
+                Accuracy metrics are calculated as described in [Burset et al. (1996)](http://dx.doi.org/10.1006/geno.1996.0298). Sensitivity is the true positive rate, Precision 
+                True Positives are query features that agree with features in the reference. The exact definition depends on the feature level:
 
-                Precision (also known specificity) is the positive predictive value 
-
-                The accuracy metrics are calculated. Please not3
-
-                Full description of how the levels are compared can be found [here](https://ccb.jhu.edu/software/stringtie/gffcompare.shtml#levels)
+                - *Base*: True positives are bases reported at the same coordinates. 
+                - *Exon*: Comparison units are exons that overlap in query and reference with same coordinates.
+                - *Intron chain*: True positives are query transcripts for which all introns coordinates match those in the reference.
+                - *Transcript*: More stringent then intron chain, all Exon coordinates need to match. Outer exon coordinates (start + end) can vary by 100 bases in default settings
+                - *Locus*: Cluster of exons need to match.
+                
+                More in depth description [here](https://ccb.jhu.edu/software/stringtie/gffcompare.shtml#levels)        
                 """
             ),
             anchor = 'gffcompare_accuracy',
@@ -119,15 +122,13 @@ class MultiqcModule(BaseMultiqcModule):
             name = "Gffcompare: Novel features",
             description = (
                 """
-                Comparison of samples with new loci
+                Number of novel features in the query
                 """
             ),
             helptext = (
                 """
-                There are three possible cases:
-                * **Primers found**: Full length cDNA reads with correct primers at both ends.
-                * **Rescued reads**: Split fusion reads.
-                * **Unusable**: Reads without correct primer combinations.
+                GffCompare does not give a value for matching features. It is calculated by the difference of total features and novel features.
+                More documentation [here](https://ccb.jhu.edu/software/stringtie/gffcompare.shtml)
                 """
             ),
             anchor = 'gffcompare_novel',
@@ -135,18 +136,16 @@ class MultiqcModule(BaseMultiqcModule):
         )
 
         self.add_section (
-            name = "Gffcompare: Missed features",
+            name = "Gffcompare: Missing features",
             description = (
                 """
-                Accuracy values for comparison of 
+                Number of missing features in the query
                 """
             ),
             helptext = (
                 """
-                There are three possible cases:
-                * **Primers found**: Full length cDNA reads with correct primers at both ends.
-                * **Rescued reads**: Split fusion reads.
-                * **Unusable**: Reads without correct primer combinations.
+                GffCompare does not give a value for matching features. It is calculated by the difference of total features and missing features.
+                More documentation [here](https://ccb.jhu.edu/software/stringtie/gffcompare.shtml)
                 """
             ),
             anchor = 'gffcompare_missed',
@@ -232,7 +231,7 @@ class MultiqcModule(BaseMultiqcModule):
 
         cats = [{
             'missed':{
-                'name': 'Missed features',
+                'name': 'Missing features',
                 'color': '#f7a35c'
             }, 
             'matching': {
