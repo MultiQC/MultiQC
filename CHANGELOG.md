@@ -24,8 +24,7 @@
 * **PycoQC**
     * Log10 x-axis for _Read Length_ plot ([#1214](https://github.com/ewels/MultiQC/issues/1214))
 * **fgbio**
-    * Fix `ErrorRateByReadPosition` to calculate `ymax` not just on the overall `error_rate`, but also specific
-	  base errors (ex. `a_to_c_error_rate`, `a_to_g_error_rate`, ...).  See ([#1215](https://github.com/ewels/MultiQC/pull/1251))
+    * Fix `ErrorRateByReadPosition` to calculate `ymax` not just on the overall `error_rate`, but also specific base errors (ex. `a_to_c_error_rate`, `a_to_g_error_rate`, ...).  ([#1215](https://github.com/ewels/MultiQC/pull/1251))
 
 #### New Custom Content features
 
