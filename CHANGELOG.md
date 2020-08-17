@@ -11,6 +11,9 @@
 
 #### Module updates
 
+* **bcftools**
+    * Added a plot with number of sites per sample
+
 * **DRAGEN**
     * Fix issue where missing out fields could crash the module ([#1223](https://github.com/ewels/MultiQC/issues/1223))
 * **featureCounts**
