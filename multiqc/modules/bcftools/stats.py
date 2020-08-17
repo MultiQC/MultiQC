@@ -32,6 +32,7 @@ class StatsReportMixin():
         self.bcftools_stats = dict()
         self.bcftools_stats_indels = dict()
         self.bcftools_stats_vqc_snp = dict()
+        self.bcftools_stats_sites_coverage = dict()
         self.bcftools_stats_vqc_transi = dict()
         self.bcftools_stats_vqc_transv = dict()
         self.bcftools_stats_vqc_indels = dict()
@@ -49,6 +50,7 @@ class StatsReportMixin():
                     self.add_data_source(f, s_name, section='stats')
                     self.bcftools_stats[s_name] = dict()
                     self.bcftools_stats_indels[s_name] = dict()
+                    self.bcftools_stats_sites_coverage[s_name] = dict()
                     self.bcftools_stats_vqc_snp[s_name] = dict()
                     self.bcftools_stats_vqc_transi[s_name] = dict()
                     self.bcftools_stats_vqc_transv[s_name] = dict()
@@ -101,6 +103,13 @@ class StatsReportMixin():
                     fields = ['variations_hom', 'variations_het']
                     for i, f in enumerate(fields):
                         self.bcftools_stats[s_name][f] = int(s[i + 4].strip())
+
+                # Sites per sample
+                if s[0] == "PSC" and len(s_names) > 0:
+                    s_name = s_names[int(s[1])]
+                    self.bcftools_stats_sites_coverage[s_name][s[2].strip()] = dict()
+                    self.bcftools_stats_sites_coverage[s_name][s[2].strip()]['sites_present'] = self.bcftools_stats[s_name]['number_of_records'] - int(s[13].strip())
+                    self.bcftools_stats_sites_coverage[s_name][s[2].strip()]['sites_missing'] = int(s[13].strip())
 
                 # Depth plots
                 if s[0] == "DP" and len(s_names) > 0:
@@ -212,6 +221,24 @@ class StatsReportMixin():
                     description = 'Read depth support distribution for called variants',
                     plot = linegraph.plot(depth_data, pconfig)
                 )
+
+            # Make bargraph plot of missing sites
+            pdata = []
+            for dataset in self.bcftools_stats_sites_coverage:
+                pdata.append(self.bcftools_stats_sites_coverage[dataset])
+            pconfig = {
+                'id': 'bcftools-stats-sites',
+                'title': 'Bcftools Stats: Sites per sample',
+                'ylab': '# Sites',
+                'cpswitch_counts_label': 'Number of sites',
+                'cpswitch': False,
+                'data_labels': list(self.bcftools_stats_sites_coverage)
+            }
+            self.add_section (
+                name = 'Missing sites per sample',
+                anchor = 'bcftools-stats',
+                plot = bargraph.plot(pdata, ['sites_present', 'sites_missing'], pconfig)
+            )
 
         # Return the number of logs that were found
         return len(self.bcftools_stats)
