@@ -54,38 +54,50 @@ class MultiqcModule(BaseMultiqcModule):
         self.general_stats_addcols(self.jcvi, headers)
 
         self.add_section(plot=self.jcvi_barplot_genes(),
-                         name="Number of genes")
+                         name="Number of genes",
+                         description="Total number of genes found in each dataset")
 
         self.add_section(plot=self.jcvi_barplot_transcripts(),
-                         name="Number of transcripts")
+                         name="Number of transcripts",
+                         description="Total number of transcripts found in each dataset")
 
         self.add_section(plot=self.jcvi_barplot_exons(),
-                         name="Number of exons")
+                         name="Number of exons",
+                         description="Total number of exons found in each dataset")
 
         self.add_section(plot=self.jcvi_barplot_genes_len(),
-                         name="Mean size of genes")
+                         name="Mean size of genes",
+                         description="Mean size of all genes foudn in each dataset")
 
         self.add_section(plot=self.jcvi_barplot_transcripts_len(),
-                         name="Mean size of transcripts")
+                         name="Mean size of transcripts",
+                         description="Mean size of all transcripts foudn in each dataset")
 
         self.add_section(plot=self.jcvi_barplot_exons_len(),
-                         name="Mean size of exons")
+                         name="Mean size of exons",
+                         description="Mean size of all exons foudn in each dataset")
 
         self.add_section(plot=self.jcvi_barplot_transcripts_per_genes(),
-                         name="Transcripts per gene")
+                         name="Transcripts per gene",
+                         description="Mean and maximum number of transcripts per gene")
 
         self.add_section(plot=self.jcvi_barplot_isoforms(),
-                         name="Isoforms")
+                         name="Isoforms",
+                         description="Number of genes found to have multiple isoforms")
 
         self.add_section(plot=self.jcvi_barplot_exons_per_genes(),
-                         name="Exons per gene")
+                         name="Exons per gene",
+                         description="Mean number of exnos per gene")
 
         gene_length_plot = self.jcvi_linegraph_gene_length()
         if gene_length_plot:
             self.add_section(
                 name='Gene length distribution',
                 anchor='jcvi_gene_length',
-                description='This plot shows the distribution of gene length. Values are binned in buckets of 100bp (e.g. the value at 150bp represents the number of genes having a length between 100 and 199bp).',
+                description='This plot shows the distribution of gene length.',
+                helptext='''
+                Values are binned in buckets of 100bp (e.g. the value at 150bp represents the number of genes having a length between 100 and 199bp).
+                ''',
                 plot=gene_length_plot
             )
 
@@ -94,7 +106,10 @@ class MultiqcModule(BaseMultiqcModule):
             self.add_section(
                 name='Exon length distribution',
                 anchor='jcvi_exon_length',
-                description='This plot shows the distribution of exon length. Values are binned in buckets of 25bp (e.g. the value at 112bp represents the number of exons having a length between 100 and 124bp).',
+                description='This plot shows the distribution of exon length.',
+                helptext='''
+                Values are binned in buckets of 25bp (e.g. the value at 112bp represents the number of exons having a length between 100 and 124bp).
+                ''',
                 plot=exon_length_plot
             )
 
@@ -103,7 +118,10 @@ class MultiqcModule(BaseMultiqcModule):
             self.add_section(
                 name='Intron length distribution',
                 anchor='jcvi_intron_length',
-                description='This plot shows the distribution of intron length. Values are binned in buckets of 25bp (e.g. the value at 112bp represents the number of introns having a length between 100 and 124bp).',
+                description='This plot shows the distribution of intron length.',
+                helptext='''
+                Values are binned in buckets of 25bp (e.g. the value at 112bp represents the number of introns having a length between 100 and 124bp).
+                ''',
                 plot=intron_length_plot
             )
 
