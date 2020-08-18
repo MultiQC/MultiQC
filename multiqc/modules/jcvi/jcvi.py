@@ -49,11 +49,9 @@ class MultiqcModule(BaseMultiqcModule):
         headers['mean_gene_size'] = {
             'title': 'Mean gene length',
             'description': 'Mean gene length',
+            'format': '{:i}',
         }
         self.general_stats_addcols(self.jcvi, headers)
-
-        self.add_section(plot=self.jcvi_table(),
-                         name="Summary")
 
         self.add_section(plot=self.jcvi_barplot_genes(),
                          name="Number of genes")
@@ -72,6 +70,15 @@ class MultiqcModule(BaseMultiqcModule):
 
         self.add_section(plot=self.jcvi_barplot_exons_len(),
                          name="Mean size of exons")
+
+        self.add_section(plot=self.jcvi_barplot_transcripts_per_genes(),
+                         name="Transcripts per gene")
+
+        self.add_section(plot=self.jcvi_barplot_isoforms(),
+                         name="Isoforms")
+
+        self.add_section(plot=self.jcvi_barplot_exons_per_genes(),
+                         name="Exons per gene")
 
         gene_length_plot = self.jcvi_linegraph_gene_length()
         if gene_length_plot:
@@ -292,94 +299,6 @@ class MultiqcModule(BaseMultiqcModule):
 
         return stat_table
 
-    def jcvi_table(self):
-        """ Make basic table of the annotation stats """
-
-        # Specify the order of the different possible categories
-        headers = OrderedDict()
-        headers['genes'] = {
-            'title': '# genes',
-            'description': 'Number of genes',
-            'format': '{:i}',
-        }
-        headers['transcripts'] = {
-            'title': '# transcripts',
-            'description': 'Number of transcripts',
-            'format': '{:i}',
-        }
-        headers['exons'] = {
-            'title': '# exons',
-            'description': 'Number of distinct exons',
-            'format': '{:i}',
-        }
-        headers['mean_gene_size'] = {
-            'title': 'Mean gene len',
-            'description': 'Mean gene length',
-            'format': '{:i}',
-        }
-        headers['mean_transcript_size'] = {
-            'title': 'Mean transcript len',
-            'description': 'Mean transcript length',
-            'format': '{:i}',
-        }
-        headers['mean_exons_size'] = {
-            'title': 'Mean exon len',
-            'description': 'Mean exon length',
-            'format': '{:i}',
-        }
-        headers['mean_transcript_number'] = {
-            'title': 'Mean transcripts/gene',
-            'description': 'Mean number of transcripts per gene',
-            'format': '{:i}',
-        }
-        headers['transcripts_per_gene'] = {
-            'title': 'Max transcripts/gene',
-            'description': 'Max number of transcripts per gene',
-            'format': '{:i}',
-        }
-        headers['genes_with_alt'] = {
-            'title': '# genes with alt',
-            'description': 'Number of genes with alternative transcript variants',
-            'format': '{:i}',
-        }
-        headers['genes_with_alt_percent'] = {
-            'title': '% genes with alt',
-            'description': 'Percentage of genes with alternative transcript variants',
-            'format': '{:i}',
-        }
-        headers['mean_exon_number'] = {
-            'title': 'Mean exons/gene',
-            'description': 'Mean number of distinct exons per gene',
-            'format': '{:i}',
-        }
-        headers['singleexon_genes'] = {
-            'title': '# single-exon',
-            'description': 'Number of single-exon genes',
-            'format': '{:i}',
-        }
-        headers['singleexon_genes_percent'] = {
-            'title': '% single-exon',
-            'description': 'Percentage of single-exon genes',
-            'format': '{:i}',
-        }
-        headers['multiexon_genes'] = {
-            'title': '# multi-exon',
-            'description': 'Number of multi-exon genes',
-            'format': '{:i}',
-        }
-        headers['multiexon_genes_percent'] = {
-            'title': '% multi-exon',
-            'description': 'Percentage of multi-exon genes',
-            'format': '{:i}',
-        }
-
-        table_config = {
-            'namespace': 'jcvi',
-            'min': 0,
-        }
-
-        return table.plot(self.jcvi, headers, table_config)
-
     def jcvi_barplot_genes(self):
         keys = OrderedDict()
         keys['multiexon_genes'] = {'name': 'Multi-exon'}
@@ -402,7 +321,7 @@ class MultiqcModule(BaseMultiqcModule):
             'id': 'jcvi_plot_transcripts',
             'title': 'JCVI: Number of transcripts',
             'ylab': '# Counts',
-            'cpswitch_counts_label': 'Number of transcripts'
+            'cpswitch': False
         }
 
         return bargraph.plot(self.jcvi, keys, plot_config)
@@ -415,7 +334,7 @@ class MultiqcModule(BaseMultiqcModule):
             'id': 'jcvi_plot_exons',
             'title': 'JCVI: Number of exons',
             'ylab': '# Counts',
-            'cpswitch_counts_label': 'Number of exons'
+            'cpswitch': False
         }
 
         return bargraph.plot(self.jcvi, keys, plot_config)
@@ -428,7 +347,8 @@ class MultiqcModule(BaseMultiqcModule):
             'id': 'jcvi_plot_genes_len',
             'title': 'JCVI: Mean size of genes',
             'ylab': '# Counts',
-            'cpswitch_counts_label': 'Mean size of genes'
+            'cpswitch': False,
+            'tt_decimals': 1
         }
 
         return bargraph.plot(self.jcvi, keys, plot_config)
@@ -441,7 +361,8 @@ class MultiqcModule(BaseMultiqcModule):
             'id': 'jcvi_plot_transcripts_len',
             'title': 'JCVI: Mean size of transcripts',
             'ylab': '# Counts',
-            'cpswitch_counts_label': 'Mean size of transcripts'
+            'cpswitch': False,
+            'tt_decimals': 1
         }
 
         return bargraph.plot(self.jcvi, keys, plot_config)
@@ -454,7 +375,50 @@ class MultiqcModule(BaseMultiqcModule):
             'id': 'jcvi_plot_exons_len',
             'title': 'JCVI: Mean size of exons',
             'ylab': '# Counts',
-            'cpswitch_counts_label': 'Mean size of exons'
+            'cpswitch': False,
+            'tt_decimals': 1
+        }
+
+        return bargraph.plot(self.jcvi, keys, plot_config)
+
+    def jcvi_barplot_transcripts_per_genes(self):
+        keys = OrderedDict()
+        keys['mean_transcript_number'] = {'name': 'Mean transcripts per genes'}
+        keys['transcripts_per_gene'] = {'name': 'Maximum transcripts per genes'}
+
+        plot_config = {
+            'id': 'jcvi_plot_transcripts_per_genes',
+            'title': 'JCVI: Transcripts per gene',
+            'ylab': '# transcripts per gene',
+            'cpswitch': False,
+            'tt_decimals': 1
+        }
+
+        return bargraph.plot(self.jcvi, keys, plot_config)
+
+    def jcvi_barplot_isoforms(self):
+        keys = OrderedDict()
+        keys['genes_with_alt'] = {'name': 'Genes with multiple isoforms'}
+
+        plot_config = {
+            'id': 'jcvi_plot_isoforms',
+            'title': 'JCVI: Genes with multiple isoforms',
+            'ylab': '# genes with multiple isoforms',
+            'cpswitch': False
+        }
+
+        return bargraph.plot(self.jcvi, keys, plot_config)
+
+    def jcvi_barplot_exons_per_genes(self):
+        keys = OrderedDict()
+        keys['mean_exon_number'] = {'name': 'Mean exons per genes'}
+
+        plot_config = {
+            'id': 'jcvi_plot_exons_per_genes',
+            'title': 'JCVI: Exons per gene',
+            'ylab': '# exons per gene',
+            'cpswitch': False,
+            'tt_decimals': 1
         }
 
         return bargraph.plot(self.jcvi, keys, plot_config)
