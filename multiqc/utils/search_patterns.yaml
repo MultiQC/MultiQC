@@ -331,6 +331,8 @@ interop/index-summary:
 ivar/trim:
     contents: 'Number of references'
     num_lines: 8
+jcvi:
+    contents: '     o    % GC    % of genome    Average size (bp)    Median size (bp)    Number    Total length (Mb)'
 jellyfish:
     fn: '*_jf.hist'
 kaiju:
