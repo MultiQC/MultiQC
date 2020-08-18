@@ -12,7 +12,7 @@
 #### Module updates
 
 * **bcftools**
-    * Added a plot with number of sites per sample
+    * Added a plot with samplewise number of sites, Ts/Tv, number of singletons and sequencing depth
 
 * **DRAGEN**
     * Fix issue where missing out fields could crash the module ([#1223](https://github.com/ewels/MultiQC/issues/1223))

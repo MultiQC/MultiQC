@@ -32,7 +32,10 @@ class StatsReportMixin():
         self.bcftools_stats = dict()
         self.bcftools_stats_indels = dict()
         self.bcftools_stats_vqc_snp = dict()
-        self.bcftools_stats_sites_coverage = dict()
+        self.bcftools_stats_sample_variants = dict()
+        self.bcftools_stats_sample_tstv = dict()
+        self.bcftools_stats_sample_singletons = dict()
+        self.bcftools_stats_sample_depth = dict()
         self.bcftools_stats_vqc_transi = dict()
         self.bcftools_stats_vqc_transv = dict()
         self.bcftools_stats_vqc_indels = dict()
@@ -50,7 +53,10 @@ class StatsReportMixin():
                     self.add_data_source(f, s_name, section='stats')
                     self.bcftools_stats[s_name] = dict()
                     self.bcftools_stats_indels[s_name] = dict()
-                    self.bcftools_stats_sites_coverage[s_name] = dict()
+                    self.bcftools_stats_sample_variants[s_name] = dict()
+                    self.bcftools_stats_sample_tstv[s_name] = dict()
+                    self.bcftools_stats_sample_singletons[s_name] = dict()
+                    self.bcftools_stats_sample_depth[s_name] = dict()
                     self.bcftools_stats_vqc_snp[s_name] = dict()
                     self.bcftools_stats_vqc_transi[s_name] = dict()
                     self.bcftools_stats_vqc_transv[s_name] = dict()
@@ -104,12 +110,41 @@ class StatsReportMixin():
                     for i, f in enumerate(fields):
                         self.bcftools_stats[s_name][f] = int(s[i + 4].strip())
 
-                # Sites per sample
+                # Per-sample variant stats
                 if s[0] == "PSC" and len(s_names) > 0:
                     s_name = s_names[int(s[1])]
-                    self.bcftools_stats_sites_coverage[s_name][s[2].strip()] = dict()
-                    self.bcftools_stats_sites_coverage[s_name][s[2].strip()]['sites_present'] = self.bcftools_stats[s_name]['number_of_records'] - int(s[13].strip())
-                    self.bcftools_stats_sites_coverage[s_name][s[2].strip()]['sites_missing'] = int(s[13].strip())
+                    sample = s[2].strip()
+                    self.bcftools_stats_sample_variants[s_name][sample] = dict()
+                    self.bcftools_stats_sample_variants[s_name][sample]['nSNPs'] = int(s[3].strip()) + int(s[4].strip()) + int(s[5].strip())
+                    self.bcftools_stats_sample_variants[s_name][sample]['nIndels'] = int(s[8].strip())
+                    nMissing = int(s[13].strip())
+                    nPresent = self.bcftools_stats[s_name]['number_of_records'] - nMissing
+                    self.bcftools_stats_sample_variants[s_name][sample]['nOther'] = nPresent - self.bcftools_stats_sample_variants[s_name][sample]['nSNPs'] - self.bcftools_stats_sample_variants[s_name][sample]['nIndels']
+
+                # Per-sample ts/tv stats
+                if s[0] == "PSC" and len(s_names) > 0:
+                    s_name = s_names[int(s[1])]
+                    sample = s[2].strip()
+                    self.bcftools_stats_sample_tstv[s_name][sample] = dict()
+                    if int(s[7].strip()) != 0:
+                        self.bcftools_stats_sample_tstv[s_name][sample]['tstv'] = float(int(s[6].strip()) / int(s[7].strip()))
+                    else:
+                        self.bcftools_stats_sample_tstv[s_name][sample]['tstv'] = 0
+
+                # Per-sample singletons stats
+                if s[0] == "PSC" and len(s_names) > 0:
+                    s_name = s_names[int(s[1])]
+                    sample = s[2].strip()
+                    self.bcftools_stats_sample_singletons[s_name][sample] = dict()
+                    self.bcftools_stats_sample_singletons[s_name][sample]['singletons'] = int(s[10].strip())
+                    self.bcftools_stats_sample_singletons[s_name][sample]['rest'] = int(s[3].strip()) + int(s[4].strip()) + int(s[5].strip()) - int(s[10].strip())
+
+                # Per-sample coverage stats
+                if s[0] == "PSC" and len(s_names) > 0:
+                    s_name = s_names[int(s[1])]
+                    sample = s[2].strip()
+                    self.bcftools_stats_sample_depth[s_name][sample] = dict()
+                    self.bcftools_stats_sample_depth[s_name][sample]['depth'] = float(s[9].strip())
 
                 # Depth plots
                 if s[0] == "DP" and len(s_names) > 0:
@@ -224,20 +259,73 @@ class StatsReportMixin():
 
             # Make bargraph plot of missing sites
             pdata = []
-            for dataset in self.bcftools_stats_sites_coverage:
-                pdata.append(self.bcftools_stats_sites_coverage[dataset])
+            for dataset in self.bcftools_stats_sample_variants:
+                pdata.append(self.bcftools_stats_sample_variants[dataset])
             pconfig = {
                 'id': 'bcftools-stats-sites',
                 'title': 'Bcftools Stats: Sites per sample',
                 'ylab': '# Sites',
                 'cpswitch_counts_label': 'Number of sites',
-                'cpswitch': False,
-                'data_labels': list(self.bcftools_stats_sites_coverage)
+                'data_labels': list(self.bcftools_stats_sample_variants)
             }
             self.add_section (
-                name = 'Missing sites per sample',
+                name = 'Sites per sample',
                 anchor = 'bcftools-stats',
-                plot = bargraph.plot(pdata, ['sites_present', 'sites_missing'], pconfig)
+                plot = bargraph.plot(pdata, ['nSNPs', 'nIndels', 'nOther'], pconfig)
+            )
+
+            # Make bargraph plot of ts/tv stats
+            pdata = []
+            for dataset in self.bcftools_stats_sample_tstv:
+                pdata.append(self.bcftools_stats_sample_tstv[dataset])
+            pconfig = {
+                'id': 'bcftools-stats-tstv',
+                'title': 'Bcftools Stats: Ts/Tv',
+                'ylab': 'Ts/Tv',
+                'cpswitch_counts_label': 'Ts/Tv',
+                'cpswitch': False,
+                'data_labels': list(self.bcftools_stats_sample_tstv)
+            }
+            self.add_section (
+                name = 'Ts/Tv',
+                anchor = 'bcftools-stats',
+                plot = bargraph.plot(pdata, ['tstv'], pconfig)
+            )
+
+            # Make bargraph plot of singletons stats
+            pdata = []
+            for dataset in self.bcftools_stats_sample_singletons:
+                pdata.append(self.bcftools_stats_sample_singletons[dataset])
+            pconfig = {
+                'id': 'bcftools-stats-singletons',
+                'title': 'Bcftools Stats: Singletons',
+                'ylab': '# Singletons',
+                'cpswitch_counts_label': 'Singletons',
+                'cpswitch_c_active': False,
+                'data_labels': list(self.bcftools_stats_sample_singletons)
+            }
+            self.add_section (
+                name = 'Number of Singletons',
+                anchor = 'bcftools-stats',
+                plot = bargraph.plot(pdata, ['singletons', 'rest'], pconfig)
+            )
+
+            # Make bargraph plot of sequencing depth stats
+            pdata = []
+            for dataset in self.bcftools_stats_sample_depth:
+                pdata.append(self.bcftools_stats_sample_depth[dataset])
+            pconfig = {
+                'id': 'bcftools-stats-depth',
+                'title': 'Bcftools Stats: Sequencing depth',
+                'ylab': 'Sequencing depth',
+                'cpswitch_counts_label': 'Sequencing depth',
+                'cpswitch': False,
+                'data_labels': list(self.bcftools_stats_sample_depth)
+            }
+            self.add_section (
+                name = 'Sequencing depth',
+                anchor = 'bcftools-stats',
+                plot = bargraph.plot(pdata, ['depth'], pconfig)
             )
 
         # Return the number of logs that were found
