@@ -8,6 +8,8 @@
 
 * [**HOPS**](https://www.github.com/rhubler/HOPS)
   * Post-alignment ancient DNA analysis tool for MALT
+* [**JCVI**](https://github.com/tanghaibao/jcvi)
+  * Computes statistics on genome annotation.
 
 #### Module updates
 
