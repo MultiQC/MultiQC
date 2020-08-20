@@ -19,6 +19,8 @@
     * Fixed bug affecting inputs with taxa levels other than Phylum ([#1217](https://github.com/ewels/MultiQC/issues/1217))
 * **MALT**
     * Fix y-axis labelling in bargraphs
+* **mosdepth**
+    * Enable prepending of directory to sample names
 * **Picard**
     * Fix `HsMetrics` bait percentage columns ([#1212](https://github.com/ewels/MultiQC/issues/1212))
 * **PycoQC**
