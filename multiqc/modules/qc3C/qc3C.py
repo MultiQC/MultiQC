@@ -98,37 +98,38 @@ class MultiqcModule(BaseMultiqcModule):
             log.debug('Found {} BAM analysis reports'.format(len(self.qc3c_data['bam'])))
 
             self.add_section(
-                name = 'BAM mode runtime details',
+                name = 'BAM mode analysis details',
                 anchor = 'qc3C-bam-runtime-parameters',
-                description = """
-                    This table includes user specified input options, observed read-length and estimated insert size.
-                """,
-                plot = self.bam_runtime_table()
-            )
-
-            self.add_section(
-                name = 'BAM mode read-pair breakdown',
-                anchor = 'qc3C-bam-hic-fraction',
                 description = """
                     This table details various alignment features which are potentially of interest to
                     researchers attempting to assess the quality of a Hi-C library.
                 """,
-                helptext = """
-                    Here, the **adjusted fraction of read-through** events can be taken as a estimate of the fraction of 
-                    Hi-C read-pairs within the library.
-
-                    * _trans_ (inter-reference) and _cis_ (intra-reference) pairs.
-                    * The fraction of _cis_ pairs whose separation is less than 1000 bp.
-                    * The fraction of total insert extent which was unobserable.
-                    * The fraction of accepted reads whose alignment began with a cutsite.
-                    * The fraction of accepted reads whose alignment ended in a cutsite.
-                    * The fraction of accepted reads which fully aligned and ended in a cutsite.
-                    * The fraction of reads which contained a suspected read-through event (across a junction)
-                    * The fraction of read-through events whose 3-prime end further aligned elsewhere.
-                    * The fraction of read-through events adjusted for unobservable extent.
-                """,
-                plot = self.bam_signal_table()
+                plot = self.bam_runtime_table()
             )
+
+            # self.add_section(
+            #     name = 'BAM mode read-pair breakdown',
+            #     anchor = 'qc3C-bam-hic-fraction',
+            #     description = """
+            #         This table details various alignment features which are potentially of interest to
+            #         researchers attempting to assess the quality of a Hi-C library.
+            #     """,
+            #     helptext = """
+            #         Here, the **adjusted fraction of read-through** events can be taken as a estimate of the fraction of
+            #         Hi-C read-pairs within the library.
+            #
+            #         * _trans_ (inter-reference) and _cis_ (intra-reference) pairs.
+            #         * The fraction of _cis_ pairs whose separation is less than 1000 bp.
+            #         * The fraction of total insert extent which was unobserable.
+            #         * The fraction of accepted reads whose alignment began with a cutsite.
+            #         * The fraction of accepted reads whose alignment ended in a cutsite.
+            #         * The fraction of accepted reads which fully aligned and ended in a cutsite.
+            #         * The fraction of reads which contained a suspected read-through event (across a junction)
+            #         * The fraction of read-through events whose 3-prime end further aligned elsewhere.
+            #         * The fraction of read-through events adjusted for unobservable extent.
+            #     """,
+            #     plot = self.bam_signal_table()
+            # )
 
             self.add_section(
                 name = 'BAM mode read parsing',
@@ -172,6 +173,48 @@ class MultiqcModule(BaseMultiqcModule):
                 plot = self.bam_valid_plot()
             )
 
+            self.add_section(
+                name = 'BAM mode long-range pairs',
+                anchor = 'qc3C-bam-longrange-plot',
+                description = "This plot visualises the breakdown of read-pairs based on separation distance.",
+                helptext = """
+                    The breakdown of separation distance is only calculated for *cis*-mapping pairs. 
+
+                    Ideally, Hi-C proximity ligation should produce many pairs which are greater than 1000 bp apart. 
+                    However, these statistics are strongly influenced by the state of the reference. For draft assemblies
+                    the distance at which pairs can map is limited by the degree of fragmentation and length of contigs. 
+                    As a result, many more pairs will be categorised as *trans*-mapping and pairs which are truly 
+                    inter-molecular cannot be distinguished from those which are merely inter-contig.
+                """,
+                plot = self.bam_longrange_plot()
+            )
+
+            self.add_section(
+                name = 'BAM mode distribution of fragment separation',
+                anchor = 'qc3C-bam-fragment-histogram',
+                description = """
+                    This figure displays the a normalised histogram of read-pair separation binned uniformly in 
+                    log-space. 
+                    
+                    Due to the binning strategy, the x-axis is log-scaled and visually accommodates pair separations up 
+                    to 1 million bp. The inferred insert size for each library is represented by a dashed, grey vertical 
+                    line. The y-axis is log-scaled by default, allowing the density attributed to long-range pairs to be 
+                    more easily seen.
+                """,
+                helptext = """
+                    A characteristic of Hi-C libraries, is the presence of a large peak below 1000 bp. qc3C attributes 
+                    this to regular (and undesirable) shotgun pairs creeping through the Hi-C protocol. The peak is used 
+                    by qc3C to infer the insert size, which is later employed to estimate unobservable extent of 
+                    inserts.
+
+                    **Note:** the inferred insert size can be significantly smaller than what a sequencing facility 
+                    might report the experimentally determined insert size to be. This discrepancy can be explained by 
+                    the failure to account for the additional adapter sequence when fragments are assessed during 
+                    library preparation.
+                """,
+                plot = self.bam_fragment_histogram()
+            )
+
             if self.do_digest_plot:
                 self.add_section(
                     name = 'BAM mode junction breakdown',
@@ -204,45 +247,6 @@ class MultiqcModule(BaseMultiqcModule):
                     plot = self.bam_junction_plot()
                 )
 
-            self.add_section(
-                name = 'BAM mode long-range pairs',
-                anchor = 'qc3C-bam-longrange-table',
-                description = "This table details the coarse binning of read-pairs based on separation distance.",
-                helptext = """
-                    Only pairs which mapped to the same reference (_cis_ pairs) are considered and therefore, for
-                    fragmented references, there will exist a negative bias against long-range pairs.
-
-                    Ideally, Hi-C proximity ligation should produce many pairs which are greater than 1000 bp apart.
-                """,
-                plot = self.bam_longrange_table()
-            )
-
-            self.add_section(
-                name = 'BAM mode distribution of fragment separation',
-                anchor = 'qc3C-bam-fragment-histogram',
-                description = """
-                    This figure displays the a normalised histogram of read-pair separation binned uniformly in 
-                    log-space. 
-                    
-                    Due to the binning strategy, the x-axis is log-scaled and visually accommodates pair separations up 
-                    to 1 million bp. The inferred insert size for each library is represented by a dashed, grey vertical 
-                    line. The y-axis is log-scaled by default, allowing the density attributed to long-range pairs to be 
-                    more easily seen.
-                """,
-                helptext = """
-                    A characteristic of Hi-C libraries, is the presence of a large peak below 1000 bp. qc3C attributes 
-                    this to regular (and undesirable) shotgun pairs creeping through the Hi-C protocol. The peak is used 
-                    by qc3C to infer the insert size, which is later employed to estimate unobservable extent of 
-                    inserts.
-
-                    **Note:** the inferred insert size can be significantly smaller than what a sequencing facility 
-                    might report the experimentally determined insert size to be. This discrepancy can be explained by 
-                    the failure to account for the additional adapter sequence when fragments are assessed during 
-                    library preparation.
-                """,
-                plot = self.bam_fragment_histogram()
-            )
-
         if len(self.qc3c_data['kmer']) > 0:
 
             self.write_data_file(self.qc3c_data['kmer'], 'multiqc_qc3c_kmer')
@@ -252,8 +256,7 @@ class MultiqcModule(BaseMultiqcModule):
                 name = 'K-mer mode runtime details',
                 anchor = 'qc3C-kmer-runtime-parameters',
                 description = """
-                    This table includes user specified input options, observed
-                    read-length and k-mer high coverage cutoff.
+                    This table includes user specified input options, observed read-length and unobservable fraction.
                 """,
                 plot = self.kmer_runtime_table()
             )
@@ -283,16 +286,18 @@ class MultiqcModule(BaseMultiqcModule):
                 plot = self.kmer_acceptance_plot()
             )
 
-            self.add_section(
-                name = 'K-mer mode junction proportion',
-                anchor = 'qc3C-kmer-signal-plot',
-                description = """
-                    This figure displays the proportion of reads which contained a putative junction
-                    sequence. The raw proportion of Hi-C reads cannot be greater than this value.
-                """,
-                plot = self.kmer_signal_plot()
-            )
+            # TODO this figure seems of low value
+            # self.add_section(
+            #     name = 'K-mer mode junction proportion',
+            #     anchor = 'qc3C-kmer-signal-plot',
+            #     description = """
+            #         This figure displays the proportion of inspected reads which contained a putative junction
+            #         sequence, as compared against all reads inspected.
+            #     """,
+            #     plot = self.kmer_signal_plot()
+            # )
 
+            # TODO consider whether this figure should be displayed when there are non-trivial digests
             if self.do_digest_plot:
                 self.add_section(
                     name = 'K-mer mode junction breakdown',
@@ -365,109 +370,70 @@ class MultiqcModule(BaseMultiqcModule):
                 'title': 'Digest',
                 'description': 'Enzymes used in digest'
             },
-            'b_seed': {
-                'title': 'Seed',
-                'description': 'Random seed',
-                'format': '{:d}',
-                'scale': False,
-                'hidden': True
-            },
-            'b_max_obs': {
-                'title': 'Max obs',
-                'description': 'User specified maximum number of observations',
-                'min': 0,
-                'format': '{:,d}',
-                'scale': 'OrRd',
-                'modify': lambda x: 'n/a' if x == -1 else x
-            },
+            # 'b_seed': {
+            #     'title': 'Seed',
+            #     'description': 'Random seed',
+            #     'format': '{:d}',
+            #     'scale': False,
+            #     'hidden': True,
+            # },
+            # 'b_max_obs': {
+            #     'title': 'Max obs',
+            #     'description': 'User specified maximum number of observations',
+            #     'min': 0,
+            #     'format': '{:,d}',
+            #     'scale': 'OrRd',
+            #     'modify': lambda x: 'n/a' if x == -1 else x
+            # },
             'b_n_accepted_pairs': {
                 'title': 'Accepted pairs',
                 'description': 'Number of pairs accepted for analysis',
                 'min': 0,
                 'format': '{:,d}',
-                'scale': 'BuGn'
+                'scale': 'Oranges'
             },
-            'b_sample_rate': {
-                'title': 'Sample rate',
-                'description': 'Sub-sampling probability',
-                'min': 0,
-                'max': 1,
-                'format': '{:g}',
-                'scale': 'Greys'
-            },
-            'b_obs_insert_mean': {
-                'title': 'Insert mean',
-                'description': 'Estimated mean insert size',
-                'min': 0,
-                'format': '{:,.0f}',
-                'suffix': 'bp',
-                'scale': 'Purples'
-            },
-            'b_obs_insert_median': {
-                'title': 'Insert median',
-                'description': 'Estimated median insert size',
-                'min': 0,
-                'format': '{:,.0f}',
-                'suffix': 'bp',
-                'scale': 'Greens'
-            },
+            # 'b_sample_rate': {
+            #     'title': 'Sample rate',
+            #     'description': 'Sub-sampling probability',
+            #     'min': 0,
+            #     'max': 1,
+            #     'format': '{:g}',
+            #     'scale': 'Greys'
+            # },
+            # 'b_obs_insert_median': {
+            #     'title': 'Insert median',
+            #     'description': 'Estimated median insert size',
+            #     'min': 0,
+            #     'format': '{:,.0f}',
+            #     'suffix': 'bp',
+            #     'scale': 'Greens'
+            # },
             'b_mean_readlen': {
                 'title': 'Read length',
-                'description': 'Observed average read length',
+                'description': 'Average observed read length',
                 'format': '{:,.0f}',
                 'suffix': 'bp',
                 'scale': 'Blues'
             },
-        })
-        return table.plot(self.qc3c_data['bam'], headers, config)
-
-    def bam_longrange_table(self):
-        config = {
-            'id': 'qc3C_bam_longrange_table',
-            'namespace': 'qc3C',
-        }
-
-        headers = OrderedDict({
-            'b_n_1kb': {
-                'title': 'Pairs >1000 bp',
-                'description': 'Number of pairs with >1kbp separation',
+            'b_obs_insert_mean': {
+                'title': 'Insert length',
+                'description': 'Inferred insert size',
                 'min': 0,
-                'format': '{:,d}',
+                'format': '{:,.0f}',
+                'suffix': 'bp',
                 'scale': 'Purples'
             },
-            'b_n_5kb': {
-                'title': 'Pairs >5000 bp',
-                'description': 'Number of pairs with >5kbp separation',
-                'min': 0,
-                'format': '{:,d}',
-                'scale': 'Blues'
-            },
-            'b_n_10kb': {
-                'title': 'Pairs >10000 bp',
-                'description': 'Number of pairs with >10kbp separation',
-                'min': 0,
-                'format': '{:,d}',
-                'scale': 'Greens'
-            },
-            'b_p_1kb_vs_accepted': {
-                'title': '% >1000 bp',
-                'description': 'Fraction of pairs with >1kbp separation vs all accepted pairs',
+            'b_unobs_fraction': {
+                'title': 'Unobserved',
+                'description': 'Fraction of total insert extent that was unobservable',
                 'min': 0,
                 'max': 100,
                 'suffix': '%',
-                'scale': 'Purples'
+                'scale': 'Reds'
             },
-            'b_p_5kb_vs_accepted': {
-                'title': '% >5000 bp',
-                'description': 'Fraction of pairs with >5kbp separation vs all accepted pairs',
-                'min': 0,
-                'max': 100,
-                'suffix': '%',
-                'scale': 'Blues'
-            },
-            'b_p_10kb_vs_accepted': {
-                'title': '% >10000 bp',
-                'description': 'Fraction of pairs with >10kbp separation vs all accepted pairs',
+            'b_p_read_thru': {
+                'title': 'Read-thru',
+                'description': 'Fraction of reads whose alignments end in a cutsite and whose sequence continues for the full junction',
                 'min': 0,
                 'max': 100,
                 'suffix': '%',
@@ -483,30 +449,18 @@ class MultiqcModule(BaseMultiqcModule):
             'namespace': 'qc3C',
             'title': 'qc3C: BAM mode long-range pairs',
             'ylab': 'Number of Reads',
-            'stacking': None,
-            'cpswitch': False,
-            'tt_percentages': False,
-            'tt_suffix': '%',
-            'data_labels': [
-                {'name': 'vs Accepted', 'hide_zero_cats': False},
-                {'name': 'vs Mapped', 'hide_zero_cats': False}
-            ]
+            'cpswitch_counts_label': 'Number of Reads'
         }
 
-        categories = [
-            OrderedDict({
-                'b_p_1kb_vs_accepted': {'name': '>1000 bp', 'color': '#EF476F'},
-                'b_p_5kb_vs_accepted': {'name': '>5000 bp', 'color': '#06D6A0'},
-                'b_p_10kb_vs_accepted': {'name': '>10000 bp', 'color': '#118AB2'}
-            }),
-            OrderedDict({
-                'b_p_1kb_vs_cis': {'name': '>1000 bp', 'color': '#EF476F'},
-                'b_p_5kb_vs_cis': {'name': '>5000 bp', 'color': '#06D6A0'},
-                'b_p_10kb_vs_cis': {'name': '>10000 bp', 'color': '#118AB2'},
-            })
-        ]
+        categories = OrderedDict({
+            'b_n_10k_': { 'name': '10000 and further bp', 'color': "#118AB2"},
+            'b_n_5k_10k': {'name': 'from 5000 to 10000 bp', 'color': "#0CABAA"},
+            'b_n_1k_5k': {'name': 'from 1000 to 5000 bp', 'color': "#07D1A1"},
+            'b_n_short_inserts': {'name': 'less than 1000 bp', 'color': "#FFD166"},
+            'b_n_trans_pairs': {'name': 'trans pairs', 'color': "#F78C6B"},
+        })
 
-        return bargraph.plot([self.qc3c_data['bam'], self.qc3c_data['bam']], categories, config)
+        return bargraph.plot(self.qc3c_data['bam'], categories, config)
 
     def bam_acceptance_plot(self):
         config = {
@@ -540,30 +494,30 @@ class MultiqcModule(BaseMultiqcModule):
         }
 
         headers = OrderedDict({
-            'b_p_trans_pairs': {
-                'title': 'Trans pairs',
-                'description': 'Fraction of pairs mapping between reference sequences',
-                'min': 0,
-                'max': 100,
-                'suffix': '%',
-                'scale': 'Greens'
-            },
-            'b_p_cis_pairs': {
-                'title': 'Cis pairs',
-                'description': 'Fraction of pairs mapping to the same reference sequence',
-                'min': 0,
-                'max': 100,
-                'suffix': '%',
-                'scale': 'Greens'
-            },
-            'b_p_short_inserts': {
-                'title': 'Short range',
-                'description': 'Fraction of pairs with small separation (< 1000bp)',
-                'min': 0,
-                'max': 100,
-                'suffix': '%',
-                'scale': 'Reds'
-            },
+            # 'b_p_trans_pairs': {
+            #     'title': 'Trans pairs',
+            #     'description': 'Fraction of pairs mapping between reference sequences',
+            #     'min': 0,
+            #     'max': 100,
+            #     'suffix': '%',
+            #     'scale': 'Greens'
+            # },
+            # 'b_p_cis_pairs': {
+            #     'title': 'Cis pairs',
+            #     'description': 'Fraction of pairs mapping to the same reference sequence',
+            #     'min': 0,
+            #     'max': 100,
+            #     'suffix': '%',
+            #     'scale': 'Greens'
+            # },
+            # 'b_p_short_inserts': {
+            #     'title': 'Short range',
+            #     'description': 'Fraction of pairs with small separation (< 1000bp)',
+            #     'min': 0,
+            #     'max': 100,
+            #     'suffix': '%',
+            #     'scale': 'Reds'
+            # },
             'b_unobs_fraction': {
                 'title': 'Unobservable extent',
                 'description': 'Estimated fraction of total fragment extent that was unobservable',
@@ -572,30 +526,30 @@ class MultiqcModule(BaseMultiqcModule):
                 'suffix': '%',
                 'scale': 'Reds'
             },
-            'b_p_cs_start': {
-                'title': 'CS start',
-                'description': 'Fraction of aligned reads that began with a cutsite',
-                'min': 0,
-                'max': 100,
-                'suffix': '%',
-                'scale': 'Greens'
-            },
-            'b_p_cs_term': {
-                'title': 'CS term',
-                'description': 'Fraction of reads where the alignment ends in a cutsite',
-                'min': 0,
-                'max': 100,
-                'suffix': '%',
-                'scale': 'Greens'
-            },
-            'b_p_cs_full': {
-                'title': 'CS full',
-                'description': 'Fraction of reads fully aligned and ending in a cutsite',
-                'min': 0,
-                'max': 100,
-                'suffix': '%',
-                'scale': 'Greens'
-            },
+            # 'b_p_cs_start': {
+            #     'title': 'CS start',
+            #     'description': 'Fraction of aligned reads that began with a cutsite',
+            #     'min': 0,
+            #     'max': 100,
+            #     'suffix': '%',
+            #     'scale': 'Greens'
+            # },
+            # 'b_p_cs_term': {
+            #     'title': 'CS term',
+            #     'description': 'Fraction of reads where the alignment ends in a cutsite',
+            #     'min': 0,
+            #     'max': 100,
+            #     'suffix': '%',
+            #     'scale': 'Greens'
+            # },
+            # 'b_p_cs_full': {
+            #     'title': 'CS full',
+            #     'description': 'Fraction of reads fully aligned and ending in a cutsite',
+            #     'min': 0,
+            #     'max': 100,
+            #     'suffix': '%',
+            #     'scale': 'Greens'
+            # },
             'b_p_read_thru': {
                 'title': 'Read-thru',
                 'description': 'Fraction of reads whose alignments end in a cutsite and whose sequence continues for the full junction',
@@ -604,22 +558,22 @@ class MultiqcModule(BaseMultiqcModule):
                 'suffix': '%',
                 'scale': 'Greens'
             },
-            'b_p_is_split': {
-                'title': 'Split',
-                'description': 'Fraction of read-thru reads further split aligned',
-                'min': 0,
-                'max': 100,
-                'suffix': '%',
-                'scale': 'Greens'
-            },
-            'b_adj_read_thru': {
-                'title': 'Adj read-thru',
-                'description': 'Fraction of read-thru events adjusted for unobservable extent',
-                'min': 0,
-                'max': 100,
-                'suffix': '%',
-                'scale': 'Greens'
-            },
+            # 'b_p_is_split': {
+            #     'title': 'Split',
+            #     'description': 'Fraction of read-thru reads further split aligned',
+            #     'min': 0,
+            #     'max': 100,
+            #     'suffix': '%',
+            #     'scale': 'Greens'
+            # },
+            # 'b_adj_read_thru': {
+            #     'title': 'Adj read-thru',
+            #     'description': 'Fraction of read-thru events adjusted for unobservable extent',
+            #     'min': 0,
+            #     'max': 100,
+            #     'suffix': '%',
+            #     'scale': 'Greens'
+            # },
         })
         return table.plot(self.qc3c_data['bam'], headers, config)
 
@@ -788,21 +742,22 @@ class MultiqcModule(BaseMultiqcModule):
                 'title': 'Digest',
                 'description': 'Enzymes used in digest'
             },
-            'k_seed': {
-                'title': 'Seed',
-                'description': 'Random seed',
-                'format': '{:d}',
-                'scale': False,
-                'hidden': True
-            },
-            'k_max_obs': {
-                'title': 'Max obs',
-                'description': 'User specified maximum number of observations',
-                'min': 0,
-                'format': '{:,d}',
-                'scale': 'OrRd',
-                'modify': lambda x: 'n/a' if x == -1 else x
-            },
+            # 'k_seed': {
+            #     'title': 'Seed',
+            #     'description': 'Random seed',
+            #     # 'format': '{:d}',
+            #     'scale': False,
+            #     'hidden': True,
+            #     'modify': lambda x: 'None' if x is None else x
+            # },
+            # 'k_max_obs': {
+            #     'title': 'Max obs',
+            #     'description': 'User specified maximum number of observations',
+            #     'min': 0,
+            #     'format': '{:,d}',
+            #     'scale': 'OrRd',
+            #     'modify': lambda x: 'n/a' if x == -1 else x
+            # },
             'k_n_accepted_reads': {
                 'title': 'Accepted reads',
                 'description': 'Number of reads accepted for analysis',
@@ -810,31 +765,31 @@ class MultiqcModule(BaseMultiqcModule):
                 'format': '{:,d}',
                 'scale': 'BuGn'
             },
-            'k_sample_rate': {
-                'title': 'Sample rate',
-                'description': 'Sub-sampling probability',
-                'min': 0,
-                'max': 1,
-                'format': '{:g}',
-                'scale': 'Greys'
-            },
-            'k_max_freq_quantile': {
-                'title': 'Quantile',
-                'description': 'Quantile cut-off for low-pass k-mer frequency filter',
-                'min': 0,
-                'max': 1,
-                'format': '{:g}',
-                'scale': 'Purples'
-            },
-            'k_max_freq': {
-                'title': 'Max freq',
-                'description': 'Maximum k-mer frequency after quantile filtering',
-                'min': 0,
-                'format': '{:,d}',
-                'scale': 'Blues'
-            },
+            # 'k_sample_rate': {
+            #     'title': 'Sample rate',
+            #     'description': 'Sub-sampling probability',
+            #     'min': 0,
+            #     'max': 1,
+            #     'format': '{:g}',
+            #     'scale': 'Greys'
+            # },
+            # 'k_max_freq_quantile': {
+            #     'title': 'Quantile',
+            #     'description': 'Quantile cut-off for low-pass k-mer frequency filter',
+            #     'min': 0,
+            #     'max': 1,
+            #     'format': '{:g}',
+            #     'scale': 'Purples'
+            # },
+            # 'k_max_freq': {
+            #     'title': 'Max freq',
+            #     'description': 'Maximum k-mer frequency after quantile filtering',
+            #     'min': 0,
+            #     'format': '{:,d}',
+            #     'scale': 'Blues'
+            # },
             'k_mean_insert': {
-                'title': 'Insert size',
+                'title': 'Insert length',
                 'description': 'User-specified insert size',
                 'min': 0,
                 'format': '{:,.0f}',
@@ -848,6 +803,15 @@ class MultiqcModule(BaseMultiqcModule):
                 'suffix': 'bp',
                 'scale': 'Blues'
             },
+            'k_unobs_fraction': {
+                'title': 'Unobservable extent',
+                'description': 'Estimated mean of the unobservable portion of fragments',
+                'shared_key': 'unobs_mean',
+                'min': 0,
+                'max': 100,
+                'suffix': '%',
+                'scale': 'Reds'
+            },
         })
         return table.plot(self.qc3c_data['kmer'], headers, config)
 
@@ -860,15 +824,15 @@ class MultiqcModule(BaseMultiqcModule):
         }
 
         headers = OrderedDict({
-            'k_unobs_fraction': {
-                'title': 'Unobservable extent',
-                'description': 'Estimated mean of the unobservable portion of fragments',
-                'shared_key': 'unobs_mean',
-                'min': 0,
-                'max': 100,
-                'suffix': '%',
-                'scale': 'Reds'
-            },
+            # 'k_unobs_fraction': {
+            #     'title': 'Unobservable extent',
+            #     'description': 'Estimated mean of the unobservable portion of fragments',
+            #     'shared_key': 'unobs_mean',
+            #     'min': 0,
+            #     'max': 100,
+            #     'suffix': '%',
+            #     'scale': 'Reds'
+            # },
             'k_raw_fraction': {
                 'title': 'Mean raw Hi-C fraction',
                 'description': 'Estimated mean of Hi-C fraction from only the observable extent',
@@ -883,7 +847,7 @@ class MultiqcModule(BaseMultiqcModule):
                 'min': 0,
                 'max': 100,
                 'suffix': '%',
-                'scale': 'Greens'
+                'scale': 'Blues'
             },
         })
         return table.plot(self.qc3c_data['kmer'], headers, config)
@@ -917,14 +881,15 @@ class MultiqcModule(BaseMultiqcModule):
             'title': 'qc3C: K-mer mode signal content',
             'ylab': 'Number of Reads',
             'hide_zero_cats': False,
+            'stacking': None,
             'cpswitch': False,
             'cpswitch_c_active': False,
             'cpswitch_counts_label': 'Number of Reads',
         }
 
         categories = OrderedDict({
-            'k_n_with_junc': {'name': 'With junc', 'color': '#41ab5d'},
-            'k_n_without_junc': {'name': 'Without junc', 'color': '#ef3b2c'},
+            'k_raw_fraction': {'name': 'Raw Hi-C fraction', 'color': '#ef3b2c'},
+            'k_adj_fraction': {'name': 'Adjusted Hi-C fraction', 'color': '#41ab5d'},
         })
         return bargraph.plot(self.qc3c_data['kmer'], categories, config)
 
@@ -999,6 +964,7 @@ class MultiqcModule(BaseMultiqcModule):
                     'b_mean_readlen': parsed['mean_readlen'],
                     'b_n_analysed_pairs': parsed['n_analysed_pairs'],
                     'b_n_accepted_pairs': parsed['n_accepted_pairs'],
+                    'b_n_trans_pairs': parsed['n_trans_pairs'],
                     'b_p_trans_pairs': parsed['n_trans_pairs'] / n_accepted_pairs * 100,
                     'b_p_cis_pairs': n_cis_pairs / n_accepted_pairs * 100,
                     'b_unobs_fraction': parsed['unobs_fraction'] * 100,
@@ -1008,6 +974,7 @@ class MultiqcModule(BaseMultiqcModule):
                     'b_p_read_thru': parsed['digest_stats']['read_thru'] / n_paired_reads * 100,
                     'b_p_is_split':  parsed['digest_stats']['is_split'] / n_paired_reads * 100,
                     'b_adj_read_thru': parsed['digest_stats']['read_thru'] / n_paired_reads * 100 * 1/(1-parsed['unobs_fraction']),
+                    'b_n_short_inserts': parsed['n_short_inserts'],
                     'b_p_short_inserts': parsed['n_short_inserts'] / n_accepted_pairs * 100,
                     'b_n_informative_fr': inf['fr'],
                     'b_n_informative_rf': inf['rf'],
@@ -1032,6 +999,9 @@ class MultiqcModule(BaseMultiqcModule):
                     'b_p_1kb_vs_cis': parsed['separation_bins']['vs_all_cis'][0],
                     'b_p_5kb_vs_cis': parsed['separation_bins']['vs_all_cis'][1],
                     'b_p_10kb_vs_cis': parsed['separation_bins']['vs_all_cis'][2],
+                    'b_n_1k_5k': parsed['separation_bins']['counts'][0] - parsed['separation_bins']['counts'][1],
+                    'b_n_5k_10k': parsed['separation_bins']['counts'][1] - parsed['separation_bins']['counts'][2],
+                    'b_n_10k_': parsed['separation_bins']['counts'][2],
                 }
 
                 fhist = {}
