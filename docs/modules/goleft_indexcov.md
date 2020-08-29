@@ -22,3 +22,10 @@ goleft_indexcov_config:
     - II
     - III
 ```
+
+The number of plotted chromosomes is limited to 50 by default, you can customise this with the following:
+
+```yaml
+goleft_indexcov_config:
+  max_chroms: 80
+```

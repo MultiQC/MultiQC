@@ -14,19 +14,26 @@ log = logging.getLogger(__name__)
 class MultiqcModule(BaseMultiqcModule):
     def __init__(self):
         # Initialise the parent object
-        super(MultiqcModule, self).__init__(name='Jellyfish', anchor='jellyfish',
-        href="http://www.cbcb.umd.edu/software/jellyfish/",
-        info="is a tool for fast, memory-efficient counting of k-mers in DNA.")
+        super(MultiqcModule, self).__init__(
+            name='Jellyfish',
+            anchor='jellyfish',
+            href="http://www.cbcb.umd.edu/software/jellyfish/",
+            info="is a tool for fast, memory-efficient counting of k-mers in DNA."
+        )
 
-        self.jellyfish_data  = dict()
+        self.jellyfish_data = dict()
         self.jellyfish_max_x = 0
         for f in self.find_log_files('jellyfish', filehandles=True):
             self.parse_jellyfish_data(f)
 
         if self.jellyfish_max_x < 100:
-            self.jellyfish_max_x = 200 # the maximum is below 100, we display anyway up to 200
+            # the maximum is below 100, we display anyway up to 200
+            self.jellyfish_max_x = 200
         else:
-            self.jellyfish_max_x = 2*self.max_key #in this case the area plotted is a function of the maximum x
+            # in this case the area plotted is a function of the maximum x
+            self.jellyfish_max_x = 2 * self.max_key
+
+        self.jellyfish_data = self.ignore_samples(self.jellyfish_data)
 
         if len(self.jellyfish_data) == 0:
             raise UserWarning

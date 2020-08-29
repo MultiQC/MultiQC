@@ -37,6 +37,9 @@ class plotFingerprintMixin():
             if len(parsed_data) > 0:
                 self.add_data_source(f, section='plotFingerprint')
 
+        self.deeptools_plotFingerprintOutRawCounts = self.ignore_samples(self.deeptools_plotFingerprintOutRawCounts)
+        self.deeptools_plotFingerprintOutQualityMetrics = self.ignore_samples(self.deeptools_plotFingerprintOutQualityMetrics)
+
         if len(self.deeptools_plotFingerprintOutRawCounts) > 0:
             self.add_section(name="Fingerprint plot",
                              anchor="deeptools_fingerprint",

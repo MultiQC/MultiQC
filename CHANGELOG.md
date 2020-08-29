@@ -1,6 +1,46 @@
 # MultiQC Version History
 
-## MultiQC v1.9dev
+## MultiQC v1.10dev
+
+#### New MultiQC Features
+
+#### New Modules
+
+* [**HOPS**](https://www.github.com/rhubler/HOPS)
+  * Post-alignment ancient DNA analysis tool for MALT
+* [**pairtools**](https://github.com/mirnylab/pairtools)
+  * pairtools - a framework to process sequencing data from a Hi-C experiment
+
+
+#### Module updates
+
+* **DRAGEN**
+    * Fix issue where missing out fields could crash the module ([#1223](https://github.com/ewels/MultiQC/issues/1223))
+* **featureCounts**
+    * Add support for output from [Rsubread](https://bioconductor.org/packages/release/bioc/html/Rsubread.html) ([#1022](https://github.com/ewels/MultiQC/issues/1022))
+* **Kaiju**
+    * Fixed bug affecting inputs with taxa levels other than Phylum ([#1217](https://github.com/ewels/MultiQC/issues/1217))
+* **MALT**
+    * Fix y-axis labelling in bargraphs
+* **mosdepth**
+    * Enable prepending of directory to sample names
+* **Picard**
+    * Fix `HsMetrics` bait percentage columns ([#1212](https://github.com/ewels/MultiQC/issues/1212))
+* **PycoQC**
+    * Log10 x-axis for _Read Length_ plot ([#1214](https://github.com/ewels/MultiQC/issues/1214))
+* **fgbio**
+    * Fix `ErrorRateByReadPosition` to calculate `ymax` not just on the overall `error_rate`, but also specific base errors (ex. `a_to_c_error_rate`, `a_to_g_error_rate`, ...).  ([#1215](https://github.com/ewels/MultiQC/pull/1251))
+
+#### New Custom Content features
+
+* General Stats custom content now gives a log message
+* If `id` is not set in `JSON` or `YAML` files, it defaults to the sample name instead of just `custom_content`
+* Data from `JSON` or `YAML` now has `data` keys (sample names) run through the `clean_s_name()` function to apply sample name cleanup
+
+#### Bug Fixes
+
+
+## [MultiQC v1.9](https://github.com/ewels/MultiQC/releases/tag/v1.9) - 2020-05-30
 
 #### Dropped official support for Python 2
 
@@ -36,53 +76,153 @@ to break. If you haven't already, **you need to switch to Python 3 now**.
 * Added `--sample-filters` option to add _show_/_hide_ buttons at the top of the report ([#1125](https://github.com/ewels/MultiQC/issues/1125))
     * Buttons control the report toolbox Show/Hide tool, filtering your samples
     * Allows reports to be pre-configured based on a supplied list of sample names at report-generation time.
+* Line graphs can now have `Log10` buttons (same functionality as bar graphs)
+* Importing and running `multiqc` in a script is now a _little_ Better
+    * `multiqc.run` now returns the `report` and `config` as well as the exit code. This means that you can explore the MultiQC run time a little in the Python environment.
+    * Much more refactoring is needed to make MultiQC as useful in Python scripts as it could be. Watch this space.
+* If a custom module `anchor` is set using `module_order`, it's now used a bit more:
+    * Prefixed to module _section_ IDs
+    * Appended to files saved in `multiqc_data`
+    * Should help to prevent duplicates requiring `-1` suffixes when running a module multiple times
+* New heatmap plot config options `xcats_samples` and `ycats_samples`
+    * If set to `False`, the report toolbox options (_highlight_, _rename_, _show/hide_) do not affect that axis.
+    * Means that the _Show only matching samples_ report toolbox option works on FastQC Status Checks, for example ([#1172](https://github.com/ewels/MultiQC/issues/1172))
+* Report header time and analysis paths can now be hidden
+    * New config options `show_analysis_paths` and `show_analysis_time` ([#1113](https://github.com/ewels/MultiQC/issues/1113))
+* New search pattern key `skip: true` to skip specific searches when modules look for a lot of different files (eg. Picard).
+* New `--profile-runtime` command line option (`config.profile_runtime`) to give analysis of how long the report takes to be generated
+    * Plots of the file search results and durations are added to the end of the MultiQC report as a special module called _Run Time_
+    * A summary of the time taken for the major stages of MultiQC execution are printed to the command line log.
+* New table config option `only_defined_headers`
+    * Defaults to `true`, set to `false` to also show any data columns that are not defined as headers
+    * Useful as allows table-wide defaults to be set with column-specific overrides
+* New `module` key allowed for `config.extra_fn_clean_exts` and `config.fn_clean_exts`
+    * Means you can limit the action of a sample name cleaning pattern to specific MultiQC modules ([#905](https://github.com/ewels/MultiQC/issues/905))
+
+#### New Custom Content features
+
+* Improve support for HTML files - now just end your HTML filename with `_mqc.html`
+    * Native handling of HTML snippets as files, no MultiQC config or YAML file required.
+    * Also with embedded custom content configuration at the start of the file as a HTML comment.
+* Add ability to group custom-content files into report sections
+    * Use the new `parent_id`, `parent_name` and `parent_description` config keys to group content together like a regular module ([#1008](https://github.com/ewels/MultiQC/issues/1008))
+* Custom Content files can now be configured using `custom_data`, without giving search patterns or data
+    * Allows you to set descriptions and nicer titles for images and other 'blunt' data types in reports ([#1026](https://github.com/ewels/MultiQC/issues/1026))
+    * Allows configuration of custom content separately from files themselves (`tsv`, `csv`, `txt` formats) ([#1205](https://github.com/ewels/MultiQC/issues/1205))
 
 #### New Modules:
 
+* [**DRAGEN**](https://www.illumina.com/products/by-type/informatics-products/dragen-bio-it-platform.html)
+    * Illumina Bio-IT Platform that uses FPGA for secondary NGS analysis
+* [**iVar**](https://github.com/andersen-lab/ivar)
+    * Added support for iVar: a computational package that contains functions broadly useful for viral amplicon-based sequencing.
+* [**Kaiju**](http://kaiju.binf.ku.dk/)
+    * Fast and sensitive taxonomic classification for metagenomics
+* [**Kraken**](https://ccb.jhu.edu/software/kraken2/)
+    * K-mer matching tool for taxonomic classification. Module plots bargraph of counts for top-5 hits across each taxa rank. General stats summary.
+* [**MALT**](https://uni-tuebingen.de/fakultaeten/mathematisch-naturwissenschaftliche-fakultaet/fachbereiche/informatik/lehrstuehle/algorithms-in-bioinformatics/software/malt/)
+    * Megan Alignment Tool: Metagenomics alignment tool.
+* [**miRTop**](https://github.com/miRTop/mirtop)
+    * Command line tool to annotate miRNAs with a standard mirna/isomir naming (mirGFF3)
+    * Module started by [@oneillkza](https://github.com/oneillkza/) and completed by [@FlorianThibord](https://github.com/FlorianThibord/)
 * [**MultiVCFAnalyzer**](https://github.com/alexherbig/multivcfanalyzer)
-    * combining multiple VCF files into one coherent report and format for downstream analysis.
-* [**pairtools**](https://github.com/mirnylab/pairtools)
-    * pairtools - a framework to process sequencing data from a Hi-C experiment
+    * Combining multiple VCF files into one coherent report and format for downstream analysis.
+* **Picard** - new submodules for `QualityByCycleMetrics`, `QualityScoreDistributionMetrics` & `QualityYieldMetrics`
+    * See [#1116](https://github.com/ewels/MultiQC/issues/1114)
+* [**Rockhopper**](https://cs.wellesley.edu/~btjaden/Rockhopper/)
+    * RNA-seq tool for bacteria, includes bar plot showing where features map.
+* [**Sickle**](https://github.com/najoshi/sickle)
+    * A windowed adaptive trimming tool for FASTQ files using quality
+* [**Somalier**](https://github.com/brentp/somalier)
+    * Relatedness checking and QC for BAM/CRAM/VCF for cancer, DNA, BS-Seq, exome, etc.
+* [**VarScan2**](https://github.com/dkoboldt/varscan)
+    * Variant calling and somatic mutation/CNV detection for next-generation sequencing data
 
 #### Module updates:
 
+* **BISCUIT**
+    * Major rewrite to work with new BISCUIT QC script (BISCUIT `v0.3.16+`)
+        * This change breaks backwards-compatability with previous BISCUIT versions. If you are unable to upgrade BISCUIT, please use MultiQC v1.8.
+    * Fixed error when missing data in log files ([#1101](https://github.com/ewels/MultiQC/issues/1101))
 * **bcl2fastq**
     * Samples with multiple library preps (i.e barcodes) will now be handled correctly ([#1094](https://github.com/ewels/MultiQC/issues/1094))
 * **BUSCO**
     * Updated log search pattern to match new format in v4 with auto-lineage detection option ([#1163](https://github.com/ewels/MultiQC/issues/1163))
+* **Cutadapt**
+    * New bar plot showing the proportion of reads filtered out for different criteria (eg. _too short_, _too many Ns_) ([#1198](https://github.com/ewels/MultiQC/issues/1198))
 * **DamageProfiler**
     * Removes redundant typo in init name. This makes referring to the module's column consistent with other modules when customising general stats table.
+* **DeDup**
+    * Updates plots to make compatible with 0.12.6
+    * Fixes reporting errors - barplot total represents _mapped_ reads, not total reads in BAM file
+    * New: Adds 'Post-DeDup Mapped Reads' column to general stats table.
+* **FastQC**
+    * Fixed tooltip text in _Sequence Duplication Levels_ plot ([#1092](https://github.com/ewels/MultiQC/issues/1092))
+    * Handle edge-case where a FastQC report was for an empty file with 0 reads ([#1129](https://github.com/ewels/MultiQC/issues/1129))
+* **FastQ Screen**
+    * Don't skip plotting `% No Hits` even if it's `0%` ([#1126](https://github.com/ewels/MultiQC/issues/1126))
+    * Refactor parsing code. Avoids error with `-0.00 %Unmapped` ([#1126](https://github.com/ewels/MultiQC/issues/1126))
+    * New plot for _Bisulfite Reads_, if data is present
+    * Categories in main plot are now sorted by the total read count and hidden if 0 across all samples
 * **fgbio**
     * New: Plot error rate by read position from `ErrorRateByReadPosition`
+    * GroupReadsByUmi plot can now be toggled to show relative percents ([#1147](https://github.com/ewels/MultiQC/pull/1147))
+* **FLASh**
+    * Logs not reporting innie and outine uncombined pairs now plot combined pairs instead ([#1173](https://github.com/ewels/MultiQC/issues/1173))
+* **GATK**
+    * Made parsing for VariantEval more tolerant, so that it will work with output from the tool when run in different modes ([#1158](https://github.com/ewels/MultiQC/issues/1158))
 * **MTNucRatioCalculator**
     * Fixed misleading value suffix in general stats table
-* **Picard**
-    * New: Submodules for `QualityByCycleMetrics`, `QualityScoreDistributionMetrics` & `QualityYieldMetrics` ([#1116](https://github.com/ewels/MultiQC/issues/1114))
-    * Updated large `HsMetrics` table to use columns specified in the MultiQC config. See [docs](https://multiqc.info/docs/#hsmetrics). ([#831](https://github.com/ewels/MultiQC/issues/831))
-    * Updated `WgsMetrics` parsing code to recognise new java class string ([#1114](https://github.com/ewels/MultiQC/issues/1114))
+* **Picard MarkDuplicates**
+    * **Major change** - previously, if multiple libraries (read-groups) were found then only the first would be used and all others ignored. Now, values from all libraries are merged and `PERCENT_DUPLICATION` and `ESTIMATED_LIBRARY_SIZE` are recalculated. Libraries can be kept as separate samples with a new MultiQC configuration option - `picard_config: markdups_merge_multiple_libraries: False`
+    * **Major change** - Updated `MarkDuplicates` bar plot to double the read-pair counts, so that the numbers stack correctly. ([#1142](https://github.com/ewels/MultiQC/issues/1142))
+* **Picard HsMetrics**
+    * Updated large table to use columns specified in the MultiQC config. See [docs](https://multiqc.info/docs/#hsmetrics). ([#831](https://github.com/ewels/MultiQC/issues/831))
+* **Picard WgsMetrics**
+    * Updated parsing code to recognise new java class string ([#1114](https://github.com/ewels/MultiQC/issues/1114))
 * **QualiMap**
     * Fixed QualiMap mean coverage calculation [#1082](https://github.com/ewels/MultiQC/issues/1082), [#1077](https://github.com/ewels/MultiQC/issues/1082)
 * **RSeqC**
+    * Support added for output from `geneBodyCoverage2.py` script ([#844](https://github.com/ewels/MultiQC/issues/844))
     * Single sample view in the _"Junction saturation"_ plot now works with the toolbox properly _(rename, hide, highlight)_ ([#1133](https://github.com/ewels/MultiQC/issues/1133))
 * **RNASeQC2**
     * Updated to handle the parsing metric files from the [newer rewrite of RNA-SeqQC](https://github.com/broadinstitute/rnaseqc).
+* **Samblaster**
+    * Improved parsing to handle variable whitespace ([#1176](https://github.com/ewels/MultiQC/issues/1176))
 * **Samtools**
     * Removes hardcoding of general stats column names. This allows column names to indicate when a module has been run twice ([https://github.com/ewels/MultiQC/issues/1076](https://github.com/ewels/MultiQC/issues/1076)).
+    * Added an observed over expected read count plot for `idxstats` ([#1118](https://github.com/ewels/MultiQC/issues/1118))
+    * Added additional (by default hidden) column for `flagstat` that displays number total number of reads in a bam
 * **sortmerna**
     * Fix the bug for the latest sortmerna version 4.2.0 ([#1121](https://github.com/ewels/MultiQC/issues/1121))
+* **sexdeterrmine**
+    * Added a scatter plot of relative X- vs Y-coverage to the generated report.
+* **VerifyBAMID**
+    * Allow files with column header `FREEMIX(alpha)` ([#1112](https://github.com/ewels/MultiQC/issues/1112))
 
 #### Bug Fixes:
 
+* Added a new test to check that modules work correctly with `--ignore-samples`. A lot of them didn't:
+    * `Mosdepth`, `conpair`, `Qualimap BamQC`, `RNA-SeQC`, `GATK BaseRecalibrator`, `SNPsplit`, `SeqyClean`, `Jellyfish`, `hap.py`, `HOMER`, `BBMap`, `DeepTools`, `HiCExplorer`, `pycoQC`, `interop`
+    * These modules have now all been fixed and `--ignore-samples` should work as you expect for whatever data you have.
 * Removed use of `shutil.copy` to avoid problems with working on multiple filesystems ([#1130](https://github.com/ewels/MultiQC/issues/1130))
 * Made folder naming behaviour of `multiqc_plots` consistent with `multiqc_data`
     * Incremental numeric suffixes now added if folder already exists
     * Plots folder properly renamed if using `-n`/`--filename`
 * Heatmap plotting function is now compatible with MultiQC toolbox `hide` and `highlight` ([#1136](https://github.com/ewels/MultiQC/issues/1136))
-
+* Plot config `logswitch_active` now works as advertised
+* When running MultiQC modules several times, multiple data files are now created instead of overwriting one another ([#1175](https://github.com/ewels/MultiQC/issues/1175))
+* Fixed minor bug where tables could report negative numbers of columns in their header text
+* Fixed bug where numeric custom content sample names could trigger a `TypeError` ([#1091](https://github.com/ewels/MultiQC/issues/1091))
+* Fixed custom content bug HTML data in a config file would trigger a `ValueError` ([#1071](https://github.com/ewels/MultiQC/issues/1071))
+* Replaced deprecated 'warn()' with 'warning()' of the logging module
+* Custom content now supports `section_extra` config key to add custom HTML after description.
+* Barplots with `ymax` set now ignore this when you click the _Percentages_ tab.
 
 ## [MultiQC v1.8](https://github.com/ewels/MultiQC/releases/tag/v1.8) - 2019-11-20
 
 #### New Modules:
+
 * [**fgbio**](http://fulcrumgenomics.github.io/fgbio/)
     * Process family size count hist data from `GroupReadsByUmi`
 * [**biobambam2**](https://github.com/gt1/biobambam2)
@@ -140,7 +280,7 @@ to break. If you haven't already, **you need to switch to Python 3 now**.
     * Fixed bug where sample name cleaning could lead to error. ([#1024](https://github.com/ewels/MultiQC/issues/1024))
     * All plots (including _Het Check_ and _Sex Check_) now hidden if no data
 * **Picard**
-    * Modified OxoGMetrics.py so that it will find files created with GATK CollectMultipleMetrics and ConvertSequencingArtifactToOxoG.
+    * Modified `OxoGMetrics` so that it will find files created with GATK `CollectMultipleMetrics` and `ConvertSequencingArtifactToOxoG`.
 * **QoRTs**
     * Fixed bug where `--dirs` broke certain input files. ([#821](https://github.com/ewels/MultiQC/issues/821))
 * **Qualimap**
@@ -164,7 +304,6 @@ to break. If you haven't already, **you need to switch to Python 3 now**.
     * Fixed a bug where `tstv_by_qual.py` produced invalid json from infinity-values.
 * **snpEff**
     * Added plot of effects
-
 
 #### New MultiQC Features:
 * Added some installation docs for windows

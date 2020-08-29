@@ -206,6 +206,23 @@ def highcharts_linegraph (plotdata, pconfig=None):
     # Build the HTML for the page
     html = '<div class="mqc_hcplot_plotgroup">'
 
+    # Log Switch
+    if pconfig.get('logswitch') is True:
+        c_active = 'active'
+        l_active = ''
+        if pconfig.get('logswitch_active') is True:
+            c_active = ''
+            l_active = 'active'
+        c_label = pconfig.get('cpswitch_counts_label', 'Counts')
+        l_label = pconfig.get('logswitch_label', 'Log10')
+        html += '<div class="btn-group hc_switch_group"> \n'
+        html += '<button class="btn btn-default btn-sm {c_a}" data-action="set_numbers" data-target="{id}" data-ylab="{c_l}">{c_l}</button> \n'.format(id=pconfig['id'], c_a=c_active, c_l=c_label)
+        if pconfig.get('logswitch') is True:
+            html += '<button class="btn btn-default btn-sm {l_a}" data-action="set_log" data-target="{id}" data-ylab="{l_l}">{l_l}</button> \n'.format(id=pconfig['id'], l_a=l_active, l_l=l_label)
+        html += '</div> '
+        if len(plotdata) > 1:
+            html += ' &nbsp; &nbsp; '
+
     # Buttons to cycle through different datasets
     if len(plotdata) > 1:
         html += '<div class="btn-group hc_switch_group">\n'

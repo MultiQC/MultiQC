@@ -36,7 +36,7 @@ The report section name and description will be automatically based on the filen
 
 ## MultiQC-specific data file
 If you can choose exactly how your data output looks, then the easiest way to parse it
-is to use a MultiQC-specific format. If the filename ends in `*_mqc.(yaml|json|txt|csv|out)`
+is to use a MultiQC-specific format. If the filename ends in `*_mqc.(yaml|yml|json|txt|csv|tsv|log|out|png|jpg|jpeg|html)`
 then it will be found by any standard MultiQC installation with no additional customisation
 required (v0.9 onwards).
 
@@ -80,6 +80,8 @@ The file format can also be JSON:
 }
 ```
 
+Note that if you're using `plot_type: html` then `data` just takes a string, with no sample keys.
+
 For maximum compatibility with other tools, you can also use comma-separated or tab-separated files.
 Include commented header lines with plot configuration in YAML format:
 
@@ -96,6 +98,18 @@ Category_1    374
 Category_2    229
 Category_3    39
 Category_4    253
+```
+
+You can easily inject custom HTML snippets by ending the filename with `_mqc.html` - again the
+embedded config works in a similar way, but with a HTML comment:
+
+```html
+<!--
+id: 'custom-html'
+section_name: 'Custom HTML'
+description: 'This section is created using a custom HTML file'
+-->
+<p>Some custom HTML content here.</p>
 ```
 
 If no configuration is given, MultiQC will do its best to guess how to visualise your data appropriately.
@@ -213,12 +227,40 @@ And work with the following data file:
 # [...]
 ```
 
+This kind of customisation should work with most Custom Content types.
+For example, using an image called `some_science_mqc.jpeg` gives us a report section `some_science`,
+which we can then add a nicer name and description to:
+
+```yaml
+custom_data:
+    some_science:
+        section_name: 'Some real science'
+        description: 'This description comes from multiqc_config.yaml and helps to annotate the Custom Content image.'
+```
+
 As mentioned above - if no configuration is given, MultiQC will do its best to guess how to visualise
 your data appropriately. To see examples of typical file structures which are understood, see the
 [test data](https://github.com/ewels/MultiQC_TestData/tree/master/data/custom_content/no_config)
 used to develop this code.
 
 # Configuration
+
+## Grouping sections and subsections
+If you have multiple content types that you would like to group together with MultiQC sub-sections,
+you can do so using the following keys:
+
+```yaml
+parent_id: custom_section
+parent_name: 'Some grouped data'
+parent_description: 'This parent section contains one or more sub-sections below it'
+```
+
+Any custom-content files that share the same `parent_id` will be grouped.
+
+Note that some things, such as `parent_name` are taken from the first file that MultiQC finds
+with this `parent_id`. So it's a good idea to specify this in every file.
+`parent_description` and `extra` is taken from the first file where it is set.
+
 ## Order of sections
 If you have multiple different Custom Content sections, their order will be random
 and may vary between runs. To avoid this, you can specify an order in your MultiQC
@@ -259,6 +301,7 @@ section_anchor: <id>    # Used in report section #soft-links
 section_name: <id>      # Nice name used for the report section header
 section_href: null      # External URL for the data, to find more information
 description: null       # Introductory text to be printed under the section header
+section_extra: null     # Custom HTML to add after the section description
 file_format: null       # File format of the data (eg. csv / tsv)
 plot_type: null         # The plot type to visualise the data with.
                         # generalstats | table | bargraph | linegraph | scatter | heatmap | beeswarm

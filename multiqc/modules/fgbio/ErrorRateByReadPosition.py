@@ -12,6 +12,7 @@ def parse_reports(self):
     Stores the per-read-per-position metrics into a data file and adds a section
     with a per-sample plot.
     """
+    linegraph_keys = ['error_rate', 'a_to_c_error_rate', 'a_to_g_error_rate', 'a_to_t_error_rate', 'c_to_a_error_rate', 'c_to_g_error_rate', 'c_to_t_error_rate']
 
     # slurp in all the data
     all_data = dict()
@@ -38,8 +39,8 @@ def parse_reports(self):
             if read_number not in s_data:
                 s_data[read_number] = dict()
             s_data[read_number][position] = row_data
-            if row_data['error_rate'] > y_max:
-                y_max = row_data['error_rate']
+            for key in linegraph_keys:
+                y_max = max(y_max, row_data[key])
             bases_total += row_data['bases_total']
             errors += row_data['errors']
 
@@ -82,8 +83,7 @@ def parse_reports(self):
     }
 
     # Build a list of linegraphs
-    linegraph_data = [{}, {}, {}, {}, {}, {}, {}]
-    linegraph_keys = ['error_rate', 'a_to_c_error_rate', 'a_to_g_error_rate', 'a_to_t_error_rate', 'c_to_a_error_rate', 'c_to_g_error_rate', 'c_to_t_error_rate']
+    linegraph_data = [{} for _ in linegraph_keys]
     for s_name, s_data in all_data.items():
         for read_number, read_data in s_data.items():
             s_name = "%s_R%d" % (s_name, int(read_number) + 1)

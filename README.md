@@ -131,47 +131,7 @@ If in doubt, feel free to get in touch with the author directly:
 ### Contributors
 Project lead and main author: [@ewels](https://github.com/ewels)
 
-Code contributions from:
-[@ahvigil](https://github.com/ahvigil),
-[@aledj2](https://github.com/aledj2),
-[@apeltzer](https://github.com/apeltzer),
-[@avilella](https://github.com/avilella),
-[@boulund](https://github.com/boulund),
-[@bschiffthaler](https://github.com/bschiffthaler),
-[@chuan-wang](https://github.com/chuan-wang),
-[@cpavanrun](https://github.com/cpavanrun),
-[@dakl](https://github.com/dakl),
-[@ehsueh](https://github.com/ehsueh),
-[@elizabethcook21](https://github.com/elizabethcook21),
-[@epruesse](https://github.com/epruesse),
-[@florianduclot](https://github.com/florianduclot/),
-[@guillermo-carrasco](https://github.com/guillermo-carrasco),
-[@HLWiencko](https://github.com/HLWiencko),
-[@iimog](https://github.com/iimog),
-[@joachimwolff](https://github.com/joachimwolff),
-[@jrderuiter](https://github.com/jrderuiter),
-[@lpantano](https://github.com/lpantano),
-[@m-ish](https://github.com/m-ish),
-[@matthdsm](https://github.com/matthdsm),
-[@MaxUlysse](https://github.com/MaxUlysse),
-[@mlusignan](https://github.com/mlusignan),
-[@moonso](https://github.com/moonso),
-[@noirot](https://github.com/noirot),
-[@nservant](https://github.com/nservant),
-[@rdali](https://github.com/rdali),
-[@remiolsen](https://github.com/remiolsen),
-[@rlegendre](https://github.com/rlegendre),
-[@robinandeer](https://github.com/robinandeer),
-[@Rotholandus](https://github.com/Rotholandus),
-[@sachalau](https://github.com/sachalau/),
-[@smeds](https://github.com/smeds/),
-[@ssjunnebo](https://github.com/ssjunnebo)
-[@t-neumann](https://github.com/t-neumann),
-[@vladsaveliev](https://github.com/vladsaveliev),
-[@winni2k](https://github.com/winni2k),
-[@wkretzsch](https://github.com/wkretzsch),
-
-
-and many others. Thanks for your support!
+There are a lot of other code contributors though!
+See the [Contributors Graph](https://github.com/ewels/MultiQC/graphs/contributors) for details.
 
 MultiQC is released under the GPL v3 or later licence.

@@ -38,18 +38,33 @@ class datatable (object):
                 keys = headers[idx].keys()
                 assert len(keys) > 0
             except (IndexError, AttributeError, AssertionError):
+                pconfig['only_defined_headers'] = False
+
+            # Add header keys from the data
+            if pconfig.get('only_defined_headers', True) is False:
+
+                # Get the keys from the data
                 keys = list()
                 for samp in d.values():
                     for k in samp.keys():
                         if k not in keys:
                             keys.append(k)
+
+                # If we don't have a headers dict for this data set yet, create one
                 try:
                     headers[idx]
                 except IndexError:
                     headers.append(list)
-                headers[idx] = OrderedDict()
+                    headers[idx] = OrderedDict()
+                else:
+                    # Convert the existing headers into an OrderedDict (eg. if parsed from a config)
+                    od_tuples = [(key, headers[idx][key]) for key in headers[idx].keys()]
+                    headers[idx] = OrderedDict(od_tuples)
+
+                # Create empty header configs for each new data key
                 for k in keys:
-                    headers[idx][k] = {}
+                    if k not in headers[idx]:
+                        headers[idx][k] = {}
 
             # Ensure that keys are strings, not numeric
             keys = [str(k) for k in keys]
@@ -215,6 +230,13 @@ class datatable (object):
 
                 self.headers_in_order[headers[idx][k]['placement']].append((idx, k))
 
+        # Skip any data that is not used in the table
+        # Would be ignored for making the table anyway, but can affect whether a beeswarm plot is used
+        for idx, d in enumerate(data):
+            for s_name in list(d.keys()):
+                if not any ( h in data[idx][s_name].keys() for h in headers[idx]):
+                    del(data[idx][s_name])
+
         # Assign to class
         self.data = data
         self.headers = headers
@@ -225,7 +247,7 @@ class datatable (object):
            Returns a list of triplets: (idx, key, header_info)
         """
         res = list()
-        #Scan through self.headers_in_order and just bolt on the actual header info
+        # Scan through self.headers_in_order and just bolt on the actual header info
         for bucket in sorted(self.headers_in_order):
             for idx, k in self.headers_in_order[bucket]:
                 res.append( (idx, k, self.headers[idx][k]) )

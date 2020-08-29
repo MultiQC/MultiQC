@@ -66,6 +66,14 @@ extra_fn_clean_exts:
     - '.fastq'
 ```
 
+The above is equivalent to the more explicit:
+
+```yaml
+extra_fn_clean_exts:
+    - type: 'truncate'
+      pattern: '.fastq'
+```
+
 This rule would produce the following sample names:
 
 ```
@@ -120,6 +128,32 @@ This rule would produce the following sample names:
 ```
 merged.recalibrated.XZY97.alignment.bam  ->  XZY97
 ```
+
+#### `module`
+
+This key will tell MultiQC to only apply the pattern to a specific MultiQC module.
+This should be a string that matches the module's `anchor` - the `#module` bit when you click the main module heading in the sidebar (remove the `#`).
+
+For example, to truncate all sample names to 5 characters for just Kallisto:
+
+```yaml
+extra_fn_clean_exts:
+    - type: regex_keep
+      pattern: '^.{5}'
+      module: kallisto
+```
+
+You can also supply a list of multiple module anchors if you wish:
+
+```yaml
+extra_fn_clean_exts:
+    - type: regex_keep
+      pattern: '^.{5}'
+      module:
+        - kallisto
+        - cutadapt
+```
+
 
 ### Clashing sample names
 This process of cleaning sample names can sometimes result in exact duplicates.
@@ -303,3 +337,117 @@ Qualimap module: _(as [described in the docs](http://multiqc.info/docs/#qualimap
 ```bash
 multiqc ./datadir --cl_config "qualimap_config: { general_stats_coverage: [20,40,200] }"
 ```
+
+## Optimising run-time
+
+Usually, MultiQC run time is fairly insignificant - in the order of seconds.
+Unless you are running MultiQC on many thousands of analysis files, the optimisations
+described below will have limited practical benefit.
+
+In other words, if you're running with 15 RNAseq samples, you may as well save yourself
+some time and stick with the defaults.
+
+### Profile your MultiQC run time
+
+As of version 1.9, MultiQC has a command line option to profile what it spends its time
+doing: `--profile-runtime` (`config.profile_runtime`). Whilst you're working with writing
+your pipeline / setting up your analysis, you can specify and MultiQC will add a section
+to the bottom of your report describing how much time it spent searching files and
+what it did with those files. You'll also get a breakdown in the command-line log
+of how long the different steps of MultiQC execution took:
+
+```
+[INFO   ]         multiqc : MultiQC complete
+[INFO   ]         multiqc : Run took 35.28 seconds
+[INFO   ]         multiqc :  - 31.01s: Searching files
+[INFO   ]         multiqc :  - 1.75s: Running modules
+[INFO   ]         multiqc :  - 0.96s: Compressing report data
+[INFO   ]         multiqc : For more information, see the 'Run Time' section in multiqc_report.html
+```
+
+If MultiQC is finishing in a few seconds or minutes, you probably don't need to do anything.
+If you are working with huge numbers of files then it may be worth looking into these
+results to see if you can speed up MultiQC. The documentation below explains how to do this.
+
+### Be picky with which modules are run
+
+Probably the easiest way to speed up MultiQC is to only use the modules that you
+know you have files for. MultiQC supports a _lot_ of different tools and searches
+for matching files for all of them every time you run it.
+
+You can do this with the `-m` / `--module` flag (can be repeated) or in a MultiQC
+config file by using `config.module_order`. See [Order of modules](/#order-of-modules).
+
+### Optimise file search patterns
+
+Secondly, think about customising the search patterns of the slowest searches.
+
+As an example, logs from Picard are published to `STDOUT` and so can have any file name.
+Some people concatenate logs, so the contents can be anywhere in the file and the files
+must also be searched by subsequent tools in case they contain multiple outputs.
+If you know that all of your Picard MarkDuplicate log files have the filename
+`mysamplename_markduplicates.log` then you can safely customise that search pattern
+with the following MultiQC config:
+
+```yaml
+sp:
+    picard/markdups:
+        fn: '*_markduplicates.log'
+```
+
+If you know that this is the only type of Picard output that you're interested in,
+you can also change all of the other Picard search patterns to use `skip: True`:
+
+```yaml
+sp:
+    picard/markdups:
+        fn: '*_markduplicates.log'
+    picard/alignment_metrics:
+        skip: true
+    picard/basedistributionbycycle:
+        skip: true
+    picard/gcbias:
+        skip: true
+    picard/hsmetrics:
+        skip: true
+    picard/insertsize:
+        skip: true
+    picard/oxogmetrics:
+        skip: true
+    picard/pcr_metrics:
+        skip: true
+    picard/quality_by_cycle:
+        skip: true
+    picard/quality_score_distribution:
+        skip: true
+    picard/quality_yield_metrics:
+        skip: true
+    picard/rnaseqmetrics:
+        skip: true
+    picard/rrbs_metrics:
+        skip: true
+    picard/sam_file_validation:
+        skip: true
+    picard/variant_calling_metrics:
+        skip: true
+    picard/wgs_metrics:
+        skip: true
+```
+
+This can speed up execution a bit if you really want to squeeze that running time.
+The [MultiQC Modules documentation](#multiqc-modules) shows the search patterns for every module.
+
+> Note that it's only worth using `skip: true` on search patterns if you want to use one  from a module that has several.
+> Usually it's better to just [specify which modules you want to run](#be-picky-with-which-modules-are-run) instead.
+
+### Force interactive plots
+
+One step that can take some time is running MatPlotLib to generate static-image plots
+(see [Flat / interactive plots](#flat--interactive-plots)).
+You can force MultiQC to skip this and only use interactive plots by using the `--interactive`
+command line option (`config.plots_force_interactive`).
+
+This approach is **not recommended if you have a very large number of samples**, as this can
+produce a huge report file with all of the embedded plot data and crash your browser when opening it.
+If you are running MultiQC for the `multiqc_data` folder and never intend to look at the report, it
+speed things up though.

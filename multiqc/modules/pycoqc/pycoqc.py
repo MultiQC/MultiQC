@@ -32,9 +32,13 @@ class MultiqcModule(BaseMultiqcModule):
             if data:
                 self.pycoqc_data[f['s_name']] = data
 
+        self.pycoqc_data = self.ignore_samples(self.pycoqc_data)
+
         # Stop if we didn't find anything
         if len(self.pycoqc_data) == 0:
             raise UserWarning
+
+        log.info("Found {} reports".format(len(self.pycoqc_data)))
 
         self.parse_data()
 
@@ -54,7 +58,7 @@ class MultiqcModule(BaseMultiqcModule):
         try:
             return yaml.load(f, Loader=yaml.FullLoader)
         except Exception as e:
-            log.warn("Could not parse YAML for '{}': \n  {}".format(f, e))
+            log.warning("Could not parse YAML for '{}': \n  {}".format(f, e))
             return None
 
     def parse_data(self):
@@ -268,7 +272,7 @@ class MultiqcModule(BaseMultiqcModule):
             'title': 'pycoQC: Read Length',
             'ylab': 'Read Density',
             'xlab': 'Basecalled Length (bp)',
-            'xmin': 0,
+            'xLog': True,
             'data_labels': [
                 {'name': 'Passing Reads', 'ylab': 'Read Density', 'xlab': 'Basecalled Length (bp)'},
                 {'name': 'All Reads', 'ylab': 'Read Density', 'xlab': 'Basecalled Length (bp)'}
@@ -277,7 +281,7 @@ class MultiqcModule(BaseMultiqcModule):
         self.add_section(
             name = 'Read length',
             anchor = 'pycoqc_read_len',
-            description = 'Distribution of read lengt for all / passed reads.',
+            description = 'Distribution of read length for all / passed reads.',
             plot = linegraph.plot(
                 self.read_length_plot_data,
                 read_length_config

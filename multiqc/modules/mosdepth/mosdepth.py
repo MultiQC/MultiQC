@@ -75,6 +75,11 @@ class MultiqcModule(BaseMultiqcModule):
 
         dist_data, cov_data, xmax, perchrom_avg_data = self.parse_cov_dist()
 
+        # Filter out any samples from --ignore-samples
+        dist_data = self.ignore_samples(dist_data)
+        cov_data = self.ignore_samples(cov_data)
+        perchrom_avg_data = self.ignore_samples(perchrom_avg_data)
+
         # No samples found
         num_samples = max(
             len(dist_data),
@@ -95,7 +100,7 @@ class MultiqcModule(BaseMultiqcModule):
                     'id': 'mosdepth-coverage-dist-id',
                     'title': 'Mosdepth: Coverage Distribution',
                     'xlab': 'Coverage (X)',
-                    'ylab': '% bases in genome/regions covered by least X reads',
+                    'ylab': '% bases in genome/regions covered by at least X reads',
                     'ymax': 100,
                     'xmax': xmax,
                     'tt_label': '<b>{point.x}X</b>: {point.y:.2f}%',
@@ -130,7 +135,7 @@ class MultiqcModule(BaseMultiqcModule):
                     'xlab': 'region',
                     'ylab': 'average coverage',
                     'categories': True,
-                    'tt_label': '<b>{point.x}X</b>: {point.y:.2f}%',
+                    'tt_label': '<b>{point.x}</b>: {point.y:.1f}x',
                     'smooth_points': 500,
                 })
             )
@@ -147,7 +152,7 @@ class MultiqcModule(BaseMultiqcModule):
 
         for scope in ('region', 'global'):
             for f in self.find_log_files('mosdepth/' + scope + '_dist'):
-                s_name = self.clean_s_name(f['fn'], root=None).replace('.mosdepth.' + scope + '.dist', '')
+                s_name = self.clean_s_name(f['fn'], f['root']).replace('.mosdepth.' + scope + '.dist', '')
                 if s_name in dist_data:  # both region and global might exist, prioritizing region
                     continue
 

@@ -14,11 +14,14 @@ log = logging.getLogger(__name__)
 class MultiqcModule(BaseMultiqcModule):
     def __init__(self):
         # Initialise the parent object
-        super(MultiqcModule, self).__init__(name='HiCExplorer', anchor='hicexplorer',
-                                            href="https://hicexplorer.readthedocs.io",
-                                            info=" addresses the common tasks of Hi-C analysis from processing to visualization.")
+        super(MultiqcModule, self).__init__(
+            name = 'HiCExplorer',
+            anchor = 'hicexplorer',
+            href = "https://hicexplorer.readthedocs.io",
+            info = " addresses the common tasks of Hi-C analysis from processing to visualization."
+        )
 
-        self.mod_data = dict()
+        self.hicexplorer_data = dict()
         for f in self.find_log_files('hicexplorer'):
             if f['s_name'] != "QC_table":
                 # Parse the log file
@@ -27,49 +30,60 @@ class MultiqcModule(BaseMultiqcModule):
                 s_name = "{}_{}_{}".format(f['root'], f['s_name'], parsed_data['File'])
                 s_name = self.clean_s_name(s_name, f['root'])
                 # Save results
-                self.mod_data[s_name] = parsed_data
+                if s_name in self.hicexplorer_data:
+                    log.debug("Duplicate sample name found! Overwriting: {}".format(s_name))
+                self.hicexplorer_data[s_name] = parsed_data
                 self.add_data_source(f, s_name=s_name)
-                self.write_data_file(self.mod_data, 'multiqc_hicexplorer')
-        if len(self.mod_data) == 0:
+
+        self.hicexplorer_data = self.ignore_samples(self.hicexplorer_data)
+
+        if len(self.hicexplorer_data) == 0:
             raise UserWarning
-        self.colors = ["#1f77b4",
-                       "#ff7f0e",
-                       "#2ca02c",
-                       "#d62728",
-                       "#9467bd",
-                       "#8c564b",
-                       "#7f7f7f",
-                       "#bcbd22",
-                       "#17becf",
-                       "#D2691E"]
+
+        log.info("Found {} reports".format(len(self.hicexplorer_data)))
+
+        self.write_data_file(self.hicexplorer_data, 'multiqc_hicexplorer')
+
+        self.colors = [
+            "#1f77b4",
+            "#ff7f0e",
+            "#2ca02c",
+            "#d62728",
+            "#9467bd",
+            "#8c564b",
+            "#7f7f7f",
+            "#bcbd22",
+            "#17becf",
+            "#D2691E"
+        ]
 
         # detect version of QC file
         # no 'Pairs mappable, unique and high quality' --> version 1.7
         # Contains 'pairs used' --> 1.8 - 3.1
         # Contains 'Hi-C contacts' --> since 3.2
         hicexplorer_versions = set()
-        for s_name in self.mod_data:
-            # compatibility to HiCExplorer <= 1.7 version QC files
-            if not 'Pairs mappable, unique and high quality' in self.mod_data[s_name] and 'Pairs considered' in self.mod_data[s_name]:
-                hicexplorer_versions.add('1.7')
-                self.mod_data[s_name]['Pairs mappable, unique and high quality'] = self.mod_data[s_name]['Pairs considered']
-                keys = ['One mate unmapped',
-                        'One mate not unique', 'One mate low quality']
-                for key in keys:
-                    self.mod_data[s_name]['Pairs mappable, unique and high quality'] -= self.mod_data[s_name][key]
-            # compatibility to HiCExplorer <= 3.1 version QC files
-            if 'Pairs considered' in self.mod_data[s_name]:
-                self.mod_data[s_name]['Sequenced reads'] = self.mod_data[s_name]['Pairs considered']
-                self.mod_data[s_name]['Hi-c contacts'] = self.mod_data[s_name]['Pairs used']
-                self.mod_data[s_name]['Low mapping quality'] = self.mod_data[s_name]['One mate low quality']
-                self.mod_data[s_name]['Intra short range (< 20kb)'] = self.mod_data[s_name]['Short range']
-                self.mod_data[s_name]['Intra long range (>= 20kb)'] = self.mod_data[s_name]['Long range']
-                self.mod_data[s_name]['Read pair type: inward pairs'] = self.mod_data[s_name]['Inward pairs']
-                self.mod_data[s_name]['Read pair type: outward pairs'] = self.mod_data[s_name]['Outward pairs']
-                self.mod_data[s_name]['Read pair type: left pairs'] = self.mod_data[s_name]['Left pairs']
-                self.mod_data[s_name]['Read pair type: right pairs'] = self.mod_data[s_name]['Right pairs']
+        for s_name in self.hicexplorer_data:
 
-            elif 'Sequenced reads' in self.mod_data[s_name]:
+            # compatibility to HiCExplorer <= 1.7 version QC files
+            if not 'Pairs mappable, unique and high quality' in self.hicexplorer_data[s_name] and 'Pairs considered' in self.hicexplorer_data[s_name]:
+                hicexplorer_versions.add('1.7')
+                self.hicexplorer_data[s_name]['Pairs mappable, unique and high quality'] = self.hicexplorer_data[s_name]['Pairs considered']
+                for key in ['One mate unmapped', 'One mate not unique', 'One mate low quality']:
+                    self.hicexplorer_data[s_name]['Pairs mappable, unique and high quality'] -= self.hicexplorer_data[s_name][key]
+
+            # compatibility to HiCExplorer <= 3.1 version QC files
+            if 'Pairs considered' in self.hicexplorer_data[s_name]:
+                self.hicexplorer_data[s_name]['Sequenced reads'] = self.hicexplorer_data[s_name]['Pairs considered']
+                self.hicexplorer_data[s_name]['Hi-c contacts'] = self.hicexplorer_data[s_name]['Pairs used']
+                self.hicexplorer_data[s_name]['Low mapping quality'] = self.hicexplorer_data[s_name]['One mate low quality']
+                self.hicexplorer_data[s_name]['Intra short range (< 20kb)'] = self.hicexplorer_data[s_name]['Short range']
+                self.hicexplorer_data[s_name]['Intra long range (>= 20kb)'] = self.hicexplorer_data[s_name]['Long range']
+                self.hicexplorer_data[s_name]['Read pair type: inward pairs'] = self.hicexplorer_data[s_name]['Inward pairs']
+                self.hicexplorer_data[s_name]['Read pair type: outward pairs'] = self.hicexplorer_data[s_name]['Outward pairs']
+                self.hicexplorer_data[s_name]['Read pair type: left pairs'] = self.hicexplorer_data[s_name]['Left pairs']
+                self.hicexplorer_data[s_name]['Read pair type: right pairs'] = self.hicexplorer_data[s_name]['Right pairs']
+
+            elif 'Sequenced reads' in self.hicexplorer_data[s_name]:
                 hicexplorer_versions.add('3.2')
 
         log.debug('HiCExplorer versions: {}'.format(', '.join(hicexplorer_versions)))
@@ -78,14 +92,33 @@ class MultiqcModule(BaseMultiqcModule):
         self.hicexplorer_basic_statistics()
 
         # key lists for plotting
-        keys_categorization_of_reads_considered = ['Pairs mappable, unique and high quality', 'One mate unmapped',
-                                                   'One mate not unique', 'Low mapping quality']
-        keys_mappable_unique_and_high_quality = ['Hi-c contacts', 'Self ligation (removed)', 'Same fragment', 'Self circle',
-                                                 'Dangling end', 'One mate not close to rest site', 'Duplicated pairs']
+        keys_categorization_of_reads_considered = [
+            'Pairs mappable, unique and high quality',
+            'One mate unmapped',
+            'One mate not unique',
+            'Low mapping quality'
+        ]
+        keys_mappable_unique_and_high_quality = [
+            'Hi-c contacts',
+            'Self ligation (removed)',
+            'Same fragment',
+            'Self circle',
+            'Dangling end',
+            'One mate not close to rest site',
+            'Duplicated pairs'
+        ]
         keys_list_contact_distance = [
-            'Intra short range (< 20kb)', 'Intra long range (>= 20kb)', 'Inter chromosomal']
-        keys_list_read_orientation = ['Read pair type: inward pairs', 'Read pair type: outward pairs',
-                                      'Read pair type: left pairs', 'Read pair type: right pairs', 'Inter chromosomal']
+            'Intra short range (< 20kb)',
+            'Intra long range (>= 20kb)',
+            'Inter chromosomal'
+        ]
+        keys_list_read_orientation = [
+            'Read pair type: inward pairs',
+            'Read pair type: outward pairs',
+            'Read pair type: left pairs',
+            'Read pair type: right pairs',
+            'Inter chromosomal'
+        ]
 
         # prepare the detail report section
         self.add_section(
@@ -205,19 +238,19 @@ class MultiqcModule(BaseMultiqcModule):
     def hicexplorer_basic_statistics(self):
         """Create the general statistics for HiCExplorer."""
         data = {}
-        for s_name in self.mod_data:
+        for s_name in self.hicexplorer_data:
             max_distance_key = 'Max rest. site distance'
-            total_pairs = self.mod_data[s_name]['Sequenced reads']
+            total_pairs = self.hicexplorer_data[s_name]['Sequenced reads']
             try:
-                self.mod_data[s_name][max_distance_key]
+                self.hicexplorer_data[s_name][max_distance_key]
             except KeyError:
                 max_distance_key = 'Max library insert size'
             data_ = {
-                'Sequenced reads': self.mod_data[s_name]['Sequenced reads'],
-                'Hi-c contacts': self.mod_data[s_name]['Hi-c contacts'] / total_pairs,
-                'Mapped': self.mod_data[s_name]['One mate unmapped'] / total_pairs,
-                'Min rest. site distance': self.mod_data[s_name]['Min rest. site distance'],
-                max_distance_key: self.mod_data[s_name][max_distance_key],
+                'Sequenced reads': self.hicexplorer_data[s_name]['Sequenced reads'],
+                'Hi-c contacts': self.hicexplorer_data[s_name]['Hi-c contacts'] / total_pairs,
+                'Mapped': self.hicexplorer_data[s_name]['One mate unmapped'] / total_pairs,
+                'Min rest. site distance': self.hicexplorer_data[s_name]['Min rest. site distance'],
+                max_distance_key: self.hicexplorer_data[s_name][max_distance_key],
             }
             data[s_name] = data_
         headers = OrderedDict()
@@ -270,4 +303,4 @@ class MultiqcModule(BaseMultiqcModule):
             'cpswitch_counts_label': 'Number of Reads'
         }
 
-        return bargraph.plot(self.mod_data, keys, config)
+        return bargraph.plot(self.hicexplorer_data, keys, config)

@@ -5,6 +5,7 @@
 from __future__ import print_function
 from collections import OrderedDict
 import logging
+import re
 
 from multiqc import config
 from multiqc.plots import bargraph
@@ -54,15 +55,26 @@ class MultiqcModule(BaseMultiqcModule):
 
         file_names = list()
         parsed_data = dict()
+        split_sep = "\t"
         for l in f['f'].splitlines():
             thisrow = list()
-            s = l.split("\t")
+
+            # If this is from Rsubread then the formatting can be very variable
+            # Default search pattern is quite generic, so f
+            if len(file_names) == 0 and len(l.split(split_sep)) < 2:
+                # Split by whitespace and strip quote marks
+                # NB: Will break if sample names have whitespace. RSubread output is so variable that this is difficult to avoid
+                split_sep = None
+
+            s = l.split(split_sep)
+            s = [sv.strip('"') for sv in s]
+
             if len(s) < 2:
                 continue
             if s[0] == 'Status':
                 for f_name in s[1:]:
                     file_names.append(f_name)
-            else:
+            elif len(file_names) + 1 == len(s):
                 k = s[0]
                 if k not in self.featurecounts_keys:
                     self.featurecounts_keys.append(k)
@@ -73,9 +85,11 @@ class MultiqcModule(BaseMultiqcModule):
                         pass
             if len(thisrow) > 0:
                 parsed_data[k] = thisrow
+
         # Check that this actually is a featureCounts file, as format and parsing is quite general
         if 'Assigned' not in parsed_data.keys():
             return None
+
         for idx, f_name in enumerate(file_names):
 
             # Clean up sample name
@@ -130,6 +144,13 @@ class MultiqcModule(BaseMultiqcModule):
     def featureCounts_chart (self):
         """ Make the featureCounts assignment rates plot """
 
+        headers = OrderedDict()
+        for h in self.featurecounts_keys:
+            nice_name = h.replace('Unassigned_', 'Unassigned: ').replace('_', ' ')
+            nice_name = re.sub(r"([a-z])([A-Z])", "\g<1> \g<2>", nice_name)
+            headers[h] = { 'name':  nice_name}
+
+
         # Config for the plot
         config = {
             'id': 'featureCounts_assignment_plot',
@@ -138,4 +159,4 @@ class MultiqcModule(BaseMultiqcModule):
             'cpswitch_counts_label': 'Number of Reads'
         }
 
-        return bargraph.plot(self.featurecounts_data, self.featurecounts_keys, config)
+        return bargraph.plot(self.featurecounts_data, headers, config)

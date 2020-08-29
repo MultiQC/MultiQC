@@ -59,7 +59,7 @@ class MultiqcModule(BaseMultiqcModule):
                 if n[sm] > 0:
                     log.info("Found {} {} reports".format(n[sm], sm))
             except (ImportError, AttributeError):
-                log.warn("Could not find RSeQC Section '{}'".format(sm))
+                log.warning("Could not find RSeQC Section '{}'".format(sm))
 
         # Exit if we didn't find anything
         if sum(n.values()) == 0:
