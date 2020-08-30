@@ -8,19 +8,29 @@ _KEY_SEP = '/'
 
 
 # some good-looking presets for pair-type report section:
-common_pairtypes = ['UU', 'RU', 'UR', 'WW', 'DD', 'MR', 'MU', 'MM', 'NM', 'NU', 'NN', 'XX']
-matching_colors = ['#33a02c',
-                    '#b2df8a',
-                    '#a6cee3',
-                    '#1f78b4',
-                    '#fff900',
-                    '#fb9a99',
-                    '#fdbf6f',
-                    '#ff7f00',
-                    '#e31a1c',
-                    '#cab2d6',
-                    '#6a3d9a',
-                    '#000000']
+pairtypes_common = OrderedDict([('UU','#33a02c'),
+    ('RU','#b2df8a'),
+    ('UR','#a6cee3'),
+    ('WW','#1f78b4'),
+    ('DD','#fff900'),
+    ('MR','#fb9a99'),
+    ('MU','#fdbf6f'),
+    ('MM','#ff7f00'),
+    ('NM','#e31a1c'),
+    ('NU','#cab2d6'),
+    ('NN','#6a3d9a'),
+    ('XX','#000000')])
+
+
+# add color to sorted keys:
+cis_range_colors = ['#8c2d04', # short-range cis
+    '#cc4c02',
+    '#ec7014',
+    '#fe9929',
+    '#fec44f',
+    '#fee391',
+    '#ffffd4'] #long-range cis
+
 
 # this should be based on chromosome sizes, not an arbitrary number
 def contact_areas(distbins, scaffold_length=2_000_000_000):
@@ -77,6 +87,8 @@ def read_pairs_stats(file_handle):
     # to be removed:
     stat_from_file['dedup'] = {}
 
+    # we probably do not need to define these here,
+    # just read the 1-key entries and then parse those out:
     stat_from_file['cis_1kb+'] = 0
     stat_from_file['cis_2kb+'] = 0
     stat_from_file['cis_4kb+'] = 0

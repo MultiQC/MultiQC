@@ -6,20 +6,18 @@ import logging
 from collections import OrderedDict
 
 from multiqc.modules.base_module import BaseMultiqcModule
-
-
-from itertools import combinations, combinations_with_replacement, zip_longest
-import os
-import re
-import json
-import numpy as np
-from copy import copy, deepcopy
 from multiqc.plots import bargraph, linegraph, heatmap
 from multiqc.utils import report
 from multiqc import config
 
-from .utils import read_pairs_stats, contact_areas
+import os
+import re
+import numpy as np
+from copy import copy
+from itertools import combinations_with_replacement, zip_longest
+from operator import itemgetter
 
+from .utils import read_pairs_stats, contact_areas, pairtypes_common, cis_range_colors
 
 # Initialise the logger
 log = logging.getLogger(__name__)
@@ -39,7 +37,7 @@ class MultiqcModule(BaseMultiqcModule):
             " extract 3C-specific information and perform common tasks, such as sorting,"
             " filtering and deduplication.")
 
-        # Find and load any pairtools stats summaries
+        # Find and load any pairtools stats summary files:
         self.pairtools_stats = dict()
         for f in self.find_log_files('pairtools', filehandles=True):
             s_name = f['s_name']
@@ -52,16 +50,16 @@ class MultiqcModule(BaseMultiqcModule):
             raise UserWarning
 
         log.info("Found {} reports".format(len(self.pairtools_stats)))
-        # self.write_data_file(self.pairtools_stats, 'multiqc_pairtools')
 
         # Add to self.js to be included in template
         self.js = {'assets/js/multiqc_pairtools.js' : os.path.join(os.path.dirname(__file__), 'assets', 'js', 'multiqc_pairtools.js') }
 
-        # max total reads for general stats:
+        # determine max total reads for general stats:
         self.max_total_reads = 0
         for s_name in self.pairtools_stats:
             self.max_total_reads = \
                 max(self.max_total_reads, self.pairtools_stats[s_name]['total'])
+        # self.max_total_reads = max(self.pairtools_stats[s_name]['total'] for s_name in self.pairtools_stats)
 
         self.pairtools_general_stats()
 
@@ -146,43 +144,27 @@ class MultiqcModule(BaseMultiqcModule):
     def pair_types_chart(self):
         """ Generate the pair types report """
 
-        _report_field = "pair_types"
+        report_field = "pair_types"
 
-        # utils ...
-        known_keys = ['UU', 'RU', 'UR', 'WW', 'DD', 'MR', 'MU', 'MM', 'NM', 'NU', 'NN', 'XX']
-        matching_colors = ['#33a02c',
-                            '#b2df8a',
-                            '#a6cee3',
-                            '#1f78b4',
-                            '#fff900',
-                            '#fb9a99',
-                            '#fdbf6f',
-                            '#ff7f00',
-                            '#e31a1c',
-                            '#cab2d6',
-                            '#6a3d9a',
-                            '#000000']
-
-        # Construct a data structure for the plot
-        # and keep track of the observed keys - for nice visuals:
-        _data = dict()
-        unknown_keys = set()
+        # Construct a data structure for the plot: sample -> 
+        # and keep track of the common pair types - for nice visuals:
+        ptypes_dict = dict()
+        rare_ptypes = set()
         for s_name in self.pairtools_stats:
-            _data[s_name] = dict()
-            for k in self.pairtools_stats[s_name][_report_field]:
-                _data[s_name][k] = self.pairtools_stats[s_name][_report_field][k]
-                # updated the list of unseen keys
-                if k not in known_keys:
-                    unknown_keys.add(k)
+            ptypes_dict[s_name] = dict()
+            for ptype in self.pairtools_stats[s_name][report_field]:
+                ptypes_dict[s_name][ptype] = self.pairtools_stats[s_name][report_field][ptype]
+                # update the collection of rare pair types :
+                if ptype not in pairtypes_common:
+                    rare_ptypes.add(ptype)
 
-        # Specify the order of the different possible categories
-        keys_anotated = OrderedDict()
-        for key, col in zip(known_keys, matching_colors):
-            keys_anotated[key] = {'color': col, 'name': key}
-        # we have to take care of "unseen" keys like that
-        # otherwise they are going to be present on the bar-chart
-        for key in unknown_keys:
-            keys_anotated[key] = {'name': key}
+        # organize pair types in a predefined order, common first, rare after:
+        ptypes_anotated = OrderedDict()
+        for ptype, color in pairtypes_common.items():
+            ptypes_anotated[ptype] = {'color': color, 'name': ptype}
+        # rare ones are colored automatically:
+        for ptype in rare_ptypes:
+            ptypes_anotated[ptype] = {'name': ptype}
 
 
         # Config for the plot
@@ -193,8 +175,7 @@ class MultiqcModule(BaseMultiqcModule):
             'cpswitch_counts_label': 'Number of Reads'
         }
 
-        # self.pair_types_chart_data = _data
-        return bargraph.plot(_data, keys_anotated, pconfig=config)
+        return bargraph.plot(ptypes_dict, ptypes_anotated, pconfig=config)
 
 
     def pairs_by_cisrange_trans(self):
@@ -202,61 +183,52 @@ class MultiqcModule(BaseMultiqcModule):
         of genomic separation, and trans-category."""
 
         cis_dist_pattern = r"cis_(\d+)kb\+"
+        total_cis = sample_stats['cis']
+        total_trans = sample_stats['trans']
 
         # Construct a data structure for the plot
-        _data = dict()
-        _tmp = dict()
+        cis_range_dict = dict()
         for s_name in self.pairtools_stats:
             sample_stats = self.pairtools_stats[s_name]
-            _tmp[s_name] = dict()
-            _data[s_name] = dict()
+            dist_cumcount = []
             for k in sample_stats:
                 # check if a key matches "cis_dist_pattern":
                 cis_dist_match = re.fullmatch(cis_dist_pattern, k)
                 if cis_dist_match is not None:
-                    # extract distance and number of cis-pairs:
+                    # extract "distance" and cumulative number of cis-pairs:
                     dist = int(cis_dist_match.group(1))
-                    _count = int(sample_stats[k])
-                    # fill in _tmp
-                    _tmp[s_name][dist] = _count
+                    count = int(sample_stats[k])
+                    dist_cumcount.append((dist,count))
             # after all cis-dist ones are extracted,
             # undo the cumulative distribution:
-            prev_counter = copy(sample_stats['cis'])
-            prev_dist = 0
-            sorted_keys = []
-            for dist in sorted(_tmp[s_name].keys()):
-                cis_pair_counter = prev_counter - _tmp[s_name][dist]
-                dist_range_key = "cis: {}-{}kb".format(prev_dist,dist)
-                _data[s_name][dist_range_key] = cis_pair_counter
-                prev_dist = dist
-                prev_counter = _tmp[s_name][dist]
-                sorted_keys.append(dist_range_key)
-            # and the final range max-dist+ :
-            cis_pair_counter = _tmp[s_name][dist]
-            dist_range_key = "cis: {}+ kb".format(prev_dist)
-            _data[s_name][dist_range_key] = prev_counter
-            sorted_keys.append(dist_range_key)
+            range_count = []
+            pdist, pcount = 0, total_cis
+            for dist,count in sorted(dist_cumcount,key=itemgetter(0)):
+                dist_range = f"cis: {pdist}-{dist}kb" if pdist>0 else f"cis: <{dist}kb"
+                range_count.append((dist_range, pcount - count))
+                pdist, pcount = dist, count
+            # open-ended long range pairs:
+            dist_range = f"cis: >{pdist}kb"
+            range_count.append((dist_range, pcount))
+            # do not forget trans pairs here (ultimate long range):
+            range_count.append(("trans", total_trans))
+            # collect range_count for a given sample:
+            cis_range_dict[s_name] = range_count
 
-            # add trans here as well ...
-            dist_range_key = "trans"
-            _data[s_name][dist_range_key] = copy(sample_stats['trans'])
-            sorted_keys.append(dist_range_key)
+        # now the assumption is, is that for all samples dist_range-s are the same:
+        # are they ? should we check ?
+        # take one from the "last" sample for now:
+        ordered_ranges, _ = zip(*range_count)
 
-        # add color to sorted keys:
-        colors_genomic_separations = ['#8c2d04', # short-range cis
-                                      '#cc4c02',
-                                      '#ec7014',
-                                      '#fe9929',
-                                      '#fec44f',
-                                      '#fee391',
-                                      '#ffffd4'] #long-range cis
+
+        # match ordered distnce ranges with colors for visual clarity:
         key_dict = OrderedDict()
-        for col,key in zip_longest(colors_genomic_separations, sorted_keys):
+        for col, dist_range in zip_longest(cis_range_colors, ordered_ranges):
             if col is not None:
-                key_dict[key] = {'color': col, 'name': key}
+                key_dict[dist_range] = {'color': col, 'name': dist_range}
             else:
-                # use auto-color when we run out of prescribed ones:
-                key_dict[key] = {'name': key}
+                # use auto-color when we run out of "nice" ones:
+                key_dict[dist_range] = {'name': dist_range}
 
         # Config for the plot
         config = {
@@ -266,7 +238,7 @@ class MultiqcModule(BaseMultiqcModule):
             'cpswitch_counts_label': 'Number of Reads'
         }
 
-        return bargraph.plot(_data, key_dict, pconfig=config)
+        cis_ bagrgraph.plot(pairs_rane_dict, key_dict, pconfig=config)
 
 
     def pairs_by_strand_orientation(self):
@@ -447,14 +419,6 @@ class MultiqcModule(BaseMultiqcModule):
 
         return linegraph.plot([_data_mean, _data_FF, _data_FR, _data_RF, _data_RR], pconfig=pconfig)
         # return linegraph.plot(_data_mean, pconfig=pconfig)
-
-
-    # def plot_single(self):
-    #     """ Return JS code required for plotting a single sample
-    #     RSeQC plot. Attempt to make it look as much like the original as possible.
-    #     Note: this code is injected by `eval(str)`, not <script type="text/javascript"> """
-
-    #     return """single_scaling(e)"""
 
 
 
