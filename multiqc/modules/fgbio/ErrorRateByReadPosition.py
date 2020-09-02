@@ -23,7 +23,7 @@ def parse_reports(self):
     collapse = True  # same as the `--collapse` option on `ErrorRateByReadPosition`
     for f in self.find_log_files('fgbio/errorratebyreadposition', filehandles=True):
         fh = f['f']
-        header = fh.readline().rstrip("\r\n").split("\t")
+        header = fh.readline().rstrip('\r\n').split('\t')
         if not header or header[0] != 'read_number':
             continue
 
