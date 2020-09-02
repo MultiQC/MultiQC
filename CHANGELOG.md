@@ -260,6 +260,8 @@ to break. If you haven't already, **you need to switch to Python 3 now**.
 * **FastQ Screen**
     * When including a FastQ Screen section multiple times in one report, the plots now behave as you would expect.
     * Fixed MultiQC linting errors
+* **fgbio**
+    * Support the new output format of `ErrorRateByReadPosition`, as well as the old output format.
 * **GATK**
     * Refactored BaseRecalibrator code to be more consistent with MultiQC Python style
     * Handle zero count errors in BaseRecalibrator
