@@ -21,11 +21,16 @@ def parse_reports(self):
     error_rates = dict()
     y_max = 0.01  # default to 1%
     collapse = True  # same as the `--collapse` option on `ErrorRateByReadPosition`
+    is_new_format = False  # Test if this is new or old format
     for f in self.find_log_files('fgbio/errorratebyreadposition', filehandles=True):
         fh = f['f']
         header = fh.readline().rstrip('\r\n').split('\t')
         if not header or header[0] != 'read_number':
             continue
+
+        # Check if this is the new style
+        if 'collapsed' in header:
+            is_new_format = True
 
         # slurp in the data for this sample
         s_name = f['s_name']
@@ -34,10 +39,10 @@ def parse_reports(self):
         errors = 0
         for line in fh:
             fields = line.rstrip('\r\n').split('\t')
+            assert len(fields) == len(header), "Missing fields in line: `{}`".format(line)
             fields[1:4] = [int(field) for field in fields[1:4]]
             fields[4:11] = [float(field) for field in fields[4:11]]
-            # Check if this is the new style
-            if len(fields) > 11:
+            if is_new_format:
                 # Check if collapse was true or false
                 fields[-1] = bool(strtobool(fields[-1]))
                 collapse = fields[-1]
@@ -85,12 +90,12 @@ def parse_reports(self):
         'ymin': 0,
         'data_labels': [
             {'name': 'Error Rate', 'ylab': 'Error Rate'},
-            {'name': 'A > C', 'ylab': 'A to C error rate (and T to G when collapsed)'},
-            {'name': 'A > G', 'ylab': 'A to G error rate (and T to C when collapsed)'},
-            {'name': 'A > T', 'ylab': 'A to T error rate (and T to A when collapsed)'},
-            {'name': 'C > A', 'ylab': 'C to A error rate (and G to T when collapsed)'},
-            {'name': 'C > G', 'ylab': 'C to G error rate (and G to C when collapsed)'},
-            {'name': 'C > T', 'ylab': 'C to T error rate (and G to A when collapsed)'},
+            {'name': 'A > C', 'ylab': 'A to C error rate'},
+            {'name': 'A > G', 'ylab': 'A to G error rate'},
+            {'name': 'A > T', 'ylab': 'A to T error rate'},
+            {'name': 'C > A', 'ylab': 'C to A error rate'},
+            {'name': 'C > G', 'ylab': 'C to G error rate'},
+            {'name': 'C > T', 'ylab': 'C to T error rate'},
         ],
     }
 
@@ -120,7 +125,7 @@ def parse_reports(self):
     self.add_section(
         name='Error Rate by Read Position',
         anchor='fgbio-error-rate-by-read-position',
-        description='Error rate by read position. Plot tabs show the error rates for specific substitution types.',
+        description='Error rate by read position. Plot tabs show the error rates for specific substitution types. `--collapse={}`'.format(collapse),
         helptext='''
         The error rate by read position. If `collapsed` was `true`, then complementary
         substitutions were grouped together into the first 6 error rates.
