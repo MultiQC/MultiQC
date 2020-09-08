@@ -54,13 +54,32 @@ def parse_line(line):
     else:
         data['name'] = ' '.join(keys)
 
-    # If there is a value
-    if values:
+    # Parsing the values
+    values = values.strip().split()
+    # Are there any values
+    if not values:
+        return data
+
+    # If there is a single value
+    if len(values) == 1:
+        value = values.pop()
         # Is the value a percentage
-        if values.endswith('%'):
-            data['percentage'] = float(values[:-1])
+        if value.endswith('%'):
+            data['percentage'] = float(value[:-1])
+        # Otherwise, it is an integer
         else:
-            # Make sure the value is an int
-            data['count'] = int(values)
+            data['count'] = int(value)
+    elif len(values) == 2:
+        # If there are multiple values, they are in the format
+        # count (percentage%)
+        count = values[0]
+        percentage = values[1]
+
+        # The percentage should be in the format: (12.34%)
+        assert re.fullmatch('[(]\d+\.\d+%[)]', percentage)
+
+        # Add the percentage and the count to the data
+        data['percentage'] = float(percentage[1:-2])
+        data['count'] = int(count)
 
     return data
