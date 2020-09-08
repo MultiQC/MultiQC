@@ -8,7 +8,6 @@ from collections import namedtuple
 from itertools import groupby
 from multiqc.plots import linegraph
 from multiqc.plots import scatter
-h
 
 # Initialise the logger
 log = logging.getLogger(__name__)
