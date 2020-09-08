@@ -236,7 +236,7 @@ def update_dict(d, u):
     """ Recursively updates nested dict d from nested dict u
     """
     for key, val in u.items():
-        if isinstance(val, collections.Mapping):
+        if isinstance(val, collections.abc.Mapping):
             d[key] = update_dict(d.get(key, {}), val)
         else:
             d[key] = u[key]
