@@ -54,4 +54,9 @@ def parse_line(line):
     else:
         data['name'] = ' '.join(keys)
 
+    # If there is a value
+    if values:
+        # Make sure the value is an int
+        data['count'] = int(values)
+
     return data
