@@ -60,6 +60,7 @@ install_requires = [
     'pyyaml>=4',
     'requests',
     'simplejson',
+    'pytest',
     'spectra>=0.0.10',
 ]
 
