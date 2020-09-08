@@ -56,7 +56,11 @@ def parse_line(line):
 
     # If there is a value
     if values:
-        # Make sure the value is an int
-        data['count'] = int(values)
+        # Is the value a percentage
+        if values.endswith('%'):
+            data['percentage'] = float(values[:-1])
+        else:
+            # Make sure the value is an int
+            data['count'] = int(values)
 
     return data
