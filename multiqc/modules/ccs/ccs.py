@@ -22,7 +22,7 @@ class MultiqcModule(BaseMultiqcModule):
             parse_ccs_log(f['f'])
 
 
-def parse_ccs_log(file_content):
+def parse_PacBio_log(file_content):
     """ Parse ccs log file """
     data = dict()
     key, value = parse_line(next(file_content))
@@ -32,16 +32,26 @@ def parse_ccs_log(file_content):
 
 def parse_line(line):
     """ Parse a line from the ccs log file """
+    data = dict()
+
+    # If we got an empty line to parse
+    if not line.strip():
+        return data
+
     # Split the line on the colon character
-    key, value = line.strip().split(':')
+    key, values = line.strip().split(':')
 
-    # Remove (A), (B), etc annotations from the key field
-    key = re.sub(r' + [(]A[)] +','', key)
+    # The key can have multiple parts
+    keys = key.strip().split()
 
-    # Remove the percentage between bracets from the value
-    value = re.sub(r' + [(]\d+.*[)]','', value.strip())
+    # Does the key have an annotation (A), (B) etc
+    if re.fullmatch('[(][A-Z][)]', keys[-1]):
+        # We store the annotation without the bracets
+        data['annotation'] = keys[-1][1:-1]
+        # And we add the rest of the key as name
+        data['name'] = ' '.join(keys[:-1])
+    # Otherwise, we just store the name
+    else:
+        data['name'] = ' '.join(keys)
 
-    # All values are integers
-    value = int(value)
-
-    return key, value
+    return data
