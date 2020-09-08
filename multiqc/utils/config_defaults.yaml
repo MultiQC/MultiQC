@@ -509,6 +509,11 @@ module_order:
         module_tag:
             - RNA
             - DNA
+    - ccs:
+        module_tag:
+            - DNA
+            - RNA
+            - PacBio
     - clipandmerge:
         module_tag:
             - DNA

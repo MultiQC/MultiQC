@@ -6,6 +6,8 @@
 
 #### New Modules
 
+* [**ccs**](https://github.com/PacificBiosciences/ccs)
+  * Generate highly accurate single-molecule consensus reads
 * [**HOPS**](https://www.github.com/rhubler/HOPS)
   * Post-alignment ancient DNA analysis tool for MALT
 
