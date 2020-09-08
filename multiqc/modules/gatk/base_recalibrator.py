@@ -35,6 +35,11 @@ class BaseRecalibratorMixin():
         }
 
         for f in self.find_log_files('gatk/base_recalibrator', filehandles=True):
+
+            # Check that we're not ignoring this sample name
+            if self.is_ignore_sample(f['s_name']):
+                continue
+
             parsed_data = self.parse_report(f['f'].readlines(), report_table_headers)
             rt_type = determine_recal_table_type(parsed_data)
             if len(parsed_data) > 0:
