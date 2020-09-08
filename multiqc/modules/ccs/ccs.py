@@ -25,8 +25,47 @@ class MultiqcModule(BaseMultiqcModule):
 def parse_PacBio_log(file_content):
     """ Parse ccs log file """
     data = dict()
-    key, value = parse_line(next(file_content))
-    data[key] = value
+    # This is a local dictionary to store which annotations belong to which
+    # result dictionary. This will be used to structure the output, but will
+    # not be part of the output itself
+    annotations = dict()
+    current_annotation = None
+
+    for line in file_content:
+        # Did we enter a new section with annotations for an earlier result?
+        # If so, we will only add an empty dictionary we the correct name
+        section_header_pattern = ' for [(][A-Z][)][:]'
+        if re.search(section_header_pattern, line):
+            linedata = parse_line(line)
+            ann = linedata['annotation']
+            name = line[:len(section_header_pattern)+1]
+            # We make a new heading with the current name under the data that
+            # matches the current annotation
+            current_annotation = dict()
+            # We add keep the dictonary accessible under 'current_annotation',
+            # so we can keep adding new data to it without having to keep track
+            # of where it belongs
+            annotations[ann][name] = current_annotation
+            continue
+
+        linedata = parse_line(line)
+
+        # If we got no data, we reached the end of the annotated section
+        if not linedata:
+            current_annotation = dict()
+            continue
+
+        # Lets get the name of the data
+        name = linedata.pop('name')
+        # If we are in an annotated section, we add it to the current annotation
+        if current_annotation:
+            current_annotation[name] = linedata
+        # Otherwise, we add the newfound annotation to the dictionary
+        else:
+            annotation = linedata.pop('annotation')
+            annotations[annotation] = linedata
+            data[name] = linedata
+
     return data
 
 
@@ -76,7 +115,7 @@ def parse_line(line):
         percentage = values[1]
 
         # The percentage should be in the format: (12.34%)
-        assert re.fullmatch('[(]\d+\.\d+%[)]', percentage)
+        assert re.fullmatch(r'[(]\d+\.\d+%[)]', percentage)
 
         # Add the percentage and the count to the data
         data['percentage'] = float(percentage[1:-2])
