@@ -18,9 +18,17 @@ class MultiqcModule(BaseMultiqcModule):
                 info='Generate highly accurate single-molecule consensus '
                      'reads')
 
+        self.mod_data = dict()
         for f in self.find_log_files('ccs', filehandles=True):
-            parse_ccs_log(f['f'])
+            self.add_data_source(f)
+            self.mod_data[f['s_name']] = parse_PacBio_log(f['f'])
+            self.write_data_file(self.mod_data, 'multiqc_ccs')
 
+        # If we found no data
+        if not self.mod_data:
+            raise UserWarning
+
+        print(self.mod_data)
 
 def parse_PacBio_log(file_content):
     """ Parse ccs log file """
