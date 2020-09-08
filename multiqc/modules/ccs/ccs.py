@@ -60,7 +60,9 @@ def parse_PacBio_log(file_content):
         # If we are in an annotated section, we add it to the current annotation
         if current_annotation:
             current_annotation[name] = linedata
-        # Otherwise, we add the newfound annotation to the dictionary
+        # Otherwise, we add the newfound annotation to the dictionary in case
+        # we find a corresponding section later on.
+        # The data from the current line we add directly
         else:
             annotation = linedata.pop('annotation')
             annotations[annotation] = linedata
