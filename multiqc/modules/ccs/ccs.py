@@ -5,6 +5,7 @@
 import logging
 import re
 
+from collections import OrderedDict
 from multiqc.modules.base_module import BaseMultiqcModule
 
 # Initialise the logger
@@ -18,17 +19,52 @@ class MultiqcModule(BaseMultiqcModule):
                 info='Generate highly accurate single-molecule consensus '
                      'reads')
 
+        # To store the mod data
         self.mod_data = dict()
+        plotdata = dict()
+        self.parse_log_files()
+        self.write_data_files()
+        self.add_general_stats()
+
+    def parse_log_files(self):
         for f in self.find_log_files('ccs', filehandles=True):
+            data = parse_PacBio_log(f['f'])
+            print(f)
+            print(self.mod_data)
+            filename = f['s_name']
+            self.mod_data[filename] = data
             self.add_data_source(f)
-            self.mod_data[f['s_name']] = parse_PacBio_log(f['f'])
-            self.write_data_file(self.mod_data, 'multiqc_ccs')
 
         # If we found no data
         if not self.mod_data:
             raise UserWarning
 
-        print(self.mod_data)
+    def write_data_files(self):
+        for filename in self.mod_data:
+            self.write_data_file(self.mod_data[filename], filename)
+
+    def add_general_stats(self):
+        """ Add results overview to the general stats table """
+        general_keys = ['ZMWs input', 'ZMWs generating CCS', 'ZMWs filtered']
+
+        # Gather the data
+        general_stats = dict()
+        for filename in self.mod_data:
+            data = self.mod_data[filename]
+            file_data = OrderedDict()
+            for key in general_keys:
+                file_data[key] = data[key]['count']
+            import json
+            print(json.dumps(file_data, indent=True))
+            general_stats[filename] = file_data
+
+        # Determine the formatting
+        headers = OrderedDict()
+        for i,field in enumerate(general_keys):
+            headers[field] = {'placement': i}
+        self.general_stats_addcols(general_stats, {key: {} for key in general_keys})
+
+
 
 def parse_PacBio_log(file_content):
     """ Parse ccs log file """
