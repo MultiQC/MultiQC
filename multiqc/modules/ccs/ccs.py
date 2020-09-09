@@ -28,7 +28,6 @@ class MultiqcModule(BaseMultiqcModule):
         plotdata = dict()
         self.parse_log_files()
         self.write_data_files()
-        self.add_general_stats()
         self.add_sections()
 
     def parse_log_files(self):
@@ -45,25 +44,6 @@ class MultiqcModule(BaseMultiqcModule):
     def write_data_files(self):
         for filename in self.mod_data:
             self.write_data_file(self.mod_data[filename], filename)
-
-    def add_general_stats(self):
-        """ Add results overview to the general stats table """
-        general_keys = ['ZMWs input', 'ZMWs generating CCS', 'ZMWs filtered']
-
-        # Gather the data
-        general_stats = dict()
-        for filename in self.mod_data:
-            data = self.mod_data[filename]
-            file_data = OrderedDict()
-            for key in general_keys:
-                file_data[key] = data[key]['count']
-            general_stats[filename] = file_data
-
-        # Determine the formatting
-        headers = OrderedDict()
-        for i,field in enumerate(general_keys):
-            headers[field] = {'placement': i}
-        self.general_stats_addcols(general_stats, {key: {} for key in general_keys})
 
     def add_sections(self):
         plot_data = dict()
@@ -109,13 +89,13 @@ class MultiqcModule(BaseMultiqcModule):
                 name='ZMWs filtered and passed',
                 anchor='ccs-filter',
                 description=(
-                    'The number of reads that failed or passed all '
+                    'The number of ZMWs that failed or passed all '
                     'filters'
                 ),
                 helptext=(
-                    'The number of reads that passed all filters is shown '
+                    'The number of ZMWs that passed all filters is shown '
                     'as **ZMWs generating CCS**. All other categories that '
-                    'are shown in the graph represent the number of reads '
+                    'are shown in the graph represent the number of ZMWs '
                     'that were dropped for the specified reason.'
                 ),
                 plot=bargraph.plot(plot_data, formatting, config)
