@@ -13,7 +13,7 @@ MultiQC Modules:
     AfterQC: modules/afterqc.md
     Bcl2fastq: modules/bcl2fastq.md
     BioBloom Tools: modules/biobloomtools.md
-    ccs: modules/ccs.md
+    CCS: modules/ccs.md
     Cluster Flow: modules/clusterflow.md
     Cutadapt: modules/cutadapt.md
     ClipAndMerge: modules/clipandmerge.md

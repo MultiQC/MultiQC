@@ -25,7 +25,6 @@ class MultiqcModule(BaseMultiqcModule):
 
         # To store the mod data
         self.mod_data = dict()
-        plotdata = dict()
         self.parse_log_files()
         self.write_data_files()
         self.add_sections()
@@ -42,8 +41,7 @@ class MultiqcModule(BaseMultiqcModule):
             raise UserWarning
 
     def write_data_files(self):
-        for filename in self.mod_data:
-            self.write_data_file(self.mod_data[filename], filename)
+        self.write_data_file(self.mod_data, 'multiqc_ccs_report')
 
     def add_sections(self):
         plot_data = dict()
