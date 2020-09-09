@@ -64,13 +64,13 @@ class MultiqcModule(BaseMultiqcModule):
 
     def add_sections(self):
         plot_data = dict()
-        # For each file, we get the filter counts
+        # First we gather all the data we need
         for filename in self.mod_data:
             filter_reasons = self.filter_and_pass(self.mod_data[filename])
             plot_data[filename] = filter_reasons
 
 
-        # Gather all the filter reasons we have
+        # Gather all the filter reasons we have found in the parsed reports
         reasons = set()
         for filename in plot_data:
             for reason in plot_data[filename]:

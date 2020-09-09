@@ -172,8 +172,8 @@ busco:
     contents: 'BUSCO version is:'
     num_lines: 1
 ccs:
-  contents: 'ZMWs input'
-  num_lines: 1
+  contents: 'ZMWs generating CCS'
+  num_lines: 2
   max_filesize: 1024
 custom_content:
     fn_re: '.+_mqc\.(yaml|yml|json|txt|csv|tsv|log|out|png|jpg|jpeg|html)'
