@@ -7,6 +7,7 @@ import re
 
 from collections import OrderedDict
 from multiqc.modules.base_module import BaseMultiqcModule
+from multiqc.plots import bargraph
 
 # Initialise the logger
 log = logging.getLogger(__name__)
@@ -25,12 +26,11 @@ class MultiqcModule(BaseMultiqcModule):
         self.parse_log_files()
         self.write_data_files()
         self.add_general_stats()
+        self.add_sections()
 
     def parse_log_files(self):
         for f in self.find_log_files('ccs', filehandles=True):
             data = parse_PacBio_log(f['f'])
-            print(f)
-            print(self.mod_data)
             filename = f['s_name']
             self.mod_data[filename] = data
             self.add_data_source(f)
@@ -54,8 +54,6 @@ class MultiqcModule(BaseMultiqcModule):
             file_data = OrderedDict()
             for key in general_keys:
                 file_data[key] = data[key]['count']
-            import json
-            print(json.dumps(file_data, indent=True))
             general_stats[filename] = file_data
 
         # Determine the formatting
@@ -64,6 +62,40 @@ class MultiqcModule(BaseMultiqcModule):
             headers[field] = {'placement': i}
         self.general_stats_addcols(general_stats, {key: {} for key in general_keys})
 
+    def add_sections(self):
+        plot_data = dict()
+        # For each file, we get the filter counts
+        for filename in self.mod_data:
+            filter_reasons = self.filter_and_pass(self.mod_data[filename])
+            plot_data[filename] = filter_reasons
+
+        self.add_section (
+                name='ZMWs filtered and passed',
+                anchor='ccs-filter',
+                description=(
+                    'The number of reads that failed or passed all '
+                    'filters'
+                ),
+                helptext=(
+                    'The number of reads that passed all filters is shown '
+                    'as **ZMWs generating CCS**. All other categories that '
+                    'are shown in the graph represent the number of reads '
+                    'that were dropped for the specified reason.'
+                ),
+                plot=bargraph.plot(plot_data)
+        )
+
+    def filter_and_pass(self, data):
+        reasons = dict()
+
+        # Add why ZMWs were filtered
+        filter_data = data['ZMWs filtered']['Exclusive ZMW counts']
+        for reason in filter_data:
+            reasons[reason] = filter_data[reason]['count']
+        # Add the number of ZMWs that passed
+        reasons['ZMWs generating CCS'] = data['ZMWs generating CCS']['count']
+
+        return reasons
 
 
 def parse_PacBio_log(file_content):
@@ -79,8 +111,9 @@ def parse_PacBio_log(file_content):
         # Get rid of trailing newlines
         line = line.strip('\n')
         # Did we enter a new section with annotations for an earlier result?
-        # If so, we will only add an empty dictionary we the correct name
-        section_header_pattern = ' for [(][A-Z][)][:]'
+        # If so, we will only add an empty dictionary with the correct name
+        # These field are of the format "something something for (A):"
+        section_header_pattern = ' for [(][A-Z][)][:]$'
         if re.search(section_header_pattern, line):
             linedata = parse_line(line)
             ann = linedata['annotation']
@@ -89,7 +122,7 @@ def parse_PacBio_log(file_content):
             # We make a new heading with the current name under the data that
             # matches the current annotation
             current_annotation = dict()
-            # We add keep the dictonary accessible under 'current_annotation',
+            # We keep the dictonary accessible under 'current_annotation',
             # so we can keep adding new data to it without having to keep track
             # of where it belongs
             annotations[ann][name] = current_annotation
@@ -104,7 +137,8 @@ def parse_PacBio_log(file_content):
 
         # Lets get the name of the data
         name = linedata.pop('name')
-        # If we are in an annotated section, we add it to the current annotation
+        # If we are in an annotated section, we add the data to the current
+        # annotation
         if current_annotation is not None:
             current_annotation[name] = linedata
         # Otherwise, we add the newfound annotation to the dictionary in case
@@ -143,7 +177,7 @@ def parse_line(line):
 
     # Parsing the values
     values = values.strip().split()
-    # Are there any values
+    # Are there are no values we are done
     if not values:
         return data
 
