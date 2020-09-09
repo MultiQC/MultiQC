@@ -20,6 +20,24 @@ class MultiqcModule(BaseMultiqcModule):
               info= ' is used to demultiplex single-molecule sequencing reads.'
         )
 
+        # To store the data
+        self.lima = dict()
+        self.parse_log_files()
+        self.write_data_files()
+
+    def parse_log_files(self):
+        for f in self.find_log_files('lima', filehandles=True):
+            data = parse_PacBio_log(f['f'])
+            filename = f['s_name']
+            self.lima[filename] = data
+            self.add_data_source(f)
+
+        if not self.lima:
+            raise UserWarning
+
+    def write_data_files(self):
+        self.write_data_file(self.lima, 'multiqc_lima_report')
+
 def parse_PacBio_log(file_content):
     """ Parse PacBio log file """
     data = dict()
