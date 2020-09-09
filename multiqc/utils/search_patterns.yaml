@@ -347,6 +347,10 @@ kraken:
 leehom:
     contents: 'Adapter dimers/chimeras'
     shared: true
+lima:
+    contents: 'ZMWs above all thresholds'
+    num_lines: 2
+    max_filesize: 1024
 longranger/summary:
     fn: '*summary.csv'
     contents: 'longranger_version,instrument_ids,gems_detected,mean_dna_per_gem,bc_on_whitelist,bc_mean_qscore,n50_linked_reads_per_molecule'

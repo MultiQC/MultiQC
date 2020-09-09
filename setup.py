@@ -131,6 +131,7 @@ setup(
             'kat = multiqc.modules.kat:MultiqcModule',
             'kraken = multiqc.modules.kraken:MultiqcModule',
             'leehom = multiqc.modules.leehom:MultiqcModule',
+            'lima = multiqc.modules.lima:MultiqcModule',
             'longranger = multiqc.modules.longranger:MultiqcModule',
             'macs2 = multiqc.modules.macs2:MultiqcModule',
             'malt = multiqc.modules.malt:MultiqcModule',
