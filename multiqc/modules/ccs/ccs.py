@@ -69,6 +69,32 @@ class MultiqcModule(BaseMultiqcModule):
             filter_reasons = self.filter_and_pass(self.mod_data[filename])
             plot_data[filename] = filter_reasons
 
+
+        # Gather all the filter reasons we have
+        reasons = set()
+        for filename in plot_data:
+            for reason in plot_data[filename]:
+                reasons.add(reason)
+
+        # Put them in a sorted list
+        pass_ = 'ZMWs generating CCS'
+        reasons = sorted(list(reasons))
+        # Put ZMWS generating CCS at the front
+        reasons.remove(pass_)
+        reasons.insert(0,pass_)
+
+        # Now we add the formatting we want
+        # We want the passed ZMWs to be green
+        green = '#5cb85c'
+        formatting = OrderedDict()
+        for reason in reasons:
+            d = dict()
+            d['name'] = reason
+            # We want the PASS count to be green
+            if reason == pass_:
+                d['color'] = green
+            formatting[reason] = d
+
         self.add_section (
                 name='ZMWs filtered and passed',
                 anchor='ccs-filter',
@@ -82,7 +108,7 @@ class MultiqcModule(BaseMultiqcModule):
                     'are shown in the graph represent the number of reads '
                     'that were dropped for the specified reason.'
                 ),
-                plot=bargraph.plot(plot_data)
+                plot=bargraph.plot(plot_data, formatting)
         )
 
     def filter_and_pass(self, data):
