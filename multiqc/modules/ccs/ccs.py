@@ -15,10 +15,13 @@ log = logging.getLogger(__name__)
 class MultiqcModule(BaseMultiqcModule):
     def __init__(self):
         # Initialse the parent object
-        super(MultiqcModule, self).__init__(name='ccs', anchor='ccs',
+        super(MultiqcModule, self).__init__(name='CCS', anchor='ccs',
                 href='https://github.com/PacificBiosciences/ccs',
-                info='Generate highly accurate single-molecule consensus '
-                     'reads')
+                info=(
+                    'is used to generate highly accurate single-molecule '
+                    'consensus reads'
+                )
+        )
 
         # To store the mod data
         self.mod_data = dict()
