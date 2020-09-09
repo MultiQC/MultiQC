@@ -95,6 +95,13 @@ class MultiqcModule(BaseMultiqcModule):
                 d['color'] = green
             formatting[reason] = d
 
+        # Plot configuration
+        config = {
+                'id': 'ccs-filter-graph',
+                'title': 'CCS: ZMW results',
+                'ylab': 'Number of ZMWs',
+                'xlab': 'CCS report file'
+        }
         self.add_section (
                 name='ZMWs filtered and passed',
                 anchor='ccs-filter',
@@ -108,7 +115,7 @@ class MultiqcModule(BaseMultiqcModule):
                     'are shown in the graph represent the number of reads '
                     'that were dropped for the specified reason.'
                 ),
-                plot=bargraph.plot(plot_data, formatting)
+                plot=bargraph.plot(plot_data, formatting, config)
         )
 
     def filter_and_pass(self, data):
