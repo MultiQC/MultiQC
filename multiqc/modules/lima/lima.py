@@ -180,11 +180,19 @@ def parse_line(line):
         count = values[0]
         percentage = values[1]
 
-        # The percentage should be in the format: (12.34% or 100% or 0%)
-        assert re.fullmatch(r'[(]\d+\.?\d*%[)]', percentage)
+        # The percentage should be in the format:
+        # (12.34%) or (100%) or (0%) or (-nan%)
+        # So we can remove the bracets first
+        percentage = percentage[1:-1]
+        # Then we make sure it is one of the supported patterns
+        assert re.fullmatch(r'(\d+\.\d+%|\d+%|-nan%)', percentage)
 
-        # Add the percentage and the count to the data
-        data['percentage'] = float(percentage[1:-2])
+        # If the percentage is this weird nan, set it to 0
+        if percentage == '-nan%':
+            data['percentage'] = 0.0
+        else:  # Otherwise, we cut of the % sign and convert to float
+            data['percentage'] = float(percentage[:-1])
+        # Add the count as an integer
         data['count'] = int(count)
 
     return data
