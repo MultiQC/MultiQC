@@ -652,3 +652,6 @@ vcftools/tstv_summary:
     fn: '*.TsTv.summary'
 verifybamid/selfsm:
     fn: '*.selfSM'
+whatshap/stats:
+    contents: '#sample	chromosome	file_name	variants	phased	unphased	singletons'
+    num_lines: 1

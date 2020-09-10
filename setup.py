@@ -175,7 +175,8 @@ setup(
             'trimmomatic = multiqc.modules.trimmomatic:MultiqcModule',
             'varscan2 = multiqc.modules.varscan2:MultiqcModule',
             'vcftools = multiqc.modules.vcftools:MultiqcModule',
-            'verifybamid = multiqc.modules.verifybamid:MultiqcModule'
+            'verifybamid = multiqc.modules.verifybamid:MultiqcModule',
+            'whatshap = multiqc.modules.whatshap:MultiqcModule'
         ],
         'multiqc.templates.v1': [
             'default = multiqc.templates.default',

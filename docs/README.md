@@ -103,6 +103,7 @@ MultiQC Modules:
     VarScan2: modules/varscan2.md
     VCFTools: modules/vcftools.md
     verifyBAMID: modules/verifybamid.md
+    WhatsHap: modules/whatshap.md
 Custom Content:
   Introduction: custom_content.md
 Coding with MultiQC:

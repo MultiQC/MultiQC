@@ -5,7 +5,8 @@
 #### New MultiQC Features
 
 #### New Modules
-
+* [**WhatsHap**](https://whatshap.readthedocs.io)
+  * WhatsHap is a software for phasing genomic variants using DNA sequencing reads
 * [**HOPS**](https://www.github.com/rhubler/HOPS)
   * Post-alignment ancient DNA analysis tool for MALT
 
