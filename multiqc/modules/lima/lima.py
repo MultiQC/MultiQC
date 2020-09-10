@@ -26,6 +26,8 @@ class MultiqcModule(BaseMultiqcModule):
         self.parse_summary_files()
         self.parse_counts_files()
         self.write_data_files()
+        # Add the counts to the general statistics
+        self.general_stats_addcols(self.lima_counts)
 
     def parse_summary_files(self):
         for f in self.find_log_files('lima/summary', filehandles=True):
