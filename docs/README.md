@@ -27,6 +27,7 @@ MultiQC Modules:
     Jellyfish: modules/jellyfish.md
     KAT: modules/kat.md
     leeHom: modules/leehom.md
+    Lima: modules/lima.md
     minionqc: modules/minionqc.md
     pycoQC: modules/pycoqc.md
     SeqyClean: modules/seqyclean.md

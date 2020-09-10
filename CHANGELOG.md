@@ -8,6 +8,8 @@
 
 * [**ccs**](https://github.com/PacificBiosciences/ccs)
   * Generate highly accurate single-molecule consensus reads
+* [**Lima**](https://github.com/PacificBiosciences/barcoding)
+  * The PacBio Barcode Demultiplexer
 * [**HOPS**](https://www.github.com/rhubler/HOPS)
   * Post-alignment ancient DNA analysis tool for MALT
 
