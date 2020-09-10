@@ -20,23 +20,65 @@ class MultiqcModule(BaseMultiqcModule):
               info= ' is used to demultiplex single-molecule sequencing reads.'
         )
 
-        # To store the data
-        self.lima = dict()
-        self.parse_log_files()
+        # To store the summary data
+        self.lima_summary = dict()
+        self.lima_counts = dict()
+        self.parse_summary_files()
+        self.parse_counts_files()
         self.write_data_files()
 
-    def parse_log_files(self):
-        for f in self.find_log_files('lima', filehandles=True):
+    def parse_summary_files(self):
+        for f in self.find_log_files('lima/summary', filehandles=True):
             data = parse_PacBio_log(f['f'])
             filename = f['s_name']
-            self.lima[filename] = data
+            self.lima_summary[filename] = data
             self.add_data_source(f)
 
-        if not self.lima:
-            raise UserWarning
+    def parse_counts_files(self):
+        for f in self.find_log_files('lima/counts', filehandles=True):
+            data = parse_lima_counts(f['f'])
+            # Check for duplicate samples
+            for sample in data:
+                if sample in self.lima_counts:
+                    msg = f'Duplicate sample name found! Overwriting: {sample}'
+                    log.debug(msg)
+            # After warning the user, overwrite the samples
+            self.lima_counts.update(data)
+            self.add_data_source(f)
+        # Remove samples that were specified using --ignore-samples
+        self.lima_counts = self.ignore_samples(self.lima_counts)
 
     def write_data_files(self):
-        self.write_data_file(self.lima, 'multiqc_lima_report')
+        if not self.lima_summary and not self.lima_counts:
+            raise UserWarning
+        if self.lima_summary:
+            self.write_data_file(self.lima_summary, 'multiqc_lima_summary')
+        if self.lima_counts:
+            self.write_data_file(self.lima_counts, 'multiqc_lima_counts')
+
+
+def parse_lima_counts(file_content):
+    """ Parse lima counts file """
+
+    # The first line is the header
+    header = next(file_content).strip().split()
+
+    # A dictionary to store the results
+    lima_counts = dict()
+    for line in file_content:
+        spline = line.strip().split()
+        data = {field: value for field, value in zip(header, spline)}
+
+        sample = data['IdxFirstNamed']
+        counts = data['Counts']
+        mean_score = data['MeanScore']
+        lima_counts[sample] = {
+                'Counts': counts,
+                'MeanScore': mean_score
+        }
+
+    return lima_counts
+
 
 def parse_PacBio_log(file_content):
     """ Parse PacBio log file """
@@ -90,6 +132,7 @@ def parse_PacBio_log(file_content):
             data[name] = linedata
 
     return data
+
 
 def parse_line(line):
     """ Parse a line from the Lima log file """
