@@ -5,11 +5,12 @@
 #### New MultiQC Features
 
 #### New Modules
-
 * [**ccs**](https://github.com/PacificBiosciences/ccs)
   * Generate highly accurate single-molecule consensus reads
 * [**Lima**](https://github.com/PacificBiosciences/barcoding)
   * The PacBio Barcode Demultiplexer
+* [**WhatsHap**](https://whatshap.readthedocs.io)
+  * WhatsHap is a software for phasing genomic variants using DNA sequencing reads
 * [**HOPS**](https://www.github.com/rhubler/HOPS)
   * Post-alignment ancient DNA analysis tool for MALT
 
