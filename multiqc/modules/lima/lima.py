@@ -36,7 +36,7 @@ class MultiqcModule(BaseMultiqcModule):
 
     def parse_counts_files(self):
         for f in self.find_log_files('lima/counts', filehandles=True):
-            data = parse_lima_counts(f['f'])
+            data = self.parse_lima_counts(f['f'], f['root'])
             # Check for duplicate samples
             for sample in data:
                 if sample in self.lima_counts:
@@ -56,28 +56,27 @@ class MultiqcModule(BaseMultiqcModule):
         if self.lima_counts:
             self.write_data_file(self.lima_counts, 'multiqc_lima_counts')
 
+    def parse_lima_counts(self, file_content, root):
+        """ Parse lima counts file """
 
-def parse_lima_counts(file_content):
-    """ Parse lima counts file """
+        # The first line is the header
+        header = next(file_content).strip().split()
 
-    # The first line is the header
-    header = next(file_content).strip().split()
+        # A dictionary to store the results
+        lima_counts = dict()
+        for line in file_content:
+            spline = line.strip().split()
+            data = {field: value for field, value in zip(header, spline)}
 
-    # A dictionary to store the results
-    lima_counts = dict()
-    for line in file_content:
-        spline = line.strip().split()
-        data = {field: value for field, value in zip(header, spline)}
+            sample = self.clean_s_name(data['IdxFirstNamed'], root)
+            counts = data['Counts']
+            mean_score = data['MeanScore']
+            lima_counts[sample] = {
+                    'Counts': counts,
+                    'MeanScore': mean_score
+            }
 
-        sample = data['IdxFirstNamed']
-        counts = data['Counts']
-        mean_score = data['MeanScore']
-        lima_counts[sample] = {
-                'Counts': counts,
-                'MeanScore': mean_score
-        }
-
-    return lima_counts
+        return lima_counts
 
 
 def parse_PacBio_log(file_content):
