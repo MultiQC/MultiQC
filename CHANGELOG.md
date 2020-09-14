@@ -28,7 +28,7 @@
 * **fgbio**
     * Fix `ErrorRateByReadPosition` to calculate `ymax` not just on the overall `error_rate`, but also specific base errors (ex. `a_to_c_error_rate`, `a_to_g_error_rate`, ...).  ([#1215](https://github.com/ewels/MultiQC/pull/1251))
 * **GATK**
-  * Add support for creation of a "Reported vs Empirical Quality" graph to the Base Recalibration module.
+  * Add support for the creation of a "Reported vs Empirical Quality" graph to the Base Recalibration module.
 
 #### New Custom Content features
 
