@@ -159,16 +159,12 @@ class BaseRecalibratorMixin():
                 table_rows.sort(key=lambda r: r['QualityScore'])
                 for reported, group in groupby(table_rows, lambda r: r['QualityScore']):
                     g = list(group)
-                    try:
-                        reported_empirical[sample].append(
-                            {
-                                'x': int(reported),
-                                'y': sum(float(r['EmpiricalQuality']) for r in g) / len(g),
-                            }
-                        )
-                    except ZeroDivisionError:
-                        reported_empirical[sample][int(reported)] = 0
-                        reported_empirical[sample].append({'x': int(reported), 'y': 0})
+                    reported_empirical[sample].append(
+                        {
+                            'x': int(reported),
+                            'y': sum(float(r['EmpiricalQuality']) for r in g) / len(g) if len(g) > 0 else 0,
+                        }
+                    )
 
             sample_data.append(reported_empirical)
 
