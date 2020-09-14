@@ -91,30 +91,66 @@ def parse_reports(self):
 
 
         # Make the bar plot of alignment read count
-        pdata = dict()
+        read_data = dict()
         for s_name in self.picard_alignment_metrics.keys():
-            pdata[s_name] = dict()
+            read_data[s_name] = dict()
             # Picard reports both reads for PE data. Divide it by two as most people will expect # clusters
             if self.picard_alignment_metrics[s_name]['CATEGORY'] == 'PAIR':
-                pdata[s_name]['total_reads'] = self.picard_alignment_metrics[s_name]['TOTAL_READS'] / 2
-                pdata[s_name]['aligned_reads'] = self.picard_alignment_metrics[s_name]['PF_READS_ALIGNED'] / 2
+                read_data[s_name]['total_reads'] = self.picard_alignment_metrics[s_name]['TOTAL_READS'] / 2
+                read_data[s_name]['aligned_reads'] = self.picard_alignment_metrics[s_name]['PF_READS_ALIGNED'] / 2
             else:
-                pdata[s_name]['total_reads'] = self.picard_alignment_metrics[s_name]['TOTAL_READS']
-                pdata[s_name]['aligned_reads'] = self.picard_alignment_metrics[s_name]['PF_READS_ALIGNED']
-            pdata[s_name]['unaligned_reads'] = pdata[s_name]['total_reads'] - pdata[s_name]['aligned_reads']
+                read_data[s_name]['total_reads'] = self.picard_alignment_metrics[s_name]['TOTAL_READS']
+                read_data[s_name]['aligned_reads'] = self.picard_alignment_metrics[s_name]['PF_READS_ALIGNED']
+            read_data[s_name]['unaligned_reads'] = read_data[s_name]['total_reads'] - read_data[s_name]['aligned_reads']
 
-        keys = OrderedDict()
-        keys['aligned_reads'] = {'name': 'Aligned Reads'}
-        keys['unaligned_reads'] = {'name': 'Unaligned Reads'}
+        read_data_keys = OrderedDict()
+        read_data_keys['aligned_reads'] = {'name': 'Aligned Reads'}
+        read_data_keys['unaligned_reads'] = {'name': 'Unaligned Reads'}
+
+        # Make the bar plot of alignment basepair counts
+        basepair_data = dict()
+        for s_name in self.picard_alignment_metrics.keys():
+            basepair_data[s_name] = dict()
+            basepair_data[s_name]['aligned_bases'] = self.picard_alignment_metrics[s_name]['PF_ALIGNED_BASES']
+        basepair_data_keys = OrderedDict()
+        basepair_data_keys['aligned_bases'] = {'name': 'Aligned Bases'}
+
+        # Make the bar plot of read length
+        readlength_data = dict()
+        for s_name in self.picard_alignment_metrics.keys():
+            readlength_data[s_name] = dict()
+            readlength_data[s_name]['read_length'] = self.picard_alignment_metrics[s_name]['MEAN_READ_LENGTH']
+        readlength_data_keys = OrderedDict()
+        readlength_data_keys['read_length'] = {'name': 'Mean Read Length'}
+
 
         # Config for the plot
         pconfig = {
-            'id': 'picard_aligned_reads',
-            'title': 'Picard: Aligned Reads',
-            'ylab': '# Reads',
-            'cpswitch_counts_label': 'Number of Reads',
+            'id': 'picard_alignment_summary',
+            'title': 'Picard: Alignment Summary',
+            'ylab': None,
+            'data_labels': [
+                {
+                    'name': 'Aligned Reads',
+                    'ylab': '# Reads',
+                    'cpswitch_counts_label': 'Number of Reads',
+                },
+                {
+                    'name': 'Aligned Bases',
+                    'ylab': '# Bases',
+                    'cpswitch_counts_label': 'Number of Bases',
+                },
+                {
+                    'name': 'Mean Read Length',
+                    'ylab': '# Bases',
+                    'cpswitch_counts_label': 'Mean Size of Reads',
+                }
+            ]
         }
 
+        # The different data sets we want to plot
+        pdata = [read_data, basepair_data, readlength_data]
+        keys = [read_data_keys, basepair_data_keys, readlength_data_keys]
         self.add_section (
             name = 'Alignment Summary',
             anchor = 'picard-alignmentsummary',
