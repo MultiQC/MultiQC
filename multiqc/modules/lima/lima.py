@@ -8,6 +8,7 @@ import re
 from collections import OrderedDict
 from multiqc.modules.base_module import BaseMultiqcModule
 from multiqc.plots import bargraph
+from multiqc.utils import config
 
 # Initialise the logger
 log = logging.getLogger(__name__)
@@ -39,6 +40,8 @@ class MultiqcModule(BaseMultiqcModule):
     def parse_counts_files(self):
         for f in self.find_log_files('lima/counts', filehandles=True):
             data = self.parse_lima_counts(f['f'], f['root'])
+            # Update sample names if --lima-barcodes was specified
+            self.update_sample_names(data)
             # Check for duplicate samples
             for sample in data:
                 if sample in self.lima_counts:
@@ -72,6 +75,8 @@ class MultiqcModule(BaseMultiqcModule):
 
             first_barcode = data['IdxFirstNamed']
             second_barcode = data['IdxCombinedNamed']
+            # The format barcode1--barcode2 is also used in
+            # self.update_sample_names
             sample = self.clean_s_name(f'{first_barcode}--{second_barcode}', root)
             counts = data['Counts']
             mean_score = data['MeanScore']
@@ -81,6 +86,38 @@ class MultiqcModule(BaseMultiqcModule):
             }
 
         return lima_counts
+
+    def update_sample_names(self, data):
+        lima_barcodes = config.kwargs['lima_barcodes']
+        # If --lima-barcodes wasn't specified
+        if not lima_barcodes:
+            return
+
+        # Read the barcodes to sample mapping
+        barcodes = self.read_lima_barcodes(lima_barcodes)
+
+        # Copy the data over to the new dictionary by sample name
+        for name in list(data.keys()):
+            # If we have a mapping from the barcode to samplename
+            if name in barcodes:
+                # Get the new sample name
+                sample_name = barcodes[name]
+                # Update the sample name
+                data[sample_name] = data.pop(name)
+
+    def read_lima_barcodes(self, lima_barcodes):
+        """
+        Read the lima barcodes file, and return as a dictionary
+
+        The keys will be of the format barcode1--barcode2, and the values will
+        be the sample name
+        """
+        barcodes = dict()
+        with open(lima_barcodes) as fin:
+            for line in fin:
+                sample, first_barcode, second_barcode = line.strip().split('\t')
+                barcodes[f'{first_barcode}--{second_barcode}'] = sample
+        return barcodes
 
 
 def parse_PacBio_log(file_content):
