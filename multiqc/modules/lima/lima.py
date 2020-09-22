@@ -29,6 +29,8 @@ class MultiqcModule(BaseMultiqcModule):
         self.write_data_files()
         # Add the counts to the general statistics
         self.general_stats_addcols(self.lima_counts)
+        # Add a graph of all filtered ZMWs
+        self.add_sections()
 
     def parse_summary_files(self):
         for f in self.find_log_files('lima/summary', filehandles=True):
@@ -119,7 +121,71 @@ class MultiqcModule(BaseMultiqcModule):
                 barcodes[f'{first_barcode}--{second_barcode}'] = sample
         return barcodes
 
+    def add_sections(self):
+        plot_data = dict()
 
+        # First, we gather all filter results for each lima summary
+        for filename, data in self.lima_summary.items():
+            filter_reasons = self.filter_and_pass(data)
+            plot_data[filename] = filter_reasons
+
+        # Gather all the reasons we found in the parsed reports
+        reasons = set()
+        for filename in plot_data:
+            for reason in plot_data[filename]:
+                reasons.add(reason)
+
+        # Put them in a sorted list for plotting
+        pass_ = 'ZMWs above all thresholds'
+        reasons = sorted(list(reasons))
+        reasons.remove(pass_)
+        reasons.insert(0, pass_)
+
+        # Set the formatting, we want the passed ZMWs to be green
+        green = '#5cb85c'
+        formatting = OrderedDict()
+        for reason in reasons:
+            d = dict()
+            d['name'] = reason
+            if reason == pass_:
+                d['color'] = green
+            formatting[reason] = d
+
+        # Plot configuration
+        config = {
+                'id': 'lima-filter-graph',
+                'title': 'Lima: ZMW results',
+                'ylab': 'Number of ZMWs',
+                'xlab': 'Lima summary file'
+        }
+        self.add_section(
+                name='ZMWs filtered by Lima',
+                anchor='lima-filter',
+                description=(
+                    'The number of ZMWs that failed or passed all Lima '
+                    'filters'
+                ),
+                helptext=(
+                    'The number of ZMWs that passed all filters is shown as '
+                    '**ZMWs above all thresholds**, all other categories that '
+                    'are shown in the graph represent the number of ZMWs that '
+                    'were dropped for the specified reason.'
+                ),
+                plot = bargraph.plot(plot_data, formatting, config)
+        )
+
+    def filter_and_pass(self, data):
+        """ Get the reasons why each ZMW was filtered """
+        reasons = dict()
+
+        # Add why ZMWs were filtered
+        filter_data = data['ZMWs below any threshold']['ZMW marginals']
+        for reason in filter_data:
+            reasons[reason] = filter_data[reason]['count']
+        # Add the ZMWs that passed
+        reasons['ZMWs above all thresholds'] = data['ZMWs above all thresholds']['count']
+
+        return reasons
 def parse_PacBio_log(file_content):
     """ Parse PacBio log file """
     data = dict()
