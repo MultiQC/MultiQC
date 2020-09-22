@@ -8,6 +8,7 @@ import re
 from collections import OrderedDict
 from multiqc.modules.base_module import BaseMultiqcModule
 from multiqc.plots import bargraph
+from multiqc.utils import config
 
 # Initialise the logger
 log = logging.getLogger(__name__)
@@ -28,6 +29,8 @@ class MultiqcModule(BaseMultiqcModule):
         self.write_data_files()
         # Add the counts to the general statistics
         self.general_stats_addcols(self.lima_counts)
+        # Add a graph of all filtered ZMWs
+        self.add_sections()
 
     def parse_summary_files(self):
         for f in self.find_log_files('lima/summary', filehandles=True):
@@ -39,6 +42,8 @@ class MultiqcModule(BaseMultiqcModule):
     def parse_counts_files(self):
         for f in self.find_log_files('lima/counts', filehandles=True):
             data = self.parse_lima_counts(f['f'], f['root'])
+            # Update sample names if --lima-barcodes was specified
+            self.update_sample_names(data)
             # Check for duplicate samples
             for sample in data:
                 if sample in self.lima_counts:
@@ -70,7 +75,11 @@ class MultiqcModule(BaseMultiqcModule):
             spline = line.strip().split()
             data = {field: value for field, value in zip(header, spline)}
 
-            sample = self.clean_s_name(data['IdxFirstNamed'], root)
+            first_barcode = data['IdxFirstNamed']
+            second_barcode = data['IdxCombinedNamed']
+            # The format barcode1--barcode2 is also used in
+            # self.update_sample_names
+            sample = self.clean_s_name(f'{first_barcode}--{second_barcode}', root)
             counts = data['Counts']
             mean_score = data['MeanScore']
             lima_counts[sample] = {
@@ -80,7 +89,103 @@ class MultiqcModule(BaseMultiqcModule):
 
         return lima_counts
 
+    def update_sample_names(self, data):
+        lima_barcodes = config.kwargs['lima_barcodes']
+        # If --lima-barcodes wasn't specified
+        if not lima_barcodes:
+            return
 
+        # Read the barcodes to sample mapping
+        barcodes = self.read_lima_barcodes(lima_barcodes)
+
+        # Copy the data over to the new dictionary by sample name
+        for name in list(data.keys()):
+            # If we have a mapping from the barcode to samplename
+            if name in barcodes:
+                # Get the new sample name
+                sample_name = barcodes[name]
+                # Update the sample name
+                data[sample_name] = data.pop(name)
+
+    def read_lima_barcodes(self, lima_barcodes):
+        """
+        Read the lima barcodes file, and return as a dictionary
+
+        The keys will be of the format barcode1--barcode2, and the values will
+        be the sample name
+        """
+        barcodes = dict()
+        with open(lima_barcodes) as fin:
+            for line in fin:
+                sample, first_barcode, second_barcode = line.strip().split('\t')
+                barcodes[f'{first_barcode}--{second_barcode}'] = sample
+        return barcodes
+
+    def add_sections(self):
+        plot_data = dict()
+
+        # First, we gather all filter results for each lima summary
+        for filename, data in self.lima_summary.items():
+            filter_reasons = self.filter_and_pass(data)
+            plot_data[filename] = filter_reasons
+
+        # Gather all the reasons we found in the parsed reports
+        reasons = set()
+        for filename in plot_data:
+            for reason in plot_data[filename]:
+                reasons.add(reason)
+
+        # Put them in a sorted list for plotting
+        pass_ = 'ZMWs above all thresholds'
+        reasons = sorted(list(reasons))
+        reasons.remove(pass_)
+        reasons.insert(0, pass_)
+
+        # Set the formatting, we want the passed ZMWs to be green
+        green = '#5cb85c'
+        formatting = OrderedDict()
+        for reason in reasons:
+            d = dict()
+            d['name'] = reason
+            if reason == pass_:
+                d['color'] = green
+            formatting[reason] = d
+
+        # Plot configuration
+        config = {
+                'id': 'lima-filter-graph',
+                'title': 'Lima: ZMW results',
+                'ylab': 'Number of ZMWs',
+                'xlab': 'Lima summary file'
+        }
+        self.add_section(
+                name='ZMWs filtered by Lima',
+                anchor='lima-filter',
+                description=(
+                    'The number of ZMWs that failed or passed all Lima '
+                    'filters'
+                ),
+                helptext=(
+                    'The number of ZMWs that passed all filters is shown as '
+                    '**ZMWs above all thresholds**, all other categories that '
+                    'are shown in the graph represent the number of ZMWs that '
+                    'were dropped for the specified reason.'
+                ),
+                plot = bargraph.plot(plot_data, formatting, config)
+        )
+
+    def filter_and_pass(self, data):
+        """ Get the reasons why each ZMW was filtered """
+        reasons = dict()
+
+        # Add why ZMWs were filtered
+        filter_data = data['ZMWs below any threshold']['ZMW marginals']
+        for reason in filter_data:
+            reasons[reason] = filter_data[reason]['count']
+        # Add the ZMWs that passed
+        reasons['ZMWs above all thresholds'] = data['ZMWs above all thresholds']['count']
+
+        return reasons
 def parse_PacBio_log(file_content):
     """ Parse PacBio log file """
     data = dict()

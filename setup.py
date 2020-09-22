@@ -189,6 +189,9 @@ setup(
             'gathered = multiqc.templates.gathered',
             'geo = multiqc.templates.geo',
         ],
+        'multiqc.cli_options.v1': [
+                'lima_barcodes = multiqc.modules.lima:lima_barcodes'
+        ]
 ## See https://multiqc.info/docs/#multiqc-plugins for documentation
 #       'multiqc.cli_options.v1': [
 #           'my-new-option = myplugin.cli:new_option'
