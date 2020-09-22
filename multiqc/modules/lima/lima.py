@@ -70,7 +70,9 @@ class MultiqcModule(BaseMultiqcModule):
             spline = line.strip().split()
             data = {field: value for field, value in zip(header, spline)}
 
-            sample = self.clean_s_name(data['IdxFirstNamed'], root)
+            first_barcode = data['IdxFirstNamed']
+            second_barcode = data['IdxCombinedNamed']
+            sample = self.clean_s_name(f'{first_barcode}--{second_barcode}', root)
             counts = data['Counts']
             mean_score = data['MeanScore']
             lima_counts[sample] = {
