@@ -262,6 +262,11 @@ module_order:
             - DNA
     - peddy:
         module_tag:
+    - lima:
+        module_tag:
+            - RNA
+            - DNA
+            - PacBio
             - DNA
     - somalier:
         module_tag:
@@ -506,11 +511,6 @@ module_order:
         module_tag:
             - RNA
             - DNA
-    - lima:
-        module_tag:
-            - RNA
-            - DNA
-            - PacBio
     - adapterRemoval:
         module_tag:
             - RNA
