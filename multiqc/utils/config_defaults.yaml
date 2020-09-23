@@ -255,6 +255,11 @@ module_order:
     # MultiQC general module for catching output from custom scripts
     - 'custom_content'
     # Post-alignment QC
+    - ccs:
+        module_tag:
+            - DNA
+            - RNA
+            - PacBio
     - conpair:
         module_tag:
             - WGS
@@ -515,11 +520,6 @@ module_order:
         module_tag:
             - RNA
             - DNA
-    - ccs:
-        module_tag:
-            - DNA
-            - RNA
-            - PacBio
     - clipandmerge:
         module_tag:
             - DNA
