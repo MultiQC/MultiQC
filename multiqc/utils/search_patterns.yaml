@@ -246,6 +246,8 @@ dragen/mapping_metrics:
     fn: '*.mapping_metrics.csv'
     contents: 'Number of unique reads (excl. duplicate marked reads)'
     num_lines: 50
+eigenstratdatabasetools:
+    fn: '*_eigenstrat_coverage.json'
 fastp:
     fn: '*fastp.json'
 fastq_screen:

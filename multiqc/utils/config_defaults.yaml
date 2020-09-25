@@ -423,6 +423,9 @@ module_order:
     - sexdeterrmine:
         module_tag:
             - DNA
+    - eigenstratdatabasetools:
+        module_tag:
+            - DNA
     - bamtools:
         module_tag:
             - DNA

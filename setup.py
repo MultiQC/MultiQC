@@ -160,6 +160,7 @@ setup(
             'sargasso = multiqc.modules.sargasso:MultiqcModule',
             'seqyclean = multiqc.modules.seqyclean:MultiqcModule',
             'sexdeterrmine = multiqc.modules.sexdeterrmine:MultiqcModule',
+            'eigenstratdatabasetools = multiqc.modules.eigenstratdatabasetools:MultiqcModule',
             'sickle = multiqc.modules.sickle:MultiqcModule',
             'skewer = multiqc.modules.skewer:MultiqcModule',
             'slamdunk = multiqc.modules.slamdunk:MultiqcModule',

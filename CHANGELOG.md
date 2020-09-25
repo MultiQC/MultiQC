@@ -8,6 +8,8 @@
 
 * [**HOPS**](https://www.github.com/rhubler/HOPS)
   * Post-alignment ancient DNA analysis tool for MALT
+* [**EigenStratDatabaseTools](https://github.com/TCLamnidis/EigenStratDatabaseTools)
+  * Added MultiQC module to report SNP coverages from `eigenstrat_snp_coverage.py` in the general stats table.
 
 #### Module updates
 

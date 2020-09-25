@@ -93,6 +93,7 @@ MultiQC Modules:
     Samtools: modules/samtools.md
     Sargasso: modules/sargasso.md
     SexDetErrmine: modules/sexdeterrmine.md
+    EigenStratDatabseTools: modules/eigenstratdatabasetools.md
     Slamdunk: modules/slamdunk.md
     SnpEff: modules/snpeff.md
     SNPsplit: modules/snpsplit.md
