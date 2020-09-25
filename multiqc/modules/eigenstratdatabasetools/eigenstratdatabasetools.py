@@ -73,7 +73,7 @@ class MultiqcModule(BaseMultiqcModule):
 
     def addSummaryMetrics(self):
         """ Take the parsed stats from eigenstrat_snp_coverage and add it to the main plot """
-        print(type(self.snp_cov_data.values()))
+        
         headers = OrderedDict()
         headers['Covered_Snps'] = {
             'title': '#SNPs Covered',
