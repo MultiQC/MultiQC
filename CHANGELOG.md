@@ -27,7 +27,7 @@
     * Log10 x-axis for _Read Length_ plot ([#1214](https://github.com/ewels/MultiQC/issues/1214))
 * **fgbio**
     * Fix `ErrorRateByReadPosition` to calculate `ymax` not just on the overall `error_rate`, but also specific base errors (ex. `a_to_c_error_rate`, `a_to_g_error_rate`, ...).  ([#1215](https://github.com/ewels/MultiQC/pull/1251))
-    * Fix `ErrorRateByReadPosition` plotted line names to no longer concatenate multiple read identifiers and to fix the off-by-one read numbering (ex. `Sample1_R2_R3` -> `Sample1_R2`) ([#[1304](https://github.com/ewels/MultiQC/pull/1304))
+    * Fix `ErrorRateByReadPosition` plotted line names to no longer concatenate multiple read identifiers and no longer have off-by-one read numbering (ex. `Sample1_R2_R3` -> `Sample1_R2`) ([#[1304](https://github.com/ewels/MultiQC/pull/1304))
 
 #### New Custom Content features
 
