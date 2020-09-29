@@ -86,9 +86,9 @@ def parse_reports(self):
     linegraph_data = [{} for _ in linegraph_keys]
     for s_name, s_data in all_data.items():
         for read_number, read_data in s_data.items():
-            s_name = "%s_R%d" % (s_name, int(read_number) + 1)
+            s_name_with_read = "%s_R%d" % (s_name, int(read_number))
             for lg, index in zip(linegraph_data, range(7)):
-                lg[s_name] = dict((d['position'], d[linegraph_keys[index]]) for d in read_data.values())
+                lg[s_name_with_read] = dict((d['position'], d[linegraph_keys[index]]) for d in read_data.values())
 
     # add a section for the plot
     self.add_section (
