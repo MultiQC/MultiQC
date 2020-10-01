@@ -83,7 +83,7 @@ class MultiqcModule(BaseMultiqcModule):
             'min': 0
         }
         headers['Total_Snps'] = {
-            'title': '#Snps Total',
+            'title': '#SNPs Total',
             'description': 'The total number of SNPs in the genotype dataset.',
             'scale': False,
             'format': '{:,.0f}',
