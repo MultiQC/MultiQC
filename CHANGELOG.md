@@ -15,6 +15,9 @@
     * Fix issue where missing out fields could crash the module ([#1223](https://github.com/ewels/MultiQC/issues/1223))
 * **featureCounts**
     * Add support for output from [Rsubread](https://bioconductor.org/packages/release/bioc/html/Rsubread.html) ([#1022](https://github.com/ewels/MultiQC/issues/1022))
+
+* **indexcov**
+    * Fixed bug when making the PED file plots ([#1265](https://github.com/ewels/MultiQC/issues/1265))
 * **Kaiju**
     * Fixed bug affecting inputs with taxa levels other than Phylum ([#1217](https://github.com/ewels/MultiQC/issues/1217))
 * **MALT**

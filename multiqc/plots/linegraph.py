@@ -172,7 +172,7 @@ def plot (data, pconfig=None):
     try:
         return get_template_mod().linegraph(plotdata, pconfig)
     except (AttributeError, TypeError):
-        if config.plots_force_flat or (not config.plots_force_interactive and len(plotdata[0]) > config.plots_flat_numseries):
+        if config.plots_force_flat or (not config.plots_force_interactive and plotdata and len(plotdata[0]) > config.plots_flat_numseries):
             try:
                 return matplotlib_linegraph(plotdata, pconfig)
             except Exception as e:
