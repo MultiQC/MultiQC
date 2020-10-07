@@ -629,6 +629,14 @@ slamdunk/tcperreadpos:
 slamdunk/tcperutrpos:
   contents: "# slamdunk tcperutr"
   num_lines: 1
+snippy/snippy:
+    - fn: '*.txt'
+      contents_re: '.*VariantTotal.*'
+      num_lines: 20
+      max_filesize: 1000
+snippy/snippy-core:
+    - fn: '*.txt'
+      contents_re: '.*ID.*LENGTH.*ALIGNED.*UNALIGNED.*VARIANT.*HET.*MASKED.*LOWCOV.*'
 snpeff:
   contents: "SnpEff_version"
   max_filesize: 5000000
