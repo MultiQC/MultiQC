@@ -177,6 +177,7 @@ setup(
             "sickle = multiqc.modules.sickle:MultiqcModule",
             "skewer = multiqc.modules.skewer:MultiqcModule",
             "slamdunk = multiqc.modules.slamdunk:MultiqcModule",
+            'snippy = multiqc.modules.snippy:MultiqcModule',
             "snpeff = multiqc.modules.snpeff:MultiqcModule",
             "snpsplit = multiqc.modules.snpsplit:MultiqcModule",
             "somalier = multiqc.modules.somalier:MultiqcModule",
