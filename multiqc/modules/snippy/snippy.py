@@ -78,12 +78,18 @@ class MultiqcModule(BaseMultiqcModule):
                 self.snippy_core_data[f["s_name"]]
             )
 
+        # Raise warning if no logs were found.
+        if len(self.snippy_data) == 0 and len(self.snippy_core_data) == 0:
+            raise UserWarning
+
         # Run analysis if txt files found
         if len(self.snippy_data) > 0:
+            log.info("Found {} file(s) for snippy/snippy.".format(len(self.snippy_data)))
             self.snippy_stats_table()
             self.snippy_report_section()
 
         if len(self.snippy_core_data) > 0:
+            log.info("Found {} file(s) for snippy/snippy-core.".format(len(self.snippy_core_data)))
             self.snippy_core_stats_table()
             self.snippy_core_report_section()
 
