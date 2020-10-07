@@ -279,7 +279,7 @@ class MultiqcModule(BaseMultiqcModule):
         headers = OrderedDict()
         headers['pct_duplication'] = {
             'title': '% Duplication',
-            'description': 'Duplication rate in filtered reads',
+            'description': 'Duplication rate before filtering',
             'max': 100,
             'min': 0,
             'suffix': '%',
