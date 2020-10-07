@@ -508,6 +508,10 @@ module_order:
   - varscan2:
       module_tag:
         - DNA
+  - snippy:
+      module_tag:
+          - DNA
+          - prokarytotic        
 
   # Alignment tool stats
   - bbmap:
