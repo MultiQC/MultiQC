@@ -104,6 +104,7 @@ MultiQC Modules:
     SexDetErrmine: modules/sexdeterrmine.md
     EigenStratDatabseTools: modules/eigenstratdatabasetools.md
     Slamdunk: modules/slamdunk.md
+    Snippy: modules/snippy.md
     SnpEff: modules/snpeff.md
     SNPsplit: modules/snpsplit.md
     Somalier: modules/somalier.md
