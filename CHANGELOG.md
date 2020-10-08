@@ -31,7 +31,7 @@
 * **GATK**
   * Add support for the creation of a "Reported vs Empirical Quality" graph to the Base Recalibration module.
 * **verifyBamID**
-  * Fix "CHIP" value detection to notice when there are "CHIP" values to display. ([#1315](https://github.com/ewels/MultiQC/pull/1251))
+  * Fix "CHIP" value detection to notice when there are "CHIP" values to display. ([#1316](https://github.com/ewels/MultiQC/pull/1316))
 
 #### New Custom Content features
 
