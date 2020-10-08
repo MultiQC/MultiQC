@@ -100,7 +100,7 @@ class MultiqcModule(BaseMultiqcModule):
                     # if it's not the first element (if it's not the name)
                     if i != 0:
                         # see if CHIP is in the column header and the value is not NA
-                        if "CHIP" in [headers[i]] and v != "NA":
+                        if headers[i].startswith("CHIP") and v != "NA":
                             # set hide_chip_columns = False so they are not hidden
                             self.hide_chip_columns=False
                         # try and convert the value into a float
