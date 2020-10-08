@@ -48,7 +48,7 @@ def parse_reports(self):
                 collapse = fields[-1]
                 if not collapse:
                     # Substitutions types were not collapsed, parse them
-                    fields[11:-1] = [float(field) for field in fields[4:11]]
+                    fields[11:-1] = [float(field) for field in fields[11:-1]]
 
             row_data = dict(zip(header, fields))
             read_number = row_data['read_number']
