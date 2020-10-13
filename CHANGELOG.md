@@ -5,15 +5,20 @@
 #### New MultiQC Features
 
 #### New Modules
-
 * [**ccs**](https://github.com/PacificBiosciences/ccs)
   * Generate highly accurate single-molecule consensus reads
+* [**Lima**](https://github.com/PacificBiosciences/barcoding)
+  * The PacBio Barcode Demultiplexer
+* [**WhatsHap**](https://whatshap.readthedocs.io)
+  * WhatsHap is a software for phasing genomic variants using DNA sequencing reads
 * [**HOPS**](https://www.github.com/rhubler/HOPS)
   * Post-alignment ancient DNA analysis tool for MALT
 
 #### Module updates
 * **CCS**
     * Add support for the json output format for CCS version 5
+* **Picard**
+    * Add additional datasets to Picard Alignment Summary ([#1293](https://github.com/ewels/MultiQC/issues/1293))
 * **DRAGEN**
     * Fix issue where missing out fields could crash the module ([#1223](https://github.com/ewels/MultiQC/issues/1223))
 * **featureCounts**

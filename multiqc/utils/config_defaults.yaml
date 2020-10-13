@@ -223,6 +223,7 @@ fn_clean_trim:
     - '_matrix'
     - '.stats'
     - '.hist'
+    - '.phased'
 
 # Files to ignore when indexing files.
 # Grep file match patterns.
@@ -266,6 +267,11 @@ module_order:
             - DNA
     - peddy:
         module_tag:
+    - lima:
+        module_tag:
+            - RNA
+            - DNA
+            - PacBio
             - DNA
     - somalier:
         module_tag:
@@ -616,3 +622,6 @@ module_order:
         module_tag:
             - DNA
             - RNA
+    - whatshap:
+        module_tag:
+            - DNA
