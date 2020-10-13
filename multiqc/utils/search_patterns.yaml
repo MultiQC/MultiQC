@@ -171,7 +171,7 @@ busco:
     fn: 'short_summary*'
     contents: 'BUSCO version is:'
     num_lines: 1
-ccs:
+ccs/v4:
   contents: 'ZMWs generating CCS'
   num_lines: 2
   max_filesize: 1024

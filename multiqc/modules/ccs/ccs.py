@@ -30,7 +30,7 @@ class MultiqcModule(BaseMultiqcModule):
         self.add_sections()
 
     def parse_v4_log_files(self):
-        for f in self.find_log_files('ccs', filehandles=True):
+        for f in self.find_log_files('ccs/v4', filehandles=True):
             data = parse_PacBio_log(f['f'])
             v5_data = self.convert_to_v5(data)
             filename = f['s_name']
