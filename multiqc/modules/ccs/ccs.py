@@ -2,6 +2,7 @@
 
 """ MultiQC module to parse output from CCS """
 
+import json
 import logging
 import re
 
@@ -26,6 +27,7 @@ class MultiqcModule(BaseMultiqcModule):
         # To store the mod data
         self.mod_data = dict()
         self.parse_v4_log_files()
+        self.parse_v5_log_files()
         self.write_data_files()
         self.add_sections()
 
@@ -33,6 +35,13 @@ class MultiqcModule(BaseMultiqcModule):
         for f in self.find_log_files('ccs/v4', filehandles=True):
             data = parse_PacBio_log(f['f'])
             v5_data = self.convert_to_v5(data)
+            filename = f['s_name']
+            self.mod_data[filename] = v5_data
+            self.add_data_source(f)
+
+    def parse_v5_log_files(self):
+        for f in self.find_log_files('ccs/v5', filehandles=True):
+            v5_data = json.load(f['f'])
             filename = f['s_name']
             self.mod_data[filename] = v5_data
             self.add_data_source(f)
