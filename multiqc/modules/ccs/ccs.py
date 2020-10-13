@@ -2,6 +2,7 @@
 
 """ MultiQC module to parse output from CCS """
 
+import json
 import logging
 import re
 
@@ -25,15 +26,24 @@ class MultiqcModule(BaseMultiqcModule):
 
         # To store the mod data
         self.mod_data = dict()
-        self.parse_log_files()
+        self.parse_v4_log_files()
+        self.parse_v5_log_files()
         self.write_data_files()
         self.add_sections()
 
-    def parse_log_files(self):
-        for f in self.find_log_files('ccs', filehandles=True):
+    def parse_v4_log_files(self):
+        for f in self.find_log_files('ccs/v4', filehandles=True):
             data = parse_PacBio_log(f['f'])
+            v5_data = self.convert_to_v5(data)
             filename = f['s_name']
-            self.mod_data[filename] = data
+            self.mod_data[filename] = v5_data
+            self.add_data_source(f)
+
+    def parse_v5_log_files(self):
+        for f in self.find_log_files('ccs/v5', filehandles=True):
+            v5_data = json.load(f['f'])
+            filename = f['s_name']
+            self.mod_data[filename] = v5_data
             self.add_data_source(f)
 
         # If we found no data
@@ -50,7 +60,6 @@ class MultiqcModule(BaseMultiqcModule):
             filter_reasons = self.filter_and_pass(self.mod_data[filename])
             plot_data[filename] = filter_reasons
 
-
         # Gather all the filter reasons we have found in the parsed reports
         reasons = set()
         for filename in plot_data:
@@ -58,7 +67,7 @@ class MultiqcModule(BaseMultiqcModule):
                 reasons.add(reason)
 
         # Put them in a sorted list
-        pass_ = 'ZMWs generating CCS'
+        pass_ = 'ZMWs pass filters'
         reasons = sorted(list(reasons))
         # Put ZMWS generating CCS at the front
         reasons.remove(pass_)
@@ -100,16 +109,72 @@ class MultiqcModule(BaseMultiqcModule):
         )
 
     def filter_and_pass(self, data):
+        """ Gather the reasons why ZMWs were failed or passed """
         reasons = dict()
 
-        # Add why ZMWs were filtered
-        filter_data = data['ZMWs filtered']['Exclusive ZMW counts']
-        for reason in filter_data:
-            reasons[reason] = filter_data[reason]['count']
-        # Add the number of ZMWs that passed
-        reasons['ZMWs generating CCS'] = data['ZMWs generating CCS']['count']
+        # We only have to use the attributes
+        attributes = data['attributes']
+
+        # Add filtere reasons (id starts with filtered_) and total passed
+        for entry in attributes:
+            if entry['id'].startswith('filtered') or entry['id'] == 'zmw_passed_yield':
+                reasons[entry['name']] = entry['value']
 
         return reasons
+
+    def convert_to_v5(self, data):
+        """ Convert the v4 format to the new CCS v5 json format """
+        # Initialise the v5 format dictionary
+        v5 = dict()
+        v5['id'] = 'ccs_processing'
+        attributes = list()
+        v5['attributes'] = attributes
+
+        # Update names for top level entries, they have been changed in v5
+        data['ZMWs pass filters'] = data['ZMWs generating CCS']
+        data['ZMWs fail filters'] = data['ZMWs filtered']
+
+        # Add the top level values to the attributes
+        for name in ('ZMWs input', 'ZMWs pass filters', 'ZMWs fail filters'):
+            count = data[name]['count']
+            attributes.append(self.make_v5_entry(name, count))
+
+        # Add the reasons for filtering to the attributes
+        for reason in data['ZMWs filtered']['Exclusive ZMW counts']:
+            count = data['ZMWs filtered']['Exclusive ZMW counts'][reason]['count']
+            attributes.append(self.make_v5_entry(reason, count))
+
+        return v5
+
+    def make_v5_entry(self, name, count):
+        """ Make a v5 output entry based on name and count """
+        # Dictionary to map the report names to the v5 id annotation
+        name_to_id = {
+                'ZMWs input': 'zmw_input',
+                'ZMWs pass filters': 'zmw_passed_yield',
+                'ZMWs fail filters': 'zmw_filtered_yield',
+                'Below SNR threshold': 'filtered_poor_snr',
+                'Median length filter': 'filtered_median_length_filter',
+                'Lacking full passes': 'filtered_too_few_passes',
+                'Heteroduplex insertions': 'filtered_heteroduplexes',
+                'Coverage drops': 'filtered_coverage_drops',
+                'Insufficient draft cov': 'filtered_insufficient_draft_cov',
+                'Draft too different': 'filtered_draft_too_different',
+                'Draft generation error': 'filtered_draft_failure',
+                'Draft above --max-length': 'filtered_draft_too_long',
+                'Draft below --min-length': 'filtered_draft_too_short',
+                'Reads failed polishing': 'filtered_read_failed_polish',
+                'Empty coverage windows': 'filtered_empty_window_during_polishing',
+                'CCS did not converge': 'filtered_non_convergent',
+                'CCS below minimum RQ': 'filtered_below_rq',
+                'Unknown error': 'filtered_unknown_error'
+        }
+
+        return {
+                'name': name,
+                'id': name_to_id[name],
+                'value': count
+                }
 
 
 def parse_PacBio_log(file_content):

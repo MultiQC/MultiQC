@@ -12,7 +12,8 @@
   * Post-alignment ancient DNA analysis tool for MALT
 
 #### Module updates
-
+* **CCS**
+    * Add support for the json output format for CCS version 5
 * **DRAGEN**
     * Fix issue where missing out fields could crash the module ([#1223](https://github.com/ewels/MultiQC/issues/1223))
 * **featureCounts**

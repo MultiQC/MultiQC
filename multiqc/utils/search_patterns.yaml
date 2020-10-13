@@ -171,10 +171,13 @@ busco:
     fn: 'short_summary*'
     contents: 'BUSCO version is:'
     num_lines: 1
-ccs:
+ccs/v4:
   contents: 'ZMWs generating CCS'
   num_lines: 2
   max_filesize: 1024
+ccs/v5:
+  contents: '"id": "ccs_processing"'
+  fn: '*.json'
 custom_content:
     fn_re: '.+_mqc\.(yaml|yml|json|txt|csv|tsv|log|out|png|jpg|jpeg|html)'
 clipandmerge:
