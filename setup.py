@@ -133,7 +133,6 @@ setup(
             'kat = multiqc.modules.kat:MultiqcModule',
             'kraken = multiqc.modules.kraken:MultiqcModule',
             'leehom = multiqc.modules.leehom:MultiqcModule',
-            'lima = multiqc.modules.lima:MultiqcModule',
             'longranger = multiqc.modules.longranger:MultiqcModule',
             'macs2 = multiqc.modules.macs2:MultiqcModule',
             'malt = multiqc.modules.malt:MultiqcModule',
@@ -178,8 +177,7 @@ setup(
             'trimmomatic = multiqc.modules.trimmomatic:MultiqcModule',
             'varscan2 = multiqc.modules.varscan2:MultiqcModule',
             'vcftools = multiqc.modules.vcftools:MultiqcModule',
-            'verifybamid = multiqc.modules.verifybamid:MultiqcModule',
-            'whatshap = multiqc.modules.whatshap:MultiqcModule'
+            'verifybamid = multiqc.modules.verifybamid:MultiqcModule'
         ],
         'multiqc.templates.v1': [
             'default = multiqc.templates.default',
@@ -189,9 +187,6 @@ setup(
             'gathered = multiqc.templates.gathered',
             'geo = multiqc.templates.geo',
         ],
-        'multiqc.cli_options.v1': [
-                'lima_barcodes = multiqc.modules.lima:lima_barcodes'
-        ]
 ## See https://multiqc.info/docs/#multiqc-plugins for documentation
 #       'multiqc.cli_options.v1': [
 #           'my-new-option = myplugin.cli:new_option'

@@ -27,7 +27,6 @@ MultiQC Modules:
     Jellyfish: modules/jellyfish.md
     KAT: modules/kat.md
     leeHom: modules/leehom.md
-    Lima: modules/lima.md
     minionqc: modules/minionqc.md
     pycoQC: modules/pycoqc.md
     SeqyClean: modules/seqyclean.md
@@ -105,7 +104,6 @@ MultiQC Modules:
     VarScan2: modules/varscan2.md
     VCFTools: modules/vcftools.md
     verifyBAMID: modules/verifybamid.md
-    WhatsHap: modules/whatshap.md
 Custom Content:
   Introduction: custom_content.md
 Coding with MultiQC:
