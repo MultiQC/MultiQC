@@ -6,6 +6,7 @@ from collections import defaultdict
 import logging
 
 from multiqc.modules.base_module import BaseMultiqcModule
+from multiqc.plots import bargraph
 
 # Initialise the logger
 log = logging.getLogger(__name__)
@@ -21,10 +22,12 @@ class MultiqcModule(BaseMultiqcModule):
         super(MultiqcModule, self).__init__(
                 name='WhatsHap', anchor='whatshap',
                 href='https://whatshap.readthedocs.io/',
-                info=(
-                    'WhatsHap is a software for phasing genomic variants '
-                    'using sequencing reads.'
-                )
+                info=("""
+                 is a program for phasing genomic variants using DNA sequencing
+                reads, also called read-based phasing or haplotype assembly. It
+                is especially suitable for long reads, but also works well with
+                short reads.
+                """)
         )
 
         # Store the whatshap stats results
@@ -47,6 +50,9 @@ class MultiqcModule(BaseMultiqcModule):
 
         # Add whatshap stats to general statistics
         self.whatshap_add_general_stats()
+
+        # Create bargraph with total phased bp
+        self.add_bargraph_total_phased()
 
 
     def parse_whatshap_stats(self, logfile):
@@ -102,6 +108,25 @@ class MultiqcModule(BaseMultiqcModule):
 
         return sample, results
 
+    @staticmethod
+    def get_summary_field(sample_stats):
+        """
+        Return the summary field for sample_stats
+
+        If there is only a single chromosome, we use that as the summary field.
+        If there are multiple chromosomes, whatshap adds the 'ALL' field which
+        contains the summary
+        """
+        # If there is only a single chromosome we use that as the summary
+        # filed. Otherwise, we use the 'ALL' chromosome (it only gets added
+        # by WhatsHap stats when there are multiple chromosomes).
+        if len(sample_stats) == 1:
+            summary_field = list(sample_stats)[0]
+        else:
+            summary_field = 'ALL'
+        return summary_field
+
+
     def whatshap_add_general_stats(self):
         """ Add WhatsHap stats to the general statistics table """
 
@@ -110,16 +135,35 @@ class MultiqcModule(BaseMultiqcModule):
 
         general = dict()
         for sample, sample_stats in self.whatshap_stats.items():
-            # If there is only a single chromosome we use that as the summary
-            # filed. Otherwise, we use the 'ALL' chromosome (it only gets added
-            # by WhatsHap stats when there are multiple chromosomes).
-            if len(sample_stats) == 1:
-                summary_field = list(sample_stats)[0]
-            else:
-                summary_field = 'ALL'
+            # Get the summary field
+            summary_field = self.get_summary_field(sample_stats)
             # The summary data we are adding to the general statistics
             summary_data = sample_stats[summary_field]
 
             general_stats = {field: summary_data[field] for field in fields}
             general[sample] = general_stats
         self.general_stats_addcols(general)
+
+    def add_bargraph_total_phased(self):
+        """ Add a bargraph of the total number of phased basepairs """
+        pdata = dict()
+        for sample, sample_stats in self.whatshap_stats.items():
+            # Get the summary field
+            summary_field = self.get_summary_field(sample_stats)
+            pdata[sample] = { 'Phased bp': sample_stats[summary_field]['bp_per_block_sum'] }
+
+        configuration = {
+            'id': 'multiqc_whatshap_phased_bp',
+            'title': 'Phased basepairs per Sample',
+            'anchor': 'multiqc_whatshap_phased_bp'
+        }
+
+        self.add_section(
+                name='Phased basepairs per Sample',
+                anchor='multiqc_whatshap_phased_bp',
+                description=
+                """
+                    This plot show the total number of phased basepairs for
+                    each sample.
+                """,
+                plot = bargraph.plot(pdata))#, configuration))
