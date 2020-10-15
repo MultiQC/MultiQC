@@ -130,7 +130,7 @@ class MultiqcModule(BaseMultiqcModule):
     def whatshap_add_general_stats(self):
         """ Add WhatsHap stats to the general statistics table """
 
-        fields = ['variants', 'phased', 'unphased',
+        fields = ['variants', 'phased', 'unphased', 'bp_per_block_sum',
                 'variant_per_block_avg', 'bp_per_block_avg', 'block_n50']
 
         general = dict()
@@ -150,7 +150,7 @@ class MultiqcModule(BaseMultiqcModule):
         for sample, sample_stats in self.whatshap_stats.items():
             # Get the summary field
             summary_field = self.get_summary_field(sample_stats)
-            pdata[sample] = { 'Phased bp': sample_stats[summary_field]['bp_per_block_sum'] }
+            pdata[sample] = { 'Phased basepairs': sample_stats[summary_field]['bp_per_block_sum'] }
 
         configuration = {
             'id': 'multiqc_whatshap_phased_bp',
