@@ -27,10 +27,10 @@ class MultiqcModule(BaseMultiqcModule):
         self.parse_summary_files()
         self.parse_counts_files()
         self.write_data_files()
-        # Add the counts to the general statistics
-        self.general_stats_addcols(self.lima_counts)
         # Add a graph of all filtered ZMWs
         self.add_sections()
+        # Add a plot for the data values in the counts file
+        self.plot_counts_data()
 
     def parse_summary_files(self):
         for f in self.find_log_files('lima/summary', filehandles=True):
@@ -83,8 +83,8 @@ class MultiqcModule(BaseMultiqcModule):
             counts = data['Counts']
             mean_score = data['MeanScore']
             lima_counts[sample] = {
-                    'Counts': counts,
-                    'MeanScore': mean_score
+                    'Counts': int(counts),
+                    'MeanScore': float(mean_score)
             }
 
         return lima_counts
@@ -186,6 +186,54 @@ class MultiqcModule(BaseMultiqcModule):
         reasons['ZMWs above all thresholds'] = data['ZMWs above all thresholds']['count']
 
         return reasons
+
+    def plot_counts_data(self):
+        """ Plot the lima counts data """
+        pdata = list()
+
+        categories = ['Counts', 'MeanScore']
+
+        configuration = {
+            'id': 'multiqc_lima_counts',
+            'title': 'Lima counts',
+            'anchor': 'multiqc_lima_counts',
+            'data_labels': [
+                {
+                    'name': category,
+                    'cpswitch_counts_label': category
+                } for category in categories
+            ]
+        }
+
+        for category in categories:
+            data = dict()
+            for sample, entry in self.lima_counts.items():
+                data[sample] = { category: entry[category] }
+            pdata.append(data)
+
+        self.add_section(
+                name='Per Sample count data',
+                anchor='multiqc_lima_count',
+                description=
+                """
+                    Per sample or per barcode statistics from Lima.
+
+                    The **Counts** show the
+                    number of reads for each sample or barcode pair.
+
+                    The **MeanScore** shows the mean quality score of the reads for
+                    each sample or barcode pair.
+                """,
+                helptext=
+                """
+                To display sample names instead of `barcode--barcode` pairs,
+                please re-run MultiQC and specify which barcodes belong to
+                which sample using the `--lima-barcodes` flag.
+                """,
+
+                plot=bargraph.plot(pdata, categories, configuration)),
+
+
 def parse_PacBio_log(file_content):
     """ Parse PacBio log file """
     data = dict()
