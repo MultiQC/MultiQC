@@ -212,7 +212,7 @@ class MultiqcModule(BaseMultiqcModule):
             pdata.append(data)
 
         self.add_section(
-                name='Per Sample count data',
+                name='Per sample count data',
                 anchor='multiqc_lima_count',
                 description=
                 """
