@@ -138,7 +138,62 @@ class MultiqcModule(BaseMultiqcModule):
                         'Number of biallelic variants in the input VCF, but '
                         'excluding any non-SNV variants if --only-snvs was '
                         'used'
-                }
+                },
+                'phased': {
+                    'id': 'phased',
+                    'title': 'Phased Variants',
+                    'description':
+                        'The number of biallelic, heterozygous variants that '
+                        'are marked as phased in the input VCF. This is again '
+                        'a subset of heterozygous_variants. Also, phased + '
+                        'unphased = heterozygous_variants.'
+                },
+                'unphased': {
+                    'id': 'unphased',
+                    'title': 'Unphased Variants',
+                    'description':
+                        'The number of biallelic, heterozygous variants that '
+                        'are not marked as phased in the input VCF. This is a '
+                        'subset of heterozygous_variants.'
+                },
+                'bp_per_block_sum': {
+                    'id': 'bp_per_block_sum',
+                    'title': 'Total Phased bp',
+                    'description':
+                        'Description of the distribution of non-singleton '
+                        'block lengths, where the length of a block is the '
+                        'number of basepairs it covers minus 1. That is, a '
+                        'block with two variants at positions 2 and 5 has '
+                        'length 3.'
+                },
+                'variant_per_block_avg': {
+                    'id': 'variant_per_block_avg',
+                    'title': 'Avg Variants per Block',
+                    'description':
+                        'Description of the distribution of non-singleton '
+                        'block sizes, where the size of a block is the number '
+                        'of variants it contains. Number of biallelic '
+                        'variants in the input VCF, but excluding any non-SNV '
+                        'variants if --only-snvs was used.'
+                },
+                'bp_per_block_avg': {
+                    'id': 'bp_per_block_avg',
+                    'title': 'Avg bp per Block',
+                    'description':
+                        'Description of the distribution of non-singleton '
+                        'block lengths, where the length of a block is the '
+                        'number of basepairs it covers minus 1. That is, a '
+                        'block with two variants at positions 2 and 5 has '
+                        'length 3.'
+                },
+                'block_n50': {
+                    'id': 'block_n50',
+                    'title': 'NG50',
+                    'description':
+                        'The NG50 value of the distribution of the block '
+                        'lengths. Interleaved blocks are cut in order to '
+                        'avoid artificially inflating this value.'
+                },
         }
 
         general = dict()
