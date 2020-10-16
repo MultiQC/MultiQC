@@ -2,7 +2,7 @@
 
 """ MultiQC module to parse output from WhatsHap """
 
-from collections import defaultdict
+from collections import defaultdict, OrderedDict
 import logging
 
 from multiqc.modules.base_module import BaseMultiqcModule
@@ -130,33 +130,81 @@ class MultiqcModule(BaseMultiqcModule):
 
         # Store the configuration for each column, this is also used to
         # determine which columns to add to the general statistics table
-        general_stats_headers = {
-                'variants': {
+        # https://whatshap.readthedocs.io/en/latest/guide.html#the-tsv-statistics-format
+        general_stats_headers = OrderedDict([
+                ('variants', {
                     'id': 'variants',
                     'title': 'Input Variants',
                     'description':
                         'Number of biallelic variants in the input VCF, but '
                         'excluding any non-SNV variants if --only-snvs was '
-                        'used'
-                },
-                'phased': {
-                    'id': 'phased',
-                    'title': 'Phased Variants',
+                        'used',
+                    'hidden': False}
+
+                ),
+                ('heterozygous_variants', {
+                    'id': 'heterozygous_variants',
+                    'title': 'Heterozygous Variants',
                     'description':
-                        'The number of biallelic, heterozygous variants that '
-                        'are marked as phased in the input VCF. This is again '
-                        'a subset of heterozygous_variants. Also, phased + '
-                        'unphased = heterozygous_variants.'
-                },
-                'unphased': {
+                        'The number of biallelic, heterozygous variants in '
+                        'the input VCF. This is a subset of Input Variants.',
+                    'hidden': False}
+
+                ),
+                ('heterozygous_snvs', {
+                    'id': 'heterozygous_snvs',
+                    'title': 'Heterozygous SNVs',
+                    'description':
+                        'The number of biallelic, heterozygous SNVs in the '
+                        'input VCF. This is a subset of Heterozygous '
+                        'Variants.',
+                    'hidden': False}
+
+                ),
+                ('unphased', {
                     'id': 'unphased',
                     'title': 'Unphased Variants',
                     'description':
                         'The number of biallelic, heterozygous variants that '
-                        'are not marked as phased in the input VCF. This is a '
-                        'subset of heterozygous_variants.'
-                },
-                'bp_per_block_sum': {
+                        'are not marked as phased in the input VCF. This '
+                        'is a subset of heterozygous_variants.',
+                    'hidden': False}
+                ),
+                ('phased', {
+                    'id': 'phased',
+                    'title': 'Phased Variants',
+                    'description':
+                        'The number of biallelic, heterozygous variants that '
+                        'are marked as phased in the input VCF. This is '
+                        'a subset of heterozygous_variants. Also, phased + '
+                        'unphased = heterozygous_variants.',
+                    'hidden': False}
+                ),
+                ('phased_snvs', {
+                    'id': 'phased_snvs',
+                    'title': 'Phased SNVs',
+                    'description':
+                        'The number of biallelic, heterozygous SNVs that are '
+                        'marked as phased in the input VCF. This is a subset '
+                        'of phased.',
+                    'hidden': False}
+                ),
+                ('blocks', {
+                    'id': 'blocks',
+                    'title': 'Blocks',
+                    'description':
+                        'The total number of phase sets/blocks.',
+                    'hidden': False}
+                ),
+                ('singletons', {
+                    'id': 'singletons',
+                    'title': 'Singletons',
+                    'description':
+                        'The number of blocks that contain exactly one '
+                        'variant.',
+                    'hidden': False}
+                ),
+                ('bp_per_block_sum', {
                     'id': 'bp_per_block_sum',
                     'title': 'Total Phased bp',
                     'description':
@@ -164,9 +212,10 @@ class MultiqcModule(BaseMultiqcModule):
                         'block lengths, where the length of a block is the '
                         'number of basepairs it covers minus 1. That is, a '
                         'block with two variants at positions 2 and 5 has '
-                        'length 3.'
-                },
-                'variant_per_block_avg': {
+                        'length 3.',
+                    'hidden': False}
+                ),
+                ('variant_per_block_avg', {
                     'id': 'variant_per_block_avg',
                     'title': 'Avg Variants per Block',
                     'description':
@@ -174,9 +223,10 @@ class MultiqcModule(BaseMultiqcModule):
                         'block sizes, where the size of a block is the number '
                         'of variants it contains. Number of biallelic '
                         'variants in the input VCF, but excluding any non-SNV '
-                        'variants if --only-snvs was used.'
-                },
-                'bp_per_block_avg': {
+                        'variants if --only-snvs was used.',
+                    'hidden': False}
+                ),
+                ('bp_per_block_avg', {
                     'id': 'bp_per_block_avg',
                     'title': 'Avg bp per Block',
                     'description':
@@ -184,17 +234,19 @@ class MultiqcModule(BaseMultiqcModule):
                         'block lengths, where the length of a block is the '
                         'number of basepairs it covers minus 1. That is, a '
                         'block with two variants at positions 2 and 5 has '
-                        'length 3.'
-                },
-                'block_n50': {
+                        'length 3.',
+                    'hidden': False}
+                ),
+                ('block_n50', {
                     'id': 'block_n50',
                     'title': 'NG50',
                     'description':
                         'The NG50 value of the distribution of the block '
                         'lengths. Interleaved blocks are cut in order to '
-                        'avoid artificially inflating this value.'
-                },
-        }
+                        'avoid artificially inflating this value.',
+                    'hidden': False}
+                )
+            ])
 
         general = dict()
         for sample, sample_stats in self.whatshap_stats.items():
