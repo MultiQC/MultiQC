@@ -54,7 +54,6 @@ class MultiqcModule(BaseMultiqcModule):
         # Create bargraph with total phased bp
         self.add_bargraph_total_phased()
 
-
     def parse_whatshap_stats(self, logfile):
         """ Parse WhatsHap stats file """
 
@@ -126,23 +125,36 @@ class MultiqcModule(BaseMultiqcModule):
             summary_field = 'ALL'
         return summary_field
 
-
     def whatshap_add_general_stats(self):
         """ Add WhatsHap stats to the general statistics table """
 
-        fields = ['variants', 'phased', 'unphased', 'bp_per_block_sum',
-                'variant_per_block_avg', 'bp_per_block_avg', 'block_n50']
+        # Store the configuration for each column, this is also used to
+        # determine which columns to add to the general statistics table
+        general_stats_headers = {
+                'variants': {
+                    'id': 'variants',
+                    'title': 'Input Variants',
+                    'description':
+                        'Number of biallelic variants in the input VCF, but '
+                        'excluding any non-SNV variants if --only-snvs was '
+                        'used'
+                }
+        }
 
         general = dict()
         for sample, sample_stats in self.whatshap_stats.items():
             # Get the summary field
             summary_field = self.get_summary_field(sample_stats)
+
             # The summary data we are adding to the general statistics
             summary_data = sample_stats[summary_field]
 
-            general_stats = {field: summary_data[field] for field in fields}
+            general_stats = {field: summary_data[field] for field in
+                             general_stats_headers}
+
             general[sample] = general_stats
-        self.general_stats_addcols(general)
+
+        self.general_stats_addcols(general, general_stats_headers)
 
     def add_bargraph_total_phased(self):
         """ Add a bargraph of the total number of phased basepairs """
