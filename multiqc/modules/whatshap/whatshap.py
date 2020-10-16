@@ -139,7 +139,7 @@ class MultiqcModule(BaseMultiqcModule):
                         'Number of biallelic variants in the input VCF, but '
                         'excluding any non-SNV variants if --only-snvs was '
                         'used',
-                    'hidden': False}
+                    'hidden': True}
 
                 ),
                 ('heterozygous_variants', {
@@ -148,7 +148,7 @@ class MultiqcModule(BaseMultiqcModule):
                     'description':
                         'The number of biallelic, heterozygous variants in '
                         'the input VCF. This is a subset of Input Variants.',
-                    'hidden': False}
+                    'hidden': True}
 
                 ),
                 ('heterozygous_snvs', {
@@ -158,7 +158,7 @@ class MultiqcModule(BaseMultiqcModule):
                         'The number of biallelic, heterozygous SNVs in the '
                         'input VCF. This is a subset of Heterozygous '
                         'Variants.',
-                    'hidden': False}
+                    'hidden': True}
 
                 ),
                 ('unphased', {
@@ -187,14 +187,14 @@ class MultiqcModule(BaseMultiqcModule):
                         'The number of biallelic, heterozygous SNVs that are '
                         'marked as phased in the input VCF. This is a subset '
                         'of phased.',
-                    'hidden': False}
+                    'hidden': True}
                 ),
                 ('blocks', {
                     'id': 'blocks',
                     'title': 'Blocks',
                     'description':
                         'The total number of phase sets/blocks.',
-                    'hidden': False}
+                    'hidden': True}
                 ),
                 ('singletons', {
                     'id': 'singletons',
@@ -202,7 +202,7 @@ class MultiqcModule(BaseMultiqcModule):
                     'description':
                         'The number of blocks that contain exactly one '
                         'variant.',
-                    'hidden': False}
+                    'hidden': True}
                 ),
                 ('bp_per_block_sum', {
                     'id': 'bp_per_block_sum',
@@ -224,7 +224,7 @@ class MultiqcModule(BaseMultiqcModule):
                         'of variants it contains. Number of biallelic '
                         'variants in the input VCF, but excluding any non-SNV '
                         'variants if --only-snvs was used.',
-                    'hidden': False}
+                    'hidden': True}
                 ),
                 ('bp_per_block_avg', {
                     'id': 'bp_per_block_avg',
@@ -244,7 +244,7 @@ class MultiqcModule(BaseMultiqcModule):
                         'The NG50 value of the distribution of the block '
                         'lengths. Interleaved blocks are cut in order to '
                         'avoid artificially inflating this value.',
-                    'hidden': False}
+                    'hidden': True}
                 )
             ])
 
