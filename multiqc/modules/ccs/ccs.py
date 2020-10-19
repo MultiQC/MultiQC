@@ -54,16 +54,21 @@ class MultiqcModule(BaseMultiqcModule):
         self.write_data_file(self.mod_data, 'multiqc_ccs_report')
 
     def add_sections(self):
-        plot_data = dict()
+        plot_data = list()
         # First we gather all the data we need
         for filename in self.mod_data:
             filter_reasons = self.filter_and_pass(self.mod_data[filename])
-            plot_data[filename] = filter_reasons
+            #plot_data[filename] = filter_reasons
+            plot_data.append({filename: filter_reasons})
 
         # Gather all the filter reasons we have found in the parsed reports
         reasons = set()
-        for filename in plot_data:
-            for reason in plot_data[filename]:
+        for entry in plot_data:
+            # Entry is a dictionary with a single key:value pair, so we can
+            # just pick the first values
+            filter_reasons = next(iter(entry.values()))
+            for reason in filter_reasons:
+                #import json; print(json.dumps(reason, indent=True));exit()
                 reasons.add(reason)
 
         # Put them in a sorted list
@@ -73,25 +78,20 @@ class MultiqcModule(BaseMultiqcModule):
         reasons.remove(pass_)
         reasons.insert(0,pass_)
 
-        # Now we add the formatting we want
-        # We want the passed ZMWs to be green
-        green = '#5cb85c'
-        formatting = OrderedDict()
-        for reason in reasons:
-            d = dict()
-            d['name'] = reason
-            # We want the PASS count to be green
-            if reason == pass_:
-                d['color'] = green
-            formatting[reason] = d
-
         # Plot configuration
         config = {
                 'id': 'ccs-filter-graph',
                 'title': 'CCS: ZMW results',
                 'ylab': 'Number of ZMWs',
-                'xlab': 'CCS report file'
+                'xlab': 'CCS report file',
+                'data_labels': [
+                    {
+                        'name': filename,
+                        'cpswitch_counts_label': filename
+                    } for filename in self.mod_data
+                ]
         }
+
         self.add_section (
                 name='ZMWs filtered and passed',
                 anchor='ccs-filter',
@@ -105,7 +105,7 @@ class MultiqcModule(BaseMultiqcModule):
                     'are shown in the graph represent the number of ZMWs '
                     'that were dropped for the specified reason.'
                 ),
-                plot=bargraph.plot(plot_data, formatting, config)
+                plot=bargraph.plot(plot_data, dict(), config)
         )
 
     def filter_and_pass(self, data):
