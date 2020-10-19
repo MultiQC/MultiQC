@@ -54,29 +54,27 @@ class MultiqcModule(BaseMultiqcModule):
         self.write_data_file(self.mod_data, 'multiqc_ccs_report')
 
     def add_sections(self):
-        plot_data = list()
-        # First we gather all the data we need
+
+        # First we gather all the filters we encountered
+        all_filters = set()
         for filename in self.mod_data:
-            filter_reasons = self.filter_and_pass(self.mod_data[filename])
-            #plot_data[filename] = filter_reasons
-            plot_data.append({filename: filter_reasons})
+            for filter_reason in self.filter_and_pass(self.mod_data[filename]):
+                all_filters.add(filter_reason)
 
-        # Gather all the filter reasons we have found in the parsed reports
-        reasons = set()
-        for entry in plot_data:
-            # Entry is a dictionary with a single key:value pair, so we can
-            # just pick the first values
-            filter_reasons = next(iter(entry.values()))
-            for reason in filter_reasons:
-                #import json; print(json.dumps(reason, indent=True));exit()
-                reasons.add(reason)
-
-        # Put them in a sorted list
-        pass_ = 'ZMWs pass filters'
-        reasons = sorted(list(reasons))
-        # Put ZMWS generating CCS at the front
-        reasons.remove(pass_)
-        reasons.insert(0,pass_)
+        # Then we add the counts for each filter to the plot data
+        plot_data = list()
+        for filename, data in self.mod_data.items():
+            d = dict()
+            for reason in all_filters:
+                d[reason] = dict()
+                for attribute in data['attributes']:
+                    if attribute['name'] == reason:
+                        d[reason][filename] = attribute['value']
+                        break
+                # If we didn't find it, set to zero
+                else:
+                    d[reason][filename] = 0
+            plot_data.append(d)
 
         # Plot configuration
         config = {
@@ -87,9 +85,11 @@ class MultiqcModule(BaseMultiqcModule):
                 'cpswitch': False,
                 'logswitch': True,
                 'stacking': None,
-                'data_labels': [
+                #'data_labels': [ filename for filename in self.mod_data]
+                'data_labels' : [
                     {
                         'name': filename,
+                        'cpswitch_counts_label': filename
                     } for filename in self.mod_data
                 ]
         }
@@ -99,7 +99,7 @@ class MultiqcModule(BaseMultiqcModule):
                 anchor='ccs-filter',
                 description=(
                     'The number of ZMWs that failed or passed all '
-                    'filters'
+                    'filters for each of the subreads files.'
                 ),
                 helptext=(
                     'The number of ZMWs that passed all filters is shown '
@@ -107,7 +107,7 @@ class MultiqcModule(BaseMultiqcModule):
                     'are shown in the graph represent the number of ZMWs '
                     'that were dropped for the specified reason.'
                 ),
-                plot=bargraph.plot(plot_data, dict(), config)
+                plot=bargraph.plot(plot_data, [filename for filename in self.mod_data], config)
         )
 
     def filter_and_pass(self, data):
