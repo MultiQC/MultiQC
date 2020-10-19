@@ -84,10 +84,12 @@ class MultiqcModule(BaseMultiqcModule):
                 'title': 'CCS: ZMW results',
                 'ylab': 'Number of ZMWs',
                 'xlab': 'CCS report file',
+                'cpswitch': False,
+                'logswitch': True,
+                'stacking': None,
                 'data_labels': [
                     {
                         'name': filename,
-                        'cpswitch_counts_label': filename
                     } for filename in self.mod_data
                 ]
         }
