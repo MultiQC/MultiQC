@@ -125,39 +125,46 @@ class MultiqcModule(BaseMultiqcModule):
         plot_data = dict()
 
         # First, we gather all filter results for each lima summary
+        all_filters = set()
         for filename, data in self.lima_summary.items():
-            filter_reasons = self.filter_and_pass(data)
-            plot_data[filename] = filter_reasons
+            for reason in self.filter_and_pass(data):
+                all_filters.add(reason)
 
-        # Gather all the reasons we found in the parsed reports
-        reasons = set()
-        for filename in plot_data:
-            for reason in plot_data[filename]:
-                reasons.add(reason)
-
-        # Put them in a sorted list for plotting
-        pass_ = 'ZMWs above all thresholds'
-        reasons = sorted(list(reasons))
-        reasons.remove(pass_)
-        reasons.insert(0, pass_)
-
-        # Set the formatting, we want the passed ZMWs to be green
-        green = '#5cb85c'
-        formatting = OrderedDict()
-        for reason in reasons:
+        plot_data = list()
+        for filename, data in self.lima_summary.items():
             d = dict()
-            d['name'] = reason
-            if reason == pass_:
-                d['color'] = green
-            formatting[reason] = d
+            for reason in all_filters:
+                d[reason] = dict()
+                # This is where the filter reasons are stored
+                zmw_marginals = data['ZMWs below any threshold']['ZMW marginals']
+                for filter_reason in zmw_marginals:
+                    if filter_reason == reason:
+                        d[reason][filename] = zmw_marginals[filter_reason]['count']
+                        break
+                # If we didn't find it, set to zero
+                else:
+                    d[reason][filename] = 0
+            plot_data.append(d)
 
         # Plot configuration
         config = {
                 'id': 'lima-filter-graph',
                 'title': 'Lima: ZMW results',
                 'ylab': 'Number of ZMWs',
-                'xlab': 'Lima summary file'
+                'xlab': 'Lima summary file',
+                'cpswitch': False,
+                'logswitch': True,
+                'stacking': None,
+                'data_labels': [
+                    {
+                        'name': filename,
+                        'cpswitch_counts_label': filename
+                    } for filename in self.lima_summary
+                ]
         }
+
+        formatting = [filename for filename in self.lima_summary]
+
         self.add_section(
                 name='ZMWs filtered by Lima',
                 anchor='lima-filter',
