@@ -138,7 +138,7 @@ class MultiqcModule(BaseMultiqcModule):
         # f_name = f['fn']
         # log.info("parsing {} {} ...".format(s_name,f_name))
         f_handle = f['f']
-        return _from_file(f_handle)
+        return read_pairs_stats(f_handle)
 
 
     def pair_types_chart(self):
@@ -182,14 +182,17 @@ class MultiqcModule(BaseMultiqcModule):
         """ cis-pairs split into several ranges
         of genomic separation, and trans-category."""
 
+        # assuming cumulative counts are given
+        # assuming open "distance" intervals (1kb+,...)
+        # assuming genomic "distances" reported in kb
         cis_dist_pattern = r"cis_(\d+)kb\+"
-        total_cis = sample_stats['cis']
-        total_trans = sample_stats['trans']
 
         # Construct a data structure for the plot
         cis_range_dict = dict()
         for s_name in self.pairtools_stats:
             sample_stats = self.pairtools_stats[s_name]
+            total_cis = int(sample_stats['cis'])
+            total_trans = int(sample_stats['trans'])
             dist_cumcount = []
             for k in sample_stats:
                 # check if a key matches "cis_dist_pattern":
@@ -203,7 +206,7 @@ class MultiqcModule(BaseMultiqcModule):
             # undo the cumulative distribution:
             range_count = []
             pdist, pcount = 0, total_cis
-            for dist,count in sorted(dist_cumcount,key=itemgetter(0)):
+            for dist,count in sorted(dist_cumcount, key=itemgetter(0)):
                 dist_range = f"cis: {pdist}-{dist}kb" if pdist>0 else f"cis: <{dist}kb"
                 range_count.append((dist_range, pcount - count))
                 pdist, pcount = dist, count
@@ -220,6 +223,9 @@ class MultiqcModule(BaseMultiqcModule):
         # take one from the "last" sample for now:
         ordered_ranges, _ = zip(*range_count)
 
+        # prepare datastructure for multiqc buil-in plotting:
+        for s_name in self.pairtools_stats:
+            cis_range_dict[s_name] = dict(cis_range_dict[s_name])
 
         # match ordered distnce ranges with colors for visual clarity:
         key_dict = OrderedDict()
@@ -238,7 +244,7 @@ class MultiqcModule(BaseMultiqcModule):
             'cpswitch_counts_label': 'Number of Reads'
         }
 
-        cis_ bagrgraph.plot(pairs_rane_dict, key_dict, pconfig=config)
+        return bargraph.plot(cis_range_dict, key_dict, pconfig=config)
 
 
     def pairs_by_strand_orientation(self):
