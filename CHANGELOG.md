@@ -30,6 +30,8 @@
     * Fix `ErrorRateByReadPosition` plotted line names to no longer concatenate multiple read identifiers and no longer have off-by-one read numbering (ex. `Sample1_R2_R3` -> `Sample1_R2`) ([#[1304](https://github.com/ewels/MultiQC/pull/1304))
 * **GATK**
   * Add support for the creation of a "Reported vs Empirical Quality" graph to the Base Recalibration module.
+* **interop**
+  * Added the `% Occupied` metric to `Read Metrics per Lane` table which is reported for NovaSeq and iSeq platforms.
 
 #### New Custom Content features
 

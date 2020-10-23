@@ -247,6 +247,11 @@ class MultiqcModule(BaseMultiqcModule):
             'description': 'The percentage of clusters passing filtering, +/- 1 standard deviation.',
             'suffix': '%',
         }
+        headers['% Occupied'] = {
+            'title': 'Occupied (%)',
+            'description': 'The percentage of nanowells occupied by clusters, +/- 1 standard deviation.',
+            'suffix': '%',
+        }
         headers['Phased'] = {
             'title': 'Phased (%)',
             'description': 'The value used by RTA for the percentage of molecules in a cluster for which sequencing falls behind (phasing) or jumps ahead (prephasing) the current cycle within a read.',
