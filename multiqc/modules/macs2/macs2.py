@@ -100,7 +100,8 @@ class MultiqcModule(BaseMultiqcModule):
             'scale': 'RdYlBu-rev'
         }
         headers['peak_count'] = {
-            'title': 'number_of_peaks',
+            'title': 'Number of Peaks',
+            'description': 'Total number of peaks',
             'min': 0,
             'format': '{:,.0f}'
         }
