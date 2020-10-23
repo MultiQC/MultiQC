@@ -13,54 +13,24 @@ sequencing data.
 
 Supported commands:
 
-* `MarkDuplicates`
-* `InsertSizeMetrics`
+* `AlignmentSummaryMetrics`
+* `BaseDistributionByCycle`
+* `CrosscheckFingerprints`
 * `GcBiasMetrics`
 * `HsMetrics`
+* `InsertSizeMetrics`
+* `MarkDuplicates`
 * `OxoGMetrics`
-* `BaseDistributionByCycl`
 * `RnaSeqMetrics`
-* `AlignmentSummaryMetrics`
 * `RrbsSummaryMetrics`
-* `ValidateSamFile`
-* `VariantCallingMetrics`
 * `QualityByCycleMetrics`
 * `QualityScoreDistributionMetrics`
 * `QualityYieldMetrics`
-
-#### MarkDuplicates
-If a `BAM` file contains multiple read groups, Picard MarkDuplicates generates a report
-with multiple metric lines, one for each "library".
-
-By default, MultiQC will sum the values for every library it finds and recompute the
-`PERCENT_DUPLICATION` and `ESTIMATED_LIBRARY_SIZE` fields, giving a single set of results
-for each `BAM` file.
-
-If instead you would prefer each library to be treated as a separate sample, you can do so
-by setting the following MultiQC config:
-
-```yaml
-picard_config:
-    markdups_merge_multiple_libraries: False
-```
-
-This prevents the merge and recalculation and appends the library name to the sample name.
-
-This behaviour is present in MultiQC since version 1.9. Before this, only the metrics from the
-first library were taken and all others were ignored.
-
-#### InsertSizeMetrics
-By default, the insert size plot is smoothed to contain a maximum of 500 data points per sample.
-This is to prevent the MultiQC report from being very large with big datasets.
-If you would like to customise this value to get a better resolution you can set the following
-MultiQC config values, with the new maximum number of points:
-
-```yaml
-picard_config:
-    insertsize_smooth_points: 10000
-```
+* `ValidateSamFile`
+* `VariantCallingMetrics`
 
 #### Coverage Levels
+
 It's possible to customise the HsMetrics _"Target Bases 30X"_ coverage and
 WgsMetrics _"Fraction of Bases over 30X"_ that are
 shown in the general statistics table. This must correspond to field names in the
@@ -84,14 +54,23 @@ picard_config:
         - 50
 ```
 
-#### ValidateSamFile Search Pattern
-Generally, Picard adds identifiable content to the output of function calls. This is not the case for ValidateSamFile. In order to identify logs the MultiQC Picard submodule `ValidateSamFile` will search for filenames that contain 'validatesamfile' or 'ValidateSamFile'. One can customise the used search pattern by overwriting the `picard/sam_file_validation` pattern in your MultiQC config. For example:
+#### CrosscheckFingerprints
+
+In addition to adding a table of results, a `Crosschecks All Expected` column will be added to the General Statistics. If all comparisons for a sample were Expected, then the value of the field will be `True` and green. If not it will be `False` and Red.
+
+You can customize the columns show in the CrosscheckFingerprints table with the config keys `CrosscheckFingerprints_table_cols` and `CrosscheckFingerprints_table_cols_hidden`. For example:
 
 ```yaml
-sp:
-    picard/sam_file_validation:
-        fn: '*[Vv]alidate[Ss]am[Ff]ile*'
+picard_config:
+    CrosscheckFingerprints_table_cols:
+        - RESULT
+        - LOD_SCORE
+    CrosscheckFingerprints_table_cols_hidden:
+        - LEFT_LANE
+        - RIGHT_LANE
 ```
+
+Note that if `CALCULATE_TUMOR_AWARE_RESULTS` was set to true on the CLI for any of the CrosscheckFingerprints result files, then the `LOD_SCORE_TUMOR_NORMAL` and `LOD_SCORE_NORMAL_TUMOR` will be displayed.
 
 #### HsMetrics
 
@@ -113,3 +92,47 @@ picard_config:
 
 Only values listed in `HsMetrics_table_cols` will be included in the table.
 Anything listed in `HsMetrics_table_cols_hidden` will be hidden by default.
+
+#### InsertSizeMetrics
+
+By default, the insert size plot is smoothed to contain a maximum of 500 data points per sample.
+This is to prevent the MultiQC report from being very large with big datasets.
+If you would like to customise this value to get a better resolution you can set the following
+MultiQC config values, with the new maximum number of points:
+
+```yaml
+picard_config:
+    insertsize_smooth_points: 10000
+```
+
+#### MarkDuplicates
+
+If a `BAM` file contains multiple read groups, Picard MarkDuplicates generates a report
+with multiple metric lines, one for each "library".
+
+By default, MultiQC will sum the values for every library it finds and recompute the
+`PERCENT_DUPLICATION` and `ESTIMATED_LIBRARY_SIZE` fields, giving a single set of results
+for each `BAM` file.
+
+If instead you would prefer each library to be treated as a separate sample, you can do so
+by setting the following MultiQC config:
+
+```yaml
+picard_config:
+    markdups_merge_multiple_libraries: False
+```
+
+This prevents the merge and recalculation and appends the library name to the sample name.
+
+This behaviour is present in MultiQC since version 1.9. Before this, only the metrics from the
+first library were taken and all others were ignored.
+
+#### ValidateSamFile Search Pattern
+
+Generally, Picard adds identifiable content to the output of function calls. This is not the case for ValidateSamFile. In order to identify logs the MultiQC Picard submodule `ValidateSamFile` will search for filenames that contain 'validatesamfile' or 'ValidateSamFile'. One can customise the used search pattern by overwriting the `picard/sam_file_validation` pattern in your MultiQC config. For example:
+
+```yaml
+sp:
+    picard/sam_file_validation:
+        fn: '*[Vv]alidate[Ss]am[Ff]ile*'
+```

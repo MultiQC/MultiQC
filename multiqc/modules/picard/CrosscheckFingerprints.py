@@ -10,7 +10,6 @@ from itertools import chain
 from itertools import groupby
 from multiqc import config
 from multiqc.plots import table
-from pprint import pprint
 
 # Initialize the logger
 log = logging.getLogger(__name__)
@@ -29,76 +28,42 @@ FIELD_DESCRIPTIONS = {
 }
 
 
-def take_till(iterator, fn):
-    """Take from an iterator till fn returns false.
-
-    Returns the iterator with the value that caused false at the front, and all the lines skipped till then.
-    """
-    headers = []
-    try:
-        val = next(iterator)
-        while fn(val):
-            headers.append(val)
-            val = next(iterator)
-    except StopIteration:
-        return ()
-    pprint(headers)
-
-    return (chain([val], iterator), headers)
-
-
-def parse_cli(line):
-    """Parse the Picard CLI invocation that is stored in the header section of the file."""
-    tumor_awareness_regex = r"CALCULATE_TUMOR_AWARE_RESULTS=(\w+)"
-    lod_threshold_regex = r"LOD_THRESHOLD=(\S+)"
-
-    tumor_awareness = None
-    lod_threshold = None
-
-    tumor_awareness_match = re.search(tumor_awareness_regex, line)
-    if tumor_awareness_match is not None:
-        tumor_awareness = strtobool(tumor_awareness_match.group(1))
-
-    lod_threshold_match = re.search(lod_threshold_regex, line)
-    if lod_threshold_match is not None:
-        lod_threshold = float(lod_threshold_match.group(1))
-
-    return (tumor_awareness, lod_threshold)
-
-
 def parse_reports(self):
-    """ Find Picard CrosscheckFingerprints reports and parse their data """
+    """Find Picard CrosscheckFingerprints reports and parse their data.
+
+    Stores the data in "Sample/Group - Sample/Group" groups since CrosscheckFingerprints
+    does pairwise comparisons between samples at the level selected by `--CROSSCHECK_BY`.
+    """
 
     self.picard_CrosscheckFingerprints_data = dict()
 
     # Go through logs and find Metrics
     for f in self.find_log_files("picard/crosscheckfingerprints", filehandles=True):
         # Parse an individual CrosscheckFingerprints Report
-        (metrics, comments) = take_till(f["f"], lambda line: line.startswith("#") or line == "\n")
+        (metrics, comments) = _take_till(f["f"], lambda line: line.startswith("#") or line == "\n")
         header = next(metrics).rstrip("\n").split("\t")
         if not "LEFT_GROUP_VALUE" in header:
             # Not a CrosscheckFingerprints Report
             continue
         reader = DictReader(metrics, fieldnames=header, delimiter="\t")
         # Parse out the tumor awareness option and the lod threshold setting if possible
-        (tumor_awareness, lod_threshold) = parse_cli(comments[1])
+        (tumor_awareness, lod_threshold) = _parse_cli(comments[1])
         for row in reader:
+            # Decide what to use as the `sample_name` for this row
             name = _get_name(row)
-            # Convert LOD scores to floats
-            for k, v in row.items():
-                if k.startswith("LOD"):
-                    row[k] = float(v)
+
             # Set the cli options of interest for this file
             row["LOD_THRESHOLD"] = lod_threshold
             row["TUMOR_AWARENESS"] = tumor_awareness
             self.picard_CrosscheckFingerprints_data[name] = row
 
     # For each sample, flag if any comparisons don't start with "Expected"
+    # A sample that does not have all "Expected" will show as `False` and be Red
     general_stats_data = _create_general_stats_data(self.picard_CrosscheckFingerprints_data)
     self.general_stats_addcols(
         general_stats_data,
         {
-            "All CrosscheckFingerprints Expected": {
+            "Crosschecks All Expected": {
                 "title": "Crosschecks All Expected",
                 "description": "All results for samples CrosscheckFingerprints were as expected.",
                 "scale": "RdYlGn",
@@ -122,6 +87,42 @@ def parse_reports(self):
     )
 
     return len(self.picard_CrosscheckFingerprints_data)
+
+
+def _take_till(iterator, fn):
+    """Take from an iterator till `fn` returns false.
+
+    Returns the iterator with the value that caused false at the front, and all the lines skipped till then as a list.
+    """
+    headers = []
+    try:
+        val = next(iterator)
+        while fn(val):
+            headers.append(val)
+            val = next(iterator)
+    except StopIteration:
+        return ()
+
+    return (chain([val], iterator), headers)
+
+
+def _parse_cli(line):
+    """Parse the Picard CLI invocation that is stored in the header section of the file."""
+    tumor_awareness_regex = r"CALCULATE_TUMOR_AWARE_RESULTS=(\w+)"
+    lod_threshold_regex = r"LOD_THRESHOLD=(\S+)"
+
+    tumor_awareness = None
+    lod_threshold = None
+
+    tumor_awareness_match = re.search(tumor_awareness_regex, line)
+    if tumor_awareness_match is not None:
+        tumor_awareness = strtobool(tumor_awareness_match.group(1))
+
+    lod_threshold_match = re.search(lod_threshold_regex, line)
+    if lod_threshold_match is not None:
+        lod_threshold = float(lod_threshold_match.group(1))
+
+    return (tumor_awareness, lod_threshold)
 
 
 def _get_name(row):
@@ -220,7 +221,8 @@ def _create_general_stats_data(in_data):
 
     for group, values in groupby(sorted_by_left_sample, key=lambda r: r["LEFT_SAMPLE"]):
         out_data[group] = {
-            "All CrosscheckFingerprints Expected": str(
+            # NB: Must coerce bool to str or else plot.table turns it into a float
+            "Crosschecks All Expected": str(
                 all(v["RESULT"].startswith("EXPECTED") for v in values)
             )
         }

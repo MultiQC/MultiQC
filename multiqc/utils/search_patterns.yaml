@@ -415,6 +415,9 @@ picard/alignment_metrics:
 picard/basedistributionbycycle:
     contents: 'BaseDistributionByCycleMetrics'
     shared: true
+picard/crosscheckfingerprints:
+    contents: 'CrosscheckFingerprints'
+    shared: true
 picard/gcbias:
     contents: 'GcBias'
     shared: true
