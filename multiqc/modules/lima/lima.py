@@ -141,9 +141,14 @@ class MultiqcModule(BaseMultiqcModule):
                     if filter_reason == reason:
                         d[reason][filename] = zmw_marginals[filter_reason]['count']
                         break
-                # If we didn't find it, set to zero
+                # If we didn't find filter reason for this filename, set it to
+                # zero
                 else:
                     d[reason][filename] = 0
+                # Unless 'reason' is actually the special case of the number of
+                # unfiltered reads
+                if reason == 'ZMWs above all thresholds':
+                    d[reason][filename] = data['ZMWs above all thresholds']['count']
             plot_data.append(d)
 
         # Plot configuration
