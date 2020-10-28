@@ -70,13 +70,15 @@ picard_config:
         - RIGHT_LANE
 ```
 
+The column names will be normalized, ex `LOD_SCORE -> Lod score`.
+
 Note that if `CALCULATE_TUMOR_AWARE_RESULTS` was set to true on the CLI for any of the CrosscheckFingerprints result files, then the `LOD_SCORE_TUMOR_NORMAL` and `LOD_SCORE_NORMAL_TUMOR` will be displayed.
 
 #### HsMetrics
 
 Note that the _Target Region Coverage_ plot is generated using the `PCT_TARGET_BASES_` table columns from the HsMetrics output (not immediately obvious when looking at the log files).
 
-You can customise the columns shown in the HsMetrics table with the config keys `HsMetrics_table_cols` and `HsMetrics_table_cols_hidden`. For example:
+You can customize the columns shown in the HsMetrics table with the config keys `HsMetrics_table_cols` and `HsMetrics_table_cols_hidden`. For example:
 
 ```yaml
 picard_config:
