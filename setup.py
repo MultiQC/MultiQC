@@ -36,6 +36,7 @@ print("""-----------------------------------
 # Set version requirements according to what version of Python we're running
 networkx_version = ''
 numpy_version = ''
+kiwisolver_version = '==1.2.0'
 matplotlib_version = '>=2.1.1'
 jinja2_version = '>=2.9'
 markdown_version = ''
@@ -48,6 +49,7 @@ if sys.version_info[0:2] < (3, 6):
     markdown_version = '<3.2'
 
 install_requires = [
+        'kiwisolver' + kiwisolver_version,
         'matplotlib' + matplotlib_version,
         'networkx' + networkx_version,
         'numpy' + numpy_version,
