@@ -59,7 +59,7 @@ def parse_reports(self):
 
     # Only add sections if we found data
     if len(self.picard_CrosscheckFingerprints_data) > 0:
-        # For each sample, flag if any comparisons don't start with "Expected"
+        # For each sample, flag if any comparisons that don't start with "Expected"
         # A sample that does not have all "Expected" will show as `False` and be Red
         general_stats_data = _create_general_stats_data(self.picard_CrosscheckFingerprints_data)
         self.general_stats_addcols(
@@ -80,7 +80,6 @@ def parse_reports(self):
             description="Pairwise identity checking betwen samples and groups.",
             helptext="""
             Checks that all data in the set of input files comes from the same individual, based on the selected group granularity.
-
             """,
             plot=table.plot(
                 self.picard_CrosscheckFingerprints_data,

@@ -56,7 +56,7 @@ picard_config:
 
 #### CrosscheckFingerprints
 
-In addition to adding a table of results, a `Crosschecks All Expected` column will be added to the General Statistics. If all comparisons for a sample were Expected, then the value of the field will be `True` and green. If not it will be `False` and Red.
+In addition to adding a table of results, a `Crosschecks All Expected` column will be added to the General Statistics. If all comparisons for a sample were `Expected`, then the value of the field will be `True` and green. If not it will be `False` and Red.
 
 You can customize the columns show in the CrosscheckFingerprints table with the config keys `CrosscheckFingerprints_table_cols` and `CrosscheckFingerprints_table_cols_hidden`. For example:
 
