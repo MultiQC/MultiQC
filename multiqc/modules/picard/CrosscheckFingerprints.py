@@ -16,8 +16,10 @@ log = logging.getLogger(__name__)
 
 # This is a subset, the rest of the fields are self descriptive
 FIELD_DESCRIPTIONS = {
+    "LEFT_SAMPLE": "The name of the left sample.",
     "LEFT_GROUP_VALUE": "The name of the left data-type group.",
-    "RIGHT_GROUP_VALUE": "The name of the right data-type grup.",
+    "RIGHT_SAMPLE": "The name of the right sample.",
+    "RIGHT_GROUP_VALUE": "The name of the right data-type group.",
     "RESULT": "The categorical result of comparing the calculated LOD score against the threshold.",
     "DATA_TYPE": "The datatype used for the comparison.",
     "LOD_SCORE": "Log10 of the probability that the samples come from the same individual.",
@@ -48,14 +50,23 @@ def parse_reports(self):
         reader = DictReader(metrics, fieldnames=header, delimiter="\t")
         # Parse out the tumor awareness option and the lod threshold setting if possible
         (tumor_awareness, lod_threshold) = _parse_cli(comments[1])
-        for row in reader:
-            # Decide what to use as the `sample_name` for this row
-            name = _get_name(row)
+        for i, row in enumerate(reader):
+            # Check if this row contains samples that should be ignored
+            if self.is_ignore_sample(row["LEFT_SAMPLE"]) or self.is_ignore_sample(
+                row["RIGHT_SAMPLE"]
+            ):
+                continue
+
+            # Clean the sammple names
+            row["LEFT_SAMPLE"] = self.clean_s_name(row["LEFT_SAMPLE"], f["root"])
+            row["LEFT_GROUP_VALUE"] = self.clean_s_name(row["LEFT_GROUP_VALUE"], f["root"])
+            row["RIGHT_SAMPLE"] = self.clean_s_name(row["RIGHT_SAMPLE"], f["root"])
+            row["RIGHT_GROUP_VALUE"] = self.clean_s_name(row["RIGHT_GROUP_VALUE"], f["root"])
 
             # Set the cli options of interest for this file
             row["LOD_THRESHOLD"] = lod_threshold
             row["TUMOR_AWARENESS"] = tumor_awareness
-            self.picard_CrosscheckFingerprints_data[name] = row
+            self.picard_CrosscheckFingerprints_data[i] = row
 
     # Only add sections if we found data
     if len(self.picard_CrosscheckFingerprints_data) > 0:
@@ -126,22 +137,6 @@ def _parse_cli(line):
     return (tumor_awareness, lod_threshold)
 
 
-def _get_name(row):
-    """ Make a name for the row based on the Samples and Groups present """
-    if (
-        row["LEFT_GROUP_VALUE"] == row["LEFT_SAMPLE"]
-        and row["RIGHT_GROUP_VALUE"] == row["RIGHT_SAMPLE"]
-    ):
-        return "{} - {}".format(row["LEFT_SAMPLE"], row["RIGHT_SAMPLE"])
-    else:
-        return "{}/{} - {}/{}".format(
-            row["LEFT_SAMPLE"],
-            row["LEFT_GROUP_VALUE"],
-            row["RIGHT_SAMPLE"],
-            row["RIGHT_GROUP_VALUE"],
-        )
-
-
 def _get_table_headers(data):
     """ Create the headers config """
 
@@ -160,60 +155,76 @@ def _get_table_headers(data):
         ]
     if not crosscheckfingerprints_table_cols_hidden:
         crosscheckfingerprints_table_cols_hidden = [
-            "LEFT_GROUP_VALUE",
-            "RIGHT_GROUP_VALUE",
             "LEFT_RUN_BARCODE",
             "LEFT_LANE",
             "LEFT_MOLECULAR_BARCODE_SEQUENCE",
             "LEFT_LIBRARY",
-            "LEFT_SAMPLE",
             "LEFT_FILE",
             "RIGHT_RUN_BARCODE",
             "RIGHT_LANE",
             "RIGHT_MOLECULAR_BARCODE_SEQUENCE",
             "RIGHT_LIBRARY",
-            "RIGHT_SAMPLE",
             "RIGHT_FILE",
         ]
 
-        # Add the Tumor/Normal LOD scores if any pair had the tumor_awareness flag set
-        if any(row["TUMOR_AWARENESS"] for row in data.values()):
-            crosscheckfingerprints_table_cols += [
-                "LOD_SCORE_TUMOR_NORMAL",
-                "LOD_SCORE_NORMAL_TUMOR",
-            ]
-        else:
-            crosscheckfingerprints_table_cols_hidden += [
-                "LOD_SCORE_TUMOR_NORMAL",
-                "LOD_SCORE_NORMAL_TUMOR",
-            ]
+    # Add the Tumor/Normal LOD scores if any pair had the tumor_awareness flag set
+    if any(row["TUMOR_AWARENESS"] for row in data.values()):
+        crosscheckfingerprints_table_cols += [
+            "LOD_SCORE_TUMOR_NORMAL",
+            "LOD_SCORE_NORMAL_TUMOR",
+        ]
+    else:
+        crosscheckfingerprints_table_cols_hidden += [
+            "LOD_SCORE_TUMOR_NORMAL",
+            "LOD_SCORE_NORMAL_TUMOR",
+        ]
 
-        headers = OrderedDict()
-        for h in FIELD_DESCRIPTIONS:
-            # Skip anything not set to visible
-            if h not in crosscheckfingerprints_table_cols:
-                continue
+    # Add Left and Right Sample names / groups, keeping it as minimal as possible
+    sample_group_are_same = (
+        lambda x: x["LEFT_SAMPLE"] == x["LEFT_GROUP_VALUE"]
+        and x["RIGHT_SAMPLE"] == x["RIGHT_GROUP_VALUE"]
+    )
 
-            # Set up the configuration for the column
-            h_title = h.replace("_", " ").strip().lower().capitalize()
-            headers[h] = {
-                "title": h_title,
-                "description": FIELD_DESCRIPTIONS.get(h),
-                "namespace": "CrosscheckFingerprints",
-            }
+    if all(sample_group_are_same(values) for values in data.values()):
+        crosscheckfingerprints_table_cols = [
+            "LEFT_SAMPLE",
+            "RIGHT_SAMPLE",
+        ] + crosscheckfingerprints_table_cols
+        crosscheckfingerprints_table_cols_hidden += ["LEFT_GROUP_VALUE", "RIGHT_GROUP_VALUE"]
+    else:
+        crosscheckfingerprints_table_cols = [
+            "LEFT_SAMPLE",
+            "LEFT_GROUP_VALUE",
+            "RIGHT_SAMPLE",
+            "RIGHT_GROUP_VALUE",
+        ] + crosscheckfingerprints_table_cols
 
-            # Rename Result to be a longer string so the table formats more nicely
-            if h == "RESULT":
-                headers[h]["title"] = "Categorical Result"
+    headers = OrderedDict()
+    for h in FIELD_DESCRIPTIONS:
+        # Skip anything not set to visible
+        if h not in crosscheckfingerprints_table_cols:
+            continue
 
-            # Add appropriate colors for LOD scores
-            if h.startswith("LOD"):
-                headers[h]["scale"] = False
+        # Set up the configuration for the column
+        h_title = h.replace("_", " ").strip().lower().capitalize()
+        headers[h] = {
+            "title": h_title,
+            "description": FIELD_DESCRIPTIONS.get(h),
+            "namespace": "CrosscheckFingerprints",
+        }
 
-            if h in crosscheckfingerprints_table_cols_hidden:
-                headers[h]["hidden"] = True
+        # Rename Result to be a longer string so the table formats more nicely
+        if h == "RESULT":
+            headers[h]["title"] = "Categorical Result"
 
-        return headers
+        # Add appropriate colors for LOD scores
+        if h.startswith("LOD"):
+            headers[h]["scale"] = False
+
+        if h in crosscheckfingerprints_table_cols_hidden:
+            headers[h]["hidden"] = True
+
+    return headers
 
 
 def _create_general_stats_data(in_data):
