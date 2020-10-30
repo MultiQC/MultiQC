@@ -273,16 +273,21 @@ class MultiqcModule(BaseMultiqcModule):
 
         configuration = {
             'id': 'multiqc_whatshap_phased_bp',
-            'title': 'Phased basepairs per Sample',
-            'anchor': 'multiqc_whatshap_phased_bp'
+            'title': 'Phased Basepairs per Sample',
+            'anchor': 'multiqc_whatshap_phased_bp',
+            'cpswitch': False,
+            'tt_percentages': False
         }
 
+        keys = OrderedDict()
+        keys ['Phased basepairs'] = {'name': 'Phased Basepairs'}
+
         self.add_section(
-                name='Phased basepairs per Sample',
+                name='Phased Basepairs per Sample',
                 anchor='multiqc_whatshap_phased_bp',
                 description=
                 """
                     This plot show the total number of phased basepairs for
                     each sample.
                 """,
-                plot = bargraph.plot(pdata))#, configuration))
+                plot = bargraph.plot(pdata, keys, configuration))
