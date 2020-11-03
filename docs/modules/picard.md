@@ -13,20 +13,24 @@ sequencing data.
 
 Supported commands:
 
-* `MarkDuplicates`
-* `InsertSizeMetrics`
-* `GcBiasMetrics`
-* `HsMetrics`
-* `OxoGMetrics`
-* `BaseDistributionByCycl`
-* `RnaSeqMetrics`
-* `AlignmentSummaryMetrics`
-* `RrbsSummaryMetrics`
-* `ValidateSamFile`
-* `VariantCallingMetrics`
-* `QualityByCycleMetrics`
-* `QualityScoreDistributionMetrics`
-* `QualityYieldMetrics`
+- `MarkDuplicates`
+- `InsertSizeMetrics`
+- `GcBiasMetrics`
+- `HsMetrics`
+- `OxoGMetrics`
+- `BaseDistributionByCycl`
+- `RnaSeqMetrics`
+- `AlignmentSummaryMetrics`
+- `RrbsSummaryMetrics`
+- `ValidateSamFile`
+- `VariantCallingMetrics`
+- `QualityByCycleMetrics`
+- `QualityScoreDistributionMetrics`
+- `QualityYieldMetrics`
+- `CollectIlluminaBasecallingMetrics`
+- `CollectIlluminaLaneMetrics`
+- `ExtractIlluminaBarcodes`
+- `MarkIlluminaAdapters`
 
 #### MarkDuplicates
 If a `BAM` file contains multiple read groups, Picard MarkDuplicates generates a report
