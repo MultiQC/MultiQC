@@ -138,7 +138,7 @@ class MultiqcModule(BaseMultiqcModule):
         if n["ExtractIlluminaBarcodes"] > 0:
             log.info("Found {} ExtractIlluminaBarcodes reports".format(n["ExtractIlluminaBarcodes"]))
 
-        n["MarkIlluminaAdapters"] = CollectIlluminaBasecallingMetrics.parse_reports(self)
+        n["MarkIlluminaAdapters"] = MarkIlluminaAdapters.parse_reports(self)
         if n["MarkIlluminaAdapters"] > 0:
             log.info("Found {} MarkIlluminaAdapters reports".format(n["MarkIlluminaAdapters"]))
 
