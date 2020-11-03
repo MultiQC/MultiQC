@@ -459,7 +459,19 @@ picard/variant_calling_metrics:
     contents: 'CollectVariantCallingMetrics'
     shared: true
 picard/wgs_metrics:
-    contents: 'CollectWgsMetrics'
+    contents: "CollectWgsMetrics"
+    shared: true
+picard/collectilluminabasecallingmetrics:
+    contents: "CollectIlluminaBasecallingMetrics"
+    shared: true
+picard/collectilluminalanemetrics:
+    contents: "CollectIlluminaLaneMetrics"
+    shared: true
+picard/extractilluminabarcodes:
+    contents: "ExtractIlluminaBarcodes"
+    shared: true
+picard/markilluminaadapters:
+    contents: "MarkIlluminaAdapters"
     shared: true
 preseq:
     - contents: 'EXPECTED_DISTINCT'
