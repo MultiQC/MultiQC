@@ -130,13 +130,13 @@ class MultiqcModule(BaseMultiqcModule):
         if n["CollectIlluminaBasecallingMetrics"] > 0:
             log.info("Found {} CollectIlluminaBasecallingMetrics reports".format(n["CollectIlluminaBasecallingMetrics"]))
 
-        # n["CollectIlluminaLaneMetrics"] = CollectIlluminaLaneMetrics.parse_reports(self)
-        # if n["CollectIlluminaLaneMetrics"] > 0:
-        #     log.info("Found {} CollectIlluminaLaneMetrics reports".format(n["CollectIlluminaLaneMetrics"]))
+        n["CollectIlluminaLaneMetrics"] = CollectIlluminaLaneMetrics.parse_reports(self)
+        if n["CollectIlluminaLaneMetrics"] > 0:
+            log.info("Found {} CollectIlluminaLaneMetrics reports".format(n["CollectIlluminaLaneMetrics"]))
 
-        # n["ExtractIlluminaBarcodes"] = ExtractIlluminaBarcodes.parse_reports(self)
-        # if n["ExtractIlluminaBarcodes"] > 0:
-        #     log.info("Found {} ExtractIlluminaBarcodes reports".format(n["ExtractIlluminaBarcodes"]))
+        n["ExtractIlluminaBarcodes"] = ExtractIlluminaBarcodes.parse_reports(self)
+        if n["ExtractIlluminaBarcodes"] > 0:
+            log.info("Found {} ExtractIlluminaBarcodes reports".format(n["ExtractIlluminaBarcodes"]))
 
         n["MarkIlluminaAdapters"] = MarkIlluminaAdapters.parse_reports(self)
         if n["MarkIlluminaAdapters"] > 0:
