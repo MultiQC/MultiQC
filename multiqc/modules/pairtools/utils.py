@@ -8,19 +8,25 @@ _KEY_SEP = '/'
 
 
 # some good-looking presets for pair-type report section:
-pairtypes_common = OrderedDict([('UU','#33a02c'),
-    ('RU','#b2df8a'),
-    ('UR','#a6cee3'),
-    ('WW','#1f78b4'),
-    ('DD','#fff900'),
-    ('MR','#fb9a99'),
-    ('MU','#fdbf6f'),
-    ('MM','#ff7f00'),
-    ('NM','#e31a1c'),
-    ('NU','#cab2d6'),
-    ('NN','#6a3d9a'),
-    ('XX','#000000')])
-
+pairtypes_common = OrderedDict([('UU', '#33a02c'), # Green
+                                ('uu', '#b2df8a'), # Pale green (walks-policy all)
+                                ('RU', '#b2df8a'), # Pale green (walks-policy mask)
+                                ('UR', '#a6cee3'), # Pale blue (walks-policy mask)
+                                ('WW', '#1f78b4'), # Blue
+                                ('DD', '#fff900'), # Yellow
+                                ('MU', '#ff7f00'), # Orange
+                                ('MR', '#fdbf6f'), # Pale orange (walks-policy mask)
+                                ('mu', '#fdbf6f'), # Pale orange (walks-policy all)
+                                ('MM', '#e31a1c'), # Red
+                                ('mm', '#fb9a99'), # Pale red (walks-policy all)
+                                ('NM', '#b15928'), # Brown
+                                ('nm', '#ffff99'), # Pale brown (yellow-ish) (walks-policy all)
+                                ('NU', '#6a3d9a'), # Violet
+                                ('NR', '#cab2d6'), # Pale violet (walks-policy mask)
+                                ('nu', '#cab2d6'), # Pale violet (walks-policy all)
+                                ('NN', '#9e0090'), # Magenta
+                                ('nn', '#ff7ff3'), # Pale magenta (walks-policy all)
+                                ('XX', '#000000')])
 
 # add color to sorted keys:
 cis_range_colors = ['#8c2d04', # short-range cis
