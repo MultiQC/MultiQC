@@ -44,7 +44,7 @@ def lane_metrics_table(data):
     tdata = {}
     for run_name, run in data.items():
         for lane_number, lane in run.items():
-            tdata[f"{run_name} - Lane {lane_number}"] = lane
+            tdata[f"{run_name} - L{lane_number}"] = lane
     return table.plot(tdata, headers, table_config)
 
 
