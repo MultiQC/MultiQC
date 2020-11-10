@@ -8,6 +8,8 @@
 
 * [**HOPS**](https://www.github.com/rhubler/HOPS)
   * Post-alignment ancient DNA analysis tool for MALT
+* [**odgi**][https://github.com/vgteam/odgi]
+  * Optimized dynamic genome/graph implementation
 
 #### Module updates
 
