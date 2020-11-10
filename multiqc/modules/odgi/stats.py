@@ -20,120 +20,136 @@ class MultiqcModule(BaseMultiqcModule):
     """
 
     def __init__(self):
-
         # Initialise the parent object
         super(MultiqcModule, self).__init__(name='Odgi', anchor='odgi',
-        href='Some ODGI URL', #TODO
-        info="Some info string!")# TODO
+                                            href='Some ODGI URL',  # TODO
+                                            info="Some info string!")  # TODO
 
-        #self.rsem_mapped_data = dict()
-        #self.rsem_multimapping_data = dict()
+        self.odgi_stats_map = dict()
 
-        # Find and load any count file
-        for f in self.find_log_files('odgi'):
-            self.parse_rsem_report(f)
-
-        # Filter to strip out ignored sample names
-        self.rsem_mapped_data = self.ignore_samples(self.rsem_mapped_data)
-
-        if len(self.rsem_mapped_data) == 0:
+        # Find and load any odgi stats file
+        log_files = self.find_log_files('odgi/stats')
+        if not log_files:
             raise UserWarning
+        for f in log_files:
+            self.parse_odgi_stats_report(f)
+            self.add_data_source(f)
 
-        log.info("Found {} reports".format(len(self.rsem_mapped_data)))
+        log.info("Found {} reports".format(len(self.odgi_stats_map)))
 
         # Write parsed report data to a file
-        self.write_data_file(self.rsem_mapped_data, 'multiqc_rsem')
+        self.write_data_file(self.odgi_stats_map, 'multiqc_odgi_stats')
 
-        # Basic Stats Table
-        self.rsem_stats_table()
+        self.plot_odgi_stats()
 
         # Assignment bar plot
-        self.rsem_mapped_reads_plot()
+        # self.rsem_mapped_reads_plot()
 
         # Multimapping line plot
-        self.rsem_multimapping_plot()
+        # self.rsem_multimapping_plot()
 
+    def parse_odgi_stats_report(self, f):
+        """
+        Bla
+        """
+        lines = f['f'].splitlines()
+        # parse the generals stats
+        stats = lines[1].split('\t')
+        length, nodes, edges, paths = stats[0], stats[1], stats[2], stats[3]
+        # parse the mean links length
+        mean_links_length = lines[4].split('\t')
+        path, in_node_space, in_nucleotide_space, num_links_considered = mean_links_length[0], mean_links_length[1], mean_links_length[2], mean_links_length[3]
+        # parse sum of path nodes distances
+        sum_of_path_nodes_distances = lines[7].split('\t')
+        path, in_node_space, in_nucleotide_space, \
+        nodes, nucleotides, num_penalties, \
+        num_penalties_different_orientation = sum_of_path_nodes_distances[0], sum_of_path_nodes_distances[1], \
+                                              sum_of_path_nodes_distances[2], sum_of_path_nodes_distances[3], \
+                                              sum_of_path_nodes_distances[4], sum_of_path_nodes_distances[5], \
+                                              sum_of_path_nodes_distances[6]
+        self.odgi_stats_map.update(MultiqcModule.compress_stats_data(f['fn'], stats, mean_links_length, sum_of_path_nodes_distances))
 
-    def parse_rsem_report (self, f):
-        """ Parse the rsem cnt stat file.
-        Description of cnt file found : https://github.com/deweylab/RSEM/blob/master/cnt_file_description.txt
+    def plot_odgi_stats(self):
+        """
+        Plot the odgi stats
         """
         data = dict()
-        multimapping_hist = dict()
-        in_hist = False
-        for l in f['f'].splitlines():
-            s = l.split()
-            if len(s) > 3:
-                # Line: N0 N1 N2 N_tot
-                # N0, number of unalignable reads;
-                # N1, number of alignable reads; (nUnique + nMulti)
-                # N2, number of filtered reads due to too many alignments
-                # N_tot = N0 + N1 + N2
-                data['Unalignable'] = int(s[0])
-                data['Alignable'] = int(s[1])
-                data['Filtered'] = int(s[2])
-                data['Total'] = int(s[3])
-                data['alignable_percent'] = (float(s[1]) / float(s[3])) * 100.0
-            elif len(s) == 3:
-                # Line: nUnique nMulti nUncertain
-                # nUnique, number of reads aligned uniquely to a gene
-                # nMulti, number of reads aligned to multiple genes; nUnique + nMulti = N1;
-                # nUncertain, number of reads aligned to multiple locations in the given reference sequences, which include isoform-level multi-mapping reads
-                data['Unique'] = int(s[0])
-                data['Multi'] = int(s[1])
-                data['Uncertain'] = int(s[2])
-            elif len(s) == 2:
-                # Number of gene alignments and read count
-                if in_hist or int(s[0]) == 0:
-                    in_hist = True
-                    try:
-                        multimapping_hist[int(s[0])] = int(s[1])
-                    except ValueError:
-                        pass
-            else:
-                break
-        try:
-            assert data['Unique'] + data['Multi'] == data['Alignable']
-        except AssertionError:
-            log.warning("Unique + Multimapping read counts != alignable reads! '{}'".format(f['fn']))
-            return None
-        except KeyError:
-            log.warning("Error parsing RSEM counts file '{}'".format(f['fn']))
-            return None
 
-        # Save parsed data
-        if len(data) > 0:
-            if f['s_name'] in self.rsem_mapped_data:
-                log.debug("Duplicate sample name found! Overwriting: {}".format(f['s_name']))
-            self.rsem_mapped_data[f['s_name']] = data
-            self.add_data_source(f)
-        if len(multimapping_hist) > 0:
-            self.rsem_multimapping_data[f['s_name']] = multimapping_hist
-
-    def rsem_stats_table(self):
-        """ Take the parsed stats from the rsem report and add them to the
-        basic stats table at the top of the report """
         headers = OrderedDict()
-        headers['alignable_percent'] = {
-            'title': '% Alignable'.format(config.read_count_prefix),
-            'description': '% Alignable reads'.format(config.read_count_desc),
+        headers['Nodes'] = {
+            'title': 'Nodes',
+            'description': 'My Second Column',
             'max': 100,
             'min': 0,
-            'suffix': '%',
-            'scale': 'YlGn'
+            'scale': 'Set1',
         }
-        self.general_stats_addcols(self.rsem_mapped_data, headers)
+        headers['Edges'] = {
+            'title': 'Edges',
+            'description': 'My Second Column',
+            'max': 100,
+            'min': 0,
+            'scale': 'Set1'
+        }
+        headers['Length'] = {
+            'title': 'Length',
+            'description': 'My Second Column',
+            'max': 100,
+            'min': 0,
+            'scale': 'Set1'
+        }
+        headers['Paths'] = {
+            'title': 'Paths',
+            'description': 'My Second Column',
+            'max': 100,
+            'min': 0,
+            'scale': 'Set1'
+        }
+        for i, fn in enumerate(self.odgi_stats_map.keys()):
+            file_stats = self.odgi_stats_map[fn]
+            data.update({f'sample{i}': file_stats[f'General stats {fn}']})
+        log.info(data)
+        self.general_stats_addcols(data, headers)
 
+    @staticmethod
+    def compress_stats_data(fn, stats, mean_links_length, sum_of_path_nodes_distances) -> dict:
+        """
+        Bla
+        """
+        return {
+            fn: {
+                f'General stats {fn}': {
+                    'Length': stats[0],
+                    'Nodes': stats[1],
+                    'Edges': stats[2],
+                    'Paths': stats[3],
+                },
+                'Mean_links_length': {
+                    'Path': mean_links_length[0],
+                    'In_node_space': mean_links_length[1],
+                    'In_nucleotide_space': mean_links_length[2],
+                    'Num_links_considered': mean_links_length[3]
+                },
+                'Sum_of_path_nodes_distances': {
+                    'Path': sum_of_path_nodes_distances[0],
+                    'In_node_space': sum_of_path_nodes_distances[1],
+                    'In_nucleotide_space': sum_of_path_nodes_distances[2],
+                    'Nodes': sum_of_path_nodes_distances[3],
+                    'Nucleotides': sum_of_path_nodes_distances[4],
+                    'Num_penalties': sum_of_path_nodes_distances[5],
+                    'Num_penalties_different_orientation': sum_of_path_nodes_distances[6]
+                }
+            }
+        }
 
     def rsem_mapped_reads_plot(self):
         """ Make the rsem assignment rates plot """
 
         # Plot categories
         keys = OrderedDict()
-        keys['Unique'] =      { 'color': '#437bb1', 'name': 'Aligned uniquely to a gene' }
-        keys['Multi'] =       { 'color': '#e63491', 'name': 'Aligned to multiple genes' }
-        keys['Filtered'] =    { 'color': '#b1084c', 'name': 'Filtered due to too many alignments' }
-        keys['Unalignable'] = { 'color': '#7f0000', 'name': 'Unalignable reads' }
+        keys['Unique'] = {'color': '#437bb1', 'name': 'Aligned uniquely to a gene'}
+        keys['Multi'] = {'color': '#e63491', 'name': 'Aligned to multiple genes'}
+        keys['Filtered'] = {'color': '#b1084c', 'name': 'Filtered due to too many alignments'}
+        keys['Unalignable'] = {'color': '#7f0000', 'name': 'Unalignable reads'}
 
         # Config for the plot
         config = {
@@ -145,10 +161,10 @@ class MultiqcModule(BaseMultiqcModule):
         }
 
         self.add_section(
-            name = 'Mapped Reads',
-            anchor = 'rsem_mapped_reads',
-            description = 'A breakdown of how all reads were aligned for each sample.',
-            plot = bargraph.plot(self.rsem_mapped_data, keys, config)
+            name='Mapped Reads',
+            anchor='rsem_mapped_reads',
+            description='A breakdown of how all reads were aligned for each sample.',
+            plot=bargraph.plot(self.rsem_mapped_data, keys, config)
         )
 
     def rsem_multimapping_plot(self):
@@ -165,13 +181,12 @@ class MultiqcModule(BaseMultiqcModule):
         }
 
         self.add_section(
-            name = 'Multimapping rates',
-            anchor = 'rsem_multimapping',
-            description = 'A frequency histogram showing how many reads were aligned to `n` reference regions.',
-            helptext = '''In an ideal world, every sequence reads would align uniquely to a single location in the
+            name='Multimapping rates',
+            anchor='rsem_multimapping',
+            description='A frequency histogram showing how many reads were aligned to `n` reference regions.',
+            helptext='''In an ideal world, every sequence reads would align uniquely to a single location in the
                 reference. However, due to factors such as repeititve sequences, short reads and sequencing errors,
                 reads can be align to the reference 0, 1 or more times. This plot shows the frequency of each factor
                 of multimapping. Good samples should have the majority of reads aligning once.''',
-            plot = linegraph.plot(self.rsem_multimapping_data, pconfig)
+            plot=linegraph.plot(self.rsem_multimapping_data, pconfig)
         )
-
