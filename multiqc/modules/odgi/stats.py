@@ -7,6 +7,7 @@ import logging
 from collections import OrderedDict
 
 from multiqc.modules.base_module import BaseMultiqcModule
+from multiqc.plots import linegraph
 
 # Initialise the logger
 log = logging.getLogger(__name__)
@@ -40,6 +41,9 @@ class MultiqcModule(BaseMultiqcModule):
 
         # Add the general section containing the general odgi stats
         self.plot_general_odgi_stats()
+
+        # sd
+        self.plot_odgi_metrics()
 
     def parse_odgi_stats_report(self, f):
         """
@@ -85,6 +89,40 @@ class MultiqcModule(BaseMultiqcModule):
             data.update({fn: file_stats['General stats {}'.format(fn)]})
         self.general_stats_addcols(data, headers)
 
+    def plot_odgi_metrics(self):
+        """
+        Plot odgi metrics (in_node_space and TODO)
+        """
+        mean_links_length_nodes_space = dict()
+        mean_links_length_nucleotide_space = dict()
+        sum_of_path_nodes_distances_nodes_space = dict()
+        sum_of_path_nodes_distances_nucleotide_space = dict()
+        for fn in self.odgi_stats_map.keys():
+            file_stats = self.odgi_stats_map[fn]
+            mean_links_length_nodes_space.update({fn: float(file_stats['Mean_links_length {}'.format(fn)]['In_node_space'])})
+            mean_links_length_nucleotide_space.update({fn: float(file_stats['Mean_links_length {}'.format(fn)]['In_nucleotide_space'])})
+            sum_of_path_nodes_distances_nodes_space.update({fn: float(file_stats['Sum_of_path_nodes_distances {}'.format(fn)]['In_node_space'])})
+            sum_of_path_nodes_distances_nucleotide_space.update({fn: float(file_stats['Sum_of_path_nodes_distances {}'.format(fn)]['In_nucleotide_space'])})
+
+        metrics_lineplot_config = {
+            'categories': True,
+            'yDecimals': False,
+            'logswitch': True,
+            'title': 'Odgi: Odgi metrics'
+        }
+
+        self.add_section(
+            name='Odgi metrics',
+            anchor='odgi-stats',
+            description='The odgi metrics section',
+            helptext='Some help string',  # TODO
+            plot=linegraph.plot({'in_node_space_mean': mean_links_length_nodes_space,
+                                 'in_nucleotide_space_mean': mean_links_length_nucleotide_space,
+                                 'in_node_space_sum': sum_of_path_nodes_distances_nodes_space,
+                                 'in_nucleotide_space_sum': sum_of_path_nodes_distances_nucleotide_space
+                                 }, pconfig=metrics_lineplot_config)
+        )
+
     @staticmethod
     def compress_stats_data(fn, stats, mean_links_length, sum_of_path_nodes_distances) -> dict:
         """
@@ -93,10 +131,10 @@ class MultiqcModule(BaseMultiqcModule):
         return {
             fn: {
                 'General stats {}'.format(fn): {
-                    'Length': int(stats[0]),
-                    'Nodes': int(stats[1]),
-                    'Edges': int(stats[2]),
-                    'Paths': int(stats[3]),
+                    'Length': int(stats[0]) if MultiqcModule.represents_int(stats[0]) else float(stats[0]),
+                    'Nodes': int(stats[1]) if MultiqcModule.represents_int(stats[1]) else float(stats[1]),
+                    'Edges': int(stats[2]) if MultiqcModule.represents_int(stats[2]) else float(stats[2]),
+                    'Paths': int(stats[3]) if MultiqcModule.represents_int(stats[3]) else float(stats[3]),
                 },
                 'Mean_links_length {}'.format(fn): {
                     'Path': mean_links_length[0],
@@ -115,3 +153,14 @@ class MultiqcModule(BaseMultiqcModule):
                 }
             }
         }
+
+    @staticmethod
+    def represents_int(s):
+        """
+        Check, whether a string represents an integer or not
+        """
+        try:
+            int(s)
+            return True
+        except ValueError:
+            return False
