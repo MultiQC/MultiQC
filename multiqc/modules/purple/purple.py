@@ -24,7 +24,7 @@ class MultiqcModule(BaseMultiqcModule):
             name='PURPLE',
             anchor='purple',
             href="https://github.com/hartwigmedical/hmftools/tree/master/purity-ploidy-estimator",
-            info="""It combines B-allele frequency (BAF), read depth ratios, somatic variants and
+            info="""combines B-allele frequency (BAF), read depth ratios, somatic variants and
                     structural variant breakpoints to estimate the purity and copy number profile
                     of a tumor sample, and also predicts gender, the MSI status, tumor mutational
                     load and burden, clonality and the whole genome duplication status."""
@@ -69,30 +69,25 @@ class MultiqcModule(BaseMultiqcModule):
                 'title': 'PURPLE summary',
             }),
             helptext="""
-            <ol>
-            <b>QC status</b>. Can fail for the following 3 reasons:
-            <li>FAIL_SEGMENT: removed samples with more than 220 copy number segments unsupported
-            at either end by SV breakpoints. This step was added to remove samples with extreme GC bias,
-            with differences in depth of up to or in excess of 10x between high and low GC regions.
-            GC normalisation is unreliable when the corrections are so extreme so we filter.
-            <li>FAIL_GENDER: if the AMBER and COBALT gender are inconsistent, we use the COBALT gender but
-            fail the sample.
-            <li>FAIL_DELETED_GENES: we fail any sample with more than 280 deleted genes. This QC step was
-            added after observing that in a handful of samples with high MB scale positive GC bias we
-            sometimes systematically underestimate the copy number in high GC regions. This can lead us to
-            incorrectly infer homozygous loss of entire chromosomes, particularly on chromosomes 17 and 19.
-            </ol>
-
-            <ol>
-            <b>Ploidy status</b>. Reflects how we have determined the purity of the sample:
-            <li>NORMAL: could fix the purity using coverage and BAF alone
-            <li>HIGHLY_DIPLOID: the fitted purity solution is highly diploid (> 95%) with a large
-            range of potential solutions, but somatic variants are unable to help either because they
-            were not supplied or because their implied purity was too low.
-            <li>SOMATIC: somatic variants have improved the otherwise highly diploid solution
-            <li>NO_TUMOR: PURPLE failed to find any aneuploidy and somatic variants were supplied but
-            there were fewer than 300 with observed VAF > 0.1.
-            </ol>
+            1. **QC status**. Can fail for the following 3 reasons:
+                * `FAIL_SEGMENT`: removed samples with more than 220 copy number segments unsupported
+                    at either end by SV breakpoints. This step was added to remove samples with extreme GC bias,
+                    with differences in depth of up to or in excess of 10x between high and low GC regions.
+                    GC normalisation is unreliable when the corrections are so extreme so we filter.
+                * `FAIL_GENDER`: if the AMBER and COBALT gender are inconsistent, we use the COBALT gender but
+                    fail the sample.
+                * `FAIL_DELETED_GENES`: we fail any sample with more than 280 deleted genes. This QC step was
+                    added after observing that in a handful of samples with high MB scale positive GC bias we
+                    sometimes systematically underestimate the copy number in high GC regions. This can lead us to
+                    incorrectly infer homozygous loss of entire chromosomes, particularly on chromosomes 17 and 19.
+            2. **Ploidy status**. Reflects how we have determined the purity of the sample:
+                * `NORMAL`: could fix the purity using coverage and BAF alone
+                * `HIGHLY_DIPLOID`: the fitted purity solution is highly diploid (> 95%) with a large
+                    range of potential solutions, but somatic variants are unable to help either because they
+                    were not supplied or because their implied purity was too low.
+                * `SOMATIC`: somatic variants have improved the otherwise highly diploid solution
+                * `NO_TUMOR`: PURPLE failed to find any aneuploidy and somatic variants were supplied but
+                    there were fewer than 300 with observed VAF > 0.1.
             """
         )
 
@@ -201,8 +196,6 @@ def _parse_purple_qc(f):
     DeletedGenes    5529
     """
 
-    f['s_name'] = re.search(r'(.*).purple.qc', f['fn']).group(1)
-
     data = dict()
     for line in f['f'].splitlines():
         fields = line.strip().split('\t')
@@ -221,8 +214,6 @@ def _parse_purple_purity(f):
     1.9480     2.0037     0.0000                0.0000                2.40     0.0000          false \
     0.012941587967820916  MSS       0.0  LOW        1.0514165792235046  LOW
     """
-
-    f['s_name'] = re.search(r'(.*).purple.purity.tsv', f['fn']).group(1)
 
     header, values = [], []
     for i, line in enumerate(f['f'].splitlines()):
