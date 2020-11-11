@@ -496,6 +496,10 @@ module_order:
             - RNA
             - methylation
             - allele-specific
+    - odgi:
+        module_tag:
+            - DNA
+            - pangenome
 
     # Pre-alignment QC
     - kat:
