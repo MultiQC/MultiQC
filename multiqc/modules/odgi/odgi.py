@@ -4,7 +4,6 @@
 
 from __future__ import print_function
 import logging
-import sys
 from collections import OrderedDict
 
 from multiqc.modules.base_module import BaseMultiqcModule
@@ -16,7 +15,7 @@ log = logging.getLogger(__name__)
 
 class MultiqcModule(BaseMultiqcModule):
     """
-    The MultiQC module to parse and plot odgi stats and viz output.
+    The MultiQC module to parse and plot odgi stats output.
     """
 
     def __init__(self):
@@ -28,7 +27,7 @@ class MultiqcModule(BaseMultiqcModule):
         self.odgi_stats_map = dict()
 
         # Find and load any odgi stats file
-        log_files = self.find_log_files('odgi/stats')
+        log_files = self.find_log_files('odgi')
         if not log_files:
             raise UserWarning
 
@@ -159,7 +158,7 @@ class MultiqcModule(BaseMultiqcModule):
             try:
                 return consensus_identifier[0]
             except IndexError:
-                log.error('Unknown file name {}: File name must either contain seqwish, smooth or consensus@!').format(file_name)
+                log.error('Unknown file name {}: File name must either contain seqwish, smooth or consensus@!'.format(file_name))
 
     def compress_stats_data(self, sample_name, stats, mean_links_length, sum_of_path_nodes_distances) -> dict:
         """
