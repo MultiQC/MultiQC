@@ -56,7 +56,7 @@ class MultiqcModule(BaseMultiqcModule):
 
         # Alignment bar plot
         self.rockhopper_count_bar_plot()
-    
+
     def add_results_to_rhdata(self, f, s_name, results):
         '''
         Helper function to add parsed results to rhdata
@@ -123,11 +123,6 @@ class MultiqcModule(BaseMultiqcModule):
             # Get number of reads aligned to each genome
             elif line.startswith('Successfully aligned reads'):
 
-                # Get Genome ID
-                # This isn't used for anything but could be used to make
-                # a table of alignment stats per genome?
-                genome = re.search('(\(.*\))',line).group(1)
-
                 # Get number of aligned reads
                 genome_reads = int(re.search('Successfully aligned reads:\s*(\d*)',line).group(1))
 
@@ -136,9 +131,11 @@ class MultiqcModule(BaseMultiqcModule):
                 for name,val in zip(stats_index,stats):
                     # Convert percentages to true number of reads in each category
                     results[name] += int(round(val*genome_reads/100))
+
         # Make sure the last sample name is added to the results dictionary
         if s_name and s_name not in results_by_s_name:
             results_by_s_name[s_name] = results
+
         # loop through all samples found and add them to rhdata
         for s_name in results_by_s_name:
             self.add_results_to_rhdata(f, s_name, results_by_s_name[s_name])
