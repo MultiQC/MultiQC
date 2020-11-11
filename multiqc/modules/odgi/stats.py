@@ -52,7 +52,7 @@ class MultiqcModule(BaseMultiqcModule):
         """
         The stats reports assume the following structure:
         
-        length    nodes    edges    paths
+        #length    nodes    edges    paths
         8778    168    243    35
         #mean_links_length
         path    in_node_space    in_nucleotide_space    num_links_considered
