@@ -47,7 +47,7 @@ class MultiqcModule(BaseMultiqcModule):
             'format': '{:i}',
         }
         headers['mean_gene_size'] = {
-            'title': 'Mean gene length',
+            'title': 'Mean gene length (bp)',
             'description': 'Mean gene length',
             'format': '{:i}',
         }
@@ -140,11 +140,10 @@ class MultiqcModule(BaseMultiqcModule):
     def jcvi_linegraph_gene_length(self):
         plot_config = {
             'id': 'jcvi_gene_length_plot',
-            'title': 'JCVI: gene length repartition',
+            'title': 'JCVI: Gene length repartition',
             'ylab': '# genes',
             'xlab': 'Gene length (bp)',
-            'xDecimals': False,
-            'ymin': 0
+            'xDecimals': False
         }
 
         plot_data = {x: self.jcvi[x]['gene_length'] for x in self.jcvi if 'gene_length' in self.jcvi[x]}
@@ -160,8 +159,7 @@ class MultiqcModule(BaseMultiqcModule):
             'title': 'JCVI: Exon length repartition',
             'ylab': '# exons',
             'xlab': 'Exon length (bp)',
-            'xDecimals': False,
-            'ymin': 0,
+            'xDecimals': False
         }
 
         plot_data = {x: self.jcvi[x]['exon_length'] for x in self.jcvi if 'exon_length' in self.jcvi[x]}
@@ -174,11 +172,10 @@ class MultiqcModule(BaseMultiqcModule):
     def jcvi_linegraph_intron_length(self):
         plot_config = {
             'id': 'jcvi_intron_length_plot',
-            'title': 'JCVI: intron length repartition',
+            'title': 'JCVI: Intron length repartition',
             'ylab': '# introns',
             'xlab': 'Intron length (bp)',
-            'xDecimals': False,
-            'ymin': 0,
+            'xDecimals': False
         }
 
         plot_data = {x: self.jcvi[x]['intron_length'] for x in self.jcvi if 'intron_length' in self.jcvi[x]}
