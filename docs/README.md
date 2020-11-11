@@ -93,6 +93,7 @@ MultiQC Modules:
     RSeQC: modules/rseqc.md
     Samblaster: modules/samblaster.md
     Samtools: modules/samtools.md
+    Sentieon: modules/sentieon.md
     Sargasso: modules/sargasso.md
     SexDetErrmine: modules/sexdeterrmine.md
     Slamdunk: modules/slamdunk.md

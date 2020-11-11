@@ -13,6 +13,9 @@
   * Identify, orient and trim full length Nanopore cDNA reads
 * [**qc3C**](https://github.com/cerebis/qc3C)
   * Reference-free QC of Hi-C sequencing data
+* [**Sentieon**](https://www.sentieon.com/products/)
+  * Submodules added to catch Picard-based QC metrics files
+
 
 #### Module updates
 
