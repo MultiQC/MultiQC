@@ -152,7 +152,7 @@ class MultiqcModule(BaseMultiqcModule):
 
         for scope in ('region', 'global'):
             for f in self.find_log_files('mosdepth/' + scope + '_dist'):
-                s_name = self.clean_s_name(f['fn'], root=None).replace('.mosdepth.' + scope + '.dist', '')
+                s_name = self.clean_s_name(f['fn'], f['root']).replace('.mosdepth.' + scope + '.dist', '')
                 if s_name in dist_data:  # both region and global might exist, prioritizing region
                     continue
 

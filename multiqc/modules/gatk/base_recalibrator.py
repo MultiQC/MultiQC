@@ -5,7 +5,9 @@
 
 import logging
 from collections import namedtuple
+from itertools import groupby
 from multiqc.plots import linegraph
+from multiqc.plots import scatter
 
 # Initialise the logger
 log = logging.getLogger(__name__)
@@ -60,6 +62,7 @@ class BaseRecalibratorMixin():
             log.info("Found {} BaseRecalibrator reports".format(n_reports_found))
 
             self.add_quality_score_vs_no_of_observations_section()
+            self.add_reported_vs_empirical_section()
 
         return n_reports_found
 
@@ -135,6 +138,57 @@ class BaseRecalibratorMixin():
                 '.'
             ),
             plot = plot,
+        )
+
+    def add_reported_vs_empirical_section(self):
+        sample_data = []
+        data_labels = []
+
+        # Loop through the different data types
+        for rt_type_name, rt_type, in recal_table_type._asdict().items():
+            # This table appears to be the correct one to use for reported vs empirical
+            # https://github.com/broadinstitute/gatk/blob/853b53ec2a3ac2d90d7d82a6c8451e29a34692d2/src/main/resources/org/broadinstitute/hellbender/utils/recalibration/BQSR.R#L148
+            sample_tables = self.gatk_base_recalibrator[rt_type]['recal_table_1']
+            if len(sample_tables) == 0:
+                continue
+
+            reported_empirical = {}
+            for sample, table in sample_tables.items():
+                reported_empirical[sample] = []
+                table_rows = [dict(zip(table, r)) for r in zip(*table.values())]
+                table_rows.sort(key=lambda r: r['QualityScore'])
+                for reported, group in groupby(table_rows, lambda r: r['QualityScore']):
+                    g = list(group)
+                    reported_empirical[sample].append(
+                        {
+                            'x': int(reported),
+                            'y': sum(float(r['EmpiricalQuality']) for r in g) / len(g) if len(g) > 0 else 0,
+                        }
+                    )
+
+            sample_data.append(reported_empirical)
+
+            # Build data label configs for this data type
+            data_labels.append(
+                {'name': '{} Reported vs. Empirical Quality', 'ylab': 'Empirical quality score'}
+            )
+        plot = scatter.plot(
+            sample_data,
+            pconfig={
+                'title': 'Reported vs. Empirical Quality',
+                'id': 'gatk-base-recalibrator-reported-empirical-plot',
+                'xlab': 'Reported quality score',
+                'ylab': 'Empirical quality score',
+                'xDecimals': False,
+                'data_labels': data_labels,
+            },
+        )
+
+        self.add_section(
+            name='Reported Quality vs. Empirical Quality',
+            anchor='gatk-base-recalibrator-reported-empirical',
+            description='Plot shows the reported quality score vs the empirical quality score.',
+            plot=plot,
         )
 
 
