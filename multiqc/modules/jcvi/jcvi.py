@@ -311,7 +311,7 @@ class MultiqcModule(BaseMultiqcModule):
         # Add missing values
         if stat_table:
             values = sorted(stat_table.keys())
-            for required_val in range(bin_by / 2, max(values), bin_by):
+            for required_val in range(int(bin_by / 2), int(max(values)), bin_by):
                 if required_val not in stat_table:
                     stat_table[required_val] = 0
 
