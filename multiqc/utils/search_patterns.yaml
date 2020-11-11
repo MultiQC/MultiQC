@@ -471,6 +471,10 @@ preseq/real_counts:
 prokka:
     contents: 'contigs:'
     num_lines: 2
+purple/qc:
+    fn: '*.purple.qc'
+purple/purity:
+    fn: '*.purple.purity.tsv'
 pycoqc:
     contents: '"pycoqc":'
     num_lines: 2

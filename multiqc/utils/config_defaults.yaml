@@ -77,6 +77,11 @@ table_cond_formatting_rules:
         fail:
             - s_eq: 'fail'
             - s_eq: 'false'
+    # PURPLE module - QC Status column
+    # TODO: Should update the table plotting code so that this can go in pconfig
+    QCStatus:
+        fail:
+            - s_contains: 'fail'
 decimalPoint_format: null
 thousandsSep_format: null
 remove_sections: []
@@ -198,6 +203,8 @@ fn_clean_exts:
     - '.selfSM'
     - '.extendedFrags'
     - '_SummaryStatistics'
+    - '.purple.purity'
+    - '.purple.qc'
 
 # These are removed after the above, only if sample names
 # start or end with this string. Again, removed in order.
@@ -255,6 +262,10 @@ module_order:
     # MultiQC general module for catching output from custom scripts
     - 'custom_content'
     # Post-alignment QC
+    - purple:
+        module_tag:
+            - DNA
+            - cancer
     - conpair:
         module_tag:
             - WGS

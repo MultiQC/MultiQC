@@ -9,6 +9,8 @@
 
 * [**HOPS**](https://www.github.com/rhubler/HOPS)
   * Post-alignment ancient DNA analysis tool for MALT
+* [**PURPLE**](https://github.com/hartwigmedical/hmftools/tree/master/purity-ploidy-estimator)
+  * A purity, ploidy and copy number estimator for whole genome tumor data
 * [**Pychopper**](https://github.com/nanoporetech/pychopper)
   * Identify, orient and trim full length Nanopore cDNA reads
 * [**qc3C**](https://github.com/cerebis/qc3C)
