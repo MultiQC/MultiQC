@@ -16,7 +16,7 @@ log = logging.getLogger(__name__)
 
 class MultiqcModule(BaseMultiqcModule):
     """
-    The MultiQC module to parse and plot odgi stats
+    The MultiQC module to parse and plot odgi stats and viz output.
     """
 
     def __init__(self):
@@ -32,12 +32,12 @@ class MultiqcModule(BaseMultiqcModule):
         if not log_files:
             raise UserWarning
 
-        log.info("Found {} reports".format(len(self.odgi_stats_map)))
-
         # Parse odgi stats data
         for f in log_files:
             self.parse_odgi_stats_report(f)
             self.add_data_source(f)
+
+        log.info("Found {} reports".format(len(self.odgi_stats_map)))
 
         # Write parsed report data to a file
         self.write_data_file(self.odgi_stats_map, 'multiqc_odgi_stats')
@@ -52,7 +52,7 @@ class MultiqcModule(BaseMultiqcModule):
         """
         The stats reports assume the following structure:
         
-        #length    nodes    edges    paths
+        length    nodes    edges    paths
         8778    168    243    35
         #mean_links_length
         path    in_node_space    in_nucleotide_space    num_links_considered
@@ -69,7 +69,10 @@ class MultiqcModule(BaseMultiqcModule):
         # parse sum of path nodes distances
         sum_of_path_nodes_distances = lines[7].split('\t')
         
-        self.odgi_stats_map.update(MultiqcModule.compress_stats_data(f['fn'], stats, mean_links_length, sum_of_path_nodes_distances))
+        self.odgi_stats_map.update(self.compress_stats_data(self.extract_sample_name(f['fn']),
+                                                            stats,
+                                                            mean_links_length,
+                                                            sum_of_path_nodes_distances))
 
     def plot_general_odgi_stats(self):
         """
@@ -99,8 +102,7 @@ class MultiqcModule(BaseMultiqcModule):
         }
         for fn in self.odgi_stats_map.keys():
             file_stats = self.odgi_stats_map[fn]
-            unique_file_identifier = MultiqcModule.strip_file_name(fn)
-            data.update({unique_file_identifier: file_stats['General stats {}'.format(fn)]})
+            data.update({fn: file_stats['General stats {}'.format(fn)]})
         self.general_stats_addcols(data, headers)
 
     def plot_odgi_metrics(self):
@@ -114,15 +116,14 @@ class MultiqcModule(BaseMultiqcModule):
         odgi_stats_file_names = sorted(self.odgi_stats_map.keys())
         seq_smooth = odgi_stats_file_names[-2:]
         sorted_filenames = seq_smooth + odgi_stats_file_names[:-2]
-        for fn in sorted_filenames:
-            file_stats = self.odgi_stats_map[fn]
-            unique_file_identifier = MultiqcModule.strip_file_name(fn)
-            mean_links_length_nodes_space.update({unique_file_identifier: float(file_stats['Mean_links_length {}'.format(fn)]['In_node_space'])})
-            mean_links_length_nucleotide_space.update({unique_file_identifier: float(file_stats['Mean_links_length {}'.format(fn)]['In_nucleotide_space'])})
+        for sample_name in sorted_filenames:
+            file_stats = self.odgi_stats_map[sample_name]
+            mean_links_length_nodes_space.update({sample_name: float(file_stats['Mean_links_length {}'.format(sample_name)]['In_node_space'])})
+            mean_links_length_nucleotide_space.update({sample_name: float(file_stats['Mean_links_length {}'.format(sample_name)]['In_nucleotide_space'])})
             sum_of_path_nodes_distances_nodes_space.update(
-                {unique_file_identifier: float(file_stats['Sum_of_path_nodes_distances {}'.format(fn)]['In_node_space'])})
+                {sample_name: float(file_stats['Sum_of_path_nodes_distances {}'.format(sample_name)]['In_node_space'])})
             sum_of_path_nodes_distances_nucleotide_space.update(
-                {unique_file_identifier: float(file_stats['Sum_of_path_nodes_distances {}'.format(fn)]['In_nucleotide_space'])})
+                {sample_name: float(file_stats['Sum_of_path_nodes_distances {}'.format(sample_name)]['In_nucleotide_space'])})
 
         metrics_lineplot_config = {
             'categories': True,
@@ -143,44 +144,42 @@ class MultiqcModule(BaseMultiqcModule):
                                  }, pconfig=metrics_lineplot_config)
         )
 
-    @staticmethod
-    def strip_file_name(fn):
+    def extract_sample_name(self, file_name):
         """
-        Bla
+        Extracts the sample name from a given file name.
+        Expects and returns one of seqwish, smooth or consensus@*
         """
-        if 'seqwish.og' in fn:
+        if 'seqwish.og' in file_name:
             return 'seqwish'
-        elif 'smooth' in fn:
+        elif 'smooth' in file_name:
             return 'smooth'
         else:
-            fn = fn.split('.')
-            consensus_identifier = list((e for e in fn if 'consensus@' in e))
+            file_name = file_name.split('.')
+            consensus_identifier = list((e for e in file_name if 'consensus@' in e))
             try:
                 return consensus_identifier[0]
             except IndexError:
-                log.error('Unknown file name: File name must either contain seqwish, smooth or consensus@!')
-                sys.exit(1)
+                log.error('Unknown file name {}: File name must either contain seqwish, smooth or consensus@!').format(file_name)
 
-    @staticmethod
-    def compress_stats_data(fn, stats, mean_links_length, sum_of_path_nodes_distances) -> dict:
+    def compress_stats_data(self, sample_name, stats, mean_links_length, sum_of_path_nodes_distances) -> dict:
         """
-        Compress odgi stats into a single dictionary
+        Compress odgi stats into a single dictionary to visualize.
         """
         return {
-            fn: {
-                'General stats {}'.format(fn): {
+            sample_name: {
+                'General stats {}'.format(sample_name): {
                     'Length': float(stats[0]),
                     'Nodes': float(stats[1]),
                     'Edges': float(stats[2]),
                     'Paths': float(stats[3]),
                 },
-                'Mean_links_length {}'.format(fn): {
+                'Mean_links_length {}'.format(sample_name): {
                     'Path': mean_links_length[0],
                     'In_node_space': mean_links_length[1],
                     'In_nucleotide_space': mean_links_length[2],
                     'Num_links_considered': mean_links_length[3]
                 },
-                'Sum_of_path_nodes_distances {}'.format(fn): {
+                'Sum_of_path_nodes_distances {}'.format(sample_name): {
                     'Path': sum_of_path_nodes_distances[0],
                     'In_node_space': sum_of_path_nodes_distances[1],
                     'In_nucleotide_space': sum_of_path_nodes_distances[2],
