@@ -4,6 +4,7 @@
 
 from __future__ import print_function
 import logging
+import sys
 from collections import OrderedDict
 
 from multiqc.modules.base_module import BaseMultiqcModule
@@ -86,7 +87,8 @@ class MultiqcModule(BaseMultiqcModule):
         }
         for fn in self.odgi_stats_map.keys():
             file_stats = self.odgi_stats_map[fn]
-            data.update({fn: file_stats['General stats {}'.format(fn)]})
+            unique_file_identifier = MultiqcModule.strip_file_name(fn)
+            data.update({unique_file_identifier: file_stats['General stats {}'.format(fn)]})
         self.general_stats_addcols(data, headers)
 
     def plot_odgi_metrics(self):
@@ -97,12 +99,18 @@ class MultiqcModule(BaseMultiqcModule):
         mean_links_length_nucleotide_space = dict()
         sum_of_path_nodes_distances_nodes_space = dict()
         sum_of_path_nodes_distances_nucleotide_space = dict()
-        for fn in self.odgi_stats_map.keys():
+        odgi_stats_file_names = sorted(self.odgi_stats_map.keys())
+        seq_smooth = odgi_stats_file_names[-2:]
+        sorted_filenames = seq_smooth + odgi_stats_file_names[:-2]
+        for fn in sorted_filenames:
             file_stats = self.odgi_stats_map[fn]
-            mean_links_length_nodes_space.update({fn: float(file_stats['Mean_links_length {}'.format(fn)]['In_node_space'])})
-            mean_links_length_nucleotide_space.update({fn: float(file_stats['Mean_links_length {}'.format(fn)]['In_nucleotide_space'])})
-            sum_of_path_nodes_distances_nodes_space.update({fn: float(file_stats['Sum_of_path_nodes_distances {}'.format(fn)]['In_node_space'])})
-            sum_of_path_nodes_distances_nucleotide_space.update({fn: float(file_stats['Sum_of_path_nodes_distances {}'.format(fn)]['In_nucleotide_space'])})
+            unique_file_identifier = MultiqcModule.strip_file_name(fn)
+            mean_links_length_nodes_space.update({unique_file_identifier: float(file_stats['Mean_links_length {}'.format(fn)]['In_node_space'])})
+            mean_links_length_nucleotide_space.update({unique_file_identifier: float(file_stats['Mean_links_length {}'.format(fn)]['In_nucleotide_space'])})
+            sum_of_path_nodes_distances_nodes_space.update(
+                {unique_file_identifier: float(file_stats['Sum_of_path_nodes_distances {}'.format(fn)]['In_node_space'])})
+            sum_of_path_nodes_distances_nucleotide_space.update(
+                {unique_file_identifier: float(file_stats['Sum_of_path_nodes_distances {}'.format(fn)]['In_nucleotide_space'])})
 
         metrics_lineplot_config = {
             'categories': True,
@@ -122,6 +130,24 @@ class MultiqcModule(BaseMultiqcModule):
                                  'in_nucleotide_space_sum': sum_of_path_nodes_distances_nucleotide_space
                                  }, pconfig=metrics_lineplot_config)
         )
+
+    @staticmethod
+    def strip_file_name(fn):
+        """
+        Bla
+        """
+        if 'seqwish.og' in fn:
+            return 'seqwish'
+        elif 'smooth' in fn:
+            return 'smooth'
+        else:
+            fn = fn.split('.')
+            consensus_identifier = list((e for e in fn if 'consensus@' in e))
+            try:
+                return consensus_identifier[0]
+            except IndexError:
+                log.error('Unknown file name: File name must either contain seqwish, smooth or consensus@!')
+                sys.exit(1)
 
     @staticmethod
     def compress_stats_data(fn, stats, mean_links_length, sum_of_path_nodes_distances) -> dict:

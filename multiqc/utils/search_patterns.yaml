@@ -388,7 +388,7 @@ disambiguate:
     contents: 'unique species A pairs'
     num_lines: 2
 odgi/stats:
-    - contents_re: 'length\tnodes\tedges\tpaths'
+    - contents_re: '#length\tnodes\tedges\tpaths'
       num_lines: 1
 odgi/viz:
     - fn: '*_odgi_viz.png'
