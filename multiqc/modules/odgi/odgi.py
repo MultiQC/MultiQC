@@ -22,7 +22,7 @@ class MultiqcModule(BaseMultiqcModule):
         # Initialise the parent object
         super(MultiqcModule, self).__init__(name='Odgi', anchor='odgi',
                                             href='https://github.com/vgteam/odgi',
-                                            info="is an optimized dynamic graph/genome implementation.")
+                                            info='is an optimized dynamic graph/genome implementation.')
 
         self.odgi_stats_map = dict()
 
@@ -36,7 +36,7 @@ class MultiqcModule(BaseMultiqcModule):
             self.parse_odgi_stats_report(f)
             self.add_data_source(f)
 
-        log.info("Found {} reports".format(len(self.odgi_stats_map)))
+        log.info('Found {} reports'.format(len(self.odgi_stats_map)))
 
         # Write parsed report data to a file
         self.write_data_file(self.odgi_stats_map, 'multiqc_odgi_stats')
