@@ -33,32 +33,49 @@ class MultiqcModule(BaseMultiqcModule):
         )
 
         self.happy_raw_sample_names = set()
-        self.happy_data = dict()
+        self.happy_indel_data = dict()
+        self.happy_snp_data = dict()
 
         for f in self.find_log_files("happy", filehandles=True):
-            self.parse_log(f)
+            self.parse_file(f)
             self.add_data_source(f)
 
         if len(self.happy_raw_sample_names) == 0:
             raise UserWarning
 
+        # print number of happy reports found and parsed
         log.info("Found {} reports".format(len(self.happy_raw_sample_names)))
 
-        self.write_data_file(self.happy_data, 'multiqc_happy_data', data_format="json")
+        # Write parsed report data to file
+        self.write_data_file(self.happy_indel_data, 'multiqc_happy_indel_data', data_format="json")
+        self.write_data_file(self.happy_snp_data, 'multiqc_happy_snp_data', data_format="json")
 
+        # add sections with the values from the indel and snp happy output
         self.add_section(
-            name = "hap.py",
-            anchor = "happy-plot",
+            name = "INDEL",
+            anchor = "happy-indel-plot",
             description = 'The default shown fields should give the best overview of quality, but there are many other hidden fields available.',
             helptext = '''
                 No plots are generated, as hap.py is generally run on single control samples (NA12878, etc.)
 
                 Ideally, precision, recall and F1 Score should all be as close to 1 as possible.
             ''',
-            plot = table.plot(self.happy_data, self.gen_headers())
+            plot = table.plot(self.happy_indel_data, self.gen_headers("_indel"))
+        )
+        
+        self.add_section(
+            name = "SNP",
+            anchor = "happy-snp-plot",
+            description = 'The default shown fields should give the best overview of quality, but there are many other hidden fields available.',
+            helptext = '''
+                No plots are generated, as hap.py is generally run on single control samples (NA12878, etc.)
+
+                Ideally, precision, recall and F1 Score should all be as close to 1 as possible.
+            ''',
+            plot = table.plot(self.happy_snp_data, self.gen_headers("_snp"))
         )
 
-    def parse_log(self, f):
+    def parse_file(self, f):
         # Check that we're not ignoring this sample name
         if self.is_ignore_sample(f['s_name']):
             return
@@ -70,15 +87,23 @@ class MultiqcModule(BaseMultiqcModule):
         rdr = csv.DictReader(f['f'])
         for row in rdr:
             row_id = "{}_{}_{}".format(f['s_name'], row["Type"], row["Filter"])
-            if row_id not in self.happy_data:
-                self.happy_data[row_id] = {"sample_id": f['s_name']}
-            for fn in rdr.fieldnames:
-                self.happy_data[row_id][fn] = row[fn]
+            if row["Type"] == 'INDEL':
+                if row_id not in self.happy_indel_data:
+                    self.happy_indel_data[row_id] = {"sample_id": f['s_name']}
+                # add suffix for headers to differentiate between indel and snp
+                for fn in rdr.fieldnames:
+                    self.happy_indel_data[row_id][fn+"_indel"] = row[fn]
 
-    def gen_headers(self):
+            elif row["Type"] == 'SNP':
+                if row_id not in self.happy_snp_data:
+                    self.happy_snp_data[row_id] = {"sample_id": f['s_name']}
+                for fn in rdr.fieldnames:
+                    self.happy_snp_data[row_id][fn+"_snp"] = row[fn]
+
+    def gen_headers(self, suffix=""):
         h = OrderedDict()
-        h["METRIC.Recall"] = {
-            "title": "Recall",
+        h["METRIC.Recall"] = { # string must match headers in the input file
+            "title": "Recall", # whatever string to be displayed in the html report table
             "description": "Recall for truth variant representation = TRUTH.TP / (TRUTH.TP + TRUTH.FN)",
             "min": 0,
             "max": 1,
@@ -281,5 +306,8 @@ class MultiqcModule(BaseMultiqcModule):
             "format": None,
             "hidden": True,
         }
-
-        return h
+        # rename column headers with '_indel' or '_snp' suffix
+        headers = [k + suffix for k in h.keys()]
+        # recreate the ordered dictionary with all headers and information
+        header_dict = OrderedDict(zip(headers, h.values()))
+        return header_dict
