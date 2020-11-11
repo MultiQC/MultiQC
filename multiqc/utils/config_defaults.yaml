@@ -101,6 +101,7 @@ sample_names_rename_buttons: []
 sample_names_rename: []
 show_hide_buttons: []
 show_hide_patterns: []
+show_hide_regex: []
 show_hide_mode: []
 no_version_check: false
 log_filesize_limit: 10000000
