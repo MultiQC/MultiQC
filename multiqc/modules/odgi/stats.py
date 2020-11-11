@@ -144,10 +144,10 @@ class MultiqcModule(BaseMultiqcModule):
         return {
             fn: {
                 'General stats {}'.format(fn): {
-                    'Length': int(stats[0]) if MultiqcModule.represents_int(stats[0]) else float(stats[0]),
-                    'Nodes': int(stats[1]) if MultiqcModule.represents_int(stats[1]) else float(stats[1]),
-                    'Edges': int(stats[2]) if MultiqcModule.represents_int(stats[2]) else float(stats[2]),
-                    'Paths': int(stats[3]) if MultiqcModule.represents_int(stats[3]) else float(stats[3]),
+                    'Length': float(stats[0]),
+                    'Nodes': float(stats[1]),
+                    'Edges': float(stats[2]),
+                    'Paths': float(stats[3]),
                 },
                 'Mean_links_length {}'.format(fn): {
                     'Path': mean_links_length[0],
@@ -166,14 +166,3 @@ class MultiqcModule(BaseMultiqcModule):
                 }
             }
         }
-
-    @staticmethod
-    def represents_int(s):
-        """
-        Check, whether a string represents an integer or not
-        """
-        try:
-            int(s)
-            return True
-        except ValueError:
-            return False
