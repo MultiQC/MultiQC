@@ -574,6 +574,9 @@ module_order:
         module_tag:
             - RNA
             - DNA
+    - pychopper:
+        module_tag:
+            - RNA
     - pycoqc:
         module_tag:
             - DNA

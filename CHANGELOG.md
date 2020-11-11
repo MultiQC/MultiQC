@@ -9,6 +9,8 @@
 
 * [**HOPS**](https://www.github.com/rhubler/HOPS)
   * Post-alignment ancient DNA analysis tool for MALT
+* [**Pychopper**](https://github.com/nanoporetech/pychopper)
+  * Identify, orient and trim full length Nanopore cDNA reads
 * [**qc3C**](https://github.com/cerebis/qc3C)
   * Reference-free QC of Hi-C sequencing data
 
