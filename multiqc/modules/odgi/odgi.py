@@ -67,7 +67,7 @@ class MultiqcModule(BaseMultiqcModule):
         mean_links_length = lines[4].split('\t')
         # parse sum of path nodes distances
         sum_of_path_nodes_distances = lines[7].split('\t')
-        
+
         self.odgi_stats_map.update(self.compress_stats_data(self.extract_sample_name(f['fn']),
                                                             stats,
                                                             mean_links_length,
@@ -125,6 +125,8 @@ class MultiqcModule(BaseMultiqcModule):
                 {sample_name: float(file_stats['Sum_of_path_nodes_distances {}'.format(sample_name)]['In_nucleotide_space'])})
 
         metrics_lineplot_config = {
+            'id': 'odgi_metrics_lineplot',
+            'ylab': 'Count',
             'categories': True,
             'yDecimals': False,
             'logswitch': True,
