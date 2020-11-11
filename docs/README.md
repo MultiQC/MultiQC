@@ -77,6 +77,7 @@ MultiQC Modules:
     mirtop: modules/mirtop.md
     MTNucRatio: modules/mtnucratio.md
     MultiVCFAnalyzer: modules/multivcfanalyzer.md
+    odig: modules/odgi.md
     phantompeakqualtools: modules/phantompeakqualtools.md
     Peddy: modules/peddy.md
     Picard: modules/picard.md
