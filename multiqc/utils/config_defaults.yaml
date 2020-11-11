@@ -412,6 +412,9 @@ module_order:
         module_tag:
             - prokarytotic
             - denovo
+    - qc3C:
+          module_tag:
+              - hi-c
     - samblaster:
         module_tag:
             - DNA
