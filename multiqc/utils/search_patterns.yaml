@@ -388,7 +388,8 @@ disambiguate:
     contents: 'unique species A pairs'
     num_lines: 2
 odgi:
-    fn: '*.gfa.stats'
+    - fn: '*.gfa.stats'
+    - fn: '*.og.stats'
 peddy/summary_table:
     fn: '*.peddy.ped'
 peddy/het_check:
