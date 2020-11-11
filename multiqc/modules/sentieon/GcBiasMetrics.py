@@ -43,19 +43,22 @@ def parse_reports(self):
                         gc_col = None
                         cov_col = None
 
-                if ('#SentieonCommandLine' in l and '--algo GCBias'
-                        in l and 'Summary' not in s_name):
+                if ('#SentieonCommandLine' in l and '--algo GCBias' in l and 'Summary' not in s_name):
                     if s_name in self.sentieon_GCbias_data:
-                        log.debug("Duplicate sample name found in {}!\
-                             Overwriting: {}".format(f['fn'], s_name))
-                    self.add_data_source(f, s_name,
-                                         section='GcBiasDetailMetrics')
+                        log.debug("Duplicate sample name found in {}! Overwriting: {}".format(f['fn'], s_name))
+                    self.add_data_source(f, s_name, section='GcBiasDetailMetrics')
                     self.sentieon_GCbias_data[s_name] = dict()
                     # Get header - find columns with the data we want
                     line = f['f'].readline()
                     s = line.strip("\n").split("\t")
-                    gc_col = s.index('GC')
-                    cov_col = s.index('NORMALIZED_COVERAGE')
+                    try:
+                        gc_col = s.index('GC')
+                    except ValueError:
+                        pass
+                    try:
+                        cov_col = s.index('NORMALIZED_COVERAGE')
+                    except ValueError:
+                        pass
 
                 if ('#SentieonCommandLine' in l and '--algo GCBias' in l and
                         'Summary' in s_name):
