@@ -222,7 +222,7 @@ class MultiqcModule(BaseMultiqcModule):
                                         'ymix': 0,
                                         'cpswitch': False,
                                         'tt_percentages': False,
-                                        'ylab': 'Percentage of reads with barcodes in the whitelist',
+                                        'ylab': 'Percentage of barcodes / reads with barcodes in the whitelist',
                                         'stacking': None,
                                         'data_labels': ['Reads', 'Bases']
                                         }
