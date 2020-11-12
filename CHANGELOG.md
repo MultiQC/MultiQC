@@ -6,6 +6,8 @@
 
 #### New Modules
 
+* [**Bustools**](https://bustools.github.io/)
+  * Tools for working with BUS files
 * [**HOPS**](https://www.github.com/rhubler/HOPS)
   * Post-alignment ancient DNA analysis tool for MALT
 
