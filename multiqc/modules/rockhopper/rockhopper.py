@@ -57,6 +57,19 @@ class MultiqcModule(BaseMultiqcModule):
         # Alignment bar plot
         self.rockhopper_count_bar_plot()
 
+    def add_results_to_rhdata(self, f, s_name, results):
+        '''
+        Helper function to add parsed results to rhdata
+        '''
+        # Calculate unaligned read count
+        total_mapped_reads  = sum([v for k,v in results.items() if k != 'total-reads'])
+        results['unaligned'] = results['total-reads'] - total_mapped_reads
+
+        if s_name in self.rh_data:
+            log.debug("Duplicate sample name found! Overwriting: {}".format(s_name))
+        self.add_data_source(f, s_name)
+        self.rh_data[s_name] = results
+
 
     def parse_rockhopper_summary(self,f):
 
@@ -76,6 +89,9 @@ class MultiqcModule(BaseMultiqcModule):
         ]
 
         results = { name:0 for name in stats_index }
+        # Files can have more than one sample in them. Store results for
+        # each sample in a dictionary
+        results_by_s_name = {}
 
         # Parse rockhopper output line-by-line since there may be many genomes
         lines = f['f'].split('\n')
@@ -83,23 +99,29 @@ class MultiqcModule(BaseMultiqcModule):
 
             # Get sample name
             if line.startswith('Aligning sequencing reads from file:'):
+                # When reaching a new sample add the previous sample to
+                # the dictionary of samples along with its results.
+                # Then reset the results dictionary for the new sample
+                if s_name  and s_name not in results_by_s_name:
+                    results_by_s_name[s_name] = results
+                    results = { name:0 for name in stats_index }
+
                 s_name = line.split(':', 1)[1].strip()
                 s_name = self.clean_s_name(s_name,f['root'])
 
             elif line.startswith('Aligning sequencing reads from files:'):
+                if s_name and s_name not in results_by_s_name:
+                    results_by_s_name[s_name] = results
+                    results = { name:0 for name in stats_index }
                 s_name = lines[i+1].strip()
                 s_name = self.clean_s_name(s_name,f['root'])
 
             # Get total number of reads read by rockhopper
             if line.startswith('Total reads:'):
                 results['total-reads'] = int(re.search('Total reads:\s*(\d*)',line).group(1))
-                i += 1
 
             # Get number of reads aligned to each genome
             elif line.startswith('Successfully aligned reads'):
-
-                # Get Genome ID
-                genome = re.search('\(>(.*?) .*\)',line).group(1)
 
                 # Get number of aligned reads
                 genome_reads = int(re.search('Successfully aligned reads:\s*(\d*)',line).group(1))
@@ -110,22 +132,14 @@ class MultiqcModule(BaseMultiqcModule):
                     # Convert percentages to true number of reads in each category
                     results[name] += int(round(val*genome_reads/100))
 
-                # Skip 10 lines
-                i += 10
+        # Make sure the last sample name is added to the results dictionary
+        if s_name and s_name not in results_by_s_name:
+            results_by_s_name[s_name] = results
 
-            else:
-                i += 1
+        # loop through all samples found and add them to rhdata
+        for s_name in results_by_s_name:
+            self.add_results_to_rhdata(f, s_name, results_by_s_name[s_name])
 
-        if len(results) > 0 and s_name is not None:
-
-            # Calculate unaligned read count
-            total_mapped_reads  = sum([v for k,v in results.items() if k != 'total-reads'])
-            results['unaligned'] = results['total-reads'] - total_mapped_reads
-
-            if s_name in self.rh_data:
-                log.debug("Duplicate sample name found! Overwriting: {}".format(s_name))
-            self.add_data_source(f, s_name)
-            self.rh_data[s_name] = results
 
     def rockhopper_general_stats_table(self):
         """ Take the parsed stats from the Rockhopper summary and add it to the
