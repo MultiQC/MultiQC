@@ -56,6 +56,7 @@ class MultiqcModule(BaseMultiqcModule):
         headers['numRecords'] = {
             'title': 'Bus Records',
             'description': 'The number of Bus Records',
+            'scale': 'BuGn',
             'min': 0,
             'hidden': False,
             'format': '{:,.0f}'
@@ -64,6 +65,7 @@ class MultiqcModule(BaseMultiqcModule):
             'title': 'Reads',
             'description': 'Total number of reads',
             'min': 0,
+            'scale': 'Greens',
             'hidden': True,
             'format': '{:,.0f}',
         }
@@ -71,11 +73,13 @@ class MultiqcModule(BaseMultiqcModule):
             'title': 'barcodes',
             'description': 'Number of distinct barcodes',
             'min': 0,
+            'scale': 'YlGn',
             'hidden': False,
             'format': '{:,.0f}',
         }
         headers['meanReadsPerBarcode'] = {
             'title': 'Mean reads per barcode',
+            'scale': 'BuGn',
             'min': 0,
             'hidden': False,
             'format': '{:,.2f}',
@@ -83,6 +87,7 @@ class MultiqcModule(BaseMultiqcModule):
         headers['numUMIs'] = {
             'title': 'distinct UMIs',
             'description': 'Number of distinct Unique Molecular Identifiers (UMIs)',
+            'scale': 'Purples',
             'min': 0,
             'hidden': False,
             'format': '{:,.0f}',
@@ -90,12 +95,14 @@ class MultiqcModule(BaseMultiqcModule):
         headers['numBarcodeUMIs'] = {
             'title': 'distinct barcode-UMI',
             'description': 'Number of distinct barcode and Unique Molecular Identifiers (UMIs) pairs',
+            'scale': 'Greens',
             'min': 0,
             'hidden': False,
             'format': '{:,.0f}',
         }
         headers['meanUMIsPerBarcode'] = {
             'title': 'Mean UMIs per barcode',
+            'scale': 'PuBnGn',
             'min': 0,
             'hidden': False,
             'format': '{:,.2f}',
@@ -104,6 +111,7 @@ class MultiqcModule(BaseMultiqcModule):
             'title': '2xdepth records',
             'description': 'Estimated number of new records at 2x sequencing depth',
             'min': 0,
+            'scale': 'Oranges',
             'hidden': False,
             'format': '{:,.0f}',
         }
@@ -111,6 +119,7 @@ class MultiqcModule(BaseMultiqcModule):
             'title': 'distinct targets',
             'description': 'Number of distinct targets detected',
             'min': 0,
+            'scale': 'BuGn',
             'hidden': True,
             'format': '{:,.0f}',
         }
@@ -118,6 +127,7 @@ class MultiqcModule(BaseMultiqcModule):
             'title': 'mean targets',
             'description': 'Mean number of targets per set',
             'min': 0,
+            'scale': 'Greens',
             'hidden': True,
             'format': '{:,.2f}',
         }
@@ -125,6 +135,7 @@ class MultiqcModule(BaseMultiqcModule):
             'title': 'singleton target',
             'description': 'Number of reads with singleton target',
             'min': 0,
+            'scale': 'Blues',
             'hidden': True,
             'format': '{:,.2f}',
         }
@@ -132,6 +143,7 @@ class MultiqcModule(BaseMultiqcModule):
             'title': '2xdepth targets',
             'description': 'Estimated number of new targets at 2x sequencing depth',
             'min': 0,
+            'scale': 'BuGn',
             'hidden': True,
             'format': '{:,.2f}',
         }
@@ -139,6 +151,7 @@ class MultiqcModule(BaseMultiqcModule):
             'title': 'Whitelisted barcodes',
             'description': 'Number of barcodes in agreement with whitelist',
             'min': 0,
+            'scale': 'Greens',
             'hidden': True,
             'format': '{:,.0f}',
         }
@@ -153,6 +166,7 @@ class MultiqcModule(BaseMultiqcModule):
         headers['numReadsOnWhitelist'] = {
             'title': 'Whitelisted reads',
             'description': 'Number of reads with barcode in agreement with whitelist',
+            'scale': 'PuBu',
             'min': 0,
             'hidden': True,
             'format': '{:,.0f}',
