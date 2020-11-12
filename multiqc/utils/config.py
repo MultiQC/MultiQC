@@ -115,6 +115,9 @@ def mqc_load_userconfig(paths=()):
 
 def mqc_load_config(yaml_config):
     """ Load and parse a config file if we find it """
+    if not os.path.isfile(yaml_config) and os.path.isfile(yaml_config.replace('.yaml', '.yml')):
+        yaml_config = yaml_config.replace('.yaml', '.yml')
+
     if os.path.isfile(yaml_config):
         try:
             with open(yaml_config) as f:

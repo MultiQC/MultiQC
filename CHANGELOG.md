@@ -3,7 +3,10 @@
 ## MultiQC v1.10dev
 
 #### New MultiQC Features
+
 * `--sample-filters` now also accepts `show_re` and `hide_re` in addition to `show` and `hide`. The `_re` options use regex, while the "normal" options use globbing.
+* MultiQC config files now work with `.yml` file extension as well as `.yaml`
+  * `.yaml` will take preference if both found.
 
 #### New Modules
 
