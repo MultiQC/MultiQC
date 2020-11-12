@@ -28,13 +28,16 @@ class MultiqcModule(BaseMultiqcModule):
 
         # Find and load any odgi stats file
         log_files = self.find_log_files('odgi')
-        if not log_files:
-            raise UserWarning
 
         # Parse odgi stats data
         for f in log_files:
             self.parse_odgi_stats_report(f)
             self.add_data_source(f)
+
+        self.odgi_stats_map = self.ignore_samples(self.odgi_stats_map)
+
+        if not self.odgi_stats_map:
+            raise UserWarning
 
         log.info('Found {} reports'.format(len(self.odgi_stats_map)))
 
@@ -50,7 +53,7 @@ class MultiqcModule(BaseMultiqcModule):
     def parse_odgi_stats_report(self, f):
         """
         The stats reports assume the following structure:
-        
+
         length    nodes    edges    paths
         8778    168    243    35
         #mean_links_length
@@ -106,7 +109,7 @@ class MultiqcModule(BaseMultiqcModule):
 
     def plot_odgi_metrics(self):
         """
-        Plot odgi metrics as a lineplot supporting raw counts and log10 counts. 
+        Plot odgi metrics as a lineplot supporting raw counts and log10 counts.
         """
         mean_links_length_nodes_space = dict()
         mean_links_length_nucleotide_space = dict()
