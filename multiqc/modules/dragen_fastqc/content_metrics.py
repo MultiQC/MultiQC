@@ -229,6 +229,10 @@ class DragenContentMetrics(BaseMultiqcModule):
                     seq = parts[0].split("'")[1]
                     if seq not in ADAPTER_SEQS:
                         continue
+                    # avoid issues with metrics like "'AGATCGGAAGAG' Total Sequence Starts" where 
+                    # code attempts to parse 'Tot' as an integer
+                    if not parts[1][:-2].isnumeric():
+                        continue
                     pos = average_from_range(parts[1][:-2])
                     adps[pos] += int(value)
 
