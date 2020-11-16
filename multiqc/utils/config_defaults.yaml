@@ -434,6 +434,12 @@ module_order:
         module_tag:
             - DNA
             - RNA
+    - nanostat:
+        module_tag:
+            - DNA
+            - RNA
+            - Methylation
+            - WGS
     - samtools:
         module_tag:
             - DNA

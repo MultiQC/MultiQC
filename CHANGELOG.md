@@ -22,7 +22,8 @@
   * Reference-free QC of Hi-C sequencing data
 * [**Sentieon**](https://www.sentieon.com/products/)
   * Submodules added to catch Picard-based QC metrics files
-
+* [**nanostat**](https://github.com/wdecoster/nanostat)
+  * Calculate various statistics from a long read sequencing datasets
 
 #### Module updates
 
