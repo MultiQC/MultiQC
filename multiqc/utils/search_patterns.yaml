@@ -339,6 +339,10 @@ kaiju:
 kallisto:
     contents: '[quant] finding pseudoalignments for the reads'
     shared: true
+nanostat:
+    max_filesize: 2048
+    contents: 'General summary:'
+    num_lines: 1
 kat:
     fn: '*.dist_analysis.json'
 kraken:

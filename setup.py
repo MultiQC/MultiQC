@@ -128,6 +128,7 @@ setup(
             'jellyfish = multiqc.modules.jellyfish:MultiqcModule',
             'kaiju = multiqc.modules.kaiju:MultiqcModule',
             'kallisto = multiqc.modules.kallisto:MultiqcModule',
+            'nanostat = multiqc.modules.nanostat:MultiqcModule',
             'kat = multiqc.modules.kat:MultiqcModule',
             'kraken = multiqc.modules.kraken:MultiqcModule',
             'leehom = multiqc.modules.leehom:MultiqcModule',
