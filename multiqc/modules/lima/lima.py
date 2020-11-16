@@ -204,16 +204,21 @@ class MultiqcModule(BaseMultiqcModule):
         pdata = list()
 
         categories = ['Counts', 'MeanScore']
+        description = ['Number of Reads', 'Mean Quality Score']
 
         configuration = {
             'id': 'multiqc_lima_counts',
-            'title': 'Lima counts',
+            'title': 'Lima: Number of Reads',
             'anchor': 'multiqc_lima_counts',
+            # Placeholder y-label, the actual values will be set below in
+            # data_labels
+            'ylab': '# Reads',
             'data_labels': [
                 {
                     'name': category,
-                    'cpswitch_counts_label': category
-                } for category in categories
+                    'cpswitch_counts_label': category,
+                    'ylab': description
+                } for category, description in zip(categories, description)
             ]
         }
 
