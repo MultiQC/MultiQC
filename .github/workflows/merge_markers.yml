@@ -13,9 +13,9 @@ jobs:
     # Grep for opening merge marker
     - name: Grep for >>>>>
       run: |
-        if [[ $(grep -ER "$>>>>>>> " . | wc -l) -ge 0 ]];then
-          echo "Opening merge marker found!"
-          grep -ER "$>>>>>>> "
+        if [[ $(grep -ER "$>>>>>>> " . | wc -l) > 0 ]];then
+          echo "Opening merge marker found\!"
+          grep -ER "$>>>>>>> " .
           exit 1
         else
           echo "No opening merge markers found"
@@ -25,9 +25,9 @@ jobs:
     # Grep for closing merge marker
     - name: Grep for >>>>>
       run: |
-        if [[ $(grep -ER "$<<<<<<< " . | wc -l) -ge 0 ]];then
-          echo "Closing merge marker found!"
-          grep -ER "$>>>>>>> "
+        if [[ $(grep -ER "$<<<<<<< " . | wc -l) > 0 ]];then
+          echo "Closing merge marker found\!"
+          grep -ER "$>>>>>>> " .
           exit 1
         else
           echo "No closing merge markers found"

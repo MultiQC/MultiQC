@@ -9,6 +9,7 @@
   * `.yaml` will take preference if both found.
 * Section comments can now also be added for _General Statistics_
   * `section_comments: { general_stats: "My comment" }`
+* New CI test looks for git merge markers in files
 
 #### New Modules
 
