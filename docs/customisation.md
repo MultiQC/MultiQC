@@ -120,13 +120,21 @@ quality metrics overlap between these batches.
 It's possible to supply a file with one or more patterns to filter samples on using the
 `--sample-filters` command line option. This file should be a tab-delimited file with each
 row containing the button name, whether the pattern should be hidden (`hide`) or shown (`show`)
-and the patterns to be applied (all subsequent columns).
+and the patterns to be applied (all subsequent columns). If you want to use a regular expression
+pattern, opposed to the default globbing, you can use `hide_re` and `show_re`.
 
 For example, to filter on read pair groups, you could use the following file:
 
 ```tsv
 Read Group 1	show	_R1
 Read Group 2	show	_R2
+```
+
+Or in regex mode:
+
+```tsv
+Read Group 1	show_re	.*_R1
+Read Group 2	show_re	.*_R2
 ```
 
 To filter on controls and sample groups you could use:
@@ -171,6 +179,8 @@ section_comments:
 Comments can be written in Markdown. The `section_comments` keys should correspond to the HTML IDs
 of the report section. You can find these by clicking on a navigation link in the report and seeing
 the `#section_id` at the end of the browser URL.
+
+To add a section comment for General Statistics, use the ID `general_stats`.
 
 ## Removing modules or sections
 If you don't want an entire module to be used in a MultiQC report, use the `-e`/`--exclude`

@@ -115,6 +115,9 @@ def mqc_load_userconfig(paths=()):
 
 def mqc_load_config(yaml_config):
     """ Load and parse a config file if we find it """
+    if not os.path.isfile(yaml_config) and os.path.isfile(yaml_config.replace('.yaml', '.yml')):
+        yaml_config = yaml_config.replace('.yaml', '.yml')
+
     if os.path.isfile(yaml_config):
         try:
             with open(yaml_config) as f:
@@ -214,10 +217,11 @@ def load_show_hide(sh_file):
                 logger.debug("Loading sample renaming config settings from: {}".format(sh_file))
                 for l in f:
                     s = l.strip().split("\t")
-                    if len(s) >= 3 and s[1] in ["show", "hide"]:
+                    if len(s) >= 3 and s[1] in ["show", "hide", "show_re", "hide_re"]:
                         show_hide_buttons.append(s[0])
                         show_hide_mode.append(s[1])
                         show_hide_patterns.append(s[2:])
+                        show_hide_regex.append(s[1] not in ["show", "hide"])  # flag whether or not regex is turned on
         except (AttributeError) as e:
             logger.error("Error loading show patterns file: {}".format(e))
 
@@ -228,6 +232,7 @@ def load_show_hide(sh_file):
         show_hide_buttons.insert(0, 'Show all')
         show_hide_mode.insert(0, 'hide')
         show_hide_patterns.insert(0, [])
+        show_hide_regex.insert(0, False)
 
 def update(u):
     return update_dict(globals(), u)

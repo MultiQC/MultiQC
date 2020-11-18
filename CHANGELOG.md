@@ -4,12 +4,28 @@
 
 #### New MultiQC Features
 
+* `--sample-filters` now also accepts `show_re` and `hide_re` in addition to `show` and `hide`. The `_re` options use regex, while the "normal" options use globbing.
+* MultiQC config files now work with `.yml` file extension as well as `.yaml`
+  * `.yaml` will take preference if both found.
+* Section comments can now also be added for _General Statistics_
+  * `section_comments: { general_stats: "My comment" }`
+* New CI test looks for git merge markers in files
+
 #### New Modules
 
 * [**Bustools**](https://bustools.github.io/)
   * Tools for working with BUS files
 * [**HOPS**](https://www.github.com/rhubler/HOPS)
   * Post-alignment ancient DNA analysis tool for MALT
+* [**PURPLE**](https://github.com/hartwigmedical/hmftools/tree/master/purity-ploidy-estimator)
+  * A purity, ploidy and copy number estimator for whole genome tumor data
+* [**Pychopper**](https://github.com/nanoporetech/pychopper)
+  * Identify, orient and trim full length Nanopore cDNA reads
+* [**qc3C**](https://github.com/cerebis/qc3C)
+  * Reference-free QC of Hi-C sequencing data
+* [**Sentieon**](https://www.sentieon.com/products/)
+  * Submodules added to catch Picard-based QC metrics files
+
 
 #### Module updates
 
@@ -17,8 +33,11 @@
     * Fix issue where missing out fields could crash the module ([#1223](https://github.com/ewels/MultiQC/issues/1223))
 * **featureCounts**
     * Add support for output from [Rsubread](https://bioconductor.org/packages/release/bioc/html/Rsubread.html) ([#1022](https://github.com/ewels/MultiQC/issues/1022))
+* **hap.py**
+    * Updated module to plot both SNP and INDEL stats ([#1241](https://github.com/ewels/MultiQC/issues/1241))
 * **Kaiju**
     * Fixed bug affecting inputs with taxa levels other than Phylum ([#1217](https://github.com/ewels/MultiQC/issues/1217))
+    * Rework barplot, add top 5 taxons ([#1219](https://github.com/ewels/MultiQC/issues/1219))
 * **MALT**
     * Fix y-axis labelling in bargraphs
 * **mosdepth**
@@ -32,6 +51,9 @@
     * Fix `ErrorRateByReadPosition` plotted line names to no longer concatenate multiple read identifiers and no longer have off-by-one read numbering (ex. `Sample1_R2_R3` -> `Sample1_R2`) ([#[1304](https://github.com/ewels/MultiQC/pull/1304))
 * **GATK**
   * Add support for the creation of a "Reported vs Empirical Quality" graph to the Base Recalibration module.
+* **Rockhopper**
+    * Fix issue with parsing genome names in Rockhopper summary files ([#1333](https://github.com/ewels/MultiQC/issues/1333))
+    * Fix issue properly parsing multiple samples within a single Rockhopper summary file
 
 #### New Custom Content features
 
