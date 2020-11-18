@@ -338,7 +338,8 @@ def parse_mapping_metrics_file(f):
                 data['Q30 bases (excl. dups & clipped bases) pct'] = data['Q30 bases (excl. dups & clipped bases)'] / \
                     data['Total bases'] * 100.0
             data['Mapped bases R1 pct'] = data['Mapped bases R1'] / data['Total bases'] * 100.0
-            data['Mapped bases R2 pct'] = data['Mapped bases R2'] / data['Total bases'] * 100.0
+            if 'Mapped bases R2' in data:
+                data['Mapped bases R2 pct'] = data['Mapped bases R2'] / data['Total bases'] * 100.0
 
     return data_by_readgroup, data_by_phenotype
 

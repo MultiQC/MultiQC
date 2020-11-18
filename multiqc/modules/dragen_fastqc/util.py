@@ -40,9 +40,9 @@ def parse_fastqc_metrics_file(f):
         data_by_sample[s_name][mate][group][metric] = value
 
     # Delete empty mate groups so we don't generate empty datasets
-    for mate, mate_data in data_by_sample[s_name].items():
-        if len(mate_data) == 0:
-            del data_by_sample[s_name][mate]
+    # Altered to work on python3 which doesn't allow deleting from dict during iterating
+    delete = [mate for mate, mate_data in data_by_sample[s_name].items() if len(mate_data) == 0]
+    for key in delete: del data_by_sample[s_name][key]
 
     return data_by_sample
 

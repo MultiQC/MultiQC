@@ -97,7 +97,7 @@ def make_headers(parsed_metric_ids, metrics):
         elif metric.unit == 'bases':
             col['description'] = col['description'].format(config.base_count_desc)
             col['title'] = config.base_count_prefix + ' ' + col['title']
-            col['modify'] = lambda x: x * config.base_count_multiplier
+            col['modify'] = lambda x: x * config.base_count_multiplier if x!="NA" else 0
             col['shared_key'] = 'base_count'
             col['format'] = base_format
         elif metric.unit == 'len':
