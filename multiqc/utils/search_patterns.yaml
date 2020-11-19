@@ -478,9 +478,18 @@ preseq/real_counts:
 prokka:
     contents: 'contigs:'
     num_lines: 2
+purple/qc:
+    fn: '*.purple.qc'
+purple/purity:
+    fn: '*.purple.purity.tsv'
 pycoqc:
     contents: '"pycoqc":'
     num_lines: 2
+pychopper:
+    contents: 'Classification	Rescue'
+    num_lines: 6
+qc3C:
+    fn: '*.qc3C.json'
 qorts:
     contents: 'BENCHMARK_MinutesOnSamIteration'
     num_lines: 100
@@ -563,6 +572,15 @@ samtools/rmdup:
     shared: true
 sargasso:
     fn: 'overall_filtering_summary.txt'
+sentieon/alignment_metrics:
+    contents: '--algo AlignmentStat'
+    shared: true
+sentieon/insertsize:
+    contents: '--algo InsertSizeMetricAlgo'
+    shared: true
+sentieon/gcbias:
+    contents: '--algo GCBias'
+    shared: true
 seqyclean:
     fn: '*_SummaryStatistics.tsv'
 sexdeterrmine:
