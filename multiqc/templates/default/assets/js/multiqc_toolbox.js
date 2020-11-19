@@ -53,11 +53,21 @@ $(function () {
     var j = $(this).data('index');
     var pattern = mqc_config['show_hide_patterns'][j];
     var show_hide_mode = mqc_config['show_hide_mode'][j];
+    var regex = mqc_config['show_hide_regex'][j];
     if(!Array.isArray(pattern)){
       pattern = [pattern];
     }
     if(show_hide_mode === undefined){
       show_hide_mode = 'show';
+    }
+
+    // click the regex button if we want it turned on/off
+    var button = document.getElementsByClassName("mqc_switch re_mode")[2]
+    if (button.className.includes(" on") && !regex){
+      button.click()
+    }
+    if (button.className.includes(" off") && regex){
+      button.click()
     }
 
     // Apply the changes

@@ -28,6 +28,7 @@ MultiQC Modules:
     leeHom: modules/leehom.md
     minionqc: modules/minionqc.md
     pycoQC: modules/pycoqc.md
+    Pychopper: modules/pychopper.md
     SeqyClean: modules/seqyclean.md
     Sickle: modules/sickle.md
     Skewer: modules/skewer.md
@@ -82,6 +83,8 @@ MultiQC Modules:
     Picard: modules/picard.md
     Preseq: modules/preseq.md
     Prokka: modules/prokka.md
+    PURPLE: modules/purple.md
+    qc3C: modules/qc3C.md
     QoRTs: modules/qorts.md
     Qualimap: modules/qualimap.md
     Quast: modules/quast.md
@@ -91,6 +94,7 @@ MultiQC Modules:
     RSeQC: modules/rseqc.md
     Samblaster: modules/samblaster.md
     Samtools: modules/samtools.md
+    Sentieon: modules/sentieon.md
     Sargasso: modules/sargasso.md
     SexDetErrmine: modules/sexdeterrmine.md
     Slamdunk: modules/slamdunk.md

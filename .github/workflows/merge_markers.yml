@@ -1,0 +1,35 @@
+name: "Check for merge markers"
+on: [push, pull_request]
+
+jobs:
+  check_merge_markers:
+    runs-on: ubuntu-latest
+
+    steps:
+
+      # Check out MultiQC code
+      - uses: actions/checkout@v2
+
+      # Grep for opening merge marker
+      - name: Grep for >>>>>>>
+        run: |
+          if [[ $(grep -ER "$>>>>>>> " . | wc -l) > 0 ]];then
+            echo "Opening merge marker found\!"
+            grep -ER "$>>>>>>> " .
+            exit 1
+          else
+            echo "No opening merge markers found"
+            exit 0
+          fi
+
+      # Grep for closing merge marker
+      - name: Grep for <<<<<<<
+        run: |
+          if [[ $(grep -ER "$<<<<<<< " . | wc -l) > 0 ]];then
+            echo "Closing merge marker found\!"
+            grep -ER "$>>>>>>> " .
+            exit 1
+          else
+            echo "No closing merge markers found"
+            exit 0
+          fi
