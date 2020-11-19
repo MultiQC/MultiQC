@@ -145,7 +145,7 @@ class MultiqcModule(BaseMultiqcModule):
                     self.kraken_total_pct[rank_code][classif] = 0
                     self.kraken_total_counts[rank_code][classif] = 0
                 self.kraken_total_pct[rank_code][classif] += \
-                    row['counts_direct'] / self.kraken_sample_total_readcounts[s_name]
+                    row['counts_rooted'] / self.kraken_sample_total_readcounts[s_name]
                 self.kraken_total_counts[rank_code][classif] += row['counts_rooted']
 
     def general_stats_cols(self):
@@ -198,7 +198,7 @@ class MultiqcModule(BaseMultiqcModule):
         for s_name, d in self.kraken_raw_data.items():
             tdata[s_name] = {}
             for row in d:
-                percent = row['counts_direct'] / self.kraken_sample_total_readcounts[s_name]
+                percent = row['counts_rooted'] / self.kraken_sample_total_readcounts[s_name]
                 if row['rank_code'] == 'U':
                     tdata[s_name]['% Unclassified'] = percent
                 if row['rank_code'] == top_rank_code and row['classif'] in top_five:
