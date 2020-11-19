@@ -6,6 +6,7 @@ from __future__ import print_function
 import csv
 import io
 import logging
+import os
 import re
 
 from collections import OrderedDict
@@ -51,8 +52,7 @@ class MultiqcModule(BaseMultiqcModule):
         for f in self.find_log_files("ngsderive/strandedness"):
             self.parse(
                 self.strandedness,
-                f.get("f"),
-                f.get("s_name"),
+                f,
                 "strandedness",
                 EXPECTED_HEADER_COUNT_STRANDEDNESS,
             )
@@ -60,8 +60,7 @@ class MultiqcModule(BaseMultiqcModule):
         for f in self.find_log_files("ngsderive/instrument"):
             self.parse(
                 self.instrument,
-                f.get("f"),
-                f.get("s_name"),
+                f,
                 "instrument",
                 EXPECTED_HEADER_COUNT_INSTRUMENT,
             )
@@ -69,8 +68,7 @@ class MultiqcModule(BaseMultiqcModule):
         for f in self.find_log_files("ngsderive/readlen"):
             self.parse(
                 self.readlen,
-                f.get("f"),
-                f.get("s_name"),
+                f,
                 "readlen",
                 EXPECTED_HEADER_COUNT_READLEN,
             )
@@ -114,32 +112,27 @@ class MultiqcModule(BaseMultiqcModule):
         f.seek(0)
         return {"dialect": dialect}
 
-    def parse(self, d, contents, sample_name, subcommand, expected_header_count):
+    def parse(self, sample_dict, found_file, subcommand, expected_header_count):
+        contents = found_file.get("f")
+        root = found_file.get("root")
+        source = os.path.abspath(os.path.join(found_file["root"], found_file["fn"]))
+
         kwargs = self.probe_file_for_dictreader_kwargs(
             io.StringIO(contents), expected_header_count
         )
 
         relevant_items = []
         for row in csv.DictReader(io.StringIO(contents), **kwargs):
-            if row.get("File") and sample_name in row.get("File"):
-                relevant_items.append(row)
+            if not row.get("File"):
+                continue
+            sample_name = self.clean_s_name(row.get("File"), root)
+            if sample_name in sample_dict:
+                log.debug(
+                    "Duplicate sample name found! Overwriting: {}".format(sample_name)
+                )
 
-        if len(relevant_items) < 1:
-            log.warning(
-                f"Could not find results for {sample_name} in ngsderive "
-                + f"{subcommand} report! This may be related to the file "
-                + "being malformed or an uncommon delimiter being detected."
-            )
-            raise UserWarning
-        elif len(relevant_items) > 1:
-            log.warning(
-                f"Too many results for {sample_name} in ngsderive "
-                + f"{subcommand} report! This may be related to the file "
-                + "being malformed or an uncommon delimiter being detected."
-            )
-            raise UserWarning
-
-        d[sample_name] = relevant_items.pop(0)
+            sample_dict[sample_name] = row
+            self.add_data_source(s_name=sample_name, source=source)
 
     def add_strandedness_data(self):
         data = {}
@@ -255,8 +248,8 @@ class MultiqcModule(BaseMultiqcModule):
         # encoded number that is then sorted.
         heatdata = zip(samples, heatdata)
 
-        def reduce(l):
-            return sum([pow(i - 1, _l) for (i, _l) in enumerate(l)])
+        def reduce(x):
+            return sum([pow(i - 1, _x) for (i, _x) in enumerate(x)])
 
         sorted_heatdata = sorted(heatdata, key=lambda x: reduce(x[1]))
         samples, heatdata = zip(*sorted_heatdata)
