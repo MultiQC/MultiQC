@@ -61,6 +61,10 @@
 
 #### Bug Fixes
 
+* **Kraken** 
+    * Fix `ZeroDivisionError`
+      ([#1276](https://github.com/ewels/MultiQC/issues/1276)).
+
 
 ## [MultiQC v1.9](https://github.com/ewels/MultiQC/releases/tag/v1.9) - 2020-05-30
 
