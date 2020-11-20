@@ -35,7 +35,7 @@ class MultiqcModule(BaseMultiqcModule):
         super(MultiqcModule, self).__init__(
             name="ngsderive",
             anchor="ngsderive",
-            href="https://github.com/claymcleod/ngsderive",
+            href="https://github.com/stjudecloud/ngsderive",
             info="is a forensic analysis tool useful in backwards computing information from "
             + "next-generation sequencing data. "
             + "Notably, results are provided as a 'best guess' — the tool does "
@@ -189,7 +189,7 @@ class MultiqcModule(BaseMultiqcModule):
             name="Strandedness",
             anchor="ngsderive-strandedness",
             description="Predicted strandedness provided by ngsderive. "
-            + 'For more information, please see <a href="https://github.com/claymcleod/ngsderive/#strandedness-inference">'
+            + 'For more information, please see <a href="https://stjudecloud.github.io/ngsderive/subcommands/strandedness/">'
             + "the relevant documentation and limitations</a>.",
             plot=bargraph.plot(bardata, headers, pconfig),
         )
@@ -269,7 +269,7 @@ class MultiqcModule(BaseMultiqcModule):
             name="Instrument",
             anchor="ngsderive-instrument",
             description="Predicted instrument provided by ngsderive. "
-            + 'For more information, please see <a href="https://github.com/claymcleod/ngsderive/#illumina-machine-type">'
+            + 'For more information, please see <a href="https://stjudecloud.github.io/ngsderive/subcommands/instrument/">'
             + "the relevant documentation and limitations</a>.",
             plot=heatmap.plot(heatdata, instruments, samples, pconfig=pconfig),
         )
@@ -340,7 +340,7 @@ class MultiqcModule(BaseMultiqcModule):
             name="Read length",
             anchor="ngsderive-readlen",
             description="Predicted read length provided by ngsderive. "
-            + 'For more information, please see <a href="https://github.com/claymcleod/ngsderive/#read-length-calculation">'
+            + 'For more information, please see <a href="https://stjudecloud.github.io/ngsderive/subcommands/readlen/">'
             + "the relevant documentation and limitations</a>.",
             plot=heatmap.plot(heatdata, readlens_to_plot, samples, pconfig=pconfig),
         )
