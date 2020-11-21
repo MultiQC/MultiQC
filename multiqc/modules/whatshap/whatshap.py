@@ -210,7 +210,7 @@ class MultiqcModule(BaseMultiqcModule):
                     'description':
                         'Description of the distribution of non-singleton '
                         'block lengths, where the length of a block is the '
-                        'number of basepairs it covers minus 1. That is, a '
+                        'number of base pairs it covers minus 1. That is, a '
                         'block with two variants at positions 2 and 5 has '
                         'length 3.',
                     'hidden': False}
@@ -232,7 +232,7 @@ class MultiqcModule(BaseMultiqcModule):
                     'description':
                         'Description of the distribution of non-singleton '
                         'block lengths, where the length of a block is the '
-                        'number of basepairs it covers minus 1. That is, a '
+                        'number of base pairs it covers minus 1. That is, a '
                         'block with two variants at positions 2 and 5 has '
                         'length 3.',
                     'hidden': False}
@@ -264,30 +264,31 @@ class MultiqcModule(BaseMultiqcModule):
         self.general_stats_addcols(general, general_stats_headers)
 
     def add_bargraph_total_phased(self):
-        """ Add a bargraph of the total number of phased basepairs """
+        """ Add a bargraph of the total number of phased base pairs """
         pdata = dict()
         for sample, sample_stats in self.whatshap_stats.items():
             # Get the summary field
             summary_field = self.get_summary_field(sample_stats)
-            pdata[sample] = { 'Phased basepairs': sample_stats[summary_field]['bp_per_block_sum'] }
+            pdata[sample] = { 'Phased Base Pairs': sample_stats[summary_field]['bp_per_block_sum'] }
 
         configuration = {
-            'id': 'multiqc_whatshap_phased_bp',
-            'title': 'Phased Basepairs per Sample',
+            'id': 'multiqc_whatshap_phased_bp_plot',
+            'title': 'WhatsHap: Phased Basepairs per Sample',
             'anchor': 'multiqc_whatshap_phased_bp',
+            'ylab': 'Base Pairs',
             'cpswitch': False,
             'tt_percentages': False
         }
 
         keys = OrderedDict()
-        keys ['Phased basepairs'] = {'name': 'Phased Basepairs'}
+        keys ['Phased Base Pairs'] = {'name': 'Phased Base Pairs'}
 
         self.add_section(
                 name='Phased Basepairs per Sample',
                 anchor='multiqc_whatshap_phased_bp',
                 description=
                 """
-                    This plot show the total number of phased basepairs for
+                    This plot show the total number of phased base pairs for
                     each sample.
                 """,
                 plot = bargraph.plot(pdata, keys, configuration))
