@@ -24,12 +24,22 @@ class MultiqcModule(BaseMultiqcModule):
         # To store the summary data
         self.lima_summary = dict()
         self.lima_counts = dict()
+
+        # Parse the output files
         self.parse_summary_files()
         self.parse_counts_files()
+
+        # Remove filtered samples
+        self.lima_summary = self.ignore_samples(self.lima_summary)
+        self.lima_counts = self.ignore_samples(self.lima_counts)
+
+        # Write the data files to disk
         self.write_data_files()
+
         # Add a graph of all filtered ZMWs
         self.add_sections()
-        # Add a plot for the data values in the counts file
+
+        # Add a graph for the data values in the counts file
         self.plot_counts_data()
 
     def parse_summary_files(self):
