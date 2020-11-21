@@ -273,12 +273,12 @@ module_order:
             - DNA
     - peddy:
         module_tag:
+            - DNA
     - lima:
         module_tag:
             - RNA
             - DNA
             - PacBio
-            - DNA
     - somalier:
         module_tag:
             - DNA
