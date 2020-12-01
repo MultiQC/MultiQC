@@ -159,7 +159,7 @@ class MultiqcModule(BaseMultiqcModule):
         Extracts the sample name from a given file name.
         Expects and returns one of seqwish, smooth or consensus@*
         """
-        if 'seqwish.og' in file_name:
+        if 'seqwish' in file_name:
             return 'seqwish'
         elif 'smooth' in file_name:
             return 'smooth'
