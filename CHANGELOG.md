@@ -40,6 +40,7 @@
     * Fix y-axis labelling in bargraphs
 * **mosdepth**
     * Enable prepending of directory to sample names
+    * Display contig names in _Coverage per contig_ plot tooltip
 * **Picard**
     * Fix `HsMetrics` bait percentage columns ([#1212](https://github.com/ewels/MultiQC/issues/1212))
 * **PycoQC**
