@@ -24,5 +24,7 @@ class MultiqcModule(BaseMultiqcModule):
                  """)
         )
 
-        for logfile in self.find_log_files('picard/alignment_metrics'):
+        self.pbmarkdup = dict()
+
+        for logfile in self.find_log_files('pbmarkdup', filehandles=True):
             print(logfile['fn'])

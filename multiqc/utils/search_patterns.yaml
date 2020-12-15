@@ -407,6 +407,8 @@ somalier/pairs:
     fn: '*.pairs.tsv'
     contents: 'hom_concordance'
     num_lines: 5
+pbmarkdup:
+    fn: '*.pbmarkdup.log'
 phantompeakqualtools/out:
     fn: '*.spp.out'
 picard/alignment_metrics:
