@@ -205,6 +205,7 @@ fn_clean_exts:
     - '_SummaryStatistics'
     - '.purple.purity'
     - '.purple.qc'
+    - '.pbmarkdup.log'
 
 # These are removed after the above, only if sample names
 # start or end with this string. Again, removed in order.
@@ -404,6 +405,10 @@ module_order:
         module_tag:
             - DNA
             - ancient
+    - pbmarkdup:
+        module_tag:
+            - DNA
+            - RNA
     - damageprofiler:
         module_tag:
             - DNA

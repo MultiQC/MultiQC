@@ -12,7 +12,8 @@
 * New CI test looks for git merge markers in files
 
 #### New Modules
-
+* [**pbmarkdup**](https://github.com/PacificBiosciences/pbmarkdup)
+  * Mark duplicate reads from PacBio sequencing of an amplified library
 * [**HOPS**](https://www.github.com/rhubler/HOPS)
   * Post-alignment ancient DNA analysis tool for MALT
 * [**PURPLE**](https://github.com/hartwigmedical/hmftools/tree/master/purity-ploidy-estimator)

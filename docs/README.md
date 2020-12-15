@@ -27,6 +27,7 @@ MultiQC Modules:
     KAT: modules/kat.md
     leeHom: modules/leehom.md
     minionqc: modules/minionqc.md
+    pbmarkdup: modules/pbmarkdup.md
     pycoQC: modules/pycoqc.md
     Pychopper: modules/pychopper.md
     SeqyClean: modules/seqyclean.md
