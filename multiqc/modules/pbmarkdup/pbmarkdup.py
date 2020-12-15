@@ -27,4 +27,46 @@ class MultiqcModule(BaseMultiqcModule):
         self.pbmarkdup = dict()
 
         for logfile in self.find_log_files('pbmarkdup', filehandles=True):
-            print(logfile['fn'])
+            self.pbmarkdup[logfile['s_name']] = self.parse_logfile(logfile)
+
+    def parse_logfile(self, logfile):
+        """
+        Parse the standard output from pbmarkdup
+
+        This is currently quite ugly, since pbmarkdup does not have an easily
+        parsable output format. See this github issue:
+        https://github.com/PacificBiosciences/pbbioconda/issues/365
+
+        For now, we just assume that the data fields are always in the same
+        order, without any missing values.
+        """
+
+        file_content = logfile['f']
+
+        # This is not tab separated :(
+        expected_header = 'LIBRARY         READS    UNIQUE MOLECULES    DUPLICATE READS'
+        header = next(file_content).strip()
+
+        assert header == expected_header, f'Unknown header: "{header}"'
+
+        data = dict()
+
+        # Each parsable line is either for a library, or for 'TOTAL', the sum
+        # of all parsed libraries
+        for line in file_content:
+            # Lines which start with --- denote separators in the file, and do
+            # not need to be parsed
+            if line.startswith('-'):
+                continue
+
+            # Not very nice, we assume that all fields are always present
+            name, reads, unique_mol_count, unique_mol_perc, duplicate_count, duplicate_perc = line.split()
+
+            # We are only interested in the counts, not the percentages
+            data[name] = {
+                    'READS': int(reads),
+                    'UNIQUE MOLECULES': int(unique_mol_count),
+                    'DUPLICATE READS': int(duplicate_count)
+            }
+
+        return data
