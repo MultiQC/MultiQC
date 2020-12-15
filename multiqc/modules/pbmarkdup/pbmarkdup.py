@@ -91,7 +91,7 @@ class MultiqcModule(BaseMultiqcModule):
         general_stats_headers = OrderedDict([
             ('unique_molecules', {
                 'id': 'unique_molecules',
-                'title': 'Unique Molecules',
+                'title': '% Unique Molecules',
                 'description': 'Percentage of unique molecules',
                 'suffix': '%',
                 'min': 0,
@@ -102,7 +102,7 @@ class MultiqcModule(BaseMultiqcModule):
             ),
             ('duplicate_reads', {
                 'id': 'duplicate_erads',
-                'title': 'Duplicate Reads',
+                'title': '% Duplicate Reads',
                 'description': 'Percentage of duplicate reads',
                 'suffix': '%',
                 'min': 0,
