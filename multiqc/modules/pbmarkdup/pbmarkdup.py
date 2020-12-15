@@ -4,13 +4,15 @@
 
 import logging
 
+from collections import OrderedDict
+
 from multiqc.modules.base_module import BaseMultiqcModule
 
 # Initialise the logger
 log = logging.getLogger(__name__)
 
 class MultiqcModule(BaseMultiqcModule):
-    """ 
+    """
     pbmarkdup module class, parses pbmarkdup output.
     """
 
@@ -28,6 +30,18 @@ class MultiqcModule(BaseMultiqcModule):
 
         for logfile in self.find_log_files('pbmarkdup', filehandles=True):
             self.pbmarkdup[logfile['s_name']] = self.parse_logfile(logfile)
+
+        # Filter to strip out ignored sample names
+        self.pbmarkdup = self.ignore_samples(self.pbmarkdup)
+
+        # Raise UserWarning if we did not find any data
+        if not self.pbmarkdup:
+            raise UserWarning
+
+        # Write the parsed data to file
+        self.write_data_file(self.pbmarkdup, 'multiqc_pbmarkdup')
+
+        self.pbmarkdup_add_general_stats()
 
     def parse_logfile(self, logfile):
         """
@@ -70,3 +84,48 @@ class MultiqcModule(BaseMultiqcModule):
             }
 
         return data
+
+    def pbmarkdup_add_general_stats(self):
+        """ Add pbmarkdup duplicates to the general stats table """
+
+        general_stats_headers = OrderedDict([
+            ('unique_molecules', {
+                'id': 'unique_molecules',
+                'title': 'Unique Molecules',
+                'description': 'Percentage of unique molecules',
+                'suffix': '%',
+                'min': 0,
+                'max': 100,
+                'modify': lambda x: x * 100,
+                'scale': 'RdYlGn'
+                }
+            ),
+            ('duplicate_reads', {
+                'id': 'duplicate_erads',
+                'title': 'Duplicate Reads',
+                'description': 'Percentage of duplicate reads',
+                'suffix': '%',
+                'min': 0,
+                'max': 100,
+                'modify': lambda x: x * 100,
+                'scale': 'RdYlGn-rev'
+                }
+            )
+        ])
+
+        general = dict()
+
+        for sample, sample_stats in self.pbmarkdup.items():
+            # We are only interested in the total counts per sample
+            total = sample_stats['TOTAL']
+
+            # Calculate the percentages unique and duplicated
+            perc_unique = total['UNIQUE MOLECULES']/total['READS']
+            perc_duplicate = total['DUPLICATE READS']/total['READS']
+
+            general[sample] = {
+                    'unique_molecules': perc_unique,
+                    'duplicate_reads': perc_duplicate
+            }
+
+        self.general_stats_addcols(general, general_stats_headers)
