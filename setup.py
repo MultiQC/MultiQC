@@ -141,7 +141,7 @@ setup(
             'mosdepth = multiqc.modules.mosdepth:MultiqcModule',
             'mtnucratio = multiqc.modules.mtnucratio:MultiqcModule',
             'multivcfanalyzer = multiqc.modules.multivcfanalyzer:MultiqcModule',
-            'pbpmarkdup = multiqc.modules.pbmarkdup:MultiqcModule',
+            'pbmarkdup = multiqc.modules.pbmarkdup:MultiqcModule',
             'peddy = multiqc.modules.peddy:MultiqcModule',
             'phantompeakqualtools = multiqc.modules.phantompeakqualtools:MultiqcModule',
             'picard = multiqc.modules.picard:MultiqcModule',
