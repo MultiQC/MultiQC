@@ -3,6 +3,7 @@
 """ MultiQC module to parse output from pbmarkdup"""
 
 import logging
+import re
 
 from collections import OrderedDict
 
@@ -57,11 +58,18 @@ class MultiqcModule(BaseMultiqcModule):
 
         file_content = logfile['f']
 
-        # This is not tab separated :(
-        expected_header = 'LIBRARY         READS    UNIQUE MOLECULES    DUPLICATE READS'
-        header = next(file_content).strip()
+        # The number of spaces in the header can vary, based on the length of
+        # the name of the library. We therefore need a regex to match the
+        # header.
+        header_pattern = 'LIBRARY *READS *UNIQUE MOLECULES *DUPLICATE READS'
+        pattern = re.compile(header_pattern)
 
-        assert header == expected_header, f'Unknown header: "{header}"'
+        # The file header
+        file_header = next(file_content).strip()
+
+        # Error if the header doesn't match the expected pattern
+        if not re.match(pattern, file_header):
+            raise RuntimeError(f'Unknown header: "{header}"')
 
         data = dict()
 
