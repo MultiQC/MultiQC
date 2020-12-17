@@ -15,6 +15,8 @@ artic/aligntrim_reports:
     num_lines: 1
 artic/vcf_reports:
     fn: '*.vcfreport.txt'
+    contents_re: '.*artic-tools.*'
+    num_lines: 1
 bamtools/stats:
     contents: 'Stats for BAM file(s):'
     shared: true

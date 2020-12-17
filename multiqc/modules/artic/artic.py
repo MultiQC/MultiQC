@@ -120,9 +120,24 @@ class MultiqcModule(BaseMultiqcModule):
         if sample in self.vcfcheck_data:
             log.debug("Duplicate sample name found! Overwriting: {}".format(sample))
 
+        # Set up data holder for sample
+        self.vcfcheck_data[sample] = dict()
+
+        # Read vcfcheck report and get important stuff out (NOTE: more to be added in next release)
+        total_vars = 0
+        passed_vars = 0
+        for l in f['f']:
+            match = re.search(r'.*\t(\d+)\svariant\srecords\sprocessed', l)
+            if match:
+                total_vars = int(match.group(1))
+            match = re.search(r'.*\t(\d+)\svariant\srecords\spassed\schecks', l)
+            if match:
+                passed_vars = int(match.group(1))
+        self.vcfcheck_data[sample]['overlap_fails'] = total_vars - passed_vars
+
     # Check the same primer scheme was used across reports
     def check_used_schemes(self):
-        """ Check collected reports used the same primer schemes
+        """ Check collected reports used the same primer schemes, otherwise amplicon plot might be weird
         """
         i = 1
         while (i < len(self.aligntrim_data)):
@@ -151,9 +166,9 @@ class MultiqcModule(BaseMultiqcModule):
 
             # check for that sample already has an aligntrim report
             if sample not in self.artic_stats:
-                log.debug(
-                    "Sample has vcf report but no aligntrim report! {}".format(sample))
-            self.artic_stats[sample]['overlap_fails'] = 0
+                log.debug("Sample has vcf report but no aligntrim report! {}".format(sample))
+                self.artic_stats[sample] = dict()
+            self.artic_stats[sample]['overlap_fails'] = self.vcfcheck_data[sample]['overlap_fails']
 
     # Add to general stats table
     def artic_general_stats_table(self):
@@ -169,7 +184,7 @@ class MultiqcModule(BaseMultiqcModule):
             'format': '{:,.0f}'
         }
         headers['overlap_fails'] = {
-            'title': '# overlap fails',
+            'title': '# overlap var. fails',
             'description': 'The number of variants detected only once in scheme overlap regions',
             'min': 0,
             'scale': 'RdYlGn-rev',
