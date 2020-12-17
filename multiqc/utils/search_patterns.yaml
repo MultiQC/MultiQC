@@ -9,6 +9,12 @@ adapterRemoval:
 afterqc:
     fn: '*.json'
     contents: 'allow_mismatch_in_poly'
+artic/aligntrim_reports:
+    fn: '*.alignreport.txt'
+    contents_re: 'QueryName\tReferenceStart\tReferenceEnd\tPrimerPair\tPrimer1\tPrimer1Start\tPrimer2\tPrimer2Start\tIsSecondary\tIsSupplementary\tStart\tEnd\tCorrectlyPaired'
+    num_lines: 1
+artic/vcf_reports:
+    fn: '*.vcfreport.txt'
 bamtools/stats:
     contents: 'Stats for BAM file(s):'
     shared: true

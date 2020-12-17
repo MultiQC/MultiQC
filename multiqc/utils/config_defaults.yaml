@@ -357,6 +357,11 @@ module_order:
             - miRNA
 
     # Post-alignment processing
+    - artic:
+        module_tag:
+            - RNA
+            - epidemiology
+            - virus
     - homer:
         module_tag:
             - RNA
