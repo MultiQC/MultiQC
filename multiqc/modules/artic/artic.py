@@ -78,7 +78,7 @@ class MultiqcModule(BaseMultiqcModule):
     def parse_aligntrim_report(self, f):
         """ Parse ARTIC aligntrim report file
         """
-        sample = f['s_name']
+        sample = f['s_name'].replace('.alignreport', '')
 
         # Check if overwriting
         if sample in self.aligntrim_data:
