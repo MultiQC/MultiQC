@@ -56,9 +56,6 @@ class MultiqcModule(BaseMultiqcModule):
         log.info("Found {} align_trim reports".format(len(self.aligntrim_data)))
         log.info("Found {} vcf_check reports".format(len(self.vcfcheck_data)))
 
-        # Check the same primer scheme was used across reports
-        self.check_used_schemes()
-
         # Write parsed data to a file
         self.write_data_file(self.aligntrim_data,
                              'multiqc_artic_aligntrim_summary')
@@ -134,19 +131,6 @@ class MultiqcModule(BaseMultiqcModule):
             if match:
                 passed_vars = int(match.group(1))
         self.vcfcheck_data[sample]['overlap_fails'] = total_vars - passed_vars
-
-    # Check the same primer scheme was used across reports
-    def check_used_schemes(self):
-        """ Check collected reports used the same primer schemes, otherwise amplicon plot might be weird
-        """
-        i = 1
-        while (i < len(self.aligntrim_data)):
-
-            # check there are no differences between the amplicon names for each sample
-            if (len((list(self.aligntrim_data.keys())[i-1] ^ list(self.aligntrim_data.keys())[i])) != 0):
-                log.debug("Different primer schemes used between align_trim reports! Report plot may look odd.")
-            i += 1
-
 
     # Process collected data for all samples
     def process_artic_data(self):
