@@ -51,6 +51,7 @@ MultiQC Modules:
     DRAGEN: modules/dragen.md
     MALT: modules/malt.md
   Post-alignment:
+    ARTIC: modules/artic.md
     Bamtools: modules/bamtools.md
     Bcftools: modules/bcftools.md
     biobambam2: modules/biobambam2.md
