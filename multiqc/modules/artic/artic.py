@@ -38,6 +38,7 @@ class MultiqcModule(BaseMultiqcModule):
         self.aligntrim_data = dict()
         self.vcfcheck_data = dict()
         self.artic_stats = dict()
+        self.primer_scheme = ""
         for f in self.find_log_files('artic/aligntrim_reports', filehandles=True):
             self.parse_aligntrim_report(f)
         for f in self.find_log_files('artic/vcf_reports', filehandles=True):
@@ -106,6 +107,18 @@ class MultiqcModule(BaseMultiqcModule):
             if fields[3] not in self.aligntrim_data[sample]:
                 self.aligntrim_data[sample][fields[3]] = 0
             self.aligntrim_data[sample][fields[3]] += 1
+
+        # Empty file check
+        if (len(self.aligntrim_data[sample]) == 0):
+            del self.aligntrim_data[sample]
+            return
+
+        # Update the primer scheme name tracker
+        scheme = list(self.aligntrim_data[sample])[0].split("_")[0]
+        if (self.primer_scheme != "") and (self.primer_scheme != scheme):
+            log.debug("Found reports from different primer schemes: {} and {}".format(self.primer_scheme, scheme))
+            raise UserWarning
+        self.primer_scheme = scheme
 
     # Parse a vcf_check report
     def parse_vcf_report(self, f):
