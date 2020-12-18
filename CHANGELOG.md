@@ -23,7 +23,8 @@
   * Reference-free QC of Hi-C sequencing data
 * [**Sentieon**](https://www.sentieon.com/products/)
   * Submodules added to catch Picard-based QC metrics files
-
+* [**ARTIC**](https://github.com/artic-network/fieldbioinformatics)
+  * Viral consensus genome pipeline for nanopore amplicon sequencing data
 
 #### Module updates
 
