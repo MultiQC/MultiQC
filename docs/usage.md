@@ -127,7 +127,7 @@ of some people's workflows. To try to accommodate this, MultiQC has a
 > many core MultiQC features and even some plots. It should only be used
 > as a last resort.
 
-To do this, MultiQC uses the `simple` template. This uses flat plots,
+To generate PDFs, MultiQC uses the `simple` template. This uses flat plots,
 has no navigation or toolbar and strips out all JavaScript. The resulting
 HTML report is pretty basic, but this simplicity is helpful when generating
 PDFs.

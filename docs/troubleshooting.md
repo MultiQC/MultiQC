@@ -7,6 +7,7 @@ any problems, please do get in touch with the developer
 Before that, here are a few things previously encountered that may help...
 
 ## Not enough samples found
+
 In this scenario, MultiQC finds _some_ logs for the bioinformatics tool
 in question, but not all of your samples appear in the report. This is
 the most common question I get regarding MultiQC operation.
@@ -44,6 +45,7 @@ log_filesize_limit: 2000000000
 ```
 
 ## No logs found for a tool
+
 In this case, you have run a bioinformatics tool and have some log files in
 a directory. When you run MultiQC with that directory, it finds nothing
 for the tool in question.
@@ -66,6 +68,7 @@ Please [open an issue](https://github.com/ewels/MultiQC/issues/new) with
 your log files and we can get it fixed.
 
 ## Error messages about mkl trial mode / licences
+
 In this case you run MultiQC and get something like this:
 
 ```
@@ -82,13 +85,13 @@ Message: trial mode EXPIRED 2 days ago
     SHUTTING DOWN PYTHON INTERPRETER
 ```
 
-
 The `mkl` library provides optimisations for `numpy`, a requirement of
 `MatPlotLib`. Recent versions of Conda have a bundled version which should
 come with a licence and remove the warning. See
 [this page](https://docs.continuum.io/mkl-optimizations/index#dismissing-mkl-trial-warnings)
 for more info. If you already have Conda installed you can get the updated
 version by running:
+
 ```
 conda remove mkl-rt
 conda install -f mkl
@@ -96,9 +99,11 @@ conda install -f mkl
 
 Another way around it is to uninstall `mkl`. It seems that `numpy` works
 without it fine:
+
 ```
-$ conda remove --features mkl
+conda remove --features mkl
 ```
+
 Problem solved! See more
 [here](http://stackoverflow.com/questions/25204021/anaconda-running-python-cannot-run-mkl-without-a-license) and
 [here](https://www.continuum.io/blog/developer-blog/anaconda-25-release-now-mkl-optimizations).
@@ -107,14 +112,17 @@ If you're not using Conda, try installing MultiQC with that instead. You
 can find instructions [here](http://multiqc.info/docs/#installing-with-conda).
 
 ## Locale Error Messages
+
 Two MultiQC dependencies have been known to throw errors due to problems
 with the Python locale settings, or rather the lack of those settings.
 
 MatPlotLib can complain that some strings (such as `en_SE`) aren't allowed.
 Running MultiQC gives the following error:
+
 ```bash
-$ multiqc --version
+multiqc --version
 ```
+
 ```python
 # ..long traceback.. #
  File "/sw/comp/python/2.7.6_milou/lib/python2.7/locale.py", line 443, in _parse_localename
@@ -144,3 +152,31 @@ export LANG=en_US.UTF-8
 
 Other locale strings are also fine, as long as the variables are set and valid.
 
+## No space left on device
+
+If you're running with very large datasets or have an unusually small temporary file
+storage location, you may run in to the following error:
+
+```python
+  File "/usr/local/lib/python3.8/site-packages/multiqc/utils/util_functions.py", line 71, in write_data_file
+    print( jsonstr.encode('utf-8', 'ignore').decode('utf-8'), file=f)
+OSError: [Errno 28] No space left on device
+```
+
+This happens because MultiQC writes all output files to a temporary directory before
+moving them to their final location (depending on configuration, MultiQC can change its output filenames
+based on the data that it parses).
+
+To solve this problem you can manually set the temp folder to another folder that has more space.
+This is best done with an environment variable which is understood by the base Python installation, `TMPDIR`.
+
+For example:
+
+```bash
+export TMPDIR=/path/to/my/tmp
+```
+
+Note that you will have to do this in each session where you run MultiQC. To automatically apply
+it at every login, add the above line to your `~/.bashrc` file.
+
+Be aware that setting this could have unforeseen consequences as it could affect the behaviour of other tools.
