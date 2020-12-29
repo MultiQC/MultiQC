@@ -14,5 +14,5 @@ The default header in the 'General Statistics' table is '% rRNA'. Users can over
 
 ```yaml
 sortmerna:
-    tab_header: 'My database hits'
+  tab_header: "My database hits"
 ```
