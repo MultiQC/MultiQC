@@ -13,23 +13,27 @@ from multiqc.plots import table
 log = logging.getLogger(__name__)
 VAR_TYPES = ("INDEL", "SNP")
 VAR_FILTERS = ("ALL", "PASS")
-METRICS = OrderedDict([
-    ("Recall", "Recall for truth variant representation = TRUTH.TP / (TRUTH.TP + TRUTH.FN)"),
-    ("Precision", "Precision of query variants = QUERY.TP / (QUERY.TP + QUERY.FP)"),
-    ("F1_Score", "Harmonic mean of precision and recall = 2METRIC.RecallMetric.Precision/(METRIC.Recall + METRIC.Precision)"),
-    ("Frac_NA", "Fraction of non-assessed query calls = QUERY.UNK / QUERY.TOTAL")
-])
+METRICS = OrderedDict(
+    [
+        ("Recall", "Recall for truth variant representation = TRUTH.TP / (TRUTH.TP + TRUTH.FN)"),
+        ("Precision", "Precision of query variants = QUERY.TP / (QUERY.TP + QUERY.FP)"),
+        (
+            "F1_Score",
+            "Harmonic mean of precision and recall = 2METRIC.RecallMetric.Precision/(METRIC.Recall + METRIC.Precision)",
+        ),
+        ("Frac_NA", "Fraction of non-assessed query calls = QUERY.UNK / QUERY.TOTAL"),
+    ]
+)
 
 
 class MultiqcModule(BaseMultiqcModule):
-
     def __init__(self):
         """ MultiQC module for processing hap.py output logs """
         super(MultiqcModule, self).__init__(
-            name='hap.py',
-            anchor='happy',
-            href='https://github.com/Illumina/hap.py',
-            info="is a set of programs based on htslib to benchmark variant calls against gold standard truth datasets."
+            name="hap.py",
+            anchor="happy",
+            href="https://github.com/Illumina/hap.py",
+            info="is a set of programs based on htslib to benchmark variant calls against gold standard truth datasets.",
         )
 
         self.happy_raw_sample_names = set()
@@ -47,63 +51,63 @@ class MultiqcModule(BaseMultiqcModule):
         log.info("Found {} reports".format(len(self.happy_raw_sample_names)))
 
         # Write parsed report data to file
-        self.write_data_file(self.happy_indel_data, 'multiqc_happy_indel_data', data_format="json")
-        self.write_data_file(self.happy_snp_data, 'multiqc_happy_snp_data', data_format="json")
+        self.write_data_file(self.happy_indel_data, "multiqc_happy_indel_data", data_format="json")
+        self.write_data_file(self.happy_snp_data, "multiqc_happy_snp_data", data_format="json")
 
         # add sections with the values from the indel and snp happy output
         self.add_section(
-            name = "INDEL",
-            anchor = "happy-indel-plot",
-            description = 'The default shown fields should give the best overview of quality, but there are many other hidden fields available.',
-            helptext = '''
+            name="INDEL",
+            anchor="happy-indel-plot",
+            description="The default shown fields should give the best overview of quality, but there are many other hidden fields available.",
+            helptext="""
                 No plots are generated, as hap.py is generally run on single control samples (NA12878, etc.)
 
                 Ideally, precision, recall and F1 Score should all be as close to 1 as possible.
-            ''',
-            plot = table.plot(self.happy_indel_data, self.gen_headers("_indel"))
+            """,
+            plot=table.plot(self.happy_indel_data, self.gen_headers("_indel")),
         )
-        
+
         self.add_section(
-            name = "SNP",
-            anchor = "happy-snp-plot",
-            description = 'The default shown fields should give the best overview of quality, but there are many other hidden fields available.',
-            helptext = '''
+            name="SNP",
+            anchor="happy-snp-plot",
+            description="The default shown fields should give the best overview of quality, but there are many other hidden fields available.",
+            helptext="""
                 No plots are generated, as hap.py is generally run on single control samples (NA12878, etc.)
 
                 Ideally, precision, recall and F1 Score should all be as close to 1 as possible.
-            ''',
-            plot = table.plot(self.happy_snp_data, self.gen_headers("_snp"))
+            """,
+            plot=table.plot(self.happy_snp_data, self.gen_headers("_snp")),
         )
 
     def parse_file(self, f):
         # Check that we're not ignoring this sample name
-        if self.is_ignore_sample(f['s_name']):
+        if self.is_ignore_sample(f["s_name"]):
             return
 
-        if f['s_name'] in self.happy_raw_sample_names:
-            log.warning("Duplicate sample name found in {}! Overwriting: {}".format(f['root'], f['s_name']))
-        self.happy_raw_sample_names.add(f['s_name'])
+        if f["s_name"] in self.happy_raw_sample_names:
+            log.warning("Duplicate sample name found in {}! Overwriting: {}".format(f["root"], f["s_name"]))
+        self.happy_raw_sample_names.add(f["s_name"])
 
-        rdr = csv.DictReader(f['f'])
+        rdr = csv.DictReader(f["f"])
         for row in rdr:
-            row_id = "{}_{}_{}".format(f['s_name'], row["Type"], row["Filter"])
-            if row["Type"] == 'INDEL':
+            row_id = "{}_{}_{}".format(f["s_name"], row["Type"], row["Filter"])
+            if row["Type"] == "INDEL":
                 if row_id not in self.happy_indel_data:
-                    self.happy_indel_data[row_id] = {"sample_id": f['s_name']}
+                    self.happy_indel_data[row_id] = {"sample_id": f["s_name"]}
                 # add suffix for headers to differentiate between indel and snp
                 for fn in rdr.fieldnames:
-                    self.happy_indel_data[row_id][fn+"_indel"] = row[fn]
+                    self.happy_indel_data[row_id][fn + "_indel"] = row[fn]
 
-            elif row["Type"] == 'SNP':
+            elif row["Type"] == "SNP":
                 if row_id not in self.happy_snp_data:
-                    self.happy_snp_data[row_id] = {"sample_id": f['s_name']}
+                    self.happy_snp_data[row_id] = {"sample_id": f["s_name"]}
                 for fn in rdr.fieldnames:
-                    self.happy_snp_data[row_id][fn+"_snp"] = row[fn]
+                    self.happy_snp_data[row_id][fn + "_snp"] = row[fn]
 
     def gen_headers(self, suffix=""):
         h = OrderedDict()
-        h["METRIC.Recall"] = { # string must match headers in the input file
-            "title": "Recall", # whatever string to be displayed in the html report table
+        h["METRIC.Recall"] = {  # string must match headers in the input file
+            "title": "Recall",  # whatever string to be displayed in the html report table
             "description": "Recall for truth variant representation = TRUTH.TP / (TRUTH.TP + TRUTH.FN)",
             "min": 0,
             "max": 1,

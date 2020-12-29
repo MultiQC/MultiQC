@@ -117,9 +117,7 @@ Coding with MultiQC:
   Updating for compatibility: compatibility.md
 ---
 
-# Welcome!
-
-## MultiQC Documentation
+# MultiQC Documentation
 
 MultiQC is a tool to aggregate bioinformatics results across many samples
 into a single report. It's written in Python and contains modules for a number
@@ -127,27 +125,28 @@ of common tools.
 
 The documentation has the following pages:
 
- - [Docs homepage](README.md) _(this README file)_
- - Using MultiQC
-   - [Installing MultiQC](installation.md)
-   - [Running MultiQC](usage.md)
-   - [Using Reports](reports.md)
-   - [Configuration](config.md)
-   - [Customising Reports](customisation.md)
-   - [Common Problems](troubleshooting.md)
- - [MultiQC Modules](modules/)
- - [Custom Content](custom_content.md)
- - Coding with MultiQC
-   - [Writing new templates](templates.md)
-   - [Writing new modules](modules.md)
-   - [Plugins](plugins.md)
-   - [MultiQC Plugins](plugins.md)
-   - [Updating for compatibility](compatibility.md)
+- [Docs homepage](README.md) _(this README file)_
+- Using MultiQC
+  - [Installing MultiQC](installation.md)
+  - [Running MultiQC](usage.md)
+  - [Using Reports](reports.md)
+  - [Configuration](config.md)
+  - [Customising Reports](customisation.md)
+  - [Common Problems](troubleshooting.md)
+- [MultiQC Modules](modules/)
+- [Custom Content](custom_content.md)
+- Coding with MultiQC
+  - [Writing new templates](templates.md)
+  - [Writing new modules](modules.md)
+  - [Plugins](plugins.md)
+  - [MultiQC Plugins](plugins.md)
+  - [Updating for compatibility](compatibility.md)
 
 These docs can be read in any of three ways:
- - On the MultiQC Website: http://multiqc.info
- - On GitHub: https://github.com/ewels/MultiQC/
- - As part of the distributed source code (in `/docs/`)
+
+- On the MultiQC Website: <http://multiqc.info>
+- On GitHub: <https://github.com/ewels/MultiQC/>
+- As part of the distributed source code (in `/docs/`)
 
 If you're curious how the website works, check out the
 [MultiQC website repository](https://github.com/ewels/MultiQC_website).
