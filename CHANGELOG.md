@@ -2,6 +2,23 @@
 
 ## MultiQC v1.10dev
 
+### Major change: Code linting
+
+This is a big change for MultiQC developers. I have added automated code formatting and code linting
+(style checks) to MultiQC. Specifically, MultiQC now uses three main tools:
+
+- [Black](https://github.com/psf/black) - Python Code
+- [Prettier](https://prettier.io/) - Everything else (almost)
+- [markdownlint-cli](https://github.com/igorshubovych/markdownlint-cli) - Stricter markdown rules
+
+**All developers must run these tools when submitting changes via Pull-Requests!**
+Automated CI tests now run with GitHub actions to check that all files pass the above tests.
+If any files do not, that test will fail giving a red :x: next to the pull request.
+
+For further information, please see the [documentation](https://multiqc.info/docs/#coding-with-multiqc).
+
+### MultiQC updates
+
 #### New MultiQC Features
 
 - `--sample-filters` now also accepts `show_re` and `hide_re` in addition to `show` and `hide`. The `_re` options use regex, while the "normal" options use globbing.

@@ -24,7 +24,7 @@ you can write it as part of a custom plugin. The process is almost identical,
 though it keeps the code bases separate. For more information about this,
 see the docs about _MultiQC Plugins_ below.
 
-## Linting
+## MultiQC Lint Tests
 
 MultiQC has been developed to be as forgiving as possible and will handle lots of
 invalid or ignored code. This is useful most of the time but can be difficult when
@@ -40,6 +40,120 @@ multiqc --lint test_data
 Note that the automated MultiQC continuous integration testing runs in this mode,
 so you will need to pass all lint tests for those checks to pass. This is required
 for any pull-requests.
+
+## Code formatting
+
+In addition to testing MultiQC functionality, the MultiQC code base is also checked for
+consistency and formatting.
+
+Everyone has their own preferences when it comes to writing any code, both in the methods
+used but also with simple things like whitespace and whether to use `"` or `'`.
+When reviewing code contributions in pull-requests, these variations in coding style
+introduce an additional mental overhead. Inconsistent code style across the package
+also makes it harder for newcomers to get into the code.
+
+Code formatting / linting tools are able to assess files in many different languages
+and check that a set of "soft" formatting rules are adhered to, to enforce code consistency.
+Better still, many of these tools can automatically change the formatting so that developers
+can write code in whatever style they prefer and defer this task to automation.
+
+Much like source control, gloves in a lab, and wearing a seatbelt, code formatters and code linting
+is an annoying inconvience at first for most people which in time becomes an indespesible
+tool in the maintenance of high quality software.
+
+When it comes to MultiQC, three tools are used to set and check the code base:
+
+- [Black](https://github.com/psf/black) - Python Code
+- [Prettier](https://prettier.io/) - Everything else (almost)
+- [markdownlint-cli](https://github.com/igorshubovych/markdownlint-cli) - Stricter markdown rules
+
+**All developers must run these tools when submitting changes via Pull-Requests!**
+Automated continuous integration tests will run using GitHub Actions to check that all files pass the above tests.
+If any files do not, that test will fail giving a red :x: next to the pull request.
+
+> Make sure that your configuration is working properly and that you're not changing loads of files
+> that you haven't worked with. Pull-requests will not be merged with such changes.
+
+All three tools should be relatively easy to install and run, and have integration with the majority
+of code editors. Once set up, they can run on save and you'll never need to think about them again.
+
+For example, [Visual Studio Code](https://code.visualstudio.com/) has
+[built-in support for Black](https://code.visualstudio.com/docs/python/editing#_formatting) and
+plugins for [Prettier](https://github.com/prettier/prettier-vscode) and
+[Markdownlint](https://github.com/DavidAnson/vscode-markdownlint).
+
+Atom also has plugins for [Black](https://atom.io/packages/python-black),
+[Prettier](https://atom.io/packages/prettier-atom) and
+[Markdownlint](https://atom.io/packages/linter-node-markdownlint).
+
+### Use version control
+
+These tools are set up to edit source code in place. If you're not used to working with them,
+make sure that you have saved your changes _and made a commit_ with those changes before running them!
+Then if all goes wrong and they make loads of unexpected changes, you can run `git checkout .` to
+reset everything before trying again.
+
+### Black
+
+MultiQC is written in Python and so the majority of the codebase is Python.
+[Black](https://github.com/psf/black) describes itself as _"The uncompromising code formatter"_
+and has very few configuration options on purpose.
+
+Black is very easy to install and run:
+
+```bash
+pip install black
+black .
+```
+
+Black should automatically find the config file in the root of the directory called
+`pyproject.toml` which configures it to use a line length of 120 characters.
+This should be found automatically.
+
+### Prettier
+
+In addition to Python, MultiQC also has a lot of markdown documentation,
+YAML configuration files, custom JavaScript and more. To format these files
+we use a tool called [Prettier](https://prettier.io/).
+
+Prettier is available via the Node Package Manager (npm). If you've not used this before,
+you'll need to install Node first: <https://nodejs.org/en/download/>
+
+Once `npm` is working, you can [install Prettier](https://prettier.io/docs/en/install.html) globally.
+Then run with the `--write` flag to edit files in place.
+
+```bash
+npm install -g prettier
+prettier --write .
+```
+
+Prettier has two config files in the repository root: `.prettierrc.yaml` and `.prettierignore`.
+These should be found automatically by Prettier.
+One configures Prettier to use longer line lengths of 120 characters and the other tells it to skip
+bundled source files and all HTML files (personally I'm not a fan of what it does with HTML).
+
+### Markdownlint
+
+Prettier formats markdown using [remark](https://github.com/remarkjs/remark), which works great.
+However, [Markdownlint](https://github.com/DavidAnson/markdownlint) has a lot more strict rules
+and checks for a load of additional nice things (eg. specifying code type for syntax highlighting of code blocks).
+
+Markdownlint doesn't fix things in place like the two tools above, instead it just checks files
+and reports problems that must be fixed manually.
+
+MultiQC uses [markdownlint-cli](https://github.com/igorshubovych/markdownlint-cli) to run tests.
+Once `npm` is working (see above), it's a simple install and run:
+
+```bash
+npm install -g markdownlint-cli
+markdownlint .
+```
+
+There is a config file for markdownlint in the root of the repository called `.markdownlint.yaml`
+which disables and tweaks quite a lot of rules. This should be found automatically.
+
+Note that the editor plugins above run this as you edit files, giving little wiggly lines
+to warn you about problems as you type.
 
 ## Initial setup
 
