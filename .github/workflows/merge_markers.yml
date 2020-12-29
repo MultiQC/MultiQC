@@ -6,7 +6,6 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-
       # Check out MultiQC code
       - uses: actions/checkout@v2
 

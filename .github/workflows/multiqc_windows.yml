@@ -10,56 +10,55 @@ jobs:
         python-version: [3.6, 3.7, 3.8]
 
     steps:
+      # Check out MultiQC code
+      - uses: actions/checkout@v2
 
-    # Check out MultiQC code
-    - uses: actions/checkout@v2
+      # Set up Windows with C++ for numpy
+      - name: Visual Studio Command Prompt tool
+        run: cmd "C:\Program Files (x86)\Microsoft Visual Studio\2019\Enterprise\VC\Auxiliary\Build\vcvarsall.bat" ${{ matrix.platform-vcvars }}
 
-    # Set up Windows with C++ for numpy
-    - name: Visual Studio Command Prompt tool
-      run: cmd "C:\Program Files (x86)\Microsoft Visual Studio\2019\Enterprise\VC\Auxiliary\Build\vcvarsall.bat" ${{ matrix.platform-vcvars }}
+      # Set up Python
+      - name: Set up Python ${{ matrix.python-version }}
+        uses: actions/setup-python@v1
+        with:
+          python-version: ${{ matrix.python-version }}
 
-    # Set up Python
-    - name: Set up Python ${{ matrix.python-version }}
-      uses: actions/setup-python@v1
-      with:
-        python-version: ${{ matrix.python-version }}
+      # Update core packages
+      - name: Install dependencies for CI tests
+        run: |
+          python -m pip install --upgrade pip setuptools
 
-    # Update core packages
-    - name: Install dependencies for CI tests
-      run: |
-        python -m pip install --upgrade pip setuptools
+      # Install MultiQC
+      - name: Install MultiQC
+        run: pip install .
 
-    # Install MultiQC
-    - name: Install MultiQC
-      run: pip install .
+      # Fetch the MultiQC test data
+      # NB: Download zip file instead of git clone, as Windows complains about reserved filenames and certain characters
+      - name: Download test data
+        run: |
+          curl -fsSL https://github.com/ewels/MultiQC_TestData/archive/master.zip -o test_data.zip
+          7z x test_data.zip -y -o"test_data"
+          dir test_data\MultiQC_TestData-master
 
-    # Fetch the MultiQC test data
-    # NB: Download zip file instead of git clone, as Windows complains about reserved filenames and certain characters
-    - name: Download test data
-      run: |
-        curl -fsSL https://github.com/ewels/MultiQC_TestData/archive/master.zip -o test_data.zip
-        7z x test_data.zip -y -o"test_data"
-        dir test_data\MultiQC_TestData-master
+      # Run all of the tests! Remember the BACKslash path separator!
+      - name: Special case input data
+        run: multiqc test_data\MultiQC_TestData-master\data --ignore test_data\MultiQC_TestData-master\data\modules\
 
-    # Run all of the tests! Remember the BACKslash path separator!
-    - name: Special case input data
-      run: multiqc test_data\MultiQC_TestData-master\data --ignore test_data\MultiQC_TestData-master\data\modules\
+      - name: All modules / Custom report filename
+        run: multiqc --lint test_data\MultiQC_TestData-master\data\modules\ --filename full_report.html
 
-    - name: All modules / Custom report filename
-      run: multiqc --lint test_data\MultiQC_TestData-master\data\modules\ --filename full_report.html
+      - name: File-list input of dirs
+        run: |
+          cd test_data\MultiQC_TestData-master
+          multiqc --file-list data\special_cases\dir_list.txt
 
-    - name: File-list input of dirs
-      run: |
-        cd test_data\MultiQC_TestData-master
-        multiqc --file-list data\special_cases\dir_list.txt
+      - name: Specific module / Force overwrite / Prepend dirnames / Name and comment / No data dir
+        run: multiqc --lint test_data\MultiQC_TestData-master\data\modules\ -m fastqc -f -d -dd 1 -i "Forced Report" -b "This command has lots of options" --filename custom_fn --no-data-dir
 
-    - name: Specific module / Force overwrite / Prepend dirnames / Name and comment / No data dir
-      run: multiqc --lint test_data\MultiQC_TestData-master\data\modules\ -m fastqc -f -d -dd 1 -i "Forced Report" -b "This command has lots of options" --filename custom_fn --no-data-dir
+      - name: For overwrite / Flat plots / Tagged modules only / Exclude module / Ignore samples / Full names / zip data dir / config file
+        run: multiqc --lint test_data\MultiQC_TestData-master\data\modules\ -f --flat --tag methylation --exclude clusterflow --ignore-samples ngi --fullnames --zip-data-dir -c test\config_example.yaml
 
-    - name: For overwrite / Flat plots / Tagged modules only / Exclude module / Ignore samples / Full names / zip data dir / config file
-      run: multiqc --lint test_data\MultiQC_TestData-master\data\modules\ -f --flat --tag methylation --exclude clusterflow --ignore-samples ngi --fullnames --zip-data-dir -c test\config_example.yaml
-
-    - name: Specfic module / named output dir / dev template / JSON data / File list
-      run: |
-        cd test_data\MultiQC_TestData-master
-        multiqc -m star -o testsmultiqc_report_dev -t default_dev -k json --file-list data\special_cases\file_list.txt
+      - name: Specfic module / named output dir / dev template / JSON data / File list
+        run: |
+          cd test_data\MultiQC_TestData-master
+          multiqc -m star -o testsmultiqc_report_dev -t default_dev -k json --file-list data\special_cases\file_list.txt
