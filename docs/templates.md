@@ -1,9 +1,11 @@
 # Writing New Templates
+
 MultiQC is built around a templating system that uses the
 [Jinja](http://jinja.pocoo.org/) python package. This makes it very
 easy to create new report templates that fit your needs.
 
 ## Core or plugin?
+
 If your template could be of use to others, it would be great if you
 could add it to the main MultiQC package. You can do this by creating a
 fork of the [MultiQC GitHub repository](https://github.com/ewels/MultiQC),
@@ -15,6 +17,7 @@ acts as a plugin. For more information about this, see the
 [plugins documentation](http://multiqc.info/docs/#multiqc-plugins).
 
 ## Creating a template skeleton
+
 For a new template to be recognised by MultiQC, it must be a python submodule
 directory with a `__init__.py` file. This must be referenced in the `setup.py`
 installation script as an
@@ -38,21 +41,25 @@ writing a plugin module you can specify your module name instead. Just make
 sure that `multiqc.templates.v1` is the same.
 
 Once you've added the entry point, remember to install the package again:
+
 ```
 pip install -e .
 ```
+
 Using `-e` tells `pip` to softlink the plugin files instead of
 copying, so changes made whilst editing files will be reflected when you
 run MultiQC.
 
 The `__init__.py` files must define two variables - the path to the template
 directory and the main jinja template file:
+
 ```python
 template_dir = os.path.dirname(__file__)
 base_fn = 'base.html'
 ```
 
 ## Child templates
+
 The default MultiQC template contains a _lot_ of code. Importantly, it includes
 1448 lines of custom JavaScript (at time of writing) which powers the plotting
 and dynamic functions in the report. You probably don't want to rewrite all of
@@ -60,6 +67,7 @@ this for your template, so to make your life easier you can create a
 _child template_.
 
 To do this, add an extra variable to your template's `__init__.py`:
+
 ```python
 template_parent = 'default'
 ```
@@ -73,6 +81,7 @@ Files within the default template have comments at the top explaining what
 part of the report they generate.
 
 ## Extra init variables
+
 There are a few extra variables that can be added to the `__init__.py` file
 to change how the report is generated.
 
@@ -98,6 +107,7 @@ config.plots_force_flat = True
 ```
 
 ## Jinja template variables
+
 There are a number of variables that you can use within your Jinja template.
 Two namespaces are available - `report` and `config`. You can print these
 using the Jinja curly brace syntax, _eg._ `{{ config.version }}`. See the
@@ -107,14 +117,22 @@ information.
 The default MultiQC template includes dependencies in the HTML so that the
 report is standalone. If you would like to do the same, use the `include_file`
 function. For example:
+
 ```html
-<script>{{ include_file('js/jquery.min.js') }}</script>
-<img src="data:image/png;base64,{{ include_file('img/logo.png', b64=True) }}">
+<script>
+  {
+    {
+      include_file("js/jquery.min.js");
+    }
+  }
+</script>
+<img src="data:image/png;base64,{{ include_file('img/logo.png', b64=True) }}" />
 ```
 
-
 ## Appendices
+
 ### Custom plotting functions
+
 If you don't like the default plotting functions built into MultiQC, you
 can write your own! If you create a callable variable in a template called
 either `bargraph` or `linegraph`, MultiQC will use that instead. For example:

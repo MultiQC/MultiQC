@@ -1,4 +1,5 @@
 # Configuring MultiQC
+
 Whilst most MultiQC settings can be specified on the command line, MultiQC
 is also able to parse system-wide and personal config files. At run time,
 it collects the configuration settings from the following places in this order
@@ -6,17 +7,18 @@ it collects the configuration settings from the following places in this order
 
 1. Hardcoded defaults in MultiQC code
 2. System-wide config in `<installation_dir>/multiqc_config.yaml`
-    * Manual installations only, not `pip` or `conda`
+   - Manual installations only, not `pip` or `conda`
 3. User config in `~/.multiqc_config.yaml`
 4. File path set in environment variable `MULTIQC_CONFIG_PATH`
-    * For example, define this in your `~/.bashrc` file and keep the file anywhere you like
+   - For example, define this in your `~/.bashrc` file and keep the file anywhere you like
 5. Config file in the current working directory: `multiqc_config.yaml`
 6. Config file paths specified in the command with `--config` / `-c`
-    * You can specify multiple files like this, they can have any filename.
+   - You can specify multiple files like this, they can have any filename.
 7. Command line config (`--cl_config`)
 8. Specific command line options (_e.g._ `--force`)
 
 ## Sample name cleaning
+
 MultiQC typically generates sample names by taking the input or log file name,
 and 'cleaning' it. To do this, it uses the `fn_clean_exts` settings and looks
 for any matches. If it finds any matches, everything to the right is removed.
@@ -24,8 +26,8 @@ For example, consider the following config:
 
 ```yaml
 fn_clean_exts:
-    - '.gz'
-    - '.fastq'
+  - ".gz"
+  - ".fastq"
 ```
 
 This would make the following sample names:
@@ -45,11 +47,11 @@ and `extra_fn_clean_trim`:
 
 ```yaml
 extra_fn_clean_exts:
-    - '.myformat'
-    - '_processedFile'
+  - ".myformat"
+  - "_processedFile"
 extra_fn_clean_trim:
-    - '#'
-    - '.myext'
+  - "#"
+  - ".myext"
 ```
 
 ### Other search types
@@ -63,15 +65,15 @@ If you just supply a string, the default behavior is similar to "trim". The file
 
 ```yaml
 extra_fn_clean_exts:
-    - '.fastq'
+  - ".fastq"
 ```
 
 The above is equivalent to the more explicit:
 
 ```yaml
 extra_fn_clean_exts:
-    - type: 'truncate'
-      pattern: '.fastq'
+  - type: "truncate"
+    pattern: ".fastq"
 ```
 
 This rule would produce the following sample names:
@@ -87,8 +89,8 @@ The `remove` type allows you to remove the exact match from the filename.
 
 ```yaml
 extra_fn_clean_exts:
-    - type: remove
-      pattern: .sorted
+  - type: remove
+    pattern: .sorted
 ```
 
 This rule would produce the following sample names:
@@ -103,8 +105,8 @@ You can also remove a substring with a regular expression. Here's a [good resour
 
 ```yaml
 extra_fn_clean_exts:
-    - type: regex
-      pattern: '^processed.'
+  - type: regex
+    pattern: "^processed."
 ```
 
 This rule would produce the following sample names:
@@ -119,8 +121,8 @@ If you'd rather like to _keep_ the match of a regular expression you can use the
 
 ```yaml
 extra_fn_clean_exts:
-    - type: regex_keep
-      pattern: '[A-Z]{3}[1-9]{2}'
+  - type: regex_keep
+    pattern: "[A-Z]{3}[1-9]{2}"
 ```
 
 This rule would produce the following sample names:
@@ -138,24 +140,24 @@ For example, to truncate all sample names to 5 characters for just Kallisto:
 
 ```yaml
 extra_fn_clean_exts:
-    - type: regex_keep
-      pattern: '^.{5}'
-      module: kallisto
+  - type: regex_keep
+    pattern: "^.{5}"
+    module: kallisto
 ```
 
 You can also supply a list of multiple module anchors if you wish:
 
 ```yaml
 extra_fn_clean_exts:
-    - type: regex_keep
-      pattern: '^.{5}'
-      module:
-        - kallisto
-        - cutadapt
+  - type: regex_keep
+    pattern: "^.{5}"
+    module:
+      - kallisto
+      - cutadapt
 ```
 
-
 ### Clashing sample names
+
 This process of cleaning sample names can sometimes result in exact duplicates.
 A duplicate sample name will overwrite previous results. Warnings showing these events
 can be seen with verbose logging using the `--verbose`/`-v` flag, or in `multiqc_data/multiqc.log`.
@@ -166,12 +168,14 @@ unsure about where the data from results within MultiQC reports come from, have 
 of the report.
 
 #### Directory names
+
 One scenario where clashing names can occur is when the same file is processed in different directories.
 For example, if `sample_1.fastq` is processed with four sets of parameters in four different
 directories, they will all have the same name - `sample_1`. Only the last will be shown.
 If the directories are different, this can be avoided with the `--dirs`/`-d` flag.
 
 For example, given the following files:
+
 ```
 ├── analysis_1
 │   └── sample_1.fastq.gz.aligned.log
@@ -180,7 +184,9 @@ For example, given the following files:
 └── analysis_3
     └── sample_1.fastq.gz.aligned.log
 ```
+
 Running `multiqc -d .` will give the following sample names:
+
 ```
 analysis_1 | sample_1
 analysis_2 | sample_1
@@ -188,13 +194,17 @@ analysis_3 | sample_1
 ```
 
 #### Filename truncation
+
 If the problem is with filename truncation, you can also use the `--fullnames`/`-s` flag,
 which disables all sample name cleaning. For example:
+
 ```
 ├── sample_1.fastq.gz.aligned.log
 └── sample_1.fastq.gz.subsampled.fastq.gz.aligned.log
 ```
+
 Running `multiqc -s .` will give the following sample names:
+
 ```
 sample_1.fastq.gz.aligned.log
 sample_1.fastq.gz.subsampled.fastq.gz.aligned.log
@@ -204,6 +214,7 @@ You can turn off sample name cleaning permanently by setting
 `fn_clean_sample_names` to `false` in your config file.
 
 ## Module search patterns
+
 Many bioinformatics tools have standard output formats, filenames and other
 signatures. MultiQC uses these to find output; for example, the FastQC module
 looks for files that end in `_fastqc.zip`.
@@ -223,8 +234,8 @@ as follows:
 
 ```yaml
 sp:
-    mqc_module:
-        fn: _mysearch.txt
+  mqc_module:
+    fn: _mysearch.txt
 ```
 
 Search patterns can specify a filename match (`fn`) or a file contents
@@ -232,6 +243,7 @@ match (`contents`), as well as a number of additional search keys.
 See [below](#step-1-find-log-files) for the full reference.
 
 ## Ignoring Files
+
 MultiQC begins by indexing all of the files that you specified and building a list
 of the ones it will use. You can specify files and directories to skip on the command
 line using `-x`/`--ignore`, or for more permanent memory, with the following config file
@@ -239,6 +251,7 @@ options: `fn_ignore_files`, `fn_ignore_dirs` and `fn_ignore_paths` (the command 
 option simply adds to all of these).
 
 For example, given the following files:
+
 ```
 ├── analysis_1
 │   └── sample_1.fastq.gz.aligned.log
@@ -247,21 +260,25 @@ For example, given the following files:
 └── analysis_3
     └── sample_1.fastq.gz.aligned.log
 ```
+
 You could specify the following relevant config options:
+
 ```yaml
 fn_ignore_files:
-    - '*.log'
+  - "*.log"
 fn_ignore_dirs:
-    - 'analysis_1'
-    - 'analysis_2'
+  - "analysis_1"
+  - "analysis_2"
 fn_ignore_paths:
-    - '*/analysis_*/sample_1*'
+  - "*/analysis_*/sample_1*"
 ```
+
 Note that the searched file paths will usually be relative to the working
 directory and can be highly variable, so you'll typically want to start patterns
 with a `*` to match any preceding directory structure.
 
 ## Ignoring samples
+
 Some modules get sample names from the contents of the file and not the filename
 (for example, `stdout` logs can contain multiple samples). You can skip samples
 by their resolved sample names (after cleaning) with two config options:
@@ -271,12 +288,13 @@ option `--ignore-samples`), the latter takes a list of regex patterns. For examp
 
 ```yaml
 sample_names_ignore:
-    - 'SRR*'
+  - "SRR*"
 sample_names_ignore_re:
-    - '^SR{2}\d{7}_1$'
+  - '^SR{2}\d{7}_1$'
 ```
 
 ## Large sample numbers
+
 MultiQC has been written with the intention of being used for any number of samples.
 This means that it _should_ work well with 6 samples or 6000. Very large sample numbers
 are becoming increasingly common, for example with single cell data.
@@ -285,6 +303,7 @@ Producing reports with data from many hundreds or thousands of samples provides 
 challenges, both technically and also in terms of data visualisation and report usability.
 
 ### Disabling on-load plotting
+
 One problem with large reports is that the browser can hang when the report is first loaded.
 This is because it loading and processing the data for all plots at once. To mitigate this,
 large reports may show plots as grey boxes with a _"Show Plot"_ button. Clicking this will
@@ -294,6 +313,7 @@ By default this behaviour kicks in when a plot has 50 samples or more. This can 
 by changing the `num_datasets_plot_limit` config option.
 
 ### Flat / interactive plots
+
 Reports with many samples start to need a lot of data for plots. This results in inconvenient
 report file sizes (can be 100s of megabytes) and worse, web browser crashes. To allow MultiQC
 to scale to these sample numbers, most plot types have two plotting functions in the code base -
@@ -306,6 +326,7 @@ be changed by running MultiQC with the `--flat` / `--interactive` command line o
 setting the `plots_force_flat` / `plots_force_interactive` config options to `True`.
 
 ### Tables / Beeswarm plots
+
 Report tables with thousands of samples (table rows) can quickly become impossible to use.
 To avoid this, tables with large numbers of rows are instead plotted as a Beeswarm plot
 (aka. a strip chart / jitter plot). These plots have fixed dimensions with any number
@@ -315,6 +336,7 @@ By default, MultiQC starts using beeswarm plots when a table has 500 rows or mor
 can be changed by setting the `max_table_rows` config option.
 
 ## Coloured log output
+
 As of MultiQC version 1.8, log output is coloured using the [coloredlogs](https://pypi.org/project/coloredlogs/)
 Python package. The code attempts to detect if the logs on the terminal are being redirected to a file
 or piped to another tool and will disable colours if so. If the colours annoy you or you're ending
@@ -323,6 +345,7 @@ flag `--no-ansi`. Sadly it's not possible to set this in a config file, as the l
 before configs are loaded.
 
 ## Command-line config
+
 Sometimes it's useful to specify a single small config option just once, where creating
 a config file for the occasion may be overkill. In these cases you can use the
 `--cl_config` option to supply additional config values on the command line.
@@ -391,8 +414,8 @@ with the following MultiQC config:
 
 ```yaml
 sp:
-    picard/markdups:
-        fn: '*_markduplicates.log'
+  picard/markdups:
+    fn: "*_markduplicates.log"
 ```
 
 If you know that this is the only type of Picard output that you're interested in,
@@ -400,44 +423,44 @@ you can also change all of the other Picard search patterns to use `skip: True`:
 
 ```yaml
 sp:
-    picard/markdups:
-        fn: '*_markduplicates.log'
-    picard/alignment_metrics:
-        skip: true
-    picard/basedistributionbycycle:
-        skip: true
-    picard/gcbias:
-        skip: true
-    picard/hsmetrics:
-        skip: true
-    picard/insertsize:
-        skip: true
-    picard/oxogmetrics:
-        skip: true
-    picard/pcr_metrics:
-        skip: true
-    picard/quality_by_cycle:
-        skip: true
-    picard/quality_score_distribution:
-        skip: true
-    picard/quality_yield_metrics:
-        skip: true
-    picard/rnaseqmetrics:
-        skip: true
-    picard/rrbs_metrics:
-        skip: true
-    picard/sam_file_validation:
-        skip: true
-    picard/variant_calling_metrics:
-        skip: true
-    picard/wgs_metrics:
-        skip: true
+  picard/markdups:
+    fn: "*_markduplicates.log"
+  picard/alignment_metrics:
+    skip: true
+  picard/basedistributionbycycle:
+    skip: true
+  picard/gcbias:
+    skip: true
+  picard/hsmetrics:
+    skip: true
+  picard/insertsize:
+    skip: true
+  picard/oxogmetrics:
+    skip: true
+  picard/pcr_metrics:
+    skip: true
+  picard/quality_by_cycle:
+    skip: true
+  picard/quality_score_distribution:
+    skip: true
+  picard/quality_yield_metrics:
+    skip: true
+  picard/rnaseqmetrics:
+    skip: true
+  picard/rrbs_metrics:
+    skip: true
+  picard/sam_file_validation:
+    skip: true
+  picard/variant_calling_metrics:
+    skip: true
+  picard/wgs_metrics:
+    skip: true
 ```
 
 This can speed up execution a bit if you really want to squeeze that running time.
 The [MultiQC Modules documentation](#multiqc-modules) shows the search patterns for every module.
 
-> Note that it's only worth using `skip: true` on search patterns if you want to use one  from a module that has several.
+> Note that it's only worth using `skip: true` on search patterns if you want to use one from a module that has several.
 > Usually it's better to just [specify which modules you want to run](#be-picky-with-which-modules-are-run) instead.
 
 ### Force interactive plots

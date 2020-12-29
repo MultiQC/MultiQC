@@ -10,14 +10,16 @@ The Prokka module analyses summary results from the
 pipeline for prokaryotic genomes.
 The Prokka module accepts two configuration options:
 
-* `prokka_table`: default `False`. Show a table in the report.
-* `prokka_barplot`: default `True`. Show a barplot in the report.
-* `prokka_fn_snames`: default `False`. Use filenames for sample names (see below).
+- `prokka_table`: default `False`. Show a table in the report.
+- `prokka_barplot`: default `True`. Show a barplot in the report.
+- `prokka_fn_snames`: default `False`. Use filenames for sample names (see below).
 
 Sample names are generated using the first line in the prokka reports:
+
 ```
 organism: Helicobacter pylori Sample1
 ```
+
 The module assumes that the first two words are the organism name and
 the third is the sample name. So the above will give a sample name of
 `Sample1`.

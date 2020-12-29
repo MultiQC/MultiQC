@@ -1,6 +1,7 @@
 # Writing New Modules
 
 ## Introduction
+
 Writing a new module can at first seem a daunting task. However, MultiQC
 has been written _(and refactored)_ to provide a lot of functionality
 as common functions.
@@ -12,6 +13,7 @@ If you have any problems, feel free to contact the author - details
 here: [@ewels](https://github.com/ewels)
 
 ## Core modules / plugins
+
 New modules can either be written as part of MultiQC or in a stand-alone
 plugin. If your module is for a publicly available tool, please add it
 to the main program and contribute your code back when complete via a
@@ -23,6 +25,7 @@ though it keeps the code bases separate. For more information about this,
 see the docs about _MultiQC Plugins_ below.
 
 ## Linting
+
 MultiQC has been developed to be as forgiving as possible and will handle lots of
 invalid or ignored code. This is useful most of the time but can be difficult when
 writing new MultiQC modules (especially during pull-request reviews).
@@ -65,20 +68,21 @@ you will need to edit or create are as follows:
 These files are described in more detail below.
 
 ### Submodule
+
 MultiQC modules are Python submodules - as such, they need their own
 directory in `/multiqc/` with an `__init__.py` file. The directory should
 share its name with the module. To follow common practice, the module
 code itself usually then goes in a separate python file (also with the same
 name, i.e. `multiqc/modname/modname.py`) which is then imported by the
- `__init__.py` file with:
+`__init__.py` file with:
 
 ```python
 from __future__ import absolute_import
 from .modname import MultiqcModule
 ```
 
-
 ### Entry points
+
 Once your submodule files are in place, you need to tell MultiQC that they
 are available as an analysis module. This is done within `setup.py` using
 [entry points](http://setuptools.readthedocs.io/en/latest/setuptools.html#dynamic-discovery-of-services-and-plugins).
@@ -102,6 +106,7 @@ pip install -e .
 ```
 
 ### MultiQC config
+
 So that MultiQC knows what order modules should be run in, you need to add
 your module to the core config file.
 
@@ -110,6 +115,7 @@ This contains the name of modules in order of precedence. Add your module here
 in an appropriate position.
 
 ### Documentation
+
 Next up, you need to create a documentation file for your module. The reason
 for this is twofold: firstly, docs are important to help people to use, debug
 and extend MultiQC (you're reading this, aren't you?). Secondly,
@@ -126,8 +132,8 @@ should have the following structure:
 Name: Tool Name
 URL: http://www.amazing-bfx-tool.com
 Description: >
-    This amazing tool does some really cool stuff. You can describe it
-    here and split onto multiple lines if you want. Not too long though!
+  This amazing tool does some really cool stuff. You can describe it
+  here and split onto multiple lines if you want. Not too long though!
 ---
 
 Your documentation goes here. Feel free to use markdown and write whatever
@@ -139,10 +145,12 @@ Make a reference to this in the YAML _frontmatter_ list at the top of
 the documentation.
 
 ### Changelog
+
 Last but not least, remember to add your new module to the `CHANGELOG.md`,
 so that people know that it's there.
 
 ### MultiqcModule Class
+
 If you've copied one of the other entry point statements, it will have ended
 in `:MultiqcModule` - this tells MultiQC to try to execute a class or function
 called `MultiqcModule`.
@@ -151,6 +159,7 @@ To use the helper functions bundled with MultiQC, you should extend this
 class from `multiqc.modules.base_module.BaseMultiqcModule` in your
 module code file (i.e. `multiqc/modname/modname.py`). This will give
 you access to a number of functions on the `self` namespace. For example:
+
 ```python
 from multiqc.modules.base_module import BaseMultiqcModule
 
@@ -170,11 +179,13 @@ Note that the `__init__` variables are used to create the header, URL link,
 analysis module credits and description in the report.
 
 ### Logging
+
 Last thing - MultiQC modules have a standardised way of producing output,
 so you shouldn't really use `print()` statements for your `Hello World` in
 your module code ;).
 
 Instead, use the `logger` module as follows:
+
 ```python
 import logging
 log = logging.getLogger(__name__)
@@ -184,17 +195,17 @@ log.info('Hello World!')
 
 Log messages can come in a range of formats:
 
-* `log.debug`
-  * Thes only show if MultiQC is run in `-v`/`--verbose` mode
-* `log.info`
-  * For more important status updates
-* `log.warning`
-  * Alert user about problems that don't halt execution
-* `log.error` and `log.critical`
-  * Not often used, these are for show-stopping problems
-
+- `log.debug`
+  - Thes only show if MultiQC is run in `-v`/`--verbose` mode
+- `log.info`
+  - For more important status updates
+- `log.warning`
+  - Alert user about problems that don't halt execution
+- `log.error` and `log.critical`
+  - Not often used, these are for show-stopping problems
 
 ## Step 1 - Find log files
+
 The first thing that your module will need to do is to find analysis log
 files. You can do this by searching for a filename fragment, or a string
 within the file. It's possible to search for both (a match on either
@@ -210,36 +221,36 @@ slash and then any string. For example, see the `fastqc` module search patterns:
 
 ```yaml
 fastqc/data:
-    fn: 'fastqc_data.txt'
+  fn: "fastqc_data.txt"
 fastqc/zip:
-    fn: '_fastqc.zip'
+  fn: "_fastqc.zip"
 ```
 
 The following search criteria sub-keys can then be used:
 
-* `fn`
-  * A glob filename pattern, used with the Python [`fnmatch`](https://docs.python.org/2/library/fnmatch.html) function
-* `fn_re`
-  * A regex filename pattern
-* `contents`
-  * A string to match within the file contents (checked line by line)
-* `contents_re`
-  * A regex to match within the file contents (checked line by line)
-  * NB: Regex must match entire line (add `.*` to start and end of pattern to avoid this)
-* `exclude_fn`
-  * A glob filename pattern which will exclude a file if matched
-* `exclude_fn_re`
-  * A regex filename pattern which will exclude a file if matched
-* `exclude_contents`
-  * A string which will exclude the file if matched within the file contents (checked line by line)
-* `exclude_contents_re`
-  * A regex which will exclude the file if matched within the file contents (checked line by line)
-* `num_lines`
-  * The number of lines to search through for the `contents` string. Default: all lines.
-* `shared`
-  * By default, once a file has been assigned to a module it is not searched again. Specify `shared: true` when your file can be shared between multiple tools (for example, part of a `stdout` stream).
-* `max_filesize`
-  * Files larger than the `log_filesize_limit` config key (default: 10MB) are skipped. If you know your files will be smaller than this and need to search by contents, you can specify this value (in bytes) to skip any files smaller than this limit.
+- `fn`
+  - A glob filename pattern, used with the Python [`fnmatch`](https://docs.python.org/2/library/fnmatch.html) function
+- `fn_re`
+  - A regex filename pattern
+- `contents`
+  - A string to match within the file contents (checked line by line)
+- `contents_re`
+  - A regex to match within the file contents (checked line by line)
+  - NB: Regex must match entire line (add `.*` to start and end of pattern to avoid this)
+- `exclude_fn`
+  - A glob filename pattern which will exclude a file if matched
+- `exclude_fn_re`
+  - A regex filename pattern which will exclude a file if matched
+- `exclude_contents`
+  - A string which will exclude the file if matched within the file contents (checked line by line)
+- `exclude_contents_re`
+  - A regex which will exclude the file if matched within the file contents (checked line by line)
+- `num_lines`
+  - The number of lines to search through for the `contents` string. Default: all lines.
+- `shared`
+  - By default, once a file has been assigned to a module it is not searched again. Specify `shared: true` when your file can be shared between multiple tools (for example, part of a `stdout` stream).
+- `max_filesize`
+  - Files larger than the `log_filesize_limit` config key (default: 10MB) are skipped. If you know your files will be smaller than this and need to search by contents, you can specify this value (in bytes) to skip any files smaller than this limit.
 
 Please try to use `num_lines` and `max_filesize` where possible as they will speed up
 MultiQC execution time.
@@ -251,9 +262,9 @@ For example, two typical modules could specify search patterns as follows:
 
 ```yaml
 mymod:
-    fn: '_myprogram.txt'
+  fn: "_myprogram.txt"
 myothermod:
-    contents: 'This is myprogram v1.3'
+  contents: "This is myprogram v1.3"
 ```
 
 You can also supply a list of different patterns for a single log file type if needed.
@@ -261,21 +272,21 @@ If any of the patterns are matched, the file will be returned:
 
 ```yaml
 mymod:
-    - fn: 'mylog.txt'
-    - fn: 'different_fn.out'
+  - fn: "mylog.txt"
+  - fn: "different_fn.out"
 ```
 
 You can use _AND_ logic by specifying keys within a single list item. For example:
 
 ```yaml
 mymod:
-    fn: 'mylog.txt'
-    contents: 'mystring'
+  fn: "mylog.txt"
+  contents: "mystring"
 myothermod:
-    - fn: 'different_fn.out'
-      contents: 'This is myprogram v1.3'
-    - fn: 'another.txt'
-      contents: 'What are these files anyway?'
+  - fn: "different_fn.out"
+    contents: "This is myprogram v1.3"
+  - fn: "another.txt"
+    contents: "What are these files anyway?"
 ```
 
 Here, a file must have the filename `mylog.txt` _and_ contain the string `mystring`.
@@ -284,13 +295,13 @@ You can match subsets of files by using `exclude_` keys as follows:
 
 ```yaml
 mymod:
-    fn: '*.myprog.txt'
-    exclude_fn: 'not_these_*'
+  fn: "*.myprog.txt"
+  exclude_fn: "not_these_*"
 myothermod:
-    fn: 'mylog.txt'
-    exclude_contents:
-        - 'trimmed'
-        - 'sorted'
+  fn: "mylog.txt"
+  exclude_contents:
+    - "trimmed"
+    - "sorted"
 ```
 
 Note that the `exclude_` patterns can have either a single value or a list of values.
@@ -333,6 +344,7 @@ This is good if the file is large, as Python doesn't read the entire
 file into memory in one go.
 
 ## Step 2 - Parse data from the input files
+
 What most MultiQC modules do once they have found matching analysis files
 is to pass the matched file contents to another function, responsible
 for parsing the data from the file. How this parsing is done will depend
@@ -356,6 +368,7 @@ class MultiqcModule(BaseMultiqcModule):
 ```
 
 ### Filtering by parsed sample names
+
 MultiQC users can use the `--ignore-samples` flag to skip sample names
 that match specific patterns. As sample names are generated in a different
 way by every module, this filter has to be applied after log parsing.
@@ -384,6 +397,7 @@ Note that this function should be used _after_ cleaning the sample name with
 `self.clean_s_name()`.
 
 ### No files found
+
 If your module cannot find any matching files, it needs to raise an
 exception of type `UserWarning`. This tells the core MultiQC program
 that no modules were found. For example:
@@ -398,6 +412,7 @@ the module progress. For example, if no logs are found then the module
 should not create any files or try to do any computation.
 
 ### Custom sample names
+
 Typically, sample names are taken from cleaned log filenames (the default
 `f['s_name']` value returned). However, if possible, it's better to use
 the name of the input file (allowing for concatenated log files).
@@ -416,6 +431,7 @@ This function has already been applied to the contents of `f['s_name']`.
 > will not work.
 
 ### Identical sample names
+
 If modules find samples with identical names, then the previous sample
 is overwritten. It's good to print a log statement when this happens,
 for debugging. However, most of the time it makes sense - programs often
@@ -427,6 +443,7 @@ if f['s_name'] in self.bowtie_data:
 ```
 
 ### Printing to the sources file
+
 Finally, once you've found your file we want to add this information to the
 `multiqc_sources.txt` file in the MultiQC report data directory. This lists
 every sample name and the file from which this data came from. This is especially
@@ -450,6 +467,7 @@ self.add_data_source(f=None, s_name=None, source=None, module=None, section=None
 ```
 
 ## Step 3 - Adding to the general statistics table
+
 Now that you have your parsed data, you can start inserting it into the
 MultiQC report. At the top of every report is the 'General Statistics'
 table. This contains metrics from all modules, allowing cross-module
@@ -513,30 +531,30 @@ headers['name'] = {
 }
 ```
 
-* `namespace`
-  * This prepends the column title in the mouse hover: _Namespace: Title_.
-  * The 'Configure Columns' modal displays this under the 'Group' column.
-  * It's automatically generated for core modules in the General Statistics table,
+- `namespace`
+  - This prepends the column title in the mouse hover: _Namespace: Title_.
+  - The 'Configure Columns' modal displays this under the 'Group' column.
+  - It's automatically generated for core modules in the General Statistics table,
     though this can be overwritten (useful for example with custom-content).
-* `scale`
-  * Colour scales are the names of ColorBrewer palettes. See below for available scales.
-  * Add `-rev` to the name of a colour scale to reverse it
-  * Set to `False` to disable colouring and background bars
-* `shared_key`
-  * Any string can be specified here, if other columns are found that share
+- `scale`
+  - Colour scales are the names of ColorBrewer palettes. See below for available scales.
+  - Add `-rev` to the name of a colour scale to reverse it
+  - Set to `False` to disable colouring and background bars
+- `shared_key`
+  - Any string can be specified here, if other columns are found that share
     the same key, a consistent colour scheme and data scale will be used in
     the table. Typically this is set to things like `read_count`, so that
     the read count in a sample can be seen varying across analysis modules.
-* `modify`
-  * A python `lambda` function to change the data in some way when it is
+- `modify`
+  - A python `lambda` function to change the data in some way when it is
     inserted into the table.
-* `hidden`
-  * Setting this to `True` will hide the column when the report loads. It can
+- `hidden`
+  - Setting this to `True` will hide the column when the report loads. It can
     then be shown through the _Configure Columns_ modal in the report. This can
     be useful when data could be sometimes useful. For example, some modules
     show "percentage aligned" on page load but hide "number of reads aligned".
-* `placement`
-  * If you feel that the results from your module should appear at the left side
+- `placement`
+  - If you feel that the results from your module should appear at the left side
     of the table set this value less than 1000. Or to move the column right, set
     it greater than 1000. This value can be any float.
 
@@ -562,6 +580,7 @@ not needed - MultiQC automatically takes the name of the module that is calling
 the function and uses this. However, sometimes it can be useful to overwrite this.
 
 ### Table colour scales
+
 Colour scales are taken from [ColorBrewer2](http://colorbrewer2.org/).
 Colour scales can be reversed by adding the suffix `-rev` to the name. For example, `RdYlGn-rev`.
 
@@ -570,6 +589,7 @@ The following scales are available:
 ![color brewer](images/cbrewer_scales.png)
 
 ## Step 4 - Writing data to a file
+
 In addition to printing data to the General Stats, MultiQC modules typically
 also write to text-files to allow people to easily use the data in downstream
 applications. This also gives the opportunity to output additional data that
@@ -603,19 +623,20 @@ Note that any keys with more than 2 levels of nesting will be ignored
 when being written to tab-separated files.
 
 ## Step 5 - Create report sections
+
 Great! It's time to start creating sections of the report with more information.
 To do this, use the `self.add_section()` helper function.
 This supports the following arguments:
 
-* `name`: Name of the section, used for the title
-* `anchor`: The URL anchor - must be unique, used when clicking the name in the side-nav
-* `description`: A very short descriptive text to go above the plot (markdown).
-* `comment`: A comment to add under the description. Big and blue text, mostly for users to customise the report (markdown).
-* `helptext`: Longer help text explaining what users should look for (markdown).
-* `plot`: Results from one of the MultiQC plotting functions
-* `content`: Any custom HTML
-* `autoformat`: Default `True`. Automatically format the `description`, `comment` and `helptext` strings.
-* `autoformat_type`: Default `markdown`. Autoformat text type. Currently only `markdown` supported.
+- `name`: Name of the section, used for the title
+- `anchor`: The URL anchor - must be unique, used when clicking the name in the side-nav
+- `description`: A very short descriptive text to go above the plot (markdown).
+- `comment`: A comment to add under the description. Big and blue text, mostly for users to customise the report (markdown).
+- `helptext`: Longer help text explaining what users should look for (markdown).
+- `plot`: Results from one of the MultiQC plotting functions
+- `content`: Any custom HTML
+- `autoformat`: Default `True`. Automatically format the `description`, `comment` and `helptext` strings.
+- `autoformat_type`: Default `markdown`. Autoformat text type. Currently only `markdown` supported.
 
 For example:
 
@@ -650,12 +671,14 @@ If a module has more than one section, these will automatically be labelled and 
 in the left side-bar navigation (unless `name` is not specified).
 
 ## Step 6 - Plot some data
+
 Ok, you have some data, now the fun bit - visualising it! Each of the plot
 types is described in the _Plotting Functions_ section of the docs.
 
 ## Appendices
 
 ### User configuration
+
 Instead of hardcoding defaults, it's a great idea to allow users to configure
 the behaviour of MultiQC module code.
 
@@ -678,7 +701,7 @@ can be configured by a user as follows:
 
 ```yaml
 mymod_config:
-    my_custom_config_var: 200
+  my_custom_config_var: 200
 ```
 
 Please be sure to use a unique top-level config name to avoid clashes - prefixing
@@ -689,6 +712,7 @@ Finally, don't forget to document the usage of your module-specific configuratio
 in `docs/modules/mymodule.md` so that people know how to use it.
 
 ### Profiling Performance
+
 It's important that MultiQC runs quickly and efficiently, especially on big
 projects with large numbers of samples. The recommended method to check this is
 by using `cProfile` to profile the code execution.
@@ -729,6 +753,7 @@ It's a good idea to run MultiQC with a comparable number of results from other t
 to have a reference to compare against for how long the code should take to run.
 
 ### Adding Custom CSS / Javascript
+
 If you would like module-specific CSS and / or JavaScript added to the template,
 just add to the `self.css` and `self.js` dictionaries that come with the
 `BaseMultiqcModule` class. The key should be the filename that you want your file to
