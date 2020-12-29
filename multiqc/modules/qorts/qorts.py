@@ -14,22 +14,25 @@ from multiqc.modules.base_module import BaseMultiqcModule
 # Initialise the logger
 log = logging.getLogger(__name__)
 
-class MultiqcModule(BaseMultiqcModule):
 
+class MultiqcModule(BaseMultiqcModule):
     def __init__(self):
 
         # Initialise the parent object
-        super(MultiqcModule, self).__init__(name='QoRTs', anchor='qorts',
-        href='http://hartleys.github.io/QoRTs/',
-        info="is toolkit for analysis, QC and data management of RNA-Seq datasets.")
+        super(MultiqcModule, self).__init__(
+            name="QoRTs",
+            anchor="qorts",
+            href="http://hartleys.github.io/QoRTs/",
+            info="is toolkit for analysis, QC and data management of RNA-Seq datasets.",
+        )
 
         # Parse logs
         self.qorts_data = dict()
-        for f in self.find_log_files('qorts', filehandles=True):
+        for f in self.find_log_files("qorts", filehandles=True):
             self.parse_qorts(f)
 
         # Remove empty samples
-        self.qorts_data = { s:v for s, v in self.qorts_data.items() if len(v) > 0 }
+        self.qorts_data = {s: v for s, v in self.qorts_data.items() if len(v) > 0}
 
         # Filter to strip out ignored sample names
         self.qorts_data = self.ignore_samples(self.qorts_data)
@@ -38,7 +41,7 @@ class MultiqcModule(BaseMultiqcModule):
             raise UserWarning
 
         log.info("Found {} logs".format(len(self.qorts_data)))
-        self.write_data_file(self.qorts_data, 'multiqc_qorts')
+        self.write_data_file(self.qorts_data, "multiqc_qorts")
 
         # Make plots
         self.qorts_general_stats()
@@ -49,15 +52,15 @@ class MultiqcModule(BaseMultiqcModule):
 
     def parse_qorts(self, f):
         s_names = None
-        for l in f['f']:
+        for l in f["f"]:
             s = l.split("\t")
             if s_names is None:
-                s_names = [ self.clean_s_name(s_name, f['root']) for s_name in s[1:] ]
-                if len(s_names) <= 2 and s_names[0].endswith('COUNT'):
-                    if f['fn'] == 'QC.summary.txt':
-                        s_names = [ self.clean_s_name( os.path.basename(os.path.normpath(f['root'])), f['root']) ]
+                s_names = [self.clean_s_name(s_name, f["root"]) for s_name in s[1:]]
+                if len(s_names) <= 2 and s_names[0].endswith("COUNT"):
+                    if f["fn"] == "QC.summary.txt":
+                        s_names = [self.clean_s_name(os.path.basename(os.path.normpath(f["root"])), f["root"])]
                     else:
-                        s_names = [ f['s_name'] ]
+                        s_names = [f["s_name"]]
                 for s_name in s_names:
                     if s_name in self.qorts_data:
                         log.debug("Duplicate sample name found! Overwriting: {}".format(s_name))
@@ -65,65 +68,65 @@ class MultiqcModule(BaseMultiqcModule):
             else:
                 for i, s_name in enumerate(s_names):
                     # Hack to get around Java localisation with commas for decimal places
-                    if ',' in s[i+1] and '.' not in s[i+1]:
-                        s[i+1] = s[i+1].replace(',', '.')
-                    self.qorts_data[s_name][s[0]] = float(s[i+1])
+                    if "," in s[i + 1] and "." not in s[i + 1]:
+                        s[i + 1] = s[i + 1].replace(",", ".")
+                    self.qorts_data[s_name][s[0]] = float(s[i + 1])
         # Add some extra fields
         for i, s_name in enumerate(s_names):
-            if 'Genes_Total' in self.qorts_data[s_name] and 'Genes_WithNonzeroCounts' in self.qorts_data[s_name]:
-                self.qorts_data[s_name]['Genes_PercentWithNonzeroCounts'] = (
-                    self.qorts_data[s_name]['Genes_WithNonzeroCounts'] / self.qorts_data[s_name]['Genes_Total']
-                    ) * 100.0
+            if "Genes_Total" in self.qorts_data[s_name] and "Genes_WithNonzeroCounts" in self.qorts_data[s_name]:
+                self.qorts_data[s_name]["Genes_PercentWithNonzeroCounts"] = (
+                    self.qorts_data[s_name]["Genes_WithNonzeroCounts"] / self.qorts_data[s_name]["Genes_Total"]
+                ) * 100.0
 
-    def qorts_general_stats (self):
+    def qorts_general_stats(self):
         """ Add columns to the General Statistics table """
         headers = OrderedDict()
-        headers['Genes_PercentWithNonzeroCounts'] = {
-            'title': '% Genes with Counts',
-            'description': 'Percent of Genes with Non-Zero Counts',
-            'max': 100,
-            'min': 0,
-            'suffix': '%',
-            'scale': 'YlGn'
+        headers["Genes_PercentWithNonzeroCounts"] = {
+            "title": "% Genes with Counts",
+            "description": "Percent of Genes with Non-Zero Counts",
+            "max": 100,
+            "min": 0,
+            "suffix": "%",
+            "scale": "YlGn",
         }
-        headers['NumberOfChromosomesCovered'] = {
-            'title': 'Chrs Covered',
-            'description': 'Number of Chromosomes Covered',
-            'format': '{:,.0f}'
+        headers["NumberOfChromosomesCovered"] = {
+            "title": "Chrs Covered",
+            "description": "Number of Chromosomes Covered",
+            "format": "{:,.0f}",
         }
         self.general_stats_addcols(self.qorts_data, headers)
 
-    def qorts_alignment_barplot (self):
+    def qorts_alignment_barplot(self):
         """ Alignment statistics bar plot """
         # Specify the order of the different possible categories
         keys = [
-            'ReadPairs_UniqueGene_CDS',
-            'ReadPairs_UniqueGene_UTR',
-            'ReadPairs_AmbigGene',
-            'ReadPairs_NoGene_Intron',
-            'ReadPairs_NoGene_OneKbFromGene',
-            'ReadPairs_NoGene_TenKbFromGene',
-            'ReadPairs_NoGene_MiddleOfNowhere'
+            "ReadPairs_UniqueGene_CDS",
+            "ReadPairs_UniqueGene_UTR",
+            "ReadPairs_AmbigGene",
+            "ReadPairs_NoGene_Intron",
+            "ReadPairs_NoGene_OneKbFromGene",
+            "ReadPairs_NoGene_TenKbFromGene",
+            "ReadPairs_NoGene_MiddleOfNowhere",
         ]
         cats = OrderedDict()
         for k in keys:
-            name = k.replace('ReadPairs_', '').replace('_',': ')
-            name = re.sub("([a-z])([A-Z])","\g<1> \g<2>",name)
-            cats[k] = { 'name': name }
+            name = k.replace("ReadPairs_", "").replace("_", ": ")
+            name = re.sub("([a-z])([A-Z])", "\g<1> \g<2>", name)
+            cats[k] = {"name": name}
 
         # Config for the plot
         pconfig = {
-            'id': 'qorts_alignments',
-            'title': 'QoRTs: Alignment Locations',
-            'ylab': '# Read Pairs',
-            'cpswitch_counts_label': 'Number of Read Pairs',
-            'hide_zero_cats': False
+            "id": "qorts_alignments",
+            "title": "QoRTs: Alignment Locations",
+            "ylab": "# Read Pairs",
+            "cpswitch_counts_label": "Number of Read Pairs",
+            "hide_zero_cats": False,
         }
 
         self.add_section(
-            name = "Alignments",
-            description = "This plot displays the rate for which the sample's read-pairs are assigned to the different categories.",
-            helptext = '''
+            name="Alignments",
+            description="This plot displays the rate for which the sample's read-pairs are assigned to the different categories.",
+            helptext="""
             The [QoRTs vignette](http://hartleys.github.io/QoRTs/doc/QoRTs-vignette.pdf) describes the categories in this plot as follows:
 
             * **Unique Gene**: The read-pair overlaps with the exonic segments of one and only one gene. For many
@@ -143,39 +146,39 @@ class MultiqcModule(BaseMultiqcModule):
 
             Outliers in these plots can indicate biological variations or the presence of large mapping problems.
             They may also suggest the presence of large, highly-expressed, unannotated transcripts or genes.
-            ''',
-            plot = bargraph.plot(self.qorts_data, cats, pconfig)
+            """,
+            plot=bargraph.plot(self.qorts_data, cats, pconfig),
         )
 
-    def qorts_splice_loci_barplot (self):
+    def qorts_splice_loci_barplot(self):
         """ Make the HighCharts HTML to plot the qorts splice loci """
         # Specify the order of the different possible categories
         keys = [
-            'SpliceLoci_Known_ManyReads',
-            'SpliceLoci_Known_FewReads',
-            'SpliceLoci_Known_NoReads',
-            'SpliceLoci_Novel_ManyReads',
-            'SpliceLoci_Novel_FewReads',
+            "SpliceLoci_Known_ManyReads",
+            "SpliceLoci_Known_FewReads",
+            "SpliceLoci_Known_NoReads",
+            "SpliceLoci_Novel_ManyReads",
+            "SpliceLoci_Novel_FewReads",
         ]
         cats = OrderedDict()
         for k in keys:
-            name = k.replace('SpliceLoci_', '').replace('_',': ')
-            name = re.sub("([a-z])([A-Z])","\g<1> \g<2>",name)
-            cats[k] = { 'name': name }
+            name = k.replace("SpliceLoci_", "").replace("_", ": ")
+            name = re.sub("([a-z])([A-Z])", "\g<1> \g<2>", name)
+            cats[k] = {"name": name}
 
         # Config for the plot
         pconfig = {
-            'id': 'qorts_splice_loci',
-            'title': 'QoRTs: Splice Loci',
-            'ylab': '# Splice Loci',
-            'cpswitch_counts_label': 'Number of Splice Loci',
-            'hide_zero_cats': False
+            "id": "qorts_splice_loci",
+            "title": "QoRTs: Splice Loci",
+            "ylab": "# Splice Loci",
+            "cpswitch_counts_label": "Number of Splice Loci",
+            "hide_zero_cats": False,
         }
 
         self.add_section(
-            name = "Splice Loci",
-            description = "This plot shows the number of splice junction loci of each type that appear in the sample's reads.",
-            helptext = '''
+            name="Splice Loci",
+            description="This plot shows the number of splice junction loci of each type that appear in the sample's reads.",
+            helptext="""
             The [QoRTs vignette](http://hartleys.github.io/QoRTs/doc/QoRTs-vignette.pdf) describes the categories in this plot as follows:
 
             * **Known**: The splice junction locus is found in the supplied transcript annotation gtf file.
@@ -200,38 +203,38 @@ class MultiqcModule(BaseMultiqcModule):
             some way involves the splice junctions themselves. These plots can be used to assess whether other minor
             abnormalities observed in the other plots are of sufficient severity to impact splice junction mapping and
             thus potentially compromise such analyses.
-            ''',
-            plot = bargraph.plot(self.qorts_data, cats, pconfig)
+            """,
+            plot=bargraph.plot(self.qorts_data, cats, pconfig),
         )
 
-    def qorts_splice_events_barplot (self):
+    def qorts_splice_events_barplot(self):
         """ Make the HighCharts HTML to plot the qorts splice events """
         # Specify the order of the different possible categories
         keys = [
-            'SpliceEvents_KnownLociWithManyReads',
-            'SpliceEvents_KnownLociWithFewReads',
-            'SpliceEvents_NovelLociWithManyReads',
-            'SpliceEvents_NovelLociWithFewReads',
+            "SpliceEvents_KnownLociWithManyReads",
+            "SpliceEvents_KnownLociWithFewReads",
+            "SpliceEvents_NovelLociWithManyReads",
+            "SpliceEvents_NovelLociWithFewReads",
         ]
         cats = OrderedDict()
         for k in keys:
-            name = k.replace('SpliceEvents_', '')
-            name = re.sub("([a-z])([A-Z])","\g<1> \g<2>",name)
-            cats[k] = { 'name': name }
+            name = k.replace("SpliceEvents_", "")
+            name = re.sub("([a-z])([A-Z])", "\g<1> \g<2>", name)
+            cats[k] = {"name": name}
 
         # Config for the plot
         pconfig = {
-            'id': 'qorts_splice_events',
-            'title': 'QoRTs: Splice Events',
-            'ylab': '# Splice Events',
-            'cpswitch_counts_label': 'Number of Splice Events',
-            'hide_zero_cats': False
+            "id": "qorts_splice_events",
+            "title": "QoRTs: Splice Events",
+            "ylab": "# Splice Events",
+            "cpswitch_counts_label": "Number of Splice Events",
+            "hide_zero_cats": False,
         }
 
         self.add_section(
-            name = "Splice Events",
-            description = "This plot shows the number of splice junction events falling into different junction categories.",
-            helptext = '''
+            name="Splice Events",
+            description="This plot shows the number of splice junction events falling into different junction categories.",
+            helptext="""
             From the [QoRTs vignette](http://hartleys.github.io/QoRTs/doc/QoRTs-vignette.pdf):
 
             A splice junction "event" is one instance of a read-pair bridging a splice junction.
@@ -252,44 +255,44 @@ class MultiqcModule(BaseMultiqcModule):
             have sequencing/technical issues causing false detection of splice junctions.
             In general, abnormalities in the splice junction rates are generally a symptom of larger issues which will
             often be picked up by other metrics.
-            ''',
-            plot = bargraph.plot(self.qorts_data, cats, pconfig)
+            """,
+            plot=bargraph.plot(self.qorts_data, cats, pconfig),
         )
 
     def qorts_strandedness_plot(self):
         """ Make a bar plot showing the reads assigned to each strand """
         # Specify the order of the different possible categories
         keys = [
-            'StrandTest_frFirstStrand',
-            'StrandTest_frSecondStrand',
-            'StrandTest_ambig_genesFountOnBothStrands',
-            'StrandTest_ambig_noGenes',
-            'StrandTest_ambig_other'
+            "StrandTest_frFirstStrand",
+            "StrandTest_frSecondStrand",
+            "StrandTest_ambig_genesFountOnBothStrands",
+            "StrandTest_ambig_noGenes",
+            "StrandTest_ambig_other",
         ]
         cats = OrderedDict()
         for k in keys:
-            name = k.replace('StrandTest_', '').replace('_', ' ').replace('ambig', 'ambig:')
-            name = re.sub("([a-z])([A-Z])","\g<1> \g<2>",name)
-            cats[k] = { 'name': name.title() }
+            name = k.replace("StrandTest_", "").replace("_", " ").replace("ambig", "ambig:")
+            name = re.sub("([a-z])([A-Z])", "\g<1> \g<2>", name)
+            cats[k] = {"name": name.title()}
 
         # Config for the plot
         pconfig = {
-            'id': 'qorts_strand_test',
-            'title': 'QoRTs: Strand Test',
-            'ylab': '# Reads',
-            'cpswitch_counts_label': 'Number of Reads',
-            'cpswitch_c_active': False
+            "id": "qorts_strand_test",
+            "title": "QoRTs: Strand Test",
+            "ylab": "# Reads",
+            "cpswitch_counts_label": "Number of Reads",
+            "cpswitch_c_active": False,
         }
 
         self.add_section(
-            name = "Strandedness",
-            description = "This plot shows the rate at which reads appear to follow different library-type strandedness rules.",
-            helptext = '''
+            name="Strandedness",
+            description="This plot shows the rate at which reads appear to follow different library-type strandedness rules.",
+            helptext="""
             From the [QoRTs vignette](http://hartleys.github.io/QoRTs/doc/QoRTs-vignette.pdf):
 
             This plot is used to detect whether your data is indeed stranded, and whether you are using the correct
             stranded data library type option. For unstranded libraries, one would expect close to 50-50
             First Strand - Second Strand. For stranded libraries, all points should fall closer to 99% one or the other.
-            ''',
-            plot = bargraph.plot(self.qorts_data, cats, pconfig)
+            """,
+            plot=bargraph.plot(self.qorts_data, cats, pconfig),
         )

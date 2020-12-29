@@ -17,20 +17,21 @@ log = logging.getLogger(__name__)
 
 
 class MultiqcModule(BaseMultiqcModule, StatsReportMixin, FlagstatReportMixin, IdxstatsReportMixin, RmdupReportMixin):
-    """ Samtools has a number of different commands and outputs.
+    """Samtools has a number of different commands and outputs.
     This MultiQC module supports some but not all. The code for
     each script is split into its own file and adds a section to
-    the module output if logs are found. """
+    the module output if logs are found."""
 
     def __init__(self):
 
         # Initialise the parent object
         super(MultiqcModule, self).__init__(
-            name='Samtools',
-            anchor='Samtools', target='Samtools',
-            href='http://www.htslib.org',
-            info=(" is a suite of programs for interacting with "
-                  "high-throughput sequencing data."))
+            name="Samtools",
+            anchor="Samtools",
+            target="Samtools",
+            href="http://www.htslib.org",
+            info=(" is a suite of programs for interacting with " "high-throughput sequencing data."),
+        )
 
         # Set up class objects to hold parsed data
         self.general_stats_headers = OrderedDict()
@@ -38,21 +39,21 @@ class MultiqcModule(BaseMultiqcModule, StatsReportMixin, FlagstatReportMixin, Id
         n = dict()
 
         # Call submodule functions
-        n['stats'] = self.parse_samtools_stats()
-        if n['stats'] > 0:
-            log.info("Found {} stats reports".format(n['stats']))
+        n["stats"] = self.parse_samtools_stats()
+        if n["stats"] > 0:
+            log.info("Found {} stats reports".format(n["stats"]))
 
-        n['flagstat'] = self.parse_samtools_flagstats()
-        if n['flagstat'] > 0:
-            log.info("Found {} flagstat reports".format(n['flagstat']))
+        n["flagstat"] = self.parse_samtools_flagstats()
+        if n["flagstat"] > 0:
+            log.info("Found {} flagstat reports".format(n["flagstat"]))
 
-        n['idxstats'] = self.parse_samtools_idxstats()
-        if n['idxstats'] > 0:
-            log.info("Found {} idxstats reports".format(n['idxstats']))
+        n["idxstats"] = self.parse_samtools_idxstats()
+        if n["idxstats"] > 0:
+            log.info("Found {} idxstats reports".format(n["idxstats"]))
 
-        n['rmdup'] = self.parse_samtools_rmdup()
-        if n['rmdup'] > 0:
-            log.info("Found {} rmdup reports".format(n['rmdup']))
+        n["rmdup"] = self.parse_samtools_rmdup()
+        if n["rmdup"] > 0:
+            log.info("Found {} rmdup reports".format(n["rmdup"]))
 
         # Exit if we didn't find anything
         if sum(n.values()) == 0:
