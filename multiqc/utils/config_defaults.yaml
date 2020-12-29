@@ -632,3 +632,6 @@ module_order:
         module_tag:
             - DNA
             - RNA
+    - indexhopping:
+        module_tag:
+            - DNA
