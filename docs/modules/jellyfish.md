@@ -14,6 +14,6 @@ The MultiQC module for Jellyfish parses _only_ `*_jf.hist` files. The general us
 
 In case a user wants to customise the matching pattern for jellyfish, then multiqc can be run with the option `--cl_config "sp: { jellyfish: { fn: 'PATTERN' } }"` where `PATTERN` is the pattern to be matched. For example:
 
-```
+```bash
 multiqc . --cl_config "sp: { jellyfish: { fn: '*.hist' } }"
 ```

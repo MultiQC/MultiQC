@@ -17,7 +17,7 @@ called `fastqc_data.txt` which is relatively easy to parse.
 
 A typical run will produce the following files:
 
-```
+```txt
 mysample_fastqc.html
 mysample_fastqc/
   Icons/

@@ -12,7 +12,7 @@ The MultiQC module parses the log files, which are created when `SortMeRNA` is r
 
 The default header in the 'General Statistics' table is '% rRNA'. Users can override this using the configuration option:
 
-```
+```yaml
 sortmerna:
     tab_header: 'My database hits'
 ```

@@ -291,7 +291,7 @@ To find out what your custom content section ID is, generate a report and click
 the side navigation to your section. The browser URL should update and show something
 that looks like this:
 
-```
+```txt
 multiqc_report.html#my_cc_section
 ```
 
@@ -323,6 +323,9 @@ plot_type:
 pconfig: {} # Configuration for the plot.
 ```
 
+> Data types `generalstats` and `beeswarm` are _only_ possible by setting the above
+> configuration keys (these can't be guessed by data format).
+
 Note that any _custom content_ data found with the same section `id` will be merged
 into the same report section / plot. The other section configuration keys are merged
 for each file, with identical keys overwriting what was previously parsed.
@@ -333,9 +336,6 @@ summarised.
 
 > If you're using `plot_type: 'generalstats'` then a report section will not be created and
 > most of the configuration keys above are ignored.
-
-> Data types `generalstats` and `beeswarm` are _only_ possible by setting the above
-> configuration keys (these can't be guessed by data format).
 
 ## Plot configuration
 
@@ -376,7 +376,7 @@ difficult when getting MultiQC to work with a new custom content format.
 To help with this, you can run with the `--lint` flag, which will give explicit
 warnings about anything that is not optimally configured. For example:
 
-```
+```bash
 multiqc --lint test_data
 ```
 
@@ -386,7 +386,7 @@ Probably the best way to get to grips with Custom Content is to see some example
 The MultiQC automated testing runs with a bunch of different files, and I try to add to
 these all the time.
 
-You can see these examples here: https://github.com/ewels/MultiQC_TestData/tree/master/data/custom_content
+You can see these examples here: <https://github.com/ewels/MultiQC_TestData/tree/master/data/custom_content>
 
 For example, to see a file which generates a table in a report by itself, you can
 have a look at `embedded_config/table_headers_mqc.txt` ([link](https://github.com/ewels/MultiQC_TestData/blob/master/data/custom_content/embedded_config/table_headers_mqc.txt)).

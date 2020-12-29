@@ -32,7 +32,7 @@ files. By default, MultiQC skips any file that is larger than 10MB to keep
 execution fast. The verbose log output (`-v` or `multiqc_data/multiqc.log`) will
 show you if files are being skipped with messages such as these:
 
-```
+```txt
 [DEBUG  ]  Ignoring file as too large: filename.txt
 ```
 
@@ -71,7 +71,7 @@ your log files and we can get it fixed.
 
 In this case you run MultiQC and get something like this:
 
-```
+```console
 $ multiqc .
 
 Vendor:  Continuum Analytics, Inc.
@@ -92,7 +92,7 @@ come with a licence and remove the warning. See
 for more info. If you already have Conda installed you can get the updated
 version by running:
 
-```
+```bash
 conda remove mkl-rt
 conda install -f mkl
 ```
@@ -100,7 +100,7 @@ conda install -f mkl
 Another way around it is to uninstall `mkl`. It seems that `numpy` works
 without it fine:
 
-```
+```bash
 conda remove --features mkl
 ```
 

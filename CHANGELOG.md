@@ -130,7 +130,7 @@ to break. If you haven't already, **you need to switch to Python 3 now**.
   - Allows you to set descriptions and nicer titles for images and other 'blunt' data types in reports ([#1026](https://github.com/ewels/MultiQC/issues/1026))
   - Allows configuration of custom content separately from files themselves (`tsv`, `csv`, `txt` formats) ([#1205](https://github.com/ewels/MultiQC/issues/1205))
 
-#### New Modules:
+#### New Modules
 
 - [**DRAGEN**](https://www.illumina.com/products/by-type/informatics-products/dragen-bio-it-platform.html)
   - Illumina Bio-IT Platform that uses FPGA for secondary NGS analysis
@@ -158,7 +158,7 @@ to break. If you haven't already, **you need to switch to Python 3 now**.
 - [**VarScan2**](https://github.com/dkoboldt/varscan)
   - Variant calling and somatic mutation/CNV detection for next-generation sequencing data
 
-#### Module updates:
+#### Module updates
 
 - **BISCUIT**
   - Major rewrite to work with new BISCUIT QC script (BISCUIT `v0.3.16+`)
@@ -220,7 +220,7 @@ to break. If you haven't already, **you need to switch to Python 3 now**.
 - **VerifyBAMID**
   - Allow files with column header `FREEMIX(alpha)` ([#1112](https://github.com/ewels/MultiQC/issues/1112))
 
-#### Bug Fixes:
+#### Bug Fixes
 
 - Added a new test to check that modules work correctly with `--ignore-samples`. A lot of them didn't:
   - `Mosdepth`, `conpair`, `Qualimap BamQC`, `RNA-SeQC`, `GATK BaseRecalibrator`, `SNPsplit`, `SeqyClean`, `Jellyfish`, `hap.py`, `HOMER`, `BBMap`, `DeepTools`, `HiCExplorer`, `pycoQC`, `interop`
@@ -241,7 +241,7 @@ to break. If you haven't already, **you need to switch to Python 3 now**.
 
 ## [MultiQC v1.8](https://github.com/ewels/MultiQC/releases/tag/v1.8) - 2019-11-20
 
-#### New Modules:
+#### New Modules
 
 - [**fgbio**](http://fulcrumgenomics.github.io/fgbio/)
   - Process family size count hist data from `GroupReadsByUmi`
@@ -259,7 +259,7 @@ to break. If you haven't already, **you need to switch to Python 3 now**.
 - [**SNPsplit**](https://github.com/FelixKrueger/SNPsplit)
   - Allele-specific alignment sorting
 
-#### Module updates:
+#### Module updates
 
 - **bcl2fastq**
   - Added handling of demultiplexing of more than 2 reads
@@ -328,7 +328,7 @@ to break. If you haven't already, **you need to switch to Python 3 now**.
 - **snpEff**
   - Added plot of effects
 
-#### New MultiQC Features:
+#### New MultiQC Features
 
 - Added some installation docs for windows
 - Added some docs about using MultiQC in bioinformatics pipelines
@@ -348,7 +348,7 @@ to break. If you haven't already, **you need to switch to Python 3 now**.
 - Config option `custom_plot_config` now works for bargraph category configs as well ([#1044](https://github.com/ewels/MultiQC/issues/1044))
 - Config `table_columns_visible` can now be given a module namespace and it will hide all columns from that module ([#541](https://github.com/ewels/MultiQC/issues/541))
 
-#### Bug Fixes:
+#### Bug Fixes
 
 - MultiQC now ignores all `.md5` files
 - Use `SafeLoader` for PyYaml load calls, avoiding recent warning messages.
@@ -362,7 +362,7 @@ to break. If you haven't already, **you need to switch to Python 3 now**.
 
 ## [MultiQC v1.7](https://github.com/ewels/MultiQC/releases/tag/v1.7) - 2018-12-21
 
-#### New Modules:
+#### New Modules
 
 - [**BISCUIT**](https://github.com/zwdzwd/biscuit)
   - BISuilfite-seq CUI Toolkit
@@ -383,7 +383,7 @@ to break. If you haven't already, **you need to switch to Python 3 now**.
   - A software for analyzing restriction enzyme-based data (e.g. RAD-seq). Support for Stacks >= 2.1 only.
   - Module written by [@remiolsen](https://github.com/remiolsen/)
 
-#### Module updates:
+#### Module updates
 
 - **AdapterRemoval**
   - Handle error when zero bases are trimmed. See [#838](https://github.com/ewels/MultiQC/issues/838).
@@ -418,7 +418,7 @@ to break. If you haven't already, **you need to switch to Python 3 now**.
   - Updated Trimmomatic module documentation to be more helpful
   - New option to use filenames instead of relying on the command line used. See [#864](https://github.com/ewels/MultiQC/issues/864).
 
-#### New MultiQC Features:
+#### New MultiQC Features
 
 - Embed your custom images with a new Custom Content feature! Just add `_mqc` to the end of the filename for `.png`, `.jpg` or `.jpeg` files.
 - Documentation for Custom Content reordered to make it a little more sane
@@ -426,7 +426,7 @@ to break. If you haven't already, **you need to switch to Python 3 now**.
 - Allow `table_columns_placement` config to work with table IDs as well as column namespaces. See [#841](https://github.com/ewels/MultiQC/issues/841).
 - Improved visual spacing between grouped bar plots
 
-#### Bug Fixes:
+#### Bug Fixes
 
 - Custom content no longer clobbers `col1_header` table configs
 - The option `--file-list` that refers to a text file with file paths to analyse will no longer ignore directory paths
@@ -437,7 +437,7 @@ to break. If you haven't already, **you need to switch to Python 3 now**.
 
 Some of these updates are thanks to the efforts of people who attended the [NASPM](https://twitter.com/NordicGenomics) 2018 MultiQC hackathon session. Thanks to everyone who attended!
 
-#### New Modules:
+#### New Modules
 
 - [**fastp**](https://github.com/OpenGene/fastp)
   - An ultra-fast all-in-one FASTQ preprocessor (QC, adapters, trimming, filtering, splitting...)
@@ -452,7 +452,7 @@ Some of these updates are thanks to the efforts of people who attended the [NASP
   - A quality control software for small RNA sequencing data.
   - Module written by [@chuan-wang](https://github.com/chuan-wang/)
 
-#### Module updates:
+#### Module updates
 
 - **BCFtools**
   - New plot showing SNP statistics versus quality of call from bcftools stats ([@MaxUlysse](https://github.com/MaxUlysse) and [@Rotholandus](https://github.com/Rotholandus))
@@ -489,7 +489,7 @@ Some of these updates are thanks to the efforts of people who attended the [NASP
 - **VerifyBamID**
   - Change column header help text for contamination to match percentage output ([@chapmanb](https://github.com/chapmanb))
 
-#### New MultiQC Features:
+#### New MultiQC Features
 
 - New config option `remove_sections` to skip specific report sections from modules
 - Add `path_filters_exclude` to exclude certain files when running modules multiple times. You could previously only include certain files.
@@ -518,7 +518,7 @@ Some of these updates are thanks to the efforts of people who attended the [NASP
 
 ## [MultiQC v1.5](https://github.com/ewels/MultiQC/releases/tag/v1.5) - 2018-03-15
 
-#### New Modules:
+#### New Modules
 
 - [**HiCPro**](https://github.com/nservant/HiC-Pro) - New module!
   - HiCPro: Quality controls and processing of Hi-C
@@ -530,7 +530,7 @@ Some of these updates are thanks to the efforts of people who attended the [NASP
   - Clip&Merge: Adapter clipping and read merging for ancient DNA analysis
   - Module written by [@apeltzer](https://github.com/apeltzer),
 
-#### Module updates:
+#### Module updates
 
 - **bcl2fastq**
   - Catch `ZeroDivisionError` exceptions when there are 0 reads ([@aledj2](https://github.com/aledj2))
@@ -562,7 +562,7 @@ Some of these updates are thanks to the efforts of people who attended the [NASP
 - **Supernova**
   - Added support for Supernova 2.0 reports. Fixed a TypeError bug when using txt reports only. Also a bug when parsing empty histogram files.
 
-#### New MultiQC Features:
+#### New MultiQC Features
 
 - Invalid choices for `--module` or `--exclude` now list the available modules alphabetically.
 - Linting now checks for presence in `config.module_order` and tags.
@@ -580,7 +580,7 @@ Some of these updates are thanks to the efforts of people who attended the [NASP
 
 A slightly earlier-than-expected release due to a new problem with dependency packages that is breaking MultiQC installations since 2018-01-11.
 
-#### New Modules:
+#### New Modules
 
 - [**Sargasso**](http://statbio.github.io/Sargasso/)
   - Parses output from Sargasso - a tool to separate mixed-species RNA-seq reads according to their species of origin
@@ -590,7 +590,7 @@ A slightly earlier-than-expected release due to a new problem with dependency pa
   - Adds the `CHIPMIX` and `FREEMIX` columns to the general statistics table.
   - Module written by [@aledj2](https://github.com/aledj2/)
 
-#### Module updates:
+#### Module updates
 
 - **MACS2**
   - Updated to work with output from older versions of MACS2 by [@avilella](https://github.com/avilella/)
@@ -610,7 +610,7 @@ A slightly earlier-than-expected release due to a new problem with dependency pa
 - **RSeQC**
   - Removed normalisation in Junction Saturation plot. Now raw counts instead of % of total junctions.
 
-#### New MultiQC Features:
+#### New MultiQC Features
 
 - Conditional formatting / highlighting of cell contents in tables
   - If you want to make values that match a criteria stand out more, you can now write custom rules and formatting instructions for tables.
@@ -642,7 +642,7 @@ For users with custom modules - search patterns _must_ now conform to the search
 pattern naming convention: `modulename` or `modulename/anything` (the search pattern
 string beginning with the name of your module, anything you like after the first `/`).
 
-#### New Modules:
+#### New Modules
 
 - [**10X Supernova**](https://support.10xgenomics.com/de-novo-assembly/software/overview/welcome)
   - Parses statistics from the _de-novo_ Supernova software.
@@ -665,7 +665,7 @@ string beginning with the name of your module, anything you like after the first
   - New module to parse the log files of `hicBuildMatrix`.
   - Module written by [@joachimwolff](https://github.com/joachimwolff/)
 
-#### Module updates:
+#### Module updates
 
 - **AfterQC**
   - Handle new output format where JSON summary key changed names.
@@ -688,10 +688,10 @@ string beginning with the name of your module, anything you like after the first
 - Went through all modules and standardised plot titles
   - All plots should now have a title with the format _Module name: Plot name_
 
-#### New MultiQC Features:
+#### New MultiQC Features
 
 - New MultiQC docker image
-  - Ready to use docker image now available at https://hub.docker.com/r/ewels/multiqc/ (200 MB)
+  - Ready to use docker image now available at <https://hub.docker.com/r/ewels/multiqc/> (200 MB)
   - Uses automated builds - pull `:latest` to get the development version, future releases will have stable tags.
   - Written by [@MaxUlysse](https://github.com/MaxUlysse/)
 - New `module_order` config options allow modules to be run multiple times
@@ -722,7 +722,7 @@ string beginning with the name of your module, anything you like after the first
 We had a fantastic group effort on MultiQC at the [2017 BOSC CodeFest](https://www.open-bio.org/wiki/Codefest_2017).
 Many thanks to those involved!
 
-#### New Modules:
+#### New Modules
 
 - [**AfterQC**](https://github.com/OpenGene/AfterQC) - New module!
   - Added parsing of the _AfterQC_ json file data, with a plot of filtered reads.
@@ -738,7 +738,7 @@ Many thanks to those involved!
   - Added support for VCFTools `TsTv-by-count` `TsTv-by-qual` `TsTv-summary`
   - Module written by [@mwhamgenomics](https://github.com/mwhamgenomics)
 
-#### Module updates:
+#### Module updates
 
 - **FastQ Screen**
   - Gracefully handle missing data from very old FastQ Screen versions.
@@ -752,7 +752,7 @@ Many thanks to those involved!
   - Some code refactoring to radically improve performance and run times, especially with high coverage datasets.
   - Fixed bug where _Cumulative coverage genome fraction_ plot could be truncated.
 
-#### New MultiQC Features:
+#### New MultiQC Features
 
 - New module help text
   - Lots of additional help text was written to make MultiQC report plots easier to interpret.
@@ -794,7 +794,7 @@ Many thanks to those involved!
 - New code to send exported JSON data to a a web server
   - This is in preparation for the upcoming MegaQC project. Stay tuned!
 
-#### Bug Fixes:
+#### Bug Fixes
 
 - Specifying multiple config files with `-c`/`--config` now works as expected
   - Previously this would only read the last specified
@@ -813,7 +813,7 @@ Many thanks to those involved!
 
 ## [MultiQC v1.1](https://github.com/ewels/MultiQC/releases/tag/v1.1) - 2017-07-18
 
-#### New Modules:
+#### New Modules
 
 - [**BioBloom Tools**](https://github.com/bcgsc/biobloom)
   - Create Bloom filters for a given reference and then to categorize sequences
@@ -838,7 +838,7 @@ Many thanks to those involved!
 - [**THetA2**](http://compbio.cs.brown.edu/projects/theta/)
   - THeTA2 _(Tumor Heterogeneity Analysis)_ estimates tumour purity and clonal / subclonal copy number.
 
-#### Module updates:
+#### Module updates
 
 - **BCFtools**
   - Option to collapse complementary changes in substitutions plot, useful for non-strand specific experiments (thanks to @vladsaveliev)
@@ -866,7 +866,7 @@ Many thanks to those involved!
   - Changed default order of sections
   - Added config option to reorder and hide module report sections
 
-#### New MultiQC features:
+#### New MultiQC features
 
 - If a report already exists, execution is no longer halted.
   - `_1` is appended to the filename, iterating if this also exists.
@@ -883,7 +883,7 @@ Many thanks to those involved!
 - Reports show warning if JavaScript is disabled
 - Config option `custom_logo` now works with file paths relative to config file directory and cwd.
 
-#### Bug Fixes:
+#### Bug Fixes
 
 - Table headers now sort columns again after scrolling the table
 - Fixed buggy table header tooltips
@@ -944,7 +944,7 @@ and more examples.
 
 To see what changes need to applied to your custom plugin code, please see the [MultiQC docs](http://multiqc.info/docs/#v1.0-updates).
 
-#### New Modules:
+#### New Modules
 
 - [**Adapter Removal**](https://github.com/mikkelschubert/adapterremoval)
   - AdapterRemoval v2 - rapid adapter trimming, identification, and read merging
@@ -963,7 +963,7 @@ To see what changes need to applied to your custom plugin code, please see the [
   - New module for `SortMeRNA`, commonly used for removing rRNA contamination from datasets.
   - Written by @bschiffthaler
 
-#### Module updates:
+#### Module updates
 
 - **Bcftools**
   - Fixed bug with display of indels when only one sample
@@ -994,7 +994,7 @@ To see what changes need to applied to your custom plugin code, please see the [
   - Fixed Python3 error in Junction Saturation code
   - Fixed JS error for Junction Saturation that made the single-sample combined plot only show _All Junctions_
 
-#### Core MultiQC updates:
+#### Core MultiQC updates
 
 - Change in module structure and import statements (see [details](http://multiqc.info/docs/#v1.0-updates)).
 - Module file search has been rewritten (see above changes to configs)
@@ -1028,7 +1028,7 @@ To see what changes need to applied to your custom plugin code, please see the [
   - Try it out by specifying `-t sections`
 - Module sections tidied and refactored
   - New helper function `self.add_section()`
-  - Sections hidden in nav if no title (no more need for the hacky `self.intro += `)
+  - Sections hidden in nav if no title (no more need for the hacky `self.intro +=`)
   - Content broken into `description`, `help` and `plot`, with automatic formatting
   - Empty module sections are now skipped in reports. No need to check if a plot function returns `None`!
   - Changes should be backwards-compatible
@@ -1068,7 +1068,7 @@ that MultiQC can now easily include output from custom scripts within reports wi
 the need for a new module or plugin. For more information, please see the
 [MultiQC documentation](http://multiqc.info/docs/#custom-content).
 
-#### New Modules:
+#### New Modules
 
 - [**HTSeq**](http://www-huber.embl.de/HTSeq/doc/count.html)
   - New module for the `htseq-count` tool, often used in RNA-seq analysis.
@@ -1079,7 +1079,7 @@ the need for a new module or plugin. For more information, please see the
 - [**Peddy**](https://github.com/brentp/peddy)
   - Peddy calculates genotype :: pedigree correspondence checks, ancestry checks and sex checks using VCF files.
 
-#### Module updates:
+#### Module updates
 
 - **Cutadapt**
   - Fixed bug in General Stats table number for old versions of cutadapt (pre v1.7)
@@ -1118,7 +1118,7 @@ the need for a new module or plugin. For more information, please see the
   - New ability to customise coverage thresholds shown in General Statistics table
     (see the [docs](http://multiqc.info/docs/#qualimap) for info).
 
-#### Core MultiQC updates:
+#### Core MultiQC updates
 
 - Support for _custom content_ (see top of release notes).
 - New ninja report tool: make scatter plots of any two table columns!
@@ -1156,7 +1156,7 @@ the need for a new module or plugin. For more information, please see the
 
 ## [MultiQC v0.8](https://github.com/ewels/MultiQC/releases/tag/v0.8) - 2016-09-26
 
-#### New Modules:
+#### New Modules
 
 - [**GATK**](https://software.broadinstitute.org/gatk/)
   - Added support for VariantEval reports, only parsing a little of the information
@@ -1167,7 +1167,7 @@ the need for a new module or plugin. For more information, please see the
 - [**QUAST**](http://quast.bioinf.spbau.ru/)
   - QUAST is a tool for assessing de novo assemblies against reference genomes.
 
-#### Module updates:
+#### Module updates
 
 - **Bismark** now supports reports from `bam2nuc`, giving Cytosine coverage in General Stats.
 - **Bowtie1**
@@ -1192,7 +1192,7 @@ the need for a new module or plugin. For more information, please see the
   - `flagstat` - new submodule! Written by @HLWiencko
   - `idxstats` - new submodule! This one by @ewels again
 
-#### Core MultiQC updates:
+#### Core MultiQC updates
 
 - New `--export`/`-p` option to generate static images plot in `multiqc_plots` (`.png`, `.svg` and `.pdf`)
   - Configurable with `export_plots`, `plots_dir_name` and `export_plot_formats` config options
@@ -1232,7 +1232,7 @@ who worked on MultiQC projects.
 
 ## [MultiQC v0.7](https://github.com/ewels/MultiQC/releases/tag/v0.7) - 2016-07-04
 
-#### Module updates:
+#### Module updates
 
 - [**Kallisto**](https://pachterlab.github.io/kallisto/) - new module!
 - **Picard**
@@ -1270,7 +1270,7 @@ who worked on MultiQC projects.
 - **MethylQA** now handles variable spacing in logs
 - **featureCounts** now splits columns on tabs instead of whitespace, can handle filenames with spaces
 
-#### Core MultiQC updates:
+#### Core MultiQC updates
 
 - **Galaxy**: MultiQC now available in Galax! Work by @devengineson / @yvanlebras / @cmonjeau
   - See it in the [Galaxy Toolshed](https://toolshed.g2.bx.psu.edu/view/engineson/multiqc/)
@@ -1301,7 +1301,7 @@ who worked on MultiQC projects.
 
 ## [MultiQC v0.6](https://github.com/ewels/MultiQC/releases/tag/v0.6) - 2016-04-29
 
-#### Module updates:
+#### Module updates
 
 - New [Salmon](http://combine-lab.github.io/salmon/) module.
 - New [Trimmomatic](http://www.usadellab.org/cms/?page=trimmomatic) module.
@@ -1312,7 +1312,7 @@ who worked on MultiQC projects.
 - Made cutadapt show counts by default instead of obs/exp
 - Added percentage view to Picard insert size plot
 
-#### Core MultiQC updates:
+#### Core MultiQC updates
 
 - Dynamic plots now update their labels properly when changing datasets and to percentages
 - Config files now loaded from working directory if present
@@ -1341,7 +1341,7 @@ Bugfixes:
 
 ## [MultiQC v0.5](https://github.com/ewels/MultiQC/releases/tag/v0.5) - 2016-03-29
 
-#### Module updates:
+#### Module updates
 
 - New [Skewer](https://github.com/relipmoc/skewer) module, written by @dakl
 - New [Samblaster](https://github.com/GregoryFaust/samblaster) module, written by @dakl
@@ -1350,7 +1350,7 @@ Bugfixes:
 - New [SnpEff](http://snpeff.sourceforge.net/) module
 - New [methylQA](http://methylqa.sourceforge.net/) module
 
-#### Core MultiQC updates:
+#### Core MultiQC updates
 
 - New "Flat" image plots, rendered at run time with MatPlotLib
   - By default, will use image plots if > 50 samples (set in config as `plots_flat_numseries`)

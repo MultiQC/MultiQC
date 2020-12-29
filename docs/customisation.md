@@ -90,7 +90,7 @@ It's possible to supply a file with one or more sets of sample names using the `
 command line option. This file should be a tab-delimited file with a header row (used for
 the report button labels) and then any number of renamed sample identifiers. For example:
 
-```
+```tsv
 MultiQC Names	Proper Names	AWESOME NAMES
 SRR1067503_1	Sample_1	MYBESTSAMP_1
 SRR1067505_1	Sample_2	MYBESTSAMP_2
@@ -542,7 +542,7 @@ table_cond_formatting_colours:
   - fail: "#d9534f"
 ```
 
-These can be overridden or added to with any string / CSS hex colour combinations you like. You can generate hex colour codes with lots of tools, for example http://htmlcolorcodes.com/
+These can be overridden or added to with any string / CSS hex colour combinations you like. You can generate hex colour codes with lots of tools, for example <http://htmlcolorcodes.com/>
 
 Note that the different sets of rules are formatted in order. So if a value matches both `pass` and `fail` then it will be formatted as a `fail`
 

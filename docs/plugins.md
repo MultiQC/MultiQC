@@ -75,7 +75,7 @@ Here, two new templates are added, a new command line option and a new code hook
 List items added to `multiqc.modules.v1` specify new modules. They should
 be described as follows:
 
-```
+```python
 modname = python_mod.dirname.submodname:classname'
 ```
 

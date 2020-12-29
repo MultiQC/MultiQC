@@ -52,7 +52,7 @@ The `combined_reference/report.tsv` file is parsed, and folders
 If you want to run MultiQC against auxiliary MetaQUAST runs, you must
 explicitly pass these files to MultiQC:
 
-```
+```bash
 multiqc runs_per_reference/reference_1/report.tsv
 ```
 

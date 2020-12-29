@@ -4,7 +4,7 @@ MultiQC is built around a templating system that uses the
 [Jinja](http://jinja.pocoo.org/) python package. This makes it very
 easy to create new report templates that fit your needs.
 
-## Core or plugin?
+## Core or plugin
 
 If your template could be of use to others, it would be great if you
 could add it to the main MultiQC package. You can do this by creating a
@@ -42,7 +42,7 @@ sure that `multiqc.templates.v1` is the same.
 
 Once you've added the entry point, remember to install the package again:
 
-```
+```bash
 pip install -e .
 ```
 

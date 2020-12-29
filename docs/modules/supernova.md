@@ -9,7 +9,7 @@ Description: >
 
 Due to the size of the `histogram_kmer_count.json` files, MultiQC is likely to skip these files. To be able to display these you will need to change the MultiQC configuration to allow for larger logfiles, see the MultiQC [documentation](http://multiqc.info/docs/#troubleshooting-1). For instance, if you run MultiQC as part of an analysis pipeline, you can create a `multiqc_config.yaml` file in the working directory, containing the following line:
 
-```
+```yaml
 log_filesize_limit: 100000000
 ```
 

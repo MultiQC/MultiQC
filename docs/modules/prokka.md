@@ -16,7 +16,7 @@ The Prokka module accepts two configuration options:
 
 Sample names are generated using the first line in the prokka reports:
 
-```
+```txt
 organism: Helicobacter pylori Sample1
 ```
 

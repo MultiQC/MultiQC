@@ -14,7 +14,7 @@ reads to long reference sequences.
 Please note that the Bowtie 2 logs are difficult to parse as they don't contain
 much extra information (such as what the input data was). A typical log looks like this:
 
-```
+```txt
 314537 reads; of these:
   314537 (100.00%) were paired; of these:
     111016 (35.30%) aligned concordantly 0 times

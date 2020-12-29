@@ -117,9 +117,7 @@ Coding with MultiQC:
   Updating for compatibility: compatibility.md
 ---
 
-# Welcome!
-
-## MultiQC Documentation
+# MultiQC Documentation
 
 MultiQC is a tool to aggregate bioinformatics results across many samples
 into a single report. It's written in Python and contains modules for a number
@@ -146,8 +144,8 @@ The documentation has the following pages:
 
 These docs can be read in any of three ways:
 
-- On the MultiQC Website: http://multiqc.info
-- On GitHub: https://github.com/ewels/MultiQC/
+- On the MultiQC Website: <http://multiqc.info>
+- On GitHub: <https://github.com/ewels/MultiQC/>
 - As part of the distributed source code (in `/docs/`)
 
 If you're curious how the website works, check out the

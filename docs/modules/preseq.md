@@ -62,7 +62,7 @@ create a file with `preseq_real_counts` in the filename and place it with your a
 It should be space or tab delimited with 2 or 3 columns (column 1 = preseq file name,
 column 2 = real read count, optional column 3 = real unique read count). For example:
 
-```
+```tsv
 Sample_1.preseq.txt 3638261 3638011
 Sample_2.preseq.txt 1592394 1592133
 [...]
