@@ -2,180 +2,193 @@
 
 /* General Styles */
 code {
-    background-color: #f3f3f3;
-    color: #666;
+  background-color: #f3f3f3;
+  color: #666;
 }
 kbd {
-    background-color: #ccc;
-    color: #333;
+  background-color: #ccc;
+  color: #333;
 }
-@media only screen and (max-width: 768px){
-    code {
-        display: inline-block;
-        max-width: 90%;
-        overflow: auto;
-    }
+@media only screen and (max-width: 768px) {
+  code {
+    display: inline-block;
+    max-width: 90%;
+    overflow: auto;
+  }
 }
 
 .radio.input-sm {
-    height: 20px;
+  height: 20px;
 }
 .radio.input-sm input {
-    margin: 2px 0 0 -20px;
+  margin: 2px 0 0 -20px;
 }
 .mqc_thousandSep {
-    padding: 0 2px;
+  padding: 0 2px;
 }
 
 /* Page Template */
-@media only screen and (min-width: 768px){
-    .mainpage { margin-left: 270px; }
-    .footer { margin-left: 250px; }
-    .mainpage, .footer {
-        -moz-transition: margin-left 0.5s;
-        -webkit-transition: margin-left 0.5s;
-        transition: margin-left 0.5s;
-    }
-    .mainpage.hidden-nav, .footer.hidden-nav { margin-left: 0; }
+@media only screen and (min-width: 768px) {
+  .mainpage {
+    margin-left: 270px;
+  }
+  .footer {
+    margin-left: 250px;
+  }
+  .mainpage,
+  .footer {
+    -moz-transition: margin-left 0.5s;
+    -webkit-transition: margin-left 0.5s;
+    transition: margin-left 0.5s;
+  }
+  .mainpage.hidden-nav,
+  .footer.hidden-nav {
+    margin-left: 0;
+  }
 
-    .side-nav-wrapper {
-        position: fixed;
-    }
-    .side-nav {
-        height: 100%;
-        width: 250px;
-        border-right: 1px solid #ccc;
-        overflow: auto;
-        padding-bottom: 30px;
-        -webkit-transition: margin-left 0.5s;
-        transition: margin-left 0.5s;
-        margin-left: 0;
-    }
-    .side-nav.hidden-nav {
-        margin-left: -250px;
-    }
+  .side-nav-wrapper {
+    position: fixed;
+  }
+  .side-nav {
+    height: 100%;
+    width: 250px;
+    border-right: 1px solid #ccc;
+    overflow: auto;
+    padding-bottom: 30px;
+    -webkit-transition: margin-left 0.5s;
+    transition: margin-left 0.5s;
+    margin-left: 0;
+  }
+  .side-nav.hidden-nav {
+    margin-left: -250px;
+  }
 }
 .mainpage {
-    padding: 20px;
+  padding: 20px;
 }
 .side-nav-wrapper {
-    height: 100%;
-    background-color: #ededed;
+  height: 100%;
+  background-color: #ededed;
 }
 .side-nav h1 {
-    font-size: 18px;
-    text-align: center;
-    margin:0;
-    border-bottom: 1px solid #ccc;
+  font-size: 18px;
+  text-align: center;
+  margin: 0;
+  border-bottom: 1px solid #ccc;
 }
 .side-nav h1 a {
-    padding: 20px 0 15px;
+  padding: 20px 0 15px;
 }
 .side-nav h1 img {
-    height: 26px;
+  height: 26px;
 }
 .side-nav h1 small {
-    font-size: 12px;
+  font-size: 12px;
 }
 .side-nav .side-nav-title a {
-    color: #333;
-    font-size: 16px;
-    font-weight: normal;
-    padding: 15px 0;
+  color: #333;
+  font-size: 16px;
+  font-weight: normal;
+  padding: 15px 0;
 }
 .side-nav .mqc_loading_warning {
-    text-align: center;
-    border-bottom: 1px solid #ccc;
-    color: #ca424c;
+  text-align: center;
+  border-bottom: 1px solid #ccc;
+  color: #ca424c;
 }
 .side-nav p {
-    font-size: 0.8em;
-    color: #999;
-    padding: 10px;
+  font-size: 0.8em;
+  color: #999;
+  padding: 10px;
 }
 .side-nav ul.mqc-nav {
-    border-bottom: 1px solid #ccc;
+  border-bottom: 1px solid #ccc;
 }
-.side-nav ul.mqc-nav, .side-nav ul.mqc-nav ul {
-    margin:0;
-    padding:0;
-    list-style-type: none;
+.side-nav ul.mqc-nav,
+.side-nav ul.mqc-nav ul {
+  margin: 0;
+  padding: 0;
+  list-style-type: none;
 }
 .side-nav a {
-    display: inline-block;
-    width: 100%;
-    text-decoration: none;
+  display: inline-block;
+  width: 100%;
+  text-decoration: none;
 }
-.side-nav a:hover, .side-nav a:active, .side-nav a:focus {
-    background-color: #dedede;
+.side-nav a:hover,
+.side-nav a:active,
+.side-nav a:focus {
+  background-color: #dedede;
 }
 .side-nav .mqc-nav a.nav-l1 {
-    padding: 10px;
-    border-top: 1px solid #ccc;
+  padding: 10px;
+  border-top: 1px solid #ccc;
 }
 .side-nav .mqc-nav li:first-child .nav-l1 {
-    border-top: 0;
+  border-top: 0;
 }
 .side-nav .mqc-nav a.nav-l2 {
-    padding: 5px 10px 5px 15px;
-    border-top: 1px solid #dedede;
-    font-size: 0.9em;
-    color: #788fa4;
+  padding: 5px 10px 5px 15px;
+  border-top: 1px solid #dedede;
+  font-size: 0.9em;
+  color: #788fa4;
 }
 .side-nav .mqc-nav li {
-    position: relative;
+  position: relative;
 }
 
 #side-nav-handle {
-    display: block;
-    position: absolute;
-    top: 50%;
-    right: -14px;
-    height: 50px;
-    width: 15px;
-    padding-top: 14px;
-    border: 1px solid #ccc;
-    border-left: 0;
-    background-color: #ededed;
-    border-top-right-radius: 5px;
-    border-bottom-right-radius: 5px;
-    color: #ccc;
-    cursor: pointer;
+  display: block;
+  position: absolute;
+  top: 50%;
+  right: -14px;
+  height: 50px;
+  width: 15px;
+  padding-top: 14px;
+  border: 1px solid #ccc;
+  border-left: 0;
+  background-color: #ededed;
+  border-top-right-radius: 5px;
+  border-bottom-right-radius: 5px;
+  color: #ccc;
+  cursor: pointer;
 }
 #side-nav-handle .glyphicon-triangle-right {
-    color: #999;
+  color: #999;
 }
-@media only screen and (max-width: 768px){
-    #side-nav-handle { display: none; }
+@media only screen and (max-width: 768px) {
+  #side-nav-handle {
+    display: none;
+  }
 }
 
 .side-nav .navbar-toggle {
-    background-color: #ddd;
-    border-color: #999;
-    position: absolute;
-    right: 10px;
-    top: 15px;
-    margin: 0;
+  background-color: #ddd;
+  border-color: #999;
+  position: absolute;
+  right: 10px;
+  top: 15px;
+  margin: 0;
 }
-.side-nav .navbar-toggle:hover, .side-nav .navbar-toggle:focus, .side-nav .navbar-toggle:active {
-    background-color: #ccc;
+.side-nav .navbar-toggle:hover,
+.side-nav .navbar-toggle:focus,
+.side-nav .navbar-toggle:active {
+  background-color: #ccc;
 }
 .side-nav .navbar-toggle .icon-bar {
-    background-color: #999;
+  background-color: #999;
 }
-
-
-
 
 #page_title {
-    margin: 0 0 20px;
+  margin: 0 0 20px;
 }
 #page_title img {
-    max-width: 260px;
+  max-width: 260px;
 }
-.report_comment, .mqc-section-comment {
-    border-left: 5px solid #8eb9dd;
-    background-color: #e8f1f8;
+.report_comment,
+.mqc-section-comment {
+  border-left: 5px solid #8eb9dd;
+  background-color: #e8f1f8;
 }
 #analysis_dirs_wrapper {
   max-height: 80px;
@@ -190,69 +203,73 @@ kbd {
   margin-left: 10px;
 }
 #mqc_header_hr {
-    margin: 0;
+  margin: 0;
 }
 
 #mqc_welcome .close {
-    top: 2px;
+  top: 2px;
 }
 #mqc_hide_welcome_btn {
-    position: relative;
-    float: right;
-    top: -2px;
-    right: -21px;
-    color: inherit;
-    opacity: 0.4;
+  position: relative;
+  float: right;
+  top: -2px;
+  right: -21px;
+  color: inherit;
+  opacity: 0.4;
 }
-#mqc_hide_welcome_btn:hover, #mqc_hide_welcome_btn:active, #mqc_hide_welcome_btn:focus {
-    opacity: 1;
+#mqc_hide_welcome_btn:hover,
+#mqc_hide_welcome_btn:active,
+#mqc_hide_welcome_btn:focus {
+  opacity: 1;
 }
 
 .footer {
-    background-color: #ededed;
-    border-top: 1px solid #ccc;
-    font-size: 0.9em;
-    color: #999;
-    padding: 20px 0;
-    margin-top: 50px;
+  background-color: #ededed;
+  border-top: 1px solid #ccc;
+  font-size: 0.9em;
+  color: #999;
+  padding: 20px 0;
+  margin-top: 50px;
 }
 .footer p {
-    margin: 0;
+  margin: 0;
 }
 .footer a {
-    color: #999;
-    text-decoration: underline;
+  color: #999;
+  text-decoration: underline;
 }
 
 /* Epic scroll bar of joy */
 ::-webkit-scrollbar {
-    width: 10px;
-    height: 10px;
+  width: 10px;
+  height: 10px;
 }
 ::-webkit-scrollbar-track {
-    background: #FFFFFF;
-    border-left: 1px solid #D8D8D8;
-    border-right: 1px solid #D8D8D8;
+  background: #ffffff;
+  border-left: 1px solid #d8d8d8;
+  border-right: 1px solid #d8d8d8;
 }
 ::-webkit-scrollbar-thumb {
-    background: #dedede;
+  background: #dedede;
 }
 ::-webkit-scrollbar-thumb:hover {
-    -moz-box-shadow: inset 1px 1px 2px rgba(0,0,0,0.1);
-    -webkit-box-shadow: inset 1px 1px 2px rgba(0,0,0,0.1);
-    box-shadow: inset 1px 1px 2px rgba(0,0,0,0.1);
+  -moz-box-shadow: inset 1px 1px 2px rgba(0, 0, 0, 0.1);
+  -webkit-box-shadow: inset 1px 1px 2px rgba(0, 0, 0, 0.1);
+  box-shadow: inset 1px 1px 2px rgba(0, 0, 0, 0.1);
 }
 ::-webkit-scrollbar-thumb:active {
-    background: #dddddd;
-    -moz-box-shadow: inset 1px 1px 10px rgba(0,0,0,0.4);
-    -webkit-box-shadow: inset 1px 1px 10px rgba(0,0,0,0.4);
-    box-shadow: inset 1px 1px 10px rgba(0,0,0,0.2);
+  background: #dddddd;
+  -moz-box-shadow: inset 1px 1px 10px rgba(0, 0, 0, 0.4);
+  -webkit-box-shadow: inset 1px 1px 10px rgba(0, 0, 0, 0.4);
+  box-shadow: inset 1px 1px 10px rgba(0, 0, 0, 0.2);
 }
-
 
 /* Stop the headings from "head-butting" the top of the browser
 https://css-tricks.com/hash-tag-links-padding/ */
-h1:before, h2:before, h3:before, h4:before {
+h1:before,
+h2:before,
+h3:before,
+h4:before {
   display: block;
   content: " ";
   margin-top: -20px;
@@ -261,291 +278,300 @@ h1:before, h2:before, h3:before, h4:before {
 }
 
 /* Fancy sample highlighting in the side nav */
-input.form-control[type=color]{
-    padding: 0 2px;
-    width: 30px;
+input.form-control[type="color"] {
+  padding: 0 2px;
+  width: 30px;
 }
 
 .hc_handle {
-    display: inline-block;
-    padding: 9px 4px;
-    height: 28px;
-    cursor: pointer;
+  display: inline-block;
+  padding: 9px 4px;
+  height: 28px;
+  cursor: pointer;
 }
 .hc_handle span {
-    display: inline-block;
-    height: 100%;
-    width: 1px;
-    margin: 0 1px;
-    background-color: #999;
+  display: inline-block;
+  height: 100%;
+  width: 1px;
+  margin: 0 1px;
+  background-color: #999;
 }
 
 /* Toolbox */
-@media only screen and (max-width: 768px){
-    .mqc-toolbox {
-        padding: 0 15px;
-        background-color: #ededed;
-        border-bottom: 1px solid #ccc;
-    }
-    #mqc_saveconfig {
-        margin: 0 -15px;
-    }
+@media only screen and (max-width: 768px) {
+  .mqc-toolbox {
+    padding: 0 15px;
+    background-color: #ededed;
+    border-bottom: 1px solid #ccc;
+  }
+  #mqc_saveconfig {
+    margin: 0 -15px;
+  }
 }
-@media only screen and (min-width: 768px){
-    .mqc-toolbox {
-        display: block;
-        position: fixed;
-        z-index: 1040;
-        width: 36px;
-        height: 100% !important;
-        top: 0;
-        right: 0;
-        -o-transition: width 0.5s;
-        -webkit-transition: width 0.5s;
-        transition: width 0.5s;
-    }
-    .mqc-toolbox.active {
-        width: 282px;
-    }
-    .mqc-toolbox .row {
-        margin: 0;
-    }
-    .mainpage {
-        padding-right: 50px;
-    }
-    .mqc-toolbox-buttons {
-        position: absolute;
-        width: 36px;
-        top: 100px;
-        left:0;
-        z-index: 20;
-    }
-    .mqc-toolbox-wrapper {
-        position:absolute;
-        width: 250px;
-        height: 100%;
-        overflow: auto;
-        left:36px;
-        margin:0;
-        background-color: #ededed;
-        border-left: 1px solid #ccc;
-        z-index: 10;
-    }
-    .mqc_filter_section {
-        display: none;
-    }
-    .mqc_filter_section.active {
-        display: block;
-    }
+@media only screen and (min-width: 768px) {
+  .mqc-toolbox {
+    display: block;
+    position: fixed;
+    z-index: 1040;
+    width: 36px;
+    height: 100% !important;
+    top: 0;
+    right: 0;
+    -o-transition: width 0.5s;
+    -webkit-transition: width 0.5s;
+    transition: width 0.5s;
+  }
+  .mqc-toolbox.active {
+    width: 282px;
+  }
+  .mqc-toolbox .row {
+    margin: 0;
+  }
+  .mainpage {
+    padding-right: 50px;
+  }
+  .mqc-toolbox-buttons {
+    position: absolute;
+    width: 36px;
+    top: 100px;
+    left: 0;
+    z-index: 20;
+  }
+  .mqc-toolbox-wrapper {
+    position: absolute;
+    width: 250px;
+    height: 100%;
+    overflow: auto;
+    left: 36px;
+    margin: 0;
+    background-color: #ededed;
+    border-left: 1px solid #ccc;
+    z-index: 10;
+  }
+  .mqc_filter_section {
+    display: none;
+  }
+  .mqc_filter_section.active {
+    display: block;
+  }
 }
 .mqc-toolbox-label {
-    display: inline-block;
-    background-color: #ededed;
-    color: #999;
-    height: 31px;
-    width: 67px;
-    padding: 3px 6px;
-    margin-left: -6px;
-    margin-bottom: 30px;
-    -ms-transform: rotate(270deg);
-    -moz-transform: rotate(270deg);
-    -webkit-transform: rotate(270deg);
-    transform: rotate(270deg);
+  display: inline-block;
+  background-color: #ededed;
+  color: #999;
+  height: 31px;
+  width: 67px;
+  padding: 3px 6px;
+  margin-left: -6px;
+  margin-bottom: 30px;
+  -ms-transform: rotate(270deg);
+  -moz-transform: rotate(270deg);
+  -webkit-transform: rotate(270deg);
+  transform: rotate(270deg);
 }
-.mqc-toolbox-label:hover, .mqc-toolbox-label:focus, .mqc-toolbox-label:active {
-    color: #999;
-    text-decoration:none;
+.mqc-toolbox-label:hover,
+.mqc-toolbox-label:focus,
+.mqc-toolbox-label:active {
+  color: #999;
+  text-decoration: none;
 }
 .mqc-toolbox-header {
-    margin: 10px;
-    border-bottom: 1px solid #ccc;
+  margin: 10px;
+  border-bottom: 1px solid #ccc;
 }
-.mqc-toolbox-buttons ul, .mqc-toolbox-buttons li {
-    padding: 0;
-    margin: 0;
-    list-style-type:none;
+.mqc-toolbox-buttons ul,
+.mqc-toolbox-buttons li {
+  padding: 0;
+  margin: 0;
+  list-style-type: none;
 }
 .mqc-toolbox-buttons li {
-    margin: 5px 0;
-    display: inline-block;
-    width: 36px;
-    height: 36px;
+  margin: 5px 0;
+  display: inline-block;
+  width: 36px;
+  height: 36px;
 }
 .mqc-toolbox-buttons li a {
-    display: inline-block;
-    font-size:18px;
-    width: 37px;
-    height: 36px;
-    padding: 7px 8px 9px;
-    color: #999;
-    background-color: #dedede;
-    border: 1px solid transparent;
-    border-right: 1px solid #ccc;
+  display: inline-block;
+  font-size: 18px;
+  width: 37px;
+  height: 36px;
+  padding: 7px 8px 9px;
+  color: #999;
+  background-color: #dedede;
+  border: 1px solid transparent;
+  border-right: 1px solid #ccc;
 }
-.mqc-toolbox-buttons li a:hover, .mqc-toolbox-buttons li a.active {
-    color: #333;
-    background-color: #ededed;
-    border: 1px solid #ccc;
+.mqc-toolbox-buttons li a:hover,
+.mqc-toolbox-buttons li a.active {
+  color: #333;
+  background-color: #ededed;
+  border: 1px solid #ccc;
 }
 .mqc-toolbox-buttons li .in_use {
-    color: #333;
-    border: 3px solid #5bc0de;
-    padding: 5px 8px 7px 6px;
-    border-right: 1px solid #ededed;
+  color: #333;
+  border: 3px solid #5bc0de;
+  padding: 5px 8px 7px 6px;
+  border-right: 1px solid #ededed;
 }
 .mqc-toolbox-buttons li a.active {
-    border-right: 1px solid #ededed;
+  border-right: 1px solid #ededed;
 }
 
-.mqc-toplink, .mqc-toplink:visited {
-    display: block;
-    position: absolute;
-    bottom: 5px;
-    width: 28px;
-    height: 28px;
-    text-align: center;
-    padding: 5px 0 5px 2px;
-    border-radius: 28px;
-    background-color: #ededed;
-    color: #999;
+.mqc-toplink,
+.mqc-toplink:visited {
+  display: block;
+  position: absolute;
+  bottom: 5px;
+  width: 28px;
+  height: 28px;
+  text-align: center;
+  padding: 5px 0 5px 2px;
+  border-radius: 28px;
+  background-color: #ededed;
+  color: #999;
 }
-.mqc-toplink:hover, .mqc-toplink:focus {
-    color: #333;
+.mqc-toplink:hover,
+.mqc-toplink:focus {
+  color: #333;
 }
-
-
 
 .mqc_filters {
-    margin: 10px 0;
-    padding: 0;
-    list-style-type:none;
-    font-size: 0.9em;
+  margin: 10px 0;
+  padding: 0;
+  list-style-type: none;
+  font-size: 0.9em;
 }
 .mqc_filters button {
-    padding: 7px 10px 0;
+  padding: 7px 10px 0;
 }
 .mqc_filters li {
-    padding: 0;
-    clear:both;
+  padding: 0;
+  clear: both;
 }
 .mqc_filters li .close {
-    margin-top: -3px;
+  margin-top: -3px;
 }
 .mqc_filters li:hover {
-    background-color: #dedede;
+  background-color: #dedede;
 }
 .mqc_filter_section .mqc_regex_mode_p {
-    margin-top: 12px;
-    white-space: nowrap;
+  margin-top: 12px;
+  white-space: nowrap;
 }
 .mqc_switch_wrapper {
-    cursor:pointer;
+  cursor: pointer;
 }
 .mqc_switch_wrapper .mqc_switch {
-    display: inline-block;
-    border: 1px solid #999;
-    border-radius: 3px;
-    padding: 2px 5px;
-    margin-left: 5px;
-    background-color:#ddd;
+  display: inline-block;
+  border: 1px solid #999;
+  border-radius: 3px;
+  padding: 2px 5px;
+  margin-left: 5px;
+  background-color: #ddd;
 }
-.mqc_switch_wrapper .off::after, .mqc_switch_wrapper .on::before{
-    content: "";
-    display: inline-block;
-    height: 0;
-    width: 0;
-    border-radius: 6px;
-    border: 6px solid #fff;
+.mqc_switch_wrapper .off::after,
+.mqc_switch_wrapper .on::before {
+  content: "";
+  display: inline-block;
+  height: 0;
+  width: 0;
+  border-radius: 6px;
+  border: 6px solid #fff;
 }
-.mqc_switch_wrapper .off::after{
-    margin: 0 0 -2px 5px;
+.mqc_switch_wrapper .off::after {
+  margin: 0 0 -2px 5px;
 }
-.mqc_switch_wrapper .on::before{
-    margin: 0 5px -2px 0;
+.mqc_switch_wrapper .on::before {
+  margin: 0 5px -2px 0;
 }
 .mqc_switch_wrapper .on {
-    background-color:#5bc0de;
-    color: #fff;
+  background-color: #5bc0de;
+  color: #fff;
 }
 
 .mqc_filter_section {
-    padding:10px;
+  padding: 10px;
 }
 .mqc_filter_section hr {
-    margin: 10px 0;
-    border-top: 1px solid #ccc;
+  margin: 10px 0;
+  border-top: 1px solid #ccc;
 }
 .mqc_filter_section p {
-    font-size: 85%;
-    padding:0;
-    margin: 5px 0;
-    color: #666;
+  font-size: 85%;
+  padding: 0;
+  margin: 5px 0;
+  color: #666;
 }
 .mqc_filter_section .text-danger {
-    color: #a94442;
+  color: #a94442;
 }
 .mqc_filter_section p a {
-    color: #666;
+  color: #666;
 }
 .mqc_filter_section p .btn {
-    color: #333;
+  color: #333;
 }
 .mqc_filter_section .text-success {
-    color: #3c763d;
+  color: #3c763d;
 }
 .mqc_filter_section .form-inline .form-control {
-    vertical-align: middle;
+  vertical-align: middle;
 }
-@media only screen and (max-width: 768px){
-    .mqc_filter_section .form-control {
-        display: inline-block;
-    }
-    .mqc_filter_section input[type="text"] { width: auto; }
+@media only screen and (max-width: 768px) {
+  .mqc_filter_section .form-control {
+    display: inline-block;
+  }
+  .mqc_filter_section input[type="text"] {
+    width: auto;
+  }
 }
 #mqc_renamesamples input[type="text"] {
-    width: 80px;
+  width: 80px;
 }
 
 #mqc_renamesamples_bulk_collapse {
-    border-top: 1px solid #CCC;
+  border-top: 1px solid #ccc;
 }
 #mqc_renamesamples_bulk_update {
-    margin-top: 5px;
+  margin-top: 5px;
 }
 #mqc_renamesamples_bulk_form textarea {
-    font-size: 8px;
-    color: #999;
+  font-size: 8px;
+  color: #999;
 }
 .f_text {
-    border: 0;
-    border-bottom: 1px solid #ccc;
-    padding: 5px 0 5px 10px;
-    margin: 0;
-    background-color: transparent;
-    outline: none;
-    width: -moz-calc(100% - 55px);
-    width: -webkit-calc(100% - 55px);
-    width: calc(100% - 55px);
+  border: 0;
+  border-bottom: 1px solid #ccc;
+  padding: 5px 0 5px 10px;
+  margin: 0;
+  background-color: transparent;
+  outline: none;
+  width: -moz-calc(100% - 55px);
+  width: -webkit-calc(100% - 55px);
+  width: calc(100% - 55px);
 }
 .f_text:focus {
-    background-color: #f6f6f6;
+  background-color: #f6f6f6;
 }
-.from_text, .to_text {
-    width: -moz-calc(49% - 20px);
-    width: -webkit-calc(49% - 20px);
-    width: calc(49% - 20px);
+.from_text,
+.to_text {
+  width: -moz-calc(49% - 20px);
+  width: -webkit-calc(49% - 20px);
+  width: calc(49% - 20px);
 }
 
 #mqc_exportplots .col-sm-6 {
   padding: 0 10px 0 0;
 }
-#mqc_exportplots .checkbox, #mqc_exportplots .data-format {
+#mqc_exportplots .checkbox,
+#mqc_exportplots .data-format {
   margin: 8px 0 0;
   font-size: 12px;
   line-height: normal;
 }
 #mqc_exportplots .data-format label {
-    font-weight: 400;
+  font-weight: 400;
 }
 #mqc_exportplots .checkbox label {
   min-height: 0;
@@ -564,29 +590,29 @@ input.form-control[type=color]{
 }
 
 #mqc_exportplots .nav-tabs {
-    border-color: #cccccc;
-    margin-bottom: 15px;
+  border-color: #cccccc;
+  margin-bottom: 15px;
 }
 #mqc_exportplots .nav-tabs li a {
-    background-color: #dddddd;
-    border-color: #cccccc;
-    padding: 8px 10px;
-    color: #999;
-    font-size: 12px;
+  background-color: #dddddd;
+  border-color: #cccccc;
+  padding: 8px 10px;
+  color: #999;
+  font-size: 12px;
 }
 #mqc_exportplots .nav-tabs li.active a {
-    background-color: #eeeeee;
-    border-bottom-color: transparent;
-    color: #333;
+  background-color: #eeeeee;
+  border-bottom-color: transparent;
+  color: #333;
 }
 
 #mqc-save-success {
-    color: #3c763d;
-    background-color: #dff0d8;
+  color: #3c763d;
+  background-color: #dff0d8;
 }
 #mqc-cleared-success {
-    color: #a94442;
-    background-color: #f2dede;
+  color: #a94442;
+  background-color: #f2dede;
 }
 
 #mqc_about p {
@@ -604,212 +630,210 @@ input.form-control[type=color]{
 
 /* Regex help modal */
 .regex_example_buttons button {
-    float: left;
-    clear: left;
-    margin-bottom: 8px;
+  float: left;
+  clear: left;
+  margin-bottom: 8px;
 }
 .regex_example_demo input {
-    margin-bottom: 8px;
-    font-family: 'Consolas', 'Monaco', 'Courier New', Courier, monospace;
+  margin-bottom: 8px;
+  font-family: "Consolas", "Monaco", "Courier New", Courier, monospace;
 }
-
 
 /* MultiQC tables */
 .table tr td {
-    font-size:0.9em;
-    height: 30px;
+  font-size: 0.9em;
+  height: 30px;
 }
 .mqc_table tbody tr td .wrapper .val {
-    z-index: -1;
+  z-index: -1;
 }
 .mqc_table tbody tr td .wrapper .val .label {
-    font-size: 100%;
-    display: inline-block;
-    min-width: 10px;
-    padding: 3px 7px;
-    font-size: 12px;
-    vertical-align: middle;
-    border-radius: 10px;
+  font-size: 100%;
+  display: inline-block;
+  min-width: 10px;
+  padding: 3px 7px;
+  font-size: 12px;
+  vertical-align: middle;
+  border-radius: 10px;
 }
 .mqc-table-responsive.mqc-table-collapse {
-    max-height: 500px;
+  max-height: 500px;
 }
 .mqc-table-responsive {
-    overflow: auto;
+  overflow: auto;
 }
 .table.mqc_table > thead > tr > th {
-    cursor: pointer;
-    /* Border doesn't scroll with the CSS transform, so just a box-shadow instead. */
-    border-bottom: 0;
-    -webkit-box-shadow: inset 0px -2px 0px 0 #ddd;
-    -moz-box-shadow: inset 0px -2px 0px 0 #ddd;
-    box-shadow: inset 0px -2px 0px 0 #ddd;
+  cursor: pointer;
+  /* Border doesn't scroll with the CSS transform, so just a box-shadow instead. */
+  border-bottom: 0;
+  -webkit-box-shadow: inset 0px -2px 0px 0 #ddd;
+  -moz-box-shadow: inset 0px -2px 0px 0 #ddd;
+  box-shadow: inset 0px -2px 0px 0 #ddd;
 }
-.mqc_table thead th, .mqc_table thead td {
-    background-color: #FFFFFF;
+.mqc_table thead th,
+.mqc_table thead td {
+  background-color: #ffffff;
 }
 .mqc_table thead th:after {
-    content: "";
-    display: inline-block;
-    width: 0;
-    height: 0;
-    margin-left: 4px;
-    vertical-align: middle;
-    border-right: 4px solid transparent;
-    border-left: 4px solid transparent;
+  content: "";
+  display: inline-block;
+  width: 0;
+  height: 0;
+  margin-left: 4px;
+  vertical-align: middle;
+  border-right: 4px solid transparent;
+  border-left: 4px solid transparent;
 }
 .mqc_table thead th.headerSortDown:after {
-    border-bottom: 4px dashed;
+  border-bottom: 4px dashed;
 }
 .mqc_table thead th.headerSortUp:after {
-    border-top: 4px dashed;
+  border-top: 4px dashed;
 }
-.mqc_table thead th.headerSortDown, .mqc_table thead th.headerSortUp {
-    background-color: #ededed;
-    color: #1ca8dd;
-    border-bottom: 2px solid #1ca8dd;
+.mqc_table thead th.headerSortDown,
+.mqc_table thead th.headerSortUp {
+  background-color: #ededed;
+  color: #1ca8dd;
+  border-bottom: 2px solid #1ca8dd;
 }
 .mqc_table th {
-    white-space: nowrap;
+  white-space: nowrap;
 }
 .mqc-table-expand {
-    text-align: center;
-    color: #999;
-    padding: 5px;
-    cursor: pointer;
-    background-color: #ffffff;
-    -webkit-transition: background-color 0.2s;
-    transition: background-color 0.2s;
+  text-align: center;
+  color: #999;
+  padding: 5px;
+  cursor: pointer;
+  background-color: #ffffff;
+  -webkit-transition: background-color 0.2s;
+  transition: background-color 0.2s;
 }
-.mqc-table-expand:hover, .mqc-table-expand:focus, .mqc-table-expand:active {
-    background-color: #ededed;
+.mqc-table-expand:hover,
+.mqc-table-expand:focus,
+.mqc-table-expand:active {
+  background-color: #ededed;
 }
 
 .mqc_table_numrows_text {
-    padding: 5px 10px;
-    font-size: 12px;
-    vertical-align: middle;
+  padding: 5px 10px;
+  font-size: 12px;
+  vertical-align: middle;
 }
-
-
-
-
-
-
 
 .sorthandle {
-    border-right: none;
-    font-weight:bold;
-    text-align: center;
+  border-right: none;
+  font-weight: bold;
+  text-align: center;
 }
 tbody .sorthandle {
-    cursor: pointer;
-    color: #ccc;
+  cursor: pointer;
+  color: #ccc;
 }
 .mqc_configModal_table tbody .sorthandle {
-    color: #999;
+  color: #999;
 }
 .mqc_table .rowheader {
-    border-left: none;
+  border-left: none;
 }
-.mqc_table tr, .mqc_table td {
-    height: 100%;
+.mqc_table tr,
+.mqc_table td {
+  height: 100%;
 }
 .mqc_table .data-coloured {
-    padding: 0;
+  padding: 0;
 }
 .mqc_table .wrapper {
-    display: inline-block;
-    position: relative;
-    height:100%;
-    width:100%;
-    z-index: -10;
+  display: inline-block;
+  position: relative;
+  height: 100%;
+  width: 100%;
+  z-index: -10;
 }
 .mqc_table .bar {
-    display: block;
-    position: absolute;
-    top: 0;
-    left: 0;
-    bottom: 0;
-    background-color: #dedede;
-    z-index:-1;
+  display: block;
+  position: absolute;
+  top: 0;
+  left: 0;
+  bottom: 0;
+  background-color: #dedede;
+  z-index: -1;
 }
 .mqc_table .val {
-    display: block;
-    position: absolute;
-    padding: 5px;
-    left:0;
+  display: block;
+  position: absolute;
+  padding: 5px;
+  left: 0;
 }
 
 /* Flat MatPlotLib plots */
 .mqc_mplplot {
-    border: 1px solid #dedede;
-    margin-top: 15px;
+  border: 1px solid #dedede;
+  margin-top: 15px;
 }
 .mqc_mplplot img {
-    max-width: 100%;
+  max-width: 100%;
 }
 
 /* Draggable height bar for HighCharts Plots */
 .hc-plot {
-    height: 500px;
-    width: 100%;
+  height: 500px;
+  width: 100%;
 }
 .hc-plot.not_rendered {
-    background-color: #ededed;
-    text-align:center;
+  background-color: #ededed;
+  text-align: center;
 }
 .hc-plot.not_rendered small {
-    display: inline-block;
-    font-style: italic;
-    padding-top: 40px;
-    color: #999;
+  display: inline-block;
+  font-style: italic;
+  padding-top: 40px;
+  color: #999;
 }
 .hc-plot .render_plot {
-    margin-top: 40px;
+  margin-top: 40px;
 }
-.hc-plot-wrapper{
-    width: 100%;
-    height: 512px;
-    position: relative;
-    border: 1px solid #dedede;
-    border-bottom: 1px solid #ccc;
-    margin-top: 15px;
+.hc-plot-wrapper {
+  width: 100%;
+  height: 512px;
+  position: relative;
+  border: 1px solid #dedede;
+  border-bottom: 1px solid #ccc;
+  margin-top: 15px;
 }
 .hc-plot-handle {
-    position: absolute;
-    bottom:0;
-    width: 100%;
-    height: 10px;
-    background-color: #dedede;
-    cursor: row-resize;
-    padding: 1px 0;
-    border-top: 1px solid #ededed;
-    -moz-transition: background-color 0.1s;
-    -webkit-transition: background-color 0.1s;
-    transition: background-color 0.1s;
+  position: absolute;
+  bottom: 0;
+  width: 100%;
+  height: 10px;
+  background-color: #dedede;
+  cursor: row-resize;
+  padding: 1px 0;
+  border-top: 1px solid #ededed;
+  -moz-transition: background-color 0.1s;
+  -webkit-transition: background-color 0.1s;
+  transition: background-color 0.1s;
 }
 .hc-plot-handle span {
-    display:block;
-    height: 1px;
-    width: 20px;
-    margin: 1px auto;
-    background-color: #999;
+  display: block;
+  height: 1px;
+  width: 20px;
+  margin: 1px auto;
+  background-color: #999;
 }
 .hc-plot-handle:hover {
-    background-color: #cdcdcd;
+  background-color: #cdcdcd;
 }
 .hc-plot-handle:hover span {
-    background-color: #999;
+  background-color: #999;
 }
 
 .mqc_hcplot_yaxis_limit_toggle {
-    float:right;
-    font-size: 11px;
-    margin-top: -30px;
+  float: right;
+  font-size: 11px;
+  margin-top: -30px;
 }
 .mqc_hcplot_yaxis_limit_toggle .mqc_switch_wrapper {
-    margin-left: 20px;
+  margin-left: 20px;
 }
 
 .beeswarm-hovertext {
@@ -829,5 +853,5 @@ tbody .sorthandle {
 }
 
 .mqc-custom-content-image img {
-    max-width: 100%;
+  max-width: 100%;
 }
