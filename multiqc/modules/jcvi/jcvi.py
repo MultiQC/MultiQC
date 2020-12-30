@@ -6,8 +6,10 @@ import logging
 import os
 import re
 
+import numpy as np
+
 from multiqc.modules.base_module import BaseMultiqcModule
-from multiqc.plots import table, bargraph, linegraph
+from multiqc.plots import bargraph, linegraph
 
 # Initialise the logger
 log = logging.getLogger(__name__)
@@ -274,7 +276,7 @@ class MultiqcModule(BaseMultiqcModule):
             self.jcvi[s_name]['singleexon_genes'] = int(match.group(1).replace(',', ''))
             self.jcvi[s_name]['singleexon_genes_percent'] = float(match.group(2).replace(',', ''))
 
-        exon_count = self.parse_hists(os.path.join(f['root'], 'Exon_Count', s_name + '.txt'))
+        exon_count = self.parse_hists(os.path.join(f['root'], 'Exon_Count', s_name + '.txt'), bin_by=1)
         if exon_count:
             self.jcvi[s_name]['exon_count'] = exon_count
 
@@ -294,23 +296,34 @@ class MultiqcModule(BaseMultiqcModule):
 
     def parse_hists(self, stat_file, bin_by=1):
 
-        stat_table = {}
-
+        vals = []
         if os.path.isfile(stat_file):
             with open(stat_file, 'r') as stat_handle:
                 for stat_line in stat_handle:
-                    val = ((int(stat_line) / bin_by) * bin_by) + bin_by / 2
-                    if val not in stat_table:
-                        stat_table[val] = 1
-                    else:
-                        stat_table[val] += 1
+                    vals.append(int(stat_line))
+
+        # Generate bin list
+        bins = list(range(1, max(vals) + bin_by, bin_by))
+
+        # Assign each value to its bin
+        inds = np.digitize(vals, bins, right=True)
+
+        stat_table = {}
+
+        for ind in inds:
+            val = bins[int(ind)]
+            if val not in stat_table:
+                stat_table[val] = 1
+            else:
+                stat_table[val] += 1
 
         # Add missing values
         if stat_table:
-            values = sorted(stat_table.keys())
-            for required_val in range(int(bin_by / 2), int(max(values)), bin_by):
+            for required_val in bins:
                 if required_val not in stat_table:
                     stat_table[required_val] = 0
+
+        stat_table = OrderedDict(sorted(stat_table.items()))
 
         return stat_table
 
