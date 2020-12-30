@@ -296,11 +296,16 @@ class MultiqcModule(BaseMultiqcModule):
 
     def parse_hists(self, stat_file, bin_by=1):
 
+        stat_table = {}
+
         vals = []
         if os.path.isfile(stat_file):
             with open(stat_file, 'r') as stat_handle:
                 for stat_line in stat_handle:
                     vals.append(int(stat_line))
+
+        if not vals:
+            return stat_table
 
         # Generate bin list
         bins = list(range(1, max(vals) + bin_by, bin_by))
@@ -308,7 +313,6 @@ class MultiqcModule(BaseMultiqcModule):
         # Assign each value to its bin
         inds = np.digitize(vals, bins, right=True)
 
-        stat_table = {}
 
         for ind in inds:
             val = bins[int(ind)]
