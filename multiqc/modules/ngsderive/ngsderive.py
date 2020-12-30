@@ -17,12 +17,6 @@ from multiqc.plots import bargraph, heatmap
 # Initialise the logger
 log = logging.getLogger(__name__)
 
-BUFFER_SIZE = 4096
-COMMON_DELIMITERS = ["\t", ",", " ", "|"]
-EXPECTED_HEADER_COUNT_STRANDEDNESS = 5
-EXPECTED_HEADER_COUNT_INSTRUMENT = 4
-EXPECTED_HEADER_COUNT_READLEN = 4
-
 
 class MultiqcModule(BaseMultiqcModule):
     """
@@ -36,12 +30,7 @@ class MultiqcModule(BaseMultiqcModule):
             name="ngsderive",
             anchor="ngsderive",
             href="https://github.com/stjudecloud/ngsderive",
-            info="is a forensic analysis tool useful in backwards computing information from "
-            + "next-generation sequencing data. "
-            + "Notably, results are provided as a 'best guess' — the tool does "
-            + "not claim 100%% accuracy and results should be considered with that understanding. "
-            + "Please see the <a href='https://github.com/stjudecloud/ngsderive'>documentation</a> "
-            + "for more information. ",
+            info="attempts to predict library information from next-generation sequencing data.",
         )
 
         self.strandedness = {}
@@ -49,12 +38,16 @@ class MultiqcModule(BaseMultiqcModule):
         self.readlen = {}
 
         # parse ngsderive summary file
+        expected_header_count_strandedness = 5
+        expected_header_count_instrument = 4
+        expected_header_count_readlen = 4
+
         for f in self.find_log_files("ngsderive/strandedness"):
             self.parse(
                 self.strandedness,
                 f,
                 "strandedness",
-                EXPECTED_HEADER_COUNT_STRANDEDNESS,
+                expected_header_count_strandedness,
             )
 
         for f in self.find_log_files("ngsderive/instrument"):
@@ -62,7 +55,7 @@ class MultiqcModule(BaseMultiqcModule):
                 self.instrument,
                 f,
                 "instrument",
-                EXPECTED_HEADER_COUNT_INSTRUMENT,
+                expected_header_count_instrument,
             )
 
         for f in self.find_log_files("ngsderive/readlen"):
@@ -70,7 +63,7 @@ class MultiqcModule(BaseMultiqcModule):
                 self.readlen,
                 f,
                 "readlen",
-                EXPECTED_HEADER_COUNT_READLEN,
+                expected_header_count_readlen,
             )
 
         self.strandedness = self.ignore_samples(self.strandedness)
@@ -103,36 +96,27 @@ class MultiqcModule(BaseMultiqcModule):
         header = f.readline()
         f.seek(0)
 
-        for delim in COMMON_DELIMITERS:
+        for delim in ["\t", ",", " ", "|"]:
             if delim in header and len(header.split(delim)) == expected_header_count:
                 return {"delimiter": delim}
 
         log.warn("Could not easily detect delimiter for file. Trying csv.Sniffer()")
-        dialect = csv.Sniffer().sniff(f.read(BUFFER_SIZE))
+        dialect = csv.Sniffer().sniff(f.read(4096))  # 4096 is the buffer size
         f.seek(0)
         return {"dialect": dialect}
 
     def parse(self, sample_dict, found_file, subcommand, expected_header_count):
-        contents = found_file.get("f")
-        root = found_file.get("root")
-        source = os.path.abspath(os.path.join(found_file["root"], found_file["fn"]))
-
-        kwargs = self.probe_file_for_dictreader_kwargs(
-            io.StringIO(contents), expected_header_count
-        )
-
+        kwargs = self.probe_file_for_dictreader_kwargs(io.StringIO(found_file["f"]), expected_header_count)
         relevant_items = []
-        for row in csv.DictReader(io.StringIO(contents), **kwargs):
+        for row in csv.DictReader(io.StringIO(found_file["f"]), **kwargs):
             if not row.get("File"):
                 continue
-            sample_name = self.clean_s_name(row.get("File"), root)
+            sample_name = self.clean_s_name(row.get("File"), found_file["root"])
             if sample_name in sample_dict:
-                log.debug(
-                    "Duplicate sample name found! Overwriting: {}".format(sample_name)
-                )
+                log.debug("Duplicate sample name found! Overwriting: {}".format(sample_name))
 
             sample_dict[sample_name] = row
-            self.add_data_source(s_name=sample_name, source=source)
+            self.add_data_source(f=found_file, s_name=sample_name)
 
     def add_strandedness_data(self):
         data = {}
@@ -150,11 +134,11 @@ class MultiqcModule(BaseMultiqcModule):
 
         headers = OrderedDict()
         headers["predicted"] = {
-            "title": "Strandedness (Predicted)",
+            "title": "Strandedness",
             "description": "Predicted strandedness from ngsderive",
         }
         headers["forward"] = {
-            "title": "Strandedness (Forward %)",
+            "title": "% Forward Strandedness",
             "description": "Percentage of reads which were evidence for forward-stranded.",
             "min": 0,
             "max": 100,
@@ -163,7 +147,7 @@ class MultiqcModule(BaseMultiqcModule):
             "hidden": True,
         }
         headers["reverse"] = {
-            "title": "Strandedness (Reverse %)",
+            "title": "% Reverse Strandedness",
             "description": "Percentage of reads which were evidence for reverse-stranded.",
             "min": 0,
             "max": 100,
@@ -176,7 +160,7 @@ class MultiqcModule(BaseMultiqcModule):
         # Config for the plot
         pconfig = {
             "id": "ngsderive_strandedness_plot",
-            "title": "ngsderive: strandedness",
+            "title": "ngsderive: Strandedness",
             "ylab": "% Read Evidence",
             "ymin": 0,
             "ymax": 100,
@@ -188,9 +172,8 @@ class MultiqcModule(BaseMultiqcModule):
         self.add_section(
             name="Strandedness",
             anchor="ngsderive-strandedness",
-            description="Predicted strandedness provided by ngsderive. "
-            + 'For more information, please see <a href="https://stjudecloud.github.io/ngsderive/subcommands/strandedness/">'
-            + "the relevant documentation and limitations</a>.",
+            description="""Predicted strandedness provided by ngsderive. For more information, please see
+            [the documentation](https://stjudecloud.github.io/ngsderive/subcommands/strandedness/).""",
             plot=bargraph.plot(bardata, headers, pconfig),
         )
 
@@ -198,25 +181,23 @@ class MultiqcModule(BaseMultiqcModule):
         data = {}
         for sample, instrument in self.instrument.items():
             data[sample] = {
-                "instrument": "/".join(
-                    sorted(instrument.get("Instrument").split(" or "))
-                ),
+                "instrument": " / ".join(sorted(instrument.get("Instrument").split(" or "))),
                 "confidence": instrument.get("Confidence"),
                 "basis": instrument.get("Basis"),
             }
 
         headers = OrderedDict()
         headers["instrument"] = {
-            "title": "Instrument (Predicted)",
+            "title": "Predicted Instrument",
             "description": "Predicted instrument from ngsderive",
         }
         headers["confidence"] = {
-            "title": "Instrument (Confidence)",
+            "title": "Instrument: Confidence",
             "description": "Level of confidence (low, medium, high) that the predicted instrument is correct.",
         }
         headers["basis"] = {
-            "title": "Instrument (Basis)",
-            "description": "Basis upon which the prediction was made (see documentation for more details).",
+            "title": "Instrument: Basis",
+            "description": "Basis upon which the prediction was made.",
             "hidden": True,
         }
         self.general_stats_addcols(data, headers)
@@ -257,7 +238,7 @@ class MultiqcModule(BaseMultiqcModule):
         # Config for the plot
         pconfig = {
             "id": "ngsderive_instruments_plot",
-            "title": "ngsderive: instruments",
+            "title": "ngsderive: Instruments",
             "xTitle": "Predicted Instrument",
             "yTitle": "Sample",
             "square": False,
@@ -268,9 +249,8 @@ class MultiqcModule(BaseMultiqcModule):
         self.add_section(
             name="Instrument",
             anchor="ngsderive-instrument",
-            description="Predicted instrument provided by ngsderive. "
-            + 'For more information, please see <a href="https://stjudecloud.github.io/ngsderive/subcommands/instrument/">'
-            + "the relevant documentation and limitations</a>.",
+            description="""Predicted instrument provided by ngsderive. For more information, please see
+            [the documentation](https://stjudecloud.github.io/ngsderive/subcommands/instrument/).""",
             plot=heatmap.plot(heatdata, instruments, samples, pconfig=pconfig),
         )
 
@@ -279,9 +259,7 @@ class MultiqcModule(BaseMultiqcModule):
         for sample, readlen in self.readlen.items():
             data[sample] = {
                 "evidence": readlen.get("Evidence"),
-                "majoritypctdetected": round(
-                    float(readlen.get("MajorityPctDetected")) * 100.0, 2
-                ),
+                "majoritypctdetected": round(float(readlen.get("MajorityPctDetected")) * 100.0, 2),
                 "consensusreadlength": int(readlen.get("ConsensusReadLength")),
             }
 
@@ -290,20 +268,14 @@ class MultiqcModule(BaseMultiqcModule):
 
         headers = OrderedDict()
         headers["consensusreadlength"] = {
-            "title": "Read Length (Predicted)",
+            "title": "Read Length (bp)",
             "description": "Predicted read length from ngsderive.",
             "scale": False,
             "format": "{:,.d}",
         }
         headers["majoritypctdetected"] = {
-            "title": "Read Length (% Supporting Reads)",
+            "title": "Read Length: % Supporting",
             "description": "Percentage of reads which were measured at the predicted read length.",
-        }
-        headers["evidence"] = {
-            "title": "Read Length (Evidence)",
-            "description": "Evidence from readlen analysis (see documentation for more details). "
-            + "Typically, this is not helpful to the user in text form.",
-            "hidden": True,
         }
         self.general_stats_addcols(data, headers)
 
@@ -317,10 +289,7 @@ class MultiqcModule(BaseMultiqcModule):
                 (k, v) = parts.split("=")
                 _this_samples_data[int(k)] = int(v)
 
-            reads = [
-                _this_samples_data.get(this_readlen, 0)
-                for this_readlen in readlens_to_plot
-            ]
+            reads = [_this_samples_data.get(this_readlen, 0) for this_readlen in readlens_to_plot]
             total_reads = sum(reads)
             reads = [r / total_reads for r in reads]
             heatdata.append(reads)
@@ -328,7 +297,7 @@ class MultiqcModule(BaseMultiqcModule):
         # Config for the plot
         pconfig = {
             "id": "ngsderive_readlen_plot",
-            "title": "ngsderive: readlen",
+            "title": "ngsderive: Read Length",
             "xTitle": "% Evidence for Read Length",
             "yTitle": "Sample",
             "square": False,
@@ -339,8 +308,7 @@ class MultiqcModule(BaseMultiqcModule):
         self.add_section(
             name="Read length",
             anchor="ngsderive-readlen",
-            description="Predicted read length provided by ngsderive. "
-            + 'For more information, please see <a href="https://stjudecloud.github.io/ngsderive/subcommands/readlen/">'
-            + "the relevant documentation and limitations</a>.",
+            description="""Predicted read length provided by ngsderive. For more information, please see
+            [the documentation](https://stjudecloud.github.io/ngsderive/subcommands/readlen/).""",
             plot=heatmap.plot(heatdata, readlens_to_plot, samples, pconfig=pconfig),
         )
