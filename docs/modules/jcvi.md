@@ -14,7 +14,7 @@ it is used to draw complementary plots.
 
 A typical result directory will contain:
 
-```
+```txt
 ├── Exon_Count
 │   ├── sample1.txt
 │   └── sample2.txt
