@@ -32,8 +32,8 @@ For further information, please see the [documentation](https://multiqc.info/doc
 
 - [**HOPS**](https://www.github.com/rhubler/HOPS)
   - Post-alignment ancient DNA analysis tool for MALT
-* [**JCVI**](https://github.com/tanghaibao/jcvi)
-  * Computes statistics on genome annotation.
+- [**JCVI**](https://github.com/tanghaibao/jcvi)
+  - Computes statistics on genome annotation.
 - [**PURPLE**](https://github.com/hartwigmedical/hmftools/tree/master/purity-ploidy-estimator)
   - A purity, ploidy and copy number estimator for whole genome tumor data
 - [**Pychopper**](https://github.com/nanoporetech/pychopper)
