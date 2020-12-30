@@ -1,7 +1,6 @@
 # ![MultiQC](https://raw.githubusercontent.com/ewels/MultiQC/master/docs/images/MultiQC_logo.png)
 
-
-### Aggregate bioinformatics results across many samples into a single report.
+### Aggregate bioinformatics results across many samples into a single report
 
 ##### Find [documentation](http://multiqc.info/docs) and [example reports](http://multiqc.info/examples/rna-seq/multiqc_report.html) at [http://multiqc.info](http://multiqc.info)
 
@@ -14,7 +13,7 @@
 [![Gitter](https://img.shields.io/badge/gitter-%20join%20chat%20%E2%86%92-4fb99a.svg?style=flat-square)](https://gitter.im/ewels/MultiQC)
 [![DOI](https://img.shields.io/badge/DOI-10.1093%2Fbioinformatics%2Fbtw354-lightgrey.svg?style=flat-square)](http://dx.doi.org/10.1093/bioinformatics/btw354)
 
------
+---
 
 MultiQC is a tool to create a single report with interactive plots
 for multiple bioinformatics analyses across many samples.
@@ -45,17 +44,20 @@ More modules are being written all of the time. Please suggest any ideas as a ne
 
 You can install MultiQC from [PyPI](https://pypi.python.org/pypi/multiqc/)
 using `pip` as follows:
+
 ```bash
 pip install multiqc
 ```
 
 Alternatively, you can install using [Conda](http://anaconda.org/)
 from the [bioconda channel](https://bioconda.github.io/):
+
 ```bash
 conda install -c bioconda multiqc
 ```
 
 If you would like the development version instead, the command is:
+
 ```bash
 pip install --upgrade --force-reinstall git+https://github.com/ewels/MultiQC.git
 ```
@@ -64,8 +66,10 @@ MultiQC is also available in the
 [Galaxy Toolshed](https://toolshed.g2.bx.psu.edu/view/engineson/multiqc/).
 
 ## Usage
+
 Once installed, you can use MultiQC by navigating to your analysis directory
 (or a parent directory) and running the tool:
+
 ```bash
 multiqc .
 ```
@@ -90,12 +94,12 @@ Pull-requests for fixes and additions are very welcome.
 Please see the [contributing notes](https://github.com/ewels/MultiQC/blob/master/.github/CONTRIBUTING.md) for more information about how the process works.
 
 ## Citation
+
 Please consider citing MultiQC if you use it in your analysis.
 
-> **MultiQC: Summarize analysis results for multiple tools and samples in a single report** <br/>
-> _Philip Ewels, Måns Magnusson, Sverker Lundin and Max Käller_ <br/>
-> Bioinformatics (2016) <br/>
-> doi: [10.1093/bioinformatics/btw354](http://dx.doi.org/10.1093/bioinformatics/btw354) <br/>
+> **MultiQC: Summarize analysis results for multiple tools and samples in a single report.** <br> _Philip Ewels, Måns Magnusson, Sverker Lundin and Max Käller_ <br>
+> Bioinformatics (2016) <br>
+> doi: [10.1093/bioinformatics/btw354](http://dx.doi.org/10.1093/bioinformatics/btw354) <br>
 > PMID: [27312411](http://www.ncbi.nlm.nih.gov/pubmed/27312411)
 
 ```BibTeX
@@ -123,12 +127,13 @@ plugins and templates.
 
 There is a chat room for the package hosted on Gitter where you can discuss
 things with the package author and other developers:
-https://gitter.im/ewels/MultiQC
+<https://gitter.im/ewels/MultiQC>
 
 If in doubt, feel free to get in touch with the author directly:
 [@ewels](https://github.com/ewels) (phil.ewels@scilifelab.se)
 
 ### Contributors
+
 Project lead and main author: [@ewels](https://github.com/ewels)
 
 There are a lot of other code contributors though!

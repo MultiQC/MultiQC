@@ -10,63 +10,62 @@ jobs:
         python-version: [3.6, 3.7, 3.8]
 
     steps:
+      # Check out MultiQC code
+      - uses: actions/checkout@v2
 
-    # Check out MultiQC code
-    - uses: actions/checkout@v2
+      # Set up Python
+      - name: Set up Python ${{ matrix.python-version }}
+        uses: actions/setup-python@v1
+        with:
+          python-version: ${{ matrix.python-version }}
 
-    # Set up Python
-    - name: Set up Python ${{ matrix.python-version }}
-      uses: actions/setup-python@v1
-      with:
-        python-version: ${{ matrix.python-version }}
+      # Update pip and install beautifulsoup4 for CI tests (CSP checking)
+      - name: Install dependencies for CI tests
+        run: |
+          python -m pip install --upgrade pip setuptools beautifulsoup4
 
-    # Update pip and install beautifulsoup4 for CI tests (CSP checking)
-    - name: Install dependencies for CI tests
-      run: |
-        python -m pip install --upgrade pip setuptools beautifulsoup4
+      # Install MultiQC
+      - name: Install MultiQC
+        run: pip install .
 
-    # Install MultiQC
-    - name: Install MultiQC
-      run: pip install .
+      # Fetch the MultiQC test data
+      - name: Download test data
+        run: |
+          git clone https://github.com/ewels/MultiQC_TestData.git test_data
 
-    # Fetch the MultiQC test data
-    - name: Download test data
-      run: |
-        git clone https://github.com/ewels/MultiQC_TestData.git test_data
+      # Run all of the tests!
+      - name: Special case input data
+        run: multiqc test_data/data --ignore test_data/data/modules/
 
-    # Run all of the tests!
-    - name: Special case input data
-      run: multiqc test_data/data --ignore test_data/data/modules/
+      - name: All modules / Custom report filename
+        run: multiqc --lint test_data/data/modules/ --filename full_report.html
 
-    - name: All modules / Custom report filename
-      run: multiqc --lint test_data/data/modules/ --filename full_report.html
+      - name: Filter out all filenames (confirm no report)
+        run: |
+          multiqc test_data/data/modules/ --filename all_ignored.html --ignore-samples '*'
+          [[ ! -f all_ignored.html ]]
 
-    - name: Filter out all filenames (confirm no report)
-      run: |
-        multiqc test_data/data/modules/ --filename all_ignored.html --ignore-samples '*'
-        [[ ! -f all_ignored.html ]]
+      - name: File-list input of dirs
+        run: |
+          cd test_data
+          multiqc --file-list data/special_cases/dir_list.txt
 
-    - name: File-list input of dirs
-      run: |
-        cd test_data
-        multiqc --file-list data/special_cases/dir_list.txt
+      - name: Specific module / Force overwrite / Prepend dirnames / Name and comment / No data dir
+        run: multiqc --lint test_data/data/modules/ -m fastqc -f -d -dd 1 -i "Forced Report" -b "This command has lots of options" --filename custom_fn --no-data-dir
 
-    - name: Specific module / Force overwrite / Prepend dirnames / Name and comment / No data dir
-      run: multiqc --lint test_data/data/modules/ -m fastqc -f -d -dd 1 -i "Forced Report" -b "This command has lots of options" --filename custom_fn --no-data-dir
+      - name: For overwrite / Flat plots / Tagged modules only / Exclude module / Ignore samples / Full names / zip data dir / config file
+        run: multiqc --lint test_data/data/modules/ -f --flat --tag methylation --exclude clusterflow --ignore-samples ngi --fullnames --zip-data-dir -c test/config_example.yaml
 
-    - name: For overwrite / Flat plots / Tagged modules only / Exclude module / Ignore samples / Full names / zip data dir / config file
-      run: multiqc --lint test_data/data/modules/ -f --flat --tag methylation --exclude clusterflow --ignore-samples ngi --fullnames --zip-data-dir -c test/config_example.yaml
+      - name: Specfic module / named output dir / dev template / JSON data / File list
+        run: |
+          cd test_data
+          multiqc -m star -o tests/multiqc_report_dev -t default_dev -k json --file-list data/special_cases/file_list.txt
 
-    - name: Specfic module / named output dir / dev template / JSON data / File list
-      run: |
-        cd test_data
-        multiqc -m star -o tests/multiqc_report_dev -t default_dev -k json --file-list data/special_cases/file_list.txt
+      - name: Empty directory (confirm no report)
+        run: |
+          mkdir empty_dir
+          multiqc -n empty empty_dir
+          [[ ! -f empty.html ]]
 
-    - name: Empty directory (confirm no report)
-      run: |
-        mkdir empty_dir
-        multiqc -n empty empty_dir
-        [[ ! -f empty.html ]]
-
-    - name: Test for missing CSPs
-      run: python test/print_missing_csp.py --report full_report.html --whitelist CSP.txt
+      - name: Test for missing CSPs
+        run: python test/print_missing_csp.py --report full_report.html --whitelist CSP.txt

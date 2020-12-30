@@ -14,19 +14,21 @@ log = logging.getLogger(__name__)
 
 
 class MultiqcModule(BaseMultiqcModule, StatsReportMixin):
-    """ Bcftools has a number of different commands and outputs.
+    """Bcftools has a number of different commands and outputs.
     This MultiQC module supports some but not all. The code for
     each script is split into its own file and adds a section to
-    the module output if logs are found. """
+    the module output if logs are found."""
 
     def __init__(self):
 
         # Initialise the parent object
         super(MultiqcModule, self).__init__(
-            name='Bcftools',
-            anchor='bcftools', target='Bcftools',
-            href='https://samtools.github.io/bcftools/',
-            info=(" contains utilities for variant calling and manipulating VCFs and BCFs."))
+            name="Bcftools",
+            anchor="bcftools",
+            target="Bcftools",
+            href="https://samtools.github.io/bcftools/",
+            info=(" contains utilities for variant calling and manipulating VCFs and BCFs."),
+        )
 
         # Set up class objects to hold parsed data
         self.general_stats_headers = OrderedDict()
@@ -34,9 +36,9 @@ class MultiqcModule(BaseMultiqcModule, StatsReportMixin):
         n = dict()
 
         # Call submodule functions
-        n['stats'] = self.parse_bcftools_stats()
-        if n['stats'] > 0:
-            log.info("Found {} stats reports".format(n['stats']))
+        n["stats"] = self.parse_bcftools_stats()
+        if n["stats"] > 0:
+            log.info("Found {} stats reports".format(n["stats"]))
 
         # Exit if we didn't find anything
         if sum(n.values()) == 0:
