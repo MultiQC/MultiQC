@@ -32,6 +32,8 @@ For further information, please see the [documentation](https://multiqc.info/doc
 
 - [**HOPS**](https://www.github.com/rhubler/HOPS)
   - Post-alignment ancient DNA analysis tool for MALT
+- [**ngsderive**](https://github.com/stjudecloud/ngsderive)
+  - Forensic analysis tool useful in backwards computing information from next-generation sequencing data.
 - [**PURPLE**](https://github.com/hartwigmedical/hmftools/tree/master/purity-ploidy-estimator)
   - A purity, ploidy and copy number estimator for whole genome tumor data
 - [**Pychopper**](https://github.com/nanoporetech/pychopper)
@@ -101,10 +103,6 @@ are no longer guaranteed.
 Whilst it may be possible to continue using MultiQC with Python 2 for a short time by
 pinning dependencies, MultiQC compatibility for Python 2 will now slowly drift and start
 to break. If you haven't already, **you need to switch to Python 3 now**.
-
-#### New Modules:
-* [**ngsderive**](https://github.com/stjudecloud/ngsderive)
-    * Forensic analysis tool useful in backwards computing information from next-generation sequencing data.
 
 #### New MultiQC Features
 
