@@ -12,7 +12,7 @@ import re
 from collections import OrderedDict
 
 from multiqc.modules.base_module import BaseMultiqcModule
-from multiqc.plots import bargraph, heatmap
+from multiqc.plots import bargraph, heatmap, table
 
 # Initialise the logger
 log = logging.getLogger(__name__)
@@ -178,40 +178,36 @@ class MultiqcModule(BaseMultiqcModule):
         )
 
     def add_instrument_data(self):
-        data = {}
-        for sample, instrument in self.instrument.items():
-            data[sample] = {
-                "instrument": " / ".join(sorted(instrument.get("Instrument").split(" or "))),
-                "confidence": instrument.get("Confidence"),
-                "basis": instrument.get("Basis"),
+        general_data = {}
+        for sample, instrument_data in self.instrument.items():
+            general_data[sample] = {
+                "instrument": " / ".join(sorted(instrument_data.get("Instrument").split(" or "))),
+                "confidence": instrument_data.get("Confidence"),
+                "basis": instrument_data.get("Basis"),
             }
 
-        headers = OrderedDict()
-        headers["instrument"] = {
+        general_headers = OrderedDict()
+        general_headers["instrument"] = {
             "title": "Predicted Instrument",
             "description": "Predicted instrument from ngsderive",
         }
-        headers["confidence"] = {
+        general_headers["confidence"] = {
             "title": "Instrument: Confidence",
             "description": "Level of confidence (low, medium, high) that the predicted instrument is correct.",
         }
-        headers["basis"] = {
+        general_headers["basis"] = {
             "title": "Instrument: Basis",
             "description": "Basis upon which the prediction was made.",
             "hidden": True,
         }
-        self.general_stats_addcols(data, headers)
+        self.general_stats_addcols(general_data, general_headers)
 
         samples = []
-        samples_data = []
         instruments = set()
 
-        # first pass through, start to formulate heatmap data
-        for s, d in data.items():
+        for s, d in general_data.items():
             samples.append(s)
-            data = d.get("instrument").split("/")
-            samples_data.append(data)
-            instruments.update(data)
+            instruments.update(d.get("instrument").split(" / "))
 
         # move multiple instruments to the end if it exists
         instruments = sorted(instruments)
@@ -219,31 +215,23 @@ class MultiqcModule(BaseMultiqcModule):
             instruments.remove("multiple instruments")
             instruments.append("multiple instruments")
 
-        # one-hot encode machine for each sample
-        heatdata = []
-        for _sample_data in samples_data:
-            heatdata.append([int(i in _sample_data) for i in instruments])
+        headers = OrderedDict()
+        for instrument in instruments:
+            headers[instrument] = {
+                "title": instrument,
+                "description": f"Predicted {instrument} from ngsderive",
+            }
 
-        # sort the table so that it looks nice. essentially, this is
-        # done as treating the one-hot encoded vectors as a binary
-        # encoded number that is then sorted.
-        heatdata = zip(samples, heatdata)
-
-        def reduce(x):
-            return sum([pow(i - 1, _x) for (i, _x) in enumerate(x)])
-
-        sorted_heatdata = sorted(heatdata, key=lambda x: reduce(x[1]))
-        samples, heatdata = zip(*sorted_heatdata)
+        table_data = {}
+        for sample, instrument_data in self.instrument.items():
+            table_data[sample] = {}
+            for instrument in instrument_data.get("Instrument").split(" or "):
+                table_data[sample][instrument] = instrument_data.get("Confidence")
 
         # Config for the plot
-        pconfig = {
+        config = {
             "id": "ngsderive_instruments_plot",
             "title": "ngsderive: Instruments",
-            "xTitle": "Predicted Instrument",
-            "yTitle": "Sample",
-            "square": False,
-            "legend": False,
-            "datalabels": False,
         }
 
         self.add_section(
@@ -251,7 +239,7 @@ class MultiqcModule(BaseMultiqcModule):
             anchor="ngsderive-instrument",
             description="""Predicted instrument provided by ngsderive. For more information, please see
             [the documentation](https://stjudecloud.github.io/ngsderive/subcommands/instrument/).""",
-            plot=heatmap.plot(heatdata, instruments, samples, pconfig=pconfig),
+            plot=table.plot(table_data, headers, config),
         )
 
     def add_readlen_data(self):
