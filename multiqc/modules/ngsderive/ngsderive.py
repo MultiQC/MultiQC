@@ -202,11 +202,9 @@ class MultiqcModule(BaseMultiqcModule):
         }
         self.general_stats_addcols(general_data, general_headers)
 
-        samples = []
         instruments = set()
 
-        for s, d in general_data.items():
-            samples.append(s)
+        for d in general_data.values():
             instruments.update(d.get("instrument").split(" / "))
 
         # move multiple instruments to the end if it exists
