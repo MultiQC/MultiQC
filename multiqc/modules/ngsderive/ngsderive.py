@@ -264,6 +264,9 @@ class MultiqcModule(BaseMultiqcModule):
         headers["majoritypctdetected"] = {
             "title": "Read Length: % Supporting",
             "description": "Percentage of reads which were measured at the predicted read length.",
+            "min": 0,
+            "max": 100,
+            "suffix": "%",
         }
         self.general_stats_addcols(data, headers)
 
