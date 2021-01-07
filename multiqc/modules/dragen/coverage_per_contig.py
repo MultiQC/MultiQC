@@ -16,8 +16,8 @@ class DragenCoveragePerContig(BaseMultiqcModule):
     def add_coverage_per_contig(self):
         perchrom_data_by_phenotype_by_sample = defaultdict(dict)
 
-        for f in self.find_log_files("dragen/wgs_contig_mean_cov"):
-            perchrom_data_by_phenotype = parse_wgs_contig_mean_cov(f)
+        for f in self.find_log_files("dragen/contig_mean_cov"):
+            perchrom_data_by_phenotype = parse_contig_mean_cov(f)
             if f["s_name"] in perchrom_data_by_phenotype_by_sample:
                 log.debug("Duplicate sample name found! Overwriting: {}".format(f["s_name"]))
             self.add_data_source(f, section="stats")
@@ -89,7 +89,7 @@ class DragenCoveragePerContig(BaseMultiqcModule):
         return perchrom_data_by_sample.keys()
 
 
-def parse_wgs_contig_mean_cov(f):
+def parse_contig_mean_cov(f):
     """
     The Contig Mean Coverage report generates a _contig_mean_cov.csv file, which contains the estimated coverage for
     all contigs, and an autosomal estimated coverage. The file includes the following three columns
@@ -102,6 +102,7 @@ def parse_wgs_contig_mean_cov(f):
 
     T_SRR7890936_50pc.wgs_contig_mean_cov_normal.csv
     T_SRR7890936_50pc.wgs_contig_mean_cov_tumor.csv
+    T_SRR7890936_50pc.target_bed_contig_mean_cov.csv
 
     chr1,11292297134,48.9945
     chr10,6482885699,48.6473
@@ -156,7 +157,7 @@ def parse_wgs_contig_mean_cov(f):
         sorted(other_contig_perchrom_data.items(), key=lambda key_val: chrom_order(key_val[0]))
     )
 
-    m = re.search(r"(.*).wgs_contig_mean_cov_?(\S*)?.csv", f["fn"])
+    m = re.search(r"(.*).(\S*)_contig_mean_cov_?(\S*)?.csv", f["fn"])
     sample, phenotype = m.group(1), m.group(2)
     f["s_name"] = sample
     return {phenotype: [main_contig_perchrom_data, other_contig_perchrom_data]}
