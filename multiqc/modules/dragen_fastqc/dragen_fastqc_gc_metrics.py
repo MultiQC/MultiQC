@@ -24,9 +24,11 @@ N_QV = 2
 ADAPTER_SEQS = ['AGATCGGAAGAG', 'ATGGAATTCTCG', 'CTGTCTCTTATA']
 
 
-class DragenGcMetrics(BaseMultiqcModule):
+class DragenFastqcGcMetrics(BaseMultiqcModule):
     """
     Rendering ALL THE THINGS!
+
+    Not to be confused with DragenGcMetrics
     """
 
     def add_gc_metrics(self):

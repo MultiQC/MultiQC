@@ -4,7 +4,7 @@ import os
 
 from .base_metrics import DragenBaseMetrics
 from .read_metrics import DragenReadMetrics
-from .gc_metrics import DragenGcMetrics
+from .dragen_fastqc_gc_metrics import DragenFastqcGcMetrics
 from .content_metrics import DragenContentMetrics
 from .util import parse_fastqc_metrics_file
 
@@ -12,7 +12,7 @@ import logging
 log = logging.getLogger(__name__)
 
 
-class MultiqcModule(DragenBaseMetrics, DragenReadMetrics, DragenGcMetrics, DragenContentMetrics):
+class MultiqcModule(DragenBaseMetrics, DragenReadMetrics, DragenFastqcGcMetrics, DragenContentMetrics):
     """ DRAGEN provides a number of differrent pipelines and outputs, including base calling, DNA and RNA alignment,
     post-alignment processing and variant calling, covering virtually all stages of typical NGS data processing.
     However, it can be treated as a fast aligner with additional features on top, as users will unlikely use any
