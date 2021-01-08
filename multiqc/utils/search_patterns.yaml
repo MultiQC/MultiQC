@@ -260,6 +260,8 @@ dragen/mapping_metrics:
     fn: '*.mapping_metrics.csv'
     contents: 'Number of unique reads (excl. duplicate marked reads)'
     num_lines: 50
+dragen/gc_metrics:
+    fn: '*.gc_metrics.csv'
 dragen_fastqc:
     fn: "*.fastqc_metrics.csv"
 fastp:
