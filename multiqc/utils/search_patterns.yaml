@@ -264,6 +264,8 @@ dragen/gc_metrics:
     fn: '*.gc_metrics.csv'
 dragen/trimmer_metrics:
     fn: '*.trimmer_metrics.csv'
+dragen/time_metrics:
+    fn: '*.time_metrics.csv'
 dragen_fastqc:
     fn: "*.fastqc_metrics.csv"
 fastp:
