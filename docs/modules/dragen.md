@@ -28,5 +28,7 @@ and alike. This MultiQC module supports some of the output but not all.
     * Add just Ploidy estimation into the general stats table
 * `<output prefix>.vc_metrics.csv`
     * A dedicated table and the total number of Variants into the general stats table
+* `<output prefix>.gc_metrics.csv`
+    * A histogram and summary statistics table on GC content metrics
 
 Each QC output adds a section into the report if a corresponding QC file is found.

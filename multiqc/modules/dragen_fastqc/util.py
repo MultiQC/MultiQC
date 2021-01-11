@@ -29,7 +29,17 @@ def parse_fastqc_metrics_file(f):
     data_by_sample = initialize_dataset(s_name)
 
     for line in f['f'].splitlines():
-        group, mate, metric, value = line.split(',')
+        # This conforms with the standard DRAGEN metrics format
+        # Percentage is currently unused
+        tokens = line.split(',')
+        if len(tokens) == 4:
+            group, mate, metric, value = line.split(',')
+            percentage = None
+        elif len(tokens) == 5:
+            group, mate, metric, value, percentage = line.split(',')
+        else:
+            raise ValueError(f'Unexpected number of values in line {line}')
+
         try:
             value = int(value)
         except ValueError:
@@ -42,7 +52,8 @@ def parse_fastqc_metrics_file(f):
     # Delete empty mate groups so we don't generate empty datasets
     # Altered to work on python3 which doesn't allow deleting from dict during iterating
     delete = [mate for mate, mate_data in data_by_sample[s_name].items() if len(mate_data) == 0]
-    for key in delete: del data_by_sample[s_name][key]
+    for key in delete:
+        del data_by_sample[s_name][key]
 
     return data_by_sample
 
