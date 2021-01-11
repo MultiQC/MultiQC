@@ -33,9 +33,10 @@ class DragenGcMetrics(BaseMultiqcModule):
         smooth_points = 300
         self.add_section(
             name='GC Bias Histogram',
-            anchor='gc-bias-hist',
+            anchor='dragen-gc-bias-hist',
             description="""
-                
+                A histogram of the normalized coverage vs GC content.  This shows how GC
+                content in the genome impacts sequencing coverage.
                 """,
             plot=linegraph.plot(hist_data, {
                 'id': 'gc-bias-hist',
@@ -52,12 +53,10 @@ class DragenGcMetrics(BaseMultiqcModule):
 
         table_data = DragenGcMetrics.__get_summary_gc_data(data_by_sample)
         self.add_section(
-            name='Mapping metrics',
-            anchor='dragen-mapping-metrics',
+            name='GC Metrics Summary',
+            anchor='dragen-gc-metrics-summary',
             description="""
-            Mapping metrics, similar to the metrics computed by the samtools-stats command.
-            Shown on per read group level. To see per-sample level metrics, refer to the general
-            stats table.
+            Summary GC metrics shown on the sample level.
             """,
             plot=table.plot(table_data, pconfig={'namespace': DragenGcMetrics.NAMESPACE})
         )
