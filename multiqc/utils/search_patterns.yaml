@@ -262,6 +262,8 @@ dragen/mapping_metrics:
     num_lines: 50
 dragen/gc_metrics:
     fn: '*.gc_metrics.csv'
+dragen/trimmer_metrics:
+    fn: '*.trimmer_metrics.csv'
 dragen_fastqc:
     fn: "*.fastqc_metrics.csv"
 fastp:
