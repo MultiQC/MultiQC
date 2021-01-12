@@ -104,9 +104,13 @@ def custom_module_classes():
                         break
                     parsed_data["id"] = parsed_data.get("id", f["s_name"])
                     # Run sample-name cleaning on the data keys
-                    parsed_data["data"] = {
-                        bm.clean_s_name(k, f["root"]): v for k, v in parsed_data.get("data", {}).items()
-                    }
+                    try:
+                        parsed_data["data"] = {
+                            bm.clean_s_name(k, f["root"]): v for k, v in parsed_data.get("data", {}).items()
+                        }
+                    except AttributeError as e:
+                        # If parsed_data["data"] is a string, this won't work - but that's fine
+                        pass
                 elif f_extension == ".json":
                     try:
                         # Use OrderedDict for objects so that column order is honoured

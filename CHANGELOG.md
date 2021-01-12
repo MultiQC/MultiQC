@@ -75,6 +75,7 @@ For further information, please see the [documentation](https://multiqc.info/doc
 - General Stats custom content now gives a log message
 - If `id` is not set in `JSON` or `YAML` files, it defaults to the sample name instead of just `custom_content`
 - Data from `JSON` or `YAML` now has `data` keys (sample names) run through the `clean_s_name()` function to apply sample name cleanup
+- Fixed minor bug which caused custom content YAML files with a string `data` type to not be parsed
 
 #### Bug Fixes
 
