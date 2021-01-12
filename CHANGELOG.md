@@ -26,12 +26,18 @@ For further information, please see the [documentation](https://multiqc.info/doc
   - `.yaml` will take preference if both found.
 - Section comments can now also be added for _General Statistics_
   - `section_comments: { general_stats: "My comment" }`
+- New table header config option `bgcols` allows background colours for table cells with categorical data.
+- New table header config options `cond_formatting_rules` and `cond_formatting_colours`
+  - Comparable functionality to user config options `table_cond_formatting_rules` and `table_cond_formatting_colours`,
+    allowes module developers to format table cell values as labels.
 - New CI test looks for git merge markers in files
 
 #### New Modules
 
 - [**HOPS**](https://www.github.com/rhubler/HOPS)
   - Post-alignment ancient DNA analysis tool for MALT
+- [**ngsderive**](https://github.com/stjudecloud/ngsderive)
+  - Forensic analysis tool useful in backwards computing information from next-generation sequencing data.
 - [**PURPLE**](https://github.com/hartwigmedical/hmftools/tree/master/purity-ploidy-estimator)
   - A purity, ploidy and copy number estimator for whole genome tumor data
 - [**Pychopper**](https://github.com/nanoporetech/pychopper)

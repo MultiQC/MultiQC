@@ -263,6 +263,10 @@ module_order:
   # MultiQC general module for catching output from custom scripts
   - "custom_content"
   # Post-alignment QC
+  - ngsderive:
+      module_tag:
+        - DNA
+        - RNA
   - purple:
       module_tag:
         - DNA
