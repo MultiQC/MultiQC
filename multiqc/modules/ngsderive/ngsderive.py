@@ -12,7 +12,7 @@ import re
 from collections import OrderedDict
 
 from multiqc.modules.base_module import BaseMultiqcModule
-from multiqc.plots import bargraph, heatmap, table
+from multiqc.plots import bargraph, linegraph, table
 
 # Initialise the logger
 log = logging.getLogger(__name__)
@@ -194,6 +194,7 @@ class MultiqcModule(BaseMultiqcModule):
         general_headers["confidence"] = {
             "title": "Instrument: Confidence",
             "description": "Level of confidence (low, medium, high) that the predicted instrument is correct.",
+            "hidden": True,
         }
         general_headers["basis"] = {
             "title": "Instrument: Basis",
@@ -249,9 +250,6 @@ class MultiqcModule(BaseMultiqcModule):
                 "consensusreadlength": int(readlen.get("ConsensusReadLength")),
             }
 
-        max_readlen = max([d.get("consensusreadlength") for _, d in data.items()])
-        readlens_to_plot = list(range(1, max_readlen + 1))
-
         headers = OrderedDict()
         headers["consensusreadlength"] = {
             "title": "Read Length (bp)",
@@ -265,33 +263,34 @@ class MultiqcModule(BaseMultiqcModule):
             "min": 0,
             "max": 100,
             "suffix": "%",
+            "hidden": True,
         }
         self.general_stats_addcols(data, headers)
 
-        samples = []
-        heatdata = []
+        linedata = [{}, {}]
 
         for sample, d in data.items():
-            samples.append(sample)
-            _this_samples_data = {}
+            # Build dict of count data
+            count_data = {}
             for parts in d.get("evidence").split(";"):
                 (k, v) = parts.split("=")
-                _this_samples_data[int(k)] = int(v)
+                count_data[int(k)] = int(v)
+            linedata[1][sample] = count_data
 
-            reads = [_this_samples_data.get(this_readlen, 0) for this_readlen in readlens_to_plot]
-            total_reads = sum(reads)
-            reads = [r / total_reads for r in reads]
-            heatdata.append(reads)
+            # Build dict of percentage data
+            total_reads = sum(count_data.values())
+            linedata[0][sample] = {readlen: (count / total_reads) * 100.0 for readlen, count in count_data.items()}
 
         # Config for the plot
         pconfig = {
             "id": "ngsderive_readlen_plot",
             "title": "ngsderive: Read Length",
-            "xTitle": "% Evidence for Read Length",
-            "yTitle": "Sample",
-            "square": False,
-            "legend": False,
-            "datalabels": False,
+            "xlab": "Read Length",
+            "ylab": "% Evidence for Read Length",
+            "data_labels": [
+                {"name": "Percentages", "ylab": "% Evidence for Read Length"},
+                {"name": "Counts", "ylab": "Number of reads"},
+            ],
         }
 
         self.add_section(
@@ -299,5 +298,5 @@ class MultiqcModule(BaseMultiqcModule):
             anchor="ngsderive-readlen",
             description="""Predicted read length provided by ngsderive. For more information, please see
             [the documentation](https://stjudecloud.github.io/ngsderive/subcommands/readlen/).""",
-            plot=heatmap.plot(heatdata, readlens_to_plot, samples, pconfig=pconfig),
+            plot=linegraph.plot(linedata, pconfig),
         )
