@@ -45,6 +45,7 @@ For further information, please see the [documentation](https://multiqc.info/doc
 
 - **DRAGEN**
   - Fix issue where missing out fields could crash the module ([#1223](https://github.com/ewels/MultiQC/issues/1223))
+  - Added support for whole-exome / targetted data ([#1290](https://github.com/ewels/MultiQC/issues/1290))
 - **featureCounts**
   - Add support for output from [Rsubread](https://bioconductor.org/packages/release/bioc/html/Rsubread.html) ([#1022](https://github.com/ewels/MultiQC/issues/1022))
 - **hap.py**
