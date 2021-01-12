@@ -180,6 +180,11 @@ class MultiqcModule(BaseMultiqcModule):
     def add_instrument_data(self):
 
         bgcols = {"low confidence": "#f8d7da", "medium confidence": "#fff3cd", "high confidence": "#d1e7dd"}
+        cond_formatting_rules = {
+            "pass": [{"s_eq": "high confidence"}],
+            "warn": [{"s_eq": "medium confidence"}],
+            "fail": [{"s_eq": "low confidence"}],
+        }
 
         general_data = {}
         for sample, instrument_data in self.instrument.items():
@@ -198,6 +203,7 @@ class MultiqcModule(BaseMultiqcModule):
             "title": "Instrument: Confidence",
             "description": "Level of confidence (low, medium, high) that the predicted instrument is correct.",
             "bgcols": bgcols,
+            "cond_formatting_rules": cond_formatting_rules,
             "hidden": True,
         }
         general_headers["basis"] = {
@@ -224,6 +230,7 @@ class MultiqcModule(BaseMultiqcModule):
                 "title": instrument,
                 "description": f"Predicted {instrument} from ngsderive",
                 "bgcols": bgcols,
+                "cond_formatting_rules": cond_formatting_rules,
             }
 
         table_data = {}

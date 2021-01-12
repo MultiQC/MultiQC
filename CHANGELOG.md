@@ -27,6 +27,9 @@ For further information, please see the [documentation](https://multiqc.info/doc
 - Section comments can now also be added for _General Statistics_
   - `section_comments: { general_stats: "My comment" }`
 - New table header config option `bgcols` allows background colours for table cells with categorical data.
+- New table header config options `cond_formatting_rules` and `cond_formatting_colours`
+  - Comparable functionality to user config options `table_cond_formatting_rules` and `table_cond_formatting_colours`,
+    allowes module developers to format table cell values as labels.
 - New CI test looks for git merge markers in files
 
 #### New Modules

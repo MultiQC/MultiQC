@@ -137,6 +137,15 @@ def make_table(dt):
         else:
             c_scale = mqc_colour.mqc_colour_scale(header["scale"], header["dmin"], header["dmax"])
 
+        # Collect conditional formatting config
+        cond_formatting_rules = {}
+        if header.get("cond_formatting_rules"):
+            cond_formatting_rules[rid] = header["cond_formatting_rules"]
+        cond_formatting_rules.update(config.table_cond_formatting_rules)
+
+        cond_formatting_colours = header.get("cond_formatting_colours", [])
+        cond_formatting_colours.extend(config.table_cond_formatting_colours)
+
         # Add the data table cells
         for (s_name, samp) in dt.data[idx].items():
             if k in samp:
@@ -180,14 +189,18 @@ def make_table(dt):
                 valstring += header.get("suffix", "")
 
                 # Conditional formatting
-                cmatches = {cfck: False for cfc in config.table_cond_formatting_colours for cfck in cfc}
+                # Build empty dict for cformatting matches
+                cmatches = {}
+                for cfc in cond_formatting_colours:
+                    for cfck in cfc:
+                        cmatches[cfck] = False
                 # Find general rules followed by column-specific rules
                 for cfk in ["all_columns", rid]:
-                    if cfk in config.table_cond_formatting_rules:
+                    if cfk in cond_formatting_rules:
                         # Loop through match types
                         for ftype in cmatches.keys():
                             # Loop through array of comparison types
-                            for cmp in config.table_cond_formatting_rules[cfk].get(ftype, []):
+                            for cmp in cond_formatting_rules[cfk].get(ftype, []):
                                 try:
                                     # Each comparison should be a dict with single key: val
                                     if "s_eq" in cmp and str(cmp["s_eq"]).lower() == str(val).lower():
@@ -210,10 +223,10 @@ def make_table(dt):
                                     )
                 # Apply HTML in order of config keys
                 badge_col = None
-                for cfc in config.table_cond_formatting_colours:
+                for cfc in cond_formatting_colours:
                     for cfck in cfc:  # should always be one, but you never know
                         if cmatches[cfck]:
-                            bgcol = cfc[cfck]
+                            badge_col = cfc[cfck]
                 if badge_col is not None:
                     valstring = '<span class="badge" style="background-color:{}">{}</span>'.format(badge_col, valstring)
 
