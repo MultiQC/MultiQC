@@ -21,9 +21,11 @@ Alignment_Length_Threshold = 0.95
 # Amplicon_Dropout_Val will report amplicon dropout in any amplicon which has fewer than X reads
 Amplicon_Dropout_Val = 50
 
-# find_missing will return a list of ints not found within the range of the provided list
-def find_missing(lst): 
-    return [x for x in range(lst[0], lst[-1]+1) if x not in lst] 
+# find_missing_amplicons will return a list of ints not found within the range of the provided list
+def find_missing_amplicons(a):
+    b = [x for x in range(1, max(a)+1)]
+    return list(set(a) ^ set(b))
+
 
 class MultiqcModule(BaseMultiqcModule):
 
@@ -89,11 +91,13 @@ class MultiqcModule(BaseMultiqcModule):
         # Set up data holder for sample
         self.aligntrim_data[sample] = dict()
 
+        # Grab the primer scheme being used
+        primerSchemeUsed = ""
+
         # Skip first line of report (header)
         _ = f['f'].readline()
 
         # Read aligntrim report and bin reads by amplicon
-        schemeName = ""
         for l in f['f']:
             fields = l.rstrip().split('\t')
 
@@ -108,8 +112,8 @@ class MultiqcModule(BaseMultiqcModule):
                 continue
 
             # Get the schemename
-            if len(schemeName) == 0:
-                schemeName = fields[3].split('_')
+            if primerSchemeUsed == "":
+                primerSchemeUsed = fields[3].split('_')[0]
 
             # Get the amplicon number
             ampliconNum = int(fields[3].split('_')[1])
@@ -125,10 +129,10 @@ class MultiqcModule(BaseMultiqcModule):
             return
 
         # Update the primer scheme name tracker
-        if (self.primer_scheme != "") and (self.primer_scheme != schemeName):
-            log.debug("Found reports from different primer schemes: {} and {}".format(self.primer_scheme, schemeName))
+        if (self.primer_scheme != "") and (self.primer_scheme != primerSchemeUsed):
+            log.debug("Found reports from different primer schemes: {} and {}".format(self.primer_scheme, primerSchemeUsed))
             raise UserWarning
-        self.primer_scheme = schemeName
+        self.primer_scheme = primerSchemeUsed
 
     # Parse a vcf_check report
     def parse_vcf_report(self, f):
@@ -167,9 +171,13 @@ class MultiqcModule(BaseMultiqcModule):
 
             # add missing amplicons as 0s
             # note: assumes terminal amplicon has not dropped out (unlikely scenario)
-            missingAmplicons = find_missing(self.aligntrim_data[sample].keys())
+            missingAmplicons = find_missing_amplicons(list(self.aligntrim_data[sample]))
             for x in missingAmplicons:
                 self.aligntrim_data[sample][x] = 0
+            newDict = dict()
+            for x in sorted(self.aligntrim_data[sample].keys()):
+                newDict[x] = self.aligntrim_data[sample][x]
+            self.aligntrim_data[sample] = newDict
 
             for count in self.aligntrim_data[sample].values():
                 if count < Amplicon_Dropout_Val:
