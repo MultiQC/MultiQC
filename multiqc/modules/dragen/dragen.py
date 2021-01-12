@@ -51,29 +51,35 @@ class MultiqcModule(
         )
 
         samples_found = set()
+
+        # <output prefix>.vc_metrics.csv
+        # a dedicated table and the total number of Variants into the general stats table
         samples_found |= self.add_vc_metrics()
-        # <output prefix>.vc_metrics.csv                   - a dedicated table and the total number of Variants into the general stats table
 
+        # <output prefix>.ploidy_estimation_metrics.csv
+        # a "Ploidy estimation" column in the general stats table
         samples_found |= self.add_ploidy_estimation_metrics()
-        # <output prefix>.ploidy_estimation_metrics.csv    - add just Ploidy estimation into gen stats
 
+        # <output prefix>.(wgs|target_bed)_fine_hist_(tumor|normal)?.csv
+        # coverage distribution and cumulative coverage plots
         samples_found |= self.add_coverage_hist()
-        # <output prefix>.wgs_fine_hist_normal.csv         - coverage distribution and cumulative coverage plots
-        # <output prefix>.wgs_fine_hist_tumor.csv          - same
 
+        # <output prefix>.(wgs|target_bed)_coverage_metrics_(tumor|normal)?.csv
+        # general stats table and a dedicated table
         samples_found |= self.add_coverage_metrics()
-        # <output prefix>.wgs_coverage_metrics_normal.csv  - general stats table and a dedicated table
-        # <output prefix>.wgs_coverage_metrics_tumor.csv   - same
 
+        # <output prefix>.(wgs|target_bed)_contig_mean_cov_(tumor|normal)?.csv
+        # a histogram like in mosdepth, with each chrom as a category on X axis, plus a category
+        # for autosomal chromosomes average
         samples_found |= self.add_coverage_per_contig()
-        # <output prefix>.wgs_contig_mean_cov_normal.csv   - a histogram like in mosdepth, with each chrom as a category on X axis, plus a category for autosomal chromosomes average
-        # <output prefix>.wgs_contig_mean_cov_tumor.csv    - same
 
+        # general stats table, a dedicated table, and a few barplots
+        # <output prefix>.mapping_metrics.csv
         samples_found |= self.add_mapping_metrics()
-        # <output prefix>.mapping_metrics.csv              - general stats table, a dedicated table, and a few barplots
 
+        # a histogram plot
+        # <output prefix>.fragment_length_hist.csv
         samples_found |= self.add_fragment_length_hist()
-        # <output prefix>.fragment_length_hist.csv         - a histogram plot
 
         if len(samples_found) == 0:
             raise UserWarning
