@@ -44,5 +44,5 @@ jobs:
       - name: Install Prettier
         run: npm install -g prettier
 
-      - name: Run yaml-lint
+      - name: Run Prettier --check
         run: prettier --check ${GITHUB_WORKSPACE}
