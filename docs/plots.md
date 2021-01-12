@@ -419,6 +419,7 @@ single_header = {
     'floor': None,                  # Minimum value for automatic bar limit
     'minRange': None,               # Minimum range for automatic bar
     'scale': 'GnBu',                # Colour scale for colour coding. False to disable.
+    'bgcols': None,                 # Dict with values: background colours for categorical data.
     'colour': '<auto>',             # Colour for column grouping
     'suffix': None,                 # Suffix for value (eg. '%')
     'format': '{:,.1f}',            # Value format string - default 1 decimal place
@@ -517,6 +518,24 @@ Colour scales can be reversed by adding the suffix `-rev` to the name. For examp
 The following scales are available:
 
 ![color brewer](images/cbrewer_scales.png)
+
+### Custom cell background colours
+
+You can specify custom background colours for specific values using the `bgcols`
+header config. This takes precedence over `scale`.
+
+For example, a header config for a column could look like this:
+
+```python
+headers[instrument] = {
+  "title": "My table column",
+  "bgcols": {
+    "bad data": "#f8d7da",
+    "ok data": "#fff3cd",
+    "good data": "#d1e7dd"
+  }
+}
+```
 
 ## Beeswarm plots (dot plots)
 

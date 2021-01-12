@@ -178,6 +178,9 @@ class MultiqcModule(BaseMultiqcModule):
         )
 
     def add_instrument_data(self):
+
+        bgcols = {"low confidence": "#f8d7da", "medium confidence": "#fff3cd", "high confidence": "#d1e7dd"}
+
         general_data = {}
         for sample, instrument_data in self.instrument.items():
             general_data[sample] = {
@@ -194,6 +197,7 @@ class MultiqcModule(BaseMultiqcModule):
         general_headers["confidence"] = {
             "title": "Instrument: Confidence",
             "description": "Level of confidence (low, medium, high) that the predicted instrument is correct.",
+            "bgcols": bgcols,
             "hidden": True,
         }
         general_headers["basis"] = {
@@ -219,6 +223,7 @@ class MultiqcModule(BaseMultiqcModule):
             headers[instrument] = {
                 "title": instrument,
                 "description": f"Predicted {instrument} from ngsderive",
+                "bgcols": bgcols,
             }
 
         table_data = {}
@@ -254,7 +259,6 @@ class MultiqcModule(BaseMultiqcModule):
         headers["consensusreadlength"] = {
             "title": "Read Length (bp)",
             "description": "Predicted read length from ngsderive.",
-            "scale": False,
             "format": "{:,.d}",
         }
         headers["majoritypctdetected"] = {

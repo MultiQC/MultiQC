@@ -209,20 +209,25 @@ def make_table(dt):
                                         "Not able to apply table conditional formatting to '{}' ({})".format(val, cmp)
                                     )
                 # Apply HTML in order of config keys
-                bgcol = None
+                badge_col = None
                 for cfc in config.table_cond_formatting_colours:
                     for cfck in cfc:  # should always be one, but you never know
                         if cmatches[cfck]:
                             bgcol = cfc[cfck]
-                if bgcol is not None:
-                    valstring = '<span class="badge" style="background-color:{}">{}</span>'.format(bgcol, valstring)
+                if badge_col is not None:
+                    valstring = '<span class="badge" style="background-color:{}">{}</span>'.format(badge_col, valstring)
 
-                # Build HTML
-                if not header["scale"]:
+                # Categorical backgorund colours supplied
+                if val in header.get("bgcols", {}).keys():
+                    col = 'style="background-color:{};"'.format(header["bgcols"][val])
                     if s_name not in t_rows:
                         t_rows[s_name] = dict()
-                    t_rows[s_name][rid] = '<td class="{rid} {h}">{v}</td>'.format(rid=rid, h=hide, v=valstring)
-                else:
+                    t_rows[s_name][rid] = '<td class="{rid} {h}" {c}>{v}</td>'.format(
+                        rid=rid, h=hide, c=col, v=valstring
+                    )
+
+                # Build table cell background colour bar
+                elif header["scale"]:
                     if c_scale is not None:
                         col = " background-color:{};".format(c_scale.get_colour(val))
                     else:
@@ -236,6 +241,12 @@ def make_table(dt):
                     t_rows[s_name][rid] = '<td class="data-coloured {rid} {h}">{c}</td>'.format(
                         rid=rid, h=hide, c=wrapper_html
                     )
+
+                # Scale / background colours are disabled
+                else:
+                    if s_name not in t_rows:
+                        t_rows[s_name] = dict()
+                    t_rows[s_name][rid] = '<td class="{rid} {h}">{v}</td>'.format(rid=rid, h=hide, v=valstring)
 
                 # Is this cell hidden or empty?
                 if s_name not in t_rows_empty:
