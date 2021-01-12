@@ -132,28 +132,11 @@ class MultiqcModule(BaseMultiqcModule):
         for (k, v) in sorted_data:
             bardata[k] = v
 
-        headers = OrderedDict()
-        headers["predicted"] = {
-            "title": "Strandedness",
-            "description": "Predicted strandedness from ngsderive",
-        }
-        headers["forward"] = {
-            "title": "% Forward Strandedness",
-            "description": "Percentage of reads which were evidence for forward-stranded.",
-            "min": 0,
-            "max": 100,
-            "suffix": "%",
-            "scale": "RdYlGn",
-            "hidden": True,
-        }
-        headers["reverse"] = {
-            "title": "% Reverse Strandedness",
-            "description": "Percentage of reads which were evidence for reverse-stranded.",
-            "min": 0,
-            "max": 100,
-            "suffix": "%",
-            "scale": "RdYlGn",
-            "hidden": True,
+        headers = {
+            "predicted": {
+                "title": "Strandedness",
+                "description": "Predicted strandedness from ngsderive",
+            }
         }
         self.general_stats_addcols(data, headers)
 
@@ -174,7 +157,7 @@ class MultiqcModule(BaseMultiqcModule):
             anchor="ngsderive-strandedness",
             description="""Predicted strandedness provided by ngsderive. For more information, please see
             [the documentation](https://stjudecloud.github.io/ngsderive/subcommands/strandedness/).""",
-            plot=bargraph.plot(bardata, headers, pconfig),
+            plot=bargraph.plot(bardata, ["forward", "reverse"], pconfig),
         )
 
     def add_instrument_data(self):
@@ -191,7 +174,6 @@ class MultiqcModule(BaseMultiqcModule):
             general_data[sample] = {
                 "instrument": " / ".join(sorted(instrument_data.get("Instrument").split(" or "))),
                 "confidence": instrument_data.get("Confidence"),
-                "basis": instrument_data.get("Basis"),
             }
 
         general_headers = OrderedDict()
@@ -204,11 +186,6 @@ class MultiqcModule(BaseMultiqcModule):
             "description": "Level of confidence (low, medium, high) that the predicted instrument is correct.",
             "bgcols": bgcols,
             "cond_formatting_rules": cond_formatting_rules,
-            "hidden": True,
-        }
-        general_headers["basis"] = {
-            "title": "Instrument: Basis",
-            "description": "Basis upon which the prediction was made.",
             "hidden": True,
         }
         self.general_stats_addcols(general_data, general_headers)
@@ -232,12 +209,17 @@ class MultiqcModule(BaseMultiqcModule):
                 "bgcols": bgcols,
                 "cond_formatting_rules": cond_formatting_rules,
             }
+        headers["basis"] = {
+            "title": "Instrument: Basis",
+            "description": "Basis upon which the prediction was made.",
+        }
 
         table_data = {}
         for sample, instrument_data in self.instrument.items():
             table_data[sample] = {}
             for instrument in instrument_data.get("Instrument").split(" or "):
                 table_data[sample][instrument] = instrument_data.get("Confidence")
+            table_data[sample]["basis"] = instrument_data.get("Basis")
 
         # Config for the plot
         config = {
