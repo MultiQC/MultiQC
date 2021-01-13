@@ -89,7 +89,7 @@ class DragenGcMetrics(BaseMultiqcModule):
 
 def parse_gc_metrics_file(f):
     """
-    sample.fragment_length_hist.csv
+    sample.gc_metrics.csv
 
     GC BIAS DETAILS,,Windows at GC 0,20,0.001
     GC BIAS DETAILS,,Windows at GC 1,4,0.000

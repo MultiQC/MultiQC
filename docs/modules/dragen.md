@@ -30,5 +30,9 @@ and alike. This MultiQC module supports some of the output but not all.
     * A dedicated table and the total number of Variants into the general stats table
 * `<output prefix>.gc_metrics.csv`
     * A histogram and summary statistics table on GC content metrics
+* `<output prefix>.trimmer_metrics.csv`
+    * A summary table of tirmmer metrics
+* `<output prefix>.time_metrics.metrics`
+    * A bar graph of the total run time and a breakdown of the run time of each individual step
 
 Each QC output adds a section into the report if a corresponding QC file is found.
