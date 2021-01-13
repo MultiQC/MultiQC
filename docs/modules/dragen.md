@@ -34,5 +34,7 @@ and alike. This MultiQC module supports some of the output but not all.
     * A summary table of tirmmer metrics
 * `<output prefix>.time_metrics.metrics`
     * A bar graph of the total run time and a breakdown of the run time of each individual step
+* `<output prefix>.quant.metrics.csv`
+    * Bar graphs of RNA fragments
 
 Each QC output adds a section into the report if a corresponding QC file is found.
