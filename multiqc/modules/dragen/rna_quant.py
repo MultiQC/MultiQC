@@ -30,12 +30,8 @@ class DragenRnaMetrics(BaseMultiqcModule):
             'Intron fragments',
             'Intergenic fragments'
         }
-        fragment_orientation_metric_names = {
-            'Forward transcript fragments',
-            'Reverse transcript fragments',
-            'Orientation filtered fragments',
-            'Ambiguous orientation fragments,'
-        }
+
+        strand_metrics = DragenRnaMetrics.__get_strand_metrics(data_by_sample)
         self.add_section(
             name='RNA Metrics',
             anchor='dragen-rna-metrics',
@@ -44,16 +40,11 @@ class DragenRnaMetrics(BaseMultiqcModule):
                 [
                     {
                         sample: {
-                            metric: stat / 60 for metric, stat in data.items() if
+                            metric: stat for metric, stat in data.items() if
                             metric in coding_fragments_metric_names
                         } for sample, data in data_by_sample.items()
                     },
-                    {
-                        sample: {
-                            metric: stat / 60 for metric, stat in data.items() if
-                            metric in fragment_orientation_metric_names
-                        } for sample, data in data_by_sample.items()
-                    },
+                    strand_metrics,
 
                 ],
                 pconfig={
@@ -63,7 +54,7 @@ class DragenRnaMetrics(BaseMultiqcModule):
                     'cpswitch_counts_label': 'Fragments',
                     'data_labels': [
                         {
-                            'name': 'Transcript Alignments',
+                            'name': 'Transcript / Intronic / Intergenic Fragments',
                             'ylab': 'Fragments',
                             'cpswitch_counts_label': 'Fragments',
                         },
@@ -78,6 +69,30 @@ class DragenRnaMetrics(BaseMultiqcModule):
         )
 
         return data_by_sample.keys()
+
+    @staticmethod
+    def __get_strand_metrics(data_by_sample: dict) -> dict:
+        strand_metrics = {}
+        for sample, data in data_by_sample.items():
+            if 'Forward transcript fragments' in data:
+                fragment_orientation_metric_names = {
+                    'Forward transcript fragments',
+                    'Reverse transcript fragments',
+                    'Orientation filtered fragments',
+                    'Ambiguous orientation fragments',
+                }
+            elif 'Strand mismatched fragments' in data:
+                fragment_orientation_metric_names = {
+                    'Transcript fragments',
+                    'Strand mismatched fragments',
+                }
+            else:
+                continue
+
+            strand_metrics[sample] = {metric: stat for metric, stat in data.items()
+                                      if metric in fragment_orientation_metric_names}
+
+        return strand_metrics
 
 
 def parse_time_metrics_file(f):
