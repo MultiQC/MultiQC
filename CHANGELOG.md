@@ -54,6 +54,11 @@ For further information, please see the [documentation](https://multiqc.info/doc
   - Added support for whole-exome / targetted data ([#1290](https://github.com/ewels/MultiQC/issues/1290))
 - **featureCounts**
   - Add support for output from [Rsubread](https://bioconductor.org/packages/release/bioc/html/Rsubread.html) ([#1022](https://github.com/ewels/MultiQC/issues/1022))
+- **fgbio**
+  - Fix `ErrorRateByReadPosition` to calculate `ymax` not just on the overall `error_rate`, but also specific base errors (ex. `a_to_c_error_rate`, `a_to_g_error_rate`, ...). ([#1215](https://github.com/ewels/MultiQC/pull/1251))
+  - Fix `ErrorRateByReadPosition` plotted line names to no longer concatenate multiple read identifiers and no longer have off-by-one read numbering (ex. `Sample1_R2_R3` -> `Sample1_R2`) ([#[1304](https://github.com/ewels/MultiQC/pull/1304))
+- **GATK**
+  - Add support for the creation of a "Reported vs Empirical Quality" graph to the Base Recalibration module.
 - **hap.py**
   - Updated module to plot both SNP and INDEL stats ([#1241](https://github.com/ewels/MultiQC/issues/1241))
 - **Kaiju**
@@ -67,11 +72,6 @@ For further information, please see the [documentation](https://multiqc.info/doc
   - Fix `HsMetrics` bait percentage columns ([#1212](https://github.com/ewels/MultiQC/issues/1212))
 - **PycoQC**
   - Log10 x-axis for _Read Length_ plot ([#1214](https://github.com/ewels/MultiQC/issues/1214))
-- **fgbio**
-  - Fix `ErrorRateByReadPosition` to calculate `ymax` not just on the overall `error_rate`, but also specific base errors (ex. `a_to_c_error_rate`, `a_to_g_error_rate`, ...). ([#1215](https://github.com/ewels/MultiQC/pull/1251))
-  - Fix `ErrorRateByReadPosition` plotted line names to no longer concatenate multiple read identifiers and no longer have off-by-one read numbering (ex. `Sample1_R2_R3` -> `Sample1_R2`) ([#[1304](https://github.com/ewels/MultiQC/pull/1304))
-- **GATK**
-  - Add support for the creation of a "Reported vs Empirical Quality" graph to the Base Recalibration module.
 - **Rockhopper**
   - Fix issue with parsing genome names in Rockhopper summary files ([#1333](https://github.com/ewels/MultiQC/issues/1333))
   - Fix issue properly parsing multiple samples within a single Rockhopper summary file
