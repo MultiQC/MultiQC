@@ -75,6 +75,8 @@ For further information, please see the [documentation](https://multiqc.info/doc
 - **Rockhopper**
   - Fix issue with parsing genome names in Rockhopper summary files ([#1333](https://github.com/ewels/MultiQC/issues/1333))
   - Fix issue properly parsing multiple samples within a single Rockhopper summary file
+- **Salmon**
+  - Only try to generate a plot for fragment length if the data was found.
 
 #### New Custom Content features
 

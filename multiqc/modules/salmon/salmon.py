@@ -33,6 +33,7 @@ class MultiqcModule(BaseMultiqcModule):
             s_name = os.path.basename(os.path.dirname(f["root"]))
             s_name = self.clean_s_name(s_name, f["root"])
             self.salmon_meta[s_name] = json.loads(f["f"])
+
         # Parse Fragment Length Distribution logs
         self.salmon_fld = dict()
         for f in self.find_log_files("salmon/fld"):
@@ -82,15 +83,16 @@ class MultiqcModule(BaseMultiqcModule):
         }
         self.general_stats_addcols(self.salmon_meta, headers)
 
-        # Fragment length distribution plot
-        pconfig = {
-            "smooth_points": 500,
-            "id": "salmon_plot",
-            "title": "Salmon: Fragment Length Distribution",
-            "ylab": "Fraction",
-            "xlab": "Fragment Length (bp)",
-            "ymin": 0,
-            "xmin": 0,
-            "tt_label": "<b>{point.x:,.0f} bp</b>: {point.y:,.0f}",
-        }
-        self.add_section(plot=linegraph.plot(self.salmon_fld, pconfig))
+        if len(self.salmon_fld) > 0:
+            # Fragment length distribution plot
+            pconfig = {
+                "smooth_points": 500,
+                "id": "salmon_plot",
+                "title": "Salmon: Fragment Length Distribution",
+                "ylab": "Fraction",
+                "xlab": "Fragment Length (bp)",
+                "ymin": 0,
+                "xmin": 0,
+                "tt_label": "<b>{point.x:,.0f} bp</b>: {point.y:,.0f}",
+            }
+            self.add_section(plot=linegraph.plot(self.salmon_fld, pconfig))
