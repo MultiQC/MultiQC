@@ -1,0 +1,4 @@
+*.html
+multiqc/templates/*/assets/js/packages
+bootstrap.min.css
+jquery.toast.css

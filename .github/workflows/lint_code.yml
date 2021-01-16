@@ -1,0 +1,48 @@
+name: Lint Code Base
+on: [push, pull_request]
+
+jobs:
+  Markdown:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+
+      - uses: actions/setup-node@v2
+        with:
+          node-version: "12"
+
+      - name: Install markdownlint
+        run: npm install -g markdownlint-cli
+
+      - name: Run Markdownlint
+        run: markdownlint ${GITHUB_WORKSPACE}
+
+  YAML:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+
+      - uses: actions/setup-node@v2
+        with:
+          node-version: "12"
+
+      - name: Install yaml-lint
+        run: npm install -g yaml-lint
+
+      - name: Run yaml-lint
+        run: yamllint $(find ${GITHUB_WORKSPACE} -type f -name "*.yml")
+
+  Prettier:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+
+      - uses: actions/setup-node@v2
+        with:
+          node-version: "12"
+
+      - name: Install Prettier
+        run: npm install -g prettier
+
+      - name: Run Prettier --check
+        run: prettier --check ${GITHUB_WORKSPACE}

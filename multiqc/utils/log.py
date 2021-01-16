@@ -13,9 +13,10 @@ import tempfile
 
 from multiqc.utils import config, util_functions
 
-LEVELS = {0: 'INFO', 1: 'DEBUG'}
+LEVELS = {0: "INFO", 1: "DEBUG"}
 log_tmp_dir = None
-log_tmp_fn = '/dev/null'
+log_tmp_fn = "/dev/null"
+
 
 def init_log(logger, loglevel=0, no_ansi=False):
     """
@@ -30,21 +31,21 @@ def init_log(logger, loglevel=0, no_ansi=False):
     # File for logging
     global log_tmp_dir, log_tmp_fn
     log_tmp_dir = tempfile.mkdtemp()
-    log_tmp_fn = os.path.join(log_tmp_dir, 'multiqc.log')
+    log_tmp_fn = os.path.join(log_tmp_dir, "multiqc.log")
 
     # Logging templates
-    debug_template = '[%(asctime)s] %(name)-50s [%(levelname)-7s]  %(message)s'
-    info_template = '[%(levelname)-7s] %(module)15s : %(message)s'
+    debug_template = "[%(asctime)s] %(name)-50s [%(levelname)-7s]  %(message)s"
+    info_template = "[%(levelname)-7s] %(module)15s : %(message)s"
 
     # Base level setup
-    logger.setLevel(getattr(logging, 'DEBUG'))
+    logger.setLevel(getattr(logging, "DEBUG"))
 
     # Set up the console logging stream
     console = logging.StreamHandler()
     console.setLevel(getattr(logging, loglevel))
     level_styles = coloredlogs.DEFAULT_LEVEL_STYLES
-    level_styles['debug'] = {'faint': True}
-    if loglevel == 'DEBUG':
+    level_styles["debug"] = {"faint": True}
+    if loglevel == "DEBUG":
         if no_ansi or not sys.stderr.isatty():
             console.setFormatter(logging.Formatter(debug_template))
         else:
@@ -57,19 +58,20 @@ def init_log(logger, loglevel=0, no_ansi=False):
     logger.addHandler(console)
 
     # Now set up the file logging stream if we have a data directory
-    file_handler = logging.FileHandler(log_tmp_fn, encoding='utf-8')
-    file_handler.setLevel(getattr(logging, 'DEBUG')) # always DEBUG for the file
+    file_handler = logging.FileHandler(log_tmp_fn, encoding="utf-8")
+    file_handler.setLevel(getattr(logging, "DEBUG"))  # always DEBUG for the file
     file_handler.setFormatter(logging.Formatter(debug_template))
     logger.addHandler(file_handler)
 
+
 def move_tmp_log(logger):
-    """ Move the temporary log file to the MultiQC data directory
-    if it exists. """
+    """Move the temporary log file to the MultiQC data directory
+    if it exists."""
 
     try:
         # https://stackoverflow.com/questions/15435652/python-does-not-release-filehandles-to-logfile
         logging.shutdown()
-        shutil.copy(log_tmp_fn, os.path.join(config.data_dir, 'multiqc.log'))
+        shutil.copy(log_tmp_fn, os.path.join(config.data_dir, "multiqc.log"))
         os.remove(log_tmp_fn)
         util_functions.robust_rmtree(log_tmp_dir)
     except (AttributeError, TypeError, IOError):

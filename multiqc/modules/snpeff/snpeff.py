@@ -18,18 +18,20 @@ class MultiqcModule(BaseMultiqcModule):
 
     def __init__(self):
         # Initialise the parent object
-        super(MultiqcModule, self).__init__(name='SnpEff', anchor='snpeff',
+        super(MultiqcModule, self).__init__(
+            name="SnpEff",
+            anchor="snpeff",
             href="http://snpeff.sourceforge.net/",
             info=" is a genetic variant annotation and effect prediction "
-                 "toolbox. It annotates and predicts the effects of variants "
-                 "on genes (such as amino acid changes). "
+            "toolbox. It annotates and predicts the effects of variants "
+            "on genes (such as amino acid changes). ",
         )
 
         self.snpeff_data = dict()
         self.snpeff_section_totals = dict()
         self.snpeff_qualities = dict()
 
-        for f in self.find_log_files('snpeff', filehandles=True):
+        for f in self.find_log_files("snpeff", filehandles=True):
             self.parse_snpeff_log(f)
 
         # Filter to strip out ignored sample names
@@ -41,38 +43,38 @@ class MultiqcModule(BaseMultiqcModule):
         log.info("Found {} reports".format(len(self.snpeff_data)))
 
         # Write parsed report data to a file
-        self.write_data_file(self.snpeff_data, 'multiqc_snpeff')
+        self.write_data_file(self.snpeff_data, "multiqc_snpeff")
 
         # General stats table
         self.general_stats()
 
         # Report sections
-        self.add_section (
-            name = 'Variants by Genomic Region',
-            description = (
+        self.add_section(
+            name="Variants by Genomic Region",
+            description=(
                 """
                 The stacked bar plot shows locations of detected variants in
                 the genome and the number of variants for each location.
                 """
             ),
-            helptext = (
+            helptext=(
                 """
                 The upstream and downstream interval size to detect these
                 genomic regions is 5000bp by default.
                 """
             ),
-            anchor = 'snpeff-genomic-regions',
-            plot = self.count_genomic_region_plot()
+            anchor="snpeff-genomic-regions",
+            plot=self.count_genomic_region_plot(),
         )
-        self.add_section (
-            name = 'Variant Effects by Impact',
-            description = (
+        self.add_section(
+            name="Variant Effects by Impact",
+            description=(
                 """
                 The stacked bar plot shows the putative impact of detected
                 variants and the number of variants for each impact.
                 """
             ),
-            helptext = (
+            helptext=(
                 """
                 There are four levels of impacts predicted by SnpEff:
 
@@ -82,35 +84,35 @@ class MultiqcModule(BaseMultiqcModule):
                 * **Modifier**: No impact
                 """
             ),
-            anchor = 'snpeff-effects-impact',
-            plot = self.effects_impact_plot()
+            anchor="snpeff-effects-impact",
+            plot=self.effects_impact_plot(),
         )
-        self.add_section (
-            name = 'Variants by Effect Types',
-            description = (
+        self.add_section(
+            name="Variants by Effect Types",
+            description=(
                 """
                 The stacked bar plot shows the effect of variants at protein
                 level and the number of variants for each effect type.
                 """
             ),
-            helptext = (
+            helptext=(
                 """
                 This plot shows the effect of variants with respect to
                 the mRNA.
                 """
             ),
-            anchor = 'snpeff-effects',
-            plot = self.effects_plot()
+            anchor="snpeff-effects",
+            plot=self.effects_plot(),
         )
-        self.add_section (
-            name = 'Variants by Functional Class',
-            description = (
+        self.add_section(
+            name="Variants by Functional Class",
+            description=(
                 """
                 The stacked bar plot shows the effect of variants and
                 the number of variants for each effect type.
                 """
             ),
-            helptext = (
+            helptext=(
                 """
                 This plot shows the effect of variants on the translation of
                 the mRNA as protein. There are three possible cases:
@@ -120,62 +122,64 @@ class MultiqcModule(BaseMultiqcModule):
                 * **Nonsense**: The variant generates a stop codon.
                 """
             ),
-            anchor = 'snpeff-functional-class',
-            plot = self.effects_function_plot()
+            anchor="snpeff-functional-class",
+            plot=self.effects_function_plot(),
         )
         if len(self.snpeff_qualities) > 0:
-            self.add_section (
-                name = 'Variant Qualities',
-                description = (
+            self.add_section(
+                name="Variant Qualities",
+                description=(
                     """
                     The line plot shows the quantity as function of the
                     variant quality score.
                     """
                 ),
-                helptext = (
+                helptext=(
                     """
                     The quality score corresponds to the QUAL column of the
                     VCF file. This score is set by the variant caller.
                     """
                 ),
-                anchor = 'snpeff-qualities',
-                plot = self.qualities_plot()
+                anchor="snpeff-qualities",
+                plot=self.qualities_plot(),
             )
-
 
     def parse_snpeff_log(self, f):
         """ Go through log file looking for snpeff output """
 
         keys = {
-            '# Summary table': [
-                'Genome', 'Number_of_variants_before_filter',
-                'Number_of_known_variants', 'Number_of_effects',
-                'Genome_total_length', 'Change_rate'
+            "# Summary table": [
+                "Genome",
+                "Number_of_variants_before_filter",
+                "Number_of_known_variants",
+                "Number_of_effects",
+                "Genome_total_length",
+                "Change_rate",
             ],
-            '# Effects by impact': ['HIGH', 'LOW', 'MODERATE', 'MODIFIER'],
-            '# Effects by functional class': ['MISSENSE', 'NONSENSE', 'SILENT', 'Missense_Silent_ratio'],
-            '# Hom/Het table': ['Het', 'Hom', 'Missing'],
-            '# Ts/Tv summary': ['Transitions', 'Transversions', 'Ts_Tv_ratio'],
-            '# Count by effects': 'all',
-            '# Count by genomic region': 'all'
+            "# Effects by impact": ["HIGH", "LOW", "MODERATE", "MODIFIER"],
+            "# Effects by functional class": ["MISSENSE", "NONSENSE", "SILENT", "Missense_Silent_ratio"],
+            "# Hom/Het table": ["Het", "Hom", "Missing"],
+            "# Ts/Tv summary": ["Transitions", "Transversions", "Ts_Tv_ratio"],
+            "# Count by effects": "all",
+            "# Count by genomic region": "all",
         }
         parsed_data = {}
         section = None
-        for l in f['f']:
+        for l in f["f"]:
             l = l.strip()
-            if l[:1] == '#':
+            if l[:1] == "#":
                 section = l
                 self.snpeff_section_totals[section] = dict()
                 continue
-            s = l.split(',')
+            s = l.split(",")
 
             # Quality values / counts
-            if section == '# Quality':
+            if section == "# Quality":
                 quals = OrderedDict()
-                if l.startswith('Values'):
-                    values = [int(c) for c in l.split(',')[1:] ]
-                    counts = f['f'].readline()
-                    counts = [int(c) for c in counts.split(',')[1:] ]
+                if l.startswith("Values"):
+                    values = [int(c) for c in l.split(",")[1:]]
+                    counts = f["f"].readline()
+                    counts = [int(c) for c in counts.split(",")[1:]]
                     c = 0
                     total = sum(counts)
                     for i, v in enumerate(values):
@@ -183,76 +187,70 @@ class MultiqcModule(BaseMultiqcModule):
                             quals[v] = counts[i]
                             c += counts[i]
                 if len(quals) > 0:
-                    self.snpeff_qualities[f['s_name']] = quals
+                    self.snpeff_qualities[f["s_name"]] = quals
 
             # Everything else
             elif section in keys:
-                if keys[section] == 'all' or any([k in s[0].strip() for k in keys[section]]):
+                if keys[section] == "all" or any([k in s[0].strip() for k in keys[section]]):
                     try:
-                        parsed_data[ s[0].strip() ] = float(s[1].strip())
+                        parsed_data[s[0].strip()] = float(s[1].strip())
                     except ValueError:
-                        parsed_data[ s[0].strip() ] = s[1].strip()
+                        parsed_data[s[0].strip()] = s[1].strip()
                     except IndexError:
                         pass
                     else:
                         # Parsing the number worked - add to totals
                         try:
-                            self.snpeff_section_totals[section][s[0].strip()] += parsed_data[ s[0].strip() ]
+                            self.snpeff_section_totals[section][s[0].strip()] += parsed_data[s[0].strip()]
                         except KeyError:
-                            self.snpeff_section_totals[section][s[0].strip()] = parsed_data[ s[0].strip() ]
-                    if len(s) > 2 and s[2][-1:] == '%':
-                        parsed_data[ '{}_percent'.format(s[0].strip()) ] = float(s[2][:-1])
+                            self.snpeff_section_totals[section][s[0].strip()] = parsed_data[s[0].strip()]
+                    if len(s) > 2 and s[2][-1:] == "%":
+                        parsed_data["{}_percent".format(s[0].strip())] = float(s[2][:-1])
 
         if len(parsed_data) > 0:
-            if f['s_name'] in self.snpeff_data:
-                log.debug("Duplicate sample name found! Overwriting: {}".format(f['s_name']))
+            if f["s_name"] in self.snpeff_data:
+                log.debug("Duplicate sample name found! Overwriting: {}".format(f["s_name"]))
             self.add_data_source(f)
-            self.snpeff_data[f['s_name']] = parsed_data
+            self.snpeff_data[f["s_name"]] = parsed_data
 
     def general_stats(self):
         """ Add key SnpEff stats to the general stats table """
 
         headers = OrderedDict()
-        headers['Change_rate'] = {
-            'title': 'Change rate',
-            'scale': 'RdYlBu-rev',
-            'min': 0,
-            'format': '{:,.0f}'
+        headers["Change_rate"] = {"title": "Change rate", "scale": "RdYlBu-rev", "min": 0, "format": "{:,.0f}"}
+        headers["Ts_Tv_ratio"] = {
+            "title": "Ts/Tv",
+            "description": "Transitions / Transversions ratio",
+            "format": "{:,.3f}",
         }
-        headers['Ts_Tv_ratio'] = {
-            'title': 'Ts/Tv',
-            'description': 'Transitions / Transversions ratio',
-            'format': '{:,.3f}'
-        }
-        headers['Number_of_variants_before_filter'] = {
-            'title': 'M Variants',
-            'description': 'Number of variants before filter (millions)',
-            'scale': 'PuRd',
-            'modify': lambda x: x / 1000000,
-            'min': 0,
-            'format': '{:,.2f}'
+        headers["Number_of_variants_before_filter"] = {
+            "title": "M Variants",
+            "description": "Number of variants before filter (millions)",
+            "scale": "PuRd",
+            "modify": lambda x: x / 1000000,
+            "min": 0,
+            "format": "{:,.2f}",
         }
         self.general_stats_addcols(self.snpeff_data, headers)
-
 
     def count_genomic_region_plot(self):
         """ Generate the SnpEff Counts by Genomic Region plot """
 
         # Sort the keys based on the total counts
-        keys = self.snpeff_section_totals['# Count by genomic region']
+        keys = self.snpeff_section_totals["# Count by genomic region"]
         sorted_keys = sorted(keys, reverse=True, key=keys.get)
 
         # Make nicer label names
         pkeys = OrderedDict()
         for k in sorted_keys:
-            pkeys[k] = {'name': k.replace('_', ' ').title().replace('Utr', 'UTR') }
+            pkeys[k] = {"name": k.replace("_", " ").title().replace("Utr", "UTR")}
 
         # Config for the plot
         pconfig = {
-            'id': 'snpeff_variant_effects_region',
-            'title': 'SnpEff: Counts by Genomic Region',
-            'ylab': '# Reads',
-            'logswitch': True
+            "id": "snpeff_variant_effects_region",
+            "title": "SnpEff: Counts by Genomic Region",
+            "ylab": "# Reads",
+            "logswitch": True,
         }
 
         return bargraph.plot(self.snpeff_data, pkeys, pconfig)
@@ -261,20 +259,20 @@ class MultiqcModule(BaseMultiqcModule):
         """ Generate the SnpEff Counts by Effects plot """
 
         # Sort the keys based on the total counts
-        keys = self.snpeff_section_totals['# Count by effects']
+        keys = self.snpeff_section_totals["# Count by effects"]
         sorted_keys = sorted(keys, reverse=True, key=keys.get)
 
         # Make nicer label names
         pkeys = OrderedDict()
         for k in sorted_keys:
-            pkeys[k] = {'name': k.replace('_', ' ').title().replace('Utr', 'UTR') }
+            pkeys[k] = {"name": k.replace("_", " ").title().replace("Utr", "UTR")}
 
         # Config for the plot
         pconfig = {
-            'id': 'snpeff_effects',
-            'title': 'SnpEff: Counts by Effect Types',
-            'ylab': '# Reads',
-            'logswitch': False
+            "id": "snpeff_effects",
+            "title": "SnpEff: Counts by Effect Types",
+            "ylab": "# Reads",
+            "logswitch": False,
         }
         return bargraph.plot(self.snpeff_data, pkeys, pconfig)
 
@@ -282,19 +280,19 @@ class MultiqcModule(BaseMultiqcModule):
         """ Generate the SnpEff Counts by Effects Impact plot """
 
         # Put keys in a more logical order
-        keys = [ 'MODIFIER', 'LOW', 'MODERATE', 'HIGH' ]
+        keys = ["MODIFIER", "LOW", "MODERATE", "HIGH"]
 
         # Make nicer label names
         pkeys = OrderedDict()
         for k in keys:
-            pkeys[k] = {'name': k.title() }
+            pkeys[k] = {"name": k.title()}
 
         # Config for the plot
         pconfig = {
-            'id': 'snpeff_variant_effects_impact',
-            'title': 'SnpEff: Counts by Effects Impact',
-            'ylab': '# Reads',
-            'logswitch': True
+            "id": "snpeff_variant_effects_impact",
+            "title": "SnpEff: Counts by Effects Impact",
+            "ylab": "# Reads",
+            "logswitch": True,
         }
 
         return bargraph.plot(self.snpeff_data, pkeys, pconfig)
@@ -303,36 +301,34 @@ class MultiqcModule(BaseMultiqcModule):
         """ Generate the SnpEff Counts by Functional Class plot """
 
         # Cats to plot in a sensible order
-        keys = [ 'SILENT', 'MISSENSE', 'NONSENSE' ]
+        keys = ["SILENT", "MISSENSE", "NONSENSE"]
 
         # Make nicer label names
         pkeys = OrderedDict()
         for k in keys:
-            pkeys[k] = {'name': k.title() }
+            pkeys[k] = {"name": k.title()}
 
         # Config for the plot
         pconfig = {
-            'id': 'snpeff_variant_effects_class',
-            'title': 'SnpEff: Counts by Functional Class',
-            'ylab': '# Reads',
-            'logswitch': True
+            "id": "snpeff_variant_effects_class",
+            "title": "SnpEff: Counts by Functional Class",
+            "ylab": "# Reads",
+            "logswitch": True,
         }
 
         return bargraph.plot(self.snpeff_data, pkeys, pconfig)
-
-
 
     def qualities_plot(self):
         """ Generate the qualities plot """
 
         pconfig = {
-            'smooth_points': 200,
-            'id': 'snpeff_qualities',
-            'title': 'SnpEff: Qualities',
-            'ylab': 'Count',
-            'xlab': 'Values',
-            'xDecimals': False,
-            'ymin': 0
+            "smooth_points": 200,
+            "id": "snpeff_qualities",
+            "title": "SnpEff: Qualities",
+            "ylab": "Count",
+            "xlab": "Values",
+            "xDecimals": False,
+            "ymin": 0,
         }
 
         return linegraph.plot(self.snpeff_qualities, pconfig)

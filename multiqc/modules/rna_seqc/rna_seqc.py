@@ -14,24 +14,24 @@ from multiqc.plots import bargraph, beeswarm, linegraph, heatmap
 # Initialise the logger
 log = logging.getLogger(__name__)
 
-class MultiqcModule(BaseMultiqcModule):
 
+class MultiqcModule(BaseMultiqcModule):
     def __init__(self):
         # Initialise the parent object
         super(MultiqcModule, self).__init__(
             name="RNA-SeQC",
             anchor="rna_seqc",
             href="https://github.com/broadinstitute/rnaseqc",
-            info="Fast, efficient RNA-Seq metrics for quality control and process optimization"
+            info="Fast, efficient RNA-Seq metrics for quality control and process optimization",
         )
 
         # Parse metrics from RNA-SeQC v1
         self.rna_seqc_metrics = dict()
-        for f in self.find_log_files('rna_seqc/metrics_v1', filehandles=True):
+        for f in self.find_log_files("rna_seqc/metrics_v1", filehandles=True):
             self.parse_metrics_rnaseqc_v1(f)
 
         # Parse metrics from RNA-SeQC v2
-        for f in self.find_log_files('rna_seqc/metrics_v2', filehandles=True):
+        for f in self.find_log_files("rna_seqc/metrics_v2", filehandles=True):
             self.parse_metrics_rnaseqc_v2(f)
 
         # Strip out ignored sample names from metrics
@@ -41,7 +41,7 @@ class MultiqcModule(BaseMultiqcModule):
         self.rna_seqc_norm_high_cov = dict()
         self.rna_seqc_norm_medium_cov = dict()
         self.rna_seqc_norm_low_cov = dict()
-        for f in self.find_log_files('rna_seqc/coverage'):
+        for f in self.find_log_files("rna_seqc/coverage"):
             self.parse_coverage(f)
         self.rna_seqc_norm_high_cov = self.ignore_samples(self.rna_seqc_norm_high_cov)
         self.rna_seqc_norm_medium_cov = self.ignore_samples(self.rna_seqc_norm_medium_cov)
@@ -51,7 +51,7 @@ class MultiqcModule(BaseMultiqcModule):
         self.rna_seqc_pearson = None
         self.rna_seqc_spearman = None
         num_correlation_samples = 0
-        for f in self.find_log_files('rna_seqc/correlation'):
+        for f in self.find_log_files("rna_seqc/correlation"):
             num_correlation_samples += self.parse_correlation(f)
 
         # Work out the maximum number of samples that we have across all reports
@@ -60,7 +60,7 @@ class MultiqcModule(BaseMultiqcModule):
             len(self.rna_seqc_norm_high_cov),
             len(self.rna_seqc_norm_medium_cov),
             len(self.rna_seqc_norm_low_cov),
-            num_correlation_samples
+            num_correlation_samples,
         )
 
         # Stop here if we didn't find anything
@@ -70,7 +70,7 @@ class MultiqcModule(BaseMultiqcModule):
         log.info("Found {} samples".format(num_found))
 
         # Write metrics to a file
-        self.write_data_file(self.rna_seqc_metrics, 'multiqc_rna_seqc')
+        self.write_data_file(self.rna_seqc_metrics, "multiqc_rna_seqc")
 
         # Generate sections for the report
         self.rnaseqc_general_stats()
@@ -85,12 +85,12 @@ class MultiqcModule(BaseMultiqcModule):
         Parse the metrics.tsv file from RNA-SeQC version 1.x
         """
         headers = None
-        for l in f['f']:
+        for l in f["f"]:
             s = l.strip().split("\t")
             if headers is None:
                 headers = s
             else:
-                s_name = s[headers.index('Sample')]
+                s_name = s[headers.index("Sample")]
                 data = dict()
                 for idx, h in enumerate(headers):
                     try:
@@ -106,11 +106,11 @@ class MultiqcModule(BaseMultiqcModule):
         Parse the *.metrics.tsv file from RNA-SeQC version 2.x
         """
         data = {}
-        s_name = f['s_name']
-        for l in f['f']:
-            s = l.split('\t')
-            if s[0] == 'Sample':
-                s_name = self.clean_s_name(s[1], f['root'])
+        s_name = f["s_name"]
+        for l in f["f"]:
+            s = l.split("\t")
+            if s[0] == "Sample":
+                s_name = self.clean_s_name(s[1], f["root"])
             if s[0] == "Total Reads":
                 s[0] = "Total Read Number"
             if s[0] == "rRNA Rate":
@@ -124,38 +124,37 @@ class MultiqcModule(BaseMultiqcModule):
             log.debug("Duplicate sample name found! Overwriting: {}".format(s_name))
         self.rna_seqc_metrics[s_name] = data
 
-
-    def parse_coverage (self, f):
+    def parse_coverage(self, f):
         """ Parse the RNA-SeQC Normalised Coverage Files """
         data = dict()
         s_names = None
         j = 1
-        for l in f['f'].splitlines():
+        for l in f["f"].splitlines():
             s = l.strip().split("\t")
             if s_names is None:
                 s_names = s
                 for s_name in s_names:
-                    s_name = self.clean_s_name(s_name, f['root'])
+                    s_name = self.clean_s_name(s_name, f["root"])
                     data[s_name] = dict()
             else:
                 for i, v in enumerate(s):
                     data[s_names[i]][j] = float(v)
                 j += 1
-        if f['fn'] == 'meanCoverageNorm_high.txt':
+        if f["fn"] == "meanCoverageNorm_high.txt":
             self.rna_seqc_norm_high_cov.update(data)
-        elif f['fn'] == 'meanCoverageNorm_medium.txt':
+        elif f["fn"] == "meanCoverageNorm_medium.txt":
             self.rna_seqc_norm_medium_cov.update(data)
-        elif f['fn'] == 'meanCoverageNorm_low.txt':
+        elif f["fn"] == "meanCoverageNorm_low.txt":
             self.rna_seqc_norm_low_cov.update(data)
 
     def parse_correlation(self, f):
         """ Parse RNA-SeQC correlation matrices """
         s_names = None
         data = list()
-        for l in f['f'].splitlines():
+        for l in f["f"].splitlines():
             s = l.strip().split("\t")
             if s_names is None:
-                s_names = [ x for x in s if x != '' ]
+                s_names = [x for x in s if x != ""]
             else:
                 data.append(s[1:])
 
@@ -163,205 +162,194 @@ class MultiqcModule(BaseMultiqcModule):
         filtered_s_names = list()
         filtered_data = list()
         for idx, s_name in enumerate(s_names):
-            s_name = self.clean_s_name(s_name, f['root'])
+            s_name = self.clean_s_name(s_name, f["root"])
             if not self.is_ignore_sample(s_name):
                 filtered_s_names.append(s_name)
                 filtered_data.append(data[idx])
 
-        if f['fn'] == 'corrMatrixPearson.txt':
+        if f["fn"] == "corrMatrixPearson.txt":
             self.rna_seqc_pearson = (filtered_s_names, filtered_data)
-        elif f['fn'] == 'corrMatrixSpearman.txt':
+        elif f["fn"] == "corrMatrixSpearman.txt":
             self.rna_seqc_spearman = (filtered_s_names, filtered_data)
 
         return len(filtered_s_names)
-
 
     def rnaseqc_general_stats(self):
         """
         Add key metrics to the general stats table
         """
         headers = OrderedDict()
-        headers['Expression Profiling Efficiency'] = {
-            'title': '% Expression Efficiency',
-            'description': 'Ratio of exonic reads to total reads',
-            'max': 100,
-            'min': 0,
-            'suffix': '%',
-            'scale': 'YlGn',
-            'modify': lambda x: float(x) * 100.0
+        headers["Expression Profiling Efficiency"] = {
+            "title": "% Expression Efficiency",
+            "description": "Ratio of exonic reads to total reads",
+            "max": 100,
+            "min": 0,
+            "suffix": "%",
+            "scale": "YlGn",
+            "modify": lambda x: float(x) * 100.0,
         }
-        headers['Genes Detected'] = {
-            'title': '# Genes',
-            'description': 'Number of genes detected with at least 5 reads',
-            'min': 0,
-            'scale': 'Bu',
-            'format': '{:,.0f}'
+        headers["Genes Detected"] = {
+            "title": "# Genes",
+            "description": "Number of genes detected with at least 5 reads",
+            "min": 0,
+            "scale": "Bu",
+            "format": "{:,.0f}",
         }
-        headers['rRNA rate'] = {
-            'title': '% rRNA Alignment',
-            'description': 'Ribosomal RNA reads per total reads',
-            'max': 100,
-            'min': 0,
-            'suffix': '%',
-            'scale': 'Reds',
-            'modify': lambda x: float(x) * 100.0
+        headers["rRNA rate"] = {
+            "title": "% rRNA Alignment",
+            "description": "Ribosomal RNA reads per total reads",
+            "max": 100,
+            "min": 0,
+            "suffix": "%",
+            "scale": "Reds",
+            "modify": lambda x: float(x) * 100.0,
         }
         self.general_stats_addcols(self.rna_seqc_metrics, headers)
 
-    def transcript_associated_plot (self):
+    def transcript_associated_plot(self):
         """ Plot a bargraph showing the Transcript-associated reads  """
 
         # Plot bar graph of groups
         keys = OrderedDict()
-        keys['Exonic Rate'] = { 'name': 'Exonic', 'color': '#2f7ed8' }
-        keys['Intronic Rate'] = { 'name': 'Intronic', 'color': '#8bbc21' }
-        keys['Intergenic Rate'] = { 'name': 'Intergenic', 'color': '#0d233a'}
+        keys["Exonic Rate"] = {"name": "Exonic", "color": "#2f7ed8"}
+        keys["Intronic Rate"] = {"name": "Intronic", "color": "#8bbc21"}
+        keys["Intergenic Rate"] = {"name": "Intergenic", "color": "#0d233a"}
 
         # Config for the plot
         pconfig = {
-            'id': 'rna_seqc_position_plot',
-            'title': 'RNA-SeQC: Transcript-associated reads',
-            'ylab': 'Ratio of Reads',
-            'cpswitch': False,
-            'ymax': 1,
-            'ymin': 0,
-            'tt_decimals': 3,
-            'cpswitch_c_active': False
+            "id": "rna_seqc_position_plot",
+            "title": "RNA-SeQC: Transcript-associated reads",
+            "ylab": "Ratio of Reads",
+            "cpswitch": False,
+            "ymax": 1,
+            "ymin": 0,
+            "tt_decimals": 3,
+            "cpswitch_c_active": False,
         }
-        self.add_section (
-            name = 'Transcript-associated reads',
-            anchor = 'rna_seqc_transcript_associated',
-            helptext = '''
+        self.add_section(
+            name="Transcript-associated reads",
+            anchor="rna_seqc_transcript_associated",
+            helptext="""
             All of the rates given are per mapped read.
 
             * **Exonic Rate** is the fraction mapping within exons.
             * **Intronic Rate** is the fraction mapping within introns.
             * **Intergenic Rate** is the fraction mapping in the genomic space between genes.
-            ''',
-            plot = bargraph.plot(self.rna_seqc_metrics, keys, pconfig)
+            """,
+            plot=bargraph.plot(self.rna_seqc_metrics, keys, pconfig),
         )
 
     def plot_correlation_heatmap(self):
         """ Return HTML for correlation heatmap """
         data = None
         corr_type = None
-        correlation_type = getattr(config, 'rna_seqc' ,{}).get('default_correlation', 'spearman')
-        if self.rna_seqc_spearman is not None and correlation_type != 'pearson':
+        correlation_type = getattr(config, "rna_seqc", {}).get("default_correlation", "spearman")
+        if self.rna_seqc_spearman is not None and correlation_type != "pearson":
             data = self.rna_seqc_spearman
-            corr_type = 'Spearman'
+            corr_type = "Spearman"
         elif self.rna_seqc_pearson is not None:
             data = self.rna_seqc_pearson
-            corr_type = 'Pearson'
+            corr_type = "Pearson"
         if data is not None:
             pconfig = {
-                'id': 'rna_seqc_correlation_heatmap',
-                'title': 'RNA-SeQC: {} Sample Correlation'.format(corr_type)
+                "id": "rna_seqc_correlation_heatmap",
+                "title": "RNA-SeQC: {} Sample Correlation".format(corr_type),
             }
-            self.add_section (
-                name = '{} Correlation'.format(corr_type),
-                anchor = 'rseqc-rna_seqc_correlation',
-                plot = heatmap.plot(data[1], data[0], data[0], pconfig)
+            self.add_section(
+                name="{} Correlation".format(corr_type),
+                anchor="rseqc-rna_seqc_correlation",
+                plot=heatmap.plot(data[1], data[0], data[0], pconfig),
             )
-
 
     def strand_barplot(self):
         """ Plot a bargraph showing the strandedness of alignments """
         # Plot bar graph of groups
-        keys = [ 'End 1 Sense', 'End 1 Antisense', 'End 2 Sense', 'End 2 Antisense' ]
+        keys = ["End 1 Sense", "End 1 Antisense", "End 2 Sense", "End 2 Antisense"]
         # Config for the plot
         pconfig = {
-            'id': 'rna_seqc_strandedness_plot',
-            'title': 'RNA-SeQC: Strand Specificity',
-            'ylab': '% Reads',
-            'cpswitch_counts_label': '# Reads',
-            'cpswitch_percent_label': '% Reads',
-            'ymin': 0,
-            'cpswitch_c_active': False
+            "id": "rna_seqc_strandedness_plot",
+            "title": "RNA-SeQC: Strand Specificity",
+            "ylab": "% Reads",
+            "cpswitch_counts_label": "# Reads",
+            "cpswitch_percent_label": "% Reads",
+            "ymin": 0,
+            "cpswitch_c_active": False,
         }
-        self.add_section (
-            name = 'Strand Specificity',
-            anchor = 'rna_seqc_strand_specificity',
-            helptext = '''
+        self.add_section(
+            name="Strand Specificity",
+            anchor="rna_seqc_strand_specificity",
+            helptext="""
             End 1/2 Sense are the number of End 1 or 2 reads that were sequenced in the sense direction.
 
             End 1/2 Antisense are the number of End 1 or 2 reads that were sequenced in the antisense direction
-            ''',
-            plot = bargraph.plot(self.rna_seqc_metrics, keys, pconfig)
+            """,
+            plot=bargraph.plot(self.rna_seqc_metrics, keys, pconfig),
         )
 
-
-    def coverage_lineplot (self):
+    def coverage_lineplot(self):
         """ Make HTML for coverage line plots """
         # Add line graph to section
         data = list()
         data_labels = list()
         if len(self.rna_seqc_norm_high_cov) > 0:
             data.append(self.rna_seqc_norm_high_cov)
-            data_labels.append({'name': 'High Expressed'})
+            data_labels.append({"name": "High Expressed"})
         if len(self.rna_seqc_norm_medium_cov) > 0:
             data.append(self.rna_seqc_norm_medium_cov)
-            data_labels.append({'name': 'Medium Expressed'})
+            data_labels.append({"name": "Medium Expressed"})
         if len(self.rna_seqc_norm_low_cov) > 0:
             data.append(self.rna_seqc_norm_low_cov)
-            data_labels.append({'name': 'Low Expressed'})
+            data_labels.append({"name": "Low Expressed"})
         pconfig = {
-            'id': 'rna_seqc_gene_body_coverage_plot',
-            'title': 'RNA-SeQC: Gene Body Coverage',
-            'ylab': '% Coverage',
-            'xlab': "Gene Body Percentile (5' -> 3')",
-            'xmin': 0,
-            'xmax': 100,
-            'tt_label': "<strong>{point.x}% from 5'</strong>: {point.y:.2f}",
-            'data_labels': data_labels
+            "id": "rna_seqc_gene_body_coverage_plot",
+            "title": "RNA-SeQC: Gene Body Coverage",
+            "ylab": "% Coverage",
+            "xlab": "Gene Body Percentile (5' -> 3')",
+            "xmin": 0,
+            "xmax": 100,
+            "tt_label": "<strong>{point.x}% from 5'</strong>: {point.y:.2f}",
+            "data_labels": data_labels,
         }
         if len(data) > 0:
-            self.add_section (
-                name = 'Gene Body Coverage',
-                anchor = 'rseqc-rna_seqc_mean_coverage',
-                helptext = 'The metrics are calculated across the transcripts with tiered expression levels.',
-                plot = linegraph.plot(data, pconfig)
+            self.add_section(
+                name="Gene Body Coverage",
+                anchor="rseqc-rna_seqc_mean_coverage",
+                helptext="The metrics are calculated across the transcripts with tiered expression levels.",
+                plot=linegraph.plot(data, pconfig),
             )
 
-
     def bam_statplot(self):
-        pconfig = {
-            'id': 'rna_seqc_bam_stat_beeswarm',
-            'title': 'RNA-SeQC: Read metrics'
-        }
+        pconfig = {"id": "rna_seqc_bam_stat_beeswarm", "title": "RNA-SeQC: Read metrics"}
         columns = [
-            'Total Read Number',
-            'Alternative Alignments',
-            'Chimeric Reads',
-            'Duplicate Reads',
-            'End 1 Mapped Reads',
-            'End 2 Mapped Reads',
-            'End 1 Mismatches',
-            'End 2 Mismatches',
-            'End 1 Sense',
-            'End 2 Sense',
-            'Ambiguous Reads',
-            'High Quality Reads',
-            'Low Quality Reads',
-            'Mapped Duplicate Reads',
-            'Mapped Reads',
-            'Mapped Unique Reads',
-            'Non-Globin Reads',
-            'Non-Globin Duplicate Reads',
-            'rRNA Reads',
-            'Unique Mapping, Vendor QC Passed Reads'
+            "Total Read Number",
+            "Alternative Alignments",
+            "Chimeric Reads",
+            "Duplicate Reads",
+            "End 1 Mapped Reads",
+            "End 2 Mapped Reads",
+            "End 1 Mismatches",
+            "End 2 Mismatches",
+            "End 1 Sense",
+            "End 2 Sense",
+            "Ambiguous Reads",
+            "High Quality Reads",
+            "Low Quality Reads",
+            "Mapped Duplicate Reads",
+            "Mapped Reads",
+            "Mapped Unique Reads",
+            "Non-Globin Reads",
+            "Non-Globin Duplicate Reads",
+            "rRNA Reads",
+            "Unique Mapping, Vendor QC Passed Reads",
         ]
         keys = OrderedDict()
         for col in columns:
-            keys[col] = {
-                'title': col,
-                'shared_key': 'read_count',
-                'suffix': config.read_count_prefix
-            }
+            keys[col] = {"title": col, "shared_key": "read_count", "suffix": config.read_count_prefix}
 
         self.add_section(
-            name = 'Read Counts',
-            anchor = 'rna_seqc_bam_stat',
-            description = 'Number of reads ({}) falling into different categories.'.format(config.read_count_desc),
-            helptext = 'Note that many of these statistics are only available from RNA-SeQC v2.x',
-            plot = beeswarm.plot(self.rna_seqc_metrics, keys, pconfig)
+            name="Read Counts",
+            anchor="rna_seqc_bam_stat",
+            description="Number of reads ({}) falling into different categories.".format(config.read_count_desc),
+            helptext="Note that many of these statistics are only available from RNA-SeQC v2.x",
+            plot=beeswarm.plot(self.rna_seqc_metrics, keys, pconfig),
         )
