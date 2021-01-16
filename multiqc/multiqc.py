@@ -807,7 +807,10 @@ def run(
             logger.info("Data        : {}".format(os.path.relpath(config.data_dir)))
             # Modules have run, so data directory should be complete by now. Move its contents.
             logger.debug("Moving data file from '{}' to '{}'".format(config.data_tmp_dir, config.data_dir))
-            copy_tree(config.data_tmp_dir, config.data_dir)
+            try:
+                copy_tree(config.data_tmp_dir, config.data_dir)
+            except OSError as why:
+                copy_tree(config.data_tmp_dir, config.data_dir, preserve_times=0, preserve_mode=0)
             shutil.rmtree(config.data_tmp_dir)
 
         # Copy across the static plot images if requested
@@ -826,7 +829,10 @@ def run(
 
             # Modules have run, so plots directory should be complete by now. Move its contents.
             logger.debug("Moving plots directory from '{}' to '{}'".format(config.plots_tmp_dir, config.plots_dir))
-            copy_tree(config.plots_tmp_dir, config.plots_dir)
+            try:
+                copy_tree(config.plots_tmp_dir, config.plots_dir)
+            except OSError as why:
+                copy_tree(config.plots_tmp_dir, config.plots_dir, preserve_times=0, preserve_mode=0)
             shutil.rmtree(config.plots_tmp_dir)
 
     plugin_hooks.mqc_trigger("before_template")
