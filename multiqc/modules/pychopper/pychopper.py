@@ -13,21 +13,24 @@ from multiqc.modules.base_module import BaseMultiqcModule
 # Initialise the logger
 log = logging.getLogger(__name__)
 
-class MultiqcModule(BaseMultiqcModule):
 
+class MultiqcModule(BaseMultiqcModule):
     def __init__(self):
 
         # Initialise the parent object
-        super(MultiqcModule, self).__init__(name='Pychopper', anchor='pychopper',
-                href='https://github.com/nanoporetech/pychopper',
-        info="is a tool to identify, orient, trim and rescue full length Nanopore cDNA reads.")
-        
+        super(MultiqcModule, self).__init__(
+            name="Pychopper",
+            anchor="pychopper",
+            href="https://github.com/nanoporetech/pychopper",
+            info="is a tool to identify, orient, trim and rescue full length Nanopore cDNA reads.",
+        )
+
         # Parse stats file
         self.pychopper_data = {}
-        for f in self.find_log_files('pychopper'):
-            sample = f['s_name']
-            self.pychopper_data[sample]= {}
-            lines = f['f'].splitlines()
+        for f in self.find_log_files("pychopper"):
+            sample = f["s_name"]
+            self.pychopper_data[sample] = {}
+            lines = f["f"].splitlines()
             for line in lines[1:]:
                 category, name, value = line.split()
                 if category not in self.pychopper_data[sample]:
@@ -40,41 +43,41 @@ class MultiqcModule(BaseMultiqcModule):
         # Raise user warning if no data found
         if len(self.pychopper_data) == 0:
             raise UserWarning
-        
+
         log.info("Found {} reports".format(len(self.pychopper_data)))
 
         # Add to general statistics table:
         # Percentage of full length transcripts
-        data_general_stats={}
+        data_general_stats = {}
         for sample in self.pychopper_data.keys():
             data_general_stats[sample] = {}
-            c=self.pychopper_data[sample]['Classification']
-            ftp=c['Primers_found'] * 100 / (c['Primers_found'] + c['Rescue'] + c['Unusable'])
-            data_general_stats[sample]['ftp']=ftp
+            c = self.pychopper_data[sample]["Classification"]
+            ftp = c["Primers_found"] * 100 / (c["Primers_found"] + c["Rescue"] + c["Unusable"])
+            data_general_stats[sample]["ftp"] = ftp
 
         headers = OrderedDict()
-        headers['ftp'] = {
-            'title' : 'Full-Length cDNA',
-            'description' : 'Percentage of full length cDNA reads with correct primers at both ends',
-            'suffix' : '%',
-            'max': 100,
-            'min': 0,
+        headers["ftp"] = {
+            "title": "Full-Length cDNA",
+            "description": "Percentage of full length cDNA reads with correct primers at both ends",
+            "suffix": "%",
+            "max": 100,
+            "min": 0,
         }
-        
+
         self.general_stats_addcols(data_general_stats, headers)
 
         # Write data file
-        self.write_data_file(self.pychopper_data, 'multiqc_pychopper')
+        self.write_data_file(self.pychopper_data, "multiqc_pychopper")
 
         # Report sections
-        self.add_section (
-            name = "cDNA Read Classification",
-            description = (
+        self.add_section(
+            name="cDNA Read Classification",
+            description=(
                 """
                 This plot shows the cDNA read categories identified by Pychopper </br>
                 """
             ),
-            helptext = (
+            helptext=(
                 """
                 There are three possible cases:
 
@@ -83,24 +86,24 @@ class MultiqcModule(BaseMultiqcModule):
                 * **Unusable**: Reads without correct primer combinations.
                 """
             ),
-            anchor = 'pychopper_classification',
-            plot = self.plot_classification()
+            anchor="pychopper_classification",
+            plot=self.plot_classification(),
         )
-        self.add_section (
-            name = "cDNA Strand Orientation",
-            description = (
+        self.add_section(
+            name="cDNA Strand Orientation",
+            description=(
                 """
                 This plot shows the strand orientation of full length cDNA reads
                 """
             ),
-            helptext = (
+            helptext=(
                 """
                 Nanopore cDNA reads are always read forward. To estimate their original strand, 
                 Pychopper searches for the location of the start and end primers and assigns the reads accordingly.
                 """
             ),
-            anchor = 'pychopper_orientation',
-            plot = self.plot_orientation()
+            anchor="pychopper_orientation",
+            plot=self.plot_orientation(),
         )
 
     # Plotting functions
@@ -108,40 +111,37 @@ class MultiqcModule(BaseMultiqcModule):
         """ Generate the cDNA read classification plot """
 
         pconfig = {
-            'id': 'pychopper_classification_plot',
-            'title': 'Pychopper: Read classification',
-            'ylab': '',
-            'xDecimals': False,
-            'ymin': 0
+            "id": "pychopper_classification_plot",
+            "title": "Pychopper: Read classification",
+            "ylab": "",
+            "xDecimals": False,
+            "ymin": 0,
         }
 
         data_classification = {}
         for sample in self.pychopper_data.keys():
             data_classification[sample] = {}
-            data_classification[sample]=self.pychopper_data[sample]['Classification']
-        
-        cats = ['Primers_found', 'Rescue', 'Unusable']
+            data_classification[sample] = self.pychopper_data[sample]["Classification"]
+
+        cats = ["Primers_found", "Rescue", "Unusable"]
         return bargraph.plot(data_classification, cats, pconfig)
-    
+
     def plot_orientation(self):
         """ Generate the read strand orientation plot """
 
         pconfig = {
-            'id': 'pychopper_orientation_plot',
-            'title': 'Pychopper: Strand Orientation',
-            'ylab': '',
-            'cpswitch_c_active': False,  
-            'xDecimals': False,
-            'ymin': 0
+            "id": "pychopper_orientation_plot",
+            "title": "Pychopper: Strand Orientation",
+            "ylab": "",
+            "cpswitch_c_active": False,
+            "xDecimals": False,
+            "ymin": 0,
         }
 
         data_orientation = {}
         for sample in self.pychopper_data.keys():
             data_orientation[sample] = {}
-            data_orientation[sample]=self.pychopper_data[sample]['Strand']
+            data_orientation[sample] = self.pychopper_data[sample]["Strand"]
 
-        cats = ['+', '-']
+        cats = ["+", "-"]
         return bargraph.plot(data_orientation, cats, pconfig)
-
-        
-

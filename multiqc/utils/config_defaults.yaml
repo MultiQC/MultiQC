@@ -22,27 +22,27 @@ custom_logo: null
 custom_logo_url: null
 custom_logo_title: null
 simple_output: false
-template: 'default'
+template: "default"
 profile_runtime: false
 pandoc_template: null
 read_count_multiplier: 0.000001
-read_count_prefix: 'M'
-read_count_desc: 'millions'
+read_count_prefix: "M"
+read_count_desc: "millions"
 long_read_count_multiplier: 0.001
-long_read_count_prefix: 'K'
-long_read_count_desc: 'thousands'
+long_read_count_prefix: "K"
+long_read_count_desc: "thousands"
 base_count_multiplier: 0.000001
-base_count_prefix: 'Mb'
-base_count_desc: 'millions'
-output_fn_name: 'multiqc_report.html'
-data_dir_name: 'multiqc_data'
-plots_dir_name: 'multiqc_plots'
-data_format: 'tsv'
+base_count_prefix: "Mb"
+base_count_desc: "millions"
+output_fn_name: "multiqc_report.html"
+data_dir_name: "multiqc_data"
+plots_dir_name: "multiqc_plots"
+data_format: "tsv"
 module_tag: []
 force: false
 prepend_dirs: false
 prepend_dirs_depth: 0
-prepend_dirs_sep: ' | '
+prepend_dirs_sep: " | "
 file_list: false
 
 make_data_dir: true
@@ -61,27 +61,27 @@ max_table_rows: 500
 table_columns_visible: {}
 table_columns_placement: {}
 table_cond_formatting_colours:
-    - blue: '#337ab7'
-    - lbue: '#5bc0de'
-    - pass: '#5cb85c'
-    - warn: '#f0ad4e'
-    - fail: '#d9534f'
+  - blue: "#337ab7"
+  - lbue: "#5bc0de"
+  - pass: "#5cb85c"
+  - warn: "#f0ad4e"
+  - fail: "#d9534f"
 table_cond_formatting_rules:
-    all_columns:
-        pass:
-            - s_eq: 'pass'
-            - s_eq: 'true'
-        warn:
-            - s_eq: 'warn'
-            - s_eq: 'unknown'
-        fail:
-            - s_eq: 'fail'
-            - s_eq: 'false'
-    # PURPLE module - QC Status column
-    # TODO: Should update the table plotting code so that this can go in pconfig
-    QCStatus:
-        fail:
-            - s_contains: 'fail'
+  all_columns:
+    pass:
+      - s_eq: "pass"
+      - s_eq: "true"
+    warn:
+      - s_eq: "warn"
+      - s_eq: "unknown"
+    fail:
+      - s_eq: "fail"
+      - s_eq: "false"
+  # PURPLE module - QC Status column
+  # TODO: Should update the table plotting code so that this can go in pconfig
+  QCStatus:
+    fail:
+      - s_contains: "fail"
 decimalPoint_format: null
 thousandsSep_format: null
 remove_sections: []
@@ -92,14 +92,15 @@ custom_plot_config: {}
 ignore_symlinks: false
 ignore_images: true
 fn_ignore_dirs:
-    - 'multiqc_data'
-    - 'icarus_viewers'       # quast
-    - 'runs_per_reference'   # quast
-    - 'not_aligned'          # quast
-    - 'contigs_reports'      # quast
+  - "multiqc_data"
+  - "icarus_viewers" # quast
+  - "runs_per_reference" # quast
+  - "not_aligned" # quast
+  - "contigs_reports" # quast
 
 fn_ignore_paths:
-    - '*/work/??/??????????????????????????????' # Nextflow work directories - always same hash lengths
+  - "*/work/??/??????????????????????????????" # Nextflow work directories - always same hash lengths
+  - ".snakemake"
 sample_names_ignore: []
 sample_names_ignore_re: []
 sample_names_rename_buttons: []
@@ -113,17 +114,17 @@ log_filesize_limit: 10000000
 report_readerrors: false
 skip_generalstats: false
 data_format_extensions:
-    tsv: 'txt'
-    json: 'json'
-    yaml: 'yaml'
+  tsv: "txt"
+  json: "json"
+  yaml: "yaml"
 export_plot_formats:
-    - 'png'
-    - 'svg'
-    - 'pdf'
+  - "png"
+  - "svg"
+  - "pdf"
 
 # Custom Config settings
 custom_content:
-    order: []
+  order: []
 
 # Option to disable sample name cleaning if desired
 fn_clean_sample_names: true
@@ -131,126 +132,126 @@ fn_clean_sample_names: true
 # Used for cleaning sample names. Should be strings.
 # NB: These are removed in order!
 fn_clean_exts:
-    - '.gz'
-    - '.fastq'
-    - '.fq'
-    - '.bam'
-    - '.sam'
-    - '.sra'
-    - '.vcf'
-    - '.dat'
-    - '_tophat'
-    - '.log'
-    - '.stderr'
-    - '.out'
-    - '.spp'
-    - '.fa'
-    - '.fasta'
-    - '.png'
-    - '.jpg'
-    - '.jpeg'
-    - '.html'
-    - 'Log.final'
-    - 'ReadsPerGene'
-    - '.flagstat'
-    - '_star_aligned'
-    - '_fastqc'
-    - '.hicup'
-    - '.counts'
-    - '_counts'
-    - '.txt'
-    - '.tsv'
-    - '.csv'
-    - '.aligned'
-    - 'Aligned'
-    - '.merge'
-    - '.deduplicated'
-    - '.dedup'
-    - '.clean'
-    - '.sorted'
-    - '.report'
-    - '| stdin'
-    - '.geneBodyCoverage'
-    - '.inner_distance_freq'
-    - '.junctionSaturation_plot.r'
-    - '.pos.DupRate.xls'
-    - '.GC.xls'
-    - '_slamdunk'
-    - '_bismark'
-    - '.conpair'
-    - '.concordance'
-    - '.contamination'
-    - '.BEST.results'
-    - '_peaks.xls'
-    - '.relatedness'
-    - '.cnt'
-    - '.aqhist'
-    - '.bhist'
-    - '.bincov'
-    - '.bqhist'
-    - '.covhist'
-    - '.covstats'
-    - '.ehist'
-    - '.gchist'
-    - '.idhist'
-    - '.ihist'
-    - '.indelhist'
-    - '.lhist'
-    - '.mhist'
-    - '.qahist'
-    - '.qhist'
-    - '.rpkm'
-    - '.selfSM'
-    - '.extendedFrags'
-    - '_SummaryStatistics'
-    - '.purple.purity'
-    - '.purple.qc'
+  - ".gz"
+  - ".fastq"
+  - ".fq"
+  - ".bam"
+  - ".sam"
+  - ".sra"
+  - ".vcf"
+  - ".dat"
+  - "_tophat"
+  - ".log"
+  - ".stderr"
+  - ".out"
+  - ".spp"
+  - ".fa"
+  - ".fasta"
+  - ".png"
+  - ".jpg"
+  - ".jpeg"
+  - ".html"
+  - "Log.final"
+  - "ReadsPerGene"
+  - ".flagstat"
+  - "_star_aligned"
+  - "_fastqc"
+  - ".hicup"
+  - ".counts"
+  - "_counts"
+  - ".txt"
+  - ".tsv"
+  - ".csv"
+  - ".aligned"
+  - "Aligned"
+  - ".merge"
+  - ".deduplicated"
+  - ".dedup"
+  - ".clean"
+  - ".sorted"
+  - ".report"
+  - "| stdin"
+  - ".geneBodyCoverage"
+  - ".inner_distance_freq"
+  - ".junctionSaturation_plot.r"
+  - ".pos.DupRate.xls"
+  - ".GC.xls"
+  - "_slamdunk"
+  - "_bismark"
+  - ".conpair"
+  - ".concordance"
+  - ".contamination"
+  - ".BEST.results"
+  - "_peaks.xls"
+  - ".relatedness"
+  - ".cnt"
+  - ".aqhist"
+  - ".bhist"
+  - ".bincov"
+  - ".bqhist"
+  - ".covhist"
+  - ".covstats"
+  - ".ehist"
+  - ".gchist"
+  - ".idhist"
+  - ".ihist"
+  - ".indelhist"
+  - ".lhist"
+  - ".mhist"
+  - ".qahist"
+  - ".qhist"
+  - ".rpkm"
+  - ".selfSM"
+  - ".extendedFrags"
+  - "_SummaryStatistics"
+  - ".purple.purity"
+  - ".purple.qc"
 
 # These are removed after the above, only if sample names
 # start or end with this string. Again, removed in order.
 fn_clean_trim:
-    - '.'
-    - ':'
-    - '_'
-    - '-'
-    - '.r'
-    - '_val'
-    - '.idxstats'
-    - '_trimmed'
-    - '.trimmed'
-    - '.csv'
-    - '.yaml'
-    - '.yml'
-    - '.json'
-    - '_mqc'
-    - 'short_summary_'
-    - '_summary'
-    - '.summary'
-    - '.align'
-    - '.h5'
-    - '_matrix'
-    - '.stats'
-    - '.hist'
+  - "."
+  - ":"
+  - "_"
+  - "-"
+  - ".r"
+  - "_val"
+  - ".idxstats"
+  - "_trimmed"
+  - ".trimmed"
+  - ".csv"
+  - ".yaml"
+  - ".yml"
+  - ".json"
+  - "_mqc"
+  - "short_summary_"
+  - "_summary"
+  - ".summary"
+  - ".align"
+  - ".h5"
+  - "_matrix"
+  - ".stats"
+  - ".hist"
 
 # Files to ignore when indexing files.
 # Grep file match patterns.
 fn_ignore_files:
-    - '.DS_Store'
-    - '*.bam'
-    - '*.bai'
-    - '*.sam'
-    - '*.fq.gz'
-    - '*.fastq.gz'
-    - '*.fq'
-    - '*.fastq'
-    - '*.fa'
-    - '*.gtf'
-    - '*.bed'
-    - '*.vcf'
-    - '*.txt.gz'
-    - '*.pdf'
-    - '*[!_][!m][!q][!c].html'
-    - '*.md5'
+  - ".DS_Store"
+  - "*.bam"
+  - "*.bai"
+  - "*.sam"
+  - "*.fq.gz"
+  - "*.fastq.gz"
+  - "*.fq"
+  - "*.fastq"
+  - "*.fa"
+  - "*.gtf"
+  - "*.bed"
+  - "*.vcf"
+  - "*.txt.gz"
+  - "*.pdf"
+  - "*[!_][!m][!q][!c].html"
+  - "*.md5"
 
 # Favourite modules that should appear at the top in preference
 # This is in addition to those below. These appear above _all_ other
@@ -259,376 +260,380 @@ top_modules: []
 
 # Order that modules should appear in report. Try to list in order of analysis.
 module_order:
-    # MultiQC general module for catching output from custom scripts
-    - 'custom_content'
-    # Post-alignment QC
-    - purple:
-        module_tag:
-            - DNA
-            - cancer
-    - conpair:
-        module_tag:
-            - WGS
-            - cancer
-            - DNA
-    - peddy:
-        module_tag:
-            - DNA
-    - somalier:
-        module_tag:
-            - DNA
-            - Methylation
-            - WGS
-            - cancer
-            - chip
-            - RNA
-    - methylQA:
-        module_tag:
-            - Methylation
-            - DNA
-    - mosdepth:
-        module_tag:
-            - DNA
-            - RNA
-    - phantompeakqualtools:
-        module_tag:
-            - chip
-    - qualimap:
-        module_tag:
-            - DNA
-            - RNA
-    - preseq:
-        module_tag:
-            - DNA
-            - RNA
-    - quast:
-        module_tag:
-            - DNA
-            - Metagenomics
-            - Denovo
-    - qorts:
-        module_tag:
-            - RNA
-    - rna_seqc:
-        module_tag:
-            - RNA
-    - rockhopper:
-        module_tag:
-            - RNA
-    - rsem:
-        module_tag:
-            - RNA
-    - rseqc:
-        module_tag:
-            - RNA
-    - busco:
-        module_tag:
-            - Denovo
-    - goleft_indexcov:
-        module_tag:
-            - DNA
-    - disambiguate:
-        module_tag:
-            - RNA
-    - supernova:
-        module_tag:
-            - DNA
-            - Denovo
-    - deeptools:
-        module_tag:
-            - DNA
-            - RNA
-            - chip
-    - sargasso:
-        module_tag:
-            - RNA
-    - verifybamid:
-        module_tag:
-            - DNA
-    - mirtrace:
-        module_tag:
-            - smRNA
-            - miRNA
-    - happy:
-        module_tag:
-            - DNA
-    - mirtop:
-        module_tag:
-            - miRNA
+  # MultiQC general module for catching output from custom scripts
+  - "custom_content"
+  # Post-alignment QC
+  - ngsderive:
+      module_tag:
+        - DNA
+        - RNA
+  - purple:
+      module_tag:
+        - DNA
+        - cancer
+  - conpair:
+      module_tag:
+        - WGS
+        - cancer
+        - DNA
+  - peddy:
+      module_tag:
+        - DNA
+  - somalier:
+      module_tag:
+        - DNA
+        - Methylation
+        - WGS
+        - cancer
+        - chip
+        - RNA
+  - methylQA:
+      module_tag:
+        - Methylation
+        - DNA
+  - mosdepth:
+      module_tag:
+        - DNA
+        - RNA
+  - phantompeakqualtools:
+      module_tag:
+        - chip
+  - qualimap:
+      module_tag:
+        - DNA
+        - RNA
+  - preseq:
+      module_tag:
+        - DNA
+        - RNA
+  - quast:
+      module_tag:
+        - DNA
+        - Metagenomics
+        - Denovo
+  - qorts:
+      module_tag:
+        - RNA
+  - rna_seqc:
+      module_tag:
+        - RNA
+  - rockhopper:
+      module_tag:
+        - RNA
+  - rsem:
+      module_tag:
+        - RNA
+  - rseqc:
+      module_tag:
+        - RNA
+  - busco:
+      module_tag:
+        - Denovo
+  - goleft_indexcov:
+      module_tag:
+        - DNA
+  - disambiguate:
+      module_tag:
+        - RNA
+  - supernova:
+      module_tag:
+        - DNA
+        - Denovo
+  - deeptools:
+      module_tag:
+        - DNA
+        - RNA
+        - chip
+  - sargasso:
+      module_tag:
+        - RNA
+  - verifybamid:
+      module_tag:
+        - DNA
+  - mirtrace:
+      module_tag:
+        - smRNA
+        - miRNA
+  - happy:
+      module_tag:
+        - DNA
+  - mirtop:
+      module_tag:
+        - miRNA
 
-    # Post-alignment processing
-    - homer:
-        module_tag:
-            - RNA
-            - DNA
-            - chip
-    - hops:
-        module_tag:
-            - DNA
-            - Metagenomics
-            - ancient
-    - macs2:
-        module_tag:
-            - chip
-    - theta2:
-        module_tag:
-            - DNA
-            - cancer
-    - snpeff:
-        module_tag:
-            - DNA
-    - gatk:
-        module_tag:
-            - DNA
-    - htseq:
-        module_tag:
-            - DNA
-            - RNA
-    - bcftools:
-        module_tag:
-            - DNA
-    - featureCounts:
-        module_tag:
-            - DNA
-            - RNA
-    - fgbio:
-        module_tag:
-            - DNA
-            - RNA
-            - umi
-    - dragen:
-        module_tag:
-            - DNA
-            - RNA
-    - dedup:
-        module_tag:
-            - DNA
-            - ancient
-    - damageprofiler:
-        module_tag:
-            - DNA
-            - ancient
-    - biobambam2:
-        module_tag:
-            - DNA
-            - RNA
-    - mtnucratio:
-        module_tag:
-            - DNA
-            - ancient
-    - picard:
-        module_tag:
-            - DNA
-            - RNA
-    - sentieon:
-        module_tag:
-            - DNA
-    - prokka:
-        module_tag:
-            - prokarytotic
-            - denovo
-    - qc3C:
-          module_tag:
-              - hi-c
-    - samblaster:
-        module_tag:
-            - DNA
-            - RNA
-    - samtools:
-        module_tag:
-            - DNA
-            - RNA
-    - sexdeterrmine:
-        module_tag:
-            - DNA
-    - bamtools:
-        module_tag:
-            - DNA
-            - RNA
-    - jellyfish:
-        module_tag:
-            - DNA
-    - vcftools:
-        module_tag:
-            - DNA
-    - longranger:
-        module_tag:
-            - DNA
-            - WGS
-    - stacks:
-        module_tag:
-            - DNA
-    - varscan2:
-        module_tag:
-            - DNA
+  # Post-alignment processing
+  - homer:
+      module_tag:
+        - RNA
+        - DNA
+        - chip
+  - hops:
+      module_tag:
+        - DNA
+        - Metagenomics
+        - ancient
+  - macs2:
+      module_tag:
+        - chip
+  - theta2:
+      module_tag:
+        - DNA
+        - cancer
+  - snpeff:
+      module_tag:
+        - DNA
+  - gatk:
+      module_tag:
+        - DNA
+  - htseq:
+      module_tag:
+        - DNA
+        - RNA
+  - bcftools:
+      module_tag:
+        - DNA
+  - featureCounts:
+      module_tag:
+        - DNA
+        - RNA
+  - fgbio:
+      module_tag:
+        - DNA
+        - RNA
+        - umi
+  - dragen:
+      module_tag:
+        - DNA
+        - RNA
+  - dedup:
+      module_tag:
+        - DNA
+        - ancient
+  - damageprofiler:
+      module_tag:
+        - DNA
+        - ancient
+  - biobambam2:
+      module_tag:
+        - DNA
+        - RNA
+  - mtnucratio:
+      module_tag:
+        - DNA
+        - ancient
+  - picard:
+      module_tag:
+        - DNA
+        - RNA
+  - sentieon:
+      module_tag:
+        - DNA
+  - prokka:
+      module_tag:
+        - prokarytotic
+        - denovo
+  - qc3C:
+      module_tag:
+        - hi-c
+  - samblaster:
+      module_tag:
+        - DNA
+        - RNA
+  - samtools:
+      module_tag:
+        - DNA
+        - RNA
+  - sexdeterrmine:
+      module_tag:
+        - DNA
+  - bamtools:
+      module_tag:
+        - DNA
+        - RNA
+  - jellyfish:
+      module_tag:
+        - DNA
+  - vcftools:
+      module_tag:
+        - DNA
+  - longranger:
+      module_tag:
+        - DNA
+        - WGS
+  - stacks:
+      module_tag:
+        - DNA
+  - varscan2:
+      module_tag:
+        - DNA
 
-    # Alignment tool stats
-    - bbmap:
-        module_tag:
-            - DNA
-            - RNA
-    - bismark:
-        module_tag:
-            - DNA
-            - methylation
-    - biscuit:
-        module_tag:
-            - DNA
-            - methylation
-    - hicexplorer:
-        module_tag:
-            - hi-c
-    - hicup:
-        module_tag:
-            - hi-c
-    - hicpro:
-        module_tag:
-            - hi-c
-    - salmon:
-        module_tag:
-            - RNA
-    - kallisto:
-        module_tag:
-            - RNA
-    - slamdunk:
-        module_tag:
-            - slam
-    - star:
-        module_tag:
-            - RNA
-    - hisat2:
-        module_tag:
-            - RNA
-    - tophat:
-        module_tag:
-            - RNA
-    - bowtie2:
-        module_tag:
-            - RNA
-    - bowtie1:
-        module_tag:
-            - RNA
-    - snpsplit:
-        module_tag:
-            - DNA
-            - RNA
-            - methylation
-            - allele-specific
+  # Alignment tool stats
+  - bbmap:
+      module_tag:
+        - DNA
+        - RNA
+  - bismark:
+      module_tag:
+        - DNA
+        - methylation
+  - biscuit:
+      module_tag:
+        - DNA
+        - methylation
+  - hicexplorer:
+      module_tag:
+        - hi-c
+  - hicup:
+      module_tag:
+        - hi-c
+  - hicpro:
+      module_tag:
+        - hi-c
+  - salmon:
+      module_tag:
+        - RNA
+  - kallisto:
+      module_tag:
+        - RNA
+  - slamdunk:
+      module_tag:
+        - slam
+  - star:
+      module_tag:
+        - RNA
+  - hisat2:
+      module_tag:
+        - RNA
+  - tophat:
+      module_tag:
+        - RNA
+  - bowtie2:
+      module_tag:
+        - RNA
+  - bowtie1:
+      module_tag:
+        - RNA
+  - snpsplit:
+      module_tag:
+        - DNA
+        - RNA
+        - methylation
+        - allele-specific
 
-    # Pre-alignment QC
-    - kat:
-        module_tag:
-            - DNA
-    - leehom:
-        module_tag:
-            - RNA
-            - DNA
-    - adapterRemoval:
-        module_tag:
-            - RNA
-            - DNA
-    - clipandmerge:
-        module_tag:
-            - DNA
-            - ancient
-    - cutadapt:
-        module_tag:
-            - RNA
-            - DNA
-    - flexbar:
-        module_tag:
-            - RNA
-            - DNA
-    - kaiju:
-        module_tag:
-            - DNA
-            - Metagenomics
-    - kraken:
-        module_tag:
-            - DNA
-            - Metagenomics
-    - malt:
-        module_tag:
-            - DNA
-            - Metagenomics
-            - ancient
-    - trimmomatic:
-        module_tag:
-            - RNA
-            - DNA
-    - sickle:
-        module_tag:
-            - RNA
-            - DNA
-    - skewer:
-        module_tag:
-            - RNA
-            - DNA
-    - sortmerna:
-        module_tag:
-            - RNA
-            - DNA
-    - biobloomtools:
-        module_tag:
-            - RNA
-            - DNA
-    - fastq_screen:
-        module_tag:
-            - RNA
-            - DNA
-    - afterqc:
-        module_tag:
-            - RNA
-            - DNA
-    - fastp:
-        module_tag:
-            - RNA
-            - DNA
-    - fastqc:
-        module_tag:
-            - RNA
-            - DNA
-    - pychopper:
-        module_tag:
-            - RNA
-    - pycoqc:
-        module_tag:
-            - DNA
-            - RNA
-    - minionqc:
-        module_tag:
-            - DNA
-            - RNA
-    - multivcfanalyzer:
-        module_tag:
-            - DNA
-            - ancient
-    - clusterflow:
-        module_tag:
-            - RNA
-            - DNA
-            - methylation
-    - bcl2fastq:
-        module_tag:
-            - RNA
-            - DNA
-            - methylation
-    - interop:
-        module_tag:
-            - RNA
-            - DNA
-            - methylation
-    - ivar:
-        module_tag:
-            - RNA
-            - epidemiology
-            - virus
-    - flash:
-        module_tag:
-            - DNA
-            - RNA
+  # Pre-alignment QC
+  - kat:
+      module_tag:
+        - DNA
+  - leehom:
+      module_tag:
+        - RNA
+        - DNA
+  - adapterRemoval:
+      module_tag:
+        - RNA
+        - DNA
+  - clipandmerge:
+      module_tag:
+        - DNA
+        - ancient
+  - cutadapt:
+      module_tag:
+        - RNA
+        - DNA
+  - flexbar:
+      module_tag:
+        - RNA
+        - DNA
+  - kaiju:
+      module_tag:
+        - DNA
+        - Metagenomics
+  - kraken:
+      module_tag:
+        - DNA
+        - Metagenomics
+  - malt:
+      module_tag:
+        - DNA
+        - Metagenomics
+        - ancient
+  - trimmomatic:
+      module_tag:
+        - RNA
+        - DNA
+  - sickle:
+      module_tag:
+        - RNA
+        - DNA
+  - skewer:
+      module_tag:
+        - RNA
+        - DNA
+  - sortmerna:
+      module_tag:
+        - RNA
+        - DNA
+  - biobloomtools:
+      module_tag:
+        - RNA
+        - DNA
+  - fastq_screen:
+      module_tag:
+        - RNA
+        - DNA
+  - afterqc:
+      module_tag:
+        - RNA
+        - DNA
+  - fastp:
+      module_tag:
+        - RNA
+        - DNA
+  - fastqc:
+      module_tag:
+        - RNA
+        - DNA
+  - pychopper:
+      module_tag:
+        - RNA
+  - pycoqc:
+      module_tag:
+        - DNA
+        - RNA
+  - minionqc:
+      module_tag:
+        - DNA
+        - RNA
+  - multivcfanalyzer:
+      module_tag:
+        - DNA
+        - ancient
+  - clusterflow:
+      module_tag:
+        - RNA
+        - DNA
+        - methylation
+  - bcl2fastq:
+      module_tag:
+        - RNA
+        - DNA
+        - methylation
+  - interop:
+      module_tag:
+        - RNA
+        - DNA
+        - methylation
+  - ivar:
+      module_tag:
+        - RNA
+        - epidemiology
+        - virus
+  - flash:
+      module_tag:
+        - DNA
+        - RNA
 
-    - seqyclean:
-        module_tag:
-            - DNA
-            - RNA
+  - seqyclean:
+      module_tag:
+        - DNA
+        - RNA
