@@ -807,7 +807,7 @@ def run(
             logger.info("Data        : {}".format(os.path.relpath(config.data_dir)))
             # Modules have run, so data directory should be complete by now. Move its contents.
             logger.debug("Moving data file from '{}' to '{}'".format(config.data_tmp_dir, config.data_dir))
-            #disable preserving of times and mode on purpose to avoid problems with mounted CIFS shares (see #625)
+            # Disable preserving of times and mode on purpose to avoid problems with mounted CIFS shares (see #625)
             copy_tree(config.data_tmp_dir, config.data_dir, preserve_times=0, preserve_mode=0)
             shutil.rmtree(config.data_tmp_dir)
 
@@ -827,7 +827,7 @@ def run(
 
             # Modules have run, so plots directory should be complete by now. Move its contents.
             logger.debug("Moving plots directory from '{}' to '{}'".format(config.plots_tmp_dir, config.plots_dir))
-            #disable preserving of times and mode on purpose to avoid problems with mounted CIFS shares (see #625)
+            # Disable preserving of times and mode on purpose to avoid problems with mounted CIFS shares (see #625)
             copy_tree(config.plots_tmp_dir, config.plots_dir, preserve_times=0, preserve_mode=0)
             shutil.rmtree(config.plots_tmp_dir)
 

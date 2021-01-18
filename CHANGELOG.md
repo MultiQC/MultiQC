@@ -87,6 +87,8 @@ For further information, please see the [documentation](https://multiqc.info/doc
 
 #### Bug Fixes
 
+- Disable preservation of timestamps / modes when copying temp report files, to help issues with network shares ([#1333](https://github.com/ewels/MultiQC/issues/1333))
+
 ## [MultiQC v1.9](https://github.com/ewels/MultiQC/releases/tag/v1.9) - 2020-05-30
 
 #### Dropped official support for Python 2
