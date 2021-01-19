@@ -22,8 +22,8 @@ class DragenCoverageMetrics(BaseMultiqcModule):
     def add_coverage_metrics(self):
         data_by_phenotype_by_sample = defaultdict(dict)
 
-        for f in self.find_log_files("dragen/wgs_coverage_metrics"):
-            data_by_phenotype = parse_wgs_coverage_metrics(f)
+        for f in self.find_log_files("dragen/coverage_metrics"):
+            data_by_phenotype = parse_coverage_metrics(f)
             if f["s_name"] in data_by_phenotype_by_sample:
                 log.debug("Duplicate sample name found! Overwriting: {}".format(f["s_name"]))
             self.add_data_source(f, section="stats")
@@ -318,10 +318,11 @@ COV_METRICS = list(
 )
 
 
-def parse_wgs_coverage_metrics(f):
+def parse_coverage_metrics(f):
     """
     T_SRR7890936_50pc.wgs_coverage_metrics_normal.csv
     T_SRR7890936_50pc.wgs_coverage_metrics_tumor.csv
+    T_SRR7890936_50pc.target_bed_coverage_metrics.csv
 
     The coverage metrics report outputs a _coverage_metrics.csv file, which provides metrics over a region,
     where the region can be the genome, a target region, or a QC coverage region. The first column of the output
@@ -389,7 +390,7 @@ def parse_wgs_coverage_metrics(f):
         if percentage is not None:
             data[metric + " pct"] = percentage
 
-    m = re.search(r"(.*).wgs_coverage_metrics_?(\S*)?.csv", f["fn"])
+    m = re.search(r"(.*).(\S*)_coverage_metrics_?(\S*)?.csv", f["fn"])
     sample, phenotype = m.group(1), m.group(2)
     f["s_name"] = sample
     return {phenotype: data}

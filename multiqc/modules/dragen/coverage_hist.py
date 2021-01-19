@@ -17,8 +17,8 @@ class DragenCoverageHist(BaseMultiqcModule):
     def add_coverage_hist(self):
         data_by_phenotype_by_sample = defaultdict(dict)
 
-        for f in self.find_log_files("dragen/wgs_fine_hist"):
-            data_by_phenotype = parse_wgs_fine_hist(f)
+        for f in self.find_log_files("dragen/fine_hist"):
+            data_by_phenotype = parse_fine_hist(f)
             if f["s_name"] in data_by_phenotype_by_sample:
                 log.debug("Duplicate sample name found! Overwriting: {}".format(f["s_name"]))
             self.add_data_source(f, section="stats")
@@ -87,10 +87,11 @@ class DragenCoverageHist(BaseMultiqcModule):
         return data_by_sample.keys()
 
 
-def parse_wgs_fine_hist(f):
+def parse_fine_hist(f):
     """
     T_SRR7890936_50pc.wgs_fine_hist_normal.csv
     T_SRR7890936_50pc.wgs_fine_hist_tumor.csv
+    T_SRR7890936_50pc.target_bed_fine_hist.csv
 
     Depth,Overall
     0,104231614
@@ -138,7 +139,7 @@ def parse_wgs_fine_hist(f):
         data[depth] = cnt
         cum_data[depth] = cum_pct
 
-    m = re.search(r"(.*).wgs_fine_hist_?(\S*)?.csv", f["fn"])
+    m = re.search(r"(.*).(\S*)_fine_hist_?(\S*)?.csv", f["fn"])
     sample, phenotype = m.group(1), m.group(2)
     f["s_name"] = sample
     return {phenotype: (data, cum_data, depth_1pc)}

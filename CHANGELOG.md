@@ -26,6 +26,10 @@ For further information, please see the [documentation](https://multiqc.info/doc
   - `.yaml` will take preference if both found.
 - Section comments can now also be added for _General Statistics_
   - `section_comments: { general_stats: "My comment" }`
+- New table header config option `bgcols` allows background colours for table cells with categorical data.
+- New table header config options `cond_formatting_rules` and `cond_formatting_colours`
+  - Comparable functionality to user config options `table_cond_formatting_rules` and `table_cond_formatting_colours`,
+    allowes module developers to format table cell values as labels.
 - New CI test looks for git merge markers in files
 
 #### New Modules
@@ -34,6 +38,8 @@ For further information, please see the [documentation](https://multiqc.info/doc
   - Post-alignment ancient DNA analysis tool for MALT
 - [**JCVI**](https://github.com/tanghaibao/jcvi)
   - Computes statistics on genome annotation.
+- [**ngsderive**](https://github.com/stjudecloud/ngsderive)
+  - Forensic analysis tool useful in backwards computing information from next-generation sequencing data.
 - [**PURPLE**](https://github.com/hartwigmedical/hmftools/tree/master/purity-ploidy-estimator)
   - A purity, ploidy and copy number estimator for whole genome tumor data
 - [**Pychopper**](https://github.com/nanoporetech/pychopper)
@@ -47,8 +53,14 @@ For further information, please see the [documentation](https://multiqc.info/doc
 
 - **DRAGEN**
   - Fix issue where missing out fields could crash the module ([#1223](https://github.com/ewels/MultiQC/issues/1223))
+  - Added support for whole-exome / targetted data ([#1290](https://github.com/ewels/MultiQC/issues/1290))
 - **featureCounts**
   - Add support for output from [Rsubread](https://bioconductor.org/packages/release/bioc/html/Rsubread.html) ([#1022](https://github.com/ewels/MultiQC/issues/1022))
+- **fgbio**
+  - Fix `ErrorRateByReadPosition` to calculate `ymax` not just on the overall `error_rate`, but also specific base errors (ex. `a_to_c_error_rate`, `a_to_g_error_rate`, ...). ([#1215](https://github.com/ewels/MultiQC/pull/1251))
+  - Fix `ErrorRateByReadPosition` plotted line names to no longer concatenate multiple read identifiers and no longer have off-by-one read numbering (ex. `Sample1_R2_R3` -> `Sample1_R2`) ([#[1304](https://github.com/ewels/MultiQC/pull/1304))
+- **GATK**
+  - Add support for the creation of a "Reported vs Empirical Quality" graph to the Base Recalibration module.
 - **hap.py**
   - Updated module to plot both SNP and INDEL stats ([#1241](https://github.com/ewels/MultiQC/issues/1241))
 - **Kaiju**
@@ -62,22 +74,22 @@ For further information, please see the [documentation](https://multiqc.info/doc
   - Fix `HsMetrics` bait percentage columns ([#1212](https://github.com/ewels/MultiQC/issues/1212))
 - **PycoQC**
   - Log10 x-axis for _Read Length_ plot ([#1214](https://github.com/ewels/MultiQC/issues/1214))
-- **fgbio**
-  - Fix `ErrorRateByReadPosition` to calculate `ymax` not just on the overall `error_rate`, but also specific base errors (ex. `a_to_c_error_rate`, `a_to_g_error_rate`, ...). ([#1215](https://github.com/ewels/MultiQC/pull/1251))
-  - Fix `ErrorRateByReadPosition` plotted line names to no longer concatenate multiple read identifiers and no longer have off-by-one read numbering (ex. `Sample1_R2_R3` -> `Sample1_R2`) ([#[1304](https://github.com/ewels/MultiQC/pull/1304))
-- **GATK**
-  - Add support for the creation of a "Reported vs Empirical Quality" graph to the Base Recalibration module.
 - **Rockhopper**
   - Fix issue with parsing genome names in Rockhopper summary files ([#1333](https://github.com/ewels/MultiQC/issues/1333))
   - Fix issue properly parsing multiple samples within a single Rockhopper summary file
+- **Salmon**
+  - Only try to generate a plot for fragment length if the data was found.
 
 #### New Custom Content features
 
 - General Stats custom content now gives a log message
 - If `id` is not set in `JSON` or `YAML` files, it defaults to the sample name instead of just `custom_content`
 - Data from `JSON` or `YAML` now has `data` keys (sample names) run through the `clean_s_name()` function to apply sample name cleanup
+- Fixed minor bug which caused custom content YAML files with a string `data` type to not be parsed
 
 #### Bug Fixes
+
+- Disable preservation of timestamps / modes when copying temp report files, to help issues with network shares ([#1333](https://github.com/ewels/MultiQC/issues/1333))
 
 ## [MultiQC v1.9](https://github.com/ewels/MultiQC/releases/tag/v1.9) - 2020-05-30
 

@@ -100,6 +100,7 @@ fn_ignore_dirs:
 
 fn_ignore_paths:
   - "*/work/??/??????????????????????????????" # Nextflow work directories - always same hash lengths
+  - ".snakemake"
 sample_names_ignore: []
 sample_names_ignore_re: []
 sample_names_rename_buttons: []
@@ -262,6 +263,10 @@ module_order:
   # MultiQC general module for catching output from custom scripts
   - "custom_content"
   # Post-alignment QC
+  - ngsderive:
+      module_tag:
+        - DNA
+        - RNA
   - purple:
       module_tag:
         - DNA

@@ -419,9 +419,12 @@ single_header = {
     'floor': None,                  # Minimum value for automatic bar limit
     'minRange': None,               # Minimum range for automatic bar
     'scale': 'GnBu',                # Colour scale for colour coding. False to disable.
+    'bgcols': None,                 # Dict with values: background colours for categorical data.
     'colour': '<auto>',             # Colour for column grouping
     'suffix': None,                 # Suffix for value (eg. '%')
     'format': '{:,.1f}',            # Value format string - default 1 decimal place
+    'cond_formatting_rules': None,  # Rules for conditional formatting table cell values - see docs below
+    'cond_formatting_colours': None, # Styles for conditional formatting of table cell values
     'shared_key': None              # See below for description
     'modify': None,                 # Lambda function to modify values
     'hidden': False                 # Set to True to hide the column on page load
@@ -517,6 +520,74 @@ Colour scales can be reversed by adding the suffix `-rev` to the name. For examp
 The following scales are available:
 
 ![color brewer](images/cbrewer_scales.png)
+
+### Custom cell background colours
+
+You can specify custom background colours for specific values using the `bgcols`
+header config. This takes precedence over `scale`.
+
+For example, a header config for a column could look like this:
+
+```python
+headers[tablecol] = {
+    "title": "My table column",
+    "bgcols": {
+        "bad data": "#f8d7da",
+        "ok data": "#fff3cd",
+        "good data": "#d1e7dd"
+    }
+}
+```
+
+### Conditional formatting of data values
+
+MultiQC has configuration options to allow users to configure _"conditional formatting"_,
+with highlighted values in table cells ([see docs](##conditional-formatting)).
+
+Developers can also make use of this functionality within the header config dictionaries
+for formatting data values.
+
+The functionality follows the same logic as for user configs with the parameters
+`cond_formatting_rules` and `cond_formatting_colours`. These correspond to the
+user config options `table_cond_formatting_rules` and `table_cond_formatting_colours`,
+with the exception that no column ID is needed for `table_cond_formatting_rules`.
+
+For example, a simple header config could look as follows:
+
+```python
+headers[instrument] = {
+    "title": "My table column",
+    "cond_formatting_rules": {
+        "pass": [{"s_eq": "good data"}],
+        "warn": [{"s_eq": "ok data"}],
+        "fail": [{"s_eq": "bad data"}],
+    }
+}
+```
+
+A more complex version with multiple rules could be:
+
+```python
+headers[tablecol] = {
+    "title": "My table column",
+    "cond_formatting_rules": {
+        "brightgreen": [
+            {"s_contains": "amazing"},
+            {"s_contains": "incredible"},
+        ],
+        "brown": [{"s_ne": "rubbish-data"}],
+        "turquoise": [
+            {"gt": 4},
+            {"lt": 12},
+        ],
+    },
+    "cond_formatting_colours": [
+        {"brightgreen": "#39FF14"},
+        {"brown": "#A52A2A"},
+        {"turquoise": "#30D5C8"},
+    ]
+}
+```
 
 ## Beeswarm plots (dot plots)
 
