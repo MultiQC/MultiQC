@@ -7,11 +7,11 @@ from multiqc.plots import bargraph
 log = logging.getLogger(__name__)
 
 
-class DragenRnaMetrics(BaseMultiqcModule):
+class DragenRnaQuantMetrics(BaseMultiqcModule):
     def add_rna_metrics(self):
         data_by_sample = dict()
 
-        for f in self.find_log_files('dragen/rna'):
+        for f in self.find_log_files('dragen/rna_quant_metrics'):
             data = parse_time_metrics_file(f)
             if f['s_name'] in data_by_sample:
                 log.debug('Duplicate sample name found! Overwriting: {}'.format(f['s_name']))
@@ -24,32 +24,31 @@ class DragenRnaMetrics(BaseMultiqcModule):
         if not data_by_sample:
             return set()
 
-        coding_fragments_metric_names = {
+        metric_names = {
             'Transcript fragments',
+            'Strand mismatched fragments',
+            'Ambiguous strand fragments',
             'Unknown transcript fragments',
             'Intron fragments',
-            'Intergenic fragments'
+            'Intergenic fragments',
         }
 
-        strand_metrics = DragenRnaMetrics.__get_strand_metrics(data_by_sample)
         self.add_section(
-            name='RNA Metrics',
-            anchor='dragen-rna-metrics',
-            description='RNA metrics for DRAGEN.',
+            name='RNA Quantification Metrics',
+            anchor='dragen-rna-quant-metrics',
+            description='RNA quantification metrics for DRAGEN.',
             plot=bargraph.plot(
                 [
                     {
                         sample: {
                             metric: stat for metric, stat in data.items() if
-                            metric in coding_fragments_metric_names
+                            metric in metric_names
                         } for sample, data in data_by_sample.items()
-                    },
-                    strand_metrics,
-
+                    }
                 ],
                 pconfig={
-                    'id': 'time_metrics_plot',
-                    'title': 'Dragen: RNA Metrics',
+                    'id': 'dragen_rna_quant_metrics',
+                    'title': 'Dragen: RNA Quant Metrics',
                     'ylab': 'Fragments',
                     'cpswitch_counts_label': 'Fragments',
                     'data_labels': [
@@ -69,30 +68,6 @@ class DragenRnaMetrics(BaseMultiqcModule):
         )
 
         return data_by_sample.keys()
-
-    @staticmethod
-    def __get_strand_metrics(data_by_sample: dict) -> dict:
-        strand_metrics = {}
-        for sample, data in data_by_sample.items():
-            if 'Forward transcript fragments' in data:
-                fragment_orientation_metric_names = {
-                    'Forward transcript fragments',
-                    'Reverse transcript fragments',
-                    'Orientation filtered fragments',
-                    'Ambiguous orientation fragments',
-                }
-            elif 'Strand mismatched fragments' in data:
-                fragment_orientation_metric_names = {
-                    'Transcript fragments',
-                    'Strand mismatched fragments',
-                }
-            else:
-                continue
-
-            strand_metrics[sample] = {metric: stat for metric, stat in data.items()
-                                      if metric in fragment_orientation_metric_names}
-
-        return strand_metrics
 
 
 def parse_time_metrics_file(f):
