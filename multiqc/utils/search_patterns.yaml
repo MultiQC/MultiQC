@@ -266,6 +266,10 @@ dragen/trimmer_metrics:
     fn: '*.trimmer_metrics.csv'
 dragen/time_metrics:
     fn: '*.time_metrics.csv'
+dragen/rna_quant_metrics:
+    fn: '*.quant.metrics.csv'
+dragen/rna_transcript_cov:
+    fn: '*.quant.transcript_coverage.txt'
 dragen_fastqc:
     fn: "*.fastqc_metrics.csv"
 fastp:
