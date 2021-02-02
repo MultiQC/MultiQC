@@ -11,6 +11,7 @@ from .mapping_metrics import DragenMappingMetics
 from .ploidy_estimation_metrics import DragenPloidyEstimationMetrics
 from .rna_quant_metrics import DragenRnaQuantMetrics
 from .rna_transcript_cov import DragenRnaTranscriptCoverage
+from .sc_rna_metrics import DragenScRnaMetrics
 from .time_metrics import DragenTimeMetrics
 from .trimmer_metrics import DragenTrimmerMetrics
 from .vc_metrics import DragenVCMetrics
@@ -21,7 +22,7 @@ log = logging.getLogger(__name__)
 class MultiqcModule(DragenMappingMetics, DragenFragmentLength, DragenPloidyEstimationMetrics,
                     DragenVCMetrics, DragenCoveragePerContig, DragenCoverageMetrics,
                     DragenCoverageHist, DragenGcMetrics, DragenTrimmerMetrics, DragenTimeMetrics,
-                    DragenRnaQuantMetrics, DragenRnaTranscriptCoverage):
+                    DragenRnaQuantMetrics, DragenRnaTranscriptCoverage, DragenScRnaMetrics):
     """ DRAGEN provides a number of differrent pipelines and outputs, including base calling, DNA and RNA alignment,
     post-alignment processing and variant calling, covering virtually all stages of typical NGS data processing.
     However, it can be treated as a fast aligner with additional features on top, as users will unlikely use any
@@ -84,6 +85,9 @@ class MultiqcModule(DragenMappingMetics, DragenFragmentLength, DragenPloidyEstim
 
         samples_found |= self.add_rna_transcript_coverage()
         # <output prefix>.quant.transcript_coverage.txt
+
+        samples_found |= self.add_sc_rna_metrics()
+        # <output prefix>.scRNA.metrics.csv
 
         if len(samples_found) == 0:
             raise UserWarning

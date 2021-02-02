@@ -270,6 +270,8 @@ dragen/rna_quant_metrics:
     fn: '*.quant.metrics.csv'
 dragen/rna_transcript_cov:
     fn: '*.quant.transcript_coverage.txt'
+dragen/sc_rna_metrics:
+    fn: '*.scRNA.metrics.csv'
 dragen_fastqc:
     fn: "*.fastqc_metrics.csv"
 fastp:

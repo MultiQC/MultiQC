@@ -1,6 +1,6 @@
 from collections import OrderedDict
-from multiqc import config
 
+from multiqc import config
 
 read_format = '{:,.1f}'
 if config.read_count_multiplier == 1:
@@ -12,6 +12,8 @@ if config.base_count_multiplier == 1:
     base_format = '{:,.0f}'
 elif config.base_count_multiplier == 0.000000001:
     base_format = '{:,.2f}'
+
+
 # base_format += '&nbsp;' + config.base_count_prefix
 
 
@@ -97,7 +99,7 @@ def make_headers(parsed_metric_ids, metrics):
         elif metric.unit == 'bases':
             col['description'] = col['description'].format(config.base_count_desc)
             col['title'] = config.base_count_prefix + ' ' + col['title']
-            col['modify'] = lambda x: x * config.base_count_multiplier if x!="NA" else 0
+            col['modify'] = lambda x: x * config.base_count_multiplier if x != "NA" else 0
             col['shared_key'] = 'base_count'
             col['format'] = base_format
         elif metric.unit == 'len':
@@ -109,7 +111,10 @@ def make_headers(parsed_metric_ids, metrics):
         elif metric.unit == '%':
             col['suffix'] = ' %'
             col['format'] = '{:,.1f}'
-        elif any(metric.descr.startswith(pref) for pref in ('Total number of ', 'The number of ', 'Number of ')):
+        elif any(
+                metric.descr is not None and
+                metric.descr.startswith(pref) for pref in ('Total number of ', 'The number of ', 'Number of ')
+        ):
             col['format'] = '{:,.0f}'
         if metric.precision is not None:
             col['format'] = '{:,.' + str(metric.precision) + 'f}'
