@@ -51,7 +51,7 @@ class DragenScRnaMetrics(BaseMultiqcModule):
             name='Single-Cell RNA Metrics',
             anchor='sc-rna-metrics',
             description="""
-            Single Cell RNA Metrics.
+            Summary metrics for single-cell RNA.
             """,
             plot=table.plot(
                 {
