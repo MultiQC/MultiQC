@@ -36,11 +36,15 @@ class MultiqcModule(BaseMultiqcModule):
         self.strandedness = {}
         self.instrument = {}
         self.readlen = {}
+        self.encoding = {}
+        self.junctions = {}
 
         # parse ngsderive summary file
         expected_header_count_strandedness = 5
         expected_header_count_instrument = 4
         expected_header_count_readlen = 4
+        expected_header_count_encoding = 3
+        expected_header_count_junctions = 9
 
         for f in self.find_log_files("ngsderive/strandedness"):
             self.parse(
@@ -66,9 +70,27 @@ class MultiqcModule(BaseMultiqcModule):
                 expected_header_count_readlen,
             )
 
+        for f in self.find_log_files("ngsderive/encoding"):
+            self.parse(
+                self.encoding,
+                f,
+                "encoding",
+                expected_header_count_encoding,
+            )
+
+        for f in self.find_log_files("ngsderive/junction_annotation"):
+            self.parse(
+                self.junctions,
+                f,
+                "junctions",
+                expected_header_count_junctions,
+            )
+
         self.strandedness = self.ignore_samples(self.strandedness)
         self.instrument = self.ignore_samples(self.instrument)
         self.readlen = self.ignore_samples(self.readlen)
+        self.encoding = self.ignore_samples(self.encoding)
+        self.junctions = self.ignore_samples(self.junctions)
 
         any_results_found = False
         if self.strandedness:
@@ -81,6 +103,14 @@ class MultiqcModule(BaseMultiqcModule):
 
         if self.readlen:
             self.add_readlen_data()
+            any_results_found = True
+
+        if self.encoding:
+            self.add_encoding_data()
+            any_results_found = True
+
+        if self.junctions:
+            self.add_junctions_data()
             any_results_found = True
 
         if not any_results_found:
@@ -161,7 +191,6 @@ class MultiqcModule(BaseMultiqcModule):
         )
 
     def add_instrument_data(self):
-
         bgcols = {"low confidence": "#f8d7da", "medium confidence": "#fff3cd", "high confidence": "#d1e7dd"}
         cond_formatting_rules = {
             "pass": [{"s_eq": "high confidence"}],
@@ -292,4 +321,129 @@ class MultiqcModule(BaseMultiqcModule):
             description="""Predicted read length provided by ngsderive. For more information, please see
             [the documentation](https://stjudecloud.github.io/ngsderive/subcommands/readlen/).""",
             plot=linegraph.plot(linedata, pconfig),
+        )
+
+    def add_encoding_data(self):
+        general_data = {}
+        for sample, encoding_data in self.encoding.items():
+            general_data[sample] = {
+                "probable_encoding": encoding_data.get("ProbableEncoding"),
+                "evidence": encoding_data.get("Evidence"),
+            }
+
+        general_headers = OrderedDict()
+        general_headers["probable_encoding"] = {
+            "title": "Probable Encoding",
+            "description": "Predicted PHRED score encoding from ngsderive",
+        }
+        general_headers["evidence"] = {
+            "title": "Encoding: Evidence",
+            "description": "Observed ASCII value ranges in PHRED score encoding",
+            "hidden": True,
+        }
+        self.general_stats_addcols(general_data, general_headers)
+
+    def add_junctions_data(self):
+        data = {}
+        for sample, junctions_data in self.junctions.items():
+            data[sample] = {
+                "total_junctions": junctions_data.get("total_junctions"),
+                "known_junctions": junctions_data.get("known_junctions"),
+                "partial_novel_junctions": junctions_data.get("partial_novel_junctions"),
+                "novel_junctions": junctions_data.get("complete_novel_junctions"),
+                "total_splice_events": junctions_data.get("total_splice_events"),
+                "known_spliced_reads": junctions_data.get("known_spliced_reads"),
+                "partial_novel_spliced_reads": junctions_data.get("partial_novel_spliced_reads"),
+                "novel_spliced_reads": junctions_data.get("complete_novel_spliced_reads"),
+            }
+
+        headers = OrderedDict(
+            {
+                "total_junctions": {
+                    "title": "Total junctions",
+                    "description": "Total number of junctions found by ngsderive",
+                    "hidden": True,
+                    "format": "{:,d}",
+                },
+                "known_junctions": {
+                    "title": "Known junctions",
+                    "description": "Number of annotated junctions found by ngsderive",
+                    "format": "{:,d}",
+                },
+                "partial_novel_junctions": {
+                    "title": "Partially novel junctions",
+                    "description": "Number of partially annotated junctions found by ngsderive",
+                    "format": "{:,d}",
+                },
+                "novel_junctions": {
+                    "title": "Novel junctions",
+                    "description": "Number of completely novel junctions found by ngsderive",
+                    "format": "{:,d}",
+                },
+                "total_splice_events": {
+                    "title": "Total splice events",
+                    "description": "Total number of spliced reads found by ngsderive",
+                    "hidden": True,
+                    "format": "{:,d}",
+                },
+                "known_spliced_reads": {
+                    "title": "Annotated spliced reads",
+                    "description": "Number of annotated spliced reads found by ngsderive",
+                    "hidden": True,
+                    "format": "{:,d}",
+                },
+                "partial_novel_spliced_reads": {
+                    "title": "Partially annotated spliced reads",
+                    "description": "Number of partially annotated spliced reads found by ngsderive",
+                    "hidden": True,
+                    "format": "{:,d}",
+                },
+                "novel_spliced_reads": {
+                    "title": "Novel spliced reads",
+                    "description": "Number of completely un-annotated spliced reads found by ngsderive",
+                    "hidden": True,
+                    "format": "{:,d}",
+                },
+            }
+        )
+        self.general_stats_addcols(data, headers)
+
+        bardata = OrderedDict()
+        sorted_junction_data = sorted(data.items(), key=lambda x: int(x[1].get("total_junctions")), reverse=True)
+        for (k, v) in sorted_junction_data:
+            bardata[k] = {
+                "known_junctions": v["known_junctions"],
+                "partial_novel_junctions": v["partial_novel_junctions"],
+                "novel_junctions": v["novel_junctions"],
+                "known_spliced_reads": v["known_spliced_reads"],
+                "partial_novel_spliced_reads": v["partial_novel_spliced_reads"],
+                "novel_spliced_reads": v["novel_spliced_reads"],
+            }
+
+        # Config for the plot
+        pconfig = {
+            "id": "ngsderive_junctions_plot",
+            "title": "ngsderive: Junction Annotation",
+            "cpswitch_counts_label": "Number",
+            "yDecimals": False,
+            "data_labels": [
+                {"name": "Junctions", "ylab": "Number of junctions"},
+                {"name": "Spliced Reads", "ylab": "Number of spliced reads"},
+            ],
+        }
+
+        cats = [OrderedDict(), OrderedDict()]
+        cats[0]["known_junctions"] = {"name": "Known junctions"}
+        cats[0]["partial_novel_junctions"] = {"name": "Partially novel junctions"}
+        cats[0]["novel_junctions"] = {"name": "Novel junctions"}
+        cats[1]["known_spliced_reads"] = {"name": "Annotated spliced reads"}
+        cats[1]["partial_novel_spliced_reads"] = {"name": "Partially annotated spliced reads"}
+        cats[1]["novel_spliced_reads"] = {"name": "Novel spliced reads"}
+
+        self.add_section(
+            name="Junction Annotations",
+            anchor="ngsderive-junctions",
+            description="""Junction annotations provided by ngsderive. For more information, please see
+            [the documentation](https://stjudecloud.github.io/ngsderive/subcommands/junction-annotation/).""",
+            plot=bargraph.plot(bardata, cats, pconfig),
         )
