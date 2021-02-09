@@ -18,13 +18,13 @@ METRICS = [
     # id_in_data    title (display name)  gen_stats  cov_table  unit  description  precision
     # Read stats:
 
-    Metric('Aligned reads in {}', 'Reads on trg', 'hid', '%', 'reads',
+    Metric('Aligned reads in {}', 'Reads on target', 'hid', '%', 'reads',
            'Number of uniquely mapped reads to region relative to the number of uniquely mapped reads to the genome. When region is the target BED, this metric is equivalent to and replaces Capture Specificity based on target region.'),
-    Metric('Aligned bases in {}', 'Bases on trg', 'hid', '%', 'bases',
+    Metric('Aligned bases in {}', 'Bases on target', 'hid', '%', 'bases',
            'Number of uniquely mapped bases to the region relative to the number of uniquely mapped bases to the genome.'),
     Metric('Average alignment coverage over {}', 'Depth', '#', '#', 'x',
            'Coverage depth over {}: number of uniquely mapped bases to {} divided by the number of sites in {}.'),
-    Metric('Uniformity of coverage (PCT > 0.2*mean) over {}', '>0.2×mean', 'hid', '#', '%',
+    Metric('Uniformity of coverage (PCT > 0.2*mean) over {}', 'Uniformity (>0.2×mean)', 'hid', '#', '%',
            'Percentage of sites with coverage greater than 20% of the mean coverage in region. Demonstrates the uniformity of coverage. The lower the better.'),
     Metric('Average chr X coverage over {}', 'X cov', None, 'hid', 'x',
            'Average chromosome X coverage over {}. Calculated as the number of bases that aligned to the chromosome X (or to the intersection of chromosome X with the target region) divided by the total number of loci in the chromosome X (or the intersection with the target region). If there is no chromosome X in the reference genome or the region does not intersect chromosome X, this metric shows as NA.'),
@@ -36,7 +36,7 @@ METRICS = [
            'Average autosomal coverage over {}. Calculated as the number of bases that aligned to the autosomal loci in {} divided by the total number of loci in the autosomal loci in {}. If there is no autosomes in the reference genome, or the region does not intersect autosomes, this metric shows as NA.'),
     Metric('Median autosomal coverage over {}', 'Med aut cov', 'hid', 'hid', 'x',
            'Median alignment coverage over the autosomal loci in {}. If there is no autosome in the reference genome or the region does not intersect autosomes, this metric shows as NA.'),
-    Metric('Mean/Median autosomal coverage ratio over {}', 'Mean/med aut cov', 'hid', '#', '',
+    Metric('Mean/Median autosomal coverage ratio over {}', 'Mean/med autosomal coverage', 'hid', '#', '',
            'Mean autosomal coverage in {} divided by the median autosomal coverage in {}. If there is no autosome in the reference genome or the region does not intersect autosomes, this metric shows as NA.',
            precision=2),
     Metric('PCT of genome with coverage [  1x: inf)', '⩾1x', 'hid', '#',
