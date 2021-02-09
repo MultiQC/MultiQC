@@ -20,6 +20,8 @@ and alike. This MultiQC module supports some of the output but not all.
     * General stats table, a dedicated table, and a few barplots
 * `<output prefix>.wgs_coverage_metrics_<tumor|normal>.csv`
     * General stats table and a dedicated table
+* `<output prefix>.qc-coverage-region-<1|2|3>_coverage_metrics.csv`
+    * General stats table and a dedicated table
 * `<output prefix>.wgs_contig_mean_cov_<tumor|normal>.csv`
     * A histogram like in mosdepth, with each chrom as a category on X axis, plus a category for autosomal chromosomes average
 * `<output prefix>.fragment_length_hist.csv`

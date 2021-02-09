@@ -252,6 +252,8 @@ dragen/wgs_contig_mean_cov:
     fn_re: '.*\.wgs_contig_mean_cov_?(tumor|normal)?\.csv'
 dragen/wgs_coverage_metrics:
     fn_re: '.*\.wgs_coverage_metrics_?(tumor|normal)?\.csv'
+dragen/qc_region_coverage_metrics:
+    fn_re: '.*\.qc-coverage-region-(1|2|3)_coverage_metrics.csv'
 dragen/wgs_fine_hist:
     fn_re: '.*\.wgs_fine_hist_?(tumor|normal)?\.csv'
 dragen/fragment_length_hist:
