@@ -167,6 +167,9 @@ bowtie2:
     - "bisulfite"
     - "HiC-Pro"
   shared: true
+bracken:
+  contents_re: '^(\d{1,3}\.\d{1,2})\t(\d+)\t(\d+)\t([\dRUDKPCOFGS-]{1,3})\t(\d+)\s+(.+)'
+  num_lines: 2
 busco:
   fn: "short_summary*"
   contents: "BUSCO version is:"

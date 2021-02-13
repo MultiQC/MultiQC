@@ -548,6 +548,10 @@ module_order:
       module_tag:
         - DNA
         - Metagenomics
+  - bracken:
+      module_tag:
+        - DNA
+        - Metagenomics
   - kraken:
       module_tag:
         - DNA
