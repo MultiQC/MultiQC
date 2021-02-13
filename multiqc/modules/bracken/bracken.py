@@ -58,6 +58,7 @@ class MultiqcModule(BaseMultiqcModule):
         self.bracken_total_pct = dict()
         self.bracken_total_counts = dict()
         self.bracken_sample_total_readcounts = dict()
+        self.sample_total_readcounts()
         self.sum_sample_counts()
 
         self.general_stats_cols()
@@ -109,6 +110,15 @@ class MultiqcModule(BaseMultiqcModule):
 
         self.bracken_raw_data[f["s_name"]] = data
 
+    def sample_total_readcounts(self):
+        """ Compute the total read counts for each sample """
+
+        for s_name, data in self.bracken_raw_data.items():
+            self.bracken_sample_total_readcounts[s_name] = 0
+            for row in data:
+                self.bracken_sample_total_readcounts[s_name] += \
+                    row['counts_direct']
+
     def sum_sample_counts(self):
         """ Sum counts across all samples for bracken data """
 
@@ -117,7 +127,6 @@ class MultiqcModule(BaseMultiqcModule):
         # Use percentages instead of counts so that deeply-sequences samples
         # are not unfairly over-represented
         for s_name, data in self.bracken_raw_data.items():
-            total_guess_count = None
             for row in data:
 
                 # Convenience vars that are easier to read
@@ -127,13 +136,6 @@ class MultiqcModule(BaseMultiqcModule):
                 # Skip anything that doesn't exactly fit a tax rank level
                 if row["rank_code"] == "-" or any(c.isdigit() for c in row["rank_code"]):
                     continue
-
-                # Calculate the total read count using percentages
-                if rank_code == "R":
-                    self.bracken_sample_total_readcounts[s_name] = round(
-                        float(row["counts_rooted"]) / (row["percent"] / 100.0)
-                    )
-                    total_guess_count = row["counts_rooted"]
 
                 if rank_code not in self.bracken_total_pct:
                     self.bracken_total_pct[rank_code] = dict()
@@ -199,12 +201,13 @@ class MultiqcModule(BaseMultiqcModule):
         for s_name, d in self.bracken_raw_data.items():
             tdata[s_name] = {}
             for row in d:
+                percent = row['counts_rooted'] / self.bracken_sample_total_readcounts[s_name]
                 if row["rank_code"] == "U":
-                    tdata[s_name]["% Unclassified"] = row["percent"]
+                    tdata[s_name]['% Unclassified'] = percent
                 if row["rank_code"] == top_rank_code and row["classif"] in top_five:
-                    tdata[s_name]["% Top 5"] = row["percent"] + tdata[s_name].get("% Top 5", 0)
+                    tdata[s_name]['% Top 5'] = percent + tdata[s_name].get('% Top 5', 0)
                 if row["rank_code"] == top_rank_code and row["classif"] == top_five[0]:
-                    tdata[s_name][top_one_hkey] = row["percent"]
+                    tdata[s_name][top_one_hkey] = percent
 
             if top_one_hkey not in tdata[s_name]:
                 tdata[s_name][top_one_hkey] = 0
