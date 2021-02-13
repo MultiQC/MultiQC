@@ -201,7 +201,7 @@ class MultiqcModule(BaseMultiqcModule):
         for s_name, d in self.bracken_raw_data.items():
             tdata[s_name] = {}
             for row in d:
-                percent = row['counts_rooted'] / self.bracken_sample_total_readcounts[s_name]
+                percent = (row['counts_rooted'] / self.bracken_sample_total_readcounts[s_name]) * 100
                 if row["rank_code"] == "U":
                     tdata[s_name]['% Unclassified'] = percent
                 if row["rank_code"] == top_rank_code and row["classif"] in top_five:
