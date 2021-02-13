@@ -54,6 +54,7 @@ MultiQC Modules:
     Bamtools: modules/bamtools.md
     Bcftools: modules/bcftools.md
     biobambam2: modules/biobambam2.md
+    Bracken: modules/bracken.md
     BUSCO: modules/busco.md
     Conpair: modules/conpair.md
     DamageProfiler: modules/damageprofiler.md

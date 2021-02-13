@@ -34,6 +34,8 @@ For further information, please see the [documentation](https://multiqc.info/doc
 
 #### New Modules
 
+- [**Bracken**](https://ccb.jhu.edu/software/bracken/)
+  - A highly accurate statistical method that computes the abundance of species in DNA sequences from a metagenomics sample.
 - [**HOPS**](https://www.github.com/rhubler/HOPS)
   - Post-alignment ancient DNA analysis tool for MALT
 - [**ngsderive**](https://github.com/stjudecloud/ngsderive)
