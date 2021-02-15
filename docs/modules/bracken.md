@@ -6,7 +6,7 @@ Description: >
   in DNA sequences from a metagenomics sample
 ---
 
-This module works bracken output files that resemble kraken reports. They look like the following:
+This module works with bracken output files that resemble kraken reports. They look like the following:
 
 ```ts
 100.00	1188381	0	R	1	root
