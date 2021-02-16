@@ -159,17 +159,17 @@ class MultiqcModule(BaseMultiqcModule):
         Extracts the sample name from a given file name.
         Expects and returns one of seqwish, smooth or consensus@*
         """
-        if 'seqwish' in file_name:
-            return 'seqwish'
-        elif 'smooth' in file_name:
-            return 'smooth'
-        else:
+        if 'consensus@' in file_name:
             file_name = file_name.split('.')
             consensus_identifier = list((e for e in file_name if 'consensus@' in e))
             try:
                 return consensus_identifier[0]
             except IndexError:
                 log.error('Unknown file name {}: File name must either contain seqwish, smooth or consensus@!'.format(file_name))
+        elif 'smooth' in file_name:
+            return 'smooth'
+        elif 'seqwish' in file_name:
+            return 'seqwish'
 
     def compress_stats_data(self, sample_name, stats, mean_links_length, sum_of_path_nodes_distances) -> dict:
         """
