@@ -339,6 +339,20 @@ def parse_mapping_metrics_file(f):
         if data.get("Number of unique reads (excl. duplicate marked reads)", "NA") == "NA":
             data["Number of unique reads (excl. duplicate marked reads)"] = data["Mapped reads"]
 
+        if data["Insert length: mean"] == "NA":
+            data["Insert length: mean"] = 0
+        if data["Insert length: median"] == "NA":
+            data["Insert length: median"] = 0
+        if data["Insert length: standard deviation"] == "NA":
+            data["Insert length: standard deviation"] = 0
+        if data["Soft-clipped bases R2"] == "NA":
+            data["Soft-clipped bases R2"] = 0
+        if data["Mismatched bases R2"] == "NA":
+            data["Mismatched bases R2"] = 0
+        if data["Mismatched bases R2 (excl. indels)"] == "NA":
+            data["Mismatched bases R2 (excl. indels)"] = 0
+            
+
         # adding alignment percentages
         if exist_and_number(data, "Total alignments", "Secondary alignments") and data["Total alignments"] > 0:
             data["Secondary alignments pct"] = data["Secondary alignments"] / data["Total alignments"] * 100.0
