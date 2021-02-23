@@ -91,7 +91,7 @@ class MultiqcModule(BaseMultiqcModule):
         """
 
         # Search regexes for stats
-        k2_regex = re.compile(r"^\s{1,2}(\d{1,2}\.\d{1,2})\t(\d+)\t(\d+)\t([\dUDKPCOFGS-]{1,3})\t(\d+)(\s+)(.+)")
+        k2_regex = re.compile(r"^\s{1,2}(\d{1,2}\.\d{1,2})\t(\d+)\t(\d+)\t([UDKPCOFGS-]\d{0,2})\t(\d+)(\s+)(.+)")
         data = []
         for l in f["f"]:
             match = k2_regex.search(l)
