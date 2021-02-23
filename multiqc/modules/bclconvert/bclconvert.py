@@ -225,6 +225,10 @@ class MultiqcModule(BaseMultiqcModule):
 
             self.cluster_length=runinfo['cluster_length']
             self.run_id=runinfo['run_id']
+        
+        if not self.cluster_length or not self.run_id:
+            log.error("Could not find a RunInfo.xml to get RunID and read length")
+            raise UserWarning
 
     def _recalculate_undetermined(self):
         # We have to calculate "corrected" unknown read counts when parsing more than one bclconvert run. To do this:
