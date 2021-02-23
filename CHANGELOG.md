@@ -34,6 +34,8 @@ For further information, please see the [documentation](https://multiqc.info/doc
 
 #### New Modules
 
+- [**BclConvert**](https://support.illumina.com/sequencing/sequencing_software/bcl-convert.html)
+  - Tool that converts Binary Base Call (BCL) files produced by Illumina sequencers to the FASTQ file format    
 - [**HOPS**](https://www.github.com/rhubler/HOPS)
   - Post-alignment ancient DNA analysis tool for MALT
 - [**ngsderive**](https://github.com/stjudecloud/ngsderive)
