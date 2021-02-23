@@ -80,6 +80,18 @@ bcl2fastq:
   fn: "Stats.json"
   contents: "DemuxResults"
   num_lines: 300
+bclconvert/runinfo:
+  fn: 'RunInfo.xml'
+  contents: '<?xml'
+bclconvert/demux:
+  fn: 'Demultiplex_Stats.csv'
+  contents: 'Lane,SampleID,Index'
+bclconvert/adaptermetrics:
+  fn: 'Adapter_Metrics.csv'
+  contents: 'Lane,SampleID,Index'
+bclconvert/unknown_barcodes:
+  fn: 'Top_Unknown_Barcodes.csv'
+  contents: 'Lane,index'
 biobambam2/bamsormadup:
   contents: "# bamsormadup"
   num_lines: 2

@@ -618,6 +618,11 @@ module_order:
         - RNA
         - DNA
         - methylation
+  - bclconvert:
+      module_tag:
+        - RNA
+        - DNA
+        - methylation
   - interop:
       module_tag:
         - RNA
