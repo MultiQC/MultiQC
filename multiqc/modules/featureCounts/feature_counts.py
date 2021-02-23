@@ -5,6 +5,7 @@
 from __future__ import print_function
 from collections import OrderedDict
 import logging
+import re
 
 from multiqc import config
 from multiqc.plots import bargraph
@@ -13,22 +14,25 @@ from multiqc.modules.base_module import BaseMultiqcModule
 # Initialise the logger
 log = logging.getLogger(__name__)
 
-class MultiqcModule(BaseMultiqcModule):
 
+class MultiqcModule(BaseMultiqcModule):
     def __init__(self):
 
         # Initialise the parent object
-        super(MultiqcModule, self).__init__(name='featureCounts',
-        anchor='featurecounts', target='Subread featureCounts',
-        href='http://bioinf.wehi.edu.au/featureCounts/',
-        info="is a highly efficient general-purpose read summarization program"\
-        " that counts mapped reads for genomic features such as genes, exons,"\
-        " promoter, gene bodies, genomic bins and chromosomal locations.")
+        super(MultiqcModule, self).__init__(
+            name="featureCounts",
+            anchor="featurecounts",
+            target="Subread featureCounts",
+            href="http://bioinf.wehi.edu.au/featureCounts/",
+            info="is a highly efficient general-purpose read summarization program"
+            " that counts mapped reads for genomic features such as genes, exons,"
+            " promoter, gene bodies, genomic bins and chromosomal locations.",
+        )
 
         # Find and load any featureCounts reports
         self.featurecounts_data = dict()
         self.featurecounts_keys = list()
-        for f in self.find_log_files('featurecounts'):
+        for f in self.find_log_files("featurecounts"):
             self.parse_featurecounts_report(f)
 
         # Filter to strip out ignored sample names
@@ -40,29 +44,39 @@ class MultiqcModule(BaseMultiqcModule):
         log.info("Found {} reports".format(len(self.featurecounts_data)))
 
         # Write parsed report data to a file
-        self.write_data_file(self.featurecounts_data, 'multiqc_featureCounts')
+        self.write_data_file(self.featurecounts_data, "multiqc_featureCounts")
 
         # Basic Stats Table
         self.featurecounts_stats_table()
 
         # Assignment bar plot
-        self.add_section( plot = self.featureCounts_chart() )
+        self.add_section(plot=self.featureCounts_chart())
 
-
-    def parse_featurecounts_report (self, f):
+    def parse_featurecounts_report(self, f):
         """ Parse the featureCounts log file. """
 
         file_names = list()
         parsed_data = dict()
-        for l in f['f'].splitlines():
+        split_sep = "\t"
+        for l in f["f"].splitlines():
             thisrow = list()
-            s = l.split("\t")
+
+            # If this is from Rsubread then the formatting can be very variable
+            # Default search pattern is quite generic, so f
+            if len(file_names) == 0 and len(l.split(split_sep)) < 2:
+                # Split by whitespace and strip quote marks
+                # NB: Will break if sample names have whitespace. RSubread output is so variable that this is difficult to avoid
+                split_sep = None
+
+            s = l.split(split_sep)
+            s = [sv.strip('"') for sv in s]
+
             if len(s) < 2:
                 continue
-            if s[0] == 'Status':
+            if s[0] == "Status":
                 for f_name in s[1:]:
                     file_names.append(f_name)
-            else:
+            elif len(file_names) + 1 == len(s):
                 k = s[0]
                 if k not in self.featurecounts_keys:
                     self.featurecounts_keys.append(k)
@@ -73,25 +87,27 @@ class MultiqcModule(BaseMultiqcModule):
                         pass
             if len(thisrow) > 0:
                 parsed_data[k] = thisrow
+
         # Check that this actually is a featureCounts file, as format and parsing is quite general
-        if 'Assigned' not in parsed_data.keys():
+        if "Assigned" not in parsed_data.keys():
             return None
+
         for idx, f_name in enumerate(file_names):
 
             # Clean up sample name
-            s_name = self.clean_s_name(f_name, f['root'])
+            s_name = self.clean_s_name(f_name, f["root"])
 
             # Reorganised parsed data for this sample
             # Collect total count number
             data = dict()
-            data['Total'] = 0
+            data["Total"] = 0
             for k in parsed_data:
                 data[k] = parsed_data[k][idx]
-                data['Total'] += parsed_data[k][idx]
+                data["Total"] += parsed_data[k][idx]
 
             # Calculate the percent aligned if we can
             try:
-                data['percent_assigned'] = (float(data['Assigned'])/float(data['Total'])) * 100.0
+                data["percent_assigned"] = (float(data["Assigned"]) / float(data["Total"])) * 100.0
             except (KeyError, ZeroDivisionError):
                 pass
 
@@ -102,40 +118,44 @@ class MultiqcModule(BaseMultiqcModule):
                 self.add_data_source(f, s_name)
                 self.featurecounts_data[s_name] = data
 
-
     def featurecounts_stats_table(self):
-        """ Take the parsed stats from the featureCounts report and add them to the
-        basic stats table at the top of the report """
+        """Take the parsed stats from the featureCounts report and add them to the
+        basic stats table at the top of the report"""
 
         headers = OrderedDict()
-        headers['percent_assigned'] = {
-            'title': '% Assigned',
-            'description': '% Assigned reads',
-            'max': 100,
-            'min': 0,
-            'suffix': '%',
-            'scale': 'RdYlGn'
+        headers["percent_assigned"] = {
+            "title": "% Assigned",
+            "description": "% Assigned reads",
+            "max": 100,
+            "min": 0,
+            "suffix": "%",
+            "scale": "RdYlGn",
         }
-        headers['Assigned'] = {
-            'title': '{} Assigned'.format(config.read_count_prefix),
-            'description': 'Assigned reads ({})'.format(config.read_count_desc),
-            'min': 0,
-            'scale': 'PuBu',
-            'modify': lambda x: float(x) * config.read_count_multiplier,
-            'shared_key': 'read_count'
+        headers["Assigned"] = {
+            "title": "{} Assigned".format(config.read_count_prefix),
+            "description": "Assigned reads ({})".format(config.read_count_desc),
+            "min": 0,
+            "scale": "PuBu",
+            "modify": lambda x: float(x) * config.read_count_multiplier,
+            "shared_key": "read_count",
         }
         self.general_stats_addcols(self.featurecounts_data, headers)
 
-
-    def featureCounts_chart (self):
+    def featureCounts_chart(self):
         """ Make the featureCounts assignment rates plot """
+
+        headers = OrderedDict()
+        for h in self.featurecounts_keys:
+            nice_name = h.replace("Unassigned_", "Unassigned: ").replace("_", " ")
+            nice_name = re.sub(r"([a-z])([A-Z])", "\g<1> \g<2>", nice_name)
+            headers[h] = {"name": nice_name}
 
         # Config for the plot
         config = {
-            'id': 'featureCounts_assignment_plot',
-            'title': 'featureCounts: Assignments',
-            'ylab': '# Reads',
-            'cpswitch_counts_label': 'Number of Reads'
+            "id": "featureCounts_assignment_plot",
+            "title": "featureCounts: Assignments",
+            "ylab": "# Reads",
+            "cpswitch_counts_label": "Number of Reads",
         }
 
-        return bargraph.plot(self.featurecounts_data, self.featurecounts_keys, config)
+        return bargraph.plot(self.featurecounts_data, headers, config)

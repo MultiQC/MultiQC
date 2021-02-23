@@ -11,7 +11,9 @@ from multiqc.modules.base_module import BaseMultiqcModule
 # Initialise the logger
 from multiqc.modules.qualimap.QM_BamQC import coverage_histogram_helptext, genome_fraction_helptext
 from multiqc.plots import linegraph
+
 log = logging.getLogger(__name__)
+
 
 class MultiqcModule(BaseMultiqcModule):
     """
@@ -69,9 +71,12 @@ class MultiqcModule(BaseMultiqcModule):
     def __init__(self):
 
         # Initialise the parent object
-        super(MultiqcModule, self).__init__(name='mosdepth', anchor='mosdepth',
+        super(MultiqcModule, self).__init__(
+            name="mosdepth",
+            anchor="mosdepth",
             href="https://github.com/brentp/mosdepth",
-            info="performs fast BAM/CRAM depth calculation for WGS, exome, or targeted sequencing")
+            info="performs fast BAM/CRAM depth calculation for WGS, exome, or targeted sequencing",
+        )
 
         dist_data, cov_data, xmax, perchrom_avg_data = self.parse_cov_dist()
 
@@ -81,63 +86,69 @@ class MultiqcModule(BaseMultiqcModule):
         perchrom_avg_data = self.ignore_samples(perchrom_avg_data)
 
         # No samples found
-        num_samples = max(
-            len(dist_data),
-            len(cov_data),
-            len(perchrom_avg_data)
-        )
+        num_samples = max(len(dist_data), len(cov_data), len(perchrom_avg_data))
         if num_samples == 0:
             raise UserWarning
         log.info("Found {} reports".format(num_samples))
 
         if dist_data:
             self.add_section(
-                name='Coverage distribution',
-                anchor='mosdepth-coverage-dist',
-                description='Distribution of the number of locations in the reference genome with a given depth of coverage',
+                name="Coverage distribution",
+                anchor="mosdepth-coverage-dist",
+                description="Distribution of the number of locations in the reference genome with a given depth of coverage",
                 helptext=genome_fraction_helptext,
-                plot=linegraph.plot(dist_data, {
-                    'id': 'mosdepth-coverage-dist-id',
-                    'title': 'Mosdepth: Coverage Distribution',
-                    'xlab': 'Coverage (X)',
-                    'ylab': '% bases in genome/regions covered by at least X reads',
-                    'ymax': 100,
-                    'xmax': xmax,
-                    'tt_label': '<b>{point.x}X</b>: {point.y:.2f}%',
-                    'smooth_points': 500,
-                })
+                plot=linegraph.plot(
+                    dist_data,
+                    {
+                        "id": "mosdepth-coverage-dist-id",
+                        "title": "Mosdepth: Coverage Distribution",
+                        "xlab": "Coverage (X)",
+                        "ylab": "% bases in genome/regions covered by at least X reads",
+                        "ymax": 100,
+                        "xmax": xmax,
+                        "tt_label": "<b>{point.x}X</b>: {point.y:.2f}%",
+                        "smooth_points": 500,
+                    },
+                ),
             )
         if cov_data:
             self.add_section(
-                name='Coverage plot',
-                anchor='mosdepth-coverage-cov',
-                description='Number of locations in the reference genome with a given depth of coverage',
+                name="Coverage plot",
+                anchor="mosdepth-coverage-cov",
+                description="Number of locations in the reference genome with a given depth of coverage",
                 helptext=coverage_histogram_helptext,
-                plot=linegraph.plot(cov_data, {
-                    'id': 'mosdepth-coverage-plot-id',
-                    'title': 'Mosdepth: Coverage Depth',
-                    'xlab': 'Coverage (X)',
-                    'ylab': '% bases in genome/regions covered at X reads',
-                    'ymax': 100,
-                    'xmax': xmax,
-                    'tt_label': '<b>{point.x}X</b>: {point.y:.2f}%',
-                    'smooth_points': 500,
-                })
+                plot=linegraph.plot(
+                    cov_data,
+                    {
+                        "id": "mosdepth-coverage-plot-id",
+                        "title": "Mosdepth: Coverage Depth",
+                        "xlab": "Coverage (X)",
+                        "ylab": "% bases in genome/regions covered at X reads",
+                        "ymax": 100,
+                        "xmax": xmax,
+                        "tt_label": "<b>{point.x}X</b>: {point.y:.2f}%",
+                        "smooth_points": 500,
+                    },
+                ),
             )
         if perchrom_avg_data:
             self.add_section(
-                name='Average coverage per contig',
-                anchor='mosdepth-coverage-per-contig-id',
-                description='Average coverage per contig or chromosome',
-                plot=linegraph.plot(perchrom_avg_data, {
-                    'id': 'mosdepth-coverage-per-contig',
-                    'title': 'Mosdepth: Coverage per contig',
-                    'xlab': 'region',
-                    'ylab': 'average coverage',
-                    'categories': True,
-                    'tt_label': '<b>{point.x}</b>: {point.y:.1f}x',
-                    'smooth_points': 500,
-                })
+                name="Average coverage per contig",
+                anchor="mosdepth-coverage-per-contig-id",
+                description="Average coverage per contig or chromosome",
+                plot=linegraph.plot(
+                    perchrom_avg_data,
+                    {
+                        "id": "mosdepth-coverage-per-contig",
+                        "title": "Mosdepth: Coverage per contig",
+                        "xlab": "region",
+                        "ylab": "average coverage",
+                        "categories": True,
+                        "tt_decimals": 1,
+                        "tt_suffix": "x",
+                        "smooth_points": 500,
+                    },
+                ),
             )
         if dist_data:
             threshs, hidden_threshs = get_cov_thresholds()
@@ -150,13 +161,13 @@ class MultiqcModule(BaseMultiqcModule):
         xmax = 0
         perchrom_avg_data = defaultdict(OrderedDict)  # per chromosome average coverage
 
-        for scope in ('region', 'global'):
-            for f in self.find_log_files('mosdepth/' + scope + '_dist'):
-                s_name = self.clean_s_name(f['fn'], root=None).replace('.mosdepth.' + scope + '.dist', '')
+        for scope in ("region", "global"):
+            for f in self.find_log_files("mosdepth/" + scope + "_dist"):
+                s_name = self.clean_s_name(f["fn"], f["root"]).replace(".mosdepth." + scope + ".dist", "")
                 if s_name in dist_data:  # both region and global might exist, prioritizing region
                     continue
 
-                for line in f['f'].split("\n"):
+                for line in f["f"].split("\n"):
                     if "\t" not in line:
                         continue
                     contig, cutoff_reads, bases_fraction = line.split("\t")
@@ -183,7 +194,7 @@ class MultiqcModule(BaseMultiqcModule):
                         perchrom_avg_data[s_name][contig] = avg
 
                 if s_name in dist_data:
-                    self.add_data_source(f, s_name=s_name, section='genome_results')
+                    self.add_data_source(f, s_name=s_name, section="genome_results")
 
         return dist_data, cov_data, xmax, perchrom_avg_data
 
@@ -193,20 +204,20 @@ class MultiqcModule(BaseMultiqcModule):
             dist_subset = {t: data for t, data in d.items() if t in threshs}
             for t in threshs:
                 if int(t) in dist_subset:
-                    data[s_name]['{}_x_pc'.format(t)] = dist_subset[t]
+                    data[s_name]["{}_x_pc".format(t)] = dist_subset[t]
                 else:
-                    data[s_name]['{}_x_pc'.format(t)] = 0
+                    data[s_name]["{}_x_pc".format(t)] = 0
 
         headers = OrderedDict()
         for t in threshs:
-            headers['{}_x_pc'.format(t)] = {
-                'title': '&ge; {}X'.format(t),
-                'description': 'Fraction of genome with at least {}X coverage'.format(t),
-                'max': 100,
-                'min': 0,
-                'suffix': '%',
-                'scale': 'RdYlGn',
-                'hidden': t in hidden_threshs,
+            headers["{}_x_pc".format(t)] = {
+                "title": "&ge; {}X".format(t),
+                "description": "Fraction of genome with at least {}X coverage".format(t),
+                "max": 100,
+                "min": 0,
+                "suffix": "%",
+                "scale": "RdYlGn",
+                "hidden": t in hidden_threshs,
             }
         self.general_stats_addcols(data, headers)
 
@@ -218,24 +229,23 @@ class MultiqcModule(BaseMultiqcModule):
                 if cum_pct >= 50:
                     median_cov = this_cov
                     break
-            data[s_name]['median_coverage'] = median_cov
+            data[s_name]["median_coverage"] = median_cov
 
         headers = OrderedDict()
-        headers['median_coverage'] = {
-            'title': 'Median',
-            'description': 'Median coverage',
-            'min': 0,
-            'suffix': 'X',
-            'scale': 'BuPu'
+        headers["median_coverage"] = {
+            "title": "Median",
+            "description": "Median coverage",
+            "min": 0,
+            "suffix": "X",
+            "scale": "BuPu",
         }
         self.general_stats_addcols(data, headers)
 
 
 def get_cov_thresholds():
-    """ Reads coverage thresholds from the config, otherwise sets sensible defaults
-    """
+    """Reads coverage thresholds from the config, otherwise sets sensible defaults"""
     try:
-        threshs = config.mosdepth_config['general_stats_coverage']
+        threshs = config.mosdepth_config["general_stats_coverage"]
         assert type(threshs) == list
         assert len(threshs) > 0
         threshs = [int(t) for t in threshs]
@@ -245,7 +255,7 @@ def get_cov_thresholds():
         log.debug("Using default coverage thresholds: {}".format(", ".join([str(t) for t in threshs])))
 
     try:
-        hidden_threshs = config.mosdepth_config['general_stats_coverage_hidden']
+        hidden_threshs = config.mosdepth_config["general_stats_coverage_hidden"]
         assert type(hidden_threshs) == list
         log.debug("Hiding coverage thresholds: {}".format(", ".join([str(t) for t in hidden_threshs])))
     except (AttributeError, TypeError, KeyError, AssertionError):

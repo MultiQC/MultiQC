@@ -5,26 +5,27 @@ import re
 from multiqc.modules.base_module import BaseMultiqcModule
 from multiqc.plots import table
 
-from .utils import make_headers, Metric
+from .utils import make_headers, Metric, exist_and_number
 
 # Initialise the logger
 import logging
+
 log = logging.getLogger(__name__)
 
 
-NAMESPACE = 'DRAGEN variant calling'
+NAMESPACE = "DRAGEN variant calling"
 
 
 class DragenVCMetrics(BaseMultiqcModule):
     def add_vc_metrics(self):
         data_by_sample = dict()
 
-        for f in self.find_log_files('dragen/vc_metrics'):
+        for f in self.find_log_files("dragen/vc_metrics"):
             data = parse_vc_metrics_file(f)
-            if f['s_name'] in data_by_sample:
-                log.debug('Duplicate sample name found! Overwriting: {}'.format(f['s_name']))
-            self.add_data_source(f, section='stats')
-            data_by_sample[f['s_name']] = data
+            if f["s_name"] in data_by_sample:
+                log.debug("Duplicate sample name found! Overwriting: {}".format(f["s_name"]))
+            self.add_data_source(f, section="stats")
+            data_by_sample[f["s_name"]] = data
 
         # Filter to strip out ignored sample names:
         data_by_sample = self.ignore_samples(data_by_sample)
@@ -41,8 +42,8 @@ class DragenVCMetrics(BaseMultiqcModule):
         self.general_stats_addcols(data_by_sample, gen_stats_headers, namespace=NAMESPACE)
 
         self.add_section(
-            name='Variant calling',
-            anchor='dragen-vc-metrics',
+            name="Variant calling",
+            anchor="dragen-vc-metrics",
             description="""
             Variant calling metrics. Metrics are reported for each sample in multi sample VCF 
             and gVCF files. Based on the run case, metrics are reported either as standard 
@@ -50,62 +51,232 @@ class DragenVCMetrics(BaseMultiqcModule):
             except for the "Filtered" metrics which represent how many variants were filtered out 
             from pre-filter VCF to generate the post-filter VCF.
             """,
-            plot=table.plot(data_by_sample, vc_table_headers, pconfig={'namespace': NAMESPACE})
+            plot=table.plot(data_by_sample, vc_table_headers, pconfig={"namespace": NAMESPACE}),
         )
         return data_by_sample.keys()
 
 
-VC_METRICS = [Metric(m.id, m.title, in_genstats=m.in_genstats, in_own_tabl=m.in_own_tabl, descr=m.descr, unit=m.unit,
-                     namespace=m.namespace or NAMESPACE, the_higher_the_worse=m.the_higher_the_worse)
-              for m in [
-    # id_in_data                                        title (display name)   gen_stats  vc_table  unit description
-    # Read stats:
-    Metric('Total'                                      , 'Variants'            , '#'  , '#'  , '', 'Total number of variants (SNPs + MNPs + INDELS).'),
-    Metric('Biallelic'                                  , 'Biallelic'           , None , 'hid', '', 'Number of sites in a genome that contains two observed alleles, counting the reference as one, and therefore allowing for one variant allele'),
-    Metric('Multiallelic'                               , 'Multiallelic'        , 'hid', '%'  , '', 'Number of sites in the VCF that contain three or more observed alleles. The reference is counted as one, therefore allowing for two or more variant alleles'),
-    Metric('SNPs'                                       , 'SNP'                 , 'hid', '%'  , '', 'Number of SNPs in the variant set. A variant is counted as an SNP when the reference, allele 1, and allele2 are all length 1'),
-    Metric('Indels'                                     , 'Indel'               , 'hid', 'hid', '', 'Number of insetions and deletions in the variant set.'),
-    Metric('Insertions'                                 , 'Ins'                 , None , '%'  , '', 'Number of insetions in the variant set.'),
-    Metric('Deletions'                                  , 'Del'                 , None , '%'  , '', 'Number of deletions in the variant set.'),
-    Metric('Insertions (Hom)'                           , 'Hom ins'             , None , 'hid', '', 'Number of variants that contains homozygous insertions'),
-    Metric('Insertions (Het)'                           , 'Het ins'             , None , 'hid', '', 'Number of variants where both alleles are insertions, but not homozygous'),
-    Metric('Deletions (Hom)'                            , 'Hom del'             , None , 'hid', '', 'Number of variants that contains homozygous deletions'),
-    Metric('Deletions (Het)'                            , 'Het del'             , None , 'hid', '', 'Number of variants where both alleles are deletion, but not homozygous'),
-    Metric('Indels (Het)'                               , 'Het indel'           , None , 'hid', '', 'Number of variants where genotypes are either [insertion+deletion], [insertion+snp] or [deletion+snp].'),
-    Metric('DeNovo SNPs'                                , 'DeNovo SNPs'         , None , None , '', 'Number of DeNovo marked SNPs, with DQ > 0.05. Set the --qc-snp-denovo-quality-threshold option to the required threshold. The default is 0.05.'),
-    Metric('DeNovo INDELs'                              , 'DeNovo indel'        , None , None , '', 'Number of DeNovo marked indels, with DQ > 0.05. Set the --qc-snp-denovo-quality-threshold option to the required threshold. The default is 0.05.'),
-    Metric('DeNovo MNPs'                                , 'DeNovo MNPs'         , None , None , '', 'Number of DeNovo marked MNPs, with DQ > 0.05. Set the --qc-snp-denovo-quality-threshold option to the required threshold. The default is 0.05.'),
-    Metric('Chr X number of SNPs over genome'           , 'ChrX SNP'            , None , None , '', 'Number of SNPs in chromosome X (or in the intersection of chromosome X with the target region). '
-                                                                                                '', 'If there was no alignment to either chromosome X, this metric shows as NA'),
-    Metric('Chr Y number of SNPs over genome'           , 'ChrY SNP'            , None , None , '', 'Number of SNPs in chromosome Y (or in the intersection of chromosome Y with the target region). '
-                                                                                                '', 'If there was no alignment to either chromosome Y, this metric shows as NA'),
-    Metric('(Chr X SNPs)/(chr Y SNPs) ratio over genome', 'X/Y SNP ratio'       , None , 'hid', '', 'Number of SNPs in chromosome X (or in the intersection of chromosome X with the target region) '
-                                                                                                '', 'divided by the number of SNPs in chromosome Y (or in the intersection of chromosome Y with the '
-                                                                                                '', 'target region). If there was no alignment to either chromosome X or chromosome Y, this metric '
-                                                                                                '', 'shows as NA'),
-    Metric('SNP Transitions'                            , 'SNP Ti'              , None , None , '', 'Number of transitions - interchanges of two purines (A<->G) or two pyrimidines (C<->T)'),
-    Metric('SNP Transversions'                          , 'SNP Tv'              , None , None , '', 'Number of transversions - interchanges of purine and pyrimidine bases'),
-    Metric('Ti/Tv ratio'                                , 'Ti/Tv'               , 'hid', '#'  , '', 'Ti/Tv ratio: ratio of transitions to transitions.'),
-    Metric('Heterozygous'                               , 'Het'                 , 'hid', 'hid', '', 'Number of heterozygous variants'),
-    Metric('Homozygous'                                 , 'Hom'                 , 'hid', 'hid', '', 'Number of homozygous variants'),
-    Metric('Het/Hom ratio'                              , 'Het/Hom'             , 'hid', '#'  , '', 'Heterozygous/ homozygous ratio'),
-    Metric('In dbSNP'                                   , 'In dbSNP'            , None , None , '', 'Number of variants detected that are present in the dbsnp reference file. If no dbsnp file '
-                                                                                                '',  'is provided via the --bsnp option, then both the In dbSNP and Novel metrics show as NA.', the_higher_the_worse=True),
-    Metric('Not in dbSNP'                               , 'Novel'               , None , None , '', 'Number of all variants minus number of variants in dbSNP. If no dbsnp file '
-                                                                                                '', 'is provided via the --bsnp option, then both the In dbSNP and Novel metrics show as NA.'),
-    Metric('Percent Callability'                        , 'Callability'         , None , '#'  , '', 'Available only in germline mode with gVCF output. The percentage of non-N reference '
-                                                                                                '', 'positions having a PASSing genotype call. Multi-allelic variants are not counted. '
-                                                                                                '', 'Deletions are counted for all the deleted reference positions only for homozygous calls. '
-                                                                                                '', 'Only autosomes and chromosomes X, Y and M are considered.'),
-    Metric('Percent Autosome Callability'               , 'Autosome callability', None , 'hid', '', 'Available only in germline mode with gVCF output. The percentage of non-N reference '
-                                                                                                '', 'positions having a PASSing genotype call. Multi-allelic variants are not counted. '
-                                                                                                '', 'Deletions are counted for all the deleted reference positions only for homozygous calls. '
-                                                                                                '', 'Only autosomes are considered (for all chromosomes, see the Callability metric).'),
-    Metric('Filtered vars'                              , 'Filt var'            , 'hid', 'hid', '', 'Number of raw variants minus the number of PASSed variants', the_higher_the_worse=True),
-    Metric('Filtered SNPs'                              , 'Filt SNP'            , 'hid', '%'  , '', 'Number of raw SNPs minus the number of PASSed SNPs', the_higher_the_worse=True),
-    Metric('Filtered indels'                            , 'Filt indel'          , 'hid', '%'  , '', 'Number of raw indels minus the number of PASSed indels', the_higher_the_worse=True),
-    Metric('Reads Processed'                            , 'VC reads'            , None , '#'  , 'reads', 'The number of reads used for variant calling, excluding any duplicate marked reads and reads falling outside of the target region'),
-]]
+VC_METRICS = [
+    Metric(
+        m.id,
+        m.title,
+        in_genstats=m.in_genstats,
+        in_own_tabl=m.in_own_tabl,
+        descr=m.descr,
+        unit=m.unit,
+        namespace=m.namespace or NAMESPACE,
+        the_higher_the_worse=m.the_higher_the_worse,
+    )
+    for m in [
+        # id_in_data                                        title (display name)   gen_stats  vc_table  unit description
+        # Read stats:
+        Metric("Total", "Variants", "#", "#", "", "Total number of variants (SNPs + MNPs + INDELS)."),
+        Metric(
+            "Biallelic",
+            "Biallelic",
+            None,
+            "hid",
+            "",
+            "Number of sites in a genome that contains two observed alleles, counting the reference as one, and therefore allowing for one variant allele",
+        ),
+        Metric(
+            "Multiallelic",
+            "Multiallelic",
+            "hid",
+            "%",
+            "",
+            "Number of sites in the VCF that contain three or more observed alleles. The reference is counted as one, therefore allowing for two or more variant alleles",
+        ),
+        Metric(
+            "SNPs",
+            "SNP",
+            "hid",
+            "%",
+            "",
+            "Number of SNPs in the variant set. A variant is counted as an SNP when the reference, allele 1, and allele2 are all length 1",
+        ),
+        Metric("Indels", "Indel", "hid", "hid", "", "Number of insetions and deletions in the variant set."),
+        Metric("Insertions", "Ins", None, "%", "", "Number of insetions in the variant set."),
+        Metric("Deletions", "Del", None, "%", "", "Number of deletions in the variant set."),
+        Metric(
+            "Insertions (Hom)", "Hom ins", None, "hid", "", "Number of variants that contains homozygous insertions"
+        ),
+        Metric(
+            "Insertions (Het)",
+            "Het ins",
+            None,
+            "hid",
+            "",
+            "Number of variants where both alleles are insertions, but not homozygous",
+        ),
+        Metric("Deletions (Hom)", "Hom del", None, "hid", "", "Number of variants that contains homozygous deletions"),
+        Metric(
+            "Deletions (Het)",
+            "Het del",
+            None,
+            "hid",
+            "",
+            "Number of variants where both alleles are deletion, but not homozygous",
+        ),
+        Metric(
+            "Indels (Het)",
+            "Het indel",
+            None,
+            "hid",
+            "",
+            "Number of variants where genotypes are either [insertion+deletion], [insertion+snp] or [deletion+snp].",
+        ),
+        Metric(
+            "DeNovo SNPs",
+            "DeNovo SNPs",
+            None,
+            None,
+            "",
+            "Number of DeNovo marked SNPs, with DQ > 0.05. Set the --qc-snp-denovo-quality-threshold option to the required threshold. The default is 0.05.",
+        ),
+        Metric(
+            "DeNovo INDELs",
+            "DeNovo indel",
+            None,
+            None,
+            "",
+            "Number of DeNovo marked indels, with DQ > 0.05. Set the --qc-snp-denovo-quality-threshold option to the required threshold. The default is 0.05.",
+        ),
+        Metric(
+            "DeNovo MNPs",
+            "DeNovo MNPs",
+            None,
+            None,
+            "",
+            "Number of DeNovo marked MNPs, with DQ > 0.05. Set the --qc-snp-denovo-quality-threshold option to the required threshold. The default is 0.05.",
+        ),
+        Metric(
+            "Chr X number of SNPs over genome",
+            "ChrX SNP",
+            None,
+            None,
+            "",
+            "Number of SNPs in chromosome X (or in the intersection of chromosome X with the target region). " "",
+            "If there was no alignment to either chromosome X, this metric shows as NA",
+        ),
+        Metric(
+            "Chr Y number of SNPs over genome",
+            "ChrY SNP",
+            None,
+            None,
+            "",
+            "Number of SNPs in chromosome Y (or in the intersection of chromosome Y with the target region). " "",
+            "If there was no alignment to either chromosome Y, this metric shows as NA",
+        ),
+        Metric(
+            "(Chr X SNPs)/(chr Y SNPs) ratio over genome",
+            "X/Y SNP ratio",
+            None,
+            "hid",
+            "",
+            "Number of SNPs in chromosome X (or in the intersection of chromosome X with the target region) " "",
+            "divided by the number of SNPs in chromosome Y (or in the intersection of chromosome Y with the " "",
+            "target region). If there was no alignment to either chromosome X or chromosome Y, this metric " "",
+            "shows as NA",
+        ),
+        Metric(
+            "SNP Transitions",
+            "SNP Ti",
+            None,
+            None,
+            "",
+            "Number of transitions - interchanges of two purines (A<->G) or two pyrimidines (C<->T)",
+        ),
+        Metric(
+            "SNP Transversions",
+            "SNP Tv",
+            None,
+            None,
+            "",
+            "Number of transversions - interchanges of purine and pyrimidine bases",
+        ),
+        Metric("Ti/Tv ratio", "Ti/Tv", "hid", "#", "", "Ti/Tv ratio: ratio of transitions to transitions."),
+        Metric("Heterozygous", "Het", "hid", "hid", "", "Number of heterozygous variants"),
+        Metric("Homozygous", "Hom", "hid", "hid", "", "Number of homozygous variants"),
+        Metric("Het/Hom ratio", "Het/Hom", "hid", "#", "", "Heterozygous/ homozygous ratio"),
+        Metric(
+            "In dbSNP",
+            "In dbSNP",
+            None,
+            None,
+            "",
+            "Number of variants detected that are present in the dbsnp reference file. If no dbsnp file " "",
+            "is provided via the --bsnp option, then both the In dbSNP and Novel metrics show as NA.",
+            the_higher_the_worse=True,
+        ),
+        Metric(
+            "Not in dbSNP",
+            "Novel",
+            None,
+            None,
+            "",
+            "Number of all variants minus number of variants in dbSNP. If no dbsnp file " "",
+            "is provided via the --bsnp option, then both the In dbSNP and Novel metrics show as NA.",
+        ),
+        Metric(
+            "Percent Callability",
+            "Callability",
+            None,
+            "#",
+            "",
+            "Available only in germline mode with gVCF output. The percentage of non-N reference " "",
+            "positions having a PASSing genotype call. Multi-allelic variants are not counted. " "",
+            "Deletions are counted for all the deleted reference positions only for homozygous calls. " "",
+            "Only autosomes and chromosomes X, Y and M are considered.",
+        ),
+        Metric(
+            "Percent Autosome Callability",
+            "Autosome callability",
+            None,
+            "hid",
+            "",
+            "Available only in germline mode with gVCF output. The percentage of non-N reference " "",
+            "positions having a PASSing genotype call. Multi-allelic variants are not counted. " "",
+            "Deletions are counted for all the deleted reference positions only for homozygous calls. " "",
+            "Only autosomes are considered (for all chromosomes, see the Callability metric).",
+        ),
+        Metric(
+            "Filtered vars",
+            "Filt var",
+            "hid",
+            "hid",
+            "",
+            "Number of raw variants minus the number of PASSed variants",
+            the_higher_the_worse=True,
+        ),
+        Metric(
+            "Filtered SNPs",
+            "Filt SNP",
+            "hid",
+            "%",
+            "",
+            "Number of raw SNPs minus the number of PASSed SNPs",
+            the_higher_the_worse=True,
+        ),
+        Metric(
+            "Filtered indels",
+            "Filt indel",
+            "hid",
+            "%",
+            "",
+            "Number of raw indels minus the number of PASSed indels",
+            the_higher_the_worse=True,
+        ),
+        Metric(
+            "Reads Processed",
+            "VC reads",
+            None,
+            "#",
+            "reads",
+            "The number of reads used for variant calling, excluding any duplicate marked reads and reads falling outside of the target region",
+        ),
+    ]
+]
 
 
 def parse_vc_metrics_file(f):
@@ -159,14 +330,14 @@ def parse_vc_metrics_file(f):
     VARIANT CALLER POSTFILTER,T_SRR7890936_50pc,Percent Autosome Callability,NA
     """
 
-    f['s_name'] = re.search(r'(.*).vc_metrics.csv', f['fn']).group(1)
+    f["s_name"] = re.search(r"(.*).vc_metrics.csv", f["fn"]).group(1)
 
     summary_data = dict()
     prefilter_data = dict()
     postfilter_data = dict()
 
-    for line in f['f'].splitlines():
-        fields = line.split(',')
+    for line in f["f"].splitlines():
+        fields = line.split(",")
         analysis = fields[0]
         # sample = fields[1]
         metric = fields[2]
@@ -188,39 +359,69 @@ def parse_vc_metrics_file(f):
             except ValueError:
                 pass
 
-        if analysis == 'VARIANT CALLER SUMMARY':
+        if analysis == "VARIANT CALLER SUMMARY":
             summary_data[metric] = value
 
-        if analysis == 'VARIANT CALLER PREFILTER':
+        if analysis == "VARIANT CALLER PREFILTER":
             prefilter_data[metric] = value
 
-        if analysis == 'VARIANT CALLER POSTFILTER':
+        if analysis == "VARIANT CALLER POSTFILTER":
             postfilter_data[metric] = value
             if percentage is not None:
-                postfilter_data[metric + ' pct'] = percentage
+                postfilter_data[metric + " pct"] = percentage
 
     # adding few more metrics: total insertions, deletions and indels numbers
     for data in [prefilter_data, postfilter_data]:
-        data['Insertions'] = data['Insertions (Hom)'] + data['Insertions (Het)']
-        data['Deletions']  = data['Deletions (Hom)']  + data['Deletions (Het)']
-        data['Indels']     = data['Insertions']       + data['Deletions']
-        if data['Total'] != 0:
-            data['Insertions pct'] = data['Insertions'] / data['Total'] * 100.0
-            data['Deletions pct']  = data['Deletions']  / data['Total'] * 100.0
-            data['Indels pct']     = data['Indels']     / data['Total'] * 100.0
+        if exist_and_number(data, "Insertions (Hom)", "Insertions (Het)"):
+            data["Insertions"] = data["Insertions (Hom)"] + data["Insertions (Het)"]
+
+        if exist_and_number(data, "Deletions (Hom)", "Deletions (Het)"):
+            data["Deletions"] = data["Deletions (Hom)"] + data["Deletions (Het)"]
+
+        if exist_and_number(data, "Insertions", "Deletions"):
+            data["Indels"] = data["Insertions"] + data["Deletions"]
+
+        if exist_and_number(data, "Total") and data["Total"] != 0:
+            if exist_and_number(data, "Insertions"):
+                data["Insertions pct"] = data["Insertions"] / data["Total"] * 100.0
+            if exist_and_number(data, "Deletions"):
+                data["Deletions pct"] = data["Deletions"] / data["Total"] * 100.0
+            if exist_and_number(data, "Indels"):
+                data["Indels pct"] = data["Indels"] / data["Total"] * 100.0
 
     data = postfilter_data
     data.update(summary_data)
+
     # we are not really interested in all the details of pre-filtered variants, however
     # it would be nice to report how much we filtered out
-    data['Filtered vars']     = prefilter_data['Total']  - data['Total']
-    data['Filtered SNPs']     = prefilter_data['SNPs']   - data['SNPs']
-    data['Filtered indels']   = prefilter_data['Indels'] - data['Indels']
-    if prefilter_data['Total'] != 0:
-        data['Filtered vars pct']   = data['Filtered vars']   / prefilter_data['Total'] * 100.0
-    if prefilter_data['SNPs'] != 0:
-        data['Filtered SNPs pct']   = data['Filtered SNPs']   / prefilter_data['SNPs'] * 100.0
-    if prefilter_data['Indels'] != 0:
-        data['Filtered indels pct'] = data['Filtered indels'] / prefilter_data['Indels'] * 100.0
+    if exist_and_number(data, "Total") and exist_and_number(prefilter_data, "Total"):
+        data["Filtered vars"] = prefilter_data["Total"] - data["Total"]
+
+    if exist_and_number(data, "SNPs") and exist_and_number(prefilter_data, "SNPs"):
+        data["Filtered SNPs"] = prefilter_data["SNPs"] - data["SNPs"]
+
+    if exist_and_number(data, "Indels") and exist_and_number(prefilter_data, "Indels"):
+        data["Filtered indels"] = prefilter_data["Indels"] - data["Indels"]
+
+    if (
+        exist_and_number(prefilter_data, "Total")
+        and exist_and_number(data, "Filtered vars")
+        and prefilter_data["Total"] != 0
+    ):
+        data["Filtered vars pct"] = data["Filtered vars"] / prefilter_data["Total"] * 100.0
+
+    if (
+        exist_and_number(prefilter_data, "SNPs")
+        and exist_and_number(data, "Filtered SNPs")
+        and prefilter_data["SNPs"] != 0
+    ):
+        data["Filtered SNPs pct"] = data["Filtered SNPs"] / prefilter_data["SNPs"] * 100.0
+
+    if (
+        exist_and_number(prefilter_data, "Indels")
+        and exist_and_number(data, "Filtered Indels")
+        and prefilter_data["Indels"] != 0
+    ):
+        data["Filtered indels pct"] = data["Filtered indels"] / prefilter_data["Indels"] * 100.0
 
     return data
