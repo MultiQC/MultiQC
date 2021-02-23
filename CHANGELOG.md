@@ -78,6 +78,8 @@ For further information, please see the [documentation](https://multiqc.info/doc
   - Fix issue properly parsing multiple samples within a single Rockhopper summary file
 - **Salmon**
   - Only try to generate a plot for fragment length if the data was found.
+- **Kraken2**
+  - Add distinct minimizer heatmap for KrakenUniq style duplication information ([#1333](https://github.com/ewels/MultiQC/pull/1380))
 
 #### New Custom Content features
 

@@ -41,7 +41,7 @@ class MultiqcModule(BaseMultiqcModule):
         self.t_ranks["R"] = "Root"
         # self.t_ranks['U'] = 'Unclassified'
 
-        self.top_n = 2
+        self.top_n = 5
 
         # Find and load any kraken reports
         self.kraken_raw_data = dict()
@@ -437,9 +437,9 @@ class MultiqcModule(BaseMultiqcModule):
             helptext = f"""
                 To make this plot, the minimizer duplication rate is computed for the top {self.top_n} most abundant species in all samples.
                 The minimizer duplication rate is defined as:
-                duplication rate = (total number of minimizer / number of distinct minimizers)
+                duplication rate = (total number of minimizers / number of distinct minimizers)
 
-                A low coverage and high duplication rage (>> 1) is often sign of read stacking, which probably indicates of false positive hit.
+                A low coverage and high duplication rate (>> 1) is often sign of read stacking, which probably indicates of false positive hit.
             """,
             plot = heatmap.plot(duplication, xlabels, ylabels, pconfig)
         )
