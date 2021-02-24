@@ -109,7 +109,9 @@ class DragenMappingMetics(BaseMultiqcModule):
         add_paired_label = False
         add_mapped_label = False
         for sample_id, data in data_by_sample.items():
-            if data['Not properly paired reads (discordant)']\
+            if data['Mapped reads R2'] == 0:
+                log.warning(f'single-ended data detected, skipping mapping/paired percentages plot for: {sample_id}')
+            elif data['Not properly paired reads (discordant)']\
                     + data['Properly paired reads']\
                     + data['Singleton reads (itself mapped; mate unmapped)']\
                     + data['Unmapped reads']\
