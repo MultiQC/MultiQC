@@ -2,11 +2,11 @@
 Name: bclconvert
 URL: https://support.illumina.com/sequencing/sequencing_software/bcl-convert.html
 Description: >
-    bclconvert can be used to both demultiplex data and convert BCL files to
-    FASTQ file formats for downstream analysis.
+  bclconvert can be used to both demultiplex data and convert BCL files to
+  FASTQ file formats for downstream analysis.
 ---
 
-This BclConvert module is based on the bcl2fastq multiqc module. It can parse multiple 
+This BclConvert module is based on the bcl2fastq multiqc module. It can parse multiple
 bclconvert run outputs as long as they are from the same sequencing run. When doing this,
 the undetermined reads will be 'corrected' and re-calculated (as an unknown read from
 some one bclcovnert run might not be truly unknown, but simply from another run).
@@ -20,7 +20,7 @@ In order to make MultiQC show the estimated depth for each sample, specify the r
 
 ```yaml
 bcl2fastq:
-    genome_size: 3049315783
+  genome_size: 3049315783
 ```
 
 The coverage depth will be estimated as the yield Q30 dvivided by the genome size.
