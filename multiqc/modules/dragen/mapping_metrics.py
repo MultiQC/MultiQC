@@ -99,55 +99,81 @@ class DragenMappingMetics(BaseMultiqcModule):
         # Make bargraph plots of mapped, dupped and paired reads
         self.__map_pair_dup_read_chart(data_by_rg)
 
+
     def __map_pair_dup_read_chart(self, data_by_sample):
-        chart_data = dict()
+        paired_reads_data = {}
+        mapped_reads_data = {}
+        category_labels = []
+        data_labels = []
+
+        add_paired_label = False
+        add_mapped_label = False
         for sample_id, data in data_by_sample.items():
-            if data['Not properly paired reads (discordant)'] + data['Properly paired reads']\
+            if data['Mapped reads R2'] == 0:
+                log.warning(f'single-ended data detected, skipping mapping/paired percentages plot for: {sample_id}')
+            elif data['Not properly paired reads (discordant)']\
+                    + data['Properly paired reads']\
                     + data['Singleton reads (itself mapped; mate unmapped)']\
-                    + data['Unmapped reads'] != data['Total reads in RG']:
+                    + data['Unmapped reads']\
+                    != data['Total reads in RG']:
                 log.warning("sum of unpaired/discordant/proppaired/unmapped reads not matching total, "
                             "skipping mapping/paired percentages plot for: {}".format(sample_id))
-                continue
+            else:
+                paired_reads_data[sample_id] = data
+                add_paired_label = True
+
             if data['Number of unique & mapped reads (excl. duplicate marked reads)']\
                     + data['Number of duplicate marked reads']\
-                    + data['Unmapped reads'] != data['Total reads in RG']:
+                    + data['Unmapped reads']\
+                    + (data['rRNA filtered reads'] if 'rRNA filtered reads' in data else 0)\
+                    != data['Total reads in RG']:
                 log.warning("sum of unique/duplicate/unmapped reads not matching total, "
                             "skipping mapping/duplicates percentages plot for: {}".format(sample_id))
-                continue
-            chart_data[sample_id] = data
+            else:
+                mapped_reads_data[sample_id] = data
+                add_mapped_label = True
+
+        # Add labels
+        if add_paired_label:
+            category_labels.append({
+                'Properly paired reads': {'color': '#099109', 'name': 'Paired, properly'},
+                'Not properly paired reads (discordant)': {'color': '#c27a0e', 'name': 'Paired, discordant'},
+                'Singleton reads (itself mapped; mate unmapped)': {'color': '#912476', 'name': 'Singleton'},
+                'Unmapped reads': {'color': '#b1084c', 'name': 'Unmapped'},
+            })
+            data_labels.append({
+                'name': 'Paired vs. discordant vs. singleton',
+                'ylab': 'Reads',
+                'cpswitch_counts_label': 'Reads',
+            })
+        if add_mapped_label:
+            mapped_chart_labels = {
+                'Number of unique & mapped reads (excl. duplicate marked reads)': {
+                    'color': '#437bb1', 'name': 'Unique'
+                },
+                'Number of duplicate marked reads': {'color': '#f5a742', 'name': 'Duplicated'},
+                'Unmapped reads': {'color': '#b1084c', 'name': 'Unmapped'},
+            }
+            if 'rRNA filtered reads' in next(iter(data_by_sample.values())):
+                mapped_chart_labels['rRNA filtered reads'] = {'color': '#43b14a', 'name': 'rRNA filtered'}
+            category_labels.append(mapped_chart_labels)
+            data_labels.append({
+                'name': 'Unique vs duplicated vs unmapped',
+                'ylab': 'Reads',
+                'cpswitch_counts_label': 'Reads',
+            })
+
+        data_to_plot = [d for d in [paired_reads_data, mapped_reads_data] if d]  # Leaves out empty dicts
         self.add_section(
             name='Mapped / paired / duplicated',
             anchor='dragen-mapped-paired-duplicated',
             description='Distribution of reads based on pairing, duplication and mapping.',
-            plot=bargraph.plot([chart_data, chart_data], [
-                {
-                    'Number of unique & mapped reads (excl. duplicate marked reads)': {'color': '#437bb1', 'name': 'Unique'},
-                    'Number of duplicate marked reads':                               {'color': '#f5a742', 'name': 'Duplicated'},
-                    'Unmapped reads':                                                 {'color': '#b1084c', 'name': 'Unmapped'},
-                },
-                {
-                    'Properly paired reads':                          {'color': '#099109', 'name': 'Paired, properly'},
-                    'Not properly paired reads (discordant)':         {'color': '#c27a0e', 'name': 'Paired, discordant'},
-                    'Singleton reads (itself mapped; mate unmapped)': {'color': '#912476', 'name': 'Singleton'},
-                    'Unmapped reads':                                 {'color': '#b1084c', 'name': 'Unmapped'},
-                },
-            ], {
+            plot=bargraph.plot(data_to_plot, category_labels, {
                 'id': 'mapping_dup_percentage_plot',
                 'title': 'Dragen: Mapped/paired/duplicated reads per read group',
                 'ylab': 'Reads',
                 'cpswitch_counts_label': 'Reads',
-                'data_labels': [
-                    {
-                        'name': 'Unique vs duplicated vs unmapped',
-                        'ylab': 'Reads',
-                        'cpswitch_counts_label': 'Reads',
-                    },
-                    {
-                        'name': 'Paired vs. discordant vs. singleton',
-                        'ylab': 'Reads',
-                        'cpswitch_counts_label': 'Reads',
-                    }
-                ]
+                'data_labels': data_labels
             })
         )
 
