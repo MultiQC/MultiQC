@@ -45,14 +45,16 @@ class MultiqcModule(BaseMultiqcModule):
 
         # Find and load any kraken reports
         self.kraken_raw_data = dict()
-        for f in self.find_log_files('kraken', filehandles=True):
+        new_report_present = False
+        for f in self.find_log_files("kraken", filehandles=True):
             log_version = self.get_log_version(f)
-            if log_version == 'old':
+            f["f"].seek(0)
+            if log_version == "old":
                 self.parse_logs(f)
             else:
+                new_report_present = True
                 self.parse_logs_minimizer(f)
 
-        # Filter to strip out ignored sample names
         self.kraken_raw_data = self.ignore_samples(self.kraken_raw_data)
 
         if len(self.kraken_raw_data) == 0:
@@ -68,7 +70,7 @@ class MultiqcModule(BaseMultiqcModule):
 
         self.general_stats_cols()
         self.top_five_barplot()
-        if log_version == 'new':
+        if new_report_present:
             self.top_five_duplication_heatmap()
 
     def get_log_version(self, f):
@@ -78,12 +80,11 @@ class MultiqcModule(BaseMultiqcModule):
         if 8 fields, the new log experimental log (with distinct minimizer)
         """
 
-        for l in f['f']:
+        for l in f["f"]:
             if len(l.split()) > 6:
-                return('new')
+                return "new"
             else:
-                return('old')
-            
+                return "old"
 
     def parse_logs(self, f):
         """
@@ -139,7 +140,7 @@ class MultiqcModule(BaseMultiqcModule):
         2. Number of fragments covered by the clade rooted at this taxon
         3. Number of fragments assigned directly to this taxon
         4. Number of minimizers in read data associated with this taxon (new)
-        5. An estimate of the number of distinct minimizers in read data 
+        5. An estimate of the number of distinct minimizers in read data
            associated with this taxon (new)
         6. A rank code, indicating:
             * (U)nclassified
@@ -169,32 +170,34 @@ class MultiqcModule(BaseMultiqcModule):
                 distinct (int): Number of distinct elements
             """
             try:
-                res = (float(total)/distinct)
+                res = float(total) / distinct
             except ZeroDivisionError:
                 res = 0.0
-            return(res)            
+            return res
 
         # Search regexes for stats
-        k2_regex = re.compile(r"^\s{1,2}(\d{1,2}\.\d{1,2})\t(\d+)\t(\d+)\t(\d+)\t(\d+)\t([\dUDKPCOFGS-]{1,3})\t(\d+)(\s+)(.+)")
+        k2_regex = re.compile(
+            r"^\s{1,2}(\d{1,2}\.\d{1,2})\t(\d+)\t(\d+)\t(\d+)\t(\d+)\t([\dUDKPCOFGS-]{1,3})\t(\d+)(\s+)(.+)"
+        )
         data = []
-        for l in f['f']:
+        for l in f["f"]:
             match = k2_regex.search(l)
             if match:
                 row = {
-                    'percent': float(match.group(1)),
-                    'counts_rooted': int(match.group(2)),
-                    'counts_direct': int(match.group(3)),
-                    'minimizer': int(match.group(4)),
-                    'minimizer_distinct': int(match.group(5)),
-                    'minimizer_duplication': duplication(int(match.group(4)), int(match.group(5))),
-                    'rank_code': match.group(6),
-                    'tax_id': int(match.group(7)),
-                    'num_spaces': len(match.group(8)),
-                    'classif': match.group(9)
+                    "percent": float(match.group(1)),
+                    "counts_rooted": int(match.group(2)),
+                    "counts_direct": int(match.group(3)),
+                    "minimizer": int(match.group(4)),
+                    "minimizer_distinct": int(match.group(5)),
+                    "minimizer_duplication": duplication(int(match.group(4)), int(match.group(5))),
+                    "rank_code": match.group(6),
+                    "tax_id": int(match.group(7)),
+                    "num_spaces": len(match.group(8)),
+                    "classif": match.group(9),
                 }
                 data.append(row)
 
-        self.kraken_raw_data[f['s_name']] = data
+        self.kraken_raw_data[f["s_name"]] = data
 
     def sum_sample_counts(self):
         """ Sum counts across all samples for kraken data """
@@ -204,7 +207,7 @@ class MultiqcModule(BaseMultiqcModule):
         # Use percentages instead of counts so that deeply-sequences samples
         # are not unfairly over-represented
         for s_name, data in self.kraken_raw_data.items():
-            total_guess_count = 0
+            total_guess_count = None
             for row in data:
 
                 # Convenience vars that are easier to read
@@ -243,7 +246,7 @@ class MultiqcModule(BaseMultiqcModule):
         for rank_code, rank_name in self.t_ranks.items():
             try:
                 sorted_pct = sorted(self.kraken_total_pct[rank_code].items(), key=lambda x: x[1], reverse=True)
-                for classif, pct_sum in sorted_pct[:self.top_n]:
+                for classif, pct_sum in sorted_pct[: self.top_n]:
                     top_five.append(classif)
                 top_rank_code = rank_code
                 top_rank_name = rank_name
@@ -251,7 +254,7 @@ class MultiqcModule(BaseMultiqcModule):
             except KeyError:
                 # No species-level data found etc
                 pass
-        top_one_hkey = '% {}'.format(top_five[0])
+        top_one_hkey = "% {}".format(top_five[0])
 
         # Column headers
         headers = OrderedDict()
@@ -364,11 +367,11 @@ class MultiqcModule(BaseMultiqcModule):
             cats.append(rank_cats)
             pd.append(rank_data)
 
-        self.add_section (
-            name = 'Top taxa',
-            anchor = 'kraken-topfive',
-            description = f'The number of reads falling into the top {self.top_n} taxa across different ranks.',
-            helptext = f"""
+        self.add_section(
+            name="Top taxa",
+            anchor="kraken-topfive",
+            description=f"The number of reads falling into the top {self.top_n} taxa across different ranks.",
+            helptext=f"""
                 To make this plot, the percentage of each sample assigned to a given taxa is summed across all samples.
                 The counts for these top five taxa are then plotted for each of the 9 different taxa ranks.
                 The unclassified count is always shown across all taxa ranks.
@@ -390,12 +393,9 @@ class MultiqcModule(BaseMultiqcModule):
 
         pd = []
         duplication = list()
-        pconfig = {
-            'id': 'kraken-topfive-duplication_plot',
-            'title': f'Kraken 2: Top {self.top_n} species duplication'
-            }
+        pconfig = {"id": "kraken-topfive-duplication_plot", "title": f"Kraken 2: Top {self.top_n} species duplication"}
 
-        rank_code = 'S'
+        rank_code = "S"
         rank_data = dict()
         # Loop through the summed tax percentages to get the top 5 across all samples
         try:
@@ -406,7 +406,6 @@ class MultiqcModule(BaseMultiqcModule):
 
         i = 0
         counts_shown = {}
-
 
         for classif, pct_sum in sorted_pct:
             i += 1
@@ -420,27 +419,31 @@ class MultiqcModule(BaseMultiqcModule):
                 if s_name not in counts_shown:
                     counts_shown[s_name] = 0
                 for row in d:
-                    if row['rank_code'] == rank_code:
-                        if row['classif'] == classif:
+                    if row["rank_code"] == rank_code:
+                        if row["classif"] == classif:
                             if classif not in rank_data[s_name]:
                                 rank_data[s_name][classif] = 0
-                            rank_data[s_name][classif] = row['minimizer_duplication']
-        ylabels = list(rank_data.keys()) 
-        xlabels = list(rank_data[ylabels[0]].keys())          
+                            try:
+                                rank_data[s_name][classif] = row["minimizer_duplication"]
+                            except KeyError:
+                                rank_data[s_name][classif] = None
+                                log.warning("Kraken2 reports of different versions were found")
+                                continue
+        ylabels = list(rank_data.keys())
+        xlabels = list(rank_data[ylabels[0]].keys())
         for sample in rank_data:
             duplication.append(list(rank_data[sample].values()))
 
-        self.add_section (
-            name = 'Duplication rate of top species',
-            anchor = 'kraken-duplication-topfive',
-            description = f'The duplication rate of minimizer falling into the top {self.top_n} species',
-            helptext = f"""
+        self.add_section(
+            name="Duplication rate of top species",
+            anchor="kraken-duplication-topfive",
+            description=f"The duplication rate of minimizer falling into the top {self.top_n} species",
+            helptext=f"""
                 To make this plot, the minimizer duplication rate is computed for the top {self.top_n} most abundant species in all samples.
                 The minimizer duplication rate is defined as:
                 duplication rate = (total number of minimizers / number of distinct minimizers)
 
                 A low coverage and high duplication rate (>> 1) is often sign of read stacking, which probably indicates of false positive hit.
             """,
-            plot = heatmap.plot(duplication, xlabels, ylabels, pconfig)
+            plot=heatmap.plot(duplication, xlabels, ylabels, pconfig),
         )
-
