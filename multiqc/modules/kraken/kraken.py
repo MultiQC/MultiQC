@@ -93,26 +93,22 @@ class MultiqcModule(BaseMultiqcModule):
         # Search regexes for stats
         k2_regex = re.compile(r"^\s{1,2}(\d{1,2}\.\d{1,2})\t(\d+)\t(\d+)\t([UDKPCOFGS-]\d{0,2})\t(\d+)(\s+)(.+)")
         data = []
-        first_line = f["f"].readline()
-        columns = len(first_line.split("\t"))
-        if columns == 6:
-            for l in f["f"]:
-                match = k2_regex.search(l)
-                if match:
-                    row = {
-                        "percent": float(match.group(1)),
-                        "counts_rooted": int(match.group(2)),
-                        "counts_direct": int(match.group(3)),
-                        "rank_code": match.group(4),
-                        "tax_id": int(match.group(5)),
-                        "num_spaces": len(match.group(6)),
-                        "classif": match.group(7),
-                    }
-                    data.append(row)
+        for l in f["f"]:
+            match = k2_regex.search(l)
+            if match:
+                row = {
+                    "percent": float(match.group(1)),
+                    "counts_rooted": int(match.group(2)),
+                    "counts_direct": int(match.group(3)),
+                    "rank_code": match.group(4),
+                    "tax_id": int(match.group(5)),
+                    "num_spaces": len(match.group(6)),
+                    "classif": match.group(7),
+                }
+                data.append(row)
 
+        if data != []:
             self.kraken_raw_data[f["s_name"]] = data
-        else:
-            log.warning("{}: Found {} columns instead of 6 (Kraken's standard report)".format(f["s_name"], columns))
 
     def sum_sample_counts(self):
         """ Sum counts across all samples for kraken data """
