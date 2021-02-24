@@ -111,6 +111,8 @@ class MultiqcModule(BaseMultiqcModule):
                     data.append(row)
 
             self.kraken_raw_data[f["s_name"]] = data
+        else:
+            log.warning("{}: Found {} columns instead of 6 (Kraken's standard report)".format(f["s_name"], columns))
 
     def sum_sample_counts(self):
         """ Sum counts across all samples for kraken data """
