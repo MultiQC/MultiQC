@@ -475,7 +475,7 @@ class MultiqcModule(BaseMultiqcModule):
         headers['yield'] = {
             'title': 'Yield (Mb)',
             'description': 'Total number of bases for this sample as determined by bclconvert demultiplexing ({})'.format(config.read_count_desc),
-            'scale': 'Blues',
+            'scale': 'Greens',
             'shared_key': 'base_count'
         }
         headers['percent_reads'] = {
@@ -489,7 +489,7 @@ class MultiqcModule(BaseMultiqcModule):
         headers['percent_yield'] = {
             'title': 'Yield %',
             'description': 'Percentage of sequenced bases for this sample in this run',
-            'scale': 'Blues',
+            'scale': 'Greens',
             'max': 100,
             'min': 0,
             'suffix': '%'
@@ -497,7 +497,7 @@ class MultiqcModule(BaseMultiqcModule):
         headers['basesQ30'] = {
             'title': 'Bases &ge; Q30 (PF)',
             'description': 'Number of bases with a Phred score of 30 or higher, passing filter ({})'.format(config.base_count_desc),
-            'scale': 'Greens',
+            'scale': 'Blues',
             'shared_key': 'base_count'
         }  
         headers['yield_q30_percent'] = {
@@ -556,7 +556,7 @@ class MultiqcModule(BaseMultiqcModule):
         headers['yield'] = {
             'title': 'Yield (Mb)',
             'description': 'Total number of bases for this sample as determined by bclconvert demultiplexing ({})'.format(config.read_count_desc),
-            'scale': 'Blues',
+            'scale': 'Greens',
             'shared_key': 'base_count'
         }
         headers['basesQ30'] = {
@@ -564,14 +564,14 @@ class MultiqcModule(BaseMultiqcModule):
             'description': 'Number of bases with a Phred score of 30 or higher, passing filter ({})'.format(config.base_count_desc),
             'max': 100,
             'min': 0,
-            'scale': 'RdYlGn'
+            'scale': 'Blues'
         }
         headers['yield_q30_percent'] = {
             'title': '% Bases &ge; Q30 (PF)',
             'description': 'Percent of bases with a Phred score of 30 or higher, passing filter ({})'.format(config.base_count_desc),
             'max': 100,
             'min': 0,
-            'scale': 'RdYlGn'
+            'scale': 'Greens'
         }
         headers['perfect_index_reads'] = {
             'title': 'Perfect Index Reads',
