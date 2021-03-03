@@ -13,10 +13,10 @@ import os
 
 from multiqc.utils import config
 
-template_parent = 'default'
+template_parent = "default"
 
 config.plots_force_flat = True
 config.simple_output = True
 
 template_dir = os.path.dirname(__file__)
-base_fn = 'base.html'
+base_fn = "base.html"
