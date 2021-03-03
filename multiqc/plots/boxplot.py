@@ -55,11 +55,15 @@ def plot(data, pconfig=None):
 
 def mock_data(data):
     res = []
-    res += [data[10]] * 10
-    res += [data[25]] * 25
-    res += [data[50]] * 30
-    res += [data[75]] * 25
-    res += [data[90]] * 10
+    value = 2  #Default to our minimum/ambiguous base QV
+    for key in [1, 2, 5, 10, 25, 50, 75, 90]:
+        value = data.get(key, value)
+        if key in [10, 90]:
+            res += [value] * 10
+        elif key in [25, 75]:
+            res += [value] * 25
+        elif key == 50:
+            res += [value] * 30
     return res
 
 
