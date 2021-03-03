@@ -34,7 +34,7 @@ For further information, please see the [documentation](https://multiqc.info/doc
 
 #### New Modules
 
-- [**EigenStratDatabaseTools](https://github.com/TCLamnidis/EigenStratDatabaseTools)
+- [**EigenStratDatabaseTools**](https://github.com/TCLamnidis/EigenStratDatabaseTools)
   - Added MultiQC module to report SNP coverages from `eigenstrat_snp_coverage.py` in the general stats table.
 - [**HOPS**](https://www.github.com/rhubler/HOPS)
   - Post-alignment ancient DNA analysis tool for MALT
@@ -48,7 +48,6 @@ For further information, please see the [documentation](https://multiqc.info/doc
   - Reference-free QC of Hi-C sequencing data
 - [**Sentieon**](https://www.sentieon.com/products/)
   - Submodules added to catch Picard-based QC metrics files
-
 
 #### Module updates
 
