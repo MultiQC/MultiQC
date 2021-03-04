@@ -82,40 +82,20 @@ class MultiqcModule(BaseMultiqcModule):
             description="Number of genes found to have multiple isoforms",
         )
 
-        gene_length_plot = self.jcvi_linegraph_gene_length()
-        if gene_length_plot:
+        feature_length_plot = self.jcvi_linegraph_feature_length()
+        if feature_length_plot:
             self.add_section(
-                name="Gene length distribution",
-                anchor="jcvi_gene_length",
-                description="This plot shows the distribution of gene length.",
+                name="Feature length distribution",
+                anchor="jcvi_feature_length",
+                description="This plot shows the distribution of gene, exon and intron length (if available).",
                 helptext="""
-                Values are binned in buckets of 100bp (e.g. the value at 150bp represents the number of genes having a length between 100 and 199bp).
-                """,
-                plot=gene_length_plot,
-            )
+                Values are binned in buckets as follows:
 
-        exon_length_plot = self.jcvi_linegraph_exon_length()
-        if exon_length_plot:
-            self.add_section(
-                name="Exon length distribution",
-                anchor="jcvi_exon_length",
-                description="This plot shows the distribution of exon length.",
-                helptext="""
-                Values are binned in buckets of 25bp (e.g. the value at 112bp represents the number of exons having a length between 100 and 124bp).
+                * Gene length: 100bp (e.g. the value at 150bp represents the number of genes having a length between 100 and 199bp).
+                * Exon length: 25bp (e.g. the value at 112bp represents the number of exons having a length between 100 and 124bp).
+                * Intron length: 25bp (e.g. the value at 112bp represents the number of introns having a length between 100 and 124bp).
                 """,
-                plot=exon_length_plot,
-            )
-
-        intron_length_plot = self.jcvi_linegraph_intron_length()
-        if intron_length_plot:
-            self.add_section(
-                name="Intron length distribution",
-                anchor="jcvi_intron_length",
-                description="This plot shows the distribution of intron length.",
-                helptext="""
-                Values are binned in buckets of 25bp (e.g. the value at 112bp represents the number of introns having a length between 100 and 124bp).
-                """,
-                plot=intron_length_plot,
+                plot=feature_length_plot,
             )
 
         exon_count_plot = self.jcvi_linegraph_exon_count()
@@ -319,50 +299,33 @@ class MultiqcModule(BaseMultiqcModule):
 
         return bargraph.plot(self.jcvi, keys, plot_config)
 
-    def jcvi_linegraph_gene_length(self):
+    def jcvi_linegraph_feature_length(self):
         plot_config = {
-            "id": "jcvi_gene_length_plot",
-            "title": "JCVI: Gene length repartition",
-            "ylab": "# genes",
+            "id": "jcvi_feature_length_plot",
+            "title": "JCVI: Feature length repartition",
+            "ylab": "# Genes",
             "xlab": "Gene length (bp)",
             "xDecimals": False,
+            "data_labels": [
+                {"name": "Genes", "ylab": "# Genes", "xlab": "Gene length (bp)"},
+                {"name": "Exons", "ylab": "# Exons", "xlab": "Exon length (bp)"},
+                {"name": "Introns", "ylab": "# Introns", "xlab": "Intron length (bp)"},
+            ],
         }
 
-        plot_data = {x: self.jcvi[x]["gene_length"] for x in self.jcvi if "gene_length" in self.jcvi[x]}
+        genes_plot_data = {x: self.jcvi[x]["gene_length"] for x in self.jcvi if "gene_length" in self.jcvi[x]}
+        exon_plot_data = {x: self.jcvi[x]["exon_length"] for x in self.jcvi if "exon_length" in self.jcvi[x]}
+        intron_plot_data = {x: self.jcvi[x]["intron_length"] for x in self.jcvi if "intron_length" in self.jcvi[x]}
 
-        if not plot_data:
-            return None
+        plot_data = []
+        if genes_plot_data:
+            plot_data.append(genes_plot_data)
+        if exon_plot_data:
+            plot_data.append(exon_plot_data)
+        if intron_plot_data:
+            plot_data.append(intron_plot_data)
 
-        return linegraph.plot(plot_data, plot_config)
-
-    def jcvi_linegraph_exon_length(self):
-        plot_config = {
-            "id": "jcvi_exon_length_plot",
-            "title": "JCVI: Exon length repartition",
-            "ylab": "# exons",
-            "xlab": "Exon length (bp)",
-            "xDecimals": False,
-        }
-
-        plot_data = {x: self.jcvi[x]["exon_length"] for x in self.jcvi if "exon_length" in self.jcvi[x]}
-
-        if not plot_data:
-            return None
-
-        return linegraph.plot(plot_data, plot_config)
-
-    def jcvi_linegraph_intron_length(self):
-        plot_config = {
-            "id": "jcvi_intron_length_plot",
-            "title": "JCVI: Intron length repartition",
-            "ylab": "# introns",
-            "xlab": "Intron length (bp)",
-            "xDecimals": False,
-        }
-
-        plot_data = {x: self.jcvi[x]["intron_length"] for x in self.jcvi if "intron_length" in self.jcvi[x]}
-
-        if not plot_data:
+        if len(plot_data) == 0:
             return None
 
         return linegraph.plot(plot_data, plot_config)
