@@ -16,20 +16,20 @@ log = logging.getLogger(__name__)
 
 
 class MultiqcModule(BaseMultiqcModule, BaseRecalibratorMixin, VariantEvalMixin):
-    """ GATK has a number of different commands and outputs.
+    """GATK has a number of different commands and outputs.
     This MultiQC module supports some but not all. The code for
     each script is split into its own file and adds a section to
-    the module output if logs are found. """
+    the module output if logs are found."""
 
     def __init__(self):
 
         # Initialise the parent object
         super(MultiqcModule, self).__init__(
-            name='GATK',
-            anchor='gatk',
-            target='GATK',
-            href='https://www.broadinstitute.org/gatk/',
-            info=" is a toolkit offering a wide variety of tools with a primary focus on variant discovery and genotyping."
+            name="GATK",
+            anchor="gatk",
+            target="GATK",
+            href="https://www.broadinstitute.org/gatk/",
+            info=" is a toolkit offering a wide variety of tools with a primary focus on variant discovery and genotyping.",
         )
 
         # Set up class objects to hold parsed data
@@ -49,7 +49,7 @@ class MultiqcModule(BaseMultiqcModule, BaseRecalibratorMixin, VariantEvalMixin):
         self.general_stats_addcols(self.general_stats_data, self.general_stats_headers)
 
     def parse_report(self, lines, table_names):
-        """ Parse a GATK report https://software.broadinstitute.org/gatk/documentation/article.php?id=1244
+        """Parse a GATK report https://software.broadinstitute.org/gatk/documentation/article.php?id=1244
 
         Only GATTable entries are parsed.  Tables are returned as a dict of tables.
         Each table is a dict of arrays, where names correspond to column names, and arrays
@@ -90,7 +90,7 @@ class MultiqcModule(BaseMultiqcModule, BaseRecalibratorMixin, VariantEvalMixin):
             line = line.rstrip()
 
             # testing to see if we have reached the end of a table in a GATKReport
-            if line == '':
+            if line == "":
                 break
 
             for index, value in enumerate(line.split()):
