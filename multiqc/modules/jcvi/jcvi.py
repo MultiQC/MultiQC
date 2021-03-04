@@ -130,71 +130,6 @@ class MultiqcModule(BaseMultiqcModule):
                 plot=exon_count_plot,
             )
 
-    def jcvi_linegraph_gene_length(self):
-        plot_config = {
-            "id": "jcvi_gene_length_plot",
-            "title": "JCVI: Gene length repartition",
-            "ylab": "# genes",
-            "xlab": "Gene length (bp)",
-            "xDecimals": False,
-        }
-
-        plot_data = {x: self.jcvi[x]["gene_length"] for x in self.jcvi if "gene_length" in self.jcvi[x]}
-
-        if not plot_data:
-            return None
-
-        return linegraph.plot(plot_data, plot_config)
-
-    def jcvi_linegraph_exon_length(self):
-        plot_config = {
-            "id": "jcvi_exon_length_plot",
-            "title": "JCVI: Exon length repartition",
-            "ylab": "# exons",
-            "xlab": "Exon length (bp)",
-            "xDecimals": False,
-        }
-
-        plot_data = {x: self.jcvi[x]["exon_length"] for x in self.jcvi if "exon_length" in self.jcvi[x]}
-
-        if not plot_data:
-            return None
-
-        return linegraph.plot(plot_data, plot_config)
-
-    def jcvi_linegraph_intron_length(self):
-        plot_config = {
-            "id": "jcvi_intron_length_plot",
-            "title": "JCVI: Intron length repartition",
-            "ylab": "# introns",
-            "xlab": "Intron length (bp)",
-            "xDecimals": False,
-        }
-
-        plot_data = {x: self.jcvi[x]["intron_length"] for x in self.jcvi if "intron_length" in self.jcvi[x]}
-
-        if not plot_data:
-            return None
-
-        return linegraph.plot(plot_data, plot_config)
-
-    def jcvi_linegraph_exon_count(self):
-        plot_config = {
-            "id": "jcvi_exon_count_plot",
-            "title": "JCVI: Exon count repartition",
-            "ylab": "# genes",
-            "xlab": "Exon count",
-            "xDecimals": False,
-            "ymin": 0,
-        }
-
-        plot_data = {x: self.jcvi[x]["exon_count"] for x in self.jcvi if "exon_count" in self.jcvi[x]}
-
-        if not plot_data:
-            return None
-
-        return linegraph.plot(plot_data, plot_config)
-
     def parse_jcvi(self, f):
 
         s_name = None
@@ -383,3 +318,68 @@ class MultiqcModule(BaseMultiqcModule):
         }
 
         return bargraph.plot(self.jcvi, keys, plot_config)
+
+    def jcvi_linegraph_gene_length(self):
+        plot_config = {
+            "id": "jcvi_gene_length_plot",
+            "title": "JCVI: Gene length repartition",
+            "ylab": "# genes",
+            "xlab": "Gene length (bp)",
+            "xDecimals": False,
+        }
+
+        plot_data = {x: self.jcvi[x]["gene_length"] for x in self.jcvi if "gene_length" in self.jcvi[x]}
+
+        if not plot_data:
+            return None
+
+        return linegraph.plot(plot_data, plot_config)
+
+    def jcvi_linegraph_exon_length(self):
+        plot_config = {
+            "id": "jcvi_exon_length_plot",
+            "title": "JCVI: Exon length repartition",
+            "ylab": "# exons",
+            "xlab": "Exon length (bp)",
+            "xDecimals": False,
+        }
+
+        plot_data = {x: self.jcvi[x]["exon_length"] for x in self.jcvi if "exon_length" in self.jcvi[x]}
+
+        if not plot_data:
+            return None
+
+        return linegraph.plot(plot_data, plot_config)
+
+    def jcvi_linegraph_intron_length(self):
+        plot_config = {
+            "id": "jcvi_intron_length_plot",
+            "title": "JCVI: Intron length repartition",
+            "ylab": "# introns",
+            "xlab": "Intron length (bp)",
+            "xDecimals": False,
+        }
+
+        plot_data = {x: self.jcvi[x]["intron_length"] for x in self.jcvi if "intron_length" in self.jcvi[x]}
+
+        if not plot_data:
+            return None
+
+        return linegraph.plot(plot_data, plot_config)
+
+    def jcvi_linegraph_exon_count(self):
+        plot_config = {
+            "id": "jcvi_exon_count_plot",
+            "title": "JCVI: Exon count repartition",
+            "ylab": "# genes",
+            "xlab": "Exon count",
+            "xDecimals": False,
+            "ymin": 0,
+        }
+
+        plot_data = {x: self.jcvi[x]["exon_count"] for x in self.jcvi if "exon_count" in self.jcvi[x]}
+
+        if not plot_data:
+            return None
+
+        return linegraph.plot(plot_data, plot_config)
