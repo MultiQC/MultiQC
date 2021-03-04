@@ -1,0 +1,19 @@
+# Don't wrap text
+line-length: false
+
+# Turn off rules about headers (we primarily render on the MultiQC website)
+first-line-h1: false
+first-heading-h1: false
+single-h1: false
+no-duplicate-header:
+  siblings_only: true
+header-increment: false
+
+# Allow tab characters in code blocks
+no-hard-tabs:
+  code_blocks: false
+
+# Allow forced linebreaks. Mostly for citation in readme.
+no-inline-html:
+  allowed_elements:
+    - br

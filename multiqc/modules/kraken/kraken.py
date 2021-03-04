@@ -15,6 +15,7 @@ from multiqc.modules.base_module import BaseMultiqcModule
 # Initialise the logger
 log = logging.getLogger(__name__)
 
+
 class MultiqcModule(BaseMultiqcModule):
     """ Kraken module """
 
@@ -22,27 +23,27 @@ class MultiqcModule(BaseMultiqcModule):
 
         # Initialise the parent object
         super(MultiqcModule, self).__init__(
-            name = 'Kraken',
-            anchor = 'kraken',
-            href = "https://ccb.jhu.edu/software/kraken/",
-            info = "is a taxonomic classification tool that uses exact k-mer matches to find the lowest common ancestor (LCA) of a given sequence."
+            name="Kraken",
+            anchor="kraken",
+            href="https://ccb.jhu.edu/software/kraken/",
+            info="is a taxonomic classification tool that uses exact k-mer matches to find the lowest common ancestor (LCA) of a given sequence.",
         )
 
         self.t_ranks = OrderedDict()
-        self.t_ranks['S'] = 'Species'
-        self.t_ranks['G'] = 'Genus'
-        self.t_ranks['F'] = 'Family'
-        self.t_ranks['O'] = 'Order'
-        self.t_ranks['C'] = 'Class'
-        self.t_ranks['P'] = 'Phylum'
-        self.t_ranks['K'] = 'Kingdom'
-        self.t_ranks['D'] = 'Domain'
-        self.t_ranks['R'] = 'Root'
+        self.t_ranks["S"] = "Species"
+        self.t_ranks["G"] = "Genus"
+        self.t_ranks["F"] = "Family"
+        self.t_ranks["O"] = "Order"
+        self.t_ranks["C"] = "Class"
+        self.t_ranks["P"] = "Phylum"
+        self.t_ranks["K"] = "Kingdom"
+        self.t_ranks["D"] = "Domain"
+        self.t_ranks["R"] = "Root"
         # self.t_ranks['U'] = 'Unclassified'
 
         # Find and load any kraken reports
         self.kraken_raw_data = dict()
-        for f in self.find_log_files('kraken', filehandles=True):
+        for f in self.find_log_files("kraken", filehandles=True):
             self.parse_logs(f)
 
         # Filter to strip out ignored sample names
@@ -62,7 +63,6 @@ class MultiqcModule(BaseMultiqcModule):
 
         self.general_stats_cols()
         self.top_five_barplot()
-
 
     def parse_logs(self, f):
         """
@@ -94,21 +94,21 @@ class MultiqcModule(BaseMultiqcModule):
         # Search regexes for stats
         k2_regex = re.compile(r"^\s{1,2}(\d{1,2}\.\d{1,2})\t(\d+)\t(\d+)\t([\dUDKPCOFGS-]{1,3})\t(\d+)(\s+)(.+)")
         data = []
-        for l in f['f']:
+        for l in f["f"]:
             match = k2_regex.search(l)
             if match:
                 row = {
-                    'percent': float(match.group(1)),
-                    'counts_rooted': int(match.group(2)),
-                    'counts_direct': int(match.group(3)),
-                    'rank_code': match.group(4),
-                    'tax_id': int(match.group(5)),
-                    'num_spaces': len(match.group(6)),
-                    'classif': match.group(7)
+                    "percent": float(match.group(1)),
+                    "counts_rooted": int(match.group(2)),
+                    "counts_direct": int(match.group(3)),
+                    "rank_code": match.group(4),
+                    "tax_id": int(match.group(5)),
+                    "num_spaces": len(match.group(6)),
+                    "classif": match.group(7),
                 }
                 data.append(row)
 
-        self.kraken_raw_data[f['s_name']] = data
+        self.kraken_raw_data[f["s_name"]] = data
 
     def sample_total_readcounts(self):
         """ Compute the total read counts for each sample """
@@ -116,9 +116,8 @@ class MultiqcModule(BaseMultiqcModule):
         for s_name, data in self.kraken_raw_data.items():
             self.kraken_sample_total_readcounts[s_name] = 0
             for row in data:
-                self.kraken_sample_total_readcounts[s_name] += \
-                    row['counts_direct']
-                
+                self.kraken_sample_total_readcounts[s_name] += row["counts_direct"]
+
     def sum_sample_counts(self):
         """ Sum counts across all samples for kraken data """
 
@@ -130,11 +129,11 @@ class MultiqcModule(BaseMultiqcModule):
             for row in data:
 
                 # Convenience vars that are easier to read
-                rank_code = row['rank_code']
-                classif = row['classif']
+                rank_code = row["rank_code"]
+                classif = row["classif"]
 
                 # Skip anything that doesn't exactly fit a tax rank level
-                if row['rank_code'] == '-' or any(c.isdigit() for c in row['rank_code']):
+                if row["rank_code"] == "-" or any(c.isdigit() for c in row["rank_code"]):
                     continue
 
                 if rank_code not in self.kraken_total_pct:
@@ -144,9 +143,10 @@ class MultiqcModule(BaseMultiqcModule):
                 if classif not in self.kraken_total_pct[rank_code]:
                     self.kraken_total_pct[rank_code][classif] = 0
                     self.kraken_total_counts[rank_code][classif] = 0
-                self.kraken_total_pct[rank_code][classif] += \
-                    row['counts_rooted'] / self.kraken_sample_total_readcounts[s_name]
-                self.kraken_total_counts[rank_code][classif] += row['counts_rooted']
+                self.kraken_total_pct[rank_code][classif] += (
+                    row["counts_rooted"] / self.kraken_sample_total_readcounts[s_name]
+                )
+                self.kraken_total_counts[rank_code][classif] += row["counts_rooted"]
 
     def general_stats_cols(self):
         """ Add a couple of columns to the General Statistics table """
@@ -167,30 +167,34 @@ class MultiqcModule(BaseMultiqcModule):
                 # No species-level data found etc
                 pass
 
-        top_one_hkey = '% {}'.format(top_five[0])
+        top_one_hkey = "% {}".format(top_five[0])
 
         # Column headers
         headers = OrderedDict()
         headers[top_one_hkey] = {
-            'title': top_one_hkey,
-            'description': 'Percentage of reads that were the top {} over all samples - {}'.format(top_rank_name, top_five[0]),
-            'suffix': '%',
-            'max': 100,
-            'scale': 'PuBuGn'
+            "title": top_one_hkey,
+            "description": "Percentage of reads that were the top {} over all samples - {}".format(
+                top_rank_name, top_five[0]
+            ),
+            "suffix": "%",
+            "max": 100,
+            "scale": "PuBuGn",
         }
-        headers['% Top 5'] = {
-            'title': '% Top 5 {}'.format(top_rank_name),
-            'description': 'Percentage of reads that were classified by one of the top 5 {} ({})'.format(top_rank_name, ', '.join(top_five)),
-            'suffix': '%',
-            'max': 100,
-            'scale': 'PuBu'
+        headers["% Top 5"] = {
+            "title": "% Top 5 {}".format(top_rank_name),
+            "description": "Percentage of reads that were classified by one of the top 5 {} ({})".format(
+                top_rank_name, ", ".join(top_five)
+            ),
+            "suffix": "%",
+            "max": 100,
+            "scale": "PuBu",
         }
-        headers['% Unclassified'] = {
-            'title': '% Unclassified',
-            'description': 'Percentage of reads that were unclassified',
-            'suffix': '%',
-            'max': 100,
-            'scale': 'OrRd'
+        headers["% Unclassified"] = {
+            "title": "% Unclassified",
+            "description": "Percentage of reads that were unclassified",
+            "suffix": "%",
+            "max": 100,
+            "scale": "OrRd",
         }
 
         # Get table data
@@ -198,12 +202,12 @@ class MultiqcModule(BaseMultiqcModule):
         for s_name, d in self.kraken_raw_data.items():
             tdata[s_name] = {}
             for row in d:
-                percent = row['counts_rooted'] / self.kraken_sample_total_readcounts[s_name]
-                if row['rank_code'] == 'U':
-                    tdata[s_name]['% Unclassified'] = percent
-                if row['rank_code'] == top_rank_code and row['classif'] in top_five:
-                    tdata[s_name]['% Top 5'] = percent + tdata[s_name].get('% Top 5', 0)
-                if row['rank_code'] == top_rank_code and row['classif'] == top_five[0]:
+                percent = row["counts_rooted"] / self.kraken_sample_total_readcounts[s_name]
+                if row["rank_code"] == "U":
+                    tdata[s_name]["% Unclassified"] = percent
+                if row["rank_code"] == top_rank_code and row["classif"] in top_five:
+                    tdata[s_name]["% Top 5"] = percent + tdata[s_name].get("% Top 5", 0)
+                if row["rank_code"] == top_rank_code and row["classif"] == top_five[0]:
                     tdata[s_name][top_one_hkey] = percent
 
             if top_one_hkey not in tdata[s_name]:
@@ -211,17 +215,16 @@ class MultiqcModule(BaseMultiqcModule):
 
         self.general_stats_addcols(tdata, headers)
 
-
     def top_five_barplot(self):
         """ Add a bar plot showing the top-5 from each taxa rank """
 
         pd = []
         cats = list()
         pconfig = {
-            'id': 'kraken-topfive-plot',
-            'title': 'Kraken 2: Top taxa',
-            'ylab': 'Number of fragments',
-            'data_labels': list(self.t_ranks.values())
+            "id": "kraken-topfive-plot",
+            "title": "Kraken 2: Top taxa",
+            "ylab": "Number of fragments",
+            "data_labels": list(self.t_ranks.values()),
         }
 
         for rank_code, rank_name in self.t_ranks.items():
@@ -240,7 +243,7 @@ class MultiqcModule(BaseMultiqcModule):
                 i += 1
                 if i > 5:
                     break
-                rank_cats[classif] = {'name': classif}
+                rank_cats[classif] = {"name": classif}
                 # Pull out counts for this rank + classif from each sample
                 for s_name, d in self.kraken_raw_data.items():
                     if s_name not in rank_data:
@@ -248,37 +251,41 @@ class MultiqcModule(BaseMultiqcModule):
                     if s_name not in counts_shown:
                         counts_shown[s_name] = 0
                     for row in d:
-                        if row['rank_code'] == rank_code:
-                            if row['classif'] == classif:
+                        if row["rank_code"] == rank_code:
+                            if row["classif"] == classif:
                                 if classif not in rank_data[s_name]:
                                     rank_data[s_name][classif] = 0
-                                rank_data[s_name][classif] += row['counts_rooted']
-                                counts_shown[s_name] += row['counts_rooted']
+                                rank_data[s_name][classif] += row["counts_rooted"]
+                                counts_shown[s_name] += row["counts_rooted"]
 
             # Add in unclassified reads and "other" - we presume from other species etc.
             for s_name, d in self.kraken_raw_data.items():
                 for row in d:
-                    if row['rank_code'] == 'U':
-                        rank_data[s_name]['U'] = row['counts_rooted']
-                        counts_shown[s_name] += row['counts_rooted']
-                rank_data[s_name]['other'] = self.kraken_sample_total_readcounts[s_name] - counts_shown[s_name]
+                    if row["rank_code"] == "U":
+                        rank_data[s_name]["U"] = row["counts_rooted"]
+                        counts_shown[s_name] += row["counts_rooted"]
+                rank_data[s_name]["other"] = self.kraken_sample_total_readcounts[s_name] - counts_shown[s_name]
 
                 # This should never happen... But it does sometimes if the total read count is a bit off
-                if rank_data[s_name]['other'] < 0:
-                    log.debug("Found negative 'other' count for {} ({}): {}".format(s_name, self.t_ranks[rank_code], rank_data[s_name]['other']))
-                    rank_data[s_name]['other'] = 0
+                if rank_data[s_name]["other"] < 0:
+                    log.debug(
+                        "Found negative 'other' count for {} ({}): {}".format(
+                            s_name, self.t_ranks[rank_code], rank_data[s_name]["other"]
+                        )
+                    )
+                    rank_data[s_name]["other"] = 0
 
-            rank_cats['other'] = { 'name': 'Other', 'color': '#cccccc' }
-            rank_cats['U'] = { 'name': 'Unclassified', 'color': '#d4949c' }
+            rank_cats["other"] = {"name": "Other", "color": "#cccccc"}
+            rank_cats["U"] = {"name": "Unclassified", "color": "#d4949c"}
 
             cats.append(rank_cats)
             pd.append(rank_data)
 
-        self.add_section (
-            name = 'Top taxa',
-            anchor = 'kraken-topfive',
-            description = 'The number of reads falling into the top 5 taxa across different ranks.',
-            helptext = """
+        self.add_section(
+            name="Top taxa",
+            anchor="kraken-topfive",
+            description="The number of reads falling into the top 5 taxa across different ranks.",
+            helptext="""
                 To make this plot, the percentage of each sample assigned to a given taxa is summed across all samples.
                 The counts for these top five taxa are then plotted for each of the 9 different taxa ranks.
                 The unclassified count is always shown across all taxa ranks.
@@ -292,5 +299,5 @@ class MultiqcModule(BaseMultiqcModule):
 
                 Note that any taxon that does not exactly fit a taxon rank (eg. `-` or `G2`) is ignored.
             """,
-            plot = bargraph.plot(pd, cats, pconfig)
+            plot=bargraph.plot(pd, cats, pconfig),
         )
