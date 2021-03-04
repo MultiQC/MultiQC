@@ -36,6 +36,8 @@ For further information, please see the [documentation](https://multiqc.info/doc
 
 - [**HOPS**](https://www.github.com/rhubler/HOPS)
   - Post-alignment ancient DNA analysis tool for MALT
+- [**JCVI**](https://github.com/tanghaibao/jcvi)
+  - Computes statistics on genome annotation.
 - [**ngsderive**](https://github.com/stjudecloud/ngsderive)
   - Forensic analysis tool useful in backwards computing information from next-generation sequencing data.
 - [**PURPLE**](https://github.com/hartwigmedical/hmftools/tree/master/purity-ploidy-estimator)
