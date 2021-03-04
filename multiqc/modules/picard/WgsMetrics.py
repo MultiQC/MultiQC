@@ -182,6 +182,7 @@ def parse_reports(self):
                 "tt_label": "<b>{point.x} X</b>: {point.y:.1f}",
                 "ymin": 0,
                 "ymax": 100,
+                "smooth_points": 1000,
                 "data_labels": [
                     {"name": "Percentage Drop-Off", "ylab": "Percentage of Bases", "ymax": 100},
                     {"name": "Counts Histogram", "ylab": "Coverage", "ymax": maxval},
