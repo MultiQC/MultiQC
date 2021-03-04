@@ -410,6 +410,7 @@ class MultiqcModule(BaseMultiqcModule):
         i = 0
         counts_shown = {}
 
+        showed_warning = False
         for classif, pct_sum in sorted_pct:
             i += 1
             if i > self.top_n:
@@ -430,7 +431,9 @@ class MultiqcModule(BaseMultiqcModule):
                                 rank_data[s_name][classif] = row["minimizer_duplication"]
                             except KeyError:
                                 rank_data[s_name][classif] = None
-                                log.warning("Kraken2 reports of different versions were found")
+                                if not showed_warning:
+                                    log.warning("Kraken2 reports of different versions were found")
+                                    showed_warning = True
                                 continue
         ylabels = list(rank_data.keys())
         xlabels = list(rank_data[ylabels[0]].keys())
