@@ -13,26 +13,30 @@ from multiqc.modules.base_module import BaseMultiqcModule
 # Initialise the logger
 log = logging.getLogger(__name__)
 
+
 class MultiqcModule(BaseMultiqcModule):
     """ Bowtie 2 module, parses stderr logs. """
 
     def __init__(self):
 
         # Initialise the parent object
-        super(MultiqcModule, self).__init__(name="Bowtie 2 / HiSAT2", anchor="bowtie2",
-        target='',
-        info="""<a href="http://bowtie-bio.sourceforge.net/bowtie2/">Bowtie 2</a>
+        super(MultiqcModule, self).__init__(
+            name="Bowtie 2 / HiSAT2",
+            anchor="bowtie2",
+            target="",
+            info="""<a href="http://bowtie-bio.sourceforge.net/bowtie2/">Bowtie 2</a>
                 and <a href="https://ccb.jhu.edu/software/hisat2/">HISAT2</a> are fast
                 and memory-efficient tools for aligning sequencing reads against a reference genome.
                 Unfortunately both tools have identical log output by default, so it is impossible
                 to distiguish which tool was used.
-                """)
+                """,
+        )
 
         # Find and load any Bowtie 2 reports
         self.bowtie2_data = dict()
         self.num_se = 0
         self.num_pe = 0
-        for f in self.find_log_files('bowtie2', filehandles=True):
+        for f in self.find_log_files("bowtie2", filehandles=True):
             self.parse_bowtie2_logs(f)
 
         # Filter to strip out ignored sample names
@@ -44,7 +48,7 @@ class MultiqcModule(BaseMultiqcModule):
         log.info("Found {} reports".format(len(self.bowtie2_data)))
 
         # Write parsed report data to a file
-        self.write_data_file(self.bowtie2_data, 'multiqc_bowtie2')
+        self.write_data_file(self.bowtie2_data, "multiqc_bowtie2")
 
         # Basic Stats Table
         # Report table is immutable, so just updating it works
@@ -52,7 +56,6 @@ class MultiqcModule(BaseMultiqcModule):
 
         # Alignment Rate Plot
         self.bowtie2_alignment_plot()
-
 
     def parse_bowtie2_logs(self, f):
         """
@@ -107,160 +110,160 @@ class MultiqcModule(BaseMultiqcModule):
 
         # Regexes
         regexes = {
-            'unpaired': {
-                'unpaired_aligned_none': r"(\d+) \([\d\.]+%\) aligned 0 times",
-                'unpaired_aligned_one': r"(\d+) \([\d\.]+%\) aligned exactly 1 time",
-                'unpaired_aligned_multi': r"(\d+) \([\d\.]+%\) aligned >1 times"
+            "unpaired": {
+                "unpaired_aligned_none": r"(\d+) \([\d\.]+%\) aligned 0 times",
+                "unpaired_aligned_one": r"(\d+) \([\d\.]+%\) aligned exactly 1 time",
+                "unpaired_aligned_multi": r"(\d+) \([\d\.]+%\) aligned >1 times",
             },
-            'paired': {
-                'paired_aligned_none': r"(\d+) \([\d\.]+%\) aligned concordantly 0 times",
-                'paired_aligned_one': r"(\d+) \([\d\.]+%\) aligned concordantly exactly 1 time",
-                'paired_aligned_multi': r"(\d+) \([\d\.]+%\) aligned concordantly >1 times",
-                'paired_aligned_discord_one': r"(\d+) \([\d\.]+%\) aligned discordantly 1 time",
-                'paired_aligned_discord_multi': r"(\d+) \([\d\.]+%\) aligned discordantly >1 times",
-                'paired_aligned_mate_one': r"(\d+) \([\d\.]+%\) aligned exactly 1 time",
-                'paired_aligned_mate_multi': r"(\d+) \([\d\.]+%\) aligned >1 times",
-                'paired_aligned_mate_none': r"(\d+) \([\d\.]+%\) aligned 0 times"
-            }
+            "paired": {
+                "paired_aligned_none": r"(\d+) \([\d\.]+%\) aligned concordantly 0 times",
+                "paired_aligned_one": r"(\d+) \([\d\.]+%\) aligned concordantly exactly 1 time",
+                "paired_aligned_multi": r"(\d+) \([\d\.]+%\) aligned concordantly >1 times",
+                "paired_aligned_discord_one": r"(\d+) \([\d\.]+%\) aligned discordantly 1 time",
+                "paired_aligned_discord_multi": r"(\d+) \([\d\.]+%\) aligned discordantly >1 times",
+                "paired_aligned_mate_one": r"(\d+) \([\d\.]+%\) aligned exactly 1 time",
+                "paired_aligned_mate_multi": r"(\d+) \([\d\.]+%\) aligned >1 times",
+                "paired_aligned_mate_none": r"(\d+) \([\d\.]+%\) aligned 0 times",
+            },
         }
 
         # Go through log file line by line
-        s_name = f['s_name']
+        s_name = f["s_name"]
         parsed_data = {}
 
-        for l in f['f']:
+        for l in f["f"]:
             # Attempt in vain to find original bowtie2 command, logged by another program
             btcmd = re.search(r"bowtie2 .+ -[1U] ([^\s,]+)", l)
             if btcmd:
-                s_name = self.clean_s_name(btcmd.group(1), f['root'])
+                s_name = self.clean_s_name(btcmd.group(1), f["root"])
                 log.debug("Found a bowtie2 command, updating sample name to '{}'".format(s_name))
 
             # Total reads
             total = re.search(r"(\d+) reads; of these:", l)
             if total:
-                parsed_data['total_reads'] = int(total.group(1))
+                parsed_data["total_reads"] = int(total.group(1))
 
             # Single end reads
             unpaired = re.search(r"(\d+) \([\d\.]+%\) were unpaired; of these:", l)
             if unpaired:
-                parsed_data['unpaired_total'] = int(unpaired.group(1))
+                parsed_data["unpaired_total"] = int(unpaired.group(1))
                 self.num_se += 1
 
                 # Do nested loop whilst we have this level of indentation
-                l = f['f'].readline()
-                while l.startswith('    '):
-                    for k, r in regexes['unpaired'].items():
+                l = f["f"].readline()
+                while l.startswith("    "):
+                    for k, r in regexes["unpaired"].items():
                         match = re.search(r, l)
                         if match:
                             parsed_data[k] = int(match.group(1))
-                    l = f['f'].readline()
+                    l = f["f"].readline()
 
             # Paired end reads
             paired = re.search(r"(\d+) \([\d\.]+%\) were paired; of these:", l)
             if paired:
-                parsed_data['paired_total'] = int(paired.group(1))
+                parsed_data["paired_total"] = int(paired.group(1))
                 self.num_pe += 1
 
                 # Do nested loop whilst we have this level of indentation
-                l = f['f'].readline()
-                while l.startswith('    '):
-                    for k, r in regexes['paired'].items():
+                l = f["f"].readline()
+                while l.startswith("    "):
+                    for k, r in regexes["paired"].items():
                         match = re.search(r, l)
                         if match:
                             parsed_data[k] = int(match.group(1))
-                    l = f['f'].readline()
+                    l = f["f"].readline()
 
             # Overall alignment rate
             overall = re.search(r"([\d\.]+)% overall alignment rate", l)
             if overall:
-                parsed_data['overall_alignment_rate'] = float(overall.group(1))
+                parsed_data["overall_alignment_rate"] = float(overall.group(1))
 
                 # End of log section
                 # Save half 'pairs' of mate counts
-                m_keys = ['paired_aligned_mate_multi', 'paired_aligned_mate_none', 'paired_aligned_mate_one']
+                m_keys = ["paired_aligned_mate_multi", "paired_aligned_mate_none", "paired_aligned_mate_one"]
                 for k in m_keys:
                     if k in parsed_data:
-                        parsed_data['{}_halved'.format(k)] = float(parsed_data[k]) / 2.0
+                        parsed_data["{}_halved".format(k)] = float(parsed_data[k]) / 2.0
                 # Save parsed data
                 if s_name in self.bowtie2_data:
                     log.debug("Duplicate sample name found! Overwriting: {}".format(s_name))
                 self.add_data_source(f, s_name)
                 self.bowtie2_data[s_name] = parsed_data
                 # Reset in case we find more in this log file
-                s_name = f['s_name']
+                s_name = f["s_name"]
                 parsed_data = {}
 
-
     def bowtie2_general_stats_table(self):
-        """ Take the parsed stats from the Bowtie 2 report and add it to the
-        basic stats table at the top of the report """
+        """Take the parsed stats from the Bowtie 2 report and add it to the
+        basic stats table at the top of the report"""
 
         headers = OrderedDict()
-        headers['overall_alignment_rate'] = {
-            'title': '% Aligned',
-            'description': 'overall alignment rate',
-            'max': 100,
-            'min': 0,
-            'suffix': '%',
-            'scale': 'YlGn'
+        headers["overall_alignment_rate"] = {
+            "title": "% Aligned",
+            "description": "overall alignment rate",
+            "max": 100,
+            "min": 0,
+            "suffix": "%",
+            "scale": "YlGn",
         }
         self.general_stats_addcols(self.bowtie2_data, headers)
 
-    def bowtie2_alignment_plot (self):
+    def bowtie2_alignment_plot(self):
         """ Make the HighCharts HTML to plot the alignment rates """
 
-        half_warning = ''
+        half_warning = ""
         for s_name in self.bowtie2_data:
-            if 'paired_aligned_mate_one_halved' in self.bowtie2_data[s_name] or 'paired_aligned_mate_multi_halved' in self.bowtie2_data[s_name] or 'paired_aligned_mate_none_halved' in self.bowtie2_data[s_name]:
-                half_warning = '''
+            if (
+                "paired_aligned_mate_one_halved" in self.bowtie2_data[s_name]
+                or "paired_aligned_mate_multi_halved" in self.bowtie2_data[s_name]
+                or "paired_aligned_mate_none_halved" in self.bowtie2_data[s_name]
+            ):
+                half_warning = """
                 <div class="alert alert-warning">Please note that single mate alignment counts are halved to tally with pair counts properly.</div>
-                '''
-        description_text = 'This plot shows the number of reads aligning to the reference in different ways.'
+                """
+        description_text = "This plot shows the number of reads aligning to the reference in different ways."
 
         # Config for the plot
-        config = {
-            'ylab': '# Reads',
-            'cpswitch_counts_label': 'Number of Reads'
-        }
+        config = {"ylab": "# Reads", "cpswitch_counts_label": "Number of Reads"}
 
         # Two plots, don't mix SE with PE
         if self.num_se > 0:
             sekeys = OrderedDict()
-            sekeys['unpaired_aligned_one'] = { 'color': '#20568f', 'name': 'SE mapped uniquely' }
-            sekeys['unpaired_aligned_multi'] = { 'color': '#f7a35c', 'name': 'SE multimapped' }
-            sekeys['unpaired_aligned_none'] = { 'color': '#981919', 'name': 'SE not aligned' }
-            config['id'] = 'bowtie2_se_plot'
-            config['title'] = 'Bowtie 2: SE Alignment Scores'
+            sekeys["unpaired_aligned_one"] = {"color": "#20568f", "name": "SE mapped uniquely"}
+            sekeys["unpaired_aligned_multi"] = {"color": "#f7a35c", "name": "SE multimapped"}
+            sekeys["unpaired_aligned_none"] = {"color": "#981919", "name": "SE not aligned"}
+            config["id"] = "bowtie2_se_plot"
+            config["title"] = "Bowtie 2: SE Alignment Scores"
             self.add_section(
-                name = 'Single-end alignments',
-                anchor = 'bowtie2-align-se',
-                description = description_text,
-                helptext = '''
+                name="Single-end alignments",
+                anchor="bowtie2-align-se",
+                description=description_text,
+                helptext="""
                 There are 3 possible types of alignment:
 
                 * **SE mapped uniquely**: Read has only one occurence in the reference genome.
                 * **SE multimapped**: Read has multiple occurence.
                 * **SE not aligned**: Read has no occurence.
-                ''',
-                plot = bargraph.plot(self.bowtie2_data, sekeys, config)
+                """,
+                plot=bargraph.plot(self.bowtie2_data, sekeys, config),
             )
 
         if self.num_pe > 0:
             pekeys = OrderedDict()
-            pekeys['paired_aligned_one'] = { 'color': '#20568f', 'name': 'PE mapped uniquely' }
-            pekeys['paired_aligned_discord_one'] = { 'color': '#5c94ca', 'name': 'PE mapped discordantly uniquely' }
-            pekeys['paired_aligned_mate_one_halved'] = { 'color': '#95ceff', 'name': 'PE one mate mapped uniquely' }
-            pekeys['paired_aligned_multi'] = { 'color': '#f7a35c', 'name': 'PE multimapped' }
-            pekeys['paired_aligned_discord_multi'] = { 'color': '#dce333', 'name': 'PE discordantly multimapped' }
-            pekeys['paired_aligned_mate_multi_halved'] = { 'color': '#ffeb75', 'name': 'PE one mate multimapped' }
-            pekeys['paired_aligned_mate_none_halved'] = { 'color': '#981919', 'name': 'PE neither mate aligned' }
-            config['id'] = 'bowtie2_pe_plot'
-            config['title'] = 'Bowtie 2: PE Alignment Scores'
+            pekeys["paired_aligned_one"] = {"color": "#20568f", "name": "PE mapped uniquely"}
+            pekeys["paired_aligned_discord_one"] = {"color": "#5c94ca", "name": "PE mapped discordantly uniquely"}
+            pekeys["paired_aligned_mate_one_halved"] = {"color": "#95ceff", "name": "PE one mate mapped uniquely"}
+            pekeys["paired_aligned_multi"] = {"color": "#f7a35c", "name": "PE multimapped"}
+            pekeys["paired_aligned_discord_multi"] = {"color": "#dce333", "name": "PE discordantly multimapped"}
+            pekeys["paired_aligned_mate_multi_halved"] = {"color": "#ffeb75", "name": "PE one mate multimapped"}
+            pekeys["paired_aligned_mate_none_halved"] = {"color": "#981919", "name": "PE neither mate aligned"}
+            config["id"] = "bowtie2_pe_plot"
+            config["title"] = "Bowtie 2: PE Alignment Scores"
             self.add_section(
-                name = 'Paired-end alignments',
-                anchor = 'bowtie2-align-pe',
-                description = description_text + half_warning,
-                helptext = '''
+                name="Paired-end alignments",
+                anchor="bowtie2-align-pe",
+                description=description_text + half_warning,
+                helptext="""
                 There are 6 possible types of alignment:
 
                 * **PE mapped uniquely**: Pair has only one occurence in the reference genome.
@@ -269,6 +272,6 @@ class MultiqcModule(BaseMultiqcModule):
                 * **PE multimapped**: Pair has multiple occurence.
                 * **PE one mate multimapped**: One read of a pair has multiple occurence.
                 * **PE neither mate aligned**: Pair has no occurence.
-                ''',
-                plot = bargraph.plot(self.bowtie2_data, pekeys, config)
+                """,
+                plot=bargraph.plot(self.bowtie2_data, pekeys, config),
             )
