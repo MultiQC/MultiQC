@@ -75,6 +75,8 @@ For further information, please see the [documentation](https://multiqc.info/doc
   - Display contig names in _Coverage per contig_ plot tooltip
 - **Picard**
   - Fix `HsMetrics` bait percentage columns ([#1212](https://github.com/ewels/MultiQC/issues/1212))
+  - Make `WgsMetrics` histogram smoothed if more than 1000 data points (avoids huge plots that crash the browser)
+  - Multiple new config options for `WgsMetrics` to customise coverage histogram and speed up MultiQC with very high coverage files.
 - **PycoQC**
   - Log10 x-axis for _Read Length_ plot ([#1214](https://github.com/ewels/MultiQC/issues/1214))
 - **Rockhopper**
