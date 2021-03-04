@@ -129,7 +129,7 @@ setup(
             "htseq = multiqc.modules.htseq:MultiqcModule",
             "interop = multiqc.modules.interop:MultiqcModule",
             "ivar = multiqc.modules.ivar:MultiqcModule",
-            'jcvi = multiqc.modules.jcvi:MultiqcModule',
+            "jcvi = multiqc.modules.jcvi:MultiqcModule",
             "jellyfish = multiqc.modules.jellyfish:MultiqcModule",
             "kaiju = multiqc.modules.kaiju:MultiqcModule",
             "kallisto = multiqc.modules.kallisto:MultiqcModule",
