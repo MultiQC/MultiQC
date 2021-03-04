@@ -59,6 +59,8 @@ For further information, please see the [documentation](https://multiqc.info/doc
 - **fgbio**
   - Fix `ErrorRateByReadPosition` to calculate `ymax` not just on the overall `error_rate`, but also specific base errors (ex. `a_to_c_error_rate`, `a_to_g_error_rate`, ...). ([#1215](https://github.com/ewels/MultiQC/pull/1251))
   - Fix `ErrorRateByReadPosition` plotted line names to no longer concatenate multiple read identifiers and no longer have off-by-one read numbering (ex. `Sample1_R2_R3` -> `Sample1_R2`) ([#[1304](https://github.com/ewels/MultiQC/pull/1304))
+- **Fastp**
+  - Fixed description for duplication rate (pre-filtering, not post) ([#[1313](https://github.com/ewels/MultiQC/pull/1313))
 - **GATK**
   - Add support for the creation of a "Reported vs Empirical Quality" graph to the Base Recalibration module.
 - **hap.py**
