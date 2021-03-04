@@ -26,27 +26,13 @@ def parse_reports(self):
         keys = None
         for l in f["f"]:
             # New log starting
-            if "CollectOxoGMetrics" in l and "INPUT" in l:
+            if ("CollectOxoGMetrics" in l or "ConvertSequencingArtifactToOxoG" in l) and "INPUT" in l:
                 s_name = None
                 keys = None
                 context_col = None
 
                 # Pull sample name from input
-                fn_search = re.search(r"INPUT(?:=|\s+)(\[?[^\s]+\]?)", l, flags=re.IGNORECASE)
-                if fn_search:
-                    s_name = os.path.basename(fn_search.group(1).strip("[]"))
-                    s_name = self.clean_s_name(s_name, f["root"])
-                    parsed_data.append(dict())
-                    sample_names.append(s_name)
-                    s_files.append(f)
-
-            elif "ConvertSequencingArtifactToOxoG" in l and "INPUT_BASE" in l:
-                s_name = None
-                keys = None
-                context_col = None
-
-                # Pull sample name from input
-                fn_search = re.search(r"INPUT_BASE(?:=|\s+)(\[?[^\s]+\]?)", l, flags=re.IGNORECASE)
+                fn_search = re.search(r"INPUT(?:_BASE)?(?:=|\s+)(\[?[^\s]+\]?)", l, flags=re.IGNORECASE)
                 if fn_search:
                     s_name = os.path.basename(fn_search.group(1).strip("[]"))
                     s_name = self.clean_s_name(s_name, f["root"])
