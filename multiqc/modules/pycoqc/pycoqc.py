@@ -56,7 +56,7 @@ class MultiqcModule(BaseMultiqcModule):
     def load_data(self, f):
         """ Load the PycoQC YAML file """
         try:
-            return yaml.load(f, Loader=yaml.FullLoader)
+            return yaml.load(f, Loader=yaml.SafeLoader)
         except Exception as e:
             log.warning("Could not parse YAML for '{}': \n  {}".format(f, e))
             return None

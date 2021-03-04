@@ -66,10 +66,13 @@ For further information, please see the [documentation](https://multiqc.info/doc
 - **Kaiju**
   - Fixed bug affecting inputs with taxa levels other than Phylum ([#1217](https://github.com/ewels/MultiQC/issues/1217))
   - Rework barplot, add top 5 taxons ([#1219](https://github.com/ewels/MultiQC/issues/1219))
+- **Kraken**
+  - Fix `ZeroDivisionError` ([#1276](https://github.com/ewels/MultiQC/issues/1276))
 - **MALT**
   - Fix y-axis labelling in bargraphs
 - **mosdepth**
   - Enable prepending of directory to sample names
+  - Display contig names in _Coverage per contig_ plot tooltip
 - **Picard**
   - Fix `HsMetrics` bait percentage columns ([#1212](https://github.com/ewels/MultiQC/issues/1212))
 - **PycoQC**
