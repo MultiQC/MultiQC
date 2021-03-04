@@ -99,6 +99,7 @@ For further information, please see the [documentation](https://multiqc.info/doc
 #### Bug Fixes
 
 - Disable preservation of timestamps / modes when copying temp report files, to help issues with network shares ([#1333](https://github.com/ewels/MultiQC/issues/1333))
+- Fixed MatPlotLib warning: `FixedFormatter should only be used together with FixedLocator`
 
 ## [MultiQC v1.9](https://github.com/ewels/MultiQC/releases/tag/v1.9) - 2020-05-30
 
