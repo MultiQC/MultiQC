@@ -77,8 +77,8 @@ For further information, please see the [documentation](https://multiqc.info/doc
   - Add distinct minimizer heatmap for KrakenUniq style duplication information ([#1333](https://github.com/ewels/MultiQC/pull/1380))
 - **MALT**
   - Fix y-axis labelling in bargraphs
-* **MACS2**
-    * Add number of peaks to General Table.
+- **MACS2**
+  - Add number of peaks to General Table.
 - **mosdepth**
   - Enable prepending of directory to sample names
   - Display contig names in _Coverage per contig_ plot tooltip

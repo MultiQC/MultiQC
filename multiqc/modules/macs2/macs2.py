@@ -97,11 +97,11 @@ class MultiqcModule(BaseMultiqcModule):
             "format": "{:,.2f}",
             "scale": "RdYlBu-rev",
         }
-        headers['peak_count'] = {
-            'title': 'Number of Peaks',
-            'description': 'Total number of peaks',
-            'min': 0,
-            'format': '{:,.0f}'
+        headers["peak_count"] = {
+            "title": "Number of Peaks",
+            "description": "Total number of peaks",
+            "min": 0,
+            "format": "{:,.0f}",
         }
         self.general_stats_addcols(self.macs_data, headers)
 
