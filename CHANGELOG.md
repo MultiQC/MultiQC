@@ -66,6 +66,8 @@ For further information, please see the [documentation](https://multiqc.info/doc
   - Add support for the creation of a "Reported vs Empirical Quality" graph to the Base Recalibration module.
 - **hap.py**
   - Updated module to plot both SNP and INDEL stats ([#1241](https://github.com/ewels/MultiQC/issues/1241))
+- **indexcov**
+  - Fixed bug when making the PED file plots ([#1265](https://github.com/ewels/MultiQC/issues/1265))
 - **Kaiju**
   - Fixed bug affecting inputs with taxa levels other than Phylum ([#1217](https://github.com/ewels/MultiQC/issues/1217))
   - Rework barplot, add top 5 taxons ([#1219](https://github.com/ewels/MultiQC/issues/1219))
@@ -78,6 +80,7 @@ For further information, please see the [documentation](https://multiqc.info/doc
   - Display contig names in _Coverage per contig_ plot tooltip
 - **Picard**
   - Fix `HsMetrics` bait percentage columns ([#1212](https://github.com/ewels/MultiQC/issues/1212))
+  - Fix `ConvertSequencingArtifactToOxoG` files not being found ([#1310](https://github.com/ewels/MultiQC/issues/1310))
   - Make `WgsMetrics` histogram smoothed if more than 1000 data points (avoids huge plots that crash the browser)
   - Multiple new config options for `WgsMetrics` to customise coverage histogram and speed up MultiQC with very high coverage files.
 - **PycoQC**
