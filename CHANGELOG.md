@@ -74,6 +74,7 @@ For further information, please see the [documentation](https://multiqc.info/doc
   - Rework barplot, add top 5 taxons ([#1219](https://github.com/ewels/MultiQC/issues/1219))
 - **Kraken**
   - Fix `ZeroDivisionError` ([#1276](https://github.com/ewels/MultiQC/issues/1276))
+  - Add distinct minimizer heatmap for KrakenUniq style duplication information ([#1333](https://github.com/ewels/MultiQC/pull/1380))
 - **MALT**
   - Fix y-axis labelling in bargraphs
 - **mosdepth**
