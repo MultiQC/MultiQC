@@ -410,6 +410,7 @@ class MultiqcModule(BaseMultiqcModule):
         i = 0
         counts_shown = {}
 
+        showed_warning = False
         for classif, pct_sum in sorted_pct:
             i += 1
             if i > self.top_n:
