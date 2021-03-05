@@ -483,6 +483,7 @@ def matplotlib_bargraph(plotdata, plotsamples, pconfig=None):
                 axes.set_xlim((0, 100))
                 # Add percent symbols
                 vals = axes.get_xticks()
+                axes.set_xticks(axes.get_xticks())
                 axes.set_xticklabels(["{:.0f}%".format(x) for x in vals])
             else:
                 default_xlimits = axes.get_xlim()

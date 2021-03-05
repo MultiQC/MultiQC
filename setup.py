@@ -63,6 +63,7 @@ install_requires = [
     "markdown" + markdown_version,
     "pyyaml>=4",
     "requests",
+    "rich",
     "simplejson",
     "spectra>=0.0.10",
 ]
@@ -129,6 +130,7 @@ setup(
             "htseq = multiqc.modules.htseq:MultiqcModule",
             "interop = multiqc.modules.interop:MultiqcModule",
             "ivar = multiqc.modules.ivar:MultiqcModule",
+            "jcvi = multiqc.modules.jcvi:MultiqcModule",
             "jellyfish = multiqc.modules.jellyfish:MultiqcModule",
             "kaiju = multiqc.modules.kaiju:MultiqcModule",
             "kallisto = multiqc.modules.kallisto:MultiqcModule",
