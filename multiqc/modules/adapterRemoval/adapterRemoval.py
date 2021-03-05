@@ -164,22 +164,24 @@ class MultiqcModule(BaseMultiqcModule):
             else:
                 self.result_data[field] = 0
 
-        reads_total = self.result_data["total"]
-        aligned_total = self.result_data["aligned"]
-        unaligned_total = self.result_data["unaligned"]
-        if self.__read_type == "paired":
-            reads_total = self.result_data["total"] * 2
-            aligned_total = self.result_data["aligned"] * 2
-            unaligned_total = self.result_data["unaligned"] * 2
+        reads_total = self.result_data['total']
+        aligned_total = self.result_data['aligned']
+        unaligned_total = self.result_data['unaligned']
+        if self.__read_type == 'paired':
+            reads_total = self.result_data['total'] * 2
+            aligned_total = self.result_data['aligned'] * 2
+            unaligned_total = self.result_data['unaligned'] * 2
 
-        self.result_data["aligned_total"] = aligned_total
-        self.result_data["unaligned_total"] = unaligned_total
-        self.result_data["reads_total"] = reads_total
-        self.result_data["discarded_total"] = reads_total - self.result_data["retained"]
+        self.result_data['aligned_total'] = aligned_total
+        self.result_data['unaligned_total'] = unaligned_total
+        self.result_data['reads_total'] = reads_total
+        if self.__collapsed:
+            self.result_data['discarded_total'] = reads_total - self.result_data['retained'] - self.result_data['full-length_cp'] - self.result_data['truncated_cp']
+            self.result_data['retained_reads'] = self.result_data['retained'] - self.result_data['singleton_m1'] - self.result_data['singleton_m2'] - self.result_data['full-length_cp'] - self.result_data['truncated_cp']
+        else:
+            self.result_data['discarded_total'] = reads_total - self.result_data['retained']
+            self.result_data['retained_reads'] = self.result_data['retained'] - self.result_data['singleton_m1'] - self.result_data['singleton_m2']
 
-        self.result_data["retained_reads"] = (
-            self.result_data["retained"] - self.result_data["singleton_m1"] - self.result_data["singleton_m2"]
-        )
         try:
             self.result_data["percent_aligned"] = (
                 float(self.result_data["aligned"]) * 100.0 / float(self.result_data["total"])
