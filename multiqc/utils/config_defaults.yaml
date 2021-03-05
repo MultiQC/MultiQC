@@ -209,12 +209,13 @@ fn_clean_exts:
   - ".trim"
   - ".bowtie2"
   - ".mkD"
-  - ".ptrim"
   - ".highfreq"
   - ".lowfreq"
   - ".consensus"
   - ".snpEff"
+  - ".snpeff"
   - ".scaffolds"
+  - ".contigs"
   - ".kraken2"
   - ".ccurve"
   - ".hisat2"
@@ -224,6 +225,10 @@ fn_clean_exts:
   - ".junction_annotation"
   - ".infer_experiment"
   - ".biotype"
+  - ".ivar"
+  - ".mpileup"
+  - ".primer_trim"
+  - ".mapped"
 
 # These are removed after the above, only if sample names
 # start or end with this string. Again, removed in order.
