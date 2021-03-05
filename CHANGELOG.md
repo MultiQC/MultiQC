@@ -31,6 +31,7 @@ For further information, please see the [documentation](https://multiqc.info/doc
   - Comparable functionality to user config options `table_cond_formatting_rules` and `table_cond_formatting_colours`,
     allowes module developers to format table cell values as labels.
 - New CI test looks for git merge markers in files
+- Beautiful new [progress bar](https://rich.readthedocs.io/en/stable/progress.html) from the amazing [willmcgugan/rich](https://github.com/willmcgugan/rich) package.
 
 #### New Modules
 
