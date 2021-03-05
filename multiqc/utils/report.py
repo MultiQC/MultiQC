@@ -6,7 +6,7 @@ helper functions to generate markup for report. """
 
 from __future__ import print_function
 from collections import defaultdict, OrderedDict
-import click
+from rich.progress import track
 import fnmatch
 import io
 import json
@@ -251,10 +251,9 @@ def get_filelist(run_module_names):
                     searchfiles.append([fn, root])
 
     # Search through collected files
-    with click.progressbar(searchfiles, label="Searching {} files..".format(len(searchfiles))) as sfiles:
-        for sf in sfiles:
-            if not add_file(sf[0], sf[1]):
-                file_search_stats["skipped_no_match"] += 1
+    for sf in track(searchfiles, description="Searching {} files..".format(len(searchfiles))):
+        if not add_file(sf[0], sf[1]):
+            file_search_stats["skipped_no_match"] += 1
 
     runtimes["total_sp"] = time.time() - total_sp_starttime
 

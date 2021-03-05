@@ -206,6 +206,24 @@ fn_clean_exts:
   - "_SummaryStatistics"
   - ".purple.purity"
   - ".purple.qc"
+  - ".trim"
+  - ".bowtie2"
+  - ".mkD"
+  - ".ptrim"
+  - ".highfreq"
+  - ".lowfreq"
+  - ".consensus"
+  - ".snpEff"
+  - ".scaffolds"
+  - ".kraken2"
+  - ".ccurve"
+  - ".hisat2"
+  - "_duprate"
+  - ".markdup"
+  - ".read_distribution"
+  - ".junction_annotation"
+  - ".infer_experiment"
+  - ".biotype"
 
 # These are removed after the above, only if sample names
 # start or end with this string. Again, removed in order.
@@ -417,6 +435,9 @@ module_order:
       module_tag:
         - DNA
         - RNA
+  - jcvi:
+      module_tag:
+        - denovo
   - mtnucratio:
       module_tag:
         - DNA
