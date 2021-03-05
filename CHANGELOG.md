@@ -32,7 +32,7 @@ For further information, please see the [documentation](https://multiqc.info/doc
     allowes module developers to format table cell values as labels.
 - New CI test looks for git merge markers in files
 - Beautiful new [progress bar](https://rich.readthedocs.io/en/stable/progress.html) from the amazing [willmcgugan/rich](https://github.com/willmcgugan/rich) package.
-- Added a bunch of new default sample name trimming suffixes [see `8ac5c7b`](https://github.com/ewels/MultiQC/commit/8ac5c7b6e4ea6003ca2c9b681953ab3f22c5dd66)
+- Added a bunch of new default sample name trimming suffixes ([see `8ac5c7b`](https://github.com/ewels/MultiQC/commit/8ac5c7b6e4ea6003ca2c9b681953ab3f22c5dd66))
 
 #### New Modules
 
@@ -77,6 +77,8 @@ For further information, please see the [documentation](https://multiqc.info/doc
   - Add distinct minimizer heatmap for KrakenUniq style duplication information ([#1333](https://github.com/ewels/MultiQC/pull/1380))
 - **MALT**
   - Fix y-axis labelling in bargraphs
+- **MACS2**
+  - Add number of peaks to the _General Statistics_ table.
 - **mosdepth**
   - Enable prepending of directory to sample names
   - Display contig names in _Coverage per contig_ plot tooltip
