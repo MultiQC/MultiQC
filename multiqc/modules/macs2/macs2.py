@@ -57,8 +57,7 @@ class MultiqcModule(BaseMultiqcModule):
             "d": r"# d = (\d+)",
         }
         s_name = f["s_name"]
-        parsed_data = dict()
-        parsed_data["peak_count"] = 0
+        parsed_data = {"peak_count": 0}
         for line in f["f"]:
             line = line.strip()
             if line.startswith("#"):
@@ -69,7 +68,7 @@ class MultiqcModule(BaseMultiqcModule):
                             s_name = self.clean_s_name(match.group(1).strip(), f["root"])
                         else:
                             parsed_data[k] = float(match.group(1).strip())
-            elif len(line) > 0:
+            elif len(line) > 0 and "start" not in line:
                 parsed_data["peak_count"] += 1
 
         if len(parsed_data) > 0:
