@@ -394,7 +394,6 @@ class MultiqcModule(BaseMultiqcModule):
     def top_five_duplication_heatmap(self):
         """ Add a heatmap showing the minimizer duplication top-5 species"""
 
-        pd = []
         duplication = list()
         pconfig = {"id": "kraken-topfive-duplication_plot", "title": f"Kraken 2: Top {self.top_n} species duplication"}
 
@@ -417,7 +416,6 @@ class MultiqcModule(BaseMultiqcModule):
                 break
             # Pull out counts for this rank + classif from each sample
             for s_name, d in self.kraken_raw_data.items():
-                sample_duplication = list()
                 if s_name not in rank_data:
                     rank_data[s_name] = dict()
                 if s_name not in counts_shown:
@@ -434,6 +432,12 @@ class MultiqcModule(BaseMultiqcModule):
                                 if not showed_warning:
                                     log.warning("Kraken2 reports of different versions were found")
                                     showed_warning = True
+        # Strip empty samples
+        for sample, vals in dict(rank_data).items():
+            if len(vals) == 0:
+                del rank_data[sample]
+
+        # Build data structures for heatmap
         ylabels = list(rank_data.keys())
         xlabels = list(rank_data[ylabels[0]].keys())
         for sample in rank_data:
@@ -445,10 +449,10 @@ class MultiqcModule(BaseMultiqcModule):
             description=f"The duplication rate of minimizer falling into the top {self.top_n} species",
             helptext=f"""
                 To make this plot, the minimizer duplication rate is computed for the top {self.top_n} most abundant species in all samples.
-                The minimizer duplication rate is defined as:
-                duplication rate = (total number of minimizers / number of distinct minimizers)
 
-                A low coverage and high duplication rate (>> 1) is often sign of read stacking, which probably indicates of false positive hit.
+                The minimizer duplication rate is defined as: `duplication rate = (total number of minimizers / number of distinct minimizers)`
+
+                A low coverage and high duplication rate (`>> 1`) is often sign of read stacking, which probably indicates of false positive hit.
             """,
             plot=heatmap.plot(duplication, xlabels, ylabels, pconfig),
         )
