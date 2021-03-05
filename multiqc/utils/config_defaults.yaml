@@ -417,6 +417,9 @@ module_order:
       module_tag:
         - DNA
         - RNA
+  - jcvi:
+      module_tag:
+        - denovo
   - mtnucratio:
       module_tag:
         - DNA

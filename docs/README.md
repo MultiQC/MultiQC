@@ -69,6 +69,7 @@ MultiQC Modules:
     HOPS: modules/hops.md
     HOMER: modules/homer.md
     HTSeq: modules/htseq.md
+    JCVI: modules/jcvi.md
     Kaiju: modules/kaiju.md
     Kraken: modules/kraken.md
     MACS2: modules/macs2.md
