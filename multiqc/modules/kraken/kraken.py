@@ -66,6 +66,7 @@ class MultiqcModule(BaseMultiqcModule):
         self.kraken_total_pct = dict()
         self.kraken_total_counts = dict()
         self.kraken_sample_total_readcounts = dict()
+        self.sample_total_readcounts()
         self.sum_sample_counts()
 
         self.general_stats_cols()
@@ -177,7 +178,7 @@ class MultiqcModule(BaseMultiqcModule):
 
         # Search regexes for stats
         k2_regex = re.compile(
-            r"^\s{1,2}(\d{1,2}\.\d{1,2})\t(\d+)\t(\d+)\t(\d+)\t(\d+)\t([\dUDKPCOFGS-]{1,3})\t(\d+)(\s+)(.+)"
+            r"^\s{1,2}(\d{1,2}\.\d{1,2})\t(\d+)\t(\d+)\t(\d+)\t(\d+)\t([UDKPCOFGS-]\d{0,2})\t(\d+)(\s+)(.+)"
         )
         data = []
         for l in f["f"]:
@@ -198,6 +199,14 @@ class MultiqcModule(BaseMultiqcModule):
                 data.append(row)
 
         self.kraken_raw_data[f["s_name"]] = data
+        
+    def sample_total_readcounts(self):
+        """ Compute the total read counts for each sample """
+
+        for s_name, data in self.kraken_raw_data.items():
+            self.kraken_sample_total_readcounts[s_name] = 0
+            for row in data:
+                self.kraken_sample_total_readcounts[s_name] += row["counts_direct"]
 
     def sum_sample_counts(self):
         """ Sum counts across all samples for kraken data """
@@ -207,7 +216,6 @@ class MultiqcModule(BaseMultiqcModule):
         # Use percentages instead of counts so that deeply-sequences samples
         # are not unfairly over-represented
         for s_name, data in self.kraken_raw_data.items():
-            total_guess_count = None
             for row in data:
 
                 # Convenience vars that are easier to read
@@ -218,14 +226,6 @@ class MultiqcModule(BaseMultiqcModule):
                 if row["rank_code"] == "-" or any(c.isdigit() for c in row["rank_code"]):
                     continue
 
-                # Calculate the total read count using percentages
-                # We use either unclassified or the first domain encountered, to try to use the largest proportion of reads = most accurate guess
-                if rank_code == "U" or (rank_code == "D" and row["counts_rooted"] > total_guess_count):
-                    self.kraken_sample_total_readcounts[s_name] = round(
-                        float(row["counts_rooted"]) / (row["percent"] / 100.0)
-                    )
-                    total_guess_count = row["counts_rooted"]
-
                 if rank_code not in self.kraken_total_pct:
                     self.kraken_total_pct[rank_code] = dict()
                     self.kraken_total_counts[rank_code] = dict()
@@ -233,7 +233,9 @@ class MultiqcModule(BaseMultiqcModule):
                 if classif not in self.kraken_total_pct[rank_code]:
                     self.kraken_total_pct[rank_code][classif] = 0
                     self.kraken_total_counts[rank_code][classif] = 0
-                self.kraken_total_pct[rank_code][classif] += row["percent"]
+                self.kraken_total_pct[rank_code][classif] += (
+                    row["counts_rooted"] / self.kraken_sample_total_readcounts[s_name]
+                )
                 self.kraken_total_counts[rank_code][classif] += row["counts_rooted"]
 
     def general_stats_cols(self):
@@ -289,12 +291,13 @@ class MultiqcModule(BaseMultiqcModule):
         for s_name, d in self.kraken_raw_data.items():
             tdata[s_name] = {}
             for row in d:
+                percent = (row["counts_rooted"] / self.kraken_sample_total_readcounts[s_name]) * 100.0
                 if row["rank_code"] == "U":
-                    tdata[s_name]["% Unclassified"] = row["percent"]
+                    tdata[s_name]["% Unclassified"] = percent
                 if row["rank_code"] == top_rank_code and row["classif"] in top_five:
-                    tdata[s_name]["% Top 5"] = row["percent"] + tdata[s_name].get("% Top 5", 0)
+                    tdata[s_name]["% Top 5"] = percent + tdata[s_name].get("% Top 5", 0)
                 if row["rank_code"] == top_rank_code and row["classif"] == top_five[0]:
-                    tdata[s_name][top_one_hkey] = row["percent"]
+                    tdata[s_name][top_one_hkey] = percent
 
             if top_one_hkey not in tdata[s_name]:
                 tdata[s_name][top_one_hkey] = 0
@@ -426,7 +429,7 @@ class MultiqcModule(BaseMultiqcModule):
                             try:
                                 rank_data[s_name][classif] = row["minimizer_duplication"]
                             except KeyError:
-                                rank_data[s_name][classif] = None
+                                del rank_data[s_name]
                                 log.warning("Kraken2 reports of different versions were found")
                                 continue
         ylabels = list(rank_data.keys())

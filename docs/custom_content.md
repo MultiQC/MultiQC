@@ -14,6 +14,10 @@ All plot types can be generated using custom content - see the
 [test files](https://github.com/ewels/MultiQC_TestData/tree/master/data/custom_content)
 for examples of how data should be structured.
 
+> **Note**: Use the name `custom_content` to refer to this module within configuration
+> settings that require a module name, such as [`module_order`](#order-of-modules) or
+> [`run_modules`](#removing-modules-or-sections).
+
 ## Data from a released tool
 
 If your data comes from a released bioinformatics tool, you shouldn't be using this
