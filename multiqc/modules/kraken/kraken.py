@@ -199,7 +199,7 @@ class MultiqcModule(BaseMultiqcModule):
                 data.append(row)
 
         self.kraken_raw_data[f["s_name"]] = data
-        
+
     def sample_total_readcounts(self):
         """ Compute the total read counts for each sample """
 
