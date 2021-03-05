@@ -84,9 +84,7 @@ setup(
     zip_safe=False,
     install_requires=install_requires,
     entry_points={
-        "console_scripts": [
-            "multiqc=multiqc.__main__:multiqc",
-        ],
+        "console_scripts": ["multiqc=multiqc.__main__:multiqc",],
         "multiqc.modules.v1": [
             "adapterRemoval = multiqc.modules.adapterRemoval:MultiqcModule",
             "afterqc = multiqc.modules.afterqc:MultiqcModule",
@@ -171,7 +169,7 @@ setup(
             "sentieon = multiqc.modules.sentieon:MultiqcModule",
             "seqyclean = multiqc.modules.seqyclean:MultiqcModule",
             "sexdeterrmine = multiqc.modules.sexdeterrmine:MultiqcModule",
-            'eigenstratdatabasetools = multiqc.modules.eigenstratdatabasetools:MultiqcModule',
+            "eigenstratdatabasetools = multiqc.modules.eigenstratdatabasetools:MultiqcModule",
             "sickle = multiqc.modules.sickle:MultiqcModule",
             "skewer = multiqc.modules.skewer:MultiqcModule",
             "slamdunk = multiqc.modules.slamdunk:MultiqcModule",
