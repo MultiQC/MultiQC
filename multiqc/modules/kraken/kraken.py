@@ -431,8 +431,9 @@ class MultiqcModule(BaseMultiqcModule):
                                 rank_data[s_name][classif] = row["minimizer_duplication"]
                             except KeyError:
                                 del rank_data[s_name]
-                                log.warning("Kraken2 reports of different versions were found")
-                                continue
+                                if not showed_warning:
+                                    log.warning("Kraken2 reports of different versions were found")
+                                    showed_warning = True
         ylabels = list(rank_data.keys())
         xlabels = list(rank_data[ylabels[0]].keys())
         for sample in rank_data:
