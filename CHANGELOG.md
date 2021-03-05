@@ -69,6 +69,8 @@ For further information, please see the [documentation](https://multiqc.info/doc
   - Updated module to plot both SNP and INDEL stats ([#1241](https://github.com/ewels/MultiQC/issues/1241))
 - **indexcov**
   - Fixed bug when making the PED file plots ([#1265](https://github.com/ewels/MultiQC/issues/1265))
+- **interop**
+  - Added the `% Occupied` metric to `Read Metrics per Lane` table which is reported for NovaSeq and iSeq platforms.
 - **Kaiju**
   - Fixed bug affecting inputs with taxa levels other than Phylum ([#1217](https://github.com/ewels/MultiQC/issues/1217))
   - Rework barplot, add top 5 taxons ([#1219](https://github.com/ewels/MultiQC/issues/1219))
