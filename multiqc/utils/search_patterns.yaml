@@ -331,6 +331,8 @@ interop/index-summary:
 ivar/trim:
   contents: "Number of references"
   num_lines: 8
+jcvi:
+  contents: "     o    % GC    % of genome    Average size (bp)    Median size (bp)    Number    Total length (Mb)"
 jellyfish:
   fn: "*_jf.hist"
 kaiju:
@@ -388,13 +390,13 @@ disambiguate:
   contents: "unique species A pairs"
   num_lines: 2
 ngsderive/strandedness:
-  contents_re: "(.*)File(.*)TotalReads(.*)ForwardPct(.*)ReversePct(.*)Predicted"
+  contents_re: "File	TotalReads	ForwardPct	ReversePct	Predicted"
   num_lines: 1
 ngsderive/instrument:
-  contents_re: "(.*)File(.*)Instrument(.*)Confidence(.*)Basis"
+  contents_re: "File	Instrument	Confidence	Basis"
   num_lines: 1
 ngsderive/readlen:
-  contents_re: "(.*)File(.*)Evidence(.*)MajorityPctDetected(.*)ConsensusReadLength"
+  contents_re: "File	Evidence	MajorityPctDetected	ConsensusReadLength"
   num_lines: 1
 ngsderive/encoding:
   contents_re: "(.*)File(.*)Evidence(.*)ProbableEncoding"

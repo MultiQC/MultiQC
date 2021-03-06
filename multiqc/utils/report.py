@@ -6,16 +6,16 @@ helper functions to generate markup for report. """
 
 from __future__ import print_function
 from collections import defaultdict, OrderedDict
-import click
 import fnmatch
+import inspect
 import io
 import json
-import inspect
 import lzstring
 import mimetypes
 import os
-import time
 import re
+import rich.progress
+import time
 import yaml
 
 from multiqc import config
@@ -251,8 +251,18 @@ def get_filelist(run_module_names):
                     searchfiles.append([fn, root])
 
     # Search through collected files
-    with click.progressbar(searchfiles, label="Searching {} files..".format(len(searchfiles))) as sfiles:
-        for sf in sfiles:
+    progress_obj = rich.progress.Progress(
+        rich.progress.SpinnerColumn(),
+        "[progress.description]{task.description}",
+        rich.progress.BarColumn(),
+        "[progress.percentage]{task.percentage:>3.0f}%",
+        "[green]{task.completed}/{task.total}",
+        "[dim]{task.fields[s_fn]}",
+    )
+    with progress_obj as progress:
+        mqc_task = progress.add_task("Searching..", total=len(searchfiles), s_fn="NA")
+        for sf in searchfiles:
+            progress.update(mqc_task, advance=1, s_fn=os.path.join(sf[1], sf[0])[-50:])
             if not add_file(sf[0], sf[1]):
                 file_search_stats["skipped_no_match"] += 1
 
