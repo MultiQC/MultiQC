@@ -2,10 +2,13 @@
 
 ## MultiQC v1.10dev
 
-### Major change: Code linting
+### Update for developers: Code linting
 
 This is a big change for MultiQC developers. I have added automated code formatting and code linting
-(style checks) to MultiQC. Specifically, MultiQC now uses three main tools:
+(style checks) to MultiQC. This helps to keep the MultiQC code base consistent despite having many
+contributors and helps me to review pull-requests without having to consider whitespace.
+
+Specifically, MultiQC now uses three main tools:
 
 - [Black](https://github.com/psf/black) - Python Code
 - [Prettier](https://prettier.io/) - Everything else (almost)
