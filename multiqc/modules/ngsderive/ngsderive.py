@@ -426,6 +426,7 @@ class MultiqcModule(BaseMultiqcModule):
             "title": "ngsderive: Junction Annotation",
             "cpswitch_counts_label": "Number",
             "yDecimals": False,
+            "ylab": "Number of junctions",
             "data_labels": [
                 {"name": "Junctions", "ylab": "Number of junctions"},
                 {"name": "Spliced Reads", "ylab": "Number of spliced reads"},
