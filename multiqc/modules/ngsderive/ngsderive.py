@@ -445,5 +445,5 @@ class MultiqcModule(BaseMultiqcModule):
             anchor="ngsderive-junctions",
             description="""Junction annotations provided by ngsderive. For more information, please see
             [the documentation](https://stjudecloud.github.io/ngsderive/subcommands/junction_annotation/).""",
-            plot=bargraph.plot(bardata, cats, pconfig),
+            plot=bargraph.plot([bardata, bardata], cats, pconfig),
         )
