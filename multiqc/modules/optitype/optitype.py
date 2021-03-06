@@ -34,8 +34,8 @@ class MultiqcModule(BaseMultiqcModule):
 
         for f in self.find_log_files("optitype"):
             rows = f["f"].splitlines()
-            #First col is empty / or always zero
-            headers = rows[0].split("\t")[1:] 
+            # First col is empty / or always zero
+            headers = rows[0].split("\t")[1:]
             cols = rows[1].split("\t")[1:]
 
             self.optitype_data[f["s_name"]] = dict()
@@ -64,9 +64,8 @@ class MultiqcModule(BaseMultiqcModule):
         # Write parsed report data to a file
         self.write_data_file(self.optitype_data, "multiqc_optitype")
 
-        #Create OptiType overview table
+        # Create OptiType overview table
         self.addSummaryMetrics()
-
 
     def addSummaryMetrics(self):
         """ Take the parsed entries from OptiType and add them to the main plot """
