@@ -40,6 +40,8 @@ For further information, please see the [documentation](https://multiqc.info/doc
 
 #### New Modules
 
+- [**EigenStratDatabaseTools**](https://github.com/TCLamnidis/EigenStratDatabaseTools)
+  - Added MultiQC module to report SNP coverages from `eigenstrat_snp_coverage.py` in the general stats table.
 - [**HOPS**](https://www.github.com/rhubler/HOPS)
   - Post-alignment ancient DNA analysis tool for MALT
 - [**JCVI**](https://github.com/tanghaibao/jcvi)
