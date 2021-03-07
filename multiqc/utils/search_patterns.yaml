@@ -3,652 +3,687 @@
 # Loaded by the config module so that these patterns can be overwritten in user config files.
 
 adapterRemoval:
-    fn: '*.settings'
-    contents: 'AdapterRemoval'
-    num_lines: 1
+  fn: "*.settings"
+  contents: "AdapterRemoval"
+  num_lines: 1
 afterqc:
-    fn: '*.json'
-    contents: 'allow_mismatch_in_poly'
+  fn: "*.json"
+  contents: "allow_mismatch_in_poly"
 bamtools/stats:
-    contents: 'Stats for BAM file(s):'
-    shared: true
-    num_lines: 10
+  contents: "Stats for BAM file(s):"
+  shared: true
+  num_lines: 10
 bbmap/stats:
-    contents: '#Name	Reads	ReadsPct'
-    num_lines: 4
+  contents: "#Name	Reads	ReadsPct"
+  num_lines: 4
 bbmap/aqhist:
-    contents: '#Quality	count1	fraction1	count2	fraction2'
-    num_lines: 1
+  contents: "#Quality	count1	fraction1	count2	fraction2"
+  num_lines: 1
 bbmap/bhist:
-    contents: '#Pos	A	C	G	T	N'
-    num_lines: 1
+  contents: "#Pos	A	C	G	T	N"
+  num_lines: 1
 bbmap/bincov:
-    # 3rd line (1st is #Mean)
-    contents: '#RefName	Cov	Pos	RunningPos'
-    num_lines: 3
+  # 3rd line (1st is #Mean)
+  contents: "#RefName	Cov	Pos	RunningPos"
+  num_lines: 3
 bbmap/bqhist:
-    contents: '#BaseNum	count_1	min_1	max_1	mean_1	Q1_1	med_1	Q3_1	LW_1	RW_1	count_2	min_2	max_2	mean_2	Q1_2	med_2	Q3_2	LW_2	RW_2'
-    num_lines: 1
+  contents: "#BaseNum	count_1	min_1	max_1	mean_1	Q1_1	med_1	Q3_1	LW_1	RW_1	count_2	min_2	max_2	mean_2	Q1_2	med_2	Q3_2	LW_2	RW_2"
+  num_lines: 1
 bbmap/covhist:
-    contents: '#Coverage	numBases'
-    num_lines: 1
+  contents: "#Coverage	numBases"
+  num_lines: 1
 bbmap/covstats:
-    contents: '#ID	Avg_fold'
-    num_lines: 1
+  contents: "#ID	Avg_fold"
+  num_lines: 1
 bbmap/ehist:
-    contents: '#Errors	Count'
-    num_lines: 1
+  contents: "#Errors	Count"
+  num_lines: 1
 bbmap/gchist:
-    # 5th line (1st is #Mean)
-    contents: '#GC	Count'
-    num_lines: 5
+  # 5th line (1st is #Mean)
+  contents: "#GC	Count"
+  num_lines: 5
 bbmap/idhist:
-    contents: '#Mean_reads'
-    num_lines: 1
+  contents: "#Mean_reads"
+  num_lines: 1
 bbmap/ihist:
-    # 6th line (first is #Mean)
-    contents: '#InsertSize	Count'
-    num_lines: 6
+  # 6th line (first is #Mean)
+  contents: "#InsertSize	Count"
+  num_lines: 6
 bbmap/indelhist:
-    contents: '#Length	Deletions	Insertions'
-    num_lines: 1
+  contents: "#Length	Deletions	Insertions"
+  num_lines: 1
 bbmap/lhist:
-    contents: '#Length	Count'
-    num_lines: 1
+  contents: "#Length	Count"
+  num_lines: 1
 bbmap/mhist:
-    contents: '#BaseNum	Match1	Sub1	Del1	Ins1	N1	Other1	Match2	Sub2	Del2	Ins2	N2	Other2'
-    num_lines: 1
+  contents: "#BaseNum	Match1	Sub1	Del1	Ins1	N1	Other1	Match2	Sub2	Del2	Ins2	N2	Other2"
+  num_lines: 1
 bbmap/qahist:
-    contents: '#Deviation'
-    num_lines: 1
+  contents: "#Deviation"
+  num_lines: 1
 bbmap/qhist:
-    contents: '#BaseNum	Read1_linear	Read1_log	Read1_measured	Read2_linear	Read2_log	Read2_measured'
-    num_lines: 1
+  contents: "#BaseNum	Read1_linear	Read1_log	Read1_measured	Read2_linear	Read2_log	Read2_measured"
+  num_lines: 1
 bbmap/rpkm:
-    contents: '#File	'
-    num_lines: 1
+  contents: "#File	"
+  num_lines: 1
 bbmap/statsfile_machine:
-    contents: 'Reads Used='
-    num_lines: 1
+  contents: "Reads Used="
+  num_lines: 1
 bbmap/statsfile:
-    contents: 'Reads Used:'
-    num_lines: 1
+  contents: "Reads Used:"
+  num_lines: 1
 bcftools/stats:
-    contents: 'This file was produced by bcftools stats'
-    shared: true
+  contents: "This file was produced by bcftools stats"
+  shared: true
 bcl2fastq:
-    fn: 'Stats.json'
-    contents: 'DemuxResults'
-    num_lines: 300
+  fn: "Stats.json"
+  contents: "DemuxResults"
+  num_lines: 300
 biobambam2/bamsormadup:
-    contents: '# bamsormadup'
-    num_lines: 2
+  contents: "# bamsormadup"
+  num_lines: 2
 biobloomtools:
-    contents: 'filter_id	hits	misses	shared	rate_hit	rate_miss	rate_shared'
-    num_lines: 2
+  contents: "filter_id	hits	misses	shared	rate_hit	rate_miss	rate_shared"
+  num_lines: 2
 biscuit/align_mapq:
-    fn: '*_mapq_table.txt'
-    contents: 'BISCUITqc Mapping Quality Table'
-    num_lines: 3
+  fn: "*_mapq_table.txt"
+  contents: "BISCUITqc Mapping Quality Table"
+  num_lines: 3
 biscuit/align_strand:
-    fn: '*_strand_table.txt'
-    contents: 'BISCUITqc Strand Table'
-    num_lines: 3
+  fn: "*_strand_table.txt"
+  contents: "BISCUITqc Strand Table"
+  num_lines: 3
 biscuit/align_isize:
-    fn: '*_isize_table.txt'
-    contents: 'BISCUITqc Insert Size Table'
-    num_lines: 3
+  fn: "*_isize_table.txt"
+  contents: "BISCUITqc Insert Size Table"
+  num_lines: 3
 biscuit/dup_report:
-    fn: '*_dup_report.txt'
-    contents: 'BISCUITqc Read Duplication Table'
-    num_lines: 3
+  fn: "*_dup_report.txt"
+  contents: "BISCUITqc Read Duplication Table"
+  num_lines: 3
 biscuit/qc_cv:
-    fn: '*_cv_table.txt'
-    contents: 'BISCUITqc Uniformity Table'
-    num_lines: 3
+  fn: "*_cv_table.txt"
+  contents: "BISCUITqc Uniformity Table"
+  num_lines: 3
 biscuit/covdist_all_base_botgc:
-    fn: '*_covdist_all_base_botgc_table.txt'
+  fn: "*_covdist_all_base_botgc_table.txt"
 biscuit/covdist_all_base:
-    fn: '*_covdist_all_base_table.txt'
+  fn: "*_covdist_all_base_table.txt"
 biscuit/covdist_all_base_topgc:
-    fn: '*_covdist_all_base_topgc_table.txt'
+  fn: "*_covdist_all_base_topgc_table.txt"
 biscuit/covdist_q40_base_botgc:
-    fn: '*_covdist_q40_base_botgc_table.txt'
+  fn: "*_covdist_q40_base_botgc_table.txt"
 biscuit/covdist_q40_base:
-    fn: '*_covdist_q40_base_table.txt'
+  fn: "*_covdist_q40_base_table.txt"
 biscuit/covdist_q40_base_topgc:
-    fn: '*_covdist_q40_base_topgc_table.txt'
+  fn: "*_covdist_q40_base_topgc_table.txt"
 biscuit/covdist_all_cpg_botgc:
-    fn: '*_covdist_all_cpg_botgc_table.txt'
+  fn: "*_covdist_all_cpg_botgc_table.txt"
 biscuit/covdist_all_cpg:
-    fn: '*_covdist_all_cpg_table.txt'
+  fn: "*_covdist_all_cpg_table.txt"
 biscuit/covdist_all_cpg_topgc:
-    fn: '*_covdist_all_cpg_topgc_table.txt'
+  fn: "*_covdist_all_cpg_topgc_table.txt"
 biscuit/covdist_q40_cpg_botgc:
-    fn: '*_covdist_q40_cpg_botgc_table.txt'
+  fn: "*_covdist_q40_cpg_botgc_table.txt"
 biscuit/covdist_q40_cpg:
-    fn: '*_covdist_q40_cpg_table.txt'
+  fn: "*_covdist_q40_cpg_table.txt"
 biscuit/covdist_q40_cpg_topgc:
-    fn: '*_covdist_q40_cpg_topgc_table.txt'
+  fn: "*_covdist_q40_cpg_topgc_table.txt"
 biscuit/cpg_retention_readpos:
-    fn: '*_CpGRetentionByReadPos.txt'
+  fn: "*_CpGRetentionByReadPos.txt"
 biscuit/cph_retention_readpos:
-    fn: '*_CpHRetentionByReadPos.txt'
+  fn: "*_CpHRetentionByReadPos.txt"
 biscuit/base_avg_retention_rate:
-    fn: '*_totalBaseConversionRate.txt'
+  fn: "*_totalBaseConversionRate.txt"
 biscuit/read_avg_retention_rate:
-    fn: '*_totalReadConversionRate.txt'
+  fn: "*_totalReadConversionRate.txt"
 bismark/align:
-    fn: '*_[SP]E_report.txt'
+  fn: "*_[SP]E_report.txt"
 bismark/dedup:
-    fn: '*.deduplication_report.txt'
+  fn: "*.deduplication_report.txt"
 bismark/meth_extract:
-    fn: '*_splitting_report.txt'
+  fn: "*_splitting_report.txt"
 bismark/m_bias:
-    fn: '*M-bias.txt'
+  fn: "*M-bias.txt"
 bismark/bam2nuc:
-    fn: '*.nucleotide_stats.txt'
+  fn: "*.nucleotide_stats.txt"
 bowtie1:
-    contents: '# reads processed:'
-    exclude_fn:
-        # Tophat log files
-        - 'bowtie.left_kept_reads.log'
-        - 'bowtie.left_kept_reads.m2g_um.log'
-        - 'bowtie.left_kept_reads.m2g_um_seg1.log'
-        - 'bowtie.left_kept_reads.m2g_um_seg2.log'
-        - 'bowtie.right_kept_reads.log'
-        - 'bowtie.right_kept_reads.m2g_um.log'
-        - 'bowtie.right_kept_reads.m2g_um_seg1.log'
-        - 'bowtie.right_kept_reads.m2g_um_seg2.log'
-    shared: true
+  contents: "# reads processed:"
+  exclude_fn:
+    # Tophat log files
+    - "bowtie.left_kept_reads.log"
+    - "bowtie.left_kept_reads.m2g_um.log"
+    - "bowtie.left_kept_reads.m2g_um_seg1.log"
+    - "bowtie.left_kept_reads.m2g_um_seg2.log"
+    - "bowtie.right_kept_reads.log"
+    - "bowtie.right_kept_reads.m2g_um.log"
+    - "bowtie.right_kept_reads.m2g_um_seg1.log"
+    - "bowtie.right_kept_reads.m2g_um_seg2.log"
+  shared: true
 bowtie2:
-    contents: 'reads; of these:'
-    exclude_contents:
-        - 'bisulfite'
-        - 'HiC-Pro'
-    shared: true
+  contents: "reads; of these:"
+  exclude_contents:
+    - "bisulfite"
+    - "HiC-Pro"
+  shared: true
 busco:
-    fn: 'short_summary*'
-    contents: 'BUSCO version is:'
-    num_lines: 1
+  fn: "short_summary*"
+  contents: "BUSCO version is:"
+  num_lines: 1
 custom_content:
-    fn_re: '.+_mqc\.(yaml|yml|json|txt|csv|tsv|log|out|png|jpg|jpeg|html)'
+  fn_re: '.+_mqc\.(yaml|yml|json|txt|csv|tsv|log|out|png|jpg|jpeg|html)'
 clipandmerge:
-    contents: 'ClipAndMerge ('
-    num_lines: 5
+  contents: "ClipAndMerge ("
+  num_lines: 5
 clusterflow/logs:
-    fn: '*_clusterFlow.txt'
-    shared: true
+  fn: "*_clusterFlow.txt"
+  shared: true
 clusterflow/runfiles:
-    fn: '*.run'
-    contents: 'Cluster Flow Run File'
-    num_lines: 2
+  fn: "*.run"
+  contents: "Cluster Flow Run File"
+  num_lines: 2
 conpair/concordance:
-    contents: 'markers (coverage per marker threshold : '
-    num_lines: 3
+  contents: "markers (coverage per marker threshold : "
+  num_lines: 3
 conpair/contamination:
-    contents: 'Tumor sample contamination level: '
-    num_lines: 3
+  contents: "Tumor sample contamination level: "
+  num_lines: 3
 cutadapt:
-    contents: 'This is cutadapt'
-    # contents: 'cutadapt version' # Use this instead if using very old versions of cutadapt (eg. v1.2)
-    shared: true
+  contents: "This is cutadapt"
+  # contents: 'cutadapt version' # Use this instead if using very old versions of cutadapt (eg. v1.2)
+  shared: true
 damageprofiler:
-    fn: '*dmgprof.json'
+  fn: "*dmgprof.json"
 dedup:
-    fn: '*dedup.json'
+  fn: "*dedup.json"
 deeptools/bamPEFragmentSizeTable:
-    contents: '	Frag. Sampled	Frag. Len. Min.	Frag. Len. 1st. Qu.	Frag. Len. Mean	Frag. Len. Median	Frag. Len. 3rd Qu.'
-    num_lines: 1
+  contents: "	Frag. Sampled	Frag. Len. Min.	Frag. Len. 1st. Qu.	Frag. Len. Mean	Frag. Len. Median	Frag. Len. 3rd Qu."
+  num_lines: 1
 deeptools/bamPEFragmentSizeDistribution:
-    contents: '#bamPEFragmentSize'
-    num_lines: 1
+  contents: "#bamPEFragmentSize"
+  num_lines: 1
 deeptools/estimateReadFiltering:
-    contents: 'Sample	Total Reads	Mapped Reads	Alignments in blacklisted regions	Estimated mapped reads'
-    num_lines: 1
+  contents: "Sample	Total Reads	Mapped Reads	Alignments in blacklisted regions	Estimated mapped reads"
+  num_lines: 1
 deeptools/plotCorrelationData:
-    contents: '#plotCorrelation --outFileCorMatrix'
-    num_lines: 1
+  contents: "#plotCorrelation --outFileCorMatrix"
+  num_lines: 1
 deeptools/plotCoverageStdout:
-    contents: 'sample	mean	std	min	25%	50%	75%	max'
-    num_lines: 1
+  contents: "sample	mean	std	min	25%	50%	75%	max"
+  num_lines: 1
 deeptools/plotCoverageOutRawCounts:
-    contents: "#plotCoverage --outRawCounts"
-    num_lines: 1
+  contents: "#plotCoverage --outRawCounts"
+  num_lines: 1
 deeptools/plotEnrichment:
-    contents: 'file	featureType	percent	featureReadCount	totalReadCount'
-    num_lines: 1
+  contents: "file	featureType	percent	featureReadCount	totalReadCount"
+  num_lines: 1
 deeptools/plotFingerprintOutRawCounts:
-    contents: '#plotFingerprint --outRawCounts'
-    num_lines: 1
+  contents: "#plotFingerprint --outRawCounts"
+  num_lines: 1
 deeptools/plotFingerprintOutQualityMetrics:
-    contents: 'Sample	AUC	Synthetic AUC	X-intercept	Synthetic X-intercept	Elbow Point	Synthetic Elbow Point'
-    num_lines: 1
+  contents: "Sample	AUC	Synthetic AUC	X-intercept	Synthetic X-intercept	Elbow Point	Synthetic Elbow Point"
+  num_lines: 1
 deeptools/plotPCAData:
-    contents: '#plotPCA --outFileNameData'
-    num_lines: 1
+  contents: "#plotPCA --outFileNameData"
+  num_lines: 1
 deeptools/plotProfile:
-    contents: 'bin labels'
-    num_lines: 1
+  contents: "bin labels"
+  num_lines: 1
 dragen/vc_metrics:
-    fn: '*.vc_metrics.csv'
+  fn: "*.vc_metrics.csv"
 dragen/ploidy_estimation_metrics:
-    fn: '*.ploidy_estimation_metrics.csv'
-dragen/wgs_contig_mean_cov:
-    fn_re: '.*\.wgs_contig_mean_cov_?(tumor|normal)?\.csv'
-dragen/wgs_coverage_metrics:
-    fn_re: '.*\.wgs_coverage_metrics_?(tumor|normal)?\.csv'
-dragen/wgs_fine_hist:
-    fn_re: '.*\.wgs_fine_hist_?(tumor|normal)?\.csv'
+  fn: "*.ploidy_estimation_metrics.csv"
+dragen/contig_mean_cov:
+  fn_re: '.*\.(wgs|target_bed)_contig_mean_cov_?(tumor|normal)?\.csv'
+dragen/coverage_metrics:
+  fn_re: '.*\.(wgs|target_bed)_coverage_metrics_?(tumor|normal)?\.csv'
+dragen/fine_hist:
+  fn_re: '.*\.(wgs|target_bed)_fine_hist_?(tumor|normal)?\.csv'
 dragen/fragment_length_hist:
-    fn: '*.fragment_length_hist.csv'
+  fn: "*.fragment_length_hist.csv"
 dragen/mapping_metrics:
-    fn: '*.mapping_metrics.csv'
-    contents: 'Number of unique reads (excl. duplicate marked reads)'
-    num_lines: 50
+  fn: "*.mapping_metrics.csv"
+  contents: "Number of unique reads (excl. duplicate marked reads)"
+  num_lines: 50
 fastp:
-    fn: '*fastp.json'
+  fn: "*fastp.json"
 fastq_screen:
-    fn: '*_screen.txt'
+  fn: "*_screen.txt"
 fastqc/data:
-    fn: 'fastqc_data.txt'
+  fn: "fastqc_data.txt"
 fastqc/zip:
-    fn: '*_fastqc.zip'
+  fn: "*_fastqc.zip"
 fastqc/theoretical_gc:
-    fn: '*fastqc_theoretical_gc*'
+  fn: "*fastqc_theoretical_gc*"
 featurecounts:
-    fn: '*.summary'
-    shared: true
+  fn: "*.summary"
+  shared: true
 fgbio/groupreadsbyumi:
-    contents: 'fraction_gt_or_eq_family_size'
-    num_lines: 3
+  contents: "fraction_gt_or_eq_family_size"
+  num_lines: 3
 fgbio/errorratebyreadposition:
-    contents: 'read_number	position	bases_total	errors	error_rate	a_to_c_error_rate	a_to_g_error_rate	a_to_t_error_rate	c_to_a_error_rate	c_to_g_error_rate	c_to_t_error_rate'
-    num_lines: 3
+  contents: "read_number	position	bases_total	errors	error_rate	a_to_c_error_rate	a_to_g_error_rate	a_to_t_error_rate	c_to_a_error_rate	c_to_g_error_rate	c_to_t_error_rate"
+  num_lines: 3
 flash/log:
-    contents: '[FLASH]'
-    shared: true
+  contents: "[FLASH]"
+  shared: true
 flash/hist:
-    fn: '*flash*.hist'
+  fn: "*flash*.hist"
 flexbar:
-    contents: 'Flexbar - flexible barcode and adapter removal'
-    shared: true
+  contents: "Flexbar - flexible barcode and adapter removal"
+  shared: true
 gatk/varianteval:
-    contents: '#:GATKTable:TiTvVariantEvaluator'
-    shared: true
+  contents: "#:GATKTable:TiTvVariantEvaluator"
+  shared: true
 gatk/base_recalibrator:
-    contents: '#:GATKTable:Arguments:Recalibration'
-    num_lines: 3
+  contents: "#:GATKTable:Arguments:Recalibration"
+  num_lines: 3
 goleft_indexcov/roc:
-    fn: '*-indexcov.roc'
+  fn: "*-indexcov.roc"
 goleft_indexcov/ped:
-    fn: '*-indexcov.ped'
+  fn: "*-indexcov.ped"
 happy:
-    fn: '*.summary.csv'
-    contents: 'Type,Filter,TRUTH'
+  fn: "*.summary.csv"
+  contents: "Type,Filter,TRUTH"
 htseq:
-    contents: '__too_low_aQual'
+  contents: "__too_low_aQual"
 hicexplorer:
-    contents: 'Min rest. site distance'
-    max_filesize: 4096
-    num_lines: 26
+  contents: "Min rest. site distance"
+  max_filesize: 4096
+  num_lines: 26
 hicup:
-    fn: 'HiCUP_summary_report*'
+  fn: "HiCUP_summary_report*"
 hicpro/mmapstat:
-    fn: '*.mmapstat'
+  fn: "*.mmapstat"
 hicpro/mpairstat:
-    fn: '*.mpairstat'
+  fn: "*.mpairstat"
 hicpro/mergestat:
-    fn: '*.mergestat'
+  fn: "*.mergestat"
 hicpro/mRSstat:
-    fn: '*.mRSstat'
+  fn: "*.mRSstat"
 hicpro/assplit:
-    fn: '*.assplit.stat'
+  fn: "*.assplit.stat"
 hisat2:
-    contents: 'HISAT2 summary stats:'
-    shared: true
+  contents: "HISAT2 summary stats:"
+  shared: true
 homer/findpeaks:
-    contents: '# HOMER Peaks'
-    num_lines: 3
+  contents: "# HOMER Peaks"
+  num_lines: 3
 homer/GCcontent:
-    fn: 'tagGCcontent.txt'
+  fn: "tagGCcontent.txt"
 homer/genomeGCcontent:
-    fn: 'genomeGCcontent.txt'
+  fn: "genomeGCcontent.txt"
 homer/RestrictionDistribution:
-    fn: 'petagRestrictionDistribution.*.txt'
+  fn: "petagRestrictionDistribution.*.txt"
 homer/LengthDistribution:
-    fn: 'tagLengthDistribution.txt'
+  fn: "tagLengthDistribution.txt"
 homer/tagInfo:
-    fn: 'tagInfo.txt'
+  fn: "tagInfo.txt"
 homer/FreqDistribution:
-    fn: 'petag.FreqDistribution_1000.txt'
+  fn: "petag.FreqDistribution_1000.txt"
 hops:
-    fn: 'heatmap_overview_Wevid.json'
+  fn: "heatmap_overview_Wevid.json"
 interop/summary:
-    contents: 'Level,Yield,Projected Yield,Aligned,Error Rate,Intensity C1,%>=Q30'
+  contents: "Level,Yield,Projected Yield,Aligned,Error Rate,Intensity C1,%>=Q30"
 interop/index-summary:
-    contents: 'Total Reads,PF Reads,% Read Identified (PF),CV,Min,Max'
+  contents: "Total Reads,PF Reads,% Read Identified (PF),CV,Min,Max"
 ivar/trim:
-    contents: 'Number of references'
-    num_lines: 8
+  contents: "Number of references"
+  num_lines: 8
+jcvi:
+  contents: "     o    % GC    % of genome    Average size (bp)    Median size (bp)    Number    Total length (Mb)"
 jellyfish:
-    fn: '*_jf.hist'
+  fn: "*_jf.hist"
 kaiju:
-    contents_re: 'file\tpercent\treads\ttaxon_id\ttaxon_name'
-    num_lines: 1
+  contents_re: 'file\tpercent\treads\ttaxon_id\ttaxon_name'
+  num_lines: 1
 kallisto:
-    contents: '[quant] finding pseudoalignments for the reads'
-    shared: true
+  contents: "[quant] finding pseudoalignments for the reads"
+  shared: true
 kat:
-    fn: '*.dist_analysis.json'
+  fn: "*.dist_analysis.json"
 kraken:
-    contents_re: '^\s{1,2}(\d{1,2}\.\d{1,2})\t(\d+)\t(\d+)\t([\dUDKPCOFGS-]{1,3})\t(\d+)\s+(.+)'
-    num_lines: 2
+  contents_re: '^\s{1,2}(\d{1,2}\.\d{1,2})\t(\d+)\t(\d+)\t([\dUDKPCOFGS-]{1,3})\t(\d+)\s+(.+)'
+  num_lines: 2
 leehom:
-    contents: 'Adapter dimers/chimeras'
-    shared: true
+  contents: "Adapter dimers/chimeras"
+  shared: true
 longranger/summary:
-    fn: '*summary.csv'
-    contents: 'longranger_version,instrument_ids,gems_detected,mean_dna_per_gem,bc_on_whitelist,bc_mean_qscore,n50_linked_reads_per_molecule'
-    num_lines: 2
+  fn: "*summary.csv"
+  contents: "longranger_version,instrument_ids,gems_detected,mean_dna_per_gem,bc_on_whitelist,bc_mean_qscore,n50_linked_reads_per_molecule"
+  num_lines: 2
 longranger/invocation:
-    fn: '_invocation'
-    contents: 'call PHASER_SVCALLER_CS('
-    max_filesize: 2048
+  fn: "_invocation"
+  contents: "call PHASER_SVCALLER_CS("
+  max_filesize: 2048
 macs2:
-    fn: '*_peaks.xls'
+  fn: "*_peaks.xls"
 malt:
-    contents: 'MaltRun - Aligns sequences using MALT (MEGAN alignment tool)'
-    num_lines: 2
+  contents: "MaltRun - Aligns sequences using MALT (MEGAN alignment tool)"
+  num_lines: 2
 methylQA:
-    fn: '*.report'
-    shared: true
+  fn: "*.report"
+  shared: true
 minionqc:
-    fn: 'summary.yaml'
-    contents: 'total.gigabases'
+  fn: "summary.yaml"
+  contents: "total.gigabases"
 mirtop:
-    fn: '*_mirtop_stats.log'
+  fn: "*_mirtop_stats.log"
 mirtrace/summary:
-    fn: 'mirtrace-results.json'
+  fn: "mirtrace-results.json"
 mirtrace/length:
-    fn: 'mirtrace-stats-length.tsv'
+  fn: "mirtrace-stats-length.tsv"
 mirtrace/contaminationbasic:
-    fn: 'mirtrace-stats-contamination_basic.tsv'
+  fn: "mirtrace-stats-contamination_basic.tsv"
 mirtrace/mirnacomplexity:
-    fn: 'mirtrace-stats-mirna-complexity.tsv'
+  fn: "mirtrace-stats-mirna-complexity.tsv"
 mtnucratio:
-    fn: '*mtnuc.json'
+  fn: "*mtnuc.json"
 mosdepth/global_dist:
-    fn: '*.mosdepth.global.dist.txt'
+  fn: "*.mosdepth.global.dist.txt"
 mosdepth/region_dist:
-    fn: '*.mosdepth.region.dist.txt'
+  fn: "*.mosdepth.region.dist.txt"
 multivcfanalyzer:
-    fn: 'MultiVCFAnalyzer.json'
+  fn: "MultiVCFAnalyzer.json"
 disambiguate:
-    contents: 'unique species A pairs'
-    num_lines: 2
+  contents: "unique species A pairs"
+  num_lines: 2
+ngsderive/strandedness:
+  contents: "File	TotalReads	ForwardPct	ReversePct	Predicted"
+  num_lines: 1
+ngsderive/instrument:
+  contents: "File	Instrument	Confidence	Basis"
+  num_lines: 1
+ngsderive/readlen:
+  contents: "File	Evidence	MajorityPctDetected	ConsensusReadLength"
+  num_lines: 1
+ngsderive/encoding:
+  contents: "File	Evidence	ProbableEncoding"
+  num_lines: 1
+ngsderive/junction_annotation:
+  contents: "File	total_junctions	total_splice_events	known_junctions	partial_novel_junctions	complete_novel_junctions	known_spliced_reads	partial_novel_spliced_reads	complete_novel_spliced_reads"
+  num_lines: 1
 peddy/summary_table:
-    fn: '*.peddy.ped'
+  fn: "*.peddy.ped"
 peddy/het_check:
-    fn: '*.het_check.csv'
+  fn: "*.het_check.csv"
 peddy/ped_check:
-    fn: '*.ped_check.csv'
+  fn: "*.ped_check.csv"
 peddy/sex_check:
-    fn: '*.sex_check.csv'
+  fn: "*.sex_check.csv"
 peddy/background_pca:
-    fn: '*.background_pca.json'
+  fn: "*.background_pca.json"
 somalier/somalier-ancestry:
-    fn: '*.somalier-ancestry.tsv'
+  fn: "*.somalier-ancestry.tsv"
 somalier/samples:
-    fn: '*.samples.tsv'
-    contents: '#family_id'
-    num_lines: 5
+  fn: "*.samples.tsv"
+  contents: "#family_id"
+  num_lines: 5
 somalier/pairs:
-    fn: '*.pairs.tsv'
-    contents: 'hom_concordance'
-    num_lines: 5
+  fn: "*.pairs.tsv"
+  contents: "hom_concordance"
+  num_lines: 5
 phantompeakqualtools/out:
-    fn: '*.spp.out'
+  fn: "*.spp.out"
 picard/alignment_metrics:
-    contents: 'AlignmentSummaryMetrics'
-    shared: true
+  contents: "AlignmentSummaryMetrics"
+  shared: true
 picard/basedistributionbycycle:
-    contents: 'BaseDistributionByCycleMetrics'
-    shared: true
+  contents: "BaseDistributionByCycleMetrics"
+  shared: true
 picard/gcbias:
-    contents: 'GcBias'
-    shared: true
+  contents: "GcBias"
+  shared: true
 picard/hsmetrics:
-    contents: 'HsMetrics'
-    shared: true
+  contents: "HsMetrics"
+  shared: true
 picard/insertsize:
-    contents: 'InsertSizeMetrics'
-    shared: true
+  contents: "InsertSizeMetrics"
+  shared: true
 picard/markdups:
-    contents: 'DuplicationMetrics'
-    shared: true
+  contents: "DuplicationMetrics"
+  shared: true
 picard/oxogmetrics:
-    contents: 'OxoGMetrics'
-    shared: true
+  contents: "OxoGMetrics"
+  shared: true
 picard/pcr_metrics:
-    contents: 'TargetedPcrMetrics'
-    shared: true
+  contents: "TargetedPcrMetrics"
+  shared: true
 picard/quality_by_cycle:
-    contents_re: '[Qq]uality[Bb]y[Cc]ycle'
-    contents: 'MEAN_QUALITY'
-    shared: true
+  contents_re: "[Qq]uality[Bb]y[Cc]ycle"
+  contents: "MEAN_QUALITY"
+  shared: true
 picard/quality_score_distribution:
-    contents_re: '[Qq]uality[Ss]core[Dd]istribution'
-    contents: 'COUNT_OF_Q'
-    shared: true
+  contents_re: "[Qq]uality[Ss]core[Dd]istribution"
+  contents: "COUNT_OF_Q"
+  shared: true
 picard/quality_yield_metrics:
-    contents: 'QualityYieldMetrics'
-    shared: true
+  contents: "QualityYieldMetrics"
+  shared: true
 picard/rnaseqmetrics:
-    contents_re: '[Rr]na[Ss]eq[Mm]etrics'
-    contents: '## METRICS CLASS'
-    shared: true
+  contents_re: "[Rr]na[Ss]eq[Mm]etrics"
+  contents: "## METRICS CLASS"
+  shared: true
 picard/rrbs_metrics:
-    contents: 'RrbsSummaryMetrics'
-    shared: true
+  contents: "RrbsSummaryMetrics"
+  shared: true
 picard/sam_file_validation:
-    fn: '*[Vv]alidate[Ss]am[Ff]ile*'
+  fn: "*[Vv]alidate[Ss]am[Ff]ile*"
 picard/variant_calling_metrics:
-    # This looks wrong but I think it's intentional - tests fail if I "fix" it
-    fn: '*.variant_calling_detail_metrics'
-    contents: 'CollectVariantCallingMetrics'
-    shared: true
+  # This looks wrong but I think it's intentional - tests fail if I "fix" it
+  fn: "*.variant_calling_detail_metrics"
+  contents: "CollectVariantCallingMetrics"
+  shared: true
 picard/wgs_metrics:
-    contents: 'CollectWgsMetrics'
-    shared: true
+  contents: "CollectWgsMetrics"
+  shared: true
 preseq:
-    - contents: 'EXPECTED_DISTINCT'
-      num_lines: 2
-    - contents: 'distinct_reads'
-      num_lines: 2
+  - contents: "EXPECTED_DISTINCT"
+    num_lines: 2
+  - contents: "distinct_reads"
+    num_lines: 2
 preseq/real_counts:
-    fn: '*preseq_real_counts*'
+  fn: "*preseq_real_counts*"
 prokka:
-    contents: 'contigs:'
-    num_lines: 2
+  contents: "contigs:"
+  num_lines: 2
+purple/qc:
+  fn: "*.purple.qc"
+purple/purity:
+  fn: "*.purple.purity.tsv"
 pycoqc:
-    contents: '"pycoqc":'
-    num_lines: 2
+  contents: '"pycoqc":'
+  num_lines: 2
+pychopper:
+  contents: "Classification	Rescue"
+  num_lines: 6
+qc3C:
+  fn: "*.qc3C.json"
 qorts:
-    contents: 'BENCHMARK_MinutesOnSamIteration'
-    num_lines: 100
+  contents: "BENCHMARK_MinutesOnSamIteration"
+  num_lines: 100
 qualimap/bamqc/genome_results:
-    fn: 'genome_results.txt'
+  fn: "genome_results.txt"
 qualimap/bamqc/coverage:
-    fn: 'coverage_histogram.txt'
+  fn: "coverage_histogram.txt"
 qualimap/bamqc/insert_size:
-    fn: 'insert_size_histogram.txt'
+  fn: "insert_size_histogram.txt"
 qualimap/bamqc/genome_fraction:
-    fn: 'genome_fraction_coverage.txt'
+  fn: "genome_fraction_coverage.txt"
 qualimap/bamqc/gc_dist:
-    fn: 'mapped_reads_gc-content_distribution.txt'
+  fn: "mapped_reads_gc-content_distribution.txt"
 qualimap/rnaseq/rnaseq_results:
-    fn: 'rnaseq_qc_results.txt'
+  fn: "rnaseq_qc_results.txt"
 qualimap/rnaseq/coverage:
-    fn: 'coverage_profile_along_genes_(total).txt'
+  fn: "coverage_profile_along_genes_(total).txt"
 quast:
-    fn: 'report.tsv'
-    shared: true
+  fn: "report.tsv"
+  shared: true
 rna_seqc/metrics_v1:
-    fn: '*metrics.tsv'
-    contents: 'Sample	Note	'
-    shared: true
+  fn: "*metrics.tsv"
+  contents: "Sample	Note	"
+  shared: true
 rna_seqc/metrics_v2:
-    fn: '*metrics.tsv'
-    contents: 'High Quality Ambiguous Alignment Rate'
-    shared: true
+  fn: "*metrics.tsv"
+  contents: "High Quality Ambiguous Alignment Rate"
+  shared: true
 rna_seqc/coverage:
-    fn_re: 'meanCoverageNorm_(high|medium|low)\.txt'
+  fn_re: 'meanCoverageNorm_(high|medium|low)\.txt'
 rna_seqc/correlation:
-    fn_re: 'corrMatrix(Pearson|Spearman)\.txt'
+  fn_re: 'corrMatrix(Pearson|Spearman)\.txt'
 rockhopper:
-    fn: 'summary.txt'
-    contents: 'Number of gene-pairs predicted to be part of the same operon'
-    max_filesize: 500000
+  fn: "summary.txt"
+  contents: "Number of gene-pairs predicted to be part of the same operon"
+  max_filesize: 500000
 rsem:
-    fn: '*.cnt'
+  fn: "*.cnt"
 rseqc/bam_stat:
-    contents: 'Proper-paired reads map to different chrom:'
-    max_filesize: 500000
+  contents: "Proper-paired reads map to different chrom:"
+  max_filesize: 500000
 rseqc/gene_body_coverage:
-    fn: '*.geneBodyCoverage.txt'
+  fn: "*.geneBodyCoverage.txt"
 rseqc/inner_distance:
-    fn: '*.inner_distance_freq.txt'
+  fn: "*.inner_distance_freq.txt"
 rseqc/junction_annotation:
-    contents: 'Partial Novel Splicing Junctions:'
-    max_filesize: 500000
+  contents: "Partial Novel Splicing Junctions:"
+  max_filesize: 500000
 rseqc/junction_saturation:
-    fn: '*.junctionSaturation_plot.r'
+  fn: "*.junctionSaturation_plot.r"
 rseqc/read_gc:
-    fn: '*.GC.xls'
+  fn: "*.GC.xls"
 rseqc/read_distribution:
-    contents: 'Group               Total_bases         Tag_count           Tags/Kb'
-    max_filesize: 500000
+  contents: "Group               Total_bases         Tag_count           Tags/Kb"
+  max_filesize: 500000
 rseqc/read_duplication_pos:
-    fn: '*.pos.DupRate.xls'
+  fn: "*.pos.DupRate.xls"
 rseqc/infer_experiment:
-    - fn: '*infer_experiment.txt'
-    - contents: 'Fraction of reads explained by'
-      max_filesize: 500000
+  - fn: "*infer_experiment.txt"
+  - contents: "Fraction of reads explained by"
+    max_filesize: 500000
 salmon/meta:
-    fn: 'meta_info.json'
-    contents: 'salmon_version'
+  fn: "meta_info.json"
+  contents: "salmon_version"
 salmon/fld:
-    fn: 'flenDist.txt'
+  fn: "flenDist.txt"
 samblaster:
-    contents: 'samblaster: Version'
-    shared: true
+  contents: "samblaster: Version"
+  shared: true
 samtools/stats:
-    contents: 'This file was produced by samtools stats'
-    shared: true
+  contents: "This file was produced by samtools stats"
+  shared: true
 samtools/flagstat:
-    contents: 'in total (QC-passed reads + QC-failed reads)'
-    shared: true
+  contents: "in total (QC-passed reads + QC-failed reads)"
+  shared: true
 samtools/idxstats:
-    fn: '*idxstat*'
+  fn: "*idxstat*"
 samtools/rmdup:
-    contents: '[bam_rmdup'
-    shared: true
+  contents: "[bam_rmdup"
+  shared: true
 sargasso:
-    fn: 'overall_filtering_summary.txt'
+  fn: "overall_filtering_summary.txt"
+sentieon/alignment_metrics:
+  contents: "--algo AlignmentStat"
+  shared: true
+sentieon/insertsize:
+  contents: "--algo InsertSizeMetricAlgo"
+  shared: true
+sentieon/gcbias:
+  contents: "--algo GCBias"
+  shared: true
 seqyclean:
-    fn: '*_SummaryStatistics.tsv'
+  fn: "*_SummaryStatistics.tsv"
 sexdeterrmine:
-    fn: 'sexdeterrmine.json'
+  fn: "sexdeterrmine.json"
 sickle:
-    contents_re: 'FastQ \w*\s?records kept: .*'
-    num_lines: 2
+  contents_re: 'FastQ \w*\s?records kept: .*'
+  num_lines: 2
 skewer:
-    contents: 'maximum error ratio allowed (-r):'
-    shared: true
+  contents: "maximum error ratio allowed (-r):"
+  shared: true
 slamdunk/summary:
-    contents: '# slamdunk summary'
-    num_lines: 1
+  contents: "# slamdunk summary"
+  num_lines: 1
 slamdunk/PCA:
-    contents: '# slamdunk PCA'
-    num_lines: 1
+  contents: "# slamdunk PCA"
+  num_lines: 1
 slamdunk/rates:
-    contents: '# slamdunk rates'
-    num_lines: 1
+  contents: "# slamdunk rates"
+  num_lines: 1
 slamdunk/utrrates:
-    contents: '# slamdunk utrrates'
-    num_lines: 1
+  contents: "# slamdunk utrrates"
+  num_lines: 1
 slamdunk/tcperreadpos:
-    contents: '# slamdunk tcperreadpos'
-    num_lines: 1
+  contents: "# slamdunk tcperreadpos"
+  num_lines: 1
 slamdunk/tcperutrpos:
-    contents: '# slamdunk tcperutr'
-    num_lines: 1
+  contents: "# slamdunk tcperutr"
+  num_lines: 1
 snpeff:
-    contents: 'SnpEff_version'
-    max_filesize: 5000000
+  contents: "SnpEff_version"
+  max_filesize: 5000000
 snpsplit/old:
-    contents: 'Writing allele-flagged output file to:'
-    num_lines: 2
+  contents: "Writing allele-flagged output file to:"
+  num_lines: 2
 snpsplit/new:
-    fn: '*SNPsplit_report.yaml'
+  fn: "*SNPsplit_report.yaml"
 sortmerna:
-    contents: 'Minimal SW score based on E-value'
-    shared: true
+  contents: "Minimal SW score based on E-value"
+  shared: true
 stacks/gstacks:
-    fn: 'gstacks.log.distribs'
-    contents: 'BEGIN effective_coverages_per_sample'
+  fn: "gstacks.log.distribs"
+  contents: "BEGIN effective_coverages_per_sample"
 stacks/populations:
-    fn: 'populations.log.distribs'
-    contents: 'BEGIN missing_samples_per_loc_prefilters'
+  fn: "populations.log.distribs"
+  contents: "BEGIN missing_samples_per_loc_prefilters"
 stacks/sumstats:
-    fn: '*.sumstats_summary.tsv'
-    contents: '# Pop ID	Private	Num_Indv	Var	StdErr	P	Var'
-    max_filesize: 1000000
+  fn: "*.sumstats_summary.tsv"
+  contents: "# Pop ID	Private	Num_Indv	Var	StdErr	P	Var"
+  max_filesize: 1000000
 star:
-    fn: '*Log.final.out'
+  fn: "*Log.final.out"
 star/genecounts:
-    fn: '*ReadsPerGene.out.tab'
+  fn: "*ReadsPerGene.out.tab"
 supernova/report:
-    fn: '*report*.txt'
-    num_lines: 100
-    contents: '- assembly checksum ='
+  fn: "*report*.txt"
+  num_lines: 100
+  contents: "- assembly checksum ="
 supernova/summary:
-    fn: 'summary.json'
-    num_lines: 120
-    contents: '"lw_mean_mol_len":'
+  fn: "summary.json"
+  num_lines: 120
+  contents: '"lw_mean_mol_len":'
 supernova/molecules:
-    fn: 'histogram_molecules.json'
-    num_lines: 10
-    contents: '"description": "molecules",'
+  fn: "histogram_molecules.json"
+  num_lines: 10
+  contents: '"description": "molecules",'
 supernova/kmers:
-    fn: 'histogram_kmer_count.json'
-    num_lines: 10
-    contents: '"description": "kmer_count",'
+  fn: "histogram_kmer_count.json"
+  num_lines: 10
+  contents: '"description": "kmer_count",'
 theta2:
-    fn: '*.BEST.results'
+  fn: "*.BEST.results"
 tophat:
-    fn: '*align_summary.txt'
-    shared: true
+  fn: "*align_summary.txt"
+  shared: true
 trimmomatic:
-    contents: 'Trimmomatic'
-    shared: true
+  contents: "Trimmomatic"
+  shared: true
 varscan2/mpileup2snp:
-    contents: 'Only SNPs will be reported'
-    num_lines: 3
+  contents: "Only SNPs will be reported"
+  num_lines: 3
 varscan2/mpileup2indel:
-    contents: 'Only indels will be reported'
-    num_lines: 3
+  contents: "Only indels will be reported"
+  num_lines: 3
 varscan2/mpileup2cns:
-    contents: 'Only variants will be reported'
-    num_lines: 3
+  contents: "Only variants will be reported"
+  num_lines: 3
 vcftools/relatedness2:
-    fn: '*.relatedness2'
+  fn: "*.relatedness2"
 vcftools/tstv_by_count:
-    fn: '*.TsTv.count'
+  fn: "*.TsTv.count"
 vcftools/tstv_by_qual:
-    fn: '*.TsTv.qual'
+  fn: "*.TsTv.qual"
 vcftools/tstv_summary:
-    fn: '*.TsTv.summary'
+  fn: "*.TsTv.summary"
 verifybamid/selfsm:
-    fn: '*.selfSM'
+  fn: "*.selfSM"
