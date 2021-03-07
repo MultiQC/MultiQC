@@ -93,6 +93,7 @@ For further information, please see the [documentation](https://multiqc.info/doc
   - Fix `ConvertSequencingArtifactToOxoG` files not being found ([#1310](https://github.com/ewels/MultiQC/issues/1310))
   - Make `WgsMetrics` histogram smoothed if more than 1000 data points (avoids huge plots that crash the browser)
   - Multiple new config options for `WgsMetrics` to customise coverage histogram and speed up MultiQC with very high coverage files.
+  - Add additional datasets to Picard Alignment Summary ([#1293](https://github.com/ewels/MultiQC/issues/1293))
 - **PycoQC**
   - Log10 x-axis for _Read Length_ plot ([#1214](https://github.com/ewels/MultiQC/issues/1214))
 - **Rockhopper**
