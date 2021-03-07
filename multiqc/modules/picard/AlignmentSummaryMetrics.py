@@ -123,11 +123,6 @@ def parse_reports(self):
                     "ylab": "# Bases",
                     "cpswitch_counts_label": "Number of Bases",
                 },
-                {
-                    "name": "Mean Read Length",
-                    "ylab": "Base pairs",
-                    "cpswitch_counts_label": "Mean Size of Reads",
-                },
             ],
         }
 
@@ -136,14 +131,14 @@ def parse_reports(self):
             name="Alignment Summary",
             anchor="picard-alignmentsummary",
             description="Please note that Picard's read counts are divided by two for paired-end data. Total bases (including unaligned) is not provided.",
-            plot=bargraph.plot([pdata, self.picard_alignment_metrics, self.picard_alignment_metrics], keys, pconfig),
+            plot=bargraph.plot([pdata, self.picard_alignment_metrics], keys, pconfig),
         )
 
         # Make a bar plot of mean read length
         keys = {"MEAN_READ_LENGTH": {"name": "Mean Read Length"}}
         pconfig = {
             "id": "picard_alignment_readlength_plot",
-            "title": "Picard: Mean Read Lenth",
+            "title": "Picard: Mean Read Length",
             "ylab": "Base pairs",
             "cpswitch": False,
         }
