@@ -13,15 +13,15 @@ from multiqc.plots import bargraph
 # Initialise the logger
 log = logging.getLogger(__name__)
 
+
 class MultiqcModule(BaseMultiqcModule):
     def __init__(self):
         # Initialse the parent object
-        super(MultiqcModule, self).__init__(name='CCS', anchor='ccs',
-                href='https://github.com/PacificBiosciences/ccs',
-                info=(
-                    'is used to generate highly accurate single-molecule '
-                    'consensus reads'
-                )
+        super(MultiqcModule, self).__init__(
+            name="CCS",
+            anchor="ccs",
+            href="https://github.com/PacificBiosciences/ccs",
+            info=("is used to generate highly accurate single-molecule " "consensus reads"),
         )
 
         # To store the mod data
@@ -32,17 +32,17 @@ class MultiqcModule(BaseMultiqcModule):
         self.add_sections()
 
     def parse_v4_log_files(self):
-        for f in self.find_log_files('ccs/v4', filehandles=True):
-            data = parse_PacBio_log(f['f'])
+        for f in self.find_log_files("ccs/v4", filehandles=True):
+            data = parse_PacBio_log(f["f"])
             v5_data = self.convert_to_v5(data)
-            filename = f['s_name']
+            filename = f["s_name"]
             self.mod_data[filename] = v5_data
             self.add_data_source(f)
 
     def parse_v5_log_files(self):
-        for f in self.find_log_files('ccs/v5', filehandles=True):
-            v5_data = json.load(f['f'])
-            filename = f['s_name']
+        for f in self.find_log_files("ccs/v5", filehandles=True):
+            v5_data = json.load(f["f"])
+            filename = f["s_name"]
             self.mod_data[filename] = v5_data
             self.add_data_source(f)
 
@@ -51,7 +51,7 @@ class MultiqcModule(BaseMultiqcModule):
             raise UserWarning
 
     def write_data_files(self):
-        self.write_data_file(self.mod_data, 'multiqc_ccs_report')
+        self.write_data_file(self.mod_data, "multiqc_ccs_report")
 
     def add_sections(self):
 
@@ -67,9 +67,9 @@ class MultiqcModule(BaseMultiqcModule):
             d = dict()
             for reason in all_filters:
                 d[reason] = dict()
-                for attribute in data['attributes']:
-                    if attribute['name'] == reason:
-                        d[reason][filename] = attribute['value']
+                for attribute in data["attributes"]:
+                    if attribute["name"] == reason:
+                        d[reason][filename] = attribute["value"]
                         break
                 # If we didn't find it, set to zero
                 else:
@@ -78,36 +78,28 @@ class MultiqcModule(BaseMultiqcModule):
 
         # Plot configuration
         config = {
-                'id': 'ccs-filter-graph',
-                'title': 'CCS: ZMW results',
-                'ylab': 'Number of ZMWs',
-                'xlab': 'CCS report file',
-                'cpswitch': False,
-                'logswitch': True,
-                'stacking': None,
-                #'data_labels': [ filename for filename in self.mod_data]
-                'data_labels' : [
-                    {
-                        'name': filename,
-                        'cpswitch_counts_label': filename
-                    } for filename in self.mod_data
-                ]
+            "id": "ccs-filter-graph",
+            "title": "CCS: ZMW results",
+            "ylab": "Number of ZMWs",
+            "xlab": "CCS report file",
+            "cpswitch": False,
+            "logswitch": True,
+            "stacking": None,
+            #'data_labels': [ filename for filename in self.mod_data]
+            "data_labels": [{"name": filename, "cpswitch_counts_label": filename} for filename in self.mod_data],
         }
 
-        self.add_section (
-                name='ZMWs filtered and passed',
-                anchor='ccs-filter',
-                description=(
-                    'The number of ZMWs that failed or passed all '
-                    'filters for each of the subreads files.'
-                ),
-                helptext=(
-                    'The number of ZMWs that passed all filters is shown '
-                    'as **ZMWs generating CCS**. All other categories that '
-                    'are shown in the graph represent the number of ZMWs '
-                    'that were dropped for the specified reason.'
-                ),
-                plot=bargraph.plot(plot_data, [filename for filename in self.mod_data], config)
+        self.add_section(
+            name="ZMWs filtered and passed",
+            anchor="ccs-filter",
+            description=("The number of ZMWs that failed or passed all " "filters for each of the subreads files."),
+            helptext=(
+                "The number of ZMWs that passed all filters is shown "
+                "as **ZMWs generating CCS**. All other categories that "
+                "are shown in the graph represent the number of ZMWs "
+                "that were dropped for the specified reason."
+            ),
+            plot=bargraph.plot(plot_data, [filename for filename in self.mod_data], config),
         )
 
     def filter_and_pass(self, data):
@@ -115,12 +107,12 @@ class MultiqcModule(BaseMultiqcModule):
         reasons = dict()
 
         # We only have to use the attributes
-        attributes = data['attributes']
+        attributes = data["attributes"]
 
         # Add filtere reasons (id starts with filtered_) and total passed
         for entry in attributes:
-            if entry['id'].startswith('filtered') or entry['id'] == 'zmw_passed_yield':
-                reasons[entry['name']] = entry['value']
+            if entry["id"].startswith("filtered") or entry["id"] == "zmw_passed_yield":
+                reasons[entry["name"]] = entry["value"]
 
         return reasons
 
@@ -128,22 +120,22 @@ class MultiqcModule(BaseMultiqcModule):
         """ Convert the v4 format to the new CCS v5 json format """
         # Initialise the v5 format dictionary
         v5 = dict()
-        v5['id'] = 'ccs_processing'
+        v5["id"] = "ccs_processing"
         attributes = list()
-        v5['attributes'] = attributes
+        v5["attributes"] = attributes
 
         # Update names for top level entries, they have been changed in v5
-        data['ZMWs pass filters'] = data['ZMWs generating CCS']
-        data['ZMWs fail filters'] = data['ZMWs filtered']
+        data["ZMWs pass filters"] = data["ZMWs generating CCS"]
+        data["ZMWs fail filters"] = data["ZMWs filtered"]
 
         # Add the top level values to the attributes
-        for name in ('ZMWs input', 'ZMWs pass filters', 'ZMWs fail filters'):
-            count = data[name]['count']
+        for name in ("ZMWs input", "ZMWs pass filters", "ZMWs fail filters"):
+            count = data[name]["count"]
             attributes.append(self.make_v5_entry(name, count))
 
         # Add the reasons for filtering to the attributes
-        for reason in data['ZMWs filtered']['Exclusive ZMW counts']:
-            count = data['ZMWs filtered']['Exclusive ZMW counts'][reason]['count']
+        for reason in data["ZMWs filtered"]["Exclusive ZMW counts"]:
+            count = data["ZMWs filtered"]["Exclusive ZMW counts"][reason]["count"]
             attributes.append(self.make_v5_entry(reason, count))
 
         return v5
@@ -152,31 +144,27 @@ class MultiqcModule(BaseMultiqcModule):
         """ Make a v5 output entry based on name and count """
         # Dictionary to map the report names to the v5 id annotation
         name_to_id = {
-                'ZMWs input': 'zmw_input',
-                'ZMWs pass filters': 'zmw_passed_yield',
-                'ZMWs fail filters': 'zmw_filtered_yield',
-                'Below SNR threshold': 'filtered_poor_snr',
-                'Median length filter': 'filtered_median_length_filter',
-                'Lacking full passes': 'filtered_too_few_passes',
-                'Heteroduplex insertions': 'filtered_heteroduplexes',
-                'Coverage drops': 'filtered_coverage_drops',
-                'Insufficient draft cov': 'filtered_insufficient_draft_cov',
-                'Draft too different': 'filtered_draft_too_different',
-                'Draft generation error': 'filtered_draft_failure',
-                'Draft above --max-length': 'filtered_draft_too_long',
-                'Draft below --min-length': 'filtered_draft_too_short',
-                'Reads failed polishing': 'filtered_read_failed_polish',
-                'Empty coverage windows': 'filtered_empty_window_during_polishing',
-                'CCS did not converge': 'filtered_non_convergent',
-                'CCS below minimum RQ': 'filtered_below_rq',
-                'Unknown error': 'filtered_unknown_error'
+            "ZMWs input": "zmw_input",
+            "ZMWs pass filters": "zmw_passed_yield",
+            "ZMWs fail filters": "zmw_filtered_yield",
+            "Below SNR threshold": "filtered_poor_snr",
+            "Median length filter": "filtered_median_length_filter",
+            "Lacking full passes": "filtered_too_few_passes",
+            "Heteroduplex insertions": "filtered_heteroduplexes",
+            "Coverage drops": "filtered_coverage_drops",
+            "Insufficient draft cov": "filtered_insufficient_draft_cov",
+            "Draft too different": "filtered_draft_too_different",
+            "Draft generation error": "filtered_draft_failure",
+            "Draft above --max-length": "filtered_draft_too_long",
+            "Draft below --min-length": "filtered_draft_too_short",
+            "Reads failed polishing": "filtered_read_failed_polish",
+            "Empty coverage windows": "filtered_empty_window_during_polishing",
+            "CCS did not converge": "filtered_non_convergent",
+            "CCS below minimum RQ": "filtered_below_rq",
+            "Unknown error": "filtered_unknown_error",
         }
 
-        return {
-                'name': name,
-                'id': name_to_id[name],
-                'value': count
-                }
+        return {"name": name, "id": name_to_id[name], "value": count}
 
 
 def parse_PacBio_log(file_content):
@@ -190,14 +178,14 @@ def parse_PacBio_log(file_content):
 
     for line in file_content:
         # Get rid of trailing newlines
-        line = line.strip('\n')
+        line = line.strip("\n")
         # Did we enter a new section with annotations for an earlier result?
         # If so, we will only add an empty dictionary with the correct name
         # These field are of the format "something something for (A):"
-        section_header_pattern = ' for [(][A-Z][)][:]$'
+        section_header_pattern = " for [(][A-Z][)][:]$"
         if re.search(section_header_pattern, line):
             linedata = parse_line(line)
-            ann = linedata['annotation']
+            ann = linedata["annotation"]
             # Cut off the ' for (B):' part
             name = line[:-9]
             # We make a new heading with the current name under the data that
@@ -217,7 +205,7 @@ def parse_PacBio_log(file_content):
             continue
 
         # Lets get the name of the data
-        name = linedata.pop('name')
+        name = linedata.pop("name")
         # If we are in an annotated section, we add the data to the current
         # annotation
         if current_annotation is not None:
@@ -226,11 +214,12 @@ def parse_PacBio_log(file_content):
         # we find a corresponding section later on.
         # The data from the current line we add directly to the output data
         else:
-            annotation = linedata.pop('annotation')
+            annotation = linedata.pop("annotation")
             annotations[annotation] = linedata
             data[name] = linedata
 
     return data
+
 
 def parse_line(line):
     """ Parse a line from the ccs log file """
@@ -241,20 +230,20 @@ def parse_line(line):
         return data
 
     # Split the line on the colon character
-    key, values = line.strip().split(':')
+    key, values = line.strip().split(":")
 
     # The key can have multiple parts
     keys = key.strip().split()
 
     # Does the key have an annotation (A), (B) etc
-    if re.fullmatch('[(][A-Z][)]', keys[-1]):
+    if re.fullmatch("[(][A-Z][)]", keys[-1]):
         # We store the annotation without the bracets
-        data['annotation'] = keys[-1][1:-1]
+        data["annotation"] = keys[-1][1:-1]
         # And we add the rest of the key as name
-        data['name'] = ' '.join(keys[:-1])
+        data["name"] = " ".join(keys[:-1])
     # Otherwise, we just store the name
     else:
-        data['name'] = ' '.join(keys)
+        data["name"] = " ".join(keys)
 
     # Parsing the values
     values = values.strip().split()
@@ -266,11 +255,11 @@ def parse_line(line):
     if len(values) == 1:
         value = values.pop()
         # Is the value a percentage
-        if value.endswith('%'):
-            data['percentage'] = float(value[:-1])
+        if value.endswith("%"):
+            data["percentage"] = float(value[:-1])
         # Otherwise, it is an integer
         else:
-            data['count'] = int(value)
+            data["count"] = int(value)
     elif len(values) == 2:
         # If there are multiple values, they are in the format
         # count (percentage%)
@@ -282,14 +271,14 @@ def parse_line(line):
         # So we can remove the bracets first
         percentage = percentage[1:-1]
         # Then we make sure it is one of the supported patterns
-        assert re.fullmatch(r'(\d+\.\d+%|\d+%|-nan%)', percentage)
+        assert re.fullmatch(r"(\d+\.\d+%|\d+%|-nan%)", percentage)
 
         # If the percentage is this weird nan, set it to 0
-        if percentage == '-nan%':
-            data['percentage'] = 0.0
+        if percentage == "-nan%":
+            data["percentage"] = 0.0
         else:  # Otherwise, we cut of the % sign and convert to float
-            data['percentage'] = float(percentage[:-1])
+            data["percentage"] = float(percentage[:-1])
         # Add the count as an integer
-        data['count'] = int(count)
+        data["count"] = int(count)
 
     return data
