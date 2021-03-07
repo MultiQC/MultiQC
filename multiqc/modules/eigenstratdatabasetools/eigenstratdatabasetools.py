@@ -22,10 +22,9 @@ class MultiqcModule(BaseMultiqcModule):
         # Initialise the parent object
         super(MultiqcModule, self).__init__(
             name="eigenstratdatabasetools",
-            anchor="eigenstrat_snp_coverage",
+            anchor="eigenstrat",
             href="https://github.com/TCLamnidis/EigenStratDatabaseTools",
-            info="""A set of tools to compare and manipulate the contents of EingenStrat 
-        databases, and to calculate SNP coverage statistics in such databases. """,
+            info="A set of tools to compare and manipulate the contents of EingenStrat databases, and to calculate SNP coverage statistics in such databases.",
         )
 
         # Find and load any DeDup reports
@@ -41,6 +40,8 @@ class MultiqcModule(BaseMultiqcModule):
         # Return if no samples found
         if len(self.snp_cov_data) == 0:
             raise UserWarning
+
+        log.info("Found {} reports".format(len(self.snp_cov_data)))
 
         # Save data output file
         self.write_data_file(self.snp_cov_data, "multiqc_snp_cov_metrics")
@@ -80,19 +81,19 @@ class MultiqcModule(BaseMultiqcModule):
 
         headers = OrderedDict()
         headers["Covered_Snps"] = {
-            "title": "#SNPs Covered",
+            "title": "Covered SNPs",
             "description": "The number of SNPs for which a genotype has been called.",
             "scale": "PuBuGn",
             "format": "{:,.0f}",
-            "min": 0,
+            "shared_key": "snp_call",
         }
         headers["Total_Snps"] = {
-            "title": "#SNPs Total",
+            "title": "Total SNPs",
             "description": "The total number of SNPs in the genotype dataset.",
-            "scale": False,
+            "scale": "PuBuGn",
             "format": "{:,.0f}",
             "hidden": True,
-            "min": 0,
+            "shared_key": "snp_call",
         }
 
         self.general_stats_addcols(self.snp_cov_data, headers)
