@@ -102,7 +102,7 @@ def parse_reports(self):
                 pdata[s_name]["aligned_reads"] = self.picard_alignment_metrics[s_name]["PF_READS_ALIGNED"]
             pdata[s_name]["unaligned_reads"] = pdata[s_name]["total_reads"] - pdata[s_name]["aligned_reads"]
 
-        keys = [OrderedDict(), OrderedDict(), OrderedDict()]
+        keys = [OrderedDict(), OrderedDict()]
         keys[0]["aligned_reads"] = {"name": "Aligned Reads"}
         keys[0]["unaligned_reads"] = {"name": "Unaligned Reads"}
         keys[1]["PF_ALIGNED_BASES"] = {"name": "Aligned Bases"}
@@ -147,6 +147,7 @@ def parse_reports(self):
         self.add_section(
             name="Mean read length",
             anchor="picard_alignment_readlength",
+            description="The mean read length of the set of reads examined.",
             plot=bargraph.plot(self.picard_alignment_metrics, keys, pconfig),
         )
 
