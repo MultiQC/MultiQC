@@ -5,10 +5,9 @@
 from __future__ import print_function
 from collections import OrderedDict
 import logging
-import re
 
-from multiqc import config
 from multiqc.modules.base_module import BaseMultiqcModule
+from multiqc.plots import bargraph
 
 # Initialise the logger
 log = logging.getLogger(__name__)
@@ -58,6 +57,9 @@ class MultiqcModule(BaseMultiqcModule):
 
         # Create OptiType overview table
         self.addSummaryMetrics()
+
+        # Create bar graph of subtype sample counts
+        self.summary_barplot()
 
     def addSummaryMetrics(self):
         """ Take the parsed entries from OptiType and add them to the main plot """
@@ -111,3 +113,30 @@ class MultiqcModule(BaseMultiqcModule):
             "hidden": True,
         }
         self.general_stats_addcols(self.optitype_data, headers)
+
+    def summary_barplot(self):
+        """ Make a bar plot showing the number of samples in each subtype """
+
+        subtypes = ["A1", "A2", "B1", "B2", "C1", "C2"]
+        data = {st: {} for st in subtypes}
+        for s_data in self.optitype_data.values():
+            for st in subtypes:
+                if s_data[st] not in data[st]:
+                    data[st][s_data[st]] = 0
+                data[st][s_data[st]] += 1
+
+        pconfig = {
+            "id": "optitype_summary_plot",
+            "title": "Optitype: Summary of subtypes",
+            "cpswitch": False,
+            "ylab": "# Samples",
+            "yDecimals": False,
+            "use_legend": False,
+        }
+
+        self.add_section(
+            name="Summary of subtype usage",
+            description="Number of samples assigned to each subtype.",
+            anchor="optitype_summary",
+            plot=bargraph.plot(data, pconfig=pconfig),
+        )
