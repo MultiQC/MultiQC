@@ -106,27 +106,15 @@ def parse_reports(self):
         read_data_keys["aligned_reads"] = {"name": "Aligned Reads"}
         read_data_keys["unaligned_reads"] = {"name": "Unaligned Reads"}
 
-        # Make the bar plot of alignment basepair counts
-        basepair_data = dict()
-        for s_name in self.picard_alignment_metrics.keys():
-            basepair_data[s_name] = dict()
-            basepair_data[s_name]["aligned_bases"] = self.picard_alignment_metrics[s_name]["PF_ALIGNED_BASES"]
-        basepair_data_keys = OrderedDict()
-        basepair_data_keys["aligned_bases"] = {"name": "Aligned Bases"}
-
-        # Make the bar plot of read length
-        readlength_data = dict()
-        for s_name in self.picard_alignment_metrics.keys():
-            readlength_data[s_name] = dict()
-            readlength_data[s_name]["read_length"] = self.picard_alignment_metrics[s_name]["MEAN_READ_LENGTH"]
-        readlength_data_keys = OrderedDict()
-        readlength_data_keys["read_length"] = {"name": "Mean Read Length"}
+        # Categories used for basepair and read length bar plots
+        basepair_data_keys = {"PF_ALIGNED_BASES": {"name": "Aligned Bases"}}
+        readlength_data_keys = {"MEAN_READ_LENGTH": {"name": "Mean Read Length"}}
 
         # Config for the plot
         pconfig = {
             "id": "picard_alignment_summary",
             "title": "Picard: Alignment Summary",
-            "ylab": None,
+            "ylab": "# Reads",
             "data_labels": [
                 {
                     "name": "Aligned Reads",
@@ -140,14 +128,14 @@ def parse_reports(self):
                 },
                 {
                     "name": "Mean Read Length",
-                    "ylab": "# Bases",
+                    "ylab": "Base pairs",
                     "cpswitch_counts_label": "Mean Size of Reads",
                 },
             ],
         }
 
         # The different data sets we want to plot
-        pdata = [read_data, basepair_data, readlength_data]
+        pdata = [read_data, self.picard_alignment_metrics, self.picard_alignment_metrics]
         keys = [read_data_keys, basepair_data_keys, readlength_data_keys]
         self.add_section(
             name="Alignment Summary",
