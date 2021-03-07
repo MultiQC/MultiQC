@@ -8,6 +8,7 @@ jobs:
     strategy:
       matrix:
         python-version: [3.6, 3.7, 3.8]
+    timeout-minutes: 10
 
     steps:
       # Check out MultiQC code
