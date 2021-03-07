@@ -57,17 +57,20 @@ class MultiqcModule(BaseMultiqcModule):
             "d": r"# d = (\d+)",
         }
         s_name = f["s_name"]
-        parsed_data = dict()
-        for l in f["f"]:
-            for k, r in regexes.items():
-                match = re.search(r, l)
-                if match:
-                    if k == "name":
-                        s_name = self.clean_s_name(match.group(1).strip(), f["root"])
-                    else:
-                        parsed_data[k] = float(match.group(1).strip())
-            if not l.startswith("#") and l.strip():
-                break
+        parsed_data = {"peak_count": 0}
+        for line in f["f"]:
+            line = line.strip()
+            if line.startswith("#"):
+                for k, r in regexes.items():
+                    match = re.search(r, line)
+                    if match:
+                        if k == "name":
+                            s_name = self.clean_s_name(match.group(1).strip(), f["root"])
+                        else:
+                            parsed_data[k] = float(match.group(1).strip())
+            elif len(line) > 0 and "start" not in line:
+                parsed_data["peak_count"] += 1
+
         if len(parsed_data) > 0:
             if s_name in self.macs_data:
                 log.debug("Duplicate sample name found! Overwriting: {}".format(s_name))
@@ -92,6 +95,12 @@ class MultiqcModule(BaseMultiqcModule):
             "min": 0,
             "format": "{:,.2f}",
             "scale": "RdYlBu-rev",
+        }
+        headers["peak_count"] = {
+            "title": "Number of Peaks",
+            "description": "Total number of peaks",
+            "min": 0,
+            "format": "{:,.0f}",
         }
         self.general_stats_addcols(self.macs_data, headers)
 
