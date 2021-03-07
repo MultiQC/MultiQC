@@ -2,10 +2,13 @@
 
 ## MultiQC v1.10dev
 
-### Major change: Code linting
+### Update for developers: Code linting
 
 This is a big change for MultiQC developers. I have added automated code formatting and code linting
-(style checks) to MultiQC. Specifically, MultiQC now uses three main tools:
+(style checks) to MultiQC. This helps to keep the MultiQC code base consistent despite having many
+contributors and helps me to review pull-requests without having to consider whitespace.
+
+Specifically, MultiQC now uses three main tools:
 
 - [Black](https://github.com/psf/black) - Python Code
 - [Prettier](https://prettier.io/) - Everything else (almost)
@@ -32,6 +35,7 @@ For further information, please see the [documentation](https://multiqc.info/doc
     allowes module developers to format table cell values as labels.
 - New CI test looks for git merge markers in files
 - Beautiful new [progress bar](https://rich.readthedocs.io/en/stable/progress.html) from the amazing [willmcgugan/rich](https://github.com/willmcgugan/rich) package.
+- Added a bunch of new default sample name trimming suffixes ([see `8ac5c7b`](https://github.com/ewels/MultiQC/commit/8ac5c7b6e4ea6003ca2c9b681953ab3f22c5dd66))
 
 #### New Modules
 
@@ -70,13 +74,18 @@ For further information, please see the [documentation](https://multiqc.info/doc
   - Updated module to plot both SNP and INDEL stats ([#1241](https://github.com/ewels/MultiQC/issues/1241))
 - **indexcov**
   - Fixed bug when making the PED file plots ([#1265](https://github.com/ewels/MultiQC/issues/1265))
+- **interop**
+  - Added the `% Occupied` metric to `Read Metrics per Lane` table which is reported for NovaSeq and iSeq platforms.
 - **Kaiju**
   - Fixed bug affecting inputs with taxa levels other than Phylum ([#1217](https://github.com/ewels/MultiQC/issues/1217))
   - Rework barplot, add top 5 taxons ([#1219](https://github.com/ewels/MultiQC/issues/1219))
 - **Kraken**
   - Fix `ZeroDivisionError` ([#1276](https://github.com/ewels/MultiQC/issues/1276))
+  - Add distinct minimizer heatmap for KrakenUniq style duplication information ([#1333](https://github.com/ewels/MultiQC/pull/1380))
 - **MALT**
   - Fix y-axis labelling in bargraphs
+- **MACS2**
+  - Add number of peaks to the _General Statistics_ table.
 - **mosdepth**
   - Enable prepending of directory to sample names
   - Display contig names in _Coverage per contig_ plot tooltip

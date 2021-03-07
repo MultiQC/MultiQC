@@ -135,13 +135,14 @@ config = {
 ### Switching datasets
 
 It's possible to have single plot with buttons to switch between different
-datasets. To do this, give a list of data objects (same formats as described
-above). Also add the following config options to supply names to the buttons:
+datasets. To do this, give a list of data objects to the `plot` function
+and specify the `data_labels` config option with the text to be used for the buttons:
 
 ```python
 config = {
     'data_labels': ['Reads', 'Bases']
 }
+html_content = bargraph.plot([data1, data2], pconfig=config)
 ```
 
 You can also customise the y-axis label and min/max values for each dataset:
@@ -180,7 +181,10 @@ cats[0]['aligned_reads'] =        {'name': 'Aligned Reads',        'color': '#8b
 cats[0]['unaligned_reads'] =      {'name': 'Unaligned Reads',      'color': '#f7a35c'}
 cats[1]['aligned_base_pairs'] =   {'name': 'Aligned Base Pairs',   'color': '#8bbc21'}
 cats[1]['unaligned_base_pairs'] = {'name': 'Unaligned Base Pairs', 'color': '#f7a35c'}
+html_content = bargraph.plot([data, data], cats, config)
 ```
+
+Note that, as in this example, the plot data can be the same dictionary supplied twice.
 
 ### Interactive / Flat image plots
 
