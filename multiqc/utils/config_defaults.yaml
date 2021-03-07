@@ -661,8 +661,12 @@ module_order:
       module_tag:
         - DNA
         - RNA
-
   - seqyclean:
       module_tag:
         - DNA
         - RNA
+  - optitype:
+      module_tag:
+        - DNA
+        - RNA
+        - HLATyping

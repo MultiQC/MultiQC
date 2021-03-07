@@ -48,6 +48,8 @@ For further information, please see the [documentation](https://multiqc.info/doc
   - Computes statistics on genome annotation.
 - [**ngsderive**](https://github.com/stjudecloud/ngsderive)
   - Forensic analysis tool useful in backwards computing information from next-generation sequencing data.
+- [**OptiType**](https://github.com/FRED-2/OptiType)
+  - Precision HLA typing from next-generation sequencing data
 - [**PURPLE**](https://github.com/hartwigmedical/hmftools/tree/master/purity-ploidy-estimator)
   - A purity, ploidy and copy number estimator for whole genome tumor data
 - [**Pychopper**](https://github.com/nanoporetech/pychopper)
