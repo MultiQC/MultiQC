@@ -260,11 +260,12 @@ def get_filelist(run_module_names):
         "[dim]{task.fields[s_fn]}",
     )
     with progress_obj as progress:
-        mqc_task = progress.add_task("Searching", total=len(searchfiles), s_fn="NA")
+        mqc_task = progress.add_task("Searching", total=len(searchfiles), s_fn="")
         for sf in searchfiles:
             progress.update(mqc_task, advance=1, s_fn=os.path.join(sf[1], sf[0])[-50:])
             if not add_file(sf[0], sf[1]):
                 file_search_stats["skipped_no_match"] += 1
+        progress.update(mqc_task, s_fn="")
 
     runtimes["total_sp"] = time.time() - total_sp_starttime
 
