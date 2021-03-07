@@ -13,15 +13,19 @@ from multiqc.modules.base_module import BaseMultiqcModule
 # Initialise the logger
 log = logging.getLogger(__name__)
 
+
 class MultiqcModule(BaseMultiqcModule):
     def __init__(self):
-        super(MultiqcModule, self).__init__(name='goleft indexcov', anchor='goleft_indexcov',
-                                            href='https://github.com/brentp/goleft/tree/master/indexcov',
-                                            info="quickly estimates coverage from a whole-genome bam index.")
+        super(MultiqcModule, self).__init__(
+            name="goleft indexcov",
+            anchor="goleft_indexcov",
+            href="https://github.com/brentp/goleft/tree/master/indexcov",
+            info="quickly estimates coverage from a whole-genome bam index.",
+        )
 
         # Parse ROC data
         self.roc_plot_data = collections.defaultdict(lambda: collections.defaultdict(dict))
-        for f in self.find_log_files('goleft_indexcov/roc', filehandles=True):
+        for f in self.find_log_files("goleft_indexcov/roc", filehandles=True):
             self.parse_roc_plot_data(f)
         # Filter to strip out ignored sample names
         num_roc_samples = 0
@@ -31,7 +35,7 @@ class MultiqcModule(BaseMultiqcModule):
 
         # Parse BIN data
         self.bin_plot_data = {}
-        for f in self.find_log_files('goleft_indexcov/ped', filehandles=True):
+        for f in self.find_log_files("goleft_indexcov/ped", filehandles=True):
             self.parse_bin_plot_data(f)
         # Filter to strip out ignored sample names
         self.bin_plot_data = self.ignore_samples(self.bin_plot_data)
@@ -71,9 +75,9 @@ class MultiqcModule(BaseMultiqcModule):
 
     def parse_roc_plot_data(self, f):
 
-        header = f['f'].readline()
+        header = f["f"].readline()
         sample_names = [self.clean_s_name(x, f["root"]) for x in header.strip().split()[2:]]
-        for parts in (l.rstrip().split() for l in f['f']):
+        for parts in (l.rstrip().split() for l in f["f"]):
             if len(parts) > 2:
                 chrom, cov = parts[:2]
                 sample_vals = parts[2:]
@@ -83,67 +87,69 @@ class MultiqcModule(BaseMultiqcModule):
                             self.roc_plot_data[chrom][sample][float(cov)] = float(val)
 
     def roc_plot(self):
-
         def to_padded_str(x):
             x = self._short_chrom(x)
             try:
                 return "%06d" % x
             except TypeError:
                 return x
+
         chroms = sorted(self.roc_plot_data.keys(), key=to_padded_str)
 
-        max_chroms = getattr(config, 'goleft_indexcov_config', {}).get('max_chroms', 50)
+        max_chroms = getattr(config, "goleft_indexcov_config", {}).get("max_chroms", 50)
         if len(chroms) > max_chroms:
             log.warning("Too many chromosomes found: %s, limiting to %s" % (len(chroms), max_chroms))
             chroms = chroms[:max_chroms]
 
         pconfig = {
-            'id': 'goleft_indexcov-roc-plot',
-            'title': 'goleft indexcov: ROC - genome coverage per scaled depth by chromosome',
-            'xlab': 'Scaled coverage',
-            'ylab': 'Proportion of regions covered',
-            'ymin': 0, 'ymax': 1.0,
-            'xmin': 0, 'xmax': 1.5,
-            'data_labels': [{"name": self._short_chrom(c)} for c in chroms]
+            "id": "goleft_indexcov-roc-plot",
+            "title": "goleft indexcov: ROC - genome coverage per scaled depth by chromosome",
+            "xlab": "Scaled coverage",
+            "ylab": "Proportion of regions covered",
+            "ymin": 0,
+            "ymax": 1.0,
+            "xmin": 0,
+            "xmax": 1.5,
+            "data_labels": [{"name": self._short_chrom(c)} for c in chroms],
         }
-        self.add_section (
-            name = 'Scaled coverage ROC plot',
-            anchor = 'goleft_indexcov-roc',
-            description = 'Coverage (ROC) plot that shows genome coverage at at given (scaled) depth.',
-            helptext = '''
+        self.add_section(
+            name="Scaled coverage ROC plot",
+            anchor="goleft_indexcov-roc",
+            description="Coverage (ROC) plot that shows genome coverage at at given (scaled) depth.",
+            helptext="""
                 Lower coverage samples have shorter curves where the proportion of regions covered
                 drops off more quickly. This indicates a higher fraction of low coverage regions.
-            ''',
-            plot = linegraph.plot([self.roc_plot_data[c] for c in chroms], pconfig)
+            """,
+            plot=linegraph.plot([self.roc_plot_data[c] for c in chroms], pconfig),
         )
 
     def parse_bin_plot_data(self, f):
-        header = f['f'].readline()[1:].strip().split("\t")
-        for sample_parts in (l.split("\t") for l in f['f']):
+        header = f["f"].readline()[1:].strip().split("\t")
+        for sample_parts in (l.split("\t") for l in f["f"]):
             cur = dict(zip(header, sample_parts))
             cur["sample_id"] = self.clean_s_name(cur["sample_id"], f["root"])
             total = float(cur["bins.in"]) + float(cur["bins.out"])
             self.bin_plot_data[cur["sample_id"]] = {
                 "x": float(cur["bins.lo"]) / total,
-                "y": float(cur["bins.out"]) / total
+                "y": float(cur["bins.out"]) / total,
             }
 
     def bin_plot(self):
         pconfig = {
-            'id': 'goleft_indexcov-bin-plot',
-            'title': 'goleft indexcov: Problematic low and non-uniform coverage bins',
-            'xlab': 'Proportion of bins with depth < 0.15',
-            'ylab': 'Proportion of bins with depth outside of (0.85, 1.15)',
-            'yCeiling': 1.0,
-            'yFloor': 0.0,
-            'xCeiling': 1.0,
-            'xFloor': 0.0
+            "id": "goleft_indexcov-bin-plot",
+            "title": "goleft indexcov: Problematic low and non-uniform coverage bins",
+            "xlab": "Proportion of bins with depth < 0.15",
+            "ylab": "Proportion of bins with depth outside of (0.85, 1.15)",
+            "yCeiling": 1.0,
+            "yFloor": 0.0,
+            "xCeiling": 1.0,
+            "xFloor": 0.0,
         }
-        self.add_section (
-            name = 'Problem coverage bins',
-            anchor = 'goleft_indexcov-bin',
-            description = 'This plot identifies problematic samples using binned coverage distributions.',
-            helptext = '''
+        self.add_section(
+            name="Problem coverage bins",
+            anchor="goleft_indexcov-bin",
+            description="This plot identifies problematic samples using binned coverage distributions.",
+            helptext="""
                 We expect bins to be around 1, so deviations from this indicate problems.
                 Low coverage bins (`< 0.15`) on the x-axis have regions with low or missing coverage.
                 Higher values indicate truncated BAM files or missing data.
@@ -151,6 +157,6 @@ class MultiqcModule(BaseMultiqcModule):
                 Large values on the y-axis are likely to impact CNV and structural variant calling.
                 See the [goleft indexcov bin documentation](https://github.com/brentp/goleft/blob/master/docs/indexcov/help-bin.md)
                 for more details.
-            ''',
-            plot = scatter.plot(self.bin_plot_data, pconfig)
+            """,
+            plot=scatter.plot(self.bin_plot_data, pconfig),
         )

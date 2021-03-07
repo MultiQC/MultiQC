@@ -1,4 +1,5 @@
 # Release checklist
+
 This checklist is for my own reference, as I forget the steps every time.
 
 1. Check that everything is up to date and ready to go
@@ -6,30 +7,30 @@ This checklist is for my own reference, as I forget the steps every time.
 3. Update version numbers in code: `setup.py`, `CHANGELOG.md`
 4. Link the changelog subheading to the as yet non-existant release URL. Add date.
 5. Install the package again in `install` mode:
-    ```bash
-    pip install .
-    ```
-    * This removes the commit hash from the version number when MultiQC runs
+   ```bash
+   pip install .
+   ```
+   - This removes the commit hash from the version number when MultiQC runs
 6. Run using test data
-    * Check for any command line or javascript errors
-    * Check version numbers are printed correctly
+   - Check for any command line or javascript errors
+   - Check version numbers are printed correctly
 7. Create new demo reports for the website
-    * Comment out any config in `~/.multiqc_config.yaml`
-    * Spot any previously unnoticed bugs and fix
-    * Upload to the website and push change to Git
+   - Comment out any config in `~/.multiqc_config.yaml`
+   - Spot any previously unnoticed bugs and fix
+   - Upload to the website and push change to Git
 8. Release on PyPI:
-    ```bash
-    rm -rf dist/
-    python setup.py sdist bdist_wheel
-    twine upload dist/*.tar.gz
-    ```
+   ```bash
+   rm -rf dist/
+   python setup.py sdist bdist_wheel
+   twine upload dist/*.tar.gz
+   ```
 9. Test that it pip installs:
-    ```bash
-    conda create --name testing --yes python pip && conda activate testing
-    pip install multiqc
-    multiqc .
-    conda deactivate && conda remove --name testing --all --yes && conda clean --all --yes
-    ```
+   ```bash
+   conda create --name testing --yes python pip && conda activate testing
+   pip install multiqc
+   multiqc .
+   conda deactivate && conda remove --name testing --all --yes && conda clean --all --yes
+   ```
 10. Commit and push version updates
 11. Make a [release](https://github.com/ewels/MultiQC/releases) on GitHub - paste changelog section.
 12. Check that [PyPI listing page](https://pypi.python.org/pypi/multiqc/) looks sane

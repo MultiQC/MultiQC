@@ -21,13 +21,14 @@ Supported commands:
 - `InsertSizeMetrics`
 - `MarkDuplicates`
 - `OxoGMetrics`
-- `RnaSeqMetrics`
-- `RrbsSummaryMetrics`
 - `QualityByCycleMetrics`
 - `QualityScoreDistributionMetrics`
 - `QualityYieldMetrics`
+- `RnaSeqMetrics`
+- `RrbsSummaryMetrics`
 - `ValidateSamFile`
 - `VariantCallingMetrics`
+- `WgsMetrics`
 
 #### Coverage Levels
 
@@ -138,3 +139,45 @@ sp:
   picard/sam_file_validation:
     fn: "*[Vv]alidate[Ss]am[Ff]ile*"
 ```
+
+#### WgsMetrics
+
+The coverage histogram from Picard typically shows a normal distribution with a very long tail.
+To make the plot easier to view, by default the module plots the line up to 99% of the data.
+This typically removes the long tail and gives a more useful graph.
+
+If you would like, you can set a specific value for the maximum coverage to cut the graph at.
+By setting this to a very large value, you will disable the cutting (the graph will automatically
+limit the axis at the maximum data point). You can do this as follows:
+
+```yaml
+picard_config:
+  wgsmetrics_histogram_max_cov: 500
+```
+
+If running with very high coverage samples or using the Picard `CAP_COVERAGE` option,
+the coverage histogram can become very large indeed. For eaxmple, if reporting coverages of 1 million,
+it will have 1 million data points per sample. That can crash the browser and take a long time to run.
+
+There are two customisation MultiQC options to help with this.
+Firstly, MultiQC will automatically "smooth" the histogram to a maximum of `1000` data points by binning.
+This should stop the browser from crashing. You can tweak how many bins are used with the following:
+
+```yaml
+picard_config:
+  wgsmetrics_histogram_smooth: 1000
+```
+
+Change `1000` to whatever number you want. If you don't want any smoothing, set it to a very high number
+bigger than the number of data points you have.
+
+Secondly, if you would prefer to instead simply skip the histogram, you can set the following:
+
+```yaml
+picard_config:
+  wgsmetrics_skip_histogram: True
+```
+
+This will omit that section from the report entirely, and also skip parsing the histogram data.
+By specifying this option you may speed up the run time for MultiQC with these types of files
+significantly.
