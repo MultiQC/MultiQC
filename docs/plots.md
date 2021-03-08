@@ -543,6 +543,26 @@ headers[tablecol] = {
 }
 ```
 
+### Zero centrepoints
+
+If you set the header config `bars_zero_centrepoint` to `True`, the background bars
+will use the absolute values to calculate bar width. So a value of `0` will have a bar
+width of `0`, `20` a width of `20` and `-30` a width of `30`.
+
+This works well with a divergent colour-scheme as the bar width shows the magnitude
+of the value properly, whilst the colour scheme shows the difference between positive
+and negative values.
+
+For example:
+
+```python
+headers[tablecol] = {
+    "title": "My table column",
+    "scale": "RdYlGn",
+    "bars_zero_centrepoint": True,
+}
+```
+
 ### Conditional formatting of data values
 
 MultiQC has configuration options to allow users to configure _"conditional formatting"_,

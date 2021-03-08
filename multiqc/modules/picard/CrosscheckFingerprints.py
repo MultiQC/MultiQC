@@ -231,6 +231,7 @@ def _get_table_headers(data):
         if h.startswith("LOD"):
             headers[h]["scale"] = "RdYlGn"
             headers[h]["shared_key"] = "LOD"
+            headers[h]["bars_zero_centrepoint"] = True
 
         if h in crosscheckfingerprints_table_cols_hidden:
             headers[h]["hidden"] = True

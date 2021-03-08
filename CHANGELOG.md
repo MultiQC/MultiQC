@@ -37,6 +37,7 @@ For further information, please see the [documentation](https://multiqc.info/doc
 - Beautiful new [progress bar](https://rich.readthedocs.io/en/stable/progress.html) from the amazing [willmcgugan/rich](https://github.com/willmcgugan/rich) package.
 - Added a bunch of new default sample name trimming suffixes ([see `8ac5c7b`](https://github.com/ewels/MultiQC/commit/8ac5c7b6e4ea6003ca2c9b681953ab3f22c5dd66))
 - Added `timeout-minutes: 10` to the CI test workflow to check that changes aren't negatively affecting run time too much.
+- New table header option `bars_zero_centrepoint` to treat `0` as zero width bars and plot bar length based on absolute values
 
 #### New Modules
 
