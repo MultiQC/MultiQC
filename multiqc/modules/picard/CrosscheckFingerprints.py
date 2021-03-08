@@ -52,9 +52,7 @@ def parse_reports(self):
         (tumor_awareness, lod_threshold) = _parse_cli(comments[1])
         for i, row in enumerate(reader):
             # Check if this row contains samples that should be ignored
-            if self.is_ignore_sample(row["LEFT_SAMPLE"]) or self.is_ignore_sample(
-                row["RIGHT_SAMPLE"]
-            ):
+            if self.is_ignore_sample(row["LEFT_SAMPLE"]) or self.is_ignore_sample(row["RIGHT_SAMPLE"]):
                 continue
 
             # Clean the sammple names
@@ -73,16 +71,13 @@ def parse_reports(self):
         # For each sample, flag if any comparisons that don't start with "Expected"
         # A sample that does not have all "Expected" will show as `False` and be Red
         general_stats_data = _create_general_stats_data(self.picard_CrosscheckFingerprints_data)
-        self.general_stats_addcols(
-            general_stats_data,
-            {
-                "Crosschecks All Expected": {
-                    "title": "Crosschecks All Expected",
-                    "description": "All results for samples CrosscheckFingerprints were as expected.",
-                    "scale": "RdYlGn",
-                }
-            },
-        )
+        general_stats_headers = {
+            "Crosschecks All Expected": {
+                "title": "Crosschecks",
+                "description": "All results for samples CrosscheckFingerprints were as expected.",
+            }
+        }
+        self.general_stats_addcols(general_stats_data, general_stats_headers)
 
         # Add a table section to the report
         self.add_section(
@@ -95,6 +90,14 @@ def parse_reports(self):
             plot=table.plot(
                 self.picard_CrosscheckFingerprints_data,
                 _get_table_headers(self.picard_CrosscheckFingerprints_data),
+                {
+                    "namespace": "Picard",
+                    "id": "picard_crosscheckfingerprints_table",
+                    "table_title": "Picard: Crosscheck Fingerprints",
+                    "save_file": True,
+                    "col1_header": "ID",
+                    "no_beeswarm": True,
+                },
             ),
         )
 
@@ -140,32 +143,34 @@ def _parse_cli(line):
 def _get_table_headers(data):
     """ Create the headers config """
 
-    picard_config = getattr(config, "picard_config", {})
-    crosscheckfingerprints_table_cols = picard_config.get("CrosscheckFingerprints_table_cols")
-    crosscheckfingerprints_table_cols_hidden = picard_config.get(
-        "CrosscheckFingerprints_table_cols_hidden"
-    )
+    crosscheckfingerprints_table_cols = [
+        "RESULT",
+        "DATA_TYPE",
+        "LOD_THRESHOLD",
+        "LOD_SCORE",
+    ]
+    crosscheckfingerprints_table_cols_hidden = [
+        "LEFT_RUN_BARCODE",
+        "LEFT_LANE",
+        "LEFT_MOLECULAR_BARCODE_SEQUENCE",
+        "LEFT_LIBRARY",
+        "LEFT_FILE",
+        "RIGHT_RUN_BARCODE",
+        "RIGHT_LANE",
+        "RIGHT_MOLECULAR_BARCODE_SEQUENCE",
+        "RIGHT_LIBRARY",
+        "RIGHT_FILE",
+        "DATA_TYPE",
+    ]
 
-    if not crosscheckfingerprints_table_cols:
-        crosscheckfingerprints_table_cols = [
-            "RESULT",
-            "DATA_TYPE",
-            "LOD_THRESHOLD",
-            "LOD_SCORE",
-        ]
-    if not crosscheckfingerprints_table_cols_hidden:
-        crosscheckfingerprints_table_cols_hidden = [
-            "LEFT_RUN_BARCODE",
-            "LEFT_LANE",
-            "LEFT_MOLECULAR_BARCODE_SEQUENCE",
-            "LEFT_LIBRARY",
-            "LEFT_FILE",
-            "RIGHT_RUN_BARCODE",
-            "RIGHT_LANE",
-            "RIGHT_MOLECULAR_BARCODE_SEQUENCE",
-            "RIGHT_LIBRARY",
-            "RIGHT_FILE",
-        ]
+    # Allow customisation from the MultiQC config
+    picard_config = getattr(config, "picard_config", {})
+    crosscheckfingerprints_table_cols = picard_config.get(
+        "CrosscheckFingerprints_table_cols", crosscheckfingerprints_table_cols
+    )
+    crosscheckfingerprints_table_cols_hidden = picard_config.get(
+        "CrosscheckFingerprints_table_cols_hidden", crosscheckfingerprints_table_cols_hidden
+    )
 
     # Add the Tumor/Normal LOD scores if any pair had the tumor_awareness flag set
     if any(row["TUMOR_AWARENESS"] for row in data.values()):
@@ -181,8 +186,7 @@ def _get_table_headers(data):
 
     # Add Left and Right Sample names / groups, keeping it as minimal as possible
     sample_group_are_same = (
-        lambda x: x["LEFT_SAMPLE"] == x["LEFT_GROUP_VALUE"]
-        and x["RIGHT_SAMPLE"] == x["RIGHT_GROUP_VALUE"]
+        lambda x: x["LEFT_SAMPLE"] == x["LEFT_GROUP_VALUE"] and x["RIGHT_SAMPLE"] == x["RIGHT_GROUP_VALUE"]
     )
 
     if all(sample_group_are_same(values) for values in data.values()):
@@ -206,20 +210,27 @@ def _get_table_headers(data):
             continue
 
         # Set up the configuration for the column
-        h_title = h.replace("_", " ").strip().lower().capitalize()
+        h_title = h.replace("_", " ").strip().lower().capitalize().replace("Lod", "LOD")
         headers[h] = {
             "title": h_title,
             "description": FIELD_DESCRIPTIONS.get(h),
             "namespace": "CrosscheckFingerprints",
+            "scale": False,
         }
 
         # Rename Result to be a longer string so the table formats more nicely
         if h == "RESULT":
             headers[h]["title"] = "Categorical Result"
+            headers[h]["cond_formatting_rules"] = {
+                "pass": [{"s_contains": "EXPECTED_"}],
+                "warn": [{"s_eq": "AMBIGUOUS"}],
+                "fail": [{"s_contains": "UNEXPECTED_"}],
+            }
 
         # Add appropriate colors for LOD scores
         if h.startswith("LOD"):
-            headers[h]["scale"] = False
+            headers[h]["scale"] = "RdYlGn"
+            headers[h]["shared_key"] = "LOD"
 
         if h in crosscheckfingerprints_table_cols_hidden:
             headers[h]["hidden"] = True
@@ -236,11 +247,7 @@ def _create_general_stats_data(in_data):
     sorted_by_left_sample = sorted(flattened, key=lambda r: r["LEFT_SAMPLE"])
 
     for group, values in groupby(sorted_by_left_sample, key=lambda r: r["LEFT_SAMPLE"]):
-        out_data[group] = {
-            # NB: Must coerce bool to str or else plot.table turns it into a float
-            "Crosschecks All Expected": str(
-                all(v["RESULT"].startswith("EXPECTED") for v in values)
-            )
-        }
+        passfail = "Pass" if all(v["RESULT"].startswith("EXPECTED") for v in values) else "Fail"
+        out_data[group] = {"Crosschecks All Expected": passfail}
 
     return out_data
