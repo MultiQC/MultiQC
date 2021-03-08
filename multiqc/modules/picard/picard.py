@@ -126,14 +126,6 @@ class MultiqcModule(BaseMultiqcModule):
         if n["WgsMetrics"] > 0:
             log.info("Found {} WgsMetrics reports".format(n["WgsMetrics"]))
 
-        n["ValidateSamFile"] = ValidateSamFile.parse_reports(self)
-        if n["ValidateSamFile"] > 0:
-            log.info("Found {} ValidateSamFile reports".format(n["ValidateSamFile"]))
-
-        n["WgsMetrics"] = WgsMetrics.parse_reports(self)
-        if n["WgsMetrics"] > 0:
-            log.info("Found {} WgsMetrics reports".format(n["WgsMetrics"]))
-
         n["CollectIlluminaBasecallingMetrics"] = CollectIlluminaBasecallingMetrics.parse_reports(self)
         if n["CollectIlluminaBasecallingMetrics"] > 0:
             log.info(
