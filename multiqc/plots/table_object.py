@@ -223,7 +223,7 @@ class datatable(object):
                     shared_keys[sk]["dmax"] = max(
                         headers[idx][k]["dmax"], shared_keys[sk].get("dmax", headers[idx][k]["dmax"])
                     )
-                    shared_keys[sk]["dmin"] = max(
+                    shared_keys[sk]["dmin"] = min(
                         headers[idx][k]["dmin"], shared_keys[sk].get("dmin", headers[idx][k]["dmin"])
                     )
 

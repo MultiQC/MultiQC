@@ -120,6 +120,8 @@ For further information, please see the [documentation](https://multiqc.info/doc
 
 - Disable preservation of timestamps / modes when copying temp report files, to help issues with network shares ([#1333](https://github.com/ewels/MultiQC/issues/1333))
 - Fixed MatPlotLib warning: `FixedFormatter should only be used together with FixedLocator`
+- Fixed long-standing min/max bug with shared minimum values for table columns using `shared_key`
+- Made table colour schemes work with negative numbers (don't strip `-` from values when making scheme)
 
 ## [MultiQC v1.9](https://github.com/ewels/MultiQC/releases/tag/v1.9) - 2020-05-30
 
