@@ -21,27 +21,37 @@ This checklist is for my own reference, as I forget the steps every time.
    - Comment out any config in `~/.multiqc_config.yaml`
    - Spot any previously unnoticed bugs and fix
    - Upload to the website and push change to Git
-8. Release on PyPI:
+8. Build PyPI dist
+
+   - Python docs [here](https://packaging.python.org/tutorials/packaging-projects/#generating-distribution-archives)
 
    ```bash
    rm -rf dist/
-   python setup.py sdist bdist_wheel
-   twine upload dist/*.tar.gz
+   pip install --upgrade pip
+   pip install --upgrade build
+   python -m build
    ```
 
-9. Test that it pip installs:
+9. Release on PyPI:
 
    ```bash
-   conda create --name testing --yes python pip && conda activate testing
-   pip install multiqc
-   multiqc .
-   conda deactivate && conda remove --name testing --all --yes && conda clean --all --yes
+   pip install --upgrade twine
+   twine upload dist/*
    ```
 
-10. Commit and push version updates
-11. Make a [release](https://github.com/ewels/MultiQC/releases) on GitHub - paste changelog section.
-12. Check that [PyPI listing page](https://pypi.python.org/pypi/multiqc/) looks sane
-13. Make a new release on `bioconda`:
+10. Test that it pip installs:
+
+    ```bash
+    conda create --name testing --yes python pip && conda activate testing
+    pip install multiqc
+    multiqc .
+    conda deactivate && conda remove --name testing --all --yes && conda clean --all --yes
+    ```
+
+11. Commit and push version updates
+12. Make a [release](https://github.com/ewels/MultiQC/releases) on GitHub - paste changelog section.
+13. Check that [PyPI listing page](https://pypi.python.org/pypi/multiqc/) looks sane
+14. Make a new release on `bioconda`:
 
     ```bash
     # Update to latest bioconda
@@ -73,9 +83,9 @@ This checklist is for my own reference, as I forget the steps every time.
     # Submit a Pull Request and merge
     ```
 
-14. Tell UPPMAX about the new version and ask for the module system to be updated.
-15. Describe new release on [SeqAnswers thread](http://seqanswers.com/forums/showthread.php?p=195831#post195831)
-16. Tweet that new version is released
-17. Update version numbers to new dev version in `setup.py`
-18. Add a new section in the changelog for the development version
-19. Commit and push. Continue making more awesome :metal:
+15. Tell UPPMAX about the new version and ask for the module system to be updated.
+16. Describe new release on [SeqAnswers thread](http://seqanswers.com/forums/showthread.php?p=195831#post195831)
+17. Tweet that new version is released
+18. Update version numbers to new dev version in `setup.py`
+19. Add a new section in the changelog for the development version
+20. Commit and push. Continue making more awesome :metal:

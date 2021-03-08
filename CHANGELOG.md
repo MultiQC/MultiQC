@@ -1,6 +1,6 @@
 # MultiQC Version History
 
-## MultiQC v1.10dev
+## [MultiQC v1.10](https://github.com/ewels/MultiQC/releases/tag/v1.10) - 2021-03-08
 
 ### Update for developers: Code linting
 
