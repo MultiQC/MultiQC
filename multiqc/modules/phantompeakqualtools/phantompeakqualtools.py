@@ -12,22 +12,25 @@ from multiqc.modules.base_module import BaseMultiqcModule
 # Initialise the logger
 log = logging.getLogger(__name__)
 
-class MultiqcModule(BaseMultiqcModule):
 
+class MultiqcModule(BaseMultiqcModule):
     def __init__(self):
 
         # Initialise the parent object
-        super(MultiqcModule, self).__init__(name='phantompeakqualtools', anchor='phantompeakqualtools',
-        href='https://www.encodeproject.org/software/phantompeakqualtools',
-        info="computes informative enrichment and quality measures for ChIP-seq/DNase-seq/FAIRE-seq/MNase-seq data.")
+        super(MultiqcModule, self).__init__(
+            name="phantompeakqualtools",
+            anchor="phantompeakqualtools",
+            href="https://www.encodeproject.org/software/phantompeakqualtools",
+            info="computes informative enrichment and quality measures for ChIP-seq/DNase-seq/FAIRE-seq/MNase-seq data.",
+        )
 
         # Parse logs
         self.phantompeakqualtools_data = dict()
-        for f in self.find_log_files('phantompeakqualtools/out', filehandles=False):
+        for f in self.find_log_files("phantompeakqualtools/out", filehandles=False):
             self.parse_phantompeakqualtools(f)
 
         # Filter to strip out ignored sample names
-        self.phantompeakqualtools_data  =  self.ignore_samples(self.phantompeakqualtools_data)
+        self.phantompeakqualtools_data = self.ignore_samples(self.phantompeakqualtools_data)
 
         # Warning when no files are found
         if len(self.phantompeakqualtools_data) == 0:
@@ -37,21 +40,21 @@ class MultiqcModule(BaseMultiqcModule):
         log.info("Found {} logs".format(len(self.phantompeakqualtools_data)))
 
         # Write parsed data to a file
-        self.write_data_file(self.phantompeakqualtools_data, 'multiqc_phantompeakqualtools')
+        self.write_data_file(self.phantompeakqualtools_data, "multiqc_phantompeakqualtools")
 
         # Report section
         self.phantompeakqualtools_general_stats()
 
     # Parse spp.out file from phantompeakqualtools
     def parse_phantompeakqualtools(self, f):
-        s_name = self.clean_s_name(f['s_name'], f['root'])
+        s_name = self.clean_s_name(f["s_name"], f["root"])
         parsed_data = {}
-        lines = f['f'].splitlines()
+        lines = f["f"].splitlines()
         for l in lines:
             s = l.split("\t")
-            parsed_data['Estimated_Fragment_Length_bp'] = int(s[2].split(",")[0])
-            parsed_data['NSC'] = float(s[8])
-            parsed_data['RSC'] = float(s[9])
+            parsed_data["Estimated_Fragment_Length_bp"] = int(s[2].split(",")[0])
+            parsed_data["NSC"] = float(s[8])
+            parsed_data["RSC"] = float(s[9])
         if len(parsed_data) > 0:
             if s_name in self.phantompeakqualtools_data:
                 log.debug("Duplicate sample name found! Overwriting: {}".format(s_name))
@@ -62,26 +65,26 @@ class MultiqcModule(BaseMultiqcModule):
     def phantompeakqualtools_general_stats(self):
         """ Add columns to General Statistics table """
         headers = OrderedDict()
-        headers['Estimated_Fragment_Length_bp'] = {
-            'title': 'Frag Length',
-            'description': 'Estimated fragment length (bp)',
-            'min': 0,
-            'format': '{:,.0f}'
+        headers["Estimated_Fragment_Length_bp"] = {
+            "title": "Frag Length",
+            "description": "Estimated fragment length (bp)",
+            "min": 0,
+            "format": "{:,.0f}",
         }
-        headers['NSC'] = {
-            'title': 'NSC',
-            'description': 'Normalized strand cross-correlation',
-            'max': 10,
-            'min': 0,
-            'format': '{:,.2f}',
-            'scale': 'RdYlGn-rev'
+        headers["NSC"] = {
+            "title": "NSC",
+            "description": "Normalized strand cross-correlation",
+            "max": 10,
+            "min": 0,
+            "format": "{:,.2f}",
+            "scale": "RdYlGn-rev",
         }
-        headers['RSC'] = {
-            'title': 'RSC',
-            'description': 'Relative strand cross-correlation',
-            'max': 10,
-            'min': 0,
-            'format': '{:,.2f}',
-            'scale': 'RdYlBu-rev'
+        headers["RSC"] = {
+            "title": "RSC",
+            "description": "Relative strand cross-correlation",
+            "max": 10,
+            "min": 0,
+            "format": "{:,.2f}",
+            "scale": "RdYlBu-rev",
         }
         self.general_stats_addcols(self.phantompeakqualtools_data, headers)
