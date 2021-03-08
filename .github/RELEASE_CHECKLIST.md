@@ -51,7 +51,9 @@ This checklist is for my own reference, as I forget the steps every time.
 11. Commit and push version updates
 12. Make a [release](https://github.com/ewels/MultiQC/releases) on GitHub - paste changelog section.
 13. Check that [PyPI listing page](https://pypi.python.org/pypi/multiqc/) looks sane
-14. Make a new release on `bioconda`:
+14. Update version numbers to new dev version in `setup.py` + a new section in the changelog for the development version
+15. Commit and push version bump
+16. Make a new release on `bioconda`:
 
     ```bash
     # Update to latest bioconda
@@ -83,9 +85,6 @@ This checklist is for my own reference, as I forget the steps every time.
     # Submit a Pull Request and merge
     ```
 
-15. Tell UPPMAX about the new version and ask for the module system to be updated.
-16. Describe new release on [SeqAnswers thread](http://seqanswers.com/forums/showthread.php?p=195831#post195831)
-17. Tweet that new version is released
-18. Update version numbers to new dev version in `setup.py`
-19. Add a new section in the changelog for the development version
-20. Commit and push. Continue making more awesome :metal:
+17. Tell UPPMAX about the new version and ask for the module system to be updated.
+18. Tweet that new version is released
+19. Continue making more awesome :metal:
