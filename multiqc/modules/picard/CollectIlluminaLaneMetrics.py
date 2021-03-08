@@ -62,17 +62,13 @@ def parse_reports(self):
 
         for line in f["f"]:
             if "CollectIlluminaLaneMetrics" in line and "RUN_DIRECTORY" in line:
-                run_dir_search = re.search(
-                    r"RUN_DIRECTORY(?:=|\s+)(\[?[^\s]+\]?)", line, flags=re.IGNORECASE
-                )
+                run_dir_search = re.search(r"RUN_DIRECTORY(?:=|\s+)(\[?[^\s]+\]?)", line, flags=re.IGNORECASE)
                 run_name = os.path.basename(run_dir_search[0])
                 if not run_name in self.picard_lane_metrics:
                     self.picard_lane_metrics[run_name] = {}
 
             if run_name is not None:
-                if (
-                    "IlluminaLaneMetrics" in line or "IlluminaPhasingMetrics" in line
-                ) and "## METRICS CLASS" in line:
+                if ("IlluminaLaneMetrics" in line or "IlluminaPhasingMetrics" in line) and "## METRICS CLASS" in line:
                     keys = f["f"].readline().strip("\n").split("\t")
                 elif keys:
                     vals = line.strip("\n").split("\t")
@@ -88,9 +84,7 @@ def parse_reports(self):
     if len(self.picard_lane_metrics) > 0:
 
         # Write parsed data to a file
-        self.write_data_file(
-            self.picard_lane_metrics, "multiqc_picard_IlluminaLaneMetrics"
-        )
+        self.write_data_file(self.picard_lane_metrics, "multiqc_picard_IlluminaLaneMetrics")
 
     self.add_section(
         name="Lane Metrics",

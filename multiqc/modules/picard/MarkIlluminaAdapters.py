@@ -21,9 +21,7 @@ def parse_reports(self):
 
     headers = ["clipped_bases", "read_count"]
     formats = [int, int]
-    all_data = read_histogram(
-        self, "picard/markilluminaadapters", "MarkIlluminaAdapters", headers, formats
-    )
+    all_data = read_histogram(self, "picard/markilluminaadapters", "MarkIlluminaAdapters", headers, formats)
 
     if not all_data:
         return 0
@@ -44,7 +42,7 @@ def parse_reports(self):
 
     lg = {}
     for s_name in all_data:
-        lg[s_name] = {clipped_bases:data['read_count'] for clipped_bases, data in all_data[s_name].items()}
+        lg[s_name] = {clipped_bases: data["read_count"] for clipped_bases, data in all_data[s_name].items()}
 
     self.add_section(
         name="Mark Illumina Adapters",

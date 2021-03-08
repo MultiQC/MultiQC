@@ -22,9 +22,7 @@ def parse_reports(self):
     self.picard_basecalling_metrics = dict()
 
     # Go through logs and find Metrics
-    for f in self.find_log_files(
-        "picard/collectilluminabasecallingmetrics", filehandles=True
-    ):
+    for f in self.find_log_files("picard/collectilluminabasecallingmetrics", filehandles=True):
         keys = None
 
         for line in f["f"]:
@@ -41,9 +39,7 @@ def parse_reports(self):
 
     if len(self.picard_basecalling_metrics) > 0:
         # Write parsed data to a file
-        self.write_data_file(
-            self.picard_basecalling_metrics, "multiqc_picard_IlluminaBasecallingMetrics"
-        )
+        self.write_data_file(self.picard_basecalling_metrics, "multiqc_picard_IlluminaBasecallingMetrics")
 
     self.add_section(
         name="Basecalling Metrics",
