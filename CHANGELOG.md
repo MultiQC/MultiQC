@@ -37,6 +37,7 @@ For further information, please see the [documentation](https://multiqc.info/doc
 - Beautiful new [progress bar](https://rich.readthedocs.io/en/stable/progress.html) from the amazing [willmcgugan/rich](https://github.com/willmcgugan/rich) package.
 - Added a bunch of new default sample name trimming suffixes ([see `8ac5c7b`](https://github.com/ewels/MultiQC/commit/8ac5c7b6e4ea6003ca2c9b681953ab3f22c5dd66))
 - Added `timeout-minutes: 10` to the CI test workflow to check that changes aren't negatively affecting run time too much.
+- New table header option `bars_zero_centrepoint` to treat `0` as zero width bars and plot bar length based on absolute values
 
 #### New Modules
 
@@ -98,6 +99,7 @@ For further information, please see the [documentation](https://multiqc.info/doc
   - Make `WgsMetrics` histogram smoothed if more than 1000 data points (avoids huge plots that crash the browser)
   - Multiple new config options for `WgsMetrics` to customise coverage histogram and speed up MultiQC with very high coverage files.
   - Add additional datasets to Picard Alignment Summary ([#1293](https://github.com/ewels/MultiQC/issues/1293))
+  - Add support for `CrosscheckFingerprints` ([#1327](https://github.com/ewels/MultiQC/issues/1327))
 - **PycoQC**
   - Log10 x-axis for _Read Length_ plot ([#1214](https://github.com/ewels/MultiQC/issues/1214))
 - **Rockhopper**
@@ -119,6 +121,8 @@ For further information, please see the [documentation](https://multiqc.info/doc
 
 - Disable preservation of timestamps / modes when copying temp report files, to help issues with network shares ([#1333](https://github.com/ewels/MultiQC/issues/1333))
 - Fixed MatPlotLib warning: `FixedFormatter should only be used together with FixedLocator`
+- Fixed long-standing min/max bug with shared minimum values for table columns using `shared_key`
+- Made table colour schemes work with negative numbers (don't strip `-` from values when making scheme)
 
 ## [MultiQC v1.9](https://github.com/ewels/MultiQC/releases/tag/v1.9) - 2020-05-30
 

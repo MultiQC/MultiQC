@@ -11,6 +11,7 @@ from multiqc.modules.base_module import BaseMultiqcModule
 # Import the Picard submodules
 from . import AlignmentSummaryMetrics
 from . import BaseDistributionByCycleMetrics
+from . import CrosscheckFingerprints
 from . import GcBiasMetrics
 from . import HsMetrics
 from . import InsertSizeMetrics
@@ -60,6 +61,10 @@ class MultiqcModule(BaseMultiqcModule):
         n["BaseDistributionByCycleMetrics"] = BaseDistributionByCycleMetrics.parse_reports(self)
         if n["BaseDistributionByCycleMetrics"] > 0:
             log.info("Found {} BaseDistributionByCycleMetrics reports".format(n["BaseDistributionByCycleMetrics"]))
+
+        n["CrosscheckFingerprints"] = CrosscheckFingerprints.parse_reports(self)
+        if n["CrosscheckFingerprints"] > 0:
+            log.info("Found {} CrosscheckFingerprints reports".format(n["CrosscheckFingerprints"]))
 
         n["GcBiasMetrics"] = GcBiasMetrics.parse_reports(self)
         if n["GcBiasMetrics"] > 0:

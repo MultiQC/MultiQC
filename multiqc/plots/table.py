@@ -160,6 +160,11 @@ def make_table(dt):
                     dmin = header["dmin"]
                     dmax = header["dmax"]
                     percentage = ((float(val) - dmin) / (dmax - dmin)) * 100
+                    # Treat 0 as 0-width and make bars width of absoluate value
+                    if header.get("bars_zero_centrepoint"):
+                        dmax = max(abs(header["dmin"]), abs(header["dmax"]))
+                        dmin = 0
+                        percentage = ((abs(float(val)) - dmin) / (dmax - dmin)) * 100
                     percentage = min(percentage, 100)
                     percentage = max(percentage, 0)
                 except (ZeroDivisionError, ValueError):
