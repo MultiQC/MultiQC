@@ -118,9 +118,9 @@ class MultiqcModule(BaseMultiqcModule):
         """ Make a bar plot showing the number of samples for each allele """
 
         alleles = ["A1", "A2", "B1", "B2", "C1", "C2"]
-        data = {al: {} for st in alleles}
+        data = {al: {} for al in alleles}
         for s_data in self.optitype_data.values():
-            for al in subtypes:
+            for al in alleles:
                 if s_data[al] not in data[al]:
                     data[al][s_data[al]] = 0
                 data[al][s_data[al]] += 1
