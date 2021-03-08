@@ -81,18 +81,21 @@ def parse_reports(self):
                         self.picard_lane_metrics[run_name][lane] = {}
                     self.picard_lane_metrics[run_name][lane].update(d)
 
+    # Filter to strip out ignored sample names
+    self.picard_lane_metrics = self.ignore_samples(self.picard_lane_metrics)
+
     if len(self.picard_lane_metrics) > 0:
 
         # Write parsed data to a file
         self.write_data_file(self.picard_lane_metrics, "multiqc_picard_IlluminaLaneMetrics")
 
-    self.add_section(
-        name="Lane Metrics",
-        anchor="picard-illuminalanemetrics",
-        description="Quality control metrics on cluster density for each lane of an Illumina flowcell",
-        helptext="For more info in the metrics, see http://broadinstitute.github.io/picard/picard-metric-definitions.html#IlluminaBasecallingMetrics",
-        plot=lane_metrics_table(self.picard_lane_metrics),
-    )
+        self.add_section(
+            name="Lane Metrics",
+            anchor="picard-illuminalanemetrics",
+            description="Quality control metrics on cluster density for each lane of an Illumina flowcell",
+            helptext="For more info in the metrics, see http://broadinstitute.github.io/picard/picard-metric-definitions.html#IlluminaBasecallingMetrics",
+            plot=lane_metrics_table(self.picard_lane_metrics),
+        )
 
     # Return the number of detected samples to the parent module
     return len(self.picard_lane_metrics)

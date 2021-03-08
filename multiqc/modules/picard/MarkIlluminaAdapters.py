@@ -23,7 +23,11 @@ def parse_reports(self):
     formats = [int, int]
     all_data = read_histogram(self, "picard/markilluminaadapters", "MarkIlluminaAdapters", headers, formats)
 
-    if not all_data:
+    # Filter to strip out ignored sample names
+    all_data = self.ignore_samples(all_data)
+
+    # Stop if we don't have anything
+    if not all_data or len(all_data) == 0:
         return 0
 
     # Write parsed data to a file

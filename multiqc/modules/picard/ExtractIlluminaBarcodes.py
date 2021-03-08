@@ -46,9 +46,15 @@ def parse_reports(self):
         for bc_data in raw_data:
             self.picard_barcode_metrics[bc_data["LANE"]][bc_data["BARCODE"]] = bc_data
 
-    if len(self.picard_barcode_metrics) > 0:
-        # Write parsed data to a file
-        self.write_data_file(self.picard_barcode_metrics, "multiqc_picard_ExtractIlluminaBarcodes")
+    # Filter to strip out ignored sample names
+    self.picard_barcode_metrics = self.ignore_samples(self.picard_barcode_metrics)
+
+    # Stop if we didn't find anything
+    if len(self.picard_barcode_metrics) == 0:
+        return 0
+
+    # Write parsed data to a file
+    self.write_data_file(self.picard_barcode_metrics, "multiqc_picard_ExtractIlluminaBarcodes")
 
     plot_data = {}
     plot_data["per_lane"] = reads_per_lane(self.picard_barcode_metrics)

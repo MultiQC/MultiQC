@@ -37,16 +37,19 @@ def parse_reports(self):
                         data.pop("MOLECULAR_BARCODE_NAME")
                         self.picard_basecalling_metrics[data["LANE"]] = data
 
+    # Filter to strip out ignored sample names
+    self.picard_basecalling_metrics = self.ignore_samples(self.picard_basecalling_metrics)
+
     if len(self.picard_basecalling_metrics) > 0:
         # Write parsed data to a file
         self.write_data_file(self.picard_basecalling_metrics, "multiqc_picard_IlluminaBasecallingMetrics")
 
-    self.add_section(
-        name="Basecalling Metrics",
-        anchor="picard-illuminabasecallingmetrics",
-        description="Quality control metrics for each lane of an Illumina flowcell",
-        plot=lane_metrics_plot(self.picard_basecalling_metrics),
-    )
+        self.add_section(
+            name="Basecalling Metrics",
+            anchor="picard-illuminabasecallingmetrics",
+            description="Quality control metrics for each lane of an Illumina flowcell",
+            plot=lane_metrics_plot(self.picard_basecalling_metrics),
+        )
 
     # Return the number of detected samples to the parent module
     return len(self.picard_basecalling_metrics)
