@@ -68,34 +68,34 @@ class MultiqcModule(BaseMultiqcModule):
 
         headers["A1"] = {
             "title": "HLA-A1",
-            "description": "HLA-I A1 subtype",
+            "description": "First HLA-A allele",
             "scale": False,
         }
         headers["A2"] = {
             "title": "HLA-A2",
-            "description": "HLA-I A2 subtype",
+            "description": "Second HLA-A allele",
             "scale": False,
             "hidden": True,
         }
         headers["B1"] = {
             "title": "HLA-B1",
-            "description": "HLA-I B1 subtype",
+            "description": "First HLA-B allele",
             "scale": False,
         }
         headers["B2"] = {
             "title": "HLA-B2",
-            "description": "HLA-I B2 subtype",
+            "description": "Second HLA-B allele",
             "scale": False,
             "hidden": True,
         }
         headers["C1"] = {
             "title": "HLA-C1",
-            "description": "HLA-I C1 subtype",
+            "description": "First HLA-C allele",
             "scale": False,
         }
         headers["C2"] = {
             "title": "HLA-C2",
-            "description": "HLA-I C2 subtype",
+            "description": "Second HLA-C allele",
             "scale": False,
             "hidden": True,
         }
@@ -115,19 +115,19 @@ class MultiqcModule(BaseMultiqcModule):
         self.general_stats_addcols(self.optitype_data, headers)
 
     def summary_barplot(self):
-        """ Make a bar plot showing the number of samples in each subtype """
+        """ Make a bar plot showing the number of samples for each allele """
 
-        subtypes = ["A1", "A2", "B1", "B2", "C1", "C2"]
-        data = {st: {} for st in subtypes}
+        alleles = ["A1", "A2", "B1", "B2", "C1", "C2"]
+        data = {al: {} for st in alleles}
         for s_data in self.optitype_data.values():
-            for st in subtypes:
-                if s_data[st] not in data[st]:
-                    data[st][s_data[st]] = 0
-                data[st][s_data[st]] += 1
+            for al in subtypes:
+                if s_data[al] not in data[al]:
+                    data[al][s_data[al]] = 0
+                data[al][s_data[al]] += 1
 
         pconfig = {
             "id": "optitype_summary_plot",
-            "title": "Optitype: Summary of subtypes",
+            "title": "Optitype: Summary of alleles",
             "cpswitch": False,
             "ylab": "# Samples",
             "yDecimals": False,
@@ -135,8 +135,8 @@ class MultiqcModule(BaseMultiqcModule):
         }
 
         self.add_section(
-            name="Summary of subtype usage",
-            description="Number of samples assigned to each subtype.",
+            name="Summary of alleles",
+            description="Number of samples sharing the same allele.",
             anchor="optitype_summary",
             plot=bargraph.plot(data, pconfig=pconfig),
         )
