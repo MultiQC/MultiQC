@@ -4,11 +4,7 @@
 
 from collections import OrderedDict
 import logging
-import math
-import os
-import re
 
-from multiqc import config
 from multiqc.plots import table, bargraph
 
 # Initialise the logger
@@ -57,24 +53,12 @@ def parse_reports(self):
 
 def lane_metrics_table(data):
     headers = OrderedDict()
-    headers["TOTAL_BASES"] = {
-        "title": "Total Bases",
-    }
-    headers["PF_BASES"] = {
-        "title": "Passing Filter Bases",
-    }
-    headers["TOTAL_READS"] = {
-        "title": "Total Reads",
-    }
-    headers["PF_READS"] = {
-        "title": "Passing Filter Reads",
-    }
-    headers["TOTAL_CLUSTERS"] = {
-        "title": "Total Cluster",
-    }
-    headers["PF_CLUSTERS"] = {
-        "title": "Passing Filter Clusters",
-    }
+    headers["TOTAL_BASES"] = {"title": "Total Bases"}
+    headers["PF_BASES"] = {"title": "Passing Filter Bases"}
+    headers["TOTAL_READS"] = {"title": "Total Reads"}
+    headers["PF_READS"] = {"title": "Passing Filter Reads"}
+    headers["TOTAL_CLUSTERS"] = {"title": "Total Cluster"}
+    headers["PF_CLUSTERS"] = {"title": "Passing Filter Clusters"}
 
     table_config = {}
     tdata = {}
@@ -96,25 +80,12 @@ def lane_metrics_plot(data):
     }
 
     plot_cats = [OrderedDict(), OrderedDict(), OrderedDict()]
-    plot_cats[0]["PF_BASES"] = {
-        "title": "Passing Filter Bases",
-    }
-    plot_cats[0]["NPF_BASES"] = {
-        "title": "Non Passing Filter Bases",
-    }
-    plot_cats[1]["PF_READS"] = {
-        "title": "Passing Filter Reads",
-    }
-    plot_cats[1]["NPF_READS"] = {
-        "title": "Non Passing Filter Reads",
-    }
-
-    plot_cats[2]["PF_CLUSTERS"] = {
-        "title": "Passing Filter Clusters",
-    }
-    plot_cats[2]["NPF_CLUSTERS"] = {
-        "title": "Non Passing Filter Clusters",
-    }
+    plot_cats[0]["PF_BASES"] = {"title": "Passing Filter Bases"}
+    plot_cats[0]["NPF_BASES"] = {"title": "Non Passing Filter Bases"}
+    plot_cats[1]["PF_READS"] = {"title": "Passing Filter Reads"}
+    plot_cats[1]["NPF_READS"] = {"title": "Non Passing Filter Reads"}
+    plot_cats[2]["PF_CLUSTERS"] = {"title": "Passing Filter Clusters"}
+    plot_cats[2]["NPF_CLUSTERS"] = {"title": "Non Passing Filter Clusters"}
     tdata = {}
     for lane_number, lane in data.items():
         lane["NPF_BASES"] = int(lane["TOTAL_BASES"]) - int(lane["PF_BASES"])

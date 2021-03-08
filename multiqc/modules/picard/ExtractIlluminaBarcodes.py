@@ -4,11 +4,8 @@
 
 from collections import OrderedDict
 import logging
-import math
-import os
 import re
 
-from multiqc import config
 from multiqc.plots import bargraph
 
 # Initialise the logger

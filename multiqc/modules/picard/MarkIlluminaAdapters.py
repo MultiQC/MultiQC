@@ -2,13 +2,8 @@
 
 """ MultiQC submodule to parse output from Picard MarkIlluminaAdapters """
 
-from collections import OrderedDict
 import logging
-import math
-import os
-import re
 
-from multiqc import config
 from multiqc.plots import linegraph
 from .util import read_histogram
 
