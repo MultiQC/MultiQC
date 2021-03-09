@@ -12,9 +12,12 @@ _..nothing yet.._
 #### New Modules
 
 #### Module updates
+-->
 
 #### Bug Fixes
--->
+
+- Allow scientific notation numbers in colour scheme generation
+  - Fixed bug with very small minimum numbers that only revelead itself after a bugfix done in the v1.10 release
 
 ## [MultiQC v1.10](https://github.com/ewels/MultiQC/releases/tag/v1.10) - 2021-03-08
 
