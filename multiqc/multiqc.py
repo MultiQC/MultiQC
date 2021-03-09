@@ -718,7 +718,7 @@ def run(
                 "mqc-generalstats-{}-{}".format(ns_html, h[k]["rid"])
             )
     # Generate the General Statistics HTML & write to file
-    if len(report.general_stats_data) > 0:
+    if len(report.general_stats_data) > 0 and not config.skip_generalstats:
         pconfig = {
             "id": "general_stats_table",
             "table_title": "General Statistics",
