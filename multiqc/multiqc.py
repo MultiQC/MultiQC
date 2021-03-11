@@ -574,6 +574,8 @@ def run(
         try:
             this_module = list(mod_dict.keys())[0]
             mod_cust_config = list(mod_dict.values())[0]
+            if mod_cust_config is None:
+                mod_cust_config = {}
             mod = config.avail_modules[this_module].load()
             mod.mod_cust_config = mod_cust_config  # feels bad doing this, but seems to work
             output = mod()
