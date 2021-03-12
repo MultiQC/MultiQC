@@ -70,6 +70,7 @@ MultiQC Modules:
     HOPS: modules/hops.md
     HOMER: modules/homer.md
     HTSeq: modules/htseq.md
+    JCVI: modules/jcvi.md
     Kaiju: modules/kaiju.md
     Kraken: modules/kraken.md
     MACS2: modules/macs2.md
@@ -79,6 +80,8 @@ MultiQC Modules:
     mirtop: modules/mirtop.md
     MTNucRatio: modules/mtnucratio.md
     MultiVCFAnalyzer: modules/multivcfanalyzer.md
+    ngsderive: modules/ngsderive.md
+    OptiType: modules/optitype.md
     phantompeakqualtools: modules/phantompeakqualtools.md
     Peddy: modules/peddy.md
     Picard: modules/picard.md
@@ -98,6 +101,7 @@ MultiQC Modules:
     Sentieon: modules/sentieon.md
     Sargasso: modules/sargasso.md
     SexDetErrmine: modules/sexdeterrmine.md
+    EigenStratDatabseTools: modules/eigenstratdatabasetools.md
     Slamdunk: modules/slamdunk.md
     SnpEff: modules/snpeff.md
     SNPsplit: modules/snpsplit.md
@@ -118,9 +122,7 @@ Coding with MultiQC:
   Updating for compatibility: compatibility.md
 ---
 
-# Welcome!
-
-## MultiQC Documentation
+# MultiQC Documentation
 
 MultiQC is a tool to aggregate bioinformatics results across many samples
 into a single report. It's written in Python and contains modules for a number
@@ -128,27 +130,28 @@ of common tools.
 
 The documentation has the following pages:
 
- - [Docs homepage](README.md) _(this README file)_
- - Using MultiQC
-   - [Installing MultiQC](installation.md)
-   - [Running MultiQC](usage.md)
-   - [Using Reports](reports.md)
-   - [Configuration](config.md)
-   - [Customising Reports](customisation.md)
-   - [Common Problems](troubleshooting.md)
- - [MultiQC Modules](modules/)
- - [Custom Content](custom_content.md)
- - Coding with MultiQC
-   - [Writing new templates](templates.md)
-   - [Writing new modules](modules.md)
-   - [Plugins](plugins.md)
-   - [MultiQC Plugins](plugins.md)
-   - [Updating for compatibility](compatibility.md)
+- [Docs homepage](README.md) _(this README file)_
+- Using MultiQC
+  - [Installing MultiQC](installation.md)
+  - [Running MultiQC](usage.md)
+  - [Using Reports](reports.md)
+  - [Configuration](config.md)
+  - [Customising Reports](customisation.md)
+  - [Common Problems](troubleshooting.md)
+- [MultiQC Modules](modules/)
+- [Custom Content](custom_content.md)
+- Coding with MultiQC
+  - [Writing new templates](templates.md)
+  - [Writing new modules](modules.md)
+  - [Plugins](plugins.md)
+  - [MultiQC Plugins](plugins.md)
+  - [Updating for compatibility](compatibility.md)
 
 These docs can be read in any of three ways:
- - On the MultiQC Website: http://multiqc.info
- - On GitHub: https://github.com/ewels/MultiQC/
- - As part of the distributed source code (in `/docs/`)
+
+- On the MultiQC Website: <http://multiqc.info>
+- On GitHub: <https://github.com/ewels/MultiQC/>
+- As part of the distributed source code (in `/docs/`)
 
 If you're curious how the website works, check out the
 [MultiQC website repository](https://github.com/ewels/MultiQC_website).

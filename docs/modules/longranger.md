@@ -2,15 +2,17 @@
 Name: Longranger
 URL: https://www.10xgenomics.com/
 Description: >
-    A set of analysis pipelines that perform sample demultiplexing, barcode processing, alignment, quality control, variant calling, phasing, and structural variant calling.
+  A set of analysis pipelines that perform sample demultiplexing, barcode processing, alignment, quality control, variant calling, phasing, and structural variant calling.
 ---
 
 Currently supported Longranger pipelines:
-  * `wgs`
-  * `targeted`
-  * `align`
+
+- `wgs`
+- `targeted`
+- `align`
 
 Usage:
+
 ```bash
 longranger wgs --fastqs=/path/to/fastq --id=NA12878
 multiqc /path/to/NA12878
