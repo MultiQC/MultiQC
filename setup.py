@@ -84,9 +84,7 @@ setup(
     zip_safe=False,
     install_requires=install_requires,
     entry_points={
-        "console_scripts": [
-            "multiqc=multiqc.__main__:multiqc",
-        ],
+        "console_scripts": ["multiqc=multiqc.__main__:multiqc",],
         "multiqc.modules.v1": [
             "adapterRemoval = multiqc.modules.adapterRemoval:MultiqcModule",
             "afterqc = multiqc.modules.afterqc:MultiqcModule",
@@ -101,7 +99,7 @@ setup(
             "bowtie1 = multiqc.modules.bowtie1:MultiqcModule",
             "bowtie2 = multiqc.modules.bowtie2:MultiqcModule",
             "busco = multiqc.modules.busco:MultiqcModule",
-            'bustools = multiqc.modules.bustools:MultiqcModule',
+            "bustools = multiqc.modules.bustools:MultiqcModule",
             "clipandmerge = multiqc.modules.clipandmerge:MultiqcModule",
             "clusterflow = multiqc.modules.clusterflow:MultiqcModule",
             "conpair = multiqc.modules.conpair:MultiqcModule",
