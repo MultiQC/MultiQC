@@ -84,7 +84,9 @@ setup(
     zip_safe=False,
     install_requires=install_requires,
     entry_points={
-        "console_scripts": ["multiqc=multiqc.__main__:multiqc",],
+        "console_scripts": [
+            "multiqc=multiqc.__main__:multiqc",
+        ],
         "multiqc.modules.v1": [
             "adapterRemoval = multiqc.modules.adapterRemoval:MultiqcModule",
             "afterqc = multiqc.modules.afterqc:MultiqcModule",
