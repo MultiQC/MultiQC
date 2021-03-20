@@ -203,11 +203,24 @@ def run_cli(
     no_ansi,
     **kwargs,
 ):
+    # Main MultiQC run command for use with the click command line, complete with all click function decorators.
+    # To make it easy to use MultiQC within notebooks and other locations that don't need click, we simply pass the
+    # parsed variables on to a vanilla python function.
+
+    """MultiQC aggregates results from bioinformatics analyses across many samples into a single report.
+
+    It searches a given directory for analysis logs and compiles a HTML report.
+    It's a general use tool, perfect for summarising the output from numerous
+    bioinformatics tools.
+
+    To run, supply with one or more directory to scan for analysis results.
+    To run here, use 'multiqc .'
+
+    See http://multiqc.info for more details.
+
+    Author: Phil Ewels (http://phil.ewels.co.uk)
     """
-    Main MultiQC run command for use with the click command line, complete with all click function decorators.
-    To make it easy to use MultiQC within notebooks and other locations that don't need click, we simply pass the
-    parsed variables on to a vanilla python function.
-    """
+
     # Use keyword arguments in case things get rearranged in the future
     multiqc_run = run(
         analysis_dir=analysis_dir,
