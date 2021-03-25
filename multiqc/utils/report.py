@@ -105,7 +105,7 @@ def get_filelist(run_module_names):
 
         # Check if we are skipping this search key
         if any([x.get("skip") for x in sps]):
-            logger.warn("Skipping search pattern: {}".format(key))
+            logger.debug("Skipping search pattern: {}".format(key))
             continue
 
         # Split search patterns according to speed of execution.

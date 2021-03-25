@@ -2,11 +2,11 @@
 
 ## MultiQC v1.11dev
 
-_..nothing yet.._
-
-<!--
 ### MultiQC updates
 
+- Dropped the `Skipping search pattern` log message from a warning to debug
+
+<!--
 #### New MultiQC Features
 
 #### New Modules
