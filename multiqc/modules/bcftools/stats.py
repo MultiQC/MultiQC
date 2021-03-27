@@ -111,7 +111,7 @@ class StatsReportMixin:
                 # Variant Qualities
                 if s[0] == "QUAL" and len(s_names) > 0:
                     s_name = s_names[int(s[1])]
-                    quality = (float("0" + s[2].strip() + "0") if "." in s[2] else "0.0")
+                    quality = (float("0" + s[2].strip()))
                     self.bcftools_stats_vqc_snp[s_name][quality] = float(s[3].strip())
                     self.bcftools_stats_vqc_transi[s_name][quality] = float(s[4].strip())
                     self.bcftools_stats_vqc_transv[s_name][quality] = float(s[5].strip())
