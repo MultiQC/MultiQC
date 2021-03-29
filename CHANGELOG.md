@@ -12,9 +12,12 @@
 #### New MultiQC Features
 
 #### New Modules
+-->
 
 #### Module updates
--->
+
+- **bcftools**
+  - Fixed bug where `QUAL` value `.` would crash MultiQC ([#1400](https://github.com/ewels/MultiQC/issues/1400))
 
 #### Bug Fixes
 
