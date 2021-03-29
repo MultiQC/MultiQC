@@ -5,6 +5,7 @@
 ### MultiQC updates
 
 - Dropped the `Skipping search pattern` log message from a warning to debug
+- Moved directory prepending with `-d` back to before sample name cleaning (as it was before v1.7) ([#1264](https://github.com/ewels/MultiQC/issues/1264))
 
 <!--
 #### New MultiQC Features
