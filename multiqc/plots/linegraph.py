@@ -139,6 +139,28 @@ def plot(data, pconfig=None):
                     pairs.append(d[s][k])
                     maxval = max(maxval, d[s][k])
             else:
+
+                # Discard > ymax or just hide?
+                # If it never comes back into the plot, discard. If it goes above then comes back, just hide.
+                discard_ymax = None
+                discard_ymin = None
+                for k in sorted(d[s].keys()):
+                    if "xmax" in series_config and float(k) > float(series_config["xmax"]):
+                        continue
+                    if "xmin" in series_config and float(k) < float(series_config["xmin"]):
+                        continue
+                    if d[s][k] is not None and "ymax" in series_config:
+                        if float(d[s][k]) > float(series_config["ymax"]):
+                            discard_ymax = True
+                        elif discard_ymax is True:
+                            discard_ymax = False
+                    if d[s][k] is not None and "ymin" in series_config:
+                        if float(d[s][k]) > float(series_config["ymin"]):
+                            discard_ymin = True
+                        elif discard_ymin is True:
+                            discard_ymin = False
+
+                # Build the plot data structure
                 for k in sorted(d[s].keys()):
                     if k is not None:
                         if "xmax" in series_config and float(k) > float(series_config["xmax"]):
@@ -146,9 +168,17 @@ def plot(data, pconfig=None):
                         if "xmin" in series_config and float(k) < float(series_config["xmin"]):
                             continue
                     if d[s][k] is not None:
-                        if "ymax" in series_config and float(d[s][k]) > float(series_config["ymax"]):
+                        if (
+                            "ymax" in series_config
+                            and float(d[s][k]) > float(series_config["ymax"])
+                            and discard_ymax is not False
+                        ):
                             continue
-                        if "ymin" in series_config and float(d[s][k]) < float(series_config["ymin"]):
+                        if (
+                            "ymin" in series_config
+                            and float(d[s][k]) < float(series_config["ymin"])
+                            and discard_ymin is not False
+                        ):
                             continue
                     pairs.append([k, d[s][k]])
                     try:
