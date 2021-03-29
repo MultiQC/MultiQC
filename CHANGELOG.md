@@ -20,6 +20,7 @@
   - Fixed bug with very small minimum numbers that only revelead itself after a bugfix done in the v1.10 release
 - Allow `top_modules` to be specified as empty dicts ([#1274](https://github.com/ewels/MultiQC/issues/1274))
 - Require at least `rich` version `9.4.0` to avoid `SpinnerColumn` `AttributeError` ([#1393](https://github.com/ewels/MultiQC/issues/1393))
+- Properly ignore `.snakemake` folders as intended ([#1395](https://github.com/ewels/MultiQC/issues/1395))
 
 ## [MultiQC v1.10](https://github.com/ewels/MultiQC/releases/tag/v1.10) - 2021-03-08
 
