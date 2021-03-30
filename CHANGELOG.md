@@ -18,6 +18,8 @@
 
 - **bcftools**
   - Fixed bug where `QUAL` value `.` would crash MultiQC ([#1400](https://github.com/ewels/MultiQC/issues/1400))
+- **Picard**
+  - Fixed bug in `ValidateSamFile` module where additional whitespace at the end of the file would cause MultiQC to crash ([#1397](https://github.com/ewels/MultiQC/issues/1397))
 
 #### Bug Fixes
 
