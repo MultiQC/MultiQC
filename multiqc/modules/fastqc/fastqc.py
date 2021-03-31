@@ -15,6 +15,7 @@ from collections import OrderedDict
 import io
 import json
 import logging
+import math
 import os
 import re
 import zipfile
@@ -465,14 +466,22 @@ class MultiqcModule(BaseMultiqcModule):
                 }
             except KeyError:
                 pass
+
             # Old versions of FastQC give counts instead of percentages
             for b in data[s_name]:
                 tot = sum([data[s_name][b][base] for base in ["a", "c", "t", "g"]])
                 if tot == 100.0:
-                    break
+                    break # Stop loop after one iteration if summed to 100 (percentages)
                 else:
                     for base in ["a", "c", "t", "g"]:
                         data[s_name][b][base] = (float(data[s_name][b][base]) / float(tot)) * 100.0
+
+            # Replace NaN with 0
+            for b in data[s_name]:
+                for base in ["a", "c", "t", "g"]:
+                    if math.isnan(float(data[s_name][b][base])):
+                        data[s_name][b][base] = 0
+
         if len(data) == 0:
             log.debug("sequence_content not found in FastQC reports")
             return None

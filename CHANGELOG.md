@@ -20,6 +20,8 @@
   - Fixed bug where `QUAL` value `.` would crash MultiQC ([#1400](https://github.com/ewels/MultiQC/issues/1400))
 - **bowtie2**
   - Fix bug where HiSAT2 paired-end bar plots were missing unaligned reads ([#1230](https://github.com/ewels/MultiQC/issues/1230))
+- **FastQC**
+  - Replace `NaN` with `0` in the _Per Base Sequence Content_ plot to avoid crashing the plot ([#1246](https://github.com/ewels/MultiQC/issues/1246))
 - **Picard**
   - Fixed bug in `ValidateSamFile` module where additional whitespace at the end of the file would cause MultiQC to crash ([#1397](https://github.com/ewels/MultiQC/issues/1397))
 - **Somalier**
