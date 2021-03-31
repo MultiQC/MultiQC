@@ -37,12 +37,11 @@ This checklist is for my own reference, as I forget the steps every time.
     git branch -D multiqc
     # Build new conda recipe from PyPI to automatically collect new dependencies
     git checkout -b multiqc
-    cd recipes
     # Do the conda skeleton to copy the dependencies
-    mkdir mqctemp && cd mqctemp && atom .
+    cd recipes && mkdir mqctemp && cd mqctemp && code .
     conda skeleton pypi multiqc
     # Update with new release header - see https://goo.gl/ZfRnmj
-    cd ../multiqc && atom .
+    cd ../multiqc && code .
     # Get the sha256sum of the release
     curl -OL https://github.com/ewels/MultiQC/archive/v1.5.tar.gz
     shasum --algorithm 256 v1.5.tar.gz
