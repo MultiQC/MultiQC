@@ -22,6 +22,8 @@
   - Fix bug where HiSAT2 paired-end bar plots were missing unaligned reads ([#1230](https://github.com/ewels/MultiQC/issues/1230))
 - **Picard**
   - Fixed bug in `ValidateSamFile` module where additional whitespace at the end of the file would cause MultiQC to crash ([#1397](https://github.com/ewels/MultiQC/issues/1397))
+- **Somalier**
+  - Fixed bug where using sample name cleaning in a config would trigger a `KeyError` ([#1234](https://github.com/ewels/MultiQC/issues/1234))
 
 #### Bug Fixes
 
