@@ -20,6 +20,8 @@
   - Fixed bug where `QUAL` value `.` would crash MultiQC ([#1400](https://github.com/ewels/MultiQC/issues/1400))
 - **bowtie2**
   - Fix bug where HiSAT2 paired-end bar plots were missing unaligned reads ([#1230](https://github.com/ewels/MultiQC/issues/1230))
+- **Deeptools**
+  - Handle `plotProfile` data where no upstream / downstream regions have been calculated around genes ([#1317](https://github.com/ewels/MultiQC/issues/1317))
 - **FastQC**
   - Replace `NaN` with `0` in the _Per Base Sequence Content_ plot to avoid crashing the plot ([#1246](https://github.com/ewels/MultiQC/issues/1246))
 - **Picard**
