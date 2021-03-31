@@ -22,6 +22,7 @@
   - Fix bug where HiSAT2 paired-end bar plots were missing unaligned reads ([#1230](https://github.com/ewels/MultiQC/issues/1230))
 - **Deeptools**
   - Handle `plotProfile` data where no upstream / downstream regions have been calculated around genes ([#1317](https://github.com/ewels/MultiQC/issues/1317))
+  - Fix `IndexError` caused by mysterious `-1` in code.. ([#1275](https://github.com/ewels/MultiQC/issues/1275))
 - **FastQC**
   - Replace `NaN` with `0` in the _Per Base Sequence Content_ plot to avoid crashing the plot ([#1246](https://github.com/ewels/MultiQC/issues/1246))
 - **Picard**

@@ -140,7 +140,7 @@ class plotProfileMixin:
                             convert_factor *= v
                             start = float(bin_labels[0].strip(k)) * convert_factor
                     step = self._int(abs(start / bin_labels.index("TSS")))
-                    end = step * (len(bin_labels) - bin_labels.index("TSS") - 1)
+                    end = step * (len(bin_labels) - bin_labels.index("TSS"))
                     converted_bin_labels = range((self._int(start) + step), (self._int(end) + step), step)
                 except UnboundLocalError:
                     converted_bin_labels = bins
