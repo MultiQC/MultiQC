@@ -1,18 +1,17 @@
 # MultiQC Version History
 
-## MultiQC v1.11dev
+## [MultiQC v1.10.1](https://github.com/ewels/MultiQC/releases/tag/v1.10.1) - 2021-04-01
 
 ### MultiQC updates
 
 - Dropped the `Skipping search pattern` log message from a warning to debug
 - Moved directory prepending with `-d` back to before sample name cleaning (as it was before v1.7) ([#1264](https://github.com/ewels/MultiQC/issues/1264))
 - If linegraph plot data goes above `ymax`, only _discard_ the data if the line doesn't come back again ([#1257](https://github.com/ewels/MultiQC/issues/1257))
-
-<!--
-#### New MultiQC Features
-
-#### New Modules
--->
+- Allow scientific notation numbers in colour scheme generation
+  - Fixed bug with very small minimum numbers that only revelead itself after a bugfix done in the v1.10 release
+- Allow `top_modules` to be specified as empty dicts ([#1274](https://github.com/ewels/MultiQC/issues/1274))
+- Require at least `rich` version `9.4.0` to avoid `SpinnerColumn` `AttributeError` ([#1393](https://github.com/ewels/MultiQC/issues/1393))
+- Properly ignore `.snakemake` folders as intended ([#1395](https://github.com/ewels/MultiQC/issues/1395))
 
 #### Module updates
 
@@ -29,14 +28,6 @@
   - Fixed bug in `ValidateSamFile` module where additional whitespace at the end of the file would cause MultiQC to crash ([#1397](https://github.com/ewels/MultiQC/issues/1397))
 - **Somalier**
   - Fixed bug where using sample name cleaning in a config would trigger a `KeyError` ([#1234](https://github.com/ewels/MultiQC/issues/1234))
-
-#### Bug Fixes
-
-- Allow scientific notation numbers in colour scheme generation
-  - Fixed bug with very small minimum numbers that only revelead itself after a bugfix done in the v1.10 release
-- Allow `top_modules` to be specified as empty dicts ([#1274](https://github.com/ewels/MultiQC/issues/1274))
-- Require at least `rich` version `9.4.0` to avoid `SpinnerColumn` `AttributeError` ([#1393](https://github.com/ewels/MultiQC/issues/1393))
-- Properly ignore `.snakemake` folders as intended ([#1395](https://github.com/ewels/MultiQC/issues/1395))
 
 ## [MultiQC v1.10](https://github.com/ewels/MultiQC/releases/tag/v1.10) - 2021-03-08
 
