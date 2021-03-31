@@ -471,7 +471,7 @@ class MultiqcModule(BaseMultiqcModule):
             for b in data[s_name]:
                 tot = sum([data[s_name][b][base] for base in ["a", "c", "t", "g"]])
                 if tot == 100.0:
-                    break # Stop loop after one iteration if summed to 100 (percentages)
+                    break  # Stop loop after one iteration if summed to 100 (percentages)
                 else:
                     for base in ["a", "c", "t", "g"]:
                         data[s_name][b][base] = (float(data[s_name][b][base]) / float(tot)) * 100.0
