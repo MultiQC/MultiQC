@@ -187,7 +187,7 @@ class MultiqcModule(BaseMultiqcModule):
                 # HiSAT2 has PE data doesn't have the mate-specific stats.
                 # To avoid missing unaligned counts in the barplot, fake the "_halved" key.
                 # See https://github.com/ewels/MultiQC/issues/1230
-                if "paired_aligned_mate_none_halved" not in parsed_data:
+                if "paired_aligned_mate_none_halved" not in parsed_data and "paired_aligned_none" in parsed_data:
                     parsed_data["paired_aligned_mate_none_halved"] = parsed_data["paired_aligned_none"]
 
                 # Save parsed data
