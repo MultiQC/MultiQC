@@ -142,7 +142,7 @@ class plotProfileMixin:
                     step = self._int(abs(start / bin_labels.index("TSS")))
                     end = step * (len(bin_labels) - bin_labels.index("TSS"))
                     converted_bin_labels = range((self._int(start) + step), (self._int(end) + step), step)
-                except UnboundLocalError:
+                except UnboundLocalError, IndexError:
                     converted_bin_labels = bins
 
                 for i in bins:
