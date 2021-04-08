@@ -420,7 +420,7 @@ def run(
 
     console = rich.console.Console(stderr=True, highlight=False)
     console.print(
-        "[blue]/[/][green]/[/][red]/[/] [bold][link=https://multiqc.info]MultiQC[/link][/] :mag: [dim]- v{}".format(
+        "\n  [blue]/[/][green]/[/][red]/[/] [bold][link=https://multiqc.info]MultiQC[/link][/] :mag: [dim]| v{}\n".format(
             config.version
         )
     )
