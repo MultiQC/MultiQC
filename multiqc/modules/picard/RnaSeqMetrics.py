@@ -147,8 +147,8 @@ def parse_reports(self):
 
         pconfig = {
             "id": "picard_rnaseqmetrics_assignment_plot",
-            "title": "Picard: RnaSeqMetrics Read Assignments",
-            "ylab": "Number of reads",
+            "title": "Picard: RnaSeqMetrics Base Assignments",
+            "ylab": "Number of bases",
         }
         self.add_section(
             name="RnaSeqMetrics Assignment",

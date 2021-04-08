@@ -10,6 +10,8 @@
 
 - **Flexbar**
   - Fixed bug where reports with 0 reads would crash MultiQC ([#1407](https://github.com/ewels/MultiQC/issues/1407))
+- **Picard**
+  - `RnaSeqMetrics` - fix assignment barplot labels to say bases instead of reads ([#1408](https://github.com/ewels/MultiQC/issues/1408))
 
 ## [MultiQC v1.10.1](https://github.com/ewels/MultiQC/releases/tag/v1.10.1) - 2021-04-01
 
