@@ -418,12 +418,18 @@ def run(
 
     plugin_hooks.mqc_trigger("execution_start")
 
-    logger.info("This is MultiQC v{}".format(config.version))
+    console = rich.console.Console(stderr=True, highlight=False)
+    console.print(
+        "[blue]/[/][green]/[/][red]/[/] [bold][link=https://multiqc.info]MultiQC[/link][/] :mag: [dim]- v{}".format(
+            config.version
+        )
+    )
+    logger.debug("This is MultiQC v{}".format(config.version))
     logger.debug("Command     : {}".format(" ".join(sys.argv)))
     logger.debug("Working dir : {}".format(os.getcwd()))
     if make_pdf:
         logger.info("--pdf specified. Using non-interactive HTML template.")
-    logger.info("Template    : {}".format(config.template))
+    logger.debug("Template    : {}".format(config.template))
     if lint:
         logger.info("--lint specified. Being strict with validation.")
 
@@ -482,8 +488,6 @@ def run(
         logger.info("Report title: {}".format(config.title))
     if dirs:
         logger.info("Prepending directory to sample names")
-    for d in config.analysis_dir:
-        logger.info("Searching   : {}".format(os.path.abspath(d)))
 
     # Prep module configs
     config.top_modules = [m if type(m) is dict else {m: {}} for m in config.top_modules]
@@ -578,6 +582,8 @@ def run(
         pass  # custom_data not in config
 
     # Get the list of files to search
+    for d in config.analysis_dir:
+        logger.info("Searching   : {}".format(os.path.abspath(d)))
     report.get_filelist(run_module_names)
 
     # Run the modules!
