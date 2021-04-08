@@ -327,6 +327,14 @@ def run(
         loglevel = "WARNING"
     log.init_log(logger, loglevel=loglevel, no_ansi=no_ansi)
 
+    console = rich.console.Console(stderr=True, highlight=False)
+    console.print(
+        "\n  [blue]/[/][green]/[/][red]/[/] [bold][link=https://multiqc.info]MultiQC[/link][/] :mag: [dim]| v{}\n".format(
+            config.version
+        )
+    )
+    logger.debug("This is MultiQC v{}".format(config.version))
+
     # Load config files
     plugin_hooks.mqc_trigger("before_config")
     config.mqc_load_userconfig(config_file)
@@ -418,13 +426,6 @@ def run(
 
     plugin_hooks.mqc_trigger("execution_start")
 
-    console = rich.console.Console(stderr=True, highlight=False)
-    console.print(
-        "\n  [blue]/[/][green]/[/][red]/[/] [bold][link=https://multiqc.info]MultiQC[/link][/] :mag: [dim]| v{}\n".format(
-            config.version
-        )
-    )
-    logger.debug("This is MultiQC v{}".format(config.version))
     logger.debug("Command     : {}".format(" ".join(sys.argv)))
     logger.debug("Working dir : {}".format(os.getcwd()))
     if make_pdf:
@@ -659,7 +660,10 @@ def run(
 
                 def __rich_measure__(self, console: rich.console.Console):
                     tb_width = max([len(l) for l in traceback.format_exc().split("\n")])
-                    log_width = 71 + len(report.last_found_file)
+                    try:
+                        log_width = 71 + len(report.last_found_file)
+                    except TypeError:
+                        log_width = 71
                     panel_width = max(tb_width, log_width)
                     return rich.console.Measurement(panel_width, panel_width)
 
@@ -673,6 +677,15 @@ def run(
                     style="on #272822",
                 )
             )
+            # Still log.debug this so that it ends up in the log file - above is just stderr for now
+            logger.debug(
+                "Oops! The '{}' MultiQC module broke...\n".format(this_module)
+                + ("=" * 80)
+                + "\n"
+                + traceback.format_exc()
+                + ("=" * 80)
+            )
+            # Exit code 1 for CI failures etc
             sys_exit_code = 1
 
         report.runtimes["mods"][run_module_names[mod_idx]] = time.time() - mod_starttime
