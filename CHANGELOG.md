@@ -6,6 +6,11 @@
 
 - Make the module crash tracebacks much prettier using `rich`
 
+#### Module updates
+
+- **Flexbar**
+  - Fixed bug where reports with 0 reads would crash MultiQC ([#1407](https://github.com/ewels/MultiQC/issues/1407))
+
 ## [MultiQC v1.10.1](https://github.com/ewels/MultiQC/releases/tag/v1.10.1) - 2021-04-01
 
 ### MultiQC updates
