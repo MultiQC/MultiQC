@@ -2,7 +2,9 @@
 
 ## MultiQC v1.11dev
 
-_..nothing yet.._
+### MultiQC updates
+
+- Make the module crash tracebacks much prettier using `rich`
 
 ## [MultiQC v1.10.1](https://github.com/ewels/MultiQC/releases/tag/v1.10.1) - 2021-04-01
 

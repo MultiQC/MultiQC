@@ -18,12 +18,15 @@ import io
 import jinja2
 import os
 import re
+import rich
 import shutil
 import subprocess
 import sys
 import tempfile
 import time
 import traceback
+
+from rich.syntax import Syntax
 
 try:
     # Python 3 imports
@@ -634,18 +637,38 @@ def run(
             sys.exit(1)
         except:
             # Flag the error, but carry on
-            logger.error(
-                "Oops! The '{}' MultiQC module broke... \n".format(this_module)
-                + "  Please copy the following traceback and report it at "
-                + "https://github.com/ewels/MultiQC/issues \n"
-                + "  If possible, please include a log file that triggers the error - "
-                + "the last file found was:\n"
-                + "    {}\n".format(report.last_found_file)
-                + ("=" * 60)
-                + "\nModule {} raised an exception: {}".format(this_module, traceback.format_exc())
-                + ("=" * 60)
+            class CustomTraceback:
+                def __rich_console__(self, console: rich.console.Console):
+                    sys_tb = sys.exc_info()
+                    issue_url = "https://github.com/ewels/MultiQC/issues/new?template=bug_report.md&title={}%20module%20-%20{}".format(
+                        this_module, sys_tb[0].__name__
+                    )
+                    yield (
+                        "Please copy this log and report it at [bright_blue][link={}]https://github.com/ewels/MultiQC/issues[/link][/] \n"
+                        "[bold underline]Please attach a file that triggers the error.[/] The last file found was: [green]{}[/]\n".format(
+                            issue_url, report.last_found_file
+                        )
+                    )
+                    yield Syntax(traceback.format_exc(), "python")
+
+                def __rich_measure__(self, console: rich.console.Console):
+                    tb_width = max([len(l) for l in traceback.format_exc().split("\n")])
+                    log_width = 71 + len(report.last_found_file)
+                    panel_width = max(tb_width, log_width)
+                    return rich.console.Measurement(panel_width, panel_width)
+
+            console = rich.console.Console(stderr=True)
+            console.print(
+                rich.panel.Panel(
+                    CustomTraceback,
+                    title="Oops! The '[underline]{}[/]' MultiQC module broke...".format(this_module),
+                    expand=False,
+                    border_style="red",
+                    style="on #272822",
+                )
             )
             sys_exit_code = 1
+
         report.runtimes["mods"][run_module_names[mod_idx]] = time.time() - mod_starttime
     report.runtimes["total_mods"] = time.time() - total_mods_starttime
 

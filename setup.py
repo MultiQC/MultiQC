@@ -63,7 +63,7 @@ install_requires = [
     "markdown" + markdown_version,
     "pyyaml>=4",
     "requests",
-    "rich>=9.4.0",
+    "rich>=10",
     "simplejson",
     "spectra>=0.0.10",
 ]
