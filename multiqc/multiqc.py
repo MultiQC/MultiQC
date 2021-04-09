@@ -534,7 +534,7 @@ def run(
 
     if len(getattr(config, "run_modules", {})) > 0:
         run_modules = [m for m in run_modules if list(m.keys())[0] in config.run_modules]
-        logger.info("Only using modules {}".format(", ".join(config.run_modules)))
+        logger.info("Only using modules: {}".format(", ".join(config.run_modules)))
     elif modules_from_tags:
         run_modules = [m for m in run_modules if list(m.keys())[0] in modules_from_tags]
         logger.info("Only using modules with '{}' tag".format(", ".join(module_tag)))
@@ -584,7 +584,7 @@ def run(
 
     # Get the list of files to search
     for d in config.analysis_dir:
-        logger.info("Searching   : {}".format(os.path.abspath(d)))
+        logger.info("Search path : {}".format(os.path.abspath(d)))
     report.get_filelist(run_module_names)
 
     # Run the modules!

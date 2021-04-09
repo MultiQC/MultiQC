@@ -256,15 +256,16 @@ def get_filelist(run_module_names):
 
     # Search through collected files
     progress_obj = rich.progress.Progress(
-        "[progress.description]{task.description}",
+        "[blue]|[/]      ",
         rich.progress.SpinnerColumn(),
+        "[blue]{task.description}[/] |",
         rich.progress.BarColumn(),
         "[progress.percentage]{task.percentage:>3.0f}%",
         "[green]{task.completed}/{task.total}",
         "[dim]{task.fields[s_fn]}",
     )
     with progress_obj as progress:
-        mqc_task = progress.add_task("|      [blue]searching[/] |", total=len(searchfiles), s_fn="")
+        mqc_task = progress.add_task("searching", total=len(searchfiles), s_fn="")
         for sf in searchfiles:
             progress.update(mqc_task, advance=1, s_fn=os.path.join(sf[1], sf[0])[-50:])
             if not add_file(sf[0], sf[1]):

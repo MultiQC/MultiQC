@@ -35,7 +35,7 @@ def init_log(logger, loglevel=0, no_ansi=False):
 
     # Logging templates
     debug_template = "[%(asctime)s] %(name)-50s [%(levelname)-7s]  %(message)s"
-    info_template = "|%(module)15s | %(message)s"
+    info_template = "|%(module)18s | %(message)s"
 
     # Base level setup
     logger.setLevel(getattr(logging, "DEBUG"))
