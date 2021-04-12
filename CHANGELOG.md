@@ -6,6 +6,7 @@
 
 - Make the module crash tracebacks much prettier using `rich`
 - Refine the cli log output a little (nicely formatted header line + drop the `[INFO]`)
+- Added docs describing tools for downstream analysis of MultiQC outputs.
 
 #### Module updates
 
