@@ -115,9 +115,7 @@ class MultiqcModule(BaseMultiqcModule):
         mean_links_length_nucleotide_space = dict()
         sum_of_path_nodes_distances_nodes_space = dict()
         sum_of_path_nodes_distances_nucleotide_space = dict()
-        odgi_stats_file_names = self.odgi_stats_map.keys()
-        odgi_stats_file_names = {x for x in odgi_stats_file_names if x[0] is not None}
-        odgi_stats_file_names = sorted(odgi_stats_file_names)
+        odgi_stats_file_names = sorted(self.odgi_stats_map.keys())
         seq_smooth = odgi_stats_file_names[-2:]
         sorted_filenames = seq_smooth + odgi_stats_file_names[:-2]
         for sample_name in sorted_filenames:
@@ -159,15 +157,15 @@ class MultiqcModule(BaseMultiqcModule):
     def extract_sample_name(self, file_name):
         """
         Extracts the sample name from a given file name.
-        Expects and returns one of seqwish, smooth or consensus@*
+        Expects and returns one of seqwish, smooth or cons@*
         """
-        if 'consensus@' in file_name:
+        if 'cons@' in file_name:
             file_name = file_name.split('.')
-            consensus_identifier = list((e for e in file_name if 'consensus@' in e))
+            consensus_identifier = list((e for e in file_name if 'cons@' in e))
             try:
                 return consensus_identifier[0]
             except IndexError:
-                log.error('Unknown file name {}: File name must either contain seqwish, smooth or consensus@!'.format(file_name))
+                log.error('Unknown file name {}: File name must either contain seqwish, smooth or cons@!'.format(file_name))
         elif 'smooth' in file_name:
             return 'smooth'
         elif 'seqwish' in file_name:
