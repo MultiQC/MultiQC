@@ -115,7 +115,9 @@ class MultiqcModule(BaseMultiqcModule):
         mean_links_length_nucleotide_space = dict()
         sum_of_path_nodes_distances_nodes_space = dict()
         sum_of_path_nodes_distances_nucleotide_space = dict()
-        odgi_stats_file_names = sorted(self.odgi_stats_map.keys())
+        odgi_stats_file_names = self.odgi_stats_map.keys()
+        odgi_stats_file_names = {x for x in odgi_stats_file_names if x[0] is not None}
+        odgi_stats_file_names = sorted(odgi_stats_file_names)
         seq_smooth = odgi_stats_file_names[-2:]
         sorted_filenames = seq_smooth + odgi_stats_file_names[:-2]
         for sample_name in sorted_filenames:
