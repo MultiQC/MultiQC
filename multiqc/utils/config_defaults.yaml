@@ -354,7 +354,7 @@ module_order:
         - Denovo
   - bustools:
       module_tag:
-          - RNA
+        - RNA
   - goleft_indexcov:
       module_tag:
         - DNA
