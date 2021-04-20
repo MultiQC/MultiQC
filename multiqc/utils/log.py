@@ -40,6 +40,11 @@ def init_log(logger, loglevel=0, no_ansi=False):
     # Base level setup
     logger.setLevel(getattr(logging, "DEBUG"))
 
+    # Automatically set no_ansi if not a tty terminal
+    if not no_ansi:
+        if sys.stderr.isatty() and not force_term_colors():
+            no_ansi = True
+
     # Set up the console logging stream
     console = logging.StreamHandler()
     console.setLevel(getattr(logging, loglevel))
@@ -48,14 +53,14 @@ def init_log(logger, loglevel=0, no_ansi=False):
     field_styles = coloredlogs.DEFAULT_FIELD_STYLES
     field_styles["module"] = {"color": "blue"}
     if loglevel == "DEBUG":
-        if no_ansi or not (sys.stderr.isatty() and rich_force_colors()):
+        if no_ansi:
             console.setFormatter(logging.Formatter(debug_template))
         else:
             console.setFormatter(
                 coloredlogs.ColoredFormatter(fmt=debug_template, level_styles=level_styles, field_styles=field_styles)
             )
     else:
-        if no_ansi or not (sys.stderr.isatty() and rich_force_colors()):
+        if no_ansi:
             console.setFormatter(logging.Formatter(info_template))
         else:
             console.setFormatter(
@@ -107,7 +112,7 @@ def get_log_stream(logger):
     return log_stream
 
 
-def rich_force_colors():
+def force_term_colors():
     """
     Check if any environment variables are set to force Rich to use coloured output
     """
