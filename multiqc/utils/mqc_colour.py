@@ -6,6 +6,7 @@ Helper functions to manipulate colours and colour scales
 from __future__ import print_function
 import spectra
 import numpy as np
+import os
 import re
 
 # Default logger will be replaced by caller
@@ -13,6 +14,13 @@ import logging
 
 logger = logging.getLogger(__name__)
 
+def rich_force_colors():
+    """
+    Check if any environment variables are set to force Rich to use coloured output
+    """
+    if os.getenv("GITHUB_ACTIONS") or os.getenv("FORCE_COLOR") or os.getenv("PY_COLORS"):
+        return True
+    return None
 
 class mqc_colour_scale(object):
     """ Class to hold a colour scheme. """
