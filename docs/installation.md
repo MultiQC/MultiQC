@@ -166,7 +166,7 @@ It's based on `czentye/matplotlib-minimal` to give the smallest size I could man
 To use, call the `docker run` with your current working directory mounted as a volume and working directory:
 
 ```bash
-docker run -v `pwd`:`pwd` -w `pwd` ewels/multiqc
+docker run -t -v `pwd`:`pwd` -w `pwd` ewels/multiqc
 ```
 
 By default, docker will use the `:latest` tag. For MultiQC, this is set to be the most recent release.
@@ -176,11 +176,25 @@ You can also specify specific versions, eg: `ewels/multiqc:1.9`.
 You can also specify additional MultiQC parameters as normal:
 
 ```bash
-docker run -v `pwd`:`pwd` -w `pwd` ewels/multiqc . --title "My amazing report" -b "This was made with docker"
+docker run -t -v `pwd`:`pwd` -w `pwd` ewels/multiqc . --title "My amazing report" -b "This was made with docker"
 ```
 
-Note that all files on the command line (eg. config files) must be mounted in the docker container to be accessible.
+Note that all files on the command line (eg. config files) must also be mounted in the docker container to be accessible.
 For more help, look into [the Docker documentation](https://docs.docker.com/engine/reference/commandline/run/)
+
+### Docker bash alias
+
+The above base command is a little verbose, so if you are using this a lot it may be worth adding the following bash alias to your `~/.bashrc` file:
+
+```bash
+alias multiqc="docker run -tv `pwd`:`pwd` -w `pwd` ewels/multiqc"
+```
+
+Once applied (you may need to reload your shell if added to your `.bashrc`) you can then just use the `multiqc` instead:
+
+```bash
+multiqc .
+```
 
 ## Using Singularity
 

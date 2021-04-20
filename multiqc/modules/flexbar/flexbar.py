@@ -60,9 +60,12 @@ class MultiqcModule(BaseMultiqcModule):
                 # Calculate removed_bases
                 if "processed_bases" in parsed_data and "remaining_bases" in parsed_data:
                     parsed_data["removed_bases"] = parsed_data["processed_bases"] - parsed_data["remaining_bases"]
-                    parsed_data["removed_bases_pct"] = (
-                        float(parsed_data["removed_bases"]) / float(parsed_data["processed_bases"])
-                    ) * 100.0
+                    try:
+                        parsed_data["removed_bases_pct"] = (
+                            float(parsed_data["removed_bases"]) / float(parsed_data["processed_bases"])
+                        ) * 100.0
+                    except ZeroDivisionError:
+                        parsed_data["removed_bases_pct"] = 0
                 if s_name in self.flexbar_data:
                     log.debug("Duplicate sample name found! Overwriting: {}".format(s_name))
                 self.flexbar_data[s_name] = parsed_data

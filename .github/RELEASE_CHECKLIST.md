@@ -21,39 +21,12 @@ This checklist is for my own reference, as I forget the steps every time.
    - Comment out any config in `~/.multiqc_config.yaml`
    - Spot any previously unnoticed bugs and fix
    - Upload to the website and push change to Git
-8. Build PyPI dist
-
-   - Python docs [here](https://packaging.python.org/tutorials/packaging-projects/#generating-distribution-archives)
-
-   ```bash
-   rm -rf dist/
-   pip install --upgrade pip
-   pip install --upgrade build
-   python -m build
-   ```
-
-9. Release on PyPI:
-
-   ```bash
-   pip install --upgrade twine
-   twine upload dist/*
-   ```
-
-10. Test that it pip installs:
-
-    ```bash
-    conda create --name testing --yes python pip && conda activate testing
-    pip install multiqc
-    multiqc .
-    conda deactivate && conda remove --name testing --all --yes && conda clean --all --yes
-    ```
-
-11. Commit and push version updates
-12. Make a [release](https://github.com/ewels/MultiQC/releases) on GitHub - paste changelog section.
-13. Check that [PyPI listing page](https://pypi.python.org/pypi/multiqc/) looks sane
-14. Update version numbers to new dev version in `setup.py` + a new section in the changelog for the development version
-15. Commit and push version bump
-16. Make a new release on `bioconda`:
+8. Commit and push version updates
+9. Make a [release](https://github.com/ewels/MultiQC/releases) on GitHub - paste changelog section.
+10. Check that [PyPI listing page](https://pypi.python.org/pypi/multiqc/) looks sane
+11. Update version numbers to new dev version in `setup.py` + a new section in the changelog for the development version
+12. Commit and push version bump
+13. Make a new release on `bioconda` (assuming new modules were added):
 
     ```bash
     # Update to latest bioconda
@@ -64,19 +37,18 @@ This checklist is for my own reference, as I forget the steps every time.
     git branch -D multiqc
     # Build new conda recipe from PyPI to automatically collect new dependencies
     git checkout -b multiqc
-    cd recipes
     # Do the conda skeleton to copy the dependencies
-    mkdir mqctemp && cd mqctemp && atom .
+    cd recipes && mkdir mqctemp && cd mqctemp && code .
     conda skeleton pypi multiqc
     # Update with new release header - see https://goo.gl/ZfRnmj
-    cd ../multiqc && atom .
+    cd ../multiqc && code .
     # Get the sha256sum of the release
     curl -OL https://github.com/ewels/MultiQC/archive/v1.5.tar.gz
     shasum --algorithm 256 v1.5.tar.gz
     # Switch out download for GitHub release and remove all other cruft
     # commit changes
     cd ../../
-    git commit -am "MultiQC version 1.5 release"
+    git commit -am "MultiQC version 1.23 release"
     # Test locally
     docker pull bioconda/bioconda-utils-build-env
     circleci build
@@ -85,6 +57,6 @@ This checklist is for my own reference, as I forget the steps every time.
     # Submit a Pull Request and merge
     ```
 
-17. Tell UPPMAX about the new version and ask for the module system to be updated.
-18. Tweet that new version is released
-19. Continue making more awesome :metal:
+14. Tell UPPMAX about the new version and ask for the module system to be updated.
+15. Tweet that new version is released
+16. Continue making more awesome :metal:

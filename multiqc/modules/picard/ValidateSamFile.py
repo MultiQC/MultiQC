@@ -184,7 +184,13 @@ def _histogram_data(iterator):
         elif histogram_started:
             if header_passed:
                 values = l.rstrip().split("\t")
-                problem_type, name = values[0].split(":")
+                if len(values) == 1:
+                    continue
+                try:
+                    problem_type, name = values[0].split(":")
+                except ValueError as e:
+                    log.warn("Line did not look like normal picard 'ERROR:NAME' format, ignoring: {}".format(values[0]))
+                    continue
                 yield problem_type, name, int(values[1])
             elif l.startswith("Error Type"):
                 header_passed = True

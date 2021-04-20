@@ -2,26 +2,52 @@
 
 ## MultiQC v1.11dev
 
-#### New Modules
-
-* [**Bustools**](https://bustools.github.io/)
-  * Tools for working with BUS files
-
-<!--
 ### MultiQC updates
 
-#### New MultiQC Features
+- Make the module crash tracebacks much prettier using `rich`
+- Refine the cli log output a little (nicely formatted header line + drop the `[INFO]`)
+- Added docs describing tools for downstream analysis of MultiQC outputs.
 
 #### New Modules
 
+- [**Bustools**](https://bustools.github.io/)
+  - Tools for working with BUS files
+
 #### Module updates
--->
 
-#### Bug Fixes
+- **Flexbar**
+  - Fixed bug where reports with 0 reads would crash MultiQC ([#1407](https://github.com/ewels/MultiQC/issues/1407))
+- **Picard**
+  - `RnaSeqMetrics` - fix assignment barplot labels to say bases instead of reads ([#1408](https://github.com/ewels/MultiQC/issues/1408))
 
+## [MultiQC v1.10.1](https://github.com/ewels/MultiQC/releases/tag/v1.10.1) - 2021-04-01
+
+### MultiQC updates
+
+- Dropped the `Skipping search pattern` log message from a warning to debug
+- Moved directory prepending with `-d` back to before sample name cleaning (as it was before v1.7) ([#1264](https://github.com/ewels/MultiQC/issues/1264))
+- If linegraph plot data goes above `ymax`, only _discard_ the data if the line doesn't come back again ([#1257](https://github.com/ewels/MultiQC/issues/1257))
 - Allow scientific notation numbers in colour scheme generation
   - Fixed bug with very small minimum numbers that only revelead itself after a bugfix done in the v1.10 release
 - Allow `top_modules` to be specified as empty dicts ([#1274](https://github.com/ewels/MultiQC/issues/1274))
+- Require at least `rich` version `9.4.0` to avoid `SpinnerColumn` `AttributeError` ([#1393](https://github.com/ewels/MultiQC/issues/1393))
+- Properly ignore `.snakemake` folders as intended ([#1395](https://github.com/ewels/MultiQC/issues/1395))
+
+#### Module updates
+
+- **bcftools**
+  - Fixed bug where `QUAL` value `.` would crash MultiQC ([#1400](https://github.com/ewels/MultiQC/issues/1400))
+- **bowtie2**
+  - Fix bug where HiSAT2 paired-end bar plots were missing unaligned reads ([#1230](https://github.com/ewels/MultiQC/issues/1230))
+- **Deeptools**
+  - Handle `plotProfile` data where no upstream / downstream regions have been calculated around genes ([#1317](https://github.com/ewels/MultiQC/issues/1317))
+  - Fix `IndexError` caused by mysterious `-1` in code.. ([#1275](https://github.com/ewels/MultiQC/issues/1275))
+- **FastQC**
+  - Replace `NaN` with `0` in the _Per Base Sequence Content_ plot to avoid crashing the plot ([#1246](https://github.com/ewels/MultiQC/issues/1246))
+- **Picard**
+  - Fixed bug in `ValidateSamFile` module where additional whitespace at the end of the file would cause MultiQC to crash ([#1397](https://github.com/ewels/MultiQC/issues/1397))
+- **Somalier**
+  - Fixed bug where using sample name cleaning in a config would trigger a `KeyError` ([#1234](https://github.com/ewels/MultiQC/issues/1234))
 
 ## [MultiQC v1.10](https://github.com/ewels/MultiQC/releases/tag/v1.10) - 2021-03-08
 

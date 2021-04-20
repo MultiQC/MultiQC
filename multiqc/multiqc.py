@@ -18,12 +18,15 @@ import io
 import jinja2
 import os
 import re
+import rich
 import shutil
 import subprocess
 import sys
 import tempfile
 import time
 import traceback
+
+from rich.syntax import Syntax
 
 try:
     # Python 3 imports
@@ -203,11 +206,24 @@ def run_cli(
     no_ansi,
     **kwargs,
 ):
+    # Main MultiQC run command for use with the click command line, complete with all click function decorators.
+    # To make it easy to use MultiQC within notebooks and other locations that don't need click, we simply pass the
+    # parsed variables on to a vanilla python function.
+
+    """MultiQC aggregates results from bioinformatics analyses across many samples into a single report.
+
+    It searches a given directory for analysis logs and compiles a HTML report.
+    It's a general use tool, perfect for summarising the output from numerous
+    bioinformatics tools.
+
+    To run, supply with one or more directory to scan for analysis results.
+    To run here, use 'multiqc .'
+
+    See http://multiqc.info for more details.
+
+    Author: Phil Ewels (http://phil.ewels.co.uk)
     """
-    Main MultiQC run command for use with the click command line, complete with all click function decorators.
-    To make it easy to use MultiQC within notebooks and other locations that don't need click, we simply pass the
-    parsed variables on to a vanilla python function.
-    """
+
     # Use keyword arguments in case things get rearranged in the future
     multiqc_run = run(
         analysis_dir=analysis_dir,
@@ -311,6 +327,14 @@ def run(
         loglevel = "WARNING"
     log.init_log(logger, loglevel=loglevel, no_ansi=no_ansi)
 
+    console = rich.console.Console(stderr=True, highlight=False)
+    console.print(
+        "\n  [blue]/[/][green]/[/][red]/[/] [bold][link=https://multiqc.info]MultiQC[/link][/] :mag: [dim]| v{}\n".format(
+            config.version
+        )
+    )
+    logger.debug("This is MultiQC v{}".format(config.version))
+
     # Load config files
     plugin_hooks.mqc_trigger("before_config")
     config.mqc_load_userconfig(config_file)
@@ -402,23 +426,22 @@ def run(
 
     plugin_hooks.mqc_trigger("execution_start")
 
-    logger.info("This is MultiQC v{}".format(config.version))
     logger.debug("Command     : {}".format(" ".join(sys.argv)))
     logger.debug("Working dir : {}".format(os.getcwd()))
     if make_pdf:
         logger.info("--pdf specified. Using non-interactive HTML template.")
-    logger.info("Template    : {}".format(config.template))
+    logger.debug("Template    : {}".format(config.template))
     if lint:
         logger.info("--lint specified. Being strict with validation.")
 
     # Throw a warning if we are running on Python 2
     if sys.version_info[0] < 3:
-        logger.warning(
+        logger.error(
             "You are running MultiQC with Python {}.{}.{}".format(
                 sys.version_info[0], sys.version_info[1], sys.version_info[2]
             )
         )
-        logger.warning("Please upgrade! MultiQC no longer officially supports Python < 3.6")
+        logger.critical("Please upgrade Python! MultiQC does not support Python < 3.6, things will break.")
     else:
         logger.debug("Running Python {}".format(sys.version.replace("\n", " ")))
 
@@ -466,8 +489,6 @@ def run(
         logger.info("Report title: {}".format(config.title))
     if dirs:
         logger.info("Prepending directory to sample names")
-    for d in config.analysis_dir:
-        logger.info("Searching   : {}".format(os.path.abspath(d)))
 
     # Prep module configs
     config.top_modules = [m if type(m) is dict else {m: {}} for m in config.top_modules]
@@ -513,7 +534,7 @@ def run(
 
     if len(getattr(config, "run_modules", {})) > 0:
         run_modules = [m for m in run_modules if list(m.keys())[0] in config.run_modules]
-        logger.info("Only using modules {}".format(", ".join(config.run_modules)))
+        logger.info("Only using modules: {}".format(", ".join(config.run_modules)))
     elif modules_from_tags:
         run_modules = [m for m in run_modules if list(m.keys())[0] in modules_from_tags]
         logger.info("Only using modules with '{}' tag".format(", ".join(module_tag)))
@@ -562,6 +583,8 @@ def run(
         pass  # custom_data not in config
 
     # Get the list of files to search
+    for d in config.analysis_dir:
+        logger.info("Search path : {}".format(os.path.abspath(d)))
     report.get_filelist(run_module_names)
 
     # Run the modules!
@@ -621,18 +644,50 @@ def run(
             sys.exit(1)
         except:
             # Flag the error, but carry on
-            logger.error(
-                "Oops! The '{}' MultiQC module broke... \n".format(this_module)
-                + "  Please copy the following traceback and report it at "
-                + "https://github.com/ewels/MultiQC/issues \n"
-                + "  If possible, please include a log file that triggers the error - "
-                + "the last file found was:\n"
-                + "    {}\n".format(report.last_found_file)
-                + ("=" * 60)
-                + "\nModule {} raised an exception: {}".format(this_module, traceback.format_exc())
-                + ("=" * 60)
+            class CustomTraceback:
+                def __rich_console__(self, console: rich.console.Console):
+                    sys_tb = sys.exc_info()
+                    issue_url = "https://github.com/ewels/MultiQC/issues/new?template=bug_report.md&title={}%20module%20-%20{}".format(
+                        this_module, sys_tb[0].__name__
+                    )
+                    yield (
+                        "Please copy this log and report it at [bright_blue][link={}]https://github.com/ewels/MultiQC/issues[/link][/] \n"
+                        "[bold underline]Please attach a file that triggers the error.[/] The last file found was: [green]{}[/]\n".format(
+                            issue_url, report.last_found_file
+                        )
+                    )
+                    yield Syntax(traceback.format_exc(), "python")
+
+                def __rich_measure__(self, console: rich.console.Console):
+                    tb_width = max([len(l) for l in traceback.format_exc().split("\n")])
+                    try:
+                        log_width = 71 + len(report.last_found_file)
+                    except TypeError:
+                        log_width = 71
+                    panel_width = max(tb_width, log_width)
+                    return rich.console.Measurement(panel_width, panel_width)
+
+            console = rich.console.Console(stderr=True)
+            console.print(
+                rich.panel.Panel(
+                    CustomTraceback,
+                    title="Oops! The '[underline]{}[/]' MultiQC module broke...".format(this_module),
+                    expand=False,
+                    border_style="red",
+                    style="on #272822",
+                )
             )
+            # Still log.debug this so that it ends up in the log file - above is just stderr for now
+            logger.debug(
+                "Oops! The '{}' MultiQC module broke...\n".format(this_module)
+                + ("=" * 80)
+                + "\n"
+                + traceback.format_exc()
+                + ("=" * 80)
+            )
+            # Exit code 1 for CI failures etc
             sys_exit_code = 1
+
         report.runtimes["mods"][run_module_names[mod_idx]] = time.time() - mod_starttime
     report.runtimes["total_mods"] = time.time() - total_mods_starttime
 

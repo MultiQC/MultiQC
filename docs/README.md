@@ -6,6 +6,7 @@ Using MultiQC:
   Configuration: config.md
   Customising Reports: customisation.md
   Using MultiQC in pipelines: pipelines.md
+  Downstream analysis: downstream.md
   Common Problems: troubleshooting.md
 MultiQC Modules:
   Pre-alignment:
@@ -137,14 +138,16 @@ The documentation has the following pages:
   - [Using Reports](reports.md)
   - [Configuration](config.md)
   - [Customising Reports](customisation.md)
+  - [Using MultiQC in pipelines](pipelines.md)
+  - [Downstream analysis of MultiQC outputs](downstream.md)
   - [Common Problems](troubleshooting.md)
 - [MultiQC Modules](modules/)
 - [Custom Content](custom_content.md)
 - Coding with MultiQC
-  - [Writing new templates](templates.md)
   - [Writing new modules](modules.md)
-  - [Plugins](plugins.md)
+  - [Plotting functions](plots.md)
   - [MultiQC Plugins](plugins.md)
+  - [Writing new templates](templates.md)
   - [Updating for compatibility](compatibility.md)
 
 These docs can be read in any of three ways:

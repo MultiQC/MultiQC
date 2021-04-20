@@ -180,10 +180,16 @@ class MultiqcModule(BaseMultiqcModule):
 
                 # End of log section
                 # Save half 'pairs' of mate counts
-                m_keys = ["paired_aligned_mate_multi", "paired_aligned_mate_none", "paired_aligned_mate_one"]
-                for k in m_keys:
+                for k in ["paired_aligned_mate_multi", "paired_aligned_mate_none", "paired_aligned_mate_one"]:
                     if k in parsed_data:
                         parsed_data["{}_halved".format(k)] = float(parsed_data[k]) / 2.0
+
+                # HiSAT2 has PE data doesn't have the mate-specific stats.
+                # To avoid missing unaligned counts in the barplot, fake the "_halved" key.
+                # See https://github.com/ewels/MultiQC/issues/1230
+                if "paired_aligned_mate_none_halved" not in parsed_data and "paired_aligned_none" in parsed_data:
+                    parsed_data["paired_aligned_mate_none_halved"] = parsed_data["paired_aligned_none"]
+
                 # Save parsed data
                 if s_name in self.bowtie2_data:
                     log.debug("Duplicate sample name found! Overwriting: {}".format(s_name))

@@ -35,7 +35,7 @@ def init_log(logger, loglevel=0, no_ansi=False):
 
     # Logging templates
     debug_template = "[%(asctime)s] %(name)-50s [%(levelname)-7s]  %(message)s"
-    info_template = "[%(levelname)-7s] %(module)15s : %(message)s"
+    info_template = "|%(module)18s | %(message)s"
 
     # Base level setup
     logger.setLevel(getattr(logging, "DEBUG"))
@@ -45,16 +45,22 @@ def init_log(logger, loglevel=0, no_ansi=False):
     console.setLevel(getattr(logging, loglevel))
     level_styles = coloredlogs.DEFAULT_LEVEL_STYLES
     level_styles["debug"] = {"faint": True}
+    field_styles = coloredlogs.DEFAULT_FIELD_STYLES
+    field_styles["module"] = {"color": "blue"}
     if loglevel == "DEBUG":
         if no_ansi or not sys.stderr.isatty():
             console.setFormatter(logging.Formatter(debug_template))
         else:
-            console.setFormatter(coloredlogs.ColoredFormatter(fmt=debug_template, level_styles=level_styles))
+            console.setFormatter(
+                coloredlogs.ColoredFormatter(fmt=debug_template, level_styles=level_styles, field_styles=field_styles)
+            )
     else:
         if no_ansi or not sys.stderr.isatty():
             console.setFormatter(logging.Formatter(info_template))
         else:
-            console.setFormatter(coloredlogs.ColoredFormatter(fmt=info_template, level_styles=level_styles))
+            console.setFormatter(
+                coloredlogs.ColoredFormatter(fmt=info_template, level_styles=level_styles, field_styles=field_styles)
+            )
     logger.addHandler(console)
 
     # Now set up the file logging stream if we have a data directory
