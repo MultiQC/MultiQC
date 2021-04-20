@@ -38,7 +38,7 @@ print(
 )
 
 # Set version requirements according to what version of Python we're running
-networkx_version = ">=2.5.1" # Needed for Python 3.9 support
+networkx_version = ">=2.5.1"  # Needed for Python 3.9 support
 numpy_version = ""
 matplotlib_version = ">=2.1.1"
 jinja2_version = ">=2.9"

@@ -14,6 +14,7 @@ import logging
 
 logger = logging.getLogger(__name__)
 
+
 def rich_force_colors():
     """
     Check if any environment variables are set to force Rich to use coloured output
@@ -21,6 +22,7 @@ def rich_force_colors():
     if os.getenv("GITHUB_ACTIONS") or os.getenv("FORCE_COLOR") or os.getenv("PY_COLORS"):
         return True
     return None
+
 
 class mqc_colour_scale(object):
     """ Class to hold a colour scheme. """
