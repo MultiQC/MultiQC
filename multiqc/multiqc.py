@@ -327,7 +327,7 @@ def run(
         loglevel = "WARNING"
     log.init_log(logger, loglevel=loglevel, no_ansi=no_ansi)
 
-    console = rich.console.Console(stderr=True, highlight=False, force_terminal=mqc_colour.rich_force_colors())
+    console = rich.console.Console(stderr=True, highlight=False, force_terminal=log.rich_force_colors())
     console.print(
         "\n  [blue]/[/][green]/[/][red]/[/] [bold][link=https://multiqc.info]MultiQC[/link][/] :mag: [dim]| v{}\n".format(
             config.version
@@ -667,7 +667,7 @@ def run(
                     panel_width = max(tb_width, log_width)
                     return rich.console.Measurement(panel_width, panel_width)
 
-            console = rich.console.Console(stderr=True, force_terminal=mqc_colour.rich_force_colors())
+            console = rich.console.Console(stderr=True, force_terminal=log.rich_force_colors())
             console.print(
                 rich.panel.Panel(
                     CustomTraceback,
