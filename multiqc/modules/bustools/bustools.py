@@ -8,7 +8,7 @@ import logging
 import os
 import json
 
-from multiqc.plots import bargraph
+from multiqc.plots import bargraph, table
 from multiqc.modules.base_module import BaseMultiqcModule
 
 # Initialise the logger
@@ -33,6 +33,15 @@ class MultiqcModule(BaseMultiqcModule):
             "processing.",
         )
 
+        self.prepare_data()
+
+        log.info("Found {} logs".format(len(self.bustools_data)))
+        self.write_data_file(self.bustools_data, "multiqc_macs")
+
+        self.bustools_general_stats()
+        self.bustools_section()
+
+    def prepare_data(self):
         # Parse logs
         self.bustools_data = dict()
         for f in self.find_log_files("bustools", filehandles=True):
@@ -46,16 +55,9 @@ class MultiqcModule(BaseMultiqcModule):
         if len(self.bustools_data) == 0:
             raise UserWarning
 
-        log.info("Found {} logs".format(len(self.bustools_data)))
-        self.write_data_file(self.bustools_data, "multiqc_macs")
-
-        self.bustools_general_stats()
-        self.bustools_section()
-
-    def bustools_general_stats(self):
-        """ Add columns to General Statistics table """
-        headers = OrderedDict()
-        headers["numRecords"] = {
+        # now fill out the table(s) headers
+        self.headers = OrderedDict()
+        self.headers["numRecords"] = {
             "title": "Bus Records",
             "description": "The number of Bus Records",
             "scale": "BuGn",
@@ -63,15 +65,15 @@ class MultiqcModule(BaseMultiqcModule):
             "hidden": False,
             "format": "{:,.0f}",
         }
-        headers["numReads"] = {
+        self.headers["numReads"] = {
             "title": "Reads",
             "description": "Total number of reads",
             "min": 0,
             "scale": "Greens",
-            "hidden": True,
+            "hidden": False,
             "format": "{:,.0f}",
         }
-        headers["numBarcodes"] = {
+        self.headers["numBarcodes"] = {
             "title": "barcodes",
             "description": "Number of distinct barcodes",
             "min": 0,
@@ -79,14 +81,14 @@ class MultiqcModule(BaseMultiqcModule):
             "hidden": False,
             "format": "{:,.0f}",
         }
-        headers["meanReadsPerBarcode"] = {
+        self.headers["meanReadsPerBarcode"] = {
             "title": "Mean reads per barcode",
             "scale": "BuGn",
             "min": 0,
             "hidden": False,
             "format": "{:,.2f}",
         }
-        headers["numUMIs"] = {
+        self.headers["numUMIs"] = {
             "title": "distinct UMIs",
             "description": "Number of distinct Unique Molecular Identifiers (UMIs)",
             "scale": "Purples",
@@ -94,7 +96,7 @@ class MultiqcModule(BaseMultiqcModule):
             "hidden": False,
             "format": "{:,.0f}",
         }
-        headers["numBarcodeUMIs"] = {
+        self.headers["numBarcodeUMIs"] = {
             "title": "distinct barcode-UMI",
             "description": "Number of distinct barcode and Unique Molecular Identifiers (UMIs) pairs",
             "scale": "Greens",
@@ -102,14 +104,14 @@ class MultiqcModule(BaseMultiqcModule):
             "hidden": False,
             "format": "{:,.0f}",
         }
-        headers["meanUMIsPerBarcode"] = {
+        self.headers["meanUMIsPerBarcode"] = {
             "title": "Mean UMIs per barcode",
             "scale": "PuBnGn",
             "min": 0,
             "hidden": False,
             "format": "{:,.2f}",
         }
-        headers["gtRecords"] = {
+        self.headers["gtRecords"] = {
             "title": "2xdepth records",
             "description": "Estimated number of new records at 2x sequencing depth",
             "min": 0,
@@ -117,7 +119,7 @@ class MultiqcModule(BaseMultiqcModule):
             "hidden": False,
             "format": "{:,.0f}",
         }
-        headers["numTargets"] = {
+        self.headers["numTargets"] = {
             "title": "distinct targets",
             "description": "Number of distinct targets detected",
             "min": 0,
@@ -125,7 +127,7 @@ class MultiqcModule(BaseMultiqcModule):
             "hidden": True,
             "format": "{:,.0f}",
         }
-        headers["meanTargetsPerSet"] = {
+        self.headers["meanTargetsPerSet"] = {
             "title": "mean targets",
             "description": "Mean number of targets per set",
             "min": 0,
@@ -133,7 +135,7 @@ class MultiqcModule(BaseMultiqcModule):
             "hidden": True,
             "format": "{:,.2f}",
         }
-        headers["numSingleton"] = {
+        self.headers["numSingleton"] = {
             "title": "singleton target",
             "description": "Number of reads with singleton target",
             "min": 0,
@@ -141,7 +143,7 @@ class MultiqcModule(BaseMultiqcModule):
             "hidden": True,
             "format": "{:,.2f}",
         }
-        headers["gtTargets"] = {
+        self.headers["gtTargets"] = {
             "title": "2xdepth targets",
             "description": "Estimated number of new targets at 2x sequencing depth",
             "min": 0,
@@ -149,7 +151,7 @@ class MultiqcModule(BaseMultiqcModule):
             "hidden": True,
             "format": "{:,.2f}",
         }
-        headers["numBarcodesOnWhitelist"] = {
+        self.headers["numBarcodesOnWhitelist"] = {
             "title": "Whitelisted barcodes",
             "description": "Number of barcodes in agreement with whitelist",
             "min": 0,
@@ -157,7 +159,7 @@ class MultiqcModule(BaseMultiqcModule):
             "hidden": True,
             "format": "{:,.0f}",
         }
-        headers["percentageBarcodesOnWhitelist"] = {
+        self.headers["percentageBarcodesOnWhitelist"] = {
             "title": "Perc. whitelisted barcodes",
             "min": 0,
             "max": 100,
@@ -165,7 +167,7 @@ class MultiqcModule(BaseMultiqcModule):
             "hidden": False,
             "format": "{:,.2f}",
         }
-        headers["numReadsOnWhitelist"] = {
+        self.headers["numReadsOnWhitelist"] = {
             "title": "Whitelisted reads",
             "description": "Number of reads with barcode in agreement with whitelist",
             "scale": "PuBu",
@@ -173,28 +175,45 @@ class MultiqcModule(BaseMultiqcModule):
             "hidden": True,
             "format": "{:,.0f}",
         }
-        headers["percentageReadsOnWhitelist"] = {
+        self.headers["percentageReadsOnWhitelist"] = {
             "title": "Perc. whitelisted reads",
             "min": 0,
             "max": 100,
             "scale": "RdYlGn",
-            "hidden": True,
+            "hidden": False,
             "format": "{:,.2f}",
         }
+
+    def bustools_general_stats(self):
+        # we take a smaller subset
+        general_stats_headers = [
+            "numRecords",
+            "numBarcodes",
+            "meanReadsPerBarcode",
+            "numUMIs",
+            "gtRecords",
+            "percentageReadsOnWhitelist",
+        ]
+        headers = {header: v for header, v in self.headers.items() if header in general_stats_headers}
+        # headers = {header: v for header, v in self.headers.items() if header not in general_stats_headers}
+        print(list(headers.keys()))
+        print(list(self.headers.keys()))
         self.general_stats_addcols(self.bustools_data, headers)
 
     def bustools_section(self):
         """ Add bargraphs showing the mean UMIs per barcode and percentages in whitelist """
+        # add the summary table
+        self.add_section(
+            name="Summary table",
+            anchor="bustools-inspect",
+            description="This is a table of the complete output of bustools inspect. Note that this table is configurable, in that there are some hidden columns. More importantly ",
+            plot=table.plot(self.bustools_data, self.headers),
+        )
+
+        # also make some nice barplots
+        # barplot for mean umis per sample
         mean_umis = {
             sample: {"UMIs per barcode": values["meanUMIsPerBarcode"]} for sample, values in self.bustools_data.items()
-        }
-
-        percentage_whitelist = {
-            sample: {
-                "Reads on whitelist": values["percentageReadsOnWhitelist"],
-                "Barcodes on whitelist": values["percentageBarcodesOnWhitelist"],
-            }
-            for sample, values in self.bustools_data.items()
         }
 
         self.add_section(
@@ -215,6 +234,14 @@ class MultiqcModule(BaseMultiqcModule):
             ),
         )
 
+        # barplot for the percentage of reads and barcodes on the whitelist
+        percentage_whitelist = {
+            sample: {
+                "Reads on whitelist": values["percentageReadsOnWhitelist"],
+                "Barcodes on whitelist": values["percentageBarcodesOnWhitelist"],
+            }
+            for sample, values in self.bustools_data.items()
+        }
         self.add_section(
             name="Percentage in whitelist",
             anchor="bustools-reads",
