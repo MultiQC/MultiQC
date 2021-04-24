@@ -123,19 +123,19 @@ def _take_till(iterator, fn):
 
 def _parse_cli(line):
     """Parse the Picard CLI invocation that is stored in the header section of the file."""
-    tumor_awareness_regex = r"CALCULATE_TUMOR_AWARE_RESULTS=(\w+)"
-    lod_threshold_regex = r"LOD_THRESHOLD=(\S+)"
+    tumor_awareness_regex = r"CALCULATE_TUMOR_AWARE_RESULTS(\s|=)(\w+)"
+    lod_threshold_regex = r"LOD_THRESHOLD(\s|=)(\S+)"
 
     tumor_awareness = None
     lod_threshold = None
 
     tumor_awareness_match = re.search(tumor_awareness_regex, line)
     if tumor_awareness_match is not None:
-        tumor_awareness = strtobool(tumor_awareness_match.group(1))
+        tumor_awareness = strtobool(tumor_awareness_match.group(2))
 
     lod_threshold_match = re.search(lod_threshold_regex, line)
     if lod_threshold_match is not None:
-        lod_threshold = float(lod_threshold_match.group(1))
+        lod_threshold = float(lod_threshold_match.group(2))
 
     return (tumor_awareness, lod_threshold)
 
@@ -223,7 +223,7 @@ def _get_table_headers(data):
             headers[h]["title"] = "Categorical Result"
             headers[h]["cond_formatting_rules"] = {
                 "pass": [{"s_contains": "EXPECTED_"}],
-                "warn": [{"s_eq": "AMBIGUOUS"}],
+                "warn": [{"s_eq": "INCONCLUSIVE"}],
                 "fail": [{"s_contains": "UNEXPECTED_"}],
             }
 
