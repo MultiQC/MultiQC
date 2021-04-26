@@ -9,6 +9,11 @@
 - Added docs describing tools for downstream analysis of MultiQC outputs.
 - Added CI tests for Python 3.9, pinned `networkx` package to `>=2.5.1` ([#1413](https://github.com/ewels/MultiQC/issues/1413))
 
+#### New Modules
+
+- [**Bustools**](https://bustools.github.io/)
+  - Tools for working with BUS files
+
 #### Module updates
 
 - **Flexbar**

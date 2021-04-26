@@ -171,6 +171,8 @@ busco:
   fn: "short_summary*"
   contents: "BUSCO version is:"
   num_lines: 1
+bustools:
+  fn: "*inspect.json"
 custom_content:
   fn_re: '.+_mqc\.(yaml|yml|json|txt|csv|tsv|log|out|png|jpg|jpeg|html)'
 clipandmerge:
