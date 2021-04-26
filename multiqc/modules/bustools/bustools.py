@@ -9,6 +9,7 @@ import os
 import json
 
 from multiqc.plots import bargraph, table
+from multiqc.utils import config
 from multiqc.modules.base_module import BaseMultiqcModule
 
 # Initialise the logger
@@ -58,77 +59,84 @@ class MultiqcModule(BaseMultiqcModule):
         # now fill out the table(s) headers
         self.headers = OrderedDict()
         self.headers["numRecords"] = {
-            "title": "Bus Records",
-            "description": "The number of Bus Records",
+            "title": "{} Bus Records".format(config.read_count_prefix),
+            "description": "The number of Bus Records ({})".format(config.read_count_desc),
             "scale": "BuGn",
             "min": 0,
-            "hidden": False,
-            "format": "{:,.0f}",
+            "shared_key": "read_count",
+            "modify": lambda x: x * config.read_count_multiplier,
+            "format": "{:,.2f}",
         }
         self.headers["numReads"] = {
-            "title": "Reads",
-            "description": "Total number of reads",
+            "title": "{} Reads".format(config.read_count_prefix),
+            "description": "Total number of reads ({})".format(config.read_count_desc),
             "min": 0,
             "scale": "Greens",
-            "hidden": False,
-            "format": "{:,.0f}",
+            "shared_key": "read_count",
+            "modify": lambda x: x * config.read_count_multiplier,
+            "format": "{:,.2f}",
         }
         self.headers["numBarcodes"] = {
-            "title": "barcodes",
+            "title": "Barcodes",
             "description": "Number of distinct barcodes",
             "min": 0,
             "scale": "YlGn",
-            "hidden": False,
             "format": "{:,.0f}",
+            "shared_key": "barcodes",
         }
         self.headers["meanReadsPerBarcode"] = {
             "title": "Mean reads per barcode",
             "scale": "BuGn",
             "min": 0,
-            "hidden": False,
             "format": "{:,.2f}",
         }
         self.headers["numUMIs"] = {
-            "title": "distinct UMIs",
-            "description": "Number of distinct Unique Molecular Identifiers (UMIs)",
+            "title": "{} Distinct UMIs".format(config.read_count_prefix),
+            "description": "Number of distinct Unique Molecular Identifiers (UMIs) ({})".format(config.read_count_desc),
             "scale": "Purples",
             "min": 0,
-            "hidden": False,
-            "format": "{:,.0f}",
+            "shared_key": "read_count",
+            "modify": lambda x: x * config.read_count_multiplier,
+            "format": "{:,.2f}",
         }
         self.headers["numBarcodeUMIs"] = {
-            "title": "distinct barcode-UMI",
-            "description": "Number of distinct barcode and Unique Molecular Identifiers (UMIs) pairs",
+            "title": "{} Distinct barcode-UMI".format(config.read_count_prefix),
+            "description": "Number of distinct barcode and Unique Molecular Identifiers (UMIs) pairs ({})".format(
+                config.read_count_desc
+            ),
             "scale": "Greens",
             "min": 0,
-            "hidden": False,
-            "format": "{:,.0f}",
+            "shared_key": "read_count",
+            "modify": lambda x: x * config.read_count_multiplier,
+            "format": "{:,.2f}",
         }
         self.headers["meanUMIsPerBarcode"] = {
             "title": "Mean UMIs per barcode",
             "scale": "PuBnGn",
             "min": 0,
-            "hidden": False,
             "format": "{:,.2f}",
         }
         self.headers["gtRecords"] = {
-            "title": "2xdepth records",
-            "description": "Estimated number of new records at 2x sequencing depth",
+            "title": "{} 2xdepth records".format(config.read_count_prefix),
+            "description": "Estimated number of new records at 2x sequencing depth ({})".format(config.read_count_desc),
             "min": 0,
             "scale": "Oranges",
-            "hidden": False,
-            "format": "{:,.0f}",
+            "format": "{:,.2f}",
+            "shared_key": "read_count",
+            "modify": lambda x: x * config.read_count_multiplier,
         }
         self.headers["numTargets"] = {
-            "title": "distinct targets",
-            "description": "Number of distinct targets detected",
+            "title": "{} Distinct targets".format(config.read_count_prefix),
+            "description": "Number of distinct targets detected ({})".format(config.read_count_desc),
             "min": 0,
             "scale": "BuGn",
             "hidden": True,
-            "format": "{:,.0f}",
+            "format": "{:,.2f}",
+            "shared_key": "read_count",
+            "modify": lambda x: x * config.read_count_multiplier,
         }
         self.headers["meanTargetsPerSet"] = {
-            "title": "mean targets",
+            "title": "Mean targets",
             "description": "Mean number of targets per set",
             "min": 0,
             "scale": "Greens",
@@ -136,20 +144,24 @@ class MultiqcModule(BaseMultiqcModule):
             "format": "{:,.2f}",
         }
         self.headers["numSingleton"] = {
-            "title": "singleton target",
-            "description": "Number of reads with singleton target",
+            "title": "{} Singleton targets".format(config.read_count_prefix),
+            "description": "Number of reads with singleton target ({})".format(config.read_count_desc),
             "min": 0,
             "scale": "Blues",
             "hidden": True,
             "format": "{:,.2f}",
+            "shared_key": "read_count",
+            "modify": lambda x: x * config.read_count_multiplier,
         }
         self.headers["gtTargets"] = {
-            "title": "2xdepth targets",
-            "description": "Estimated number of new targets at 2x sequencing depth",
+            "title": "{} 2xdepth targets".format(config.read_count_prefix),
+            "description": "Estimated number of new targets at 2x sequencing depth ({})".format(config.read_count_desc),
             "min": 0,
             "scale": "BuGn",
             "hidden": True,
             "format": "{:,.2f}",
+            "shared_key": "read_count",
+            "modify": lambda x: x * config.read_count_multiplier,
         }
         self.headers["numBarcodesOnWhitelist"] = {
             "title": "Whitelisted barcodes",
@@ -158,30 +170,33 @@ class MultiqcModule(BaseMultiqcModule):
             "scale": "Greens",
             "hidden": True,
             "format": "{:,.0f}",
+            "shared_key": "barcodes",
         }
         self.headers["percentageBarcodesOnWhitelist"] = {
-            "title": "Perc. whitelisted barcodes",
+            "title": "% Whitelisted barcodes",
             "min": 0,
             "max": 100,
+            "suffix": "%",
             "scale": "RdYlGn",
-            "hidden": False,
-            "format": "{:,.2f}",
         }
         self.headers["numReadsOnWhitelist"] = {
-            "title": "Whitelisted reads",
-            "description": "Number of reads with barcode in agreement with whitelist",
+            "title": "{} Whitelisted reads".format(config.read_count_prefix),
+            "description": "Number of reads with barcode in agreement with whitelist ({})".format(
+                config.read_count_desc
+            ),
             "scale": "PuBu",
             "min": 0,
             "hidden": True,
-            "format": "{:,.0f}",
+            "format": "{:,.2f}",
+            "shared_key": "read_count",
+            "modify": lambda x: x * config.read_count_multiplier,
         }
         self.headers["percentageReadsOnWhitelist"] = {
-            "title": "Perc. whitelisted reads",
+            "title": "% Whitelisted reads",
             "min": 0,
             "max": 100,
+            "suffix": "%",
             "scale": "RdYlGn",
-            "hidden": False,
-            "format": "{:,.2f}",
         }
 
     def bustools_general_stats(self):
@@ -194,20 +209,23 @@ class MultiqcModule(BaseMultiqcModule):
             "gtRecords",
             "percentageReadsOnWhitelist",
         ]
-        headers = {header: v for header, v in self.headers.items() if header in general_stats_headers}
-        # headers = {header: v for header, v in self.headers.items() if header not in general_stats_headers}
-        print(list(headers.keys()))
-        print(list(self.headers.keys()))
+        headers = OrderedDict()
+        for header, v in self.headers.items():
+            if header in general_stats_headers:
+                headers[header] = {key: value for key, value in v.items()}  # deep copy
+                if header not in ["numRecords", "numUMIs", "percentageReadsOnWhitelist"]:
+                    headers[header]["hidden"] = True
         self.general_stats_addcols(self.bustools_data, headers)
 
     def bustools_section(self):
         """ Add bargraphs showing the mean UMIs per barcode and percentages in whitelist """
         # add the summary table
+        tconfig = {"namespace": "Bustools", "id": "bustools_summary", "table_title": "Bustools Summary Table"}
         self.add_section(
             name="Summary table",
             anchor="bustools-inspect",
             description="This is a table of the complete output of bustools inspect. Note that this table is configurable, in that there are some hidden columns. More importantly ",
-            plot=table.plot(self.bustools_data, self.headers),
+            plot=table.plot(self.bustools_data, self.headers, tconfig),
         )
 
         # also make some nice barplots
