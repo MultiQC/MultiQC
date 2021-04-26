@@ -24,13 +24,8 @@ class MultiqcModule(BaseMultiqcModule):
             name="Bustools",
             anchor="bustools",
             href="https://bustools.github.io/",
-            info="BUS format is a file format for single-cell RNA-seq data "
+            info="works with BUS files - a file format for single-cell RNA-seq data "
             "designed to facilitate the development of modular workflows for data "
-            "processing. It consists of a binary representation of barcode and "
-            "UMI sequences from scRNA-seq reads, along with sets of equivalence "
-            "classes obtained by pseudoalignment of reads to a reference "
-            "transcriptome (hence the acronym Barcode, UMI, Set). BUS files are "
-            "a convenient and useful checkpoint during single-cell RNA-seq "
             "processing.",
         )
 
@@ -224,7 +219,7 @@ class MultiqcModule(BaseMultiqcModule):
         self.add_section(
             name="Summary table",
             anchor="bustools-inspect",
-            description="This is a table of the complete output of bustools inspect. Note that this table is configurable, in that there are some hidden columns. More importantly ",
+            description="This is a table of the complete output of bustools inspect. Note that some columns are hidden by default (click <em>Configure Columns</em> to show).",
             plot=table.plot(self.bustools_data, self.headers, tconfig),
         )
 
@@ -237,7 +232,8 @@ class MultiqcModule(BaseMultiqcModule):
         self.add_section(
             name="Mean number of UMIs per barcode",
             anchor="bustools-umis",
-            description="Each unique barcode represents a cell and each Unique Molecular Identifier (UMI) represents "
+            description="Average number of UMIs (unique molecular identifiers) per barcode",
+            helptext="Each unique barcode represents a cell and each Unique Molecular Identifier (UMI) represents "
             "a unique transcript molecule. By counting the mean number of UMIs per barcode, you "
             "effectively calculate the average number of unique transcripts per cell.",
             plot=bargraph.plot(
@@ -263,22 +259,22 @@ class MultiqcModule(BaseMultiqcModule):
         self.add_section(
             name="Percentage in whitelist",
             anchor="bustools-reads",
-            description="The whitelist is a list of unique barcodes used in your protocol, either provided or inferred "
-            "from the data. Each unique barcode from the whitelist represents a cell. The percentage of "
+            description="The whitelist is a list of unique barcodes used in your protocol, either provided or inferred from the data.",
+            helptext="Each unique barcode from the whitelist represents a cell. The percentage of "
             "reads with barcode / barcodes in the whitelist is a measure of percentage of reads that could "
             "be asigned to a cell.",
             plot=bargraph.plot(
                 percentage_whitelist,
                 pconfig={
                     "id": "bus_reads",
-                    "title": "Bustools: percentage of barcodes and/or reads with barcodes in the " "whitelist",
+                    "title": "Bustools: Barcodes / reads with barcodes in the whitelist",
                     "ymax": 100,
                     "ymix": 0,
                     "cpswitch": False,
                     "tt_percentages": False,
                     "ylab": "Percentage of barcodes / reads with barcodes in the whitelist",
                     "stacking": None,
-                    "data_labels": ["Reads", "Bases"],
+                    "ylab_format": "{value}%",
                 },
             ),
         )
