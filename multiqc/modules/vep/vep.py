@@ -215,7 +215,6 @@ class MultiqcModule(BaseMultiqcModule):
             "Consequences (all)",
             "Coding consequences",
             "SIFT summary",
-            "PolyPhen summary",
             "Variants by chromosome",
         ]
         for title in titles:
@@ -256,13 +255,37 @@ class MultiqcModule(BaseMultiqcModule):
         pass
 
     def bar_graph_polyphen(self):
-        pass
+        title = "PolyPhen summary"
+        plot_data, plot_cats, plot_config = self._prep_bar_graph(title)
+        htmlid = re.sub("\W*", "_", title).lower()
+        if len(plot_data) == 0:
+            return
+
+        # Customise order and colours of categories
+        p_cats = OrderedDict()
+        p_cats["benign"] = {"color": "#a6db9f"}
+        p_cats["possibly_damaging"] = {"color": "#fec44f"}
+        p_cats["probably_damaging"] = {"color": "#d53e4f"}
+        p_cats["unknown"] = {"color": "#d9d9d9"}
+        for c, cat in plot_cats.items():
+            if c not in p_cats:
+                p_cats[c] = cat
+            p_cats[c].update(cat)
+            p_cats[c]["name"] = p_cats[c]["name"].replace("_", " ").capitalize()
+
+        plot_config["ylab"] = "Number of variants"
+
+        self.add_section(
+            name=title,
+            anchor=htmlid,
+            description="PolyPhen variant effect prediction.",
+            plot=bargraph.plot(plot_data, cats=p_cats, pconfig=plot_config),
+        )
 
     def bar_graph_variants__by_chromosome(self):
         pass
 
     def bar_graph_position_in_protein(self):
-
         title = "Position in protein"
         plot_data, plot_cats, plot_config = self._prep_bar_graph(title)
         htmlid = re.sub("\W*", "_", title).lower()
