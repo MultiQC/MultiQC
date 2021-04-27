@@ -46,6 +46,7 @@ class MultiqcModule(BaseMultiqcModule):
         )
 
         self.vep_data = dict()
+
         # Scan for VEP stats in plain html format
         for f in self.find_log_files("vep/vep_html", filehandles=True):
             self.parse_vep_html(f)
@@ -57,14 +58,23 @@ class MultiqcModule(BaseMultiqcModule):
         # Filter to strip out ignored sample names
         self.vep_data = self.ignore_samples(self.vep_data)
 
-        if len(self.vep_data) > 0:
-            # Add general stats table
-            self.add_stats_table()
-            # Generate bar graphs if any data was found
-            self.generate_bar_graphs()
-            log.info("Found {} VEP summaries".format(len(self.vep_data)))
-        else:
+        # Stop if we didn't get any samples
+        if len(self.vep_data) == 0:
             raise UserWarning
+        log.info("Found {} VEP summaries".format(len(self.vep_data)))
+
+        # Add general stats table
+        self.add_stats_table()
+
+        # Bar graphs
+        self.generate_bar_graphs()
+
+    #        "Variant classes",
+    #            "Consequences (most severe)",
+    #            "SIFT summary",
+    #            "PolyPhen summary",
+    #            "Variants by chromosome",
+    #            "Position in protein",
 
     def parse_vep_html(self, f):
         """This Function will parse VEP summary files with HTML format"""
@@ -155,35 +165,46 @@ class MultiqcModule(BaseMultiqcModule):
     def add_stats_table(self):
         """Add a section with VEP General Statistics"""
         table_config = {
-            "id": "vep-general-stats",  # ID used for the table
-            "table_title": "VEP General Statistics",  # Title of the table. Used in the column config modal
-            "save_file": False,  # Whether to save the table data to a file
-            "sortRows": True,  # Whether to sort rows alphabetically
-            "only_defined_headers": False,  # Only show columns that are defined in the headers config
-            "col1_header": "Sample Name",  # The header used for the first column
-            "no_beeswarm": True,  # Force a table to always be plotted (beeswarm by default if many rows)
+            "id": "vep-general-stats",
+            "namespace": "VEP",
+            "table_title": "VEP General Statistics",
         }
         title = "General statistics"
-        plot_cats = OrderedDict()
-        plot_data = OrderedDict()
-        color_list = ["Oranges", "Blues", "Reds", "Greens"]
-        for sample_name in self.vep_data:
-            if self.vep_data[sample_name][title] and len(self.vep_data[sample_name][title]) > 0:
-                order = 0
-                plot_data[sample_name] = {}
-                for key in self.vep_data[sample_name][title]:
-                    order += 1
-                    if key not in plot_cats:
-                        plot_cats[key] = {"name": key, "format": "{:,.0f}", "scale": color_list[order % 4]}
-                    plot_data[sample_name][key] = self.vep_data[sample_name][title][key]
-        if len(plot_data) > 0:
-            self.add_section(
-                name="General Statistics",
-                anchor="vep-general-statistics",
-                description="VEP General statistics",
-                helptext="Table showing general statistics of VEP annotaion run",
-                plot=table.plot(plot_data, plot_cats, table_config),
-            )
+        table_data = {s_name: self.vep_data[s_name]["General statistics"] for s_name in self.vep_data}
+
+        # Build the header configs
+        cat_names = [
+            "Overlapped regulatory features",
+            "Overlapped transcripts",
+            "Overlapped genes",
+            "Existing variants",
+            "Novel variants",
+            "Variants filtered out",
+            "Variants processed",
+            "Lines of input read",
+        ]
+        # Set up the base config for each column
+        table_cats = OrderedDict()
+        color_list = ["Oranges", "Reds", "Blues", "Greens"]
+        for order, header in enumerate(cat_names):
+            table_cats[header] = {
+                "name": header,
+                "format": "{:,.0f}",
+                "scale": color_list[order % 4],
+            }
+        # Column-specific customisation
+        table_cats["Lines of input read"]["hidden"] = True
+        table_cats["Variants processed"]["shared_key"] = "variants"
+        table_cats["Variants filtered out"]["shared_key"] = "variants"
+        table_cats["Novel variants"]["shared_key"] = "variants"
+        table_cats["Existing variants"]["shared_key"] = "variants"
+
+        self.add_section(
+            name="General Statistics",
+            anchor="vep-general-statistics",
+            helptext="Table showing general statistics of VEP annotaion run",
+            plot=table.plot(table_data, table_cats, table_config),
+        )
 
     def generate_bar_graphs(self):
         """Add bar graphs from the given VEP stats"""
