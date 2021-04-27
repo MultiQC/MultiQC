@@ -75,7 +75,7 @@ class MultiqcModule(BaseMultiqcModule):
         self.bar_graph_consequences()
         self.bar_graph_sift()
         self.bar_graph_polyphen()
-        self.bar_graph_variants__by_chromosome()
+        self.bar_graph_variants_by_chromosome()
         self.bar_graph_position_in_protein()
 
     def parse_vep_html(self, f):
@@ -215,7 +215,6 @@ class MultiqcModule(BaseMultiqcModule):
             "Consequences (all)",
             "Coding consequences",
             "SIFT summary",
-            "Variants by chromosome",
         ]
         for title in titles:
             htmlid = re.sub("\W*", "", title)
@@ -282,8 +281,27 @@ class MultiqcModule(BaseMultiqcModule):
             plot=bargraph.plot(plot_data, cats=p_cats, pconfig=plot_config),
         )
 
-    def bar_graph_variants__by_chromosome(self):
-        pass
+    def bar_graph_variants_by_chromosome(self):
+        title = "Variants by chromosome"
+        plot_data, plot_cats, plot_config = self._prep_bar_graph(title)
+        htmlid = re.sub("\W*", "_", title).lower()
+        if len(plot_data) == 0:
+            return
+
+        # Sort the chromosomes numerically (almost - feel free to improve)
+        chrs = {chr: k["name"].replace("chr", "").split("_")[0].rjust(20, "0") for chr, k in plot_cats.items()}
+        p_cats = OrderedDict()
+        for chr in sorted(chrs, key=chrs.get):
+            p_cats[chr] = plot_cats[chr]
+
+        plot_config["cpswitch_c_active"] = False
+
+        self.add_section(
+            name=title,
+            anchor=htmlid,
+            description="Number of variants found on each chromosome.",
+            plot=bargraph.plot(plot_data, cats=p_cats, pconfig=plot_config),
+        )
 
     def bar_graph_position_in_protein(self):
         title = "Position in protein"
