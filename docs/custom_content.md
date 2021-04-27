@@ -41,6 +41,18 @@ Note that this means that it's very possible to make the HTML file very very lar
 
 The report section name and description will be automatically based on the filename.
 
+Note that if you are using `sp:` to take in images with a custom filename you need to also set `ignore_images: false` in your config. For example:
+
+```yaml
+custom_data:
+  my_custom_content_image:
+    section_name: "My nice image"
+sp:
+  my_custom_content_image:
+    fn: "*.png"
+ignore_images: false
+```
+
 ## MultiQC-specific data file
 
 If you can choose exactly how your data output looks, then the easiest way to parse it
