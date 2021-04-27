@@ -1,3 +1,3 @@
 from __future__ import absolute_import
 
-from .samblaster import MultiqcModule
+from .vep import MultiqcModule
