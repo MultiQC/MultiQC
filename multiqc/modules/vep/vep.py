@@ -214,7 +214,6 @@ class MultiqcModule(BaseMultiqcModule):
             "Consequences (most severe)",
             "Consequences (all)",
             "Coding consequences",
-            "SIFT summary",
         ]
         for title in titles:
             htmlid = re.sub("\W*", "", title)
@@ -251,7 +250,32 @@ class MultiqcModule(BaseMultiqcModule):
         pass
 
     def bar_graph_sift(self):
-        pass
+        title = "SIFT summary"
+        plot_data, plot_cats, plot_config = self._prep_bar_graph(title)
+        htmlid = re.sub("\W*", "_", title).lower()
+        if len(plot_data) == 0:
+            return
+
+        # Customise order and colours of categories
+        p_cats = OrderedDict()
+        p_cats["tolerated"] = {"color": "#59ae61"}
+        p_cats["tolerated_low_confidence"] = {"color": "#a6db9f"}
+        p_cats["deleterious_low_confidence"] = {"color": "#fec44f"}
+        p_cats["deleterious"] = {"color": "#d53e4f"}
+        for c, cat in plot_cats.items():
+            if c not in p_cats:
+                p_cats[c] = cat
+            p_cats[c].update(cat)
+            p_cats[c]["name"] = p_cats[c]["name"].replace("_", " ").capitalize()
+
+        plot_config["ylab"] = "Number of variants"
+
+        self.add_section(
+            name=title,
+            anchor=htmlid,
+            description="SIFT variant effect prediction.",
+            plot=bargraph.plot(plot_data, cats=p_cats, pconfig=plot_config),
+        )
 
     def bar_graph_polyphen(self):
         title = "PolyPhen summary"
