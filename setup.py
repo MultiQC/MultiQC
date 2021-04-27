@@ -188,6 +188,7 @@ setup(
             "trimmomatic = multiqc.modules.trimmomatic:MultiqcModule",
             "varscan2 = multiqc.modules.varscan2:MultiqcModule",
             "vcftools = multiqc.modules.vcftools:MultiqcModule",
+            "vep = multiqc.modules.vep:MultiqcModule",
             "verifybamid = multiqc.modules.verifybamid:MultiqcModule",
         ],
         "multiqc.templates.v1": [

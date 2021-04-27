@@ -693,5 +693,14 @@ vcftools/tstv_by_qual:
   fn: "*.TsTv.qual"
 vcftools/tstv_summary:
   fn: "*.TsTv.summary"
+vep/vep_html:
+  fn: "*.html"
+  contents: "VEP summary"
+  num_lines: 10
+  max_filesize: 100000
+vep/vep_txt:
+  contents: "[VEP run statistics]"
+  num_lines: 1
+  max_filesize: 10000
 verifybamid/selfsm:
   fn: "*.selfSM"
