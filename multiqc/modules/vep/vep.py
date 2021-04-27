@@ -4,8 +4,8 @@
 
 from __future__ import print_function
 
-import ast
 from collections import OrderedDict
+import ast
 import logging
 import re
 from multiqc.plots import bargraph, table
@@ -14,24 +14,6 @@ from multiqc.modules.base_module import BaseMultiqcModule
 
 # Initialise the logger
 log = logging.getLogger(__name__)
-
-
-def extract_vep_html_data(chart_title, html_content):
-    """Function for finding and extracting VEP stats that were stored as javascript arrays"""
-    found_matches = re.findall("{}.*google.visualization.*;".format(chart_title), html_content)
-    if len(found_matches) > 0:
-        array_content = re.search(r"\[\[.*]]", found_matches[0])
-        if array_content:
-            x = array_content.group(0)
-            try:
-                rv = ast.literal_eval(x)
-                return rv
-            except ValueError:
-                return None
-        else:
-            return None
-    else:
-        return None
 
 
 class MultiqcModule(BaseMultiqcModule):
@@ -76,6 +58,23 @@ class MultiqcModule(BaseMultiqcModule):
         self.bar_graph_variants_by_chromosome()
         self.bar_graph_position_in_protein()
 
+    def extract_vep_html_data(self, chart_title, html_content):
+        """Function for finding and extracting VEP stats that were stored as javascript arrays"""
+        found_matches = re.findall("{}.*google.visualization.*;".format(chart_title), html_content)
+        if len(found_matches) > 0:
+            array_content = re.search(r"\[\[.*]]", found_matches[0])
+            if array_content:
+                x = array_content.group(0)
+                try:
+                    rv = ast.literal_eval(x)
+                    return rv
+                except ValueError:
+                    return None
+            else:
+                return None
+        else:
+            return None
+
     def parse_vep_html(self, f):
         """This Function will parse VEP summary files with HTML format"""
         # Initialise vep_data dictionary for the current sample
@@ -98,7 +97,7 @@ class MultiqcModule(BaseMultiqcModule):
         for title in titles:
             # Remove backslashes which were required for re
             clean_title = title.replace("\\", "")
-            extracted_data = extract_vep_html_data(title, html_content)
+            extracted_data = self.extract_vep_html_data(title, html_content)
             if extracted_data:
                 if clean_title not in self.vep_data[f["s_name"]]:
                     self.vep_data[f["s_name"]][clean_title] = {}
