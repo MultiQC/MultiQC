@@ -1,14 +1,16 @@
 #!/usr/bin/env python
 
-""" MultiQC module to parse output from Samblaster """
+""" MultiQC module to parse output from VEP """
 
 from __future__ import print_function
+
+import ast
 from collections import OrderedDict
 import logging
 import re
 from multiqc.plots import bargraph, table
+from multiqc.utils import mqc_colour
 from multiqc.modules.base_module import BaseMultiqcModule
-import ast
 
 # Initialise the logger
 log = logging.getLogger(__name__)
@@ -69,12 +71,12 @@ class MultiqcModule(BaseMultiqcModule):
         # Bar graphs
         self.generate_bar_graphs()
 
-    #        "Variant classes",
-    #            "Consequences (most severe)",
-    #            "SIFT summary",
-    #            "PolyPhen summary",
-    #            "Variants by chromosome",
-    #            "Position in protein",
+        self.bar_graph_variant_classes()
+        self.bar_graph_consequences()
+        self.bar_graph_sift()
+        self.bar_graph_polyphen()
+        self.bar_graph_variants__by_chromosome()
+        self.bar_graph_position_in_protein()
 
     def parse_vep_html(self, f):
         """This Function will parse VEP summary files with HTML format"""
@@ -169,7 +171,6 @@ class MultiqcModule(BaseMultiqcModule):
             "namespace": "VEP",
             "table_title": "VEP General Statistics",
         }
-        title = "General statistics"
         table_data = {s_name: self.vep_data[s_name]["General statistics"] for s_name in self.vep_data}
 
         # Build the header configs
@@ -216,12 +217,16 @@ class MultiqcModule(BaseMultiqcModule):
             "SIFT summary",
             "PolyPhen summary",
             "Variants by chromosome",
-            "Position in protein",
         ]
         for title in titles:
             htmlid = re.sub("\W*", "", title)
             plotid = htmlid + "plot"
-            plot_config = {"id": plotid, "title": "VEP: {}".format(title), "ylab": "Counts", "stacking": "normal"}
+            plot_config = {
+                "id": plotid,
+                "title": "VEP: {}".format(title),
+                "ylab": "Counts",
+                "stacking": "normal",
+            }
             plot_cats = OrderedDict()
             plot_data = OrderedDict()
             for sample_name in self.vep_data:
@@ -240,3 +245,62 @@ class MultiqcModule(BaseMultiqcModule):
                     helptext='Stacked bar graph showing VEP "{}" statistics'.format(title),
                     plot=bargraph.plot(plot_data, cats=plot_cats, pconfig=plot_config),
                 )
+
+    def bar_graph_variant_classes(self):
+        pass
+
+    def bar_graph_consequences(self):
+        pass
+
+    def bar_graph_sift(self):
+        pass
+
+    def bar_graph_polyphen(self):
+        pass
+
+    def bar_graph_variants__by_chromosome(self):
+        pass
+
+    def bar_graph_position_in_protein(self):
+
+        title = "Position in protein"
+        plot_data, plot_cats, plot_config = self._prep_bar_graph(title)
+        htmlid = re.sub("\W*", "_", title).lower()
+        if len(plot_data) == 0:
+            return
+
+        # Nice graduated colours for categories
+        colour_scale = mqc_colour.mqc_colour_scale("YlGnBu", 0, len(plot_cats) - 1)
+        for idx, k in enumerate(plot_cats):
+            plot_cats[k]["color"] = colour_scale.get_colour(idx, lighten=0.8)
+
+        plot_config["cpswitch_c_active"] = False
+
+        self.add_section(
+            name=title,
+            anchor=htmlid,
+            description="Relative position of affected amino acids in protein.",
+            plot=bargraph.plot(plot_data, cats=plot_cats, pconfig=plot_config),
+        )
+
+    def _prep_bar_graph(self, title):
+        plot_data = OrderedDict()
+        for s_name in self.vep_data:
+            plot_data[s_name] = self.vep_data[s_name][title]
+        plot_cats = OrderedDict()
+        htmlid = re.sub("\W*", "_", title).lower()
+        plotid = "{}_plot".format(htmlid)
+        plot_config = {
+            "id": plotid,
+            "title": "VEP: {}".format(title),
+        }
+        if len(plot_data) == 0:
+            return [plot_data, plot_cats, plot_config]
+
+        # Build plot categories
+        for d in plot_data.values():
+            for k in d.keys():
+                if k not in plot_cats:
+                    plot_cats[k] = {"name": k}
+
+        return [plot_data, plot_cats, plot_config]
