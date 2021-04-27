@@ -42,7 +42,7 @@ def init_log(logger, loglevel=0, no_ansi=False):
 
     # Automatically set no_ansi if not a tty terminal
     if not no_ansi:
-        if sys.stderr.isatty() and not force_term_colors():
+        if not sys.stderr.isatty() and not force_term_colors():
             no_ansi = True
 
     # Set up the console logging stream
