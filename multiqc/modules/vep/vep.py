@@ -211,9 +211,6 @@ class MultiqcModule(BaseMultiqcModule):
         """Add bar graphs from the given VEP stats"""
         titles = [
             "Variant classes",
-            "Consequences (most severe)",
-            "Consequences (all)",
-            "Coding consequences",
         ]
         for title in titles:
             htmlid = re.sub("\W*", "", title)
@@ -240,14 +237,34 @@ class MultiqcModule(BaseMultiqcModule):
                     anchor=htmlid,
                     description='Bar graph showing VEP "{}" statistics'.format(title),
                     helptext='Stacked bar graph showing VEP "{}" statistics'.format(title),
-                    plot=bargraph.plot(plot_data, cats=plot_cats, pconfig=plot_config),
+                    plot=bargraph.plot(plot_data, plot_cats, plot_config),
                 )
 
     def bar_graph_variant_classes(self):
         pass
 
     def bar_graph_consequences(self):
-        pass
+        p_data = []
+        p_cats = []
+        p_config = {"data_labels": []}
+        for title in ["Consequences (most severe)", "Coding consequences", "Consequences (all)"]:
+            plot_data, plot_cats, plot_config = self._prep_bar_graph(title)
+            p_data.append(plot_data)
+            p_cats.append(plot_cats)
+            p_config.update(plot_config)
+            p_config["data_labels"].append(title)
+        p_config["title"] = "VEP: Variant Consequences"
+        p_config["ylab"] = p_config["data_labels"][0]
+
+        if max([len(d) for d in plot_data]) == 0:
+            return
+
+        self.add_section(
+            name="Consequences",
+            anchor="consequences",
+            description="Predicted consequences of variations.",
+            plot=bargraph.plot(p_data, p_cats, p_config),
+        )
 
     def bar_graph_sift(self):
         title = "SIFT summary"
@@ -274,7 +291,7 @@ class MultiqcModule(BaseMultiqcModule):
             name=title,
             anchor=htmlid,
             description="SIFT variant effect prediction.",
-            plot=bargraph.plot(plot_data, cats=p_cats, pconfig=plot_config),
+            plot=bargraph.plot(plot_data, p_cats, plot_config),
         )
 
     def bar_graph_polyphen(self):
@@ -302,7 +319,7 @@ class MultiqcModule(BaseMultiqcModule):
             name=title,
             anchor=htmlid,
             description="PolyPhen variant effect prediction.",
-            plot=bargraph.plot(plot_data, cats=p_cats, pconfig=plot_config),
+            plot=bargraph.plot(plot_data, p_cats, plot_config),
         )
 
     def bar_graph_variants_by_chromosome(self):
@@ -324,7 +341,7 @@ class MultiqcModule(BaseMultiqcModule):
             name=title,
             anchor=htmlid,
             description="Number of variants found on each chromosome.",
-            plot=bargraph.plot(plot_data, cats=p_cats, pconfig=plot_config),
+            plot=bargraph.plot(plot_data, p_cats, plot_config),
         )
 
     def bar_graph_position_in_protein(self):
@@ -345,7 +362,7 @@ class MultiqcModule(BaseMultiqcModule):
             name=title,
             anchor=htmlid,
             description="Relative position of affected amino acids in protein.",
-            plot=bargraph.plot(plot_data, cats=plot_cats, pconfig=plot_config),
+            plot=bargraph.plot(plot_data, plot_cats, plot_config),
         )
 
     def _prep_bar_graph(self, title):
