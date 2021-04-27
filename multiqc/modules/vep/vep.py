@@ -351,6 +351,7 @@ class MultiqcModule(BaseMultiqcModule):
         plot_config = {
             "id": plotid,
             "title": "VEP: {}".format(title),
+            "ylab": "Number of variants",
         }
         if len(plot_data) == 0:
             return [plot_data, plot_cats, plot_config]
