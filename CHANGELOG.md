@@ -1,11 +1,12 @@
 # MultiQC Version History
 
 ## MultiQC v1.11dev
+
 #### New Modules
 
 - [**VEP**](https://www.ensembl.org/info/docs/tools/vep/index.html)
   - Added MultiQC module to add summary statistics of Ensembl VEP annotations.
-  
+
 ### MultiQC updates
 
 - Make the module crash tracebacks much prettier using `rich`
