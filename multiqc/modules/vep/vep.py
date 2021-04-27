@@ -208,7 +208,7 @@ class MultiqcModule(BaseMultiqcModule):
     def bar_graph_variant_classes(self):
         title = "Variant classes"
         plot_data, plot_cats, plot_config = self._prep_bar_graph(title)
-        htmlid = re.sub("\W*", "_", title).lower()
+        htmlid = re.sub("\W+", "_", title).lower()
         if len(plot_data) == 0:
             return
 
@@ -246,7 +246,7 @@ class MultiqcModule(BaseMultiqcModule):
     def bar_graph_sift(self):
         title = "SIFT summary"
         plot_data, plot_cats, plot_config = self._prep_bar_graph(title)
-        htmlid = re.sub("\W*", "_", title).lower()
+        htmlid = re.sub("\W+", "_", title).lower()
         if len(plot_data) == 0:
             return
 
@@ -274,7 +274,7 @@ class MultiqcModule(BaseMultiqcModule):
     def bar_graph_polyphen(self):
         title = "PolyPhen summary"
         plot_data, plot_cats, plot_config = self._prep_bar_graph(title)
-        htmlid = re.sub("\W*", "_", title).lower()
+        htmlid = re.sub("\W+", "_", title).lower()
         if len(plot_data) == 0:
             return
 
@@ -302,7 +302,7 @@ class MultiqcModule(BaseMultiqcModule):
     def bar_graph_variants_by_chromosome(self):
         title = "Variants by chromosome"
         plot_data, plot_cats, plot_config = self._prep_bar_graph(title)
-        htmlid = re.sub("\W*", "_", title).lower()
+        htmlid = re.sub("\W+", "_", title).lower()
         if len(plot_data) == 0:
             return
 
@@ -324,7 +324,7 @@ class MultiqcModule(BaseMultiqcModule):
     def bar_graph_position_in_protein(self):
         title = "Position in protein"
         plot_data, plot_cats, plot_config = self._prep_bar_graph(title)
-        htmlid = re.sub("\W*", "_", title).lower()
+        htmlid = re.sub("\W+", "_", title).lower()
         if len(plot_data) == 0:
             return
 
@@ -347,7 +347,7 @@ class MultiqcModule(BaseMultiqcModule):
         for s_name in self.vep_data:
             plot_data[s_name] = self.vep_data[s_name][title]
         plot_cats = OrderedDict()
-        htmlid = re.sub("\W*", "_", title).lower()
+        htmlid = re.sub("\W+", "_", title).lower()
         plotid = "{}_plot".format(htmlid)
         plot_config = {
             "id": plotid,
