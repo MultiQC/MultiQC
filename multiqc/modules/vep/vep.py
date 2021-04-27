@@ -69,8 +69,6 @@ class MultiqcModule(BaseMultiqcModule):
         self.add_stats_table()
 
         # Bar graphs
-        self.generate_bar_graphs()
-
         self.bar_graph_variant_classes()
         self.bar_graph_consequences()
         self.bar_graph_sift()
@@ -207,41 +205,20 @@ class MultiqcModule(BaseMultiqcModule):
             plot=table.plot(table_data, table_cats, table_config),
         )
 
-    def generate_bar_graphs(self):
-        """Add bar graphs from the given VEP stats"""
-        titles = [
-            "Variant classes",
-        ]
-        for title in titles:
-            htmlid = re.sub("\W*", "", title)
-            plotid = htmlid + "plot"
-            plot_config = {
-                "id": plotid,
-                "title": "VEP: {}".format(title),
-                "ylab": "Counts",
-                "stacking": "normal",
-            }
-            plot_cats = OrderedDict()
-            plot_data = OrderedDict()
-            for sample_name in self.vep_data:
-                if self.vep_data[sample_name][title] and len(self.vep_data[sample_name][title]) > 0:
-                    plot_data[sample_name] = {}
-                    for key in self.vep_data[sample_name][title]:
-                        if key not in plot_cats:
-                            plot_cats[key] = {"name": key}
-                        plot_data[sample_name][key] = self.vep_data[sample_name][title][key]
-
-            if len(plot_data) > 0:
-                self.add_section(
-                    name=title,
-                    anchor=htmlid,
-                    description='Bar graph showing VEP "{}" statistics'.format(title),
-                    helptext='Stacked bar graph showing VEP "{}" statistics'.format(title),
-                    plot=bargraph.plot(plot_data, plot_cats, plot_config),
-                )
-
     def bar_graph_variant_classes(self):
-        pass
+        title = "Variant classes"
+        plot_data, plot_cats, plot_config = self._prep_bar_graph(title)
+        htmlid = re.sub("\W*", "_", title).lower()
+        if len(plot_data) == 0:
+            return
+
+        plot_config["ylab"] = "Number of variants"
+        self.add_section(
+            name=title,
+            anchor=htmlid,
+            description="Classes of variants found in the data.",
+            plot=bargraph.plot(plot_data, plot_cats, plot_config),
+        )
 
     def bar_graph_consequences(self):
         p_data = []
