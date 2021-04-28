@@ -344,7 +344,8 @@ class MultiqcModule(BaseMultiqcModule):
     def _prep_bar_graph(self, title):
         plot_data = OrderedDict()
         for s_name in self.vep_data:
-            plot_data[s_name] = self.vep_data[s_name][title]
+            if title in self.vep_data[s_name]:
+                plot_data[s_name] = self.vep_data[s_name][title]
         plot_cats = OrderedDict()
         htmlid = re.sub("\W+", "_", title).lower()
         plotid = "{}_plot".format(htmlid)
