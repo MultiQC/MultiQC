@@ -72,7 +72,6 @@ def get_filelist(run_module_names):
     """
     # Prep search patterns
     spatterns = [{}, {}, {}, {}, {}, {}, {}]
-    epatterns = [{}, {}]
     runtimes["sp"] = defaultdict()
     ignored_patterns = []
     skipped_patterns = []
