@@ -13,6 +13,7 @@
 - Refine the cli log output a little (nicely formatted header line + drop the `[INFO]`)
 - Added docs describing tools for downstream analysis of MultiQC outputs.
 - Added CI tests for Python 3.9, pinned `networkx` package to `>=2.5.1` ([#1413](https://github.com/ewels/MultiQC/issues/1413))
+- Added patterns to `config.fn_ignore_paths` to avoid error with parsing installation dir / singularity cache ([#1416](https://github.com/ewels/MultiQC/issues/1416))
 
 #### New Modules
 

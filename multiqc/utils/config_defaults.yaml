@@ -101,6 +101,9 @@ fn_ignore_dirs:
 fn_ignore_paths:
   - "*/work/??/??????????????????????????????" # Nextflow work directories - always same hash lengths
   - "*/.snakemake"
+  - "*/.singularity" # Singularity cache path
+  - "*/__pycache__"
+  - "*/site-packages/multiqc" # MultiQC installation directory
 sample_names_ignore: []
 sample_names_ignore_re: []
 sample_names_rename_buttons: []
@@ -263,6 +266,7 @@ fn_clean_trim:
 # Grep file match patterns.
 fn_ignore_files:
   - ".DS_Store"
+  - ".py[cod]"
   - "*.bam"
   - "*.bai"
   - "*.sam"
