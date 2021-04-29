@@ -283,7 +283,6 @@ fn_ignore_files:
   - "*.pdf"
   - "*.md5"
   - "*[!s][!u][!m][!_\\.m][!mva][!qer][!cpy].html" # Allow _mqc.html, _vep.html and summary.html files
-  - "*.py[cod]" # Compiled python files, eg. MultiQC installation directory
 
 # Favourite modules that should appear at the top in preference
 # This is in addition to those below. These appear above _all_ other
