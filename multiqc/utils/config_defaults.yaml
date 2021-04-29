@@ -234,7 +234,6 @@ fn_clean_exts:
   - ".mapped"
   - ".vep"
   - "_vep"
-  - ".txt_summary"
 
 # These are removed after the above, only if sample names
 # start or end with this string. Again, removed in order.
