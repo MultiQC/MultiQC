@@ -232,6 +232,8 @@ fn_clean_exts:
   - ".mpileup"
   - ".primer_trim"
   - ".mapped"
+  - ".vep"
+  - "_vep"
 
 # These are removed after the above, only if sample names
 # start or end with this string. Again, removed in order.
@@ -275,10 +277,11 @@ fn_ignore_files:
   - "*.gtf"
   - "*.bed"
   - "*.vcf"
+  - "*.tbi"
   - "*.txt.gz"
   - "*.pdf"
-  - "*[!_][!m][!q][!c].html"
   - "*.md5"
+  - "*[!s][!u][!m][!_\\.m][!mva][!qer][!cpy].html" # Allow _mqc.html, _vep.html and summary.html files
 
 # Favourite modules that should appear at the top in preference
 # This is in addition to those below. These appear above _all_ other
@@ -458,6 +461,9 @@ module_order:
       module_tag:
         - DNA
         - RNA
+  - vep:
+      module_tag:
+        - DNA
   - sentieon:
       module_tag:
         - DNA

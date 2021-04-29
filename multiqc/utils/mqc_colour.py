@@ -41,7 +41,7 @@ class mqc_colour_scale(object):
             self.minval = float(minval)
             self.maxval = float(maxval)
 
-    def get_colour(self, val, colformat="hex"):
+    def get_colour(self, val, colformat="hex", lighten=0.3):
         """ Given a value, return a colour within the colour scale """
         try:
             # When we have non-numeric values (e.g. Male/Female, Yes/No, chromosome names, etc), and a qualitive
@@ -69,7 +69,7 @@ class mqc_colour_scale(object):
 
                 # Weird, I know. I ported this from the original JavaScript for continuity
                 # Seems to work better than adjusting brightness / saturation / luminosity
-                rgb_converter = lambda x: max(0, min(1, 1 + ((x - 1) * 0.3)))
+                rgb_converter = lambda x: max(0, min(1, 1 + ((x - 1) * lighten)))
                 thecolour = spectra.rgb(*[rgb_converter(v) for v in my_scale(val).rgb])
 
                 return thecolour.hexcode

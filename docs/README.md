@@ -112,6 +112,7 @@ MultiQC Modules:
     THeTA2: modules/theta2.md
     VarScan2: modules/varscan2.md
     VCFTools: modules/vcftools.md
+    VEP: modules/vep.md
     verifyBAMID: modules/verifybamid.md
 Custom Content:
   Introduction: custom_content.md
