@@ -97,6 +97,7 @@ MultiQC Modules:
     Rockhopper: modules/rockhopper.md
     RSEM: modules/rsem.md
     RSeQC: modules/rseqc.md
+    Sambamba: modules/sambamba.md
     Samblaster: modules/samblaster.md
     Samtools: modules/samtools.md
     Sentieon: modules/sentieon.md
