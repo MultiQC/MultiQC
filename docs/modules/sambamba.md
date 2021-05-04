@@ -16,7 +16,7 @@ Supported commands:
 
 This module parses key phrases in the output log files to find duplicate and non-duplicate reads. The absolute read counts are displayed in a stacked bar plot, and the duplicate rate per sample is calculated using the following formula:
 
->duplicate_rate = duplicate_reads / (sorted_end_pairs x2 + single_ends - single_unmatched_pairs) x100
+> duplicate_rate = duplicate_reads / (sorted_end_pairs x2 + single_ends - single_unmatched_pairs) x100
 
 The duplicate rates are displayed in the general statistics table at the top of the report. Lastly, If Sambamba Markdup is invoked using Snakemake, the following bare-bones shell command should work fine:
 
