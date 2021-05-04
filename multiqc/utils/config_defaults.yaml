@@ -393,6 +393,9 @@ module_order:
   - mirtop:
       module_tag:
         - miRNA
+  - sambamba:
+      module_tag:
+        - DNA
 
   # Post-alignment processing
   - homer:

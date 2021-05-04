@@ -576,6 +576,10 @@ salmon/meta:
   contents: "salmon_version"
 salmon/fld:
   fn: "flenDist.txt"
+sambamba/markdup:
+  fn: "markdup_*"
+  contents: "finding positions of the duplicate reads in the file"
+  num_lines: 5
 samblaster:
   contents: "samblaster: Version"
   shared: true

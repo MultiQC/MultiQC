@@ -168,6 +168,7 @@ setup(
             "rsem = multiqc.modules.rsem:MultiqcModule",
             "rseqc = multiqc.modules.rseqc:MultiqcModule",
             "salmon = multiqc.modules.salmon:MultiqcModule",
+            "sambamba = multiqc.modules.sambamba:MultiqcModule",
             "samblaster = multiqc.modules.samblaster:MultiqcModule",
             "samtools = multiqc.modules.samtools:MultiqcModule",
             "sargasso = multiqc.modules.sargasso:MultiqcModule",

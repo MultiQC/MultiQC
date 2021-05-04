@@ -6,6 +6,8 @@
 
 - [**VEP**](https://www.ensembl.org/info/docs/tools/vep/index.html)
   - Added MultiQC module to add summary statistics of Ensembl VEP annotations.
+- [**Sambamba Markdup**](https://lomereiter.github.io/sambamba/docs/sambamba-markdup.html)
+  - Added MultiQC module to add duplicate rate calculated by Sambamba Markdup.
 
 ### MultiQC updates
 
