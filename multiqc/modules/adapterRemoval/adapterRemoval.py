@@ -178,7 +178,11 @@ class MultiqcModule(BaseMultiqcModule):
         self.result_data["discarded_total"] = reads_total - self.result_data["retained"]
 
         self.result_data["paired_reads"] = (
-            self.result_data["retained"] - self.result_data["singleton_m1"] - self.result_data["singleton_m2"] - self.result_data["full-length_cp"] - self.result_data["truncated_cp"]
+            self.result_data["retained"]
+            - self.result_data["singleton_m1"]
+            - self.result_data["singleton_m2"]
+            - self.result_data["full-length_cp"]
+            - self.result_data["truncated_cp"]
         )
         try:
             self.result_data["percent_aligned"] = (
