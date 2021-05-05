@@ -177,8 +177,8 @@ class MultiqcModule(BaseMultiqcModule):
         self.result_data["reads_total"] = reads_total
         self.result_data["discarded_total"] = reads_total - self.result_data["retained"]
 
-        self.result_data["retained_reads"] = (
-            self.result_data["retained"] - self.result_data["singleton_m1"] - self.result_data["singleton_m2"]
+        self.result_data["paired_reads"] = (
+            self.result_data["retained"] - self.result_data["singleton_m1"] - self.result_data["singleton_m2"] - self.result_data["full-length_cp"] - self.result_data["truncated_cp"]
         )
         try:
             self.result_data["percent_aligned"] = (
@@ -268,7 +268,7 @@ class MultiqcModule(BaseMultiqcModule):
         cats_pec = OrderedDict()
 
         if self.__any_paired:
-            cats_pec["retained_reads"] = {"name": "Retained Read Pairs"}
+            cats_pec["paired_reads"] = {"name": "Paired Reads"}
 
         cats_pec["singleton_m1"] = {"name": "Singleton R1"}
 
