@@ -4,7 +4,7 @@ import os
 
 from .base_metrics import DragenBaseMetrics
 from .read_metrics import DragenReadMetrics
-from .dragen_fastqc_gc_metrics import DragenFastqcGcMetrics
+from .gc_metrics import DragenFastqcGcMetrics
 from .content_metrics import DragenContentMetrics
 from .util import parse_fastqc_metrics_file
 
