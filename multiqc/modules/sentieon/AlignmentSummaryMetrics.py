@@ -14,7 +14,7 @@ log = logging.getLogger(__name__)
 
 
 def parse_reports(self):
-    """ Find Sentieon AlignmentSummaryMetrics reports and parse their data """
+    """Find Sentieon AlignmentSummaryMetrics reports and parse their data"""
 
     # Set up vars
     self.sentieon_alignment_metrics = dict()

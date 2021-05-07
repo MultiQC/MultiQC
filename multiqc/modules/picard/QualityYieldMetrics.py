@@ -32,7 +32,7 @@ DESC = OrderedDict(
 
 
 def parse_reports(self):
-    """ Find Picard QualityYieldMetrics reports and parse their data """
+    """Find Picard QualityYieldMetrics reports and parse their data"""
 
     # Set up vars
     all_data = OrderedDict()

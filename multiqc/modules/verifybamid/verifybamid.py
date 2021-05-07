@@ -79,7 +79,7 @@ class MultiqcModule(BaseMultiqcModule):
         self.verifybamid_table()
 
     def parse_selfsm(self, f):
-        """ Go through selfSM file and create a dictionary with the sample name as a key, """
+        """Go through selfSM file and create a dictionary with the sample name as a key,"""
         # create a dictionary to populate from this sample's file
         parsed_data = dict()
         # set a empty variable which denotes if the headers have been read
@@ -123,7 +123,7 @@ class MultiqcModule(BaseMultiqcModule):
         return parsed_data
 
     def verifybamid_general_stats_table(self):
-        """ Take the percentage of contamination from all the parsed *.SELFSM files and add it to the basic stats table at the top of the report """
+        """Take the percentage of contamination from all the parsed *.SELFSM files and add it to the basic stats table at the top of the report"""
 
         # create a dictionary to hold the columns to add to the general stats table
         headers = OrderedDict()

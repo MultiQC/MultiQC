@@ -140,7 +140,7 @@ class MultiqcModule(BaseMultiqcModule):
         )
 
     def parse_fastp_log(self, f):
-        """ Parse the JSON output from fastp and save the summary statistics """
+        """Parse the JSON output from fastp and save the summary statistics"""
         try:
             parsed_json = json.load(f["f"])
         except:
@@ -343,7 +343,7 @@ class MultiqcModule(BaseMultiqcModule):
         self.general_stats_addcols(self.fastp_data, headers)
 
     def fastp_filtered_reads_chart(self):
-        """ Function to generate the fastp filtered reads bar plot """
+        """Function to generate the fastp filtered reads bar plot"""
         # Specify the order of the different possible categories
         keys = OrderedDict()
         keys["filtering_result_passed_filter_reads"] = {"name": "Passed Filter"}
@@ -362,7 +362,7 @@ class MultiqcModule(BaseMultiqcModule):
         return bargraph.plot(self.fastp_data, keys, pconfig)
 
     def fastp_read_qual_plot(self):
-        """ Make the read quality plot for Fastp """
+        """Make the read quality plot for Fastp"""
         data_labels, pdata = self.filter_pconfig_pdata_subplots(self.fastp_qual_plotdata, "Sequence Quality")
         pconfig = {
             "id": "fastp-seq-quality-plot",
@@ -376,7 +376,7 @@ class MultiqcModule(BaseMultiqcModule):
         return linegraph.plot(pdata, pconfig)
 
     def fastp_read_gc_plot(self):
-        """ Make the read GC plot for Fastp """
+        """Make the read GC plot for Fastp"""
         data_labels, pdata = self.filter_pconfig_pdata_subplots(self.fastp_gc_content_data, "Base Content Percent")
         pconfig = {
             "id": "fastp-seq-content-gc-plot",
@@ -393,7 +393,7 @@ class MultiqcModule(BaseMultiqcModule):
         return linegraph.plot(pdata, pconfig)
 
     def fastp_read_n_plot(self):
-        """ Make the read N content plot for Fastp """
+        """Make the read N content plot for Fastp"""
         data_labels, pdata = self.filter_pconfig_pdata_subplots(self.fastp_n_content_data, "Base Content Percent")
         pconfig = {
             "id": "fastp-seq-content-n-plot",

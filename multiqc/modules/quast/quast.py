@@ -148,7 +148,7 @@ class MultiqcModule(BaseMultiqcModule):
         self.general_stats_addcols(self.quast_data, headers)
 
     def quast_table(self):
-        """ Write some more statistics about the assemblies in a table. """
+        """Write some more statistics about the assemblies in a table."""
         headers = OrderedDict()
 
         headers["N50"] = {
@@ -258,7 +258,7 @@ class MultiqcModule(BaseMultiqcModule):
         return table.plot(self.quast_data, headers, config)
 
     def quast_contigs_barplot(self):
-        """ Make a bar plot showing the number and length of contigs for each assembly """
+        """Make a bar plot showing the number and length of contigs for each assembly"""
 
         # Prep the data
         data = dict()

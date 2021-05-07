@@ -13,7 +13,7 @@ log = logging.getLogger(__name__)
 
 class RmdupReportMixin:
     def parse_samtools_rmdup(self):
-        """ Find Samtools rmdup logs and parse their data """
+        """Find Samtools rmdup logs and parse their data"""
 
         self.samtools_rmdup = dict()
         for f in self.find_log_files("samtools/rmdup", filehandles=True):

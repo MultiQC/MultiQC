@@ -174,7 +174,7 @@ class BaseMultiqcModule(object):
         autoformat=True,
         autoformat_type="markdown",
     ):
-        """ Add a section to the module report output """
+        """Add a section to the module report output"""
 
         # Default anchor
         if anchor is None:
@@ -313,7 +313,7 @@ class BaseMultiqcModule(object):
         return s_name
 
     def ignore_samples(self, data):
-        """ Strip out samples which match `sample_names_ignore` """
+        """Strip out samples which match `sample_names_ignore`"""
         try:
             if isinstance(data, OrderedDict):
                 newdata = OrderedDict()
@@ -329,7 +329,7 @@ class BaseMultiqcModule(object):
             return data
 
     def is_ignore_sample(self, s_name):
-        """ Should a sample name be ignored? """
+        """Should a sample name be ignored?"""
         glob_match = any(fnmatch.fnmatch(s_name, sn) for sn in config.sample_names_ignore)
         re_match = any(re.match(sn, s_name) for sn in config.sample_names_ignore_re)
         return glob_match or re_match
@@ -411,7 +411,7 @@ class BaseMultiqcModule(object):
     ##################################################
     #### DEPRECATED FORWARDERS
     def plot_bargraph(self, data, cats=None, pconfig=None):
-        """ Depreciated function. Forwards to new location. """
+        """Depreciated function. Forwards to new location."""
         from multiqc.plots import bargraph
 
         if pconfig is None:
@@ -419,7 +419,7 @@ class BaseMultiqcModule(object):
         return bargraph.plot(data, cats, pconfig)
 
     def plot_xy_data(self, data, pconfig=None):
-        """ Depreciated function. Forwards to new location. """
+        """Depreciated function. Forwards to new location."""
         from multiqc.plots import linegraph
 
         if pconfig is None:

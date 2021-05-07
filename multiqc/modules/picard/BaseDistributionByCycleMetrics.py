@@ -59,7 +59,7 @@ def read_base_distrib_data(line_iter):
 
 
 def parse_reports(self):
-    """ Find Picard BaseDistributionByCycleMetrics reports and parse their data """
+    """Find Picard BaseDistributionByCycleMetrics reports and parse their data"""
 
     # Set up vars
     self.picard_baseDistributionByCycle_data = dict()

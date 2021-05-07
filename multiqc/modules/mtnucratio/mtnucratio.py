@@ -15,7 +15,7 @@ log = logging.getLogger(__name__)
 
 
 class MultiqcModule(BaseMultiqcModule):
-    """ mtnucratio module """
+    """mtnucratio module"""
 
     def __init__(self):
 
@@ -49,7 +49,7 @@ class MultiqcModule(BaseMultiqcModule):
 
     # Parse our nice little JSON file
     def parseJSON(self, f):
-        """ Parse the JSON output from mtnucratio and save the summary statistics """
+        """Parse the JSON output from mtnucratio and save the summary statistics"""
         try:
             parsed_json = json.load(f["f"])
             if "metrics" not in parsed_json and "metadata" not in parsed_json:

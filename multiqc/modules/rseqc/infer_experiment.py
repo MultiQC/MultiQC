@@ -14,7 +14,7 @@ log = logging.getLogger(__name__)
 
 
 def parse_reports(self):
-    """ Find RSeQC infer_experiment reports and parse their data """
+    """Find RSeQC infer_experiment reports and parse their data"""
 
     # Set up vars
     self.infer_exp = dict()

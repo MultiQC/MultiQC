@@ -15,7 +15,7 @@ log = logging.getLogger(__name__)
 
 
 class MultiqcModule(BaseMultiqcModule):
-    """ Skewer """
+    """Skewer"""
 
     def __init__(self):
         # Initialise the parent object
@@ -75,7 +75,7 @@ class MultiqcModule(BaseMultiqcModule):
         log.info("Found {} reports".format(len(self.skewer_data)))
 
     def add_readlen_dist_plot(self):
-        """ Generate plot HTML for read length distribution plot. """
+        """Generate plot HTML for read length distribution plot."""
         pconfig = {
             "id": "skewer_read_length_histogram",
             "title": "Skewer: Read Length Distribution after trimming",
@@ -89,7 +89,7 @@ class MultiqcModule(BaseMultiqcModule):
         self.add_section(plot=linegraph.plot(self.skewer_readlen_dist, pconfig))
 
     def parse_skewer_log(self, f):
-        """ Go through log file looking for skewer output """
+        """Go through log file looking for skewer output"""
         fh = f["f"]
         regexes = {
             "fq1": "Input file:\s+(.+)",

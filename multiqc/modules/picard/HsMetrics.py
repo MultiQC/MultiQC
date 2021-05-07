@@ -57,7 +57,7 @@ FIELD_DESCRIPTIONS = {
 
 
 def parse_reports(self):
-    """ Find Picard HsMetrics reports and parse their data """
+    """Find Picard HsMetrics reports and parse their data"""
 
     # Set up vars
     self.picard_HsMetrics_data = dict()

@@ -53,7 +53,7 @@ class MultiqcModule(BaseMultiqcModule):
         self.add_section(plot=self.htseq_counts_chart())
 
     def parse_htseq_report(self, f):
-        """ Parse the HTSeq Count log file. """
+        """Parse the HTSeq Count log file."""
         keys = ["__no_feature", "__ambiguous", "__too_low_aQual", "__not_aligned", "__alignment_not_unique"]
         parsed_data = dict()
         assigned_counts = 0
@@ -102,7 +102,7 @@ class MultiqcModule(BaseMultiqcModule):
         self.general_stats_addcols(self.htseq_data, headers)
 
     def htseq_counts_chart(self):
-        """ Make the HTSeq Count assignment rates plot """
+        """Make the HTSeq Count assignment rates plot"""
         cats = OrderedDict()
         cats["assigned"] = {"name": "Assigned"}
         cats["ambiguous"] = {"name": "Ambiguous"}

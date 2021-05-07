@@ -18,7 +18,7 @@ recal_table_type = RecalTableType(0, 1)
 
 class BaseRecalibratorMixin:
     def parse_gatk_base_recalibrator(self):
-        """ Find GATK BaseRecalibrator logs and parse their data """
+        """Find GATK BaseRecalibrator logs and parse their data"""
 
         report_table_headers = {
             "#:GATKTable:Arguments:Recalibration argument collection values used in this run": "arguments",
@@ -66,7 +66,7 @@ class BaseRecalibratorMixin:
         return n_reports_found
 
     def add_quality_score_vs_no_of_observations_section(self):
-        """ Add a section for the quality score vs number of observations line plot """
+        """Add a section for the quality score vs number of observations line plot"""
 
         sample_data = []
         data_labels = []

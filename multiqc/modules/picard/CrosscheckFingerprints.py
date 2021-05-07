@@ -141,7 +141,7 @@ def _parse_cli(line):
 
 
 def _get_table_headers(data):
-    """ Create the headers config """
+    """Create the headers config"""
 
     crosscheckfingerprints_table_cols = [
         "RESULT",

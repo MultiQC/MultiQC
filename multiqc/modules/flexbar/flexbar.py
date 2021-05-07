@@ -102,7 +102,7 @@ class MultiqcModule(BaseMultiqcModule):
         _save_data(parsed_data)
 
     def flexbar_barplot(self):
-        """ Make the HighCharts HTML to plot the flexbar rates """
+        """Make the HighCharts HTML to plot the flexbar rates"""
 
         # Specify the order of the different possible categories
         keys = OrderedDict()

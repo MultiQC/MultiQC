@@ -63,7 +63,7 @@ class MultiqcModule(BaseMultiqcModule):
 
     # Report fragment length, NSC and RSC in general stat table
     def phantompeakqualtools_general_stats(self):
-        """ Add columns to General Statistics table """
+        """Add columns to General Statistics table"""
         headers = OrderedDict()
         headers["Estimated_Fragment_Length_bp"] = {
             "title": "Frag Length",

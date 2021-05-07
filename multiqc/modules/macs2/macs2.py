@@ -77,7 +77,7 @@ class MultiqcModule(BaseMultiqcModule):
             self.macs_data[s_name] = parsed_data
 
     def macs_general_stats(self):
-        """ Add columns to General Statistics table """
+        """Add columns to General Statistics table"""
         headers = OrderedDict()
         headers["d"] = {"title": "Fragment Length", "min": 0, "format": "{:,.0f}"}
         headers["treatment_redundant_rate"] = {
@@ -105,7 +105,7 @@ class MultiqcModule(BaseMultiqcModule):
         self.general_stats_addcols(self.macs_data, headers)
 
     def macs_filtered_reads_plot(self):
-        """ Plot of filtered reads for control and treatment samples """
+        """Plot of filtered reads for control and treatment samples"""
         data = dict()
         req_cats = [
             "control_fragments_total",

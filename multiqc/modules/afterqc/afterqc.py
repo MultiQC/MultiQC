@@ -58,7 +58,7 @@ class MultiqcModule(BaseMultiqcModule):
         )
 
     def parse_afterqc_log(self, f):
-        """ Parse the JSON output from AfterQC and save the summary statistics """
+        """Parse the JSON output from AfterQC and save the summary statistics"""
         try:
             parsed_json = json.load(f["f"])
         except:
@@ -131,7 +131,7 @@ class MultiqcModule(BaseMultiqcModule):
         self.general_stats_addcols(self.afterqc_data, headers)
 
     def after_qc_bad_reads_chart(self):
-        """ Function to generate the AfterQC bad reads bar plot """
+        """Function to generate the AfterQC bad reads bar plot"""
         # Specify the order of the different possible categories
         keys = OrderedDict()
         keys["good_reads"] = {"name": "Good Reads"}

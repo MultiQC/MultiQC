@@ -140,7 +140,7 @@ class MultiqcModule(BaseMultiqcModule):
         self.add_data_source(f, s_name)
 
     def prokka_table(self):
-        """ Make basic table of the annotation stats """
+        """Make basic table of the annotation stats"""
 
         # Specify the order of the different possible categories
         headers = OrderedDict()
@@ -201,7 +201,7 @@ class MultiqcModule(BaseMultiqcModule):
         return table.plot(self.prokka, headers, table_config)
 
     def prokka_barplot(self):
-        """ Make a basic plot of the annotation stats """
+        """Make a basic plot of the annotation stats"""
 
         # Specify the order of the different categories
         keys = OrderedDict()

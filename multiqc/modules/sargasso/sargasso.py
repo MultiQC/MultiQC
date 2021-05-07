@@ -54,7 +54,7 @@ class MultiqcModule(BaseMultiqcModule):
         # log.info('done')
 
     def parse_sargasso_logs(self, f):
-        """ Parse the sargasso log file. """
+        """Parse the sargasso log file."""
         species_name = list()
         items = list()
         header = list()
@@ -143,7 +143,7 @@ class MultiqcModule(BaseMultiqcModule):
         self.general_stats_addcols(self.sargasso_data, headers)
 
     def sargasso_chart(self):
-        """ Make the sargasso plot """
+        """Make the sargasso plot"""
 
         # Config for the plot
         config = {

@@ -457,7 +457,7 @@ def save_htmlid(html_id, skiplint=False):
 
 
 def compress_json(data):
-    """ Take a Python data object. Convert to JSON and compress using lzstring """
+    """Take a Python data object. Convert to JSON and compress using lzstring"""
     json_string = json.dumps(data).encode("utf-8", "ignore").decode("utf-8")
     json_string = sanitise_json(json_string)
     x = lzstring.LZString()

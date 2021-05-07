@@ -12,7 +12,7 @@ log = logging.getLogger(__name__)
 
 
 class StatsReportMixin:
-    """ Mixin loaded by the bcftools MultiqcModule class """
+    """Mixin loaded by the bcftools MultiqcModule class"""
 
     def parse_bcftools_stats(self):
         """
@@ -219,7 +219,7 @@ class StatsReportMixin:
         return len(self.bcftools_stats)
 
     def bcftools_stats_genstats_headers(self):
-        """ Add key statistics to the General Stats table """
+        """Add key statistics to the General Stats table"""
         stats_headers = OrderedDict()
         stats_headers["number_of_records"] = {
             "title": "Vars",

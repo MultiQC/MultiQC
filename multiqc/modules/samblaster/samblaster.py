@@ -15,7 +15,7 @@ log = logging.getLogger(__name__)
 
 
 class MultiqcModule(BaseMultiqcModule):
-    """ Samblaster """
+    """Samblaster"""
 
     def __init__(self):
         # Initialise the parent object
@@ -56,7 +56,7 @@ class MultiqcModule(BaseMultiqcModule):
         self.add_barplot()
 
     def add_barplot(self):
-        """ Generate the Samblaster bar plot. """
+        """Generate the Samblaster bar plot."""
         cats = OrderedDict()
         cats["n_nondups"] = {"name": "Non-duplicates"}
         cats["n_dups"] = {"name": "Duplicates"}

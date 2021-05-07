@@ -175,7 +175,7 @@ def _parse_summary_report(filehandle):
 
 
 def _histogram_data(iterator):
-    """ Yields only the row contents that contain the histogram entries """
+    """Yields only the row contents that contain the histogram entries"""
     histogram_started = False
     header_passed = False
     for l in iterator:
@@ -290,7 +290,7 @@ def _get_general_stats_headers():
 
 
 def _generate_overview_note(pass_count, only_warning_count, error_count, total_count):
-    """ Generates and returns the HTML note that provides a summary of validation status. """
+    """Generates and returns the HTML note that provides a summary of validation status."""
 
     note_html = ['<div class="progress">']
     pbars = [

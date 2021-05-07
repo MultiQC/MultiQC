@@ -64,7 +64,7 @@ class MultiqcModule(BaseMultiqcModule):
         self.cutadapt_length_trimmed_plot()
 
     def parse_cutadapt_logs(self, f):
-        """ Go through log file looking for cutadapt output """
+        """Go through log file looking for cutadapt output"""
         fh = f["f"]
         regexes = {
             "1.7": {
@@ -195,7 +195,7 @@ class MultiqcModule(BaseMultiqcModule):
         self.general_stats_addcols(self.cutadapt_data, headers)
 
     def cutadapt_filtered_barplot(self):
-        """ Bar plot showing proportion of reads trimmed """
+        """Bar plot showing proportion of reads trimmed"""
 
         pconfig = {"id": "cutadapt_filtered_reads_plot", "title": "Cutadapt: Filtered Reads", "ylab": "Counts"}
 
@@ -221,7 +221,7 @@ class MultiqcModule(BaseMultiqcModule):
         )
 
     def cutadapt_length_trimmed_plot(self):
-        """ Generate the trimming length plot """
+        """Generate the trimming length plot"""
 
         pconfig = {
             "id": "cutadapt_trimmed_sequences_plot",

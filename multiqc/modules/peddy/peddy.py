@@ -97,7 +97,7 @@ class MultiqcModule(BaseMultiqcModule):
         self.peddy_sex_check_plot()
 
     def parse_peddy_summary(self, f):
-        """ Go through log file looking for peddy output """
+        """Go through log file looking for peddy output"""
         parsed_data = dict()
         headers = None
         for l in f["f"].splitlines():
@@ -118,7 +118,7 @@ class MultiqcModule(BaseMultiqcModule):
         return parsed_data
 
     def parse_peddy_csv(self, f, pattern):
-        """ Parse csv output from peddy """
+        """Parse csv output from peddy"""
         parsed_data = dict()
         headers = None
         s_name_idx = None

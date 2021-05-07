@@ -820,47 +820,47 @@ class MultiqcModule(BaseMultiqcModule):
         return dict(zip(covs, ccov_cnts))
 
     def parse_logs_covdist_all_base_botgc(self, f, fn):
-        """ Handled by parse_logs_covdist_all_base() """
+        """Handled by parse_logs_covdist_all_base()"""
         return self.parse_logs_covdist_all_base(f, fn)
 
     def parse_logs_covdist_all_base_topgc(self, f, fn):
-        """ Handled by parse_logs_covdist_all_base() """
+        """Handled by parse_logs_covdist_all_base()"""
         return self.parse_logs_covdist_all_base(f, fn)
 
     def parse_logs_covdist_q40_base(self, f, fn):
-        """ Handled by parse_logs_covdist_all_base() """
+        """Handled by parse_logs_covdist_all_base()"""
         return self.parse_logs_covdist_all_base(f, fn)
 
     def parse_logs_covdist_q40_base_botgc(self, f, fn):
-        """ Handled by parse_logs_covdist_all_base() """
+        """Handled by parse_logs_covdist_all_base()"""
         return self.parse_logs_covdist_all_base(f, fn)
 
     def parse_logs_covdist_q40_base_topgc(self, f, fn):
-        """ Handled by parse_logs_covdist_all_base() """
+        """Handled by parse_logs_covdist_all_base()"""
         return self.parse_logs_covdist_all_base(f, fn)
 
     def parse_logs_covdist_all_cpg(self, f, fn):
-        """ Handled by parse_logs_covdist_all_base() """
+        """Handled by parse_logs_covdist_all_base()"""
         return self.parse_logs_covdist_all_base(f, fn)
 
     def parse_logs_covdist_all_cpg_botgc(self, f, fn):
-        """ Handled by parse_logs_covdist_all_base() """
+        """Handled by parse_logs_covdist_all_base()"""
         return self.parse_logs_covdist_all_base(f, fn)
 
     def parse_logs_covdist_all_cpg_topgc(self, f, fn):
-        """ Handled by parse_logs_covdist_all_base() """
+        """Handled by parse_logs_covdist_all_base()"""
         return self.parse_logs_covdist_all_base(f, fn)
 
     def parse_logs_covdist_q40_cpg(self, f, fn):
-        """ Handled by parse_logs_covdist_all_base() """
+        """Handled by parse_logs_covdist_all_base()"""
         return self.parse_logs_covdist_all_base(f, fn)
 
     def parse_logs_covdist_q40_cpg_botgc(self, f, fn):
-        """ Handled by parse_logs_covdist_all_base() """
+        """Handled by parse_logs_covdist_all_base()"""
         return self.parse_logs_covdist_all_base(f, fn)
 
     def parse_logs_covdist_q40_cpg_topgc(self, f, fn):
-        """ Handled by parse_logs_covdist_all_base() """
+        """Handled by parse_logs_covdist_all_base()"""
         return self.parse_logs_covdist_all_base(f, fn)
 
     def chart_covdist_all_base(self):
@@ -936,47 +936,47 @@ class MultiqcModule(BaseMultiqcModule):
         )
 
     def chart_covdist_all_base_botgc(self):
-        """ Handled by chart_covdist_all_base() """
+        """Handled by chart_covdist_all_base()"""
         pass
 
     def chart_covdist_all_base_topgc(self):
-        """ Handled by chart_covdist_all_base() """
+        """Handled by chart_covdist_all_base()"""
         pass
 
     def chart_covdist_q40_base(self):
-        """ Handled by chart_covdist_all_base() """
+        """Handled by chart_covdist_all_base()"""
         pass
 
     def chart_covdist_q40_base_botgc(self):
-        """ Handled by chart_covdist_all_base() """
+        """Handled by chart_covdist_all_base()"""
         pass
 
     def chart_covdist_q40_base_topgc(self):
-        """ Handled by chart_covdist_all_base() """
+        """Handled by chart_covdist_all_base()"""
         pass
 
     def chart_covdist_all_cpg(self):
-        """ Handled by chart_covdist_all_base() """
+        """Handled by chart_covdist_all_base()"""
         pass
 
     def chart_covdist_all_cpg_botgc(self):
-        """ Handled by chart_covdist_all_base() """
+        """Handled by chart_covdist_all_base()"""
         pass
 
     def chart_covdist_all_cpg_topgc(self):
-        """ Handled by chart_covdist_all_base() """
+        """Handled by chart_covdist_all_base()"""
         pass
 
     def chart_covdist_q40_cpg(self):
-        """ Handled by chart_covdist_all_base() """
+        """Handled by chart_covdist_all_base()"""
         pass
 
     def chart_covdist_q40_cpg_botgc(self):
-        """ Handled by chart_covdist_all_base() """
+        """Handled by chart_covdist_all_base()"""
         pass
 
     def chart_covdist_q40_cpg_topgc(self):
-        """ Handled by chart_covdist_all_base() """
+        """Handled by chart_covdist_all_base()"""
         pass
 
     ########################################
@@ -1091,11 +1091,11 @@ class MultiqcModule(BaseMultiqcModule):
         )
 
     def parse_logs_cph_retention_readpos(self, f, fn):
-        """ Handled by parse_logs_cpg_retention_readpos() """
+        """Handled by parse_logs_cpg_retention_readpos()"""
         return self.parse_logs_cpg_retention_readpos(f, fn)
 
     def chart_cph_retention_readpos(self):
-        """ Handled by chart_cpg_retention_readpos() """
+        """Handled by chart_cpg_retention_readpos()"""
         pass
 
     def parse_logs_read_avg_retention_rate(self, f, fn):
@@ -1208,5 +1208,5 @@ class MultiqcModule(BaseMultiqcModule):
         return data
 
     def chart_base_avg_retention_rate(self):
-        """ Handled by chart_read_avg_retention_rate() """
+        """Handled by chart_read_avg_retention_rate()"""
         pass

@@ -15,7 +15,7 @@ log = logging.getLogger(__name__)
 
 
 class MultiqcModule(BaseMultiqcModule):
-    """ Bowtie 2 module, parses stderr logs. """
+    """Bowtie 2 module, parses stderr logs."""
 
     def __init__(self):
 
@@ -215,7 +215,7 @@ class MultiqcModule(BaseMultiqcModule):
         self.general_stats_addcols(self.bowtie2_data, headers)
 
     def bowtie2_alignment_plot(self):
-        """ Make the HighCharts HTML to plot the alignment rates """
+        """Make the HighCharts HTML to plot the alignment rates"""
 
         half_warning = ""
         for s_name in self.bowtie2_data:

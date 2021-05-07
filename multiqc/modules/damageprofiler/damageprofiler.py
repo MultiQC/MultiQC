@@ -97,7 +97,7 @@ class MultiqcModule(BaseMultiqcModule):
 
     # Parse our nice little JSON file
     def parseJSON(self, f):
-        """ Parse the JSON output from DamageProfiler and save the summary statistics """
+        """Parse the JSON output from DamageProfiler and save the summary statistics"""
         try:
             parsed_json = json.load(f["f"])
         except Exception as e:
