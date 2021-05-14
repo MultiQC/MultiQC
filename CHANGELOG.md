@@ -2,13 +2,9 @@
 
 ## MultiQC v1.11dev
 
-#### New Modules
-
-- [**VEP**](https://www.ensembl.org/info/docs/tools/vep/index.html)
-  - Added MultiQC module to add summary statistics of Ensembl VEP annotations.
-
 ### MultiQC updates
 
+- New interactive slider controls for controlling heatmap colour scales ([#1427](https://github.com/ewels/MultiQC/issues/1427))
 - Make the module crash tracebacks much prettier using `rich`
 - Refine the cli log output a little (nicely formatted header line + drop the `[INFO]`)
 - Added docs describing tools for downstream analysis of MultiQC outputs.
@@ -19,6 +15,8 @@
 
 - [**Bustools**](https://bustools.github.io/)
   - Tools for working with BUS files
+- [**VEP**](https://www.ensembl.org/info/docs/tools/vep/index.html)
+  - Added MultiQC module to add summary statistics of Ensembl VEP annotations.
 
 #### Module updates
 

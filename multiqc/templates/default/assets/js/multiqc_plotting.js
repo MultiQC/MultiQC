@@ -1747,21 +1747,7 @@ function plot_heatmap(target, ds) {
     $(".mqc_heatmap_sortHighlight").attr("disabled", true);
   }
 
-  // We set undefined config vars so that they stay the same when hiding samples
-  if (config["min"] === undefined || config["max"] === undefined) {
-    var dmin = data[0][2];
-    var dmax = data[0][2];
-    for (n = 0; n < data.length; n++) {
-      dmin = Math.min(dmin, data[n][2]);
-      dmax = Math.max(dmax, data[n][2]);
-    }
-    if (config["min"] === undefined) {
-      config["min"] = dmin;
-    }
-    if (config["max"] === undefined) {
-      config["max"] = dmax;
-    }
-  }
+  // Build scale
   if (config["colstops"] === undefined) {
     config["colstops"] = [
       [0, "#313695"],
@@ -1941,6 +1927,18 @@ function plot_heatmap(target, ds) {
       }
     }
   );
+
+  // Build range slider
+  $("#" + target + "_range_slider_min").on("input", function () {
+    var chart = $("#" + $(this).data("target")).highcharts();
+    chart.colorAxis[0].update({ min: $(this).val() });
+    $("#" + target + "_range_slider_min_val").text(parseFloat($(this).val()).toFixed(2));
+  });
+  $("#" + target + "_range_slider_max").on("input", function () {
+    var chart = $("#" + $(this).data("target")).highcharts();
+    chart.colorAxis[0].update({ max: $(this).val() });
+    $("#" + target + "_range_slider_max_val").text(parseFloat($(this).val()).toFixed(2));
+  });
 }
 
 // Highlight text with a fadeout background colour highlight
