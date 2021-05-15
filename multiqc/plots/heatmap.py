@@ -79,12 +79,14 @@ def highcharts_heatmap(data, xcats, ycats, pconfig=None):
         </div>
         <div class="mqc_hcplot_range_sliders">
             <div>
-                <label for="{id}_range_slider_min">Min (<span id="{id}_range_slider_min_val">{min}</span>):</label>
-                <input id="{id}_range_slider_min" type="range" value="{min}" min="{min}" max="{max}" step="any" data-target="{id}" />
+                <label for="{id}_range_slider_min_txt">Min:</label>
+                <input id="{id}_range_slider_min_txt" type="number" class="form-control" value="{min}" min="{min}" max="{max}" data-minmax="min" data-target="{id}" />
+                <input id="{id}_range_slider_min" type="range" value="{min}" min="{min}" max="{max}" step="any" data-minmax="min" data-target="{id}" />
             </div>
             <div>
-                <label for="{id}_range_slider_max">Max (<span id="{id}_range_slider_max_val">{max}</span>):</label>
-                <input id="{id}_range_slider_max" type="range" value="{max}" min="{min}" max="{max}" step="any" data-target="{id}" />
+                <label for="{id}_range_slider_max_txt">Max:</label>
+                <input id="{id}_range_slider_max_txt" type="number" class="form-control" value="{max}" min="{min}" max="{max}" data-minmax="max" data-target="{id}" />
+                <input id="{id}_range_slider_max" type="range" value="{max}" min="{min}" max="{max}" step="any" data-minmax="max" data-target="{id}" />
             </div>
         </div>
         <div class="hc-plot-wrapper">

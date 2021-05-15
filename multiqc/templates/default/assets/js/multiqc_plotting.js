@@ -1928,16 +1928,20 @@ function plot_heatmap(target, ds) {
     }
   );
 
-  // Build range slider
-  $("#" + target + "_range_slider_min").on("input", function () {
-    var chart = $("#" + $(this).data("target")).highcharts();
-    chart.colorAxis[0].update({ min: $(this).val() });
-    $("#" + target + "_range_slider_min_val").text(parseFloat($(this).val()).toFixed(2));
-  });
-  $("#" + target + "_range_slider_max").on("input", function () {
-    var chart = $("#" + $(this).data("target")).highcharts();
-    chart.colorAxis[0].update({ max: $(this).val() });
-    $("#" + target + "_range_slider_max_val").text(parseFloat($(this).val()).toFixed(2));
+  // Listeners for range slider
+  $(".mqc_hcplot_range_sliders input").on("keyup change", function () {
+    target = $(this).data("target");
+    minmax = $(this).data("minmax");
+    var chart = $("#" + target).highcharts();
+    if (minmax == "min") {
+      chart.colorAxis[0].update({ min: $(this).val() });
+    }
+    if (minmax == "max") {
+      chart.colorAxis[0].update({ max: $(this).val() });
+    }
+    $("#" + target + "_range_slider_" + minmax + ", #" + target + "_range_slider_" + minmax + "_txt").val(
+      $(this).val()
+    );
   });
 }
 

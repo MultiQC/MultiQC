@@ -839,6 +839,9 @@ tbody .sorthandle {
   display: inline-block;
   width: 200px;
 }
+.mqc_hcplot_range_sliders input.form-control {
+  width: 100px;
+}
 .mqc_hcplot_yaxis_limit_toggle {
   float: right;
   font-size: 11px;
