@@ -1929,7 +1929,7 @@ function plot_heatmap(target, ds) {
   );
 
   // Listeners for range slider
-  $(".mqc_hcplot_range_sliders input").on("keyup change", function () {
+  $(".mqc_hcplot_range_sliders input").on("keyup change input", function () {
     target = $(this).data("target");
     minmax = $(this).data("minmax");
     var chart = $("#" + target).highcharts();
