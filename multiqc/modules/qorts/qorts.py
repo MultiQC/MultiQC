@@ -79,7 +79,7 @@ class MultiqcModule(BaseMultiqcModule):
                 ) * 100.0
 
     def qorts_general_stats(self):
-        """ Add columns to the General Statistics table """
+        """Add columns to the General Statistics table"""
         headers = OrderedDict()
         headers["Genes_PercentWithNonzeroCounts"] = {
             "title": "% Genes with Counts",
@@ -97,7 +97,7 @@ class MultiqcModule(BaseMultiqcModule):
         self.general_stats_addcols(self.qorts_data, headers)
 
     def qorts_alignment_barplot(self):
-        """ Alignment statistics bar plot """
+        """Alignment statistics bar plot"""
         # Specify the order of the different possible categories
         keys = [
             "ReadPairs_UniqueGene_CDS",
@@ -151,7 +151,7 @@ class MultiqcModule(BaseMultiqcModule):
         )
 
     def qorts_splice_loci_barplot(self):
-        """ Make the HighCharts HTML to plot the qorts splice loci """
+        """Make the HighCharts HTML to plot the qorts splice loci"""
         # Specify the order of the different possible categories
         keys = [
             "SpliceLoci_Known_ManyReads",
@@ -208,7 +208,7 @@ class MultiqcModule(BaseMultiqcModule):
         )
 
     def qorts_splice_events_barplot(self):
-        """ Make the HighCharts HTML to plot the qorts splice events """
+        """Make the HighCharts HTML to plot the qorts splice events"""
         # Specify the order of the different possible categories
         keys = [
             "SpliceEvents_KnownLociWithManyReads",
@@ -260,7 +260,7 @@ class MultiqcModule(BaseMultiqcModule):
         )
 
     def qorts_strandedness_plot(self):
-        """ Make a bar plot showing the reads assigned to each strand """
+        """Make a bar plot showing the reads assigned to each strand"""
         # Specify the order of the different possible categories
         keys = [
             "StrandTest_frFirstStrand",

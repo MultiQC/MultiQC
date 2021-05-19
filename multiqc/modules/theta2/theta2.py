@@ -55,7 +55,7 @@ class MultiqcModule(BaseMultiqcModule):
         )
 
     def parse_theta2_report(self, fh):
-        """ Parse the final THetA2 log file. """
+        """Parse the final THetA2 log file."""
         parsed_data = {}
         for l in fh:
             if l.startswith("#"):
@@ -75,7 +75,7 @@ class MultiqcModule(BaseMultiqcModule):
         return parsed_data
 
     def theta2_purities_chart(self):
-        """ Make the plot showing alignment rates """
+        """Make the plot showing alignment rates"""
 
         # Specify the order of the different possible categories
         keys = OrderedDict()

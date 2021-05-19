@@ -397,13 +397,13 @@ class MultiqcModule(BaseMultiqcModule):
 
     @staticmethod
     def _drop_time(s):
-        """ remove time """
+        """remove time"""
         m = re.match(r"(.*) .+$", s)
         return s if m is None else m.group(1)
 
     @staticmethod
     def _drop_name(s):
-        """ drop leading program name from version string """
+        """drop leading program name from version string"""
         return s.split()[-1]
 
     def bam_runtime_table(self):

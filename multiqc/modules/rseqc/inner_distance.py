@@ -13,7 +13,7 @@ log = logging.getLogger(__name__)
 
 
 def parse_reports(self):
-    """ Find RSeQC inner_distance frequency reports and parse their data """
+    """Find RSeQC inner_distance frequency reports and parse their data"""
 
     # Set up vars
     self.inner_distance = dict()

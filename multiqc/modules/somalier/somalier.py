@@ -97,7 +97,7 @@ class MultiqcModule(BaseMultiqcModule):
         self.somalier_ancestry_pca_plot()
 
     def parse_somalier_samples(self, f):
-        """ Go through log file looking for somalier output """
+        """Go through log file looking for somalier output"""
         parsed_data = dict()
         headers = None
         sample_i = -100
@@ -120,7 +120,7 @@ class MultiqcModule(BaseMultiqcModule):
         return parsed_data
 
     def parse_somalier_pairs_tsv(self, f):
-        """ Parse csv output from somalier """
+        """Parse csv output from somalier"""
         parsed_data = dict()
         headers = None
         s_name_idx = None
@@ -672,7 +672,7 @@ class MultiqcModule(BaseMultiqcModule):
 
 
 def _make_col_alpha(cols, alpha):
-    """ Take a HTML colour value and return a rgba string with alpha """
+    """Take a HTML colour value and return a rgba string with alpha"""
     cols_return = []
     for col in cols:
         col_srgb = spectra.html(col)

@@ -14,7 +14,7 @@ log = logging.getLogger(__name__)
 
 
 def parse_reports(self):
-    """ Find bamtools stats reports and parse their data """
+    """Find bamtools stats reports and parse their data"""
 
     # Set up vars
     self.bamtools_stats_data = dict()

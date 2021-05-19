@@ -62,7 +62,7 @@ class MultiqcModule(BaseMultiqcModule):
         self.summary_barplot()
 
     def addSummaryMetrics(self):
-        """ Take the parsed entries from OptiType and add them to the main plot """
+        """Take the parsed entries from OptiType and add them to the main plot"""
         # A1, A2, B1, B2, C1, C2, Reads, Objective
         headers = OrderedDict()
 
@@ -115,7 +115,7 @@ class MultiqcModule(BaseMultiqcModule):
         self.general_stats_addcols(self.optitype_data, headers)
 
     def summary_barplot(self):
-        """ Make a bar plot showing the number of samples for each allele """
+        """Make a bar plot showing the number of samples for each allele"""
 
         alleles = ["A1", "A2", "B1", "B2", "C1", "C2"]
         data = {al: {} for al in alleles}

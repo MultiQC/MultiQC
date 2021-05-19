@@ -127,7 +127,7 @@ class MultiqcModule(BaseMultiqcModule):
         s_name = None
 
     def sortmerna_detailed_barplot(self):
-        """ Make the HighCharts HTML to plot the sortmerna rates """
+        """Make the HighCharts HTML to plot the sortmerna rates"""
 
         # Specify the order of the different possible categories
         keys = {}

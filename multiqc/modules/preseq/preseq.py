@@ -189,7 +189,7 @@ class MultiqcModule(BaseMultiqcModule):
 
 
 def _parse_preseq_logs(f):
-    """ Go through log file looking for preseq output """
+    """Go through log file looking for preseq output"""
 
     lines = f["f"].splitlines()
     header = lines.pop(0)

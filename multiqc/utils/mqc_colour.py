@@ -16,10 +16,10 @@ logger = logging.getLogger(__name__)
 
 
 class mqc_colour_scale(object):
-    """ Class to hold a colour scheme. """
+    """Class to hold a colour scheme."""
 
     def __init__(self, name="GnBu", minval=0, maxval=100):
-        """ Initialise class with a colour scale """
+        """Initialise class with a colour scale"""
 
         self.colours = self.get_colours(name)
         self.name = name
@@ -42,7 +42,7 @@ class mqc_colour_scale(object):
             self.maxval = float(maxval)
 
     def get_colour(self, val, colformat="hex", lighten=0.3):
-        """ Given a value, return a colour within the colour scale """
+        """Given a value, return a colour within the colour scale"""
         try:
             # When we have non-numeric values (e.g. Male/Female, Yes/No, chromosome names, etc), and a qualitive
             # scale (Set1, Set3, etc), we don't want to attempt to parse numbers, otherwise we will end up with all

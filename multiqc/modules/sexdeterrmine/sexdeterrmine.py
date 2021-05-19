@@ -15,7 +15,7 @@ log = logging.getLogger(__name__)
 
 
 class MultiqcModule(BaseMultiqcModule):
-    """ SexDeterrmine module """
+    """SexDeterrmine module"""
 
     def __init__(self):
 
@@ -80,7 +80,7 @@ class MultiqcModule(BaseMultiqcModule):
                     self.sexdet_data[s_clean][k] = v
 
     def addSummaryMetrics(self):
-        """ Take the parsed stats from SexDetErrmine and add it to the main plot """
+        """Take the parsed stats from SexDetErrmine and add it to the main plot"""
 
         headers = OrderedDict()
         headers["RateErrX"] = {

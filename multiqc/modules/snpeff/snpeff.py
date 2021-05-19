@@ -14,7 +14,7 @@ log = logging.getLogger(__name__)
 
 
 class MultiqcModule(BaseMultiqcModule):
-    """ SnpEff """
+    """SnpEff"""
 
     def __init__(self):
         # Initialise the parent object
@@ -145,7 +145,7 @@ class MultiqcModule(BaseMultiqcModule):
             )
 
     def parse_snpeff_log(self, f):
-        """ Go through log file looking for snpeff output """
+        """Go through log file looking for snpeff output"""
 
         keys = {
             "# Summary table": [
@@ -214,7 +214,7 @@ class MultiqcModule(BaseMultiqcModule):
             self.snpeff_data[f["s_name"]] = parsed_data
 
     def general_stats(self):
-        """ Add key SnpEff stats to the general stats table """
+        """Add key SnpEff stats to the general stats table"""
 
         headers = OrderedDict()
         headers["Change_rate"] = {"title": "Change rate", "scale": "RdYlBu-rev", "min": 0, "format": "{:,.0f}"}
@@ -234,7 +234,7 @@ class MultiqcModule(BaseMultiqcModule):
         self.general_stats_addcols(self.snpeff_data, headers)
 
     def count_genomic_region_plot(self):
-        """ Generate the SnpEff Counts by Genomic Region plot """
+        """Generate the SnpEff Counts by Genomic Region plot"""
 
         # Sort the keys based on the total counts
         keys = self.snpeff_section_totals["# Count by genomic region"]
@@ -256,7 +256,7 @@ class MultiqcModule(BaseMultiqcModule):
         return bargraph.plot(self.snpeff_data, pkeys, pconfig)
 
     def effects_plot(self):
-        """ Generate the SnpEff Counts by Effects plot """
+        """Generate the SnpEff Counts by Effects plot"""
 
         # Sort the keys based on the total counts
         keys = self.snpeff_section_totals["# Count by effects"]
@@ -277,7 +277,7 @@ class MultiqcModule(BaseMultiqcModule):
         return bargraph.plot(self.snpeff_data, pkeys, pconfig)
 
     def effects_impact_plot(self):
-        """ Generate the SnpEff Counts by Effects Impact plot """
+        """Generate the SnpEff Counts by Effects Impact plot"""
 
         # Put keys in a more logical order
         keys = ["MODIFIER", "LOW", "MODERATE", "HIGH"]
@@ -298,7 +298,7 @@ class MultiqcModule(BaseMultiqcModule):
         return bargraph.plot(self.snpeff_data, pkeys, pconfig)
 
     def effects_function_plot(self):
-        """ Generate the SnpEff Counts by Functional Class plot """
+        """Generate the SnpEff Counts by Functional Class plot"""
 
         # Cats to plot in a sensible order
         keys = ["SILENT", "MISSENSE", "NONSENSE"]
@@ -319,7 +319,7 @@ class MultiqcModule(BaseMultiqcModule):
         return bargraph.plot(self.snpeff_data, pkeys, pconfig)
 
     def qualities_plot(self):
-        """ Generate the qualities plot """
+        """Generate the qualities plot"""
 
         pconfig = {
             "smooth_points": 200,

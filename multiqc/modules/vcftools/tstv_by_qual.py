@@ -11,7 +11,7 @@ log = logging.getLogger(__name__)
 
 class TsTvByQualMixin:
     def parse_tstv_by_qual(self):
-        """ Create the HTML for the TsTv by quality linegraph plot. """
+        """Create the HTML for the TsTv by quality linegraph plot."""
 
         self.vcftools_tstv_by_qual = dict()
         for f in self.find_log_files("vcftools/tstv_by_qual", filehandles=True):

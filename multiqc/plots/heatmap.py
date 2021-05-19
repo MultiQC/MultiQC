@@ -47,9 +47,20 @@ def highcharts_heatmap(data, xcats, ycats, pconfig=None):
 
     # Reformat the data for highcharts
     pdata = []
+    minval = None
+    maxval = None
     for i, arr in enumerate(data):
         for j, val in enumerate(arr):
             pdata.append([j, i, val])
+            if minval is None or val < minval:
+                minval = val
+            if maxval is None or val > maxval:
+                maxval = val
+
+    if "min" not in pconfig:
+        pconfig["min"] = minval
+    if "max" not in pconfig:
+        pconfig["max"] = maxval
 
     # Get the plot ID
     if pconfig.get("id") is None:
@@ -59,20 +70,32 @@ def highcharts_heatmap(data, xcats, ycats, pconfig=None):
     pconfig["id"] = report.save_htmlid(pconfig["id"])
 
     # Build the HTML for the page
-    html = '<div class="mqc_hcplot_plotgroup">'
-
-    # The 'sort by highlights button'
-    html += """<div class="btn-group hc_switch_group">
-        <button type="button" class="mqc_heatmap_sortHighlight btn btn-default btn-sm" data-target="#{id}" disabled="disabled">
-            <span class="glyphicon glyphicon-sort-by-attributes-alt"></span> Sort by highlight
-        </button>
-    </div>""".format(
-        id=pconfig["id"]
-    )
-
-    # The plot div
-    html += '<div class="hc-plot-wrapper"><div id="{id}" class="hc-plot not_rendered hc-heatmap"><small>loading..</small></div></div></div> \n'.format(
-        id=pconfig["id"]
+    html = """
+    <div class="mqc_hcplot_plotgroup">
+        <div class="btn-group hc_switch_group">
+            <button type="button" class="mqc_heatmap_sortHighlight btn btn-default btn-sm" data-target="#{id}" disabled="disabled">
+                <span class="glyphicon glyphicon-sort-by-attributes-alt"></span> Sort by highlight
+            </button>
+        </div>
+        <div class="mqc_hcplot_range_sliders">
+            <div>
+                <label for="{id}_range_slider_min_txt">Min:</label>
+                <input id="{id}_range_slider_min_txt" type="number" class="form-control" value="{min}" min="{min}" max="{max}" data-minmax="min" data-target="{id}" />
+                <input id="{id}_range_slider_min" type="range" value="{min}" min="{min}" max="{max}" step="any" data-minmax="min" data-target="{id}" />
+            </div>
+            <div>
+                <label for="{id}_range_slider_max_txt">Max:</label>
+                <input id="{id}_range_slider_max_txt" type="number" class="form-control" value="{max}" min="{min}" max="{max}" data-minmax="max" data-target="{id}" />
+                <input id="{id}_range_slider_max" type="range" value="{max}" min="{min}" max="{max}" step="any" data-minmax="max" data-target="{id}" />
+            </div>
+        </div>
+        <div class="hc-plot-wrapper">
+            <div id="{id}" class="hc-plot not_rendered hc-heatmap">
+                <small>loading..</small>
+            </div>
+        </div>
+    </div> \n""".format(
+        id=pconfig["id"], min=pconfig["min"], max=pconfig["max"]
     )
 
     report.num_hc_plots += 1

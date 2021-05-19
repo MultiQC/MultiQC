@@ -57,7 +57,7 @@ class MultiqcModule(BaseMultiqcModule):
         self.write_data_file(data_export, "multiqc_biobloomtools")
 
     def parse_bbt(self, fh):
-        """ Parse the BioBloom Tools output into a 3D dict """
+        """Parse the BioBloom Tools output into a 3D dict"""
         parsed_data = OrderedDict()
         headers = None
         for l in fh:

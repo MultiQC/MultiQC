@@ -14,7 +14,7 @@ log = logging.getLogger(__name__)
 
 
 def parse_reports(self):
-    """ Find Picard AlignmentSummaryMetrics reports and parse their data """
+    """Find Picard AlignmentSummaryMetrics reports and parse their data"""
 
     # Set up vars
     self.picard_alignment_metrics = dict()

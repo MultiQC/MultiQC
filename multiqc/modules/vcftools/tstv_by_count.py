@@ -11,7 +11,7 @@ log = logging.getLogger(__name__)
 
 class TsTvByCountMixin:
     def parse_tstv_by_count(self):
-        """ Create the HTML for the TsTv by alternative allele count linegraph plot. """
+        """Create the HTML for the TsTv by alternative allele count linegraph plot."""
 
         self.vcftools_tstv_by_count = dict()
         for f in self.find_log_files("vcftools/tstv_by_count", filehandles=True):

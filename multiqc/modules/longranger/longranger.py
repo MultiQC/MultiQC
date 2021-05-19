@@ -16,7 +16,7 @@ log = logging.getLogger(__name__)
 
 
 class MultiqcModule(BaseMultiqcModule):
-    """ Longranger module """
+    """Longranger module"""
 
     def __init__(self):
 

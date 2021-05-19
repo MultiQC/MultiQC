@@ -198,7 +198,7 @@ class MultiqcModule(BaseMultiqcModule):
         self.general_stats_addcols(self.varscan2_data, headers)
 
     def varscan2_counts_barplot(self):
-        """ Make the HighCharts HTML to plot the reported SNPs"""
+        """Make the HighCharts HTML to plot the reported SNPs"""
         # 146 variant positions (106 SNP, 40 indel)
         # 12 were failed by the strand-filter
         # 99 variant positions reported (99 SNP, 0 indel)

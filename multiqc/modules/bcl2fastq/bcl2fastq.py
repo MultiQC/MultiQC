@@ -440,7 +440,7 @@ class MultiqcModule(BaseMultiqcModule):
         self.general_stats_addcols(data, headers)
 
     def lane_stats_table(self):
-        """ Return a table with overview stats for each bcl2fastq lane for a single flow cell """
+        """Return a table with overview stats for each bcl2fastq lane for a single flow cell"""
         headers = OrderedDict()
         headers["total_yield"] = {
             "title": "{} Total Yield".format(config.base_count_prefix),

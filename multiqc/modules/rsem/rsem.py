@@ -128,7 +128,7 @@ class MultiqcModule(BaseMultiqcModule):
         self.general_stats_addcols(self.rsem_mapped_data, headers)
 
     def rsem_mapped_reads_plot(self):
-        """ Make the rsem assignment rates plot """
+        """Make the rsem assignment rates plot"""
 
         # Plot categories
         keys = OrderedDict()
@@ -154,7 +154,7 @@ class MultiqcModule(BaseMultiqcModule):
         )
 
     def rsem_multimapping_plot(self):
-        """ Make a line plot showing the multimapping levels """
+        """Make a line plot showing the multimapping levels"""
 
         pconfig = {
             "id": "rsem_multimapping_rates",

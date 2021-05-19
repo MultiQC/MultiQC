@@ -16,7 +16,7 @@ log = logging.getLogger(__name__)
 
 class FlagstatReportMixin:
     def parse_samtools_flagstats(self):
-        """ Find Samtools flagstat logs and parse their data """
+        """Find Samtools flagstat logs and parse their data"""
 
         self.samtools_flagstat = dict()
         for f in self.find_log_files("samtools/flagstat"):

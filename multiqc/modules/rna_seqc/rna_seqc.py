@@ -125,7 +125,7 @@ class MultiqcModule(BaseMultiqcModule):
         self.rna_seqc_metrics[s_name] = data
 
     def parse_coverage(self, f):
-        """ Parse the RNA-SeQC Normalised Coverage Files """
+        """Parse the RNA-SeQC Normalised Coverage Files"""
         data = dict()
         s_names = None
         j = 1
@@ -148,7 +148,7 @@ class MultiqcModule(BaseMultiqcModule):
             self.rna_seqc_norm_low_cov.update(data)
 
     def parse_correlation(self, f):
-        """ Parse RNA-SeQC correlation matrices """
+        """Parse RNA-SeQC correlation matrices"""
         s_names = None
         data = list()
         for l in f["f"].splitlines():
@@ -207,7 +207,7 @@ class MultiqcModule(BaseMultiqcModule):
         self.general_stats_addcols(self.rna_seqc_metrics, headers)
 
     def transcript_associated_plot(self):
-        """ Plot a bargraph showing the Transcript-associated reads  """
+        """Plot a bargraph showing the Transcript-associated reads"""
 
         # Plot bar graph of groups
         keys = OrderedDict()
@@ -240,7 +240,7 @@ class MultiqcModule(BaseMultiqcModule):
         )
 
     def plot_correlation_heatmap(self):
-        """ Return HTML for correlation heatmap """
+        """Return HTML for correlation heatmap"""
         data = None
         corr_type = None
         correlation_type = getattr(config, "rna_seqc", {}).get("default_correlation", "spearman")
@@ -262,7 +262,7 @@ class MultiqcModule(BaseMultiqcModule):
             )
 
     def strand_barplot(self):
-        """ Plot a bargraph showing the strandedness of alignments """
+        """Plot a bargraph showing the strandedness of alignments"""
         # Plot bar graph of groups
         keys = ["End 1 Sense", "End 1 Antisense", "End 2 Sense", "End 2 Antisense"]
         # Config for the plot
@@ -287,7 +287,7 @@ class MultiqcModule(BaseMultiqcModule):
         )
 
     def coverage_lineplot(self):
-        """ Make HTML for coverage line plots """
+        """Make HTML for coverage line plots"""
         # Add line graph to section
         data = list()
         data_labels = list()

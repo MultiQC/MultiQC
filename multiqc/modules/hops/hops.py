@@ -44,7 +44,7 @@ class MultiqcModule(BaseMultiqcModule):
         self.hops_heatmap()
 
     def parseJSON(self, f):
-        """ Parse the JSON output from HOPS and save the summary statistics """
+        """Parse the JSON output from HOPS and save the summary statistics"""
 
         try:
             parsed_json = json.load(f["f"])
@@ -64,7 +64,7 @@ class MultiqcModule(BaseMultiqcModule):
                 self.hops_data[s_name][t] = parsed_json[s][t]
 
     def hops_heatmap(self):
-        """ Heatmap showing all statuses for every sample """
+        """Heatmap showing all statuses for every sample"""
         heatmap_numbers = {"none": 1, "edit_only": 2, "damage_only": 3, "edit_and_damage": 4}
 
         samples = []

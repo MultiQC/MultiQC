@@ -14,7 +14,7 @@ log = logging.getLogger(__name__)
 
 
 def parse_reports(self):
-    """ Find Picard QualityByCycleMetrics reports and parse their data """
+    """Find Picard QualityByCycleMetrics reports and parse their data"""
 
     headers = ["CYCLE", "MEAN_QUALITY"]
     formats = [int, float]

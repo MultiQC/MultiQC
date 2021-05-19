@@ -15,7 +15,7 @@ log = logging.getLogger(__name__)
 
 
 def parse_reports(self):
-    """ Find Qualimap RNASeq reports and parse their data """
+    """Find Qualimap RNASeq reports and parse their data"""
 
     self.qualimap_rnaseq_genome_results = dict()
     regexes = {

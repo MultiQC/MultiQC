@@ -38,7 +38,7 @@ class MultiqcModule(BaseMultiqcModule):
         self.search_pattern_times_section()
 
     def file_search_stats_section(self):
-        """ Count of all files iterated through by MultiQC, by category """
+        """Count of all files iterated through by MultiQC, by category"""
 
         pdata = OrderedDict()
         pcats = OrderedDict()
@@ -84,7 +84,7 @@ class MultiqcModule(BaseMultiqcModule):
         )
 
     def search_pattern_times_section(self):
-        """ Section with a bar plot showing the time spent on each search pattern """
+        """Section with a bar plot showing the time spent on each search pattern"""
 
         pdata = OrderedDict()
         for key in sorted(report.runtimes["sp"], key=report.runtimes["sp"].get, reverse=True):

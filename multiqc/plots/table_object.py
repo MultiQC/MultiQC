@@ -16,7 +16,7 @@ class datatable(object):
     for either a table or a beeswarm plot."""
 
     def __init__(self, data, headers=None, pconfig=None):
-        """ Prepare data for use in a table or plot """
+        """Prepare data for use in a table or plot"""
         if headers is None:
             headers = []
         if pconfig is None:
