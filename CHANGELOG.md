@@ -24,6 +24,7 @@
   - Fixed bug where reports with 0 reads would crash MultiQC ([#1407](https://github.com/ewels/MultiQC/issues/1407))
 - **Mosdepth**
   - Show barplot instead of line graph for coverage-per-contig plot if there is only one contig.
+  - Include or exclude contigs based on patterns for coverage-per-contig plots
 - **Picard**
   - `RnaSeqMetrics` - fix assignment barplot labels to say bases instead of reads ([#1408](https://github.com/ewels/MultiQC/issues/1408))
   - `CrosscheckFingerprints` - fix bug where LOD threshold was not detected when invoked with "new" picard cli style. fixed formatting bug ([#1414](https://github.com/ewels/MultiQC/issues/1414))

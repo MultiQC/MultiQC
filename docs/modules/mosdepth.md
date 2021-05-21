@@ -48,3 +48,21 @@ general_stats_coverage_hidden:
   - 20
   - 200
 ```
+
+For the per-contig coverage plot, you can include and exclude contigs based on name or pattern:
+
+```yaml
+mosdepth_config:
+  include_contigs:
+    - "chr*"
+  exclude_contigs:
+    - '*_alt'
+    - '*_decoy'
+    - '*_random'
+    - 'chrUn*'
+    - 'HLA*'
+    - 'chrM'
+    - 'chrEBV'
+```
+
+Note that exclusion superseeds inclusion for the contig filters.

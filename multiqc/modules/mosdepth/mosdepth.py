@@ -12,6 +12,8 @@ from multiqc.modules.base_module import BaseMultiqcModule
 from multiqc.modules.qualimap.QM_BamQC import coverage_histogram_helptext, genome_fraction_helptext
 from multiqc.plots import linegraph, bargraph
 
+import fnmatch
+
 log = logging.getLogger(__name__)
 
 
@@ -175,6 +177,13 @@ class MultiqcModule(BaseMultiqcModule):
         cov_data = defaultdict(OrderedDict)  # absoulte (non-cumulative) coverage
         xmax = 0
         perchrom_avg_data = defaultdict(OrderedDict)  # per chromosome average coverage
+        
+        include_contigs = config.mosdepth_config.get("include_contigs", [])
+        assert type(include_contigs) == list, type(include_contigs)
+        exclude_contigs = config.mosdepth_config.get("exclude_contigs", [])
+        assert type(exclude_contigs) == list, type(exclude_contigs)
+        log.debug("include_congtigs: {}".format(include_contigs))
+        log.debug("exclude_congtigs: {}".format(exclude_contigs))
 
         for scope in ("region", "global"):
             for f in self.find_log_files("mosdepth/" + scope + "_dist"):
@@ -186,6 +195,19 @@ class MultiqcModule(BaseMultiqcModule):
                     if "\t" not in line:
                         continue
                     contig, cutoff_reads, bases_fraction = line.split("\t")
+
+                    # filter out contigs based on exclusion patterns
+                    if any(fnmatch.fnmatch(contig, pattern) for pattern in exclude_contigs):
+                        # Commented out since this could be many thousands of contigs fo reach!
+                        #log.debug("Skipping excluded contig '{}'".format(contig))
+                        continue
+                    
+                    # filter out contigs based on inclusion patterns
+                    if 0 < len(include_contigs) and not any(fnmatch.fnmatch(contig, pattern) for pattern in include_contigs):
+                        # Commented out since this could be many thousands of contigs fo reach!
+                        #log.debug("Skipping not included contig '{}'".format(contig))
+                        continue
+
                     if contig == "total":  # for global coverage distribution
                         cumcov = 100.0 * float(bases_fraction)
                         x = int(cutoff_reads)
