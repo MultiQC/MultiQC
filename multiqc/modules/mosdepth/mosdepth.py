@@ -177,7 +177,7 @@ class MultiqcModule(BaseMultiqcModule):
         cov_data = defaultdict(OrderedDict)  # absoulte (non-cumulative) coverage
         xmax = 0
         perchrom_avg_data = defaultdict(OrderedDict)  # per chromosome average coverage
-        
+
         try:
             include_contigs = config.mosdepth_config.get("include_contigs", [])
             assert type(include_contigs) == list, type(include_contigs)
@@ -205,13 +205,15 @@ class MultiqcModule(BaseMultiqcModule):
                     # filter out contigs based on exclusion patterns
                     if any(fnmatch.fnmatch(contig, pattern) for pattern in exclude_contigs):
                         # Commented out since this could be many thousands of contigs fo reach!
-                        #log.debug("Skipping excluded contig '{}'".format(contig))
+                        # log.debug("Skipping excluded contig '{}'".format(contig))
                         continue
-                    
+
                     # filter out contigs based on inclusion patterns
-                    if 0 < len(include_contigs) and not any(fnmatch.fnmatch(contig, pattern) for pattern in include_contigs):
+                    if 0 < len(include_contigs) and not any(
+                        fnmatch.fnmatch(contig, pattern) for pattern in include_contigs
+                    ):
                         # Commented out since this could be many thousands of contigs fo reach!
-                        #log.debug("Skipping not included contig '{}'".format(contig))
+                        # log.debug("Skipping not included contig '{}'".format(contig))
                         continue
 
                     if contig == "total":  # for global coverage distribution
