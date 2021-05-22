@@ -56,13 +56,13 @@ mosdepth_config:
   include_contigs:
     - "chr*"
   exclude_contigs:
-    - '*_alt'
-    - '*_decoy'
-    - '*_random'
-    - 'chrUn*'
-    - 'HLA*'
-    - 'chrM'
-    - 'chrEBV'
+    - "*_alt"
+    - "*_decoy"
+    - "*_random"
+    - "chrUn*"
+    - "HLA*"
+    - "chrM"
+    - "chrEBV"
 ```
 
 Note that exclusion superseeds inclusion for the contig filters.
