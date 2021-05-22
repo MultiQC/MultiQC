@@ -109,11 +109,11 @@ picard_config:
 ```
 
 The plotted maximum insert size can be set with:
+
 ```yaml
 picard_config:
   insertsize_xmax: 10000
 ```
-
 
 #### MarkDuplicates
 
