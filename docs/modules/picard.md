@@ -108,6 +108,13 @@ picard_config:
   insertsize_smooth_points: 10000
 ```
 
+The plotted maximum insert size can be set with:
+```yaml
+picard_config:
+  insertsize_xmax: 10000
+```
+
+
 #### MarkDuplicates
 
 If a `BAM` file contains multiple read groups, Picard MarkDuplicates generates a report
