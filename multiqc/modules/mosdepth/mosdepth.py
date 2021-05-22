@@ -178,10 +178,16 @@ class MultiqcModule(BaseMultiqcModule):
         xmax = 0
         perchrom_avg_data = defaultdict(OrderedDict)  # per chromosome average coverage
         
-        include_contigs = config.mosdepth_config.get("include_contigs", [])
-        assert type(include_contigs) == list, type(include_contigs)
-        exclude_contigs = config.mosdepth_config.get("exclude_contigs", [])
-        assert type(exclude_contigs) == list, type(exclude_contigs)
+        try:
+            include_contigs = config.mosdepth_config.get("include_contigs", [])
+            assert type(include_contigs) == list, type(include_contigs)
+        except (AttributeError, TypeError, AssertionError):
+            include_contigs = []
+        try:
+            exclude_contigs = config.mosdepth_config.get("exclude_contigs", [])
+            assert type(exclude_contigs) == list, type(exclude_contigs)
+        except (AttributeError, TypeError, AssertionError):
+            exclude_contigs = []
         log.debug("include_congtigs: {}".format(include_contigs))
         log.debug("exclude_congtigs: {}".format(exclude_contigs))
 
