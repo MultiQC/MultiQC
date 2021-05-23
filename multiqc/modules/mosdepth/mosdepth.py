@@ -202,20 +202,6 @@ class MultiqcModule(BaseMultiqcModule):
                         continue
                     contig, cutoff_reads, bases_fraction = line.split("\t")
 
-                    # filter out contigs based on exclusion patterns
-                    if any(fnmatch.fnmatch(contig, pattern) for pattern in exclude_contigs):
-                        # Commented out since this could be many thousands of contigs fo reach!
-                        # log.debug("Skipping excluded contig '{}'".format(contig))
-                        continue
-
-                    # filter out contigs based on inclusion patterns
-                    if 0 < len(include_contigs) and not any(
-                        fnmatch.fnmatch(contig, pattern) for pattern in include_contigs
-                    ):
-                        # Commented out since this could be many thousands of contigs fo reach!
-                        # log.debug("Skipping not included contig '{}'".format(contig))
-                        continue
-
                     if contig == "total":  # for global coverage distribution
                         cumcov = 100.0 * float(bases_fraction)
                         x = int(cutoff_reads)
@@ -235,6 +221,20 @@ class MultiqcModule(BaseMultiqcModule):
                         if cumcov > 1:  # require >1% to prevent long flat tail
                             xmax = max(xmax, x)
                     else:  # for per-contig plot
+                        # filter out contigs based on exclusion patterns
+                        if any(fnmatch.fnmatch(contig, pattern) for pattern in exclude_contigs):
+                            # Commented out since this could be many thousands of contigs fo reach!
+                            # log.debug("Skipping excluded contig '{}'".format(contig))
+                            continue
+
+                        # filter out contigs based on inclusion patterns
+                        if 0 < len(include_contigs) and not any(
+                            fnmatch.fnmatch(contig, pattern) for pattern in include_contigs
+                        ):
+                            # Commented out since this could be many thousands of contigs fo reach!
+                            # log.debug("Skipping not included contig '{}'".format(contig))
+                            continue
+
                         avg = perchrom_avg_data[s_name].get(contig, 0) + float(bases_fraction)
                         perchrom_avg_data[s_name][contig] = avg
 
