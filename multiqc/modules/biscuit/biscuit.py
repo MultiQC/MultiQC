@@ -151,8 +151,7 @@ class MultiqcModule(BaseMultiqcModule):
         # Calculate % aligned
         for s_name, dd in self.mdata["align_mapq"].items():
             if len(dd) > 0:
-                total = sum([int(_) for _ in dd.values()])
-                pd[s_name] = {"aligned": 100.0 * float(total - int(dd["unmapped"])) / total}
+                pd[s_name] = {"aligned": dd["frc_align"]}
 
         # Caclulate % duplicated
         for s_name, dd in self.mdata["dup_report"].items():
@@ -172,8 +171,21 @@ class MultiqcModule(BaseMultiqcModule):
             "scale": "YlOrBr",
             "hidden": True,
         }
-        pheader["dup_all"] = {"title": "Dup. % for All Reads", "min": 0, "max": 100, "suffix": "%", "scale": "Reds"}
-        pheader["aligned"] = {"title": "% Aligned", "min": 0, "max": 100, "suffix": "%", "scale": "RdYlGn"}
+        pheader["dup_all"] = {
+            "title": "Dup. % for All Reads",
+            "min": 0,
+            "max": 100,
+            "suffix": "%",
+            "scale": "Reds"
+        }
+        pheader["aligned"] = {
+            "title": "% Aligned",
+            "min": 0,
+            "max": 100,
+            "suffix": "%",
+            "scale": "RdYlGn",
+            "format": "{:,.2f}"
+        }
 
         self.general_stats_addcols(pd, pheader)
 
@@ -196,10 +208,33 @@ class MultiqcModule(BaseMultiqcModule):
             log.debug("No data available in {}. Will not fill corresponding entries.".format(fn))
             return {}
 
-        data = {}
+        mapq = {}
         for l in file_data:
             s = l.split()
-            data[s[0]] = s[1]  # data[MAPQ] = number of reads
+            mapq[s[0]] = s[1]  # mapq[MAPQ] = number of reads
+
+        data = {
+            "frc_align": 0,
+            "opt_align": 0,
+            "sub_align": 0,
+            "not_align": 0,
+            "mapqs": dict(zip(range(61), [0 for _ in range(61)]))
+        }
+        if len(mapq) > 0:
+            total = sum([int(cnt) for _, cnt in mapq.items() if _ != "unmapped"])
+            cnts = [0 for _ in range(61)]
+            for mq, cnt in mapq.items():
+                if mq == "unmapped":
+                    data["not_align"] += int(cnt)
+                else:
+                    data["mapqs"][int(mq)] = 100.0 * float(cnt) / total
+                    if int(mq) >= 40:
+                        data["opt_align"] += int(cnt)
+                    else:
+                        data["sub_align"] += int(cnt)
+
+            data["frc_align"] = 100 * (data["opt_align"] + data["sub_align"]) / \
+                    (data["opt_align"] + data["sub_align"] + data["not_align"])
 
         return data
 
@@ -224,14 +259,11 @@ class MultiqcModule(BaseMultiqcModule):
         # Calculate alignment counts
         for s_name, dd in self.mdata["align_mapq"].items():
             if len(dd) > 0:
-                pd[s_name] = {"opt_align": 0, "sub_align": 0, "not_align": 0}
-                for mapq, cnt in dd.items():
-                    if mapq == "unmapped":
-                        pd[s_name]["not_align"] += int(cnt)
-                    elif int(mapq) >= 40:
-                        pd[s_name]["opt_align"] += int(cnt)
-                    else:
-                        pd[s_name]["sub_align"] += int(cnt)
+                pd[s_name] = {
+                    "opt_align": dd["opt_align"],
+                    "sub_align": dd["sub_align"],
+                    "not_align": dd["not_align"]
+                }
 
         pheader = OrderedDict()
         pheader["opt_align"] = {"color": "#1f78b4", "name": "Optimally Aligned Reads"}
@@ -268,15 +300,7 @@ class MultiqcModule(BaseMultiqcModule):
         pd_mapq = {}
         for s_name, dd in self.mdata["align_mapq"].items():
             if len(dd) > 0:
-                # Total aligned count across all qualities
-                total = sum([int(cnt) for _, cnt in dd.items() if _ != "unmapped"])
-                cnts = []
-                for mapq in range(61):
-                    if str(mapq) in dd:
-                        cnts.append(100.0 * float(dd[str(mapq)]) / total)
-                    else:
-                        cnts.append(0)
-                pd_mapq[s_name] = dict(zip(range(61), cnts))
+                pd_mapq[s_name] = dd["mapqs"]
 
         pconfig = {
             "id": "biscuit_mapq",
@@ -511,29 +535,49 @@ class MultiqcModule(BaseMultiqcModule):
             No returns, generates Duplicate Rates chart
         """
 
-        pd = dict([(s_name, dd) for s_name, dd in self.mdata["dup_report"].items() if dd["all"] != -1])
+        pd1 = {} # Overall duplicate rate
+        pd2 = {} # MAPQ>=40 duplicate rate
+        for s_name, dd in self.mdata["dup_report"].items():
+            if "all" in dd and dd["all"] != -1:
+                pd1[s_name] = {"dup_rate": dd["all"]}
+            if "q40" in dd and dd["q40"] != -1:
+                pd2[s_name] = {"dup_rate": dd["q40"]}
 
-        pheader = OrderedDict()
-        pheader["all"] = {"title": "Overall", "suffix": "%", "max": 100, "min": 0, "scale": "Reds"}
-        pheader["q40"] = {"title": "MAPQ >= 40", "suffix": "%", "max": 100, "min": 0, "scale": "Purples"}
+        pheader = OrderedDict(
+            [
+                ("dup_rate", {"color": "#a50f15", "name": "Duplicate Rate"})
+            ]
+        )
 
         pconfig = {
             "id": "biscuit_dup_report",
-            "table_title": "BISCUIT: Duplicate Rates",
-            "sortRows": False,
-            "save_file": True,
+            "cpswitch": False,
+            "cpswitch_c_active": False,
+            "title": "BISCUIT: Percentage of Duplicate Reads",
+            "data_labels": [
+                {"name": "Overall Duplicate Rate"},
+                {"name": "MAPQ>=40 Duplicate Rate"}
+            ],
+            "ylab": "Duplicate Rate [%]",
+            "ymin": 0,
+            "ymax": 100,
+            "yCeiling": 110,
+            "use_legend": False,
+            "tt_decimals": 1,
+            "tt_suffix": "%",
+            "tt_percentages": False
         }
 
-        if len(pd) > 0:
+        if len(pd1) > 0:
             self.add_section(
                 name="Duplicate Rates",
                 anchor="biscuit-dup-report",
                 description="Shows the percentage of total reads that are duplicates.",
                 helptext="""
                     `MAPQ >= 40` shows the duplicate rate for just the reads reads
-                    with an alignment quality score of `MAPQ >= 40`.
+                    with a mapping quality score of `MAPQ >= 40`.
                 """,
-                plot=table.plot(pd, pheader, pconfig),
+                plot=bargraph.plot([pd1, pd2], [pheader, pheader], pconfig),
             )
 
     ########################################
@@ -1108,17 +1152,30 @@ class MultiqcModule(BaseMultiqcModule):
             data - dictionary of read averaged fraction of retainied cytosines by context
         """
 
+        file_data = f.splitlines()[2:]
+
+        # Handle missing data
+        if len(file_data) == 0:
+            log.debug("No data available in {}. Will not fill corresponding entries.".format(fn))
+            return {"no_data_available": 1}
+
         data = {}
-        try:
-            m = re.match(r"([\d.]+)\t([\d.]+)\t([\d.]+)\t([\d.]+)", f.splitlines()[2])
-        except IndexError:
-            return {}
-        else:
-            if m is not None:
-                data["rca"] = 100.0 * float(m.group(1))
-                data["rcc"] = 100.0 * float(m.group(2))
-                data["rcg"] = 100.0 * float(m.group(3))
-                data["rct"] = 100.0 * float(m.group(4))
+        for l in file_data:
+            fields = l.split("\t")
+            # Skip rows that have NaNs as something went wrong in processing
+            if "nan" in fields:
+                log.debug("Found NaN in {}. Skipping.".format(fn))
+                continue
+
+            # BISCUIT returns -1 if insufficient data. Only fill fields with value >= 0.
+            if float(fields[0]) >= 0:
+                data["rca"] = 100.0 * float(fields[0])
+            if float(fields[1]) >= 0:
+                data["rcc"] = 100.0 * float(fields[1])
+            if float(fields[2]) >= 0:
+                data["rcg"] = 100.0 * float(fields[2])
+            if float(fields[3]) >= 0:
+                data["rct"] = 100.0 * float(fields[3])
 
         return data
 
@@ -1129,58 +1186,70 @@ class MultiqcModule(BaseMultiqcModule):
         Inputs:
             No inputs
         Returns:
-            No returns, generates Retenion vs. Base Position in Read chart
+            No returns, generates Cytosine Retention chart
         """
 
-        mdata_byread = {}
+        pdata_byread = {}
         for s_name, dd in self.mdata["read_avg_retention_rate"].items():
-            mdata_byread[s_name] = dd
+            if "no_data_available" not in dd.keys():
+                pdata_byread[s_name] = dd
 
-        mdata_bybase = {}
+        pdata_bybase = {}
         for s_name, dd in self.mdata["base_avg_retention_rate"].items():
-            mdata_bybase[s_name] = dd
+            if "no_data_available" not in dd.keys():
+                pdata_bybase[s_name] = dd
 
-        pdata = {}
-        for s_name, dd in mdata_byread.items():
-            try:
-                pdata[s_name] = dict(list(dd.items()) + list(mdata_bybase[s_name].items()))
-            except KeyError:
-                log.warning("Couldn't find sample when making avg_retention_rate plot: '{}'".format(s_name))
-
-        shared = {"format": "{:,.2f}", "min": 0, "max": 100, "suffix": "%", "scale": "YlGnBu"}
-
-        pheader = OrderedDict()
-        pheader["rca"] = dict(shared, **{"title": "RA CpA", "description": "Read Averaged CpA Retention"})
-        pheader["rcc"] = dict(shared, **{"title": "RA CpC", "description": "Read Averaged CpC Retention"})
-        pheader["rcg"] = dict(shared, **{"title": "RA CpG", "description": "Read Averaged CpG Retention"})
-        pheader["rct"] = dict(shared, **{"title": "RA CpT", "description": "Read Averaged CpT Retention"})
-        pheader["bca"] = dict(shared, **{"title": "BA CpA", "description": "Base Averaged CpA Retention"})
-        pheader["bcc"] = dict(shared, **{"title": "BA CpC", "description": "Base Averaged CpC Retention"})
-        pheader["bcg"] = dict(shared, **{"title": "BA CpG", "description": "Base Averaged CpG Retention"})
-        pheader["bct"] = dict(shared, **{"title": "BA CpT", "description": "Base Averaged CpT Retention"})
+        pheader_byread = OrderedDict(
+            [
+                ("rca", {"color": "#D81B60", "name": "CpA Retention"}),
+                ("rcc", {"color": "#1E88E5", "name": "CpC Retention"}),
+                ("rcg", {"color": "#A0522D", "name": "CpG Retention"}),
+                ("rct", {"color": "#004D40", "name": "CpT Retention"}),
+            ]
+        )
+        pheader_bybase = OrderedDict(
+            [
+                ("bca", {"color": "#D81B60", "name": "CpA Retention"}),
+                ("bcc", {"color": "#1E88E5", "name": "CpC Retention"}),
+                ("bcg", {"color": "#A0522D", "name": "CpG Retention"}),
+                ("bct", {"color": "#004D40", "name": "CpT Retention"}),
+            ]
+        )
 
         pconfig = {
             "id": "biscuit_retention",
-            "table_title": "BISCUIT: Cytosine Retention",
-            "sortRows": False,
-            "save_file": True,
+            "cpswitch": False,
+            "cpswitch_c_active": False,
+            "title": "BISCUIT: Cytosine Retention",
+            "data_labels": [
+                {"name": "Read-averaged Retention"},
+                {"name": "Base-averaged Retention"}
+            ],
+            "ylab": "Percent Retained",
+            "ymin": 0,
+            "ymax": 100,
+            "yCeiling": 110,
+            "stacking": None,
+            "use_legend": True,
+            "tt_decimals": 1,
+            "tt_suffix": "%",
+            "tt_percentages": False
         }
 
         self.add_section(
             name="Cytosine Retention",
             anchor="biscuit-retention",
-            description="""
-                Shows the cytosine retention rate for different contexts.
-                `RA`: Read-averaged rates.
-                `BA`:Base-averaged rates.
-            """,
+            description="Shows the cytosine retention rate for different contexts.",
             helptext="""
                 The cytosine retention rate is calculated as `1 - (cytosine conversion rate)`.
 
                 Assuming complete, but not over, bisulfite conversion, the cytosine retention rate
                 is the average cytosine modification (including 5mC, 5hmC, etc) rate.
+
+                Note, if a sample is missing from the Base-averaged Retention table,
+                there wasn't sufficient data to plot that sample.
             """,
-            plot=table.plot(pdata, pheader, pconfig),
+            plot=bargraph.plot([pdata_byread, pdata_bybase], [pheader_byread, pheader_bybase], pconfig),
         )
 
     def parse_logs_base_avg_retention_rate(self, f, fn):
@@ -1193,17 +1262,30 @@ class MultiqcModule(BaseMultiqcModule):
             data - dictionary of base averaged fraction of retainied cytosines by context
         """
 
+        file_data = f.splitlines()[2:]
+
+        # Handle missing data
+        if len(file_data) == 0:
+            log.debug("No data available in {}. Will not fill corresponding entries.".format(fn))
+            return {"no_data_available": 1}
+
         data = {}
-        try:
-            m = re.match(r"([\d.]+)\t([\d.]+)\t([\d.]+)\t([\d.]+)", f.splitlines()[2])
-        except IndexError:
-            return {}
-        else:
-            if m is not None:
-                data["bca"] = 100.0 * float(m.group(1))
-                data["bcc"] = 100.0 * float(m.group(2))
-                data["bcg"] = 100.0 * float(m.group(3))
-                data["bct"] = 100.0 * float(m.group(4))
+        for l in file_data:
+            fields = l.split("\t")
+            # Skip rows that have NaNs as something went wrong in processing
+            if "nan" in fields:
+                log.debug("Found NaN in {}. Skipping.".format(fn))
+                continue
+
+            # BISCUIT returns -1 if insufficient data. Only fill fields with value >= 0.
+            if float(fields[0]) >= 0:
+                data["bca"] = 100.0 * float(fields[0])
+            if float(fields[1]) >= 0:
+                data["bcc"] = 100.0 * float(fields[1])
+            if float(fields[2]) >= 0:
+                data["bcg"] = 100.0 * float(fields[2])
+            if float(fields[3]) >= 0:
+                data["bct"] = 100.0 * float(fields[3])
 
         return data
 

@@ -20,6 +20,10 @@
 
 #### Module updates
 
+- **biscuit**
+  - Duplicate Rate and Cytosine Retention tables are now bargraphs.
+  - Refactor code to only calculate alignment statistics once.
+  - Fixed bug where cytosine retentions values would not be properly read if in scientific notation.
 - **bcl2fastq**
   - Added sample name cleaning so that prepending directories with the `-d` flag works properly.
 - **Flexbar**
