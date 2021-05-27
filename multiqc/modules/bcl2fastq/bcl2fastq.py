@@ -142,7 +142,10 @@ class MultiqcModule(BaseMultiqcModule):
         except ValueError:
             log.warning("Could not parse file as json: {}".format(myfile["fn"]))
             return
-        runId = content["RunId"]
+
+        # Clean / prepend directories to sample names
+        runId = self.clean_s_name(content["RunId"], myfile["root"])
+
         if runId not in self.bcl2fastq_data:
             self.bcl2fastq_data[runId] = dict()
         run_data = self.bcl2fastq_data[runId]
@@ -177,6 +180,7 @@ class MultiqcModule(BaseMultiqcModule):
                     sample = demuxResult["SampleName"]
                 else:
                     sample = "{}-{}".format(demuxResult["SampleId"], demuxResult["SampleName"])
+                sample = self.clean_s_name(sample, myfile["root"])
                 if sample in run_data[lane]["samples"]:
                     log.debug(
                         "Duplicate runId/lane/sample combination found! Overwriting: {}, {}".format(
@@ -254,6 +258,7 @@ class MultiqcModule(BaseMultiqcModule):
                 lane["mean_qscore"] = float(lane["qscore_sum"]) / float(lane["total_yield"])
             except ZeroDivisionError:
                 lane["mean_qscore"] = "NA"
+
             for sample_id, sample in lane["samples"].items():
                 try:
                     sample["percent_Q30"] = (float(sample["yieldQ30"]) / float(sample["total_yield"])) * 100.0

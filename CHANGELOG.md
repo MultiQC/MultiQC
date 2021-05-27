@@ -20,6 +20,8 @@
 
 #### Module updates
 
+- **bcl2fastq**
+  - Added sample name cleaning so that prepending directories with the `-d` flag works properly.
 - **Flexbar**
   - Fixed bug where reports with 0 reads would crash MultiQC ([#1407](https://github.com/ewels/MultiQC/issues/1407))
 - **Mosdepth**
