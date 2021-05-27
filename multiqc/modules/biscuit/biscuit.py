@@ -171,20 +171,14 @@ class MultiqcModule(BaseMultiqcModule):
             "scale": "YlOrBr",
             "hidden": True,
         }
-        pheader["dup_all"] = {
-            "title": "Dup. % for All Reads",
-            "min": 0,
-            "max": 100,
-            "suffix": "%",
-            "scale": "Reds"
-        }
+        pheader["dup_all"] = {"title": "Dup. % for All Reads", "min": 0, "max": 100, "suffix": "%", "scale": "Reds"}
         pheader["aligned"] = {
             "title": "% Aligned",
             "min": 0,
             "max": 100,
             "suffix": "%",
             "scale": "RdYlGn",
-            "format": "{:,.2f}"
+            "format": "{:,.2f}",
         }
 
         self.general_stats_addcols(pd, pheader)
@@ -218,7 +212,7 @@ class MultiqcModule(BaseMultiqcModule):
             "opt_align": 0,
             "sub_align": 0,
             "not_align": 0,
-            "mapqs": dict(zip(range(61), [0 for _ in range(61)]))
+            "mapqs": dict(zip(range(61), [0 for _ in range(61)])),
         }
         if len(mapq) > 0:
             total = sum([int(cnt) for _, cnt in mapq.items() if _ != "unmapped"])
@@ -233,8 +227,11 @@ class MultiqcModule(BaseMultiqcModule):
                     else:
                         data["sub_align"] += int(cnt)
 
-            data["frc_align"] = 100 * (data["opt_align"] + data["sub_align"]) / \
-                    (data["opt_align"] + data["sub_align"] + data["not_align"])
+            data["frc_align"] = (
+                100
+                * (data["opt_align"] + data["sub_align"])
+                / (data["opt_align"] + data["sub_align"] + data["not_align"])
+            )
 
         return data
 
@@ -259,11 +256,7 @@ class MultiqcModule(BaseMultiqcModule):
         # Calculate alignment counts
         for s_name, dd in self.mdata["align_mapq"].items():
             if len(dd) > 0:
-                pd[s_name] = {
-                    "opt_align": dd["opt_align"],
-                    "sub_align": dd["sub_align"],
-                    "not_align": dd["not_align"]
-                }
+                pd[s_name] = {"opt_align": dd["opt_align"], "sub_align": dd["sub_align"], "not_align": dd["not_align"]}
 
         pheader = OrderedDict()
         pheader["opt_align"] = {"color": "#1f78b4", "name": "Optimally Aligned Reads"}
@@ -535,29 +528,22 @@ class MultiqcModule(BaseMultiqcModule):
             No returns, generates Duplicate Rates chart
         """
 
-        pd1 = {} # Overall duplicate rate
-        pd2 = {} # MAPQ>=40 duplicate rate
+        pd1 = {}  # Overall duplicate rate
+        pd2 = {}  # MAPQ>=40 duplicate rate
         for s_name, dd in self.mdata["dup_report"].items():
             if "all" in dd and dd["all"] != -1:
                 pd1[s_name] = {"dup_rate": dd["all"]}
             if "q40" in dd and dd["q40"] != -1:
                 pd2[s_name] = {"dup_rate": dd["q40"]}
 
-        pheader = OrderedDict(
-            [
-                ("dup_rate", {"color": "#a50f15", "name": "Duplicate Rate"})
-            ]
-        )
+        pheader = OrderedDict([("dup_rate", {"color": "#a50f15", "name": "Duplicate Rate"})])
 
         pconfig = {
             "id": "biscuit_dup_report",
             "cpswitch": False,
             "cpswitch_c_active": False,
             "title": "BISCUIT: Percentage of Duplicate Reads",
-            "data_labels": [
-                {"name": "Overall Duplicate Rate"},
-                {"name": "MAPQ>=40 Duplicate Rate"}
-            ],
+            "data_labels": [{"name": "Overall Duplicate Rate"}, {"name": "MAPQ>=40 Duplicate Rate"}],
             "ylab": "Duplicate Rate [%]",
             "ymin": 0,
             "ymax": 100,
@@ -565,7 +551,7 @@ class MultiqcModule(BaseMultiqcModule):
             "use_legend": False,
             "tt_decimals": 1,
             "tt_suffix": "%",
-            "tt_percentages": False
+            "tt_percentages": False,
         }
 
         if len(pd1) > 0:
@@ -1221,10 +1207,7 @@ class MultiqcModule(BaseMultiqcModule):
             "cpswitch": False,
             "cpswitch_c_active": False,
             "title": "BISCUIT: Cytosine Retention",
-            "data_labels": [
-                {"name": "Read-averaged Retention"},
-                {"name": "Base-averaged Retention"}
-            ],
+            "data_labels": [{"name": "Read-averaged Retention"}, {"name": "Base-averaged Retention"}],
             "ylab": "Percent Retained",
             "ymin": 0,
             "ymax": 100,
@@ -1233,7 +1216,7 @@ class MultiqcModule(BaseMultiqcModule):
             "use_legend": True,
             "tt_decimals": 1,
             "tt_suffix": "%",
-            "tt_percentages": False
+            "tt_percentages": False,
         }
 
         self.add_section(
