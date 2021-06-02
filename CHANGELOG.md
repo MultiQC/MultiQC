@@ -24,6 +24,8 @@
   - Added sample name cleaning so that prepending directories with the `-d` flag works properly.
 - **Flexbar**
   - Fixed bug where reports with 0 reads would crash MultiQC ([#1407](https://github.com/ewels/MultiQC/issues/1407))
+- **Kraken**
+  - Handle a `ZeroDivisionError` if there are zero reads ([#1440](https://github.com/ewels/MultiQC/issues/1440))
 - **Mosdepth**
   - Show barplot instead of line graph for coverage-per-contig plot if there is only one contig.
 - **Picard**
