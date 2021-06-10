@@ -1002,9 +1002,10 @@ def run(
         logger.info("For more information, see the 'Run Time' section in {}".format(os.path.relpath(config.output_fn)))
 
     if report.num_mpl_plots > 0:
-        logger.info("Generated {} static plots in the report!".format(report.num_mpl_plots))
-        logger.info("To always use interactive plots, use the '--interactive' command line options")
-        logger.info("For more information, see 'Flat / interactive plots' section in the docs (https://multiqc.info/docs/#flat--interactive-plots)")
+        logger.info("Generated {} static plot{} in the report".format(report.num_mpl_plots, "s" if report.num_mpl_plots > 1 else ""))
+        logger.info(" - Your sample size has exceeded the 'plots_flat_numseries' config threshold")
+        logger.info(" - To avoid this behavior, use the '--interactive' command line option")
+        logger.info(" - For more information, see 'Flat / interactive plots' section in the docs (https://multiqc.info/docs/#flat--interactive-plots)")
 
     if lint and len(report.lint_errors) > 0:
         logger.error("Found {} linting errors!\n{}".format(len(report.lint_errors), "\n".join(report.lint_errors)))
