@@ -1003,7 +1003,7 @@ def run(
 
     if report.num_mpl_plots > 0:
         logger.info("Generated {} static plot{} in the report".format(report.num_mpl_plots, "s" if report.num_mpl_plots > 1 else ""))
-        logger.info(" - Your sample size has exceeded the 'plots_flat_numseries' config threshold")
+        logger.info(" - Your sample size likely exceeds the 'plots_flat_numseries' config threshold ({})".format(config.plots_flat_numseries))
         logger.info(" - To avoid this behavior, use the '--interactive' command line option")
         logger.info(" - For more information, see 'Flat / interactive plots' section in the docs (https://multiqc.info/docs/#flat--interactive-plots)")
 
