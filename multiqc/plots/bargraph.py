@@ -190,7 +190,7 @@ def plot(data, cats=None, pconfig=None):
         ):
             try:
                 plot = matplotlib_bargraph(plotdata, plotsamples, pconfig)
-                report.num_mpl_plots += 1 # count MatpPlotLib figure
+                report.num_mpl_plots += 1
                 return plot
             except Exception as e:
                 logger.error("############### Error making MatPlotLib figure! Falling back to HighCharts.")
@@ -556,7 +556,5 @@ def matplotlib_bargraph(plotdata, plotsamples, pconfig=None):
 
     # Close wrapping div
     html += "</div>"
-
-
 
     return html

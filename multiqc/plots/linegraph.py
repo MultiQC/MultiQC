@@ -217,7 +217,7 @@ def plot(data, pconfig=None):
         ):
             try:
                 plot = matplotlib_linegraph(plotdata, pconfig)
-                report.num_mpl_plots += 1 # count MatpPlotLib figure
+                report.num_mpl_plots += 1
                 return plot
             except Exception as e:
                 logger.error("############### Error making MatPlotLib figure! Falling back to HighCharts.")
