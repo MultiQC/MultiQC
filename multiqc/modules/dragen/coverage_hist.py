@@ -125,7 +125,10 @@ def parse_wgs_fine_hist(f):
         except ValueError:
             continue
         cum_cnt += cnt
-        cum_pct = cum_cnt / total_cnt * 100.0
+        if total_cnt > 0:
+            cum_pct = cum_cnt / total_cnt * 100.0
+        else:
+            cum_pct = 0
         if cum_pct < 1:  # to trim long flat tail
             depth_1pc = depth
         data[depth] = cnt
