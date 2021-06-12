@@ -631,7 +631,7 @@ slamdunk/tcperutrpos:
   num_lines: 1
 snippy/snippy:
     contents: 'VariantTotal'
-    num_lines: 10
+    num_lines: 20
 snippy/snippy-core:
     contents_re: 'ID\tLENGTH\tALIGNED\tUNALIGNED\tVARIANT\tHET\tMASKED\tLOWCOV'
     num_lines: 1
