@@ -203,6 +203,8 @@ class MultiqcModule(BaseMultiqcModule):
             ) * 100.0
         except KeyError:
             log.debug("Could not calculate 'pct_surviving': {}".format(f["fn"]))
+        except ZeroDivisionError:
+            log.warning("FastQ input file has zero raw reads")
 
         # Parse adapter_cutting
         try:
