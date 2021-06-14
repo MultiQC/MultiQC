@@ -146,6 +146,8 @@ class MultiqcModule(BaseMultiqcModule):
                 continue
             key, value = line.split("\t")
             if key == "Novel / existing variants":
+                if value == "-":
+                    continue
                 values = value.split("/")
                 novel = values[0].split("(")[0].replace(" ", "")
                 existing = values[1].split("(")[0].replace(" ", "")
