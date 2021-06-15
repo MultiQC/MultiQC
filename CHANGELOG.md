@@ -33,6 +33,12 @@
   - `CrosscheckFingerprints` - fix bug where LOD threshold was not detected when invoked with "new" picard cli style. fixed formatting bug ([#1414](https://github.com/ewels/MultiQC/issues/1414))
 - **QUAST**
   - Fixed typo causing wrong number of contigs being displayed ([#1442](https://github.com/ewels/MultiQC/issues/1442))
+- **Kraken**
+  - Updated search patterns to handle edge case ([#1428](https://github.com/ewels/MultiQC/issues/1428))
+- **fastp**
+  - Handle a `ZeroDivisionError` if there are zero reads ([#1444](https://github.com/ewels/MultiQC/issues/1444))
+- **VEP**
+  - Handle error from missing variants in VEP stats file. ([#1446](https://github.com/ewels/MultiQC/issues/1446))
 
 ## [MultiQC v1.10.1](https://github.com/ewels/MultiQC/releases/tag/v1.10.1) - 2021-04-01
 
