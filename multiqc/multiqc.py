@@ -1001,20 +1001,12 @@ def run(
         logger.info(" - {:.2f}s: Compressing report data".format(report.runtimes["total_compression"]))
         logger.info("For more information, see the 'Run Time' section in {}".format(os.path.relpath(config.output_fn)))
 
-    if report.num_mpl_plots > 0:
-        logger.info(
-            "Generated {} static plot{} in the report".format(
-                report.num_mpl_plots, "s" if report.num_mpl_plots > 1 else ""
-            )
-        )
-        logger.info(
-            " - Your sample size likely exceeds the 'plots_flat_numseries' config threshold ({})".format(
-                config.plots_flat_numseries
-            )
-        )
-        logger.info(" - To avoid this behavior, use the '--interactive' command line option")
-        logger.info(
-            " - For more information, see 'Flat / interactive plots' section in the docs (https://multiqc.info/docs/#flat--interactive-plots)"
+    if report.num_mpl_plots > 0 and not config.plots_force_flat:
+        logger.warning("Flat-image plots used in the report due to large sample numbers")
+        console.print(
+            "[blue]|           multiqc[/] | "
+            "To force interactive plots, use the [yellow]'--interactive'[/] flag. "
+            "See the [link=https://multiqc.info/docs/#flat--interactive-plots]documentation[/link]."
         )
 
     if lint and len(report.lint_errors) > 0:
