@@ -216,9 +216,8 @@ def plot(data, pconfig=None):
             not config.plots_force_interactive and plotdata and len(plotdata[0]) > config.plots_flat_numseries
         ):
             try:
-                plot = matplotlib_linegraph(plotdata, pconfig)
                 report.num_mpl_plots += 1
-                return plot
+                return matplotlib_linegraph(plotdata, pconfig)
             except Exception as e:
                 logger.error("############### Error making MatPlotLib figure! Falling back to HighCharts.")
                 logger.debug(e, exc_info=True)

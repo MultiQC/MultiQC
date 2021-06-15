@@ -189,9 +189,8 @@ def plot(data, cats=None, pconfig=None):
             not config.plots_force_interactive and len(plotsamples[0]) > config.plots_flat_numseries
         ):
             try:
-                plot = matplotlib_bargraph(plotdata, plotsamples, pconfig)
                 report.num_mpl_plots += 1
-                return plot
+                return matplotlib_bargraph(plotdata, plotsamples, pconfig)
             except Exception as e:
                 logger.error("############### Error making MatPlotLib figure! Falling back to HighCharts.")
                 logger.debug(e, exc_info=True)
