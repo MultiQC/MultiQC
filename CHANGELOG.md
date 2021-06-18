@@ -17,6 +17,8 @@
   - Tools for working with BUS files
 - [**VEP**](https://www.ensembl.org/info/docs/tools/vep/index.html)
   - Added MultiQC module to add summary statistics of Ensembl VEP annotations.
+- [**Pangolin**](https://github.com/cov-lineages/pangolin)
+  - Added MultiQC support for Pangolin, the tool that determines SARS-CoV-2 lineages
 
 #### Module updates
 
