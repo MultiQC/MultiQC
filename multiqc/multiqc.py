@@ -1001,6 +1001,14 @@ def run(
         logger.info(" - {:.2f}s: Compressing report data".format(report.runtimes["total_compression"]))
         logger.info("For more information, see the 'Run Time' section in {}".format(os.path.relpath(config.output_fn)))
 
+    if report.num_mpl_plots > 0 and not config.plots_force_flat:
+        logger.warning("Flat-image plots used in the report due to large sample numbers")
+        console.print(
+            "[blue]|           multiqc[/] | "
+            "To force interactive plots, use the [yellow]'--interactive'[/] flag. "
+            "See the [link=https://multiqc.info/docs/#flat--interactive-plots]documentation[/link]."
+        )
+
     if lint and len(report.lint_errors) > 0:
         logger.error("Found {} linting errors!\n{}".format(len(report.lint_errors), "\n".join(report.lint_errors)))
         sys_exit_code = 1
