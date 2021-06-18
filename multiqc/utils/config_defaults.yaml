@@ -561,7 +561,9 @@ module_order:
         - RNA
         - methylation
         - allele-specific
-
+  - pangolin:
+      module_tag:
+        - RNA
   # Pre-alignment QC
   - kat:
       module_tag:

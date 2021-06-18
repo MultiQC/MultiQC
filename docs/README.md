@@ -46,6 +46,7 @@ MultiQC Modules:
     HISAT2: modules/hisat2.md
     Kallisto: modules/kallisto.md
     Long Ranger: modules/longranger.md
+    Pangolin: modules/pangolin.md
     Salmon: modules/salmon.md
     STAR: modules/star.md
     TopHat: modules/tophat.md
