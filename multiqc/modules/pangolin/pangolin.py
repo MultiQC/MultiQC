@@ -35,7 +35,12 @@ class MultiqcModule(BaseMultiqcModule):
 
         self.pangolin_general_stats_table()
 
-        self.add_section(name="Run table", anchor="pangolin-run-table", plot=self.pangolin_table())
+        self.add_section(
+            name="Run table",
+            anchor="pangolin-run-table",
+            description="Statistics gathered from the input pangolin files",
+            plot=self.pangolin_table(),
+        )
 
     def parse_pangolin_log(self, fh):
         contents = csv.DictReader(fh["f"])
@@ -76,7 +81,7 @@ class MultiqcModule(BaseMultiqcModule):
             ),
             "min": 0,
             "max": 1,
-            "scale": "RdYlGn-rev",
+            "scale": "RdBl-rev",
         }
 
         headers["ambiguity_score"] = {
@@ -101,7 +106,7 @@ class MultiqcModule(BaseMultiqcModule):
             "description": "The support score is the proportion of defining variants which have the alternative allele in the sequence.",
             "min": 0,
             "max": 1,
-            "scale": "RdYlGn",
+            "scale": "RdYlBl",
         }
 
         headers["scorpio_conflict"] = {
