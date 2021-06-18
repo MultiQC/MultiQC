@@ -216,6 +216,7 @@ def plot(data, pconfig=None):
             not config.plots_force_interactive and plotdata and len(plotdata[0]) > config.plots_flat_numseries
         ):
             try:
+                report.num_mpl_plots += 1
                 return matplotlib_linegraph(plotdata, pconfig)
             except Exception as e:
                 logger.error("############### Error making MatPlotLib figure! Falling back to HighCharts.")
@@ -586,8 +587,6 @@ def matplotlib_linegraph(plotdata, pconfig=None):
 
     # Close wrapping div
     html += "</div>"
-
-    report.num_mpl_plots += 1
 
     return html
 
