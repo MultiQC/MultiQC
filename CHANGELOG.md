@@ -40,6 +40,8 @@
   - Handle a `ZeroDivisionError` if there are zero reads ([#1444](https://github.com/ewels/MultiQC/issues/1444))
 - **VEP**
   - Handle error from missing variants in VEP stats file. ([#1446](https://github.com/ewels/MultiQC/issues/1446))
+- **qc3C**
+  - Updated module to not fail on older field names.
 
 ## [MultiQC v1.10.1](https://github.com/ewels/MultiQC/releases/tag/v1.10.1) - 2021-04-01
 
