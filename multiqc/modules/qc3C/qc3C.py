@@ -1106,7 +1106,7 @@ class MultiqcModule(BaseMultiqcModule):
             # to render the junction frequency plot
             if len(parsed["junction_frequency"]) > 1:
                 self.do_digest_plot = True
-                log.info("Enabled junction frequency plot for non-trivial digest: {}".format(f["root"]))
+                log.debug("Enabled junction frequency plot for non-trivial digest: {}".format(f["root"]))
                 # include the junction frequencies (1 or many depending on digest)
                 self.qc3c_data[analysis_mode][s_name].update(parsed["junction_frequency"])
 
