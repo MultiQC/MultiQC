@@ -965,20 +965,8 @@ class MultiqcModule(BaseMultiqcModule):
                 )
             parsed = parsed[-1]
             # Check if fields in json file are named as in the old version
-            if "unobs_fraction" not in parsed:
-                parsed["unobs_fraction"] = parsed["unobs_frac"]
-            if "vs_accepted" not in parsed["separation_bins"]:
-                parsed["separation_bins"]["vs_accepted"] = parsed["separation_bins"]["zvs_accepted"]
-
         except json.JSONDecodeError:
             log.warning("Could not parse qc3C JSON: '{}'".format(f["fn"]))
-            return
-        except KeyError as ex:
-            log.error(
-                "The entry {} was not found in the qc3C JSON file '{}'".format(
-                    str(ex), os.path.join(f["root"], f["fn"])
-                )
-            )
             return
 
         s_name = self.clean_s_name(os.path.basename(f["root"]), os.path.dirname(f["root"]))
@@ -987,8 +975,12 @@ class MultiqcModule(BaseMultiqcModule):
 
         try:
             analysis_mode = parsed["mode"]
+            if "unobs_fraction" not in parsed:
+                parsed["unobs_fraction"] = parsed["unobs_frac"]
 
             if analysis_mode == "bam":
+                if "vs_accepted" not in parsed["separation_bins"]:
+                    parsed["separation_bins"]["vs_accepted"] = parsed["separation_bins"]["zvs_accepted"]
 
                 # set some variables to shorten the lines below
                 inf = parsed["classification"]["informative"]
