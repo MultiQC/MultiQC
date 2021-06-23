@@ -49,12 +49,17 @@ class MultiqcModule(BaseMultiqcModule):
             plot=self.pangolin_table(),
         )
 
-    def parse_pangolin_log(self, fh):
-        contents = csv.DictReader(fh["f"])
-        for row in contents:
-            taxon_name = row["taxon"]
-            row.pop("taxon")
-            self.pangolin_data[taxon_name] = row
+    def parse_pangolin_log(self, f):
+        for row in csv.DictReader(f["f"]):
+            try:
+                taxon_name = row["taxon"]
+                row.pop("taxon")
+                s_name = self.clean_s_name(taxon_name, f["root"])
+                if s_name in self.pangolin_data:
+                    log.debug("Duplicate sample name found! Overwriting: {}".format(s_name))
+                self.pangolin_data[s_name] = row
+            except KeyError:
+                log.debug("File '{}' could not be parsed - no taxon field found.".format(f["fn"]))
 
     def pangolin_general_stats_table(self):
         """Takes the parsed sample data and adds it to the general stats table"""
