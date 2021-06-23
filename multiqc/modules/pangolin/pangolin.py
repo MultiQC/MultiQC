@@ -7,6 +7,7 @@ from collections import OrderedDict
 import logging
 import csv
 
+from multiqc.utils import mqc_colour
 from multiqc.plots import table
 from multiqc.modules.base_module import BaseMultiqcModule
 
@@ -29,6 +30,7 @@ class MultiqcModule(BaseMultiqcModule):
 
         # Find and parse the sample files
         self.pangolin_data = dict()
+        self.lineage_colours = dict()
         for f in self.find_log_files("pangolin", filehandles=True):
             self.parse_pangolin_log(f)
 
@@ -39,6 +41,16 @@ class MultiqcModule(BaseMultiqcModule):
         if len(self.pangolin_data) == 0:
             raise UserWarning
         log.info("Found {} samples".format(len(self.pangolin_data)))
+
+        # Assign some lineage colours
+        # First, remove blank / None
+        self.lineage_colours.pop("", None)
+        self.lineage_colours.pop("None", None)
+        cols = mqc_colour.mqc_colour_scale("Set1", 0, len(self.lineage_colours))
+        for k in self.lineage_colours:
+            self.lineage_colours[k] = cols.get_colour(k)
+        # Manually add back None as grey
+        self.lineage_colours["None"] = "#EFEFEF"
 
         self.pangolin_general_stats_table()
 
@@ -79,6 +91,9 @@ class MultiqcModule(BaseMultiqcModule):
                 if s_name in self.pangolin_data:
                     log.debug("Duplicate sample name found! Overwriting: {}".format(s_name))
                 self.pangolin_data[s_name] = row
+                # Just save the lineage key for now - we will sort out the colours later
+                self.lineage_colours[row["lineage"]] = None
+                self.lineage_colours[row["scorpio_call"]] = None
             except KeyError:
                 log.debug("File '{}' could not be parsed - no taxon field found.".format(f["fn"]))
 
@@ -91,6 +106,7 @@ class MultiqcModule(BaseMultiqcModule):
             "description": "Lineage",
             "min": 0,
             "scale": "RdYlGn",
+            "bgcols": self.lineage_colours,
         }
         self.general_stats_addcols(self.pangolin_data, headers)
 
@@ -105,6 +121,7 @@ class MultiqcModule(BaseMultiqcModule):
                 and the SARS-CoV-2 diversity designated.
             """,
             "scale": False,
+            "bgcols": self.lineage_colours,
         }
         headers["conflict"] = {
             "title": "Conflict",
@@ -125,6 +142,7 @@ class MultiqcModule(BaseMultiqcModule):
             "title": "S call",
             "description": "Scorpio: If a query is assigned a constellation by scorpio this call is output in this column",
             "scale": False,
+            "bgcols": self.lineage_colours,
         }
 
         headers["scorpio_support"] = {
