@@ -46,9 +46,9 @@ class MultiqcModule(BaseMultiqcModule):
         # First, remove blank / None
         self.lineage_colours.pop("", None)
         self.lineage_colours.pop("None", None)
-        cols = mqc_colour.mqc_colour_scale("Set1", 0, len(self.lineage_colours))
-        for k in self.lineage_colours:
-            self.lineage_colours[k] = cols.get_colour(k)
+        cols = mqc_colour.mqc_colour_scale("Dark2", 0, len(self.lineage_colours))
+        for idx, k in enumerate(self.lineage_colours):
+            self.lineage_colours[k] = cols.get_colour(idx)
         # Manually add back None as grey
         self.lineage_colours["None"] = "#EFEFEF"
 
