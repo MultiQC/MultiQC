@@ -46,7 +46,6 @@ MultiQC Modules:
     HISAT2: modules/hisat2.md
     Kallisto: modules/kallisto.md
     Long Ranger: modules/longranger.md
-    Pangolin: modules/pangolin.md
     Salmon: modules/salmon.md
     STAR: modules/star.md
     TopHat: modules/tophat.md
@@ -85,6 +84,7 @@ MultiQC Modules:
     ngsderive: modules/ngsderive.md
     OptiType: modules/optitype.md
     phantompeakqualtools: modules/phantompeakqualtools.md
+    Pangolin: modules/pangolin.md
     Peddy: modules/peddy.md
     Picard: modules/picard.md
     Preseq: modules/preseq.md
