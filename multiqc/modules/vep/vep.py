@@ -146,6 +146,10 @@ class MultiqcModule(BaseMultiqcModule):
                 continue
             key, value = line.split("\t")
             if key == "Novel / existing variants":
+                if value == "-":
+                    txt_data[title]["Novel variants"] = 0
+                    txt_data[title]["Existing variants"] = 0
+                    continue
                 values = value.split("/")
                 novel = values[0].split("(")[0].replace(" ", "")
                 existing = values[1].split("(")[0].replace(" ", "")

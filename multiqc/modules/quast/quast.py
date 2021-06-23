@@ -184,7 +184,7 @@ class MultiqcModule(BaseMultiqcModule):
             "min": 0,
             "suffix": self.total_number_contigs_suffix,
             "scale": "GnYlRd",
-            "mofidy": lambda x: x * self.total_number_contigs_multiplier,
+            "modify": lambda x: x * self.total_number_contigs_multiplier,
         }
         headers["Largest contig"] = {
             "title": "Largest contig ({})".format(self.contig_length_suffix),
