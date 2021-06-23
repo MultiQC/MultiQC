@@ -25,13 +25,20 @@ class MultiqcModule(BaseMultiqcModule):
             name="Pangolin",
             anchor="pangolin",
             href="https://github.com/cov-lineages/pangolin",
-            info="is a software package for assigning SARS-CoV-2 genome sequences to global lineages.",
+            info="uses variant calls to assign SARS-CoV-2 genome sequences to global lineages.",
         )
 
         # Find and parse the sample files
         self.pangolin_data = dict()
         for f in self.find_log_files("pangolin", filehandles=True):
             self.parse_pangolin_log(f)
+
+        # Filter out parsed samples based on sample name
+        self.pangolin_data = self.ignore_samples(self.pangolin_data)
+
+        # Stop if we didn't find anything
+        if len(self.pangolin_data) == 0:
+            raise UserWarning
 
         self.pangolin_general_stats_table()
 
