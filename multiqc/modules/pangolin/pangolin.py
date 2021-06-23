@@ -38,12 +38,13 @@ class MultiqcModule(BaseMultiqcModule):
         # Stop if we didn't find anything
         if len(self.pangolin_data) == 0:
             raise UserWarning
+        log.info("Found {} samples".format(len(self.pangolin_data)))
 
         self.pangolin_general_stats_table()
 
         self.add_section(
             name="Run table",
-            anchor="pangolin-run-table",
+            anchor="pangolin-run",
             description="Statistics gathered from the input pangolin files",
             helptext="""
             This table shows some of the metrics parsed by Pangolin.
@@ -171,4 +172,10 @@ class MultiqcModule(BaseMultiqcModule):
             "description": "Additional information from Pangolin",
         }
 
-        return table.plot(self.pangolin_data, headers)
+        table_config = {
+            "namespace": "Pangolin",
+            "id": "pangolin_run_table",
+            "table_title": "Pangolin: Run details",
+        }
+
+        return table.plot(self.pangolin_data, headers, table_config)
