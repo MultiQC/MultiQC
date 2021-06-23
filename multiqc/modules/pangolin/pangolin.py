@@ -90,6 +90,8 @@ class MultiqcModule(BaseMultiqcModule):
                 s_name = self.clean_s_name(taxon_name, f["root"])
                 if s_name in self.pangolin_data:
                     log.debug("Duplicate sample name found! Overwriting: {}".format(s_name))
+                # Avoid generic header ID that clashes with other modules
+                row["qc_status"] = row.pop("status")
                 self.pangolin_data[s_name] = row
                 # Just save the lineage key for now - we will sort out the colours later
                 self.lineage_colours[row["lineage"]] = None
@@ -188,7 +190,7 @@ class MultiqcModule(BaseMultiqcModule):
             "hidden": True,
         }
 
-        headers["status"] = {
+        headers["qc_status"] = {
             "title": "QC Status",
             "description": "Indicates whether the sequence passed the QC thresholds for minimum length and maximum N content.",
             "scale": False,
@@ -201,6 +203,7 @@ class MultiqcModule(BaseMultiqcModule):
             "scale": False,
         }
 
+        # Main table config
         table_config = {
             "namespace": "Pangolin",
             "id": "pangolin_run_table",
