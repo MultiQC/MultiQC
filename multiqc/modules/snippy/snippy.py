@@ -5,6 +5,7 @@
 from collections import OrderedDict
 import logging
 
+from multiqc import config
 from multiqc.plots import bargraph
 from multiqc.modules.base_module import BaseMultiqcModule
 
@@ -198,35 +199,40 @@ class MultiqcModule(BaseMultiqcModule):
         """
         # General stats table headers
         headers = OrderedDict()
+        headers["Variant-SNP"] = {
+            "title": "# SNP",
+            "description": "Total SNP variants detected.",
+            "scale": "BuPu",
+            "format": "{:.0f}",
+            "shared_key": "variant_count",
+        }
+        headers["Variant-INS"] = {
+            "title": "# INS",
+            "description": "Total INS variants detected.",
+            "scale": "BuGn",
+            "format": "{:.0f}",
+            "shared_key": "variant_count",
+        }
+        headers["Variant-DEL"] = {
+            "title": "# DEL",
+            "description": "Total DEL variants detected.",
+            "scale": "YlOrBr",
+            "format": "{:.0f}",
+            "shared_key": "variant_count",
+        }
+        headers["Variant-COMPLEX"] = {
+            "title": "# COMPLEX",
+            "description": "Total COMPLEX variants detected.",
+            "scale": "PuRd",
+            "format": "{:.0f}",
+            "shared_key": "variant_count",
+        }
         headers["VariantTotal"] = {
-            "title": "VariantTotal",
+            "title": "# Variants",
             "description": "Total variants detected.",
             "scale": "Blues",
             "format": "{:.0f}",
-        }
-        headers["Variant-SNP"] = {
-            "title": "Variant SNP",
-            "description": "Total SNP detected.",
-            "scale": "BuPu",
-            "format": "{:.0f}",
-        }
-        headers["Variant-INS"] = {
-            "title": "Variant INS",
-            "description": "Total INS detected.",
-            "scale": "BuGn",
-            "format": "{:.0f}",
-        }
-        headers["Variant-DEL"] = {
-            "title": "Variant DEL",
-            "description": "Total DEL detected.",
-            "scale": "YlOrBr",
-            "format": "{:.0f}",
-        }
-        headers["Variant-COMPLEX"] = {
-            "title": "Variant COMPLEX",
-            "description": "Total COMPLEX detected.",
-            "scale": "PuRd",
-            "format": "{:.0f}",
+            "shared_key": "variant_count",
         }
         return headers
 
@@ -238,16 +244,15 @@ class MultiqcModule(BaseMultiqcModule):
         # General stats table headers
         headers = OrderedDict()
         headers["Percent_Aligned"] = {
-            "title": "Percent_Aligned",
+            "title": "% Aligned",
             "description": "Percent of bases aligned to the reference.",
             "max": 100,
             "min": 0,
             "scale": "RdYlGn",
             "suffix": "%",
-            "hidden": False,
         }
         headers["Percent_Het"] = {
-            "title": "Percent_Het",
+            "title": "% Het",
             "description": "Percent of aligned sites that are heterozygous.",
             "max": 100,
             "min": 0,
@@ -256,52 +261,48 @@ class MultiqcModule(BaseMultiqcModule):
             "hidden": True,
         }
         headers["LENGTH"] = {
-            "title": "Length",
-            "description": "Number of nucleotides in the reference genome.",
+            "title": "{} Length".format(config.base_count_prefix),
+            "description": "Number of nucleotides in the reference genome ({}).".format(config.base_count_desc),
             "scale": "Blues",
-            "format": "{:.0f}",
-            "hidden": False,
+            "shared_key": "base_count",
         }
         headers["ALIGNED"] = {
-            "title": "Aligned",
-            "description": "Number of aligned nucleotides.",
+            "title": "{} Aligned".format(config.base_count_prefix),
+            "description": "Number of aligned nucleotides ({}).".format(config.base_count_desc),
             "scale": "RdYlGn",
-            "format": "{:.0f}",
-            "hidden": False,
+            "shared_key": "base_count",
         }
         headers["UNALIGNED"] = {
-            "title": "Unaligned",
-            "description": "Number of unaligned nucleotides.",
+            "title": "{} Unaligned".format(config.base_count_prefix),
+            "description": "Number of unaligned nucleotides ({}).".format(config.base_count_desc),
             "scale": "RdYlGn-rev",
-            "format": "{:.0f}",
-            "hidden": False,
+            "shared_key": "base_count",
         }
         headers["VARIANT"] = {
-            "title": "Variant",
-            "description": "Number of variants.",
+            "title": "{} Variants".format(config.base_count_prefix),
+            "description": "Number of variants ({}).".format(config.base_count_desc),
             "scale": "Blues",
             "format": "{:.0f}",
-            "hidden": False,
+            "shared_key": "base_count",
         }
         headers["HET"] = {
-            "title": "Het",
-            "description": "Number of heterozygous sites.",
+            "title": "{} Hets".format(config.base_count_prefix),
+            "description": "Number of heterozygous sites ({}).".format(config.base_count_desc),
             "scale": "RdYlGn-rev",
             "format": "{:.0f}",
-            "hidden": False,
+            "shared_key": "base_count",
         }
         headers["MASKED"] = {
-            "title": "Masked",
-            "description": "Number of masked nucleotides.",
+            "title": "{} Masked".format(config.base_count_prefix),
+            "description": "Number of masked nucleotides ({}).".format(config.base_count_desc),
             "scale": "Blues",
-            "format": "{:.0f}",
-            "hidden": False,
+            "shared_key": "base_count",
         }
         headers["LOWCOV"] = {
-            "title": "Lowcov",
-            "description": "Number of low coverage sites.",
+            "title": "{} Low Cov".format(config.base_count_prefix),
+            "description": "Number of low coverage sites ({}).".format(config.base_count_desc),
             "scale": "RdYlGn-rev",
             "format": "{:.0f}",
-            "hidden": False,
+            "shared_key": "base_count",
         }
         return headers
