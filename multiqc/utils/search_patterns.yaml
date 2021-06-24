@@ -411,6 +411,9 @@ ngsderive/junction_annotation:
 optitype:
   contents: "	A1	A2	B1	B2	C1	C2	Reads	Objective"
   num_lines: 1
+pangolin:
+  contents: "pangolin_version"
+  num_lines: 1
 peddy/summary_table:
   fn: "*.peddy.ped"
 peddy/het_check:
