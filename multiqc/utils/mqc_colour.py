@@ -43,17 +43,26 @@ class mqc_colour_scale(object):
 
     def get_colour(self, val, colformat="hex", lighten=0.3):
         """Given a value, return a colour within the colour scale"""
+
+        # Ported from the original JavaScript for continuity
+        # Seems to work better than adjusting brightness / saturation / luminosity
+        rgb_converter = lambda x: max(0, min(1, 1 + ((x - 1) * lighten)))
+
         try:
             # When we have non-numeric values (e.g. Male/Female, Yes/No, chromosome names, etc), and a qualitive
             # scale (Set1, Set3, etc), we don't want to attempt to parse numbers, otherwise we will end up with all
-            # values assigned withthe same color. But instead we will geta has from a string to hope to assign
+            # values assigned with the same color. But instead we will geta has from a string to hope to assign
             # a unique color for each possible enumeration value.
             if self.name in mqc_colour_scale.qualitative_scales and isinstance(val, str):
-                return self.colours[hash(val) % len(self.colours)]
+                thecolour = spectra.html(self.colours[hash(val) % len(self.colours)])
+                thecolour = spectra.rgb(*[rgb_converter(v) for v in thecolour.rgb])
+                return thecolour.hexcode
 
             # When there is only 1 color in scale, spectra.scale() will crash with DevisionByZero
             elif len(self.colours) == 1:
-                return self.colours[0]
+                thecolour = spectra.html(self.colours[0])
+                thecolour = spectra.rgb(*[rgb_converter(v) for v in thecolour.rgb])
+                return thecolour.hexcode
 
             else:
                 # Sanity checks
@@ -67,9 +76,7 @@ class mqc_colour_scale(object):
                 domain_nums = list(np.linspace(self.minval, self.maxval, len(self.colours)))
                 my_scale = spectra.scale(self.colours).domain(domain_nums)
 
-                # Weird, I know. I ported this from the original JavaScript for continuity
-                # Seems to work better than adjusting brightness / saturation / luminosity
-                rgb_converter = lambda x: max(0, min(1, 1 + ((x - 1) * lighten)))
+                # Lighten colours
                 thecolour = spectra.rgb(*[rgb_converter(v) for v in my_scale(val).rgb])
 
                 return thecolour.hexcode

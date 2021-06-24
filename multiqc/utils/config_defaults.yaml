@@ -339,7 +339,7 @@ module_order:
   - quast:
       module_tag:
         - DNA
-        - Metagenomics
+        - metagenomics
         - Denovo
   - qorts:
       module_tag:
@@ -406,7 +406,7 @@ module_order:
   - hops:
       module_tag:
         - DNA
-        - Metagenomics
+        - metagenomics
         - ancient
   - macs2:
       module_tag:
@@ -564,7 +564,10 @@ module_order:
         - RNA
         - methylation
         - allele-specific
-
+  - pangolin:
+      module_tag:
+        - DNA
+        - virus
   # Pre-alignment QC
   - kat:
       module_tag:
@@ -592,15 +595,15 @@ module_order:
   - kaiju:
       module_tag:
         - DNA
-        - Metagenomics
+        - metagenomics
   - kraken:
       module_tag:
         - DNA
-        - Metagenomics
+        - metagenomics
   - malt:
       module_tag:
         - DNA
-        - Metagenomics
+        - metagenomics
         - ancient
   - trimmomatic:
       module_tag:

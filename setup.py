@@ -151,6 +151,7 @@ setup(
             "multivcfanalyzer = multiqc.modules.multivcfanalyzer:MultiqcModule",
             "ngsderive = multiqc.modules.ngsderive:MultiqcModule",
             "optitype = multiqc.modules.optitype:MultiqcModule",
+            "pangolin = multiqc.modules.pangolin:MultiqcModule",
             "peddy = multiqc.modules.peddy:MultiqcModule",
             "phantompeakqualtools = multiqc.modules.phantompeakqualtools:MultiqcModule",
             "picard = multiqc.modules.picard:MultiqcModule",
