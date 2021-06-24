@@ -50,33 +50,21 @@ class MultiqcModule(BaseMultiqcModule):
         for f in self.find_log_files("snippy/snippy"):
             # Check for duplicate sample names
             if f["s_name"] in self.snippy_data:
-                log.debug(
-                    "Duplicate sample name found for snippy! Overwriting: {}".format(
-                        f["s_name"]
-                    )
-                )
+                log.debug("Duplicate sample name found for snippy! Overwriting: {}".format(f["s_name"]))
             # Add the file data under the key filename
             self.snippy_data[f["s_name"]] = self.parse_snippy_txt(f["f"])
             # Ignore samples specified by the user
-            self.snippy_data[f["s_name"]] = self.ignore_samples(
-                self.snippy_data[f["s_name"]]
-            )
+            self.snippy_data[f["s_name"]] = self.ignore_samples(self.snippy_data[f["s_name"]])
 
         # Parse the txt files from snippy-core
         for f in self.find_log_files("snippy/snippy-core"):
             # Check for duplicate sample names
             if f["s_name"] in self.snippy_core_data:
-                log.debug(
-                    "Duplicate sample name found for snippy-core! Overwriting: {}".format(
-                        f["s_name"]
-                    )
-                )
+                log.debug("Duplicate sample name found for snippy-core! Overwriting: {}".format(f["s_name"]))
             # Add the file data under the key filename
             self.snippy_core_data[f["s_name"]] = self.parse_snippy_core_txt(f["f"])
             # Ignore samples specified by the user
-            self.snippy_core_data[f["s_name"]] = self.ignore_samples(
-                self.snippy_core_data[f["s_name"]]
-            )
+            self.snippy_core_data[f["s_name"]] = self.ignore_samples(self.snippy_core_data[f["s_name"]])
 
         # Raise warning if no logs were found.
         if len(self.snippy_data) == 0 and len(self.snippy_core_data) == 0:
@@ -140,15 +128,9 @@ class MultiqcModule(BaseMultiqcModule):
             for sample in self.snippy_core_data[file]:
                 data[sample] = {}
                 for i in range(0, len(self.snippy_core_col)):
-                    data[sample][self.snippy_core_col[i]] = int(
-                        self.snippy_core_data[file][sample][i]
-                    )
-                data[sample]["Percent_Aligned"] = (
-                    data[sample]["ALIGNED"] / data[sample]["LENGTH"]
-                ) * 100
-                data[sample]["Percent_Het"] = (
-                    data[sample]["HET"] / data[sample]["ALIGNED"]
-                ) * 100
+                    data[sample][self.snippy_core_col[i]] = int(self.snippy_core_data[file][sample][i])
+                data[sample]["Percent_Aligned"] = (data[sample]["ALIGNED"] / data[sample]["LENGTH"]) * 100
+                data[sample]["Percent_Het"] = (data[sample]["HET"] / data[sample]["ALIGNED"]) * 100
 
         self.general_stats_addcols(data, self.snippy_core_headers_config())
         self.write_data_file(data, "multiqc_snippy")
@@ -197,13 +179,9 @@ class MultiqcModule(BaseMultiqcModule):
                 for i in range(0, len(self.snippy_core_col)):
                     if self.snippy_core_col[i] == "LENGTH":
                         continue
-                    bargraph_data[sample][self.snippy_core_col[i]] = int(
-                        self.snippy_core_data[file][sample][i]
-                    )
+                    bargraph_data[sample][self.snippy_core_col[i]] = int(self.snippy_core_data[file][sample][i])
                 # Subtract variant from aligned
-                bargraph_data[sample]["ALIGNED"] = (
-                    bargraph_data[sample]["ALIGNED"] - bargraph_data[sample]["VARIANT"]
-                )
+                bargraph_data[sample]["ALIGNED"] = bargraph_data[sample]["ALIGNED"] - bargraph_data[sample]["VARIANT"]
 
         # Config for the plot
         pconfig = {
