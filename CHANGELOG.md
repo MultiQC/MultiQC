@@ -38,6 +38,7 @@
 - **Picard**
   - `RnaSeqMetrics` - fix assignment barplot labels to say bases instead of reads ([#1408](https://github.com/ewels/MultiQC/issues/1408))
   - `CrosscheckFingerprints` - fix bug where LOD threshold was not detected when invoked with "new" picard cli style. fixed formatting bug ([#1414](https://github.com/ewels/MultiQC/issues/1414))
+  - Add metrics from `CollectIlluminaBasecallingMetrics`, `CollectIlluminaLaneMetrics`, `ExtractIlluminaBarcodes` and `MarkIlluminaAdapters` ([#1336](https://github.com/ewels/MultiQC/pull/1336))
 - **qc3C**
   - Updated module to not fail on older field names.
 - **QUAST**
@@ -174,7 +175,6 @@ For further information, please see the [documentation](https://multiqc.info/doc
   - Multiple new config options for `WgsMetrics` to customise coverage histogram and speed up MultiQC with very high coverage files.
   - Add additional datasets to Picard Alignment Summary ([#1293](https://github.com/ewels/MultiQC/issues/1293))
   - Add support for `CrosscheckFingerprints` ([#1327](https://github.com/ewels/MultiQC/issues/1327))
-  - Add metrics from `CollectIlluminaBasecallingMetrics`, `CollectIlluminaLaneMetrics`, `ExtractIlluminaBarcodes` and `MarkIlluminaAdapters` ([#1336](https://github.com/ewels/MultiQC/pull/1336))
 - **PycoQC**
   - Log10 x-axis for _Read Length_ plot ([#1214](https://github.com/ewels/MultiQC/issues/1214))
 - **Rockhopper**
