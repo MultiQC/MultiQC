@@ -13,10 +13,10 @@ log = logging.getLogger(__name__)
 
 
 class StatsReportMixin:
-    """ Mixin class, loaded by main samtools MuliqcModule class. """
+    """Mixin class, loaded by main samtools MuliqcModule class."""
 
     def parse_samtools_stats(self):
-        """ Find Samtools stats logs and parse their data """
+        """Find Samtools stats logs and parse their data"""
 
         self.samtools_stats = dict()
         for f in self.find_log_files("samtools/stats"):
@@ -212,7 +212,7 @@ class StatsReportMixin:
 
 
 def alignment_chart(data):
-    """Make the HighCharts HTML to plot the alignment rates """
+    """Make the HighCharts HTML to plot the alignment rates"""
     keys = OrderedDict()
     keys["reads_mapped"] = {"color": "#437bb1", "name": "Mapped"}
     keys["reads_unmapped"] = {"color": "#b1084c", "name": "Unmapped"}

@@ -108,7 +108,7 @@ class MultiqcModule(BaseMultiqcModule):
 
     # Plotting functions
     def plot_classification(self):
-        """ Generate the cDNA read classification plot """
+        """Generate the cDNA read classification plot"""
 
         pconfig = {
             "id": "pychopper_classification_plot",
@@ -127,7 +127,7 @@ class MultiqcModule(BaseMultiqcModule):
         return bargraph.plot(data_classification, cats, pconfig)
 
     def plot_orientation(self):
-        """ Generate the read strand orientation plot """
+        """Generate the read strand orientation plot"""
 
         pconfig = {
             "id": "pychopper_orientation_plot",

@@ -43,7 +43,7 @@ class MultiqcModule(BaseMultiqcModule):
         self.read_count_plot()
 
     def parse_logs(self, f):
-        """ Parse the Sickle standard output """
+        """Parse the Sickle standard output"""
         regexes = [
             # Paired-end
             ["reads_paired_kept", re.compile("FastQ paired records kept: ([\d,]+) .*")],
@@ -100,7 +100,7 @@ class MultiqcModule(BaseMultiqcModule):
         self.general_stats_addcols(self.sickle_data, headers)
 
     def read_count_plot(self):
-        """ Stacked bar plot showing counts of reads """
+        """Stacked bar plot showing counts of reads"""
         pconfig = {
             "id": "sickle_sequence_counts_plot",
             "title": "Sickle: Sequence Counts",

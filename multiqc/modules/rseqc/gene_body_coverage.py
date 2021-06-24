@@ -13,7 +13,7 @@ log = logging.getLogger(__name__)
 
 
 def parse_reports(self):
-    """ Find RSeQC gene_body_coverage reports and parse their data """
+    """Find RSeQC gene_body_coverage reports and parse their data"""
 
     # Set up vars
     self.gene_body_cov_hist_counts = dict()

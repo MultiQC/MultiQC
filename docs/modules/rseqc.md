@@ -40,3 +40,6 @@ rseqc_sections:
 ```
 
 Change the order to rearrage sections or remove to hide them from the report.
+
+Note that some scripts (for example, `junction_annotation.py`) produce the results used by MultiQC as standard-error.
+To use with MultiQC, make sure that you redirect this to a file using `2> mysample.log`.

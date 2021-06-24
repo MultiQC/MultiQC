@@ -18,7 +18,7 @@ log = logging.getLogger(__name__)
 
 
 class MultiqcModule(BaseMultiqcModule):
-    """ HiC-Pro module, parses log and stats files saved by HiC-Pro. """
+    """HiC-Pro module, parses log and stats files saved by HiC-Pro."""
 
     def __init__(self):
 
@@ -142,7 +142,7 @@ class MultiqcModule(BaseMultiqcModule):
             )
 
     def parse_hicpro_stats(self, f, rsection):
-        """ Parse a HiC-Pro stat file """
+        """Parse a HiC-Pro stat file"""
         s_name = self.clean_s_name(os.path.basename(f["root"]), os.path.dirname(f["root"]))
 
         if s_name not in self.hicpro_data.keys():
@@ -157,7 +157,7 @@ class MultiqcModule(BaseMultiqcModule):
                 self.hicpro_data[s_name][s[0]] = int(s[1])
 
     def hicpro_stats_table(self):
-        """ Add HiC-Pro stats to the general stats table """
+        """Add HiC-Pro stats to the general stats table"""
         headers = OrderedDict()
 
         headers["percent_duplicates"] = {
@@ -270,7 +270,7 @@ class MultiqcModule(BaseMultiqcModule):
         self.general_stats_addcols(self.hicpro_data, headers, "HiC-Pro")
 
     def hicpro_mapping_chart(self):
-        """ Generate the HiC-Pro Aligned reads plot """
+        """Generate the HiC-Pro Aligned reads plot"""
 
         # Specify the order of the different possible categories
         keys = OrderedDict()
@@ -303,7 +303,7 @@ class MultiqcModule(BaseMultiqcModule):
         return bargraph.plot(data, [keys, keys], config)
 
     def hicpro_pairing_chart(self):
-        """ Generate Pairing chart """
+        """Generate Pairing chart"""
 
         # Specify the order of the different possible categories
         keys = OrderedDict()
@@ -324,7 +324,7 @@ class MultiqcModule(BaseMultiqcModule):
         return bargraph.plot(self.hicpro_data, keys, config)
 
     def hicpro_filtering_chart(self):
-        """ Generate the HiC-Pro filtering plot """
+        """Generate the HiC-Pro filtering plot"""
 
         # Specify the order of the different possible categories
         keys = OrderedDict()
@@ -349,7 +349,7 @@ class MultiqcModule(BaseMultiqcModule):
         return bargraph.plot(self.hicpro_data, keys, config)
 
     def hicpro_contact_chart(self):
-        """ Generate the HiC-Pro interaction plot """
+        """Generate the HiC-Pro interaction plot"""
 
         # Specify the order of the different possible categories
         keys = OrderedDict()
@@ -369,7 +369,7 @@ class MultiqcModule(BaseMultiqcModule):
         return bargraph.plot(self.hicpro_data, keys, config)
 
     def hicpro_as_chart(self):
-        """ Generate Allele-specific plot"""
+        """Generate Allele-specific plot"""
 
         keys = OrderedDict()
         keys["Valid_pairs_from_ref_genome_(1-1)"] = {"color": "#e6550d", "name": "Genome1 specific read pairs (1-1)"}
@@ -411,7 +411,7 @@ class MultiqcModule(BaseMultiqcModule):
         return bargraph.plot(self.hicpro_data, keys, config)
 
     def hicpro_capture_chart(self):
-        """ Generate Capture Hi-C plot"""
+        """Generate Capture Hi-C plot"""
 
         keys = OrderedDict()
         keys["valid_pairs_on_target_cap_cap"] = {"color": "#0039e6", "name": "Capture-Capture interactions"}

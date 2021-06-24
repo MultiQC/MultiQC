@@ -373,7 +373,7 @@ class MultiqcModule(BaseMultiqcModule):
         self.general_stats_addcols(self.slamdunk_data, headers)
 
     def slamdunkFilterStatsTable(self):
-        """ Take the parsed filter stats from Slamdunk and add it to a separate table """
+        """Take the parsed filter stats from Slamdunk and add it to a separate table"""
 
         headers = OrderedDict()
         headers["mapped"] = {
@@ -444,7 +444,7 @@ class MultiqcModule(BaseMultiqcModule):
         )
 
     def slamdunkOverallRatesPlot(self):
-        """ Generate the overall rates plot """
+        """Generate the overall rates plot"""
 
         pconfig = {
             "id": "overallratesplot",
@@ -483,7 +483,7 @@ class MultiqcModule(BaseMultiqcModule):
         )
 
     def slamdunkUtrRatesPlot(self):
-        """ Generate the UTR rates plot """
+        """Generate the UTR rates plot"""
 
         cats = OrderedDict()
         keys = ["T>C", "A>T", "A>G", "A>C", "T>A", "T>G", "G>A", "G>T", "G>C", "C>A", "C>T", "C>G"]
@@ -512,7 +512,7 @@ class MultiqcModule(BaseMultiqcModule):
         )
 
     def slamdunkPCAPlot(self):
-        """ Generate the PCA plots """
+        """Generate the PCA plots"""
 
         pconfig = {
             "id": "slamdunk_pca",
@@ -532,7 +532,7 @@ class MultiqcModule(BaseMultiqcModule):
         )
 
     def slamdunkTcPerReadPosPlot(self):
-        """ Generate the tc per read pos plots """
+        """Generate the tc per read pos plots"""
 
         pconfig_nontc = {
             "id": "slamdunk_nontcperreadpos_plot",
@@ -579,7 +579,7 @@ class MultiqcModule(BaseMultiqcModule):
         )
 
     def slamdunkTcPerUTRPosPlot(self):
-        """ Generate the tc per UTR pos plots """
+        """Generate the tc per UTR pos plots"""
 
         pconfig_nontc = {
             "id": "slamdunk_slamdunk_nontcperutrpos_plot",

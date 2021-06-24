@@ -14,7 +14,7 @@ log = logging.getLogger(__name__)
 
 
 class MultiqcModule(BaseMultiqcModule):
-    """ BUSCO module """
+    """BUSCO module"""
 
     def __init__(self):
 
@@ -76,7 +76,7 @@ class MultiqcModule(BaseMultiqcModule):
             self.busco_data[f["s_name"]] = parsed_data
 
     def busco_plot(self, lin):
-        """ Make the HighCharts HTML for the BUSCO plot for a particular lineage """
+        """Make the HighCharts HTML for the BUSCO plot for a particular lineage"""
 
         data = {}
         for s_name in self.busco_data:

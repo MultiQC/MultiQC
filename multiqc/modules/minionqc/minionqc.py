@@ -171,7 +171,7 @@ class MultiqcModule(BaseMultiqcModule):
         return headers
 
     def table_qALL(self):
-        """ Table showing stats for all reads """
+        """Table showing stats for all reads"""
 
         self.add_section(
             name="Stats: All reads",
@@ -189,7 +189,7 @@ class MultiqcModule(BaseMultiqcModule):
         )
 
     def table_qfiltered(self):
-        """ Table showing stats for q-filtered reads """
+        """Table showing stats for q-filtered reads"""
 
         description = "MinIONQC statistics for quality filtered reads. " + "Quailty threshold used: {}.".format(
             ", ".join(list(self.q_threshold_list))

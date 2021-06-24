@@ -167,7 +167,7 @@ def make_table(dt):
                         percentage = ((abs(float(val)) - dmin) / (dmax - dmin)) * 100
                     percentage = min(percentage, 100)
                     percentage = max(percentage, 0)
-                except (ZeroDivisionError, ValueError):
+                except (ZeroDivisionError, ValueError, TypeError):
                     percentage = 0
 
                 try:

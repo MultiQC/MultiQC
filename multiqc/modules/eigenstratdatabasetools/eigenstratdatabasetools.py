@@ -15,7 +15,7 @@ log = logging.getLogger(__name__)
 
 
 class MultiqcModule(BaseMultiqcModule):
-    """ eigenstratdatabasetools module """
+    """eigenstratdatabasetools module"""
 
     def __init__(self):
 
@@ -77,7 +77,7 @@ class MultiqcModule(BaseMultiqcModule):
                     self.snp_cov_data[s_clean][k] = v
 
     def addSummaryMetrics(self):
-        """ Take the parsed stats from eigenstrat_snp_coverage and add it to the main plot """
+        """Take the parsed stats from eigenstrat_snp_coverage and add it to the main plot"""
 
         headers = OrderedDict()
         headers["Covered_Snps"] = {

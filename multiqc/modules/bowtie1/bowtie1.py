@@ -16,7 +16,7 @@ log = logging.getLogger(__name__)
 
 
 class MultiqcModule(BaseMultiqcModule):
-    """ Bowtie 1 module, parses stderr logs. """
+    """Bowtie 1 module, parses stderr logs."""
 
     def __init__(self):
 
@@ -117,7 +117,7 @@ class MultiqcModule(BaseMultiqcModule):
         self.general_stats_addcols(self.bowtie_data, headers)
 
     def bowtie_alignment_plot(self):
-        """ Make the HighCharts HTML to plot the alignment rates """
+        """Make the HighCharts HTML to plot the alignment rates"""
 
         # Specify the order of the different possible categories
         keys = OrderedDict()

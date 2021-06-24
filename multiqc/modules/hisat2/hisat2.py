@@ -15,7 +15,7 @@ log = logging.getLogger(__name__)
 
 
 class MultiqcModule(BaseMultiqcModule):
-    """ HISAT2 module, parses stderr logs. """
+    """HISAT2 module, parses stderr logs."""
 
     def __init__(self):
 
@@ -122,7 +122,7 @@ class MultiqcModule(BaseMultiqcModule):
         self.general_stats_addcols(self.hisat2_data, headers)
 
     def hisat2_alignment_plot(self):
-        """ Make the HighCharts HTML to plot the alignment rates """
+        """Make the HighCharts HTML to plot the alignment rates"""
 
         # Split the data into SE and PE
         sedata = {}

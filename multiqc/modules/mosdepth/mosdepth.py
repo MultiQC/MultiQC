@@ -10,7 +10,7 @@ from multiqc.modules.base_module import BaseMultiqcModule
 
 # Initialise the logger
 from multiqc.modules.qualimap.QM_BamQC import coverage_histogram_helptext, genome_fraction_helptext
-from multiqc.plots import linegraph
+from multiqc.plots import linegraph, bargraph
 
 log = logging.getLogger(__name__)
 
@@ -132,11 +132,9 @@ class MultiqcModule(BaseMultiqcModule):
                 ),
             )
         if perchrom_avg_data:
-            self.add_section(
-                name="Average coverage per contig",
-                anchor="mosdepth-coverage-per-contig-id",
-                description="Average coverage per contig or chromosome",
-                plot=linegraph.plot(
+            num_contigs = max([len(x.keys()) for x in perchrom_avg_data.values()])
+            if num_contigs > 1:
+                perchrom_plot = linegraph.plot(
                     perchrom_avg_data,
                     {
                         "id": "mosdepth-coverage-per-contig",
@@ -148,7 +146,24 @@ class MultiqcModule(BaseMultiqcModule):
                         "tt_suffix": "x",
                         "smooth_points": 500,
                     },
-                ),
+                )
+            else:
+                perchrom_plot = bargraph.plot(
+                    perchrom_avg_data,
+                    pconfig={
+                        "id": "mosdepth-coverage-per-contig",
+                        "title": "Mosdepth: Coverage per contig",
+                        "xlab": "Sample",
+                        "ylab": "Average coverage",
+                        "tt_suffix": "x",
+                    },
+                )
+
+            self.add_section(
+                name="Average coverage per contig",
+                anchor="mosdepth-coverage-per-contig-id",
+                description="Average coverage per contig or chromosome",
+                plot=perchrom_plot,
             )
         if dist_data:
             threshs, hidden_threshs = get_cov_thresholds()

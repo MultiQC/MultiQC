@@ -100,7 +100,7 @@ class MultiqcModule(BaseMultiqcModule):
             )
 
     def parse_star_report(self, raw_data):
-        """ Parse the final STAR log file. """
+        """Parse the final STAR log file."""
 
         regexes = {
             "total_reads": r"Number of input reads \|\s+(\d+)",
@@ -165,7 +165,7 @@ class MultiqcModule(BaseMultiqcModule):
         return parsed_data
 
     def parse_star_genecount_report(self, f):
-        """ Parse a STAR gene counts output file """
+        """Parse a STAR gene counts output file"""
         # Three numeric columns: unstranded, stranded/first-strand, stranded/second-strand
         keys = ["N_unmapped", "N_multimapping", "N_noFeature", "N_ambiguous"]
         unstranded = {"N_genes": 0}
@@ -222,7 +222,7 @@ class MultiqcModule(BaseMultiqcModule):
         self.general_stats_addcols(self.star_data, headers)
 
     def star_alignment_chart(self):
-        """ Make the plot showing alignment rates """
+        """Make the plot showing alignment rates"""
 
         # Specify the order of the different possible categories
         keys = OrderedDict()
@@ -244,7 +244,7 @@ class MultiqcModule(BaseMultiqcModule):
         return bargraph.plot(self.star_data, keys, pconfig)
 
     def star_genecount_chart(self):
-        """ Make a plot for the ReadsPerGene output """
+        """Make a plot for the ReadsPerGene output"""
 
         # Specify the order of the different possible categories
         keys = OrderedDict()

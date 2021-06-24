@@ -13,7 +13,7 @@ logger = config.logger
 
 
 def run_tests():
-    """ Run all lint tests """
+    """Run all lint tests"""
     if config.lint:
         check_mods_docs_readme()
 

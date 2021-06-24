@@ -28,7 +28,7 @@ METRICS = OrderedDict(
 
 class MultiqcModule(BaseMultiqcModule):
     def __init__(self):
-        """ MultiQC module for processing hap.py output logs """
+        """MultiQC module for processing hap.py output logs"""
         super(MultiqcModule, self).__init__(
             name="hap.py",
             anchor="happy",

@@ -16,7 +16,7 @@ class datatable(object):
     for either a table or a beeswarm plot."""
 
     def __init__(self, data, headers=None, pconfig=None):
-        """ Prepare data for use in a table or plot """
+        """Prepare data for use in a table or plot"""
         if headers is None:
             headers = []
         if pconfig is None:
@@ -200,7 +200,7 @@ class datatable(object):
                                 headers[idx][k]["dmax"] = max(headers[idx][k]["dmax"], val)
                             if setdmin:
                                 headers[idx][k]["dmin"] = min(headers[idx][k]["dmin"], val)
-                        except ValueError:
+                        except (ValueError, TypeError):
                             val = samp[k]  # couldn't convert to float - keep as a string
                         except KeyError:
                             pass  # missing data - skip
