@@ -87,6 +87,10 @@ class MultiqcModule(BaseMultiqcModule):
             try:
                 taxon_name = row["taxon"]
                 row.pop("taxon")
+                # Taxon names sometimes include backslashes.
+                # MultiQC assumes that these are file path separators and cleans them away
+                # Bit of a nasty hack is to just replace them here first.
+                taxon_name = taxon_name.replace("/", "_")
                 s_name = self.clean_s_name(taxon_name, f["root"])
                 if s_name in self.pangolin_data:
                     log.debug("Duplicate sample name found! Overwriting: {}".format(s_name))
