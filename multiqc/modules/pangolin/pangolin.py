@@ -41,6 +41,7 @@ class MultiqcModule(BaseMultiqcModule):
         if len(self.pangolin_data) == 0:
             raise UserWarning
         log.info("Found {} samples".format(len(self.pangolin_data)))
+        self.write_data_file(self.pangolin_data, 'multiqc_pangolin')
 
         # Assign some lineage colours
         # First, remove blank / None
