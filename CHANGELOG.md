@@ -133,8 +133,9 @@ For further information, please see the [documentation](https://multiqc.info/doc
   - Reference-free QC of Hi-C sequencing data
 - [**Sentieon**](https://www.sentieon.com/products/)
   - Submodules added to catch Picard-based QC metrics files
+
 * [**Snippy**](https://github.com/tseemann/snippy)
-  * Rapid haploid variant calling and core genome alignment.
+  - Rapid haploid variant calling and core genome alignment.
 
 #### Module updates
 

@@ -510,8 +510,8 @@ module_order:
         - DNA
   - snippy:
       module_tag:
-          - DNA
-          - prokarytotic        
+        - DNA
+        - prokarytotic
 
   # Alignment tool stats
   - bbmap:

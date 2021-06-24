@@ -633,11 +633,11 @@ slamdunk/tcperutrpos:
   contents: "# slamdunk tcperutr"
   num_lines: 1
 snippy/snippy:
-    contents: 'VariantTotal'
-    num_lines: 20
+  contents: "VariantTotal"
+  num_lines: 20
 snippy/snippy-core:
-    contents_re: 'ID\tLENGTH\tALIGNED\tUNALIGNED\tVARIANT\tHET\tMASKED\tLOWCOV'
-    num_lines: 1
+  contents_re: 'ID\tLENGTH\tALIGNED\tUNALIGNED\tVARIANT\tHET\tMASKED\tLOWCOV'
+  num_lines: 1
 snpeff:
   contents: "SnpEff_version"
   max_filesize: 5000000
