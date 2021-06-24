@@ -24,7 +24,7 @@ class MultiqcModule(BaseMultiqcModule):
             name="Snippy",
             anchor="snippy",
             href="https://github.com/tseemann/snippy",
-            info="Rapid haploid variant calling and core genome alignment.",
+            info="is used for rapid haploid variant calling and core genome alignment.",
         )
 
         self.snippy_data = {}
@@ -53,8 +53,8 @@ class MultiqcModule(BaseMultiqcModule):
                 log.debug("Duplicate sample name found for snippy! Overwriting: {}".format(f["s_name"]))
             # Add the file data under the key filename
             self.snippy_data[f["s_name"]] = self.parse_snippy_txt(f["f"])
-            # Ignore samples specified by the user
-            self.snippy_data[f["s_name"]] = self.ignore_samples(self.snippy_data[f["s_name"]])
+        # Ignore samples specified by the user
+        self.snippy_data = self.ignore_samples(self.snippy_data)
 
         # Parse the txt files from snippy-core
         for f in self.find_log_files("snippy/snippy-core"):
@@ -63,8 +63,8 @@ class MultiqcModule(BaseMultiqcModule):
                 log.debug("Duplicate sample name found for snippy-core! Overwriting: {}".format(f["s_name"]))
             # Add the file data under the key filename
             self.snippy_core_data[f["s_name"]] = self.parse_snippy_core_txt(f["f"])
-            # Ignore samples specified by the user
-            self.snippy_core_data[f["s_name"]] = self.ignore_samples(self.snippy_core_data[f["s_name"]])
+        # Ignore samples specified by the user
+        self.snippy_core_data = self.ignore_samples(self.snippy_core_data)
 
         # Raise warning if no logs were found.
         if len(self.snippy_data) == 0 and len(self.snippy_core_data) == 0:
@@ -72,12 +72,12 @@ class MultiqcModule(BaseMultiqcModule):
 
         # Run analysis if txt files found
         if len(self.snippy_data) > 0:
-            log.info("Found {} file(s) for snippy/snippy.".format(len(self.snippy_data)))
+            log.info("Found {} reports".format(len(self.snippy_data)))
             self.snippy_stats_table()
             self.snippy_report_section()
 
         if len(self.snippy_core_data) > 0:
-            log.info("Found {} file(s) for snippy/snippy-core.".format(len(self.snippy_core_data)))
+            log.info("Found {} snippy-core reports".format(len(self.snippy_core_data)))
             self.snippy_core_stats_table()
             self.snippy_core_report_section()
 
@@ -90,12 +90,10 @@ class MultiqcModule(BaseMultiqcModule):
         for line in file.splitlines():
             split_line = line.strip().split("\t")
             if split_line[0] in self.snippy_col:
-                data[split_line[0]] = split_line[1]
+                data[split_line[0]] = int(split_line[1])
         for col in self.snippy_col:
             if col not in data:
                 data[col] = 0
-            else:
-                data[col] = int(data[col])
         return data
 
     # -------------------------------------------------------------------------#
@@ -160,11 +158,7 @@ class MultiqcModule(BaseMultiqcModule):
             name="Snippy Variants",
             anchor="snippy_variants_stats",
             plot=bargraph.plot(bargraph_data, pconfig=pconfig),
-            description="Variant type descriptive statistics.",
-            helptext="""
-                The stacked bar graph shows the different variant types reported
-                by snippy.
-            """,
+            description="This plot shows the different variant types reported by snippy.",
         )
 
     # -------------------------------------------------------------------------#
@@ -194,11 +188,7 @@ class MultiqcModule(BaseMultiqcModule):
             name="Snippy-Core Alignment Statistics",
             anchor="snippy_core_alignment_stats",
             plot=bargraph.plot(bargraph_data, pconfig=pconfig),
-            description="Core genome alignment descriptive statistics.",
-            helptext="""
-                The stacked bar graph shows the different categories of sites in
-                a snippy-core alignment.
-            """,
+            description="Different categories of sites in a snippy-core genome alignment.",
         )
 
     # -------------------------------------------------------------------------#
