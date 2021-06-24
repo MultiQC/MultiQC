@@ -13,7 +13,7 @@ log = logging.getLogger(__name__)
 
 
 def parse_reports(self):
-    """ Find Picard ExtractIlluminaBarcodes reports and parse their data """
+    """Find Picard ExtractIlluminaBarcodes reports and parse their data"""
 
     # Set up vars
     self.picard_barcode_metrics = dict()
@@ -88,7 +88,10 @@ def parse_reports(self):
     self.add_section(
         name="Barcode Metrics Per Lane",
         anchor="picard-illuminabarcodemetrics-perlane",
-        description="Indicates the number of matches (and mismatches) between the barcode reads and the actual barcodes",
+        description="""
+            Indicates the number of matches (and mismatches) between the barcode reads and the actual barcodes.
+            See the [Picard Documentation](https://broadinstitute.github.io/picard/picard-metric-definitions.html#ExtractIlluminaBarcodes.BarcodeMetric) for details.
+        """,
         plot=bargraph.plot(
             [plot_data["per_lane"], plot_data["per_lane"], plot_data["per_lane"]],
             plot_cats,
@@ -99,7 +102,10 @@ def parse_reports(self):
     self.add_section(
         name="Barcode Metrics Per Barcode",
         anchor="picard-illuminabarcodemetrics-perbarcode",
-        description="Indicates the number of matches (and mismatches) between the barcode reads and the actual barcodes",
+        description="""
+            Indicates the number of matches (and mismatches) between the barcode reads and the actual barcodes.
+            See the [Picard Documentation](https://broadinstitute.github.io/picard/picard-metric-definitions.html#ExtractIlluminaBarcodes.BarcodeMetric) for details.
+        """,
         plot=bargraph.plot(
             [plot_data["per_bc"], plot_data["per_bc"], plot_data["per_bc"]],
             plot_cats,

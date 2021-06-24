@@ -12,7 +12,7 @@ log = logging.getLogger(__name__)
 
 
 def parse_reports(self):
-    """ Find Picard MarkIlluminaAdapters reports and parse their data """
+    """Find Picard MarkIlluminaAdapters reports and parse their data"""
 
     headers = ["clipped_bases", "read_count"]
     formats = [int, int]
@@ -33,9 +33,9 @@ def parse_reports(self):
         "id": "picard_mark_illumina_adapters",
         "title": "Picard: Mark Illumina Adapters",
         "ylab": "Clipped Bases",
-        "xlab": "Read Number",
+        "xlab": "Cycle Number",
         "xDecimals": False,
-        "tt_label": "<b>cycle {point.x}</b>: {point.y:.2f}",
+        "tt_label": "<b>Cycle {point.x}</b>: {point.y:.2f}",
         "ymin": 0,
     }
 
@@ -45,7 +45,10 @@ def parse_reports(self):
 
     self.add_section(
         name="Mark Illumina Adapters",
-        description="Number of Clipped Bases by Read",
+        description="""
+            Number of Clipped Bases by Read.
+            See the [Picard Docuementation](https://broadinstitute.github.io/picard/command-line-overview.html#MarkIlluminaAdapters) for details.
+        """,
         anchor="picard-mark-illumina-adapters",
         plot=linegraph.plot(lg, pconfig),
     )

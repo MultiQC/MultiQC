@@ -12,7 +12,7 @@ log = logging.getLogger(__name__)
 
 
 def parse_reports(self):
-    """ Find Picard CollectIlluminaBasecallingMetrics reports and parse their data """
+    """Find Picard CollectIlluminaBasecallingMetrics reports and parse their data"""
 
     # Set up vars
     self.picard_basecalling_metrics = dict()
@@ -43,7 +43,16 @@ def parse_reports(self):
         self.add_section(
             name="Basecalling Metrics",
             anchor="picard-illuminabasecallingmetrics",
-            description="Quality control metrics for each lane of an Illumina flowcell",
+            description="Quality control metrics for each lane of an Illumina flowcell.",
+            helptext="""
+            For full details, please see the [Picard Documentation](http://broadinstitute.github.io/picard/picard-metric-definitions.html#IlluminaBasecallingMetrics).
+
+            * `PF_BASES` / `NPF_BASES` :  The total number of passing-filter / not-passing-filter bases assigned to the index.
+            * `PF_READS` / `NPF_READS` :  The total number of passing-filter / not-passing-filter reads assigned to the index.
+            * `PF_CLUSTERS` / `NPF_CLUSTERS` :  The total number of passing-filter / not-passing-filter clusters assigned to the index.
+
+            `NPF` stands for _"not passing filter"_ and is calculated by subtracting the `PF_` metric from the `TOTAL_` Picard metrics.
+            """,
             plot=lane_metrics_plot(self.picard_basecalling_metrics),
         )
 
@@ -60,7 +69,11 @@ def lane_metrics_table(data):
     headers["TOTAL_CLUSTERS"] = {"title": "Total Cluster"}
     headers["PF_CLUSTERS"] = {"title": "Passing Filter Clusters"}
 
-    table_config = {}
+    table_config = {
+        "id": "picard-illumina-basecalling-metrics-table",
+        "namespace": "Picard",
+        "table_title": "Picard Illumina Base Calling Metrics",
+    }
     tdata = {}
     for lane_number, lane in data.items():
         tdata[f"L{lane_number}"] = lane
@@ -70,7 +83,7 @@ def lane_metrics_table(data):
 def lane_metrics_plot(data):
     plot_config = {
         "id": "plot-picard-illuminabasecallingmetrics",
-        "title": "Picard IlluminaBasecallingMetrics: Basecalling Metrics",
+        "title": "Picard: Illumina Basecalling Metrics",
         "ylab": "Lane",
         "data_labels": [
             {"name": "Bases", "ylab": "Number of Bases"},

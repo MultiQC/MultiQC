@@ -17,7 +17,7 @@ def lane_metrics_table(data):
     headers = OrderedDict()
     headers["CLUSTER_DENSITY"] = {
         "title": "Cluster Density",
-        "description": "The number of clusters per unit area on the this lane expressed in units of [cluster / mm^2].",
+        "description": "The number of clusters per unit area on the this lane (cluster / mm^2`)",
         "scale": "Greens",
     }
     headers["TYPE_NAME"] = {
@@ -38,7 +38,11 @@ def lane_metrics_table(data):
         "max": 1,
     }
 
-    table_config = {}
+    table_config = {
+        "id": "picard-illumina-lane-metrics-table",
+        "namespace": "Picard",
+        "table_title": "Picard Illumina Lane Metrics",
+    }
     tdata = {}
     for run_name, run in data.items():
         for lane_number, lane in run.items():
@@ -47,7 +51,7 @@ def lane_metrics_table(data):
 
 
 def parse_reports(self):
-    """ Find Picard CollectIlluminaLaneMetrics reports and parse their data """
+    """Find Picard CollectIlluminaLaneMetrics reports and parse their data"""
 
     # Set up vars
     self.picard_lane_metrics = dict()
@@ -90,8 +94,7 @@ def parse_reports(self):
         self.add_section(
             name="Lane Metrics",
             anchor="picard-illuminalanemetrics",
-            description="Quality control metrics on cluster density for each lane of an Illumina flowcell",
-            helptext="For more info in the metrics, see http://broadinstitute.github.io/picard/picard-metric-definitions.html#IlluminaBasecallingMetrics",
+            description="Quality control metrics on cluster density for each lane of an Illumina flowcell. For more information, see the [Picard Documentation](https://broadinstitute.github.io/picard/picard-metric-definitions.html#IlluminaLaneMetrics).",
             plot=lane_metrics_table(self.picard_lane_metrics),
         )
 
