@@ -15,7 +15,7 @@ log = logging.getLogger(__name__)
 
 
 def parse_reports(self):
-    """ Find Picard QualityScoreDistribution reports and parse their data """
+    """Find Picard QualityScoreDistribution reports and parse their data"""
 
     headers = ["QUALITY", "COUNT_OF_Q"]
     formats = [int, int]

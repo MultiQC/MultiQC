@@ -53,7 +53,7 @@ class MultiqcModule(BaseMultiqcModule):
         self.add_section(plot=self.featureCounts_chart())
 
     def parse_featurecounts_report(self, f):
-        """ Parse the featureCounts log file. """
+        """Parse the featureCounts log file."""
 
         file_names = list()
         parsed_data = dict()
@@ -142,7 +142,7 @@ class MultiqcModule(BaseMultiqcModule):
         self.general_stats_addcols(self.featurecounts_data, headers)
 
     def featureCounts_chart(self):
-        """ Make the featureCounts assignment rates plot """
+        """Make the featureCounts assignment rates plot"""
 
         headers = OrderedDict()
         for h in self.featurecounts_keys:

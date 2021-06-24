@@ -14,7 +14,7 @@ log = logging.getLogger(__name__)
 
 
 def parse_reports(self):
-    """ Find Picard RnaSeqMetrics reports and parse their data """
+    """Find Picard RnaSeqMetrics reports and parse their data"""
 
     # Set up vars
     self.picard_RnaSeqMetrics_data = dict()
@@ -147,8 +147,8 @@ def parse_reports(self):
 
         pconfig = {
             "id": "picard_rnaseqmetrics_assignment_plot",
-            "title": "Picard: RnaSeqMetrics Read Assignments",
-            "ylab": "Number of reads",
+            "title": "Picard: RnaSeqMetrics Base Assignments",
+            "ylab": "Number of bases",
         }
         self.add_section(
             name="RnaSeqMetrics Assignment",

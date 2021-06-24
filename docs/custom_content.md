@@ -14,6 +14,10 @@ All plot types can be generated using custom content - see the
 [test files](https://github.com/ewels/MultiQC_TestData/tree/master/data/custom_content)
 for examples of how data should be structured.
 
+> **Note**: Use the name `custom_content` to refer to this module within configuration
+> settings that require a module name, such as [`module_order`](#order-of-modules) or
+> [`run_modules`](#removing-modules-or-sections).
+
 ## Data from a released tool
 
 If your data comes from a released bioinformatics tool, you shouldn't be using this
@@ -36,6 +40,18 @@ Images will be embedded within the HTML file, so will be self contained.
 Note that this means that it's very possible to make the HTML file very very large if abused!
 
 The report section name and description will be automatically based on the filename.
+
+Note that if you are using `sp:` to take in images with a custom filename you need to also set `ignore_images: false` in your config. For example:
+
+```yaml
+custom_data:
+  my_custom_content_image:
+    section_name: "My nice image"
+sp:
+  my_custom_content_image:
+    fn: "*.png"
+ignore_images: false
+```
 
 ## MultiQC-specific data file
 

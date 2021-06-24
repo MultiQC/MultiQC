@@ -14,7 +14,7 @@ log = logging.getLogger(__name__)
 
 
 class MultiqcModule(BaseMultiqcModule):
-    """ HiCUP module, parses log files saved by HiCUP. """
+    """HiCUP module, parses log files saved by HiCUP."""
 
     def __init__(self):
 
@@ -63,7 +63,7 @@ class MultiqcModule(BaseMultiqcModule):
         )
 
     def parse_hicup_logs(self, f):
-        """ Parse a HiCUP summary report """
+        """Parse a HiCUP summary report"""
         if not f["fn"].endswith(".txt"):
             return None
         header = []
@@ -93,7 +93,7 @@ class MultiqcModule(BaseMultiqcModule):
                 self.hicup_data[s_name] = parsed_data
 
     def hicup_stats_table(self):
-        """ Add core HiCUP stats to the general stats table """
+        """Add core HiCUP stats to the general stats table"""
         headers = OrderedDict()
         headers["Percentage_Ditags_Passed_Through_HiCUP"] = {
             "title": "% Passed",
@@ -155,7 +155,7 @@ class MultiqcModule(BaseMultiqcModule):
         self.general_stats_addcols(self.hicup_data, headers, "HiCUP")
 
     def hicup_truncating_chart(self):
-        """ Generate the HiCUP Truncated reads plot """
+        """Generate the HiCUP Truncated reads plot"""
 
         # Specify the order of the different possible categories
         keys = OrderedDict()
@@ -183,7 +183,7 @@ class MultiqcModule(BaseMultiqcModule):
         return bargraph.plot(data, keys, config)
 
     def hicup_alignment_chart(self):
-        """ Generate the HiCUP Aligned reads plot """
+        """Generate the HiCUP Aligned reads plot"""
 
         # Specify the order of the different possible categories
         keys = OrderedDict()
@@ -229,7 +229,7 @@ class MultiqcModule(BaseMultiqcModule):
         return bargraph.plot(data, keys, config)
 
     def hicup_filtering_chart(self):
-        """ Generate the HiCUP filtering plot """
+        """Generate the HiCUP filtering plot"""
 
         # Specify the order of the different possible categories
         keys = OrderedDict()
@@ -253,7 +253,7 @@ class MultiqcModule(BaseMultiqcModule):
         return bargraph.plot(self.hicup_data, keys, config)
 
     def hicup_dedup_chart(self):
-        """ Generate the HiCUP Deduplication plot """
+        """Generate the HiCUP Deduplication plot"""
 
         # Specify the order of the different possible categories
         keys = OrderedDict()

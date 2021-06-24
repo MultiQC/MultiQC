@@ -189,6 +189,7 @@ def plot(data, cats=None, pconfig=None):
             not config.plots_force_interactive and len(plotsamples[0]) > config.plots_flat_numseries
         ):
             try:
+                report.num_mpl_plots += 1
                 return matplotlib_bargraph(plotdata, plotsamples, pconfig)
             except Exception as e:
                 logger.error("############### Error making MatPlotLib figure! Falling back to HighCharts.")
@@ -483,6 +484,7 @@ def matplotlib_bargraph(plotdata, plotsamples, pconfig=None):
                 axes.set_xlim((0, 100))
                 # Add percent symbols
                 vals = axes.get_xticks()
+                axes.set_xticks(axes.get_xticks())
                 axes.set_xticklabels(["{:.0f}%".format(x) for x in vals])
             else:
                 default_xlimits = axes.get_xlim()
@@ -553,7 +555,5 @@ def matplotlib_bargraph(plotdata, plotsamples, pconfig=None):
 
     # Close wrapping div
     html += "</div>"
-
-    report.num_mpl_plots += 1
 
     return html

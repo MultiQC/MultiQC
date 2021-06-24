@@ -12,7 +12,7 @@ log = logging.getLogger(__name__)
 
 class TsTvSummaryMixin:
     def parse_tstv_summary(self):
-        """ Create the HTML for the TsTv summary plot. """
+        """Create the HTML for the TsTv summary plot."""
 
         self.vcftools_tstv_summary = dict()
         for f in self.find_log_files("vcftools/tstv_summary", filehandles=True):

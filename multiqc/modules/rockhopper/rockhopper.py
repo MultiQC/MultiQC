@@ -181,7 +181,7 @@ class MultiqcModule(BaseMultiqcModule):
         self.general_stats_addcols(self.rh_data, headers)
 
     def rockhopper_count_bar_plot(self):
-        """ Stacked bar plot showing counts of reads """
+        """Stacked bar plot showing counts of reads"""
 
         pconfig = {
             "id": "rockhopper_reads_counts_plot",

@@ -75,7 +75,7 @@ class MultiqcModule(BaseMultiqcModule):
         self.top_five_barplot()
 
     def parse_kaiju2table_report(self, report):
-        """ Search a kaiju with a set of regexes """
+        """Search a kaiju with a set of regexes"""
         parsed_data = {}
 
         for l in report["f"]:
@@ -98,7 +98,7 @@ class MultiqcModule(BaseMultiqcModule):
         return taxo_rank, parsed_data
 
     def sum_sample_counts(self):
-        """ Sum counts across all samples for kaiju data """
+        """Sum counts across all samples for kaiju data"""
 
         # Sum the percentages for each taxa across all samples
         # Allows us to pick top-5 for each rank
@@ -189,7 +189,7 @@ class MultiqcModule(BaseMultiqcModule):
         self.general_stats_addcols(tdata, headers)
 
     def top_five_barplot(self):
-        """ Add a bar plot showing the top-5 from each taxa rank """
+        """Add a bar plot showing the top-5 from each taxa rank"""
 
         # ordered rank used
         rank_used = []

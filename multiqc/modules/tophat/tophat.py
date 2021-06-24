@@ -61,7 +61,7 @@ class MultiqcModule(BaseMultiqcModule):
         self.tophat_alignment_plot()
 
     def parse_tophat_log(self, raw_data):
-        """ Parse the Tophat alignment log file. """
+        """Parse the Tophat alignment log file."""
 
         if "Aligned pairs" in raw_data:
             # Paired end data
@@ -127,7 +127,7 @@ class MultiqcModule(BaseMultiqcModule):
         self.general_stats_addcols(self.tophat_data, headers)
 
     def tophat_alignment_plot(self):
-        """ Make the HighCharts HTML to plot the alignment rates """
+        """Make the HighCharts HTML to plot the alignment rates"""
 
         # Specify the order of the different possible categories
         keys = OrderedDict()

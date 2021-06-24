@@ -16,7 +16,7 @@ log = logging.getLogger(__name__)
 
 
 class MultiqcModule(BaseMultiqcModule):
-    """ DeDup module """
+    """DeDup module"""
 
     def __init__(self):
 
@@ -59,7 +59,7 @@ class MultiqcModule(BaseMultiqcModule):
 
     # Parse our nice little JSON file
     def parseJSON(self, f):
-        """ Parse the JSON output from DeDup and save the summary statistics """
+        """Parse the JSON output from DeDup and save the summary statistics"""
         try:
             parsed_json = json.load(f["f"])
             # Check for Keys existing
@@ -148,7 +148,7 @@ class MultiqcModule(BaseMultiqcModule):
         self.general_stats_addcols(self.dedup_data, headers)
 
     def dedup_alignment_plot(self):
-        """ Make the HighCharts HTML to plot the duplication rates """
+        """Make the HighCharts HTML to plot the duplication rates"""
 
         # Specify the order of the different possible categories
         keys = OrderedDict()

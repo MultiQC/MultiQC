@@ -24,7 +24,7 @@ MultiQC was written by Phil Ewels (http://phil.ewels.co.uk) at SciLifeLab Sweden
 from setuptools import setup, find_packages
 import sys
 
-version = "1.10dev"
+version = "1.11dev"
 dl_version = "master" if "dev" in version else "v{}".format(version)
 
 print(
@@ -38,7 +38,7 @@ print(
 )
 
 # Set version requirements according to what version of Python we're running
-networkx_version = ""
+networkx_version = ">=2.5.1"  # Needed for Python 3.9 support
 numpy_version = ""
 matplotlib_version = ">=2.1.1"
 jinja2_version = ">=2.9"
@@ -63,6 +63,7 @@ install_requires = [
     "markdown" + markdown_version,
     "pyyaml>=4",
     "requests",
+    "rich>=10",
     "simplejson",
     "spectra>=0.0.10",
 ]
@@ -100,6 +101,7 @@ setup(
             "bowtie1 = multiqc.modules.bowtie1:MultiqcModule",
             "bowtie2 = multiqc.modules.bowtie2:MultiqcModule",
             "busco = multiqc.modules.busco:MultiqcModule",
+            "bustools = multiqc.modules.bustools:MultiqcModule",
             "clipandmerge = multiqc.modules.clipandmerge:MultiqcModule",
             "clusterflow = multiqc.modules.clusterflow:MultiqcModule",
             "conpair = multiqc.modules.conpair:MultiqcModule",
@@ -110,6 +112,7 @@ setup(
             "deeptools = multiqc.modules.deeptools:MultiqcModule",
             "disambiguate = multiqc.modules.disambiguate:MultiqcModule",
             "dragen = multiqc.modules.dragen:MultiqcModule",
+            "eigenstratdatabasetools = multiqc.modules.eigenstratdatabasetools:MultiqcModule",
             "fastp = multiqc.modules.fastp:MultiqcModule",
             "fastq_screen = multiqc.modules.fastq_screen:MultiqcModule",
             "fastqc = multiqc.modules.fastqc:MultiqcModule",
@@ -129,6 +132,7 @@ setup(
             "htseq = multiqc.modules.htseq:MultiqcModule",
             "interop = multiqc.modules.interop:MultiqcModule",
             "ivar = multiqc.modules.ivar:MultiqcModule",
+            "jcvi = multiqc.modules.jcvi:MultiqcModule",
             "jellyfish = multiqc.modules.jellyfish:MultiqcModule",
             "kaiju = multiqc.modules.kaiju:MultiqcModule",
             "kallisto = multiqc.modules.kallisto:MultiqcModule",
@@ -147,6 +151,8 @@ setup(
             "multivcfanalyzer = multiqc.modules.multivcfanalyzer:MultiqcModule",
             "ngsderive = multiqc.modules.ngsderive:MultiqcModule",
             "odgi = multiqc.modules.odgi:MultiqcModule",
+            "optitype = multiqc.modules.optitype:MultiqcModule",
+            "pangolin = multiqc.modules.pangolin:MultiqcModule",
             "peddy = multiqc.modules.peddy:MultiqcModule",
             "phantompeakqualtools = multiqc.modules.phantompeakqualtools:MultiqcModule",
             "picard = multiqc.modules.picard:MultiqcModule",
@@ -185,6 +191,7 @@ setup(
             "trimmomatic = multiqc.modules.trimmomatic:MultiqcModule",
             "varscan2 = multiqc.modules.varscan2:MultiqcModule",
             "vcftools = multiqc.modules.vcftools:MultiqcModule",
+            "vep = multiqc.modules.vep:MultiqcModule",
             "verifybamid = multiqc.modules.verifybamid:MultiqcModule",
         ],
         "multiqc.templates.v1": [
@@ -210,7 +217,7 @@ setup(
         #       ]
     },
     classifiers=[
-        "Development Status :: 4 - Beta",
+        "Development Status :: 5 - Production/Stable",
         "Environment :: Console",
         "Environment :: Web Environment",
         "Intended Audience :: Science/Research",
