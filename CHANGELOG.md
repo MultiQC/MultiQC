@@ -11,41 +11,40 @@
 - Added CI tests for Python 3.9, pinned `networkx` package to `>=2.5.1` ([#1413](https://github.com/ewels/MultiQC/issues/1413))
 - Added patterns to `config.fn_ignore_paths` to avoid error with parsing installation dir / singularity cache ([#1416](https://github.com/ewels/MultiQC/issues/1416))
 - Print a log message when flat-image plots are used due to sample size surpassing `plots_flat_numseries` config ([#1254](https://github.com/ewels/MultiQC/issues/1254))
+- Fix the `mqc_colours` util function to lighten colours even when passing categorical or single-length lists.
 
 #### New Modules
 
 - [**Bustools**](https://bustools.github.io/)
   - Tools for working with BUS files
-- [**VEP**](https://www.ensembl.org/info/docs/tools/vep/index.html)
-  - Added MultiQC module to add summary statistics of Ensembl VEP annotations.
 - [**Pangolin**](https://github.com/cov-lineages/pangolin)
   - Added MultiQC support for Pangolin, the tool that determines SARS-CoV-2 lineages
 - [**Snippy**](https://github.com/tseemann/snippy)
   - Rapid haploid variant calling and core genome alignment.
+- [**VEP**](https://www.ensembl.org/info/docs/tools/vep/index.html)
+  - Added MultiQC module to add summary statistics of Ensembl VEP annotations.
+  - Handle error from missing variants in VEP stats file. ([#1446](https://github.com/ewels/MultiQC/issues/1446))
 
 #### Module updates
 
 - **bcl2fastq**
   - Added sample name cleaning so that prepending directories with the `-d` flag works properly.
+- **fastp**
+  - Handle a `ZeroDivisionError` if there are zero reads ([#1444](https://github.com/ewels/MultiQC/issues/1444))
 - **Flexbar**
   - Fixed bug where reports with 0 reads would crash MultiQC ([#1407](https://github.com/ewels/MultiQC/issues/1407))
 - **Kraken**
   - Handle a `ZeroDivisionError` if there are zero reads ([#1440](https://github.com/ewels/MultiQC/issues/1440))
+  - Updated search patterns to handle edge case ([#1428](https://github.com/ewels/MultiQC/issues/1428))
 - **Mosdepth**
   - Show barplot instead of line graph for coverage-per-contig plot if there is only one contig.
 - **Picard**
   - `RnaSeqMetrics` - fix assignment barplot labels to say bases instead of reads ([#1408](https://github.com/ewels/MultiQC/issues/1408))
   - `CrosscheckFingerprints` - fix bug where LOD threshold was not detected when invoked with "new" picard cli style. fixed formatting bug ([#1414](https://github.com/ewels/MultiQC/issues/1414))
-- **QUAST**
-  - Fixed typo causing wrong number of contigs being displayed ([#1442](https://github.com/ewels/MultiQC/issues/1442))
-- **Kraken**
-  - Updated search patterns to handle edge case ([#1428](https://github.com/ewels/MultiQC/issues/1428))
-- **fastp**
-  - Handle a `ZeroDivisionError` if there are zero reads ([#1444](https://github.com/ewels/MultiQC/issues/1444))
-- **VEP**
-  - Handle error from missing variants in VEP stats file. ([#1446](https://github.com/ewels/MultiQC/issues/1446))
 - **qc3C**
   - Updated module to not fail on older field names.
+- **QUAST**
+  - Fixed typo causing wrong number of contigs being displayed ([#1442](https://github.com/ewels/MultiQC/issues/1442))
 
 ## [MultiQC v1.10.1](https://github.com/ewels/MultiQC/releases/tag/v1.10.1) - 2021-04-01
 
