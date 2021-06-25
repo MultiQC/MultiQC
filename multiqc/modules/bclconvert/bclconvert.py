@@ -70,6 +70,7 @@ class MultiqcModule(BaseMultiqcModule):
         # Return with Warning if no files are found
         if len(self.bclconvert_bylane) == 0 and len(self.bclconvert_bysample) == 0:
             raise UserWarning
+        log.info("{} lanes and {} samples found".format(len(self.bclconvert_bylane), len(self.bclconvert_bysample)))
 
         # Print source files
         for s in self.source_files.keys():
