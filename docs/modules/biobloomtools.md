@@ -2,8 +2,8 @@
 Name: BioBloom Tools
 URL: https://github.com/bcgsc/biobloom/
 Description: >
-    BioBloom Tools assigns reads to different references using bloom filters.
-    This is faster than alignment and can be used for contamination detection.
+  BioBloom Tools assigns reads to different references using bloom filters.
+  This is faster than alignment and can be used for contamination detection.
 ---
 
 [BioBloom Tools](https://github.com/bcgsc/biobloom/) (BBT) provides the means
