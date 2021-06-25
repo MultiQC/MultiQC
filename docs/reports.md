@@ -1,29 +1,33 @@
 # Using MultiQC Reports
+
 Once MultiQC has finished, you should have a HTML report file called
 `multiqc_report.html` (or something similar, depending on how you ran MultiQC).
 You can launch this report with `open multiqc_report.html` on the command
 line, or double clicking the file in a file browser.
 
 ## Browser compatibility
+
 MultiQC reports should work in any modern browser. They have been tested
 using OSX Chrome, Firefox and Safari. If you find any report bugs, please
 report them as a [GitHub issue](https://github.com/ewels/MultiQC/issues).
 
 ## Report layout
+
 MultiQC reports have three main page sections:
 
- - The navigation menu (left side)
-   - Links to the different module sections in the report
-   - Click the logo to go to the top of the page
- - The toolbox (right side)
-   - Contains various tools to modify the report data (see below)
- - The report (middle)
-   - This is what you came here for, the data!
+- The navigation menu (left side)
+  - Links to the different module sections in the report
+  - Click the logo to go to the top of the page
+- The toolbox (right side)
+  - Contains various tools to modify the report data (see below)
+- The report (middle)
+  - This is what you came here for, the data!
 
 Note that if you're viewing the report on a mobile device / small window,
 the content will be reformatted to fit the screen.
 
 ## General Statistics table
+
 At the top of every MultiQC report is the 'General Statistics' table.
 This shows an overview of key values, taken from all modules. The aim
 of the table is to bring together stats for each sample from across the
@@ -43,10 +47,12 @@ plus options to show/hide and change the order of columns.
 ![configure columns](images/genstats_config_cols.png)
 
 ## Plots
+
 MultiQC modules can take plot more extensive data in the sections below
 the general statistics table.
 
 ### Interactive plots
+
 Plots in MultiQC reports are usually interactive, using the
 [HighCharts](http://www.highcharts.com/) JavaScript library.
 
@@ -68,6 +74,7 @@ You can force reports to use interactive plots instead of flat by specifying
 the `--interactive` command line option (see below).
 
 ### Flat plots
+
 Reports with large numbers of samples may contain flat plots. These are
 rendered when the MultiQC report is generated using
 [MatPlotLib](http://matplotlib.org/) and are non-interactive (flat)
@@ -86,6 +93,7 @@ _Configuring MultiQC_ docs for more on how to customise the flat / interactive
 plot behaviour.
 
 ### Exporting plots
+
 If you want to use the plot elsewhere (_eg._ in a presentation or paper),
 you can export it in a range of formats. Just click the menu button in
 the top right of the plot:
@@ -101,14 +109,15 @@ for use in publications and manual customisation / annotation. The
 _Plot scaling_ option changes how large the labels are relative to the plot.
 
 ### Dynamic plots
+
 Some plots have buttons above them which allow you to change the data
 that they show or their axis. For example, many bar plots have the option
 to show the data as percentages instead of counts:
 
 ![percentage button](images/plot_percentage_button.png)
 
-
 ## Toolbox
+
 MultiQC reports come with a 'toolbox', accessible by clicking the buttons
 on the right hand side of the report:
 
@@ -119,6 +128,7 @@ You can hide the toolbox by clicking the open panel button a second time,
 or pressing `Escape` on your keyboard.
 
 ### Highlight Samples
+
 If you run MultiQC plots with a lot of samples, plots can become very
 data-heavy. This makes it difficult to find specific samples, or subsets
 of samples.
@@ -149,6 +159,7 @@ click the grey cross on the right hand side.
 Searching for an empty string will match all samples.
 
 ### Renaming Samples
+
 Sample names are typically generated based on processed file names. These
 file names are not always informative. To help with this, you can do a search
 and replace within sample names. Here, we remove the `SRR1067` and `_1` parts
@@ -169,6 +180,7 @@ spreadsheet using the 'bulk import' tool:
 ![bulk rename](images/toolbox_bulk_rename.png)
 
 ### Hiding Samples
+
 Sometimes, you want to focus on a subset of samples. To temporarily
 hide samples from the report, enter a search string as described above into
 the 'Hide Samples' toolbox panel.
@@ -179,6 +191,7 @@ _(Note that plots will tell you how many samples have been hidden)_
 ![hide samples](images/toolbox_hide_samples.png)
 
 ### Export
+
 This panel allows you to download MultiQC plots as images or as raw data.
 You can configure the size and characteristics of exported plot images:
 Width and Height set the output size of the images, scale sets
@@ -195,10 +208,10 @@ will be exported.
 > for more information.
 
 ### Save Settings
+
 To avoid having to re-enter the same toolbox setup repeatedly, you can
 save your settings using the 'Save Settings' panel. Just pick a name
 and click save. To load, choose your set of settings and press load
 (or delete). Loaded settings are applied on top of current settings.
 All configs are saved in browser local storage - they do not travel
 with the report and may not work in older browsers.
-

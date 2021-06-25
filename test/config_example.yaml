@@ -37,29 +37,29 @@ make_data_dir: True
 # Two options here - fn_clean_exts will remove the defaults,
 # extra_fn_clean_exts will append to the defaults
 extra_fn_clean_exts:
-    - .gz
-    - .fastq
-    - .fq
-    - .bam
-    - .sam
-    - .sra
-    - _tophat
-    - _star_aligned
-    - _fastqc
-    - type: remove
-      pattern: '.sorted'
-    - type: regex
-      pattern: '^Sample_\d+'
-    - type: regex_keep
-      pattern: '[A-Z]{3}[1-9]{4}[A,B][1-9]'
+  - .gz
+  - .fastq
+  - .fq
+  - .bam
+  - .sam
+  - .sra
+  - _tophat
+  - _star_aligned
+  - _fastqc
+  - type: remove
+    pattern: ".sorted"
+  - type: regex
+    pattern: '^Sample_\d+'
+  - type: regex_keep
+    pattern: "[A-Z]{3}[1-9]{4}[A,B][1-9]"
 
 # Ignore these files / directories / paths when searching for logs
 fn_ignore_files:
-    - .DS_Store
+  - .DS_Store
 fn_ignore_dirs:
-    - annoying_dirname
+  - annoying_dirname
 fn_ignore_paths:
-    - '*/path/to/*_files/'
+  - "*/path/to/*_files/"
 
 # Ignore files larger than this when searching for logs (bytes)
 log_filesize_limit: 5000000
@@ -77,39 +77,36 @@ no_version_check: False
 # or flat plots (images, using MatPlotLib). With interactive plots, the report
 # can prevent automatically rendering all graphs if there are lots of samples
 # to prevent the browser being locked up when the report opens.
-plots_force_flat: False          # Try to use only flat image graphs
-plots_force_interactive: False   # Try to use only interactive javascript graphs
-plots_flat_numseries: 100        # If neither of the above, use flat if > this number of datasets
-num_datasets_plot_limit: 50      # If interactive, don't plot on load if > this number of datasets
-max_table_rows: 500              # Swap tables for a beeswarm plot above this
+plots_force_flat: False # Try to use only flat image graphs
+plots_force_interactive: False # Try to use only interactive javascript graphs
+plots_flat_numseries: 100 # If neither of the above, use flat if > this number of datasets
+num_datasets_plot_limit: 50 # If interactive, don't plot on load if > this number of datasets
+max_table_rows: 500 # Swap tables for a beeswarm plot above this
 
 # Overwrite module filename search patterns. See multiqc/utils/search_patterns.yaml
 # for the defaults. Remove a default by setting it to null.
 sp:
-    star:
-        fn: '*Log.final.out'
-    trimmomatic:
-        contents: 'Trimmomatic'
-
+  star:
+    fn: "*Log.final.out"
+  trimmomatic:
+    contents: "Trimmomatic"
 
 # Specify a custom logo to add to reports (uncomment to use)
-custom_logo: null         # '/path/to/logo.png'
-custom_logo_url: null     # 'https://www.example.com'
-custom_logo_title: null   # 'Our Institute Name'
-subtitle: null            # Grey text below title
-intro_text: null          # Set to False to remove, or your own text
+custom_logo: null # '/path/to/logo.png'
+custom_logo_url: null # 'https://www.example.com'
+custom_logo_title: null # 'Our Institute Name'
+subtitle: null # Grey text below title
+intro_text: null # Set to False to remove, or your own text
 
 # Add generic information to the top of reports
 report_header_info:
-    - Example Config:: 'This is arbitrary'
-    - Another field:: 'Loaded from <code>multiqc_config_example.yaml</code>'
-    - Something different:: 'You can put any key-value pairs here'
-    - Want to know more?: 'See the <a href="http://multiqc.info/docs" target="_blank">MultiQC docs</a>'
+  - Example Config:: "This is arbitrary"
+  - Another field:: "Loaded from <code>multiqc_config_example.yaml</code>"
+  - Something different:: "You can put any key-value pairs here"
+  - Want to know more?: 'See the <a href="http://multiqc.info/docs" target="_blank">MultiQC docs</a>'
 
 # Overwrite the defaults of which table columns are visible by default
 table_columns_visible:
-    FastQC:
-        percent_fails: False
-        total_sequences: True
-
-
+  FastQC:
+    percent_fails: False
+    total_sequences: True

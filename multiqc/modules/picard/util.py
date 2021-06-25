@@ -19,15 +19,16 @@ def read_sample_name(line_iter, clean_fn, program_name):
         while True:
             new_line = next(line_iter)
             new_line = new_line.strip()
-            if program_name in new_line and 'INPUT' in new_line:
+            if program_name in new_line and "INPUT" in new_line:
                 # Pull sample name from input
                 fn_search = re.search(r"INPUT=?\s*(\[?[^\s]+\]?)", new_line, flags=re.IGNORECASE)
                 if fn_search:
-                    s_name = os.path.basename(fn_search.group(1).strip('[]'))
+                    s_name = os.path.basename(fn_search.group(1).strip("[]"))
                     s_name = clean_fn(s_name)
                     return s_name
     except StopIteration:
         return None
+
 
 def read_histogram(self, program_key, program_name, headers, formats):
     """
@@ -46,11 +47,11 @@ def read_histogram(self, program_key, program_name, headers, formats):
 
     # Go through logs and find Metrics
     for f in self.find_log_files(program_key, filehandles=True):
-        lines = iter(f['f'])
+        lines = iter(f["f"])
 
         # read through the header of the file to obtain the
         # sample name
-        clean_fn = lambda n: self.clean_s_name(n, f['root'])
+        clean_fn = lambda n: self.clean_s_name(n, f["root"])
         s_name = read_sample_name(lines, clean_fn, program_name)
         if s_name is None:
             continue
@@ -60,7 +61,7 @@ def read_histogram(self, program_key, program_name, headers, formats):
         try:
             # skip to the histogram
             line = next(lines)
-            while not line.startswith('## HISTOGRAM'):
+            while not line.startswith("## HISTOGRAM"):
                 line = next(lines)
 
             # check the header
@@ -71,7 +72,7 @@ def read_histogram(self, program_key, program_name, headers, formats):
             # slurp the data
             line = next(lines).rstrip()
             while line:
-                fields = line.split('\t')
+                fields = line.split("\t")
                 assert len(fields) == len(headers)
                 for i in range(len(fields)):
                     fields[i] = formats[i](fields[i])

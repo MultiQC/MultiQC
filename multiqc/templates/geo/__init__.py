@@ -11,10 +11,10 @@ http://code.divshot.com/geo-bootstrap/
 """
 import os
 
-template_parent = 'default'
+template_parent = "default"
 
 template_dir = os.path.dirname(__file__)
-base_fn = 'base.html'
+base_fn = "base.html"
 
-output_subdir = 'multiqc_report'
-copy_files = ['assets']
+output_subdir = "multiqc_report"
+copy_files = ["assets"]
