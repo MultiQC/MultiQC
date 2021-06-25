@@ -12,19 +12,23 @@ from multiqc.modules.base_module import BaseMultiqcModule
 # Initialise the logger
 log = logging.getLogger(__name__)
 
+
 class MultiqcModule(BaseMultiqcModule):
-    """ Qualimap is really a collection of separate programs:
+    """Qualimap is really a collection of separate programs:
     BamQC, RNASeq and Counts.. This module is split into separate
-    files to reflect this and help with code organisation. """
+    files to reflect this and help with code organisation."""
 
     def __init__(self):
 
         # Initialise the parent object
-        super(MultiqcModule, self).__init__(name='QualiMap', anchor='qualimap',
+        super(MultiqcModule, self).__init__(
+            name="QualiMap",
+            anchor="qualimap",
             href="http://qualimap.bioinfo.cipf.es/",
-            info="is a platform-independent application to facilitate the quality"\
-            " control of alignment sequencing data and its derivatives like"\
-            " feature counts.")
+            info="is a platform-independent application to facilitate the quality"
+            " control of alignment sequencing data and its derivatives like"
+            " feature counts.",
+        )
 
         # Initialise the submodules
         from . import QM_BamQC
@@ -36,13 +40,13 @@ class MultiqcModule(BaseMultiqcModule):
         n = dict()
 
         # Call submodule functions
-        n['BamQC'] = QM_BamQC.parse_reports(self)
-        if n['BamQC'] > 0:
-            log.info("Found {} BamQC reports".format(n['BamQC']))
+        n["BamQC"] = QM_BamQC.parse_reports(self)
+        if n["BamQC"] > 0:
+            log.info("Found {} BamQC reports".format(n["BamQC"]))
 
-        n['RNASeq'] = QM_RNASeq.parse_reports(self)
-        if n['RNASeq'] > 0:
-            log.info("Found {} RNASeq reports".format(n['RNASeq']))
+        n["RNASeq"] = QM_RNASeq.parse_reports(self)
+        if n["RNASeq"] > 0:
+            log.info("Found {} RNASeq reports".format(n["RNASeq"]))
 
         # Exit if we didn't find anything
         if sum(n.values()) == 0:
@@ -53,8 +57,8 @@ class MultiqcModule(BaseMultiqcModule):
 
     # Helper functions
     def get_s_name(self, f):
-        s_name = os.path.basename(os.path.dirname(f['root']))
-        s_name = self.clean_s_name(s_name, f['root'])
-        if s_name.endswith('.qc'):
+        s_name = os.path.basename(os.path.dirname(f["root"]))
+        s_name = self.clean_s_name(s_name, f["root"])
+        if s_name.endswith(".qc"):
             s_name = s_name[:-3]
         return s_name

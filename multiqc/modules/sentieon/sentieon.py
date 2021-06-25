@@ -19,7 +19,7 @@ log = logging.getLogger(__name__)
 
 
 class MultiqcModule(BaseMultiqcModule):
-    """ Sentieon-dnaseq produces many outputs. This module deals with 3 Picard
+    """Sentieon-dnaseq produces many outputs. This module deals with 3 Picard
     equivalents which do not transfer well to MultiQC. The code for each script
     is split into its own file and adds a section to the module output if
     logs are found."""
@@ -28,10 +28,12 @@ class MultiqcModule(BaseMultiqcModule):
 
         # Initialise the parent object
         super(MultiqcModule, self).__init__(
-            name='Sentieon', anchor='sentieon',
-            href='https://www.sentieon.com/products/',
+            name="Sentieon",
+            anchor="sentieon",
+            href="https://www.sentieon.com/products/",
             info="contains a suite of QC tools. The ones represented in this \
-                  module are analogues of Picard QC metrics.")
+                  module are analogues of Picard QC metrics.",
+        )
 
         # Set up class objects to hold parsed data
         self.general_stats_headers = OrderedDict()
@@ -39,20 +41,17 @@ class MultiqcModule(BaseMultiqcModule):
         n = dict()
 
         # Call submodule functions
-        n['AlignmentMetrics'] = AlignmentSummaryMetrics.parse_reports(self)
-        if n['AlignmentMetrics'] > 0:
-            log.info("Found {} AlignmentSummaryMetrics reports".format(
-                n['AlignmentMetrics']))
+        n["AlignmentMetrics"] = AlignmentSummaryMetrics.parse_reports(self)
+        if n["AlignmentMetrics"] > 0:
+            log.info("Found {} AlignmentSummaryMetrics reports".format(n["AlignmentMetrics"]))
 
-        n['GcBiasMetrics'] = GcBiasMetrics.parse_reports(self)
-        if n['GcBiasMetrics'] > 0:
-            log.info("Found {} GcBiasMetrics reports".format(
-                n['GcBiasMetrics']))
+        n["GcBiasMetrics"] = GcBiasMetrics.parse_reports(self)
+        if n["GcBiasMetrics"] > 0:
+            log.info("Found {} GcBiasMetrics reports".format(n["GcBiasMetrics"]))
 
-        n['InsertSizeMetrics'] = InsertSizeMetrics.parse_reports(self)
-        if n['InsertSizeMetrics'] > 0:
-            log.info("Found {} InsertSizeMetrics reports".format(
-                n['InsertSizeMetrics']))
+        n["InsertSizeMetrics"] = InsertSizeMetrics.parse_reports(self)
+        if n["InsertSizeMetrics"] > 0:
+            log.info("Found {} InsertSizeMetrics reports".format(n["InsertSizeMetrics"]))
 
         # Exit if we didn't find anything
         if sum(n.values()) == 0:
@@ -60,8 +59,7 @@ class MultiqcModule(BaseMultiqcModule):
 
         # Add to the General Stats table (has to be called once per
         # MultiQC module)
-        self.general_stats_addcols(
-            self.general_stats_data, self.general_stats_headers)
+        self.general_stats_addcols(self.general_stats_data, self.general_stats_headers)
 
     # Helper functions
     def multiply_hundred(self, val):

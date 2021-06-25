@@ -18,8 +18,8 @@ is easier to use.
 import os
 from multiqc.utils import config
 
-template_parent = 'default'
+template_parent = "default"
 template_dir = os.path.dirname(__file__)
-base_fn = 'base.html'
+base_fn = "base.html"
 
 config.collapse_tables = False
