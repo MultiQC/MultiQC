@@ -2,8 +2,8 @@
 Name: Peddy
 URL: https://github.com/brentp/peddy
 Description: >
-    Peddy calculates genotype :: pedigree correspondence checks,
-    ancestry checks and sex checks using VCF files.
+  Peddy calculates genotype :: pedigree correspondence checks,
+  ancestry checks and sex checks using VCF files.
 ---
 
 Peddy compares familial-relationships and sexes as reported in a
