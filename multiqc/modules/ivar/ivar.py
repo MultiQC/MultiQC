@@ -134,7 +134,7 @@ class MultiqcModule(BaseMultiqcModule):
         self.general_stats_addcols(self.ivar_data, headers)
 
     def primer_heatmap(self):
-        """ Heatmap showing information on each primer found for every sample """
+        """Heatmap showing information on each primer found for every sample"""
         # Top level dict contains sample IDs + OrderedDict(primer, counts)
 
         final_data = list()

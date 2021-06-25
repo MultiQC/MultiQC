@@ -17,7 +17,7 @@ log = logging.getLogger(__name__)
 
 
 class MultiqcModule(BaseMultiqcModule):
-    """ Kraken module """
+    """Kraken module"""
 
     def __init__(self):
 
@@ -115,7 +115,7 @@ class MultiqcModule(BaseMultiqcModule):
         """
 
         # Search regexes for stats
-        k2_regex = re.compile(r"^\s{1,2}(\d{1,2}\.\d{1,2})\t(\d+)\t(\d+)\t([\dUDKPCOFGS-]{1,3})\t(\d+)(\s+)(.+)")
+        k2_regex = re.compile(r"^\s{0,2}(\d{1,3}\.\d{1,2})\t(\d+)\t(\d+)\t([\dUDKRPCOFGS-]{1,3})\t(\d+)(\s+)(.+)")
         data = []
         for l in f["f"]:
             match = k2_regex.search(l)
@@ -201,15 +201,22 @@ class MultiqcModule(BaseMultiqcModule):
         self.kraken_raw_data[f["s_name"]] = data
 
     def sample_total_readcounts(self):
-        """ Compute the total read counts for each sample """
+        """Compute the total read counts for each sample"""
 
+        total_all_samples = 0
         for s_name, data in self.kraken_raw_data.items():
             self.kraken_sample_total_readcounts[s_name] = 0
             for row in data:
                 self.kraken_sample_total_readcounts[s_name] += row["counts_direct"]
+            total_all_samples += self.kraken_sample_total_readcounts[s_name]
+
+        # Check that we had some counts for some samples, exit if not
+        if total_all_samples == 0:
+            log.warning("No samples had any reads")
+            raise UserWarning
 
     def sum_sample_counts(self):
-        """ Sum counts across all samples for kraken data """
+        """Sum counts across all samples for kraken data"""
 
         # Sum the percentages for each taxa across all samples
         # Allows us to pick top-5 for each rank
@@ -233,13 +240,16 @@ class MultiqcModule(BaseMultiqcModule):
                 if classif not in self.kraken_total_pct[rank_code]:
                     self.kraken_total_pct[rank_code][classif] = 0
                     self.kraken_total_counts[rank_code][classif] = 0
-                self.kraken_total_pct[rank_code][classif] += (
-                    row["counts_rooted"] / self.kraken_sample_total_readcounts[s_name]
-                )
+                try:
+                    self.kraken_total_pct[rank_code][classif] += (
+                        row["counts_rooted"] / self.kraken_sample_total_readcounts[s_name]
+                    )
+                except ZeroDivisionError:
+                    pass
                 self.kraken_total_counts[rank_code][classif] += row["counts_rooted"]
 
     def general_stats_cols(self):
-        """ Add a couple of columns to the General Statistics table """
+        """Add a couple of columns to the General Statistics table"""
 
         # Get top taxa in most specific taxa rank that we have
         top_five = []
@@ -291,7 +301,10 @@ class MultiqcModule(BaseMultiqcModule):
         for s_name, d in self.kraken_raw_data.items():
             tdata[s_name] = {}
             for row in d:
-                percent = (row["counts_rooted"] / self.kraken_sample_total_readcounts[s_name]) * 100.0
+                try:
+                    percent = (row["counts_rooted"] / self.kraken_sample_total_readcounts[s_name]) * 100.0
+                except ZeroDivisionError:
+                    percent = 0
                 if row["rank_code"] == "U":
                     tdata[s_name]["% Unclassified"] = percent
                 if row["rank_code"] == top_rank_code and row["classif"] in top_five:
@@ -305,7 +318,7 @@ class MultiqcModule(BaseMultiqcModule):
         self.general_stats_addcols(tdata, headers)
 
     def top_five_barplot(self):
-        """ Add a bar plot showing the top-5 from each taxa rank """
+        """Add a bar plot showing the top-5 from each taxa rank"""
 
         pd = []
         cats = list()
@@ -392,7 +405,7 @@ class MultiqcModule(BaseMultiqcModule):
         )
 
     def top_five_duplication_heatmap(self):
-        """ Add a heatmap showing the minimizer duplication top-5 species"""
+        """Add a heatmap showing the minimizer duplication top-5 species"""
 
         duplication = list()
         pconfig = {"id": "kraken-topfive-duplication_plot", "title": f"Kraken 2: Top {self.top_n} species duplication"}

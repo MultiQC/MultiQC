@@ -201,7 +201,7 @@ class MultiqcModule(BaseMultiqcModule):
 
     # miRTrace QC Plot
     def mirtrace_qc_plot(self):
-        """ Generate the miRTrace QC Plot"""
+        """Generate the miRTrace QC Plot"""
 
         # Specify the order of the different possible categories
         keys = OrderedDict()
@@ -223,7 +223,7 @@ class MultiqcModule(BaseMultiqcModule):
 
     # miRTrace Read Length Distribution
     def mirtrace_length_plot(self):
-        """ Generate the miRTrace Read Length Distribution"""
+        """Generate the miRTrace Read Length Distribution"""
 
         data = dict()
         for s_name in self.length_data:
@@ -256,7 +256,7 @@ class MultiqcModule(BaseMultiqcModule):
 
     # miRTrace RNA Categories
     def mirtrace_rna_categories(self):
-        """ Generate the miRTrace RNA Categories"""
+        """Generate the miRTrace RNA Categories"""
 
         # Specify the order of the different possible categories
         keys = OrderedDict()
@@ -278,7 +278,7 @@ class MultiqcModule(BaseMultiqcModule):
 
     # miRTrace Contamination Check
     def mirtrace_contamination_check(self):
-        """ Generate the miRTrace Contamination Check"""
+        """Generate the miRTrace Contamination Check"""
 
         # A library of 24 colors. Should be enough for this plot
         color_lib = [
@@ -332,7 +332,7 @@ class MultiqcModule(BaseMultiqcModule):
 
     # miRTrace Read Length Distribution
     def mirtrace_complexity_plot(self):
-        """ Generate the miRTrace miRNA Complexity Plot"""
+        """Generate the miRTrace miRNA Complexity Plot"""
 
         data = dict()
         for s_name in self.complexity_data:

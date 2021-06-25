@@ -11,7 +11,7 @@ import shutil
 import sys
 import tempfile
 
-from multiqc.utils import config, util_functions
+from multiqc.utils import config, util_functions, mqc_colour
 
 LEVELS = {0: "INFO", 1: "DEBUG"}
 log_tmp_dir = None
@@ -35,26 +35,37 @@ def init_log(logger, loglevel=0, no_ansi=False):
 
     # Logging templates
     debug_template = "[%(asctime)s] %(name)-50s [%(levelname)-7s]  %(message)s"
-    info_template = "[%(levelname)-7s] %(module)15s : %(message)s"
+    info_template = "|%(module)18s | %(message)s"
 
     # Base level setup
     logger.setLevel(getattr(logging, "DEBUG"))
+
+    # Automatically set no_ansi if not a tty terminal
+    if not no_ansi:
+        if not sys.stderr.isatty() and not force_term_colors():
+            no_ansi = True
 
     # Set up the console logging stream
     console = logging.StreamHandler()
     console.setLevel(getattr(logging, loglevel))
     level_styles = coloredlogs.DEFAULT_LEVEL_STYLES
     level_styles["debug"] = {"faint": True}
+    field_styles = coloredlogs.DEFAULT_FIELD_STYLES
+    field_styles["module"] = {"color": "blue"}
     if loglevel == "DEBUG":
-        if no_ansi or not sys.stderr.isatty():
+        if no_ansi:
             console.setFormatter(logging.Formatter(debug_template))
         else:
-            console.setFormatter(coloredlogs.ColoredFormatter(fmt=debug_template, level_styles=level_styles))
+            console.setFormatter(
+                coloredlogs.ColoredFormatter(fmt=debug_template, level_styles=level_styles, field_styles=field_styles)
+            )
     else:
-        if no_ansi or not sys.stderr.isatty():
+        if no_ansi:
             console.setFormatter(logging.Formatter(info_template))
         else:
-            console.setFormatter(coloredlogs.ColoredFormatter(fmt=info_template, level_styles=level_styles))
+            console.setFormatter(
+                coloredlogs.ColoredFormatter(fmt=info_template, level_styles=level_styles, field_styles=field_styles)
+            )
     logger.addHandler(console)
 
     # Now set up the file logging stream if we have a data directory
@@ -99,3 +110,12 @@ def get_log_stream(logger):
         return file_stream
 
     return log_stream
+
+
+def force_term_colors():
+    """
+    Check if any environment variables are set to force Rich to use coloured output
+    """
+    if os.getenv("GITHUB_ACTIONS") or os.getenv("FORCE_COLOR") or os.getenv("PY_COLORS"):
+        return True
+    return None

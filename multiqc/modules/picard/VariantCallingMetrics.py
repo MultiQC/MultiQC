@@ -11,7 +11,7 @@ log = logging.getLogger(__name__)
 
 
 def parse_reports(parent_module):
-    """ Find Picard VariantCallingMetrics reports and process their data """
+    """Find Picard VariantCallingMetrics reports and process their data"""
 
     # get data
     data = collect_data(parent_module)
@@ -114,7 +114,7 @@ def parse_reports(parent_module):
 
 
 def collect_data(parent_module):
-    """ Find Picard VariantCallingMetrics reports and parse their data """
+    """Find Picard VariantCallingMetrics reports and parse their data"""
 
     data = dict()
     for file_meta in parent_module.find_log_files("picard/variant_calling_metrics", filehandles=True):
@@ -131,7 +131,7 @@ def collect_data(parent_module):
 
 
 def table_in(filehandle, pre_header_string):
-    """ Generator that assumes a table starts the line after a given string """
+    """Generator that assumes a table starts the line after a given string"""
 
     in_histogram = False
     next_is_header = False
@@ -151,7 +151,7 @@ def table_in(filehandle, pre_header_string):
 
 
 def derive_data(data):
-    """ Based on the data derive additional data """
+    """Based on the data derive additional data"""
 
     for s_name, values in data.items():
         # setup holding variable
@@ -176,13 +176,13 @@ def derive_data(data):
 
 
 def stripped(iterator):
-    """ Generator to strip string of whitespace """
+    """Generator to strip string of whitespace"""
     for item in iterator:
         yield item.strip()
 
 
 def compare_variant_type_plot(data):
-    """ Return HTML for the Variant Counts barplot """
+    """Return HTML for the Variant Counts barplot"""
     keys = OrderedDict()
     keys["snps"] = {"name": "SNPs", "color": "#7cb5ec"}
     keys["indels"] = {"name": "InDels", "color": "#90ed7d"}
@@ -227,7 +227,7 @@ def compare_variant_type_plot(data):
 
 
 def compare_variants_label_plot(data):
-    """ Return HTML for the Compare variants plot"""
+    """Return HTML for the Compare variants plot"""
     keys = OrderedDict()
 
     keys["total_called_variants_known"] = {"name": "Known Variants"}

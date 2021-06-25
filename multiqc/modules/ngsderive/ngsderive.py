@@ -92,29 +92,27 @@ class MultiqcModule(BaseMultiqcModule):
         self.encoding = self.ignore_samples(self.encoding)
         self.junctions = self.ignore_samples(self.junctions)
 
-        any_results_found = False
+        num_results_found = max(
+            [len(d) for d in [self.strandedness, self.instrument, self.readlen, self.encoding, self.junctions]]
+        )
+        if num_results_found == 0:
+            raise UserWarning
+        log.info("Found {} reports".format(num_results_found))
+
         if self.strandedness:
             self.add_strandedness_data()
-            any_results_found = True
 
         if self.instrument:
             self.add_instrument_data()
-            any_results_found = True
 
         if self.readlen:
             self.add_readlen_data()
-            any_results_found = True
 
         if self.encoding:
             self.add_encoding_data()
-            any_results_found = True
 
         if self.junctions:
             self.add_junctions_data()
-            any_results_found = True
-
-        if not any_results_found:
-            raise UserWarning
 
     def probe_file_for_dictreader_kwargs(self, f, expected_header_count):
         """In short, this function was created to figure out which

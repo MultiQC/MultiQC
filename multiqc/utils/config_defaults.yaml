@@ -100,7 +100,10 @@ fn_ignore_dirs:
 
 fn_ignore_paths:
   - "*/work/??/??????????????????????????????" # Nextflow work directories - always same hash lengths
-  - ".snakemake"
+  - "*/.snakemake"
+  - "*/.singularity" # Singularity cache path
+  - "*/__pycache__"
+  - "*/site-packages/multiqc" # MultiQC installation directory
 sample_names_ignore: []
 sample_names_ignore_re: []
 sample_names_rename_buttons: []
@@ -229,6 +232,8 @@ fn_clean_exts:
   - ".mpileup"
   - ".primer_trim"
   - ".mapped"
+  - ".vep"
+  - "_vep"
 
 # These are removed after the above, only if sample names
 # start or end with this string. Again, removed in order.
@@ -260,6 +265,7 @@ fn_clean_trim:
 # Grep file match patterns.
 fn_ignore_files:
   - ".DS_Store"
+  - ".py[cod]"
   - "*.bam"
   - "*.bai"
   - "*.sam"
@@ -271,10 +277,11 @@ fn_ignore_files:
   - "*.gtf"
   - "*.bed"
   - "*.vcf"
+  - "*.tbi"
   - "*.txt.gz"
   - "*.pdf"
-  - "*[!_][!m][!q][!c].html"
   - "*.md5"
+  - "*[!s][!u][!m][!_\\.m][!mva][!qer][!cpy].html" # Allow _mqc.html, _vep.html and summary.html files
 
 # Favourite modules that should appear at the top in preference
 # This is in addition to those below. These appear above _all_ other
@@ -337,7 +344,7 @@ module_order:
   - quast:
       module_tag:
         - DNA
-        - Metagenomics
+        - metagenomics
         - Denovo
   - qorts:
       module_tag:
@@ -357,6 +364,9 @@ module_order:
   - busco:
       module_tag:
         - Denovo
+  - bustools:
+      module_tag:
+        - RNA
   - goleft_indexcov:
       module_tag:
         - DNA
@@ -398,7 +408,7 @@ module_order:
   - hops:
       module_tag:
         - DNA
-        - Metagenomics
+        - metagenomics
         - ancient
   - macs2:
       module_tag:
@@ -456,6 +466,9 @@ module_order:
       module_tag:
         - DNA
         - RNA
+  - vep:
+      module_tag:
+        - DNA
   - sentieon:
       module_tag:
         - DNA
@@ -475,6 +488,9 @@ module_order:
         - DNA
         - RNA
   - sexdeterrmine:
+      module_tag:
+        - DNA
+  - eigenstratdatabasetools:
       module_tag:
         - DNA
   - bamtools:
@@ -550,7 +566,10 @@ module_order:
         - RNA
         - methylation
         - allele-specific
-
+  - pangolin:
+      module_tag:
+        - DNA
+        - virus
   # Pre-alignment QC
   - kat:
       module_tag:
@@ -578,15 +597,15 @@ module_order:
   - kaiju:
       module_tag:
         - DNA
-        - Metagenomics
+        - metagenomics
   - kraken:
       module_tag:
         - DNA
-        - Metagenomics
+        - metagenomics
   - malt:
       module_tag:
         - DNA
-        - Metagenomics
+        - metagenomics
         - ancient
   - trimmomatic:
       module_tag:
@@ -663,8 +682,12 @@ module_order:
       module_tag:
         - DNA
         - RNA
-
   - seqyclean:
       module_tag:
         - DNA
         - RNA
+  - optitype:
+      module_tag:
+        - DNA
+        - RNA
+        - HLATyping

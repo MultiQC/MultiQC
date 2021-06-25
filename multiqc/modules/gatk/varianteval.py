@@ -13,7 +13,7 @@ log = logging.getLogger(__name__)
 
 class VariantEvalMixin:
     def parse_gatk_varianteval(self):
-        """ Find GATK varianteval logs and parse their data """
+        """Find GATK varianteval logs and parse their data"""
 
         self.gatk_varianteval = dict()
         for f in self.find_log_files("gatk/varianteval", filehandles=True):
@@ -89,7 +89,7 @@ class VariantEvalMixin:
 
 
 def parse_single_report(f):
-    """ Parse a gatk varianteval varianteval """
+    """Parse a gatk varianteval varianteval"""
     # Fixme: Separate GATKReport parsing and data subsetting. A GATKReport parser now available from the GATK MultiqcModel.
 
     data = dict()
@@ -200,7 +200,7 @@ def parse_single_report(f):
 
 
 def count_variants_barplot(data):
-    """ Return HTML for the Variant Counts barplot """
+    """Return HTML for the Variant Counts barplot"""
     keys = OrderedDict()
     keys["snps"] = {"name": "SNPs"}
     keys["mnps"] = {"name": "MNPs"}

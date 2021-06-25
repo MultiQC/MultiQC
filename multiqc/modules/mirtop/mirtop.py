@@ -86,7 +86,7 @@ class MultiqcModule(BaseMultiqcModule):
         self.mirtop_mean_read_count()
 
     def parse_mirtop_report(self, f):
-        """ Parse the mirtop log file. """
+        """Parse the mirtop log file."""
 
         content = json.loads(f["f"])
         for s_name in content.get("metrics", {}).keys():
@@ -180,7 +180,7 @@ class MultiqcModule(BaseMultiqcModule):
         return cats_section
 
     def mirtop_read_count(self):
-        """ Generate barplot for the read count plot"""
+        """Generate barplot for the read count plot"""
         p_config = {"id": "mirtop_read_count_plot", "title": "mirtop: IsomiR read counts", "ylab": "Read counts"}
         self.add_section(
             name="IsomiR read counts",
@@ -202,7 +202,7 @@ class MultiqcModule(BaseMultiqcModule):
         )
 
     def mirtop_unique_read_count(self):
-        """ Generate the section for the Unique Read Count plot """
+        """Generate the section for the Unique Read Count plot"""
         p_config = {
             "id": "mirtop_unique_read_count_plot",
             "title": "mirtop: IsomiR unique read counts",
@@ -224,7 +224,7 @@ class MultiqcModule(BaseMultiqcModule):
         )
 
     def mirtop_mean_read_count(self):
-        """ Generate the section for the Mean Read Count plot """
+        """Generate the section for the Mean Read Count plot"""
         p_config = {"id": "mirtop_mean_read_count_plot", "title": "mirtop: Mean isomiR read counts", "ylab": "Means"}
         self.add_section(
             name="Mean isomiR read counts",
