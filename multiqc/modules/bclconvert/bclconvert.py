@@ -14,11 +14,6 @@ import xml.etree.ElementTree as ET
 log = logging.getLogger(__name__)
 
 
-read_format = "{:,.1f} " + config.read_count_prefix
-if config.read_count_multiplier == 1:
-    read_format = "{:,.0f}"
-
-
 class MultiqcModule(BaseMultiqcModule):
     def __init__(self):
         # Initialise the parent object
@@ -475,24 +470,23 @@ class MultiqcModule(BaseMultiqcModule):
             }
 
         headers["reads"] = {
-            "title": "Clusters",
+            "title": "{} Clusters".format(config.read_count_prefix),
             "description": "Total number of clusters (read pairs) for this sample as determined by bclconvert demultiplexing ({})".format(
                 config.read_count_desc
             ),
             "scale": "Blues",
             "shared_key": "read_count",
-            "format": read_format,
         }
         headers["yield"] = {
-            "title": "Yield (Mb)",
+            "title": "Yield ({})".format(config.base_count_prefix),
             "description": "Total number of bases for this sample as determined by bclconvert demultiplexing ({})".format(
-                config.read_count_desc
+                config.base_count_desc
             ),
             "scale": "Greens",
             "shared_key": "base_count",
         }
         headers["percent_reads"] = {
-            "title": "Clusters %",
+            "title": "% Clusters",
             "description": "Percentage of clusters (read pairs) for this sample in this run, as determined by bclconvert demultiplexing",
             "scale": "Blues",
             "max": 100,
@@ -500,7 +494,7 @@ class MultiqcModule(BaseMultiqcModule):
             "suffix": "%",
         }
         headers["percent_yield"] = {
-            "title": "Yield %",
+            "title": "% Yield",
             "description": "Percentage of sequenced bases for this sample in this run",
             "scale": "Greens",
             "max": 100,
@@ -508,7 +502,7 @@ class MultiqcModule(BaseMultiqcModule):
             "suffix": "%",
         }
         headers["basesQ30"] = {
-            "title": "Bases &ge; Q30 (PF)",
+            "title": "Bases ({}) &ge; Q30 (PF)".format(config.base_count_prefix),
             "description": "Number of bases with a Phred score of 30 or higher, passing filter ({})".format(
                 config.base_count_desc
             ),
@@ -555,65 +549,62 @@ class MultiqcModule(BaseMultiqcModule):
         headers = OrderedDict()
         if lane["depth"] != "NA":
             headers["depth"] = {
-                "title": "Est. depth".format(config.read_count_prefix),
-                "description": "Estimated depth based on the number of bases with quality score greater or equal to Q30, "
-                "assuming the genome size is {} as provided in config".format(self._get_genome_size()),
-                "min": 0,
+                "title": "Est. depth",
+                "description": (
+                    "Estimated depth based on the number of bases with quality score greater or equal to Q30, "
+                    "assuming the genome size is {} as provided in config".format(self._get_genome_size())
+                ),
                 "suffix": "X",
                 "scale": "BuPu",
             }
 
         headers["reads"] = {
-            "title": "Clusters",
+            "title": "{} Clusters".format(config.read_count_prefix),
             "description": "Total number of clusters (read pairs) for this sample as determined by bclconvert demultiplexing ({})".format(
                 config.read_count_desc
             ),
             "scale": "Blues",
             "shared_key": "read_count",
-            "format": read_format,
         }
         headers["yield"] = {
-            "title": "Yield (Mb)",
+            "title": "Yield ({})".format(config.base_count_prefix),
             "description": "Total number of bases for this sample as determined by bclconvert demultiplexing ({})".format(
-                config.read_count_desc
+                config.base_count_desc
             ),
             "scale": "Greens",
             "shared_key": "base_count",
         }
         headers["basesQ30"] = {
-            "title": "Bases &ge; Q30 (PF)",
+            "title": "Bases ({}) &ge; Q30 (PF)".format(config.base_count_prefix),
             "description": "Number of bases with a Phred score of 30 or higher, passing filter ({})".format(
                 config.base_count_desc
             ),
-            "max": 100,
-            "min": 0,
             "scale": "Blues",
+            "shared_key": "base_count",
         }
         headers["yield_q30_percent"] = {
             "title": "% Bases &ge; Q30 (PF)",
-            "description": "Percent of bases with a Phred score of 30 or higher, passing filter ({})".format(
-                config.base_count_desc
-            ),
+            "description": "Percent of bases with a Phred score of 30 or higher, passing filter",
             "max": 100,
             "min": 0,
             "scale": "Greens",
         }
         headers["perfect_index_reads"] = {
-            "title": "Perfect Index Reads",
-            "description": "Reads with perfect index (0 mismatches)",
+            "title": "{} Perfect Index".format(config.read_count_prefix),
+            "description": "Reads with perfect index - 0 mismatches ({})".format(config.read_count_desc),
             "scale": "Blues",
             "shared_key": "read_count",
         }
 
         headers["one_mismatch_index_reads"] = {
-            "title": "One Mismatch Index Reads",
-            "description": "Reads with one mismatch index",
-            "min": 0,
+            "title": "{} One Mismatch".format(config.read_count_prefix),
+            "description": "Reads with one mismatch index ({})".format(config.read_count_desc),
             "scale": "Spectral",
+            "shared_key": "read_count",
         }
         headers["percent_perfectIndex"] = {
             "title": "% Perfect Index",
-            "description": "Percent of reads with perfect index (0 mismatches)",
+            "description": "Percent of reads with perfect index - 0 mismatches",
             "max": 100,
             "min": 0,
             "scale": "RdYlGn",
@@ -627,6 +618,8 @@ class MultiqcModule(BaseMultiqcModule):
             "scale": "RdYlGn",
             "suffix": "%",
         }
+
+        # Table config
         table_config = {
             "namespace": "bclconvert",
             "id": "bclconvert-lane-stats-table",
