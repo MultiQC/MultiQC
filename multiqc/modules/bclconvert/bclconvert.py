@@ -80,15 +80,19 @@ class MultiqcModule(BaseMultiqcModule):
                 section="bclconvert-bysample",
             )
 
-        # Add sample counts to general stats table
-        self.add_general_stats()
-
         self.write_data_file(
             {str(k): self.bclconvert_bylane[k] for k in self.bclconvert_bylane.keys()}, "multiqc_bclconvert_bylane"
         )
         self.write_data_file(self.bclconvert_bysample, "multiqc_bclconvert_bysample")
 
-        # Add section for summary stats per flow cell
+        # Add sections for summary stats per flow cell
+        self.add_section(
+            name="Sample Statistics",
+            anchor="bclconvert-samplestats",
+            description="Statistics about each sample for each flowcell",
+            plot=self.sample_stats_table(),
+        )
+
         self.add_section(
             name="Lane Statistics",
             anchor="bclconvert-lanestats",
@@ -411,8 +415,8 @@ class MultiqcModule(BaseMultiqcModule):
             sorted_barcodes = None
         return sorted_barcodes
 
-    def add_general_stats(self):
-        general_stats_data = dict()
+    def sample_stats_table(self):
+        sample_stats_data = dict()
         run_total_reads = self._total_reads_for_run()
 
         for sample_id, sample in self.bclconvert_bysample.items():
@@ -443,7 +447,7 @@ class MultiqcModule(BaseMultiqcModule):
             except ZeroDivisionError:
                 percent_reads = "NA"
 
-            general_stats_data[sample_id] = {
+            sample_stats_data[sample_id] = {
                 "depth": sample["depth"],
                 "basesQ30": sample["basesQ30"],
                 "reads": sample["reads"],
@@ -460,9 +464,10 @@ class MultiqcModule(BaseMultiqcModule):
         headers = OrderedDict()
         if sample["depth"] != "NA":
             headers["depth"] = {
-                "title": "Est. depth".format(config.read_count_prefix),
-                "description": "Estimated depth based on the number of bases with quality score greater or equal to Q30, assuming the genome size is {} as provided in config".format(
-                    self._get_genome_size()
+                "title": "Coverage",
+                "description": (
+                    "Estimated sequencing depth based on the number of bases with quality score greater or equal to Q30, "
+                    "assuming the genome size is {}, as provided in config".format(self._get_genome_size())
                 ),
                 "min": 0,
                 "suffix": "X",
@@ -536,7 +541,15 @@ class MultiqcModule(BaseMultiqcModule):
             "suffix": "%",
         }
 
-        self.general_stats_addcols(general_stats_data, headers)
+        # Table config
+        table_config = {
+            "namespace": "bclconvert",
+            "id": "bclconvert-sample-stats-table",
+            "table_title": "bclconvert Sample Statistics",
+            "no_beeswarm": True,
+        }
+
+        return table.plot(sample_stats_data, headers, table_config)
 
     def lane_stats_table(self):
         for lane_id, lane in self.bclconvert_bylane.items():
@@ -549,10 +562,10 @@ class MultiqcModule(BaseMultiqcModule):
         headers = OrderedDict()
         if lane["depth"] != "NA":
             headers["depth"] = {
-                "title": "Est. depth",
+                "title": "Coverage",
                 "description": (
-                    "Estimated depth based on the number of bases with quality score greater or equal to Q30, "
-                    "assuming the genome size is {} as provided in config".format(self._get_genome_size())
+                    "Estimated sequencing depth based on the number of bases with quality score greater or equal to Q30, "
+                    "assuming the genome size is {}, as provided in config".format(self._get_genome_size())
                 ),
                 "suffix": "X",
                 "scale": "BuPu",
