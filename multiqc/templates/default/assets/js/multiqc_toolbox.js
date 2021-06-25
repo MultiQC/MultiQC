@@ -625,8 +625,7 @@ function mqc_toolbox_confirmapply() {
   if ($("#mqc_cols_apply").is(":enabled") && $("#mqc_cols").is(":visible")) {
     $.toast({
       heading: "Highlights Not Applied",
-      text:
-        "Careful - your changes haven't been applied yet! Click the <em>Apply</em> button in the toolbox to set your changes.",
+      text: "Careful - your changes haven't been applied yet! Click the <em>Apply</em> button in the toolbox to set your changes.",
       icon: "warning",
       position: "bottom-right",
       hideAfter: 5000,
@@ -635,8 +634,7 @@ function mqc_toolbox_confirmapply() {
   if ($("#mqc_rename_apply").is(":enabled") && $("#mqc_renamesamples").is(":visible")) {
     $.toast({
       heading: "Rename Patterns Not Applied",
-      text:
-        "Careful - your changes haven't been applied yet! Click the <em>Apply</em> button in the toolbox to set your changes.",
+      text: "Careful - your changes haven't been applied yet! Click the <em>Apply</em> button in the toolbox to set your changes.",
       icon: "warning",
       position: "bottom-right",
       hideAfter: 5000,
@@ -645,8 +643,7 @@ function mqc_toolbox_confirmapply() {
   if ($("#mqc_hide_apply").is(":enabled") && $("#mqc_hidesamples").is(":visible")) {
     $.toast({
       heading: "Hide Samples Not Applied",
-      text:
-        "Careful - your changes haven't been applied yet! Click the <em>Apply</em> button in the toolbox to set your changes.",
+      text: "Careful - your changes haven't been applied yet! Click the <em>Apply</em> button in the toolbox to set your changes.",
       icon: "warning",
       position: "bottom-right",
       hideAfter: 5000,

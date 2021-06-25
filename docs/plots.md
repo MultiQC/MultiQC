@@ -135,13 +135,14 @@ config = {
 ### Switching datasets
 
 It's possible to have single plot with buttons to switch between different
-datasets. To do this, give a list of data objects (same formats as described
-above). Also add the following config options to supply names to the buttons:
+datasets. To do this, give a list of data objects to the `plot` function
+and specify the `data_labels` config option with the text to be used for the buttons:
 
 ```python
 config = {
     'data_labels': ['Reads', 'Bases']
 }
+html_content = bargraph.plot([data1, data2], pconfig=config)
 ```
 
 You can also customise the y-axis label and min/max values for each dataset:
@@ -180,7 +181,10 @@ cats[0]['aligned_reads'] =        {'name': 'Aligned Reads',        'color': '#8b
 cats[0]['unaligned_reads'] =      {'name': 'Unaligned Reads',      'color': '#f7a35c'}
 cats[1]['aligned_base_pairs'] =   {'name': 'Aligned Base Pairs',   'color': '#8bbc21'}
 cats[1]['unaligned_base_pairs'] = {'name': 'Unaligned Base Pairs', 'color': '#f7a35c'}
+html_content = bargraph.plot([data, data], cats, config)
 ```
+
+Note that, as in this example, the plot data can be the same dictionary supplied twice.
 
 ### Interactive / Flat image plots
 
@@ -536,6 +540,26 @@ headers[tablecol] = {
         "ok data": "#fff3cd",
         "good data": "#d1e7dd"
     }
+}
+```
+
+### Zero centrepoints
+
+If you set the header config `bars_zero_centrepoint` to `True`, the background bars
+will use the absolute values to calculate bar width. So a value of `0` will have a bar
+width of `0`, `20` a width of `20` and `-30` a width of `30`.
+
+This works well with a divergent colour-scheme as the bar width shows the magnitude
+of the value properly, whilst the colour scheme shows the difference between positive
+and negative values.
+
+For example:
+
+```python
+headers[tablecol] = {
+    "title": "My table column",
+    "scale": "RdYlGn",
+    "bars_zero_centrepoint": True,
 }
 ```
 

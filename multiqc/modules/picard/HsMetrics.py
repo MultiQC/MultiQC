@@ -57,7 +57,7 @@ FIELD_DESCRIPTIONS = {
 
 
 def parse_reports(self):
-    """ Find Picard HsMetrics reports and parse their data """
+    """Find Picard HsMetrics reports and parse their data"""
 
     # Set up vars
     self.picard_HsMetrics_data = dict()
@@ -158,7 +158,7 @@ def parse_reports(self):
             assert len(covs) > 0
             covs = [str(i) for i in covs]
             log.debug("Custom Picard coverage thresholds: {}".format(", ".join([i for i in covs])))
-        except (AttributeError, TypeError, AssertionError):
+        except (KeyError, AttributeError, TypeError, AssertionError):
             covs = ["30"]
         for c in covs:
             self.general_stats_headers["PCT_TARGET_BASES_{}X".format(c)] = {

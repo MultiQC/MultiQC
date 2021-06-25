@@ -114,7 +114,7 @@ class MultiqcModule(BaseMultiqcModule):
         self.general_stats_addcols(self.methylqa_data, headers)
 
     def methylqa_alignment_plot(self):
-        """ Make the HighCharts HTML to plot the alignment rates """
+        """Make the HighCharts HTML to plot the alignment rates"""
 
         if len(self.methylqa_coverage_counts) == 0:
             return '<div class="alert alert-danger">No histogram data found.</div>'

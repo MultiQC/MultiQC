@@ -14,7 +14,7 @@ log = logging.getLogger(__name__)
 
 class IdxstatsReportMixin:
     def parse_samtools_idxstats(self):
-        """ Find Samtools idxstats logs and parse their data """
+        """Find Samtools idxstats logs and parse their data"""
 
         self.samtools_idxstats = dict()
         for f in self.find_log_files("samtools/idxstats"):
@@ -164,7 +164,7 @@ class IdxstatsReportMixin:
 
 
 def parse_single_report(f):
-    """ Parse a samtools idxstats idxstats """
+    """Parse a samtools idxstats idxstats"""
 
     parsed_data = OrderedDict()
     for l in f.splitlines():

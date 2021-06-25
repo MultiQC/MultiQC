@@ -6,16 +6,16 @@ helper functions to generate markup for report. """
 
 from __future__ import print_function
 from collections import defaultdict, OrderedDict
-import click
 import fnmatch
+import inspect
 import io
 import json
-import inspect
 import lzstring
 import mimetypes
 import os
-import time
 import re
+import rich.progress
+import time
 import yaml
 
 from multiqc import config
@@ -72,9 +72,9 @@ def get_filelist(run_module_names):
     """
     # Prep search patterns
     spatterns = [{}, {}, {}, {}, {}, {}, {}]
-    epatterns = [{}, {}]
     runtimes["sp"] = defaultdict()
     ignored_patterns = []
+    skipped_patterns = []
     for key, sps in config.sp.items():
         mod_name = key.split("/", 1)[0]
         if mod_name.lower() not in [m.lower() for m in run_module_names]:
@@ -105,8 +105,7 @@ def get_filelist(run_module_names):
 
         # Check if we are skipping this search key
         if any([x.get("skip") for x in sps]):
-            logger.warn("Skipping search pattern: {}".format(key))
-            continue
+            skipped_patterns.append(key)
 
         # Split search patterns according to speed of execution.
         if any([x for x in sps if "contents_re" in x]):
@@ -128,6 +127,10 @@ def get_filelist(run_module_names):
 
     if len(ignored_patterns) > 0:
         logger.debug("Ignored {} search patterns as didn't match running modules.".format(len(ignored_patterns)))
+
+    if len(skipped_patterns) > 0:
+        logger.info("Skipping {} file search patterns".format(len(skipped_patterns)))
+        logger.debug("Skipping search patterns: {}".format(", ".join(skipped_patterns)))
 
     def add_file(fn, root):
         """
@@ -251,10 +254,22 @@ def get_filelist(run_module_names):
                     searchfiles.append([fn, root])
 
     # Search through collected files
-    with click.progressbar(searchfiles, label="Searching {} files..".format(len(searchfiles))) as sfiles:
-        for sf in sfiles:
+    progress_obj = rich.progress.Progress(
+        "[blue]|[/]      ",
+        rich.progress.SpinnerColumn(),
+        "[blue]{task.description}[/] |",
+        rich.progress.BarColumn(),
+        "[progress.percentage]{task.percentage:>3.0f}%",
+        "[green]{task.completed}/{task.total}",
+        "[dim]{task.fields[s_fn]}",
+    )
+    with progress_obj as progress:
+        mqc_task = progress.add_task("searching", total=len(searchfiles), s_fn="")
+        for sf in searchfiles:
+            progress.update(mqc_task, advance=1, s_fn=os.path.join(sf[1], sf[0])[-50:])
             if not add_file(sf[0], sf[1]):
                 file_search_stats["skipped_no_match"] += 1
+        progress.update(mqc_task, s_fn="")
 
     runtimes["total_sp"] = time.time() - total_sp_starttime
 
@@ -442,7 +457,7 @@ def save_htmlid(html_id, skiplint=False):
 
 
 def compress_json(data):
-    """ Take a Python data object. Convert to JSON and compress using lzstring """
+    """Take a Python data object. Convert to JSON and compress using lzstring"""
     json_string = json.dumps(data).encode("utf-8", "ignore").decode("utf-8")
     json_string = sanitise_json(json_string)
     x = lzstring.LZString()

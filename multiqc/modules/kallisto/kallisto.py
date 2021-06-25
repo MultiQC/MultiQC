@@ -17,7 +17,7 @@ log = logging.getLogger(__name__)
 
 
 class MultiqcModule(BaseMultiqcModule):
-    """ Kallisto module """
+    """Kallisto module"""
 
     def __init__(self):
 
@@ -117,7 +117,7 @@ class MultiqcModule(BaseMultiqcModule):
         self.general_stats_addcols(self.kallisto_data, headers)
 
     def kallisto_alignment_plot(self):
-        """ Make the HighCharts HTML to plot the alignment rates """
+        """Make the HighCharts HTML to plot the alignment rates"""
 
         # Specify the order of the different possible categories
         keys = OrderedDict()

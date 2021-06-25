@@ -1,0 +1,32 @@
+name: Publish MultiQC to PyPI
+on:
+  release:
+    types: [published]
+
+jobs:
+  build-n-publish:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v2
+        name: Check out source-code repository
+
+      - name: Set up Python 3.7
+        uses: actions/setup-python@v1
+        with:
+          python-version: 3.7
+
+      - name: Install python dependencies
+        run: |
+          python -m pip install --upgrade pip setuptools wheel build
+          pip install .
+
+      - name: Build the distribution
+        run: python setup.py sdist bdist_wheel
+
+      - name: Publish MultiQC to PyPI
+        if: github.repository == 'ewels/MultiQC'
+        uses: pypa/gh-action-pypi-publish@master
+        with:
+          user: __token__
+          password: ${{ secrets.PYPI_API_TOKEN }}

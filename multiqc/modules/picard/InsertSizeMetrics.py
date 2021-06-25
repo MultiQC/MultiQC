@@ -15,7 +15,7 @@ log = logging.getLogger(__name__)
 
 
 def parse_reports(self):
-    """ Find Picard InsertSizeMetrics reports and parse their data """
+    """Find Picard InsertSizeMetrics reports and parse their data"""
 
     # Set up vars
     self.picard_insertSize_data = dict()

@@ -8,7 +8,7 @@ Please fill in the appropriate checklist below (delete whatever is not relevant)
 
 <!-- If this PR is for a NEW module - delete if not -->
 
-- [ ] There is example tool output for tools in the https://github.com/ewels/MultiQC_TestData repository or attached to this PR
+- [ ] There is example tool output for tools in the <https://github.com/ewels/MultiQC_TestData> repository or attached to this PR
 - [ ] Code is tested and works locally (including with `--lint` flag)
 - [ ] `docs/README.md` is updated with link to below
 - [ ] `docs/modulename.md` is created

@@ -72,7 +72,7 @@ class MultiqcModule(BaseMultiqcModule):
         self.write_data_file(self.parse_csv(), "multiqc_fastq_screen")
 
     def parse_fqscreen(self, f):
-        """ Parse the FastQ Screen output into a 3D dict """
+        """Parse the FastQ Screen output into a 3D dict"""
         parsed_data = OrderedDict()
         nohits_pct = None
         headers = None
@@ -307,7 +307,7 @@ class MultiqcModule(BaseMultiqcModule):
         return bargraph.plot(data, cats, pconfig)
 
     def fqscreen_bisulfite_plot(self):
-        """ Make a stacked barplot for the bisulfite data, if we have any """
+        """Make a stacked barplot for the bisulfite data, if we have any"""
 
         pconfig = {
             "id": "fastq_screen_bisulfite_plot",

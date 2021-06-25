@@ -15,7 +15,7 @@ log = logging.getLogger(__name__)
 
 
 def parse_reports(self):
-    """ Find Sentieon InsertSizeMetrics reports and parse their data """
+    """Find Sentieon InsertSizeMetrics reports and parse their data"""
 
     # Set up vars
     self.sentieon_insertSize_data = dict()

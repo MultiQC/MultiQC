@@ -15,6 +15,7 @@ from collections import OrderedDict
 import io
 import json
 import logging
+import math
 import os
 import re
 import zipfile
@@ -300,7 +301,7 @@ class MultiqcModule(BaseMultiqcModule):
         self.general_stats_addcols(data, headers)
 
     def read_count_plot(self):
-        """ Stacked bar plot showing counts of reads """
+        """Stacked bar plot showing counts of reads"""
         pconfig = {
             "id": "fastqc_sequence_counts_plot",
             "title": "FastQC: Sequence Counts",
@@ -358,7 +359,7 @@ class MultiqcModule(BaseMultiqcModule):
         )
 
     def sequence_quality_plot(self):
-        """ Create the HTML for the phred quality score plot """
+        """Create the HTML for the phred quality score plot"""
 
         data = dict()
         for s_name in self.fastqc_data:
@@ -408,7 +409,7 @@ class MultiqcModule(BaseMultiqcModule):
         )
 
     def per_seq_quality_plot(self):
-        """ Create the HTML for the per sequence quality score plot """
+        """Create the HTML for the per sequence quality score plot"""
 
         data = dict()
         for s_name in self.fastqc_data:
@@ -454,7 +455,7 @@ class MultiqcModule(BaseMultiqcModule):
         )
 
     def sequence_content_plot(self):
-        """ Create the epic HTML for the FastQC sequence content heatmap """
+        """Create the epic HTML for the FastQC sequence content heatmap"""
 
         # Prep the data
         data = OrderedDict()
@@ -465,14 +466,22 @@ class MultiqcModule(BaseMultiqcModule):
                 }
             except KeyError:
                 pass
+
             # Old versions of FastQC give counts instead of percentages
             for b in data[s_name]:
                 tot = sum([data[s_name][b][base] for base in ["a", "c", "t", "g"]])
                 if tot == 100.0:
-                    break
+                    break  # Stop loop after one iteration if summed to 100 (percentages)
                 else:
                     for base in ["a", "c", "t", "g"]:
                         data[s_name][b][base] = (float(data[s_name][b][base]) / float(tot)) * 100.0
+
+            # Replace NaN with 0
+            for b in data[s_name]:
+                for base in ["a", "c", "t", "g"]:
+                    if math.isnan(float(data[s_name][b][base])):
+                        data[s_name][b][base] = 0
+
         if len(data) == 0:
             log.debug("sequence_content not found in FastQC reports")
             return None
@@ -542,7 +551,7 @@ class MultiqcModule(BaseMultiqcModule):
         )
 
     def gc_content_plot(self):
-        """ Create the HTML for the FastQC GC content plot """
+        """Create the HTML for the FastQC GC content plot"""
 
         data = dict()
         data_norm = dict()
@@ -660,7 +669,7 @@ class MultiqcModule(BaseMultiqcModule):
         )
 
     def n_content_plot(self):
-        """ Create the HTML for the per base N content plot """
+        """Create the HTML for the per base N content plot"""
 
         data = dict()
         for s_name in self.fastqc_data:
@@ -714,7 +723,7 @@ class MultiqcModule(BaseMultiqcModule):
         )
 
     def seq_length_dist_plot(self):
-        """ Create the HTML for the Sequence Length Distribution plot """
+        """Create the HTML for the Sequence Length Distribution plot"""
 
         data = dict()
         seq_lengths = set()
@@ -765,7 +774,7 @@ class MultiqcModule(BaseMultiqcModule):
             )
 
     def seq_dup_levels_plot(self):
-        """ Create the HTML for the Sequence Duplication Levels plot """
+        """Create the HTML for the Sequence Duplication Levels plot"""
 
         data = dict()
         max_dupval = 0
@@ -912,7 +921,7 @@ class MultiqcModule(BaseMultiqcModule):
         )
 
     def adapter_content_plot(self):
-        """ Create the HTML for the FastQC adapter plot """
+        """Create the HTML for the FastQC adapter plot"""
 
         data = dict()
         for s_name in self.fastqc_data:
@@ -989,7 +998,7 @@ class MultiqcModule(BaseMultiqcModule):
         )
 
     def status_heatmap(self):
-        """ Heatmap showing all statuses for every sample """
+        """Heatmap showing all statuses for every sample"""
         status_numbers = {"pass": 1, "warn": 0.5, "fail": 0.25}
         data = []
         s_names = []

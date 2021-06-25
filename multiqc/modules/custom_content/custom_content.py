@@ -297,7 +297,7 @@ def custom_module_classes():
 
 
 class MultiqcModule(BaseMultiqcModule):
-    """ Module class, used for each custom content type """
+    """Module class, used for each custom content type"""
 
     def __init__(self, c_id, mod):
 
@@ -435,7 +435,7 @@ def _find_file_header(f):
 
 
 def _find_html_file_header(f):
-    """ Look for a HTML comment config at the start of a custom content HTML file """
+    """Look for a HTML comment config at the start of a custom content HTML file"""
     if f["f"].lstrip().startswith("<!--"):
         match = re.search(r"^\<\!\-\-((?:.|\n|\r)*?)-->", f["f"].lstrip())
         if match:
