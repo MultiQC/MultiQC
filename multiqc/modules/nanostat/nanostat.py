@@ -15,7 +15,7 @@ log = logging.getLogger(__name__)
 
 
 class MultiqcModule(BaseMultiqcModule):
-    """ NanoStat module """
+    """NanoStat module"""
 
     _KEYS_NUM = [
         "Active channels",
@@ -107,12 +107,10 @@ class MultiqcModule(BaseMultiqcModule):
         out_d = {self._key_fmt.format(k, stat_type): v for k, v in nano_stats.items()}
 
         # Warn if we find overlapping data for the same sample
-        if logfile["s_name"] in self.nanostat_data and not set(
-            self.nanostat_data[s_name].keys()
-        ).isdisjoint(out_d.keys()):
-            log.debug(
-                "Duplicate sample data found! Overwriting: {}".format(logfile["s_name"])
-            )
+        if logfile["s_name"] in self.nanostat_data and not set(self.nanostat_data[s_name].keys()).isdisjoint(
+            out_d.keys()
+        ):
+            log.debug("Duplicate sample data found! Overwriting: {}".format(logfile["s_name"]))
 
         self.nanostat_data.setdefault(s_name, dict()).update(out_d)
 
@@ -232,14 +230,12 @@ class MultiqcModule(BaseMultiqcModule):
                     # Hide columns from sequencing_summary if alignment summary available.
                     visible = (stat_type_idx == 0) or (first_type_key not in headers)
                     visible &= not key.startswith("&gt;")
-                    headers[key]["hidden"] = headers[key].get("hidden", False) or (
-                        visible == False
-                    )
+                    headers[key]["hidden"] = headers[key].get("hidden", False) or (visible == False)
 
         self.general_stats_addcols(self.nanostat_data, headers)
 
     def nanostat_alignment_plot(self):
-        """ Make the HighCharts HTML to plot the alignment rates """
+        """Make the HighCharts HTML to plot the alignment rates"""
 
         def _get_total_reads(data_dict):
             stat_type = self._stat_types[0]
