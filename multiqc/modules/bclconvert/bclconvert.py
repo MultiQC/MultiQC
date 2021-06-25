@@ -50,6 +50,16 @@ class MultiqcModule(BaseMultiqcModule):
                 "They will be merged, undetermined stats will be recalculated. "
                 "The top-unknown-barcodes-per-lane table will not be displayed."
             )
+            self.add_section(
+                anchor="bclconvert-multiple-runs-warning",
+                content="""
+                <div class="alert alert-warning">
+                    <strong>Warning:</strong> Detected multiple bclconvert runs from the same sequencer output.
+                    Runs were merged and undetermined stats were recalculated.
+                    The top-unknown-barcodes-per-lane table is not displayed.
+                </div>
+                """,
+            )
             self._recalculate_undetermined()
         if self.num_demux_files == 1:
             # only possible to calculae barcodes per lane when parsing a single bclconvert run
@@ -278,7 +288,6 @@ class MultiqcModule(BaseMultiqcModule):
 
             sample = row["SampleID"]
 
-            # if self.num_demux_files == 1 or sample != "Undetermined": # dont include undetermined reads in samples collection when parsing multiple bclconvert runs
             if sample != "Undetermined":  # dont include undetermined reads at all in any of the calculations...
                 if sample not in run_data[lane_id]["samples"]:
                     run_data[lane_id]["samples"][sample] = {}
