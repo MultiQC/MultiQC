@@ -46,9 +46,9 @@ class MultiqcModule(BaseMultiqcModule):
             raise UserWarning
         if self.num_demux_files > 1:
             log.warning(
-                "Detected multiple bcl2fastq runs from the same sequencer output. "
+                "Detected multiple bclconvert runs from the same sequencer output. "
                 "They will be merged, undetermined stats will be recalculated. "
-                "The top-unknown-barcodes-per-lane table will not be displayed"
+                "The top-unknown-barcodes-per-lane table will not be displayed."
             )
             self._recalculate_undetermined()
         if self.num_demux_files == 1:
@@ -544,7 +544,7 @@ class MultiqcModule(BaseMultiqcModule):
                 yield_q30_percent = "{0:.1f}".format(float(100.0 * (lane["basesQ30"] / lane["yield"])))
             except ZeroDivisionError:
                 yield_q30_percent = "0.0"
-            lane["yield_q30_percent"] = yield_q30_percent
+            self.bclconvert_bylane[lane_id]["yield_q30_percent"] = yield_q30_percent
 
         headers = OrderedDict()
         if lane["depth"] != "NA":
