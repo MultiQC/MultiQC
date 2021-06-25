@@ -11,6 +11,7 @@ from multiqc.plots import bargraph
 # Initialise the logger
 log = logging.getLogger(__name__)
 
+
 class MultiqcModule(BaseMultiqcModule):
     """
     WhatsHap module class, parses WhatsHap output.
@@ -20,21 +21,24 @@ class MultiqcModule(BaseMultiqcModule):
 
         # Initialise the parent object
         super(MultiqcModule, self).__init__(
-                name='WhatsHap', anchor='whatshap',
-                href='https://whatshap.readthedocs.io/',
-                info=("""
+            name="WhatsHap",
+            anchor="whatshap",
+            href="https://whatshap.readthedocs.io/",
+            info=(
+                """
                  is a program for phasing genomic variants using DNA sequencing
                 reads, also called read-based phasing or haplotype assembly. It
                 is especially suitable for long reads, but also works well with
                 short reads.
-                """)
+                """
+            ),
         )
 
         # Store the whatshap stats results
         self.whatshap_stats = dict()
 
         # Iterate over all files we found
-        for f in self.find_log_files('whatshap/stats', filehandles=True):
+        for f in self.find_log_files("whatshap/stats", filehandles=True):
             sample, data = self.parse_whatshap_stats(f)
             self.whatshap_stats[sample] = data
 
@@ -46,7 +50,7 @@ class MultiqcModule(BaseMultiqcModule):
             raise UserWarning
 
         # Write parsed report data to a file
-        self.write_data_file(self.whatshap_stats, 'multiqc_whatshap_stats')
+        self.write_data_file(self.whatshap_stats, "multiqc_whatshap_stats")
 
         # Add whatshap stats to general statistics
         self.whatshap_add_general_stats()
@@ -55,7 +59,7 @@ class MultiqcModule(BaseMultiqcModule):
         self.add_bargraph_total_phased()
 
     def parse_whatshap_stats(self, logfile):
-        """ Parse WhatsHap stats file """
+        """Parse WhatsHap stats file"""
 
         def process_data(data):
             """
@@ -73,13 +77,13 @@ class MultiqcModule(BaseMultiqcModule):
                     pass
 
                 # Replace 'nan' with zero
-                if value == 'nan':
+                if value == "nan":
                     data[key] = 0
-                
-        file_content = logfile['f']
+
+        file_content = logfile["f"]
         # This will later be replaced by the sample name from the file, unless
         # we are parsing an empty file
-        sample = self.clean_s_name(logfile['s_name'], logfile['root'])
+        sample = self.clean_s_name(logfile["s_name"], logfile["root"])
         # Get the header and remove the "#" character from the first field
         header = next(file_content).strip().split()
         header[0] = header[0][1:]
@@ -89,11 +93,11 @@ class MultiqcModule(BaseMultiqcModule):
         # Parse the lines that have the data
         for line in file_content:
             spline = line.strip().split()
-            data = {field:value for field, value in zip(header, spline)}
+            data = {field: value for field, value in zip(header, spline)}
             process_data(data)
             # Remove the sample and chromsome from the data
-            sample = data.pop('sample')
-            chromosome = data.pop('chromosome')
+            sample = data.pop("sample")
+            chromosome = data.pop("chromosome")
             # Insert the current line under chromosome
             results[chromosome] = data
 
@@ -103,7 +107,7 @@ class MultiqcModule(BaseMultiqcModule):
         # summary for all results, so we re-use that to store all zero's
         if not results:
             results = dict()
-            results['ALL'] = defaultdict(int)
+            results["ALL"] = defaultdict(int)
 
         return sample, results
 
@@ -122,131 +126,153 @@ class MultiqcModule(BaseMultiqcModule):
         if len(sample_stats) == 1:
             summary_field = list(sample_stats)[0]
         else:
-            summary_field = 'ALL'
+            summary_field = "ALL"
         return summary_field
 
     def whatshap_add_general_stats(self):
-        """ Add WhatsHap stats to the general statistics table """
+        """Add WhatsHap stats to the general statistics table"""
 
         # Store the configuration for each column, this is also used to
         # determine which columns to add to the general statistics table
         # https://whatshap.readthedocs.io/en/latest/guide.html#the-tsv-statistics-format
-        general_stats_headers = OrderedDict([
-                ('variants', {
-                    'id': 'variants',
-                    'title': 'Input Variants',
-                    'description':
-                        'Number of biallelic variants in the input VCF, but '
-                        'excluding any non-SNV variants if --only-snvs was '
-                        'used',
-                    'hidden': True}
-
+        general_stats_headers = OrderedDict(
+            [
+                (
+                    "variants",
+                    {
+                        "id": "variants",
+                        "title": "Input Variants",
+                        "description": "Number of biallelic variants in the input VCF, but "
+                        "excluding any non-SNV variants if --only-snvs was "
+                        "used",
+                        "hidden": True,
+                    },
                 ),
-                ('heterozygous_variants', {
-                    'id': 'heterozygous_variants',
-                    'title': 'Heterozygous Variants',
-                    'description':
-                        'The number of biallelic, heterozygous variants in '
-                        'the input VCF. This is a subset of Input Variants.',
-                    'hidden': True}
-
+                (
+                    "heterozygous_variants",
+                    {
+                        "id": "heterozygous_variants",
+                        "title": "Heterozygous Variants",
+                        "description": "The number of biallelic, heterozygous variants in "
+                        "the input VCF. This is a subset of Input Variants.",
+                        "hidden": True,
+                    },
                 ),
-                ('heterozygous_snvs', {
-                    'id': 'heterozygous_snvs',
-                    'title': 'Heterozygous SNVs',
-                    'description':
-                        'The number of biallelic, heterozygous SNVs in the '
-                        'input VCF. This is a subset of Heterozygous '
-                        'Variants.',
-                    'hidden': True}
-
+                (
+                    "heterozygous_snvs",
+                    {
+                        "id": "heterozygous_snvs",
+                        "title": "Heterozygous SNVs",
+                        "description": "The number of biallelic, heterozygous SNVs in the "
+                        "input VCF. This is a subset of Heterozygous "
+                        "Variants.",
+                        "hidden": True,
+                    },
                 ),
-                ('unphased', {
-                    'id': 'unphased',
-                    'title': 'Unphased Variants',
-                    'description':
-                        'The number of biallelic, heterozygous variants that '
-                        'are not marked as phased in the input VCF. This '
-                        'is a subset of heterozygous_variants.',
-                    'hidden': False}
+                (
+                    "unphased",
+                    {
+                        "id": "unphased",
+                        "title": "Unphased Variants",
+                        "description": "The number of biallelic, heterozygous variants that "
+                        "are not marked as phased in the input VCF. This "
+                        "is a subset of heterozygous_variants.",
+                        "hidden": False,
+                    },
                 ),
-                ('phased', {
-                    'id': 'phased',
-                    'title': 'Phased Variants',
-                    'description':
-                        'The number of biallelic, heterozygous variants that '
-                        'are marked as phased in the input VCF. This is '
-                        'a subset of heterozygous_variants. Also, phased + '
-                        'unphased = heterozygous_variants.',
-                    'hidden': False}
+                (
+                    "phased",
+                    {
+                        "id": "phased",
+                        "title": "Phased Variants",
+                        "description": "The number of biallelic, heterozygous variants that "
+                        "are marked as phased in the input VCF. This is "
+                        "a subset of heterozygous_variants. Also, phased + "
+                        "unphased = heterozygous_variants.",
+                        "hidden": False,
+                    },
                 ),
-                ('phased_snvs', {
-                    'id': 'phased_snvs',
-                    'title': 'Phased SNVs',
-                    'description':
-                        'The number of biallelic, heterozygous SNVs that are '
-                        'marked as phased in the input VCF. This is a subset '
-                        'of phased.',
-                    'hidden': True}
+                (
+                    "phased_snvs",
+                    {
+                        "id": "phased_snvs",
+                        "title": "Phased SNVs",
+                        "description": "The number of biallelic, heterozygous SNVs that are "
+                        "marked as phased in the input VCF. This is a subset "
+                        "of phased.",
+                        "hidden": True,
+                    },
                 ),
-                ('blocks', {
-                    'id': 'blocks',
-                    'title': 'Blocks',
-                    'description':
-                        'The total number of phase sets/blocks.',
-                    'hidden': True}
+                (
+                    "blocks",
+                    {
+                        "id": "blocks",
+                        "title": "Blocks",
+                        "description": "The total number of phase sets/blocks.",
+                        "hidden": True,
+                    },
                 ),
-                ('singletons', {
-                    'id': 'singletons',
-                    'title': 'Singletons',
-                    'description':
-                        'The number of blocks that contain exactly one '
-                        'variant.',
-                    'hidden': True}
+                (
+                    "singletons",
+                    {
+                        "id": "singletons",
+                        "title": "Singletons",
+                        "description": "The number of blocks that contain exactly one " "variant.",
+                        "hidden": True,
+                    },
                 ),
-                ('bp_per_block_sum', {
-                    'id': 'bp_per_block_sum',
-                    'title': 'Total Phased bp',
-                    'description':
-                        'Description of the distribution of non-singleton '
-                        'block lengths, where the length of a block is the '
-                        'number of base pairs it covers minus 1. That is, a '
-                        'block with two variants at positions 2 and 5 has '
-                        'length 3.',
-                    'hidden': False}
+                (
+                    "bp_per_block_sum",
+                    {
+                        "id": "bp_per_block_sum",
+                        "title": "Total Phased bp",
+                        "description": "Description of the distribution of non-singleton "
+                        "block lengths, where the length of a block is the "
+                        "number of base pairs it covers minus 1. That is, a "
+                        "block with two variants at positions 2 and 5 has "
+                        "length 3.",
+                        "hidden": False,
+                    },
                 ),
-                ('variant_per_block_avg', {
-                    'id': 'variant_per_block_avg',
-                    'title': 'Avg Variants per Block',
-                    'description':
-                        'Description of the distribution of non-singleton '
-                        'block sizes, where the size of a block is the number '
-                        'of variants it contains. Number of biallelic '
-                        'variants in the input VCF, but excluding any non-SNV '
-                        'variants if --only-snvs was used.',
-                    'hidden': True}
+                (
+                    "variant_per_block_avg",
+                    {
+                        "id": "variant_per_block_avg",
+                        "title": "Avg Variants per Block",
+                        "description": "Description of the distribution of non-singleton "
+                        "block sizes, where the size of a block is the number "
+                        "of variants it contains. Number of biallelic "
+                        "variants in the input VCF, but excluding any non-SNV "
+                        "variants if --only-snvs was used.",
+                        "hidden": True,
+                    },
                 ),
-                ('bp_per_block_avg', {
-                    'id': 'bp_per_block_avg',
-                    'title': 'Avg bp per Block',
-                    'description':
-                        'Description of the distribution of non-singleton '
-                        'block lengths, where the length of a block is the '
-                        'number of base pairs it covers minus 1. That is, a '
-                        'block with two variants at positions 2 and 5 has '
-                        'length 3.',
-                    'hidden': False}
+                (
+                    "bp_per_block_avg",
+                    {
+                        "id": "bp_per_block_avg",
+                        "title": "Avg bp per Block",
+                        "description": "Description of the distribution of non-singleton "
+                        "block lengths, where the length of a block is the "
+                        "number of base pairs it covers minus 1. That is, a "
+                        "block with two variants at positions 2 and 5 has "
+                        "length 3.",
+                        "hidden": False,
+                    },
                 ),
-                ('block_n50', {
-                    'id': 'block_n50',
-                    'title': 'NG50',
-                    'description':
-                        'The NG50 value of the distribution of the block '
-                        'lengths. Interleaved blocks are cut in order to '
-                        'avoid artificially inflating this value.',
-                    'hidden': True}
-                )
-            ])
+                (
+                    "block_n50",
+                    {
+                        "id": "block_n50",
+                        "title": "NG50",
+                        "description": "The NG50 value of the distribution of the block "
+                        "lengths. Interleaved blocks are cut in order to "
+                        "avoid artificially inflating this value.",
+                        "hidden": True,
+                    },
+                ),
+            ]
+        )
 
         general = dict()
         for sample, sample_stats in self.whatshap_stats.items():
@@ -256,39 +282,38 @@ class MultiqcModule(BaseMultiqcModule):
             # The summary data we are adding to the general statistics
             summary_data = sample_stats[summary_field]
 
-            general_stats = {field: summary_data[field] for field in
-                             general_stats_headers}
+            general_stats = {field: summary_data[field] for field in general_stats_headers}
 
             general[sample] = general_stats
 
         self.general_stats_addcols(general, general_stats_headers)
 
     def add_bargraph_total_phased(self):
-        """ Add a bargraph of the total number of phased base pairs """
+        """Add a bargraph of the total number of phased base pairs"""
         pdata = dict()
         for sample, sample_stats in self.whatshap_stats.items():
             # Get the summary field
             summary_field = self.get_summary_field(sample_stats)
-            pdata[sample] = { 'Phased Base Pairs': sample_stats[summary_field]['bp_per_block_sum'] }
+            pdata[sample] = {"Phased Base Pairs": sample_stats[summary_field]["bp_per_block_sum"]}
 
         configuration = {
-            'id': 'multiqc_whatshap_phased_bp_plot',
-            'title': 'WhatsHap: Phased Basepairs per Sample',
-            'anchor': 'multiqc_whatshap_phased_bp',
-            'ylab': 'Base Pairs',
-            'cpswitch': False,
-            'tt_percentages': False
+            "id": "multiqc_whatshap_phased_bp_plot",
+            "title": "WhatsHap: Phased Basepairs per Sample",
+            "anchor": "multiqc_whatshap_phased_bp",
+            "ylab": "Base Pairs",
+            "cpswitch": False,
+            "tt_percentages": False,
         }
 
         keys = OrderedDict()
-        keys ['Phased Base Pairs'] = {'name': 'Phased Base Pairs'}
+        keys["Phased Base Pairs"] = {"name": "Phased Base Pairs"}
 
         self.add_section(
-                name='Phased Basepairs per Sample',
-                anchor='multiqc_whatshap_phased_bp',
-                description=
-                """
+            name="Phased Basepairs per Sample",
+            anchor="multiqc_whatshap_phased_bp",
+            description="""
                     This plot show the total number of phased base pairs for
                     each sample.
                 """,
-                plot = bargraph.plot(pdata, keys, configuration))
+            plot=bargraph.plot(pdata, keys, configuration),
+        )
