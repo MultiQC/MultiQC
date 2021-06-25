@@ -14,7 +14,7 @@ log = logging.getLogger(__name__)
 
 
 def parse_reports(self):
-    """ Find RSeQC junction_annotation reports and parse their data """
+    """Find RSeQC junction_annotation reports and parse their data"""
 
     # Set up vars
     self.junction_annotation_data = dict()

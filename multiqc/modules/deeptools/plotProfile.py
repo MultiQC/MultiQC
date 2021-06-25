@@ -81,7 +81,7 @@ class plotProfileMixin:
                     list(filter(None, bin_labels))[2],
                     list(filter(None, bin_labels))[3],
                 )
-            except ValueError:
+            except (ValueError, IndexError):
                 pass
 
             config = {
@@ -131,15 +131,19 @@ class plotProfileMixin:
                 s_name = self.clean_s_name(cols[0], f["root"])
                 d[s_name] = dict()
 
-                factors = {"Kb": 1e3, "Mb": 1e6, "Gb": 1e9}
-                convert_factor = 1
-                for k, v in factors.items():
-                    if k in bin_labels[0]:
-                        convert_factor *= v
-                        start = float(bin_labels[0].strip(k)) * convert_factor
-                step = self._int(abs(start / bin_labels.index("TSS")))
-                end = step * (len(bin_labels) - bin_labels.index("TSS") - 1)
-                converted_bin_labels = range((self._int(start) + step), (self._int(end) + step), step)
+                # Convert the bins into genomic coordinates if we can
+                try:
+                    factors = {"Kb": 1e3, "Mb": 1e6, "Gb": 1e9}
+                    convert_factor = 1
+                    for k, v in factors.items():
+                        if k in bin_labels[0]:
+                            convert_factor *= v
+                            start = float(bin_labels[0].strip(k)) * convert_factor
+                    step = self._int(abs(start / bin_labels.index("TSS")))
+                    end = step * (len(bin_labels) - bin_labels.index("TSS"))
+                    converted_bin_labels = range((self._int(start) + step), (self._int(end) + step), step)
+                except (UnboundLocalError, ValueError):
+                    converted_bin_labels = bins
 
                 for i in bins:
                     d[s_name].update({converted_bin_labels[i - 1]: float(cols[i + 1])})

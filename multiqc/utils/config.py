@@ -96,7 +96,7 @@ if len(avail_modules) == 0 or len(avail_templates) == 0:
 ##### Functions to load user config files. These are called by the main MultiQC script.
 # Note that config files are loaded in a specific order and values can overwrite each other.
 def mqc_load_userconfig(paths=()):
-    """ Overwrite config defaults with user config files """
+    """Overwrite config defaults with user config files"""
 
     # Load and parse installation config file if we find it
     mqc_load_config(os.path.join(os.path.dirname(MULTIQC_DIR), "multiqc_config.yaml"))
@@ -117,7 +117,7 @@ def mqc_load_userconfig(paths=()):
 
 
 def mqc_load_config(yaml_config):
-    """ Load and parse a config file if we find it """
+    """Load and parse a config file if we find it"""
     if not os.path.isfile(yaml_config) and os.path.isfile(yaml_config.replace(".yaml", ".yml")):
         yaml_config = yaml_config.replace(".yaml", ".yml")
 
@@ -155,7 +155,7 @@ def mqc_cl_config(cl_config):
 
 
 def mqc_add_config(conf, conf_path=None):
-    """ Add to the global config with given MultiQC config dict """
+    """Add to the global config with given MultiQC config dict"""
     global fn_clean_exts, fn_clean_trim
     for c, v in conf.items():
         if c == "sp":

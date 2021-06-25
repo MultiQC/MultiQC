@@ -12,7 +12,7 @@ log = logging.getLogger(__name__)
 
 
 class StatsReportMixin:
-    """ Mixin loaded by the bcftools MultiqcModule class """
+    """Mixin loaded by the bcftools MultiqcModule class"""
 
     def parse_bcftools_stats(self):
         """
@@ -111,7 +111,7 @@ class StatsReportMixin:
                 # Variant Qualities
                 if s[0] == "QUAL" and len(s_names) > 0:
                     s_name = s_names[int(s[1])]
-                    quality = float(s[2].strip())
+                    quality = float("0" + s[2].strip())
                     self.bcftools_stats_vqc_snp[s_name][quality] = float(s[3].strip())
                     self.bcftools_stats_vqc_transi[s_name][quality] = float(s[4].strip())
                     self.bcftools_stats_vqc_transv[s_name][quality] = float(s[5].strip())
@@ -219,7 +219,7 @@ class StatsReportMixin:
         return len(self.bcftools_stats)
 
     def bcftools_stats_genstats_headers(self):
-        """ Add key statistics to the General Stats table """
+        """Add key statistics to the General Stats table"""
         stats_headers = OrderedDict()
         stats_headers["number_of_records"] = {
             "title": "Vars",

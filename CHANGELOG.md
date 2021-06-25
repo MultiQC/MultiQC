@@ -1,11 +1,91 @@
 # MultiQC Version History
 
-## MultiQC v1.10dev
+## MultiQC v1.11dev
 
-### Major change: Code linting
+### MultiQC updates
+
+- New interactive slider controls for controlling heatmap colour scales ([#1427](https://github.com/ewels/MultiQC/issues/1427))
+- Make the module crash tracebacks much prettier using `rich`
+- Refine the cli log output a little (nicely formatted header line + drop the `[INFO]`)
+- Added docs describing tools for downstream analysis of MultiQC outputs.
+- Added CI tests for Python 3.9, pinned `networkx` package to `>=2.5.1` ([#1413](https://github.com/ewels/MultiQC/issues/1413))
+- Added patterns to `config.fn_ignore_paths` to avoid error with parsing installation dir / singularity cache ([#1416](https://github.com/ewels/MultiQC/issues/1416))
+- Print a log message when flat-image plots are used due to sample size surpassing `plots_flat_numseries` config ([#1254](https://github.com/ewels/MultiQC/issues/1254))
+- Fix the `mqc_colours` util function to lighten colours even when passing categorical or single-length lists.
+
+#### New Modules
+
+- [**BclConvert**](https://support.illumina.com/sequencing/sequencing_software/bcl-convert.html)
+  - Tool that converts / demultiplexes Illumina Binary Base Call (BCL) files to FASTQ files
+- [**Bustools**](https://bustools.github.io/)
+  - Tools for working with BUS files
+- [**Pangolin**](https://github.com/cov-lineages/pangolin)
+  - Added MultiQC support for Pangolin, the tool that determines SARS-CoV-2 lineages
+- [**VEP**](https://www.ensembl.org/info/docs/tools/vep/index.html)
+  - Added MultiQC module to add summary statistics of Ensembl VEP annotations.
+
+#### Module updates
+
+- **bcl2fastq**
+  - Added sample name cleaning so that prepending directories with the `-d` flag works properly.
+- **fastp**
+  - Handle a `ZeroDivisionError` if there are zero reads ([#1444](https://github.com/ewels/MultiQC/issues/1444))
+- **Flexbar**
+  - Fixed bug where reports with 0 reads would crash MultiQC ([#1407](https://github.com/ewels/MultiQC/issues/1407))
+- **Kraken**
+  - Handle a `ZeroDivisionError` if there are zero reads ([#1440](https://github.com/ewels/MultiQC/issues/1440))
+  - Updated search patterns to handle edge case ([#1428](https://github.com/ewels/MultiQC/issues/1428))
+- **Mosdepth**
+  - Show barplot instead of line graph for coverage-per-contig plot if there is only one contig.
+- **Picard**
+  - `RnaSeqMetrics` - fix assignment barplot labels to say bases instead of reads ([#1408](https://github.com/ewels/MultiQC/issues/1408))
+  - `CrosscheckFingerprints` - fix bug where LOD threshold was not detected when invoked with "new" picard cli style. fixed formatting bug ([#1414](https://github.com/ewels/MultiQC/issues/1414))
+  - Add metrics from `CollectIlluminaBasecallingMetrics`, `CollectIlluminaLaneMetrics`, `ExtractIlluminaBarcodes` and `MarkIlluminaAdapters` ([#1336](https://github.com/ewels/MultiQC/pull/1336))
+- **qc3C**
+  - Updated module to not fail on older field names.
+- **QUAST**
+  - Fixed typo causing wrong number of contigs being displayed ([#1442](https://github.com/ewels/MultiQC/issues/1442))
+- **VEP**
+  - Handle error from missing variants in VEP stats file. ([#1446](https://github.com/ewels/MultiQC/issues/1446))
+
+## [MultiQC v1.10.1](https://github.com/ewels/MultiQC/releases/tag/v1.10.1) - 2021-04-01
+
+### MultiQC updates
+
+- Dropped the `Skipping search pattern` log message from a warning to debug
+- Moved directory prepending with `-d` back to before sample name cleaning (as it was before v1.7) ([#1264](https://github.com/ewels/MultiQC/issues/1264))
+- If linegraph plot data goes above `ymax`, only _discard_ the data if the line doesn't come back again ([#1257](https://github.com/ewels/MultiQC/issues/1257))
+- Allow scientific notation numbers in colour scheme generation
+  - Fixed bug with very small minimum numbers that only revelead itself after a bugfix done in the v1.10 release
+- Allow `top_modules` to be specified as empty dicts ([#1274](https://github.com/ewels/MultiQC/issues/1274))
+- Require at least `rich` version `9.4.0` to avoid `SpinnerColumn` `AttributeError` ([#1393](https://github.com/ewels/MultiQC/issues/1393))
+- Properly ignore `.snakemake` folders as intended ([#1395](https://github.com/ewels/MultiQC/issues/1395))
+
+#### Module updates
+
+- **bcftools**
+  - Fixed bug where `QUAL` value `.` would crash MultiQC ([#1400](https://github.com/ewels/MultiQC/issues/1400))
+- **bowtie2**
+  - Fix bug where HiSAT2 paired-end bar plots were missing unaligned reads ([#1230](https://github.com/ewels/MultiQC/issues/1230))
+- **Deeptools**
+  - Handle `plotProfile` data where no upstream / downstream regions have been calculated around genes ([#1317](https://github.com/ewels/MultiQC/issues/1317))
+  - Fix `IndexError` caused by mysterious `-1` in code.. ([#1275](https://github.com/ewels/MultiQC/issues/1275))
+- **FastQC**
+  - Replace `NaN` with `0` in the _Per Base Sequence Content_ plot to avoid crashing the plot ([#1246](https://github.com/ewels/MultiQC/issues/1246))
+- **Picard**
+  - Fixed bug in `ValidateSamFile` module where additional whitespace at the end of the file would cause MultiQC to crash ([#1397](https://github.com/ewels/MultiQC/issues/1397))
+- **Somalier**
+  - Fixed bug where using sample name cleaning in a config would trigger a `KeyError` ([#1234](https://github.com/ewels/MultiQC/issues/1234))
+
+## [MultiQC v1.10](https://github.com/ewels/MultiQC/releases/tag/v1.10) - 2021-03-08
+
+### Update for developers: Code linting
 
 This is a big change for MultiQC developers. I have added automated code formatting and code linting
-(style checks) to MultiQC. Specifically, MultiQC now uses three main tools:
+(style checks) to MultiQC. This helps to keep the MultiQC code base consistent despite having many
+contributors and helps me to review pull-requests without having to consider whitespace.
+
+Specifically, MultiQC now uses three main tools:
 
 - [Black](https://github.com/psf/black) - Python Code
 - [Prettier](https://prettier.io/) - Everything else (almost)
@@ -31,15 +111,23 @@ For further information, please see the [documentation](https://multiqc.info/doc
   - Comparable functionality to user config options `table_cond_formatting_rules` and `table_cond_formatting_colours`,
     allowes module developers to format table cell values as labels.
 - New CI test looks for git merge markers in files
+- Beautiful new [progress bar](https://rich.readthedocs.io/en/stable/progress.html) from the amazing [willmcgugan/rich](https://github.com/willmcgugan/rich) package.
+- Added a bunch of new default sample name trimming suffixes ([see `8ac5c7b`](https://github.com/ewels/MultiQC/commit/8ac5c7b6e4ea6003ca2c9b681953ab3f22c5dd66))
+- Added `timeout-minutes: 10` to the CI test workflow to check that changes aren't negatively affecting run time too much.
+- New table header option `bars_zero_centrepoint` to treat `0` as zero width bars and plot bar length based on absolute values
 
 #### New Modules
 
-- [**BclConvert**](https://support.illumina.com/sequencing/sequencing_software/bcl-convert.html)
-  - Tool that converts Binary Base Call (BCL) files produced by Illumina sequencers to the FASTQ file format
+- [**EigenStratDatabaseTools**](https://github.com/TCLamnidis/EigenStratDatabaseTools)
+  - Added MultiQC module to report SNP coverages from `eigenstrat_snp_coverage.py` in the general stats table.
 - [**HOPS**](https://www.github.com/rhubler/HOPS)
   - Post-alignment ancient DNA analysis tool for MALT
+- [**JCVI**](https://github.com/tanghaibao/jcvi)
+  - Computes statistics on genome annotation.
 - [**ngsderive**](https://github.com/stjudecloud/ngsderive)
   - Forensic analysis tool useful in backwards computing information from next-generation sequencing data.
+- [**OptiType**](https://github.com/FRED-2/OptiType)
+  - Precision HLA typing from next-generation sequencing data
 - [**PURPLE**](https://github.com/hartwigmedical/hmftools/tree/master/purity-ploidy-estimator)
   - A purity, ploidy and copy number estimator for whole genome tumor data
 - [**Pychopper**](https://github.com/nanoporetech/pychopper)
@@ -59,20 +147,36 @@ For further information, please see the [documentation](https://multiqc.info/doc
 - **fgbio**
   - Fix `ErrorRateByReadPosition` to calculate `ymax` not just on the overall `error_rate`, but also specific base errors (ex. `a_to_c_error_rate`, `a_to_g_error_rate`, ...). ([#1215](https://github.com/ewels/MultiQC/pull/1251))
   - Fix `ErrorRateByReadPosition` plotted line names to no longer concatenate multiple read identifiers and no longer have off-by-one read numbering (ex. `Sample1_R2_R3` -> `Sample1_R2`) ([#[1304](https://github.com/ewels/MultiQC/pull/1304))
+- **Fastp**
+  - Fixed description for duplication rate (pre-filtering, not post) ([#[1313](https://github.com/ewels/MultiQC/pull/1313))
 - **GATK**
   - Add support for the creation of a "Reported vs Empirical Quality" graph to the Base Recalibration module.
 - **hap.py**
   - Updated module to plot both SNP and INDEL stats ([#1241](https://github.com/ewels/MultiQC/issues/1241))
+- **indexcov**
+  - Fixed bug when making the PED file plots ([#1265](https://github.com/ewels/MultiQC/issues/1265))
+- **interop**
+  - Added the `% Occupied` metric to `Read Metrics per Lane` table which is reported for NovaSeq and iSeq platforms.
 - **Kaiju**
   - Fixed bug affecting inputs with taxa levels other than Phylum ([#1217](https://github.com/ewels/MultiQC/issues/1217))
   - Rework barplot, add top 5 taxons ([#1219](https://github.com/ewels/MultiQC/issues/1219))
+- **Kraken**
+  - Fix `ZeroDivisionError` ([#1276](https://github.com/ewels/MultiQC/issues/1276))
+  - Add distinct minimizer heatmap for KrakenUniq style duplication information ([#1333](https://github.com/ewels/MultiQC/pull/1380))
 - **MALT**
   - Fix y-axis labelling in bargraphs
+- **MACS2**
+  - Add number of peaks to the _General Statistics_ table.
 - **mosdepth**
   - Enable prepending of directory to sample names
   - Display contig names in _Coverage per contig_ plot tooltip
 - **Picard**
   - Fix `HsMetrics` bait percentage columns ([#1212](https://github.com/ewels/MultiQC/issues/1212))
+  - Fix `ConvertSequencingArtifactToOxoG` files not being found ([#1310](https://github.com/ewels/MultiQC/issues/1310))
+  - Make `WgsMetrics` histogram smoothed if more than 1000 data points (avoids huge plots that crash the browser)
+  - Multiple new config options for `WgsMetrics` to customise coverage histogram and speed up MultiQC with very high coverage files.
+  - Add additional datasets to Picard Alignment Summary ([#1293](https://github.com/ewels/MultiQC/issues/1293))
+  - Add support for `CrosscheckFingerprints` ([#1327](https://github.com/ewels/MultiQC/issues/1327))
 - **PycoQC**
   - Log10 x-axis for _Read Length_ plot ([#1214](https://github.com/ewels/MultiQC/issues/1214))
 - **Rockhopper**
@@ -80,6 +184,8 @@ For further information, please see the [documentation](https://multiqc.info/doc
   - Fix issue properly parsing multiple samples within a single Rockhopper summary file
 - **Salmon**
   - Only try to generate a plot for fragment length if the data was found.
+- **verifyBamID**
+  - Fix `CHIP` value detection ([#1316](https://github.com/ewels/MultiQC/pull/1316)).
 
 #### New Custom Content features
 
@@ -91,6 +197,9 @@ For further information, please see the [documentation](https://multiqc.info/doc
 #### Bug Fixes
 
 - Disable preservation of timestamps / modes when copying temp report files, to help issues with network shares ([#1333](https://github.com/ewels/MultiQC/issues/1333))
+- Fixed MatPlotLib warning: `FixedFormatter should only be used together with FixedLocator`
+- Fixed long-standing min/max bug with shared minimum values for table columns using `shared_key`
+- Made table colour schemes work with negative numbers (don't strip `-` from values when making scheme)
 
 ## [MultiQC v1.9](https://github.com/ewels/MultiQC/releases/tag/v1.9) - 2020-05-30
 
