@@ -16,7 +16,7 @@ log = logging.getLogger(__name__)
 class MultiqcModule(BaseMultiqcModule):
     """RSeQC is a collection of scripts. This MultiQC module
     supports some but not all. The code for each script is split
-    into its own file and adds a section to the module ooutput if
+    into its own file and adds a section to the module output if
     logs are found."""
 
     def __init__(self):
