@@ -75,13 +75,14 @@ def parse_reports(self):
         # Fix double counting of TSS_up and TES_down
         prefixes = ("tss_up", "tes_down")
         sizes = ("10kb", "5kb", "1kb")
-        suffixes = ("total_bases", "tag_count", "tags_kb")
-        combinations = (
+        suffixes = ("total_bases", "tag_count")
+        combinations = [
             (prefix, big, small, suffix)
             for prefix in prefixes
             for suffix in suffixes
             for big, small in zip(sizes, sizes[1:])
-        )
+        ]
+
         for sample_name, sample in self.read_dist.items():
             for prefix, big, small, suffix in combinations:
                 try:
