@@ -11,11 +11,15 @@ from multiqc.modules.base_module import BaseMultiqcModule
 # Import the Picard submodules
 from . import AlignmentSummaryMetrics
 from . import BaseDistributionByCycleMetrics
+from . import CollectIlluminaBasecallingMetrics
+from . import CollectIlluminaLaneMetrics
 from . import CrosscheckFingerprints
+from . import ExtractIlluminaBarcodes
 from . import GcBiasMetrics
 from . import HsMetrics
 from . import InsertSizeMetrics
 from . import MarkDuplicates
+from . import MarkIlluminaAdapters
 from . import OxoGMetrics
 from . import QualityByCycleMetrics
 from . import QualityScoreDistributionMetrics
@@ -23,8 +27,8 @@ from . import QualityYieldMetrics
 from . import RnaSeqMetrics
 from . import RrbsSummaryMetrics
 from . import TargetedPcrMetrics
-from . import VariantCallingMetrics
 from . import ValidateSamFile
+from . import VariantCallingMetrics
 from . import WgsMetrics
 
 
@@ -121,6 +125,24 @@ class MultiqcModule(BaseMultiqcModule):
         n["WgsMetrics"] = WgsMetrics.parse_reports(self)
         if n["WgsMetrics"] > 0:
             log.info("Found {} WgsMetrics reports".format(n["WgsMetrics"]))
+
+        n["CollectIlluminaBasecallingMetrics"] = CollectIlluminaBasecallingMetrics.parse_reports(self)
+        if n["CollectIlluminaBasecallingMetrics"] > 0:
+            log.info(
+                "Found {} CollectIlluminaBasecallingMetrics reports".format(n["CollectIlluminaBasecallingMetrics"])
+            )
+
+        n["CollectIlluminaLaneMetrics"] = CollectIlluminaLaneMetrics.parse_reports(self)
+        if n["CollectIlluminaLaneMetrics"] > 0:
+            log.info("Found {} CollectIlluminaLaneMetrics reports".format(n["CollectIlluminaLaneMetrics"]))
+
+        n["ExtractIlluminaBarcodes"] = ExtractIlluminaBarcodes.parse_reports(self)
+        if n["ExtractIlluminaBarcodes"] > 0:
+            log.info("Found {} ExtractIlluminaBarcodes reports".format(n["ExtractIlluminaBarcodes"]))
+
+        n["MarkIlluminaAdapters"] = MarkIlluminaAdapters.parse_reports(self)
+        if n["MarkIlluminaAdapters"] > 0:
+            log.info("Found {} MarkIlluminaAdapters reports".format(n["MarkIlluminaAdapters"]))
 
         # Exit if we didn't find anything
         if sum(n.values()) == 0:
