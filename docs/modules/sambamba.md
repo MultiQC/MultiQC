@@ -14,12 +14,29 @@ Supported commands:
 
 ### markdup
 
-This module parses key phrases in the output log files to find duplicate and non-duplicate reads. The absolute read counts are displayed in a stacked bar plot, and the duplicate rate per sample is calculated using the following formula:
+This module parses key phrases in the output log files to find duplicate + unique reads and then calculates duplicate rate per sample. It will search for log files with a "markdup_" prefix, such as `markdup_WT_1.log`, and will work for both single and paired-end data. The absolute number of reads by type are displayed in a stacked bar plot, and duplicate rates are in the general statistics table.
 
-> duplicate_rate = duplicate_reads / (sorted_end_pairs x2 + single_ends - single_unmatched_pairs) x100
+Duplicate rates are calculated as follows:
 
-The duplicate rates are displayed in the general statistics table at the top of the report. Lastly, If Sambamba Markdup is invoked using Snakemake, the following bare-bones shell command should work fine:
+> **Paired end**
+>
+> duplicate_rate = duplicateReads / (sortedEndPairs * 2 + singleEnds - singleUnmatchedPairs) * 100
 
-```bash
-sambamba markdup {input} {output} > {log} 2>&1
+
+> **Single end**
+>
+> duplicate_rate = duplicateReads / singleEnds * 100
+
+If Sambamba Markdup is invoked using Snakemake, the following bare-bones rule should work fine:
+
+```python
+rule markdup:
+  input:
+    "data/align/{sample}.bam"
+  output:
+    "data/markdup/{sample}.markdup.bam"
+  log:
+    "data/logs/markdup_{sample}.log"
+  shell:
+    "sambamba markdup {input} {output} > {log} 2>&1"
 ```
