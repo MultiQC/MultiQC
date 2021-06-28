@@ -21,6 +21,7 @@ class SambambaMarkdupMixin:
         # Clean sample name from 'markdup_sample_1' to 'sample_1'
         # Find and load sambamba logs to markdup_data_dict.
         # Regex for key phrases and calculate duplicate rate.
+        # Detect if sample is single or paired-end reads. Process differently.
         # Give user warning if redundant samples are found.
 
         self.markdup_data_dict = dict()
@@ -28,7 +29,7 @@ class SambambaMarkdupMixin:
         for f in self.find_log_files("sambamba/markdup"):
 
             # define sample name
-            sample_name = self.clean_s_name(f["s_name"].replace("markdup_", ""), f["root"])
+            sample_name = f["s_name"]
 
             # parse sambamba output by sample name
             self.markdup_data_dict[sample_name] = self.get_markdup_stats(f["f"])
@@ -63,27 +64,91 @@ class SambambaMarkdupMixin:
         """
         Input actual content of sambamba markdup log output.
         Regex for important phrases and extract reads.
-        Calculate and return duplicate rate.
-        Outputs dictionary of markdup stats of a sample.
+        Detect and calculate duplicate rate by single/paired-end samples.
+        Outputs dictionary of markdup stats of a sample by single/paired-end type.
         This dict is associated with corresponding sample in key of markdup_data_dict.
         """
+
+        """NOTE: reads sum to between 98 - 99% of input BAM file. Is Sambamba Markdup not recognizing the entire file?"""
 
         sorted_end_pairs = int(re.search("sorted \d+ end pairs", f).group(0).split(" ")[1])
         single_ends = int(re.search("and \d+ single ends", f).group(0).split(" ")[1])
         single_unmatched_pairs = int(re.search("among them \d+ unmatched", f).group(0).split(" ")[2])
         duplicate_reads = int(re.search("found \d+ duplicates", f).group(0).split(" ")[1])
 
-        duplicate_rate = duplicate_reads / (sorted_end_pairs * 2 + single_ends - single_unmatched_pairs) * 100
-        duplicate_rate = round(duplicate_rate, 2)
+        duplicate_rate = self.calculate_duplicate_rate(
+            sortedEndPairs=sorted_end_pairs,
+            singleEnds=single_ends,
+            singleUnmatchedPairs=single_unmatched_pairs,
+            duplicateReads=duplicate_reads,
+        )
 
-        stats = {
-            "Sorted End Pairs": sorted_end_pairs,
-            "Single Ends": single_ends,
-            "Single Unmatched Pairs": single_unmatched_pairs,
-            "Duplicate Reads": duplicate_reads,
-            "Duplicate Rates": duplicate_rate,
-        }
+        sample_statistics = self.calculate_read_proportions(
+            sortedEndPairs=sorted_end_pairs,
+            singleEnds=single_ends,
+            singleUnmatchedPairs=single_unmatched_pairs,
+            duplicateReads=duplicate_reads,
+            duplicateRate=duplicate_rate,
+        )
 
+        return sample_statistics
+
+    def calculate_duplicate_rate(self, sortedEndPairs, singleEnds, singleUnmatchedPairs, duplicateReads):
+
+        """
+        Input all regexed stats from markdup log.
+        Detect if sample is paired or single-end.
+        Calculate duplicate rate as needed.
+        Print debug msg if a sample neither fits singleEnds or PE scheme.
+        Output duplicate rate.
+        """
+
+        if (sortedEndPairs > 0) and (singleUnmatchedPairs > 0):
+            duplicate_rate = duplicateReads / (sortedEndPairs * 2 + singleEnds - singleUnmatchedPairs) * 100
+            duplicate_rate = round(duplicate_rate, 2)
+        elif (sortedEndPairs == 0) and (singleUnmatchedPairs == 0):
+            duplicate_rate = duplicateReads / singleEnds * 100
+            duplicate_rate = round(duplicate_rate, 2)
+        else:
+            log.debug("Sample {} is neither paired-end nor single-end.".format(f["s_name"]))
+            duplicate_rate = 0
+
+        return duplicate_rate
+
+    def calculate_read_proportions(
+        self, sortedEndPairs, singleEnds, singleUnmatchedPairs, duplicateReads, duplicateRate
+    ):
+
+        """
+        Input all regexed stats from markdup log and duplicate rate.
+        Detect if sample is PE or singleEnds.
+        Return correct number of reads by type in context of showing proportions of a whole.
+        """
+
+        if (sortedEndPairs > 0) and (singleUnmatchedPairs > 0):
+            stats = {
+                "Total Sorted Paired End Reads": sortedEndPairs * 2 - duplicateReads,
+                "Total Single End Reads": singleEnds - 2 * singleUnmatchedPairs,
+                "Total Single Unmatched Reads": 2 * singleUnmatchedPairs,
+                "Total Duplicate Reads": duplicateReads,
+                "Duplicate Rates": duplicateRate,
+            }
+        elif (sortedEndPairs == 0) and (singleUnmatchedPairs == 0):
+            stats = {
+                "Total Sorted Paired End Reads": sortedEndPairs,  # 0
+                "Total Single End Reads": singleEnds - duplicateReads,
+                "Total Single Unmatched Reads": singleUnmatchedPairs,  # 0
+                "Total Duplicate Reads": duplicateReads,
+                "Duplicate Rates": duplicateRate,
+            }
+        else:
+            stats = {
+                "Total Sorted Paired End Reads": 0,
+                "Total Single End Reads": 0,
+                "Total Single Unmatched Reads": 0,
+                "Total Duplicate Reads": 0,
+                "Duplicate Rates": 0,
+            }
         return stats
 
     def markdup_write_data_to_file(self):
@@ -101,7 +166,7 @@ class SambambaMarkdupMixin:
         """
 
         headers = OrderedDict()
-        headers["Duplicate Reads"] = {
+        headers["Total Duplicate Reads"] = {
             "title": "Duplicate Reads",
             "description": "Number of Duplicate Reads per Sample",
             "scale": "RdYlGn-rev",
@@ -123,7 +188,12 @@ class SambambaMarkdupMixin:
         """
 
         # plot these categories, but not duplicate rate.
-        cats = ["Sorted End Pairs", "Single Ends", "Single Unmatched Pairs", "Duplicate Reads"]
+        cats = [
+            "Total Sorted Paired End Reads",
+            "Total Single End Reads",
+            "Total Single Unmatched Reads",
+            "Total Duplicate Reads",
+        ]
 
         config = {"id": "SambambaMarkdupBargraph", "title": "Sambamba Markdup: Duplicate Counts", "ylab": "# Reads"}
 
