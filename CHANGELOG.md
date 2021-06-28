@@ -26,6 +26,8 @@
 
 - **bcl2fastq**
   - Added sample name cleaning so that prepending directories with the `-d` flag works properly.
+- **Dragen**
+  - Handled MultiQC crashing when run on single-end output from Dragen ([#1374](https://github.com/ewels/MultiQC/issues/1374))
 - **fastp**
   - Handle a `ZeroDivisionError` if there are zero reads ([#1444](https://github.com/ewels/MultiQC/issues/1444))
 - **Flexbar**
@@ -45,8 +47,6 @@
   - Fixed typo causing wrong number of contigs being displayed ([#1442](https://github.com/ewels/MultiQC/issues/1442))
 - **VEP**
   - Handle error from missing variants in VEP stats file. ([#1446](https://github.com/ewels/MultiQC/issues/1446))
-- **Dragen**
-  - Handled MultiQC crashing when run on single-end output from Dragen ([#1374](https://github.com/ewels/MultiQC/issues/1374))
 
 ## [MultiQC v1.10.1](https://github.com/ewels/MultiQC/releases/tag/v1.10.1) - 2021-04-01
 
