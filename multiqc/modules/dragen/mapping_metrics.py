@@ -107,11 +107,11 @@ class DragenMappingMetics(BaseMultiqcModule):
                 continue
             if (
                 data["Number of unique & mapped reads (excl. duplicate marked reads)"]
-                + data["Number of duplicate marked reads"]
+                + data.get("Number of duplicate marked reads", 0)
                 + data["Unmapped reads"]
                 != data["Total reads in RG"]
             ):
-                log.warning(
+                log.debug(
                     "sum of unique/duplicate/unmapped reads not matching total, "
                     "skipping mapping/duplicates percentages plot for: {}".format(sample_id)
                 )
