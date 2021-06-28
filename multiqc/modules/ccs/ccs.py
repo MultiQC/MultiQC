@@ -21,7 +21,7 @@ class MultiqcModule(BaseMultiqcModule):
             name="CCS",
             anchor="ccs",
             href="https://github.com/PacificBiosciences/ccs",
-            info=("is used to generate highly accurate single-molecule " "consensus reads"),
+            info=" is used to generate highly accurate single-molecule consensus reads.",
         )
 
         # To store the mod data
@@ -56,25 +56,30 @@ class MultiqcModule(BaseMultiqcModule):
     def add_sections(self):
 
         # First we gather all the filters we encountered
-        all_filters = set()
+        all_filters = dict()
         for filename in self.mod_data:
             for filter_reason in self.filter_and_pass(self.mod_data[filename]):
-                all_filters.add(filter_reason)
+                all_filters[filter_reason] = 0
 
         # Then we add the counts for each filter to the plot data
-        plot_data = list()
-        for filename, data in self.mod_data.items():
-            d = dict()
+        plot_data = dict()
+        for s_name, data in self.mod_data.items():
+            plot_data[s_name] = dict()
             for reason in all_filters:
-                d[reason] = dict()
                 for attribute in data["attributes"]:
                     if attribute["name"] == reason:
-                        d[reason][filename] = attribute["value"]
+                        plot_data[s_name][reason] = attribute["value"]
+                        all_filters[reason] += attribute["value"]
                         break
                 # If we didn't find it, set to zero
                 else:
-                    d[reason][filename] = 0
-            plot_data.append(d)
+                    plot_data[s_name][reason] = 0
+
+        # Sort the categories based on the total counts
+        # Smallest first, for Log10 view
+        plot_cats = []
+        for reason, count in sorted(all_filters.items(), key=lambda item: item[1], reverse=True):
+            plot_cats.append(reason)
 
         # Plot configuration
         config = {
@@ -82,28 +87,22 @@ class MultiqcModule(BaseMultiqcModule):
             "title": "CCS: ZMW results",
             "ylab": "Number of ZMWs",
             "xlab": "CCS report file",
-            "cpswitch": False,
             "logswitch": True,
-            "stacking": None,
-            #'data_labels': [ filename for filename in self.mod_data]
-            "data_labels": [{"name": filename, "cpswitch_counts_label": filename} for filename in self.mod_data],
         }
 
         self.add_section(
             name="ZMWs filtered and passed",
             anchor="ccs-filter",
-            description=("The number of ZMWs that failed or passed all " "filters for each of the subreads files."),
-            helptext=(
-                "The number of ZMWs that passed all filters is shown "
-                "as **ZMWs generating CCS**. All other categories that "
-                "are shown in the graph represent the number of ZMWs "
-                "that were dropped for the specified reason."
-            ),
-            plot=bargraph.plot(plot_data, [filename for filename in self.mod_data], config),
+            description="The number of ZMWs that failed or passed all filters for each of the subreads files.",
+            helptext="""
+                The number of ZMWs that passed all filters is shown as **ZMWs generating CCS**. All other categories that
+                are shown in the graph represent the number of ZMWs that were dropped for the specified reason.
+            """,
+            plot=bargraph.plot(plot_data, plot_cats, config),
         )
 
     def filter_and_pass(self, data):
-        """ Gather the reasons why ZMWs were failed or passed """
+        """Gather the reasons why ZMWs were failed or passed"""
         reasons = dict()
 
         # We only have to use the attributes
@@ -117,7 +116,7 @@ class MultiqcModule(BaseMultiqcModule):
         return reasons
 
     def convert_to_v5(self, data):
-        """ Convert the v4 format to the new CCS v5 json format """
+        """Convert the v4 format to the new CCS v5 json format"""
         # Initialise the v5 format dictionary
         v5 = dict()
         v5["id"] = "ccs_processing"
@@ -141,7 +140,7 @@ class MultiqcModule(BaseMultiqcModule):
         return v5
 
     def make_v5_entry(self, name, count):
-        """ Make a v5 output entry based on name and count """
+        """Make a v5 output entry based on name and count"""
         # Dictionary to map the report names to the v5 id annotation
         name_to_id = {
             "ZMWs input": "zmw_input",
@@ -168,7 +167,7 @@ class MultiqcModule(BaseMultiqcModule):
 
 
 def parse_PacBio_log(file_content):
-    """ Parse ccs log file """
+    """Parse ccs log file"""
     data = dict()
     # This is a local dictionary to store which annotations belong to which
     # result dictionary. This will be used to structure the output, but will
@@ -222,7 +221,7 @@ def parse_PacBio_log(file_content):
 
 
 def parse_line(line):
-    """ Parse a line from the ccs log file """
+    """Parse a line from the ccs log file"""
     data = dict()
 
     # If we got an empty line to parse
