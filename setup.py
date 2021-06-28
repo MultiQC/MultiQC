@@ -62,7 +62,6 @@ install_requires = [
     "lzstring",
     "markdown" + markdown_version,
     "pyyaml>=4",
-    "pytest",
     "requests",
     "rich>=10",
     "simplejson",
