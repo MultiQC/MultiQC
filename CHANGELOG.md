@@ -26,6 +26,8 @@
 
 - **bcl2fastq**
   - Added sample name cleaning so that prepending directories with the `-d` flag works properly.
+- **Dragen**
+  - Handled MultiQC crashing when run on single-end output from Dragen ([#1374](https://github.com/ewels/MultiQC/issues/1374))
 - **fastp**
   - Handle a `ZeroDivisionError` if there are zero reads ([#1444](https://github.com/ewels/MultiQC/issues/1444))
 - **Flexbar**
