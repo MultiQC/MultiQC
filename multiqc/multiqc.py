@@ -1002,7 +1002,11 @@ def run(
         logger.info("For more information, see the 'Run Time' section in {}".format(os.path.relpath(config.output_fn)))
 
     if report.num_mpl_plots > 0 and not config.plots_force_flat:
-        logger.warning("Flat-image plots used in the report due to large sample numbers")
+        logger.warning(
+            "{} flat-image plot{} used in the report due to large sample numbers".format(
+                report.num_mpl_plots, "s" if report.num_mpl_plots > 1 else ""
+            )
+        )
         console.print(
             "[blue]|           multiqc[/] | "
             "To force interactive plots, use the [yellow]'--interactive'[/] flag. "

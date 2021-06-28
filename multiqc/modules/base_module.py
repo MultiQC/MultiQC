@@ -307,6 +307,8 @@ class BaseMultiqcModule(object):
 
         # Remove trailing whitespace
         s_name = s_name.strip()
+
+        # If we cleaned back to an empty string, just use the original value
         if s_name == "":
             s_name = s_name_original
 
