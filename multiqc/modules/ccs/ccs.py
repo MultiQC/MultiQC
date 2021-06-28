@@ -28,7 +28,15 @@ class MultiqcModule(BaseMultiqcModule):
         self.mod_data = dict()
         self.parse_v4_log_files()
         self.parse_v5_log_files()
-        self.write_data_files()
+        self.mod_data = self.ignore_samples(self.mod_data)
+
+        # If we found no data
+        if not self.mod_data:
+            raise UserWarning
+        log.info("Found {} reports".format(len(self.mod_data)))
+
+        self.write_data_file(self.mod_data, "multiqc_ccs_report")
+        self.add_general_stats()
         self.add_sections()
 
     def parse_v4_log_files(self):
@@ -46,12 +54,44 @@ class MultiqcModule(BaseMultiqcModule):
             self.mod_data[filename] = v5_data
             self.add_data_source(f)
 
-        # If we found no data
-        if not self.mod_data:
-            raise UserWarning
+    def add_general_stats(self):
+        gstats_data = {}
+        for s_name, attrs in self.mod_data.items():
+            gstats_data[s_name] = {}
+            for attr in attrs["attributes"]:
+                if attr["id"] == "zmw_input":
+                    gstats_data[s_name]["zmw_input"] = attr["value"]
+                if attr["id"] == "zmw_passed_yield":
+                    gstats_data[s_name]["zmw_passed_yield"] = attr["value"]
+            try:
+                gstats_data[s_name]["zmw_pct_passed_yield"] = (
+                    gstats_data[s_name]["zmw_passed_yield"] / gstats_data[s_name]["zmw_input"]
+                ) * 100.0
+            except (KeyError, ZeroDivisionError):
+                pass
 
-    def write_data_files(self):
-        self.write_data_file(self.mod_data, "multiqc_ccs_report")
+        headers = OrderedDict()
+        headers["zmw_pct_passed_yield"] = {
+            "title": "ZMW %PF",
+            "description": "ZMWs percent pass filters",
+            "max": 100,
+            "min": 0,
+            "scale": "RdYlGn",
+            "suffix": "%",
+        }
+        headers["zmw_passed_yield"] = {
+            "title": "ZMWs PF",
+            "description": "ZMWs pass filters",
+            "scale": "BuGn",
+            "shared_key": "long_read_count",
+        }
+        headers["zmw_input"] = {
+            "title": "ZMWs input",
+            "description": "ZMWs input",
+            "scale": "Purples",
+            "shared_key": "long_read_count",
+        }
+        self.general_stats_addcols(gstats_data, headers)
 
     def add_sections(self):
 
