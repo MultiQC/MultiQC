@@ -220,6 +220,20 @@ def load_sample_names(snames_file):
     logger.debug("Found {} sample renaming patterns".format(len(sample_names_rename_buttons)))
 
 
+def load_replace_names(rnames_file):
+    global sample_names_replace
+    try:
+        with open(rnames_file) as f:
+            logger.debug("Loading sample replace config settings from: {}".format(rnames_file))
+            for l in f:
+                s = l.strip().split("\t")
+                if len(s) == 2:
+                    sample_names_replace[s[0]] = s[1]
+    except (IOError, AttributeError) as e:
+        logger.error("Error loading sample names replacement file: {}".format(e))
+    logger.debug("Found {} sample replacing patterns".format(len(sample_names_replace)))
+
+
 def load_show_hide(sh_file):
     global show_hide_buttons, show_hide_patterns, show_hide_mode
     if sh_file:
