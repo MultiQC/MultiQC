@@ -25,17 +25,17 @@ class MultiqcModule(BaseMultiqcModule):
         )
 
         # To store the mod data
-        self.mod_data = dict()
+        self.ccs_data = dict()
         self.parse_v4_log_files()
         self.parse_v5_log_files()
-        self.mod_data = self.ignore_samples(self.mod_data)
+        self.ccs_data = self.ignore_samples(self.ccs_data)
 
         # If we found no data
-        if not self.mod_data:
+        if not self.ccs_data:
             raise UserWarning
-        log.info("Found {} reports".format(len(self.mod_data)))
+        log.info("Found {} reports".format(len(self.ccs_data)))
 
-        self.write_data_file(self.mod_data, "multiqc_ccs_report")
+        self.write_data_file(self.ccs_data, "multiqc_ccs_report")
         self.add_general_stats()
         self.add_sections()
 
@@ -44,19 +44,19 @@ class MultiqcModule(BaseMultiqcModule):
             data = parse_PacBio_log(f["f"])
             v5_data = self.convert_to_v5(data)
             filename = f["s_name"]
-            self.mod_data[filename] = v5_data
+            self.ccs_data[filename] = v5_data
             self.add_data_source(f)
 
     def parse_v5_log_files(self):
         for f in self.find_log_files("ccs/v5", filehandles=True):
             v5_data = json.load(f["f"])
             filename = f["s_name"]
-            self.mod_data[filename] = v5_data
+            self.ccs_data[filename] = v5_data
             self.add_data_source(f)
 
     def add_general_stats(self):
         gstats_data = {}
-        for s_name, attrs in self.mod_data.items():
+        for s_name, attrs in self.ccs_data.items():
             gstats_data[s_name] = {}
             for attr in attrs["attributes"]:
                 if attr["id"] == "zmw_input":
@@ -97,13 +97,13 @@ class MultiqcModule(BaseMultiqcModule):
 
         # First we gather all the filters we encountered
         all_filters = dict()
-        for filename in self.mod_data:
-            for filter_reason in self.filter_and_pass(self.mod_data[filename]):
+        for filename in self.ccs_data:
+            for filter_reason in self.filter_and_pass(self.ccs_data[filename]):
                 all_filters[filter_reason] = 0
 
         # Then we add the counts for each filter to the plot data
         plot_data = dict()
-        for s_name, data in self.mod_data.items():
+        for s_name, data in self.ccs_data.items():
             plot_data[s_name] = dict()
             for reason in all_filters:
                 for attribute in data["attributes"]:
