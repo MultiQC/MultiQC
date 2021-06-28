@@ -13,14 +13,14 @@ body:
     id: log
     attributes:
       label: MultiQC Error log
-      description: Please paste your full MultiQC log.
+      description: Please paste your **full** MultiQC log.
       render: console
 
   - type: textarea
     id: error-file
     attributes:
       label: File that triggers the error
-      description: Please drag and drop (and upload to the GitHub issue) an input file that can be used to replicate the error. Please don't copy and paste log contents, as important whitespace can change. If the file type is not allowed, please compress into a `.zip` file and try again.
+      description: Please drag and drop (and upload to the GitHub issue) an input file that can be used to replicate the error. Please don't copy and paste log contents, as important whitespace can change. If the file type is not allowed, please compress into a `.zip` file.
 
   - type: input
     id: command
