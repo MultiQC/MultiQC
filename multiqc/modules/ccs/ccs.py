@@ -21,7 +21,7 @@ class MultiqcModule(BaseMultiqcModule):
             name="CCS",
             anchor="ccs",
             href="https://github.com/PacificBiosciences/ccs",
-            info=" is used to generate highly accurate single-molecule consensus reads.",
+            info=" is used to generate highly accurate single-molecule consensus reads from PacBio sequencing.",
         )
 
         # To store the mod data
@@ -72,8 +72,8 @@ class MultiqcModule(BaseMultiqcModule):
 
         headers = OrderedDict()
         headers["zmw_pct_passed_yield"] = {
-            "title": "ZMW %PF",
-            "description": "ZMWs percent pass filters",
+            "title": "ZMWs %PF",
+            "description": "Percent of ZMWs passing filters",
             "max": 100,
             "min": 0,
             "scale": "RdYlGn",
@@ -83,13 +83,16 @@ class MultiqcModule(BaseMultiqcModule):
             "title": "ZMWs PF",
             "description": "ZMWs pass filters",
             "scale": "BuGn",
-            "shared_key": "long_read_count",
+            "format": "{.0f}",
+            "shared_key": "zmw_count",
+            "hidden": True,
         }
         headers["zmw_input"] = {
             "title": "ZMWs input",
             "description": "ZMWs input",
             "scale": "Purples",
-            "shared_key": "long_read_count",
+            "format": "{.0f}",
+            "shared_key": "zmw_count",
         }
         self.general_stats_addcols(gstats_data, headers)
 
@@ -135,7 +138,7 @@ class MultiqcModule(BaseMultiqcModule):
             anchor="ccs-filter",
             description="The number of ZMWs that failed or passed all filters for each of the subreads files.",
             helptext="""
-                The number of ZMWs that passed all filters is shown as **ZMWs generating CCS**. All other categories that
+                The number of ZMWs that passed all filters is shown as **ZMWs pass filters**. All other categories that
                 are shown in the graph represent the number of ZMWs that were dropped for the specified reason.
             """,
             plot=bargraph.plot(plot_data, plot_cats, config),
