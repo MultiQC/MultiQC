@@ -117,48 +117,52 @@ class DragenMappingMetics(BaseMultiqcModule):
                 )
                 continue
             chart_data[sample_id] = data
-        self.add_section(
-            name="Mapped / paired / duplicated",
-            anchor="dragen-mapped-paired-duplicated",
-            description="Distribution of reads based on pairing, duplication and mapping.",
-            plot=bargraph.plot(
-                [chart_data, chart_data],
-                [
-                    {
-                        "Number of unique & mapped reads (excl. duplicate marked reads)": {
-                            "color": "#437bb1",
-                            "name": "Unique",
-                        },
-                        "Number of duplicate marked reads": {"color": "#f5a742", "name": "Duplicated"},
-                        "Unmapped reads": {"color": "#b1084c", "name": "Unmapped"},
-                    },
-                    {
-                        "Properly paired reads": {"color": "#099109", "name": "Paired, properly"},
-                        "Not properly paired reads (discordant)": {"color": "#c27a0e", "name": "Paired, discordant"},
-                        "Singleton reads (itself mapped; mate unmapped)": {"color": "#912476", "name": "Singleton"},
-                        "Unmapped reads": {"color": "#b1084c", "name": "Unmapped"},
-                    },
-                ],
-                {
-                    "id": "mapping_dup_percentage_plot",
-                    "title": "Dragen: Mapped/paired/duplicated reads per read group",
-                    "ylab": "Reads",
-                    "cpswitch_counts_label": "Reads",
-                    "data_labels": [
+        if len(chart_data) > 0:
+            self.add_section(
+                name="Mapped / paired / duplicated",
+                anchor="dragen-mapped-paired-duplicated",
+                description="Distribution of reads based on pairing, duplication and mapping.",
+                plot=bargraph.plot(
+                    [chart_data, chart_data],
+                    [
                         {
-                            "name": "Unique vs duplicated vs unmapped",
-                            "ylab": "Reads",
-                            "cpswitch_counts_label": "Reads",
+                            "Number of unique & mapped reads (excl. duplicate marked reads)": {
+                                "color": "#437bb1",
+                                "name": "Unique",
+                            },
+                            "Number of duplicate marked reads": {"color": "#f5a742", "name": "Duplicated"},
+                            "Unmapped reads": {"color": "#b1084c", "name": "Unmapped"},
                         },
                         {
-                            "name": "Paired vs. discordant vs. singleton",
-                            "ylab": "Reads",
-                            "cpswitch_counts_label": "Reads",
+                            "Properly paired reads": {"color": "#099109", "name": "Paired, properly"},
+                            "Not properly paired reads (discordant)": {
+                                "color": "#c27a0e",
+                                "name": "Paired, discordant",
+                            },
+                            "Singleton reads (itself mapped; mate unmapped)": {"color": "#912476", "name": "Singleton"},
+                            "Unmapped reads": {"color": "#b1084c", "name": "Unmapped"},
                         },
                     ],
-                },
-            ),
-        )
+                    {
+                        "id": "mapping_dup_percentage_plot",
+                        "title": "Dragen: Mapped/paired/duplicated reads per read group",
+                        "ylab": "Reads",
+                        "cpswitch_counts_label": "Reads",
+                        "data_labels": [
+                            {
+                                "name": "Unique vs duplicated vs unmapped",
+                                "ylab": "Reads",
+                                "cpswitch_counts_label": "Reads",
+                            },
+                            {
+                                "name": "Paired vs. discordant vs. singleton",
+                                "ylab": "Reads",
+                                "cpswitch_counts_label": "Reads",
+                            },
+                        ],
+                    },
+                ),
+            )
 
 
 def parse_mapping_metrics_file(f):
@@ -338,6 +342,14 @@ def parse_mapping_metrics_file(f):
             data["Number of duplicate marked and mate reads removed"] = 0
         if data.get("Number of unique reads (excl. duplicate marked reads)", "NA") == "NA":
             data["Number of unique reads (excl. duplicate marked reads)"] = data["Mapped reads"]
+
+        # fixing when dragen was run on single-end data
+        if data.get("Mismatched bases R2 (excl. indels)", "NA") == "NA":
+            data["Mismatched bases R2 (excl. indels)"] = 0
+        if data.get("Mismatched bases R2", "NA") == "NA":
+            data["Mismatched bases R2"] = 0
+        if data.get("Soft-clipped bases R2", "NA") == "NA":
+            data["Soft-clipped bases R2"] = 0
 
         # adding alignment percentages
         if exist_and_number(data, "Total alignments", "Secondary alignments") and data["Total alignments"] > 0:
