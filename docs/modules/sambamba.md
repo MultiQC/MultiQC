@@ -27,8 +27,7 @@ Duplicate rates are calculated as follows:
 
 #### Paired end
 
-> `duplicate_rate = duplicateReads /
-> (sortedEndPairs * 2 + singleEnds - singleUnmatchedPairs) * 100`
+> `duplicate_rate = duplicateReads / (sortedEndPairs * 2 + singleEnds - singleUnmatchedPairs) * 100`
 
 #### Single end
 
