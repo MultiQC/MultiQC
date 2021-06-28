@@ -237,6 +237,7 @@ fn_clean_exts:
   - ".mapped"
   - ".vep"
   - "_vep"
+  - "ccs"
 
 # These are removed after the above, only if sample names
 # start or end with this string. Again, removed in order.
@@ -296,6 +297,11 @@ module_order:
   # MultiQC general module for catching output from custom scripts
   - "custom_content"
   # Post-alignment QC
+  - ccs:
+      module_tag:
+        - DNA
+        - RNA
+        - PacBio
   - ngsderive:
       module_tag:
         - DNA

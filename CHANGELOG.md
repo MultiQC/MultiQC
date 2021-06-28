@@ -18,6 +18,8 @@
 
 - [**Bustools**](https://bustools.github.io/)
   - Tools for working with BUS files
+- [**ccs**](https://github.com/PacificBiosciences/ccs)
+  - Generate highly accurate single-molecule consensus reads from PacBio data
 - [**Pangolin**](https://github.com/cov-lineages/pangolin)
   - Added MultiQC support for Pangolin, the tool that determines SARS-CoV-2 lineages
 - [**VEP**](https://www.ensembl.org/info/docs/tools/vep/index.html)

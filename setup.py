@@ -102,6 +102,7 @@ setup(
             "bowtie2 = multiqc.modules.bowtie2:MultiqcModule",
             "busco = multiqc.modules.busco:MultiqcModule",
             "bustools = multiqc.modules.bustools:MultiqcModule",
+            "ccs = multiqc.modules.ccs:MultiqcModule",
             "clipandmerge = multiqc.modules.clipandmerge:MultiqcModule",
             "clusterflow = multiqc.modules.clusterflow:MultiqcModule",
             "conpair = multiqc.modules.conpair:MultiqcModule",
