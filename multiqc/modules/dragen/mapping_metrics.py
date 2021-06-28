@@ -100,7 +100,7 @@ class DragenMappingMetics(BaseMultiqcModule):
                 + data["Unmapped reads"]
                 != data["Total reads in RG"]
             ):
-                log.warning(
+                log.debug(
                     "sum of unpaired/discordant/proppaired/unmapped reads not matching total, "
                     "skipping mapping/paired percentages plot for: {}".format(sample_id)
                 )
@@ -335,21 +335,19 @@ def parse_mapping_metrics_file(f):
 
     # adding some missing values that we wanna report for consistency
     for data in itertools.chain(data_by_readgroup.values(), data_by_phenotype.values()):
-        # fixing when deduplication wasn't performed
-        if data.get("Number of duplicate marked reads", "NA") == "NA":
-            data["Number of duplicate marked reads"] = 0
-        if data.get("Number of duplicate marked and mate reads removed", "NA") == "NA":
-            data["Number of duplicate marked and mate reads removed"] = 0
-        if data.get("Number of unique reads (excl. duplicate marked reads)", "NA") == "NA":
-            data["Number of unique reads (excl. duplicate marked reads)"] = data["Mapped reads"]
-
-        # fixing when dragen was run on single-end data
-        if data.get("Mismatched bases R2 (excl. indels)", "NA") == "NA":
-            data["Mismatched bases R2 (excl. indels)"] = 0
-        if data.get("Mismatched bases R2", "NA") == "NA":
-            data["Mismatched bases R2"] = 0
-        if data.get("Soft-clipped bases R2", "NA") == "NA":
-            data["Soft-clipped bases R2"] = 0
+        # fixing when deduplication wasn't performed, or running with single-end data
+        for field in [
+            "Number of duplicate marked reads",
+            "Number of duplicate marked and mate reads removed",
+            "Number of unique reads (excl. duplicate marked reads)",
+            "Mismatched bases R2 (excl. indels)",
+            "Mismatched bases R2",
+            "Soft-clipped bases R2",
+        ]:
+            try:
+                data.pop(field)
+            except KeyError:
+                pass
 
         # adding alignment percentages
         if exist_and_number(data, "Total alignments", "Secondary alignments") and data["Total alignments"] > 0:
