@@ -107,7 +107,11 @@ def parse_reports(self):
 
     # Calculate summed mean values for all read orientations
     for s_name, v in self.sentieon_insertSize_samplestats.items():
-        self.sentieon_insertSize_samplestats[s_name]["summed_mean"] = v["meansum"] / v["total_pairs"]
+        try:
+            self.sentieon_insertSize_samplestats[s_name]["summed_mean"] = v["meansum"] / v["total_pairs"]
+        except ZeroDivisionError:
+            # The mean of zero elements is zero
+            self.sentieon_insertSize_samplestats[s_name]["summed_mean"] = 0
 
     # Calculate summed median values for all read orientations
     for s_name in self.sentieon_insertSize_histogram:
