@@ -110,18 +110,22 @@ class SambambaMarkdupMixin:
 
         """
         Take parsed stats from sambamba markdup to general stats table at the top of the report.
+
+        Append to the dictionaries from the top-level Sambamba module script, so that all columns
+        are added in a single function call across all Sambamba submodules.
         """
 
-        headers = {
-            "duplicate_rate": {
-                "title": "% Dups",
-                "description": "Rate of Duplication per Sample",
-                "scale": "RdYlGn-rev",
-                "format": "{:,.0f}",
-                "suffix": "%",
-            }
+        self.general_stats_headers["duplicate_rate"] = {
+            "title": "% Dups",
+            "description": "Rate of Duplication per Sample",
+            "scale": "RdYlGn-rev",
+            "format": "{:,.0f}",
+            "suffix": "%",
         }
-        self.general_stats_addcols(self.markdup_data, headers)
+        for s_name, data in self.markdup_data.items():
+            if s_name not in self.general_stats_data:
+                self.general_stats_data[s_name] = {}
+            self.general_stats_data[s_name]["duplicate_rate"] = data["duplicate_rate"]
 
     def markdup_section(self):
 
