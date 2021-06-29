@@ -28,11 +28,6 @@ jobs:
           username: ${{ github.repository_owner }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
-      - id: docker-tag
-        uses: yuya-takeyama/docker-tag-from-github-ref-action@v1
-        with:
-          latest-branches:
-
       - name: Push dev image
         uses: docker/build-push-action@v2
         if: github.event_name == 'push'
