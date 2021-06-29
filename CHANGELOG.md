@@ -24,8 +24,11 @@
   - Added MultiQC support for Pangolin, the tool that determines SARS-CoV-2 lineages
 - [**Sambamba Markdup**](https://lomereiter.github.io/sambamba/docs/sambamba-markdup.html)
   - Added MultiQC module to add duplicate rate calculated by Sambamba Markdup.
+- [**Snippy**](https://github.com/tseemann/snippy)
+  - Rapid haploid variant calling and core genome alignment.
 - [**VEP**](https://www.ensembl.org/info/docs/tools/vep/index.html)
   - Added MultiQC module to add summary statistics of Ensembl VEP annotations.
+  - Handle error from missing variants in VEP stats file. ([#1446](https://github.com/ewels/MultiQC/issues/1446))
 
 #### Module updates
 
@@ -52,8 +55,6 @@
   - Fixed typo causing wrong number of contigs being displayed ([#1442](https://github.com/ewels/MultiQC/issues/1442))
 - **Sentieon**
   - Handled `ZeroDivisionError` when input files have zero reads ([#1420](https://github.com/ewels/MultiQC/issues/1420))
-- **VEP**
-  - Handle error from missing variants in VEP stats file. ([#1446](https://github.com/ewels/MultiQC/issues/1446))
 - **RSeQC**
   - Fixed double counting of some categories in `read_distribution` bar graph. ([#1457](https://github.com/ewels/MultiQC/issues/1457))
 
