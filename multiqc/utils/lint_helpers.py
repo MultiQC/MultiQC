@@ -30,6 +30,7 @@ def check_mods_docs_readme():
     if not os.path.isfile(readme_fn):
         logger.warning("Can't check docs readme in lint test as file doesn't exist: {}".format(readme_fn))
         return None
+    logger.info("Checking docs readme '{}' as --lint specified".format(readme_fn))
     with open(readme_fn) as f:
         fm = next(yaml.load_all(f, Loader=yaml.SafeLoader))
 
