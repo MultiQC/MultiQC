@@ -113,7 +113,18 @@ class MultiqcModule(BaseMultiqcModule):
         """
         Add the snippy data to the general stats.
         """
-        self.general_stats_addcols(self.snippy_data, self.snippy_headers_config())
+        self.general_stats_addcols(
+            self.snippy_data,
+            {
+                "VariantTotal": {
+                    "title": "# Variants",
+                    "description": "Total variants detected.",
+                    "scale": "BuPu",
+                    "format": "{:.0f}",
+                    "shared_key": "variant_count",
+                }
+            },
+        )
         self.write_data_file(self.snippy_data, "multiqc_snippy")
 
     # -------------------------------------------------------------------------#
@@ -193,116 +204,47 @@ class MultiqcModule(BaseMultiqcModule):
         )
 
     # -------------------------------------------------------------------------#
-    def snippy_headers_config(self):
-        """
-        Prepare the headers for the snippy stats table.
-        """
-        # General stats table headers
-        headers = OrderedDict()
-        headers["Variant-SNP"] = {
-            "title": "# SNP",
-            "description": "Total SNP variants detected.",
-            "scale": "BuPu",
-            "format": "{:.0f}",
-            "shared_key": "variant_count",
-        }
-        headers["Variant-INS"] = {
-            "title": "# INS",
-            "description": "Total INS variants detected.",
-            "scale": "BuGn",
-            "format": "{:.0f}",
-            "shared_key": "variant_count",
-        }
-        headers["Variant-DEL"] = {
-            "title": "# DEL",
-            "description": "Total DEL variants detected.",
-            "scale": "YlOrBr",
-            "format": "{:.0f}",
-            "shared_key": "variant_count",
-        }
-        headers["Variant-COMPLEX"] = {
-            "title": "# COMPLEX",
-            "description": "Total COMPLEX variants detected.",
-            "scale": "PuRd",
-            "format": "{:.0f}",
-            "shared_key": "variant_count",
-        }
-        headers["VariantTotal"] = {
-            "title": "# Variants",
-            "description": "Total variants detected.",
-            "scale": "Blues",
-            "format": "{:.0f}",
-            "shared_key": "variant_count",
-        }
-        return headers
-
-    # -------------------------------------------------------------------------#
     def snippy_core_headers_config(self):
         """
         Prepare the headers for the snippy core stats table.
         """
         # General stats table headers
         headers = OrderedDict()
-        headers["Percent_Aligned"] = {
-            "title": "% Aligned",
-            "description": "Percent of bases aligned to the reference.",
-            "max": 100,
-            "min": 0,
-            "scale": "RdYlGn",
-            "suffix": "%",
-        }
         headers["Percent_Het"] = {
             "title": "% Het",
-            "description": "Percent of aligned sites that are heterozygous.",
+            "description": "Percent of aligned sites that are heterozygous",
             "max": 100,
             "min": 0,
             "scale": "RdYlGn-rev",
             "suffix": "%",
-            "hidden": True,
-        }
-        headers["LENGTH"] = {
-            "title": "{} Length".format(config.base_count_prefix),
-            "description": "Number of nucleotides in the reference genome ({}).".format(config.base_count_desc),
-            "scale": "Blues",
-            "shared_key": "base_count",
-        }
-        headers["ALIGNED"] = {
-            "title": "{} Aligned".format(config.base_count_prefix),
-            "description": "Number of aligned nucleotides ({}).".format(config.base_count_desc),
-            "scale": "RdYlGn",
-            "shared_key": "base_count",
-        }
-        headers["UNALIGNED"] = {
-            "title": "{} Unaligned".format(config.base_count_prefix),
-            "description": "Number of unaligned nucleotides ({}).".format(config.base_count_desc),
-            "scale": "RdYlGn-rev",
-            "shared_key": "base_count",
-        }
-        headers["VARIANT"] = {
-            "title": "{} Variants".format(config.base_count_prefix),
-            "description": "Number of variants ({}).".format(config.base_count_desc),
-            "scale": "Blues",
-            "format": "{:.0f}",
-            "shared_key": "base_count",
         }
         headers["HET"] = {
-            "title": "{} Hets".format(config.base_count_prefix),
-            "description": "Number of heterozygous sites ({}).".format(config.base_count_desc),
+            "title": "# Hets",
+            "description": "Number of heterozygous sites",
             "scale": "RdYlGn-rev",
-            "format": "{:.0f}",
-            "shared_key": "base_count",
+            "format": "{:,.0f}",
+            "hidden": True,
         }
-        headers["MASKED"] = {
-            "title": "{} Masked".format(config.base_count_prefix),
-            "description": "Number of masked nucleotides ({}).".format(config.base_count_desc),
+        headers["VARIANT"] = {
+            "title": "# Variants",
+            "description": "Number of variants",
             "scale": "Blues",
-            "shared_key": "base_count",
+            "format": "{:,.0f}",
+            "hidden": True,
         }
-        headers["LOWCOV"] = {
-            "title": "{} Low Cov".format(config.base_count_prefix),
-            "description": "Number of low coverage sites ({}).".format(config.base_count_desc),
-            "scale": "RdYlGn-rev",
-            "format": "{:.0f}",
-            "shared_key": "base_count",
+        headers["Percent_Aligned"] = {
+            "title": "% Aligned",
+            "description": "Percent of bases aligned to the reference",
+            "max": 100,
+            "min": 0,
+            "scale": "RdYlGn",
+            "suffix": "%",
+        }
+        headers["ALIGNED"] = {
+            "title": "# Aligned",
+            "description": "Number of aligned nucleotides",
+            "scale": "RdYlGn",
+            "format": "{:,.0f}",
+            "hidden": True,
         }
         return headers
