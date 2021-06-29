@@ -110,6 +110,7 @@ sample_names_rename_buttons: []
 sample_names_replace: {}
 sample_names_replace_regex: False
 sample_names_replace_exact: False
+sample_names_replace_complete: False
 sample_names_rename: []
 show_hide_buttons: []
 show_hide_patterns: []

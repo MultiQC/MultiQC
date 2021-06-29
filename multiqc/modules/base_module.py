@@ -329,7 +329,13 @@ class BaseMultiqcModule(object):
                         s_name = re.sub(s_name_search, s_name_replace, s_name)
                     # Replace - simple string
                     else:
-                        s_name = s_name.replace(s_name_search, s_name_replace)
+                        # Complete name swap
+                        if config.sample_names_replace_complete:
+                            if s_name_search in s_name:
+                                s_name = s_name_replace
+                        # Partial substring replace
+                        else:
+                            s_name = s_name.replace(s_name_search, s_name_replace)
                 except re.error as e:
                     logger.error("Error with sample name replacement regex: {}".format(e))
 

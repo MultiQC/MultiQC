@@ -100,9 +100,18 @@ IDX102936	Sample_3
 
 Note that by default, _partial_ matches are replaced. So if a log file gives a sample
 name of `IDX102934_mytool` then the result will be `Sample_1_mytool`.
-To replace a sample name only if it _fully_ matches the search string, set
-`sample_names_replace_exact` to `True` in a MultiQC config file.
-Then `IDX102934_mytool` would remain unchanged.
+There are two config options to fine-tune this behaviour:
+
+Setting `sample_names_replace_exact` to `True` in a MultiQC config file will tell
+MultiQC to only change a sample name if the pattern _fully_ matches the search string.
+In the above example, `IDX102934_mytool` would remain unchanged.
+
+Setting `sample_names_replace_complete` to `True`, the replacement string will be used
+as a complete replacement if the search pattern matches at all.
+In the above example, `IDX102934_mytool` would become `Sample_1`.
+
+> NB: Use this method with caution! If aggressive cleaning of sample names results in
+> multiple samples with identical identifiers, they will be overwritten.
 
 To have more control over replacements, you can use regular expressions.
 If you set `sample_names_replace_regex` to `True` in a MultiQC config file
@@ -118,6 +127,10 @@ With this file, `SAMPLE1_PE_2` would be renamed to `XXX_1_PE_2`.
 
 Setting `sample_names_replace_exact` to `True` also works for regular expression
 searches. The code uses the `re.fullmatch` function, so no `^` or `$` anchors are needed.
+
+Setting `sample_names_replace_complete` is ignored when using regexes.
+If you want this behaviour then configure your regular expression to match the entire string.
+For example, `*(\d)_([PS]E)_(\d) \1_\2_\3` would rename `SAMPLE1_PE_2` to `1_PE_2`.
 
 Finally, if you prefer not to use `--replace-names` with a TSV file, you
 can set the search patterns in a MultiQC config file directly.
