@@ -173,6 +173,13 @@ busco:
   num_lines: 1
 bustools:
   fn: "*inspect.json"
+ccs/v4:
+  contents: "ZMWs generating CCS"
+  num_lines: 2
+  max_filesize: 1024
+ccs/v5:
+  contents: '"id": "ccs_processing"'
+  fn: "*.json"
 custom_content:
   fn_re: '.+_mqc\.(yaml|yml|json|txt|csv|tsv|log|out|png|jpg|jpeg|html)'
 clipandmerge:
@@ -491,6 +498,18 @@ picard/variant_calling_metrics:
 picard/wgs_metrics:
   contents: "CollectWgsMetrics"
   shared: true
+picard/collectilluminabasecallingmetrics:
+  contents: "CollectIlluminaBasecallingMetrics"
+  shared: true
+picard/collectilluminalanemetrics:
+  contents: "CollectIlluminaLaneMetrics"
+  shared: true
+picard/extractilluminabarcodes:
+  contents: "ExtractIlluminaBarcodes"
+  shared: true
+picard/markilluminaadapters:
+  contents: "MarkIlluminaAdapters"
+  shared: true
 preseq:
   - contents: "EXPECTED_DISTINCT"
     num_lines: 2
@@ -579,6 +598,9 @@ salmon/meta:
   contents: "salmon_version"
 salmon/fld:
   fn: "flenDist.txt"
+sambamba/markdup:
+  contents: "finding positions of the duplicate reads in the file"
+  num_lines: 5
 samblaster:
   contents: "samblaster: Version"
   shared: true

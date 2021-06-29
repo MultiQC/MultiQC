@@ -14,6 +14,7 @@ MultiQC Modules:
     AfterQC: modules/afterqc.md
     Bcl2fastq: modules/bcl2fastq.md
     BioBloom Tools: modules/biobloomtools.md
+    CCS: modules/ccs.md
     Cluster Flow: modules/clusterflow.md
     Cutadapt: modules/cutadapt.md
     ClipAndMerge: modules/clipandmerge.md
@@ -98,6 +99,7 @@ MultiQC Modules:
     Rockhopper: modules/rockhopper.md
     RSEM: modules/rsem.md
     RSeQC: modules/rseqc.md
+    Sambamba: modules/sambamba.md
     Samblaster: modules/samblaster.md
     Samtools: modules/samtools.md
     Sentieon: modules/sentieon.md

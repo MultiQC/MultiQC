@@ -7,6 +7,7 @@
 - New interactive slider controls for controlling heatmap colour scales ([#1427](https://github.com/ewels/MultiQC/issues/1427))
 - Make the module crash tracebacks much prettier using `rich`
 - Refine the cli log output a little (nicely formatted header line + drop the `[INFO]`)
+- Added new `--replace-names` / config `sample_names_replace` option to replace sample names during report generation
 - Added docs describing tools for downstream analysis of MultiQC outputs.
 - Added CI tests for Python 3.9, pinned `networkx` package to `>=2.5.1` ([#1413](https://github.com/ewels/MultiQC/issues/1413))
 - Added patterns to `config.fn_ignore_paths` to avoid error with parsing installation dir / singularity cache ([#1416](https://github.com/ewels/MultiQC/issues/1416))
@@ -17,8 +18,12 @@
 
 - [**Bustools**](https://bustools.github.io/)
   - Tools for working with BUS files
+- [**ccs**](https://github.com/PacificBiosciences/ccs)
+  - Generate highly accurate single-molecule consensus reads from PacBio data
 - [**Pangolin**](https://github.com/cov-lineages/pangolin)
   - Added MultiQC support for Pangolin, the tool that determines SARS-CoV-2 lineages
+- [**Sambamba Markdup**](https://lomereiter.github.io/sambamba/docs/sambamba-markdup.html)
+  - Added MultiQC module to add duplicate rate calculated by Sambamba Markdup.
 - [**Snippy**](https://github.com/tseemann/snippy)
   - Rapid haploid variant calling and core genome alignment.
 - [**VEP**](https://www.ensembl.org/info/docs/tools/vep/index.html)
@@ -29,6 +34,8 @@
 
 - **bcl2fastq**
   - Added sample name cleaning so that prepending directories with the `-d` flag works properly.
+- **Dragen**
+  - Handled MultiQC crashing when run on single-end output from Dragen ([#1374](https://github.com/ewels/MultiQC/issues/1374))
 - **fastp**
   - Handle a `ZeroDivisionError` if there are zero reads ([#1444](https://github.com/ewels/MultiQC/issues/1444))
 - **Flexbar**
@@ -41,10 +48,19 @@
 - **Picard**
   - `RnaSeqMetrics` - fix assignment barplot labels to say bases instead of reads ([#1408](https://github.com/ewels/MultiQC/issues/1408))
   - `CrosscheckFingerprints` - fix bug where LOD threshold was not detected when invoked with "new" picard cli style. fixed formatting bug ([#1414](https://github.com/ewels/MultiQC/issues/1414))
+  - Add metrics from `CollectIlluminaBasecallingMetrics`, `CollectIlluminaLaneMetrics`, `ExtractIlluminaBarcodes` and `MarkIlluminaAdapters` ([#1336](https://github.com/ewels/MultiQC/pull/1336))
 - **qc3C**
   - Updated module to not fail on older field names.
 - **QUAST**
   - Fixed typo causing wrong number of contigs being displayed ([#1442](https://github.com/ewels/MultiQC/issues/1442))
+    <<<<<<< HEAD
+    =======
+- **VEP**
+  - Handle error from missing variants in VEP stats file. ([#1446](https://github.com/ewels/MultiQC/issues/1446))
+- **RSeQC**
+  - Fixed double counting of some categories in `read_distribution` bar graph. ([#1457](https://github.com/ewels/MultiQC/issues/1457))
+
+> > > > > > > master
 
 ## [MultiQC v1.10.1](https://github.com/ewels/MultiQC/releases/tag/v1.10.1) - 2021-04-01
 
