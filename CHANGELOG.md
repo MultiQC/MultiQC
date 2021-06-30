@@ -40,6 +40,8 @@
   - Handled MultiQC crashing when run on single-end output from Dragen ([#1374](https://github.com/ewels/MultiQC/issues/1374))
 - **fastp**
   - Handle a `ZeroDivisionError` if there are zero reads ([#1444](https://github.com/ewels/MultiQC/issues/1444))
+- **FastQC**
+  - Added check for if `overrepresented_sequences` is missing from reports ([#1281](https://github.com/ewels/MultiQC/issues/1444))
 - **Flexbar**
   - Fixed bug where reports with 0 reads would crash MultiQC ([#1407](https://github.com/ewels/MultiQC/issues/1407))
 - **Kraken**
