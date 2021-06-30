@@ -857,18 +857,15 @@ class MultiqcModule(BaseMultiqcModule):
                 data[s_name]["top_overrepresented"] = max_pcnt
                 data[s_name]["remaining_overrepresented"] = total_pcnt - max_pcnt
             except KeyError:
-                try:
-                    if self.fastqc_data[s_name]["statuses"]["overrepresented_sequences"] == "pass":
-                        data[s_name]["total_overrepresented"] = 0
-                        data[s_name]["top_overrepresented"] = 0
-                        data[s_name]["remaining_overrepresented"] = 0
-                    else:
-                        log.debug("Couldn't find data for {}, invalid Key".format(s_name))
-                except KeyError:
-                    pass
+                if self.fastqc_data[s_name]["statuses"].get("overrepresented_sequences") == "pass":
+                    data[s_name]["total_overrepresented"] = 0
+                    data[s_name]["top_overrepresented"] = 0
+                    data[s_name]["remaining_overrepresented"] = 0
+                else:
+                    log.debug("Couldn't find data for {}, invalid Key".format(s_name))
 
         if all(len(data[s_name]) == 0 for s_name in self.fastqc_data):
-            log.warning("overrepresented_sequences not found in FastQC reports")
+            log.debug("overrepresented_sequences not found in FastQC reports")
             return None
 
         cats = OrderedDict()
