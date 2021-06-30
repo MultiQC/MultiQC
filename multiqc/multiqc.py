@@ -656,7 +656,7 @@ def run(
         except:
             # Flag the error, but carry on
             class CustomTraceback:
-                def __rich_console__(self, console: rich.console.Console):
+                def __rich_console__(self, console: rich.console.Console, options: rich.console.ConsoleOptions):
                     sys_tb = sys.exc_info()
                     issue_url = "https://github.com/ewels/MultiQC/issues/new?template=bug_report.md&title={}%20module%20-%20{}".format(
                         this_module, sys_tb[0].__name__
@@ -669,7 +669,7 @@ def run(
                     )
                     yield Syntax(traceback.format_exc(), "python")
 
-                def __rich_measure__(self, console: rich.console.Console):
+                def __rich_measure__(self, console: rich.console.Console, options: rich.console.ConsoleOptions):
                     tb_width = max([len(l) for l in traceback.format_exc().split("\n")])
                     try:
                         log_width = 71 + len(report.last_found_file)
@@ -681,7 +681,7 @@ def run(
             console = rich.console.Console(stderr=True, force_terminal=log.force_term_colors())
             console.print(
                 rich.panel.Panel(
-                    CustomTraceback,
+                    CustomTraceback(),
                     title="Oops! The '[underline]{}[/]' MultiQC module broke...".format(this_module),
                     expand=False,
                     border_style="red",
