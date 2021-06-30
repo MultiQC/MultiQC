@@ -25,18 +25,19 @@ body:
     id: log
     attributes:
       label: MultiQC Error log
-      description: Please paste your **full** MultiQC log.
+      description: |
+        Please paste your **full command** and MultiQC log.
+        Please do not truncate it, as the MultiQC version and command may be needed to help.
       render: console
+      placeholder: |
+        $ multiqc .
 
-  - type: textarea
-    id: command
-    attributes:
-      label: Command used to run MultiQC
-      placeholder: eg. multiqc .
-      render: bash
+          /// MultiQC 🔍 | v1.10.1
 
-  - type: input
-    id: version
-    attributes:
-      label: MultiQC Version
-      placeholder: eg. MultiQC v1.10
+        |           multiqc | Search path : /path/to/my/data
+        |         searching | ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 100% 2352/2352
+        |            fastqc | Found 498 reports
+        |           multiqc | Compressing plot data
+        |           multiqc | Report      : multiqc_report.html
+        |           multiqc | Data        : multiqc_data
+        |           multiqc | MultiQC complete
