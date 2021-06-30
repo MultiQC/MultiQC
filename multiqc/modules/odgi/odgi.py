@@ -20,8 +20,8 @@ class MultiqcModule(BaseMultiqcModule):
 
     def __init__(self):
         # Initialise the parent object
-        super(MultiqcModule, self).__init__(name='Odgi', anchor='odgi',
-                                            href='https://github.com/vgteam/odgi',
+        super(MultiqcModule, self).__init__(name='ODGI', anchor='odgi',
+                                            href='https://github.com/pangenome/odgi',
                                             info='is an optimized dynamic graph/genome implementation.')
 
         self.odgi_stats_map = dict()
@@ -66,6 +66,9 @@ class MultiqcModule(BaseMultiqcModule):
         lines = f['f'].splitlines()
         # parse the generals stats
         stats = lines[1].split('\t')
+        print("[START]: STATS")
+        print(stats)
+        print("[END]: STATS")
         # parse the mean links length
         mean_links_length = lines[4].split('\t')
         # parse sum of path nodes distances
@@ -84,7 +87,7 @@ class MultiqcModule(BaseMultiqcModule):
         headers = OrderedDict()
         headers['Length'] = {
             'title': 'Length',
-            'description': 'Graph length',
+            'description': 'Graph length in nucleotides',
             'scale': 'BuPu'
         }
         headers['Nodes'] = {
@@ -99,7 +102,7 @@ class MultiqcModule(BaseMultiqcModule):
         }
         headers['Paths'] = {
             'title': 'Paths',
-            'description': 'Number of paths through the graph',
+            'description': 'Number of paths in the graph',
             'scale': 'Greens'
         }
         for fn in self.odgi_stats_map.keys():
@@ -133,11 +136,11 @@ class MultiqcModule(BaseMultiqcModule):
             'categories': True,
             'yDecimals': False,
             'logswitch': True,
-            'title': 'Odgi: Odgi metrics'
+            'title': 'ODGI: ODGI metrics'
         }
 
         self.add_section(
-            name='Odgi metrics',
+            name='ODGI metrics',
             anchor='odgi-stats',
             description='The odgi metrics section',
             helptext='<b>sum-of-path-node-distances</b>:<br>For each path we iterate from node to node and count the node distance of nodes on the pangenome '
@@ -159,6 +162,7 @@ class MultiqcModule(BaseMultiqcModule):
         Extracts the sample name from a given file name.
         Expects and returns one of seqwish, smooth or cons@*
         """
+        # TODO if non of the above, just take the full name
         if 'cons@' in file_name:
             file_name = file_name.split('.')
             consensus_identifier = list((e for e in file_name if 'cons@' in e))
