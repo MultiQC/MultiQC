@@ -290,6 +290,10 @@ gatk/varianteval:
 gatk/base_recalibrator:
   contents: "#:GATKTable:Arguments:Recalibration"
   num_lines: 3
+gffcompare:
+  fn: "*.stats"
+  contents: "# gffcompare"
+  num_lines: 2
 goleft_indexcov/roc:
   fn: "*-indexcov.roc"
 goleft_indexcov/ped:
@@ -653,6 +657,12 @@ slamdunk/tcperreadpos:
   num_lines: 1
 slamdunk/tcperutrpos:
   contents: "# slamdunk tcperutr"
+  num_lines: 1
+snippy/snippy:
+  contents: "snippy"
+  num_lines: 20
+snippy/snippy-core:
+  contents_re: 'ID\tLENGTH\tALIGNED\tUNALIGNED\tVARIANT\tHET\tMASKED\tLOWCOV'
   num_lines: 1
 snpeff:
   contents: "SnpEff_version"

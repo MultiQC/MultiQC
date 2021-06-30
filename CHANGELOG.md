@@ -20,12 +20,17 @@
   - Tools for working with BUS files
 - [**ccs**](https://github.com/PacificBiosciences/ccs)
   - Generate highly accurate single-molecule consensus reads from PacBio data
+- [**GffCompare**](https://ccb.jhu.edu/software/stringtie/gffcompare.shtml)
+  - GffCompare can annotate and estimate accuracy of one or more GFF files compared with a reference annotation.
 - [**Pangolin**](https://github.com/cov-lineages/pangolin)
   - Added MultiQC support for Pangolin, the tool that determines SARS-CoV-2 lineages
 - [**Sambamba Markdup**](https://lomereiter.github.io/sambamba/docs/sambamba-markdup.html)
   - Added MultiQC module to add duplicate rate calculated by Sambamba Markdup.
+- [**Snippy**](https://github.com/tseemann/snippy)
+  - Rapid haploid variant calling and core genome alignment.
 - [**VEP**](https://www.ensembl.org/info/docs/tools/vep/index.html)
   - Added MultiQC module to add summary statistics of Ensembl VEP annotations.
+  - Handle error from missing variants in VEP stats file. ([#1446](https://github.com/ewels/MultiQC/issues/1446))
 
 #### Module updates
 
@@ -48,12 +53,13 @@
   - `RnaSeqMetrics` - fix assignment barplot labels to say bases instead of reads ([#1408](https://github.com/ewels/MultiQC/issues/1408))
   - `CrosscheckFingerprints` - fix bug where LOD threshold was not detected when invoked with "new" picard cli style. fixed formatting bug ([#1414](https://github.com/ewels/MultiQC/issues/1414))
   - Add metrics from `CollectIlluminaBasecallingMetrics`, `CollectIlluminaLaneMetrics`, `ExtractIlluminaBarcodes` and `MarkIlluminaAdapters` ([#1336](https://github.com/ewels/MultiQC/pull/1336))
+  - Made checker for comma as decimal separator in `HsMetrics` more robust ([#1296](https://github.com/ewels/MultiQC/issues/1296))
 - **qc3C**
   - Updated module to not fail on older field names.
 - **QUAST**
   - Fixed typo causing wrong number of contigs being displayed ([#1442](https://github.com/ewels/MultiQC/issues/1442))
-- **VEP**
-  - Handle error from missing variants in VEP stats file. ([#1446](https://github.com/ewels/MultiQC/issues/1446))
+- **Sentieon**
+  - Handled `ZeroDivisionError` when input files have zero reads ([#1420](https://github.com/ewels/MultiQC/issues/1420))
 - **RSeQC**
   - Fixed double counting of some categories in `read_distribution` bar graph. ([#1457](https://github.com/ewels/MultiQC/issues/1457))
 
