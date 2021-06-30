@@ -96,8 +96,6 @@ class MultiqcModule(BaseMultiqcModule):
                 int(s) for s in lines[26].replace("/", " ").split() if s.isdigit()
             ]
 
-        # print(self.gffcompare_data)
-
         # Filter to strip out ignored sample names
         self.gffcompare_data = self.ignore_samples(self.gffcompare_data)
 
@@ -114,25 +112,25 @@ class MultiqcModule(BaseMultiqcModule):
 
         # Report sectionsq
         self.add_section(
-            name="GffCompare: Accuracy values",
+            name="Accuracy values",
             description=(
                 """
-                Displayed are the accuracy values precisiond and sensitivity for different levels of genomic features. 
+                Displayed are the accuracy values precisiond and sensitivity for different levels of genomic features.
                 The metrics are calculated for the comparison of a query and reference GTF file.
                 """
             ),
             helptext=(
                 """
-                Accuracy metrics are calculated as described in [Burset et al. (1996)](http://dx.doi.org/10.1006/geno.1996.0298). Sensitivity is the true positive rate, Precision 
+                Accuracy metrics are calculated as described in [Burset et al. (1996)](http://dx.doi.org/10.1006/geno.1996.0298). Sensitivity is the true positive rate, Precision
                 True Positives are query features that agree with features in the reference. The exact definition depends on the feature level:
 
-                - *Base*: True positives are bases reported at the same coordinates. 
+                - *Base*: True positives are bases reported at the same coordinates.
                 - *Exon*: Comparison units are exons that overlap in query and reference with same coordinates.
                 - *Intron chain*: True positives are query transcripts for which all introns coordinates match those in the reference.
                 - *Transcript*: More stringent then intron chain, all Exon coordinates need to match. Outer exon coordinates (start + end) can vary by 100 bases in default settings
                 - *Locus*: Cluster of exons need to match.
-                
-                More in depth description [here](https://ccb.jhu.edu/software/stringtie/gffcompare.shtml#levels)        
+
+                More in depth description [here](https://ccb.jhu.edu/software/stringtie/gffcompare.shtml#levels)
                 """
             ),
             anchor="gffcompare_accuracy",
@@ -140,7 +138,7 @@ class MultiqcModule(BaseMultiqcModule):
         )
 
         self.add_section(
-            name="Gffcompare: Novel features",
+            name="Novel features",
             description=(
                 """
                 Number of novel features in the query
@@ -157,7 +155,7 @@ class MultiqcModule(BaseMultiqcModule):
         )
 
         self.add_section(
-            name="Gffcompare: Missing features",
+            name="Missing features",
             description=(
                 """
                 Number of missing features in the query
