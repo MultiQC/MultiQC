@@ -147,8 +147,8 @@ For further information, please see the [documentation](https://multiqc.info/doc
 - [**Sentieon**](https://www.sentieon.com/products/)
   - Submodules added to catch Picard-based QC metrics files
 
-* [**GffCompare**]](https://ccb.jhu.edu/software/stringtie/gffcompare.shtml) 
-    * GffCompare can annotate and estimate accuracy of one or more GFF files compared with a reference annotation. 
+* [**GffCompare**]](https://ccb.jhu.edu/software/stringtie/gffcompare.shtml)
+  - GffCompare can annotate and estimate accuracy of one or more GFF files compared with a reference annotation.
 
 #### Module updates
 
