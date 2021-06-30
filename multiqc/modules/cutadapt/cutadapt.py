@@ -39,9 +39,13 @@ class MultiqcModule(BaseMultiqcModule):
         self.cutadapt_length_counts = dict()
         self.cutadapt_length_exp = dict()
         self.cutadapt_length_obsexp = dict()
+        self.ends = None
 
         for f in self.find_log_files("cutadapt", filehandles=True):
             self.parse_cutadapt_logs(f)
+
+        # Transform trimmed length data by type
+        self.transform_trimming_length_data_for_plot()
 
         # Filter to strip out ignored sample names
         self.cutadapt_data = self.ignore_samples(self.cutadapt_data)
@@ -142,31 +146,44 @@ class MultiqcModule(BaseMultiqcModule):
                 if "===" in l:
                     log_section = l.strip().strip("=").strip()
 
+                if "Overview of removed sequences" in l:
+                    if "' end" in l:
+                        res = re.search("(\d)' end", l)
+                        end = int(res.group(1))
+                    else:
+                        end = 0
+
+                    # Initilise dictionaries for length data if not already done
+                    if end not in self.cutadapt_length_counts:
+                        self.cutadapt_length_counts[end] = dict()
+                        self.cutadapt_length_exp[end] = dict()
+                        self.cutadapt_length_obsexp[end] = dict()
+
                 # Histogram showing lengths trimmed
                 if "length" in l and "count" in l and "expect" in l:
                     plot_sname = s_name
                     if log_section is not None:
                         plot_sname = "{} - {}".format(s_name, log_section)
-                    self.cutadapt_length_counts[plot_sname] = dict()
-                    self.cutadapt_length_exp[plot_sname] = dict()
-                    self.cutadapt_length_obsexp[plot_sname] = dict()
+                    self.cutadapt_length_counts[end][plot_sname] = dict()
+                    self.cutadapt_length_exp[end][plot_sname] = dict()
+                    self.cutadapt_length_obsexp[end][plot_sname] = dict()
+
                     # Nested loop to read this section while the regex matches
                     for l in fh:
                         r_seqs = re.search("^(\d+)\s+(\d+)\s+([\d\.]+)", l)
                         if r_seqs:
                             a_len = int(r_seqs.group(1))
-                            self.cutadapt_length_counts[plot_sname][a_len] = int(r_seqs.group(2))
-                            self.cutadapt_length_exp[plot_sname][a_len] = float(r_seqs.group(3))
+                            self.cutadapt_length_counts[end][plot_sname][a_len] = int(r_seqs.group(2))
+                            self.cutadapt_length_exp[end][plot_sname][a_len] = float(r_seqs.group(3))
                             if float(r_seqs.group(3)) > 0:
-                                self.cutadapt_length_obsexp[plot_sname][a_len] = float(r_seqs.group(2)) / float(
+                                self.cutadapt_length_obsexp[end][plot_sname][a_len] = float(r_seqs.group(2)) / float(
                                     r_seqs.group(3)
                                 )
                             else:
                                 # Cheating, I know. Infinity is difficult to plot.
-                                self.cutadapt_length_obsexp[plot_sname][a_len] = float(r_seqs.group(2))
+                                self.cutadapt_length_obsexp[end][plot_sname][a_len] = float(r_seqs.group(2))
                         else:
                             break
-
         # Calculate a few extra numbers of our own
         for s_name, d in self.cutadapt_data.items():
             # Percent trimmed
@@ -178,6 +195,28 @@ class MultiqcModule(BaseMultiqcModule):
                 self.cutadapt_data[s_name]["percent_trimmed"] = (
                     (float(d.get("bp_trimmed", 0)) + float(d.get("quality_trimmed", 0))) / d["bp_processed"]
                 ) * 100
+
+    def transform_trimming_length_data_for_plot(self):
+        """Check if we parsed double ended data and transform it accordingly"""
+        if len(self.cutadapt_length_counts) == 1:
+            self.ends = None
+            self.cutadapt_length_counts = self.cutadapt_length_counts[0]
+            self.cutadapt_length_exp = self.cutadapt_length_exp[0]
+            self.cutadapt_length_obsexp = self.cutadapt_length_obsexp[0]
+        else:
+            # Sanity check
+            if (
+                self.cutadapt_length_counts.keys() != self.cutadapt_length_exp.keys()
+                or self.cutadapt_length_exp.keys() != self.cutadapt_length_obsexp.keys()
+            ):
+                log.error("Something went wrong...")
+                log.debug("Keys in trimmed length data differed")
+                raise UserWarning
+
+            self.ends = list(self.cutadapt_length_counts.keys())
+            self.cutadapt_length_counts = list(self.cutadapt_length_counts.values())
+            self.cutadapt_length_exp = list(self.cutadapt_length_exp.values())
+            self.cutadapt_length_obsexp = list(self.cutadapt_length_obsexp.values())
 
     def cutadapt_general_stats_table(self):
         """Take the parsed stats from the Cutadapt report and add it to the
@@ -231,7 +270,16 @@ class MultiqcModule(BaseMultiqcModule):
             "xDecimals": False,
             "ymin": 0,
             "tt_label": "<b>{point.x} bp trimmed</b>: {point.y:.0f}",
-            "data_labels": [{"name": "Counts", "ylab": "Count"}, {"name": "Obs/Exp", "ylab": "Observed / Expected"}],
+            "data_labels": [{"name": "Counts", "ylab": "Count"}, {"name": "Obs/Exp", "ylab": "Observed / Expected"}]
+            if not self.ends
+            else [
+                entry
+                for end in self.ends
+                for entry in (
+                    {"name": f"{end}' end Counts", "ylab": "Count"},
+                    {"name": f"{end}' end Obs/Exp", "ylab": "Observed / Expected"},
+                )
+            ],
         }
 
         self.add_section(
@@ -245,5 +293,14 @@ class MultiqcModule(BaseMultiqcModule):
             See the [cutadapt documentation](http://cutadapt.readthedocs.org/en/latest/guide.html#how-to-read-the-report)
             for more information on how these numbers are generated.
             """,
-            plot=linegraph.plot([self.cutadapt_length_counts, self.cutadapt_length_obsexp], pconfig),
+            plot=linegraph.plot([self.cutadapt_length_counts, self.cutadapt_length_obsexp], pconfig)
+            if not self.ends
+            else linegraph.plot(
+                [
+                    data
+                    for end_entry in zip(self.cutadapt_length_counts, self.cutadapt_length_obsexp)
+                    for data in end_entry
+                ],
+                pconfig,
+            ),
         )
