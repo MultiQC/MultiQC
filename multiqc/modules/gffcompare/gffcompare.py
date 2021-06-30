@@ -29,6 +29,11 @@ class MultiqcModule(BaseMultiqcModule):
         # Everything is hardcoded with linenumbers, needs to be adjusted if output should change.
         # Other versions of GffCompare with different ouptut formats might not work.
 
+        # TODO (@ewels): It would be nice to rewrite this with regular expressions to make it more robust
+        # However, for now I'm ok with it as the output is written by the tool and not stdout / stderr,
+        # so the line numbering *should* be fairly portable across systems, at least for the same version of the tool.
+        # If you come here because the tool has updated and the module has broken, please refactor the below code.
+
         self.gffcompare_data = {}
         for f in self.find_log_files("gffcompare"):
             sample = f["s_name"]
@@ -130,7 +135,7 @@ class MultiqcModule(BaseMultiqcModule):
                 - *Transcript*: More stringent then intron chain, all Exon coordinates need to match. Outer exon coordinates (start + end) can vary by 100 bases in default settings
                 - *Locus*: Cluster of exons need to match.
 
-                More in depth description [here](https://ccb.jhu.edu/software/stringtie/gffcompare.shtml#levels)
+                A more in depth description can be found [here](https://ccb.jhu.edu/software/stringtie/gffcompare.shtml#levels).
                 """
             ),
             anchor="gffcompare_accuracy",
@@ -139,34 +144,14 @@ class MultiqcModule(BaseMultiqcModule):
 
         self.add_section(
             name="Novel features",
-            description=(
-                """
-                Number of novel features in the query
-                """
-            ),
-            helptext=(
-                """
-                GffCompare does not give a value for matching features. It is calculated by the difference of total features and novel features.
-                More documentation [here](https://ccb.jhu.edu/software/stringtie/gffcompare.shtml)
-                """
-            ),
+            description="Number of novel features, present in the query data but not found in the reference annotation.",
             anchor="gffcompare_novel",
             plot=self.plot_novel(),
         )
 
         self.add_section(
             name="Missing features",
-            description=(
-                """
-                Number of missing features in the query
-                """
-            ),
-            helptext=(
-                """
-                GffCompare does not give a value for matching features. It is calculated by the difference of total features and missing features.
-                More documentation [here](https://ccb.jhu.edu/software/stringtie/gffcompare.shtml)
-                """
-            ),
+            description="False negative features, which are found in the reference annotation but missed (not present) in the query data.",
             anchor="gffcompare_missed",
             plot=self.plot_missed(),
         )
