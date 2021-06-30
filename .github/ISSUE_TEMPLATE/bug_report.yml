@@ -5,7 +5,9 @@ body:
     id: description
     attributes:
       label: Description of bug
-      description: A clear and concise description of what the bug is.
+      description: |
+        A clear and concise description of what the bug is.
+        **Please do note paste in the contents of example files** - upload them as a file in the field below.
     validations:
       required: true
 
@@ -26,32 +28,15 @@ body:
         If the file type is not allowed, please compress into a `.zip` file.
       placeholder: "[ Drag and drop an example file here to upload ]"
 
-  - type: input
+  - type: textarea
     id: command
     attributes:
       label: Command used to run MultiQC
       placeholder: eg. multiqc .
+      render: bash
 
   - type: input
     id: version
     attributes:
       label: MultiQC Version
       placeholder: eg. MultiQC v1.10
-
-  - type: input
-    id: os
-    attributes:
-      label: Operating System
-      placeholder: eg. macOS Sierra 10.12.5
-
-  - type: input
-    id: python
-    attributes:
-      label: Python Version
-      placeholder: eg. Python 3.8.4
-
-  - type: input
-    id: installation
-    attributes:
-      label: Method of MultiQC installation
-      placeholder: eg. pip, conda, manual
