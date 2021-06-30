@@ -153,6 +153,15 @@ def parse_reports(self):
         )
 
     if len(self.qualimap_rnaseq_cov_hist) > 0:
+
+        # Make a normalised percentage version of the coverage data
+        self.qualimap_rnaseq_cov_hist_percent = dict()
+        for s_name in self.qualimap_rnaseq_cov_hist:
+            self.qualimap_rnaseq_cov_hist_percent[s_name] = OrderedDict()
+            total = sum(self.qualimap_rnaseq_cov_hist[s_name].values())
+            for k, v in self.qualimap_rnaseq_cov_hist[s_name].items():
+                self.qualimap_rnaseq_cov_hist_percent[s_name][k] = (v / total) * 100
+
         coverage_profile_helptext = """
         There are currently three main approaches to map reads to transcripts in an
         RNA-seq experiment: mapping reads to a reference genome to identify expressed
@@ -181,24 +190,26 @@ def parse_reports(self):
         at the 3&#8242; end of transcripts, which may indicate poor RNA quality in the
         original sample (<a href="https://doi.org/10.1186/s13059-016-0881-8"
         target="_blank">Conesa et al. 2016</a>)."""
+        pconfig = {
+            "id": "qualimap_gene_coverage_profile",
+            "title": "Qualimap RNAseq: Coverage Profile Along Genes (total)",
+            "ylab": "Coverage",
+            "xlab": "Transcript Position (%)",
+            "ymin": 0,
+            "xmin": 0,
+            "xmax": 100,
+            "tt_label": "<b>{point.x}% bp</b>: {point.y:.2f}",
+            "data_labels": [
+                {"name": "Counts", "ylab": "Coverage"},
+                {"name": "Percentages", "ylab": "Percentage Coverage"},
+            ],
+        }
         self.add_section(
             name="Gene Coverage Profile",
             anchor="qualimap-genome-fraction-coverage",
             description="Mean distribution of coverage depth across the length of all mapped transcripts.",
             helptext=coverage_profile_helptext,
-            plot=linegraph.plot(
-                self.qualimap_rnaseq_cov_hist,
-                {
-                    "id": "qualimap_gene_coverage_profile",
-                    "title": "Qualimap RNAseq: Coverage Profile Along Genes (total)",
-                    "ylab": "Coverage",
-                    "xlab": "Transcript Position (%)",
-                    "ymin": 0,
-                    "xmin": 0,
-                    "xmax": 100,
-                    "tt_label": "<b>{point.x} bp</b>: {point.y:.0f}%",
-                },
-            ),
+            plot=linegraph.plot([self.qualimap_rnaseq_cov_hist, self.qualimap_rnaseq_cov_hist_percent], pconfig),
         )
 
     #### General Stats
