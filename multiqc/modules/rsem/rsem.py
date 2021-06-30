@@ -76,7 +76,10 @@ class MultiqcModule(BaseMultiqcModule):
                 data["Alignable"] = int(s[1])
                 data["Filtered"] = int(s[2])
                 data["Total"] = int(s[3])
-                data["alignable_percent"] = (float(s[1]) / float(s[3])) * 100.0
+                try:
+                    data["alignable_percent"] = (float(s[1]) / float(s[3])) * 100.0
+                except ZeroDivisionError:
+                    data["alignable_percent"] = 0
             elif len(s) == 3:
                 # Line: nUnique nMulti nUncertain
                 # nUnique, number of reads aligned uniquely to a gene

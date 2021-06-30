@@ -42,6 +42,8 @@
   - Handled MultiQC crashing when run on single-end output from Dragen ([#1374](https://github.com/ewels/MultiQC/issues/1374))
 - **fastp**
   - Handle a `ZeroDivisionError` if there are zero reads ([#1444](https://github.com/ewels/MultiQC/issues/1444))
+- **FastQC**
+  - Added check for if `overrepresented_sequences` is missing from reports ([#1281](https://github.com/ewels/MultiQC/issues/1444))
 - **Flexbar**
   - Fixed bug where reports with 0 reads would crash MultiQC ([#1407](https://github.com/ewels/MultiQC/issues/1407))
 - **Kraken**
@@ -56,10 +58,14 @@
   - Made checker for comma as decimal separator in `HsMetrics` more robust ([#1296](https://github.com/ewels/MultiQC/issues/1296))
 - **qc3C**
   - Updated module to not fail on older field names.
+- **qualimap**
+  - Added new percentage coverage plot in `QM_RNASeq`, and fixed wrong units in tool tip label ([#1258](https://github.com/ewels/MultiQC/issues/1258))
 - **QUAST**
   - Fixed typo causing wrong number of contigs being displayed ([#1442](https://github.com/ewels/MultiQC/issues/1442))
 - **Sentieon**
   - Handled `ZeroDivisionError` when input files have zero reads ([#1420](https://github.com/ewels/MultiQC/issues/1420))
+- **RSEM**
+  - Handled `ZeroDivisionError` when input files have zero reads ([#1040](https://github.com/ewels/MultiQC/issues/1040))
 - **RSeQC**
   - Fixed double counting of some categories in `read_distribution` bar graph. ([#1457](https://github.com/ewels/MultiQC/issues/1457))
 
