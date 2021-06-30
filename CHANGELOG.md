@@ -54,6 +54,8 @@
   - Made checker for comma as decimal separator in `HsMetrics` more robust ([#1296](https://github.com/ewels/MultiQC/issues/1296))
 - **qc3C**
   - Updated module to not fail on older field names.
+- **qualimap**
+  - Added new percentage coverage plot in `QM_RNASeq`, and fixed wrong units in tool tip label ([#1258](https://github.com/ewels/MultiQC/issues/1258))
 - **QUAST**
   - Fixed typo causing wrong number of contigs being displayed ([#1442](https://github.com/ewels/MultiQC/issues/1442))
 - **Sentieon**
