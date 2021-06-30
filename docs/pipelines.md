@@ -72,7 +72,7 @@ won't run.
 ### Clashing input filenames
 
 If a nextflow process tries to stage more than one input file with an identical filename,
-it will throw an error.  Putting inputs into their own subfolder (`file ('fastqc/*')`) in
+it will throw an error. Putting inputs into their own subfolder (`file ('fastqc/*')`) in
 the above examples is not really needed, but reduces the chance of input filename clashes.
 
 If you're using a tool that gives the same filename to each file that MultiQC uses, you'll
@@ -96,7 +96,6 @@ This `file` pattern renames each stringtie log file to `stringtie_log1`,
 
 Note that MultiQC finds output from some tools based on their filename, so use with caution
 (you may need to define some custom [module search patterns](https://multiqc.info/docs/#module-search-patterns)).
-
 
 ### Custom run name
 
@@ -168,31 +167,24 @@ process multiqc {
 
 ## Snakemake
 
-The best-practice for using MultiQC in [Snakemake](https://snakemake.readthedocs.io/)  pipelines is to use a predefined [Snakemake wrapper](https://snakemake-wrappers.readthedocs.io/en/stable/wrappers/multiqc.html). For example, see the following mini-pipeline:
+The best-practice for using MultiQC in [Snakemake](https://snakemake.readthedocs.io/) pipelines is to use a predefined [Snakemake wrapper](https://snakemake-wrappers.readthedocs.io/en/stable/wrappers/multiqc.html). For example, see the following mini-pipeline:
 
 ```yaml
 configfile: "config.yaml"
 
 rule all:
-    input:
-        "multiqc_report.html"
+  input: "multiqc_report.html"
 
 rule fastqc:
-    input:
-        "data/{sample}.fastq.gz"
-    output:
-        html="fastqc/{sample}.html",
-        zip="fastqc/{sample}.zip"
-    wrapper:
-        "0.31.1/bio/fastqc"
+  input: "data/{sample}.fastq.gz"
+  output: html="fastqc/{sample}.html",
+    zip="fastqc/{sample}.zip"
+  wrapper: "0.31.1/bio/fastqc"
 
 rule multiqc:
-    input:
-        expand("fastqc/{sample}.html", sample=config["samples"])
-    output:
-        "multiqc_report.html"
-    wrapper:
-        "0.31.1/bio/multiqc"
+  input: expand("fastqc/{sample}.html", sample=config["samples"])
+  output: "multiqc_report.html"
+  wrapper: "0.31.1/bio/multiqc"
 ```
 
 Snakemake wrappers not only deliver predefined and unit tested code for generating the requested output with the respective tool, but also define the required software stack in terms of conda packages.

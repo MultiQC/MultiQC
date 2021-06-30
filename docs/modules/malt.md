@@ -1,8 +1,8 @@
 ---
 Name: MALT
 URL: https://uni-tuebingen.de/fakultaeten/mathematisch-naturwissenschaftliche-fakultaet/fachbereiche/informatik/lehrstuehle/algorithms-in-bioinformatics/software/malt/
-Description: > 
-    MEGAN alignment tool 
+Description: >
+  MEGAN alignment tool
 ---
 
 MALT performs alignment of metagenomic reads against a database of reference sequences (such as NR, GenBank or Silva) and produces a MEGAN RMA file as output.
