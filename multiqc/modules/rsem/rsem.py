@@ -49,6 +49,7 @@ class MultiqcModule(BaseMultiqcModule):
         self.write_data_file(self.rsem_mapped_data, "multiqc_rsem")
 
         # Basic Stats Table
+
         self.rsem_stats_table()
 
         # Assignment bar plot
@@ -76,7 +77,14 @@ class MultiqcModule(BaseMultiqcModule):
                 data["Alignable"] = int(s[1])
                 data["Filtered"] = int(s[2])
                 data["Total"] = int(s[3])
-                data["alignable_percent"] = (float(s[1]) / float(s[3])) * 100.0
+                try:
+                    data["alignable_percent"] = (float(s[1]) / float(s[3])) * 100.0
+                except ZeroDivisionError:
+                    if float(s[1]) == 0.0:
+                        log.warning(f"Skipping zero reads sample '{f['fn']}'")
+                    else:
+                        log.error("Erroneous sample: Alignable reads can't be be non-zero if total reads are zero")
+                    return None
             elif len(s) == 3:
                 # Line: nUnique nMulti nUncertain
                 # nUnique, number of reads aligned uniquely to a gene
