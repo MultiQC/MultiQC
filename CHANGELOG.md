@@ -58,6 +58,9 @@
   - Fixed typo causing wrong number of contigs being displayed ([#1442](https://github.com/ewels/MultiQC/issues/1442))
 - **Sentieon**
   - Handled `ZeroDivisionError` when input files have zero reads ([#1420](https://github.com/ewels/MultiQC/issues/1420))
+- **RSEM**
+  - Handled `ZeroDivisionError` when input files have zero reads ([#1040](https://github.com/ewels/MultiQC/issues/1040))
+andled `Zerod
 - **RSeQC**
   - Fixed double counting of some categories in `read_distribution` bar graph. ([#1457](https://github.com/ewels/MultiQC/issues/1457))
 
