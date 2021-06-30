@@ -36,6 +36,7 @@ class MultiqcModule(BaseMultiqcModule):
 
         self.gffcompare_data = {}
         for f in self.find_log_files("gffcompare"):
+            self.add_data_source(f)
             sample = f["s_name"]
             self.gffcompare_data[sample] = {}
             lines = f["f"].splitlines()
