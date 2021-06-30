@@ -862,6 +862,7 @@ class MultiqcModule(BaseMultiqcModule):
                     data[s_name]["top_overrepresented"] = 0
                     data[s_name]["remaining_overrepresented"] = 0
                 else:
+                    del data[s_name]
                     log.debug("Couldn't find data for {}, invalid Key".format(s_name))
 
         if all(len(data[s_name]) == 0 for s_name in self.fastqc_data):
