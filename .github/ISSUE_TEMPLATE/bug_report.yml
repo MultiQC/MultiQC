@@ -7,16 +7,9 @@ body:
       label: Description of bug
       description: |
         A clear and concise description of what the bug is.
-        **Please do note paste in the contents of example files** - upload them as a file in the field below.
+        **Please do note paste in the contents of example files** - upload them as a file.
     validations:
       required: true
-
-  - type: textarea
-    id: log
-    attributes:
-      label: MultiQC Error log
-      description: Please paste your **full** MultiQC log.
-      render: console
 
   - type: textarea
     id: error-file
@@ -27,6 +20,13 @@ body:
         ***Please do not copy and paste log contents***, as important whitespace can change.
         If the file type is not allowed, please compress into a `.zip` file.
       placeholder: "[ Drag and drop an example file here to upload ]"
+
+  - type: textarea
+    id: log
+    attributes:
+      label: MultiQC Error log
+      description: Please paste your **full** MultiQC log.
+      render: console
 
   - type: textarea
     id: command
