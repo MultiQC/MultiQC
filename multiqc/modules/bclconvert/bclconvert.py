@@ -25,26 +25,27 @@ class MultiqcModule(BaseMultiqcModule):
             " to FASTQ file formats for downstream analysis.",
         )
 
-        # set up run id, cluster length
-        self.run_id = None
+        # set up and collate bclconvert run and demux files
+        self.last_run_id = None
         self.cluster_length = None
-        self._set_run_details()
+        self.multiple_sequencing_runs = False
+        bclconvert_demuxes = self._collate_log_files()
+        self.num_demux_files = len(bclconvert_demuxes)
+
         self.bclconvert_data = dict()
-        self.bclconvert_data[self.run_id] = dict()
+        for demux in bclconvert_demuxes:
+            self.bclconvert_data[demux["run_id"]] = dict()
 
         # variables to store reads for undetermined read recalcuation
         self.per_lane_undetermined_reads = dict()
         self.total_reads_in_lane_per_file = dict()
 
-        # Gather data from all the demux csv files
-        self.num_demux_files = sum(1 for x in self.find_log_files("bclconvert/demux"))
-
-        for demux in self.find_log_files("bclconvert/demux", filehandles=True):
+        for demux in bclconvert_demuxes:
             self.parse_demux_data(demux)
 
         if self.num_demux_files == 0:
             raise UserWarning
-        if self.num_demux_files > 1:
+        elif self.num_demux_files > 1 and not self.multiple_sequencing_runs:
             log.warning(
                 "Detected multiple bclconvert runs from the same sequencer output. "
                 "They will be merged, undetermined stats will be recalculated. "
@@ -61,8 +62,25 @@ class MultiqcModule(BaseMultiqcModule):
                 """,
             )
             self._recalculate_undetermined()
-        if self.num_demux_files == 1:
-            # only possible to calculae barcodes per lane when parsing a single bclconvert run
+        elif self.multiple_sequencing_runs:
+            # if we have data from multple sequencing runs, the recalculation in _recalculate_undetermined() wont work. in this case we suppress/hide the info.
+            log.warning(
+                "Detected multiple sequencer runs (saw multiple different run ids across RunInfo.xml files). "
+                "Undetermined Stats cannot be re-caclulated and will be suppressed. Samole stats will be merged."
+            )
+            self.add_section(
+                anchor="sequencer-multiple-runs-warning",
+                content="""
+                <div class="alert alert-warning">
+                    <strong>Warning:</strong> Detected multiple sequencer runs.
+                    Sample stats were merged. Undetermined stats cannot be recalculated for multiple sequencing runs and are suppressed.
+                    The top-unknown-barcodes-per-lane table is not displayed.
+                </div>
+                """,
+            )
+            self.per_lane_undetermined_reads = None
+        elif self.num_demux_files == 1:
+            # only possible to calculate barcodes per lane when parsing a single bclconvert run
             self._parse_top_unknown_barcodes()
 
         # Collect counts by lane and sample
@@ -213,40 +231,63 @@ class MultiqcModule(BaseMultiqcModule):
     def _parse_single_runinfo_file(self, runinfo_file):
         # get run id and readlength from RunInfo.xml
         try:
-            tree = ET.parse(runinfo_file["f"])
-            root = tree.getroot()
+            root = ET.fromstring(runinfo_file["f"])
             run_id = root.find("Run").get("Id")
             read_length = root.find("./Run/Reads/Read[1]").get(
                 "NumCycles"
             )  # ET indexes first element at 1, so here we're gettign the first NumCycles
         except:
-            log.error("Could not parse RunInfo.xml to get RunID and read length")
+            log.error(f"Could not parse RunInfo.xml to get RunID and read length in '{runinfo_file['root']}'")
             raise UserWarning
         return {"run_id": run_id, "read_length": int(read_length), "cluster_length": int(read_length) * 2}
 
-    def _set_run_details(self):
-        # we might have several runinfo.xmls, but they all ought to be the same run and cluster length
-        for runinfo_file in self.find_log_files("bclconvert/runinfo", filehandles=True):
-            runinfo = self._parse_single_runinfo_file(runinfo_file)
+    def _find_log_files_and_sort(self, search_pattern, sort_field):
+        logs = list()
+        for m in self.find_log_files(search_pattern):
+            logs.append(m)
+        return sorted(logs, key=lambda i: i[sort_field])  # sort on root directory
 
-            if self.run_id and runinfo["run_id"] != self.run_id:
-                log.error(
-                    "Input data belongs to multiple sequencer runs (detected multiple run ids). This is not supported by this module: please run MultiQC on each run seperately to generate seperate reports."
-                )
-                raise UserWarning
+    def _collate_log_files(self):
+        # this function returns a list of self.find_log_files('bclconvert/demux') dicts, with the run_id added on, sorted by root directory
+        #
+        # to get all that we must parse runinfo files and match them with demux files, because demux files dont contain run-ids
+        # we need to match demux and runinfo logs from the same directory, but find_log_files() does not guarantee order; however it provides root dir, so we use that
 
-            if self.cluster_length and runinfo["cluster_length"] != self.cluster_length:
-                log.error(
-                    "Detected different read lengths across the RunXml files. This should not be -  read length across all input directories must be the same."
-                )
-                raise UserWarning
+        demuxes = self._find_log_files_and_sort("bclconvert/demux", "root")
+        runinfos = self._find_log_files_and_sort("bclconvert/runinfo", "root")
 
-            self.cluster_length = runinfo["cluster_length"]
-            self.run_id = runinfo["run_id"]
-
-        if not self.cluster_length or not self.run_id:
-            log.error("Could not find a RunInfo.xml to get RunID and read length")
+        if not len(demuxes) == len(runinfos):
+            log.error(
+                f"Different amount of Demux Stats files and RunInfoXML files found: '{len(demuxes)}' and '{len(runinfos)}'"
+            )
             raise UserWarning
+
+        for idx, runinfo in enumerate(runinfos):
+            rundata = self._parse_single_runinfo_file(runinfo)
+
+            if runinfo["root"] != demuxes[idx]["root"]:
+                log.error(
+                    f"Expected RunInfo.xml file in '{runinfo['root']}' and Demultiplex_Stats.csv in '{demuxes[idx]['root']}' to be in the same directory"
+                )
+                raise UserWarning
+            else:
+                demuxes[idx]["run_id"] = rundata["run_id"]
+
+            if self.last_run_id and rundata["run_id"] != self.last_run_id:
+                self.multiple_sequencing_runs = (
+                    True  # this will mean we supress unknown reads, since we can't do a recaculation
+                )
+
+            self.last_run_id = rundata["run_id"]
+
+            if self.cluster_length and rundata["cluster_length"] != self.cluster_length:
+                log.error(
+                    "Detected different read lengths across the RunXml files. This should not be - read length across all input directories must be the same."
+                )
+                raise UserWarning
+            self.cluster_length = rundata["cluster_length"]
+
+        return demuxes
 
     def _recalculate_undetermined(self):
         # We have to calculate "corrected" unknown read counts when parsing more than one bclconvert run. To do this:
@@ -263,7 +304,7 @@ class MultiqcModule(BaseMultiqcModule):
                     )
                 total_reads_per_lane[lane_id] = reads
 
-        run_data = self.bclconvert_data[self.run_id]
+        run_data = self.bclconvert_data[self.last_run_id]  # in this situaiton we have only one run id
         for lane_id, lane in run_data.items():
             determined_reads = 0
             for sample_id, sample in lane["samples"].items():
@@ -275,9 +316,10 @@ class MultiqcModule(BaseMultiqcModule):
         filename = str(os.path.join(myfile["root"], myfile["fn"]))
         self.total_reads_in_lane_per_file[filename] = dict()
 
-        reader = csv.DictReader(myfile["f"], delimiter=",")
+        # reader = csv.DictReader(myfile["f"], delimiter=",")
+        reader = csv.DictReader(open(filename), delimiter=",")
         for row in reader:
-            run_data = self.bclconvert_data[self.run_id]
+            run_data = self.bclconvert_data[myfile["run_id"]]
             lane_id = "L{}".format(row["Lane"])
             if lane_id not in run_data:
                 run_data[lane_id] = {}
@@ -323,7 +365,7 @@ class MultiqcModule(BaseMultiqcModule):
                 self.per_lane_undetermined_reads[lane_id] += int(row["# Reads"])
 
     def _parse_top_unknown_barcodes(self):
-        run_data = self.bclconvert_data[self.run_id]
+        run_data = self.bclconvert_data[self.last_run_id]
 
         for unknown_barcode_file in self.find_log_files("bclconvert/unknown_barcodes", filehandles=True):
             barcode_reader = csv.DictReader(unknown_barcode_file["f"], delimiter=",")
@@ -334,10 +376,17 @@ class MultiqcModule(BaseMultiqcModule):
                 thisbarcode = str(unknown_barcode_row["index"]) + "-" + str(unknown_barcode_row["index2"])
                 run_data[thislane]["top_unknown_barcodes"][thisbarcode] = int(unknown_barcode_row["# Reads"])
 
-    def _total_reads_for_run(self):
+    def _total_reads_for_run(self, run_id):
         totalreads = 0
-        for lane_id, lane in self.bclconvert_data[self.run_id].items():
+        for lane_id, lane in self.bclconvert_data[run_id].items():
             totalreads += lane["reads"]
+        return totalreads
+
+    def _total_reads_all_runs(self):
+        totalreads = 0
+        for key, run_data in self.bclconvert_data.items():
+            for lane_id, lane in run_data.items():
+                totalreads += lane["reads"]
         return totalreads
 
     def _set_lane_percentage_stats(self, data):
@@ -427,7 +476,7 @@ class MultiqcModule(BaseMultiqcModule):
 
     def sample_stats_table(self):
         sample_stats_data = dict()
-        run_total_reads = self._total_reads_for_run()
+        total_reads = self._total_reads_all_runs()
 
         for sample_id, sample in self.bclconvert_bysample.items():
             # percent stats for bclconvert-bysample i.e. stats for sample across all lanes
@@ -448,12 +497,12 @@ class MultiqcModule(BaseMultiqcModule):
                 yield_q30_percent = "0.0"  #
 
             try:
-                percent_yield = (float(sample["yield"]) / float((run_total_reads) * (self.cluster_length))) * 100.0
+                percent_yield = (float(sample["yield"]) / float((total_reads) * (self.cluster_length))) * 100.0
             except ZeroDivisionError:
                 percent_yield = "NA"
 
             try:
-                percent_reads = (float(sample["reads"]) / float(run_total_reads)) * 100.0
+                percent_reads = (float(sample["reads"]) / float(total_reads)) * 100.0
             except ZeroDivisionError:
                 percent_reads = "NA"
 
@@ -665,14 +714,14 @@ class MultiqcModule(BaseMultiqcModule):
             }
             try:
                 if key.startswith(
-                    self.prepend_runid(self.run_id, "")
+                    self.prepend_runid(self.last_run_id, "")  # this wont run in multiple sequencing run situations
                 ):  # per-lane stats start with a prepended run id, this is a per-lane entry
-                    this_lane_id = key.replace(self.prepend_runid(self.run_id, ""), "")
-                    rundata = self.bclconvert_data[self.run_id]
+                    this_lane_id = key.replace(self.prepend_runid(self.last_run_id, ""), "")
+                    rundata = self.bclconvert_data[self.last_run_id]
                     if this_lane_id in rundata:  # this is definitely a lane
                         bar_data[key]["undetermined"] = self.per_lane_undetermined_reads[this_lane_id]
-            except KeyError:
-                # do nothing, there is no Undetermined
+            except TypeError:
+                # do nothing, there is no Undetermined - this will happen in case of multiple run ids
                 pass
 
         return bar_data
