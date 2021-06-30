@@ -875,7 +875,7 @@ class MultiqcModule(BaseMultiqcModule):
 
         # Config for the plot
         pconfig = {
-            "id": "fastqc_overrepresented_sequencesi_plot",
+            "id": "fastqc_overrepresented_sequences_plot",
             "title": "FastQC: Overrepresented sequences",
             "ymin": 0,
             "yCeiling": 100,
