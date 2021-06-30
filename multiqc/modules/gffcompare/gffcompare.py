@@ -113,6 +113,8 @@ class MultiqcModule(BaseMultiqcModule):
         # Add nothing to general statistics table
 
         # Write data file
+        # TODO (@ewels) - because the data structure is hierarchical, the default tsv output format gives an empty file
+        # If / when refactoring the above parsing code, restructure to a flat dict so that this works with tabular output files.
         self.write_data_file(self.gffcompare_data, "multiqc_gffcompare")
 
         # Report sectionsq
