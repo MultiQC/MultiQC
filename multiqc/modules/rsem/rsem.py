@@ -49,7 +49,6 @@ class MultiqcModule(BaseMultiqcModule):
         self.write_data_file(self.rsem_mapped_data, "multiqc_rsem")
 
         # Basic Stats Table
-
         self.rsem_stats_table()
 
         # Assignment bar plot
