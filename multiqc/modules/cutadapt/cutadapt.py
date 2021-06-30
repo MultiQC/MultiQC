@@ -214,9 +214,6 @@ class MultiqcModule(BaseMultiqcModule):
                 raise UserWarning
 
             self.ends = list(self.cutadapt_length_counts.keys())
-            self.cutadapt_length_counts = list(self.cutadapt_length_counts.values())
-            self.cutadapt_length_exp = list(self.cutadapt_length_exp.values())
-            self.cutadapt_length_obsexp = list(self.cutadapt_length_obsexp.values())
 
     def cutadapt_general_stats_table(self):
         """Take the parsed stats from the Cutadapt report and add it to the
@@ -261,46 +258,60 @@ class MultiqcModule(BaseMultiqcModule):
 
     def cutadapt_length_trimmed_plot(self):
         """Generate the trimming length plot"""
+        if self.ends:
+            for end in self.ends:
+                pconfig = {
+                    "id": f"cutadapt_trimmed_sequences_plot_{end}",
+                    "title": f"Cutadapt: Lengths of Trimmed Sequences ({end}' end)",
+                    "ylab": "Counts",
+                    "xlab": "Length Trimmed (bp)",
+                    "xDecimals": False,
+                    "ymin": 0,
+                    "tt_label": "<b>{point.x} bp trimmed</b>: {point.y:.0f}",
+                    "data_labels": [
+                        {"name": "Counts", "ylab": "Count"},
+                        {"name": "Obs/Exp", "ylab": "Observed / Expected"},
+                    ],
+                }
 
-        pconfig = {
-            "id": "cutadapt_trimmed_sequences_plot",
-            "title": "Cutadapt: Lengths of Trimmed Sequences",
-            "ylab": "Counts",
-            "xlab": "Length Trimmed (bp)",
-            "xDecimals": False,
-            "ymin": 0,
-            "tt_label": "<b>{point.x} bp trimmed</b>: {point.y:.0f}",
-            "data_labels": [{"name": "Counts", "ylab": "Count"}, {"name": "Obs/Exp", "ylab": "Observed / Expected"}]
-            if not self.ends
-            else [
-                entry
-                for end in self.ends
-                for entry in (
-                    {"name": f"{end}' end Counts", "ylab": "Count"},
-                    {"name": f"{end}' end Obs/Exp", "ylab": "Observed / Expected"},
+                self.add_section(
+                    name=f"Trimmed Sequence Lengths ({end}' end)",
+                    anchor=f"cutadapt_trimmed_sequences{end}",
+                    description=f"This plot shows the number of reads with certain lengths of adapter trimmed for the {end}' end.",
+                    helptext="""
+                    Obs/Exp shows the raw counts divided by the number expected due to sequencing errors.
+                    A defined peak may be related to adapter length.
+
+                    See the [cutadapt documentation](http://cutadapt.readthedocs.org/en/latest/guide.html#how-to-read-the-report)
+                    for more information on how these numbers are generated.
+                    """,
+                    plot=linegraph.plot([self.cutadapt_length_counts[end], self.cutadapt_length_obsexp[end]], pconfig),
                 )
-            ],
-        }
-
-        self.add_section(
-            name="Trimmed Sequence Lengths",
-            anchor="cutadapt_trimmed_sequences",
-            description="This plot shows the number of reads with certain lengths of adapter trimmed.",
-            helptext="""
-            Obs/Exp shows the raw counts divided by the number expected due to sequencing errors.
-            A defined peak may be related to adapter length.
-
-            See the [cutadapt documentation](http://cutadapt.readthedocs.org/en/latest/guide.html#how-to-read-the-report)
-            for more information on how these numbers are generated.
-            """,
-            plot=linegraph.plot([self.cutadapt_length_counts, self.cutadapt_length_obsexp], pconfig)
-            if not self.ends
-            else linegraph.plot(
-                [
-                    data
-                    for end_entry in zip(self.cutadapt_length_counts, self.cutadapt_length_obsexp)
-                    for data in end_entry
+        else:
+            pconfig = {
+                "id": f"cutadapt_trimmed_sequences_plot",
+                "title": f"Cutadapt: Lengths of Trimmed Sequences",
+                "ylab": "Counts",
+                "xlab": "Length Trimmed (bp)",
+                "xDecimals": False,
+                "ymin": 0,
+                "tt_label": "<b>{point.x} bp trimmed</b>: {point.y:.0f}",
+                "data_labels": [
+                    {"name": "Counts", "ylab": "Count"},
+                    {"name": "Obs/Exp", "ylab": "Observed / Expected"},
                 ],
-                pconfig,
-            ),
-        )
+            }
+
+            self.add_section(
+                name=f"Trimmed Sequence Lengths",
+                anchor=f"cutadapt_trimmed_sequences",
+                description=f"This plot shows the number of reads with certain lengths of adapter trimmed.",
+                helptext="""
+                Obs/Exp shows the raw counts divided by the number expected due to sequencing errors.
+                A defined peak may be related to adapter length.
+
+                See the [cutadapt documentation](http://cutadapt.readthedocs.org/en/latest/guide.html#how-to-read-the-report)
+                for more information on how these numbers are generated.
+                """,
+                plot=linegraph.plot([self.cutadapt_length_counts, self.cutadapt_length_obsexp], pconfig),
+            )
