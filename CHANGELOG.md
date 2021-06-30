@@ -31,6 +31,8 @@
 
 - **bcl2fastq**
   - Added sample name cleaning so that prepending directories with the `-d` flag works properly.
+- **Cutadapt**
+  - Added support for linked adapters [[#1329](https://github.com/ewels/MultiQC/issues/1329)]
 - **Dragen**
   - Handled MultiQC crashing when run on single-end output from Dragen ([#1374](https://github.com/ewels/MultiQC/issues/1374))
 - **fastp**
