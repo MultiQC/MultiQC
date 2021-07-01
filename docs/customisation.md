@@ -78,7 +78,81 @@ Then this will be displayed at the top of reports:
 
 Note that you can also specify a path to a config file using `-c`.
 
-## Bulk sample renaming
+## Sample name replacement
+
+Occasionally, when you run MultiQC you may know that you want to change the resulting
+sample names at run time. You can do this using the `--replace-names` option, which
+allows you to change sample names during report creation.
+
+Unlike `--sample-names` below, the original names never make it through to the report.
+This can be useful if you know that you have a range of outputs that result in varying
+sample names but want to create a consistent report - especially if you want
+samples to line up properly in the _General Statistics_ table.
+
+To use, create a tab-separated file with two columns. The first column contains the
+search strings and the second the replacement strings:
+
+```tsv
+IDX102934	Sample_1
+IDX102935	Sample_2
+IDX102936	Sample_3
+```
+
+Note that by default, _partial_ matches are replaced. So if a log file gives a sample
+name of `IDX102934_mytool` then the result will be `Sample_1_mytool`.
+There are two config options to fine-tune this behaviour:
+
+Setting `sample_names_replace_exact` to `True` in a MultiQC config file will tell
+MultiQC to only change a sample name if the pattern _fully_ matches the search string.
+In the above example, `IDX102934_mytool` would remain unchanged.
+
+Setting `sample_names_replace_complete` to `True`, the replacement string will be used
+as a complete replacement if the search pattern matches at all.
+In the above example, `IDX102934_mytool` would become `Sample_1`.
+
+> NB: Use this method with caution! If aggressive cleaning of sample names results in
+> multiple samples with identical identifiers, they will be overwritten.
+
+To have more control over replacements, you can use regular expressions.
+If you set `sample_names_replace_regex` to `True` in a MultiQC config file
+and then create a file that contains regex search strings and even Python regex
+group identifiers in the replace string. For example:
+
+```tsv
+SAMPLE(\d)_([PS]E)_(\d)	XXX_\1_\2_\3
+```
+
+With this file, `SAMPLE1_PE_2` would be renamed to `XXX_1_PE_2`.
+`SAMPLE3_SE_4` would be renamed to `XXX_3_SE_4`.
+
+Setting `sample_names_replace_exact` to `True` also works for regular expression
+searches. The code uses the `re.fullmatch` function, so no `^` or `$` anchors are needed.
+
+Setting `sample_names_replace_complete` is ignored when using regexes.
+If you want this behaviour then configure your regular expression to match the entire string.
+For example, `*(\d)_([PS]E)_(\d) \1_\2_\3` would rename `SAMPLE1_PE_2` to `1_PE_2`.
+
+Finally, if you prefer not to use `--replace-names` with a TSV file, you
+can set the search patterns in a MultiQC config file directly.
+For example:
+
+```yaml
+sample_names_replace:
+  IDX102934: Sample_1
+  IDX102935: Sample_2
+  IDX102936: Sample_3
+```
+
+Remember that backslashes must be escaped in YAML. So if using regular expressions
+you will need to use double-backslashes. You may also need to quote strings:
+
+```yaml
+sample_names_replace_regex: True
+sample_names_replace:
+  "SAMPLE(\\d)_([PS]E)_(\\d)": "XXX_\\1_\\2_\\3"
+```
+
+## Bulk sample renaming in reports
 
 Although it is possible to rename samples manually and in bulk using the
 [report toolbox](#renaming-samples), it's often desirable to embed such renaming patterns

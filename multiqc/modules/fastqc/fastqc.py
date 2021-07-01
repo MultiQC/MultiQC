@@ -857,12 +857,17 @@ class MultiqcModule(BaseMultiqcModule):
                 data[s_name]["top_overrepresented"] = max_pcnt
                 data[s_name]["remaining_overrepresented"] = total_pcnt - max_pcnt
             except KeyError:
-                if self.fastqc_data[s_name]["statuses"]["overrepresented_sequences"] == "pass":
+                if self.fastqc_data[s_name]["statuses"].get("overrepresented_sequences") == "pass":
                     data[s_name]["total_overrepresented"] = 0
                     data[s_name]["top_overrepresented"] = 0
                     data[s_name]["remaining_overrepresented"] = 0
                 else:
+                    del data[s_name]
                     log.debug("Couldn't find data for {}, invalid Key".format(s_name))
+
+        if all(len(data[s_name]) == 0 for s_name in self.fastqc_data):
+            log.debug("overrepresented_sequences not found in FastQC reports")
+            return None
 
         cats = OrderedDict()
         cats["top_overrepresented"] = {"name": "Top over-represented sequence"}
@@ -870,7 +875,7 @@ class MultiqcModule(BaseMultiqcModule):
 
         # Config for the plot
         pconfig = {
-            "id": "fastqc_overrepresented_sequencesi_plot",
+            "id": "fastqc_overrepresented_sequences_plot",
             "title": "FastQC: Overrepresented sequences",
             "ymin": 0,
             "yCeiling": 100,

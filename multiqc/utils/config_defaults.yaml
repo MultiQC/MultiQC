@@ -107,6 +107,10 @@ fn_ignore_paths:
 sample_names_ignore: []
 sample_names_ignore_re: []
 sample_names_rename_buttons: []
+sample_names_replace: {}
+sample_names_replace_regex: False
+sample_names_replace_exact: False
+sample_names_replace_complete: False
 sample_names_rename: []
 show_hide_buttons: []
 show_hide_patterns: []
@@ -234,6 +238,7 @@ fn_clean_exts:
   - ".mapped"
   - ".vep"
   - "_vep"
+  - "ccs"
 
 # These are removed after the above, only if sample names
 # start or end with this string. Again, removed in order.
@@ -293,6 +298,11 @@ module_order:
   # MultiQC general module for catching output from custom scripts
   - "custom_content"
   # Post-alignment QC
+  - ccs:
+      module_tag:
+        - DNA
+        - RNA
+        - PacBio
   - ngsderive:
       module_tag:
         - DNA
@@ -365,6 +375,9 @@ module_order:
   - goleft_indexcov:
       module_tag:
         - DNA
+  - gffcompare:
+      module_tag:
+        - RNA
   - disambiguate:
       module_tag:
         - RNA
@@ -393,6 +406,9 @@ module_order:
   - mirtop:
       module_tag:
         - miRNA
+  - sambamba:
+      module_tag:
+        - DNA
 
   # Post-alignment processing
   - homer:
@@ -508,6 +524,10 @@ module_order:
   - varscan2:
       module_tag:
         - DNA
+  - snippy:
+      module_tag:
+        - DNA
+        - prokarytotic
 
   # Alignment tool stats
   - bbmap:
