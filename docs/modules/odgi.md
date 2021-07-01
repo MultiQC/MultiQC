@@ -1,6 +1,6 @@
 ---
 Name: odgi
-URL: https://github.com/vgteam/odgi
+URL: https://github.com/pangenome/odgi
 Description: >
   is an optimized dynamic graph/genome implementation.
 ---
