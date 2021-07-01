@@ -150,12 +150,12 @@ class MultiqcModule(BaseMultiqcModule):
                 # Detect whether 3' or 5'
                 end_regex = re.search("Type: regular (\d)'", l)
                 if end_regex:
-                    end = int(end_regex.group(1))
+                    end = end_regex.group(1)
 
                 if "Overview of removed sequences" in l:
                     if "' end" in l:
                         res = re.search("(\d)' end", l)
-                        end = int(res.group(1))
+                        end = res.group(1)
 
                     # Initilise dictionaries for length data if not already done
                     if end not in self.cutadapt_length_counts:
@@ -261,7 +261,7 @@ class MultiqcModule(BaseMultiqcModule):
 
     def cutadapt_length_trimmed_plot(self):
         """Generate the trimming length plot"""
-        for end in self.ends:
+        for end in [x for x in ["default", "5", "3"] if x in self.ends]:
             pconfig = {
                 "id": f"cutadapt_trimmed_sequences_plot_{end}",
                 "title": "Cutadapt: Lengths of Trimmed Sequences{}".format(
