@@ -13,7 +13,6 @@ import xml.etree.ElementTree as ET
 
 log = logging.getLogger(__name__)
 
-
 class MultiqcModule(BaseMultiqcModule):
     def __init__(self):
         # Initialise the parent object
@@ -170,7 +169,7 @@ class MultiqcModule(BaseMultiqcModule):
                 [cats, lcats],
                 {
                     "id": "bclconvert_sample_counts",
-                    "title": "bclconvert Clusters by sample",
+                    "title": "bclconvert: Clusters by sample",
                     "hide_zero_cats": False,
                     "ylab": "Number of clusters",
                     "data_labels": ["Index mismatches", "Counts per lane"],
@@ -620,7 +619,7 @@ class MultiqcModule(BaseMultiqcModule):
 
         headers = OrderedDict()
         if lane["depth"] != "NA":
-            headers["depth"] = {
+            headers["depth-lane"] = {
                 "title": "Coverage",
                 "description": (
                     "Estimated sequencing depth based on the number of bases with quality score greater or equal to Q30, "
@@ -630,7 +629,7 @@ class MultiqcModule(BaseMultiqcModule):
                 "scale": "BuPu",
             }
 
-        headers["reads"] = {
+        headers["reads-lane"] = {
             "title": "{} Clusters".format(config.read_count_prefix),
             "description": "Total number of clusters (read pairs) for this sample as determined by bclconvert demultiplexing ({})".format(
                 config.read_count_desc
@@ -638,7 +637,7 @@ class MultiqcModule(BaseMultiqcModule):
             "scale": "Blues",
             "shared_key": "read_count",
         }
-        headers["yield"] = {
+        headers["yield-lane"] = {
             "title": "Yield ({})".format(config.base_count_prefix),
             "description": "Total number of bases for this sample as determined by bclconvert demultiplexing ({})".format(
                 config.base_count_desc
@@ -646,7 +645,7 @@ class MultiqcModule(BaseMultiqcModule):
             "scale": "Greens",
             "shared_key": "base_count",
         }
-        headers["basesQ30"] = {
+        headers["basesQ30-lane"] = {
             "title": "Bases ({}) &ge; Q30 (PF)".format(config.base_count_prefix),
             "description": "Number of bases with a Phred score of 30 or higher, passing filter ({})".format(
                 config.base_count_desc
@@ -654,27 +653,27 @@ class MultiqcModule(BaseMultiqcModule):
             "scale": "Blues",
             "shared_key": "base_count",
         }
-        headers["yield_q30_percent"] = {
+        headers["yield_q30_percent-lane"] = {
             "title": "% Bases &ge; Q30 (PF)",
             "description": "Percent of bases with a Phred score of 30 or higher, passing filter",
             "max": 100,
             "min": 0,
             "scale": "Greens",
         }
-        headers["perfect_index_reads"] = {
+        headers["perfect_index_reads-lane"] = {
             "title": "{} Perfect Index".format(config.read_count_prefix),
             "description": "Reads with perfect index - 0 mismatches ({})".format(config.read_count_desc),
             "scale": "Blues",
             "shared_key": "read_count",
         }
 
-        headers["one_mismatch_index_reads"] = {
+        headers["one_mismatch_index_reads-lane"] = {
             "title": "{} One Mismatch".format(config.read_count_prefix),
             "description": "Reads with one mismatch index ({})".format(config.read_count_desc),
             "scale": "Spectral",
             "shared_key": "read_count",
         }
-        headers["percent_perfectIndex"] = {
+        headers["percent_perfectIndex-lane"] = {
             "title": "% Perfect Index",
             "description": "Percent of reads with perfect index - 0 mismatches",
             "max": 100,
@@ -682,7 +681,7 @@ class MultiqcModule(BaseMultiqcModule):
             "scale": "RdYlGn",
             "suffix": "%",
         }
-        headers["percent_oneMismatch"] = {
+        headers["percent_oneMismatch-lane"] = {
             "title": "% One Mismach",
             "description": "Percent of reads with one mismatch",
             "max": 100,
@@ -693,13 +692,22 @@ class MultiqcModule(BaseMultiqcModule):
 
         # Table config
         table_config = {
-            "namespace": "bclconvert",
+            "namespace": "bclconvert-lane",
             "id": "bclconvert-lane-stats-table",
             "table_title": "bclconvert Lane Statistics",
             "col1_header": "Run ID - Lane",
             "no_beeswarm": True,
         }
-        return table.plot(self.bclconvert_bylane, headers, table_config)
+
+        # new dict with matching keys for plotting (this avoids duplicate html id linting errors)
+        bclconvert_bylane_foroutput = dict()
+        for laneid, lanestats in self.bclconvert_bylane.items():
+            if laneid not in bclconvert_bylane_foroutput:
+                bclconvert_bylane_foroutput[laneid] = dict()
+            for key, value in lanestats.items():
+                bclconvert_bylane_foroutput[laneid][key + "-lane"] = value
+
+        return table.plot(bclconvert_bylane_foroutput, headers, table_config)
 
     def prepend_runid(self, runId, rest):
         return str(runId) + " - " + str(rest)
