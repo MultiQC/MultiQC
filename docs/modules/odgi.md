@@ -25,7 +25,7 @@ weakly_connected_components:
   - component:
       id: 0
       nodes: 3751
-      is_acyclic: 'no'
+      is_acyclic: "no"
 num_nodes_self_loops:
   total: 0
   unique: 0
@@ -53,14 +53,14 @@ sum_of_path_node_distances:
 
 For the odgi module to discover the [odgi stats](https://odgi.readthedocs.io/en/latest/rst/commands/odgi_stats.html) reports, the file must match one of the following patterns:
 
-- "*.og.stats.yaml"
-- "*.og.stats.yml"
-- "*.odgi.stats.yaml"
-- "*.odgi.stats.yml" 
+- "\*.og.stats.yaml"
+- "\*.og.stats.yml"
+- "\*.odgi.stats.yaml"
+- "\*.odgi.stats.yml"
 
 A bar graph is generated, which shows the length, number of nodes, edges and paths for each sample.
 Additionally, a second bar graph is generated visualizing the `in_node_space` and `in_nucleotide_space` for every sample.
 
-It is possible to add custom content to your MultiQC report including 
+It is possible to add custom content to your MultiQC report including
 [odgi viz](https://odgi.readthedocs.io/en/latest/rst/commands/odgi_viz.html) or [odgi draw](https://odgi.readthedocs.io/en/latest/rst/commands/odgi_draw.html) PNGs.
 Ensure that the names of the PNGs match `*_odgi_viz_mqc.png`.
