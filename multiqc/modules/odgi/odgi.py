@@ -116,6 +116,7 @@ class MultiqcModule(BaseMultiqcModule):
             "title": "Nodes",
             "description": "Number of nodes in the graph.",
             "scale": "OrRd",
+            'format': '{:,.0f}', 
         }
         headers["Edges"] = {"title": "Edges", "description": "Number of edges in the graph.", "scale": "PuBu"}
         headers["Paths"] = {"title": "Paths", "description": "Number of paths in the graph.", "scale": "Greens"}
