@@ -8,7 +8,7 @@ from collections import OrderedDict
 
 from multiqc import config
 from multiqc.modules.base_module import BaseMultiqcModule
-from multiqc.plots import linegraph
+from multiqc.plots import bargraph
 
 import yaml
 
@@ -50,7 +50,8 @@ class MultiqcModule(BaseMultiqcModule):
         self.plot_general_odgi_stats()
 
         # Plot the odgi stats metrics as a lineplot
-        self.plot_odgi_metrics()
+        self.plot_sum_of_path_nodes_distances()
+        self.plot_mean_links_length()
 
     def parse_odgi_stats_report(self, f):
         """
@@ -190,70 +191,66 @@ class MultiqcModule(BaseMultiqcModule):
         }
         self.general_stats_addcols(self.odgi_stats_map, headers)
 
-    def plot_odgi_metrics(self):
+    def plot_sum_of_path_nodes_distances(self):
         """
-        Plot odgi metrics as a lineplot supporting raw counts and log10 counts.
+        Plot odgi path node distances bar plot.
         """
-        mean_links_length_nodes_space = dict()
-        mean_links_length_nucleotide_space = dict()
-        sum_of_path_nodes_distances_nodes_space = dict()
-        sum_of_path_nodes_distances_nucleotide_space = dict()
-        odgi_stats_file_names = sorted(self.odgi_stats_map.keys())
-        seq_smooth = odgi_stats_file_names[-2:]
-        sorted_filenames = seq_smooth + odgi_stats_file_names[:-2]
-        for sample_name in sorted_filenames:
-            mean_links_length_nodes_space.update(
-                {sample_name: float(self.odgi_stats_map[sample_name]["mean_links_length_in_node_space"])}
-            )
-            mean_links_length_nucleotide_space.update(
-                {sample_name: float(self.odgi_stats_map[sample_name]["mean_links_length_in_nucleotide_space"])}
-            )
-            sum_of_path_nodes_distances_nodes_space.update(
-                {sample_name: float(self.odgi_stats_map[sample_name]["sum_of_path_nodes_distances_in_node_space"])}
-            )
-            sum_of_path_nodes_distances_nucleotide_space.update(
-                {
-                    sample_name: float(
-                        self.odgi_stats_map[sample_name]["sum_of_path_nodes_distances_in_nucleotide_space"]
-                    )
-                }
-            )
 
-        metrics_lineplot_config = {
-            "id": "odgi_metrics_lineplot",
-            "ylab": "Count",
-            "categories": True,
+        cats = [OrderedDict(), OrderedDict()]
+        cats[0]["sum_of_path_nodes_distances_in_node_space"] = {"name": "Sum of distances: node space"}
+        cats[1]["sum_of_path_nodes_distances_in_nucleotide_space"] = {"name": "Sum of distances: nucleotide space"}
+        pconfig = {
+            "id": "odgi_sum_of_path_nodes_distances_plot",
+            "title": "ODGI: Sum of path node distances",
+            "ylab": "Distance",
             "yDecimals": False,
+            "cpswitch": False,
             "logswitch": True,
-            "title": "ODGI: ODGI stats metrics - Evaluating sorting goodness - How linear is a graph?",
+            "data_labels": [
+                {"name": "Node space", "ylab": "Distance"},
+                {"name": "Nucleotide space", "ylab": "Distance"},
+            ],
+        }
+        self.add_section(
+            name="Sum of path node distances",
+            anchor="odgi_sum_of_path_nodes_distances",
+            description="""
+                For each path we iterate from node to node and count the node / nucleotide distance of nodes on the pangenome
+                level normalized by the path length. If a node is reversed, we count the node distance twice.
+                This value allows you to evaluate the sorting goodness - how linear the graph is.
+            """,
+            plot=bargraph.plot([self.odgi_stats_map, self.odgi_stats_map], cats, pconfig),
+        )
+
+    def plot_mean_links_length(self):
+        """
+        Plot odgi path node distances bar plot.
+        """
+        cats = [OrderedDict(), OrderedDict()]
+        cats[0]["mean_links_length_in_node_space"] = {"name": "Mean links length: node space"}
+        cats[1]["mean_links_length_in_nucleotide_space"] = {"name": "Mean links length: nucleotide space"}
+        pconfig = {
+            "id": "odgi_mean_links_length_plot",
+            "title": "ODGI: Mean links length",
+            "ylab": "Distance",
+            "yDecimals": False,
+            "cpswitch": False,
+            "logswitch": True,
+            "data_labels": [
+                {"name": "Node space", "ylab": "Distance"},
+                {"name": "Nucleotide space", "ylab": "Distance"},
+            ],
         }
 
         self.add_section(
-            name="ODGI metrics",
-            anchor="odgi_stats",
-            description="The ODGI metrics section",
-            helptext="""
-            - `sum-of-path-node-distances`
-                - For each path we iterate from node to node and count the node distance of nodes on the pangenome
-                  level normalized by the path length. If a node is reversed, we count the node distance twice.
-            - `sum-of-path-nucleotide-distances`
-                - For each path we iterate from node to node and count the nucleotide distance of nodes on the pangenome
-                  level normalized by the path length. If the node is reversed, we count the nucleotide distance twice.
-            - `mean-links-length`
-                - In contrast to the `sum-of-path-distances`, for each path we iterate from node to node and count the
-                  node distance `mean_links_length_nodes_space` or nucleotide distance `mean_links_length_nucleotide_space`
-                  of nodes within the same path only!
-                  We then normalized by the path length
+            name="Mean links length",
+            anchor="odgi_mean_links_length",
+            description="""
+                For each path we iterate from node to node and count the node / nucleotide distance `mean_links_length`
+                of nodes _within the same path only._ We then normalized by the path length.
+                This value allows you to evaluate the sorting goodness - how linear the graph is.
             """,
-            plot=linegraph.plot(
-                {
-                    "mean_links_length_nodes_space": mean_links_length_nodes_space,
-                    "mean_links_length_nucleotide_space": mean_links_length_nucleotide_space,
-                    "sum_of_path_nodes_distances_nodes_space": sum_of_path_nodes_distances_nodes_space,
-                    "sum_of_path_nodes_distances_nucleotide_space": sum_of_path_nodes_distances_nucleotide_space,
-                },
-                pconfig=metrics_lineplot_config,
-            ),
+            plot=bargraph.plot([self.odgi_stats_map, self.odgi_stats_map], cats, pconfig),
         )
 
     def extract_sample_name(self, file_name):
