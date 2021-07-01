@@ -116,39 +116,68 @@ class MultiqcModule(BaseMultiqcModule):
             "title": "Nodes",
             "description": "Number of nodes in the graph.",
             "scale": "OrRd",
-            'format': '{:,.0f}', 
+            "format": "{:,.0f}",
         }
         headers["Edges"] = {
-        "title": "Edges", 
-        "description": "Number of edges in the graph.", 
-        "scale": "PuBu",
-        'format': '{:,.0f}' }
+            "title": "Edges",
+            "description": "Number of edges in the graph.",
+            "scale": "PuBu",
+            "format": "{:,.0f}",
+        }
         headers["Paths"] = {
-        "title": "Paths", 
-        "description": "Number of paths in the graph.", 
-        "scale": "Greens",
-        'format': '{:,.0f}'}
+            "title": "Paths",
+            "description": "Number of paths in the graph.",
+            "scale": "Greens",
+            "format": "{:,.0f}",
+        }
         headers["Components"] = {
             "title": "Components",
             "description": "Number of weakly connected components in the " "graph.",
             "scale": "Oranges",
         }
-        headers["A"] = {"title": "A", "description": "Number of adenine bases in the graph.", "scale": "Spectral"}
-        headers["C"] = {"title": "C", "description": "Number of cytosine bases in the graph.", "scale": "Greys"}
-        headers["T"] = {"title": "T", "description": "Number of thymine bases in the graph.", "scale": "Blues"}
-        headers["G"] = {"title": "G", "description": "Number of guanine bases in the graph.", "scale": "BrBG"}
-        headers["N"] = {"title": "N", "description": "Number of `N` basis in the graph.", "scale": "BrBG"}
+        headers["A"] = {
+            "title": "A",
+            "description": "Number of adenine bases in the graph.",
+            "scale": "Spectral",
+            "format": "{:,.0f}",
+        }
+        headers["C"] = {
+            "title": "C",
+            "description": "Number of cytosine bases in the graph.",
+            "scale": "Greys",
+            "format": "{:,.0f}",
+        }
+        headers["T"] = {
+            "title": "T",
+            "description": "Number of thymine bases in the graph.",
+            "scale": "Blues",
+            "format": "{:,.0f}",
+        }
+        headers["G"] = {
+            "title": "G",
+            "description": "Number of guanine bases in the graph.",
+            "scale": "BrBG",
+            "format": "{:,.0f}",
+        }
+        headers["N"] = {
+            "title": "N",
+            "description": "Number of `N` basis in the graph.",
+            "scale": "BrBG",
+            "format": "{:,.0f}",
+        }
         headers["Total"] = {
             "title": "Nodes With Self Loops - Total",
             "description": "Total number of nodes having self loops in the " "graph.",
             "scale": "Set1",
             "hidden": True,
+            "format": "{:,.0f}",
         }
         headers["Unique"] = {
             "title": "Nodes With Self Loops - Unique",
             "description": "Number of unique nodes having self loops in the " "graph.",
             "scale": "Set2",
             "hidden": True,
+            "format": "{:,.0f}",
         }
         for fn in self.odgi_stats_map.keys():
             file_stats = self.odgi_stats_map[fn]
