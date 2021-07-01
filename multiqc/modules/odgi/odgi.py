@@ -118,7 +118,11 @@ class MultiqcModule(BaseMultiqcModule):
             "scale": "OrRd",
             'format': '{:,.0f}', 
         }
-        headers["Edges"] = {"title": "Edges", "description": "Number of edges in the graph.", "scale": "PuBu"}
+        headers["Edges"] = {
+        "title": "Edges", 
+        "description": "Number of edges in the graph.", 
+        "scale": "PuBu",
+        'format': '{:,.0f}' }
         headers["Paths"] = {
         "title": "Paths", 
         "description": "Number of paths in the graph.", 
