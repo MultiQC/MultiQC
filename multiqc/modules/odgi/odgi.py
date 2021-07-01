@@ -119,6 +119,28 @@ class MultiqcModule(BaseMultiqcModule):
         }
         headers["Edges"] = {"title": "Edges", "description": "Number of edges in the graph.", "scale": "PuBu"}
         headers["Paths"] = {"title": "Paths", "description": "Number of paths in the graph.", "scale": "Greens"}
+        headers["Components"] = {
+            "title": "Components",
+            "description": "Number of weakly connected components in the " "graph.",
+            "scale": "Oranges",
+        }
+        headers["A"] = {"title": "A", "description": "Number of adenine bases in the graph.", "scale": "Spectral"}
+        headers["C"] = {"title": "C", "description": "Number of cytosine bases in the graph.", "scale": "Greys"}
+        headers["T"] = {"title": "T", "description": "Number of thymine bases in the graph.", "scale": "Blues"}
+        headers["G"] = {"title": "G", "description": "Number of guanine bases in the graph.", "scale": "BrBG"}
+        headers["N"] = {"title": "N", "description": "Number of `N` basis in the graph.", "scale": "BrBG"}
+        headers["Total"] = {
+            "title": "Nodes With Self Loops - Total",
+            "description": "Total number of nodes having self loops in the " "graph.",
+            "scale": "Set1",
+            "hidden": True,
+        }
+        headers["Unique"] = {
+            "title": "Nodes With Self Loops - Unique",
+            "description": "Number of unique nodes having self loops in the " "graph.",
+            "scale": "Set2",
+            "hidden": True,
+        }
         for fn in self.odgi_stats_map.keys():
             file_stats = self.odgi_stats_map[fn]
             data.update({fn: file_stats["General stats {}".format(fn)]})
@@ -188,7 +210,8 @@ class MultiqcModule(BaseMultiqcModule):
     def extract_sample_name(self, file_name):
         """
         Extracts the sample name from a given file name.
-        Expects and returns one of seqwish, smooth or cons@*
+        Expects and returns one of seqwish, smooth or cons@*.
+        If none of the above keywords are present, the full filename except for the ending is returned.
         """
         # TODO if non of the above, just take the full name
         if "cons@" in file_name:
@@ -216,6 +239,8 @@ class MultiqcModule(BaseMultiqcModule):
         for d in sum_of_path_nodes_distances:
             if d["distance"]["path"] == "all_paths":
                 distance = d["distance"]
+        n = data.get("N", 0)
+        num_nodes_self_loops = data["num_nodes_self_loops"]
         return {
             sample_name: {
                 "General stats {}".format(sample_name): {
@@ -223,6 +248,14 @@ class MultiqcModule(BaseMultiqcModule):
                     "Nodes": float(data["nodes"]),
                     "Edges": float(data["edges"]),
                     "Paths": float(data["paths"]),
+                    "Components": float(data["num_weakly_connected_components"]),
+                    "A": float(data["A"]),
+                    "C": float(data["C"]),
+                    "T": float(data["T"]),
+                    "G": float(data["G"]),
+                    "N": float(n),
+                    "Total": float(num_nodes_self_loops["total"]),
+                    "Unique": float(num_nodes_self_loops["unique"]),
                 },
                 "Mean_links_length {}".format(sample_name): {
                     "Path": length["path"],
