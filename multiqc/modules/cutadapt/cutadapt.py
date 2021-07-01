@@ -36,9 +36,9 @@ class MultiqcModule(BaseMultiqcModule):
 
         # Find and load any Cutadapt reports
         self.cutadapt_data = dict()
-        self.cutadapt_length_counts = dict()
-        self.cutadapt_length_exp = dict()
-        self.cutadapt_length_obsexp = dict()
+        self.cutadapt_length_counts = {"?": dict()}
+        self.cutadapt_length_exp = {"?": dict()}
+        self.cutadapt_length_obsexp = {"?": dict()}
         self.ends = ["?"]
 
         for f in self.find_log_files("cutadapt", filehandles=True):
@@ -210,6 +210,11 @@ class MultiqcModule(BaseMultiqcModule):
             log.error("Something went wrong...")
             log.debug("Keys in trimmed length data differed")
             raise UserWarning
+
+        if len(self.cutadapt_length_counts["?"]) == 0:
+            self.cutadapt_length_counts.pop("?")
+            self.cutadapt_length_exp.pop("?")
+            self.cutadapt_length_obsexp.pop("?")
 
         self.ends = list(self.cutadapt_length_counts.keys())
 
