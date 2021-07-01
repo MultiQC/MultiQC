@@ -46,38 +46,23 @@ class MultiqcModule(BaseMultiqcModule):
         if self.num_demux_files == 0:
             raise UserWarning
         elif self.num_demux_files > 1 and not self.multiple_sequencing_runs:
-            log.warning(
-                "Detected multiple bclconvert runs from the same sequencer output. "
-                "They will be merged, undetermined stats will be recalculated. "
-                "The top-unknown-barcodes-per-lane table will not be displayed."
-            )
-            self.add_section(
-                anchor="bclconvert-multiple-runs-warning",
-                content="""
+            log.warning("Found multiple runs from the same sequencer output")
+            self.intro += """
                 <div class="alert alert-warning">
                     <strong>Warning:</strong> Detected multiple bclconvert runs from the same sequencer output.
                     Runs were merged and undetermined stats were recalculated.
-                    The top-unknown-barcodes-per-lane table is not displayed.
                 </div>
-                """,
-            )
+            """
             self._recalculate_undetermined()
         elif self.multiple_sequencing_runs:
             # if we have data from multple sequencing runs, the recalculation in _recalculate_undetermined() wont work. in this case we suppress/hide the info.
-            log.warning(
-                "Detected multiple sequencer runs (saw multiple different run ids across RunInfo.xml files). "
-                "Undetermined Stats cannot be re-caclulated and will be suppressed. Samole stats will be merged."
-            )
-            self.add_section(
-                anchor="sequencer-multiple-runs-warning",
-                content="""
+            log.warning("Found multiple sequencer runs")
+            self.intro += """
                 <div class="alert alert-warning">
                     <strong>Warning:</strong> Detected multiple sequencer runs.
-                    Sample stats were merged. Undetermined stats cannot be recalculated for multiple sequencing runs and are suppressed.
-                    The top-unknown-barcodes-per-lane table is not displayed.
+                    Sample stats were merged.
                 </div>
-                """,
-            )
+            """
             self.per_lane_undetermined_reads = None
         elif self.num_demux_files == 1:
             # only possible to calculate barcodes per lane when parsing a single bclconvert run
@@ -134,10 +119,25 @@ class MultiqcModule(BaseMultiqcModule):
         cats["perfect"] = {"name": "Perfect Index Reads"}
         cats["imperfect"] = {"name": "Mismatched Index Reads"}
         cats["undetermined"] = {"name": "Undetermined Reads"}
+        extra = ""
+        if self.num_demux_files > 1 and not self.multiple_sequencing_runs:
+            extra = """
+                <div class="alert alert-warning">
+                    <strong>Warning:</strong> Found multiple runs from the same sequencer output.
+                    Runs were merged and <em>Undetermined Reads</em> were recalculated.
+                </div>
+            """
+        elif self.multiple_sequencing_runs:
+            extra = """
+                <div class="alert alert-warning">
+                    <strong>Warning:</strong> Found multiple sequencer runs.
+                    <em>Undetermined Reads</em> cannot be recalculated for multiple sequencing runs and are not shown.
+                </div>
+            """
         self.add_section(
             name="Clusters by lane",
             anchor="bclconvert-bylane",
-            description="Number of reads per lane (with number of perfect index reads).",
+            description="Number of reads per lane (with number of perfect index reads)." + extra,
             helptext="""Perfect index reads are those that do not have a single mismatch.
                 All samples of a lane are combined. Undetermined reads are treated as a third category.""",
             plot=bargraph.plot(
