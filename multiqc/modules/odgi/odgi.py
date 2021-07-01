@@ -217,6 +217,8 @@ class MultiqcModule(BaseMultiqcModule):
             description="""
                 For each path we iterate from node to node and count the node / nucleotide distance of nodes on the pangenome
                 level normalized by the path length. If a node is reversed, we count the node distance twice.
+            """,
+            helptext="""
                 This value allows you to evaluate the sorting goodness - how linear the graph is.
             """,
             plot=bargraph.plot([self.odgi_stats_map, self.odgi_stats_map], cats, pconfig),
@@ -248,6 +250,8 @@ class MultiqcModule(BaseMultiqcModule):
             description="""
                 For each path we iterate from node to node and count the node / nucleotide distance `mean_links_length`
                 of nodes _within the same path only._ We then normalized by the path length.
+            """,
+            helptext="""
                 This value allows you to evaluate the sorting goodness - how linear the graph is.
             """,
             plot=bargraph.plot([self.odgi_stats_map, self.odgi_stats_map], cats, pconfig),
