@@ -16,6 +16,8 @@
 
 #### New Modules
 
+- [**BclConvert**](https://support.illumina.com/sequencing/sequencing_software/bcl-convert.html)
+  - Tool that converts / demultiplexes Illumina Binary Base Call (BCL) files to FASTQ files
 - [**Bustools**](https://bustools.github.io/)
   - Tools for working with BUS files
 - [**ccs**](https://github.com/PacificBiosciences/ccs)

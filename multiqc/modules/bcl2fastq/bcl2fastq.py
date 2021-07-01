@@ -400,7 +400,7 @@ class MultiqcModule(BaseMultiqcModule):
             "shared_key": "read_count",
         }
         headers["yieldQ30"] = {
-            "title": "{} Yield &ge; Q30".format(config.base_count_prefix),
+            "title": "Yield ({}) &ge; Q30".format(config.base_count_prefix),
             "description": "Number of bases with a Phred score of 30 or higher ({})".format(config.base_count_desc),
             "scale": "Greens",
             "shared_key": "base_count",
