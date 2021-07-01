@@ -111,7 +111,12 @@ class MultiqcModule(BaseMultiqcModule):
         """
         data = dict()
         headers = OrderedDict()
-        headers["Length"] = {"title": "Length", "description": "Graph length in nucleotides.", "scale": "BuPu"}
+        headers["Length"] = {
+            "title": "Length",
+            "description": "Graph length in nucleotides.",
+            "scale": "BuPu",
+            "format": "{:,.0f}",
+        }
         headers["Nodes"] = {
             "title": "Nodes",
             "description": "Number of nodes in the graph.",
@@ -134,6 +139,7 @@ class MultiqcModule(BaseMultiqcModule):
             "title": "Components",
             "description": "Number of weakly connected components in the " "graph.",
             "scale": "Oranges",
+            "format": "{:,.0f}",
         }
         headers["A"] = {
             "title": "A",
