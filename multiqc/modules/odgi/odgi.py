@@ -160,26 +160,26 @@ class MultiqcModule(BaseMultiqcModule):
             "categories": True,
             "yDecimals": False,
             "logswitch": True,
-            "title": "ODGI: ODGI stats metrics",
+            "title": "ODGI: ODGI stats metrics - Evaluating sorting goodness - How linear is a graph?",
         }
 
         self.add_section(
             name="ODGI metrics",
             anchor="odgi_stats",
-            description="The odgi metrics section",
+            description="The ODGI metrics section",
             helptext="<b>sum-of-path-node-distances</b>:<br>For each path we iterate from node to node and count the node distance of nodes on the pangenome "
             "level normalized by the path length. If a node is reversed, we count the node distance twice.<br><br>"
             "<b>sum-of-path-nucleotide-distances</b>:<br>"
             "For each path we iterate from node to node and count the nucleotide distance of nodes on the pangenome level normalized by the path "
             "length. If the node is reversed, we count the nucleotide distance twice.<br><br>"
-            "<b>mean-links-length</b>:<br>For each path we iterate from node to node and count the node distance of nodes within the same path only! "
+            "<b>mean-links-length</b>:<br>In contrast to the <em>sum-of-path-distances</em>, for each path we iterate from node to node and count the node distance <b>mean_links_length_nodes_space</b> or nucleotide distance <b>mean_links_length_nucleotide_space</b> of nodes within the same path only! "
             "We then normalized by the path length.",
             plot=linegraph.plot(
                 {
-                    "in_node_space_mean": mean_links_length_nodes_space,
-                    "in_nucleotide_space_mean": mean_links_length_nucleotide_space,
-                    "in_node_space_sum": sum_of_path_nodes_distances_nodes_space,
-                    "in_nucleotide_space_sum": sum_of_path_nodes_distances_nucleotide_space,
+                    "mean_links_length_nodes_space": mean_links_length_nodes_space,
+                    "mean_links_length_nucleotide_space": mean_links_length_nucleotide_space,
+                    "sum_of_path_nodes_distances_nodes_space": sum_of_path_nodes_distances_nodes_space,
+                    "sum_of_path_nodes_distances_nucleotide_space": sum_of_path_nodes_distances_nucleotide_space,
                 },
                 pconfig=metrics_lineplot_config,
             ),
