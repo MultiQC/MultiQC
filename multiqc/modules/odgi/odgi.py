@@ -6,6 +6,7 @@ from __future__ import print_function
 import logging
 from collections import OrderedDict
 
+from multiqc import config
 from multiqc.modules.base_module import BaseMultiqcModule
 from multiqc.plots import linegraph
 
@@ -29,19 +30,15 @@ class MultiqcModule(BaseMultiqcModule):
             info="is an optimized dynamic graph/genome implementation.",
         )
 
-        self.odgi_stats_map = dict()
-
-        # Find and load any odgi stats file
-        log_files = self.find_log_files("odgi", filehandles=True)
-
         # Parse odgi stats data
-        for f in log_files:
+        self.odgi_stats_map = dict()
+        for f in self.find_log_files("odgi", filehandles=True):
             self.parse_odgi_stats_report(f)
-            self.add_data_source(f)
 
         self.odgi_stats_map = self.ignore_samples(self.odgi_stats_map)
 
-        if not self.odgi_stats_map:
+        # No samples found
+        if len(self.odgi_stats_map) == 0:
             raise UserWarning
 
         if len(self.odgi_stats_map) == 1:
@@ -98,24 +95,36 @@ class MultiqcModule(BaseMultiqcModule):
               num_penalties: 231
               num_penalties_different_orientation: 0
         """
-        data = {}
+        # Load the YAML file
         try:
             data = yaml.load(f["f"], Loader=yaml.SafeLoader)
         except Exception as e:
             log.warning("Could not parse YAML for '{}': \n  {}".format(f, e))
-        self.odgi_stats_map.update(self.compress_stats_data(self.extract_sample_name(f["fn"]), data))
+            return
+
+        # Clean up the sample name
+        s_name = self.extract_sample_name(f["fn"])
+        s_name = self.clean_s_name(s_name, f["root"])
+
+        # Add to the data sources file
+        self.add_data_source(f, s_name)
+
+        # Add the data to the main odgi_stats_map dict
+        if s_name in self.odgi_stats_map:
+            log.debug("Duplicate sample name found! Overwriting: {}".format(s_name))
+        self.odgi_stats_map[s_name] = self.compress_stats_data(data)
 
     def plot_general_odgi_stats(self):
         """
         Plot the odgi stats by adding them to the general statistics table.
         """
-        data = dict()
         headers = OrderedDict()
         headers["Length"] = {
-            "title": "Length",
-            "description": "Graph length in nucleotides.",
+            "title": f"{config.base_count_prefix} Length",
+            "description": f"Graph length in nucleotides ({config.base_count_desc} )",
             "scale": "BuPu",
-            "format": "{:,.0f}",
+            "modify": lambda x: x * config.base_count_multiplier,
+            "shared_key": "base_count",
         }
         headers["Nodes"] = {
             "title": "Nodes",
@@ -185,10 +194,7 @@ class MultiqcModule(BaseMultiqcModule):
             "hidden": True,
             "format": "{:,.0f}",
         }
-        for fn in self.odgi_stats_map.keys():
-            file_stats = self.odgi_stats_map[fn]
-            data.update({fn: file_stats["General stats {}".format(fn)]})
-        self.general_stats_addcols(data, headers)
+        self.general_stats_addcols(self.odgi_stats_map, headers)
 
     def plot_odgi_metrics(self):
         """
@@ -202,20 +208,19 @@ class MultiqcModule(BaseMultiqcModule):
         seq_smooth = odgi_stats_file_names[-2:]
         sorted_filenames = seq_smooth + odgi_stats_file_names[:-2]
         for sample_name in sorted_filenames:
-            file_stats = self.odgi_stats_map[sample_name]
             mean_links_length_nodes_space.update(
-                {sample_name: float(file_stats["Mean_links_length {}".format(sample_name)]["In_node_space"])}
+                {sample_name: float(self.odgi_stats_map[sample_name]["Mean_links_length_In_node_space"])}
             )
             mean_links_length_nucleotide_space.update(
-                {sample_name: float(file_stats["Mean_links_length {}".format(sample_name)]["In_nucleotide_space"])}
+                {sample_name: float(self.odgi_stats_map[sample_name]["Mean_links_length_In_nucleotide_space"])}
             )
             sum_of_path_nodes_distances_nodes_space.update(
-                {sample_name: float(file_stats["Sum_of_path_nodes_distances {}".format(sample_name)]["In_node_space"])}
+                {sample_name: float(self.odgi_stats_map[sample_name]["Sum_of_path_nodes_distances_In_node_space"])}
             )
             sum_of_path_nodes_distances_nucleotide_space.update(
                 {
                     sample_name: float(
-                        file_stats["Sum_of_path_nodes_distances {}".format(sample_name)]["In_nucleotide_space"]
+                        self.odgi_stats_map[sample_name]["Sum_of_path_nodes_distances_In_nucleotide_space"]
                     )
                 }
             )
@@ -233,13 +238,19 @@ class MultiqcModule(BaseMultiqcModule):
             name="ODGI metrics",
             anchor="odgi_stats",
             description="The ODGI metrics section",
-            helptext="<b>sum-of-path-node-distances</b>:<br>For each path we iterate from node to node and count the node distance of nodes on the pangenome "
-            "level normalized by the path length. If a node is reversed, we count the node distance twice.<br><br>"
-            "<b>sum-of-path-nucleotide-distances</b>:<br>"
-            "For each path we iterate from node to node and count the nucleotide distance of nodes on the pangenome level normalized by the path "
-            "length. If the node is reversed, we count the nucleotide distance twice.<br><br>"
-            "<b>mean-links-length</b>:<br>In contrast to the <em>sum-of-path-distances</em>, for each path we iterate from node to node and count the node distance <b>mean_links_length_nodes_space</b> or nucleotide distance <b>mean_links_length_nucleotide_space</b> of nodes within the same path only! "
-            "We then normalized by the path length.",
+            helptext="""
+            - `sum-of-path-node-distances`
+                - For each path we iterate from node to node and count the node distance of nodes on the pangenome
+                  level normalized by the path length. If a node is reversed, we count the node distance twice.
+            - `sum-of-path-nucleotide-distances`
+                - For each path we iterate from node to node and count the nucleotide distance of nodes on the pangenome
+                  level normalized by the path length. If the node is reversed, we count the nucleotide distance twice.
+            - `mean-links-length`
+                - In contrast to the `sum-of-path-distances`, for each path we iterate from node to node and count the
+                  node distance `mean_links_length_nodes_space` or nucleotide distance `mean_links_length_nucleotide_space`
+                  of nodes within the same path only!
+                  We then normalized by the path length
+            """,
             plot=linegraph.plot(
                 {
                     "mean_links_length_nodes_space": mean_links_length_nodes_space,
@@ -269,7 +280,7 @@ class MultiqcModule(BaseMultiqcModule):
         else:
             return ".".join(file_name.split(".")[:-3])
 
-    def compress_stats_data(self, sample_name, data) -> dict:
+    def compress_stats_data(self, data) -> dict:
         """
         Compress odgi stats into a single dictionary to visualize.
         """
@@ -286,36 +297,30 @@ class MultiqcModule(BaseMultiqcModule):
         n = data.get("N", 0)
         num_nodes_self_loops = data["num_nodes_self_loops"]
         return {
-            sample_name: {
-                "General stats {}".format(sample_name): {
-                    "Length": float(data["length"]),
-                    "Nodes": float(data["nodes"]),
-                    "Edges": float(data["edges"]),
-                    "Paths": float(data["paths"]),
-                    "Components": float(data["num_weakly_connected_components"]),
-                    "A": float(data["A"]),
-                    "C": float(data["C"]),
-                    "T": float(data["T"]),
-                    "G": float(data["G"]),
-                    "N": float(n),
-                    "Total": float(num_nodes_self_loops["total"]),
-                    "Unique": float(num_nodes_self_loops["unique"]),
-                },
-                "Mean_links_length {}".format(sample_name): {
-                    "Path": length["path"],
-                    "In_node_space": length["in_node_space"],
-                    "In_nucleotide_space": length["in_nucleotide_space"],
-                    "Num_links_considered": length["num_links_considered"],
-                    "Num_gap_links_not_penalized": length["num_gap_links_not_penalized"],
-                },
-                "Sum_of_path_nodes_distances {}".format(sample_name): {
-                    "Path": distance["path"],
-                    "In_node_space": distance["in_node_space"],
-                    "In_nucleotide_space": distance["in_nucleotide_space"],
-                    "Nodes": distance["nodes"],
-                    "Nucleotides": distance["nucleotides"],
-                    "Num_penalties": distance["num_penalties"],
-                    "Num_penalties_different_orientation": distance["num_penalties_different_orientation"],
-                },
-            }
+            "Length": float(data["length"]),
+            "Nodes": float(data["nodes"]),
+            "Edges": float(data["edges"]),
+            "Paths": float(data["paths"]),
+            "Components": float(data["num_weakly_connected_components"]),
+            "A": float(data["A"]),
+            "C": float(data["C"]),
+            "T": float(data["T"]),
+            "G": float(data["G"]),
+            "N": float(n),
+            "Total": float(num_nodes_self_loops["total"]),
+            "Unique": float(num_nodes_self_loops["unique"]),
+            "Mean_links_length_Path": length["path"],
+            "Mean_links_length_In_node_space": length["in_node_space"],
+            "Mean_links_length_In_nucleotide_space": length["in_nucleotide_space"],
+            "Mean_links_length_Num_links_considered": length["num_links_considered"],
+            "Mean_links_length_Num_gap_links_not_penalized": length["num_gap_links_not_penalized"],
+            "Sum_of_path_nodes_distances_Path": distance["path"],
+            "Sum_of_path_nodes_distances_In_node_space": distance["in_node_space"],
+            "Sum_of_path_nodes_distances_In_nucleotide_space": distance["in_nucleotide_space"],
+            "Sum_of_path_nodes_distances_Nodes": distance["nodes"],
+            "Sum_of_path_nodes_distances_Nucleotides": distance["nucleotides"],
+            "Sum_of_path_nodes_distances_Num_penalties": distance["num_penalties"],
+            "Sum_of_path_nodes_distances_Num_penalties_different_orientation": distance[
+                "num_penalties_different_orientation"
+            ],
         }
