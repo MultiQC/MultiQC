@@ -36,10 +36,10 @@ class MultiqcModule(BaseMultiqcModule):
 
         # Find and load any Cutadapt reports
         self.cutadapt_data = dict()
-        self.cutadapt_length_counts = {"?": dict()}
-        self.cutadapt_length_exp = {"?": dict()}
-        self.cutadapt_length_obsexp = {"?": dict()}
-        self.ends = ["?"]
+        self.cutadapt_length_counts = {"default": dict()}
+        self.cutadapt_length_exp = {"default": dict()}
+        self.cutadapt_length_obsexp = {"default": dict()}
+        self.ends = ["default"]
 
         for f in self.find_log_files("cutadapt", filehandles=True):
             self.parse_cutadapt_logs(f)
@@ -106,7 +106,7 @@ class MultiqcModule(BaseMultiqcModule):
             # New log starting
             if "cutadapt" in l:
                 s_name = None
-                end = "?"
+                end = "default"
                 c_version = re.match(r"This is cutadapt ([\d\.]+)", l)
                 if c_version:
                     try:
@@ -211,10 +211,10 @@ class MultiqcModule(BaseMultiqcModule):
             log.debug("Keys in trimmed length data differed")
             raise UserWarning
 
-        if len(self.cutadapt_length_counts["?"]) == 0:
-            self.cutadapt_length_counts.pop("?")
-            self.cutadapt_length_exp.pop("?")
-            self.cutadapt_length_obsexp.pop("?")
+        if len(self.cutadapt_length_counts["default"]) == 0:
+            self.cutadapt_length_counts.pop("default")
+            self.cutadapt_length_exp.pop("default")
+            self.cutadapt_length_obsexp.pop("default")
 
         self.ends = list(self.cutadapt_length_counts.keys())
 
@@ -264,7 +264,9 @@ class MultiqcModule(BaseMultiqcModule):
         for end in self.ends:
             pconfig = {
                 "id": f"cutadapt_trimmed_sequences_plot_{end}",
-                "title": "Cutadapt: Lengths of Trimmed Sequences{}".format("" if end == "?" else f" ({end}' end)"),
+                "title": "Cutadapt: Lengths of Trimmed Sequences{}".format(
+                    "" if end == "default" else f" ({end}' end)"
+                ),
                 "ylab": "Counts",
                 "xlab": "Length Trimmed (bp)",
                 "xDecimals": False,
@@ -277,10 +279,10 @@ class MultiqcModule(BaseMultiqcModule):
             }
 
             self.add_section(
-                name="Trimmed Sequence Lengths{}".format("" if end == "?" else f" ({end}')"),
-                anchor="cutadapt_trimmed_sequences{}".format("" if end == "?" else f"_{end}"),
+                name="Trimmed Sequence Lengths{}".format("" if end == "default" else f" ({end}')"),
+                anchor="cutadapt_trimmed_sequences{}".format("" if end == "default" else f"_{end}"),
                 description="This plot shows the number of reads with certain lengths of adapter trimmed{}.".format(
-                    "" if end == "?" else f" for the {end}' end"
+                    "" if end == "default" else f" for the {end}' end"
                 ),
                 helptext="""
                 Obs/Exp shows the raw counts divided by the number expected due to sequencing errors.
