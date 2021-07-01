@@ -119,7 +119,11 @@ class MultiqcModule(BaseMultiqcModule):
             'format': '{:,.0f}', 
         }
         headers["Edges"] = {"title": "Edges", "description": "Number of edges in the graph.", "scale": "PuBu"}
-        headers["Paths"] = {"title": "Paths", "description": "Number of paths in the graph.", "scale": "Greens"}
+        headers["Paths"] = {
+        "title": "Paths", 
+        "description": "Number of paths in the graph.", 
+        "scale": "Greens",
+        'format': '{:,.0f}'}
         headers["Components"] = {
             "title": "Components",
             "description": "Number of weakly connected components in the " "graph.",
