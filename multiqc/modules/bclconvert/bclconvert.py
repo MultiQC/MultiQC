@@ -13,6 +13,7 @@ import xml.etree.ElementTree as ET
 
 log = logging.getLogger(__name__)
 
+
 class MultiqcModule(BaseMultiqcModule):
     def __init__(self):
         # Initialise the parent object
