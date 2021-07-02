@@ -183,7 +183,11 @@ class MultiqcModule(BaseMultiqcModule):
         self.add_section(
             name="Per sample count data",
             anchor="multiqc_lima_count",
-            description="Per sample or per barcode statistics from Lima.",
+            description="""
+                Per sample or per barcode statistics from Lima.
+                For instructions on how to display sample names instead of `barcode--barcode` pairs,
+                please see the [MultiQC Lima documentation](https://multiqc.info/docs/#lima).
+            """,
             plot=table.plot(self.lima_counts, headers, tconfig),
         )
 
