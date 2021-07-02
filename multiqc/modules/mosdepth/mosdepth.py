@@ -4,6 +4,7 @@ from __future__ import print_function
 
 from collections import defaultdict, OrderedDict
 import logging
+import fnmatch
 
 from multiqc import config
 from multiqc.modules.base_module import BaseMultiqcModule
@@ -176,6 +177,19 @@ class MultiqcModule(BaseMultiqcModule):
         xmax = 0
         perchrom_avg_data = defaultdict(OrderedDict)  # per chromosome average coverage
 
+        try:
+            include_contigs = config.mosdepth_config.get("include_contigs", [])
+            assert type(include_contigs) == list, type(include_contigs)
+        except (AttributeError, TypeError, AssertionError):
+            include_contigs = []
+        try:
+            exclude_contigs = config.mosdepth_config.get("exclude_contigs", [])
+            assert type(exclude_contigs) == list, type(exclude_contigs)
+        except (AttributeError, TypeError, AssertionError):
+            exclude_contigs = []
+        log.debug("include_contigs: {}".format(include_contigs))
+        log.debug("exclude_contigs: {}".format(exclude_contigs))
+
         for scope in ("region", "global"):
             for f in self.find_log_files("mosdepth/" + scope + "_dist"):
                 s_name = self.clean_s_name(f["fn"], f["root"]).replace(".mosdepth." + scope + ".dist", "")
@@ -186,6 +200,7 @@ class MultiqcModule(BaseMultiqcModule):
                     if "\t" not in line:
                         continue
                     contig, cutoff_reads, bases_fraction = line.split("\t")
+
                     if contig == "total":  # for global coverage distribution
                         cumcov = 100.0 * float(bases_fraction)
                         x = int(cutoff_reads)
@@ -205,6 +220,23 @@ class MultiqcModule(BaseMultiqcModule):
                         if cumcov > 1:  # require >1% to prevent long flat tail
                             xmax = max(xmax, x)
                     else:  # for per-contig plot
+                        # filter out contigs based on exclusion patterns
+                        if any(fnmatch.fnmatch(contig, str(pattern)) for pattern in exclude_contigs):
+                            try:
+                                if config.mosdepth_config["show_excluded_debug_logs"]:
+                                    log.debug("Skipping excluded contig '{}'".format(contig))
+                            except (AttributeError, KeyError):
+                                pass
+                            continue
+
+                        # filter out contigs based on inclusion patterns
+                        if len(include_contigs) > 0 and not any(
+                            fnmatch.fnmatch(contig, pattern) for pattern in include_contigs
+                        ):
+                            # Commented out since this could be many thousands of contigs fo reach!
+                            # log.debug("Skipping not included contig '{}'".format(contig))
+                            continue
+
                         avg = perchrom_avg_data[s_name].get(contig, 0) + float(bases_fraction)
                         perchrom_avg_data[s_name][contig] = avg
 
@@ -265,7 +297,7 @@ def get_cov_thresholds():
         assert len(threshs) > 0
         threshs = [int(t) for t in threshs]
         log.debug("Custom coverage thresholds: {}".format(", ".join([str(t) for t in threshs])))
-    except (AttributeError, TypeError, AssertionError):
+    except (KeyError, AttributeError, TypeError, AssertionError):
         threshs = [1, 5, 10, 30, 50]
         log.debug("Using default coverage thresholds: {}".format(", ".join([str(t) for t in threshs])))
 
@@ -273,7 +305,7 @@ def get_cov_thresholds():
         hidden_threshs = config.mosdepth_config["general_stats_coverage_hidden"]
         assert type(hidden_threshs) == list
         log.debug("Hiding coverage thresholds: {}".format(", ".join([str(t) for t in hidden_threshs])))
-    except (AttributeError, TypeError, KeyError, AssertionError):
+    except (KeyError, AttributeError, TypeError, AssertionError):
         hidden_threshs = [t for t in threshs if t != 30]
 
     return threshs, hidden_threshs
