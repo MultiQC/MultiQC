@@ -8,7 +8,7 @@ from collections import OrderedDict
 
 from multiqc import config
 from multiqc.modules.base_module import BaseMultiqcModule
-from multiqc.plots import bargraph
+from multiqc.plots import bargraph, table
 
 import yaml
 
@@ -46,8 +46,8 @@ class MultiqcModule(BaseMultiqcModule):
         # Write parsed report data to a file
         self.write_data_file(self.odgi_stats_map, "multiqc_odgi_stats")
 
-        # Add the general section containing the general odgi stats
-        self.plot_general_odgi_stats()
+        # Plot detailed odgi stats in an extra section
+        self.plot_extended_odgi_stats()
 
         # Plot the odgi stats metrics as a lineplot
         self.plot_sum_of_path_nodes_distances()
@@ -123,17 +123,16 @@ class MultiqcModule(BaseMultiqcModule):
             log.debug("Duplicate sample name found! Overwriting: {}".format(s_name))
         self.odgi_stats_map[s_name] = data_flat
 
-    def plot_general_odgi_stats(self):
+    def plot_extended_odgi_stats(self):
         """
-        Plot the odgi stats by adding them to the general statistics table.
+        Plot the detailed odgi stats in this extra table.
         """
         headers = OrderedDict()
         headers["length"] = {
-            "title": f"{config.base_count_prefix} Length",
-            "description": f"Graph length in nucleotides ({config.base_count_desc} )",
+            "title": "Length",
+            "description": "Graph length in nucleotides.",
             "scale": "BuPu",
-            "modify": lambda x: x * config.base_count_multiplier,
-            "shared_key": "base_count",
+            "format": "{:,.0f}",
         }
         headers["nodes"] = {
             "title": "Nodes",
@@ -159,21 +158,35 @@ class MultiqcModule(BaseMultiqcModule):
             "scale": "Oranges",
             "format": "{:,.0f}",
         }
-        headers["pct_gc"] = {
-            "title": "% GC",
-            "description": "Percent of G/C bases in the graph",
+        headers["A"] = {
+            "title": "A",
+            "description": "Number of adenine bases in the graph.",
             "scale": "Spectral",
-            "max": 100,
-            "min": 0,
-            "suffix": "%",
+            "format": "{:,.0f}",
         }
-        headers["pct_n"] = {
-            "title": "% N",
-            "description": "Percent of N bases in the graph",
-            "scale": "Reds",
-            "max": 100,
-            "min": 0,
-            "suffix": "%",
+        headers["C"] = {
+            "title": "C",
+            "description": "Number of cytosine bases in the graph.",
+            "scale": "Greys",
+            "format": "{:,.0f}",
+        }
+        headers["T"] = {
+            "title": "T",
+            "description": "Number of thymine bases in the graph.",
+            "scale": "Blues",
+            "format": "{:,.0f}",
+        }
+        headers["G"] = {
+            "title": "G",
+            "description": "Number of guanine bases in the graph.",
+            "scale": "BrBG",
+            "format": "{:,.0f}",
+        }
+        headers["N"] = {
+            "title": "N",
+            "description": "Number of `N` basis in the graph.",
+            "scale": "Set3",
+            "format": "{:,.0f}",
         }
         headers["total"] = {
             "title": "Self Loops Nodes",
@@ -189,7 +202,35 @@ class MultiqcModule(BaseMultiqcModule):
             "hidden": True,
             "format": "{:,.0f}",
         }
-        self.general_stats_addcols(self.odgi_stats_map, headers)
+        headers["pct_gc"] = {
+            "title": "% GC",
+            "description": "Percent of G/C bases in the graph.",
+            "scale": "Spectral",
+            "max": 100,
+            "min": 0,
+            "suffix": "%",
+            "hidden": True,
+        }
+        headers["pct_n"] = {
+            "title": "% N",
+            "description": "Percent of N bases in the graph.",
+            "scale": "Reds",
+            "max": 100,
+            "min": 0,
+            "suffix": "%",
+            "hidden": True,
+        }
+        self.add_section(
+            name="Detailed ODGI stats table.",
+            anchor="extended_odgi_stats",
+            description="""
+                Plot the detailed ODGI stats.
+            """,
+            helptext="""
+                All stats should be self-explanatory.
+            """,
+            plot=table.plot(self.odgi_stats_map, headers),
+        )
 
     def plot_sum_of_path_nodes_distances(self):
         """
@@ -263,7 +304,6 @@ class MultiqcModule(BaseMultiqcModule):
         Expects and returns one of seqwish, smooth or cons@*.
         If none of the above keywords are present, the full filename except for the ending is returned.
         """
-        # TODO if non of the above, just take the full name
         if "cons@" in file_name:
             file_name = file_name.split(".")
             consensus_identifier = list((e for e in file_name if "cons@" in e))
