@@ -202,6 +202,28 @@ class MultiqcModule(BaseMultiqcModule):
                 self.cutadapt_data[s_name]["percent_trimmed"] = (
                     (float(d.get("bp_trimmed", 0)) + float(d.get("quality_trimmed", 0))) / d["bp_processed"]
                 ) * 100
+            # Add missing filtering categories for pre-1.7 logs
+            if StrictVersion(d["cutadapt_version"]) > StrictVersion("1.6"):
+                if "r_processed" in d:
+                    r_filtered_unexplained = (
+                        d["r_processed"]
+                        - d.get("r_too_short", 0)
+                        - d.get("r_too_long", 0)
+                        - d.get("r_too_many_N", 0)
+                        - d.get("r_written", 0)
+                    )
+                    if r_filtered_unexplained > 0:
+                        self.cutadapt_data[s_name]["r_filtered_unexplained"] = r_filtered_unexplained
+                if "pairs_processed" in d:
+                    pairs_filtered_unexplained = (
+                        d["pairs_processed"]
+                        - d.get("pairs_too_short", 0)
+                        - d.get("pairs_too_long", 0)
+                        - d.get("pairs_too_many_N", 0)
+                        - d.get("pairs_written", 0)
+                    )
+                    if pairs_filtered_unexplained > 0:
+                        self.cutadapt_data[s_name]["pairs_filtered_unexplained"] = pairs_filtered_unexplained
 
     def transform_trimming_length_data_for_plot(self):
         """Check if we parsed double ended data and transform it accordingly"""
@@ -254,6 +276,8 @@ class MultiqcModule(BaseMultiqcModule):
         cats["r_too_long"] = {"name": "Reads that were too long"}
         cats["pairs_too_many_N"] = {"name": "Pairs with too many N"}
         cats["r_too_many_N"] = {"name": "Reads with too many N"}
+        cats["pairs_filtered_unexplained"] = {"name": "Filtered pairs (uncategorised)"}
+        cats["r_filtered_unexplained"] = {"name": "Filtered reads (uncategorised)"}
 
         self.add_section(
             name="Filtered Reads",
