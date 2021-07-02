@@ -19,7 +19,7 @@ class MultiqcModule(BaseMultiqcModule):
             name="Lima",
             anchor="lima",
             href="https://github.com/PacificBiosciences/barcoding",
-            info=" is used to demultiplex single-molecule sequencing reads.",
+            info=" is used to demultiplex PacBio single-molecule sequencing reads.",
         )
 
         # To store the summary data
@@ -91,60 +91,53 @@ class MultiqcModule(BaseMultiqcModule):
         return lima_counts
 
     def plot_filter_data(self):
-        plot_data = dict()
 
         # First, we gather all filter results for each lima summary
         all_filters = set()
-        for filename, data in self.lima_summary.items():
+        for data in self.lima_summary.values():
             for reason in self.filter_and_pass(data):
                 all_filters.add(reason)
+        all_filters = list(all_filters)
+        # Move passing reads to the start of the list
+        all_filters.insert(0, all_filters.pop(all_filters.index("ZMWs above all thresholds")))
 
-        plot_data = list()
-        for filename, data in self.lima_summary.items():
-            d = dict()
+        # Flatten the data into a structure that can be plotted
+        plot_data = dict()
+        for s_name, data in self.lima_summary.items():
+            plot_data[s_name] = dict()
             for reason in all_filters:
-                d[reason] = dict()
+                plot_data[s_name][reason] = dict()
                 # This is where the filter reasons are stored
                 zmw_marginals = data["ZMWs below any threshold"]["ZMW marginals"]
                 for filter_reason in zmw_marginals:
                     if filter_reason == reason:
-                        d[reason][filename] = zmw_marginals[filter_reason]["count"]
+                        plot_data[s_name][reason] = zmw_marginals[filter_reason]["count"]
                         break
-                # If we didn't find filter reason for this filename, set it to
-                # zero
+                # If we didn't find filter reason for this filename, set it to zero
                 else:
-                    d[reason][filename] = 0
-                # Unless 'reason' is actually the special case of the number of
-                # unfiltered reads
+                    plot_data[s_name][reason] = 0
+                # Unless 'reason' is actually the special case of the number of unfiltered reads
                 if reason == "ZMWs above all thresholds":
-                    d[reason][filename] = data["ZMWs above all thresholds"]["count"]
-            plot_data.append(d)
+                    plot_data[s_name][reason] = data["ZMWs above all thresholds"]["count"]
 
         # Plot configuration
         config = {
             "id": "lima-filter-graph",
-            "title": "Lima: ZMW results",
+            "title": "Lima: ZMW filtering results",
             "ylab": "Number of ZMWs",
             "xlab": "Lima summary file",
-            "cpswitch": False,
-            "logswitch": True,
-            "stacking": None,
-            "data_labels": [{"name": filename, "cpswitch_counts_label": filename} for filename in self.lima_summary],
         }
 
-        formatting = [filename for filename in self.lima_summary]
-
         self.add_section(
-            name="ZMWs filtered by Lima",
+            name="ZMW filtering",
             anchor="lima-filter",
-            description=("The number of ZMWs that failed or passed all Lima " "filters"),
-            helptext=(
-                "The number of ZMWs that passed all filters is shown as "
-                "**ZMWs above all thresholds**, all other categories that "
-                "are shown in the graph represent the number of ZMWs that "
-                "were dropped for the specified reason."
-            ),
-            plot=bargraph.plot(plot_data, formatting, config),
+            description=("The number of ZMWs that failed or passed all Lima filters"),
+            helptext="""
+                The number of ZMWs that passed all filters is shown as **ZMWs above all thresholds**,
+                all other categories that are shown in the graph represent the number of ZMWs that
+                were dropped for the specified reason.
+            """,
+            plot=bargraph.plot(plot_data, all_filters, config),
         )
 
     def filter_and_pass(self, data):
@@ -204,7 +197,7 @@ class MultiqcModule(BaseMultiqcModule):
                 which sample using the `--lima-barcodes` flag.
                 """,
             plot=bargraph.plot(pdata, categories, configuration),
-        ),
+        )
 
 
 def parse_PacBio_log(file_content):
