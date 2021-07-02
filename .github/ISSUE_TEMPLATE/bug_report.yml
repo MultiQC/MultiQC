@@ -5,49 +5,39 @@ body:
     id: description
     attributes:
       label: Description of bug
-      description: A clear and concise description of what the bug is.
+      description: |
+        A clear and concise description of what the bug is.
+        **Please do note paste in the contents of example files** - upload them as a file.
     validations:
       required: true
-
-  - type: textarea
-    id: log
-    attributes:
-      label: MultiQC Error log
-      description: Please paste your full MultiQC log.
-      render: console
 
   - type: textarea
     id: error-file
     attributes:
       label: File that triggers the error
-      description: Please drag and drop (and upload to the GitHub issue) an input file that can be used to replicate the error. Please don't copy and paste log contents, as important whitespace can change. If the file type is not allowed, please compress into a `.zip` file and try again.
+      description: |
+        Please drag and drop (and upload to the GitHub issue) an input file that can be used to replicate the error.
+        ***Please do not copy and paste log contents***, as important whitespace can change.
+        If the file type is not allowed, please compress into a `.zip` file.
+      placeholder: "[ Drag and drop an example file here to upload ]"
 
-  - type: input
-    id: command
+  - type: textarea
+    id: log
     attributes:
-      label: Command used to run MultiQC
-      placeholder: eg. multiqc .
+      label: MultiQC Error log
+      description: |
+        Please paste your **full command** and MultiQC log.
+        Please do not truncate it, as the MultiQC version and command may be needed to help.
+      render: console
+      placeholder: |
+        $ multiqc .
 
-  - type: input
-    id: version
-    attributes:
-      label: MultiQC Version
-      placeholder: eg. MultiQC v1.10
+          /// MultiQC 🔍 | v1.10.1
 
-  - type: input
-    id: os
-    attributes:
-      label: Operating System
-      placeholder: eg. macOS Sierra 10.12.5
-
-  - type: input
-    id: python
-    attributes:
-      label: Python Version
-      placeholder: eg. Python 3.8.4
-
-  - type: input
-    id: installation
-    attributes:
-      label: Method of MultiQC installation
-      placeholder: eg. pip, conda, manual
+        |           multiqc | Search path : /path/to/my/data
+        |         searching | ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 100% 2352/2352
+        |            fastqc | Found 498 reports
+        |           multiqc | Compressing plot data
+        |           multiqc | Report      : multiqc_report.html
+        |           multiqc | Data        : multiqc_data
+        |           multiqc | MultiQC complete

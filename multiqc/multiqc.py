@@ -90,16 +90,22 @@ logger = config.logger
 )
 @click.option("--ignore-symlinks", "ignore_symlinks", is_flag=True, help="Ignore symlinked directories and files")
 @click.option(
+    "--replace-names",
+    "replace_names",
+    type=click.Path(exists=True, readable=True),
+    help="Path to TSV file to rename sample names during report generation",
+)
+@click.option(
     "--sample-names",
     "sample_names",
     type=click.Path(exists=True, readable=True),
-    help="File containing alternative sample names",
+    help="Path to TSV file containing alternative sample names for renaming buttons in the report",
 )
 @click.option(
     "--sample-filters",
     "sample_filters",
     type=click.Path(exists=True, readable=True),
-    help="File containing show/hide patterns for the report",
+    help="Path to TSV file containing show/hide patterns for the report",
 )
 @click.option(
     "-l", "--file-list", is_flag=True, help="Supply a file containing a list of file paths to be searched, one per row"
@@ -182,6 +188,7 @@ def run_cli(
     outdir,
     ignore,
     ignore_samples,
+    replace_names,
     sample_names,
     sample_filters,
     file_list,
@@ -239,6 +246,7 @@ def run_cli(
         outdir=outdir,
         ignore=ignore,
         ignore_samples=ignore_samples,
+        replace_names=replace_names,
         sample_names=sample_names,
         sample_filters=sample_filters,
         file_list=file_list,
@@ -283,6 +291,7 @@ def run(
     outdir=None,
     ignore=(),
     ignore_samples=(),
+    replace_names=None,
     sample_names=None,
     sample_filters=None,
     file_list=False,
@@ -407,6 +416,8 @@ def run(
         config.megaqc_upload = False
     else:
         config.megaqc_upload = True
+    if replace_names:
+        config.load_replace_names(replace_names)
     if sample_names:
         config.load_sample_names(sample_names)
     config.load_show_hide(sample_filters)
@@ -645,7 +656,7 @@ def run(
         except:
             # Flag the error, but carry on
             class CustomTraceback:
-                def __rich_console__(self, console: rich.console.Console):
+                def __rich_console__(self, console: rich.console.Console, options: rich.console.ConsoleOptions):
                     sys_tb = sys.exc_info()
                     issue_url = "https://github.com/ewels/MultiQC/issues/new?template=bug_report.md&title={}%20module%20-%20{}".format(
                         this_module, sys_tb[0].__name__
@@ -658,7 +669,7 @@ def run(
                     )
                     yield Syntax(traceback.format_exc(), "python")
 
-                def __rich_measure__(self, console: rich.console.Console):
+                def __rich_measure__(self, console: rich.console.Console, options: rich.console.ConsoleOptions):
                     tb_width = max([len(l) for l in traceback.format_exc().split("\n")])
                     try:
                         log_width = 71 + len(report.last_found_file)
@@ -670,7 +681,7 @@ def run(
             console = rich.console.Console(stderr=True, force_terminal=log.force_term_colors())
             console.print(
                 rich.panel.Panel(
-                    CustomTraceback,
+                    CustomTraceback(),
                     title="Oops! The '[underline]{}[/]' MultiQC module broke...".format(this_module),
                     expand=False,
                     border_style="red",
@@ -1002,7 +1013,11 @@ def run(
         logger.info("For more information, see the 'Run Time' section in {}".format(os.path.relpath(config.output_fn)))
 
     if report.num_mpl_plots > 0 and not config.plots_force_flat:
-        logger.warning("Flat-image plots used in the report due to large sample numbers")
+        logger.warning(
+            "{} flat-image plot{} used in the report due to large sample numbers".format(
+                report.num_mpl_plots, "s" if report.num_mpl_plots > 1 else ""
+            )
+        )
         console.print(
             "[blue]|           multiqc[/] | "
             "To force interactive plots, use the [yellow]'--interactive'[/] flag. "

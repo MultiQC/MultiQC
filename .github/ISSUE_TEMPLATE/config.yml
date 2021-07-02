@@ -1,0 +1,7 @@
+contact_links:
+  - name: MultiQC Documentation
+    url: https://multiqc.info/docs/
+    about: Make sure you've checked the documentation first.
+  - name: MultiQC Gitter chat
+    url: https://gitter.im/ewels/MultiQC
+    about: You can ask quick questions on the MultiQC Gitter chat.
