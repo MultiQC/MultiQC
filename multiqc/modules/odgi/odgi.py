@@ -47,7 +47,7 @@ class MultiqcModule(BaseMultiqcModule):
         self.write_data_file(self.odgi_stats_map, "multiqc_odgi_stats")
 
         # Plot detailed odgi stats in an extra section
-        self.plot_extended_odgi_stats()
+        self.odgi_stats_table()
 
         # Plot the odgi stats metrics as a lineplot
         self.plot_sum_of_path_nodes_distances()
@@ -123,9 +123,9 @@ class MultiqcModule(BaseMultiqcModule):
             log.debug("Duplicate sample name found! Overwriting: {}".format(s_name))
         self.odgi_stats_map[s_name] = data_flat
 
-    def plot_extended_odgi_stats(self):
+    def odgi_stats_table(self):
         """
-        Plot the detailed odgi stats in this extra table.
+        Detailed odgi stats in this extra table.
         """
         headers = OrderedDict()
         headers["length"] = {
@@ -163,30 +163,35 @@ class MultiqcModule(BaseMultiqcModule):
             "description": "Number of adenine bases in the graph.",
             "scale": "Spectral",
             "format": "{:,.0f}",
+            "shared_key": "nucleotides",
         }
         headers["C"] = {
             "title": "C",
             "description": "Number of cytosine bases in the graph.",
             "scale": "Greys",
             "format": "{:,.0f}",
+            "shared_key": "nucleotides",
         }
         headers["T"] = {
             "title": "T",
             "description": "Number of thymine bases in the graph.",
             "scale": "Blues",
             "format": "{:,.0f}",
+            "shared_key": "nucleotides",
         }
         headers["G"] = {
             "title": "G",
             "description": "Number of guanine bases in the graph.",
-            "scale": "BrBG",
+            "scale": "RdPu",
             "format": "{:,.0f}",
+            "shared_key": "nucleotides",
         }
         headers["N"] = {
             "title": "N",
             "description": "Number of `N` basis in the graph.",
             "scale": "Set3",
             "format": "{:,.0f}",
+            "shared_key": "nucleotides",
         }
         headers["total"] = {
             "title": "Self Loops Nodes",
@@ -220,16 +225,25 @@ class MultiqcModule(BaseMultiqcModule):
             "suffix": "%",
             "hidden": True,
         }
+        # Some of the headers are quite general and can clash with other modules.
+        # Prepend odgi_ to keep them unique
+        prefix_headers = OrderedDict()
+        prefix_data = {}
+        for h, v in headers.items():
+            prefix_headers[f"odgi_{h}"] = v
+        for s_name, d in self.odgi_stats_map.items():
+            prefix_data[s_name] = {}
+            for h in headers:
+                prefix_data[s_name][f"odgi_{h}"] = d[h]
+        tconfig = {
+            "id": "odgi_table",
+            "namespace": "ODGI",
+            "table_title": "ODGI Stats",
+        }
         self.add_section(
             name="Detailed ODGI stats table.",
             anchor="extended_odgi_stats",
-            description="""
-                Plot the detailed ODGI stats.
-            """,
-            helptext="""
-                All stats should be self-explanatory.
-            """,
-            plot=table.plot(self.odgi_stats_map, headers),
+            plot=table.plot(prefix_data, prefix_headers, tconfig),
         )
 
     def plot_sum_of_path_nodes_distances(self):
