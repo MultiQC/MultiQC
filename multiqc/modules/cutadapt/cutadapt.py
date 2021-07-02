@@ -142,7 +142,6 @@ class MultiqcModule(BaseMultiqcModule):
                     match = re.search(r, l)
                     if match:
                         self.cutadapt_data[s_name][k] = int(match.group(1).replace(",", ""))
-
                 # Starting a new section
                 if "===" in l:
                     log_section = l.strip().strip("=").strip()
@@ -242,6 +241,33 @@ class MultiqcModule(BaseMultiqcModule):
         # of SE and PE data then this means quite a lot of categories.
         # Usually, only a single data type is used though - in that case
         # any categories with 0 across all samples will be ignored.
+        cats_with_zero = []
+        plottable = False
+        for sample in self.cutadapt_data.values():
+            for cat in [
+                "pairs_written",
+                "r_written",
+                "pairs_too_short",
+                "r_too_short",
+                "pairs_too_long",
+                "pairs_too_many_N",
+                "r_too_many_N",
+            ]:
+                if cat in sample:
+                    if sample[cat] > 0:
+                        plottable = True
+                    if sample[cat] == 0:
+                        cats_with_zero.append(cat)
+
+        if len(cats_with_zero) > 0:
+            log.warning(
+                "Read categories {} were zero for some samples".format(", ".join(f"'{cat}'" for cat in cats_with_zero))
+            )
+
+        if not plottable:
+            log.warning("Found no non-zero read or pairs categories in report. Skipping bar graph...")
+            return None
+
         cats = OrderedDict()
         cats["pairs_written"] = {"name": "Pairs passing filters"}
         cats["r_written"] = {"name": "Reads passing filters"}
