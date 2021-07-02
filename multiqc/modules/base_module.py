@@ -307,8 +307,37 @@ class BaseMultiqcModule(object):
 
         # Remove trailing whitespace
         s_name = s_name.strip()
+
+        # If we cleaned back to an empty string, just use the original value
         if s_name == "":
             s_name = s_name_original
+
+        # Do any hard replacements that are set with --replace-names
+        if config.sample_names_replace:
+            for s_name_search, s_name_replace in config.sample_names_replace.items():
+                try:
+                    # Skip if we're looking for exact matches only
+                    if config.sample_names_replace_exact:
+                        # Simple strings
+                        if not config.sample_names_replace_regex and s_name != s_name_search:
+                            continue
+                        # regexes
+                        if config.sample_names_replace_regex and not re.fullmatch(s_name_search, s_name):
+                            continue
+                    # Replace - regex
+                    if config.sample_names_replace_regex:
+                        s_name = re.sub(s_name_search, s_name_replace, s_name)
+                    # Replace - simple string
+                    else:
+                        # Complete name swap
+                        if config.sample_names_replace_complete:
+                            if s_name_search in s_name:
+                                s_name = s_name_replace
+                        # Partial substring replace
+                        else:
+                            s_name = s_name.replace(s_name_search, s_name_replace)
+                except re.error as e:
+                    logger.error("Error with sample name replacement regex: {}".format(e))
 
         return s_name
 
