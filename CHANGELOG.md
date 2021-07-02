@@ -13,6 +13,7 @@
 - Added patterns to `config.fn_ignore_paths` to avoid error with parsing installation dir / singularity cache ([#1416](https://github.com/ewels/MultiQC/issues/1416))
 - Print a log message when flat-image plots are used due to sample size surpassing `plots_flat_numseries` config ([#1254](https://github.com/ewels/MultiQC/issues/1254))
 - Fix the `mqc_colours` util function to lighten colours even when passing categorical or single-length lists.
+- Bugfix for Custom Content, using YAML configuration (eg. section headers) for images should now work
 
 #### New Modules
 
