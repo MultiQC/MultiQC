@@ -22,6 +22,7 @@ Supported scripts:
 - `read_distribution`
 - `read_duplication`
 - `read_gc`
+- `tin`
 
 You can choose to hide sections of RSeQC output and customise their order.
 To do this, add and customise the following to your MultiQC config file:
@@ -29,6 +30,7 @@ To do this, add and customise the following to your MultiQC config file:
 ```yaml
 rseqc_sections:
   - read_distribution
+  - tin
   - gene_body_coverage
   - inner_distance
   - read_gc

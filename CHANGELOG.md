@@ -64,6 +64,8 @@
   - Updated module to not fail on older field names.
 - **qualimap**
   - Added new percentage coverage plot in `QM_RNASeq`, and fixed wrong units in tool tip label ([#1258](https://github.com/ewels/MultiQC/issues/1258))
+- **RSeQC**
+  - Added a long-requested submodule to support showing the [**TIN**](http://rseqc.sourceforge.net/#tin-py) (Transcript Integrity Number) ([#737](https://github.com/ewels/MultiQC/issues/737))
 - **QUAST**
   - Fixed typo causing wrong number of contigs being displayed ([#1442](https://github.com/ewels/MultiQC/issues/1442))
 - **Sentieon**
