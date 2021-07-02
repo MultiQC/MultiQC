@@ -153,6 +153,7 @@ setup(
             "mtnucratio = multiqc.modules.mtnucratio:MultiqcModule",
             "multivcfanalyzer = multiqc.modules.multivcfanalyzer:MultiqcModule",
             "ngsderive = multiqc.modules.ngsderive:MultiqcModule",
+            "odgi = multiqc.modules.odgi:MultiqcModule",
             "optitype = multiqc.modules.optitype:MultiqcModule",
             "pangolin = multiqc.modules.pangolin:MultiqcModule",
             "peddy = multiqc.modules.peddy:MultiqcModule",

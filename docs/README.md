@@ -85,6 +85,7 @@ MultiQC Modules:
     MTNucRatio: modules/mtnucratio.md
     MultiVCFAnalyzer: modules/multivcfanalyzer.md
     ngsderive: modules/ngsderive.md
+    odgi: modules/odgi.md
     OptiType: modules/optitype.md
     phantompeakqualtools: modules/phantompeakqualtools.md
     Pangolin: modules/pangolin.md

@@ -437,6 +437,11 @@ optitype:
 pangolin:
   contents: "pangolin_version"
   num_lines: 1
+odgi:
+  - fn: "*.og.stats.yaml"
+  - fn: "*.og.stats.yml"
+  - fn: "*.odgi.stats.yaml"
+  - fn: "*.odgi.stats.yml"
 peddy/summary_table:
   fn: "*.peddy.ped"
 peddy/het_check:

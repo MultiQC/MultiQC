@@ -160,6 +160,8 @@ For further information, please see the [documentation](https://multiqc.info/doc
   - Reference-free QC of Hi-C sequencing data
 - [**Sentieon**](https://www.sentieon.com/products/)
   - Submodules added to catch Picard-based QC metrics files
+- [**odgi**](https://github.com/pangenome/odgi)
+  - Optimized dynamic genome/graph implementation
 
 #### Module updates
 
