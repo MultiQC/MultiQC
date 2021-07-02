@@ -100,28 +100,29 @@ class MultiqcModule(BaseMultiqcModule):
             },
         }
         s_name = None
-        cutadapt_version = "1.7"
+        end = "default"
+        cutadapt_version = None
+        parsing_version = "1.7"
         log_section = None
         for l in fh:
             # New log starting
-            if "cutadapt" in l:
+            if "This is cutadapt" in l or "cutadapt version" in l:
                 s_name = None
                 end = "default"
+                cutadapt_version = None
                 c_version = re.match(r"This is cutadapt ([\d\.]+)", l)
                 if c_version:
+                    cutadapt_version = c_version.group(1)
                     try:
                         assert StrictVersion(c_version.group(1)) <= StrictVersion("1.6")
-                        cutadapt_version = "1.6"
+                        parsing_version = "1.6"
                     except:
-                        cutadapt_version = "1.7"
+                        parsing_version = "1.7"
                 c_version_old = re.match(r"cutadapt version ([\d\.]+)", l)
                 if c_version_old:
-                    try:
-                        assert StrictVersion(c_version.group(1)) <= StrictVersion("1.6")
-                        cutadapt_version = "1.6"
-                    except:
-                        # I think the pattern "cutadapt version XX" is only pre-1.6?
-                        cutadapt_version = "1.6"
+                    cutadapt_version = c_version_old.group(1)
+                    # The pattern "cutadapt version XX" is only pre-1.6
+                    parsing_version = "1.6"
             # Get sample name from end of command line params
             if l.startswith("Command line parameters"):
                 s_name = l.split()[-1]
@@ -133,12 +134,14 @@ class MultiqcModule(BaseMultiqcModule):
                 if s_name in self.cutadapt_data:
                     log.debug("Duplicate sample name found! Overwriting: {}".format(s_name))
                 self.cutadapt_data[s_name] = dict()
+                if cutadapt_version:
+                    self.cutadapt_data[s_name]["cutadapt_version"] = cutadapt_version
 
             if s_name is not None:
                 self.add_data_source(f, s_name)
 
                 # Search regexes for overview stats
-                for k, r in regexes[cutadapt_version].items():
+                for k, r in regexes[parsing_version].items():
                     match = re.search(r, l)
                     if match:
                         self.cutadapt_data[s_name][k] = int(match.group(1).replace(",", ""))
