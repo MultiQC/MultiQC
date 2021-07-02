@@ -40,8 +40,9 @@
 - **bcl2fastq**
   - Added sample name cleaning so that prepending directories with the `-d` flag works properly.
 - **Cutadapt**
-  - Added support for linked adapters [[#1329](https://github.com/ewels/MultiQC/issues/1329)]
+  - Added support for linked adapters [[#1329](https://github.com/ewels/multiqc/issues/1329)]
   - Parse whether trimming was 5' or 3' for _Lengths of Trimmed Sequences_ plot where possible
+  - Warn user when all filtered reads categories are zero and filtered reads bar graph can't be created ([#1328](https://github.com/ewels/multiqc/issues/1328))
 - **Dragen**
   - Handled MultiQC crashing when run on single-end output from Dragen ([#1374](https://github.com/ewels/MultiQC/issues/1374))
 - **fastp**

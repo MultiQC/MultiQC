@@ -237,10 +237,7 @@ class MultiqcModule(BaseMultiqcModule):
 
         pconfig = {"id": "cutadapt_filtered_reads_plot", "title": "Cutadapt: Filtered Reads", "ylab": "Counts"}
 
-        # We just use all categories. If a report is generated with a mixture
-        # of SE and PE data then this means quite a lot of categories.
-        # Usually, only a single data type is used though - in that case
-        # any categories with 0 across all samples will be ignored.
+        # Check if there are any non zero samples in data
         cats_with_zero = []
         plottable = False
         for sample in self.cutadapt_data.values():
@@ -267,6 +264,11 @@ class MultiqcModule(BaseMultiqcModule):
         if not plottable:
             log.warning("Found no non-zero read or pairs categories in report. Skipping bar graph...")
             return None
+
+        # We just use all categories. If a report is generated with a mixture
+        # of SE and PE data then this means quite a lot of categories.
+        # Usually, only a single data type is used though - in that case
+        # any categories with 0 across all samples will be ignored.
 
         cats = OrderedDict()
         cats["pairs_written"] = {"name": "Pairs passing filters"}
