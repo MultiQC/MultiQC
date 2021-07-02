@@ -32,7 +32,6 @@ MultiQC Modules:
     Lima: modules/lima.md
     minionqc: modules/minionqc.md
     pbmarkdup: modules/pbmarkdup.md
-    pycoQC: modules/pycoqc.md
     Pychopper: modules/pychopper.md
     pycoQC: modules/pycoqc.md
     SeqyClean: modules/seqyclean.md
