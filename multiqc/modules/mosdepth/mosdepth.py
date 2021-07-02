@@ -188,8 +188,8 @@ class MultiqcModule(BaseMultiqcModule):
             assert type(exclude_contigs) == list, type(exclude_contigs)
         except (AttributeError, TypeError, AssertionError):
             exclude_contigs = []
-        log.debug("include_congtigs: {}".format(include_contigs))
-        log.debug("exclude_congtigs: {}".format(exclude_contigs))
+        log.debug("include_contigs: {}".format(include_contigs))
+        log.debug("exclude_contigs: {}".format(exclude_contigs))
 
         for scope in ("region", "global"):
             for f in self.find_log_files("mosdepth/" + scope + "_dist"):
@@ -222,13 +222,13 @@ class MultiqcModule(BaseMultiqcModule):
                             xmax = max(xmax, x)
                     else:  # for per-contig plot
                         # filter out contigs based on exclusion patterns
-                        if any(fnmatch.fnmatch(contig, pattern) for pattern in exclude_contigs):
+                        if any(fnmatch.fnmatch(contig, str(pattern)) for pattern in exclude_contigs):
                             # Commented out since this could be many thousands of contigs fo reach!
                             # log.debug("Skipping excluded contig '{}'".format(contig))
                             continue
 
                         # filter out contigs based on inclusion patterns
-                        if 0 < len(include_contigs) and not any(
+                        if len(include_contigs) > 0 and not any(
                             fnmatch.fnmatch(contig, pattern) for pattern in include_contigs
                         ):
                             # Commented out since this could be many thousands of contigs fo reach!
@@ -295,7 +295,7 @@ def get_cov_thresholds():
         assert len(threshs) > 0
         threshs = [int(t) for t in threshs]
         log.debug("Custom coverage thresholds: {}".format(", ".join([str(t) for t in threshs])))
-    except (AttributeError, TypeError, AssertionError):
+    except (KeyError, AttributeError, TypeError, AssertionError):
         threshs = [1, 5, 10, 30, 50]
         log.debug("Using default coverage thresholds: {}".format(", ".join([str(t) for t in threshs])))
 
@@ -303,7 +303,7 @@ def get_cov_thresholds():
         hidden_threshs = config.mosdepth_config["general_stats_coverage_hidden"]
         assert type(hidden_threshs) == list
         log.debug("Hiding coverage thresholds: {}".format(", ".join([str(t) for t in hidden_threshs])))
-    except (AttributeError, TypeError, KeyError, AssertionError):
+    except (KeyError, AttributeError, TypeError, AssertionError):
         hidden_threshs = [t for t in threshs if t != 30]
 
     return threshs, hidden_threshs
