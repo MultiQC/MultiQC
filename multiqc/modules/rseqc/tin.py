@@ -52,7 +52,7 @@ def parse_reports(self):
         for s_name in self.tin_data:
             if s_name not in self.general_stats_data:
                 self.general_stats_data[s_name] = dict()
-                self.general_stats_data[s_name]["TIN(median)"] = self.tin_data[s_name]["TIN(median)"]
+            self.general_stats_data[s_name]["TIN(median)"] = self.tin_data[s_name]["TIN(median)"]
         pconfig = {"id": "rseqc_tin_median_score_plot", "title": "RSeQC: TIN Score", "ylab": "TIN score"}
 
         cats = OrderedDict()
