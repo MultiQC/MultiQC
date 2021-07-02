@@ -16,6 +16,8 @@
 
 #### New Modules
 
+- [**BclConvert**](https://support.illumina.com/sequencing/sequencing_software/bcl-convert.html)
+  - Tool that converts / demultiplexes Illumina Binary Base Call (BCL) files to FASTQ files
 - [**Bustools**](https://bustools.github.io/)
   - Tools for working with BUS files
 - [**ccs**](https://github.com/PacificBiosciences/ccs)
@@ -36,6 +38,9 @@
 
 - **bcl2fastq**
   - Added sample name cleaning so that prepending directories with the `-d` flag works properly.
+- **Cutadapt**
+  - Added support for linked adapters [[#1329](https://github.com/ewels/MultiQC/issues/1329)]
+  - Parse whether trimming was 5' or 3' for _Lengths of Trimmed Sequences_ plot where possible
 - **Dragen**
   - Handled MultiQC crashing when run on single-end output from Dragen ([#1374](https://github.com/ewels/MultiQC/issues/1374))
 - **fastp**
