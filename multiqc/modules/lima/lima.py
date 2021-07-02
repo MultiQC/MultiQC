@@ -5,10 +5,8 @@
 import logging
 import re
 
-from collections import OrderedDict
 from multiqc.modules.base_module import BaseMultiqcModule
 from multiqc.plots import bargraph
-from multiqc.utils import config
 
 # Initialise the logger
 log = logging.getLogger(__name__)
@@ -37,10 +35,15 @@ class MultiqcModule(BaseMultiqcModule):
         self.lima_counts = self.ignore_samples(self.lima_counts)
 
         # Write the data files to disk
-        self.write_data_files()
+        if not self.lima_summary and not self.lima_counts:
+            raise UserWarning
+        if self.lima_summary:
+            self.write_data_file(self.lima_summary, "multiqc_lima_summary")
+        if self.lima_counts:
+            self.write_data_file(self.lima_counts, "multiqc_lima_counts")
 
         # Add a graph of all filtered ZMWs
-        self.add_sections()
+        self.plot_filter_data()
 
         # Add a graph for the data values in the counts file
         self.plot_counts_data()
@@ -48,33 +51,22 @@ class MultiqcModule(BaseMultiqcModule):
     def parse_summary_files(self):
         for f in self.find_log_files("lima/summary", filehandles=True):
             data = parse_PacBio_log(f["f"])
-            filename = f["s_name"]
-            self.lima_summary[filename] = data
-            self.add_data_source(f)
+            if len(data) > 0:
+                if f["s_name"] in self.lima_summary:
+                    log.debug(f"Duplicate summary sample name found! Overwriting: {f['s_name']}")
+                self.lima_summary[f["s_name"]] = data
+                self.add_data_source(f)
 
     def parse_counts_files(self):
         for f in self.find_log_files("lima/counts", filehandles=True):
             data = self.parse_lima_counts(f["f"], f["root"])
-            # Update sample names if --lima-barcodes was specified
-            self.update_sample_names(data)
             # Check for duplicate samples
             for sample in data:
                 if sample in self.lima_counts:
-                    msg = f"Duplicate sample name found! Overwriting: {sample}"
-                    log.debug(msg)
+                    log.debug(f"Duplicate counts sample name found! Overwriting: {sample}")
             # After warning the user, overwrite the samples
             self.lima_counts.update(data)
             self.add_data_source(f)
-        # Remove samples that were specified using --ignore-samples
-        self.lima_counts = self.ignore_samples(self.lima_counts)
-
-    def write_data_files(self):
-        if not self.lima_summary and not self.lima_counts:
-            raise UserWarning
-        if self.lima_summary:
-            self.write_data_file(self.lima_summary, "multiqc_lima_summary")
-        if self.lima_counts:
-            self.write_data_file(self.lima_counts, "multiqc_lima_counts")
 
     def parse_lima_counts(self, file_content, root):
         """Parse lima counts file"""
@@ -91,7 +83,6 @@ class MultiqcModule(BaseMultiqcModule):
             first_barcode = data["IdxFirstNamed"]
             second_barcode = data["IdxCombinedNamed"]
             # The format barcode1--barcode2 is also used in
-            # self.update_sample_names
             sample = self.clean_s_name(f"{first_barcode}--{second_barcode}", root)
             counts = data["Counts"]
             mean_score = data["MeanScore"]
@@ -99,39 +90,7 @@ class MultiqcModule(BaseMultiqcModule):
 
         return lima_counts
 
-    def update_sample_names(self, data):
-        lima_barcodes = config.kwargs["lima_barcodes"]
-        # If --lima-barcodes wasn't specified
-        if not lima_barcodes:
-            return
-
-        # Read the barcodes to sample mapping
-        barcodes = self.read_lima_barcodes(lima_barcodes)
-
-        # Copy the data over to the new dictionary by sample name
-        for name in list(data.keys()):
-            # If we have a mapping from the barcode to samplename
-            if name in barcodes:
-                # Get the new sample name
-                sample_name = barcodes[name]
-                # Update the sample name
-                data[sample_name] = data.pop(name)
-
-    def read_lima_barcodes(self, lima_barcodes):
-        """
-        Read the lima barcodes file, and return as a dictionary
-
-        The keys will be of the format barcode1--barcode2, and the values will
-        be the sample name
-        """
-        barcodes = dict()
-        with open(lima_barcodes) as fin:
-            for line in fin:
-                sample, first_barcode, second_barcode = line.strip().split("\t")
-                barcodes[f"{first_barcode}--{second_barcode}"] = sample
-        return barcodes
-
-    def add_sections(self):
+    def plot_filter_data(self):
         plot_data = dict()
 
         # First, we gather all filter results for each lima summary
