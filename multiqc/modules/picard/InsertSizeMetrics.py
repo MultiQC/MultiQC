@@ -185,6 +185,11 @@ def parse_reports(self):
                     {"name": "Percentages", "ylab": "Percentage of Counts"},
                 ],
             }
+            try:
+                pconfig["xmax"] = config.picard_config["insertsize_xmax"]
+            except (AttributeError, KeyError):
+                pass
+
             self.add_section(
                 name="Insert Size",
                 anchor="picard-insertsize",
