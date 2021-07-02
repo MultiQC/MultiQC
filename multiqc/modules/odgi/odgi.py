@@ -247,6 +247,7 @@ class MultiqcModule(BaseMultiqcModule):
             "yDecimals": False,
             "cpswitch": False,
             "logswitch": True,
+            'logswitch_active': True,
             "data_labels": [
                 {"name": "Node space", "ylab": "Distance"},
                 {"name": "Nucleotide space", "ylab": "Distance"},
@@ -279,6 +280,7 @@ class MultiqcModule(BaseMultiqcModule):
             "yDecimals": False,
             "cpswitch": False,
             "logswitch": True,
+            'logswitch_active': True,
             "data_labels": [
                 {"name": "Node space", "ylab": "Distance"},
                 {"name": "Nucleotide space", "ylab": "Distance"},
