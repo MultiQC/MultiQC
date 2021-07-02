@@ -72,6 +72,25 @@ def parse_reports(self):
     self.read_dist = self.ignore_samples(self.read_dist)
 
     if len(self.read_dist) > 0:
+        # Fix double counting of TSS_up and TES_down
+        prefixes = ("tss_up", "tes_down")
+        sizes = ("10kb", "5kb", "1kb")
+        suffixes = ("total_bases", "tag_count")
+        combinations = [
+            (prefix, big, small, suffix)
+            for prefix in prefixes
+            for suffix in suffixes
+            for big, small in zip(sizes, sizes[1:])
+        ]
+
+        for sample_name, sample in self.read_dist.items():
+            for prefix, big, small, suffix in combinations:
+                try:
+                    big_val = sample.pop(f"{prefix}_{big}_{suffix}")
+                    small_val = sample[f"{prefix}_{small}_{suffix}"]
+                    sample[f"{prefix}_{small}-{big}_{suffix}"] = big_val - small_val
+                except KeyError as e:
+                    log.debug(f"Field {e} is missing from {sample_name}")
 
         # Write to file
         self.write_data_file(self.read_dist, "multiqc_rseqc_read_distribution")
@@ -83,11 +102,11 @@ def parse_reports(self):
         keys["3_utr_exons_tag_count"] = {"name": "3'UTR_Exons"}
         keys["introns_tag_count"] = {"name": "Introns"}
         keys["tss_up_1kb_tag_count"] = {"name": "TSS_up_1kb"}
-        keys["tss_up_5kb_tag_count"] = {"name": "TSS_up_5kb"}
-        keys["tss_up_10kb_tag_count"] = {"name": "TSS_up_10kb"}
+        keys["tss_up_1kb-5kb_tag_count"] = {"name": "TSS_up_1kb-5kb"}
+        keys["tss_up_5kb-10kb_tag_count"] = {"name": "TSS_up_5kb-10kb"}
         keys["tes_down_1kb_tag_count"] = {"name": "TES_down_1kb"}
-        keys["tes_down_5kb_tag_count"] = {"name": "TES_down_5kb"}
-        keys["tes_down_10kb_tag_count"] = {"name": "TES_down_10kb"}
+        keys["tes_down_1kb-5kb_tag_count"] = {"name": "TES_down_1kb-5kb"}
+        keys["tes_down_5kb-10kb_tag_count"] = {"name": "TES_down_5kb-10kb"}
         keys["other_intergenic_tag_count"] = {"name": "Other_intergenic"}
 
         # Config for the plot

@@ -100,65 +100,69 @@ class DragenMappingMetics(BaseMultiqcModule):
                 + data["Unmapped reads"]
                 != data["Total reads in RG"]
             ):
-                log.warning(
+                log.debug(
                     "sum of unpaired/discordant/proppaired/unmapped reads not matching total, "
                     "skipping mapping/paired percentages plot for: {}".format(sample_id)
                 )
                 continue
             if (
                 data["Number of unique & mapped reads (excl. duplicate marked reads)"]
-                + data["Number of duplicate marked reads"]
+                + data.get("Number of duplicate marked reads", 0)
                 + data["Unmapped reads"]
                 != data["Total reads in RG"]
             ):
-                log.warning(
+                log.debug(
                     "sum of unique/duplicate/unmapped reads not matching total, "
                     "skipping mapping/duplicates percentages plot for: {}".format(sample_id)
                 )
                 continue
             chart_data[sample_id] = data
-        self.add_section(
-            name="Mapped / paired / duplicated",
-            anchor="dragen-mapped-paired-duplicated",
-            description="Distribution of reads based on pairing, duplication and mapping.",
-            plot=bargraph.plot(
-                [chart_data, chart_data],
-                [
-                    {
-                        "Number of unique & mapped reads (excl. duplicate marked reads)": {
-                            "color": "#437bb1",
-                            "name": "Unique",
-                        },
-                        "Number of duplicate marked reads": {"color": "#f5a742", "name": "Duplicated"},
-                        "Unmapped reads": {"color": "#b1084c", "name": "Unmapped"},
-                    },
-                    {
-                        "Properly paired reads": {"color": "#099109", "name": "Paired, properly"},
-                        "Not properly paired reads (discordant)": {"color": "#c27a0e", "name": "Paired, discordant"},
-                        "Singleton reads (itself mapped; mate unmapped)": {"color": "#912476", "name": "Singleton"},
-                        "Unmapped reads": {"color": "#b1084c", "name": "Unmapped"},
-                    },
-                ],
-                {
-                    "id": "mapping_dup_percentage_plot",
-                    "title": "Dragen: Mapped/paired/duplicated reads per read group",
-                    "ylab": "Reads",
-                    "cpswitch_counts_label": "Reads",
-                    "data_labels": [
+        if len(chart_data) > 0:
+            self.add_section(
+                name="Mapped / paired / duplicated",
+                anchor="dragen-mapped-paired-duplicated",
+                description="Distribution of reads based on pairing, duplication and mapping.",
+                plot=bargraph.plot(
+                    [chart_data, chart_data],
+                    [
                         {
-                            "name": "Unique vs duplicated vs unmapped",
-                            "ylab": "Reads",
-                            "cpswitch_counts_label": "Reads",
+                            "Number of unique & mapped reads (excl. duplicate marked reads)": {
+                                "color": "#437bb1",
+                                "name": "Unique",
+                            },
+                            "Number of duplicate marked reads": {"color": "#f5a742", "name": "Duplicated"},
+                            "Unmapped reads": {"color": "#b1084c", "name": "Unmapped"},
                         },
                         {
-                            "name": "Paired vs. discordant vs. singleton",
-                            "ylab": "Reads",
-                            "cpswitch_counts_label": "Reads",
+                            "Properly paired reads": {"color": "#099109", "name": "Paired, properly"},
+                            "Not properly paired reads (discordant)": {
+                                "color": "#c27a0e",
+                                "name": "Paired, discordant",
+                            },
+                            "Singleton reads (itself mapped; mate unmapped)": {"color": "#912476", "name": "Singleton"},
+                            "Unmapped reads": {"color": "#b1084c", "name": "Unmapped"},
                         },
                     ],
-                },
-            ),
-        )
+                    {
+                        "id": "mapping_dup_percentage_plot",
+                        "title": "Dragen: Mapped/paired/duplicated reads per read group",
+                        "ylab": "Reads",
+                        "cpswitch_counts_label": "Reads",
+                        "data_labels": [
+                            {
+                                "name": "Unique vs duplicated vs unmapped",
+                                "ylab": "Reads",
+                                "cpswitch_counts_label": "Reads",
+                            },
+                            {
+                                "name": "Paired vs. discordant vs. singleton",
+                                "ylab": "Reads",
+                                "cpswitch_counts_label": "Reads",
+                            },
+                        ],
+                    },
+                ),
+            )
 
 
 def parse_mapping_metrics_file(f):
@@ -331,13 +335,19 @@ def parse_mapping_metrics_file(f):
 
     # adding some missing values that we wanna report for consistency
     for data in itertools.chain(data_by_readgroup.values(), data_by_phenotype.values()):
-        # fixing when deduplication wasn't performed
-        if data.get("Number of duplicate marked reads", "NA") == "NA":
-            data["Number of duplicate marked reads"] = 0
-        if data.get("Number of duplicate marked and mate reads removed", "NA") == "NA":
-            data["Number of duplicate marked and mate reads removed"] = 0
-        if data.get("Number of unique reads (excl. duplicate marked reads)", "NA") == "NA":
-            data["Number of unique reads (excl. duplicate marked reads)"] = data["Mapped reads"]
+        # fixing when deduplication wasn't performed, or running with single-end data
+        for field in [
+            "Number of duplicate marked reads",
+            "Number of duplicate marked and mate reads removed",
+            "Number of unique reads (excl. duplicate marked reads)",
+            "Mismatched bases R2 (excl. indels)",
+            "Mismatched bases R2",
+            "Soft-clipped bases R2",
+        ]:
+            try:
+                data.pop(field)
+            except KeyError:
+                pass
 
         # adding alignment percentages
         if exist_and_number(data, "Total alignments", "Secondary alignments") and data["Total alignments"] > 0:

@@ -110,10 +110,12 @@ class datatable(object):
 
                 # Applying defaults presets for data keys if shared_key is set to base_count or read_count
                 shared_key = headers[idx][k].get("shared_key", None)
-                if shared_key in ["read_count", "base_count"]:
+                if shared_key in ["read_count", "long_read_count", "base_count"]:
                     if shared_key == "read_count":
                         multiplier = config.read_count_multiplier
-                    else:
+                    elif shared_key == "long_read_count":
+                        multiplier = config.long_read_count_multiplier
+                    elif shared_key == "base_count":
                         multiplier = config.base_count_multiplier
                     if headers[idx][k].get("modify") is None:
                         headers[idx][k]["modify"] = lambda x: x * multiplier

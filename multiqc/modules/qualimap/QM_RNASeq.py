@@ -153,6 +153,15 @@ def parse_reports(self):
         )
 
     if len(self.qualimap_rnaseq_cov_hist) > 0:
+
+        # Make a normalised percentage version of the coverage data
+        self.qualimap_rnaseq_cov_hist_percent = dict()
+        for s_name in self.qualimap_rnaseq_cov_hist:
+            self.qualimap_rnaseq_cov_hist_percent[s_name] = OrderedDict()
+            total = sum(self.qualimap_rnaseq_cov_hist[s_name].values())
+            for k, v in self.qualimap_rnaseq_cov_hist[s_name].items():
+                self.qualimap_rnaseq_cov_hist_percent[s_name][k] = (v / total) * 100.0
+
         coverage_profile_helptext = """
         There are currently three main approaches to map reads to transcripts in an
         RNA-seq experiment: mapping reads to a reference genome to identify expressed
@@ -174,31 +183,39 @@ def parse_reports(self):
         transcript. To enable meaningful comparison between transcripts, base positions
         are rescaled to relative positions expressed as percentage distance along each
         transcript (*0%, 1%, &#8230;, 99%*). For the set of transcripts with at least
-        one mapped read, QualiMap plots the cumulative mapped-read depth (y-axis) at
+        one mapped read, QualiMap plots the _cumulative mapped-read depth_ (y-axis) at
         each relative transcript position (x-axis). This plot shows the gene coverage
         profile across all mapped transcripts for each read dataset. It provides a
         visual way to assess positional biases, such as an accumulation of mapped reads
         at the 3&#8242; end of transcripts, which may indicate poor RNA quality in the
         original sample (<a href="https://doi.org/10.1186/s13059-016-0881-8"
-        target="_blank">Conesa et al. 2016</a>)."""
+        target="_blank">Conesa et al. 2016</a>).
+
+        The _Normalised_ plot is calculated by MultiQC to enable comparison of samples
+        with varying sequencing depth. The _cumulative mapped-read depth_ at each
+        position across the averaged transcript position are divided by the total for
+        that sample across the entire averaged transcript.
+        """
+        pconfig = {
+            "id": "qualimap_gene_coverage_profile",
+            "title": "Qualimap RNAseq: Coverage Profile Along Genes (total)",
+            "ylab": "Cumulative mapped-read depth",
+            "xlab": "Transcript Position (%)",
+            "ymin": 0,
+            "xmin": 0,
+            "xmax": 100,
+            "tt_label": "<b>{point.x}%</b>: {point.y:.2f}",
+            "data_labels": [
+                {"name": "Counts", "ylab": "Cumulative mapped-read depth"},
+                {"name": "Normalised", "ylab": "Percentage total cumulative mapped-read depth"},
+            ],
+        }
         self.add_section(
             name="Gene Coverage Profile",
             anchor="qualimap-genome-fraction-coverage",
             description="Mean distribution of coverage depth across the length of all mapped transcripts.",
             helptext=coverage_profile_helptext,
-            plot=linegraph.plot(
-                self.qualimap_rnaseq_cov_hist,
-                {
-                    "id": "qualimap_gene_coverage_profile",
-                    "title": "Qualimap RNAseq: Coverage Profile Along Genes (total)",
-                    "ylab": "Coverage",
-                    "xlab": "Transcript Position (%)",
-                    "ymin": 0,
-                    "xmin": 0,
-                    "xmax": 100,
-                    "tt_label": "<b>{point.x} bp</b>: {point.y:.0f}%",
-                },
-            ),
+            plot=linegraph.plot([self.qualimap_rnaseq_cov_hist, self.qualimap_rnaseq_cov_hist_percent], pconfig),
         )
 
     #### General Stats

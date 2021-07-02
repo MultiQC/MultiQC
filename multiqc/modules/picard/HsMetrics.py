@@ -93,12 +93,12 @@ def parse_reports(self):
                         parsed_data[s_name][j] = dict()
                         # Check that we're not using commas for decimal places
                         if commadecimal is None:
+                            commadecimal = False
                             for i, k in enumerate(keys):
-                                if k.startswith("PCT_"):
+                                if "PCT" in k or "BAIT" in k or "MEAN" in k:
                                     if "," in vals[i]:
                                         commadecimal = True
-                                    else:
-                                        commadecimal = False
+                                        break
                         for i, k in enumerate(keys):
                             try:
                                 if commadecimal:
