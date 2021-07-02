@@ -63,7 +63,12 @@ def parse_reports(self):
         self.add_section(
             name="TIN score",
             anchor="rseqc_tin",
-            description="[TIN](http://rseqc.sourceforge.net/#tin-py) measures the RNA degradation in a sample.",
+            description=(
+                "[TIN](http://rseqc.sourceforge.net/#tin-py) is designed to evaluate RNA integrity at transcript level. "
+                "TIN (transcript integrity number) is named in analogous to RIN (RNA integrity number). "
+                "RIN (RNA integrity number) is the most widely used metric to evaluate RNA integrity at sample (or transcriptome) level. "
+                "It is a very useful preventive measure to ensure good RNA quality and robust, reproducible RNA sequencing."
+            ),
             plot=bargraph.plot(self.tin_data, cats, pconfig),
         )
     return len(self.tin_data)
