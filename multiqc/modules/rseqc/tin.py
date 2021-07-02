@@ -26,8 +26,6 @@ def parse_reports(self):
         except csv.Error:
             continue
 
-        if "TIN(median)" not in contents:
-            continue
         s_name = contents["Bam_file"]
         contents.pop("Bam_file")
         self.tin_data[s_name] = contents
