@@ -2,11 +2,13 @@
 
 """ MultiQC module to parse output from Lima """
 
+from collections import OrderedDict
 import logging
 import re
 
+from multiqc import config
 from multiqc.modules.base_module import BaseMultiqcModule
-from multiqc.plots import bargraph
+from multiqc.plots import bargraph, table
 
 # Initialise the logger
 log = logging.getLogger(__name__)
@@ -46,7 +48,7 @@ class MultiqcModule(BaseMultiqcModule):
         self.plot_filter_data()
 
         # Add a graph for the data values in the counts file
-        self.plot_counts_data()
+        self.make_counts_table()
 
     def parse_summary_files(self):
         for f in self.find_log_files("lima/summary", filehandles=True):
@@ -153,50 +155,36 @@ class MultiqcModule(BaseMultiqcModule):
 
         return reasons
 
-    def plot_counts_data(self):
-        """Plot the lima counts data"""
-        pdata = list()
-
-        categories = ["Counts", "MeanScore"]
-        description = ["Number of Reads", "Mean Quality Score"]
-
-        configuration = {
+    def make_counts_table(self):
+        """Make the lima counts table"""
+        tconfig = {
             "id": "multiqc_lima_counts",
+            "namespace": "Lima",
             "title": "Lima: Number of Reads",
             "anchor": "multiqc_lima_counts",
-            # Placeholder y-label, the actual values will be set below in
-            # data_labels
             "ylab": "# Reads",
-            "data_labels": [
-                {"name": category, "cpswitch_counts_label": category, "ylab": description}
-                for category, description in zip(categories, description)
-            ],
         }
 
-        for category in categories:
-            data = dict()
-            for sample, entry in self.lima_counts.items():
-                data[sample] = {category: entry[category]}
-            pdata.append(data)
+        headers = OrderedDict()
+        headers["Counts"] = {
+            "title": f"Read Count ({config.long_read_count_prefix})",
+            "description": f"Number of reads for each sample or barcode pair ({config.long_read_count_desc})",
+            "modify": lambda x: x * config.long_read_count_multiplier,
+            "shared_key": "long_read_counts",
+            "format": "{:,.2f}",
+            "scale": "PuBuGn",
+        }
+        headers["MeanScore"] = {
+            "title": "Quality Score",
+            "description": "The mean quality score of the reads for each sample or barcode pair",
+            "scale": "Spectral",
+        }
 
         self.add_section(
             name="Per sample count data",
             anchor="multiqc_lima_count",
-            description="""
-                    Per sample or per barcode statistics from Lima.
-
-                    The **Counts** show the
-                    number of reads for each sample or barcode pair.
-
-                    The **MeanScore** shows the mean quality score of the reads for
-                    each sample or barcode pair.
-                """,
-            helptext="""
-                To display sample names instead of `barcode--barcode` pairs,
-                please re-run MultiQC and specify which barcodes belong to
-                which sample using the `--lima-barcodes` flag.
-                """,
-            plot=bargraph.plot(pdata, categories, configuration),
+            description="Per sample or per barcode statistics from Lima.",
+            plot=table.plot(self.lima_counts, headers, tconfig),
         )
 
 
