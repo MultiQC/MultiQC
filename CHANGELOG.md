@@ -25,6 +25,10 @@
   - Generate highly accurate single-molecule consensus reads from PacBio data
 - [**GffCompare**](https://ccb.jhu.edu/software/stringtie/gffcompare.shtml)
   - GffCompare can annotate and estimate accuracy of one or more GFF files compared with a reference annotation.
+- [**Lima**](https://github.com/PacificBiosciences/barcoding)
+  - The PacBio Barcode Demultiplexer
+- [**odgi**](https://github.com/pangenome/odgi)
+  - Optimized dynamic genome/graph implementation
 - [**Pangolin**](https://github.com/cov-lineages/pangolin)
   - Added MultiQC support for Pangolin, the tool that determines SARS-CoV-2 lineages
 - [**Sambamba Markdup**](https://lomereiter.github.io/sambamba/docs/sambamba-markdup.html)
@@ -164,8 +168,6 @@ For further information, please see the [documentation](https://multiqc.info/doc
   - Reference-free QC of Hi-C sequencing data
 - [**Sentieon**](https://www.sentieon.com/products/)
   - Submodules added to catch Picard-based QC metrics files
-- [**odgi**](https://github.com/pangenome/odgi)
-  - Optimized dynamic genome/graph implementation
 
 #### Module updates
 

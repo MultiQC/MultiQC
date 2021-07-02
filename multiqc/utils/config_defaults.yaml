@@ -316,6 +316,11 @@ module_order:
         - WGS
         - cancer
         - DNA
+  - lima:
+      module_tag:
+        - RNA
+        - DNA
+        - PacBio
   - peddy:
       module_tag:
         - DNA
