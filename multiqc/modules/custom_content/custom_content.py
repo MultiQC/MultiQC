@@ -138,6 +138,8 @@ def custom_module_classes():
                         "section_name": f["s_name"].replace("_", " ").replace("-", " ").replace(".", " "),
                         "data": img_html,
                     }
+                    # If the search pattern 'k' has an associated custom content section config, use it
+                    parsed_data.update(cust_mods.get(k, {}).get("config", {}))
                 elif f_extension == ".html":
                     parsed_data = {"id": f["s_name"], "plot_type": "html", "data": f["f"]}
                     parsed_data.update(_find_html_file_header(f))

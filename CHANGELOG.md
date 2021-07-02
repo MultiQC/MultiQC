@@ -7,21 +7,57 @@
 - New interactive slider controls for controlling heatmap colour scales ([#1427](https://github.com/ewels/MultiQC/issues/1427))
 - Make the module crash tracebacks much prettier using `rich`
 - Refine the cli log output a little (nicely formatted header line + drop the `[INFO]`)
+- Added new `--replace-names` / config `sample_names_replace` option to replace sample names during report generation
 - Added docs describing tools for downstream analysis of MultiQC outputs.
 - Added CI tests for Python 3.9, pinned `networkx` package to `>=2.5.1` ([#1413](https://github.com/ewels/MultiQC/issues/1413))
 - Added patterns to `config.fn_ignore_paths` to avoid error with parsing installation dir / singularity cache ([#1416](https://github.com/ewels/MultiQC/issues/1416))
+- Print a log message when flat-image plots are used due to sample size surpassing `plots_flat_numseries` config ([#1254](https://github.com/ewels/MultiQC/issues/1254))
+- Fix the `mqc_colours` util function to lighten colours even when passing categorical or single-length lists.
+- Bugfix for Custom Content, using YAML configuration (eg. section headers) for images should now work
 
 #### New Modules
 
+- [**BclConvert**](https://support.illumina.com/sequencing/sequencing_software/bcl-convert.html)
+  - Tool that converts / demultiplexes Illumina Binary Base Call (BCL) files to FASTQ files
 - [**Bustools**](https://bustools.github.io/)
   - Tools for working with BUS files
+- [**ccs**](https://github.com/PacificBiosciences/ccs)
+  - Generate highly accurate single-molecule consensus reads from PacBio data
+- [**GffCompare**](https://ccb.jhu.edu/software/stringtie/gffcompare.shtml)
+  - GffCompare can annotate and estimate accuracy of one or more GFF files compared with a reference annotation.
+- [**Lima**](https://github.com/PacificBiosciences/barcoding)
+  - The PacBio Barcode Demultiplexer
+- [**odgi**](https://github.com/pangenome/odgi)
+  - Optimized dynamic genome/graph implementation
+- [**Pangolin**](https://github.com/cov-lineages/pangolin)
+  - Added MultiQC support for Pangolin, the tool that determines SARS-CoV-2 lineages
+- [**Sambamba Markdup**](https://lomereiter.github.io/sambamba/docs/sambamba-markdup.html)
+  - Added MultiQC module to add duplicate rate calculated by Sambamba Markdup.
+- [**Snippy**](https://github.com/tseemann/snippy)
+  - Rapid haploid variant calling and core genome alignment.
 - [**VEP**](https://www.ensembl.org/info/docs/tools/vep/index.html)
   - Added MultiQC module to add summary statistics of Ensembl VEP annotations.
+  - Handle error from missing variants in VEP stats file. ([#1446](https://github.com/ewels/MultiQC/issues/1446))
 
 #### Module updates
 
+- **bcl2fastq**
+  - Added sample name cleaning so that prepending directories with the `-d` flag works properly.
+- **Cutadapt**
+  - Added support for linked adapters [[#1329](https://github.com/ewels/MultiQC/issues/1329)]
+  - Parse whether trimming was 5' or 3' for _Lengths of Trimmed Sequences_ plot where possible
+  - Plot filtered reads even when no filtering category is found ([#1328](https://github.com/ewels/MultiQC/issues/1328))
+- **Dragen**
+  - Handled MultiQC crashing when run on single-end output from Dragen ([#1374](https://github.com/ewels/MultiQC/issues/1374))
+- **fastp**
+  - Handle a `ZeroDivisionError` if there are zero reads ([#1444](https://github.com/ewels/MultiQC/issues/1444))
+- **FastQC**
+  - Added check for if `overrepresented_sequences` is missing from reports ([#1281](https://github.com/ewels/MultiQC/issues/1444))
 - **Flexbar**
   - Fixed bug where reports with 0 reads would crash MultiQC ([#1407](https://github.com/ewels/MultiQC/issues/1407))
+- **Kraken**
+  - Handle a `ZeroDivisionError` if there are zero reads ([#1440](https://github.com/ewels/MultiQC/issues/1440))
+  - Updated search patterns to handle edge case ([#1428](https://github.com/ewels/MultiQC/issues/1428))
 - **Mosdepth**
   - Show barplot instead of line graph for coverage-per-contig plot if there is only one contig.
   - Include or exclude contigs based on patterns for coverage-per-contig plots
@@ -29,6 +65,22 @@
   - `RnaSeqMetrics` - fix assignment barplot labels to say bases instead of reads ([#1408](https://github.com/ewels/MultiQC/issues/1408))
   - `CrosscheckFingerprints` - fix bug where LOD threshold was not detected when invoked with "new" picard cli style. fixed formatting bug ([#1414](https://github.com/ewels/MultiQC/issues/1414))
   - `InsertSizeMetrics` - add the `insertsize_xmax` configuration option to limit the plotted maximum insert size
+  - Add metrics from `CollectIlluminaBasecallingMetrics`, `CollectIlluminaLaneMetrics`, `ExtractIlluminaBarcodes` and `MarkIlluminaAdapters` ([#1336](https://github.com/ewels/MultiQC/pull/1336))
+  - Made checker for comma as decimal separator in `HsMetrics` more robust ([#1296](https://github.com/ewels/MultiQC/issues/1296))
+- **qc3C**
+  - Updated module to not fail on older field names.
+- **qualimap**
+  - Added new percentage coverage plot in `QM_RNASeq`, and fixed wrong units in tool tip label ([#1258](https://github.com/ewels/MultiQC/issues/1258))
+- **RSeQC**
+  - Added a long-requested submodule to support showing the [**TIN**](http://rseqc.sourceforge.net/#tin-py) (Transcript Integrity Number) ([#737](https://github.com/ewels/MultiQC/issues/737))
+- **QUAST**
+  - Fixed typo causing wrong number of contigs being displayed ([#1442](https://github.com/ewels/MultiQC/issues/1442))
+- **Sentieon**
+  - Handled `ZeroDivisionError` when input files have zero reads ([#1420](https://github.com/ewels/MultiQC/issues/1420))
+- **RSEM**
+  - Handled `ZeroDivisionError` when input files have zero reads ([#1040](https://github.com/ewels/MultiQC/issues/1040))
+- **RSeQC**
+  - Fixed double counting of some categories in `read_distribution` bar graph. ([#1457](https://github.com/ewels/MultiQC/issues/1457))
 
 ## [MultiQC v1.10.1](https://github.com/ewels/MultiQC/releases/tag/v1.10.1) - 2021-04-01
 

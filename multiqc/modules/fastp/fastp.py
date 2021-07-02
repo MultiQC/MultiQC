@@ -116,28 +116,37 @@ class MultiqcModule(BaseMultiqcModule):
             )
 
         # Base quality plot
-        self.add_section(
-            name="Sequence Quality",
-            anchor="fastp-seq-quality",
-            description="Average sequencing quality over each base of all reads.",
-            plot=self.fastp_read_qual_plot(),
-        )
+        try:
+            self.add_section(
+                name="Sequence Quality",
+                anchor="fastp-seq-quality",
+                description="Average sequencing quality over each base of all reads.",
+                plot=self.fastp_read_qual_plot(),
+            )
+        except RuntimeError:
+            log.debug("No data found for 'Sequence Quality' plot")
 
         # GC content plot
-        self.add_section(
-            name="GC Content",
-            anchor="fastp-seq-content-gc",
-            description="Average GC content over each base of all reads.",
-            plot=self.fastp_read_gc_plot(),
-        )
+        try:
+            self.add_section(
+                name="GC Content",
+                anchor="fastp-seq-content-gc",
+                description="Average GC content over each base of all reads.",
+                plot=self.fastp_read_gc_plot(),
+            )
+        except RuntimeError:
+            log.debug("No data found for 'GC Content' plot")
 
         # N content plot
-        self.add_section(
-            name="N content",
-            anchor="fastp-seq-content-n",
-            description="Average N content over each base of all reads.",
-            plot=self.fastp_read_n_plot(),
-        )
+        try:
+            self.add_section(
+                name="N content",
+                anchor="fastp-seq-content-n",
+                description="Average N content over each base of all reads.",
+                plot=self.fastp_read_n_plot(),
+            )
+        except RuntimeError:
+            log.debug("No data found for 'N content' plot")
 
     def parse_fastp_log(self, f):
         """Parse the JSON output from fastp and save the summary statistics"""
@@ -203,6 +212,8 @@ class MultiqcModule(BaseMultiqcModule):
             ) * 100.0
         except KeyError:
             log.debug("Could not calculate 'pct_surviving': {}".format(f["fn"]))
+        except ZeroDivisionError:
+            log.warning("FastQ input file has zero raw reads")
 
         # Parse adapter_cutting
         try:
@@ -435,5 +446,9 @@ class MultiqcModule(BaseMultiqcModule):
             if sum([len(data[k][x]) for x in data[k]]) > 0:
                 data_labels.append(config[k])
                 pdata.append(data[k])
+
+        # Abort sample if no data
+        if len(pdata) == 0:
+            raise RuntimeError
 
         return data_labels, pdata

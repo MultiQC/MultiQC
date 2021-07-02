@@ -15,11 +15,15 @@ Supported commands:
 
 - `AlignmentSummaryMetrics`
 - `BaseDistributionByCycle`
+- `CollectIlluminaBasecallingMetrics`
+- `CollectIlluminaLaneMetrics`
 - `CrosscheckFingerprints`
+- `ExtractIlluminaBarcodes`
 - `GcBiasMetrics`
 - `HsMetrics`
 - `InsertSizeMetrics`
 - `MarkDuplicates`
+- `MarkIlluminaAdapters`
 - `OxoGMetrics`
 - `QualityByCycleMetrics`
 - `QualityScoreDistributionMetrics`

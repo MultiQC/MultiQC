@@ -44,9 +44,9 @@ fi
 cd "$MULTIQC_TEST_ROOT"
 
 if [ "$*" == "" ] ; then
-    python3 -munittest discover
-    python  -munittest discover
+    python3 -mpytest
+    python  -mpytest
 else
     set -e
-    for t in "$@" ; do $PY -munittest unit_tests.test_"$t" ; done
+    for t in "$@" ; do $PY -mpytest "$t" ; done
 fi
