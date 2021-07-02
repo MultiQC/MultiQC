@@ -186,9 +186,8 @@ def parse_reports(self):
                 ],
             }
             try:
-                if "insertsize_xmax" in config.picard_config:
-                    pconfig["xmax"] = config.picard_config["insertsize_xmax"]
-            except (AttributeError, KeyError, ValueError):
+                pconfig["xmax"] = config.picard_config["insertsize_xmax"]
+            except (AttributeError, KeyError):
                 pass
 
             self.add_section(
