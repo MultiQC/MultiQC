@@ -31,6 +31,8 @@
   - Added MultiQC module to add duplicate rate calculated by Sambamba Markdup.
 - [**Snippy**](https://github.com/tseemann/snippy)
   - Rapid haploid variant calling and core genome alignment.
+- [**TIN**](http://rseqc.sourceforge.net/#tin-py)
+  - RSeQC subtool that calculates the RNA integrity of samples at transcript level
 - [**VEP**](https://www.ensembl.org/info/docs/tools/vep/index.html)
   - Added MultiQC module to add summary statistics of Ensembl VEP annotations.
   - Handle error from missing variants in VEP stats file. ([#1446](https://github.com/ewels/MultiQC/issues/1446))
