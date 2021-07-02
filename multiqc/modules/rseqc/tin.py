@@ -24,6 +24,7 @@ def parse_reports(self):
             reader = csv.DictReader(f["f"], delimiter="\t")
             contents = next(reader)
         except csv.Error:
+            log.error(f"Could not parse file '{f['fn']}'")
             continue
 
         s_name = contents["Bam_file"]
@@ -42,8 +43,8 @@ def parse_reports(self):
 
         # Add to general stats table
         self.general_stats_headers["TIN(median)"] = {
-            "title": "TIN median score",
-            "description": "the RNA integrity of a sample",
+            "title": "TIN",
+            "description": "Median Transcript Integriry Number (TIN), indicating the RNA integrity of a sample",
             "max": 100,
             "min": 0,
             "scale": "RdBu",
@@ -53,20 +54,5 @@ def parse_reports(self):
             if s_name not in self.general_stats_data:
                 self.general_stats_data[s_name] = dict()
             self.general_stats_data[s_name]["TIN(median)"] = self.tin_data[s_name]["TIN(median)"]
-        pconfig = {"id": "rseqc_tin_median_score_plot", "title": "RSeQC: TIN Score", "ylab": "TIN score"}
 
-        cats = OrderedDict()
-        cats["TIN(median)"] = {"name": "TIN median score"}
-
-        self.add_section(
-            name="TIN score",
-            anchor="rseqc_tin",
-            description=(
-                "[TIN](http://rseqc.sourceforge.net/#tin-py) is designed to evaluate RNA integrity at transcript level. "
-                "TIN (transcript integrity number) is named in analogous to RIN (RNA integrity number). "
-                "RIN (RNA integrity number) is the most widely used metric to evaluate RNA integrity at sample (or transcriptome) level. "
-                "It is a very useful preventive measure to ensure good RNA quality and robust, reproducible RNA sequencing."
-            ),
-            plot=bargraph.plot(self.tin_data, cats, pconfig),
-        )
     return len(self.tin_data)
