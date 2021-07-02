@@ -42,6 +42,14 @@ def parse_reports(self):
         self.write_data_file(self.tin_data, "multiqc_rseqc_tin")
 
         # Add to general stats table
+        self.general_stats_headers["TIN(stdev)"] = {
+            "title": "TIN stdev",
+            "description": "Standard Deviation for the Transcript Integriry Number (TIN)",
+            "max": 100,
+            "min": 0,
+            "scale": "Reds",
+            "hidden": True,
+        }
         self.general_stats_headers["TIN(median)"] = {
             "title": "TIN",
             "description": "Median Transcript Integriry Number (TIN), indicating the RNA integrity of a sample",
@@ -54,5 +62,6 @@ def parse_reports(self):
             if s_name not in self.general_stats_data:
                 self.general_stats_data[s_name] = dict()
             self.general_stats_data[s_name]["TIN(median)"] = self.tin_data[s_name]["TIN(median)"]
+            self.general_stats_data[s_name]["TIN(stdev)"] = self.tin_data[s_name]["TIN(stdev)"]
 
     return len(self.tin_data)
