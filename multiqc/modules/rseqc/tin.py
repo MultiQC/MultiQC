@@ -1,0 +1,69 @@
+#!/usr/bin/env python
+
+""" MultiQC submodule to parse output from RSeQC tin.py
+http://rseqc.sourceforge.net/#tin-py """
+
+from collections import OrderedDict
+import logging
+import csv
+
+from multiqc.plots import bargraph
+
+# Initialise the logger
+log = logging.getLogger(__name__)
+
+
+def parse_reports(self):
+    """Find RSeQC tin reports and parse their data"""
+
+    self.tin_data = dict()
+
+    for f in self.find_log_files("rseqc/tin", filehandles=True):
+        # Parse contents
+        try:
+            reader = csv.DictReader(f["f"], delimiter="\t")
+            contents = next(reader)
+        except csv.Error:
+            continue
+
+        if "TIN(median)" not in contents:
+            continue
+        s_name = contents["Bam_file"]
+        contents.pop("Bam_file")
+        self.tin_data[s_name] = contents
+
+        # Add file to multiqc_sources.txt
+        self.add_data_source(f)
+
+    # Filter to strip out ignored sample names
+    self.tin_data = self.ignore_samples(self.tin_data)
+
+    if len(self.tin_data) > 0:
+        # Write to file
+        self.write_data_file(self.tin_data, "multiqc_rseqc_tin")
+
+        # Add to general stats table
+        self.general_stats_headers["TIN(median)"] = {
+            "title": "TIN median score",
+            "description": "the RNA integrity of a sample",
+            "max": 100,
+            "min": 0,
+            "scale": "RdBu",
+        }
+
+        for s_name in self.tin_data:
+            if s_name not in self.general_stats_data:
+                self.general_stats_data[s_name] = dict()
+                self.general_stats_data[s_name]["TIN(median)"] = self.tin_data[s_name]["TIN(median)"]
+        pconfig = {"id": "rseqc_tin_median_score_plot", "title": "RSeQC: TIN Score", "ylab": "TIN score"}
+
+        cats = OrderedDict()
+        cats["TIN(median)"] = {"name": "TIN median score"}
+
+        self.add_section(
+            name="TIN score",
+            anchor="rseqc_tin",
+            description="[TIN](http://rseqc.sourceforge.net/#tin-py) measures the RNA degradation in a sample.",
+            plot=bargraph.plot(self.tin_data, cats, pconfig),
+        )
+    return len(self.tin_data)

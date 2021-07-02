@@ -48,6 +48,7 @@ class MultiqcModule(BaseMultiqcModule):
                 "junction_saturation",
                 "infer_experiment",
                 "bam_stat",
+                "tin",
             ]
 
         # Add self.js to be included in template

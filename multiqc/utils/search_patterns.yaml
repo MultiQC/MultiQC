@@ -610,6 +610,9 @@ rseqc/infer_experiment:
   - fn: "*infer_experiment.txt"
   - contents: "Fraction of reads explained by"
     max_filesize: 500000
+rseqc/tin:
+  contents: "Bam_file"
+  num_lines: 1
 salmon/meta:
   fn: "meta_info.json"
   contents: "salmon_version"
