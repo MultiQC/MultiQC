@@ -288,6 +288,10 @@ Note that some things, such as `parent_name` are taken from the first file that 
 with this `parent_id`. So it's a good idea to specify this in every file.
 `parent_description` and `extra` is taken from the first file where it is set.
 
+> `parent_id` only works within Custom Content.
+> It is not currently possible to add custom content output into a report section
+> from a core MultiQC module.
+
 ## Order of sections
 
 If you have multiple different Custom Content sections, their order will be random
