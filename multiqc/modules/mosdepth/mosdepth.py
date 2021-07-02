@@ -4,6 +4,7 @@ from __future__ import print_function
 
 from collections import defaultdict, OrderedDict
 import logging
+import fnmatch
 
 from multiqc import config
 from multiqc.modules.base_module import BaseMultiqcModule
@@ -11,8 +12,6 @@ from multiqc.modules.base_module import BaseMultiqcModule
 # Initialise the logger
 from multiqc.modules.qualimap.QM_BamQC import coverage_histogram_helptext, genome_fraction_helptext
 from multiqc.plots import linegraph, bargraph
-
-import fnmatch
 
 log = logging.getLogger(__name__)
 
@@ -223,8 +222,11 @@ class MultiqcModule(BaseMultiqcModule):
                     else:  # for per-contig plot
                         # filter out contigs based on exclusion patterns
                         if any(fnmatch.fnmatch(contig, str(pattern)) for pattern in exclude_contigs):
-                            # Commented out since this could be many thousands of contigs fo reach!
-                            # log.debug("Skipping excluded contig '{}'".format(contig))
+                            try:
+                                if config.mosdepth_config["show_excluded_debug_logs"]:
+                                    log.debug("Skipping excluded contig '{}'".format(contig))
+                            except (AttributeError, KeyError):
+                                pass
                             continue
 
                         # filter out contigs based on inclusion patterns
