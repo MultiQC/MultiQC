@@ -41,7 +41,6 @@ class MultiqcModule(BaseMultiqcModule):
         "&gt;Q15",
     ]
     _stat_types = ("aligned", "seq summary", "unrecognized")
-    _key_fmt = "{} ({})"
 
     def __init__(self):
 
@@ -115,7 +114,7 @@ class MultiqcModule(BaseMultiqcModule):
             log.debug(f"Did not recognise NanoStat file '{f['fn']}' - skipping")
             return
 
-        out_d = {self._key_fmt.format(k, stat_type): v for k, v in nano_stats.items()}
+        out_d = {f"{k}_{stat_type}": v for k, v in nano_stats.items()}
 
         # Warn if we find overlapping data for the same sample
         if f["s_name"] in self.nanostat_data:
@@ -218,7 +217,7 @@ class MultiqcModule(BaseMultiqcModule):
         # Add the stat_type suffix
         headers = OrderedDict()
         for k in headers_base:
-            key = self._key_fmt.format(k, stat_type)
+            key = f"{k}_{stat_type}"
             headers[key] = headers_base.get(k, dict()).copy()
 
         # Table config
@@ -247,7 +246,7 @@ class MultiqcModule(BaseMultiqcModule):
         def _get_total_reads(data_dict):
             stat_type = self._stat_types[0]
             for stat_type in self._stat_types:
-                total_key = self._key_fmt.format("Number of reads", stat_type)
+                total_key = f"Number of reads_{stat_type}"
                 if total_key in data_dict:
                     return data_dict[total_key], stat_type
             return None, None
@@ -275,7 +274,7 @@ class MultiqcModule(BaseMultiqcModule):
             prev_reads = reads_total
             for k, range_name in _range_names.items():
                 if k != "rest":
-                    data_key = self._key_fmt.format(k, stat_type)
+                    data_key = f"{k}_{stat_type}"
                     reads_gt = data_dict[data_key]
 
                     bar_data[s_name][range_name] = prev_reads - reads_gt
@@ -284,7 +283,7 @@ class MultiqcModule(BaseMultiqcModule):
                         log.error(f"Error on {s_name} {range_name} {data_key} . Negative number of reads")
                     prev_reads = reads_gt
                 else:
-                    data_key = self._key_fmt.format("&gt;Q15", stat_type)
+                    data_key = f"&gt;Q15_{stat_type}"
                     bar_data[s_name][range_name] = data_dict[data_key]
 
         cats = OrderedDict()
