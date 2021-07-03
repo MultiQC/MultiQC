@@ -365,9 +365,9 @@ kallisto:
   contents: "[quant] finding pseudoalignments for the reads"
   shared: true
 nanostat:
-  max_filesize: 2048
-  contents: "General summary:"
-  num_lines: 1
+  max_filesize: 4096
+  contents: "Number, percentage and megabases of reads above quality cutoffs"
+  num_lines: 20
 kat:
   fn: "*.dist_analysis.json"
 kraken:
