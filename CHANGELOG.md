@@ -27,6 +27,8 @@
   - GffCompare can annotate and estimate accuracy of one or more GFF files compared with a reference annotation.
 - [**Lima**](https://github.com/PacificBiosciences/barcoding)
   - The PacBio Barcode Demultiplexer
+- [**NanoStat**](https://github.com/wdecoster/nanostat)
+  - Calculate various statistics from a long read sequencing datasets
 - [**odgi**](https://github.com/pangenome/odgi)
   - Optimized dynamic genome/graph implementation
 - [**Pangolin**](https://github.com/cov-lineages/pangolin)
