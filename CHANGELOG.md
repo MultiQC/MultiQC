@@ -2,12 +2,15 @@
 
 ## MultiQC v1.11dev
 
-### MultiQC updates
+### MultiQC new features
 
 - New interactive slider controls for controlling heatmap colour scales ([#1427](https://github.com/ewels/MultiQC/issues/1427))
+- Added new `--replace-names` / config `sample_names_replace` option to replace sample names during report generation
+
+### MultiQC updates
+
 - Make the module crash tracebacks much prettier using `rich`
 - Refine the cli log output a little (nicely formatted header line + drop the `[INFO]`)
-- Added new `--replace-names` / config `sample_names_replace` option to replace sample names during report generation
 - Added docs describing tools for downstream analysis of MultiQC outputs.
 - Added CI tests for Python 3.9, pinned `networkx` package to `>=2.5.1` ([#1413](https://github.com/ewels/MultiQC/issues/1413))
 - Added patterns to `config.fn_ignore_paths` to avoid error with parsing installation dir / singularity cache ([#1416](https://github.com/ewels/MultiQC/issues/1416))
@@ -29,7 +32,7 @@
   - The PacBio Barcode Demultiplexer
 - [**NanoStat**](https://github.com/wdecoster/nanostat)
   - Calculate various statistics from a long read sequencing datasets
-- [**odgi**](https://github.com/pangenome/odgi)
+- [**ODGI**](https://github.com/pangenome/odgi)
   - Optimized dynamic genome/graph implementation
 - [**Pangolin**](https://github.com/cov-lineages/pangolin)
   - Added MultiQC support for Pangolin, the tool that determines SARS-CoV-2 lineages
@@ -41,6 +44,21 @@
   - Added MultiQC module to add summary statistics of Ensembl VEP annotations.
   - Handle error from missing variants in VEP stats file. ([#1446](https://github.com/ewels/MultiQC/issues/1446))
 
+#### Module feature additions
+
+- **Cutadapt**
+  - Added support for linked adapters [#1329](https://github.com/ewels/MultiQC/issues/1329)]
+  - Parse whether trimming was 5' or 3' for _Lengths of Trimmed Sequences_ plot where possible
+- **Mosdepth**
+  - Include or exclude contigs based on patterns for coverage-per-contig plots
+- **Picard**
+  - Add metrics from `CollectIlluminaBasecallingMetrics`, `CollectIlluminaLaneMetrics`, `ExtractIlluminaBarcodes` and `MarkIlluminaAdapters` ([#1336](https://github.com/ewels/MultiQC/pull/1336))
+  - New `insertsize_xmax` configuration option to limit the plotted maximum insert size for `InsertSizeMetrics`
+- **Qualimap**
+  - Added new percentage coverage plot in `QM_RNASeq` ([#1258](https://github.com/ewels/MultiQC/issues/1258))
+- **RSeQC**
+  - Added a long-requested submodule to support showing the [**TIN**](http://rseqc.sourceforge.net/#tin-py) (Transcript Integrity Number) ([#737](https://github.com/ewels/MultiQC/issues/737))
+
 #### Module updates
 
 - **biscuit**
@@ -50,8 +68,6 @@
 - **bcl2fastq**
   - Added sample name cleaning so that prepending directories with the `-d` flag works properly.
 - **Cutadapt**
-  - Added support for linked adapters [[#1329](https://github.com/ewels/MultiQC/issues/1329)]
-  - Parse whether trimming was 5' or 3' for _Lengths of Trimmed Sequences_ plot where possible
   - Plot filtered reads even when no filtering category is found ([#1328](https://github.com/ewels/MultiQC/issues/1328))
 - **Dragen**
   - Handled MultiQC crashing when run on single-end output from Dragen ([#1374](https://github.com/ewels/MultiQC/issues/1374))
@@ -66,19 +82,14 @@
   - Updated search patterns to handle edge case ([#1428](https://github.com/ewels/MultiQC/issues/1428))
 - **Mosdepth**
   - Show barplot instead of line graph for coverage-per-contig plot if there is only one contig.
-  - Include or exclude contigs based on patterns for coverage-per-contig plots
 - **Picard**
   - `RnaSeqMetrics` - fix assignment barplot labels to say bases instead of reads ([#1408](https://github.com/ewels/MultiQC/issues/1408))
   - `CrosscheckFingerprints` - fix bug where LOD threshold was not detected when invoked with "new" picard cli style. fixed formatting bug ([#1414](https://github.com/ewels/MultiQC/issues/1414))
-  - `InsertSizeMetrics` - add the `insertsize_xmax` configuration option to limit the plotted maximum insert size
-  - Add metrics from `CollectIlluminaBasecallingMetrics`, `CollectIlluminaLaneMetrics`, `ExtractIlluminaBarcodes` and `MarkIlluminaAdapters` ([#1336](https://github.com/ewels/MultiQC/pull/1336))
   - Made checker for comma as decimal separator in `HsMetrics` more robust ([#1296](https://github.com/ewels/MultiQC/issues/1296))
 - **qc3C**
   - Updated module to not fail on older field names.
-- **qualimap**
-  - Added new percentage coverage plot in `QM_RNASeq`, and fixed wrong units in tool tip label ([#1258](https://github.com/ewels/MultiQC/issues/1258))
-- **RSeQC**
-  - Added a long-requested submodule to support showing the [**TIN**](http://rseqc.sourceforge.net/#tin-py) (Transcript Integrity Number) ([#737](https://github.com/ewels/MultiQC/issues/737))
+- **Qualimap**
+  - Fixed wrong units in tool tip label ([#1258](https://github.com/ewels/MultiQC/issues/1258))
 - **QUAST**
   - Fixed typo causing wrong number of contigs being displayed ([#1442](https://github.com/ewels/MultiQC/issues/1442))
 - **Sentieon**
