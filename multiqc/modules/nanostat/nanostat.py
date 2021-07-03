@@ -135,7 +135,8 @@ class MultiqcModule(BaseMultiqcModule):
         headers_base["Active channels"] = {
             "title": "Active channels",
             "description": "Active channels",
-            "scale": "YlGn",
+            "scale": "Greens",
+            "format": "{:,.0f}",
         }
         headers_base["Median read length"] = {
             "title": f"Median length",
@@ -143,27 +144,34 @@ class MultiqcModule(BaseMultiqcModule):
             "suffix": " bp",
             "format": "{:,.0f}",
             "shared_key": "nucleotides",
-            "scale": "YlGn",
+            "scale": "BuPu",
         }
         headers_base["Mean read length"] = {
             "title": f"Mean length",
             "description": f"Mean read length (bp)",
             "suffix": " bp",
-            "scale": "YlGn",
+            "scale": "Purples",
             "format": "{:,.0f}",
             "shared_key": "nucleotides",
             "hidden": True,
+        }
+        headers_base["Read length N50"] = {
+            "title": "Read N50",
+            "description": "Read length N50",
+            "format": "{:,.0f}",
+            "suffix": " bp",
+            "scale": "RdPu",
         }
         headers_base["Median read quality"] = {
             "title": "Median Qual",
             "description": "Median read quality (Phred scale)",
             "shared_key": "phred_score",
-            "scale": "YlGn",
+            "scale": "RdYlGn",
         }
         headers_base["Mean read quality"] = {
             "title": "Mean Qual",
             "description": "Mean read quality (Phred scale)",
-            "scale": "YlGn",
+            "scale": "PiYG",
             "shared_key": "phred_score",
             "hidden": True,
         }
@@ -173,7 +181,7 @@ class MultiqcModule(BaseMultiqcModule):
             "min": 0,
             "max": 100,
             "suffix": "%",
-            "scale": "YlGn",
+            "scale": "RdYlBu",
             "shared_key": "percent_identity",
         }
         headers_base["Average percent identity"] = {
@@ -181,7 +189,7 @@ class MultiqcModule(BaseMultiqcModule):
             "description": "Average percent identity",
             "max": 100,
             "suffix": "%",
-            "scale": "YlGn",
+            "scale": "Spectral",
             "shared_key": "percent_identity",
             "hidden": True,
         }
@@ -192,26 +200,19 @@ class MultiqcModule(BaseMultiqcModule):
             "shared_key": "long_read_count",
             "scale": "YlGn",
         }
-        headers_base["Read length N50"] = {
-            "title": "Read N50",
-            "description": "Read length N50",
-            "format": "{:,g}",
-            "suffix": " bp",
-            "scale": "YlGn",
-        }
         headers_base["Total bases"] = {
             "title": f"Total Bases ({config.base_count_prefix})",
             "description": f"Total bases ({config.base_count_desc})",
             "modify": lambda x: x * config.base_count_multiplier,
             "shared_key": "base_count",
-            "scale": "YlGn",
+            "scale": "BrBG",
         }
         headers_base["Total bases aligned"] = {
             "title": f"Aligned Bases ({config.base_count_prefix})",
             "description": f"Total bases aligned ({config.base_count_desc})",
             "modify": lambda x: x * config.base_count_multiplier,
             "shared_key": "base_count",
-            "scale": "YlGn",
+            "scale": "PuOr",
         }
 
         # Add the stat_type suffix
