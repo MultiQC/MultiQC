@@ -222,9 +222,15 @@ class MultiqcModule(BaseMultiqcModule):
             headers[key] = headers_base.get(k, dict()).copy()
 
         # Add the report section
+        description = ""
+        if stat_type == "aligned":
+            description = "NanoStat statistics from FastQ, FASTA or BAM files."
+        if stat_type == "seq summary":
+            description = "NanoStat statistics from albacore or guppy summary files."
         self.add_section(
             name="{} stats".format(stat_type.replace("_", " ").capitalize()),
             anchor=f"nanostat_{stat_type}_stats",
+            description=description,
             plot=table.plot(self.nanostat_data, headers),
         )
 
