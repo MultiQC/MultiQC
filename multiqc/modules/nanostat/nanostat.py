@@ -8,7 +8,8 @@ import logging
 import jinja2
 
 from multiqc import config
-from multiqc.plots import bargraph
+from multiqc.utils import mqc_colour
+from multiqc.plots import bargraph, table
 from multiqc.modules.base_module import BaseMultiqcModule
 
 # Initialise the logger
@@ -54,6 +55,8 @@ class MultiqcModule(BaseMultiqcModule):
 
         # Find and load any NanoStat reports
         self.nanostat_data = dict()
+        self.has_aligned = False
+        self.has_seq_summary = False
         for f in self.find_log_files("nanostat", filehandles=True):
             self.parse_nanostat_log(f)
 
@@ -68,11 +71,14 @@ class MultiqcModule(BaseMultiqcModule):
         # Write parsed report data to a file
         self.write_data_file(self.nanostat_data, "multiqc_nanostat")
 
-        # Basic Stats Table
-        self.nanostat_general_stats_table()
+        # Stats Tables
+        if self.has_aligned:
+            self.nanostat_stats_table("aligned")
+        if self.has_seq_summary:
+            self.nanostat_stats_table("seq summary")
 
         # Quality distribution Plot
-        self.add_section(plot=self.nanostat_alignment_plot())
+        self.reads_by_quality_plot()
 
     def parse_nanostat_log(self, f):
         """Parse output from NanoStat
@@ -101,8 +107,10 @@ class MultiqcModule(BaseMultiqcModule):
 
         if "Total bases aligned" in nano_stats:
             stat_type = "aligned"
+            self.has_aligned = True
         elif "Active channels" in nano_stats:
             stat_type = "seq summary"
+            self.has_seq_summary = True
         else:
             log.debug(f"Did not recognise NanoStat file '{f['fn']}' - skipping")
             return
@@ -119,120 +127,112 @@ class MultiqcModule(BaseMultiqcModule):
 
         self.add_data_source(f)
 
-    def nanostat_general_stats_table(self):
+    def nanostat_stats_table(self, stat_type):
         """Take the parsed stats from the Kallisto report and add it to the
         basic stats table at the top of the report"""
 
-        headers_base = {
-            "Average percent identity": {
-                "title": "Mean Identity",
-                "description": "Average percent identity",
-                "max": 100,
-                "suffix": "%",
-                "scale": "YlGn",
-                "hidden": True,
-            },
-            "Active channels": {
-                "title": "Active channels",
-                "description": "Active channels",
-                "scale": "YlGn",
-            },
-            "Mean read length": {
-                "title": f"Mean length ({config.base_count_prefix})",
-                "description": f"Mean read length ({config.base_count_desc})",
-                "suffix": "bp",
-                "scale": "YlGn",
-                "modify": lambda x: x * config.base_count_multiplier,
-                "shared_key": "base_count",
-                "hidden": True,
-            },
-            "Mean read quality": {
-                "title": "Mean Qual",
-                "description": "Mean read quality (Phred scale)",
-                "scale": "YlGn",
-                "shared_key": "phred_score",
-                "hidden": True,
-            },
-            "Median percent identity": {
-                "title": "Median Identity",
-                "description": "Median percent identity",
-                "min": 0,
-                "max": 100,
-                "suffix": "%",
-                "scale": "YlGn",
-            },
-            "Median read length": {
-                "title": f"Median length ({config.base_count_prefix})",
-                "description": f"Median read length ({config.base_count_desc})",
-                "suffix": "bp",
-                "modify": lambda x: x * config.base_count_multiplier,
-                "shared_key": "base_count",
-                "scale": "YlGn",
-                "hidden": True,
-            },
-            "Median read quality": {
-                "title": "Median Qual",
-                "description": "Median read quality (Phred scale)",
-                "shared_key": "phred_score",
-                "scale": "YlGn",
-            },
-            "Number of reads": {
-                "title": f"# Reads ({config.long_read_count_prefix})",
-                "description": f"Number of reads ({config.long_read_count_desc})",
-                "modify": lambda x: x * config.long_read_count_multiplier,
-                "shared_key": "long_read_count",
-                "scale": "YlGn",
-            },
-            "Read length N50": {
-                "title": "Read N50",
-                "description": "Read length N50",
-                "format": "{:,g}",
-                "suffix": "bp",
-                "scale": "YlGn",
-            },
-            "Total bases": {
-                "title": f"Total Bases ({config.base_count_prefix})",
-                "description": f"Total bases ({config.base_count_desc})",
-                "modify": lambda x: x * config.base_count_multiplier,
-                "shared_key": "base_count",
-                "scale": "YlGn",
-            },
-            "Total bases aligned": {
-                "title": f"Aligned Bases ({config.base_count_prefix})",
-                "description": f"Total bases aligned ({config.base_count_desc})",
-                "modify": lambda x: x * config.base_count_multiplier,
-                "shared_key": "base_count",
-                "scale": "YlGn",
-            },
+        headers_base = OrderedDict()
+        headers_base["Average percent identity"] = {
+            "title": "Mean Identity",
+            "description": "Average percent identity",
+            "max": 100,
+            "suffix": "%",
+            "scale": "YlGn",
+            "hidden": True,
+        }
+        headers_base["Active channels"] = {
+            "title": "Active channels",
+            "description": "Active channels",
+            "scale": "YlGn",
+        }
+        headers_base["Mean read length"] = {
+            "title": f"Mean length ({config.base_count_prefix})",
+            "description": f"Mean read length ({config.base_count_desc})",
+            "suffix": "bp",
+            "scale": "YlGn",
+            "modify": lambda x: x * config.base_count_multiplier,
+            "shared_key": "base_count",
+            "hidden": True,
+        }
+        headers_base["Mean read quality"] = {
+            "title": "Mean Qual",
+            "description": "Mean read quality (Phred scale)",
+            "scale": "YlGn",
+            "shared_key": "phred_score",
+            "hidden": True,
+        }
+        headers_base["Median percent identity"] = {
+            "title": "Median Identity",
+            "description": "Median percent identity",
+            "min": 0,
+            "max": 100,
+            "suffix": "%",
+            "scale": "YlGn",
+        }
+        headers_base["Median read length"] = {
+            "title": f"Median length ({config.base_count_prefix})",
+            "description": f"Median read length ({config.base_count_desc})",
+            "suffix": "bp",
+            "modify": lambda x: x * config.base_count_multiplier,
+            "shared_key": "base_count",
+            "scale": "YlGn",
+            "hidden": True,
+        }
+        headers_base["Median read quality"] = {
+            "title": "Median Qual",
+            "description": "Median read quality (Phred scale)",
+            "shared_key": "phred_score",
+            "scale": "YlGn",
+        }
+        headers_base["Number of reads"] = {
+            "title": f"# Reads ({config.long_read_count_prefix})",
+            "description": f"Number of reads ({config.long_read_count_desc})",
+            "modify": lambda x: x * config.long_read_count_multiplier,
+            "shared_key": "long_read_count",
+            "scale": "YlGn",
+        }
+        headers_base["Read length N50"] = {
+            "title": "Read N50",
+            "description": "Read length N50",
+            "format": "{:,g}",
+            "suffix": " bp",
+            "scale": "YlGn",
+        }
+        headers_base["Total bases"] = {
+            "title": f"Total Bases ({config.base_count_prefix})",
+            "description": f"Total bases ({config.base_count_desc})",
+            "modify": lambda x: x * config.base_count_multiplier,
+            "shared_key": "base_count",
+            "scale": "YlGn",
+        }
+        headers_base["Total bases aligned"] = {
+            "title": f"Aligned Bases ({config.base_count_prefix})",
+            "description": f"Total bases aligned ({config.base_count_desc})",
+            "modify": lambda x: x * config.base_count_multiplier,
+            "shared_key": "base_count",
+            "scale": "YlGn",
         }
         # Find all columns to add to the table"
         header_keys = set()
         for d in self.nanostat_data.values():
-            header_keys.update({k for k in d.keys()})
+            header_keys.update({k for k in d.keys() if not k.startswith("&gt;")})
 
-        # table_keys = list(next(iter(self.nanostat_data.values())).keys())
-        default_stat_source = self._stat_types[0]
+        # Add the stat_type suffix
+        headers = OrderedDict()
+        for k in self._KEYS_NUM + self._KEYS_READ_Q:
+            key = self._key_fmt.format(k, stat_type)
+            if key in header_keys:
+                headers[key] = headers_base.get(k, dict()).copy()
 
-        headers = dict()
-        for placement_idx, k in enumerate(self._KEYS_NUM + self._KEYS_READ_Q):
-            first_type_key = self._key_fmt.format(k, default_stat_source)
-            for stat_type_idx, stat_type in enumerate(self._stat_types):
-                key = self._key_fmt.format(k, stat_type)
-                if key in header_keys:
-                    headers[key] = headers_base.get(k, dict()).copy()
-                    headers[key]["placement"] = 1000.0 + placement_idx
+        # Add the report section
+        self.add_section(
+            name="{} stats".format(stat_type.replace("_", " ").title()),
+            anchor=f"nanostat_{stat_type}_stats",
+            plot=table.plot(self.nanostat_data, headers),
+        )
 
-                    if "title" in headers[key]:
-                        headers[key]["title"] += f" ({stat_type})"
-                    # Hide columns from sequencing_summary if alignment summary available.
-                    visible = (stat_type_idx == 0) or (first_type_key not in headers)
-                    visible &= not key.startswith("&gt;")
-                    headers[key]["hidden"] = headers[key].get("hidden", False) or (visible == False)
-
-        self.general_stats_addcols(self.nanostat_data, headers)
-
-    def nanostat_alignment_plot(self):
-        """Make the HighCharts HTML to plot the alignment rates"""
+    def reads_by_quality_plot(self):
+        """Make the HighCharts HTML to plot the reads by quality"""
 
         def _get_total_reads(data_dict):
             stat_type = self._stat_types[0]
@@ -254,8 +254,13 @@ class MultiqcModule(BaseMultiqcModule):
             "rest": "&gt;Q15",
         }
         for s_name, data_dict in self.nanostat_data.items():
-            bar_data[s_name] = {}
             reads_total, stat_type = _get_total_reads(data_dict)
+            if s_name in bar_data and stat_type == "aligned":
+                log.debug("Sample '{s_name}' duplicated in the quality plot - ignoring aligned data")
+                continue
+            elif s_name in bar_data and stat_type == "seq summary":
+                log.debug("Sample '{s_name}' duplicated in the quality plot - overwriting with seq summary data")
+            bar_data[s_name] = {}
 
             prev_reads = reads_total
             for k, range_name in _range_names.items():
@@ -265,25 +270,40 @@ class MultiqcModule(BaseMultiqcModule):
 
                     bar_data[s_name][range_name] = prev_reads - reads_gt
 
-                    assert (
-                        bar_data[s_name][range_name] >= 0
-                    ), f"Error on {s_name} {range_name} {data_key} . Negative number of reads"
+                    if bar_data[s_name][range_name] < 0:
+                        log.error(f"Error on {s_name} {range_name} {data_key} . Negative number of reads")
                     prev_reads = reads_gt
                 else:
                     data_key = self._key_fmt.format("&gt;Q15", stat_type)
                     bar_data[s_name][range_name] = data_dict[data_key]
 
-        keys = OrderedDict()
-
-        for k in _range_names.values():
-            keys[k] = {"name": "Reads " + k}
+        cats = OrderedDict()
+        keys = reversed(list(_range_names.values()))
+        colours = mqc_colour.mqc_colour_scale("RdYlGn-rev", 0, len(_range_names))
+        for idx, k in enumerate(keys):
+            cats[k] = {"name": "Reads " + k, "color": colours.get_colour(idx, lighten=1)}
 
         # Config for the plot
         config = {
             "id": "nanostat_quality_dist",
-            "title": f"NanoStat: Reads by quality ({stat_type})",
+            "title": f"NanoStat: Reads by quality",
             "ylab": "# Reads",
             "cpswitch_counts_label": "Number of Reads",
         }
 
-        return bargraph.plot(bar_data, keys, config)
+        # Add the report section
+        self.add_section(
+            name="Reads by quality",
+            anchor=f"nanostat_read_qualities",
+            description="Read counts categorised by read quality (phred score).",
+            helptext="""
+                Sequencing machines assign each generated read a quality score using the
+                [Phred scale](https://en.wikipedia.org/wiki/Phred_quality_score).
+                The phred score represents the liklelyhood that a given read contains errors.
+                So, high quality reads have a high score.
+
+                Data may come from NanoPlot reports generated with sequencing summary files or alignment stats.
+                If a sample has data from both, the sequencing summary is preferred.
+            """,
+            plot=bargraph.plot(bar_data, cats, config),
+        )
