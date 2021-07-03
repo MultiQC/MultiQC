@@ -221,6 +221,13 @@ class MultiqcModule(BaseMultiqcModule):
             key = self._key_fmt.format(k, stat_type)
             headers[key] = headers_base.get(k, dict()).copy()
 
+        # Table config
+        table_config = {
+            "namespace": "NanoStat",
+            "id": "nanostat_{}_stats_table".format(stat_type.replace(" ", "_")),
+            "table_title": f"NanoStat {stat_type}",
+        }
+
         # Add the report section
         description = ""
         if stat_type == "aligned":
@@ -229,9 +236,9 @@ class MultiqcModule(BaseMultiqcModule):
             description = "NanoStat statistics from albacore or guppy summary files."
         self.add_section(
             name="{} stats".format(stat_type.replace("_", " ").capitalize()),
-            anchor=f"nanostat_{stat_type}_stats",
+            anchor="nanostat_{}_stats".format(stat_type.replace(" ", "_")),
             description=description,
-            plot=table.plot(self.nanostat_data, headers),
+            plot=table.plot(self.nanostat_data, headers, table_config),
         )
 
     def reads_by_quality_plot(self):
