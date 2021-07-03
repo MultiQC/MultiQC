@@ -48,3 +48,33 @@ general_stats_coverage_hidden:
   - 20
   - 200
 ```
+
+For the per-contig coverage plot, you can include and exclude contigs based on name or pattern.
+
+For example, you could add the following to your MultiQC config file:
+
+```yaml
+mosdepth_config:
+  include_contigs:
+    - "chr*"
+  exclude_contigs:
+    - "*_alt"
+    - "*_decoy"
+    - "*_random"
+    - "chrUn*"
+    - "HLA*"
+    - "chrM"
+    - "chrEBV"
+```
+
+Note that exclusion superseeds inclusion for the contig filters.
+
+If you want to see what is being excluded, you can set `show_excluded_debug_logs` to `True`:
+
+```yaml
+mosdepth_config:
+  show_excluded_debug_logs: True
+```
+
+This will then print a debug log message (use `multiqc -v`) for each excluded contig.
+This is disabled by default as there can be very many in some cases.
