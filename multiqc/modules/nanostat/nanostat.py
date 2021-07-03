@@ -5,6 +5,7 @@
 from __future__ import print_function
 from collections import OrderedDict
 import logging
+import jinja2
 
 from multiqc import config
 from multiqc.plots import bargraph
@@ -73,12 +74,15 @@ class MultiqcModule(BaseMultiqcModule):
         # Quality distribution Plot
         self.add_section(plot=self.nanostat_alignment_plot())
 
-    def parse_nanostat_log(self, logfile):
-        import jinja2
+    def parse_nanostat_log(self, f):
+        """Parse output from NanoStat
 
-        s_name = logfile["s_name"]
+        Note: Tool can be run in two different modes, giving two variants to the output.
+        To avoid overwriting keys from different modes, keys are given a suffix.
+        """
+
         nano_stats = {}
-        for line in logfile["f"]:
+        for line in f["f"]:
 
             line = jinja2.escape(line)
             parts = line.strip().split(":")
@@ -100,21 +104,20 @@ class MultiqcModule(BaseMultiqcModule):
         elif "Active channels" in nano_stats:
             stat_type = "seq summary"
         else:
-            stat_type = "unrecognized"
-            log.debug("%s datatype with key %s", stat_type, str(logfile))
-            log.debug(str(nano_stats))
+            log.debug(f"Did not recognise NanoStat file '{f['fn']}' - skipping")
+            return
 
         out_d = {self._key_fmt.format(k, stat_type): v for k, v in nano_stats.items()}
 
         # Warn if we find overlapping data for the same sample
-        if logfile["s_name"] in self.nanostat_data and not set(self.nanostat_data[s_name].keys()).isdisjoint(
-            out_d.keys()
-        ):
-            log.debug("Duplicate sample data found! Overwriting: {}".format(logfile["s_name"]))
+        if f["s_name"] in self.nanostat_data:
+            # Only if the same has some keys in common
+            if not set(self.nanostat_data[f["s_name"]].keys()).isdisjoint(out_d.keys()):
+                log.debug("Duplicate sample data found! Overwriting: {}".format(f["s_name"]))
 
-        self.nanostat_data.setdefault(s_name, dict()).update(out_d)
+        self.nanostat_data.setdefault(f["s_name"], {}).update(out_d)
 
-        self.add_data_source(logfile, s_name)
+        self.add_data_source(f)
 
     def nanostat_general_stats_table(self):
         """Take the parsed stats from the Kallisto report and add it to the
@@ -125,7 +128,6 @@ class MultiqcModule(BaseMultiqcModule):
                 "title": "Mean Identity",
                 "description": "Average percent identity",
                 "max": 100,
-                # "min": 0,
                 "suffix": "%",
                 "scale": "YlGn",
                 "hidden": True,
@@ -133,78 +135,73 @@ class MultiqcModule(BaseMultiqcModule):
             "Active channels": {
                 "title": "Active channels",
                 "description": "Active channels",
-                "format": "{:,g}",
-                # "min": 0,
                 "scale": "YlGn",
             },
             "Mean read length": {
-                "title": "Mean length",
-                "description": "Mean read length",
-                # "min": 0,
-                "format": "{:,g}",
+                "title": f"Mean length ({config.base_count_prefix})",
+                "description": f"Mean read length ({config.base_count_desc})",
                 "suffix": "bp",
                 "scale": "YlGn",
+                "modify": lambda x: x * config.base_count_multiplier,
+                "shared_key": "base_count",
                 "hidden": True,
             },
             "Mean read quality": {
                 "title": "Mean Qual",
                 "description": "Mean read quality (Phred scale)",
-                # "min": 0,
                 "scale": "YlGn",
+                "shared_key": "phred_score",
                 "hidden": True,
             },
             "Median percent identity": {
                 "title": "Median Identity",
                 "description": "Median percent identity",
+                "min": 0,
                 "max": 100,
-                # "min": 0,
                 "suffix": "%",
                 "scale": "YlGn",
             },
             "Median read length": {
-                "title": "Median length",
-                "description": "Median read length",
-                # "min": 0,
+                "title": f"Median length ({config.base_count_prefix})",
+                "description": f"Median read length ({config.base_count_desc})",
                 "suffix": "bp",
-                "format": "{:,g}",
+                "modify": lambda x: x * config.base_count_multiplier,
+                "shared_key": "base_count",
                 "scale": "YlGn",
                 "hidden": True,
             },
             "Median read quality": {
                 "title": "Median Qual",
                 "description": "Median read quality (Phred scale)",
-                # "min": 0,
+                "shared_key": "phred_score",
                 "scale": "YlGn",
             },
             "Number of reads": {
-                "title": "# reads",
-                "description": "Number of reads",
-                "format": "{:,g}",
-                # "min": 0,
+                "title": f"# Reads ({config.long_read_count_prefix})",
+                "description": f"Number of reads ({config.long_read_count_desc})",
+                "modify": lambda x: x * config.long_read_count_multiplier,
+                "shared_key": "long_read_count",
                 "scale": "YlGn",
             },
             "Read length N50": {
                 "title": "Read N50",
                 "description": "Read length N50",
                 "format": "{:,g}",
-                # "min": 0,
                 "suffix": "bp",
                 "scale": "YlGn",
             },
             "Total bases": {
-                "title": "Total Bases",
-                "description": "Total bases",
-                "format": "{:,g}",
-                # "min": 0,
-                "suffix": "bp",
+                "title": f"Total Bases ({config.base_count_prefix})",
+                "description": f"Total bases ({config.base_count_desc})",
+                "modify": lambda x: x * config.base_count_multiplier,
+                "shared_key": "base_count",
                 "scale": "YlGn",
             },
             "Total bases aligned": {
-                "title": "Aligned Bases",
-                "description": "Total bases aligned",
-                "format": "{:,g}",
-                # "min": 0,
-                "suffix": "bp",
+                "title": f"Aligned Bases ({config.base_count_prefix})",
+                "description": f"Total bases aligned ({config.base_count_desc})",
+                "modify": lambda x: x * config.base_count_multiplier,
+                "shared_key": "base_count",
                 "scale": "YlGn",
             },
         }
