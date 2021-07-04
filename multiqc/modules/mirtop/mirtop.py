@@ -90,14 +90,14 @@ class MultiqcModule(BaseMultiqcModule):
 
         content = json.loads(f["f"])
         for s_name in content.get("metrics", {}).keys():
-            s_name = self.clean_s_name(s_name, f)
+            cleaned_s_name = self.clean_s_name(s_name, f)
             ## Check for sample name duplicates
-            if s_name in self.mirtop_data:
-                log.debug("Duplicate sample name found! Overwriting: {}".format(s_name))
+            if cleaned_s_name in self.mirtop_data:
+                log.debug("Duplicate sample name found! Overwriting: {}".format(cleaned_s_name))
             parsed_data = content["metrics"][s_name]
             parsed_data["read_count"] = parsed_data["isomiR_sum"] + parsed_data["ref_miRNA_sum"]
             parsed_data["isomiR_perc"] = (parsed_data["isomiR_sum"] / parsed_data["read_count"]) * 100
-            self.mirtop_data[s_name] = parsed_data
+            self.mirtop_data[cleaned_s_name] = parsed_data
 
     def aggregate_snps_in_samples(self):
         """Aggregate info for iso_snp isomiRs (for clarity). "Mean" section will be recomputed"""

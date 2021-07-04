@@ -41,6 +41,9 @@ jobs:
       - name: All modules / Custom report filename
         run: multiqc --lint test_data/data/modules/ --filename full_report.html
 
+      - name: All modules / Log filename as s_name, no cleaning
+        run: multiqc --lint test_data/data/modules/ --fullnames --fn_as_s_name
+
       - name: Filter out all filenames (confirm no report)
         run: |
           multiqc test_data/data/modules/ --filename all_ignored.html --ignore-samples '*'

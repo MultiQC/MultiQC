@@ -132,9 +132,8 @@ class MultiqcModule(BaseMultiqcModule):
         for l in f["f"].splitlines():
             s = l.strip().split("\t")
             if s_names is None:
-                s_names = s
+                s_names = [self.clean_s_name(s_name, f) for s_name in s]
                 for s_name in s_names:
-                    s_name = self.clean_s_name(s_name, f)
                     data[s_name] = dict()
             else:
                 for i, v in enumerate(s):
