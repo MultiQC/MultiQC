@@ -90,6 +90,9 @@ logger = config.logger
 )
 @click.option("--ignore-symlinks", "ignore_symlinks", is_flag=True, help="Ignore symlinked directories and files")
 @click.option(
+    "--fn_as_s_name", "use_filename_as_sample_name", is_flag=True, help="Use the log filename as the sample name"
+)
+@click.option(
     "--replace-names",
     "replace_names",
     type=click.Path(exists=True, readable=True),
@@ -188,6 +191,7 @@ def run_cli(
     outdir,
     ignore,
     ignore_samples,
+    use_filename_as_sample_name,
     replace_names,
     sample_names,
     sample_filters,
@@ -246,6 +250,7 @@ def run_cli(
         outdir=outdir,
         ignore=ignore,
         ignore_samples=ignore_samples,
+        use_filename_as_sample_name=use_filename_as_sample_name,
         replace_names=replace_names,
         sample_names=sample_names,
         sample_filters=sample_filters,
@@ -291,6 +296,7 @@ def run(
     outdir=None,
     ignore=(),
     ignore_samples=(),
+    use_filename_as_sample_name=False,
     replace_names=None,
     sample_names=None,
     sample_filters=None,
@@ -386,9 +392,9 @@ def run(
     config.analysis_dir = analysis_dir
     if outdir is not None:
         config.output_dir = outdir
-    if no_clean_sname:
-        config.fn_clean_sample_names = False
-        logger.info("Not cleaning sample names")
+    if use_filename_as_sample_name:
+        config.use_filename_as_sample_name = True
+        logger.info("Using log filenames for sample names")
     if make_data_dir:
         config.make_data_dir = True
     if no_data_dir:
@@ -416,6 +422,9 @@ def run(
         config.megaqc_upload = False
     else:
         config.megaqc_upload = True
+    if no_clean_sname:
+        config.fn_clean_sample_names = False
+        logger.info("Not cleaning sample names")
     if replace_names:
         config.load_replace_names(replace_names)
     if sample_names:

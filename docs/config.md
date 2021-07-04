@@ -226,9 +226,10 @@ they can be overwritten in `<installation_dir>/multiqc_config.yaml` or
 `~/.multiqc_config.yaml`. So if you always rename your `_fastqc.zip` files to
 `_qccheck.zip`, MultiQC can still work.
 
-To see the default search patterns, see the
-[`search_patterns.yaml`](https://github.com/ewels/MultiQC/blob/master/multiqc/utils/search_patterns.yaml)
-file. Copy the section for the program that you want to modify and paste this
+To see the default search patterns, check a given module in the MultiQC documentation.
+Each module has its search patterns listed beneath any free-text docs.
+Alternatively, see the [`search_patterns.yaml`](https://github.com/ewels/MultiQC/blob/master/multiqc/utils/search_patterns.yaml)
+file in the MultiQC source code. Copy the section for the program that you want to modify and paste this
 into your config file. Make sure you make it part of a dictionary called `sp`
 as follows:
 
@@ -241,6 +242,40 @@ sp:
 Search patterns can specify a filename match (`fn`) or a file contents
 match (`contents`), as well as a number of additional search keys.
 See [below](#step-1-find-log-files) for the full reference.
+
+## Using log filenames as sample names
+
+A substantial number of MultiQC modules take the sample name identifiers that you
+see in the report from the file contents - typically the filename of the input file.
+This is because log files can often be called things like `mytool.log` or even concatenated.
+Using the input filename used by the tool is typically safer and more consistent across modules.
+
+However, sometimes this does not work well. For example, if the input filename is not
+relevant (eg. using a temporary file or FIFO, process substitution or stdin etc.).
+In these cases your log files may have useful filenames but MultiQC will not be using them.
+
+To force MultiQC to use the log filename as the sample identifier, you can use the
+`--fn_as_s_name` command line flag or set the `use_filename_as_sample_name`:
+
+```yaml
+use_filename_as_sample_name: true
+```
+
+This affects all modules and all search patterns. If you want to limit this to just
+one or more specific search patterns, you can do by giving a list:
+
+```yaml
+use_filename_as_sample_name:
+  - cutadapt
+  - picard/gcbias
+  - picard/markdups
+```
+
+Note that this should be the search pattern key (see above) and not just the module name.
+This is because some modules search for multiple files.
+
+The log filename will still be cleaned. To use the raw log filenames,
+combine with the `--fullnames`/`-s` flag or `fn_clean_sample_names` config option described above.
 
 ## Ignoring Files
 

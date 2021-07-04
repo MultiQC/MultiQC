@@ -6,6 +6,8 @@
 
 - New interactive slider controls for controlling heatmap colour scales ([#1427](https://github.com/ewels/MultiQC/issues/1427))
 - Added new `--replace-names` / config `sample_names_replace` option to replace sample names during report generation
+- Added `use_filename_as_sample_name` config option / `--fn_as_s_name` command line flag ([#949](https://github.com/ewels/MultiQC/issues/949), [#890](https://github.com/ewels/MultiQC/issues/890), [#864](https://github.com/ewels/MultiQC/issues/864))
+  - Forces modules to use the log filename for the sample identifier, even if the module usually takes this from the file contents
 
 ### MultiQC updates
 

@@ -136,6 +136,10 @@ custom_content:
 # Option to disable sample name cleaning if desired
 fn_clean_sample_names: true
 
+# Option to use the filename as the sample name if desired
+# Set to True to apply for all modules. Define a list of search pattern keys to be specific.
+use_filename_as_sample_name: false
+
 # Used for cleaning sample names. Should be strings.
 # NB: These are removed in order!
 fn_clean_exts:
@@ -240,6 +244,7 @@ fn_clean_exts:
   - "_vep"
   - "ccs"
   - "_NanoStats"
+  - ".cutadapt"
 
 # These are removed after the above, only if sample names
 # start or end with this string. Again, removed in order.

@@ -136,7 +136,8 @@ class BaseMultiqcModule(object):
                     )
 
             # Make a sample name from the filename
-            f["s_name"] = self.clean_s_name(f["fn"], f["root"])
+            f["sp_key"] = sp_key
+            f["s_name"] = self.clean_s_name(f["fn"], f)
             if filehandles or filecontents:
                 try:
                     # Custom content module can now handle image files
@@ -237,7 +238,7 @@ class BaseMultiqcModule(object):
             }
         )
 
-    def clean_s_name(self, s_name, root):
+    def clean_s_name(self, s_name, f=None, root=None, filename=None, seach_pattern_key=None):
         """Helper function to take a long file name and strip it
         back to a clean sample name. Somewhat arbitrary.
         :param s_name: The sample name to clean
@@ -246,6 +247,34 @@ class BaseMultiqcModule(object):
         :return: The cleaned sample name, ready to be used
         """
         s_name_original = s_name
+
+        # Backwards compatability - if f is a string, it's probably the root (this used to be the second argument)
+        if isinstance(f, str):
+            root = f
+            f = None
+
+        # Set string variables from f if it was a dict from find_log_files()
+        if isinstance(f, dict):
+            if "root" in f and root is None:
+                root = f["root"]
+            if "fn" in f and filename is None:
+                filename = f["fn"]
+            if "sp_key" in f and seach_pattern_key is None:
+                seach_pattern_key = f["sp_key"]
+
+        # For modules setting s_name from file contents, set s_name back to the filename
+        # (if wanted in the config)
+        if filename is not None and (
+            config.use_filename_as_sample_name is True
+            or (
+                isinstance(config.use_filename_as_sample_name, list)
+                and seach_pattern_key is not None
+                and seach_pattern_key in config.use_filename_as_sample_name
+            )
+        ):
+            s_name = filename
+
+        # Set root to empty string if not known
         if root is None:
             root = ""
 
