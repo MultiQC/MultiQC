@@ -228,7 +228,7 @@ class bamPEFragmentSizeTableMixin:
                 s_name = None
                 for idx, h in enumerate(headers):
                     if idx == 0:
-                        s_name = self.clean_s_name(cols[0], f["root"])
+                        s_name = self.clean_s_name(cols[0], f)
                         if s_name in d:
                             log.debug("Replacing duplicate sample {}.".format(s_name))
                         d[s_name] = OrderedDict()

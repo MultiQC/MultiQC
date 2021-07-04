@@ -75,7 +75,7 @@ class MultiqcModule(BaseMultiqcModule):
                     return None
                 header = s[1:]
             else:
-                s_name = self.clean_s_name(s[0], f["root"])
+                s_name = self.clean_s_name(s[0], f)
                 if s_name.startswith("HiCUP_output/"):
                     s_name = s_name[13:]
                 parsed_data = {}

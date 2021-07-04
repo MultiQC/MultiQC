@@ -72,7 +72,7 @@ class MultiqcModule(BaseMultiqcModule):
             return None
 
         # Get sample name from JSON first
-        s_name = self.clean_s_name(parsed_json["metadata"]["sample_name"], f["root"])
+        s_name = self.clean_s_name(parsed_json["metadata"]["sample_name"], f)
         self.add_data_source(f, s_name)
 
         metrics_dict = parsed_json["metrics"]

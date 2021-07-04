@@ -24,12 +24,12 @@ class MultiqcModule(BaseMultiqcModule):
 
         self.data = {}
 
-        for summary_file in self.find_log_files("disambiguate"):
-            summ_data = self.parse_summary(summary_file["f"])
+        for f in self.find_log_files("disambiguate"):
+            summ_data = self.parse_summary(f["f"])
 
             for sample, counts in summ_data.items():
                 # Clean sample name.
-                sample = self.clean_s_name(sample, summary_file["root"])
+                sample = self.clean_s_name(sample, f)
 
                 # Check for duplicates.
                 if sample in self.data:
@@ -37,7 +37,7 @@ class MultiqcModule(BaseMultiqcModule):
 
                 # Add to data and add data source.
                 self.data[sample] = counts
-                self.add_data_source(summary_file, s_name=sample)
+                self.add_data_source(f, s_name=sample)
 
         self.data = self.ignore_samples(self.data)
 

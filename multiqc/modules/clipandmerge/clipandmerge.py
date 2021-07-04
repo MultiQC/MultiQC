@@ -72,9 +72,9 @@ class MultiqcModule(BaseMultiqcModule):
                     parsed_data[k] = r_search.group(1)
 
         if len(parsed_data) > 0:
-            s_name = self.clean_s_name(os.path.basename(f["root"]), f["root"])
+            s_name = self.clean_s_name(os.path.basename(f["root"]), f)
             if "identifier" in parsed_data:
-                s_name = self.clean_s_name(parsed_data["identifier"], f["root"])
+                s_name = self.clean_s_name(parsed_data["identifier"], f)
             self.clipandmerge_data[s_name] = parsed_data
 
     def clipandmerge_general_stats_table(self):

@@ -113,7 +113,7 @@ class MultiqcModule(BaseMultiqcModule):
 
         # Clean up the sample name
         s_name = self.extract_sample_name(f["fn"])
-        s_name = self.clean_s_name(s_name, f["root"])
+        s_name = self.clean_s_name(s_name, f)
 
         # Add to the data sources file
         self.add_data_source(f, s_name)

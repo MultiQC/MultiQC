@@ -60,7 +60,7 @@ class plotCorrelationMixin:
                 continue
             else:
                 c = str(cols[0]).strip("'")
-                s_name = self.clean_s_name(c, f["root"])
+                s_name = self.clean_s_name(c, f)
                 samples.append(s_name)
                 d[s_name] = []
                 for c in cols[1 : len(cols)]:

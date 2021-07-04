@@ -67,7 +67,7 @@ class MultiqcModule(BaseMultiqcModule):
                 if match:
                     # backtrack from the end to the first space
                     s_name = match.group().split()[-1]
-                    s_name = self.clean_s_name(s_name, f["root"])
+                    s_name = self.clean_s_name(s_name, f)
                     if s_name in self.trimmomatic:
                         log.debug("Duplicate sample name found! Overwriting: {}".format(s_name))
                 else:
@@ -77,7 +77,7 @@ class MultiqcModule(BaseMultiqcModule):
                     if match:
                         # backtrack from the end to the first space
                         s_name = match.group().split()[-1]
-                        s_name = self.clean_s_name(s_name, f["root"])
+                        s_name = self.clean_s_name(s_name, f)
                         if s_name in self.trimmomatic:
                             log.debug("Duplicate sample name found! Overwriting: {}".format(s_name))
 

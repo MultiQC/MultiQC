@@ -82,7 +82,7 @@ class MultiqcModule(BaseMultiqcModule):
             # Attempt in vain to find original hisat2 command, logged by another program
             hscmd = re.search(r"hisat2 .+ -[1U] ([^\s,]+)", l)
             if hscmd:
-                s_name = self.clean_s_name(hscmd.group(1), f["root"])
+                s_name = self.clean_s_name(hscmd.group(1), f)
                 log.debug("Found a HISAT2 command, updating sample name to '{}'".format(s_name))
 
             # Run through all regexes

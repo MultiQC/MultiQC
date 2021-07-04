@@ -90,7 +90,7 @@ class MultiqcModule(BaseMultiqcModule):
 
         content = json.loads(f["f"])
         for s_name in content.get("metrics", {}).keys():
-            s_name = self.clean_s_name(s_name, f["root"])
+            s_name = self.clean_s_name(s_name, f)
             ## Check for sample name duplicates
             if s_name in self.mirtop_data:
                 log.debug("Duplicate sample name found! Overwriting: {}".format(s_name))

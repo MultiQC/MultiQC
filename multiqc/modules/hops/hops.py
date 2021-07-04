@@ -55,7 +55,7 @@ class MultiqcModule(BaseMultiqcModule):
 
         # Convert JSON to dict for easier manipulation
         for s in parsed_json:
-            s_name = self.clean_s_name(s, f["root"])
+            s_name = self.clean_s_name(s, f)
             if s_name in self.hops_data:
                 log.debug("Duplicate sample name found! Overwriting: {}".format(s_name))
             self.add_data_source(f, s_name=s_name)

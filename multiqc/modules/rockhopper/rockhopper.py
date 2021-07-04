@@ -106,14 +106,14 @@ class MultiqcModule(BaseMultiqcModule):
                     results = {name: 0 for name in stats_index}
 
                 s_name = line.split(":", 1)[1].strip()
-                s_name = self.clean_s_name(s_name, f["root"])
+                s_name = self.clean_s_name(s_name, f)
 
             elif line.startswith("Aligning sequencing reads from files:"):
                 if s_name and s_name not in results_by_s_name:
                     results_by_s_name[s_name] = results
                     results = {name: 0 for name in stats_index}
                 s_name = lines[i + 1].strip()
-                s_name = self.clean_s_name(s_name, f["root"])
+                s_name = self.clean_s_name(s_name, f)
 
             # Get total number of reads read by rockhopper
             if line.startswith("Total reads:"):

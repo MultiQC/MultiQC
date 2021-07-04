@@ -56,10 +56,10 @@ def parse_reports(self):
                 continue
 
             # Clean the sammple names
-            row["LEFT_SAMPLE"] = self.clean_s_name(row["LEFT_SAMPLE"], f["root"])
-            row["LEFT_GROUP_VALUE"] = self.clean_s_name(row["LEFT_GROUP_VALUE"], f["root"])
-            row["RIGHT_SAMPLE"] = self.clean_s_name(row["RIGHT_SAMPLE"], f["root"])
-            row["RIGHT_GROUP_VALUE"] = self.clean_s_name(row["RIGHT_GROUP_VALUE"], f["root"])
+            row["LEFT_SAMPLE"] = self.clean_s_name(row["LEFT_SAMPLE"], f)
+            row["LEFT_GROUP_VALUE"] = self.clean_s_name(row["LEFT_GROUP_VALUE"], f)
+            row["RIGHT_SAMPLE"] = self.clean_s_name(row["RIGHT_SAMPLE"], f)
+            row["RIGHT_GROUP_VALUE"] = self.clean_s_name(row["RIGHT_GROUP_VALUE"], f)
 
             # Set the cli options of interest for this file
             row["LOD_THRESHOLD"] = lod_threshold

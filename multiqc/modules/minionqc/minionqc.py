@@ -34,7 +34,7 @@ class MultiqcModule(BaseMultiqcModule):
         for f in self.find_log_files("minionqc", filehandles=True):
 
             # get sample name
-            s_name = self.clean_s_name(os.path.basename(f["root"]), os.path.dirname(f["root"]))
+            s_name = self.clean_s_name(os.path.basename(f["root"]), f, root=os.path.dirname(f["root"]))
 
             # parses minionqc summary data
             parsed_dict = self.parse_minionqc_report(s_name, f["f"])

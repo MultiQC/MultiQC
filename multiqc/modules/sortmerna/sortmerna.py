@@ -69,7 +69,7 @@ class MultiqcModule(BaseMultiqcModule):
         for l in f["f"]:
             if "Reads file" in l:
                 parts = re.split(":|=", l)
-                s_name = self.clean_s_name(parts[-1], f["root"])
+                s_name = self.clean_s_name(parts[-1], f)
                 self.sortmerna[s_name] = dict()
             if "Results:" in l and not post_results_start:  # old versions
                 post_results_start = True

@@ -128,7 +128,7 @@ class plotProfileMixin:
                     else:
                         break
             else:
-                s_name = self.clean_s_name(cols[0], f["root"])
+                s_name = self.clean_s_name(cols[0], f)
                 d[s_name] = dict()
 
                 # Convert the bins into genomic coordinates if we can

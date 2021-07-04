@@ -47,7 +47,7 @@ def parse_reports(self):
 
         lines = iter(f["f"])
 
-        clean_fn = lambda n: self.clean_s_name(n, f["root"])
+        clean_fn = lambda n: self.clean_s_name(n, f)
         s_name = read_sample_name(lines, clean_fn, "CollectQualityYieldMetrics")
 
         if s_name is None:

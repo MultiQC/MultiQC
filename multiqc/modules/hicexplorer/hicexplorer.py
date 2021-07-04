@@ -28,7 +28,7 @@ class MultiqcModule(BaseMultiqcModule):
                 parsed_data = self.parse_logs(f["f"])
                 # Build the sample ID
                 s_name = "{}_{}_{}".format(f["root"], f["s_name"], parsed_data["File"])
-                s_name = self.clean_s_name(s_name, f["root"])
+                s_name = self.clean_s_name(s_name, f)
                 # Save results
                 if s_name in self.hicexplorer_data:
                     log.debug("Duplicate sample name found! Overwriting: {}".format(s_name))

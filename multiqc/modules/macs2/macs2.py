@@ -65,7 +65,7 @@ class MultiqcModule(BaseMultiqcModule):
                     match = re.search(r, line)
                     if match:
                         if k == "name":
-                            s_name = self.clean_s_name(match.group(1).strip(), f["root"])
+                            s_name = self.clean_s_name(match.group(1).strip(), f)
                         else:
                             parsed_data[k] = float(match.group(1).strip())
             elif len(line) > 0 and "start" not in line:

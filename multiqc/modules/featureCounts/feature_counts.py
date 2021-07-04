@@ -95,7 +95,7 @@ class MultiqcModule(BaseMultiqcModule):
         for idx, f_name in enumerate(file_names):
 
             # Clean up sample name
-            s_name = self.clean_s_name(f_name, f["root"])
+            s_name = self.clean_s_name(f_name, f)
 
             # Reorganised parsed data for this sample
             # Collect total count number

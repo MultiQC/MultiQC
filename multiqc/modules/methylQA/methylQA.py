@@ -56,7 +56,7 @@ class MultiqcModule(BaseMultiqcModule):
         # Get s_name from first input file if possible
         s_name = f["s_name"]
         if f["f"][0].startswith("files provided"):
-            s_name = self.clean_s_name(os.path.basename(f["f"][0]))
+            s_name = self.clean_s_name(os.path.basename(f["f"][0]), f)
 
         parsed_data = {}
         regexes = {

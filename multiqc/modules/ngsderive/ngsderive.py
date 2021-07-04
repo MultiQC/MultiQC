@@ -135,11 +135,10 @@ class MultiqcModule(BaseMultiqcModule):
 
     def parse(self, sample_dict, found_file, subcommand, expected_header_count):
         kwargs = self.probe_file_for_dictreader_kwargs(io.StringIO(found_file["f"]), expected_header_count)
-        relevant_items = []
         for row in csv.DictReader(io.StringIO(found_file["f"]), **kwargs):
             if not row.get("File"):
                 continue
-            sample_name = self.clean_s_name(row.get("File"), found_file["root"])
+            sample_name = self.clean_s_name(row.get("File"), found_file)
             if sample_name in sample_dict:
                 log.debug("Duplicate sample name found! Overwriting: {}".format(sample_name))
 

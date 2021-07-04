@@ -64,7 +64,7 @@ class MultiqcModule(BaseMultiqcModule):
 
     def parse_counts_files(self):
         for f in self.find_log_files("lima/counts", filehandles=True):
-            data = self.parse_lima_counts(f["f"], f["root"])
+            data = self.parse_lima_counts(f["f"], f)
             # Check for duplicate samples
             for sample in data:
                 if sample in self.lima_counts:
@@ -73,7 +73,7 @@ class MultiqcModule(BaseMultiqcModule):
             self.lima_counts.update(data)
             self.add_data_source(f)
 
-    def parse_lima_counts(self, file_content, root):
+    def parse_lima_counts(self, file_content, f):
         """Parse lima counts file"""
 
         # The first line is the header
@@ -88,7 +88,7 @@ class MultiqcModule(BaseMultiqcModule):
             first_barcode = data["IdxFirstNamed"]
             second_barcode = data["IdxCombinedNamed"]
             # The format barcode1--barcode2 is also used in
-            sample = self.clean_s_name(f"{first_barcode}--{second_barcode}", root)
+            sample = self.clean_s_name(f"{first_barcode}--{second_barcode}", f)
             counts = data["Counts"]
             mean_score = data["MeanScore"]
             lima_counts[sample] = {"Counts": int(counts), "MeanScore": float(mean_score)}

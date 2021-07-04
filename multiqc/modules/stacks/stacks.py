@@ -124,7 +124,7 @@ class MultiqcModule(BaseMultiqcModule):
         self.cov_data = OrderedDict()
         for f in self.find_log_files("stacks/gstacks"):
             run_name = os.path.dirname(f["root"])
-            s_name = self.clean_s_name(os.path.basename(f["root"]), run_name)
+            s_name = self.clean_s_name(os.path.basename(f["root"]), f, root=run_name)
             try:
                 self.cov_data.update(self.parse_gstacks(f["f"], s_name))
                 num_files += 1
@@ -136,7 +136,7 @@ class MultiqcModule(BaseMultiqcModule):
         self.distribs_snps = OrderedDict()
         for f in self.find_log_files("stacks/populations"):
             run_name = os.path.dirname(f["root"])
-            s_name = self.clean_s_name(os.path.basename(f["root"]), run_name)
+            s_name = self.clean_s_name(os.path.basename(f["root"]), f, root=run_name)
             i, j = self.parse_populations(f["f"], s_name)
             try:
                 self.distribs_loci.update(i)
@@ -149,7 +149,7 @@ class MultiqcModule(BaseMultiqcModule):
         self.sumstats_data = OrderedDict()
         for f in self.find_log_files("stacks/sumstats"):
             run_name = os.path.dirname(f["root"])
-            s_name = self.clean_s_name(os.path.basename(f["root"]), run_name)
+            s_name = self.clean_s_name(os.path.basename(f["root"]), f, root=run_name)
             try:
                 self.sumstats_data.update(self.parse_sumstats(f["f"], s_name))
                 num_files += 1

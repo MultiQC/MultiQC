@@ -69,7 +69,7 @@ class MultiqcModule(BaseMultiqcModule):
             if "bowtie" in l and "q.gz" in l:
                 fqmatch = re.search(r"([^\s,]+\.f(ast)?q.gz)", l)
                 if fqmatch:
-                    s_name = self.clean_s_name(fqmatch.group(1), f["root"])
+                    s_name = self.clean_s_name(fqmatch.group(1), f)
                     log.debug("Found a bowtie command, updating sample name to '{}'".format(s_name))
 
             # End of log, reset in case there is another in this file

@@ -90,7 +90,7 @@ class MultiqcModule(BaseMultiqcModule):
                     new_sample_name = "_".join([sample_name, species_name[idx]])
 
                     # Clean up sample name
-                    new_sample_name = self.clean_s_name(new_sample_name, f["root"])
+                    new_sample_name = self.clean_s_name(new_sample_name, f)
 
                     if new_sample_name in self.sargasso_data.keys():
                         log.debug("Duplicate sample name found! Overwriting: {}".format(new_sample_name))

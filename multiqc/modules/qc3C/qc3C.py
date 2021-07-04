@@ -968,7 +968,7 @@ class MultiqcModule(BaseMultiqcModule):
             log.warning("Could not parse qc3C JSON: '{}'".format(f["fn"]))
             return
 
-        s_name = self.clean_s_name(os.path.basename(f["root"]), os.path.dirname(f["root"]))
+        s_name = self.clean_s_name(os.path.basename(f["root"]), f, root=os.path.dirname(f["root"]))
         if s_name in self.qc3c_data:
             log.debug("Duplicate sample name found! Overwriting: {}".format(f["s_name"]))
 

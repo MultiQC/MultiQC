@@ -45,7 +45,7 @@ class MultiqcModule(BaseMultiqcModule):
 
         # Find and parse unzipped FastQC reports
         for f in self.find_log_files("fastqc/data"):
-            s_name = self.clean_s_name(os.path.basename(f["root"]), os.path.dirname(f["root"]))
+            s_name = self.clean_s_name(os.path.basename(f["root"]), f, root=os.path.dirname(f["root"]))
             self.parse_fastqc_report(f["f"], s_name, f)
 
         # Find and parse zipped FastQC reports
@@ -138,7 +138,7 @@ class MultiqcModule(BaseMultiqcModule):
         # Make the sample name from the input filename if we find it
         fn_search = re.search(r"Filename\s+(.+)", file_contents)
         if fn_search:
-            s_name = self.clean_s_name(fn_search.group(1), f["root"])
+            s_name = self.clean_s_name(fn_search.group(1), f)
 
         if s_name in self.fastqc_data.keys():
             log.debug("Duplicate sample name found! Overwriting: {}".format(s_name))

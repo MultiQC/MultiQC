@@ -106,7 +106,7 @@ def parse_genome_results(self, f):
         return None
 
     # Get a nice sample name
-    s_name = self.clean_s_name(d["bam_file"], f["root"])
+    s_name = self.clean_s_name(d["bam_file"], f)
 
     # Add to general stats table & calculate a nice % aligned
     try:

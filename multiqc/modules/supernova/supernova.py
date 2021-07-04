@@ -198,7 +198,7 @@ class MultiqcModule(BaseMultiqcModule):
         for f in self.find_log_files("supernova/report"):
             log.debug("Found report in: {}".format(f["root"]))
             sid, data = self.parse_report(f["f"])
-            s_name = self.clean_s_name(sid, f["root"])
+            s_name = self.clean_s_name(sid, f)
             if s_name in reports.keys():
                 log.debug("Duplicate sample name found! Overwriting: {}".format(s_name))
             reports[s_name] = data
@@ -216,7 +216,7 @@ class MultiqcModule(BaseMultiqcModule):
                 log.debug("Could not find sample_id in JSON file in {}".format(f["root"]))
                 continue
 
-            s_name = self.clean_s_name(sid, f["root"])
+            s_name = self.clean_s_name(sid, f)
             if s_name in summaries.keys():
                 log.debug("Duplicate sample name found! Overwriting: {}".format(s_name))
             summaries[s_name] = data
@@ -231,7 +231,7 @@ class MultiqcModule(BaseMultiqcModule):
                 if f["root"] in root_summary.keys():
                     data = self.parse_histogram(f["f"])
                     sid = root_summary[f["root"]]
-                    s_name = self.clean_s_name(sid, f["root"])
+                    s_name = self.clean_s_name(sid, f)
                     molecules[s_name] = data
                     self.add_data_source(f, s_name=s_name, section="supernova-molecules")
             except RuntimeError:
@@ -245,7 +245,7 @@ class MultiqcModule(BaseMultiqcModule):
                 if f["root"] in root_summary.keys():
                     data = self.parse_histogram(f["f"], 400)
                     sid = root_summary[f["root"]]
-                    s_name = self.clean_s_name(sid, f["root"])
+                    s_name = self.clean_s_name(sid, f)
                     kmers[s_name] = data
                     self.add_data_source(f, s_name=s_name, section="supernova-kmers")
             except RuntimeError:

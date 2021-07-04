@@ -62,7 +62,7 @@ class MultiqcModule(BaseMultiqcModule):
             if s_name == "Metadata":
                 continue
 
-            s_clean = self.clean_s_name(s_name, f["root"])
+            s_clean = self.clean_s_name(s_name, f)
             if s_clean in self.snp_cov_data:
                 log.debug("Duplicate sample name found! Overwriting: {}".format(s_clean))
 

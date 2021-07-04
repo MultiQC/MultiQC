@@ -47,7 +47,6 @@ class MultiqcModule(BaseMultiqcModule):
 
     # Parse spp.out file from phantompeakqualtools
     def parse_phantompeakqualtools(self, f):
-        s_name = self.clean_s_name(f["s_name"], f["root"])
         parsed_data = {}
         lines = f["f"].splitlines()
         for l in lines:
@@ -56,10 +55,10 @@ class MultiqcModule(BaseMultiqcModule):
             parsed_data["NSC"] = float(s[8])
             parsed_data["RSC"] = float(s[9])
         if len(parsed_data) > 0:
-            if s_name in self.phantompeakqualtools_data:
-                log.debug("Duplicate sample name found! Overwriting: {}".format(s_name))
-            self.add_data_source(f, s_name)
-            self.phantompeakqualtools_data[s_name] = parsed_data
+            if f["s_name"] in self.phantompeakqualtools_data:
+                log.debug("Duplicate sample name found! Overwriting: {}".format(f["s_name"]))
+            self.add_data_source(f)
+            self.phantompeakqualtools_data[f["s_name"]] = parsed_data
 
     # Report fragment length, NSC and RSC in general stat table
     def phantompeakqualtools_general_stats(self):

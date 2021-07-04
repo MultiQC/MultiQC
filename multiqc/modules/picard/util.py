@@ -51,7 +51,7 @@ def read_histogram(self, program_key, program_name, headers, formats):
 
         # read through the header of the file to obtain the
         # sample name
-        clean_fn = lambda n: self.clean_s_name(n, f["root"])
+        clean_fn = lambda n: self.clean_s_name(n, f)
         s_name = read_sample_name(lines, clean_fn, program_name)
         if s_name is None:
             continue

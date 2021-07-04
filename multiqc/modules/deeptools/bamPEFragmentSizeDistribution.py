@@ -56,7 +56,7 @@ class bamPEFragmentSizeDistributionMixin:
             elif cols[0] == "Size":
                 continue
             else:
-                s_name = self.clean_s_name(cols[2].rstrip().split("/")[-1], f["root"])
+                s_name = self.clean_s_name(cols[2].rstrip().split("/")[-1], f)
                 if s_name != lastsample:
                     d[s_name] = dict()
                     lastsample = s_name

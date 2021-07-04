@@ -42,7 +42,7 @@ class MultiqcModule(BaseMultiqcModule):
         self.bustools_data = dict()
         for f in self.find_log_files("bustools", filehandles=True):
             content = json.load(f["f"])
-            s_name = self.clean_s_name(os.path.basename(f["root"]), os.path.dirname(f["root"]))
+            s_name = self.clean_s_name(os.path.basename(f["root"]), f, root=os.path.dirname(f["root"]))
             self.bustools_data[s_name] = content
 
         # Filter to strip out ignored sample names

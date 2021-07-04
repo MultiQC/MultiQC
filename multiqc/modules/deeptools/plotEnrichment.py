@@ -73,7 +73,7 @@ class plotEnrichmentMixin:
                 )
                 return dict()
 
-            s_name = self.clean_s_name(cols[0], f["root"])
+            s_name = self.clean_s_name(cols[0], f)
             if s_name not in d:
                 d[s_name] = dict()
             cols[1] = str(cols[1])

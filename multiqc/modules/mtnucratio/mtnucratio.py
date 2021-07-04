@@ -55,13 +55,13 @@ class MultiqcModule(BaseMultiqcModule):
             if "metrics" not in parsed_json and "metadata" not in parsed_json:
                 log.warning("No MTNUCRATIO JSON: '{}'".format(f["fn"]))
                 return None
-        except JSONDecodeError as e:
+        except json.JSONDecodeError as e:
             log.warning("Could not parse mtnucratio JSON: '{}'".format(f["fn"]))
             log.debug(e)
             return None
 
         # Get sample name from JSON first
-        s_name = self.clean_s_name(parsed_json["metadata"]["sample_name"], "")
+        s_name = self.clean_s_name(parsed_json["metadata"]["sample_name"], f)
         self.add_data_source(f, s_name)
 
         metrics_dict = parsed_json["metrics"]

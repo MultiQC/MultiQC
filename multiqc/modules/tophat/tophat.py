@@ -37,7 +37,7 @@ class MultiqcModule(BaseMultiqcModule):
                     s_name = os.path.basename(f["root"])
                 else:
                     s_name = f["s_name"].split("align_summary.txt", 1)[0]
-                s_name = self.clean_s_name(s_name, f["root"])
+                s_name = self.clean_s_name(s_name, f)
                 if s_name in self.tophat_data:
                     log.debug("Duplicate sample name found! Overwriting: {}".format(s_name))
                 self.add_data_source(f, s_name)

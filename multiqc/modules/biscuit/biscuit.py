@@ -109,7 +109,7 @@ class MultiqcModule(BaseMultiqcModule):
                 s_name = f["fn"]
                 for suffix in file_suffixes:
                     s_name = s_name.replace(suffix, "")
-                s_name = self.clean_s_name(s_name, f["root"])
+                s_name = self.clean_s_name(s_name, f)
 
                 # Add source file to multiqc_sources.txt
                 self.add_data_source(f, s_name=s_name, section=k)

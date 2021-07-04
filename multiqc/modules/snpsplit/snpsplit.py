@@ -49,7 +49,7 @@ class MultiqcModule(BaseMultiqcModule):
         self.allele_sorting_section()
 
     def _save_parsed(self, parsed, f):
-        s_name = self.clean_s_name(parsed[0], f["root"])
+        s_name = self.clean_s_name(parsed[0], f)
         if s_name in self.snpsplit_data:
             log.debug("Replacing duplicate sample {}".format(s_name))
         self.snpsplit_data[s_name] = parsed[1]

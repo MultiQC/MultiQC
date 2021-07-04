@@ -76,7 +76,7 @@ class MultiqcModule(BaseMultiqcModule):
     def parse_roc_plot_data(self, f):
 
         header = f["f"].readline()
-        sample_names = [self.clean_s_name(x, f["root"]) for x in header.strip().split()[2:]]
+        sample_names = [self.clean_s_name(x, f) for x in header.strip().split()[2:]]
         for parts in (l.rstrip().split() for l in f["f"]):
             if len(parts) > 2:
                 chrom, cov = parts[:2]
@@ -127,7 +127,7 @@ class MultiqcModule(BaseMultiqcModule):
         header = f["f"].readline()[1:].strip().split("\t")
         for sample_parts in (l.split("\t") for l in f["f"]):
             cur = dict(zip(header, sample_parts))
-            cur["sample_id"] = self.clean_s_name(cur["sample_id"], f["root"])
+            cur["sample_id"] = self.clean_s_name(cur["sample_id"], f)
             total = float(cur["bins.in"]) + float(cur["bins.out"])
             self.bin_plot_data[cur["sample_id"]] = {
                 "x": float(cur["bins.lo"]) / total,

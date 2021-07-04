@@ -31,7 +31,7 @@ class MultiqcModule(BaseMultiqcModule):
         for f in self.find_log_files("salmon/meta"):
             # Get the s_name from the parent directory
             s_name = os.path.basename(os.path.dirname(f["root"]))
-            s_name = self.clean_s_name(s_name, f["root"])
+            s_name = self.clean_s_name(s_name, f)
             self.salmon_meta[s_name] = json.loads(f["f"])
 
         # Parse Fragment Length Distribution logs
@@ -40,7 +40,7 @@ class MultiqcModule(BaseMultiqcModule):
             # Get the s_name from the parent directory
             if os.path.basename(f["root"]) == "libParams":
                 s_name = os.path.basename(os.path.dirname(f["root"]))
-                s_name = self.clean_s_name(s_name, f["root"])
+                s_name = self.clean_s_name(s_name, f)
                 parsed = OrderedDict()
                 for i, v in enumerate(f["f"].split()):
                     parsed[i] = float(v)

@@ -95,7 +95,7 @@ class MultiqcModule(BaseMultiqcModule):
             # for all rows after the first
             else:
                 # clean the sample name (first column) and assign to s_name
-                s_name = self.clean_s_name(s[0], f["root"])
+                s_name = self.clean_s_name(s[0], f)
                 # create a dictionary entry with the first column as a key (sample name) and empty dictionary as a value
                 parsed_data[s_name] = {}
                 # for each item in list of items in the row

@@ -106,7 +106,7 @@ class plotFingerprintMixin:
                 firstLine = False
                 continue
 
-            s_name = self.clean_s_name(cols[0], f["root"])
+            s_name = self.clean_s_name(cols[0], f)
             if s_name in d:
                 log.warning("Replacing duplicate sample {}.".format(s_name))
             d[s_name] = OrderedDict()
@@ -144,7 +144,7 @@ class plotFingerprintMixin:
             if firstLine:
                 for c in cols:
                     c = str(c).strip("'")
-                    s_name = self.clean_s_name(c, f["root"])
+                    s_name = self.clean_s_name(c, f)
                     d[s_name] = []
                     samples.append(s_name)
                 firstLine = False

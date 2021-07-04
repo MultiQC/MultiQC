@@ -110,7 +110,7 @@ class MultiqcModule(BaseMultiqcModule):
         for l in f["f"]:
             s = l.split("\t")
             if s[0] == "Sample":
-                s_name = self.clean_s_name(s[1], f["root"])
+                s_name = self.clean_s_name(s[1], f)
             if s[0] == "Total Reads":
                 s[0] = "Total Read Number"
             if s[0] == "rRNA Rate":
@@ -134,7 +134,7 @@ class MultiqcModule(BaseMultiqcModule):
             if s_names is None:
                 s_names = s
                 for s_name in s_names:
-                    s_name = self.clean_s_name(s_name, f["root"])
+                    s_name = self.clean_s_name(s_name, f)
                     data[s_name] = dict()
             else:
                 for i, v in enumerate(s):
@@ -162,7 +162,7 @@ class MultiqcModule(BaseMultiqcModule):
         filtered_s_names = list()
         filtered_data = list()
         for idx, s_name in enumerate(s_names):
-            s_name = self.clean_s_name(s_name, f["root"])
+            s_name = self.clean_s_name(s_name, f)
             if not self.is_ignore_sample(s_name):
                 filtered_s_names.append(s_name)
                 filtered_data.append(data[idx])

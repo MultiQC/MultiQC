@@ -31,7 +31,7 @@ class TagDirReportMixin:
         for f in self.find_log_files("homer/GCcontent", filehandles=True):
             # Get the s_name from the parent directory
             s_name = os.path.basename(f["root"])
-            s_name = self.clean_s_name(s_name, f["root"])
+            s_name = self.clean_s_name(s_name, f)
             parsed_data = self.parse_twoCol_file(f)
             if parsed_data is not None:
                 if s_name in self.tagdir_data["GCcontent"]:
@@ -65,7 +65,7 @@ class TagDirReportMixin:
         # Find and parse homer restriction distribution reports
         for f in self.find_log_files("homer/RestrictionDistribution", filehandles=True):
             s_name = os.path.basename(f["root"])
-            s_name = self.clean_s_name(s_name, f["root"])
+            s_name = self.clean_s_name(s_name, f)
             parsed_data = self.parse_restriction_dist(f)
             if parsed_data is not None:
                 if s_name in self.tagdir_data["restriction"]:
@@ -94,7 +94,7 @@ class TagDirReportMixin:
         # Find and parse homer tag length distribution reports
         for f in self.find_log_files("homer/LengthDistribution", filehandles=True):
             s_name = os.path.basename(f["root"])
-            s_name = self.clean_s_name(s_name, f["root"])
+            s_name = self.clean_s_name(s_name, f)
             parsed_data = self.parse_length_dist(f)
             if parsed_data is not None:
                 if s_name in self.tagdir_data["length"]:
@@ -117,7 +117,7 @@ class TagDirReportMixin:
         # Find and parse homer taginfo reports
         for f in self.find_log_files("homer/tagInfo", filehandles=True):
             s_name = os.path.basename(f["root"])
-            s_name = self.clean_s_name(s_name, f["root"])
+            s_name = self.clean_s_name(s_name, f)
             parsed_data = self.parse_tag_info_chrs(f)
             if parsed_data is not None:
                 if s_name in self.tagdir_data["taginfo_total"]:
@@ -130,7 +130,7 @@ class TagDirReportMixin:
 
         for f in self.find_log_files("homer/tagInfo", filehandles=True):
             s_name = os.path.basename(f["root"])
-            s_name = self.clean_s_name(s_name, f["root"])
+            s_name = self.clean_s_name(s_name, f)
             ## collected tag_info data for general stats table and store under 'header'
             parsed_data = self.parse_tag_info(f)
             if parsed_data is not None:
@@ -156,7 +156,7 @@ class TagDirReportMixin:
         # Find and parse homer tag FreqDistribution_1000 reports
         for f in self.find_log_files("homer/FreqDistribution", filehandles=True):
             s_name = os.path.basename(f["root"])
-            s_name = self.clean_s_name(s_name, f["root"])
+            s_name = self.clean_s_name(s_name, f)
             parsed_data = self.parse_FreqDist(f)
             if parsed_data is not None:
                 if s_name in self.tagdir_data["FreqDistribution"]:

@@ -38,7 +38,7 @@ def parse_reports(self):
         s_name_regex = re.search(r"bam file\s*=\s*(.+)", f["f"], re.MULTILINE)
         if s_name_regex:
             d["bam_file"] = s_name_regex.group(1)
-            s_name = self.clean_s_name(d["bam_file"], f["root"])
+            s_name = self.clean_s_name(d["bam_file"], f)
         else:
             log.warning("Couldn't find an input filename in genome_results file {}/{}".format(f["root"], f["fn"]))
             return None

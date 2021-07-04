@@ -58,7 +58,7 @@ class MultiqcModule(BaseMultiqcModule):
             # Get input filename
             match = re.search(r"\[quant\] will process (pair|file) 1: (\S+)", l)
             if match:
-                s_name = self.clean_s_name(os.path.basename(match.group(2)), f["root"])
+                s_name = self.clean_s_name(os.path.basename(match.group(2)), f)
 
             if s_name is not None:
                 # Alignment rates

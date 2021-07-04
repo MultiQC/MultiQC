@@ -107,7 +107,7 @@ class plotCoverageMixin:
                 )
                 return dict()
 
-            s_name = self.clean_s_name(cols[0], f["root"])
+            s_name = self.clean_s_name(cols[0], f)
             if s_name in d:
                 log.warning("Replacing duplicate sample {}.".format(s_name))
             d[s_name] = dict()
@@ -150,7 +150,7 @@ class plotCoverageMixin:
             if cols[0] == "#'chr'":
                 nCols = len(cols)
                 for col in cols[3:]:
-                    s_name = self.clean_s_name(col.strip("'"), f["root"])
+                    s_name = self.clean_s_name(col.strip("'"), f)
                     samples.append(s_name)
                     d[s_name] = dict()
                 continue

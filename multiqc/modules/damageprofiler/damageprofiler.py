@@ -106,7 +106,7 @@ class MultiqcModule(BaseMultiqcModule):
             return None
 
         # Get sample name from JSON first
-        s_name = self.clean_s_name(parsed_json["metadata"]["sample_name"], "")
+        s_name = self.clean_s_name(parsed_json["metadata"]["sample_name"], f)
         self.add_data_source(f, s_name)
 
         # Add 3' G to A data

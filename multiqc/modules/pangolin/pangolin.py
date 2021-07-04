@@ -92,7 +92,7 @@ class MultiqcModule(BaseMultiqcModule):
                 # MultiQC assumes that these are file path separators and cleans them away
                 # Bit of a nasty hack is to just replace them here first.
                 taxon_name = taxon_name.replace("/", "_")
-                s_name = self.clean_s_name(taxon_name, f["root"])
+                s_name = self.clean_s_name(taxon_name, f)
                 if s_name in self.pangolin_data:
                     log.debug("Duplicate sample name found! Overwriting: {}".format(s_name))
                 # Avoid generic header ID that clashes with other modules
