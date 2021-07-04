@@ -125,7 +125,10 @@ class MultiqcModule(BaseMultiqcModule):
                     parsing_version = "1.6"
             # Get sample name from end of command line params
             if l.startswith("Command line parameters"):
-                s_name = l.split()[-1]
+                for cli in reversed(l.split()):
+                    if not cli.startswith("-"):
+                        s_name = cli
+                        break
                 # Manage case where sample name is '-' (reading from stdin)
                 if s_name == "-":
                     s_name = f["s_name"]
