@@ -8,6 +8,9 @@
 - Added new `--replace-names` / config `sample_names_replace` option to replace sample names during report generation
 - Added `use_filename_as_sample_name` config option / `--fn_as_s_name` command line flag ([#949](https://github.com/ewels/MultiQC/issues/949), [#890](https://github.com/ewels/MultiQC/issues/890), [#864](https://github.com/ewels/MultiQC/issues/864))
   - Forces modules to use the log filename for the sample identifier, even if the module usually takes this from the file contents
+  - Required a change to the `clean_s_name()` function arguments. All core MultiQC modules updated to reflect this.
+  - Should be backwards compatible for custom modules. To adopt new behaviour, supply `f` instead of `f["root"]` as the second argument.
+  - See the documenation for details: [Using log filenames as sample names](https://multiqc.info/docs/#using-log-filenames-as-sample-names) and [Custom sample names](https://multiqc.info/docs/#custom-sample-names).
 
 ### MultiQC updates
 
