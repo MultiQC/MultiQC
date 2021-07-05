@@ -60,22 +60,27 @@ class MultiqcModule(BaseMultiqcModule):
         #       statistics table.
         # 2. All samples that have not been renamed will be added to their own
         #       table in the Lima section of the report.
-        self.lima_general_counts = dict()
-        for sample in list(self.lima_counts):
+        lima_renamed_count = dict()
+        lima_original_count = dict()
+
+        for sample in self.lima_counts:
             if sample in config.sample_names_replace.values():
-                self.lima_general_counts[sample] = self.lima_counts.pop(sample)
+                lima_renamed_count[sample] = self.lima_counts[sample]
+            else:
+                lima_original_count[sample] = self.lima_counts[sample]
 
         # Get the headers and tconfig for the table
         headers, tconfig = self.make_headers_config()
 
         # Add a graph for the data values in the counts file, for the samples
         # that haven't been renamed
-        if self.lima_counts:
-            self.make_counts_table(headers, tconfig)
+        if lima_original_count:
+            self.make_counts_table(lima_original_count, headers, tconfig)
 
         # Add renamed samples to the general statistics table, since we assume
         # they are named consistenly now
-        self.add_general_stats(headers, tconfig)
+        if lima_renamed_count:
+            self.add_general_stats(lima_renamed_count, headers)
 
     def parse_summary_files(self):
         for f in self.find_log_files("lima/summary", filehandles=True):
@@ -207,7 +212,7 @@ class MultiqcModule(BaseMultiqcModule):
         }
         return headers, tconfig
 
-    def make_counts_table(self, headers, tconfig):
+    def make_counts_table(self, counts, headers, tconfig):
         self.add_section(
             name="Per sample count data",
             anchor="multiqc_lima_count",
@@ -216,11 +221,11 @@ class MultiqcModule(BaseMultiqcModule):
                 For instructions on how to display sample names instead of `barcode--barcode` pairs,
                 please see the [MultiQC Lima documentation](https://multiqc.info/docs/#lima).
             """,
-            plot=table.plot(self.lima_counts, headers, tconfig),
+            plot=table.plot(counts, headers, tconfig),
         )
-    def add_general_stats(self, headers, tconfig):
+    def add_general_stats(self, counts, headers):
         """ Add (renamed) samples to the general statistics table """
-        self.general_stats_addcols(self.lima_general_counts, headers, tconfig)
+        self.general_stats_addcols(counts, headers)
 
 
 def parse_PacBio_log(file_content):
