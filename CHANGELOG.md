@@ -1,5 +1,13 @@
 # MultiQC Version History
 
+## MultiQC v1.12dev
+
+### MultiQC updates
+
+### New Modules
+
+### Module updates
+
 ## [MultiQC v1.11](https://github.com/ewels/MultiQC/releases/tag/v1.11) - 2021-07-05
 
 ### MultiQC new features
@@ -23,7 +31,7 @@
 - Fix the `mqc_colours` util function to lighten colours even when passing categorical or single-length lists.
 - Bugfix for Custom Content, using YAML configuration (eg. section headers) for images should now work
 
-#### New Modules
+### New Modules
 
 - [**BclConvert**](https://support.illumina.com/sequencing/sequencing_software/bcl-convert.html)
   - Tool that converts / demultiplexes Illumina Binary Base Call (BCL) files to FASTQ files
@@ -49,7 +57,7 @@
   - Added MultiQC module to add summary statistics of Ensembl VEP annotations.
   - Handle error from missing variants in VEP stats file. ([#1446](https://github.com/ewels/MultiQC/issues/1446))
 
-#### Module feature additions
+### Module feature additions
 
 - **Cutadapt**
   - Added support for linked adapters [#1329](https://github.com/ewels/MultiQC/issues/1329)]
@@ -64,7 +72,7 @@
 - **RSeQC**
   - Added a long-requested submodule to support showing the [**TIN**](http://rseqc.sourceforge.net/#tin-py) (Transcript Integrity Number) ([#737](https://github.com/ewels/MultiQC/issues/737))
 
-#### Module updates
+### Module updates
 
 - **biscuit**
   - Duplicate Rate and Cytosine Retention tables are now bargraphs.
