@@ -1,6 +1,6 @@
 # MultiQC Version History
 
-## MultiQC v1.11dev
+## [MultiQC v1.11](https://github.com/ewels/MultiQC/releases/tag/v1.11) - 2021-07-05
 
 ### MultiQC new features
 
@@ -57,7 +57,7 @@
 - **Mosdepth**
   - Include or exclude contigs based on patterns for coverage-per-contig plots
 - **Picard**
-  - Add metrics from `CollectIlluminaBasecallingMetrics`, `CollectIlluminaLaneMetrics`, `ExtractIlluminaBarcodes` and `MarkIlluminaAdapters` ([#1336](https://github.com/ewels/MultiQC/pull/1336))
+  - Add support for `CollectIlluminaBasecallingMetrics`, `CollectIlluminaLaneMetrics`, `ExtractIlluminaBarcodes` and `MarkIlluminaAdapters` ([#1336](https://github.com/ewels/MultiQC/pull/1336))
   - New `insertsize_xmax` configuration option to limit the plotted maximum insert size for `InsertSizeMetrics`
 - **Qualimap**
   - Added new percentage coverage plot in `QM_RNASeq` ([#1258](https://github.com/ewels/MultiQC/issues/1258))
