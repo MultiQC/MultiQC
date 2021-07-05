@@ -50,8 +50,21 @@ class MultiqcModule(BaseMultiqcModule):
         # Add a graph of all filtered ZMWs
         self.plot_filter_data()
 
+        # If any of the samples have been renamed, their count can be added to the general
+        # statistics table
+        self.lima_general_counts = dict()
+        for sample in list(self.lima_counts):
+            if sample in config.sample_names_replace.values():
+                self.lima_general_counts[sample] = self.lima_counts.pop(sample)
+
+        # Get the headers and tconfig for the table
+        headers, tconfig = self.make_headers_config()
+
         # Add a graph for the data values in the counts file
-        self.make_counts_table()
+        self.make_counts_table(headers, tconfig)
+
+        # Add renamed samples to the general statistics table, since we assume
+        # they are named consistenly now
 
     def parse_summary_files(self):
         for f in self.find_log_files("lima/summary", filehandles=True):
@@ -158,8 +171,8 @@ class MultiqcModule(BaseMultiqcModule):
 
         return reasons
 
-    def make_counts_table(self):
-        """Make the lima counts table"""
+    def make_headers_config(self):
+        """Prepare the headers and config for the lima counts table"""
         tconfig = {
             "id": "multiqc_lima_counts",
             "namespace": "Lima",
@@ -182,7 +195,9 @@ class MultiqcModule(BaseMultiqcModule):
             "description": "The mean quality score of the reads for each sample or barcode pair",
             "scale": "Spectral",
         }
+        return headers, tconfig
 
+    def make_counts_table(self, headers, tconfig):
         self.add_section(
             name="Per sample count data",
             anchor="multiqc_lima_count",
