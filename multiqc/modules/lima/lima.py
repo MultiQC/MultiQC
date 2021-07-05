@@ -50,8 +50,16 @@ class MultiqcModule(BaseMultiqcModule):
         # Add a graph of all filtered ZMWs
         self.plot_filter_data()
 
-        # If any of the samples have been renamed, their count can be added to the general
-        # statistics table
+        # Here, we make a difference between samples that have been renamed,
+        # and samples that have their name derived from lima itself. Since lima
+        # uses barcode1--barcode2 as sample names, these will never match the
+        # other samples in the MultiQC report.
+        #
+        # Therefore, we do two different things here.
+        # 1. All samples that have been renamed will be added to the general
+        #       statistics table.
+        # 2. All samples that have not been renamed will be added to their own
+        #       table in the Lima section of the report.
         self.lima_general_counts = dict()
         for sample in list(self.lima_counts):
             if sample in config.sample_names_replace.values():
@@ -60,11 +68,14 @@ class MultiqcModule(BaseMultiqcModule):
         # Get the headers and tconfig for the table
         headers, tconfig = self.make_headers_config()
 
-        # Add a graph for the data values in the counts file
-        self.make_counts_table(headers, tconfig)
+        # Add a graph for the data values in the counts file, for the samples
+        # that haven't been renamed
+        if self.lima_counts:
+            self.make_counts_table(headers, tconfig)
 
         # Add renamed samples to the general statistics table, since we assume
         # they are named consistenly now
+        self.add_general_stats(headers, tconfig)
 
     def parse_summary_files(self):
         for f in self.find_log_files("lima/summary", filehandles=True):
@@ -109,7 +120,6 @@ class MultiqcModule(BaseMultiqcModule):
         return lima_counts
 
     def plot_filter_data(self):
-
         # First, we gather all filter results for each lima summary
         all_filters = set()
         for data in self.lima_summary.values():
@@ -208,6 +218,9 @@ class MultiqcModule(BaseMultiqcModule):
             """,
             plot=table.plot(self.lima_counts, headers, tconfig),
         )
+    def add_general_stats(self, headers, tconfig):
+        """ Add (renamed) samples to the general statistics table """
+        self.general_stats_addcols(self.lima_general_counts, headers, tconfig)
 
 
 def parse_PacBio_log(file_content):
