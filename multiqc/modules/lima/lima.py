@@ -223,6 +223,7 @@ class MultiqcModule(BaseMultiqcModule):
             """,
             plot=table.plot(counts, headers, tconfig),
         )
+
     def add_general_stats(self, counts, headers):
         """ Add (renamed) samples to the general statistics table """
         self.general_stats_addcols(counts, headers)
