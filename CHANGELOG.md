@@ -8,6 +8,9 @@
 
 ### Module updates
 
+- **RSeQC**
+  - Fixed minor bug in new TIN parsing where the sample name was not being correctly cleaned ([#1484](https://github.com/ewels/MultiQC/issues/1484))
+
 ## [MultiQC v1.11](https://github.com/ewels/MultiQC/releases/tag/v1.11) - 2021-07-05
 
 ### MultiQC new features
