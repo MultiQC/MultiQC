@@ -74,6 +74,8 @@
   - Added new percentage coverage plot in `QM_RNASeq` ([#1258](https://github.com/ewels/MultiQC/issues/1258))
 - **RSeQC**
   - Added a long-requested submodule to support showing the [**TIN**](http://rseqc.sourceforge.net/#tin-py) (Transcript Integrity Number) ([#737](https://github.com/ewels/MultiQC/issues/737))
+- **Salmon**
+  - Reports `library_types`, `compatible_fragment_ratio`, `strand_mapping_bias` to General Stats table. ([#733](https://github.com/ewels/MultiQC/issues/733)) 
 
 ### Module updates
 

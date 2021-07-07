@@ -628,6 +628,11 @@ rseqc/tin:
 salmon/meta:
   fn: "meta_info.json"
   contents: "salmon_version"
+  contents: "library_types"
+salmon:
+  fn: "lib_format_counts.json"
+  contents: "compatible_fragment_ratio"
+  contents: "strand_mapping_bias"
 salmon/fld:
   fn: "flenDist.txt"
 sambamba/markdup:
