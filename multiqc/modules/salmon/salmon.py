@@ -70,6 +70,8 @@ class MultiqcModule(BaseMultiqcModule):
             self.write_data_file(self.salmon_meta, "multiqc_salmon")
         if len(self.salmon_fld) > 0:
             log.info("Found {} fragment length distributions".format(len(self.salmon_fld)))
+        if len(self.salmon_lfc) > 0:
+            log.info("Found {} library format counts reports".format(len(self.salmon_lfc)))
 
         # Add alignment rate to the general stats table
         headers = OrderedDict()
@@ -93,10 +95,13 @@ class MultiqcModule(BaseMultiqcModule):
         lib_types = None
         hide_lib = True
         for s in self.salmon_meta:
-            self.salmon_meta[s]["library_types"] = ",".join(self.salmon_meta[s]["library_types"])
-            if not lib_types:
-                lib_types = self.salmon_meta[s]["library_types"]
-            if hide_lib and self.salmon_meta[s]["library_types"] != lib_types:
+            if "library_types" in self.salmon_meta[s].keys():
+                self.salmon_meta[s]["library_types"] = ",".join(self.salmon_meta[s]["library_types"])
+                if not lib_types:
+                    lib_types = self.salmon_meta[s]["library_types"]
+                if hide_lib and self.salmon_meta[s]["library_types"] != lib_types:
+                    hide_lib = False
+            elif lib_types:
                 hide_lib = False
         headers["library_types"] = {
             "title": "Lib Types",
