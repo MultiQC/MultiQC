@@ -52,7 +52,7 @@ class MultiqcModule(BaseMultiqcModule):
 
         # Parse Library Format Counts information. JSON file expected
         self.salmon_lfc = dict()
-        for f in self.find_log_files("salmon"):
+        for f in self.find_log_files("salmon/root"):
             s_name = os.path.basename(f["root"])  # lfc file located at root folder
             s_name = self.clean_s_name(s_name, f)
             self.salmon_lfc[s_name] = json.loads(f["f"])
