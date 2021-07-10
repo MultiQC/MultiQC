@@ -232,6 +232,8 @@ class MultiqcModule(BaseMultiqcModule):
             ) * 100.0
         except KeyError:
             log.debug("Could not calculate 'pct_adapter': {}".format(f["fn"]))
+        except ZeroDivisionError:
+            log.warning("FastQ input file has zero raw reads")
 
         # Duplication rate plot data
         try:
