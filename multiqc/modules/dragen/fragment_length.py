@@ -35,6 +35,9 @@ class DragenFragmentLength(BaseMultiqcModule):
         if not data_by_rg_by_sample:
             return set()
 
+        # Write data to file
+        self.write_data_file(data_by_rg_by_sample, "dragen_frag_len")
+
         # Merging all data
         data_by_rg = {}
         for sn, d_rg in data_by_rg_by_sample.items():
@@ -48,8 +51,8 @@ class DragenFragmentLength(BaseMultiqcModule):
             name="Fragment length hist",
             anchor="dragen-fragment-length-histogram",
             description="""
-            Distribution of estimated fragment lengths of mapped reads per read group. 
-            Only points supported by at least {} reads are shown to prevent long flat tail. 
+            Distribution of estimated fragment lengths of mapped reads per read group.
+            Only points supported by at least {} reads are shown to prevent long flat tail.
             The plot is also smoothed down to showing 300 points on the X axis to reduce noise.
             """.format(
                 MIN_CNT_TO_SHOW_ON_PLOT
