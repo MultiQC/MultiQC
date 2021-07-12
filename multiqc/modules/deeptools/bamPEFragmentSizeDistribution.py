@@ -27,7 +27,8 @@ class bamPEFragmentSizeDistributionMixin:
 
         if len(self.deeptools_bamPEFragmentSizeDistribution) > 0:
             # Write data to file
-            self.write_data_file(self.deeptools_bamPEFragmentSizeDistribution, "deeptools_frag_dist")
+            self.write_data_file(self.deeptools_bamPEFragmentSizeDistribution, "deeptools_frag_size_dist")
+
             config = {
                 "id": "fragment_size_distribution_plot",
                 "title": "deeptools: Fragment Size Distribution Plot",

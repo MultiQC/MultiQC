@@ -38,8 +38,8 @@ class DragenCoveragePerContig(BaseMultiqcModule):
         if not perchrom_data_by_sample:
             return set()
 
-        # Write data to file
-        self.write_data_file(perchrom_data_by_sample, "dragen_cov_contig")
+        # Data is in wrong format for writing to file
+        # self.write_data_file(perchrom_data_by_sample, "dragen_cov_contig")
 
         main_contigs_by_sample = {sn: data[0] for sn, data in perchrom_data_by_sample.items()}
         other_contigs_by_sample = {sn: data[1] for sn, data in perchrom_data_by_sample.items()}

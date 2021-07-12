@@ -39,8 +39,8 @@ class DragenCoverageHist(BaseMultiqcModule):
         if not data_by_sample:
             return set()
 
-        # Write data to file
-        self.write_data_file(data_by_sample, "dragen_cov_hist")
+        # Data is in wrong format for writing to file
+        # self.write_data_file(data_by_sample, "dragen_cov_hist")
 
         dist_data = {sn: dist for sn, (dist, cum, depth_1pc) in data_by_sample.items()}
         cum_data = {sn: cum for sn, (dist, cum, depth_1pc) in data_by_sample.items()}

@@ -26,8 +26,8 @@ class plotCorrelationMixin:
         self.deeptools_plotCorrelationData = self.ignore_samples(self.deeptools_plotCorrelationData)
 
         if len(self.deeptools_plotCorrelationData) > 0:
-            # Write data to file
-            self.write_data_file(self.deeptools_plotCorrelationData, "deeptools_plot_corr")
+            # Data is in wrong format for writing to file
+            # self.write_data_file(self.deeptools_plotCorrelationData, "deeptools_plot_corr")
 
             config = {
                 "id": "deeptools_correlation_plot",

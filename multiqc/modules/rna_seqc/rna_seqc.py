@@ -29,10 +29,12 @@ class MultiqcModule(BaseMultiqcModule):
         self.rna_seqc_metrics = dict()
         for f in self.find_log_files("rna_seqc/metrics_v1", filehandles=True):
             self.parse_metrics_rnaseqc_v1(f)
+            self.add_data_source(f, section="v1")
 
         # Parse metrics from RNA-SeQC v2
         for f in self.find_log_files("rna_seqc/metrics_v2", filehandles=True):
             self.parse_metrics_rnaseqc_v2(f)
+            self.add_data_source(f, section="v2")
 
         # Strip out ignored sample names from metrics
         self.rna_seqc_metrics = self.ignore_samples(self.rna_seqc_metrics)
