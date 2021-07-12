@@ -4,6 +4,8 @@
 
 ### MultiQC updates
 
+- Added missing functions call to several modules ([#1468](https://github.com/ewels/MultiQC/issues/1468))
+
 ### New Modules
 
 ### Module updates
