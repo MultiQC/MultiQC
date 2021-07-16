@@ -18,6 +18,21 @@ Supported commands:
 - `idxstats`
 - `rmdup`
 
+### stats
+
+The `samtools stats` tool collects many statistics from SAM/BAM files. MultiQC can pick these files up by including `stats` in the filename, i.e. `sample_ID.stats.txt`. It is likely most useful when you want to easily create a bargraph of mapped vs unmapped against a reference file from a preferred aligner. Some useful settings to customize the plot might look like:
+
+```yaml
+custom_plot_config:
+    samtools_alignment_plot:
+        cpswitch_c_active: False
+        reads_mapped:
+                color: "#ff7654"
+        reads_unmapped:
+                color: "#47ff94"
+```
+This allows you to customize whether or not percent mapped is the default visualization of the barplot, and the colors of the mapped/unmapped stacked portions of the plot. This type of plot generation is substantially easier than trying to parse results from `samtools flagstat` if you're only interested in percent mapping against a reference.
+
 ### idxstats
 
 The `samtools idxstats` prints its results to standard
