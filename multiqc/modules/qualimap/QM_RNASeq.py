@@ -159,8 +159,12 @@ def parse_reports(self):
         for s_name in self.qualimap_rnaseq_cov_hist:
             self.qualimap_rnaseq_cov_hist_percent[s_name] = OrderedDict()
             total = sum(self.qualimap_rnaseq_cov_hist[s_name].values())
-            for k, v in self.qualimap_rnaseq_cov_hist[s_name].items():
-                self.qualimap_rnaseq_cov_hist_percent[s_name][k] = (v / total) * 100.0
+            if total == 0:
+                for k, v in self.qualimap_rnaseq_cov_hist[s_name].items():
+                    self.qualimap_rnaseq_cov_hist_percent[s_name][k] = 0.0
+            else:
+                for k, v in self.qualimap_rnaseq_cov_hist[s_name].items():
+                    self.qualimap_rnaseq_cov_hist_percent[s_name][k] = (v / total) * 100.0
 
         coverage_profile_helptext = """
         There are currently three main approaches to map reads to transcripts in an
