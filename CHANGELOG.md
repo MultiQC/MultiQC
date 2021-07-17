@@ -8,6 +8,8 @@
 
 ### Module updates
 
+- **FastQC**
+  - Fixed bug when skipping overrepresented sequences ([#1488](https://github.com/ewels/MultiQC/issues/1488))
 - **RSeQC**
   - Fixed minor bug in new TIN parsing where the sample name was not being correctly cleaned ([#1484](https://github.com/ewels/MultiQC/issues/1484))
 - **CCS**
