@@ -4,6 +4,8 @@
 
 ### MultiQC updates
 
+- Added `--no-report` flag to skip report generation ([#1462](https://github.com/ewels/MultiQC/issues/1462))
+
 ### New Modules
 
 ### Module updates
