@@ -4,6 +4,8 @@
 
 ### MultiQC updates
 
+- Made MultiQC skip modules for which no files were found ([#1463](https://github.com/ewels/MultiQC/issues/1463))
+
 ### New Modules
 
 ### Module updates
