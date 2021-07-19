@@ -607,6 +607,10 @@ def run(
         logger.info("Search path : {}".format(os.path.abspath(d)))
     report.get_filelist(run_module_names)
 
+    # Only run the modules for which any files were found
+    non_empty_modules = {key.split("/")[0].lower() for key, files in report.files.items() if len(files) > 0}
+    run_modules = [m for m in run_modules if list(m.keys())[0].lower() in non_empty_modules]
+
     # Run the modules!
     plugin_hooks.mqc_trigger("before_modules")
     report.modules_output = list()
