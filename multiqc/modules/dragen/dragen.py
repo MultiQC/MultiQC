@@ -62,8 +62,8 @@ class MultiqcModule(DragenMappingMetics, DragenFragmentLength, DragenPloidyEstim
 
         samples_found |= self.add_qc_region_coverage_metrics()
         # <output prefix>.qc-coverage-region-i_coverage_metrics.csv
-
         samples_found |= self.add_coverage_hist()
+
         # <output prefix>.wgs_fine_hist_normal.csv         - coverage distribution and cumulative coverage plots
         # <output prefix>.wgs_fine_hist_tumor.csv          - same
 
@@ -90,7 +90,7 @@ class MultiqcModule(DragenMappingMetics, DragenFragmentLength, DragenPloidyEstim
         # <output prefix>.quant.transcript_coverage.txt
 
         samples_found |= self.add_sc_rna_metrics()
-        # <output prefix>.scRNA.metrics.csv
+    	# <output prefix>.scRNA.metrics.csv
 
         if len(samples_found) == 0:
             raise UserWarning

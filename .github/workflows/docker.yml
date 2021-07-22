@@ -1,0 +1,49 @@
+name: Publish Docker image
+
+on:
+  push:
+    branches: [master]
+  release:
+    types: [published]
+
+jobs:
+  push_to_registry:
+    if: github.repository == 'ewels/MultiQC'
+    name: Push Docker image to Docker Hub / GitHub Docker Registry
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out the repo
+        uses: actions/checkout@v2
+
+      - name: Log in to Docker Hub
+        uses: docker/login-action@v1
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+
+      - name: Login to GitHub Container Registry
+        uses: docker/login-action@v1
+        with:
+          registry: ghcr.io
+          username: ${{ github.repository_owner }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Push dev image
+        uses: docker/build-push-action@v2
+        if: github.event_name == 'push'
+        with:
+          push: true
+          tags: |
+            ewels/multiqc:dev
+            ghcr.io/ewels/multiqc:dev
+
+      - name: Push release image
+        uses: docker/build-push-action@v2
+        if: github.event_name == 'release'
+        with:
+          push: true
+          tags: |
+            ewels/multiqc:${{ github.event.release.tag_name }}
+            ewels/multiqc:latest
+            ghcr.io/ewels/multiqc:${{ github.event.release.tag_name }}
+            ghcr.io/ewels/multiqc:latest

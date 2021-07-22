@@ -2,9 +2,9 @@
 Name: Adapter Removal
 URL: https://github.com/mikkelschubert/adapterremoval
 Description: >
-    Removes adapter sequences and trims low quality bases from the 3' end of reads.
-    Overlapping paired-ended reads can be merged into consensus sequences
-    and adapter sequence can be found for paired-ended data if not known.
+  Removes adapter sequences and trims low quality bases from the 3' end of reads.
+  Overlapping paired-ended reads can be merged into consensus sequences
+  and adapter sequence can be found for paired-ended data if not known.
 ---
 
 This program searches for and removes remnant adapter sequences from High-Throughput
@@ -21,6 +21,6 @@ a tool for rapid adapter trimming, identification, and read merging.
 
 supported setting file results:
 
-* `single end`
-* `paired end noncollapsed`
-* `paired end collapsed`
+- `single end`
+- `paired end noncollapsed`
+- `paired end collapsed`
