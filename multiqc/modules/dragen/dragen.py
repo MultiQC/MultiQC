@@ -19,11 +19,22 @@ from .vc_metrics import DragenVCMetrics
 log = logging.getLogger(__name__)
 
 
-class MultiqcModule(DragenMappingMetics, DragenFragmentLength, DragenPloidyEstimationMetrics,
-                    DragenVCMetrics, DragenCoveragePerContig, DragenCoverageMetrics,
-                    DragenCoverageHist, DragenGcMetrics, DragenTrimmerMetrics, DragenTimeMetrics,
-                    DragenRnaQuantMetrics, DragenRnaTranscriptCoverage, DragenScRnaMetrics):
-    """ DRAGEN provides a number of differrent pipelines and outputs, including base calling, DNA and RNA alignment,
+class MultiqcModule(
+    DragenMappingMetics,
+    DragenFragmentLength,
+    DragenPloidyEstimationMetrics,
+    DragenVCMetrics,
+    DragenCoveragePerContig,
+    DragenCoverageMetrics,
+    DragenCoverageHist,
+    DragenGcMetrics,
+    DragenTrimmerMetrics,
+    DragenTimeMetrics,
+    DragenRnaQuantMetrics,
+    DragenRnaTranscriptCoverage,
+    DragenScRnaMetrics,
+):
+    """DRAGEN provides a number of differrent pipelines and outputs, including base calling, DNA and RNA alignment,
     post-alignment processing and variant calling, covering virtually all stages of typical NGS data processing.
     However, it can be treated as a fast aligner with additional features on top, as users will unlikely use any
     features without enabling DRAGEN mapping. So we will treat this module as an alignment tool module and
@@ -41,10 +52,15 @@ class MultiqcModule(DragenMappingMetics, DragenFragmentLength, DragenPloidyEstim
 
     def __init__(self):
         super(MultiqcModule, self).__init__(
-            name='DRAGEN', anchor='DRAGEN', target='DRAGEN',
-            href='https://www.illumina.com/products/by-type/informatics-products/dragen-bio-it-platform.html',
-            info=(" is a Bio-IT Platform that provides ultra-rapid secondary analysis of sequencing data"
-                  " using field-programmable gate array technology (FPGA)."))
+            name="DRAGEN",
+            anchor="DRAGEN",
+            target="DRAGEN",
+            href="https://www.illumina.com/products/by-type/informatics-products/dragen-bio-it-platform.html",
+            info=(
+                " is a Bio-IT Platform that provides ultra-rapid secondary analysis of sequencing data"
+                " using field-programmable gate array technology (FPGA)."
+            ),
+        )
 
         samples_found = set()
         samples_found |= self.add_mapping_metrics()
@@ -90,7 +106,7 @@ class MultiqcModule(DragenMappingMetics, DragenFragmentLength, DragenPloidyEstim
         # <output prefix>.quant.transcript_coverage.txt
 
         samples_found |= self.add_sc_rna_metrics()
-    	# <output prefix>.scRNA.metrics.csv
+        # <output prefix>.scRNA.metrics.csv
 
         if len(samples_found) == 0:
             raise UserWarning
