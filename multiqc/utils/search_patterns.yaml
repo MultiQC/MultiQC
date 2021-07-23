@@ -658,6 +658,8 @@ sentieon/insertsize:
 sentieon/gcbias:
   contents: "--algo GCBias"
   shared: true
+seqwho:
+  fn: "SeqWho_call.json"
 seqyclean:
   fn: "*_SummaryStatistics.tsv"
 sexdeterrmine:
