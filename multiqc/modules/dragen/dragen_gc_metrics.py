@@ -11,17 +11,17 @@ log = logging.getLogger(__name__)
 class DragenGcMetrics(BaseMultiqcModule):
     """Not to be confused with DragenFastqcGcMetrics"""
 
-    NAMESPACE = 'Dragen GC Metrics'
+    NAMESPACE = "Dragen GC Metrics"
 
     def add_gc_metrics_hist(self):
         data_by_sample = dict()
 
-        for f in self.find_log_files('dragen/gc_metrics'):
+        for f in self.find_log_files("dragen/gc_metrics"):
             data = parse_gc_metrics_file(f)
-            if f['s_name'] in data_by_sample:
-                log.debug('Duplicate sample name found! Overwriting: {}'.format(f['s_name']))
-            self.add_data_source(f, section='stats')
-            data_by_sample[f['s_name']] = data
+            if f["s_name"] in data_by_sample:
+                log.debug("Duplicate sample name found! Overwriting: {}".format(f["s_name"]))
+            self.add_data_source(f, section="stats")
+            data_by_sample[f["s_name"]] = data
 
         # Filter to strip out ignored sample names:
         data_by_sample = self.ignore_samples(data_by_sample)
@@ -32,33 +32,36 @@ class DragenGcMetrics(BaseMultiqcModule):
         hist_data = DragenGcMetrics.__get_normalized_gc_data(data_by_sample)
         smooth_points = 300
         self.add_section(
-            name='GC Bias Histogram',
-            anchor='dragen-gc-bias-hist',
+            name="GC Bias Histogram",
+            anchor="dragen-gc-bias-hist",
             description="""
                 A histogram of the normalized coverage vs GC content.  This shows how GC
                 content in the genome impacts sequencing coverage.
                 """,
-            plot=linegraph.plot(hist_data, {
-                'id': 'gc-bias-hist',
-                'title': 'Dragen: GC Bias Histogram',
-                'ylab': 'Normalized Coverage',
-                'xlab': '% GC',
-                'ymin': 0,
-                'xmin': 0,
-                'tt_label': '<b>{point.x} % GC</b>: {point.y} Normalized coverage',
-                'smooth_points': smooth_points,
-                'namespace': DragenGcMetrics.NAMESPACE,
-            })
+            plot=linegraph.plot(
+                hist_data,
+                {
+                    "id": "gc-bias-hist",
+                    "title": "Dragen: GC Bias Histogram",
+                    "ylab": "Normalized Coverage",
+                    "xlab": "% GC",
+                    "ymin": 0,
+                    "xmin": 0,
+                    "tt_label": "<b>{point.x} % GC</b>: {point.y} Normalized coverage",
+                    "smooth_points": smooth_points,
+                    "namespace": DragenGcMetrics.NAMESPACE,
+                },
+            ),
         )
 
         table_data = DragenGcMetrics.__get_summary_gc_data(data_by_sample)
         self.add_section(
-            name='GC Metrics Summary',
-            anchor='dragen-gc-metrics-summary',
+            name="GC Metrics Summary",
+            anchor="dragen-gc-metrics-summary",
             description="""
             Summary GC metrics shown on the sample level.
             """,
-            plot=table.plot(table_data, pconfig={'namespace': DragenGcMetrics.NAMESPACE})
+            plot=table.plot(table_data, pconfig={"namespace": DragenGcMetrics.NAMESPACE}),
         )
 
         return data_by_sample.keys()
@@ -66,20 +69,20 @@ class DragenGcMetrics(BaseMultiqcModule):
     @staticmethod
     def __get_normalized_gc_data(data_by_sample) -> dict:
         """Returns headers, data"""
-        analysis = 'GC BIAS DETAILS'
+        analysis = "GC BIAS DETAILS"
         hist_data = {}
         for sample_name, sample_data in data_by_sample.items():
             # {Normalized coverage at GC 0: 0.8324, Normalized coverage at GC 1,0.9456}
             hist_data[sample_name] = {
                 int(key.split()[-1]): item
                 for key, item in sample_data[analysis].items()
-                if key.startswith('Normalized coverage at GC')
+                if key.startswith("Normalized coverage at GC")
             }
         return hist_data
 
     @staticmethod
     def __get_summary_gc_data(data_by_sample) -> dict:
-        analysis = 'GC METRICS SUMMARY'
+        analysis = "GC METRICS SUMMARY"
         summary_data = {}
         for sample_name, sample_data in data_by_sample.items():
             summary_data[sample_name] = {metric: stat for metric, stat in sample_data[analysis].items()}
@@ -112,11 +115,11 @@ def parse_gc_metrics_file(f):
     GC METRICS SUMMARY,,GC Dropout,2.01
     """
 
-    f['s_name'] = re.search(r'(.*).gc_metrics.csv', f['fn']).group(1)
+    f["s_name"] = re.search(r"(.*).gc_metrics.csv", f["fn"]).group(1)
 
     data = defaultdict(dict)
-    for line in f['f'].splitlines():
-        tokens = line.split(',')
+    for line in f["f"].splitlines():
+        tokens = line.split(",")
         # Percentage is currently unused
         if len(tokens) == 4:
             analysis, _, metric, stat = tokens
@@ -124,7 +127,7 @@ def parse_gc_metrics_file(f):
         elif len(tokens) == 5:
             analysis, _, metric, stat, percentage = tokens
         else:
-            raise ValueError(f'Unexpected number of tokens in line {line}')
+            raise ValueError(f"Unexpected number of tokens in line {line}")
 
         try:
             stat = float(stat)
