@@ -5,6 +5,7 @@
 ### MultiQC updates
 
 ### New Modules
+
 - [**SeqWho**](https://daehwankimlab.github.io/seqwho/)
   - Tool to determine a FASTQ(A) sequencing file identity, both source protocol and species of origin.
 
