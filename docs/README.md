@@ -33,6 +33,7 @@ MultiQC Modules:
     minionqc: modules/minionqc.md
     Pychopper: modules/pychopper.md
     pycoQC: modules/pycoqc.md
+    SeqWho: modules/seqwho.md
     SeqyClean: modules/seqyclean.md
     Sickle: modules/sickle.md
     Skewer: modules/skewer.md
