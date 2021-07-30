@@ -10,6 +10,7 @@ Imported by __init__.py so available as multiqc.run()
 from __future__ import print_function
 
 import base64
+import multiprocessing
 import click
 from distutils import version
 from distutils.dir_util import copy_tree
@@ -175,6 +176,7 @@ logger = config.logger
 @click.option("-v", "--verbose", count=True, default=0, help="Increase output verbosity.")
 @click.option("-q", "--quiet", is_flag=True, help="Only show log warnings")
 @click.option("--profile-runtime", is_flag=True, help="Add analysis of how long MultiQC takes to run to the report")
+@click.option("--cpus", "cpus", type=int, default=1, help="Let MultiQC use this many processes")
 @click.option("--no-ansi", is_flag=True, help="Disable coloured log output")
 @click.version_option(config.version, prog_name="multiqc")
 def run_cli(
@@ -214,6 +216,7 @@ def run_cli(
     verbose,
     quiet,
     profile_runtime,
+    cpus,
     no_ansi,
     **kwargs,
 ):
@@ -273,6 +276,7 @@ def run_cli(
         verbose=verbose,
         quiet=quiet,
         profile_runtime=profile_runtime,
+        cpus=cpus,
         no_ansi=no_ansi,
         kwargs=kwargs,
     )
@@ -319,6 +323,7 @@ def run(
     verbose=0,
     quiet=False,
     profile_runtime=False,
+    cpus=1,
     no_ansi=False,
     kwargs={},
 ):
@@ -438,6 +443,11 @@ def run(
         config.exclude_modules = exclude
     if profile_runtime:
         config.profile_runtime = True
+    if cpus == 0:
+        # Set the number of allowed processes to the autodetected amount
+        cpus = multiprocessing.cpu_count()
+    if cpus != 1:
+        config.cpus = cpus
     config.kwargs = kwargs  # Plugin command line options
 
     # Clean up analysis_dir if a string (interactive environment only)
