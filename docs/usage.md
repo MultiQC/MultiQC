@@ -221,4 +221,3 @@ restricted to the file search stage of MultiQC and can be useful if
 you have many log files to process. To specify how many parallel
 processes MultiQc is allowed to start use the `--cpus <processes>`
 flag.
-
