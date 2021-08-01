@@ -4,7 +4,7 @@
 
 ### MultiQC updates
 
-Added `--cpu` flag for running file search in parallel ([#1461](https://github.com/ewels/MultiQC/issues/1461))
+Added `--cpus` flag for running file search in parallel ([#1461](https://github.com/ewels/MultiQC/issues/1461))
 
 ### New Modules
 
