@@ -704,9 +704,9 @@ sortmerna:
   contents: "Minimal SW score based on E-value"
   shared: true
 ssds/parse:
-  fn: '*SSDS_parse_report.tab'
+  fn: "*SSDS_parse_report.tab"
 ssds/spot:
-  fn: '*SSDS_SPoT_report.tab'
+  fn: "*SSDS_SPoT_report.tab"
 stacks/gstacks:
   fn: "gstacks.log.distribs"
   contents: "BEGIN effective_coverages_per_sample"
