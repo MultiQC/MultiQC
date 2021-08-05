@@ -703,10 +703,10 @@ snpsplit/new:
 sortmerna:
   contents: "Minimal SW score based on E-value"
   shared: true
-ssds/parse:   
-    fn: '*parseSSDSreport.tab'
-ssds/spot:   
-    fn: '*SPoTreport.tab'
+ssds/parse:
+  fn: '*SSDS_parse_report.tab'
+ssds/spot:
+  fn: '*SSDS_SPoT_report.tab'
 stacks/gstacks:
   fn: "gstacks.log.distribs"
   contents: "BEGIN effective_coverages_per_sample"
