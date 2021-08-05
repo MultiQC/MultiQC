@@ -320,17 +320,17 @@ class MultiqcModule(BaseMultiqcModule):
             # Configure the total alignment plot
             b2config = {
                 "id": "Total_Alignment_Stats_Plot",
-                "title": "Alignment QC",
-                "ylab": "# Fragments",
-                "cpswitch_counts_label": "Number of Fragments",
+                "title": "Read-pair types",
+                "ylab": "# Read-pairs",
+                "cpswitch_counts_label": "Number of Read-pairs",
             }
 
             # Add the Total alignment stats barplot to the page
             self.add_section(
                 plot=bargraph.plot(self.ssds_stats, b2keys, b2config),
                 name="Total alignment stats (including unaligned)",
-                anchor="total-aln-stats",
-                content="<p>This module parses the output from <code>SSDS stats</code>.</p>",
+                description='<p>This plot shows the fraction of read-pairs derived from different sources. It includes unmapped / low quality / supplementary read-pairs in the "other" category.</p>',
+                content='<p>This module parses the results from <a href="https://github.com/kevbrick/ssds_pipeline_accessory_scripts.git"><code>parse_SSDS_BAM.py</code> </a></p>',
             )
 
             ##################################################################################
@@ -346,7 +346,7 @@ class MultiqcModule(BaseMultiqcModule):
             # Configure the SSDS Alignment barplot
             pconfig = {
                 "id": "SSDS_Alignment_Stats_Plot",
-                "title": "Types of Aligned SSDS fragments",
+                "title": "SSDS fragment types",
                 "ylab": "# Fragments",
                 "cpswitch_counts_label": "Number of Fragments",
             }
@@ -356,7 +356,8 @@ class MultiqcModule(BaseMultiqcModule):
                 plot=bargraph.plot(self.ssds_stats, keys, pconfig),
                 name="SSDS alignment stats (excluding unaligned)",
                 anchor="ssds-alignment-barplot",
-                content="<p>This module parses the output from <code>SSDS stats</code>.</p>",
+                description="<p>This plot shows the fraction of fragments derived from different sources.</p>",
+                content='<p>This module parses the results from <a href="https://github.com/kevbrick/ssds_pipeline_accessory_scripts.git"><code>parse_SSDS_BAM.py</code> </a></p>',
             )
 
             ##################################################################################
@@ -375,13 +376,15 @@ class MultiqcModule(BaseMultiqcModule):
 
             # Add the SPoT stats to the page
             for dna in ["ssDNA", "ssDNA_type2", "dsDNA_hiconf", "dsDNA_loconf", "unclassified"]:
-                sys.stderr.write(dna)
-
                 self.add_section(
                     plot=table.plot(self.heatMapList[dna], self.SPoT_headers, pconfig),
                     name="SPoTs (" + dna + ")",
                     anchor="SPoT-stats-" + dna,
-                    content="<p>This module parses the output from <code>SSDS stats</code>.</p>",
+                    description="<p>The signal portion of tags (SPoT) is the fraction of reads that are found at a given set of genomic intervals. \
+                                    Values range from 0 (no reads) to 1 (all reads). The interval names have been defined by the user. Intervals \
+                                    followed by (R) indicate the SPoT at a randomly shuffled set of the same intervals - this gives a ballpark idea \
+                                    of the expected overlap if reads are not enriched at these loci. </p>",
+                    content='<p>This module parses the results from <a href="https://github.com/kevbrick/ssds_pipeline_accessory_scripts.git"><code>calculate_SPoT.py</code> </a></p>',
                 )
 
             ##################################################################################
@@ -390,78 +393,70 @@ class MultiqcModule(BaseMultiqcModule):
             # Loop through all 20 combinations of parameter and type
             # (ss,t2,dH,dL,un) X (frag,ITR,uH,Fillin)
             # hard coding the list is the easiest option here (no need to be clever)
-            for hType in [
-                "ssDNA_Fragment",
-                "ssDNA_ITR",
-                "ssDNA_uH",
-                "ssDNA_FillIn",
-                "ssDNA_type2_Fragment",
-                "ssDNA_type2_ITR",
-                "ssDNA_type2_uH",
-                "ssDNA_type2_FillIn",
-                "dsDNA_hiconf_Fragment",
-                "dsDNA_hiconf_ITR",
-                "dsDNA_hiconf_uH",
-                "dsDNA_hiconf_FillIn",
-                "dsDNA_loconf_Fragment",
-                "dsDNA_loconf_ITR",
-                "dsDNA_loconf_uH",
-                "dsDNA_loconf_FillIn",
-                "unclassified_Fragment",
-                "unclassified_ITR",
-                "unclassified_uH",
-                "unclassified_FillIn",
-            ]:
+            plot_descriptions = {
+                "Fragment": "NOTE: SSDS fragments tend to be rather short < 100bp.",
+                "ITR": 'SSDS read pairs are characterized by Inverted Terminal Repeats (ITRs) (same sequence at the 5 prime end of read 1 and the 3 prime end of read 2). ITR length can be modulated by changing the temperature of the SSDS protocol (see <a href="https://genome.cshlp.org/content/22/5/957.long">Khil et al., Genome Res.2012</a>)',
+                "uH": "ITR formation is thought to be modulated by short microhomologies (uH) in the genome.",
+                "FillIn": "The fill-in region indicates the region at the 3 prime end of that is the result of sythesis using the 5 prime end of read 1 as a template. The fill-in at the end of read 2 is not found in the reference genome, but matches the 5 prime end of read 1.",
+            }
 
-                # If histogram dictionary exists for this combo
-                if len(self.histograms[hType]) > 0:
+            for dna_type in ["ssDNA", "ssDNA_type2", "dsDNA_hiconf", "dsDNA_loconf", "unclassified"]:
+                for val_type in ["Fragment", "ITR", "uH", "FillIn"]:
+                    combo_type = dna_type + "_" + val_type
+                    # If histogram dictionary exists for this combo
+                    if len(self.histograms[combo_type]) > 0:
 
-                    ## Make a percentage normalised version of the data
-                    data_percent = {}
+                        ## Make a percentage normalised version of the data
+                        data_percent = {}
 
-                    # Loop through key, value pairs for this histogram
-                    for s_name, data in self.histograms[hType].items():
+                        # Loop through key, value pairs for this histogram
+                        for s_name, data in self.histograms[combo_type].items():
 
-                        # initialize total to 0 (not sure why I do that)
-                        total = 0
+                            # initialize total to 0 (not sure why I do that)
+                            total = 0
 
-                        # Create percentage dictionary
-                        data_percent[s_name] = OrderedDict()
+                            # Create percentage dictionary
+                            data_percent[s_name] = OrderedDict()
 
-                        # Get total for this histogram
-                        total = float(sum(data.values()))
+                            # Get total for this histogram
+                            total = float(sum(data.values()))
 
-                        # Calculate percentages for this histogram
-                        for k, v in data.items():
-                            if v > 0:
-                                data_percent[s_name][k] = (v / total) * 100
-                            else:
-                                data_percent[s_name][k] = 0
+                            # Calculate percentages for this histogram
+                            for k, v in data.items():
+                                if v > 0:
+                                    data_percent[s_name][k] = (v / total) * 100
+                                else:
+                                    data_percent[s_name][k] = 0
 
-                    fig_label = hType.replace("_", " ")
-                    # Configure histogram plot
-                    histConfig = {
-                        "id": hType + "_length",
-                        "title": fig_label + " length",
-                        "ylab": "Fragments (%)",
-                        "xlab": fig_label + " length (bp)",
-                        "xDecimals": False,
-                        "ymin": 0,
-                        "data_labels": [
-                            {"name": "Percent", "ylab": "Fragments (%)"},
-                            {"name": "Counts", "ylab": "Fragments (count)"},
-                        ],
-                    }
+                        fig_label = combo_type.replace("_", " ")
+                        # Configure histogram plot
+                        histConfig = {
+                            "id": combo_type + "_length",
+                            "title": fig_label + " length",
+                            "ylab": "Fragments (%)",
+                            "xlab": fig_label + " length (bp)",
+                            "xDecimals": False,
+                            "ymin": 0,
+                            "data_labels": [
+                                {"name": "Percent", "ylab": "Fragments (%)"},
+                                {"name": "Counts", "ylab": "Fragments (count)"},
+                            ],
+                        }
 
-                    # Add histogram to multi-QC page
-                    # - percentage histogram is first (default)
-                    # - switch order to reverse
-                    self.add_section(
-                        plot=linegraph.plot([data_percent, self.histograms[hType]], histConfig),
-                        name=fig_label,
-                        anchor="ssds-stats" + hType,
-                        content="<p>This module parses the output from <code>SSDS SPoT stats</code>.</p>",
-                    )
+                        # Add histogram to multi-QC page
+                        self.add_section(
+                            plot=linegraph.plot([data_percent, self.histograms[combo_type]], histConfig),
+                            name=fig_label,
+                            anchor="ssds-stats" + combo_type,
+                            description="<p>This plot shows the length distribution of SSDS "
+                            + val_type
+                            + "s for "
+                            + dna_type
+                            + " fragments. "
+                            + plot_descriptions[val_type]
+                            + ".</p>",
+                            content='<p>This module parses the results from <a href="https://github.com/kevbrick/ssds_pipeline_accessory_scripts.git"><code>parse_SSDS_BAM.py</code> </a></p>',
+                        )
 
         # Return the number of logs that were found
         return len(self.ssds_stats)
