@@ -320,7 +320,7 @@ class MultiqcModule(BaseMultiqcModule):
             # Configure the total alignment plot
             b2config = {
                 "id": "Total_Alignment_Stats_Plot",
-                "title": "Read-pair types",
+                "title": "SSDS: Read-pair_types",
                 "ylab": "# Read-pairs",
                 "cpswitch_counts_label": "Number of Read-pairs",
             }
@@ -328,7 +328,7 @@ class MultiqcModule(BaseMultiqcModule):
             # Add the Total alignment stats barplot to the page
             self.add_section(
                 plot=bargraph.plot(self.ssds_stats, b2keys, b2config),
-                name="Total alignment stats (including unaligned)",
+                name="Read pair alignment stats",
                 description='<p>This plot shows the fraction of read-pairs derived from different sources. It includes unmapped / low quality / supplementary read-pairs in the "other" category.</p>',
                 content='<p>This module parses the results from <a href="https://github.com/kevbrick/ssds_pipeline_accessory_scripts.git"><code>parse_SSDS_BAM.py</code> </a></p>',
             )
@@ -346,8 +346,9 @@ class MultiqcModule(BaseMultiqcModule):
             # Configure the SSDS Alignment barplot
             pconfig = {
                 "id": "SSDS_Alignment_Stats_Plot",
-                "title": "SSDS fragment types",
+                "title": "SSDS: Fragment_types",
                 "ylab": "# Fragments",
+                "save_file": False,
                 "cpswitch_counts_label": "Number of Fragments",
             }
 
@@ -363,19 +364,17 @@ class MultiqcModule(BaseMultiqcModule):
             ##################################################################################
             ## PLOT 3: SPoT Heatmap
             # Specify the order and colors of the different types of aligned / unaligned reads
-
-            # Configure the SPoT table
-            pconfig = {
-                "id": "SPoT_stats_table",
-                "table_title": "SPoT Statistics",
-                "save_file": True,
-                "raw_data_fn": "multiqc_SPoT_stats",
-            }
-
             self.SPoT_headers_sorted = sorted(self.SPoT_headers)
 
             # Add the SPoT stats to the page
             for dna in ["ssDNA", "ssDNA_type2", "dsDNA_hiconf", "dsDNA_loconf", "unclassified"]:
+                # Configure the SPoT table
+                pconfig = {
+                    "id": "SPoT_stats_table_" + dna,
+                    "table_title": "SPoT Statistics for " + dna,
+                    "save_file": False,
+                    "raw_data_fn": "multiqc_SPoT_stats",
+                }
                 self.add_section(
                     plot=table.plot(self.heatMapList[dna], self.SPoT_headers, pconfig),
                     name="SPoTs (" + dna + ")",
@@ -432,8 +431,9 @@ class MultiqcModule(BaseMultiqcModule):
                         # Configure histogram plot
                         histConfig = {
                             "id": combo_type + "_length",
-                            "title": fig_label + " length",
+                            "title": "SSDS: " + fig_label + " length",
                             "ylab": "Fragments (%)",
+                            "save_file": False,
                             "xlab": fig_label + " length (bp)",
                             "xDecimals": False,
                             "ymin": 0,
