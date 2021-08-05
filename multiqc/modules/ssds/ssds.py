@@ -66,7 +66,7 @@ class MultiqcModule(BaseMultiqcModule):
         self.heatYcats = []
 
         # Loop through all files in folder for parse SSDS logs
-        for f in self.find_log_files("parse_ssds"):
+        for f in self.find_log_files("ssds/parse"):
 
             # Chop off the file extension (save space on screen)
             reportName = f["s_name"]
@@ -161,7 +161,7 @@ class MultiqcModule(BaseMultiqcModule):
                 self.add_data_source(f)
                 self.ssds_stats[reportName] = parsed_data
 
-        for f in self.find_log_files("SPoT_ssds"):
+        for f in self.find_log_files("ssds/spot"):
 
             # Chop off the file extension (save space on screen)
             reportName = f["s_name"]
