@@ -6,6 +6,9 @@
 
 ### New Modules
 
+- [**Nextclade**](https://github.com/nextstrain/nextclade)
+  - Tool that assigns clades to SARS-CoV-2 samples
+
 ### Module updates
 
 - **RSeQC**
