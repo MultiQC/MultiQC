@@ -8,6 +8,8 @@
 
 ### Module updates
 
+- **bbmap**
+  - Added parsing and plotting for `refstats` output from the `bbsplit` tool ([#757](https://github.com/ewels/MultiQC/issues/757))
 - **RSeQC**
   - Fixed minor bug in new TIN parsing where the sample name was not being correctly cleaned ([#1484](https://github.com/ewels/MultiQC/issues/1484))
 - **CCS**
