@@ -70,7 +70,7 @@ class MultiqcModule(BaseMultiqcModule):
                         new_key = "_".join(new_key.split("."))
                     sample[new_key] = sample.pop(key)
 
-                for key in sample.keys():
+                for key in list(sample.keys()):
                     new_key = key.lower()
                     sample[new_key] = sample.pop(key)
 
