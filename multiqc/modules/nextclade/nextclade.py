@@ -79,7 +79,7 @@ class MultiqcModule(BaseMultiqcModule):
                 log.error(f"File '{f['fn']}' could not be parsed - no sequence name found")
 
     def nextclade_general_stats_table(self):
-        """Takes the parsed sample data and adds it to the general stats table"""
+        """Takes the parsed sample data and adds the sequences' clade to the general stats table"""
 
         headers = OrderedDict()
         headers["clade"] = {
@@ -94,72 +94,150 @@ class MultiqcModule(BaseMultiqcModule):
         headers = OrderedDict()
         headers["clade"] = {
             "title": "Clade",
-            "description": "",
+            "description": "The inferred clade from the input sequence and reference tree",
         }
         headers["qc_overallscore"] = {
             "title": "QC overall score",
-            "description": "",
+            "description": "Summarizing score of all QC test",
+            "hidden": True,
         }
 
         headers["qc_overallstatus"] = {
             "title": "QC overall status",
-            "description": "",
+            "description": "Summarizing status of all QC tests",
         }
         headers["totalgaps"] = {
             "title": "Total gaps",
-            "description": "",
+            "description": "Total number of detected nucleotide gaps",
         }
 
         headers["totalinsertions"] = {
             "title": "Total insertions",
-            "description": "",
+            "description": "Total number of detected nucleotide insertions",
         }
 
         headers["totalmissing"] = {
             "title": "Total missing",
-            "description": "",
+            "description": "Total number of detected missing nucleotides",
         }
 
         headers["totalmutations"] = {
             "title": "Total mutations",
-            "description": "",
+            "description": "Total number of detected nucleotide mutations",
         }
 
         headers["totalnonacgtns"] = {
             "title": "Total non ACGTNs",
-            "description": "",
+            "description": "Total number of detected ambiguous nucleotides",
         }
-        headers["totalpcrprimerchanges"] = {"title": "Total PCR primer changes", "description": ""}
-        headers["totalaminoacidsubstitutions"] = {"title": "Total amino acid substitutions", "description": ""}
-        headers["aadeletions"] = {"title": "AA deletions", "description": ""}
-        headers["totalaminoaciddeletions"] = {"title": "Total amino acid deletions", "description": ""}
-        headers["alignmentend"] = {"title": "Alignment end", "description": ""}
-        headers["alignmentscore"] = {"title": "Alignment score", "description": ""}
-        headers["alignmentstart"] = {"title": "Alignment start", "description": ""}
+        headers["totalpcrprimerchanges"] = {
+            "title": "Total PCR primer changes",
+            "description": "Total number of nucleotide mutations detected in PCR primer regions",
+        }
+        headers["totalaminoacidsubstitutions"] = {
+            "title": "Total amino acid substitutions",
+            "description": "Total number of detected aminoacid substitutions",
+        }
+        headers["totalaminoaciddeletions"] = {
+            "title": "Total amino acid deletions",
+            "description": "Total number of detected aminoacid substitutions",
+        }
+        headers["alignmentscore"] = {
+            "title": "Alignment score",
+            "description": "Indicates to what degree the input sequence and the reference sequence correspond",
+        }
+        headers["alignmentstart"] = {
+            "title": "Alignment start",
+            "description": "Beginning of the sequenced region",
+            "hidden": True,
+        }
+        headers["alignmentend"] = {
+            "title": "Alignment end",
+            "description": "End of the sequenced region",
+            "hidden": True,
+        }
         headers["qc_missingdata_missingdatathreshold"] = {
             "title": "QC missing data: missing data threshold",
-            "description": "",
+            "description": "The threshold used for the 'Missing data' QC test",
+            "hidden": True,
         }
-        headers["qc_missingdata_score"] = {"title": "QC missingdata: score", "description": ""}
-        headers["qc_missingdata_status"] = {"title": "QC missingdata: status", "description": ""}
-        headers["qc_missingdata_totalmissing"] = {"title": "QC missingdata: total missing", "description": ""}
+        headers["qc_missingdata_score"] = {
+            "title": "QC missingdata: score",
+            "description": "Score from the 'Missing data' QC test",
+            "hidden": True,
+        }
+        headers["qc_missingdata_status"] = {
+            "title": "QC missingdata: status",
+            "description": "Status for 'Missing data' QC test",
+        }
+        headers["qc_missingdata_totalmissing"] = {
+            "title": "QC missingdata: total missing",
+            "description": "Total number of missing nucleotides used in 'Missing data' QC test",
+            "hidden": True,
+        }
         headers["qc_mixedsites_mixedsitesthreshold"] = {
             "title": "QC mixedsites: mixed sites threshold",
-            "description": "",
+            "description": "Threshold used for 'Mixed sites' QC test",
+            "hidden": True,
         }
-        headers["qc_mixedsites_score"] = {"title": "QC mixed sites: score", "description": ""}
-        headers["qc_mixedsites_status"] = {"title": "QC mixedsites: status", "description": ""}
-        headers["qc_mixedsites_totalmixedsites"] = {"title": "QC mixedsites: total mixed sites", "description": ""}
-        headers["qc_privatemutations_cutoff"] = {"title": "QC private mutations: cutoff", "description": ""}
-        headers["qc_privatemutations_excess"] = {"title": "QC private mutations: excess", "description": ""}
-        headers["qc_privatemutations_score"] = {"title": "QC private mutations: score", "description": ""}
-        headers["qc_privatemutations_status"] = {"title": "QC private mutations: status", "description": ""}
-        headers["qc_privatemutations_total"] = {"title": "QC private mutations: total", "description": ""}
-        headers["qc_snpclusters_clusteredsnps"] = {"title": "QC SNP clusters: clustered SNPs", "description": ""}
-        headers["qc_snpclusters_score"] = {"title": "QC SNP clusters: score", "description": ""}
-        headers["qc_snpclusters_status"] = {"title": "QC SNP clusters: status", "description": ""}
-        headers["qc_snpclusters_totalsnps"] = {"title": "QC SNP clusters: total SNPs", "description": ""}
-        headers["errors"] = {"title": "errors", "description": ""}
+        headers["qc_mixedsites_score"] = {
+            "title": "QC mixed sites: score",
+            "description": "Score from the 'Missing data' QC testScore from the 'Missing data' QC test",
+            "hidden": True,
+        }
+        headers["qc_mixedsites_status"] = {
+            "title": "QC mixedsites: status",
+            "description": "Status for 'Missing data' QC test",
+        }
+        headers["qc_mixedsites_totalmixedsites"] = {
+            "title": "QC mixedsites: total mixed sites",
+            "description": "Total number of ambiguous nucleotides used for 'Mixed sites' QC test",
+            "hidden": True,
+        }
+        headers["qc_privatemutations_cutoff"] = {
+            "title": "QC private mutations: cutoff",
+            "description": "Cutoff parameter used for 'Private mutations' QC test",
+            "hidden": True,
+        }
+        headers["qc_privatemutations_excess"] = {
+            "title": "QC private mutations: excess",
+            "description": "Excess parameter used for 'Private mutations' QC test",
+            "hidden": True,
+        }
+        headers["qc_privatemutations_score"] = {
+            "title": "QC private mutations: score",
+            "description": "Score for 'Private mutations' QC rule",
+            "hidden": True,
+        }
+        headers["qc_privatemutations_status"] = {
+            "title": "QC private mutations: status",
+            "description": "Status for 'Private mutations' QC rule",
+        }
+        headers["qc_privatemutations_total"] = {
+            "title": "QC private mutations: total",
+            "description": "Total number of private mutations used for 'Private mutations' QC rule",
+            "hidden": True,
+        }
+        headers["qc_snpclusters_clusteredsnps"] = {
+            "title": "QC SNP clusters: clustered SNPs",
+            "description": "Clustered SNP detected for 'SNP clusters' QC test",
+            "hidden": True,
+        }
+        headers["qc_snpclusters_score"] = {
+            "title": "QC SNP clusters: score",
+            "description": "Score for 'SNP clusters' QC test",
+            "hidden": True,
+        }
+        headers["qc_snpclusters_status"] = {
+            "title": "QC SNP clusters: status",
+            "description": "Status for 'SNP clusters' QC test",
+        }
+        headers["qc_snpclusters_totalsnps"] = {
+            "title": "QC SNP clusters: total SNPs",
+            "description": "Total number of SNPs for 'SNP clusters' QC test",
+            "hidden": True,
+        }
+        headers["errors"] = {"title": "errors", "description": "List of errors that occurred during processing"}
 
         # Main table config
         table_config = {
