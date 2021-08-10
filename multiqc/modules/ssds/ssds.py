@@ -58,10 +58,13 @@ class MultiqcModule(BaseMultiqcModule):
         # Add to the General Stats table (has to be called once per MultiQC module)
         self.general_stats_addcols(self.general_stats_data, self.general_stats_headers)
 
-        self.tot_alignment_plot()
-        self.ssds_alignment_plot()
-        self.ssds_heatmap()
-        self.itr_properties_plots()
+        if n["SSDS_dets"] > 0:
+            self.tot_alignment_plot()
+            self.ssds_alignment_plot()
+            self.itr_properties_plots()
+
+        if n["SSDS_SPoT"] > 0:
+            self.ssds_spot_heatmap()
 
     def parse_details_reports(self):
 
@@ -74,6 +77,9 @@ class MultiqcModule(BaseMultiqcModule):
         # Loop through all files in folder for parse SSDS logs
         for f in self.find_log_files("ssds/parse"):
 
+            ## Prevent loading of empty reports
+            reportOK = False
+
             # Chop off the file extension (save space on screen)
             reportName = f["s_name"]
             reportName = re.sub("\..+", "", reportName)
@@ -82,6 +88,7 @@ class MultiqcModule(BaseMultiqcModule):
 
             # Loop through the file by line
             for line in f["f"].splitlines():
+                reportOK = True
 
                 #  Split line into columns
                 sections = line.split("\t")
@@ -116,8 +123,9 @@ class MultiqcModule(BaseMultiqcModule):
                 if field == "filtered_fragments":
                     parsed_data["other"] = parsed_data[field]
 
-            self.add_data_source(f)
-            self.ssds_stats[reportName] = parsed_data
+            if reportOK:
+                self.add_data_source(f)
+                self.ssds_stats[reportName] = parsed_data
 
         # If we have some data to show, carry on
         if len(self.ssds_stats) > 0:
@@ -157,6 +165,8 @@ class MultiqcModule(BaseMultiqcModule):
             reportName = f["s_name"]
             reportName = re.sub("\..+", "", reportName)
 
+            reportOK = False
+
             # Loop through the file by line
             for line in f["f"].splitlines():
 
@@ -164,6 +174,7 @@ class MultiqcModule(BaseMultiqcModule):
                 sections = line.split("\t")
 
                 if sections[0].endswith("_SPoT"):
+                    reportOK = True
                     reptype = "SPoT"
                     read_dets = sections[0].replace("_SPoT", "")
                     interval_dets = sections[1]
@@ -183,8 +194,9 @@ class MultiqcModule(BaseMultiqcModule):
                     else:
                         self.SPoT_values[read_dets][reportName][interval_dets] = float(SPoT) * 100
 
-            self.add_data_source(f)
-            self.ssds_SPoT_stats[reportName] = self.SPoT_values[read_dets]
+            if reportOK:
+                self.add_data_source(f)
+                self.ssds_SPoT_stats[reportName] = self.SPoT_values[read_dets]
 
         # Return the number of logs that were found
         return len(self.ssds_SPoT_stats)
@@ -247,7 +259,118 @@ class MultiqcModule(BaseMultiqcModule):
             content='<p>This module parses the results from <a href="https://github.com/kevbrick/ssds_pipeline_accessory_scripts.git"><code>parse_SSDS_BAM.py</code> </a></p>',
         )
 
-    def ssds_heatmap(self):
+    def itr_properties_plots(self):
+
+        ## Plot 4: SSDS properties / Length histograms
+
+        plot_description = """<table style="width:100%">
+            <tr style="vertical-align: top; text-align: left"><td>Fragment length:</td><td>Also known as "insert size". Fragments from SSDS experiments are generally short (<100bp).</td>
+            <tr style="vertical-align: top; text-align: left"><td>Inverted Terminal Repeats (ITRs):</td><td>SSDS read pairs are characterized by Inverted Terminal Repeats (ITRs) (the same sequence at the 5 prime end of read 1 and the 3 prime end of read 2).<br>ITRs with a fill-in are characteristic of ssDNA (see <a href="https://genome.cshlp.org/content/22/5/957.long">Khil et al., Genome Res.2012</a>).</td>
+            <tr style="vertical-align: top; text-align: left"><td>ITR micro-homology (uH):</td><td>ITR formation is modulated by short microhomologies (uH) in the genome.</td>
+            <tr style="vertical-align: top; text-align: left"><td>ITR Fill-In:</td><td>The fill-in region arises during end-repair; DNA synthesis extends the 3' end of ssDNA using the 5 prime end of the fragment as a template.<br>The fill-in occurs at the 3 prime end of read 2 is not found in the reference genome, but matches the 5 prime end of read 2 and is not found in the genome.</td></tr></table>"""
+
+        plot_descriptions = {}
+        plot_descriptions["ssDNA"] = (
+            "Fragments designated <b>ssDNA</b> are derived from single-stranded DNA.<hr>" + plot_description
+        )
+        plot_descriptions["ssDNA_type2"] = (
+            "Fragments designated as <b>ssDNA_type2</b> are likely to have been derived from single-stranded DNA. However, these fragments are not routinely used in ssDNA-based analyses as they may occasionally be derived from dsDNA.<hr>"
+            + plot_description
+        )
+        plot_descriptions["dsDNA_loconf"] = (
+            "Fragments designated as <b>dsDNA_loconf</b> are likely derived from double-stranded DNA. However, this is a low-confidence designation as they may also infrequently be derived from ssDNA.<hr>"
+            + plot_description
+        )
+        plot_descriptions["dsDNA_hiconf"] = (
+            "Fragments designated as <b>hiDNA_loconf</b> are likely derived from double-stranded DNA. Although we have more confidence in this categorization than for lo-conf dsDNA, it remains possible that these fragments are derived from sincle-stranded DNA.<hr>"
+            + plot_description
+        )
+        plot_descriptions["unclassified"] = (
+            "Fragments designated as <b>unclassified</b> cannot be defined as either ssDNA or dsDNA-derived.<hr>"
+            + plot_description
+        )
+
+        for dna_type in ["ssDNA", "ssDNA_type2", "dsDNA_hiconf", "dsDNA_loconf", "unclassified"]:
+
+            ## Make a percentage normalised version of the data
+            data_percent = {}
+
+            for prop_type in ["Fragment", "ITR", "uH", "FillIn"]:
+                combo_type = dna_type + "_" + prop_type
+
+                data_percent[prop_type] = {}
+
+                # If histogram dictionary exists for this combo
+                if len(self.histograms[combo_type]) > 0:
+
+                    # Loop through key, value pairs for this histogram
+                    for s_name, data in self.histograms[combo_type].items():
+                        total = 0
+
+                        # Create percentage dictionary
+                        data_percent[prop_type][s_name] = {}
+
+                        # Get total for this histogram
+                        total = float(sum(data.values()))
+
+                        # Calculate percentages for this histogram
+                        for k, v in data.items():
+                            if v > 0:
+                                data_percent[prop_type][s_name][k] = (v / total) * 100
+                            else:
+                                data_percent[prop_type][s_name][k] = 0
+
+            # Configure histogram plot
+            histConfig = {
+                "id": dna_type + "_fragment_properties",
+                "title": "Module SSDS: " + dna_type + " fragment properties",
+                "save_file": True,
+                "xDecimals": False,
+                "ymin": 0,
+                "ylab": "Fragments",
+                "categories": True,
+                "data_labels": [
+                    {"name": "ITR (Count)", "ylab": "Fragments (#)", "xlab": "Total ITR length (nt)"},
+                    {"name": "ITR (%)", "ylab": "Fragments (%)", "xlab": "Total ITR length (nt)"},
+                    {
+                        "name": "Micro-homology (Count)",
+                        "ylab": "Fragments (#)",
+                        "xlab": "ITR microhomology length (nt)",
+                    },
+                    {"name": "Micro-homology (%)", "ylab": "Fragments (%)", "xlab": "ITR microhomology length (nt)"},
+                    {"name": "Fill-in (Count)", "ylab": "Fragments (#)", "xlab": "ITR fill-in length (nt)"},
+                    {"name": "Fill-in (%)", "ylab": "Fragments (%)", "xlab": "ITR fill-in length (nt)"},
+                    {"name": "Fragment (Count)", "ylab": "Fragments (#)", "xlab": "Fragment length (nt)"},
+                    {"name": "Fragment (%)", "ylab": "Fragments (%)", "xlab": "Fragment length (nt)"},
+                ],
+            }
+
+            plot_data = [
+                self.histograms[dna_type + "_ITR"],
+                data_percent["ITR"],
+                self.histograms[dna_type + "_uH"],
+                data_percent["uH"],
+                self.histograms[dna_type + "_FillIn"],
+                data_percent["FillIn"],
+                self.histograms[dna_type + "_Fragment"],
+                data_percent["Fragment"],
+            ]
+
+            ## KB: 10/08/21: Adding this linegraph is slow.
+            # Add histogram to multi-QC page
+            self.add_section(
+                plot=linegraph.plot(plot_data, histConfig),
+                name="Frag. props: " + dna_type,
+                anchor="ssds-stats" + combo_type,
+                description="<p>This plot shows the length distributions for fragment properties for "
+                + dna_type
+                + " fragments from SSDS.<br><br>"
+                + plot_descriptions[dna_type]
+                + "</p>",
+                content='<p>This module parses the results from <a href="https://github.com/kevbrick/ssds_pipeline_accessory_scripts.git"><code>parse_SSDS_BAM.py</code> </a></p>',
+            )
+
+    def ssds_spot_heatmap(self):
 
         ## PLOT 3: Heatmap showing SPoT breakdown by type for every sample
 
@@ -329,114 +452,3 @@ class MultiqcModule(BaseMultiqcModule):
             """,
             plot=heatmap.plot(data, s_names, interval_names, pconfig),
         )
-
-    def itr_properties_plots(self):
-
-        ## Plot 4: SSDS properties / Length histograms
-
-        plot_description = """<table style="width:100%">
-            <tr style="vertical-align: top; text-align: left"><td>Fragment length:</td><td>Also known as "insert size". Fragments from SSDS experiments are generally short (<100bp).</td>
-            <tr style="vertical-align: top; text-align: left"><td>Inverted Terminal Repeats (ITRs):</td><td>SSDS read pairs are characterized by Inverted Terminal Repeats (ITRs) (the same sequence at the 5 prime end of read 1 and the 3 prime end of read 2).<br>ITRs with a fill-in are characteristic of ssDNA (see <a href="https://genome.cshlp.org/content/22/5/957.long">Khil et al., Genome Res.2012</a>).</td>
-            <tr style="vertical-align: top; text-align: left"><td>ITR micro-homology (uH):</td><td>ITR formation is modulated by short microhomologies (uH) in the genome.</td>
-            <tr style="vertical-align: top; text-align: left"><td>ITR Fill-In:</td><td>The fill-in region arises during end-repair; DNA synthesis extends the 3' end of ssDNA using the 5 prime end of the fragment as a template.<br>The fill-in occurs at the 3 prime end of read 2 is not found in the reference genome, but matches the 5 prime end of read 2 and is not found in the genome.</td></tr></table>"""
-
-        plot_descriptions = {}
-        plot_descriptions["ssDNA"] = (
-            "Fragments designated <b>ssDNA</b> are derived from single-stranded DNA.<hr>" + plot_description
-        )
-        plot_descriptions["ssDNA_type2"] = (
-            "Fragments designated as <b>ssDNA_type2</b> are likely to have been derived from single-stranded DNA. However, these fragments are not routinely used in ssDNA-based analyses as they may occasionally be derived from dsDNA.<hr>"
-            + plot_description
-        )
-        plot_descriptions["dsDNA_loconf"] = (
-            "Fragments designated as <b>dsDNA_loconf</b> are likely derived from double-stranded DNA. However, this is a low-confidence designation as they may also infrequently be derived from ssDNA.<hr>"
-            + plot_description
-        )
-        plot_descriptions["dsDNA_hiconf"] = (
-            "Fragments designated as <b>hiDNA_loconf</b> are likely derived from double-stranded DNA. Although we have more confidence in this categorization than for lo-conf dsDNA, it remains possible that these fragments are derived from sincle-stranded DNA.<hr>"
-            + plot_description
-        )
-        plot_descriptions["unclassified"] = (
-            "Fragments designated as <b>unclassified</b> cannot be defined as either ssDNA or dsDNA-derived.<hr>"
-            + plot_description
-        )
-
-        for dna_type in ["ssDNA", "ssDNA_type2", "dsDNA_hiconf", "dsDNA_loconf", "unclassified"]:
-            ## Make a percentage normalised version of the data
-            data_percent = {}
-            for prop_type in ["Fragment", "ITR", "uH", "FillIn"]:
-
-                combo_type = dna_type + "_" + prop_type
-
-                data_percent[prop_type] = {}
-
-                # If histogram dictionary exists for this combo
-                if len(self.histograms[combo_type]) > 0:
-
-                    # Loop through key, value pairs for this histogram
-                    for s_name, data in self.histograms[combo_type].items():
-
-                        # initialize total to 0 (not sure why I do that)
-                        total = 0
-
-                        # Create percentage dictionary
-                        data_percent[prop_type][s_name] = {}
-
-                        # Get total for this histogram
-                        total = float(sum(data.values()))
-
-                        # Calculate percentages for this histogram
-                        for k, v in data.items():
-                            if v > 0:
-                                data_percent[prop_type][s_name][k] = (v / total) * 100
-                            else:
-                                data_percent[prop_type][s_name][k] = 0
-
-            # Configure histogram plot
-            histConfig = {
-                "id": dna_type + "_fragment_properties",
-                "title": "Module SSDS: " + dna_type + " fragment properties",
-                "save_file": True,
-                "xDecimals": False,
-                "ymin": 0,
-                "ylab": "Fragments",
-                "categories": True,
-                "data_labels": [
-                    {"name": "ITR (Count)", "ylab": "Fragments (#)", "xlab": "Total ITR length (nt)"},
-                    {"name": "ITR (%)", "ylab": "Fragments (%)", "xlab": "Total ITR length (nt)"},
-                    {
-                        "name": "Micro-homology (Count)",
-                        "ylab": "Fragments (#)",
-                        "xlab": "ITR microhomology length (nt)",
-                    },
-                    {"name": "Micro-homology (%)", "ylab": "Fragments (%)", "xlab": "ITR microhomology length (nt)"},
-                    {"name": "Fill-in (Count)", "ylab": "Fragments (#)", "xlab": "ITR fill-in length (nt)"},
-                    {"name": "Fill-in (%)", "ylab": "Fragments (%)", "xlab": "ITR fill-in length (nt)"},
-                    {"name": "Fragment (Count)", "ylab": "Fragments (#)", "xlab": "Fragment length (nt)"},
-                    {"name": "Fragment (%)", "ylab": "Fragments (%)", "xlab": "Fragment length (nt)"},
-                ],
-            }
-
-            plot_data = [
-                self.histograms[dna_type + "_ITR"],
-                data_percent["ITR"],
-                self.histograms[dna_type + "_uH"],
-                data_percent["uH"],
-                self.histograms[dna_type + "_FillIn"],
-                data_percent["FillIn"],
-                self.histograms[dna_type + "_Fragment"],
-                data_percent["Fragment"],
-            ]
-
-            # Add histogram to multi-QC page
-            self.add_section(
-                plot=linegraph.plot(plot_data, histConfig),
-                name="Frag. props: " + dna_type,
-                anchor="ssds-stats" + combo_type,
-                description="<p>This plot shows the length distributions for fragment properties for "
-                + dna_type
-                + " fragments from SSDS.<br><br>"
-                + plot_descriptions[dna_type]
-                + "</p>",
-                content='<p>This module parses the results from <a href="https://github.com/kevbrick/ssds_pipeline_accessory_scripts.git"><code>parse_SSDS_BAM.py</code> </a></p>',
-            )
