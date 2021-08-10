@@ -109,42 +109,60 @@ class MultiqcModule(BaseMultiqcModule):
         headers["totalgaps"] = {
             "title": "Total gaps",
             "description": "Total number of detected nucleotide gaps",
+            "min": 0,
+            "scale": "RdBl-rev",
         }
 
         headers["totalinsertions"] = {
             "title": "Total insertions",
             "description": "Total number of detected nucleotide insertions",
+            "min": 0,
+            "scale": "RdYlGr-rev",
         }
 
         headers["totalmissing"] = {
             "title": "Total missing",
             "description": "Total number of detected missing nucleotides",
+            "min": 0,
+            "scale": "RdYlBl-rev",
         }
 
         headers["totalmutations"] = {
             "title": "Total mutations",
             "description": "Total number of detected nucleotide mutations",
+            "min": 0,
+            "scale": "RdBl-rev",
         }
 
         headers["totalnonacgtns"] = {
             "title": "Total non ACGTNs",
             "description": "Total number of detected ambiguous nucleotides",
+            "min": 0,
+            "scale": "RdYlGr-rev",
         }
         headers["totalpcrprimerchanges"] = {
             "title": "Total PCR primer changes",
             "description": "Total number of nucleotide mutations detected in PCR primer regions",
+            "min": 0,
+            "scale": "RdYlBl-rev",
         }
         headers["totalaminoacidsubstitutions"] = {
             "title": "Total amino acid substitutions",
             "description": "Total number of detected aminoacid substitutions",
+            "min": 0,
+            "scale": "RdBl-rev",
         }
         headers["totalaminoaciddeletions"] = {
             "title": "Total amino acid deletions",
             "description": "Total number of detected aminoacid substitutions",
+            "min": 0,
+            "scale": "RdYlGr-rev",
         }
         headers["alignmentscore"] = {
             "title": "Alignment score",
             "description": "Indicates to what degree the input sequence and the reference sequence correspond",
+            "min": 0,
+            "scale": "RdYlBl-rev",
         }
         headers["alignmentstart"] = {
             "title": "Alignment start",
@@ -159,11 +177,13 @@ class MultiqcModule(BaseMultiqcModule):
         headers["qc_missingdata_missingdatathreshold"] = {
             "title": "QC missing data: missing data threshold",
             "description": "The threshold used for the 'Missing data' QC test",
+            "scale": "GrBl",
             "hidden": True,
         }
         headers["qc_missingdata_score"] = {
             "title": "QC missingdata: score",
             "description": "Score from the 'Missing data' QC test",
+            "scale": "RdYlGr-rev",
             "hidden": True,
         }
         headers["qc_missingdata_status"] = {
@@ -173,16 +193,19 @@ class MultiqcModule(BaseMultiqcModule):
         headers["qc_missingdata_totalmissing"] = {
             "title": "QC missingdata: total missing",
             "description": "Total number of missing nucleotides used in 'Missing data' QC test",
+            "scale": "RdYlBl-rev",
             "hidden": True,
         }
         headers["qc_mixedsites_mixedsitesthreshold"] = {
             "title": "QC mixedsites: mixed sites threshold",
             "description": "Threshold used for 'Mixed sites' QC test",
+            "scale": "GrBl",
             "hidden": True,
         }
         headers["qc_mixedsites_score"] = {
             "title": "QC mixed sites: score",
             "description": "Score from the 'Missing data' QC testScore from the 'Missing data' QC test",
+            "scale": "RdYlGr-rev",
             "hidden": True,
         }
         headers["qc_mixedsites_status"] = {
@@ -192,21 +215,25 @@ class MultiqcModule(BaseMultiqcModule):
         headers["qc_mixedsites_totalmixedsites"] = {
             "title": "QC mixedsites: total mixed sites",
             "description": "Total number of ambiguous nucleotides used for 'Mixed sites' QC test",
+            "scale": "RdYlBl-rev",
             "hidden": True,
         }
         headers["qc_privatemutations_cutoff"] = {
             "title": "QC private mutations: cutoff",
             "description": "Cutoff parameter used for 'Private mutations' QC test",
+            "scale": "GrBl",
             "hidden": True,
         }
         headers["qc_privatemutations_excess"] = {
             "title": "QC private mutations: excess",
             "description": "Excess parameter used for 'Private mutations' QC test",
+            "scale": "OrRd",
             "hidden": True,
         }
         headers["qc_privatemutations_score"] = {
             "title": "QC private mutations: score",
             "description": "Score for 'Private mutations' QC rule",
+            "scale": "RdYlGr-rev",
             "hidden": True,
         }
         headers["qc_privatemutations_status"] = {
@@ -216,6 +243,7 @@ class MultiqcModule(BaseMultiqcModule):
         headers["qc_privatemutations_total"] = {
             "title": "QC private mutations: total",
             "description": "Total number of private mutations used for 'Private mutations' QC rule",
+            "scale": "RdYlBl-rev",
             "hidden": True,
         }
         headers["qc_snpclusters_clusteredsnps"] = {
@@ -226,6 +254,7 @@ class MultiqcModule(BaseMultiqcModule):
         headers["qc_snpclusters_score"] = {
             "title": "QC SNP clusters: score",
             "description": "Score for 'SNP clusters' QC test",
+            "scale": "RdYlGr-rev",
             "hidden": True,
         }
         headers["qc_snpclusters_status"] = {
@@ -235,6 +264,7 @@ class MultiqcModule(BaseMultiqcModule):
         headers["qc_snpclusters_totalsnps"] = {
             "title": "QC SNP clusters: total SNPs",
             "description": "Total number of SNPs for 'SNP clusters' QC test",
+            "scale": "RdYlBl-rev",
             "hidden": True,
         }
         headers["errors"] = {"title": "errors", "description": "List of errors that occurred during processing"}
