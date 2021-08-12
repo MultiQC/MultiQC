@@ -117,6 +117,7 @@ class DragenMappingMetics(BaseMultiqcModule):
                 + data["Properly paired reads"]
                 + data["Singleton reads (itself mapped; mate unmapped)"]
                 + data["Unmapped reads"]
+                 + data["rRNA filtered reads"]
                 != data["Total reads in RG"]
             ):
                 log.warning(
@@ -439,6 +440,7 @@ MAPPING_METRICS = [
     Metric("Mapped reads R1", "Map R1", None, "hid", "reads", "Number of mapped reads R1, {}"),
     Metric("Mapped reads R2", "Map R2", None, "hid", "reads", "Number of mapped reads R2, {}"),
     Metric("Unmapped reads", "Unmap", "%", "%", "reads", "Number of unmapped reads, {}", the_higher_the_worse=True),
+    Metric("rRNA filtered reads", "rRNA", "%", "%", "reads", "Number of rRNA filtered reads, {}", the_higher_the_worse=True),
     Metric("Reads with MAPQ [40:inf)", "MQ⩾40", None, "hid", "reads", "Number of reads with MAPQ [40:inf), {}"),
     Metric(
         "Number of duplicate marked reads",
