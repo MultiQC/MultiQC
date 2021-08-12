@@ -281,7 +281,7 @@ def run_cli(
     sys.exit(multiqc_run["sys_exit_code"])
 
 
-# Main function that runs MultQC. Available to use within an interactive Python environment
+# Main function that runs MultiQC. Available to use within an interactive Python environment
 def run(
     analysis_dir,
     dirs=False,
