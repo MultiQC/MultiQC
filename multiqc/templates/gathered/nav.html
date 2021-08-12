@@ -1,0 +1,54 @@
+{# #######################
+  nav.html
+##########################
+
+The side navigation for the report.
+
+#}
+
+<div class="side-nav-wrapper">
+  <div class="side-nav">
+    <h1>
+      <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target=".mqc-nav, .mqc-toolbox">
+        <span class="sr-only">Toggle navigation</span>
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+      </button>
+      <a href="#">
+        <img src="data:image/png;base64,{{ include_file('assets/img/MultiQC_logo.png', b64=True) }}" title="MultiQC">
+        <br class="hidden-xs">
+        <small class="hidden-xs">v{{ config.version }}</small>
+      </a>
+    </h1>
+    {% if config.title is not none %}
+      <h1 class="side-nav-title"><a href="#">{{ config.title }}</a></h1>
+    {% endif %}
+    <p class="mqc_loading_warning">Loading report..</p>
+    <ul class="mqc-nav collapse navbar-collapse">
+      {% if not config.skip_generalstats %}
+      <li>
+        <a href="#general_stats" class="nav-l1">General Stats</a>
+      </li>
+      {% endif -%}
+      <li>
+        <a href="#detailed_stats" class="nav-l1">Detailed Stats</a>
+		<ul>
+      {% for m in report.modules_output %}
+      {% if m.sections | length > 0 %}
+	  {% for s in m.sections -%}
+		{% if s['name'] is not none and s['name'] | length > 0 %}
+		<li>
+		  <a href="#{{ s['anchor'] }}" class="nav-l2">{{ s['name']|striptags }}</a>
+		</li>
+		{% endif %}
+	  {%- endfor %}
+      {% endif %}
+      {% endfor %}
+		</ul>
+      </li>
+    </ul>
+  </div>
+  <!-- Nav Width Toggle Button -->
+  <div id="side-nav-handle"><span class="glyphicon glyphicon-triangle-left" aria-hidden="true"></span></div>
+</div>
