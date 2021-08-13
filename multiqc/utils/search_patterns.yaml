@@ -306,6 +306,8 @@ goleft_indexcov/roc:
   fn: "*-indexcov.roc"
 goleft_indexcov/ped:
   fn: "*-indexcov.ped"
+gopeaks:
+  fn: "*_gopeaks.json"
 happy:
   fn: "*.summary.csv"
   contents: "Type,Filter,TRUTH"

@@ -432,6 +432,10 @@ module_order:
         - DNA
         - metagenomics
         - ancient
+  - gopeaks:
+      module_tag:
+        - DNA
+        - CUT&TAG
   - macs2:
       module_tag:
         - chip
