@@ -402,7 +402,7 @@ def parse_mapping_metrics_file(f):
             for m in ["Q30 bases (excl. dups & clipped bases)", "Mapped bases R1", "Mapped bases R2"]:
                 if exist_and_number(data, m):
                     data[m + " pct"] = data[m] / data["Total bases"] * 100.0
-
+        print("TEST")
     return data_by_readgroup, data_by_phenotype
 
 
@@ -680,5 +680,15 @@ MAPPING_METRICS = [
         "over multiple loci (possibly due to structural variants). One alignment is "
         "referred to as the representative alignment, the other are supplementary",
         precision=2,
+    ),
+    Metric(
+        "Estimated sample contamination",
+        "Contam'n",
+        "#",
+        "#",
+        "proportion",
+        "Fraction of estimated sample contamination",
+        precision=2,
+        the_higher_the_worse=True
     ),
 ]
