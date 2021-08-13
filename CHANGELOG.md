@@ -8,6 +8,9 @@ Fixed logger bugs when calling `multiqc.run` multiple times by removing logging 
 
 ### New Modules
 
+- **Gopeaks**
+  - Added gopeaks module, a peak caller for CUT&TAG sequencing data.
+
 ### Module updates
 
 - **RSeQC**
