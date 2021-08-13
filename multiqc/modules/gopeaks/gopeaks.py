@@ -76,7 +76,7 @@ class MultiqcModule(BaseMultiqcModule):
         self.plot_data[gopeaks_data["prefix"]] = {"counts": gopeaks_data["peak_counts"]}
 
     def add_plot_data(self):
-        config = {"id": "gopeaks_peak_counts_plot", "title": "Number of peaks for each sample", "ylab": "sample"}
+        config = {"id": "gopeaks_peak_counts_plot", "title": "Gopeaks: Number of peaks for each sample", "ylab": "sample"}
         self.add_section(
             name="Peak Counts",
             anchor="gopeaks_counts",
