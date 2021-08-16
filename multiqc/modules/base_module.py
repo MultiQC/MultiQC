@@ -12,6 +12,7 @@ import mimetypes
 import os
 import re
 import textwrap
+import requests
 
 from multiqc.utils import report, config, util_functions
 
@@ -30,6 +31,7 @@ class BaseMultiqcModule(object):
         extra=None,
         autoformat=True,
         autoformat_type="markdown",
+        doi=None,
     ):
 
         # Custom options from user config that can overwrite base module values
@@ -41,6 +43,8 @@ class BaseMultiqcModule(object):
         self.info = mod_cust_config.get("info", info)
         self.comment = mod_cust_config.get("comment", comment)
         self.extra = mod_cust_config.get("extra", extra)
+        self.doi = mod_cust_config.get("doi", doi)
+
         # Specific module level config to overwrite (e.g. config.bcftools, config.fastqc)
         config.update({anchor: mod_cust_config.get("custom_config", {})})
 
@@ -55,14 +59,37 @@ class BaseMultiqcModule(object):
             self.info = ""
         if self.extra is None:
             self.extra = ""
+        if self.doi is None:
+            self.citation = {}
+        else:
+            # Try fetching the citation text from the API
+            try:
+                headers = {"accept": "text/x-bibliography", "style": "apa", "encoding": "utf-8"}
+                response = requests.get(f"https://doi.org/{doi}", headers=headers)
+                if response.status_code == 200:
+                    self.citation = {"doi": doi, "cite": response.content.decode("utf-8")}
+                else:
+                    self.citation = {"doi": doi}
+            except:
+                self.citation = {"doi": doi}
+
         if target is None:
             target = self.name
         if self.href is not None:
             self.mname = '<a href="{}" target="_blank">{}</a>'.format(self.href, target)
         else:
             self.mname = target
-        if self.href or self.info or self.extra:
-            self.intro = "<p>{} {}</p>{}".format(self.mname, self.info, self.extra)
+        if self.href or self.info or self.extra or self.doi:
+            self.intro = "<p>{} {} </p>{}{}".format(
+                self.mname,
+                self.info,
+                f'<blockquote><cite>{self.citation.get("cite")}</cite></blockquote>'
+                if "cite" in self.citation
+                else f'<a href="{self.citation["doi"]}">{self.citation["doi"]}</a>'
+                if "doi" in self.citation
+                else "",
+                self.extra,
+            )
 
         # Format the markdown strings
         if autoformat:
