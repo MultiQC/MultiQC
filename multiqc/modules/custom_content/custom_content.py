@@ -355,14 +355,13 @@ class MultiqcModule(BaseMultiqcModule):
         plot = None
         content = None
 
+        self.write_data_file(mod["data"], "multiqc_{}".format(section_name.lower().replace(" ", "_").replace("/", "_")))
+
         # Table
         if mod["config"].get("plot_type") == "table":
             pconfig["sortRows"] = pconfig.get("sortRows", False)
             headers = mod["config"].get("headers")
             plot = table.plot(mod["data"], headers, pconfig)
-            self.write_data_file(
-                mod["data"], "multiqc_{}".format(section_name.lower().replace(" ", "_").replace("/", "_"))
-            )
 
         # Bar plot
         elif mod["config"].get("plot_type") == "bargraph":

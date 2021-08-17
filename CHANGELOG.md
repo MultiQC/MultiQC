@@ -4,7 +4,8 @@
 
 ### MultiQC updates
 
-Fixed logger bugs when calling `multiqc.run` multiple times by removing logging file handlers between calls ([#1141](https://github.com/ewels/MultiQC/issues/1141)
+- Fixed logger bugs when calling `multiqc.run` multiple times by removing logging file handlers between calls ([#1141](https://github.com/ewels/MultiQC/issues/1141)
+- Always save `custom content` data to file with a name reflecting the section name. ([#1194](https://github.com/ewels/MultiQC/issues/1194))
 
 ### New Modules
 
