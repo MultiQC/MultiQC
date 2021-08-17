@@ -199,33 +199,42 @@ def make_table(dt):
                 for cfc in cond_formatting_colours:
                     for cfck in cfc:
                         cmatches[cfck] = False
-                # Find general rules followed by column-specific rules
-                for cfk in ["all_columns", rid]:
-                    if cfk in cond_formatting_rules:
-                        # Loop through match types
-                        for ftype in cmatches.keys():
-                            # Loop through array of comparison types
-                            for cmp in cond_formatting_rules[cfk].get(ftype, []):
-                                try:
-                                    # Each comparison should be a dict with single key: val
-                                    if "s_eq" in cmp and str(cmp["s_eq"]).lower() == str(val).lower():
-                                        cmatches[ftype] = True
-                                    if "s_contains" in cmp and str(cmp["s_contains"]).lower() in str(val).lower():
-                                        cmatches[ftype] = True
-                                    if "s_ne" in cmp and str(cmp["s_ne"]).lower() != str(val).lower():
-                                        cmatches[ftype] = True
-                                    if "eq" in cmp and float(cmp["eq"]) == float(val):
-                                        cmatches[ftype] = True
-                                    if "ne" in cmp and float(cmp["ne"]) != float(val):
-                                        cmatches[ftype] = True
-                                    if "gt" in cmp and float(cmp["gt"]) < float(val):
-                                        cmatches[ftype] = True
-                                    if "lt" in cmp and float(cmp["lt"]) > float(val):
-                                        cmatches[ftype] = True
-                                except:
-                                    logger.warning(
-                                        "Not able to apply table conditional formatting to '{}' ({})".format(val, cmp)
-                                    )
+
+                # Find general rules follow by table level rules
+                for formatting_rules in (
+                    [cond_formatting_rules, cond_formatting_rules[table_id]]
+                    if table_id in cond_formatting_rules
+                    else [cond_formatting_rules]
+                ):
+                    # Find general rules followed by column-specific rules
+                    for cfk in ["all_columns", rid]:
+                        if cfk in formatting_rules:
+                            # Loop through match types
+                            for ftype in cmatches.keys():
+                                # Loop through array of comparison types
+                                for cmp in formatting_rules[cfk].get(ftype, []):
+                                    try:
+                                        # Each comparison should be a dict with single key: val
+                                        if "s_eq" in cmp and str(cmp["s_eq"]).lower() == str(val).lower():
+                                            cmatches[ftype] = True
+                                        if "s_contains" in cmp and str(cmp["s_contains"]).lower() in str(val).lower():
+                                            cmatches[ftype] = True
+                                        if "s_ne" in cmp and str(cmp["s_ne"]).lower() != str(val).lower():
+                                            cmatches[ftype] = True
+                                        if "eq" in cmp and float(cmp["eq"]) == float(val):
+                                            cmatches[ftype] = True
+                                        if "ne" in cmp and float(cmp["ne"]) != float(val):
+                                            cmatches[ftype] = True
+                                        if "gt" in cmp and float(cmp["gt"]) < float(val):
+                                            cmatches[ftype] = True
+                                        if "lt" in cmp and float(cmp["lt"]) > float(val):
+                                            cmatches[ftype] = True
+                                    except:
+                                        logger.warning(
+                                            "Not able to apply table conditional formatting to '{}' ({})".format(
+                                                val, cmp
+                                            )
+                                        )
                 # Apply HTML in order of config keys
                 badge_col = None
                 for cfc in cond_formatting_colours:
