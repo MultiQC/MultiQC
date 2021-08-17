@@ -4,7 +4,8 @@
 
 ### MultiQC updates
 
-Fixed logger bugs when calling `multiqc.run` multiple times by removing logging file handlers between calls ([#1141](https://github.com/ewels/MultiQC/issues/1141)
+- Fixed logger bugs when calling `multiqc.run` multiple times by removing logging file handlers between calls ([#1141](https://github.com/ewels/MultiQC/issues/1141)
+- Added table level conditional formatting ([#761](https://github.com/ewels/MultiQC/issues/761))
 
 ### New Modules
 
