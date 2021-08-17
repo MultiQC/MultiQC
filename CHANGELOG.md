@@ -4,7 +4,8 @@
 
 ### MultiQC updates
 
-Fixed logger bugs when calling `multiqc.run` multiple times by removing logging file handlers between calls ([#1141](https://github.com/ewels/MultiQC/issues/1141)
+- Fixed logger bugs when calling `multiqc.run` multiple times by removing logging file handlers between calls ([#1141](https://github.com/ewels/MultiQC/issues/1141)
+- Allow path filters without full paths by trying to prefix analysis dir when filtering ([#1308](https://github.com/ewels/MultiQC/issues/1308))
 
 ### New Modules
 
