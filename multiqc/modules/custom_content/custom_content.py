@@ -366,6 +366,7 @@ class MultiqcModule(BaseMultiqcModule):
 
         # Bar plot
         elif mod["config"].get("plot_type") == "bargraph":
+            mod["data"] = {k: v for k, v in sorted(mod["data"].items())}
             plot = bargraph.plot(mod["data"], mod["config"].get("categories"), pconfig)
 
         # Line plot
