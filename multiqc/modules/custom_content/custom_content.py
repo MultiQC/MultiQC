@@ -355,7 +355,11 @@ class MultiqcModule(BaseMultiqcModule):
         plot = None
         content = None
 
-        self.write_data_file(mod["data"], "multiqc_{}".format(section_name.lower().replace(" ", "_").replace("/", "_")))
+        # Save the data if it's not a html string
+        if not isinstance(mod["data"], str):
+            self.write_data_file(
+                mod["data"], "multiqc_{}".format(section_name.lower().replace(" ", "_").replace("/", "_"))
+            )
 
         # Table
         if mod["config"].get("plot_type") == "table":
