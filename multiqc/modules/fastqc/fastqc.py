@@ -74,7 +74,6 @@ class MultiqcModule(BaseMultiqcModule):
 
         # Filter to strip out ignored sample names
         self.fastqc_data = self.ignore_samples(self.fastqc_data)
-
         if len(self.fastqc_data) == 0:
             raise UserWarning
 
@@ -465,7 +464,7 @@ class MultiqcModule(BaseMultiqcModule):
                     self.avg_bp_from_range(d["base"]): d for d in self.fastqc_data[s_name]["per_base_sequence_content"]
                 }
             except KeyError:
-                pass
+                continue
 
             # Old versions of FastQC give counts instead of percentages
             for b in data[s_name]:
