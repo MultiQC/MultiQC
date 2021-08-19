@@ -292,7 +292,7 @@ def parse_mapping_metrics_file(f):
     We are reporting summary metrics in the general stats table, and per-read-group in a separate table.
     """
 
-    f["s_name"] = re.search(r"(.*).mapping_metrics.csv", f["fn"]).group(1)
+    f["s_name"] = re.search(r"(.*)\.mapping_metrics.csv", f["fn"]).group(1)
 
     data_by_readgroup = defaultdict(dict)
     data_by_phenotype = defaultdict(dict)

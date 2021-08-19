@@ -330,7 +330,7 @@ def parse_vc_metrics_file(f):
     VARIANT CALLER POSTFILTER,T_SRR7890936_50pc,Percent Autosome Callability,NA
     """
 
-    f["s_name"] = re.search(r"(.*).vc_metrics.csv", f["fn"]).group(1)
+    f["s_name"] = re.search(r"(.*)\.vc_metrics.csv", f["fn"]).group(1)
 
     summary_data = dict()
     prefilter_data = dict()
