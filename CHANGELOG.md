@@ -4,7 +4,8 @@
 
 ### MultiQC updates
 
-Fixed logger bugs when calling `multiqc.run` multiple times by removing logging file handlers between calls ([#1141](https://github.com/ewels/MultiQC/issues/1141)
+- Fixed logger bugs when calling `multiqc.run` multiple times by removing logging file handlers between calls ([#1141](https://github.com/ewels/MultiQC/issues/1141)
+- Update github actions to run tests on a single module if it is the only file affected by the PR ([#915](https://github.com/ewels/MultiQC/issues/915))
 
 ### New Modules
 
