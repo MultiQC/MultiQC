@@ -6,6 +6,8 @@
 
 Fixed logger bugs when calling `multiqc.run` multiple times by removing logging file handlers between calls ([#1141](https://github.com/ewels/MultiQC/issues/1141)
 
+Updated Dockerfile to enable support to build multiarch images, run through a non-privileged user and build tools for non precompiled python binaries.
+
 ### New Modules
 
 ### Module updates
