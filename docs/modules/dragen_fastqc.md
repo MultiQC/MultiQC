@@ -4,9 +4,8 @@ URL: https://www.illumina.com/products/by-type/informatics-products/dragen-bio-i
 Description: >
     Illumina Bio-IT Platform that uses FPGA for accelerated primary and secondary analysis
 ---
-
 [Illumina DRAGEN](https://www.illumina.com/products/by-type/informatics-products/dragen-bio-it-platform.html)
-is a Bio-IT Platform that provides ultra-rapid primary and secondary analysis of sequencing data using 
+is a Bio-IT Platform that provides ultra-rapid primary and secondary analysis of sequencing data using
 field-programmable gate array technology (FPGA).
 
 DRAGEN has a number of different pipelines and outputs, including base calling, DNA and RNA alignment, and
@@ -19,13 +18,12 @@ section and module, such that they can be run indepedently or in conjunction wit
 DRAGEN modules as desired.
 
 * `<output prefix>.fastqc_metrics.csv`
-    * Pre-calculated positional QV quantiles
-    * Mean QVs by read position and base
-    * A histogram of estimated read-level qualities
-    * A histogram of read lengths
-    * A smoothed histogram of sample GC content
-    * Average read quality values for each GC content bin
-    * Positional prevalence of ambiguous bases
-    * Positional base content
-    * Adapter/Kmer sequence start positions
-
+  * Pre-calculated positional QV quantiles
+  * Mean QVs by read position and base
+  * A histogram of estimated read-level qualities
+  * A histogram of read lengths
+  * A smoothed histogram of sample GC content
+  * Average read quality values for each GC content bin
+  * Positional prevalence of ambiguous bases
+  * Positional base content
+  * Adapter/Kmer sequence start positions
