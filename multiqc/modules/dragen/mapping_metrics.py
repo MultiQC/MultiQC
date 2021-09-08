@@ -402,7 +402,6 @@ def parse_mapping_metrics_file(f):
             for m in ["Q30 bases (excl. dups & clipped bases)", "Mapped bases R1", "Mapped bases R2"]:
                 if exist_and_number(data, m):
                     data[m + " pct"] = data[m] / data["Total bases"] * 100.0
-        print("TEST")
     return data_by_readgroup, data_by_phenotype
 
 
