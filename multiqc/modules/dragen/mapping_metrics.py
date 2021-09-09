@@ -162,11 +162,7 @@ class DragenMappingMetics(BaseMultiqcModule):
                 }
             )
             data_labels.append(
-                {
-                    "name": "Paired vs. discordant vs. singleton",
-                    "ylab": "Reads",
-                    "cpswitch_counts_label": "Reads",
-                }
+                {"name": "Paired vs. discordant vs. singleton", "ylab": "Reads", "cpswitch_counts_label": "Reads"}
             )
         if add_mapped_label:
             mapped_chart_labels = {
@@ -183,11 +179,7 @@ class DragenMappingMetics(BaseMultiqcModule):
                 mapped_chart_labels["rRNA filtered reads"] = {"color": "#43b14a", "name": "rRNA filtered"}
             category_labels.append(mapped_chart_labels)
             data_labels.append(
-                {
-                    "name": "Unique vs duplicated vs unmapped",
-                    "ylab": "Reads",
-                    "cpswitch_counts_label": "Reads",
-                }
+                {"name": "Unique vs duplicated vs unmapped", "ylab": "Reads", "cpswitch_counts_label": "Reads"}
             )
 
         data_to_plot = [d for d in [paired_reads_data, mapped_reads_data] if d]  # Leaves out empty dicts
@@ -681,13 +673,6 @@ MAPPING_METRICS = [
         precision=2,
     ),
     Metric(
-        "Estimated sample contamination",
-        "Contam'n",
-        "#",
-        "#",
-        "proportion",
-        "Fraction of estimated sample contamination",
-        precision=2,
-        the_higher_the_worse=True
+        "rRNA filtered reads", "rRNA", "%", "%", "reads", "Number of rRNA filtered reads, {}", the_higher_the_worse=True
     ),
 ]
