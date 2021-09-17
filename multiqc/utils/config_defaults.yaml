@@ -700,6 +700,11 @@ module_order:
         - RNA
         - DNA
         - methylation
+  - checkqc:
+      module_tag:
+        - DNA
+        - RNA
+        - Illumina
   - bcl2fastq:
       module_tag:
         - RNA

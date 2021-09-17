@@ -1,5 +1,11 @@
 # MultiQC Version History
 
+## MultiQC v1.13dev
+
+### New Modules
+
+- [**CheckQC**](https://github.com/Molmed/checkQC): A program designed to check a set of quality criteria against an Illumina runfolder
+
 ## MultiQC v1.12dev
 
 ### MultiQC updates
