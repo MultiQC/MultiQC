@@ -155,6 +155,7 @@ setup(
             "multivcfanalyzer = multiqc.modules.multivcfanalyzer:MultiqcModule",
             "nanostat = multiqc.modules.nanostat:MultiqcModule",
             "ngsderive = multiqc.modules.ngsderive:MultiqcModule",
+            "ngsbits = multiqc.modules.ngsbits:MultiqcModule",
             "odgi = multiqc.modules.odgi:MultiqcModule",
             "optitype = multiqc.modules.optitype:MultiqcModule",
             "pangolin = multiqc.modules.pangolin:MultiqcModule",
