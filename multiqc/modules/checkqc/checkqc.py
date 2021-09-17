@@ -48,7 +48,7 @@ class MultiqcModule(BaseMultiqcModule):
         """Add data to the general statistics table
 
         Adds only results from ReadsPerSampleHandler, as this is the
-        only handler that is sample-centric, the others are lane-centric 
+        only handler that is sample-centric, the others are lane-centric
 
         Args:
             content (dict): JSON dict of checkqc JSON file
