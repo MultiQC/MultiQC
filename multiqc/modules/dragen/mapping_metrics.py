@@ -128,12 +128,20 @@ class DragenMappingMetics(BaseMultiqcModule):
                 paired_reads_data[sample_id] = data
                 add_paired_label = True
 
+            # Dragen 3.9 has replaced 'rRNA filtered reads' with 'Adjustment of reads matching filter contigs'
+            if "rRNA filtered reads" in data.keys():
+                rrna_filtered_reads_var = "rRNA filtered reads"
+            elif "Adjustment of reads matching filter contigs" in data.keys():
+                rrna_filtered_reads_var = "Adjustment of reads matching filter contigs"
+            else:
+                rrna_filtered_reads_var = None
+
             if (
                 data["Number of unique & mapped reads (excl. duplicate marked reads)"]
                 + data.get("Number of duplicate marked reads", 0)
-                + data["Unmapped reads"]
-                + (data["rRNA filtered reads"] if "rRNA filtered reads" in data else 0)
-                != data["Total reads in RG"]
+                + data.get("Unmapped reads", 0)
+                + (data.get(rrna_filtered_reads_var, 0) if rrna_filtered_reads_var is not None else 0)
+                != data.get("Total reads in RG", 0)
             ):
                 log.warning(
                     "sum of unique/duplicate/unmapped reads not matching total, "
