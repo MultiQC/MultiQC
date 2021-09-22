@@ -7,6 +7,7 @@ LABEL author="Phil Ewels" \
       description="MultiQC" \
       maintainer="phil.ewels@scilifelab.se"
 
+ARG ALPINE_PACKAGE_VERSION="3.13"
 ARG MATPLOTLIB_VERSION="3.1.2"
 
 ARG USER_NAME="multiqc_user"
@@ -18,7 +19,7 @@ ARG GROUP_ID="1000"
 ADD . /usr/src/multiqc
 WORKDIR /usr/src/multiqc
 
-RUN apk add --repository http://dl-cdn.alpinelinux.org/alpine/edge/main \
+RUN apk add --repository "https://dl-cdn.alpinelinux.org/alpine/${ALPINE_PACKAGE_VERSION}/main" \
             --update \
             --no-cache \
             bash \
