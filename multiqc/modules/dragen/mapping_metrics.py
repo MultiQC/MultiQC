@@ -179,6 +179,8 @@ class DragenMappingMetics(BaseMultiqcModule):
             }
             if "rRNA filtered reads" in next(iter(data_by_sample.values())):
                 mapped_chart_labels["rRNA filtered reads"] = {"color": "#43b14a", "name": "rRNA filtered"}
+            elif "Adjustment of reads matching filter contigs" in next(iter(data_by_sample.values())):
+                mapped_chart_labels["rRNA filtered reads"] = {"color": "#43b14a", "name": "rRNA filtered"}
             category_labels.append(mapped_chart_labels)
             data_labels.append(
                 {
