@@ -4,7 +4,6 @@ URL: https://www.illumina.com/products/by-type/informatics-products/dragen-bio-i
 Description: >
   Illumina Bio-IT Platform that uses FPGA for secondary NGS analysis.
 ---
-
 [Illumina DRAGEN](https://www.illumina.com/products/by-type/informatics-products/dragen-bio-it-platform.html)
 is a Bio-IT Platform that provides ultra-rapid secondary analysis of sequencing data using field-programmable
 gate array technology (FPGA).
