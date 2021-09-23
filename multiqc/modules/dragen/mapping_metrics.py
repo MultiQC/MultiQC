@@ -675,4 +675,7 @@ MAPPING_METRICS = [
     Metric(
         "rRNA filtered reads", "rRNA", "%", "%", "reads", "Number of rRNA filtered reads, {}", the_higher_the_worse=True
     ),
+    Metric(
+        "Adjustment of reads matching filter contigs", "filter contigs", "%", "%", "reads", "Number of filtered reads, {}", the_higher_the_worse=True
+    ),
 ]
