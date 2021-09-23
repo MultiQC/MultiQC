@@ -110,15 +110,23 @@ class DragenMappingMetics(BaseMultiqcModule):
         add_paired_label = False
         add_mapped_label = False
         for sample_id, data in data_by_sample.items():
-            if data["Mapped reads R2"] == 0:
+            # Dragen 3.9 has replaced 'rRNA filtered reads' with 'Adjustment of reads matching filter contigs'
+            if "rRNA filtered reads" in data.keys():
+                rrna_filtered_reads_key = "rRNA filtered reads"
+            elif "Adjustment of reads matching filter contigs" in data.keys():
+                rrna_filtered_reads_key = "Adjustment of reads matching filter contigs"
+            else:
+                rrna_filtered_reads_key = None
+
+            if data.get("Mapped reads R2", None) == 0:
                 log.warning(f"single-ended data detected, skipping mapping/paired percentages plot for: {sample_id}")
             elif (
-                data["Not properly paired reads (discordant)"]
-                + data["Properly paired reads"]
-                + data["Singleton reads (itself mapped; mate unmapped)"]
-                + data["Unmapped reads"]
-                 + data["rRNA filtered reads"]
-                != data["Total reads in RG"]
+                data.get("Not properly paired reads (discordant)", 0)
+                + data.get("Properly paired reads", 0)
+                + data.get("Singleton reads (itself mapped; mate unmapped)", 0)
+                + data.get("Unmapped reads", 0)
+                + (data.get(rrna_filtered_reads_key, 0) if rrna_filtered_reads_key is not None and rrna_filtered_reads_key == "rRNA filtered reads" else 0)
+                != data.get("Total reads in RG", 0)
             ):
                 log.warning(
                     "sum of unpaired/discordant/proppaired/unmapped reads not matching total, "
@@ -128,19 +136,13 @@ class DragenMappingMetics(BaseMultiqcModule):
                 paired_reads_data[sample_id] = data
                 add_paired_label = True
 
-            # Dragen 3.9 has replaced 'rRNA filtered reads' with 'Adjustment of reads matching filter contigs'
-            if "rRNA filtered reads" in data.keys():
-                rrna_filtered_reads_key = "rRNA filtered reads"
-            elif "Adjustment of reads matching filter contigs" in data.keys():
-                rrna_filtered_reads_key = "Adjustment of reads matching filter contigs"
-            else:
-                rrna_filtered_reads_key = None
+
 
             if (
-                data["Number of unique & mapped reads (excl. duplicate marked reads)"]
+                data.get("Number of unique & mapped reads (excl. duplicate marked reads)", 0)
                 + data.get("Number of duplicate marked reads", 0)
                 + data.get("Unmapped reads", 0)
-                + (data.get(rrna_filtered_reads_key, 0) if rrna_filtered_reads_key is not None else 0)
+                + (data.get(rrna_filtered_reads_key, 0) if rrna_filtered_reads_key is not None and rrna_filtered_reads_key == "rRNA filtered reads" else 0)
                 != data.get("Total reads in RG", 0)
             ):
                 log.warning(
@@ -162,11 +164,7 @@ class DragenMappingMetics(BaseMultiqcModule):
                 }
             )
             data_labels.append(
-                {
-                    "name": "Paired vs. discordant vs. singleton",
-                    "ylab": "Reads",
-                    "cpswitch_counts_label": "Reads",
-                }
+                {"name": "Paired vs. discordant vs. singleton", "ylab": "Reads", "cpswitch_counts_label": "Reads"}
             )
         if add_mapped_label:
             mapped_chart_labels = {
@@ -180,14 +178,10 @@ class DragenMappingMetics(BaseMultiqcModule):
             if "rRNA filtered reads" in next(iter(data_by_sample.values())):
                 mapped_chart_labels["rRNA filtered reads"] = {"color": "#43b14a", "name": "rRNA filtered"}
             elif "Adjustment of reads matching filter contigs" in next(iter(data_by_sample.values())):
-                mapped_chart_labels["rRNA filtered reads"] = {"color": "#43b14a", "name": "rRNA filtered"}
+                mapped_chart_labels["Adjustment of reads matching filter contigs"] = {"color": "#43b14a", "name": "rRNA filtered"}
             category_labels.append(mapped_chart_labels)
             data_labels.append(
-                {
-                    "name": "Unique vs duplicated vs unmapped",
-                    "ylab": "Reads",
-                    "cpswitch_counts_label": "Reads",
-                }
+                {"name": "Unique vs duplicated vs unmapped", "ylab": "Reads", "cpswitch_counts_label": "Reads"}
             )
 
         data_to_plot = [d for d in [paired_reads_data, mapped_reads_data] if d]  # Leaves out empty dicts
@@ -402,7 +396,6 @@ def parse_mapping_metrics_file(f):
             for m in ["Q30 bases (excl. dups & clipped bases)", "Mapped bases R1", "Mapped bases R2"]:
                 if exist_and_number(data, m):
                     data[m + " pct"] = data[m] / data["Total bases"] * 100.0
-
     return data_by_readgroup, data_by_phenotype
 
 
@@ -680,5 +673,11 @@ MAPPING_METRICS = [
         "over multiple loci (possibly due to structural variants). One alignment is "
         "referred to as the representative alignment, the other are supplementary",
         precision=2,
+    ),
+    Metric(
+        "rRNA filtered reads", "rRNA", "%", "%", "reads", "Number of rRNA filtered reads, {}", the_higher_the_worse=True
+    ),
+    Metric(
+        "Adjustment of reads matching filter contigs", "rRNA / Filtered Contigs", "%", "%", "reads", "Number of filtered reads, {}", the_higher_the_worse=True
     ),
 ]
