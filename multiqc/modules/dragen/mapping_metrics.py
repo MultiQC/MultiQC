@@ -110,15 +110,23 @@ class DragenMappingMetics(BaseMultiqcModule):
         add_paired_label = False
         add_mapped_label = False
         for sample_id, data in data_by_sample.items():
-            if data["Mapped reads R2"] == 0:
+            # Dragen 3.9 has replaced 'rRNA filtered reads' with 'Adjustment of reads matching filter contigs'
+            if "rRNA filtered reads" in data.keys():
+                rrna_filtered_reads_key = "rRNA filtered reads"
+            elif "Adjustment of reads matching filter contigs" in data.keys():
+                rrna_filtered_reads_key = "Adjustment of reads matching filter contigs"
+            else:
+                rrna_filtered_reads_key = None
+
+            if data.get("Mapped reads R2", None) == 0:
                 log.warning(f"single-ended data detected, skipping mapping/paired percentages plot for: {sample_id}")
             elif (
-                data["Not properly paired reads (discordant)"]
-                + data["Properly paired reads"]
-                + data["Singleton reads (itself mapped; mate unmapped)"]
-                + data["Unmapped reads"]
-                 + data["rRNA filtered reads"]
-                != data["Total reads in RG"]
+                data.get("Not properly paired reads (discordant)", 0)
+                + data.get("Properly paired reads", 0)
+                + data.get("Singleton reads (itself mapped; mate unmapped)", 0)
+                + data.get("Unmapped reads", 0)
+                + (data.get(rrna_filtered_reads_key, 0) if rrna_filtered_reads_key is not None and rrna_filtered_reads_key == "rRNA filtered reads" else 0)
+                != data.get("Total reads in RG", 0)
             ):
                 log.warning(
                     "sum of unpaired/discordant/proppaired/unmapped reads not matching total, "
@@ -128,16 +136,10 @@ class DragenMappingMetics(BaseMultiqcModule):
                 paired_reads_data[sample_id] = data
                 add_paired_label = True
 
-            # Dragen 3.9 has replaced 'rRNA filtered reads' with 'Adjustment of reads matching filter contigs'
-            if "rRNA filtered reads" in data.keys():
-                rrna_filtered_reads_key = "rRNA filtered reads"
-            elif "Adjustment of reads matching filter contigs" in data.keys():
-                rrna_filtered_reads_key = "Adjustment of reads matching filter contigs"
-            else:
-                rrna_filtered_reads_key = None
+
 
             if (
-                data["Number of unique & mapped reads (excl. duplicate marked reads)"]
+                data.get("Number of unique & mapped reads (excl. duplicate marked reads)", 0)
                 + data.get("Number of duplicate marked reads", 0)
                 + data.get("Unmapped reads", 0)
                 + (data.get(rrna_filtered_reads_key, 0) if rrna_filtered_reads_key is not None and rrna_filtered_reads_key == "rRNA filtered reads" else 0)
