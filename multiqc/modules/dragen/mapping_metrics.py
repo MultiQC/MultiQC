@@ -140,7 +140,7 @@ class DragenMappingMetics(BaseMultiqcModule):
                 data["Number of unique & mapped reads (excl. duplicate marked reads)"]
                 + data.get("Number of duplicate marked reads", 0)
                 + data.get("Unmapped reads", 0)
-                + (data.get(rrna_filtered_reads_key, 0) if rrna_filtered_reads_key is not None else 0)
+                + (data.get(rrna_filtered_reads_key, 0) if rrna_filtered_reads_key is not None and rrna_filtered_reads_key == "rRNA filtered reads" else 0)
                 != data.get("Total reads in RG", 0)
             ):
                 log.warning(
@@ -176,7 +176,7 @@ class DragenMappingMetics(BaseMultiqcModule):
             if "rRNA filtered reads" in next(iter(data_by_sample.values())):
                 mapped_chart_labels["rRNA filtered reads"] = {"color": "#43b14a", "name": "rRNA filtered"}
             elif "Adjustment of reads matching filter contigs" in next(iter(data_by_sample.values())):
-                mapped_chart_labels["rRNA filtered reads"] = {"color": "#43b14a", "name": "rRNA filtered"}
+                mapped_chart_labels["Adjustment of reads matching filter contigs"] = {"color": "#43b14a", "name": "rRNA filtered"}
             category_labels.append(mapped_chart_labels)
             data_labels.append(
                 {"name": "Unique vs duplicated vs unmapped", "ylab": "Reads", "cpswitch_counts_label": "Reads"}
