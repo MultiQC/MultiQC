@@ -274,7 +274,7 @@ class MultiqcModule(BaseMultiqcModule):
             "Fragments designated <b>ssDNA</b> are derived from single-stranded DNA.<hr>" + plot_description
         )
         plot_descriptions["ssDNA_type2"] = (
-            "Fragments designated as <b>ssDNA_type2</b> are likely to have been derived from single-stranded DNA. However, these fragments are not routinely used in ssDNA-based analyses as they may occasionally be derived from dsDNA.<hr>"
+            "Fragments designated as <b>ssDNA_type2</b> are likely, but not unambiguously derived from single-stranded DNA. These fragments are not routinely used in ssDNA-based analyses as they may occasionally be derived from dsDNA.<hr>"
             + plot_description
         )
         plot_descriptions["dsDNA_loconf"] = (
@@ -282,7 +282,7 @@ class MultiqcModule(BaseMultiqcModule):
             + plot_description
         )
         plot_descriptions["dsDNA_hiconf"] = (
-            "Fragments designated as <b>hiDNA_loconf</b> are likely derived from double-stranded DNA. Although we have more confidence in this categorization than for lo-conf dsDNA, it remains possible that these fragments are derived from sincle-stranded DNA.<hr>"
+            "Fragments designated as <b>hiDNA_loconf</b> are likely derived from double-stranded DNA. Although we have more confidence in this categorization than for lo-conf dsDNA, it remains possible that these fragments are derived from single-stranded DNA.<hr>"
             + plot_description
         )
         plot_descriptions["unclassified"] = (
@@ -399,14 +399,14 @@ class MultiqcModule(BaseMultiqcModule):
 
         s_names = []
 
-        for d in dna_types:
-            for s in sample_names:
+        for s in sample_names:
+            for d in dna_types:
                 s_names.append("(" + short_dna_type[d] + ")" + s)
 
         for i in interval_names:
             row = []
-            for d in dna_types:
-                for s in sample_names:
+            for s in sample_names:
+                for d in dna_types:
                     try:
                         row.append(float(self.SPoT_values[d][s][i]))
                     except KeyError:
@@ -416,7 +416,7 @@ class MultiqcModule(BaseMultiqcModule):
         pconfig = {
             "id": "ssds-spot-heatmap",
             "title": "SSDS: Signal Percentage of Tags (%)",
-            "xTitle": "",
+            "xTitle": "Sample",
             "yTitle": "Interval",
             "square": False,
             "colstops": [
@@ -429,7 +429,6 @@ class MultiqcModule(BaseMultiqcModule):
             "legend": False,
             "datalabels": True,
             "xcats_samples": False,
-            "ycats_samples": False,
             "borderWidth": 1,
         }
 
@@ -440,7 +439,14 @@ class MultiqcModule(BaseMultiqcModule):
                 Signal Percentage of Tags (SPoT) for all samples (%). Colors indicate the value (0 / no data =white; 
                 Otherwise, increasing SPoT from yellow to orange to red). Intervals annotated as (R) represent
                 the SPoT when the intervals are randomly shuffled in the genome (bedtools shuffle -chrom). This 
-                provides a naive, but useful estimate of random expectation for a non-enriched library.
+                provides a naive, but useful estimate of random expectation for a non-enriched library.<br><br>
+                <table style="width:100%">
+                    <tr style="vertical-align: top; text-align: left"><td><b>ss</b> (ssDNA)        : Fragments unambiguously derived from single-stranded DNA (ssDNA)</td>
+                    <tr style="vertical-align: top; text-align: left"><td><b>t2</b> (ssDNA_type2)  : Fragments likely, but not unambiguously derived from single-stranded DNA. Not routinely used in ssDNA-based analyses as they may occasionally be derived from dsDNA.</td>
+                    <tr style="vertical-align: top; text-align: left"><td><b>dH</b> (hiDNA_hiconf) : Fragments likely derived from double-stranded DNA. Although we have more confidence in this categorization than for lo-conf dsDNA, it remains possible that these fragments are derived from single-stranded DNA</td>
+                    <tr style="vertical-align: top; text-align: left"><td><b>dL</b> (dsDNA_loconf) : Fragments may be derived from double-stranded DNA. However, this is a low-confidence designation as they may also infrequently be derived from ssDNA. </td>
+                    <tr style="vertical-align: top; text-align: left"><td><b>un</b> (unclassified) : Fragments cannot be defined as either ssDNA or dsDNA-derived.</td>
+                </table><br>
             """,
             helptext="""
                 The Signal Percentage of Tags (SPoT) represents the percentage of sequencing reads found in

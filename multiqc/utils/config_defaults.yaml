@@ -245,6 +245,7 @@ fn_clean_exts:
   - "ccs"
   - "_NanoStats"
   - ".cutadapt"
+  - ".unprocessed_SSDS"
 
 # These are removed after the above, only if sample names
 # start or end with this string. Again, removed in order.
