@@ -51,6 +51,8 @@ class MultiqcModule(BaseMultiqcModule):
 
         if len(self.gopeaks_data) == 0:
             raise UserWarning
+        if len(self.gopeaks_data) > 0:
+            log.info("Found {} samples".format(len(self.gopeaks_data)))
 
         # Add sample log info to basic stats table
         self.gopeaks_general_stats_table()
@@ -67,7 +69,7 @@ class MultiqcModule(BaseMultiqcModule):
         """
 
         d = {}
-        path_to_file = f["root"] + f["fn"]
+        path_to_file = f["root"] + "/" + f["fn"]
         f = open(path_to_file)
         sample_log = json.load(f)
         d["peak_counts"] = sample_log["peak_counts"]
