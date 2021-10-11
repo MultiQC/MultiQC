@@ -8,8 +8,8 @@ Fixed logger bugs when calling `multiqc.run` multiple times by removing logging 
 
 ### New Modules
 
-  * [**GoPeaks**](https://github.com/maxsonBraunLab/gopeaks)
-    - GoPeaks is used to call peaks in CUT&TAG/CUT&RUN datasets.
+- [**GoPeaks**](https://github.com/maxsonBraunLab/gopeaks)
+  - GoPeaks is used to call peaks in CUT&TAG/CUT&RUN datasets.
 
 ### Module updates
 
