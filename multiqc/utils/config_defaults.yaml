@@ -422,6 +422,11 @@ module_order:
         - DNA
 
   # Post-alignment processing
+  - gopeaks:
+      module_tag:
+        - DNA
+        - CUT&TAG
+        - CUT&RUN
   - homer:
       module_tag:
         - RNA
