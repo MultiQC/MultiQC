@@ -52,7 +52,7 @@ def parse_ploidy_estimation_metrics_file(f):
     PLOIDY ESTIMATION,,Ploidy estimation,X0
     """
 
-    f["s_name"] = re.search(r"(.*).ploidy_estimation_metrics.csv", f["fn"]).group(1)
+    f["s_name"] = re.search(r"(.*)\.ploidy_estimation_metrics.csv", f["fn"]).group(1)
 
     data = defaultdict(dict)
 

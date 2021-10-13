@@ -96,7 +96,7 @@ def parse_fragment_length_hist_file(f):
     39317,1
     """
 
-    f["s_name"] = re.search(r"(.*).fragment_length_hist.csv", f["fn"]).group(1)
+    f["s_name"] = re.search(r"(.*)\.fragment_length_hist.csv", f["fn"]).group(1)
 
     data_by_rg = defaultdict(dict)
 
