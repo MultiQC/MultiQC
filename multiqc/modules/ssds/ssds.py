@@ -207,9 +207,9 @@ class MultiqcModule(BaseMultiqcModule):
 
         sample_color_keys = OrderedDict()
         sample_color_keys["ssDNA_fragments"] = {"color": "#437bb1", "name": "ssDNA"}
-        sample_color_keys["ssDNA_type2_fragments"] = {"color": "#f7a35c", "name": "ssDNA (type 2)"}
-        sample_color_keys["dsDNA_hiconf_fragments"] = {"color": "#11a400", "name": "dsDNA (higher confidence)"}
-        sample_color_keys["dsDNA_loconf_fragments"] = {"color": "#0b6c00", "name": "dsDNA (lower confidence)"}
+        sample_color_keys["ssLow_fragments"] = {"color": "#103150", "name": "ssDNA (low confidence)"}
+        sample_color_keys["type2_fragments"] = {"color": "#f7a35c", "name": "Ambiguous (ss/ds DNA)"}
+        sample_color_keys["dsDNA_fragments"] = {"color": "#11a400", "name": "dsDNA"}
         sample_color_keys["unclassified_fragments"] = {"color": "#b1084c", "name": "Unclassified"}
         sample_color_keys["adapter"] = {"color": "#7fffd4", "name": "Adapter"}
         sample_color_keys["other"] = {"color": "#696969", "name": "Other"}
@@ -236,9 +236,9 @@ class MultiqcModule(BaseMultiqcModule):
 
         keys = OrderedDict()
         keys["ssDNA_fragments"] = {"color": "#437bb1", "name": "ssDNA"}
-        keys["ssDNA_type2_fragments"] = {"color": "#f7a35c", "name": "ssDNA (type 2)"}
-        keys["dsDNA_hiconf_fragments"] = {"color": "#11a400", "name": "dsDNA (higher confidence)"}
-        keys["dsDNA_loconf_fragments"] = {"color": "#0b6c00", "name": "dsDNA (lower confidence)"}
+        keys["ssLow_fragments"] = {"color": "#103150", "name": "ssDNA (low confidence)"}
+        keys["type2_fragments"] = {"color": "#f7a35c", "name": "Ambiguous (ss/ds DNA)"}
+        keys["dsDNA_fragments"] = {"color": "#11a400", "name": "dsDNA"}
         keys["unclassified_fragments"] = {"color": "#b1084c", "name": "Unclassified"}
 
         # Configure the SSDS Alignment barplot
@@ -271,33 +271,41 @@ class MultiqcModule(BaseMultiqcModule):
 
         plot_descriptions = {}
         plot_descriptions["ssDNA"] = (
-            "Fragments designated <b>ssDNA</b> are derived from single-stranded DNA.<hr>" + plot_description
-        )
-        plot_descriptions["ssDNA_type2"] = (
-            "Fragments designated as <b>ssDNA_type2</b> are likely, but not unambiguously derived from single-stranded DNA. These fragments are not routinely used in ssDNA-based analyses as they may occasionally be derived from dsDNA.<hr>"
+            "Fragments designated <b>ssDNA</b> are derived from single-stranded DNA.<hr>"
             + plot_description
+            + "<hr><i>Selection criteria:</i> <b>ITR > 5 bp</b> & <b>Fill-in > 2 bp</b> & <b>uHomology > 0 bp</b><hr>"
         )
-        plot_descriptions["dsDNA_loconf"] = (
-            "Fragments designated as <b>dsDNA_loconf</b> are likely derived from double-stranded DNA. However, this is a low-confidence designation as they may also infrequently be derived from ssDNA.<hr>"
+        plot_descriptions["ssLow"] = (
+            "Fragments designated as <b>ssLow</b> are likely derived from single-stranded DNA. However, this is a low-confidence designation as these fragments may also be derived from dsDNA. Not routinely used in ssDNA-based analyses.<hr>"
             + plot_description
+            + "<hr><i>Selection criteria:</i> <b>Fill-in > 0 bp</b> but <b>not classified as ssDNA</b><hr>"
         )
-        plot_descriptions["dsDNA_hiconf"] = (
-            "Fragments designated as <b>hiDNA_loconf</b> are likely derived from double-stranded DNA. Although we have more confidence in this categorization than for lo-conf dsDNA, it remains possible that these fragments are derived from single-stranded DNA.<hr>"
+        plot_descriptions["type2"] = (
+            "Fragments designated as <b>type2</b> may be derived from ssDNA or dsDNA. These fragments are not routinely used in ssDNA-based analyses..<hr>"
             + plot_description
+            + "<hr><i>Selection criteria:</i> <b>ITR > 3 bp</b> & <b>NO fill-in</b><hr>"
+        )
+        plot_descriptions["dsDNA"] = (
+            "Fragments designated as <b>dsDNA</b> are likely derived from double-stranded DNA. It remains possible that these fragments are derived from single-stranded DNA, particularly in libraries with ssDNA enrichment.<hr>"
+            + plot_description
+            + "<hr><i>Selection criteria:</i> <b>ITR < 3 bp</b> & <b>NO fill-in</b><hr>"
         )
         plot_descriptions["unclassified"] = (
-            "Fragments designated as <b>unclassified</b> cannot be defined as either ssDNA or dsDNA-derived.<hr>"
+            "Fragments designated as <b>unclassified</b> cannot be designated as either ssDNA or dsDNA-derived.<hr>"
             + plot_description
+            + "<hr><i>Selection criteria:</i> <b>All remaining reads</b> not classified by other criteria.<hr>"
         )
 
-        for dna_type in ["ssDNA", "ssDNA_type2", "dsDNA_hiconf", "dsDNA_loconf", "unclassified"]:
+        for dna_type in ["ssDNA", "ssLow", "type2", "dsDNA", "unclassified"]:
 
             ## Make a percentage normalised version of the data
+            data_count = {}
             data_percent = {}
 
-            for prop_type in ["Fragment", "ITR", "uH", "FillIn"]:
+            for prop_type in ["ITR", "uH", "FillIn", "Fragment"]:
                 combo_type = dna_type + "_" + prop_type
 
+                data_count[prop_type] = {}
                 data_percent[prop_type] = {}
 
                 # If histogram dictionary exists for this combo
@@ -305,9 +313,13 @@ class MultiqcModule(BaseMultiqcModule):
 
                     # Loop through key, value pairs for this histogram
                     for s_name, data in self.histograms[combo_type].items():
+                        maxXval = {}
+                        maxXval[prop_type] = -1
+
                         total = 0
 
                         # Create percentage dictionary
+                        data_count[prop_type][s_name] = {}
                         data_percent[prop_type][s_name] = {}
 
                         # Get total for this histogram
@@ -315,10 +327,19 @@ class MultiqcModule(BaseMultiqcModule):
 
                         # Calculate percentages for this histogram
                         for k, v in data.items():
+                            if (maxXval[prop_type] + 1) < k:
+                                for l in range(maxXval[prop_type] + 1, k):
+                                    data_count[prop_type][s_name][l] = 0
+                                    data_percent[prop_type][s_name][l] = 0
+
+                            data_count[prop_type][s_name][k] = v
                             if v > 0:
                                 data_percent[prop_type][s_name][k] = (v / total) * 100
                             else:
                                 data_percent[prop_type][s_name][k] = 0
+
+                            if k > maxXval[prop_type]:
+                                maxXval[prop_type] = k
 
             # Configure histogram plot
             histConfig = {
@@ -346,16 +367,15 @@ class MultiqcModule(BaseMultiqcModule):
             }
 
             plot_data = [
-                self.histograms[dna_type + "_ITR"],
+                data_count["ITR"],
                 data_percent["ITR"],
-                self.histograms[dna_type + "_uH"],
+                data_count["uH"],
                 data_percent["uH"],
-                self.histograms[dna_type + "_FillIn"],
+                data_count["FillIn"],
                 data_percent["FillIn"],
-                self.histograms[dna_type + "_Fragment"],
+                data_count["Fragment"],
                 data_percent["Fragment"],
             ]
-
             ## KB: 10/08/21: Adding this linegraph is slow.
             # Add histogram to multi-QC page
             self.add_section(
@@ -380,13 +400,13 @@ class MultiqcModule(BaseMultiqcModule):
         hm = self.SPoT_values
 
         # dna_types = self.SPoT_values.keys()
-        dna_types = ["ssDNA", "ssDNA_type2", "dsDNA_hiconf", "dsDNA_loconf", "unclassified"]
+        dna_types = ["ssDNA", "ssLow", "type2", "dsDNA", "unclassified"]
 
         short_dna_type = OrderedDict()
         short_dna_type["ssDNA"] = "ss"
-        short_dna_type["ssDNA_type2"] = "t2"
-        short_dna_type["dsDNA_hiconf"] = "dH"
-        short_dna_type["dsDNA_loconf"] = "dL"
+        short_dna_type["ssLow"] = "sl"
+        short_dna_type["type2"] = "t2"
+        short_dna_type["dsDNA"] = "ds"
         short_dna_type["unclassified"] = "un"
 
         sample_names = sorted(self.SPoT_values["ssDNA"].keys())
@@ -442,9 +462,9 @@ class MultiqcModule(BaseMultiqcModule):
                 provides a naive, but useful estimate of random expectation for a non-enriched library.<br><br>
                 <table style="width:100%">
                     <tr style="vertical-align: top; text-align: left"><td><b>ss</b> (ssDNA)        : Fragments unambiguously derived from single-stranded DNA (ssDNA)</td>
-                    <tr style="vertical-align: top; text-align: left"><td><b>t2</b> (ssDNA_type2)  : Fragments likely, but not unambiguously derived from single-stranded DNA. Not routinely used in ssDNA-based analyses as they may occasionally be derived from dsDNA.</td>
-                    <tr style="vertical-align: top; text-align: left"><td><b>dH</b> (hiDNA_hiconf) : Fragments likely derived from double-stranded DNA. Although we have more confidence in this categorization than for lo-conf dsDNA, it remains possible that these fragments are derived from single-stranded DNA</td>
-                    <tr style="vertical-align: top; text-align: left"><td><b>dL</b> (dsDNA_loconf) : Fragments may be derived from double-stranded DNA. However, this is a low-confidence designation as they may also infrequently be derived from ssDNA. </td>
+                    <tr style="vertical-align: top; text-align: left"><td><b>sl</b> (ssLow)        : Low confidence ssDNA. With a low likelihood, these fragments may also be derived from dsDNA. Not routinely used in ssDNA-based analyses.</td>
+                    <tr style="vertical-align: top; text-align: left"><td><b>t2</b> (type2)        : Fragments may be derived from ss- or ds-DNA. Not routinely used in ssDNA-based analyses.</td>
+                    <tr style="vertical-align: top; text-align: left"><td><b>ds</b> (dsDNA)        : Fragments likely derived from double-stranded DNA. It remains possible that these fragments are derived from single-stranded DNA, particularly in libraries with ssDNA enrichment. </td>
                     <tr style="vertical-align: top; text-align: left"><td><b>un</b> (unclassified) : Fragments cannot be defined as either ssDNA or dsDNA-derived.</td>
                 </table><br>
             """,
