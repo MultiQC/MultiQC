@@ -281,7 +281,7 @@ class DragenCoverageMetrics(BaseMultiqcModule):
         data_by_phenotype_by_sample = defaultdict(dict)
 
         for f in self.find_log_files("dragen/wgs_coverage_metrics"):
-            data_by_phenotype = parse_wgs_coverage_metrics(f, r"(.*)\.wgs_coverage_metrics_?(\S*)?.csv")
+            data_by_phenotype = parse_wgs_coverage_metrics(f, r"(.*)\.wgs_coverage_metrics_?(tumor|normal)?.csv")
             if f["s_name"] in data_by_phenotype_by_sample:
                 log.debug("Duplicate sample name found! Overwriting: {}".format(f["s_name"]))
             self.add_data_source(f, section="stats")
