@@ -280,7 +280,7 @@ class MultiqcModule(BaseMultiqcModule):
 
         headers = OrderedDict()
         headers["median_coverage"] = {
-            "title": "Coverage",
+            "title": "Median Cov.",
             "description": "Median coverage",
             "min": 0,
             "suffix": "X",

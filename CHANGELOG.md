@@ -19,7 +19,7 @@ Fixed logger bugs when calling `multiqc.run` multiple times by removing logging 
 - **RSeQC**
   - Fixed minor bug in new TIN parsing where the sample name was not being correctly cleaned ([#1484](https://github.com/ewels/MultiQC/issues/1484))
 - **Mosdepth**
-  - Change general statistics header to report coverage instead of median
+  - Change general statistics header to report "Median cov." instead of "Median"
 
 ## [MultiQC v1.11](https://github.com/ewels/MultiQC/releases/tag/v1.11) - 2021-07-05
 
