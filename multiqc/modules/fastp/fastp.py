@@ -230,7 +230,7 @@ class MultiqcModule(BaseMultiqcModule):
                 self.fastp_data[s_name]["adapter_cutting_adapter_trimmed_reads"]
                 / self.fastp_data[s_name]["before_filtering_total_reads"]
             ) * 100.0
-        except (KeyError):
+        except (KeyError): #, ZeroDivisionError):
             log.debug("Could not calculate 'pct_adapter': {}".format(f["fn"]))
 
         # Duplication rate plot data
