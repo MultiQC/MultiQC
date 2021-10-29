@@ -283,7 +283,7 @@ class MultiqcModule(BaseMultiqcModule):
                 if s_name in cumcov_dist_data:
                     self.add_data_source(f, s_name=s_name, section="genome_results")
 
-        return mean_cov, cumcov_dist_data, cov_dist_data, xmax, perchrom_avg_data
+        return genstats, cumcov_dist_data, cov_dist_data, xmax, perchrom_avg_data
 
 
     def genstats_cov_thresholds(self, cumcov_dist_data, threshs, hidden_threshs):
