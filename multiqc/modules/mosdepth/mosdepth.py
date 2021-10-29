@@ -275,7 +275,7 @@ class MultiqcModule(BaseMultiqcModule):
                             # log.debug("Skipping not included contig '{}'".format(contig))
                             continue
 
-                        if cutoff_reads > 0:
+                        if cutoff_reads != "0":
                             avg = perchrom_avg_data[s_name].get(contig, 0) + float(bases_fraction)
                             perchrom_avg_data[s_name][contig] = avg
 
