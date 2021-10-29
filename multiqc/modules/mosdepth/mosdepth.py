@@ -80,30 +80,20 @@ class MultiqcModule(BaseMultiqcModule):
             doi="10.1093/bioinformatics/btx699",
         )
 
-        mean_cov, cumcov_dist_data, cov_dist_data, xmax, perchrom_avg_data = self.parse_cov_dist()
+        genstats_headers = defaultdict(OrderedDict)
+        genstats, cumcov_dist_data, cov_dist_data, xmax, perchrom_avg_data = self.parse_cov_dist()
 
         # Filter out any samples from --ignore-samples
-        mean_cov = self.ignore_samples(mean_cov)
+        genstats = self.ignore_samples(genstats)
         cumcov_dist_data = self.ignore_samples(cumcov_dist_data)
         cov_dist_data = self.ignore_samples(cov_dist_data)
         perchrom_avg_data = self.ignore_samples(perchrom_avg_data)
 
         # No samples found
-        num_samples = max(len(mean_cov), len(cumcov_dist_data), len(cov_dist_data), len(perchrom_avg_data))
+        num_samples = max(len(genstats), len(cumcov_dist_data), len(cov_dist_data), len(perchrom_avg_data))
         if num_samples == 0:
             raise UserWarning
         log.info("Found {} reports".format(num_samples))
-
-        # Add mean coverage to General Stats
-        headers = OrderedDict()
-        headers["mean_coverage"] = {
-            "title": "Mean Cov.",
-            "description": "Mean coverage",
-            "min": 0,
-            "suffix": "X",
-            "scale": "BuPu",
-        }
-        self.general_stats_addcols(mean_cov, headers)
 
 
         if cumcov_dist_data:
@@ -196,8 +186,19 @@ class MultiqcModule(BaseMultiqcModule):
             self.genstats_mediancov(cumcov_dist_data)
 
 
+        # Add mean coverage to General Stats
+        genstats_headers["mean_coverage"] = {
+            "title": "Mean Cov.",
+            "description": "Mean coverage",
+            "min": 0,
+            "suffix": "X",
+            "scale": "BuPu",
+        }
+        self.general_stats_addcols(genstats, genstats_headers)
+
+
     def parse_cov_dist(self):
-        mean_cov = defaultdict(OrderedDict)  # mean coverage
+        genstats = defaultdict(OrderedDict)  # mean coverage
         cumcov_dist_data = defaultdict(OrderedDict)  # cumulative distribution
         cov_dist_data = defaultdict(OrderedDict)  # absolute (non-cumulative) coverage
         xmax = 0
@@ -222,7 +223,7 @@ class MultiqcModule(BaseMultiqcModule):
             for line in f["f"].splitlines():
                 chrom, length, bases, mean, min_cov, max_cov = line.split("\t")
                 if chrom.startswith("total"):
-                    mean_cov[s_name]["mean_coverage"]= mean
+                    genstats[s_name]["mean_coverage"]= mean
 
         # Parse coverage distributions
         for scope in ("region", "global"):
@@ -284,19 +285,18 @@ class MultiqcModule(BaseMultiqcModule):
 
         return mean_cov, cumcov_dist_data, cov_dist_data, xmax, perchrom_avg_data
 
+
     def genstats_cov_thresholds(self, cumcov_dist_data, threshs, hidden_threshs):
-        data = defaultdict(OrderedDict)
         for s_name, d in cumcov_dist_data.items():
-            dist_subset = {t: data for t, data in d.items() if t in threshs}
+            dist_subset = {t: self.genstats for t, self.genstats in d.items() if t in threshs}
             for t in threshs:
                 if int(t) in dist_subset:
-                    data[s_name]["{}_x_pc".format(t)] = dist_subset[t]
+                    self.genstats[s_name]["{}_x_pc".format(t)] = dist_subset[t]
                 else:
-                    data[s_name]["{}_x_pc".format(t)] = 0
+                    self.genstats[s_name]["{}_x_pc".format(t)] = 0
 
-        headers = OrderedDict()
         for t in threshs:
-            headers["{}_x_pc".format(t)] = {
+            self.genstats_headers["{}_x_pc".format(t)] = {
                 "title": "&ge; {}X".format(t),
                 "description": "Fraction of genome with at least {}X coverage".format(t),
                 "max": 100,
@@ -305,7 +305,7 @@ class MultiqcModule(BaseMultiqcModule):
                 "scale": "RdYlGn",
                 "hidden": t in hidden_threshs,
             }
-        self.general_stats_addcols(data, headers)
+
 
     def genstats_mediancov(self, cumcov_dist_data):
         data = defaultdict(OrderedDict)
@@ -315,17 +315,15 @@ class MultiqcModule(BaseMultiqcModule):
                 if cum_pct >= 50:
                     median_cov = this_cov
                     break
-            data[s_name]["median_coverage"] = median_cov
+            self.genstats[s_name]["median_coverage"] = median_cov
 
-        headers = OrderedDict()
-        headers["median_coverage"] = {
+        self.genstats_headers["median_coverage"] = {
             "title": "Median",
             "description": "Median coverage",
             "min": 0,
             "suffix": "X",
             "scale": "BuPu",
         }
-        self.general_stats_addcols(data, headers)
 
 
 def get_cov_thresholds():
