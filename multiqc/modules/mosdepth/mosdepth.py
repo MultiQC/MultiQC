@@ -84,7 +84,8 @@ class MultiqcModule(BaseMultiqcModule):
         genstats, cumcov_dist_data, cov_dist_data, xmax, perchrom_avg_data = self.parse_cov_dist()
 
         # Filter out any samples from --ignore-samples
-        genstats = self.ignore_samples(genstats)
+        if genstats:
+            genstats = self.ignore_samples(genstats)
         cumcov_dist_data = self.ignore_samples(cumcov_dist_data)
         cov_dist_data = self.ignore_samples(cov_dist_data)
         perchrom_avg_data = self.ignore_samples(perchrom_avg_data)
@@ -93,7 +94,7 @@ class MultiqcModule(BaseMultiqcModule):
         num_samples = max(len(genstats), len(cumcov_dist_data), len(cov_dist_data), len(perchrom_avg_data))
         if num_samples == 0:
             raise UserWarning
-        log.info("Found {} reports".format(num_samples))
+        log.info(f"Found {num_samples} reports")
 
 
         if cumcov_dist_data:
@@ -214,8 +215,8 @@ class MultiqcModule(BaseMultiqcModule):
             assert type(exclude_contigs) == list, type(exclude_contigs)
         except (AttributeError, TypeError, AssertionError):
             exclude_contigs = []
-        log.debug("include_contigs: {}".format(include_contigs))
-        log.debug("exclude_contigs: {}".format(exclude_contigs))
+        log.debug(f"include_contigs: {include_contigs}")
+        log.debug(f"exclude_contigs: {exclude_contigs}")
 
         # Parse mean coverage
         for f in self.find_log_files("mosdepth/summary"):
@@ -236,6 +237,8 @@ class MultiqcModule(BaseMultiqcModule):
                     if "\t" not in line:
                         continue
                     contig, cutoff_reads, bases_fraction = line.split("\t")
+                    if float(bases_fraction) == 0:
+                        continue
 
                     # Parse cumulative coverage and calculate absolute coverage (global)
                     if contig == "total":
@@ -263,7 +266,7 @@ class MultiqcModule(BaseMultiqcModule):
                         if any(fnmatch.fnmatch(contig, str(pattern)) for pattern in exclude_contigs):
                             try:
                                 if config.mosdepth_config["show_excluded_debug_logs"]:
-                                    log.debug("Skipping excluded contig '{}'".format(contig))
+                                    log.debug(f"Skipping excluded contig '{contig}'")
                             except (AttributeError, KeyError):
                                 pass
                             continue
@@ -273,12 +276,16 @@ class MultiqcModule(BaseMultiqcModule):
                             fnmatch.fnmatch(contig, pattern) for pattern in include_contigs
                         ):
                             # Commented out since this could be many thousands of contigs!
-                            # log.debug("Skipping not included contig '{}'".format(contig))
+                            # log.debug(f"Skipping not included contig '{contig}'")
                             continue
 
-                        if cutoff_reads != "0":
-                            avg = perchrom_avg_data[s_name].get(contig, 0) + float(bases_fraction)
-                            perchrom_avg_data[s_name][contig] = avg
+                        avg = perchrom_avg_data[s_name].get(contig, 0) + float(bases_fraction)
+                        perchrom_avg_data[s_name][contig] = avg
+
+                # Correct per-contig average
+                for i in perchrom_avg_data:
+                    for j in perchrom_avg_data[i]:
+                        perchrom_avg_data[i][j] -= 1
 
                 if s_name in cumcov_dist_data:
                     self.add_data_source(f, s_name=s_name, section="genome_results")
@@ -291,14 +298,14 @@ class MultiqcModule(BaseMultiqcModule):
             dist_subset = {t: data for t, data in d.items() if t in threshs}
             for t in threshs:
                 if int(t) in dist_subset:
-                    genstats[s_name]["{}_x_pc".format(t)] = dist_subset[t]
+                    genstats[s_name][f"{t}_x_pc"] = dist_subset[t]
                 else:
-                    genstats[s_name]["{}_x_pc".format(t)] = 0
+                    genstats[s_name][f"{t}_x_pc"] = 0
 
         for t in threshs:
-            genstats_headers["{}_x_pc".format(t)] = {
-                "title": "&ge; {}X".format(t),
-                "description": "Fraction of genome with at least {}X coverage".format(t),
+            genstats_headers[f"{t}_x_pc"] = {
+                "title": f"&ge; {t}X",
+                "description": f"Fraction of genome with at least {t}X coverage",
                 "max": 100,
                 "min": 0,
                 "suffix": "%",
