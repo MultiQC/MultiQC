@@ -282,14 +282,14 @@ class MultiqcModule(BaseMultiqcModule):
                         avg = perchrom_avg_data[s_name].get(contig, 0) + float(bases_fraction)
                         perchrom_avg_data[s_name][contig] = avg
 
-                # Correct per-contig average
-                for i in perchrom_avg_data:
-                    for j in perchrom_avg_data[i]:
-                        perchrom_avg_data[i][j] -= 1
-
                 if s_name in cumcov_dist_data:
                     self.add_data_source(f, s_name=s_name, section="genome_results")
 
+            # Correct per-contig average
+            for i in perchrom_avg_data:
+                for j in perchrom_avg_data[i]:
+                    perchrom_avg_data[i][j] -= 1
+            log.debug(perchrom_avg_data)
         return genstats, cumcov_dist_data, cov_dist_data, xmax, perchrom_avg_data
 
 
