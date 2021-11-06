@@ -177,8 +177,7 @@ logger = config.logger
 @click.option("--profile-runtime", is_flag=True, help="Add analysis of how long MultiQC takes to run to the report")
 @click.option("--no-ansi", is_flag=True, help="Disable coloured log output")
 @click.option(
-    "--custom-css-files",
-    "--custom-css-files",
+    "--custom-css-file",
     "custom_css_files",
     type=click.Path(exists=True, readable=True),
     multiple=True,
@@ -449,7 +448,7 @@ def run(
         config.exclude_modules = exclude
     if profile_runtime:
         config.profile_runtime = True
-    if custom_css_files is not None and len(custom_css_files) > 0:
+    if custom_css_files:
         config.custom_css_files.extend(custom_css_files)
     config.kwargs = kwargs  # Plugin command line options
 
