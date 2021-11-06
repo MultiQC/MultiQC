@@ -512,7 +512,7 @@ speed things up though.
 
 ## Custom CSS files
 
-MultiQC generates an html report. You can include custom CSS in your final report.
+MultiQC generates HTML reports. You can include custom CSS in your final report if you wish.
 Simply add css files to the `custom_css_files` config option:
 
 ```yaml
