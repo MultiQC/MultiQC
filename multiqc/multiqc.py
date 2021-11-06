@@ -182,7 +182,7 @@ logger = config.logger
     "custom_css_files",
     type=click.Path(exists=True, readable=True),
     multiple=True,
-    help="Custom CSS files to add to the final report",
+    help="Custom CSS file to add to the final report",
 )
 @click.version_option(config.version, prog_name="multiqc")
 def run_cli(
