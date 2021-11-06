@@ -520,5 +520,5 @@ custom_css_files:
   - myfile.css
 ```
 
-Or pass `--custom-css-files` (multiple params accepted) and multiqc will include
+Or pass `--custom-css-files` (can be specified multiple times) and MultiQC will include
 them in the final report html.
