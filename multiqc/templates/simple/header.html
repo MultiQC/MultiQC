@@ -11,7 +11,7 @@ No offer to play a YouTube tutorial video and so on.
     {% if config.custom_logo is not none %}
       <div class="pull-right">
       {{ '<a href="'+config.custom_logo_url+'" target="_blank">' if config.custom_logo_url is not none }}
-        <img src="data:image/png;base64,{{ include_file(config.custom_logo, b64=True) }}" title="{{ config.custom_logo_title if config.custom_logo_title is not none }}">
+        <img src="data:image/png;base64,{{ include_file(config.custom_logo, b64=True) }}" title="{{ config.custom_logo_title if config.custom_logo_title is not none }}" class="custom_logo">
       {{ '</a>' if config.custom_logo_url is not none }}
       </div>
     {% endif %}
