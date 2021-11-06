@@ -1000,7 +1000,7 @@ def run(
             else:
                 logger.info("PDF Report  : {}".format(pdf_fn_name))
         except OSError as e:
-            if e.errno == os.errno.ENOENT:
+            if e.errno == errno.ENOENT:
                 logger.error("Error creating PDF - pandoc not found. Is it installed? http://pandoc.org/")
             else:
                 logger.error(
