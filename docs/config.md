@@ -521,4 +521,4 @@ custom_css_files:
 ```
 
 Or pass `--custom-css-files` (can be specified multiple times) and MultiQC will include
-them in the final report html.
+them in the final report HTML.
