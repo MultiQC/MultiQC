@@ -30,6 +30,7 @@ Fixed logger bugs when calling `multiqc.run` multiple times by removing logging 
   - Required a change to the `clean_s_name()` function arguments. All core MultiQC modules updated to reflect this.
   - Should be backwards compatible for custom modules. To adopt new behaviour, supply `f` instead of `f["root"]` as the second argument.
   - See the documenation for details: [Using log filenames as sample names](https://multiqc.info/docs/#using-log-filenames-as-sample-names) and [Custom sample names](https://multiqc.info/docs/#custom-sample-names).
+  - Added support for `--custom-css-file` / `config.custom_css_files` option to include custom CSS in the final report
 
 ### MultiQC updates
 

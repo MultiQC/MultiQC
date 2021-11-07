@@ -21,6 +21,7 @@ config_file: null
 custom_logo: null
 custom_logo_url: null
 custom_logo_title: null
+custom_css_files: []
 simple_output: false
 template: "default"
 profile_runtime: false
