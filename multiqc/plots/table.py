@@ -237,7 +237,7 @@ def make_table(dt):
 
                 # Categorical backgorund colours supplied
                 if val in header.get("bgcols", {}).keys():
-                    col = 'style="background-color:{};"'.format(header["bgcols"][val])
+                    col = 'style="background-color:{} !important;"'.format(header["bgcols"][val])
                     if s_name not in t_rows:
                         t_rows[s_name] = dict()
                     t_rows[s_name][rid] = '<td class="{rid} {h}" {c}>{v}</td>'.format(
@@ -247,7 +247,7 @@ def make_table(dt):
                 # Build table cell background colour bar
                 elif header["scale"]:
                     if c_scale is not None:
-                        col = " background-color:{};".format(c_scale.get_colour(val))
+                        col = " background-color:{} !important;".format(c_scale.get_colour(val))
                     else:
                         col = ""
                     bar_html = '<span class="bar" style="width:{}%;{}"></span>'.format(percentage, col)
