@@ -44,6 +44,7 @@ class MultiqcModule(BaseMultiqcModule):
             content = json.load(f["f"])
             s_name = self.clean_s_name(os.path.basename(f["root"]), f, root=os.path.dirname(f["root"]))
             self.bustools_data[s_name] = content
+            self.add_data_source(f)
 
         # Filter to strip out ignored sample names
         self.bustools_data = self.ignore_samples(self.bustools_data)

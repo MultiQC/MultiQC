@@ -30,6 +30,7 @@ class MultiqcModule(BaseMultiqcModule):
         self.trimmomatic = dict()
         for f in self.find_log_files("trimmomatic", filehandles=True):
             self.parse_trimmomatic(f)
+            self.add_data_source(f)
 
         # Filter to strip out ignored sample names
         self.trimmomatic = self.ignore_samples(self.trimmomatic)

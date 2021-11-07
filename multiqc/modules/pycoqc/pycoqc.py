@@ -31,6 +31,7 @@ class MultiqcModule(BaseMultiqcModule):
             # Function can return None if YAML parsing failed
             if data:
                 self.pycoqc_data[f["s_name"]] = data
+            self.add_data_source(f)
 
         self.pycoqc_data = self.ignore_samples(self.pycoqc_data)
 
@@ -39,6 +40,9 @@ class MultiqcModule(BaseMultiqcModule):
             raise UserWarning
 
         log.info("Found {} reports".format(len(self.pycoqc_data)))
+
+        # Write data to file
+        self.write_data_file(self.pycoqc_data, "pycoqc")
 
         self.parse_data()
 

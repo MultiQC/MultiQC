@@ -34,6 +34,7 @@ class MultiqcModule(BaseMultiqcModule):
             parsed_data = self.parse_htseq_report(f)
             if parsed_data is not None:
                 self.htseq_data[f["s_name"]] = parsed_data
+                self.add_data_source(f)
 
         # Filter to strip out ignored sample names
         self.htseq_data = self.ignore_samples(self.htseq_data)

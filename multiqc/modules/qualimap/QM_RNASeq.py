@@ -107,6 +107,9 @@ def parse_reports(self):
     # Genomic Origin Bar Graph
     # NB: Ignore 'Overlapping Exon' in report - these make the numbers add up to > 100%
     if len(self.qualimap_rnaseq_genome_results) > 0:
+        # Write data to file
+        self.write_data_file(self.qualimap_rnaseq_genome_results, "qualimap_rnaseq_genome_results")
+
         gorigin_cats = OrderedDict()
         gorigin_cats["reads_aligned_exonic"] = {"name": "Exonic"}
         gorigin_cats["reads_aligned_intronic"] = {"name": "Intronic"}
@@ -153,6 +156,8 @@ def parse_reports(self):
         )
 
     if len(self.qualimap_rnaseq_cov_hist) > 0:
+        # Write data to file
+        self.write_data_file(self.qualimap_rnaseq_cov_hist, "qualimap_rnaseq_cov_hist")
 
         # Make a normalised percentage version of the coverage data
         self.qualimap_rnaseq_cov_hist_percent = dict()

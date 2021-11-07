@@ -32,6 +32,9 @@ it prints the contents of these files into the report.
     {{ include_file('assets/css/default_multiqc.css') }}
     {{ include_file('assets/css/jquery.toast.css') }}
 </style>
+{% for css_href in config.custom_css_files %}
+<style type="text/css">{{ include_file(css_href, None) }}</style>
+{% endfor %}
 {% set included_css = [] %}
 {%- for m in report.modules_output %}{% if m.css and m.css|length > 0 -%}{% for css_href in m.css.values() %}
 {% if css_href not in included_css -%}

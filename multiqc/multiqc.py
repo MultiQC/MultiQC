@@ -177,6 +177,13 @@ logger = config.logger
 @click.option("-q", "--quiet", is_flag=True, help="Only show log warnings")
 @click.option("--profile-runtime", is_flag=True, help="Add analysis of how long MultiQC takes to run to the report")
 @click.option("--no-ansi", is_flag=True, help="Disable coloured log output")
+@click.option(
+    "--custom-css-file",
+    "custom_css_files",
+    type=click.Path(exists=True, readable=True),
+    multiple=True,
+    help="Custom CSS file to add to the final report",
+)
 @click.version_option(config.version, prog_name="multiqc")
 def run_cli(
     analysis_dir,
@@ -217,6 +224,7 @@ def run_cli(
     quiet,
     profile_runtime,
     no_ansi,
+    custom_css_files,
     **kwargs,
 ):
     # Main MultiQC run command for use with the click command line, complete with all click function decorators.
@@ -277,6 +285,7 @@ def run_cli(
         quiet=quiet,
         profile_runtime=profile_runtime,
         no_ansi=no_ansi,
+        custom_css_files=custom_css_files,
         kwargs=kwargs,
     )
 
@@ -284,7 +293,7 @@ def run_cli(
     sys.exit(multiqc_run["sys_exit_code"])
 
 
-# Main function that runs MultQC. Available to use within an interactive Python environment
+# Main function that runs MultiQC. Available to use within an interactive Python environment
 def run(
     analysis_dir,
     dirs=False,
@@ -324,6 +333,7 @@ def run(
     quiet=False,
     profile_runtime=False,
     no_ansi=False,
+    custom_css_files=(),
     kwargs={},
 ):
     """MultiQC aggregates results from bioinformatics analyses across many samples into a single report.
@@ -444,6 +454,8 @@ def run(
         config.exclude_modules = exclude
     if profile_runtime:
         config.profile_runtime = True
+    if custom_css_files:
+        config.custom_css_files.extend(custom_css_files)
     config.kwargs = kwargs  # Plugin command line options
 
     # Clean up analysis_dir if a string (interactive environment only)
@@ -1026,7 +1038,7 @@ def run(
             else:
                 logger.info("PDF Report  : {}".format(pdf_fn_name))
         except OSError as e:
-            if e.errno == os.errno.ENOENT:
+            if e.errno == errno.ENOENT:
                 logger.error("Error creating PDF - pandoc not found. Is it installed? http://pandoc.org/")
             else:
                 logger.error(

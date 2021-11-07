@@ -29,6 +29,7 @@ class MultiqcModule(BaseMultiqcModule):
         self.macs_data = dict()
         for f in self.find_log_files("macs2", filehandles=True):
             self.parse_macs(f)
+            self.add_data_source(f)
 
         # Filter to strip out ignored sample names
         self.macs_data = self.ignore_samples(self.macs_data)

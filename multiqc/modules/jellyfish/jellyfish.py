@@ -39,6 +39,9 @@ class MultiqcModule(BaseMultiqcModule):
         if len(self.jellyfish_data) == 0:
             raise UserWarning
 
+        # Write data to file
+        self.write_data_file(self.jellyfish_data, "jellyfish")
+
         log.info("Found {} reports".format(len(self.jellyfish_data)))
 
         self.frequencies_plot(xmax=self.jellyfish_max_x)
