@@ -751,53 +751,52 @@ tbody .sorthandle {
 }
 @media print {
   .mqc-module-section-first, .mqc-section {
-    page-break-inside: avoid;
+    page-break-inside: avoid; /* keep section titles with the first bit of content, and try to keep sections together */
   }
   .mqc_table .wrapper {
-    z-index: 0;
+    z-index: 0; /* make sure table cell contents show up */
   }
   .mqc-table-expand {
-    display: none;
+    display: none; /* no use printing a useless expand button */
   }
   .mqc-section-plot .text-info {
     display: none;
   }
   .multiqc_logo, .custom_logo {
-    width: 200px;
-    margin-top: 22px;
+    width: 200px; /* make sure logos aren't dominantly huge */
   }
   td, span.bar {
-    -webkit-print-color-adjust: exact;
+    -webkit-print-color-adjust: exact; /* print cell background colors in table */
   }
   .dl-horizontal {
-    display: flex;
+    display: flex; /* tidy up user-provided report header info */
     flex-wrap: wrap;
   }
   .dl-horizontal dt {
-    flex: 0 0 34%;
+    flex: 0 0 34%; /* ensure kv pairs take up a whole row */
     float: none;
     width: 300px;
-    font-weight: 900;
+    font-weight: 900; /* bold the key in the kv pair */
   }
   .dl-horizontal dd {
-    flex: 1 0 34%;
+    flex: 1 0 34%; /* let the val grow to fill the space */
     margin-left: 0;
   }
   button.btn-help {
-    display: none;
+    display: none; /* no need to print buttons */
   }
   a[href]:after {
-    content: none !important;
+    content: none !important; /* printed link text is fairly ugly */
   }
   .table.mqc_table {
     table-layout: fixed;
   }
   .mqc_table th {
-    white-space: normal;
-    font-weight: 900;
+    white-space: normal; /* make sure that table header text can wrap */
+    font-weight: 900; /* and that table headers are bolded */
   }
   .table > thead > tr > th {
-    vertical-align: top;
+    vertical-align: top; /* looks better when all the table-headers are top-aligned, especially when some wrap */
   }
 }
 .mqc_table .bar {
