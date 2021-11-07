@@ -48,6 +48,8 @@ def parse_reports(self):
     self.read_gc = self.ignore_samples(self.read_gc)
 
     if len(self.read_gc) > 0:
+        # Write data to file
+        self.write_data_file(self.read_gc, "rseqc_read_gc")
 
         # Add line graph to section
         pconfig = {

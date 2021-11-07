@@ -52,6 +52,7 @@ class MultiqcModule(BaseMultiqcModule):
                 continue
             if parsed_data is not None:
                 self.adapter_removal_data[self.s_name] = parsed_data
+                self.add_data_source(f)
 
         # Filter to strip out ignored sample names
         self.adapter_removal_data = self.ignore_samples(self.adapter_removal_data)

@@ -132,6 +132,9 @@ class MultiqcModule(BaseMultiqcModule):
         # Basic stats table
         self.biscuit_stats_table()
 
+        # Write data to file
+        self.write_data_file(self.mdata, "biscuit")
+
         # Make report sections
         for k in self.mdata:
             if len(self.mdata[k]) > 0:

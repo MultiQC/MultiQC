@@ -46,6 +46,9 @@ class MultiqcModule(BaseMultiqcModule):
             num_samples = max([len(self.mod_data[ft].keys()) for ft in self.mod_data])
             log.info("Found {} reports".format(num_samples))
 
+        # Write data to file
+        self.write_data_file(self.mod_data, "bbmap")
+
         for file_type in section_order:
             if len(self.mod_data[file_type]) > 0:
                 log.debug("section %s has %d entries", file_type, len(self.mod_data[file_type]))

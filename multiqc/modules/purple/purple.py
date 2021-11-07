@@ -56,6 +56,9 @@ class MultiqcModule(BaseMultiqcModule):
             raise UserWarning
         log.info("Found {} reports".format(len(data_by_sample)))
 
+        # Write data to file
+        self.write_data_file(data_by_sample, "purple")
+
         headers = _make_table_headers()
 
         self.add_section(
