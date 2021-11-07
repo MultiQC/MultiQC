@@ -57,21 +57,28 @@ class BaseMultiqcModule(object):
 
         if self.info is None:
             self.info = ""
+        # Always finish with a ".", as we may add a DOI after the intro.
+        if self.info[:-1] != ".":
+            self.info += "."
         if self.extra is None:
             self.extra = ""
         if self.doi is None:
             self.citation = {}
+            self.doi_link = ""
         else:
+            self.citation = {"doi": self.doi}
+            tooltip = ""
             # Try fetching the citation text from the API
             try:
                 headers = {"accept": "text/x-bibliography", "style": "apa", "encoding": "utf-8"}
                 response = requests.get(f"https://doi.org/{doi}", headers=headers)
                 if response.status_code == 200:
-                    self.citation = {"doi": doi, "cite": response.content.decode("utf-8")}
-                else:
-                    self.citation = {"doi": doi}
+                    self.citation["cite"] = response.content.decode("utf-8")
+                    tooltip = f' title="{self.citation["cite"]}" data-toggle="tooltip"'
             except:
-                self.citation = {"doi": doi}
+                pass
+            # Build the HTML link for the DOI
+            self.doi_link = f' <em class="module-doi text-muted small" style="margin-left: 1rem;">DOI: <a href="https://doi.org/{self.doi}" target="_blank"{tooltip}>{self.doi}</a></em>.'
 
         if target is None:
             target = self.name
@@ -79,17 +86,8 @@ class BaseMultiqcModule(object):
             self.mname = '<a href="{}" target="_blank">{}</a>'.format(self.href, target)
         else:
             self.mname = target
-        if self.href or self.info or self.extra or self.doi:
-            self.intro = "<p>{} {} </p>{}{}".format(
-                self.mname,
-                self.info,
-                f'<blockquote><cite>{self.citation.get("cite")}</cite></blockquote>'
-                if "cite" in self.citation
-                else f'<a href="{self.citation["doi"]}">{self.citation["doi"]}</a>'
-                if "doi" in self.citation
-                else "",
-                self.extra,
-            )
+        if self.href or self.info or self.extra or self.doi_link:
+            self.intro = "<p>{} {}{}</p>{}".format(self.mname, self.info, self.doi_link, self.extra)
 
         # Format the markdown strings
         if autoformat:
