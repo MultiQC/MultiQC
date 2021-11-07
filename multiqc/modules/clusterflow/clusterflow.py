@@ -63,9 +63,15 @@ class MultiqcModule(BaseMultiqcModule):
         if len(self.clusterflow_runfiles) > 0:
             self.clusterflow_pipelines_section()
 
+            # Write data to file
+            self.write_data_file(self.clusterflow_runfiles, "clusterflow_runfiles")
+
         # Commands
         if len(self.clusterflow_commands) > 0:
             self.clusterflow_commands_table()
+
+            # Write data to file
+            self.write_data_file(self.clusterflow_runfiles, "clusterflow_commands")
 
     def parse_clusterflow_logs(self, f):
         """Parse Clusterflow logs"""

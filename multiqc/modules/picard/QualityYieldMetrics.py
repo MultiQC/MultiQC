@@ -40,6 +40,8 @@ def parse_reports(self):
 
     # Go through logs and find Metrics
     for f in self.find_log_files("picard/quality_yield_metrics", filehandles=True):
+        self.add_data_source(f, section="QualityYieldMetrics")
+
         parsed_data = dict()
         s_name = None
         keys = None

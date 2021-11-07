@@ -33,6 +33,7 @@ class MultiqcModule(BaseMultiqcModule):
         for f in self.find_log_files("sargasso"):
             self.parse_sargasso_logs(f)
             self.sargasso_files.append(f)
+            self.add_data_source(f)
 
         # log.info('Removing ignored samples...')
         self.sargasso_data = self.ignore_samples(self.sargasso_data)

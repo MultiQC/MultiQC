@@ -34,10 +34,12 @@ class MultiqcModule(BaseMultiqcModule):
         # Scan for VEP stats in plain html format
         for f in self.find_log_files("vep/vep_html", filehandles=True):
             self.parse_vep_html(f)
+            self.add_data_source(f)
 
         # Scan for VEP stats in plain text format
         for f in self.find_log_files("vep/vep_txt", filehandles=True):
             self.parse_vep_txt(f)
+            self.add_data_source(f)
 
         # Filter to strip out ignored sample names
         self.vep_data = self.ignore_samples(self.vep_data)
@@ -46,6 +48,9 @@ class MultiqcModule(BaseMultiqcModule):
         if len(self.vep_data) == 0:
             raise UserWarning
         log.info("Found {} VEP summaries".format(len(self.vep_data)))
+
+        # Write data to file
+        self.write_data_file(self.vep_data, "vep")
 
         # Add general stats table
         self.add_stats_table()

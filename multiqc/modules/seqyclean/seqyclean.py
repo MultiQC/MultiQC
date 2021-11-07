@@ -38,6 +38,8 @@ class MultiqcModule(BaseMultiqcModule):
                     pass
                 self.seqyclean_data[f["s_name"]].update({header: col})
 
+            self.add_data_source(f)
+
         if len(self.seqyclean_data) == 0:
             raise UserWarning
 
