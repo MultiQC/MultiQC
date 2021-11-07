@@ -6,6 +6,7 @@
 
 - Fixed logger bugs when calling `multiqc.run` multiple times by removing logging file handlers between calls ([#1141](https://github.com/ewels/MultiQC/issues/1141))
 - Added missing functions call to several modules ([#1468](https://github.com/ewels/MultiQC/issues/1468))
+- Wrote new script to check for core function calls that should be in every module (`.github/workflows/code_checks.py`), runs on GitHub actions CI
 
 ### New Modules
 
