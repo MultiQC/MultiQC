@@ -750,7 +750,8 @@ tbody .sorthandle {
   z-index: -10;
 }
 @media print {
-  .mqc-module-section-first, .mqc-section {
+  .mqc-module-section-first,
+  .mqc-section {
     page-break-inside: avoid; /* keep section titles with the first bit of content, and try to keep sections together */
   }
   .mqc_table .wrapper {
@@ -762,10 +763,12 @@ tbody .sorthandle {
   .mqc-section-plot .text-info {
     display: none;
   }
-  .multiqc_logo, .custom_logo {
+  .multiqc_logo,
+  .custom_logo {
     width: 200px; /* make sure logos aren't dominantly huge */
   }
-  td, span.bar {
+  td,
+  span.bar {
     -webkit-print-color-adjust: exact; /* print cell background colors in table */
   }
   .dl-horizontal {
