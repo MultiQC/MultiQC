@@ -474,7 +474,9 @@ def matplotlib_bargraph(plotdata, plotsamples, pconfig=None):
                 prev_values = values
 
             # Tidy up axes
-            axes.tick_params(labelsize=pconfig.get("labelSize", 8), direction="out", left=False, right=False, top=False, bottom=False)
+            axes.tick_params(
+                labelsize=pconfig.get("labelSize", 8), direction="out", left=False, right=False, top=False, bottom=False
+            )
             axes.set_xlabel(pconfig.get("ylab", ""))  # I know, I should fix the fact that the config is switched
             axes.set_ylabel(pconfig.get("xlab", ""))
             axes.set_yticks(y_ind)  # Specify where to put the labels
