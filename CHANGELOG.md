@@ -8,6 +8,7 @@
 - Fixed logger bugs when calling `multiqc.run` multiple times by removing logging file handlers between calls ([#1141](https://github.com/ewels/MultiQC/issues/1141))
 - Added missing functions call to several modules ([#1468](https://github.com/ewels/MultiQC/issues/1468))
 - Wrote new script to check for core function calls that should be in every module (`.github/workflows/code_checks.py`), runs on GitHub actions CI
+- Added support for `--custom-css-file` / `config.custom_css_files` option to include custom CSS in the final report ([#1573](https://github.com/ewels/MultiQC/pull/1573))
 
 ### New Modules
 
@@ -33,7 +34,6 @@
   - Required a change to the `clean_s_name()` function arguments. All core MultiQC modules updated to reflect this.
   - Should be backwards compatible for custom modules. To adopt new behaviour, supply `f` instead of `f["root"]` as the second argument.
   - See the documenation for details: [Using log filenames as sample names](https://multiqc.info/docs/#using-log-filenames-as-sample-names) and [Custom sample names](https://multiqc.info/docs/#custom-sample-names).
-  - Added support for `--custom-css-file` / `config.custom_css_files` option to include custom CSS in the final report
 
 ### MultiQC updates
 
