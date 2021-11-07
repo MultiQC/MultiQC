@@ -749,6 +749,57 @@ tbody .sorthandle {
   width: 100%;
   z-index: -10;
 }
+@media print {
+  .mqc-module-section-first, .mqc-section {
+    page-break-inside: avoid;
+  }
+  .mqc_table .wrapper {
+    z-index: 0;
+  }
+  .mqc-table-expand {
+    display: none;
+  }
+  .mqc-section-plot .text-info {
+    display: none;
+  }
+  .multiqc_logo, .custom_logo {
+    width: 200px;
+    margin-top: 22px;
+  }
+  td, span.bar {
+    -webkit-print-color-adjust: exact;
+  }
+  .dl-horizontal {
+    display: flex;
+    flex-wrap: wrap;
+  }
+  .dl-horizontal dt {
+    flex: 0 0 34%;
+    float: none;
+    width: 300px;
+    font-weight: 900;
+  }
+  .dl-horizontal dd {
+    flex: 1 0 34%;
+    margin-left: 0;
+  }
+  button.btn-help {
+    display: none;
+  }
+  a[href]:after {
+    content: none !important;
+  }
+  .table.mqc_table {
+    table-layout: fixed;
+  }
+  .mqc_table th {
+    white-space: normal;
+    font-weight: 900;
+  }
+  .table > thead > tr > th {
+    vertical-align: top;
+  }
+}
 .mqc_table .bar {
   display: block;
   position: absolute;
