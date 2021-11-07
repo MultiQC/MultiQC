@@ -109,6 +109,7 @@ config = {
     'title': None,                          # Plot title - should be in format "Module Name: Plot Title"
     'xlab': None,                           # X axis label
     'ylab': None,                           # Y axis label
+    'labelSize': None,                      # Axis label size - should be an integer (default: 8)
     'ymax': None,                           # Max y limit
     'ymin': None,                           # Min y limit
     'yCeiling': None,                       # Maximum value for automatic axis limit (good for percentages)
@@ -236,6 +237,7 @@ config = {
     'title': None,               # Plot title - should be in format "Module Name: Plot Title"
     'xlab': None,                # X axis label
     'ylab': None,                # Y axis label
+    'labelSize': None,           # Axis label size - should be an integer (default: 8)
     'xCeiling': None,            # Maximum value for automatic axis limit (good for percentages)
     'xFloor': None,              # Minimum value for automatic axis limit
     'xMinRange': None,           # Minimum range for axis
