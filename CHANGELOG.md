@@ -20,6 +20,8 @@
   - Fixed module failing when writing data to file if there is a `/` in the section name ([#1515](https://github.com/ewels/MultiQC/issues/1515))
 - **DRAGEN**
   - Fixed bug in sample name regular expression ([#1537](https://github.com/ewels/MultiQC/pull/1537))
+- **FastQC**
+  - Fixed bug when skipping overrepresented sequences ([#1488](https://github.com/ewels/MultiQC/issues/1488))
 - **RSeQC**
   - Fixed minor bug in new TIN parsing where the sample name was not being correctly cleaned ([#1484](https://github.com/ewels/MultiQC/issues/1484))
 
