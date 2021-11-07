@@ -259,6 +259,8 @@ class MultiqcModule(BaseMultiqcModule):
 
             self.longranger_data[sid] = data
 
+            self.add_data_source(f)
+
         # Filter to strip out ignored sample names
         self.longranger_data = self.ignore_samples(self.longranger_data)
 

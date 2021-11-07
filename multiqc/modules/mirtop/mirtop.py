@@ -30,6 +30,8 @@ class MultiqcModule(BaseMultiqcModule):
         self.mirtop_data = dict()
         for f in self.find_log_files("mirtop"):
             self.parse_mirtop_report(f)
+            self.add_data_source(f)
+
         # Filter out ignored samples (given with --ignore-samples option)
         self.mirtop_data = self.ignore_samples(self.mirtop_data)
 

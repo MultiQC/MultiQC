@@ -865,7 +865,7 @@ class MultiqcModule(BaseMultiqcModule):
                     del data[s_name]
                     log.debug("Couldn't find data for {}, invalid Key".format(s_name))
 
-        if all(len(data[s_name]) == 0 for s_name in self.fastqc_data):
+        if all(len(data.get(s_name, {})) == 0 for s_name in self.fastqc_data):
             log.debug("overrepresented_sequences not found in FastQC reports")
             return None
 

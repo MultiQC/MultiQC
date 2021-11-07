@@ -30,6 +30,7 @@ class MultiqcModule(BaseMultiqcModule):
         self.qorts_data = dict()
         for f in self.find_log_files("qorts", filehandles=True):
             self.parse_qorts(f)
+            self.add_data_source(f)
 
         # Remove empty samples
         self.qorts_data = {s: v for s, v in self.qorts_data.items() if len(v) > 0}

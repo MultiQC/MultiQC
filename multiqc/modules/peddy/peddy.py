@@ -45,6 +45,7 @@ class MultiqcModule(BaseMultiqcModule):
                         self.peddy_data[cleaned_s_name].update(parsed_data[s_name])
                     except KeyError:
                         self.peddy_data[cleaned_s_name] = parsed_data[s_name]
+                self.add_data_source(f)
 
         # parse peddy CSV files
         for pattern in ["het_check", "ped_check", "sex_check"]:

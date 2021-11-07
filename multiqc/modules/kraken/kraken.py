@@ -54,11 +54,15 @@ class MultiqcModule(BaseMultiqcModule):
             else:
                 new_report_present = True
                 self.parse_logs_minimizer(f)
+            self.add_data_source(f)
 
         self.kraken_raw_data = self.ignore_samples(self.kraken_raw_data)
 
         if len(self.kraken_raw_data) == 0:
             raise UserWarning
+
+        # Data is in wrong format for writing to file
+        # self.write_data_file(self.kraken_raw_data, "kraken")
 
         log.info("Found {} reports".format(len(self.kraken_raw_data)))
 

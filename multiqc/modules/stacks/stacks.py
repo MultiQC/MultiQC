@@ -127,6 +127,7 @@ class MultiqcModule(BaseMultiqcModule):
             s_name = self.clean_s_name(os.path.basename(f["root"]), f, root=run_name)
             try:
                 self.cov_data.update(self.parse_gstacks(f["f"], s_name))
+                self.add_data_source(f, section="gstacks")
                 num_files += 1
             except:
                 log.error("Could not parse gstacks.distribs file in {}".format(f["s_name"]))
@@ -141,6 +142,7 @@ class MultiqcModule(BaseMultiqcModule):
             try:
                 self.distribs_loci.update(i)
                 self.distribs_snps.update(j)
+                self.add_data_source(f, section="populations")
                 num_files += 1
             except:
                 log.error("Could not parse population.log.distribs file in {}".format(f["s_name"]))
@@ -152,6 +154,7 @@ class MultiqcModule(BaseMultiqcModule):
             s_name = self.clean_s_name(os.path.basename(f["root"]), f, root=run_name)
             try:
                 self.sumstats_data.update(self.parse_sumstats(f["f"], s_name))
+                self.add_data_source(f, section="sumstats")
                 num_files += 1
             except:
                 log.error("Could not parse populations.sumstats_summary file in {}".format(f["s_name"]))

@@ -54,6 +54,9 @@ class MultiqcModule(BaseMultiqcModule):
             raise UserWarning
         log.info("Found {} reports".format(len(data)))
 
+        # Write data to file
+        self.write_data_file(data, "preseq")
+
         # Preseq plot
         self._make_preseq_length_trimmed_plot(data, data_is_bases)
 
