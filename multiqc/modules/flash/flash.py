@@ -34,6 +34,7 @@ class MultiqcModule(BaseMultiqcModule):
         self.flash_data = OrderedDict()
         for logfile in self.find_log_files("flash/log"):
             self.flash_data.update(self.parse_flash_log(logfile))
+            self.add_data_source(logfile)
 
         # ignore sample names
         self.flash_data = self.ignore_samples(self.flash_data)

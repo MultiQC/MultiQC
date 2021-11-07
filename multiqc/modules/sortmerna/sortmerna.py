@@ -31,6 +31,7 @@ class MultiqcModule(BaseMultiqcModule):
         self.sortmerna = dict()
         for f in self.find_log_files("sortmerna", filehandles=True):
             self.parse_sortmerna(f)
+            self.add_data_source(f)
 
         # Filter to strip out ignored sample names
         self.sortmerna = self.ignore_samples(self.sortmerna)

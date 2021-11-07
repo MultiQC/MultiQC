@@ -39,6 +39,9 @@ class DragenCoverageHist(BaseMultiqcModule):
         if not data_by_sample:
             return set()
 
+        # Data is in wrong format for writing to file
+        # self.write_data_file(data_by_sample, "dragen_cov_hist")
+
         dist_data = {sn: dist for sn, (dist, cum, depth_1pc) in data_by_sample.items()}
         cum_data = {sn: cum for sn, (dist, cum, depth_1pc) in data_by_sample.items()}
         depth_1pc = max(depth_1pc for (dist, cum, depth_1pc) in data_by_sample.values())
@@ -139,7 +142,7 @@ def parse_fine_hist(f):
         data[depth] = cnt
         cum_data[depth] = cum_pct
 
-    m = re.search(r"(.*).(\S*)_fine_hist_?(\S*)?.csv", f["fn"])
+    m = re.search(r"(.*)\.(\S*)_fine_hist_?(\S*)?.csv", f["fn"])
     sample, phenotype = m.group(1), m.group(2)
     f["s_name"] = sample
     return {phenotype: (data, cum_data, depth_1pc)}

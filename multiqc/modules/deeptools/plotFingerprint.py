@@ -44,6 +44,9 @@ class plotFingerprintMixin:
         )
 
         if len(self.deeptools_plotFingerprintOutRawCounts) > 0:
+            # Write data to file
+            self.write_data_file(self.deeptools_plotFingerprintOutRawCounts, "deeptools_plot_fingerprint_counts")
+
             self.add_section(
                 name="Fingerprint plot",
                 anchor="deeptools_fingerprint",
@@ -64,6 +67,9 @@ class plotFingerprintMixin:
             )
 
         if len(self.deeptools_plotFingerprintOutQualityMetrics) > 0:
+            # Write data to file
+            self.write_data_file(self.deeptools_plotFingerprintOutQualityMetrics, "deeptools_plot_fingerprint_metrics")
+
             self.add_section(
                 name="Fingerprint quality metrics",
                 anchor="plotFingerprint",

@@ -53,6 +53,10 @@ class DragenMappingMetics(BaseMultiqcModule):
 
         if not data_by_rg_by_sample and not data_by_phenotype_by_sample:
             return set()
+
+        # Write data to file
+        self.write_data_file(data_by_sample, "dragen_map_metrics")
+
         self.report_mapping_metrics(data_by_sample, data_by_rg_by_sample)
         return data_by_rg_by_sample.keys()
 
@@ -292,7 +296,7 @@ def parse_mapping_metrics_file(f):
     We are reporting summary metrics in the general stats table, and per-read-group in a separate table.
     """
 
-    f["s_name"] = re.search(r"(.*).mapping_metrics.csv", f["fn"]).group(1)
+    f["s_name"] = re.search(r"(.*)\.mapping_metrics.csv", f["fn"]).group(1)
 
     data_by_readgroup = defaultdict(dict)
     data_by_phenotype = defaultdict(dict)
