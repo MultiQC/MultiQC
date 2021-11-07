@@ -76,6 +76,7 @@ class MultiqcModule(BaseMultiqcModule):
             if "identifier" in parsed_data:
                 s_name = self.clean_s_name(parsed_data["identifier"], f)
             self.clipandmerge_data[s_name] = parsed_data
+            self.add_data_source(f)
 
     def clipandmerge_general_stats_table(self):
         """Take the parsed stats from the ClipAndMerge report and add it to the

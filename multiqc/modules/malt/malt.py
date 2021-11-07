@@ -35,6 +35,9 @@ class MultiqcModule(BaseMultiqcModule):
         if len(self.malt_data) == 0:
             raise UserWarning
 
+        # Write data to file
+        self.write_data_file(self.malt_data, "malt")
+
         log.info("Found {} reports".format(len(self.malt_data)))
 
         self.malt_general_stats()

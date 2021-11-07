@@ -33,6 +33,7 @@ class MultiqcModule(BaseMultiqcModule):
         self.lineage_colours = dict()
         for f in self.find_log_files("pangolin", filehandles=True):
             self.parse_pangolin_log(f)
+            self.add_data_source(f)
 
         # Filter out parsed samples based on sample name
         self.pangolin_data = self.ignore_samples(self.pangolin_data)
