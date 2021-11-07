@@ -510,6 +510,13 @@ produce a huge report file with all of the embedded plot data and crash your bro
 If you are running MultiQC for the `multiqc_data` folder and never intend to look at the report, it
 speed things up though.
 
+### Skip the report if you don't need it
+
+If you're running MultiQC just to get parsed data / exported plots (`multiqc_data`) or the output for MegaQC
+and don't actually need the report, you can skip it with `--no-report`.
+This prevents any HTML report from being generated, including the data compression step that precedes it.
+This can cut a few seconds off the MultiQC execution time.
+
 ## Custom CSS files
 
 MultiQC generates HTML reports. You can include custom CSS in your final report if you wish.
