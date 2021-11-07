@@ -12,7 +12,6 @@ import mimetypes
 import os
 import re
 import textwrap
-import requests
 
 from multiqc.utils import report, config, util_functions
 
@@ -67,18 +66,8 @@ class BaseMultiqcModule(object):
             self.doi_link = ""
         else:
             self.citation = {"doi": self.doi}
-            tooltip = ""
-            # Try fetching the citation text from the API
-            try:
-                headers = {"accept": "text/x-bibliography", "style": "apa", "encoding": "utf-8"}
-                response = requests.get(f"https://doi.org/{doi}", headers=headers)
-                if response.status_code == 200:
-                    self.citation["cite"] = response.content.decode("utf-8")
-                    tooltip = f' title="{self.citation["cite"]}" data-toggle="tooltip"'
-            except:
-                pass
             # Build the HTML link for the DOI
-            self.doi_link = f' <em class="module-doi text-muted small" style="margin-left: 1rem;">DOI: <a href="https://doi.org/{self.doi}" target="_blank"{tooltip}>{self.doi}</a></em>.'
+            self.doi_link = f' <em class="module-doi text-muted small" style="margin-left: 1rem;">DOI: <a href="https://doi.org/{self.doi}" target="_blank">{self.doi}</a></em>.'
 
         if target is None:
             target = self.name
