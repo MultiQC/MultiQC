@@ -11,12 +11,12 @@ the output from each module and print it in sections.
   {% if m.sections | length > 0 %}
   <div id="mqc-module-section-{{ m.anchor }}" class="mqc-module-section">
     {% for s in m.sections %}
-    {% if loop.first %}
-    <div class="mqc-module-section-first">
-      <h2 id="{{ m.anchor }}">{{ m.name }}</h2>
-      {{ m.intro if m.intro }}
-      {% if m['comment'] %}<blockquote class="mqc-section-comment">{{ m['comment'] }}</blockquote>{% endif %}
-    {% endif %}
+      {% if loop.first %}
+      <div class="mqc-module-section-first">
+        <h2 id="{{ m.anchor }}">{{ m.name }}</h2>
+        {{ m.intro if m.intro }}
+        {% if m['comment'] %}<blockquote class="mqc-section-comment">{{ m['comment'] }}</blockquote>{% endif %}
+      {% endif %}
         {% if s['print_section'] %}
           {% if (s['name'] is none or s['name'] | length == 0) and s['helptext'] is not none and s['helptext'] | length > 0 %}
             <button class="btn btn-default btn-sm pull-right btn-help" type="button" data-toggle="collapse" data-target="#{{ s['anchor'] }}_helptext" aria-expanded="false" aria-controls="{{ s['anchor'] }}_helptext">
