@@ -210,10 +210,8 @@ class MultiqcModule(BaseMultiqcModule):
                 self.fastp_data[s_name]["after_filtering_total_reads"]
                 / self.fastp_data[s_name]["before_filtering_total_reads"]
             ) * 100.0
-        except KeyError:
-            log.debug("Could not calculate 'pct_surviving': {}".format(f["fn"]))
-        except ZeroDivisionError:
-            log.warning("FastQ input file has zero raw reads")
+        except (KeyError, ZeroDivisionError) as e:
+            log.debug("Could not calculate 'pct_surviving' ({}): {}".format(e.__class__.__name__, f["fn"]))
 
         # Parse adapter_cutting
         try:
@@ -230,10 +228,8 @@ class MultiqcModule(BaseMultiqcModule):
                 self.fastp_data[s_name]["adapter_cutting_adapter_trimmed_reads"]
                 / self.fastp_data[s_name]["before_filtering_total_reads"]
             ) * 100.0
-        except KeyError:
-            log.debug("Could not calculate 'pct_adapter': {}".format(f["fn"]))
-        except ZeroDivisionError:
-            log.warning("FastQ input file has zero raw reads")
+        except (KeyError, ZeroDivisionError) as e:
+            log.debug("Could not calculate 'pct_adapter' ({}): {}".format(e.__class__.__name__, f["fn"]))
 
         # Duplication rate plot data
         try:
