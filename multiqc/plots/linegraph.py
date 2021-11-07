@@ -444,7 +444,7 @@ def matplotlib_linegraph(plotdata, pconfig=None):
                 )
 
         # Tidy up axes
-        axes.tick_params(labelsize=12, direction="out", left=False, right=False, top=False, bottom=False)
+        axes.tick_params(labelsize=pconfig.get("labelSize", 8), direction="out", left=False, right=False, top=False, bottom=False)
         axes.set_xlabel(pconfig.get("xlab", ""))
         axes.set_ylabel(pconfig.get("ylab", ""))
 
