@@ -545,7 +545,7 @@ def matplotlib_linegraph(plotdata, pconfig=None):
                 bbox_to_anchor=(0, -0.22, 1, 0.102),
                 ncol=5,
                 mode="expand",
-                fontsize=12,
+                fontsize=pconfig.get("labelSize", 8),
                 frameon=False,
             )
             plt.tight_layout(rect=[0, 0.08, 1, 0.92])
