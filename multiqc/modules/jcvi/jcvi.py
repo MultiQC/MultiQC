@@ -23,7 +23,7 @@ class MultiqcModule(BaseMultiqcModule):
             anchor="jcvi",
             href="https://pypi.org/project/jcvi/",
             info="computes statistics on genome annotation.",
-            doi="10.5281/zenodo.31631"
+            doi="10.5281/zenodo.31631",
         )
 
         # Parse logs
