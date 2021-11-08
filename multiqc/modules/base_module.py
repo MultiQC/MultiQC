@@ -67,7 +67,7 @@ class BaseMultiqcModule(object):
         else:
             self.citation = {"doi": self.doi}
             # Build the HTML link for the DOI
-            self.doi_link = f' <em class="module-doi text-muted small" style="margin-left: 1rem;">DOI: <a href="https://doi.org/{self.doi}" target="_blank">{self.doi}</a></em>.'
+            self.doi_link = f' <em class="module-doi text-muted small" style="margin-left: 1rem;" data-doi="{self.doi}" data-toggle="popover">DOI: <a href="https://doi.org/{self.doi}" target="_blank">{self.doi}</a></em>.'
 
         if target is None:
             target = self.name
