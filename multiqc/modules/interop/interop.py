@@ -16,6 +16,7 @@ class MultiqcModule(BaseMultiqcModule):
             anchor="interop",
             href="http://illumina.github.io/interop/index.html",
             info=" - a set of common routines used for reading and writing InterOp metric files.",
+            # No DOI
         )
 
         log = logging.getLogger(__name__)

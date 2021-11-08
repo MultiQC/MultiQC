@@ -21,8 +21,9 @@ class MultiqcModule(BaseMultiqcModule):
         super(MultiqcModule, self).__init__(
             name="MACS2",
             anchor="macs",
-            href="https://github.com/taoliu/MACS",
+            href="https://macs3-project.github.io/MACS/",
             info="identifies transcription factor binding sites in ChIP-seq data.",
+            doi=["10.1101/496521", "10.1186/gb-2008-9-9-r137"],
         )
 
         # Parse logs

@@ -22,6 +22,7 @@ class MultiqcModule(BaseMultiqcModule):
             anchor="lima",
             href="https://github.com/PacificBiosciences/barcoding",
             info=" is used to demultiplex PacBio single-molecule sequencing reads.",
+            # Can't find a DOI
         )
 
         # To store the summary data

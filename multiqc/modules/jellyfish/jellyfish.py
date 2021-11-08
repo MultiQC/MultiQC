@@ -18,8 +18,9 @@ class MultiqcModule(BaseMultiqcModule):
         super(MultiqcModule, self).__init__(
             name="Jellyfish",
             anchor="jellyfish",
-            href="http://www.cbcb.umd.edu/software/jellyfish/",
+            href="https://github.com/gmarcais/Jellyfish",
             info="is a tool for fast, memory-efficient counting of k-mers in DNA.",
+            doi="10.1093/bioinformatics/btr011",
         )
 
         self.jellyfish_data = dict()

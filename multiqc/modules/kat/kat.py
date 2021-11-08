@@ -19,7 +19,8 @@ class MultiqcModule(BaseMultiqcModule):
             name="K-mer Analysis Toolkit",
             anchor="kat",
             href="https://github.com/TGAC/KAT",
-            info="is an toolkit for analysing sequencing data via its k-mer spectra.",
+            info="is a toolkit for analysing sequencing data via its k-mer spectra.",
+            doi="10.1093/bioinformatics/btw663",
         )
 
         # Find and load any KAT dist analysis reports
