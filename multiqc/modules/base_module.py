@@ -30,7 +30,7 @@ class BaseMultiqcModule(object):
         extra=None,
         autoformat=True,
         autoformat_type="markdown",
-        doi=None,
+        doi=[],
     ):
 
         # Custom options from user config that can overwrite base module values
@@ -57,17 +57,23 @@ class BaseMultiqcModule(object):
         if self.info is None:
             self.info = ""
         # Always finish with a ".", as we may add a DOI after the intro.
-        if self.info[:-1] != ".":
+        if len(self.info) > 0 and self.info[:-1] != ".":
             self.info += "."
         if self.extra is None:
             self.extra = ""
-        if self.doi is None:
-            self.citation = {}
-            self.doi_link = ""
-        else:
-            self.citation = {"doi": self.doi}
-            # Build the HTML link for the DOI
-            self.doi_link = f' <em class="module-doi text-muted small" style="margin-left: 1rem;" data-doi="{self.doi}" data-toggle="popover">DOI: <a href="https://doi.org/{self.doi}" target="_blank">{self.doi}</a></em>.'
+        self.doi_link = ""
+        if type(self.doi) is str:
+            self.doi = [self.doi]
+        if len(self.doi) > 0:
+            doi_links = []
+            for doi in self.doi:
+                # Build the HTML link for the DOI
+                doi_links.append(
+                    f' <a class="module-doi" data-doi="{doi}" data-toggle="popover" href="https://doi.org/{doi}" target="_blank">{doi}</a>'
+                )
+            self.doi_link = '<em class="text-muted small" style="margin-left: 1rem;">DOI: {}.</em>'.format(
+                ", ".join(doi_links)
+            )
 
         if target is None:
             target = self.name
