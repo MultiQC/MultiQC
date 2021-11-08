@@ -48,6 +48,7 @@ class MultiqcModule(
                 " is a Bio-IT Platform that provides ultra-rapid secondary analysis of sequencing data"
                 " using field-programmable gate array technology (FPGA)."
             ),
+            # Can't find a DOI
         )
 
         samples_found = set()

@@ -22,6 +22,7 @@ class MultiqcModule(BaseMultiqcModule):
             anchor="ccs",
             href="https://github.com/PacificBiosciences/ccs",
             info=" is used to generate highly accurate single-molecule consensus reads from PacBio sequencing.",
+            # Can't find a DOI
         )
 
         # To store the mod data

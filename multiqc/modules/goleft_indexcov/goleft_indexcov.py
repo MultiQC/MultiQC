@@ -21,6 +21,7 @@ class MultiqcModule(BaseMultiqcModule):
             anchor="goleft_indexcov",
             href="https://github.com/brentp/goleft/tree/master/indexcov",
             info="quickly estimates coverage from a whole-genome bam index.",
+            doi="10.1093/gigascience/gix090",
         )
 
         # Parse ROC data

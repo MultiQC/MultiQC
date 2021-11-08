@@ -22,8 +22,9 @@ class MultiqcModule(BaseMultiqcModule):
         super(MultiqcModule, self).__init__(
             name="biobambam2",
             anchor="biobambam2",
-            href="https://github.com/gt1/biobambam2",
+            href="https://gitlab.com/german.tischler/biobambam2",
             info="provides tools for early stage alignment file processing",
+            # Can't find a DOI
         )
 
         # Set up class objects to hold parsed data

@@ -39,6 +39,7 @@ class MultiqcModule(BaseMultiqcModule):
             href="http://www.bioinformatics.babraham.ac.uk/projects/fastqc/",
             info="is a quality control tool for high throughput sequence data,"
             " written by Simon Andrews at the Babraham Institute in Cambridge.",
+            # No DOI
         )
 
         self.fastqc_data = dict()

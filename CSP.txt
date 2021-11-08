@@ -3,7 +3,7 @@
 
 script-src 'self'
     # v1.12
-    'sha256-SQTafvsETJDzjJlY9TY2myHTdq6nek+vRq99tRRmeS4=' # multiqc.js after 4be582b
+    'sha256-iV6CFHoCJq7rXjscXMmCioPf05AIE/ZU98tHigtrnoE=' # multiqc.js after 9800862
     'sha256-TUYHIjQsABv4n1G4GdIAz0ZljvuXPEvQ9T20Sok7TvE=' # multiqc.js
     'sha256-teMLGfDW72TRam2f0Fnj53uchjf3tQR9N0xo+hR2PXU=' # multiqc_tables.js
     'sha256-AEcY37NW7iIjmlzDOPZvuAorKHxXZxsECPnuSP52fB8=' # multiqc_plotting.js

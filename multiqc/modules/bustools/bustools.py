@@ -27,6 +27,7 @@ class MultiqcModule(BaseMultiqcModule):
             info="works with BUS files - a file format for single-cell RNA-seq data "
             "designed to facilitate the development of modular workflows for data "
             "processing.",
+            doi="10.1093/bioinformatics/btz279",
         )
 
         self.prepare_data()
