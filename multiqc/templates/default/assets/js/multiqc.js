@@ -53,38 +53,46 @@ $(function () {
   });
 
   // Initialise module DOI popovers
-  $(".module-doi").each(function () {
+  $(".module-doi").click(function (e) {
+    // Don't follow the link
+    e.preventDefault();
     var el = $(this);
+
+    // Check if we already have a popover
+    if (el.data("bs.popover")) {
+      return;
+    }
+
+    // Check if we already failed to get a popover
+    if (el.hasClass("no-doi-details")) {
+      window.open(el.attr("href"), "_blank");
+    }
+
     // Get full paper details
     var doi = $(this).data("doi");
     $.get("https://api.crossref.org/works/" + doi, function (data) {
-      console.log(data);
-      // Authors
-      var authors = "";
+      // Prepare fields
+      var title = data.message.title[0];
+      var journal = data.message["short-container-title"][0];
+      var year = data.message.published["date-parts"][0][0];
+      var authors = [];
       $.each(data.message.author, function (idx, author) {
-        authors += author.given + ", ";
+        authors.push(author.given);
       });
+      var content = "<p><em>" + journal + "</em> (" + year + ")</p>";
+      content += "<p class='small'>" + authors.join(", ") + "</p>";
+      content += '<p><a href="https://doi.org/' + doi + '" class="btn btn-primary" target="_blank">View paper</a></p>';
       // Make the popover
       el.popover({
-        title: data.message.title[0],
-        content:
-          "<p><em>" +
-          data.message["short-container-title"][0] +
-          "</em> (" +
-          data.message.published["date-parts"][0][0] +
-          ")</p>" +
-          "<p class='small'>" +
-          authors +
-          '</p><p><a href="https://doi.org/' +
-          doi +
-          '" class="btn btn-primary" target="_blank">View paper</a></p>',
+        title: title,
+        content: content,
         html: true,
         trigger: "focus",
       });
+      el.popover("show");
+    }).fail(function () {
+      el.addClass("no-doi-details");
+      window.open(el.attr("href"), "_blank");
     });
-  });
-  // Stop the DOI link from working, as we have popovers
-  $(".module-doi").click(function (e) {
-    e.preventDefault();
   });
 });

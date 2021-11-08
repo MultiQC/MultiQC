@@ -72,7 +72,7 @@ class BaseMultiqcModule(object):
                     f' <a class="module-doi" data-doi="{doi}" data-toggle="popover" href="https://doi.org/{doi}" target="_blank">{doi}</a>'
                 )
             self.doi_link = '<em class="text-muted small" style="margin-left: 1rem;">DOI: {}.</em>'.format(
-                ", ".join(doi_links)
+                "; ".join(doi_links)
             )
 
         if target is None:
