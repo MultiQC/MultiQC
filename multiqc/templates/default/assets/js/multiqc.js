@@ -88,6 +88,7 @@ $(function () {
         content: content,
         html: true,
         trigger: "focus",
+        placement: "auto left",
       });
       el.popover("show");
     }).fail(function () {
