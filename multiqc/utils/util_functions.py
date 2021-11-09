@@ -74,6 +74,9 @@ def write_data_file(data, fn, sort_cols=False, data_format=None):
                 yaml.dump(data, f, default_flow_style=False)
             else:
                 # Default - tab separated output
+                # Heatmaps and other odd things might break this, so skip if so
+                if type(data) is not dict:
+                    return
                 # Convert keys to strings
                 data = {str(k): v for k, v in data.items()}
                 # Get all headers
