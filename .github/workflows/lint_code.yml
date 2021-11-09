@@ -54,3 +54,14 @@ jobs:
 
       - name: Check code lints with Black
         uses: jpetrucciani/black-check@master
+
+  CodeChecks:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+
+      - name: Install dependencies
+        run: pip install rich
+
+      - name: Run manual code style checks
+        run: python ${GITHUB_WORKSPACE}/.github/workflows/code_checks.py

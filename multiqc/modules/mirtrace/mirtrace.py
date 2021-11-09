@@ -24,6 +24,7 @@ class MultiqcModule(BaseMultiqcModule):
             anchor="mirtrace",
             href="https://github.com/friedlanderlab/mirtrace",
             info="is a quality control software for small RNA sequencing data developed by Friedländer lab (KTH, Sweden).",
+            doi="10.1186/s13059-018-1588-9",
         )
 
         # Find and load miRTrace summary statistics table

@@ -28,6 +28,7 @@ class MultiqcModule(BaseMultiqcModule, FindPeaksReportMixin, TagDirReportMixin):
             anchor="homer",
             href="http://homer.ucsd.edu/homer/",
             info="is a suite of tools for Motif Discovery and next-gen sequencing analysis.",
+            doi="10.1016/j.molcel.2010.05.004",
         )
 
         # Set up class objects to hold parsed data

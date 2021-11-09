@@ -30,6 +30,9 @@ class DragenPloidyEstimationMetrics(BaseMultiqcModule):
         if not data_by_sample:
             return set()
 
+        # Write data to file
+        self.write_data_file(data_by_sample, "dragen_ploidy")
+
         headers = OrderedDict()
         headers["Ploidy estimation"] = {
             "title": "Sex",
@@ -52,7 +55,7 @@ def parse_ploidy_estimation_metrics_file(f):
     PLOIDY ESTIMATION,,Ploidy estimation,X0
     """
 
-    f["s_name"] = re.search(r"(.*).ploidy_estimation_metrics.csv", f["fn"]).group(1)
+    f["s_name"] = re.search(r"(.*)\.ploidy_estimation_metrics.csv", f["fn"]).group(1)
 
     data = defaultdict(dict)
 

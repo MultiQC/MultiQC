@@ -21,24 +21,35 @@ class MultiqcModule(BaseMultiqcModule):
             anchor="goleft_indexcov",
             href="https://github.com/brentp/goleft/tree/master/indexcov",
             info="quickly estimates coverage from a whole-genome bam index.",
+            doi="10.1093/gigascience/gix090",
         )
 
         # Parse ROC data
         self.roc_plot_data = collections.defaultdict(lambda: collections.defaultdict(dict))
         for f in self.find_log_files("goleft_indexcov/roc", filehandles=True):
             self.parse_roc_plot_data(f)
+            self.add_data_source(f)
+
         # Filter to strip out ignored sample names
         num_roc_samples = 0
         for chrom in self.roc_plot_data:
             self.roc_plot_data[chrom] = self.ignore_samples(self.roc_plot_data[chrom])
             num_roc_samples = max(len(self.roc_plot_data[chrom]), num_roc_samples)
 
+        # Write data to file
+        self.write_data_file(self.roc_plot_data, "goleft_roc")
+
         # Parse BIN data
         self.bin_plot_data = {}
         for f in self.find_log_files("goleft_indexcov/ped", filehandles=True):
             self.parse_bin_plot_data(f)
+            self.add_data_source(f)
+
         # Filter to strip out ignored sample names
         self.bin_plot_data = self.ignore_samples(self.bin_plot_data)
+
+        # Write data to file
+        self.write_data_file(self.roc_plot_data, "goleft_bin")
 
         # Stop execution if no samples
         num_samples = max(len(self.bin_plot_data), num_roc_samples)

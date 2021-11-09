@@ -22,6 +22,7 @@ class MultiqcModule(BaseMultiqcModule):
             anchor="kaiju",
             href="http://kaiju.binf.ku.dk/",
             info="a fast and sensitive taxonomic classification for metagenomics.",
+            doi="10.1038/ncomms11257",
         )
 
         # Set up data structures
