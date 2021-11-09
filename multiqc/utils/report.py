@@ -406,7 +406,7 @@ def data_sources_tofile():
 
 
 def dois_tofile():
-    """ Find all DOIs listed in report sections and write to a file """
+    """Find all DOIs listed in report sections and write to a file"""
     # Collect DOIs
     dois = {"MultiQC": ["10.1093/bioinformatics/btw354"]}
     for mod in modules_output:
