@@ -32,7 +32,7 @@ class MultiqcModule(BaseMultiqcModule):
             anchor="biscuit",
             href="https://github.com/huishenlab/biscuit",
             info="is a tool to map bisulfite converted DNA sequence reads and determine cytosine methylation states.",
-            # Can't find a DOI
+            # Can't find a DOI // doi=
         )
 
         # Set up data structures

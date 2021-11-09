@@ -31,7 +31,7 @@ class MultiqcModule(BaseMultiqcModule):
             anchor="ngsderive",
             href="https://github.com/stjudecloud/ngsderive",
             info="attempts to predict library information from next-generation sequencing data.",
-            # Can't find a DOI
+            # Can't find a DOI // doi=
         )
 
         self.strandedness = {}

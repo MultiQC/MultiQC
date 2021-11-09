@@ -24,7 +24,7 @@ class MultiqcModule(BaseMultiqcModule):
             anchor="biobambam2",
             href="https://gitlab.com/german.tischler/biobambam2",
             info="provides tools for early stage alignment file processing",
-            # Can't find a DOI
+            doi="10.1186/1751-0473-9-13",
         )
 
         # Set up class objects to hold parsed data

@@ -22,7 +22,7 @@ class MultiqcModule(BaseMultiqcModule):
             anchor="malt",
             href="http://ab.inf.uni-tuebingen.de/software/malt/",
             info="performs alignment of metagenomic reads against a database of reference sequences (such as NR, GenBank or Silva) and produces a MEGAN RMA file as output.",
-            # Can't find a DOI
+            doi="10.1101/050559 ",
         )
 
         # Find and load Malt reports

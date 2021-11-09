@@ -23,6 +23,7 @@ class MultiqcModule(BaseMultiqcModule):
             anchor="pychopper",
             href="https://github.com/nanoporetech/pychopper",
             info="is a tool to identify, orient, trim and rescue full length Nanopore cDNA reads.",
+            # Can't find a DOI // doi=
         )
 
         # Parse stats file

@@ -24,7 +24,7 @@ class MultiqcModule(BaseMultiqcModule):
             anchor="mirtop",
             href="https://github.com/miRTop/mirtop/",
             info="is a command line tool to annotate miRNAs and isomiRs and compute general statistics using the mirGFF3 format.",
-            # Can't find a DOI
+            doi="10.5281/zenodo.45385",  # Zenodo won't load this page for me as I write this, but it's the listed DOI.
         )
 
         # Find and load any mirtop reports

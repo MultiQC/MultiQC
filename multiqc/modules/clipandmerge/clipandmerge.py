@@ -26,7 +26,7 @@ class MultiqcModule(BaseMultiqcModule):
             anchor="clipandmerge",
             href="http://www.github.com/apeltzer/ClipAndMerge",
             info="is a tool for adapter clipping and read merging for ancient DNA data.",
-            # Can't find a DOI
+            doi="10.1186/s13059-016-0918-z",
         )
 
         # Find and load any ClipAndMerge reports

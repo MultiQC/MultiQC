@@ -24,6 +24,7 @@ class MultiqcModule(BaseMultiqcModule):
             anchor="trimmomatic",
             href="http://www.usadellab.org/cms/?page=trimmomatic",
             info="is a flexible read trimming tool for Illumina NGS data.",
+            doi="10.1093/bioinformatics/btu170",
         )
 
         # Parse logs

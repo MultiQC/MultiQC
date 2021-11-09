@@ -23,8 +23,8 @@ class MultiqcModule(BaseMultiqcModule):
             name="QUAST",
             anchor="quast",
             href="http://quast.bioinf.spbau.ru/",
-            info="is a quality assessment tool for genome assemblies, written by "
-            "the Center for Algorithmic Biotechnology.",
+            info="is a quality assessment tool for genome assemblies, written by the Center for Algorithmic Biotechnology.",
+            doi="10.1093/bioinformatics/btt086",
         )
 
         # Get modifiers from config file

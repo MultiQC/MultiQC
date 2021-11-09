@@ -27,6 +27,7 @@ class MultiqcModule(BaseMultiqcModule):
             href="https://www.ensembl.org/info/docs/tools/vep/index.html",
             info="Ensembl VEP determines the effect of your variants on genes, transcripts and protein sequences, "
             "as well as regulatory regions.",
+            doi="10.1186/s13059-016-0974-4",
         )
 
         self.vep_data = dict()

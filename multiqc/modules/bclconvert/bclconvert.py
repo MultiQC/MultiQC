@@ -22,7 +22,7 @@ class MultiqcModule(BaseMultiqcModule):
             anchor="bclconvert",
             href="https://support.illumina.com/",
             info="can be used to both demultiplex data and convert BCL files to FASTQ file formats for downstream analysis.",
-            # Can't find a DOI
+            # Can't find a DOI // doi=
         )
 
         # set up and collate bclconvert run and demux files

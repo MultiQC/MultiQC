@@ -24,6 +24,7 @@ class MultiqcModule(BaseMultiqcModule):
             anchor="qorts",
             href="http://hartleys.github.io/QoRTs/",
             info="is toolkit for analysis, QC and data management of RNA-Seq datasets.",
+            doi="10.1186/s12859-015-0670-5",
         )
 
         # Parse logs

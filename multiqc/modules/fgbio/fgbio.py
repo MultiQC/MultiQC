@@ -26,7 +26,7 @@ class MultiqcModule(BaseMultiqcModule, GroupReadsByUmiMixin):
             target="fgbio",
             href="http://fulcrumgenomics.github.io/fgbio/",
             info=" is a command line toolkit for working with genomic and particularly next generation sequencing data..",
-            # Can't find a DOI
+            # No publication / DOI // doi=
         )
 
         # Set up class objects to hold parsed data
