@@ -12,6 +12,7 @@
 - Added support for `--custom-css-file` / `config.custom_css_files` option to include custom CSS in the final report ([#1573](https://github.com/ewels/MultiQC/pull/1573))
 - MultiQC now skips modules for which no files were found - gives a small performance boost ([#1463](https://github.com/ewels/MultiQC/issues/1463))
 - New option to customise font size for axis labels in flat MatPlotLib charts ([#1576](https://github.com/ewels/MultiQC/pull/1576))
+- CSS Improvements to make printed reports more attractive / readable ([#1579](https://github.com/ewels/MultiQC/pull/1579))
 
 ### New Modules
 
