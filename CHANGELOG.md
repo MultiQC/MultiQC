@@ -25,7 +25,7 @@
 - **DRAGEN**
   - Fixed bug in sample name regular expression ([#1537](https://github.com/ewels/MultiQC/pull/1537))
 - **FastQC**
-  - Fixed bug when skipping overrepresented sequences ([#1488](https://github.com/ewels/MultiQC/issues/1488))
+  - Fixed several bugs occuring when FastQC sections are skipped ([#1488](https://github.com/ewels/MultiQC/issues/1488), [#1533](https://github.com/ewels/MultiQC/issues/1533))
 - **Qualimap**
   - Fix `ZeroDivisionError` in `QM_RNASeq` and skip genomic origins plot if no aligned reads are found ([#1492](https://github.com/ewels/MultiQC/issues/1492))
 - **RSeQC**
