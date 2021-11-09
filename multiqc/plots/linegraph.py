@@ -444,7 +444,9 @@ def matplotlib_linegraph(plotdata, pconfig=None):
                 )
 
         # Tidy up axes
-        axes.tick_params(labelsize=8, direction="out", left=False, right=False, top=False, bottom=False)
+        axes.tick_params(
+            labelsize=pconfig.get("labelSize", 8), direction="out", left=False, right=False, top=False, bottom=False
+        )
         axes.set_xlabel(pconfig.get("xlab", ""))
         axes.set_ylabel(pconfig.get("ylab", ""))
 
@@ -545,7 +547,7 @@ def matplotlib_linegraph(plotdata, pconfig=None):
                 bbox_to_anchor=(0, -0.22, 1, 0.102),
                 ncol=5,
                 mode="expand",
-                fontsize=8,
+                fontsize=pconfig.get("labelSize", 8),
                 frameon=False,
             )
             plt.tight_layout(rect=[0, 0.08, 1, 0.92])

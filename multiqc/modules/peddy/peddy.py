@@ -27,6 +27,7 @@ class MultiqcModule(BaseMultiqcModule):
             anchor="peddy",
             href="https://github.com/brentp/peddy",
             info="calculates genotype :: pedigree correspondence checks, ancestry checks and sex checks using VCF files.",
+            doi="10.1016/j.ajhg.2017.01.017",
         )
 
         # Find and load any Peddy reports
@@ -45,6 +46,7 @@ class MultiqcModule(BaseMultiqcModule):
                         self.peddy_data[cleaned_s_name].update(parsed_data[s_name])
                     except KeyError:
                         self.peddy_data[cleaned_s_name] = parsed_data[s_name]
+                self.add_data_source(f)
 
         # parse peddy CSV files
         for pattern in ["het_check", "ped_check", "sex_check"]:

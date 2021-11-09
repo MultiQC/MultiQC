@@ -23,6 +23,9 @@ class TagDirReportMixin:
         self.parse_FreqDistribution_data()
         self.homer_stats_table_tagInfo()
 
+        # Write data to file
+        self.write_data_file(self.tagdir_data, "homer_tagdir")
+
         return sum([len(v) for k, v in self.tagdir_data.items() if k != "header"])
 
     def parse_gc_content(self):
@@ -53,6 +56,7 @@ class TagDirReportMixin:
         self.tagdir_data["GCcontent"] = self.ignore_samples(self.tagdir_data["GCcontent"])
 
         if len(self.tagdir_data["GCcontent"]) > 0:
+
             self.add_section(
                 name="Per Sequence GC Content",
                 anchor="homer_per_sequence_gc_content",

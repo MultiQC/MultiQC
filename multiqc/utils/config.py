@@ -156,7 +156,7 @@ def mqc_cl_config(cl_config):
 
 def mqc_add_config(conf, conf_path=None):
     """Add to the global config with given MultiQC config dict"""
-    global fn_clean_exts, fn_clean_trim
+    global custom_css_files, fn_clean_exts, fn_clean_trim
     for c, v in conf.items():
         if c == "sp":
             # Merge filename patterns instead of replacing
@@ -182,6 +182,19 @@ def mqc_add_config(conf, conf_path=None):
                 continue
             logger.debug("New config '{}': {}".format(c, fpath))
             update({c: fpath})
+        elif c == "custom_css_files":
+            for fpath in v:
+                if os.path.exists(fpath):
+                    fpath = os.path.abspath(fpath)
+                elif conf_path is not None and os.path.exists(os.path.join(os.path.dirname(conf_path), fpath)):
+                    fpath = os.path.abspath(os.path.join(os.path.dirname(conf_path), fpath))
+                else:
+                    logger.error("CSS path '{}' path not found, skipping ({})".format(c, fpath))
+                    continue
+                logger.debug("Adding css file '{}': {}".format(c, fpath))
+                if not custom_css_files:
+                    custom_css_files = []
+                custom_css_files.append(fpath)
         else:
             logger.debug("New config '{}': {}".format(c, v))
             update({c: v})

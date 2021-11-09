@@ -39,6 +39,7 @@ class MultiqcModule(BaseMultiqcModule):
             href="http://www.bioinformatics.babraham.ac.uk/projects/fastqc/",
             info="is a quality control tool for high throughput sequence data,"
             " written by Simon Andrews at the Babraham Institute in Cambridge.",
+            # No publication / DOI // doi=
         )
 
         self.fastqc_data = dict()
@@ -267,8 +268,8 @@ class MultiqcModule(BaseMultiqcModule):
             "format": "{:,.0f}",
         }
         headers["avg_sequence_length"] = {
-            "title": "Length",
-            "description": "Average Sequence Length (bp)",
+            "title": "Read Length",
+            "description": "Average Read Length (bp)",
             "min": 0,
             "suffix": " bp",
             "scale": "RdYlGn",
@@ -861,7 +862,7 @@ class MultiqcModule(BaseMultiqcModule):
                     del data[s_name]
                     log.debug("Couldn't find data for {}, invalid Key".format(s_name))
 
-        if all(len(data[s_name]) == 0 for s_name in self.fastqc_data):
+        if all(len(data.get(s_name, {})) == 0 for s_name in self.fastqc_data):
             log.debug("overrepresented_sequences not found in FastQC reports")
             return None
 

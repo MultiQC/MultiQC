@@ -28,6 +28,7 @@ class MultiqcModule(BaseMultiqcModule):
             anchor="afterqc",
             href="https://github.com/OpenGene/AfterQC",
             info="Automatic Filtering, Trimming, Error Removing and Quality Control for fastq data.",
+            doi="10.1186/s12859-017-1469-3",
         )
 
         # Find and load any Afterqc reports
