@@ -107,60 +107,82 @@ def parse_reports(self):
     # Genomic Origin Bar Graph
     # NB: Ignore 'Overlapping Exon' in report - these make the numbers add up to > 100%
     if len(self.qualimap_rnaseq_genome_results) > 0:
-        gorigin_cats = OrderedDict()
-        gorigin_cats["reads_aligned_exonic"] = {"name": "Exonic"}
-        gorigin_cats["reads_aligned_intronic"] = {"name": "Intronic"}
-        gorigin_cats["reads_aligned_intergenic"] = {"name": "Intergenic"}
-        gorigin_pconfig = {
-            "id": "qualimap_genomic_origin",
-            "title": "Qualimap RNAseq: Genomic Origin",
-            "ylab": "Number of reads",
-            "cpswitch_c_active": False,
-        }
-        genomic_origin_helptext = """
-        There are currently three main approaches to map reads to transcripts in an
-        RNA-seq experiment: mapping reads to a reference genome to identify expressed
-        transcripts that are annotated (and discover those that are unknown), mapping
-        reads to a reference transcriptome, and <i>de novo</i> assembly of transcript
-        sequences (<a href="https://doi.org/10.1186/s13059-016-0881-8"
-        target="_blank">Conesa et al. 2016</a>).
+        # Check that we have anything to plot
+        if (
+            sum(
+                entry[key]
+                for entry in self.qualimap_rnaseq_genome_results.values()
+                for key in ["reads_aligned_exonic", "reads_aligned_intronic", "reads_aligned_intronic"]
+            )
+            > 0
+        ):
 
-        For RNA-seq QC analysis, QualiMap can be used to assess alignments produced by
-        the first of these approaches. For input, it requires a GTF annotation file
-        along with a reference genome, which can be used to reconstruct the exon
-        structure of known transcripts. This allows mapped reads to be grouped by
-        whether they originate in an exonic region (for QualiMap, this may include
-        5&#8242; and 3&#8242; UTR regions as well as protein-coding exons), an intron,
-        or an intergenic region (see the <a href="http://qualimap.bioinfo.cipf.es/doc_html/index.html"
-        target="_blank">Qualimap 2 documentation</a>).
+            # Write data to file
+            self.write_data_file(self.qualimap_rnaseq_genome_results, "qualimap_rnaseq_genome_results")
 
-        The inferred genomic origins of RNA-seq reads are presented here as a bar graph
-        showing either the number or percentage of mapped reads in each read dataset
-        that have been assigned to each type of genomic region. This graph can be used
-        to assess the proportion of useful reads in an RNA-seq experiment. That
-        proportion can be reduced by the presence of intron sequences, especially if
-        depletion of ribosomal RNA was used during sample preparation (<a href="https://doi.org/10.1038/nrg3642"
-        target="_blank">Sims et al. 2014</a>). It can also be reduced by off-target
-        transcripts, which are detected in greater numbers at the sequencing depths
-        needed to detect poorly-expressed transcripts (<a href="https://doi.org/10.1101/gr.124321.111"
-        target="_blank">Tarazona et al. 2011</a>)."""
-        self.add_section(
-            name="Genomic origin of reads",
-            anchor="qualimap-reads-genomic-origin",
-            description="Classification of mapped reads as originating in exonic, intronic or intergenic regions. These can be displayed as either the number or percentage of mapped reads.",
-            helptext=genomic_origin_helptext,
-            plot=bargraph.plot(self.qualimap_rnaseq_genome_results, gorigin_cats, gorigin_pconfig),
-        )
+            gorigin_cats = OrderedDict()
+            gorigin_cats["reads_aligned_exonic"] = {"name": "Exonic"}
+            gorigin_cats["reads_aligned_intronic"] = {"name": "Intronic"}
+            gorigin_cats["reads_aligned_intergenic"] = {"name": "Intergenic"}
+            gorigin_pconfig = {
+                "id": "qualimap_genomic_origin",
+                "title": "Qualimap RNAseq: Genomic Origin",
+                "ylab": "Number of reads",
+                "cpswitch_c_active": False,
+            }
+            genomic_origin_helptext = """
+            There are currently three main approaches to map reads to transcripts in an
+            RNA-seq experiment: mapping reads to a reference genome to identify expressed
+            transcripts that are annotated (and discover those that are unknown), mapping
+            reads to a reference transcriptome, and <i>de novo</i> assembly of transcript
+            sequences (<a href="https://doi.org/10.1186/s13059-016-0881-8"
+            target="_blank">Conesa et al. 2016</a>).
+
+            For RNA-seq QC analysis, QualiMap can be used to assess alignments produced by
+            the first of these approaches. For input, it requires a GTF annotation file
+            along with a reference genome, which can be used to reconstruct the exon
+            structure of known transcripts. This allows mapped reads to be grouped by
+            whether they originate in an exonic region (for QualiMap, this may include
+            5&#8242; and 3&#8242; UTR regions as well as protein-coding exons), an intron,
+            or an intergenic region (see the <a href="http://qualimap.bioinfo.cipf.es/doc_html/index.html"
+            target="_blank">Qualimap 2 documentation</a>).
+
+            The inferred genomic origins of RNA-seq reads are presented here as a bar graph
+            showing either the number or percentage of mapped reads in each read dataset
+            that have been assigned to each type of genomic region. This graph can be used
+            to assess the proportion of useful reads in an RNA-seq experiment. That
+            proportion can be reduced by the presence of intron sequences, especially if
+            depletion of ribosomal RNA was used during sample preparation (<a href="https://doi.org/10.1038/nrg3642"
+            target="_blank">Sims et al. 2014</a>). It can also be reduced by off-target
+            transcripts, which are detected in greater numbers at the sequencing depths
+            needed to detect poorly-expressed transcripts (<a href="https://doi.org/10.1101/gr.124321.111"
+            target="_blank">Tarazona et al. 2011</a>)."""
+            self.add_section(
+                name="Genomic origin of reads",
+                anchor="qualimap-reads-genomic-origin",
+                description="Classification of mapped reads as originating in exonic, intronic or intergenic regions. These can be displayed as either the number or percentage of mapped reads.",
+                helptext=genomic_origin_helptext,
+                plot=bargraph.plot(self.qualimap_rnaseq_genome_results, gorigin_cats, gorigin_pconfig),
+            )
+        else:
+            log.warning("Found zero aligned reads. Skipping 'Genomic origin of reads' plot.")
 
     if len(self.qualimap_rnaseq_cov_hist) > 0:
+
+        # Write data to file
+        self.write_data_file(self.qualimap_rnaseq_cov_hist, "qualimap_rnaseq_cov_hist")
 
         # Make a normalised percentage version of the coverage data
         self.qualimap_rnaseq_cov_hist_percent = dict()
         for s_name in self.qualimap_rnaseq_cov_hist:
             self.qualimap_rnaseq_cov_hist_percent[s_name] = OrderedDict()
             total = sum(self.qualimap_rnaseq_cov_hist[s_name].values())
-            for k, v in self.qualimap_rnaseq_cov_hist[s_name].items():
-                self.qualimap_rnaseq_cov_hist_percent[s_name][k] = (v / total) * 100.0
+            if total == 0:
+                for k, v in self.qualimap_rnaseq_cov_hist[s_name].items():
+                    self.qualimap_rnaseq_cov_hist_percent[s_name][k] = 0.0
+            else:
+                for k, v in self.qualimap_rnaseq_cov_hist[s_name].items():
+                    self.qualimap_rnaseq_cov_hist_percent[s_name][k] = (v / total) * 100.0
 
         coverage_profile_helptext = """
         There are currently three main approaches to map reads to transcripts in an

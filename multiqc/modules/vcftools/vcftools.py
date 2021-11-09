@@ -21,6 +21,7 @@ class MultiqcModule(BaseMultiqcModule, Relatedness2Mixin, TsTvByCountMixin, TsTv
             anchor="vcftools",
             href="https://vcftools.github.io",
             info="is a program for working with and reporting on VCF files.",
+            doi="10.1093/bioinformatics/btr330",
         )
 
         n = dict()

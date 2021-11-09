@@ -4,7 +4,15 @@
 
 ### MultiQC updates
 
-Fixed logger bugs when calling `multiqc.run` multiple times by removing logging file handlers between calls ([#1141](https://github.com/ewels/MultiQC/issues/1141)
+- Added `--no-report` flag to skip report generation ([#1462](https://github.com/ewels/MultiQC/issues/1462))
+- Added support for priting tool DOI in report sections ([#1177](https://github.com/ewels/MultiQC/issues/1177))
+- Fixed logger bugs when calling `multiqc.run` multiple times by removing logging file handlers between calls ([#1141](https://github.com/ewels/MultiQC/issues/1141))
+- Added missing functions call to several modules ([#1468](https://github.com/ewels/MultiQC/issues/1468))
+- Wrote new script to check for core function calls that should be in every module (`.github/workflows/code_checks.py`), runs on GitHub actions CI
+- Added support for `--custom-css-file` / `config.custom_css_files` option to include custom CSS in the final report ([#1573](https://github.com/ewels/MultiQC/pull/1573))
+- MultiQC now skips modules for which no files were found - gives a small performance boost ([#1463](https://github.com/ewels/MultiQC/issues/1463))
+- New option to customise font size for axis labels in flat MatPlotLib charts ([#1576](https://github.com/ewels/MultiQC/pull/1576))
+- CSS Improvements to make printed reports more attractive / readable ([#1579](https://github.com/ewels/MultiQC/pull/1579))
 
 ### New Modules
 
@@ -16,6 +24,10 @@ Fixed logger bugs when calling `multiqc.run` multiple times by removing logging 
   - Fixed module failing when writing data to file if there is a `/` in the section name ([#1515](https://github.com/ewels/MultiQC/issues/1515))
 - **DRAGEN**
   - Fixed bug in sample name regular expression ([#1537](https://github.com/ewels/MultiQC/pull/1537))
+- **FastQC**
+  - Fixed bug when skipping overrepresented sequences ([#1488](https://github.com/ewels/MultiQC/issues/1488))
+- **Qualimap**
+  - Fix `ZeroDivisionError` in `QM_RNASeq` and skip genomic origins plot if no aligned reads are found ([#1492](https://github.com/ewels/MultiQC/issues/1492))
 - **RSeQC**
   - Fixed minor bug in new TIN parsing where the sample name was not being correctly cleaned ([#1484](https://github.com/ewels/MultiQC/issues/1484))
 - **FastQC**

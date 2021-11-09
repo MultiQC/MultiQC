@@ -280,17 +280,34 @@ from multiqc.modules.base_module import BaseMultiqcModule
 class MultiqcModule(BaseMultiqcModule):
     def __init__(self):
         # Initialise the parent object
-        super(MultiqcModule, self).__init__(name='My Module', anchor='mymod',
-        href="http://www.awesome_bioinfo.com/my_module",
-        info="is an example analysis module used for writing documentation.")
+        super(MultiqcModule, self).__init__(
+          name='My Module',
+          anchor='mymod',
+          href="http://www.awesome_bioinfo.com/my_module",
+          info="is an example analysis module used for writing documentation.",
+          doi="01.2345/journal/abc123"
+        )
 ```
+
+The `__init__` variables are used to create the header, URL link,
+analysis module credits and description in the report.
+
+The available arguments when initialising a module as follows:
+
+- `name` - Name of your module
+- `anchor` - A HTML-safe anchor that will be used after the `#` in the URL
+- `href` - Link to the homepage for the tool
+- `info` - Very short description text about the tool
+- `doi` - One or more publication DOIs (`str`, or `list` of `str`s)
+- `comment` - Additional comment text for module. Usually user-supplied in a config.
+- `extra` - Additional custom HTML after description text.
+- `target` - Name of the module in the description (default: `name`)
+- `autoformat` - (default: `True`)
+- `autoformat_type` - (default: `markdown`)
 
 Ok, that should be it! The `__init__()` function will now be executed every
 time MultiQC runs. Try adding a `print("Hello World!")` statement and see
 if it appears in the MultiQC logs at the appropriate time...
-
-Note that the `__init__` variables are used to create the header, URL link,
-analysis module credits and description in the report.
 
 ### Logging
 

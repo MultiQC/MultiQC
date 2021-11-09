@@ -316,6 +316,7 @@ class MultiqcModule(BaseMultiqcModule):
             href=mod["config"].get("section_href"),
             info=mod_info,
             extra=mod["config"].get("extra"),
+            # No DOI here.. // doi=
         )
 
         # Don't repeat the Custom Content name in the subtext

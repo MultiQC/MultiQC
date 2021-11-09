@@ -27,6 +27,7 @@ class MultiqcModule(BaseMultiqcModule):
             info="is a fast and sensitive alignment program for mapping "
             "NGS reads (both DNA and RNA) against a reference genome or "
             "population of reference genomes.",
+            doi=["10.1038/nmeth.3317", "10.1038/s41587-019-0201-4"],
         )
 
         # Find and load any HISAT2 reports
