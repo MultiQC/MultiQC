@@ -21,8 +21,9 @@ class MultiqcModule(BaseMultiqcModule):
         super(MultiqcModule, self).__init__(
             name="RNA-SeQC",
             anchor="rna_seqc",
-            href="https://github.com/broadinstitute/rnaseqc",
+            href="https://github.com/getzlab/rnaseqc",
             info="Fast, efficient RNA-Seq metrics for quality control and process optimization",
+            doi=["10.1093/bioinformatics/btab135", "10.1093/bioinformatics/bts196"],
         )
 
         # Parse metrics from RNA-SeQC v1

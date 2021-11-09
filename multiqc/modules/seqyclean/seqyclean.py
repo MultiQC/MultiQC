@@ -20,6 +20,7 @@ class MultiqcModule(BaseMultiqcModule):
             anchor="seqyclean",
             href="https://github.com/ibest/seqyclean",
             info="is a pre-processing tool for NGS data that filters adapters, vectors, and contaminants while quality trimming.",
+            doi="10.1145/3107411.3107446",
         )
 
         # Parse logs

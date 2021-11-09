@@ -10,14 +10,20 @@ BASE_DIR = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__fil
 MODULES_DIR = os.path.join(BASE_DIR, "multiqc", "modules")
 num_errors = 0
 
+checks = {
+    "self.add_data_source": "self.find_log_files",
+    "self.write_data_file": "self.find_log_files",
+    "doi=": "super(MultiqcModule, self).__init__(",
+}
+
 # Check that add_data_source() is called for each module
-for function in ["self.add_data_source", "self.write_data_file"]:
+for function, search_term in checks.items():
     print(f"[bold black on yellow]  Checking for function call '{function}'  [/]")
     missing_files = []
     for fn in glob.glob(os.path.join(MODULES_DIR, "*", "*.py")):
         with open(fn, "r") as fh:
             modfile = fh.read()
-            if "self.find_log_files" in modfile and function not in modfile:
+            if search_term in modfile and function not in modfile:
                 relpath = os.path.relpath(fn, MODULES_DIR)
                 missing_files.append((relpath, f"Can't find '{function}' in /{relpath}"))
                 num_errors += 1
@@ -25,7 +31,6 @@ for function in ["self.add_data_source", "self.write_data_file"]:
     for file in sorted(missing_files, key=lambda x: x[0]):
         print(file[1])
     print("\n\n")
-
 
 if num_errors > 0:
     print(f"[bold red]{num_errors} problems found")

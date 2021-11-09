@@ -27,6 +27,7 @@ class MultiqcModule(BaseMultiqcModule):
             anchor="peddy",
             href="https://github.com/brentp/peddy",
             info="calculates genotype :: pedigree correspondence checks, ancestry checks and sex checks using VCF files.",
+            doi="10.1016/j.ajhg.2017.01.017",
         )
 
         # Find and load any Peddy reports

@@ -24,10 +24,11 @@ class MultiqcModule(BaseMultiqcModule):
         super(MultiqcModule, self).__init__(
             name="Long Ranger",
             anchor="longranger",
-            href="https://www.10xgenomics.com/",
+            href="https://support.10xgenomics.com/genome-exome/software/pipelines/latest/what-is-long-ranger",
             info="A set of analysis pipelines that perform sample demultiplexing, "
             "barcode processing, alignment, quality control, variant calling, phasing, "
             "and structural variant calling.",
+            doi="10.1101/gr.234443.118",
         )
 
         def try_float_lambda(x, func, base):

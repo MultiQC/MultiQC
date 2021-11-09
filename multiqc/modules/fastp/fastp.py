@@ -28,6 +28,7 @@ class MultiqcModule(BaseMultiqcModule):
             anchor="fastp",
             href="https://github.com/OpenGene/fastp",
             info="An ultra-fast all-in-one FASTQ preprocessor (QC, adapters, trimming, filtering, splitting...)",
+            doi="10.1093/bioinformatics/bty560",
         )
 
         # Find and load any fastp reports

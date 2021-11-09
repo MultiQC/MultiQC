@@ -30,6 +30,7 @@ class MultiqcModule(BaseMultiqcModule):
             anchor="clusterflow",
             href="http://clusterflow.io",
             info="is a simple and flexible bioinformatics pipeline tool.",
+            doi="10.12688/f1000research.10335.2",
         )
 
         # Find and load any Cluster Flow reports

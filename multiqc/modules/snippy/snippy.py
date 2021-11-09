@@ -26,6 +26,7 @@ class MultiqcModule(BaseMultiqcModule):
             anchor="snippy",
             href="https://github.com/tseemann/snippy",
             info="is used for rapid haploid variant calling and core genome alignment.",
+            # Can't find a DOI // doi=
         )
 
         self.snippy_data = {}

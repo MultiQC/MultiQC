@@ -19,8 +19,9 @@ class MultiqcModule(BaseMultiqcModule):
         super(MultiqcModule, self).__init__(
             name="pycoQC",
             anchor="pycoqc",
-            href="https://a-slide.github.io/pycoQC/",
+            href="https://github.com/tleonardi/pycoQC",
             info="computes metrics and generates interactive QC plots for Oxford Nanopore technologies sequencing data",
+            doi="10.21105/joss.01236",
         )
 
         self.pycoqc_data = {}

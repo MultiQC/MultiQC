@@ -27,6 +27,7 @@ class MultiqcModule(BaseMultiqcModule):
             target="Bowtie 1",
             href="http://bowtie-bio.sourceforge.net/",
             info="is an ultrafast, memory-efficient short read aligner.",
+            doi="10.1186/gb-2009-10-3-r25",
         )
 
         # Find and load any Bowtie reports

@@ -20,8 +20,9 @@ class MultiqcModule(BaseMultiqcModule):
         super(MultiqcModule, self).__init__(
             name="MALT",
             anchor="malt",
-            href="https://uni-tuebingen.de/fakultaeten/mathematisch-naturwissenschaftliche-fakultaet/fachbereiche/informatik/lehrstuehle/algorithms-in-bioinformatics/software/malt/",
+            href="http://ab.inf.uni-tuebingen.de/software/malt/",
             info="performs alignment of metagenomic reads against a database of reference sequences (such as NR, GenBank or Silva) and produces a MEGAN RMA file as output.",
+            doi="10.1101/050559 ",
         )
 
         # Find and load Malt reports

@@ -26,6 +26,7 @@ class MultiqcModule(BaseMultiqcModule):
             anchor="pangolin",
             href="https://github.com/cov-lineages/pangolin",
             info="uses variant calls to assign SARS-CoV-2 genome sequences to global lineages.",
+            doi="10.1093/ve/veab064",
         )
 
         # Find and parse the sample files

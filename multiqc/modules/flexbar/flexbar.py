@@ -23,6 +23,7 @@ class MultiqcModule(BaseMultiqcModule):
             anchor="flexbar",
             href="https://github.com/seqan/flexbar",
             info="is a barcode and adapter removal tool.",
+            doi="10.1093/bioinformatics/btx330",
         )
 
         # Parse logs

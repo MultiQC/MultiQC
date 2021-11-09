@@ -77,6 +77,7 @@ class MultiqcModule(BaseMultiqcModule):
             anchor="mosdepth",
             href="https://github.com/brentp/mosdepth",
             info="performs fast BAM/CRAM depth calculation for WGS, exome, or targeted sequencing",
+            doi="10.1093/bioinformatics/btx699",
         )
 
         dist_data, cov_data, xmax, perchrom_avg_data = self.parse_cov_dist()

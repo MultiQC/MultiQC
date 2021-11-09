@@ -21,8 +21,9 @@ class MultiqcModule(BaseMultiqcModule):
         super(MultiqcModule, self).__init__(
             name="sargasso",
             anchor="sargasso",
-            href="http://statbio.github.io/Sargasso/",
+            href="http://biomedicalinformaticsgroup.github.io/Sargasso/",
             info="is a tool to separate mixed-species RNA-seq reads" "according to their species of origin.",
+            doi="10.1038/s41596-018-0029-2",
         )
 
         # Find and load any Sargasso reports
