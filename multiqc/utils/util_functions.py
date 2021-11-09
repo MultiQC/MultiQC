@@ -3,6 +3,7 @@
 """ MultiQC Utility functions, used in a variety of places. """
 
 from __future__ import print_function
+from collections import OrderedDict
 import io
 import json
 import os
@@ -75,7 +76,8 @@ def write_data_file(data, fn, sort_cols=False, data_format=None):
             else:
                 # Default - tab separated output
                 # Heatmaps and other odd things might break this, so skip if so
-                if type(data) is not dict:
+                # TODO: leaves an empty file, should clean this up
+                if type(data) is not dict and type(data) is not OrderedDict:
                     return
                 # Convert keys to strings
                 data = {str(k): v for k, v in data.items()}

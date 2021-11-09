@@ -350,6 +350,8 @@ class MultiqcModule(BaseMultiqcModule):
         section_description = mod["config"].get("description", "")
 
         pconfig = mod["config"].get("pconfig", {})
+        if pconfig.get("id") is None:
+            pconfig["id"] = f"{c_id}-plot"
         if pconfig.get("title") is None:
             pconfig["title"] = section_name
 
@@ -358,9 +360,8 @@ class MultiqcModule(BaseMultiqcModule):
 
         # Save the data if it's not a html string
         if not isinstance(mod["data"], str):
-            self.write_data_file(
-                mod["data"], "multiqc_{}".format(section_name.lower().replace(" ", "_").replace("/", "_"))
-            )
+            self.write_data_file(mod["data"], "multiqc_{}".format(pconfig["id"]))
+            pconfig["save_data_file"] = False
 
         # Table
         if mod["config"].get("plot_type") == "table":
