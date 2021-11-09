@@ -392,7 +392,8 @@ def matplotlib_bargraph(plotdata, plotsamples, pconfig=None):
                 if s_name not in fdata:
                     fdata[s_name] = dict()
                 fdata[s_name][d["name"]] = dval
-        util_functions.write_data_file(fdata, pids[pidx])
+        if pconfig.get("save_data_file", True):
+            util_functions.write_data_file(fdata, pids[pidx])
 
         # Plot percentage as well as counts
         plot_pcts = [False]
