@@ -30,6 +30,10 @@
   - Fix `ZeroDivisionError` in `QM_RNASeq` and skip genomic origins plot if no aligned reads are found ([#1492](https://github.com/ewels/MultiQC/issues/1492))
 - **RSeQC**
   - Fixed minor bug in new TIN parsing where the sample name was not being correctly cleaned ([#1484](https://github.com/ewels/MultiQC/issues/1484))
+- **FastQC**
+  - Clarify general statistics table header for length
+- **QUAST**
+  - Clarify general statistics table header for length
 
 ## [MultiQC v1.11](https://github.com/ewels/MultiQC/releases/tag/v1.11) - 2021-07-05
 

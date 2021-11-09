@@ -138,8 +138,8 @@ class MultiqcModule(BaseMultiqcModule):
             "modify": lambda x: x * self.contig_length_multiplier,
         }
         headers["Total length"] = {
-            "title": "Length ({})".format(self.total_length_suffix),
-            "description": "The total number of bases in the assembly (mega base pairs).",
+            "title": "Assembly Length ({})".format(self.total_length_suffix),
+            "description": "The total number of bases in the assembly ({}).".format(self.total_length_suffix),
             "min": 0,
             "suffix": self.total_length_suffix,
             "scale": "YlGn",

@@ -273,8 +273,8 @@ class MultiqcModule(BaseMultiqcModule):
             "format": "{:,.0f}",
         }
         headers["avg_sequence_length"] = {
-            "title": "Length",
-            "description": "Average Sequence Length (bp)",
+            "title": "Read Length",
+            "description": "Average Read Length (bp)",
             "min": 0,
             "suffix": " bp",
             "scale": "RdYlGn",
