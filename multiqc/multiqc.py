@@ -839,9 +839,12 @@ def run(
     else:
         config.skip_generalstats = True
 
-    # Write the report sources to disk
     if config.data_dir is not None:
+        # Write the report sources to disk
         report.data_sources_tofile()
+
+        # Create a file with the module DOIs
+        report.dois_tofile()
 
     if config.make_report:
         # Compress the report plot JSON data

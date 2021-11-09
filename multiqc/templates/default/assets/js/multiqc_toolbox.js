@@ -122,15 +122,11 @@ $(function () {
   $(".download-citations-btn").click(function (e) {
     e.preventDefault();
     var format = $(this).data("format");
-    var doi_list = {};
+    var doi_list = { "10.1093/bioinformatics/btw354": "MultiQC" };
     $(".module-doi").each(function () {
       var module_id = $(this).closest(".mqc-module-section-first").find("h2").attr("id");
       doi_list[$(this).data("doi")] = module_id;
     });
-    if (Object.keys(doi_list).length == 0) {
-      alert("No DOIs found in report");
-      return;
-    }
     // Get BibTeX
     if (format == "bibtex") {
       var bibtex_string = "";
