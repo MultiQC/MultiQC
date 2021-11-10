@@ -124,7 +124,7 @@ config = {
     'tt_decimals': 0,                       # Number of decimal places to use in the tooltip number
     'tt_suffix': '',                        # Suffix to add after tooltip number
     'tt_percentages': True,                 # Show the percentages of each count in the tooltip
-    'height': 512                           # The default height of the interactive plot, in pixels
+    'height': 512                           # The default height of the plot, in pixels
 }
 ```
 
@@ -266,7 +266,7 @@ config = {
     'click_func': function(){},  # Javascript function to be called when a point is clicked
     'cursor': None               # CSS mouse cursor type. Defaults to pointer when 'click_func' specified
     'reversedStacks': False      # Reverse the order of the category stacks. Defaults True for plots with Log10 option
-    'height': 512                # The default height of the interactive plot, in pixels
+    'height': 512                # The default height of the plot, in pixels
 }
 html_content = linegraph.plot(data, config)
 ```

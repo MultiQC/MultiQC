@@ -419,9 +419,18 @@ def matplotlib_bargraph(plotdata, plotsamples, pconfig=None):
                     hide_plot = True
 
             # Set up figure
-            plt_height = len(plotsamples[pidx]) / 2.3
+
+            # Height has a default, then adjusted by the number of samples
+            plt_height = len(plotsamples[pidx]) / 2.3  # Default in inches, empirically determined
             plt_height = max(6, plt_height)  # At least 6" tall
             plt_height = min(30, plt_height)  # Cap at 30" tall
+
+            # Use fixed height if pconfig['height'] is set (convert pixels -> inches)
+            if "height" in pconfig:
+                # Default interactive height in pixels = 512
+                # Not perfect replication, but good enough
+                plt_height = 6 * (pconfig["height"] / 512)
+
             bar_width = 0.8
 
             fig = plt.figure(figsize=(14, plt_height), frameon=False)

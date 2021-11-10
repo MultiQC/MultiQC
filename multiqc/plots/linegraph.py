@@ -411,8 +411,15 @@ def matplotlib_linegraph(plotdata, pconfig=None):
             else:
                 util_functions.write_data_file(fdata, pid)
 
+        plt_height = 6
+        # Use fixed height if pconfig['height'] is set (convert pixels -> inches)
+        if "height" in pconfig:
+            # Default interactive height in pixels = 512
+            # Not perfect replication, but good enough
+            plt_height = 6 * (pconfig["height"] / 512)
+
         # Set up figure
-        fig = plt.figure(figsize=(14, 6), frameon=False)
+        fig = plt.figure(figsize=(14, plt_height), frameon=False)
         axes = fig.add_subplot(111)
 
         # Go through data series
