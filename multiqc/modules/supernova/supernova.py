@@ -21,6 +21,7 @@ class MultiqcModule(BaseMultiqcModule):
             anchor="supernova",
             href="https://www.10xgenomics.com/",
             info="is a de novo genome assembler 10X Genomics linked-reads.",
+            doi="10.1101/gr.214874.116",
         )
 
         # Headers for the supernova Table

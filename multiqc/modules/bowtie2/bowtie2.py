@@ -30,6 +30,7 @@ class MultiqcModule(BaseMultiqcModule):
                 Unfortunately both tools have identical log output by default, so it is impossible
                 to distiguish which tool was used.
                 """,
+            doi=["10.1038/nmeth.1923", "10.1038/nmeth.3317", "10.1038/s41587-019-0201-4"],
         )
 
         # Find and load any Bowtie 2 reports

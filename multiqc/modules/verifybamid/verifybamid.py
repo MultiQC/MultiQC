@@ -25,6 +25,7 @@ class MultiqcModule(BaseMultiqcModule):
             anchor="verifybamid",
             href="https://genome.sph.umich.edu/wiki/VerifyBamID",
             info="detects sample contamination and/or sample swaps.",
+            doi="10.1016/j.ajhg.2012.09.004",
         )
 
         # flag to hide columns if no chip data

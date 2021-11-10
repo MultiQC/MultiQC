@@ -26,6 +26,7 @@ class MultiqcModule(BaseMultiqcModule):
             anchor="leehom",
             href="https://github.com/grenaud/leeHom",
             info="is a program for the Bayesian reconstruction of ancient DNA",
+            doi="10.1093/nar/gku699",
         )
 
         # Find and load any leeHom reports
