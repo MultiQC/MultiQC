@@ -279,10 +279,11 @@ def highcharts_bargraph(plotdata, plotsamples=None, pconfig=None):
         html += "</div>\n\n"
 
     # Plot HTML
-    html += """<div class="hc-plot-wrapper">
+    html += """<div class="hc-plot-wrapper"{height}>
         <div id="{id}" class="hc-plot not_rendered hc-bar-plot"><small>loading..</small></div>
     </div></div>""".format(
-        id=pconfig["id"]
+        id=pconfig["id"],
+        height=f' style="height:{pconfig["height"]}px"' if "height" in pconfig else "",
     )
 
     report.num_hc_plots += 1
@@ -418,9 +419,18 @@ def matplotlib_bargraph(plotdata, plotsamples, pconfig=None):
                     hide_plot = True
 
             # Set up figure
-            plt_height = len(plotsamples[pidx]) / 2.3
+
+            # Height has a default, then adjusted by the number of samples
+            plt_height = len(plotsamples[pidx]) / 2.3  # Default in inches, empirically determined
             plt_height = max(6, plt_height)  # At least 6" tall
             plt_height = min(30, plt_height)  # Cap at 30" tall
+
+            # Use fixed height if pconfig['height'] is set (convert pixels -> inches)
+            if "height" in pconfig:
+                # Default interactive height in pixels = 512
+                # Not perfect replication, but good enough
+                plt_height = 6 * (pconfig["height"] / 512)
+
             bar_width = 0.8
 
             fig = plt.figure(figsize=(14, plt_height), frameon=False)

@@ -296,8 +296,9 @@ def highcharts_linegraph(plotdata, pconfig=None):
         html += "</div>\n\n"
 
     # The plot div
-    html += '<div class="hc-plot-wrapper"><div id="{id}" class="hc-plot not_rendered hc-line-plot"><small>loading..</small></div></div></div> \n'.format(
-        id=pconfig["id"]
+    html += '<div class="hc-plot-wrapper"{height}><div id="{id}" class="hc-plot not_rendered hc-line-plot"><small>loading..</small></div></div></div> \n'.format(
+        id=pconfig["id"],
+        height=f' style="height:{pconfig["height"]}px"' if "height" in pconfig else "",
     )
 
     report.num_hc_plots += 1
@@ -410,8 +411,15 @@ def matplotlib_linegraph(plotdata, pconfig=None):
             else:
                 util_functions.write_data_file(fdata, pid)
 
+        plt_height = 6
+        # Use fixed height if pconfig['height'] is set (convert pixels -> inches)
+        if "height" in pconfig:
+            # Default interactive height in pixels = 512
+            # Not perfect replication, but good enough
+            plt_height = 6 * (pconfig["height"] / 512)
+
         # Set up figure
-        fig = plt.figure(figsize=(14, 6), frameon=False)
+        fig = plt.figure(figsize=(14, plt_height), frameon=False)
         axes = fig.add_subplot(111)
 
         # Go through data series

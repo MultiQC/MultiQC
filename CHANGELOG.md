@@ -4,6 +4,7 @@
 
 ### MultiQC updates
 
+- Added option to customise default plot height in plot config ([#1432](https://github.com/ewels/MultiQC/issues/1432))
 - Added `--no-report` flag to skip report generation ([#1462](https://github.com/ewels/MultiQC/issues/1462))
 - Added support for priting tool DOI in report sections ([#1177](https://github.com/ewels/MultiQC/issues/1177))
 - Fixed logger bugs when calling `multiqc.run` multiple times by removing logging file handlers between calls ([#1141](https://github.com/ewels/MultiQC/issues/1141))
