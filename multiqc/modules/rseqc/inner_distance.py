@@ -43,6 +43,8 @@ def parse_reports(self):
     self.inner_distance = self.ignore_samples(self.inner_distance)
 
     if len(self.inner_distance) > 0:
+        # Write data to file
+        self.write_data_file(self.inner_distance, "rseqc_inner_distance")
 
         # Make a normalised percentage version of the data
         for s_name in self.inner_distance:

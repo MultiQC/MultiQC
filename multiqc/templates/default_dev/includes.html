@@ -29,6 +29,9 @@ it prints the contents of these files into the report.
 </style>
 <link rel="stylesheet" type="text/css" href="assets/css/bootstrap.min.css">
 <link rel="stylesheet" type="text/css" href="assets/css/default_multiqc.css">
+{% for css_href in config.custom_css_files %}
+<link rel="stylesheet" type="text/css" href="{{ css_href }}">
+{% endfor %}
 {%- for m in report.modules_output %}{% if m.css and m.css|length > 0 -%}{% for css_href in m.css.keys() %}
 <link rel="stylesheet" type="text/css" href="{{ css_href }}">
 {%- endfor %}{% endif %}{% endfor %}

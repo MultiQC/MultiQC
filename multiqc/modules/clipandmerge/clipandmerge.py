@@ -26,6 +26,7 @@ class MultiqcModule(BaseMultiqcModule):
             anchor="clipandmerge",
             href="http://www.github.com/apeltzer/ClipAndMerge",
             info="is a tool for adapter clipping and read merging for ancient DNA data.",
+            doi="10.1186/s13059-016-0918-z",
         )
 
         # Find and load any ClipAndMerge reports
@@ -76,6 +77,7 @@ class MultiqcModule(BaseMultiqcModule):
             if "identifier" in parsed_data:
                 s_name = self.clean_s_name(parsed_data["identifier"], f)
             self.clipandmerge_data[s_name] = parsed_data
+            self.add_data_source(f)
 
     def clipandmerge_general_stats_table(self):
         """Take the parsed stats from the ClipAndMerge report and add it to the

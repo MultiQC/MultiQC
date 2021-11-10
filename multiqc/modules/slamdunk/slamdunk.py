@@ -28,6 +28,7 @@ class MultiqcModule(BaseMultiqcModule):
             anchor="slamdunk",
             href="http://t-neumann.github.io/slamdunk/",
             info="is a tool to analyze SLAMSeq data.",
+            doi="10.1186/s12859-019-2849-7",
         )
 
         num_reports = 0

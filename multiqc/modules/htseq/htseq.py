@@ -22,9 +22,10 @@ class MultiqcModule(BaseMultiqcModule):
             name="HTSeq Count",
             anchor="htseq",
             target="HTSeq Count",
-            href="http://www-huber.embl.de/HTSeq/doc/count.html",
+            href="https://htseq.readthedocs.io/en/master/htseqcount.html",
             info=" is part of the HTSeq Python package - it takes a file with aligned sequencing "
             "reads, plus a list of genomic features and counts how many reads map to each feature.",
+            doi="10.1093/bioinformatics/btu638",
         )
 
         # Find and load any HTSeq Count reports
@@ -34,6 +35,7 @@ class MultiqcModule(BaseMultiqcModule):
             parsed_data = self.parse_htseq_report(f)
             if parsed_data is not None:
                 self.htseq_data[f["s_name"]] = parsed_data
+                self.add_data_source(f)
 
         # Filter to strip out ignored sample names
         self.htseq_data = self.ignore_samples(self.htseq_data)

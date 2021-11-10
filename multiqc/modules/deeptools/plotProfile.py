@@ -26,6 +26,8 @@ class plotProfileMixin:
         self.deeptools_plotProfile = self.ignore_samples(self.deeptools_plotProfile)
 
         if len(self.deeptools_plotProfile) > 0:
+            # Write data to file
+            self.write_data_file(self.deeptools_plotProfile, "deeptools_plot_profile")
 
             # Try to do plot bands but don't crash if the labels aren't as we expect
             xPlotBands = []

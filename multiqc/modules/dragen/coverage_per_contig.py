@@ -38,6 +38,9 @@ class DragenCoveragePerContig(BaseMultiqcModule):
         if not perchrom_data_by_sample:
             return set()
 
+        # Data is in wrong format for writing to file
+        # self.write_data_file(perchrom_data_by_sample, "dragen_cov_contig")
+
         main_contigs_by_sample = {sn: data[0] for sn, data in perchrom_data_by_sample.items()}
         other_contigs_by_sample = {sn: data[1] for sn, data in perchrom_data_by_sample.items()}
 
@@ -45,9 +48,9 @@ class DragenCoveragePerContig(BaseMultiqcModule):
             name="Coverage per contig",
             anchor="dragen-coverage-per-contig",
             description="""
-            Average coverage per contig or chromosome. 
-            Calculated as the number of bases (excluding duplicate marked reads, reads 
-            with MAPQ=0, and clipped bases), divided by the length of the contig or 
+            Average coverage per contig or chromosome.
+            Calculated as the number of bases (excluding duplicate marked reads, reads
+            with MAPQ=0, and clipped bases), divided by the length of the contig or
             (if a target bed is used) the total length of the target region spanning that contig.
             """,
             plot=linegraph.plot(
@@ -69,8 +72,8 @@ class DragenCoveragePerContig(BaseMultiqcModule):
                 name="Coverage per contig (non-main)",
                 anchor="dragen-coverage-per-nonmain-contig",
                 description="""
-                Non-main contigs: 
-                unlocalized (*_random), unplaced (chrU_*), alts (*_alt), mitochondria (chrM), EBV, HLA. 
+                Non-main contigs:
+                unlocalized (*_random), unplaced (chrU_*), alts (*_alt), mitochondria (chrM), EBV, HLA.
                 Zoom in to see more contigs as all labels don\'t fit the screen.
                 """,
                 plot=linegraph.plot(
@@ -157,7 +160,7 @@ def parse_contig_mean_cov(f):
         sorted(other_contig_perchrom_data.items(), key=lambda key_val: chrom_order(key_val[0]))
     )
 
-    m = re.search(r"(.*).(\S*)_contig_mean_cov_?(\S*)?.csv", f["fn"])
+    m = re.search(r"(.*)\.(\S*)_contig_mean_cov_?(\S*)?.csv", f["fn"])
     sample, phenotype = m.group(1), m.group(2)
     f["s_name"] = sample
     return {phenotype: [main_contig_perchrom_data, other_contig_perchrom_data]}

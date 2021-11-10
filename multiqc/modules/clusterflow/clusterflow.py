@@ -30,6 +30,7 @@ class MultiqcModule(BaseMultiqcModule):
             anchor="clusterflow",
             href="http://clusterflow.io",
             info="is a simple and flexible bioinformatics pipeline tool.",
+            doi="10.12688/f1000research.10335.2",
         )
 
         # Find and load any Cluster Flow reports
@@ -63,9 +64,15 @@ class MultiqcModule(BaseMultiqcModule):
         if len(self.clusterflow_runfiles) > 0:
             self.clusterflow_pipelines_section()
 
+            # Write data to file
+            self.write_data_file(self.clusterflow_runfiles, "clusterflow_runfiles")
+
         # Commands
         if len(self.clusterflow_commands) > 0:
             self.clusterflow_commands_table()
+
+            # Write data to file
+            self.write_data_file(self.clusterflow_runfiles, "clusterflow_commands")
 
     def parse_clusterflow_logs(self, f):
         """Parse Clusterflow logs"""

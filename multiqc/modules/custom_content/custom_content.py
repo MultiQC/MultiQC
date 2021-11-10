@@ -316,6 +316,7 @@ class MultiqcModule(BaseMultiqcModule):
             href=mod["config"].get("section_href"),
             info=mod_info,
             extra=mod["config"].get("extra"),
+            # No DOI here.. // doi=
         )
 
         # Don't repeat the Custom Content name in the subtext
@@ -349,20 +350,24 @@ class MultiqcModule(BaseMultiqcModule):
         section_description = mod["config"].get("description", "")
 
         pconfig = mod["config"].get("pconfig", {})
+        if pconfig.get("id") is None:
+            pconfig["id"] = f"{c_id}-plot"
         if pconfig.get("title") is None:
             pconfig["title"] = section_name
 
         plot = None
         content = None
 
+        # Save the data if it's not a html string
+        if not isinstance(mod["data"], str):
+            self.write_data_file(mod["data"], "multiqc_{}".format(pconfig["id"]))
+            pconfig["save_data_file"] = False
+
         # Table
         if mod["config"].get("plot_type") == "table":
             pconfig["sortRows"] = pconfig.get("sortRows", False)
             headers = mod["config"].get("headers")
             plot = table.plot(mod["data"], headers, pconfig)
-            self.write_data_file(
-                mod["data"], "multiqc_{}".format(section_name.lower().replace(" ", "_").replace("/", "_"))
-            )
 
         # Bar plot
         elif mod["config"].get("plot_type") == "bargraph":
