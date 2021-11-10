@@ -17,6 +17,7 @@
 - Always save `custom content` data to file with a name reflecting the section name. ([#1194](https://github.com/ewels/MultiQC/issues/1194))
 - Sort custom content bargraph data by default ([#1412](https://github.com/ewels/MultiQC/issues/1412))
 - Make table _Conditional Formatting_ work at table level as well as column level. ([#761](https://github.com/ewels/MultiQC/issues/761))
+- Added support for customising table column names ([#1255](https://github.com/ewels/MultiQC/issues/1255))
 
 ### New Modules
 

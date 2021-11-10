@@ -62,6 +62,7 @@ collapse_tables: true
 max_table_rows: 500
 table_columns_visible: {}
 table_columns_placement: {}
+table_columns_name: {}
 table_cond_formatting_colours:
   - blue: "#337ab7"
   - lbue: "#5bc0de"

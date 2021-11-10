@@ -113,3 +113,8 @@ table_columns_visible:
   FastQC:
     percent_fails: False
     total_sequences: True
+
+# Overwrite the default table column names
+table_columns_name:
+  FastQC:
+    percent_fails: "Percent not pass"
