@@ -21,6 +21,7 @@ config_file: null
 custom_logo: null
 custom_logo_url: null
 custom_logo_title: null
+custom_css_files: []
 simple_output: false
 template: "default"
 profile_runtime: false
@@ -52,6 +53,7 @@ megaqc_url: false
 megaqc_access_token: null
 megaqc_timeout: 30
 export_plots: false
+make_report: true
 plots_force_flat: false
 plots_force_interactive: false
 plots_flat_numseries: 100

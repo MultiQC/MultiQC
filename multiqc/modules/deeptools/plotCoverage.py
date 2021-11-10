@@ -40,6 +40,9 @@ class plotCoverageMixin:
         self.deeptools_plotCoverageOutRawCounts = self.ignore_samples(self.deeptools_plotCoverageOutRawCounts)
 
         if len(self.deeptools_plotCoverageStdout) > 0:
+            # Write data to file
+            self.write_data_file(self.deeptools_plotCoverageStdout, "deeptools_plot_cov_stdout")
+
             header = OrderedDict()
             header["min"] = {"title": "Min", "description": "Minimum Coverage", "shared_key": "coverage"}
             header["25%"] = {
@@ -75,6 +78,9 @@ class plotCoverageMixin:
             )
 
         if len(self.deeptools_plotCoverageOutRawCounts) > 0:
+            # Write data to file
+            self.write_data_file(self.deeptools_plotCoverageOutRawCounts, "deeptools_plot_cov_counts")
+
             config = {
                 "id": "deeptools_coverage_metrics_plot",
                 "title": "deepTools: Coverage distribution",

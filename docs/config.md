@@ -509,3 +509,23 @@ This approach is **not recommended if you have a very large number of samples**,
 produce a huge report file with all of the embedded plot data and crash your browser when opening it.
 If you are running MultiQC for the `multiqc_data` folder and never intend to look at the report, it
 speed things up though.
+
+### Skip the report if you don't need it
+
+If you're running MultiQC just to get parsed data / exported plots (`multiqc_data`) or the output for MegaQC
+and don't actually need the report, you can skip it with `--no-report`.
+This prevents any HTML report from being generated, including the data compression step that precedes it.
+This can cut a few seconds off the MultiQC execution time.
+
+## Custom CSS files
+
+MultiQC generates HTML reports. You can include custom CSS in your final report if you wish.
+Simply add CSS files to the `custom_css_files` config option:
+
+```yaml
+custom_css_files:
+  - myfile.css
+```
+
+Or pass `--custom-css-file` (can be specified multiple times) and MultiQC will include
+them in the final report HTML.

@@ -392,7 +392,8 @@ def matplotlib_bargraph(plotdata, plotsamples, pconfig=None):
                 if s_name not in fdata:
                     fdata[s_name] = dict()
                 fdata[s_name][d["name"]] = dval
-        util_functions.write_data_file(fdata, pids[pidx])
+        if pconfig.get("save_data_file", True):
+            util_functions.write_data_file(fdata, pids[pidx])
 
         # Plot percentage as well as counts
         plot_pcts = [False]
@@ -474,7 +475,9 @@ def matplotlib_bargraph(plotdata, plotsamples, pconfig=None):
                 prev_values = values
 
             # Tidy up axes
-            axes.tick_params(labelsize=8, direction="out", left=False, right=False, top=False, bottom=False)
+            axes.tick_params(
+                labelsize=pconfig.get("labelSize", 8), direction="out", left=False, right=False, top=False, bottom=False
+            )
             axes.set_xlabel(pconfig.get("ylab", ""))  # I know, I should fix the fact that the config is switched
             axes.set_ylabel(pconfig.get("xlab", ""))
             axes.set_yticks(y_ind)  # Specify where to put the labels
@@ -516,7 +519,7 @@ def matplotlib_bargraph(plotdata, plotsamples, pconfig=None):
                 bbox_to_anchor=(0, bottom_gap, 1, 0.102),
                 ncol=5,
                 mode="expand",
-                fontsize=8,
+                fontsize=pconfig.get("labelSize", 8),
                 frameon=False,
             )
 
