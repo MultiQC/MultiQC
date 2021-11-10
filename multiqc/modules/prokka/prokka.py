@@ -23,6 +23,7 @@ class MultiqcModule(BaseMultiqcModule):
             anchor="prokka",
             href="http://www.vicbioinformatics.com/software.prokka.shtml",
             info="is a software tool for the rapid annotation of prokaryotic genomes.",
+            doi="10.1093/bioinformatics/btu153",
         )
 
         # Parse logs

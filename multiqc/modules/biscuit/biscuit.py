@@ -31,10 +31,8 @@ class MultiqcModule(BaseMultiqcModule):
             name="BISCUIT",
             anchor="biscuit",
             href="https://github.com/huishenlab/biscuit",
-            info="""
-                is a tool to map bisulfite converted DNA sequence reads and
-                determine cytosine methylation states.
-            """,
+            info="is a tool to map bisulfite converted DNA sequence reads and determine cytosine methylation states.",
+            # Can't find a DOI // doi=
         )
 
         # Set up data structures
@@ -131,6 +129,9 @@ class MultiqcModule(BaseMultiqcModule):
 
         # Basic stats table
         self.biscuit_stats_table()
+
+        # Write data to file
+        self.write_data_file(self.mdata, "biscuit")
 
         # Make report sections
         for k in self.mdata:

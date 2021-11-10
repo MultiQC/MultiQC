@@ -24,12 +24,15 @@ class MultiqcModule(BaseMultiqcModule):
             anchor="mirtop",
             href="https://github.com/miRTop/mirtop/",
             info="is a command line tool to annotate miRNAs and isomiRs and compute general statistics using the mirGFF3 format.",
+            doi="10.5281/zenodo.45385",  # Zenodo won't load this page for me as I write this, but it's the listed DOI.
         )
 
         # Find and load any mirtop reports
         self.mirtop_data = dict()
         for f in self.find_log_files("mirtop"):
             self.parse_mirtop_report(f)
+            self.add_data_source(f)
+
         # Filter out ignored samples (given with --ignore-samples option)
         self.mirtop_data = self.ignore_samples(self.mirtop_data)
 

@@ -139,6 +139,7 @@ class MultiqcModule(BaseMultiqcModule):
             anchor="qc3C",
             href="http://github.com/cerebis/qc3C",
             info="provides reference-free and BAM based quality control for Hi-C data",
+            doi="10.1371/journal.pcbi.1008839",
         )
 
         self.qc3c_data = defaultdict(dict)

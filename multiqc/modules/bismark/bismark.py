@@ -68,7 +68,8 @@ class MultiqcModule(BaseMultiqcModule):
             name="Bismark",
             anchor="bismark",
             href="http://www.bioinformatics.babraham.ac.uk/projects/bismark/",
-            info="is a tool to map bisulfite converted sequence reads and determine" " cytosine methylation states.",
+            info="is a tool to map bisulfite converted sequence reads and determine cytosine methylation states.",
+            doi="10.1093/bioinformatics/btr167",
         )
 
         # Set up data structures
