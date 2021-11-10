@@ -14,6 +14,7 @@
 - New option to customise font size for axis labels in flat MatPlotLib charts ([#1576](https://github.com/ewels/MultiQC/pull/1576))
 - CSS Improvements to make printed reports more attractive / readable ([#1579](https://github.com/ewels/MultiQC/pull/1579))
 - Always save `custom content` data to file with a name reflecting the section name. ([#1194](https://github.com/ewels/MultiQC/issues/1194))
+- Make table _Conditional Formatting_ work at table level as well as column level. ([#761](https://github.com/ewels/MultiQC/issues/761))
 
 ### New Modules
 

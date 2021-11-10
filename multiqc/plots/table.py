@@ -200,7 +200,7 @@ def make_table(dt):
                     for cfck in cfc:
                         cmatches[cfck] = False
                 # Find general rules followed by column-specific rules
-                for cfk in ["all_columns", rid]:
+                for cfk in ["all_columns", rid, table_id]:
                     if cfk in cond_formatting_rules:
                         # Loop through match types
                         for ftype in cmatches.keys():
