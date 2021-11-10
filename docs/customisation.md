@@ -556,6 +556,20 @@ The columns are organised by either _namespace_ or table ID, then column ID.
 In the above example, `Samtools` is the namespace in the General Statistics table -
 the text that is at the start of the tooltip. For custom tables, the ID may be easier to use.
 
+### Column titles
+
+Sometimes it may be helpful to adjust the default table column header to display a different title.
+For example when running a module multiple times, or when different modules have columns with similar names.
+
+To do this, use the approach described above to find the column _Group_ and _ID_ and combine with the `table_columns_name` config option.
+For example, the following config will change the General Statistics column for FastQC from _% GC_ to _Percent of bases that are GC_
+
+```yaml
+table_columns_name:
+  FastQC:
+    percent_gc: "Percent of bases that are GC"
+```
+
 ### Conditional formatting
 
 It's possible to highlight values in tables based on their value. This is done using the `table_cond_formatting_rules` config setting.
