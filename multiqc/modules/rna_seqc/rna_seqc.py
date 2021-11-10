@@ -21,18 +21,21 @@ class MultiqcModule(BaseMultiqcModule):
         super(MultiqcModule, self).__init__(
             name="RNA-SeQC",
             anchor="rna_seqc",
-            href="https://github.com/broadinstitute/rnaseqc",
+            href="https://github.com/getzlab/rnaseqc",
             info="Fast, efficient RNA-Seq metrics for quality control and process optimization",
+            doi=["10.1093/bioinformatics/btab135", "10.1093/bioinformatics/bts196"],
         )
 
         # Parse metrics from RNA-SeQC v1
         self.rna_seqc_metrics = dict()
         for f in self.find_log_files("rna_seqc/metrics_v1", filehandles=True):
             self.parse_metrics_rnaseqc_v1(f)
+            self.add_data_source(f, section="v1")
 
         # Parse metrics from RNA-SeQC v2
         for f in self.find_log_files("rna_seqc/metrics_v2", filehandles=True):
             self.parse_metrics_rnaseqc_v2(f)
+            self.add_data_source(f, section="v2")
 
         # Strip out ignored sample names from metrics
         self.rna_seqc_metrics = self.ignore_samples(self.rna_seqc_metrics)

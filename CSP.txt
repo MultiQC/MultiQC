@@ -1,7 +1,18 @@
 # If you are hosting MultiQC reports >= v1.8 on a web application with CSP
-# (Content Security Policy), you will need the following scripts whitelisted:
+# (Content Security Policy), you will need the following scripts allowlisted:
 
 script-src 'self'
+    # v1.12
+    'sha256-iV6CFHoCJq7rXjscXMmCioPf05AIE/ZU98tHigtrnoE=' # multiqc.js after 9800862
+    'sha256-OqdU34KpZyh/xfGLAlfEQHnEmkvk2rXMqqh2lex89QM=' # multiqc_toolbox.js after b183572
+    'sha256-TUYHIjQsABv4n1G4GdIAz0ZljvuXPEvQ9T20Sok7TvE=' # multiqc.js
+    'sha256-teMLGfDW72TRam2f0Fnj53uchjf3tQR9N0xo+hR2PXU=' # multiqc_tables.js
+    'sha256-AEcY37NW7iIjmlzDOPZvuAorKHxXZxsECPnuSP52fB8=' # multiqc_plotting.js
+    'sha256-iPIReyQyAoheerXqjtulr8WN7lPMWacMVU4awy5CTJg=' # multiqc_mpl.js
+    'sha256-KGgqQTL/PWbF29mNXwFnepbDYBEnTKdMtejlNhEiXfs=' # multiqc_toolbox.js
+    'sha256-RO0nmf6TEJtrp+R4JF8N4UrF+A2Hfkb8BKxyS7nM5go=' # multiqc_rseqc.js
+    'sha256-kH3IklvmfvBiZprdCgEZqGuZjhiGEF5V3tHncoRciQI=' # multiqc_fastqc.js
+
     # v1.9
     'sha256-47DEQpj8HBSa+/TImW+5JCeuQeRkm5NMpJWZG3hSuFU='
 
