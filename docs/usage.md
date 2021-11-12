@@ -28,14 +28,16 @@ multiqc data/*_fastqc.zip
 multiqc data/sample_1*
 ```
 
-You can also ignore files using the `-x`/`--ignore` flag (can be specified multiple
-times). This takes a string which it matches using glob expansion to filenames,
-directory names and entire paths:
+If the `--ignore-symlinks` flag is set, MultiQC will ignore symlinked directories and files.
+
+Furthermore, you can ignore files or directories using the `-x`/`--ignore` option. In order to exclude multiple files, you may either specify the option multiple times or use the `*` and `?` wildcards in its argument. The option's argument takes a string which it matches using glob expansion to filenames, directory names and entire paths:
 
 ```bash
-multiqc . --ignore *_R2*
-multiqc . --ignore run_two/
-multiqc . --ignore */run_three/*/fastqc/*_R2.zip
+multiqc . --ignore "file"
+multiqc . --ignore "fileA" --ignore "fileB"
+multiqc . --ignore "_R?.zip"
+multiqc . --ignore "run_two/*"
+multiqc . --ignore "*/run_three/*/fastqc/*_R2.zip"
 ```
 
 Some modules get sample names from the contents of the file and not the filename
@@ -43,7 +45,7 @@ Some modules get sample names from the contents of the file and not the filename
 skip samples by name instead:
 
 ```bash
-multiqc . --ignore-samples sample_3*
+multiqc . --ignore-samples "sample_3*"
 ```
 
 These strings are matched using glob logic (`*` and `?` are wildcards).
