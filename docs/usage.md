@@ -30,7 +30,12 @@ multiqc data/sample_1*
 
 If the `--ignore-symlinks` flag is set, MultiQC will ignore symlinked directories and files.
 
-Furthermore, you can ignore files or directories using the `-x`/`--ignore` option. In order to exclude multiple files, you may either specify the option multiple times or use the `*` and `?` wildcards in its argument. The option's argument takes a string which it matches using glob expansion to filenames, directory names and entire paths:
+You can also ignore files or directories using the `-x`/`--ignore` option.
+This can be specified multiple times and accepts glob patterns (eg. using the `*` and `?` wildcards).
+
+> Note that glob patterns should be enclosed in quotes to prevent them being expanded by bash
+
+The argument can match filenames, directory names and entire paths. For example:
 
 ```bash
 multiqc . --ignore "file"
