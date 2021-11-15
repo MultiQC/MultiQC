@@ -20,6 +20,8 @@ def parse_reports(self):
 
     # Go through logs and find Metrics
     for f in self.find_log_files("picard/extractilluminabarcodes", filehandles=True):
+        self.add_data_source(f, section="ExtractIlluminaBarcodes")
+
         lane = None
         raw_data = []
         keys = None

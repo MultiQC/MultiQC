@@ -27,7 +27,8 @@ class MultiqcModule(BaseMultiqcModule, StatsReportMixin):
             anchor="bcftools",
             target="Bcftools",
             href="https://samtools.github.io/bcftools/",
-            info=(" contains utilities for variant calling and manipulating VCFs and BCFs."),
+            info=" contains utilities for variant calling and manipulating VCFs and BCFs.",
+            doi="10.1093/gigascience/giab008",
         )
 
         # Set up class objects to hold parsed data

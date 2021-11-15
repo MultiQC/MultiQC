@@ -24,9 +24,10 @@ class MultiqcModule(BaseMultiqcModule):
             anchor="preseq",
             href="http://smithlabresearch.org/software/preseq/",
             info="""estimates the complexity of a library, showing how many additional
-         unique reads are sequenced for increasing total read count.
-         A shallow curve indicates complexity saturation. The dashed line
-         shows a perfectly complex library where total reads = unique reads.""",
+                    unique reads are sequenced for increasing total read count.
+                    A shallow curve indicates complexity saturation. The dashed line
+                    shows a perfectly complex library where total reads = unique reads.""",
+            doi="10.1038/nmeth.2375",
         )
 
         # Find and load any Preseq reports
@@ -53,6 +54,9 @@ class MultiqcModule(BaseMultiqcModule):
         if len(data) == 0:
             raise UserWarning
         log.info("Found {} reports".format(len(data)))
+
+        # Write data to file
+        self.write_data_file(data, "preseq")
 
         # Preseq plot
         self._make_preseq_length_trimmed_plot(data, data_is_bases)

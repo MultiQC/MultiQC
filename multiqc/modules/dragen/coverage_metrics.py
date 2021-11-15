@@ -3,6 +3,7 @@
 from __future__ import print_function
 
 import itertools
+from multiqc.utils.util_functions import write_data_file
 import re
 from collections import defaultdict
 from multiqc.modules.base_module import BaseMultiqcModule
@@ -44,6 +45,9 @@ class DragenCoverageMetrics(BaseMultiqcModule):
         if not data_by_sample:
             return set()
 
+        # Write data to file
+        self.write_data_file(data_by_sample, "dragen_cov_metrics")
+
         all_metric_names = set()
         for sn, sdata in data_by_sample.items():
             for m in sdata.keys():
@@ -56,17 +60,17 @@ class DragenCoverageMetrics(BaseMultiqcModule):
             name="Coverage metrics",
             anchor="dragen-cov-metrics",
             description="""
-            Coverage metrics over a region (where the region can be a target region, 
+            Coverage metrics over a region (where the region can be a target region,
             a QC coverage region, or the whole genome). Press the `Help` button for details.
             """,
             helptext="""
             The following criteria are used when calculating coverage:
-            
+
             * Duplicate reads and clipped bases are ignored.
             * Only reads with `MAPQ` > `min MAPQ` and bases with `BQ` > `min BQ` are considered
-            
+
             Considering only bases usable for variant calling, _i.e._ excluding:
-            
+
             1. Clipped bases
             2. Bases in duplicate reads
             3. Reads with `MAPQ` < `min MAPQ` (default `20`)
@@ -390,7 +394,7 @@ def parse_coverage_metrics(f):
         if percentage is not None:
             data[metric + " pct"] = percentage
 
-    m = re.search(r"(.*).(\S*)_coverage_metrics_?(\S*)?.csv", f["fn"])
+    m = re.search(r"(.*)\.(\S*)_coverage_metrics_?(\S*)?.csv", f["fn"])
     sample, phenotype = m.group(1), m.group(2)
     f["s_name"] = sample
     return {phenotype: data}

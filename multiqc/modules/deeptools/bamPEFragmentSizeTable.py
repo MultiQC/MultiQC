@@ -28,6 +28,9 @@ class bamPEFragmentSizeTableMixin:
         self.deeptools_bamPEFragmentSize = self.ignore_samples(self.deeptools_bamPEFragmentSize)
 
         if len(self.deeptools_bamPEFragmentSize) > 0:
+            # Write data to file
+            self.write_data_file(self.deeptools_bamPEFragmentSize, "deeptools_frag_size_table")
+
             headersSE = OrderedDict()
             headersSE["Reads Sampled"] = {
                 "title": "# Sampled",

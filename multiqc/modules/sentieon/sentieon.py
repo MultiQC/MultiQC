@@ -31,8 +31,8 @@ class MultiqcModule(BaseMultiqcModule):
             name="Sentieon",
             anchor="sentieon",
             href="https://www.sentieon.com/products/",
-            info="contains a suite of QC tools. The ones represented in this \
-                  module are analogues of Picard QC metrics.",
+            info="contains a suite of QC tools. The ones represented in this module are analogues of Picard QC metrics.",
+            # Can't find a DOI // doi=
         )
 
         # Set up class objects to hold parsed data
