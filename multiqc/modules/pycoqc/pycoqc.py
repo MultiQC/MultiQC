@@ -19,8 +19,9 @@ class MultiqcModule(BaseMultiqcModule):
         super(MultiqcModule, self).__init__(
             name="pycoQC",
             anchor="pycoqc",
-            href="https://a-slide.github.io/pycoQC/",
+            href="https://github.com/tleonardi/pycoQC",
             info="computes metrics and generates interactive QC plots for Oxford Nanopore technologies sequencing data",
+            doi="10.21105/joss.01236",
         )
 
         self.pycoqc_data = {}
@@ -31,6 +32,7 @@ class MultiqcModule(BaseMultiqcModule):
             # Function can return None if YAML parsing failed
             if data:
                 self.pycoqc_data[f["s_name"]] = data
+            self.add_data_source(f)
 
         self.pycoqc_data = self.ignore_samples(self.pycoqc_data)
 
@@ -39,6 +41,9 @@ class MultiqcModule(BaseMultiqcModule):
             raise UserWarning
 
         log.info("Found {} reports".format(len(self.pycoqc_data)))
+
+        # Write data to file
+        self.write_data_file(self.pycoqc_data, "pycoqc")
 
         self.parse_data()
 

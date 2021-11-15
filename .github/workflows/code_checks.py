@@ -10,26 +10,30 @@ BASE_DIR = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__fil
 MODULES_DIR = os.path.join(BASE_DIR, "multiqc", "modules")
 num_errors = 0
 
-# Check that add_data_source() is called for each module
-print("[bold black on yellow]  Checking for function call 'self.add_data_source'  [/]")
-for fn in glob.glob(os.path.join(MODULES_DIR, "*", "*.py")):
-    with open(fn, "r") as fh:
-        modfile = fh.read()
-        if "self.find_log_files" in modfile and "self.add_data_source" not in modfile:
-            print(f"Can't find 'self.add_data_source' in /{os.path.relpath(fn, MODULES_DIR)}")
-            num_errors += 1
+checks = {
+    "self.add_data_source": "self.find_log_files",
+    "self.write_data_file": "self.find_log_files",
+    "doi=": "super(MultiqcModule, self).__init__(",
+}
 
 # Check that add_data_source() is called for each module
-print("\n\n\n[bold black on yellow]  Checking for function call 'self.write_data_file'  [/]")
-for fn in glob.glob(os.path.join(MODULES_DIR, "*", "*.py")):
-    with open(fn, "r") as fh:
-        modfile = fh.read()
-        if "self.find_log_files" in modfile and "self.write_data_file" not in modfile:
-            print(f"Can't find 'self.write_data_file' in /{os.path.relpath(fn, MODULES_DIR)}")
-            num_errors += 1
+for function, search_term in checks.items():
+    print(f"[bold black on yellow]  Checking for function call '{function}'  [/]")
+    missing_files = []
+    for fn in glob.glob(os.path.join(MODULES_DIR, "*", "*.py")):
+        with open(fn, "r") as fh:
+            modfile = fh.read()
+            if search_term in modfile and function not in modfile:
+                relpath = os.path.relpath(fn, MODULES_DIR)
+                missing_files.append((relpath, f"Can't find '{function}' in /{relpath}"))
+                num_errors += 1
+
+    for file in sorted(missing_files, key=lambda x: x[0]):
+        print(file[1])
+    print("\n\n")
 
 if num_errors > 0:
-    print(f"\n\n[bold red]{num_errors} problems found")
+    print(f"[bold red]{num_errors} problems found")
     print(
         "\n\nNB: If a file shouldn't use a function for a legitimate reason, "
         "add a comment explaining why that is the case with the function name. "

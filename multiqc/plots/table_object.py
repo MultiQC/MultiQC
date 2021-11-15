@@ -165,6 +165,17 @@ class datatable(object):
                             except KeyError:
                                 pass
 
+                # Overwrite name if set in user config
+                for ns in config.table_columns_name.keys():
+                    # Make namespace key case insensitive
+                    if ns.lower() == headers[idx][k]["namespace"].lower():
+
+                        # Assume a dict of the specific column IDs
+                        try:
+                            headers[idx][k]["title"] = config.table_columns_name[ns][k]
+                        except KeyError:
+                            pass
+
                 # Also overwite placement if set in config
                 try:
                     headers[idx][k]["placement"] = float(

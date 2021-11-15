@@ -30,6 +30,9 @@ class DragenPloidyEstimationMetrics(BaseMultiqcModule):
         if not data_by_sample:
             return set()
 
+        # Write data to file
+        self.write_data_file(data_by_sample, "dragen_ploidy")
+
         headers = OrderedDict()
         headers["Ploidy estimation"] = {
             "title": "Sex",
