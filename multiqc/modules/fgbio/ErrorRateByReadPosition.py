@@ -38,6 +38,8 @@ def parse_reports(self):
     collapse = True  # same as the `--collapse` option on `ErrorRateByReadPosition`
     is_new_format = False  # Test if this is new or old format
     for f in self.find_log_files("fgbio/errorratebyreadposition", filehandles=True):
+        self.add_data_source(f, section="Error rate by read position")
+
         fh = f["f"]
         header = fh.readline().rstrip("\r\n").split("\t")
         if not header or header[0] != "read_number":

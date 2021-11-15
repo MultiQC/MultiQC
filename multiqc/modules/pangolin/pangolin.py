@@ -26,6 +26,7 @@ class MultiqcModule(BaseMultiqcModule):
             anchor="pangolin",
             href="https://github.com/cov-lineages/pangolin",
             info="uses variant calls to assign SARS-CoV-2 genome sequences to global lineages.",
+            doi="10.1093/ve/veab064",
         )
 
         # Find and parse the sample files
@@ -33,6 +34,7 @@ class MultiqcModule(BaseMultiqcModule):
         self.lineage_colours = dict()
         for f in self.find_log_files("pangolin", filehandles=True):
             self.parse_pangolin_log(f)
+            self.add_data_source(f)
 
         # Filter out parsed samples based on sample name
         self.pangolin_data = self.ignore_samples(self.pangolin_data)
@@ -92,7 +94,7 @@ class MultiqcModule(BaseMultiqcModule):
                 # MultiQC assumes that these are file path separators and cleans them away
                 # Bit of a nasty hack is to just replace them here first.
                 taxon_name = taxon_name.replace("/", "_")
-                s_name = self.clean_s_name(taxon_name, f["root"])
+                s_name = self.clean_s_name(taxon_name, f)
                 if s_name in self.pangolin_data:
                     log.debug("Duplicate sample name found! Overwriting: {}".format(s_name))
                 # Avoid generic header ID that clashes with other modules

@@ -30,7 +30,7 @@ def parse_reports(self):
                 keys = None
                 # Pull sample name from filename
                 s_name = os.path.basename(f["s_name"])
-                s_name = self.clean_s_name(s_name, f["root"])
+                s_name = self.clean_s_name(s_name, f)
                 parsed_data[s_name] = dict()
 
             if s_name is not None:

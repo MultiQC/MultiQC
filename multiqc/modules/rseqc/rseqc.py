@@ -28,6 +28,7 @@ class MultiqcModule(BaseMultiqcModule):
             href="http://rseqc.sourceforge.net/",
             info="package provides a number of useful modules that can"
             " comprehensively evaluate high throughput RNA-seq data.",
+            doi="10.1093/bioinformatics/bts356",
         )
 
         # Set up class objects to hold parsed data

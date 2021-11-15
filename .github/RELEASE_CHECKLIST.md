@@ -18,9 +18,20 @@ This checklist is for my own reference, as I forget the steps every time.
    - Check for any command line or javascript errors
    - Check version numbers are printed correctly
 7. Create new demo reports for the website
+
    - Comment out any config in `~/.multiqc_config.yaml`
+
+     ```bash
+     mv ~/.multiqc_config.yaml ~/.multiqc_config.yaml.bkup
+     ```
+
+     ```bash
+     mv ~/.multiqc_config.yaml.bkup ~/.multiqc_config.yaml
+     ```
+
    - Spot any previously unnoticed bugs and fix
    - Upload to the website and push change to Git
+
 8. Commit and push version updates
 9. Make a [release](https://github.com/ewels/MultiQC/releases) on GitHub - paste changelog section.
 10. Check that [PyPI listing page](https://pypi.python.org/pypi/multiqc/) looks sane

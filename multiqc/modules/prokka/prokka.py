@@ -23,6 +23,7 @@ class MultiqcModule(BaseMultiqcModule):
             anchor="prokka",
             href="http://www.vicbioinformatics.com/software.prokka.shtml",
             info="is a software tool for the rapid annotation of prokaryotic genomes.",
+            doi="10.1093/bioinformatics/btu153",
         )
 
         # Parse logs
@@ -114,7 +115,7 @@ class MultiqcModule(BaseMultiqcModule):
         # text on the organism line is the sample name.
         try:
             organism = " ".join(first_line.strip().split(":", 1)[1].split()[:2])
-            s_name = self.clean_s_name(" ".join(first_line.split()[3:]), f["root"])
+            s_name = self.clean_s_name(" ".join(first_line.split()[3:]), f)
         except KeyError:
             organism = first_line.strip().split(":", 1)[1]
             s_name = f["s_name"]

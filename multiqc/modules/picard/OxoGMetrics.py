@@ -35,7 +35,7 @@ def parse_reports(self):
                 fn_search = re.search(r"INPUT(?:_BASE)?(?:=|\s+)(\[?[^\s]+\]?)", l, flags=re.IGNORECASE)
                 if fn_search:
                     s_name = os.path.basename(fn_search.group(1).strip("[]"))
-                    s_name = self.clean_s_name(s_name, f["root"])
+                    s_name = self.clean_s_name(s_name, f)
                     parsed_data.append(dict())
                     sample_names.append(s_name)
                     s_files.append(f)

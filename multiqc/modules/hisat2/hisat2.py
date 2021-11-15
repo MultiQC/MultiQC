@@ -27,6 +27,7 @@ class MultiqcModule(BaseMultiqcModule):
             info="is a fast and sensitive alignment program for mapping "
             "NGS reads (both DNA and RNA) against a reference genome or "
             "population of reference genomes.",
+            doi=["10.1038/nmeth.3317", "10.1038/s41587-019-0201-4"],
         )
 
         # Find and load any HISAT2 reports
@@ -82,7 +83,7 @@ class MultiqcModule(BaseMultiqcModule):
             # Attempt in vain to find original hisat2 command, logged by another program
             hscmd = re.search(r"hisat2 .+ -[1U] ([^\s,]+)", l)
             if hscmd:
-                s_name = self.clean_s_name(hscmd.group(1), f["root"])
+                s_name = self.clean_s_name(hscmd.group(1), f)
                 log.debug("Found a HISAT2 command, updating sample name to '{}'".format(s_name))
 
             # Run through all regexes

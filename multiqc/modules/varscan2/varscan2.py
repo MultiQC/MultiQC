@@ -25,13 +25,14 @@ class MultiqcModule(BaseMultiqcModule):
             anchor="varscan",
             href="http://dkoboldt.github.io/varscan/",
             info="variant detection in massively parallel sequencing data",
+            doi=["10.1101/gr.129684.111", "10.1093/bioinformatics/btp373"],
         )
 
         # Find and load VarScan2 reports - there are 3 different ones, but all with identical content (differentiated by header)
         self.varscan2_data = dict()
         for f in self.find_log_files("varscan2/mpileup2snp", filehandles=True):
             parsed_data = self.parse_varscan(f)
-            s_name = self.clean_s_name(parsed_data["sample_name"], f["root"])
+            s_name = self.clean_s_name(parsed_data["sample_name"], f)
             # Drop existing sample_name from dict now
             del parsed_data["sample_name"]
             if parsed_data is not None and len(parsed_data) > 0:
@@ -40,7 +41,7 @@ class MultiqcModule(BaseMultiqcModule):
 
         for f in self.find_log_files("varscan2/mpileup2indel", filehandles=True):
             parsed_data = self.parse_varscan(f)
-            s_name = self.clean_s_name(parsed_data["sample_name"], f["root"])
+            s_name = self.clean_s_name(parsed_data["sample_name"], f)
             # Drop existing sample_name from dict now
             del parsed_data["sample_name"]
             if parsed_data is not None and len(parsed_data) > 0:
@@ -49,7 +50,7 @@ class MultiqcModule(BaseMultiqcModule):
 
         for f in self.find_log_files("varscan2/mpileup2cns", filehandles=True):
             parsed_data = self.parse_varscan(f)
-            s_name = self.clean_s_name(parsed_data["sample_name"], f["root"])
+            s_name = self.clean_s_name(parsed_data["sample_name"], f)
             # Drop existing sample_name from dict now
             del parsed_data["sample_name"]
             if parsed_data is not None and len(parsed_data) > 0:

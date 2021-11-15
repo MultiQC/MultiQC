@@ -78,7 +78,7 @@ def parse_reports(self):
                 fn_search = re.search(r"INPUT(?:=|\s+)(\[?[^\s]+\]?)", l, flags=re.IGNORECASE)
                 if fn_search:
                     s_name = os.path.basename(fn_search.group(1).strip("[]"))
-                    s_name = self.clean_s_name(s_name, f["root"])
+                    s_name = self.clean_s_name(s_name, f)
                     parsed_data[s_name] = dict()
 
             if s_name is not None:
@@ -226,6 +226,7 @@ def _get_table_headers(data):
             "PCT_USABLE_BASES_ON_TARGET",
             "PF_BASES_ALIGNED",
             "PF_READS",
+            "PCT_SELECTED_BASES",
             "PF_UNIQUE_READS",
             "PF_UQ_BASES_ALIGNED",
             "PF_UQ_READS_ALIGNED",

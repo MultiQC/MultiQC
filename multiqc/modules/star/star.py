@@ -25,6 +25,7 @@ class MultiqcModule(BaseMultiqcModule):
             anchor="star",
             href="https://github.com/alexdobin/STAR",
             info="is an ultrafast universal RNA-seq aligner.",
+            doi="10.1093/bioinformatics/bts635",
         )
 
         # Find and load any STAR reports
@@ -34,7 +35,7 @@ class MultiqcModule(BaseMultiqcModule):
             if parsed_data is not None:
                 s_name = f["s_name"]
                 if s_name == "" or s_name == "Log.final.out":
-                    s_name = self.clean_s_name(os.path.basename(f["root"]), os.path.dirname(f["root"]))
+                    s_name = self.clean_s_name(os.path.basename(f["root"]), f, root=os.path.dirname(f["root"]))
                 if s_name in self.star_data:
                     log.debug("Duplicate sample name found! Overwriting: {}".format(s_name))
                 self.add_data_source(f, section="SummaryLog")
@@ -49,7 +50,7 @@ class MultiqcModule(BaseMultiqcModule):
             if parsed_data is not None:
                 s_name = f["s_name"]
                 if s_name == "" or s_name == "ReadsPerGene.out.tab":
-                    s_name = self.clean_s_name(os.path.basename(f["root"]), os.path.dirname(f["root"]))
+                    s_name = self.clean_s_name(os.path.basename(f["root"]), f, root=os.path.dirname(f["root"]))
                 if s_name in self.star_data:
                     log.debug("Duplicate ReadsPerGene sample name found! Overwriting: {}".format(s_name))
                 self.add_data_source(f, section="ReadsPerGene")

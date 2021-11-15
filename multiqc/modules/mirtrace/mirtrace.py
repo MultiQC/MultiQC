@@ -24,6 +24,7 @@ class MultiqcModule(BaseMultiqcModule):
             anchor="mirtrace",
             href="https://github.com/friedlanderlab/mirtrace",
             info="is a quality control software for small RNA sequencing data developed by Friedländer lab (KTH, Sweden).",
+            doi="10.1186/s13059-018-1588-9",
         )
 
         # Find and load miRTrace summary statistics table
@@ -99,7 +100,7 @@ class MultiqcModule(BaseMultiqcModule):
 
         if "results" in cdict.keys():
             for record in cdict["results"]:
-                s_name = self.clean_s_name(record["verbosename"], f["root"])
+                s_name = self.clean_s_name(record["verbosename"], f)
                 parsed_data = {}
                 parsed_data["filename"] = record["filename"]
                 parsed_data["reads_total"] = record["stats"]["allSeqsCount"]
@@ -137,7 +138,7 @@ class MultiqcModule(BaseMultiqcModule):
                 body[s[0]] = s[1 : len(s)]
 
         for record in header[0 : len(header)]:
-            s_name = self.clean_s_name(record, f["root"])
+            s_name = self.clean_s_name(record, f)
             parsed_data = {}
             idx = header[0 : len(header)].index(record)
             for length in body:
@@ -163,7 +164,7 @@ class MultiqcModule(BaseMultiqcModule):
                 body[s[0]] = s[1 : len(s)]
 
         for record in header[0 : len(header)]:
-            s_name = self.clean_s_name(record, f["root"])
+            s_name = self.clean_s_name(record, f)
             parsed_data = {}
             idx = header[0 : len(header)].index(record)
             for clade in body:
@@ -189,7 +190,7 @@ class MultiqcModule(BaseMultiqcModule):
                 body[s[0]] = s[1 : len(s)]
 
         for record in header[0 : len(header)]:
-            s_name = self.clean_s_name(record, f["root"])
+            s_name = self.clean_s_name(record, f)
             parsed_data = {}
             idx = header[0 : len(header)].index(record)
             for depth in body:

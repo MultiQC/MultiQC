@@ -24,6 +24,7 @@ class MultiqcModule(BaseMultiqcModule):
             anchor="minionqc",
             href="https://github.com/roblanf/minion_qc",
             info=" is a QC tool for Oxford Nanopore sequencing data",
+            doi="10.1093/bioinformatics/bty654",
         )
 
         # Find and load any minionqc reports
@@ -34,7 +35,7 @@ class MultiqcModule(BaseMultiqcModule):
         for f in self.find_log_files("minionqc", filehandles=True):
 
             # get sample name
-            s_name = self.clean_s_name(os.path.basename(f["root"]), os.path.dirname(f["root"]))
+            s_name = self.clean_s_name(os.path.basename(f["root"]), f, root=os.path.dirname(f["root"]))
 
             # parses minionqc summary data
             parsed_dict = self.parse_minionqc_report(s_name, f["f"])

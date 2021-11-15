@@ -30,6 +30,7 @@ class MultiqcModule(BaseMultiqcModule):
                 Unfortunately both tools have identical log output by default, so it is impossible
                 to distiguish which tool was used.
                 """,
+            doi=["10.1038/nmeth.1923", "10.1038/nmeth.3317", "10.1038/s41587-019-0201-4"],
         )
 
         # Find and load any Bowtie 2 reports
@@ -135,7 +136,7 @@ class MultiqcModule(BaseMultiqcModule):
             # Attempt in vain to find original bowtie2 command, logged by another program
             btcmd = re.search(r"bowtie2 .+ -[1U] ([^\s,]+)", l)
             if btcmd:
-                s_name = self.clean_s_name(btcmd.group(1), f["root"])
+                s_name = self.clean_s_name(btcmd.group(1), f)
                 log.debug("Found a bowtie2 command, updating sample name to '{}'".format(s_name))
 
             # Total reads
