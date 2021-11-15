@@ -29,6 +29,8 @@
   - Fixed module failing when writing data to file if there is a `/` in the section name ([#1515](https://github.com/ewels/MultiQC/issues/1515))
 - **DRAGEN**
   - Fixed bug in sample name regular expression ([#1537](https://github.com/ewels/MultiQC/pull/1537))
+- **Fastp**
+  - Fixed % pass filter statistics ([#1574](https://github.com/ewels/MultiQC/issues/1574))
 - **FastQC**
   - Fixed several bugs occuring when FastQC sections are skipped ([#1488](https://github.com/ewels/MultiQC/issues/1488), [#1533](https://github.com/ewels/MultiQC/issues/1533))
   - Clarify general statistics table header for length
