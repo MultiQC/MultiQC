@@ -226,7 +226,7 @@ class MultiqcModule(BaseMultiqcModule):
         )
 
     def add_general_stats(self, counts, headers):
-        """ Add (renamed) samples to the general statistics table """
+        """Add (renamed) samples to the general statistics table"""
         self.general_stats_addcols(counts, headers)
 
 
