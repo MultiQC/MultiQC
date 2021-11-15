@@ -87,10 +87,11 @@ def make_plot(dt):
         return '<p class="text-danger">Error - was not able to plot data.</p>'
 
     # Plot HTML
-    html = """<div class="hc-plot-wrapper">
+    html = """<div class="hc-plot-wrapper"{height}>
         <div id="{bid}" class="hc-plot not_rendered hc-beeswarm-plot"><small>loading..</small></div>
     </div>""".format(
-        bid=bs_id
+        bid=bs_id,
+        height=f' style="height:{dt.pconfig["height"]}px"' if "height" in dt.pconfig else "",
     )
 
     report.num_hc_plots += 1

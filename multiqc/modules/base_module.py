@@ -30,6 +30,7 @@ class BaseMultiqcModule(object):
         extra=None,
         autoformat=True,
         autoformat_type="markdown",
+        doi=[],
     ):
 
         # Custom options from user config that can overwrite base module values
@@ -41,6 +42,8 @@ class BaseMultiqcModule(object):
         self.info = mod_cust_config.get("info", info)
         self.comment = mod_cust_config.get("comment", comment)
         self.extra = mod_cust_config.get("extra", extra)
+        self.doi = mod_cust_config.get("doi", doi)
+
         # Specific module level config to overwrite (e.g. config.bcftools, config.fastqc)
         config.update({anchor: mod_cust_config.get("custom_config", {})})
 
@@ -53,16 +56,33 @@ class BaseMultiqcModule(object):
 
         if self.info is None:
             self.info = ""
+        # Always finish with a ".", as we may add a DOI after the intro.
+        if len(self.info) > 0 and self.info[:-1] != ".":
+            self.info += "."
         if self.extra is None:
             self.extra = ""
+        self.doi_link = ""
+        if type(self.doi) is str:
+            self.doi = [self.doi]
+        if len(self.doi) > 0:
+            doi_links = []
+            for doi in self.doi:
+                # Build the HTML link for the DOI
+                doi_links.append(
+                    f' <a class="module-doi" data-doi="{doi}" data-toggle="popover" href="https://doi.org/{doi}" target="_blank">{doi}</a>'
+                )
+            self.doi_link = '<em class="text-muted small" style="margin-left: 1rem;">DOI: {}.</em>'.format(
+                "; ".join(doi_links)
+            )
+
         if target is None:
             target = self.name
         if self.href is not None:
             self.mname = '<a href="{}" target="_blank">{}</a>'.format(self.href, target)
         else:
             self.mname = target
-        if self.href or self.info or self.extra:
-            self.intro = "<p>{} {}</p>{}".format(self.mname, self.info, self.extra)
+        if self.href or self.info or self.extra or self.doi_link:
+            self.intro = "<p>{} {}{}</p>{}".format(self.mname, self.info, self.doi_link, self.extra)
 
         # Format the markdown strings
         if autoformat:

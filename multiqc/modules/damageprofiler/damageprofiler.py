@@ -26,6 +26,7 @@ class MultiqcModule(BaseMultiqcModule):
             anchor="damageprofiler",
             href="https://github.com/Integrative-Transcriptomics/DamageProfiler",
             info="a tool to determine damage patterns on ancient DNA.",
+            doi="10.1093/bioinformatics/btab190",
         )
 
         # Init empty dictionaries
