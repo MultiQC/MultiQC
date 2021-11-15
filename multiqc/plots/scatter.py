@@ -133,8 +133,9 @@ def highcharts_scatter_plot(plotdata, pconfig=None):
         html += "</div>\n\n"
 
     # The plot div
-    html += '<div class="hc-plot-wrapper"><div id="{id}" class="hc-plot not_rendered hc-scatter-plot"><small>loading..</small></div></div></div> \n'.format(
-        id=pconfig["id"]
+    html += '<div class="hc-plot-wrapper"{height}><div id="{id}" class="hc-plot not_rendered hc-scatter-plot"><small>loading..</small></div></div></div> \n'.format(
+        id=pconfig["id"],
+        height=f' style="height:{pconfig["height"]}px"' if "height" in pconfig else "",
     )
 
     report.num_hc_plots += 1

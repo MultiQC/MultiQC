@@ -16,6 +16,7 @@ class MultiqcModule(BaseMultiqcModule):
             anchor="interop",
             href="http://illumina.github.io/interop/index.html",
             info=" - a set of common routines used for reading and writing InterOp metric files.",
+            # No publication / DOI // doi=
         )
 
         log = logging.getLogger(__name__)
@@ -27,10 +28,13 @@ class MultiqcModule(BaseMultiqcModule):
             parsed_data = self.parse_summary_csv(f["f"])
             if max(len(parsed_data["summary"]), len(parsed_data["details"])) > 0:
                 self.runSummary[f["s_name"]] = parsed_data
+                self.add_data_source(f)
+
         for f in self.find_log_files("interop/index-summary", filehandles=True):
             parsed_data = self.parse_index_summary_csv(f["f"])
             if max(len(parsed_data["summary"]), len(parsed_data["details"])) > 0:
                 self.indexSummary[f["s_name"]] = parsed_data
+                self.add_data_source(f)
 
         self.runSummary = self.ignore_samples(self.runSummary)
         self.indexSummary = self.ignore_samples(self.indexSummary)
@@ -44,6 +48,9 @@ class MultiqcModule(BaseMultiqcModule):
 
         # Create report Sections
         if len(self.runSummary) > 0:
+            # Write data to file
+            self.write_data_file(self.runSummary, "interop_runsummary")
+
             self.add_section(
                 name="Read Metrics Summary",
                 anchor="interop-runmetrics-summary",
@@ -57,6 +64,9 @@ class MultiqcModule(BaseMultiqcModule):
             )
 
         if len(self.indexSummary) > 0:
+            # Write data to file
+            self.write_data_file(self.indexSummary, "interop_indexsummary")
+
             self.add_section(
                 name="Indexing QC Metrics summary",
                 anchor="interop-indexmetrics-summary",

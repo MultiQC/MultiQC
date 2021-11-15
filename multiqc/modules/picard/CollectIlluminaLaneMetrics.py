@@ -58,6 +58,8 @@ def parse_reports(self):
 
     # Go through logs and find Metrics
     for f in self.find_log_files("picard/collectilluminalanemetrics", filehandles=True):
+        self.add_data_source(f, section="CollectIlluminaLaneMetrics")
+
         run_name = None
         parsed_data = []
         keys = []

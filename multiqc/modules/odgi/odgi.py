@@ -28,6 +28,7 @@ class MultiqcModule(BaseMultiqcModule):
             anchor="odgi",
             href="https://github.com/pangenome/odgi",
             info="is an optimized dynamic graph/genome implementation, for efficient analysis and manipulation of pangenome graphs structured in the variation graph model.",
+            # Can't find a DOI // doi=
         )
 
         # Parse odgi stats data
