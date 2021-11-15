@@ -25,7 +25,7 @@ class MultiqcModule(BaseMultiqcModule):
         # Initialise the parent object
         super(MultiqcModule, self).__init__(
             name="CheckQC",
-            anchor="mymod",
+            anchor="checkqc",
             href="https://github.com/Molmed/checkQC",
             info="CheckQC is a program designed to check a set of quality criteria against an Illumina runfolder.",
             doi="10.21105/joss.00556",
@@ -61,6 +61,7 @@ class MultiqcModule(BaseMultiqcModule):
             sample = self.clean_s_name(issue["data"]["sample_name"], f)
             if self.is_ignore_sample(sample):
                 continue
+            self.add_data_source(f, sample, section="general_stats")
             read_num = issue["data"]["sample_reads"]
             read_threshold = issue["data"]["threshold"]
             general_stats[sample] = {"read_num": read_num, "read_threshold": read_threshold}
@@ -100,6 +101,7 @@ class MultiqcModule(BaseMultiqcModule):
             sample = self.clean_s_name(f"{sample_name} - {lane}", f)
             if self.is_ignore_sample(sample):
                 continue
+            self.add_data_source(f, sample, section="reads_per_sample")
 
             read_num = issue["data"]["sample_reads"] * pow(10, 6)
             read_threshold = issue["data"]["threshold"] * pow(10, 6)
@@ -155,6 +157,7 @@ class MultiqcModule(BaseMultiqcModule):
             threshold = issue["data"]["threshold"] * pow(10, 6)
             if self.is_ignore_sample(sample):
                 continue
+            self.add_data_source(f, sample, section="cluster_pf")
 
             data[sample] = {"lane_pf": lane_pf}
             if is_error:
@@ -210,6 +213,7 @@ class MultiqcModule(BaseMultiqcModule):
             sample = self.clean_s_name(f"{lane} - {read}", f)
             if self.is_ignore_sample(sample):
                 continue
+            self.add_data_source(f, sample, section="q30")
             percent_q30 = issue["data"]["percent_q30"]
             threshold = issue["data"]["threshold"]
             data[sample] = {"percent_q30": percent_q30}
@@ -263,6 +267,7 @@ class MultiqcModule(BaseMultiqcModule):
             sample = self.clean_s_name(f"{lane} - {read}", f)
             if self.is_ignore_sample(sample):
                 continue
+            self.add_data_source(f, sample, section="error_rate")
             error_rate = issue["data"]["error_rate"]
             threshold = issue["data"]["threshold"]
             data[sample] = {"threshold": threshold}
@@ -314,6 +319,7 @@ class MultiqcModule(BaseMultiqcModule):
             sample = self.clean_s_name(str(issue["data"]["lane"]), f)
             if self.is_ignore_sample(sample):
                 continue
+            self.add_data_source(f, sample, section="undetermined")
             p_undetermined = issue["data"]["percentage_undetermined"]
             threshold = issue["data"]["threshold"]
             computed_threshold = issue["data"]["computed_threshold"]
@@ -399,6 +405,9 @@ class MultiqcModule(BaseMultiqcModule):
         lanes = set()
         for (idx, _) in sorted_idx:
             sample = self.clean_s_name(idx, f)
+            if self.is_ignore_sample(sample):
+                continue
+            self.add_data_source(f, sample, section="unidentified_index")
             data[sample] = {}
             for lane, val in idx_to_lane_to_rep[idx].items():
                 data[sample][f"overrep_{lane}"] = val
