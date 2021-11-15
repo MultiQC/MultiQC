@@ -208,7 +208,7 @@ class MultiqcModule(BaseMultiqcModule):
 
         try:
             self.fastp_data[s_name]["pct_surviving"] = (
-                self.fastp_data[s_name]["after_filtering_total_reads"]
+                self.fastp_data[s_name]["filtering_result_passed_filter_reads"]
                 / self.fastp_data[s_name]["before_filtering_total_reads"]
             ) * 100.0
         except (KeyError, ZeroDivisionError) as e:
