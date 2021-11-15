@@ -21,24 +21,35 @@ class MultiqcModule(BaseMultiqcModule):
             anchor="goleft_indexcov",
             href="https://github.com/brentp/goleft/tree/master/indexcov",
             info="quickly estimates coverage from a whole-genome bam index.",
+            doi="10.1093/gigascience/gix090",
         )
 
         # Parse ROC data
         self.roc_plot_data = collections.defaultdict(lambda: collections.defaultdict(dict))
         for f in self.find_log_files("goleft_indexcov/roc", filehandles=True):
             self.parse_roc_plot_data(f)
+            self.add_data_source(f)
+
         # Filter to strip out ignored sample names
         num_roc_samples = 0
         for chrom in self.roc_plot_data:
             self.roc_plot_data[chrom] = self.ignore_samples(self.roc_plot_data[chrom])
             num_roc_samples = max(len(self.roc_plot_data[chrom]), num_roc_samples)
 
+        # Write data to file
+        self.write_data_file(self.roc_plot_data, "goleft_roc")
+
         # Parse BIN data
         self.bin_plot_data = {}
         for f in self.find_log_files("goleft_indexcov/ped", filehandles=True):
             self.parse_bin_plot_data(f)
+            self.add_data_source(f)
+
         # Filter to strip out ignored sample names
         self.bin_plot_data = self.ignore_samples(self.bin_plot_data)
+
+        # Write data to file
+        self.write_data_file(self.roc_plot_data, "goleft_bin")
 
         # Stop execution if no samples
         num_samples = max(len(self.bin_plot_data), num_roc_samples)
@@ -125,14 +136,18 @@ class MultiqcModule(BaseMultiqcModule):
 
     def parse_bin_plot_data(self, f):
         header = f["f"].readline()[1:].strip().split("\t")
+        self.bin_plot_data_empty_samples = []
         for sample_parts in (l.split("\t") for l in f["f"]):
             cur = dict(zip(header, sample_parts))
             cur["sample_id"] = self.clean_s_name(cur["sample_id"], f)
             total = float(cur["bins.in"]) + float(cur["bins.out"])
-            self.bin_plot_data[cur["sample_id"]] = {
-                "x": float(cur["bins.lo"]) / total,
-                "y": float(cur["bins.out"]) / total,
-            }
+            try:
+                self.bin_plot_data[cur["sample_id"]] = {
+                    "x": float(cur["bins.lo"]) / total,
+                    "y": float(cur["bins.out"]) / total,
+                }
+            except ZeroDivisionError:
+                self.bin_plot_data_empty_samples.append(cur["sample_id"])
 
     def bin_plot(self):
         pconfig = {
@@ -145,6 +160,17 @@ class MultiqcModule(BaseMultiqcModule):
             "xCeiling": 1.0,
             "xFloor": 0.0,
         }
+        extra = ""
+        if len(self.bin_plot_data_empty_samples) > 0:
+            # Bootstrap alert about missing samples
+            extra = f"""<div class="alert alert-warning" style="margin:2rem 0;">
+                <strong>Warning:</strong>
+                {len(self.bin_plot_data_empty_samples)} sample{'s' if len(self.bin_plot_data_empty_samples) > 1 else ''} had zero bins and could not be plotted.
+                <a href="#goleft_empty_samples" onclick="$('#goleft_empty_samples').slideToggle();">Click to show missing sample names.</a>
+                <div id="goleft_empty_samples" style="display:none;">
+                    <ul><li><code>{"</code></li>, <li><code>".join(self.bin_plot_data_empty_samples)}</code></li></ul>
+                </div>
+            </div>"""
         self.add_section(
             name="Problem coverage bins",
             anchor="goleft_indexcov-bin",
@@ -159,4 +185,5 @@ class MultiqcModule(BaseMultiqcModule):
                 for more details.
             """,
             plot=scatter.plot(self.bin_plot_data, pconfig),
+            content=extra,
         )

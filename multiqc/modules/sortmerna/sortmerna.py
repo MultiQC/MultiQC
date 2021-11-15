@@ -25,12 +25,14 @@ class MultiqcModule(BaseMultiqcModule):
             anchor="sortmerna",
             href="http://bioinfo.lifl.fr/RNA/sortmerna/",
             info="is a program for filtering, mapping and OTU-picking NGS reads in metatranscriptomic and metagenomic data.",
+            doi="10.1093/bioinformatics/bts611",
         )
 
         # Parse logs
         self.sortmerna = dict()
         for f in self.find_log_files("sortmerna", filehandles=True):
             self.parse_sortmerna(f)
+            self.add_data_source(f)
 
         # Filter to strip out ignored sample names
         self.sortmerna = self.ignore_samples(self.sortmerna)

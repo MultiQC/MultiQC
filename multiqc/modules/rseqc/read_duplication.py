@@ -37,6 +37,8 @@ def parse_reports(self):
     self.read_dups = self.ignore_samples(self.read_dups)
 
     if len(self.read_dups) > 0:
+        # Write data to file
+        self.write_data_file(self.read_dups, "rseqc_read_dups")
 
         # Add line graph to section
         pconfig = {

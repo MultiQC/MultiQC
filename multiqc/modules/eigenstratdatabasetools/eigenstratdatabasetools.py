@@ -25,6 +25,7 @@ class MultiqcModule(BaseMultiqcModule):
             anchor="eigenstrat",
             href="https://github.com/TCLamnidis/EigenStratDatabaseTools",
             info="A set of tools to compare and manipulate the contents of EingenStrat databases, and to calculate SNP coverage statistics in such databases.",
+            # No publication / DOI // doi=
         )
 
         # Find and load any DeDup reports

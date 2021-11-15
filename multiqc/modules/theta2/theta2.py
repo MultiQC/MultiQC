@@ -23,6 +23,7 @@ class MultiqcModule(BaseMultiqcModule):
             href="http://compbio.cs.brown.edu/projects/theta/",
             info="<em>(Tumor Heterogeneity Analysis)</em> estimates tumour purity "
             "and clonal / subclonal copy number.",
+            doi=["10.1093/bioinformatics/btu651", "10.1186/gb-2013-14-7-r80"],
         )
 
         # Find and load any THetA2 reports

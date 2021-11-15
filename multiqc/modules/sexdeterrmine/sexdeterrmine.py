@@ -25,7 +25,8 @@ class MultiqcModule(BaseMultiqcModule):
             anchor="sexdeterrmine",
             href="https://github.com/TCLamnidis/Sex.DetERRmine",
             info="""A python script to calculate the relative coverage of X and Y chromosomes,
-            and their associated error bars, from the depth of coverage at specified SNPs. """,
+            and their associated error bars, from the depth of coverage at specified SNPs.""",
+            doi="10.1038/s41467-018-07483-5",
         )
 
         # Find and load any DeDup reports

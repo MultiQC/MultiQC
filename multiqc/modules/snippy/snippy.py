@@ -26,6 +26,7 @@ class MultiqcModule(BaseMultiqcModule):
             anchor="snippy",
             href="https://github.com/tseemann/snippy",
             info="is used for rapid haploid variant calling and core genome alignment.",
+            # Can't find a DOI // doi=
         )
 
         self.snippy_data = {}
@@ -54,6 +55,9 @@ class MultiqcModule(BaseMultiqcModule):
                 log.debug("Duplicate sample name found for snippy! Overwriting: {}".format(f["s_name"]))
             # Add the file data under the key filename
             self.snippy_data[f["s_name"]] = self.parse_snippy_txt(f["f"])
+
+            self.add_data_source(f, section="snippy")
+
         # Ignore samples specified by the user
         self.snippy_data = self.ignore_samples(self.snippy_data)
 
@@ -64,6 +68,9 @@ class MultiqcModule(BaseMultiqcModule):
                 log.debug("Duplicate sample name found for snippy-core! Overwriting: {}".format(f["s_name"]))
             # Add the file data under the key filename
             self.snippy_core_data[f["s_name"]] = self.parse_snippy_core_txt(f["f"])
+
+            self.add_data_source(f, section="snippy-core")
+
         # Ignore samples specified by the user
         self.snippy_core_data = self.ignore_samples(self.snippy_core_data)
 
