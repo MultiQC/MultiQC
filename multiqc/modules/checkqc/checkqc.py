@@ -28,6 +28,7 @@ class MultiqcModule(BaseMultiqcModule):
             anchor="mymod",
             href="https://github.com/Molmed/checkQC",
             info="CheckQC is a program designed to check a set of quality criteria against an Illumina runfolder.",
+            doi="10.21105/joss.00556",
         )
 
         self.checkqc_content = dict()

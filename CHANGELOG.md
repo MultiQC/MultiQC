@@ -1,11 +1,5 @@
 # MultiQC Version History
 
-## MultiQC v1.13dev
-
-### New Modules
-
-- [**CheckQC**](https://github.com/Molmed/checkQC): A program designed to check a set of quality criteria against an Illumina runfolder
-
 ## MultiQC v1.12dev
 
 ### MultiQC updates
@@ -26,6 +20,8 @@
 - Added support for customising table column names ([#1255](https://github.com/ewels/MultiQC/issues/1255))
 
 ### New Modules
+
+- [**CheckQC**](https://github.com/Molmed/checkQC): A program designed to check a set of quality criteria against an Illumina runfolder
 
 ### Module updates
 
