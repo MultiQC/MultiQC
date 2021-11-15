@@ -25,7 +25,8 @@ class MultiqcModule(BaseMultiqcModule):
             name="OptiType",
             anchor="optitype",
             href="https://github.com/FRED-2/OptiType",
-            info="Precision HLA typing from next-generation sequencing data ",
+            info="Precision HLA typing from next-generation sequencing data.",
+            doi="10.1093/bioinformatics/btu548",
         )
 
         # Find and load any optitype reports

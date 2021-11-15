@@ -24,6 +24,7 @@ class MultiqcModule(BaseMultiqcModule):
             anchor="minionqc",
             href="https://github.com/roblanf/minion_qc",
             info=" is a QC tool for Oxford Nanopore sequencing data",
+            doi="10.1093/bioinformatics/bty654",
         )
 
         # Find and load any minionqc reports

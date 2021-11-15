@@ -98,6 +98,9 @@ custom_logo_title: null # 'Our Institute Name'
 subtitle: null # Grey text below title
 intro_text: null # Set to False to remove, or your own text
 
+# Specify custom css to add to the report
+custom_css_files: []
+
 # Add generic information to the top of reports
 report_header_info:
   - Example Config:: "This is arbitrary"
@@ -110,3 +113,8 @@ table_columns_visible:
   FastQC:
     percent_fails: False
     total_sequences: True
+
+# Overwrite the default table column names
+table_columns_name:
+  FastQC:
+    percent_fails: "Percent not pass"
