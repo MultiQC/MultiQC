@@ -3,6 +3,19 @@
 /* FastQC statuses popovers */
 .fastqc_passfail_progress .progress-bar {
   cursor: pointer;
+  -webkit-print-color-adjust: exact !important;
+  color-adjust: exact !important;
+  color: #fff !important;
+}
+/* Set colours to !important so that they print */
+.progress-bar-success {
+  background-color: #5cb85c !important;
+}
+.progress-bar-warning {
+  background-color: #f0ad4e !important;
+}
+.progress-bar-succedangerss {
+  background-color: #d9534f !important;
 }
 .popover-fastqc-status .popover-content {
   font-size: 11px;

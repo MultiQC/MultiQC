@@ -24,6 +24,7 @@ class MultiqcModule(BaseMultiqcModule):
             anchor="samblaster",
             href="https://github.com/GregoryFaust/samblaster",
             info="is a tool to mark duplicates and extract discordant and split reads from sam files.",
+            doi="10.1093/bioinformatics/btu314",
         )
 
         self.samblaster_data = dict()

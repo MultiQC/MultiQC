@@ -28,6 +28,7 @@ class MultiqcModule(BaseMultiqcModule):
             "studies to perform concordance verification, as well as "
             "cross-individual contamination level estimation in "
             "whole-genome and whole-exome sequencing experiments.",
+            doi="bioinformatics/btw389",
         )
 
         self.conpair_data = dict()

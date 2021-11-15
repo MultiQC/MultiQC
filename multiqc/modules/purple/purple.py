@@ -25,11 +25,12 @@ class MultiqcModule(BaseMultiqcModule):
         super(MultiqcModule, self).__init__(
             name="PURPLE",
             anchor="purple",
-            href="https://github.com/hartwigmedical/hmftools/tree/master/purity-ploidy-estimator",
+            href="https://github.com/hartwigmedical/hmftools/",
             info="""combines B-allele frequency (BAF), read depth ratios, somatic variants and
                     structural variant breakpoints to estimate the purity and copy number profile
                     of a tumor sample, and also predicts gender, the MSI status, tumor mutational
                     load and burden, clonality and the whole genome duplication status.""",
+            doi="10.1038/s41586-019-1689-y",
         )
 
         data_by_sample = defaultdict(dict)
@@ -55,6 +56,9 @@ class MultiqcModule(BaseMultiqcModule):
         if not data_by_sample:
             raise UserWarning
         log.info("Found {} reports".format(len(data_by_sample)))
+
+        # Write data to file
+        self.write_data_file(data_by_sample, "purple")
 
         headers = _make_table_headers()
 
