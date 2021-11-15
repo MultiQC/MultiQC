@@ -30,6 +30,7 @@ class BaseMultiqcModule(object):
         extra=None,
         autoformat=True,
         autoformat_type="markdown",
+        doi=[],
     ):
 
         # Custom options from user config that can overwrite base module values
@@ -41,6 +42,8 @@ class BaseMultiqcModule(object):
         self.info = mod_cust_config.get("info", info)
         self.comment = mod_cust_config.get("comment", comment)
         self.extra = mod_cust_config.get("extra", extra)
+        self.doi = mod_cust_config.get("doi", doi)
+
         # Specific module level config to overwrite (e.g. config.bcftools, config.fastqc)
         config.update({anchor: mod_cust_config.get("custom_config", {})})
 
@@ -53,16 +56,33 @@ class BaseMultiqcModule(object):
 
         if self.info is None:
             self.info = ""
+        # Always finish with a ".", as we may add a DOI after the intro.
+        if len(self.info) > 0 and self.info[:-1] != ".":
+            self.info += "."
         if self.extra is None:
             self.extra = ""
+        self.doi_link = ""
+        if type(self.doi) is str:
+            self.doi = [self.doi]
+        if len(self.doi) > 0:
+            doi_links = []
+            for doi in self.doi:
+                # Build the HTML link for the DOI
+                doi_links.append(
+                    f' <a class="module-doi" data-doi="{doi}" data-toggle="popover" href="https://doi.org/{doi}" target="_blank">{doi}</a>'
+                )
+            self.doi_link = '<em class="text-muted small" style="margin-left: 1rem;">DOI: {}.</em>'.format(
+                "; ".join(doi_links)
+            )
+
         if target is None:
             target = self.name
         if self.href is not None:
             self.mname = '<a href="{}" target="_blank">{}</a>'.format(self.href, target)
         else:
             self.mname = target
-        if self.href or self.info or self.extra:
-            self.intro = "<p>{} {}</p>{}".format(self.mname, self.info, self.extra)
+        if self.href or self.info or self.extra or self.doi_link:
+            self.intro = "<p>{} {}{}</p>{}".format(self.mname, self.info, self.doi_link, self.extra)
 
         # Format the markdown strings
         if autoformat:
@@ -136,7 +156,8 @@ class BaseMultiqcModule(object):
                     )
 
             # Make a sample name from the filename
-            f["s_name"] = self.clean_s_name(f["fn"], f["root"])
+            f["sp_key"] = sp_key
+            f["s_name"] = self.clean_s_name(f["fn"], f)
             if filehandles or filecontents:
                 try:
                     # Custom content module can now handle image files
@@ -237,7 +258,7 @@ class BaseMultiqcModule(object):
             }
         )
 
-    def clean_s_name(self, s_name, root):
+    def clean_s_name(self, s_name, f=None, root=None, filename=None, seach_pattern_key=None):
         """Helper function to take a long file name and strip it
         back to a clean sample name. Somewhat arbitrary.
         :param s_name: The sample name to clean
@@ -246,6 +267,34 @@ class BaseMultiqcModule(object):
         :return: The cleaned sample name, ready to be used
         """
         s_name_original = s_name
+
+        # Backwards compatability - if f is a string, it's probably the root (this used to be the second argument)
+        if isinstance(f, str):
+            root = f
+            f = None
+
+        # Set string variables from f if it was a dict from find_log_files()
+        if isinstance(f, dict):
+            if "root" in f and root is None:
+                root = f["root"]
+            if "fn" in f and filename is None:
+                filename = f["fn"]
+            if "sp_key" in f and seach_pattern_key is None:
+                seach_pattern_key = f["sp_key"]
+
+        # For modules setting s_name from file contents, set s_name back to the filename
+        # (if wanted in the config)
+        if filename is not None and (
+            config.use_filename_as_sample_name is True
+            or (
+                isinstance(config.use_filename_as_sample_name, list)
+                and seach_pattern_key is not None
+                and seach_pattern_key in config.use_filename_as_sample_name
+            )
+        ):
+            s_name = filename
+
+        # Set root to empty string if not known
         if root is None:
             root = ""
 

@@ -31,6 +31,7 @@ class MultiqcModule(BaseMultiqcModule):
             anchor="ngsderive",
             href="https://github.com/stjudecloud/ngsderive",
             info="attempts to predict library information from next-generation sequencing data.",
+            # Can't find a DOI // doi=
         )
 
         self.strandedness = {}
@@ -135,11 +136,10 @@ class MultiqcModule(BaseMultiqcModule):
 
     def parse(self, sample_dict, found_file, subcommand, expected_header_count):
         kwargs = self.probe_file_for_dictreader_kwargs(io.StringIO(found_file["f"]), expected_header_count)
-        relevant_items = []
         for row in csv.DictReader(io.StringIO(found_file["f"]), **kwargs):
             if not row.get("File"):
                 continue
-            sample_name = self.clean_s_name(row.get("File"), found_file["root"])
+            sample_name = self.clean_s_name(row.get("File"), found_file)
             if sample_name in sample_dict:
                 log.debug("Duplicate sample name found! Overwriting: {}".format(sample_name))
 
@@ -147,6 +147,9 @@ class MultiqcModule(BaseMultiqcModule):
             self.add_data_source(f=found_file, s_name=sample_name)
 
     def add_strandedness_data(self):
+        # Write data to file
+        self.write_data_file(self.strandedness, "ngsderive_strandedness")
+
         data = {}
         for sample, strandedness in self.strandedness.items():
             data[sample] = {
@@ -189,6 +192,9 @@ class MultiqcModule(BaseMultiqcModule):
         )
 
     def add_instrument_data(self):
+        # Write data to file
+        self.write_data_file(self.instrument, "ngsderive_instrument")
+
         bgcols = {"low confidence": "#f8d7da", "medium confidence": "#fff3cd", "high confidence": "#d1e7dd"}
         cond_formatting_rules = {
             "pass": [{"s_eq": "high confidence"}],
@@ -263,6 +269,9 @@ class MultiqcModule(BaseMultiqcModule):
         )
 
     def add_readlen_data(self):
+        # Write data to file
+        self.write_data_file(self.readlen, "ngsderive_readlen")
+
         data = {}
         for sample, readlen in self.readlen.items():
             data[sample] = {
@@ -322,6 +331,9 @@ class MultiqcModule(BaseMultiqcModule):
         )
 
     def add_encoding_data(self):
+        # Write data to file
+        self.write_data_file(self.encoding, "ngsderive_encoding")
+
         general_data = {}
         for sample, encoding_data in self.encoding.items():
             general_data[sample] = {
@@ -342,6 +354,9 @@ class MultiqcModule(BaseMultiqcModule):
         self.general_stats_addcols(general_data, general_headers)
 
     def add_junctions_data(self):
+        # Write data to file
+        self.write_data_file(self.junctions, "ngsderive_junctions")
+
         data = {}
         for sample, junctions_data in self.junctions.items():
             data[sample] = {

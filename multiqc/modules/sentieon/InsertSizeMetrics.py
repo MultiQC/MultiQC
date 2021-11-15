@@ -45,7 +45,7 @@ def parse_reports(self):
             if s_name is None and "InsertSizeMetricAlgo" in line:
                 # Pull sample name from filename
                 s_name = os.path.basename(f["s_name"])
-                s_name = self.clean_s_name(s_name, f["root"])
+                s_name = self.clean_s_name(s_name, f)
 
             if s_name is not None:
                 if "InsertSizeMetricAlgo" in line and "#SentieonCommandLine" in line:

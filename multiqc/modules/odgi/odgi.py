@@ -28,6 +28,7 @@ class MultiqcModule(BaseMultiqcModule):
             anchor="odgi",
             href="https://github.com/pangenome/odgi",
             info="is an optimized dynamic graph/genome implementation, for efficient analysis and manipulation of pangenome graphs structured in the variation graph model.",
+            # Can't find a DOI // doi=
         )
 
         # Parse odgi stats data
@@ -113,7 +114,7 @@ class MultiqcModule(BaseMultiqcModule):
 
         # Clean up the sample name
         s_name = self.extract_sample_name(f["fn"])
-        s_name = self.clean_s_name(s_name, f["root"])
+        s_name = self.clean_s_name(s_name, f)
 
         # Add to the data sources file
         self.add_data_source(f, s_name)

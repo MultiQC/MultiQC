@@ -22,6 +22,7 @@ class MultiqcModule(BaseMultiqcModule):
             anchor="kaiju",
             href="http://kaiju.binf.ku.dk/",
             info="a fast and sensitive taxonomic classification for metagenomics.",
+            doi="10.1038/ncomms11257",
         )
 
         # Set up data structures
@@ -74,15 +75,15 @@ class MultiqcModule(BaseMultiqcModule):
         self.kaiju_stats_table()
         self.top_five_barplot()
 
-    def parse_kaiju2table_report(self, report):
+    def parse_kaiju2table_report(self, f):
         """Search a kaiju with a set of regexes"""
         parsed_data = {}
 
-        for l in report["f"]:
+        for l in f["f"]:
             if l.startswith("file\t"):
                 continue
             (s_file, pct, reads, taxon_id, taxon_names) = l.rstrip().split("\t")
-            s_name = self.clean_s_name(s_file, report["root"])
+            s_name = self.clean_s_name(s_file, f)
             if s_name not in parsed_data.keys():
                 parsed_data[s_name] = {"assigned": {}}
 

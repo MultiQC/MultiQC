@@ -115,6 +115,8 @@ def _parse_reports_by_type(self):
     data = dict()
 
     for file_meta in self.find_log_files("picard/sam_file_validation", filehandles=True):
+        self.add_data_source(file_meta, "ValidateSamFile")
+
         sample = file_meta["s_name"]
 
         if sample in data:

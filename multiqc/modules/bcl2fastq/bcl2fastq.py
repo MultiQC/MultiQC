@@ -19,14 +19,14 @@ class MultiqcModule(BaseMultiqcModule):
             name="bcl2fastq",
             anchor="bcl2fastq",
             href="https://support.illumina.com/sequencing/sequencing_software/bcl2fastq-conversion-software.html",
-            info="can be used to both demultiplex data and convert BCL files"
-            " to FASTQ file formats for downstream analysis.",
+            info="can be used to both demultiplex data and convert BCL files to FASTQ file formats for downstream analysis.",
+            # Can't find a DOI // doi=
         )
 
         # Gather data from all json files
         self.bcl2fastq_data = dict()
-        for myfile in self.find_log_files("bcl2fastq"):
-            self.parse_file_as_json(myfile)
+        for f in self.find_log_files("bcl2fastq"):
+            self.parse_file_as_json(f)
 
         # Collect counts by lane and sample (+source_files)
         self.bcl2fastq_bylane = dict()
@@ -136,15 +136,15 @@ class MultiqcModule(BaseMultiqcModule):
             ),
         )
 
-    def parse_file_as_json(self, myfile):
+    def parse_file_as_json(self, f):
         try:
-            content = json.loads(myfile["f"])
+            content = json.loads(f["f"])
         except ValueError:
-            log.warning("Could not parse file as json: {}".format(myfile["fn"]))
+            log.warning("Could not parse file as json: {}".format(f["fn"]))
             return
 
         # Clean / prepend directories to sample names
-        runId = self.clean_s_name(content["RunId"], myfile["root"])
+        runId = self.clean_s_name(content["RunId"], f)
 
         if runId not in self.bcl2fastq_data:
             self.bcl2fastq_data[runId] = dict()
@@ -180,7 +180,7 @@ class MultiqcModule(BaseMultiqcModule):
                     sample = demuxResult["SampleName"]
                 else:
                     sample = "{}-{}".format(demuxResult["SampleId"], demuxResult["SampleName"])
-                sample = self.clean_s_name(sample, myfile["root"])
+                sample = self.clean_s_name(sample, f)
                 if sample in run_data[lane]["samples"]:
                     log.debug(
                         "Duplicate runId/lane/sample combination found! Overwriting: {}, {}".format(
@@ -191,7 +191,7 @@ class MultiqcModule(BaseMultiqcModule):
                     "total": 0,
                     "total_yield": 0,
                     "perfectIndex": 0,
-                    "filename": os.path.join(myfile["root"], myfile["fn"]),
+                    "filename": os.path.join(f["root"], f["fn"]),
                     "yieldQ30": 0,
                     "qscore_sum": 0,
                 }

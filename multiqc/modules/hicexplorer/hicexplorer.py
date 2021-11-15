@@ -19,16 +19,17 @@ class MultiqcModule(BaseMultiqcModule):
             anchor="hicexplorer",
             href="https://hicexplorer.readthedocs.io",
             info=" addresses the common tasks of Hi-C analysis from processing to visualization.",
+            doi=["10.1093/nar/gky504", "10.1093/nar/gkaa220"],
         )
 
         self.hicexplorer_data = dict()
         for f in self.find_log_files("hicexplorer"):
-            if f["s_name"] != "QC_table":
+            if f["fn"] != "QC_table.txt":
                 # Parse the log file
                 parsed_data = self.parse_logs(f["f"])
                 # Build the sample ID
                 s_name = "{}_{}_{}".format(f["root"], f["s_name"], parsed_data["File"])
-                s_name = self.clean_s_name(s_name, f["root"])
+                s_name = self.clean_s_name(s_name, f)
                 # Save results
                 if s_name in self.hicexplorer_data:
                     log.debug("Duplicate sample name found! Overwriting: {}".format(s_name))

@@ -24,6 +24,7 @@ class MultiqcModule(BaseMultiqcModule):
             anchor="skewer",
             href="https://github.com/relipmoc/skewer",
             info="is an adapter trimming tool specially designed for processing next-generation sequencing (NGS) paired-end sequences.",
+            doi="10.1186/1471-2105-15-182",
         )
 
         self.skewer_data = dict()
@@ -123,7 +124,7 @@ class MultiqcModule(BaseMultiqcModule):
                 readlen_dist[read_length] = pct_at_rl
 
         if data["fq1"] is not None:
-            s_name = self.clean_s_name(data["fq1"], f["root"])
+            s_name = self.clean_s_name(data["fq1"], f)
             if s_name in self.skewer_readlen_dist:
                 log.debug("Duplicate sample name found in {}! Overwriting: {}".format(f["fn"], s_name))
             self.add_data_source(f, s_name)
@@ -131,7 +132,7 @@ class MultiqcModule(BaseMultiqcModule):
             self.skewer_readlen_dist[s_name] = readlen_dist
 
         if data["fq2"] is not None:
-            s_name = self.clean_s_name(data["fq1"], f["root"])
+            s_name = self.clean_s_name(data["fq1"], f)
             if s_name in self.skewer_readlen_dist:
                 log.debug("Duplicate sample name found in {}! Overwriting: {}".format(f["fn"], s_name))
             self.add_data_source(f, s_name)

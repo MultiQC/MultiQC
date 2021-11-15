@@ -26,6 +26,9 @@ class plotPCAMixin:
         self.deeptools_plotPCAData = self.ignore_samples(self.deeptools_plotPCAData)
 
         if len(self.deeptools_plotPCAData) > 0:
+            # Write data to file
+            self.write_data_file(self.deeptools_plotPCAData, "deeptools_plot_PCA")
+
             config = {
                 "id": "deeptools_pca_plot",
                 "title": "deeptools: PCA Plot",
@@ -65,7 +68,7 @@ class plotPCAMixin:
             elif cols[0] == "Component":
                 for c in cols[1 : (len(cols) - 1)]:
                     c = str(c).strip("'")
-                    s_name = self.clean_s_name(c, f["root"])
+                    s_name = self.clean_s_name(c, f)
                     d[s_name] = {}
                     samples.append(s_name)
             else:

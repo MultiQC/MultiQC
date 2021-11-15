@@ -405,6 +405,29 @@ def data_sources_tofile():
             print(body.encode("utf-8", "ignore").decode("utf-8"), file=f)
 
 
+def dois_tofile():
+    """Find all DOIs listed in report sections and write to a file"""
+    # Collect DOIs
+    dois = {"MultiQC": ["10.1093/bioinformatics/btw354"]}
+    for mod in modules_output:
+        if mod.doi is not None and mod.doi != []:
+            dois[mod.anchor] = mod.doi
+    # Write to a file
+    fn = "multiqc_citations.{}".format(config.data_format_extensions[config.data_format])
+    with io.open(os.path.join(config.data_dir, fn), "w", encoding="utf-8") as f:
+        if config.data_format == "json":
+            jsonstr = json.dumps(dois, indent=4, ensure_ascii=False)
+            print(jsonstr.encode("utf-8", "ignore").decode("utf-8"), file=f)
+        elif config.data_format == "yaml":
+            yaml.dump(dois, f, default_flow_style=False)
+        else:
+            body = ""
+            for mod, dois in dois.items():
+                for doi in dois:
+                    body += "{}{} # {}\n".format(doi, " " * (50 - len(doi)), mod)
+            print(body.encode("utf-8", "ignore").decode("utf-8"), file=f)
+
+
 def save_htmlid(html_id, skiplint=False):
     """Take a HTML ID, sanitise for HTML, check for duplicates and save.
     Returns sanitised, unique ID"""

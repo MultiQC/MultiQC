@@ -31,6 +31,7 @@ class MultiqcModule(BaseMultiqcModule):
             identify transcript boundaries, and discover novel
             transcripts such as small RNAs.
             """,
+            doi=["10.1016/j.ymeth.2019.03.026", "10.1186/s13059-014-0572-2", "10.1093/nar/gkt444"],
         )
 
         # Set up vars
@@ -106,14 +107,14 @@ class MultiqcModule(BaseMultiqcModule):
                     results = {name: 0 for name in stats_index}
 
                 s_name = line.split(":", 1)[1].strip()
-                s_name = self.clean_s_name(s_name, f["root"])
+                s_name = self.clean_s_name(s_name, f)
 
             elif line.startswith("Aligning sequencing reads from files:"):
                 if s_name and s_name not in results_by_s_name:
                     results_by_s_name[s_name] = results
                     results = {name: 0 for name in stats_index}
                 s_name = lines[i + 1].strip()
-                s_name = self.clean_s_name(s_name, f["root"])
+                s_name = self.clean_s_name(s_name, f)
 
             # Get total number of reads read by rockhopper
             if line.startswith("Total reads:"):

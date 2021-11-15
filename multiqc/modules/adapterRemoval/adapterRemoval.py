@@ -24,6 +24,7 @@ class MultiqcModule(BaseMultiqcModule):
             target="Adapter Removal",
             href="https://github.com/MikkelSchubert/adapterremoval",
             info=" rapid adapter trimming, identification, and read merging ",
+            doi=["10.1186/s13104-016-1900-2", "10.1186/1756-0500-5-337"],
         )
 
         self.__read_type = None
@@ -52,6 +53,7 @@ class MultiqcModule(BaseMultiqcModule):
                 continue
             if parsed_data is not None:
                 self.adapter_removal_data[self.s_name] = parsed_data
+                self.add_data_source(f)
 
         # Filter to strip out ignored sample names
         self.adapter_removal_data = self.ignore_samples(self.adapter_removal_data)

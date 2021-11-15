@@ -28,6 +28,7 @@ class MultiqcModule(BaseMultiqcModule):
             info="is a platform-independent application to facilitate the quality"
             " control of alignment sequencing data and its derivatives like"
             " feature counts.",
+            doi=["10.1093/bioinformatics/btv566", "10.1093/bioinformatics/bts503"],
         )
 
         # Initialise the submodules
@@ -58,7 +59,7 @@ class MultiqcModule(BaseMultiqcModule):
     # Helper functions
     def get_s_name(self, f):
         s_name = os.path.basename(os.path.dirname(f["root"]))
-        s_name = self.clean_s_name(s_name, f["root"])
+        s_name = self.clean_s_name(s_name, f)
         if s_name.endswith(".qc"):
             s_name = s_name[:-3]
         return s_name

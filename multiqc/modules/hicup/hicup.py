@@ -23,7 +23,8 @@ class MultiqcModule(BaseMultiqcModule):
             name="HiCUP",
             anchor="hicup",
             href="http://www.bioinformatics.babraham.ac.uk/projects/hicup/",
-            info="(Hi-C User Pipeline) is a tool for mapping and performing " "quality control on Hi-C data.",
+            info="(Hi-C User Pipeline) is a tool for mapping and performing quality control on Hi-C data.",
+            doi="10.12688/f1000research.7334.1",
         )
 
         # Find and load any HiCUP summary reports
@@ -75,7 +76,7 @@ class MultiqcModule(BaseMultiqcModule):
                     return None
                 header = s[1:]
             else:
-                s_name = self.clean_s_name(s[0], f["root"])
+                s_name = self.clean_s_name(s[0], f)
                 if s_name.startswith("HiCUP_output/"):
                     s_name = s_name[13:]
                 parsed_data = {}

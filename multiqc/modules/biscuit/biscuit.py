@@ -31,10 +31,8 @@ class MultiqcModule(BaseMultiqcModule):
             name="BISCUIT",
             anchor="biscuit",
             href="https://github.com/huishenlab/biscuit",
-            info="""
-                is a tool to map bisulfite converted DNA sequence reads and
-                determine cytosine methylation states.
-            """,
+            info="is a tool to map bisulfite converted DNA sequence reads and determine cytosine methylation states.",
+            # Can't find a DOI // doi=
         )
 
         # Set up data structures
@@ -109,7 +107,7 @@ class MultiqcModule(BaseMultiqcModule):
                 s_name = f["fn"]
                 for suffix in file_suffixes:
                     s_name = s_name.replace(suffix, "")
-                s_name = self.clean_s_name(s_name, f["root"])
+                s_name = self.clean_s_name(s_name, f)
 
                 # Add source file to multiqc_sources.txt
                 self.add_data_source(f, s_name=s_name, section=k)
@@ -131,6 +129,9 @@ class MultiqcModule(BaseMultiqcModule):
 
         # Basic stats table
         self.biscuit_stats_table()
+
+        # Write data to file
+        self.write_data_file(self.mdata, "biscuit")
 
         # Make report sections
         for k in self.mdata:

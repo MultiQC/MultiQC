@@ -41,7 +41,7 @@ class StatsReportMixin:
                 s = line.split("\t")
                 # Get the sample names - one per 'set'
                 if s[0] == "ID":
-                    s_name = self.clean_s_name(s[2], f["root"])
+                    s_name = self.clean_s_name(s[2], f)
                     s_names.append(s_name)
                     if s_name in self.bcftools_stats:
                         log.debug("Duplicate sample name found! Overwriting: {}".format(s_name))

@@ -27,7 +27,7 @@ def parse_reports(self):
             log.error(f"Could not parse file '{f['fn']}'")
             continue
 
-        s_name = contents["Bam_file"]
+        s_name = self.clean_s_name(contents["Bam_file"], f)
         contents.pop("Bam_file")
         self.tin_data[s_name] = contents
 

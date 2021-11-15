@@ -29,9 +29,10 @@ class MultiqcModule(BaseMultiqcModule):
             name="Cutadapt",
             anchor="cutadapt",
             href="https://cutadapt.readthedocs.io/",
-            info="is a tool to find and remove adapter sequences, primers, poly-A"
-            "tails and other types of unwanted sequence from your high-throughput"
-            " sequencing reads.",
+            info="""is a tool to find and remove adapter sequences, primers, poly-A
+                    tails and other types of unwanted sequence from your high-throughput
+                    sequencing reads.""",
+            doi="10.14806/ej.17.1.200",
         )
 
         # Find and load any Cutadapt reports
@@ -125,12 +126,15 @@ class MultiqcModule(BaseMultiqcModule):
                     parsing_version = "1.6"
             # Get sample name from end of command line params
             if l.startswith("Command line parameters"):
-                s_name = l.split()[-1]
+                for cli in reversed(l.split()):
+                    if not cli.startswith("-"):
+                        s_name = cli
+                        break
                 # Manage case where sample name is '-' (reading from stdin)
                 if s_name == "-":
                     s_name = f["s_name"]
                 else:
-                    s_name = self.clean_s_name(s_name, f["root"])
+                    s_name = self.clean_s_name(s_name, f)
                 if s_name in self.cutadapt_data:
                     log.debug("Duplicate sample name found! Overwriting: {}".format(s_name))
                 self.cutadapt_data[s_name] = dict()

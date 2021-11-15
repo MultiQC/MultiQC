@@ -27,6 +27,7 @@ class MultiqcModule(BaseMultiqcModule):
             target="Bowtie 1",
             href="http://bowtie-bio.sourceforge.net/",
             info="is an ultrafast, memory-efficient short read aligner.",
+            doi="10.1186/gb-2009-10-3-r25",
         )
 
         # Find and load any Bowtie reports
@@ -69,7 +70,7 @@ class MultiqcModule(BaseMultiqcModule):
             if "bowtie" in l and "q.gz" in l:
                 fqmatch = re.search(r"([^\s,]+\.f(ast)?q.gz)", l)
                 if fqmatch:
-                    s_name = self.clean_s_name(fqmatch.group(1), f["root"])
+                    s_name = self.clean_s_name(fqmatch.group(1), f)
                     log.debug("Found a bowtie command, updating sample name to '{}'".format(s_name))
 
             # End of log, reset in case there is another in this file

@@ -21,6 +21,7 @@ class MultiqcModule(BaseMultiqcModule):
             target="SNPsplit",
             href="https://www.bioinformatics.babraham.ac.uk/projects/SNPsplit/",
             info="A tool to determine allele-specific alignments from high-throughput sequencing experiments that have been aligned to N-masked genomes",
+            doi="10.12688/f1000research.9037.2",
         )
 
         self.snpsplit_data = dict()
@@ -49,7 +50,7 @@ class MultiqcModule(BaseMultiqcModule):
         self.allele_sorting_section()
 
     def _save_parsed(self, parsed, f):
-        s_name = self.clean_s_name(parsed[0], f["root"])
+        s_name = self.clean_s_name(parsed[0], f)
         if s_name in self.snpsplit_data:
             log.debug("Replacing duplicate sample {}".format(s_name))
         self.snpsplit_data[s_name] = parsed[1]

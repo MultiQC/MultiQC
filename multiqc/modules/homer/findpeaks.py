@@ -66,7 +66,7 @@ class FindPeaksReportMixin:
                 except ValueError:
                     parsed_data[k] = v
                 if k == "tag_directory":
-                    s_name = self.clean_s_name(os.path.basename(v), os.path.dirname(v))
+                    s_name = self.clean_s_name(os.path.basename(v), f, root=os.path.dirname(v))
 
         if len(parsed_data) > 0:
             if s_name in self.homer_findpeaks:
