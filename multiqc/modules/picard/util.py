@@ -47,6 +47,7 @@ def read_histogram(self, program_key, program_name, headers, formats):
 
     # Go through logs and find Metrics
     for f in self.find_log_files(program_key, filehandles=True):
+        self.add_data_source(f, section="Histogram")
         lines = iter(f["f"])
 
         # read through the header of the file to obtain the
@@ -87,4 +88,9 @@ def read_histogram(self, program_key, program_name, headers, formats):
         if sample_data:
             all_data[s_name] = sample_data
 
-    return self.ignore_samples(all_data)
+    data = self.ignore_samples(all_data)
+
+    # Write data to file
+    self.write_data_file(data, "picard_histogram")
+
+    return data

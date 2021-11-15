@@ -27,6 +27,7 @@ class MultiqcModule(BaseMultiqcModule):
             anchor="kallisto",
             href="http://pachterlab.github.io/kallisto/",
             info="is a program for quantifying abundances of transcripts from RNA-Seq data.",
+            doi="10.1038/nbt.3519",
         )
 
         # Find and load any Kallisto reports

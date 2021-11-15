@@ -31,6 +31,7 @@ class MultiqcModule(BaseMultiqcModule):
             identify transcript boundaries, and discover novel
             transcripts such as small RNAs.
             """,
+            doi=["10.1016/j.ymeth.2019.03.026", "10.1186/s13059-014-0572-2", "10.1093/nar/gkt444"],
         )
 
         # Set up vars

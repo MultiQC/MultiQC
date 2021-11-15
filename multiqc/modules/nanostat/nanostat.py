@@ -50,6 +50,7 @@ class MultiqcModule(BaseMultiqcModule):
             anchor="nanostat",
             href="https://github.com/wdecoster/nanostat/",
             info="various statistics from a long read sequencing dataset in fastq, bam or sequencing summary format.",
+            doi="10.1093/bioinformatics/bty149",
         )
 
         # Find and load any NanoStat reports

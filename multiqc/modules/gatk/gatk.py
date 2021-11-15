@@ -30,6 +30,7 @@ class MultiqcModule(BaseMultiqcModule, BaseRecalibratorMixin, VariantEvalMixin):
             target="GATK",
             href="https://www.broadinstitute.org/gatk/",
             info=" is a toolkit offering a wide variety of tools with a primary focus on variant discovery and genotyping.",
+            doi=["10.1101/201178", "10.1002/0471250953.bi1110s43", "10.1038/ng.806", "10.1101/gr.107524.110"],
         )
 
         # Set up class objects to hold parsed data

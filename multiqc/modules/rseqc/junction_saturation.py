@@ -50,6 +50,11 @@ def parse_reports(self):
 
     if len(self.junction_saturation_all) > 0:
 
+        # Write data to file
+        self.write_data_file(self.junction_saturation_all, "rseqc_junction_saturation_all")
+        self.write_data_file(self.junction_saturation_known, "junction_saturation_known")
+        self.write_data_file(self.junction_saturation_novel, "junction_saturation_novel")
+
         # Add line graph to section
         pconfig = {
             "id": "rseqc_junction_saturation_plot",
