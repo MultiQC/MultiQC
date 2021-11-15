@@ -25,6 +25,7 @@ class MultiqcModule(BaseMultiqcModule):
             anchor="varscan",
             href="http://dkoboldt.github.io/varscan/",
             info="variant detection in massively parallel sequencing data",
+            doi=["10.1101/gr.129684.111", "10.1093/bioinformatics/btp373"],
         )
 
         # Find and load VarScan2 reports - there are 3 different ones, but all with identical content (differentiated by header)

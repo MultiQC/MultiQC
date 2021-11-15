@@ -226,6 +226,7 @@ def _get_table_headers(data):
             "PCT_USABLE_BASES_ON_TARGET",
             "PF_BASES_ALIGNED",
             "PF_READS",
+            "PCT_SELECTED_BASES",
             "PF_UNIQUE_READS",
             "PF_UQ_BASES_ALIGNED",
             "PF_UQ_READS_ALIGNED",

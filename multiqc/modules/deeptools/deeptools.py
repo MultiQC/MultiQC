@@ -41,6 +41,7 @@ class MultiqcModule(
             target="deepTools",
             href="http://deeptools.readthedocs.io",
             info=" is a suite of tools to process and analyze deep sequencing data.",
+            doi="10.1093/nar/gkw257",
         )
 
         # Set up class objects to hold parsed data

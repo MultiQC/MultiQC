@@ -25,9 +25,9 @@ class MultiqcModule(BaseMultiqcModule, SambambaMarkdupMixin):
         super(MultiqcModule, self).__init__(
             name="Sambamba",
             anchor="sambamba",
-            target="sambamba",
             href="https://lomereiter.github.io/sambamba/",
-            info=(" is a suite of programs for interacting with high-throughput sequencing data."),
+            info=" is a suite of programs for interacting with high-throughput sequencing data.",
+            doi="10.1093/bioinformatics/btv098",
         )
 
         # Set up class objects to hold parsed data

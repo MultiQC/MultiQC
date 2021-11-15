@@ -23,12 +23,15 @@ class TsTvByQualMixin:
                     val = float("nan")
                 d[key] = val
             self.vcftools_tstv_by_qual[f["s_name"]] = d
+            self.add_data_source(f, "TsTv by quality")
 
         # Filter out ignored sample names
         self.vcftools_tstv_by_qual = self.ignore_samples(self.vcftools_tstv_by_qual)
 
         if len(self.vcftools_tstv_by_qual) == 0:
             return 0
+        # Write data to file
+        self.write_data_file(self.vcftools_tstv_by_qual, "vcftools_tstv_by_qual")
 
         pconfig = {
             "id": "vcftools_tstv_by_qual",
