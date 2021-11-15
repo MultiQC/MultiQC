@@ -41,6 +41,10 @@ class MultiqcModule(BaseMultiqcModule):
         if not self.checkqc_content:
             raise UserWarning
 
+        # Data is either strongly hierarchical / ordered as JSON input
+        # or it's identical to General Stats / plots and exported anyway.
+        # So we will skip calling self.write_data_file
+
     def parse_json(self, f):
         self.add_general_stats(self.checkqc_content[f["f"]], f)
         self.add_sections(self.checkqc_content[f["f"]], f)
