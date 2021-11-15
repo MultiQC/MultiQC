@@ -4,7 +4,6 @@
 
 ### MultiQC updates
 
-- Fixed fastp `%PF` ([#1574](https://github.com/ewels/MultiQC/issues/1574))
 - Added option to customise default plot height in plot config ([#1432](https://github.com/ewels/MultiQC/issues/1432))
 - Added `--no-report` flag to skip report generation ([#1462](https://github.com/ewels/MultiQC/issues/1462))
 - Added support for priting tool DOI in report sections ([#1177](https://github.com/ewels/MultiQC/issues/1177))
@@ -30,6 +29,8 @@
   - Fixed module failing when writing data to file if there is a `/` in the section name ([#1515](https://github.com/ewels/MultiQC/issues/1515))
 - **DRAGEN**
   - Fixed bug in sample name regular expression ([#1537](https://github.com/ewels/MultiQC/pull/1537))
+- **Fastp**
+    - Fixed Fastp `%PF` ([#1574](https://github.com/ewels/MultiQC/issues/1574))
 - **FastQC**
   - Fixed several bugs occuring when FastQC sections are skipped ([#1488](https://github.com/ewels/MultiQC/issues/1488), [#1533](https://github.com/ewels/MultiQC/issues/1533))
 - **Qualimap**
