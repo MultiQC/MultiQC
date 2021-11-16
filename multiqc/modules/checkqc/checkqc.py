@@ -20,7 +20,9 @@ handlers = (
 )
 
 import sys
+
 print(sys.path)
+
 
 class MultiqcModule(BaseMultiqcModule):
     def __init__(self):
@@ -63,7 +65,7 @@ class MultiqcModule(BaseMultiqcModule):
             }
             self.general_stats_addcols(general_stats, headers)
 
-        self.write_data_file(self.checkqc_data, 'multiqc_checkqc')
+        self.write_data_file(self.checkqc_data, "multiqc_checkqc")
 
         self.add_sections()
 
@@ -83,7 +85,6 @@ class MultiqcModule(BaseMultiqcModule):
         if "UnidentifiedIndexHandler" in content:
             self.get_unidentified_index_data(content["UnidentifiedIndexHandler"], run, f)
         return general_stats
-        
 
     def _get_unique_runname(self, content):
         base_run_name = content["run_summary"]["instrument_and_reagent_type"]
@@ -202,7 +203,6 @@ class MultiqcModule(BaseMultiqcModule):
                 sample = self.clean_s_name(lane, f)
             else:
                 sample = self.clean_s_name(f"{lane} ({run})", f)
-
 
             lane_pf = issue["data"]["lane_pf"]
             threshold = issue["data"]["threshold"] * pow(10, 6)
@@ -343,7 +343,6 @@ class MultiqcModule(BaseMultiqcModule):
                 sample = self.clean_s_name(f"{lane} - {read}", f)
             else:
                 sample = self.clean_s_name(f"{lane} - {read} ({run})", f)
-
 
             if self.is_ignore_sample(sample):
                 continue
@@ -510,7 +509,7 @@ class MultiqcModule(BaseMultiqcModule):
         data = {}
         for (idx, _) in sorted_idx:
             sample = self.clean_s_name(idx, f)
-            
+
             if self.is_ignore_sample(sample):
                 continue
             self.add_data_source(f, sample)
@@ -537,7 +536,7 @@ class MultiqcModule(BaseMultiqcModule):
             run (str): name of sequencing run
         """
         data = self.checkqc_data["UnidentifiedIndexHandler"]
-        
+
         lanes = set()
         for sample in data:
             for lane in data[sample]:
