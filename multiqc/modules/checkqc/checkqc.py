@@ -19,10 +19,6 @@ handlers = (
     "UndeterminedPercentageHandler",
 )
 
-import sys
-
-print(sys.path)
-
 
 class MultiqcModule(BaseMultiqcModule):
     def __init__(self):
