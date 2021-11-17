@@ -29,9 +29,10 @@ class MultiqcModule(BaseMultiqcModule):
             name="Cutadapt",
             anchor="cutadapt",
             href="https://cutadapt.readthedocs.io/",
-            info="is a tool to find and remove adapter sequences, primers, poly-A"
-            "tails and other types of unwanted sequence from your high-throughput"
-            " sequencing reads.",
+            info="""is a tool to find and remove adapter sequences, primers, poly-A
+                    tails and other types of unwanted sequence from your high-throughput
+                    sequencing reads.""",
+            doi="10.14806/ej.17.1.200",
         )
 
         # Find and load any Cutadapt reports

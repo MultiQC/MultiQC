@@ -749,6 +749,91 @@ tbody .sorthandle {
   width: 100%;
   z-index: -10;
 }
+@media print {
+  /* Hide the side-navigation and toolbox */
+  .side-nav-wrapper,
+  .mqc-toolbox {
+    display: none;
+  }
+  .mainpage {
+    padding: 20px;
+  }
+  /* Don't limit the height of the sources */
+  #analysis_dirs_wrapper {
+    max-height: none !important;
+  }
+  /* Expand long tables */
+  .mqc-table-expand {
+    display: none;
+  }
+  .mqc-table-responsive.mqc-table-collapse {
+    max-height: none !important;
+  }
+  .mqc_table thead {
+    transform: none !important;
+  }
+  /* keep section titles with the first bit of content, and try to keep sections together */
+  .mqc-module-section-first,
+  .mqc-section {
+    page-break-inside: avoid;
+  }
+  /* make sure table cell contents show up */
+  .mqc_table .wrapper {
+    z-index: 0;
+  }
+  /* no use printing a useless expand button */
+  .mqc-table-expand {
+    display: none;
+  }
+  .mqc-section-plot .text-info {
+    display: none;
+  }
+  /* make sure logos aren't dominantly huge */
+  .multiqc_logo,
+  .custom_logo {
+    width: 200px;
+  }
+  /* print cell background colors in table */
+  td,
+  span.bar {
+    -webkit-print-color-adjust: exact;
+    color-adjust: exact;
+  }
+  /* tidy up user-provided report header info */
+  .dl-horizontal {
+    display: flex;
+    flex-wrap: wrap;
+  }
+  /* ensure kv pairs take up a whole row */
+  .dl-horizontal dt {
+    flex: 0 0 34%;
+    float: none;
+    width: 300px;
+    font-weight: 900; /* bold the key in the kv pair */
+  }
+  .dl-horizontal dd {
+    flex: 1 0 34%; /* let the val grow to fill the space */
+    margin-left: 0;
+  }
+  /* no need to print buttons */
+  button.btn-help {
+    display: none;
+  }
+  /* printed link text is fairly ugly */
+  a[href]:after {
+    content: none !important;
+  }
+  .table.mqc_table {
+    table-layout: fixed;
+  }
+  .mqc_table th {
+    white-space: normal; /* make sure that table header text can wrap */
+    font-weight: 900; /* and that table headers are bolded */
+  }
+  .table > thead > tr > th {
+    vertical-align: top; /* looks better when all the table-headers are top-aligned, especially when some wrap */
+  }
+}
 .mqc_table .bar {
   display: block;
   position: absolute;

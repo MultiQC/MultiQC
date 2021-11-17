@@ -77,6 +77,7 @@ class MultiqcModule(BaseMultiqcModule):
             anchor="mosdepth",
             href="https://github.com/brentp/mosdepth",
             info="performs fast BAM/CRAM depth calculation for WGS, exome, or targeted sequencing",
+            doi="10.1093/bioinformatics/btx699",
         )
 
         dist_data, cov_data, xmax, perchrom_avg_data = self.parse_cov_dist()
@@ -93,6 +94,9 @@ class MultiqcModule(BaseMultiqcModule):
         log.info("Found {} reports".format(num_samples))
 
         if dist_data:
+            # Write data to file
+            self.write_data_file(dist_data, "mosdepth_dist")
+
             self.add_section(
                 name="Coverage distribution",
                 anchor="mosdepth-coverage-dist",
@@ -113,6 +117,9 @@ class MultiqcModule(BaseMultiqcModule):
                 ),
             )
         if cov_data:
+            # Write data to file
+            self.write_data_file(cov_data, "mosdepth_cov")
+
             self.add_section(
                 name="Coverage plot",
                 anchor="mosdepth-coverage-cov",
@@ -133,6 +140,9 @@ class MultiqcModule(BaseMultiqcModule):
                 ),
             )
         if perchrom_avg_data:
+            # Write data to file
+            self.write_data_file(perchrom_avg_data, "mosdepth_perchrom")
+
             num_contigs = max([len(x.keys()) for x in perchrom_avg_data.values()])
             if num_contigs > 1:
                 perchrom_plot = linegraph.plot(

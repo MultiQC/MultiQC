@@ -18,6 +18,7 @@ class Relatedness2Mixin:
             m = _Relatedness2Matrix(f)
             if m.data and m.x_labels and m.y_labels:
                 matrices[f["s_name"]] = m
+            self.add_data_source(f, section="Relatedness")
 
         matrices = self.ignore_samples(matrices)
 
@@ -25,6 +26,9 @@ class Relatedness2Mixin:
             return 0
 
         log.info("Found {} valid relatedness2 matrices".format(len(matrices)))
+
+        # The matrices cannot be written to a file in their current format
+        # self.write_data_file(matrices, "vcftools_relatedness")
 
         helptext = """
         `RELATEDNESS_PHI` gives a relatedness score between two samples. A higher score indicates a higher degree of
