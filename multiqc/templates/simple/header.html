@@ -11,12 +11,12 @@ No offer to play a YouTube tutorial video and so on.
     {% if config.custom_logo is not none %}
       <div class="pull-right">
       {{ '<a href="'+config.custom_logo_url+'" target="_blank">' if config.custom_logo_url is not none }}
-        <img src="data:image/png;base64,{{ include_file(config.custom_logo, b64=True) }}" title="{{ config.custom_logo_title if config.custom_logo_title is not none }}">
+        <img src="data:image/png;base64,{{ include_file(config.custom_logo, b64=True) }}" title="{{ config.custom_logo_title if config.custom_logo_title is not none }}" class="custom_logo">
       {{ '</a>' if config.custom_logo_url is not none }}
       </div>
     {% endif %}
     <a href="http://multiqc.info" target="_blank">
-        <img src="data:image/png;base64,{{ include_file('assets/img/MultiQC_logo.png', b64=True) }}" title="MultiQC">
+        <img src="data:image/png;base64,{{ include_file('assets/img/MultiQC_logo.png', b64=True) }}" title="MultiQC" class="multiqc_logo">
     </a>
 </h1>
 {% if config.title is not none or config.subtitle is not none %}
@@ -47,14 +47,24 @@ No offer to play a YouTube tutorial video and so on.
 </div>
 {% endif %}
 
+{% if config.show_analysis_time or config.show_analysis_paths %}
 <div id="analysis_dirs_wrapper">
-  <p>Report generated on {{ config.creation_date }} based on data in:<br>
-  {% if config.analysis_dir | length == 1 %}<code class="mqc_analysis_path">{{ config.analysis_dir[0] }}</code>
-  {% else %}
-  <ul>
-    {% for d in config.analysis_dir %}
-    <li><code class="mqc_analysis_path">{{ d }}</code></li>
-    {%  endfor %}
-  </ul>
+  <p>Report
+  {% if config.show_analysis_time %}
+    generated on {{ config.creation_date }}
+  {% endif %}
+  {% if config.show_analysis_paths %}
+    based on data in:
+    {% if config.analysis_dir | length == 1 %}
+      <code class="mqc_analysis_path">{{ config.analysis_dir[0] }}</code></p>
+    {% else %}
+      </p>
+      <ul>
+        {% for d in config.analysis_dir %}
+        <li><code class="mqc_analysis_path">{{ d }}</code></li>
+        {%  endfor %}
+      </ul>
+    {% endif %}
   {% endif %}
 </div>
+{% endif %}
