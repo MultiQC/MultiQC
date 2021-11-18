@@ -103,18 +103,21 @@ class MultiqcModule(BaseMultiqcModule):
             "description": "Number of CCS where both primers have been detected",
             "suffix": " fl",
             'format': '{:,}',
+            'scale': 'spectral',
         }
         headers["num_reads_flnc"] = {
             "title": "Number of non chimeric full length reads",
             "description": "Number of non chimeric CCS where both primers have been detected",
             "suffix": " flnc",
             'format': '{:,}',
+            'scale': 'RdYlGn',
         }
         headers["num_reads_flnc_polya"] = {
             "title": "Number of poly(A) free non chimeric full length reads",
             "description": "Number of non chimeric CCS where both primers have been detected and the poly(A) tail has been removed",
             "suffix": " flnc_polya",
             'format': '{:,}',
+            'scale': 'spectral',
         }
         self.general_stats_addcols(gstats_data, headers)
 
@@ -154,18 +157,22 @@ class MultiqcModule(BaseMultiqcModule):
         headers['min_fivelen'] = {
             'title': "Min 5' primer length",
             'description': "The minimum 5' primer length in base pair",
+            'scale': 'spectral',
         }
         headers['mean_fivelen'] = {
             'title': "Mean 5' primer length",
             'description': "The mean 5' primer length in base pair",
+            'scale': 'RdYlGn',
         }
         headers['std_fivelen'] = {
             'title': "Std of 5' primer length",
             'description': "The standard deviation of 5' primer length in base pair",
+            'scale': 'spectral',
         }
         headers['max_fivelen'] = {
             'title': "Max 5' primer length",
             'description': "The maximum 5' primer length in base pair",
+            'scale': 'RdYlGn',
         }
 
         config = {
@@ -198,18 +205,22 @@ class MultiqcModule(BaseMultiqcModule):
         headers['min_threelen'] = {
             'title': "Min 3' primer length",
             'description': "The minimum 3' primer length in base pair",
+            'scale': 'spectral',
         }
         headers['mean_threelen'] = {
             'title': "Mean 3' primer length",
             'description': "The mean 3' primer length in base pair",
+            'scale': 'RdYlGn',
         }
         headers['std_threelen'] = {
             'title': "Std of 3' primer length",
             'description': "The standard deviation of 3' primer length in base pair",
+            'scale': 'spectral',
         }
         headers['max_threelen'] = {
             'title': "Max 3' primer length",
             'description': "The maximum 3' primer length in base pair",
+            'scale': 'RdYlGn',
         }
 
         config = {
@@ -242,18 +253,22 @@ class MultiqcModule(BaseMultiqcModule):
             headers['min_polyAlen'] = {
                 'title': "Min polyA tail length",
                 'description': "The minimum polyA tail length in base pair",
+                'scale': 'spectral',
             }
             headers['mean_polyAlen'] = {
                 'title': "Mean polyA tail length",
                 'description': "The mean polyA tail length in base pair",
+                'scale': 'RdYlGn',
             }
             headers['std_polyAlen'] = {
                 'title': "Std of polyA tail length",
                 'description': "The standard deviation of polyA tail length in base pair",
+                'scale': 'spectral',
             }
             headers['max_polyAlen'] = {
                 'title': "Max polyA tail length",
                 'description': "The maximum polyA tail length in base pair",
+                'scale': 'RdYlGn',
             }
 
             config = {
@@ -286,18 +301,22 @@ class MultiqcModule(BaseMultiqcModule):
             headers['min_insertlen'] = {
                 'title': "Min insert length",
                 'description': "The minimum insert length in base pair",
+                'scale': 'spectral',
             }
             headers['mean_insertlen'] = {
                 'title': "Mean insert length",
                 'description': "The mean insert length in base pair",
+                'scale': 'RdYlGn',
             }
             headers['std_insertlen'] = {
                 'title': "Std of insert length",
                 'description': "The standard deviation of insert length in base pair",
+                'scale': 'spectral',
             }
             headers['max_insertlen'] = {
                 'title': "Max insert length",
                 'description': "The maximum insert length in base pair",
+                'scale': 'RdYlGn',
             }
 
             config = {
