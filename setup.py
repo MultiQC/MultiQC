@@ -134,6 +134,7 @@ setup(
             "hops = multiqc.modules.hops:MultiqcModule",
             "htseq = multiqc.modules.htseq:MultiqcModule",
             "interop = multiqc.modules.interop:MultiqcModule",
+            "isoseq3_refine = multiqc.modules.isoseq3_refine:MultiqcModule",
             "ivar = multiqc.modules.ivar:MultiqcModule",
             "jcvi = multiqc.modules.jcvi:MultiqcModule",
             "jellyfish = multiqc.modules.jellyfish:MultiqcModule",

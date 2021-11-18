@@ -6,6 +6,9 @@
 
 ### New Modules
 
+- **isoseq3 refine** 
+  - Isoseq3 refine is a PacBio tool that refine full length highly accurate single-molecule consensus reads (HiFi Reads).
+
 ### Module updates
 
 - **RSeQC**
