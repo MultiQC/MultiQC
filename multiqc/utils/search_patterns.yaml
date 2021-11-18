@@ -355,7 +355,7 @@ isoseq3_refine/json:
   contents: '"num_reads_fl"'
   fn: "*.json"
 isoseq3_refine/csv:
-  contents: 'id,strand,fivelen,threelen,polyAlen,insertlen,primer'
+  contents: "id,strand,fivelen,threelen,polyAlen,insertlen,primer"
   fn: "*.csv"
 ivar/trim:
   contents: "Number of references"
