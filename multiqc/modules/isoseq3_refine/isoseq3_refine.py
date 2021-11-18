@@ -44,51 +44,7 @@ class MultiqcModule(BaseMultiqcModule):
 
         self.write_data_file(self.isoseq3_refine_data, "multiqc_isoseq3_refine_report")
         self.add_general_stats()
-
-        # self.add_section(
-        #     name="Full length CCS report",
-        #     anchor="fl-report",
-        #     description="Detail the CCS selected and trimmed by isoseq3 refine",
-        #     helptext="""
-        #              _fl / Full Length_
-        #              * Both primers have been detected and trimmed from CCS
-        #              _flnc / Full Length Non Chimeric_
-        #              * Both primers have been detected and trimmed from CCS
-        #              * No chimeric structure has been detected (ex: primer inside the CCS)
-        #              _flnc_polya / Full Length Non Chimeric no poly(A) tail_
-        #              * Both primers have been detected and trimmed from CCS
-        #              * No chimeric structure has been detected (ex: primer inside the CCS)
-        #              * The poly(A) tails has been detected and trimmed
-        #             """,
-        #     plot=table.plot(self.isoseq3_refine_data_json),
-        # )
-
-        self.add_section(
-            name="Filtered and trimmed CCS descriptive stats",
-            anchor="ccs-stats",
-            description="Descriptives stats about 5'/3' primerlen, insert and polyA length.",
-            helptext="""
-            The .report.csv file contains information about 5' prime and 3' primers length, insert length, poly(A) length, and couple of primers detected for each CCS.  
-            The table presents min, max, mean, standard deviation for each parameters.
-            """,
-            plot=table.plot(self.isoseq3_refine_data_csv),
-        )
-
-        self.add_section(
-            name="Strand counting",
-            anchor="strand-counting",
-            description="Count of number of CCS on forward strand and reverse strand",
-            helptext="Simple counting of + / - strand",
-            plot=table.plot(self.isoseq3_refine_data_csv_primer),
-        )
-
-        self.add_section(
-            name="Primers pairs counting",
-            anchor="primer-counting",
-            description="Count the number of CCS for each couples of primers detected",
-            helptext="Number of CCS per couple of primers detected",
-            plot=table.plot(self.isoseq3_refine_data_csv_strand),
-        )
+        self.add_sections()
 
     def parse_log(self):
         for f in self.find_log_files("isoseq3_refine/json", filehandles=True):
@@ -161,3 +117,202 @@ class MultiqcModule(BaseMultiqcModule):
             'format': '{:,}',
         }
         self.general_stats_addcols(gstats_data, headers)
+
+    def add_sections(self):
+        self.add_section_fivelen()
+        self.add_section_insertlen()
+        self.add_section_polyalen()
+        self.add_section_threelen()
+        # self.add_section(
+        #     name="Full length CCS report",
+        #     anchor="fl-report",
+        #     description="Detail the CCS selected and trimmed by isoseq3 refine",
+        #     helptext="""
+        #              _fl / Full Length_
+        #              * Both primers have been detected and trimmed from CCS
+        #              _flnc / Full Length Non Chimeric_
+        #              * Both primers have been detected and trimmed from CCS
+        #              * No chimeric structure has been detected (ex: primer inside the CCS)
+        #              _flnc_polya / Full Length Non Chimeric no poly(A) tail_
+        #              * Both primers have been detected and trimmed from CCS
+        #              * No chimeric structure has been detected (ex: primer inside the CCS)
+        #              * The poly(A) tails has been detected and trimmed
+        #             """,
+        #     plot=table.plot(self.isoseq3_refine_data_json),
+        # )
+
+    def add_section_fivelen(self):
+        plot_data = dict()
+        for s_name, data in self.isoseq3_refine_data_csv.items():
+            plot_data[s_name] = dict()
+            plot_data[s_name]['min_fivelen'] = data['min_fivelen']
+            plot_data[s_name]['mean_fivelen'] = data['mean_fivelen']
+            plot_data[s_name]['std_fivelen'] = data['std_fivelen']
+            plot_data[s_name]['max_fivelen'] = data['max_fivelen']
+
+        headers = OrderedDict()
+        headers['min_fivelen'] = {
+            'title': "Min 5' primer length",
+            'description': "The minimum 5' primer length in base pair",
+        }
+        headers['mean_fivelen'] = {
+            'title': "Mean 5' primer length",
+            'description': "The mean 5' primer length in base pair",
+        }
+        headers['std_fivelen'] = {
+            'title': "Std of 5' primer length",
+            'description': "The standard deviation of 5' primer length in base pair",
+        }
+        headers['max_fivelen'] = {
+            'title': "Max 5' primer length",
+            'description': "The maximum 5' primer length in base pair",
+        }
+
+        config = {
+            "id": "isoseq3_refine_5p_tab",
+            "title": "isoseq3 refine: 5 prime primer",
+        }
+
+        self.add_section(
+            name="5' primer",
+            anchor="fivep-stats",
+            description="Descriptive stats about 5' primer length.",
+            helptext="""
+                    The .report.csv file contains information about 5' prime and 3' primers length, insert length,\\ 
+                    poly(A) length, and couple of primers detected for each CCS.
+                    The table presents min, max, mean, standard deviation for each parameters.
+                    """,
+            plot=table.plot(plot_data, headers, config)
+        )
+
+    def add_section_threelen(self):
+        plot_data = dict()
+        for s_name, data in self.isoseq3_refine_data_csv.items():
+            plot_data[s_name] = dict()
+            plot_data[s_name]['min_threelen'] = data['min_threelen']
+            plot_data[s_name]['mean_threelen'] = data['mean_threelen']
+            plot_data[s_name]['std_threelen'] = data['std_threelen']
+            plot_data[s_name]['max_threelen'] = data['max_threelen']
+
+        headers = OrderedDict()
+        headers['min_threelen'] = {
+            'title': "Min 3' primer length",
+            'description': "The minimum 3' primer length in base pair",
+        }
+        headers['mean_threelen'] = {
+            'title': "Mean 3' primer length",
+            'description': "The mean 3' primer length in base pair",
+        }
+        headers['std_threelen'] = {
+            'title': "Std of 3' primer length",
+            'description': "The standard deviation of 3' primer length in base pair",
+        }
+        headers['max_threelen'] = {
+            'title': "Max 3' primer length",
+            'description': "The maximum 3' primer length in base pair",
+        }
+
+        config = {
+            "id": "isoseq3_refine_3p_tab",
+            "title": "isoseq3 refine: 3 prime primer",
+        }
+
+        self.add_section(
+            name="3' primer",
+            anchor="threep-stats",
+            description="Descriptive stats about 3' primer length.",
+            helptext="""
+                    The .report.csv file contains information about 5' prime and 3' primers length, insert length,\\ 
+                    poly(A) length, and couple of primers detected for each CCS.
+                    The table presents min, max, mean, standard deviation for each parameters.
+                    """,
+            plot=table.plot(plot_data, headers, config)
+        )
+
+    def add_section_polyalen(self):
+        plot_data = dict()
+        for s_name, data in self.isoseq3_refine_data_csv.items():
+            plot_data[s_name] = dict()
+            plot_data[s_name]['min_polyAlen'] = data['min_polyAlen']
+            plot_data[s_name]['mean_polyAlen'] = data['mean_polyAlen']
+            plot_data[s_name]['std_polyAlen'] = data['std_polyAlen']
+            plot_data[s_name]['max_polyAlen'] = data['max_polyAlen']
+
+            headers = OrderedDict()
+            headers['min_polyAlen'] = {
+                'title': "Min polyA tail length",
+                'description': "The minimum polyA tail length in base pair",
+            }
+            headers['mean_polyAlen'] = {
+                'title': "Mean polyA tail length",
+                'description': "The mean polyA tail length in base pair",
+            }
+            headers['std_polyAlen'] = {
+                'title': "Std of polyA tail length",
+                'description': "The standard deviation of polyA tail length in base pair",
+            }
+            headers['max_polyAlen'] = {
+                'title': "Max polyA tail length",
+                'description': "The maximum polyA tail length in base pair",
+            }
+
+            config = {
+                "id": "isoseq3_refine_polya_tab",
+                "title": "isoseq3 refine: polyA tail",
+            }
+
+        self.add_section(
+            name="polyA tails",
+            anchor="polya-stats",
+            description="Descriptive stats about polyA tail length.",
+            helptext="""
+                    The .report.csv file contains information about 5' prime and 3' primers length, insert length,\\ 
+                    poly(A) length, and couple of primers detected for each CCS.
+                    The table presents min, max, mean, standard deviation for each parameters.
+                    """,
+            plot=table.plot(plot_data, headers, config)
+        )
+
+    def add_section_insertlen(self):
+        plot_data = dict()
+        for s_name, data in self.isoseq3_refine_data_csv.items():
+            plot_data[s_name] = dict()
+            plot_data[s_name]['min_insertlen'] = data['min_insertlen']
+            plot_data[s_name]['mean_insertlen'] = data['mean_insertlen']
+            plot_data[s_name]['std_insertlen'] = data['std_insertlen']
+            plot_data[s_name]['max_insertlen'] = data['max_insertlen']
+
+            headers = OrderedDict()
+            headers['min_insertlen'] = {
+                'title': "Min insert length",
+                'description': "The minimum insert length in base pair",
+            }
+            headers['mean_insertlen'] = {
+                'title': "Mean insert length",
+                'description': "The mean insert length in base pair",
+            }
+            headers['std_insertlen'] = {
+                'title': "Std of insert length",
+                'description': "The standard deviation of insert length in base pair",
+            }
+            headers['max_insertlen'] = {
+                'title': "Max insert length",
+                'description': "The maximum insert length in base pair",
+            }
+
+            config = {
+                "id": "isoseq3_refine_insert_tab",
+                "title": "isoseq3 refine: insert",
+            }
+
+        self.add_section(
+            name="Insert length",
+            anchor="insert-stats",
+            description="Descriptives stats about insert length.",
+            helptext="""
+                    The .report.csv file contains information about 5' prime and 3' primers length, insert length,\\ 
+                    poly(A) length, and couple of primers detected for each CCS.
+                    The table presents min, max, mean, standard deviation for each parameters.
+                    """,
+            plot=table.plot(plot_data, headers, config)
+        )

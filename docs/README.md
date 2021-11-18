@@ -25,6 +25,7 @@ MultiQC Modules:
     FLASh: modules/flash.md
     Flexbar: modules/flexbar.md
     InterOp: modules/interop.md
+    isoseq3_refine: modules/isoseq3_refine.md
     iVar: modules/ivar.md
     Jellyfish: modules/jellyfish.md
     KAT: modules/kat.md
