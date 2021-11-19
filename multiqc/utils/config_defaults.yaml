@@ -307,6 +307,10 @@ module_order:
   # MultiQC general module for catching output from custom scripts
   - "custom_content"
   # Post-alignment QC
+  - isoseq3_cluster:
+      module_tag:
+        - RNA
+        - PacBio
   - ccs:
       module_tag:
         - DNA

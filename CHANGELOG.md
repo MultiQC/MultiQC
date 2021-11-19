@@ -21,6 +21,8 @@
 
 ### New Modules
 
+- **isoseq3 cluster**
+
 ### Module updates
 
 - **CCS**

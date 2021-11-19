@@ -351,6 +351,10 @@ interop/summary:
   contents: "Level,Yield,Projected Yield,Aligned,Error Rate,Intensity C1,%>=Q30"
 interop/index-summary:
   contents: "Total Reads,PF Reads,% Read Identified (PF),CV,Min,Max"
+isoseq3_cluster/csv:
+  contents: "cluster_id"
+  fn: "*cluster_report.csv"
+  num_lines: 1
 ivar/trim:
   contents: "Number of references"
   num_lines: 8
