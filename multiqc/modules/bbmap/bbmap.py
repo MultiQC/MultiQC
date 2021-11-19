@@ -26,6 +26,8 @@ class MultiqcModule(BaseMultiqcModule):
             href="http://jgi.doe.gov/data-and-tools/bbtools/",
             info="""is a suite of fast multithreaded bioinformatics tools
             designed for the analysis of DNA and RNA sequence data.""",
+            # One publication, but only for the merge tool:
+            # doi="10.1371/journal.pone.0185056",
         )
 
         # Init data dict
@@ -45,6 +47,9 @@ class MultiqcModule(BaseMultiqcModule):
         else:
             num_samples = max([len(self.mod_data[ft].keys()) for ft in self.mod_data])
             log.info("Found {} reports".format(num_samples))
+
+        # Write data to file
+        self.write_data_file(self.mod_data, "bbmap")
 
         for file_type in section_order:
             if len(self.mod_data[file_type]) > 0:

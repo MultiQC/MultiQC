@@ -37,6 +37,10 @@ def init_log(logger, loglevel=0, no_ansi=False):
     debug_template = "[%(asctime)s] %(name)-50s [%(levelname)-7s]  %(message)s"
     info_template = "|%(module)18s | %(message)s"
 
+    # Remove log handlers left from previous calls to multiqc.run
+    while logger.hasHandlers():
+        logger.removeHandler(logger.handlers[0])
+
     # Base level setup
     logger.setLevel(getattr(logging, "DEBUG"))
 

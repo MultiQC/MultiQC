@@ -27,6 +27,7 @@ class MultiqcModule(BaseMultiqcModule):
             anchor="kraken",
             href="https://ccb.jhu.edu/software/kraken/",
             info="is a taxonomic classification tool that uses exact k-mer matches to find the lowest common ancestor (LCA) of a given sequence.",
+            doi="10.1186/gb-2014-15-3-r46",
         )
 
         self.t_ranks = OrderedDict()
@@ -54,11 +55,15 @@ class MultiqcModule(BaseMultiqcModule):
             else:
                 new_report_present = True
                 self.parse_logs_minimizer(f)
+            self.add_data_source(f)
 
         self.kraken_raw_data = self.ignore_samples(self.kraken_raw_data)
 
         if len(self.kraken_raw_data) == 0:
             raise UserWarning
+
+        # Data is in wrong format for writing to file
+        # self.write_data_file(self.kraken_raw_data, "kraken")
 
         log.info("Found {} reports".format(len(self.kraken_raw_data)))
 

@@ -23,12 +23,14 @@ class MultiqcModule(BaseMultiqcModule):
             anchor="flexbar",
             href="https://github.com/seqan/flexbar",
             info="is a barcode and adapter removal tool.",
+            doi="10.1093/bioinformatics/btx330",
         )
 
         # Parse logs
         self.flexbar_data = dict()
         for f in self.find_log_files("flexbar", filehandles=True):
             self.parse_flexbar(f)
+            self.add_data_source(f)
 
         # Filter to strip out ignored sample names
         self.flexbar_data = self.ignore_samples(self.flexbar_data)

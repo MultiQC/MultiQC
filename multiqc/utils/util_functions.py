@@ -3,6 +3,7 @@
 """ MultiQC Utility functions, used in a variety of places. """
 
 from __future__ import print_function
+from collections import OrderedDict
 import io
 import json
 import os
@@ -74,6 +75,10 @@ def write_data_file(data, fn, sort_cols=False, data_format=None):
                 yaml.dump(data, f, default_flow_style=False)
             else:
                 # Default - tab separated output
+                # Heatmaps and other odd things might break this, so skip if so
+                # TODO: leaves an empty file, should clean this up
+                if type(data) is not dict and type(data) is not OrderedDict:
+                    return
                 # Convert keys to strings
                 data = {str(k): v for k, v in data.items()}
                 # Get all headers

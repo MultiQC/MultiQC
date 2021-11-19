@@ -89,13 +89,16 @@ def highcharts_heatmap(data, xcats, ycats, pconfig=None):
                 <input id="{id}_range_slider_max" type="range" value="{max}" min="{min}" max="{max}" step="any" data-minmax="max" data-target="{id}" />
             </div>
         </div>
-        <div class="hc-plot-wrapper">
+        <div class="hc-plot-wrapper"{height}>
             <div id="{id}" class="hc-plot not_rendered hc-heatmap">
                 <small>loading..</small>
             </div>
         </div>
     </div> \n""".format(
-        id=pconfig["id"], min=pconfig["min"], max=pconfig["max"]
+        id=pconfig["id"],
+        min=pconfig["min"],
+        max=pconfig["max"],
+        height=f' style="height:{pconfig["height"]}px"' if "height" in pconfig else "",
     )
 
     report.num_hc_plots += 1
