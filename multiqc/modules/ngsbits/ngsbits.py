@@ -23,6 +23,7 @@ class MultiqcModule(BaseMultiqcModule):
             anchor="ngsbits",
             href="https://github.com/imgag/ngs-bits",
             info="is a collection of short-read sequencing tools.",
+            doi="10.1093/bioinformatics/btx032",
         )
 
         # Get the list of submodules (can be customised)
