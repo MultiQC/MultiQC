@@ -83,7 +83,8 @@ class MultiqcModule(BaseMultiqcModule):
             self.nanostat_stats_table("fasta")
 
         # Quality distribution Plot
-        self.reads_by_quality_plot()
+        if self.has_quality:
+            self.reads_by_quality_plot()
 
     def parse_nanostat_log(self, f):
         """Parse output from NanoStat
