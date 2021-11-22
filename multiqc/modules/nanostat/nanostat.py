@@ -75,8 +75,12 @@ class MultiqcModule(BaseMultiqcModule):
         # Stats Tables
         if self.has_aligned:
             self.nanostat_stats_table("aligned")
-        if self.has_seq_summary:
+        elif self.has_seq_summary:
             self.nanostat_stats_table("seq summary")
+        elif self.has_quality:
+            self.nanostat_stats_table("fastq")
+        else:
+            self.nanostat_stats_table("fasta")
 
         # Quality distribution Plot
         self.reads_by_quality_plot()
