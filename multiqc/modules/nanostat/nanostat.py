@@ -238,10 +238,15 @@ class MultiqcModule(BaseMultiqcModule):
 
         # Add the report section
         description = ""
+        if stat_type == "fasta":
+            description = "NanoStat statistics from FASTA files."
+        if stat_type == "fastq":
+            description = "NanoStat statistics from FastQ files."
         if stat_type == "aligned":
-            description = "NanoStat statistics from FastQ, FASTA or BAM files."
+            description = "NanoStat statistics from BAM files."
         if stat_type == "seq summary":
             description = "NanoStat statistics from albacore or guppy summary files."
+
         self.add_section(
             name="{} stats".format(stat_type.replace("_", " ").capitalize()),
             anchor="nanostat_{}_stats".format(stat_type.replace(" ", "_")),
