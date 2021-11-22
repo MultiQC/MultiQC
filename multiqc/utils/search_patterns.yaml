@@ -366,7 +366,7 @@ kallisto:
   shared: true
 nanostat:
   max_filesize: 4096
-  contents: "General summary:         "
+  contents_re: "General summary:\\s*"
   num_lines: 1
 kat:
   fn: "*.dist_analysis.json"
