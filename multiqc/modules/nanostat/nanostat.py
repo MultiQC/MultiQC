@@ -40,7 +40,7 @@ class MultiqcModule(BaseMultiqcModule):
         "&gt;Q12",
         "&gt;Q15",
     ]
-    _stat_types = ("aligned", "seq summary", "unrecognized")
+    _stat_types = ("aligned", "seq summary", "fastq", "fasta", "unrecognized")
 
     def __init__(self):
 
@@ -57,6 +57,7 @@ class MultiqcModule(BaseMultiqcModule):
         self.nanostat_data = dict()
         self.has_aligned = False
         self.has_seq_summary = False
+        self.has_quality = False
         for f in self.find_log_files("nanostat", filehandles=True):
             self.parse_nanostat_log(f)
 
@@ -108,9 +109,16 @@ class MultiqcModule(BaseMultiqcModule):
         if "Total bases aligned" in nano_stats:
             stat_type = "aligned"
             self.has_aligned = True
+            self.has_quality = True
         elif "Active channels" in nano_stats:
             stat_type = "seq summary"
             self.has_seq_summary = True
+            self.has_quality = True
+        elif "Mean read quality" in nano_stats:
+            stat_type = "fastq"
+            self.has_quality = True
+        elif "Mean read length" in nano_stats:
+            stat_type = "fasta"
         else:
             log.debug(f"Did not recognise NanoStat file '{f['fn']}' - skipping")
             return
