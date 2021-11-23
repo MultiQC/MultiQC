@@ -344,15 +344,15 @@ class MultiqcModule(BaseMultiqcModule):
                 lane["yield"] += int(row["# Reads"]) * (self.cluster_length)
                 lane["perfect_index_reads"] += int(row["# Perfect Index Reads"])
                 lane["one_mismatch_index_reads"] += int(row["# One Mismatch Index Reads"])
-                lane["basesQ30"] += int(row["# of >= Q30 Bases (PF)"])
+                lane["basesQ30"] += int(row.get("# of >= Q30 Bases (PF)", "0"))
 
                 # stats for this sample in this lane
                 lane_sample["reads"] += int(row["# Reads"])
                 lane_sample["yield"] += int(row["# Reads"]) * (self.cluster_length)
                 lane_sample["perfect_index_reads"] += int(row["# Perfect Index Reads"])
                 lane_sample["one_mismatch_index_reads"] += int(row["# One Mismatch Index Reads"])
-                lane_sample["basesQ30"] += int(row["# of >= Q30 Bases (PF)"])
-                lane_sample["mean_quality"] += float(row["Mean Quality Score (PF)"])
+                lane_sample["basesQ30"] += int(row.get("# of >= Q30 Bases (PF)", "0"))
+                lane_sample["mean_quality"] += float(row.get("Mean Quality Score (PF)", "0"))
 
             if lane_id not in self.total_reads_in_lane_per_file[filename]:
                 self.total_reads_in_lane_per_file[filename][lane_id] = 0
