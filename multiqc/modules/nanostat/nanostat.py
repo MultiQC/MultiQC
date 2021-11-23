@@ -74,13 +74,13 @@ class MultiqcModule(BaseMultiqcModule):
         self.write_data_file(self.nanostat_data, "multiqc_nanostat")
 
         # Stats Tables
-        if self.has_aligned == True:
+        if self.has_aligned:
             self.nanostat_stats_table("aligned")
-        if self.has_seq_summary == True:
+        if self.has_seq_summary:
             self.nanostat_stats_table("seq summary")
-        if self.has_fastq == True:
+        if self.has_fastq:
             self.nanostat_stats_table("fastq")
-        if self.has_fastq == True:
+        if self.has_fastq:
             self.nanostat_stats_table("fasta")
 
         # Quality distribution Plot
