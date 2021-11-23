@@ -487,13 +487,13 @@ class MultiqcModule(BaseMultiqcModule):
             m = re.match(
                 r"Index: ([ATGC+]+) on lane: (\d+) was significantly "
                 r"overrepresented \(([0-9.]+)%\) at significance "
-                r"threshold of: ([0-9.]+)%\.",
+                r"threshold of: [0-9.]+%\.",
                 msg,
             )
             if not m:
                 # TODO: Could add handling of other message types
                 continue
-            index, lane, overrep, threshold = m.groups()
+            index, lane, overrep = m.groups()
             overrep = float(overrep)
 
             if index not in idx_to_lane_to_rep:
