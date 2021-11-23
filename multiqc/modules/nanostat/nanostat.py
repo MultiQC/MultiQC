@@ -57,7 +57,8 @@ class MultiqcModule(BaseMultiqcModule):
         self.nanostat_data = dict()
         self.has_aligned = False
         self.has_seq_summary = False
-        self.has_quality = False
+        self.has_fastq = False
+        self.has_fasta = False
         for f in self.find_log_files("nanostat", filehandles=True):
             self.parse_nanostat_log(f)
 
@@ -73,17 +74,17 @@ class MultiqcModule(BaseMultiqcModule):
         self.write_data_file(self.nanostat_data, "multiqc_nanostat")
 
         # Stats Tables
-        if self.has_aligned:
+        if self.has_aligned == True:
             self.nanostat_stats_table("aligned")
-        elif self.has_seq_summary:
+        if self.has_seq_summary == True:
             self.nanostat_stats_table("seq summary")
-        elif self.has_quality:
+        if self.has_fastq == True:
             self.nanostat_stats_table("fastq")
-        else:
+        if self.has_fastq == True:
             self.nanostat_stats_table("fasta")
 
         # Quality distribution Plot
-        if self.has_quality:
+        if self.has_aligned or self.has_seq_summary or self.has_fastq:
             self.reads_by_quality_plot()
 
     def parse_nanostat_log(self, f):
@@ -114,16 +115,15 @@ class MultiqcModule(BaseMultiqcModule):
         if "Total bases aligned" in nano_stats:
             stat_type = "aligned"
             self.has_aligned = True
-            self.has_quality = True
         elif "Active channels" in nano_stats:
             stat_type = "seq summary"
             self.has_seq_summary = True
-            self.has_quality = True
         elif "Mean read quality" in nano_stats:
             stat_type = "fastq"
-            self.has_quality = True
+            self.has_fastq = True
         elif "Mean read length" in nano_stats:
             stat_type = "fasta"
+            self.has_fasta = True
         else:
             log.debug(f"Did not recognise NanoStat file '{f['fn']}' - skipping")
             return
