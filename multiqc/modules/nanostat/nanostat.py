@@ -284,13 +284,13 @@ class MultiqcModule(BaseMultiqcModule):
         for s_name, data_dict in self.nanostat_data.items():
             reads_total, stat_type = _get_total_reads(data_dict)
             if stat_type == "fasta":
-                log.debug("Sample '{s_name}' has no quality metrics - excluded from quality plot")
+                log.debug(f"Sample '{s_name}' has no quality metrics - excluded from quality plot")
                 continue
             if s_name in bar_data and stat_type == "aligned":
-                log.debug("Sample '{s_name}' duplicated in the quality plot - ignoring aligned data")
+                log.debug(f"Sample '{s_name}' duplicated in the quality plot - ignoring aligned data")
                 continue
             elif s_name in bar_data and stat_type == "seq summary":
-                log.debug("Sample '{s_name}' duplicated in the quality plot - overwriting with seq summary data")
+                log.debug(f"Sample '{s_name}' duplicated in the quality plot - overwriting with seq summary data")
             bar_data[s_name] = {}
 
             prev_reads = reads_total
