@@ -2,6 +2,8 @@
 
 ## MultiQC v1.12dev
 
+- Set default values for some columns for BCL convert. ([#1563](https://github.com/ewels/MultiQC/issues/1563))
+
 ### MultiQC updates
 
 - Added option to customise default plot height in plot config ([#1432](https://github.com/ewels/MultiQC/issues/1432))
