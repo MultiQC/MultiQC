@@ -6,7 +6,7 @@ from collections import OrderedDict
 from operator import itemgetter
 import re
 from multiqc.modules.base_module import BaseMultiqcModule
-from multiqc.plots import bargraph
+from multiqc.plots import bargraph, table
 
 log = logging.getLogger(__name__)
 
@@ -35,6 +35,7 @@ class MultiqcModule(BaseMultiqcModule):
         self.runs = set()
 
         self.log_files = list(self.find_log_files("checkqc"))
+        self.onerun = len(self.log_files) == 1
 
         general_stats = dict()
         for f in self.log_files:
@@ -103,6 +104,8 @@ class MultiqcModule(BaseMultiqcModule):
             self.add_error_rate_section()
         if "UndeterminedPercentageHandler" in self.checkqc_data:
             self.add_undetermined_percentage_section()
+        if "UndeterminedPercentageHandler_ZeroYield" in self.checkqc_data:
+            self.add_undetermined_percentage_zero_yield_section()
         if "UnidentifiedIndexHandler" in self.checkqc_data:
             self.add_unidentified_index_section()
 
@@ -125,7 +128,7 @@ class MultiqcModule(BaseMultiqcModule):
             is_error = issue["type"] == "error"
             sample_name = issue["data"]["sample_name"]
             lane = issue["data"]["lane"]
-            if len(self.log_files) == 1:
+            if self.onerun:
                 sample = self.clean_s_name(f"{sample_name} (Lane {lane})", f)
             else:
                 sample = self.clean_s_name(f"{sample_name} (Lane {lane}, run {run})", f)
@@ -195,7 +198,7 @@ class MultiqcModule(BaseMultiqcModule):
         for issue in issues:
             is_error = issue["type"] == "error"
             lane = str(issue["data"]["lane"])
-            if len(self.log_files) == 1:
+            if self.onerun:
                 sample = self.clean_s_name(lane, f)
             else:
                 sample = self.clean_s_name(f"{lane} ({run})", f)
@@ -267,7 +270,7 @@ class MultiqcModule(BaseMultiqcModule):
             is_error = issue["type"] == "error"
             lane = issue["data"]["lane"]
             read = issue["data"]["read"]
-            if len(self.log_files) == 1:
+            if self.onerun:
                 sample = self.clean_s_name(f"{lane} - {read}", f)
             else:
                 sample = self.clean_s_name(f"{lane} - {read} ({run})", f)
@@ -335,7 +338,7 @@ class MultiqcModule(BaseMultiqcModule):
             is_error = issue["type"] == "error"
             lane = issue["data"]["lane"]
             read = issue["data"]["read"]
-            if len(self.log_files) == 1:
+            if self.onerun:
                 sample = self.clean_s_name(f"{lane} - {read}", f)
             else:
                 sample = self.clean_s_name(f"{lane} - {read} ({run})", f)
@@ -398,11 +401,12 @@ class MultiqcModule(BaseMultiqcModule):
             run (str): name of sequencing run
             f (dict): MultiQC log file dict
         """
+        zero_yield_data = {}
         data = {}
         for issue in issues:
             is_error = issue["type"] == "error"
             lane = str(issue["data"]["lane"])
-            if len(self.log_files) == 1:
+            if self.onerun:
                 sample = self.clean_s_name(lane, f)
             else:
                 sample = self.clean_s_name(f"{lane} ({run})", f)
@@ -412,9 +416,12 @@ class MultiqcModule(BaseMultiqcModule):
             self.add_data_source(f, sample)
             p_undetermined = issue["data"]["percentage_undetermined"]
             if p_undetermined == "N/A":
-                data[sample] = {"zero_yield": 0}
+                zero_yield_data[sample] = {"lane": lane}
+                if self.onerun:
+                    zero_yield_data[sample] = {"lane": lane}
+                else:
+                    zero_yield_data[sample] = {"lane": lane, "run": run}
             else:
-
                 threshold = issue["data"]["threshold"]
                 computed_threshold = issue["data"]["computed_threshold"]
                 phix = issue["data"]["phix_on_lane"]
@@ -428,6 +435,11 @@ class MultiqcModule(BaseMultiqcModule):
                 self.checkqc_data["UndeterminedPercentageHandler"] = data
             else:
                 self.checkqc_data["UndeterminedPercentageHandler"].update(data)
+        if zero_yield_data:
+            if "UndeterminedPercentageHandler_ZeroYield" not in self.checkqc_data:
+                self.checkqc_data["UndeterminedPercentageHandler_ZeroYield"] = zero_yield_data
+            else:
+                self.checkqc_data["UndeterminedPercentageHandler_ZeroYield"] += zero_yield_data
 
     def add_undetermined_percentage_section(self):
         """Add a section for lanes with undetermined index percentage too high
@@ -453,10 +465,6 @@ class MultiqcModule(BaseMultiqcModule):
         if error:
             cats["missing_error"] = {"name": r"% undetermined indexes above threshold for QC error", "color": "#f44336"}
 
-        cats["zero_yield"] = {
-            "name": r"Yield is 0, no undetermined percentage computation possible",
-            "color": "#7d3c98",
-        }
         pconfig = {
             "id": "checkqc_undetermined-percentage-plot",
             "title": "CheckQC: Percentage undetermined indexes too high",
@@ -470,6 +478,30 @@ class MultiqcModule(BaseMultiqcModule):
             anchor="checkqc-undeterminedrate",
             description="Some lanes have a percentage of undetermined indexes that is too high.",
             plot=bargraph.plot(data, cats, pconfig),
+        )
+
+    def add_undetermined_percentage_zero_yield_section(self):
+        """Add a section for lanes with zero yield
+
+        Creates a table with the lane names with zero yield
+
+        Args:
+            run (str): name of sequencing run
+        """
+        data = self.checkqc_data["UndeterminedPercentageHandler_ZeroYield"]
+
+        pconfig = {"id": "checkqc_zero-yield-table", "table_title": "CheckQC: Lanes with Yield 0", "scale": "Reds"}
+
+        headers = OrderedDict()
+        headers["lane"] = {"title": "Lane", "description": "Sequencing lane", "format": "{:,.0f}"}
+        if self.onerun:
+            headers["run"] = {"title": "Run", "description": "Sequencing run"}
+
+        self.add_section(
+            name="Lanes with zero yield",
+            anchor="checkqc-zero-yield",
+            description="Some lanes have zero yield, no undetermined percentage computation possible",
+            plot=table.plot(data, headers, pconfig),
         )
 
     def get_unidentified_index_data(self, issues, run, f):
@@ -517,7 +549,7 @@ class MultiqcModule(BaseMultiqcModule):
             if sample not in data:
                 data[sample] = {}
             for lane, val in idx_to_lane_to_rep[idx].items():
-                if len(self.log_files) == 1:
+                if self.onerun:
                     data[sample][lane] = val
                 else:
                     data[sample][f"{lane} ({run})"] = val
