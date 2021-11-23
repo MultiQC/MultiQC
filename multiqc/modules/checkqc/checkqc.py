@@ -32,6 +32,7 @@ class MultiqcModule(BaseMultiqcModule):
         )
 
         self.checkqc_data = dict()
+        self.runs = set()
 
         self.log_files = list(self.find_log_files("checkqc"))
 
@@ -42,7 +43,6 @@ class MultiqcModule(BaseMultiqcModule):
             if genstats:
                 general_stats.update(genstats)
             self.add_data_source(f)
-            # self.add_general_stats(f)
 
         if not self.checkqc_data:
             raise UserWarning
@@ -86,9 +86,10 @@ class MultiqcModule(BaseMultiqcModule):
         base_run_name = content["run_summary"]["instrument_and_reagent_type"]
         run_name = base_run_name
         i = 1
-        while run_name in self.checkqc_data:
+        while run_name in self.runs:
             run_name = f"{base_run_name}_{i}"
             i += 1
+        self.runs.add(run_name)
         return run_name
 
     def add_sections(self):
@@ -132,9 +133,8 @@ class MultiqcModule(BaseMultiqcModule):
                 continue
             self.add_data_source(f, sample)
 
-            read_num = issue["data"]["sample_reads"] * pow(10, 6)
-            threshold = issue["data"]["threshold"]
-            read_threshold = threshold * pow(10, 6)
+            read_num = issue["data"]["sample_reads"]
+            read_threshold = issue["data"]["threshold"]
 
             general_stats[sample] = {"read_num": read_num, "read_threshold": read_threshold}
 
@@ -167,12 +167,12 @@ class MultiqcModule(BaseMultiqcModule):
         if warning:
             cats["missing_warning"] = {"name": "Reads missing to reach threshold for QC warning", "color": "#ffc300"}
         if error:
-            cats["missing_error"] = {"name": "Reads missing to reach threshold for QC error", "color": "#ff0000"}
+            cats["missing_error"] = {"name": "Reads missing to reach threshold for QC error", "color": "#f44336"}
 
         pconfig = {
             "id": "checkqc_reads-per-sample-plot",
             "title": "CheckQC: Number reads too low",
-            "ylab": "Number of reads",
+            "ylab": "Number of reads [M]",
             "xlab": "Sample - Lane",
         }
 
@@ -233,7 +233,7 @@ class MultiqcModule(BaseMultiqcModule):
         }
 
         if error:
-            cats["missing_error"] = {"name": "Cluster PF missing to reach threshold for QC error", "color": "#ff0000"}
+            cats["missing_error"] = {"name": "Cluster PF missing to reach threshold for QC error", "color": "#f44336"}
         if warning:
             cats["missing_warning"] = {
                 "name": "Cluster PF missing to reach threshold for QC warning",
@@ -305,7 +305,7 @@ class MultiqcModule(BaseMultiqcModule):
         if warning:
             cats["missing_warning"] = {"name": "%Q30 missing to reach threshold for QC warning", "color": "#ffc300"}
         if error:
-            cats["missing_error"] = {"name": "%Q30 missing to reach threshold for QC error", "color": "#ff0000"}
+            cats["missing_error"] = {"name": "%Q30 missing to reach threshold for QC error", "color": "#f44336"}
 
         pconfig = {
             "id": "checkqc_q30-plot",
@@ -373,7 +373,7 @@ class MultiqcModule(BaseMultiqcModule):
         if warning:
             cats["missing_warning"] = {"name": "Error rate part above threshold for QC warning", "color": "#ffc300"}
         if error:
-            cats["missing_error"] = {"name": "Error rate part above threshold for QC error", "color": "#ff0000"}
+            cats["missing_error"] = {"name": "Error rate part above threshold for QC error", "color": "#f44336"}
 
         pconfig = {
             "id": "checkqc_error-rate-plot",
@@ -411,14 +411,18 @@ class MultiqcModule(BaseMultiqcModule):
                 continue
             self.add_data_source(f, sample)
             p_undetermined = issue["data"]["percentage_undetermined"]
-            threshold = issue["data"]["threshold"]
-            computed_threshold = issue["data"]["computed_threshold"]
-            phix = issue["data"]["phix_on_lane"]
-            data[sample] = {"phix": phix, "threshold": threshold}
-            if is_error:
-                data[sample]["missing_error"] = p_undetermined - computed_threshold
+            if p_undetermined == "N/A":
+                data[sample] = {"zero_yield": 0}
             else:
-                data[sample]["missing_warning"] = p_undetermined - computed_threshold
+
+                threshold = issue["data"]["threshold"]
+                computed_threshold = issue["data"]["computed_threshold"]
+                phix = issue["data"]["phix_on_lane"]
+                data[sample] = {"phix": phix, "threshold": threshold}
+                if is_error:
+                    data[sample]["missing_error"] = p_undetermined - computed_threshold
+                else:
+                    data[sample]["missing_warning"] = p_undetermined - computed_threshold
         if data:
             if "UndeterminedPercentageHandler" not in self.checkqc_data:
                 self.checkqc_data["UndeterminedPercentageHandler"] = data
@@ -437,7 +441,7 @@ class MultiqcModule(BaseMultiqcModule):
 
         warning, error = self._get_warning_error(data)
         cats = OrderedDict()
-        cats["phix"] = {"name": r"% PhiX", "color": "#000000"}
+        cats["phix"] = {"name": r"% PhiX", "color": "#212121"}
         cats["threshold"] = {
             "name": r"% undetermined indexes until threshold",
         }
@@ -447,8 +451,12 @@ class MultiqcModule(BaseMultiqcModule):
                 "color": "#ffc300",
             }
         if error:
-            cats["missing_error"] = {"name": r"% undetermined indexes above threshold for QC error", "color": "#ff0000"}
+            cats["missing_error"] = {"name": r"% undetermined indexes above threshold for QC error", "color": "#f44336"}
 
+        cats["zero_yield"] = {
+            "name": r"Yield is 0, no undetermined percentage computation possible",
+            "color": "#7d3c98",
+        }
         pconfig = {
             "id": "checkqc_undetermined-percentage-plot",
             "title": "CheckQC: Percentage undetermined indexes too high",
@@ -473,10 +481,8 @@ class MultiqcModule(BaseMultiqcModule):
             f (dict): MultiQC log file dict
         """
         idx_to_lane_to_rep = {}
-        threshold = None
 
         for issue in issues:
-            # is_error = issue["type"] == "error"
             msg = issue["data"]["msg"]
             m = re.match(
                 r"Index: ([ATGC+]+) on lane: (\d+) was significantly "
@@ -489,7 +495,6 @@ class MultiqcModule(BaseMultiqcModule):
                 continue
             index, lane, overrep, threshold = m.groups()
             overrep = float(overrep)
-            threshold = float(threshold)
 
             if index not in idx_to_lane_to_rep:
                 idx_to_lane_to_rep[index] = {}
