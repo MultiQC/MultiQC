@@ -416,11 +416,7 @@ class MultiqcModule(BaseMultiqcModule):
             self.add_data_source(f, sample)
             p_undetermined = issue["data"]["percentage_undetermined"]
             if p_undetermined == "N/A":
-                zero_yield_data[sample] = {"lane": lane}
-                if self.onerun:
-                    zero_yield_data[sample] = {"lane": lane}
-                else:
-                    zero_yield_data[sample] = {"lane": lane, "run": run}
+                zero_yield_data[run] = {"lane": lane}
             else:
                 threshold = issue["data"]["threshold"]
                 computed_threshold = issue["data"]["computed_threshold"]
@@ -439,7 +435,7 @@ class MultiqcModule(BaseMultiqcModule):
             if "UndeterminedPercentageHandler_ZeroYield" not in self.checkqc_data:
                 self.checkqc_data["UndeterminedPercentageHandler_ZeroYield"] = zero_yield_data
             else:
-                self.checkqc_data["UndeterminedPercentageHandler_ZeroYield"] += zero_yield_data
+                self.checkqc_data["UndeterminedPercentageHandler_ZeroYield"].update(zero_yield_data)
 
     def add_undetermined_percentage_section(self):
         """Add a section for lanes with undetermined index percentage too high
@@ -490,12 +486,13 @@ class MultiqcModule(BaseMultiqcModule):
         """
         data = self.checkqc_data["UndeterminedPercentageHandler_ZeroYield"]
 
-        pconfig = {"id": "checkqc_zero-yield-table", "table_title": "CheckQC: Lanes with Yield 0", "scale": "Reds"}
+        pconfig = {"id": "checkqc_zero-yield-table",
+                   "table_title": "CheckQC: Lanes with Yield 0",
+                   "scale": "Reds",
+                   "col1_header": "Run"}
 
         headers = OrderedDict()
         headers["lane"] = {"title": "Lane", "description": "Sequencing lane", "format": "{:,.0f}"}
-        if self.onerun:
-            headers["run"] = {"title": "Run", "description": "Sequencing run"}
 
         self.add_section(
             name="Lanes with zero yield",
