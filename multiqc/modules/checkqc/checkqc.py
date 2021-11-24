@@ -486,10 +486,12 @@ class MultiqcModule(BaseMultiqcModule):
         """
         data = self.checkqc_data["UndeterminedPercentageHandler_ZeroYield"]
 
-        pconfig = {"id": "checkqc_zero-yield-table",
-                   "table_title": "CheckQC: Lanes with Yield 0",
-                   "scale": "Reds",
-                   "col1_header": "Run"}
+        pconfig = {
+            "id": "checkqc_zero-yield-table",
+            "table_title": "CheckQC: Lanes with Yield 0",
+            "scale": "Reds",
+            "col1_header": "Run",
+        }
 
         headers = OrderedDict()
         headers["lane"] = {"title": "Lane", "description": "Sequencing lane", "format": "{:,.0f}"}
