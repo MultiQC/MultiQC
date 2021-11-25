@@ -373,6 +373,8 @@ def run(
     if len(cl_config) > 0:
         config.mqc_cl_config(cl_config)
 
+    report.init()
+
     # Log the command used to launch MultiQC
     report.multiqc_command = " ".join(sys.argv)
     logger.debug("Command used: {}".format(report.multiqc_command))
