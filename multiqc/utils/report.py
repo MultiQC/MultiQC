@@ -34,6 +34,7 @@ except NameError:
 
 
 # Set up global variables shared across modules
+# Inside a function so that the global vars are reset if MultiQC is run more than once within a single session / environment
 def init():
     global general_stats_data
     general_stats_data = list()
