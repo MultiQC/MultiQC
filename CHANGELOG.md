@@ -18,6 +18,7 @@
 - Sort custom content bargraph data by default ([#1412](https://github.com/ewels/MultiQC/issues/1412))
 - Make table _Conditional Formatting_ work at table level as well as column level. ([#761](https://github.com/ewels/MultiQC/issues/761))
 - Added support for customising table column names ([#1255](https://github.com/ewels/MultiQC/issues/1255))
+- Init/reset global state between runs ([#1596](https://github.com/ewels/MultiQC/pull/1596))
 
 ### New Modules
 
