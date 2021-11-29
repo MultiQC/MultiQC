@@ -80,7 +80,7 @@ class MultiqcModule(BaseMultiqcModule):
             self.nanostat_stats_table("seq summary")
         if self.has_fastq:
             self.nanostat_stats_table("fastq")
-        if self.has_fastq:
+        if self.has_fasta:
             self.nanostat_stats_table("fasta")
 
         # Quality distribution Plot
