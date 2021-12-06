@@ -47,7 +47,7 @@ METRICS = [
         "hid",
         "#",
         "%",
-        "Percentage of sites with coverage greater than 20% of the mean coverage in region. Demonstrates the uniformity of coverage. The lower the better.",
+        "Percentage of sites with coverage greater than 20% of the mean coverage in region. Demonstrates the uniformity of coverage, the higher the better.",
     ),
     Metric(
         "Average chr X coverage over {}",
