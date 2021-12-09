@@ -29,12 +29,15 @@ class MultiqcModule(BaseMultiqcModule):
                  as HiFi reads and marks or removes duplicates.
                  """
             ),
+            # Can't find a DOI // doi=
+
         )
 
         self.pbmarkdup = dict()
 
         for logfile in self.find_log_files("pbmarkdup", filehandles=True):
             self.pbmarkdup[logfile["s_name"]] = self.parse_logfile(logfile)
+            self.add_data_source(logfile)
 
         # Filter to strip out ignored sample names
         self.pbmarkdup = self.ignore_samples(self.pbmarkdup)
