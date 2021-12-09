@@ -30,7 +30,6 @@ class MultiqcModule(BaseMultiqcModule):
                  """
             ),
             # Can't find a DOI // doi=
-
         )
 
         self.pbmarkdup = dict()
