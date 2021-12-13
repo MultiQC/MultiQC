@@ -41,6 +41,7 @@ class MultiqcModule(BaseMultiqcModule):
     def parse_hifiasm_log_files(self):
         for f in self.find_log_files("hifiasm", filehandles=True):
             filename = f["s_name"]
+            self.add_data_source(f)
             if filename in self.hifiasm_data:
                 log.debug(f"Duplicate sample name found! Overwriting: {filename}")
             data = self.extract_kmer_graph(f["f"])
