@@ -138,8 +138,7 @@ To see examples of typical file structures which are understood, see the
 [test data](https://github.com/ewels/MultiQC_TestData/tree/master/data/custom_content/no_config)
 used to develop this code. Something will be probably be shown, but it may produce unexpected results.
 
-Note that particularly in the case of `*_mqc.tsv` or `_mqc.csv` files, the first column is 'special' in that you do not specify any information about it in the configuration column.
-However you can customise the column name by including a 'header row' in the first line of the `tsv` or `csv` itself specifying the column names, with the first column with the name of your choice, and subsequent columns including the key(s) defined in the header.
+> Check [Tricky extras](#tricky-extras) for certain caveats about formatting headers for custom `tsv` or `csv` files, particularly for the first column. 
 
 ## Data as part of MultiQC config
 
@@ -389,6 +388,7 @@ in the `pconfig` scope (see above example). Files that are just tables use `head
 The first column in every table is reserved for the sample name. As such, it shouldn't contain data.
 All header configuration will be ignored for the first column. The only exception is name:
 this can be tweaked using the somewhat tricky `col1_header` field in the `pconfig` scope (see table docs).
+Alternatively, you can customise the column name by including a 'header row' in the first line of the `tsv` or `csv` itself specifying the column names, with the first column with the name of your choice, and subsequent columns including the key(s) defined in the header
 
 ## Linting
 
