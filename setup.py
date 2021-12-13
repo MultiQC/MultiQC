@@ -129,6 +129,7 @@ setup(
             "hicexplorer = multiqc.modules.hicexplorer:MultiqcModule",
             "hicpro = multiqc.modules.hicpro:MultiqcModule",
             "hicup = multiqc.modules.hicup:MultiqcModule",
+            "hifiasm = multiqc.modules.hifiasm:MultiqcModule",
             "hisat2 = multiqc.modules.hisat2:MultiqcModule",
             "homer = multiqc.modules.homer:MultiqcModule",
             "hops = multiqc.modules.hops:MultiqcModule",

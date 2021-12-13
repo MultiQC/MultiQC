@@ -54,6 +54,8 @@ MultiQC Modules:
     Salmon: modules/salmon.md
     STAR: modules/star.md
     TopHat: modules/tophat.md
+  Assemblers:
+    HiFiasm: modules/hifiasm.md
   Post-alignment:
     Bamtools: modules/bamtools.md
     Bcftools: modules/bcftools.md

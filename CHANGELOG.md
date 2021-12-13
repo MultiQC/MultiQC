@@ -22,6 +22,9 @@
 
 ### New Modules
 
+- [**HiFiasm**](https://github.com/chhylp123/hifiasm)
+  - A haplotype-resolved assembler for accurate Hifi reads
+
 ### Module updates
 
 - **CCS**
