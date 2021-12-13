@@ -362,9 +362,9 @@ module_order:
         - RNA
   - hifiasm:
       module_tag:
-          - DNA
-          - Denovo
-          - PacBio
+        - DNA
+        - Denovo
+        - PacBio
   - quast:
       module_tag:
         - DNA
