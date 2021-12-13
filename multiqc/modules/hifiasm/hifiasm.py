@@ -62,6 +62,14 @@ class MultiqcModule(BaseMultiqcModule):
             name="HiFiasm kmer graph",
             anchor="hifiasm-kmer-graph",
             description="Kmer counts in the input data",
+            helptext="""
+                The kmer distribution graph for the input data. For homozygous
+                samples, there should be one peak around read coverage. For
+                heterozygous samples, there should be two peaks, see the
+                [HiFiasm
+                documentation](https://hifiasm.readthedocs.io/en/latest/interpreting-output.html#hifiasm-log-interpretation)
+                for details.
+                """,
             plot=linegraph.plot(self.hifiasm_data, config),
         )
 
