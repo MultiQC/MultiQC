@@ -138,7 +138,7 @@ To see examples of typical file structures which are understood, see the
 [test data](https://github.com/ewels/MultiQC_TestData/tree/master/data/custom_content/no_config)
 used to develop this code. Something will be probably be shown, but it may produce unexpected results.
 
-Note that particularly in the case of `*_mqc.tsv` or `_mqc.csv` files, the first column is 'special' in that you do not specify any information about it in the configuration column. 
+Note that particularly in the case of `*_mqc.tsv` or `_mqc.csv` files, the first column is 'special' in that you do not specify any information about it in the configuration column.
 However you can customise the column name by including a 'header row' in the first line of the `tsv` or `csv` itself specifying the column names, with the first column with the name of your choice, and subsequent columns including the key(s) defined in the header.
 
 ## Data as part of MultiQC config
