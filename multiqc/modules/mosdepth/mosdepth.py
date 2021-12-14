@@ -96,7 +96,6 @@ class MultiqcModule(BaseMultiqcModule):
             raise UserWarning
         log.info(f"Found {num_samples} reports")
 
-
         if cumcov_dist_data:
             # Write data to file
             self.write_data_file(cumcov_dist_data, "mosdepth_cumcov_dist")
@@ -186,7 +185,6 @@ class MultiqcModule(BaseMultiqcModule):
             self.genstats_cov_thresholds(genstats, genstats_headers, cumcov_dist_data, threshs, hidden_threshs)
             self.genstats_mediancov(genstats, genstats_headers, cumcov_dist_data)
 
-
         # Add mean coverage to General Stats
         genstats_headers["mean_coverage"] = {
             "title": "Mean Cov.",
@@ -196,7 +194,6 @@ class MultiqcModule(BaseMultiqcModule):
             "scale": "BuPu",
         }
         self.general_stats_addcols(genstats, genstats_headers)
-
 
     def parse_cov_dist(self):
         genstats = defaultdict(OrderedDict)  # mean coverage
@@ -292,7 +289,6 @@ class MultiqcModule(BaseMultiqcModule):
             log.debug(perchrom_avg_data)
         return genstats, cumcov_dist_data, cov_dist_data, xmax, perchrom_avg_data
 
-
     def genstats_cov_thresholds(self, genstats, genstats_headers, cumcov_dist_data, threshs, hidden_threshs):
         for s_name, d in cumcov_dist_data.items():
             dist_subset = {t: data for t, data in d.items() if t in threshs}
@@ -312,7 +308,6 @@ class MultiqcModule(BaseMultiqcModule):
                 "scale": "RdYlGn",
                 "hidden": t in hidden_threshs,
             }
-
 
     def genstats_mediancov(self, genstats, genstats_headers, cumcov_dist_data):
         for s_name, d in cumcov_dist_data.items():
