@@ -85,10 +85,10 @@ class MultiqcModule(BaseMultiqcModule):
 
         # Filter out any samples from --ignore-samples
         if genstats:
-            genstats = self.ignore_samples(genstats)
-        cumcov_dist_data = self.ignore_samples(cumcov_dist_data)
-        cov_dist_data = self.ignore_samples(cov_dist_data)
-        perchrom_avg_data = self.ignore_samples(perchrom_avg_data)
+            genstats = defaultdict(OrderedDict, self.ignore_samples(genstats))
+        cumcov_dist_data = defaultdict(OrderedDict, self.ignore_samples(cumcov_dist_data))
+        cov_dist_data = defaultdict(OrderedDict, self.ignore_samples(cov_dist_data))
+        perchrom_avg_data = defaultdict(OrderedDict, self.ignore_samples(perchrom_avg_data))
 
         # No samples found
         num_samples = max(len(genstats), len(cumcov_dist_data), len(cov_dist_data), len(perchrom_avg_data))
