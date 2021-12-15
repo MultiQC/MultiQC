@@ -32,6 +32,7 @@ class MultiqcModule(BaseMultiqcModule):
             target="SSDS QC",
             href="http://genome.cshlp.org/content/early/2012/03/20/gr.130583.111.full.pdf",
             info=" Statistics for Single Stranded DNA Sequencing (SSDS).",
+            doi="10.1101/gr.130583.111",
         )
 
         # Set up class objects to hold parsed data
