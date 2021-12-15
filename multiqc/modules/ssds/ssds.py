@@ -262,7 +262,6 @@ class MultiqcModule(BaseMultiqcModule):
     def itr_properties_plots(self):
 
         ## Plot 4: SSDS properties / Length histograms
-
         plot_description = """<table style="width:100%">
             <tr style="vertical-align: top; text-align: left"><td>Fragment length:</td><td>Also known as "insert size". Fragments from SSDS experiments are generally short (<100bp).</td>
             <tr style="vertical-align: top; text-align: left"><td>Inverted Terminal Repeats (ITRs):</td><td>SSDS read pairs are characterized by Inverted Terminal Repeats (ITRs) (the same sequence at the 5 prime end of read 1 and the 3 prime end of read 2).<br>ITRs with a fill-in are characteristic of ssDNA (see <a href="https://genome.cshlp.org/content/22/5/957.long">Khil et al., Genome Res.2012</a>).</td>
@@ -291,13 +290,14 @@ class MultiqcModule(BaseMultiqcModule):
             + "<hr><i>Selection criteria:</i> <b>ITR < 3 bp</b> & <b>NO fill-in</b><hr>"
         )
         plot_descriptions["unclassified"] = (
-            "Fragments designated as <b>unclassified</b> cannot be designated as either ssDNA or dsDNA-derived.<hr>"
+            "Fragments that cannot be classified based on the ITR structure. Designated as <b>unclassified</b>.<hr>"
             + plot_description
             + "<hr><i>Selection criteria:</i> <b>All remaining reads</b> not classified by other criteria.<hr>"
         )
 
         for dna_type in ["ssDNA", "ssLow", "type2", "dsDNA", "unclassified"]:
 
+            ok_to_plot = False
             ## Make a percentage normalised version of the data
             data_count = {}
             data_percent = {}
@@ -309,86 +309,92 @@ class MultiqcModule(BaseMultiqcModule):
                 data_percent[prop_type] = {}
 
                 # If histogram dictionary exists for this combo
-                if len(self.histograms[combo_type]) > 0:
+                if combo_type in self.histograms.keys():
+                    if len(self.histograms[combo_type]) > 0:
+                        ok_to_plot = True
 
-                    # Loop through key, value pairs for this histogram
-                    for s_name, data in self.histograms[combo_type].items():
-                        maxXval = {}
-                        maxXval[prop_type] = -1
+                        # Loop through key, value pairs for this histogram
+                        for s_name, data in self.histograms[combo_type].items():
+                            maxXval = {}
+                            maxXval[prop_type] = -1
 
-                        total = 0
+                            total = 0
+                            # Create percentage dictionary
+                            data_count[prop_type][s_name] = {}
+                            data_percent[prop_type][s_name] = {}
 
-                        # Create percentage dictionary
-                        data_count[prop_type][s_name] = {}
-                        data_percent[prop_type][s_name] = {}
+                            # Get total for this histogram
+                            total = float(sum(data.values()))
 
-                        # Get total for this histogram
-                        total = float(sum(data.values()))
+                            # Calculate percentages for this histogram
+                            for k, v in data.items():
+                                if (maxXval[prop_type] + 1) < k:
+                                    for l in range(maxXval[prop_type] + 1, k):
+                                        data_count[prop_type][s_name][l] = 0
+                                        data_percent[prop_type][s_name][l] = 0
 
-                        # Calculate percentages for this histogram
-                        for k, v in data.items():
-                            if (maxXval[prop_type] + 1) < k:
-                                for l in range(maxXval[prop_type] + 1, k):
-                                    data_count[prop_type][s_name][l] = 0
-                                    data_percent[prop_type][s_name][l] = 0
+                                data_count[prop_type][s_name][k] = v
+                                if v > 0:
+                                    data_percent[prop_type][s_name][k] = (v / total) * 100
+                                else:
+                                    data_percent[prop_type][s_name][k] = 0
+                                if k > maxXval[prop_type]:
+                                    maxXval[prop_type] = k
 
-                            data_count[prop_type][s_name][k] = v
-                            if v > 0:
-                                data_percent[prop_type][s_name][k] = (v / total) * 100
-                            else:
-                                data_percent[prop_type][s_name][k] = 0
+            if ok_to_plot:
+                # Configure histogram plot
+                histConfig = {
+                    "id": dna_type + "_fragment_properties",
+                    "title": "Module SSDS: " + dna_type + " fragment properties",
+                    "save_file": True,
+                    "xDecimals": False,
+                    "ymin": 0,
+                    "ylab": "Fragments",
+                    "categories": True,
+                    "data_labels": [
+                        {"name": "ITR (Count)", "ylab": "Fragments (#)", "xlab": "Total ITR length (nt)"},
+                        {"name": "ITR (%)", "ylab": "Fragments (%)", "xlab": "Total ITR length (nt)"},
+                        {
+                            "name": "Micro-homology (Count)",
+                            "ylab": "Fragments (#)",
+                            "xlab": "ITR microhomology length (nt)",
+                        },
+                        {
+                            "name": "Micro-homology (%)",
+                            "ylab": "Fragments (%)",
+                            "xlab": "ITR microhomology length (nt)",
+                        },
+                        {"name": "Fill-in (Count)", "ylab": "Fragments (#)", "xlab": "ITR fill-in length (nt)"},
+                        {"name": "Fill-in (%)", "ylab": "Fragments (%)", "xlab": "ITR fill-in length (nt)"},
+                        {"name": "Fragment (Count)", "ylab": "Fragments (#)", "xlab": "Fragment length (nt)"},
+                        {"name": "Fragment (%)", "ylab": "Fragments (%)", "xlab": "Fragment length (nt)"},
+                    ],
+                }
 
-                            if k > maxXval[prop_type]:
-                                maxXval[prop_type] = k
+                plot_data = [
+                    data_count["ITR"],
+                    data_percent["ITR"],
+                    data_count["uH"],
+                    data_percent["uH"],
+                    data_count["FillIn"],
+                    data_percent["FillIn"],
+                    data_count["Fragment"],
+                    data_percent["Fragment"],
+                ]
 
-            # Configure histogram plot
-            histConfig = {
-                "id": dna_type + "_fragment_properties",
-                "title": "Module SSDS: " + dna_type + " fragment properties",
-                "save_file": True,
-                "xDecimals": False,
-                "ymin": 0,
-                "ylab": "Fragments",
-                "categories": True,
-                "data_labels": [
-                    {"name": "ITR (Count)", "ylab": "Fragments (#)", "xlab": "Total ITR length (nt)"},
-                    {"name": "ITR (%)", "ylab": "Fragments (%)", "xlab": "Total ITR length (nt)"},
-                    {
-                        "name": "Micro-homology (Count)",
-                        "ylab": "Fragments (#)",
-                        "xlab": "ITR microhomology length (nt)",
-                    },
-                    {"name": "Micro-homology (%)", "ylab": "Fragments (%)", "xlab": "ITR microhomology length (nt)"},
-                    {"name": "Fill-in (Count)", "ylab": "Fragments (#)", "xlab": "ITR fill-in length (nt)"},
-                    {"name": "Fill-in (%)", "ylab": "Fragments (%)", "xlab": "ITR fill-in length (nt)"},
-                    {"name": "Fragment (Count)", "ylab": "Fragments (#)", "xlab": "Fragment length (nt)"},
-                    {"name": "Fragment (%)", "ylab": "Fragments (%)", "xlab": "Fragment length (nt)"},
-                ],
-            }
-
-            plot_data = [
-                data_count["ITR"],
-                data_percent["ITR"],
-                data_count["uH"],
-                data_percent["uH"],
-                data_count["FillIn"],
-                data_percent["FillIn"],
-                data_count["Fragment"],
-                data_percent["Fragment"],
-            ]
-            ## KB: 10/08/21: Adding this linegraph is slow.
-            # Add histogram to multi-QC page
-            self.add_section(
-                plot=linegraph.plot(plot_data, histConfig),
-                name="Frag. props: " + dna_type,
-                anchor="ssds-stats" + combo_type,
-                description="<p>This plot shows the length distributions for fragment properties for "
-                + dna_type
-                + " fragments from SSDS.<br><br>"
-                + plot_descriptions[dna_type]
-                + "</p>",
-                content='<p>This module parses the results from <a href="https://github.com/kevbrick/ssds_pipeline_accessory_scripts.git"><code>parse_SSDS_BAM.py</code> </a></p>',
-            )
+                # KB: 10/08/21: Adding this linegraph is slow.
+                # Add histogram to multi-QC page
+                self.add_section(
+                    plot=linegraph.plot(plot_data, histConfig),
+                    name="Frag. props: " + dna_type,
+                    anchor="ssds-stats" + combo_type,
+                    description="<p>This plot shows the length distributions for fragment properties for "
+                    + dna_type
+                    + " fragments from SSDS.<br><br>"
+                    + plot_descriptions[dna_type]
+                    + "</p>",
+                    content='<p>This module parses the results from <a href="https://github.com/kevbrick/ssds_pipeline_accessory_scripts.git"><code>parse_SSDS_BAM.py</code> </a></p>',
+                )
 
     def ssds_spot_heatmap(self):
 
@@ -397,10 +403,32 @@ class MultiqcModule(BaseMultiqcModule):
         data = []
         spot_vals = OrderedDict()
 
+        help_text = {}
+        help_text[
+            "ssDNA"
+        ] = """<tr style="vertical-align: top; text-align: left"><td><b>ss</b> (ssDNA)        : Fragments unambiguously derived from single-stranded DNA (ssDNA)</td>"""
+        help_text[
+            "ssLow"
+        ] = """<tr style="vertical-align: top; text-align: left"><td><b>sl</b> (ssLow)        : Low confidence ssDNA. With a low likelihood, these fragments may also be derived from dsDNA. Not routinely used in ssDNA-based analyses.</td>"""
+        help_text[
+            "type2"
+        ] = """<tr style="vertical-align: top; text-align: left"><td><b>t2</b> (type2)        : Fragments may be derived from ss- or ds-DNA. Not routinely used in ssDNA-based analyses.</td>"""
+        help_text[
+            "dsDNA"
+        ] = """<tr style="vertical-align: top; text-align: left"><td><b>ds</b> (dsDNA)        : Fragments likely derived from double-stranded DNA. It remains possible that these fragments are derived from single-stranded DNA, particularly in libraries with ssDNA enrichment. </td>"""
+        help_text[
+            "unclassified"
+        ] = """<tr style="vertical-align: top; text-align: left"><td><b>un</b> (unclassified) : Ambiguous, unclassified fragments.</td>"""
+
         hm = self.SPoT_values
 
         # dna_types = self.SPoT_values.keys()
-        dna_types = ["ssDNA", "ssLow", "type2", "dsDNA", "unclassified"]
+        dna_types = []
+        help_dets = ""
+        for d in ["ssDNA", "ssLow", "type2", "dsDNA", "unclassified"]:
+            if d in self.SPoT_values.keys():
+                dna_types.append(d)
+                help_dets = help_dets + help_text[d]
 
         short_dna_type = OrderedDict()
         short_dna_type["ssDNA"] = "ss"
@@ -419,19 +447,19 @@ class MultiqcModule(BaseMultiqcModule):
 
         s_names = []
 
-        for s in sample_names:
-            for d in dna_types:
+        for d in dna_types:
+            for s in sample_names:
                 s_names.append("(" + short_dna_type[d] + ")" + s)
 
-        for i in interval_names:
-            row = []
+        for d in dna_types:
             for s in sample_names:
-                for d in dna_types:
+                row = []
+                for i in interval_names:
                     try:
                         row.append(float(self.SPoT_values[d][s][i]))
                     except KeyError:
                         row.append(0)
-            data.append(row)
+                data.append(row)
 
         pconfig = {
             "id": "ssds-spot-heatmap",
@@ -460,14 +488,9 @@ class MultiqcModule(BaseMultiqcModule):
                 Otherwise, increasing SPoT from yellow to orange to red). Intervals annotated as (R) represent
                 the SPoT when the intervals are randomly shuffled in the genome (bedtools shuffle -chrom). This 
                 provides a naive, but useful estimate of random expectation for a non-enriched library.<br><br>
-                <table style="width:100%">
-                    <tr style="vertical-align: top; text-align: left"><td><b>ss</b> (ssDNA)        : Fragments unambiguously derived from single-stranded DNA (ssDNA)</td>
-                    <tr style="vertical-align: top; text-align: left"><td><b>sl</b> (ssLow)        : Low confidence ssDNA. With a low likelihood, these fragments may also be derived from dsDNA. Not routinely used in ssDNA-based analyses.</td>
-                    <tr style="vertical-align: top; text-align: left"><td><b>t2</b> (type2)        : Fragments may be derived from ss- or ds-DNA. Not routinely used in ssDNA-based analyses.</td>
-                    <tr style="vertical-align: top; text-align: left"><td><b>ds</b> (dsDNA)        : Fragments likely derived from double-stranded DNA. It remains possible that these fragments are derived from single-stranded DNA, particularly in libraries with ssDNA enrichment. </td>
-                    <tr style="vertical-align: top; text-align: left"><td><b>un</b> (unclassified) : Fragments cannot be defined as either ssDNA or dsDNA-derived.</td>
-                </table><br>
-            """,
+                <table style="width:100%">"""
+            + help_dets
+            + "</table><br>",
             helptext="""
                 The Signal Percentage of Tags (SPoT) represents the percentage of sequencing reads found in
                 a set of genomic intervals. Higher numbers indicate that the library was enriched for reads
@@ -476,5 +499,5 @@ class MultiqcModule(BaseMultiqcModule):
                 represents a reasonable expectation of random overlap, however this very simple estimate should
                 be formally validated more robustly.  
             """,
-            plot=heatmap.plot(data, s_names, interval_names, pconfig),
+            plot=heatmap.plot(data, interval_names, s_names, pconfig),
         )
