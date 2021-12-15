@@ -290,7 +290,7 @@ class MultiqcModule(BaseMultiqcModule):
             + "<hr><i>Selection criteria:</i> <b>ITR < 3 bp</b> & <b>NO fill-in</b><hr>"
         )
         plot_descriptions["unclassified"] = (
-            "Fragments that cannot be classified based on the ITR structure. Designated as <b>unclassified</b>.<hr>"
+            "<b>Unclassified</b> fragments cannot be classified based on the ITR structure.<hr>"
             + plot_description
             + "<hr><i>Selection criteria:</i> <b>All remaining reads</b> not classified by other criteria.<hr>"
         )
