@@ -57,7 +57,7 @@ class BaseMultiqcModule(object):
         if self.info is None:
             self.info = ""
         # Always finish with a ".", as we may add a DOI after the intro.
-        if len(self.info) > 0 and self.info[:-1] != ".":
+        if len(self.info) > 0 and self.info[-1] != ".":
             self.info += "."
         if self.extra is None:
             self.extra = ""
