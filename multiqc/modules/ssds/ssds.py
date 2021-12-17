@@ -273,7 +273,7 @@ class MultiqcModule(BaseMultiqcModule):
         plot_descriptions["ssDNA"] = (
             "Fragments designated <b>ssDNA</b> are derived from single-stranded DNA.<hr>"
             + plot_description
-            + "<hr><i>Selection criteria:</i> <b>ITR > 5 bp</b> & <b>Fill-in > 2 bp</b> & <b>uHomology > 0 bp</b><hr>"
+            + "<hr><i>Selection criteria:</i> <b>ITR > 5 bp</b> & <b>Fill-in > 2 bp</b><hr>"
         )
         plot_descriptions["ssLow"] = (
             "Fragments designated as <b>ssLow</b> are likely derived from single-stranded DNA. However, this is a low-confidence designation as these fragments may also be derived from dsDNA. Not routinely used in ssDNA-based analyses.<hr>"
@@ -485,9 +485,9 @@ class MultiqcModule(BaseMultiqcModule):
             name="SSDS SPoTs",
             anchor="ssds_spot_heatmap",
             description="""
-                Signal Percentage of Tags (SPoT) for all samples (%). Colors indicate the value (0 / no data =white; 
+                Signal Percentage of Tags (SPoT) for all samples (%). Colors indicate the value (0 / no data =white;
                 Otherwise, increasing SPoT from yellow to orange to red). Intervals annotated as (R) represent
-                the SPoT when the intervals are randomly shuffled in the genome (bedtools shuffle -chrom). This 
+                the SPoT when the intervals are randomly shuffled in the genome (bedtools shuffle -chrom). This
                 provides a naive, but useful estimate of random expectation for a non-enriched library.<br><br>
                 <table style="width:100%">"""
             + help_dets
@@ -498,7 +498,7 @@ class MultiqcModule(BaseMultiqcModule):
                 in that location. The SSDS report may also contain intervals annotated as (R); these represent
                 the SPoT when the intervals are randomly shuffled in the genome (bedtools shuffle -chrom). This
                 represents a reasonable expectation of random overlap, however this very simple estimate should
-                be formally validated more robustly.  
+                be formally validated more robustly.
             """,
             plot=heatmap.plot(data, interval_names, s_names, pconfig),
         )
