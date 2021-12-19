@@ -17,7 +17,7 @@ from copy import copy
 from itertools import combinations_with_replacement, zip_longest
 from operator import itemgetter
 
-from .utils import read_pairs_stats, contact_areas, pairtypes_common, cis_range_colors
+from .utils import read_stats_from_file, contact_areas, pairtypes_common, cis_range_colors
 
 # Initialise the logger
 log = logging.getLogger(__name__)
@@ -49,7 +49,7 @@ class MultiqcModule(BaseMultiqcModule):
         if len(self.pairtools_stats) == 0:
             raise UserWarning
 
-        log.info("Found {} reports".format(len(self.pairtools_stats)))
+        log.info(f"Found {len(self.pairtools_stats)} reports")
 
         # Add to self.js to be included in template
         self.js = {'assets/js/multiqc_pairtools.js' : os.path.join(os.path.dirname(__file__), 'assets', 'js', 'multiqc_pairtools.js') }
@@ -59,7 +59,6 @@ class MultiqcModule(BaseMultiqcModule):
         for s_name in self.pairtools_stats:
             self.max_total_reads = \
                 max(self.max_total_reads, self.pairtools_stats[s_name]['total'])
-        # self.max_total_reads = max(self.pairtools_stats[s_name]['total'] for s_name in self.pairtools_stats)
 
         self.pairtools_general_stats()
 
@@ -79,9 +78,9 @@ class MultiqcModule(BaseMultiqcModule):
             name = 'Pre-filtered pairs grouped by genomic separations',
             anchor = 'cis-ranges-trans',
             description="Distribution of pre-filtered pairs (UU, UR and RU) by genomic"
-                        " separations for <it>cis-</it>pairs and <it>trans-</it>pairs as a separate group.",
+                        " separation for <it>cis-</it>pairs and <it>trans-</it>pairs.",
             helptext = '''Pre-filtered read pairs might still include artifacts:
-            Short-range cis-pairs are typically enriched in technical artifacts, such as self-circles, dangling-ends, etc.
+            Short-range cis-pairs (<1kb) are typically enriched in technical artifacts (self-circles, dangling-ends, etc).
             High fraction of trans interactions typically suggests increased noise levels''',
             plot = self.pairs_by_cisrange_trans()
         )
@@ -97,9 +96,9 @@ class MultiqcModule(BaseMultiqcModule):
             helptext = '''Short-range cis-pairs are typically enriched in technical artifacts.
             Frequency of interactions for read pairs of different orientations
             ++,+-,-+ and -- (FF, FR, RF, RR) provide insight into these technical artifacts.
-            Different technical artifacts manifest themselves with only single type of read orientation
-            (dangling-ends - FR, self-circles - RF). Thus enrichment of FR/RF pairs at a given genomic
-            separation can hint at the level of contamination.''',
+            For example, dangling-ends manifest themselves as FR-pairs, while self-circles - RF.
+            Thus enrichment of FR/RF pairs at a given genomic separation can hint at the level
+            of contamination.''',
             plot = self.pairs_with_genomic_separation()
         )
 
@@ -113,9 +112,9 @@ class MultiqcModule(BaseMultiqcModule):
             helptext = '''Short-range cis-pairs are typically enriched in technical artifacts.
             Frequency of interactions for read pairs of different orientations
             ++,+-,-+ and -- (FF, FR, RF, RR) provide insight into these technical artifacts.
-            Different technical artifacts manifest themselves with only single type of read orientation
-            (dangling-ends - FR, self-circles - RF). Thus enrichment of FR/RF pairs at a given genomic
-            separation can hint at the level of contamination.''',
+            For example, dangling-ends manifest themselves as FR-pairs, while self-circles - RF.
+            Thus enrichment of FR/RF pairs at a given genomic separation can hint at the level
+            of contamination.''',
             plot = self.pairs_by_strand_orientation()
         )
 
@@ -126,19 +125,16 @@ class MultiqcModule(BaseMultiqcModule):
             description="Number of pre-filtered interactions (pairs) within a single chromosome"
                         " or for a pair of chromosomes.",
             helptext = '''Numbers of pairs are normalized by the total number of pre-filtered pairs per sample.
-            Number are reported only for chromosomes/pairs that have >1% of pre-filtered pairs.
-            [THERE SEEM TO BE A BUG IN MULTIQC HEATMAP - OBVIOUS WHEN USE HIGHLIGHTING,RENAMING ETC]''',
+            Number are reported only for chromosomes/pairs that have >1% of pre-filtered pairs.''',
             plot = self.pairs_by_chrom_pairs()
         )
 
 
     def parse_pairtools_stats(self, f):
         """ Parse a pairtools summary stats """
-        # s_name = f['s_name']
-        # f_name = f['fn']
-        # log.info("parsing {} {} ...".format(s_name,f_name))
         f_handle = f['f']
-        return read_pairs_stats(f_handle)
+        log.info(f"parsing .stats file: {f_handle.name}")
+        return read_stats_from_file(f_handle)
 
 
     def pair_types_chart(self):
@@ -179,8 +175,10 @@ class MultiqcModule(BaseMultiqcModule):
 
 
     def pairs_by_cisrange_trans(self):
-        """ cis-pairs split into several ranges
-        of genomic separation, and trans-category."""
+        """
+        cis-pairs split into several ranges
+        of genomic separation, and trans-category.
+        """
 
         # assuming cumulative counts are given
         # assuming open "distance" intervals (1kb+,...)
@@ -322,7 +320,8 @@ class MultiqcModule(BaseMultiqcModule):
         return bargraph.plot(
                 [_data[_d] for _d in dist_ranges],
                 [keys_annotated for _d in dist_ranges],
-                pconfig=config)
+                pconfig=config,
+            )
 
 
 
@@ -394,11 +393,6 @@ class MultiqcModule(BaseMultiqcModule):
                     _data_RF[s_name][k] = _RF
                     _data_RR[s_name][k] = _RR
 
-        # # Specify the order of the different possible categories
-        # keys = sorted_keys
-        # keys['Not_Truncated_Reads'] = { 'color': '#2f7ed8', 'name': 'Not Truncated' }
-        # keys['Truncated_Read']      = { 'color': '#0d233a', 'name': 'Truncated' }
-
         pconfig = {
             'id': 'broom_plot',
             'title': 'Pairs by distance and by read orientation',
@@ -421,11 +415,7 @@ class MultiqcModule(BaseMultiqcModule):
             'click_func': 'single_scaling'
         }
 
-        # plot = linegraph.plot(self.cutadapt_length_counts, pconfig)
-
         return linegraph.plot([_data_mean, _data_FF, _data_FR, _data_RF, _data_RR], pconfig=pconfig)
-        # return linegraph.plot(_data_mean, pconfig=pconfig)
-
 
 
     # chrom_freq/chr1/chrX ...
