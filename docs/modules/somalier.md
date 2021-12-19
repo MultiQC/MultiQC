@@ -2,8 +2,8 @@
 Name: Somalier
 URL: https://github.com/brentp/somalier
 Description: >
-    Somalier does fast genotype :: pedigree correspondence checks
-    from BAM/CRAM/VCF
+  Somalier does fast genotype :: pedigree correspondence checks
+  from BAM/CRAM/VCF
 ---
 
 Somalier can be used to find sample swaps or duplicates in cancer

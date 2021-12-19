@@ -1,4 +1,5 @@
 # Running MultiQC
+
 Once installed, just go to your analysis directory and run `multiqc`, followed
 by a list of directories to search. At it's simplest, this can just be `.`
 (the current working directory):
@@ -16,6 +17,7 @@ to use the generated report.
 For a description of all command line parameters, run `multiqc --help`.
 
 ## Choosing where to scan
+
 You can supply MultiQC with as many directories or files as you like. Above,
 we supply `.` - just the current directory, but all of these would work too:
 
@@ -26,14 +28,21 @@ multiqc data/*_fastqc.zip
 multiqc data/sample_1*
 ```
 
-You can also ignore files using the `-x`/`--ignore` flag (can be specified multiple
-times). This takes a string which it matches using glob expansion to filenames,
-directory names and entire paths:
+If the `--ignore-symlinks` flag is set, MultiQC will ignore symlinked directories and files.
+
+You can also ignore files or directories using the `-x`/`--ignore` option.
+This can be specified multiple times and accepts glob patterns (eg. using the `*` and `?` wildcards).
+
+> Note that glob patterns should be enclosed in quotes to prevent them being expanded by bash
+
+The argument can match filenames, directory names and entire paths. For example:
 
 ```bash
-multiqc . --ignore *_R2*
-multiqc . --ignore run_two/
-multiqc . --ignore */run_three/*/fastqc/*_R2.zip
+multiqc . --ignore "file"
+multiqc . --ignore "fileA" --ignore "fileB"
+multiqc . --ignore "_R?.zip"
+multiqc . --ignore "run_two/*"
+multiqc . --ignore "*/run_three/*/fastqc/*_R2.zip"
 ```
 
 Some modules get sample names from the contents of the file and not the filename
@@ -41,8 +50,9 @@ Some modules get sample names from the contents of the file and not the filename
 skip samples by name instead:
 
 ```bash
-multiqc . --ignore-samples sample_3*
+multiqc . --ignore-samples "sample_3*"
 ```
+
 These strings are matched using glob logic (`*` and `?` are wildcards).
 
 All of these settings can be saved in a MultiQC config file so that you don't have
@@ -56,6 +66,7 @@ multiqc --file-list my_file_list.txt
 ```
 
 ## Renaming reports
+
 The report is called `multiqc_report.html` by default. Tab-delimited data files
 are created in `multiqc_data/`, containing additional information.
 You can use a custom name for the report with the `-n`/`--filename` parameter, or instruct
@@ -64,11 +75,13 @@ MultiQC to create them in a subdirectory using the `-o`/`-outdir` parameter.
 Note that different MultiQC templates may have different defaults.
 
 ## Overwriting existing reports
+
 It's quite common to repeatedly create new reports as new analysis results
 are generated. Instead of manually deleting old reports, you can just specify
 the `-f` parameter and MultiQC will overwrite any conflicting report filenames.
 
 ## Sample names prefixed with directories
+
 Sometimes, the same samples may be processed in different ways. If MultiQC
 finds log files with the same sample name, the previous data will be overwritten
 (this can be inspected by running MultiQC with `-v`/`--verbose`).
@@ -84,7 +97,7 @@ directories from the start of the path.
 
 For example:
 
-```
+```console
 $ multiqc -d .
 # analysis_1 | results | type | sample_1 | file.log
 # analysis_2 | results | type | sample_2 | file.log
@@ -102,6 +115,7 @@ $ multiqc -d -dd -1 .
 ```
 
 ## Using different templates
+
 MultiQC is built around a templating system. You can produce reports with
 different styling by using the `-t`/`--template` option. The available templates
 are listed with `multiqc --help`.
@@ -110,12 +124,17 @@ If you're interested in creating your own custom template, see the
 [writing new templates](http://multiqc.info/docs/#writing-new-templates) section.
 
 ## PDF Reports
+
 Whilst HTML is definitely the format of choice for MultiQC reports due to
 the interactive features that it can offer, PDF files are an integral part
 of some people's workflows. To try to accommodate this, MultiQC has a
 `--pdf` command line flag which will try to create a PDF report for you.
 
-To do this, MultiQC uses the `simple` template. This uses flat plots,
+> PDF export support for MultiQC can be difficult to use and disables
+> many core MultiQC features and even some plots. It should only be used
+> as a last resort.
+
+To generate PDFs, MultiQC uses the `simple` template. This uses flat plots,
 has no navigation or toolbar and strips out all JavaScript. The resulting
 HTML report is pretty basic, but this simplicity is helpful when generating
 PDFs.
@@ -125,23 +144,35 @@ a command line tool able to convert documents between different file formats.
 **You must have Pandoc already installed for this to work**. If you don't have
 Pandoc installed, you will get an error message that looks like this:
 
-```
+```txt
 Error creating PDF - pandoc not found. Is it installed? http://pandoc.org/
 ```
 
-Please note that Pandoc is a complex tool and uses LaTeX / XeLaTeX for PDF
-generation. Please make sure that you have the latest version of Pandoc and
+Please note that Pandoc is a complex tool and has a number of its own dependencies
+for PDF generation. Notably, it uses LaTeX / XeLaTeX which you must also have installed.
+Please make sure that you have the latest version of Pandoc and
 that it can successfully convert basic HTML files to PDF before reporting
-and errors. Also note that not all plots have flat image equivalents, so
+and errors.
+
+Error messages from Pandoc are piped through to the MultiQC log,
+for example if the xelatex dependency is not installed you will see the following:
+
+```txt
+xelatex not found. Please select a different --pdf-engine or install xelatex
+```
+
+Note that not all plots have flat image equivalents, so
 some will be missing (at time of writing: FastQC sequence content plot,
 beeswarm dot plots, heatmaps).
 
 ## Printing to stdout
+
 If you would like to generate MultiQC reports on the fly, you can print the
 output to standard out by specifying `-n stdout`. Note that the data directory
 will not be generated and the template used must create stand-alone HTML reports.
 
 ## Parsed data directory
+
 By default, MultiQC creates a directory alongside the report containing
 tab-delimited files with the parsed data. This is useful for downstream
 processing, especially if you're running MultiQC with very large numbers
@@ -159,6 +190,7 @@ is never produced when printing the MultiQC report to `stdout`.
 To zip the data directory, use the `-z`/`--zip-data-dir` flag.
 
 ## Exporting Plots
+
 In addition to the HTML report, it's also possible to get MultiQC to save
 plots as stand alone files. You can do this with the `-p`/`--export` command
 line flag. By default, plots will be saved in a directory called `multiqc_plots`
@@ -177,6 +209,7 @@ missing.
 > MultiQC reports, using the [Export toolbox](http://multiqc.info/docs/#export) in the side bar.
 
 ## Choosing which modules to run
+
 Sometimes, it's desirable to choose which MultiQC modules run. This could be
 because you're only interested in one type of output and want to keep the
 reports small. Or perhaps the output from one module is misleading in your

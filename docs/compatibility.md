@@ -5,6 +5,7 @@ modules and plugins will keep working. However, in some cases we have to make ch
 require code to be modified. This section summarises the changes by MultiQC release.
 
 ## v1.0 Updates
+
 MultiQC v1.0 brings a few changes in the way that MultiQC modules and plugins are written. Most are backwards-compatible, but there are a couple that could break external plugins.
 
 #### Module imports
@@ -16,11 +17,13 @@ All MultiQC modules and plugins will need to change some of their import stateme
 There are two things that you probably need to change in your plugin modules to
 make them work with the updated version of MultiQC, both to do with imports.
 Instead of this style of importing modules:
+
 ```python
 from multiqc import config, BaseMultiqcModule, plots
 ```
 
 You now need this:
+
 ```python
 from multiqc import config
 from multiqc.plots import bargraph   # Load specific plot types here
@@ -34,11 +37,14 @@ Secondly, modules that use `import plots` now need to import the specific plots 
 You will also need to update any plotting functions, removing the `plot.` prefix.
 
 For example, change this:
+
 ```python
 import plots
 return plots.bargraph.plot(data, keys, pconfig)
 ```
+
 to this:
+
 ```python
 from plots import bargraph
 return bargraph.plot(data, keys, pconfig)
@@ -53,11 +59,13 @@ If you have any questions, please open an issue.
 > Many thanks to [@tbooth](https://github.com/tbooth) at [@EdinburghGenomics](https://github.com/EdinburghGenomics) for his patient work with this.
 
 #### Searching for files
+
 The core `find_log_files` function has been rewritten and now works a little differently. Instead of searching all analysis files each time it's called (by every module), all files are searched once at the start of the MultiQC execution. This makes MultiQC run much faster.
 
 To use the new syntax, add your search pattern to `config.sp` using the new `before_config` plugin hook:
 
 `setup.py`:
+
 ```python
 # [..]
   'multiqc.hooks.v1': [
@@ -66,6 +74,7 @@ To use the new syntax, add your search pattern to `config.sp` using the new `bef
 ```
 
 `mymodule.py`:
+
 ```python
 from multiqc.utils import config
 def load_config():
@@ -88,6 +97,7 @@ for f in self.find_log_files('my_plugin/my_mod'):
 The old syntax (supplying a `dict` instead of a string to the function without any previous config setup) will still work, but you will get a depreciation notice. This functionality may be removed in the future.
 
 #### Adding report sections
+
 Until now, report sections were added by creating a list called `self.sections` and adding to it. If you only had a single section, the routine was to instead append to the `self.intro` string.
 
 These methods have been depreciated in favour of a new function called `self.add_section()`. For example, instead of the previous:
@@ -119,6 +129,7 @@ Note that content should now be split up into three new keys: `description`, `he
 All fields are optional. If `name` is omitted then the end result will be the same as previously done with `self.intro += content`.
 
 #### Updated number formatting
+
 A couple of minor updates to how numbers are handled in tables may affect your configs. Firstly, format strings looking like `{:.1f}` should now be `{:,.1f}` (note the extra comma). This enables customisable number formatting with separated thousand groups.
 
 Secondly, any table columns reporting a read count should use new config options to allow user-configurable multipliers. For example, instead of this:
@@ -146,4 +157,3 @@ headers['read_counts'] = {
 ```
 
 Not as pretty, but allows users to view low depth coverage.
-
