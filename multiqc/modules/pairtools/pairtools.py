@@ -371,12 +371,12 @@ class MultiqcModule(BaseMultiqcModule):
             dir_RF = np.asarray(sample_dist_freq["-+"])[1:].astype(float)
             dir_RR = np.asarray(sample_dist_freq["--"])[1:].astype(float)
 
-            dir_mean /= _areas
-
-            dir_FF /= _areas
-            dir_FR /= _areas
-            dir_RF /= _areas
-            dir_RR /= _areas
+            if self.pairtools_stats[s_name]["chromsizes"]:
+                dir_mean /= _areas
+                dir_FF /= _areas
+                dir_FR /= _areas
+                dir_RF /= _areas
+                dir_RR /= _areas
             #
             # fill in the data ...
             for i, (k,v1) in enumerate(zip(_dist_bins_geom, dir_mean)):
@@ -434,7 +434,7 @@ class MultiqcModule(BaseMultiqcModule):
         _chromset = set()
         _data_pruned = dict()
         for s_name in self.pairtools_stats:
-            pairs_min = 0.001*self.pairtools_stats[s_name]['cis']
+            pairs_min = 0.05*self.pairtools_stats[s_name]['cis']
             _chrom_freq_sample = \
                 self.pairtools_stats[s_name][_report_field]
             _data_pruned[s_name] = \
@@ -451,7 +451,7 @@ class MultiqcModule(BaseMultiqcModule):
         # Construct a data structure for the plot
         _data = dict()
         for s_name in self.pairtools_stats:
-            pairs_min = 0.001*self.pairtools_stats[s_name]['cis']
+            pairs_min = 0.05*self.pairtools_stats[s_name]['cis']
             pairs_tot = self.pairtools_stats[s_name]['cis']+self.pairtools_stats[s_name]['trans']
             _data[s_name] = dict()
             _chrom_freq_sample = \
@@ -501,11 +501,11 @@ class MultiqcModule(BaseMultiqcModule):
         """ Add columns to General Statistics table """
         headers = OrderedDict()
         headers['total'] = {
-            'title': '{} read pairs'.format(config.read_count_prefix),
-            'description': 'Total read pairs ({})'.format(config.read_count_desc),
-            'min': 0,
-            'modify': lambda x: x * config.read_count_multiplier,
-            'scale': 'Blues',
+            "title": f"{config.read_count_prefix} read pairs",
+            "description": f"Total read pairs ({config.read_count_desc})",
+            "min": 0,
+            "modify": lambda x: x * config.read_count_multiplier,
+            "scale": 'Blues',
         }
         headers['frac_unmapped'] = {
             'title': '% unmapped',
