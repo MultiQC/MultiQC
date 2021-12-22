@@ -121,8 +121,20 @@ class MultiqcModule(BaseMultiqcModule):
                 field = field.replace(" ", "_")
                 value = float(sections[2].strip())
                 parsed_data[field] = value
-                if field == "filtered_fragments":
-                    parsed_data["other"] = parsed_data[field]
+                #                if field == "filtered_fragments":
+                #                    parsed_data["other"] = parsed_data[field]
+
+                if field == "fragment_too_long":
+                    parsed_data["frag_long"] = parsed_data[field]
+
+                if field == "fragment_too_short":
+                    parsed_data["frag_short"] = parsed_data[field]
+
+                if field == "alignment_too_short":
+                    parsed_data["aligned_short"] = parsed_data[field]
+
+                if field == "supplementary_alignment":
+                    parsed_data["supp_alignment"] = parsed_data[field]
 
             if reportOK:
                 self.add_data_source(f)
@@ -213,6 +225,10 @@ class MultiqcModule(BaseMultiqcModule):
         sample_color_keys["dsDNA_fragments"] = {"color": "#11a400", "name": "dsDNA"}
         sample_color_keys["unclassified_fragments"] = {"color": "#b1084c", "name": "Unclassified"}
         sample_color_keys["adapter"] = {"color": "#7fffd4", "name": "Adapter"}
+        sample_color_keys["frag_long"] = {"color": "#000000", "name": "Fragment too long (>10 Kb)"}
+        sample_color_keys["frag_short"] = {"color": "#333333", "name": "Fragment too short (< 35 bp)"}
+        sample_color_keys["aligned_short"] = {"color": "#888888", "name": "Alignment too short (< 35 bp)"}
+        sample_color_keys["supp_alignment"] = {"color": "#dddddd", "name": "Supplementary alignment"}
         sample_color_keys["other"] = {"color": "#696969", "name": "Other"}
 
         # Configure the total alignment plot
