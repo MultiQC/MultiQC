@@ -6,39 +6,46 @@ from collections import OrderedDict
 _SEP = '\t'
 _KEY_SEP = '/'
 
-# some good-looking presets for pair-type report section
-# consider moving to separate yml file
-pairtypes_common = OrderedDict()
-pairtypes_common['UU'] = '#33a02c' # Green
-pairtypes_common['uu'] = '#b2df8a' # Pale green (walks-policy all)
-pairtypes_common['RU'] = '#b2df8a' # Pale green (walks-policy mask)
-pairtypes_common['UR'] = '#a6cee3' # Pale blue (walks-policy mask)
-pairtypes_common['WW'] = '#1f78b4' # Blue
-pairtypes_common['DD'] = '#fff900' # Yellow
-pairtypes_common['MU'] = '#ff7f00' # Orange
-pairtypes_common['MR'] = '#fdbf6f' # Pale orange (walks-policy mask)
-pairtypes_common['mu'] = '#fdbf6f' # Pale orange (walks-policy all)
-pairtypes_common['MM'] = '#e31a1c' # Red
-pairtypes_common['mm'] = '#fb9a99' # Pale red (walks-policy all)
-pairtypes_common['NM'] = '#b15928' # Brown
-pairtypes_common['nm'] = '#ffff99' # Pale brown (yellow-ish) (walks-policy all)
-pairtypes_common['NU'] = '#6a3d9a' # Violet
-pairtypes_common['NR'] = '#cab2d6' # Pale violet (walks-policy mask)
-pairtypes_common['nu'] = '#cab2d6' # Pale violet (walks-policy all)
-pairtypes_common['NN'] = '#9e0090' # Magenta
-pairtypes_common['nn'] = '#ff7ff3' # Pale magenta (walks-policy all)
-pairtypes_common['XX'] = '#000000'
 
-# add color to sorted keys:
-cis_range_colors = [
-    '#8c2d04',  # short-range cis
-    '#cc4c02',
-    '#ec7014',
-    '#fe9929',
-    '#fec44f',
-    '#fee391',
-    '#ffffd4',  #long-range cis
-    ]
+def genomic_dist_human_str(dist_in_bp):
+    """
+    turn genomic distance (in basepairs) into
+    human readable string (supports Mb, Kb and bp)
+    """
+    if dist_in_bp:
+        _bp = int(dist_in_bp)
+        if _bp // 1_000_000:
+            return f"{_bp // 1_000_000}Mb"
+        elif _bp // 1_000:
+            return f"{_bp // 1_000}Kb"
+        else:
+            return f"{_bp}"
+    else:
+        return ""
+
+
+def edges_to_intervals(edges):
+    """
+    turn an array of internal edges into an array of
+    intervals, i.e.:
+    [1,2,3] -> [(0,1),(1,2),(2,3),(3,None)]
+    """
+    _edges = np.r_[0, edges, None]
+    zippend_edges = zip(_edges[:-1], _edges[1:])
+    return list(zippend_edges)
+
+
+def cumsums_to_rangesums(cumsums, total):
+    """
+    transform cumulative counts to counts in the intervals
+    using the total counts information, e.g.:
+    [a1,... aN] ->
+    [total, a1,... aN, 0] ->
+    [total-a1, a1-a2, ... aN-0]
+    """
+    _cumcsums = np.r_[total, cumsums, 0]
+    return list(_cumcsums[:-1] - _cumcsums[1:])
+
 
 # this should be based on chromosome sizes, not an arbitrary number
 def contact_areas(distbins, scaffold_length):
@@ -119,8 +126,9 @@ def read_stats_from_file(file_handle):
     # start using chromsizes
     stat_from_file['chromsizes'] = {}
 
-    # we probably do not need to define these here,
-    # just read the 1-key entries and then parse those out:
+    # don't need to defined them here - but right now
+    # this definitions help us define the structure of
+    # the stats file:
     stat_from_file['cis_1kb+'] = 0
     stat_from_file['cis_2kb+'] = 0
     stat_from_file['cis_4kb+'] = 0
