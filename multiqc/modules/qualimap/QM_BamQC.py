@@ -98,7 +98,7 @@ def parse_genome_results(self, f):
         if r_search:
             if "\d" in r:
                 try:
-                    d[k] = float(r_search.group(1).replace(',',''))
+                    d[k] = float(r_search.group(1).replace(",", ""))
                 except ValueError:
                     d[k] = r_search.group(1)
             else:
