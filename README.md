@@ -59,8 +59,7 @@ If you would like the development version instead, the command is:
 pip install --upgrade --force-reinstall git+https://github.com/ewels/MultiQC.git
 ```
 
-MultiQC is also available in the
-[Galaxy Toolshed](https://toolshed.g2.bx.psu.edu/view/engineson/multiqc/).
+MultiQC is also available via [Galaxy](https://usegalaxy.org/) ([Toolshed](https://toolshed.g2.bx.psu.edu/view/iuc/multiqc/9a913cdee30e), [Galaxy wrapper](https://github.com/galaxyproject/tools-iuc/tree/master/tools/multiqc)).
 
 ## Usage
 
