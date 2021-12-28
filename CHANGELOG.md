@@ -19,6 +19,7 @@
 - Make table _Conditional Formatting_ work at table level as well as column level. ([#761](https://github.com/ewels/MultiQC/issues/761))
 - Added support for customising table column names ([#1255](https://github.com/ewels/MultiQC/issues/1255))
 - Init/reset global state between runs ([#1596](https://github.com/ewels/MultiQC/pull/1596))
+- Fixed a problem with numeric filenames ([#1606](https://github.com/ewels/MultiQC/issues/1606))
 
 ### New Modules
 
