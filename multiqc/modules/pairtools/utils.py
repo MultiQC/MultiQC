@@ -1,4 +1,6 @@
+import re
 import numpy as np
+from operator import itemgetter
 from collections import OrderedDict
 # given supported python versions see if we still need
 # OrderedDict or could rely on dict
@@ -91,20 +93,35 @@ def read_stats_from_file(file_handle):
     """
     # fill in from file - file_handle:
     stat_from_file = OrderedDict()
-    #
     min_log10_dist=0
     max_log10_dist=9
     log10_dist_bin_step=0.25
     # some variables used for initialization:
-    # genomic distance bining for the ++/--/-+/+- distribution
+    # genomic distance binning for the ++/--/-+/+- distribution
     _dist_bins = (np.r_[0,
         np.round(10**np.arange(min_log10_dist, max_log10_dist+0.001,
                                log10_dist_bin_step))
         .astype(np.int)]
     )
 
+    def get_range_index_from_range(distance_range, dist_bins=_dist_bins):
+        """
+        turn distance_range (as string) into an index of the pre-defined
+        distance bins _dist_bins
+        """
+        if distance_range.endswith('+'):  # last range "10000+"
+            range_start = distance_range.strip('+')
+        elif '-' in distance_range:  # intermediate range "100-2000"
+            range_start, _end = distance_range.split('-')
+        else: # unparseable range
+            raise ParseError(f'{invalid_file_msg}cannot parse distance range {distance_range} for dist_freq')
+        # get the index of that bin in a hardcoded array of distance ranges '_dist_bins'
+        return np.searchsorted(dist_bins, int(range_start), 'right') - 1
+
+
     # common error message for ParseError
     invalid_file_msg = f"{file_handle.name} is not a valid stats file: "
+    tab_sep_msg = "It has to be a TAB-separated key-value like file."
 
     # establish structure of an empty _stat:
     stat_from_file['total'] = 0
@@ -114,9 +131,7 @@ def read_stats_from_file(file_handle):
     stat_from_file['total_mapped'] = 0
     stat_from_file['total_dups'] = 0
     stat_from_file['total_nodups'] = 0
-    ########################################
     # the rest of stats are based on nodups:
-    ########################################
     stat_from_file['cis'] = 0
     stat_from_file['trans'] = 0
     stat_from_file['pair_types'] = {}
@@ -124,26 +139,29 @@ def read_stats_from_file(file_handle):
     stat_from_file['dedup'] = {}
 
     # start using chromsizes
-    stat_from_file['chromsizes'] = {}
+    stat_from_file['chromsizes'] = OrderedDict()
 
-    # don't need to defined them here - but right now
-    # this definitions help us define the structure of
-    # the stats file:
-    stat_from_file['cis_1kb+'] = 0
-    stat_from_file['cis_2kb+'] = 0
-    stat_from_file['cis_4kb+'] = 0
-    stat_from_file['cis_10kb+'] = 0
-    stat_from_file['cis_20kb+'] = 0
-    stat_from_file['cis_40kb+'] = 0
+    # currently we consider following cis distance ranges for the cumulative counts:
+    # cis_1kb+
+    # cis_2kb+
+    # cis_4kb+
+    # cis_10kb+
+    # cis_20kb+
+    # cis_40kb+
+    # we will store such values in a list of (dist_key, cumcount_val)
+    stat_from_file["cis_dist"] = []
+    cis_dist_pattern = r"cis_(\d+)kb\+"
 
-    stat_from_file['chrom_freq'] = OrderedDict()
+    # store into [(chr1, chr2, count)] as a temporary structure
+    stat_from_file['chrom_freq'] = []
 
-    stat_from_file['dist_freq'] = OrderedDict([
-        ('+-', np.zeros(len(_dist_bins), dtype=np.int)),
-        ('-+', np.zeros(len(_dist_bins), dtype=np.int)),
-        ('--', np.zeros(len(_dist_bins), dtype=np.int)),
-        ('++', np.zeros(len(_dist_bins), dtype=np.int)),
-        ])
+    # store into [(pair_orientation, dist_range, value)] as a temporary struct
+    stat_from_file['dist_freq'] = []
+    # final data structure for this info
+    dist_freq_tmp = OrderedDict()
+    for pair_orientation in ['+-', '-+', '--', '++']:
+        dist_freq_tmp[pair_orientation] = np.zeros_like(_dist_bins)
+
 
     # pack distance bins along with dist_freq at least for now
     stat_from_file['dist_bins'] = _dist_bins
@@ -151,70 +169,120 @@ def read_stats_from_file(file_handle):
     # line by line parsing
     for l in file_handle:
         fields = l.strip().split(_SEP)
-        if len(fields) == 0:
-            # skip empty lines:
+        # skip empty or commented lines
+        if l.startswith("#") or (len(fields) == 0):
             continue
-        if len(fields) != 2:
-            # expect two _SEP separated values per line:
-            raise ParseError(
-                '{} is not a valid stats file'.format(file_handle.name))
-        # extract key and value, then split the key:
-        putative_key, putative_val =  fields[0], fields[1]
-        key_fields = putative_key.split(_KEY_SEP)
-        # we should impose a rigid structure of .stats or redo it:
-        if len(key_fields)==1:
-            key = key_fields[0]
-            if key in stat_from_file:
-                stat_from_file[key] = int(fields[1])
-            else:
-                raise ParseError(f'{invalid_file_msg}unknown field {key} detected')
+        # raise exception is it does not look like TAB-separated key,value:
+        elif len(fields) != 2:
+            raise ParseError(f'{invalid_file_msg}{tab_sep_msg}')
+        # otherwise parse key,value and store it in an organized storage per-sample
         else:
-            # in this case key must be in ['pair_types','chrom_freq','dist_freq','dedup']
-            # get the first 'key' and keep the remainders in 'key_fields'
-            key = key_fields.pop(0)
-            if key in ['pair_types', 'dedup']:
-                # assert there is only one element in key_fields left:
-                # 'pair_types' and 'dedup' treated the same
-                if len(key_fields) == 1:
-                    stat_from_file[key][key_fields[0]] = int(fields[1])
+            # (we should impose a rigid structure of .stats or redo it)
+            # extract key and value, then split the key:
+            _key_tmp, value =  fields
+            # make sure all values are integer
+            try:
+                value = int(value)
+            except ValueError as e:
+                raise ParseError(f'{invalid_file_msg}value for {_key_tmp} is not integer') from e
+            # parse temporary key
+            parsed_key_fields = _key_tmp.split(_KEY_SEP)
+            # (A) key is not nested
+            if len(parsed_key_fields) == 1:
+                key, = parsed_key_fields
+                # check if key matches "cis_dist_pattern"
+                key_match = re.fullmatch(cis_dist_pattern, key)
+                # extract 'dist' from key-regexp, store as [(dist,count)]
+                if key_match is not None:
+                    dist = int(key_match.group(1))
+                    stat_from_file["cis_dist"].append((dist, value))
+                # store as is, if no match detected
                 else:
-                    raise ParseError(f'{invalid_file_msg}{key} section implies 1 identifier')
-            elif key == 'chrom_freq':
-                # assert remaining key_fields == [chr1, chr2]:
-                if len(key_fields) == 2:
-                    stat_from_file[key][tuple(key_fields)] = int(fields[1])
-                else:
-                    raise ParseError(f'{invalid_file_msg}{key} section implies 2 identifiers')
-            elif key == 'dist_freq':
-                # assert that last element of key_fields is the 'directions'
-                if len(key_fields) == 2:
-                    # assert 'dirs' in ['++','--','+-','-+']
-                    dirs = key_fields.pop()
-                    # there is only genomic distance range of the bin that's left:
-                    bin_range, = key_fields
-                    # extract left border of the bin "1000000+" or "1500-6000":
-                    if bin_range.endswith('+'):
-                        dist_bin_left = bin_range.strip('+')
+                    if key in stat_from_file:
+                        stat_from_file[key] = value
                     else:
-                        dist_bin_left = bin_range.split('-')[0]
-                    # get the index of that bin:
-                    bin_idx = np.searchsorted(_dist_bins, int(dist_bin_left), 'right') - 1
-                    # store corresponding value:
-                    stat_from_file[key][dirs][bin_idx] = int(fields[1])
+                        raise ParseError(f'{invalid_file_msg}unknown field {key} detected')
+            # (B) nested key
+            elif len(parsed_key_fields) > 1:
+                # in this case key must be in ['pair_types','chrom_freq','dist_freq','dedup']
+                # get the first 'key' and keep the remaining in 'parsed_key_fields'
+                root_key = parsed_key_fields.pop(0)
+                # 1. counts by pairtype pair_types/UU
+                if root_key in ['pair_types', 'dedup']:
+                    # assert there is only one element in parsed_key_fields left
+                    # 'pair_types' and 'dedup' treated the same
+                    try:
+                        sub_key, = parsed_key_fields
+                        stat_from_file[root_key][sub_key] = value
+                    except ValueError as e:
+                        raise ParseError(f'{invalid_file_msg}{root_key} section implies 1 extra identifier') from e
+                # 2. counts by chrom pairs chrom_freq/chr1/chr2
+                elif root_key in ['chromsizes']:
+                    # remaining parsed_key_fields must be chromosome name:
+                    try:
+                        chrom, = parsed_key_fields
+                        stat_from_file[root_key][chrom] = value
+                    except ValueError as e:
+                        raise ParseError(f'{invalid_file_msg}{root_key} section implies 1 extra identifiers') from e
+                # 3. counts by chrom pairs chromsizes/chrom
+                elif root_key in ['chrom_freq']:
+                    # remaining parsed_key_fields must be a pair of chromosome names [chr1, chr2]:
+                    try:
+                        chrom1, chrom2 = parsed_key_fields
+                        stat_from_file[root_key].append((chrom1, chrom2, value))
+                    except ValueError as e:
+                        raise ParseError(f'{invalid_file_msg}{root_key} section implies 2 extra identifiers') from e
+                # 4. counts by distance and by pair orientation dist_freq/56234133-100000000/-+
+                elif root_key in ['dist_freq']:
+                    # remaining parsed_key_fields must be distance range and pair orientation:
+                    try:
+                        distance_range, pair_orientation = parsed_key_fields
+                        stat_from_file[root_key].append((pair_orientation, distance_range, value))
+                    except ValueError as e:
+                        raise ParseError(f'{invalid_file_msg}{root_key} section implies 2 identifiers') from e
+                # 5. unknwn root_key
                 else:
-                    raise ParseError(f'{invalid_file_msg}{key} section implies 2 identifiers')
+                    raise ParseError(f'{invalid_file_msg}unknown field {root_key} detected')
+            # (C) empty or unparseable _key_tmp
             else:
-                raise ParseError(f'{invalid_file_msg}unknown field {key} detected')
-    # add some fractions:
+                raise ParseError(f'{invalid_file_msg}unknown field {_key_tmp} detected')
+
+    # we need to do some further parsing for the following temporary structures:
+    # 1. 'cis_dist':
+    # sort cumulative counts by distance, and split into 2 separate arrays
+    sorted_dists, cumcounts =  zip(*sorted(stat_from_file["cis_dist"], key=itemgetter(0)))
+    stat_from_file["cis_dist"] = {}
+    stat_from_file["cis_dist"]["dists"] = sorted_dists
+    stat_from_file["cis_dist"]["counts"] = cumcounts
+    # 2. 'dist_freq'
+    # parse distance ranges and orientations to store
+    for pair_orientation, distance_range, count in stat_from_file['dist_freq']:
+        range_index = get_range_index_from_range(distance_range, _dist_bins)
+        # store corresponding value:
+        try:
+            dist_freq_tmp[pair_orientation][range_index] = count
+        except IndexError as e:
+            raise ParseError(f'{invalid_file_msg}distance range {distance_range} is beyond define grid for dist_freq') from e
+        except KeyError as e:
+            raise ParseError(f'{invalid_file_msg}pair orientation {pair_orientation} mismatch for dist_freq') from e
+    # if parsing was successful, replace 'dist_freq' with the new datastructure:
+    stat_from_file['dist_freq'] = dist_freq_tmp
+    # 3. 'chrom_freq'
+    # unpack chrom1, chrom2, counts into 3 separate ndarrays, mimicking COO sparse matrix:
+    chrom1, chrom2, counts = zip(*stat_from_file["chrom_freq"])
+    stat_from_file["chrom_freq"] = {}
+    stat_from_file["chrom_freq"]["chrom1"] = np.asarray(chrom1, dtype='U')  # unicode str
+    stat_from_file["chrom_freq"]["chrom2"] = np.asarray(chrom2, dtype='U')  # unicode str
+    stat_from_file["chrom_freq"]["counts"] = np.asarray(counts, dtype=np.int)
+
+    # add some fractions for general statistics table:
     stat_from_file['frac_unmapped'] = stat_from_file['total_unmapped']/stat_from_file['total']*100.
     stat_from_file['frac_single_sided_mapped'] = stat_from_file['total_single_sided_mapped']/stat_from_file['total']*100.
     # total_mapped = total_dups + total_nodups
     # should the following be divided by mapped or by total ?!
     stat_from_file['frac_mapped'] = stat_from_file['total_mapped']/stat_from_file['total']*100.
     stat_from_file['frac_dups'] = stat_from_file['total_dups']/stat_from_file['total']*100.
-    ########################################
     # the rest of stats are based on nodups:
-    ########################################
     stat_from_file['cis_percent'] = stat_from_file['cis']/stat_from_file['total_nodups']*100.
 
     return stat_from_file

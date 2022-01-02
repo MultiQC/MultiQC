@@ -13,12 +13,10 @@ from multiqc import config
 from pathlib import Path
 
 import os
-import re
 import yaml
 import numpy as np
 from copy import copy
 from itertools import combinations_with_replacement, zip_longest
-from operator import itemgetter
 
 from .utils import read_stats_from_file, \
                    contact_areas, \
@@ -204,32 +202,13 @@ class MultiqcModule(BaseMultiqcModule):
          - genomic "distances" are in kb
         """
 
-        def extract_cis_range_counts(sample_stats, cis_dist_pattern = r"cis_(\d+)kb\+"):
-            """
-            given a sample's data dictionary "sample_stats"
-            extract cis_range keys and cumulative counts,
-            turn hem into range counts, and return keys and count
-            """
-            dist_cumcount = []
-            for _key in sample_stats:
-                # check if a key matches "cis_dist_pattern":
-                cis_dist_match = re.fullmatch(cis_dist_pattern, _key)
-                if cis_dist_match is not None:
-                    # extract "distance" and cumulative number of cis-pairs:
-                    dist = int(cis_dist_match.group(1))
-                    count = int(sample_stats[_key])
-                    dist_cumcount.append((dist,count))
-            # sort cumulative counts by distances
-            sorted_dists, cumcounts =  zip(*sorted(dist_cumcount, key=itemgetter(0)))
-            # return sorted distances and matching cumulative counts
-            return sorted_dists, cumcounts
-
         # Construct a data structure for the plot
         cis_rangecounts_dict = dict()
         cis_distances_dict = dict()
         for s_name in self.pairtools_stats:
             sample_stats = self.pairtools_stats[s_name]
-            sorted_dists, cumcounts = extract_cis_range_counts(sample_stats)
+            sorted_dists = sample_stats["cis_dist"]["dists"] # edges of distance ranges
+            cumcounts = sample_stats["cis_dist"]["counts"] # cumulative counts
             rangecounts = cumsums_to_rangesums(cumcounts, sample_stats['cis'])
             rangecounts.append(sample_stats['trans'])
             cis_rangecounts_dict[s_name] = rangecounts
@@ -347,104 +326,73 @@ class MultiqcModule(BaseMultiqcModule):
 
 
 
-    # dist_freq/56234133-100000000/-+
     def pairs_with_genomic_separation(self):
         """
         number of cis-pairs with genomic separation
+        # dist_freq/56234133-100000000/-+
         """
 
         dist_freq_field = "dist_freq"
+        data_cats = ["avg", "FF", "FR", "RR", "RF"]
+        # extract pair orientations types - as they'll be used here many times
+        porient_names = self.params["pairs_orientation_names"]
 
-        # # Construct a data structure for the plot
-        # _data_std = dict()
-        # _data_spread = dict()
-        _data_mean = dict()
-        _data_FF = dict()
-        _data_FR = dict()
-        _data_RR = dict()
-        _data_RF = dict()
+        # Initialize a data structure for the plot
+        _data = {cat: {} for cat in data_cats}
+
         for s_name in self.pairtools_stats:
-            # _data_std[s_name] = dict()
-            # _data_spread[s_name] = dict()
-            _data_mean[s_name] = dict()
-            _data_FF[s_name] = dict()
-            _data_FR[s_name] = dict()
-            _data_RR[s_name] = dict()
-            _data_RF[s_name] = dict()
+            for cat in data_cats:
+                _data[cat][s_name] = {}
             # pre-calculate geom-mean of dist-bins for P(s):
-            _dist_bins = self.pairtools_stats[s_name]['dist_bins']
-            # this is wrong - should be chromsizes based :
-            _areas = contact_areas( _dist_bins, scaffold_length=2_000_000_000_000 )
-            _dist_bins_geom = []
-            for i in range(len(_dist_bins)-1):
-                geom_dist = np.sqrt(np.prod(_dist_bins[i:i+2]))
-                _dist_bins_geom.append(int(geom_dist))
-            # _dist_bins_geom are calcualted
+            _dist_bins = np.asarray(self.pairtools_stats[s_name]['dist_bins'])
+            # extract contacts by distance ranges and orientation types
             sample_dist_freq = self.pairtools_stats[s_name][dist_freq_field]
 
-            dir_mean = np.sum([
-                        sample_dist_freq["++"],
-                        sample_dist_freq["+-"],
-                        sample_dist_freq["-+"],
-                        sample_dist_freq["--"]
-                                ],axis=0)[1:].astype(float)
-            # ++,--,+-,-+ spread was used before ...
+            # contacts by orientation and distance, and their average summary,
+            _summary = {}
+            _summary["avg"] = np.sum([sample_dist_freq[po] for po in porient_names],axis=0).astype(float)
+            for po, po_name in porient_names.items():
+                _summary[po_name] = np.asarray(sample_dist_freq[po]).astype(float)
 
-            dir_FF = np.asarray(sample_dist_freq["++"])[1:].astype(float)
-            dir_FR = np.asarray(sample_dist_freq["+-"])[1:].astype(float)
-            dir_RF = np.asarray(sample_dist_freq["-+"])[1:].astype(float)
-            dir_RR = np.asarray(sample_dist_freq["--"])[1:].astype(float)
-
+            # this is wrong - should be chromsizes based :
             if self.pairtools_stats[s_name]["chromsizes"]:
-                dir_mean /= _areas
-                dir_FF /= _areas
-                dir_FR /= _areas
-                dir_RF /= _areas
-                dir_RR /= _areas
-            #
-            # fill in the data ...
-            for i, (k,v1) in enumerate(zip(_dist_bins_geom, dir_mean)):
-                if i>3:
-                    # _data_std[s_name][k] = v1
-                    # _data_spread[s_name][k] = v2
-                    _data_mean[s_name][k] = v1
+                # normalize contacts by distance with the theoretical # of pairs in a range
+                _areas = contact_areas( _dist_bins, scaffold_length=2_000_000_000_000 )
+                for cat in data_cats:
+                    _summary[cat] = _summary[cat]/_areas
 
+            # assign geometric mean distance to every distance interval
+            _dist_bins_geom = np.sqrt(_dist_bins[1:]*_dist_bins[:-1])
+            # fill in the data for XY-line plotting
+            # i.e. dict by samples of dicts by dist (X), of (normalized) counts (Y):
+            for cat in data_cats:
+                _data[cat][s_name] = dict(zip(_dist_bins_geom[1:], _summary[cat][2:]))
 
-            for i, (k,_FF,_FR,_RF,_RR) in enumerate(zip(_dist_bins_geom, dir_FF, dir_FR, dir_RF, dir_RR)):
-                if i>3:
-                    _data_FF[s_name][k] = _FF
-                    _data_FR[s_name][k] = _FR
-                    _data_RF[s_name][k] = _RF
-                    _data_RR[s_name][k] = _RR
+                log.critical(_dist_bins_geom)
 
         pconfig = {
             'id': 'broom_plot',
             'title': 'Pairs by distance and by read orientation',
-            # 'ylab': 'Counts',
             'xlab': 'Genomic separation (bp)',
             'xLog': True,
             'yLog': True,
-            # 'xDecimals': False,
-            # 'ymin': 0,
-            # 'tt_label': '<b>{point.x} bp trimmed</b>: {point.y:.0f}',
+            'ymin': 10,
             'data_labels': [{'name': 'P(s)', 'ylab': 'frequency of interactions'},
                             {'name': 'FF', 'ylab': 'frequency of interactions'},
                             {'name': 'FR', 'ylab': 'frequency of interactions'},
                             {'name': 'RF', 'ylab': 'frequency of interactions'},
                             {'name': 'RR', 'ylab': 'frequency of interactions'}],
-            # 'data_labels': [{'name': 'Spread: std', 'ylab': 'frequency of interactions'},
-            #                 {'name': 'Spread: max-min', 'ylab': 'frequency of interactions'},
-            #                 {'name': 'P(s): sum', 'ylab': 'frequency of interactions'}],
-            # 'click_func': self.plot_single()
-            'click_func': 'single_scaling'
+            'click_func': 'single_scaling' # activate custom JS when individual curve clicked
         }
 
-        return linegraph.plot([_data_mean, _data_FF, _data_FR, _data_RF, _data_RR], pconfig=pconfig)
+        return linegraph.plot([_data[cat] for cat in data_cats], pconfig=pconfig)
 
 
     # chrom_freq/chr1/chrX ...
     def pairs_by_chrom_pairs(self):
         """ number of pairs by chromosome pairs """
+
+        # should probably allow for ~100 chromsomes on display, truncate based on size or counts ...
 
         _report_field = "chrom_freq"
 
