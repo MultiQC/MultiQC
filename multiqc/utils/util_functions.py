@@ -66,6 +66,31 @@ def write_data_file(data, fn, sort_cols=False, data_format=None):
                         return None
                 return json.JSONEncoder.default(self, obj)
 
+        # some metrics can't be coerced to tab-separated output (omit those and write separately to YAML)
+        if data_format not in ["json", "yaml"] and len(data) > 1:
+            aberrant_data = list()
+            for _, key in zip(range(len(data)), data):
+                if type(data[key]) is not dict and type(data[key]) is not OrderedDict:
+                    aberrant_data.append(key)
+
+            for key in aberrant_data:
+                with io.open(os.path.join(config.data_dir, fn + "_" + str(key)), "w", encoding="utf-8") as f:
+                    yaml.dump(data[key], f, default_flow_style=False)
+                    config.logger.debug(
+                        "Some metrics could not be coerced into tab-separated output and were written as YAML instead to "
+                        + fn
+                    )
+                del data[key]
+
+            if not data:  # no items left for regular export
+                return
+
+        elif len(data) == 1 and type(data) is not dict and type(data) is not OrderedDict:
+            config.logger.debug(
+                "Metrics of " + fn + "can't be saved as tab-separated output. Choose JSON or YAML output instead."
+            )
+            return
+
         # Save file
         with io.open(os.path.join(config.data_dir, fn), "w", encoding="utf-8") as f:
             if data_format == "json":
@@ -75,10 +100,7 @@ def write_data_file(data, fn, sort_cols=False, data_format=None):
                 yaml.dump(data, f, default_flow_style=False)
             else:
                 # Default - tab separated output
-                # Heatmaps and other odd things might break this, so skip if so
-                # TODO: leaves an empty file, should clean this up
-                if type(data) is not dict and type(data) is not OrderedDict:
-                    return
+
                 # Convert keys to strings
                 data = {str(k): v for k, v in data.items()}
                 # Get all headers
