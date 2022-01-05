@@ -85,7 +85,12 @@ def write_data_file(data, fn, sort_cols=False, data_format=None):
             if not data:  # no items left for regular export
                 return
 
-        elif len(data) == 1 and type(data) is not dict and type(data) is not OrderedDict:
+        elif (
+            data_format not in ["json", "yaml"]
+            and len(data) == 1
+            and type(data) is not dict
+            and type(data) is not OrderedDict
+        ):
             config.logger.debug(
                 "Metrics of " + fn + "can't be saved as tab-separated output. Choose JSON or YAML output instead."
             )
