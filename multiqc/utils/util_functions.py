@@ -6,7 +6,6 @@ from __future__ import print_function
 from collections import OrderedDict
 import io
 import json
-from logging import NullHandler
 import os
 import yaml
 import time
