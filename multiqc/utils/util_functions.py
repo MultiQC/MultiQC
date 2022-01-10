@@ -15,38 +15,6 @@ import sys
 from multiqc import config
 
 
-def tab_separated_output(data, sort_cols):
-    """Subfunction of write_data_file() below
-    Some metrics, in particular those of the custom content module
-    can't be written cleanly to tab-separated output. Now failure
-    can trigger the use of a more suitable export format.
-    """
-    try:
-        # Convert keys to strings
-        data = {str(k): v for k, v in data.items()}
-        # Get all headers
-        h = ["Sample"]
-        for sn in sorted(data.keys()):
-            for k in data[sn].keys():
-                if type(data[sn][k]) is not dict and k not in h:
-                    h.append(str(k))
-        if sort_cols:
-            h = sorted(h)
-
-        # Get the rows
-        rows = ["\t".join(h)]
-        for sn in sorted(data.keys()):
-            # Make a list starting with the sample name, then each field in order of the header cols
-            l = [str(sn)] + [str(data[sn].get(k, "")) for k in h[1:]]
-            rows.append("\t".join(l))
-
-        body = "\n".join(rows)
-
-        return body, True
-    except:
-        return None, False
-
-
 def robust_rmtree(path, logger=None, max_retries=10):
     """Robustly tries to delete paths.
     Retries several times (with increasing delays) if an OSError
@@ -83,10 +51,6 @@ def write_data_file(data, fn, sort_cols=False, data_format=None):
 
     if config.data_dir is not None:
 
-        # Initialise variables
-        fallback = False
-        success = False
-
         # Get data format from config
         if data_format is None:
             data_format = config.data_format
@@ -105,50 +69,33 @@ def write_data_file(data, fn, sort_cols=False, data_format=None):
         if data_format not in ["json", "yaml"]:
 
             # attempt to reshape data to tsv
-            data_tsv, success = tab_separated_output(data, sort_cols=sort_cols)
+            try:
+                # Convert keys to strings
+                data = {str(k): v for k, v in data.items()}
+                # Get all headers
+                h = ["Sample"]
+                for sn in sorted(data.keys()):
+                    for k in data[sn].keys():
+                        if type(data[sn][k]) is not dict and k not in h:
+                            h.append(str(k))
+                if sort_cols:
+                    h = sorted(h)
 
-            if not success:
-                # Unsuccessful TSV reshape: Try to remove malformed data and export remainders.
-                aberrant_data = list()
-                regular_data = list()
+                # Get the rows
+                rows = ["\t".join(h)]
+                for sn in sorted(data.keys()):
+                    # Make a list starting with the sample name, then each field in order of the header cols
+                    l = [str(sn)] + [str(data[sn].get(k, "")) for k in h[1:]]
+                    rows.append("\t".join(l))
 
-                try:
-                    for _, key in zip(range(len(data)), data):
-                        _, success = tab_separated_output([data[key]], sort_cols=sort_cols)
-                        if success:
-                            regular_data.append(data[key])
-                        else:
-                            aberrant_data.append(data[key])
+                body = "\n".join(rows)
 
-                    if regular_data:
-                        # Final, now hopefully working reshape
-                        data_tsv, success = tab_separated_output(regular_data, sort_cols=sort_cols)
-
-                        if success:
-                            # Separate export for what didn't work.
-                            for key in aberrant_data:
-                                adf = str(fn + "_" + str(key) + config.data_format_extensions["yaml"])
-                                with io.open(os.path.join(config.data_dir, adf), "w", encoding="utf-8") as g:
-                                    yaml.dump(aberrant_data[key], g, default_flow_style=False)
-                                    config.logger.info(
-                                        "Some metrics could not be coerced into tab-separated output and were instead written as YAML to "
-                                        + adf
-                                    )
-                        else:  # Reshaping remainder failed.
-                            fallback = True
-                    else:  # No regular data: Rather export everything as YAML.
-                        fallback = True
-                except:
-                    # Subsetting doesn't work, e.g. because key is a list for scatterplots
-                    fallback = True
-
-        if fallback:
-            data_format = "yaml"
-            config.logger.warning(
-                "Metrics of "
-                + fn
-                + " could not be saved as tab-separated output. Choose JSON or YAML output instead. Falling back to YAML."
-            )
+            except:
+                data_format = "yaml"
+                config.logger.warning(
+                    fn
+                    + " could not be saved as tab-separated output. Choose JSON or YAML output instead. Falling back to YAML."
+                )
 
         # Add relevant file extension to filename, save file.
         fn = "{}.{}".format(fn, config.data_format_extensions[data_format])
@@ -160,7 +107,7 @@ def write_data_file(data, fn, sort_cols=False, data_format=None):
                 yaml.dump(data, f, default_flow_style=False)
             else:
                 # Default - tab separated output
-                print(data_tsv.encode("utf-8", "ignore").decode("utf-8"), file=f)
+                print(body.encode("utf-8", "ignore").decode("utf-8"), file=f)
 
 
 def view_all_tags(ctx, param, value):
