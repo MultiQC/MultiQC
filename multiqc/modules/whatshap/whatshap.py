@@ -188,7 +188,7 @@ class MultiqcModule(BaseMultiqcModule):
                         "description": "The number of biallelic, heterozygous variants that "
                         "are marked as phased in the input VCF. This is "
                         "a subset of heterozygous_variants. Also, phased + "
-                        "unphased = heterozygous_variants.",
+                        "unphased + singletons = heterozygous_variants.",
                         "hidden": False,
                     },
                 ),
