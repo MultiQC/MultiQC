@@ -32,7 +32,7 @@ class MultiqcModule(BaseMultiqcModule):
                 short reads.
                 """
             ),
-            doi='10.1101/085050'
+            doi="10.1101/085050",
         )
 
         # Store the whatshap stats results
@@ -42,6 +42,7 @@ class MultiqcModule(BaseMultiqcModule):
         for f in self.find_log_files("whatshap/stats", filehandles=True):
             sample, data = self.parse_whatshap_stats(f)
             self.whatshap_stats[sample] = data
+            self.add_data_source(f)
 
         # Filter to strip out ignored sample names
         self.whatshap_stats = self.ignore_samples(self.whatshap_stats)
