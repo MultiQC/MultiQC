@@ -13,6 +13,7 @@ from .plot_indelhist import plot_indelhist
 from .plot_mhist import plot_mhist
 from .plot_qahist import plot_qahist
 from .plot_qhist import plot_qhist
+from .plot_refhist import plot_refhist
 
 
 class slice2OrderedDict(object):
@@ -40,6 +41,7 @@ section_order = [
     "gchist",
     "bhist",
     "rpkm",
+    "refstats",
     "statsfile_machine",
     "statsfile",
 ]
@@ -364,6 +366,24 @@ file_types = {
         "plot_func": plot_basic_hist,
         "plot_params": {},
         "not_implemented": "",
+    },
+    "refstats": {
+        "title": "RefStats",
+        "descr": "Statistics counting which reads mapped to which reference genome (BBSplit)",
+        "help_text": "",
+        "cols": odict[
+            "name":str,
+            "%unambiguousReads":float,
+            "unambiguousMB":float,
+            "%ambiguousReads":float,
+            "ambiguousMB":float,
+            "unambiguousReads":int,
+            "ambiguousReads":int,
+            "assignedReads":int,
+            "assignedBases":int,
+        ],
+        "plot_func": plot_refhist,
+        "plot_params": {},
     },
     "statsfile_machine": {
         "title": "General stats",
