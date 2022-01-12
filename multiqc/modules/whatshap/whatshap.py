@@ -32,6 +32,7 @@ class MultiqcModule(BaseMultiqcModule):
                 short reads.
                 """
             ),
+            doi=10.1101/085050
         )
 
         # Store the whatshap stats results
