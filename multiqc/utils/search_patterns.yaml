@@ -181,7 +181,7 @@ bowtie2:
     - "HiC-Pro"
   shared: true
 busco:
-  fn: "short_summary*"
+  fn: "*short_summary*"
   contents: "BUSCO version is:"
   num_lines: 1
 bustools:
@@ -407,6 +407,12 @@ malt:
 methylQA:
   fn: "*.report"
   shared: true
+merqury/completeness:
+  fn: "*_merqury.completeness.tab"
+  shared: true
+merqury/qv:
+  fn: "*_merqury.qv.tab"
+  shared: true
 minionqc:
   fn: "summary.yaml"
   contents: "total.gigabases"
@@ -591,7 +597,7 @@ qualimap/rnaseq/rnaseq_results:
 qualimap/rnaseq/coverage:
   fn: "coverage_profile_along_genes_(total).txt"
 quast:
-  fn: "report.tsv"
+  fn: "*report.tsv"
   shared: true
 rna_seqc/metrics_v1:
   fn: "*metrics.tsv"

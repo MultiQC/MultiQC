@@ -350,6 +350,10 @@ module_order:
       module_tag:
         - Methylation
         - DNA
+  - merqury:
+      module_tag:
+        - DNA
+        - Denovo
   - mosdepth:
       module_tag:
         - DNA

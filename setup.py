@@ -130,6 +130,7 @@ setup(
             "macs2 = multiqc.modules.macs2:MultiqcModule",
             "malt = multiqc.modules.malt:MultiqcModule",
             "methylQA = multiqc.modules.methylQA:MultiqcModule",
+            "merqury = multiqc.modules.merqury:MultiqcModule",
             "minionqc = multiqc.modules.minionqc:MultiqcModule",
             "mirtop = multiqc.modules.mirtop:MultiqcModule",
             "mirtrace = multiqc.modules.mirtrace:MultiqcModule",
