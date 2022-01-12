@@ -23,6 +23,9 @@
 
 ### New Modules
 
+- [**ssds**](http://genome.cshlp.org/content/early/2012/03/20/gr.130583.111.full.pdf)
+  - Display sample summary statistics from SSDS (Single-Stranded DNA Sequencing) experiments.
+
 ### Module updates
 
 - **CCS**

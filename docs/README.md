@@ -116,6 +116,7 @@ MultiQC Modules:
     SnpEff: modules/snpeff.md
     SNPsplit: modules/snpsplit.md
     Somalier: modules/somalier.md
+    SSDS: modules/ssds.md
     Stacks: modules/stacks.md
     Supernova: modules/supernova.md
     THeTA2: modules/theta2.md
