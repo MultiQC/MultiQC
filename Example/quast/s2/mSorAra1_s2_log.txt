@@ -1,0 +1,70 @@
+/usr/local/tools/_conda/envs/__quast@5.0.2/bin/quast -o outputdir --est-ref-size 2230886386 --eukaryote --min-contig 500 --threads 1 --split-scaffolds --labels species_Sorex_araneus_mSorAra1_assembly_vgp_standard_2_0_mSorAra1_pri_asm_20211103_fasta --large --min-alignment 65 --min-identity 95.0 --ambiguity-usage one --contig-thresholds 0,1000 --extensive-mis-size 1000 --scaffold-gap-max-size 1000 --unaligned-part-size 500 /data/dnb03/galaxy_db/files/0/e/e/dataset_0eec9f37-8810-4236-b8ea-2a9f6b2cf18f.dat
+
+Version: 5.0.2
+
+System information:
+  OS: Linux-4.18.0-305.19.1.el8_4.x86_64-x86_64-with-centos-8.4.2105 (linux_64)
+  Python version: 3.6.7
+  CPUs number: 40
+
+Started: 2021-11-11 19:35:05
+
+Logging to /data/dnb03/galaxy_db/job_working_directory/033/707/33707657/working/outputdir/quast.log
+
+CWD: /data/dnb03/galaxy_db/job_working_directory/033/707/33707657/working
+Main parameters: 
+  MODE: large, threads: 1, eukaryotic: true, split scaffolds: true, minimum contig length: 500, \
+  minimum alignment length: 65, ambiguity: one, threshold for extensive misassembly size: 1000
+
+Contigs:
+  Pre-processing...
+  /data/dnb03/galaxy_db/files/0/e/e/dataset_0eec9f37-8810-4236-b8ea-2a9f6b2cf18f.dat ==> species_Sorex_araneus_mSorAra1_assembly_vgp_standard_2_0_mSorAra1_pri_asm_20211103_fasta
+    breaking scaffolds into contigs:
+      233 scaffolds (species_Sorex_araneus_mSorAra1_assembly_vgp_standard_2_0_mSorAra1_pri_asm_20211103_fasta) were broken into 1499 contigs (species_Sorex_araneus_mSorAra1_assembly_vgp_standard_2_0_mSorAra1_pri_asm_20211103_fasta_broken)
+
+2021-11-11 19:42:08
+Running Basic statistics processor...
+  Estimated reference length = 2230886386
+  Contig files: 
+    1  species_Sorex_araneus_mSorAra1_assembly_vgp_standard_2_0_mSorAra1_pri_asm_20211103_fasta
+    2  species_Sorex_araneus_mSorAra1_assembly_vgp_standard_2_0_mSorAra1_pri_asm_20211103_fasta_broken
+  Calculating N50 and L50...
+    1  species_Sorex_araneus_mSorAra1_assembly_vgp_standard_2_0_mSorAra1_pri_asm_20211103_fasta, N50 = 231235302, L50 = 4, Total length = 2459336321, GC % = 43.23, # N's per 100 kbp =  2392.21
+    2  species_Sorex_araneus_mSorAra1_assembly_vgp_standard_2_0_mSorAra1_pri_asm_20211103_fasta_broken, N50 = 4024507, L50 = 182, Total length = 2400503717, GC % = 43.23, # N's per 100 kbp =  0.00
+  Drawing Nx plot...
+    saved to /data/dnb03/galaxy_db/job_working_directory/033/707/33707657/working/outputdir/basic_stats/Nx_plot.pdf
+  Drawing NGx plot...
+    saved to /data/dnb03/galaxy_db/job_working_directory/033/707/33707657/working/outputdir/basic_stats/NGx_plot.pdf
+  Drawing cumulative plot...
+    saved to /data/dnb03/galaxy_db/job_working_directory/033/707/33707657/working/outputdir/basic_stats/cumulative_plot.pdf
+  Drawing GC content plot...
+    saved to /data/dnb03/galaxy_db/job_working_directory/033/707/33707657/working/outputdir/basic_stats/GC_content_plot.pdf
+  Drawing species_Sorex_araneus_mSorAra1_assembly_vgp_standard_2_0_mSorAra1_pri_asm_20211103_fasta GC content plot...
+    saved to /data/dnb03/galaxy_db/job_working_directory/033/707/33707657/working/outputdir/basic_stats/species_Sorex_araneus_mSorAra1_assembly_vgp_standard_2_0_mSorAra1_pri_asm_20211103_fasta_GC_content_plot.pdf
+  Drawing species_Sorex_araneus_mSorAra1_assembly_vgp_standard_2_0_mSorAra1_pri_asm_20211103_fasta_broken GC content plot...
+    saved to /data/dnb03/galaxy_db/job_working_directory/033/707/33707657/working/outputdir/basic_stats/species_Sorex_araneus_mSorAra1_assembly_vgp_standard_2_0_mSorAra1_pri_asm_20211103_fasta_broken_GC_content_plot.pdf
+Done.
+
+NOTICE: Genes are not predicted by default. Use --gene-finding or --glimmer option to enable it.
+
+2021-11-11 19:47:03
+Creating large visual summaries...
+This may take a while: press Ctrl-C to skip this step..
+  1 of 2: Creating Icarus viewers...
+  2 of 2: Creating PDF with all tables and plots...
+Done
+
+2021-11-11 19:48:16
+RESULTS:
+  Text versions of total report are saved to /data/dnb03/galaxy_db/job_working_directory/033/707/33707657/working/outputdir/report.txt, report.tsv, and report.tex
+  Text versions of transposed total report are saved to /data/dnb03/galaxy_db/job_working_directory/033/707/33707657/working/outputdir/transposed_report.txt, transposed_report.tsv, and transposed_report.tex
+  HTML version (interactive tables and plots) is saved to /data/dnb03/galaxy_db/job_working_directory/033/707/33707657/working/outputdir/report.html
+  PDF version (tables and plots) is saved to /data/dnb03/galaxy_db/job_working_directory/033/707/33707657/working/outputdir/report.pdf
+  Icarus (contig browser) is saved to /data/dnb03/galaxy_db/job_working_directory/033/707/33707657/working/outputdir/icarus.html
+  Log is saved to /data/dnb03/galaxy_db/job_working_directory/033/707/33707657/working/outputdir/quast.log
+
+Finished: 2021-11-11 19:48:16
+Elapsed time: 0:13:10.587114
+NOTICEs: 1; WARNINGs: 0; non-fatal ERRORs: 0
+
+Thank you for using QUAST!

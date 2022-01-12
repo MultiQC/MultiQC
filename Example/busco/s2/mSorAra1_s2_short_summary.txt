@@ -1,0 +1,19 @@
+# BUSCO version is: 5.2.2 
+# The lineage dataset is: vertebrata_odb10 (Creation date: 2021-02-19, number of genomes: 67, number of BUSCOs: 3354)
+# Summarized benchmarking in BUSCO notation for file /data/dnb03/galaxy_db/files/0/e/e/dataset_0eec9f37-8810-4236-b8ea-2a9f6b2cf18f.dat
+# BUSCO was run in mode: genome
+# Gene predictor used: metaeuk
+
+	***** Results: *****
+
+	C:95.1%[S:92.7%,D:2.4%],F:0.0%,M:4.9%,n:3354	   
+	3192	Complete BUSCOs (C)			   
+	3110	Complete and single-copy BUSCOs (S)	   
+	82	Complete and duplicated BUSCOs (D)	   
+	0	Fragmented BUSCOs (F)			   
+	162	Missing BUSCOs (M)			   
+	3354	Total BUSCO groups searched		   
+
+Dependencies and versions:
+	hmmsearch: 3.1
+	metaeuk: 4.a0f584d

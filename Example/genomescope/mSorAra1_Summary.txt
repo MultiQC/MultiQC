@@ -1,0 +1,15 @@
+GenomeScope version 2.0
+input file = /data/dnb05/galaxy_db/files/9/7/4/dataset_974446f5-3451-4fe1-8c50-f0149188ea63.dat
+output directory = .
+p = 2
+k = 21
+TESTING set to TRUE
+
+property                      min               max               
+Homozygous (aa)               98.8635%          98.8808%          
+Heterozygous (ab)             1.11918%          1.13646%          
+Genome Haploid Length         2,228,058,969 bp  2,230,886,386 bp  
+Genome Repeat Length          602,233,306 bp    602,997,543 bp    
+Genome Unique Length          1,625,825,663 bp  1,627,888,844 bp  
+Model Fit                     74.0632%          96.8505%          
+Read Error Rate               0.180441%         0.180441%         

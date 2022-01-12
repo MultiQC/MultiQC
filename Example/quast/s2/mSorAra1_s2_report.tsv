@@ -1,0 +1,19 @@
+Assembly	species_Sorex_araneus_mSorAra1_assembly_vgp_standard_2_0_mSorAra1_pri_asm_20211103_fasta	species_Sorex_araneus_mSorAra1_assembly_vgp_standard_2_0_mSorAra1_pri_asm_20211103_fasta_broken
+# contigs (>= 0 bp)	233	-
+# contigs (>= 1000 bp)	233	1498
+Total length (>= 0 bp)	2459336321	-
+Total length (>= 1000 bp)	2459336321	2400503717
+# contigs	233	1499
+Largest contig	441239200	19703282
+Total length	2459336321	2400503717
+Estimated reference length	2230886386	2230886386
+GC (%)	43.23	43.23
+N50	231235302	4024507
+NG50	338227856	4325180
+N75	166085329	1971637
+NG75	212012663	2430996
+L50	4	182
+LG50	3	161
+L75	7	389
+LG75	6	331
+# N's per 100 kbp	2392.21	0.00
