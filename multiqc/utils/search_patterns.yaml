@@ -413,6 +413,11 @@ merqury/completeness:
 merqury/qv:
   fn: "*_merqury.qv.tab"
   shared: true
+merqury/spectra:
+  - fn: "*.spectra-cn.hist"
+    shared: true
+  - fn: "*.spectra-asm.hist"
+    shared: true
 minionqc:
   fn: "summary.yaml"
   contents: "total.gigabases"
