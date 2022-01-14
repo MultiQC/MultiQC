@@ -39,8 +39,7 @@ class MultiqcModule(BaseMultiqcModule):
         
         self.spectra_data = dict()
         for f in self.find_log_files("merqury/spectra"):
-            self.spectra_data.update(self.parse_spectra_log(f))
-            self.add_data_source(f)
+            self.parse_spectra_log(f)
 
         log.info("Found {} completeness reports".format(len(self.completeness_data)))
         log.info("Found {} qv reports".format(len(self.qv_data)))
@@ -60,20 +59,8 @@ class MultiqcModule(BaseMultiqcModule):
         
         self.add_section(name="QV estimation", anchor="merqury-qv", plot=self.qv_table())
         
-        for f in self.spectra_data.keys():
-            self.add_section(name="Spectra plots", anchor="merqury-spectra", plot=self.spectra_plot(self.spectra_data[f],f))
-            
-        """
-        # One Alignment Rate Plot per lineage
-        lineages = set([self.busco_data[s_name].get("lineage_dataset") for s_name in self.busco_data.keys()])
-        for lin in lineages:
-            self.add_section(
-                name="Lineage Assessment" if lin is None else "Lineage: {}".format(lin),
-                anchor="busco-lineage-{}".format(re.sub("\W+", "_", str(lin))),
-                plot=self.busco_plot(lin),
-            )
-        """
-            
+        for s_name in self.spectra_data.keys():
+            self.add_section(name="Spectra plots for "+s_name, anchor="merqury-spectra", plot=self.spectra_plot(self.spectra_data[s_name],s_name)) 
     
     def parse_completeness_log(self, f):
         self.add_data_source(f,f["s_name"])
@@ -105,46 +92,43 @@ class MultiqcModule(BaseMultiqcModule):
             self.qv_data[s_name+"_"+suffix]["qv"]=s_val3
             self.qv_data[s_name+"_"+suffix]["error"]=s_val4
    
-    def parse_spectra_log(self,histf):
+    def parse_spectra_log(self,f):
+        self.add_data_source(f,f["s_name"])
+        s_name=f["s_name"].split(".")[0]
+        p_name=".".join(f["s_name"].split(".")[1:])
         nameddata = dict()
+        nameddata[s_name]=dict()
         data = dict()
-        for l in histf["f"].splitlines()[1:]:
+        for l in f["f"].splitlines()[1:]:
             s = l.strip().split("\t")
             serie=s[0]
             if serie not in data.keys(): data[serie]={}
             data[serie][int(s[1])] = int(s[2])
-        nameddata[histf["s_name"]] = data
-        return nameddata
+        if s_name not in self.spectra_data.keys(): self.spectra_data[s_name]={}
+        self.spectra_data[s_name][p_name]=data
 
-    def spectra_plot(self,data,f):
-        colors=["#000000","#cc0000","#246bce","#93c47d","#8e7cc3","#e69138"]
-        colorscale= {list(data.keys())[i]: colors[i] for i in range(len(data.keys()))}
-        ymax=0
-        for serie in data.keys():
-            if serie!="read-only": ymax=max([ymax,max(data[serie].values())])
-        ymax=ymax*1.1
+    def spectra_plot(self,d,f):
+        config={'data_labels':[]}
+        out=[]
         xmax=0
-        for serie in list(data.keys())[1:4]:
-            peak=max(data[serie].values())
-            xmax=max([xmax,[k for k, v in data[serie].items() if v == peak][0]])
-        xmax=xmax*2.1
-        
-        fplotconfig = {
-            "id": "merqury_spectra_plot",
-            "title": f,
-            "xlab": "kmer multiplicity",
-            "ylab": "kmer count",
-            "xmax":xmax,
-            "ymax":ymax,
-            "showInLegend": True,
-            "use_legend": True,
-            'legend': True,
-            "data_labels": [
-                {"name": "kmer spectra", "ylab": "kmer count", "xlab": "kmer multiplicity"},
-            ],
-            "colors": colorscale,
-        }
-        return linegraph.plot(data, fplotconfig)
+        ymax=0
+        for plot_key in d.keys():
+            data=d[plot_key]
+            colors=["#000000","#cc0000","#246bce","#93c47d","#8e7cc3","#e69138"]
+            colorscale= {}
+            for i in range(len(data.keys())):
+                serie=list(data.keys())[i]
+                colorscale[serie]=colors[i]
+                if i>0 and i<3:
+                    ymax=max([ymax,max(data[serie].values())])
+                    peak=max(data[serie].values())
+                    xmax=max([xmax,[k for k, v in data[serie].items() if v == peak][0]])
+            config["data_labels"].append({'name':plot_key,"ylab": "kmer count", "xlab": "kmer multiplicity","colors":colorscale,"legend":True,"showInLegend":False,"use_legend":False})
+            config["xmax"]=xmax*2.1
+            config["ymax"]=ymax*1.1
+            config['height']=350
+            out.append(data)
+        return linegraph.plot(out, config)
         
     def completeness_table(self):
         """Take the parsed stats from the QUAST report and add some to the
