@@ -47,6 +47,7 @@ class MultiqcModule(BaseMultiqcModule):
 
         if not self.checkqc_data:
             raise UserWarning
+        log.info(f"Found {len(self.log_files)} run and {len(self.checkqc_data)} samples")
 
         if general_stats:
             headers = OrderedDict()
