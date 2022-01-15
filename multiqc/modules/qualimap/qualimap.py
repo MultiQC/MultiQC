@@ -28,6 +28,7 @@ class MultiqcModule(BaseMultiqcModule):
             info="is a platform-independent application to facilitate the quality"
             " control of alignment sequencing data and its derivatives like"
             " feature counts.",
+            doi=["10.1093/bioinformatics/btv566", "10.1093/bioinformatics/bts503"],
         )
 
         # Initialise the submodules

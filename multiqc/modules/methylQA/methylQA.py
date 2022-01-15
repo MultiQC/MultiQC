@@ -25,6 +25,7 @@ class MultiqcModule(BaseMultiqcModule):
             target="methylQA",
             href="http://methylqa.sourceforge.net/",
             info=" - a methylation sequencing data quality assessment tool.",
+            doi="10.1016/j.ymeth.2014.10.032",
         )
 
         # Find and load any methylQA reports

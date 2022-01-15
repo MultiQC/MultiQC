@@ -25,6 +25,7 @@ class MultiqcModule(BaseMultiqcModule):
             anchor="iVar",
             href="https://github.com/andersen-lab/ivar",
             info="is a computational package that contains functions broadly useful for viral amplicon-based sequencing.",
+            doi="10.1101/383513",
         )
 
         # Find and load iVar trim results
