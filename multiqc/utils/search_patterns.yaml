@@ -368,8 +368,8 @@ kallisto:
   shared: true
 nanostat:
   max_filesize: 4096
-  contents: "Number, percentage and megabases of reads above quality cutoffs"
-  num_lines: 20
+  contents_re: "General summary:\\s*"
+  num_lines: 1
 kat:
   fn: "*.dist_analysis.json"
 kraken:

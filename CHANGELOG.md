@@ -42,6 +42,8 @@
   - Fix `ZeroDivisionError` if no bins are found ([#1586](https://github.com/ewels/MultiQC/issues/1586))
 - **Lima**
   - Move samples that have been renamed using `--replace-names` into the _General Statistics_ table ([#1483](https://github.com/ewels/MultiQC/pull/1483))
+- **NanoStat**
+  - Recognize FASTA and FastQ report flavors ([#1547](https://github.com/ewels/MultiQC/issues/1547))
 - **Qualimap**
   - Fix `ZeroDivisionError` in `QM_RNASeq` and skip genomic origins plot if no aligned reads are found ([#1492](https://github.com/ewels/MultiQC/issues/1492))
 - **QUAST**
