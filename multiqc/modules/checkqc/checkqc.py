@@ -581,7 +581,7 @@ class MultiqcModule(BaseMultiqcModule):
 
         pconfig = {
             "id": "checkqc_unidentified-index-plot",
-            "title": f"CheckQC: Overrepresented unidentified indexes)",
+            "title": f"CheckQC: Overrepresented unidentified indexes",
             "ylab": r"% representation",
             "xlab": f"Overrepresented indexes",
             "stacking": None,
