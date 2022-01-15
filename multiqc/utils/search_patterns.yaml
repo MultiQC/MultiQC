@@ -84,6 +84,8 @@ bclconvert/runinfo:
   fn: "RunInfo.xml"
 bclconvert/demux:
   fn: "Demultiplex_Stats.csv"
+bclconvert/quality_metrics:
+  fn: "Quality_Metrics.csv"
 bclconvert/adaptermetrics:
   fn: "Adapter_Metrics.csv"
 bclconvert/unknown_barcodes:
