@@ -92,7 +92,7 @@ def write_data_file(data, fn, sort_cols=False, data_format=None):
 
             except:
                 data_format = "yaml"
-               logger.debug(f"{fn} could not be saved as tsv/csv. Falling back to YAML.")
+                config.logger.debug(f"{fn} could not be saved as tsv/csv. Falling back to YAML.")
 
         # Add relevant file extension to filename, save file.
         fn = "{}.{}".format(fn, config.data_format_extensions[data_format])
