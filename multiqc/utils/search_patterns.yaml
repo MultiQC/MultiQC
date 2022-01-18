@@ -418,6 +418,9 @@ merqury/spectra:
     shared: true
   - fn: "*.spectra-asm.hist"
     shared: true
+genomescope/summary:
+  fn: "*_Summary.txt"
+  shared: true
 minionqc:
   fn: "summary.yaml"
   contents: "total.gigabases"
@@ -465,6 +468,9 @@ optitype:
 pangolin:
   contents: "pangolin_version"
   num_lines: 1
+pretext:
+  fn: "*pretext.png"
+  shared: true
 odgi:
   - fn: "*.og.stats.yaml"
   - fn: "*.og.stats.yml"
