@@ -9,11 +9,7 @@ def plot_indelhist(samples, file_type, **plot_args):
     The 'samples' parameter could be from the bbmap mod_data dictionary:
     samples = bbmap.MultiqcModule.mod_data[file_type]
     """
-
-    all_x = set()
-    for item in sorted(chain(*[samples[sample]["data"].items() for sample in samples])):
-        all_x.add(item[0])
-
+    all_x = {item[0] for item in sorted(chain(*[samples[sample]['data'].items() for sample in samples]))}
     columns_to_plot = {
         "Deletions": {
             0: "Count",
