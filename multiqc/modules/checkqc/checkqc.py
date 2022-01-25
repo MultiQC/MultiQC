@@ -37,31 +37,14 @@ class MultiqcModule(BaseMultiqcModule):
         self.log_files = list(self.find_log_files("checkqc"))
         self.onerun = len(self.log_files) == 1
 
-        general_stats = dict()
         for f in self.log_files:
             raw_content = json.loads(f["f"])
-            genstats = self.parse_checkqc_json(raw_content, f)
-            if genstats:
-                general_stats.update(genstats)
+            self.parse_checkqc_json(raw_content, f)
             self.add_data_source(f)
 
         if not self.checkqc_data:
             raise UserWarning
         log.info(f"Found {len(self.log_files)} run and {len(self.checkqc_data)} samples")
-
-        if general_stats:
-            headers = OrderedDict()
-            headers["read_num"] = {
-                "title": "Too few reads",
-                "description": "Too few demultiplexed reads for sample. Compare with column 'Minimal reads threshold'.",
-                "suffix": "M",
-            }
-            headers["read_threshold"] = {
-                "title": "Minimal reads threshold",
-                "description": "Threshold for minimal expected number of reads for sample.",
-                "suffix": "M",
-            }
-            self.general_stats_addcols(general_stats, headers)
 
         self.write_data_file(self.checkqc_data, "multiqc_checkqc")
 
@@ -69,9 +52,8 @@ class MultiqcModule(BaseMultiqcModule):
 
     def parse_checkqc_json(self, content, f):
         run = self._get_unique_runname(content)
-        general_stats = dict()
         if "ReadsPerSampleHandler" in content:
-            general_stats = self.get_reads_per_sample_data(content["ReadsPerSampleHandler"], run, f)
+            self.get_reads_per_sample_data(content["ReadsPerSampleHandler"], run, f)
         if "ClusterPFHandler" in content:
             self.get_cluster_pf_data(content["ClusterPFHandler"], run, f)
         if "Q30Handler" in content:
@@ -82,7 +64,6 @@ class MultiqcModule(BaseMultiqcModule):
             self.get_undetermined_percentage_data(content["UndeterminedPercentageHandler"], run, f)
         if "UnidentifiedIndexHandler" in content:
             self.get_unidentified_index_data(content["UnidentifiedIndexHandler"], run, f)
-        return general_stats
 
     def _get_unique_runname(self, content):
         base_run_name = content["run_summary"]["instrument_and_reagent_type"]
@@ -113,34 +94,26 @@ class MultiqcModule(BaseMultiqcModule):
     def get_reads_per_sample_data(self, issues, run, f):
         """Parse data from checkQC ReadsPerSampleHandler
 
-        Also adds samples to general stats table
-
         Args:
             issues (dict): JSON dict from CheckQC containing ReadsPerSampleHandler results
             run (str): name of sequencing run
             f (dict): MultiQC log file dict
-
-        Return:
-            general_stats (dict): dict with values for general stats table
         """
         data = {}
-        general_stats = {}
         for issue in issues:
             is_error = issue["type"] == "error"
             sample_name = issue["data"]["sample_name"]
             lane = issue["data"]["lane"]
             if self.onerun:
-                sample = self.clean_s_name(f"{sample_name} (Lane {lane})", f)
+                sample = self.clean_s_name(f"{sample_name} - Lane {lane}", f)
             else:
-                sample = self.clean_s_name(f"{sample_name} (Lane {lane}, run {run})", f)
+                sample = self.clean_s_name(f"{sample_name} - Lane {lane}, run {run}", f)
             if self.is_ignore_sample(sample):
                 continue
             self.add_data_source(f, sample)
 
             read_num = issue["data"]["sample_reads"]
             read_threshold = issue["data"]["threshold"]
-
-            general_stats[sample] = {"read_num": read_num, "read_threshold": read_threshold}
 
             data[sample] = {"read_num": read_num, "threshold": read_threshold}
             if is_error:
@@ -152,7 +125,6 @@ class MultiqcModule(BaseMultiqcModule):
                 self.checkqc_data["ReadsPerSampleHandler"] = data
             else:
                 self.checkqc_data["ReadsPerSampleHandler"].update(data)
-        return general_stats
 
     def add_reads_per_sample_section(self):
         """Add a section for samples with too few reads
