@@ -24,6 +24,8 @@
 
 ### New Modules
 
+- [**CheckQC**](https://github.com/Molmed/checkQC): A program designed to check a set of quality criteria against an Illumina runfolder
+
 ### Module updates
 
 - **bclconvert**
