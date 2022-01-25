@@ -20,15 +20,16 @@ class DragenFragmentLength(BaseMultiqcModule):
         data_by_rg_by_sample = defaultdict(dict)
 
         for f in self.find_log_files("dragen/fragment_length_hist"):
-            data_by_rg = parse_fragment_length_hist_file(f)
-            if f["s_name"] in data_by_rg_by_sample:
-                log.debug("Duplicate sample name found! Overwriting: {}".format(f["s_name"]))
+            s_name, data_by_rg = parse_fragment_length_hist_file(f)
+            s_name = self.clean_s_name(s_name, f)
+            if s_name in data_by_rg_by_sample:
+                log.debug(f"Duplicate sample name found! Overwriting: {s_name}")
             self.add_data_source(f, section="stats")
 
             for rg, data in data_by_rg.items():
                 if any(rg in d_rg for sn, d_rg in data_by_rg_by_sample.items()):
-                    log.debug("Duplicate read group name {} found for {}! Overwriting".format(rg, f["s_name"]))
-            data_by_rg_by_sample[f["s_name"]].update(data_by_rg)
+                    log.debug(f"Duplicate read group name {rg} found for {s_name}! Overwriting")
+            data_by_rg_by_sample[s_name].update(data_by_rg)
 
         # Filter to strip out ignored sample names:
         data_by_rg_by_sample = self.ignore_samples(data_by_rg_by_sample)
@@ -99,7 +100,7 @@ def parse_fragment_length_hist_file(f):
     39317,1
     """
 
-    f["s_name"] = re.search(r"(.*)\.fragment_length_hist.csv", f["fn"]).group(1)
+    s_name = re.search(r"(.*)\.fragment_length_hist.csv", f["fn"]).group(1)
 
     data_by_rg = defaultdict(dict)
 
@@ -119,4 +120,4 @@ def parse_fragment_length_hist_file(f):
                 if cnt >= MIN_CNT_TO_SHOW_ON_PLOT:  # to prevent long flat tail
                     data_by_rg[read_group][frag_len] = cnt
 
-    return data_by_rg
+    return s_name, data_by_rg
