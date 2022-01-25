@@ -416,6 +416,8 @@ mirtrace/mirnacomplexity:
   fn: "mirtrace-stats-mirna-complexity.tsv"
 mtnucratio:
   fn: "*mtnuc.json"
+mosdepth/summary:
+  fn: "*.mosdepth.summary.txt"
 mosdepth/global_dist:
   fn: "*.mosdepth.global.dist.txt"
 mosdepth/region_dist:

@@ -51,6 +51,10 @@
 - **RSeQC**
   - Fixed minor bug in new TIN parsing where the sample name was not being correctly cleaned ([#1484](https://github.com/ewels/MultiQC/issues/1484))
   - Fixed bug in the `junction_saturation` submodule ([#1582](https://github.com/ewels/MultiQC/issues/1582))
+- **Mosdepth**
+  - Added mean coverage, as requested by [#1566](https://github.com/ewels/MultiQC/issues/1566)
+  - Fixed issue [#1568](https://github.com/ewels/MultiQC/issues/1568)
+  - Fixed a bug when reporting per contig coverage
 
 ## [MultiQC v1.11](https://github.com/ewels/MultiQC/releases/tag/v1.11) - 2021-07-05
 
