@@ -200,12 +200,13 @@ class MultiqcModule(BaseMultiqcModule):
 
         """
         data = self.checkqc_data["ClusterPFHandler"]
+        data = {f"Lane {k}": v for k, v in data.items()}
 
         warning, error = self._get_warning_error(data)
 
         cats = OrderedDict()
         cats["lane_pf"] = {
-            "name": "Cluster PF",
+            "name": "Clusters passing filters",
         }
 
         if error:
@@ -218,13 +219,12 @@ class MultiqcModule(BaseMultiqcModule):
 
         pconfig = {
             "id": "checkqc_cluster-pf-plot",
-            "title": "CheckQC: Cluster PF too low",
+            "title": "CheckQC: Too few clusters passing filters",
             "ylab": "Number of clusters",
-            "xlab": "Lanes",
         }
 
         self.add_section(
-            name="Cluster PF too low",
+            name="Clusters passing filters",
             anchor="checkqc-clusterpf",
             description="Some sequencing lanes have too few clusters passing filter (PF)",
             plot=bargraph.plot(data, cats, pconfig),
@@ -244,9 +244,9 @@ class MultiqcModule(BaseMultiqcModule):
             lane = issue["data"]["lane"]
             read = issue["data"]["read"]
             if self.onerun:
-                sample = self.clean_s_name(f"{lane} - {read}", f)
+                sample = self.clean_s_name(f"{lane} - R{read}", f)
             else:
-                sample = self.clean_s_name(f"{lane} - {read} ({run})", f)
+                sample = self.clean_s_name(f"{lane} - R{read} ({run})", f)
 
             if self.is_ignore_sample(sample):
                 continue
@@ -271,6 +271,7 @@ class MultiqcModule(BaseMultiqcModule):
 
         """
         data = self.checkqc_data["Q30Handler"]
+        data = {f"Lane {k}": v for k, v in data.items()}
 
         warning, error = self._get_warning_error(data)
 
@@ -312,9 +313,9 @@ class MultiqcModule(BaseMultiqcModule):
             lane = issue["data"]["lane"]
             read = issue["data"]["read"]
             if self.onerun:
-                sample = self.clean_s_name(f"{lane} - {read}", f)
+                sample = self.clean_s_name(f"{lane} - R{read}", f)
             else:
-                sample = self.clean_s_name(f"{lane} - {read} ({run})", f)
+                sample = self.clean_s_name(f"{lane} - R{read} ({run})", f)
 
             if self.is_ignore_sample(sample):
                 continue
@@ -339,6 +340,7 @@ class MultiqcModule(BaseMultiqcModule):
 
         """
         data = self.checkqc_data["ErrorRateHandler"]
+        data = {f"Lane {k}": v for k, v in data.items()}
 
         warning, error = self._get_warning_error(data)
 
@@ -419,6 +421,7 @@ class MultiqcModule(BaseMultiqcModule):
             run (str): name of sequencing run
         """
         data = self.checkqc_data["UndeterminedPercentageHandler"]
+        data = {f"Lane {k}": v for k, v in data.items()}
 
         warning, error = self._get_warning_error(data)
         cats = OrderedDict()
@@ -438,12 +441,11 @@ class MultiqcModule(BaseMultiqcModule):
             "id": "checkqc_undetermined-percentage-plot",
             "title": "CheckQC: Percentage undetermined indexes too high",
             "ylab": r"% undetermined indexes",
-            "xlab": "Lane",
             "cpswitch": False,
         }
 
         self.add_section(
-            name="Percentage of undetermined indexes too high",
+            name="% Undetermined indexes",
             anchor="checkqc-undeterminedrate",
             description="Some lanes have a percentage of undetermined indexes that is too high.",
             plot=bargraph.plot(data, cats, pconfig),
@@ -560,7 +562,7 @@ class MultiqcModule(BaseMultiqcModule):
         }
 
         self.add_section(
-            name="Overrepresented unidentified indexes",
+            name="Unidentified indexes",
             anchor="checkqc-unidentifiedpercentage",
             description="Some lanes have unidentified indexes that are overrepresented.",
             plot=bargraph.plot(data, cats, pconfig),
