@@ -20,6 +20,7 @@
 - Added support for customising table column names ([#1255](https://github.com/ewels/MultiQC/issues/1255))
 - Init/reset global state between runs ([#1596](https://github.com/ewels/MultiQC/pull/1596))
 - Fixed a problem with numeric filenames ([#1606](https://github.com/ewels/MultiQC/issues/1606))
+- Fixed nasty bug where line charts with a categorical x-axis would take categories from the last sample only ([#1568](https://github.com/ewels/MultiQC/issues/1568))
 
 ### New Modules
 
