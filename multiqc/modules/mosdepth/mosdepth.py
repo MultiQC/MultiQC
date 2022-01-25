@@ -217,7 +217,7 @@ class MultiqcModule(BaseMultiqcModule):
 
         # Parse mean coverage
         for f in self.find_log_files("mosdepth/summary"):
-            s_name = self.clean_s_name(f["fn"], f).replace(".mosdepth", "")
+            s_name = self.clean_s_name(f["fn"], f)
             for line in f["f"].splitlines():
                 chrom, length, bases, mean, min_cov, max_cov = line.split("\t")
                 if chrom.startswith("total"):
@@ -226,7 +226,7 @@ class MultiqcModule(BaseMultiqcModule):
         # Parse coverage distributions
         for scope in ("region", "global"):
             for f in self.find_log_files("mosdepth/" + scope + "_dist"):
-                s_name = self.clean_s_name(f["fn"], f).replace(".mosdepth." + scope + ".dist", "")
+                s_name = self.clean_s_name(f["fn"], f)
                 if s_name in cumcov_dist_data:  # both region and global might exist, prioritizing region
                     continue
 
