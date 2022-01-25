@@ -29,7 +29,7 @@ class MultiqcModule(BaseMultiqcModule):
         self.last_run_id = None
         self.cluster_length = None
         self.multiple_sequencing_runs = False
-        bclconvert_demuxes = self._collate_log_files()
+        bclconvert_demuxes, bclconvert_qmetrics = self._collate_log_files()
         self.num_demux_files = len(bclconvert_demuxes)
 
         self.bclconvert_data = dict()
@@ -42,6 +42,8 @@ class MultiqcModule(BaseMultiqcModule):
 
         for demux in bclconvert_demuxes:
             self.parse_demux_data(demux)
+        for qmetric in bclconvert_qmetrics:
+            self.parse_qmetrics_data(qmetric)
 
         if self.num_demux_files == 0:
             raise UserWarning
@@ -254,6 +256,7 @@ class MultiqcModule(BaseMultiqcModule):
         # we need to match demux and runinfo logs from the same directory, but find_log_files() does not guarantee order; however it provides root dir, so we use that
 
         demuxes = self._find_log_files_and_sort("bclconvert/demux", "root")
+        qmetrics = self._find_log_files_and_sort("bclconvert/quality_metrics", "root")  # v3.9.3 and above
         runinfos = self._find_log_files_and_sort("bclconvert/runinfo", "root")
 
         if not len(demuxes) == len(runinfos):
@@ -272,6 +275,10 @@ class MultiqcModule(BaseMultiqcModule):
                 raise UserWarning
             else:
                 demuxes[idx]["run_id"] = rundata["run_id"]
+                try:
+                    qmetrics[idx]["run_id"] = rundata["run_id"]
+                except IndexError:
+                    pass
 
             if self.last_run_id and rundata["run_id"] != self.last_run_id:
                 self.multiple_sequencing_runs = (
@@ -287,7 +294,7 @@ class MultiqcModule(BaseMultiqcModule):
                 raise UserWarning
             self.cluster_length = rundata["cluster_length"]
 
-        return demuxes
+        return demuxes, qmetrics
 
     def _recalculate_undetermined(self):
         # We have to calculate "corrected" unknown read counts when parsing more than one bclconvert run. To do this:
@@ -316,7 +323,6 @@ class MultiqcModule(BaseMultiqcModule):
         filename = str(os.path.join(myfile["root"], myfile["fn"]))
         self.total_reads_in_lane_per_file[filename] = dict()
 
-        # reader = csv.DictReader(myfile["f"], delimiter=",")
         reader = csv.DictReader(open(filename), delimiter=",")
         for row in reader:
             run_data = self.bclconvert_data[myfile["run_id"]]
@@ -344,15 +350,17 @@ class MultiqcModule(BaseMultiqcModule):
                 lane["yield"] += int(row["# Reads"]) * (self.cluster_length)
                 lane["perfect_index_reads"] += int(row["# Perfect Index Reads"])
                 lane["one_mismatch_index_reads"] += int(row["# One Mismatch Index Reads"])
-                lane["basesQ30"] += int(row["# of >= Q30 Bases (PF)"])
+                lane["basesQ30"] += int(row.get("# of >= Q30 Bases (PF)", "0"))  # Column only present pre v3.9.3
 
                 # stats for this sample in this lane
                 lane_sample["reads"] += int(row["# Reads"])
                 lane_sample["yield"] += int(row["# Reads"]) * (self.cluster_length)
                 lane_sample["perfect_index_reads"] += int(row["# Perfect Index Reads"])
                 lane_sample["one_mismatch_index_reads"] += int(row["# One Mismatch Index Reads"])
-                lane_sample["basesQ30"] += int(row["# of >= Q30 Bases (PF)"])
-                lane_sample["mean_quality"] += float(row["Mean Quality Score (PF)"])
+                lane_sample["basesQ30"] += int(row.get("# of >= Q30 Bases (PF)", "0"))  # Column only present pre v3.9.3
+                lane_sample["mean_quality"] += float(
+                    row.get("Mean Quality Score (PF)", "0")
+                )  # Column only present pre v3.9.3
 
             if lane_id not in self.total_reads_in_lane_per_file[filename]:
                 self.total_reads_in_lane_per_file[filename][lane_id] = 0
@@ -363,6 +371,31 @@ class MultiqcModule(BaseMultiqcModule):
 
             if self.num_demux_files == 1 and sample == "Undetermined":
                 self.per_lane_undetermined_reads[lane_id] += int(row["# Reads"])
+
+    def parse_qmetrics_data(self, myfile):
+        # parse a bclconvert output stats csv, populate variables appropriately
+        filename = str(os.path.join(myfile["root"], myfile["fn"]))
+        self.total_reads_in_lane_per_file[filename] = dict()
+
+        reader = csv.DictReader(open(filename), delimiter=",")
+        for row in reader:
+            run_data = self.bclconvert_data[myfile["run_id"]]
+            lane_id = "L{}".format(row["Lane"])
+            if lane_id not in run_data:
+                log.warn(f"Found unrecognised lane {lane_id} in Quality Metrics file, skipping")
+                continue
+            lane = run_data[lane_id]
+            sample = row["SampleID"]
+            if sample != "Undetermined":  # dont include undetermined reads at all in any of the calculations...
+                if sample not in run_data[lane_id]["samples"]:
+                    log.warn(f"Found unrecognised sample {sample} in Quality Metrics file, skipping")
+                    continue
+                lane_sample = run_data[lane_id]["samples"][sample]  # this sample in this lane
+
+                # Parse the stats that moved to this file in v3.9.3
+                lane["basesQ30"] += int(row["YieldQ30"])
+                lane_sample["basesQ30"] += int(row["YieldQ30"])
+                lane_sample["mean_quality"] += float(row["Mean Quality Score (PF)"])
 
     def _parse_top_unknown_barcodes(self):
         run_data = self.bclconvert_data[self.last_run_id]
@@ -683,7 +716,7 @@ class MultiqcModule(BaseMultiqcModule):
             "suffix": "%",
         }
         headers["percent_oneMismatch-lane"] = {
-            "title": "% One Mismach",
+            "title": "% One Mismatch",
             "description": "Percent of reads with one mismatch",
             "max": 100,
             "min": 0,

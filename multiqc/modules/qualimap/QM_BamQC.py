@@ -96,9 +96,12 @@ def parse_genome_results(self, f):
     for k, r in regexes.items():
         r_search = re.search(r, f["f"], re.MULTILINE)
         if r_search:
-            try:
-                d[k] = float(r_search.group(1).replace(",", ""))
-            except ValueError:
+            if "\d" in r:
+                try:
+                    d[k] = float(r_search.group(1).replace(",", ""))
+                except ValueError:
+                    d[k] = r_search.group(1)
+            else:
                 d[k] = r_search.group(1)
     # Check we have an input filename
     if "bam_file" not in d:
