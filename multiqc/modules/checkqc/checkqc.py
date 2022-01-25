@@ -27,7 +27,7 @@ class MultiqcModule(BaseMultiqcModule):
             name="CheckQC",
             anchor="checkqc",
             href="https://github.com/Molmed/checkQC",
-            info="CheckQC is a program designed to check a set of quality criteria against an Illumina runfolder.",
+            info="is a program designed to check a set of quality criteria against an Illumina runfolder. Samples are only shown in the report if they fail a check.",
             doi="10.21105/joss.00556",
         )
 
