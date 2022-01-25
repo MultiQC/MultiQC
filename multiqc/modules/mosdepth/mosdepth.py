@@ -285,9 +285,10 @@ class MultiqcModule(BaseMultiqcModule):
             # Correct per-contig average, since mosdepth reports cumulative coverage for at least
             # a certain value (see https://github.com/brentp/mosdepth#distribution-output).
             # For that reason, the 0 category (which is always 1) should not be included.
-            for i in perchrom_avg_data:
-                for j in perchrom_avg_data[i]:
-                    perchrom_avg_data[i][j] -= 1
+            if scope == "region":
+                for i in perchrom_avg_data:
+                    for j in perchrom_avg_data[i]:
+                        perchrom_avg_data[i][j] -= 1
         return genstats, cumcov_dist_data, cov_dist_data, xmax, perchrom_avg_data
 
     def genstats_cov_thresholds(self, genstats, genstats_headers, cumcov_dist_data, threshs, hidden_threshs):
