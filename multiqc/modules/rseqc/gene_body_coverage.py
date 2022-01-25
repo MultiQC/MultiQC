@@ -81,7 +81,7 @@ def parse_reports(self):
 
     if len(self.gene_body_cov_hist_counts) > 0:
         # Write data to file
-        self.write_data_file(self.gen_body_cov_hist_counts, "rseqc_gene_body_cov")
+        self.write_data_file(self.gene_body_cov_hist_counts, "rseqc_gene_body_cov")
 
         # Make a normalised percentage version of the data
         for s_name in self.gene_body_cov_hist_counts:
