@@ -50,8 +50,14 @@
   - Move samples that have been renamed using `--replace-names` into the _General Statistics_ table ([#1483](https://github.com/ewels/MultiQC/pull/1483))
 - **miRTrace**
   - Replace hardcoded RGB colours with Hex to avoid errors with newer versions of matplotlib ([#1263](https://github.com/ewels/MultiQC/pull/1263))
+- **Mosdepth**
+  - Added mean coverage, as requested by [#1566](https://github.com/ewels/MultiQC/issues/1566)
+  - Fixed issue [#1568](https://github.com/ewels/MultiQC/issues/1568)
+  - Fixed a bug when reporting per contig coverage
 - **NanoStat**
   - Recognize FASTA and FastQ report flavors ([#1547](https://github.com/ewels/MultiQC/issues/1547))
+- **Picard**
+  - Update `ExtractIlluminaBarcodes` to recognise more log patterns in newer versions of Picard ([#1611](https://github.com/ewels/MultiQC/pull/1611))
 - **Qualimap**
   - Fix `ZeroDivisionError` in `QM_RNASeq` and skip genomic origins plot if no aligned reads are found ([#1492](https://github.com/ewels/MultiQC/issues/1492))
 - **QUAST**
@@ -60,10 +66,6 @@
   - Fixed minor bug in new TIN parsing where the sample name was not being correctly cleaned ([#1484](https://github.com/ewels/MultiQC/issues/1484))
   - Fixed bug in the `junction_saturation` submodule ([#1582](https://github.com/ewels/MultiQC/issues/1582))
   - Fixed bug where empty files caused `tin` submodule to crash ([#1604](https://github.com/ewels/MultiQC/issues/1604))
-- **Mosdepth**
-  - Added mean coverage, as requested by [#1566](https://github.com/ewels/MultiQC/issues/1566)
-  - Fixed issue [#1568](https://github.com/ewels/MultiQC/issues/1568)
-  - Fixed a bug when reporting per contig coverage
 
 ## [MultiQC v1.11](https://github.com/ewels/MultiQC/releases/tag/v1.11) - 2021-07-05
 
