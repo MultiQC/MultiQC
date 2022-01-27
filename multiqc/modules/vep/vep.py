@@ -125,14 +125,18 @@ class MultiqcModule(BaseMultiqcModule):
                 if len(cells) == 2:
                     key = cells[0][4:-5]
                     value = cells[1][4:-5]
-                    if key == "Novel / existing variants":
-                        values = value.split("/")
-                        novel = values[0].split("(")[0].replace(" ", "")
-                        existing = values[1].split("(")[0].replace(" ", "")
-                        self.vep_data[f["s_name"]][title]["Novel variants"] = int(novel)
-                        self.vep_data[f["s_name"]][title]["Existing variants"] = int(existing)
-                    else:
-                        self.vep_data[f["s_name"]][title][key] = int(value)
+                    try:
+                        if key == "Novel / existing variants":
+                            values = value.split("/")
+                            novel = values[0].split("(")[0].replace(" ", "")
+                            existing = values[1].split("(")[0].replace(" ", "")
+                            self.vep_data[f["s_name"]][title]["Novel variants"] = int(novel)
+                            self.vep_data[f["s_name"]][title]["Existing variants"] = int(existing)
+                        else:
+                            self.vep_data[f["s_name"]][title][key] = int(value)
+                    except (IndexError, ValueError):
+                        # Table cells can just have "-". Don't log values if so. See issue #1597
+                        pass
 
     def parse_vep_txt(self, f):
         """This Function will parse VEP summary files with plain text format"""
