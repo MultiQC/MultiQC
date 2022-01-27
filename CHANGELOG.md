@@ -23,6 +23,7 @@
 - Fixed nasty bug where line charts with a categorical x-axis would take categories from the last sample only ([#1568](https://github.com/ewels/MultiQC/issues/1568))
 - Ignore any files called `multiqc_data.json` ([#1598](https://github.com/ewels/MultiQC/issues/1598))
 - Check that the config `path_filters` is a list, convert to list if a string is supplied ([#1539](https://github.com/ewels/MultiQC/issues/1539))
+- Custom Content: Use filename for section header in files with no headers ([#1550](https://github.com/ewels/MultiQC/issues/1550))
 
 ### New Modules
 
