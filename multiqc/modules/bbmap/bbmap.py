@@ -125,9 +125,9 @@ class MultiqcModule(BaseMultiqcModule):
                 else:
                     # It should be the table header. Verify:
                     if line != cols:
-                        if line != cols + list(log_descr["extracols"].keys()):
+                        if line != cols + list(log_descr.get("extracols", {}).keys()):
                             log.error("Table headers do not match those 'on file'. %s != %s", repr(line), repr(cols))
-                        return False
+                            return False
             else:
                 if isinstance(log_descr["cols"], OrderedDict):
                     line = [value_type(value) for value_type, value in zip(log_descr["cols"].values(), line)]
