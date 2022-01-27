@@ -51,6 +51,8 @@
   - Clarify general statistics table header for length
 - **goleft/indexcov**
   - Fix `ZeroDivisionError` if no bins are found ([#1586](https://github.com/ewels/MultiQC/issues/1586))
+- **HiCPro**
+  - Better handling of errors when expected data keys are not found ([#1366](https://github.com/ewels/MultiQC/issues/1366))
 - **Lima**
   - Move samples that have been renamed using `--replace-names` into the _General Statistics_ table ([#1483](https://github.com/ewels/MultiQC/pull/1483))
 - **miRTrace**
