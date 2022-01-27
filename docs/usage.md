@@ -220,3 +220,11 @@ you want to run. Alternatively, use `-e`/`--exclude` to run all modules
 except those listed.
 
 You can get a group of modules by using `--tag` followed by a tag e.g. RNA or DNA.
+
+## Running MultiQC on several CPU cores
+
+MultiQC offers some support for parallel processing. It is currently
+restricted to the file search stage of MultiQC and can be useful if
+you have many log files to process. To specify how many parallel
+processes MultiQc is allowed to start use the `--cpus <processes>`
+flag.

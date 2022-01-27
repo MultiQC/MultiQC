@@ -4,6 +4,7 @@
 
 ### MultiQC updates
 
+- Added `--cpus` flag for running file search in parallel ([#1461](https://github.com/ewels/MultiQC/issues/1461))
 - Added option to customise default plot height in plot config ([#1432](https://github.com/ewels/MultiQC/issues/1432))
 - Added `--no-report` flag to skip report generation ([#1462](https://github.com/ewels/MultiQC/issues/1462))
 - Added support for priting tool DOI in report sections ([#1177](https://github.com/ewels/MultiQC/issues/1177))

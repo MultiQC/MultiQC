@@ -104,8 +104,10 @@ class MultiqcModule(BaseMultiqcModule):
             description="""
                 Time spent running each search pattern to find files for MultiQC modules.
                 **Total file search time: {:.2f} seconds**.
+                **Total file name search time: {:.2f} seconds**.
+                **Total file content search time: {:.2f} seconds**.
             """.format(
-                report.runtimes["total_sp"]
+                report.runtimes["total_sp"], report.runtimes["file_name_search"], report.runtimes["file_content_search"]
             ),
             helptext="""
                 **NOTE: Usually, MultiQC run time is fairly insignificant - in the order of seconds.

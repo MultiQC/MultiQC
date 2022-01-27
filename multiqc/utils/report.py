@@ -10,6 +10,9 @@ import fnmatch
 import inspect
 import io
 import json
+import sys
+import threading
+import traceback
 import lzstring
 import mimetypes
 import os
@@ -17,6 +20,7 @@ import re
 import rich.progress
 import time
 import yaml
+import multiprocessing
 
 from multiqc import config
 
@@ -97,6 +101,7 @@ def init():
 
 
 def get_filelist(run_module_names):
+    global file_search_stats, runtimes, files
     """
     Go through all supplied search directories and assembly a master
     list of files to search. Then fire search functions for each file.
@@ -163,60 +168,6 @@ def get_filelist(run_module_names):
         logger.info("Skipping {} file search patterns".format(len(skipped_patterns)))
         logger.debug("Skipping search patterns: {}".format(", ".join(skipped_patterns)))
 
-    def add_file(fn, root):
-        """
-        Function applied to each file found when walking the analysis
-        directories. Runs through all search patterns and returns True
-        if a match is found.
-        """
-        f = {"fn": fn, "root": root}
-
-        # Check that this is a file and not a pipe or anything weird
-        if not os.path.isfile(os.path.join(root, fn)):
-            file_search_stats["skipped_not_a_file"] += 1
-            return False
-
-        # Check that we don't want to ignore this file
-        i_matches = [n for n in config.fn_ignore_files if fnmatch.fnmatch(fn, n)]
-        if len(i_matches) > 0:
-            logger.debug("Ignoring file as matched an ignore pattern: {}".format(fn))
-            file_search_stats["skipped_ignore_pattern"] += 1
-            return False
-
-        # Limit search to small files, to avoid 30GB FastQ files etc.
-        try:
-            f["filesize"] = os.path.getsize(os.path.join(root, fn))
-        except (IOError, OSError, ValueError, UnicodeDecodeError):
-            logger.debug("Couldn't read file when checking filesize: {}".format(fn))
-        else:
-            if f["filesize"] > config.log_filesize_limit:
-                file_search_stats["skipped_filesize_limit"] += 1
-                return False
-
-        # Test file for each search pattern
-        file_matched = False
-        for patterns in spatterns:
-            for key, sps in patterns.items():
-                start = time.time()
-                for sp in sps:
-                    if search_file(sp, f, key):
-                        # Check that we shouldn't exclude this file
-                        if not exclude_file(sp, f):
-                            # Looks good! Remember this file
-                            files[key].append(f)
-                            file_search_stats[key] = file_search_stats.get(key, 0) + 1
-                            file_matched = True
-                        # Don't keep searching this file for other modules
-                        if not sp.get("shared", False):
-                            runtimes["sp"][key] = runtimes["sp"].get(key, 0) + (time.time() - start)
-                            return True
-                        # Don't look at other patterns for this module
-                        else:
-                            break
-                runtimes["sp"][key] = runtimes["sp"].get(key, 0) + (time.time() - start)
-
-        return file_matched
-
     # Go through the analysis directories and get file list
     multiqc_installation_dir_files = [
         "LICENSE",
@@ -229,6 +180,7 @@ def get_filelist(run_module_names):
         "setup.py",
         ".gitignore",
     ]
+
     total_sp_starttime = time.time()
     for path in config.analysis_dir:
         if os.path.islink(path) and config.ignore_symlinks:
@@ -284,6 +236,10 @@ def get_filelist(run_module_names):
                 for fn in filenames:
                     searchfiles.append([fn, root])
 
+    file_name_search_end = time.time()
+    runtimes["file_name_search"] = file_name_search_end - total_sp_starttime
+    file_content_search_start = time.time()
+
     # Search through collected files
     progress_obj = rich.progress.Progress(
         "[blue]|[/]      ",
@@ -294,20 +250,302 @@ def get_filelist(run_module_names):
         "[green]{task.completed}/{task.total}",
         "[dim]{task.fields[s_fn]}",
     )
-    with progress_obj as progress:
-        mqc_task = progress.add_task("searching", total=len(searchfiles), s_fn="")
-        for sf in searchfiles:
-            progress.update(mqc_task, advance=1, s_fn=os.path.join(sf[1], sf[0])[-50:])
-            if not add_file(sf[0], sf[1]):
-                file_search_stats["skipped_no_match"] += 1
-        progress.update(mqc_task, s_fn="")
 
-    runtimes["total_sp"] = time.time() - total_sp_starttime
+    class SerialFileAdder:
+        """
+        Container class for running the file addition serially
+        """
+
+        def __init__(self, files, file_search_stats, spatterns):
+            self.files = files
+            self.sp_runtimes = dict()
+            self.file_search_stats = file_search_stats
+            self.spatterns = spatterns
+
+        # Bit of a hack...
+        from .report import add_file
+
+    class FileAdderProcess(multiprocessing.Process):
+        def __init__(self, id, spatterns, results_pipe_s, path_pipe_r, _files, queue, prog_queue):
+            """
+            A worker process for running the file addition in parallel
+            """
+            super().__init__()
+            self.id = id
+            self.spatterns = spatterns
+            self.results_pipe_s = results_pipe_s
+            self.path_pipe_r = path_pipe_r
+            self.need_work_queue = queue
+            self.prog_queue = prog_queue
+            self.files = _files
+            self.sp_runtimes = dict()
+            self.file_search_stats = {
+                "skipped_no_match": 0,
+                "skipped_not_a_file": 0,
+                "skipped_ignore_pattern": 0,
+                "skipped_filesize_limit": 0,
+            }
+
+        # Bit of a hack...
+        from .report import add_file
+
+        def run(self):
+            try:
+                chunk = []
+                while True:
+                    # Ask the main process for more work
+                    self.need_work_queue.put(self.id)
+                    signal = self.path_pipe_r.recv()
+                    last_chunk_len = len(chunk)
+                    if signal == -1:
+                        # We received an exit signal from the main process
+                        # and should notify the progress tracker
+                        self.prog_queue.put((2, self.id, last_chunk_len))
+                        break
+                    chunk = self.path_pipe_r.recv()
+                    self.prog_queue.put((1, self.id, last_chunk_len, len(chunk)))
+
+                    # Iterate over the paths in the current chunk and update the results accordingly
+                    for fn, root in chunk:
+                        if not self.add_file(fn, root):
+                            self.file_search_stats["skipped_no_match"] += 1
+                        self.prog_queue.put((0, self.id, os.path.join(fn, root)))
+
+                # Everything went well, send the data
+                self.results_pipe_s.send(0)
+                self.results_pipe_s.send((self.files, self.sp_runtimes, self.file_search_stats))
+
+            except Exception as e:
+                # Report the exception to the main process
+                self.results_pipe_s.send(-1)
+                self.results_pipe_s.send((e, traceback.format_exc()))
+
+    class ProgressTracker(threading.Thread):
+        """
+        Thread for tracking the progress of the worker processes
+        """
+
+        def __init__(self, progress, prog_queue, n_procs, len_files):
+            super().__init__()
+
+            self.queue = prog_queue
+            self.active = n_procs
+
+            # Initialise the progress bars
+            self.progress = progress
+            self.main_task = self.progress.add_task("Total    ", total=len_files, s_fn="")
+            self.proc_tasks = [self.progress.add_task(f"Process {i}", total=0, s_fn="") for i in range(1, n_procs + 1)]
+
+        def run(self):
+            while self.active > 0:
+                v = self.queue.get()
+                status = v[0]
+                id = v[1]
+                if status == 0:
+                    # Update the worker process task
+                    file_name = v[2]
+                    self.progress.update(self.proc_tasks[id], advance=1, s_fn=file_name)
+                elif status == 1:
+                    # A worker process is finished with a chunk
+                    last_chunk_len = v[2]
+                    curr_chunk_len = v[3]
+                    self.progress.update(self.main_task, advance=last_chunk_len)
+                    self.progress.update(self.proc_tasks[id], total=curr_chunk_len, completed=0)
+                elif status == 2:
+                    # The process is finished, just update the main process task
+                    last_chunk_len = v[2]
+                    self.progress.update(self.main_task, advance=last_chunk_len)
+                    self.active -= 1
+                elif status == -1:
+                    # We got an exception in one of the processes and should exit gracefully
+                    return
+
+    with progress_obj as progress:
+        if config.cpus == 1:
+            mqc_task = progress.add_task("searching", total=len(searchfiles), s_fn="")
+            searcher = SerialFileAdder(files, file_search_stats, spatterns)
+            for sf in searchfiles:
+                progress.update(mqc_task, advance=1, s_fn=os.path.join(sf[1], sf[0])[-50:])
+                if not searcher.add_file(sf[0], sf[1]):
+                    file_search_stats["skipped_no_match"] += 1
+            runtimes["sp"] = searcher.sp_runtimes
+            files = searcher.files
+            file_search_stats = searcher.file_search_stats
+            progress.update(mqc_task, s_fn="")
+        else:
+            # Set up variables for parallel file search
+            results_pipes = []
+            path_pipes = []
+            worker_procs = []
+
+            # Set up queues for communication between the processes
+            need_work_queue = multiprocessing.Queue()
+            prog_queue = multiprocessing.Queue()
+
+            # Initialise the worker processes
+            for i in range(config.cpus):
+                results_pipe_r, results_pipe_s = multiprocessing.Pipe(duplex=False)
+                path_pipe_r, path_pipe_s = multiprocessing.Pipe(duplex=False)
+                _files = {mod: [] for mod in config.sp.keys()}
+                worker_proc = FileAdderProcess(
+                    i, spatterns, results_pipe_s, path_pipe_r, _files, need_work_queue, prog_queue
+                )
+                worker_proc.daemon = True
+                worker_proc.start()
+
+                results_pipes.append(results_pipe_r)
+                path_pipes.append(path_pipe_s)
+                worker_procs.append(worker_proc)
+
+            class Chunker:
+                """
+                Iterator returning chunks from the file path list based on file size
+                """
+
+                def __init__(self, paths, size_threshold):
+                    self.paths = paths
+                    self.threshold = size_threshold
+                    self.i = 0
+
+                def __iter__(self):
+                    self.i = 0
+                    return self
+
+                def __next__(self):
+                    if self.i >= len(self.paths):
+                        raise StopIteration
+
+                    curr_size = 0
+                    chunk = []
+                    while curr_size < self.threshold and self.i < len(self.paths):
+                        path = self.paths[self.i]
+                        chunk.append(path)
+                        curr_size += os.path.getsize(os.path.join(path[1], path[0]))
+                        self.i += 1
+                    return chunk
+
+            # Set up progress tracker thread
+            progress_tracker = ProgressTracker(progress, prog_queue, config.cpus, len(searchfiles))
+            progress_tracker.daemon = True
+            progress_tracker.start()
+
+            # We iterate over the file paths chunks
+            # and send them to the workers
+            for chunk in Chunker(searchfiles, 2 ** 21):
+                id = need_work_queue.get()
+                path_pipes[id].send(0)
+                path_pipes[id].send(chunk)
+
+            # Tell the worker processes to exit
+            for _ in worker_procs:
+                id = need_work_queue.get()
+                path_pipes[id].send(-1)
+
+            # Gather the data from the processes
+            for pipe in results_pipes:
+                exit_status = pipe.recv()
+                if exit_status == 0:
+                    # Gather the data from the process
+                    _files, _sp_runtimes, _file_search_stats = pipe.recv()
+
+                    for key, file_list in _files.items():
+                        if key not in files:
+                            files[key] = []
+                        files[key].extend(file_list)
+
+                    for cat, num in _file_search_stats.items():
+                        if cat not in file_search_stats:
+                            file_search_stats[cat] = num
+                        else:
+                            file_search_stats[cat] += num
+
+                    sp_runtimes = runtimes["sp"]
+                    for key, sp_runtime in _sp_runtimes.items():
+                        sp_runtimes[key] = sp_runtime + sp_runtimes.get(key, 0)
+                elif exit_status == -1:
+                    # An exception has occurred in the worker
+
+                    # Tell the progress tracker thread to exit
+                    prog_queue.send((-1, -1))
+
+                    # Fetch the exception information
+                    e, tb_str = pipe.recv()
+
+                    # We should use the worker's actual traceback object
+                    # here, but traceback objects are not picklable.
+                    logger.error("%s", tb_str)
+                    raise e
+
+            # Join the processes
+            for worker_proc in worker_procs:
+                worker_proc.join()
+
+            # Finally, join the progress tracker thread
+            progress_tracker.join()
+
+    file_content_search_end = time.time()
+    runtimes["file_content_search"] = file_content_search_end - file_content_search_start
+    runtimes["total_sp"] = file_content_search_end - total_sp_starttime
+
+
+def add_file(self, fn, root):
+    """
+    Function applied to each file found when walking the analysis
+    directories. Runs through all search patterns and returns True
+    if a match is found.
+    """
+    f = {"fn": fn, "root": root}
+
+    # Check that this is a file and not a pipe or anything weird
+    if not os.path.isfile(os.path.join(root, fn)):
+        self.file_search_stats["skipped_not_a_file"] += 1
+        return False
+
+    # Check that we don't want to ignore this file
+    i_matches = [n for n in config.fn_ignore_files if fnmatch.fnmatch(fn, n)]
+    if len(i_matches) > 0:
+        logger.debug("Ignoring file as matched an ignore pattern: {}".format(fn))
+        self.file_search_stats["skipped_ignore_pattern"] += 1
+        return False
+
+    # Limit search to small files, to avoid 30GB FastQ files etc.
+    try:
+        f["filesize"] = os.path.getsize(os.path.join(root, fn))
+    except (IOError, OSError, ValueError, UnicodeDecodeError):
+        logger.debug("Couldn't read file when checking filesize: {}".format(fn))
+    else:
+        if f["filesize"] > config.log_filesize_limit:
+            self.file_search_stats["skipped_filesize_limit"] += 1
+            return False
+
+    # Test file for each search pattern
+    file_matched = False
+    for patterns in self.spatterns:
+        for key, sps in patterns.items():
+            start = time.time()
+            for sp in sps:
+                if search_file(sp, f, key):
+                    # Check that we shouldn't exclude this file
+                    if not exclude_file(sp, f):
+                        # Looks good! Remember this file
+                        self.files[key].append(f)
+                        self.file_search_stats[key] = file_search_stats.get(key, 0) + 1
+                        file_matched = True
+                    # Don't keep searching this file for other modules
+                    if not sp.get("shared", False):
+                        self.sp_runtimes[key] = self.sp_runtimes.get(key, 0) + (time.time() - start)
+                        return True
+                    # Don't look at other patterns for this module
+                    else:
+                        break
+            self.sp_runtimes[key] = self.sp_runtimes.get(key, 0) + (time.time() - start)
+
+    return file_matched
 
 
 def search_file(pattern, f, module_key):
     """
-    Function to searach a single file for a single search pattern.
+    Function to search a single file for a single search pattern.
     """
 
     fn_matched = False
@@ -347,6 +585,7 @@ def search_file(pattern, f, module_key):
     if pattern.get("contents") is not None or pattern.get("contents_re") is not None:
         if pattern.get("contents_re") is not None:
             repattern = re.compile(pattern["contents_re"])
+
         try:
             with io.open(os.path.join(f["root"], f["fn"]), "r", encoding="utf-8") as f:
                 l = 1
@@ -359,7 +598,7 @@ def search_file(pattern, f, module_key):
                                 return True
                             break
                     # Search by file contents (regex)
-                    elif pattern.get("contents_re") is not None:
+                    elif "contents_re" in pattern:
                         if re.search(repattern, line):
                             contents_matched = True
                             if pattern.get("fn") is None and pattern.get("fn_re") is None:
