@@ -66,6 +66,7 @@
   - Fixed minor bug in new TIN parsing where the sample name was not being correctly cleaned ([#1484](https://github.com/ewels/MultiQC/issues/1484))
   - Fixed bug in the `junction_saturation` submodule ([#1582](https://github.com/ewels/MultiQC/issues/1582))
   - Fixed bug where empty files caused `tin` submodule to crash ([#1604](https://github.com/ewels/MultiQC/issues/1604))
+  - Fix bug in `read_distribution` for samples with zero tags ([#1571](https://github.com/ewels/MultiQC/issues/1571))
 - **VEP**
   - Handle table cells containing `-` instead of numbers ([#1597](https://github.com/ewels/MultiQC/issues/1597))
 
