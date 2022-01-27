@@ -21,6 +21,7 @@
 - Init/reset global state between runs ([#1596](https://github.com/ewels/MultiQC/pull/1596))
 - Fixed a problem with numeric filenames ([#1606](https://github.com/ewels/MultiQC/issues/1606))
 - Fixed nasty bug where line charts with a categorical x-axis would take categories from the last sample only ([#1568](https://github.com/ewels/MultiQC/issues/1568))
+- Ignore any files called `multiqc_data.json` ([#1598](https://github.com/ewels/MultiQC/issues/1598))
 
 ### New Modules
 
