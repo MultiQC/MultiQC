@@ -35,6 +35,8 @@
   - Correctly handle adapter stats files with additional columns ([#1556](https://github.com/ewels/MultiQC/issues/1556))
 - **bclconvert**
   - Handle change in output format in v3.9.3 with new `Quality_Metrics.csv` file ([#1563](https://github.com/ewels/MultiQC/issues/1563))
+- **bcftools**
+  - Added a plot with samplewise number of sites, Ts/Tv, number of singletons and sequencing depth ([#1087](https://github.com/ewels/MultiQC/issues/1087))
 - **bowtie**
   - Minor update to handle new log wording in bowtie v1.3.0 ([#1615](https://github.com/ewels/MultiQC/issues/1615))
 - **CCS**

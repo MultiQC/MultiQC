@@ -31,6 +31,10 @@ class StatsReportMixin:
         self.bcftools_stats = dict()
         self.bcftools_stats_indels = dict()
         self.bcftools_stats_vqc_snp = dict()
+        self.bcftools_stats_sample_variants = dict()
+        self.bcftools_stats_sample_tstv = dict()
+        self.bcftools_stats_sample_singletons = dict()
+        self.bcftools_stats_sample_depth = dict()
         self.bcftools_stats_vqc_transi = dict()
         self.bcftools_stats_vqc_transv = dict()
         self.bcftools_stats_vqc_indels = dict()
@@ -48,6 +52,10 @@ class StatsReportMixin:
                     self.add_data_source(f, s_name, section="stats")
                     self.bcftools_stats[s_name] = dict()
                     self.bcftools_stats_indels[s_name] = dict()
+                    self.bcftools_stats_sample_variants[s_name] = dict()
+                    self.bcftools_stats_sample_tstv[s_name] = dict()
+                    self.bcftools_stats_sample_singletons[s_name] = dict()
+                    self.bcftools_stats_sample_depth[s_name] = dict()
                     self.bcftools_stats_vqc_snp[s_name] = dict()
                     self.bcftools_stats_vqc_transi[s_name] = dict()
                     self.bcftools_stats_vqc_transv[s_name] = dict()
@@ -101,6 +109,52 @@ class StatsReportMixin:
                     for i, f in enumerate(fields):
                         self.bcftools_stats[s_name][f] = int(s[i + 4].strip())
 
+                # Per-sample variant stats
+                if s[0] == "PSC" and len(s_names) > 0:
+                    s_name = s_names[int(s[1])]
+                    sample = self.clean_s_name(s[2].strip(), f)
+                    self.bcftools_stats_sample_variants[s_name][sample] = dict()
+                    self.bcftools_stats_sample_variants[s_name][sample]["nSNPs"] = (
+                        int(s[3].strip()) + int(s[4].strip()) + int(s[5].strip())
+                    )
+                    self.bcftools_stats_sample_variants[s_name][sample]["nIndels"] = int(s[8].strip())
+                    nMissing = int(s[13].strip())
+                    nPresent = self.bcftools_stats[s_name]["number_of_records"] - nMissing
+                    self.bcftools_stats_sample_variants[s_name][sample]["nOther"] = (
+                        nPresent
+                        - self.bcftools_stats_sample_variants[s_name][sample]["nSNPs"]
+                        - self.bcftools_stats_sample_variants[s_name][sample]["nIndels"]
+                    )
+
+                # Per-sample ts/tv stats
+                if s[0] == "PSC" and len(s_names) > 0:
+                    s_name = s_names[int(s[1])]
+                    sample = self.clean_s_name(s[2].strip(), f)
+                    self.bcftools_stats_sample_tstv[s_name][sample] = dict()
+                    if int(s[7].strip()) != 0:
+                        self.bcftools_stats_sample_tstv[s_name][sample]["tstv"] = float(
+                            int(s[6].strip()) / int(s[7].strip())
+                        )
+                    else:
+                        self.bcftools_stats_sample_tstv[s_name][sample]["tstv"] = 0
+
+                # Per-sample singletons stats
+                if s[0] == "PSC" and len(s_names) > 0:
+                    s_name = s_names[int(s[1])]
+                    sample = self.clean_s_name(s[2].strip(), f)
+                    self.bcftools_stats_sample_singletons[s_name][sample] = dict()
+                    self.bcftools_stats_sample_singletons[s_name][sample]["singletons"] = int(s[10].strip())
+                    self.bcftools_stats_sample_singletons[s_name][sample]["rest"] = (
+                        int(s[3].strip()) + int(s[4].strip()) + int(s[5].strip()) - int(s[10].strip())
+                    )
+
+                # Per-sample coverage stats
+                if s[0] == "PSC" and len(s_names) > 0:
+                    s_name = s_names[int(s[1])]
+                    sample = self.clean_s_name(s[2].strip(), f)
+                    self.bcftools_stats_sample_depth[s_name][sample] = dict()
+                    self.bcftools_stats_sample_depth[s_name][sample]["depth"] = float(s[9].strip())
+
                 # Depth plots
                 if s[0] == "DP" and len(s_names) > 0:
                     s_name = s_names[int(s[1])]
@@ -117,6 +171,22 @@ class StatsReportMixin:
                     self.bcftools_stats_vqc_transv[s_name][quality] = float(s[5].strip())
                     self.bcftools_stats_vqc_indels[s_name][quality] = float(s[6].strip())
 
+        # Remove empty samples
+        self.bcftools_stats = {k: v for k, v in self.bcftools_stats.items() if len(v) > 0}
+        self.bcftools_stats_indels = {k: v for k, v in self.bcftools_stats_indels.items() if len(v) > 0}
+        self.bcftools_stats_sample_variants = {
+            k: v for k, v in self.bcftools_stats_sample_variants.items() if len(v) > 0
+        }
+        self.bcftools_stats_sample_tstv = {k: v for k, v in self.bcftools_stats_sample_tstv.items() if len(v) > 0}
+        self.bcftools_stats_sample_singletons = {
+            k: v for k, v in self.bcftools_stats_sample_singletons.items() if len(v) > 0
+        }
+        self.bcftools_stats_sample_depth = {k: v for k, v in self.bcftools_stats_sample_depth.items() if len(v) > 0}
+        self.bcftools_stats_vqc_snp = {k: v for k, v in self.bcftools_stats_vqc_snp.items() if len(v) > 0}
+        self.bcftools_stats_vqc_transi = {k: v for k, v in self.bcftools_stats_vqc_transi.items() if len(v) > 0}
+        self.bcftools_stats_vqc_transv = {k: v for k, v in self.bcftools_stats_vqc_transv.items() if len(v) > 0}
+        self.bcftools_stats_vqc_indels = {k: v for k, v in self.bcftools_stats_vqc_indels.items() if len(v) > 0}
+
         # Filter to strip out ignored sample names
         self.bcftools_stats = self.ignore_samples(self.bcftools_stats)
 
@@ -131,7 +201,9 @@ class StatsReportMixin:
                 self.general_stats_addcols(self.bcftools_stats, stats_headers, "Bcftools Stats")
             if getattr(config, "bcftools", {}).get("write_separate_table", False):
                 self.add_section(
-                    name="Bcftools Stats", anchor="bcftools-stats", plot=table.plot(self.bcftools_stats, stats_headers)
+                    name="Bcftools Stats",
+                    anchor="bcftools-stats_stats",
+                    plot=table.plot(self.bcftools_stats, stats_headers),
                 )
 
             # Make bargraph plot of substitution types
@@ -146,7 +218,7 @@ class StatsReportMixin:
             }
             self.add_section(
                 name="Variant Substitution Types",
-                anchor="bcftools-stats",
+                anchor="bcftools-stats_variant_sub_types",
                 plot=bargraph.plot(self.bcftools_stats, keys, pconfig),
             )
 
@@ -213,6 +285,73 @@ class StatsReportMixin:
                     anchor="bcftools-stats_depth_plot",
                     description="Read depth support distribution for called variants",
                     plot=linegraph.plot(depth_data, pconfig),
+                )
+
+            # Make bargraph plot of missing sites
+            if len(self.bcftools_stats_sample_variants) > 0:
+                pconfig = {
+                    "id": "bcftools-stats-sites",
+                    "title": "Bcftools Stats: Sites per sample",
+                    "ylab": "# Sites",
+                    "cpswitch_counts_label": "Number of sites",
+                    "data_labels": list(self.bcftools_stats_sample_variants),
+                }
+                self.add_section(
+                    name="Sites per sample",
+                    anchor="bcftools-stats_sites_per_sample",
+                    plot=bargraph.plot(
+                        list(self.bcftools_stats_sample_variants.values()), ["nSNPs", "nIndels", "nOther"], pconfig
+                    ),
+                )
+
+            # Make bargraph plot of ts/tv stats
+            if len(self.bcftools_stats_sample_tstv) > 0:
+                pconfig = {
+                    "id": "bcftools-stats-tstv",
+                    "title": "Bcftools Stats: Ts/Tv",
+                    "ylab": "Ts/Tv",
+                    "cpswitch_counts_label": "Ts/Tv",
+                    "cpswitch": False,
+                    "data_labels": list(self.bcftools_stats_sample_tstv),
+                }
+                self.add_section(
+                    name="Ts/Tv",
+                    anchor="bcftools-stats_ts_tv",
+                    plot=bargraph.plot(list(self.bcftools_stats_sample_tstv.values()), ["tstv"], pconfig),
+                )
+
+            # Make bargraph plot of singletons stats
+            if len(self.bcftools_stats_sample_singletons) > 0:
+                pconfig = {
+                    "id": "bcftools-stats-singletons",
+                    "title": "Bcftools Stats: Singletons",
+                    "ylab": "# Singletons",
+                    "cpswitch_counts_label": "Singletons",
+                    "cpswitch_c_active": False,
+                    "data_labels": list(self.bcftools_stats_sample_singletons),
+                }
+                self.add_section(
+                    name="Number of Singletons",
+                    anchor="bcftools-stats_singletones",
+                    plot=bargraph.plot(
+                        list(self.bcftools_stats_sample_singletons.values()), ["singletons", "rest"], pconfig
+                    ),
+                )
+
+            # Make bargraph plot of sequencing depth stats
+            if len(self.bcftools_stats_sample_depth) > 0:
+                pconfig = {
+                    "id": "bcftools-stats-depth",
+                    "title": "Bcftools Stats: Sequencing depth",
+                    "ylab": "Sequencing depth",
+                    "cpswitch_counts_label": "Sequencing depth",
+                    "cpswitch": False,
+                    "data_labels": list(self.bcftools_stats_sample_depth),
+                }
+                self.add_section(
+                    name="Sequencing depth",
+                    anchor="bcftools-stats_sequencing_depth",
+                    plot=bargraph.plot(list(self.bcftools_stats_sample_depth.values()), ["depth"], pconfig),
                 )
 
         # Return the number of logs that were found
