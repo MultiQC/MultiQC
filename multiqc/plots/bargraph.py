@@ -178,7 +178,7 @@ def plot(data, cats=None, pconfig=None):
             plotdata.append(hc_data)
 
     if len(plotdata) == 0:
-        logger.warning("Tried to make bar plot, but had no data")
+        logger.warning(f"Tried to make bar plot, but had no data: {pconfig.get('id')}")
         return '<p class="text-danger">Error - was not able to plot data.</p>'
 
     # Make a plot - custom, interactive or flat
