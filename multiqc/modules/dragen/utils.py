@@ -120,7 +120,7 @@ def make_headers(parsed_metric_ids, metrics):
         elif metric.unit == "%":
             col["suffix"] = " %"
             col["format"] = "{:,.1f}"
-        elif any(metric.descr.startswith(pref) for pref in ("Total number of ", "The number of ", "Number of ")):
+        elif any((metric.descr and metric.descr.startswith(pref)) for pref in ("Total number of ", "The number of ", "Number of ")):
             col["format"] = "{:,.0f}"
         if metric.precision is not None:
             col["format"] = "{:,." + str(metric.precision) + "f}"
