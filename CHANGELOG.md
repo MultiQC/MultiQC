@@ -29,6 +29,8 @@
 
 - [**CheckQC**](https://github.com/Molmed/checkQC)
   - A program designed to check a set of quality criteria against an Illumina runfolder
+- [**WhatsHap**](https://whatshap.readthedocs.io)
+  - WhatsHap is a software for phasing genomic variants using DNA sequencing reads
 
 ### Module updates
 
@@ -130,8 +132,6 @@
 - [**VEP**](https://www.ensembl.org/info/docs/tools/vep/index.html)
   - Added MultiQC module to add summary statistics of Ensembl VEP annotations.
   - Handle error from missing variants in VEP stats file. ([#1446](https://github.com/ewels/MultiQC/issues/1446))
-- [**WhatsHap**](https://whatshap.readthedocs.io)
-  - WhatsHap is a software for phasing genomic variants using DNA sequencing reads
 
 ### Module feature additions
 
