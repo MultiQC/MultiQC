@@ -24,14 +24,11 @@ class MultiqcModule(BaseMultiqcModule):
             name="WhatsHap",
             anchor="whatshap",
             href="https://whatshap.readthedocs.io/",
-            info=(
-                """
-                 is a program for phasing genomic variants using DNA sequencing
-                reads, also called read-based phasing or haplotype assembly. It
-                is especially suitable for long reads, but also works well with
-                short reads.
-                """
-            ),
+            info="""is a program for phasing genomic variants using DNA sequencing
+                    reads, also called read-based phasing or haplotype assembly. It
+                    is especially suitable for long reads, but also works well with
+                    short reads.
+                    """,
             doi="10.1101/085050",
         )
 
@@ -88,7 +85,7 @@ class MultiqcModule(BaseMultiqcModule):
         sample = self.clean_s_name(logfile["s_name"], logfile["root"])
         # Get the header and remove the "#" character from the first field
         header = next(file_content).strip().split()
-        header[0] = header[0][1:]
+        header[0] = header[0].lstrip("#")
 
         # The results from this log file, a dictionary for every chromosome
         results = defaultdict(dict)
@@ -98,7 +95,7 @@ class MultiqcModule(BaseMultiqcModule):
             data = {field: value for field, value in zip(header, spline)}
             process_data(data)
             # Remove the sample and chromsome from the data
-            sample = data.pop("sample")
+            sample = self.clean_s_name(data.pop("sample"), logfile)
             chromosome = data.pop("chromosome")
             # Insert the current line under chromosome
             results[chromosome] = data
@@ -144,9 +141,9 @@ class MultiqcModule(BaseMultiqcModule):
                     {
                         "id": "variants",
                         "title": "Input Variants",
-                        "description": "Number of biallelic variants in the input VCF, but "
-                        "excluding any non-SNV variants if --only-snvs was "
-                        "used",
+                        "description": """Number of biallelic variants in the input VCF, but
+                                        excluding any non-SNV variants if --only-snvs was
+                                        used""",
                         "hidden": True,
                     },
                 ),
@@ -155,8 +152,8 @@ class MultiqcModule(BaseMultiqcModule):
                     {
                         "id": "heterozygous_variants",
                         "title": "Heterozygous Variants",
-                        "description": "The number of biallelic, heterozygous variants in "
-                        "the input VCF. This is a subset of Input Variants.",
+                        "description": """The number of biallelic, heterozygous variants in
+                                        the input VCF. This is a subset of Input Variants.""",
                         "hidden": True,
                     },
                 ),
@@ -165,9 +162,9 @@ class MultiqcModule(BaseMultiqcModule):
                     {
                         "id": "heterozygous_snvs",
                         "title": "Heterozygous SNVs",
-                        "description": "The number of biallelic, heterozygous SNVs in the "
-                        "input VCF. This is a subset of Heterozygous "
-                        "Variants.",
+                        "description": """The number of biallelic, heterozygous SNVs in the
+                                        input VCF. This is a subset of Heterozygous
+                                        Variants.""",
                         "hidden": True,
                     },
                 ),
@@ -176,9 +173,9 @@ class MultiqcModule(BaseMultiqcModule):
                     {
                         "id": "unphased",
                         "title": "Unphased Variants",
-                        "description": "The number of biallelic, heterozygous variants that "
-                        "are not marked as phased in the input VCF. This "
-                        "is a subset of heterozygous_variants.",
+                        "description": """The number of biallelic, heterozygous variants that
+                                        are not marked as phased in the input VCF. This
+                                        is a subset of heterozygous_variants.""",
                         "hidden": False,
                     },
                 ),
@@ -187,10 +184,10 @@ class MultiqcModule(BaseMultiqcModule):
                     {
                         "id": "phased",
                         "title": "Phased Variants",
-                        "description": "The number of biallelic, heterozygous variants that "
-                        "are marked as phased in the input VCF. This is "
-                        "a subset of heterozygous_variants. Also, phased + "
-                        "unphased + singletons = heterozygous_variants.",
+                        "description": """The number of biallelic, heterozygous variants that
+                                        are marked as phased in the input VCF. This is
+                                        a subset of heterozygous_variants. Also, phased +
+                                        unphased + singletons = heterozygous_variants.""",
                         "hidden": False,
                     },
                 ),
@@ -199,9 +196,9 @@ class MultiqcModule(BaseMultiqcModule):
                     {
                         "id": "phased_snvs",
                         "title": "Phased SNVs",
-                        "description": "The number of biallelic, heterozygous SNVs that are "
-                        "marked as phased in the input VCF. This is a subset "
-                        "of phased.",
+                        "description": """The number of biallelic, heterozygous SNVs that are
+                                        marked as phased in the input VCF. This is a subset
+                                        of phased.""",
                         "hidden": True,
                     },
                 ),
@@ -228,11 +225,11 @@ class MultiqcModule(BaseMultiqcModule):
                     {
                         "id": "bp_per_block_sum",
                         "title": "Total Phased bp",
-                        "description": "Description of the distribution of non-singleton "
-                        "block lengths, where the length of a block is the "
-                        "number of base pairs it covers minus 1. That is, a "
-                        "block with two variants at positions 2 and 5 has "
-                        "length 3.",
+                        "description": """Description of the distribution of non-singleton
+                                        block lengths, where the length of a block is the
+                                        number of base pairs it covers minus 1. That is, a
+                                        block with two variants at positions 2 and 5 has
+                                        length 3.""",
                         "hidden": False,
                     },
                 ),
@@ -241,11 +238,11 @@ class MultiqcModule(BaseMultiqcModule):
                     {
                         "id": "variant_per_block_avg",
                         "title": "Avg Variants per Block",
-                        "description": "Description of the distribution of non-singleton "
-                        "block sizes, where the size of a block is the number "
-                        "of variants it contains. Number of biallelic "
-                        "variants in the input VCF, but excluding any non-SNV "
-                        "variants if --only-snvs was used.",
+                        "description": """Description of the distribution of non-singleton
+                                        block sizes, where the size of a block is the number
+                                        of variants it contains. Number of biallelic
+                                        variants in the input VCF, but excluding any non-SNV
+                                        variants if --only-snvs was used.""",
                         "hidden": True,
                     },
                 ),
@@ -254,11 +251,11 @@ class MultiqcModule(BaseMultiqcModule):
                     {
                         "id": "bp_per_block_avg",
                         "title": "Avg bp per Block",
-                        "description": "Description of the distribution of non-singleton "
-                        "block lengths, where the length of a block is the "
-                        "number of base pairs it covers minus 1. That is, a "
-                        "block with two variants at positions 2 and 5 has "
-                        "length 3.",
+                        "description": """Description of the distribution of non-singleton
+                                        block lengths, where the length of a block is the
+                                        number of base pairs it covers minus 1. That is, a
+                                        block with two variants at positions 2 and 5 has
+                                        length 3.""",
                         "hidden": False,
                     },
                 ),
@@ -267,9 +264,9 @@ class MultiqcModule(BaseMultiqcModule):
                     {
                         "id": "block_n50",
                         "title": "NG50",
-                        "description": "The NG50 value of the distribution of the block "
-                        "lengths. Interleaved blocks are cut in order to "
-                        "avoid artificially inflating this value.",
+                        "description": """The NG50 value of the distribution of the block
+                                        lengths. Interleaved blocks are cut in order to
+                                        avoid artificially inflating this value.""",
                         "hidden": True,
                     },
                 ),
