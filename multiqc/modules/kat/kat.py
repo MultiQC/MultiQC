@@ -19,15 +19,17 @@ class MultiqcModule(BaseMultiqcModule):
             name="K-mer Analysis Toolkit",
             anchor="kat",
             href="https://github.com/TGAC/KAT",
-            info="is an toolkit for analysing sequencing data via its k-mer spectra.",
+            info="is a toolkit for analysing sequencing data via its k-mer spectra.",
+            doi="10.1093/bioinformatics/btw663",
         )
 
         # Find and load any KAT dist analysis reports
         self.kat_data = dict()
-        for c_file in self.find_log_files("kat"):
-            s_name = self.clean_s_name(c_file["s_name"].replace(".dist_analysis", ""), c_file["root"])
-            content = json.loads(c_file["f"])
+        for f in self.find_log_files("kat"):
+            s_name = self.clean_s_name(f["s_name"].replace(".dist_analysis", ""), f)
+            content = json.loads(f["f"])
             self.kat_data[s_name] = self.parse_kat_report(content)
+            self.add_data_source(f)
 
         # Filter to strip out ignored sample names
         self.kat_data = self.ignore_samples(self.kat_data)

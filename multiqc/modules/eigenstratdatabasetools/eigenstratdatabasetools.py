@@ -25,6 +25,7 @@ class MultiqcModule(BaseMultiqcModule):
             anchor="eigenstrat",
             href="https://github.com/TCLamnidis/EigenStratDatabaseTools",
             info="A set of tools to compare and manipulate the contents of EingenStrat databases, and to calculate SNP coverage statistics in such databases.",
+            # No publication / DOI // doi=
         )
 
         # Find and load any DeDup reports
@@ -62,7 +63,7 @@ class MultiqcModule(BaseMultiqcModule):
             if s_name == "Metadata":
                 continue
 
-            s_clean = self.clean_s_name(s_name, f["root"])
+            s_clean = self.clean_s_name(s_name, f)
             if s_clean in self.snp_cov_data:
                 log.debug("Duplicate sample name found! Overwriting: {}".format(s_clean))
 

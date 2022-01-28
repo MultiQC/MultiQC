@@ -21,14 +21,16 @@ class MultiqcModule(BaseMultiqcModule):
         super(MultiqcModule, self).__init__(
             name="MACS2",
             anchor="macs",
-            href="https://github.com/taoliu/MACS",
+            href="https://macs3-project.github.io/MACS/",
             info="identifies transcription factor binding sites in ChIP-seq data.",
+            doi=["10.1101/496521", "10.1186/gb-2008-9-9-r137"],
         )
 
         # Parse logs
         self.macs_data = dict()
         for f in self.find_log_files("macs2", filehandles=True):
             self.parse_macs(f)
+            self.add_data_source(f)
 
         # Filter to strip out ignored sample names
         self.macs_data = self.ignore_samples(self.macs_data)
@@ -65,7 +67,7 @@ class MultiqcModule(BaseMultiqcModule):
                     match = re.search(r, line)
                     if match:
                         if k == "name":
-                            s_name = self.clean_s_name(match.group(1).strip(), f["root"])
+                            s_name = self.clean_s_name(match.group(1).strip(), f)
                         else:
                             parsed_data[k] = float(match.group(1).strip())
             elif len(line) > 0 and "start" not in line:

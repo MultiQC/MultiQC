@@ -18,8 +18,9 @@ class MultiqcModule(BaseMultiqcModule):
         super(MultiqcModule, self).__init__(
             name="HOPS",
             anchor="hops",
-            href="https://www.https://github.com/rhuebler/HOPS/",
+            href="https://github.com/rhuebler/HOPS/",
             info="is an ancient DNA characteristics screening tool of output from the metagenomic aligner MALT.",
+            doi="10.1186/s13059-019-1903-0",
         )
 
         # Find and load any HOPS post-processing JSONs
@@ -35,6 +36,9 @@ class MultiqcModule(BaseMultiqcModule):
 
         if len(self.hops_data) == 0:
             raise UserWarning
+
+        # Write data to file
+        self.write_data_file(self.hops_data, "hops")
 
         log.info("Found {} samples".format(len(self.hops_data)))
 
@@ -55,7 +59,7 @@ class MultiqcModule(BaseMultiqcModule):
 
         # Convert JSON to dict for easier manipulation
         for s in parsed_json:
-            s_name = self.clean_s_name(s, f["root"])
+            s_name = self.clean_s_name(s, f)
             if s_name in self.hops_data:
                 log.debug("Duplicate sample name found! Overwriting: {}".format(s_name))
             self.add_data_source(f, s_name=s_name)

@@ -31,6 +31,7 @@ class MultiqcModule(BaseMultiqcModule):
             anchor="somalier",
             href="https://github.com/brentp/somalier",
             info="calculates genotype :: pedigree correspondence checks from sketches derived from BAM/CRAM or VCF",
+            doi="10.1186/s13073-020-00761-2",
         )
 
         # Find and load any somalier reports
@@ -46,7 +47,7 @@ class MultiqcModule(BaseMultiqcModule):
             parsed_data = self.parse_somalier_samples(f)
             if parsed_data is not None:
                 for s_name_raw in parsed_data:
-                    s_name = "*".join([self.clean_s_name(s, f["root"]) for s in s_name_raw.split("*")])
+                    s_name = "*".join([self.clean_s_name(s, f) for s in s_name_raw.split("*")])
                     if s_name in self.somalier_data.keys():
                         log.debug("Duplicate sample name found! Overwriting: {}".format(s_name))
                     self.add_data_source(f, s_name)
@@ -57,7 +58,7 @@ class MultiqcModule(BaseMultiqcModule):
             parsed_data = self.parse_somalier_pairs_tsv(f)
             if parsed_data is not None:
                 for s_name_raw in parsed_data:
-                    s_name = "*".join([self.clean_s_name(s, f["root"]) for s in s_name_raw.split("*")])
+                    s_name = "*".join([self.clean_s_name(s, f) for s in s_name_raw.split("*")])
                     if s_name in self.somalier_data.keys():
                         log.debug("Duplicate sample name found! Overwriting: {}".format(s_name))
                     self.add_data_source(f, s_name)
@@ -209,7 +210,7 @@ class MultiqcModule(BaseMultiqcModule):
                 # safely add new data to object data
                 # warn when overwriting
                 for s_name_raw in parsed_data:
-                    s_name = "*".join([self.clean_s_name(s, f["root"]) for s in s_name_raw.split("*")])
+                    s_name = "*".join([self.clean_s_name(s, f) for s in s_name_raw.split("*")])
                     if s_name in self.somalier_data.keys():
                         intersect_keys = parsed_data[s_name_raw].keys() & self.somalier_data.keys()
                         if len(intersect_keys) > 0:
@@ -546,7 +547,7 @@ class MultiqcModule(BaseMultiqcModule):
             if "X_depth_mean" in d and "original_pedigree_sex" in d:
                 data[s_name] = {
                     "x": (random.random() - 0.5) * 0.1 + sex_index.get(d["original_pedigree_sex"], 2),
-                    "y": d["X_depth_mean"],
+                    "y": 2 * d["X_depth_mean"] / d["gt_depth_mean"],
                 }
 
         if len(data) > 0:

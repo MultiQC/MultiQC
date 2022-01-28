@@ -28,6 +28,7 @@ class MultiqcModule(BaseMultiqcModule):
             anchor="hicpro",
             href="https://github.com/nservant/HiC-Pro",
             info="is an efficient and flexible pipeline for Hi-C data processing. The MultiQC module is supported since HiC-Pro v2.11.0.",
+            doi="10.1186/s13059-015-0831-x",
         )
 
         # Find and load any HiC-Pro summary reports
@@ -39,15 +40,18 @@ class MultiqcModule(BaseMultiqcModule):
         # Update current statistics
         for s_name in self.hicpro_data:
             data = self.hicpro_data[s_name]
-            data["duplicates"] = data["valid_interaction"] - data["valid_interaction_rmdup"]
-            data["percent_duplicates"] = float(data["duplicates"]) / float(data["valid_interaction"]) * 100.0
-            data["percent_mapped_R1"] = float(data["mapped_R1"]) / float(data["total_R1"]) * 100.0
-            data["percent_mapped_R2"] = float(data["mapped_R2"]) / float(data["total_R2"]) * 100.0
-            data["paired_reads"] = int(data["Reported_pairs"])
-            data["percent_paired_reads"] = float(data["Reported_pairs"]) / float(data["total_R1"]) * 100.0
-            data["percent_valid"] = float(data["valid_interaction"]) / float(data["total_R1"]) * 100.0
-            data["Failed_To_Align_Read_R1"] = int(data["total_R1"]) - int(data["mapped_R1"])
-            data["Failed_To_Align_Read_R2"] = int(data["total_R2"]) - int(data["mapped_R2"])
+            try:
+                data["duplicates"] = data["valid_interaction"] - data["valid_interaction_rmdup"]
+                data["percent_duplicates"] = float(data["duplicates"]) / float(data["valid_interaction"]) * 100.0
+                data["percent_mapped_R1"] = float(data["mapped_R1"]) / float(data["total_R1"]) * 100.0
+                data["percent_mapped_R2"] = float(data["mapped_R2"]) / float(data["total_R2"]) * 100.0
+                data["paired_reads"] = int(data["Reported_pairs"])
+                data["percent_paired_reads"] = float(data["Reported_pairs"]) / float(data["total_R1"]) * 100.0
+                data["percent_valid"] = float(data["valid_interaction"]) / float(data["total_R1"]) * 100.0
+                data["Failed_To_Align_Read_R1"] = int(data["total_R1"]) - int(data["mapped_R1"])
+                data["Failed_To_Align_Read_R2"] = int(data["total_R2"]) - int(data["mapped_R2"])
+            except KeyError as e:
+                log.error(f"Missing expected key {e} in sample '{s_name}'")
 
             try:
                 data["valid_pairs_off_target"] = int(data["valid_interaction"]) - int(data["valid_pairs_on_target"])
@@ -86,8 +90,8 @@ class MultiqcModule(BaseMultiqcModule):
             anchor="hicpro-pairing",
             description="Pairing of single-end mapping.",
             helptext="""
-            HiC-Pro combines aligned reads as pairs. Singleton, low quality pairs or 
-            pairs involving multi-mapped reads are usually discarded. Note that the filtering 
+            HiC-Pro combines aligned reads as pairs. Singleton, low quality pairs or
+            pairs involving multi-mapped reads are usually discarded. Note that the filtering
             at pairing level can change accrding to the parameters used.""",
             plot=self.hicpro_pairing_chart(),
         )
@@ -97,12 +101,12 @@ class MultiqcModule(BaseMultiqcModule):
             anchor="hicpro-filtering",
             description="Filtering of read pairs.",
             helptext="""
-            Aligned read pairs are filtered to select valid 3C products from two 
-            different restriction fragments. Read pairs coming from the same fragments, 
+            Aligned read pairs are filtered to select valid 3C products from two
+            different restriction fragments. Read pairs coming from the same fragments,
             such as self-ligation or unligated (danging-end) fragments, are discarded.
             Ligation products involving neighboring restriction fragment (religation) are also discarded.
             Filtered pairs correspond to ligation products discarded based on the range of insert/fragment sizes defined
-            in the analysis. Finally, as the ligation should be a random process, valid read pairs from all 
+            in the analysis. Finally, as the ligation should be a random process, valid read pairs from all
             orientations (R=Reverse, F=forward) are expected to be observed in the same proportion.""",
             plot=self.hicpro_filtering_chart(),
         )
@@ -112,7 +116,7 @@ class MultiqcModule(BaseMultiqcModule):
             anchor="hicpro-rmdup",
             description="Contacts statistics after duplicates removal.",
             helptext="""
-            Description of contact frequency after duplicates removal. Intra-chromosomal 
+            Description of contact frequency after duplicates removal. Intra-chromosomal
             (*cis*) interaction are expected to be more frequent than inter-chromosomal contacts (*trans*)""",
             plot=self.hicpro_contact_chart(),
         )
@@ -124,7 +128,7 @@ class MultiqcModule(BaseMultiqcModule):
                 anchor="hicpro-asan",
                 description="Assignment of valid interactions (afer duplicates removal) to parental alleles.",
                 helptext="""
-                Description of allele-specific contacts. Valid interactions (0-1 and 1-1, resp. 0-2, 2-2) 
+                Description of allele-specific contacts. Valid interactions (0-1 and 1-1, resp. 0-2, 2-2)
                 are used to build the genome1 (resp. genome2) parental maps.""",
                 plot=allele_plot,
             )
@@ -136,15 +140,14 @@ class MultiqcModule(BaseMultiqcModule):
                 anchor="hicpro-cap",
                 description="Selection of interactions overlaping the targeted region(s).",
                 helptext="""
-                Description of capture efficiency. Valid interactions with either two (capture-capture) or 
+                Description of capture efficiency. Valid interactions with either two (capture-capture) or
                 one (capture-reporter) interactors overlapping with the target(s) are reported.""",
                 plot=capture_plot,
             )
 
     def parse_hicpro_stats(self, f, rsection):
         """Parse a HiC-Pro stat file"""
-        s_name = self.clean_s_name(os.path.basename(f["root"]), os.path.dirname(f["root"]))
-
+        s_name = self.clean_s_name(os.path.basename(f["root"]), root=os.path.dirname(f["root"]))
         if s_name not in self.hicpro_data.keys():
             self.hicpro_data[s_name] = {}
 
@@ -281,12 +284,15 @@ class MultiqcModule(BaseMultiqcModule):
         data = [{}, {}]
         for s_name in self.hicpro_data:
             for r in [1, 2]:
-                data[r - 1]["{} [R{}]".format(s_name, r)] = {
-                    "Full_Alignments_Read": self.hicpro_data[s_name]["global_R{}".format(r)],
-                    "Trimmed_Alignments_Read": self.hicpro_data[s_name]["local_R{}".format(r)],
-                    "Failed_To_Align_Read": int(self.hicpro_data[s_name]["total_R{}".format(r)])
-                    - int(self.hicpro_data[s_name]["mapped_R{}".format(r)]),
-                }
+                try:
+                    data[r - 1]["{} [R{}]".format(s_name, r)] = {
+                        "Full_Alignments_Read": self.hicpro_data[s_name]["global_R{}".format(r)],
+                        "Trimmed_Alignments_Read": self.hicpro_data[s_name]["local_R{}".format(r)],
+                        "Failed_To_Align_Read": int(self.hicpro_data[s_name]["total_R{}".format(r)])
+                        - int(self.hicpro_data[s_name]["mapped_R{}".format(r)]),
+                    }
+                except KeyError as e:
+                    log.error(f"Missing expected plot key {e} in {s_name} Read {r}")
 
         # Config for the plot
         config = {

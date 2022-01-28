@@ -21,6 +21,7 @@ config_file: null
 custom_logo: null
 custom_logo_url: null
 custom_logo_title: null
+custom_css_files: []
 simple_output: false
 template: "default"
 profile_runtime: false
@@ -52,6 +53,7 @@ megaqc_url: false
 megaqc_access_token: null
 megaqc_timeout: 30
 export_plots: false
+make_report: true
 plots_force_flat: false
 plots_force_interactive: false
 plots_flat_numseries: 100
@@ -60,6 +62,7 @@ collapse_tables: true
 max_table_rows: 500
 table_columns_visible: {}
 table_columns_placement: {}
+table_columns_name: {}
 table_cond_formatting_colours:
   - blue: "#337ab7"
   - lbue: "#5bc0de"
@@ -135,6 +138,10 @@ custom_content:
 
 # Option to disable sample name cleaning if desired
 fn_clean_sample_names: true
+
+# Option to use the filename as the sample name if desired
+# Set to True to apply for all modules. Define a list of search pattern keys to be specific.
+use_filename_as_sample_name: false
 
 # Used for cleaning sample names. Should be strings.
 # NB: These are removed in order!
@@ -239,6 +246,9 @@ fn_clean_exts:
   - ".vep"
   - "_vep"
   - "ccs"
+  - "_NanoStats"
+  - ".cutadapt"
+  - ".mosdepth"
 
 # These are removed after the above, only if sample names
 # start or end with this string. Again, removed in order.
@@ -288,6 +298,7 @@ fn_ignore_files:
   - "*.pdf"
   - "*.md5"
   - "*[!s][!u][!m][!_\\.m][!mva][!qer][!cpy].html" # Allow _mqc.html, _vep.html and summary.html files
+  - multiqc_data.json
 
 # Favourite modules that should appear at the top in preference
 # This is in addition to those below. These appear above _all_ other
@@ -496,6 +507,12 @@ module_order:
   - qc3C:
       module_tag:
         - hi-c
+  - nanostat:
+      module_tag:
+        - DNA
+        - RNA
+        - Methylation
+        - WGS
   - samblaster:
       module_tag:
         - DNA
@@ -689,6 +706,11 @@ module_order:
         - RNA
         - DNA
         - methylation
+  - checkqc:
+      module_tag:
+        - DNA
+        - RNA
+        - Illumina
   - bcl2fastq:
       module_tag:
         - RNA

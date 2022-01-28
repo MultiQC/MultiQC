@@ -28,6 +28,9 @@ class estimateReadFilteringMixin:
         self.deeptools_estimateReadFiltering = self.ignore_samples(self.deeptools_estimateReadFiltering)
 
         if len(self.deeptools_estimateReadFiltering) > 0:
+            # Write data to file
+            self.write_data_file(self.deeptools_estimateReadFiltering, "deeptools_read_filtering")
+
             header = OrderedDict()
             header["M Entries"] = {"title": "M entries", "description": "Number of entries in the file (millions)"}
             header["pct_Aligned"] = {
@@ -145,7 +148,7 @@ class estimateReadFilteringMixin:
                 )
                 return dict()
 
-            s_name = self.clean_s_name(cols[0], f["root"])
+            s_name = self.clean_s_name(cols[0], f)
             if s_name in d:
                 log.debug("Replacing duplicate sample {}.".format(s_name))
             d[s_name] = dict()

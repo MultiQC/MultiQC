@@ -76,6 +76,10 @@ file_types = {
             ),
         },
         "cols": odict["Name":str, "Reads":int, "ReadsPct" : lambda v: float(v.strip("%"))],
+        "extracols": odict[
+            "Bases":int,
+            "BasesPct":float,
+        ],
         "plot_func": None,  ## Plotting for 'stats' not implemented
         "plot_params": {},
     },

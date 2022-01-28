@@ -23,11 +23,11 @@ def parse_reports(self):
         try:
             reader = csv.DictReader(f["f"], delimiter="\t")
             contents = next(reader)
-        except csv.Error:
-            log.error(f"Could not parse file '{f['fn']}'")
+        except (csv.Error, StopIteration) as e:
+            log.error(f"Could not parse file '{f['fn']}': {e}")
             continue
 
-        s_name = contents["Bam_file"]
+        s_name = self.clean_s_name(contents["Bam_file"], f)
         contents.pop("Bam_file")
         self.tin_data[s_name] = contents
 

@@ -139,6 +139,7 @@ class MultiqcModule(BaseMultiqcModule):
             anchor="qc3C",
             href="http://github.com/cerebis/qc3C",
             info="provides reference-free and BAM based quality control for Hi-C data",
+            doi="10.1371/journal.pcbi.1008839",
         )
 
         self.qc3c_data = defaultdict(dict)
@@ -968,7 +969,7 @@ class MultiqcModule(BaseMultiqcModule):
             log.warning("Could not parse qc3C JSON: '{}'".format(f["fn"]))
             return
 
-        s_name = self.clean_s_name(os.path.basename(f["root"]), os.path.dirname(f["root"]))
+        s_name = self.clean_s_name(os.path.basename(f["root"]), f, root=os.path.dirname(f["root"]))
         if s_name in self.qc3c_data:
             log.debug("Duplicate sample name found! Overwriting: {}".format(f["s_name"]))
 

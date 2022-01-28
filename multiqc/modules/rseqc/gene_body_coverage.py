@@ -40,7 +40,7 @@ def parse_reports(self):
                     keys = s[1:]
                 else:
                     nrows += 1
-                    s_name = self.clean_s_name(s[0], f["root"])
+                    s_name = self.clean_s_name(s[0], f)
                     if s_name in self.gene_body_cov_hist_counts:
                         log.debug("Duplicate sample name found! Overwriting: {}".format(s_name))
                     self.add_data_source(f, s_name, section="gene_body_coverage")
@@ -80,6 +80,8 @@ def parse_reports(self):
     self.gene_body_cov_hist_counts = self.ignore_samples(self.gene_body_cov_hist_counts)
 
     if len(self.gene_body_cov_hist_counts) > 0:
+        # Write data to file
+        self.write_data_file(self.gene_body_cov_hist_counts, "rseqc_gene_body_cov")
 
         # Make a normalised percentage version of the data
         for s_name in self.gene_body_cov_hist_counts:

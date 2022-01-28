@@ -22,6 +22,7 @@ class MultiqcModule(BaseMultiqcModule):
             anchor="ccs",
             href="https://github.com/PacificBiosciences/ccs",
             info=" is used to generate highly accurate single-molecule consensus reads from PacBio sequencing.",
+            # Can't find a DOI // doi=
         )
 
         # To store the mod data
@@ -59,9 +60,9 @@ class MultiqcModule(BaseMultiqcModule):
         for s_name, attrs in self.ccs_data.items():
             gstats_data[s_name] = {}
             for attr in attrs["attributes"]:
-                if attr["id"] == "zmw_input":
+                if "zmw_input" in attr["id"]:
                     gstats_data[s_name]["zmw_input"] = attr["value"]
-                if attr["id"] == "zmw_passed_yield":
+                if "zmw_passed_yield" in attr["id"]:
                     gstats_data[s_name]["zmw_passed_yield"] = attr["value"]
             try:
                 gstats_data[s_name]["zmw_pct_passed_yield"] = (
@@ -153,7 +154,12 @@ class MultiqcModule(BaseMultiqcModule):
 
         # Add filtere reasons (id starts with filtered_) and total passed
         for entry in attributes:
-            if entry["id"].startswith("filtered") or entry["id"] == "zmw_passed_yield":
+            if (
+                entry["id"].startswith("filtered")
+                or entry["id"] == "zmw_passed_yield"
+                or entry["id"].startswith("ccs_processing.filtered")
+                or entry["id"] == "ccs_processing.zmw_passed_yield"
+            ):
                 reasons[entry["name"]] = entry["value"]
 
         return reasons

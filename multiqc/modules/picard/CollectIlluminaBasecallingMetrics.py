@@ -19,8 +19,9 @@ def parse_reports(self):
 
     # Go through logs and find Metrics
     for f in self.find_log_files("picard/collectilluminabasecallingmetrics", filehandles=True):
-        keys = None
+        self.add_data_source(f, section="CollectIlluminaBasecallingMetrics")
 
+        keys = None
         for line in f["f"]:
             if "IlluminaBasecallingMetrics" and "## METRICS CLASS" in line:
                 keys = f["f"].readline().strip("\n").split("\t")

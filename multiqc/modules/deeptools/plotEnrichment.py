@@ -28,6 +28,9 @@ class plotEnrichmentMixin:
         self.deeptools_plotEnrichment = self.ignore_samples(self.deeptools_plotEnrichment)
 
         if len(self.deeptools_plotEnrichment) > 0:
+            # Write data to file
+            self.write_data_file(self.deeptools_plotEnrichment, "deeptools_plot_enrich")
+
             dCounts = OrderedDict()
             dPercents = OrderedDict()
             for sample, v in self.deeptools_plotEnrichment.items():
@@ -73,7 +76,7 @@ class plotEnrichmentMixin:
                 )
                 return dict()
 
-            s_name = self.clean_s_name(cols[0], f["root"])
+            s_name = self.clean_s_name(cols[0], f)
             if s_name not in d:
                 d[s_name] = dict()
             cols[1] = str(cols[1])

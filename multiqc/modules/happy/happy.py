@@ -34,6 +34,7 @@ class MultiqcModule(BaseMultiqcModule):
             anchor="happy",
             href="https://github.com/Illumina/hap.py",
             info="is a set of programs based on htslib to benchmark variant calls against gold standard truth datasets.",
+            # No publication / DOI // doi=
         )
 
         self.happy_raw_sample_names = set()

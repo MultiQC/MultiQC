@@ -28,6 +28,7 @@ class MultiqcModule(BaseMultiqcModule):
             anchor="slamdunk",
             href="http://t-neumann.github.io/slamdunk/",
             info="is a tool to analyze SLAMSeq data.",
+            doi="10.1186/s12859-019-2849-7",
         )
 
         num_reports = 0
@@ -146,7 +147,7 @@ class MultiqcModule(BaseMultiqcModule):
         for line in f["f"]:
             fields = line.rstrip().split("\t")
 
-            sample = self.clean_s_name(fields[0], f["root"])
+            sample = self.clean_s_name(fields[0], f)
             PC1 = fields[1]
             PC2 = fields[2]
 
@@ -311,7 +312,7 @@ class MultiqcModule(BaseMultiqcModule):
         for line in f["f"]:
 
             fields = line.rstrip().split("\t")
-            s_name = self.clean_s_name(fields[0], f["root"])
+            s_name = self.clean_s_name(fields[0], f)
             self.slamdunk_data[s_name] = dict()
             self.slamdunk_data[s_name]["sequenced"] = int(fields[4])
             self.slamdunk_data[s_name]["mapped"] = int(fields[5])

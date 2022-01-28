@@ -28,12 +28,14 @@ class MultiqcModule(BaseMultiqcModule):
             anchor="flash",
             href="https://ccb.jhu.edu/software/FLASH/",
             info="is a very fast and accurate software tool to merge paired-end reads from next-generation sequencing experiments.",
+            doi="10.1093/bioinformatics/btr507",
         )
 
         # Find all log files with flash msgs
         self.flash_data = OrderedDict()
         for logfile in self.find_log_files("flash/log"):
             self.flash_data.update(self.parse_flash_log(logfile))
+            self.add_data_source(logfile)
 
         # ignore sample names
         self.flash_data = self.ignore_samples(self.flash_data)
@@ -86,7 +88,7 @@ class MultiqcModule(BaseMultiqcModule):
             return int(match.group(1))
         return 0
 
-    def clean_pe_name(self, nlog, root):
+    def clean_pe_name(self, nlog, logf):
         """additional name cleaning for paired end data"""
         use_output_name = getattr(config, "flash", {}).get("use_output_name", False)
         if use_output_name:
@@ -96,7 +98,7 @@ class MultiqcModule(BaseMultiqcModule):
         if not name:
             return None
         name = name.group(1)
-        name = self.clean_s_name(name, root)
+        name = self.clean_s_name(name, logf)
         return name
 
     def parse_flash_log(self, logf):
@@ -107,7 +109,7 @@ class MultiqcModule(BaseMultiqcModule):
             try:
                 sample = dict()
                 ## Sample name ##
-                s_name = self.clean_pe_name(slog, logf["root"])
+                s_name = self.clean_pe_name(slog, logf)
                 if s_name is None:
                     continue
                 sample["s_name"] = s_name

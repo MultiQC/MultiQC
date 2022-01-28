@@ -24,7 +24,7 @@ MultiQC was written by Phil Ewels (http://phil.ewels.co.uk) at SciLifeLab Sweden
 from setuptools import setup, find_packages
 import sys
 
-version = "1.11dev"
+version = "1.12dev"
 dl_version = "master" if "dev" in version else "v{}".format(version)
 
 print(
@@ -104,6 +104,7 @@ setup(
             "busco = multiqc.modules.busco:MultiqcModule",
             "bustools = multiqc.modules.bustools:MultiqcModule",
             "ccs = multiqc.modules.ccs:MultiqcModule",
+            "checkqc = multiqc.modules.checkqc:MultiqcModule",
             "clipandmerge = multiqc.modules.clipandmerge:MultiqcModule",
             "clusterflow = multiqc.modules.clusterflow:MultiqcModule",
             "conpair = multiqc.modules.conpair:MultiqcModule",
@@ -153,6 +154,7 @@ setup(
             "mosdepth = multiqc.modules.mosdepth:MultiqcModule",
             "mtnucratio = multiqc.modules.mtnucratio:MultiqcModule",
             "multivcfanalyzer = multiqc.modules.multivcfanalyzer:MultiqcModule",
+            "nanostat = multiqc.modules.nanostat:MultiqcModule",
             "ngsderive = multiqc.modules.ngsderive:MultiqcModule",
             "odgi = multiqc.modules.odgi:MultiqcModule",
             "optitype = multiqc.modules.optitype:MultiqcModule",

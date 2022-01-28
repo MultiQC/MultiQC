@@ -16,6 +16,7 @@ MultiQC Modules:
     BclConvert: modules/bclconvert.md
     BioBloom Tools: modules/biobloomtools.md
     CCS: modules/ccs.md
+    CheckQC: modules/checkqc.md
     ClipAndMerge: modules/clipandmerge.md
     Cluster Flow: modules/clusterflow.md
     Cutadapt: modules/cutadapt.md
@@ -86,6 +87,7 @@ MultiQC Modules:
     mosdepth: modules/mosdepth.md
     MTNucRatio: modules/mtnucratio.md
     MultiVCFAnalyzer: modules/multivcfanalyzer.md
+    NanoStat: modules/nanostat.md
     ngsderive: modules/ngsderive.md
     odgi: modules/odgi.md
     OptiType: modules/optitype.md

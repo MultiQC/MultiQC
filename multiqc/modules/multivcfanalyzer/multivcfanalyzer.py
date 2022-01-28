@@ -26,7 +26,9 @@ class MultiqcModule(BaseMultiqcModule):
             name="MultiVCFAnalyzer",
             anchor="multivcfanalyzer",
             href="https://github.com/alexherbig/MultiVCFAnalyzer",
-            info="""combines multiple VCF files in a coherent way, can produce summary statistics and downstream analysis formats for phylogeny reconstruction.""",
+            info="""combines multiple VCF files in a coherent way,
+            can produce summary statistics and downstream analysis formats for phylogeny reconstruction.""",
+            doi="10.1038/nature13591",
         )
 
         # Find and load any MultiVCFAnalyzer reports
@@ -87,7 +89,7 @@ class MultiqcModule(BaseMultiqcModule):
 
         # Parse JSON data to a dict
         for s_name, metrics in data.get("metrics", {}).items():
-            s_clean = self.clean_s_name(s_name, f["root"])
+            s_clean = self.clean_s_name(s_name, f)
             if s_clean in self.mvcf_data:
                 log.debug("Duplicate sample name found! Overwriting: {}".format(s_clean))
 

@@ -280,17 +280,34 @@ from multiqc.modules.base_module import BaseMultiqcModule
 class MultiqcModule(BaseMultiqcModule):
     def __init__(self):
         # Initialise the parent object
-        super(MultiqcModule, self).__init__(name='My Module', anchor='mymod',
-        href="http://www.awesome_bioinfo.com/my_module",
-        info="is an example analysis module used for writing documentation.")
+        super(MultiqcModule, self).__init__(
+          name='My Module',
+          anchor='mymod',
+          href="http://www.awesome_bioinfo.com/my_module",
+          info="is an example analysis module used for writing documentation.",
+          doi="01.2345/journal/abc123"
+        )
 ```
+
+The `__init__` variables are used to create the header, URL link,
+analysis module credits and description in the report.
+
+The available arguments when initialising a module as follows:
+
+- `name` - Name of your module
+- `anchor` - A HTML-safe anchor that will be used after the `#` in the URL
+- `href` - Link to the homepage for the tool
+- `info` - Very short description text about the tool
+- `doi` - One or more publication DOIs (`str`, or `list` of `str`s)
+- `comment` - Additional comment text for module. Usually user-supplied in a config.
+- `extra` - Additional custom HTML after description text.
+- `target` - Name of the module in the description (default: `name`)
+- `autoformat` - (default: `True`)
+- `autoformat_type` - (default: `markdown`)
 
 Ok, that should be it! The `__init__()` function will now be executed every
 time MultiQC runs. Try adding a `print("Hello World!")` statement and see
 if it appears in the MultiQC logs at the appropriate time...
-
-Note that the `__init__` variables are used to create the header, URL link,
-analysis module credits and description in the report.
 
 ### Logging
 
@@ -534,15 +551,36 @@ To do this, you should use the `self.clean_s_name()` function, as
 this will prepend the directory name if requested on the command line:
 
 ```python
-input_fname = s[3] # Or parsed however
-s_name = self.clean_s_name(input_fname, f['root'])
+for f in self.find_log_files('mymod'):
+    input_fname, data = self.my_custom_parsing(f) # Or parsed however
+    s_name = self.clean_s_name(input_fname, f)
 ```
 
-This function has already been applied to the contents of `f['s_name']`.
+This function has already been applied to the contents of `f['s_name']`,
+so it is only required when using something different for the sample identifier.
 
 > `self.clean_s_name()` **must** be used on sample names parsed from the file
 > contents. Without it, features such as prepending directories (`--dirs`)
 > will not work.
+
+The second argument should be the dictionary returned by the `self.find_log_files()` function.
+The root path is used for `--dirs` and the search pattern key is used
+for fine-grained configuration of the config option `use_filename_as_sample_name`.
+
+If you are using non-standard values for the logfile root, filename or search pattern
+key, these can be specified. The function def looks like this:
+
+```python
+def clean_s_name(self, s_name, f=None, root=None, filename=None, seach_pattern_key=None):
+```
+
+A tyical example is when the sample name is the log file directory.
+In this case, the root should be the dirname of that directory.
+This is non-standard, and would be specified as follows:
+
+```python
+s_name = self.clean_s_name(f["root"], f, root=os.path.dirname(f["root"]))
+```
 
 ### Identical sample names
 

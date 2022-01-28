@@ -28,6 +28,7 @@ class MultiqcModule(BaseMultiqcModule):
             info="allows you to screen a library of sequences in FastQ format against"
             " a set of sequence databases so you can see if the composition of the"
             " library matches with what you expect.",
+            doi="10.12688/f1000research.15931.2",
         )
 
         # Find and load any FastQ Screen reports
