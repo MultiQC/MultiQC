@@ -373,7 +373,6 @@ def parse_mapping_metrics_file(f):
     for data in itertools.chain(data_by_readgroup.values(), data_by_phenotype.values()):
         # fixing when deduplication wasn't performed, or running with single-end data
         for field in [
-            "Number of duplicate marked reads",
             "Number of duplicate marked and mate reads removed",
             "Number of unique reads (excl. duplicate marked reads)",
             "Mismatched bases R2 (excl. indels)",
