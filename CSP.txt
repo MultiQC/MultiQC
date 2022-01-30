@@ -1,14 +1,28 @@
 # If you are hosting MultiQC reports >= v1.8 on a web application with CSP
-# (Content Security Policy), you will need the following scripts whitelisted:
+# (Content Security Policy), you will need the following scripts allowlisted:
 
 script-src 'self'
-    # v1.8dev with support for multiple fastq modules
-    'sha256-gMm+i7J9RFrqkxWwywqwdylMa1h6M7wuN8lUGjU1yXY=' # multiqc_fastqc.js
+    # v1.12
+    'sha256-iV6CFHoCJq7rXjscXMmCioPf05AIE/ZU98tHigtrnoE=' # multiqc.js after 9800862
+    'sha256-OqdU34KpZyh/xfGLAlfEQHnEmkvk2rXMqqh2lex89QM=' # multiqc_toolbox.js after b183572
+    'sha256-TUYHIjQsABv4n1G4GdIAz0ZljvuXPEvQ9T20Sok7TvE=' # multiqc.js
+    'sha256-teMLGfDW72TRam2f0Fnj53uchjf3tQR9N0xo+hR2PXU=' # multiqc_tables.js
+    'sha256-AEcY37NW7iIjmlzDOPZvuAorKHxXZxsECPnuSP52fB8=' # multiqc_plotting.js
+    'sha256-iPIReyQyAoheerXqjtulr8WN7lPMWacMVU4awy5CTJg=' # multiqc_mpl.js
+    'sha256-KGgqQTL/PWbF29mNXwFnepbDYBEnTKdMtejlNhEiXfs=' # multiqc_toolbox.js
+    'sha256-RO0nmf6TEJtrp+R4JF8N4UrF+A2Hfkb8BKxyS7nM5go=' # multiqc_rseqc.js
+    'sha256-kH3IklvmfvBiZprdCgEZqGuZjhiGEF5V3tHncoRciQI=' # multiqc_fastqc.js
+
+    # v1.9
+    'sha256-47DEQpj8HBSa+/TImW+5JCeuQeRkm5NMpJWZG3hSuFU='
+
+    # v1.8 with support for multiple fastq modules
+    'sha256-QikgYLXjlBzwXG+ymKSgvpKRMD9n0vZIOHtNOwYJjPo=' # multiqc_fastqc.js
     'sha256-pMsBH3T9O1Z2ybOWP9nXEnBjBiYNE7W0JnFTJc2udmw=' # fastq screen inline script
     'sha256-kvXmFPx65wSwMACCymANGTV/YPyA4cby1tDgjq1/138=' # multiqc_plotting.js
     'sha256-pSkR6mTLjv5YR+gLPA69aBzr+/34tLq+OtZ/ajFK+oE=' # multiqc_tables.js
 
-    # v1.8dev
+    # v1.8
     'sha256-Q8T2P8EmA90icfsFreWNkgqXzeAUtRDu2cLsJfgN1aY=' # load mqc_compressed_plotdata and mqc_config
     'sha256-+F66a8s8ponoNnBnP06kgZ4LvQ6IBedFeTJHpTbA0O0=' # load_fastqc_passfails();
     'sha256-6Iyez8LRQbIQe12+IHNW66k9OJvzlLF1yPb2gK11T5o=' # fastq screen inline script
