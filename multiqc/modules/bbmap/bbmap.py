@@ -2,6 +2,7 @@
 from __future__ import print_function
 import logging
 from collections import OrderedDict
+from multiqc.utils import config
 from multiqc.plots import table
 from multiqc.modules.base_module import BaseMultiqcModule
 
@@ -72,40 +73,28 @@ class MultiqcModule(BaseMultiqcModule):
                     plot=self.make_basic_table(file_type),
                 )
 
-        self.qchist_data = dict()
-        headers = OrderedDict()
+        # Special case - qchist metric in General Stats
+        if "qchist" in self.mod_data:
+            data = {}
+            fraction_gt_q30 = []
+            for s_name in self.mod_data["qchist"]:
+                for qual, d in self.mod_data["qchist"][s_name]["data"].items():
+                    if int(qual) >= 30:
+                        fraction_gt_q30.append(d[1])
+                data[s_name] = {"pct_q30": sum(fraction_gt_q30) * 100.0}
 
-        for f in self.find_log_files("bbmap/qchist"):
-            self.qchist_data[f["s_name"]] = dict()
-            my_total = []
-            for l in f["f"].splitlines()[1:]:
-                splitted = l.split("\t", 3)
-                key = splitted[0]
-                if int(key) >= 30:
-                    value = float(splitted[2])
-                    my_total.append(value)
-                self.qchist_data[f["s_name"]][key] = sum(my_total) * 100
-            headers[key] = {
-                "title": "% Q30 bases",
-                "description": "BBMap qchist - Percentage of bases with QUAL>=30",
-                "suffix": " %",
-                "scale": "RdYlGn-rev",
-                "format": "{:,.2f}",
+            headers = {
+                "pct_q30": {
+                    "title": "% Q30 bases",
+                    "description": "BBMap qchist - Percentage of bases with phred quality score >= 30",
+                    "suffix": " %",
+                    "scale": "RdYlGn",
+                    "format": "{:,.2f}",
+                    "min": 0,
+                    "max": 100,
+                }
             }
-        self.general_stats_addcols(self.qchist_data, headers)
-
-        # Filter out samples matching ignored sample names
-        self.qchist_data = self.ignore_samples(self.qchist_data)
-
-        # Nothing found - raise a UserWarning to tell MultiQC
-        if len(self.qchist_data) == 0:
-            log.debug("Could not find any reports in {}".format(config.analysis_dir))
-            raise UserWarning
-
-        log.info("Found {} reports".format(len(self.qchist_data)))
-
-        # Write parsed report data to a file
-        self.write_data_file(self.qchist_data, "multiqc_bbmap-qchist")
+            self.general_stats_addcols(data, headers)
 
     def parse_logs(self, file_type, root, s_name, fn, f, **kw):
 

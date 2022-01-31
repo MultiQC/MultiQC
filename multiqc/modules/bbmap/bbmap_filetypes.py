@@ -329,7 +329,8 @@ file_types = {
     },
     "qchist": {
         "title": "Count of bases with each quality value",
-        "descr": "Histogram of base qualities (`qchist`). " "Plot shows the number of bases at each quality score.",
+        "descr": "Histogram of base qualities (`qchist`). "
+        "Plot shows the number of bases at each quality score. Zero counts are shown as `0.1` due to log axis.",
         "help_text": "",
         "cols": odict["Quality":int, "count1":int, "fraction1":float],
         "plot_func": plot_qchist,
