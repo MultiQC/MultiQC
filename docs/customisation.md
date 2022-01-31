@@ -298,6 +298,17 @@ For example, the GATK module has a section with the title _"Compare Overlap"_. W
 in the report's left hand side navigation, the web browser URL has `#gatk-compare-overlap`
 appended. Here, you would add `gatk-compare-overlap` to the `remove_sections` config.
 
+Finally, you can prevent MultiQC from finding the files for a module or submodule by customising
+its search pattern. For example, to skip Picard Base Calling metrics, you could use the following:
+
+```yaml
+sp:
+  picard/collectilluminabasecallingmetrics:
+    skip: true
+```
+
+The search pattern identifiers can be found in the documentation below for each module.
+
 #### Removing General Statistics
 
 The General Statistics is a bit of a special case in MultiQC, but there is added code to make it

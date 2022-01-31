@@ -16,6 +16,7 @@ MultiQC Modules:
     BclConvert: modules/bclconvert.md
     BioBloom Tools: modules/biobloomtools.md
     CCS: modules/ccs.md
+    CheckQC: modules/checkqc.md
     ClipAndMerge: modules/clipandmerge.md
     Cluster Flow: modules/clusterflow.md
     Cutadapt: modules/cutadapt.md

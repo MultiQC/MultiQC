@@ -213,6 +213,7 @@ fn_clean_exts:
   - ".lhist"
   - ".mhist"
   - ".qahist"
+  - ".qchist"
   - ".qhist"
   - ".rpkm"
   - ".selfSM"
@@ -248,6 +249,7 @@ fn_clean_exts:
   - "ccs"
   - "_NanoStats"
   - ".cutadapt"
+  - ".mosdepth"
 
 # These are removed after the above, only if sample names
 # start or end with this string. Again, removed in order.
@@ -296,6 +298,7 @@ fn_ignore_files:
   - "*.pdf"
   - "*.md5"
   - "*[!s][!u][!m][!_\\.m][!mva][!qer][!cpy].html" # Allow _mqc.html, _vep.html and summary.html files
+  - multiqc_data.json
 
 # Favourite modules that should appear at the top in preference
 # This is in addition to those below. These appear above _all_ other
@@ -707,6 +710,11 @@ module_order:
         - RNA
         - DNA
         - methylation
+  - checkqc:
+      module_tag:
+        - DNA
+        - RNA
+        - Illumina
   - bcl2fastq:
       module_tag:
         - RNA
