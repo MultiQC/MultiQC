@@ -67,7 +67,7 @@ class MultiqcModule(BaseMultiqcModule):
         # The number of spaces in the header can vary, based on the length of
         # the name of the library. We therefore need a regex to match the
         # header.
-        header_pattern = "LIBRARY *READS *UNIQUE MOLECULES *DUPLICATE READS"
+        header_pattern = "LIBRARY +READS +UNIQUE MOLECULES +DUPLICATE READS"
         pattern = re.compile(header_pattern)
 
         # The file header
