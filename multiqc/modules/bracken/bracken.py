@@ -27,6 +27,7 @@ class MultiqcModule(BaseMultiqcModule):
             anchor="bracken",
             href="https://ccb.jhu.edu/software/bracken/",
             info="is a highly accurate statistical method that computes the abundance of species in DNA sequences from a metagenomics sample.",
+            doi="10.7717/peerj-cs.104",
         )
 
         self.t_ranks = OrderedDict()
@@ -45,6 +46,7 @@ class MultiqcModule(BaseMultiqcModule):
         self.bracken_raw_data = dict()
         for f in self.find_log_files("bracken", filehandles=True):
             self.parse_logs(f)
+            self.add_data_source(f)
 
         # Filter to strip out ignored sample names
         self.bracken_raw_data = self.ignore_samples(self.bracken_raw_data)
@@ -53,6 +55,9 @@ class MultiqcModule(BaseMultiqcModule):
             raise UserWarning
 
         log.info("Found {} reports".format(len(self.bracken_raw_data)))
+
+        # Data is in wrong format for writing to file
+        # self.write_data_file(self.kraken_raw_data, "kraken")
 
         # Sum counts across all samples, so that we can pick top 5
         self.bracken_total_pct = dict()
