@@ -77,7 +77,7 @@ class MultiqcModule(BaseMultiqcModule):
 
                 # Replace 'nan' with zero
                 if value == "nan":
-                    data[key] = 0
+                    data[key] = None
 
         file_content = logfile["f"]
         # This will later be replaced by the sample name from the file, unless
