@@ -32,8 +32,9 @@
 
 ### Module updates
 
-- **bbmap**
+- **BBMap**
   - Correctly handle adapter stats files with additional columns ([#1556](https://github.com/ewels/MultiQC/issues/1556))
+  - Added handling for `qchist` output ([#1021](https://github.com/ewels/MultiQC/issues/1021))
 - **bclconvert**
   - Handle change in output format in v3.9.3 with new `Quality_Metrics.csv` file ([#1563](https://github.com/ewels/MultiQC/issues/1563))
 - **bcftools**

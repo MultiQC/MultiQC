@@ -213,6 +213,7 @@ fn_clean_exts:
   - ".lhist"
   - ".mhist"
   - ".qahist"
+  - ".qchist"
   - ".qhist"
   - ".rpkm"
   - ".selfSM"
