@@ -470,7 +470,7 @@ somalier/pairs:
   contents: "hom_concordance"
   num_lines: 5
 pbmarkdup:
-  contents_re: "LIBRARY\s+READS\s+UNIQUE MOLECULES\s+DUPLICATE READS"
+  contents_re: "LIBRARY +READS +UNIQUE MOLECULES +DUPLICATE READS"
   num_lines: 5
 phantompeakqualtools/out:
   fn: "*.spp.out"
