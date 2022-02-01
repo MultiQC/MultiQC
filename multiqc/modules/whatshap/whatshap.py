@@ -82,7 +82,7 @@ class MultiqcModule(BaseMultiqcModule):
         file_content = logfile["f"]
         # This will later be replaced by the sample name from the file, unless
         # we are parsing an empty file
-        sample = self.clean_s_name(logfile["s_name"], logfile["root"])
+        sample = logfile["s_name"]
         # Get the header and remove the "#" character from the first field
         header = next(file_content).strip().split()
         header[0] = header[0].lstrip("#")
@@ -95,7 +95,7 @@ class MultiqcModule(BaseMultiqcModule):
             data = {field: value for field, value in zip(header, spline)}
             process_data(data)
             # Remove the sample and chromsome from the data
-            data.pop("sample")
+            sample = str(data.pop("sample"))
             chromosome = data.pop("chromosome")
             # Insert the current line under chromosome
             results[chromosome] = data
@@ -107,6 +107,9 @@ class MultiqcModule(BaseMultiqcModule):
         if not results:
             results = dict()
             results["ALL"] = defaultdict(int)
+
+        # Clean the sample name
+        sample = self.clean_s_name(sample, logfile["root"])
 
         return sample, results
 
