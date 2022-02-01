@@ -128,6 +128,7 @@ class MultiqcModule(BaseMultiqcModule):
                         "max": 100,
                         "modify": lambda x: x * 100,
                         "scale": "RdYlGn-rev",
+                        "hidden": True
                     },
                 ),
             ]
