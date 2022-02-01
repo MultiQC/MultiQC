@@ -642,7 +642,7 @@ salmon/fld:
   fn: "flenDist.txt"
 sambamba/markdup:
   contents: "finding positions of the duplicate reads in the file"
-  num_lines: 10
+  num_lines: 50
 samblaster:
   contents: "samblaster: Version"
   shared: true
