@@ -95,7 +95,7 @@ class MultiqcModule(BaseMultiqcModule):
             data = {field: value for field, value in zip(header, spline)}
             process_data(data)
             # Remove the sample and chromsome from the data
-            sample = self.clean_s_name(data.pop("sample"), logfile)
+            data.pop("sample")
             chromosome = data.pop("chromosome")
             # Insert the current line under chromosome
             results[chromosome] = data
@@ -306,6 +306,18 @@ class MultiqcModule(BaseMultiqcModule):
 
         keys = OrderedDict()
         keys["Phased Base Pairs"] = {"name": "Phased Base Pairs"}
+
+        # If the Phased Base Pairs is zero for all samples, we do not add the
+        # WhatsHap section
+        for sample, values in pdata.items():
+            if values['Phased Base Pairs']:
+                # If we found one sample with data, we break out of the loop
+                # and add the WhatsHap section
+                break
+        # If we completed the for loop, there is no data, so we return without
+        # adding the WhatsHap section
+        else:
+            return
 
         self.add_section(
             name="Phased Basepairs per Sample",
