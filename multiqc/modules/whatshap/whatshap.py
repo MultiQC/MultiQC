@@ -147,6 +147,7 @@ class MultiqcModule(BaseMultiqcModule):
                         "description": """Number of biallelic variants in the input VCF, but
                                         excluding any non-SNV variants if --only-snvs was
                                         used""",
+                        "format": "{:,.0f}",
                         "hidden": True,
                     },
                 ),
@@ -157,6 +158,7 @@ class MultiqcModule(BaseMultiqcModule):
                         "title": "Heterozygous Variants",
                         "description": """The number of biallelic, heterozygous variants in
                                         the input VCF. This is a subset of Input Variants.""",
+                        "format": "{:,.0f}",
                         "hidden": True,
                     },
                 ),
@@ -168,6 +170,7 @@ class MultiqcModule(BaseMultiqcModule):
                         "description": """The number of biallelic, heterozygous SNVs in the
                                         input VCF. This is a subset of Heterozygous
                                         Variants.""",
+                        "format": "{:,.0f}",
                         "hidden": True,
                     },
                 ),
@@ -179,6 +182,7 @@ class MultiqcModule(BaseMultiqcModule):
                         "description": """The number of biallelic, heterozygous variants that
                                         are not marked as phased in the input VCF. This
                                         is a subset of heterozygous_variants.""",
+                        "format": "{:,.0f}",
                         "hidden": False,
                     },
                 ),
@@ -191,6 +195,7 @@ class MultiqcModule(BaseMultiqcModule):
                                         are marked as phased in the input VCF. This is
                                         a subset of heterozygous_variants. Also, phased +
                                         unphased + singletons = heterozygous_variants.""",
+                        "format": "{:,.0f}",
                         "hidden": False,
                     },
                 ),
@@ -202,6 +207,7 @@ class MultiqcModule(BaseMultiqcModule):
                         "description": """The number of biallelic, heterozygous SNVs that are
                                         marked as phased in the input VCF. This is a subset
                                         of phased.""",
+                        "format": "{:,.0f}",
                         "hidden": True,
                     },
                 ),
@@ -211,6 +217,7 @@ class MultiqcModule(BaseMultiqcModule):
                         "id": "blocks",
                         "title": "Blocks",
                         "description": "The total number of phase sets/blocks.",
+                        "format": "{:,.0f}",
                         "hidden": True,
                     },
                 ),
@@ -219,7 +226,8 @@ class MultiqcModule(BaseMultiqcModule):
                     {
                         "id": "singletons",
                         "title": "Singletons",
-                        "description": "The number of blocks that contain exactly one " "variant.",
+                        "description": "The number of blocks that contain exactly one variant.",
+                        "format": "{:,.0f}",
                         "hidden": True,
                     },
                 ),
@@ -233,6 +241,7 @@ class MultiqcModule(BaseMultiqcModule):
                                         number of base pairs it covers minus 1. That is, a
                                         block with two variants at positions 2 and 5 has
                                         length 3.""",
+                        "format": "{:,.0f}",
                         "hidden": False,
                     },
                 ),
@@ -259,6 +268,7 @@ class MultiqcModule(BaseMultiqcModule):
                                         number of base pairs it covers minus 1. That is, a
                                         block with two variants at positions 2 and 5 has
                                         length 3.""",
+                        "format": "{:,.0f}",
                         "hidden": False,
                     },
                 ),
@@ -270,6 +280,7 @@ class MultiqcModule(BaseMultiqcModule):
                         "description": """The NG50 value of the distribution of the block
                                         lengths. Interleaved blocks are cut in order to
                                         avoid artificially inflating this value.""",
+                        "format": "{:,.0f}",
                         "hidden": True,
                     },
                 ),
