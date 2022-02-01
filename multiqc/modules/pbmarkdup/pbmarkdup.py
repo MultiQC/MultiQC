@@ -35,8 +35,10 @@ class MultiqcModule(BaseMultiqcModule):
         self.pbmarkdup = dict()
 
         for logfile in self.find_log_files("pbmarkdup", filehandles=True):
-            self.pbmarkdup[logfile["s_name"]] = self.parse_logfile(logfile)
-            self.add_data_source(logfile)
+            data = self.parse_logfile(logfile)
+            if data:
+                self.pbmarkdup[logfile["s_name"]] = data
+                self.add_data_source(logfile)
 
         # Filter to strip out ignored sample names
         self.pbmarkdup = self.ignore_samples(self.pbmarkdup)
