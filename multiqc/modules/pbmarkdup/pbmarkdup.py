@@ -94,8 +94,11 @@ class MultiqcModule(BaseMultiqcModule):
             # Not very nice, we assume that all fields are always present
             name, reads, unique_mol_count, unique_mol_perc, duplicate_count, duplicate_perc = line.split()
 
+            # Clean the sample name
+            s_name = self.clean_s_name(name, logfile)
+
             # We are only interested in the counts, not the percentages
-            data[name] = {
+            data[s_name] = {
                 "READS": int(reads),
                 "UNIQUE MOLECULES": int(unique_mol_count),
                 "DUPLICATE READS": int(duplicate_count),
