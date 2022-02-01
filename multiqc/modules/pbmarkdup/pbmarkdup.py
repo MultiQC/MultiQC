@@ -73,9 +73,11 @@ class MultiqcModule(BaseMultiqcModule):
         # The file header
         file_header = next(file_content).strip()
 
-        # Error if the header doesn't match the expected pattern
+        # Log an error if the header doesn't match the expected pattern
         if not re.match(pattern, file_header):
-            raise RuntimeError(f'Unknown header: "{header}"')
+            fname = logfile["fn"]
+            log.error(f"Can't parse file '{fname}', unknown header: '{header}'")
+            return False
 
         data = dict()
 
