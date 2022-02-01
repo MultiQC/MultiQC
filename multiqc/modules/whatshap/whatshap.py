@@ -228,8 +228,8 @@ class MultiqcModule(BaseMultiqcModule):
                     {
                         "id": "bp_per_block_sum",
                         "title": "Total Phased bp",
-                        "description": """Description of the distribution of non-singleton
-                                        block lengths, where the length of a block is the
+                        "description": """The sum of the lengths of all non-singleton
+                                        blocks, where the length of a block is the
                                         number of base pairs it covers minus 1. That is, a
                                         block with two variants at positions 2 and 5 has
                                         length 3.""",
