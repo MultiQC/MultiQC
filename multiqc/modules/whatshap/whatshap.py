@@ -310,7 +310,7 @@ class MultiqcModule(BaseMultiqcModule):
         # If the Phased Base Pairs is zero for all samples, we do not add the
         # WhatsHap section
         for sample, values in pdata.items():
-            if values['Phased Base Pairs']:
+            if values["Phased Base Pairs"]:
                 # If we found one sample with data, we break out of the loop
                 # and add the WhatsHap section
                 break
