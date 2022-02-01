@@ -174,6 +174,7 @@ def custom_module_classes():
                     # Guess c_id if no information known
                     if k == "custom_content":
                         c_id = s_name
+                        m_config["id"] = c_id
 
                     # Merge with config from a MultiQC config file if we have it
                     m_config.update(mod_cust_config.get(c_id, {}))
