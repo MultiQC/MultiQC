@@ -706,6 +706,11 @@ module_order:
       module_tag:
         - DNA
         - RNA
+  - anglerfish:
+      module_tag:
+        - DNA
+        - Illumina
+        - ONT
   - multivcfanalyzer:
       module_tag:
         - DNA

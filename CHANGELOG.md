@@ -62,6 +62,8 @@ _nothing yet.._
 
 ### New Modules
 
+- [**Anglerfish**](https://github.com/remiolsen/anglerfish)
+  - A tool designed to assess pool balancing, contamination and insert sizes of Illumina library dry runs on Oxford Nanopore data.
 - [**CheckQC**](https://github.com/Molmed/checkQC)
   - A program designed to check a set of quality criteria against an Illumina runfolder
 - [**pbmarkdup**](https://github.com/PacificBiosciences/pbmarkdup)
