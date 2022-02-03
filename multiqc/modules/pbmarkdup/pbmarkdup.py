@@ -37,7 +37,9 @@ class MultiqcModule(BaseMultiqcModule):
         for logfile in self.find_log_files("pbmarkdup", filehandles=True):
             data = self.parse_logfile(logfile)
             if data:
-                self.pbmarkdup[logfile["s_name"]] = data
+                # Clean the file name
+                s_name = self.clean_s_name(logfile["s_name"], logfile)
+                self.pbmarkdup[s_name] = data
                 self.add_data_source(logfile)
 
         # Filter to strip out ignored sample names
@@ -92,13 +94,10 @@ class MultiqcModule(BaseMultiqcModule):
                 continue
 
             # Not very nice, we assume that all fields are always present
-            name, reads, unique_mol_count, unique_mol_perc, duplicate_count, duplicate_perc = line.split()
-
-            # Clean the sample name
-            s_name = self.clean_s_name(name, logfile)
+            lib_name, reads, unique_mol_count, unique_mol_perc, duplicate_count, duplicate_perc = line.split()
 
             # We are only interested in the counts, not the percentages
-            data[s_name] = {
+            data[lib_name] = {
                 "READS": int(reads),
                 "UNIQUE MOLECULES": int(unique_mol_count),
                 "DUPLICATE READS": int(duplicate_count),
