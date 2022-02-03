@@ -479,6 +479,9 @@ somalier/pairs:
   fn: "*.pairs.tsv"
   contents: "hom_concordance"
   num_lines: 5
+pbmarkdup:
+  contents_re: "LIBRARY +READS +UNIQUE MOLECULES +DUPLICATE READS"
+  num_lines: 5
 phantompeakqualtools/out:
   fn: "*.spp.out"
 picard/alignment_metrics:
