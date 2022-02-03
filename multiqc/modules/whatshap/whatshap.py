@@ -105,10 +105,10 @@ class MultiqcModule(BaseMultiqcModule):
 
             # Calculate the fraction of heterozygous variants that were phased
             try:
-                frac_het_phased = data['phased']/data['heterozygous_variants']
+                frac_het_phased = data["phased"] / data["heterozygous_variants"]
             except ZeroDivisionError:
                 frac_het_phased = 0
-            data['frac_het_phased'] = frac_het_phased
+            data["frac_het_phased"] = frac_het_phased
 
             # Insert the current line under chromosome
             results[chromosome] = data
@@ -152,7 +152,8 @@ class MultiqcModule(BaseMultiqcModule):
         # https://whatshap.readthedocs.io/en/latest/guide.html#the-tsv-statistics-format
         general_stats_headers = OrderedDict(
             [
-                (   "frac_het_phased",
+                (
+                    "frac_het_phased",
                     {
                         "id": "perc_het_phased",
                         "title": "% Phased Variants",
@@ -379,7 +380,8 @@ class MultiqcModule(BaseMultiqcModule):
                         "hidden": False,
                     },
                 ),
-                (   "frac_het_phased",
+                (
+                    "frac_het_phased",
                     {
                         "id": "perc_het_phased",
                         "title": "% Phased Variants",
@@ -435,8 +437,4 @@ class MultiqcModule(BaseMultiqcModule):
 
             general[sample] = stats
 
-        self.add_section(
-                name="WhatsHap statistics",
-                anchor="whatshap-table",
-                plot=table.plot(general, stats_headers)
-        )
+        self.add_section(name="WhatsHap statistics", anchor="whatshap-table", plot=table.plot(general, stats_headers))
