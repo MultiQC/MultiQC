@@ -155,6 +155,7 @@ fn_clean_exts:
   - ".vcf"
   - ".dat"
   - "_tophat"
+  - ".pbmarkdup.log"
   - ".log"
   - ".stderr"
   - ".out"
@@ -213,6 +214,7 @@ fn_clean_exts:
   - ".lhist"
   - ".mhist"
   - ".qahist"
+  - ".qchist"
   - ".qhist"
   - ".rpkm"
   - ".selfSM"
@@ -475,6 +477,10 @@ module_order:
       module_tag:
         - DNA
         - ancient
+  - pbmarkdup:
+      module_tag:
+        - DNA
+        - RNA
   - damageprofiler:
       module_tag:
         - DNA

@@ -4,6 +4,7 @@
 
 ### MultiQC updates
 
+- Fixed issue with format sambamba markdup 0.8.1 ([#1617](https://github.com/ewels/MultiQC/issues/1617))
 - Added option to customise default plot height in plot config ([#1432](https://github.com/ewels/MultiQC/issues/1432))
 - Added `--no-report` flag to skip report generation ([#1462](https://github.com/ewels/MultiQC/issues/1462))
 - Added support for priting tool DOI in report sections ([#1177](https://github.com/ewels/MultiQC/issues/1177))
@@ -29,13 +30,16 @@
 
 - [**CheckQC**](https://github.com/Molmed/checkQC)
   - A program designed to check a set of quality criteria against an Illumina runfolder
+- [**pbmarkdup**](https://github.com/PacificBiosciences/pbmarkdup)
+  - Mark duplicate reads from PacBio sequencing of an amplified library
 - [**WhatsHap**](https://whatshap.readthedocs.io)
   - WhatsHap is a software for phasing genomic variants using DNA sequencing reads
 
 ### Module updates
 
-- **bbmap**
+- **BBMap**
   - Correctly handle adapter stats files with additional columns ([#1556](https://github.com/ewels/MultiQC/issues/1556))
+  - Added handling for `qchist` output ([#1021](https://github.com/ewels/MultiQC/issues/1021))
 - **bclconvert**
   - Handle change in output format in v3.9.3 with new `Quality_Metrics.csv` file ([#1563](https://github.com/ewels/MultiQC/issues/1563))
 - **bcftools**
