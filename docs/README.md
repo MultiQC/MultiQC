@@ -125,6 +125,7 @@ MultiQC Modules:
     VCFTools: modules/vcftools.md
     VEP: modules/vep.md
     verifyBAMID: modules/verifybamid.md
+    WhatsHap: modules/whatshap.md
 Custom Content:
   Introduction: custom_content.md
 Coding with MultiQC:

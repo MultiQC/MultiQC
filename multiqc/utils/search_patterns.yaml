@@ -782,3 +782,6 @@ vep/vep_txt:
   max_filesize: 100000
 verifybamid/selfsm:
   fn: "*.selfSM"
+whatshap/stats:
+  contents: "#sample	chromosome	file_name	variants	phased	unphased	singletons"
+  num_lines: 1

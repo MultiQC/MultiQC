@@ -32,6 +32,8 @@
   - A program designed to check a set of quality criteria against an Illumina runfolder
 - [**pbmarkdup**](https://github.com/PacificBiosciences/pbmarkdup)
   - Mark duplicate reads from PacBio sequencing of an amplified library
+- [**WhatsHap**](https://whatshap.readthedocs.io)
+  - WhatsHap is a software for phasing genomic variants using DNA sequencing reads
 
 ### Module updates
 

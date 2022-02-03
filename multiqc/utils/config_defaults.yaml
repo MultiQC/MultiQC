@@ -277,6 +277,7 @@ fn_clean_trim:
   - "_matrix"
   - ".stats"
   - ".hist"
+  - ".phased"
 
 # Files to ignore when indexing files.
 # Grep file match patterns.
@@ -749,3 +750,6 @@ module_order:
         - DNA
         - RNA
         - HLATyping
+  - whatshap:
+      module_tag:
+        - DNA
