@@ -6,7 +6,7 @@ from collections import defaultdict, OrderedDict
 import logging
 
 from multiqc.modules.base_module import BaseMultiqcModule
-from multiqc.plots import bargraph
+from multiqc.plots import bargraph, table
 
 # Initialise the logger
 log = logging.getLogger(__name__)
@@ -57,6 +57,10 @@ class MultiqcModule(BaseMultiqcModule):
         # Create bargraph with total phased bp
         self.add_bargraph_total_phased()
 
+        # Add a table with more extensive whatshap stats not shown in the
+        # general statistics table
+        self.add_stats_table()
+
     def parse_whatshap_stats(self, logfile):
         """Parse WhatsHap stats file"""
 
@@ -94,9 +98,18 @@ class MultiqcModule(BaseMultiqcModule):
             spline = line.strip().split()
             data = {field: value for field, value in zip(header, spline)}
             process_data(data)
+
             # Remove the sample and chromsome from the data
             sample = str(data.pop("sample"))
             chromosome = data.pop("chromosome")
+
+            # Calculate the fraction of heterozygous variants that were phased
+            try:
+                frac_het_phased = data['phased']/data['heterozygous_variants']
+            except ZeroDivisionError:
+                frac_het_phased = 0
+            data['frac_het_phased'] = frac_het_phased
+
             # Insert the current line under chromosome
             results[chromosome] = data
 
@@ -139,123 +152,19 @@ class MultiqcModule(BaseMultiqcModule):
         # https://whatshap.readthedocs.io/en/latest/guide.html#the-tsv-statistics-format
         general_stats_headers = OrderedDict(
             [
-                (
-                    "variants",
+                (   "frac_het_phased",
                     {
-                        "id": "variants",
-                        "title": "Input Variants",
-                        "description": """Number of biallelic variants in the input VCF, but
-                                        excluding any non-SNV variants if --only-snvs was
-                                        used""",
+                        "id": "perc_het_phased",
+                        "title": "% Phased Variants",
+                        "description": """Fraction of heterozygous variants
+                                          that could be phased.
+                                        """,
                         "format": "{:,.0f}",
-                        "hidden": True,
-                    },
-                ),
-                (
-                    "heterozygous_variants",
-                    {
-                        "id": "heterozygous_variants",
-                        "title": "Heterozygous Variants",
-                        "description": """The number of biallelic, heterozygous variants in
-                                        the input VCF. This is a subset of Input Variants.""",
-                        "format": "{:,.0f}",
-                        "hidden": True,
-                    },
-                ),
-                (
-                    "heterozygous_snvs",
-                    {
-                        "id": "heterozygous_snvs",
-                        "title": "Heterozygous SNVs",
-                        "description": """The number of biallelic, heterozygous SNVs in the
-                                        input VCF. This is a subset of Heterozygous
-                                        Variants.""",
-                        "format": "{:,.0f}",
-                        "hidden": True,
-                    },
-                ),
-                (
-                    "unphased",
-                    {
-                        "id": "unphased",
-                        "title": "Unphased Variants",
-                        "description": """The number of biallelic, heterozygous variants that
-                                        are not marked as phased in the input VCF. This
-                                        is a subset of heterozygous_variants.""",
-                        "format": "{:,.0f}",
+                        "suffix": "%",
+                        "min": 0,
+                        "max": 100,
+                        "modify": lambda x: x * 100,
                         "hidden": False,
-                    },
-                ),
-                (
-                    "phased",
-                    {
-                        "id": "phased",
-                        "title": "Phased Variants",
-                        "description": """The number of biallelic, heterozygous variants that
-                                        are marked as phased in the input VCF. This is
-                                        a subset of heterozygous_variants. Also, phased +
-                                        unphased + singletons = heterozygous_variants.""",
-                        "format": "{:,.0f}",
-                        "hidden": False,
-                    },
-                ),
-                (
-                    "phased_snvs",
-                    {
-                        "id": "phased_snvs",
-                        "title": "Phased SNVs",
-                        "description": """The number of biallelic, heterozygous SNVs that are
-                                        marked as phased in the input VCF. This is a subset
-                                        of phased.""",
-                        "format": "{:,.0f}",
-                        "hidden": True,
-                    },
-                ),
-                (
-                    "blocks",
-                    {
-                        "id": "blocks",
-                        "title": "Blocks",
-                        "description": "The total number of phase sets/blocks.",
-                        "format": "{:,.0f}",
-                        "hidden": True,
-                    },
-                ),
-                (
-                    "singletons",
-                    {
-                        "id": "singletons",
-                        "title": "Singletons",
-                        "description": "The number of blocks that contain exactly one variant.",
-                        "format": "{:,.0f}",
-                        "hidden": True,
-                    },
-                ),
-                (
-                    "bp_per_block_sum",
-                    {
-                        "id": "bp_per_block_sum",
-                        "title": "Total Phased bp",
-                        "description": """The sum of the lengths of all non-singleton
-                                        blocks, where the length of a block is the
-                                        number of base pairs it covers minus 1. That is, a
-                                        block with two variants at positions 2 and 5 has
-                                        length 3.""",
-                        "format": "{:,.0f}",
-                        "hidden": False,
-                    },
-                ),
-                (
-                    "variant_per_block_avg",
-                    {
-                        "id": "variant_per_block_avg",
-                        "title": "Avg Variants per Block",
-                        "description": """Description of the distribution of non-singleton
-                                        block sizes, where the size of a block is the number
-                                        of variants it contains. Number of biallelic
-                                        variants in the input VCF, but excluding any non-SNV
-                                        variants if --only-snvs was used.""",
-                        "hidden": True,
                     },
                 ),
                 (
@@ -341,4 +250,193 @@ class MultiqcModule(BaseMultiqcModule):
                     each sample.
                 """,
             plot=bargraph.plot(pdata, keys, configuration),
+        )
+
+    def add_stats_table(self):
+        """Add WhatsHap stats to the general statistics table"""
+
+        # Store the configuration for each column, this is also used to
+        # determine which columns to add to the general statistics table
+        # https://whatshap.readthedocs.io/en/latest/guide.html#the-tsv-statistics-format
+        stats_headers = OrderedDict(
+            [
+                (
+                    "variants",
+                    {
+                        "id": "variants",
+                        "title": "Input Variants",
+                        "description": """Number of biallelic variants in the input VCF, but
+                                        excluding any non-SNV variants if --only-snvs was
+                                        used""",
+                        "format": "{:,.0f}",
+                        "hidden": False,
+                    },
+                ),
+                (
+                    "heterozygous_variants",
+                    {
+                        "id": "heterozygous_variants",
+                        "title": "Heterozygous Variants",
+                        "description": """The number of biallelic, heterozygous variants in
+                                        the input VCF. This is a subset of Input Variants.""",
+                        "format": "{:,.0f}",
+                        "hidden": False,
+                    },
+                ),
+                (
+                    "heterozygous_snvs",
+                    {
+                        "id": "heterozygous_snvs",
+                        "title": "Heterozygous SNVs",
+                        "description": """The number of biallelic, heterozygous SNVs in the
+                                        input VCF. This is a subset of Heterozygous
+                                        Variants.""",
+                        "format": "{:,.0f}",
+                        "hidden": False,
+                    },
+                ),
+                (
+                    "unphased",
+                    {
+                        "id": "unphased",
+                        "title": "Unphased Variants",
+                        "description": """The number of biallelic, heterozygous variants that
+                                        are not marked as phased in the input VCF. This
+                                        is a subset of heterozygous_variants.""",
+                        "format": "{:,.0f}",
+                        "hidden": False,
+                    },
+                ),
+                (
+                    "phased",
+                    {
+                        "id": "phased",
+                        "title": "Phased Variants",
+                        "description": """The number of biallelic, heterozygous variants that
+                                        are marked as phased in the input VCF. This is
+                                        a subset of heterozygous_variants. Also, phased +
+                                        unphased + singletons = heterozygous_variants.""",
+                        "format": "{:,.0f}",
+                        "hidden": False,
+                    },
+                ),
+                (
+                    "phased_snvs",
+                    {
+                        "id": "phased_snvs",
+                        "title": "Phased SNVs",
+                        "description": """The number of biallelic, heterozygous SNVs that are
+                                        marked as phased in the input VCF. This is a subset
+                                        of phased.""",
+                        "format": "{:,.0f}",
+                        "hidden": False,
+                    },
+                ),
+                (
+                    "blocks",
+                    {
+                        "id": "blocks",
+                        "title": "Blocks",
+                        "description": "The total number of phase sets/blocks.",
+                        "format": "{:,.0f}",
+                        "hidden": False,
+                    },
+                ),
+                (
+                    "singletons",
+                    {
+                        "id": "singletons",
+                        "title": "Singletons",
+                        "description": "The number of blocks that contain exactly one variant.",
+                        "format": "{:,.0f}",
+                        "hidden": False,
+                    },
+                ),
+                (
+                    "bp_per_block_sum",
+                    {
+                        "id": "bp_per_block_sum",
+                        "title": "Total Phased bp",
+                        "description": """The sum of the lengths of all non-singleton
+                                        blocks, where the length of a block is the
+                                        number of base pairs it covers minus 1. That is, a
+                                        block with two variants at positions 2 and 5 has
+                                        length 3.""",
+                        "format": "{:,.0f}",
+                        "hidden": False,
+                    },
+                ),
+                (
+                    "variant_per_block_avg",
+                    {
+                        "id": "variant_per_block_avg",
+                        "title": "Avg Variants per Block",
+                        "description": """Description of the distribution of non-singleton
+                                        block sizes, where the size of a block is the number
+                                        of variants it contains. Number of biallelic
+                                        variants in the input VCF, but excluding any non-SNV
+                                        variants if --only-snvs was used.""",
+                        "hidden": False,
+                    },
+                ),
+                (   "frac_het_phased",
+                    {
+                        "id": "perc_het_phased",
+                        "title": "% Phased Variants",
+                        "description": """Fraction of heterozygous variants
+                                          that could be phased.
+                                        """,
+                        "format": "{:,.0f}",
+                        "suffix": "%",
+                        "min": 0,
+                        "max": 100,
+                        "modify": lambda x: x * 100,
+                        "hidden": True,
+                    },
+                ),
+                (
+                    "bp_per_block_avg",
+                    {
+                        "id": "bp_per_block_avg",
+                        "title": "Avg bp per Block",
+                        "description": """Description of the distribution of non-singleton
+                                        block lengths, where the length of a block is the
+                                        number of base pairs it covers minus 1. That is, a
+                                        block with two variants at positions 2 and 5 has
+                                        length 3.""",
+                        "format": "{:,.0f}",
+                        "hidden": True,
+                    },
+                ),
+                (
+                    "block_n50",
+                    {
+                        "id": "block_n50",
+                        "title": "NG50",
+                        "description": """The NG50 value of the distribution of the block
+                                        lengths. Interleaved blocks are cut in order to
+                                        avoid artificially inflating this value.""",
+                        "format": "{:,.0f}",
+                        "hidden": True,
+                    },
+                ),
+            ]
+        )
+
+        general = dict()
+        for sample, sample_stats in self.whatshap_stats.items():
+            # Get the summary field
+            summary_field = self.get_summary_field(sample_stats)
+
+            # The summary data we are adding to the general statistics
+            summary_data = sample_stats[summary_field]
+
+            stats = {field: summary_data[field] for field in stats_headers}
+
+            general[sample] = stats
+
+        self.add_section(
+                name="WhatsHap statistics",
+                anchor="whatshap-table",
+                plot=table.plot(general, stats_headers)
         )
