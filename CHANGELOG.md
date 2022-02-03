@@ -30,6 +30,8 @@
 
 - [**CheckQC**](https://github.com/Molmed/checkQC)
   - A program designed to check a set of quality criteria against an Illumina runfolder
+- [**pbmarkdup**](https://github.com/PacificBiosciences/pbmarkdup)
+  - Mark duplicate reads from PacBio sequencing of an amplified library
 
 ### Module updates
 
@@ -125,8 +127,6 @@
   - Optimized dynamic genome/graph implementation
 - [**Pangolin**](https://github.com/cov-lineages/pangolin)
   - Added MultiQC support for Pangolin, the tool that determines SARS-CoV-2 lineages
-- [**pbmarkdup**](https://github.com/PacificBiosciences/pbmarkdup)
-  - Mark duplicate reads from PacBio sequencing of an amplified library
 - [**Sambamba Markdup**](https://lomereiter.github.io/sambamba/docs/sambamba-markdup.html)
   - Added MultiQC module to add duplicate rate calculated by Sambamba Markdup.
 - [**Snippy**](https://github.com/tseemann/snippy)
