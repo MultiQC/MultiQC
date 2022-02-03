@@ -104,6 +104,7 @@ setup(
             "busco = multiqc.modules.busco:MultiqcModule",
             "bustools = multiqc.modules.bustools:MultiqcModule",
             "ccs = multiqc.modules.ccs:MultiqcModule",
+            "checkqc = multiqc.modules.checkqc:MultiqcModule",
             "clipandmerge = multiqc.modules.clipandmerge:MultiqcModule",
             "clusterflow = multiqc.modules.clusterflow:MultiqcModule",
             "conpair = multiqc.modules.conpair:MultiqcModule",
@@ -158,6 +159,7 @@ setup(
             "odgi = multiqc.modules.odgi:MultiqcModule",
             "optitype = multiqc.modules.optitype:MultiqcModule",
             "pangolin = multiqc.modules.pangolin:MultiqcModule",
+            "pbmarkdup = multiqc.modules.pbmarkdup:MultiqcModule",
             "peddy = multiqc.modules.peddy:MultiqcModule",
             "phantompeakqualtools = multiqc.modules.phantompeakqualtools:MultiqcModule",
             "picard = multiqc.modules.picard:MultiqcModule",
@@ -200,6 +202,7 @@ setup(
             "vcftools = multiqc.modules.vcftools:MultiqcModule",
             "vep = multiqc.modules.vep:MultiqcModule",
             "verifybamid = multiqc.modules.verifybamid:MultiqcModule",
+            "whatshap = multiqc.modules.whatshap:MultiqcModule",
         ],
         "multiqc.templates.v1": [
             "default = multiqc.templates.default",

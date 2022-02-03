@@ -27,6 +27,7 @@ class MultiqcModule(BaseMultiqcModule):
             target="Bowtie 1",
             href="http://bowtie-bio.sourceforge.net/",
             info="is an ultrafast, memory-efficient short read aligner.",
+            doi="10.1186/gb-2009-10-3-r25",
         )
 
         # Find and load any Bowtie reports
@@ -57,8 +58,8 @@ class MultiqcModule(BaseMultiqcModule):
         parsed_data = {}
         regexes = {
             "reads_processed": r"# reads processed:\s+(\d+)",
-            "reads_aligned": r"# reads with at least one reported alignment:\s+(\d+)",
-            "reads_aligned_percentage": r"# reads with at least one reported alignment:\s+\d+\s+\(([\d\.]+)%\)",
+            "reads_aligned": r"# reads with at least one(?: reported)? alignment:\s+(\d+)",
+            "reads_aligned_percentage": r"# reads with at least one(?: reported)? alignment:\s+\d+\s+\(([\d\.]+)%\)",
             "not_aligned": r"# reads that failed to align:\s+(\d+)",
             "not_aligned_percentage": r"# reads that failed to align:\s+\d+\s+\(([\d\.]+)%\)",
             "multimapped": r"# reads with alignments suppressed due to -m:\s+(\d+)",
