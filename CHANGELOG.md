@@ -83,6 +83,8 @@
   - Fixed bug in the `junction_saturation` submodule ([#1582](https://github.com/ewels/MultiQC/issues/1582))
   - Fixed bug where empty files caused `tin` submodule to crash ([#1604](https://github.com/ewels/MultiQC/issues/1604))
   - Fix bug in `read_distribution` for samples with zero tags ([#1571](https://github.com/ewels/MultiQC/issues/1571))
+- **Salmon**
+  - Reports `library_types`, `compatible_fragment_ratio`, `strand_mapping_bias` to General Stats table. ([#733](https://github.com/ewels/MultiQC/issues/733))
 - **Somalier**
   - Plot scaled X depth instead of mean for _Sex_ plot ([#1546](https://github.com/ewels/MultiQC/issues/1546))
 - **VEP**
@@ -151,8 +153,6 @@
   - Added new percentage coverage plot in `QM_RNASeq` ([#1258](https://github.com/ewels/MultiQC/issues/1258))
 - **RSeQC**
   - Added a long-requested submodule to support showing the [**TIN**](http://rseqc.sourceforge.net/#tin-py) (Transcript Integrity Number) ([#737](https://github.com/ewels/MultiQC/issues/737))
-- **Salmon**
-  - Reports `library_types`, `compatible_fragment_ratio`, `strand_mapping_bias` to General Stats table. ([#733](https://github.com/ewels/MultiQC/issues/733))
 
 ### Module updates
 
