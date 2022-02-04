@@ -31,36 +31,30 @@ class MultiqcModule(BaseMultiqcModule):
             doi=None,
         )
 
-        # Find and load any fastp reports
-        self.fastp_data = dict()
-        self.fastp_duplication_plotdata = dict()
-        self.fastp_insert_size_data = dict()
-        self.fastp_all_data = dict()
-        self.fastp_qual_plotdata = dict()
-        self.fastp_gc_content_data = dict()
-        self.fastp_n_content_data = dict()
-        for k in ["read1_before_filtering", "read2_before_filtering", "read1_after_filtering", "read2_after_filtering"]:
-            self.fastp_qual_plotdata[k] = dict()
-            self.fastp_gc_content_data[k] = dict()
-            self.fastp_n_content_data[k] = dict()
+        # Find and load any anglerfish reports
+        self.anglerfish_data = dict()
+        self.anglerfish_pafstats = dict()
+        self.anglerfish_samples = dict()
+        self.anglerfish_undetermined = dict()
 
-        for f in self.find_log_files("fastp", filehandles=True):
-            self.parse_fastp_log(f)
+        for json in self.find_log_files("anglerfish", filehandles=True):
+            self.parse_anglerfish_json(json)
 
         # Filter to strip out ignored sample names
-        self.fastp_data = self.ignore_samples(self.fastp_data)
+        self.anglerfish_data = self.ignore_samples(self.anglerfish_data)
 
-        if len(self.fastp_data) == 0:
+        # Stop execution of the data if no anglerfish data is found.
+        if len(self.anglerfish_data) == 0:
             raise UserWarning
 
-        log.info("Found {} reports".format(len(self.fastp_data)))
+        log.info("Found {} reports".format(len(self.anglerfish_data)))
 
         # Write parsed report data to a file
         ## Parse whole JSON to save all its content
-        self.write_data_file(self.fastp_all_data, "multiqc_fastp")
+        self.write_data_file(self.fastp_all_data, "multiqc_anglerfish")
 
         # General Stats Table
-        self.fastp_general_stats_table()
+        self.anglerfish_general_stats_table()
 
         # Filtering statistics bar plot
         self.add_section(
@@ -69,74 +63,6 @@ class MultiqcModule(BaseMultiqcModule):
             description="Filtering statistics of sampled reads.",
             plot=self.fastp_filtered_reads_chart(),
         )
-
-        # Duplication rate plot
-        if len(self.fastp_duplication_plotdata) > 0:
-            self.add_section(
-                name="Duplication Rates",
-                anchor="fastp-duprates",
-                description="Duplication rates of sampled reads.",
-                plot=linegraph.plot(
-                    self.fastp_duplication_plotdata,
-                    {
-                        "id": "fastp-duprates-plot",
-                        "title": "Fastp: Duplication Rate",
-                        "xlab": "Duplication level",
-                        "ylab": "Read percent",
-                        "yCeiling": 100,
-                        "ymin": 0,
-                        "yLabelFormat": "{value}%",
-                        "tt_label": "{point.x}: {point.y:.2f}%",
-                        "xDecimals": False,
-                    },
-                ),
-            )
-
-        # Insert size plot
-        if len(self.fastp_insert_size_data) > 0:
-            self.add_section(
-                name="Insert Sizes",
-                anchor="fastp-insert-size",
-                description="Insert size estimation of sampled reads.",
-                plot=linegraph.plot(
-                    self.fastp_insert_size_data,
-                    {
-                        "id": "fastp-insert-size-plot",
-                        "title": "Fastp: Insert Size Distribution",
-                        "xlab": "Insert size",
-                        "ylab": "Read percent",
-                        "yCeiling": 100,
-                        "ymin": 0,
-                        "yLabelFormat": "{value}%",
-                        "tt_label": "{point.x}: {point.y:.2f}%",
-                        "xDecimals": False,
-                        "smooth_points": 300,
-                        "smooth_points_sumcounts": False,
-                    },
-                ),
-            )
-
-        # Base quality plot
-        try:
-            self.add_section(
-                name="Sequence Quality",
-                anchor="fastp-seq-quality",
-                description="Average sequencing quality over each base of all reads.",
-                plot=self.fastp_read_qual_plot(),
-            )
-        except RuntimeError:
-            log.debug("No data found for 'Sequence Quality' plot")
-
-        # GC content plot
-        try:
-            self.add_section(
-                name="GC Content",
-                anchor="fastp-seq-content-gc",
-                description="Average GC content over each base of all reads.",
-                plot=self.fastp_read_gc_plot(),
-            )
-        except RuntimeError:
-            log.debug("No data found for 'GC Content' plot")
 
         # N content plot
         try:
@@ -149,7 +75,7 @@ class MultiqcModule(BaseMultiqcModule):
         except RuntimeError:
             log.debug("No data found for 'N content' plot")
 
-    def parse_fastp_log(self, f):
+    def parse_anglerfish_json(self, f):
         """Parse the JSON output from fastp and save the summary statistics"""
         try:
             parsed_json = json.load(f["f"])
