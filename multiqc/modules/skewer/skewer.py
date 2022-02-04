@@ -148,6 +148,12 @@ class MultiqcModule(BaseMultiqcModule):
         for k in stats:
             self.skewer_data[s_name][k] = int(data[k])
 
-        self.skewer_data[s_name]["pct_avail"] = 100.0 * float(data["r_avail"]) / float(data["r_processed"]) if data["r_processed"] else 0
-        self.skewer_data[s_name]["pct_trimmed"] = 100.0 * float(data["r_trimmed"]) / float(data["r_avail"]) if data["r_avail"] else 0
-        self.skewer_data[s_name]["pct_untrimmed"] = 100.0 * float(data["r_untrimmed"]) / float(data["r_avail"]) if data["r_avail"] else 0
+        self.skewer_data[s_name]["pct_avail"] = (
+            100.0 * float(data["r_avail"]) / float(data["r_processed"]) if data["r_processed"] else 0
+        )
+        self.skewer_data[s_name]["pct_trimmed"] = (
+            100.0 * float(data["r_trimmed"]) / float(data["r_avail"]) if data["r_avail"] else 0
+        )
+        self.skewer_data[s_name]["pct_untrimmed"] = (
+            100.0 * float(data["r_untrimmed"]) / float(data["r_avail"]) if data["r_avail"] else 0
+        )
