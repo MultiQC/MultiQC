@@ -81,6 +81,8 @@
   - Fixed bug in the `junction_saturation` submodule ([#1582](https://github.com/ewels/MultiQC/issues/1582))
   - Fixed bug where empty files caused `tin` submodule to crash ([#1604](https://github.com/ewels/MultiQC/issues/1604))
   - Fix bug in `read_distribution` for samples with zero tags ([#1571](https://github.com/ewels/MultiQC/issues/1571))
+- **Skewer**
+  - Fix `ZeroDivisionError` if no available reads are found ([#1622](https://github.com/ewels/MultiQC/issues/1622))
 - **Somalier**
   - Plot scaled X depth instead of mean for _Sex_ plot ([#1546](https://github.com/ewels/MultiQC/issues/1546))
 - **VEP**
