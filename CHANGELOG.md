@@ -83,6 +83,8 @@
   - Fixed bug in the `junction_saturation` submodule ([#1582](https://github.com/ewels/MultiQC/issues/1582))
   - Fixed bug where empty files caused `tin` submodule to crash ([#1604](https://github.com/ewels/MultiQC/issues/1604))
   - Fix bug in `read_distribution` for samples with zero tags ([#1571](https://github.com/ewels/MultiQC/issues/1571))
+- **Skewer**
+  - Fix `ZeroDivisionError` if no available reads are found ([#1622](https://github.com/ewels/MultiQC/issues/1622))
 - **Somalier**
   - Plot scaled X depth instead of mean for _Sex_ plot ([#1546](https://github.com/ewels/MultiQC/issues/1546))
 - **VEP**
@@ -791,7 +793,7 @@ Some of these updates are thanks to the efforts of people who attended the [NASP
 
 #### Bug Fixes
 
-- Fix path*filters for top_modules/module_order configuration only selecting if \_all* globs match. It now filters searches that match _any_ glob.
+- Fix path filters for `top_modules/module_order` configuration only selecting if _all_ globs match. It now filters searches that match _any_ glob.
 - Empty sample names from cleaning are now no longer allowed
 - Stop prepend_dirs set in the config from getting clobbered by an unpassed CLI option ([@tsnowlan](https://github.com/tsnowlan))
 - Modules running multiple times now have multiple sets of columns in the General Statistics table again, instead of overwriting one another.
