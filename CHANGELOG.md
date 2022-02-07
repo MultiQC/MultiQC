@@ -791,7 +791,7 @@ Some of these updates are thanks to the efforts of people who attended the [NASP
 
 #### Bug Fixes
 
-- Fix path filters for top_modules/module_order configuration only selecting if \_all globs match. It now filters searches that match _any_ glob.
+- Fix path filters for `top_modules/module_order` configuration only selecting if _all_ globs match. It now filters searches that match _any_ glob.
 - Empty sample names from cleaning are now no longer allowed
 - Stop prepend_dirs set in the config from getting clobbered by an unpassed CLI option ([@tsnowlan](https://github.com/tsnowlan))
 - Modules running multiple times now have multiple sets of columns in the General Statistics table again, instead of overwriting one another.
