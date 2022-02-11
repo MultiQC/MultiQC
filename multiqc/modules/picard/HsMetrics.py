@@ -302,7 +302,8 @@ def _add_target_bases(data):
     data_clean = defaultdict(dict)
     for s in data:
         for h in data[s]:
-            if h.startswith("PCT_TARGET"):
+            # Exclude PCT_TARGET values that are zero
+            if h.startswith("PCT_TARGET") and data[s][h]:
                 data_clean[s][int(h.replace("PCT_TARGET_BASES_", "")[:-1])] = data[s][h] * 100.0
 
     pconfig = {
