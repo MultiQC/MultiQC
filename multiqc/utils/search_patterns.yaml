@@ -372,7 +372,7 @@ kaiju:
 kallisto:
   contents: "[quant] finding pseudoalignments for the reads"
   shared: true
-nanostat:
+nanopack:
   max_filesize: 4096
   contents_re: "General summary:\\s*"
   num_lines: 1

@@ -513,7 +513,7 @@ module_order:
   - qc3C:
       module_tag:
         - hi-c
-  - nanostat:
+  - nanopack:
       module_tag:
         - DNA
         - RNA

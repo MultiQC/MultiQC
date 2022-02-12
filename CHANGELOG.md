@@ -12,7 +12,7 @@ _nothing yet.._
 
 ### Module updates
 
-_nothing yet.._
+- Rename NanoStat to NanoPack and adjust text content
 
 ## [MultiQC v1.12](https://github.com/ewels/MultiQC/releases/tag/v1.12) - 2022-02-08
 

@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 
-""" MultiQC module to parse output from NanoStat """
+""" MultiQC module to parse output from NanoPack Tools """
 
 from __future__ import print_function
 from collections import OrderedDict
@@ -17,7 +17,7 @@ log = logging.getLogger(__name__)
 
 
 class MultiqcModule(BaseMultiqcModule):
-    """NanoStat module"""
+    """NanoPack module"""
 
     _KEYS_NUM = [
         "Active channels",
@@ -47,47 +47,47 @@ class MultiqcModule(BaseMultiqcModule):
         # Initialise the parent object
         super(MultiqcModule, self).__init__(
             name="NanoStat",
-            anchor="nanostat",
-            href="https://github.com/wdecoster/nanostat/",
+            anchor="nanopack",
+            href="https://github.com/wdecoster/nanopack/",
             info="various statistics from a long read sequencing dataset in fastq, bam or sequencing summary format.",
             doi="10.1093/bioinformatics/bty149",
         )
 
         # Find and load any NanoStat reports
-        self.nanostat_data = dict()
+        self.nanopack_data = dict()
         self.has_aligned = False
         self.has_seq_summary = False
         self.has_fastq = False
         self.has_fasta = False
-        for f in self.find_log_files("nanostat", filehandles=True):
-            self.parse_nanostat_log(f)
+        for f in self.find_log_files("nanopack", filehandles=True):
+            self.parse_nanopack_log(f)
 
         # Filter to strip out ignored sample names
-        self.nanostat_data = self.ignore_samples(self.nanostat_data)
+        self.nanopack_data = self.ignore_samples(self.nanopack_data)
 
-        if len(self.nanostat_data) == 0:
+        if len(self.nanopack_data) == 0:
             raise UserWarning
 
-        log.info("Found {} reports".format(len(self.nanostat_data)))
+        log.info("Found {} reports".format(len(self.nanopack_data)))
 
         # Write parsed report data to a file
-        self.write_data_file(self.nanostat_data, "multiqc_nanostat")
+        self.write_data_file(self.nanopack_data, "multiqc_nanopack")
 
         # Stats Tables
         if self.has_aligned:
-            self.nanostat_stats_table("aligned")
+            self.nanopack_stats_table("aligned")
         if self.has_seq_summary:
-            self.nanostat_stats_table("seq summary")
+            self.nanopack_stats_table("seq summary")
         if self.has_fastq:
-            self.nanostat_stats_table("fastq")
+            self.nanopack_stats_table("fastq")
         if self.has_fasta:
-            self.nanostat_stats_table("fasta")
+            self.nanopack_stats_table("fasta")
 
         # Quality distribution Plot
         if self.has_aligned or self.has_seq_summary or self.has_fastq:
             self.reads_by_quality_plot()
 
-    def parse_nanostat_log(self, f):
+    def parse_nanopack_log(self, f):
         """Parse output from NanoStat
 
         Note: Tool can be run in two different modes, giving two variants to the output.
@@ -131,16 +131,16 @@ class MultiqcModule(BaseMultiqcModule):
         out_d = {f"{k}_{stat_type}": v for k, v in nano_stats.items()}
 
         # Warn if we find overlapping data for the same sample
-        if f["s_name"] in self.nanostat_data:
+        if f["s_name"] in self.nanopack_data:
             # Only if the same has some keys in common
-            if not set(self.nanostat_data[f["s_name"]].keys()).isdisjoint(out_d.keys()):
+            if not set(self.nanopack_data[f["s_name"]].keys()).isdisjoint(out_d.keys()):
                 log.debug("Duplicate sample data found! Overwriting: {}".format(f["s_name"]))
 
-        self.nanostat_data.setdefault(f["s_name"], {}).update(out_d)
+        self.nanopack_data.setdefault(f["s_name"], {}).update(out_d)
 
         self.add_data_source(f)
 
-    def nanostat_stats_table(self, stat_type):
+    def nanopack_stats_table(self, stat_type):
         """Take the parsed stats from the Kallisto report and add it to the
         basic stats table at the top of the report"""
 
@@ -237,7 +237,7 @@ class MultiqcModule(BaseMultiqcModule):
         # Table config
         table_config = {
             "namespace": "NanoStat",
-            "id": "nanostat_{}_stats_table".format(stat_type.replace(" ", "_")),
+            "id": "nanopack_{}_stats_table".format(stat_type.replace(" ", "_")),
             "table_title": f"NanoStat {stat_type}",
         }
 
@@ -254,9 +254,9 @@ class MultiqcModule(BaseMultiqcModule):
 
         self.add_section(
             name="{} stats".format(stat_type.replace("_", " ").capitalize()),
-            anchor="nanostat_{}_stats".format(stat_type.replace(" ", "_")),
+            anchor="nanopack_{}_stats".format(stat_type.replace(" ", "_")),
             description=description,
-            plot=table.plot(self.nanostat_data, headers, table_config),
+            plot=table.plot(self.nanopack_data, headers, table_config),
         )
 
     def reads_by_quality_plot(self):
@@ -281,7 +281,7 @@ class MultiqcModule(BaseMultiqcModule):
             "&gt;Q15": "Q12-15",
             "rest": "&gt;Q15",
         }
-        for s_name, data_dict in self.nanostat_data.items():
+        for s_name, data_dict in self.nanopack_data.items():
             reads_total, stat_type = _get_total_reads(data_dict)
             if stat_type == "fasta":
                 log.debug(f"Sample '{s_name}' has no quality metrics - excluded from quality plot")
@@ -316,7 +316,7 @@ class MultiqcModule(BaseMultiqcModule):
 
         # Config for the plot
         config = {
-            "id": "nanostat_quality_dist",
+            "id": "nanopack_quality_dist",
             "title": "NanoStat: Reads by quality",
             "ylab": "# Reads",
             "cpswitch_counts_label": "Number of Reads",
@@ -325,7 +325,7 @@ class MultiqcModule(BaseMultiqcModule):
         # Add the report section
         self.add_section(
             name="Reads by quality",
-            anchor=f"nanostat_read_qualities",
+            anchor=f"nanopack_read_qualities",
             description="Read counts categorised by read quality (phred score).",
             helptext="""
                 Sequencing machines assign each generated read a quality score using the
