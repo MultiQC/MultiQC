@@ -46,10 +46,10 @@ class MultiqcModule(BaseMultiqcModule):
 
         # Initialise the parent object
         super(MultiqcModule, self).__init__(
-            name="NanoStat",
+            name="NanoPack",
             anchor="nanopack",
             href="https://github.com/wdecoster/nanopack/",
-            info="various statistics from a long read sequencing dataset in fastq, bam or sequencing summary format.",
+            info="reports various statistics from a long read sequencing dataset in FASTQ, BAM or sequencing summary format.",
             doi="10.1093/bioinformatics/bty149",
         )
 
@@ -141,8 +141,7 @@ class MultiqcModule(BaseMultiqcModule):
         self.add_data_source(f)
 
     def nanopack_stats_table(self, stat_type):
-        """Take the parsed stats from the Kallisto report and add it to the
-        basic stats table at the top of the report"""
+        """Create NanoPack Stats table"""
 
         headers_base = OrderedDict()
         headers_base["Active channels"] = {
@@ -236,26 +235,15 @@ class MultiqcModule(BaseMultiqcModule):
 
         # Table config
         table_config = {
-            "namespace": "NanoStat",
+            "namespace": "NanoPack",
             "id": "nanopack_{}_stats_table".format(stat_type.replace(" ", "_")),
-            "table_title": f"NanoStat {stat_type}",
+            "table_title": f"NanoPack {stat_type}",
         }
 
         # Add the report section
-        description = ""
-        if stat_type == "fasta":
-            description = "NanoStat statistics from FASTA files."
-        if stat_type == "fastq":
-            description = "NanoStat statistics from FastQ files."
-        if stat_type == "aligned":
-            description = "NanoStat statistics from BAM files."
-        if stat_type == "seq summary":
-            description = "NanoStat statistics from albacore or guppy summary files."
-
         self.add_section(
-            name="{} stats".format(stat_type.replace("_", " ").capitalize()),
+            name="Summary Statistics",
             anchor="nanopack_{}_stats".format(stat_type.replace(" ", "_")),
-            description=description,
             plot=table.plot(self.nanopack_data, headers, table_config),
         )
 
@@ -317,7 +305,7 @@ class MultiqcModule(BaseMultiqcModule):
         # Config for the plot
         config = {
             "id": "nanopack_quality_dist",
-            "title": "NanoStat: Reads by quality",
+            "title": "NanoPack: Reads by quality",
             "ylab": "# Reads",
             "cpswitch_counts_label": "Number of Reads",
         }
@@ -326,15 +314,13 @@ class MultiqcModule(BaseMultiqcModule):
         self.add_section(
             name="Reads by quality",
             anchor=f"nanopack_read_qualities",
-            description="Read counts categorised by read quality (phred score).",
+            description="Read counts categorised by read quality (Phred score).",
             helptext="""
                 Sequencing machines assign each generated read a quality score using the
                 [Phred scale](https://en.wikipedia.org/wiki/Phred_quality_score).
                 The phred score represents the liklelyhood that a given read contains errors.
-                So, high quality reads have a high score.
+                High quality reads have a high score.
 
-                Data may come from NanoPlot reports generated with sequencing summary files or alignment stats.
-                If a sample has data from both, the sequencing summary is preferred.
             """,
             plot=bargraph.plot(bar_data, cats, config),
         )
