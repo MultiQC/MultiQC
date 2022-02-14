@@ -303,11 +303,11 @@ def _extract_coverage(field):
 
     PCT_TARGET_BASES_250X -> 250
     """
-    return int(field.split('_')[-1][:-1])
+    return int(field.split("_")[-1][:-1])
 
 
 def _pct_target_to_include(data):
-    """ Determine which PCT_TARGET_BASES_250X to include in the plot
+    """Determine which PCT_TARGET_BASES_250X to include in the plot
 
     In picard >2.23.8, the range goes up to 100k, which gives a distorted plot
     for regular coverage sequencing. We therefore only include values up to the
