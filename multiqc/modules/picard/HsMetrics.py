@@ -298,13 +298,42 @@ def _get_table_headers(data):
     return headers
 
 
+def _extract_coverage(field):
+    """Extract coverage from header name
+
+    PCT_TARGET_BASES_250X -> 250
+    """
+    return int(field.split('_')[-1][:-1])
+
+
+def _pct_target_to_include(data):
+    """ Determine which PCT_TARGET_BASES_250X to include in the plot
+
+    In picard >2.23.8, the range goes up to 100k, which gives a distorted plot
+    for regular coverage sequencing. We therefore only include values up to the
+    highest coverage present in the data.
+    """
+    included = set()
+    for sample in data:
+        for header, value in data[sample].items():
+            # If value is nonzero, we store the coverage as an integer, so we
+            # can sort later
+            if header.startswith("PCT_TARGET_BASES_") and value:
+                included.add(_extract_coverage(header))
+
+    # Next we sort, and restore the original header format
+    return {f"PCT_TARGET_BASES_{x}X" for x in sorted(included)}
+
+
 def _add_target_bases(data):
     data_clean = defaultdict(dict)
+    # Determine the fields to include.
+    to_include = _pct_target_to_include(data)
     for s in data:
-        for h in data[s]:
-            # Exclude PCT_TARGET values that are zero
-            if h.startswith("PCT_TARGET") and data[s][h]:
-                data_clean[s][int(h.replace("PCT_TARGET_BASES_", "")[:-1])] = data[s][h] * 100.0
+        for h in to_include:
+            # Get the coverage, set to 0 if not defined
+            cov = data[s].get(h, 0)
+            data_clean[s][_extract_coverage(h)] = cov * 100.0
 
     pconfig = {
         "id": "picard_percentage_target_bases",
@@ -313,7 +342,7 @@ def _add_target_bases(data):
         "ylab": "Pct of bases",
         "ymax": 100,
         "ymin": 0,
-        "xmin": 0,
+        "xLog": True,
         "tt_label": "<b>{point.x}X</b>: {point.y:.2f}%",
     }
     return {
