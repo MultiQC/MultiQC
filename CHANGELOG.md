@@ -4,7 +4,7 @@
 
 ### MultiQC updates
 
-_nothing yet.._
+- flat line plots respect xLog: True and yLog: True in config ([#1631](https://github.com/ewels/MultiQC/issues/1631))
 
 ### New Modules
 
