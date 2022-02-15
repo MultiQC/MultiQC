@@ -324,7 +324,6 @@ def matplotlib_linegraph(plotdata, pconfig=None):
     """
     if pconfig is None:
         pconfig = {}
-
     # Plot group ID
     if pconfig.get("id") is None:
         pconfig["id"] = "mqc_mplplot_" + "".join(random.sample(letters, 10))
@@ -460,6 +459,12 @@ def matplotlib_linegraph(plotdata, pconfig=None):
                     d["data"], label=d["name"], color=d.get("color", default_colors[cidx]), linewidth=1, marker=None
                 )
 
+        # Log scale
+        if pconfig.get("xLog", False):
+            axes.set_xscale('log')
+        if pconfic.get("yLog", False):
+            axes.set_yscale('log')       
+ 
         # Tidy up axes
         axes.tick_params(
             labelsize=pconfig.get("labelSize", 8), direction="out", left=False, right=False, top=False, bottom=False
