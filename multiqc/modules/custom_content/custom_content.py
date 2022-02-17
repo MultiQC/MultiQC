@@ -172,9 +172,10 @@ def custom_module_classes():
                         s_name = f["s_name"]
 
                     # Guess c_id if no information known
-                    if k == "custom_content" and not m_config.get("id"):
+                    if k == "custom_content":
                         c_id = s_name
-                        m_config["id"] = c_id
+                        if not m_config.get("id"):
+                            m_config["id"] = c_id
 
                     # Merge with config from a MultiQC config file if we have it
                     m_config.update(mod_cust_config.get(c_id, {}))
