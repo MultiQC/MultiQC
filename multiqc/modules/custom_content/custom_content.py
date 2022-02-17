@@ -172,7 +172,7 @@ def custom_module_classes():
                         s_name = f["s_name"]
 
                     # Guess c_id if no information known
-                    if k == "custom_content":
+                    if k == "custom_content" and not m_config.get("id"):
                         c_id = s_name
                         m_config["id"] = c_id
 
