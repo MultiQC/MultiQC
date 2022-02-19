@@ -4,7 +4,7 @@
 
 ### MultiQC updates
 
-_nothing yet.._
+- Major spruce of the command line help, using the new [rich-click](https://github.com/ewels/rich-click) package
 
 ### New Modules
 
