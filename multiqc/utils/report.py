@@ -14,11 +14,13 @@ import lzstring
 import mimetypes
 import os
 import re
+import rich
 import rich.progress
 import time
 import yaml
 
 from multiqc import config
+from multiqc.utils import util_functions
 
 logger = config.logger
 
@@ -285,6 +287,13 @@ def get_filelist(run_module_names):
                     searchfiles.append([fn, root])
 
     # Search through collected files
+    console = rich.console.Console(
+        stderr=True,
+        highlight=False,
+        force_terminal=util_functions.force_term_colors(),
+        force_interactive=False if config.no_ansi else None,
+        color_system=None if config.no_ansi else "auto",
+    )
     progress_obj = rich.progress.Progress(
         "[blue]|[/]      ",
         rich.progress.SpinnerColumn(),
@@ -293,6 +302,7 @@ def get_filelist(run_module_names):
         "[progress.percentage]{task.percentage:>3.0f}%",
         "[green]{task.completed}/{task.total}",
         "[dim]{task.fields[s_fn]}",
+        console=console,
     )
     with progress_obj as progress:
         mqc_task = progress.add_task("searching", total=len(searchfiles), s_fn="")
