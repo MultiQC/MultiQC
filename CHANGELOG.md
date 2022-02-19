@@ -5,6 +5,7 @@
 ### MultiQC updates
 
 - Major spruce of the command line help, using the new [rich-click](https://github.com/ewels/rich-click) package
+- Drop some of the Python 2k compatability code (eg. custom requirements)
 
 ### New Modules
 
