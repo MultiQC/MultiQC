@@ -26,7 +26,6 @@ from .utils import (
     edges_to_intervals,
     cumsums_to_rangesums,
     total_coverage,
-    get_chromsizes,
 )
 
 
