@@ -49,27 +49,119 @@ def cumsums_to_rangesums(cumsums, total):
     return list(_cumcsums[:-1] - _cumcsums[1:])
 
 
-# this should be based on chromosome sizes, not an arbitrary number
-def contact_areas(distbins, scaffold_length):
+def _contact_area(min_dists, max_dists, reg_len):
     """
-    calculate possible number of pairwise contacts for a given
-    range of genomic distances given some scaffold length
+    calculate possible number of pairwise contacts "contact area" for
+    a range of genomic distances between 'min_dist', 'max_dist' and
+    assuming region length, 'reg_len'.
+
+    min      max     reg_len
+    * * * * * * * * * *
+      *       *       *
+        *  con- *     *  'inner'
+          *  tact *   *
+            *  area * *
+              *       *
+                *     *  'outer'
+                  *   *
+                    * *
+                      *
+    'contact_area' is an area of a trapezoid-shaped section of a right
+    triangle of size 'reg_len'.
+    The right triangle represents all contacts within a region, and
+    a trapezod section represents contacts within the region, that are
+    between 'min_dist' and 'max_dist' in size.
+
+    contact_area = outer_area - inner_area
+
+    Paramteres
+    ----------
+    min_dist : float | ndarray
+        lower boundary of genomic distances
+        can be a single value or array
+    max_dist : float | ndarray
+        upper boundary of genomic distances
+        can be a single value or array
+    reg_len: float
+        region size
+    """
+    outer_areas = np.maximum(reg_len - min_dists, 0) ** 2
+    inner_areas = np.maximum(reg_len - max_dists, 0) ** 2
+    return 0.5 * (outer_areas - inner_areas)
+
+
+def contact_areas_genomewide(distbins, scaffold_sizes):
+    """
+    calculate possible number of pairwise contacts "contact areas"
+    for a given range of genomic distances given some collection
+    of scaffold sizes.
+
+    "contact_areas" are calculated using all scaffold sizes, i.e.
+    genome-wide, and assuming cis-interactions only.
 
     Paramteres
     ----------
     distbins : ndarray
-        an array of genomic distances
-    scaffold_length: float
+        an array of genomic distances, that define
+        edges of the distance bins.
+    scaffold_sizes: [float]
         length of a scaffold (should be chromsizes)
     """
     distbins = distbins.astype(float)
-    scaffold_length = float(scaffold_length)
-    outer_areas = np.maximum(scaffold_length - distbins[:-1], 0) ** 2
-    inner_areas = np.maximum(scaffold_length - distbins[1:], 0) ** 2
-    return 0.5 * (outer_areas - inner_areas)
+    scaffold_sizes = scaffold_sizes.astype(float)
+    scaffold_areas = np.zeros(len(distbins)-1)
+    for scaffold_len in scaffold_sizes:
+        _areas = _contact_area(
+            min_dists=distbins[:-1],
+            max_dists=distbins[1:],
+            reg_len=scaffold_len
+        )
+        scaffold_areas = scaffold_areas + _areas
+    return scaffold_areas
+
+
+def total_coverage(interaction_matrix, chroms):
+    """
+    Calculate genomic read coverage for every chromosome:
+    C_i = V_ii + 0.5*sum(V_ij) + 0.5*sum(V_ji)
+
+    Parameters:
+    ----------
+    interaction_matrix: ([chrom1], [chrom2], [counts]) | \
+                         {"chrom1":[str], "chrom2":[str], "counts":[int]}
+        Matrix of inter- and intra-chromosomal interactions
+        in a COO-like sparse format.
+    chroms: [str]
+        iterable of chromosome names
+    norm: [int]
+        normalization factor for the coverage
+
+    Returns
+    -------
+    coverage: [float]
+        List of read coverage values for chromosomes in chroms.
+    """
+    # unpack interaction matrix
+    if isinstance(interaction_matrix, tuple):
+        chrom1, chrom2, counts = interaction_matrix
+    elif isinstance(interaction_matrix, dict):
+        chrom1 = interaction_matrix["chrom1"]
+        chrom2 = interaction_matrix["chrom2"]
+        counts = interaction_matrix["counts"]
+    else:
+        raise ValueError("input interaction matrix must tuple of 3 or dict")
+
+    coverage = []
+    for i, chrom in enumerate(chroms):
+        _cov = counts[chrom1 == chrom].sum() + counts[chrom2 == chrom].sum()
+        coverage.append(0.5*_cov)
+
+    return coverage
+
 
 class ParseError(Exception):
     pass
+
 
 def read_stats_from_file(file_handle):
     """
@@ -101,8 +193,9 @@ def read_stats_from_file(file_handle):
     _dist_bins = (np.r_[0,
         np.round(10**np.arange(min_log10_dist, max_log10_dist+0.001,
                                log10_dist_bin_step))
-        .astype(np.int)]
+        .astype(np.int), +np.inf]
     )
+
 
     def get_range_index_from_range(distance_range, dist_bins=_dist_bins):
         """
@@ -160,7 +253,7 @@ def read_stats_from_file(file_handle):
     # final data structure for this info
     dist_freq_tmp = OrderedDict()
     for pair_orientation in ['+-', '-+', '--', '++']:
-        dist_freq_tmp[pair_orientation] = np.zeros_like(_dist_bins)
+        dist_freq_tmp[pair_orientation] = np.zeros(len(_dist_bins)-1)
 
 
     # pack distance bins along with dist_freq at least for now

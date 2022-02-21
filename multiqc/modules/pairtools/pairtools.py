@@ -16,13 +16,18 @@ import os
 import yaml
 import numpy as np
 from copy import copy
+from random import choice
 from itertools import combinations_with_replacement, zip_longest
 
-from .utils import read_stats_from_file, \
-                   contact_areas, \
-                   genomic_dist_human_str, \
-                   edges_to_intervals, \
-                   cumsums_to_rangesums
+from .utils import (
+    read_stats_from_file,
+    contact_areas_genomewide,
+    genomic_dist_human_str,
+    edges_to_intervals,
+    cumsums_to_rangesums,
+    total_coverage,
+    get_chromsizes,
+)
 
 
 # Initialise the logger
@@ -57,7 +62,7 @@ class MultiqcModule(BaseMultiqcModule):
         self.pairtools_stats = self.ignore_samples(self.pairtools_stats)
 
         if len(self.pairtools_stats) == 0:
-            raise UserWarning
+            raise UserWarning("No reports to use.")
 
         log.info(f"Found {len(self.pairtools_stats)} reports")
 
@@ -67,6 +72,39 @@ class MultiqcModule(BaseMultiqcModule):
         # load various parameters stored in a separate yml (e.g. color schemes)
         with open(os.path.join(os.path.dirname(__file__), 'assets', 'params', 'params.yml'), 'r') as fp:
             self.params = yaml.safe_load(fp)
+
+        #############################################
+        #############################################
+        # should add several cross-sample checks
+        #############################################
+        #############################################
+        # e.g. check if all sets of distances are identical,
+        # by comparing them all to the last one: (s_name, sorted_dists)
+        cis_dists_mismatch = False
+        chromsizes_provided = True
+        chromsizes_mismatch = False
+        if len(self.pairtools_stats) > 1:
+            random_sample = choice(list(self.pairtools_stats))
+            # check if cis-ranges are same across samples
+            random_dists = self.pairtools_stats[random_sample]["cis_dist"]["dists"]
+            for s_name in self.pairtools_stats:
+                # check is cis_dists (e.g. cis_10kb+) have identical dists across samples
+                # it is [1, 2, 4, 10, 20, 40] as of now in pairtools
+                if self.pairtools_stats[s_name]["cis_dist"]["dists"] != random_dists:
+                    cis_dists_mismatch = True
+                    log.warning(f"Samples {s_name} and {random_sample} have different sets of cis-ranges,\n"
+                                 "pairs by cis range will not be reported !")
+            # check if chromsizes are the same across samples
+            random_chromsizes = self.pairtools_stats[random_sample]["chromsizes"]
+            for s_name in self.pairtools_stats:
+                if not self.pairtools_stats[s_name]["chromsizes"]:
+                    chromsizes_provided = False
+                elif self.pairtools_stats[s_name]["chromsizes"] != random_chromsizes:
+                    chromsizes_mismatch = True
+                    chromsizes_provided = False
+                    log.warning(f"Samples {s_name} and {random_sample} have different sets of chromsizes.")
+
+
 
         # determine max total reads for general stats:
         self.max_total_reads = 0
@@ -99,14 +137,18 @@ class MultiqcModule(BaseMultiqcModule):
             plot = self.pairs_by_cisrange_trans()
         )
 
-
+        if not chromsizes_provided:
+            nochromsizes_warning = '''**Warning! There are no chromosome sizes detected in the stats files, therefore
+            interaction frequencies are presented without normalization (i.e. raw log-binned counts)**'''
+        else:
+            nochromsizes_warning = ""
         self.add_section (
             name = 'Frequency of interactions as a function of genomic separation',
             anchor = 'scalings-plots',
             description="Frequency of interactions (pre-filtered pairs) as a function"
                         " of genomic separation, known as \"scaling plots\", P(s)."
                         " Click on an individual curve to reveal P(s) for different"
-                        " read pair orientations.",
+                        " read pair orientations." + nochromsizes_warning,
             helptext = '''Short-range cis-pairs are typically enriched in technical artifacts.
             Frequency of interactions for read pairs of different orientations
             ++,+-,-+ and -- (FF, FR, RF, RR) provide insight into these technical artifacts.
@@ -133,15 +175,16 @@ class MultiqcModule(BaseMultiqcModule):
         )
 
 
-        self.add_section (
-            name = 'Pre-filtered pairs grouped by chromosomes',
-            anchor = 'pairs-by-chroms',
-            description="Number of pre-filtered interactions (pairs) within a single chromosome"
-                        " or for a pair of chromosomes.",
-            helptext = '''Numbers of pairs are normalized by the total number of pre-filtered pairs per sample.
-            Number are reported only for chromosomes/pairs that have >1% of pre-filtered pairs.''',
-            plot = self.pairs_by_chrom_pairs()
-        )
+        if chromsizes_provided:
+            self.add_section (
+                name = 'Pre-filtered pairs grouped by chromosomes',
+                anchor = 'pairs-by-chroms',
+                description="Number of pre-filtered interactions (pairs) within a single chromosome"
+                            " or for a pair of chromosomes.",
+                helptext = '''Numbers of pairs are normalized by the total number of pre-filtered pairs per sample.
+                Number are reported only for chromosomes/pairs that have >1% of pre-filtered pairs.''',
+                plot = self.coverage_by_chrom()
+            )
 
 
     def parse_pairtools_stats(self, f):
@@ -325,7 +368,6 @@ class MultiqcModule(BaseMultiqcModule):
             )
 
 
-
     def pairs_with_genomic_separation(self):
         """
         number of cis-pairs with genomic separation
@@ -354,21 +396,19 @@ class MultiqcModule(BaseMultiqcModule):
             for po, po_name in porient_names.items():
                 _summary[po_name] = np.asarray(sample_dist_freq[po]).astype(float)
 
-            # this is wrong - should be chromsizes based :
             if self.pairtools_stats[s_name]["chromsizes"]:
                 # normalize contacts by distance with the theoretical # of pairs in a range
-                _areas = contact_areas( _dist_bins, scaffold_length=2_000_000_000_000 )
+                sizes = np.fromiter(self.pairtools_stats[s_name]["chromsizes"].values(), dtype=float)
+                _areas = contact_areas_genomewide( _dist_bins, scaffold_sizes=sizes )
                 for cat in data_cats:
-                    _summary[cat] = _summary[cat]/_areas
+                    _summary[cat] = _summary[cat] / _areas
 
             # assign geometric mean distance to every distance interval
-            _dist_bins_geom = np.sqrt(_dist_bins[1:]*_dist_bins[:-1])
+            _dist_bins_geom = np.sqrt(_dist_bins[:-1]*_dist_bins[1:])
             # fill in the data for XY-line plotting
             # i.e. dict by samples of dicts by dist (X), of (normalized) counts (Y):
             for cat in data_cats:
-                _data[cat][s_name] = dict(zip(_dist_bins_geom[1:], _summary[cat][2:]))
-
-                log.critical(_dist_bins_geom)
+                _data[cat][s_name] = dict(zip(_dist_bins_geom[1:-1], _summary[cat][1:]))
 
         pconfig = {
             'id': 'broom_plot',
@@ -376,7 +416,6 @@ class MultiqcModule(BaseMultiqcModule):
             'xlab': 'Genomic separation (bp)',
             'xLog': True,
             'yLog': True,
-            'ymin': 10,
             'data_labels': [{'name': 'P(s)', 'ylab': 'frequency of interactions'},
                             {'name': 'FF', 'ylab': 'frequency of interactions'},
                             {'name': 'FR', 'ylab': 'frequency of interactions'},
@@ -388,85 +427,47 @@ class MultiqcModule(BaseMultiqcModule):
         return linegraph.plot([_data[cat] for cat in data_cats], pconfig=pconfig)
 
 
-    # chrom_freq/chr1/chrX ...
-    def pairs_by_chrom_pairs(self):
-        """ number of pairs by chromosome pairs """
-
-        # should probably allow for ~100 chromsomes on display, truncate based on size or counts ...
+    # coverage per chromosome per sample - a heatmap
+    def coverage_by_chrom(self):
+        """
+        number of pairs by chromosome pairs
+        """
 
         _report_field = "chrom_freq"
 
-        # perhaps we should prune list of
-        # inter chromosomal interactions and go from there:
-        def prune_dhrom_freq(chrom_freq_dict, threshold):
-            return {k:v for k,v in chrom_freq_dict.items() if v > threshold }
-
-        # infer list of chromosomes (beware of scaffolds):
-        # tuple(key_fields)
-        _chromset = set()
-        _data_pruned = dict()
+        the_data = []
         for s_name in self.pairtools_stats:
-            pairs_min = 0.01*self.pairtools_stats[s_name]['cis']
-            _chrom_freq_sample = \
-                self.pairtools_stats[s_name][_report_field]
-            _data_pruned[s_name] = \
-                prune_dhrom_freq(_chrom_freq_sample,pairs_min)
-            # unzip list of tuples:
-            _chroms1, _chroms2 = list(
-                    zip(*_data_pruned[s_name].keys())
-                )
-            _chromset |= set(_chroms1)
-            _chromset |= set(_chroms2)
-        # done:
-        _chroms = sorted(list(_chromset))
+            # output not more than 100 chroms, sorted on size ...
+            if len(self.pairtools_stats[s_name]["chromsizes"]):
+                all_chroms = list(self.pairtools_stats[s_name]["chromsizes"])
+                sizes = list(self.pairtools_stats[s_name]["chromsizes"].values())
+            else:
+                # returning empty
+                return heatmap.plot([])
+            # show first 100 chroms only ...
+            cov_chroms = all_chroms[:100]
+            chrom_sizes = sizes[:100]
 
-        # Construct a data structure for the plot
-        _data = dict()
-        for s_name in self.pairtools_stats:
-            pairs_min = 0.01*self.pairtools_stats[s_name]['cis']
-            pairs_tot = self.pairtools_stats[s_name]['cis']+self.pairtools_stats[s_name]['trans']
-            _data[s_name] = dict()
-            _chrom_freq_sample = \
-                _data_pruned[s_name]
-            # go over chroms:
-            for c1,c2 in combinations_with_replacement( _chroms, 2):
-                # record the chromosome combination:
-                _chrom_combo = (c1,c2)
-                # _num_pairs calculations:
-                if (c1,c2) in _chrom_freq_sample:
-                    _num_pairs = _chrom_freq_sample[(c1,c2)]
-                elif (c2,c1) in _chrom_freq_sample:
-                    _num_pairs = _chrom_freq_sample[(c2,c1)]
-                    # _chrom_combo = (c2,c1)
-                else:
-                    _num_pairs = 0
-                # let's filter by # of pairs - by doing some masking ...
-                if _num_pairs < pairs_min:
-                    _num_pairs = 0
-                else:
-                    # we'll try to normalize it afterwards ...
-                    _num_pairs /= pairs_tot
-                    # pass
-                _data[s_name][_chrom_combo] = _num_pairs
+            tot_contact = self.pairtools_stats[s_name]['total_nodups']/self.max_total_reads
+            coverage = total_coverage(self.pairtools_stats[s_name]["chrom_freq"], cov_chroms)
+            # normalize coverage by chromsizes and total nodup interaction per sample
+            coverage = [c/(s*tot_contact) for c,s in zip(coverage, sizes)]
 
-        # now we need to filter 0 cells ...
-        # prepare for the heatmap:
-        xcats = sorted([ (c1, c2) for c1, c2 in combinations_with_replacement( _chroms, 2) ])
-        xcats_names = [f"{c1}-{c2}" for c1,c2 in xcats]
-        # try samples as x-category ...
-        ycats = sorted(_data)
-        the_data = [ [ _data[s][k] for k in xcats ] for s in ycats ]
+            # [ [ _data[s][k] for k in xcats ] for s in ycats ]
+            the_data.append(coverage)
 
+        pconfig = {
+            'square': False,
+            'xcats_samples': False,
+            'ycats_samples': True,
+        }
 
-        # check if there are any zeros in the column (i.e. for a given chrom pair) ...
-        mask = np.all(the_data, axis=0)
-        the_data_filt = np.asarray(the_data)[:,mask]
-        # # mean over columns to sort ...
-        sorted_idx = the_data_filt.mean(axis=0).argsort()
         return heatmap.plot(
-                the_data_filt[:,sorted_idx].tolist(),
-                np.array(xcats_names)[mask][sorted_idx].tolist(),
-                ycats)#, pconfig)
+                the_data,
+                xcats=cov_chroms,
+                ycats=list(self.pairtools_stats),
+                pconfig=pconfig,
+            )
 
 
     def pairtools_general_stats(self):
