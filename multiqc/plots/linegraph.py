@@ -461,10 +461,10 @@ def matplotlib_linegraph(plotdata, pconfig=None):
 
         # Log scale
         if pconfig.get("xLog", False):
-            axes.set_xscale('log')
+            axes.set_xscale("log")
         if pconfic.get("yLog", False):
-            axes.set_yscale('log')       
- 
+            axes.set_yscale("log")
+
         # Tidy up axes
         axes.tick_params(
             labelsize=pconfig.get("labelSize", 8), direction="out", left=False, right=False, top=False, bottom=False
