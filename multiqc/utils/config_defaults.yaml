@@ -41,6 +41,7 @@ plots_dir_name: "multiqc_plots"
 data_format: "tsv"
 module_tag: []
 force: false
+no_ansi: false
 prepend_dirs: false
 prepend_dirs_depth: 0
 prepend_dirs_sep: " | "
