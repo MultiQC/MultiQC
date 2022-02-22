@@ -4,7 +4,9 @@
 
 ### MultiQC updates
 
-- flat line plots respect xLog: True and yLog: True in config ([#1631](https://github.com/ewels/MultiQC/issues/1631))
+- Major spruce of the command line help, using the new [rich-click](https://github.com/ewels/rich-click) package
+- Drop some of the Python 2k compatability code (eg. custom requirements)
+- Matplotlib line plots now respect `xLog: True` and `yLog: True` in config ([#1631](https://github.com/ewels/MultiQC/issues/1631))
 
 ### New Modules
 

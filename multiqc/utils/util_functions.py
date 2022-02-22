@@ -128,3 +128,12 @@ def view_all_tags(ctx, param, value):
         for ttgs in avail_tags[t]:
             print("   - {}".format(ttgs))
     ctx.exit()
+
+
+def force_term_colors():
+    """
+    Check if any environment variables are set to force Rich to use coloured output
+    """
+    if os.getenv("GITHUB_ACTIONS") or os.getenv("FORCE_COLOR") or os.getenv("PY_COLORS"):
+        return True
+    return None
