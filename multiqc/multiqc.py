@@ -356,7 +356,6 @@ def run(
         stderr=True,
         highlight=False,
         force_terminal=util_functions.force_term_colors(),
-        force_interactive=False if no_ansi else None,
         color_system=None if no_ansi else "auto",
     )
     console.print(
@@ -720,7 +719,6 @@ def run(
             console = rich.console.Console(
                 stderr=True,
                 force_terminal=util_functions.force_term_colors(),
-                force_interactive=False if no_ansi else None,
                 color_system=None if no_ansi else "auto",
             )
             console.print(
