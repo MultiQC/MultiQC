@@ -298,6 +298,17 @@ For example, the GATK module has a section with the title _"Compare Overlap"_. W
 in the report's left hand side navigation, the web browser URL has `#gatk-compare-overlap`
 appended. Here, you would add `gatk-compare-overlap` to the `remove_sections` config.
 
+Finally, you can prevent MultiQC from finding the files for a module or submodule by customising
+its search pattern. For example, to skip Picard Base Calling metrics, you could use the following:
+
+```yaml
+sp:
+  picard/collectilluminabasecallingmetrics:
+    skip: true
+```
+
+The search pattern identifiers can be found in the documentation below for each module.
+
 #### Removing General Statistics
 
 The General Statistics is a bit of a special case in MultiQC, but there is added code to make it
@@ -556,9 +567,24 @@ The columns are organised by either _namespace_ or table ID, then column ID.
 In the above example, `Samtools` is the namespace in the General Statistics table -
 the text that is at the start of the tooltip. For custom tables, the ID may be easier to use.
 
+### Column titles
+
+Sometimes it may be helpful to adjust the default table column header to display a different title.
+For example when running a module multiple times, or when different modules have columns with similar names.
+
+To do this, use the approach described above to find the column _Group_ and _ID_ and combine with the `table_columns_name` config option.
+For example, the following config will change the General Statistics column for FastQC from _% GC_ to _Percent of bases that are GC_
+
+```yaml
+table_columns_name:
+  FastQC:
+    percent_gc: "Percent of bases that are GC"
+```
+
 ### Conditional formatting
 
-It's possible to highlight values in tables based on their value. This is done using the `table_cond_formatting_rules` config setting. Rules can be applied to every table column, or to specific columns only, using that column's unique ID.
+It's possible to highlight values in tables based on their value. This is done using the `table_cond_formatting_rules` config setting.
+Rules can be applied to every table in the report (`all_columns`), specific tables (table ID), or specific columns (column ID).
 
 The default rules are as follows:
 
@@ -576,7 +602,9 @@ table_cond_formatting_rules:
       - s_eq: "false"
 ```
 
-These make any table cells that match the string `pass` or `true` have text with a green background, orange for `warn`, red for `fail` and so on. There can be multiple tests for each style of formatting - if there is a match for any, it will be applied. The following comparison operators are available:
+These make any table cells in the report that match the string `pass` or `true` have text with a green background, orange for `warn`, red for `fail` and so on.
+There can be multiple tests for each style of formatting - if there is a match for any, it will be applied.
+The following comparison operators are available:
 
 - `s_eq` - String exactly equals (case insensitive)
 - `s_contains` - String contains (case insensitive)
@@ -586,7 +614,22 @@ These make any table cells that match the string `pass` or `true` have text with
 - `gt` - Value is greater than
 - `lt` - Value is less than
 
-To have matches for a specific column, use that column's ID instead of `all_columns`. For example:
+To have matches for a specific table or column, use that ID instead of `all_columns`.
+
+For example, for the entire General Stats table:
+
+```yaml
+table_cond_formatting_rules:
+  general_stats_table:
+    pass:
+      - gt: 80
+    warn:
+      - lt: 80
+    fail:
+      - lt: 70
+```
+
+Or for one column in the General Stats table:
 
 ```yaml
 table_cond_formatting_rules:
@@ -601,7 +644,10 @@ table_cond_formatting_rules:
 
 Note that the formatting is done in a specific order - `pass`/`warn`/`fail` by default, so that anything matching both `warn` and `fail` will be formatted as `fail` for example. This can be customised with `table_cond_formatting_colours` (see below).
 
-To find the unique ID for your column, right click a table cell in a report and inspect it's HTML (_Inpsect_ in Chrome). It should look something like `<td class="data-coloured mqc-generalstats-Assigned">`, where the `mqc-generalstats-Assigned` bit is the unique ID.
+To find the unique ID for your table / column, right click it in a report and inspect it's HTML (_Inpsect_ in Chrome).
+
+- Tables should look something like `<table id="general_stats_table" class="table table-condensed mqc_table" data-title="General Statistics">`, where `general_stats_table` is the ID.
+- Table cells should look something like `<td class="data-coloured mqc-generalstats-Assigned">`, where the `mqc-generalstats-Assigned` bit is the unique ID.
 
 > I know this isn't the same method of IDs as above and isn't super easy to do. Sorry!
 

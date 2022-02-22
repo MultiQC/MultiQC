@@ -26,6 +26,7 @@ class MultiqcModule(BaseMultiqcModule):
             href="https://ccb.jhu.edu/software/tophat/",
             info="is a fast splice junction mapper for RNA-Seq reads. "
             "It aligns RNA-Seq reads to mammalian-sized genomes.",
+            doi=["10.1186/gb-2013-14-4-r36", "10.1093/bioinformatics/btp120"],
         )
 
         # Find and load any Tophat reports

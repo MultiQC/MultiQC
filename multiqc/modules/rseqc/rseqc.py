@@ -28,6 +28,7 @@ class MultiqcModule(BaseMultiqcModule):
             href="http://rseqc.sourceforge.net/",
             info="package provides a number of useful modules that can"
             " comprehensively evaluate high throughput RNA-seq data.",
+            doi="10.1093/bioinformatics/bts356",
         )
 
         # Set up class objects to hold parsed data
@@ -66,7 +67,7 @@ class MultiqcModule(BaseMultiqcModule):
                 if n[sm] > 0:
                     log.info("Found {} {} reports".format(n[sm], sm))
             except (ImportError, AttributeError):
-                log.warning("Could not find RSeQC Section '{}'".format(sm))
+                log.error("Could not find RSeQC Section '{}'".format(sm))
 
         # Exit if we didn't find anything
         if sum(n.values()) == 0:

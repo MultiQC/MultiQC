@@ -14,11 +14,13 @@ import lzstring
 import mimetypes
 import os
 import re
+import rich
 import rich.progress
 import time
 import yaml
 
 from multiqc import config
+from multiqc.utils import util_functions
 
 logger = config.logger
 
@@ -32,37 +34,68 @@ try:
 except NameError:
     pass  # Python 3
 
-# Set up global variables shared across modules
-general_stats_data = list()
-general_stats_headers = list()
-general_stats_html = ""
-data_sources = defaultdict(lambda: defaultdict(lambda: defaultdict()))
-plot_data = dict()
-html_ids = list()
-lint_errors = list()
-num_hc_plots = 0
-num_mpl_plots = 0
-saved_raw_data = dict()
-last_found_file = None
-runtimes = {
-    "total": 0,
-    "total_sp": 0,
-    "total_mods": 0,
-    "total_compression": 0,
-    "sp": defaultdict(),
-    "mods": defaultdict(),
-}
-file_search_stats = {
-    "skipped_symlinks": 0,
-    "skipped_not_a_file": 0,
-    "skipped_ignore_pattern": 0,
-    "skipped_filesize_limit": 0,
-    "skipped_no_match": 0,
-}
 
-# Make a dict of discovered files for each seach key
-searchfiles = list()
-files = dict()
+# Set up global variables shared across modules
+# Inside a function so that the global vars are reset if MultiQC is run more than once within a single session / environment
+def init():
+    global general_stats_data
+    general_stats_data = list()
+
+    global general_stats_headers
+    general_stats_headers = list()
+
+    global general_stats_html
+    general_stats_html = ""
+
+    global data_sources
+    data_sources = defaultdict(lambda: defaultdict(lambda: defaultdict()))
+
+    global plot_data
+    plot_data = dict()
+
+    global html_ids
+    html_ids = list()
+
+    global lint_errors
+    lint_errors = list()
+
+    global num_hc_plots
+    num_hc_plots = 0
+
+    global num_mpl_plots
+    num_mpl_plots = 0
+
+    global saved_raw_data
+    saved_raw_data = dict()
+
+    global last_found_file
+    last_found_file = None
+
+    global runtimes
+    runtimes = {
+        "total": 0,
+        "total_sp": 0,
+        "total_mods": 0,
+        "total_compression": 0,
+        "sp": defaultdict(),
+        "mods": defaultdict(),
+    }
+
+    global file_search_stats
+    file_search_stats = {
+        "skipped_symlinks": 0,
+        "skipped_not_a_file": 0,
+        "skipped_ignore_pattern": 0,
+        "skipped_filesize_limit": 0,
+        "skipped_no_match": 0,
+    }
+
+    global searchfiles
+    searchfiles = list()
+
+    # Make a dict of discovered files for each seach key
+    global files
+    files = dict()
 
 
 def get_filelist(run_module_names):
@@ -254,6 +287,13 @@ def get_filelist(run_module_names):
                     searchfiles.append([fn, root])
 
     # Search through collected files
+    console = rich.console.Console(
+        stderr=True,
+        highlight=False,
+        force_terminal=util_functions.force_term_colors(),
+        force_interactive=False if config.no_ansi else None,
+        color_system=None if config.no_ansi else "auto",
+    )
     progress_obj = rich.progress.Progress(
         "[blue]|[/]      ",
         rich.progress.SpinnerColumn(),
@@ -262,6 +302,7 @@ def get_filelist(run_module_names):
         "[progress.percentage]{task.percentage:>3.0f}%",
         "[green]{task.completed}/{task.total}",
         "[dim]{task.fields[s_fn]}",
+        console=console,
     )
     with progress_obj as progress:
         mqc_task = progress.add_task("searching", total=len(searchfiles), s_fn="")
@@ -402,6 +443,29 @@ def data_sources_tofile():
                     for s_name, source in data_sources[mod][sec].items():
                         lines.append([mod, sec, s_name, source])
             body = "\n".join(["\t".join(l) for l in lines])
+            print(body.encode("utf-8", "ignore").decode("utf-8"), file=f)
+
+
+def dois_tofile():
+    """Find all DOIs listed in report sections and write to a file"""
+    # Collect DOIs
+    dois = {"MultiQC": ["10.1093/bioinformatics/btw354"]}
+    for mod in modules_output:
+        if mod.doi is not None and mod.doi != []:
+            dois[mod.anchor] = mod.doi
+    # Write to a file
+    fn = "multiqc_citations.{}".format(config.data_format_extensions[config.data_format])
+    with io.open(os.path.join(config.data_dir, fn), "w", encoding="utf-8") as f:
+        if config.data_format == "json":
+            jsonstr = json.dumps(dois, indent=4, ensure_ascii=False)
+            print(jsonstr.encode("utf-8", "ignore").decode("utf-8"), file=f)
+        elif config.data_format == "yaml":
+            yaml.dump(dois, f, default_flow_style=False)
+        else:
+            body = ""
+            for mod, dois in dois.items():
+                for doi in dois:
+                    body += "{}{} # {}\n".format(doi, " " * (50 - len(doi)), mod)
             print(body.encode("utf-8", "ignore").decode("utf-8"), file=f)
 
 

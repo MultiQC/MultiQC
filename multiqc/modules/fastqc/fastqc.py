@@ -39,6 +39,7 @@ class MultiqcModule(BaseMultiqcModule):
             href="http://www.bioinformatics.babraham.ac.uk/projects/fastqc/",
             info="is a quality control tool for high throughput sequence data,"
             " written by Simon Andrews at the Babraham Institute in Cambridge.",
+            # No publication / DOI // doi=
         )
 
         self.fastqc_data = dict()
@@ -74,7 +75,6 @@ class MultiqcModule(BaseMultiqcModule):
 
         # Filter to strip out ignored sample names
         self.fastqc_data = self.ignore_samples(self.fastqc_data)
-
         if len(self.fastqc_data) == 0:
             raise UserWarning
 
@@ -211,21 +211,17 @@ class MultiqcModule(BaseMultiqcModule):
         # Prep the data
         data = dict()
         for s_name in self.fastqc_data:
+            data[s_name] = dict()
             bs = self.fastqc_data[s_name]["basic_statistics"]
-            try:
-                # FastQC reports with 0 reads will trigger a KeyError here
-                data[s_name] = {
-                    "percent_gc": bs["%GC"],
-                    "avg_sequence_length": bs["avg_sequence_length"],
-                    "total_sequences": bs["Total Sequences"],
-                }
-            except KeyError:
+            # Samples with 0 reads and reports with some skipped sections might be missing things here
+            data[s_name]["percent_gc"] = bs.get("%GC", 0)
+            data[s_name]["avg_sequence_length"] = bs.get("avg_sequence_length", 0)
+            data[s_name]["total_sequences"] = bs.get("Total Sequences", 0)
+
+            # Log warning about zero-read samples as a courtesy
+            if data[s_name]["total_sequences"] == 0:
                 log.warning("Sample had zero reads: '{}'".format(s_name))
-                data[s_name] = {
-                    "percent_gc": 0,
-                    "avg_sequence_length": 0,
-                    "total_sequences": 0,
-                }
+
             try:
                 # Older versions of FastQC don't have this
                 data[s_name]["percent_duplicates"] = 100 - bs["total_deduplicated_percentage"]
@@ -272,8 +268,8 @@ class MultiqcModule(BaseMultiqcModule):
             "format": "{:,.0f}",
         }
         headers["avg_sequence_length"] = {
-            "title": "Length",
-            "description": "Average Sequence Length (bp)",
+            "title": "Read Length",
+            "description": "Average Read Length (bp)",
             "min": 0,
             "suffix": " bp",
             "scale": "RdYlGn",
@@ -465,7 +461,8 @@ class MultiqcModule(BaseMultiqcModule):
                     self.avg_bp_from_range(d["base"]): d for d in self.fastqc_data[s_name]["per_base_sequence_content"]
                 }
             except KeyError:
-                pass
+                # FastQC module was skipped - move on to the next sample
+                continue
 
             # Old versions of FastQC give counts instead of percentages
             for b in data[s_name]:
@@ -865,7 +862,7 @@ class MultiqcModule(BaseMultiqcModule):
                     del data[s_name]
                     log.debug("Couldn't find data for {}, invalid Key".format(s_name))
 
-        if all(len(data[s_name]) == 0 for s_name in self.fastqc_data):
+        if all(len(data.get(s_name, {})) == 0 for s_name in self.fastqc_data):
             log.debug("overrepresented_sequences not found in FastQC reports")
             return None
 

@@ -19,6 +19,7 @@ class MultiqcModule(BaseMultiqcModule):
             anchor="sickle",
             href="https://github.com/najoshi/sickle",
             info="A windowed adaptive trimming tool for FASTQ files using quality.",
+            # No DOI // doi=
         )
 
         # parse list of log files

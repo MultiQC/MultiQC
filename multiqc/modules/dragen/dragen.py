@@ -56,10 +56,9 @@ class MultiqcModule(
             anchor="DRAGEN",
             target="DRAGEN",
             href="https://www.illumina.com/products/by-type/informatics-products/dragen-bio-it-platform.html",
-            info=(
-                " is a Bio-IT Platform that provides ultra-rapid secondary analysis of sequencing data"
-                " using field-programmable gate array technology (FPGA)."
-            ),
+            info=""" is a Bio-IT Platform that provides ultra-rapid secondary analysis of sequencing data
+                     using field-programmable gate array technology (FPGA).""",
+            # Can't find a DOI // doi=
         )
 
         samples_found = set()

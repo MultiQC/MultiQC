@@ -24,17 +24,15 @@ MultiQC was written by Phil Ewels (http://phil.ewels.co.uk) at SciLifeLab Sweden
 from setuptools import setup, find_packages
 import sys
 
-version = "1.12dev"
+version = "1.13dev"
 dl_version = "master" if "dev" in version else "v{}".format(version)
 
 print(
-    """-----------------------------------
- Installing MultiQC version {}
+    f"""-----------------------------------
+ Installing MultiQC version {version}
 -----------------------------------
 
-""".format(
-        version
-    )
+"""
 )
 
 # Set version requirements according to what version of Python we're running
@@ -66,6 +64,7 @@ install_requires = [
     "pyyaml>=4",
     "requests",
     "rich>=10",
+    "rich-click",
     "simplejson",
     "spectra>=0.0.10",
 ]
@@ -87,7 +86,7 @@ setup(
     install_requires=install_requires,
     entry_points={
         "console_scripts": [
-            "multiqc=multiqc.__main__:multiqc",
+            "multiqc=multiqc.__main__:run_multiqc",
         ],
         "multiqc.modules.v1": [
             "adapterRemoval = multiqc.modules.adapterRemoval:MultiqcModule",
@@ -106,6 +105,7 @@ setup(
             "busco = multiqc.modules.busco:MultiqcModule",
             "bustools = multiqc.modules.bustools:MultiqcModule",
             "ccs = multiqc.modules.ccs:MultiqcModule",
+            "checkqc = multiqc.modules.checkqc:MultiqcModule",
             "clipandmerge = multiqc.modules.clipandmerge:MultiqcModule",
             "clusterflow = multiqc.modules.clusterflow:MultiqcModule",
             "conpair = multiqc.modules.conpair:MultiqcModule",
@@ -161,6 +161,7 @@ setup(
             "odgi = multiqc.modules.odgi:MultiqcModule",
             "optitype = multiqc.modules.optitype:MultiqcModule",
             "pangolin = multiqc.modules.pangolin:MultiqcModule",
+            "pbmarkdup = multiqc.modules.pbmarkdup:MultiqcModule",
             "peddy = multiqc.modules.peddy:MultiqcModule",
             "phantompeakqualtools = multiqc.modules.phantompeakqualtools:MultiqcModule",
             "picard = multiqc.modules.picard:MultiqcModule",
@@ -203,6 +204,7 @@ setup(
             "vcftools = multiqc.modules.vcftools:MultiqcModule",
             "vep = multiqc.modules.vep:MultiqcModule",
             "verifybamid = multiqc.modules.verifybamid:MultiqcModule",
+            "whatshap = multiqc.modules.whatshap:MultiqcModule",
         ],
         "multiqc.templates.v1": [
             "default = multiqc.templates.default",
@@ -213,18 +215,18 @@ setup(
             "geo = multiqc.templates.geo",
         ],
         ## See https://multiqc.info/docs/#multiqc-plugins for documentation
-        #       'multiqc.cli_options.v1': [
-        #           'my-new-option = myplugin.cli:new_option'
-        #       ],
-        #       'multiqc.hooks.v1': [
-        #           'before_config = myplugin.hooks:before_config',
-        #           'config_loaded = myplugin.hooks:config_loaded',
-        #           'execution_start = myplugin.hooks:execution_start',
-        #           'before_modules = myplugin.hooks:before_modules',
-        #           'after_modules = myplugin.hooks:after_modules',
-        #           'before_report_generation = myplugin.hooks:before_report_generation',
-        #           'execution_finish = myplugin.hooks:execution_finish',
-        #       ]
+        # 'multiqc.cli_options.v1': [
+        #     'my-new-option = myplugin.cli:new_option'
+        # ],
+        # 'multiqc.hooks.v1': [
+        #     'before_config = myplugin.hooks:before_config',
+        #     'config_loaded = myplugin.hooks:config_loaded',
+        #     'execution_start = myplugin.hooks:execution_start',
+        #     'before_modules = myplugin.hooks:before_modules',
+        #     'after_modules = myplugin.hooks:after_modules',
+        #     'before_report_generation = myplugin.hooks:before_report_generation',
+        #     'execution_finish = myplugin.hooks:execution_finish',
+        # ]
     },
     classifiers=[
         "Development Status :: 5 - Production/Stable",

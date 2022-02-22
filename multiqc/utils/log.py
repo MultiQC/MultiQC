@@ -11,7 +11,7 @@ import shutil
 import sys
 import tempfile
 
-from multiqc.utils import config, util_functions, mqc_colour
+from multiqc.utils import config, util_functions
 
 LEVELS = {0: "INFO", 1: "DEBUG"}
 log_tmp_dir = None
@@ -37,12 +37,16 @@ def init_log(logger, loglevel=0, no_ansi=False):
     debug_template = "[%(asctime)s] %(name)-50s [%(levelname)-7s]  %(message)s"
     info_template = "|%(module)18s | %(message)s"
 
+    # Remove log handlers left from previous calls to multiqc.run
+    while logger.hasHandlers():
+        logger.removeHandler(logger.handlers[0])
+
     # Base level setup
     logger.setLevel(getattr(logging, "DEBUG"))
 
     # Automatically set no_ansi if not a tty terminal
     if not no_ansi:
-        if not sys.stderr.isatty() and not force_term_colors():
+        if not sys.stderr.isatty() and not util_functions.force_term_colors():
             no_ansi = True
 
     # Set up the console logging stream
@@ -110,12 +114,3 @@ def get_log_stream(logger):
         return file_stream
 
     return log_stream
-
-
-def force_term_colors():
-    """
-    Check if any environment variables are set to force Rich to use coloured output
-    """
-    if os.getenv("GITHUB_ACTIONS") or os.getenv("FORCE_COLOR") or os.getenv("PY_COLORS"):
-        return True
-    return None
