@@ -12,11 +12,12 @@ class DragenRnaQuantMetrics(BaseMultiqcModule):
         data_by_sample = dict()
 
         for f in self.find_log_files("dragen/rna_quant_metrics"):
-            data = parse_time_metrics_file(f)
-            if f["s_name"] in data_by_sample:
-                log.debug("Duplicate sample name found! Overwriting: {}".format(f["s_name"]))
+            s_name, data = parse_time_metrics_file(f)
+            s_name = self.clean_s_name(s_name, f)
+            if s_name in data_by_sample:
+                log.debug("Duplicate sample name found! Overwriting: {}".format(s_name))
             self.add_data_source(f, section="stats")
-            data_by_sample[f["s_name"]] = data
+            data_by_sample[s_name] = data
 
         # Filter to strip out ignored sample names:
         data_by_sample = self.ignore_samples(data_by_sample)
@@ -78,7 +79,7 @@ def parse_time_metrics_file(f):
     RUN TIME,,Time sorting and marking duplicates,00:00:07.368,7.37
     RUN TIME,,Time DRAGStr calibration,00:00:07.069,7.07
     """
-    f["s_name"] = re.search(r"(.*).quant.metrics.csv", f["fn"]).group(1)
+    s_name = re.search(r"(.*).quant.metrics.csv", f["fn"]).group(1)
 
     data = {}
     for line in f["f"].splitlines():
@@ -97,4 +98,4 @@ def parse_time_metrics_file(f):
             pass
         data[metric] = stat
 
-    return data
+    return s_name, data

@@ -17,11 +17,12 @@ class DragenRnaTranscriptCoverage(BaseMultiqcModule):
         data_by_sample = defaultdict(dict)
 
         for f in self.find_log_files("dragen/rna_transcript_cov"):
-            data = parse_rna_transcript_cov(f)
-            if f["s_name"] in data_by_sample:
-                log.debug("Duplicate sample name found! Overwriting: {}".format(f["s_name"]))
+            s_name, data = parse_rna_transcript_cov(f)
+            s_name = self.clean_s_name(s_name, f)
+            if s_name in data_by_sample:
+                log.debug("Duplicate sample name found! Overwriting: {}".format(s_name))
             self.add_data_source(f, section="stats")
-            data_by_sample[f["s_name"]] = data
+            data_by_sample[s_name] = data
 
         # Filter to strip out ignored sample names:
         data_by_sample = self.ignore_samples(data_by_sample)
@@ -62,7 +63,7 @@ def parse_rna_transcript_cov(f):
     5	0.308795
     """
 
-    f["s_name"] = re.search(r"(.*).quant.transcript_coverage.txt", f["fn"]).group(1)
+    s_name = re.search(r"(.*).quant.transcript_coverage.txt", f["fn"]).group(1)
 
     data = {}
     for line in f["f"].splitlines()[1:]:
@@ -78,4 +79,4 @@ def parse_rna_transcript_cov(f):
             pass
         data[percentile] = coverage
 
-    return data
+    return s_name, data

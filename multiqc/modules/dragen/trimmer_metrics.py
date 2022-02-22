@@ -13,11 +13,13 @@ class DragenTrimmerMetrics(BaseMultiqcModule):
         data_by_sample = dict()
 
         for f in self.find_log_files("dragen/trimmer_metrics"):
-            data = parse_trimmer_metrics_file(f)
-            if f["s_name"] in data_by_sample:
-                log.debug("Duplicate sample name found! Overwriting: {}".format(f["s_name"]))
+            s_name, data = parse_trimmer_metrics_file(f)
+            s_name = self.clean_s_name(s_name, f)
+
+            if s_name in data_by_sample:
+                log.debug("Duplicate sample name found! Overwriting: {}".format(s_name))
             self.add_data_source(f, section="stats")
-            data_by_sample[f["s_name"]] = data
+            data_by_sample[s_name] = data
 
         # Filter to strip out ignored sample names:
         data_by_sample = self.ignore_samples(data_by_sample)
@@ -67,7 +69,7 @@ def parse_trimmer_metrics_file(f):
     TRIMMER STATISTICS,,Total trimmed bases,0,0.00
     """
 
-    f["s_name"] = re.search(r"(.*).trimmer_metrics.csv", f["fn"]).group(1)
+    s_name = re.search(r"(.*).trimmer_metrics.csv", f["fn"]).group(1)
 
     data = defaultdict(dict)
     for line in f["f"].splitlines():
@@ -86,4 +88,4 @@ def parse_trimmer_metrics_file(f):
             pass
         data[analysis][metric] = (stat, percentage)
 
-    return data
+    return s_name, data
