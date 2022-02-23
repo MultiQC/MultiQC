@@ -40,7 +40,7 @@ class MultiqcModule(BaseMultiqcModule):
         self.t_ranks["K"] = "Kingdom"
         self.t_ranks["D"] = "Domain"
         self.t_ranks["R"] = "Root"
-        self.t_ranks['U'] = 'Unclassified'
+        self.t_ranks["U"] = "Unclassified"
 
         self.top_n = 5
 
