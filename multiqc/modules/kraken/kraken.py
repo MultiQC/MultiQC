@@ -40,7 +40,7 @@ class MultiqcModule(BaseMultiqcModule):
         self.t_ranks["K"] = "Kingdom"
         self.t_ranks["D"] = "Domain"
         self.t_ranks["R"] = "Root"
-        # self.t_ranks['U'] = 'Unclassified'
+        self.t_ranks['U'] = 'Unclassified'
 
         self.top_n = 5
 
@@ -276,7 +276,10 @@ class MultiqcModule(BaseMultiqcModule):
         headers = OrderedDict()
 
         top_one_hkey = None
-        if len(top_five) > 0:
+
+        # don't include top-5 % in general stats if all is unclassified.
+        # unclassified is included separately, so also don't include twice
+        if top_rank_code != "U":
             top_one_hkey = "% {}".format(top_five[0])
             headers[top_one_hkey] = {
                 "title": top_one_hkey,
@@ -296,8 +299,6 @@ class MultiqcModule(BaseMultiqcModule):
                 "max": 100,
                 "scale": "PuBu",
             }
-        else:
-            self.top_n = 0
 
         headers["% Unclassified"] = {
             "title": "% Unclassified",
@@ -331,10 +332,6 @@ class MultiqcModule(BaseMultiqcModule):
     def top_five_barplot(self):
         """Add a bar plot showing the top-5 from each taxa rank"""
 
-        if self.top_n == 0:
-            log.info("No taxa found, omitting Top taxa barplot")
-            return
-
         pd = []
         cats = list()
         pconfig = {
@@ -367,13 +364,16 @@ class MultiqcModule(BaseMultiqcModule):
                         rank_data[s_name] = dict()
                     if s_name not in counts_shown:
                         counts_shown[s_name] = 0
+
                     for row in d:
-                        if row["rank_code"] == rank_code:
-                            if row["classif"] == classif:
-                                if classif not in rank_data[s_name]:
-                                    rank_data[s_name][classif] = 0
-                                rank_data[s_name][classif] += row["counts_rooted"]
-                                counts_shown[s_name] += row["counts_rooted"]
+                        # unclassified are handled separately
+                        if row["rank_code"] != "U":
+                            if row["rank_code"] == rank_code:
+                                if row["classif"] == classif:
+                                    if classif not in rank_data[s_name]:
+                                        rank_data[s_name][classif] = 0
+                                    rank_data[s_name][classif] += row["counts_rooted"]
+                                    counts_shown[s_name] += row["counts_rooted"]
 
             # Add in unclassified reads and "other" - we presume from other species etc.
             for s_name, d in self.kraken_raw_data.items():
@@ -421,10 +421,6 @@ class MultiqcModule(BaseMultiqcModule):
 
     def top_five_duplication_heatmap(self):
         """Add a heatmap showing the minimizer duplication top-5 species"""
-
-        if self.top_n == 0:
-            log.info("No taxa found, omitting Top five duplication heatmap")
-            return
 
         duplication = list()
         pconfig = {"id": "kraken-topfive-duplication_plot", "title": f"Kraken 2: Top {self.top_n} species duplication"}
