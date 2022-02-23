@@ -271,28 +271,34 @@ class MultiqcModule(BaseMultiqcModule):
             except KeyError:
                 # No species-level data found etc
                 pass
-        top_one_hkey = "% {}".format(top_five[0])
 
         # Column headers
         headers = OrderedDict()
-        headers[top_one_hkey] = {
-            "title": top_one_hkey,
-            "description": "Percentage of reads that were the top {} over all samples - {}".format(
-                top_rank_name, top_five[0]
-            ),
-            "suffix": "%",
-            "max": 100,
-            "scale": "PuBuGn",
-        }
-        headers["% Top 5"] = {
-            "title": "% Top 5 {}".format(top_rank_name),
-            "description": "Percentage of reads that were classified by one of the top 5 {} ({})".format(
-                top_rank_name, ", ".join(top_five)
-            ),
-            "suffix": "%",
-            "max": 100,
-            "scale": "PuBu",
-        }
+
+        top_one_hkey = None
+        if len(top_five) > 0:
+            top_one_hkey = "% {}".format(top_five[0])
+            headers[top_one_hkey] = {
+                "title": top_one_hkey,
+                "description": "Percentage of reads that were the top {} over all samples - {}".format(
+                    top_rank_name, top_five[0]
+                ),
+                "suffix": "%",
+                "max": 100,
+                "scale": "PuBuGn",
+            }
+            headers["% Top 5"] = {
+                "title": "% Top 5 {}".format(top_rank_name),
+                "description": "Percentage of reads that were classified by one of the top 5 {} ({})".format(
+                    top_rank_name, ", ".join(top_five)
+                ),
+                "suffix": "%",
+                "max": 100,
+                "scale": "PuBu",
+            }
+        else:
+            self.top_n = 0
+
         headers["% Unclassified"] = {
             "title": "% Unclassified",
             "description": "Percentage of reads that were unclassified",
@@ -317,13 +323,17 @@ class MultiqcModule(BaseMultiqcModule):
                 if row["rank_code"] == top_rank_code and row["classif"] == top_five[0]:
                     tdata[s_name][top_one_hkey] = percent
 
-            if top_one_hkey not in tdata[s_name]:
+            if top_one_hkey is not None and top_one_hkey not in tdata[s_name]:
                 tdata[s_name][top_one_hkey] = 0
 
         self.general_stats_addcols(tdata, headers)
 
     def top_five_barplot(self):
         """Add a bar plot showing the top-5 from each taxa rank"""
+
+        if self.top_n == 0:
+            log.info("No taxa found, omitting Top taxa barplot")
+            return
 
         pd = []
         cats = list()
@@ -411,6 +421,10 @@ class MultiqcModule(BaseMultiqcModule):
 
     def top_five_duplication_heatmap(self):
         """Add a heatmap showing the minimizer duplication top-5 species"""
+
+        if self.top_n == 0:
+            log.info("No taxa found, omitting Top five duplication heatmap")
+            return
 
         duplication = list()
         pconfig = {"id": "kraken-topfive-duplication_plot", "title": f"Kraken 2: Top {self.top_n} species duplication"}
