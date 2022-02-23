@@ -6,6 +6,7 @@
 
 - Major spruce of the command line help, using the new [rich-click](https://github.com/ewels/rich-click) package
 - Drop some of the Python 2k compatability code (eg. custom requirements)
+- Kraken now handles empty kreports gracefully ([#1637](https://github.com/ewels/MultiQC/issues/1637))
 
 ### New Modules
 
