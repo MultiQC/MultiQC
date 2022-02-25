@@ -31,3 +31,6 @@ Thumbs.db
 
 .idea/
 runTest.sh
+multiqc.xcworkspace/contents.xcworkspacedata
+multiqc.xcworkspace/xcshareddata/IDEWorkspaceChecks.plist
+multiqc.xcworkspace/xcuserdata/gformenti.xcuserdatad/UserInterfaceState.xcuserstate
