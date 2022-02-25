@@ -27,7 +27,7 @@ class MultiqcModule(BaseMultiqcModule, StatsReportMixin):
             anchor="gfastats",
             target="gfastats",
             href="https://github.com/vgl-hub/gfastats",
-            info=" is a single fast and exhaustive tool for summary statistics and simultaneous *fa* (fasta, fastq, gfa [.gz]) genome assembly file manipulation..",
+            info=" is a single fast and exhaustive tool for summary statistics and simultaneous *fa* (fasta, fastq, gfa [.gz]) genome assembly file manipulation.",
             doi="",
         )
 

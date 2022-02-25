@@ -25,6 +25,7 @@ MultiQC Modules:
     FastQC: modules/fastqc.md
     FLASh: modules/flash.md
     Flexbar: modules/flexbar.md
+    gfastats: modules/gfastats.md
     InterOp: modules/interop.md
     iVar: modules/ivar.md
     Jellyfish: modules/jellyfish.md
