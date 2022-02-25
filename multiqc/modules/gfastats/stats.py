@@ -11,12 +11,13 @@ from multiqc.plots import beeswarm, bargraph
 # Initialise the logger
 log = logging.getLogger(__name__)
 
+
 class StatsReportMixin:
     """Mixin class, loaded by main gfastats MutliqcModule class."""
 
     def parse_gfastats_stats(self):
         """Find gfastats stats logs and parse summary statistics"""
-        
+
         self.gfastats_stats = dict()
         for f in self.find_log_files("gfastats/stats"):
             parsed_data = dict()
@@ -43,12 +44,12 @@ class StatsReportMixin:
             self.write_data_file(self.gfastats_stats, "multiqc_gfastats_stats")
 
             # General Stats Table
-#            stats_headers = OrderedDict()
-#            stats_headers["Total_scaffold_length"] = {
-#                "title": "Total scaffold length",
-#                "description": "Total length of scaffolds",
-#            }
-            
+            #            stats_headers = OrderedDict()
+            #            stats_headers["Total_scaffold_length"] = {
+            #                "title": "Total scaffold length",
+            #                "description": "Total length of scaffolds",
+            #            }
+
             self.general_stats_addcols(self.gfastats_stats)
 
         # Return the number of logs that were found

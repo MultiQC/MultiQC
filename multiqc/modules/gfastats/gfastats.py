@@ -12,6 +12,7 @@ from .stats import StatsReportMixin
 # Initialise the logger
 log = logging.getLogger(__name__)
 
+
 class MultiqcModule(BaseMultiqcModule, StatsReportMixin):
     """gfastats has a number of different commands and outputs.
     This MultiQC module supports some but not all. The code for
@@ -34,7 +35,7 @@ class MultiqcModule(BaseMultiqcModule, StatsReportMixin):
         self.general_stats_headers = OrderedDict()
         self.general_stats_data = dict()
         n = dict()
-        
+
         # Call submodule functions
         n["stats"] = self.parse_gfastats_stats()
         if n["stats"] > 0:
