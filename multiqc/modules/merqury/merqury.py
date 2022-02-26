@@ -5,7 +5,7 @@
 from __future__ import print_function
 from collections import OrderedDict
 import logging
-import re
+import re, base64
 from multiqc.plots import linegraph, table
 from multiqc.modules.base_module import BaseMultiqcModule
 
@@ -66,6 +66,8 @@ class MultiqcModule(BaseMultiqcModule):
                 anchor="merqury-spectra",
                 plot=self.spectra_plot(self.spectra_data[s_name], s_name),
             )
+
+        self.plot_figures()
 
     def parse_completeness_log(self, f):
         self.add_data_source(f, f["s_name"])
@@ -226,3 +228,15 @@ class MultiqcModule(BaseMultiqcModule):
         }
         # self.general_stats_addcols(self.merqury_data, headers)
         return table.plot(self.qv_data, headers, config)
+
+    def plot_figures(self):
+        self.merqury_png = dict()
+        for f in self.find_log_files("merqury/png"):
+            self.merqury_png[f["s_name"]] = base64.b64encode(f["f"].read()).decode("utf-8")
+        image_format = "png"
+        log.info("Found {} merqury images".format(len(self.merqury_png)))
+        for image_name, image_string in self.merqury_png.items():
+            img_html = '<div class="mqc-custom-content-image"><img src="data:image/{};base64,{}" /></div>'.format(
+                image_format, image_string
+            )
+            self.add_section(name=image_name, anchor="merqury", content=img_html)

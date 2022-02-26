@@ -350,17 +350,6 @@ module_order:
       module_tag:
         - Methylation
         - DNA
-  - genomescope:
-      module_tag: -Denovo
-        -kmer
-  - merqury:
-      module_tag:
-        - DNA
-        - Denovo
-  - pretext:
-      module_tag:
-        - HiC
-        - pretext
   - mosdepth:
       module_tag:
         - DNA
@@ -376,6 +365,18 @@ module_order:
       module_tag:
         - DNA
         - RNA
+  - genomescope2:
+      module_tag:
+        - Denovo
+        - kmer
+  - merqury:
+      module_tag:
+        - DNA
+        - Denovo
+  - pretext:
+      module_tag:
+        - HiC
+        - pretext
   - quast:
       module_tag:
         - DNA

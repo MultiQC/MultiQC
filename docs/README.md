@@ -25,10 +25,12 @@ MultiQC Modules:
     FastQC: modules/fastqc.md
     FLASh: modules/flash.md
     Flexbar: modules/flexbar.md
+    Genomescope2: modules/genomescope2.md
     InterOp: modules/interop.md
     iVar: modules/ivar.md
     Jellyfish: modules/jellyfish.md
     KAT: modules/kat.md
+    Merqury: modules/merqury.md
     leeHom: modules/leehom.md
     Lima: modules/lima.md
     minionqc: modules/minionqc.md
@@ -97,6 +99,7 @@ MultiQC Modules:
     phantompeakqualtools: modules/phantompeakqualtools.md
     Picard: modules/picard.md
     Preseq: modules/preseq.md
+    Pretext: modules/pretext.md
     Prokka: modules/prokka.md
     PURPLE: modules/purple.md
     qc3C: modules/qc3C.md

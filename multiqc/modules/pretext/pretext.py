@@ -23,9 +23,10 @@ class MultiqcModule(BaseMultiqcModule):
             anchor="pretext",
             href="https://github.com/wtsi-hpag/PretextView",
             info="is a tool for visualizing HiC contact maps",
+            doi="",
         )
         self.pretext_data = dict()
-        for f in self.find_log_files("pretext"):
+        for f in self.find_log_files("pretext/png"):
             self.pretext_data[f["s_name"].replace("_pretext", "")] = base64.b64encode(f["f"].read()).decode("utf-8")
         image_format = "png"
         log.info("Found {} pretext image".format(len(self.pretext_data)))

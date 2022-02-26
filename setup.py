@@ -105,7 +105,7 @@ setup(
             "fgbio = multiqc.modules.fgbio:MultiqcModule",
             "flash = multiqc.modules.flash:MultiqcModule",
             "flexbar = multiqc.modules.flexbar:MultiqcModule",
-            "genomescope = multiqc.modules.genomescope:MultiqcModule",
+            "genomescope2 = multiqc.modules.genomescope2:MultiqcModule",
             "gffcompare = multiqc.modules.gffcompare:MultiqcModule",
             "gatk = multiqc.modules.gatk:MultiqcModule",
             "goleft_indexcov = multiqc.modules.goleft_indexcov:MultiqcModule",

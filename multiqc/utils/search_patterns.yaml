@@ -306,6 +306,11 @@ gatk/varianteval:
 gatk/base_recalibrator:
   contents: "#:GATKTable:Arguments:Recalibration"
   num_lines: 3
+genomescope2/summary:
+  fn: "*_Summary.txt"
+  contents: "GenomeScope"
+genomescope2/png:
+  fn: "*_Plot*.png"
 gffcompare:
   fn: "*.stats"
   contents: "# gffcompare"
@@ -409,18 +414,16 @@ methylQA:
   shared: true
 merqury/completeness:
   fn: "*_merqury.completeness.tab"
-  shared: true
 merqury/qv:
   fn: "*_merqury.qv.tab"
-  shared: true
 merqury/spectra:
-  - fn: "*.spectra-cn.hist"
-    shared: true
-  - fn: "*.spectra-asm.hist"
-    shared: true
-genomescope/summary:
-  fn: "*_Summary.txt"
-  shared: true
+  - fn: "*.spectra*.hist"
+merqury/png:
+  - fn: "*.spectra*.png"
+  - fn: "*.phased_block*.png"
+  - fn: "*.hapmers.blob*.png"
+  - fn: "*.continuity.N*.png"
+  - fn: "*.block.N*.png"
 minionqc:
   fn: "summary.yaml"
   contents: "total.gigabases"
@@ -468,9 +471,8 @@ optitype:
 pangolin:
   contents: "pangolin_version"
   num_lines: 1
-pretext:
-  fn: "*pretext.png"
-  shared: true
+pretext/png:
+  fn: "*heatmap_*.png"
 odgi:
   - fn: "*.og.stats.yaml"
   - fn: "*.og.stats.yml"
