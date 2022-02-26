@@ -23,6 +23,7 @@ class MultiqcModule(BaseMultiqcModule):
             anchor="pretext",
             href="https://github.com/wtsi-hpag/PretextView",
             info="is a tool for visualizing HiC contact maps",
+            doi="",
         )
         self.pretext_data = dict()
         for f in self.find_log_files("pretext/png"):
@@ -34,3 +35,5 @@ class MultiqcModule(BaseMultiqcModule):
                 image_format, image_string
             )
             self.add_section(name=image_name, anchor="pretext", content=img_html)
+
+        # nothing to write, only images (no self.write_data_file self.add_data_source)
