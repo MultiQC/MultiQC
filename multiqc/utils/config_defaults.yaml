@@ -351,8 +351,7 @@ module_order:
         - Methylation
         - DNA
   - genomescope:
-      module_tag:
-        -Denovo
+      module_tag: -Denovo
         -kmer
   - merqury:
       module_tag:

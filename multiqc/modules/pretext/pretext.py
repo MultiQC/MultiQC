@@ -26,14 +26,11 @@ class MultiqcModule(BaseMultiqcModule):
         )
         self.pretext_data = dict()
         for f in self.find_log_files("pretext"):
-            self.pretext_data[f["s_name"].replace("_pretext","")]=(base64.b64encode(f["f"].read()).decode("utf-8"))
+            self.pretext_data[f["s_name"].replace("_pretext", "")] = base64.b64encode(f["f"].read()).decode("utf-8")
         image_format = "png"
         log.info("Found {} pretext image".format(len(self.pretext_data)))
-        for image_name,image_string in self.pretext_data.items():
-            img_html = (
-            '<div class="mqc-custom-content-image"><img src="data:image/{};base64,{}" /></div>'.format(image_format, image_string ))
-            self.add_section (
-                name=image_name,
-                anchor="pretext",
-                content = img_html
+        for image_name, image_string in self.pretext_data.items():
+            img_html = '<div class="mqc-custom-content-image"><img src="data:image/{};base64,{}" /></div>'.format(
+                image_format, image_string
             )
+            self.add_section(name=image_name, anchor="pretext", content=img_html)
