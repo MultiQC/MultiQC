@@ -38,7 +38,7 @@ def init_log(logger, loglevel=0, no_ansi=False):
     info_template = "|%(module)18s | %(message)s"
 
     # Remove log handlers left from previous calls to multiqc.run
-    while logger.hasHandlers():
+    while logger.handlers:
         logger.removeHandler(logger.handlers[0])
 
     # Base level setup
