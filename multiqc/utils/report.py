@@ -321,7 +321,6 @@ def search_file(pattern, f, module_key):
 
     fn_matched = False
     contents_matched = False
-
     # Use mimetypes to exclude binary files where possible
     if not re.match(r".+_mqc\.(png|jpg|jpeg)", f["fn"]) and config.ignore_images:
         (ftype, encoding) = mimetypes.guess_type(os.path.join(f["root"], f["fn"]))

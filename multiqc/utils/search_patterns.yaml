@@ -193,6 +193,13 @@ ccs/v4:
 ccs/v5:
   contents: '"id": "ccs_processing"'
   fn: "*.json"
+checkatlas/summary:
+  fn: "*_checkatlas.tsv"
+checkatlas/umap:
+  fn: "*_checkatlas_umap.png"
+checkatlas/adata:
+  fn: "*_checkatlas_adata.tsv"
+  shared: true
 checkqc:
   contents: "instrument_and_reagent_type"
   fn: "*.json"
