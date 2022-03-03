@@ -290,7 +290,6 @@ def get_filelist(run_module_names):
     console = rich.console.Console(
         stderr=True,
         highlight=False,
-        force_terminal=util_functions.force_term_colors(),
         force_interactive=False if config.no_ansi else None,
         color_system=None if config.no_ansi else "auto",
     )
