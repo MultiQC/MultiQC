@@ -41,6 +41,7 @@ plots_dir_name: "multiqc_plots"
 data_format: "tsv"
 module_tag: []
 force: false
+no_ansi: false
 prepend_dirs: false
 prepend_dirs_depth: 0
 prepend_dirs_sep: " | "
@@ -155,6 +156,7 @@ fn_clean_exts:
   - ".vcf"
   - ".dat"
   - "_tophat"
+  - ".pbmarkdup.log"
   - ".log"
   - ".stderr"
   - ".out"
@@ -213,6 +215,7 @@ fn_clean_exts:
   - ".lhist"
   - ".mhist"
   - ".qahist"
+  - ".qchist"
   - ".qhist"
   - ".rpkm"
   - ".selfSM"
@@ -249,6 +252,7 @@ fn_clean_exts:
   - "_NanoStats"
   - ".cutadapt"
   - ".qcML"
+  - ".mosdepth"
 
 # These are removed after the above, only if sample names
 # start or end with this string. Again, removed in order.
@@ -275,6 +279,7 @@ fn_clean_trim:
   - "_matrix"
   - ".stats"
   - ".hist"
+  - ".phased"
 
 # Files to ignore when indexing files.
 # Grep file match patterns.
@@ -297,6 +302,7 @@ fn_ignore_files:
   - "*.pdf"
   - "*.md5"
   - "*[!s][!u][!m][!_\\.m][!mva][!qer][!cpy].html" # Allow _mqc.html, _vep.html and summary.html files
+  - multiqc_data.json
 
 # Favourite modules that should appear at the top in preference
 # This is in addition to those below. These appear above _all_ other
@@ -477,6 +483,10 @@ module_order:
       module_tag:
         - DNA
         - ancient
+  - pbmarkdup:
+      module_tag:
+        - DNA
+        - RNA
   - damageprofiler:
       module_tag:
         - DNA
@@ -708,6 +718,11 @@ module_order:
         - RNA
         - DNA
         - methylation
+  - checkqc:
+      module_tag:
+        - DNA
+        - RNA
+        - Illumina
   - bcl2fastq:
       module_tag:
         - RNA
@@ -741,3 +756,6 @@ module_order:
         - DNA
         - RNA
         - HLATyping
+  - whatshap:
+      module_tag:
+        - DNA
