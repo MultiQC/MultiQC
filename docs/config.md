@@ -379,6 +379,21 @@ up with weird characters in your MultiQC output, you can disable this feature wi
 flag `--no-ansi`. Sadly it's not possible to set this in a config file, as the logger is initilised
 before configs are loaded.
 
+## Checks for new versions
+
+When MultiQC runs it automatically checks to see if there is a new version available to download.
+This helps people stay up to date and reduces the number of bug reports that are
+due to outdated MultiQC versions.
+
+The timeout for the version check is set to 5 seconds, so if you're running offline it should
+fail silently and add negligable run time.
+However, if you prefer you can explicitly disable the version check by adding
+`no_version_check: true` to your MultiQC config.
+
+The check is done with the main MultiQC website (<https://multiqc.info>).
+The only statistics that are collected are the number of checks and the version of MultiQC
+that is being run. No identifiable information (eg. IP address etc) is stored.
+
 ## Command-line config
 
 Sometimes it's useful to specify a single small config option just once, where creating
