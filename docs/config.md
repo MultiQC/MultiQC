@@ -382,6 +382,8 @@ before configs are loaded.
 ## Checks for new versions
 
 When MultiQC runs it automatically checks to see if there is a new version available to download.
+If so, a log message is printed at the top of the run saying where to download it
+(_MultiQC Version v0.6 now available!_).
 This helps people stay up to date and reduces the number of bug reports that are
 due to outdated MultiQC versions.
 
