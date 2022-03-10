@@ -187,6 +187,12 @@ class datatable(object):
                     except (KeyError, ValueError):
                         pass
 
+                # Overwrite any header config if set in config
+                for custom_k, custom_v in (
+                    config.custom_table_header_config.get(pconfig.get("id"), {}).get(k, {}).items()
+                ):
+                    headers[idx][k][custom_k] = custom_v
+
                 # Work out max and min value if not given
                 setdmax = False
                 setdmin = False
