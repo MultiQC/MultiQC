@@ -552,6 +552,7 @@ def general_stats_headers(self):
         "min": 0,
         "suffix": "X",
         "scale": "BuPu",
+        "format": "{0:.3f}",
     }
     self.general_stats_headers["mean_coverage"] = {
         "title": "Mean cov",
@@ -559,6 +560,7 @@ def general_stats_headers(self):
         "min": 0,
         "suffix": "X",
         "scale": "BuPu",
+        "format": "{0:.3f}",
     }
     self.general_stats_headers["percentage_aligned"] = {
         "title": "% Aligned",
