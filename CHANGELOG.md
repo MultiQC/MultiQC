@@ -17,6 +17,9 @@ _nothing yet.._
 
 - Only set id for custom content when id not set by metadata ([#1629](https://github.com/ewels/MultiQC/issues/1629))
 
+- **Qualimap**
+  - Increase precision display for Qualimap general stats columns mean and median coverage to account for low-coverage data 
+
 ## [MultiQC v1.12](https://github.com/ewels/MultiQC/releases/tag/v1.12) - 2022-02-08
 
 ### MultiQC - new features
