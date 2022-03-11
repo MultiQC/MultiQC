@@ -46,11 +46,7 @@ class MultiqcModule(BaseMultiqcModule):
 
         # Write parsed report data to a file
         self.write_data_file(self.completeness_data, "multiqc_merqury_completeness")
-
-        # Write parsed report data to a file
         self.write_data_file(self.qv_data, "multiqc_merqury_qv")
-
-        # Write parsed report data to a file
         self.write_data_file(self.spectra_data, "multiqc_merqury_spectra")
 
         # self.merqury_general_stats_table()
