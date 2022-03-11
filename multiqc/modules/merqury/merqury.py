@@ -24,7 +24,7 @@ class MultiqcModule(BaseMultiqcModule):
             anchor="merqury",
             href="https://github.com/marbl/merqury",
             info="Evaluate genome assemblies with k-mers and more.",
-            doi="https://genomebiology.biomedcentral.com/articles/10.1186/s13059-020-02134-9",
+            doi="10.1186/s13059-020-02134-9",
         )
 
         # Find and load any MERQURY reports
