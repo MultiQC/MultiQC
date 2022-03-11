@@ -42,7 +42,7 @@ class MultiqcModule(BaseMultiqcModule):
         self.plot_figures()
 
     def parse_summary_log(self, f):
-        self.add_data_source(f, f["s_name"])
+        self.add_data_source(f)
         s_name = f["s_name"].replace("_Summary.txt", "")
         block = -1
         i = 0
