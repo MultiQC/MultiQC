@@ -24,7 +24,7 @@ class MultiqcModule(BaseMultiqcModule):
             anchor="Genomescope2",
             href="https://github.com/tbenavi1/genomescope2.0",
             info="Reference-free profiling of polyploid genomes.",
-            doi="https://doi.org/10.1038/s41467-020-14998-3",
+            doi="10.1038/s41467-020-14998-3",
         )
 
         # Find and load any GENOMESCOPE reports
