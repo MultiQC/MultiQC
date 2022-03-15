@@ -178,10 +178,19 @@ class MultiqcModule(BaseMultiqcModule):
         self.result_data["unaligned_total"] = unaligned_total
         self.result_data["reads_total"] = reads_total
         self.result_data["discarded_total"] = reads_total - self.result_data["retained"]
-
-        self.result_data["retained_reads"] = (
-            self.result_data["retained"] - self.result_data["singleton_m1"] - self.result_data["singleton_m2"]
-        )
+        if self.__read_type == "paired":
+          if not self.__collapsed:
+              self.result_data["paired_reads"] = (
+              self.result_data["retained"] - self.result_data["singleton_m1"] - self.result_data["singleton_m2"]
+              )
+          else:
+              self.result_data["paired_reads"] = (
+              self.result_data["retained"] - self.result_data["full-length_cp"] - self.result_data["truncated_cp"] - self.result_data["singleton_m1"] - self.result_data["singleton_m2"]
+              )
+          full_length_cp = self.result_data["full-length_cp"] * 2
+          truncated_cp = self.result_data["truncated_cp"] * 2
+          self.result_data["full-length_cp"] = full_length_cp
+          self.result_data["truncated_cp"] = truncated_cp
         try:
             self.result_data["percent_aligned"] = (
                 float(self.result_data["aligned"]) * 100.0 / float(self.result_data["total"])
@@ -270,7 +279,7 @@ class MultiqcModule(BaseMultiqcModule):
         cats_pec = OrderedDict()
 
         if self.__any_paired:
-            cats_pec["retained_reads"] = {"name": "Retained Read Pairs"}
+            cats_pec["paired_reads"] = {"name": "Paired Reads"}
 
         cats_pec["singleton_m1"] = {"name": "Singleton R1"}
 
@@ -278,8 +287,8 @@ class MultiqcModule(BaseMultiqcModule):
             cats_pec["singleton_m2"] = {"name": "Singleton R2"}
 
             if self.__any_collapsed:
-                cats_pec["full-length_cp"] = {"name": "Full-length Collapsed Pairs"}
-                cats_pec["truncated_cp"] = {"name": "Truncated Collapsed Pairs"}
+                cats_pec["full-length_cp"] = {"name": "Full-length Collapsed Reads"}
+                cats_pec["truncated_cp"] = {"name": "Truncated Collapsed Reads"}
 
         cats_pec["discarded_m1"] = {"name": "Discarded R1"}
 
