@@ -179,24 +179,22 @@ class MultiqcModule(BaseMultiqcModule):
         self.result_data["reads_total"] = reads_total
         self.result_data["discarded_total"] = reads_total - self.result_data["retained"]
         if self.__read_type == "paired":
-          if not self.__collapsed:
-              self.result_data["paired_reads"] = (
-              self.result_data["retained"] 
-              - self.result_data["singleton_m1"] 
-              - self.result_data["singleton_m2"]
-              )
-          else:
-              self.result_data["paired_reads"] = (
-              self.result_data["retained"] 
-              - self.result_data["full-length_cp"] 
-              - self.result_data["truncated_cp"] 
-              - self.result_data["singleton_m1"] 
-              - self.result_data["singleton_m2"]
-              )
-          full_length_cp = self.result_data["full-length_cp"] * 2
-          truncated_cp = self.result_data["truncated_cp"] * 2
-          self.result_data["full-length_cp"] = full_length_cp
-          self.result_data["truncated_cp"] = truncated_cp
+            if not self.__collapsed:
+                self.result_data["paired_reads"] = (
+                    self.result_data["retained"] - self.result_data["singleton_m1"] - self.result_data["singleton_m2"]
+                )
+            else:
+                self.result_data["paired_reads"] = (
+                    self.result_data["retained"]
+                    - self.result_data["full-length_cp"]
+                    - self.result_data["truncated_cp"]
+                    - self.result_data["singleton_m1"]
+                    - self.result_data["singleton_m2"]
+                )
+            full_length_cp = self.result_data["full-length_cp"] * 2
+            truncated_cp = self.result_data["truncated_cp"] * 2
+            self.result_data["full-length_cp"] = full_length_cp
+            self.result_data["truncated_cp"] = truncated_cp
         try:
             self.result_data["percent_aligned"] = (
                 float(self.result_data["aligned"]) * 100.0 / float(self.result_data["total"])
