@@ -181,7 +181,9 @@ class MultiqcModule(BaseMultiqcModule):
         if self.__read_type == "paired":
           if not self.__collapsed:
               self.result_data["paired_reads"] = (
-              self.result_data["retained"] - self.result_data["singleton_m1"] - self.result_data["singleton_m2"]
+              self.result_data["retained"] 
+              - self.result_data["singleton_m1"] 
+              - self.result_data["singleton_m2"]
               )
           else:
               self.result_data["paired_reads"] = (
