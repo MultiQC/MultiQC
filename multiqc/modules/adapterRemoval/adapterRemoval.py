@@ -283,7 +283,7 @@ class MultiqcModule(BaseMultiqcModule):
         cats_pec = OrderedDict()
 
         if self.__any_paired:
-            cats_pec["paired_reads"] = {"name": "Paired Reads"}
+            cats_pec["paired_reads"] = {"name": "Uncollapsed Paired Reads"}
 
         cats_pec["singleton_m1"] = {"name": "Singleton R1"}
 
@@ -298,11 +298,16 @@ class MultiqcModule(BaseMultiqcModule):
 
         if self.__any_paired:
             cats_pec["discarded_m2"] = {"name": "Discarded R2"}
-
+        if self.__any_collapsed:
+            retained_chart_description = "The number of input sequences that were retained, collapsed, and discarded. Be aware that t
+he number of collapsed reads in the output FASTQ will be half of the numbers displayed in this plot, because both R1 and R2 of
+the collapsed sequences are counted here."
+        else:
+            retained_chart_description = "The number of input sequences that were retained and discarded."
         self.add_section(
-            name="Retained and Discarded Paired-End Collapsed",
+            name="Retained and Discarded Reads",
             anchor="adapter_removal_retained_plot",
-            description="The number of retained and discarded reads.",
+            description=retained_chart_description,
             plot=bargraph.plot(self.adapter_removal_data, cats_pec, pconfig),
         )
 
@@ -345,7 +350,7 @@ class MultiqcModule(BaseMultiqcModule):
         pconfig["data_labels"] = data_labels
 
         self.add_section(
-            name="Length Distribution Paired End Collapsed",
+            name="Length Distribution",
             anchor="ar_length_count",
             description="The length distribution of reads after processing adapter alignment.",
             plot=linegraph.plot(lineplot_data, pconfig),
