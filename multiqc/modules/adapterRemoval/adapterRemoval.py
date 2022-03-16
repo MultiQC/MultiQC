@@ -299,9 +299,7 @@ class MultiqcModule(BaseMultiqcModule):
         if self.__any_paired:
             cats_pec["discarded_m2"] = {"name": "Discarded R2"}
         if self.__any_collapsed:
-            retained_chart_description = "The number of input sequences that were retained, collapsed, and discarded. Be aware that t
-he number of collapsed reads in the output FASTQ will be half of the numbers displayed in this plot, because both R1 and R2 of
-the collapsed sequences are counted here."
+            retained_chart_description = "The number of input sequences that were retained, collapsed, and discarded. Be aware that the number of collapsed reads in the output FASTQ will be half of the numbers displayed in this plot, because both R1 and R2 of the collapsed sequences are counted here."
         else:
             retained_chart_description = "The number of input sequences that were retained and discarded."
         self.add_section(
