@@ -218,7 +218,7 @@ class MultiqcModule(BaseMultiqcModule):
             )
         except ZeroDivisionError:
             self.result_data["percent_discarded"] = 0
-            
+
     def set_len_dist(self, len_dist_data):
 
         for line in len_dist_data[1:]:
@@ -304,7 +304,6 @@ class MultiqcModule(BaseMultiqcModule):
             "scale": "RdYlGn-rev",
             "shared_key": "percent_discarded",
         }
-
         self.general_stats_addcols(self.adapter_removal_data, headers)
 
     def adapter_removal_retained_chart(self):
