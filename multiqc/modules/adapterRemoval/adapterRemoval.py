@@ -201,7 +201,24 @@ class MultiqcModule(BaseMultiqcModule):
             )
         except ZeroDivisionError:
             self.result_data["percent_aligned"] = 0
-
+        if self.__collapsed:
+            try:
+                self.result_data["percent_collapsed"] = (
+                    float(self.result_data["full-length_cp"] + self.result_data["truncated_cp"])
+                    * 100.0
+                    / float(self.result_data["reads_total"])
+                )
+            except ZeroDivisionError:
+                self.result_data["percent_collapsed"] = 0
+        try:
+            self.result_data["percent_discarded"] = (
+                float(self.result_data["discarded_m1"] + self.result_data["discarded_m2"])
+                * 100.0
+                / float(self.result_data["reads_total"])
+            )
+        except ZeroDivisionError:
+            self.result_data["percent_discarded"] = 0
+            
     def set_len_dist(self, len_dist_data):
 
         for line in len_dist_data[1:]:
@@ -268,6 +285,26 @@ class MultiqcModule(BaseMultiqcModule):
             "scale": "PuBu",
             "shared_key": "read_count",
         }
+        if self.__any_collapsed:
+            headers["percent_collapsed"] = {
+                "title": "% Collapsed",
+                "description": "% collapsed reads",
+                "max": 100,
+                "min": 0,
+                "suffix": "%",
+                "scale": "RdYlGn-rev",
+                "shared_key": "percent_aligned",
+            }
+        headers["percent_discarded"] = {
+            "title": "% Discarded",
+            "description": "% discarded reads",
+            "max": 100,
+            "min": 0,
+            "suffix": "%",
+            "scale": "RdYlGn-rev",
+            "shared_key": "percent_discarded",
+        }
+
         self.general_stats_addcols(self.adapter_removal_data, headers)
 
     def adapter_removal_retained_chart(self):
