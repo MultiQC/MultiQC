@@ -12,6 +12,7 @@ from .plot_ihist import plot_ihist
 from .plot_indelhist import plot_indelhist
 from .plot_mhist import plot_mhist
 from .plot_qahist import plot_qahist
+from .plot_qchist import plot_qchist
 from .plot_qhist import plot_qhist
 
 
@@ -32,6 +33,7 @@ section_order = [
     "indelhist",
     "mhist",
     "qahist",
+    "qchist",
     "qhist",
     "aqhist",
     "ehist",
@@ -76,6 +78,10 @@ file_types = {
             ),
         },
         "cols": odict["Name":str, "Reads":int, "ReadsPct" : lambda v: float(v.strip("%"))],
+        "extracols": odict[
+            "Bases":int,
+            "BasesPct":float,
+        ],
         "plot_func": None,  ## Plotting for 'stats' not implemented
         "plot_params": {},
     },
@@ -320,6 +326,24 @@ file_types = {
         ],
         "plot_func": plot_qahist,
         "plot_params": {},
+    },
+    "qchist": {
+        "title": "Count of bases with each quality value",
+        "descr": "Histogram of base qualities (`qchist`). "
+        "Plot shows the number of bases at each quality score. Zero counts are shown as `0.1` due to log axis.",
+        "help_text": "",
+        "cols": odict["Quality":int, "count1":int, "fraction1":float],
+        "plot_func": plot_qchist,
+        "plot_params": {
+            "xPlotBands": [
+                {"from": 30, "to": 100, "color": "#c3e6c3"},
+                {"from": 20, "to": 30, "color": "#e6dcc3"},
+                {"from": 0, "to": 20, "color": "#e6c3c3"},
+            ],
+            "yLog": True,
+            "xlab": "Phred Score",
+            "ylab": "Counts",
+        },
     },
     "qhist": {
         "title": "Sequence Quality Histograms",

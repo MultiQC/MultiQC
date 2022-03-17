@@ -25,6 +25,7 @@ class MultiqcModule(BaseMultiqcModule):
             info=" is a genetic variant annotation and effect prediction "
             "toolbox. It annotates and predicts the effects of variants "
             "on genes (such as amino acid changes). ",
+            doi="10.4161/fly.19695",
         )
 
         self.snpeff_data = dict()

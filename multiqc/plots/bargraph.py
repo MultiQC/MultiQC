@@ -178,7 +178,7 @@ def plot(data, cats=None, pconfig=None):
             plotdata.append(hc_data)
 
     if len(plotdata) == 0:
-        logger.warning("Tried to make bar plot, but had no data")
+        logger.warning(f"Tried to make bar plot, but had no data: {pconfig.get('id')}")
         return '<p class="text-danger">Error - was not able to plot data.</p>'
 
     # Make a plot - custom, interactive or flat
@@ -198,7 +198,11 @@ def plot(data, cats=None, pconfig=None):
         else:
             # Use MatPlotLib to generate static plots if requested
             if config.export_plots:
-                matplotlib_bargraph(plotdata, plotsamples, pconfig)
+                try:
+                    matplotlib_bargraph(plotdata, plotsamples, pconfig)
+                except Exception as e:
+                    logger.error("############### Error making MatPlotLib figure! Plot not exported.")
+                    logger.debug(e, exc_info=True)
             # Return HTML for HighCharts dynamic plot
             return highcharts_bargraph(plotdata, plotsamples, pconfig)
 
@@ -279,10 +283,11 @@ def highcharts_bargraph(plotdata, plotsamples=None, pconfig=None):
         html += "</div>\n\n"
 
     # Plot HTML
-    html += """<div class="hc-plot-wrapper">
+    html += """<div class="hc-plot-wrapper"{height}>
         <div id="{id}" class="hc-plot not_rendered hc-bar-plot"><small>loading..</small></div>
     </div></div>""".format(
-        id=pconfig["id"]
+        id=pconfig["id"],
+        height=f' style="height:{pconfig["height"]}px"' if "height" in pconfig else "",
     )
 
     report.num_hc_plots += 1
@@ -392,7 +397,8 @@ def matplotlib_bargraph(plotdata, plotsamples, pconfig=None):
                 if s_name not in fdata:
                     fdata[s_name] = dict()
                 fdata[s_name][d["name"]] = dval
-        util_functions.write_data_file(fdata, pids[pidx])
+        if pconfig.get("save_data_file", True):
+            util_functions.write_data_file(fdata, pids[pidx])
 
         # Plot percentage as well as counts
         plot_pcts = [False]
@@ -417,9 +423,18 @@ def matplotlib_bargraph(plotdata, plotsamples, pconfig=None):
                     hide_plot = True
 
             # Set up figure
-            plt_height = len(plotsamples[pidx]) / 2.3
+
+            # Height has a default, then adjusted by the number of samples
+            plt_height = len(plotsamples[pidx]) / 2.3  # Default in inches, empirically determined
             plt_height = max(6, plt_height)  # At least 6" tall
             plt_height = min(30, plt_height)  # Cap at 30" tall
+
+            # Use fixed height if pconfig['height'] is set (convert pixels -> inches)
+            if "height" in pconfig:
+                # Default interactive height in pixels = 512
+                # Not perfect replication, but good enough
+                plt_height = 6 * (pconfig["height"] / 512)
+
             bar_width = 0.8
 
             fig = plt.figure(figsize=(14, plt_height), frameon=False)
@@ -474,7 +489,9 @@ def matplotlib_bargraph(plotdata, plotsamples, pconfig=None):
                 prev_values = values
 
             # Tidy up axes
-            axes.tick_params(labelsize=8, direction="out", left=False, right=False, top=False, bottom=False)
+            axes.tick_params(
+                labelsize=pconfig.get("labelSize", 8), direction="out", left=False, right=False, top=False, bottom=False
+            )
             axes.set_xlabel(pconfig.get("ylab", ""))  # I know, I should fix the fact that the config is switched
             axes.set_ylabel(pconfig.get("xlab", ""))
             axes.set_yticks(y_ind)  # Specify where to put the labels
@@ -516,7 +533,7 @@ def matplotlib_bargraph(plotdata, plotsamples, pconfig=None):
                 bbox_to_anchor=(0, bottom_gap, 1, 0.102),
                 ncol=5,
                 mode="expand",
-                fontsize=8,
+                fontsize=pconfig.get("labelSize", 8),
                 frameon=False,
             )
 

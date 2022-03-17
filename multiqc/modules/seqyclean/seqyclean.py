@@ -20,6 +20,7 @@ class MultiqcModule(BaseMultiqcModule):
             anchor="seqyclean",
             href="https://github.com/ibest/seqyclean",
             info="is a pre-processing tool for NGS data that filters adapters, vectors, and contaminants while quality trimming.",
+            doi="10.1145/3107411.3107446",
         )
 
         # Parse logs
@@ -37,6 +38,8 @@ class MultiqcModule(BaseMultiqcModule):
                 except (ValueError, TypeError):
                     pass
                 self.seqyclean_data[f["s_name"]].update({header: col})
+
+            self.add_data_source(f)
 
         if len(self.seqyclean_data) == 0:
             raise UserWarning

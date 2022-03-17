@@ -31,6 +31,7 @@ class MultiqcModule(BaseMultiqcModule):
             anchor="somalier",
             href="https://github.com/brentp/somalier",
             info="calculates genotype :: pedigree correspondence checks from sketches derived from BAM/CRAM or VCF",
+            doi="10.1186/s13073-020-00761-2",
         )
 
         # Find and load any somalier reports
@@ -546,7 +547,7 @@ class MultiqcModule(BaseMultiqcModule):
             if "X_depth_mean" in d and "original_pedigree_sex" in d:
                 data[s_name] = {
                     "x": (random.random() - 0.5) * 0.1 + sex_index.get(d["original_pedigree_sex"], 2),
-                    "y": d["X_depth_mean"],
+                    "y": 2 * d["X_depth_mean"] / d["gt_depth_mean"],
                 }
 
         if len(data) > 0:

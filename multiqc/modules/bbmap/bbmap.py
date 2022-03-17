@@ -2,7 +2,7 @@
 from __future__ import print_function
 import logging
 from collections import OrderedDict
-
+from multiqc.utils import config
 from multiqc.plots import table
 from multiqc.modules.base_module import BaseMultiqcModule
 
@@ -26,6 +26,8 @@ class MultiqcModule(BaseMultiqcModule):
             href="http://jgi.doe.gov/data-and-tools/bbtools/",
             info="""is a suite of fast multithreaded bioinformatics tools
             designed for the analysis of DNA and RNA sequence data.""",
+            # One publication, but only for the merge tool:
+            # doi="10.1371/journal.pone.0185056",
         )
 
         # Init data dict
@@ -45,6 +47,9 @@ class MultiqcModule(BaseMultiqcModule):
         else:
             num_samples = max([len(self.mod_data[ft].keys()) for ft in self.mod_data])
             log.info("Found {} reports".format(num_samples))
+
+        # Write data to file
+        self.write_data_file(self.mod_data, "bbmap")
 
         for file_type in section_order:
             if len(self.mod_data[file_type]) > 0:
@@ -67,6 +72,29 @@ class MultiqcModule(BaseMultiqcModule):
                     helptext=file_types[file_type]["help_text"],
                     plot=self.make_basic_table(file_type),
                 )
+
+        # Special case - qchist metric in General Stats
+        if "qchist" in self.mod_data:
+            data = {}
+            fraction_gt_q30 = []
+            for s_name in self.mod_data["qchist"]:
+                for qual, d in self.mod_data["qchist"][s_name]["data"].items():
+                    if int(qual) >= 30:
+                        fraction_gt_q30.append(d[1])
+                data[s_name] = {"pct_q30": sum(fraction_gt_q30) * 100.0}
+
+            headers = {
+                "pct_q30": {
+                    "title": "% Q30 bases",
+                    "description": "BBMap qchist - Percentage of bases with phred quality score >= 30",
+                    "suffix": " %",
+                    "scale": "RdYlGn",
+                    "format": "{:,.2f}",
+                    "min": 0,
+                    "max": 100,
+                }
+            }
+            self.general_stats_addcols(data, headers)
 
     def parse_logs(self, file_type, root, s_name, fn, f, **kw):
 
@@ -120,9 +148,9 @@ class MultiqcModule(BaseMultiqcModule):
                 else:
                     # It should be the table header. Verify:
                     if line != cols:
-                        if line != cols + list(log_descr["extracols"].keys()):
+                        if line != cols + list(log_descr.get("extracols", {}).keys()):
                             log.error("Table headers do not match those 'on file'. %s != %s", repr(line), repr(cols))
-                        return False
+                            return False
             else:
                 if isinstance(log_descr["cols"], OrderedDict):
                     line = [value_type(value) for value_type, value in zip(log_descr["cols"].values(), line)]

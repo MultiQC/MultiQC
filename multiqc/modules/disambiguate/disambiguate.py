@@ -17,9 +17,8 @@ class MultiqcModule(BaseMultiqcModule):
             name="Disambiguate",
             anchor="disambiguate",
             href="https://github.com/AstraZeneca-NGS/disambiguate",
-            info=(
-                "is an algorithm for disambiguating reads aligned " "to two different species (e.g. human and mouse)."
-            ),
+            info="is an algorithm for disambiguating reads aligned to two different species (e.g. human and mouse).",
+            doi="10.12688/f1000research.10082.1",
         )
 
         self.data = {}

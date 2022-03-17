@@ -30,7 +30,8 @@ class MultiqcModule(BaseMultiqcModule, StatsReportMixin, FlagstatReportMixin, Id
             anchor="Samtools",
             target="Samtools",
             href="http://www.htslib.org",
-            info=(" is a suite of programs for interacting with " "high-throughput sequencing data."),
+            info=" is a suite of programs for interacting with high-throughput sequencing data.",
+            doi="10.1093/bioinformatics/btp352",
         )
 
         # Set up class objects to hold parsed data
