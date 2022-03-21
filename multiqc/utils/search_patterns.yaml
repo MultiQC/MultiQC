@@ -85,6 +85,7 @@ bcl2fastq:
   num_lines: 300
 bclconvert/runinfo:
   fn: "RunInfo.xml"
+  shared: true
 bclconvert/demux:
   fn: "Demultiplex_Stats.csv"
 bclconvert/quality_metrics:
