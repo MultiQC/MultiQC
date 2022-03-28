@@ -44,8 +44,15 @@ class MultiqcModule(DragenBaseMetrics, DragenReadMetrics, DragenFastqcGcMetrics,
 
         data_by_sample = {}
         for f in self.find_log_files('dragen_fastqc'):
-            data_by_mate = parse_fastqc_metrics_file(f)
-            if f['s_name'] in data_by_sample:
+            s_name, data_by_mate = parse_fastqc_metrics_file(f)
+
+            # Clean sample name and key
+            new_s_name = self.clean_s_name(s_name, f)
+            data_by_mate[new_s_name] = data_by_mate.pop(s_name)
+            s_name = new_s_name
+            del new_s_name
+
+            if s_name in data_by_sample:
                 log.debug('Duplicate sample name found! Overwriting: {}'.format(f['s_name']))
             self.add_data_source(f, section='stats')
             data_by_sample.update(data_by_mate)

@@ -32,9 +32,10 @@ class DragenMappingMetics(BaseMultiqcModule):
             self.add_data_source(f, section="stats")
             data_by_phenotype_by_sample[s_name].update(data_by_phenotype)
 
-            for rg, data in data_by_readgroup.items():
-                if any(rg in d_rg for sn, d_rg in data_by_rg_by_sample.items()):
-                    log.debug(f"Duplicate read group name {rg} found for output prefix {s_name}! Overwriting")
+            for phenotype, phenotype_d in data_by_readgroup.items():
+                for rg, data in phenotype_d.items():
+                    if any(rg in d_rg for sn, d_rg in data_by_rg_by_sample.items()):
+                        log.debug(f"Duplicate read group name {rg} found for output prefix {s_name}! Overwriting")
             data_by_rg_by_sample[s_name].update(data_by_readgroup)
 
         # filter to strip out ignored sample names:
@@ -50,6 +51,17 @@ class DragenMappingMetics(BaseMultiqcModule):
                     new_sn = sn + "_normal"
                 data_by_sample[new_sn] = data_by_phenotype_by_sample[sn][phenotype]
 
+        # flattening phenotype-sample data by adding a prefix " normal" to the normal samples
+        data_by_rg_by_sample_new = dict()
+        for sn in data_by_rg_by_sample:
+            for phenotype in data_by_rg_by_sample[sn]:
+                new_sn = sn
+                if phenotype == "normal":
+                    new_sn = sn + "_normal"
+                data_by_rg_by_sample_new[new_sn] = data_by_rg_by_sample[sn][phenotype]
+        data_by_rg_by_sample = data_by_rg_by_sample_new
+        del data_by_rg_by_sample_new
+
         if not data_by_rg_by_sample and not data_by_phenotype_by_sample:
             return set()
 
@@ -57,15 +69,23 @@ class DragenMappingMetics(BaseMultiqcModule):
         self.write_data_file(data_by_sample, "dragen_map_metrics")
 
         self.report_mapping_metrics(data_by_sample, data_by_rg_by_sample)
+
         return data_by_rg_by_sample.keys()
 
     def report_mapping_metrics(self, data_by_sample, data_by_rg_by_sample):
         # merging all read group data
         data_by_rg = dict()
+
         for sname in data_by_rg_by_sample:
             for rg, d in data_by_rg_by_sample[sname].items():
-                if rg in data_by_rg:
-                    rg = rg + " (" + sname + ")"
+                # Check only one read-group per sample
+                if len(list(data_by_rg_by_sample[sname].keys())) == 1:
+                    rg = sname
+                    data_by_rg[rg] = d
+                    continue
+
+                # Multiple read-groups per sample
+                rg = sname + f" ({rg}) "
                 data_by_rg[rg] = d
 
         # getting all available metric names to determine table headers
@@ -372,12 +392,15 @@ def parse_mapping_metrics_file(f):
         if analysis == "ALIGNING PER RG":
             # setting normal and tumor sample names for future use
             readgroup = fields[1]
-            data_by_readgroup[readgroup][metric] = value
+            if readgroup not in data_by_readgroup[phenotype].keys():
+                data_by_readgroup[phenotype][readgroup] = {}
+            data_by_readgroup[phenotype][readgroup][metric] = value
             if percentage is not None:
-                data_by_readgroup[readgroup][metric + " pct"] = percentage
+                data_by_readgroup[phenotype][readgroup][metric + " pct"] = percentage
 
     # adding some missing values that we wanna report for consistency
-    for data in itertools.chain(data_by_readgroup.values(), data_by_phenotype.values()):
+    # Expand data_by_readgroup to values below phenotype level
+    for data in itertools.chain(*[data_by_readgroup[key].values() for key in data_by_readgroup.keys()], data_by_phenotype.values()):
         # fixing when deduplication wasn't performed, or running with single-end data
         for field in [
             "Number of duplicate marked and mate reads removed",

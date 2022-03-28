@@ -25,7 +25,6 @@ def parse_fastqc_metrics_file(f):
     ...
     """
     s_name = re.search(r'(.*).fastqc_metrics.csv', f['fn']).group(1)
-    f['s_name'] = s_name
     data_by_sample = initialize_dataset(s_name)
 
     for line in f['f'].splitlines():
@@ -55,7 +54,7 @@ def parse_fastqc_metrics_file(f):
     for key in delete:
         del data_by_sample[s_name][key]
 
-    return data_by_sample
+    return s_name, data_by_sample
 
 
 def initialize_dataset(s_name):
