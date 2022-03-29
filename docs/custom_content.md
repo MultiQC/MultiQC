@@ -14,6 +14,10 @@ All plot types can be generated using custom content - see the
 [test files](https://github.com/ewels/MultiQC_TestData/tree/master/data/custom_content)
 for examples of how data should be structured.
 
+> **Note**: Use the name `custom_content` to refer to this module within configuration
+> settings that require a module name, such as [`module_order`](#order-of-modules) or
+> [`run_modules`](#removing-modules-or-sections).
+
 ## Data from a released tool
 
 If your data comes from a released bioinformatics tool, you shouldn't be using this
@@ -36,6 +40,18 @@ Images will be embedded within the HTML file, so will be self contained.
 Note that this means that it's very possible to make the HTML file very very large if abused!
 
 The report section name and description will be automatically based on the filename.
+
+Note that if you are using `sp:` to take in images with a custom filename you need to also set `ignore_images: false` in your config. For example:
+
+```yaml
+custom_data:
+  my_custom_content_image:
+    section_name: "My nice image"
+sp:
+  my_custom_content_image:
+    fn: "*.png"
+ignore_images: false
+```
 
 ## MultiQC-specific data file
 
@@ -121,6 +137,9 @@ If no configuration is given, MultiQC will do its best to guess how to visualise
 To see examples of typical file structures which are understood, see the
 [test data](https://github.com/ewels/MultiQC_TestData/tree/master/data/custom_content/no_config)
 used to develop this code. Something will be probably be shown, but it may produce unexpected results.
+
+> **Note:** Check [Tricky extras](#tricky-extras) for certain caveats about formatting headers for custom
+> `tsv` or `csv` files, particularly for the first column.
 
 ## Data as part of MultiQC config
 
@@ -272,6 +291,10 @@ Note that some things, such as `parent_name` are taken from the first file that 
 with this `parent_id`. So it's a good idea to specify this in every file.
 `parent_description` and `extra` is taken from the first file where it is set.
 
+> `parent_id` only works within Custom Content.
+> It is not currently possible to add custom content output into a report section
+> from a core MultiQC module.
+
 ## Order of sections
 
 If you have multiple different Custom Content sections, their order will be random
@@ -366,6 +389,9 @@ in the `pconfig` scope (see above example). Files that are just tables use `head
 The first column in every table is reserved for the sample name. As such, it shouldn't contain data.
 All header configuration will be ignored for the first column. The only exception is name:
 this can be tweaked using the somewhat tricky `col1_header` field in the `pconfig` scope (see table docs).
+Alternatively, you can customise the column name by including a 'header row' in the first line of the `tsv`
+or `csv` itself specifying the column names, with the first column with the name of your choice, and
+subsequent columns including the key(s) defined in the header.
 
 ## Linting
 

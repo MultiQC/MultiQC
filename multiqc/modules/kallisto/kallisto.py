@@ -17,7 +17,7 @@ log = logging.getLogger(__name__)
 
 
 class MultiqcModule(BaseMultiqcModule):
-    """ Kallisto module """
+    """Kallisto module"""
 
     def __init__(self):
 
@@ -27,6 +27,7 @@ class MultiqcModule(BaseMultiqcModule):
             anchor="kallisto",
             href="http://pachterlab.github.io/kallisto/",
             info="is a program for quantifying abundances of transcripts from RNA-Seq data.",
+            doi="10.1038/nbt.3519",
         )
 
         # Find and load any Kallisto reports
@@ -58,7 +59,7 @@ class MultiqcModule(BaseMultiqcModule):
             # Get input filename
             match = re.search(r"\[quant\] will process (pair|file) 1: (\S+)", l)
             if match:
-                s_name = self.clean_s_name(os.path.basename(match.group(2)), f["root"])
+                s_name = self.clean_s_name(os.path.basename(match.group(2)), f)
 
             if s_name is not None:
                 # Alignment rates
@@ -117,7 +118,7 @@ class MultiqcModule(BaseMultiqcModule):
         self.general_stats_addcols(self.kallisto_data, headers)
 
     def kallisto_alignment_plot(self):
-        """ Make the HighCharts HTML to plot the alignment rates """
+        """Make the HighCharts HTML to plot the alignment rates"""
 
         # Specify the order of the different possible categories
         keys = OrderedDict()

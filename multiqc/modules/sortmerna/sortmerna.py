@@ -25,12 +25,14 @@ class MultiqcModule(BaseMultiqcModule):
             anchor="sortmerna",
             href="http://bioinfo.lifl.fr/RNA/sortmerna/",
             info="is a program for filtering, mapping and OTU-picking NGS reads in metatranscriptomic and metagenomic data.",
+            doi="10.1093/bioinformatics/bts611",
         )
 
         # Parse logs
         self.sortmerna = dict()
         for f in self.find_log_files("sortmerna", filehandles=True):
             self.parse_sortmerna(f)
+            self.add_data_source(f)
 
         # Filter to strip out ignored sample names
         self.sortmerna = self.ignore_samples(self.sortmerna)
@@ -69,7 +71,7 @@ class MultiqcModule(BaseMultiqcModule):
         for l in f["f"]:
             if "Reads file" in l:
                 parts = re.split(":|=", l)
-                s_name = self.clean_s_name(parts[-1], f["root"])
+                s_name = self.clean_s_name(parts[-1], f)
                 self.sortmerna[s_name] = dict()
             if "Results:" in l and not post_results_start:  # old versions
                 post_results_start = True
@@ -127,7 +129,7 @@ class MultiqcModule(BaseMultiqcModule):
         s_name = None
 
     def sortmerna_detailed_barplot(self):
-        """ Make the HighCharts HTML to plot the sortmerna rates """
+        """Make the HighCharts HTML to plot the sortmerna rates"""
 
         # Specify the order of the different possible categories
         keys = {}

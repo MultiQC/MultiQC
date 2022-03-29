@@ -28,6 +28,7 @@ class MultiqcModule(BaseMultiqcModule):
             info="allows you to screen a library of sequences in FastQ format against"
             " a set of sequence databases so you can see if the composition of the"
             " library matches with what you expect.",
+            doi="10.12688/f1000research.15931.2",
         )
 
         # Find and load any FastQ Screen reports
@@ -72,7 +73,7 @@ class MultiqcModule(BaseMultiqcModule):
         self.write_data_file(self.parse_csv(), "multiqc_fastq_screen")
 
     def parse_fqscreen(self, f):
-        """ Parse the FastQ Screen output into a 3D dict """
+        """Parse the FastQ Screen output into a 3D dict"""
         parsed_data = OrderedDict()
         nohits_pct = None
         headers = None
@@ -307,7 +308,7 @@ class MultiqcModule(BaseMultiqcModule):
         return bargraph.plot(data, cats, pconfig)
 
     def fqscreen_bisulfite_plot(self):
-        """ Make a stacked barplot for the bisulfite data, if we have any """
+        """Make a stacked barplot for the bisulfite data, if we have any"""
 
         pconfig = {
             "id": "fastq_screen_bisulfite_plot",

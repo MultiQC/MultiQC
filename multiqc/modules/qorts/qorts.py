@@ -24,12 +24,14 @@ class MultiqcModule(BaseMultiqcModule):
             anchor="qorts",
             href="http://hartleys.github.io/QoRTs/",
             info="is toolkit for analysis, QC and data management of RNA-Seq datasets.",
+            doi="10.1186/s12859-015-0670-5",
         )
 
         # Parse logs
         self.qorts_data = dict()
         for f in self.find_log_files("qorts", filehandles=True):
             self.parse_qorts(f)
+            self.add_data_source(f)
 
         # Remove empty samples
         self.qorts_data = {s: v for s, v in self.qorts_data.items() if len(v) > 0}
@@ -55,10 +57,11 @@ class MultiqcModule(BaseMultiqcModule):
         for l in f["f"]:
             s = l.split("\t")
             if s_names is None:
-                s_names = [self.clean_s_name(s_name, f["root"]) for s_name in s[1:]]
-                if len(s_names) <= 2 and s_names[0].endswith("COUNT"):
+                raw_s_names = s[1:]
+                s_names = [self.clean_s_name(s_name, f) for s_name in raw_s_names]
+                if len(s_names) <= 2 and raw_s_names[0].endswith("COUNT"):
                     if f["fn"] == "QC.summary.txt":
-                        s_names = [self.clean_s_name(os.path.basename(os.path.normpath(f["root"])), f["root"])]
+                        s_names = [self.clean_s_name(os.path.basename(os.path.normpath(f["root"])), f)]
                     else:
                         s_names = [f["s_name"]]
                 for s_name in s_names:
@@ -79,7 +82,7 @@ class MultiqcModule(BaseMultiqcModule):
                 ) * 100.0
 
     def qorts_general_stats(self):
-        """ Add columns to the General Statistics table """
+        """Add columns to the General Statistics table"""
         headers = OrderedDict()
         headers["Genes_PercentWithNonzeroCounts"] = {
             "title": "% Genes with Counts",
@@ -97,7 +100,7 @@ class MultiqcModule(BaseMultiqcModule):
         self.general_stats_addcols(self.qorts_data, headers)
 
     def qorts_alignment_barplot(self):
-        """ Alignment statistics bar plot """
+        """Alignment statistics bar plot"""
         # Specify the order of the different possible categories
         keys = [
             "ReadPairs_UniqueGene_CDS",
@@ -151,7 +154,7 @@ class MultiqcModule(BaseMultiqcModule):
         )
 
     def qorts_splice_loci_barplot(self):
-        """ Make the HighCharts HTML to plot the qorts splice loci """
+        """Make the HighCharts HTML to plot the qorts splice loci"""
         # Specify the order of the different possible categories
         keys = [
             "SpliceLoci_Known_ManyReads",
@@ -208,7 +211,7 @@ class MultiqcModule(BaseMultiqcModule):
         )
 
     def qorts_splice_events_barplot(self):
-        """ Make the HighCharts HTML to plot the qorts splice events """
+        """Make the HighCharts HTML to plot the qorts splice events"""
         # Specify the order of the different possible categories
         keys = [
             "SpliceEvents_KnownLociWithManyReads",
@@ -260,7 +263,7 @@ class MultiqcModule(BaseMultiqcModule):
         )
 
     def qorts_strandedness_plot(self):
-        """ Make a bar plot showing the reads assigned to each strand """
+        """Make a bar plot showing the reads assigned to each strand"""
         # Specify the order of the different possible categories
         keys = [
             "StrandTest_frFirstStrand",

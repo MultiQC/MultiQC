@@ -23,8 +23,8 @@ The MultiQC module plots coverage distributions from 2 kinds of outputs:
 
 Using "region" if exists, otherwise "global". Plotting 3 figures:
 
-- Distribution of the number of locations in the genome with a given depth of coverage.
-- Absoulute number of locations in the genome with a given depth of coverage.
+- Proportion of bases in the reference genome with, at least, a given depth of coverage (cumulative coverage distribution).
+- Proportion of bases in the reference genome with a given depth of coverage (absolute coverage distribution).
 - Average coverage per contig/chromosome.
 
 Also plotting the percentage of the genome covered at a threshold in the General Stats section.
@@ -48,3 +48,33 @@ general_stats_coverage_hidden:
   - 20
   - 200
 ```
+
+For the per-contig coverage plot, you can include and exclude contigs based on name or pattern.
+
+For example, you could add the following to your MultiQC config file:
+
+```yaml
+mosdepth_config:
+  include_contigs:
+    - "chr*"
+  exclude_contigs:
+    - "*_alt"
+    - "*_decoy"
+    - "*_random"
+    - "chrUn*"
+    - "HLA*"
+    - "chrM"
+    - "chrEBV"
+```
+
+Note that exclusion superseeds inclusion for the contig filters.
+
+If you want to see what is being excluded, you can set `show_excluded_debug_logs` to `True`:
+
+```yaml
+mosdepth_config:
+  show_excluded_debug_logs: True
+```
+
+This will then print a debug log message (use `multiqc -v`) for each excluded contig.
+This is disabled by default as there can be very many in some cases.

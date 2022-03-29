@@ -96,7 +96,7 @@ if len(avail_modules) == 0 or len(avail_templates) == 0:
 ##### Functions to load user config files. These are called by the main MultiQC script.
 # Note that config files are loaded in a specific order and values can overwrite each other.
 def mqc_load_userconfig(paths=()):
-    """ Overwrite config defaults with user config files """
+    """Overwrite config defaults with user config files"""
 
     # Load and parse installation config file if we find it
     mqc_load_config(os.path.join(os.path.dirname(MULTIQC_DIR), "multiqc_config.yaml"))
@@ -117,7 +117,7 @@ def mqc_load_userconfig(paths=()):
 
 
 def mqc_load_config(yaml_config):
-    """ Load and parse a config file if we find it """
+    """Load and parse a config file if we find it"""
     if not os.path.isfile(yaml_config) and os.path.isfile(yaml_config.replace(".yaml", ".yml")):
         yaml_config = yaml_config.replace(".yaml", ".yml")
 
@@ -155,8 +155,8 @@ def mqc_cl_config(cl_config):
 
 
 def mqc_add_config(conf, conf_path=None):
-    """ Add to the global config with given MultiQC config dict """
-    global fn_clean_exts, fn_clean_trim
+    """Add to the global config with given MultiQC config dict"""
+    global custom_css_files, fn_clean_exts, fn_clean_trim
     for c, v in conf.items():
         if c == "sp":
             # Merge filename patterns instead of replacing
@@ -182,6 +182,19 @@ def mqc_add_config(conf, conf_path=None):
                 continue
             logger.debug("New config '{}': {}".format(c, fpath))
             update({c: fpath})
+        elif c == "custom_css_files":
+            for fpath in v:
+                if os.path.exists(fpath):
+                    fpath = os.path.abspath(fpath)
+                elif conf_path is not None and os.path.exists(os.path.join(os.path.dirname(conf_path), fpath)):
+                    fpath = os.path.abspath(os.path.join(os.path.dirname(conf_path), fpath))
+                else:
+                    logger.error("CSS path '{}' path not found, skipping ({})".format(c, fpath))
+                    continue
+                logger.debug("Adding css file '{}': {}".format(c, fpath))
+                if not custom_css_files:
+                    custom_css_files = []
+                custom_css_files.append(fpath)
         else:
             logger.debug("New config '{}': {}".format(c, v))
             update({c: v})
@@ -220,6 +233,20 @@ def load_sample_names(snames_file):
     logger.debug("Found {} sample renaming patterns".format(len(sample_names_rename_buttons)))
 
 
+def load_replace_names(rnames_file):
+    global sample_names_replace
+    try:
+        with open(rnames_file) as f:
+            logger.debug("Loading sample replace config settings from: {}".format(rnames_file))
+            for l in f:
+                s = l.strip().split("\t")
+                if len(s) == 2:
+                    sample_names_replace[s[0]] = s[1]
+    except (IOError, AttributeError) as e:
+        logger.error("Error loading sample names replacement file: {}".format(e))
+    logger.debug("Found {} sample replacing patterns".format(len(sample_names_replace)))
+
+
 def load_show_hide(sh_file):
     global show_hide_buttons, show_hide_patterns, show_hide_mode
     if sh_file:
@@ -253,7 +280,7 @@ def update(u):
 def update_dict(d, u):
     """Recursively updates nested dict d from nested dict u"""
     for key, val in u.items():
-        if isinstance(val, collections.Mapping):
+        if isinstance(val, collections.abc.Mapping):
             d[key] = update_dict(d.get(key, {}), val)
         else:
             d[key] = u[key]

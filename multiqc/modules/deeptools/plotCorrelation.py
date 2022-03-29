@@ -26,6 +26,9 @@ class plotCorrelationMixin:
         self.deeptools_plotCorrelationData = self.ignore_samples(self.deeptools_plotCorrelationData)
 
         if len(self.deeptools_plotCorrelationData) > 0:
+            # Data is in wrong format for writing to file
+            # self.write_data_file(self.deeptools_plotCorrelationData, "deeptools_plot_corr")
+
             config = {
                 "id": "deeptools_correlation_plot",
                 "title": "deeptools: Correlation Plot",
@@ -60,7 +63,7 @@ class plotCorrelationMixin:
                 continue
             else:
                 c = str(cols[0]).strip("'")
-                s_name = self.clean_s_name(c, f["root"])
+                s_name = self.clean_s_name(c, f)
                 samples.append(s_name)
                 d[s_name] = []
                 for c in cols[1 : len(cols)]:

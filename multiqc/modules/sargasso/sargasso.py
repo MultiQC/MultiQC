@@ -21,8 +21,9 @@ class MultiqcModule(BaseMultiqcModule):
         super(MultiqcModule, self).__init__(
             name="sargasso",
             anchor="sargasso",
-            href="http://statbio.github.io/Sargasso/",
+            href="http://biomedicalinformaticsgroup.github.io/Sargasso/",
             info="is a tool to separate mixed-species RNA-seq reads" "according to their species of origin.",
+            doi="10.1038/s41596-018-0029-2",
         )
 
         # Find and load any Sargasso reports
@@ -33,6 +34,7 @@ class MultiqcModule(BaseMultiqcModule):
         for f in self.find_log_files("sargasso"):
             self.parse_sargasso_logs(f)
             self.sargasso_files.append(f)
+            self.add_data_source(f)
 
         # log.info('Removing ignored samples...')
         self.sargasso_data = self.ignore_samples(self.sargasso_data)
@@ -54,7 +56,7 @@ class MultiqcModule(BaseMultiqcModule):
         # log.info('done')
 
     def parse_sargasso_logs(self, f):
-        """ Parse the sargasso log file. """
+        """Parse the sargasso log file."""
         species_name = list()
         items = list()
         header = list()
@@ -90,7 +92,7 @@ class MultiqcModule(BaseMultiqcModule):
                     new_sample_name = "_".join([sample_name, species_name[idx]])
 
                     # Clean up sample name
-                    new_sample_name = self.clean_s_name(new_sample_name, f["root"])
+                    new_sample_name = self.clean_s_name(new_sample_name, f)
 
                     if new_sample_name in self.sargasso_data.keys():
                         log.debug("Duplicate sample name found! Overwriting: {}".format(new_sample_name))
@@ -143,7 +145,7 @@ class MultiqcModule(BaseMultiqcModule):
         self.general_stats_addcols(self.sargasso_data, headers)
 
     def sargasso_chart(self):
-        """ Make the sargasso plot """
+        """Make the sargasso plot"""
 
         # Config for the plot
         config = {

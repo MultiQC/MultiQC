@@ -57,7 +57,7 @@ FIELD_DESCRIPTIONS = {
 
 
 def parse_reports(self):
-    """ Find Picard HsMetrics reports and parse their data """
+    """Find Picard HsMetrics reports and parse their data"""
 
     # Set up vars
     self.picard_HsMetrics_data = dict()
@@ -78,7 +78,7 @@ def parse_reports(self):
                 fn_search = re.search(r"INPUT(?:=|\s+)(\[?[^\s]+\]?)", l, flags=re.IGNORECASE)
                 if fn_search:
                     s_name = os.path.basename(fn_search.group(1).strip("[]"))
-                    s_name = self.clean_s_name(s_name, f["root"])
+                    s_name = self.clean_s_name(s_name, f)
                     parsed_data[s_name] = dict()
 
             if s_name is not None:
@@ -93,12 +93,12 @@ def parse_reports(self):
                         parsed_data[s_name][j] = dict()
                         # Check that we're not using commas for decimal places
                         if commadecimal is None:
+                            commadecimal = False
                             for i, k in enumerate(keys):
-                                if k.startswith("PCT_"):
+                                if "PCT" in k or "BAIT" in k or "MEAN" in k:
                                     if "," in vals[i]:
                                         commadecimal = True
-                                    else:
-                                        commadecimal = False
+                                        break
                         for i, k in enumerate(keys):
                             try:
                                 if commadecimal:
@@ -158,7 +158,7 @@ def parse_reports(self):
             assert len(covs) > 0
             covs = [str(i) for i in covs]
             log.debug("Custom Picard coverage thresholds: {}".format(", ".join([i for i in covs])))
-        except (AttributeError, TypeError, AssertionError):
+        except (KeyError, AttributeError, TypeError, AssertionError):
             covs = ["30"]
         for c in covs:
             self.general_stats_headers["PCT_TARGET_BASES_{}X".format(c)] = {
@@ -226,6 +226,7 @@ def _get_table_headers(data):
             "PCT_USABLE_BASES_ON_TARGET",
             "PF_BASES_ALIGNED",
             "PF_READS",
+            "PCT_SELECTED_BASES",
             "PF_UNIQUE_READS",
             "PF_UQ_BASES_ALIGNED",
             "PF_UQ_READS_ALIGNED",

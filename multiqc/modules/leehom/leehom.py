@@ -26,6 +26,7 @@ class MultiqcModule(BaseMultiqcModule):
             anchor="leehom",
             href="https://github.com/grenaud/leeHom",
             info="is a program for the Bayesian reconstruction of ancient DNA",
+            doi="10.1093/nar/gku699",
         )
 
         # Find and load any leeHom reports
@@ -52,7 +53,7 @@ class MultiqcModule(BaseMultiqcModule):
         self.leehom_general_stats_table()
 
     def parse_leehom_logs(self, f):
-        """ Go through log file looking for leehom output """
+        """Go through log file looking for leehom output"""
         regexes = {
             "total": r"Total reads[\s\:]+(\d+)",
             "merged_trimming": r"Merged \(trimming\)\s+(\d+)",

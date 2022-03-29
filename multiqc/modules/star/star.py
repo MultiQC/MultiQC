@@ -25,6 +25,7 @@ class MultiqcModule(BaseMultiqcModule):
             anchor="star",
             href="https://github.com/alexdobin/STAR",
             info="is an ultrafast universal RNA-seq aligner.",
+            doi="10.1093/bioinformatics/bts635",
         )
 
         # Find and load any STAR reports
@@ -34,7 +35,7 @@ class MultiqcModule(BaseMultiqcModule):
             if parsed_data is not None:
                 s_name = f["s_name"]
                 if s_name == "" or s_name == "Log.final.out":
-                    s_name = self.clean_s_name(os.path.basename(f["root"]), os.path.dirname(f["root"]))
+                    s_name = self.clean_s_name(os.path.basename(f["root"]), f, root=os.path.dirname(f["root"]))
                 if s_name in self.star_data:
                     log.debug("Duplicate sample name found! Overwriting: {}".format(s_name))
                 self.add_data_source(f, section="SummaryLog")
@@ -49,7 +50,7 @@ class MultiqcModule(BaseMultiqcModule):
             if parsed_data is not None:
                 s_name = f["s_name"]
                 if s_name == "" or s_name == "ReadsPerGene.out.tab":
-                    s_name = self.clean_s_name(os.path.basename(f["root"]), os.path.dirname(f["root"]))
+                    s_name = self.clean_s_name(os.path.basename(f["root"]), f, root=os.path.dirname(f["root"]))
                 if s_name in self.star_data:
                     log.debug("Duplicate ReadsPerGene sample name found! Overwriting: {}".format(s_name))
                 self.add_data_source(f, section="ReadsPerGene")
@@ -100,7 +101,7 @@ class MultiqcModule(BaseMultiqcModule):
             )
 
     def parse_star_report(self, raw_data):
-        """ Parse the final STAR log file. """
+        """Parse the final STAR log file."""
 
         regexes = {
             "total_reads": r"Number of input reads \|\s+(\d+)",
@@ -165,7 +166,7 @@ class MultiqcModule(BaseMultiqcModule):
         return parsed_data
 
     def parse_star_genecount_report(self, f):
-        """ Parse a STAR gene counts output file """
+        """Parse a STAR gene counts output file"""
         # Three numeric columns: unstranded, stranded/first-strand, stranded/second-strand
         keys = ["N_unmapped", "N_multimapping", "N_noFeature", "N_ambiguous"]
         unstranded = {"N_genes": 0}
@@ -222,7 +223,7 @@ class MultiqcModule(BaseMultiqcModule):
         self.general_stats_addcols(self.star_data, headers)
 
     def star_alignment_chart(self):
-        """ Make the plot showing alignment rates """
+        """Make the plot showing alignment rates"""
 
         # Specify the order of the different possible categories
         keys = OrderedDict()
@@ -244,7 +245,7 @@ class MultiqcModule(BaseMultiqcModule):
         return bargraph.plot(self.star_data, keys, pconfig)
 
     def star_genecount_chart(self):
-        """ Make a plot for the ReadsPerGene output """
+        """Make a plot for the ReadsPerGene output"""
 
         # Specify the order of the different possible categories
         keys = OrderedDict()

@@ -16,7 +16,7 @@ log = logging.getLogger(__name__)
 
 
 def parse_reports(self):
-    """ Find Qualimap BamQC reports and parse their data """
+    """Find Qualimap BamQC reports and parse their data"""
 
     # General stats - genome_results.txt
     self.qualimap_bamqc_genome_results = dict()
@@ -79,7 +79,7 @@ def parse_reports(self):
 
 
 def parse_genome_results(self, f):
-    """ Parse the contents of the Qualimap BamQC genome_results.txt file """
+    """Parse the contents of the Qualimap BamQC genome_results.txt file"""
     regexes = {
         "bam_file": r"bam file = (.+)",
         "total_reads": r"number of reads = ([\d,]+)",
@@ -96,9 +96,12 @@ def parse_genome_results(self, f):
     for k, r in regexes.items():
         r_search = re.search(r, f["f"], re.MULTILINE)
         if r_search:
-            try:
-                d[k] = float(r_search.group(1).replace(",", ""))
-            except ValueError:
+            if "\d" in r:
+                try:
+                    d[k] = float(r_search.group(1).replace(",", ""))
+                except ValueError:
+                    d[k] = r_search.group(1)
+            else:
                 d[k] = r_search.group(1)
     # Check we have an input filename
     if "bam_file" not in d:
@@ -106,7 +109,7 @@ def parse_genome_results(self, f):
         return None
 
     # Get a nice sample name
-    s_name = self.clean_s_name(d["bam_file"], f["root"])
+    s_name = self.clean_s_name(d["bam_file"], f)
 
     # Add to general stats table & calculate a nice % aligned
     try:
@@ -127,7 +130,7 @@ def parse_genome_results(self, f):
 
 
 def parse_coverage(self, f):
-    """ Parse the contents of the Qualimap BamQC Coverage Histogram file """
+    """Parse the contents of the Qualimap BamQC Coverage Histogram file"""
     # Get the sample name from the parent parent directory
     # Typical path: <sample name>/raw_data_qualimapReport/coverage_histogram.txt
     s_name = self.get_s_name(f)
@@ -165,7 +168,7 @@ def parse_coverage(self, f):
 
 
 def parse_insert_size(self, f):
-    """ Parse the contents of the Qualimap BamQC Insert Size Histogram file """
+    """Parse the contents of the Qualimap BamQC Insert Size Histogram file"""
     # Get the sample name from the parent parent directory
     # Typical path: <sample name>/raw_data_qualimapReport/insert_size_histogram.txt
     s_name = self.get_s_name(f)
@@ -203,7 +206,7 @@ def parse_insert_size(self, f):
 
 
 def parse_gc_dist(self, f):
-    """ Parse the contents of the Qualimap BamQC Mapped Reads GC content distribution file """
+    """Parse the contents of the Qualimap BamQC Mapped Reads GC content distribution file"""
     # Get the sample name from the parent parent directory
     # Typical path: <sample name>/raw_data_qualimapReport/mapped_reads_gc-content_distribution.txt
     s_name = self.get_s_name(f)
@@ -306,7 +309,7 @@ minimum depth filter on the fraction of a genome available for analysis."""
 
 
 def report_sections(self):
-    """ Add results from Qualimap BamQC parsing to the report """
+    """Add results from Qualimap BamQC parsing to the report"""
     # Append to self.sections list
 
     if len(self.qualimap_bamqc_coverage_hist) > 0:

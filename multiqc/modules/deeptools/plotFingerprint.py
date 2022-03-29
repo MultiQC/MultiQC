@@ -44,6 +44,9 @@ class plotFingerprintMixin:
         )
 
         if len(self.deeptools_plotFingerprintOutRawCounts) > 0:
+            # Write data to file
+            self.write_data_file(self.deeptools_plotFingerprintOutRawCounts, "deeptools_plot_fingerprint_counts")
+
             self.add_section(
                 name="Fingerprint plot",
                 anchor="deeptools_fingerprint",
@@ -64,6 +67,9 @@ class plotFingerprintMixin:
             )
 
         if len(self.deeptools_plotFingerprintOutQualityMetrics) > 0:
+            # Write data to file
+            self.write_data_file(self.deeptools_plotFingerprintOutQualityMetrics, "deeptools_plot_fingerprint_metrics")
+
             self.add_section(
                 name="Fingerprint quality metrics",
                 anchor="plotFingerprint",
@@ -106,7 +112,7 @@ class plotFingerprintMixin:
                 firstLine = False
                 continue
 
-            s_name = self.clean_s_name(cols[0], f["root"])
+            s_name = self.clean_s_name(cols[0], f)
             if s_name in d:
                 log.warning("Replacing duplicate sample {}.".format(s_name))
             d[s_name] = OrderedDict()
@@ -144,7 +150,7 @@ class plotFingerprintMixin:
             if firstLine:
                 for c in cols:
                     c = str(c).strip("'")
-                    s_name = self.clean_s_name(c, f["root"])
+                    s_name = self.clean_s_name(c, f)
                     d[s_name] = []
                     samples.append(s_name)
                 firstLine = False

@@ -16,7 +16,7 @@ log = logging.getLogger(__name__)
 
 
 class MultiqcModule(BaseMultiqcModule):
-    """ ClipAndMerge module """
+    """ClipAndMerge module"""
 
     def __init__(self):
 
@@ -26,6 +26,7 @@ class MultiqcModule(BaseMultiqcModule):
             anchor="clipandmerge",
             href="http://www.github.com/apeltzer/ClipAndMerge",
             info="is a tool for adapter clipping and read merging for ancient DNA data.",
+            doi="10.1186/s13059-016-0918-z",
         )
 
         # Find and load any ClipAndMerge reports
@@ -72,10 +73,11 @@ class MultiqcModule(BaseMultiqcModule):
                     parsed_data[k] = r_search.group(1)
 
         if len(parsed_data) > 0:
-            s_name = self.clean_s_name(os.path.basename(f["root"]), f["root"])
+            s_name = self.clean_s_name(os.path.basename(f["root"]), f)
             if "identifier" in parsed_data:
-                s_name = self.clean_s_name(parsed_data["identifier"], f["root"])
+                s_name = self.clean_s_name(parsed_data["identifier"], f)
             self.clipandmerge_data[s_name] = parsed_data
+            self.add_data_source(f)
 
     def clipandmerge_general_stats_table(self):
         """Take the parsed stats from the ClipAndMerge report and add it to the
@@ -94,7 +96,7 @@ class MultiqcModule(BaseMultiqcModule):
         self.general_stats_addcols(self.clipandmerge_data, headers)
 
     def clipandmerge_alignment_plot(self):
-        """ Make the HighCharts HTML to plot the duplication rates """
+        """Make the HighCharts HTML to plot the duplication rates"""
 
         # Specify the order of the different possible categories
         keys = OrderedDict()

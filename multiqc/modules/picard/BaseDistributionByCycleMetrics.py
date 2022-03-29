@@ -59,7 +59,7 @@ def read_base_distrib_data(line_iter):
 
 
 def parse_reports(self):
-    """ Find Picard BaseDistributionByCycleMetrics reports and parse their data """
+    """Find Picard BaseDistributionByCycleMetrics reports and parse their data"""
 
     # Set up vars
     self.picard_baseDistributionByCycle_data = dict()
@@ -74,7 +74,7 @@ def parse_reports(self):
 
             # read through the header of the file to obtain the
             # sample name
-            clean_fn = lambda n: self.clean_s_name(n, f["root"])
+            clean_fn = lambda n: self.clean_s_name(n, f)
             s_name = read_sample_name(lines, clean_fn, "BaseDistributionByCycle")
             assert s_name is not None
 

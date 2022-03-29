@@ -28,12 +28,13 @@ METRICS = OrderedDict(
 
 class MultiqcModule(BaseMultiqcModule):
     def __init__(self):
-        """ MultiQC module for processing hap.py output logs """
+        """MultiQC module for processing hap.py output logs"""
         super(MultiqcModule, self).__init__(
             name="hap.py",
             anchor="happy",
             href="https://github.com/Illumina/hap.py",
             info="is a set of programs based on htslib to benchmark variant calls against gold standard truth datasets.",
+            # No publication / DOI // doi=
         )
 
         self.happy_raw_sample_names = set()

@@ -32,7 +32,7 @@ DESC = OrderedDict(
 
 
 def parse_reports(self):
-    """ Find Picard QualityYieldMetrics reports and parse their data """
+    """Find Picard QualityYieldMetrics reports and parse their data"""
 
     # Set up vars
     all_data = OrderedDict()
@@ -40,6 +40,8 @@ def parse_reports(self):
 
     # Go through logs and find Metrics
     for f in self.find_log_files("picard/quality_yield_metrics", filehandles=True):
+        self.add_data_source(f, section="QualityYieldMetrics")
+
         parsed_data = dict()
         s_name = None
         keys = None
@@ -47,7 +49,7 @@ def parse_reports(self):
 
         lines = iter(f["f"])
 
-        clean_fn = lambda n: self.clean_s_name(n, f["root"])
+        clean_fn = lambda n: self.clean_s_name(n, f)
         s_name = read_sample_name(lines, clean_fn, "CollectQualityYieldMetrics")
 
         if s_name is None:

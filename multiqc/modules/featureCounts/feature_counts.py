@@ -23,10 +23,11 @@ class MultiqcModule(BaseMultiqcModule):
             name="featureCounts",
             anchor="featurecounts",
             target="Subread featureCounts",
-            href="http://bioinf.wehi.edu.au/featureCounts/",
+            href="http://subread.sourceforge.net/",
             info="is a highly efficient general-purpose read summarization program"
             " that counts mapped reads for genomic features such as genes, exons,"
             " promoter, gene bodies, genomic bins and chromosomal locations.",
+            doi="10.1093/bioinformatics/btt656",
         )
 
         # Find and load any featureCounts reports
@@ -53,7 +54,7 @@ class MultiqcModule(BaseMultiqcModule):
         self.add_section(plot=self.featureCounts_chart())
 
     def parse_featurecounts_report(self, f):
-        """ Parse the featureCounts log file. """
+        """Parse the featureCounts log file."""
 
         file_names = list()
         parsed_data = dict()
@@ -95,7 +96,7 @@ class MultiqcModule(BaseMultiqcModule):
         for idx, f_name in enumerate(file_names):
 
             # Clean up sample name
-            s_name = self.clean_s_name(f_name, f["root"])
+            s_name = self.clean_s_name(f_name, f)
 
             # Reorganised parsed data for this sample
             # Collect total count number
@@ -142,7 +143,7 @@ class MultiqcModule(BaseMultiqcModule):
         self.general_stats_addcols(self.featurecounts_data, headers)
 
     def featureCounts_chart(self):
-        """ Make the featureCounts assignment rates plot """
+        """Make the featureCounts assignment rates plot"""
 
         headers = OrderedDict()
         for h in self.featurecounts_keys:

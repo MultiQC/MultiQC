@@ -17,7 +17,7 @@ log = logging.getLogger(__name__)
 
 
 class MultiqcModule(BaseMultiqcModule):
-    """ Bracken module """
+    """Bracken module"""
 
     def __init__(self):
 
@@ -27,6 +27,7 @@ class MultiqcModule(BaseMultiqcModule):
             anchor="bracken",
             href="https://ccb.jhu.edu/software/bracken/",
             info="is a highly accurate statistical method that computes the abundance of species in DNA sequences from a metagenomics sample.",
+            doi="10.7717/peerj-cs.104",
         )
 
         self.t_ranks = OrderedDict()
@@ -45,6 +46,7 @@ class MultiqcModule(BaseMultiqcModule):
         self.bracken_raw_data = dict()
         for f in self.find_log_files("bracken", filehandles=True):
             self.parse_logs(f)
+            self.add_data_source(f)
 
         # Filter to strip out ignored sample names
         self.bracken_raw_data = self.ignore_samples(self.bracken_raw_data)
@@ -53,6 +55,9 @@ class MultiqcModule(BaseMultiqcModule):
             raise UserWarning
 
         log.info("Found {} reports".format(len(self.bracken_raw_data)))
+
+        # Data is in wrong format for writing to file
+        # self.write_data_file(self.kraken_raw_data, "kraken")
 
         # Sum counts across all samples, so that we can pick top 5
         self.bracken_total_pct = dict()
@@ -110,16 +115,15 @@ class MultiqcModule(BaseMultiqcModule):
         self.bracken_raw_data[f["s_name"]] = data
 
     def sample_total_readcounts(self):
-        """ Compute the total read counts for each sample """
+        """Compute the total read counts for each sample"""
 
         for s_name, data in self.bracken_raw_data.items():
             self.bracken_sample_total_readcounts[s_name] = 0
             for row in data:
-                self.bracken_sample_total_readcounts[s_name] += \
-                    row['counts_direct']
+                self.bracken_sample_total_readcounts[s_name] += row["counts_direct"]
 
     def sum_sample_counts(self):
-        """ Sum counts across all samples for bracken data """
+        """Sum counts across all samples for bracken data"""
 
         # Sum the percentages for each taxa across all samples
         # Allows us to pick top-5 for each rank
@@ -147,7 +151,7 @@ class MultiqcModule(BaseMultiqcModule):
                 self.bracken_total_counts[rank_code][classif] += row["counts_rooted"]
 
     def general_stats_cols(self):
-        """ Add a couple of columns to the General Statistics table """
+        """Add a couple of columns to the General Statistics table"""
 
         # Get top taxa in most specific taxa rank that we have
         top_five = []
@@ -195,7 +199,7 @@ class MultiqcModule(BaseMultiqcModule):
             for row in d:
                 percent = (row['counts_rooted'] / self.bracken_sample_total_readcounts[s_name]) * 100
                 if row["rank_code"] == top_rank_code and row["classif"] in top_five:
-                    tdata[s_name]['% Top 5'] = percent + tdata[s_name].get('% Top 5', 0)
+                    tdata[s_name]["% Top 5"] = percent + tdata[s_name].get("% Top 5", 0)
                 if row["rank_code"] == top_rank_code and row["classif"] == top_five[0]:
                     tdata[s_name][top_one_hkey] = percent
 
@@ -205,7 +209,7 @@ class MultiqcModule(BaseMultiqcModule):
         self.general_stats_addcols(tdata, headers)
 
     def top_five_barplot(self):
-        """ Add a bar plot showing the top-5 from each taxa rank """
+        """Add a bar plot showing the top-5 from each taxa rank"""
 
         pd = []
         cats = list()

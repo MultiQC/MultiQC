@@ -12,7 +12,7 @@ log = logging.getLogger(__name__)
 
 class FindPeaksReportMixin:
     def parse_homer_findpeaks(self):
-        """ Find HOMER findpeaks logs and parse their data """
+        """Find HOMER findpeaks logs and parse their data"""
 
         self.homer_findpeaks = dict()
         for f in self.find_log_files("homer/findpeaks", filehandles=True):
@@ -49,7 +49,7 @@ class FindPeaksReportMixin:
         return len(self.homer_findpeaks)
 
     def parse_findPeaks(self, f):
-        """ Parse HOMER findPeaks file headers. """
+        """Parse HOMER findPeaks file headers."""
         parsed_data = dict()
         s_name = f["s_name"]
         for l in f["f"]:
@@ -66,7 +66,7 @@ class FindPeaksReportMixin:
                 except ValueError:
                     parsed_data[k] = v
                 if k == "tag_directory":
-                    s_name = self.clean_s_name(os.path.basename(v), os.path.dirname(v))
+                    s_name = self.clean_s_name(os.path.basename(v), f, root=os.path.dirname(v))
 
         if len(parsed_data) > 0:
             if s_name in self.homer_findpeaks:

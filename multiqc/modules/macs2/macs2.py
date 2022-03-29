@@ -21,14 +21,16 @@ class MultiqcModule(BaseMultiqcModule):
         super(MultiqcModule, self).__init__(
             name="MACS2",
             anchor="macs",
-            href="https://github.com/taoliu/MACS",
+            href="https://macs3-project.github.io/MACS/",
             info="identifies transcription factor binding sites in ChIP-seq data.",
+            doi=["10.1101/496521", "10.1186/gb-2008-9-9-r137"],
         )
 
         # Parse logs
         self.macs_data = dict()
         for f in self.find_log_files("macs2", filehandles=True):
             self.parse_macs(f)
+            self.add_data_source(f)
 
         # Filter to strip out ignored sample names
         self.macs_data = self.ignore_samples(self.macs_data)
@@ -57,24 +59,27 @@ class MultiqcModule(BaseMultiqcModule):
             "d": r"# d = (\d+)",
         }
         s_name = f["s_name"]
-        parsed_data = dict()
-        for l in f["f"]:
-            for k, r in regexes.items():
-                match = re.search(r, l)
-                if match:
-                    if k == "name":
-                        s_name = self.clean_s_name(match.group(1).strip(), f["root"])
-                    else:
-                        parsed_data[k] = float(match.group(1).strip())
-            if not l.startswith("#") and l.strip():
-                break
+        parsed_data = {"peak_count": 0}
+        for line in f["f"]:
+            line = line.strip()
+            if line.startswith("#"):
+                for k, r in regexes.items():
+                    match = re.search(r, line)
+                    if match:
+                        if k == "name":
+                            s_name = self.clean_s_name(match.group(1).strip(), f)
+                        else:
+                            parsed_data[k] = float(match.group(1).strip())
+            elif len(line) > 0 and "start" not in line:
+                parsed_data["peak_count"] += 1
+
         if len(parsed_data) > 0:
             if s_name in self.macs_data:
                 log.debug("Duplicate sample name found! Overwriting: {}".format(s_name))
             self.macs_data[s_name] = parsed_data
 
     def macs_general_stats(self):
-        """ Add columns to General Statistics table """
+        """Add columns to General Statistics table"""
         headers = OrderedDict()
         headers["d"] = {"title": "Fragment Length", "min": 0, "format": "{:,.0f}"}
         headers["treatment_redundant_rate"] = {
@@ -93,10 +98,16 @@ class MultiqcModule(BaseMultiqcModule):
             "format": "{:,.2f}",
             "scale": "RdYlBu-rev",
         }
+        headers["peak_count"] = {
+            "title": "Number of Peaks",
+            "description": "Total number of peaks",
+            "min": 0,
+            "format": "{:,.0f}",
+        }
         self.general_stats_addcols(self.macs_data, headers)
 
     def macs_filtered_reads_plot(self):
-        """ Plot of filtered reads for control and treatment samples """
+        """Plot of filtered reads for control and treatment samples"""
         data = dict()
         req_cats = [
             "control_fragments_total",

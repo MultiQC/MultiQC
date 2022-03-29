@@ -15,7 +15,7 @@ log = logging.getLogger(__name__)
 
 
 class MultiqcModule(BaseMultiqcModule):
-    """ mtnucratio module """
+    """mtnucratio module"""
 
     def __init__(self):
 
@@ -25,6 +25,7 @@ class MultiqcModule(BaseMultiqcModule):
             anchor="mtnucratio",
             href="http://www.github.com/apeltzer/MTNucRatioCalculator",
             info="is a tool to compute mt/nuc ratios for NGS datasets.",
+            doi="10.1186/s13059-016-0918-z",
         )
 
         # Find and load any MTNUCRATIO reports
@@ -49,19 +50,19 @@ class MultiqcModule(BaseMultiqcModule):
 
     # Parse our nice little JSON file
     def parseJSON(self, f):
-        """ Parse the JSON output from mtnucratio and save the summary statistics """
+        """Parse the JSON output from mtnucratio and save the summary statistics"""
         try:
             parsed_json = json.load(f["f"])
             if "metrics" not in parsed_json and "metadata" not in parsed_json:
                 log.warning("No MTNUCRATIO JSON: '{}'".format(f["fn"]))
                 return None
-        except JSONDecodeError as e:
+        except json.JSONDecodeError as e:
             log.warning("Could not parse mtnucratio JSON: '{}'".format(f["fn"]))
             log.debug(e)
             return None
 
         # Get sample name from JSON first
-        s_name = self.clean_s_name(parsed_json["metadata"]["sample_name"], "")
+        s_name = self.clean_s_name(parsed_json["metadata"]["sample_name"], f)
         self.add_data_source(f, s_name)
 
         metrics_dict = parsed_json["metrics"]

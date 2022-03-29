@@ -14,7 +14,7 @@ log = logging.getLogger(__name__)
 
 
 class MultiqcModule(BaseMultiqcModule):
-    """ BUSCO module """
+    """BUSCO module"""
 
     def __init__(self):
 
@@ -24,6 +24,7 @@ class MultiqcModule(BaseMultiqcModule):
             anchor="busco",
             href="http://busco.ezlab.org/",
             info="assesses genome assembly and annotation completeness with Benchmarking Universal Single-Copy Orthologs.",
+            doi="10.1093/bioinformatics/btv351",
         )
 
         # Keys and strings, used for parsing and for plot
@@ -74,9 +75,10 @@ class MultiqcModule(BaseMultiqcModule):
 
         if len(parsed_data) > 0:
             self.busco_data[f["s_name"]] = parsed_data
+            self.add_data_source(f)
 
     def busco_plot(self, lin):
-        """ Make the HighCharts HTML for the BUSCO plot for a particular lineage """
+        """Make the HighCharts HTML for the BUSCO plot for a particular lineage"""
 
         data = {}
         for s_name in self.busco_data:

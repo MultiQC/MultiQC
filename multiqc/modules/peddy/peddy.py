@@ -27,6 +27,7 @@ class MultiqcModule(BaseMultiqcModule):
             anchor="peddy",
             href="https://github.com/brentp/peddy",
             info="calculates genotype :: pedigree correspondence checks, ancestry checks and sex checks using VCF files.",
+            doi="10.1016/j.ajhg.2017.01.017",
         )
 
         # Find and load any Peddy reports
@@ -40,11 +41,12 @@ class MultiqcModule(BaseMultiqcModule):
             parsed_data = self.parse_peddy_summary(f)
             if parsed_data is not None:
                 for s_name in parsed_data:
-                    s_name = self.clean_s_name(s_name, f["root"])
+                    cleaned_s_name = self.clean_s_name(s_name, f)
                     try:
-                        self.peddy_data[s_name].update(parsed_data[s_name])
+                        self.peddy_data[cleaned_s_name].update(parsed_data[s_name])
                     except KeyError:
-                        self.peddy_data[s_name] = parsed_data[s_name]
+                        self.peddy_data[cleaned_s_name] = parsed_data[s_name]
+                self.add_data_source(f)
 
         # parse peddy CSV files
         for pattern in ["het_check", "ped_check", "sex_check"]:
@@ -97,7 +99,7 @@ class MultiqcModule(BaseMultiqcModule):
         self.peddy_sex_check_plot()
 
     def parse_peddy_summary(self, f):
-        """ Go through log file looking for peddy output """
+        """Go through log file looking for peddy output"""
         parsed_data = dict()
         headers = None
         for l in f["f"].splitlines():
@@ -118,7 +120,7 @@ class MultiqcModule(BaseMultiqcModule):
         return parsed_data
 
     def parse_peddy_csv(self, f, pattern):
-        """ Parse csv output from peddy """
+        """Parse csv output from peddy"""
         parsed_data = dict()
         headers = None
         s_name_idx = None
@@ -136,7 +138,7 @@ class MultiqcModule(BaseMultiqcModule):
                         return None
             else:
                 s_name = "-".join([s[idx] for idx in s_name_idx])
-                s_name = self.clean_s_name(s_name, f["root"])
+                s_name = self.clean_s_name(s_name, f)
                 parsed_data[s_name] = dict()
                 for i, v in enumerate(s):
                     if i not in s_name_idx:

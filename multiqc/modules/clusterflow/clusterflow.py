@@ -30,6 +30,7 @@ class MultiqcModule(BaseMultiqcModule):
             anchor="clusterflow",
             href="http://clusterflow.io",
             info="is a simple and flexible bioinformatics pipeline tool.",
+            doi="10.12688/f1000research.10335.2",
         )
 
         # Find and load any Cluster Flow reports
@@ -63,12 +64,18 @@ class MultiqcModule(BaseMultiqcModule):
         if len(self.clusterflow_runfiles) > 0:
             self.clusterflow_pipelines_section()
 
+            # Write data to file
+            self.write_data_file(self.clusterflow_runfiles, "clusterflow_runfiles")
+
         # Commands
         if len(self.clusterflow_commands) > 0:
             self.clusterflow_commands_table()
 
+            # Write data to file
+            self.write_data_file(self.clusterflow_runfiles, "clusterflow_commands")
+
     def parse_clusterflow_logs(self, f):
-        """ Parse Clusterflow logs """
+        """Parse Clusterflow logs"""
         module = None
         job_id = None
         pipeline_id = None
@@ -95,7 +102,7 @@ class MultiqcModule(BaseMultiqcModule):
                 self.clusterflow_commands[pipeline_id].append(l[8:])
 
     def clusterflow_commands_table(self):
-        """ Make a table of the Cluster Flow commands """
+        """Make a table of the Cluster Flow commands"""
 
         # I wrote this when I was tired. Sorry if it's incomprehensible.
 
@@ -335,7 +342,7 @@ class MultiqcModule(BaseMultiqcModule):
         )
 
     def clusterflow_pipelines_printout(self):
-        """ Print the steps used in each Cluster Flow pipeline """
+        """Print the steps used in each Cluster Flow pipeline"""
         data = dict()
         html = ""
         for f, d in self.clusterflow_runfiles.items():

@@ -28,6 +28,7 @@ class MultiqcModule(BaseMultiqcModule):
             anchor="afterqc",
             href="https://github.com/OpenGene/AfterQC",
             info="Automatic Filtering, Trimming, Error Removing and Quality Control for fastq data.",
+            doi="10.1186/s12859-017-1469-3",
         )
 
         # Find and load any Afterqc reports
@@ -58,7 +59,7 @@ class MultiqcModule(BaseMultiqcModule):
         )
 
     def parse_afterqc_log(self, f):
-        """ Parse the JSON output from AfterQC and save the summary statistics """
+        """Parse the JSON output from AfterQC and save the summary statistics"""
         try:
             parsed_json = json.load(f["f"])
         except:
@@ -131,7 +132,7 @@ class MultiqcModule(BaseMultiqcModule):
         self.general_stats_addcols(self.afterqc_data, headers)
 
     def after_qc_bad_reads_chart(self):
-        """ Function to generate the AfterQC bad reads bar plot """
+        """Function to generate the AfterQC bad reads bar plot"""
         # Specify the order of the different possible categories
         keys = OrderedDict()
         keys["good_reads"] = {"name": "Good Reads"}

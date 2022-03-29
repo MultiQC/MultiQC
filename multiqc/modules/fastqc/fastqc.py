@@ -15,6 +15,7 @@ from collections import OrderedDict
 import io
 import json
 import logging
+import math
 import os
 import re
 import zipfile
@@ -38,13 +39,14 @@ class MultiqcModule(BaseMultiqcModule):
             href="http://www.bioinformatics.babraham.ac.uk/projects/fastqc/",
             info="is a quality control tool for high throughput sequence data,"
             " written by Simon Andrews at the Babraham Institute in Cambridge.",
+            # No publication / DOI // doi=
         )
 
         self.fastqc_data = dict()
 
         # Find and parse unzipped FastQC reports
         for f in self.find_log_files("fastqc/data"):
-            s_name = self.clean_s_name(os.path.basename(f["root"]), os.path.dirname(f["root"]))
+            s_name = self.clean_s_name(os.path.basename(f["root"]), f, root=os.path.dirname(f["root"]))
             self.parse_fastqc_report(f["f"], s_name, f)
 
         # Find and parse zipped FastQC reports
@@ -73,7 +75,6 @@ class MultiqcModule(BaseMultiqcModule):
 
         # Filter to strip out ignored sample names
         self.fastqc_data = self.ignore_samples(self.fastqc_data)
-
         if len(self.fastqc_data) == 0:
             raise UserWarning
 
@@ -137,7 +138,7 @@ class MultiqcModule(BaseMultiqcModule):
         # Make the sample name from the input filename if we find it
         fn_search = re.search(r"Filename\s+(.+)", file_contents)
         if fn_search:
-            s_name = self.clean_s_name(fn_search.group(1), f["root"])
+            s_name = self.clean_s_name(fn_search.group(1), f)
 
         if s_name in self.fastqc_data.keys():
             log.debug("Duplicate sample name found! Overwriting: {}".format(s_name))
@@ -210,21 +211,17 @@ class MultiqcModule(BaseMultiqcModule):
         # Prep the data
         data = dict()
         for s_name in self.fastqc_data:
+            data[s_name] = dict()
             bs = self.fastqc_data[s_name]["basic_statistics"]
-            try:
-                # FastQC reports with 0 reads will trigger a KeyError here
-                data[s_name] = {
-                    "percent_gc": bs["%GC"],
-                    "avg_sequence_length": bs["avg_sequence_length"],
-                    "total_sequences": bs["Total Sequences"],
-                }
-            except KeyError:
+            # Samples with 0 reads and reports with some skipped sections might be missing things here
+            data[s_name]["percent_gc"] = bs.get("%GC", 0)
+            data[s_name]["avg_sequence_length"] = bs.get("avg_sequence_length", 0)
+            data[s_name]["total_sequences"] = bs.get("Total Sequences", 0)
+
+            # Log warning about zero-read samples as a courtesy
+            if data[s_name]["total_sequences"] == 0:
                 log.warning("Sample had zero reads: '{}'".format(s_name))
-                data[s_name] = {
-                    "percent_gc": 0,
-                    "avg_sequence_length": 0,
-                    "total_sequences": 0,
-                }
+
             try:
                 # Older versions of FastQC don't have this
                 data[s_name]["percent_duplicates"] = 100 - bs["total_deduplicated_percentage"]
@@ -271,8 +268,8 @@ class MultiqcModule(BaseMultiqcModule):
             "format": "{:,.0f}",
         }
         headers["avg_sequence_length"] = {
-            "title": "Length",
-            "description": "Average Sequence Length (bp)",
+            "title": "Read Length",
+            "description": "Average Read Length (bp)",
             "min": 0,
             "suffix": " bp",
             "scale": "RdYlGn",
@@ -300,7 +297,7 @@ class MultiqcModule(BaseMultiqcModule):
         self.general_stats_addcols(data, headers)
 
     def read_count_plot(self):
-        """ Stacked bar plot showing counts of reads """
+        """Stacked bar plot showing counts of reads"""
         pconfig = {
             "id": "fastqc_sequence_counts_plot",
             "title": "FastQC: Sequence Counts",
@@ -358,7 +355,7 @@ class MultiqcModule(BaseMultiqcModule):
         )
 
     def sequence_quality_plot(self):
-        """ Create the HTML for the phred quality score plot """
+        """Create the HTML for the phred quality score plot"""
 
         data = dict()
         for s_name in self.fastqc_data:
@@ -408,7 +405,7 @@ class MultiqcModule(BaseMultiqcModule):
         )
 
     def per_seq_quality_plot(self):
-        """ Create the HTML for the per sequence quality score plot """
+        """Create the HTML for the per sequence quality score plot"""
 
         data = dict()
         for s_name in self.fastqc_data:
@@ -454,7 +451,7 @@ class MultiqcModule(BaseMultiqcModule):
         )
 
     def sequence_content_plot(self):
-        """ Create the epic HTML for the FastQC sequence content heatmap """
+        """Create the epic HTML for the FastQC sequence content heatmap"""
 
         # Prep the data
         data = OrderedDict()
@@ -464,15 +461,24 @@ class MultiqcModule(BaseMultiqcModule):
                     self.avg_bp_from_range(d["base"]): d for d in self.fastqc_data[s_name]["per_base_sequence_content"]
                 }
             except KeyError:
-                pass
+                # FastQC module was skipped - move on to the next sample
+                continue
+
             # Old versions of FastQC give counts instead of percentages
             for b in data[s_name]:
                 tot = sum([data[s_name][b][base] for base in ["a", "c", "t", "g"]])
                 if tot == 100.0:
-                    break
+                    break  # Stop loop after one iteration if summed to 100 (percentages)
                 else:
                     for base in ["a", "c", "t", "g"]:
                         data[s_name][b][base] = (float(data[s_name][b][base]) / float(tot)) * 100.0
+
+            # Replace NaN with 0
+            for b in data[s_name]:
+                for base in ["a", "c", "t", "g"]:
+                    if math.isnan(float(data[s_name][b][base])):
+                        data[s_name][b][base] = 0
+
         if len(data) == 0:
             log.debug("sequence_content not found in FastQC reports")
             return None
@@ -542,7 +548,7 @@ class MultiqcModule(BaseMultiqcModule):
         )
 
     def gc_content_plot(self):
-        """ Create the HTML for the FastQC GC content plot """
+        """Create the HTML for the FastQC GC content plot"""
 
         data = dict()
         data_norm = dict()
@@ -660,7 +666,7 @@ class MultiqcModule(BaseMultiqcModule):
         )
 
     def n_content_plot(self):
-        """ Create the HTML for the per base N content plot """
+        """Create the HTML for the per base N content plot"""
 
         data = dict()
         for s_name in self.fastqc_data:
@@ -714,7 +720,7 @@ class MultiqcModule(BaseMultiqcModule):
         )
 
     def seq_length_dist_plot(self):
-        """ Create the HTML for the Sequence Length Distribution plot """
+        """Create the HTML for the Sequence Length Distribution plot"""
 
         data = dict()
         seq_lengths = set()
@@ -765,7 +771,7 @@ class MultiqcModule(BaseMultiqcModule):
             )
 
     def seq_dup_levels_plot(self):
-        """ Create the HTML for the Sequence Duplication Levels plot """
+        """Create the HTML for the Sequence Duplication Levels plot"""
 
         data = dict()
         max_dupval = 0
@@ -848,12 +854,17 @@ class MultiqcModule(BaseMultiqcModule):
                 data[s_name]["top_overrepresented"] = max_pcnt
                 data[s_name]["remaining_overrepresented"] = total_pcnt - max_pcnt
             except KeyError:
-                if self.fastqc_data[s_name]["statuses"]["overrepresented_sequences"] == "pass":
+                if self.fastqc_data[s_name]["statuses"].get("overrepresented_sequences") == "pass":
                     data[s_name]["total_overrepresented"] = 0
                     data[s_name]["top_overrepresented"] = 0
                     data[s_name]["remaining_overrepresented"] = 0
                 else:
+                    del data[s_name]
                     log.debug("Couldn't find data for {}, invalid Key".format(s_name))
+
+        if all(len(data.get(s_name, {})) == 0 for s_name in self.fastqc_data):
+            log.debug("overrepresented_sequences not found in FastQC reports")
+            return None
 
         cats = OrderedDict()
         cats["top_overrepresented"] = {"name": "Top over-represented sequence"}
@@ -861,7 +872,7 @@ class MultiqcModule(BaseMultiqcModule):
 
         # Config for the plot
         pconfig = {
-            "id": "fastqc_overrepresented_sequencesi_plot",
+            "id": "fastqc_overrepresented_sequences_plot",
             "title": "FastQC: Overrepresented sequences",
             "ymin": 0,
             "yCeiling": 100,
@@ -912,7 +923,7 @@ class MultiqcModule(BaseMultiqcModule):
         )
 
     def adapter_content_plot(self):
-        """ Create the HTML for the FastQC adapter plot """
+        """Create the HTML for the FastQC adapter plot"""
 
         data = dict()
         for s_name in self.fastqc_data:
@@ -989,7 +1000,7 @@ class MultiqcModule(BaseMultiqcModule):
         )
 
     def status_heatmap(self):
-        """ Heatmap showing all statuses for every sample """
+        """Heatmap showing all statuses for every sample"""
         status_numbers = {"pass": 1, "warn": 0.5, "fail": 0.25}
         data = []
         s_names = []

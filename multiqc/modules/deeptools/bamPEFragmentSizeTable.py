@@ -28,6 +28,9 @@ class bamPEFragmentSizeTableMixin:
         self.deeptools_bamPEFragmentSize = self.ignore_samples(self.deeptools_bamPEFragmentSize)
 
         if len(self.deeptools_bamPEFragmentSize) > 0:
+            # Write data to file
+            self.write_data_file(self.deeptools_bamPEFragmentSize, "deeptools_frag_size_table")
+
             headersSE = OrderedDict()
             headersSE["Reads Sampled"] = {
                 "title": "# Sampled",
@@ -228,7 +231,7 @@ class bamPEFragmentSizeTableMixin:
                 s_name = None
                 for idx, h in enumerate(headers):
                     if idx == 0:
-                        s_name = self.clean_s_name(cols[0], f["root"])
+                        s_name = self.clean_s_name(cols[0], f)
                         if s_name in d:
                             log.debug("Replacing duplicate sample {}.".format(s_name))
                         d[s_name] = OrderedDict()

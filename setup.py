@@ -24,7 +24,7 @@ MultiQC was written by Phil Ewels (http://phil.ewels.co.uk) at SciLifeLab Sweden
 from setuptools import setup, find_packages
 import sys
 
-version = "1.10dev"
+version = "1.12dev"
 dl_version = "master" if "dev" in version else "v{}".format(version)
 
 print(
@@ -38,7 +38,7 @@ print(
 )
 
 # Set version requirements according to what version of Python we're running
-networkx_version = ""
+networkx_version = ">=2.5.1"  # Needed for Python 3.9 support
 numpy_version = ""
 matplotlib_version = ">=2.1.1"
 jinja2_version = ">=2.9"
@@ -63,6 +63,7 @@ install_requires = [
     "markdown" + markdown_version,
     "pyyaml>=4",
     "requests",
+    "rich>=10",
     "simplejson",
     "spectra>=0.0.10",
 ]
@@ -93,6 +94,7 @@ setup(
             "bbmap = multiqc.modules.bbmap:MultiqcModule",
             "bcftools = multiqc.modules.bcftools:MultiqcModule",
             "bcl2fastq = multiqc.modules.bcl2fastq:MultiqcModule",
+            "bclconvert = multiqc.modules.bclconvert:MultiqcModule",
             "biobambam2 = multiqc.modules.biobambam2:MultiqcModule",
             "biobloomtools = multiqc.modules.biobloomtools:MultiqcModule",
             "biscuit = multiqc.modules.biscuit:MultiqcModule",
@@ -101,6 +103,9 @@ setup(
             "bowtie2 = multiqc.modules.bowtie2:MultiqcModule",
             "bracken = multiqc.modules.bracken:MultiqcModule",
             "busco = multiqc.modules.busco:MultiqcModule",
+            "bustools = multiqc.modules.bustools:MultiqcModule",
+            "ccs = multiqc.modules.ccs:MultiqcModule",
+            "checkqc = multiqc.modules.checkqc:MultiqcModule",
             "clipandmerge = multiqc.modules.clipandmerge:MultiqcModule",
             "clusterflow = multiqc.modules.clusterflow:MultiqcModule",
             "conpair = multiqc.modules.conpair:MultiqcModule",
@@ -111,6 +116,7 @@ setup(
             "deeptools = multiqc.modules.deeptools:MultiqcModule",
             "disambiguate = multiqc.modules.disambiguate:MultiqcModule",
             "dragen = multiqc.modules.dragen:MultiqcModule",
+            "eigenstratdatabasetools = multiqc.modules.eigenstratdatabasetools:MultiqcModule",
             "fastp = multiqc.modules.fastp:MultiqcModule",
             "fastq_screen = multiqc.modules.fastq_screen:MultiqcModule",
             "fastqc = multiqc.modules.fastqc:MultiqcModule",
@@ -118,6 +124,7 @@ setup(
             "fgbio = multiqc.modules.fgbio:MultiqcModule",
             "flash = multiqc.modules.flash:MultiqcModule",
             "flexbar = multiqc.modules.flexbar:MultiqcModule",
+            "gffcompare = multiqc.modules.gffcompare:MultiqcModule",
             "gatk = multiqc.modules.gatk:MultiqcModule",
             "goleft_indexcov = multiqc.modules.goleft_indexcov:MultiqcModule",
             "happy = multiqc.modules.happy:MultiqcModule",
@@ -130,12 +137,14 @@ setup(
             "htseq = multiqc.modules.htseq:MultiqcModule",
             "interop = multiqc.modules.interop:MultiqcModule",
             "ivar = multiqc.modules.ivar:MultiqcModule",
+            "jcvi = multiqc.modules.jcvi:MultiqcModule",
             "jellyfish = multiqc.modules.jellyfish:MultiqcModule",
             "kaiju = multiqc.modules.kaiju:MultiqcModule",
             "kallisto = multiqc.modules.kallisto:MultiqcModule",
             "kat = multiqc.modules.kat:MultiqcModule",
             "kraken = multiqc.modules.kraken:MultiqcModule",
             "leehom = multiqc.modules.leehom:MultiqcModule",
+            "lima = multiqc.modules.lima:MultiqcModule",
             "longranger = multiqc.modules.longranger:MultiqcModule",
             "macs2 = multiqc.modules.macs2:MultiqcModule",
             "malt = multiqc.modules.malt:MultiqcModule",
@@ -146,7 +155,11 @@ setup(
             "mosdepth = multiqc.modules.mosdepth:MultiqcModule",
             "mtnucratio = multiqc.modules.mtnucratio:MultiqcModule",
             "multivcfanalyzer = multiqc.modules.multivcfanalyzer:MultiqcModule",
+            "nanostat = multiqc.modules.nanostat:MultiqcModule",
             "ngsderive = multiqc.modules.ngsderive:MultiqcModule",
+            "odgi = multiqc.modules.odgi:MultiqcModule",
+            "optitype = multiqc.modules.optitype:MultiqcModule",
+            "pangolin = multiqc.modules.pangolin:MultiqcModule",
             "peddy = multiqc.modules.peddy:MultiqcModule",
             "phantompeakqualtools = multiqc.modules.phantompeakqualtools:MultiqcModule",
             "picard = multiqc.modules.picard:MultiqcModule",
@@ -164,6 +177,7 @@ setup(
             "rsem = multiqc.modules.rsem:MultiqcModule",
             "rseqc = multiqc.modules.rseqc:MultiqcModule",
             "salmon = multiqc.modules.salmon:MultiqcModule",
+            "sambamba = multiqc.modules.sambamba:MultiqcModule",
             "samblaster = multiqc.modules.samblaster:MultiqcModule",
             "samtools = multiqc.modules.samtools:MultiqcModule",
             "sargasso = multiqc.modules.sargasso:MultiqcModule",
@@ -173,6 +187,7 @@ setup(
             "sickle = multiqc.modules.sickle:MultiqcModule",
             "skewer = multiqc.modules.skewer:MultiqcModule",
             "slamdunk = multiqc.modules.slamdunk:MultiqcModule",
+            "snippy = multiqc.modules.snippy:MultiqcModule",
             "snpeff = multiqc.modules.snpeff:MultiqcModule",
             "snpsplit = multiqc.modules.snpsplit:MultiqcModule",
             "somalier = multiqc.modules.somalier:MultiqcModule",
@@ -185,6 +200,7 @@ setup(
             "trimmomatic = multiqc.modules.trimmomatic:MultiqcModule",
             "varscan2 = multiqc.modules.varscan2:MultiqcModule",
             "vcftools = multiqc.modules.vcftools:MultiqcModule",
+            "vep = multiqc.modules.vep:MultiqcModule",
             "verifybamid = multiqc.modules.verifybamid:MultiqcModule",
         ],
         "multiqc.templates.v1": [
@@ -210,7 +226,7 @@ setup(
         #       ]
     },
     classifiers=[
-        "Development Status :: 4 - Beta",
+        "Development Status :: 5 - Production/Stable",
         "Environment :: Console",
         "Environment :: Web Environment",
         "Intended Audience :: Science/Research",

@@ -15,7 +15,7 @@ log = logging.getLogger(__name__)
 
 
 class MultiqcModule(BaseMultiqcModule):
-    """ Samblaster """
+    """Samblaster"""
 
     def __init__(self):
         # Initialise the parent object
@@ -24,6 +24,7 @@ class MultiqcModule(BaseMultiqcModule):
             anchor="samblaster",
             href="https://github.com/GregoryFaust/samblaster",
             info="is a tool to mark duplicates and extract discordant and split reads from sam files.",
+            doi="10.1093/bioinformatics/btu314",
         )
 
         self.samblaster_data = dict()
@@ -56,7 +57,7 @@ class MultiqcModule(BaseMultiqcModule):
         self.add_barplot()
 
     def add_barplot(self):
-        """ Generate the Samblaster bar plot. """
+        """Generate the Samblaster bar plot."""
         cats = OrderedDict()
         cats["n_nondups"] = {"name": "Non-duplicates"}
         cats["n_dups"] = {"name": "Duplicates"}
@@ -90,7 +91,7 @@ class MultiqcModule(BaseMultiqcModule):
             # including the read group will be written in the log
             match = re.search(rgtag_name_regex, l)
             if match:
-                s_name = self.clean_s_name(match.group(1), f["root"])
+                s_name = self.clean_s_name(match.group(1), f)
 
             # try to find name from the input file name, if used
             match = re.search(input_file_regex, l)
@@ -99,7 +100,7 @@ class MultiqcModule(BaseMultiqcModule):
                 fname, ext = os.path.splitext(basefn)
                 # if it's stdin, then try bwa RG-tag instead
                 if fname != "stdin":
-                    s_name = self.clean_s_name(fname, f["root"])
+                    s_name = self.clean_s_name(fname, f)
 
             match = re.search(dups_regex, l)
             if match:

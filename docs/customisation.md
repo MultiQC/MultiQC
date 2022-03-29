@@ -78,7 +78,81 @@ Then this will be displayed at the top of reports:
 
 Note that you can also specify a path to a config file using `-c`.
 
-## Bulk sample renaming
+## Sample name replacement
+
+Occasionally, when you run MultiQC you may know that you want to change the resulting
+sample names at run time. You can do this using the `--replace-names` option, which
+allows you to change sample names during report creation.
+
+Unlike `--sample-names` below, the original names never make it through to the report.
+This can be useful if you know that you have a range of outputs that result in varying
+sample names but want to create a consistent report - especially if you want
+samples to line up properly in the _General Statistics_ table.
+
+To use, create a tab-separated file with two columns. The first column contains the
+search strings and the second the replacement strings:
+
+```tsv
+IDX102934	Sample_1
+IDX102935	Sample_2
+IDX102936	Sample_3
+```
+
+Note that by default, _partial_ matches are replaced. So if a log file gives a sample
+name of `IDX102934_mytool` then the result will be `Sample_1_mytool`.
+There are two config options to fine-tune this behaviour:
+
+Setting `sample_names_replace_exact` to `True` in a MultiQC config file will tell
+MultiQC to only change a sample name if the pattern _fully_ matches the search string.
+In the above example, `IDX102934_mytool` would remain unchanged.
+
+Setting `sample_names_replace_complete` to `True`, the replacement string will be used
+as a complete replacement if the search pattern matches at all.
+In the above example, `IDX102934_mytool` would become `Sample_1`.
+
+> NB: Use this method with caution! If aggressive cleaning of sample names results in
+> multiple samples with identical identifiers, they will be overwritten.
+
+To have more control over replacements, you can use regular expressions.
+If you set `sample_names_replace_regex` to `True` in a MultiQC config file
+and then create a file that contains regex search strings and even Python regex
+group identifiers in the replace string. For example:
+
+```tsv
+SAMPLE(\d)_([PS]E)_(\d)	XXX_\1_\2_\3
+```
+
+With this file, `SAMPLE1_PE_2` would be renamed to `XXX_1_PE_2`.
+`SAMPLE3_SE_4` would be renamed to `XXX_3_SE_4`.
+
+Setting `sample_names_replace_exact` to `True` also works for regular expression
+searches. The code uses the `re.fullmatch` function, so no `^` or `$` anchors are needed.
+
+Setting `sample_names_replace_complete` is ignored when using regexes.
+If you want this behaviour then configure your regular expression to match the entire string.
+For example, `*(\d)_([PS]E)_(\d) \1_\2_\3` would rename `SAMPLE1_PE_2` to `1_PE_2`.
+
+Finally, if you prefer not to use `--replace-names` with a TSV file, you
+can set the search patterns in a MultiQC config file directly.
+For example:
+
+```yaml
+sample_names_replace:
+  IDX102934: Sample_1
+  IDX102935: Sample_2
+  IDX102936: Sample_3
+```
+
+Remember that backslashes must be escaped in YAML. So if using regular expressions
+you will need to use double-backslashes. You may also need to quote strings:
+
+```yaml
+sample_names_replace_regex: True
+sample_names_replace:
+  "SAMPLE(\\d)_([PS]E)_(\\d)": "XXX_\\1_\\2_\\3"
+```
+
+## Bulk sample renaming in reports
 
 Although it is possible to rename samples manually and in bulk using the
 [report toolbox](#renaming-samples), it's often desirable to embed such renaming patterns
@@ -223,6 +297,17 @@ The section ID is the string appended to the URL when clicking a report section 
 For example, the GATK module has a section with the title _"Compare Overlap"_. When clicking that
 in the report's left hand side navigation, the web browser URL has `#gatk-compare-overlap`
 appended. Here, you would add `gatk-compare-overlap` to the `remove_sections` config.
+
+Finally, you can prevent MultiQC from finding the files for a module or submodule by customising
+its search pattern. For example, to skip Picard Base Calling metrics, you could use the following:
+
+```yaml
+sp:
+  picard/collectilluminabasecallingmetrics:
+    skip: true
+```
+
+The search pattern identifiers can be found in the documentation below for each module.
 
 #### Removing General Statistics
 
@@ -482,9 +567,24 @@ The columns are organised by either _namespace_ or table ID, then column ID.
 In the above example, `Samtools` is the namespace in the General Statistics table -
 the text that is at the start of the tooltip. For custom tables, the ID may be easier to use.
 
+### Column titles
+
+Sometimes it may be helpful to adjust the default table column header to display a different title.
+For example when running a module multiple times, or when different modules have columns with similar names.
+
+To do this, use the approach described above to find the column _Group_ and _ID_ and combine with the `table_columns_name` config option.
+For example, the following config will change the General Statistics column for FastQC from _% GC_ to _Percent of bases that are GC_
+
+```yaml
+table_columns_name:
+  FastQC:
+    percent_gc: "Percent of bases that are GC"
+```
+
 ### Conditional formatting
 
-It's possible to highlight values in tables based on their value. This is done using the `table_cond_formatting_rules` config setting. Rules can be applied to every table column, or to specific columns only, using that column's unique ID.
+It's possible to highlight values in tables based on their value. This is done using the `table_cond_formatting_rules` config setting.
+Rules can be applied to every table in the report (`all_columns`), specific tables (table ID), or specific columns (column ID).
 
 The default rules are as follows:
 
@@ -502,7 +602,9 @@ table_cond_formatting_rules:
       - s_eq: "false"
 ```
 
-These make any table cells that match the string `pass` or `true` have text with a green background, orange for `warn`, red for `fail` and so on. There can be multiple tests for each style of formatting - if there is a match for any, it will be applied. The following comparison operators are available:
+These make any table cells in the report that match the string `pass` or `true` have text with a green background, orange for `warn`, red for `fail` and so on.
+There can be multiple tests for each style of formatting - if there is a match for any, it will be applied.
+The following comparison operators are available:
 
 - `s_eq` - String exactly equals (case insensitive)
 - `s_contains` - String contains (case insensitive)
@@ -512,7 +614,22 @@ These make any table cells that match the string `pass` or `true` have text with
 - `gt` - Value is greater than
 - `lt` - Value is less than
 
-To have matches for a specific column, use that column's ID instead of `all_columns`. For example:
+To have matches for a specific table or column, use that ID instead of `all_columns`.
+
+For example, for the entire General Stats table:
+
+```yaml
+table_cond_formatting_rules:
+  general_stats_table:
+    pass:
+      - gt: 80
+    warn:
+      - lt: 80
+    fail:
+      - lt: 70
+```
+
+Or for one column in the General Stats table:
 
 ```yaml
 table_cond_formatting_rules:
@@ -527,7 +644,10 @@ table_cond_formatting_rules:
 
 Note that the formatting is done in a specific order - `pass`/`warn`/`fail` by default, so that anything matching both `warn` and `fail` will be formatted as `fail` for example. This can be customised with `table_cond_formatting_colours` (see below).
 
-To find the unique ID for your column, right click a table cell in a report and inspect it's HTML (_Inpsect_ in Chrome). It should look something like `<td class="data-coloured mqc-generalstats-Assigned">`, where the `mqc-generalstats-Assigned` bit is the unique ID.
+To find the unique ID for your table / column, right click it in a report and inspect it's HTML (_Inpsect_ in Chrome).
+
+- Tables should look something like `<table id="general_stats_table" class="table table-condensed mqc_table" data-title="General Statistics">`, where `general_stats_table` is the ID.
+- Table cells should look something like `<td class="data-coloured mqc-generalstats-Assigned">`, where the `mqc-generalstats-Assigned` bit is the unique ID.
 
 > I know this isn't the same method of IDs as above and isn't super easy to do. Sorry!
 

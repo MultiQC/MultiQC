@@ -6,16 +6,16 @@ helper functions to generate markup for report. """
 
 from __future__ import print_function
 from collections import defaultdict, OrderedDict
-import click
 import fnmatch
+import inspect
 import io
 import json
-import inspect
 import lzstring
 import mimetypes
 import os
-import time
 import re
+import rich.progress
+import time
 import yaml
 
 from multiqc import config
@@ -32,37 +32,68 @@ try:
 except NameError:
     pass  # Python 3
 
-# Set up global variables shared across modules
-general_stats_data = list()
-general_stats_headers = list()
-general_stats_html = ""
-data_sources = defaultdict(lambda: defaultdict(lambda: defaultdict()))
-plot_data = dict()
-html_ids = list()
-lint_errors = list()
-num_hc_plots = 0
-num_mpl_plots = 0
-saved_raw_data = dict()
-last_found_file = None
-runtimes = {
-    "total": 0,
-    "total_sp": 0,
-    "total_mods": 0,
-    "total_compression": 0,
-    "sp": defaultdict(),
-    "mods": defaultdict(),
-}
-file_search_stats = {
-    "skipped_symlinks": 0,
-    "skipped_not_a_file": 0,
-    "skipped_ignore_pattern": 0,
-    "skipped_filesize_limit": 0,
-    "skipped_no_match": 0,
-}
 
-# Make a dict of discovered files for each seach key
-searchfiles = list()
-files = dict()
+# Set up global variables shared across modules
+# Inside a function so that the global vars are reset if MultiQC is run more than once within a single session / environment
+def init():
+    global general_stats_data
+    general_stats_data = list()
+
+    global general_stats_headers
+    general_stats_headers = list()
+
+    global general_stats_html
+    general_stats_html = ""
+
+    global data_sources
+    data_sources = defaultdict(lambda: defaultdict(lambda: defaultdict()))
+
+    global plot_data
+    plot_data = dict()
+
+    global html_ids
+    html_ids = list()
+
+    global lint_errors
+    lint_errors = list()
+
+    global num_hc_plots
+    num_hc_plots = 0
+
+    global num_mpl_plots
+    num_mpl_plots = 0
+
+    global saved_raw_data
+    saved_raw_data = dict()
+
+    global last_found_file
+    last_found_file = None
+
+    global runtimes
+    runtimes = {
+        "total": 0,
+        "total_sp": 0,
+        "total_mods": 0,
+        "total_compression": 0,
+        "sp": defaultdict(),
+        "mods": defaultdict(),
+    }
+
+    global file_search_stats
+    file_search_stats = {
+        "skipped_symlinks": 0,
+        "skipped_not_a_file": 0,
+        "skipped_ignore_pattern": 0,
+        "skipped_filesize_limit": 0,
+        "skipped_no_match": 0,
+    }
+
+    global searchfiles
+    searchfiles = list()
+
+    # Make a dict of discovered files for each seach key
+    global files
+    files = dict()
 
 
 def get_filelist(run_module_names):
@@ -72,9 +103,9 @@ def get_filelist(run_module_names):
     """
     # Prep search patterns
     spatterns = [{}, {}, {}, {}, {}, {}, {}]
-    epatterns = [{}, {}]
     runtimes["sp"] = defaultdict()
     ignored_patterns = []
+    skipped_patterns = []
     for key, sps in config.sp.items():
         mod_name = key.split("/", 1)[0]
         if mod_name.lower() not in [m.lower() for m in run_module_names]:
@@ -105,8 +136,7 @@ def get_filelist(run_module_names):
 
         # Check if we are skipping this search key
         if any([x.get("skip") for x in sps]):
-            logger.warn("Skipping search pattern: {}".format(key))
-            continue
+            skipped_patterns.append(key)
 
         # Split search patterns according to speed of execution.
         if any([x for x in sps if "contents_re" in x]):
@@ -128,6 +158,10 @@ def get_filelist(run_module_names):
 
     if len(ignored_patterns) > 0:
         logger.debug("Ignored {} search patterns as didn't match running modules.".format(len(ignored_patterns)))
+
+    if len(skipped_patterns) > 0:
+        logger.info("Skipping {} file search patterns".format(len(skipped_patterns)))
+        logger.debug("Skipping search patterns: {}".format(", ".join(skipped_patterns)))
 
     def add_file(fn, root):
         """
@@ -251,10 +285,22 @@ def get_filelist(run_module_names):
                     searchfiles.append([fn, root])
 
     # Search through collected files
-    with click.progressbar(searchfiles, label="Searching {} files..".format(len(searchfiles))) as sfiles:
-        for sf in sfiles:
+    progress_obj = rich.progress.Progress(
+        "[blue]|[/]      ",
+        rich.progress.SpinnerColumn(),
+        "[blue]{task.description}[/] |",
+        rich.progress.BarColumn(),
+        "[progress.percentage]{task.percentage:>3.0f}%",
+        "[green]{task.completed}/{task.total}",
+        "[dim]{task.fields[s_fn]}",
+    )
+    with progress_obj as progress:
+        mqc_task = progress.add_task("searching", total=len(searchfiles), s_fn="")
+        for sf in searchfiles:
+            progress.update(mqc_task, advance=1, s_fn=os.path.join(sf[1], sf[0])[-50:])
             if not add_file(sf[0], sf[1]):
                 file_search_stats["skipped_no_match"] += 1
+        progress.update(mqc_task, s_fn="")
 
     runtimes["total_sp"] = time.time() - total_sp_starttime
 
@@ -390,6 +436,29 @@ def data_sources_tofile():
             print(body.encode("utf-8", "ignore").decode("utf-8"), file=f)
 
 
+def dois_tofile():
+    """Find all DOIs listed in report sections and write to a file"""
+    # Collect DOIs
+    dois = {"MultiQC": ["10.1093/bioinformatics/btw354"]}
+    for mod in modules_output:
+        if mod.doi is not None and mod.doi != []:
+            dois[mod.anchor] = mod.doi
+    # Write to a file
+    fn = "multiqc_citations.{}".format(config.data_format_extensions[config.data_format])
+    with io.open(os.path.join(config.data_dir, fn), "w", encoding="utf-8") as f:
+        if config.data_format == "json":
+            jsonstr = json.dumps(dois, indent=4, ensure_ascii=False)
+            print(jsonstr.encode("utf-8", "ignore").decode("utf-8"), file=f)
+        elif config.data_format == "yaml":
+            yaml.dump(dois, f, default_flow_style=False)
+        else:
+            body = ""
+            for mod, dois in dois.items():
+                for doi in dois:
+                    body += "{}{} # {}\n".format(doi, " " * (50 - len(doi)), mod)
+            print(body.encode("utf-8", "ignore").decode("utf-8"), file=f)
+
+
 def save_htmlid(html_id, skiplint=False):
     """Take a HTML ID, sanitise for HTML, check for duplicates and save.
     Returns sanitised, unique ID"""
@@ -442,7 +511,7 @@ def save_htmlid(html_id, skiplint=False):
 
 
 def compress_json(data):
-    """ Take a Python data object. Convert to JSON and compress using lzstring """
+    """Take a Python data object. Convert to JSON and compress using lzstring"""
     json_string = json.dumps(data).encode("utf-8", "ignore").decode("utf-8")
     json_string = sanitise_json(json_string)
     x = lzstring.LZString()

@@ -24,12 +24,15 @@ class MultiqcModule(BaseMultiqcModule):
             anchor="mirtop",
             href="https://github.com/miRTop/mirtop/",
             info="is a command line tool to annotate miRNAs and isomiRs and compute general statistics using the mirGFF3 format.",
+            doi="10.5281/zenodo.45385",  # Zenodo won't load this page for me as I write this, but it's the listed DOI.
         )
 
         # Find and load any mirtop reports
         self.mirtop_data = dict()
         for f in self.find_log_files("mirtop"):
             self.parse_mirtop_report(f)
+            self.add_data_source(f)
+
         # Filter out ignored samples (given with --ignore-samples option)
         self.mirtop_data = self.ignore_samples(self.mirtop_data)
 
@@ -86,18 +89,18 @@ class MultiqcModule(BaseMultiqcModule):
         self.mirtop_mean_read_count()
 
     def parse_mirtop_report(self, f):
-        """ Parse the mirtop log file. """
+        """Parse the mirtop log file."""
 
         content = json.loads(f["f"])
         for s_name in content.get("metrics", {}).keys():
-            s_name = self.clean_s_name(s_name, f["root"])
+            cleaned_s_name = self.clean_s_name(s_name, f)
             ## Check for sample name duplicates
-            if s_name in self.mirtop_data:
-                log.debug("Duplicate sample name found! Overwriting: {}".format(s_name))
+            if cleaned_s_name in self.mirtop_data:
+                log.debug("Duplicate sample name found! Overwriting: {}".format(cleaned_s_name))
             parsed_data = content["metrics"][s_name]
             parsed_data["read_count"] = parsed_data["isomiR_sum"] + parsed_data["ref_miRNA_sum"]
             parsed_data["isomiR_perc"] = (parsed_data["isomiR_sum"] / parsed_data["read_count"]) * 100
-            self.mirtop_data[s_name] = parsed_data
+            self.mirtop_data[cleaned_s_name] = parsed_data
 
     def aggregate_snps_in_samples(self):
         """Aggregate info for iso_snp isomiRs (for clarity). "Mean" section will be recomputed"""
@@ -180,7 +183,7 @@ class MultiqcModule(BaseMultiqcModule):
         return cats_section
 
     def mirtop_read_count(self):
-        """ Generate barplot for the read count plot"""
+        """Generate barplot for the read count plot"""
         p_config = {"id": "mirtop_read_count_plot", "title": "mirtop: IsomiR read counts", "ylab": "Read counts"}
         self.add_section(
             name="IsomiR read counts",
@@ -202,7 +205,7 @@ class MultiqcModule(BaseMultiqcModule):
         )
 
     def mirtop_unique_read_count(self):
-        """ Generate the section for the Unique Read Count plot """
+        """Generate the section for the Unique Read Count plot"""
         p_config = {
             "id": "mirtop_unique_read_count_plot",
             "title": "mirtop: IsomiR unique read counts",
@@ -224,7 +227,7 @@ class MultiqcModule(BaseMultiqcModule):
         )
 
     def mirtop_mean_read_count(self):
-        """ Generate the section for the Mean Read Count plot """
+        """Generate the section for the Mean Read Count plot"""
         p_config = {"id": "mirtop_mean_read_count_plot", "title": "mirtop: Mean isomiR read counts", "ylab": "Means"}
         self.add_section(
             name="Mean isomiR read counts",

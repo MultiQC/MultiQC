@@ -22,6 +22,7 @@ class MultiqcModule(BaseMultiqcModule):
             anchor="kaiju",
             href="http://kaiju.binf.ku.dk/",
             info="a fast and sensitive taxonomic classification for metagenomics.",
+            doi="10.1038/ncomms11257",
         )
 
         # Set up data structures
@@ -74,15 +75,15 @@ class MultiqcModule(BaseMultiqcModule):
         self.kaiju_stats_table()
         self.top_five_barplot()
 
-    def parse_kaiju2table_report(self, report):
-        """ Search a kaiju with a set of regexes """
+    def parse_kaiju2table_report(self, f):
+        """Search a kaiju with a set of regexes"""
         parsed_data = {}
 
-        for l in report["f"]:
+        for l in f["f"]:
             if l.startswith("file\t"):
                 continue
             (s_file, pct, reads, taxon_id, taxon_names) = l.rstrip().split("\t")
-            s_name = self.clean_s_name(s_file, report["root"])
+            s_name = self.clean_s_name(s_file, f)
             if s_name not in parsed_data.keys():
                 parsed_data[s_name] = {"assigned": {}}
 
@@ -98,7 +99,7 @@ class MultiqcModule(BaseMultiqcModule):
         return taxo_rank, parsed_data
 
     def sum_sample_counts(self):
-        """ Sum counts across all samples for kaiju data """
+        """Sum counts across all samples for kaiju data"""
 
         # Sum the percentages for each taxa across all samples
         # Allows us to pick top-5 for each rank
@@ -189,7 +190,7 @@ class MultiqcModule(BaseMultiqcModule):
         self.general_stats_addcols(tdata, headers)
 
     def top_five_barplot(self):
-        """ Add a bar plot showing the top-5 from each taxa rank """
+        """Add a bar plot showing the top-5 from each taxa rank"""
 
         # ordered rank used
         rank_used = []

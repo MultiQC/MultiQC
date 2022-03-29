@@ -14,7 +14,7 @@ log = logging.getLogger(__name__)
 
 
 def parse_reports(self):
-    """ Find RSeQC junction_saturation frequency reports and parse their data """
+    """Find RSeQC junction_saturation frequency reports and parse their data"""
 
     # Set up vars
     self.junction_saturation_all = dict()
@@ -49,6 +49,11 @@ def parse_reports(self):
     self.junction_saturation_novel = self.ignore_samples(self.junction_saturation_novel)
 
     if len(self.junction_saturation_all) > 0:
+
+        # Write data to file
+        self.write_data_file(self.junction_saturation_all, "rseqc_junction_saturation_all")
+        self.write_data_file(self.junction_saturation_known, "junction_saturation_known")
+        self.write_data_file(self.junction_saturation_novel, "junction_saturation_novel")
 
         # Add line graph to section
         pconfig = {

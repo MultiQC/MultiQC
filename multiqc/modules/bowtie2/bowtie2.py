@@ -15,7 +15,7 @@ log = logging.getLogger(__name__)
 
 
 class MultiqcModule(BaseMultiqcModule):
-    """ Bowtie 2 module, parses stderr logs. """
+    """Bowtie 2 module, parses stderr logs."""
 
     def __init__(self):
 
@@ -30,6 +30,7 @@ class MultiqcModule(BaseMultiqcModule):
                 Unfortunately both tools have identical log output by default, so it is impossible
                 to distiguish which tool was used.
                 """,
+            doi=["10.1038/nmeth.1923", "10.1038/nmeth.3317", "10.1038/s41587-019-0201-4"],
         )
 
         # Find and load any Bowtie 2 reports
@@ -135,7 +136,7 @@ class MultiqcModule(BaseMultiqcModule):
             # Attempt in vain to find original bowtie2 command, logged by another program
             btcmd = re.search(r"bowtie2 .+ -[1U] ([^\s,]+)", l)
             if btcmd:
-                s_name = self.clean_s_name(btcmd.group(1), f["root"])
+                s_name = self.clean_s_name(btcmd.group(1), f)
                 log.debug("Found a bowtie2 command, updating sample name to '{}'".format(s_name))
 
             # Total reads
@@ -180,10 +181,16 @@ class MultiqcModule(BaseMultiqcModule):
 
                 # End of log section
                 # Save half 'pairs' of mate counts
-                m_keys = ["paired_aligned_mate_multi", "paired_aligned_mate_none", "paired_aligned_mate_one"]
-                for k in m_keys:
+                for k in ["paired_aligned_mate_multi", "paired_aligned_mate_none", "paired_aligned_mate_one"]:
                     if k in parsed_data:
                         parsed_data["{}_halved".format(k)] = float(parsed_data[k]) / 2.0
+
+                # HiSAT2 has PE data doesn't have the mate-specific stats.
+                # To avoid missing unaligned counts in the barplot, fake the "_halved" key.
+                # See https://github.com/ewels/MultiQC/issues/1230
+                if "paired_aligned_mate_none_halved" not in parsed_data and "paired_aligned_none" in parsed_data:
+                    parsed_data["paired_aligned_mate_none_halved"] = parsed_data["paired_aligned_none"]
+
                 # Save parsed data
                 if s_name in self.bowtie2_data:
                     log.debug("Duplicate sample name found! Overwriting: {}".format(s_name))
@@ -209,7 +216,7 @@ class MultiqcModule(BaseMultiqcModule):
         self.general_stats_addcols(self.bowtie2_data, headers)
 
     def bowtie2_alignment_plot(self):
-        """ Make the HighCharts HTML to plot the alignment rates """
+        """Make the HighCharts HTML to plot the alignment rates"""
 
         half_warning = ""
         for s_name in self.bowtie2_data:

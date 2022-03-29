@@ -16,7 +16,7 @@ class datatable(object):
     for either a table or a beeswarm plot."""
 
     def __init__(self, data, headers=None, pconfig=None):
-        """ Prepare data for use in a table or plot """
+        """Prepare data for use in a table or plot"""
         if headers is None:
             headers = []
         if pconfig is None:
@@ -110,10 +110,12 @@ class datatable(object):
 
                 # Applying defaults presets for data keys if shared_key is set to base_count or read_count
                 shared_key = headers[idx][k].get("shared_key", None)
-                if shared_key in ["read_count", "base_count"]:
+                if shared_key in ["read_count", "long_read_count", "base_count"]:
                     if shared_key == "read_count":
                         multiplier = config.read_count_multiplier
-                    else:
+                    elif shared_key == "long_read_count":
+                        multiplier = config.long_read_count_multiplier
+                    elif shared_key == "base_count":
                         multiplier = config.base_count_multiplier
                     if headers[idx][k].get("modify") is None:
                         headers[idx][k]["modify"] = lambda x: x * multiplier
@@ -163,6 +165,17 @@ class datatable(object):
                             except KeyError:
                                 pass
 
+                # Overwrite name if set in user config
+                for ns in config.table_columns_name.keys():
+                    # Make namespace key case insensitive
+                    if ns.lower() == headers[idx][k]["namespace"].lower():
+
+                        # Assume a dict of the specific column IDs
+                        try:
+                            headers[idx][k]["title"] = config.table_columns_name[ns][k]
+                        except KeyError:
+                            pass
+
                 # Also overwite placement if set in config
                 try:
                     headers[idx][k]["placement"] = float(
@@ -200,7 +213,7 @@ class datatable(object):
                                 headers[idx][k]["dmax"] = max(headers[idx][k]["dmax"], val)
                             if setdmin:
                                 headers[idx][k]["dmin"] = min(headers[idx][k]["dmin"], val)
-                        except ValueError:
+                        except (ValueError, TypeError):
                             val = samp[k]  # couldn't convert to float - keep as a string
                         except KeyError:
                             pass  # missing data - skip
@@ -223,7 +236,7 @@ class datatable(object):
                     shared_keys[sk]["dmax"] = max(
                         headers[idx][k]["dmax"], shared_keys[sk].get("dmax", headers[idx][k]["dmax"])
                     )
-                    shared_keys[sk]["dmin"] = max(
+                    shared_keys[sk]["dmin"] = min(
                         headers[idx][k]["dmin"], shared_keys[sk].get("dmin", headers[idx][k]["dmin"])
                     )
 

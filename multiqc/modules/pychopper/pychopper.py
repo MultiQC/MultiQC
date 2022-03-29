@@ -23,6 +23,7 @@ class MultiqcModule(BaseMultiqcModule):
             anchor="pychopper",
             href="https://github.com/nanoporetech/pychopper",
             info="is a tool to identify, orient, trim and rescue full length Nanopore cDNA reads.",
+            # Can't find a DOI // doi=
         )
 
         # Parse stats file
@@ -36,6 +37,7 @@ class MultiqcModule(BaseMultiqcModule):
                 if category not in self.pychopper_data[sample]:
                     self.pychopper_data[sample][category] = {}
                 self.pychopper_data[sample][category][name] = float(value)
+            self.add_data_source(f)
 
         # Filter to strip out ignored sample names
         self.pychopper_data = self.ignore_samples(self.pychopper_data)
@@ -98,7 +100,7 @@ class MultiqcModule(BaseMultiqcModule):
             ),
             helptext=(
                 """
-                Nanopore cDNA reads are always read forward. To estimate their original strand, 
+                Nanopore cDNA reads are always read forward. To estimate their original strand,
                 Pychopper searches for the location of the start and end primers and assigns the reads accordingly.
                 """
             ),
@@ -108,7 +110,7 @@ class MultiqcModule(BaseMultiqcModule):
 
     # Plotting functions
     def plot_classification(self):
-        """ Generate the cDNA read classification plot """
+        """Generate the cDNA read classification plot"""
 
         pconfig = {
             "id": "pychopper_classification_plot",
@@ -127,7 +129,7 @@ class MultiqcModule(BaseMultiqcModule):
         return bargraph.plot(data_classification, cats, pconfig)
 
     def plot_orientation(self):
-        """ Generate the read strand orientation plot """
+        """Generate the read strand orientation plot"""
 
         pconfig = {
             "id": "pychopper_orientation_plot",

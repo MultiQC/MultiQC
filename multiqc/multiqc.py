@@ -18,12 +18,15 @@ import io
 import jinja2
 import os
 import re
+import rich
 import shutil
 import subprocess
 import sys
 import tempfile
 import time
 import traceback
+
+from rich.syntax import Syntax
 
 try:
     # Python 3 imports
@@ -37,7 +40,7 @@ except ImportError:
     sys.setdefaultencoding("utf8")
 
 from .plots import table
-from .utils import report, plugin_hooks, megaqc, util_functions, lint_helpers, config, log
+from .utils import report, plugin_hooks, megaqc, util_functions, lint_helpers, config, log, mqc_colour
 
 start_execution_time = time.time()
 logger = config.logger
@@ -87,16 +90,25 @@ logger = config.logger
 )
 @click.option("--ignore-symlinks", "ignore_symlinks", is_flag=True, help="Ignore symlinked directories and files")
 @click.option(
+    "--fn_as_s_name", "use_filename_as_sample_name", is_flag=True, help="Use the log filename as the sample name"
+)
+@click.option(
+    "--replace-names",
+    "replace_names",
+    type=click.Path(exists=True, readable=True),
+    help="Path to TSV file to rename sample names during report generation",
+)
+@click.option(
     "--sample-names",
     "sample_names",
     type=click.Path(exists=True, readable=True),
-    help="File containing alternative sample names",
+    help="Path to TSV file containing alternative sample names for renaming buttons in the report",
 )
 @click.option(
     "--sample-filters",
     "sample_filters",
     type=click.Path(exists=True, readable=True),
-    help="File containing show/hide patterns for the report",
+    help="Path to TSV file containing show/hide patterns for the report",
 )
 @click.option(
     "-l", "--file-list", is_flag=True, help="Supply a file containing a list of file paths to be searched, one per row"
@@ -129,6 +141,7 @@ logger = config.logger
     help="Output parsed data in a different format. Default: {}".format(config.data_format),
 )
 @click.option("-z", "--zip-data-dir", "zip_data_dir", is_flag=True, help="Compress the data directory.")
+@click.option("--no-report", "no_report", is_flag=True, help="Do not generate a report, only export data and plots")
 @click.option(
     "-p", "--export", "export_plots", is_flag=True, help="Export plots as static images in addition to the report"
 )
@@ -164,6 +177,13 @@ logger = config.logger
 @click.option("-q", "--quiet", is_flag=True, help="Only show log warnings")
 @click.option("--profile-runtime", is_flag=True, help="Add analysis of how long MultiQC takes to run to the report")
 @click.option("--no-ansi", is_flag=True, help="Disable coloured log output")
+@click.option(
+    "--custom-css-file",
+    "custom_css_files",
+    type=click.Path(exists=True, readable=True),
+    multiple=True,
+    help="Custom CSS file to add to the final report",
+)
 @click.version_option(config.version, prog_name="multiqc")
 def run_cli(
     analysis_dir,
@@ -179,6 +199,8 @@ def run_cli(
     outdir,
     ignore,
     ignore_samples,
+    use_filename_as_sample_name,
+    replace_names,
     sample_names,
     sample_filters,
     file_list,
@@ -190,6 +212,7 @@ def run_cli(
     force,
     ignore_symlinks,
     export_plots,
+    no_report,
     plots_flat,
     plots_interactive,
     lint,
@@ -201,13 +224,27 @@ def run_cli(
     quiet,
     profile_runtime,
     no_ansi,
+    custom_css_files,
     **kwargs,
 ):
+    # Main MultiQC run command for use with the click command line, complete with all click function decorators.
+    # To make it easy to use MultiQC within notebooks and other locations that don't need click, we simply pass the
+    # parsed variables on to a vanilla python function.
+
+    """MultiQC aggregates results from bioinformatics analyses across many samples into a single report.
+
+    It searches a given directory for analysis logs and compiles a HTML report.
+    It's a general use tool, perfect for summarising the output from numerous
+    bioinformatics tools.
+
+    To run, supply with one or more directory to scan for analysis results.
+    To run here, use 'multiqc .'
+
+    See http://multiqc.info for more details.
+
+    Author: Phil Ewels (http://phil.ewels.co.uk)
     """
-    Main MultiQC run command for use with the click command line, complete with all click function decorators.
-    To make it easy to use MultiQC within notebooks and other locations that don't need click, we simply pass the
-    parsed variables on to a vanilla python function.
-    """
+
     # Use keyword arguments in case things get rearranged in the future
     multiqc_run = run(
         analysis_dir=analysis_dir,
@@ -223,6 +260,8 @@ def run_cli(
         outdir=outdir,
         ignore=ignore,
         ignore_samples=ignore_samples,
+        use_filename_as_sample_name=use_filename_as_sample_name,
+        replace_names=replace_names,
         sample_names=sample_names,
         sample_filters=sample_filters,
         file_list=file_list,
@@ -233,6 +272,7 @@ def run_cli(
         zip_data_dir=zip_data_dir,
         force=force,
         ignore_symlinks=ignore_symlinks,
+        no_report=no_report,
         export_plots=export_plots,
         plots_flat=plots_flat,
         plots_interactive=plots_interactive,
@@ -245,6 +285,7 @@ def run_cli(
         quiet=quiet,
         profile_runtime=profile_runtime,
         no_ansi=no_ansi,
+        custom_css_files=custom_css_files,
         kwargs=kwargs,
     )
 
@@ -252,7 +293,7 @@ def run_cli(
     sys.exit(multiqc_run["sys_exit_code"])
 
 
-# Main function that runs MultQC. Available to use within an interactive Python environment
+# Main function that runs MultiQC. Available to use within an interactive Python environment
 def run(
     analysis_dir,
     dirs=False,
@@ -267,6 +308,8 @@ def run(
     outdir=None,
     ignore=(),
     ignore_samples=(),
+    use_filename_as_sample_name=False,
+    replace_names=None,
     sample_names=None,
     sample_filters=None,
     file_list=False,
@@ -277,6 +320,7 @@ def run(
     zip_data_dir=False,
     force=True,
     ignore_symlinks=False,
+    no_report=False,
     export_plots=False,
     plots_flat=False,
     plots_interactive=False,
@@ -289,6 +333,7 @@ def run(
     quiet=False,
     profile_runtime=False,
     no_ansi=False,
+    custom_css_files=(),
     kwargs={},
 ):
     """MultiQC aggregates results from bioinformatics analyses across many samples into a single report.
@@ -311,6 +356,14 @@ def run(
         loglevel = "WARNING"
     log.init_log(logger, loglevel=loglevel, no_ansi=no_ansi)
 
+    console = rich.console.Console(stderr=True, highlight=False, force_terminal=log.force_term_colors())
+    console.print(
+        "\n  [blue]/[/][green]/[/][red]/[/] [bold][link=https://multiqc.info]MultiQC[/link][/] :mag: [dim]| v{}\n".format(
+            config.version
+        )
+    )
+    logger.debug("This is MultiQC v{}".format(config.version))
+
     # Load config files
     plugin_hooks.mqc_trigger("before_config")
     config.mqc_load_userconfig(config_file)
@@ -319,6 +372,8 @@ def run(
     # Command-line config YAML
     if len(cl_config) > 0:
         config.mqc_cl_config(cl_config)
+
+    report.init()
 
     # Log the command used to launch MultiQC
     report.multiqc_command = " ".join(sys.argv)
@@ -353,9 +408,9 @@ def run(
     config.analysis_dir = analysis_dir
     if outdir is not None:
         config.output_dir = outdir
-    if no_clean_sname:
-        config.fn_clean_sample_names = False
-        logger.info("Not cleaning sample names")
+    if use_filename_as_sample_name:
+        config.use_filename_as_sample_name = True
+        logger.info("Using log filenames for sample names")
     if make_data_dir:
         config.make_data_dir = True
     if no_data_dir:
@@ -370,6 +425,8 @@ def run(
         config.data_format = data_format
     if export_plots:
         config.export_plots = True
+    if no_report:
+        config.make_report = False
     if plots_flat:
         config.plots_force_flat = True
     if plots_interactive:
@@ -383,6 +440,11 @@ def run(
         config.megaqc_upload = False
     else:
         config.megaqc_upload = True
+    if no_clean_sname:
+        config.fn_clean_sample_names = False
+        logger.info("Not cleaning sample names")
+    if replace_names:
+        config.load_replace_names(replace_names)
     if sample_names:
         config.load_sample_names(sample_names)
     config.load_show_hide(sample_filters)
@@ -394,6 +456,8 @@ def run(
         config.exclude_modules = exclude
     if profile_runtime:
         config.profile_runtime = True
+    if custom_css_files:
+        config.custom_css_files.extend(custom_css_files)
     config.kwargs = kwargs  # Plugin command line options
 
     # Clean up analysis_dir if a string (interactive environment only)
@@ -402,23 +466,22 @@ def run(
 
     plugin_hooks.mqc_trigger("execution_start")
 
-    logger.info("This is MultiQC v{}".format(config.version))
     logger.debug("Command     : {}".format(" ".join(sys.argv)))
     logger.debug("Working dir : {}".format(os.getcwd()))
     if make_pdf:
         logger.info("--pdf specified. Using non-interactive HTML template.")
-    logger.info("Template    : {}".format(config.template))
+    logger.debug("Template    : {}".format(config.template))
     if lint:
         logger.info("--lint specified. Being strict with validation.")
 
     # Throw a warning if we are running on Python 2
     if sys.version_info[0] < 3:
-        logger.warning(
+        logger.error(
             "You are running MultiQC with Python {}.{}.{}".format(
                 sys.version_info[0], sys.version_info[1], sys.version_info[2]
             )
         )
-        logger.warning("Please upgrade! MultiQC no longer officially supports Python < 3.6")
+        logger.critical("Please upgrade Python! MultiQC does not support Python < 3.6, things will break.")
     else:
         logger.debug("Running Python {}".format(sys.version.replace("\n", " ")))
 
@@ -458,7 +521,7 @@ def run(
             config.output_fn_name = filename
             config.data_dir_name = "{}_data".format(filename)
             config.plots_dir_name = "{}_plots".format(filename)
-        if not config.output_fn_name.endswith(".html"):
+        if not config.output_fn_name.endswith(".html") and config.make_report:
             config.output_fn_name = "{}.html".format(config.output_fn_name)
 
     # Print some status updates
@@ -466,8 +529,6 @@ def run(
         logger.info("Report title: {}".format(config.title))
     if dirs:
         logger.info("Prepending directory to sample names")
-    for d in config.analysis_dir:
-        logger.info("Searching   : {}".format(os.path.abspath(d)))
 
     # Prep module configs
     config.top_modules = [m if type(m) is dict else {m: {}} for m in config.top_modules]
@@ -488,7 +549,7 @@ def run(
                         logger.error(errmsg)
                         report.lint_errors.append(errmsg)
 
-    # Get the avaiable tags to decide which modules to run.
+    # Get the available tags to decide which modules to run.
     modules_from_tags = set()
     if config.module_tag is not None:
         tags = config.module_tag
@@ -513,7 +574,7 @@ def run(
 
     if len(getattr(config, "run_modules", {})) > 0:
         run_modules = [m for m in run_modules if list(m.keys())[0] in config.run_modules]
-        logger.info("Only using modules {}".format(", ".join(config.run_modules)))
+        logger.info("Only using modules: {}".format(", ".join(config.run_modules)))
     elif modules_from_tags:
         run_modules = [m for m in run_modules if list(m.keys())[0] in modules_from_tags]
         logger.info("Only using modules with '{}' tag".format(", ".join(module_tag)))
@@ -544,6 +605,8 @@ def run(
         os.makedirs(config.plots_dir)
     else:
         config.plots_dir = None
+    if not config.make_report:
+        config.output_fn = None
 
     # Load the template
     template_mod = config.avail_templates[config.template].load()
@@ -562,7 +625,14 @@ def run(
         pass  # custom_data not in config
 
     # Get the list of files to search
+    for d in config.analysis_dir:
+        logger.info("Search path : {}".format(os.path.abspath(d)))
     report.get_filelist(run_module_names)
+
+    # Only run the modules for which any files were found
+    non_empty_modules = {key.split("/")[0].lower() for key, files in report.files.items() if len(files) > 0}
+    run_modules = [m for m in run_modules if list(m.keys())[0].lower() in non_empty_modules]
+    run_module_names = [list(m.keys())[0] for m in run_modules]
 
     # Run the modules!
     plugin_hooks.mqc_trigger("before_modules")
@@ -574,6 +644,8 @@ def run(
         try:
             this_module = list(mod_dict.keys())[0]
             mod_cust_config = list(mod_dict.values())[0]
+            if mod_cust_config is None:
+                mod_cust_config = {}
             mod = config.avail_modules[this_module].load()
             mod.mod_cust_config = mod_cust_config  # feels bad doing this, but seems to work
             output = mod()
@@ -582,31 +654,32 @@ def run(
             for m in output:
                 report.modules_output.append(m)
 
-            # Copy over css & js files if requested by the theme
-            try:
-                for to, path in report.modules_output[-1].css.items():
-                    copy_to = os.path.join(tmp_dir, to)
-                    os.makedirs(os.path.dirname(copy_to))
-                    shutil.copyfile(path, copy_to)
-            except OSError as e:
-                if e.errno == errno.EEXIST:
+            if config.make_report:
+                # Copy over css & js files if requested by the theme
+                try:
+                    for to, path in report.modules_output[-1].css.items():
+                        copy_to = os.path.join(tmp_dir, to)
+                        os.makedirs(os.path.dirname(copy_to))
+                        shutil.copyfile(path, copy_to)
+                except OSError as e:
+                    if e.errno == errno.EEXIST:
+                        pass
+                    else:
+                        raise
+                except AttributeError:
                     pass
-                else:
-                    raise
-            except AttributeError:
-                pass
-            try:
-                for to, path in report.modules_output[-1].js.items():
-                    copy_to = os.path.join(tmp_dir, to)
-                    os.makedirs(os.path.dirname(copy_to))
-                    shutil.copyfile(path, copy_to)
-            except OSError as e:
-                if e.errno == errno.EEXIST:
+                try:
+                    for to, path in report.modules_output[-1].js.items():
+                        copy_to = os.path.join(tmp_dir, to)
+                        os.makedirs(os.path.dirname(copy_to))
+                        shutil.copyfile(path, copy_to)
+                except OSError as e:
+                    if e.errno == errno.EEXIST:
+                        pass
+                    else:
+                        raise
+                except AttributeError:
                     pass
-                else:
-                    raise
-            except AttributeError:
-                pass
 
         except UserWarning:
             logger.debug("No samples found: {}".format(list(mod_dict.keys())[0]))
@@ -619,18 +692,50 @@ def run(
             sys.exit(1)
         except:
             # Flag the error, but carry on
-            logger.error(
-                "Oops! The '{}' MultiQC module broke... \n".format(this_module)
-                + "  Please copy the following traceback and report it at "
-                + "https://github.com/ewels/MultiQC/issues \n"
-                + "  If possible, please include a log file that triggers the error - "
-                + "the last file found was:\n"
-                + "    {}\n".format(report.last_found_file)
-                + ("=" * 60)
-                + "\nModule {} raised an exception: {}".format(this_module, traceback.format_exc())
-                + ("=" * 60)
+            class CustomTraceback:
+                def __rich_console__(self, console: rich.console.Console, options: rich.console.ConsoleOptions):
+                    sys_tb = sys.exc_info()
+                    issue_url = "https://github.com/ewels/MultiQC/issues/new?template=bug_report.md&title={}%20module%20-%20{}".format(
+                        this_module, sys_tb[0].__name__
+                    )
+                    yield (
+                        "Please copy this log and report it at [bright_blue][link={}]https://github.com/ewels/MultiQC/issues[/link][/] \n"
+                        "[bold underline]Please attach a file that triggers the error.[/] The last file found was: [green]{}[/]\n".format(
+                            issue_url, report.last_found_file
+                        )
+                    )
+                    yield Syntax(traceback.format_exc(), "python")
+
+                def __rich_measure__(self, console: rich.console.Console, options: rich.console.ConsoleOptions):
+                    tb_width = max([len(l) for l in traceback.format_exc().split("\n")])
+                    try:
+                        log_width = 71 + len(report.last_found_file)
+                    except TypeError:
+                        log_width = 71
+                    panel_width = max(tb_width, log_width)
+                    return rich.console.Measurement(panel_width, panel_width)
+
+            console = rich.console.Console(stderr=True, force_terminal=log.force_term_colors())
+            console.print(
+                rich.panel.Panel(
+                    CustomTraceback(),
+                    title="Oops! The '[underline]{}[/]' MultiQC module broke...".format(this_module),
+                    expand=False,
+                    border_style="red",
+                    style="on #272822",
+                )
             )
+            # Still log.debug this so that it ends up in the log file - above is just stderr for now
+            logger.debug(
+                "Oops! The '{}' MultiQC module broke...\n".format(this_module)
+                + ("=" * 80)
+                + "\n"
+                + traceback.format_exc()
+                + ("=" * 80)
+            )
+            # Exit code 1 for CI failures etc
             sys_exit_code = 1
+
         report.runtimes["mods"][run_module_names[mod_idx]] = time.time() - mod_starttime
     report.runtimes["total_mods"] = time.time() - total_mods_starttime
 
@@ -648,45 +753,17 @@ def run(
         # Exit with an error code if a module broke
         sys.exit(sys_exit_code)
 
-    # Sort the report module output if we have a config
-    if len(getattr(config, "report_section_order", {})) > 0:
-        section_id_order = {}
-        idx = 10
-        for mod in reversed(report.modules_output):
-            section_id_order[mod.anchor] = idx
-            idx += 10
-        for anchor, ss in config.report_section_order.items():
-            if anchor not in section_id_order.keys():
-                logger.debug("Reordering sections: anchor '{}' not found.".format(anchor))
-                continue
-            if ss.get("order") is not None:
-                section_id_order[anchor] = ss["order"]
-            if ss.get("after") in section_id_order.keys():
-                section_id_order[anchor] = section_id_order[ss["after"]] + 1
-            if ss.get("before") in section_id_order.keys():
-                section_id_order[anchor] = section_id_order[ss["before"]] - 1
-        sorted_ids = sorted(section_id_order, key=section_id_order.get)
-        report.modules_output = [mod for i in reversed(sorted_ids) for mod in report.modules_output if mod.anchor == i]
-
-    # Sort the report sections if we have a config
-    # Basically the same as above, but sections within a module
-    if len(getattr(config, "report_section_order", {})) > 0:
-        # Go through each module
-        for midx, mod in enumerate(report.modules_output):
+    if config.make_report:
+        # Sort the report module output if we have a config
+        if len(getattr(config, "report_section_order", {})) > 0:
             section_id_order = {}
-            # Get a list of the section anchors
             idx = 10
-            for s in mod.sections:
-                section_id_order[s["anchor"]] = idx
+            for mod in reversed(report.modules_output):
+                section_id_order[mod.anchor] = idx
                 idx += 10
-            # Go through each section to be reordered
             for anchor, ss in config.report_section_order.items():
-                # Section to be moved is not in this module
                 if anchor not in section_id_order.keys():
-                    logger.debug("Reordering sections: anchor '{}' not found for module '{}'.".format(anchor, mod.name))
-                    continue
-                if ss == "remove":
-                    section_id_order[anchor] = False
+                    logger.debug("Reordering sections: anchor '{}' not found.".format(anchor))
                     continue
                 if ss.get("order") is not None:
                     section_id_order[anchor] = ss["order"]
@@ -694,11 +771,44 @@ def run(
                     section_id_order[anchor] = section_id_order[ss["after"]] + 1
                 if ss.get("before") in section_id_order.keys():
                     section_id_order[anchor] = section_id_order[ss["before"]] - 1
-            # Remove module sections
-            section_id_order = {s: o for s, o in section_id_order.items() if o is not False}
-            # Sort the module sections
             sorted_ids = sorted(section_id_order, key=section_id_order.get)
-            report.modules_output[midx].sections = [s for i in sorted_ids for s in mod.sections if s["anchor"] == i]
+            report.modules_output = [
+                mod for i in reversed(sorted_ids) for mod in report.modules_output if mod.anchor == i
+            ]
+
+        # Sort the report sections if we have a config
+        # Basically the same as above, but sections within a module
+        if len(getattr(config, "report_section_order", {})) > 0:
+            # Go through each module
+            for midx, mod in enumerate(report.modules_output):
+                section_id_order = {}
+                # Get a list of the section anchors
+                idx = 10
+                for s in mod.sections:
+                    section_id_order[s["anchor"]] = idx
+                    idx += 10
+                # Go through each section to be reordered
+                for anchor, ss in config.report_section_order.items():
+                    # Section to be moved is not in this module
+                    if anchor not in section_id_order.keys():
+                        logger.debug(
+                            "Reordering sections: anchor '{}' not found for module '{}'.".format(anchor, mod.name)
+                        )
+                        continue
+                    if ss == "remove":
+                        section_id_order[anchor] = False
+                        continue
+                    if ss.get("order") is not None:
+                        section_id_order[anchor] = ss["order"]
+                    if ss.get("after") in section_id_order.keys():
+                        section_id_order[anchor] = section_id_order[ss["after"]] + 1
+                    if ss.get("before") in section_id_order.keys():
+                        section_id_order[anchor] = section_id_order[ss["before"]] - 1
+                # Remove module sections
+                section_id_order = {s: o for s, o in section_id_order.items() if o is not False}
+                # Sort the module sections
+                sorted_ids = sorted(section_id_order, key=section_id_order.get)
+                report.modules_output[midx].sections = [s for i in sorted_ids for s in mod.sections if s["anchor"] == i]
 
     plugin_hooks.mqc_trigger("after_modules")
 
@@ -708,6 +818,7 @@ def run(
     for i in empty_keys:
         del report.general_stats_data[i]
         del report.general_stats_headers[i]
+
     # Add general-stats IDs to table row headers
     for idx, h in enumerate(report.general_stats_headers):
         for k in h.keys():
@@ -717,8 +828,9 @@ def run(
             report.general_stats_headers[idx][k]["rid"] = report.save_htmlid(
                 "mqc-generalstats-{}-{}".format(ns_html, h[k]["rid"])
             )
+
     # Generate the General Statistics HTML & write to file
-    if len(report.general_stats_data) > 0:
+    if len(report.general_stats_data) > 0 and not config.skip_generalstats:
         pconfig = {
             "id": "general_stats_table",
             "table_title": "General Statistics",
@@ -729,14 +841,19 @@ def run(
     else:
         config.skip_generalstats = True
 
-    # Write the report sources to disk
     if config.data_dir is not None:
+        # Write the report sources to disk
         report.data_sources_tofile()
-    # Compress the report plot JSON data
-    runtime_compression_start = time.time()
-    logger.info("Compressing plot data")
-    report.plot_compressed_json = report.compress_json(report.plot_data)
-    report.runtimes["total_compression"] = time.time() - runtime_compression_start
+
+        # Create a file with the module DOIs
+        report.dois_tofile()
+
+    if config.make_report:
+        # Compress the report plot JSON data
+        runtime_compression_start = time.time()
+        logger.info("Compressing plot data")
+        report.plot_compressed_json = report.compress_json(report.plot_data)
+        report.runtimes["total_compression"] = time.time() - runtime_compression_start
 
     plugin_hooks.mqc_trigger("before_report_generation")
 
@@ -750,17 +867,18 @@ def run(
 
     # Make the final report path & data directories
     if filename != "stdout":
-        config.output_fn = os.path.join(config.output_dir, config.output_fn_name)
+        if config.make_report:
+            config.output_fn = os.path.join(config.output_dir, config.output_fn_name)
         config.data_dir = os.path.join(config.output_dir, config.data_dir_name)
         config.plots_dir = os.path.join(config.output_dir, config.plots_dir_name)
         # Check for existing reports and remove if -f was specified
         if (
-            os.path.exists(config.output_fn)
+            (config.make_report and os.path.exists(config.output_fn))
             or (config.make_data_dir and os.path.exists(config.data_dir))
             or (config.export_plots and os.path.exists(config.plots_dir))
         ):
             if config.force:
-                if os.path.exists(config.output_fn):
+                if config.make_report and os.path.exists(config.output_fn):
                     logger.warning("Deleting    : {}   (-f was specified)".format(os.path.relpath(config.output_fn)))
                     os.remove(config.output_fn)
                 if config.make_data_dir and os.path.exists(config.data_dir):
@@ -772,33 +890,38 @@ def run(
             else:
                 # Set up the base names of the report and the data dir
                 report_num = 1
-                report_base, report_ext = os.path.splitext(config.output_fn_name)
+                if config.make_report:
+                    report_base, report_ext = os.path.splitext(config.output_fn_name)
                 dir_base = os.path.basename(config.data_dir)
                 plots_base = os.path.basename(config.plots_dir)
 
                 # Iterate through appended numbers until we find one that's free
                 while (
-                    os.path.exists(config.output_fn)
+                    (config.make_report and os.path.exists(config.output_fn))
                     or (config.make_data_dir and os.path.exists(config.data_dir))
                     or (config.export_plots and os.path.exists(config.plots_dir))
                 ):
-                    config.output_fn = os.path.join(
-                        config.output_dir, "{}_{}{}".format(report_base, report_num, report_ext)
-                    )
+                    if config.make_report:
+                        config.output_fn = os.path.join(
+                            config.output_dir, "{}_{}{}".format(report_base, report_num, report_ext)
+                        )
                     config.data_dir = os.path.join(config.output_dir, "{}_{}".format(dir_base, report_num))
                     config.plots_dir = os.path.join(config.output_dir, "{}_{}".format(plots_base, report_num))
                     report_num += 1
-
-                config.output_fn_name = os.path.basename(config.output_fn)
+                if config.make_report:
+                    config.output_fn_name = os.path.basename(config.output_fn)
                 config.data_dir_name = os.path.basename(config.data_dir)
                 config.plots_dir_name = os.path.basename(config.plots_dir)
                 logger.warning("Previous MultiQC output found! Adjusting filenames..")
                 logger.warning("Use -f or --force to overwrite existing reports instead")
 
         # Make directories for report if needed
-        if not os.path.exists(os.path.dirname(config.output_fn)):
-            os.makedirs(os.path.dirname(config.output_fn))
-        logger.info("Report      : {}".format(os.path.relpath(config.output_fn)))
+        if config.make_report:
+            if not os.path.exists(os.path.dirname(config.output_fn)):
+                os.makedirs(os.path.dirname(config.output_fn))
+            logger.info("Report      : {}".format(os.path.relpath(config.output_fn)))
+        else:
+            logger.info("Report      : None")
 
         if config.make_data_dir == False:
             logger.info("Data        : None")
@@ -833,58 +956,60 @@ def run(
 
     plugin_hooks.mqc_trigger("before_template")
 
-    # Load in parent template files first if a child theme
-    try:
-        parent_template = config.avail_templates[template_mod.template_parent].load()
-        copy_tree(parent_template.template_dir, tmp_dir)
-    except AttributeError:
-        pass  # Not a child theme
-
-    # Copy the template files to the tmp directory (distutils overwrites parent theme files)
-    copy_tree(template_mod.template_dir, tmp_dir)
-
-    # Function to include file contents in Jinja template
-    def include_file(name, fdir=tmp_dir, b64=False):
+    # Generate report if required
+    if config.make_report:
+        # Load in parent template files first if a child theme
         try:
-            if fdir is None:
-                fdir = ""
-            if b64:
-                with io.open(os.path.join(fdir, name), "rb") as f:
-                    return base64.b64encode(f.read()).decode("utf-8")
-            else:
-                with io.open(os.path.join(fdir, name), "r", encoding="utf-8") as f:
-                    return f.read()
-        except (OSError, IOError) as e:
-            logger.error("Could not include file '{}': {}".format(name, e))
-
-    # Load the report template
-    try:
-        env = jinja2.Environment(loader=jinja2.FileSystemLoader(tmp_dir))
-        env.globals["include_file"] = include_file
-        j_template = env.get_template(template_mod.base_fn)
-    except:
-        raise IOError("Could not load {} template file '{}'".format(config.template, template_mod.base_fn))
-
-    # Use jinja2 to render the template and overwrite
-    config.analysis_dir = [os.path.realpath(d) for d in config.analysis_dir]
-    report_output = j_template.render(report=report, config=config)
-    if filename == "stdout":
-        print(report_output.encode("utf-8"), file=sys.stdout)
-    else:
-        try:
-            with io.open(config.output_fn, "w", encoding="utf-8") as f:
-                print(report_output, file=f)
-        except IOError as e:
-            raise IOError("Could not print report to '{}' - {}".format(config.output_fn, IOError(e)))
-
-        # Copy over files if requested by the theme
-        try:
-            for f in template_mod.copy_files:
-                fn = os.path.join(tmp_dir, f)
-                dest_dir = os.path.join(os.path.dirname(config.output_fn), f)
-                copy_tree(fn, dest_dir)
+            parent_template = config.avail_templates[template_mod.template_parent].load()
+            copy_tree(parent_template.template_dir, tmp_dir)
         except AttributeError:
-            pass  # No files to copy
+            pass  # Not a child theme
+
+        # Copy the template files to the tmp directory (distutils overwrites parent theme files)
+        copy_tree(template_mod.template_dir, tmp_dir)
+
+        # Function to include file contents in Jinja template
+        def include_file(name, fdir=tmp_dir, b64=False):
+            try:
+                if fdir is None:
+                    fdir = ""
+                if b64:
+                    with io.open(os.path.join(fdir, name), "rb") as f:
+                        return base64.b64encode(f.read()).decode("utf-8")
+                else:
+                    with io.open(os.path.join(fdir, name), "r", encoding="utf-8") as f:
+                        return f.read()
+            except (OSError, IOError) as e:
+                logger.error("Could not include file '{}': {}".format(name, e))
+
+        # Load the report template
+        try:
+            env = jinja2.Environment(loader=jinja2.FileSystemLoader(tmp_dir))
+            env.globals["include_file"] = include_file
+            j_template = env.get_template(template_mod.base_fn)
+        except:
+            raise IOError("Could not load {} template file '{}'".format(config.template, template_mod.base_fn))
+
+        # Use jinja2 to render the template and overwrite
+        config.analysis_dir = [os.path.realpath(d) for d in config.analysis_dir]
+        report_output = j_template.render(report=report, config=config)
+        if filename == "stdout":
+            print(report_output.encode("utf-8"), file=sys.stdout)
+        else:
+            try:
+                with io.open(config.output_fn, "w", encoding="utf-8") as f:
+                    print(report_output, file=f)
+            except IOError as e:
+                raise IOError("Could not print report to '{}' - {}".format(config.output_fn, IOError(e)))
+
+            # Copy over files if requested by the theme
+            try:
+                for f in template_mod.copy_files:
+                    fn = os.path.join(tmp_dir, f)
+                    dest_dir = os.path.join(os.path.dirname(config.output_fn), f)
+                    copy_tree(fn, dest_dir)
+            except AttributeError:
+                pass  # No files to copy
 
     # Clean up temporary directory
     shutil.rmtree(tmp_dir)
@@ -923,7 +1048,7 @@ def run(
             else:
                 logger.info("PDF Report  : {}".format(pdf_fn_name))
         except OSError as e:
-            if e.errno == os.errno.ENOENT:
+            if e.errno == errno.ENOENT:
                 logger.error("Error creating PDF - pandoc not found. Is it installed? http://pandoc.org/")
             else:
                 logger.error(
@@ -941,8 +1066,23 @@ def run(
         logger.info("Run took {:.2f} seconds".format(report.runtimes["total"]))
         logger.info(" - {:.2f}s: Searching files".format(report.runtimes["total_sp"]))
         logger.info(" - {:.2f}s: Running modules".format(report.runtimes["total_mods"]))
-        logger.info(" - {:.2f}s: Compressing report data".format(report.runtimes["total_compression"]))
-        logger.info("For more information, see the 'Run Time' section in {}".format(os.path.relpath(config.output_fn)))
+        if config.make_report:
+            logger.info(" - {:.2f}s: Compressing report data".format(report.runtimes["total_compression"]))
+            logger.info(
+                "For more information, see the 'Run Time' section in {}".format(os.path.relpath(config.output_fn))
+            )
+
+    if report.num_mpl_plots > 0 and not config.plots_force_flat:
+        logger.warning(
+            "{} flat-image plot{} used in the report due to large sample numbers".format(
+                report.num_mpl_plots, "s" if report.num_mpl_plots > 1 else ""
+            )
+        )
+        console.print(
+            "[blue]|           multiqc[/] | "
+            "To force interactive plots, use the [yellow]'--interactive'[/] flag. "
+            "See the [link=https://multiqc.info/docs/#flat--interactive-plots]documentation[/link]."
+        )
 
     if lint and len(report.lint_errors) > 0:
         logger.error("Found {} linting errors!\n{}".format(len(report.lint_errors), "\n".join(report.lint_errors)))

@@ -26,6 +26,9 @@ class bamPEFragmentSizeDistributionMixin:
         self.deeptools_bamPEFragmentSizeDistribution = self.ignore_samples(self.deeptools_bamPEFragmentSizeDistribution)
 
         if len(self.deeptools_bamPEFragmentSizeDistribution) > 0:
+            # Write data to file
+            self.write_data_file(self.deeptools_bamPEFragmentSizeDistribution, "deeptools_frag_size_dist")
+
             config = {
                 "id": "fragment_size_distribution_plot",
                 "title": "deeptools: Fragment Size Distribution Plot",
@@ -56,7 +59,7 @@ class bamPEFragmentSizeDistributionMixin:
             elif cols[0] == "Size":
                 continue
             else:
-                s_name = self.clean_s_name(cols[2].rstrip().split("/")[-1], f["root"])
+                s_name = self.clean_s_name(cols[2].rstrip().split("/")[-1], f)
                 if s_name != lastsample:
                     d[s_name] = dict()
                     lastsample = s_name

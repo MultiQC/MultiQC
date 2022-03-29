@@ -15,7 +15,7 @@ log = logging.getLogger(__name__)
 
 
 class MultiqcModule(BaseMultiqcModule):
-    """ SexDeterrmine module """
+    """SexDeterrmine module"""
 
     def __init__(self):
 
@@ -25,7 +25,8 @@ class MultiqcModule(BaseMultiqcModule):
             anchor="sexdeterrmine",
             href="https://github.com/TCLamnidis/Sex.DetERRmine",
             info="""A python script to calculate the relative coverage of X and Y chromosomes,
-            and their associated error bars, from the depth of coverage at specified SNPs. """,
+            and their associated error bars, from the depth of coverage at specified SNPs.""",
+            doi="10.1038/s41467-018-07483-5",
         )
 
         # Find and load any DeDup reports
@@ -66,7 +67,7 @@ class MultiqcModule(BaseMultiqcModule):
             if s_name == "Metadata":
                 continue
 
-            s_clean = self.clean_s_name(s_name, f["root"])
+            s_clean = self.clean_s_name(s_name, f)
             if s_clean in self.sexdet_data:
                 log.debug("Duplicate sample name found! Overwriting: {}".format(s_clean))
 
@@ -80,7 +81,7 @@ class MultiqcModule(BaseMultiqcModule):
                     self.sexdet_data[s_clean][k] = v
 
     def addSummaryMetrics(self):
-        """ Take the parsed stats from SexDetErrmine and add it to the main plot """
+        """Take the parsed stats from SexDetErrmine and add it to the main plot"""
 
         headers = OrderedDict()
         headers["RateErrX"] = {

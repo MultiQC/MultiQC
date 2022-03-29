@@ -25,6 +25,7 @@ class MultiqcModule(BaseMultiqcModule):
             anchor="verifybamid",
             href="https://genome.sph.umich.edu/wiki/VerifyBamID",
             info="detects sample contamination and/or sample swaps.",
+            doi="10.1016/j.ajhg.2012.09.004",
         )
 
         # flag to hide columns if no chip data
@@ -79,7 +80,7 @@ class MultiqcModule(BaseMultiqcModule):
         self.verifybamid_table()
 
     def parse_selfsm(self, f):
-        """ Go through selfSM file and create a dictionary with the sample name as a key, """
+        """Go through selfSM file and create a dictionary with the sample name as a key,"""
         # create a dictionary to populate from this sample's file
         parsed_data = dict()
         # set a empty variable which denotes if the headers have been read
@@ -95,7 +96,7 @@ class MultiqcModule(BaseMultiqcModule):
             # for all rows after the first
             else:
                 # clean the sample name (first column) and assign to s_name
-                s_name = self.clean_s_name(s[0], f["root"])
+                s_name = self.clean_s_name(s[0], f)
                 # create a dictionary entry with the first column as a key (sample name) and empty dictionary as a value
                 parsed_data[s_name] = {}
                 # for each item in list of items in the row
@@ -103,7 +104,7 @@ class MultiqcModule(BaseMultiqcModule):
                     # if it's not the first element (if it's not the name)
                     if i != 0:
                         # see if CHIP is in the column header and the value is not NA
-                        if "CHIP" in [headers[i]] and v != "NA":
+                        if headers[i].startswith("CHIP") and v != "NA":
                             # set hide_chip_columns = False so they are not hidden
                             self.hide_chip_columns = False
                         # try and convert the value into a float
@@ -123,7 +124,7 @@ class MultiqcModule(BaseMultiqcModule):
         return parsed_data
 
     def verifybamid_general_stats_table(self):
-        """ Take the percentage of contamination from all the parsed *.SELFSM files and add it to the basic stats table at the top of the report """
+        """Take the percentage of contamination from all the parsed *.SELFSM files and add it to the basic stats table at the top of the report"""
 
         # create a dictionary to hold the columns to add to the general stats table
         headers = OrderedDict()

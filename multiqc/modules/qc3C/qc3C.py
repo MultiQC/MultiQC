@@ -139,6 +139,7 @@ class MultiqcModule(BaseMultiqcModule):
             anchor="qc3C",
             href="http://github.com/cerebis/qc3C",
             info="provides reference-free and BAM based quality control for Hi-C data",
+            doi="10.1371/journal.pcbi.1008839",
         )
 
         self.qc3c_data = defaultdict(dict)
@@ -233,8 +234,8 @@ class MultiqcModule(BaseMultiqcModule):
                     [HiC-Pro](https://github.com/nservant/HiC-Pro).
                 """,
                 helptext="""
-                    As the field has moved from 6-cutter to 4-cutter enzymes, and subsequently dual-enzyme digests, the 
-                    higher density of sites has made this framework less useful, since it has become increasingly easy 
+                    As the field has moved from 6-cutter to 4-cutter enzymes, and subsequently dual-enzyme digests, the
+                    higher density of sites has made this framework less useful, since it has become increasingly easy
                     to satisfy the intervening site criteria.
                 """,
                 plot=self.bam_valid_plot(),
@@ -245,12 +246,12 @@ class MultiqcModule(BaseMultiqcModule):
                 anchor="qc3C-bam-longrange-plot",
                 description="This plot visualises the breakdown of read-pairs based on separation distance.",
                 helptext="""
-                    The breakdown of separation distance is only calculated for *cis*-mapping pairs. 
+                    The breakdown of separation distance is only calculated for *cis*-mapping pairs.
 
-                    Ideally, Hi-C proximity ligation should produce many pairs which are greater than 1000 bp apart. 
+                    Ideally, Hi-C proximity ligation should produce many pairs which are greater than 1000 bp apart.
                     However, these statistics are strongly influenced by the state of the reference. For draft assemblies
-                    the distance at which pairs can map is limited by the degree of fragmentation and length of contigs. 
-                    As a result, many more pairs will be categorised as *trans*-mapping and pairs which are truly 
+                    the distance at which pairs can map is limited by the degree of fragmentation and length of contigs.
+                    As a result, many more pairs will be categorised as *trans*-mapping and pairs which are truly
                     inter-molecular cannot be distinguished from those which are merely inter-contig.
                 """,
                 plot=self.bam_longrange_plot(),
@@ -260,23 +261,23 @@ class MultiqcModule(BaseMultiqcModule):
                 name="BAM mode distribution of fragment separation",
                 anchor="qc3C-bam-fragment-histogram",
                 description="""
-                    This figure displays the a normalised histogram of read-pair separation binned uniformly in 
-                    log-space. 
-                    
-                    Due to the binning strategy, the x-axis is log-scaled and visually accommodates pair separations up 
-                    to 1 million bp. The inferred insert size for each library is represented by a dashed, grey vertical 
-                    line. The y-axis is log-scaled by default, allowing the density attributed to long-range pairs to be 
+                    This figure displays the a normalised histogram of read-pair separation binned uniformly in
+                    log-space.
+
+                    Due to the binning strategy, the x-axis is log-scaled and visually accommodates pair separations up
+                    to 1 million bp. The inferred insert size for each library is represented by a dashed, grey vertical
+                    line. The y-axis is log-scaled by default, allowing the density attributed to long-range pairs to be
                     more easily seen.
                 """,
                 helptext="""
-                    A characteristic of Hi-C libraries, is the presence of a large peak below 1000 bp. qc3C attributes 
-                    this to regular (and undesirable) shotgun pairs creeping through the Hi-C protocol. The peak is used 
-                    by qc3C to infer the insert size, which is later employed to estimate unobservable extent of 
+                    A characteristic of Hi-C libraries, is the presence of a large peak below 1000 bp. qc3C attributes
+                    this to regular (and undesirable) shotgun pairs creeping through the Hi-C protocol. The peak is used
+                    by qc3C to infer the insert size, which is later employed to estimate unobservable extent of
                     inserts.
 
-                    **Note:** the inferred insert size can be significantly smaller than what a sequencing facility 
-                    might report the experimentally determined insert size to be. This discrepancy can be explained by 
-                    the failure to account for the additional adapter sequence when fragments are assessed during 
+                    **Note:** the inferred insert size can be significantly smaller than what a sequencing facility
+                    might report the experimentally determined insert size to be. This discrepancy can be explained by
+                    the failure to account for the additional adapter sequence when fragments are assessed during
                     library preparation.
                 """,
                 plot=self.bam_fragment_histogram(),
@@ -291,24 +292,24 @@ class MultiqcModule(BaseMultiqcModule):
                         are actually observed in the reads. (_Trivial single-digests are ignored_)
                     """,
                     helptext="""
-                        For trivial single-enzyme digests, there is only one possible junction sequence and so the 
-                        result for these experiments are not plotted. For dual-enzyme (such as Phase Genomics) there are 
-                        four potential junctions, while for dual-enzyme digests with one ambiguous site (such as Arima 
+                        For trivial single-enzyme digests, there is only one possible junction sequence and so the
+                        result for these experiments are not plotted. For dual-enzyme (such as Phase Genomics) there are
+                        four potential junctions, while for dual-enzyme digests with one ambiguous site (such as Arima
                         Genomics) there are 16 possible junction sequences.
-    
-                        How efficiently the more complicated library protocols are at producing hybrid junctions is 
+
+                        How efficiently the more complicated library protocols are at producing hybrid junctions is
                         possibly just a point of interest.
-                        
+
                         Junctions are named for which enzymes was responsible for creating the 5' and 3' ends.
-                        E.g. `Sau3AI/MluCI` would involve two different enzymes, while `Sau3AI/Sau3AI` only one, as 
-                        would be the case in a single-enzyme digest. Proceeding the name is the actual junction 
+                        E.g. `Sau3AI/MluCI` would involve two different enzymes, while `Sau3AI/Sau3AI` only one, as
+                        would be the case in a single-enzyme digest. Proceeding the name is the actual junction
                         sequence.
-                        
-                        The junctions are grouped by their 5' and then 3' enzyme, while the color spectrum used across 
+
+                        The junctions are grouped by their 5' and then 3' enzyme, while the color spectrum used across
                         each bar aims to emphasise these enzymatic sources.
-    
-                        **Note:** in BAM mode, the counts **are** controlled for false positives, in the sense that read 
-                        alignments must terminate at a cutsite, but the read sequence must continue and contain the 
+
+                        **Note:** in BAM mode, the counts **are** controlled for false positives, in the sense that read
+                        alignments must terminate at a cutsite, but the read sequence must continue and contain the
                         observed junction.
                     """,
                     plot=self.bam_junction_plot(),
@@ -333,11 +334,11 @@ class MultiqcModule(BaseMultiqcModule):
                 anchor="qc3C-kmer-hic-fraction",
                 description="This table lists the inferred proportion of Hi-C proximity ligation fragments.",
                 helptext="""
-                    Here, **Mean adjusted Hi-C fraction** represents the best estimate of the proportion of a library's 
-                    read-pairs which are a product of proximity ligation. This figure is arrived at by correcting the 
+                    Here, **Mean adjusted Hi-C fraction** represents the best estimate of the proportion of a library's
+                    read-pairs which are a product of proximity ligation. This figure is arrived at by correcting the
                     raw estimate for the fraction of insert extent which was not observable.
 
-                    The observable extent is limited by the length of reads relative to the supplied insert size, as 
+                    The observable extent is limited by the length of reads relative to the supplied insert size, as
                     well as a further constraint on flanking sequence around any suspected junction sequence.
                 """,
                 plot=self.kmer_signal_table(),
@@ -374,22 +375,22 @@ class MultiqcModule(BaseMultiqcModule):
                         are actually observed in the reads. (_Trivial single-digests are ignored_)
                     """,
                     helptext="""
-                        For trivial single-enzyme digests, there is only one possible junction sequence and so the 
-                        result for these experiments are not plotted. For dual-enzyme (such as Phase Genomics) there are 
-                        four potential junctions, while for dual-enzyme digests with one ambiguous site (such as Arima 
+                        For trivial single-enzyme digests, there is only one possible junction sequence and so the
+                        result for these experiments are not plotted. For dual-enzyme (such as Phase Genomics) there are
+                        four potential junctions, while for dual-enzyme digests with one ambiguous site (such as Arima
                         Genomics) there are 16 possible junction sequences.
-    
-                        How efficiently the more complicated library protocols are at producing hybrid junctions is 
+
+                        How efficiently the more complicated library protocols are at producing hybrid junctions is
                         possibly just a point of interest.
-    
+
                         Junctions are named for which enzymes was responsible for creating the 5' and 3' ends.
-                        E.g. `Sau3AI/MluCI` would involve two different enzymes, while `Sau3AI/Sau3AI` only one, as 
-                        would be the case in a single-enzyme digest. Proceeding the name is the actual junction 
+                        E.g. `Sau3AI/MluCI` would involve two different enzymes, while `Sau3AI/Sau3AI` only one, as
+                        would be the case in a single-enzyme digest. Proceeding the name is the actual junction
                         sequence.
-                        
-                        The junctions are grouped by their 5' and then 3' enzyme, while the color spectrum used across 
+
+                        The junctions are grouped by their 5' and then 3' enzyme, while the color spectrum used across
                         each bar aims to emphasise these enzymatic sources.
-                        
+
                     **Note:** in k-mer mode, the counts are not controlled for false positives.
                     """,
                     plot=self.kmer_junction_plot(),
@@ -397,13 +398,13 @@ class MultiqcModule(BaseMultiqcModule):
 
     @staticmethod
     def _drop_time(s):
-        """ remove time """
+        """remove time"""
         m = re.match(r"(.*) .+$", s)
         return s if m is None else m.group(1)
 
     @staticmethod
     def _drop_name(s):
-        """ drop leading program name from version string """
+        """drop leading program name from version string"""
         return s.split()[-1]
 
     def bam_runtime_table(self):
@@ -968,14 +969,18 @@ class MultiqcModule(BaseMultiqcModule):
             log.warning("Could not parse qc3C JSON: '{}'".format(f["fn"]))
             return
 
-        s_name = self.clean_s_name(os.path.basename(f["root"]), os.path.dirname(f["root"]))
+        s_name = self.clean_s_name(os.path.basename(f["root"]), f, root=os.path.dirname(f["root"]))
         if s_name in self.qc3c_data:
             log.debug("Duplicate sample name found! Overwriting: {}".format(f["s_name"]))
 
         try:
             analysis_mode = parsed["mode"]
+            if "unobs_fraction" not in parsed and "unobs_frac" in parsed:
+                parsed["unobs_fraction"] = parsed["unobs_frac"]
 
             if analysis_mode == "bam":
+                if "vs_accepted" not in parsed["separation_bins"] and "zvs_accepted " in parsed["separation_bins"]:
+                    parsed["separation_bins"]["vs_accepted"] = parsed["separation_bins"]["zvs_accepted"]
 
                 # set some variables to shorten the lines below
                 inf = parsed["classification"]["informative"]
@@ -1101,7 +1106,7 @@ class MultiqcModule(BaseMultiqcModule):
             # to render the junction frequency plot
             if len(parsed["junction_frequency"]) > 1:
                 self.do_digest_plot = True
-                log.info("Enabled junction frequency plot for non-trivial digest: {}".format(f["root"]))
+                log.debug("Enabled junction frequency plot for non-trivial digest: {}".format(f["root"]))
                 # include the junction frequencies (1 or many depending on digest)
                 self.qc3c_data[analysis_mode][s_name].update(parsed["junction_frequency"])
 

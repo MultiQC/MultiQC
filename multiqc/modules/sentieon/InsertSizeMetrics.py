@@ -15,7 +15,7 @@ log = logging.getLogger(__name__)
 
 
 def parse_reports(self):
-    """ Find Sentieon InsertSizeMetrics reports and parse their data """
+    """Find Sentieon InsertSizeMetrics reports and parse their data"""
 
     # Set up vars
     self.sentieon_insertSize_data = dict()
@@ -45,7 +45,7 @@ def parse_reports(self):
             if s_name is None and "InsertSizeMetricAlgo" in line:
                 # Pull sample name from filename
                 s_name = os.path.basename(f["s_name"])
-                s_name = self.clean_s_name(s_name, f["root"])
+                s_name = self.clean_s_name(s_name, f)
 
             if s_name is not None:
                 if "InsertSizeMetricAlgo" in line and "#SentieonCommandLine" in line:
@@ -107,7 +107,11 @@ def parse_reports(self):
 
     # Calculate summed mean values for all read orientations
     for s_name, v in self.sentieon_insertSize_samplestats.items():
-        self.sentieon_insertSize_samplestats[s_name]["summed_mean"] = v["meansum"] / v["total_pairs"]
+        try:
+            self.sentieon_insertSize_samplestats[s_name]["summed_mean"] = v["meansum"] / v["total_pairs"]
+        except ZeroDivisionError:
+            # The mean of zero elements is zero
+            self.sentieon_insertSize_samplestats[s_name]["summed_mean"] = 0
 
     # Calculate summed median values for all read orientations
     for s_name in self.sentieon_insertSize_histogram:

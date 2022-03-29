@@ -23,8 +23,8 @@ class MultiqcModule(BaseMultiqcModule):
             name="QUAST",
             anchor="quast",
             href="http://quast.bioinf.spbau.ru/",
-            info="is a quality assessment tool for genome assemblies, written by "
-            "the Center for Algorithmic Biotechnology.",
+            info="is a quality assessment tool for genome assemblies, written by the Center for Algorithmic Biotechnology.",
+            doi="10.1093/bioinformatics/btt086",
         )
 
         # Get modifiers from config file
@@ -95,7 +95,7 @@ class MultiqcModule(BaseMultiqcModule):
         # Pull out the sample names from the first row
         s_names = lines[0].split("\t")
         # Prepend directory name(s) to sample names as configured
-        s_names = [self.clean_s_name(s_name, f["root"]) for s_name in s_names]
+        s_names = [self.clean_s_name(s_name, f) for s_name in s_names]
         for s_name in s_names[1:]:
             if s_name in self.quast_data:
                 log.debug("Duplicate sample name found! Overwriting: {}".format(s_name))
@@ -138,8 +138,8 @@ class MultiqcModule(BaseMultiqcModule):
             "modify": lambda x: x * self.contig_length_multiplier,
         }
         headers["Total length"] = {
-            "title": "Length ({})".format(self.total_length_suffix),
-            "description": "The total number of bases in the assembly (mega base pairs).",
+            "title": "Assembly Length ({})".format(self.total_length_suffix),
+            "description": "The total number of bases in the assembly ({}).".format(self.total_length_suffix),
             "min": 0,
             "suffix": self.total_length_suffix,
             "scale": "YlGn",
@@ -148,7 +148,7 @@ class MultiqcModule(BaseMultiqcModule):
         self.general_stats_addcols(self.quast_data, headers)
 
     def quast_table(self):
-        """ Write some more statistics about the assemblies in a table. """
+        """Write some more statistics about the assemblies in a table."""
         headers = OrderedDict()
 
         headers["N50"] = {
@@ -184,7 +184,7 @@ class MultiqcModule(BaseMultiqcModule):
             "min": 0,
             "suffix": self.total_number_contigs_suffix,
             "scale": "GnYlRd",
-            "mofidy": lambda x: x * self.total_number_contigs_multiplier,
+            "modify": lambda x: x * self.total_number_contigs_multiplier,
         }
         headers["Largest contig"] = {
             "title": "Largest contig ({})".format(self.contig_length_suffix),
@@ -258,7 +258,7 @@ class MultiqcModule(BaseMultiqcModule):
         return table.plot(self.quast_data, headers, config)
 
     def quast_contigs_barplot(self):
-        """ Make a bar plot showing the number and length of contigs for each assembly """
+        """Make a bar plot showing the number and length of contigs for each assembly"""
 
         # Prep the data
         data = dict()

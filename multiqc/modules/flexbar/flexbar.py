@@ -23,12 +23,14 @@ class MultiqcModule(BaseMultiqcModule):
             anchor="flexbar",
             href="https://github.com/seqan/flexbar",
             info="is a barcode and adapter removal tool.",
+            doi="10.1093/bioinformatics/btx330",
         )
 
         # Parse logs
         self.flexbar_data = dict()
         for f in self.find_log_files("flexbar", filehandles=True):
             self.parse_flexbar(f)
+            self.add_data_source(f)
 
         # Filter to strip out ignored sample names
         self.flexbar_data = self.ignore_samples(self.flexbar_data)
@@ -60,9 +62,12 @@ class MultiqcModule(BaseMultiqcModule):
                 # Calculate removed_bases
                 if "processed_bases" in parsed_data and "remaining_bases" in parsed_data:
                     parsed_data["removed_bases"] = parsed_data["processed_bases"] - parsed_data["remaining_bases"]
-                    parsed_data["removed_bases_pct"] = (
-                        float(parsed_data["removed_bases"]) / float(parsed_data["processed_bases"])
-                    ) * 100.0
+                    try:
+                        parsed_data["removed_bases_pct"] = (
+                            float(parsed_data["removed_bases"]) / float(parsed_data["processed_bases"])
+                        ) * 100.0
+                    except ZeroDivisionError:
+                        parsed_data["removed_bases_pct"] = 0
                 if s_name in self.flexbar_data:
                     log.debug("Duplicate sample name found! Overwriting: {}".format(s_name))
                 self.flexbar_data[s_name] = parsed_data
@@ -85,7 +90,7 @@ class MultiqcModule(BaseMultiqcModule):
                 match = re.search(r, l)
                 if match:
                     if k == "output_filename":
-                        s_name = self.clean_s_name(match.group(1), f["root"])
+                        s_name = self.clean_s_name(match.group(1), f)
                     else:
                         parsed_data[k] = int(match.group(1))
 
@@ -99,7 +104,7 @@ class MultiqcModule(BaseMultiqcModule):
         _save_data(parsed_data)
 
     def flexbar_barplot(self):
-        """ Make the HighCharts HTML to plot the flexbar rates """
+        """Make the HighCharts HTML to plot the flexbar rates"""
 
         # Specify the order of the different possible categories
         keys = OrderedDict()

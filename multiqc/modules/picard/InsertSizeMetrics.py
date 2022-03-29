@@ -15,7 +15,7 @@ log = logging.getLogger(__name__)
 
 
 def parse_reports(self):
-    """ Find Picard InsertSizeMetrics reports and parse their data """
+    """Find Picard InsertSizeMetrics reports and parse their data"""
 
     # Set up vars
     self.picard_insertSize_data = dict()
@@ -48,7 +48,7 @@ def parse_reports(self):
                 fn_search = re.search(r"INPUT(?:=|\s+)(\[?[^\s]+\]?)", l, flags=re.IGNORECASE)
                 if fn_search:
                     s_name = os.path.basename(fn_search.group(1).strip("[]"))
-                    s_name = self.clean_s_name(s_name, f["root"])
+                    s_name = self.clean_s_name(s_name, f)
 
             if s_name is not None:
                 if "InsertSizeMetrics" in l and "## METRICS CLASS" in l:
@@ -185,6 +185,11 @@ def parse_reports(self):
                     {"name": "Percentages", "ylab": "Percentage of Counts"},
                 ],
             }
+            try:
+                pconfig["xmax"] = config.picard_config["insertsize_xmax"]
+            except (AttributeError, KeyError):
+                pass
+
             self.add_section(
                 name="Insert Size",
                 anchor="picard-insertsize",

@@ -115,6 +115,8 @@ def _parse_reports_by_type(self):
     data = dict()
 
     for file_meta in self.find_log_files("picard/sam_file_validation", filehandles=True):
+        self.add_data_source(file_meta, "ValidateSamFile")
+
         sample = file_meta["s_name"]
 
         if sample in data:
@@ -175,7 +177,7 @@ def _parse_summary_report(filehandle):
 
 
 def _histogram_data(iterator):
-    """ Yields only the row contents that contain the histogram entries """
+    """Yields only the row contents that contain the histogram entries"""
     histogram_started = False
     header_passed = False
     for l in iterator:
@@ -184,7 +186,13 @@ def _histogram_data(iterator):
         elif histogram_started:
             if header_passed:
                 values = l.rstrip().split("\t")
-                problem_type, name = values[0].split(":")
+                if len(values) == 1:
+                    continue
+                try:
+                    problem_type, name = values[0].split(":")
+                except ValueError as e:
+                    log.warn("Line did not look like normal picard 'ERROR:NAME' format, ignoring: {}".format(values[0]))
+                    continue
                 yield problem_type, name, int(values[1])
             elif l.startswith("Error Type"):
                 header_passed = True
@@ -284,7 +292,7 @@ def _get_general_stats_headers():
 
 
 def _generate_overview_note(pass_count, only_warning_count, error_count, total_count):
-    """ Generates and returns the HTML note that provides a summary of validation status. """
+    """Generates and returns the HTML note that provides a summary of validation status."""
 
     note_html = ['<div class="progress">']
     pbars = [

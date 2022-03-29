@@ -19,8 +19,9 @@ class MultiqcModule(BaseMultiqcModule):
         super(MultiqcModule, self).__init__(
             name="pycoQC",
             anchor="pycoqc",
-            href="https://a-slide.github.io/pycoQC/",
+            href="https://github.com/tleonardi/pycoQC",
             info="computes metrics and generates interactive QC plots for Oxford Nanopore technologies sequencing data",
+            doi="10.21105/joss.01236",
         )
 
         self.pycoqc_data = {}
@@ -31,6 +32,7 @@ class MultiqcModule(BaseMultiqcModule):
             # Function can return None if YAML parsing failed
             if data:
                 self.pycoqc_data[f["s_name"]] = data
+            self.add_data_source(f)
 
         self.pycoqc_data = self.ignore_samples(self.pycoqc_data)
 
@@ -39,6 +41,9 @@ class MultiqcModule(BaseMultiqcModule):
             raise UserWarning
 
         log.info("Found {} reports".format(len(self.pycoqc_data)))
+
+        # Write data to file
+        self.write_data_file(self.pycoqc_data, "pycoqc")
 
         self.parse_data()
 
@@ -54,7 +59,7 @@ class MultiqcModule(BaseMultiqcModule):
             self.make_quality_plot()
 
     def load_data(self, f):
-        """ Load the PycoQC YAML file """
+        """Load the PycoQC YAML file"""
         try:
             return yaml.load(f, Loader=yaml.SafeLoader)
         except Exception as e:
@@ -62,7 +67,7 @@ class MultiqcModule(BaseMultiqcModule):
             return None
 
     def parse_data(self):
-        """ Convert the parsed data into the correct structures for MultiQC functions """
+        """Convert the parsed data into the correct structures for MultiQC functions"""
 
         self.table_data = {}
         self.reads_data = {}
@@ -264,7 +269,7 @@ class MultiqcModule(BaseMultiqcModule):
         )
 
     def read_length_plot(self):
-        """ Read length plot, showing passed reads and all reads """
+        """Read length plot, showing passed reads and all reads"""
 
         read_length_config = {
             "id": "pycoqc_read_len_plot",
@@ -285,7 +290,7 @@ class MultiqcModule(BaseMultiqcModule):
         )
 
     def make_quality_plot(self):
-        """ Quality plot, showing distrubtion of PHRED scores. """
+        """Quality plot, showing distrubtion of PHRED scores."""
 
         qual_config = {
             "id": "pycoqc_read_qual_plot",

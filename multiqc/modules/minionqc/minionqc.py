@@ -24,6 +24,7 @@ class MultiqcModule(BaseMultiqcModule):
             anchor="minionqc",
             href="https://github.com/roblanf/minion_qc",
             info=" is a QC tool for Oxford Nanopore sequencing data",
+            doi="10.1093/bioinformatics/bty654",
         )
 
         # Find and load any minionqc reports
@@ -34,7 +35,7 @@ class MultiqcModule(BaseMultiqcModule):
         for f in self.find_log_files("minionqc", filehandles=True):
 
             # get sample name
-            s_name = self.clean_s_name(os.path.basename(f["root"]), os.path.dirname(f["root"]))
+            s_name = self.clean_s_name(os.path.basename(f["root"]), f, root=os.path.dirname(f["root"]))
 
             # parses minionqc summary data
             parsed_dict = self.parse_minionqc_report(s_name, f["f"])
@@ -171,7 +172,7 @@ class MultiqcModule(BaseMultiqcModule):
         return headers
 
     def table_qALL(self):
-        """ Table showing stats for all reads """
+        """Table showing stats for all reads"""
 
         self.add_section(
             name="Stats: All reads",
@@ -189,7 +190,7 @@ class MultiqcModule(BaseMultiqcModule):
         )
 
     def table_qfiltered(self):
-        """ Table showing stats for q-filtered reads """
+        """Table showing stats for q-filtered reads"""
 
         description = "MinIONQC statistics for quality filtered reads. " + "Quailty threshold used: {}.".format(
             ", ".join(list(self.q_threshold_list))

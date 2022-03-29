@@ -28,6 +28,7 @@ class MultiqcModule(BaseMultiqcModule):
             anchor="fastp",
             href="https://github.com/OpenGene/fastp",
             info="An ultra-fast all-in-one FASTQ preprocessor (QC, adapters, trimming, filtering, splitting...)",
+            doi="10.1093/bioinformatics/bty560",
         )
 
         # Find and load any fastp reports
@@ -116,31 +117,40 @@ class MultiqcModule(BaseMultiqcModule):
             )
 
         # Base quality plot
-        self.add_section(
-            name="Sequence Quality",
-            anchor="fastp-seq-quality",
-            description="Average sequencing quality over each base of all reads.",
-            plot=self.fastp_read_qual_plot(),
-        )
+        try:
+            self.add_section(
+                name="Sequence Quality",
+                anchor="fastp-seq-quality",
+                description="Average sequencing quality over each base of all reads.",
+                plot=self.fastp_read_qual_plot(),
+            )
+        except RuntimeError:
+            log.debug("No data found for 'Sequence Quality' plot")
 
         # GC content plot
-        self.add_section(
-            name="GC Content",
-            anchor="fastp-seq-content-gc",
-            description="Average GC content over each base of all reads.",
-            plot=self.fastp_read_gc_plot(),
-        )
+        try:
+            self.add_section(
+                name="GC Content",
+                anchor="fastp-seq-content-gc",
+                description="Average GC content over each base of all reads.",
+                plot=self.fastp_read_gc_plot(),
+            )
+        except RuntimeError:
+            log.debug("No data found for 'GC Content' plot")
 
         # N content plot
-        self.add_section(
-            name="N content",
-            anchor="fastp-seq-content-n",
-            description="Average N content over each base of all reads.",
-            plot=self.fastp_read_n_plot(),
-        )
+        try:
+            self.add_section(
+                name="N content",
+                anchor="fastp-seq-content-n",
+                description="Average N content over each base of all reads.",
+                plot=self.fastp_read_n_plot(),
+            )
+        except RuntimeError:
+            log.debug("No data found for 'N content' plot")
 
     def parse_fastp_log(self, f):
-        """ Parse the JSON output from fastp and save the summary statistics """
+        """Parse the JSON output from fastp and save the summary statistics"""
         try:
             parsed_json = json.load(f["f"])
         except:
@@ -152,7 +162,7 @@ class MultiqcModule(BaseMultiqcModule):
         cmd = parsed_json["command"].split()
         for i, v in enumerate(cmd):
             if v == "-i":
-                s_name = self.clean_s_name(cmd[i + 1], f["root"])
+                s_name = self.clean_s_name(cmd[i + 1], f)
         if s_name == "fastp":
             log.warning("Could not parse sample name from fastp command: {}".format(f["fn"]))
 
@@ -198,11 +208,11 @@ class MultiqcModule(BaseMultiqcModule):
 
         try:
             self.fastp_data[s_name]["pct_surviving"] = (
-                self.fastp_data[s_name]["after_filtering_total_reads"]
+                self.fastp_data[s_name]["filtering_result_passed_filter_reads"]
                 / self.fastp_data[s_name]["before_filtering_total_reads"]
             ) * 100.0
-        except KeyError:
-            log.debug("Could not calculate 'pct_surviving': {}".format(f["fn"]))
+        except (KeyError, ZeroDivisionError) as e:
+            log.debug("Could not calculate 'pct_surviving' ({}): {}".format(e.__class__.__name__, f["fn"]))
 
         # Parse adapter_cutting
         try:
@@ -219,8 +229,8 @@ class MultiqcModule(BaseMultiqcModule):
                 self.fastp_data[s_name]["adapter_cutting_adapter_trimmed_reads"]
                 / self.fastp_data[s_name]["before_filtering_total_reads"]
             ) * 100.0
-        except KeyError:
-            log.debug("Could not calculate 'pct_adapter': {}".format(f["fn"]))
+        except (KeyError, ZeroDivisionError) as e:
+            log.debug("Could not calculate 'pct_adapter' ({}): {}".format(e.__class__.__name__, f["fn"]))
 
         # Duplication rate plot data
         try:
@@ -289,7 +299,7 @@ class MultiqcModule(BaseMultiqcModule):
         headers = OrderedDict()
         headers["pct_duplication"] = {
             "title": "% Duplication",
-            "description": "Duplication rate in filtered reads",
+            "description": "Duplication rate before filtering",
             "max": 100,
             "min": 0,
             "suffix": "%",
@@ -343,7 +353,7 @@ class MultiqcModule(BaseMultiqcModule):
         self.general_stats_addcols(self.fastp_data, headers)
 
     def fastp_filtered_reads_chart(self):
-        """ Function to generate the fastp filtered reads bar plot """
+        """Function to generate the fastp filtered reads bar plot"""
         # Specify the order of the different possible categories
         keys = OrderedDict()
         keys["filtering_result_passed_filter_reads"] = {"name": "Passed Filter"}
@@ -362,7 +372,7 @@ class MultiqcModule(BaseMultiqcModule):
         return bargraph.plot(self.fastp_data, keys, pconfig)
 
     def fastp_read_qual_plot(self):
-        """ Make the read quality plot for Fastp """
+        """Make the read quality plot for Fastp"""
         data_labels, pdata = self.filter_pconfig_pdata_subplots(self.fastp_qual_plotdata, "Sequence Quality")
         pconfig = {
             "id": "fastp-seq-quality-plot",
@@ -376,7 +386,7 @@ class MultiqcModule(BaseMultiqcModule):
         return linegraph.plot(pdata, pconfig)
 
     def fastp_read_gc_plot(self):
-        """ Make the read GC plot for Fastp """
+        """Make the read GC plot for Fastp"""
         data_labels, pdata = self.filter_pconfig_pdata_subplots(self.fastp_gc_content_data, "Base Content Percent")
         pconfig = {
             "id": "fastp-seq-content-gc-plot",
@@ -393,7 +403,7 @@ class MultiqcModule(BaseMultiqcModule):
         return linegraph.plot(pdata, pconfig)
 
     def fastp_read_n_plot(self):
-        """ Make the read N content plot for Fastp """
+        """Make the read N content plot for Fastp"""
         data_labels, pdata = self.filter_pconfig_pdata_subplots(self.fastp_n_content_data, "Base Content Percent")
         pconfig = {
             "id": "fastp-seq-content-n-plot",
@@ -435,5 +445,9 @@ class MultiqcModule(BaseMultiqcModule):
             if sum([len(data[k][x]) for x in data[k]]) > 0:
                 data_labels.append(config[k])
                 pdata.append(data[k])
+
+        # Abort sample if no data
+        if len(pdata) == 0:
+            raise RuntimeError
 
         return data_labels, pdata

@@ -22,9 +22,10 @@ class MultiqcModule(BaseMultiqcModule):
             name="HTSeq Count",
             anchor="htseq",
             target="HTSeq Count",
-            href="http://www-huber.embl.de/HTSeq/doc/count.html",
+            href="https://htseq.readthedocs.io/en/master/htseqcount.html",
             info=" is part of the HTSeq Python package - it takes a file with aligned sequencing "
             "reads, plus a list of genomic features and counts how many reads map to each feature.",
+            doi="10.1093/bioinformatics/btu638",
         )
 
         # Find and load any HTSeq Count reports
@@ -34,6 +35,7 @@ class MultiqcModule(BaseMultiqcModule):
             parsed_data = self.parse_htseq_report(f)
             if parsed_data is not None:
                 self.htseq_data[f["s_name"]] = parsed_data
+                self.add_data_source(f)
 
         # Filter to strip out ignored sample names
         self.htseq_data = self.ignore_samples(self.htseq_data)
@@ -53,7 +55,7 @@ class MultiqcModule(BaseMultiqcModule):
         self.add_section(plot=self.htseq_counts_chart())
 
     def parse_htseq_report(self, f):
-        """ Parse the HTSeq Count log file. """
+        """Parse the HTSeq Count log file."""
         keys = ["__no_feature", "__ambiguous", "__too_low_aQual", "__not_aligned", "__alignment_not_unique"]
         parsed_data = dict()
         assigned_counts = 0
@@ -102,7 +104,7 @@ class MultiqcModule(BaseMultiqcModule):
         self.general_stats_addcols(self.htseq_data, headers)
 
     def htseq_counts_chart(self):
-        """ Make the HTSeq Count assignment rates plot """
+        """Make the HTSeq Count assignment rates plot"""
         cats = OrderedDict()
         cats["assigned"] = {"name": "Assigned"}
         cats["ambiguous"] = {"name": "Ambiguous"}

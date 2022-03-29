@@ -25,6 +25,7 @@ class MultiqcModule(BaseMultiqcModule):
             target="methylQA",
             href="http://methylqa.sourceforge.net/",
             info=" - a methylation sequencing data quality assessment tool.",
+            doi="10.1016/j.ymeth.2014.10.032",
         )
 
         # Find and load any methylQA reports
@@ -56,7 +57,7 @@ class MultiqcModule(BaseMultiqcModule):
         # Get s_name from first input file if possible
         s_name = f["s_name"]
         if f["f"][0].startswith("files provided"):
-            s_name = self.clean_s_name(os.path.basename(f["f"][0]))
+            s_name = self.clean_s_name(os.path.basename(f["f"][0]), f)
 
         parsed_data = {}
         regexes = {
@@ -114,7 +115,7 @@ class MultiqcModule(BaseMultiqcModule):
         self.general_stats_addcols(self.methylqa_data, headers)
 
     def methylqa_alignment_plot(self):
-        """ Make the HighCharts HTML to plot the alignment rates """
+        """Make the HighCharts HTML to plot the alignment rates"""
 
         if len(self.methylqa_coverage_counts) == 0:
             return '<div class="alert alert-danger">No histogram data found.</div>'

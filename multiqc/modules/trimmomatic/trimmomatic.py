@@ -24,12 +24,14 @@ class MultiqcModule(BaseMultiqcModule):
             anchor="trimmomatic",
             href="http://www.usadellab.org/cms/?page=trimmomatic",
             info="is a flexible read trimming tool for Illumina NGS data.",
+            doi="10.1093/bioinformatics/btu170",
         )
 
         # Parse logs
         self.trimmomatic = dict()
         for f in self.find_log_files("trimmomatic", filehandles=True):
             self.parse_trimmomatic(f)
+            self.add_data_source(f)
 
         # Filter to strip out ignored sample names
         self.trimmomatic = self.ignore_samples(self.trimmomatic)
@@ -67,7 +69,7 @@ class MultiqcModule(BaseMultiqcModule):
                 if match:
                     # backtrack from the end to the first space
                     s_name = match.group().split()[-1]
-                    s_name = self.clean_s_name(s_name, f["root"])
+                    s_name = self.clean_s_name(s_name, f)
                     if s_name in self.trimmomatic:
                         log.debug("Duplicate sample name found! Overwriting: {}".format(s_name))
                 else:
@@ -77,7 +79,7 @@ class MultiqcModule(BaseMultiqcModule):
                     if match:
                         # backtrack from the end to the first space
                         s_name = match.group().split()[-1]
-                        s_name = self.clean_s_name(s_name, f["root"])
+                        s_name = self.clean_s_name(s_name, f)
                         if s_name in self.trimmomatic:
                             log.debug("Duplicate sample name found! Overwriting: {}".format(s_name))
 
@@ -115,7 +117,7 @@ class MultiqcModule(BaseMultiqcModule):
                     s_name = None
 
     def trimmomatic_barplot(self):
-        """ Make the HighCharts HTML to plot the trimmomatic rates """
+        """Make the HighCharts HTML to plot the trimmomatic rates"""
 
         # Specify the order of the different possible categories
         keys = OrderedDict()

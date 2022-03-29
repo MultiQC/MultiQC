@@ -11,7 +11,7 @@ log = logging.getLogger(__name__)
 
 class TsTvByCountMixin:
     def parse_tstv_by_count(self):
-        """ Create the HTML for the TsTv by alternative allele count linegraph plot. """
+        """Create the HTML for the TsTv by alternative allele count linegraph plot."""
 
         self.vcftools_tstv_by_count = dict()
         for f in self.find_log_files("vcftools/tstv_by_count", filehandles=True):
@@ -21,12 +21,16 @@ class TsTvByCountMixin:
                 val = float(line.split()[3])  # taking Ts/Tv as value
                 d[key] = val
             self.vcftools_tstv_by_count[f["s_name"]] = d
+            self.add_data_source(f, "TsTv by counts")
 
         # Filter out ignored sample names
         self.vcftools_tstv_by_count = self.ignore_samples(self.vcftools_tstv_by_count)
 
         if len(self.vcftools_tstv_by_count) == 0:
             return 0
+
+        # Write data to file
+        self.write_data_file(self.vcftools_tstv_by_count, "vcftools_tstv_by_count")
 
         pconfig = {
             "id": "vcftools_tstv_by_count",

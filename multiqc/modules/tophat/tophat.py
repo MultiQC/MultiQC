@@ -26,6 +26,7 @@ class MultiqcModule(BaseMultiqcModule):
             href="https://ccb.jhu.edu/software/tophat/",
             info="is a fast splice junction mapper for RNA-Seq reads. "
             "It aligns RNA-Seq reads to mammalian-sized genomes.",
+            doi=["10.1186/gb-2013-14-4-r36", "10.1093/bioinformatics/btp120"],
         )
 
         # Find and load any Tophat reports
@@ -37,7 +38,7 @@ class MultiqcModule(BaseMultiqcModule):
                     s_name = os.path.basename(f["root"])
                 else:
                     s_name = f["s_name"].split("align_summary.txt", 1)[0]
-                s_name = self.clean_s_name(s_name, f["root"])
+                s_name = self.clean_s_name(s_name, f)
                 if s_name in self.tophat_data:
                     log.debug("Duplicate sample name found! Overwriting: {}".format(s_name))
                 self.add_data_source(f, s_name)
@@ -61,7 +62,7 @@ class MultiqcModule(BaseMultiqcModule):
         self.tophat_alignment_plot()
 
     def parse_tophat_log(self, raw_data):
-        """ Parse the Tophat alignment log file. """
+        """Parse the Tophat alignment log file."""
 
         if "Aligned pairs" in raw_data:
             # Paired end data
@@ -127,7 +128,7 @@ class MultiqcModule(BaseMultiqcModule):
         self.general_stats_addcols(self.tophat_data, headers)
 
     def tophat_alignment_plot(self):
-        """ Make the HighCharts HTML to plot the alignment rates """
+        """Make the HighCharts HTML to plot the alignment rates"""
 
         # Specify the order of the different possible categories
         keys = OrderedDict()

@@ -31,6 +31,7 @@ class MultiqcModule(BaseMultiqcModule):
             anchor="somalier",
             href="https://github.com/brentp/somalier",
             info="calculates genotype :: pedigree correspondence checks from sketches derived from BAM/CRAM or VCF",
+            doi="10.1186/s13073-020-00761-2",
         )
 
         # Find and load any somalier reports
@@ -45,23 +46,23 @@ class MultiqcModule(BaseMultiqcModule):
         for f in self.find_log_files("somalier/samples"):
             parsed_data = self.parse_somalier_samples(f)
             if parsed_data is not None:
-                for s_name in parsed_data:
-                    s_name = self.clean_s_name(s_name, f["root"])
+                for s_name_raw in parsed_data:
+                    s_name = "*".join([self.clean_s_name(s, f) for s in s_name_raw.split("*")])
                     if s_name in self.somalier_data.keys():
                         log.debug("Duplicate sample name found! Overwriting: {}".format(s_name))
                     self.add_data_source(f, s_name)
-                    self.somalier_data[s_name] = parsed_data[s_name]
+                    self.somalier_data[s_name] = parsed_data[s_name_raw]
 
         # parse somalier CSV files
         for f in self.find_log_files("somalier/pairs"):
             parsed_data = self.parse_somalier_pairs_tsv(f)
             if parsed_data is not None:
-                for s_name in parsed_data:
-                    s_name = self.clean_s_name(s_name, f["root"])
+                for s_name_raw in parsed_data:
+                    s_name = "*".join([self.clean_s_name(s, f) for s in s_name_raw.split("*")])
                     if s_name in self.somalier_data.keys():
                         log.debug("Duplicate sample name found! Overwriting: {}".format(s_name))
                     self.add_data_source(f, s_name)
-                    self.somalier_data[s_name] = parsed_data[s_name]
+                    self.somalier_data[s_name] = parsed_data[s_name_raw]
 
         # parse somalier ancestry files
         for f in self.find_log_files("somalier/somalier-ancestry", filehandles=True):
@@ -97,7 +98,7 @@ class MultiqcModule(BaseMultiqcModule):
         self.somalier_ancestry_pca_plot()
 
     def parse_somalier_samples(self, f):
-        """ Go through log file looking for somalier output """
+        """Go through log file looking for somalier output"""
         parsed_data = dict()
         headers = None
         sample_i = -100
@@ -120,7 +121,7 @@ class MultiqcModule(BaseMultiqcModule):
         return parsed_data
 
     def parse_somalier_pairs_tsv(self, f):
-        """ Parse csv output from somalier """
+        """Parse csv output from somalier"""
         parsed_data = dict()
         headers = None
         s_name_idx = None
@@ -208,19 +209,19 @@ class MultiqcModule(BaseMultiqcModule):
                 # cycle over keys, i.e. sample names
                 # safely add new data to object data
                 # warn when overwriting
-                for s_name in parsed_data:
-                    s_name = self.clean_s_name(s_name, f["root"])
+                for s_name_raw in parsed_data:
+                    s_name = "*".join([self.clean_s_name(s, f) for s in s_name_raw.split("*")])
                     if s_name in self.somalier_data.keys():
-                        intersect_keys = parsed_data[s_name].keys() & self.somalier_data.keys()
+                        intersect_keys = parsed_data[s_name_raw].keys() & self.somalier_data.keys()
                         if len(intersect_keys) > 0:
                             log.debug(
                                 "Duplicate sample name found! Overwriting: {} : {}".format(s_name, intersect_keys)
                             )
                     self.add_data_source(f, s_name)
                     try:
-                        self.somalier_data[s_name].update(parsed_data[s_name])
+                        self.somalier_data[s_name].update(parsed_data[s_name_raw])
                     except KeyError:
-                        self.somalier_data[s_name] = parsed_data[s_name]
+                        self.somalier_data[s_name] = parsed_data[s_name_raw]
         else:
             log.warning("Detected empty file: {}".format(f["fn"]))
 
@@ -546,7 +547,7 @@ class MultiqcModule(BaseMultiqcModule):
             if "X_depth_mean" in d and "original_pedigree_sex" in d:
                 data[s_name] = {
                     "x": (random.random() - 0.5) * 0.1 + sex_index.get(d["original_pedigree_sex"], 2),
-                    "y": d["X_depth_mean"],
+                    "y": 2 * d["X_depth_mean"] / d["gt_depth_mean"],
                 }
 
         if len(data) > 0:
@@ -672,7 +673,7 @@ class MultiqcModule(BaseMultiqcModule):
 
 
 def _make_col_alpha(cols, alpha):
-    """ Take a HTML colour value and return a rgba string with alpha """
+    """Take a HTML colour value and return a rgba string with alpha"""
     cols_return = []
     for col in cols:
         col_srgb = spectra.html(col)

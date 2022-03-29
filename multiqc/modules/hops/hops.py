@@ -18,8 +18,9 @@ class MultiqcModule(BaseMultiqcModule):
         super(MultiqcModule, self).__init__(
             name="HOPS",
             anchor="hops",
-            href="https://www.https://github.com/rhuebler/HOPS/",
+            href="https://github.com/rhuebler/HOPS/",
             info="is an ancient DNA characteristics screening tool of output from the metagenomic aligner MALT.",
+            doi="10.1186/s13059-019-1903-0",
         )
 
         # Find and load any HOPS post-processing JSONs
@@ -36,6 +37,9 @@ class MultiqcModule(BaseMultiqcModule):
         if len(self.hops_data) == 0:
             raise UserWarning
 
+        # Write data to file
+        self.write_data_file(self.hops_data, "hops")
+
         log.info("Found {} samples".format(len(self.hops_data)))
 
         # This type of data isn't 'summarise-able' for general stats, so
@@ -44,7 +48,7 @@ class MultiqcModule(BaseMultiqcModule):
         self.hops_heatmap()
 
     def parseJSON(self, f):
-        """ Parse the JSON output from HOPS and save the summary statistics """
+        """Parse the JSON output from HOPS and save the summary statistics"""
 
         try:
             parsed_json = json.load(f["f"])
@@ -55,7 +59,7 @@ class MultiqcModule(BaseMultiqcModule):
 
         # Convert JSON to dict for easier manipulation
         for s in parsed_json:
-            s_name = self.clean_s_name(s, f["root"])
+            s_name = self.clean_s_name(s, f)
             if s_name in self.hops_data:
                 log.debug("Duplicate sample name found! Overwriting: {}".format(s_name))
             self.add_data_source(f, s_name=s_name)
@@ -64,7 +68,7 @@ class MultiqcModule(BaseMultiqcModule):
                 self.hops_data[s_name][t] = parsed_json[s][t]
 
     def hops_heatmap(self):
-        """ Heatmap showing all statuses for every sample """
+        """Heatmap showing all statuses for every sample"""
         heatmap_numbers = {"none": 1, "edit_only": 2, "damage_only": 3, "edit_and_damage": 4}
 
         samples = []

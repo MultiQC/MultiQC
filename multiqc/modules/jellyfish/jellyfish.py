@@ -18,8 +18,9 @@ class MultiqcModule(BaseMultiqcModule):
         super(MultiqcModule, self).__init__(
             name="Jellyfish",
             anchor="jellyfish",
-            href="http://www.cbcb.umd.edu/software/jellyfish/",
+            href="https://github.com/gmarcais/Jellyfish",
             info="is a tool for fast, memory-efficient counting of k-mers in DNA.",
+            doi="10.1093/bioinformatics/btr011",
         )
 
         self.jellyfish_data = dict()
@@ -39,12 +40,15 @@ class MultiqcModule(BaseMultiqcModule):
         if len(self.jellyfish_data) == 0:
             raise UserWarning
 
+        # Write data to file
+        self.write_data_file(self.jellyfish_data, "jellyfish")
+
         log.info("Found {} reports".format(len(self.jellyfish_data)))
 
         self.frequencies_plot(xmax=self.jellyfish_max_x)
 
     def parse_jellyfish_data(self, f):
-        """ Go through the hist file and memorise it """
+        """Go through the hist file and memorise it"""
         histogram = {}
         occurence = 0
         for line in f["f"]:
@@ -64,7 +68,7 @@ class MultiqcModule(BaseMultiqcModule):
             self.jellyfish_data[f["s_name"]] = histogram
 
     def frequencies_plot(self, xmin=0, xmax=200):
-        """ Generate the qualities plot """
+        """Generate the qualities plot"""
 
         helptext = """
             A possible way to assess the complexity of a library even in

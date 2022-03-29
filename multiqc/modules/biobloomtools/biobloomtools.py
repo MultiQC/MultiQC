@@ -24,6 +24,7 @@ class MultiqcModule(BaseMultiqcModule):
             info="creates filters for a genome reference and categorises "
             "sequences. This is faster than alignment and can be used for pre-processing "
             "and QC applications such as contamination detection.",
+            doi="10.1093/bioinformatics/btu558",
         )
 
         # Find and load any BioBloom Tools reports
@@ -57,7 +58,7 @@ class MultiqcModule(BaseMultiqcModule):
         self.write_data_file(data_export, "multiqc_biobloomtools")
 
     def parse_bbt(self, fh):
-        """ Parse the BioBloom Tools output into a 3D dict """
+        """Parse the BioBloom Tools output into a 3D dict"""
         parsed_data = OrderedDict()
         headers = None
         for l in fh:

@@ -17,7 +17,7 @@ log = logging.getLogger(__name__)
 
 
 class MultiqcModule(BaseMultiqcModule):
-    """ MultiVCFAnalyzer module """
+    """MultiVCFAnalyzer module"""
 
     def __init__(self):
 
@@ -26,7 +26,9 @@ class MultiqcModule(BaseMultiqcModule):
             name="MultiVCFAnalyzer",
             anchor="multivcfanalyzer",
             href="https://github.com/alexherbig/MultiVCFAnalyzer",
-            info="""combines multiple VCF files in a coherent way, can produce summary statistics and downstream analysis formats for phylogeny reconstruction.""",
+            info="""combines multiple VCF files in a coherent way,
+            can produce summary statistics and downstream analysis formats for phylogeny reconstruction.""",
+            doi="10.1038/nature13591",
         )
 
         # Find and load any MultiVCFAnalyzer reports
@@ -87,7 +89,7 @@ class MultiqcModule(BaseMultiqcModule):
 
         # Parse JSON data to a dict
         for s_name, metrics in data.get("metrics", {}).items():
-            s_clean = self.clean_s_name(s_name, f["root"])
+            s_clean = self.clean_s_name(s_name, f)
             if s_clean in self.mvcf_data:
                 log.debug("Duplicate sample name found! Overwriting: {}".format(s_clean))
 
@@ -98,7 +100,7 @@ class MultiqcModule(BaseMultiqcModule):
 
     # Compute % heterozygous snp alleles and add to data
     def compute_perc_hets(self):
-        """Take the parsed stats from MultiVCFAnalyzer and add one column per sample """
+        """Take the parsed stats from MultiVCFAnalyzer and add one column per sample"""
         for sample in self.mvcf_data:
             try:
                 self.mvcf_data[sample]["Heterozygous SNP alleles (percent)"] = (
@@ -108,14 +110,14 @@ class MultiqcModule(BaseMultiqcModule):
                 self.mvcf_data[sample]["Heterozygous SNP alleles (percent)"] = "NA"
 
     def computeSnpHom(self):
-        """ Computes snp(hom) for data present by MultiVCFAnalyzer"""
+        """Computes snp(hom) for data present by MultiVCFAnalyzer"""
         for sample in self.mvcf_data:
             self.mvcf_data[sample]["SNP Calls (hom)"] = (self.mvcf_data[sample]["SNP Calls (all)"]) - self.mvcf_data[
                 sample
             ]["SNP Calls (het)"]
 
     def addSummaryMetrics(self):
-        """ Take the parsed stats from MultiVCFAnalyzer and add it to the main plot """
+        """Take the parsed stats from MultiVCFAnalyzer and add it to the main plot"""
 
         headers = OrderedDict()
 
@@ -152,7 +154,7 @@ class MultiqcModule(BaseMultiqcModule):
         self.general_stats_addcols(self.mvcf_data, headers)
 
     def addTable(self):
-        """ Take the parsed stats from MultiVCFAnalyzer and add it to the MVCF Table"""
+        """Take the parsed stats from MultiVCFAnalyzer and add it to the MVCF Table"""
         headers = OrderedDict()
 
         headers["allPos"] = {
@@ -259,7 +261,7 @@ class MultiqcModule(BaseMultiqcModule):
         return tab
 
     def addBarplot(self):
-        """ Take the parsed stats from MultiVCFAnalyzer and add it to the MVCF Table"""
+        """Take the parsed stats from MultiVCFAnalyzer and add it to the MVCF Table"""
         cats = OrderedDict()
 
         # SNP Calls (all): Green CHECK

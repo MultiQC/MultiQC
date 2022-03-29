@@ -13,7 +13,7 @@ log = logging.getLogger(__name__)
 
 
 def parse_reports(self):
-    """ Find RSeQC inner_distance frequency reports and parse their data """
+    """Find RSeQC inner_distance frequency reports and parse their data"""
 
     # Set up vars
     self.inner_distance = dict()
@@ -43,6 +43,8 @@ def parse_reports(self):
     self.inner_distance = self.ignore_samples(self.inner_distance)
 
     if len(self.inner_distance) > 0:
+        # Write data to file
+        self.write_data_file(self.inner_distance, "rseqc_inner_distance")
 
         # Make a normalised percentage version of the data
         for s_name in self.inner_distance:

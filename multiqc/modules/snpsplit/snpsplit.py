@@ -21,6 +21,7 @@ class MultiqcModule(BaseMultiqcModule):
             target="SNPsplit",
             href="https://www.bioinformatics.babraham.ac.uk/projects/SNPsplit/",
             info="A tool to determine allele-specific alignments from high-throughput sequencing experiments that have been aligned to N-masked genomes",
+            doi="10.12688/f1000research.9037.2",
         )
 
         self.snpsplit_data = dict()
@@ -49,7 +50,7 @@ class MultiqcModule(BaseMultiqcModule):
         self.allele_sorting_section()
 
     def _save_parsed(self, parsed, f):
-        s_name = self.clean_s_name(parsed[0], f["root"])
+        s_name = self.clean_s_name(parsed[0], f)
         if s_name in self.snpsplit_data:
             log.debug("Replacing duplicate sample {}".format(s_name))
         self.snpsplit_data[s_name] = parsed[1]
@@ -137,7 +138,7 @@ class MultiqcModule(BaseMultiqcModule):
         return [input_fn, d]
 
     def add_general_stats(self):
-        """ Add some columns to the General Statistics table at the top of the report """
+        """Add some columns to the General Statistics table at the top of the report"""
         headers = OrderedDict()
         headers["tagging_SNP_annotation"] = {
             "title": "SNP annotation",
@@ -165,7 +166,7 @@ class MultiqcModule(BaseMultiqcModule):
         self.general_stats_addcols(self.snpsplit_data, headers)
 
     def allele_tagging_section(self):
-        """ Allele-tagging report """
+        """Allele-tagging report"""
         cats = OrderedDict()
         cats["tagging_g1"] = {"name": "Genome 1"}
         cats["tagging_g2"] = {"name": "Genome 2"}
@@ -215,7 +216,7 @@ class MultiqcModule(BaseMultiqcModule):
         )
 
     def allele_sorting_section(self):
-        """ Allele-specific sorting report """
+        """Allele-specific sorting report"""
         cats = OrderedDict()
         cats["sorting_genome1"] = {"name": "Genome 1"}
         cats["sorting_genome2"] = {"name": "Genome 2"}

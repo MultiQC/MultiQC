@@ -109,6 +109,7 @@ config = {
     'title': None,                          # Plot title - should be in format "Module Name: Plot Title"
     'xlab': None,                           # X axis label
     'ylab': None,                           # Y axis label
+    'labelSize': 8,                         # Axis label font size
     'ymax': None,                           # Max y limit
     'ymin': None,                           # Min y limit
     'yCeiling': None,                       # Maximum value for automatic axis limit (good for percentages)
@@ -123,6 +124,7 @@ config = {
     'tt_decimals': 0,                       # Number of decimal places to use in the tooltip number
     'tt_suffix': '',                        # Suffix to add after tooltip number
     'tt_percentages': True,                 # Show the percentages of each count in the tooltip
+    'height': 512                           # The default height of the plot, in pixels
 }
 ```
 
@@ -135,13 +137,14 @@ config = {
 ### Switching datasets
 
 It's possible to have single plot with buttons to switch between different
-datasets. To do this, give a list of data objects (same formats as described
-above). Also add the following config options to supply names to the buttons:
+datasets. To do this, give a list of data objects to the `plot` function
+and specify the `data_labels` config option with the text to be used for the buttons:
 
 ```python
 config = {
     'data_labels': ['Reads', 'Bases']
 }
+html_content = bargraph.plot([data1, data2], pconfig=config)
 ```
 
 You can also customise the y-axis label and min/max values for each dataset:
@@ -180,7 +183,10 @@ cats[0]['aligned_reads'] =        {'name': 'Aligned Reads',        'color': '#8b
 cats[0]['unaligned_reads'] =      {'name': 'Unaligned Reads',      'color': '#f7a35c'}
 cats[1]['aligned_base_pairs'] =   {'name': 'Aligned Base Pairs',   'color': '#8bbc21'}
 cats[1]['unaligned_base_pairs'] = {'name': 'Unaligned Base Pairs', 'color': '#f7a35c'}
+html_content = bargraph.plot([data, data], cats, config)
 ```
+
+Note that, as in this example, the plot data can be the same dictionary supplied twice.
 
 ### Interactive / Flat image plots
 
@@ -232,6 +238,7 @@ config = {
     'title': None,               # Plot title - should be in format "Module Name: Plot Title"
     'xlab': None,                # X axis label
     'ylab': None,                # Y axis label
+    'labelSize': 8,              # Axis label font size
     'xCeiling': None,            # Maximum value for automatic axis limit (good for percentages)
     'xFloor': None,              # Minimum value for automatic axis limit
     'xMinRange': None,           # Minimum range for axis
@@ -259,6 +266,7 @@ config = {
     'click_func': function(){},  # Javascript function to be called when a point is clicked
     'cursor': None               # CSS mouse cursor type. Defaults to pointer when 'click_func' specified
     'reversedStacks': False      # Reverse the order of the category stacks. Defaults True for plots with Log10 option
+    'height': 512                # The default height of the plot, in pixels
 }
 html_content = linegraph.plot(data, config)
 ```
@@ -539,6 +547,26 @@ headers[tablecol] = {
 }
 ```
 
+### Zero centrepoints
+
+If you set the header config `bars_zero_centrepoint` to `True`, the background bars
+will use the absolute values to calculate bar width. So a value of `0` will have a bar
+width of `0`, `20` a width of `20` and `-30` a width of `30`.
+
+This works well with a divergent colour-scheme as the bar width shows the magnitude
+of the value properly, whilst the colour scheme shows the difference between positive
+and negative values.
+
+For example:
+
+```python
+headers[tablecol] = {
+    "title": "My table column",
+    "scale": "RdYlGn",
+    "bars_zero_centrepoint": True,
+}
+```
+
 ### Conditional formatting of data values
 
 MultiQC has configuration options to allow users to configure _"conditional formatting"_,
@@ -655,6 +683,7 @@ pconfig = {
     'borderWidth': 0,              # Border width between cells
     'datalabels': True,            # Show values in each cell. Defaults True when less than 20 samples.
     'datalabel_colour': '<auto>',  # Colour of text for values. Defaults to auto contrast.
+    'height': 512                  # The default height of the interactive plot, in pixels
 }
 ```
 

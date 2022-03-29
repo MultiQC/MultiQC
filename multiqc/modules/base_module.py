@@ -30,6 +30,7 @@ class BaseMultiqcModule(object):
         extra=None,
         autoformat=True,
         autoformat_type="markdown",
+        doi=[],
     ):
 
         # Custom options from user config that can overwrite base module values
@@ -41,6 +42,8 @@ class BaseMultiqcModule(object):
         self.info = mod_cust_config.get("info", info)
         self.comment = mod_cust_config.get("comment", comment)
         self.extra = mod_cust_config.get("extra", extra)
+        self.doi = mod_cust_config.get("doi", doi)
+
         # Specific module level config to overwrite (e.g. config.bcftools, config.fastqc)
         config.update({anchor: mod_cust_config.get("custom_config", {})})
 
@@ -53,16 +56,33 @@ class BaseMultiqcModule(object):
 
         if self.info is None:
             self.info = ""
+        # Always finish with a ".", as we may add a DOI after the intro.
+        if len(self.info) > 0 and self.info[-1] != ".":
+            self.info += "."
         if self.extra is None:
             self.extra = ""
+        self.doi_link = ""
+        if type(self.doi) is str:
+            self.doi = [self.doi]
+        if len(self.doi) > 0:
+            doi_links = []
+            for doi in self.doi:
+                # Build the HTML link for the DOI
+                doi_links.append(
+                    f' <a class="module-doi" data-doi="{doi}" data-toggle="popover" href="https://doi.org/{doi}" target="_blank">{doi}</a>'
+                )
+            self.doi_link = '<em class="text-muted small" style="margin-left: 1rem;">DOI: {}.</em>'.format(
+                "; ".join(doi_links)
+            )
+
         if target is None:
             target = self.name
         if self.href is not None:
             self.mname = '<a href="{}" target="_blank">{}</a>'.format(self.href, target)
         else:
             self.mname = target
-        if self.href or self.info or self.extra:
-            self.intro = "<p>{} {}</p>{}".format(self.mname, self.info, self.extra)
+        if self.href or self.info or self.extra or self.doi_link:
+            self.intro = "<p>{} {}{}</p>{}".format(self.mname, self.info, self.doi_link, self.extra)
 
         # Format the markdown strings
         if autoformat:
@@ -88,6 +108,10 @@ class BaseMultiqcModule(object):
         # Allows modules to be called multiple times with different sets of files
         path_filters = getattr(self, "mod_cust_config", {}).get("path_filters")
         path_filters_exclude = getattr(self, "mod_cust_config", {}).get("path_filters_exclude")
+        if type(path_filters) == str:
+            path_filters = [path_filters]
+        if type(path_filters_exclude) == str:
+            path_filters_exclude = [path_filters_exclude]
 
         # Old, depreciated syntax support. Likely to be removed in a future version.
         if isinstance(sp_key, dict):
@@ -114,9 +138,7 @@ class BaseMultiqcModule(object):
                 exlusion_hits = (fnmatch.fnmatch(report.last_found_file, pfe) for pfe in path_filters_exclude)
                 if any(exlusion_hits):
                     logger.debug(
-                        "{} - Skipping '{}' as it matched the path_filters_exclude for '{}'".format(
-                            sp_key, f["fn"], self.name
-                        )
+                        f"{sp_key} - Skipping '{report.last_found_file}' as it matched the path_filters_exclude for '{self.name}'"
                     )
                     continue
 
@@ -125,18 +147,17 @@ class BaseMultiqcModule(object):
                 inclusion_hits = (fnmatch.fnmatch(report.last_found_file, pf) for pf in path_filters)
                 if not any(inclusion_hits):
                     logger.debug(
-                        "{} - Skipping '{}' as it didn't match the path_filters for '{}'".format(
-                            sp_key, f["fn"], self.name
-                        )
+                        f"{sp_key} - Skipping '{report.last_found_file}' as it didn't match the path_filters for '{self.name}'"
                     )
                     continue
                 else:
                     logger.debug(
-                        "{} - Selecting '{}' as it matched the path_filters for '{}'".format(sp_key, f["fn"], self.name)
+                        f"{sp_key} - Selecting '{report.last_found_file}' as it matched the path_filters for '{self.name}'"
                     )
 
             # Make a sample name from the filename
-            f["s_name"] = self.clean_s_name(f["fn"], f["root"])
+            f["sp_key"] = sp_key
+            f["s_name"] = self.clean_s_name(f["fn"], f)
             if filehandles or filecontents:
                 try:
                     # Custom content module can now handle image files
@@ -174,7 +195,7 @@ class BaseMultiqcModule(object):
         autoformat=True,
         autoformat_type="markdown",
     ):
-        """ Add a section to the module report output """
+        """Add a section to the module report output"""
 
         # Default anchor
         if anchor is None:
@@ -237,7 +258,7 @@ class BaseMultiqcModule(object):
             }
         )
 
-    def clean_s_name(self, s_name, root):
+    def clean_s_name(self, s_name, f=None, root=None, filename=None, seach_pattern_key=None):
         """Helper function to take a long file name and strip it
         back to a clean sample name. Somewhat arbitrary.
         :param s_name: The sample name to clean
@@ -246,12 +267,54 @@ class BaseMultiqcModule(object):
         :return: The cleaned sample name, ready to be used
         """
         s_name_original = s_name
+
+        # Backwards compatability - if f is a string, it's probably the root (this used to be the second argument)
+        if isinstance(f, str):
+            root = f
+            f = None
+
+        # Set string variables from f if it was a dict from find_log_files()
+        if isinstance(f, dict):
+            if "root" in f and root is None:
+                root = f["root"]
+            if "fn" in f and filename is None:
+                filename = f["fn"]
+            if "sp_key" in f and seach_pattern_key is None:
+                seach_pattern_key = f["sp_key"]
+
+        # For modules setting s_name from file contents, set s_name back to the filename
+        # (if wanted in the config)
+        if filename is not None and (
+            config.use_filename_as_sample_name is True
+            or (
+                isinstance(config.use_filename_as_sample_name, list)
+                and seach_pattern_key is not None
+                and seach_pattern_key in config.use_filename_as_sample_name
+            )
+        ):
+            s_name = filename
+
+        # Set root to empty string if not known
         if root is None:
             root = ""
 
         # if s_name comes from file contents, it may have a file path
         # For consistency with other modules, we keep just the basename
         s_name = os.path.basename(s_name)
+
+        # Prepend sample name with directory
+        if config.prepend_dirs:
+            sep = config.prepend_dirs_sep
+            root = root.lstrip(".{}".format(os.sep))
+            dirs = [d.strip() for d in root.split(os.sep) if d.strip() != ""]
+            if config.prepend_dirs_depth != 0:
+                d_idx = config.prepend_dirs_depth * -1
+                if config.prepend_dirs_depth > 0:
+                    dirs = dirs[d_idx:]
+                else:
+                    dirs = dirs[:d_idx]
+            if len(dirs) > 0:
+                s_name = "{}{}{}".format(sep.join(dirs), sep, s_name)
 
         if config.fn_clean_sample_names:
             # Split then take first section to remove everything after these matches
@@ -291,29 +354,44 @@ class BaseMultiqcModule(object):
                 if s_name.startswith(chrs):
                     s_name = s_name[len(chrs) :]
 
-        # Prepend sample name with directory
-        if config.prepend_dirs:
-            sep = config.prepend_dirs_sep
-            root = root.lstrip(".{}".format(os.sep))
-            dirs = [d.strip() for d in root.split(os.sep) if d.strip() != ""]
-            if config.prepend_dirs_depth != 0:
-                d_idx = config.prepend_dirs_depth * -1
-                if config.prepend_dirs_depth > 0:
-                    dirs = dirs[d_idx:]
-                else:
-                    dirs = dirs[:d_idx]
-            if len(dirs) > 0:
-                s_name = "{}{}{}".format(sep.join(dirs), sep, s_name)
-
         # Remove trailing whitespace
         s_name = s_name.strip()
+
+        # If we cleaned back to an empty string, just use the original value
         if s_name == "":
             s_name = s_name_original
+
+        # Do any hard replacements that are set with --replace-names
+        if config.sample_names_replace:
+            for s_name_search, s_name_replace in config.sample_names_replace.items():
+                try:
+                    # Skip if we're looking for exact matches only
+                    if config.sample_names_replace_exact:
+                        # Simple strings
+                        if not config.sample_names_replace_regex and s_name != s_name_search:
+                            continue
+                        # regexes
+                        if config.sample_names_replace_regex and not re.fullmatch(s_name_search, s_name):
+                            continue
+                    # Replace - regex
+                    if config.sample_names_replace_regex:
+                        s_name = re.sub(s_name_search, s_name_replace, s_name)
+                    # Replace - simple string
+                    else:
+                        # Complete name swap
+                        if config.sample_names_replace_complete:
+                            if s_name_search in s_name:
+                                s_name = s_name_replace
+                        # Partial substring replace
+                        else:
+                            s_name = s_name.replace(s_name_search, s_name_replace)
+                except re.error as e:
+                    logger.error("Error with sample name replacement regex: {}".format(e))
 
         return s_name
 
     def ignore_samples(self, data):
-        """ Strip out samples which match `sample_names_ignore` """
+        """Strip out samples which match `sample_names_ignore`"""
         try:
             if isinstance(data, OrderedDict):
                 newdata = OrderedDict()
@@ -329,7 +407,7 @@ class BaseMultiqcModule(object):
             return data
 
     def is_ignore_sample(self, s_name):
-        """ Should a sample name be ignored? """
+        """Should a sample name be ignored?"""
         glob_match = any(fnmatch.fnmatch(s_name, sn) for sn in config.sample_names_ignore)
         re_match = any(re.match(sn, s_name) for sn in config.sample_names_ignore_re)
         return glob_match or re_match
@@ -411,7 +489,7 @@ class BaseMultiqcModule(object):
     ##################################################
     #### DEPRECATED FORWARDERS
     def plot_bargraph(self, data, cats=None, pconfig=None):
-        """ Depreciated function. Forwards to new location. """
+        """Depreciated function. Forwards to new location."""
         from multiqc.plots import bargraph
 
         if pconfig is None:
@@ -419,7 +497,7 @@ class BaseMultiqcModule(object):
         return bargraph.plot(data, cats, pconfig)
 
     def plot_xy_data(self, data, pconfig=None):
-        """ Depreciated function. Forwards to new location. """
+        """Depreciated function. Forwards to new location."""
         from multiqc.plots import linegraph
 
         if pconfig is None:

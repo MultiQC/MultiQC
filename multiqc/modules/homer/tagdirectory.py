@@ -15,13 +15,16 @@ log = logging.getLogger(__name__)
 
 class TagDirReportMixin:
     def homer_tagdirectory(self):
-        """ Find HOMER tagdirectory logs and parse their data """
+        """Find HOMER tagdirectory logs and parse their data"""
         self.parse_gc_content()
         self.parse_re_dist()
         self.parse_tagLength_dist()
         self.parse_tagInfo_data()
         self.parse_FreqDistribution_data()
         self.homer_stats_table_tagInfo()
+
+        # Write data to file
+        self.write_data_file(self.tagdir_data, "homer_tagdir")
 
         return sum([len(v) for k, v in self.tagdir_data.items() if k != "header"])
 
@@ -31,7 +34,7 @@ class TagDirReportMixin:
         for f in self.find_log_files("homer/GCcontent", filehandles=True):
             # Get the s_name from the parent directory
             s_name = os.path.basename(f["root"])
-            s_name = self.clean_s_name(s_name, f["root"])
+            s_name = self.clean_s_name(s_name, f)
             parsed_data = self.parse_twoCol_file(f)
             if parsed_data is not None:
                 if s_name in self.tagdir_data["GCcontent"]:
@@ -53,6 +56,7 @@ class TagDirReportMixin:
         self.tagdir_data["GCcontent"] = self.ignore_samples(self.tagdir_data["GCcontent"])
 
         if len(self.tagdir_data["GCcontent"]) > 0:
+
             self.add_section(
                 name="Per Sequence GC Content",
                 anchor="homer_per_sequence_gc_content",
@@ -65,7 +69,7 @@ class TagDirReportMixin:
         # Find and parse homer restriction distribution reports
         for f in self.find_log_files("homer/RestrictionDistribution", filehandles=True):
             s_name = os.path.basename(f["root"])
-            s_name = self.clean_s_name(s_name, f["root"])
+            s_name = self.clean_s_name(s_name, f)
             parsed_data = self.parse_restriction_dist(f)
             if parsed_data is not None:
                 if s_name in self.tagdir_data["restriction"]:
@@ -94,7 +98,7 @@ class TagDirReportMixin:
         # Find and parse homer tag length distribution reports
         for f in self.find_log_files("homer/LengthDistribution", filehandles=True):
             s_name = os.path.basename(f["root"])
-            s_name = self.clean_s_name(s_name, f["root"])
+            s_name = self.clean_s_name(s_name, f)
             parsed_data = self.parse_length_dist(f)
             if parsed_data is not None:
                 if s_name in self.tagdir_data["length"]:
@@ -117,7 +121,7 @@ class TagDirReportMixin:
         # Find and parse homer taginfo reports
         for f in self.find_log_files("homer/tagInfo", filehandles=True):
             s_name = os.path.basename(f["root"])
-            s_name = self.clean_s_name(s_name, f["root"])
+            s_name = self.clean_s_name(s_name, f)
             parsed_data = self.parse_tag_info_chrs(f)
             if parsed_data is not None:
                 if s_name in self.tagdir_data["taginfo_total"]:
@@ -130,7 +134,7 @@ class TagDirReportMixin:
 
         for f in self.find_log_files("homer/tagInfo", filehandles=True):
             s_name = os.path.basename(f["root"])
-            s_name = self.clean_s_name(s_name, f["root"])
+            s_name = self.clean_s_name(s_name, f)
             ## collected tag_info data for general stats table and store under 'header'
             parsed_data = self.parse_tag_info(f)
             if parsed_data is not None:
@@ -156,7 +160,7 @@ class TagDirReportMixin:
         # Find and parse homer tag FreqDistribution_1000 reports
         for f in self.find_log_files("homer/FreqDistribution", filehandles=True):
             s_name = os.path.basename(f["root"])
-            s_name = self.clean_s_name(s_name, f["root"])
+            s_name = self.clean_s_name(s_name, f)
             parsed_data = self.parse_FreqDist(f)
             if parsed_data is not None:
                 if s_name in self.tagdir_data["FreqDistribution"]:
@@ -179,7 +183,7 @@ class TagDirReportMixin:
             )
 
     def homer_stats_table_tagInfo(self):
-        """ Add core HOMER stats to the general stats table from tagInfo file"""
+        """Add core HOMER stats to the general stats table from tagInfo file"""
 
         if len(self.tagdir_data["header"]) == 0:
             return None
@@ -230,7 +234,7 @@ class TagDirReportMixin:
         self.general_stats_addcols(self.tagdir_data["header"], headers, "HOMER")
 
     def homer_stats_table_interChr(self):
-        """ Add core HOMER stats to the general stats table from FrequencyDistribution file"""
+        """Add core HOMER stats to the general stats table from FrequencyDistribution file"""
 
         headers = OrderedDict()
         headers["InterChr"] = {
@@ -246,7 +250,7 @@ class TagDirReportMixin:
         return {key: value * factor for key, value in mydict.items()}
 
     def parse_twoCol_file(self, f):
-        """ Parse HOMER tagdirectory GCcontent file. """
+        """Parse HOMER tagdirectory GCcontent file."""
         parsed_data = dict()
         firstline = True
         for l in f["f"]:
@@ -262,7 +266,7 @@ class TagDirReportMixin:
         return parsed_data
 
     def parse_restriction_dist(self, f):
-        """ Parse HOMER tagdirectory petagRestrictionDistribution file. """
+        """Parse HOMER tagdirectory petagRestrictionDistribution file."""
         parsed_data = dict()
         firstline = True
         for l in f["f"]:
@@ -281,7 +285,7 @@ class TagDirReportMixin:
         return parsed_data
 
     def parse_length_dist(self, f):
-        """ Parse HOMER tagdirectory tagLengthDistribution file. """
+        """Parse HOMER tagdirectory tagLengthDistribution file."""
         parsed_data = dict()
         firstline = True
         for l in f["f"]:
@@ -297,7 +301,7 @@ class TagDirReportMixin:
         return parsed_data
 
     def parse_tag_info(self, f):
-        """ Parse HOMER tagdirectory taginfo.txt file to extract statistics in the first 11 lines. """
+        """Parse HOMER tagdirectory taginfo.txt file to extract statistics in the first 11 lines."""
         # General Stats Table
         tag_info = dict()
         for l in f["f"]:
@@ -320,7 +324,7 @@ class TagDirReportMixin:
         return tag_info
 
     def parse_tag_info_chrs(self, f, convChr=True):
-        """ Parse HOMER tagdirectory taginfo.txt file to extract chromosome coverage. """
+        """Parse HOMER tagdirectory taginfo.txt file to extract chromosome coverage."""
         parsed_data_total = OrderedDict()
         parsed_data_uniq = OrderedDict()
         remove = ["hap", "random", "chrUn", "cmd", "EBV", "GL", "NT_"]
@@ -345,7 +349,7 @@ class TagDirReportMixin:
         return [parsed_data_total, parsed_data_uniq]
 
     def parse_FreqDist(self, f):
-        """ Parse HOMER tagdirectory petag.FreqDistribution_1000 file. """
+        """Parse HOMER tagdirectory petag.FreqDistribution_1000 file."""
         parsed_data = dict()
         firstline = True
         for l in f["f"]:
@@ -365,7 +369,7 @@ class TagDirReportMixin:
         return parsed_data
 
     def parse_FreqDist_interChr(self, f):
-        """ Parse HOMER tagdirectory petag.FreqDistribution_1000 file to get inter-chromosomal interactions. """
+        """Parse HOMER tagdirectory petag.FreqDistribution_1000 file to get inter-chromosomal interactions."""
         parsed_data = dict()
         firstline = True
         for l in f["f"]:
@@ -379,7 +383,7 @@ class TagDirReportMixin:
 
     def restriction_dist_chart(self):
 
-        """ Make the petagRestrictionDistribution plot """
+        """Make the petagRestrictionDistribution plot"""
 
         pconfig = {
             "id": "petagRestrictionDistribution",
@@ -394,7 +398,7 @@ class TagDirReportMixin:
 
     def length_dist_chart(self):
 
-        """ Make the tagLengthDistribution plot """
+        """Make the tagLengthDistribution plot"""
 
         pconfig = {
             "id": "tagLengthDistribution",
@@ -406,7 +410,7 @@ class TagDirReportMixin:
         return linegraph.plot(self.tagdir_data["length"], pconfig)
 
     def GCcontent_plot(self):
-        """ Create the HTML for the Homer GC content plot """
+        """Create the HTML for the Homer GC content plot"""
 
         pconfig = {
             "id": "homer-tag-directory-gc-content",
@@ -425,7 +429,7 @@ class TagDirReportMixin:
 
     def tag_info_chart(self):
 
-        """ Make the taginfo.txt plot """
+        """Make the taginfo.txt plot"""
 
         ## TODO: human chrs on hg19. How will this work with GRCh genome or other, non human, genomes?
         # nice if they are ordered by size
@@ -450,7 +454,7 @@ class TagDirReportMixin:
         return bargraph.plot(self.tagdir_data["taginfo_total"], chrs, pconfig)
 
     def FreqDist_chart(self):
-        """ Make the petag.FreqDistribution_1000 plot """
+        """Make the petag.FreqDistribution_1000 plot"""
         # Take a log of the data before plotting so that we can
         # reduce the number of points to plot evenly
         pdata = {}

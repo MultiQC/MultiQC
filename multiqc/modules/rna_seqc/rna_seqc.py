@@ -21,18 +21,21 @@ class MultiqcModule(BaseMultiqcModule):
         super(MultiqcModule, self).__init__(
             name="RNA-SeQC",
             anchor="rna_seqc",
-            href="https://github.com/broadinstitute/rnaseqc",
+            href="https://github.com/getzlab/rnaseqc",
             info="Fast, efficient RNA-Seq metrics for quality control and process optimization",
+            doi=["10.1093/bioinformatics/btab135", "10.1093/bioinformatics/bts196"],
         )
 
         # Parse metrics from RNA-SeQC v1
         self.rna_seqc_metrics = dict()
         for f in self.find_log_files("rna_seqc/metrics_v1", filehandles=True):
             self.parse_metrics_rnaseqc_v1(f)
+            self.add_data_source(f, section="v1")
 
         # Parse metrics from RNA-SeQC v2
         for f in self.find_log_files("rna_seqc/metrics_v2", filehandles=True):
             self.parse_metrics_rnaseqc_v2(f)
+            self.add_data_source(f, section="v2")
 
         # Strip out ignored sample names from metrics
         self.rna_seqc_metrics = self.ignore_samples(self.rna_seqc_metrics)
@@ -110,7 +113,7 @@ class MultiqcModule(BaseMultiqcModule):
         for l in f["f"]:
             s = l.split("\t")
             if s[0] == "Sample":
-                s_name = self.clean_s_name(s[1], f["root"])
+                s_name = self.clean_s_name(s[1], f)
             if s[0] == "Total Reads":
                 s[0] = "Total Read Number"
             if s[0] == "rRNA Rate":
@@ -125,16 +128,15 @@ class MultiqcModule(BaseMultiqcModule):
         self.rna_seqc_metrics[s_name] = data
 
     def parse_coverage(self, f):
-        """ Parse the RNA-SeQC Normalised Coverage Files """
+        """Parse the RNA-SeQC Normalised Coverage Files"""
         data = dict()
         s_names = None
         j = 1
         for l in f["f"].splitlines():
             s = l.strip().split("\t")
             if s_names is None:
-                s_names = s
+                s_names = [self.clean_s_name(s_name, f) for s_name in s]
                 for s_name in s_names:
-                    s_name = self.clean_s_name(s_name, f["root"])
                     data[s_name] = dict()
             else:
                 for i, v in enumerate(s):
@@ -148,7 +150,7 @@ class MultiqcModule(BaseMultiqcModule):
             self.rna_seqc_norm_low_cov.update(data)
 
     def parse_correlation(self, f):
-        """ Parse RNA-SeQC correlation matrices """
+        """Parse RNA-SeQC correlation matrices"""
         s_names = None
         data = list()
         for l in f["f"].splitlines():
@@ -162,7 +164,7 @@ class MultiqcModule(BaseMultiqcModule):
         filtered_s_names = list()
         filtered_data = list()
         for idx, s_name in enumerate(s_names):
-            s_name = self.clean_s_name(s_name, f["root"])
+            s_name = self.clean_s_name(s_name, f)
             if not self.is_ignore_sample(s_name):
                 filtered_s_names.append(s_name)
                 filtered_data.append(data[idx])
@@ -207,7 +209,7 @@ class MultiqcModule(BaseMultiqcModule):
         self.general_stats_addcols(self.rna_seqc_metrics, headers)
 
     def transcript_associated_plot(self):
-        """ Plot a bargraph showing the Transcript-associated reads  """
+        """Plot a bargraph showing the Transcript-associated reads"""
 
         # Plot bar graph of groups
         keys = OrderedDict()
@@ -240,7 +242,7 @@ class MultiqcModule(BaseMultiqcModule):
         )
 
     def plot_correlation_heatmap(self):
-        """ Return HTML for correlation heatmap """
+        """Return HTML for correlation heatmap"""
         data = None
         corr_type = None
         correlation_type = getattr(config, "rna_seqc", {}).get("default_correlation", "spearman")
@@ -262,7 +264,7 @@ class MultiqcModule(BaseMultiqcModule):
             )
 
     def strand_barplot(self):
-        """ Plot a bargraph showing the strandedness of alignments """
+        """Plot a bargraph showing the strandedness of alignments"""
         # Plot bar graph of groups
         keys = ["End 1 Sense", "End 1 Antisense", "End 2 Sense", "End 2 Antisense"]
         # Config for the plot
@@ -287,7 +289,7 @@ class MultiqcModule(BaseMultiqcModule):
         )
 
     def coverage_lineplot(self):
-        """ Make HTML for coverage line plots """
+        """Make HTML for coverage line plots"""
         # Add line graph to section
         data = list()
         data_labels = list()

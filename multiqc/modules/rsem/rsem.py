@@ -28,6 +28,7 @@ class MultiqcModule(BaseMultiqcModule):
             href="https://deweylab.github.io/RSEM/",
             info="RSEM (RNA-Seq by Expectation-Maximization) is a software package for"
             "estimating gene and isoform expression levels from RNA-Seq data.",
+            doi="10.1186/1471-2105-12-323",
         )
 
         self.rsem_mapped_data = dict()
@@ -76,7 +77,10 @@ class MultiqcModule(BaseMultiqcModule):
                 data["Alignable"] = int(s[1])
                 data["Filtered"] = int(s[2])
                 data["Total"] = int(s[3])
-                data["alignable_percent"] = (float(s[1]) / float(s[3])) * 100.0
+                try:
+                    data["alignable_percent"] = (float(s[1]) / float(s[3])) * 100.0
+                except ZeroDivisionError:
+                    data["alignable_percent"] = 0
             elif len(s) == 3:
                 # Line: nUnique nMulti nUncertain
                 # nUnique, number of reads aligned uniquely to a gene
@@ -128,7 +132,7 @@ class MultiqcModule(BaseMultiqcModule):
         self.general_stats_addcols(self.rsem_mapped_data, headers)
 
     def rsem_mapped_reads_plot(self):
-        """ Make the rsem assignment rates plot """
+        """Make the rsem assignment rates plot"""
 
         # Plot categories
         keys = OrderedDict()
@@ -154,7 +158,7 @@ class MultiqcModule(BaseMultiqcModule):
         )
 
     def rsem_multimapping_plot(self):
-        """ Make a line plot showing the multimapping levels """
+        """Make a line plot showing the multimapping levels"""
 
         pconfig = {
             "id": "rsem_multimapping_rates",

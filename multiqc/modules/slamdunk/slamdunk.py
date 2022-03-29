@@ -28,6 +28,7 @@ class MultiqcModule(BaseMultiqcModule):
             anchor="slamdunk",
             href="http://t-neumann.github.io/slamdunk/",
             info="is a tool to analyze SLAMSeq data.",
+            doi="10.1186/s12859-019-2849-7",
         )
 
         num_reports = 0
@@ -146,7 +147,7 @@ class MultiqcModule(BaseMultiqcModule):
         for line in f["f"]:
             fields = line.rstrip().split("\t")
 
-            sample = self.clean_s_name(fields[0], f["root"])
+            sample = self.clean_s_name(fields[0], f)
             PC1 = fields[1]
             PC2 = fields[2]
 
@@ -311,7 +312,7 @@ class MultiqcModule(BaseMultiqcModule):
         for line in f["f"]:
 
             fields = line.rstrip().split("\t")
-            s_name = self.clean_s_name(fields[0], f["root"])
+            s_name = self.clean_s_name(fields[0], f)
             self.slamdunk_data[s_name] = dict()
             self.slamdunk_data[s_name]["sequenced"] = int(fields[4])
             self.slamdunk_data[s_name]["mapped"] = int(fields[5])
@@ -373,7 +374,7 @@ class MultiqcModule(BaseMultiqcModule):
         self.general_stats_addcols(self.slamdunk_data, headers)
 
     def slamdunkFilterStatsTable(self):
-        """ Take the parsed filter stats from Slamdunk and add it to a separate table """
+        """Take the parsed filter stats from Slamdunk and add it to a separate table"""
 
         headers = OrderedDict()
         headers["mapped"] = {
@@ -444,7 +445,7 @@ class MultiqcModule(BaseMultiqcModule):
         )
 
     def slamdunkOverallRatesPlot(self):
-        """ Generate the overall rates plot """
+        """Generate the overall rates plot"""
 
         pconfig = {
             "id": "overallratesplot",
@@ -483,7 +484,7 @@ class MultiqcModule(BaseMultiqcModule):
         )
 
     def slamdunkUtrRatesPlot(self):
-        """ Generate the UTR rates plot """
+        """Generate the UTR rates plot"""
 
         cats = OrderedDict()
         keys = ["T>C", "A>T", "A>G", "A>C", "T>A", "T>G", "G>A", "G>T", "G>C", "C>A", "C>T", "C>G"]
@@ -512,7 +513,7 @@ class MultiqcModule(BaseMultiqcModule):
         )
 
     def slamdunkPCAPlot(self):
-        """ Generate the PCA plots """
+        """Generate the PCA plots"""
 
         pconfig = {
             "id": "slamdunk_pca",
@@ -532,7 +533,7 @@ class MultiqcModule(BaseMultiqcModule):
         )
 
     def slamdunkTcPerReadPosPlot(self):
-        """ Generate the tc per read pos plots """
+        """Generate the tc per read pos plots"""
 
         pconfig_nontc = {
             "id": "slamdunk_nontcperreadpos_plot",
@@ -579,7 +580,7 @@ class MultiqcModule(BaseMultiqcModule):
         )
 
     def slamdunkTcPerUTRPosPlot(self):
-        """ Generate the tc per UTR pos plots """
+        """Generate the tc per UTR pos plots"""
 
         pconfig_nontc = {
             "id": "slamdunk_slamdunk_nontcperutrpos_plot",

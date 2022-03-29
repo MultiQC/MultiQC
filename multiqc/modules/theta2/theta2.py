@@ -23,6 +23,7 @@ class MultiqcModule(BaseMultiqcModule):
             href="http://compbio.cs.brown.edu/projects/theta/",
             info="<em>(Tumor Heterogeneity Analysis)</em> estimates tumour purity "
             "and clonal / subclonal copy number.",
+            doi=["10.1093/bioinformatics/btu651", "10.1186/gb-2013-14-7-r80"],
         )
 
         # Find and load any THetA2 reports
@@ -55,7 +56,7 @@ class MultiqcModule(BaseMultiqcModule):
         )
 
     def parse_theta2_report(self, fh):
-        """ Parse the final THetA2 log file. """
+        """Parse the final THetA2 log file."""
         parsed_data = {}
         for l in fh:
             if l.startswith("#"):
@@ -75,7 +76,7 @@ class MultiqcModule(BaseMultiqcModule):
         return parsed_data
 
     def theta2_purities_chart(self):
-        """ Make the plot showing alignment rates """
+        """Make the plot showing alignment rates"""
 
         # Specify the order of the different possible categories
         keys = OrderedDict()

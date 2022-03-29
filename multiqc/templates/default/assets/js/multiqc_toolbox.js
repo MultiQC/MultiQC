@@ -118,6 +118,44 @@ $(function () {
     mqc_toolbox_openclose(target);
   });
 
+  // Download DOIs
+  $(".download-citations-btn").click(function (e) {
+    e.preventDefault();
+    var format = $(this).data("format");
+    var doi_list = { "10.1093/bioinformatics/btw354": "MultiQC" };
+    $(".module-doi").each(function () {
+      var module_id = $(this).closest(".mqc-module-section-first").find("h2").attr("id");
+      doi_list[$(this).data("doi")] = module_id;
+    });
+    // Get BibTeX
+    if (format == "bibtex") {
+      var bibtex_string = "";
+      // Kick off crossref api calls
+      var ajax_promises = [];
+      for (var doi in doi_list) {
+        ajax_promises.push(
+          $.get("https://api.crossref.org/works/" + doi + "/transform/application/x-bibtex", function (data) {
+            bibtex_string += data + "\n";
+          })
+        );
+      }
+      // Wait until all API calls are done
+      $.when.apply(null, ajax_promises).then(function () {
+        var blob = new Blob([bibtex_string], { type: "text/plain;charset=utf-8" });
+        saveAs(blob, "multiqc_references.bib");
+      });
+    }
+    // Download list of DOIs
+    else {
+      var doi_string = "";
+      for (var doi in doi_list) {
+        doi_string += doi + new Array(50 - doi.length).join(" ") + " # " + doi_list[doi] + "\n";
+      }
+      var blob = new Blob([doi_string], { type: "text/plain;charset=utf-8" });
+      saveAs(blob, "multiqc_dois.txt");
+    }
+  });
+
   // Highlight colour filters
   $("#mqc_color_form").submit(function (e) {
     e.preventDefault();
@@ -625,8 +663,7 @@ function mqc_toolbox_confirmapply() {
   if ($("#mqc_cols_apply").is(":enabled") && $("#mqc_cols").is(":visible")) {
     $.toast({
       heading: "Highlights Not Applied",
-      text:
-        "Careful - your changes haven't been applied yet! Click the <em>Apply</em> button in the toolbox to set your changes.",
+      text: "Careful - your changes haven't been applied yet! Click the <em>Apply</em> button in the toolbox to set your changes.",
       icon: "warning",
       position: "bottom-right",
       hideAfter: 5000,
@@ -635,8 +672,7 @@ function mqc_toolbox_confirmapply() {
   if ($("#mqc_rename_apply").is(":enabled") && $("#mqc_renamesamples").is(":visible")) {
     $.toast({
       heading: "Rename Patterns Not Applied",
-      text:
-        "Careful - your changes haven't been applied yet! Click the <em>Apply</em> button in the toolbox to set your changes.",
+      text: "Careful - your changes haven't been applied yet! Click the <em>Apply</em> button in the toolbox to set your changes.",
       icon: "warning",
       position: "bottom-right",
       hideAfter: 5000,
@@ -645,8 +681,7 @@ function mqc_toolbox_confirmapply() {
   if ($("#mqc_hide_apply").is(":enabled") && $("#mqc_hidesamples").is(":visible")) {
     $.toast({
       heading: "Hide Samples Not Applied",
-      text:
-        "Careful - your changes haven't been applied yet! Click the <em>Apply</em> button in the toolbox to set your changes.",
+      text: "Careful - your changes haven't been applied yet! Click the <em>Apply</em> button in the toolbox to set your changes.",
       icon: "warning",
       position: "bottom-right",
       hideAfter: 5000,

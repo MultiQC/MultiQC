@@ -24,6 +24,7 @@ class MultiqcModule(BaseMultiqcModule):
             anchor="mirtrace",
             href="https://github.com/friedlanderlab/mirtrace",
             info="is a quality control software for small RNA sequencing data developed by Friedländer lab (KTH, Sweden).",
+            doi="10.1186/s13059-018-1588-9",
         )
 
         # Find and load miRTrace summary statistics table
@@ -99,7 +100,7 @@ class MultiqcModule(BaseMultiqcModule):
 
         if "results" in cdict.keys():
             for record in cdict["results"]:
-                s_name = self.clean_s_name(record["verbosename"], f["root"])
+                s_name = self.clean_s_name(record["verbosename"], f)
                 parsed_data = {}
                 parsed_data["filename"] = record["filename"]
                 parsed_data["reads_total"] = record["stats"]["allSeqsCount"]
@@ -137,7 +138,7 @@ class MultiqcModule(BaseMultiqcModule):
                 body[s[0]] = s[1 : len(s)]
 
         for record in header[0 : len(header)]:
-            s_name = self.clean_s_name(record, f["root"])
+            s_name = self.clean_s_name(record, f)
             parsed_data = {}
             idx = header[0 : len(header)].index(record)
             for length in body:
@@ -163,7 +164,7 @@ class MultiqcModule(BaseMultiqcModule):
                 body[s[0]] = s[1 : len(s)]
 
         for record in header[0 : len(header)]:
-            s_name = self.clean_s_name(record, f["root"])
+            s_name = self.clean_s_name(record, f)
             parsed_data = {}
             idx = header[0 : len(header)].index(record)
             for clade in body:
@@ -189,7 +190,7 @@ class MultiqcModule(BaseMultiqcModule):
                 body[s[0]] = s[1 : len(s)]
 
         for record in header[0 : len(header)]:
-            s_name = self.clean_s_name(record, f["root"])
+            s_name = self.clean_s_name(record, f)
             parsed_data = {}
             idx = header[0 : len(header)].index(record)
             for depth in body:
@@ -201,7 +202,7 @@ class MultiqcModule(BaseMultiqcModule):
 
     # miRTrace QC Plot
     def mirtrace_qc_plot(self):
-        """ Generate the miRTrace QC Plot"""
+        """Generate the miRTrace QC Plot"""
 
         # Specify the order of the different possible categories
         keys = OrderedDict()
@@ -223,7 +224,7 @@ class MultiqcModule(BaseMultiqcModule):
 
     # miRTrace Read Length Distribution
     def mirtrace_length_plot(self):
-        """ Generate the miRTrace Read Length Distribution"""
+        """Generate the miRTrace Read Length Distribution"""
 
         data = dict()
         for s_name in self.length_data:
@@ -256,7 +257,7 @@ class MultiqcModule(BaseMultiqcModule):
 
     # miRTrace RNA Categories
     def mirtrace_rna_categories(self):
-        """ Generate the miRTrace RNA Categories"""
+        """Generate the miRTrace RNA Categories"""
 
         # Specify the order of the different possible categories
         keys = OrderedDict()
@@ -278,34 +279,34 @@ class MultiqcModule(BaseMultiqcModule):
 
     # miRTrace Contamination Check
     def mirtrace_contamination_check(self):
-        """ Generate the miRTrace Contamination Check"""
+        """Generate the miRTrace Contamination Check"""
 
         # A library of 24 colors. Should be enough for this plot
         color_lib = [
-            "rgb(166,206,227)",
-            "rgb(31,120,180)",
-            "rgb(178,223,138)",
-            "rgb(51,160,44)",
-            "rgb(251,154,153)",
-            "rgb(227,26,28)",
-            "rgb(253,191,111)",
-            "rgb(255,127,0)",
-            "rgb(202,178,214)",
-            "rgb(106,61,154)",
-            "rgb(255,255,153)",
-            "rgb(177,89,40)",
-            "rgb(141,211,199)",
-            "rgb(255,255,179)",
-            "rgb(190,186,218)",
-            "rgb(251,128,114)",
-            "rgb(128,177,211)",
-            "rgb(253,180,98)",
-            "rgb(179,222,105)",
-            "rgb(252,205,229)",
-            "rgb(217,217,217)",
-            "rgb(188,128,189)",
-            "rgb(204,235,197)",
-            "rgb(255,237,111)",
+            "#A6CEE3",
+            "#1F78B4",
+            "#B2DF8A",
+            "#33A02C",
+            "#FB9A99",
+            "#E31A1C",
+            "#FDBF6F",
+            "#FF7F00",
+            "#CAB2D6",
+            "#6A3D9A",
+            "#FFFF99",
+            "#B15928",
+            "#8DD3C7",
+            "#FFFFB3",
+            "#BEBADA",
+            "#FB8072",
+            "#80B1D3",
+            "#FDB462",
+            "#B3DE69",
+            "#FCCDE5",
+            "#D9D9D9",
+            "#BC80BD",
+            "#CCEBC5",
+            "#FFED6F",
         ]
 
         idx = 0
@@ -332,7 +333,7 @@ class MultiqcModule(BaseMultiqcModule):
 
     # miRTrace Read Length Distribution
     def mirtrace_complexity_plot(self):
-        """ Generate the miRTrace miRNA Complexity Plot"""
+        """Generate the miRTrace miRNA Complexity Plot"""
 
         data = dict()
         for s_name in self.complexity_data:

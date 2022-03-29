@@ -14,7 +14,7 @@ log = logging.getLogger(__name__)
 
 
 def parse_reports(self):
-    """ Find Picard TargetedPcrMetrics reports and parse their data """
+    """Find Picard TargetedPcrMetrics reports and parse their data"""
 
     # Set up vars
     self.picard_pcrmetrics_data = dict()
@@ -31,7 +31,7 @@ def parse_reports(self):
                 fn_search = re.search(r"INPUT(?:=|\s+)(\[?[^\s]+\]?)", l, flags=re.IGNORECASE)
                 if fn_search:
                     s_name = os.path.basename(fn_search.group(1).strip("[]"))
-                    s_name = self.clean_s_name(s_name, f["root"])
+                    s_name = self.clean_s_name(s_name, f)
 
             if s_name is not None:
                 if "TargetedPcrMetrics" in l and "## METRICS CLASS" in l:
