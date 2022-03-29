@@ -72,7 +72,6 @@ class MultiqcModule(BaseMultiqcModule):
         2. Number of fragments covered by the clade rooted at this taxon
         3. Number of fragments assigned directly to this taxon
         4. A rank code, indicating:
-            * (U)nclassified
             * (R)oot
             * (D)omain
             * (K)ingdom
@@ -92,7 +91,7 @@ class MultiqcModule(BaseMultiqcModule):
         """
 
         # Search regexes for stats
-        br_regex = re.compile(r"^(\d{1,3}\.\d{1,2})\t(\d+)\t(\d+)\t([\dRUDKPCOFGS-]{1,3})\t(\d+)(\s+)(.+)")
+        br_regex = re.compile(r"^(\d{1,3}\.\d{1,2})\t(\d+)\t(\d+)\t([\dRDKPCOFGS-]{1,3})\t(\d+)(\s+)(.+)")
         data = []
         for l in f["f"]:
             match = br_regex.search(l)
@@ -188,13 +187,6 @@ class MultiqcModule(BaseMultiqcModule):
             "max": 100,
             "scale": "PuBu",
         }
-        headers["% Unclassified"] = {
-            "title": "% Unclassified",
-            "description": "Percentage of reads that were unclassified",
-            "suffix": "%",
-            "max": 100,
-            "scale": "OrRd",
-        }
 
         # Get table data
         tdata = {}
@@ -202,8 +194,6 @@ class MultiqcModule(BaseMultiqcModule):
             tdata[s_name] = {}
             for row in d:
                 percent = (row['counts_rooted'] / self.bracken_sample_total_readcounts[s_name]) * 100
-                if row["rank_code"] == "U":
-                    tdata[s_name]['% Unclassified'] = percent
                 if row["rank_code"] == top_rank_code and row["classif"] in top_five:
                     tdata[s_name]['% Top 5'] = percent + tdata[s_name].get('% Top 5', 0)
                 if row["rank_code"] == top_rank_code and row["classif"] == top_five[0]:
@@ -259,10 +249,7 @@ class MultiqcModule(BaseMultiqcModule):
 
             # Add in unclassified reads and "other" - we presume from other species etc.
             for s_name, d in self.bracken_raw_data.items():
-                for row in d:
-                    if row["rank_code"] == "U":
-                        rank_data[s_name]["U"] = row["counts_rooted"]
-                        counts_shown[s_name] += row["counts_rooted"]
+                
                 rank_data[s_name]["other"] = self.bracken_sample_total_readcounts[s_name] - counts_shown[s_name]
 
                 # This should never happen... But it does sometimes if the total read count is a bit off
@@ -275,7 +262,6 @@ class MultiqcModule(BaseMultiqcModule):
                     rank_data[s_name]["other"] = 0
 
             rank_cats["other"] = {"name": "Other", "color": "#cccccc"}
-            rank_cats["U"] = {"name": "Unclassified", "color": "#d4949c"}
 
             cats.append(rank_cats)
             pd.append(rank_data)
@@ -287,11 +273,6 @@ class MultiqcModule(BaseMultiqcModule):
             helptext="""
                 To make this plot, the percentage of each sample assigned to a given taxa is summed across all samples.
                 The counts for these top five taxa are then plotted for each of the 9 different taxa ranks.
-                The unclassified count is always shown across all taxa ranks.
-
-                The total number of reads is approximated by dividing the number of `unclassified` reads by the percentage of
-                the library that they account for.
-                Note that this is only an approximation, and that bracken percentages don't always add to exactly 100%.
 
                 The category _"Other"_ shows the difference between the above total read count and the sum of the read counts
                 in the top 5 taxa shown + unclassified. This should cover all taxa _not_ in the top 5, +/- any rounding errors.
