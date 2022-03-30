@@ -6,6 +6,7 @@
 
 - Major spruce of the command line help, using the new [rich-click](https://github.com/ewels/rich-click) package
 - Drop some of the Python 2k compatability code (eg. custom requirements)
+- Fix jinja2 version specification given incompatibility with >=3.1.0
 
 ### New Modules
 
