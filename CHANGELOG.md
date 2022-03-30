@@ -6,6 +6,9 @@
 
 - Major spruce of the command line help, using the new [rich-click](https://github.com/ewels/rich-click) package
 - Drop some of the Python 2k compatability code (eg. custom requirements)
+- Improvements for running MultiQC in a Python environment, such as a Jupyter Notebook or script
+  - Fixed bug raised when removing logging file handlers between calls that arose when configuring the root logger with dictConfig ([#1643](https://github.com/ewels/MultiQC/issues/1643))
+- Added new config option `custom_table_header_config` to override any config for any table header
 - Fix jinja2 version specification given incompatibility with >=3.1.0
 
 ### New Modules
@@ -14,7 +17,10 @@ _nothing yet.._
 
 ### Module updates
 
-_nothing yet.._
+- **AdapterRemoval**
+  - Finally merge a fix for counts of reads that are discarded/collapsed ([#1647](https://github.com/ewels/MultiQC/issues/1647))
+- **Custom content**
+  - Only set id for custom content when id not set by metadata ([#1629](https://github.com/ewels/MultiQC/issues/1629))
 
 ## [MultiQC v1.12](https://github.com/ewels/MultiQC/releases/tag/v1.12) - 2022-02-08
 

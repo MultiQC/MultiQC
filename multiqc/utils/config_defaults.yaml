@@ -92,6 +92,7 @@ remove_sections: []
 section_comments: {}
 lint: False
 custom_plot_config: {}
+custom_table_header_config: {}
 
 ignore_symlinks: false
 ignore_images: true

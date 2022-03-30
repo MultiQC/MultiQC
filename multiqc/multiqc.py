@@ -330,7 +330,7 @@ def run(
     profile_runtime=False,
     no_ansi=False,
     custom_css_files=(),
-    kwargs={},
+    **kwargs,
 ):
     """MultiQC aggregates results from bioinformatics analyses across many samples into a single report.
 
