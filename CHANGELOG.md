@@ -18,6 +18,8 @@ _nothing yet.._
 
 - **AdapterRemoval**
   - Finally merge a fix for counts of reads that are discarded/collapsed ([#1647](https://github.com/ewels/MultiQC/issues/1647))
+  ** VEP **
+  - Fixed bug when `General Statistics` have a value of `-` ([#1656](https://github.com/ewels/MultiQC/pull/1656))
 - **Custom content**
   - Only set id for custom content when id not set by metadata ([#1629](https://github.com/ewels/MultiQC/issues/1629))
 
