@@ -127,8 +127,8 @@ class MultiqcModule(BaseMultiqcModule):
                     value = cells[1][4:-5]
                     if key == "Novel / existing variants":
                         if value == "-":
-                            self.vep_data[f["s_name"]][title]["Novel variants"] = 0
-                            self.vep_data[f["s_name"]][title]["Existing variants"] = 0
+                            self.vep_data[f["s_name"]][title]["Novel variants"] = None
+                            self.vep_data[f["s_name"]][title]["Existing variants"] = None
                             continue
                         values = value.split("/")
                         novel = values[0].split("(")[0].replace(" ", "")
@@ -136,7 +136,7 @@ class MultiqcModule(BaseMultiqcModule):
                         self.vep_data[f["s_name"]][title]["Novel variants"] = int(novel)
                         self.vep_data[f["s_name"]][title]["Existing variants"] = int(existing)
                     else:
-                        self.vep_data[f["s_name"]][title][key] = 0 if value == "-" else int(value)
+                        self.vep_data[f["s_name"]][title][key] = None if value == "-" else int(value)
 
     def parse_vep_txt(self, f):
         """This Function will parse VEP summary files with plain text format"""
@@ -157,8 +157,8 @@ class MultiqcModule(BaseMultiqcModule):
             key, value = line.split("\t")
             if key == "Novel / existing variants":
                 if value == "-":
-                    txt_data[title]["Novel variants"] = 0
-                    txt_data[title]["Existing variants"] = 0
+                    txt_data[title]["Novel variants"] = None
+                    txt_data[title]["Existing variants"] = None
                     continue
                 values = value.split("/")
                 novel = values[0].split("(")[0].replace(" ", "")
@@ -166,7 +166,7 @@ class MultiqcModule(BaseMultiqcModule):
                 txt_data[title]["Novel variants"] = int(novel)
                 txt_data[title]["Existing variants"] = int(existing)
             elif title != "VEP run statistics":
-                txt_data[title][key] = 0 if value == "-" else int(value)
+                txt_data[title][key] = None if value == "-" else int(value)
             else:
                 txt_data[title][key] = value
 
