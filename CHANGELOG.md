@@ -9,6 +9,7 @@
 - Improvements for running MultiQC in a Python environment, such as a Jupyter Notebook or script
   - Fixed bug raised when removing logging file handlers between calls that arose when configuring the root logger with dictConfig ([#1643](https://github.com/ewels/MultiQC/issues/1643))
 - Added new config option `custom_table_header_config` to override any config for any table header
+- Fixed edge-case bug in custom content where a `description` that doesn't terminate in `.` gave duplicate section descriptions.
 
 ### New Modules
 
