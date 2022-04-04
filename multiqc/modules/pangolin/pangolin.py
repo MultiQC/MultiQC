@@ -98,7 +98,8 @@ class MultiqcModule(BaseMultiqcModule):
                 if s_name in self.pangolin_data:
                     log.debug("Duplicate sample name found! Overwriting: {}".format(s_name))
                 # Avoid generic header ID that clashes with other modules
-                row["qc_status"] = row.pop("status")
+                if "qc_status" not in row:
+                    row["qc_status"] = row.pop("status")
                 self.pangolin_data[s_name] = row
                 # Just save the lineage key for now - we will sort out the colours later
                 self.lineage_colours[row["lineage"]] = None
