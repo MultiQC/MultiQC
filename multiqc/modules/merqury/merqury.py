@@ -142,7 +142,7 @@ class MultiqcModule(BaseMultiqcModule):
             config["xmax"] = xmax * 2.1
             config["ymax"] = ymax * 1.1
             config["height"] = 350
-            config["id"] = 1
+            config["id"] = "merqury_spectra_plot"
             config["title"] = "Merqury: Spectra plot"
             config["ylab"] = "Count"
             out.append(data)
@@ -153,7 +153,7 @@ class MultiqcModule(BaseMultiqcModule):
         General Statistics table at the top of the report"""
 
         headers = OrderedDict()
-        headers["com1"] = {
+        headers["kmers_assembly"] = {
             "title": "k-mers in assembly",
             "description": "k-mers in assembly",
             "min": 0,
@@ -161,7 +161,7 @@ class MultiqcModule(BaseMultiqcModule):
             "scale": "RdYlGn",
             "format": "{:,.2f}",
         }
-        headers["com2"] = {
+        headers["kmers_reads"] = {
             "title": "k-mers in read set",
             "description": "k-mers in read set",
             "min": 0,
@@ -190,7 +190,7 @@ class MultiqcModule(BaseMultiqcModule):
         General Statistics table at the top of the report"""
 
         headers = OrderedDict()
-        headers["qv1"] = {
+        headers["unique_kmers"] = {
             "title": "uniq k-mers",
             "description": "k-mers uniquely found only in the assembly",
             "min": 0,
@@ -198,8 +198,8 @@ class MultiqcModule(BaseMultiqcModule):
             "scale": "RdYlGn",
             "format": "{:,.2f}",
         }
-        headers["qv2"] = {
-            "title": "common k-mers",
+        headers["shared_kmers"] = {
+            "title": "shared k-mers",
             "description": "k-mers found in both assembly and the read set",
             "min": 0,
             # "suffix": self.contig_length_suffix,
