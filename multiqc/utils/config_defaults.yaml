@@ -98,6 +98,7 @@ ignore_symlinks: false
 ignore_images: true
 fn_ignore_dirs:
   - "multiqc_data"
+  - ".git"
   - "icarus_viewers" # quast
   - "runs_per_reference" # quast
   - "not_aligned" # quast
