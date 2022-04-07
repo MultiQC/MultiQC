@@ -31,14 +31,20 @@ class MultiqcModule(BaseMultiqcModule):
         self.completeness_data = dict()
         for f in self.find_log_files("merqury/completeness"):
             self.parse_completeness_log(f)
+            
+        self.completeness_data = self.ignore_samples(self.completeness_data)
 
         self.qv_data = dict()
         for f in self.find_log_files("merqury/qv"):
             self.parse_qv_log(f)
+            
+        self.qv_data = self.ignore_samples(self.qv_data)
 
         self.spectra_data = dict()
         for f in self.find_log_files("merqury/spectra"):
             self.parse_spectra_log(f)
+            
+        self.spectra_data = self.ignore_samples(self.spectra_data)
 
         log.info("Found {} completeness reports".format(len(self.completeness_data)))
         log.info("Found {} qv reports".format(len(self.qv_data)))

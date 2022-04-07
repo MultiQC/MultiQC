@@ -31,6 +31,8 @@ class MultiqcModule(BaseMultiqcModule):
         self.summary_data = dict()
         for f in self.find_log_files("genomescope2/summary"):
             self.parse_summary_log(f)
+            
+        self.summary_data = self.ignore_samples(self.summary_data)
 
         log.info("Found {} summary reports".format(len(self.summary_data)))
 
