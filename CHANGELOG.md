@@ -4,6 +4,8 @@
 
 ### MultiQC updates
 
+- Upgrade the jQuery tablesorter plugin to v2
+
 ### New Modules
 
 ### Module updates
