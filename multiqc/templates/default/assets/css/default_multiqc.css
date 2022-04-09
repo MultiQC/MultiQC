@@ -705,7 +705,7 @@ input.form-control[type="color"] {
 .mqc_table thead td {
   background-color: #ffffff;
 }
-.mqc_table thead th:after {
+.mqc_table thead th .tablesorter-header-inner:after {
   content: "";
   display: inline-block;
   width: 0;
@@ -715,14 +715,14 @@ input.form-control[type="color"] {
   border-right: 4px solid transparent;
   border-left: 4px solid transparent;
 }
-.mqc_table thead th.headerSortDown:after {
+.mqc_table thead th.tablesorter-headerAsc .tablesorter-header-inner:after {
   border-bottom: 4px dashed;
 }
-.mqc_table thead th.headerSortUp:after {
+.mqc_table thead th.tablesorter-headerDesc .tablesorter-header-inner:after {
   border-top: 4px dashed;
 }
-.mqc_table thead th.headerSortDown,
-.mqc_table thead th.headerSortUp {
+.mqc_table thead th.tablesorter-headerAsc,
+.mqc_table thead th.tablesorter-headerDesc {
   background-color: #ededed;
   color: #1ca8dd;
   border-bottom: 2px solid #1ca8dd;
