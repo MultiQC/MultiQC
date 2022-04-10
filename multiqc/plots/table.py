@@ -356,9 +356,9 @@ def make_table(dt):
     html += """
         <div id="{tid}_container" class="mqc_table_container">
             <div class="table-responsive mqc-table-responsive {cc}">
-                <table id="{tid}" class="table table-condensed mqc_table" data-title="{title}">
+                <table id="{tid}" class="table table-condensed mqc_table" data-title="{title}" data-sortlist="{sortlist}">
         """.format(
-        tid=table_id, title=table_title, cc=collapse_class
+        tid=table_id, title=table_title, cc=collapse_class, sortlist=dt.pconfig.get('defaultsort', ''),
     )
 
     # Build the header row
