@@ -28,7 +28,7 @@ class MultiqcModule(BaseMultiqcModule):
         self.pretext_data = dict()
 
         for f in self.find_log_files("pretext/png"):
-            self.pretext_data[f["s_name"].replace("_pretext", "")] = base64.b64encode(f["f"].read()).decode("utf-8")
+            self.pretext_data[f["s_name"] = base64.b64encode(f["f"].read()).decode("utf-8")
 
         self.pretext_data = self.ignore_samples(self.pretext_data)
 

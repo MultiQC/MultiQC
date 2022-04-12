@@ -311,6 +311,7 @@ genomescope2/summary:
   contents: "GenomeScope"
 genomescope2/png:
   fn: "*_Plot*.png"
+  fn: "*_plot*.png"
 gffcompare:
   fn: "*.stats"
   contents: "# gffcompare"
@@ -472,7 +473,7 @@ pangolin:
   contents: "pangolin_version"
   num_lines: 1
 pretext/png:
-  fn: "*heatmap_*.png"
+  fn: "*_pretext*.png"
 odgi:
   - fn: "*.og.stats.yaml"
   - fn: "*.og.stats.yml"
