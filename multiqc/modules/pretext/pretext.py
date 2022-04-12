@@ -26,16 +26,16 @@ class MultiqcModule(BaseMultiqcModule):
             doi="",
         )
         self.pretext_data = dict()
-        
+
         for f in self.find_log_files("pretext/png"):
             self.pretext_data[f["s_name"].replace("_pretext", "")] = base64.b64encode(f["f"].read()).decode("utf-8")
-        
+
         self.pretext_data = self.ignore_samples(self.pretext_data)
-        
+
         try:
             if not self.pretext_data:
                 raise UserWarning
-        
+
             image_format = "png"
             log.info("Found {} pretext image".format(len(self.pretext_data)))
             for image_name, image_string in self.pretext_data.items():
