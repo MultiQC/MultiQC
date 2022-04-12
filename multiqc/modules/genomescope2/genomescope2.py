@@ -30,10 +30,10 @@ class MultiqcModule(BaseMultiqcModule):
         # Find and load any GENOMESCOPE reports
         self.summary_data = dict()
 
-        self.summary_data = self.ignore_samples(self.summary_data)
-
         for f in self.find_log_files("genomescope2/summary"):
             self.parse_summary_log(f)
+
+        self.summary_data = self.ignore_samples(self.summary_data)
 
         try:
             if not self.summary_data:
