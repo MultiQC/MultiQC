@@ -46,9 +46,12 @@ class MultiqcModule(BaseMultiqcModule):
 
         self.spectra_data = self.ignore_samples(self.spectra_data)
 
-        log.info("Found {} completeness reports".format(len(self.completeness_data)))
-        log.info("Found {} qv reports".format(len(self.qv_data)))
-        log.info("Found {} spectra histograms".format(len(self.spectra_data)))
+        log.info(
+            "Found %d completeness and %d qv reports. Found %d spectra plots.",
+            len(self.completeness_data),
+            len(self.qv_data),
+            len(self.spectra_data),
+        )
 
         # Write parsed report data to a file
         self.write_data_file(self.completeness_data, "multiqc_merqury_completeness")

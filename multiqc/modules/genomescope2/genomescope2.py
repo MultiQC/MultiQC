@@ -29,23 +29,33 @@ class MultiqcModule(BaseMultiqcModule):
 
         # Find and load any GENOMESCOPE reports
         self.summary_data = dict()
-        for f in self.find_log_files("genomescope2/summary"):
-            self.parse_summary_log(f)
 
         self.summary_data = self.ignore_samples(self.summary_data)
 
-        log.info("Found {} summary reports".format(len(self.summary_data)))
+        for f in self.find_log_files("genomescope2/summary"):
+            self.parse_summary_log(f)
 
-        # Write parsed report data to a file
-        self.write_data_file(self.summary_data, "multiqc_genomescope_summary")
+        try:
+            if not self.summary_data:
+                raise UserWarning
+            log.info("Found %d log reports", len(self.summary_data))
 
-        self.add_section(name="Summary", anchor="genomescope-summary", plot=self.summary_table())
+            # Write parsed report data to a file
+            self.write_data_file(self.summary_data, "multiqc_genomescope_summary")
 
-        self.plot_figures()
+            self.add_section(name="Summary", anchor="genomescope-summary", plot=self.summary_table())
+
+            self.plot_figures()
+
+        except UserWarning:
+            pass
+        except Exception as err:
+            log.error(err)
+            log.debug(traceback.format_exc())
 
     def parse_summary_log(self, f):
         self.add_data_source(f)
-        s_name = f["s_name"].replace("_Summary.txt", "")
+        s_name = f["s_name"].fn_clean_exts()
         block = -1
         i = 0
         content = []
