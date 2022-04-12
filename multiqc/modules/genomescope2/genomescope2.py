@@ -55,7 +55,7 @@ class MultiqcModule(BaseMultiqcModule):
 
     def parse_summary_log(self, f):
         self.add_data_source(f)
-        s_name = f["s_name"].fn_clean_exts()
+        s_name = f["s_name"]
         block = -1
         i = 0
         content = []
