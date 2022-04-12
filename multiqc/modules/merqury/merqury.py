@@ -46,33 +46,42 @@ class MultiqcModule(BaseMultiqcModule):
 
         self.spectra_data = self.ignore_samples(self.spectra_data)
 
-        log.info(
-            "Found %d completeness and %d qv reports. Found %d spectra plots.",
-            len(self.completeness_data),
-            len(self.qv_data),
-            len(self.spectra_data),
-        )
-
-        # Write parsed report data to a file
-        self.write_data_file(self.completeness_data, "multiqc_merqury_completeness")
-        self.write_data_file(self.qv_data, "multiqc_merqury_qv")
-        self.write_data_file(self.spectra_data, "multiqc_merqury_spectra")
-
-        # self.merqury_general_stats_table()
-        self.add_section(
-            name="k-mer completeness (recovery rate)", anchor="merqury-completeness", plot=self.completeness_table()
-        )
-
-        self.add_section(name="QV estimation", anchor="merqury-qv", plot=self.qv_table())
-
-        for s_name in self.spectra_data.keys():
-            self.add_section(
-                name="Spectra plots for " + s_name,
-                anchor="merqury-spectra",
-                plot=self.spectra_plot(self.spectra_data[s_name], s_name),
+        try:
+            if (not self.completeness_data) & (not self.qv_data) & (not self.spectra_data):
+                raise UserWarning
+            log.info(
+                "Found %d completeness and %d qv reports. Found %d spectra plots.",
+                len(self.completeness_data),
+                len(self.qv_data),
+                len(self.spectra_data),
             )
 
-        self.plot_figures()
+            # Write parsed report data to a file
+            self.write_data_file(self.completeness_data, "multiqc_merqury_completeness")
+            self.write_data_file(self.qv_data, "multiqc_merqury_qv")
+            self.write_data_file(self.spectra_data, "multiqc_merqury_spectra")
+
+            # self.merqury_general_stats_table()
+            self.add_section(
+                name="k-mer completeness (recovery rate)", anchor="merqury-completeness", plot=self.completeness_table()
+            )
+
+            self.add_section(name="QV estimation", anchor="merqury-qv", plot=self.qv_table())
+
+            for s_name in self.spectra_data.keys():
+                self.add_section(
+                    name="Spectra plots for " + s_name,
+                    anchor="merqury-spectra",
+                    plot=self.spectra_plot(self.spectra_data[s_name], s_name),
+                )
+
+            self.plot_figures()
+
+        except UserWarning:
+            pass
+        except Exception as err:
+            log.error(err)
+            log.debug(traceback.format_exc())
 
     def parse_completeness_log(self, f):
         self.add_data_source(f, f["s_name"])
