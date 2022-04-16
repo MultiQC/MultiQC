@@ -545,9 +545,13 @@ class MultiqcModule(BaseMultiqcModule):
 
         for s_name, d in self.somalier_data.items():
             if "X_depth_mean" in d and "original_pedigree_sex" in d:
+                if d["gt_depth_mean"] == 0:
+                    y = 0
+                else:
+                    y = 2 * d["X_depth_mean"] / d["gt_depth_mean"]
                 data[s_name] = {
                     "x": (random.random() - 0.5) * 0.1 + sex_index.get(d["original_pedigree_sex"], 2),
-                    "y": 2 * d["X_depth_mean"] / d["gt_depth_mean"],
+                    "y": y,
                 }
 
         if len(data) > 0:
