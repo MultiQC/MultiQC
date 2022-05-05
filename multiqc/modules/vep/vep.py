@@ -125,18 +125,16 @@ class MultiqcModule(BaseMultiqcModule):
                 if len(cells) == 2:
                     key = cells[0][4:-5]
                     value = cells[1][4:-5]
-                    try:
-                        if key == "Novel / existing variants":
-                            values = value.split("/")
-                            novel = values[0].split("(")[0].replace(" ", "")
-                            existing = values[1].split("(")[0].replace(" ", "")
-                            self.vep_data[f["s_name"]][title]["Novel variants"] = int(novel)
-                            self.vep_data[f["s_name"]][title]["Existing variants"] = int(existing)
-                        else:
-                            self.vep_data[f["s_name"]][title][key] = int(value)
-                    except (IndexError, ValueError):
-                        # Table cells can just have "-". Don't log values if so. See issue #1597
-                        pass
+                    if value == "-":
+                        continue
+                    if key == "Novel / existing variants":
+                        values = value.split("/")
+                        novel = values[0].split("(")[0].replace(" ", "")
+                        existing = values[1].split("(")[0].replace(" ", "")
+                        self.vep_data[f["s_name"]][title]["Novel variants"] = int(novel)
+                        self.vep_data[f["s_name"]][title]["Existing variants"] = int(existing)
+                    else:
+                        self.vep_data[f["s_name"]][title][key] = int(value)
 
     def parse_vep_txt(self, f):
         """This Function will parse VEP summary files with plain text format"""
@@ -155,11 +153,9 @@ class MultiqcModule(BaseMultiqcModule):
                 txt_data[title] = {}
                 continue
             key, value = line.split("\t")
+            if value == "-":
+                continue
             if key == "Novel / existing variants":
-                if value == "-":
-                    txt_data[title]["Novel variants"] = 0
-                    txt_data[title]["Existing variants"] = 0
-                    continue
                 values = value.split("/")
                 novel = values[0].split("(")[0].replace(" ", "")
                 existing = values[1].split("(")[0].replace(" ", "")

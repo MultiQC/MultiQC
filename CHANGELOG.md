@@ -7,6 +7,11 @@
 - Major spruce of the command line help, using the new [rich-click](https://github.com/ewels/rich-click) package
 - Drop some of the Python 2k compatability code (eg. custom requirements)
 - Matplotlib line plots now respect `xLog: True` and `yLog: True` in config ([#1631](https://github.com/ewels/MultiQC/issues/1631))
+- Improvements for running MultiQC in a Python environment, such as a Jupyter Notebook or script
+  - Fixed bug raised when removing logging file handlers between calls that arose when configuring the root logger with dictConfig ([#1643](https://github.com/ewels/MultiQC/issues/1643))
+- Added new config option `custom_table_header_config` to override any config for any table header
+- Fixed edge-case bug in custom content where a `description` that doesn't terminate in `.` gave duplicate section descriptions.
+- Tidied the verbose log to remove some very noisy statements and add summaries for skipped files in the search
 
 ### New Modules
 
@@ -14,7 +19,18 @@ _nothing yet.._
 
 ### Module updates
 
-- Only set id for custom content when id not set by metadata ([#1629](https://github.com/ewels/MultiQC/issues/1629))
+- **AdapterRemoval**
+  - Finally merge a fix for counts of reads that are discarded/collapsed ([#1647](https://github.com/ewels/MultiQC/issues/1647))
+- **VEP**
+  - Fixed bug when `General Statistics` have a value of `-` ([#1656](https://github.com/ewels/MultiQC/pull/1656))
+- **Custom content**
+  - Only set id for custom content when id not set by metadata ([#1629](https://github.com/ewels/MultiQC/issues/1629))
+- **Nanostat**
+  - Removed HTML escaping of special characters in the log to fix bug in jinja2 v3.10 removing `jinja2.escape()` ([#1659](https://github.com/ewels/MultiQC/pull/1659))
+- **Pangolin**
+  - Updated module to handle outputs from Pangolin v4 ([#1660](https://github.com/ewels/MultiQC/pull/1660))
+- **Somalier**
+  - Handle zero mean X depth in _Sex_ plot ([#1670](https://github.com/ewels/MultiQC/pull/1670))
 
 ## [MultiQC v1.12](https://github.com/ewels/MultiQC/releases/tag/v1.12) - 2022-02-08
 
