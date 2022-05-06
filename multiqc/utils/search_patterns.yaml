@@ -194,12 +194,23 @@ ccs/v5:
   contents: '"id": "ccs_processing"'
   fn: "*.json"
 checkatlas/summary:
-  fn: "*_checkatlas.tsv"
-checkatlas/umap:
-  fn: "*_checkatlas_umap.png"
+  fn: "*_checkatlas_summ.tsv"
 checkatlas/adata:
   fn: "*_checkatlas_adata.tsv"
-  shared: true
+checkatlas/qc:
+  fn: "*_checkatlas_qc.png"
+checkatlas/umap:
+  fn: "*_checkatlas_umap.png"
+checkatlas/tsne:
+  fn: "*_checkatlas_tsne.png"
+checkatlas/cluster:
+  fn: "*_checkatlas_mcluster.tsv"
+checkatlas/annotation:
+  fn: "*_checkatlas_mannot.tsv"
+checkatlas/dimred:
+  fn: "*_checkatlas_mdimred.tsv"
+checkatlas/specificity:
+  fn: "*_checkatlas_mspecificity.tsv"
 checkqc:
   contents: "instrument_and_reagent_type"
   fn: "*.json"
