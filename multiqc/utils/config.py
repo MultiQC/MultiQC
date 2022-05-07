@@ -53,7 +53,7 @@ with open(searchp_fn) as f:
 # Other defaults that can't be set in YAML
 data_tmp_dir = "/tmp"  # will be overwritten by core script
 modules_dir = os.path.join(MULTIQC_DIR, "modules")
-creation_date = datetime.now().strftime("%Y-%m-%d, %H:%M")
+creation_date = datetime.now().astimezone().strftime("%Y-%m-%d, %H:%M %Z")
 working_dir = os.getcwd()
 analysis_dir = [os.getcwd()]
 output_dir = os.path.realpath(os.getcwd())
