@@ -87,7 +87,10 @@ def init():
         "skipped_not_a_file": 0,
         "skipped_ignore_pattern": 0,
         "skipped_filesize_limit": 0,
+        "skipped_module_specific_max_filesize": 0,
         "skipped_no_match": 0,
+        "skipped_directory_fn_ignore_dirs": 0,
+        "skipped_file_contents_search_errors": 0,
     }
 
     global searchfiles
@@ -181,7 +184,6 @@ def get_filelist(run_module_names):
         # Check that we don't want to ignore this file
         i_matches = [n for n in config.fn_ignore_files if fnmatch.fnmatch(fn, n)]
         if len(i_matches) > 0:
-            logger.debug("Ignoring file as matched an ignore pattern: {}".format(fn))
             file_search_stats["skipped_ignore_pattern"] += 1
             return False
 
@@ -250,7 +252,7 @@ def get_filelist(run_module_names):
                         removed_dirs = [
                             os.path.join(root, d) for d in set(orig_dirnames).symmetric_difference(set(dirnames))
                         ]
-                        logger.debug("Ignoring directory as matched fn_ignore_dirs: {}".format(", ".join(removed_dirs)))
+                        file_search_stats["skipped_directory_fn_ignore_dirs"] += len(removed_dirs)
                         orig_dirnames = dirnames[:]
                 for n in config.fn_ignore_paths:
                     dirnames[:] = [d for d in dirnames if not fnmatch.fnmatch(os.path.join(root, d), n.rstrip(os.sep))]
@@ -258,18 +260,16 @@ def get_filelist(run_module_names):
                         removed_dirs = [
                             os.path.join(root, d) for d in set(orig_dirnames).symmetric_difference(set(dirnames))
                         ]
-                        logger.debug(
-                            "Ignoring directory as matched fn_ignore_paths: {}".format(", ".join(removed_dirs))
-                        )
+                        file_search_stats["skipped_directory_fn_ignore_dirs"] += len(removed_dirs)
 
                 # Skip *this* directory if matches ignore params
                 d_matches = [n for n in config.fn_ignore_dirs if fnmatch.fnmatch(bname, n.rstrip(os.sep))]
                 if len(d_matches) > 0:
-                    logger.debug("Ignoring directory as matched fn_ignore_dirs: {}".format(bname))
+                    file_search_stats["skipped_directory_fn_ignore_dirs"] += 1
                     continue
                 p_matches = [n for n in config.fn_ignore_paths if fnmatch.fnmatch(root, n.rstrip(os.sep))]
                 if len(p_matches) > 0:
-                    logger.debug("Ignoring directory as matched fn_ignore_paths: {}".format(root))
+                    file_search_stats["skipped_directory_fn_ignore_dirs"] += 1
                     continue
 
                 # Sanity check - make sure that we're not just running in the installation directory
@@ -313,12 +313,20 @@ def get_filelist(run_module_names):
 
     runtimes["total_sp"] = time.time() - total_sp_starttime
 
+    # Debug log summary about what we skipped
+    summaries = []
+    for key in sorted(file_search_stats, key=file_search_stats.get, reverse=True):
+        if "skipped_" in key and file_search_stats[key] > 0:
+            summaries.append(f"{key}: {file_search_stats[key]}")
+    logger.debug(f"Summary of files that were skipped by the search: [{'] // ['.join(summaries)}]")
+
 
 def search_file(pattern, f, module_key):
     """
     Function to searach a single file for a single search pattern.
     """
 
+    global file_search_stats
     fn_matched = False
     contents_matched = False
     # Use mimetypes to exclude binary files where possible
@@ -332,9 +340,7 @@ def search_file(pattern, f, module_key):
     # Search pattern specific filesize limit
     if pattern.get("max_filesize") is not None and "filesize" in f:
         if f["filesize"] > pattern.get("max_filesize"):
-            logger.debug(
-                "File ignored by {} because it exceeded search pattern filesize limit: {}".format(module_key, f["fn"])
-            )
+            file_search_stats["skipped_module_specific_max_filesize"] += 1
             return False
 
     # Search by file name (glob)
@@ -356,9 +362,10 @@ def search_file(pattern, f, module_key):
         if pattern.get("contents_re") is not None:
             repattern = re.compile(pattern["contents_re"])
         try:
-            with io.open(os.path.join(f["root"], f["fn"]), "r", encoding="utf-8") as f:
+            file_path = os.path.join(f["root"], f["fn"])
+            with io.open(file_path, "r", encoding="utf-8") as fh:
                 l = 1
-                for line in f:
+                for line in fh:
                     # Search by file contents (string)
                     if pattern.get("contents") is not None:
                         if pattern["contents"] in line:
@@ -377,10 +384,12 @@ def search_file(pattern, f, module_key):
                     if pattern.get("num_lines") and l >= pattern.get("num_lines"):
                         break
                     l += 1
-        except (IOError, OSError, ValueError, UnicodeDecodeError):
+        # Can't open file - usually because it's a binary file and we're reading as utf-8
+        except (IOError, OSError, ValueError, UnicodeDecodeError) as e:
             if config.report_readerrors:
-                logger.debug("Couldn't read file when looking for output: {}".format(f["fn"]))
-                return False
+                logger.debug(f"Couldn't read file when looking for output: {file_path}, {e}")
+            file_search_stats["skipped_file_contents_search_errors"] += 1
+            return False
 
     return fn_matched and contents_matched
 

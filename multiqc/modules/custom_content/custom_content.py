@@ -174,7 +174,8 @@ def custom_module_classes():
                     # Guess c_id if no information known
                     if k == "custom_content":
                         c_id = s_name
-                        m_config["id"] = c_id
+                        if not m_config.get("id"):
+                            m_config["id"] = c_id
 
                     # Merge with config from a MultiQC config file if we have it
                     m_config.update(mod_cust_config.get(c_id, {}))
@@ -414,7 +415,7 @@ class MultiqcModule(BaseMultiqcModule):
         # Don't use exactly the same title / description text as the main module
         if section_name == self.name:
             section_name = None
-        if section_description == self.info:
+        if section_description.strip(".") == self.info.strip("."):
             section_description = ""
 
         self.add_section(name=section_name, anchor=c_id, description=section_description, plot=plot, content=content)

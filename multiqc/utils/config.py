@@ -132,8 +132,6 @@ def mqc_load_config(yaml_config):
         except yaml.scanner.ScannerError as e:
             logger.error("Error parsing config YAML: {}".format(e))
             sys.exit(1)
-    else:
-        logger.debug("No MultiQC config found: {}".format(yaml_config))
 
 
 def mqc_cl_config(cl_config):
@@ -157,19 +155,23 @@ def mqc_cl_config(cl_config):
 def mqc_add_config(conf, conf_path=None):
     """Add to the global config with given MultiQC config dict"""
     global custom_css_files, fn_clean_exts, fn_clean_trim
+    log_new_config = {}
+    log_filename_patterns = []
+    log_filename_clean_extensions = []
+    log_filename_clean_trimmings = []
     for c, v in conf.items():
         if c == "sp":
             # Merge filename patterns instead of replacing
             sp.update(v)
-            logger.debug("Added to filename patterns: {}".format(v))
+            log_filename_patterns.append(v)
         elif c == "extra_fn_clean_exts":
             # Prepend to filename cleaning patterns instead of replacing
             fn_clean_exts[0:0] = v
-            logger.debug("Added to filename clean extensions: {}".format(v))
+            log_filename_clean_extensions.append(v)
         elif c == "extra_fn_clean_trim":
             # Prepend to filename cleaning patterns instead of replacing
             fn_clean_trim[0:0] = v
-            logger.debug("Added to filename clean trimmings: {}".format(v))
+            log_filename_clean_trimmings.append(v)
         elif c in ["custom_logo"] and v:
             # Resolve file paths - absolute or cwd, or relative to config file
             fpath = v
@@ -180,7 +182,7 @@ def mqc_add_config(conf, conf_path=None):
             else:
                 logger.error("Config '{}' path not found, skipping ({})".format(c, fpath))
                 continue
-            logger.debug("New config '{}': {}".format(c, fpath))
+            log_new_config[c] = fpath
             update({c: fpath})
         elif c == "custom_css_files":
             for fpath in v:
@@ -196,8 +198,16 @@ def mqc_add_config(conf, conf_path=None):
                     custom_css_files = []
                 custom_css_files.append(fpath)
         else:
-            logger.debug("New config '{}': {}".format(c, v))
+            log_new_config[c] = v
             update({c: v})
+    if len(log_new_config) > 0:
+        logger.debug(f"New config: {log_new_config}")
+    if len(log_filename_patterns) > 0:
+        logger.debug(f"Added to filename patterns: {log_filename_patterns}")
+    if len(log_filename_clean_extensions) > 0:
+        logger.debug(f"Added to filename clean extensions: {log_filename_clean_extensions}")
+    if len(log_filename_clean_trimmings) > 0:
+        logger.debug(f"Added to filename clean trimmings: {log_filename_clean_trimmings}")
 
 
 #### Function to load file containing a list of alternative sample-name swaps

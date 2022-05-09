@@ -5,7 +5,6 @@
 from __future__ import print_function
 from collections import OrderedDict
 import logging
-import jinja2
 
 from multiqc import config
 from multiqc.utils import mqc_colour
@@ -34,11 +33,11 @@ class MultiqcModule(BaseMultiqcModule):
     ]
 
     _KEYS_READ_Q = [
-        "&gt;Q5",
-        "&gt;Q7",
-        "&gt;Q10",
-        "&gt;Q12",
-        "&gt;Q15",
+        ">Q5",
+        ">Q7",
+        ">Q10",
+        ">Q12",
+        ">Q15",
     ]
     _stat_types = ("aligned", "seq summary", "fastq", "fasta", "unrecognized")
 
@@ -97,7 +96,6 @@ class MultiqcModule(BaseMultiqcModule):
         nano_stats = {}
         for line in f["f"]:
 
-            line = jinja2.escape(line)
             parts = line.strip().split(":")
             if len(parts) == 0:
                 continue
@@ -274,12 +272,12 @@ class MultiqcModule(BaseMultiqcModule):
         stat_type = "unrecognized"
         # Order of keys, from >Q5 to >Q15
         _range_names = {
-            "&gt;Q5": "&lt;Q5",
-            "&gt;Q7": "Q5-7",
-            "&gt;Q10": "Q7-10",
-            "&gt;Q12": "Q10-12",
-            "&gt;Q15": "Q12-15",
-            "rest": "&gt;Q15",
+            ">Q5": "<Q5",
+            ">Q7": "Q5-7",
+            ">Q10": "Q7-10",
+            ">Q12": "Q10-12",
+            ">Q15": "Q12-15",
+            "rest": ">Q15",
         }
         for s_name, data_dict in self.nanostat_data.items():
             reads_total, stat_type = _get_total_reads(data_dict)
@@ -305,7 +303,7 @@ class MultiqcModule(BaseMultiqcModule):
                         log.error(f"Error on {s_name} {range_name} {data_key} . Negative number of reads")
                     prev_reads = reads_gt
                 else:
-                    data_key = f"&gt;Q15_{stat_type}"
+                    data_key = f">Q15_{stat_type}"
                     bar_data[s_name][range_name] = data_dict[data_key]
 
         cats = OrderedDict()

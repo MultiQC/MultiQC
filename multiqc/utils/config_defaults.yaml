@@ -92,11 +92,13 @@ remove_sections: []
 section_comments: {}
 lint: False
 custom_plot_config: {}
+custom_table_header_config: {}
 
 ignore_symlinks: false
 ignore_images: true
 fn_ignore_dirs:
   - "multiqc_data"
+  - ".git"
   - "icarus_viewers" # quast
   - "runs_per_reference" # quast
   - "not_aligned" # quast
