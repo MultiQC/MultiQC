@@ -298,6 +298,17 @@ For example, the GATK module has a section with the title _"Compare Overlap"_. W
 in the report's left hand side navigation, the web browser URL has `#gatk-compare-overlap`
 appended. Here, you would add `gatk-compare-overlap` to the `remove_sections` config.
 
+Finally, you can prevent MultiQC from finding the files for a module or submodule by customising
+its search pattern. For example, to skip Picard Base Calling metrics, you could use the following:
+
+```yaml
+sp:
+  picard/collectilluminabasecallingmetrics:
+    skip: true
+```
+
+The search pattern identifiers can be found in the documentation below for each module.
+
 #### Removing General Statistics
 
 The General Statistics is a bit of a special case in MultiQC, but there is added code to make it
@@ -503,6 +514,41 @@ custom_plot_config:
 ```
 
 ## Customising tables
+
+Much like with the custom plot config above, you can override almost any configuration options for tables.
+To see what's available, read the documentation about [Creating a table](#creating-a-table) below.
+
+Tables have configuration at two levels. Table-wide configs are the same as plot configs and can
+be overridden with `custom_plot_config` as described above.
+
+Headers have their own configuration which can be overriden with `custom_table_header_config`.
+
+Examples are often more useful for this kind of thing than words, so here are a few:
+
+For the Picard HSMetrics table, we can use a custom table header for the first column
+and change the default minimum value for the colour scale for all columns:
+
+> Here `min` is a _header_ config but we're setting it at table config level.
+> This means it will be used as a default for all columns in the table if the module
+> doesn't itself define anything specific for that column.
+> If it does, you need to overwrite that specific column using `custom_table_header_config`
+
+```yaml
+custom_plot_config:
+  picard_hsmetrics_table:
+    col1_header: "Identifiers"
+    min: 1000
+```
+
+Now for header-specific changes.
+To change the number of decimals used in the General Statistics table for the Qualimap _Mean Coverage_ column:
+
+```yaml
+custom_table_header_config:
+  general_stats_table:
+    mean_coverage:
+      format: "{:,.20f}"
+```
 
 ### Hiding columns
 

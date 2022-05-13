@@ -24,11 +24,12 @@ class DragenCoverageMetrics(BaseMultiqcModule):
         data_by_phenotype_by_sample = defaultdict(dict)
 
         for f in self.find_log_files("dragen/coverage_metrics"):
-            data_by_phenotype = parse_coverage_metrics(f)
-            if f["s_name"] in data_by_phenotype_by_sample:
-                log.debug("Duplicate sample name found! Overwriting: {}".format(f["s_name"]))
+            s_name, data_by_phenotype = parse_coverage_metrics(f)
+            s_name = self.clean_s_name(s_name, f)
+            if s_name in data_by_phenotype_by_sample:
+                log.debug(f"Duplicate sample name found! Overwriting: {s_name}")
             self.add_data_source(f, section="stats")
-            data_by_phenotype_by_sample[f["s_name"]].update(data_by_phenotype)
+            data_by_phenotype_by_sample[s_name].update(data_by_phenotype)
 
         # Filter to strip out ignored sample names:
         data_by_phenotype_by_sample = self.ignore_samples(data_by_phenotype_by_sample)
@@ -396,5 +397,4 @@ def parse_coverage_metrics(f):
 
     m = re.search(r"(.*)\.(\S*)_coverage_metrics_?(\S*)?.csv", f["fn"])
     sample, phenotype = m.group(1), m.group(2)
-    f["s_name"] = sample
-    return {phenotype: data}
+    return sample, {phenotype: data}

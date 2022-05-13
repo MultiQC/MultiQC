@@ -5,7 +5,6 @@
 from __future__ import print_function
 from collections import OrderedDict
 import logging
-import jinja2
 
 from multiqc import config
 from multiqc.utils import mqc_colour
@@ -34,13 +33,13 @@ class MultiqcModule(BaseMultiqcModule):
     ]
 
     _KEYS_READ_Q = [
-        "&gt;Q5",
-        "&gt;Q7",
-        "&gt;Q10",
-        "&gt;Q12",
-        "&gt;Q15",
+        ">Q5",
+        ">Q7",
+        ">Q10",
+        ">Q12",
+        ">Q15",
     ]
-    _stat_types = ("aligned", "seq summary", "unrecognized")
+    _stat_types = ("aligned", "seq summary", "fastq", "fasta", "unrecognized")
 
     def __init__(self):
 
@@ -57,6 +56,8 @@ class MultiqcModule(BaseMultiqcModule):
         self.nanostat_data = dict()
         self.has_aligned = False
         self.has_seq_summary = False
+        self.has_fastq = False
+        self.has_fasta = False
         for f in self.find_log_files("nanostat", filehandles=True):
             self.parse_nanostat_log(f)
 
@@ -76,9 +77,14 @@ class MultiqcModule(BaseMultiqcModule):
             self.nanostat_stats_table("aligned")
         if self.has_seq_summary:
             self.nanostat_stats_table("seq summary")
+        if self.has_fastq:
+            self.nanostat_stats_table("fastq")
+        if self.has_fasta:
+            self.nanostat_stats_table("fasta")
 
         # Quality distribution Plot
-        self.reads_by_quality_plot()
+        if self.has_aligned or self.has_seq_summary or self.has_fastq:
+            self.reads_by_quality_plot()
 
     def parse_nanostat_log(self, f):
         """Parse output from NanoStat
@@ -90,7 +96,6 @@ class MultiqcModule(BaseMultiqcModule):
         nano_stats = {}
         for line in f["f"]:
 
-            line = jinja2.escape(line)
             parts = line.strip().split(":")
             if len(parts) == 0:
                 continue
@@ -111,6 +116,12 @@ class MultiqcModule(BaseMultiqcModule):
         elif "Active channels" in nano_stats:
             stat_type = "seq summary"
             self.has_seq_summary = True
+        elif "Mean read quality" in nano_stats:
+            stat_type = "fastq"
+            self.has_fastq = True
+        elif "Mean read length" in nano_stats:
+            stat_type = "fasta"
+            self.has_fasta = True
         else:
             log.debug(f"Did not recognise NanoStat file '{f['fn']}' - skipping")
             return
@@ -230,10 +241,15 @@ class MultiqcModule(BaseMultiqcModule):
 
         # Add the report section
         description = ""
+        if stat_type == "fasta":
+            description = "NanoStat statistics from FASTA files."
+        if stat_type == "fastq":
+            description = "NanoStat statistics from FastQ files."
         if stat_type == "aligned":
-            description = "NanoStat statistics from FastQ, FASTA or BAM files."
+            description = "NanoStat statistics from BAM files."
         if stat_type == "seq summary":
             description = "NanoStat statistics from albacore or guppy summary files."
+
         self.add_section(
             name="{} stats".format(stat_type.replace("_", " ").capitalize()),
             anchor="nanostat_{}_stats".format(stat_type.replace(" ", "_")),
@@ -256,20 +272,23 @@ class MultiqcModule(BaseMultiqcModule):
         stat_type = "unrecognized"
         # Order of keys, from >Q5 to >Q15
         _range_names = {
-            "&gt;Q5": "&lt;Q5",
-            "&gt;Q7": "Q5-7",
-            "&gt;Q10": "Q7-10",
-            "&gt;Q12": "Q10-12",
-            "&gt;Q15": "Q12-15",
-            "rest": "&gt;Q15",
+            ">Q5": "<Q5",
+            ">Q7": "Q5-7",
+            ">Q10": "Q7-10",
+            ">Q12": "Q10-12",
+            ">Q15": "Q12-15",
+            "rest": ">Q15",
         }
         for s_name, data_dict in self.nanostat_data.items():
             reads_total, stat_type = _get_total_reads(data_dict)
+            if stat_type == "fasta":
+                log.debug(f"Sample '{s_name}' has no quality metrics - excluded from quality plot")
+                continue
             if s_name in bar_data and stat_type == "aligned":
-                log.debug("Sample '{s_name}' duplicated in the quality plot - ignoring aligned data")
+                log.debug(f"Sample '{s_name}' duplicated in the quality plot - ignoring aligned data")
                 continue
             elif s_name in bar_data and stat_type == "seq summary":
-                log.debug("Sample '{s_name}' duplicated in the quality plot - overwriting with seq summary data")
+                log.debug(f"Sample '{s_name}' duplicated in the quality plot - overwriting with seq summary data")
             bar_data[s_name] = {}
 
             prev_reads = reads_total
@@ -284,7 +303,7 @@ class MultiqcModule(BaseMultiqcModule):
                         log.error(f"Error on {s_name} {range_name} {data_key} . Negative number of reads")
                     prev_reads = reads_gt
                 else:
-                    data_key = f"&gt;Q15_{stat_type}"
+                    data_key = f">Q15_{stat_type}"
                     bar_data[s_name][range_name] = data_dict[data_key]
 
         cats = OrderedDict()

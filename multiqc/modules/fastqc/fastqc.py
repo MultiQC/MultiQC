@@ -62,7 +62,7 @@ class MultiqcModule(BaseMultiqcModule):
                 fqc_zip = zipfile.ZipFile(os.path.join(f["root"], f["fn"]))
             except Exception as e:
                 log.warning("Couldn't read '{}' - Bad zip file".format(f["fn"]))
-                log.debug("Bad zip file error:\n{}".format(e))
+                log.debug("Bad zip file error: {}".format(e))
                 continue
             # FastQC zip files should have just one directory inside, containing report
             d_name = fqc_zip.namelist()[0]
