@@ -44,6 +44,9 @@ class MultiqcModule(BaseMultiqcModule):
             if parsed is not None:
                 self.gopeaks_data[f["s_name"]] = parsed
 
+                # add gopeaks data to multiqc_source.txt
+                self.add_data_source(f)
+
             # filter away samples if MultiQC user does not want them
             self.gopeaks_data = self.ignore_samples(self.gopeaks_data)
 
@@ -54,6 +57,8 @@ class MultiqcModule(BaseMultiqcModule):
             raise UserWarning
         if len(self.gopeaks_data) > 0:
             log.info("Found {} samples".format(len(self.gopeaks_data)))
+
+        self.write_data_file(self.gopeaks_data, "multiqc_gopeaks")
 
         # Add sample log info to basic stats table
         self.gopeaks_general_stats_table()
