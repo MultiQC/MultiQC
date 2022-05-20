@@ -16,6 +16,7 @@
 ### New Modules
 
 - **cellranger**
+  - parse cellranger quality reports from VDJ and count analysis
 
 ### Module updates
 
