@@ -28,6 +28,7 @@ class MultiqcModule(BaseMultiqcModule, CellRangerCountMixin, CellRangerVdjMixin)
             anchor="cellranger",
             href="https://support.10xgenomics.com/single-cell-gene-expression/software/pipelines/latest/what-is-cell-ranger",
             info="Cellranger analyze single cell expression or vdj data produced by 10X Genomics.",
+            doi='10.1038/ncomms14049',
         )
 
         # Set up class objects to hold parsed data
