@@ -15,7 +15,7 @@
 
 ### New Modules
 
-_nothing yet.._
+- **cellranger**
 
 ### Module updates
 

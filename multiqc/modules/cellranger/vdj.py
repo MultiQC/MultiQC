@@ -1,0 +1,244 @@
+#!/usr/bin/env python
+
+""" MultiQC module to parse output from Cellranger count """
+
+import logging
+import json
+from collections import OrderedDict
+from multiqc import config
+from multiqc.plots import linegraph, table
+from .utils_functions import update_dict, set_hidden_cols, transform_data
+
+# Initialise the logger
+log = logging.getLogger(__name__)
+
+class CellRangerVdjMixin:
+    """Cellranger count report parser"""
+
+    def parse_vdj_html(self):
+        self.cellrangervdj_mapping = dict()
+        self.cellrangervdj_annotations = dict()
+        self.cellrangervdj_general_data = dict()
+        self.cellrangervdj_warnings = dict()
+        self.cellrangervdj_plots_conf = {'bc': dict(), 'genes': dict()}
+        self.cellrangervdj_plots_data = {'bc': dict(), 'genes': dict()}
+        self.vdj_general_data_headers = OrderedDict()
+        self.vdj_mapping_headers = OrderedDict()
+        self.vdj_annotations_headers = OrderedDict()
+        self.vdj_warnings_headers = OrderedDict()
+
+        for f in self.find_log_files("cellranger/vdj_html", filehandles=True):
+            self.parse_vdj_report(f)
+        
+        self.cellrangervdj_mapping = self.ignore_samples(self.cellrangervdj_mapping)
+        self.cellrangervdj_annotations = self.ignore_samples(self.cellrangervdj_annotations)
+        self.cellrangervdj_general_data = self.ignore_samples(self.cellrangervdj_general_data)
+        self.cellrangervdj_warnings = self.ignore_samples(self.cellrangervdj_warnings)
+        for k in self.cellrangervdj_plots_data.keys():
+            self.cellrangervdj_plots_data[k] = self.ignore_samples(self.cellrangervdj_plots_data[k])
+
+        self.vdj_general_data_headers['VDJ reads'] = {
+            'title': 'VDJ {} Reads'.format(config.read_count_prefix),
+            'description': 'Number of reads ({})'.format(config.read_count_desc),
+            'modify': lambda x: x * config.read_count_multiplier,
+        }
+        self.vdj_general_data_headers = set_hidden_cols(
+            self.vdj_general_data_headers, 
+            ['VDJ Q30 bc', 'VDJ Q30 UMI', 'VDJ Q30 read', 'VDJ Q30 read1', 'VDJ Q30 read2']
+        )
+
+        self.vdj_mapping_headers['reads'] = {
+            'title': '{} Reads'.format(config.read_count_prefix),
+            'description': 'Number of reads ({})'.format(config.read_count_desc),
+            'modify': lambda x: x * config.read_count_multiplier,
+        }
+        self.vdj_mapping_headers = set_hidden_cols(
+            self.vdj_mapping_headers,
+            ['Q30 bc', 'Q30 UMI', 'Q30 read1', 'Q30 read2', 
+            'IGH reads', 'IGK reads', 'IGL reads']
+        )
+
+        if len(self.cellrangervdj_general_data) == 0:
+            raise UserWarning
+
+        self.general_stats_addcols(self.cellrangervdj_general_data, self.vdj_general_data_headers)
+
+        # Write parsed report data to a file
+        self.write_data_file(self.cellrangervdj_mapping, "multiqc_cellranger_vdj_mapping")
+        self.write_data_file(self.cellrangervdj_annotations, "multiqc_cellranger_vdj_annotations")
+
+        #Add sections to the report
+        if len(self.cellrangervdj_warnings) > 0:
+            self.add_section(
+                name = 'VDJ - Warnings',
+                anchor = 'cellranger-vdj-warnings',
+                description = 'Warnings encountered during the analysis',
+                plot = table.plot(
+                    self.cellrangervdj_warnings, 
+                    self.vdj_warnings_headers,
+                    {'namespace': 'Cellranger VDJ'}
+                )
+            )
+
+        self.add_section(
+            name = 'VDJ - Summary stats',
+            anchor = 'cellranger-vdj-stats',
+            description = 'Summary QC metrics from Cellranger count',
+            plot = table.plot(
+                self.cellrangervdj_mapping, 
+                self.vdj_mapping_headers,
+                {'namespace': 'Cellranger VDJ'}
+            )
+        )
+
+        self.add_section(
+            name = 'VDJ - Annotations',
+            anchor = 'cellranger-vdj-annot',
+            description = 'V(D)J annotations from Cellranger VDJ analysis',
+            plot = table.plot(
+                self.cellrangervdj_annotations, 
+                self.vdj_annotations_headers,
+                {'namespace': 'Cellranger VDJ'}
+            )
+        )
+
+        self.add_section(
+            name = 'VDJ - BC rank plot',
+            anchor = 'cellranger-vdj-bcrank-plot',
+            description = self.cellrangervdj_plots_conf['bc']['description'],
+            helptext = self.cellrangervdj_plots_conf['bc']['helptext'],
+            plot = linegraph.plot(self.cellrangervdj_plots_data['bc'], self.cellrangervdj_plots_conf['bc']['config'])
+        )
+
+        return len(self.cellrangervdj_general_data) 
+
+    def parse_vdj_report(self, f):
+        """Go through the html report of cellranger and extract the data in a dics"""
+  
+        for line in f['f']:
+            line = line.strip()
+            if line.startswith('const data'):
+                line = line.replace('const data = ', '')
+                mydict = json.loads(line)
+                mydict = mydict['summary']
+                break
+        
+        s_name = mydict['sample']['id']
+        data = dict()
+        data_general_stats = dict()
+
+        #Store general stats from cells and sequencing tables 
+        col_dict = {
+            'Estimated Number of Cells': 'estimated cells',
+            'Mean Reads per Cell': 'avg reads/cell',
+            'Fraction Reads in Cells': 'reads in cells'
+        }
+        data_general_stats, self.vdj_general_data_headers = update_dict(
+            data_general_stats, self.vdj_general_data_headers, 
+            mydict['summary_tab']['cells']['table']['rows'], 
+            col_dict, "VDJ")
+
+        col_dict = {
+            'Number of Reads': 'reads',
+            'Valid Barcodes': 'valid bc',
+            'Q30 Bases in Barcode': 'Q30 bc',
+            'Q30 Bases in UMI': 'Q30 UMI',
+            'Q30 Bases in RNA Read 1': 'Q30 read1',
+            'Q30 Bases in RNA Read 2': 'Q30 read2'
+        }
+        data_general_stats, self.vdj_general_data_headers = update_dict(
+            data_general_stats, self.vdj_general_data_headers, 
+            mydict['summary_tab']['vdj_sequencing']['table']['rows'], 
+            col_dict, "VDJ")
+        
+        #Store sequencing results data from vdj report
+        data_rows = mydict['summary_tab']['vdj_sequencing']['table']['rows'] + \
+            mydict['summary_tab']['cells']['table']['rows'] + \
+                mydict['summary_tab']['vdj_enrichment']['table']['rows']
+        col_dict = {
+            'Number of Reads': 'reads',
+            'Valid Barcodes': 'valid bc',
+            'Estimated Number of Cells': 'estimated cells',
+            'Mean Reads per Cell': 'avg reads/cell',
+            'Mean Used Reads per Cell': 'used reads/cell',
+            'Fraction Reads in Cells': 'reads in cells',
+            'Reads Mapped to Any V(D)J Gene': 'VDJ reads',
+            'Reads Mapped to IGH': 'IGH reads',
+            'Reads Mapped to IGK': 'IGK reads',
+            'Reads Mapped to IGL': 'IGL reads',
+            'Q30 Bases in Barcode': 'Q30 bc',
+            'Q30 Bases in UMI': 'Q30 UMI',
+            'Q30 Bases in RNA Read 1': 'Q30 read1',
+            'Q30 Bases in RNA Read 2': 'Q30 read2'
+        }
+        data, self.vdj_mapping_headers = update_dict(
+            data_general_stats, self.vdj_mapping_headers, 
+            data_rows, 
+            col_dict)
+        
+        # Store VDJ annotation and expression data from vdj report
+        col_dict = {
+            'Cells With Productive V-J Spanning Pair': 'cells VJ span',
+            'Cells With Productive V-J Spanning (IGK, IGH) Pair': 'cells IGK-IGH span',
+            'Cells With Productive V-J Spanning (IGL, IGH) Pair': 'cells IGL-IGH span',
+            'Paired Clonotype Diversity': 'clonotype diversity',
+            'Cells With IGH Contig': 'cells IGH contig',
+            'Cells With IGK Contig': 'cells IGK contig',
+            'Cells With IGL Contig': 'cells IGL contig',
+            'Cells With CDR3-annotated IGH Contig': 'cells IGH CDR3',
+            'Cells With CDR3-annotated IGK Contig': 'cells IGK CDR3',
+            'Cells With CDR3-annotated IGL Contig': 'cells IGL CDR3',
+            'Cells With V-J Spanning IGH Contig': 'cells IGH VJ span',
+            'Cells With V-J Spanning IGK Contig': 'cells IGK VJ span',
+            'Cells With V-J Spanning IGL Contig': 'cells IGL VJ span',
+            'Cells With Productive IGH Contig': 'cells IGH productive',
+            'Cells With Productive IGK Contig': 'cells IGK productive',
+            'Cells With Productive IGL Contig': 'cells IGL productive'
+        }
+        data_annotations, self.vdj_annotations_headers = update_dict(
+            data_general_stats, self.vdj_annotations_headers, 
+            mydict['summary_tab']['vdj_annotation']['table']['rows'], 
+            col_dict)
+
+        # Extract warnings if any
+        warnings = dict()
+        alarms_list = mydict['alarms'].get('alarms', [])
+        for alarm in alarms_list:
+            warnings[alarm['id']] = "FAIL"
+            self.vdj_warnings_headers[alarm['id']] = {
+                'title': alarm['id'],
+                'description': alarm['title'],
+                'bgcols': {'FAIL': '#f06807'}
+            }
+            
+        # Extract data for plots
+        help_dict = {x[0]: x[1][0] for x in mydict['summary_tab']['cells']['help']['data']}
+        plots = {
+            'bc': {
+                'config': {
+                    'id': 'mqc_cellranger_vdj_bc_knee',
+                    'title': f"Cellranger VDJ: {mydict['summary_tab']['cells']['barcode_knee_plot']['layout']['title']}",
+                    'xlab': mydict['summary_tab']['cells']['barcode_knee_plot']['layout']['xaxis']['title'],
+                    'ylab': mydict['summary_tab']['cells']['barcode_knee_plot']['layout']['yaxis']['title'],
+                    'yLog': True,
+                    'xLog': True
+                    },
+                'description': 'Barcode knee plot',
+                'helptext': help_dict['Barcode Rank Plot']
+            }
+        }
+        plots_data = {
+            'bc': transform_data(mydict['summary_tab']['cells']['barcode_knee_plot']['data'][2])
+        }
+
+        if len(data) > 0:
+            if s_name in self.cellrangervdj_general_data:
+                log.debug("Duplicate sample name found in {}! Overwriting: {}".format(f["fn"], s_name))
+            self.add_data_source(f, s_name, module="cellranger", section="count")
+            self.cellrangervdj_mapping[s_name] = data
+            self.cellrangervdj_general_data[s_name] = data_general_stats
+            self.cellrangervdj_annotations[s_name] = data_annotations
+            if len(warnings) > 0: self.cellrangervdj_warnings[s_name] = warnings
+            self.cellrangervdj_plots_conf = plots
+            for k in plots_data.keys():
+                self.cellrangervdj_plots_data[k][s_name] = plots_data[k]

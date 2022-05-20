@@ -607,6 +607,10 @@ module_order:
   - bowtie1:
       module_tag:
         - RNA
+  - cellranger:
+      module_tag:
+        - RNA
+        - single-cell
   - snpsplit:
       module_tag:
         - DNA
@@ -617,7 +621,6 @@ module_order:
       module_tag:
         - DNA
         - pangenome
-
   - pangolin:
       module_tag:
         - DNA
