@@ -58,6 +58,14 @@ class CellRangerVdjMixin:
             'IGH reads', 'IGK reads', 'IGL reads']
         )
 
+        self.vdj_annotations_headers = set_hidden_cols(
+            self.vdj_annotations_headers,
+            ['cells IGH contig', 'cells IGK contig', 'cells IGL contig', 
+            'cells IGH CDR3', 'cells IGK CDR3', 'cells IGL CDR3',
+            'cells IGH VJ span', 'cells IGK VJ span', 'cells IGL VJ span']
+        )
+
+
         if len(self.cellrangervdj_general_data) == 0:
             raise UserWarning
 
