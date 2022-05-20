@@ -13,9 +13,10 @@ from .vdj import CellRangerVdjMixin
 # Initialise the logger
 log = logging.getLogger(__name__)
 
+
 class MultiqcModule(BaseMultiqcModule, CellRangerCountMixin, CellRangerVdjMixin):
-    """Cellranger has 2 main modules: count and vdj. 
-    This module parses data directly from the web_summary.html and summarise 
+    """Cellranger has 2 main modules: count and vdj.
+    This module parses data directly from the web_summary.html and summarise
     data useful for QC in the main sample table as well as generate some module specific plots
     """
 
@@ -26,7 +27,7 @@ class MultiqcModule(BaseMultiqcModule, CellRangerCountMixin, CellRangerVdjMixin)
             name="Cellranger",
             anchor="cellranger",
             href="https://support.10xgenomics.com/single-cell-gene-expression/software/pipelines/latest/what-is-cell-ranger",
-            info="Cellranger analyze single cell expression or vdj data produced by 10X Genomics."
+            info="Cellranger analyze single cell expression or vdj data produced by 10X Genomics.",
         )
 
         # Set up class objects to hold parsed data
