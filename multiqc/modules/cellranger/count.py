@@ -181,7 +181,9 @@ class CellRangerCountMixin:
             "Reads Mapped Confidently to Intergenic Regions": "confident intergenic",
             "Reads Mapped Antisense to Gene": "reads antisense",
         }
-        data, self.count_data_headers = update_dict(data_general_stats, self.count_data_headers, data_rows, col_dict)
+        data, self.count_data_headers = update_dict(
+            data_general_stats, self.count_data_headers, data_rows, col_dict, "COUNT"
+        )
 
         # Extract warnings if any
         warnings = dict()

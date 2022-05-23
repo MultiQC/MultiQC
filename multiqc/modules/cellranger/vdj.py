@@ -186,7 +186,9 @@ class CellRangerVdjMixin:
             "Q30 Bases in RNA Read 1": "Q30 read1",
             "Q30 Bases in RNA Read 2": "Q30 read2",
         }
-        data, self.vdj_mapping_headers = update_dict(data_general_stats, self.vdj_mapping_headers, data_rows, col_dict)
+        data, self.vdj_mapping_headers = update_dict(
+            data_general_stats, self.vdj_mapping_headers, data_rows, col_dict, "VDJ"
+        )
 
         # Store VDJ annotation and expression data from vdj report
         col_dict = {
