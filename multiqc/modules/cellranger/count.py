@@ -7,7 +7,7 @@ import json
 from collections import OrderedDict
 from multiqc import config
 from multiqc.plots import linegraph, table
-from .utils_functions import update_dict, set_hidden_cols, transform_data
+from .utils_functions import *
 
 # Initialise the logger
 log = logging.getLogger(__name__)
@@ -104,6 +104,16 @@ class CellRangerCountMixin:
             helptext=self.cellrangercount_plots_conf["genes"]["helptext"],
             plot=linegraph.plot(
                 self.cellrangercount_plots_data["genes"], self.cellrangercount_plots_conf["genes"]["config"]
+            ),
+        )
+
+        self.add_section(
+            name="Count - Saturation plot",
+            anchor="cellranger-count-saturation-plot",
+            description=self.cellrangercount_plots_conf["saturation"]["description"],
+            helptext=self.cellrangercount_plots_conf["saturation"]["helptext"],
+            plot=linegraph.plot(
+                self.cellrangercount_plots_data["saturation"], self.cellrangercount_plots_conf["saturation"]["config"]
             ),
         )
 
@@ -223,10 +233,25 @@ class CellRangerCountMixin:
                 "description": "Median gene counts per cell",
                 "helptext": mydict["analysis_tab"]["median_gene_plot"]["help"]["helpText"],
             },
+            "saturation": {
+                "config": {
+                    "id": "mqc_cellranger_count_saturation",
+                    "title": f"Cellranger count: {mydict['analysis_tab']['seq_saturation_plot']['help']['title']}",
+                    "xlab": mydict["analysis_tab"]["seq_saturation_plot"]["plot"]["layout"]["xaxis"]["title"],
+                    "ylab": mydict["analysis_tab"]["seq_saturation_plot"]["plot"]["layout"]["yaxis"]["title"],
+                    "yLog": False,
+                    "xLog": False,
+                    "ymin": 0,
+                    "ymax": 1,
+                },
+                "description": "Sequencing saturation",
+                "helptext": mydict["analysis_tab"]["seq_saturation_plot"]["help"]["helpText"],
+            },
         }
         plots_data = {
-            "bc": transform_data(mydict["summary_tab"]["cells"]["barcode_knee_plot"]["data"][0]),
-            "genes": transform_data(mydict["analysis_tab"]["median_gene_plot"]["plot"]["data"][0]),
+            "bc": parse_bcknee_data(mydict["summary_tab"]["cells"]["barcode_knee_plot"]["data"], s_name),
+            "genes": {s_name: transform_data(mydict["analysis_tab"]["median_gene_plot"]["plot"]["data"][0])},
+            "saturation": {s_name: transform_data(mydict["analysis_tab"]["seq_saturation_plot"]["plot"]["data"][0])},
         }
 
         if len(data) > 0:
@@ -239,4 +264,6 @@ class CellRangerCountMixin:
                 self.cellrangercount_warnings[s_name] = warnings
             self.cellrangercount_plots_conf = plots
             for k in plots_data.keys():
-                self.cellrangercount_plots_data[k][s_name] = plots_data[k]
+                if k not in self.cellrangercount_plots_data.keys():
+                    self.cellrangercount_plots_data[k] = dict()
+                self.cellrangercount_plots_data[k].update(plots_data[k])

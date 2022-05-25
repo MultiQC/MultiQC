@@ -49,6 +49,17 @@ def set_hidden_cols(headers, col_names):
     return headers
 
 
+def parse_bcknee_data(data, s_name):
+    """parse data for bc knee plot from cellranger dict"""
+
+    value_dict = dict()
+    for idx, data_series in enumerate(data):
+        id = f"{s_name}_{idx}_{data_series['name']}"
+        value_dict[id] = transform_data(data_series)
+
+    return value_dict
+
+
 def transform_data(data):
     """Transform x:list,y:list data to a dict of x_val:y_val"""
 
