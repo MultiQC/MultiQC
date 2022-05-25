@@ -63,61 +63,65 @@ class CellRangerCountMixin:
             ],
         )
 
-        if len(self.cellrangercount_data) == 0:
-            raise UserWarning
+        if len(self.cellrangercount_general_data) == 0:
+            return 0
 
-        self.general_stats_addcols(self.cellrangercount_general_data, self.count_general_data_headers)
+        else:
+            self.general_stats_addcols(self.cellrangercount_general_data, self.count_general_data_headers)
 
-        # Write parsed report data to a file
-        self.write_data_file(self.cellrangercount_data, "multiqc_cellranger_count")
+            # Write parsed report data to a file
+            self.write_data_file(self.cellrangercount_data, "multiqc_cellranger_count")
 
-        # Add sections to the report
-        if len(self.cellrangercount_warnings) > 0:
+            # Add sections to the report
+            if len(self.cellrangercount_warnings) > 0:
+                self.add_section(
+                    name="Count - Warnings",
+                    anchor="cellranger-count-warnings",
+                    description="Warnings encountered during the analysis",
+                    plot=table.plot(
+                        self.cellrangercount_warnings, self.count_warnings_headers, {"namespace": "Cellranger Count"}
+                    ),
+                )
+
             self.add_section(
-                name="Count - Warnings",
-                anchor="cellranger-count-warnings",
-                description="Warnings encountered during the analysis",
-                plot=table.plot(
-                    self.cellrangercount_warnings, self.count_warnings_headers, {"namespace": "Cellranger Count"}
+                name="Count - Summary stats",
+                anchor="cellranger-count-stats",
+                description="Summary QC metrics from Cellranger count",
+                plot=table.plot(self.cellrangercount_data, self.count_data_headers, {"namespace": "Cellranger Count"}),
+            )
+
+            self.add_section(
+                name="Count - BC rank plot",
+                anchor="cellranger-count-bcrank-plot",
+                description=self.cellrangercount_plots_conf["bc"]["description"],
+                helptext=self.cellrangercount_plots_conf["bc"]["helptext"],
+                plot=linegraph.plot(
+                    self.cellrangercount_plots_data["bc"], self.cellrangercount_plots_conf["bc"]["config"]
                 ),
             )
 
-        self.add_section(
-            name="Count - Summary stats",
-            anchor="cellranger-count-stats",
-            description="Summary QC metrics from Cellranger count",
-            plot=table.plot(self.cellrangercount_data, self.count_data_headers, {"namespace": "Cellranger Count"}),
-        )
+            self.add_section(
+                name="Count - Median genes",
+                anchor="cellranger-count-genes-plot",
+                description=self.cellrangercount_plots_conf["genes"]["description"],
+                helptext=self.cellrangercount_plots_conf["genes"]["helptext"],
+                plot=linegraph.plot(
+                    self.cellrangercount_plots_data["genes"], self.cellrangercount_plots_conf["genes"]["config"]
+                ),
+            )
 
-        self.add_section(
-            name="Count - BC rank plot",
-            anchor="cellranger-count-bcrank-plot",
-            description=self.cellrangercount_plots_conf["bc"]["description"],
-            helptext=self.cellrangercount_plots_conf["bc"]["helptext"],
-            plot=linegraph.plot(self.cellrangercount_plots_data["bc"], self.cellrangercount_plots_conf["bc"]["config"]),
-        )
+            self.add_section(
+                name="Count - Saturation plot",
+                anchor="cellranger-count-saturation-plot",
+                description=self.cellrangercount_plots_conf["saturation"]["description"],
+                helptext=self.cellrangercount_plots_conf["saturation"]["helptext"],
+                plot=linegraph.plot(
+                    self.cellrangercount_plots_data["saturation"],
+                    self.cellrangercount_plots_conf["saturation"]["config"],
+                ),
+            )
 
-        self.add_section(
-            name="Count - Median genes",
-            anchor="cellranger-count-genes-plot",
-            description=self.cellrangercount_plots_conf["genes"]["description"],
-            helptext=self.cellrangercount_plots_conf["genes"]["helptext"],
-            plot=linegraph.plot(
-                self.cellrangercount_plots_data["genes"], self.cellrangercount_plots_conf["genes"]["config"]
-            ),
-        )
-
-        self.add_section(
-            name="Count - Saturation plot",
-            anchor="cellranger-count-saturation-plot",
-            description=self.cellrangercount_plots_conf["saturation"]["description"],
-            helptext=self.cellrangercount_plots_conf["saturation"]["helptext"],
-            plot=linegraph.plot(
-                self.cellrangercount_plots_data["saturation"], self.cellrangercount_plots_conf["saturation"]["config"]
-            ),
-        )
-
-        return len(self.cellrangercount_general_data)
+            return len(self.cellrangercount_general_data)
 
     def parse_count_report(self, f):
         """Go through the html report of cellranger and extract the data in a dics"""

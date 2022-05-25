@@ -74,50 +74,52 @@ class CellRangerVdjMixin:
         )
 
         if len(self.cellrangervdj_general_data) == 0:
-            raise UserWarning
+            return 0
 
-        self.general_stats_addcols(self.cellrangervdj_general_data, self.vdj_general_data_headers)
+        else:
 
-        # Write parsed report data to a file
-        self.write_data_file(self.cellrangervdj_mapping, "multiqc_cellranger_vdj_mapping")
-        self.write_data_file(self.cellrangervdj_annotations, "multiqc_cellranger_vdj_annotations")
+            self.general_stats_addcols(self.cellrangervdj_general_data, self.vdj_general_data_headers)
 
-        # Add sections to the report
-        if len(self.cellrangervdj_warnings) > 0:
+            # Write parsed report data to a file
+            self.write_data_file(self.cellrangervdj_mapping, "multiqc_cellranger_vdj_mapping")
+            self.write_data_file(self.cellrangervdj_annotations, "multiqc_cellranger_vdj_annotations")
+
+            # Add sections to the report
+            if len(self.cellrangervdj_warnings) > 0:
+                self.add_section(
+                    name="VDJ - Warnings",
+                    anchor="cellranger-vdj-warnings",
+                    description="Warnings encountered during the analysis",
+                    plot=table.plot(
+                        self.cellrangervdj_warnings, self.vdj_warnings_headers, {"namespace": "Cellranger VDJ"}
+                    ),
+                )
+
             self.add_section(
-                name="VDJ - Warnings",
-                anchor="cellranger-vdj-warnings",
-                description="Warnings encountered during the analysis",
+                name="VDJ - Summary stats",
+                anchor="cellranger-vdj-stats",
+                description="Summary QC metrics from Cellranger count",
+                plot=table.plot(self.cellrangervdj_mapping, self.vdj_mapping_headers, {"namespace": "Cellranger VDJ"}),
+            )
+
+            self.add_section(
+                name="VDJ - Annotations",
+                anchor="cellranger-vdj-annot",
+                description="V(D)J annotations from Cellranger VDJ analysis",
                 plot=table.plot(
-                    self.cellrangervdj_warnings, self.vdj_warnings_headers, {"namespace": "Cellranger VDJ"}
+                    self.cellrangervdj_annotations, self.vdj_annotations_headers, {"namespace": "Cellranger VDJ"}
                 ),
             )
 
-        self.add_section(
-            name="VDJ - Summary stats",
-            anchor="cellranger-vdj-stats",
-            description="Summary QC metrics from Cellranger count",
-            plot=table.plot(self.cellrangervdj_mapping, self.vdj_mapping_headers, {"namespace": "Cellranger VDJ"}),
-        )
+            self.add_section(
+                name="VDJ - BC rank plot",
+                anchor="cellranger-vdj-bcrank-plot",
+                description=self.cellrangervdj_plots_conf["bc"]["description"],
+                helptext=self.cellrangervdj_plots_conf["bc"]["helptext"],
+                plot=linegraph.plot(self.cellrangervdj_plots_data["bc"], self.cellrangervdj_plots_conf["bc"]["config"]),
+            )
 
-        self.add_section(
-            name="VDJ - Annotations",
-            anchor="cellranger-vdj-annot",
-            description="V(D)J annotations from Cellranger VDJ analysis",
-            plot=table.plot(
-                self.cellrangervdj_annotations, self.vdj_annotations_headers, {"namespace": "Cellranger VDJ"}
-            ),
-        )
-
-        self.add_section(
-            name="VDJ - BC rank plot",
-            anchor="cellranger-vdj-bcrank-plot",
-            description=self.cellrangervdj_plots_conf["bc"]["description"],
-            helptext=self.cellrangervdj_plots_conf["bc"]["helptext"],
-            plot=linegraph.plot(self.cellrangervdj_plots_data["bc"], self.cellrangervdj_plots_conf["bc"]["config"]),
-        )
-
-        return len(self.cellrangervdj_general_data)
+            return len(self.cellrangervdj_general_data)
 
     def parse_vdj_report(self, f):
         """Go through the html report of cellranger and extract the data in a dics"""
