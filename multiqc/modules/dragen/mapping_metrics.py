@@ -371,7 +371,7 @@ def parse_mapping_metrics_file(f):
         except (ValueError, TypeError):
             try:
                 value = float(value)
-            except ValueError:
+            except (ValueError, TypeError):
                 pass
 
         percentage = None
