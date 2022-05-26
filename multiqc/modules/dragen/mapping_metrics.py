@@ -368,7 +368,7 @@ def parse_mapping_metrics_file(f):
         value = fields[3] if fields[3] != "NA" else None
         try:
             value = int(value)
-        except ValueError:
+        except (ValueError, TypeError):
             try:
                 value = float(value)
             except ValueError:
