@@ -365,13 +365,13 @@ def parse_mapping_metrics_file(f):
         phenotype = fields[0].split("/")[0].split(" ")[0].lower()  # TUMOR MAPPING -> tumor
         analysis = fields[0].split("/")[1]  # ALIGNING SUMMARY, ALIGNING PER RG
         metric = fields[2]
-        value = fields[3]
+        value = fields[3] if fields[3] != "NA" else None
         try:
             value = int(value)
-        except ValueError:
+        except (ValueError, TypeError):
             try:
                 value = float(value)
-            except ValueError:
+            except (ValueError, TypeError):
                 pass
 
         percentage = None
@@ -384,7 +384,8 @@ def parse_mapping_metrics_file(f):
 
         # sample-unspecific metrics are reported only in ALIGNING SUMMARY sections
         if analysis == "ALIGNING SUMMARY":
-            data_by_phenotype[phenotype][metric] = value
+            if value is not None:
+                data_by_phenotype[phenotype][metric] = value
             if percentage is not None:
                 data_by_phenotype[phenotype][metric + " pct"] = percentage
 
@@ -394,7 +395,8 @@ def parse_mapping_metrics_file(f):
             readgroup = fields[1]
             if readgroup not in data_by_readgroup[phenotype].keys():
                 data_by_readgroup[phenotype][readgroup] = {}
-            data_by_readgroup[phenotype][readgroup][metric] = value
+            if value is not None:
+                data_by_readgroup[phenotype][readgroup][metric] = value
             if percentage is not None:
                 data_by_readgroup[phenotype][readgroup][metric + " pct"] = percentage
 
