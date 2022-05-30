@@ -4,9 +4,6 @@
 """ MultiQC submodule to parse output from gfastats --stats """
 
 import logging
-from collections import OrderedDict
-from multiqc import config
-from multiqc.plots import beeswarm, bargraph
 
 # Initialise the logger
 log = logging.getLogger(__name__)
@@ -42,13 +39,6 @@ class StatsReportMixin:
 
             # Write parsed report data to a file
             self.write_data_file(self.gfastats_stats, "multiqc_gfastats_stats")
-
-            # General Stats Table
-            #            stats_headers = OrderedDict()
-            #            stats_headers["Total_scaffold_length"] = {
-            #                "title": "Total scaffold length",
-            #                "description": "Total length of scaffolds",
-            #            }
 
             self.general_stats_addcols(self.gfastats_stats)
 
