@@ -31,6 +31,8 @@ _nothing yet.._
   - Updated module to handle outputs from Pangolin v4 ([#1660](https://github.com/ewels/MultiQC/pull/1660))
 - **Somalier**
   - Handle zero mean X depth in _Sex_ plot ([#1670](https://github.com/ewels/MultiQC/pull/1670))
+- **Fastp**
+  - Include low complexity and too long reads in filtering bar chart
 
 ## [MultiQC v1.12](https://github.com/ewels/MultiQC/releases/tag/v1.12) - 2022-02-08
 
