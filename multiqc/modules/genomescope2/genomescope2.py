@@ -33,11 +33,16 @@ class MultiqcModule(BaseMultiqcModule):
         for f in self.find_log_files("genomescope2/summary"):
             self.parse_summary_log(f)
 
+        self.find_figures()
+
         self.summary_data = self.ignore_samples(self.summary_data)
 
-        if not self.summary_data:
+        if not len(self.summary_data) and not len(self.genomescope_png):
             raise UserWarning
-        log.info("Found %d log reports", len(self.summary_data))
+        if len(self.summary_data):
+            log.info(f"Found {len(self.summary_data)} log reports")
+        if len(self.genomescope_png):
+            log.info(f"Found {len(self.genomescope_png)} images")
 
         # Write parsed report data to a file
         self.write_data_file(self.summary_data, "multiqc_genomescope_summary")
@@ -92,21 +97,14 @@ class MultiqcModule(BaseMultiqcModule):
         }
         return table.plot(self.summary_data, headers, config)
 
-    def plot_figures(self):
+    def find_figures(self):
         self.genomescope_png = dict()
         for f in self.find_log_files("genomescope2/png"):
             self.genomescope_png[f["s_name"]] = base64.b64encode(f["f"].read()).decode("utf-8")
-        image_format = "png"
 
         self.genomescope_png = self.ignore_samples(self.genomescope_png)
 
-        if not self.genomescope_png:
-            raise UserWarning
-
-        log.info("Found {} genomescope2 images".format(len(self.genomescope_png)))
-
+    def plot_figures(self):
         for image_name, image_string in self.genomescope_png.items():
-            img_html = '<div class="mqc-custom-content-image"><img src="data:image/{};base64,{}" /></div>'.format(
-                image_format, image_string
-            )
+            img_html = f'<div class="mqc-custom-content-image"><img src="data:image/png;base64,{image_string}" /></div>'
             self.add_section(name=image_name, anchor="Genomescope2", content=img_html)
