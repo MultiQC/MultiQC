@@ -62,20 +62,17 @@ class MultiqcModule(BaseMultiqcModule):
                 block = i
             if block != -1:
                 content.append(l)
-            if l.startswith("GenomeScope version "):
-                version = l.replace("GenomeScope version ", "")
-            if l.startswith("k = "):
-                k = l.split(" = ")[1]
-            if l.startswith("p = "):
-                p = l.split(" = ")[1]
             i = i + 1
-        legend = content[0].split()
         self.summary_data[s_name] = dict()
         self.legends = []
         for l in content[1:]:
             items = re.split(r"\s{2,}", l.strip())
             this_name = items[0]
-            this_val = items[2]
+            this_val = items[2].rstrip("%bp")
+            try:
+                this_val = float(this_val)
+            except ValueError:
+                pass
             self.summary_data[s_name][this_name] = this_val
             self.legends.append(this_name)
 
