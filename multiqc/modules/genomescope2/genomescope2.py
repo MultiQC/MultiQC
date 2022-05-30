@@ -35,23 +35,16 @@ class MultiqcModule(BaseMultiqcModule):
 
         self.summary_data = self.ignore_samples(self.summary_data)
 
-        try:
-            if not self.summary_data:
-                raise UserWarning
-            log.info("Found %d log reports", len(self.summary_data))
+        if not self.summary_data:
+            raise UserWarning
+        log.info("Found %d log reports", len(self.summary_data))
 
-            # Write parsed report data to a file
-            self.write_data_file(self.summary_data, "multiqc_genomescope_summary")
+        # Write parsed report data to a file
+        self.write_data_file(self.summary_data, "multiqc_genomescope_summary")
 
-            self.add_section(name="Summary", anchor="genomescope-summary", plot=self.summary_table())
+        self.add_section(name="Summary", anchor="genomescope-summary", plot=self.summary_table())
 
-            self.plot_figures()
-
-        except UserWarning:
-            pass
-        except Exception as err:
-            log.error(err)
-            log.debug(traceback.format_exc())
+        self.plot_figures()
 
     def parse_summary_log(self, f):
         self.add_data_source(f)
@@ -110,20 +103,13 @@ class MultiqcModule(BaseMultiqcModule):
 
         self.genomescope_png = self.ignore_samples(self.genomescope_png)
 
-        try:
-            if not self.genomescope_png:
-                raise UserWarning
+        if not self.genomescope_png:
+            raise UserWarning
 
-            log.info("Found {} genomescope2 images".format(len(self.genomescope_png)))
+        log.info("Found {} genomescope2 images".format(len(self.genomescope_png)))
 
-            for image_name, image_string in self.genomescope_png.items():
-                img_html = '<div class="mqc-custom-content-image"><img src="data:image/{};base64,{}" /></div>'.format(
-                    image_format, image_string
-                )
-                self.add_section(name=image_name, anchor="Genomescope2", content=img_html)
-
-        except UserWarning:
-            pass
-        except Exception as err:
-            log.error(err)
-            log.debug(traceback.format_exc())
+        for image_name, image_string in self.genomescope_png.items():
+            img_html = '<div class="mqc-custom-content-image"><img src="data:image/{};base64,{}" /></div>'.format(
+                image_format, image_string
+            )
+            self.add_section(name=image_name, anchor="Genomescope2", content=img_html)
