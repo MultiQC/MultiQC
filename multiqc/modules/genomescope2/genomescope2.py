@@ -82,10 +82,7 @@ class MultiqcModule(BaseMultiqcModule):
             headers[legend] = {
                 "title": legend,
                 "description": legend,
-                "min": 0,
-                # "suffix": self.contig_length_suffix,
                 "scale": "RdYlGn",
-                "format": "{:,.2f}",
             }
 
         config = {
