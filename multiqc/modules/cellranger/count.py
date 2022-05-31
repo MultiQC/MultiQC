@@ -52,14 +52,17 @@ class CellRangerCountMixin:
         self.count_data_headers = set_hidden_cols(
             self.count_data_headers,
             [
-                "Q30 bc",
-                "Q30 UMI",
-                "Q30 read",
-                "confident transcriptome",
-                "confident intronic",
-                "confident intergenic",
-                "reads antisense",
-                "saturation",
+                "COUNT Q30 bc",
+                "COUNT Q30 UMI",
+                "COUNT Q30 read",
+                "COUNT reads in cells",
+                "COUNT avg reads/cell",
+                "COUNT confident reads",
+                "COUNT confident transcriptome",
+                "COUNT confident intronic",
+                "COUNT confident intergenic",
+                "COUNT reads antisense",
+                "COUNT saturation",
             ],
         )
 
