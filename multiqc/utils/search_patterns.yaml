@@ -285,6 +285,8 @@ dragen/rna_transcript_cov:
   fn: "*.quant.transcript_coverage.txt"
 dragen/sc_rna_metrics:
   fn: "*.scRNA.metrics.csv"
+dragen/sc_atac_metrics:
+  fn: "*.scATAC.metrics.csv"
 dragen_fastqc:
   fn: "*.fastqc_metrics.csv"
 eigenstratdatabasetools:

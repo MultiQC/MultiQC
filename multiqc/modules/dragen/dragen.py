@@ -12,6 +12,7 @@ from .ploidy_estimation_metrics import DragenPloidyEstimationMetrics
 from .rna_quant_metrics import DragenRnaQuantMetrics
 from .rna_transcript_cov import DragenRnaTranscriptCoverage
 from .sc_rna_metrics import DragenScRnaMetrics
+from .sc_atac_metrics import DragenScAtacMetrics
 from .time_metrics import DragenTimeMetrics
 from .trimmer_metrics import DragenTrimmerMetrics
 from .vc_metrics import DragenVCMetrics
@@ -33,6 +34,7 @@ class MultiqcModule(
     DragenRnaQuantMetrics,
     DragenRnaTranscriptCoverage,
     DragenScRnaMetrics,
+    DragenScAtacMetrics,
 ):
     """DRAGEN provides a number of differrent pipelines and outputs, including base calling, DNA and RNA alignment,
     post-alignment processing and variant calling, covering virtually all stages of typical NGS data processing.
@@ -106,6 +108,9 @@ class MultiqcModule(
 
         samples_found |= self.add_sc_rna_metrics()
         # <output prefix>.scRNA.metrics.csv
+
+        samples_found |= self.add_sc_atac_metrics()
+        # <output prefix>.scATAC.metrics.csv
 
         if len(samples_found) == 0:
             raise UserWarning
