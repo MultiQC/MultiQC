@@ -234,8 +234,6 @@ class MultiqcModule(BaseMultiqcModule):
             'namespace': 'adata_table'
         }
         headers = OrderedDict()
-        print('yo')
-        print(self.data_adata.keys())
         headers['obs'] = {
             'scale': False
         }
