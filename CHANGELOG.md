@@ -67,17 +67,6 @@ _nothing yet.._
 - [**pbmarkdup**](https://github.com/PacificBiosciences/pbmarkdup)
   - Mark duplicate reads from PacBio sequencing of an amplified library
 
-### Module feature additions
-
-- **BBMap**
-  - Added handling for `qchist` output ([#1021](https://github.com/ewels/MultiQC/issues/1021))
-- **bcftools**
-  - Added a plot with samplewise number of sites, Ts/Tv, number of singletons and sequencing depth ([#1087](https://github.com/ewels/MultiQC/issues/1087))
-- **Mosdepth**
-  - Added mean coverage [#1566](https://github.com/ewels/MultiQC/issues/1566)
-- **NanoStat**
-  - Recognize FASTA and FastQ report flavors ([#1547](https://github.com/ewels/MultiQC/issues/1547))
-
 ### Module updates
 
 - **BBMap**
@@ -195,6 +184,14 @@ _nothing yet.._
   - Added new percentage coverage plot in `QM_RNASeq` ([#1258](https://github.com/ewels/MultiQC/issues/1258))
 - **RSeQC**
   - Added a long-requested submodule to support showing the [**TIN**](http://rseqc.sourceforge.net/#tin-py) (Transcript Integrity Number) ([#737](https://github.com/ewels/MultiQC/issues/737))
+- **BBMap**
+  - Added handling for `qchist` output ([#1021](https://github.com/ewels/MultiQC/issues/1021))
+- **bcftools**
+  - Added a plot with samplewise number of sites, Ts/Tv, number of singletons and sequencing depth ([#1087](https://github.com/ewels/MultiQC/issues/1087))
+- **Mosdepth**
+  - Added mean coverage [#1566](https://github.com/ewels/MultiQC/issues/1566)
+- **NanoStat**
+  - Recognize FASTA and FastQ report flavors ([#1547](https://github.com/ewels/MultiQC/issues/1547))
 
 ### Module updates
 

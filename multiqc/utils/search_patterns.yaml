@@ -310,7 +310,6 @@ genomescope2/summary:
   fn: "*_Summary.txt"
   contents: "GenomeScope"
 genomescope2/png:
-  fn: "*_Plot*.png"
   fn: "*_plot*.png"
 gffcompare:
   fn: "*.stats"
