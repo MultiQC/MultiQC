@@ -66,6 +66,19 @@ _nothing yet.._
   - A program designed to check a set of quality criteria against an Illumina runfolder
 - [**pbmarkdup**](https://github.com/PacificBiosciences/pbmarkdup)
   - Mark duplicate reads from PacBio sequencing of an amplified library
+- [**WhatsHap**](https://whatshap.readthedocs.io)
+  - WhatsHap is a software for phasing genomic variants using DNA sequencing reads
+
+### Module feature additions
+
+- **BBMap**
+  - Added handling for `qchist` output ([#1021](https://github.com/ewels/MultiQC/issues/1021))
+- **bcftools**
+  - Added a plot with samplewise number of sites, Ts/Tv, number of singletons and sequencing depth ([#1087](https://github.com/ewels/MultiQC/issues/1087))
+- **Mosdepth**
+  - Added mean coverage [#1566](https://github.com/ewels/MultiQC/issues/1566)
+- **NanoStat**
+  - Recognize FASTA and FastQ report flavors ([#1547](https://github.com/ewels/MultiQC/issues/1547))
 
 ### Module feature additions
 
