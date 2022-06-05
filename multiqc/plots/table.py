@@ -361,7 +361,7 @@ def make_table(dt):
         tid=table_id,
         title=table_title,
         cc=collapse_class,
-        sortlist=dt.pconfig.get("defaultsort", ""),
+        sortlist=_get_sortlist(dt),
     )
 
     # Build the header row
@@ -433,3 +433,22 @@ def make_table(dt):
         report.saved_raw_data[fn] = dt.raw_vals
 
     return html
+
+
+def _get_sortlist(dt):
+    defaultsort = dt.pconfig.get("defaultsort")
+    if defaultsort is None:
+        return ""
+
+    headers = dt.get_headers_in_order()
+    sortlist = []
+
+    # defaultsort is a list of {column, direction} objects
+    for d in defaultsort:
+        # the idx first el of the triple is not actualy unique, it's the bucket
+        # so we must enumerate ourselves here
+        idx = next(idx for idx, (_, k, header) in enumerate(headers) if k == d["column"])
+        direction = 0 if d["direction"] == "asc" else 1
+        sortlist.append([idx, direction])
+
+    return str(sortlist)

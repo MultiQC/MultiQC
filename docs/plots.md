@@ -617,6 +617,21 @@ headers[tablecol] = {
 }
 ```
 
+### Specifying sorting of columns
+
+You can specify multiple columns to sort by. In `custom_plot_config`, for each plot, you can add a `defaultsort` option. Here is an example:
+```
+custom_plot_config:
+  table_data-plot:
+    defaultsort:
+      - column: "Starting Amount (ng)"
+        direction: desc
+      - column: "Mean Insert Length"
+        direction: asc
+```
+
+Direction must be `asc` or `desc`.
+
 ## Beeswarm plots (dot plots)
 
 Beeswarm plots work from the exact same data structure as tables, so the
