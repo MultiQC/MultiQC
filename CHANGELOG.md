@@ -12,6 +12,7 @@
 - Fixed edge-case bug in custom content where a `description` that doesn't terminate in `.` gave duplicate section descriptions.
 - Tidied the verbose log to remove some very noisy statements and add summaries for skipped files in the search
 - Add timezone to time in reports
+- Optimize line-graph generation to remove an n^2 loop
 
 ### New Modules
 
