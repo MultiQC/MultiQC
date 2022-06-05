@@ -11,6 +11,7 @@
 - Added new config option `custom_table_header_config` to override any config for any table header
 - Fixed edge-case bug in custom content where a `description` that doesn't terminate in `.` gave duplicate section descriptions.
 - Tidied the verbose log to remove some very noisy statements and add summaries for skipped files in the search
+- Add timezone to time in reports
 
 ### New Modules
 
@@ -28,6 +29,10 @@ _nothing yet.._
   - Removed HTML escaping of special characters in the log to fix bug in jinja2 v3.10 removing `jinja2.escape()` ([#1659](https://github.com/ewels/MultiQC/pull/1659))
 - **Pangolin**
   - Updated module to handle outputs from Pangolin v4 ([#1660](https://github.com/ewels/MultiQC/pull/1660))
+- **Somalier**
+  - Handle zero mean X depth in _Sex_ plot ([#1670](https://github.com/ewels/MultiQC/pull/1670))
+- **Fastp**
+  - Include low complexity and too long reads in filtering bar chart
 
 ## [MultiQC v1.12](https://github.com/ewels/MultiQC/releases/tag/v1.12) - 2022-02-08
 
