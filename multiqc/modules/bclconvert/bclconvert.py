@@ -219,7 +219,7 @@ class MultiqcModule(BaseMultiqcModule):
                         + "."
                     )
                     gs = None
-        log.debug("Determied genome size as " + str(gs))
+        log.debug("Determined genome size as " + str(gs))
         return gs
 
     def _set_up_reads_dictionary(self, dict):
@@ -230,6 +230,16 @@ class MultiqcModule(BaseMultiqcModule):
         dict["basesQ30"] = 0
         dict["mean_quality"] = 0
 
+    def _is_single_end_reads(self, root):
+        ncount = 0
+        # we have single-end reads if we have exactly one IsIndexedRead=N element in our RunInfo.xml
+        for element in root.findall("./Run/Reads/Read"):
+            if element.get("IsIndexedRead") == "N":
+                ncount += 1
+        if ncount == 1:
+            return True
+        return False
+
     def _parse_single_runinfo_file(self, runinfo_file):
         # get run id and readlength from RunInfo.xml
         try:
@@ -237,11 +247,15 @@ class MultiqcModule(BaseMultiqcModule):
             run_id = root.find("Run").get("Id")
             read_length = root.find("./Run/Reads/Read[1]").get(
                 "NumCycles"
-            )  # ET indexes first element at 1, so here we're gettign the first NumCycles
+            )  # ET indexes first element at 1, so here we're getting the first NumCycles
         except:
             log.error(f"Could not parse RunInfo.xml to get RunID and read length in '{runinfo_file['root']}'")
             raise UserWarning
-        return {"run_id": run_id, "read_length": int(read_length), "cluster_length": int(read_length) * 2}
+        if self._is_single_end_reads(root):
+            cluster_length = int(read_length)
+        else:
+            cluster_length = int(read_length) * 2
+        return {"run_id": run_id, "read_length": int(read_length), "cluster_length": cluster_length}
 
     def _find_log_files_and_sort(self, search_pattern, sort_field):
         logs = list()

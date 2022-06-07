@@ -33,6 +33,8 @@ _nothing yet.._
   - Handle zero mean X depth in _Sex_ plot ([#1670](https://github.com/ewels/MultiQC/pull/1670))
 - **Fastp**
   - Include low complexity and too long reads in filtering bar chart
+- **BclConvert**
+  - Handle single-end read data correctly when setting cluster length instead of always assuming paired-end reads ([#1697](https://github.com/ewels/MultiQC/issues/1697))
 
 ## [MultiQC v1.12](https://github.com/ewels/MultiQC/releases/tag/v1.12) - 2022-02-08
 
