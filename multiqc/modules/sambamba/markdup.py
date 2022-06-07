@@ -91,8 +91,8 @@ class SambambaMarkdupMixin:
         # NB: Single-end data will have 0 for sorted_end_pairs and single_unmatched_pairs
         try:
             d["duplicate_rate"] = (
-            d["duplicate_reads"] / ((d["sorted_end_pairs"] * 2) + (d["single_ends"] - d["single_unmatched_pairs"]))
-        ) * 100.0
+                d["duplicate_reads"] / ((d["sorted_end_pairs"] * 2) + (d["single_ends"] - d["single_unmatched_pairs"]))
+            ) * 100.0
         except ZeroDivisionError:
             d["duplicate_rate"] = 0
             log.debug("Sambamba Markdup: zero division error for '{}'".format(f["fn"]))
