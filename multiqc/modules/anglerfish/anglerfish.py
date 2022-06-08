@@ -8,7 +8,7 @@ import logging
 import json
 
 from multiqc import config
-from multiqc.plots import bargraph, linegraph
+from multiqc.plots import bargraph, linegraph, scatter
 from multiqc.modules.base_module import BaseMultiqcModule
 
 # Initialise the logger
@@ -93,7 +93,7 @@ class MultiqcModule(BaseMultiqcModule):
         self.anglerfish_pafstats[s_name] = {}
         self.anglerfish_samples[s_name] = {}
         self.anglerfish_undetermined[s_name] = {}
-        ## TODO: Add function
+        ## TODO: Add parser
 
     def anglerfish_general_stats_table(self):
         """TODO"""
@@ -105,6 +105,28 @@ class MultiqcModule(BaseMultiqcModule):
     def anglerfish_paf_stats_chart(self):
         """TODO"""
         keys = OrderedDict()
+        keys["Aligned reads matching both I7 and I5 adaptor"] = {
+            "color": "TODO",
+            "name": "Aligned reads matching both I7 and I5 adaptor",
+        }
+        keys["Aligned reads matching multiple I7/I5 adaptor pairs"] = {
+            "color": "TODO",
+            "name": "Aligned reads matching multiple I7/I5 adaptor pairs",
+        }
+        keys["aligned reads matching only I7 or I5 adaptor"] = {
+            "color": "#2f7ed8",
+            "name": "aligned reads matching only I7 or I5 adaptor",
+        }
+        keys["aligned reads with uncategorized alignments"] = {
+            "color": "#2f7ed8",
+            "name": "aligned reads with uncategorized alignments",
+        }
+        keys["input_reads"] = {"color": "#2f7ed8", "name": "input_reads"}
+        keys["reads aligning to adaptor sequences"] = {
+            "color": "#2f7ed8",
+            "name": "reads aligning to adaptor sequences",
+        }
+
         # TODO: Add keys
         # TODO: Add data structure for plot?
         # TODO: Add config
@@ -116,4 +138,12 @@ class MultiqcModule(BaseMultiqcModule):
         # TODO: keys
         # TODO: ?? Maybe not, depending on plot: data structure for plot?
         # TODO: (p?)config
-        # TODO: return type
+        # TODO: return type, but what...?
+
+    # def anglerfish_undetermined samples
+    #
+    #
+    #
+    #
+    #
+    #
