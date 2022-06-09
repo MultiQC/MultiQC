@@ -359,7 +359,7 @@ def run(
         color_system=None if no_ansi else "auto",
     )
     console.print(
-        f"\n  CheckAtlas-version[blue]/[/][green]/[/][red]/[/] [bold][link=https://multiqc.info]MultiQC[/link][/] :mag: [dim]| v{config.version}\n"
+        f"\n  [blue]/[/][green]/[/][red]/[/] [bold][link=https://multiqc.info]MultiQC[/link][/] :mag: [dim]| v{config.version}\n"
     )
     logger.debug("This is MultiQC v{}".format(config.version))
 
@@ -1102,4 +1102,3 @@ def run(
     # * appropriate error code (eg. 1 if a module broke, 0 on success)
     #
     return {"report": report, "config": config, "sys_exit_code": sys_exit_code}
-
