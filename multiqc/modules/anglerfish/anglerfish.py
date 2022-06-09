@@ -139,6 +139,7 @@ class MultiqcModule(BaseMultiqcModule):
         """TODO"""
         headers = OrderedDict()
         # TODO: Add headers
+        # library header?
 
         self.general_stats_addcols(self.anglerfish_data, headers, "anglerfish")
 
@@ -178,7 +179,7 @@ class MultiqcModule(BaseMultiqcModule):
         # TODO: keys
         # TODO: ?? Maybe not, depending on plot: data structure for plot?
         # TODO: (p?)config
-        # TODO: return type, but what...?
+        return scatter.plot(data, pconfig)
 
     # def anglerfish_undetermined samples
     #
