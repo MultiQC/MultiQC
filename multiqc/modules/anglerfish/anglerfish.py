@@ -33,9 +33,9 @@ class MultiqcModule(BaseMultiqcModule):
 
         # Find and load any anglerfish reports
         self.anglerfish_data = dict()
-        self.anglerfish_pafstats = dict()
-        self.anglerfish_samples = dict()
-        self.anglerfish_undetermined = dict()
+        # self.anglerfish_pafstats = dict()
+        # self.anglerfish_samples = dict()
+        # self.anglerfish_undetermined = dict()
 
         for f in self.find_log_files("anglerfish", filehandles=True):
             self.parse_anglerfish_json(f)
@@ -70,7 +70,7 @@ class MultiqcModule(BaseMultiqcModule):
             description="Outliers for the sample statistics",
             plot=self.anglerfish_sample_stats_chart(),
         )
-        # TODO: Undetermined plot
+        # TODO: Undetermined plot [maybe under if-clause, incase no undetermined exist?]
         # self.add_section(
         #     name="Undetermined ??? TODO",
         #     anchor="TODO",
@@ -90,10 +90,43 @@ class MultiqcModule(BaseMultiqcModule):
         s_name = f["s_name"]
         self.add_data_source(f, s_name)
         self.anglerfish_data[s_name] = {}
-        self.anglerfish_pafstats[s_name] = {}
-        self.anglerfish_samples[s_name] = {}
-        self.anglerfish_undetermined[s_name] = {}
-        ## TODO: Add parser
+        # self.anglerfish_pafstats[s_name] = {}
+        # self.anglerfish_samples[s_name] = {}
+        # self.anglerfish_undetermined[s_name] = {}
+
+        # Parse paf statistics
+        for k in parsed_json["paf_stats"]:
+            # TODO: better documentation
+            # Parse all keys
+            for l in parsed_json["paf_stats"][k]:
+                # TODO: fix keys
+                key = parsed_json["paf_stats"][k][l]
+                try:
+                    # TODO: could be more generall (not two lines nearly the same), but would require more code
+                    # Amount of reads matched to key
+                    self.anglerfish_data[s_name][key + "amount_{}".format(k)] = float(
+                        parsed_json["paf_stats"][k][key][0]
+                    )
+                    # Percentage of reads matched to key
+                    self.anglerfish_data[s_name][key + "percent_{}".format(k)] = float(
+                        parsed_json["paf_stats"][k][key][1]
+                    )
+                except KeyError:
+                    log.debug("'" + key + "' key missing in anglerfish json: '{}'".format(f["fn"]))
+
+        # Parse Sample Reads
+        for k in parsed_json["sample_stats"]:
+            # Parses all samples
+            for l in parsed_json["sample_stats"][k]:
+                # Parses all information about a sample
+                # TODO: fix keys
+                key = parsed_json["sample_stats"][k][l]
+                try:
+                    self.anglerfish_data[s_name][key + "_{}".format(k)] = float(parsed_json["sample_stats"][k][key])
+                except KeyError:
+                    log.debug("'" + key + "' key missing in anglerfish json: '{}'".format(f["fn"]))
+
+        # [Maybe] Parse Undetermined
 
     def anglerfish_general_stats_table(self):
         """TODO"""
@@ -106,29 +139,28 @@ class MultiqcModule(BaseMultiqcModule):
         """TODO"""
         keys = OrderedDict()
         keys["Aligned reads matching both I7 and I5 adaptor"] = {
-            "color": "TODO",
+            "color": TODO,
             "name": "Aligned reads matching both I7 and I5 adaptor",
         }
         keys["Aligned reads matching multiple I7/I5 adaptor pairs"] = {
-            "color": "TODO",
+            "color": TODO,
             "name": "Aligned reads matching multiple I7/I5 adaptor pairs",
         }
-        keys["aligned reads matching only I7 or I5 adaptor"] = {
-            "color": "#2f7ed8",
-            "name": "aligned reads matching only I7 or I5 adaptor",
+        keys["Aligned reads matching only I7 or I5 adaptor"] = {
+            "color": TODO,
+            "name": "Aligned reads matching only I7 or I5 adaptor",
         }
-        keys["aligned reads with uncategorized alignments"] = {
-            "color": "#2f7ed8",
-            "name": "aligned reads with uncategorized alignments",
+        keys["Aligned reads with uncategorized alignments"] = {
+            "color": TODO,
+            "name": "Aligned reads with uncategorized alignments",
         }
-        keys["input_reads"] = {"color": "#2f7ed8", "name": "input_reads"}
-        keys["reads aligning to adaptor sequences"] = {
-            "color": "#2f7ed8",
-            "name": "reads aligning to adaptor sequences",
+        keys["Input_reads"] = {"color": TODO, "name": "Input_reads"}
+        keys["Reads aligning to adaptor sequences"] = {
+            "color": TODO,
+            "name": "Reads aligning to adaptor sequences",
         }
 
-        # TODO: Add keys
-        # TODO: Add data structure for plot?
+        # TODO: [This is might not be needed] Add data structure for plot?
         # TODO: Add config
         return bargraph.plot(self.anglerfish_data, keys, config)
 
