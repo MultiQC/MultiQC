@@ -98,8 +98,6 @@ class MultiqcModule(BaseMultiqcModule):
         for f in self.find_log_files("checkatlas/tsne"):
             input_fname = f['s_name'].replace('_checkatlas_tsne','')
             s_name = self.clean_s_name(input_fname, f)
-            print(s_name)
-            print(f)
             self.data_tsne[s_name] = f['f']
             self.add_data_source(f, s_name)
 
