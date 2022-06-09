@@ -33,9 +33,9 @@ class MultiqcModule(BaseMultiqcModule):
 
         # Find and load any anglerfish reports
         self.anglerfish_data = dict()
-        # self.anglerfish_pafstats = dict()
-        # self.anglerfish_samples = dict()
-        # self.anglerfish_undetermined = dict()
+        # self.anglerfish_pafstats = dict(), These might not be neccessary
+        # self.anglerfish_samples = dict(), These might not be neccessary
+        # self.anglerfish_undetermined = dict(), These might not be neccessary
 
         for f in self.find_log_files("anglerfish", filehandles=True):
             self.parse_anglerfish_json(f)
@@ -63,7 +63,7 @@ class MultiqcModule(BaseMultiqcModule):
             description="Paf Statistics of sampled reads.",
             plot=self.anglerfish_paf_stats_chart(),
         )
-        # TODO: Sample statistics scatter plot
+        # TODO: Sample statistics scatter plot, normal distribution?
         self.add_section(
             name="Sample Statistics",
             anchor="anglerfish-sample-statistics",
@@ -90,19 +90,22 @@ class MultiqcModule(BaseMultiqcModule):
         s_name = f["s_name"]
         self.add_data_source(f, s_name)
         self.anglerfish_data[s_name] = {}
-        # self.anglerfish_pafstats[s_name] = {}
-        # self.anglerfish_samples[s_name] = {}
-        # self.anglerfish_undetermined[s_name] = {}
+        # self.anglerfish_pafstats[s_name] = {}, These might not be neccessary
+        # self.anglerfish_samples[s_name] = {}, These might not be neccessary
+        # self.anglerfish_undetermined[s_name] = {}, These might not be neccessary
 
         # Parse paf statistics
         for k in parsed_json["paf_stats"]:
             # TODO: better documentation
             # Parse all keys
             for l in parsed_json["paf_stats"][k]:
-                # TODO: fix keys
-                key = parsed_json["paf_stats"][k][l]
+                # TODO: get key in a better way
+                key_list = (parsed_json["paf_stats"][k]).keys()
+                key = key_list[l]
+                # key = parsed_json["paf_stats"][k][l]
                 try:
                     # TODO: could be more generall (not two lines nearly the same), but would require more code
+                    # TODO: maybe use tuple
                     # Amount of reads matched to key
                     self.anglerfish_data[s_name][key + "amount_{}".format(k)] = float(
                         parsed_json["paf_stats"][k][key][0]
@@ -119,15 +122,19 @@ class MultiqcModule(BaseMultiqcModule):
             # Parses all samples
             for l in parsed_json["sample_stats"][k]:
                 # Parses all information about a sample
-                # TODO: fix keys
-                key = parsed_json["sample_stats"][k][l]
+                # TODO: get key in a better way
+                key_list = (parsed_json["sample_stats"][k]).keys()
+                key = key_list[l]
+                # key = parsed_json["sample_stats"][k][l]
                 try:
+                    # TODO: probably dont need to parse sample_name, if this is just for plotting
                     self.anglerfish_data[s_name][key + "_{}".format(k)] = float(parsed_json["sample_stats"][k][key])
                 except KeyError:
                     log.debug("'" + key + "' key missing in anglerfish json: '{}'".format(f["fn"]))
 
         # [Maybe] Parse Undetermined
 
+    # TODO: General stats table
     def anglerfish_general_stats_table(self):
         """TODO"""
         headers = OrderedDict()
@@ -160,7 +167,8 @@ class MultiqcModule(BaseMultiqcModule):
             "name": "Reads aligning to adaptor sequences",
         }
 
-        # TODO: [This is might not be needed] Add data structure for plot?
+        # TODO: [if needed] Data structure for the plot
+
         # TODO: Add config
         return bargraph.plot(self.anglerfish_data, keys, config)
 
