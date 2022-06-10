@@ -104,6 +104,8 @@ class MultiqcModule(BaseMultiqcModule):
                 except KeyError:
                     log.debug("'" + key + "' key missing in anglerfish json '{}'".format(f["fn"]))
             index += 1
+        # for plotting
+        self.anglerfish_data[s_name]["paf_stats_amount"] = index
         # Parse Sample Reads
         index = 0
         for k in parsed_json["sample_stats"]:
@@ -126,39 +128,61 @@ class MultiqcModule(BaseMultiqcModule):
         self.general_stats_addcols(self.anglerfish_data, headers, "anglerfish")
 
     def anglerfish_paf_stats_chart(self):
-        """TODO"""
+        """Generate the Anglerfish Paf stats plot"""
         keys = OrderedDict()
-        keys["Aligned reads matching both I7 and I5 adaptor"] = {
+        keys["aligned reads matching both I7 and I5 adaptor"] = {
             "color": "#003f5c",
-            "name": "Aligned reads matching both I7 and I5 adaptor",
+            "name": "aligned reads matching both I7 and I5 adaptor",
         }
-        keys["Aligned reads matching multiple I7/I5 adaptor pairs"] = {
+        keys["aligned reads matching multiple I7/I5 adaptor pairs"] = {
             "color": "#444e86",
-            "name": "Aligned reads matching multiple I7/I5 adaptor pairs",
+            "name": "aligned reads matching multiple I7/I5 adaptor pairs",
         }
-        keys["Aligned reads matching only I7 or I5 adaptor"] = {
+        keys["aligned reads matching only I7 or I5 adaptor"] = {
             "color": "#955196",
-            "name": "Aligned reads matching only I7 or I5 adaptor",
+            "name": "aligned reads matching only I7 or I5 adaptor",
         }
-        keys["Aligned reads with uncategorized alignments"] = {
+        keys["aligned reads with uncategorized alignments"] = {
             "color": "#dd5182",
-            "name": "Aligned reads with uncategorized alignments",
+            "name": "aligned reads with uncategorized alignments",
         }
-        keys["Input_reads"] = {"color": "#ff6e54", "name": "Input_reads"}
-        keys["Reads aligning to adaptor sequences"] = {
+        keys["input_reads"] = {"color": "#ff6e54", "name": "input_reads"}
+        keys["reads aligning to adaptor sequences"] = {
             "color": "#ffa600",
-            "name": "Reads aligning to adaptor sequences",
+            "name": "reads aligning to adaptor sequences",
         }
 
         # TODO: Data structure for the Paf stat plot
-
+        data = {}
+        for s_name in self.anglerfish_data:
+            index = self.anglerfish_data[s_name]["paf_stats_amount"]
+            for i in range(index):
+                data["{s} Paf Stats, {i}".format(s=s_name, i=i)] = {}
+                data["{s} Paf Stats, {i}".format(s=s_name, i=i)][
+                    "aligned reads matching both I7 and I5 adaptor"
+                ] = self.anglerfish_data[s_name]["aligned reads matching both I7 and I5 adaptor_{}".format(i)]
+                data["{s} Paf Stats, {i}".format(s=s_name, i=i)][
+                    "aligned reads matching multiple I7/I5 adaptor pairs"
+                ] = self.anglerfish_data[s_name]["aligned reads matching multiple I7/I5 adaptor pairs_{}".format(i)]
+                data["{s} Paf Stats, {i}".format(s=s_name, i=i)][
+                    "aligned reads matching only I7 or I5 adaptor"
+                ] = self.anglerfish_data[s_name]["aligned reads matching only I7 or I5 adaptor_{}".format(i)]
+                data["{s} Paf Stats, {i}".format(s=s_name, i=i)][
+                    "aligned reads with uncategorized alignments"
+                ] = self.anglerfish_data[s_name]["aligned reads with uncategorized alignments_{}".format(i)]
+                data["{s} Paf Stats, {i}".format(s=s_name, i=i)]["input_reads"] = self.anglerfish_data[s_name][
+                    "input_reads_{}".format(i)
+                ]
+                data["{s} Paf Stats, {i}".format(s=s_name, i=i)][
+                    "reads aligning to adaptor sequences"
+                ] = self.anglerfish_data[s_name]["reads aligning to adaptor sequences_{}".format(i)]
         # configuration
         config = {
             "id": "paf_stats_plot",
             "title": "Anglerfish: Paf Statistics",
             "ylab": "# Reads",
         }
-        return bargraph.plot(self.anglerfish_data, keys, config)
+        return bargraph.plot(data, keys, config)
 
     # def anglerfish_sample_stats_chart(self):
     # """TODO"""
