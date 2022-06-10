@@ -128,30 +128,8 @@ class MultiqcModule(BaseMultiqcModule):
 
     def anglerfish_paf_stats_chart(self):
         """Generate the Anglerfish Paf stats plot"""
-        keys = OrderedDict()
-        keys["aligned reads matching both I7 and I5 adaptor"] = {
-            "color": "#003f5c",
-            "name": "aligned reads matching both I7 and I5 adaptor",
-        }
-        keys["aligned reads matching multiple I7/I5 adaptor pairs"] = {
-            "color": "#444e86",
-            "name": "aligned reads matching multiple I7/I5 adaptor pairs",
-        }
-        keys["aligned reads matching only I7 or I5 adaptor"] = {
-            "color": "#955196",
-            "name": "aligned reads matching only I7 or I5 adaptor",
-        }
-        keys["aligned reads with uncategorized alignments"] = {
-            "color": "#dd5182",
-            "name": "aligned reads with uncategorized alignments",
-        }
-        keys["input_reads"] = {"color": "#ff6e54", "name": "input_reads"}
-        keys["reads aligning to adaptor sequences"] = {
-            "color": "#ffa600",
-            "name": "reads aligning to adaptor sequences",
-        }
 
-        # TODO: Data structure for the Paf stat plot
+        # Data structure for the Paf stat plot
         data = {}
         for s_name in self.anglerfish_data:
             index = self.anglerfish_data[s_name]["paf_stats_amount"]
@@ -175,13 +153,13 @@ class MultiqcModule(BaseMultiqcModule):
                 data["{s} Paf Stats, {i}".format(s=s_name, i=i)][
                     "reads aligning to adaptor sequences"
                 ] = self.anglerfish_data[s_name]["reads aligning to adaptor sequences_{}".format(i)]
-        # configuration
         config = {
-            "id": "paf_stats_plot",
-            "title": "Anglerfish: Paf Statistics",
-            "ylab": "# Reads",
+            "id": "Anglerfish_paf_plot",
+            "cpswitch": False,
+            "stacking": None,
         }
-        return bargraph.plot(data, keys, config)
+        # return bargraph.plot(data, keys, config)
+        return bargraph.plot(data, None, config)
 
     # def anglerfish_sample_stats_chart(self):
     # """TODO"""
