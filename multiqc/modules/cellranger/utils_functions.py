@@ -49,13 +49,19 @@ def set_hidden_cols(headers, col_names):
     return headers
 
 
-def parse_bcknee_data(data, s_name):
+def parse_bcknee_data(data, s_name, max_idx=1000):
     """parse data for bc knee plot from cellranger dict"""
 
     value_dict = dict()
     for idx, data_series in enumerate(data):
-        id = f"{s_name}_{idx}_{data_series['name']}"
-        value_dict[id] = transform_data(data_series)
+        if idx > max_idx:
+            break
+        if len(data_series["x"]) == 0:
+            continue
+        id = f"{s_name}_{data_series['name']}"
+        if id not in value_dict.keys():
+            value_dict[id] = dict()
+        value_dict[id].update(transform_data(data_series))
 
     return value_dict
 
@@ -65,6 +71,7 @@ def transform_data(data):
 
     value_dict = dict()
     for idx, row in enumerate(data["x"]):
-        value_dict[row] = data["y"][idx]
+        if row > 0 and data["y"][idx] > 0:
+            value_dict[row] = data["y"][idx]
 
     return value_dict

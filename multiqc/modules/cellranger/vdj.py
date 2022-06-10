@@ -7,7 +7,7 @@ import json
 from collections import OrderedDict
 from multiqc import config
 from multiqc.plots import linegraph, table
-from .utils_functions import update_dict, set_hidden_cols, transform_data
+from .utils_functions import *
 
 # Initialise the logger
 log = logging.getLogger(__name__)
@@ -245,7 +245,7 @@ class CellRangerVdjMixin:
                 "helptext": help_dict["Barcode Rank Plot"],
             }
         }
-        plots_data = {"bc": transform_data(mydict["summary_tab"]["cells"]["barcode_knee_plot"]["data"][2])}
+        plots_data = {"bc": parse_bcknee_data(mydict["summary_tab"]["cells"]["barcode_knee_plot"]["data"], s_name)}
 
         if len(data) > 0:
             if s_name in self.cellrangervdj_general_data:
@@ -258,4 +258,6 @@ class CellRangerVdjMixin:
                 self.cellrangervdj_warnings[s_name] = warnings
             self.cellrangervdj_plots_conf = plots
             for k in plots_data.keys():
-                self.cellrangervdj_plots_data[k][s_name] = plots_data[k]
+                if k not in self.cellrangervdj_plots_data.keys():
+                    self.cellrangervdj_plots_data[k] = dict()
+                self.cellrangervdj_plots_data[k].update(plots_data[k])
