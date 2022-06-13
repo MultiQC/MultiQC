@@ -146,6 +146,7 @@ class MultiqcModule(BaseMultiqcModule):
 
         # Data structure for the Paf stat plot
         data = {}
+        dataL = {}
         for s_name in self.anglerfish_data:
             index = self.anglerfish_data[s_name]["paf_stats_amount"]
             for i in range(index):
@@ -168,14 +169,47 @@ class MultiqcModule(BaseMultiqcModule):
                 data["{s} Paf Stats, {i}".format(s=s_name, i=i)][
                     "reads aligning to adaptor sequences"
                 ] = self.anglerfish_data[s_name]["reads aligning to adaptor sequences_{}".format(i)]
+
+                # Second data set
+                dataL["{s} aligned reads matching both I7 and I5 adaptor, {i}".format(s=s_name, i=i)] = {}
+                dataL["{s} aligned reads matching both I7 and I5 adaptor, {i}".format(s=s_name, i=i)][
+                    "aligned reads matching both I7 and I5 adaptor"
+                ] = self.anglerfish_data[s_name]["aligned reads matching both I7 and I5 adaptor_{}".format(i)]
+
+                dataL["{s} aligned reads matching multiple I7/I5 adaptor pairs, {i}".format(s=s_name, i=i)] = {}
+                dataL["{s} aligned reads matching multiple I7/I5 adaptor pairs, {i}".format(s=s_name, i=i)][
+                    "aligned reads matching multiple I7/I5 adaptor pairs"
+                ] = self.anglerfish_data[s_name]["aligned reads matching multiple I7/I5 adaptor pairs_{}".format(i)]
+
+                dataL["{s} aligned reads matching only I7 or I5 adaptor, {i}".format(s=s_name, i=i)] = {}
+                dataL["{s} aligned reads matching only I7 or I5 adaptor, {i}".format(s=s_name, i=i)][
+                    "aligned reads matching only I7 or I5 adaptor"
+                ] = self.anglerfish_data[s_name]["aligned reads matching only I7 or I5 adaptor_{}".format(i)]
+
+                dataL["{s} aligned reads with uncategorized alignments, {i}".format(s=s_name, i=i)] = {}
+                dataL["{s} aligned reads with uncategorized alignments, {i}".format(s=s_name, i=i)][
+                    "aligned reads with uncategorized alignments"
+                ] = self.anglerfish_data[s_name]["aligned reads with uncategorized alignments_{}".format(i)]
+
+                dataL["{s} input_reads, {i}".format(s=s_name, i=i)] = {}
+                dataL["{s} input_reads, {i}".format(s=s_name, i=i)]["input_reads"] = self.anglerfish_data[s_name][
+                    "input_reads_{}".format(i)
+                ]
+
+                dataL["{s} reads aligning to adaptor sequences, {i}".format(s=s_name, i=i)] = {}
+                dataL["{s} reads aligning to adaptor sequences, {i}".format(s=s_name, i=i)][
+                    "reads aligning to adaptor sequences"
+                ] = self.anglerfish_data[s_name]["reads aligning to adaptor sequences_{}".format(i)]
+
         config = {
             "id": "Anglerfish_paf_plot",
             "cpswitch": False,
+            "data_labels": ["Grouped", "Single"],
             "title": "Anglerfish: Paf Plot",
             "stacking": None,
         }
         # return bargraph.plot(data, keys, config)
-        return bargraph.plot(data, None, config)
+        return bargraph.plot([data, dataL], None, config)
 
     def anglerfish_sample_stats_chart(self):
         """Generate Sample Stats Scatter Plot"""
