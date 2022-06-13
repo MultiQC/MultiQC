@@ -118,9 +118,14 @@ class MultiqcModule(BaseMultiqcModule):
                 self.anglerfish_data[s_name]["std_read_len_{}".format(index)] = float(k["std_read_len"])
             except:
                 log.debug("'mean_read_len' key missing in anglerfish json: '{}'".format(f["fn"]))
+            try:
+                self.anglerfish_data[s_name]["sample_name_{}".format(index)] = k["sample_name"]
+            except:
+                log.debug("'sample_name' key missing in anglerfish json: '{}'".format(f["fn"]))
+
             # for key in key_list:
             #     try:
-            #         self.anglerfish_data[s_name][key + "_{}".format(index)] = k[key]
+            #         self.anglerfish_data[s_name][key + "_{}".format(index)] = float(k[key])
             #     except:
             #         log.debug("'" + key + "' key missing in anglerfish json: '{}'".format(f["fn"]))
             index += 1
@@ -184,11 +189,12 @@ class MultiqcModule(BaseMultiqcModule):
             index = self.anglerfish_data[s_name]["sample_stats_amount"]
 
             for i in range(index):
-                data["{s} Sample Stats, {i}".format(s=s_name, i=i)] = {}
-                data["{s} Sample Stats, {i}".format(s=s_name, i=i)]["x"] = self.anglerfish_data[s_name][
+                sample_name = self.anglerfish_data[s_name]["sample_name_{}".format(i)]
+                data["{s} Sample: {i}".format(s=s_name, i=sample_name)] = {}
+                data["{s} Sample: {i}".format(s=s_name, i=sample_name)]["x"] = self.anglerfish_data[s_name][
                     "#reads_{}".format(i)
                 ]
-                data["{s} Sample Stats, {i}".format(s=s_name, i=i)]["y"] = self.anglerfish_data[s_name][
+                data["{s} Sample: {i}".format(s=s_name, i=sample_name)]["y"] = self.anglerfish_data[s_name][
                     "std_read_len_{}".format(i)
                 ]
             config = {
