@@ -62,13 +62,14 @@ class MultiqcModule(BaseMultiqcModule):
             description="Paf Statistics of sampled reads.",
             plot=self.anglerfish_paf_stats_chart(),
         )
-        # TODO: Sample statistics scatter plot, normal distribution?
-        # self.add_section(
-        #    name="Sample Statistics",
-        #    anchor="anglerfish-sample-statistics",
-        #    description="Outliers for the sample statistics",
-        #    plot=self.anglerfish_sample_stats_chart(),
-        # )
+
+        # Sample Stats scatter plot
+        self.add_section(
+            name="Sample Statistics",
+            anchor="anglerfish-sample-statistics",
+            description="Outliers for the sample statistics",
+            plot=self.anglerfish_sample_stats_chart(),
+        )
         # TODO: Undetermined plot [maybe under if-clause, incase no undetermined exist?]
         # self.add_section(
         #     name="Undetermined ??? TODO",
@@ -108,19 +109,33 @@ class MultiqcModule(BaseMultiqcModule):
         # Parse Sample Reads
         index = 0
         for k in parsed_json["sample_stats"]:
-            key_list = k.keys()
-            for key in key_list:
-                try:
-                    self.anglerfish_data[s_name][key + "_{}".format(index)] = k[key]
-                except:
-                    log.debug("'" + key + "' key missing in anglerfish json: '{}'".format(f["fn"]))
+            # key_list = k.keys()
+            try:
+                self.anglerfish_data[s_name]["#reads_{}".format(index)] = float(k["#reads"])
+            except:
+                log.debug("'#reads' key missing in anglerfish json: '{}'".format(f["fn"]))
+            try:
+                self.anglerfish_data[s_name]["std_read_len_{}".format(index)] = float(k["std_read_len"])
+            except:
+                log.debug("'mean_read_len' key missing in anglerfish json: '{}'".format(f["fn"]))
+            # for key in key_list:
+            #     try:
+            #         self.anglerfish_data[s_name][key + "_{}".format(index)] = k[key]
+            #     except:
+            #         log.debug("'" + key + "' key missing in anglerfish json: '{}'".format(f["fn"]))
             index += 1
+        self.anglerfish_data[s_name]["sample_stats_amount"] = index
         # [Maybe] Parse Undetermined
 
     # TODO: General stats table
     def anglerfish_general_stats_table(self):
         """Add Anglerfish statistics to the general statistics table"""
         headers = OrderedDict()
+        headers["librarys"] = {
+            "title": "Librarys",
+            "description": "Amount of librarys used",
+            # TODO: Rest of info
+        }
         # TODO: Add headers
         # library header?
 
@@ -161,9 +176,30 @@ class MultiqcModule(BaseMultiqcModule):
         # return bargraph.plot(data, keys, config)
         return bargraph.plot(data, None, config)
 
-    # def anglerfish_sample_stats_chart(self):
-    # """TODO"""
-    # keys = OrderedDict()
+    def anglerfish_sample_stats_chart(self):
+        """TODO"""
+        # keys = OrderedDict()
+        data = {}
+        for s_name in self.anglerfish_data:
+            index = self.anglerfish_data[s_name]["sample_stats_amount"]
+
+            for i in range(index):
+                data["{s} Sample Stats, {i}".format(s=s_name, i=i)] = {}
+                data["{s} Sample Stats, {i}".format(s=s_name, i=i)]["x"] = self.anglerfish_data[s_name][
+                    "#reads_{}".format(i)
+                ]
+                data["{s} Sample Stats, {i}".format(s=s_name, i=i)]["y"] = self.anglerfish_data[s_name][
+                    "std_read_len_{}".format(i)
+                ]
+            config = {
+                "id": "sample_stats_scatter_plot",
+                "xlab": "#reads",
+                "ylab": "mean_read_len",
+                "ymin": 0,
+                "xmin": 0,
+            }
+        return scatter.plot(data, config)
+
     # TODO: keys
     # TODO: ?? Maybe not, depending on plot: data structure for plot?
     # TODO: (p?)config
