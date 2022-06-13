@@ -14,7 +14,8 @@
 
 ### New Modules
 
-_nothing yet.._
+- [**CheckQC**](https://github.com/becavin-lab/checkatlas)
+  - A one-liner tool for quality control of your single-cell atlases. 
 
 ### Module updates
 
