@@ -66,13 +66,14 @@ class MultiqcModule(BaseMultiqcModule):
             description="Outliers for the sample statistics",
             plot=self.anglerfish_sample_stats_chart(),
         )
-        # TODO: Undetermined plot [maybe under if-clause, incase no undetermined exist?]
-        # self.add_section(
-        #     name="Undetermined ??? TODO",
-        #     anchor="TODO",
-        #     description="TODO",
-        #     plot=TODO,
-        # )
+        # Undetermined plot
+        # TODO: error handle if no undetermined exists?
+        self.add_section(
+            name="Undetermined indexes",
+            anchor="anglerfish-undetermined-indexes",
+            description="Showcases undetermined indexes",
+            plot=self.anglerfish_undetermined_index_chart(),
+        )
 
     def parse_anglerfish_json(self, f):
         """Parse the JSON output from anglerfish and save the summary statistics"""
@@ -110,14 +111,21 @@ class MultiqcModule(BaseMultiqcModule):
                         self.anglerfish_data[s_name][key + "_{}".format(index)] = float(k[key])
                     except:
                         log.debug("'" + key + "' missing in anglerfish json: '{}'".format(f["fn"]))
-                if key == "sample_name":
+                else:
                     try:
                         self.anglerfish_data[s_name]["sample_name_{}".format(index)] = k["sample_name"]
                     except:
                         log.debug("'sample_name' key missing in anglerfish json: '{}'".format(f["fn"]))
             index += 1
         self.anglerfish_data[s_name]["sample_stats_amount"] = index
-        # TODO: [Maybe] Parse Undetermined
+
+        # Parse Undetermined
+        index = 0
+        for k in parsed_json["undetermined"]:
+            self.anglerfish_data[s_name]["undetermined_count_{}".format(index)] = float(k["count"])
+            self.anglerfish_data[s_name]["undetermined_index_{}".format(index)] = k["undetermined_index"]
+            index += 1
+        self.anglerfish_data[s_name]["undetermined_amount"] = index
 
     # TODO: General stats table
     def anglerfish_general_stats_table(self):
@@ -206,15 +214,20 @@ class MultiqcModule(BaseMultiqcModule):
             }
         return scatter.plot(data, config)
 
-    # TODO: keys
-    # TODO: ?? Maybe not, depending on plot: data structure for plot?
-    # TODO: (p?)config
-    # return scatter.plot(data, pconfig)
-
-    # def anglerfish_undetermined samples
-    #
-    #
-    #
-    #
-    #
-    #
+    def anglerfish_undetermined_index_chart(self):
+        """Generate Undetermined indexes Bar Plot"""
+        data = {}
+        for s_name in self.anglerfish_data:
+            index = self.anglerfish_data[s_name]["undetermined_amount"]
+            for i in range(index):
+                undetermined_index = self.anglerfish_data[s_name]["undetermined_index_{}".format(i)]
+                data["{s}: {u_i}".format(s=s_name, u_i=undetermined_index)] = {}
+                data["{s}: {u_i}".format(s=s_name, u_i=undetermined_index)][undetermined_index] = self.anglerfish_data[
+                    s_name
+                ]["undetermined_count_{}".format(i)]
+        config = {
+            "id": "Anglerfish_undetermined_index_plot",
+            "cpswitch": False,
+            "title": "Anglerfish: Undetermined Indexes",
+        }
+        return bargraph.plot(data, None, config)
