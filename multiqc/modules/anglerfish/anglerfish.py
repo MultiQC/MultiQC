@@ -59,8 +59,7 @@ class MultiqcModule(BaseMultiqcModule):
             description="Paf Statistics of sampled reads.",
             plot=self.anglerfish_paf_stats_chart(),
         )
-
-        # Sample Stats scatter plot
+        # Sample Stats -mean scatter plot
         self.add_section(
             name="Sample Statistics",
             anchor="anglerfish-sample-statistics",
@@ -106,7 +105,7 @@ class MultiqcModule(BaseMultiqcModule):
         for k in parsed_json["sample_stats"]:
             key_list = k.keys()
             for key in key_list:
-                if (key == "#reads") or (key == "std_read_len"):
+                if key != "sample_name":
                     try:
                         self.anglerfish_data[s_name][key + "_{}".format(index)] = float(k[key])
                     except:
@@ -164,6 +163,7 @@ class MultiqcModule(BaseMultiqcModule):
         config = {
             "id": "Anglerfish_paf_plot",
             "cpswitch": False,
+            "title": "Anglerfish: Paf Plot",
             "stacking": None,
         }
         # return bargraph.plot(data, keys, config)
@@ -177,17 +177,30 @@ class MultiqcModule(BaseMultiqcModule):
 
             for i in range(index):
                 sample_name = self.anglerfish_data[s_name]["sample_name_{}".format(i)]
-                data["{s} Sample: {i}".format(s=s_name, i=sample_name)] = {}
-                data["{s} Sample: {i}".format(s=s_name, i=sample_name)]["x"] = self.anglerfish_data[s_name][
-                    "#reads_{}".format(i)
-                ]
-                data["{s} Sample: {i}".format(s=s_name, i=sample_name)]["y"] = self.anglerfish_data[s_name][
-                    "std_read_len_{}".format(i)
-                ]
+                data["std_read_len Sample: {i}, {s}".format(i=sample_name, s=s_name)] = {}
+                data["mean_read_len Sample: {i}, {s}".format(i=sample_name, s=s_name)] = {}
+
+                data["std_read_len Sample: {i}, {s}".format(i=sample_name, s=s_name)]["x"] = self.anglerfish_data[
+                    s_name
+                ]["#reads_{}".format(i)]
+                data["mean_read_len Sample: {i}, {s}".format(i=sample_name, s=s_name)]["x"] = self.anglerfish_data[
+                    s_name
+                ]["#reads_{}".format(i)]
+
+                data["std_read_len Sample: {i}, {s}".format(i=sample_name, s=s_name)]["y"] = self.anglerfish_data[
+                    s_name
+                ]["std_read_len_{}".format(i)]
+                data["mean_read_len Sample: {i}, {s}".format(i=sample_name, s=s_name)]["y"] = self.anglerfish_data[
+                    s_name
+                ]["mean_read_len_{}".format(i)]
+
+                data["std_read_len Sample: {i}, {s}".format(i=sample_name, s=s_name)]["color"] = "#1f78b4"
+                data["mean_read_len Sample: {i}, {s}".format(i=sample_name, s=s_name)]["color"] = "#33a02c"
             config = {
                 "id": "sample_stats_scatter_plot",
+                "title": "Anglerfish: Sample Stats",
                 "xlab": "#reads",
-                "ylab": "std_read_len",
+                "ylab": "read_len",
                 "ymin": 0,
                 "xmin": 0,
             }
