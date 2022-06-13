@@ -149,113 +149,119 @@ class MultiqcModule(BaseMultiqcModule):
         """Generate the Anglerfish Paf stats plot"""
 
         # Data structure for the Paf stat plot
-        data = {}
-        dataL = {}
-        dataP = {}
-        dataL_P = {}
+        ## Data Structure for grouped amounts
+        dataG = {}
+        ## Data structure for single amounts
+        dataS = {}
+        ## Data Structure for grouped percentages
+        dataG_P = {}
+        ## Data structure for single percentages
+        dataS_P = {}
         for s_name in self.anglerfish_data:
             index = self.anglerfish_data[s_name]["paf_stats_amount"]
             for i in range(index):
-                data["{s} Paf Stats, {i}".format(s=s_name, i=i)] = {}
-                data["{s} Paf Stats, {i}".format(s=s_name, i=i)][
+                # Grouped and Single data in amounts
+
+                dataG["{s} Paf Stats, {i}".format(s=s_name, i=i)] = {}
+
+                dataG["{s} Paf Stats, {i}".format(s=s_name, i=i)][
                     "aligned reads matching both I7 and I5 adaptor"
                 ] = self.anglerfish_data[s_name]["aligned reads matching both I7 and I5 adaptor_{}".format(i)]
-                data["{s} Paf Stats, {i}".format(s=s_name, i=i)][
+                dataG["{s} Paf Stats, {i}".format(s=s_name, i=i)][
                     "aligned reads matching multiple I7/I5 adaptor pairs"
                 ] = self.anglerfish_data[s_name]["aligned reads matching multiple I7/I5 adaptor pairs_{}".format(i)]
-                data["{s} Paf Stats, {i}".format(s=s_name, i=i)][
+                dataG["{s} Paf Stats, {i}".format(s=s_name, i=i)][
                     "aligned reads matching only I7 or I5 adaptor"
                 ] = self.anglerfish_data[s_name]["aligned reads matching only I7 or I5 adaptor_{}".format(i)]
-                data["{s} Paf Stats, {i}".format(s=s_name, i=i)][
+                dataG["{s} Paf Stats, {i}".format(s=s_name, i=i)][
                     "aligned reads with uncategorized alignments"
                 ] = self.anglerfish_data[s_name]["aligned reads with uncategorized alignments_{}".format(i)]
-                data["{s} Paf Stats, {i}".format(s=s_name, i=i)]["input_reads"] = self.anglerfish_data[s_name][
+                dataG["{s} Paf Stats, {i}".format(s=s_name, i=i)]["input_reads"] = self.anglerfish_data[s_name][
                     "input_reads_{}".format(i)
                 ]
-                data["{s} Paf Stats, {i}".format(s=s_name, i=i)][
+                dataG["{s} Paf Stats, {i}".format(s=s_name, i=i)][
                     "reads aligning to adaptor sequences"
                 ] = self.anglerfish_data[s_name]["reads aligning to adaptor sequences_{}".format(i)]
 
                 # Single Bar data set
-                dataL["{s} aligned reads matching both I7 and I5 adaptor, {i}".format(s=s_name, i=i)] = {}
-                dataL["{s} aligned reads matching both I7 and I5 adaptor, {i}".format(s=s_name, i=i)][
+                dataS["{s} aligned reads matching both I7 and I5 adaptor, {i}".format(s=s_name, i=i)] = {}
+                dataS["{s} aligned reads matching both I7 and I5 adaptor, {i}".format(s=s_name, i=i)][
                     "aligned reads matching both I7 and I5 adaptor"
                 ] = self.anglerfish_data[s_name]["aligned reads matching both I7 and I5 adaptor_{}".format(i)]
-
-                dataL["{s} aligned reads matching multiple I7/I5 adaptor pairs, {i}".format(s=s_name, i=i)] = {}
-                dataL["{s} aligned reads matching multiple I7/I5 adaptor pairs, {i}".format(s=s_name, i=i)][
+                dataS["{s} aligned reads matching multiple I7/I5 adaptor pairs, {i}".format(s=s_name, i=i)] = {}
+                dataS["{s} aligned reads matching multiple I7/I5 adaptor pairs, {i}".format(s=s_name, i=i)][
                     "aligned reads matching multiple I7/I5 adaptor pairs"
                 ] = self.anglerfish_data[s_name]["aligned reads matching multiple I7/I5 adaptor pairs_{}".format(i)]
 
-                dataL["{s} aligned reads matching only I7 or I5 adaptor, {i}".format(s=s_name, i=i)] = {}
-                dataL["{s} aligned reads matching only I7 or I5 adaptor, {i}".format(s=s_name, i=i)][
+                dataS["{s} aligned reads matching only I7 or I5 adaptor, {i}".format(s=s_name, i=i)] = {}
+                dataS["{s} aligned reads matching only I7 or I5 adaptor, {i}".format(s=s_name, i=i)][
                     "aligned reads matching only I7 or I5 adaptor"
                 ] = self.anglerfish_data[s_name]["aligned reads matching only I7 or I5 adaptor_{}".format(i)]
 
-                dataL["{s} aligned reads with uncategorized alignments, {i}".format(s=s_name, i=i)] = {}
-                dataL["{s} aligned reads with uncategorized alignments, {i}".format(s=s_name, i=i)][
+                dataS["{s} aligned reads with uncategorized alignments, {i}".format(s=s_name, i=i)] = {}
+                dataS["{s} aligned reads with uncategorized alignments, {i}".format(s=s_name, i=i)][
                     "aligned reads with uncategorized alignments"
                 ] = self.anglerfish_data[s_name]["aligned reads with uncategorized alignments_{}".format(i)]
 
-                dataL["{s} input_reads, {i}".format(s=s_name, i=i)] = {}
-                dataL["{s} input_reads, {i}".format(s=s_name, i=i)]["input_reads"] = self.anglerfish_data[s_name][
+                dataS["{s} input_reads, {i}".format(s=s_name, i=i)] = {}
+                dataS["{s} input_reads, {i}".format(s=s_name, i=i)]["input_reads"] = self.anglerfish_data[s_name][
                     "input_reads_{}".format(i)
                 ]
 
-                dataL["{s} reads aligning to adaptor sequences, {i}".format(s=s_name, i=i)] = {}
-                dataL["{s} reads aligning to adaptor sequences, {i}".format(s=s_name, i=i)][
+                dataS["{s} reads aligning to adaptor sequences, {i}".format(s=s_name, i=i)] = {}
+                dataS["{s} reads aligning to adaptor sequences, {i}".format(s=s_name, i=i)][
                     "reads aligning to adaptor sequences"
                 ] = self.anglerfish_data[s_name]["reads aligning to adaptor sequences_{}".format(i)]
 
                 # Percentages Data Set
-                dataP["{s} Paf Stats, {i}".format(s=s_name, i=i)] = {}
-                dataP["{s} Paf Stats, {i}".format(s=s_name, i=i)][
+                dataG_P["{s} Paf Stats, {i}".format(s=s_name, i=i)] = {}
+                dataG_P["{s} Paf Stats, {i}".format(s=s_name, i=i)][
                     "aligned reads matching both I7 and I5 adaptor"
                 ] = self.anglerfish_data[s_name]["aligned reads matching both I7 and I5 adaptor_P_{}".format(i)]
-                dataP["{s} Paf Stats, {i}".format(s=s_name, i=i)][
+                dataG_P["{s} Paf Stats, {i}".format(s=s_name, i=i)][
                     "aligned reads matching multiple I7/I5 adaptor pairs"
                 ] = self.anglerfish_data[s_name]["aligned reads matching multiple I7/I5 adaptor pairs_P_{}".format(i)]
-                dataP["{s} Paf Stats, {i}".format(s=s_name, i=i)][
+                dataG_P["{s} Paf Stats, {i}".format(s=s_name, i=i)][
                     "aligned reads matching only I7 or I5 adaptor"
                 ] = self.anglerfish_data[s_name]["aligned reads matching only I7 or I5 adaptor_P_{}".format(i)]
-                dataP["{s} Paf Stats, {i}".format(s=s_name, i=i)][
+                dataG_P["{s} Paf Stats, {i}".format(s=s_name, i=i)][
                     "aligned reads with uncategorized alignments"
                 ] = self.anglerfish_data[s_name]["aligned reads with uncategorized alignments_P_{}".format(i)]
-                dataP["{s} Paf Stats, {i}".format(s=s_name, i=i)]["input_reads"] = self.anglerfish_data[s_name][
+                dataG_P["{s} Paf Stats, {i}".format(s=s_name, i=i)]["input_reads"] = self.anglerfish_data[s_name][
                     "input_reads_P_{}".format(i)
                 ]
-                dataP["{s} Paf Stats, {i}".format(s=s_name, i=i)][
+                dataG_P["{s} Paf Stats, {i}".format(s=s_name, i=i)][
                     "reads aligning to adaptor sequences"
                 ] = self.anglerfish_data[s_name]["reads aligning to adaptor sequences_P_{}".format(i)]
 
                 # Percentages Single
-                dataL_P["{s} aligned reads matching both I7 and I5 adaptor, {i}".format(s=s_name, i=i)] = {}
-                dataL_P["{s} aligned reads matching both I7 and I5 adaptor, {i}".format(s=s_name, i=i)][
+                dataS_P["{s} aligned reads matching both I7 and I5 adaptor, {i}".format(s=s_name, i=i)] = {}
+                dataS_P["{s} aligned reads matching both I7 and I5 adaptor, {i}".format(s=s_name, i=i)][
                     "aligned reads matching both I7 and I5 adaptor"
                 ] = self.anglerfish_data[s_name]["aligned reads matching both I7 and I5 adaptor_P_{}".format(i)]
 
-                dataL_P["{s} aligned reads matching multiple I7/I5 adaptor pairs, {i}".format(s=s_name, i=i)] = {}
-                dataL_P["{s} aligned reads matching multiple I7/I5 adaptor pairs, {i}".format(s=s_name, i=i)][
+                dataS_P["{s} aligned reads matching multiple I7/I5 adaptor pairs, {i}".format(s=s_name, i=i)] = {}
+                dataS_P["{s} aligned reads matching multiple I7/I5 adaptor pairs, {i}".format(s=s_name, i=i)][
                     "aligned reads matching multiple I7/I5 adaptor pairs"
                 ] = self.anglerfish_data[s_name]["aligned reads matching multiple I7/I5 adaptor pairs_P_{}".format(i)]
 
-                dataL_P["{s} aligned reads matching only I7 or I5 adaptor, {i}".format(s=s_name, i=i)] = {}
-                dataL_P["{s} aligned reads matching only I7 or I5 adaptor, {i}".format(s=s_name, i=i)][
+                dataS_P["{s} aligned reads matching only I7 or I5 adaptor, {i}".format(s=s_name, i=i)] = {}
+                dataS_P["{s} aligned reads matching only I7 or I5 adaptor, {i}".format(s=s_name, i=i)][
                     "aligned reads matching only I7 or I5 adaptor"
                 ] = self.anglerfish_data[s_name]["aligned reads matching only I7 or I5 adaptor_P_{}".format(i)]
 
-                dataL_P["{s} aligned reads with uncategorized alignments, {i}".format(s=s_name, i=i)] = {}
-                dataL_P["{s} aligned reads with uncategorized alignments, {i}".format(s=s_name, i=i)][
+                dataS_P["{s} aligned reads with uncategorized alignments, {i}".format(s=s_name, i=i)] = {}
+                dataS_P["{s} aligned reads with uncategorized alignments, {i}".format(s=s_name, i=i)][
                     "aligned reads with uncategorized alignments"
                 ] = self.anglerfish_data[s_name]["aligned reads with uncategorized alignments_P_{}".format(i)]
 
-                dataL_P["{s} input_reads, {i}".format(s=s_name, i=i)] = {}
-                dataL_P["{s} input_reads, {i}".format(s=s_name, i=i)]["input_reads"] = self.anglerfish_data[s_name][
+                dataS_P["{s} input_reads, {i}".format(s=s_name, i=i)] = {}
+                dataS_P["{s} input_reads, {i}".format(s=s_name, i=i)]["input_reads"] = self.anglerfish_data[s_name][
                     "input_reads_P_{}".format(i)
                 ]
 
-                dataL_P["{s} reads aligning to adaptor sequences, {i}".format(s=s_name, i=i)] = {}
-                dataL_P["{s} reads aligning to adaptor sequences, {i}".format(s=s_name, i=i)][
+                dataS_P["{s} reads aligning to adaptor sequences, {i}".format(s=s_name, i=i)] = {}
+                dataS_P["{s} reads aligning to adaptor sequences, {i}".format(s=s_name, i=i)][
                     "reads aligning to adaptor sequences"
                 ] = self.anglerfish_data[s_name]["reads aligning to adaptor sequences_P_{}".format(i)]
 
@@ -274,7 +280,7 @@ class MultiqcModule(BaseMultiqcModule):
             "tt_percentages": False,
         }
         # return bargraph.plot(data, keys, config)
-        return bargraph.plot([data, dataL, dataP, dataL_P], None, config)
+        return bargraph.plot([dataG, dataS, dataG_P, dataS_P], None, config)
 
     def anglerfish_sample_stats_chart(self):
         """Generate Sample Stats Scatter Plot"""
