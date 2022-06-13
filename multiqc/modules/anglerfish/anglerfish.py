@@ -160,6 +160,7 @@ class MultiqcModule(BaseMultiqcModule):
         for s_name in self.anglerfish_data:
             index = self.anglerfish_data[s_name]["paf_stats_amount"]
             for i in range(index):
+                # Added for readability
                 # Grouped and Single data in amounts
 
                 dataG["{s} Paf Stats, {i}".format(s=s_name, i=i)] = {}
@@ -326,10 +327,10 @@ class MultiqcModule(BaseMultiqcModule):
             index = self.anglerfish_data[s_name]["undetermined_amount"]
             for i in range(index):
                 undetermined_index = self.anglerfish_data[s_name]["undetermined_index_{}".format(i)]
-                data["{s}: {u_i}".format(s=s_name, u_i=undetermined_index)] = {}
-                data["{s}: {u_i}".format(s=s_name, u_i=undetermined_index)][undetermined_index] = self.anglerfish_data[
-                    s_name
-                ]["undetermined_count_{}".format(i)]
+                data["{}".format(undetermined_index)] = {}
+                data["{}".format(undetermined_index)][undetermined_index] = self.anglerfish_data[s_name][
+                    "undetermined_count_{}".format(i)
+                ]
         config = {
             "id": "Anglerfish_undetermined_index_plot",
             "cpswitch": False,
