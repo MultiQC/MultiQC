@@ -32,7 +32,7 @@ class MultiqcModule(BaseMultiqcModule):
 
         # Find and load any anglerfish reports
         self.anglerfish_data = dict()
-        self.anglerfish_lib = dict()
+        self.anglerfish_gst = dict()
 
         for f in self.find_log_files("anglerfish", filehandles=True):
             self.parse_anglerfish_json(f)
@@ -135,12 +135,13 @@ class MultiqcModule(BaseMultiqcModule):
         for k in parsed_json["sample_stats"]:
             key = k["sample_name"]
             reads = float(k["#reads"])
-            self.anglerfish_lib[key] = {}
-            self.anglerfish_lib["undetermined"] = {}
-            self.anglerfish_lib[key]["library"] = float((reads / total_read) * 100)
-        self.anglerfish_lib["undetermined"]["library"] = float((total_count / total_read) * 100)
+            self.anglerfish_gst[key] = {}
+            self.anglerfish_gst["undetermined"] = {}
+            self.anglerfish_gst[key]["library"] = float((reads / total_read) * 100)
+            self.anglerfish_gst[key]["#reads"] = reads
+        self.anglerfish_gst["undetermined"]["library"] = float((total_count / total_read) * 100)
 
-    # TODO: General stats table
+    # General stats table
     def anglerfish_general_stats_table(self):
         """Add Anglerfish statistics to the general statistics table"""
         headers = OrderedDict()
@@ -153,7 +154,14 @@ class MultiqcModule(BaseMultiqcModule):
             "suffix": " %",
         }
 
-        self.general_stats_addcols(self.anglerfish_lib, headers, "anglerfish")
+        headers["#reads"] = {
+            "title": "#reads",
+            "description": "Amount of reads",
+            "min": 0,
+            "scale": "RdYlGn-rev",
+        }
+
+        self.general_stats_addcols(self.anglerfish_gst, headers, "anglerfish")
 
     def anglerfish_paf_stats_chart(self):
         """Generate the Anglerfish Paf stats plot"""
@@ -208,10 +216,10 @@ class MultiqcModule(BaseMultiqcModule):
 
     def group_data(self, data, s_name, key_list, percent=None, index=None):
         """Make a data structure with all keys in a group"""
-        keyN = "{} Paf stats".format(s_name)
+        keyN = "Paf stats"
         suffix = "_0"
         if index != None:
-            keyN = "{s} Paf Stats, {i}".format(s=s_name, i=index)
+            keyN = "Paf Stats, {}".format(index)
             suffix = "_{}".format(index)
         data[keyN] = {}
         if percent != None:
@@ -230,8 +238,8 @@ class MultiqcModule(BaseMultiqcModule):
             keyN = key
             if index != None:
                 keyN = key + "_{}".format(index)
-            data["{} ".format(s_name) + keyN] = {}
-            data["{} ".format(s_name) + keyN][key] = self.anglerfish_data[s_name][key + suffix]
+            data[keyN] = {}
+            data[keyN][key] = self.anglerfish_data[s_name][key + suffix]
 
     def anglerfish_sample_stats_chart(self):
         """Generate Sample Stats Scatter Plot"""
