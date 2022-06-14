@@ -167,13 +167,13 @@ class MultiqcModule(BaseMultiqcModule):
         """Generate the Anglerfish Paf stats plot"""
 
         # Data structure for the Paf stat plot
-        ## Data Structure for grouped amounts
+        ## Data Structure for grouped keys amounts
         dataG = {}
-        ## Data structure for single amounts
+        ## Data structure for single keys amounts
         dataS = {}
-        ## Data Structure for grouped percentages
+        ## Data Structure for grouped keys percentages
         dataG_P = {}
-        ## Data structure for single percentages
+        ## Data structure for single keys percentages
         dataS_P = {}
         # Keys
         key_list = [
@@ -216,10 +216,10 @@ class MultiqcModule(BaseMultiqcModule):
 
     def group_data(self, data, s_name, key_list, percent=None, index=None):
         """Make a data structure with all keys in a group"""
-        keyN = "Paf stats"
+        keyN = "{} Paf stats".format(s_name)
         suffix = "_0"
         if index != None:
-            keyN = "Paf Stats, {}".format(index)
+            keyN = "{s} Paf Stats, {i}".format(s=s_name, i=index)
             suffix = "_{}".format(index)
         data[keyN] = {}
         if percent != None:
@@ -238,8 +238,8 @@ class MultiqcModule(BaseMultiqcModule):
             keyN = key
             if index != None:
                 keyN = key + "_{}".format(index)
-            data[keyN] = {}
-            data[keyN][key] = self.anglerfish_data[s_name][key + suffix]
+            data["{} ".format(s_name) + keyN] = {}
+            data["{} ".format(s_name) + keyN][key] = self.anglerfish_data[s_name][key + suffix]
 
     def anglerfish_sample_stats_chart(self):
         """Generate Sample Stats Scatter Plot"""
