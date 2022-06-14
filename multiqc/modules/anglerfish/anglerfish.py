@@ -8,7 +8,7 @@ import logging
 import json
 
 from multiqc import config
-from multiqc.plots import bargraph, linegraph, scatter
+from multiqc.plots import bargraph, scatter
 from multiqc.modules.base_module import BaseMultiqcModule
 
 # Initialise the logger
@@ -68,7 +68,6 @@ class MultiqcModule(BaseMultiqcModule):
             plot=self.anglerfish_sample_stats_chart(),
         )
         # Undetermined plot
-        # TODO: error handle if no undetermined exists?
         self.add_section(
             name="Undetermined indexes",
             anchor="anglerfish-undetermined-indexes",
@@ -96,9 +95,6 @@ class MultiqcModule(BaseMultiqcModule):
             for key in key_list:
                 try:
                     self.anglerfish_data[s_name][key + "_{}".format(index)] = float(k[key][0])
-                except KeyError:
-                    log.debug("'" + key + "' key missing in anglerfish json '{}'".format(f["fn"]))
-                try:
                     self.anglerfish_data[s_name][key + "_P_{}".format(index)] = float((k[key][1]) * 100)
                 except KeyError:
                     log.debug("'" + key + "' key missing in anglerfish json '{}'".format(f["fn"]))
@@ -133,8 +129,8 @@ class MultiqcModule(BaseMultiqcModule):
             self.anglerfish_data[s_name]["undetermined_index_{}".format(index)] = k["undetermined_index"]
             index += 1
         self.anglerfish_data[s_name]["undetermined_amount"] = index
+
         # Parse Library
-        # TODO: ska den ta in alla olika?
         total_read = parsed_json["paf_stats"][0]["input_reads"][0]
         for k in parsed_json["sample_stats"]:
             key = k["sample_name"]
@@ -156,8 +152,6 @@ class MultiqcModule(BaseMultiqcModule):
             "scale": "RdYlGn-rev",
             "suffix": " %",
         }
-        # TODO: Add headers
-        # library header?
 
         self.general_stats_addcols(self.anglerfish_lib, headers, "anglerfish")
 
@@ -173,20 +167,29 @@ class MultiqcModule(BaseMultiqcModule):
         dataG_P = {}
         ## Data structure for single percentages
         dataS_P = {}
+        # Keys
+        key_list = [
+            "aligned reads matching both I7 and I5 adaptor",
+            "aligned reads matching multiple I7/I5 adaptor pairs",
+            "aligned reads matching only I7 or I5 adaptor",
+            "aligned reads with uncategorized alignments",
+            "input_reads",
+            "reads aligning to adaptor sequences",
+        ]
         for s_name in self.anglerfish_data:
             index = self.anglerfish_data[s_name]["paf_stats_amount"]
-            if index is 1:
-                self.get_data(dataG, s_name, None, None, None)
-                self.get_data(dataS, s_name, None, True, None)
-                self.get_data(dataG_P, s_name, None, None, True)
-                self.get_data(dataS_P, s_name, None, True, True)
+            if index == 1:
+                self.group_data(dataG, s_name, key_list, None, None)
+                self.group_data(dataG_P, s_name, key_list, True, None)
+                self.single_data(dataS, s_name, key_list, None, None)
+                self.single_data(dataS_P, s_name, key_list, True, None)
             else:
                 for i in range(index):
-                    self.get_data(dataG, s_name, i, None, None)
-                    self.get_data(dataS, s_name, i, True, None)
-                    self.get_data(dataG_P, s_name, i, None, True)
-                    self.get_data(dataS_P, s_name, i, True, True)
-                # Grouped and Single data in amounts
+                    self.group_data(dataG, s_name, key_list, None, i)
+                    self.group_data(dataG_P, s_name, key_list, True, i)
+                    self.single_data(dataS, s_name, key_list, None, i)
+                    self.single_data(dataS_P, s_name, key_list, True, i)
+
         config = {
             "id": "Anglerfish_paf_plot",
             "cpswitch": False,
@@ -201,41 +204,26 @@ class MultiqcModule(BaseMultiqcModule):
             "tt_decimals": 2,
             "tt_percentages": False,
         }
-        # return bargraph.plot(data, keys, config)
         return bargraph.plot([dataG, dataS, dataG_P, dataS_P], None, config)
 
-    def get_data(self, data, s_name, index=None, single=None, percent=None):
-        key_list = [
-            "aligned reads matching both I7 and I5 adaptor",
-            "aligned reads matching multiple I7/I5 adaptor pairs",
-            "aligned reads matching only I7 or I5 adaptor",
-            "aligned reads with uncategorized alignments",
-            "input_reads",
-            "reads aligning to adaptor sequences",
-        ]
-
-        if index is None:
-            if single is None:
-                self.group_data(data, s_name, key_list, "_0", percent, index)
-            else:
-                self.single_data(data, s_name, key_list, "_0", percent, index)
-        else:
-            if single is None:
-                self.group_data(data, s_name, key_list, "_{}".format(index), percent, index)
-            else:
-                self.single_data(data, s_name, key_list, "_{}".format(index), percent, index)
-
-    def group_data(self, data, s_name, key_list, suffix, percent=None, index=None):
+    def group_data(self, data, s_name, key_list, percent=None, index=None):
+        """Make a data structure with all keys in a group"""
         keyN = "{} Paf stats".format(s_name)
+        suffix = "_0"
         if index != None:
             keyN = "{s} Paf Stats, {i}".format(s=s_name, i=index)
+            suffix = "_{}".format(index)
         data[keyN] = {}
         if percent != None:
             suffix = "_P" + suffix
         for key in key_list:
             data[keyN][key] = self.anglerfish_data[s_name][key + suffix]
 
-    def single_data(self, data, s_name, key_list, suffix, percent=None, index=None):
+    def single_data(self, data, s_name, key_list, percent=None, index=None):
+        """Make data structure with all keys as own categories"""
+        suffix = "_0"
+        if index != None:
+            suffix = "_{}".format(index)
         if percent != None:
             suffix = "_P" + suffix
         for key in key_list:
@@ -253,32 +241,14 @@ class MultiqcModule(BaseMultiqcModule):
 
             for i in range(index):
                 sample_name = self.anglerfish_data[s_name]["sample_name_{}".format(i)]
-                data["std_read_len Sample: {i}, {s}".format(i=sample_name, s=s_name)] = {}
-                data["mean_read_len Sample: {i}, {s}".format(i=sample_name, s=s_name)] = {}
-
-                data["std_read_len Sample: {i}, {s}".format(i=sample_name, s=s_name)]["x"] = self.anglerfish_data[
-                    s_name
-                ]["#reads_{}".format(i)]
-                data["mean_read_len Sample: {i}, {s}".format(i=sample_name, s=s_name)]["x"] = self.anglerfish_data[
-                    s_name
-                ]["#reads_{}".format(i)]
-
-                data["std_read_len Sample: {i}, {s}".format(i=sample_name, s=s_name)]["y"] = self.anglerfish_data[
-                    s_name
-                ]["std_read_len_{}".format(i)]
-                data["mean_read_len Sample: {i}, {s}".format(i=sample_name, s=s_name)]["y"] = self.anglerfish_data[
-                    s_name
-                ]["mean_read_len_{}".format(i)]
-
-                data["std_read_len Sample: {i}, {s}".format(i=sample_name, s=s_name)]["color"] = "#1f78b4"
-                data["mean_read_len Sample: {i}, {s}".format(i=sample_name, s=s_name)]["color"] = "#33a02c"
+                data["Sample: {}".format(sample_name)] = {}
+                data["Sample: {}".format(sample_name)]["x"] = self.anglerfish_data[s_name]["std_read_len_{}".format(i)]
+                data["Sample: {}".format(sample_name)]["y"] = self.anglerfish_data[s_name]["mean_read_len_{}".format(i)]
             config = {
                 "id": "sample_stats_scatter_plot",
                 "title": "Anglerfish: Sample Stats",
-                "xlab": "#reads",
-                "ylab": "read_len",
-                "ymin": 0,
-                "xmin": 0,
+                "xlab": "std_read_len",
+                "ylab": "mean_read_len",
             }
         return scatter.plot(data, config)
 
