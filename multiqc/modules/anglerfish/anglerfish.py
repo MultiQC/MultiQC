@@ -8,7 +8,7 @@ import logging
 import json
 
 from multiqc import config
-from multiqc.plots import bargraph, scatter
+from multiqc.plots import bargraph, scatter, beeswarm
 from multiqc.modules.base_module import BaseMultiqcModule
 
 # Initialise the logger
@@ -66,6 +66,13 @@ class MultiqcModule(BaseMultiqcModule):
             anchor="anglerfish-sample-statistics",
             description="Outliers for the sample statistics",
             plot=self.anglerfish_sample_stats_chart(),
+        )
+        # Sample Stats -mean beeswarm plot
+        self.add_section(
+            name="Sample Statistics",
+            anchor="anglerfish-sample-statistics",
+            description="Outliers for the sample statistics",
+            plot=self.anglerfish_sample_stats_beeswarm(),
         )
         # Undetermined plot
         self.add_section(
@@ -139,6 +146,8 @@ class MultiqcModule(BaseMultiqcModule):
             self.anglerfish_gst["undetermined"] = {}
             self.anglerfish_gst[key]["library"] = float((reads / total_read) * 100)
             self.anglerfish_gst[key]["#reads"] = reads
+            self.anglerfish_gst[key]["mean_read_len"] = float(k["mean_read_len"])
+            self.anglerfish_gst[key]["std_read_len"] = float(k["std_read_len"])
         self.anglerfish_gst["undetermined"]["library"] = float((total_count / total_read) * 100)
 
     # General stats table
@@ -157,6 +166,18 @@ class MultiqcModule(BaseMultiqcModule):
         headers["#reads"] = {
             "title": "#reads",
             "description": "Amount of reads",
+            "min": 0,
+            "scale": "RdYlGn-rev",
+        }
+        headers["mean_read_len"] = {
+            "title": "mean_read_len",
+            "description": "Mean read length",
+            "min": 0,
+            "scale": "RdYlGn-rev",
+        }
+        headers["std_read_len"] = {
+            "title": "std_read_len",
+            "description": "Standard deviation read length",
             "min": 0,
             "scale": "RdYlGn-rev",
         }
@@ -259,6 +280,23 @@ class MultiqcModule(BaseMultiqcModule):
                 "ylab": "mean_read_len",
             }
         return scatter.plot(data, config)
+
+    def anglerfish_sample_stats_beeswarm(self):
+        """TODO"""
+        data = {}
+        for s_name in self.anglerfish_data:
+            index = self.anglerfish_data[s_name]["sample_stats_amount"]
+
+            for i in range(index):
+                sample_name = self.anglerfish_data[s_name]["sample_name_{}".format(i)]
+                data["Sample: {}".format(sample_name)] = {}
+                data["Sample: {}".format(sample_name)]["std_read_len"] = self.anglerfish_data[s_name][
+                    "std_read_len_{}".format(i)
+                ]
+                data["Sample: {}".format(sample_name)]["mean_read_len"] = self.anglerfish_data[s_name][
+                    "mean_read_len_{}".format(i)
+                ]
+        return beeswarm.plot(data)
 
     def anglerfish_undetermined_index_chart(self):
         """Generate Undetermined indexes Bar Plot"""
