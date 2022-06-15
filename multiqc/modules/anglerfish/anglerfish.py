@@ -61,12 +61,7 @@ class MultiqcModule(BaseMultiqcModule):
             plot=self.anglerfish_sample_stats(),
         )
         # Undetermined indexes plot
-        self.add_section(
-            name="Undetermined indexes",
-            anchor="Anglerfish-undetermined-indexes",
-            description="",
-            plot=self.anglerfish_undetermined_index_chart(),
-        )
+        self.anglerfish_undetermined_index_chart()
 
     def parse_anglerfish_json(self, f):
         """Parse the JSON output from Anglerfish and save the summary statistics"""
@@ -96,12 +91,17 @@ class MultiqcModule(BaseMultiqcModule):
         # Parse Undetermined Indexes
         index = 0
         total_count = 0
-        for k in parsed_json["undetermined"]:
-            self.anglerfish_data[s_name]["undetermined_count_{}".format(index)] = float(k["count"])
-            total_count += float(k["count"])
-            self.anglerfish_data[s_name]["undetermined_index_{}".format(index)] = k["undetermined_index"]
-            index += 1
-        self.anglerfish_data[s_name]["undetermined_amount"] = index
+        try:
+            for k in parsed_json["undetermined"]:
+                if len(k) > 0:
+                    self.anglerfish_data[s_name]["undetermined_count_{}".format(index)] = float(k["count"])
+                    total_count += float(k["count"])
+                    self.anglerfish_data[s_name]["undetermined_index_{}".format(index)] = k["undetermined_index"]
+                    index += 1
+            self.anglerfish_data[s_name]["undetermined_amount"] = index
+        except (KeyError):
+            # No undetermined in file
+            self.anglerfish_data[s_name]["undetermined_amount"] = -1
 
         # Parse for general stat table
         ## Multiple sample names per file requires dict where thr first key is not file name
@@ -186,18 +186,32 @@ class MultiqcModule(BaseMultiqcModule):
     def anglerfish_undetermined_index_chart(self):
         """Generate Undetermined indexes Bar Plot"""
         data = {}
+        debug_list = []
         for s_name in self.anglerfish_data:
             index = self.anglerfish_data[s_name]["undetermined_amount"]
-            for i in range(index):
-                undetermined_index = self.anglerfish_data[s_name]["undetermined_index_{}".format(i)]
-                data["{}".format(undetermined_index)] = {}
-                data["{}".format(undetermined_index)][undetermined_index] = self.anglerfish_data[s_name][
-                    "undetermined_count_{}".format(i)
-                ]
-        config = {
-            "id": "Anglerfish_undetermined_index_plot",
-            "cpswitch": False,
-            "title": "Anglerfish: Undetermined Indexes",
-            "tt_percentages": False,
-        }
-        return bargraph.plot(data, None, config)
+            if index > 0:
+                for i in range(index):
+                    undetermined_index = self.anglerfish_data[s_name]["undetermined_index_{}".format(i)]
+                    data["{}".format(undetermined_index)] = {}
+                    data["{}".format(undetermined_index)][undetermined_index] = self.anglerfish_data[s_name][
+                        "undetermined_count_{}".format(i)
+                    ]
+            else:
+                # For non existing undetermined and empty undetermined
+                debug_list.append(s_name)
+        # Only add undetermined section if undetermined data exists
+        if len(data) != 0:
+            config = {
+                "id": "Anglerfish_undetermined_index_plot",
+                "cpswitch": False,
+                "title": "Anglerfish: Undetermined Indexes",
+                "tt_percentages": False,
+            }
+            self.add_section(
+                name="Undetermined Indexes",
+                anchor="Anglerfish-undetermined-indexes",
+                plot=bargraph.plot(data, None, config),
+            )
+            for n in debug_list:
+                # Adds which files where missing undetermined info to log
+                log.debug("No Undetermined Data in Anglerfish json: {}".format(n))
