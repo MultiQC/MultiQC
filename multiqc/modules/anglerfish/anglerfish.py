@@ -24,8 +24,8 @@ class MultiqcModule(BaseMultiqcModule):
 
         # Initialise the parent object
         super(MultiqcModule, self).__init__(
-            name="anglerfish",
-            anchor="anglerfish",
+            name="Anglerfish",
+            anchor="Anglerfish",
             href="https://github.com/remiolsen/anglerfish",
             info="A tool to assess Illumina libraries sequenced on Oxford Nanopore for the purpose of quality control.",
         )
@@ -55,32 +55,25 @@ class MultiqcModule(BaseMultiqcModule):
 
         # Sample Stats Read length table/beeswarm plot
         self.add_section(
-            name="Sample Statistics- Read Lengths",
-            anchor="anglerfish-sample-statistics",
-            description="",  # TODO ?
+            name="Read Lengths Summary",
+            anchor="Anglerfish-sample-statistics",
+            description="The mean read length and the standard deviation for each sample.",
             plot=self.anglerfish_sample_stats(),
         )
         # Undetermined indexes plot
         self.add_section(
             name="Undetermined indexes",
-            anchor="anglerfish-undetermined-indexes",
-            description="Showcases undetermined indexes",
+            anchor="Anglerfish-undetermined-indexes",
+            description="",
             plot=self.anglerfish_undetermined_index_chart(),
-        )
-        # Paf Statistics bar plot
-        self.add_section(
-            name="Paf Statistics",
-            anchor="anglerfish-paf-statistics",
-            description="I7 and I5 adaptor alignement.",
-            plot=self.anglerfish_paf_stats_chart(),
         )
 
     def parse_anglerfish_json(self, f):
-        """Parse the JSON output from anglerfish and save the summary statistics"""
+        """Parse the JSON output from Anglerfish and save the summary statistics"""
         try:
             parsed_json = json.load(f["f"])
         except:
-            log.warning("Could not parse anglerfish JSON: '{}'".format(f["fn"]))
+            log.warning("Could not parse Anglerfish JSON: '{}'".format(f["fn"]))
             return None
 
         # Fetch a sample name from the command
@@ -88,41 +81,19 @@ class MultiqcModule(BaseMultiqcModule):
         self.add_data_source(f, s_name)
         self.anglerfish_data[s_name] = {}
 
-        # Parse paf statistics
-        index = 0
-        for k in parsed_json["paf_stats"]:
-            key_list = k.keys()
-            for key in key_list:
-                try:
-                    self.anglerfish_data[s_name][self.key_switch(key) + "_{}".format(index)] = float(k[key][0])
-                    self.anglerfish_data[s_name][self.key_switch(key) + "_P_{}".format(index)] = float(
-                        (k[key][1]) * 100
-                    )
-                except KeyError:
-                    log.debug("'" + key + "' key missing in anglerfish json '{}'".format(f["fn"]))
-            index += 1
-        # Save total index amount, for plotting purpose
-        self.anglerfish_data[s_name]["paf_stats_amount"] = index
-
-        # Parse Sample Reads
+        # Parse Sample Stats
         index = 0
         for k in parsed_json["sample_stats"]:
             key_list = k.keys()
             for key in key_list:
                 if key != "sample_name":
-                    try:
-                        self.anglerfish_data[s_name][key + "_{}".format(index)] = float(k[key])
-                    except:
-                        log.debug("'" + key + "' missing in anglerfish json: '{}'".format(f["fn"]))
+                    self.anglerfish_data[s_name][key + "_{}".format(index)] = float(k[key])
                 else:
-                    try:
-                        self.anglerfish_data[s_name]["sample_name_{}".format(index)] = k["sample_name"]
-                    except:
-                        log.debug("'sample_name' key missing in anglerfish json: '{}'".format(f["fn"]))
+                    self.anglerfish_data[s_name]["sample_name_{}".format(index)] = k["sample_name"]
             index += 1
         self.anglerfish_data[s_name]["sample_stats_amount"] = index
 
-        # Parse Undetermined
+        # Parse Undetermined Indexes
         index = 0
         total_count = 0
         for k in parsed_json["undetermined"]:
@@ -132,37 +103,33 @@ class MultiqcModule(BaseMultiqcModule):
             index += 1
         self.anglerfish_data[s_name]["undetermined_amount"] = index
 
-        # Parse Library
+        # Parse for general stat table
+        ## Multiple sample names per file requires dict where thr first key is not file name
         total_read = parsed_json["paf_stats"][0]["input_reads"][0]
         for k in parsed_json["sample_stats"]:
             key = k["sample_name"]
             reads = float(k["#reads"])
             self.anglerfish_gst[key] = {}
             self.anglerfish_gst["undetermined"] = {}
-            self.anglerfish_gst[key]["library"] = float((reads / total_read) * 100)
             self.anglerfish_gst[key]["#reads"] = reads
             self.anglerfish_gst[key]["mean_read_len"] = float(k["mean_read_len"])
             self.anglerfish_gst[key]["std_read_len"] = float(k["std_read_len"])
-        self.anglerfish_gst["undetermined"]["library"] = float((total_count / total_read) * 100)
-
-    def key_switch(self, arg):
-        switcher = {
-            "aligned reads matching both I7 and I5 adaptor": "align both",
-            "aligned reads matching multiple I7/I5 adaptor pairs": "align multiple",
-            "aligned reads matching only I7 or I5 adaptor": "align one",
-            "aligned reads with uncategorized alignments": "uncategorized",
-            "input_reads": "input reads",
-            "reads aligning to adaptor sequences": "align any",
-        }
-        return switcher.get(arg)
+            try:
+                self.anglerfish_gst[key]["library"] = float((reads / total_read) * 100)
+                self.anglerfish_gst["undetermined"]["library"] = float((total_count / total_read) * 100)
+            except (ZeroDivisionError):
+                log.debug("zero input reads - library = 0")
+                self.anglerfish_gst[key]["library"] = float(0)
+                self.anglerfish_gst["undetermined"]["library"] = float(0)
 
     # General stats table
     def anglerfish_general_stats_table(self):
         """Add Anglerfish statistics to the general statistics table"""
         headers = OrderedDict()
         headers["library"] = {
+            "namespace": "Anglerfish",
             "title": "library",
-            "description": "Amount of library used",
+            "description": "Amount of library used. Calculated from a samples #reads divided by total number of input reads",
             "max": 100,
             "min": 0,
             "scale": "RdYlGn-rev",
@@ -170,18 +137,21 @@ class MultiqcModule(BaseMultiqcModule):
         }
 
         headers["#reads"] = {
+            "namespace": "Anglerfish",
             "title": "#reads",
             "description": "Amount of reads",
             "min": 0,
             "scale": "RdYlGn-rev",
         }
         headers["mean_read_len"] = {
+            "namespace": "Anglerfish",
             "title": "mean_read_len",
             "description": "Mean read length",
             "min": 0,
             "scale": "RdYlGn-rev",
         }
         headers["std_read_len"] = {
+            "namespace": "Anglerfish",
             "title": "std_read_len",
             "description": "Standard deviation read length",
             "min": 0,
@@ -190,86 +160,10 @@ class MultiqcModule(BaseMultiqcModule):
 
         self.general_stats_addcols(self.anglerfish_gst, headers, "anglerfish")
 
-    def anglerfish_paf_stats_chart(self):
-        """Generate the Anglerfish Paf stats plot"""
-
-        # Data structure for the Paf stat plot
-        ## Data Structure for grouped keys amounts
-        dataG = {}
-        ## Data structure for single keys amounts
-        dataS = {}
-        ## Data Structure for grouped keys percentages
-        dataG_P = {}
-        ## Data structure for single keys percentages
-        dataS_P = {}
-        # Keys
-        key_list = [
-            "align both",
-            "align multiple",
-            "align one",
-            "uncategorized",
-            "input reads",
-            "align any",
-        ]
-        for s_name in self.anglerfish_data:
-            index = self.anglerfish_data[s_name]["paf_stats_amount"]
-            if index == 1:
-                self.group_data(dataG, s_name, key_list, None, None)
-                self.group_data(dataG_P, s_name, key_list, True, None)
-                self.single_data(dataS, s_name, key_list, None, None)
-                self.single_data(dataS_P, s_name, key_list, True, None)
-            else:
-                for i in range(index):
-                    self.group_data(dataG, s_name, key_list, None, i)
-                    self.group_data(dataG_P, s_name, key_list, True, i)
-                    self.single_data(dataS, s_name, key_list, None, i)
-                    self.single_data(dataS_P, s_name, key_list, True, i)
-
-        config = {
-            "id": "Anglerfish_paf_plot",
-            "cpswitch": False,
-            "data_labels": [
-                {"name": "Amount in Group", "ylab": "Amount matched"},
-                {"name": "Amount Single", "ylab": "Amount matched"},
-                {"name": "Percentages in Group", "ylab": "Percent", "ymax": 100},
-                {"name": "Percentages Single", "ylab": "Percent", "ymax": 100},
-            ],
-            "title": "Anglerfish: Paf Plot",
-            "stacking": None,
-            "tt_decimals": 2,
-            "tt_percentages": False,
-        }
-        return bargraph.plot([dataG, dataS, dataG_P, dataS_P], None, config)
-
-    def group_data(self, data, s_name, key_list, percent=None, index=None):
-        """Make a data structure with all keys in a group"""
-        keyN = "Paf stats"
-        suffix = "_0"
-        if index != None:
-            keyN = "Paf Stats, {i}".format(i=index)
-            suffix = "_{}".format(index)
-        data[keyN] = {}
-        if percent != None:
-            suffix = "_P" + suffix
-        for key in key_list:
-            data[keyN][key] = self.anglerfish_data[s_name][key + suffix]
-
-    def single_data(self, data, s_name, key_list, percent=None, index=None):
-        """Make data structure with all keys as own categories"""
-        suffix = "_0"
-        if index != None:
-            suffix = "_{}".format(index)
-        if percent != None:
-            suffix = "_P" + suffix
-        for key in key_list:
-            keyN = key
-            if index != None:
-                keyN = key + "_{}".format(index)
-            data[keyN] = {}
-            data[keyN][key] = self.anglerfish_data[s_name][key + suffix]
-
     def anglerfish_sample_stats(self):
-        """TODO"""
+        """Generate plot for read length from sample stats.
+        For >10 samples: generate table plot
+        for >= 10 samples: generate beeswarm plot"""
         data = {}
         for s_name in self.anglerfish_data:
             index = self.anglerfish_data[s_name]["sample_stats_amount"]
@@ -277,12 +171,13 @@ class MultiqcModule(BaseMultiqcModule):
             for i in range(index):
                 sample_name = self.anglerfish_data[s_name]["sample_name_{}".format(i)]
                 data["Sample: {}".format(sample_name)] = {}
-                data["Sample: {}".format(sample_name)]["std_read_len"] = self.anglerfish_data[s_name][
-                    "std_read_len_{}".format(i)
-                ]
-                data["Sample: {}".format(sample_name)]["mean_read_len"] = self.anglerfish_data[s_name][
+                data["Sample: {}".format(sample_name)]["Mean"] = self.anglerfish_data[s_name][
                     "mean_read_len_{}".format(i)
                 ]
+                data["Sample: {}".format(sample_name)]["Standard Deviation"] = self.anglerfish_data[s_name][
+                    "std_read_len_{}".format(i)
+                ]
+
         # Plot table if less than 10 samples exist, beeswarm if more
         if index < 10:
             return table.plot(data)
