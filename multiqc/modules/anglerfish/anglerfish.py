@@ -32,7 +32,6 @@ class MultiqcModule(BaseMultiqcModule):
 
         # Find and load any anglerfish reports
         self.anglerfish_data = dict()
-        self.anglerfish_gst = dict()
 
         for f in self.find_log_files("anglerfish", filehandles=True):
             self.parse_anglerfish_json(f)
@@ -53,9 +52,9 @@ class MultiqcModule(BaseMultiqcModule):
         # General Stats Table
         self.anglerfish_general_stats_table()
 
-        # Sample Stats Read length table/beeswarm plot
+        # Adds section for Sample Stats Read length table/beeswarm plot
         self.anglerfish_sample_stats()
-        # Undetermined indexes plot
+        # Adds section for Undetermined indexes plot
         self.anglerfish_undetermined_index_chart()
 
     def parse_anglerfish_json(self, f):
@@ -64,7 +63,7 @@ class MultiqcModule(BaseMultiqcModule):
             parsed_json = json.load(f["f"])
         except:
             log.warning("Could not parse Anglerfish JSON: '{}'".format(f["fn"]))
-            return None
+            return
 
         # Fetch a sample name from the command
         s_name = f["s_name"]
@@ -72,6 +71,7 @@ class MultiqcModule(BaseMultiqcModule):
         self.anglerfish_data[s_name] = {}
 
         # Parse Sample Stats
+        ## Index for each sample and their reads in order to iterate without knowing sample names
         index = 0
         try:
             for k in parsed_json["sample_stats"]:
@@ -88,6 +88,7 @@ class MultiqcModule(BaseMultiqcModule):
             self.anglerfish_data[s_name]["sample_stats_amount"] = -1
 
         # Parse Undetermined Indexes
+        ## Index for each undetermined (count, index) pair
         index = 0
         total_count = 0
         try:
@@ -101,33 +102,36 @@ class MultiqcModule(BaseMultiqcModule):
         except (KeyError):
             # No undetermined in file or undetermined missing info
             self.anglerfish_data[s_name]["undetermined_amount"] = -1
+        self.anglerfish_data[s_name]["total_count"] = total_count
 
-        # Parse for general stat table
-        ## Multiple sample names per file requires dict where thr first key is not file name
-        total_read = parsed_json["paf_stats"][0]["input_reads"][0]
-        try:
-            for k in parsed_json["sample_stats"]:
-                key = k["sample_name"]
-                reads = float(k["#reads"])
-                self.anglerfish_gst[key] = {}
-                self.anglerfish_gst["undetermined"] = {}
-                self.anglerfish_gst[key]["#reads"] = reads
-                self.anglerfish_gst[key]["mean_read_len"] = float(k["mean_read_len"])
-                self.anglerfish_gst[key]["std_read_len"] = float(k["std_read_len"])
-                try:
-                    self.anglerfish_gst[key]["library"] = float((reads / total_read) * 100)
-                    self.anglerfish_gst["undetermined"]["library"] = float((total_count / total_read) * 100)
-                except (ZeroDivisionError):
-                    # log.debug("zero input reads - library = 0")
-                    self.anglerfish_gst[key]["library"] = float(0)
-                    self.anglerfish_gst["undetermined"]["library"] = float(0)
-        except (KeyError):
-            # Do  nothing
-            return None
+        # Save total amount of input reads
+        self.anglerfish_data[s_name]["total_read"] = float(parsed_json["paf_stats"][0]["input_reads"][0])
 
     # General stats table
     def anglerfish_general_stats_table(self):
         """Add Anglerfish statistics to the general statistics table"""
+        # Prepp data for general stat table
+        ## Multiple sample names per file requires dict where the first key is not file name
+        data = {}
+        for s_name in self.anglerfish_data:
+            total_read = self.anglerfish_data[s_name]["total_read"]
+            total_count = self.anglerfish_data[s_name]["total_count"]
+            try:
+                for k in range(self.anglerfish_data[s_name]["sample_stats_amount"]):
+                    key = self.anglerfish_data[s_name]["sample_name_{}".format(k)]
+                    data[key] = {}
+                    data["undetermined"] = {}
+                    reads = self.anglerfish_data[s_name]["#reads_{}".format(k)]
+                    data[key]["#reads"] = reads
+                    data[key]["mean_read_len"] = self.anglerfish_data[s_name]["mean_read_len_{}".format(k)]
+                    data[key]["std_read_len"] = self.anglerfish_data[s_name]["std_read_len_{}".format(k)]
+                    data[key]["library"] = float((reads / total_read) * 100)
+                    data["undetermined"]["library"] = float((total_count / total_read) * 100)
+            except (KeyError):
+                log.debug("No general stats table generated from Anglerfish json: {}".format(s_name))
+            except (ZeroDivisionError):
+                log.debug("No library in general stats table generated from Anglerfish json: {}".format(s_name))
+
         headers = OrderedDict()
         headers["library"] = {
             "namespace": "Anglerfish",
@@ -161,7 +165,7 @@ class MultiqcModule(BaseMultiqcModule):
             "scale": "RdYlGn-rev",
         }
 
-        self.general_stats_addcols(self.anglerfish_gst, headers, "anglerfish")
+        self.general_stats_addcols(data, headers, "anglerfish")
 
     def anglerfish_sample_stats(self):
         """Generate plot for read length from sample stats.
@@ -169,9 +173,11 @@ class MultiqcModule(BaseMultiqcModule):
         for >= 10 samples: generate beeswarm plot"""
         data = {}
         debug_list = []
+        total_samples = 0
         for s_name in self.anglerfish_data:
             index = self.anglerfish_data[s_name]["sample_stats_amount"]
             if index > 0:
+                total_samples += index
                 for i in range(index):
                     sample_name = self.anglerfish_data[s_name]["sample_name_{}".format(i)]
                     data["Sample: {}".format(sample_name)] = {}
@@ -186,20 +192,17 @@ class MultiqcModule(BaseMultiqcModule):
                 debug_list.append(s_name)
         if len(data) != 0:
             # Plot table if less than 10 samples exist, beeswarm if more
-            if index < 10:
-                self.add_section(
-                    name="Read Lengths Summary",
-                    anchor="Anglerfish-sample-statistics",
-                    description="The mean read length and the standard deviation for each sample.",
-                    plot=table.plot(data),
-                )
+            p = ""
+            if total_samples < 10:
+                p = table.plot(data)
             else:
-                self.add_section(
-                    name="Read Lengths Summary",
-                    anchor="Anglerfish-sample-statistics",
-                    description="The mean read length and the standard deviation for each sample.",
-                    plot=beeswarm.plot(data),
-                )
+                p = beeswarm.plot(data)
+            self.add_section(
+                name="Read Lengths Summary",
+                anchor="Anglerfish-sample-statistics",
+                description="The mean read length and the standard deviation for each sample.",
+                plot=p,
+            )
         for n in debug_list:
             # Adds which files where missing undetermined info to log
             log.debug("Missing Sample Stat Data in Anglerfish json: {}".format(n))

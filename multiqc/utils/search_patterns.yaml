@@ -11,7 +11,7 @@ afterqc:
   contents: "allow_mismatch_in_poly"
 anglerfish:
   fn: "*.json"
-  contents: "paf_stats"
+  contents: "anglerfish_version"
 bamtools/stats:
   contents: "Stats for BAM file(s):"
   shared: true
