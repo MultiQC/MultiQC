@@ -191,16 +191,20 @@ class MultiqcModule(BaseMultiqcModule):
                 # For non existing sample stat and faulty sample stat
                 debug_list.append(s_name)
         if len(data) != 0:
+            config = {
+                "id": "Sample_Stat_Read_Length",
+                "title": "Anglerfish: Read Lengths Summary",
+            }
             # Plot table if less than 10 samples exist, beeswarm if more
             p = ""
             if total_samples < 10:
-                p = table.plot(data)
+                p = table.plot(data, None, config)
             else:
-                p = beeswarm.plot(data)
+                p = beeswarm.plot(data, None, config)
             self.add_section(
                 name="Read Lengths Summary",
                 anchor="Anglerfish-sample-statistics",
-                description="The mean read length and the standard deviation for each sample.",
+                description="The Mean read length and the Standard Deviation for each sample.",
                 plot=p,
             )
         for n in debug_list:
