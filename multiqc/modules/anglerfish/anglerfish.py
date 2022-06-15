@@ -118,7 +118,7 @@ class MultiqcModule(BaseMultiqcModule):
                 self.anglerfish_gst[key]["library"] = float((reads / total_read) * 100)
                 self.anglerfish_gst["undetermined"]["library"] = float((total_count / total_read) * 100)
             except (ZeroDivisionError):
-                log.debug("zero input reads - library = 0")
+                # log.debug("zero input reads - library = 0")
                 self.anglerfish_gst[key]["library"] = float(0)
                 self.anglerfish_gst["undetermined"]["library"] = float(0)
 
