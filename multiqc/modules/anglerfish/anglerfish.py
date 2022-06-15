@@ -8,7 +8,7 @@ import logging
 import json
 
 from multiqc import config
-from multiqc.plots import bargraph, scatter, beeswarm
+from multiqc.plots import bargraph, scatter, beeswarm, table
 from multiqc.modules.base_module import BaseMultiqcModule
 
 # Initialise the logger
@@ -53,33 +53,26 @@ class MultiqcModule(BaseMultiqcModule):
         # General Stats Table
         self.anglerfish_general_stats_table()
 
-        # Paf Statistics bar plot
-        # self.add_section(
-        #     name="Paf Statistics",
-        #     anchor="anglerfish-paf-statistics",
-        #     description="Paf Statistics of sampled reads.",
-        #     plot=self.anglerfish_paf_stats_chart(),
-        # )
-        # Sample Stats -mean scatter plot
-        # self.add_section(
-        #     name="Sample Statistics Scatter plot",
-        #     anchor="anglerfish-sample-statistics",
-        #     description="Outliers for the sample statistics",
-        #     plot=self.anglerfish_sample_stats_chart(),
-        # )
-        # Sample Stats -mean beeswarm plot
+        # Sample Stats Read length table/beeswarm plot
         self.add_section(
-            name="Sample Statistics Beeswarm",
+            name="Sample Statistics- Read Lengths",
             anchor="anglerfish-sample-statistics",
-            description="Outliers for the sample statistics",
-            plot=self.anglerfish_sample_stats_beeswarm(),
+            description="",  # TODO ?
+            plot=self.anglerfish_sample_stats(),
         )
-        # Undetermined plot
+        # Undetermined indexes plot
         self.add_section(
             name="Undetermined indexes",
             anchor="anglerfish-undetermined-indexes",
             description="Showcases undetermined indexes",
             plot=self.anglerfish_undetermined_index_chart(),
+        )
+        # Paf Statistics bar plot
+        self.add_section(
+            name="Paf Statistics",
+            anchor="anglerfish-paf-statistics",
+            description="I7 and I5 adaptor alignement.",
+            plot=self.anglerfish_paf_stats_chart(),
         )
 
     def parse_anglerfish_json(self, f):
@@ -101,8 +94,10 @@ class MultiqcModule(BaseMultiqcModule):
             key_list = k.keys()
             for key in key_list:
                 try:
-                    self.anglerfish_data[s_name][key + "_{}".format(index)] = float(k[key][0])
-                    self.anglerfish_data[s_name][key + "_P_{}".format(index)] = float((k[key][1]) * 100)
+                    self.anglerfish_data[s_name][self.key_switch(key) + "_{}".format(index)] = float(k[key][0])
+                    self.anglerfish_data[s_name][self.key_switch(key) + "_P_{}".format(index)] = float(
+                        (k[key][1]) * 100
+                    )
                 except KeyError:
                     log.debug("'" + key + "' key missing in anglerfish json '{}'".format(f["fn"]))
             index += 1
@@ -150,6 +145,17 @@ class MultiqcModule(BaseMultiqcModule):
             self.anglerfish_gst[key]["std_read_len"] = float(k["std_read_len"])
         self.anglerfish_gst["undetermined"]["library"] = float((total_count / total_read) * 100)
 
+    def key_switch(self, arg):
+        switcher = {
+            "aligned reads matching both I7 and I5 adaptor": "align both",
+            "aligned reads matching multiple I7/I5 adaptor pairs": "align multiple",
+            "aligned reads matching only I7 or I5 adaptor": "align one",
+            "aligned reads with uncategorized alignments": "uncategorized",
+            "input_reads": "input reads",
+            "reads aligning to adaptor sequences": "align any",
+        }
+        return switcher.get(arg)
+
     # General stats table
     def anglerfish_general_stats_table(self):
         """Add Anglerfish statistics to the general statistics table"""
@@ -184,63 +190,63 @@ class MultiqcModule(BaseMultiqcModule):
 
         self.general_stats_addcols(self.anglerfish_gst, headers, "anglerfish")
 
-    # def anglerfish_paf_stats_chart(self):
-    #     """Generate the Anglerfish Paf stats plot"""
+    def anglerfish_paf_stats_chart(self):
+        """Generate the Anglerfish Paf stats plot"""
 
-    #     # Data structure for the Paf stat plot
-    #     ## Data Structure for grouped keys amounts
-    #     dataG = {}
-    #     ## Data structure for single keys amounts
-    #     dataS = {}
-    #     ## Data Structure for grouped keys percentages
-    #     dataG_P = {}
-    #     ## Data structure for single keys percentages
-    #     dataS_P = {}
-    #     # Keys
-    #     key_list = [
-    #         "aligned reads matching both I7 and I5 adaptor",
-    #         "aligned reads matching multiple I7/I5 adaptor pairs",
-    #         "aligned reads matching only I7 or I5 adaptor",
-    #         "aligned reads with uncategorized alignments",
-    #         "input_reads",
-    #         "reads aligning to adaptor sequences",
-    #     ]
-    #     for s_name in self.anglerfish_data:
-    #         index = self.anglerfish_data[s_name]["paf_stats_amount"]
-    #         if index == 1:
-    #             self.group_data(dataG, s_name, key_list, None, None)
-    #             self.group_data(dataG_P, s_name, key_list, True, None)
-    #             self.single_data(dataS, s_name, key_list, None, None)
-    #             self.single_data(dataS_P, s_name, key_list, True, None)
-    #         else:
-    #             for i in range(index):
-    #                 self.group_data(dataG, s_name, key_list, None, i)
-    #                 self.group_data(dataG_P, s_name, key_list, True, i)
-    #                 self.single_data(dataS, s_name, key_list, None, i)
-    #                 self.single_data(dataS_P, s_name, key_list, True, i)
+        # Data structure for the Paf stat plot
+        ## Data Structure for grouped keys amounts
+        dataG = {}
+        ## Data structure for single keys amounts
+        dataS = {}
+        ## Data Structure for grouped keys percentages
+        dataG_P = {}
+        ## Data structure for single keys percentages
+        dataS_P = {}
+        # Keys
+        key_list = [
+            "align both",
+            "align multiple",
+            "align one",
+            "uncategorized",
+            "input reads",
+            "align any",
+        ]
+        for s_name in self.anglerfish_data:
+            index = self.anglerfish_data[s_name]["paf_stats_amount"]
+            if index == 1:
+                self.group_data(dataG, s_name, key_list, None, None)
+                self.group_data(dataG_P, s_name, key_list, True, None)
+                self.single_data(dataS, s_name, key_list, None, None)
+                self.single_data(dataS_P, s_name, key_list, True, None)
+            else:
+                for i in range(index):
+                    self.group_data(dataG, s_name, key_list, None, i)
+                    self.group_data(dataG_P, s_name, key_list, True, i)
+                    self.single_data(dataS, s_name, key_list, None, i)
+                    self.single_data(dataS_P, s_name, key_list, True, i)
 
-    #     config = {
-    #         "id": "Anglerfish_paf_plot",
-    #         "cpswitch": False,
-    #         "data_labels": [
-    #             {"name": "Amount in Group", "ylab": "Amount matched"},
-    #             {"name": "Amount Single", "ylab": "Amount matched"},
-    #             {"name": "Percentages in Group", "ylab": "Percent", "ymax": 100},
-    #             {"name": "Percentages Single", "ylab": "Percent", "ymax": 100},
-    #         ],
-    #         "title": "Anglerfish: Paf Plot",
-    #         "stacking": None,
-    #         "tt_decimals": 2,
-    #         "tt_percentages": False,
-    #     }
-    #     return bargraph.plot([dataG, dataS, dataG_P, dataS_P], None, config)
+        config = {
+            "id": "Anglerfish_paf_plot",
+            "cpswitch": False,
+            "data_labels": [
+                {"name": "Amount in Group", "ylab": "Amount matched"},
+                {"name": "Amount Single", "ylab": "Amount matched"},
+                {"name": "Percentages in Group", "ylab": "Percent", "ymax": 100},
+                {"name": "Percentages Single", "ylab": "Percent", "ymax": 100},
+            ],
+            "title": "Anglerfish: Paf Plot",
+            "stacking": None,
+            "tt_decimals": 2,
+            "tt_percentages": False,
+        }
+        return bargraph.plot([dataG, dataS, dataG_P, dataS_P], None, config)
 
     def group_data(self, data, s_name, key_list, percent=None, index=None):
         """Make a data structure with all keys in a group"""
-        keyN = "{} Paf stats".format(s_name)
+        keyN = "Paf stats"
         suffix = "_0"
         if index != None:
-            keyN = "{s} Paf Stats, {i}".format(s=s_name, i=index)
+            keyN = "Paf Stats, {i}".format(i=index)
             suffix = "_{}".format(index)
         data[keyN] = {}
         if percent != None:
@@ -259,10 +265,10 @@ class MultiqcModule(BaseMultiqcModule):
             keyN = key
             if index != None:
                 keyN = key + "_{}".format(index)
-            data["{} ".format(s_name) + keyN] = {}
-            data["{} ".format(s_name) + keyN][key] = self.anglerfish_data[s_name][key + suffix]
+            data[keyN] = {}
+            data[keyN][key] = self.anglerfish_data[s_name][key + suffix]
 
-    def anglerfish_sample_stats_beeswarm(self):
+    def anglerfish_sample_stats(self):
         """TODO"""
         data = {}
         for s_name in self.anglerfish_data:
@@ -277,6 +283,9 @@ class MultiqcModule(BaseMultiqcModule):
                 data["Sample: {}".format(sample_name)]["mean_read_len"] = self.anglerfish_data[s_name][
                     "mean_read_len_{}".format(i)
                 ]
+        # Plot table if less than 10 samples exist, beeswarm if more
+        if index < 10:
+            return table.plot(data)
         return beeswarm.plot(data)
 
     def anglerfish_undetermined_index_chart(self):
