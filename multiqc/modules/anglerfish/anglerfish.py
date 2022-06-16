@@ -27,6 +27,7 @@ class MultiqcModule(BaseMultiqcModule):
             anchor="Anglerfish",
             href="https://github.com/remiolsen/anglerfish",
             info="A tool to assess Illumina libraries sequenced on Oxford Nanopore for the purpose of quality control.",
+            doi="",
         )
 
         # Find and load any anglerfish reports
