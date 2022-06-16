@@ -139,7 +139,7 @@ class MultiqcModule(BaseMultiqcModule):
             "description": "Amount of library used. Calculated from a samples #reads divided by total number of input reads",
             "max": 100,
             "min": 0,
-            "scale": "RdYlGn-rev",
+            "scale": "PuBu-rev",
             "suffix": " %",
         }
 
@@ -148,21 +148,21 @@ class MultiqcModule(BaseMultiqcModule):
             "title": "#reads",
             "description": "Amount of reads",
             "min": 0,
-            "scale": "RdYlGn-rev",
+            "scale": "PuOr",
         }
         headers["mean_read_len"] = {
             "namespace": "Anglerfish",
             "title": "mean_read_len",
             "description": "Mean read length",
             "min": 0,
-            "scale": "RdYlGn-rev",
+            "scale": "RdYlGn",
         }
         headers["std_read_len"] = {
             "namespace": "Anglerfish",
             "title": "std_read_len",
             "description": "Standard deviation read length",
             "min": 0,
-            "scale": "RdYlGn-rev",
+            "scale": "RdPu",
         }
 
         self.general_stats_addcols(data, headers, "anglerfish")
@@ -234,6 +234,7 @@ class MultiqcModule(BaseMultiqcModule):
                 "id": "Anglerfish_undetermined_index_plot",
                 "cpswitch": False,
                 "title": "Anglerfish: Undetermined Indexes",
+                "ylab": "Index Count",
                 "tt_percentages": False,
             }
             self.add_section(
