@@ -135,7 +135,7 @@ class MultiqcModule(BaseMultiqcModule):
         headers = OrderedDict()
         headers["library"] = {
             "title": "library",
-            "description": "Amount of library.",
+            "description": "Percentage of library.",
             "max": 100,
             "min": 0,
             "scale": "PuBu-rev",
