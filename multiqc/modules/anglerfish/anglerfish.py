@@ -135,7 +135,7 @@ class MultiqcModule(BaseMultiqcModule):
         headers = OrderedDict()
         headers["library"] = {
             "title": "library",
-            "description": "Percentage of library.",
+            "description": "Fraction within library.",
             "max": 100,
             "min": 0,
             "scale": "PuBu-rev",
@@ -156,7 +156,7 @@ class MultiqcModule(BaseMultiqcModule):
         }
         headers["std_read_len"] = {
             "title": "Length StdDev",
-            "description": "Standard deviation read length",
+            "description": "Standard deviation of the read lengths",
             "min": 0,
             "scale": "RdPu",
         }
