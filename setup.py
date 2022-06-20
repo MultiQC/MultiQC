@@ -86,6 +86,7 @@ setup(
             "busco = multiqc.modules.busco:MultiqcModule",
             "bustools = multiqc.modules.bustools:MultiqcModule",
             "ccs = multiqc.modules.ccs:MultiqcModule",
+            "cegx = multiqc.modules.cegx:MultiqcModule",
             "checkqc = multiqc.modules.checkqc:MultiqcModule",
             "clipandmerge = multiqc.modules.clipandmerge:MultiqcModule",
             "clusterflow = multiqc.modules.clusterflow:MultiqcModule",

@@ -193,6 +193,8 @@ ccs/v4:
 ccs/v5:
   contents: '"id": "ccs_processing"'
   fn: "*.json"
+cegx/mbias:
+  fn: "*_mbias.tsv"
 checkqc:
   contents: "instrument_and_reagent_type"
   fn: "*.json"

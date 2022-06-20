@@ -756,3 +756,6 @@ module_order:
   - whatshap:
       module_tag:
         - DNA
+  - cegx:
+      module_tag:
+        - methylation

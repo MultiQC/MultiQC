@@ -15,7 +15,8 @@
 
 ### New Modules
 
-_nothing yet.._
+- [**cegx**](https://cambridge-epigenetix.com)
+   - Display sample summary statistics from CEGX pipeline.
 
 ### Module updates
 
