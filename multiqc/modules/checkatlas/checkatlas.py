@@ -16,7 +16,7 @@ from multiqc.modules.base_module import BaseMultiqcModule
 # Initialise the logger
 log = logging.getLogger(__name__)
 
-FIG_PATH = 'checkatlas_fig'
+FIG_PATH = "checkatlas_fig"
 
 LIST_PATTERN = [
     "checkatlas/summary",
@@ -108,7 +108,7 @@ class MultiqcModule(BaseMultiqcModule):
         self.data_qc = dict()
         for f in self.find_log_files("checkatlas/qc"):
             # copy figures to multiqc data folder
-            shutil.copy2(os.path.join(f['root'], f['fn']), fig_dir)
+            shutil.copy2(os.path.join(f["root"], f["fn"]), fig_dir)
             input_fname = f["s_name"].replace("_checkatlas_qc", "")
             s_name = self.clean_s_name(input_fname, f)
             self.data_qc[s_name] = f["fn"]
@@ -117,7 +117,7 @@ class MultiqcModule(BaseMultiqcModule):
         self.data_umap = dict()
         for f in self.find_log_files("checkatlas/umap"):
             # copy figures to multiqc data folder
-            shutil.copy2(os.path.join(f['root'], f['fn']), fig_dir)
+            shutil.copy2(os.path.join(f["root"], f["fn"]), fig_dir)
             input_fname = f["s_name"].replace("_checkatlas_umap", "")
             s_name = self.clean_s_name(input_fname, f)
             self.data_umap[s_name] = f["fn"]
@@ -126,7 +126,7 @@ class MultiqcModule(BaseMultiqcModule):
         self.data_tsne = dict()
         for f in self.find_log_files("checkatlas/tsne"):
             # copy figures to multiqc data folder
-            shutil.copy2(os.path.join(f['root'], f['fn']), fig_dir)
+            shutil.copy2(os.path.join(f["root"], f["fn"]), fig_dir)
             input_fname = f["s_name"].replace("_checkatlas_tsne", "")
             s_name = self.clean_s_name(input_fname, f)
             self.data_tsne[s_name] = f["fn"]
