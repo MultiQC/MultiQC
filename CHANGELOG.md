@@ -33,6 +33,8 @@ _nothing yet.._
   - Handle zero mean X depth in _Sex_ plot ([#1670](https://github.com/ewels/MultiQC/pull/1670))
 - **Fastp**
   - Include low complexity and too long reads in filtering bar chart
+- **miRTop**
+  - Fix module crashing when `ref_miRNA_sum` is missing in file. ([#1712](https://github.com/ewels/MultiQC/issues/1712))
 
 ## [MultiQC v1.12](https://github.com/ewels/MultiQC/releases/tag/v1.12) - 2022-02-08
 
