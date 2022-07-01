@@ -26,6 +26,7 @@ _nothing yet.._
 - **Custom content**
   - Only set id for custom content when id not set by metadata ([#1629](https://github.com/ewels/MultiQC/issues/1629))
   - Fix bug where module wouldn't run if all content was within a MultiQC config file ([#1686](https://github.com/ewels/MultiQC/issues/1686))
+  - Fix crash when `info` isn't set ([#1688](https://github.com/ewels/MultiQC/issues/1688))
 - **Nanostat**
   - Removed HTML escaping of special characters in the log to fix bug in jinja2 v3.10 removing `jinja2.escape()` ([#1659](https://github.com/ewels/MultiQC/pull/1659))
   - Fix bug where module would crash if input does not contain quality scores ([#1717](https://github.com/ewels/MultiQC/issues/1717))
