@@ -25,6 +25,7 @@ _nothing yet.._
   - Fixed bug when `General Statistics` have a value of `-` ([#1656](https://github.com/ewels/MultiQC/pull/1656))
 - **Custom content**
   - Only set id for custom content when id not set by metadata ([#1629](https://github.com/ewels/MultiQC/issues/1629))
+  - Fix bug where module wouldn't run if all content was within a MultiQC config file ([#1686](https://github.com/ewels/MultiQC/issues/1686))
 - **Nanostat**
   - Removed HTML escaping of special characters in the log to fix bug in jinja2 v3.10 removing `jinja2.escape()` ([#1659](https://github.com/ewels/MultiQC/pull/1659))
 - **Pangolin**
