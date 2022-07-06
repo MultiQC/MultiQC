@@ -225,6 +225,12 @@ To fix this, run the command `export PYTHONNOUSERSITE=1` before running MultiQC.
 This variable [tells Python](https://docs.python.org/3/using/cmdline.html#envvar-PYTHONNOUSERSITE)
 not to add site-packages to the system path when loading, which should avoid the conflicts.
 
+## Using the nix flake
+
+In a nix installation with [flakes](https://nixos.wiki/wiki/Flakes) enabled,
+run `nix develop`in the MultiQC repository to enter a shell
+with required dependencies. To build MultiQC, run `nix build`.
+
 ## Python 2
 
 As of MultiQC version 1.9, **Python 2 is no longer officially supported**.
