@@ -227,7 +227,7 @@ not to add site-packages to the system path when loading, which should avoid the
 
 ## Using the nix flake
 
-In a nix installation with [flakes](https://nixos.wiki/wiki/Flakes) enabled,
+If you're using the [nix package manager](https://nixos.org/download.html#download-nixm) with [flakes](https://nixos.wiki/wiki/Flakes) enabled, you can
 run `nix develop`in the MultiQC repository to enter a shell
 with required dependencies. To build MultiQC, run `nix build`.
 
