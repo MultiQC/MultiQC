@@ -39,6 +39,7 @@ _nothing yet.._
   - Include low complexity and too long reads in filtering bar chart
 - **miRTop**
   - Fix module crashing when `ref_miRNA_sum` is missing in file. ([#1712](https://github.com/ewels/MultiQC/issues/1712))
+  - Fix module crashing due to zero division ([#1719](https://github.com/ewels/MultiQC/issues/1719))
 
 ## [MultiQC v1.12](https://github.com/ewels/MultiQC/releases/tag/v1.12) - 2022-02-08
 
