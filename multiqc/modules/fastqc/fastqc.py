@@ -312,14 +312,12 @@ class MultiqcModule(BaseMultiqcModule):
             pd = self.fastqc_data[s_name]["basic_statistics"]
             pdata[s_name] = dict()
             try:
-                if math.isnan(float(pd["total_deduplicated_percentage"])): 
-                    pdata[s_name]["Duplicate Reads"] = math.nan
-                else:
+                if not math.isnan(float(pd["total_deduplicated_percentage"])): 
                     pdata[s_name]["Duplicate Reads"] = int(
                         ((100.0 - float(pd["total_deduplicated_percentage"])) / 100.0) * pd["Total Sequences"]
                     )
-                pdata[s_name]["Unique Reads"] = pd["Total Sequences"] - pdata[s_name]["Duplicate Reads"]
-                has_dups = True
+                    pdata[s_name]["Unique Reads"] = pd["Total Sequences"] - pdata[s_name]["Duplicate Reads"]
+                    has_dups = True
             except KeyError:
                 # Older versions of FastQC don't have duplicate reads
                 pdata[s_name] = {"Total Sequences": pd["Total Sequences"]}
