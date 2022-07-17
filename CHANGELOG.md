@@ -39,6 +39,8 @@ _nothing yet.._
   - Include low complexity and too long reads in filtering bar chart
 - **miRTop**
   - Fix module crashing when `ref_miRNA_sum` is missing in file. ([#1712](https://github.com/ewels/MultiQC/issues/1712))
+- **FastQC**
+  - Fixed error when parsing duplicate ratio when there is `nan` values in the report. ([#1725](https://github.com/ewels/MultiQC/pull/1725))
 
 ## [MultiQC v1.12](https://github.com/ewels/MultiQC/releases/tag/v1.12) - 2022-02-08
 
