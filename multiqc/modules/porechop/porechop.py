@@ -38,12 +38,13 @@ class MultiqcModule(BaseMultiqcModule):
 
         file_content = logfile["f"]
         for l in file_content:
+            ## Find line after loading reads, and remove suffixes for sample name
             if "Loading reads" in l:
-                ## Find line after loading reads, and remove suffixes
                 s_name = next(file_content).rstrip()
                 s_name = self.clean_s_name(s_name, logfile)
                 self.add_data_source(logfile, s_name=s_name)
                 self.porechop_data[s_name] = {}
+            ## Find each valid metric, clean up for plain integer
             elif "reads loaded" in l:
                 self.porechop_data[s_name]["input_reads"] = {}
                 self.porechop_data[s_name]["input_reads"]["total"] = l.split(" ")[0]
@@ -61,17 +62,3 @@ class MultiqcModule(BaseMultiqcModule):
                 self.porechop_data[s_name]["split_middle"] = {}
                 self.porechop_data[s_name]["split_middle"]["trimmed"] = l.split(" ")[0]
                 self.porechop_data[s_name]["split_middle"]["total"] = l.split(" ")[2]
-
-        ## DETECTION
-        ## Looking for known adapter sets
-        ## 100 / 100 (100.0%)
-
-        ## TRIMMING
-        ## 100 / 100 reads had adapters trimmed from their start (6,986 bp removed)
-        ## 100 / 100 reads had adapters trimmed from their end (5,389 bp removed)
-
-        ## MIDDLE ADAPTERS
-        ## Splitting reads containing middle adapters
-        ## 100 / 100 (100.0%)
-
-        ## 0 / 100 reads were split based on middle adapters
