@@ -698,6 +698,10 @@ module_order:
   - pychopper:
       module_tag:
         - RNA
+  - porechop:
+      module_tag:
+        - DNA
+        - nanopore
   - pycoqc:
       module_tag:
         - DNA

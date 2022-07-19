@@ -145,6 +145,7 @@ setup(
             "peddy = multiqc.modules.peddy:MultiqcModule",
             "phantompeakqualtools = multiqc.modules.phantompeakqualtools:MultiqcModule",
             "picard = multiqc.modules.picard:MultiqcModule",
+            "porechop = multiqc.modules.porechop:MultiqcModule",
             "preseq = multiqc.modules.preseq:MultiqcModule",
             "prokka = multiqc.modules.prokka:MultiqcModule",
             "purple = multiqc.modules.purple:MultiqcModule",

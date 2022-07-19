@@ -16,7 +16,8 @@
 
 ### New Modules
 
-_nothing yet.._
+- [**Porechop**](https://github.com/rrwick/Porechop)
+  - A tool for finding and removing adapters from Oxford Nanopore reads
 
 ### Module updates
 
