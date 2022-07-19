@@ -10,13 +10,16 @@ from collections import OrderedDict
 import logging
 import re
 from multiqc import config
-from multiqc.plots import bargraph, table
+from multiqc.plots import table, linegraph
 from multiqc.modules.base_module import BaseMultiqcModule
 
 # Initialise the logger
 log = logging.getLogger(__name__)
 
 FIG_PATH = "checkatlas_fig"
+
+QC_HEADER = ["total_counts", "n_genes_by_counts",
+             "pct_counts_mt"]
 
 LIST_PATTERN = [
     "checkatlas/summary",
@@ -45,6 +48,7 @@ DICT_EXTENSION = {
 DICT_NAMING = {
     "checkatlas/summary": "checkatlas_summ",
     "checkatlas/adata": "_checkatlas_adata",
+    "checkatlas/qc_fig": "checkatlas_qc_fig",
     "checkatlas/qc": "checkatlas_qc",
     "checkatlas/umap": "_checkatlas_umap",
     "checkatlas/tsne": "checkatlas_tsne",
@@ -105,13 +109,25 @@ class MultiqcModule(BaseMultiqcModule):
             self.data_adata[s_name] = self.parse_adata_logs(f["f"])
             self.add_data_source(f, s_name)
 
-        self.data_qc = dict()
-        for f in self.find_log_files("checkatlas/qc"):
+        self.data_qc_fig = dict()
+        for f in self.find_log_files("checkatlas/qc_fig"):
             # copy figures to multiqc data folder
             shutil.copy2(os.path.join(f["root"], f["fn"]), fig_dir)
             input_fname = f["s_name"].replace("_checkatlas_qc", "")
             s_name = self.clean_s_name(input_fname, f)
-            self.data_qc[s_name] = f["fn"]
+            self.data_qc_fig[s_name] = f["fn"]
+            self.add_data_source(f, s_name)
+
+        self.data_qc_counts = dict()
+        self.data_qc_genes = dict()
+        self.data_qc_mito = dict()
+        for f in self.find_log_files("checkatlas/qc"):
+            input_fname = f["s_name"].replace("_checkatlas_qc", "")
+            s_name = self.clean_s_name(input_fname, f)
+            data_qc_counts, data_qc_genes, data_qc_mito = self.parse_qc_logs(f["f"])
+            self.data_qc_counts[s_name] = data_qc_counts
+            self.data_qc_genes[s_name] = data_qc_genes
+            self.data_qc_mito[s_name] = data_qc_mito
             self.add_data_source(f, s_name)
 
         self.data_umap = dict()
@@ -136,7 +152,7 @@ class MultiqcModule(BaseMultiqcModule):
         for f in self.find_log_files("checkatlas/cluster"):
             input_fname = f["s_name"].replace("_checkatlas_mcluster", "")
             s_name = self.clean_s_name(input_fname, f)
-            data = self.parse_metric_table_logs(f["f"])
+            data = self.parse_metric_logs(f["f"])
             for key, item in data.items():
                 self.data_metric_cluster[key] = item
             self.add_data_source(f, s_name)
@@ -145,7 +161,7 @@ class MultiqcModule(BaseMultiqcModule):
         for f in self.find_log_files("checkatlas/annotation"):
             input_fname = f["s_name"].replace("_checkatlas_mannot", "")
             s_name = self.clean_s_name(input_fname, f)
-            data = self.parse_metric_table_logs(f["f"])
+            data = self.parse_metric_logs(f["f"])
             for key, item in data.items():
                 self.data_metric_annot[key] = item
             self.add_data_source(f, s_name)
@@ -154,7 +170,7 @@ class MultiqcModule(BaseMultiqcModule):
         for f in self.find_log_files("checkatlas/dimred"):
             input_fname = f["s_name"].replace("_checkatlas_mdimred", "")
             s_name = self.clean_s_name(input_fname, f)
-            data = self.parse_metric_table_logs(f["f"])
+            data = self.parse_metric_logs(f["f"])
             for key, item in data.items():
                 self.data_metric_dimred[key] = item
             self.add_data_source(f, s_name)
@@ -163,8 +179,14 @@ class MultiqcModule(BaseMultiqcModule):
             log.info("Found {} summary tables".format(len(self.data_summary)))
         if len(self.data_adata) > 0:
             log.info("Found {} adata tables".format(len(self.data_adata)))
-        if len(self.data_qc) > 0:
-            log.info("Found {} QC figures".format(len(self.data_qc)))
+        if len(self.data_qc_fig) > 0:
+            log.info("Found {} QC violin plots".format(len(self.data_qc_counts)))
+        if len(self.data_qc_counts) > 0:
+            log.info("Found {} QC counts tables".format(len(self.data_qc_counts)))
+        if len(self.data_qc_genes) > 0:
+            log.info("Found {} QC genes tables".format(len(self.data_qc_genes)))
+        if len(self.data_qc_mito) > 0:
+            log.info("Found {} QC mito tables".format(len(self.data_qc_mito)))
         if len(self.data_umap) > 0:
             log.info("Found {} UMAP figures".format(len(self.data_umap)))
         if len(self.data_tsne) > 0:
@@ -181,7 +203,57 @@ class MultiqcModule(BaseMultiqcModule):
 
         self.add_sections()
 
-    def parse_metric_table_logs(self, f):
+
+    def parse_qc_logs(self, f):
+        """
+        Parse logs which are .tsv files
+        Ex: _checkatlas.tsv, adata_checkatlas.tsv
+        :param f:
+        :return:
+        """
+        data_qc_counts = dict()
+        data_qc_genes = dict()
+        data_qc_mito = dict()
+        list_qc_counts = list()
+        list_qc_genes = list()
+        list_qc_mito = list()
+        lines = f.splitlines()
+        headers = lines[0].split("\t")
+        try:
+            index_counts = headers.index(QC_HEADER[0])
+        except ValueError:
+            index_counts = -1
+        try:
+            index_genes = headers.index(QC_HEADER[1])
+        except ValueError:
+            index_genes = -1
+        try:
+            index_mito = headers.index(QC_HEADER[2])
+        except ValueError:
+            index_mito = -1
+
+        for i in range(1, len(lines)):
+            line = lines[i].split("\t")
+            if index_counts != -1:
+                list_qc_counts.append(float(line[index_counts]))
+            if index_genes != -1:
+                list_qc_genes.append(float(line[index_genes]))
+            if index_mito != -1:
+                list_qc_mito.append(float(line[index_mito]))
+        list_qc_counts.sort(reverse=True)
+        list_qc_genes.sort(reverse=True)
+        list_qc_mito.sort(reverse=True)
+
+        for i in range(1, len(list_qc_counts)):
+            data_qc_counts[i] = list_qc_counts[i]
+        for i in range(1, len(list_qc_genes)):
+            data_qc_genes[i] = list_qc_genes[i]
+        for i in range(1, len(list_qc_mito)):
+            data_qc_mito[i] = list_qc_mito[i]
+
+        return data_qc_counts, data_qc_genes, data_qc_mito
+
+    def parse_metric_logs(self, f):
         """
         Parse logs which are .tsv files
         Ex: _checkatlas.tsv, adata_checkatlas.tsv
@@ -190,9 +262,9 @@ class MultiqcModule(BaseMultiqcModule):
         """
         data = {}
         lines = f.splitlines()
-        headers = lines[0].split(",")
+        headers = lines[0].split("\t")
         for i in range(1, len(lines)):
-            line = lines[i].split(",")
+            line = lines[i].split("\t")
             line_dict = {}
             for j in range(1, len(line)):
                 line_dict[headers[j]] = line[j]
@@ -208,9 +280,9 @@ class MultiqcModule(BaseMultiqcModule):
         """
         data = {}
         lines = f.splitlines()
-        headers = lines[0].split(",")
+        headers = lines[0].split("\t")
         for i in range(1, len(lines)):
-            line = lines[i].split(",")
+            line = lines[i].split("\t")
             for j in range(0, len(line)):
                 data[headers[j]] = line[j]
         return data
@@ -233,6 +305,7 @@ class MultiqcModule(BaseMultiqcModule):
 
     def add_sections(self):
         self.add_summary_section()
+        self.add_qc_fig_section()
         self.add_qc_section()
         self.add_umap_section()
         self.add_tsne_section()
@@ -271,18 +344,84 @@ class MultiqcModule(BaseMultiqcModule):
             content=table.plot(self.data_adata, headers, config),
         )
 
-    def add_qc_section(self):
-        type_viz = DICT_NAMING["checkatlas/qc"]
-        html_content = create_img_html_content(type_viz, self.data_qc)
+    def add_qc_fig_section(self):
+        type_viz = DICT_NAMING["checkatlas/qc_fig"]
+        html_content = create_img_html_content(type_viz, self.data_qc_fig)
         self.add_section(
             name="QC visualisation",
-            anchor="checkatlas-qc",
+            anchor="checkatlas-qc_fig",
             description="QC of your atlases.",
             helptext="""
-                
+    
                 """,
             content=html_content,
         )
+
+    def add_qc_section(self):
+        type_viz = DICT_NAMING["checkatlas/qc"]
+        config = {
+            # Building the plot
+            'title': "QC total-counts",
+            'ylab': "total_counts",                # X axis label
+            'xlab': "Cell Rank",                # Y axis label
+            'id': 'qc_counts',     # HTML ID used for plot
+            'categories': False,         # Set to True to use x values as categories instead of numbers.
+        }
+        self.add_section(
+            name="QC total_counts",
+            anchor="checkatlas-qc_counts",
+            description="QC of your atlases Cellrank vs total-counts.",
+            helptext="""
+
+                """,
+            content=linegraph.plot(data=self.data_qc_counts, pconfig=config)
+        )
+
+        config = {
+            # Building the plot
+            'title': "QC n_genes_by_counts",
+            'ylab': "n_genes_by_counts",                # X axis label
+            'xlab': "Cell Rank",                # Y axis label
+            'id': 'qc_genes',     # HTML ID used for plot
+            'categories': False,         # Set to True to use x values as categories instead of numbers.
+        }
+        self.add_section(
+            name="QC n_genes_by_counts",
+            anchor="checkatlas-qc_genes",
+            description="QC of your atlases Cellrank vs n_genes_by_counts.",
+            helptext="""
+
+                """,
+            content=linegraph.plot(data=self.data_qc_genes, pconfig=config)
+        )
+
+        config = {
+            # Building the plot
+            'title': "QC pct_counts_mt",
+            'ylab': "pct_counts_mt",                # X axis label
+            'xlab': "Cell Rank",                # Y axis label
+            'id': 'qc_mito',     # HTML ID used for plot
+            'categories': False,         # Set to True to use x values as categories instead of numbers.
+        }
+        self.add_section(
+            name="QC pct_counts_mt",
+            anchor="checkatlas-qc_mito",
+            description="QC of your atlases Cellrank vs pct_counts_mt.",
+            helptext="""
+
+                """,
+            content=linegraph.plot(data=self.data_qc_mito, pconfig=config)
+        )
+        # html_content = create_img_html_content(type_viz, self.data_qc)
+        # self.add_section(
+        #     name="QC visualisation",
+        #     anchor="checkatlas-qc",
+        #     description="QC of your atlases.",
+        #     helptext="""
+        #
+        #         """,
+        #     content=html_content,
+        # )
 
     def add_umap_section(self):
         type_viz = DICT_NAMING["checkatlas/umap"]

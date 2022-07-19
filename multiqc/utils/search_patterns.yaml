@@ -198,6 +198,8 @@ checkatlas/summary:
 checkatlas/adata:
   fn: "*_checkatlas_adata.tsv"
 checkatlas/qc:
+  fn: "*_checkatlas_qc.tsv"
+checkatlas/qc_fig:
   fn: "*_checkatlas_qc.png"
 checkatlas/umap:
   fn: "*_checkatlas_umap.png"
