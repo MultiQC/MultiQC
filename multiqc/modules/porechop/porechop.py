@@ -15,7 +15,7 @@ class MultiqcModule(BaseMultiqcModule):
             info="A tool for finding and removing adapters from Oxford Nanopore reads.",
         )
 
-        # Find and load Malt reports
+        # Find and load reports
         self.porechop_data = dict()
 
         # Find all files for porechop
