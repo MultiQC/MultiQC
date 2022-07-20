@@ -95,6 +95,7 @@ setup(
             "damageprofiler = multiqc.modules.damageprofiler:MultiqcModule",
             "dedup = multiqc.modules.dedup:MultiqcModule",
             "deeptools = multiqc.modules.deeptools:MultiqcModule",
+            "diamond = multiqc.modules.diamond:MultiqcModule"
             "disambiguate = multiqc.modules.disambiguate:MultiqcModule",
             "dragen = multiqc.modules.dragen:MultiqcModule",
             "eigenstratdatabasetools = multiqc.modules.eigenstratdatabasetools:MultiqcModule",

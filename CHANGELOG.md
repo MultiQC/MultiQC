@@ -16,7 +16,8 @@
 
 ### New Modules
 
-_nothing yet.._
+- [**DIAMOND**](https://github.com/bbuchfink/diamond)
+  - A high-throughput program for aligning DNA reads or protein sequences against a protein reference database such as NR, at up to 20,000 times the speed of BLAST, with high sensitivity.
 
 ### Module updates
 
