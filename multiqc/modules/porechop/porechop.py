@@ -15,7 +15,7 @@ class MultiqcModule(BaseMultiqcModule):
             name="Porechop",
             anchor="porechop",
             href="https://github.com/rrwick/Porechop",
-            info="A tool for finding and removing adapters from Oxford Nanopore reads.",
+            info="a tool for finding and removing adapters from Oxford Nanopore reads.",
         )
 
         # Find and load reports
@@ -39,6 +39,9 @@ class MultiqcModule(BaseMultiqcModule):
         print(self.porechop_data)
 
         self.porechop_general_stats()
+        self.start_trim_barplot()
+        self.end_trim_barplot()
+        self.middle_split_barplot()
 
     def parse_logs(self, logfile):
         """Parsing Logs. Note: careful of ANSI formatting log"""
@@ -59,6 +62,9 @@ class MultiqcModule(BaseMultiqcModule):
                 self.porechop_data[s_name]["Start Trimmed"] = float(l.split(" ")[0])
                 self.porechop_data[s_name]["Start Trimmed Total"] = float(l.split(" ")[2])
                 self.porechop_data[s_name]["Start Trimmed (bp)"] = float(l.split(" ")[10].strip("(").replace(",", ""))
+                self.porechop_data[s_name]["Start Untrimmed"] = (
+                    self.porechop_data[s_name]["Start Trimmed Total"] - self.porechop_data[s_name]["Start Trimmed"]
+                )
                 self.porechop_data[s_name]["Start Trimmed (%)"] = (
                     self.porechop_data[s_name]["Start Trimmed"]
                     / self.porechop_data[s_name]["Start Trimmed Total"]
@@ -69,6 +75,9 @@ class MultiqcModule(BaseMultiqcModule):
                 self.porechop_data[s_name]["End Trimmed"] = float(l.split(" ")[0])
                 self.porechop_data[s_name]["End Trimmed Total"] = float(l.split(" ")[2])
                 self.porechop_data[s_name]["End Trimmed (bp)"] = float(l.split(" ")[10].strip("(").replace(",", ""))
+                self.porechop_data[s_name]["End Untrimmed"] = (
+                    self.porechop_data[s_name]["End Trimmed Total"] - self.porechop_data[s_name]["End Trimmed"]
+                )
                 self.porechop_data[s_name]["End Trimmed (%)"] = (
                     self.porechop_data[s_name]["End Trimmed"] / self.porechop_data[s_name]["Start Trimmed Total"] * 100
                 )
@@ -76,6 +85,9 @@ class MultiqcModule(BaseMultiqcModule):
                 self.porechop_data[s_name]["Middle Split"] = {}
                 self.porechop_data[s_name]["Middle Split"] = float(l.split(" ")[0])
                 self.porechop_data[s_name]["Middle Split Total"] = float(l.split(" ")[2])
+                self.porechop_data[s_name]["Middle Not-Split"] = (
+                    self.porechop_data[s_name]["Middle Split Total"] - self.porechop_data[s_name]["Middle Split"]
+                )
                 self.porechop_data[s_name]["Middle Split (%)"] = (
                     self.porechop_data[s_name]["Middle Split"] / self.porechop_data[s_name]["Middle Split Total"] * 100
                 )
@@ -139,7 +151,56 @@ class MultiqcModule(BaseMultiqcModule):
             "max": 100,
             "scale": "RdYlGn",
         }
-        # headers["Start Trimmed (%)"]
-        # headers["End Trimmed (%)"]
-        # headers["Middle Split"]
+
         self.general_stats_addcols(self.porechop_data, headers)
+
+    def start_trim_barplot(self):
+        """Barplot of number of reads adapter trimmed at read start"""
+        cats = OrderedDict()
+        cats["Start Trimmed"] = {"name": "Start Trimmed", "color": "#7cb5ec"}
+        cats["Start Untrimmed"] = {"name": "Start Untrimmed", "color": "#f7a35c"}
+        config = {
+            "id": "porechop-starttrim-barplot",
+            "title": "Porechop: Read Start Adapter Timmed",
+            "ylab": "Read Counts",
+        }
+        self.add_section(
+            name="Reads adapter-trimmed read start",
+            anchor="porechop-starttrim-barplot",
+            description="Shows the number of reads that had adapters removed from read start.",
+            plot=bargraph.plot(self.porechop_data, cats, config),
+        )
+
+    def end_trim_barplot(self):
+        """Barplot of number of reads adapter trimmed at read end"""
+        cats = OrderedDict()
+        cats["End Trimmed"] = {"name": "End Trimmed", "color": "#7cb5ec"}
+        cats["End Untrimmed"] = {"name": "End Untrimmed", "color": "#7cb5ec"}
+        config = {
+            "id": "porechop-endtrim-barplot",
+            "title": "Porechop: Read End Adapter Timmed",
+            "ylab": "Read Counts",
+        }
+        self.add_section(
+            name="Reads adapter-trimmed read end",
+            anchor="porechop-endtrim-barplot",
+            description="Shows the number of reads that had adapters removed from read end.",
+            plot=bargraph.plot(self.porechop_data, cats, config),
+        )
+
+    def middle_split_barplot(self):
+        """Barplot of number of reads adapter trimmed at read end"""
+        cats = OrderedDict()
+        cats["Middle Split"] = {"name": "Split Reads", "color": "#7cb5ec"}
+        cats["Middle Not-Split"] = {"name": "Unsplit Reads", "color": "#f7a35c"}
+        config = {
+            "id": "porechop-middlesplit-barplot",
+            "title": "Porechop: Middle Split",
+            "ylab": "Read Counts",
+        }
+        self.add_section(
+            name="Middle split reads",
+            anchor="porechop-endtrim-barplot",
+            description="Shows the number of reads that were split due to adapter being present in middle of read.",
+            plot=bargraph.plot(self.porechop_data, cats, config),
+        )
