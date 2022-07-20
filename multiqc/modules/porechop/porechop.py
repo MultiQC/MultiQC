@@ -16,6 +16,7 @@ class MultiqcModule(BaseMultiqcModule):
             anchor="porechop",
             href="https://github.com/rrwick/Porechop",
             info="a tool for finding and removing adapters from Oxford Nanopore reads.",
+            doi="",
         )
 
         # Find and load reports
@@ -56,12 +57,14 @@ class MultiqcModule(BaseMultiqcModule):
             ## Find each valid metric, clean up for plain integer
             elif "reads loaded" in l:
                 self.porechop_data[s_name]["Input Reads"] = {}
-                self.porechop_data[s_name]["Input Reads"] = float(l.split(" ")[0])
+                self.porechop_data[s_name]["Input Reads"] = float(l.lstrip().split(" ")[0].replace(",", ""))
             elif "from their start" in l:
                 self.porechop_data[s_name]["Start Trimmed"] = {}
-                self.porechop_data[s_name]["Start Trimmed"] = float(l.split(" ")[0])
-                self.porechop_data[s_name]["Start Trimmed Total"] = float(l.split(" ")[2])
-                self.porechop_data[s_name]["Start Trimmed (bp)"] = float(l.split(" ")[10].strip("(").replace(",", ""))
+                self.porechop_data[s_name]["Start Trimmed"] = float(l.lstrip().split(" ")[0].replace(",", ""))
+                self.porechop_data[s_name]["Start Trimmed Total"] = float(l.lstrip().split(" ")[2].replace(",", ""))
+                self.porechop_data[s_name]["Start Trimmed (bp)"] = float(
+                    l.lstrip().split(" ")[10].strip("(").replace(",", "")
+                )
                 self.porechop_data[s_name]["Start Untrimmed"] = (
                     self.porechop_data[s_name]["Start Trimmed Total"] - self.porechop_data[s_name]["Start Trimmed"]
                 )
@@ -72,9 +75,11 @@ class MultiqcModule(BaseMultiqcModule):
                 )
             elif "from their end" in l:
                 self.porechop_data[s_name]["End Trimmed"] = {}
-                self.porechop_data[s_name]["End Trimmed"] = float(l.split(" ")[0])
-                self.porechop_data[s_name]["End Trimmed Total"] = float(l.split(" ")[2])
-                self.porechop_data[s_name]["End Trimmed (bp)"] = float(l.split(" ")[10].strip("(").replace(",", ""))
+                self.porechop_data[s_name]["End Trimmed"] = float(l.lstrip().split(" ")[0].replace(",", ""))
+                self.porechop_data[s_name]["End Trimmed Total"] = float(l.lstrip().split(" ")[2].replace(",", ""))
+                self.porechop_data[s_name]["End Trimmed (bp)"] = float(
+                    l.lstrip().split(" ")[10].strip("(").replace(",", "")
+                )
                 self.porechop_data[s_name]["End Untrimmed"] = (
                     self.porechop_data[s_name]["End Trimmed Total"] - self.porechop_data[s_name]["End Trimmed"]
                 )
@@ -83,8 +88,8 @@ class MultiqcModule(BaseMultiqcModule):
                 )
             elif "split based on" in l:
                 self.porechop_data[s_name]["Middle Split"] = {}
-                self.porechop_data[s_name]["Middle Split"] = float(l.split(" ")[0])
-                self.porechop_data[s_name]["Middle Split Total"] = float(l.split(" ")[2])
+                self.porechop_data[s_name]["Middle Split"] = float(l.lstrip().split(" ")[0].replace(",", ""))
+                self.porechop_data[s_name]["Middle Split Total"] = float(l.lstrip().split(" ")[2].replace(",", ""))
                 self.porechop_data[s_name]["Middle Not-Split"] = (
                     self.porechop_data[s_name]["Middle Split Total"] - self.porechop_data[s_name]["Middle Split"]
                 )
@@ -175,7 +180,7 @@ class MultiqcModule(BaseMultiqcModule):
         """Barplot of number of reads adapter trimmed at read end"""
         cats = OrderedDict()
         cats["End Trimmed"] = {"name": "End Trimmed", "color": "#7cb5ec"}
-        cats["End Untrimmed"] = {"name": "End Untrimmed", "color": "#7cb5ec"}
+        cats["End Untrimmed"] = {"name": "End Untrimmed", "color": "#f7a35c"}
         config = {
             "id": "porechop-endtrim-barplot",
             "title": "Porechop: Read End Adapter Timmed",
