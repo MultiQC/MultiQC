@@ -2,8 +2,11 @@
 
 """ MultiQC module to parse output from DIAMOND """
 
-from multiqc.modules.base_module import BaseMultiqcModule
 import logging
+
+from multiqc.modules.base_module import BaseMultiqcModule
+from collections import OrderedDict
+from multiqc import config
 
 # Initialise the logger
 log = logging.getLogger(__name__)
@@ -20,16 +23,45 @@ class MultiqcModule(BaseMultiqcModule):
             doi="10.1038/s41592-021-01101-x",
         )
 
-    log.info("Hello World!")
+        log.info("Hello World!")
 
-    self.find_log_files("diamond")
+        self.diamond_data = dict()
 
-    # Find all files for diamond
-    for f in self.find_log_files("diamond", filehandles=True):
-        self.parse_logs(f)
+        # Find and load any DIAMOND reports
+        self.diamond_data = dict()
 
-    def parse_logs(self, f):
+        for f in self.find_log_files("diamond", filehandles=True):
+            s_name = f["s_name"]
+            self.parse_logs(f)
+
+        # Filter to strip out ignored sample names
+        self.diamond_data = self.ignore_samples(self.diamond_data)
+
+        if len(self.diamond_data) == 0:
+            raise UserWarning
+
+        log.info("Found {} reports".format(len(self.diamond_data)))
+
+        # Write parsed report data to file
+        self.write_data_file(self.diamond_data, "diamond")
+        self.diamond_general_stats()
+
+    def parse_logs(self, logfile):
+        """Parsing logs""" ""
         file_content = logfile["f"]
         for l in file_content:
-            if "Closing the output file" in l:
-                print(next(file_content))
+            if "queries aligned" in l:
+                s_name = logfile["s_name"]
+                self.add_data_source(logfile, s_name=s_name)
+                self.diamond_data[s_name] = {}
+                self.diamond_data[s_name]["queries_aligned"] = int(l.split(" ")[0])
+
+    def diamond_general_stats(self):
+        """Diamond General Stats Table"""
+        headers = OrderedDict()
+        headers["queries_aligned"] = {
+            "title": "Queries aligned",
+            "description": "number of queries aligned",
+            "scale": "YlGn",
+        }
+        self.general_stats_addcols(self.diamond_data, headers)
