@@ -36,9 +36,6 @@ class MultiqcModule(BaseMultiqcModule):
         # Write data to file
         self.write_data_file(self.porechop_data, "porechop")
 
-        ## DEBUG
-        print(self.porechop_data)
-
         self.porechop_general_stats()
         self.start_trim_barplot()
         self.end_trim_barplot()
