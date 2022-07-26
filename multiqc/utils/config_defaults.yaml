@@ -575,7 +575,7 @@ module_order:
         - DNA
         - methylation
   - diamond:
-      module tag:
+      module_tag:
         - Protein
         - DNA
   - hicexplorer:

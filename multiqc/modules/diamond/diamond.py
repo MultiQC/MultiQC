@@ -75,7 +75,7 @@ class MultiqcModule(BaseMultiqcModule):
         }
         self.add_section(
             name="Queries aligned",
-            anchor="diamond-barplot",
+            anchor="barplot",
             description="Shows the number of queries that were aligned to the diamond database.",
             plot=bargraph.plot(self.diamond_data, cats, config),
         )
