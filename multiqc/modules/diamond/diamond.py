@@ -5,6 +5,7 @@
 import logging
 
 from multiqc.modules.base_module import BaseMultiqcModule
+from multiqc.plots import bargraph
 from collections import OrderedDict
 from multiqc import config
 
@@ -22,10 +23,6 @@ class MultiqcModule(BaseMultiqcModule):
             info="a sequence aligner for protein and translated DNA searches, designed for high performance analysis of big sequence data.",
             doi="10.1038/s41592-021-01101-x",
         )
-
-        log.info("Hello World!")
-
-        self.diamond_data = dict()
 
         # Find and load any DIAMOND reports
         self.diamond_data = dict()
@@ -45,6 +42,7 @@ class MultiqcModule(BaseMultiqcModule):
         # Write parsed report data to file
         self.write_data_file(self.diamond_data, "diamond")
         self.diamond_general_stats()
+        self.diamond_barplot()
 
     def parse_logs(self, logfile):
         """Parsing logs""" ""
@@ -65,3 +63,19 @@ class MultiqcModule(BaseMultiqcModule):
             "scale": "YlGn",
         }
         self.general_stats_addcols(self.diamond_data, headers)
+
+    def diamond_barplot(self):
+        """Barplot of number of queries aligned"""
+        cats = OrderedDict()
+        cats["queries_aligned"] = {"name": "Queries Aligned", "color": "#7cb5ec"}
+        config = {
+            "id": "diamond-barplot",
+            "title": "Diamond: Number of queries aligned",
+            "ylab": "Number of queries",
+        }
+        self.add_section(
+            name="Queries aligned",
+            anchor="diamond-barplot",
+            description="Shows the number of queries that were aligned to the diamond database.",
+            plot=bargraph.plot(self.diamond_data, cats, config),
+        )
