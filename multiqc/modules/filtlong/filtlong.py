@@ -40,12 +40,10 @@ class MultiqcModule(BaseMultiqcModule):
 
     def parse_logs(self, logfile):
         """Parsing Logs. Note: careful of ANSI formatting log"""
-        parsed_data = {}
         file_content = logfile["f"]
         for l in file_content:
           # Find the valid metric
           if "target:" in l:
-            print ("Test " +l)
             s_name = logfile["s_name"]
             self.add_data_source(logfile, s_name=s_name)
             self.filtlong_data[s_name] = {}
@@ -94,7 +92,7 @@ class MultiqcModule(BaseMultiqcModule):
         }
         self.add_section(
             name="Filtlong-number of target bases",
-            anchor="filtlong-targetbases-barplot",
+            anchor="targetbases-barplot",
             description="Shows the number of target bases.",
             plot=bargraph.plot(self.filtlong_data, cats, config),
         )
@@ -110,7 +108,7 @@ class MultiqcModule(BaseMultiqcModule):
         }
         self.add_section(
             name="Filtlong-number of keeping bases",
-            anchor="filtlong-keepingbases-barplot",
+            anchor="keepingbases-barplot",
             description="Shows the number of keeping bases.",
             plot=bargraph.plot(self.filtlong_data, cats, config),
         )
