@@ -3,6 +3,8 @@
 """ MultiQC module to parse output from checkatlas """
 
 from __future__ import print_function
+
+import math
 import shutil
 
 import os.path
@@ -245,11 +247,11 @@ class MultiqcModule(BaseMultiqcModule):
         list_qc_mito.sort(reverse=True)
 
         for i in range(1, len(list_qc_counts)):
-            data_qc_counts[i] = list_qc_counts[i]
+            data_qc_counts[math.log10(i)] = list_qc_counts[i]
         for i in range(1, len(list_qc_genes)):
-            data_qc_genes[i] = list_qc_genes[i]
+            data_qc_genes[math.log10(i)] = list_qc_genes[i]
         for i in range(1, len(list_qc_mito)):
-            data_qc_mito[i] = list_qc_mito[i]
+            data_qc_mito[math.log10(i)] = list_qc_mito[i]
 
         return data_qc_counts, data_qc_genes, data_qc_mito
 
@@ -361,18 +363,20 @@ class MultiqcModule(BaseMultiqcModule):
         type_viz = DICT_NAMING["checkatlas/qc"]
         config = {
             # Building the plot
-            'title': "QC total-counts",
+            'title': "QC total_counts",
             'ylab': "total_counts",                # X axis label
-            'xlab': "Cell Rank",                # Y axis label
+            'xlab': "log10(Cell Rank)",                # Y axis label
+            'logswitch': True,
+            'logswitch_active': True,
             'id': 'qc_counts',     # HTML ID used for plot
             'categories': False,         # Set to True to use x values as categories instead of numbers.
         }
         self.add_section(
             name="QC total_counts",
             anchor="checkatlas-qc_counts",
-            description="QC of your atlases Cellrank vs total-counts.",
+            description="QC of your atlases log10(Cellrank vs total-counts.",
             helptext="""
-
+            
                 """,
             content=linegraph.plot(data=self.data_qc_counts, pconfig=config)
         )
@@ -381,14 +385,16 @@ class MultiqcModule(BaseMultiqcModule):
             # Building the plot
             'title': "QC n_genes_by_counts",
             'ylab': "n_genes_by_counts",                # X axis label
-            'xlab': "Cell Rank",                # Y axis label
+            'xlab': "log10(Cell Rank)",                # Y axis label
+            'logswitch': True,
+            'logswitch_active': True,
             'id': 'qc_genes',     # HTML ID used for plot
             'categories': False,         # Set to True to use x values as categories instead of numbers.
         }
         self.add_section(
             name="QC n_genes_by_counts",
             anchor="checkatlas-qc_genes",
-            description="QC of your atlases Cellrank vs n_genes_by_counts.",
+            description="QC of your atlases log10(Cellrank vs n_genes_by_counts.",
             helptext="""
 
                 """,
@@ -399,29 +405,21 @@ class MultiqcModule(BaseMultiqcModule):
             # Building the plot
             'title': "QC pct_counts_mt",
             'ylab': "pct_counts_mt",                # X axis label
-            'xlab': "Cell Rank",                # Y axis label
+            'xlab': "log10(Cell Rank)",                # Y axis label
+            'logswitch': True,
+            'logswitch_active': True,
             'id': 'qc_mito',     # HTML ID used for plot
             'categories': False,         # Set to True to use x values as categories instead of numbers.
         }
         self.add_section(
             name="QC pct_counts_mt",
             anchor="checkatlas-qc_mito",
-            description="QC of your atlases Cellrank vs pct_counts_mt.",
+            description="QC of your atlases log10(Cellrank vs pct_counts_mt.",
             helptext="""
 
                 """,
             content=linegraph.plot(data=self.data_qc_mito, pconfig=config)
         )
-        # html_content = create_img_html_content(type_viz, self.data_qc)
-        # self.add_section(
-        #     name="QC visualisation",
-        #     anchor="checkatlas-qc",
-        #     description="QC of your atlases.",
-        #     helptext="""
-        #
-        #         """,
-        #     content=html_content,
-        # )
 
     def add_umap_section(self):
         type_viz = DICT_NAMING["checkatlas/umap"]
