@@ -292,6 +292,8 @@ fgbio/groupreadsbyumi:
 fgbio/errorratebyreadposition:
   contents: "read_number	position	bases_total	errors	error_rate	a_to_c_error_rate	a_to_g_error_rate	a_to_t_error_rate	c_to_a_error_rate	c_to_g_error_rate	c_to_t_error_rate"
   num_lines: 3
+filtlong:
+  contents_re: ".*Filtering long reads.*"
 flash/log:
   contents: "[FLASH]"
   shared: true

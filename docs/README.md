@@ -23,6 +23,7 @@ MultiQC Modules:
     Fastp: modules/fastp.md
     FastQ Screen: modules/fastq_screen.md
     FastQC: modules/fastqc.md
+    Filtlong: modules/filtlong.md
     FLASh: modules/flash.md
     Flexbar: modules/flexbar.md
     InterOp: modules/interop.md

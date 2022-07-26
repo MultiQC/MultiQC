@@ -16,7 +16,8 @@
 
 ### New Modules
 
-_nothing yet.._
+[**Filtlong**](https://github.com/rrwick/Filtlong)
+  - A tool for filtering long reads by quality.
 
 ### Module updates
 

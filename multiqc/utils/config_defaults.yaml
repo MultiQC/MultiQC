@@ -695,6 +695,11 @@ module_order:
       module_tag:
         - RNA
         - DNA
+  - filtlong:
+      module_tag:
+        - DNA
+        - ONT
+        - PacBio
   - pychopper:
       module_tag:
         - RNA
