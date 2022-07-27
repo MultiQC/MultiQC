@@ -631,6 +631,9 @@ def run(
 
     # Only run the modules for which any files were found
     non_empty_modules = {key.split("/")[0].lower() for key, files in report.files.items() if len(files) > 0}
+    # Always run custom content, as it can have data purely from a MultiQC config file (no search files)
+    if "custom_content" not in non_empty_modules:
+        non_empty_modules.add("custom_content")
     run_modules = [m for m in run_modules if list(m.keys())[0].lower() in non_empty_modules]
     run_module_names = [list(m.keys())[0] for m in run_modules]
 

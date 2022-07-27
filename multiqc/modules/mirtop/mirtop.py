@@ -98,7 +98,8 @@ class MultiqcModule(BaseMultiqcModule):
             if cleaned_s_name in self.mirtop_data:
                 log.debug("Duplicate sample name found! Overwriting: {}".format(cleaned_s_name))
             parsed_data = content["metrics"][s_name]
-            parsed_data["read_count"] = parsed_data["isomiR_sum"] + parsed_data["ref_miRNA_sum"]
+            # Sum the isomiR and ref_miRNA counts. Ignore ref_miRNA if it is not present.
+            parsed_data["read_count"] = parsed_data["isomiR_sum"] + parsed_data.get("ref_miRNA_sum", 0)
             parsed_data["isomiR_perc"] = (parsed_data["isomiR_sum"] / parsed_data["read_count"]) * 100
             self.mirtop_data[cleaned_s_name] = parsed_data
 
