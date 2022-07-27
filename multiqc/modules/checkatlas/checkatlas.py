@@ -101,14 +101,14 @@ class MultiqcModule(BaseMultiqcModule):
         for f in self.find_log_files("checkatlas/summary"):
             input_fname = f["s_name"].replace("_checkatlas_summ", "")
             s_name = self.clean_s_name(input_fname, f)
-            self.data_summary[s_name] = self.parse_firstline_table_logs(f["f"])
+            self.data_summary[s_name] = parse_firstline_table_logs(f["f"])
             self.add_data_source(f, s_name)
 
         self.data_adata = dict()
         for f in self.find_log_files("checkatlas/adata"):
             input_fname = f["s_name"].replace("_checkatlas_adata", "")
             s_name = self.clean_s_name(input_fname, f)
-            self.data_adata[s_name] = self.parse_adata_logs(f["f"])
+            self.data_adata[s_name] = parse_firstline_table_logs(f["f"])
             self.add_data_source(f, s_name)
 
         self.data_qc_fig = dict()
@@ -126,7 +126,7 @@ class MultiqcModule(BaseMultiqcModule):
         for f in self.find_log_files("checkatlas/qc"):
             input_fname = f["s_name"].replace("_checkatlas_qc", "")
             s_name = self.clean_s_name(input_fname, f)
-            data_qc_counts, data_qc_genes, data_qc_mito = self.parse_qc_logs(f["f"])
+            data_qc_counts, data_qc_genes, data_qc_mito = parse_qc_logs(f["f"])
             self.data_qc_counts[s_name] = data_qc_counts
             self.data_qc_genes[s_name] = data_qc_genes
             self.data_qc_mito[s_name] = data_qc_mito
@@ -154,7 +154,7 @@ class MultiqcModule(BaseMultiqcModule):
         for f in self.find_log_files("checkatlas/cluster"):
             input_fname = f["s_name"].replace("_checkatlas_mcluster", "")
             s_name = self.clean_s_name(input_fname, f)
-            data = self.parse_metric_logs(f["f"])
+            data = parse_metric_logs(f["f"])
             for key, item in data.items():
                 self.data_metric_cluster[key] = item
             self.add_data_source(f, s_name)
@@ -163,7 +163,7 @@ class MultiqcModule(BaseMultiqcModule):
         for f in self.find_log_files("checkatlas/annotation"):
             input_fname = f["s_name"].replace("_checkatlas_mannot", "")
             s_name = self.clean_s_name(input_fname, f)
-            data = self.parse_metric_logs(f["f"])
+            data = parse_metric_logs(f["f"])
             for key, item in data.items():
                 self.data_metric_annot[key] = item
             self.add_data_source(f, s_name)
@@ -172,7 +172,7 @@ class MultiqcModule(BaseMultiqcModule):
         for f in self.find_log_files("checkatlas/dimred"):
             input_fname = f["s_name"].replace("_checkatlas_mdimred", "")
             s_name = self.clean_s_name(input_fname, f)
-            data = self.parse_metric_logs(f["f"])
+            data = parse_metric_logs(f["f"])
             for key, item in data.items():
                 self.data_metric_dimred[key] = item
             self.add_data_source(f, s_name)
@@ -206,106 +206,12 @@ class MultiqcModule(BaseMultiqcModule):
         self.add_sections()
 
 
-    def parse_qc_logs(self, f):
-        """
-        Parse logs which are .tsv files
-        Ex: _checkatlas.tsv, adata_checkatlas.tsv
-        :param f:
-        :return:
-        """
-        data_qc_counts = dict()
-        data_qc_genes = dict()
-        data_qc_mito = dict()
-        list_qc_counts = list()
-        list_qc_genes = list()
-        list_qc_mito = list()
-        lines = f.splitlines()
-        headers = lines[0].split("\t")
-        try:
-            index_counts = headers.index(QC_HEADER[0])
-        except ValueError:
-            index_counts = -1
-        try:
-            index_genes = headers.index(QC_HEADER[1])
-        except ValueError:
-            index_genes = -1
-        try:
-            index_mito = headers.index(QC_HEADER[2])
-        except ValueError:
-            index_mito = -1
 
-        for i in range(1, len(lines)):
-            line = lines[i].split("\t")
-            if index_counts != -1:
-                list_qc_counts.append(float(line[index_counts]))
-            if index_genes != -1:
-                list_qc_genes.append(float(line[index_genes]))
-            if index_mito != -1:
-                list_qc_mito.append(float(line[index_mito]))
-        list_qc_counts.sort(reverse=True)
-        list_qc_genes.sort(reverse=True)
-        list_qc_mito.sort(reverse=True)
-
-        for i in range(1, len(list_qc_counts)):
-            data_qc_counts[math.log10(i)] = list_qc_counts[i]
-        for i in range(1, len(list_qc_genes)):
-            data_qc_genes[math.log10(i)] = list_qc_genes[i]
-        for i in range(1, len(list_qc_mito)):
-            data_qc_mito[math.log10(i)] = list_qc_mito[i]
-
-        return data_qc_counts, data_qc_genes, data_qc_mito
-
-    def parse_metric_logs(self, f):
-        """
-        Parse logs which are .tsv files
-        Ex: _checkatlas.tsv, adata_checkatlas.tsv
-        :param f:
-        :return:
-        """
-        data = {}
-        lines = f.splitlines()
-        headers = lines[0].split("\t")
-        for i in range(1, len(lines)):
-            line = lines[i].split("\t")
-            line_dict = {}
-            for j in range(1, len(line)):
-                line_dict[headers[j]] = line[j]
-            data[line[0]] = line_dict
-        return data
-
-    def parse_firstline_table_logs(self, f):
-        """
-        Parse logs which are .tsv files
-        Ex: _checkatlas.tsv, adata_checkatlas.tsv
-        :param f:
-        :return:
-        """
-        data = {}
-        lines = f.splitlines()
-        headers = lines[0].split("\t")
-        for i in range(1, len(lines)):
-            line = lines[i].split("\t")
-            for j in range(0, len(line)):
-                data[headers[j]] = line[j]
-        return data
-
-    def parse_adata_logs(self, f):
-        """
-        Parse logs which are .tsv files
-        Ex: _checkatlas.tsv, adata_checkatlas.tsv
-        :param f:
-        :return:
-        """
-        data = {}
-        lines = f.splitlines()
-        headers = lines[0].split(",")
-        for i in range(1, len(lines)):
-            line = lines[i].split(",")
-            for j in range(0, len(line)):
-                data[headers[j]] = line[j]
-        return data
 
     def add_sections(self):
+        """
+        Add the different sections for checkatlas report
+        """
         self.add_summary_section()
         self.add_qc_fig_section()
         self.add_qc_section()
@@ -316,6 +222,7 @@ class MultiqcModule(BaseMultiqcModule):
         self.add_dimredmetrics_section()
         self.add_specificitymetrics_section()
         self.add_adata_section()
+
 
     def add_summary_section(self):
         self.add_section(
@@ -329,7 +236,7 @@ class MultiqcModule(BaseMultiqcModule):
         )
 
     def add_adata_section(self):
-        config = {"namespace": "adata_table"}
+        config_adata = {"namespace": "adata_table"}
         headers = OrderedDict()
         headers["obs"] = {"scale": False}
         headers["obsm"] = {"scale": False}
@@ -341,9 +248,8 @@ class MultiqcModule(BaseMultiqcModule):
             anchor="checkatlas-anndata",
             description="Exploration of your AnnData",
             helptext="""
-            
-            """,
-            content=table.plot(self.data_adata, headers, config),
+                """,
+            content=table.plot(self.data_adata, headers, pconfig=config_adata)
         )
 
     def add_qc_fig_section(self):
@@ -361,7 +267,7 @@ class MultiqcModule(BaseMultiqcModule):
 
     def add_qc_section(self):
         type_viz = DICT_NAMING["checkatlas/qc"]
-        config = {
+        config_qc = {
             # Building the plot
             'title': "QC total_counts",
             'ylab': "total_counts",                # X axis label
@@ -378,10 +284,10 @@ class MultiqcModule(BaseMultiqcModule):
             helptext="""
             
                 """,
-            content=linegraph.plot(data=self.data_qc_counts, pconfig=config)
+            content=linegraph.plot(data=self.data_qc_counts, pconfig=config_qc)
         )
 
-        config = {
+        config_qc = {
             # Building the plot
             'title': "QC n_genes_by_counts",
             'ylab': "n_genes_by_counts",                # X axis label
@@ -398,10 +304,10 @@ class MultiqcModule(BaseMultiqcModule):
             helptext="""
 
                 """,
-            content=linegraph.plot(data=self.data_qc_genes, pconfig=config)
+            content=linegraph.plot(data=self.data_qc_genes, pconfig=config_qc)
         )
 
-        config = {
+        config_qc = {
             # Building the plot
             'title': "QC pct_counts_mt",
             'ylab': "pct_counts_mt",                # X axis label
@@ -418,7 +324,7 @@ class MultiqcModule(BaseMultiqcModule):
             helptext="""
 
                 """,
-            content=linegraph.plot(data=self.data_qc_mito, pconfig=config)
+            content=linegraph.plot(data=self.data_qc_mito, pconfig=config_qc)
         )
 
     def add_umap_section(self):
@@ -448,7 +354,7 @@ class MultiqcModule(BaseMultiqcModule):
         )
 
     def add_clustermetrics_section(self):
-        config = {"namespace": "metric_cluster_table"}
+        config_cluster = {"namespace": "metric_cluster_table"}
 
         self.add_section(
             name="Classification metrics",
@@ -457,7 +363,7 @@ class MultiqcModule(BaseMultiqcModule):
             helptext="""
             
             """,
-            content=table.plot(data=self.data_metric_cluster, pconfig=config),
+            content=table.plot(data=self.data_metric_cluster, pconfig=config_cluster),
         )
 
     def add_annotationmetrics_section(self):
@@ -492,6 +398,93 @@ class MultiqcModule(BaseMultiqcModule):
             """,
             content="",
         )
+
+
+def parse_qc_logs(f):
+    """
+    Parse logs from QC tables in .tsv files
+    Order by CellRank
+    Calc log10(CelllRank)
+    :param f:
+    :return:
+    """
+    data_qc_counts = dict()
+    data_qc_genes = dict()
+    data_qc_mito = dict()
+    list_qc_counts = list()
+    list_qc_genes = list()
+    list_qc_mito = list()
+    lines = f.splitlines()
+    headers = lines[0].split("\t")
+    try:
+        index_counts = headers.index(QC_HEADER[0])
+    except ValueError:
+        index_counts = -1
+    try:
+        index_genes = headers.index(QC_HEADER[1])
+    except ValueError:
+        index_genes = -1
+    try:
+        index_mito = headers.index(QC_HEADER[2])
+    except ValueError:
+        index_mito = -1
+
+    for i in range(1, len(lines)):
+        line = lines[i].split("\t")
+        if index_counts != -1:
+            list_qc_counts.append(float(line[index_counts]))
+        if index_genes != -1:
+            list_qc_genes.append(float(line[index_genes]))
+        if index_mito != -1:
+            list_qc_mito.append(float(line[index_mito]))
+    list_qc_counts.sort(reverse=True)
+    list_qc_genes.sort(reverse=True)
+    list_qc_mito.sort(reverse=True)
+
+    for i in range(1, len(list_qc_counts)):
+        data_qc_counts[math.log10(i)] = list_qc_counts[i]
+    for i in range(1, len(list_qc_genes)):
+        data_qc_genes[math.log10(i)] = list_qc_genes[i]
+    for i in range(1, len(list_qc_mito)):
+        data_qc_mito[math.log10(i)] = list_qc_mito[i]
+
+    return data_qc_counts, data_qc_genes, data_qc_mito
+
+
+def parse_firstline_table_logs(f):
+    """
+    Parse only header and first line of logs which are .tsv files
+    Ex: _checkatlas.tsv, adata_checkatlas.tsv
+    :param f:
+    :return:
+    """
+    data = {}
+    lines = f.splitlines()
+    headers = lines[0].split('\t')
+    for i in range(1, len(lines)):
+        line = lines[i].split('\t')
+        for j in range(0, len(line)):
+            data[headers[j]] = line[j]
+    return data
+
+
+def parse_metric_logs(f):
+    """
+    Parse all lines of logs which are .tsv files
+    Ex: _checkatlas.tsv, adata_checkatlas.tsv
+    :param f:
+    :return:
+    """
+    data = {}
+    lines = f.splitlines()
+    headers = lines[0].split("\t")
+    for i in range(1, len(lines)):
+        line = lines[i].split("\t")
+        line_dict = {}
+        for j in range(1, len(line)):
+            line_dict[headers[j]] = line[j]
+        data[line[0]] = line_dict
+    return data
 
 
 def create_img_html_content(type_viz, data):
