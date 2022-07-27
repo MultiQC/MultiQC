@@ -294,6 +294,7 @@ fgbio/errorratebyreadposition:
   num_lines: 3
 filtlong:
   contents_re: ".*Filtering long reads.*"
+  num_lines: 5
 flash/log:
   contents: "[FLASH]"
   shared: true
