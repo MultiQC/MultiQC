@@ -20,8 +20,7 @@ log = logging.getLogger(__name__)
 
 FIG_PATH = "checkatlas_fig"
 
-QC_HEADER = ["total_counts", "n_genes_by_counts",
-             "pct_counts_mt"]
+QC_HEADER = ["total_counts", "n_genes_by_counts", "pct_counts_mt"]
 
 LIST_PATTERN = [
     "checkatlas/summary",
@@ -205,9 +204,6 @@ class MultiqcModule(BaseMultiqcModule):
 
         self.add_sections()
 
-
-
-
     def add_sections(self):
         """
         Add the different sections for checkatlas report
@@ -222,7 +218,6 @@ class MultiqcModule(BaseMultiqcModule):
         self.add_dimredmetrics_section()
         self.add_specificitymetrics_section()
         self.add_adata_section()
-
 
     def add_summary_section(self):
         self.add_section(
@@ -249,7 +244,7 @@ class MultiqcModule(BaseMultiqcModule):
             description="Exploration of your AnnData",
             helptext="""
                 """,
-            content=table.plot(self.data_adata, headers, pconfig=config_adata)
+            content=table.plot(self.data_adata, headers, pconfig=config_adata),
         )
 
     def add_qc_fig_section(self):
@@ -269,13 +264,13 @@ class MultiqcModule(BaseMultiqcModule):
         type_viz = DICT_NAMING["checkatlas/qc"]
         config_qc = {
             # Building the plot
-            'title': "QC total_counts",
-            'ylab': "total_counts",                # X axis label
-            'xlab': "log10(Cell Rank)",                # Y axis label
-            'logswitch': True,
-            'logswitch_active': True,
-            'id': 'qc_counts',     # HTML ID used for plot
-            'categories': False,         # Set to True to use x values as categories instead of numbers.
+            "title": "QC total_counts",
+            "ylab": "total_counts",  # X axis label
+            "xlab": "log10(Cell Rank)",  # Y axis label
+            "logswitch": True,
+            "logswitch_active": True,
+            "id": "qc_counts",  # HTML ID used for plot
+            "categories": False,  # Set to True to use x values as categories instead of numbers.
         }
         self.add_section(
             name="QC total_counts",
@@ -284,18 +279,18 @@ class MultiqcModule(BaseMultiqcModule):
             helptext="""
             
                 """,
-            content=linegraph.plot(data=self.data_qc_counts, pconfig=config_qc)
+            content=linegraph.plot(data=self.data_qc_counts, pconfig=config_qc),
         )
 
         config_qc = {
             # Building the plot
-            'title': "QC n_genes_by_counts",
-            'ylab': "n_genes_by_counts",                # X axis label
-            'xlab': "log10(Cell Rank)",                # Y axis label
-            'logswitch': True,
-            'logswitch_active': True,
-            'id': 'qc_genes',     # HTML ID used for plot
-            'categories': False,         # Set to True to use x values as categories instead of numbers.
+            "title": "QC n_genes_by_counts",
+            "ylab": "n_genes_by_counts",  # X axis label
+            "xlab": "log10(Cell Rank)",  # Y axis label
+            "logswitch": True,
+            "logswitch_active": True,
+            "id": "qc_genes",  # HTML ID used for plot
+            "categories": False,  # Set to True to use x values as categories instead of numbers.
         }
         self.add_section(
             name="QC n_genes_by_counts",
@@ -304,18 +299,18 @@ class MultiqcModule(BaseMultiqcModule):
             helptext="""
 
                 """,
-            content=linegraph.plot(data=self.data_qc_genes, pconfig=config_qc)
+            content=linegraph.plot(data=self.data_qc_genes, pconfig=config_qc),
         )
 
         config_qc = {
             # Building the plot
-            'title': "QC pct_counts_mt",
-            'ylab': "pct_counts_mt",                # X axis label
-            'xlab': "log10(Cell Rank)",                # Y axis label
-            'logswitch': True,
-            'logswitch_active': True,
-            'id': 'qc_mito',     # HTML ID used for plot
-            'categories': False,         # Set to True to use x values as categories instead of numbers.
+            "title": "QC pct_counts_mt",
+            "ylab": "pct_counts_mt",  # X axis label
+            "xlab": "log10(Cell Rank)",  # Y axis label
+            "logswitch": True,
+            "logswitch_active": True,
+            "id": "qc_mito",  # HTML ID used for plot
+            "categories": False,  # Set to True to use x values as categories instead of numbers.
         }
         self.add_section(
             name="QC pct_counts_mt",
@@ -324,7 +319,7 @@ class MultiqcModule(BaseMultiqcModule):
             helptext="""
 
                 """,
-            content=linegraph.plot(data=self.data_qc_mito, pconfig=config_qc)
+            content=linegraph.plot(data=self.data_qc_mito, pconfig=config_qc),
         )
 
     def add_umap_section(self):
@@ -460,9 +455,9 @@ def parse_firstline_table_logs(f):
     """
     data = {}
     lines = f.splitlines()
-    headers = lines[0].split('\t')
+    headers = lines[0].split("\t")
     for i in range(1, len(lines)):
-        line = lines[i].split('\t')
+        line = lines[i].split("\t")
         for j in range(0, len(line)):
             data[headers[j]] = line[j]
     return data
