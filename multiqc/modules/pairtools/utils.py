@@ -267,6 +267,9 @@ def read_stats_from_file(file_handle):
             # (we should impose a rigid structure of .stats or redo it)
             # extract key and value, then split the key:
             _key_tmp, value = fields
+            # skip non-integer fields that we do not use
+            if "frac" in _key_tmp or "complexity" in _key_tmp:
+                continue
             # make sure all values are integer
             try:
                 value = int(value)
