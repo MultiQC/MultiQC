@@ -54,6 +54,16 @@ class FlagstatReportMixin:
                 "shared_key": "read_count",
                 "placement": 101.0,
             }
+            flagstats_headers["mapped_passed_pct"] = {
+                "title": "% Reads Mapped",
+                "description": "% Reads Mapped in the bam file",
+                "min": 0,
+                "max": 100,
+                "placement": 102.0,
+                "suffix": "%",
+                "scale": "RdYlGn",
+                "hidden": True,
+            }
             self.general_stats_addcols(self.samtools_flagstat, flagstats_headers)
 
             # Make dot plot of counts
