@@ -7,7 +7,6 @@ from multiqc.plots import bargraph
 
 log = logging.getLogger(__name__)
 
-
 class MultiqcModule(BaseMultiqcModule):
     def __init__(self):
         # Initialise the parent object
