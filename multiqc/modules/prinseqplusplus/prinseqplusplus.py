@@ -3,7 +3,7 @@ import logging
 import re
 from collections import OrderedDict
 from multiqc import config
-from multiqc.plots import bargraph
+from multiqc.plots import beeswarm
 
 log = logging.getLogger(__name__)
 
@@ -93,7 +93,7 @@ class MultiqcModule(BaseMultiqcModule):
         headers["max_len"] = {
             "title": "Max. Length Filtered ({})".format(config.read_count_prefix),
             "description": "Reads execeed max length filter ({})".format(config.read_count_prefix),
-            "scale": "Greens",
+            "scale": "Purples",
             "shared_key": "read_count",
             "modify": lambda x: x * config.read_count_multiplier,
         }
@@ -107,7 +107,7 @@ class MultiqcModule(BaseMultiqcModule):
         headers["max_gc"] = {
             "title": "Max. GC Filtered ({})".format(config.read_count_prefix),
             "description": "Reads exceeding min GC filter ({})".format(config.read_count_prefix),
-            "scale": "Greens",
+            "scale": "Purples",
             "shared_key": "read_count",
             "modify": lambda x: x * config.read_count_multiplier,
         }
@@ -121,7 +121,7 @@ class MultiqcModule(BaseMultiqcModule):
         headers["min_qual_mean"] = {
             "title": "Min. Qual. Mean Filtered ({})".format(config.read_count_prefix),
             "description": "Reads falling below min mean quality score ({})".format(config.read_count_prefix),
-            "scale": "Greens",
+            "scale": "Purples",
             "shared_key": "read_count",
             "modify": lambda x: x * config.read_count_multiplier,
         }
@@ -135,7 +135,7 @@ class MultiqcModule(BaseMultiqcModule):
         headers["noiupac"] = {
             "title": "IUPAC Read Filtered ({})".format(config.read_count_prefix),
             "description": "Reads with bases other than ACTGN ({})".format(config.read_count_prefix),
-            "scale": "Greens",
+            "scale": "Purples",
             "shared_key": "read_count",
             "modify": lambda x: x * config.read_count_multiplier,
         }
@@ -149,7 +149,7 @@ class MultiqcModule(BaseMultiqcModule):
         headers["lc_entropy"] = {
             "title": "Entropy Filtered Reads ({})".format(config.read_count_prefix),
             "description": "Entropy filtered reads removed ({})".format(config.read_count_prefix),
-            "scale": "Greens",
+            "scale": "Purples",
             "shared_key": "read_count",
             "modify": lambda x: x * config.read_count_multiplier,
         }
