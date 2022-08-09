@@ -89,6 +89,7 @@ MultiQC Modules:
     MTNucRatio: modules/mtnucratio.md
     MultiVCFAnalyzer: modules/multivcfanalyzer.md
     NanoStat: modules/nanostat.md
+    Nextclade: modules/nextclade.md
     ngsderive: modules/ngsderive.md
     odgi: modules/odgi.md
     OptiType: modules/optitype.md

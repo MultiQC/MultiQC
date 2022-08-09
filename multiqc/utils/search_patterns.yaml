@@ -433,6 +433,9 @@ multivcfanalyzer:
 disambiguate:
   contents: "unique species A pairs"
   num_lines: 2
+nextclade:
+  contents: "seqName;clade;"
+  num_lines: 1
 ngsderive/strandedness:
   contents: "File	TotalReads	ForwardPct	ReversePct	Predicted"
   num_lines: 1

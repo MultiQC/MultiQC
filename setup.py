@@ -137,6 +137,7 @@ setup(
             "mtnucratio = multiqc.modules.mtnucratio:MultiqcModule",
             "multivcfanalyzer = multiqc.modules.multivcfanalyzer:MultiqcModule",
             "nanostat = multiqc.modules.nanostat:MultiqcModule",
+            "nextclade = multiqc.modules.nextclade:MultiqcModule",
             "ngsderive = multiqc.modules.ngsderive:MultiqcModule",
             "odgi = multiqc.modules.odgi:MultiqcModule",
             "optitype = multiqc.modules.optitype:MultiqcModule",
