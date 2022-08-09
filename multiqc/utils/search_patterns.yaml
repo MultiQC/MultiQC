@@ -558,6 +558,9 @@ preseq:
     num_lines: 2
 preseq/real_counts:
   fn: "*preseq_real_counts*"
+prinseqplusplus:
+  - contents: "reads removed by -"
+    num_lines: 2
 prokka:
   contents: "contigs:"
   num_lines: 2

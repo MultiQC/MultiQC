@@ -16,7 +16,8 @@
 
 ### New Modules
 
-_nothing yet.._
+- [**PRINSEQ++**](https://github.com/Adrian-Cantu/PRINSEQ-plus-plus)
+  - PRINSEQ++ is a C++ of prinseq-lite.pl program for filtering, reformating or triming genomic and metagenomic sequence data.
 
 ### Module updates
 

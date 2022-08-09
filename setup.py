@@ -146,6 +146,7 @@ setup(
             "phantompeakqualtools = multiqc.modules.phantompeakqualtools:MultiqcModule",
             "picard = multiqc.modules.picard:MultiqcModule",
             "preseq = multiqc.modules.preseq:MultiqcModule",
+            "prinseqplusplus = multiqc.modules.prinseqplusplus:MultiqcModule",
             "prokka = multiqc.modules.prokka:MultiqcModule",
             "purple = multiqc.modules.purple:MultiqcModule",
             "pychopper = multiqc.modules.pychopper:MultiqcModule",
