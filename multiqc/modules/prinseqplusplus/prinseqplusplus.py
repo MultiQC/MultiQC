@@ -48,7 +48,9 @@ class MultiqcModule(BaseMultiqcModule):
             log.warn("Duplicate sample name found! Overwriting: {}".format(s_name))
 
         self.prinseqplusplus_data[s_name] = {}
+        self.add_data_source(logfile, s_name=s_name)
         file_content = logfile["f"]
+
         for l in file_content:
             ## Find line after loading reads, and remove suffixes for sample name
 
