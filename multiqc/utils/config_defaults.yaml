@@ -634,6 +634,10 @@ module_order:
       module_tag:
         - RNA
         - DNA
+  - bbduk:
+      module_tag:
+        - RNA
+        - DNA
   - clipandmerge:
       module_tag:
         - DNA

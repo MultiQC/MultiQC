@@ -40,11 +40,52 @@ class MultiqcModule(BaseMultiqcModule):
 
         log.info("Found {} reports".format(len(self.bbduk_data)))
 
+        ## DEBUGGING
+        print(self.bbduk_data)
+
         # Write data to file
         self.write_data_file(self.bbduk_data, "bbduk")
 
         # self.bbduk_general_stats()
         # self.bbduk_beeswarm_plot()
 
-    def parse_logs(self, f):
+    def parse_logs(self, logfile):
         """Parses a BBDuk stdout saved in a file"""
+        ## Assume take from the name of the file as the includes pair names,
+        ## which we can't 'collapse' into a single one.
+        s_name = logfile["fn"]
+        s_name = self.clean_s_name(s_name, logfile)
+
+        if self.bbduk_data.get(s_name) is not None:
+            log.warn("Duplicate sample name found based on filename! Overwriting: {}".format(s_name))
+
+        self.bbduk_data[s_name] = {}
+        self.add_data_source(logfile, s_name=s_name)
+        file_content = logfile["f"]
+
+        for l in file_content:
+            ## Find line after loading reads, and remove suffixes for sample name
+
+            for cat in [
+                # "Input",
+                "QTrimmed",
+                "KTrimmed",
+                "Trimmed by overlap",
+                "Low quality discards",
+                "Low entropy discards",
+                "Total Removed",
+                "Result",
+            ]:
+                if cat in l:
+                    self.bbduk_data[s_name][cat + " reads"] = int(grab_reads(l))
+                    self.bbduk_data[s_name][cat + " percent"] = float(grab_perc(l))
+
+
+def grab_reads(l):
+    """Extracts read counts from STDOUT entry"""
+    return l.split(":")[1].lstrip().split(" ")[0]
+
+
+def grab_perc(l):
+    """Extracts percent from STDOUT entry"""
+    return l.split(":")[1].lstrip().split(" ")[2].strip("(|)|%")
