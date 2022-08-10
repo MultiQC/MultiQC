@@ -1,8 +1,0 @@
-102 reads removed by -min_len
-108165 reads removed by -min_cg
-256810 reads removed by -max_cg
-1970 reads removed by -min_qual_score
-7 reads removed by -min_qual_mean
-130 reads removed by -ns_max_n
-2879 reads removed by -derep
-54 reads removed by -lc_entropy
