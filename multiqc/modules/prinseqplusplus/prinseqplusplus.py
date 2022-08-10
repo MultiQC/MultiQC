@@ -33,6 +33,8 @@ class MultiqcModule(BaseMultiqcModule):
 
         log.info("Found {} reports".format(len(self.prinseqplusplus_data)))
 
+        print(self.prinseqplusplus_data)
+
         # Write data to file
         self.write_data_file(self.prinseqplusplus_data, "prinseqplusplus")
 
@@ -162,3 +164,8 @@ class MultiqcModule(BaseMultiqcModule):
         }
 
         self.general_stats_addcols(self.prinseqplusplus_data, headers)
+
+    def beeswarm_plot(self):
+        """Beeswarm plot of all possible filtering results"""
+        cats = OrderedDict()
+        cats["lc_entropy"] = {"name": "lc_entropy"}
