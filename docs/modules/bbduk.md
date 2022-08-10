@@ -7,12 +7,15 @@ Description: >
 	into a single high-performance tool.
 ---
 
-The BBDuk module produces summary statistics from the BBDuk tool of the
-[BBTools](http://jgi.doe.gov/data-and-tools/bbtools/bb-tools-user-guide/) suite
-of tools. The module can summarise data from the following BBDuk funtionality
+The BBDuk module produces summary statistics from the stdout logging information
+from the BBDuk tool of the [BBTools](http://jgi.doe.gov/data-and-tools/bbtools/bb-tools-user-guide/) suite of tools. The module can summarise data from the following BBDuk funtionality
 (descriptions from command line help output):
 
-- `entropy`
+- `entropy` - entropy filtering
+- `ktrim` - kmer trimming
+- `qtrim` - quality trimming
+- `maq` - read quality filtering
+- `ref` contaminant filtering
 
 Additional information on the BBMap tools is available on
 [SeqAnswers](http://seqanswers.com/forums/showthread.php?t=41057).
