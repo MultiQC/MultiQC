@@ -33,28 +33,32 @@ class MultiqcModule(BaseMultiqcModule):
 
         log.info("Found {} reports".format(len(self.prinseqplusplus_data)))
 
-        print(self.prinseqplusplus_data)
-
         # Write data to file
         self.write_data_file(self.prinseqplusplus_data, "prinseqplusplus")
 
         self.prinseqplusplus_general_stats()
+        self.prinseqplusplus_beeswarm_plot()
 
     def parse_logs(self, logfile):
         """Parsing Logs."""
         s_name = logfile["fn"]
         s_name = self.clean_s_name(s_name, logfile)
+
+        if self.prinseqplusplus_data.get(s_name) is not None:
+            log.warn("Duplicate sample name found! Overwriting: {}".format(s_name))
+
         self.prinseqplusplus_data[s_name] = {}
         file_content = logfile["f"]
         for l in file_content:
             ## Find line after loading reads, and remove suffixes for sample name
+
             if "-min_len" in l:
                 self.prinseqplusplus_data[s_name]["min_len"] = {}
                 self.prinseqplusplus_data[s_name]["min_len"] = int(l.lstrip().rstrip().split(" ")[0])
             elif "-max_len" in l:
                 self.prinseqplusplus_data[s_name]["max_len"] = {}
                 self.prinseqplusplus_data[s_name]["max_len"] = int(l.lstrip().rstrip().split(" ")[0])
-            elif "-min_cg" in l:  ## This seems to be a typo in the log, should be gc
+            elif "-min_cg" in l:  ## This seems to be a typo in the log file of PRINSEQ++, should be gc
                 self.prinseqplusplus_data[s_name]["min_gc"] = {}
                 self.prinseqplusplus_data[s_name]["min_gc"] = int(l.lstrip().rstrip().split(" ")[0])
             elif "-max_cg" in l:
@@ -165,7 +169,33 @@ class MultiqcModule(BaseMultiqcModule):
 
         self.general_stats_addcols(self.prinseqplusplus_data, headers)
 
-    def beeswarm_plot(self):
+    def prinseqplusplus_beeswarm_plot(self):
         """Beeswarm plot of all possible filtering results"""
-        cats = OrderedDict()
-        cats["lc_entropy"] = {"name": "lc_entropy"}
+        headers = OrderedDict()
+
+        reads = {
+            "min": 0,
+            "modify": lambda x: float(x) * config.read_count_multiplier,
+            "suffix": "{} reads".format(config.read_count_prefix),
+            "decimalPlaces": 0,
+            "shared_key": "read_count",
+        }
+        headers["min_len"] = dict(reads, title="min_len")
+        headers["max_len"] = dict(reads, title="max_len")
+        headers["min_gc"] = dict(reads, title="min_gc")
+        headers["max_gc"] = dict(reads, title="max_gc")
+        headers["lc_entropy"] = dict(reads, title="lc_entropy")
+        headers["min_qual_score"] = dict(reads, title="min_qual_score")
+        headers["min_qual_mean"] = dict(reads, title="min_qual_mean")
+        headers["ns_max_n"] = dict(reads, title="ns_max_n")
+        headers["noiupac"] = dict(reads, title="noiupac")
+        headers["derep"] = dict(reads, title="derep")
+        headers["lc_entropy"] = dict(reads, title="lc_entropy")
+        headers["lc_dust"] = dict(reads, title="lc_dust")
+
+        self.add_section(
+            name="Filtered Reads",
+            anchor="prinseqplusplus",
+            description="Shows the number of reads removed by the various PRINSEQ++ filter options",
+            plot=beeswarm.plot(self.prinseqplusplus_data, headers, {"id": "prinseplusplus"}),
+        )
