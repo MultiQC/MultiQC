@@ -13,6 +13,9 @@ bamtools/stats:
   contents: "Stats for BAM file(s):"
   shared: true
   num_lines: 10
+bbduk:
+  contents: "jgi.BBDuk"
+  num_lines: 1
 bbmap/stats:
   contents: "#Name	Reads	ReadsPct"
   num_lines: 4

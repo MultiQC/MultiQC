@@ -12,6 +12,7 @@ MultiQC Modules:
   Pre-alignment:
     Adapter Removal: modules/adapterRemoval.md
     AfterQC: modules/afterqc.md
+    BBDuk: modules/bbduk.md
     Bcl2fastq: modules/bcl2fastq.md
     BclConvert: modules/bclconvert.md
     BioBloom Tools: modules/biobloomtools.md

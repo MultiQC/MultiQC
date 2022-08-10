@@ -16,7 +16,8 @@
 
 ### New Modules
 
-_nothing yet.._
+- [**BBDuk**](https://jgi.doe.gov/data-and-tools/software-tools/bbtools/bb-tools-user-guide/bbduk-guide/)
+  - Combines most common data-quality-related trimming, filtering, and masking operations via kmers into a single high-performance tool.
 
 ### Module updates
 

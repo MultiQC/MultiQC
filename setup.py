@@ -73,6 +73,7 @@ setup(
             "adapterRemoval = multiqc.modules.adapterRemoval:MultiqcModule",
             "afterqc = multiqc.modules.afterqc:MultiqcModule",
             "bamtools = multiqc.modules.bamtools:MultiqcModule",
+            "bbduk = multiqc.modules.bbduk:MultiQCModule",
             "bbmap = multiqc.modules.bbmap:MultiqcModule",
             "bcftools = multiqc.modules.bcftools:MultiqcModule",
             "bcl2fastq = multiqc.modules.bcl2fastq:MultiqcModule",
