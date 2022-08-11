@@ -201,14 +201,11 @@ class MultiqcModule(BaseMultiqcModule):
         ]:
             cats[cat] = {"name": cat}
 
-        config = {
-            "id": "bbduk-bargraph",
-            "title": "BBDuk filtered reads in percentages",
-        }
+        config = {"id": "bbduk-bargraph", "title": "BBDuk: Percentage Summary", "ylab": "Percentage of Reads"}
 
         self.add_section(
             name="Filtered Reads Percentages",
-            anchor="bbduk-bargraph",
+            anchor="bbduk-bargraph-percentages",
             description="Shows summary of reads removed across all BBDuk filters",
             plot=bargraph.plot(self.bbduk_data, cats, config),
         )
@@ -243,7 +240,7 @@ class MultiqcModule(BaseMultiqcModule):
             name="Filtered Reads",
             anchor="bbduk-beeswarm",
             description="Shows the number of reads removed by various BBDuk filters",
-            plot=beeswarm.plot(self.bbduk_data, headers, {"id": "bbduk-beeswarm"}),
+            plot=beeswarm.plot(self.bbduk_data, headers, {"id": "bbduk-beeswarm-reads"}),
         )
 
 
