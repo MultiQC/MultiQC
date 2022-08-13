@@ -195,14 +195,26 @@ class MultiqcModule(BaseMultiqcModule):
             d["measure"]: d["value"] for d in self.fastqc_data[s_name]["basic_statistics"]
         }
 
-        # Calculate the average sequence length (Basic Statistics gives a range)
-        length_bp = 0
-        total_count = 0
-        for d in self.fastqc_data[s_name].get("sequence_length_distribution", {}):
-            length_bp += d["count"] * self.avg_bp_from_range(d["length"])
-            total_count += d["count"]
-        if total_count > 0:
-            self.fastqc_data[s_name]["basic_statistics"]["avg_sequence_length"] = length_bp / total_count
+        # Calculate the median sequence length (Basic Statistics gives a range)
+        sequence_length_distributions = [v for v in self.fastqc_data[s_name].get("sequence_length_distribution", {})]
+        total_reads = sum(v["count"] for v in sequence_length_distributions)
+
+        # we sort by the avg of the range, which is effectively
+        # sorting ranges in asc order assuming no overlap
+        sequence_length_distributions.sort(key=lambda d: self.avg_bp_from_range(d["length"]))
+
+        reads_seen = 0
+        for d in sequence_length_distributions:
+            reads_seen += d["count"]
+
+            if reads_seen >= total_reads / 2:
+                # if the distribution-entry is a range, we use the average of the range.
+                # this isn't technically correct, because we can't know what the distribution
+                # is within that range. Probably good enough though.
+                self.fastqc_data[s_name]["basic_statistics"]["median_sequence_length"] = self.avg_bp_from_range(
+                    d["length"]
+                )
+                break
 
     def fastqc_general_stats(self):
         """Add some single-number stats to the basic statistics
@@ -215,7 +227,7 @@ class MultiqcModule(BaseMultiqcModule):
             bs = self.fastqc_data[s_name]["basic_statistics"]
             # Samples with 0 reads and reports with some skipped sections might be missing things here
             data[s_name]["percent_gc"] = bs.get("%GC", 0)
-            data[s_name]["avg_sequence_length"] = bs.get("avg_sequence_length", 0)
+            data[s_name]["median_sequence_length"] = bs.get("median_sequence_length", 0)
             data[s_name]["total_sequences"] = bs.get("Total Sequences", 0)
 
             # Log warning about zero-read samples as a courtesy
@@ -242,7 +254,7 @@ class MultiqcModule(BaseMultiqcModule):
                 pass
 
         # Are sequence lengths interesting?
-        seq_lengths = [x["avg_sequence_length"] for x in data.values()]
+        seq_lengths = [x["median_sequence_length"] for x in data.values()]
         try:
             hide_seq_length = False if max(seq_lengths) - min(seq_lengths) > 10 else True
         except ValueError:
@@ -267,9 +279,9 @@ class MultiqcModule(BaseMultiqcModule):
             "scale": "Set1",
             "format": "{:,.0f}",
         }
-        headers["avg_sequence_length"] = {
+        headers["median_sequence_length"] = {
             "title": "Read Length",
-            "description": "Average Read Length (bp)",
+            "description": "Median Read Length (bp)",
             "min": 0,
             "suffix": " bp",
             "scale": "RdYlGn",
