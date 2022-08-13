@@ -27,6 +27,7 @@ class MultiqcModule(BaseMultiqcModule):
             anchor="nextclade",
             href="https://github.com/nextstrain/nextclade",
             info="does viral genome alignment, clade assignment, mutation calling, and quality checks",
+            doi="10.21105/joss.03773",
         )
 
         # Parse logs
