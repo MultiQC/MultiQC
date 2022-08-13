@@ -13,6 +13,7 @@
 - Tidied the verbose log to remove some very noisy statements and add summaries for skipped files in the search
 - Add timezone to time in reports
 - Add nix flake support
+- Add total read count (after filtering) from fastp to general stats table
 
 ### New Modules
 
