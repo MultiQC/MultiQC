@@ -38,8 +38,6 @@ class MultiqcModule(BaseMultiqcModule):
 
         log.info("Found {} reports".format(len(self.motus_data)))
 
-        print(self.motus_data)
-
         # Write data to file
         self.write_data_file(self.motus_data, "motus")
 
@@ -181,10 +179,14 @@ class MultiqcModule(BaseMultiqcModule):
         cats["Discarded reads"] = dict(common, name="Unmapped reads")
 
         self.add_section(
-            name="Read filtering information",
+            name="mOTUs: Read filtering information",
             anchor="motus-filtering",
             description="Read filtering statistics (i.e. mapping of reads to the mOTUs marker database).",
-            plot=bargraph.plot(self.motus_data, cats, {"id": "motus-filtering-reads"}),
+            plot=bargraph.plot(
+                self.motus_data,
+                cats,
+                {"id": "motus-filtering-reads", "title": "mOTUs: Read filtering information", "ylab": "Reads"},
+            ),
         )
 
     def motus_mapping_bargraph_plot(self):
@@ -206,10 +208,14 @@ class MultiqcModule(BaseMultiqcModule):
         )
 
         self.add_section(
-            name="Insert mapping information",
+            name="mOTUs: Insert mapping information",
             anchor="motus-mapping",
             description="How inserts was classified after alignment to MGCs.",
-            plot=bargraph.plot(self.motus_data, cats, {"id": "motus-mapping-inserts"}),
+            plot=bargraph.plot(
+                self.motus_data,
+                cats,
+                {"id": "motus-mapping-inserts", "title": "mOTUs: Insert mapping information", "ylab": "Inserts"},
+            ),
         )
 
     def motus_motus_bargraph_plot(self):
@@ -226,8 +232,16 @@ class MultiqcModule(BaseMultiqcModule):
         cats["Number of ext-mOTUs"] = dict(common, name="(Unknown) MAG mOTUs")
 
         self.add_section(
-            name="mOTU identification information",
+            name="mOTUs: mOTU identification information",
             anchor="motus-identification",
             description="Distribution of the types of mOTUs found.",
-            plot=bargraph.plot(self.motus_data, cats, {"id": "motus-identification-types"}),
+            plot=bargraph.plot(
+                self.motus_data,
+                cats,
+                {
+                    "id": "motus-identification-types",
+                    "title": "mOTUs: mOTU identification information",
+                    "ylab": "mOTUs",
+                },
+            ),
         )

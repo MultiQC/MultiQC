@@ -659,6 +659,10 @@ module_order:
         - DNA
         - metagenomics
         - ancient
+  - motus:
+      module_tag:
+        - RNA
+        - DNA
   - trimmomatic:
       module_tag:
         - RNA
