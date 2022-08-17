@@ -134,6 +134,7 @@ setup(
             "mirtop = multiqc.modules.mirtop:MultiqcModule",
             "mirtrace = multiqc.modules.mirtrace:MultiqcModule",
             "mosdepth = multiqc.modules.mosdepth:MultiqcModule",
+            "motus = multiqc.modules.motus:MultiqcModule",
             "mtnucratio = multiqc.modules.mtnucratio:MultiqcModule",
             "multivcfanalyzer = multiqc.modules.multivcfanalyzer:MultiqcModule",
             "nanostat = multiqc.modules.nanostat:MultiqcModule",

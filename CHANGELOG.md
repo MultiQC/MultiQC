@@ -16,7 +16,8 @@
 
 ### New Modules
 
-_nothing yet.._
+- [**mOTUs**](https://motu-tool.org/)
+  - Microbial profiling through marker gene (MG)-based operational taxonomic units (mOTUs)
 
 ### Module updates
 
