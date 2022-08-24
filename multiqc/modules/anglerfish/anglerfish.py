@@ -74,15 +74,19 @@ class MultiqcModule(BaseMultiqcModule):
         # Parse Sample Stats
         ## Index for each sample and their reads in order to iterate without knowing sample names
         index = 0
+        total_reads = 0
         try:
             for k in parsed_json["sample_stats"]:
                 for key in k:
                     if key != "sample_name":
+                        if key == "#reads":
+                            total_reads += float(k[key])
                         self.anglerfish_data[s_name][f"{key}_{index}"] = float(k[key])
                     else:
                         self.anglerfish_data[s_name][f"sample_name_{index}"] = k["sample_name"]
                 index += 1
             self.anglerfish_data[s_name]["sample_stats_amount"] = index
+            self.anglerfish_data[s_name]["total_read"] = total_reads
         except KeyError:
             # No sample stat in file or sample stat missing info
             self.anglerfish_data[s_name]["sample_stats_amount"] = -1
@@ -104,9 +108,6 @@ class MultiqcModule(BaseMultiqcModule):
             self.anglerfish_data[s_name]["undetermined_amount"] = -1
         self.anglerfish_data[s_name]["total_count"] = total_count
 
-        # Save total amount of input reads
-        self.anglerfish_data[s_name]["total_read"] = float(parsed_json["paf_stats"][0]["input_reads"][0])
-
     # General stats table
     def anglerfish_general_stats_table(self):
         """Add Anglerfish statistics to the general statistics table"""
@@ -121,8 +122,10 @@ class MultiqcModule(BaseMultiqcModule):
                     key = self.anglerfish_data[s_name][f"sample_name_{k}"]
                     data[key] = {}
                     data["undetermined"] = {}
+                    data[f"total_read_{s_name}"] = {}
                     reads = self.anglerfish_data[s_name][f"#reads_{k}"]
                     data[key]["#reads"] = reads
+                    # data[f"total_read_{s_name}"]["#reads"] = total_read
                     data[key]["mean_read_len"] = self.anglerfish_data[s_name][f"mean_read_len_{k}"]
                     data[key]["std_read_len"] = self.anglerfish_data[s_name][f"std_read_len_{k}"]
                     data[key]["library"] = float((reads / total_read) * 100)
@@ -134,7 +137,7 @@ class MultiqcModule(BaseMultiqcModule):
 
         headers = OrderedDict()
         headers["library"] = {
-            "title": "library",
+            "title": "% Library",
             "description": "Fraction within library.",
             "max": 100,
             "min": 0,
@@ -147,18 +150,21 @@ class MultiqcModule(BaseMultiqcModule):
             "description": "Total number of reads",
             "min": 0,
             "scale": "PuOr",
+            "format": "{:.0f}",
         }
         headers["mean_read_len"] = {
             "title": "Read  Length",
             "description": "Mean read length",
             "min": 0,
             "scale": "RdYlGn",
+            "suffix": " bp",
         }
         headers["std_read_len"] = {
             "title": "Length StdDev",
             "description": "Standard deviation of the read lengths",
             "min": 0,
             "scale": "RdPu",
+            "suffix": " bp",
         }
 
         self.general_stats_addcols(data, headers, "anglerfish")
