@@ -741,6 +741,10 @@ tophat:
 trimmomatic:
   contents: "Trimmomatic"
   shared: true
+truvari/bench:
+  contents_re: ".*Running .*truvari.* bench.*"
+  fn: "log.txt"
+  num_lines: 1
 varscan2/mpileup2snp:
   contents: "Only SNPs will be reported"
   num_lines: 3

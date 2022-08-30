@@ -8,6 +8,9 @@ Fixed logger bugs when calling `multiqc.run` multiple times by removing logging 
 
 ### New Modules
 
+- [**Truvari**](https://github.com/ACEnglish/truvari)
+  - Toolkit for benchmarking, merging, and annotating Structrual Variants (SVs). Added support for reading output from `truvari bench`.
+
 ### Module updates
 
 - **CCS**
