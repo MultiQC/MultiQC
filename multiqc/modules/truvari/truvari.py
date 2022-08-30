@@ -25,6 +25,7 @@ class MultiqcModule(BaseMultiqcModule, BenchSummary):
             target="Truvari",
             href="https://github.com/ACEnglish/truvari",
             info=(" Structural variant toolkit for VCFs."),
+            doi="https://doi.org/10.1101/2022.02.21.481353",
         )
 
         # Set up class objects to hold parsed data
