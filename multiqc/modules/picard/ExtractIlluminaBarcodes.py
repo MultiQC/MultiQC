@@ -20,6 +20,8 @@ def parse_reports(self):
 
     # Go through logs and find Metrics
     for f in self.find_log_files("picard/extractilluminabarcodes", filehandles=True):
+        self.add_data_source(f, section="ExtractIlluminaBarcodes")
+
         lane = None
         raw_data = []
         keys = None
@@ -31,7 +33,7 @@ def parse_reports(self):
                 if lane_search:
                     lane = lane_search[0]
                     self.picard_barcode_metrics[lane] = {}
-            if "ExtractIlluminaBarcodes" in line and "## METRICS CLASS" in line:
+            if ("ExtractIlluminaBarcodes" in line or "BarcodeMetric" in line) and "## METRICS CLASS" in line:
                 keys = f["f"].readline().strip("\n").split("\t")
             elif keys:
                 vals = line.strip("\n").split("\t")

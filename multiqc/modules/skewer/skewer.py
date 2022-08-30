@@ -24,6 +24,7 @@ class MultiqcModule(BaseMultiqcModule):
             anchor="skewer",
             href="https://github.com/relipmoc/skewer",
             info="is an adapter trimming tool specially designed for processing next-generation sequencing (NGS) paired-end sequences.",
+            doi="10.1186/1471-2105-15-182",
         )
 
         self.skewer_data = dict()
@@ -147,6 +148,12 @@ class MultiqcModule(BaseMultiqcModule):
         for k in stats:
             self.skewer_data[s_name][k] = int(data[k])
 
-        self.skewer_data[s_name]["pct_avail"] = 100.0 * float(data["r_avail"]) / float(data["r_processed"])
-        self.skewer_data[s_name]["pct_trimmed"] = 100.0 * float(data["r_trimmed"]) / float(data["r_avail"])
-        self.skewer_data[s_name]["pct_untrimmed"] = 100.0 * float(data["r_untrimmed"]) / float(data["r_avail"])
+        self.skewer_data[s_name]["pct_avail"] = (
+            100.0 * float(data["r_avail"]) / float(data["r_processed"]) if float(data["r_processed"]) else None
+        )
+        self.skewer_data[s_name]["pct_trimmed"] = (
+            100.0 * float(data["r_trimmed"]) / float(data["r_avail"]) if float(data["r_avail"]) else None
+        )
+        self.skewer_data[s_name]["pct_untrimmed"] = (
+            100.0 * float(data["r_untrimmed"]) / float(data["r_avail"]) if float(data["r_avail"]) else None
+        )

@@ -176,7 +176,20 @@ def parse_reports(self):
             if s_name not in self.general_stats_data:
                 self.general_stats_data[s_name] = dict()
             self.general_stats_data[s_name].update(data[s_name])
-        self.add_section(name="HSMetrics", anchor="picard_hsmetrics", plot=table.plot(data, _get_table_headers(data)))
+        self.add_section(
+            name="HSMetrics",
+            anchor="picard_hsmetrics",
+            plot=table.plot(
+                data,
+                _get_table_headers(data),
+                {
+                    "id": "picard_hsmetrics_table",
+                    "namespace": "HsMetrics",
+                    "scale": "RdYlGn",
+                    "min": 0,
+                },
+            ),
+        )
         tbases = _add_target_bases(data)
         self.add_section(
             name=tbases["name"], anchor=tbases["anchor"], description=tbases["description"], plot=tbases["plot"]
@@ -226,6 +239,7 @@ def _get_table_headers(data):
             "PCT_USABLE_BASES_ON_TARGET",
             "PF_BASES_ALIGNED",
             "PF_READS",
+            "PCT_SELECTED_BASES",
             "PF_UNIQUE_READS",
             "PF_UQ_BASES_ALIGNED",
             "PF_UQ_READS_ALIGNED",
@@ -268,9 +282,6 @@ def _get_table_headers(data):
             headers[h] = {
                 "title": h_title.strip().lower().capitalize(),
                 "description": FIELD_DESCRIPTIONS[h] if h in FIELD_DESCRIPTIONS else None,
-                "scale": "RdYlGn",
-                "min": 0,
-                "namespace": "HsMetrics",
             }
             if h.find("PCT") > -1:
                 headers[h]["title"] = "% {}".format(headers[h]["title"])

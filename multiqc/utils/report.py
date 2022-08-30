@@ -14,11 +14,13 @@ import lzstring
 import mimetypes
 import os
 import re
+import rich
 import rich.progress
 import time
 import yaml
 
 from multiqc import config
+from multiqc.utils import util_functions
 
 logger = config.logger
 
@@ -32,37 +34,71 @@ try:
 except NameError:
     pass  # Python 3
 
-# Set up global variables shared across modules
-general_stats_data = list()
-general_stats_headers = list()
-general_stats_html = ""
-data_sources = defaultdict(lambda: defaultdict(lambda: defaultdict()))
-plot_data = dict()
-html_ids = list()
-lint_errors = list()
-num_hc_plots = 0
-num_mpl_plots = 0
-saved_raw_data = dict()
-last_found_file = None
-runtimes = {
-    "total": 0,
-    "total_sp": 0,
-    "total_mods": 0,
-    "total_compression": 0,
-    "sp": defaultdict(),
-    "mods": defaultdict(),
-}
-file_search_stats = {
-    "skipped_symlinks": 0,
-    "skipped_not_a_file": 0,
-    "skipped_ignore_pattern": 0,
-    "skipped_filesize_limit": 0,
-    "skipped_no_match": 0,
-}
 
-# Make a dict of discovered files for each seach key
-searchfiles = list()
-files = dict()
+# Set up global variables shared across modules
+# Inside a function so that the global vars are reset if MultiQC is run more than once within a single session / environment
+def init():
+    global general_stats_data
+    general_stats_data = list()
+
+    global general_stats_headers
+    general_stats_headers = list()
+
+    global general_stats_html
+    general_stats_html = ""
+
+    global data_sources
+    data_sources = defaultdict(lambda: defaultdict(lambda: defaultdict()))
+
+    global plot_data
+    plot_data = dict()
+
+    global html_ids
+    html_ids = list()
+
+    global lint_errors
+    lint_errors = list()
+
+    global num_hc_plots
+    num_hc_plots = 0
+
+    global num_mpl_plots
+    num_mpl_plots = 0
+
+    global saved_raw_data
+    saved_raw_data = dict()
+
+    global last_found_file
+    last_found_file = None
+
+    global runtimes
+    runtimes = {
+        "total": 0,
+        "total_sp": 0,
+        "total_mods": 0,
+        "total_compression": 0,
+        "sp": defaultdict(),
+        "mods": defaultdict(),
+    }
+
+    global file_search_stats
+    file_search_stats = {
+        "skipped_symlinks": 0,
+        "skipped_not_a_file": 0,
+        "skipped_ignore_pattern": 0,
+        "skipped_filesize_limit": 0,
+        "skipped_module_specific_max_filesize": 0,
+        "skipped_no_match": 0,
+        "skipped_directory_fn_ignore_dirs": 0,
+        "skipped_file_contents_search_errors": 0,
+    }
+
+    global searchfiles
+    searchfiles = list()
+
+    # Make a dict of discovered files for each seach key
+    global files
+    files = dict()
 
 
 def get_filelist(run_module_names):
@@ -148,7 +184,6 @@ def get_filelist(run_module_names):
         # Check that we don't want to ignore this file
         i_matches = [n for n in config.fn_ignore_files if fnmatch.fnmatch(fn, n)]
         if len(i_matches) > 0:
-            logger.debug("Ignoring file as matched an ignore pattern: {}".format(fn))
             file_search_stats["skipped_ignore_pattern"] += 1
             return False
 
@@ -217,7 +252,7 @@ def get_filelist(run_module_names):
                         removed_dirs = [
                             os.path.join(root, d) for d in set(orig_dirnames).symmetric_difference(set(dirnames))
                         ]
-                        logger.debug("Ignoring directory as matched fn_ignore_dirs: {}".format(", ".join(removed_dirs)))
+                        file_search_stats["skipped_directory_fn_ignore_dirs"] += len(removed_dirs)
                         orig_dirnames = dirnames[:]
                 for n in config.fn_ignore_paths:
                     dirnames[:] = [d for d in dirnames if not fnmatch.fnmatch(os.path.join(root, d), n.rstrip(os.sep))]
@@ -225,18 +260,16 @@ def get_filelist(run_module_names):
                         removed_dirs = [
                             os.path.join(root, d) for d in set(orig_dirnames).symmetric_difference(set(dirnames))
                         ]
-                        logger.debug(
-                            "Ignoring directory as matched fn_ignore_paths: {}".format(", ".join(removed_dirs))
-                        )
+                        file_search_stats["skipped_directory_fn_ignore_dirs"] += len(removed_dirs)
 
                 # Skip *this* directory if matches ignore params
                 d_matches = [n for n in config.fn_ignore_dirs if fnmatch.fnmatch(bname, n.rstrip(os.sep))]
                 if len(d_matches) > 0:
-                    logger.debug("Ignoring directory as matched fn_ignore_dirs: {}".format(bname))
+                    file_search_stats["skipped_directory_fn_ignore_dirs"] += 1
                     continue
                 p_matches = [n for n in config.fn_ignore_paths if fnmatch.fnmatch(root, n.rstrip(os.sep))]
                 if len(p_matches) > 0:
-                    logger.debug("Ignoring directory as matched fn_ignore_paths: {}".format(root))
+                    file_search_stats["skipped_directory_fn_ignore_dirs"] += 1
                     continue
 
                 # Sanity check - make sure that we're not just running in the installation directory
@@ -254,6 +287,12 @@ def get_filelist(run_module_names):
                     searchfiles.append([fn, root])
 
     # Search through collected files
+    console = rich.console.Console(
+        stderr=True,
+        highlight=False,
+        force_interactive=False if config.no_ansi else None,
+        color_system=None if config.no_ansi else "auto",
+    )
     progress_obj = rich.progress.Progress(
         "[blue]|[/]      ",
         rich.progress.SpinnerColumn(),
@@ -262,6 +301,7 @@ def get_filelist(run_module_names):
         "[progress.percentage]{task.percentage:>3.0f}%",
         "[green]{task.completed}/{task.total}",
         "[dim]{task.fields[s_fn]}",
+        console=console,
     )
     with progress_obj as progress:
         mqc_task = progress.add_task("searching", total=len(searchfiles), s_fn="")
@@ -273,12 +313,20 @@ def get_filelist(run_module_names):
 
     runtimes["total_sp"] = time.time() - total_sp_starttime
 
+    # Debug log summary about what we skipped
+    summaries = []
+    for key in sorted(file_search_stats, key=file_search_stats.get, reverse=True):
+        if "skipped_" in key and file_search_stats[key] > 0:
+            summaries.append(f"{key}: {file_search_stats[key]}")
+    logger.debug(f"Summary of files that were skipped by the search: [{'] // ['.join(summaries)}]")
+
 
 def search_file(pattern, f, module_key):
     """
     Function to searach a single file for a single search pattern.
     """
 
+    global file_search_stats
     fn_matched = False
     contents_matched = False
 
@@ -293,9 +341,7 @@ def search_file(pattern, f, module_key):
     # Search pattern specific filesize limit
     if pattern.get("max_filesize") is not None and "filesize" in f:
         if f["filesize"] > pattern.get("max_filesize"):
-            logger.debug(
-                "File ignored by {} because it exceeded search pattern filesize limit: {}".format(module_key, f["fn"])
-            )
+            file_search_stats["skipped_module_specific_max_filesize"] += 1
             return False
 
     # Search by file name (glob)
@@ -317,9 +363,10 @@ def search_file(pattern, f, module_key):
         if pattern.get("contents_re") is not None:
             repattern = re.compile(pattern["contents_re"])
         try:
-            with io.open(os.path.join(f["root"], f["fn"]), "r", encoding="utf-8") as f:
+            file_path = os.path.join(f["root"], f["fn"])
+            with io.open(file_path, "r", encoding="utf-8") as fh:
                 l = 1
-                for line in f:
+                for line in fh:
                     # Search by file contents (string)
                     if pattern.get("contents") is not None:
                         if pattern["contents"] in line:
@@ -338,10 +385,12 @@ def search_file(pattern, f, module_key):
                     if pattern.get("num_lines") and l >= pattern.get("num_lines"):
                         break
                     l += 1
-        except (IOError, OSError, ValueError, UnicodeDecodeError):
+        # Can't open file - usually because it's a binary file and we're reading as utf-8
+        except (IOError, OSError, ValueError, UnicodeDecodeError) as e:
             if config.report_readerrors:
-                logger.debug("Couldn't read file when looking for output: {}".format(f["fn"]))
-                return False
+                logger.debug(f"Couldn't read file when looking for output: {file_path}, {e}")
+            file_search_stats["skipped_file_contents_search_errors"] += 1
+            return False
 
     return fn_matched and contents_matched
 
@@ -402,6 +451,29 @@ def data_sources_tofile():
                     for s_name, source in data_sources[mod][sec].items():
                         lines.append([mod, sec, s_name, source])
             body = "\n".join(["\t".join(l) for l in lines])
+            print(body.encode("utf-8", "ignore").decode("utf-8"), file=f)
+
+
+def dois_tofile():
+    """Find all DOIs listed in report sections and write to a file"""
+    # Collect DOIs
+    dois = {"MultiQC": ["10.1093/bioinformatics/btw354"]}
+    for mod in modules_output:
+        if mod.doi is not None and mod.doi != []:
+            dois[mod.anchor] = mod.doi
+    # Write to a file
+    fn = "multiqc_citations.{}".format(config.data_format_extensions[config.data_format])
+    with io.open(os.path.join(config.data_dir, fn), "w", encoding="utf-8") as f:
+        if config.data_format == "json":
+            jsonstr = json.dumps(dois, indent=4, ensure_ascii=False)
+            print(jsonstr.encode("utf-8", "ignore").decode("utf-8"), file=f)
+        elif config.data_format == "yaml":
+            yaml.dump(dois, f, default_flow_style=False)
+        else:
+            body = ""
+            for mod, dois in dois.items():
+                for doi in dois:
+                    body += "{}{} # {}\n".format(doi, " " * (50 - len(doi)), mod)
             print(body.encode("utf-8", "ignore").decode("utf-8"), file=f)
 
 

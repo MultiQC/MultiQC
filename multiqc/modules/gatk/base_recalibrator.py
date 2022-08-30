@@ -60,6 +60,9 @@ class BaseRecalibratorMixin:
         if n_reports_found > 0:
             log.info("Found {} BaseRecalibrator reports".format(n_reports_found))
 
+            # Write data to file
+            self.write_data_file(self.gatk_base_recalibrator, "gatk_base_recalibrator")
+
             self.add_quality_score_vs_no_of_observations_section()
             self.add_reported_vs_empirical_section()
 

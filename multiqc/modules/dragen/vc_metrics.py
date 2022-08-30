@@ -21,16 +21,20 @@ class DragenVCMetrics(BaseMultiqcModule):
         data_by_sample = dict()
 
         for f in self.find_log_files("dragen/vc_metrics"):
-            data = parse_vc_metrics_file(f)
-            if f["s_name"] in data_by_sample:
-                log.debug("Duplicate sample name found! Overwriting: {}".format(f["s_name"]))
+            s_name, data = parse_vc_metrics_file(f)
+            s_name = self.clean_s_name(s_name, f)
+            if s_name in data_by_sample:
+                log.debug(f"Duplicate sample name found! Overwriting: {s_name}")
             self.add_data_source(f, section="stats")
-            data_by_sample[f["s_name"]] = data
+            data_by_sample[s_name] = data
 
         # Filter to strip out ignored sample names:
         data_by_sample = self.ignore_samples(data_by_sample)
         if not data_by_sample:
             return set()
+
+        # Write data to file
+        self.write_data_file(data_by_sample, "dragen_vc_metrics")
 
         all_metric_names = set()
         for sn, sdata in data_by_sample.items():
@@ -45,10 +49,10 @@ class DragenVCMetrics(BaseMultiqcModule):
             name="Variant calling",
             anchor="dragen-vc-metrics",
             description="""
-            Variant calling metrics. Metrics are reported for each sample in multi sample VCF 
-            and gVCF files. Based on the run case, metrics are reported either as standard 
-            VARIANT CALLER or JOINT CALLER. All metrics are reported for post-filter VCFs, 
-            except for the "Filtered" metrics which represent how many variants were filtered out 
+            Variant calling metrics. Metrics are reported for each sample in multi sample VCF
+            and gVCF files. Based on the run case, metrics are reported either as standard
+            VARIANT CALLER or JOINT CALLER. All metrics are reported for post-filter VCFs,
+            except for the "Filtered" metrics which represent how many variants were filtered out
             from pre-filter VCF to generate the post-filter VCF.
             """,
             plot=table.plot(data_by_sample, vc_table_headers, pconfig={"namespace": NAMESPACE}),
@@ -330,7 +334,7 @@ def parse_vc_metrics_file(f):
     VARIANT CALLER POSTFILTER,T_SRR7890936_50pc,Percent Autosome Callability,NA
     """
 
-    f["s_name"] = re.search(r"(.*)\.vc_metrics.csv", f["fn"]).group(1)
+    s_name = re.search(r"(.*)\.vc_metrics.csv", f["fn"]).group(1)
 
     summary_data = dict()
     prefilter_data = dict()
@@ -424,4 +428,4 @@ def parse_vc_metrics_file(f):
     ):
         data["Filtered indels pct"] = data["Filtered indels"] / prefilter_data["Indels"] * 100.0
 
-    return data
+    return s_name, data

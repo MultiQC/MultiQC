@@ -379,6 +379,23 @@ up with weird characters in your MultiQC output, you can disable this feature wi
 flag `--no-ansi`. Sadly it's not possible to set this in a config file, as the logger is initilised
 before configs are loaded.
 
+## Checks for new versions
+
+When MultiQC runs it automatically checks to see if there is a new version available to download.
+If so, a log message is printed at the top of the run saying where to download it
+(_MultiQC Version v0.6 now available!_).
+This helps people stay up to date and reduces the number of bug reports that are
+due to outdated MultiQC versions.
+
+The timeout for the version check is set to 5 seconds, so if you're running offline it should
+fail silently and add negligable run time.
+However, if you prefer you can explicitly disable the version check by adding
+`no_version_check: true` to your MultiQC config.
+
+The check is done with the main MultiQC website (<https://multiqc.info>).
+The only statistics that are collected are the number of checks and the version of MultiQC
+that is being run. No identifiable information (eg. IP address etc) is stored.
+
 ## Command-line config
 
 Sometimes it's useful to specify a single small config option just once, where creating
@@ -509,3 +526,23 @@ This approach is **not recommended if you have a very large number of samples**,
 produce a huge report file with all of the embedded plot data and crash your browser when opening it.
 If you are running MultiQC for the `multiqc_data` folder and never intend to look at the report, it
 speed things up though.
+
+### Skip the report if you don't need it
+
+If you're running MultiQC just to get parsed data / exported plots (`multiqc_data`) or the output for MegaQC
+and don't actually need the report, you can skip it with `--no-report`.
+This prevents any HTML report from being generated, including the data compression step that precedes it.
+This can cut a few seconds off the MultiQC execution time.
+
+## Custom CSS files
+
+MultiQC generates HTML reports. You can include custom CSS in your final report if you wish.
+Simply add CSS files to the `custom_css_files` config option:
+
+```yaml
+custom_css_files:
+  - myfile.css
+```
+
+Or pass `--custom-css-file` (can be specified multiple times) and MultiQC will include
+them in the final report HTML.

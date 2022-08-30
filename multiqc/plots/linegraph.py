@@ -123,7 +123,7 @@ def plot(data, pconfig=None):
 
         for s in sorted(d.keys()):
 
-            # Ensure any overwritting conditionals from data_labels (e.g. ymax) are taken in consideration
+            # Ensure any overwritten conditionals from data_labels (e.g. ymax) are taken in consideration
             series_config = pconfig.copy()
             if (
                 "data_labels" in pconfig and type(pconfig["data_labels"][data_index]) is dict
@@ -133,11 +133,19 @@ def plot(data, pconfig=None):
             pairs = list()
             maxval = 0
             if "categories" in series_config:
-                pconfig["categories"] = list()
+                if "categories" not in pconfig or type(pconfig["categories"]) is not list:
+                    pconfig["categories"] = list()
+                # Add any new categories
                 for k in d[s].keys():
-                    pconfig["categories"].append(k)
-                    pairs.append(d[s][k])
-                    maxval = max(maxval, d[s][k])
+                    if k not in pconfig["categories"]:
+                        pconfig["categories"].append(k)
+                # Go through categories and add either data or a blank
+                for k in pconfig["categories"]:
+                    try:
+                        pairs.append(d[s][k])
+                        maxval = max(maxval, d[s][k])
+                    except KeyError:
+                        pairs.append(None)
             else:
 
                 # Discard > ymax or just hide?
@@ -296,8 +304,9 @@ def highcharts_linegraph(plotdata, pconfig=None):
         html += "</div>\n\n"
 
     # The plot div
-    html += '<div class="hc-plot-wrapper"><div id="{id}" class="hc-plot not_rendered hc-line-plot"><small>loading..</small></div></div></div> \n'.format(
-        id=pconfig["id"]
+    html += '<div class="hc-plot-wrapper"{height}><div id="{id}" class="hc-plot not_rendered hc-line-plot"><small>loading..</small></div></div></div> \n'.format(
+        id=pconfig["id"],
+        height=f' style="height:{pconfig["height"]}px"' if "height" in pconfig else "",
     )
 
     report.num_hc_plots += 1
@@ -377,40 +386,48 @@ def matplotlib_linegraph(plotdata, pconfig=None):
         pid = pids[pidx]
 
         # Save plot data to file
-        fdata = OrderedDict()
-        lastcats = None
-        sharedcats = True
-        for d in pdata:
-            fdata[d["name"]] = OrderedDict()
-            for i, x in enumerate(d["data"]):
-                if type(x) is list:
-                    fdata[d["name"]][str(x[0])] = x[1]
-                    # Check to see if all categories are the same
-                    if lastcats is None:
-                        lastcats = [x[0] for x in d["data"]]
-                    elif lastcats != [x[0] for x in d["data"]]:
-                        sharedcats = False
-                else:
-                    try:
-                        fdata[d["name"]][pconfig["categories"][i]] = x
-                    except (KeyError, IndexError):
-                        fdata[d["name"]][str(i)] = x
-
-        # Custom tsv output if the x axis varies
-        if not sharedcats and config.data_format == "tsv":
-            fout = ""
+        if pconfig.get("save_data_file", True):
+            fdata = OrderedDict()
+            lastcats = None
+            sharedcats = True
             for d in pdata:
-                fout += "\t" + "\t".join([str(x[0]) for x in d["data"]])
-                fout += "\n{}\t".format(d["name"])
-                fout += "\t".join([str(x[1]) for x in d["data"]])
-                fout += "\n"
-            with io.open(os.path.join(config.data_dir, "{}.txt".format(pid)), "w", encoding="utf-8") as f:
-                print(fout.encode("utf-8", "ignore").decode("utf-8"), file=f)
-        else:
-            util_functions.write_data_file(fdata, pid)
+                fdata[d["name"]] = OrderedDict()
+                for i, x in enumerate(d["data"]):
+                    if type(x) is list:
+                        fdata[d["name"]][str(x[0])] = x[1]
+                        # Check to see if all categories are the same
+                        if lastcats is None:
+                            lastcats = [x[0] for x in d["data"]]
+                        elif lastcats != [x[0] for x in d["data"]]:
+                            sharedcats = False
+                    else:
+                        try:
+                            fdata[d["name"]][pconfig["categories"][i]] = x
+                        except (KeyError, IndexError):
+                            fdata[d["name"]][str(i)] = x
+
+            # Custom tsv output if the x axis varies
+            if not sharedcats and config.data_format == "tsv":
+                fout = ""
+                for d in pdata:
+                    fout += "\t" + "\t".join([str(x[0]) for x in d["data"]])
+                    fout += "\n{}\t".format(d["name"])
+                    fout += "\t".join([str(x[1]) for x in d["data"]])
+                    fout += "\n"
+                with io.open(os.path.join(config.data_dir, "{}.txt".format(pid)), "w", encoding="utf-8") as f:
+                    print(fout.encode("utf-8", "ignore").decode("utf-8"), file=f)
+            else:
+                util_functions.write_data_file(fdata, pid)
+
+        plt_height = 6
+        # Use fixed height if pconfig['height'] is set (convert pixels -> inches)
+        if "height" in pconfig:
+            # Default interactive height in pixels = 512
+            # Not perfect replication, but good enough
+            plt_height = 6 * (pconfig["height"] / 512)
 
         # Set up figure
-        fig = plt.figure(figsize=(14, 6), frameon=False)
+        fig = plt.figure(figsize=(14, plt_height), frameon=False)
         axes = fig.add_subplot(111)
 
         # Go through data series
@@ -444,7 +461,9 @@ def matplotlib_linegraph(plotdata, pconfig=None):
                 )
 
         # Tidy up axes
-        axes.tick_params(labelsize=8, direction="out", left=False, right=False, top=False, bottom=False)
+        axes.tick_params(
+            labelsize=pconfig.get("labelSize", 8), direction="out", left=False, right=False, top=False, bottom=False
+        )
         axes.set_xlabel(pconfig.get("xlab", ""))
         axes.set_ylabel(pconfig.get("ylab", ""))
 
@@ -545,7 +564,7 @@ def matplotlib_linegraph(plotdata, pconfig=None):
                 bbox_to_anchor=(0, -0.22, 1, 0.102),
                 ncol=5,
                 mode="expand",
-                fontsize=8,
+                fontsize=pconfig.get("labelSize", 8),
                 frameon=False,
             )
             plt.tight_layout(rect=[0, 0.08, 1, 0.92])

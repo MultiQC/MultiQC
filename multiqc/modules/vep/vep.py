@@ -27,6 +27,7 @@ class MultiqcModule(BaseMultiqcModule):
             href="https://www.ensembl.org/info/docs/tools/vep/index.html",
             info="Ensembl VEP determines the effect of your variants on genes, transcripts and protein sequences, "
             "as well as regulatory regions.",
+            doi="10.1186/s13059-016-0974-4",
         )
 
         self.vep_data = dict()
@@ -34,10 +35,12 @@ class MultiqcModule(BaseMultiqcModule):
         # Scan for VEP stats in plain html format
         for f in self.find_log_files("vep/vep_html", filehandles=True):
             self.parse_vep_html(f)
+            self.add_data_source(f)
 
         # Scan for VEP stats in plain text format
         for f in self.find_log_files("vep/vep_txt", filehandles=True):
             self.parse_vep_txt(f)
+            self.add_data_source(f)
 
         # Filter to strip out ignored sample names
         self.vep_data = self.ignore_samples(self.vep_data)
@@ -46,6 +49,9 @@ class MultiqcModule(BaseMultiqcModule):
         if len(self.vep_data) == 0:
             raise UserWarning
         log.info("Found {} VEP summaries".format(len(self.vep_data)))
+
+        # Write data to file
+        self.write_data_file(self.vep_data, "vep")
 
         # Add general stats table
         self.add_stats_table()
@@ -119,6 +125,8 @@ class MultiqcModule(BaseMultiqcModule):
                 if len(cells) == 2:
                     key = cells[0][4:-5]
                     value = cells[1][4:-5]
+                    if value == "-":
+                        continue
                     if key == "Novel / existing variants":
                         values = value.split("/")
                         novel = values[0].split("(")[0].replace(" ", "")
@@ -145,11 +153,9 @@ class MultiqcModule(BaseMultiqcModule):
                 txt_data[title] = {}
                 continue
             key, value = line.split("\t")
+            if value == "-":
+                continue
             if key == "Novel / existing variants":
-                if value == "-":
-                    txt_data[title]["Novel variants"] = 0
-                    txt_data[title]["Existing variants"] = 0
-                    continue
                 values = value.split("/")
                 novel = values[0].split("(")[0].replace(" ", "")
                 existing = values[1].split("(")[0].replace(" ", "")

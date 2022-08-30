@@ -3,13 +3,14 @@
 """ MultiQC module to parse output from mirtop"""
 
 from __future__ import print_function
-from collections import OrderedDict
-import logging
+
 import json
+import logging
+from collections import OrderedDict
 
 from multiqc import config
-from multiqc.plots import bargraph
 from multiqc.modules.base_module import BaseMultiqcModule
+from multiqc.plots import bargraph
 
 # Initialise the logger
 log = logging.getLogger(__name__)
@@ -24,12 +25,15 @@ class MultiqcModule(BaseMultiqcModule):
             anchor="mirtop",
             href="https://github.com/miRTop/mirtop/",
             info="is a command line tool to annotate miRNAs and isomiRs and compute general statistics using the mirGFF3 format.",
+            doi="10.5281/zenodo.45385",  # Zenodo won't load this page for me as I write this, but it's the listed DOI.
         )
 
         # Find and load any mirtop reports
         self.mirtop_data = dict()
         for f in self.find_log_files("mirtop"):
             self.parse_mirtop_report(f)
+            self.add_data_source(f)
+
         # Filter out ignored samples (given with --ignore-samples option)
         self.mirtop_data = self.ignore_samples(self.mirtop_data)
 
@@ -95,8 +99,12 @@ class MultiqcModule(BaseMultiqcModule):
             if cleaned_s_name in self.mirtop_data:
                 log.debug("Duplicate sample name found! Overwriting: {}".format(cleaned_s_name))
             parsed_data = content["metrics"][s_name]
-            parsed_data["read_count"] = parsed_data["isomiR_sum"] + parsed_data["ref_miRNA_sum"]
-            parsed_data["isomiR_perc"] = (parsed_data["isomiR_sum"] / parsed_data["read_count"]) * 100
+            # Sum the isomiR and ref_miRNA counts. Ignore ref_miRNA if it is not present.
+            parsed_data["read_count"] = parsed_data["isomiR_sum"] + parsed_data.get("ref_miRNA_sum", 0)
+            if parsed_data["read_count"] > 0:
+                parsed_data["isomiR_perc"] = (parsed_data["isomiR_sum"] / parsed_data["read_count"]) * 100
+            else:
+                parsed_data["isomiR_perc"] = 0.0
             self.mirtop_data[cleaned_s_name] = parsed_data
 
     def aggregate_snps_in_samples(self):

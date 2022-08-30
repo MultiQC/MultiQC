@@ -19,8 +19,8 @@ class MultiqcModule(BaseMultiqcModule):
             name="bcl2fastq",
             anchor="bcl2fastq",
             href="https://support.illumina.com/sequencing/sequencing_software/bcl2fastq-conversion-software.html",
-            info="can be used to both demultiplex data and convert BCL files"
-            " to FASTQ file formats for downstream analysis.",
+            info="can be used to both demultiplex data and convert BCL files to FASTQ file formats for downstream analysis.",
+            # Can't find a DOI // doi=
         )
 
         # Gather data from all json files
@@ -102,7 +102,7 @@ class MultiqcModule(BaseMultiqcModule):
             anchor="bcl2fastq-bysample",
             description="Number of reads per sample.",
             helptext="""Perfect index reads are those that do not have a single mismatch.
-                All samples are aggregated across lanes combinned. Undetermined reads are ignored.
+                All samples are aggregated across lanes combined. Undetermined reads are ignored.
                 Undetermined reads are treated as a separate sample.""",
             plot=bargraph.plot(
                 [self.get_bar_data_from_counts(self.bcl2fastq_bysample), self.bcl2fastq_bysample_lane],

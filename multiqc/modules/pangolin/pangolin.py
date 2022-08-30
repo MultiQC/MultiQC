@@ -26,6 +26,7 @@ class MultiqcModule(BaseMultiqcModule):
             anchor="pangolin",
             href="https://github.com/cov-lineages/pangolin",
             info="uses variant calls to assign SARS-CoV-2 genome sequences to global lineages.",
+            doi="10.1093/ve/veab064",
         )
 
         # Find and parse the sample files
@@ -33,6 +34,7 @@ class MultiqcModule(BaseMultiqcModule):
         self.lineage_colours = dict()
         for f in self.find_log_files("pangolin", filehandles=True):
             self.parse_pangolin_log(f)
+            self.add_data_source(f)
 
         # Filter out parsed samples based on sample name
         self.pangolin_data = self.ignore_samples(self.pangolin_data)
@@ -96,7 +98,8 @@ class MultiqcModule(BaseMultiqcModule):
                 if s_name in self.pangolin_data:
                     log.debug("Duplicate sample name found! Overwriting: {}".format(s_name))
                 # Avoid generic header ID that clashes with other modules
-                row["qc_status"] = row.pop("status")
+                if "qc_status" not in row:
+                    row["qc_status"] = row.pop("status")
                 self.pangolin_data[s_name] = row
                 # Just save the lineage key for now - we will sort out the colours later
                 self.lineage_colours[row["lineage"]] = None
