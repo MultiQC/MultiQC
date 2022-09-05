@@ -107,19 +107,19 @@ class BenchSummary:
             "title": "TP-call",
             "description": "Number of matching calls from the comp vcf",
             "scale": "PuBu",
-            "format": "{:,.0f}"
+            "format": "{:,.0f}",
         }
         keys["FP"] = {
             "title": "FP",
             "description": "Number of non-matching calls from the comp vcf",
             "scale": "OrRd",
-            "format": "{:,.0f}"
+            "format": "{:,.0f}",
         }
         keys["FN"] = {
             "title": "FN",
             "description": "Number of non-matching calls from the base vcf",
             "scale": "BuGn",
-            "format": "{:,.0f}"
+            "format": "{:,.0f}",
         }
 
         # Reuse info from bench_headers but hide by default
@@ -131,41 +131,41 @@ class BenchSummary:
             "title": "nBase",
             "description": "Number of calls in the base vcf",
             "scale": "Oranges",
-            "format": "{:,.0f}"
+            "format": "{:,.0f}",
         }
         keys["call cnt"] = {
             "title": "nCall",
             "description": "Number of calls in the comp vcf",
             "scale": "Blues",
-            "format": "{:,.0f}"
+            "format": "{:,.0f}",
         }
         keys["TP-call_TP-gt"] = {
             "title": "TP-call_TP-gt",
             "description": "TP-call with genotype match",
             "hidden": True,
             "scale": "Greens",
-            "format": "{:,.0f}"
+            "format": "{:,.0f}",
         }
         keys["TP-call_FP-gt"] = {
             "title": "TP-call_FP-gt",
             "description": "TP-call without genotype match",
             "hidden": True,
             "scale": "YlGn",
-            "format": "{:,.0f}"
+            "format": "{:,.0f}",
         }
         keys["TP-base_TP-gt"] = {
             "title": "TP-base_TP-gt",
             "description": "TP-base with genotype match",
             "hidden": True,
             "scale": "RdPu",
-            "format": "{:,.0f}"
+            "format": "{:,.0f}",
         }
         keys["TP-base_FP-gt"] = {
             "title": "TP-call_FP-gt",
             "description": "TP-base without genotype match",
             "hidden": True,
             "scale": "Purples",
-            "format": "{:,.0f}"
+            "format": "{:,.0f}",
         }
         keys["gt_concordance"] = {
             "title": "gt Concordance",
