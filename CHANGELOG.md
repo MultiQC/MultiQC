@@ -1,6 +1,6 @@
 # MultiQC Version History
 
-## MultiQC v1.13dev
+## [MultiQC v1.13](https://github.com/ewels/MultiQC/releases/tag/v1.13) - 2022-07-09
 
 ### MultiQC updates
 
@@ -14,10 +14,6 @@
 - Add timezone to time in reports
 - Add nix flake support
 - Added automatic tweet about new releases
-
-### New Modules
-
-_nothing yet.._
 
 ### Module updates
 
