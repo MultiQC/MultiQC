@@ -620,6 +620,7 @@ headers[tablecol] = {
 ### Specifying sorting of columns
 
 You can specify multiple columns to sort by. In `custom_plot_config`, for each plot, you can add a `defaultsort` option. Here is an example:
+
 ```
 custom_plot_config:
   table_data-plot:
