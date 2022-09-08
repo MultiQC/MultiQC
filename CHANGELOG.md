@@ -1,6 +1,6 @@
 # MultiQC Version History
 
-## [MultiQC v1.13](https://github.com/ewels/MultiQC/releases/tag/v1.13) - 2022-07-09
+## [MultiQC v1.13](https://github.com/ewels/MultiQC/releases/tag/v1.13) - 2022-09-08
 
 ### MultiQC updates
 
