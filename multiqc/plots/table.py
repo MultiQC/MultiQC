@@ -447,7 +447,15 @@ def _get_sortlist(dt):
     for d in defaultsort:
         # the idx first el of the triple is not actualy unique, it's the bucket
         # so we must enumerate ourselves here
-        idx = next(idx for idx, (_, k, header) in enumerate(headers) if k == d["column"])
+        try:
+            idx = next(idx for idx, (_, k, header) in enumerate(headers) if k == d["column"])
+        except StopIteration:
+            logger.warning(
+                "Tried to sort by column '%s', but column was not found. Available columns: %s",
+                d["column"],
+                [k for (_, k, _) in headers],
+            )
+            return ""
         idx += 1  # to account for col1_header
         direction = 0 if d["direction"] == "asc" else 1
         sortlist.append([idx, direction])
