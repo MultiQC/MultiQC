@@ -448,6 +448,7 @@ def _get_sortlist(dt):
         # the idx first el of the triple is not actualy unique, it's the bucket
         # so we must enumerate ourselves here
         idx = next(idx for idx, (_, k, header) in enumerate(headers) if k == d["column"])
+        idx += 1 # to account for col1_header
         direction = 0 if d["direction"] == "asc" else 1
         sortlist.append([idx, direction])
 
