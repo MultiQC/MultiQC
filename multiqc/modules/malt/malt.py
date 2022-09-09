@@ -77,14 +77,20 @@ class MultiqcModule(BaseMultiqcModule):
                                 self.malt_data[s_name]["No Assig. Taxonomy"] = (
                                     self.malt_data[s_name]["Total reads"] - self.malt_data[s_name]["Assig. Taxonomy"]
                                 )
-                                self.malt_data[s_name]["Mappability"] = (
-                                    float(self.malt_data[s_name]["Total reads"])
-                                    / float(self.malt_data[s_name]["Num. of queries"])
-                                ) * 100.0
-                                self.malt_data[s_name]["Taxonomic assignment success"] = (
-                                    float(self.malt_data[s_name]["Assig. Taxonomy"])
-                                    / float(self.malt_data[s_name]["Total reads"])
-                                ) * 100.0
+                                try:
+                                    self.malt_data[s_name]["Mappability"] = (
+                                        float(self.malt_data[s_name]["Total reads"])
+                                        / float(self.malt_data[s_name]["Num. of queries"])
+                                    ) * 100.0
+                                except ZeroDivisionError:
+                                    self.malt_data[s_name]["Mappability"] = 0
+                                try:
+                                    self.malt_data[s_name]["Taxonomic assignment success"] = (
+                                        float(self.malt_data[s_name]["Assig. Taxonomy"])
+                                        / float(self.malt_data[s_name]["Total reads"])
+                                    ) * 100.0
+                                except ZeroDivisionError:
+                                    self.malt_data[s_name]["Taxonomic assignment success"] = 0
                             except KeyError:
                                 pass
                             reading = False
