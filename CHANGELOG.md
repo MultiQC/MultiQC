@@ -10,6 +10,7 @@
 - Bump minimum version of Jinja2 to `>=3.0.0` ([#1642](https://github.com/ewels/MultiQC/issues/1642))
 - Disable search progress bar if running with `--quiet` or `--no-ansi` ([#1638](https://github.com/ewels/MultiQC/issues/1638))
 - Optimize line-graph generation to remove an n^2 loop ([#1668](https://github.com/ewels/MultiQC/pull/1668))
+- Allow path filters without full paths by trying to prefix analysis dir when filtering ([#1308](https://github.com/ewels/MultiQC/issues/1308))
 
 ### New Modules
 

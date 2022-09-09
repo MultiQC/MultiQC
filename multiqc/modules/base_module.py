@@ -12,6 +12,7 @@ import mimetypes
 import os
 import re
 import textwrap
+import itertools
 
 from multiqc.utils import report, config, util_functions
 
@@ -135,7 +136,17 @@ class BaseMultiqcModule(object):
 
             # Filter out files based on exclusion patterns
             if path_filters_exclude and len(path_filters_exclude) > 0:
-                exlusion_hits = (fnmatch.fnmatch(report.last_found_file, pfe) for pfe in path_filters_exclude)
+                # Try both the given path and also the path prefixed with the analyis dirs
+                exlusion_hits = itertools.chain(
+                    (fnmatch.fnmatch(report.last_found_file, pfe) for pfe in path_filters_exclude),
+                    *(
+                        (
+                            fnmatch.fnmatch(report.last_found_file, os.path.join(analysis_dir, pfe))
+                            for pfe in path_filters_exclude
+                        )
+                        for analysis_dir in config.analysis_dir
+                    ),
+                )
                 if any(exlusion_hits):
                     logger.debug(
                         f"{sp_key} - Skipping '{report.last_found_file}' as it matched the path_filters_exclude for '{self.name}'"
@@ -144,7 +155,14 @@ class BaseMultiqcModule(object):
 
             # Filter out files based on inclusion patterns
             if path_filters and len(path_filters) > 0:
-                inclusion_hits = (fnmatch.fnmatch(report.last_found_file, pf) for pf in path_filters)
+                # Try both the given path and also the path prefixed with the analyis dirs
+                inclusion_hits = itertools.chain(
+                    (fnmatch.fnmatch(report.last_found_file, pf) for pf in path_filters),
+                    *(
+                        (fnmatch.fnmatch(report.last_found_file, os.path.join(analysis_dir, pf)) for pf in path_filters)
+                        for analysis_dir in config.analysis_dir
+                    ),
+                )
                 if not any(inclusion_hits):
                     logger.debug(
                         f"{sp_key} - Skipping '{report.last_found_file}' as it didn't match the path_filters for '{self.name}'"
