@@ -216,8 +216,6 @@ click.rich_click.OPTION_GROUPS = {
     "--data-format",
     "data_format",
     type=click.Choice(config.data_format_extensions.keys()),
-    default=config.data_format,
-    show_default=True,
     help="Output parsed data in a different format.",
 )
 @click.option("-z", "--zip-data-dir", "zip_data_dir", is_flag=True, help="Compress the data directory.")

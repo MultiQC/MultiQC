@@ -6,6 +6,8 @@
 
 ### MultiQC updates
 
+- Bugfix: Make `config.data_format` work again ([#1722](https://github.com/ewels/MultiQC/issues/1722))
+
 ### New Modules
 
 ### Module feature additions
