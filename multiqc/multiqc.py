@@ -216,8 +216,6 @@ click.rich_click.OPTION_GROUPS = {
     "--data-format",
     "data_format",
     type=click.Choice(config.data_format_extensions.keys()),
-    default=config.data_format,
-    show_default=True,
     help="Output parsed data in a different format.",
 )
 @click.option("-z", "--zip-data-dir", "zip_data_dir", is_flag=True, help="Compress the data directory.")
@@ -350,6 +348,7 @@ def run(
     loglevel = log.LEVELS.get(min(verbose, 1), "INFO")
     if quiet:
         loglevel = "WARNING"
+        config.quiet = True
     log.init_log(logger, loglevel=loglevel, no_ansi=no_ansi)
 
     console = rich.console.Console(
