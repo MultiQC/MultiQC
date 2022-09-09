@@ -368,6 +368,13 @@ class MultiqcModule(BaseMultiqcModule):
             self.write_data_file(mod["data"], "multiqc_{}".format(pconfig["id"]))
             pconfig["save_data_file"] = False
 
+        # Try to cooerce x-axis to numeric
+        if mod["config"].get("plot_type") in ["linegraph", "scatter"]:
+            try:
+                mod["data"] = {k: {float(x): v[x] for x in v} for k, v in mod["data"].items()}
+            except ValueError:
+                pass
+
         # Table
         if mod["config"].get("plot_type") == "table":
             pconfig["sortRows"] = pconfig.get("sortRows", False)

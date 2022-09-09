@@ -18,6 +18,7 @@
 
 - **Custom content**
   - Create a report even if there's only Custom Content General Stats there
+  - Attempt to cooerce line / scatter x-axes into floats so as not to lose labels ([#1242](https://github.com/ewels/MultiQC/issues/1242))
 
 ## [MultiQC v1.13](https://github.com/ewels/MultiQC/releases/tag/v1.13) - 2022-09-08
 
