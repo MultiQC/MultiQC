@@ -14,6 +14,9 @@
 
 ### Module feature additions
 
+- **Fastp**
+  - Add total read count (after filtering) to general stats table ([#1744](https://github.com/ewels/MultiQC/issues/1744))
+
 ### Module updates
 
 - **Custom content**
