@@ -302,6 +302,7 @@ def get_filelist(run_module_names):
         "[green]{task.completed}/{task.total}",
         "[dim]{task.fields[s_fn]}",
         console=console,
+        disable=config.no_ansi or config.quiet,
     )
     with progress_obj as progress:
         mqc_task = progress.add_task("searching", total=len(searchfiles), s_fn="")

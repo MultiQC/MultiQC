@@ -317,8 +317,9 @@ class MultiqcModule(BaseMultiqcModule):
                 )
                 pdata[s_name]["Unique Reads"] = pd["Total Sequences"] - pdata[s_name]["Duplicate Reads"]
                 has_dups = True
-            except KeyError:
-                # Older versions of FastQC don't have duplicate reads
+            # Older versions of FastQC don't have duplicate reads
+            # Very sparse data can report -nan: #Total Deduplicated Percentage  -nan
+            except (KeyError, ValueError):
                 pdata[s_name] = {"Total Sequences": pd["Total Sequences"]}
                 has_total = True
         pcats = list()
