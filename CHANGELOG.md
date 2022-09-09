@@ -1,6 +1,34 @@
 # MultiQC Version History
 
-## MultiQC v1.13dev
+## MultiQC v1.14dev
+
+### MultiQC new features
+
+### MultiQC updates
+
+- Bugfix: Make `config.data_format` work again ([#1722](https://github.com/ewels/MultiQC/issues/1722))
+- Bump minimum version of Jinja2 to `>=3.0.0` ([#1642](https://github.com/ewels/MultiQC/issues/1642))
+- Disable search progress bar if running with `--quiet` or `--no-ansi` ([#1638](https://github.com/ewels/MultiQC/issues/1638))
+
+### New Modules
+
+### Module feature additions
+
+- **Fastp**
+  - Add total read count (after filtering) to general stats table ([#1744](https://github.com/ewels/MultiQC/issues/1744))
+
+### Module updates
+
+- **Custom content**
+  - Create a report even if there's only Custom Content General Stats there
+  - Attempt to cooerce line / scatter x-axes into floats so as not to lose labels ([#1242](https://github.com/ewels/MultiQC/issues/1242))
+  - Multi-sample line-graph TSV files that have no sample name in row 1 column 1 now use row 1 as x-axis labels ([#1242](https://github.com/ewels/MultiQC/issues/1242))
+- **malt**
+  - Fixed division by 0 in malt module ([#1683](https://github.com/ewels/MultiQC/issues/1683))
+- **Sambamba Markdup**
+  - Catch zero division in sambamba markdup ([#1654](https://github.com/ewels/MultiQC/issues/1654))
+
+## [MultiQC v1.13](https://github.com/ewels/MultiQC/releases/tag/v1.13) - 2022-09-08
 
 ### MultiQC updates
 
@@ -13,10 +41,7 @@
 - Tidied the verbose log to remove some very noisy statements and add summaries for skipped files in the search
 - Add timezone to time in reports
 - Add nix flake support
-
-### New Modules
-
-_nothing yet.._
+- Added automatic tweet about new releases
 
 ### Module updates
 
@@ -39,6 +64,7 @@ _nothing yet.._
   - Include low complexity and too long reads in filtering bar chart
 - **miRTop**
   - Fix module crashing when `ref_miRNA_sum` is missing in file. ([#1712](https://github.com/ewels/MultiQC/issues/1712))
+  - Fix module crashing due to zero division ([#1719](https://github.com/ewels/MultiQC/issues/1719))
 - **FastQC**
   - Fixed error when parsing duplicate ratio when there is `nan` values in the report. ([#1725](https://github.com/ewels/MultiQC/pull/1725))
 
