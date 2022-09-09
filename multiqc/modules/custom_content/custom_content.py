@@ -291,7 +291,10 @@ def custom_module_classes():
 
     # If we only have General Stats columns then there are no module outputs
     if len(sorted_modules) == 0:
-        raise UserWarning
+        if mod["config"].get("plot_type") == "generalstats":
+            sorted_modules = [bm]
+        else:
+            raise UserWarning
 
     return sorted_modules
 

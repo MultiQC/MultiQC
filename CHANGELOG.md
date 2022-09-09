@@ -12,6 +12,9 @@
 
 ### Module updates
 
+- **Custom content**
+  - Create a report even if there's only Custom Content General Stats there
+
 ## [MultiQC v1.13](https://github.com/ewels/MultiQC/releases/tag/v1.13) - 2022-09-08
 
 ### MultiQC updates
