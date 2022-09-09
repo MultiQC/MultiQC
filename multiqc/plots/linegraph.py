@@ -392,14 +392,17 @@ def matplotlib_linegraph(plotdata, pconfig=None):
             sharedcats = True
             for d in pdata:
                 fdata[d["name"]] = OrderedDict()
+
+                # Check to see if all categories are the same
+                if len(d["data"]) > 0 and type(d["data"][0]) is list:
+                    if lastcats is None:
+                        lastcats = [x[0] for x in d["data"]]
+                    elif lastcats != [x[0] for x in d["data"]]:
+                        sharedcats = False
+
                 for i, x in enumerate(d["data"]):
                     if type(x) is list:
                         fdata[d["name"]][str(x[0])] = x[1]
-                        # Check to see if all categories are the same
-                        if lastcats is None:
-                            lastcats = [x[0] for x in d["data"]]
-                        elif lastcats != [x[0] for x in d["data"]]:
-                            sharedcats = False
                     else:
                         try:
                             fdata[d["name"]][pconfig["categories"][i]] = x

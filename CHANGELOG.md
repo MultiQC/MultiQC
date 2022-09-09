@@ -1,6 +1,43 @@
 # MultiQC Version History
 
-## MultiQC v1.13dev
+## MultiQC v1.14dev
+
+### MultiQC new features
+
+### MultiQC updates
+
+- Bugfix: Make `config.data_format` work again ([#1722](https://github.com/ewels/MultiQC/issues/1722))
+- Bump minimum version of Jinja2 to `>=3.0.0` ([#1642](https://github.com/ewels/MultiQC/issues/1642))
+- Disable search progress bar if running with `--quiet` or `--no-ansi` ([#1638](https://github.com/ewels/MultiQC/issues/1638))
+- Optimize line-graph generation to remove an n^2 loop ([#1668](https://github.com/ewels/MultiQC/pull/1668))
+- Allow path filters without full paths by trying to prefix analysis dir when filtering ([#1308](https://github.com/ewels/MultiQC/issues/1308))
+- Update github actions to run tests on a single module if it is the only file affected by the PR ([#915](https://github.com/ewels/MultiQC/issues/915))
+
+### New Modules
+
+### Module feature additions
+
+- **Fastp**
+  - Add total read count (after filtering) to general stats table ([#1744](https://github.com/ewels/MultiQC/issues/1744))
+
+### Module updates
+
+- **BclConvert**
+  - Handle single-end read data correctly when setting cluster length instead of always assuming paired-end reads ([#1697](https://github.com/ewels/MultiQC/issues/1697))
+- **Custom content**
+  - Create a report even if there's only Custom Content General Stats there
+  - Attempt to cooerce line / scatter x-axes into floats so as not to lose labels ([#1242](https://github.com/ewels/MultiQC/issues/1242))
+  - Multi-sample line-graph TSV files that have no sample name in row 1 column 1 now use row 1 as x-axis labels ([#1242](https://github.com/ewels/MultiQC/issues/1242))
+- **FastQC**
+  - Report median read-length for fastqc instead of mean ([#1745](https://github.com/ewels/MultiQC/pull/1745))
+- **malt**
+  - Fixed division by 0 in malt module ([#1683](https://github.com/ewels/MultiQC/issues/1683))
+- **Sambamba Markdup**
+  - Catch zero division in sambamba markdup ([#1654](https://github.com/ewels/MultiQC/issues/1654))
+- **Samtools**
+  - Added additional (by default hidden) column for `flagstat` that displays percentage of mapped reads in a bam ([#1733](https://github.com/ewels/MultiQC/issues/1733))
+
+## [MultiQC v1.13](https://github.com/ewels/MultiQC/releases/tag/v1.13) - 2022-09-08
 
 ### MultiQC updates
 
@@ -13,11 +50,7 @@
 - Tidied the verbose log to remove some very noisy statements and add summaries for skipped files in the search
 - Add timezone to time in reports
 - Add nix flake support
-- Report median read-length for fastqc instead of mean
-
-### New Modules
-
-_nothing yet.._
+- Added automatic tweet about new releases
 
 ### Module updates
 
@@ -40,6 +73,7 @@ _nothing yet.._
   - Include low complexity and too long reads in filtering bar chart
 - **miRTop**
   - Fix module crashing when `ref_miRNA_sum` is missing in file. ([#1712](https://github.com/ewels/MultiQC/issues/1712))
+  - Fix module crashing due to zero division ([#1719](https://github.com/ewels/MultiQC/issues/1719))
 - **FastQC**
   - Fixed error when parsing duplicate ratio when there is `nan` values in the report. ([#1725](https://github.com/ewels/MultiQC/pull/1725))
 

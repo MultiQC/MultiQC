@@ -23,7 +23,7 @@ MultiQC was written by Phil Ewels (http://phil.ewels.co.uk) at SciLifeLab Sweden
 
 from setuptools import setup, find_packages
 
-version = "1.13dev"
+version = "1.14dev"
 dl_version = "master" if "dev" in version else "v{}".format(version)
 
 print(
@@ -55,7 +55,7 @@ setup(
         "click",
         "coloredlogs",
         "future>0.14.0",
-        "jinja2>=2.9",
+        "jinja2>=3.0.0",
         "lzstring",
         "markdown",
         "pyyaml>=4",
