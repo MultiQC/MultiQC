@@ -136,6 +136,7 @@ class BaseMultiqcModule(object):
 
             # Filter out files based on exclusion patterns
             if path_filters_exclude and len(path_filters_exclude) > 0:
+                # Try both the given path and also the path prefixed with the analyis dirs
                 exlusion_hits = itertools.chain(
                     (fnmatch.fnmatch(report.last_found_file, pfe) for pfe in path_filters_exclude),
                     *(
@@ -154,6 +155,7 @@ class BaseMultiqcModule(object):
 
             # Filter out files based on inclusion patterns
             if path_filters and len(path_filters) > 0:
+                # Try both the given path and also the path prefixed with the analyis dirs
                 inclusion_hits = itertools.chain(
                     (fnmatch.fnmatch(report.last_found_file, pf) for pf in path_filters),
                     *(
