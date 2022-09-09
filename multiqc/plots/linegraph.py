@@ -123,7 +123,7 @@ def plot(data, pconfig=None):
 
         for s in sorted(d.keys()):
 
-            # Ensure any overwritting conditionals from data_labels (e.g. ymax) are taken in consideration
+            # Ensure any overwritten conditionals from data_labels (e.g. ymax) are taken in consideration
             series_config = pconfig.copy()
             if (
                 "data_labels" in pconfig and type(pconfig["data_labels"][data_index]) is dict
@@ -133,11 +133,19 @@ def plot(data, pconfig=None):
             pairs = list()
             maxval = 0
             if "categories" in series_config:
-                pconfig["categories"] = list()
+                if "categories" not in pconfig or type(pconfig["categories"]) is not list:
+                    pconfig["categories"] = list()
+                # Add any new categories
                 for k in d[s].keys():
-                    pconfig["categories"].append(k)
-                    pairs.append(d[s][k])
-                    maxval = max(maxval, d[s][k])
+                    if k not in pconfig["categories"]:
+                        pconfig["categories"].append(k)
+                # Go through categories and add either data or a blank
+                for k in pconfig["categories"]:
+                    try:
+                        pairs.append(d[s][k])
+                        maxval = max(maxval, d[s][k])
+                    except KeyError:
+                        pairs.append(None)
             else:
 
                 # Discard > ymax or just hide?
@@ -384,14 +392,17 @@ def matplotlib_linegraph(plotdata, pconfig=None):
             sharedcats = True
             for d in pdata:
                 fdata[d["name"]] = OrderedDict()
+
+                # Check to see if all categories are the same
+                if len(d["data"]) > 0 and type(d["data"][0]) is list:
+                    if lastcats is None:
+                        lastcats = [x[0] for x in d["data"]]
+                    elif lastcats != [x[0] for x in d["data"]]:
+                        sharedcats = False
+
                 for i, x in enumerate(d["data"]):
                     if type(x) is list:
                         fdata[d["name"]][str(x[0])] = x[1]
-                        # Check to see if all categories are the same
-                        if lastcats is None:
-                            lastcats = [x[0] for x in d["data"]]
-                        elif lastcats != [x[0] for x in d["data"]]:
-                            sharedcats = False
                     else:
                         try:
                             fdata[d["name"]][pconfig["categories"][i]] = x

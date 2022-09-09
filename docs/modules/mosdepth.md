@@ -23,8 +23,8 @@ The MultiQC module plots coverage distributions from 2 kinds of outputs:
 
 Using "region" if exists, otherwise "global". Plotting 3 figures:
 
-- Distribution of the number of locations in the genome with a given depth of coverage.
-- Absoulute number of locations in the genome with a given depth of coverage.
+- Proportion of bases in the reference genome with, at least, a given depth of coverage (cumulative coverage distribution).
+- Proportion of bases in the reference genome with a given depth of coverage (absolute coverage distribution).
 - Average coverage per contig/chromosome.
 
 Also plotting the percentage of the genome covered at a threshold in the General Stats section.

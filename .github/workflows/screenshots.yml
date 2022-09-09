@@ -1,0 +1,29 @@
+name: Docs screenshots
+on:
+  workflow_dispatch:
+
+jobs:
+  rich_codex:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out MultiQC code
+        uses: actions/checkout@v3
+
+      - name: Set up Python
+        uses: actions/setup-python@v3
+
+      - name: Install MultiQC
+        run: pip install .
+
+      - name: Download test data
+        run: |
+          wget https://github.com/ewels/MultiQC_TestData/archive/refs/heads/master.zip
+          unzip master.zip
+          mv MultiQC_TestData-master/ test_data/
+
+      - name: Generate terminal images with rich-codex
+        uses: ewels/rich-codex@v1
+        with:
+          clean_img_paths: docs/images/screenshots/*.svg
+          commit_changes: "true"
+          skip_git_checks: "true"

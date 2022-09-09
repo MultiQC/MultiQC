@@ -178,7 +178,7 @@ def plot(data, cats=None, pconfig=None):
             plotdata.append(hc_data)
 
     if len(plotdata) == 0:
-        logger.warning("Tried to make bar plot, but had no data")
+        logger.warning(f"Tried to make bar plot, but had no data: {pconfig.get('id')}")
         return '<p class="text-danger">Error - was not able to plot data.</p>'
 
     # Make a plot - custom, interactive or flat
@@ -198,7 +198,11 @@ def plot(data, cats=None, pconfig=None):
         else:
             # Use MatPlotLib to generate static plots if requested
             if config.export_plots:
-                matplotlib_bargraph(plotdata, plotsamples, pconfig)
+                try:
+                    matplotlib_bargraph(plotdata, plotsamples, pconfig)
+                except Exception as e:
+                    logger.error("############### Error making MatPlotLib figure! Plot not exported.")
+                    logger.debug(e, exc_info=True)
             # Return HTML for HighCharts dynamic plot
             return highcharts_bargraph(plotdata, plotsamples, pconfig)
 

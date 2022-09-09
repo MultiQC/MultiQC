@@ -62,7 +62,7 @@ class MultiqcModule(BaseMultiqcModule):
                 fqc_zip = zipfile.ZipFile(os.path.join(f["root"], f["fn"]))
             except Exception as e:
                 log.warning("Couldn't read '{}' - Bad zip file".format(f["fn"]))
-                log.debug("Bad zip file error:\n{}".format(e))
+                log.debug("Bad zip file error: {}".format(e))
                 continue
             # FastQC zip files should have just one directory inside, containing report
             d_name = fqc_zip.namelist()[0]
@@ -317,8 +317,9 @@ class MultiqcModule(BaseMultiqcModule):
                 )
                 pdata[s_name]["Unique Reads"] = pd["Total Sequences"] - pdata[s_name]["Duplicate Reads"]
                 has_dups = True
-            except KeyError:
-                # Older versions of FastQC don't have duplicate reads
+            # Older versions of FastQC don't have duplicate reads
+            # Very sparse data can report -nan: #Total Deduplicated Percentage  -nan
+            except (KeyError, ValueError):
                 pdata[s_name] = {"Total Sequences": pd["Total Sequences"]}
                 has_total = True
         pcats = list()

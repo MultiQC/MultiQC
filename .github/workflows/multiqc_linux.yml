@@ -11,28 +11,26 @@ jobs:
     timeout-minutes: 10
 
     steps:
-      # Check out MultiQC code
-      - uses: actions/checkout@v2
+      - name: Check out MultiQC code
+        uses: actions/checkout@v2
 
-      # Set up Python
       - name: Set up Python ${{ matrix.python-version }}
-        uses: actions/setup-python@v1
+        uses: actions/setup-python@v2
         with:
           python-version: ${{ matrix.python-version }}
 
-      # Update pip and install beautifulsoup4 for CI tests (CSP checking)
+      # For CSP checking
       - name: Install dependencies for CI tests
-        run: |
-          python -m pip install --upgrade pip setuptools beautifulsoup4
+        run: python -m pip install --upgrade pip setuptools beautifulsoup4
 
-      # Install MultiQC
       - name: Install MultiQC
         run: pip install .
 
-      # Fetch the MultiQC test data
       - name: Download test data
-        run: |
-          git clone https://github.com/ewels/MultiQC_TestData.git test_data
+        uses: actions/checkout@v3
+        with:
+          repository: ewels/MultiQC_TestData
+          path: test_data
 
       # Run all of the tests!
       - name: Special case input data

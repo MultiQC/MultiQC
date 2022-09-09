@@ -58,8 +58,8 @@ class MultiqcModule(BaseMultiqcModule):
         parsed_data = {}
         regexes = {
             "reads_processed": r"# reads processed:\s+(\d+)",
-            "reads_aligned": r"# reads with at least one reported alignment:\s+(\d+)",
-            "reads_aligned_percentage": r"# reads with at least one reported alignment:\s+\d+\s+\(([\d\.]+)%\)",
+            "reads_aligned": r"# reads with at least one(?: reported)? alignment:\s+(\d+)",
+            "reads_aligned_percentage": r"# reads with at least one(?: reported)? alignment:\s+\d+\s+\(([\d\.]+)%\)",
             "not_aligned": r"# reads that failed to align:\s+(\d+)",
             "not_aligned_percentage": r"# reads that failed to align:\s+\d+\s+\(([\d\.]+)%\)",
             "multimapped": r"# reads with alignments suppressed due to -m:\s+(\d+)",

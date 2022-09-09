@@ -324,6 +324,14 @@ class MultiqcModule(BaseMultiqcModule):
             "shared_key": "base_count",
             "hidden": True,
         }
+        headers["after_filtering_total_reads"] = {
+            "title": "{} Reads After Filtering".format(config.read_count_prefix),
+            "description": "Total reads after filtering ({})".format(config.read_count_desc),
+            "min": 0,
+            "scale": "Blues",
+            "modify": lambda x: x * config.read_count_multiplier,
+            "shared_key": "read_count",
+        }
         headers["after_filtering_gc_content"] = {
             "title": "GC content",
             "description": "GC content after filtering",
@@ -359,7 +367,9 @@ class MultiqcModule(BaseMultiqcModule):
         keys["filtering_result_passed_filter_reads"] = {"name": "Passed Filter"}
         keys["filtering_result_low_quality_reads"] = {"name": "Low Quality"}
         keys["filtering_result_too_many_N_reads"] = {"name": "Too Many N"}
-        keys["filtering_result_too_short_reads"] = {"name": "Too short"}
+        keys["filtering_result_low_complexity_reads"] = {"name": "Low Complexity"}
+        keys["filtering_result_too_short_reads"] = {"name": "Too Short"}
+        keys["filtering_result_too_long_reads"] = {"name": "Too Long"}
 
         # Config for the plot
         pconfig = {

@@ -61,6 +61,9 @@ bbmap/mhist:
 bbmap/qahist:
   contents: "#Deviation"
   num_lines: 1
+bbmap/qchist:
+  contents_re: '#Quality	count1	fraction1\n'
+  num_lines: 1
 bbmap/qhist:
   contents: "#BaseNum	Read1_linear	Read1_log	Read1_measured	Read2_linear	Read2_log	Read2_measured"
   num_lines: 1
@@ -189,6 +192,9 @@ ccs/v4:
   max_filesize: 1024
 ccs/v5:
   contents: '"id": "ccs_processing"'
+  fn: "*.json"
+checkqc:
+  contents: "instrument_and_reagent_type"
   fn: "*.json"
 custom_content:
   fn_re: '.+_mqc\.(yaml|yml|json|txt|csv|tsv|log|out|png|jpg|jpeg|html)'
@@ -416,6 +422,8 @@ mirtrace/mirnacomplexity:
   fn: "mirtrace-stats-mirna-complexity.tsv"
 mtnucratio:
   fn: "*mtnuc.json"
+mosdepth/summary:
+  fn: "*.mosdepth.summary.txt"
 mosdepth/global_dist:
   fn: "*.mosdepth.global.dist.txt"
 mosdepth/region_dist:
@@ -470,6 +478,9 @@ somalier/samples:
 somalier/pairs:
   fn: "*.pairs.tsv"
   contents: "hom_concordance"
+  num_lines: 5
+pbmarkdup:
+  contents_re: "LIBRARY +READS +UNIQUE MOLECULES +DUPLICATE READS"
   num_lines: 5
 phantompeakqualtools/out:
   fn: "*.spp.out"
@@ -634,7 +645,7 @@ salmon/fld:
   fn: "flenDist.txt"
 sambamba/markdup:
   contents: "finding positions of the duplicate reads in the file"
-  num_lines: 5
+  num_lines: 50
 samblaster:
   contents: "samblaster: Version"
   shared: true
@@ -771,3 +782,6 @@ vep/vep_txt:
   max_filesize: 100000
 verifybamid/selfsm:
   fn: "*.selfSM"
+whatshap/stats:
+  contents: "#sample	chromosome	file_name	variants	phased	unphased	singletons"
+  num_lines: 1

@@ -125,6 +125,8 @@ class MultiqcModule(BaseMultiqcModule):
                 if len(cells) == 2:
                     key = cells[0][4:-5]
                     value = cells[1][4:-5]
+                    if value == "-":
+                        continue
                     if key == "Novel / existing variants":
                         values = value.split("/")
                         novel = values[0].split("(")[0].replace(" ", "")
@@ -151,11 +153,9 @@ class MultiqcModule(BaseMultiqcModule):
                 txt_data[title] = {}
                 continue
             key, value = line.split("\t")
+            if value == "-":
+                continue
             if key == "Novel / existing variants":
-                if value == "-":
-                    txt_data[title]["Novel variants"] = 0
-                    txt_data[title]["Existing variants"] = 0
-                    continue
                 values = value.split("/")
                 novel = values[0].split("(")[0].replace(" ", "")
                 existing = values[1].split("(")[0].replace(" ", "")
