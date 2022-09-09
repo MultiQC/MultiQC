@@ -348,6 +348,7 @@ def run(
     loglevel = log.LEVELS.get(min(verbose, 1), "INFO")
     if quiet:
         loglevel = "WARNING"
+        config.quiet = True
     log.init_log(logger, loglevel=loglevel, no_ansi=no_ansi)
 
     console = rich.console.Console(
