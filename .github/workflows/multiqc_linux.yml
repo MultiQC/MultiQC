@@ -65,7 +65,7 @@ jobs:
         uses: haya14busa/action-cond@v1
         id: single_module
         with:
-          cond: ${{ ! needs.changes.outputs.base_module && needs.changes.outputs.n_modules == 1 && (needs.changes.outputs.n_files == 1 || needs.changes.outputs.n_files == 2 && needs.changes.outputs.changelog)}}
+          cond: ${{ ! needs.changes.outputs.base_module && needs.changes.outputs.n_modules == 1 && (needs.changes.outputs.n_files_changes == 1 || needs.changes.outputs.n_files_changes == 2 && needs.changes.outputs.changelog)}}
           if_true: "-m ${{ needs.changes.outputs.modules[0] }}"
           if_false: ""
 
