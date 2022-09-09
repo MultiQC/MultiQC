@@ -28,6 +28,7 @@ class MultiqcModule(BaseMultiqcModule):
             anchor="hicpro",
             href="https://github.com/nservant/HiC-Pro",
             info="is an efficient and flexible pipeline for Hi-C data processing. The MultiQC module is supported since HiC-Pro v2.11.0.",
+            doi="10.1186/s13059-015-0831-x",
         )
 
         # Find and load any HiC-Pro summary reports
@@ -39,15 +40,18 @@ class MultiqcModule(BaseMultiqcModule):
         # Update current statistics
         for s_name in self.hicpro_data:
             data = self.hicpro_data[s_name]
-            data["duplicates"] = data["valid_interaction"] - data["valid_interaction_rmdup"]
-            data["percent_duplicates"] = float(data["duplicates"]) / float(data["valid_interaction"]) * 100.0
-            data["percent_mapped_R1"] = float(data["mapped_R1"]) / float(data["total_R1"]) * 100.0
-            data["percent_mapped_R2"] = float(data["mapped_R2"]) / float(data["total_R2"]) * 100.0
-            data["paired_reads"] = int(data["Reported_pairs"])
-            data["percent_paired_reads"] = float(data["Reported_pairs"]) / float(data["total_R1"]) * 100.0
-            data["percent_valid"] = float(data["valid_interaction"]) / float(data["total_R1"]) * 100.0
-            data["Failed_To_Align_Read_R1"] = int(data["total_R1"]) - int(data["mapped_R1"])
-            data["Failed_To_Align_Read_R2"] = int(data["total_R2"]) - int(data["mapped_R2"])
+            try:
+                data["duplicates"] = data["valid_interaction"] - data["valid_interaction_rmdup"]
+                data["percent_duplicates"] = float(data["duplicates"]) / float(data["valid_interaction"]) * 100.0
+                data["percent_mapped_R1"] = float(data["mapped_R1"]) / float(data["total_R1"]) * 100.0
+                data["percent_mapped_R2"] = float(data["mapped_R2"]) / float(data["total_R2"]) * 100.0
+                data["paired_reads"] = int(data["Reported_pairs"])
+                data["percent_paired_reads"] = float(data["Reported_pairs"]) / float(data["total_R1"]) * 100.0
+                data["percent_valid"] = float(data["valid_interaction"]) / float(data["total_R1"]) * 100.0
+                data["Failed_To_Align_Read_R1"] = int(data["total_R1"]) - int(data["mapped_R1"])
+                data["Failed_To_Align_Read_R2"] = int(data["total_R2"]) - int(data["mapped_R2"])
+            except KeyError as e:
+                log.error(f"Missing expected key {e} in sample '{s_name}'")
 
             try:
                 data["valid_pairs_off_target"] = int(data["valid_interaction"]) - int(data["valid_pairs_on_target"])
@@ -280,12 +284,15 @@ class MultiqcModule(BaseMultiqcModule):
         data = [{}, {}]
         for s_name in self.hicpro_data:
             for r in [1, 2]:
-                data[r - 1]["{} [R{}]".format(s_name, r)] = {
-                    "Full_Alignments_Read": self.hicpro_data[s_name]["global_R{}".format(r)],
-                    "Trimmed_Alignments_Read": self.hicpro_data[s_name]["local_R{}".format(r)],
-                    "Failed_To_Align_Read": int(self.hicpro_data[s_name]["total_R{}".format(r)])
-                    - int(self.hicpro_data[s_name]["mapped_R{}".format(r)]),
-                }
+                try:
+                    data[r - 1]["{} [R{}]".format(s_name, r)] = {
+                        "Full_Alignments_Read": self.hicpro_data[s_name]["global_R{}".format(r)],
+                        "Trimmed_Alignments_Read": self.hicpro_data[s_name]["local_R{}".format(r)],
+                        "Failed_To_Align_Read": int(self.hicpro_data[s_name]["total_R{}".format(r)])
+                        - int(self.hicpro_data[s_name]["mapped_R{}".format(r)]),
+                    }
+                except KeyError as e:
+                    log.error(f"Missing expected plot key {e} in {s_name} Read {r}")
 
         # Config for the plot
         config = {

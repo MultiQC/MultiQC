@@ -28,6 +28,7 @@ class MultiqcModule(BaseMultiqcModule):
             anchor="fastp",
             href="https://github.com/OpenGene/fastp",
             info="An ultra-fast all-in-one FASTQ preprocessor (QC, adapters, trimming, filtering, splitting...)",
+            doi="10.1093/bioinformatics/bty560",
         )
 
         # Find and load any fastp reports
@@ -207,13 +208,11 @@ class MultiqcModule(BaseMultiqcModule):
 
         try:
             self.fastp_data[s_name]["pct_surviving"] = (
-                self.fastp_data[s_name]["after_filtering_total_reads"]
+                self.fastp_data[s_name]["filtering_result_passed_filter_reads"]
                 / self.fastp_data[s_name]["before_filtering_total_reads"]
             ) * 100.0
-        except KeyError:
-            log.debug("Could not calculate 'pct_surviving': {}".format(f["fn"]))
-        except ZeroDivisionError:
-            log.warning("FastQ input file has zero raw reads")
+        except (KeyError, ZeroDivisionError) as e:
+            log.debug("Could not calculate 'pct_surviving' ({}): {}".format(e.__class__.__name__, f["fn"]))
 
         # Parse adapter_cutting
         try:
@@ -230,8 +229,8 @@ class MultiqcModule(BaseMultiqcModule):
                 self.fastp_data[s_name]["adapter_cutting_adapter_trimmed_reads"]
                 / self.fastp_data[s_name]["before_filtering_total_reads"]
             ) * 100.0
-        except KeyError:
-            log.debug("Could not calculate 'pct_adapter': {}".format(f["fn"]))
+        except (KeyError, ZeroDivisionError) as e:
+            log.debug("Could not calculate 'pct_adapter' ({}): {}".format(e.__class__.__name__, f["fn"]))
 
         # Duplication rate plot data
         try:
@@ -325,6 +324,14 @@ class MultiqcModule(BaseMultiqcModule):
             "shared_key": "base_count",
             "hidden": True,
         }
+        headers["after_filtering_total_reads"] = {
+            "title": "{} Reads After Filtering".format(config.read_count_prefix),
+            "description": "Total reads after filtering ({})".format(config.read_count_desc),
+            "min": 0,
+            "scale": "Blues",
+            "modify": lambda x: x * config.read_count_multiplier,
+            "shared_key": "read_count",
+        }
         headers["after_filtering_gc_content"] = {
             "title": "GC content",
             "description": "GC content after filtering",
@@ -360,7 +367,9 @@ class MultiqcModule(BaseMultiqcModule):
         keys["filtering_result_passed_filter_reads"] = {"name": "Passed Filter"}
         keys["filtering_result_low_quality_reads"] = {"name": "Low Quality"}
         keys["filtering_result_too_many_N_reads"] = {"name": "Too Many N"}
-        keys["filtering_result_too_short_reads"] = {"name": "Too short"}
+        keys["filtering_result_low_complexity_reads"] = {"name": "Low Complexity"}
+        keys["filtering_result_too_short_reads"] = {"name": "Too Short"}
+        keys["filtering_result_too_long_reads"] = {"name": "Too Long"}
 
         # Config for the plot
         pconfig = {

@@ -22,12 +22,16 @@ class TsTvSummaryMixin:
                 val = int(line.split()[1])  # taking the second column (COUNT) as value
                 d[key] = val
             self.vcftools_tstv_summary[f["s_name"]] = d
+            self.add_data_source(f, "Summary")
 
         # Filter out ignored sample names
         self.vcftools_tstv_summary = self.ignore_samples(self.vcftools_tstv_summary)
 
         if len(self.vcftools_tstv_summary) == 0:
             return 0
+
+        # Write data to file
+        self.write_data_file(self.vcftools_tstv_summary, "vcftools_tstv_summary")
 
         # Specifying the categories of the bargraph
         keys = OrderedDict()

@@ -27,6 +27,7 @@ class MultiqcModule(BaseMultiqcModule):
             anchor="kallisto",
             href="http://pachterlab.github.io/kallisto/",
             info="is a program for quantifying abundances of transcripts from RNA-Seq data.",
+            doi="10.1038/nbt.3519",
         )
 
         # Find and load any Kallisto reports
@@ -56,7 +57,7 @@ class MultiqcModule(BaseMultiqcModule):
         for l in f["f"]:
 
             # Get input filename
-            match = re.search(r"\[quant\] will process (pair|file) 1: (\S+)", l)
+            match = re.search(r"\[quant\] will process (pair|file|sample) 1: (\S+)", l)
             if match:
                 s_name = self.clean_s_name(os.path.basename(match.group(2)), f)
 

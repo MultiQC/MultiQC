@@ -25,6 +25,7 @@ class MultiqcModule(BaseMultiqcModule):
             anchor="mtnucratio",
             href="http://www.github.com/apeltzer/MTNucRatioCalculator",
             info="is a tool to compute mt/nuc ratios for NGS datasets.",
+            doi="10.1186/s13059-016-0918-z",
         )
 
         # Find and load any MTNUCRATIO reports

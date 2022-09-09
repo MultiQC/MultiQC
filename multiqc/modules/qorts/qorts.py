@@ -24,12 +24,14 @@ class MultiqcModule(BaseMultiqcModule):
             anchor="qorts",
             href="http://hartleys.github.io/QoRTs/",
             info="is toolkit for analysis, QC and data management of RNA-Seq datasets.",
+            doi="10.1186/s12859-015-0670-5",
         )
 
         # Parse logs
         self.qorts_data = dict()
         for f in self.find_log_files("qorts", filehandles=True):
             self.parse_qorts(f)
+            self.add_data_source(f)
 
         # Remove empty samples
         self.qorts_data = {s: v for s, v in self.qorts_data.items() if len(v) > 0}

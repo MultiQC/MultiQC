@@ -20,8 +20,9 @@ class MultiqcModule(BaseMultiqcModule):
         super(MultiqcModule, self).__init__(
             name="MALT",
             anchor="malt",
-            href="https://uni-tuebingen.de/fakultaeten/mathematisch-naturwissenschaftliche-fakultaet/fachbereiche/informatik/lehrstuehle/algorithms-in-bioinformatics/software/malt/",
+            href="http://ab.inf.uni-tuebingen.de/software/malt/",
             info="performs alignment of metagenomic reads against a database of reference sequences (such as NR, GenBank or Silva) and produces a MEGAN RMA file as output.",
+            doi="10.1101/050559 ",
         )
 
         # Find and load Malt reports
@@ -34,6 +35,9 @@ class MultiqcModule(BaseMultiqcModule):
 
         if len(self.malt_data) == 0:
             raise UserWarning
+
+        # Write data to file
+        self.write_data_file(self.malt_data, "malt")
 
         log.info("Found {} reports".format(len(self.malt_data)))
 
@@ -73,14 +77,20 @@ class MultiqcModule(BaseMultiqcModule):
                                 self.malt_data[s_name]["No Assig. Taxonomy"] = (
                                     self.malt_data[s_name]["Total reads"] - self.malt_data[s_name]["Assig. Taxonomy"]
                                 )
-                                self.malt_data[s_name]["Mappability"] = (
-                                    float(self.malt_data[s_name]["Total reads"])
-                                    / float(self.malt_data[s_name]["Num. of queries"])
-                                ) * 100.0
-                                self.malt_data[s_name]["Taxonomic assignment success"] = (
-                                    float(self.malt_data[s_name]["Assig. Taxonomy"])
-                                    / float(self.malt_data[s_name]["Total reads"])
-                                ) * 100.0
+                                try:
+                                    self.malt_data[s_name]["Mappability"] = (
+                                        float(self.malt_data[s_name]["Total reads"])
+                                        / float(self.malt_data[s_name]["Num. of queries"])
+                                    ) * 100.0
+                                except ZeroDivisionError:
+                                    self.malt_data[s_name]["Mappability"] = 0
+                                try:
+                                    self.malt_data[s_name]["Taxonomic assignment success"] = (
+                                        float(self.malt_data[s_name]["Assig. Taxonomy"])
+                                        / float(self.malt_data[s_name]["Total reads"])
+                                    ) * 100.0
+                                except ZeroDivisionError:
+                                    self.malt_data[s_name]["Taxonomic assignment success"] = 0
                             except KeyError:
                                 pass
                             reading = False

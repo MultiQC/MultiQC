@@ -28,14 +28,21 @@ multiqc data/*_fastqc.zip
 multiqc data/sample_1*
 ```
 
-You can also ignore files using the `-x`/`--ignore` flag (can be specified multiple
-times). This takes a string which it matches using glob expansion to filenames,
-directory names and entire paths:
+If the `--ignore-symlinks` flag is set, MultiQC will ignore symlinked directories and files.
+
+You can also ignore files or directories using the `-x`/`--ignore` option.
+This can be specified multiple times and accepts glob patterns (eg. using the `*` and `?` wildcards).
+
+> Note that glob patterns should be enclosed in quotes to prevent them being expanded by bash
+
+The argument can match filenames, directory names and entire paths. For example:
 
 ```bash
-multiqc . --ignore *_R2*
-multiqc . --ignore run_two/
-multiqc . --ignore */run_three/*/fastqc/*_R2.zip
+multiqc . --ignore "file"
+multiqc . --ignore "fileA" --ignore "fileB"
+multiqc . --ignore "_R?.zip"
+multiqc . --ignore "run_two/*"
+multiqc . --ignore "*/run_three/*/fastqc/*_R2.zip"
 ```
 
 Some modules get sample names from the contents of the file and not the filename
@@ -43,7 +50,7 @@ Some modules get sample names from the contents of the file and not the filename
 skip samples by name instead:
 
 ```bash
-multiqc . --ignore-samples sample_3*
+multiqc . --ignore-samples "sample_3*"
 ```
 
 These strings are matched using glob logic (`*` and `?` are wildcards).
@@ -63,7 +70,7 @@ multiqc --file-list my_file_list.txt
 The report is called `multiqc_report.html` by default. Tab-delimited data files
 are created in `multiqc_data/`, containing additional information.
 You can use a custom name for the report with the `-n`/`--filename` parameter, or instruct
-MultiQC to create them in a subdirectory using the `-o`/`-outdir` parameter.
+MultiQC to create them in a subdirectory using the `-o`/`--outdir` parameter.
 
 Note that different MultiQC templates may have different defaults.
 

@@ -26,6 +26,9 @@ class plotPCAMixin:
         self.deeptools_plotPCAData = self.ignore_samples(self.deeptools_plotPCAData)
 
         if len(self.deeptools_plotPCAData) > 0:
+            # Write data to file
+            self.write_data_file(self.deeptools_plotPCAData, "deeptools_plot_PCA")
+
             config = {
                 "id": "deeptools_pca_plot",
                 "title": "deeptools: PCA Plot",

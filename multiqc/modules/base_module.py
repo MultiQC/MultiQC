@@ -12,6 +12,7 @@ import mimetypes
 import os
 import re
 import textwrap
+import itertools
 
 from multiqc.utils import report, config, util_functions
 
@@ -30,6 +31,7 @@ class BaseMultiqcModule(object):
         extra=None,
         autoformat=True,
         autoformat_type="markdown",
+        doi=[],
     ):
 
         # Custom options from user config that can overwrite base module values
@@ -41,6 +43,8 @@ class BaseMultiqcModule(object):
         self.info = mod_cust_config.get("info", info)
         self.comment = mod_cust_config.get("comment", comment)
         self.extra = mod_cust_config.get("extra", extra)
+        self.doi = mod_cust_config.get("doi", doi)
+
         # Specific module level config to overwrite (e.g. config.bcftools, config.fastqc)
         config.update({anchor: mod_cust_config.get("custom_config", {})})
 
@@ -53,16 +57,33 @@ class BaseMultiqcModule(object):
 
         if self.info is None:
             self.info = ""
+        # Always finish with a ".", as we may add a DOI after the intro.
+        if len(self.info) > 0 and self.info[-1] != ".":
+            self.info += "."
         if self.extra is None:
             self.extra = ""
+        self.doi_link = ""
+        if type(self.doi) is str:
+            self.doi = [self.doi]
+        if len(self.doi) > 0:
+            doi_links = []
+            for doi in self.doi:
+                # Build the HTML link for the DOI
+                doi_links.append(
+                    f' <a class="module-doi" data-doi="{doi}" data-toggle="popover" href="https://doi.org/{doi}" target="_blank">{doi}</a>'
+                )
+            self.doi_link = '<em class="text-muted small" style="margin-left: 1rem;">DOI: {}.</em>'.format(
+                "; ".join(doi_links)
+            )
+
         if target is None:
             target = self.name
         if self.href is not None:
             self.mname = '<a href="{}" target="_blank">{}</a>'.format(self.href, target)
         else:
             self.mname = target
-        if self.href or self.info or self.extra:
-            self.intro = "<p>{} {}</p>{}".format(self.mname, self.info, self.extra)
+        if self.href or self.info or self.extra or self.doi_link:
+            self.intro = "<p>{} {}{}</p>{}".format(self.mname, self.info, self.doi_link, self.extra)
 
         # Format the markdown strings
         if autoformat:
@@ -88,6 +109,10 @@ class BaseMultiqcModule(object):
         # Allows modules to be called multiple times with different sets of files
         path_filters = getattr(self, "mod_cust_config", {}).get("path_filters")
         path_filters_exclude = getattr(self, "mod_cust_config", {}).get("path_filters_exclude")
+        if type(path_filters) == str:
+            path_filters = [path_filters]
+        if type(path_filters_exclude) == str:
+            path_filters_exclude = [path_filters_exclude]
 
         # Old, depreciated syntax support. Likely to be removed in a future version.
         if isinstance(sp_key, dict):
@@ -111,28 +136,41 @@ class BaseMultiqcModule(object):
 
             # Filter out files based on exclusion patterns
             if path_filters_exclude and len(path_filters_exclude) > 0:
-                exlusion_hits = (fnmatch.fnmatch(report.last_found_file, pfe) for pfe in path_filters_exclude)
+                # Try both the given path and also the path prefixed with the analyis dirs
+                exlusion_hits = itertools.chain(
+                    (fnmatch.fnmatch(report.last_found_file, pfe) for pfe in path_filters_exclude),
+                    *(
+                        (
+                            fnmatch.fnmatch(report.last_found_file, os.path.join(analysis_dir, pfe))
+                            for pfe in path_filters_exclude
+                        )
+                        for analysis_dir in config.analysis_dir
+                    ),
+                )
                 if any(exlusion_hits):
                     logger.debug(
-                        "{} - Skipping '{}' as it matched the path_filters_exclude for '{}'".format(
-                            sp_key, f["fn"], self.name
-                        )
+                        f"{sp_key} - Skipping '{report.last_found_file}' as it matched the path_filters_exclude for '{self.name}'"
                     )
                     continue
 
             # Filter out files based on inclusion patterns
             if path_filters and len(path_filters) > 0:
-                inclusion_hits = (fnmatch.fnmatch(report.last_found_file, pf) for pf in path_filters)
+                # Try both the given path and also the path prefixed with the analyis dirs
+                inclusion_hits = itertools.chain(
+                    (fnmatch.fnmatch(report.last_found_file, pf) for pf in path_filters),
+                    *(
+                        (fnmatch.fnmatch(report.last_found_file, os.path.join(analysis_dir, pf)) for pf in path_filters)
+                        for analysis_dir in config.analysis_dir
+                    ),
+                )
                 if not any(inclusion_hits):
                     logger.debug(
-                        "{} - Skipping '{}' as it didn't match the path_filters for '{}'".format(
-                            sp_key, f["fn"], self.name
-                        )
+                        f"{sp_key} - Skipping '{report.last_found_file}' as it didn't match the path_filters for '{self.name}'"
                     )
                     continue
                 else:
                     logger.debug(
-                        "{} - Selecting '{}' as it matched the path_filters for '{}'".format(sp_key, f["fn"], self.name)
+                        f"{sp_key} - Selecting '{report.last_found_file}' as it matched the path_filters for '{self.name}'"
                     )
 
             # Make a sample name from the filename
@@ -157,9 +195,8 @@ class BaseMultiqcModule(object):
                                 f["f"] = fh.read()
                                 yield f
                 except (IOError, OSError, ValueError, UnicodeDecodeError) as e:
-                    if config.report_readerrors:
-                        logger.debug("Couldn't open filehandle when returning file: {}\n{}".format(f["fn"], e))
-                        f["f"] = None
+                    logger.debug("Couldn't open filehandle when returning file: {}\n{}".format(f["fn"], e))
+                    f["f"] = None
             else:
                 yield f
 

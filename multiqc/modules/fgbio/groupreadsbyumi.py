@@ -45,6 +45,10 @@ class GroupReadsByUmiMixin:
         self.fgbio_umi_data = self.ignore_samples(umi_data)
         self.fgbio_umi_data_normed = self.ignore_samples(umi_data_normed)
 
+        # Write data to file
+        self.write_data_file(self.fgbio_umi_data, "fgbio_umi")
+        self.write_data_file(self.fgbio_umi_data_normed, "fgbio_umi_normed")
+
     def parse_groupreadsbyumi_plot(self):
         config = {
             "id": "fgbio-groupreadsbyumi-plot",

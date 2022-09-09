@@ -174,6 +174,8 @@ def custom_module_classes():
                     # Guess c_id if no information known
                     if k == "custom_content":
                         c_id = s_name
+                        if not m_config.get("id"):
+                            m_config["id"] = c_id
 
                     # Merge with config from a MultiQC config file if we have it
                     m_config.update(mod_cust_config.get(c_id, {}))
@@ -289,7 +291,10 @@ def custom_module_classes():
 
     # If we only have General Stats columns then there are no module outputs
     if len(sorted_modules) == 0:
-        raise UserWarning
+        if mod["config"].get("plot_type") == "generalstats":
+            sorted_modules = [bm]
+        else:
+            raise UserWarning
 
     return sorted_modules
 
@@ -316,6 +321,7 @@ class MultiqcModule(BaseMultiqcModule):
             href=mod["config"].get("section_href"),
             info=mod_info,
             extra=mod["config"].get("extra"),
+            # No DOI here.. // doi=
         )
 
         # Don't repeat the Custom Content name in the subtext
@@ -349,23 +355,35 @@ class MultiqcModule(BaseMultiqcModule):
         section_description = mod["config"].get("description", "")
 
         pconfig = mod["config"].get("pconfig", {})
+        if pconfig.get("id") is None:
+            pconfig["id"] = f"{c_id}-plot"
         if pconfig.get("title") is None:
             pconfig["title"] = section_name
 
         plot = None
         content = None
 
+        # Save the data if it's not a html string
+        if not isinstance(mod["data"], str):
+            self.write_data_file(mod["data"], "multiqc_{}".format(pconfig["id"]))
+            pconfig["save_data_file"] = False
+
+        # Try to cooerce x-axis to numeric
+        if mod["config"].get("plot_type") in ["linegraph", "scatter"]:
+            try:
+                mod["data"] = {k: {float(x): v[x] for x in v} for k, v in mod["data"].items()}
+            except ValueError:
+                pass
+
         # Table
         if mod["config"].get("plot_type") == "table":
             pconfig["sortRows"] = pconfig.get("sortRows", False)
             headers = mod["config"].get("headers")
             plot = table.plot(mod["data"], headers, pconfig)
-            self.write_data_file(
-                mod["data"], "multiqc_{}".format(section_name.lower().replace(" ", "_").replace("/", "_"))
-            )
 
         # Bar plot
         elif mod["config"].get("plot_type") == "bargraph":
+            mod["data"] = {k: v for k, v in sorted(mod["data"].items())}
             plot = bargraph.plot(mod["data"], mod["config"].get("categories"), pconfig)
 
         # Line plot
@@ -407,7 +425,7 @@ class MultiqcModule(BaseMultiqcModule):
         # Don't use exactly the same title / description text as the main module
         if section_name == self.name:
             section_name = None
-        if section_description == self.info:
+        if self.info and section_description.strip(".") == self.info.strip("."):
             section_description = ""
 
         self.add_section(name=section_name, anchor=c_id, description=section_description, plot=plot, content=content)
@@ -632,12 +650,23 @@ def _parse_txt(f, conf):
 
     if conf.get("plot_type") == "linegraph":
         data = dict()
+        # If the first row has no header, use it as axis labels
+        x_labels = []
+        if d[0][0].strip() == "":
+            x_labels = d.pop(0)[1:]
         # Use 1..n range for x values
         for s in d:
             data[s[0]] = dict()
             for i, v in enumerate(s[1:]):
-                j = i + 1
-                data[s[0]][i + 1] = v
+                try:
+                    x_val = x_labels[i]
+                    try:
+                        x_val = float(x_val)
+                    except ValueError:
+                        pass
+                except IndexError:
+                    x_val = i + 1
+                data[s[0]][x_val] = v
         return (data, conf)
 
     # Got to the end and haven't returned. It's a mystery, capn'!
