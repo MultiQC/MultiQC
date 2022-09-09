@@ -19,6 +19,8 @@
 
 ### Module updates
 
+- **BclConvert**
+  - Handle single-end read data correctly when setting cluster length instead of always assuming paired-end reads ([#1697](https://github.com/ewels/MultiQC/issues/1697))
 - **Custom content**
   - Create a report even if there's only Custom Content General Stats there
   - Attempt to cooerce line / scatter x-axes into floats so as not to lose labels ([#1242](https://github.com/ewels/MultiQC/issues/1242))
