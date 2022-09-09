@@ -650,12 +650,23 @@ def _parse_txt(f, conf):
 
     if conf.get("plot_type") == "linegraph":
         data = dict()
+        # If the first row has no header, use it as axis labels
+        x_labels = []
+        if d[0][0].strip() == "":
+            x_labels = d.pop(0)[1:]
         # Use 1..n range for x values
         for s in d:
             data[s[0]] = dict()
             for i, v in enumerate(s[1:]):
-                j = i + 1
-                data[s[0]][i + 1] = v
+                try:
+                    x_val = x_labels[i]
+                    try:
+                        x_val = float(x_val)
+                    except ValueError:
+                        pass
+                except IndexError:
+                    x_val = i + 1
+                data[s[0]][x_val] = v
         return (data, conf)
 
     # Got to the end and haven't returned. It's a mystery, capn'!
