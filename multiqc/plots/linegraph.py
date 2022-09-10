@@ -2,8 +2,6 @@
 
 """ MultiQC functions to plot a linegraph """
 
-from __future__ import print_function, division
-from collections import OrderedDict
 import base64
 import inspect
 import io
@@ -12,6 +10,7 @@ import os
 import random
 import re
 import sys
+from collections import OrderedDict
 
 from multiqc.utils import config, report, util_functions
 

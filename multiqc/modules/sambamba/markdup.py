@@ -1,10 +1,10 @@
 #!/usr/bin/env python
 
-from __future__ import print_function
-from collections import OrderedDict
-import os
+
 import logging
+import os
 import re
+from collections import OrderedDict
 
 from multiqc import config
 from multiqc.plots import bargraph

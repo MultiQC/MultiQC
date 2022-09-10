@@ -1,17 +1,18 @@
 #!/usr/bin/env python
 # coding=utf-8
-from __future__ import print_function
+
 
 import itertools
+import logging
 import re
 from collections import defaultdict
+
 from multiqc.modules.base_module import BaseMultiqcModule
 from multiqc.plots import bargraph, table
-from .utils import make_headers, Metric, exist_and_number
+
+from .utils import Metric, exist_and_number, make_headers
 
 # Initialise the logger
-import logging
-
 log = logging.getLogger(__name__)
 
 

@@ -2,9 +2,8 @@
 
 """ MultiQC functions to plot a bargraph """
 
-from __future__ import print_function
+
 import base64
-from collections import OrderedDict
 import inspect
 import io
 import logging
@@ -13,6 +12,7 @@ import os
 import random
 import re
 import sys
+from collections import OrderedDict
 
 from multiqc.utils import config, report, util_functions
 

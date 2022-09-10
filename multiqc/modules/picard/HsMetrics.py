@@ -2,13 +2,13 @@
 
 """ MultiQC submodule to parse output from Picard HsMetrics """
 
-from collections import OrderedDict, defaultdict
 import logging
 import os
 import re
+from collections import OrderedDict, defaultdict
 
 from multiqc import config
-from multiqc.plots import table, linegraph
+from multiqc.plots import linegraph, table
 
 # Initialise the logger
 log = logging.getLogger(__name__)

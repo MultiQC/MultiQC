@@ -1,15 +1,16 @@
+import csv
+import decimal
 import json
 import logging
 import operator
 import os
+import xml.etree.ElementTree as ET
 from collections import OrderedDict, defaultdict
 from itertools import islice
-import csv
-import decimal
+
 from multiqc import config
-from multiqc.plots import bargraph, table
 from multiqc.modules.base_module import BaseMultiqcModule
-import xml.etree.ElementTree as ET
+from multiqc.plots import bargraph, table
 
 log = logging.getLogger(__name__)
 
