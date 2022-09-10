@@ -25,6 +25,14 @@ jobs:
       - name: Check code lints with Black
         uses: jpetrucciani/black-check@master
 
+  isort:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+
+      - name: Check imports with isort
+        uses: jamescurtin/isort-action@master
+
   CodeChecks:
     runs-on: ubuntu-latest
     steps:
