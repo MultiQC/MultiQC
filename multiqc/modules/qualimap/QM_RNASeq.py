@@ -2,7 +2,6 @@
 
 """ MultiQC Submodule to parse output from Qualimap RNASeq """
 
-from __future__ import print_function
 
 import logging
 import re

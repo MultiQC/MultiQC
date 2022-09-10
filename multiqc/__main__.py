@@ -8,7 +8,6 @@ $ multiqc .
 $ python -m multiqc .
 """
 
-from __future__ import print_function
 
 import pkg_resources
 

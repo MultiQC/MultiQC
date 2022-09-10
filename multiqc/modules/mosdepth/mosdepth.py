@@ -1,6 +1,5 @@
 """ MultiQC module to parse output from mosdepth """
 
-from __future__ import print_function
 
 import fnmatch
 import logging

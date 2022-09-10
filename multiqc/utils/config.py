@@ -3,7 +3,6 @@
 """ MultiQC config module. Holds a single copy of
 config variables to be used across all other modules """
 
-from __future__ import print_function
 
 import collections
 import inspect

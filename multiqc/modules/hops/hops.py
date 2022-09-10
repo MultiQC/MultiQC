@@ -1,6 +1,5 @@
 """ MultiQC module to parse output from HOPS postprocessing script """
 
-from __future__ import print_function
 
 import json
 import logging

@@ -2,7 +2,6 @@
 
 """ MultiQC functions to plot a bargraph """
 
-from __future__ import print_function
 
 import base64
 import inspect

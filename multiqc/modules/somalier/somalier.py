@@ -2,7 +2,6 @@
 
 """ MultiQC module to parse output from somalier """
 
-from __future__ import print_function
 
 import csv
 import logging

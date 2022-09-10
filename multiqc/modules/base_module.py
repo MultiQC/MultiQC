@@ -2,7 +2,6 @@
 
 """ MultiQC modules base class, contains helper functions """
 
-from __future__ import print_function
 
 import fnmatch
 import io

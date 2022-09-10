@@ -10,7 +10,6 @@
 #### Have a look at Kallisto for a simpler example.     ####
 ############################################################
 
-from __future__ import print_function
 
 import io
 import json

@@ -2,7 +2,6 @@
 
 """ MultiQC module to parse Stacks 2 denovo output"""
 
-from __future__ import print_function
 
 import logging
 import os

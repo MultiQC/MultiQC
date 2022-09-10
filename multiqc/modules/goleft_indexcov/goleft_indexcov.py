@@ -2,7 +2,7 @@
 
 https://github.com/brentp/goleft/tree/master/indexcov
 """
-from __future__ import print_function
+
 
 import collections
 import logging

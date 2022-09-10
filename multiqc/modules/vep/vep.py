@@ -2,7 +2,6 @@
 
 """ MultiQC module to parse output from VEP """
 
-from __future__ import print_function
 
 import ast
 import logging

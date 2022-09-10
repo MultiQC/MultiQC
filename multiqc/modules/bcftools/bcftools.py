@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 """ MultiQC module to parse output from bcftools """
-from __future__ import print_function
+
 
 import logging
 from collections import OrderedDict

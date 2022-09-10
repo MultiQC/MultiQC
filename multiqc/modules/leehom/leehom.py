@@ -2,7 +2,6 @@
 
 """ MultiQC module to parse output from leeHom """
 
-from __future__ import print_function
 
 import logging
 import re

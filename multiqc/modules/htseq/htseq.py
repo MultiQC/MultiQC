@@ -2,7 +2,6 @@
 
 """ MultiQC module to parse output from HTSeq Count """
 
-from __future__ import print_function
 
 import logging
 from collections import OrderedDict

@@ -3,7 +3,6 @@
 
 """ MultiQC module to parse output files from VarScan2 """
 
-from __future__ import print_function
 
 import logging
 import re

@@ -2,7 +2,6 @@
 
 """ MultiQC module to parse output from eigenstrat_snp_coverage """
 
-from __future__ import print_function
 
 import json
 import logging

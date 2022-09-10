@@ -2,7 +2,6 @@
 
 """ MultiQC module to parse logs from SnpEff """
 
-from __future__ import print_function
 
 import logging
 from collections import OrderedDict

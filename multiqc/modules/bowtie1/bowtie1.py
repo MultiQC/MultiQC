@@ -2,7 +2,6 @@
 
 """ MultiQC module to parse output from Bowtie 1 """
 
-from __future__ import print_function
 
 import logging
 import re

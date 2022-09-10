@@ -2,7 +2,6 @@
 
 """ MultiQC module to parse output from qc3C """
 
-from __future__ import print_function
 
 import itertools
 import json

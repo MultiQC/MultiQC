@@ -2,7 +2,6 @@
 
 """ Super Special-Case MultiQC module to produce report section on MultiQC run time """
 
-from __future__ import print_function
 
 import logging
 import re

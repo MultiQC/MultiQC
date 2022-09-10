@@ -4,7 +4,6 @@
 module. Is available to subsequent modules. Contains
 helper functions to generate markup for report. """
 
-from __future__ import print_function
 
 import fnmatch
 import inspect

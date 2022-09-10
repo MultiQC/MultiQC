@@ -2,7 +2,6 @@
 
 """ MultiQC module to parse output from DamageProfiler """
 
-from __future__ import print_function
 
 import json
 import logging

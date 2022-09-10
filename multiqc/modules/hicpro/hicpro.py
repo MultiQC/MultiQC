@@ -4,7 +4,6 @@
 
 """ MultiQC module to parse output from HiC-Pro """
 
-from __future__ import print_function
 
 import logging
 import os.path

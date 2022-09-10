@@ -3,7 +3,6 @@
 Helper functions to manipulate colours and colour scales
 """
 
-from __future__ import print_function
 
 # Default logger will be replaced by caller
 import logging

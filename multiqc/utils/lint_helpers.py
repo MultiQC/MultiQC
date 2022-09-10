@@ -3,7 +3,6 @@
 """ MultiQC lint helpers. Simple additional tests to run when
 --lint is specified (outside scope of normal functions) """
 
-from __future__ import print_function
 
 import os
 

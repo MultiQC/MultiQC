@@ -2,7 +2,6 @@
 
 """ MultiQC module to parse output from Cluster Flow """
 
-from __future__ import print_function
 
 import datetime
 import logging

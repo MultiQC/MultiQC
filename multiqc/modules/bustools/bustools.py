@@ -2,7 +2,6 @@
 
 """ MultiQC module to parse output from bustools inspect """
 
-from __future__ import print_function
 
 import json
 import logging
