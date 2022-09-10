@@ -35,3 +35,30 @@ jobs:
 
       - name: Run manual code style checks
         run: python ${GITHUB_WORKSPACE}/.github/workflows/code_checks.py
+
+  check_merge_markers:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+
+      - name: Grep for >>>>>>>
+        run: |
+          if [[ $(grep -ER "$>>>>>>> " . | wc -l) > 0 ]];then
+            echo "Opening merge marker found\!"
+            grep -ER "$>>>>>>> " .
+            exit 1
+          else
+            echo "No opening merge markers found"
+            exit 0
+          fi
+
+      - name: Grep for <<<<<<<
+        run: |
+          if [[ $(grep -ER "$<<<<<<< " . | wc -l) > 0 ]];then
+            echo "Closing merge marker found\!"
+            grep -ER "$>>>>>>> " .
+            exit 1
+          else
+            echo "No closing merge markers found"
+            exit 0
+          fi
