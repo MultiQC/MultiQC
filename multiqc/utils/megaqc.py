@@ -10,7 +10,7 @@ import os
 
 import requests
 
-from multiqc import config
+from . import config
 
 log = config.logger
 

@@ -13,7 +13,7 @@ from collections import OrderedDict
 
 import yaml
 
-from multiqc import config
+from . import config
 
 
 def robust_rmtree(path, logger=None, max_retries=10):

@@ -20,8 +20,7 @@ import rich
 import rich.progress
 import yaml
 
-from multiqc import config
-from multiqc.utils import util_functions
+from . import config
 
 logger = config.logger
 
