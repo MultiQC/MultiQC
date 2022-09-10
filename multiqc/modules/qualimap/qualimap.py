@@ -3,9 +3,10 @@
 """ MultiQC module to parse output from QualiMap """
 
 from __future__ import print_function
-from collections import defaultdict, OrderedDict
+
 import logging
 import os
+from collections import OrderedDict, defaultdict
 
 from multiqc.modules.base_module import BaseMultiqcModule
 
@@ -32,8 +33,7 @@ class MultiqcModule(BaseMultiqcModule):
         )
 
         # Initialise the submodules
-        from . import QM_BamQC
-        from . import QM_RNASeq
+        from . import QM_BamQC, QM_RNASeq
 
         # Set up class objects to hold parsed data()
         self.general_stats_headers = OrderedDict()

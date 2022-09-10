@@ -4,19 +4,21 @@
 config variables to be used across all other modules """
 
 from __future__ import print_function
-from datetime import datetime
-import inspect
-import collections
-import os
-import pkg_resources
-import subprocess
-import sys
-import yaml
 
-import multiqc
+import collections
+import inspect
 
 # Default logger will be replaced by caller
 import logging
+import os
+import subprocess
+import sys
+from datetime import datetime
+
+import pkg_resources
+import yaml
+
+import multiqc
 
 logger = logging.getLogger("multiqc")
 

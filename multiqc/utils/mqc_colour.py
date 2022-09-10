@@ -4,13 +4,14 @@ Helper functions to manipulate colours and colour scales
 """
 
 from __future__ import print_function
-import spectra
-import numpy as np
-import os
-import re
 
 # Default logger will be replaced by caller
 import logging
+import os
+import re
+
+import numpy as np
+import spectra
 
 logger = logging.getLogger(__name__)
 

@@ -5,8 +5,9 @@
 from __future__ import print_function
 
 import logging
-from multiqc.plots import linegraph
+
 from multiqc.modules.base_module import BaseMultiqcModule
+from multiqc.plots import linegraph
 
 # Initialise the logger
 log = logging.getLogger(__name__)

@@ -3,14 +3,15 @@
 """ MultiQC module to parse output from kraken """
 
 from __future__ import print_function
-from collections import OrderedDict
-import os
+
 import logging
+import os
 import re
+from collections import OrderedDict
 
 from multiqc import config
-from multiqc.plots import bargraph, heatmap
 from multiqc.modules.base_module import BaseMultiqcModule
+from multiqc.plots import bargraph, heatmap
 
 # Initialise the logger
 log = logging.getLogger(__name__)

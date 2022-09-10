@@ -3,14 +3,16 @@
 """ MultiQC Utility functions, used in a variety of places. """
 
 from __future__ import print_function
-from collections import OrderedDict
+
 import io
 import json
 import os
-import yaml
-import time
 import shutil
 import sys
+import time
+from collections import OrderedDict
+
+import yaml
 
 from multiqc import config
 

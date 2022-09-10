@@ -2,16 +2,16 @@
 
 from __future__ import print_function
 
-from collections import defaultdict, OrderedDict
-import logging
 import fnmatch
+import logging
+from collections import OrderedDict, defaultdict
 
 from multiqc import config
 from multiqc.modules.base_module import BaseMultiqcModule
 
 # Initialise the logger
 from multiqc.modules.qualimap.QM_BamQC import coverage_histogram_helptext, genome_fraction_helptext
-from multiqc.plots import linegraph, bargraph
+from multiqc.plots import bargraph, linegraph
 
 log = logging.getLogger(__name__)
 

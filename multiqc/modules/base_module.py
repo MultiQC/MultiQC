@@ -3,18 +3,20 @@
 """ MultiQC modules base class, contains helper functions """
 
 from __future__ import print_function
-from collections import OrderedDict
-import io
+
 import fnmatch
+import io
+import itertools
 import logging
-import markdown
 import mimetypes
 import os
 import re
 import textwrap
-import itertools
+from collections import OrderedDict
 
-from multiqc.utils import report, config, util_functions
+import markdown
+
+from multiqc.utils import config, report, util_functions
 
 logger = logging.getLogger(__name__)
 

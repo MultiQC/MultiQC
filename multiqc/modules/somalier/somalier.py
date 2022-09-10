@@ -3,16 +3,18 @@
 """ MultiQC module to parse output from somalier """
 
 from __future__ import print_function
-from collections import OrderedDict, defaultdict
-from math import isnan, isinf
+
 import csv
 import logging
 import random
+from collections import OrderedDict, defaultdict
+from math import isinf, isnan
+
 import spectra
 
+from multiqc.modules.base_module import BaseMultiqcModule
 from multiqc.plots import bargraph, heatmap, scatter, table
 from multiqc.utils import mqc_colour
-from multiqc.modules.base_module import BaseMultiqcModule
 
 # Initialise the logger
 log = logging.getLogger(__name__)

@@ -3,16 +3,18 @@
 """ MultiQC module to parse output from qc3C """
 
 from __future__ import print_function
-from collections import OrderedDict, defaultdict
+
 import itertools
 import json
 import logging
-import numpy as np
 import os
 import re
+from collections import OrderedDict, defaultdict
+
+import numpy as np
 
 from multiqc.modules.base_module import BaseMultiqcModule
-from multiqc.plots import table, bargraph, linegraph
+from multiqc.plots import bargraph, linegraph, table
 
 log = logging.getLogger(__name__)
 

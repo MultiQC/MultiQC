@@ -3,10 +3,12 @@
 """ MultiQC code to export data to MegaQC / flat JSON files """
 
 from __future__ import print_function
+
 import gzip
 import io
 import json
 import os
+
 import requests
 
 from multiqc import config

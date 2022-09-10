@@ -4,6 +4,7 @@
 
 import logging
 from collections import OrderedDict
+
 import numpy as np
 
 from multiqc.plots import linegraph

@@ -3,12 +3,13 @@
 https://github.com/brentp/goleft/tree/master/indexcov
 """
 from __future__ import print_function
+
 import collections
 import logging
 
 from multiqc import config
-from multiqc.plots import linegraph, scatter
 from multiqc.modules.base_module import BaseMultiqcModule
+from multiqc.plots import linegraph, scatter
 
 # Initialise the logger
 log = logging.getLogger(__name__)

@@ -3,8 +3,8 @@
 """ MultiQC submodule to parse output from RSeQC read_duplication.py
 http://rseqc.sourceforge.net/#read-duplication-py """
 
-from collections import OrderedDict
 import logging
+from collections import OrderedDict
 
 from multiqc.plots import linegraph
 

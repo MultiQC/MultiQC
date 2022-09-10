@@ -4,7 +4,9 @@
 --lint is specified (outside scope of normal functions) """
 
 from __future__ import print_function
+
 import os
+
 import yaml
 
 from multiqc.utils import config, report

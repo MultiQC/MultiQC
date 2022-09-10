@@ -3,16 +3,17 @@
 from __future__ import print_function
 
 import itertools
-from multiqc.utils.util_functions import write_data_file
+import logging
 import re
 from collections import defaultdict
+
 from multiqc.modules.base_module import BaseMultiqcModule
 from multiqc.plots import table
-from .utils import make_headers, Metric
+from multiqc.utils.util_functions import write_data_file
+
+from .utils import Metric, make_headers
 
 # Initialise the logger
-import logging
-
 log = logging.getLogger(__name__)
 
 

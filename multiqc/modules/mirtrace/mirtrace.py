@@ -4,12 +4,13 @@
 """ MultiQC module to parse output files from miRTrace """
 
 from __future__ import print_function
-from collections import OrderedDict
-import logging
 
 import json
-from multiqc.plots import bargraph, linegraph
+import logging
+from collections import OrderedDict
+
 from multiqc.modules.base_module import BaseMultiqcModule
+from multiqc.plots import bargraph, linegraph
 
 # Initialise the logger
 log = logging.getLogger(__name__)

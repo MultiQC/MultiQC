@@ -5,18 +5,20 @@ module. Is available to subsequent modules. Contains
 helper functions to generate markup for report. """
 
 from __future__ import print_function
-from collections import defaultdict, OrderedDict
+
 import fnmatch
 import inspect
 import io
 import json
-import lzstring
 import mimetypes
 import os
 import re
+import time
+from collections import OrderedDict, defaultdict
+
+import lzstring
 import rich
 import rich.progress
-import time
 import yaml
 
 from multiqc import config

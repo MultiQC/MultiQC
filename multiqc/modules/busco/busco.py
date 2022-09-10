@@ -3,11 +3,13 @@
 """ MultiQC module to parse output from BUSCO """
 
 from __future__ import print_function
-from collections import OrderedDict
+
 import logging
 import re
-from multiqc.plots import bargraph
+from collections import OrderedDict
+
 from multiqc.modules.base_module import BaseMultiqcModule
+from multiqc.plots import bargraph
 
 # Initialise the logger
 log = logging.getLogger(__name__)

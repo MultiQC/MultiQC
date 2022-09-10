@@ -3,14 +3,13 @@
 """ MultiQC module to parse output from MultiVCFAnalyzer """
 
 from __future__ import print_function
-from collections import OrderedDict
-import logging
-import json
 
-from multiqc.plots import table
-from multiqc.plots import bargraph
+import json
+import logging
 from collections import OrderedDict
+
 from multiqc.modules.base_module import BaseMultiqcModule
+from multiqc.plots import bargraph, table
 
 # Initialise the logger
 log = logging.getLogger(__name__)

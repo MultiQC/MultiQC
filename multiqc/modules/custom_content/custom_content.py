@@ -3,18 +3,20 @@
 """ Core MultiQC module to parse output from custom script output """
 
 from __future__ import print_function
+
 import base64
-from collections import defaultdict, OrderedDict
-import logging
 import json
+import logging
 import os
 import re
+from collections import OrderedDict, defaultdict
+
 import yaml
 
 from multiqc import config
-from multiqc.utils import report
 from multiqc.modules.base_module import BaseMultiqcModule
-from multiqc.plots import table, bargraph, linegraph, scatter, heatmap, beeswarm
+from multiqc.plots import bargraph, beeswarm, heatmap, linegraph, scatter, table
+from multiqc.utils import report
 
 # Initialise the logger
 log = logging.getLogger(__name__)
