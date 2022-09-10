@@ -1,5 +1,15 @@
 name: "MultiQC - Windows"
-on: [push, pull_request]
+on:
+  push:
+    branches:
+      - master
+    paths-ignore:
+      - "docs/**"
+      - "*.md"
+  pull_request:
+    paths-ignore:
+      - "docs/**"
+      - "*.md"
 
 jobs:
   changes:
@@ -35,7 +45,7 @@ jobs:
     needs: changes
     strategy:
       matrix:
-        python-version: [3.6, 3.7, 3.8, 3.9]
+        python-version: ["3.6", "3.7", "3.8", "3.9", "3.10"]
     timeout-minutes: 10
 
     steps:
