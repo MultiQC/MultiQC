@@ -3,12 +3,11 @@
 """ MultiQC module to parse output from Lima """
 
 import logging
-import re
 from collections import OrderedDict
 
 from multiqc import config
 from multiqc.modules.base_module import BaseMultiqcModule
-from multiqc.plots import bargraph, table
+from multiqc.plots import bargraph
 
 # Initialise the logger
 log = logging.getLogger(__name__)
@@ -35,7 +34,7 @@ class MultiqcModule(BaseMultiqcModule):
         self.humid = self.ignore_samples(self.humid)
 
         # Let MultiQC know this module found no data
-        if not self.humid: 
+        if not self.humid:
             raise UserWarning
 
         self.write_data_file(self.humid, "multiqc_humid")
@@ -56,12 +55,12 @@ class MultiqcModule(BaseMultiqcModule):
     def add_general_stats(self):
         # Add the number of unique reads (=clusters) to the general statistics
         # report
-        data = { k: {'uniq': v['clusters']} for k,v in self.humid.items()}
+        data = {k: {"uniq": v["clusters"]} for k, v in self.humid.items()}
         headers = OrderedDict()
-        headers['uniq'] = {
-                'title': 'Unique reads',
-                'description': 'Number of unique reads after UMI deduplication',
-                'format': None
+        headers["uniq"] = {
+            "title": "Unique reads",
+            "description": "Number of unique reads after UMI deduplication",
+            "format": None,
         }
         self.general_stats_addcols(data, headers)
 
@@ -69,28 +68,26 @@ class MultiqcModule(BaseMultiqcModule):
         # The values we want to plot (add to the toal number of reads)
         cats = OrderedDict()
 
-        cats['clusters'] = { 'name': 'Unique reads', 'color': '#a9ff96'}
-        cats['duplicates'] = { 'name': 'Duplicate reads', 'color': '#95ceff'}
-        cats['filtered'] = { 'name': 'Filtered reads', 'color': '#e0e0e1'}
+        cats["clusters"] = {"name": "Unique reads", "color": "#a9ff96"}
+        cats["duplicates"] = {"name": "Duplicate reads", "color": "#95ceff"}
+        cats["filtered"] = {"name": "Filtered reads", "color": "#e0e0e1"}
 
-        self.add_section(
-            name = "HUMID",
-            anchor = 'humid',
-            plot = bargraph.plot(self.humid, cats)
-        )
+        self.add_section(name="HUMID", anchor="humid", plot=bargraph.plot(self.humid, cats))
+
 
 def parse_stat_file(fin):
-    """ Parse the stats file """
+    """Parse the stats file"""
     data = dict()
     for line in fin:
-        field, value = line.strip().split(': ')
+        field, value = line.strip().split(": ")
         data[field] = int(value)
     process_stats(data)
     return data
 
+
 def process_stats(stats):
-    """ Process the statistics, to calculate some useful values """
-    stats['filtered'] = stats['total'] - stats['usable']
-    stats['duplicates'] = stats['total'] - stats['clusters'] - stats['filtered']
+    """Process the statistics, to calculate some useful values"""
+    stats["filtered"] = stats["total"] - stats["usable"]
+    stats["duplicates"] = stats["total"] - stats["clusters"] - stats["filtered"]
     # Sanity check
-    assert stats['duplicates'] + stats['clusters'] + stats['filtered'] == stats['total']
+    assert stats["duplicates"] + stats["clusters"] + stats["filtered"] == stats["total"]
