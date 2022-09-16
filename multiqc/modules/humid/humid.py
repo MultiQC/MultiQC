@@ -60,7 +60,8 @@ class MultiqcModule(BaseMultiqcModule):
         headers = OrderedDict()
         headers['uniq'] = {
                 'title': 'Unique reads',
-                'description': 'Number of unique reads after UMI deduplication'
+                'description': 'Number of unique reads after UMI deduplication',
+                'format': None
         }
         self.general_stats_addcols(data, headers)
 
