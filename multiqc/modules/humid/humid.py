@@ -39,6 +39,7 @@ class MultiqcModule(BaseMultiqcModule):
             raise UserWarning
 
         self.write_data_file(self.humid, "multiqc_humid")
+        self.add_general_stats()
         log.info(f"Found {len(self.humid)} reports")
 
     def parse_stat_files(self):
@@ -50,6 +51,17 @@ class MultiqcModule(BaseMultiqcModule):
             f["s_name"] = name
             self.humid[name] = data
             self.add_data_source(f)
+
+    def add_general_stats(self):
+        # Add the number of unique reads (=clusters) to the general statistics
+        # report
+        data = { k: {'uniq': v['clusters']} for k,v in self.humid.items()}
+        headers = OrderedDict()
+        headers['uniq'] = {
+                'title': 'Unique reads',
+                'description': 'Number of unique reads after UMI deduplication'
+        }
+        self.general_stats_addcols(data, headers)
 
 def parse_stat_file(fin):
     """ Parse the stats file """
