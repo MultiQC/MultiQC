@@ -40,6 +40,7 @@ class MultiqcModule(BaseMultiqcModule):
 
         self.write_data_file(self.humid, "multiqc_humid")
         self.add_general_stats()
+        self.add_humid_section()
         log.info(f"Found {len(self.humid)} reports")
 
     def parse_stat_files(self):
@@ -62,6 +63,17 @@ class MultiqcModule(BaseMultiqcModule):
                 'description': 'Number of unique reads after UMI deduplication'
         }
         self.general_stats_addcols(data, headers)
+
+    def add_humid_section(self):
+        # The values we want to plot (add to the toal number of reads)
+        fields = ["clusters", "duplicates", "filtered"]
+
+        self.add_section(
+            name = "HUMID",
+            anchor = 'humid',
+            plot = bargraph.plot(self.humid, fields)
+        )
+        #html_content = bargraph.plot(data, fields)
 
 def parse_stat_file(fin):
     """ Parse the stats file """
