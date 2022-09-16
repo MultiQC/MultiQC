@@ -66,14 +66,17 @@ class MultiqcModule(BaseMultiqcModule):
 
     def add_humid_section(self):
         # The values we want to plot (add to the toal number of reads)
-        fields = ["clusters", "duplicates", "filtered"]
+        cats = OrderedDict()
+
+        cats['clusters'] = { 'name': 'Unique reads', 'color': '#a9ff96'}
+        cats['duplicates'] = { 'name': 'Duplicate reads', 'color': '#95ceff'}
+        cats['filtered'] = { 'name': 'Filtered reads', 'color': '#e0e0e1'}
 
         self.add_section(
             name = "HUMID",
             anchor = 'humid',
-            plot = bargraph.plot(self.humid, fields)
+            plot = bargraph.plot(self.humid, cats)
         )
-        #html_content = bargraph.plot(data, fields)
 
 def parse_stat_file(fin):
     """ Parse the stats file """
