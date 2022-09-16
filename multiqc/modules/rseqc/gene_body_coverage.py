@@ -3,8 +3,8 @@
 """ MultiQC submodule to parse output from RSeQC geneBody_coverage.py
 http://rseqc.sourceforge.net/#genebody-coverage-py """
 
-from collections import OrderedDict
 import logging
+from collections import OrderedDict
 
 from multiqc.plots import linegraph
 

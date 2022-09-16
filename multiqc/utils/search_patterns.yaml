@@ -61,6 +61,9 @@ bbmap/mhist:
 bbmap/qahist:
   contents: "#Deviation"
   num_lines: 1
+bbmap/qchist:
+  contents_re: '#Quality	count1	fraction1\n'
+  num_lines: 1
 bbmap/qhist:
   contents: "#BaseNum	Read1_linear	Read1_log	Read1_measured	Read2_linear	Read2_log	Read2_measured"
   num_lines: 1
@@ -479,6 +482,9 @@ somalier/pairs:
   fn: "*.pairs.tsv"
   contents: "hom_concordance"
   num_lines: 5
+pbmarkdup:
+  contents_re: "LIBRARY +READS +UNIQUE MOLECULES +DUPLICATE READS"
+  num_lines: 5
 phantompeakqualtools/out:
   fn: "*.spp.out"
 picard/alignment_metrics:
@@ -642,7 +648,7 @@ salmon/fld:
   fn: "flenDist.txt"
 sambamba/markdup:
   contents: "finding positions of the duplicate reads in the file"
-  num_lines: 5
+  num_lines: 50
 samblaster:
   contents: "samblaster: Version"
   shared: true
@@ -779,3 +785,6 @@ vep/vep_txt:
   max_filesize: 100000
 verifybamid/selfsm:
   fn: "*.selfSM"
+whatshap/stats:
+  contents: "#sample	chromosome	file_name	variants	phased	unphased	singletons"
+  num_lines: 1

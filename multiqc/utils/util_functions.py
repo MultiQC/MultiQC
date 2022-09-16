@@ -2,17 +2,18 @@
 
 """ MultiQC Utility functions, used in a variety of places. """
 
-from __future__ import print_function
-from collections import OrderedDict
+
 import io
 import json
 import os
-import yaml
-import time
 import shutil
 import sys
+import time
+from collections import OrderedDict
 
-from multiqc import config
+import yaml
+
+from . import config
 
 
 def robust_rmtree(path, logger=None, max_retries=10):
@@ -29,11 +30,11 @@ def robust_rmtree(path, logger=None, max_retries=10):
         except OSError:
             if logger:
                 logger.info("Unable to remove path: {}".format(path))
-                logger.info("Retrying after {} seconds".format(i ** 2))
+                logger.info("Retrying after {} seconds".format(i**2))
             else:
                 print("Unable to remove path: {}".format(path), file=sys.stderr)
-                print("Retrying after {} seconds".format(i ** 2), file=sys.stderr)
-            time.sleep(i ** 2)
+                print("Retrying after {} seconds".format(i**2), file=sys.stderr)
+            time.sleep(i**2)
 
     # Final attempt, pass any Exceptions up to caller.
     shutil.rmtree(path)
@@ -128,3 +129,12 @@ def view_all_tags(ctx, param, value):
         for ttgs in avail_tags[t]:
             print("   - {}".format(ttgs))
     ctx.exit()
+
+
+def force_term_colors():
+    """
+    Check if any environment variables are set to force Rich to use coloured output
+    """
+    if os.getenv("GITHUB_ACTIONS") or os.getenv("FORCE_COLOR") or os.getenv("PY_COLORS"):
+        return True
+    return None

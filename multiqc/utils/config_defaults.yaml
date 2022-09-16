@@ -41,6 +41,8 @@ plots_dir_name: "multiqc_plots"
 data_format: "tsv"
 module_tag: []
 force: false
+no_ansi: false
+quiet: false
 prepend_dirs: false
 prepend_dirs_depth: 0
 prepend_dirs_sep: " | "
@@ -91,11 +93,13 @@ remove_sections: []
 section_comments: {}
 lint: False
 custom_plot_config: {}
+custom_table_header_config: {}
 
 ignore_symlinks: false
 ignore_images: true
 fn_ignore_dirs:
   - "multiqc_data"
+  - ".git"
   - "icarus_viewers" # quast
   - "runs_per_reference" # quast
   - "not_aligned" # quast
@@ -155,6 +159,7 @@ fn_clean_exts:
   - ".vcf"
   - ".dat"
   - "_tophat"
+  - ".pbmarkdup.log"
   - ".log"
   - ".stderr"
   - ".out"
@@ -213,6 +218,7 @@ fn_clean_exts:
   - ".lhist"
   - ".mhist"
   - ".qahist"
+  - ".qchist"
   - ".qhist"
   - ".rpkm"
   - ".selfSM"
@@ -275,6 +281,7 @@ fn_clean_trim:
   - "_matrix"
   - ".stats"
   - ".hist"
+  - ".phased"
 
 # Files to ignore when indexing files.
 # Grep file match patterns.
@@ -297,6 +304,7 @@ fn_ignore_files:
   - "*.pdf"
   - "*.md5"
   - "*[!s][!u][!m][!_\\.m][!mva][!qer][!cpy].html" # Allow _mqc.html, _vep.html and summary.html files
+  - multiqc_data.json
 
 # Favourite modules that should appear at the top in preference
 # This is in addition to those below. These appear above _all_ other
@@ -478,6 +486,10 @@ module_order:
       module_tag:
         - DNA
         - ancient
+  - pbmarkdup:
+      module_tag:
+        - DNA
+        - RNA
   - damageprofiler:
       module_tag:
         - DNA
@@ -747,3 +759,6 @@ module_order:
         - DNA
         - RNA
         - HLATyping
+  - whatshap:
+      module_tag:
+        - DNA

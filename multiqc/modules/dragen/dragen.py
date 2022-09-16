@@ -1,14 +1,12 @@
-from __future__ import absolute_import
+import logging
 
-from .mapping_metrics import DragenMappingMetics
+from .coverage_hist import DragenCoverageHist
+from .coverage_metrics import DragenCoverageMetrics
+from .coverage_per_contig import DragenCoveragePerContig
 from .fragment_length import DragenFragmentLength
+from .mapping_metrics import DragenMappingMetics
 from .ploidy_estimation_metrics import DragenPloidyEstimationMetrics
 from .vc_metrics import DragenVCMetrics
-from .coverage_per_contig import DragenCoveragePerContig
-from .coverage_metrics import DragenCoverageMetrics
-from .coverage_hist import DragenCoverageHist
-
-import logging
 
 log = logging.getLogger(__name__)
 

@@ -32,6 +32,7 @@ MultiQC Modules:
     leeHom: modules/leehom.md
     Lima: modules/lima.md
     minionqc: modules/minionqc.md
+    pbmarkdup: modules/pbmarkdup.md
     Pychopper: modules/pychopper.md
     pycoQC: modules/pycoqc.md
     SeqyClean: modules/seqyclean.md
@@ -126,6 +127,7 @@ MultiQC Modules:
     VCFTools: modules/vcftools.md
     VEP: modules/vep.md
     verifyBAMID: modules/verifybamid.md
+    WhatsHap: modules/whatshap.md
 Custom Content:
   Introduction: custom_content.md
 Coding with MultiQC:

@@ -2,36 +2,6 @@ name: Lint Code Base
 on: [push, pull_request]
 
 jobs:
-  Markdown:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v2
-
-      - uses: actions/setup-node@v2
-        with:
-          node-version: "12"
-
-      - name: Install markdownlint
-        run: npm install -g markdownlint-cli
-
-      - name: Run Markdownlint
-        run: markdownlint ${GITHUB_WORKSPACE}
-
-  YAML:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v2
-
-      - uses: actions/setup-node@v2
-        with:
-          node-version: "12"
-
-      - name: Install yaml-lint
-        run: npm install -g yaml-lint
-
-      - name: Run yaml-lint
-        run: yamllint $(find ${GITHUB_WORKSPACE} -type f -name "*.yml")
-
   Prettier:
     runs-on: ubuntu-latest
     steps:
@@ -55,6 +25,14 @@ jobs:
       - name: Check code lints with Black
         uses: jpetrucciani/black-check@master
 
+  isort:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+
+      - name: Check imports with isort
+        uses: jamescurtin/isort-action@master
+
   CodeChecks:
     runs-on: ubuntu-latest
     steps:
@@ -65,3 +43,30 @@ jobs:
 
       - name: Run manual code style checks
         run: python ${GITHUB_WORKSPACE}/.github/workflows/code_checks.py
+
+  MergeMarkers:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+
+      - name: Grep for >>>>>>>
+        run: |
+          if [[ $(grep -ER "$>>>>>>> " . | wc -l) > 0 ]];then
+            echo "Opening merge marker found\!"
+            grep -ER "$>>>>>>> " .
+            exit 1
+          else
+            echo "No opening merge markers found"
+            exit 0
+          fi
+
+      - name: Grep for <<<<<<<
+        run: |
+          if [[ $(grep -ER "$<<<<<<< " . | wc -l) > 0 ]];then
+            echo "Closing merge marker found\!"
+            grep -ER "$>>>>>>> " .
+            exit 1
+          else
+            echo "No closing merge markers found"
+            exit 0
+          fi
