@@ -116,6 +116,7 @@ setup(
             "homer = multiqc.modules.homer:MultiqcModule",
             "hops = multiqc.modules.hops:MultiqcModule",
             "htseq = multiqc.modules.htseq:MultiqcModule",
+            "humid = multiqc.modules.humid:MultiqcModule",
             "interop = multiqc.modules.interop:MultiqcModule",
             "ivar = multiqc.modules.ivar:MultiqcModule",
             "jcvi = multiqc.modules.jcvi:MultiqcModule",
