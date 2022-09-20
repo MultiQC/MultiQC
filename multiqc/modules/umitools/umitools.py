@@ -23,10 +23,10 @@ class MultiqcModule(BaseMultiqcModule):
 
         # Initialise the parent object
         super(MultiqcModule, self).__init__(
-            name="umitools",
+            name="UMI-tools",
             anchor="umitools",
             href="https://github.com/CGATOxford/UMI-tools",
-            info="tools for dealing with Unique Molecular Identifiers and scRNA-Seq cell barcodes.",
+            info="contains tools for dealing with Unique Molecular Identifiers (UMIs)/(RMTs) and scRNA-Seq barcodes.",
             doi="10.1101/gr.209601.116",
         )
 
@@ -128,6 +128,7 @@ class MultiqcModule(BaseMultiqcModule):
             "title": "Unique Reads",
             "description": "Reads remaining after deduplication",
             "min": 0,
+            "format": "{:,.0f}",
             "scale": "RdYlGn",
         }
         headers["percent_passing_dedup"] = {
@@ -136,7 +137,7 @@ class MultiqcModule(BaseMultiqcModule):
             "max": 100,
             "min": 0,
             "suffix": "%",
-            "scale": "YlGn",
+            "scale": "RdYlGn",
         }
         self.general_stats_addcols(self.umitools_data, headers)
 
@@ -145,8 +146,8 @@ class MultiqcModule(BaseMultiqcModule):
 
         # Specify the order of the different possible categories
         keys = OrderedDict()
-        keys["output_reads"] = {"color": "#437bb1", "name": "Reads remaining"}
-        keys["removed_reads"] = {"color": "#b1084c", "name": "Reads removed"}
+        keys["output_reads"] = {"color": "#7fc97f", "name": "Reads remaining"}
+        keys["removed_reads"] = {"color": "#fdc086", "name": "Reads removed"}
 
         # Config for the plot
         config = {
@@ -166,26 +167,31 @@ class MultiqcModule(BaseMultiqcModule):
             "title": "Total UMIs",
             "description": "total umis found in sample",
             "min": 0,
+            "format": "{:,.0f}",
         }
         headers["distinct_umis"] = {
             "title": "Distinct UMIs",
             "description": "distinct umis found in sample",
             "min": 0,
+            "format": "{:,.0f}",
         }
         headers["positions_deduplicated"] = {
             "title": "Pos Dedup",
             "description": "genomic positions deduplicated",
             "min": 0,
+            "format": "{:,.0f}",
         }
         headers["mean_umi_per_pos"] = {
             "title": "mean #UMI",
             "description": "mean UMIs at each genomic position",
             "min": 0,
+            "format": "{:,.2f}",
         }
         headers["max_umi_per_pos"] = {
             "title": "max #UMI",
             "description": "max UMIs at any genomic position",
             "min": 0,
+            "format": "{:,.0f}",
         }
 
         # Config for the table
