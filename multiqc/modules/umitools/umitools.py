@@ -37,7 +37,7 @@ class MultiqcModule(BaseMultiqcModule):
         # Find all umitools log files
         for f in self.find_log_files("umitools/dedup"):
             # Get the sample name from a custom parsing of the log file
-            input_fname, data = self.parse_logs(f)
+            input_fname, data = self.parse_logs(f['f'])
             if len(data) > 1:
                 # Clean the sample name
                 s_name = self.clean_s_name(input_fname, f)
@@ -94,7 +94,7 @@ class MultiqcModule(BaseMultiqcModule):
         for line in f.splitlines():
 
             # search for the sample name
-            if line.startswith("# stdnin"):
+            if line.startswith("# stdin"):
                 # parse the line and write to the sample name
                 parsed_fname = line.partition("name=")[2].partition(" mode=")[0].strip("'")
                 parsed_fname = os.path.basename(parsed_fname)
