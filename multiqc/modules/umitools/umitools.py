@@ -168,30 +168,35 @@ class MultiqcModule(BaseMultiqcModule):
             "description": "total umis found in sample",
             "min": 0,
             "format": "{:,.0f}",
+            "scale": "Blues",
         }
         headers["distinct_umis"] = {
             "title": "Distinct UMIs",
             "description": "distinct umis found in sample",
             "min": 0,
             "format": "{:,.0f}",
+            "scale": "Purples",
         }
         headers["positions_deduplicated"] = {
             "title": "Pos Dedup",
             "description": "genomic positions deduplicated",
             "min": 0,
             "format": "{:,.0f}",
+            "scale": "Greens",
         }
         headers["mean_umi_per_pos"] = {
             "title": "mean #UMI",
             "description": "mean UMIs at each genomic position",
             "min": 0,
             "format": "{:,.2f}",
+            "scale": "Reds",
         }
         headers["max_umi_per_pos"] = {
             "title": "max #UMI",
             "description": "max UMIs at any genomic position",
             "min": 0,
             "format": "{:,.0f}",
+            "scale": "Oranges",
         }
 
         # Config for the table
