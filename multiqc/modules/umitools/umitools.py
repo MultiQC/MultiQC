@@ -30,17 +30,14 @@ class MultiqcModule(BaseMultiqcModule):
             doi="10.1101/gr.209601.116",
         )
 
-        # Find and load any umitools reports
+        # Find and load any umitools log files
         self.umitools_data = dict()
-        ### add more datatypes here
-
-        # Find all umitools log files
         for f in self.find_log_files("umitools/dedup"):
-            # Get the sample name from a custom parsing of the log file
+            # Parse the log file for sample name and statistics
             input_fname, data = self.parse_logs(f['f'])
             if len(data) > 1:
                 # Clean the sample name
-                s_name = self.clean_s_name(input_fname, f)
+                f["s_name"] = self.clean_s_name(input_fname, f)
                 # Log a warning if the log file matches an existing sample name
                 if f["s_name"] in self.umitools_data:
                     log.debug("Duplicate sample name found! Overwriting: {}".format(f["s_name"]))
@@ -96,8 +93,7 @@ class MultiqcModule(BaseMultiqcModule):
             # search for the sample name
             if line.startswith("# stdin"):
                 # parse the line and write to the sample name
-                parsed_fname = line.partition("name=")[2].partition(" mode=")[0].strip("'")
-                parsed_fname = os.path.basename(parsed_fname)
+                parsed_fname = os.path.basename(line.partition("name=")[2].partition(" mode=")[0].strip("'"))
 
             if parsed_fname is not None:
                 # iterate through each item in the lookup table
@@ -109,7 +105,7 @@ class MultiqcModule(BaseMultiqcModule):
 
         # calculate a few simple supplementary stats
         try:
-            logdata["percent_passing_dedup"] = (logdata["output_reads"] / logdata["input_reads"]) * 100.0
+            logdata["percent_passing_dedup"] = round(((logdata["output_reads"] / logdata["input_reads"]) * 100.0), 2)
         except (KeyError, ZeroDivisionError):
             pass
         try:
@@ -163,6 +159,13 @@ class MultiqcModule(BaseMultiqcModule):
         """Take the parsed stats from the umitools report and generate a table of umi stats"""
 
         headers = OrderedDict()
+        headers["positions_deduplicated"] = {
+            "title": "Pos Dedup",
+            "description": "genomic positions deduplicated",
+            "min": 0,
+            "format": "{:,.0f}",
+            "scale": "Greens",
+        }
         headers["total_umis"] = {
             "title": "Total UMIs",
             "description": "total umis found in sample",
@@ -176,13 +179,6 @@ class MultiqcModule(BaseMultiqcModule):
             "min": 0,
             "format": "{:,.0f}",
             "scale": "Purples",
-        }
-        headers["positions_deduplicated"] = {
-            "title": "Pos Dedup",
-            "description": "genomic positions deduplicated",
-            "min": 0,
-            "format": "{:,.0f}",
-            "scale": "Greens",
         }
         headers["mean_umi_per_pos"] = {
             "title": "mean #UMI",
