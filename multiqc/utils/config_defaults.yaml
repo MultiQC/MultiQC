@@ -561,6 +561,10 @@ module_order:
       module_tag:
         - DNA
         - prokarytotic
+  - umitools:
+      module_tag:
+        - DNA
+        - RNA
 
   # Alignment tool stats
   - bbmap:

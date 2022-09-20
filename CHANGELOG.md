@@ -18,6 +18,9 @@
 
 ### New Modules
 
+- **UMI-tools**
+  - The MultiQC module for umitools parses logs from umi-tools. Currently `dedup` command is supported.
+
 ### Module feature additions
 
 - **Fastp**
