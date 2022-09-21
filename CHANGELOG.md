@@ -18,8 +18,8 @@
 
 ### New Modules
 
-- **UMI-tools**
-  - The MultiQC module for umitools parses logs from umi-tools. Currently `dedup` command is supported.
+- [**UMI-tools**](https://umi-tools.readthedocs.io)
+  - UMI-tools contains tools for dealing with Unique Molecular Identifiers (UMIs)/Random Molecular Tags (RMTs) and single cell RNA-Seq cell barcodes.
 
 ### Module feature additions
 
