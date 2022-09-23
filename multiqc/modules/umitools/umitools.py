@@ -68,10 +68,7 @@ class MultiqcModule(BaseMultiqcModule):
         )
 
         # add a section with a beeswarm plot of UMI stats to the report
-        self.add_section(
-            name="UMI Stats", anchor="umitools-umi-stats", plot=self.umitools_umi_stats_swarm()
-        )
-
+        self.add_section(name="UMI Stats", anchor="umitools-umi-stats", plot=self.umitools_umi_stats_swarm())
 
     def parse_logs(self, f):
         # Initialise a dictionary to hold the data from this log file
@@ -124,7 +121,6 @@ class MultiqcModule(BaseMultiqcModule):
 
         return parsed_fname, logdata
 
-
     def umitools_general_stats_table(self):
         """Take the parsed stats from the umitools report and add it to the
         basic stats table at the top of the report"""
@@ -164,7 +160,6 @@ class MultiqcModule(BaseMultiqcModule):
         }
 
         return bargraph.plot(self.umitools_data, keys, config)
-
 
     def umitools_umi_stats_swarm(self):
         """Generate a swarmplot of umi stats for the main report"""
