@@ -8,6 +8,7 @@ import os
 from collections import OrderedDict
 
 from multiqc.modules.base_module import BaseMultiqcModule
+from multiqc import config
 from multiqc.plots import bargraph, beeswarm
 
 # Initialise the logger
@@ -81,7 +82,7 @@ class MultiqcModule(BaseMultiqcModule):
         # Make a dictionary to hold the data lookup table and data types
         lookup_dict = {
             "total_umis": ("INFO total_umis ", int),
-            "distinct_umis": ("INFO #umis ", int),
+            "unique_umis": ("INFO #umis ", int),
             "input_reads": ("INFO Reads: Input Reads: ", int),
             "output_reads": ("INFO Number of reads out: ", int),
             "positions_deduplicated": ("INFO Total number of positions deduplicated: ", int),
@@ -127,11 +128,12 @@ class MultiqcModule(BaseMultiqcModule):
 
         headers = OrderedDict()
         headers["output_reads"] = {
-            "title": "Unique Reads",
-            "description": "Reads remaining after deduplication",
+            "title": "{} Unique Reads".format(config.read_count_prefix),
+            "description": "Reads remaining after deduplication ({})".format(config.read_count_desc),
             "min": 0,
-            "format": "{:,.0f}",
-            "scale": "RdYlGn",
+            "modify": lambda x: x * config.read_count_multiplier,
+            "shared_key": "read_count",
+            "scale": "PuRd",
         }
         headers["percent_passing_dedup"] = {
             "title": "% Pass Dedup",
@@ -179,9 +181,9 @@ class MultiqcModule(BaseMultiqcModule):
             "format": "{:,.0f}",
             "scale": "Blues",
         }
-        headers["distinct_umis"] = {
-            "title": "Distinct UMIs",
-            "description": "Distinct UMIs found in sample",
+        headers["unique_umis"] = {
+            "title": "Unique UMIs",
+            "description": "Unique UMIs found in sample",
             "min": 0,
             "format": "{:,.0f}",
             "scale": "Purples",
