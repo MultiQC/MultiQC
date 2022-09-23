@@ -7,8 +7,8 @@ import logging
 import os
 from collections import OrderedDict
 
-from multiqc.modules.base_module import BaseMultiqcModule
 from multiqc import config
+from multiqc.modules.base_module import BaseMultiqcModule
 from multiqc.plots import bargraph, beeswarm
 
 # Initialise the logger
