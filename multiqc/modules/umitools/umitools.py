@@ -8,7 +8,7 @@ import os
 from collections import OrderedDict
 
 from multiqc.modules.base_module import BaseMultiqcModule
-from multiqc.plots import bargraph, table
+from multiqc.plots import bargraph, beeswarm
 
 # Initialise the logger
 log = logging.getLogger(__name__)
@@ -67,8 +67,11 @@ class MultiqcModule(BaseMultiqcModule):
             name="Deduplicated Reads", anchor="umitools-dedup-plot", plot=self.umitools_deduplication_plot()
         )
 
-        # add a section with a table of UMI stats to the report
-        self.add_section(name="UMI Stats", anchor="umitools-umi-stats", plot=self.umitools_umi_stats_table())
+        # add a section with a beeswarm plot of UMI stats to the report
+        self.add_section(
+            name="UMI Stats", anchor="umitools-umi-stats", plot=self.umitools_umi_stats_swarm()
+        )
+
 
     def parse_logs(self, f):
         # Initialise a dictionary to hold the data from this log file
@@ -121,6 +124,7 @@ class MultiqcModule(BaseMultiqcModule):
 
         return parsed_fname, logdata
 
+
     def umitools_general_stats_table(self):
         """Take the parsed stats from the umitools report and add it to the
         basic stats table at the top of the report"""
@@ -144,7 +148,7 @@ class MultiqcModule(BaseMultiqcModule):
         self.general_stats_addcols(self.umitools_data, headers)
 
     def umitools_deduplication_plot(self):
-        """Make the HighCharts HTML to plot the deduplication rates"""
+        """Generate a plot the read deduplication rates for the main report"""
 
         # Specify the order of the different possible categories
         keys = OrderedDict()
@@ -161,41 +165,42 @@ class MultiqcModule(BaseMultiqcModule):
 
         return bargraph.plot(self.umitools_data, keys, config)
 
-    def umitools_umi_stats_table(self):
-        """Take the parsed stats from the umitools report and generate a table of umi stats"""
+
+    def umitools_umi_stats_swarm(self):
+        """Generate a swarmplot of umi stats for the main report"""
 
         headers = OrderedDict()
         headers["positions_deduplicated"] = {
-            "title": "Pos Dedup",
-            "description": "genomic positions deduplicated",
+            "title": "Positions Dedup",
+            "description": "Total number of positions deduplicated",
             "min": 0,
             "format": "{:,.0f}",
             "scale": "Greens",
         }
         headers["total_umis"] = {
             "title": "Total UMIs",
-            "description": "total umis found in sample",
+            "description": "Total UMIs found in sample",
             "min": 0,
             "format": "{:,.0f}",
             "scale": "Blues",
         }
         headers["distinct_umis"] = {
             "title": "Distinct UMIs",
-            "description": "distinct umis found in sample",
+            "description": "Distinct UMIs found in sample",
             "min": 0,
             "format": "{:,.0f}",
             "scale": "Purples",
         }
         headers["mean_umi_per_pos"] = {
-            "title": "mean #UMI",
-            "description": "mean UMIs at each genomic position",
+            "title": "Mean #UMI",
+            "description": "Mean number of unique UMIs per position",
             "min": 0,
             "format": "{:,.2f}",
             "scale": "Reds",
         }
         headers["max_umi_per_pos"] = {
-            "title": "max #UMI",
-            "description": "max UMIs at any genomic position",
+            "title": "Max #UMI",
+            "description": "Max number of unique UMIs per position",
             "min": 0,
             "format": "{:,.0f}",
             "scale": "Oranges",
@@ -203,8 +208,8 @@ class MultiqcModule(BaseMultiqcModule):
 
         # Config for the table
         config = {
-            "id": "umitools_stats_table",
+            "id": "umitools_stats_swarmplot",
             "table_title": "UMI-tools: UMI stats",
         }
 
-        return table.plot(self.umitools_data, headers, config)
+        return beeswarm.plot(self.umitools_data, headers, config)
