@@ -34,7 +34,7 @@ class DragenScRnaMetrics(BaseMultiqcModule):
         data_by_sample = dict()
 
         for f in self.find_log_files("dragen/sc_rna_metrics"):
-            data = parse_time_metrics_file(f)
+            data = parse_scrna_metrics_file(f)
             if f["s_name"] in data_by_sample:
                 log.debug("Duplicate sample name found! Overwriting: {}".format(f["s_name"]))
             self.add_data_source(f, section="stats")
@@ -69,7 +69,7 @@ class DragenScRnaMetrics(BaseMultiqcModule):
         return data_by_sample.keys()
 
 
-def parse_time_metrics_file(f):
+def parse_scrna_metrics_file(f):
     """
     sample.scRNA.metrics.csv
 
@@ -79,7 +79,7 @@ def parse_time_metrics_file(f):
     RUN TIME,,Time sorting and marking duplicates,00:00:07.368,7.37
     RUN TIME,,Time DRAGStr calibration,00:00:07.069,7.07
     """
-    f["s_name"] = re.search(r"(.*).scRNA.metrics.csv", f["fn"]).group(1)
+    f["s_name"] = re.search(r"(.*)\.scRNA[_\.]metrics\.csv", f["fn"]).group(1)
 
     data = {}
     for line in f["f"].splitlines():

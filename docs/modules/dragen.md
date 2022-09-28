@@ -39,7 +39,9 @@ and alike. This MultiQC module supports some of the output but not all.
   - A bar graph of RNA fragments
 - `<output prefix>.quant.transcript_coverage.txt`
   - A line plot of average coverage along RNA transcripts
-- `<output prefix>.scRNA.metrics.csv`
+- `<output prefix>.scRNA.metrics.csv` or `<output prefix>.scRNA_metrics.csv`
   - Summary table for single-cell RNA metrics
+- `<output prefix>.scATAC.metrics.csv` or `<output prefix>.scATAC_metrics.csv`
+  - Summary table for single-cell ATAC metrics
 
 Each QC output adds a section into the report if a corresponding QC file is found.

@@ -107,10 +107,10 @@ class MultiqcModule(
         # <output prefix>.quant.transcript_coverage.txt
 
         samples_found |= self.add_sc_rna_metrics()
-        # <output prefix>.scRNA.metrics.csv
+        # <output prefix>.scRNA.metrics.csv or <output prefix>.scRNA_metrics.csv
 
         samples_found |= self.add_sc_atac_metrics()
-        # <output prefix>.scATAC.metrics.csv
+        # <output prefix>.scATAC.metrics.csv or <output prefix>.scATAC_metrics.csv
 
         if len(samples_found) == 0:
             raise UserWarning
