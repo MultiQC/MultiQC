@@ -194,13 +194,13 @@ ccs/v5:
   contents: '"id": "ccs_processing"'
   fn: "*.json"
 cellranger/count_html:
-  fn: "*web_summary.html"
+  - fn: "*web_summary.html"
   - contents: '"command":"Cell Ranger","subcommand":"count"'
     num_lines: 13
   - contents: '"command": "Cell Ranger", "subcommand": "count"'
     num_lines: 13
 cellranger/vdj_html:
-  fn: "*web_summary.html"
+  - fn: "*web_summary.html"
   - contents: '"command":"Cell Ranger","subcommand":"vdj"'
     num_lines: 13
   - contents: '"command": "Cell Ranger", "subcommand": "vdj"'
