@@ -1,0 +1,4 @@
+# STAR logs are renamed to "log.final.out" instead of "Log.final.out"
+sp:
+    star:
+        fn: '*log.final.out'
