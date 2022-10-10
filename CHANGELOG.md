@@ -6,6 +6,7 @@
 
 ### MultiQC updates
 
+- Bugfix: Do not show empty bcftools stats variant depth plots[#1770](https://github.com/ewels/MultiQC/pull/1770)
 - Bugfix: Make `config.data_format` work again ([#1722](https://github.com/ewels/MultiQC/issues/1722))
 - Bump minimum version of Jinja2 to `>=3.0.0` ([#1642](https://github.com/ewels/MultiQC/issues/1642))
 - Disable search progress bar if running with `--quiet` or `--no-ansi` ([#1638](https://github.com/ewels/MultiQC/issues/1638))
