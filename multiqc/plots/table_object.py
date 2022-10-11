@@ -2,9 +2,9 @@
 
 """ MultiQC datatable class, used by tables and beeswarm plots """
 
-from collections import defaultdict, OrderedDict
 import logging
 import re
+from collections import OrderedDict, defaultdict
 
 from multiqc.utils import config, report
 

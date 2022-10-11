@@ -2,7 +2,7 @@
 
 """ MultiQC functions to plot a heatmap """
 
-from __future__ import print_function
+
 import logging
 import random
 
