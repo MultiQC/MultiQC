@@ -15,6 +15,7 @@
 - Add CI testing for Python 3.10 and 3.11
 - Add new code formatting tool [isort](https://pycqa.github.io/isort/) to standardise the order and formatting of Python module imports
 - Remove Python 2-3 compatability `from __future__` imports
+- Fix Kraken duplicate heatmap to account for missing taxons
 
 ### New Modules
 
