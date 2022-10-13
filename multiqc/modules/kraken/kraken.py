@@ -440,7 +440,7 @@ class MultiqcModule(BaseMultiqcModule):
                     counts_shown[s_name] = 0
 
                 if classif not in rank_data[s_name]:
-                    rank_data[s_name][classif] = 0
+                    rank_data[s_name][classif] = None
 
                 try:
                     row = next(row for row in d if row["rank_code"] == rank_code and row["classif"] == classif)
