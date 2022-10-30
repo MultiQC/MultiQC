@@ -1,38 +1,16 @@
 name: Lint Code Base
-on: [push, pull_request]
+on:
+  push:
+    branches: [master]
+  pull_request:
 
 jobs:
-  Prettier:
+  pre-commit:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v2
-
-      - uses: actions/setup-node@v2
-        with:
-          node-version: "12"
-
-      - name: Install Prettier
-        run: npm install -g prettier
-
-      - name: Run Prettier --check
-        run: prettier --check ${GITHUB_WORKSPACE}
-
-  PythonBlack:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v2
-
-      - name: Check code lints with Black
-        uses: jpetrucciani/black-check@master
-
-  isort:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v2
-
-      - name: Check imports with isort
-        uses: jamescurtin/isort-action@master
-
+      - uses: actions/checkout@v3
+      - uses: actions/setup-python@v3
+      - uses: pre-commit/action@v2.0.3
   CodeChecks:
     runs-on: ubuntu-latest
     steps:
@@ -43,30 +21,3 @@ jobs:
 
       - name: Run manual code style checks
         run: python ${GITHUB_WORKSPACE}/.github/workflows/code_checks.py
-
-  MergeMarkers:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v2
-
-      - name: Grep for >>>>>>>
-        run: |
-          if [[ $(grep -ER "$>>>>>>> " . | wc -l) > 0 ]];then
-            echo "Opening merge marker found\!"
-            grep -ER "$>>>>>>> " .
-            exit 1
-          else
-            echo "No opening merge markers found"
-            exit 0
-          fi
-
-      - name: Grep for <<<<<<<
-        run: |
-          if [[ $(grep -ER "$<<<<<<< " . | wc -l) > 0 ]];then
-            echo "Closing merge marker found\!"
-            grep -ER "$>>>>>>> " .
-            exit 1
-          else
-            echo "No closing merge markers found"
-            exit 0
-          fi
