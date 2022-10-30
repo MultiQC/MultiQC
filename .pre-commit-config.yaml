@@ -13,7 +13,7 @@ repos:
       - id: check-added-large-files
       - id: check-merge-conflict
       - id: debug-statements
-      - id: name-tests-test
+      # - id: name-tests-test
   - repo: https://github.com/pre-commit/mirrors-prettier
     rev: "v2.7.1"
     hooks:
@@ -38,25 +38,25 @@ repos:
         require_serial: true
         additional_dependencies:
           - black
-      - id: flake8
-        name: Flake8 - Enforce code style and doc.
-        description: A command-line utility for enforcing style consistency across Python projects.
-        entry: flake8
-        args: ["--config=.flake8"]
-        language: python
-        types: [python]
-        exclude: ^examples/
-        require_serial: true
-        additional_dependencies:
-          - flake8
-          - flake8-docstrings
-      - id: mypy
-        name: mypy - Static type checking
-        description: Mypy helps ensure that we use our functions and variables correctly by checking the types.
-        entry: mypy
-        language: python
-        types: [python]
-        exclude: ^examples/
-        require_serial: true
-        additional_dependencies:
-          - mypy
+#      - id: flake8
+#        name: Flake8 - Enforce code style and doc.
+#        description: A command-line utility for enforcing style consistency across Python projects.
+#        entry: flake8
+#        args: ["--config=.flake8"]
+#        language: python
+#        types: [python]
+#        exclude: ^examples/
+#        require_serial: true
+#        additional_dependencies:
+#          - flake8
+#          - flake8-docstrings
+#      - id: mypy
+#        name: mypy - Static type checking
+#        description: Mypy helps ensure that we use our functions and variables correctly by checking the types.
+#        entry: mypy
+#        language: python
+#        types: [python]
+#        exclude: ^examples/
+#        require_serial: true
+#        additional_dependencies:
+#          - mypy
