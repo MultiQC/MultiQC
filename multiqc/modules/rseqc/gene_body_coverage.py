@@ -87,14 +87,16 @@ def parse_reports(self):
         for s_name in self.gene_body_cov_hist_counts:
             self.gene_body_cov_hist_percent[s_name] = OrderedDict()
             total = sum(self.gene_body_cov_hist_counts[s_name].values())
+            min_cov = min(self.gene_body_cov_hist_counts[s_name].values())
+            max_cov = max(self.gene_body_cov_hist_counts[s_name].values())
             for k, v in self.gene_body_cov_hist_counts[s_name].items():
-                self.gene_body_cov_hist_percent[s_name][k] = (v / total) * 100
+                self.gene_body_cov_hist_percent[s_name][k] = (v - min_cov) / (max_cov - min_cov)
 
         # Add line graph to section
         pconfig = {
             "id": "rseqc_gene_body_coverage_plot",
             "title": "RSeQC: Gene Body Coverage",
-            "ylab": "% Coverage",
+            "ylab": "Coverage",
             "xlab": "Gene Body Percentile (5' -> 3')",
             "xmin": 0,
             "xmax": 100,
