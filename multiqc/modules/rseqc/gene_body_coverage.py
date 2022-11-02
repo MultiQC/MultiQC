@@ -83,10 +83,11 @@ def parse_reports(self):
         # Write data to file
         self.write_data_file(self.gene_body_cov_hist_counts, "rseqc_gene_body_cov")
 
-        # Make a normalised percentage version of the data
+        # Make a normalised coverage for plotting using the formula (cov - min_cov) / (max_cov - min_cov)
         for s_name in self.gene_body_cov_hist_counts:
             self.gene_body_cov_hist_percent[s_name] = OrderedDict()
             total = sum(self.gene_body_cov_hist_counts[s_name].values())
+            # min_cov and max_cov are required to compute the normalized coverage
             min_cov = min(self.gene_body_cov_hist_counts[s_name].values())
             max_cov = max(self.gene_body_cov_hist_counts[s_name].values())
             for k, v in self.gene_body_cov_hist_counts[s_name].items():
