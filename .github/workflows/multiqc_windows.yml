@@ -24,7 +24,7 @@ jobs:
       changelog: ${{ steps.filter.outputs.changes.changelog }}
 
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
 
       - uses: dorny/paths-filter@v2
         id: filter
@@ -50,7 +50,7 @@ jobs:
 
     steps:
       # Check out MultiQC code
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
 
       # Set up Windows with C++ for numpy
       - name: Visual Studio Command Prompt tool
