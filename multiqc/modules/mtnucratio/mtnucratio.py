@@ -2,10 +2,10 @@
 
 """ MultiQC module to parse output from mtnucratio """
 
-from __future__ import print_function
-from collections import OrderedDict
-import logging
+
 import json
+import logging
+from collections import OrderedDict
 
 from multiqc import config
 from multiqc.modules.base_module import BaseMultiqcModule
