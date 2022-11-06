@@ -3,11 +3,14 @@
 """ MultiQC module to parse output from genomescope """
 
 from __future__ import print_function
-from collections import OrderedDict
+
+import base64
 import logging
-import re, base64
-from multiqc.plots import table
+import re
+from collections import OrderedDict
+
 from multiqc.modules.base_module import BaseMultiqcModule
+from multiqc.plots import table
 
 # Initialise the logger
 log = logging.getLogger(__name__)

@@ -3,9 +3,12 @@
 """ MultiQC module to parse output from BUSCO """
 
 from __future__ import print_function
-from collections import OrderedDict
+
+import base64
 import logging
-import re, base64
+import re
+from collections import OrderedDict
+
 from multiqc.modules.base_module import BaseMultiqcModule
 
 # Initialise the logger

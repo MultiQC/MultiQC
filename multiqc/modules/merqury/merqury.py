@@ -3,11 +3,14 @@
 """ MultiQC module to parse output from MERQURY """
 
 from __future__ import print_function
-from collections import OrderedDict
+
+import base64
 import logging
-import re, base64
-from multiqc.plots import linegraph, table
+import re
+from collections import OrderedDict
+
 from multiqc.modules.base_module import BaseMultiqcModule
+from multiqc.plots import linegraph, table
 
 # Initialise the logger
 log = logging.getLogger(__name__)
