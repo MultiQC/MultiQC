@@ -2,8 +2,8 @@
 
 """ MultiQC module to parse output from WhatsHap """
 
-from collections import defaultdict, OrderedDict
 import logging
+from collections import OrderedDict, defaultdict
 
 from multiqc.modules.base_module import BaseMultiqcModule
 from multiqc.plots import bargraph, table

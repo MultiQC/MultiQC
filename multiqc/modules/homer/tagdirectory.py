@@ -6,8 +6,9 @@ import logging
 import math
 import os
 import re
-from multiqc.plots import bargraph, linegraph
 from collections import OrderedDict
+
+from multiqc.plots import bargraph, linegraph
 
 # Initialise the logger
 log = logging.getLogger(__name__)

@@ -1,6 +1,6 @@
 from collections import OrderedDict
-from multiqc import config
 
+from multiqc import config
 
 read_format = "{:,.1f}"
 if config.read_count_multiplier == 1:

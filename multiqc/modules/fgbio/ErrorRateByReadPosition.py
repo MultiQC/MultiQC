@@ -4,6 +4,7 @@
 
 
 from distutils.util import strtobool
+
 from multiqc.plots import linegraph
 
 

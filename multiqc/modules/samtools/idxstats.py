@@ -5,6 +5,7 @@
 
 import logging
 from collections import OrderedDict, defaultdict
+
 from multiqc import config
 from multiqc.plots import bargraph, linegraph
 
