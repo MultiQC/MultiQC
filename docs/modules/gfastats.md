@@ -17,4 +17,5 @@ Supported commands:
 
 The `gfastats --stats` is the default command and prints its results to standard
 out (no consistent file name) and has no header lines
-(no way to recognise from content of file) so it will be looking for \*.gfastats.tsv|csv files.
+(no way to recognise from content of file).
+Because of this, you _must_ name your output files so that they end in `.gfastats.tsv` or `.gfastats.csv` so that MultiQC can find them.
