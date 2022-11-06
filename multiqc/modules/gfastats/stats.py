@@ -21,8 +21,7 @@ class StatsReportMixin:
             for line in f["f"].splitlines()[1:]:
                 sections = line.split("\t")
                 field = sections[0]
-                field = field.replace(" ", "_")
-                if not field == "Base_composition_(ACGT)":
+                if not field == "Base composition (ACGT)":
                     value = float(sections[1])
                     parsed_data[field] = value
 
