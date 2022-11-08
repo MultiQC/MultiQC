@@ -68,9 +68,9 @@ class MultiqcModule(BaseMultiqcModule):
         # The values we want to plot (add to the toal number of reads)
         cats = OrderedDict()
 
-        cats["clusters"] = {"name": "Unique reads", "color": "#a9ff96"}
-        cats["duplicates"] = {"name": "Duplicate reads", "color": "#95ceff"}
-        cats["filtered"] = {"name": "Filtered reads", "color": "#e0e0e1"}
+        cats["clusters"] = {"name": "Unique reads"}
+        cats["duplicates"] = {"name": "Duplicate reads"}
+        cats["filtered"] = {"name": "Filtered reads"}
 
         self.add_section(name="HUMID", anchor="humid", plot=bargraph.plot(self.humid, cats))
 
