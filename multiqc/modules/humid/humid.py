@@ -73,13 +73,8 @@ class MultiqcModule(BaseMultiqcModule):
         cats["filtered"] = {"name": "Filtered reads"}
 
         # Bargraph configuration
-        config = {
-            "id": "humid-bargraph",
-            "title": "HUMID: Deduplication results",
-            "ylab": "Number of reads"
-        }
-        self.add_section(name="HUMID deduplication results",
-                plot=bargraph.plot(self.humid, cats, config))
+        config = {"id": "humid-bargraph", "title": "HUMID: Deduplication results", "ylab": "Number of reads"}
+        self.add_section(name="HUMID deduplication results", plot=bargraph.plot(self.humid, cats, config))
 
 
 def parse_stat_file(fin):
