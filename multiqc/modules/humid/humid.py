@@ -20,7 +20,7 @@ class MultiqcModule(BaseMultiqcModule):
             name="HUMID",
             anchor="humid",
             href="https://github.com/jfjlaros/HUMID",
-            info=" -- High-performance UMI Deduplicator.",
+            info=" is a fast, reference free tool to remove (UMI) duplicates " "from sequencing data",
             # No publication / DOI // doi=
         )
 
@@ -74,7 +74,25 @@ class MultiqcModule(BaseMultiqcModule):
 
         # Bargraph configuration
         config = {"id": "humid-bargraph", "title": "HUMID: Deduplication results", "ylab": "Number of reads"}
-        self.add_section(name="HUMID deduplication results", plot=bargraph.plot(self.humid, cats, config))
+        self.add_section(
+            name="Duplication Summary",
+            anchor="humid-section",
+            description="""
+                Duplication statistics per sample. Every read in the
+                input data has been assigned to one of the three categories
+                shown here.
+                """,
+            helptext="""
+                **Unique reads** are the reads that are left over after
+                deduplication.
+                **Duplicate reads** are the reads that were determined to be
+                duplicates of the **Unique reads**.
+                **Filtered reads** were reads that could not be analysed, due to N
+                nucleotides, or because the UMI or sequences were too short to
+                use.
+                """,
+            plot=bargraph.plot(self.humid, cats, config),
+        )
 
 
 def parse_stat_file(fin):
