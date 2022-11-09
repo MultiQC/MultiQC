@@ -6,4 +6,5 @@ Description: >
 High-performance UMI Deduplicator
 
 ---
+
 HUMID is a tool for reference free (UMI) deduplication
