@@ -625,10 +625,10 @@ module_order:
         - virus
   # Pre-alignment QC
   - humid:
-    module_tag:
-      - DNA
-      - RNA
-      - umi
+      module_tag:
+        - DNA
+        - RNA
+        - umi
   - kat:
       module_tag:
         - DNA

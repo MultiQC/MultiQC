@@ -3,4 +3,7 @@
 Name: HUMID
 URL: https://github.com/jfjlaros/dedup
 Description: >
-Error tolerant UMI aware FastQ deduplicator
+High-performance UMI Deduplicator
+
+---
+HUMID is a tool for reference free (UMI) deduplication

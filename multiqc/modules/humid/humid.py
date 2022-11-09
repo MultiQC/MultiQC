@@ -19,8 +19,8 @@ class MultiqcModule(BaseMultiqcModule):
         super(MultiqcModule, self).__init__(
             name="HUMID",
             anchor="humid",
-            href="https://github.com/jfjlaros/dedup",
-            info=" -- Error tolerant UMI aware FastQ deduplicator.",
+            href="https://github.com/jfjlaros/HUMID",
+            info=" -- High-performance UMI Deduplicator.",
             # No publication / DOI // doi=
         )
 
@@ -72,7 +72,14 @@ class MultiqcModule(BaseMultiqcModule):
         cats["duplicates"] = {"name": "Duplicate reads"}
         cats["filtered"] = {"name": "Filtered reads"}
 
-        self.add_section(name="HUMID", anchor="humid", plot=bargraph.plot(self.humid, cats))
+        # Bargraph configuration
+        config = {
+            "id": "humid-bargraph",
+            "title": "HUMID: Deduplication results",
+            "ylab": "Number of reads"
+        }
+        self.add_section(name="HUMID deduplication results",
+                plot=bargraph.plot(self.humid, cats, config))
 
 
 def parse_stat_file(fin):
