@@ -24,7 +24,7 @@ jobs:
       changelog: ${{ steps.filter.outputs.changes.changelog }}
 
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
 
       - uses: dorny/paths-filter@v2
         id: filter
@@ -45,12 +45,12 @@ jobs:
     needs: changes
     strategy:
       matrix:
-        python-version: ["3.6", "3.7", "3.8", "3.9", "3.10", "3.11-dev"]
+        python-version: ["3.6", "3.7", "3.8", "3.9", "3.10", "3.11"]
     timeout-minutes: 10
 
     steps:
       - name: Check out MultiQC code
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3
 
       - name: Set up Python ${{ matrix.python-version }}
         uses: actions/setup-python@v2
