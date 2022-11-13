@@ -119,9 +119,7 @@ class MultiqcModule(BaseMultiqcModule):
 
         # Now add each section in order
         self.read_count_plot()
-
         self.per_base_quality_plot()
-
         self.sequence_quality_plot()
         self.per_seq_quality_plot()
         self.sequence_content_plot()
@@ -358,7 +356,6 @@ class MultiqcModule(BaseMultiqcModule):
             plot=bargraph.plot(pdata, pcats, pconfig),
         )
 
-
     def per_base_quality_plot(self):
         """Create the HTML for the phred quality score per base plot"""
 
@@ -371,16 +368,15 @@ class MultiqcModule(BaseMultiqcModule):
                 }
             except KeyError:
                 pass        
-
         pconfig = {
             "id": "fastqc_per_base_quality_plot",
-            "title": "FastQC: Median Quality Scores",
+            "title": "FastQC: PHRED Score Distribution",
             "ylab": "Phred Score",
             "xlab": "Position (bp)",
             "ymin": 0,
             "xDecimals": False,
             "tt_label": "<b>Base {point.x}</b>: {point.y:.2f}",
-            "colors": self.get_status_cols("per_base_sequence_quality"),
+            "colors": self.get_status_cols("per_base_quality"),
             "yPlotBands": [
                 {"from": 28, "to": 100, "color": "#c3e6c3"},
                 {"from": 20, "to": 28, "color": "#e6dcc3"},
@@ -389,12 +385,13 @@ class MultiqcModule(BaseMultiqcModule):
         }
 
         self.add_section(
-            name="Sequence Quality Histograms",
+            name="Sequence Quality Distribution",
             anchor="fastqc_per_base_quality",
-            description="PHRED quality across each base position in the read.",
+            description="PHRED quality score distribution across reads.",
             helptext="""
-            For each base, the median, upper/lower quartiles, and 10th/90th percentiles 
-            are represented in the form of a miniature boxplot.
+            For each base, the solid lines delimit the lower and upper quartile.
+            The dotted lines delimit the 10h and 90th percentiles.
+            The center dot represents the median.
 
             Taken from the [FastQC help](http://www.bioinformatics.babraham.ac.uk/projects/fastqc/Help/3%20Analysis%20Modules/2%20Per%20Base%20Sequence%20Quality.html):
 
@@ -406,7 +403,6 @@ class MultiqcModule(BaseMultiqcModule):
             """,
             plot=qualityplot.plot(data, pconfig)
         )
-
 
     def sequence_quality_plot(self):
         """Create the HTML for the phred quality score plot"""
