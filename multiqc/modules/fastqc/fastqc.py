@@ -22,7 +22,7 @@ from collections import OrderedDict
 
 from multiqc import config
 from multiqc.modules.base_module import BaseMultiqcModule
-from multiqc.plots import bargraph, heatmap, linegraph
+from multiqc.plots import bargraph, heatmap, linegraph, qualityplot
 from multiqc.utils import report
 
 # Initialise the logger
@@ -404,7 +404,7 @@ class MultiqcModule(BaseMultiqcModule):
             The quality of calls on most platforms will degrade as the run progresses, so it is
             common to see base calls falling into the orange area towards the end of a read._
             """,
-            #plot=linegraph.plot(data, pconfig)
+            plot=qualityplot.plot(data, pconfig)
         )
 
 
