@@ -119,6 +119,9 @@ class MultiqcModule(BaseMultiqcModule):
 
         # Now add each section in order
         self.read_count_plot()
+
+        self.per_base_quality_plot()
+
         self.sequence_quality_plot()
         self.per_seq_quality_plot()
         self.sequence_content_plot()
@@ -354,6 +357,56 @@ class MultiqcModule(BaseMultiqcModule):
             """,
             plot=bargraph.plot(pdata, pcats, pconfig),
         )
+
+
+    def per_base_quality_plot(self):
+        """Create the HTML for the phred quality score per base plot"""
+
+        data = dict()
+        for s_name in self.fastqc_data:
+            try:
+                data[s_name] = {
+                    self.avg_bp_from_range(d["base"]): d
+                    for d in self.fastqc_data[s_name]["per_base_sequence_quality"]
+                }
+            except KeyError:
+                pass        
+
+        pconfig = {
+            "id": "fastqc_per_base_quality_plot",
+            "title": "FastQC: Median Quality Scores",
+            "ylab": "Phred Score",
+            "xlab": "Position (bp)",
+            "ymin": 0,
+            "xDecimals": False,
+            "tt_label": "<b>Base {point.x}</b>: {point.y:.2f}",
+            "colors": self.get_status_cols("per_base_sequence_quality"),
+            "yPlotBands": [
+                {"from": 28, "to": 100, "color": "#c3e6c3"},
+                {"from": 20, "to": 28, "color": "#e6dcc3"},
+                {"from": 0, "to": 20, "color": "#e6c3c3"},
+            ]
+        }
+
+        self.add_section(
+            name="Sequence Quality Histograms",
+            anchor="fastqc_per_base_quality",
+            description="PHRED quality across each base position in the read.",
+            helptext="""
+            For each base, the median, upper/lower quartiles, and 10th/90th percentiles 
+            are represented in the form of a miniature boxplot.
+
+            Taken from the [FastQC help](http://www.bioinformatics.babraham.ac.uk/projects/fastqc/Help/3%20Analysis%20Modules/2%20Per%20Base%20Sequence%20Quality.html):
+
+            _The y-axis on the graph shows the quality scores. The higher the score, the better
+            the base call. The background of the graph divides the y axis into very good quality
+            calls (green), calls of reasonable quality (orange), and calls of poor quality (red).
+            The quality of calls on most platforms will degrade as the run progresses, so it is
+            common to see base calls falling into the orange area towards the end of a read._
+            """,
+            #plot=linegraph.plot(data, pconfig)
+        )
+
 
     def sequence_quality_plot(self):
         """Create the HTML for the phred quality score plot"""
