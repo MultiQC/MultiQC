@@ -36,6 +36,9 @@
   - Create a report even if there's only Custom Content General Stats there
   - Attempt to cooerce line / scatter x-axes into floats so as not to lose labels ([#1242](https://github.com/ewels/MultiQC/issues/1242))
   - Multi-sample line-graph TSV files that have no sample name in row 1 column 1 now use row 1 as x-axis labels ([#1242](https://github.com/ewels/MultiQC/issues/1242))
+- **Kraken**
+  - Fix duplicate heatmap to account for missing taxons ([#1779](https://github.com/ewels/MultiQC/pull/1779))
+  - Make heatmap full width
 - **malt**
   - Fixed division by 0 in malt module ([#1683](https://github.com/ewels/MultiQC/issues/1683))
 - **RSeQC**
