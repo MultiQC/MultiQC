@@ -324,7 +324,7 @@ class MultiqcModule(BaseMultiqcModule):
             "shared_key": "base_count",
             "hidden": True,
         }
-        headers["after_filtering_total_reads"] = {
+        headers["filtering_result_passed_filter_reads"] = {
             "title": "{} Reads After Filtering".format(config.read_count_prefix),
             "description": "Total reads after filtering ({})".format(config.read_count_desc),
             "min": 0,
