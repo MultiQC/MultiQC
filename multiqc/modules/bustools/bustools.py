@@ -81,6 +81,12 @@ class MultiqcModule(BaseMultiqcModule):
             "format": "{:,.0f}",
             "shared_key": "barcodes",
         }
+        self.headers["medianReadsPerBarcode"] = {
+            "title": "Median reads per barcode",
+            "scale": "RdYlGn",
+            "min": 0,
+            "format": "{:,.2f}",
+        }
         self.headers["meanReadsPerBarcode"] = {
             "title": "Mean reads per barcode",
             "scale": "BuGn",
