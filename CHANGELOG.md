@@ -26,20 +26,27 @@
 
 ### Module updates
 
+- **Bcftools stats**
+  - Bugfix: Do not show empty bcftools stats variant depth plots[#1777](https://github.com/ewels/MultiQC/pull/1777)
 - **BclConvert**
   - Handle single-end read data correctly when setting cluster length instead of always assuming paired-end reads ([#1697](https://github.com/ewels/MultiQC/issues/1697))
+  - Handle different R1 and R2 read-lengths correctly instead of assuming they are the same ([#1174](https://github.com/ewels/MultiQC/issues/1174))
+- **Bustools**
+  - Show median reads per barcode statistic
 - **Custom content**
   - Create a report even if there's only Custom Content General Stats there
   - Attempt to cooerce line / scatter x-axes into floats so as not to lose labels ([#1242](https://github.com/ewels/MultiQC/issues/1242))
   - Multi-sample line-graph TSV files that have no sample name in row 1 column 1 now use row 1 as x-axis labels ([#1242](https://github.com/ewels/MultiQC/issues/1242))
 - **malt**
   - Fixed division by 0 in malt module ([#1683](https://github.com/ewels/MultiQC/issues/1683))
+- **RSeQC**
+  - Update `geneBody_coverage` to plot normalized coverages using a similar formula to that used by RSeQC itself ([#1792](https://github.com/ewels/MultiQC/pull/1792))
 - **Sambamba Markdup**
   - Catch zero division in sambamba markdup ([#1654](https://github.com/ewels/MultiQC/issues/1654))
 - **Samtools**
   - Added additional (by default hidden) column for `flagstat` that displays percentage of mapped reads in a bam ([#1733](https://github.com/ewels/MultiQC/issues/1733))
-- **Bcftools stats**
-  - Bugfix: Do not show empty bcftools stats variant depth plots[#1777](https://github.com/ewels/MultiQC/pull/1777)
+- **Qualimap**
+  - Bugfix: Remove General Stats rows for filtered samples ([#1780](https://github.com/ewels/MultiQC/issues/1780))
 
 ## [MultiQC v1.13](https://github.com/ewels/MultiQC/releases/tag/v1.13) - 2022-09-08
 

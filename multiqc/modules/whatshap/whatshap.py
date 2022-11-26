@@ -97,11 +97,13 @@ class MultiqcModule(BaseMultiqcModule):
         for line in file_content:
             spline = line.strip().split()
             data = {field: value for field, value in zip(header, spline)}
-            process_data(data)
 
             # Remove the sample and chromsome from the data
             sample = str(data.pop("sample"))
             chromosome = data.pop("chromosome")
+
+            # Process the remaining data fields
+            process_data(data)
 
             # Calculate the fraction of heterozygous variants that were phased
             try:
