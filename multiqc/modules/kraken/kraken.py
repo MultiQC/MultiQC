@@ -413,7 +413,12 @@ class MultiqcModule(BaseMultiqcModule):
         """Add a heatmap showing the minimizer duplication top-5 species"""
 
         duplication = list()
-        pconfig = {"id": "kraken-topfive-duplication_plot", "title": f"Kraken 2: Top {self.top_n} species duplication"}
+        pconfig = {
+            "id": "kraken-topfive-duplication_plot",
+            "title": f"Kraken 2: Top {self.top_n} species duplication",
+            "square": False,
+            "xcats_samples": False,
+        }
 
         rank_code = "S"
         rank_data = dict()
