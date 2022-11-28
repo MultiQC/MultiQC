@@ -110,7 +110,6 @@ def parse_genome_results(self, f):
 
     for k, r in regexes_secondary.items():
         r_search = re.findall(r, f["f"], re.MULTILINE)
-        print(r_search)
         if len(r_search) > 1:
             if "\d" in r:
                 try:
@@ -613,7 +612,7 @@ def general_stats_headers(self):
         "title": "{} Region size".format(config.read_count_prefix),
         "description": "Size of target region",
         "suffix": " bp",
-        "scale": "RdYlGn",
+        "scale": "PuBuGn",
         "hidden": True,
     }
     self.general_stats_headers["regions_mapped_reads"] = {
