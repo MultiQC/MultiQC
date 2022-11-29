@@ -243,14 +243,12 @@ class MultiqcModule(BaseMultiqcModule):
 
     def _get_r2_length(self, root):
         for element in root.findall("./Run/Reads/Read"):
-            if element.get("Number") == "3" and element.get("IsIndexedRead") == "N": # single-index paired-end data 
-                return element.get("NumCycles") 
+            if element.get("Number") == "3" and element.get("IsIndexedRead") == "N":
+                return element.get("NumCycles")  # single-index paired-end data
             if element.get("Number") == "4" and element.get("IsIndexedRead") == "N":
                 return element.get("NumCycles")
-        
-        log.error(
-            f"Expected RunInfo.xml file to have an element with property Number=4, IsIndexedRead=N, and a NumCycles property"
-        )
+
+        log.error(f"Could not figure out read 2 length from RunInfo.xml")
         raise UserWarning
 
     def _parse_single_runinfo_file(self, runinfo_file):
