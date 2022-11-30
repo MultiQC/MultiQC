@@ -45,7 +45,7 @@
 - **Samtools**
   - Added additional column for `flagstat` that displays percentage of mapped reads in a bam (hidden by default) ([#1733](https://github.com/ewels/MultiQC/issues/1733))
 - **Qualimap**
-  - Added additional columns in general stats for BamQC results that displays region on-target stats if region bed has been supplied (hidden by default)
+  - Added additional columns in general stats for BamQC results that displays region on-target stats if region bed has been supplied (hidden by default) ([#1798](https://github.com/ewels/MultiQC/pull/1798))
   - Bugfix: Remove General Stats rows for filtered samples ([#1780](https://github.com/ewels/MultiQC/issues/1780))
 
 ## [MultiQC v1.13](https://github.com/ewels/MultiQC/releases/tag/v1.13) - 2022-09-08
