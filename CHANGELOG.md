@@ -41,6 +41,8 @@
   - Make heatmap full width
 - **malt**
   - Fixed division by 0 in malt module ([#1683](https://github.com/ewels/MultiQC/issues/1683))
+- **Picard**
+  - HsMetrics: Allow custom columns in General Stats too, with `HsMetrics_genstats_table_cols` and `HsMetrics_genstats_table_cols_hidden`
 - **RSeQC**
   - Update `geneBody_coverage` to plot normalized coverages using a similar formula to that used by RSeQC itself ([#1792](https://github.com/ewels/MultiQC/pull/1792))
 - **Sambamba Markdup**
