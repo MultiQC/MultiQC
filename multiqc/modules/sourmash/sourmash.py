@@ -26,7 +26,7 @@ class MultiqcModule(BaseMultiqcModule, compare):
         n = dict()
         n["compare"] = self.parse_compare()
         if n["compare"] > 0:
-             log.info("Found {} compare reports".format(n["compare"]))
-        
+            log.info("Found {} compare reports".format(n["compare"]))
+
         if sum(n.values()) == 0:
             raise UserWarning

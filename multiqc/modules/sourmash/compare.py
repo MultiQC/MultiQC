@@ -11,6 +11,7 @@ from multiqc.plots import heatmap
 # Initialise the logger
 log = logging.getLogger(__name__)
 
+
 class compare:
     def parse_compare(self):
         """
@@ -18,11 +19,11 @@ class compare:
         The alternative would be to have the root of the labels.txt file be ignored
         """
         matrices = {}
-        
+
         for f in self.find_log_files("sourmash/compare", filehandles=True):
             m = compare2matrix(f)
             if m.data and m.comparelabels:
-                 matrices[f["s_name"]] = m
+                matrices[f["s_name"]] = m
             self.add_data_source(f, section="compare")
 
         matrices = self.ignore_samples(matrices)
@@ -45,22 +46,22 @@ class compare:
         for name, m in matrices.items():
             idx += 1
             self.add_section(
-                name = "compare",
-                anchor = "sourmash-compare-{}".format(idx),
-                description = "**Input:** `{}`.\n\n Heatmap of similarity values from the output of sourmash compare".format(
+                name="compare",
+                anchor="sourmash-compare-{}".format(idx),
+                description="**Input:** `{}`.\n\n Heatmap of similarity values from the output of sourmash compare".format(
                     name
                 ),
-                helptext = helptext,
-                plot = heatmap.plot(
-                     m.data,
-                     xcats = m.comparelabels,
-                     ycats = m.comparelabels,
-                     pconfig = {
+                helptext=helptext,
+                plot=heatmap.plot(
+                    m.data,
+                    xcats=m.comparelabels,
+                    ycats=m.comparelabels,
+                    pconfig={
                         "id": "sourmash-compare-heatmap-{}".format(idx),
                         "title": "sourmash: compare",
                         "square": True,
                         "decimalPlaces": 7,
-                     },
+                    },
                 ),
             )
 
@@ -78,15 +79,15 @@ class compare2matrix:
         """
         source for first two lines: https://github.com/sourmash-bio/sourmash/blob/9083d20aabcb77c67ba050b727efdd3f5d0a0398/src/sourmash/fig.py#L13
         """
-        self.comparelabels = [x.strip() for x in f] 
+        self.comparelabels = [x.strip() for x in f]
         basefile = re.sub(".labels.txt", "", str(f.name))
-        comparematrix = numpy.load(open(basefile, 'rb'))
+        comparematrix = numpy.load(open(basefile, "rb"))
         comparedict = {}
         for i in range(len(self.comparelabels)):
             comparevalues = list(comparematrix[i])
             res = {self.comparelabels[i]: comparevalues[i] for i in range(len(self.comparelabels))}
             comparedict[self.comparelabels[i]] = res
-    
+
         # impose alphabetical order and avoid json serialisation errors in utils.report
         self.comparelabels = sorted(self.comparelabels)
 
