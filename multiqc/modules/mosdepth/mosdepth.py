@@ -290,12 +290,30 @@ class MultiqcModule(BaseMultiqcModule):
         return genstats, cumcov_dist_data, cov_dist_data, xmax, perchrom_avg_data
 
     def genstats_cov_thresholds(self, genstats, genstats_headers, cumcov_dist_data, threshs, hidden_threshs):
-        for s_name, d in cumcov_dist_data.items():
-            dist_subset = {t: data for t, data in d.items() if t in threshs}
-            for t in threshs:
-                if int(t) in dist_subset:
-                    genstats[s_name][f"{t}_x_pc"] = dist_subset[t]
+        def recursive_get_value(d: OrderedDict, t: int) -> int:
+            """
+            If the depth threshold (t) is not in the OrderedDict, iterate up the depth values.
+            This means the % at the threshold will be estimated slightly lower but prevents zero values.
+            """
+            depths = list(d.keys())
+            if t in d:
+                return d[t]
+            else:
+                greater_than_t = [x for x in depths if x > t]
+                if len(greater_than_t) == 0:
+                    # No depths available greater than t
+                    log.debug(f"No values found for threshold {t}, assuming 0%")
+                    return 0
                 else:
+                    greater_than_t.sort()
+                    return recursive_get_value(d, greater_than_t[0])
+
+        for s_name, d in cumcov_dist_data.items():
+            for t in threshs:
+                try:
+                    genstats[s_name][f"{t}_x_pc"] = recursive_get_value(d, int(t))
+                except KeyError:
+                    # If value doesn't exist, use zero
                     genstats[s_name][f"{t}_x_pc"] = 0
 
         for t in threshs:
