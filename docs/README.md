@@ -39,6 +39,7 @@ MultiQC Modules:
     Sickle: modules/sickle.md
     Skewer: modules/skewer.md
     SortMeRNA: modules/sortmerna.md
+    sourmash: modules/sourmash.md
     Trimmomatic: modules/trimmomatic.md
   Aligners:
     BBMap: modules/bbmap.md
