@@ -255,6 +255,7 @@ fn_clean_exts:
   - "_NanoStats"
   - ".cutadapt"
   - ".mosdepth"
+  - ".labels"
 
 # These are removed after the above, only if sample names
 # start or end with this string. Again, removed in order.
