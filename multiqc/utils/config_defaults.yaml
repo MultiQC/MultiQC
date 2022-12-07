@@ -647,6 +647,11 @@ module_order:
       module_tag:
         - RNA
         - DNA
+  - sourmash:
+      module_tag:
+        - DNA
+        - RNA
+        - metagenomics
   - kaiju:
       module_tag:
         - DNA
