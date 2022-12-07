@@ -18,6 +18,9 @@
 
 ### New Modules
 
+- **Sourmash**
+  - create MultiQC module to parse the output of sourmash compare and sourmash gather
+
 ### Module feature additions
 
 - **Fastp**
