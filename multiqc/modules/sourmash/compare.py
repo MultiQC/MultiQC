@@ -3,8 +3,9 @@
 """ MultiQC module to parse similarity matrix output by sourmash compare """
 
 import logging
-import numpy
 import re
+
+import numpy
 
 from multiqc.plots import heatmap
 

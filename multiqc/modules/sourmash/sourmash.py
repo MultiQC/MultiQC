@@ -4,8 +4,8 @@
 
 import logging
 
-from multiqc.modules.base_module import BaseMultiqcModule
 from multiqc import config
+from multiqc.modules.base_module import BaseMultiqcModule
 
 from .compare import compare
 
