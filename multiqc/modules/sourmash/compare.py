@@ -78,13 +78,13 @@ class compare2matrix:
         """
         source for first two lines: https://github.com/sourmash-bio/sourmash/blob/9083d20aabcb77c67ba050b727efdd3f5d0a0398/src/sourmash/fig.py#L13
         """
-        basefile = re.sub(".labels.txt", "", str(f))
+        self.comparelabels = [x.strip() for x in f] 
+        basefile = re.sub(".labels.txt", "", str(f.name))
         comparematrix = numpy.load(open(basefile, 'rb'))
-        self.comparelabels = [x.strip() for x in open(basefile + '.labels.txt')] 
         comparedict = {}
-        for i in range(len(comparelabels)):
+        for i in range(len(self.comparelabels)):
             comparevalues = list(comparematrix[i])
-            res = {self.comparelabels[i]: comparevalues[i] for i in range(len(comparelabels))}
+            res = {self.comparelabels[i]: comparevalues[i] for i in range(len(self.comparelabels))}
             comparedict[self.comparelabels[i]] = res
     
         # impose alphabetical order and avoid json serialisation errors in utils.report
@@ -92,6 +92,6 @@ class compare2matrix:
 
         for x in self.comparelabels:
             line = []
-            for y in sef.comparelabels:
+            for y in self.comparelabels:
                 line.append(comparedict[x][y])
             self.data.append(line)
