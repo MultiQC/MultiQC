@@ -16,12 +16,13 @@ class gather:
         """
         Modeled after the kraken module and the sourmash compare module.
         """
-  
+
         self.top_n = 5
 
         # find and load gather reports
         self.gather_raw_data = dict()
         for f in self.find_log_files("sourmash/gather", filehandles=True):
+            # f["f"].seek(0)
             d = gather2data(f)
             if d.data:
                 self.gather_raw_data[f["s_name"]] = d
@@ -51,30 +52,30 @@ class gather:
 
         # run functions to build multiqc report components
         self.general_stats_cols()
-        #self.top_five_barplot()
+        # self.top_five_barplot()
 
     def calculate_pct_per_match_all_samples(self):
-        """ 
+        """
         sum the percent of each genome match across queries.
         these values will be used to identify the top 5 matches.
         """
         for s_name, data in self.gather_raw_data.items():
             for row in data:
                 # convienence vars to make code easier to read
-                match_name = row["match_name"] 
-                # loop over all samples and sum different variables 
+                match_name = row["match_name"]
+                # loop over all samples and sum different variables
                 if match_name not in self.gather_pct_per_match_all_samples:
                     self.gather_pct_per_match_all_samples[match_name] = 0
                 self.gather_pct_per_match_all_samples[match_name] += row["pct_unique_weighted"]
 
     def calculate_pct_unclassified_per_sample(self):
-        """ calculate the percent of each sample that was unclassified """
+        """calculate the percent of each sample that was unclassified"""
         for s_name, data in self.gather_raw_data.items():
             for row in data:
-            # sum over all matches for a given query to calculate the percent classified
+                # sum over all matches for a given query to calculate the percent classified
                 if s_name not in self.gather_pct_unclassified_per_sample:
                     self.gather_pct_unclassified_per_sample[s_name] = 0
-                self.gather_pct_unclassified_per_sample[s_name] += row['pct_unique_weighted']
+                self.gather_pct_unclassified_per_sample[s_name] += row["pct_unique_weighted"]
             # convert to % unclassified
             self.gather_pct_unclassified_per_sample[s_name] = 100 - self.gather_pct_unclassified_per_sample[s_name]
 
@@ -84,8 +85,8 @@ class gather:
         """
         # get top genomes matched across samples
         sorted_pct = sorted(self.gather_pct_per_match_all_samples.items(), key=lambda x: x[1], reverse=True)
-        for pct_sum in sorted_pct[: top_n]:
-            self.gather_top_five_matches.append(pct_sum[0]) # append the genome name to the top five list
+        for pct_sum in sorted_pct[:top_n]:
+            self.gather_top_five_matches.append(pct_sum[0])  # append the genome name to the top five list
 
         # calculate the pct attributable to the top 5 matches per sample
         for match_name in self.gather_top_five_matches:
@@ -94,8 +95,8 @@ class gather:
                     self.gather_pct_top_five_per_sample[s_name] = 0
                 for row in data:
                     if row["match_name"] == match_name:
-                        self.gather_pct_top_five_per_sample[s_name] += row['pct_unique_weighted']
-   
+                        self.gather_pct_top_five_per_sample[s_name] += row["pct_unique_weighted"]
+
     def general_stats_column(self):
         """
         add columns to the general statistics table for % top 5 matches and % unclassified
@@ -111,7 +112,7 @@ class gather:
             "max": 100,
             "scale": "PuBu",
         }
-          
+
         headers["% Unclassified"] = {
             "title": "% Unclassified",
             "description": "Percentage of sample that was unclassified",
@@ -129,13 +130,13 @@ class gather:
 
         self.general_stats_addcols(tdata, headers)
 
-
-    #def top_five_barplot(self):
+    # def top_five_barplot(self):
     #    """ add a barplot showing the top five genomes identified across all samples """
 
 
 class gather2data:
-    """ class to read in and parse the gather csv into a list of dictionaries. """
+    """class to read in and parse the gather csv into a list of dictionaries."""
+
     def __init__(self, gather_file):
         self.data = []
 
@@ -143,11 +144,11 @@ class gather2data:
 
     def load_gather(self, f):
         gatherr = csv.DictReader(f)
-        for line in gatherr:    
+        for line in gatherr:
             row = {
-                "query_name" : line['query_name'],
-                "match_name" : line['name'],
-                "pct_unique_weighted" : float(line['f_unique_weighted']) * 100,
-                "pct_match" : float(line['f_match']) * 100
+                "query_name": line["query_name"],
+                "match_name": line["name"],
+                "pct_unique_weighted": float(line["f_unique_weighted"]) * 100,
+                "pct_match": float(line["f_match"]) * 100,
             }
             self.data.append(row)
