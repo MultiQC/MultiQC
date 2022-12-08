@@ -37,33 +37,97 @@ class gather:
 
         log.info("Found {} reports".format(len(self.gather_raw_data)))
 
-        # sum counts across all samples, so that we can pick top 5
-        self.gather_total_pct_unique_weighted = dict()
-        #self.sum_sample_counts()
+        # initialize variables to store summarized information
+        self.gather_pct_per_match_all_samples = dict()
+        self.gather_pct_unclassified_per_sample = dict()
+        self.gather_pct_top_five_per_sample = dict()
+        self.gather_top_five_matches = []
 
-        #self.general_stats_cols()
+        # run functions to summarize information
+        self.calculate_pct_per_match_all_samples()
+        self.calculate_pct_unclassified_per_sample()
+        self.calculate_top_five_matches()
+        self.calculate_pct_top_five_per_sample()
+
+        # run functions to build multiqc report components
+        self.general_stats_cols()
         #self.top_five_barplot()
 
 
-    def calculate_total_pct_unique(self):
+    def calculate_pct_per_match_all_samples(self):
         """ 
-        sum the match fractions across queries.
-        these values will be used to identify the top 5 matches with or without abundance weighting 
+        sum the percent of each genome match across queries.
+        these values will be used to identify the top 5 matches.
         """
         for s_name, data in self.gather_raw_data.items():
             for row in data:
                 # convienence vars to make code easier to read
                 match_name = row["match_name"] 
                 # loop over all samples and sum different variables 
-                if match_name not in self.gather_total_pct_unique_weighted:
-                    self.gather_total_pct_unique_weighted[match_name] = 0
-                self.gather_total_pct_unique_weighted[match_name] += row["pct_unique_weighted"]
+                if match_name not in self.gather_pct_per_match_all_samples:
+                    self.gather_pct_per_match_all_samples[match_name] = 0
+                self.gather_pct_per_match_all_samples[match_name] += row["pct_unique_weighted"]
 
+    def calculate_pct_unclassified_per_sample(self):
+        for s_name, data in self.gather_raw_data.items():
+            for row in data:
+            # sum over all matches for a given query to calculate the percent classified
+                if s_name not in self.gather_pct_unclassified_per_sample:
+                    self.gather_pct_unclassified_per_sample[s_name] = 0
+                self.gather_pct_unclassified_per_sample[s_name] += row['pct_unique_weighted']
+            # convert to % unclassified
+            self.gather_pct_unclassified_per_sample[s_name] = 100 - self.gather_pct_unclassified_per_sample[s_name]
 
+    def calculate_pct_top_five_per_sample(self):
+    """
+    calculate the percent of each sample that is attributable to the top 5 genomes across all samples
+    """
+        # get top genomes matched across samples
+        sorted_pct = sorted(self.gather_pct_per_match_all_samples.items(), key=lambda x: x[1], reverse=True)
+        for pct_sum in sorted_pct[: top_n]:
+            self.gather_top_five_matches.append(pct_sum[0]) # append the genome name to the top five list
+
+        # calculate the pct attributable to the top 5 matches per sample
+        for match_name in self.gather_top_five_matches:
+            for s_name, data in self.gather_raw_data.items():
+                if s_name not in self.gather_pct_top_five_per_sample:
+                    self.gather_pct_top_five_per_sample[s_name] = 0
+                for row in data:
+                    if row["match_name"] == match_name:
+                        self.gather_pct_top_five_per_sample[s_name] += row['pct_unique_weighted']
+   
     def general_stats_column(self):
         """
         add columns to the general statistics table for % top 5 matches and % unclassified
         """
+        # Column headers
+        headers = OrderedDict()
+        headers["% Top 5"] = {
+            "title": "% Top 5 Genomes",
+            "description": "Percentage of sample that was classified as one of the top 5 genomes ({})".format(
+                ", ".join(self.gather_top_five_matches)
+            ),
+            "suffix": "%",
+            "max": 100,
+            "scale": "PuBu",
+        }
+          
+        headers["% Unclassified"] = {
+            "title": "% Unclassified",
+            "description": "Percentage of sample that was unclassified",
+            "suffix": "%",
+            "max": 100,
+            "scale": "OrRd",
+        }
+
+        # set table data
+        tdata = {}
+        for s_name, data in self.gather_raw_data.items():
+            tdata[s_name] = {}
+            tdata[s_name]["% Unclassified"] = self.gather_pct_unclassified_per_sample[s_name]
+            tdata[s_name]["% Top 5"] = self.gather_pct_top_five_per_sample[s_name]
+
+        self.general_stats_addcols(tdata, headers)
 
 class gather2data:
     """ class to read in and parse the gather csv into a list of dictionaries. """
