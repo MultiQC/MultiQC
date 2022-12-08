@@ -19,7 +19,7 @@
 ### New Modules
 
 - **Sourmash**
-  - create MultiQC module to parse the output of sourmash compare
+  - create MultiQC module to parse the output of sourmash gather
 
 ### Module feature additions
 
