@@ -4,6 +4,7 @@
 
 import logging
 import csv
+from collections import OrderedDict
 
 from multiqc.plots import heatmap
 
@@ -25,7 +26,7 @@ class gather:
             # f["f"].seek(0)
             d = gather2data(f)
             if d.data:
-                self.gather_raw_data[f["s_name"]] = d
+                self.gather_raw_data[f["s_name"]] = d.data
             self.add_data_source(f, section="gather")
 
         self.gather_raw_data = self.ignore_samples(self.gather_raw_data)
@@ -47,12 +48,16 @@ class gather:
         # run functions to summarize information
         self.calculate_pct_per_match_all_samples()
         self.calculate_pct_unclassified_per_sample()
-        self.calculate_top_five_matches()
+        #self.calculate_top_five_matches()
         self.calculate_pct_top_five_per_sample()
 
         # run functions to build multiqc report components
-        self.general_stats_cols()
+        self.general_stats_columns()
         # self.top_five_barplot()
+
+        # return the number of reports id'd, which will be logged in sourmash.py
+        return len(self.gather_raw_data)
+
 
     def calculate_pct_per_match_all_samples(self):
         """
@@ -85,7 +90,7 @@ class gather:
         """
         # get top genomes matched across samples
         sorted_pct = sorted(self.gather_pct_per_match_all_samples.items(), key=lambda x: x[1], reverse=True)
-        for pct_sum in sorted_pct[:top_n]:
+        for pct_sum in sorted_pct[:self.top_n]:
             self.gather_top_five_matches.append(pct_sum[0])  # append the genome name to the top five list
 
         # calculate the pct attributable to the top 5 matches per sample
@@ -97,7 +102,7 @@ class gather:
                     if row["match_name"] == match_name:
                         self.gather_pct_top_five_per_sample[s_name] += row["pct_unique_weighted"]
 
-    def general_stats_column(self):
+    def general_stats_columns(self):
         """
         add columns to the general statistics table for % top 5 matches and % unclassified
         """
@@ -132,6 +137,7 @@ class gather:
 
     # def top_five_barplot(self):
     #    """ add a barplot showing the top five genomes identified across all samples """
+
 
 
 class gather2data:
