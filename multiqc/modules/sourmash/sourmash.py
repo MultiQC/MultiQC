@@ -30,7 +30,7 @@ class MultiqcModule(BaseMultiqcModule, compare, gather):
             log.info("Found {} compare reports".format(n["compare"]))
 
         n["gather"] = self.parse_gather()
-            if n["gather"] > 0:
+        if n["gather"] > 0:
             log.info("Found {} gather reports".format(n["gather"]))
 
         if sum(n.values()) == 0:

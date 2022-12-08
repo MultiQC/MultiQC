@@ -21,7 +21,7 @@ class gather:
 
         # find and load gather reports
         self.gather_raw_data = dict()
-        for f in self.find_log_files("sourmash/gather", filehandles=True)
+        for f in self.find_log_files("sourmash/gather", filehandles=True):
             d = gather2data(f)
             if d.data:
                 self.gather_raw_data[f["s_name"]] = d
@@ -53,7 +53,6 @@ class gather:
         self.general_stats_cols()
         #self.top_five_barplot()
 
-
     def calculate_pct_per_match_all_samples(self):
         """ 
         sum the percent of each genome match across queries.
@@ -69,6 +68,7 @@ class gather:
                 self.gather_pct_per_match_all_samples[match_name] += row["pct_unique_weighted"]
 
     def calculate_pct_unclassified_per_sample(self):
+        """ calculate the percent of each sample that was unclassified """
         for s_name, data in self.gather_raw_data.items():
             for row in data:
             # sum over all matches for a given query to calculate the percent classified
@@ -79,9 +79,9 @@ class gather:
             self.gather_pct_unclassified_per_sample[s_name] = 100 - self.gather_pct_unclassified_per_sample[s_name]
 
     def calculate_pct_top_five_per_sample(self):
-    """
-    calculate the percent of each sample that is attributable to the top 5 genomes across all samples
-    """
+        """
+        calculate the percent of each sample that is attributable to the top 5 genomes across all samples
+        """
         # get top genomes matched across samples
         sorted_pct = sorted(self.gather_pct_per_match_all_samples.items(), key=lambda x: x[1], reverse=True)
         for pct_sum in sorted_pct[: top_n]:
@@ -128,6 +128,11 @@ class gather:
             tdata[s_name]["% Top 5"] = self.gather_pct_top_five_per_sample[s_name]
 
         self.general_stats_addcols(tdata, headers)
+
+
+    #def top_five_barplot(self):
+    #    """ add a barplot showing the top five genomes identified across all samples """
+
 
 class gather2data:
     """ class to read in and parse the gather csv into a list of dictionaries. """
