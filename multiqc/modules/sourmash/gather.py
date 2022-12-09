@@ -149,7 +149,7 @@ class gather:
         )  # a list of categories to be shown as a color on the plot. includes the top 5 genomes, other, and unclassified
         pconfig = {
             "id": "gather-topfive-plot",
-            "title": "gather top genomes",
+            "title": "sourmash: gather top genomes",
             "ylab": "percentages",
             "cpswitch": False,  # do not show the 'Counts / Percentages' switch, since gather only reports percentages
             "cpswitch_c_active": False,  # Initial display should show percentage, not counts
