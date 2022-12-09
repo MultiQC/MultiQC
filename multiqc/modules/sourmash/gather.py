@@ -2,11 +2,11 @@
 
 """ MultiQC module to parse similarity matrix output by sourmash gather """
 
-import logging
 import csv
+import logging
 from collections import OrderedDict
 
-from multiqc.plots import heatmap, bargraph
+from multiqc.plots import bargraph
 
 # Initialise the logger
 log = logging.getLogger(__name__)
