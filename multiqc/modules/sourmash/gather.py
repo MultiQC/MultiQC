@@ -48,7 +48,7 @@ class gather:
         # run functions to summarize information
         self.calculate_pct_per_match_all_samples()
         self.calculate_pct_unclassified_per_sample()
-        #self.calculate_top_five_matches()
+        # self.calculate_top_five_matches()
         self.calculate_pct_top_five_per_sample()
 
         # run functions to build multiqc report components
@@ -57,7 +57,6 @@ class gather:
 
         # return the number of reports id'd, which will be logged in sourmash.py
         return len(self.gather_raw_data)
-
 
     def calculate_pct_per_match_all_samples(self):
         """
@@ -77,7 +76,7 @@ class gather:
 
     def calculate_pct_unclassified_per_sample(self):
         """
-        calculate the percent of each sample that was unclassified. 
+        calculate the percent of each sample that was unclassified.
         the output is a dictionary, gather_pct_unclassified_per_sample, with s_name (samples) as keys and the percent of the sample unclassified as values.
         """
         for s_name, data in self.gather_raw_data.items():
@@ -96,7 +95,7 @@ class gather:
         """
         # get top genomes matched across samples
         sorted_pct = sorted(self.gather_pct_per_match_all_samples.items(), key=lambda x: x[1], reverse=True)
-        for pct_sum in sorted_pct[:self.top_n]:
+        for pct_sum in sorted_pct[: self.top_n]:
             self.gather_top_five_matches.append(pct_sum[0])  # append the genome name to the top five list
 
         # calculate the pct attributable to the top 5 matches per sample
@@ -144,20 +143,22 @@ class gather:
     def top_five_barplot(self):
         """Add a bar plot showing the percentage of top-5 genomes, the percentage of other genomes, and the unclassified percentage"""
 
-        pd = [] # plot data
-        cats = list() # a list of categories to be shown as a color on the plot. includes the top 5 genomes, other, and unclassified
+        pd = []  # plot data
+        cats = (
+            list()
+        )  # a list of categories to be shown as a color on the plot. includes the top 5 genomes, other, and unclassified
         pconfig = {
             "id": "gather-topfive-plot",
             "title": "gather top genomes",
             "ylab": "percentages",
-            "cpswitch": False, # do not show the 'Counts / Percentages' switch, since gather only reports percentages
-            "cpswitch_c_active": False, # Initial display should show percentage, not counts
+            "cpswitch": False,  # do not show the 'Counts / Percentages' switch, since gather only reports percentages
+            "cpswitch_c_active": False,  # Initial display should show percentage, not counts
         }
-        
+
         # create dictionaries for plot fill names and data (match percentages)
         match_cats = OrderedDict()
         match_data = dict()
-        
+
         pct_shown = {}
         for match_name in self.gather_top_five_matches:
             # make match_name a fill category for the plot
@@ -181,7 +182,9 @@ class gather:
             match_data[s_name]["unclassified"] = self.gather_pct_unclassified_per_sample[s_name]
             pct_shown[s_name] += self.gather_pct_unclassified_per_sample[s_name]
             # other
-            match_data[s_name]["other"] = 100 - (self.gather_pct_unclassified_per_sample[s_name] + self.gather_pct_top_five_per_sample[s_name])
+            match_data[s_name]["other"] = 100 - (
+                self.gather_pct_unclassified_per_sample[s_name] + self.gather_pct_top_five_per_sample[s_name]
+            )
 
         match_cats["other"] = {"name": "Other", "color": "#cccccc"}
         match_cats["unclassified"] = {"name": "Unclassified", "color": "#d4949c"}
@@ -202,6 +205,7 @@ class gather:
             """,
             plot=bargraph.plot(pd, cats, pconfig),
         )
+
 
 class gather2data:
     """class to read in and parse the gather csv into a list of dictionaries."""

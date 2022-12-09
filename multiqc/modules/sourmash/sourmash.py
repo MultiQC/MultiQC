@@ -26,7 +26,7 @@ class MultiqcModule(BaseMultiqcModule, compare, gather):
 
         n = dict()
         n["compare"] = self.parse_compare()
-        #if n["compare"] > 0:
+        # if n["compare"] > 0:
         #    log.info("Found {} compare reports".format(n["compare"]))
 
         n["gather"] = self.parse_gather()
