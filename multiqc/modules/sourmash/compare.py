@@ -16,8 +16,7 @@ log = logging.getLogger(__name__)
 class compare:
     def parse_compare(self):
         """
-        Modeled after vcftools relatedness2 module, which also has many samples represented.
-        The alternative would be to have the root of the labels.txt file be ignored
+        Modeled after vcftools relatedness2 module, which also has many samples represented in the parsed file.
         """
         matrices = {}
 
