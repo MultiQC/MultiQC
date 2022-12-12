@@ -29,9 +29,9 @@ class compare:
         matrices = self.ignore_samples(matrices)
 
         if len(matrices) == 0:
-            raise UserWarning
+            return 0
 
-        #log.info("Found {} valid compare matrices".format(len(matrices)))
+        log.info("Found {} valid compare results".format(len(matrices)))
 
         # The matrices cannot be written to a file in their current format
         # self.write_data_file(matrices, "sourmash_compare")
@@ -46,7 +46,7 @@ class compare:
         for name, m in matrices.items():
             idx += 1
             self.add_section(
-                name="Sample similarity",
+                name="compare: Sample Similarity",
                 anchor="sourmash-compare-{}".format(idx),
                 description="**Input:** `{}`.\n\n Heatmap of similarity values from the output of sourmash compare".format(
                     name
