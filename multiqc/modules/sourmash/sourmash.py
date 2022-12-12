@@ -26,12 +26,12 @@ class MultiqcModule(BaseMultiqcModule, compare, gather):
 
         n = dict()
         n["compare"] = self.parse_compare()
-        # if n["compare"] > 0:
-        #    log.info("Found {} compare reports".format(n["compare"]))
+        if n["compare"] > 0:
+            log.info("Found {} compare results".format(n["compare"]))
 
         n["gather"] = self.parse_gather()
         if n["gather"] > 0:
-            log.info("Found {} gather reports".format(n["gather"]))
+            log.info("Found {} gather results".format(n["gather"]))
 
         if sum(n.values()) == 0:
             raise UserWarning

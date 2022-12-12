@@ -23,7 +23,6 @@ class gather:
         # find and load gather reports
         self.gather_raw_data = dict()
         for f in self.find_log_files("sourmash/gather", filehandles=True):
-            # f["f"].seek(0)
             d = gather2data(f)
             if d.data:
                 self.gather_raw_data[f["s_name"]] = d.data
@@ -37,7 +36,7 @@ class gather:
         # data is in wrong format for writing to file
         # self.write_data_file(self.gather_raw_data, "gather")
 
-        log.info("Found {} reports".format(len(self.gather_raw_data)))
+        log.info("Found {} gather results".format(len(self.gather_raw_data)))
 
         # initialize variables to store summarized information
         self.gather_pct_per_match_all_samples = dict()
@@ -193,7 +192,7 @@ class gather:
         pd.append(match_data)
 
         self.add_section(
-            name="Top genomes",
+            name="Top gather genomes",
             anchor="gather-topfive",
             description=f"The percentage of the sample falling into the top {self.top_n} genome matches.",
             helptext=f"""
