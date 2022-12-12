@@ -24,6 +24,7 @@ class gather:
         self.gather_raw_data = dict()
         for f in self.find_log_files("sourmash/gather", filehandles=True):
             d = gather2data(f)
+            d.load_gather()
             if d.data:
                 self.gather_raw_data[f["s_name"]] = d.data
             self.add_data_source(f, section="gather")
@@ -31,7 +32,7 @@ class gather:
         self.gather_raw_data = self.ignore_samples(self.gather_raw_data)
 
         if len(self.gather_raw_data) == 0:
-            raise UserWarning
+            return 0
 
         # data is in wrong format for writing to file
         # self.write_data_file(self.gather_raw_data, "gather")
@@ -212,10 +213,10 @@ class gather2data:
     def __init__(self, gather_file):
         self.data = []
 
-        self.load_gather(gather_file["f"])
+        self.gather_file = gather_file
 
-    def load_gather(self, f):
-        gatherr = csv.DictReader(f)
+    def load_gather(self):
+        gatherr = csv.DictReader(self.gather_file["f"])
         for line in gatherr:
             row = {
                 "query_name": line["query_name"],
