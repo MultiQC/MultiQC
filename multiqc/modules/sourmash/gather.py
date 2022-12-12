@@ -193,7 +193,7 @@ class gather:
         pd.append(match_data)
 
         self.add_section(
-            name="Top gather genomes",
+            name="gather: Top Genomes",
             anchor="gather-topfive",
             description=f"The percentage of the sample falling into the top {self.top_n} genome matches.",
             helptext=f"""
