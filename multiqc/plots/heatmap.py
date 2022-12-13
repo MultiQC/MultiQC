@@ -2,7 +2,7 @@
 
 """ MultiQC functions to plot a heatmap """
 
-from __future__ import print_function
+
 import logging
 import random
 
@@ -52,10 +52,11 @@ def highcharts_heatmap(data, xcats, ycats, pconfig=None):
     for i, arr in enumerate(data):
         for j, val in enumerate(arr):
             pdata.append([j, i, val])
-            if minval is None or val < minval:
-                minval = val
-            if maxval is None or val > maxval:
-                maxval = val
+            if val is not None:
+                if minval is None or val < minval:
+                    minval = val
+                if maxval is None or val > maxval:
+                    maxval = val
 
     if "min" not in pconfig:
         pconfig["min"] = minval

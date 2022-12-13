@@ -5,6 +5,7 @@
 import csv
 import logging
 from collections import defaultdict
+
 from multiqc.plots import heatmap
 
 # Initialise the logger

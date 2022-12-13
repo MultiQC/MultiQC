@@ -8,6 +8,7 @@ import re
 from collections import OrderedDict
 
 from multiqc.plots import linegraph
+
 from .util import read_histogram
 
 # Initialise the logger

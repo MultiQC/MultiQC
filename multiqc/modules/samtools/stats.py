@@ -5,8 +5,9 @@
 
 import logging
 from collections import OrderedDict
+
 from multiqc import config
-from multiqc.plots import beeswarm, bargraph
+from multiqc.plots import bargraph, beeswarm
 
 # Initialise the logger
 log = logging.getLogger(__name__)

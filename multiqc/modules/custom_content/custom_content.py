@@ -2,19 +2,20 @@
 
 """ Core MultiQC module to parse output from custom script output """
 
-from __future__ import print_function
+
 import base64
-from collections import defaultdict, OrderedDict
-import logging
 import json
+import logging
 import os
 import re
+from collections import OrderedDict, defaultdict
+
 import yaml
 
 from multiqc import config
-from multiqc.utils import report
 from multiqc.modules.base_module import BaseMultiqcModule
-from multiqc.plots import table, bargraph, linegraph, scatter, heatmap, beeswarm
+from multiqc.plots import bargraph, beeswarm, heatmap, linegraph, scatter, table
+from multiqc.utils import report
 
 # Initialise the logger
 log = logging.getLogger(__name__)
@@ -291,7 +292,10 @@ def custom_module_classes():
 
     # If we only have General Stats columns then there are no module outputs
     if len(sorted_modules) == 0:
-        raise UserWarning
+        if mod["config"].get("plot_type") == "generalstats":
+            sorted_modules = [bm]
+        else:
+            raise UserWarning
 
     return sorted_modules
 
@@ -365,6 +369,13 @@ class MultiqcModule(BaseMultiqcModule):
             self.write_data_file(mod["data"], "multiqc_{}".format(pconfig["id"]))
             pconfig["save_data_file"] = False
 
+        # Try to cooerce x-axis to numeric
+        if mod["config"].get("plot_type") in ["linegraph", "scatter"]:
+            try:
+                mod["data"] = {k: {float(x): v[x] for x in v} for k, v in mod["data"].items()}
+            except ValueError:
+                pass
+
         # Table
         if mod["config"].get("plot_type") == "table":
             pconfig["sortRows"] = pconfig.get("sortRows", False)
@@ -415,7 +426,7 @@ class MultiqcModule(BaseMultiqcModule):
         # Don't use exactly the same title / description text as the main module
         if section_name == self.name:
             section_name = None
-        if section_description == self.info:
+        if self.info and section_description.strip(".") == self.info.strip("."):
             section_description = ""
 
         self.add_section(name=section_name, anchor=c_id, description=section_description, plot=plot, content=content)
@@ -640,12 +651,23 @@ def _parse_txt(f, conf):
 
     if conf.get("plot_type") == "linegraph":
         data = dict()
+        # If the first row has no header, use it as axis labels
+        x_labels = []
+        if d[0][0].strip() == "":
+            x_labels = d.pop(0)[1:]
         # Use 1..n range for x values
         for s in d:
             data[s[0]] = dict()
             for i, v in enumerate(s[1:]):
-                j = i + 1
-                data[s[0]][i + 1] = v
+                try:
+                    x_val = x_labels[i]
+                    try:
+                        x_val = float(x_val)
+                    except ValueError:
+                        pass
+                except IndexError:
+                    x_val = i + 1
+                data[s[0]][x_val] = v
         return (data, conf)
 
     # Got to the end and haven't returned. It's a mystery, capn'!
