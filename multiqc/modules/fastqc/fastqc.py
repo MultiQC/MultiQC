@@ -197,7 +197,7 @@ class MultiqcModule(BaseMultiqcModule):
 
         # we sort by the avg of the range, which is effectively
         # sorting ranges in asc order assuming no overlap
-        sequence_length_distributions = self.fastqc_data[s_name].get("sequence_length_distribution", {})
+        sequence_length_distributions = self.fastqc_data[s_name].get("sequence_length_distribution", [])
         sequence_length_distributions.sort(key=lambda d: self.avg_bp_from_range(d["length"]))
 
         # Calculate the average sequence length (Basic Statistics gives a range)
@@ -210,7 +210,7 @@ class MultiqcModule(BaseMultiqcModule):
             length_reads += d["count"]
             length_bp += d["count"] * self.avg_bp_from_range(d["length"])
 
-            if median is None and reads_seen >= total_count / 2:
+            if median is None and length_reads >= total_count / 2:
                 # if the distribution-entry is a range, we use the average of the range.
                 # this isn't technically correct, because we can't know what the distribution
                 # is within that range. Probably good enough though.
