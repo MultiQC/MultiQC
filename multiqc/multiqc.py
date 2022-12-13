@@ -7,27 +7,28 @@ The main function to run MultiQC. Sorry about the messy namespace.
 Primarily called by multiqc.__main__.py
 Imported by __init__.py so available as multiqc.run()
 """
-from distutils import version
-from distutils.dir_util import copy_tree
-from rich.syntax import Syntax
-from urllib.request import urlopen
 import base64
 import errno
 import io
-import jinja2
 import os
 import re
-import rich
-import rich_click as click
 import shutil
 import subprocess
 import sys
 import tempfile
 import time
 import traceback
+from distutils import version
+from distutils.dir_util import copy_tree
+from urllib.request import urlopen
+
+import jinja2
+import rich
+import rich_click as click
+from rich.syntax import Syntax
 
 from .plots import table
-from .utils import report, plugin_hooks, megaqc, util_functions, lint_helpers, config, util_functions, log
+from .utils import config, lint_helpers, log, megaqc, plugin_hooks, report, util_functions
 
 # Set up logging
 start_execution_time = time.time()

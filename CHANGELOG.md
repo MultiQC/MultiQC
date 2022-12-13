@@ -12,6 +12,9 @@
 - Optimize line-graph generation to remove an n^2 loop ([#1668](https://github.com/ewels/MultiQC/pull/1668))
 - Allow path filters without full paths by trying to prefix analysis dir when filtering ([#1308](https://github.com/ewels/MultiQC/issues/1308))
 - Update github actions to run tests on a single module if it is the only file affected by the PR ([#915](https://github.com/ewels/MultiQC/issues/915))
+- Add CI testing for Python 3.10 and 3.11
+- Add new code formatting tool [isort](https://pycqa.github.io/isort/) to standardise the order and formatting of Python module imports
+- Remove Python 2-3 compatability `from __future__` imports
 
 ### New Modules
 
@@ -22,20 +25,35 @@
 
 ### Module updates
 
+- **Bcftools stats**
+  - Bugfix: Do not show empty bcftools stats variant depth plots[#1777](https://github.com/ewels/MultiQC/pull/1777)
 - **BclConvert**
   - Handle single-end read data correctly when setting cluster length instead of always assuming paired-end reads ([#1697](https://github.com/ewels/MultiQC/issues/1697))
+  - Handle different R1 and R2 read-lengths correctly instead of assuming they are the same ([#1174](https://github.com/ewels/MultiQC/issues/1174))
+- **Bustools**
+  - Show median reads per barcode statistic
 - **Custom content**
   - Create a report even if there's only Custom Content General Stats there
   - Attempt to cooerce line / scatter x-axes into floats so as not to lose labels ([#1242](https://github.com/ewels/MultiQC/issues/1242))
   - Multi-sample line-graph TSV files that have no sample name in row 1 column 1 now use row 1 as x-axis labels ([#1242](https://github.com/ewels/MultiQC/issues/1242))
 - **FastQC**
-  - Report median read-length for fastqc instead of mean ([#1745](https://github.com/ewels/MultiQC/pull/1745))
+  - Report median read-length for fastqc in addition to mean ([#1745](https://github.com/ewels/MultiQC/pull/1745))
+- **Kraken**
+  - Fix duplicate heatmap to account for missing taxons ([#1779](https://github.com/ewels/MultiQC/pull/1779))
+  - Make heatmap full width
 - **malt**
   - Fixed division by 0 in malt module ([#1683](https://github.com/ewels/MultiQC/issues/1683))
+- **Picard**
+  - HsMetrics: Allow custom columns in General Stats too, with `HsMetrics_genstats_table_cols` and `HsMetrics_genstats_table_cols_hidden`
+- **RSeQC**
+  - Update `geneBody_coverage` to plot normalized coverages using a similar formula to that used by RSeQC itself ([#1792](https://github.com/ewels/MultiQC/pull/1792))
 - **Sambamba Markdup**
   - Catch zero division in sambamba markdup ([#1654](https://github.com/ewels/MultiQC/issues/1654))
 - **Samtools**
-  - Added additional (by default hidden) column for `flagstat` that displays percentage of mapped reads in a bam ([#1733](https://github.com/ewels/MultiQC/issues/1733))
+  - Added additional column for `flagstat` that displays percentage of mapped reads in a bam (hidden by default) ([#1733](https://github.com/ewels/MultiQC/issues/1733))
+- **Qualimap**
+  - Added additional columns in general stats for BamQC results that displays region on-target stats if region bed has been supplied (hidden by default) ([#1798](https://github.com/ewels/MultiQC/pull/1798))
+  - Bugfix: Remove General Stats rows for filtered samples ([#1780](https://github.com/ewels/MultiQC/issues/1780))
 
 ## [MultiQC v1.13](https://github.com/ewels/MultiQC/releases/tag/v1.13) - 2022-09-08
 

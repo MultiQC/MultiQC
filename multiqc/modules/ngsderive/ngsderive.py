@@ -2,13 +2,12 @@
 
 """ MultiQC module to parse output from ngsderive """
 
-from __future__ import print_function
+
 import csv
 import io
 import logging
 import os
 import re
-
 from collections import OrderedDict
 
 from multiqc.modules.base_module import BaseMultiqcModule

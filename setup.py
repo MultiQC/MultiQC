@@ -21,7 +21,7 @@ See the MultiQC website for documentation and tutorial videos: http://multiqc.in
 MultiQC was written by Phil Ewels (http://phil.ewels.co.uk) at SciLifeLab Sweden (http://www.scilifelab.se)
 """
 
-from setuptools import setup, find_packages
+from setuptools import find_packages, setup
 
 version = "1.14dev"
 dl_version = "master" if "dev" in version else "v{}".format(version)
