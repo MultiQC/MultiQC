@@ -18,6 +18,9 @@
 
 ### New Modules
 
+- [**gfastats**](https://github.com/vgl-hub/gfastats)
+  - A single fast and exhaustive tool for summary statistics and simultaneous _fa_ (fasta, fastq, gfa [.gz]) genome assembly file manipulation
+
 ### Module feature additions
 
 - **Fastp**

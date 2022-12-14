@@ -31,6 +31,12 @@ Thumbs.db
 
 .idea/
 runTest.sh
+multiqc.xcworkspace
+
+# Prevent direnv from cluttering the repo
+.envrc
+.direnv/*
+/result
 
 # Prevent direnv from cluttering the repo
 .envrc

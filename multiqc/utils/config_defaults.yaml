@@ -369,6 +369,11 @@ module_order:
       module_tag:
         - DNA
         - RNA
+  - gfastats:
+      module_tag:
+        - DNA
+        - metagenomics
+        - Denovo
   - quast:
       module_tag:
         - DNA

@@ -306,6 +306,9 @@ gatk/varianteval:
 gatk/base_recalibrator:
   contents: "#:GATKTable:Arguments:Recalibration"
   num_lines: 3
+gfastats/stats:
+  - fn: "*.gfastats.tsv"
+  - fn: "*.gfastats.csv"
 gffcompare:
   fn: "*.stats"
   contents: "# gffcompare"
