@@ -1,10 +1,10 @@
 #!/usr/bin/env python
 
-from __future__ import print_function
-from collections import OrderedDict
+
 import logging
 import os
 import re
+from collections import OrderedDict
 
 import numpy as np
 

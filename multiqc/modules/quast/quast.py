@@ -2,14 +2,14 @@
 
 """ MultiQC module to parse output from QUAST """
 
-from __future__ import print_function
-from collections import OrderedDict
+
 import logging
 import re
+from collections import OrderedDict
 
 from multiqc import config
-from multiqc.plots import table, bargraph
 from multiqc.modules.base_module import BaseMultiqcModule
+from multiqc.plots import bargraph, table
 
 # Initialise the logger
 log = logging.getLogger(__name__)

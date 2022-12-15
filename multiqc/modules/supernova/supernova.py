@@ -2,13 +2,14 @@
 
 """ MultiQC module to parse output from Supernova"""
 
-from __future__ import print_function
-from collections import OrderedDict
+
+import json
 import logging
 import re
-import json
-from multiqc.plots import table, linegraph, bargraph
+from collections import OrderedDict
+
 from multiqc.modules.base_module import BaseMultiqcModule
+from multiqc.plots import bargraph, linegraph, table
 
 # Initialise the logger
 log = logging.getLogger(__name__)

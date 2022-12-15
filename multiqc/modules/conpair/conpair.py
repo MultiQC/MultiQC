@@ -2,7 +2,7 @@
 
 """ MultiQC module to parse output from Conpair """
 
-from __future__ import print_function
+
 import logging
 import re
 
