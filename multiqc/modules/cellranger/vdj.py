@@ -1,12 +1,14 @@
 #!/usr/bin/env python
 
-""" MultiQC module to parse output from Cellranger count """
+""" MultiQC module to parse output from Cell Ranger count """
 
-import logging
 import json
+import logging
 from collections import OrderedDict
+
 from multiqc import config
 from multiqc.plots import linegraph, table
+
 from .utils_functions import *
 
 # Initialise the logger
@@ -14,7 +16,7 @@ log = logging.getLogger(__name__)
 
 
 class CellRangerVdjMixin:
-    """Cellranger count report parser"""
+    """Cell Ranger count report parser"""
 
     def parse_vdj_html(self):
         self.cellrangervdj_mapping = dict()
@@ -91,23 +93,23 @@ class CellRangerVdjMixin:
                     anchor="cellranger-vdj-warnings",
                     description="Warnings encountered during the analysis",
                     plot=table.plot(
-                        self.cellrangervdj_warnings, self.vdj_warnings_headers, {"namespace": "Cellranger VDJ"}
+                        self.cellrangervdj_warnings, self.vdj_warnings_headers, {"namespace": "Cell Ranger VDJ"}
                     ),
                 )
 
             self.add_section(
                 name="VDJ - Summary stats",
                 anchor="cellranger-vdj-stats",
-                description="Summary QC metrics from Cellranger count",
-                plot=table.plot(self.cellrangervdj_mapping, self.vdj_mapping_headers, {"namespace": "Cellranger VDJ"}),
+                description="Summary QC metrics from Cell Ranger count",
+                plot=table.plot(self.cellrangervdj_mapping, self.vdj_mapping_headers, {"namespace": "Cell Ranger VDJ"}),
             )
 
             self.add_section(
                 name="VDJ - Annotations",
                 anchor="cellranger-vdj-annot",
-                description="V(D)J annotations from Cellranger VDJ analysis",
+                description="V(D)J annotations from Cell Ranger VDJ analysis",
                 plot=table.plot(
-                    self.cellrangervdj_annotations, self.vdj_annotations_headers, {"namespace": "Cellranger VDJ"}
+                    self.cellrangervdj_annotations, self.vdj_annotations_headers, {"namespace": "Cell Ranger VDJ"}
                 ),
             )
 
@@ -122,7 +124,7 @@ class CellRangerVdjMixin:
             return len(self.cellrangervdj_general_data)
 
     def parse_vdj_report(self, f):
-        """Go through the html report of cellranger and extract the data in a dics"""
+        """Go through the html report of cell ranger and extract the data in a dicts"""
 
         for line in f["f"]:
             line = line.strip()
@@ -235,7 +237,7 @@ class CellRangerVdjMixin:
             "bc": {
                 "config": {
                     "id": "mqc_cellranger_vdj_bc_knee",
-                    "title": f"Cellranger VDJ: {mydict['summary_tab']['cells']['barcode_knee_plot']['layout']['title']}",
+                    "title": f"Cell Ranger VDJ: {mydict['summary_tab']['cells']['barcode_knee_plot']['layout']['title']}",
                     "xlab": mydict["summary_tab"]["cells"]["barcode_knee_plot"]["layout"]["xaxis"]["title"],
                     "ylab": mydict["summary_tab"]["cells"]["barcode_knee_plot"]["layout"]["yaxis"]["title"],
                     "yLog": True,

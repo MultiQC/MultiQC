@@ -1,12 +1,14 @@
 #!/usr/bin/env python
 
-""" MultiQC module to parse output from Cellranger count """
+""" MultiQC module to parse output from Cell Ranger count """
 
-import logging
 import json
+import logging
 from collections import OrderedDict
+
 from multiqc import config
 from multiqc.plots import linegraph, table
+
 from .utils_functions import *
 
 # Initialise the logger
@@ -14,7 +16,7 @@ log = logging.getLogger(__name__)
 
 
 class CellRangerCountMixin:
-    """Cellranger count report parser"""
+    """Cell Ranger count report parser"""
 
     def parse_count_html(self):
         self.cellrangercount_data = dict()
@@ -82,15 +84,15 @@ class CellRangerCountMixin:
                     anchor="cellranger-count-warnings",
                     description="Warnings encountered during the analysis",
                     plot=table.plot(
-                        self.cellrangercount_warnings, self.count_warnings_headers, {"namespace": "Cellranger Count"}
+                        self.cellrangercount_warnings, self.count_warnings_headers, {"namespace": "Cell Ranger Count"}
                     ),
                 )
 
             self.add_section(
                 name="Count - Summary stats",
                 anchor="cellranger-count-stats",
-                description="Summary QC metrics from Cellranger count",
-                plot=table.plot(self.cellrangercount_data, self.count_data_headers, {"namespace": "Cellranger Count"}),
+                description="Summary QC metrics from Cell Ranger count",
+                plot=table.plot(self.cellrangercount_data, self.count_data_headers, {"namespace": "Cell Ranger Count"}),
             )
 
             self.add_section(
@@ -127,7 +129,7 @@ class CellRangerCountMixin:
             return len(self.cellrangercount_general_data)
 
     def parse_count_report(self, f):
-        """Go through the html report of cellranger and extract the data in a dics"""
+        """Go through the html report of cell ranger and extract the data in a dicts"""
 
         for line in f["f"]:
             line = line.strip()
@@ -170,7 +172,7 @@ class CellRangerCountMixin:
             "COUNT",
         )
 
-        # Store full data from cellranger count report
+        # Store full data from cell ranger count report
         data_rows = (
             mydict["summary_tab"]["sequencing"]["table"]["rows"]
             + mydict["summary_tab"]["cells"]["table"]["rows"]
@@ -219,7 +221,7 @@ class CellRangerCountMixin:
             "bc": {
                 "config": {
                     "id": "mqc_cellranger_count_bc_knee",
-                    "title": f"Cellranger count: {mydict['summary_tab']['cells']['barcode_knee_plot']['layout']['title']}",
+                    "title": f"Cell Ranger count: {mydict['summary_tab']['cells']['barcode_knee_plot']['layout']['title']}",
                     "xlab": mydict["summary_tab"]["cells"]["barcode_knee_plot"]["layout"]["xaxis"]["title"],
                     "ylab": mydict["summary_tab"]["cells"]["barcode_knee_plot"]["layout"]["yaxis"]["title"],
                     "yLog": True,
@@ -231,7 +233,7 @@ class CellRangerCountMixin:
             "genes": {
                 "config": {
                     "id": "mqc_cellranger_count_genesXcell",
-                    "title": f"Cellranger count: {mydict['analysis_tab']['median_gene_plot']['help']['title']}",
+                    "title": f"Cell Ranger count: {mydict['analysis_tab']['median_gene_plot']['help']['title']}",
                     "xlab": mydict["analysis_tab"]["median_gene_plot"]["plot"]["layout"]["xaxis"]["title"],
                     "ylab": mydict["analysis_tab"]["median_gene_plot"]["plot"]["layout"]["yaxis"]["title"],
                     "yLog": False,
@@ -243,7 +245,7 @@ class CellRangerCountMixin:
             "saturation": {
                 "config": {
                     "id": "mqc_cellranger_count_saturation",
-                    "title": f"Cellranger count: {mydict['analysis_tab']['seq_saturation_plot']['help']['title']}",
+                    "title": f"Cell Ranger count: {mydict['analysis_tab']['seq_saturation_plot']['help']['title']}",
                     "xlab": mydict["analysis_tab"]["seq_saturation_plot"]["plot"]["layout"]["xaxis"]["title"],
                     "ylab": mydict["analysis_tab"]["seq_saturation_plot"]["plot"]["layout"]["yaxis"]["title"],
                     "yLog": False,
