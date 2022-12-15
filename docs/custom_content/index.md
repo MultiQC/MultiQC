@@ -1,3 +1,10 @@
+---
+title: Custom Content
+description: Report on your data, even without a MultiQC module
+section_title: Custom Content
+section_order: 2
+---
+
 # Introduction
 
 Bioinformatics projects often include non-standardised analyses, with results from custom

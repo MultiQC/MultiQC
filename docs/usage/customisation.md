@@ -1,3 +1,9 @@
+---
+title: Customising Reports
+description: Making MultiQC reports bespoke for your use case
+order: 5
+---
+
 # Customising Reports
 
 MultiQC offers a few ways to customise reports to easily add your own

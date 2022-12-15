@@ -1,3 +1,9 @@
+---
+title: Introduction
+description: How to install MultiQC on your system
+order: 1
+---
+
 # Introduction
 
 MultiQC is a reporting tool that parses summary statistics from results and log files

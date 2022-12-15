@@ -1,3 +1,9 @@
+---
+title: Common Problems
+description: Troubleshooting difficulties
+order: 8
+---
+
 # Troubleshooting
 
 Hopefully MultiQC will be easy to use and run without any hitches. If you have

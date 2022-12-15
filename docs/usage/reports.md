@@ -1,3 +1,9 @@
+---
+title: Using Reports
+description: Getting to grips with MultiQC reports
+order: 3
+---
+
 # Using MultiQC Reports
 
 Once MultiQC has finished, you should have a HTML report file called
