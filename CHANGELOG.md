@@ -20,8 +20,9 @@
 
 ### New Modules
 
-- **cellranger**
-  - parse cellranger quality reports from VDJ and count analysis
+- [**Cell Ranger**](https://support.10xgenomics.com/single-cell-gene-expression/software/pipelines/latest/what-is-cell-ranger)
+  - Works with data from 10X Genomics Chromium. Processes Chromium single cell data to align reads, generate feature-barcode matrices, perform clustering and other secondary analysis, and more.
+  - New MultiQC module parses Cell Ranger quality reports from VDJ and count analysis
 
 ### Module feature additions
 
