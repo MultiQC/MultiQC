@@ -3,9 +3,9 @@
 """ MultiQC submodule to parse output from RSeQC junction_saturation.py
 http://rseqc.sourceforge.net/#junction-saturation-py """
 
-from collections import OrderedDict
 import logging
 import re
+from collections import OrderedDict
 
 from multiqc.plots import linegraph
 

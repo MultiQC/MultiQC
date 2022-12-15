@@ -7,6 +7,7 @@ import os
 import re
 
 from multiqc.plots import linegraph
+
 from .util import read_sample_name
 
 # Initialise the logger

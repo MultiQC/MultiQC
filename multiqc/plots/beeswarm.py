@@ -5,8 +5,8 @@
 import logging
 import random
 
-from multiqc.utils import config, report
 from multiqc.plots import table_object
+from multiqc.utils import config, report
 
 logger = logging.getLogger(__name__)
 

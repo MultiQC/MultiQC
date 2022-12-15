@@ -1,6 +1,67 @@
 # MultiQC Version History
 
-## MultiQC v1.13dev
+## MultiQC v1.14dev
+
+### MultiQC new features
+
+### MultiQC updates
+
+- Bugfix: Make `config.data_format` work again ([#1722](https://github.com/ewels/MultiQC/issues/1722))
+- Bump minimum version of Jinja2 to `>=3.0.0` ([#1642](https://github.com/ewels/MultiQC/issues/1642))
+- Disable search progress bar if running with `--quiet` or `--no-ansi` ([#1638](https://github.com/ewels/MultiQC/issues/1638))
+- Optimize line-graph generation to remove an n^2 loop ([#1668](https://github.com/ewels/MultiQC/pull/1668))
+- Allow path filters without full paths by trying to prefix analysis dir when filtering ([#1308](https://github.com/ewels/MultiQC/issues/1308))
+- Update github actions to run tests on a single module if it is the only file affected by the PR ([#915](https://github.com/ewels/MultiQC/issues/915))
+- Add CI testing for Python 3.10 and 3.11
+- Add new code formatting tool [isort](https://pycqa.github.io/isort/) to standardise the order and formatting of Python module imports
+- Remove Python 2-3 compatability `from __future__` imports
+- Parsing output file column headers is much faster.
+- Fix sorting of table columns with text values
+
+### New Modules
+
+- **cellranger**
+  - parse cellranger quality reports from VDJ and count analysis
+
+### Module feature additions
+
+- **Fastp**
+  - Add total read count (after filtering) to general stats table ([#1744](https://github.com/ewels/MultiQC/issues/1744))
+
+### Module updates
+
+- **Bcftools stats**
+  - Bugfix: Do not show empty bcftools stats variant depth plots[#1777](https://github.com/ewels/MultiQC/pull/1777)
+- **BclConvert**
+  - Handle single-end read data correctly when setting cluster length instead of always assuming paired-end reads ([#1697](https://github.com/ewels/MultiQC/issues/1697))
+  - Handle different R1 and R2 read-lengths correctly instead of assuming they are the same ([#1774](https://github.com/ewels/MultiQC/issues/1774))
+  - Handle single-index paired-end data correctly
+- **BUSCO**
+  - Update BUSCO pass/warning/fail scheme to be more clear for users
+- **Bustools**
+  - Show median reads per barcode statistic
+- **Custom content**
+  - Create a report even if there's only Custom Content General Stats there
+  - Attempt to cooerce line / scatter x-axes into floats so as not to lose labels ([#1242](https://github.com/ewels/MultiQC/issues/1242))
+  - Multi-sample line-graph TSV files that have no sample name in row 1 column 1 now use row 1 as x-axis labels ([#1242](https://github.com/ewels/MultiQC/issues/1242))
+- **Kraken**
+  - Fix duplicate heatmap to account for missing taxons ([#1779](https://github.com/ewels/MultiQC/pull/1779))
+  - Make heatmap full width
+- **malt**
+  - Fixed division by 0 in malt module ([#1683](https://github.com/ewels/MultiQC/issues/1683))
+- **Picard**
+  - HsMetrics: Allow custom columns in General Stats too, with `HsMetrics_genstats_table_cols` and `HsMetrics_genstats_table_cols_hidden`
+- **RSeQC**
+  - Update `geneBody_coverage` to plot normalized coverages using a similar formula to that used by RSeQC itself ([#1792](https://github.com/ewels/MultiQC/pull/1792))
+- **Sambamba Markdup**
+  - Catch zero division in sambamba markdup ([#1654](https://github.com/ewels/MultiQC/issues/1654))
+- **Samtools**
+  - Added additional column for `flagstat` that displays percentage of mapped reads in a bam (hidden by default) ([#1733](https://github.com/ewels/MultiQC/issues/1733))
+- **Qualimap**
+  - Added additional columns in general stats for BamQC results that displays region on-target stats if region bed has been supplied (hidden by default) ([#1798](https://github.com/ewels/MultiQC/pull/1798))
+  - Bugfix: Remove General Stats rows for filtered samples ([#1780](https://github.com/ewels/MultiQC/issues/1780))
+
+## [MultiQC v1.13](https://github.com/ewels/MultiQC/releases/tag/v1.13) - 2022-09-08
 
 ### MultiQC updates
 
@@ -12,11 +73,8 @@
 - Fixed edge-case bug in custom content where a `description` that doesn't terminate in `.` gave duplicate section descriptions.
 - Tidied the verbose log to remove some very noisy statements and add summaries for skipped files in the search
 - Add timezone to time in reports
-
-### New Modules
-
-- **cellranger**
-  - parse cellranger quality reports from VDJ and count analysis
+- Add nix flake support
+- Added automatic tweet about new releases
 
 ### Module updates
 
@@ -26,12 +84,22 @@
   - Fixed bug when `General Statistics` have a value of `-` ([#1656](https://github.com/ewels/MultiQC/pull/1656))
 - **Custom content**
   - Only set id for custom content when id not set by metadata ([#1629](https://github.com/ewels/MultiQC/issues/1629))
+  - Fix bug where module wouldn't run if all content was within a MultiQC config file ([#1686](https://github.com/ewels/MultiQC/issues/1686))
+  - Fix crash when `info` isn't set ([#1688](https://github.com/ewels/MultiQC/issues/1688))
 - **Nanostat**
   - Removed HTML escaping of special characters in the log to fix bug in jinja2 v3.10 removing `jinja2.escape()` ([#1659](https://github.com/ewels/MultiQC/pull/1659))
+  - Fix bug where module would crash if input does not contain quality scores ([#1717](https://github.com/ewels/MultiQC/issues/1717))
 - **Pangolin**
   - Updated module to handle outputs from Pangolin v4 ([#1660](https://github.com/ewels/MultiQC/pull/1660))
 - **Somalier**
   - Handle zero mean X depth in _Sex_ plot ([#1670](https://github.com/ewels/MultiQC/pull/1670))
+- **Fastp**
+  - Include low complexity and too long reads in filtering bar chart
+- **miRTop**
+  - Fix module crashing when `ref_miRNA_sum` is missing in file. ([#1712](https://github.com/ewels/MultiQC/issues/1712))
+  - Fix module crashing due to zero division ([#1719](https://github.com/ewels/MultiQC/issues/1719))
+- **FastQC**
+  - Fixed error when parsing duplicate ratio when there is `nan` values in the report. ([#1725](https://github.com/ewels/MultiQC/pull/1725))
 
 ## [MultiQC v1.12](https://github.com/ewels/MultiQC/releases/tag/v1.12) - 2022-02-08
 

@@ -5,6 +5,7 @@
 import logging
 
 from multiqc.plots import linegraph
+
 from .util import read_histogram
 
 # Initialise the logger

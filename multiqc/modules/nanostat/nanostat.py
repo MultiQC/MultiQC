@@ -2,14 +2,14 @@
 
 """ MultiQC module to parse output from NanoStat """
 
-from __future__ import print_function
-from collections import OrderedDict
+
 import logging
+from collections import OrderedDict
 
 from multiqc import config
-from multiqc.utils import mqc_colour
-from multiqc.plots import bargraph, table
 from multiqc.modules.base_module import BaseMultiqcModule
+from multiqc.plots import bargraph, table
+from multiqc.utils import mqc_colour
 
 # Initialise the logger
 log = logging.getLogger(__name__)
@@ -54,6 +54,7 @@ class MultiqcModule(BaseMultiqcModule):
 
         # Find and load any NanoStat reports
         self.nanostat_data = dict()
+        self.has_qscores = False
         self.has_aligned = False
         self.has_seq_summary = False
         self.has_fastq = False
@@ -83,7 +84,7 @@ class MultiqcModule(BaseMultiqcModule):
             self.nanostat_stats_table("fasta")
 
         # Quality distribution Plot
-        if self.has_aligned or self.has_seq_summary or self.has_fastq:
+        if self.has_qscores:
             self.reads_by_quality_plot()
 
     def parse_nanostat_log(self, f):
@@ -109,6 +110,9 @@ class MultiqcModule(BaseMultiqcModule):
                 # Number of reads above Q score cutoff
                 val = int(parts[1].strip().split()[0])
                 nano_stats[key] = val
+
+        if ">Q5" in nano_stats:
+            self.has_qscores = True
 
         if "Total bases aligned" in nano_stats:
             stat_type = "aligned"
