@@ -16,6 +16,7 @@
 - Add new code formatting tool [isort](https://pycqa.github.io/isort/) to standardise the order and formatting of Python module imports
 - Remove Python 2-3 compatability `from __future__` imports
 - Parsing output file column headers is much faster.
+- Fix sorting of table columns with text values
 
 ### New Modules
 
