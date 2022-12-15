@@ -30,7 +30,8 @@
   - Bugfix: Do not show empty bcftools stats variant depth plots[#1777](https://github.com/ewels/MultiQC/pull/1777)
 - **BclConvert**
   - Handle single-end read data correctly when setting cluster length instead of always assuming paired-end reads ([#1697](https://github.com/ewels/MultiQC/issues/1697))
-  - Handle different R1 and R2 read-lengths correctly instead of assuming they are the same ([#1174](https://github.com/ewels/MultiQC/issues/1174))
+  - Handle different R1 and R2 read-lengths correctly instead of assuming they are the same ([#1774](https://github.com/ewels/MultiQC/issues/1774))
+  - Handle single-index paired-end data correctly
 - **BUSCO**
   - Update BUSCO pass/warning/fail scheme to be more clear for users
 - **Bustools**
