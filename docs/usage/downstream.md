@@ -1,3 +1,9 @@
+---
+title: Downstream analysis
+description: How to use MultiQC raw data outputs
+order: 7
+---
+
 # Downstream analysis
 
 Whilst MultiQC is typically used as a final reporting step in an analysis, it can also be used as an intermediate in your analysis.

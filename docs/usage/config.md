@@ -1,3 +1,9 @@
+---
+title: Configuration
+description: Settings to tweak how MultiQC works
+order: 4
+---
+
 # Configuring MultiQC
 
 Whilst most MultiQC settings can be specified on the command line, MultiQC

@@ -1,3 +1,9 @@
+---
+title: Plotting Functions
+description: Visualising your data
+order: 2
+---
+
 # Plotting Functions
 
 MultiQC plotting functions are held within `multiqc.plots` submodules.

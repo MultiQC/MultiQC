@@ -1,3 +1,9 @@
+---
+title: Running MultiQC
+description: Generating MultiQC reports from your data
+order: 2
+---
+
 # Running MultiQC
 
 Once installed, just go to your analysis directory and run `multiqc`, followed
