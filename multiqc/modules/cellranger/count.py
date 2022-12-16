@@ -135,11 +135,11 @@ class CellRangerCountMixin:
             line = line.strip()
             if line.startswith("const data"):
                 line = line.replace("const data = ", "")
-                mydict = json.loads(line)
-                mydict = mydict["summary"]
+                summary = json.loads(line)
+                summary = summary["summary"]
                 break
 
-        s_name = mydict["sample"]["id"]
+        s_name = self.clean_s_name(summary["sample"]["id"], f["root"])
         data = dict()
         data_general_stats = dict()
 
@@ -152,7 +152,7 @@ class CellRangerCountMixin:
         data_general_stats, self.count_general_data_headers = update_dict(
             data_general_stats,
             self.count_general_data_headers,
-            mydict["summary_tab"]["cells"]["table"]["rows"],
+            summary["summary_tab"]["cells"]["table"]["rows"],
             col_dict,
             "COUNT",
         )
@@ -167,16 +167,16 @@ class CellRangerCountMixin:
         data_general_stats, self.count_general_data_headers = update_dict(
             data_general_stats,
             self.count_general_data_headers,
-            mydict["summary_tab"]["sequencing"]["table"]["rows"],
+            summary["summary_tab"]["sequencing"]["table"]["rows"],
             col_dict,
             "COUNT",
         )
 
         # Store full data from cell ranger count report
         data_rows = (
-            mydict["summary_tab"]["sequencing"]["table"]["rows"]
-            + mydict["summary_tab"]["cells"]["table"]["rows"]
-            + mydict["summary_tab"]["mapping"]["table"]["rows"]
+            summary["summary_tab"]["sequencing"]["table"]["rows"]
+            + summary["summary_tab"]["cells"]["table"]["rows"]
+            + summary["summary_tab"]["mapping"]["table"]["rows"]
         )
         col_dict = {
             "Number of Reads": "reads",
@@ -206,7 +206,7 @@ class CellRangerCountMixin:
 
         # Extract warnings if any
         warnings = dict()
-        alarms_list = mydict["alarms"].get("alarms", [])
+        alarms_list = summary["alarms"].get("alarms", [])
         for alarm in alarms_list:
             warnings[alarm["id"]] = "FAIL"
             self.count_warnings_headers[alarm["id"]] = {
@@ -216,14 +216,14 @@ class CellRangerCountMixin:
             }
 
         # Extract data for plots
-        help_dict = {x[0]: x[1][0] for x in mydict["summary_tab"]["cells"]["help"]["data"]}
+        help_dict = {x[0]: x[1][0] for x in summary["summary_tab"]["cells"]["help"]["data"]}
         plots = {
             "bc": {
                 "config": {
                     "id": "mqc_cellranger_count_bc_knee",
-                    "title": f"Cell Ranger count: {mydict['summary_tab']['cells']['barcode_knee_plot']['layout']['title']}",
-                    "xlab": mydict["summary_tab"]["cells"]["barcode_knee_plot"]["layout"]["xaxis"]["title"],
-                    "ylab": mydict["summary_tab"]["cells"]["barcode_knee_plot"]["layout"]["yaxis"]["title"],
+                    "title": f"Cell Ranger count: {summary['summary_tab']['cells']['barcode_knee_plot']['layout']['title']}",
+                    "xlab": summary["summary_tab"]["cells"]["barcode_knee_plot"]["layout"]["xaxis"]["title"],
+                    "ylab": summary["summary_tab"]["cells"]["barcode_knee_plot"]["layout"]["yaxis"]["title"],
                     "yLog": True,
                     "xLog": True,
                 },
@@ -233,34 +233,34 @@ class CellRangerCountMixin:
             "genes": {
                 "config": {
                     "id": "mqc_cellranger_count_genesXcell",
-                    "title": f"Cell Ranger count: {mydict['analysis_tab']['median_gene_plot']['help']['title']}",
-                    "xlab": mydict["analysis_tab"]["median_gene_plot"]["plot"]["layout"]["xaxis"]["title"],
-                    "ylab": mydict["analysis_tab"]["median_gene_plot"]["plot"]["layout"]["yaxis"]["title"],
+                    "title": f"Cell Ranger count: {summary['analysis_tab']['median_gene_plot']['help']['title']}",
+                    "xlab": summary["analysis_tab"]["median_gene_plot"]["plot"]["layout"]["xaxis"]["title"],
+                    "ylab": summary["analysis_tab"]["median_gene_plot"]["plot"]["layout"]["yaxis"]["title"],
                     "yLog": False,
                     "xLog": False,
                 },
                 "description": "Median gene counts per cell",
-                "helptext": mydict["analysis_tab"]["median_gene_plot"]["help"]["helpText"],
+                "helptext": summary["analysis_tab"]["median_gene_plot"]["help"]["helpText"],
             },
             "saturation": {
                 "config": {
                     "id": "mqc_cellranger_count_saturation",
-                    "title": f"Cell Ranger count: {mydict['analysis_tab']['seq_saturation_plot']['help']['title']}",
-                    "xlab": mydict["analysis_tab"]["seq_saturation_plot"]["plot"]["layout"]["xaxis"]["title"],
-                    "ylab": mydict["analysis_tab"]["seq_saturation_plot"]["plot"]["layout"]["yaxis"]["title"],
+                    "title": f"Cell Ranger count: {summary['analysis_tab']['seq_saturation_plot']['help']['title']}",
+                    "xlab": summary["analysis_tab"]["seq_saturation_plot"]["plot"]["layout"]["xaxis"]["title"],
+                    "ylab": summary["analysis_tab"]["seq_saturation_plot"]["plot"]["layout"]["yaxis"]["title"],
                     "yLog": False,
                     "xLog": False,
                     "ymin": 0,
                     "ymax": 1,
                 },
                 "description": "Sequencing saturation",
-                "helptext": mydict["analysis_tab"]["seq_saturation_plot"]["help"]["helpText"],
+                "helptext": summary["analysis_tab"]["seq_saturation_plot"]["help"]["helpText"],
             },
         }
         plots_data = {
-            "bc": parse_bcknee_data(mydict["summary_tab"]["cells"]["barcode_knee_plot"]["data"], s_name),
-            "genes": {s_name: transform_data(mydict["analysis_tab"]["median_gene_plot"]["plot"]["data"][0])},
-            "saturation": {s_name: transform_data(mydict["analysis_tab"]["seq_saturation_plot"]["plot"]["data"][0])},
+            "bc": parse_bcknee_data(summary["summary_tab"]["cells"]["barcode_knee_plot"]["data"], s_name),
+            "genes": {s_name: transform_data(summary["analysis_tab"]["median_gene_plot"]["plot"]["data"][0])},
+            "saturation": {s_name: transform_data(summary["analysis_tab"]["seq_saturation_plot"]["plot"]["data"][0])},
         }
 
         if len(data) > 0:
