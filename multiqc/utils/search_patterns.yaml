@@ -195,15 +195,17 @@ ccs/v5:
   fn: "*.json"
 cellranger/count_html:
   - fn: "*.html"
-  - contents: '"command":"Cell Ranger","subcommand":"count"'
+    contents: '"command":"Cell Ranger","subcommand":"count"'
     num_lines: 13
-  - contents: '"command": "Cell Ranger", "subcommand": "count"'
+  - fn: "*.html"
+    contents: '"command": "Cell Ranger", "subcommand": "count"'
     num_lines: 13
 cellranger/vdj_html:
   - fn: "*.html"
-  - contents: '"command":"Cell Ranger","subcommand":"vdj"'
+    contents: '"command":"Cell Ranger","subcommand":"vdj"'
     num_lines: 13
-  - contents: '"command": "Cell Ranger", "subcommand": "vdj"'
+  - fn: "*.html"
+    contents: '"command": "Cell Ranger", "subcommand": "vdj"'
     num_lines: 13
 checkqc:
   contents: "instrument_and_reagent_type"
