@@ -72,6 +72,7 @@
 - Add timezone to time in reports
 - Add nix flake support
 - Added automatic tweet about new releases
+- Breaking: Removed `--cl_config` option. Please use `--cl-config` instead.
 
 ### Module updates
 

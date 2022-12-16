@@ -14,7 +14,7 @@ it collects the configuration settings from the following places in this order
 5. Config file in the current working directory: `multiqc_config.yaml`
 6. Config file paths specified in the command with `--config` / `-c`
    - You can specify multiple files like this, they can have any filename.
-7. Command line config (`--cl_config`)
+7. Command line config (`--cl-config`)
 8. Specific command line options (_e.g._ `--force`)
 
 ## Sample name cleaning
@@ -400,7 +400,7 @@ that is being run. No identifiable information (eg. IP address etc) is stored.
 
 Sometimes it's useful to specify a single small config option just once, where creating
 a config file for the occasion may be overkill. In these cases you can use the
-`--cl_config` option to supply additional config values on the command line.
+`--cl-config` option to supply additional config values on the command line.
 
 Config variables should be given as a YAML string. You will usually need to enclose
 this in quotes. If MultiQC is unable to understand your config you will get an error message
@@ -410,7 +410,7 @@ As an example, the following command configures the coverage levels to use for t
 Qualimap module: _(as [described in the docs](http://multiqc.info/docs/#qualimap))_
 
 ```bash
-multiqc ./datadir --cl_config "qualimap_config: { general_stats_coverage: [20,40,200] }"
+multiqc ./datadir --cl-config "qualimap_config: { general_stats_coverage: [20,40,200] }"
 ```
 
 ## Optimising run-time
