@@ -1,8 +1,7 @@
 ---
 title: Custom Content
 description: Report on your data, even without a MultiQC module
-section_title: Custom Content
-section_order: 2
+order: 2
 ---
 
 # Introduction
