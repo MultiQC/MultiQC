@@ -292,7 +292,7 @@ class MultiqcModule(BaseMultiqcModule):
             "suffix": " bp",
             "scale": "RdYlGn",
             "format": "{:,.0f}",
-            "hidden": hide_seq_length,
+            "hidden": True,
         }
         headers["median_sequence_length"] = {
             "title": "Median Read Length",
