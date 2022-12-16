@@ -301,7 +301,7 @@ class MultiqcModule(BaseMultiqcModule):
             "suffix": " bp",
             "scale": "RdYlGn",
             "format": "{:,.0f}",
-            "hidden": True,
+            "hidden": hide_seq_length,
         }
         headers["percent_fails"] = {
             "title": "% Failed",
