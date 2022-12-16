@@ -9,7 +9,7 @@ from collections import OrderedDict
 from multiqc import config
 from multiqc.plots import linegraph, table
 
-from .utils_functions import *
+from ._utils import *
 
 # Initialise the logger
 log = logging.getLogger(__name__)
