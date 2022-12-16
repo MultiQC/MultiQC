@@ -80,7 +80,7 @@ report_header_info:
 
 Then this will be displayed at the top of reports:
 
-![report project info](../images/report_proj_info.png)
+![report project info](../../../images/report_proj_info.png)
 
 Note that you can also specify a path to a config file using `-c`.
 
