@@ -262,7 +262,7 @@ class MultiqcModule(BaseMultiqcModule):
         # Are sequence lengths interesting?
         median_seq_lengths = [x["median_sequence_length"] for x in data.values()]
         try:
-            hide_seq_length = False if max(avg_seq_lengths) - min(avg_seq_lengths) > 10 else True
+            hide_seq_length = max(median_seq_lengths) - min(median_seq_lengths) <= 10
         except ValueError:
             # Zero reads
             hide_seq_length = True
