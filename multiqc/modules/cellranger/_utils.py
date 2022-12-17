@@ -1,21 +1,22 @@
 #!/usr/bin/env python
 
 
-def update_dict(table, headers, rows_list, col_map, prefix):
+def update_dict(table, headers, rows_list, col_map, colours, prefix):
     """update the data dict and headers dict"""
 
     for col_name, col_data in rows_list:
-        # Sanitize numeric data
-        is_percentage = "%" in col_data
-        col_data = col_data.replace(",", "").replace("%", "")
-
-        # Convert to float when possible
-        try:
-            col_data = float(col_data)
-        except ValueError:
-            col_data = col_data
 
         if col_name in col_map:
+            # Sanitize numeric data
+            is_percentage = "%" in col_data
+            col_data = col_data.replace(",", "").replace("%", "")
+
+            # Convert to float when possible
+            try:
+                col_data = float(col_data)
+            except ValueError:
+                col_data = col_data
+
             col_id = col_map[col_name]
             table[col_id] = col_data
             title = col_id.title() if col_id[0:1].islower() else col_id
@@ -25,6 +26,7 @@ def update_dict(table, headers, rows_list, col_map, prefix):
                 "title": title,
                 "description": col_name,
                 "namespace": f"Cell Ranger {prefix}",
+                "scale": colours.get(col_id, "RdYlGn" if is_percentage else "GnBu"),
             }
             if is_percentage:
                 headers[col_id].update(

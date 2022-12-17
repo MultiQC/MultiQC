@@ -150,11 +150,17 @@ class CellRangerCountMixin:
             "Mean Reads per Cell": "avg reads/cell",
             "Fraction Reads in Cells": "reads in cells",
         }
+        colours = {
+            "estimated cells": "PuBu",
+            "avg reads/cell": "GnBu",
+            "reads in cells": "Purples",
+        }
         data_general_stats, self.count_general_data_headers = update_dict(
             data_general_stats,
             self.count_general_data_headers,
             summary["summary_tab"]["cells"]["table"]["rows"],
             col_dict,
+            colours,
             "Count",
         )
 
@@ -166,11 +172,19 @@ class CellRangerCountMixin:
             "Q30 Bases in UMI": "Q30 UMI",
             "Q30 Bases in RNA Read": "Q30 read",
         }
+        colours = {
+            "reads": "PuBnGn",
+            "valid bc": "RdYlGn",
+            "Q30 bc": "RdYlBu",
+            "Q30 UMI": "Spectral",
+            "Q30 read": "RdBu",
+        }
         data_general_stats, self.count_general_data_headers = update_dict(
             data_general_stats,
             self.count_general_data_headers,
             summary["summary_tab"]["sequencing"]["table"]["rows"],
             col_dict,
+            colours,
             "Count",
         )
 
@@ -203,8 +217,35 @@ class CellRangerCountMixin:
             "Reads Mapped Confidently to Intergenic Regions": "confident intergenic",
             "Reads Mapped Antisense to Gene": "reads antisense",
         }
+        colours = {
+            "reads": "YlGn",
+            "estimated cells": "RdPu",
+            "avg reads/cell": "Blues",
+            "genes detected": "Greens",
+            "median genes/cell": "Purples",
+            "reads in cells": "PuBnGn",
+            "valid bc": "Spectral",
+            "valid umi": "RdYlGn",
+            "median umi/cell": "YlGn",
+            "saturation": "YlOdRd",
+            # "Q30 bc": "",
+            # "Q30 UMI": "",
+            # "Q30 read": "",
+            # "reads mapped": "",
+            # "confident reads": "",
+            # "confident transcriptome": "",
+            # "confident exonic": "",
+            # "confident intronic": "",
+            # "confident intergenic": "",
+            # "reads antisense": "",
+        }
         data, self.count_data_headers = update_dict(
-            data_general_stats, self.count_data_headers, data_rows, col_dict, "Count"
+            data_general_stats,
+            self.count_data_headers,
+            data_rows,
+            col_dict,
+            colours,
+            "Count",
         )
 
         # Extract warnings if any

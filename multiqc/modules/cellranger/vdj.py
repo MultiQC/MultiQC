@@ -160,11 +160,17 @@ class CellRangerVdjMixin:
             "Mean Reads per Cell": "avg reads/cell",
             "Fraction Reads in Cells": "reads in cells",
         }
+        colours = {
+            "estimated cells": "",
+            "avg reads/cell": "",
+            "reads in cells": "",
+        }
         data_general_stats, self.vdj_general_data_headers = update_dict(
             data_general_stats,
             self.vdj_general_data_headers,
             mydict["summary_tab"]["cells"]["table"]["rows"],
             col_dict,
+            colours,
             "VDJ",
         )
 
@@ -176,11 +182,20 @@ class CellRangerVdjMixin:
             "Q30 Bases in RNA Read 1": "Q30 read1",
             "Q30 Bases in RNA Read 2": "Q30 read2",
         }
+        colours = {
+            # "reads": "",
+            # "valid bc": "",
+            # "Q30 bc": "",
+            # "Q30 UMI": "",
+            # "Q30 read1": "",
+            # "Q30 read2": "",
+        }
         data_general_stats, self.vdj_general_data_headers = update_dict(
             data_general_stats,
             self.vdj_general_data_headers,
             mydict["summary_tab"]["vdj_sequencing"]["table"]["rows"],
             col_dict,
+            colours,
             "VDJ",
         )
 
@@ -206,8 +221,28 @@ class CellRangerVdjMixin:
             "Q30 Bases in RNA Read 1": "Q30 read1",
             "Q30 Bases in RNA Read 2": "Q30 read2",
         }
+        colours = {
+            # "reads" "valid bc": "",
+            # "estimated cells": "",
+            # "avg reads/cell": "",
+            # "used reads/cell": "",
+            # "reads in cells": "",
+            # "VDJ reads": "",
+            # "IGH reads": "",
+            # "IGK reads": "",
+            # "IGL reads": "",
+            # "Q30 bc": "",
+            # "Q30 UMI": "",
+            # "Q30 read1": "",
+            # "Q30 read2": "",
+        }
         data, self.vdj_mapping_headers = update_dict(
-            data_general_stats, self.vdj_mapping_headers, data_rows, col_dict, "VDJ"
+            data_general_stats,
+            self.vdj_mapping_headers,
+            data_rows,
+            col_dict,
+            colours,
+            "VDJ",
         )
 
         # Store VDJ annotation and expression data from vdj report
@@ -229,11 +264,30 @@ class CellRangerVdjMixin:
             "Cells With Productive IGK Contig": "cells IGK productive",
             "Cells With Productive IGL Contig": "cells IGL productive",
         }
+        colours = {
+            # "cells VJ span": "",
+            # "cells IGK-IGH span": "",
+            # "cells IGL-IGH span": "",
+            # "clonotype diversity": "",
+            # "cells IGH contig": "",
+            # "cells IGK contig": "",
+            # "cells IGL contig": "",
+            # "cells IGH CDR3": "",
+            # "cells IGK CDR3": "",
+            # "cells IGL CDR3": "",
+            # "cells IGH VJ span": "",
+            # "cells IGK VJ span": "",
+            # "cells IGL VJ span": "",
+            # "cells IGH productive": "",
+            # "cells IGK productive": "",
+            # "cells IGL productive": "",
+        }
         data_annotations, self.vdj_annotations_headers = update_dict(
             data_general_stats,
             self.vdj_annotations_headers,
             mydict["summary_tab"]["vdj_annotation"]["table"]["rows"],
             col_dict,
+            colours,
             "VDJ",
         )
 
