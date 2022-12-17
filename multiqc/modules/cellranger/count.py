@@ -38,6 +38,7 @@ class CellRangerCountMixin:
             self.cellrangercount_plots_data[k] = self.ignore_samples(self.cellrangercount_plots_data[k])
 
         self.count_general_data_headers["reads"] = {
+            "rid": "count_genstats_reads",
             "title": "{} Reads".format(config.read_count_prefix),
             "description": "Number of reads ({})".format(config.read_count_desc),
             "modify": lambda x: x * config.read_count_multiplier,
@@ -49,6 +50,7 @@ class CellRangerCountMixin:
         )
 
         self.count_data_headers["reads"] = {
+            "rid": "count_data_reads",
             "title": "{} Reads".format(config.read_count_prefix),
             "description": "Number of reads ({})".format(config.read_count_desc),
             "modify": lambda x: x * config.read_count_multiplier,

@@ -23,6 +23,7 @@ def update_dict(table, headers, rows_list, col_map, colours, prefix):
             for str in ["Bc", "Umi", "Igk", "Igh", "Igl", "Vj"]:
                 title = title.replace(str, str.upper())
             headers[col_id] = {
+                "rid": "{}_{}".format(prefix, col_id.replace(" ", "_").replace("/", "_")),
                 "title": title,
                 "description": col_name,
                 "namespace": f"Cell Ranger {prefix}",
