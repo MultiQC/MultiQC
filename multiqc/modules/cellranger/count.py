@@ -37,13 +37,15 @@ class CellRangerCountMixin:
         for k in self.cellrangercount_plots_data.keys():
             self.cellrangercount_plots_data[k] = self.ignore_samples(self.cellrangercount_plots_data[k])
 
-        self.count_general_data_headers["COUNT reads"] = {
-            "title": "COUNT {} Reads".format(config.read_count_prefix),
+        self.count_general_data_headers["reads"] = {
+            "title": "{} Reads".format(config.read_count_prefix),
             "description": "Number of reads ({})".format(config.read_count_desc),
             "modify": lambda x: x * config.read_count_multiplier,
+            "shared_key": "read_count",
+            "namespace": "Cell Ranger Count",
         }
         self.count_general_data_headers = set_hidden_cols(
-            self.count_general_data_headers, ["COUNT Q30 bc", "COUNT Q30 UMI", "COUNT Q30 read"]
+            self.count_general_data_headers, ["Q30 bc", "Q30 UMI", "Q30 read"]
         )
 
         self.count_data_headers["reads"] = {
@@ -54,17 +56,17 @@ class CellRangerCountMixin:
         self.count_data_headers = set_hidden_cols(
             self.count_data_headers,
             [
-                "COUNT Q30 bc",
-                "COUNT Q30 UMI",
-                "COUNT Q30 read",
-                "COUNT reads in cells",
-                "COUNT avg reads/cell",
-                "COUNT confident reads",
-                "COUNT confident transcriptome",
-                "COUNT confident intronic",
-                "COUNT confident intergenic",
-                "COUNT reads antisense",
-                "COUNT saturation",
+                "Q30 bc",
+                "Q30 UMI",
+                "Q30 read",
+                "reads in cells",
+                "avg reads/cell",
+                "confident reads",
+                "confident transcriptome",
+                "confident intronic",
+                "confident intergenic",
+                "reads antisense",
+                "saturation",
             ],
         )
 
@@ -140,10 +142,9 @@ class CellRangerCountMixin:
                 break
 
         s_name = self.clean_s_name(summary["sample"]["id"], f["root"])
-        data = dict()
         data_general_stats = dict()
 
-        # Store general stats from cells and sequencing tables
+        # Store general stats from cells
         col_dict = {
             "Estimated Number of Cells": "estimated cells",
             "Mean Reads per Cell": "avg reads/cell",
@@ -154,9 +155,10 @@ class CellRangerCountMixin:
             self.count_general_data_headers,
             summary["summary_tab"]["cells"]["table"]["rows"],
             col_dict,
-            "COUNT",
+            "Count",
         )
 
+        # Store general stats from sequencing tables
         col_dict = {
             "Number of Reads": "reads",
             "Valid Barcodes": "valid bc",
@@ -169,10 +171,11 @@ class CellRangerCountMixin:
             self.count_general_data_headers,
             summary["summary_tab"]["sequencing"]["table"]["rows"],
             col_dict,
-            "COUNT",
+            "Count",
         )
 
         # Store full data from cell ranger count report
+        data = dict()
         data_rows = (
             summary["summary_tab"]["sequencing"]["table"]["rows"]
             + summary["summary_tab"]["cells"]["table"]["rows"]
@@ -201,7 +204,7 @@ class CellRangerCountMixin:
             "Reads Mapped Antisense to Gene": "reads antisense",
         }
         data, self.count_data_headers = update_dict(
-            data_general_stats, self.count_data_headers, data_rows, col_dict, "COUNT"
+            data_general_stats, self.count_data_headers, data_rows, col_dict, "Count"
         )
 
         # Extract warnings if any

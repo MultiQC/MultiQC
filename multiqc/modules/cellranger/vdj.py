@@ -40,14 +40,22 @@ class CellRangerVdjMixin:
         for k in self.cellrangervdj_plots_data.keys():
             self.cellrangervdj_plots_data[k] = self.ignore_samples(self.cellrangervdj_plots_data[k])
 
-        self.vdj_general_data_headers["VDJ reads"] = {
-            "title": "VDJ {} Reads".format(config.read_count_prefix),
+        self.vdj_general_data_headers["reads"] = {
+            "title": "{} Reads".format(config.read_count_prefix),
             "description": "Number of reads ({})".format(config.read_count_desc),
             "modify": lambda x: x * config.read_count_multiplier,
+            "shared_key": "read_count",
+            "namespace": "Cell Ranger VDJ",
         }
         self.vdj_general_data_headers = set_hidden_cols(
             self.vdj_general_data_headers,
-            ["VDJ Q30 bc", "VDJ Q30 UMI", "VDJ Q30 read", "VDJ Q30 read1", "VDJ Q30 read2"],
+            [
+                "Q30 bc",
+                "Q30 UMI",
+                "Q30 read",
+                "Q30 read1",
+                "Q30 read2",
+            ],
         )
 
         self.vdj_mapping_headers["reads"] = {
@@ -57,7 +65,15 @@ class CellRangerVdjMixin:
         }
         self.vdj_mapping_headers = set_hidden_cols(
             self.vdj_mapping_headers,
-            ["Q30 bc", "Q30 UMI", "Q30 read1", "Q30 read2", "IGH reads", "IGK reads", "IGL reads"],
+            [
+                "Q30 bc",
+                "Q30 UMI",
+                "Q30 read1",
+                "Q30 read2",
+                "IGH reads",
+                "IGK reads",
+                "IGL reads",
+            ],
         )
 
         self.vdj_annotations_headers = set_hidden_cols(
@@ -218,6 +234,7 @@ class CellRangerVdjMixin:
             self.vdj_annotations_headers,
             mydict["summary_tab"]["vdj_annotation"]["table"]["rows"],
             col_dict,
+            "VDJ",
         )
 
         # Extract warnings if any

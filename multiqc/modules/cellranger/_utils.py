@@ -1,38 +1,39 @@
 #!/usr/bin/env python
 
 
-def update_dict(table, headers, rows_list, col_map, prefix=""):
+def update_dict(table, headers, rows_list, col_map, prefix):
     """update the data dict and headers dict"""
 
-    for row in rows_list:
-        is_percentage = False
-        col_name = row[0]
-        col_data = row[1]
-
+    for col_name, col_data in rows_list:
         # Sanitize numeric data
-        col_data = col_data.replace(",", "")
-
-        if "%" in col_data:
-            col_data = col_data.replace("%", "")
-            is_percentage = True
+        is_percentage = "%" in col_data
+        col_data = col_data.replace(",", "").replace("%", "")
 
         # Convert to float when possible
         try:
             col_data = float(col_data)
-        except:
+        except ValueError:
             col_data = col_data
 
-        if col_name in col_map.keys():
-            if prefix == "":
-                col_id = col_map[col_name]
-                col_desc = col_name
-            else:
-                col_id = f"{prefix} {col_map[col_name]}"
-                col_desc = f"{prefix}: {col_name}"
+        if col_name in col_map:
+            col_id = col_map[col_name]
             table[col_id] = col_data
-            headers[col_id] = {"title": col_id, "description": col_desc}
+            title = col_id.title() if col_id[0:1].islower() else col_id
+            for str in ["Bc", "Umi", "Igk", "Igh", "Igl", "Vj"]:
+                title = title.replace(str, str.upper())
+            headers[col_id] = {
+                "title": title,
+                "description": col_name,
+                "namespace": f"Cell Ranger {prefix}",
+            }
             if is_percentage:
-                headers[col_id].update({"suffix": "%", "max": 100, "min": 0})
+                headers[col_id].update(
+                    {
+                        "suffix": "%",
+                        "max": 100,
+                        "min": 0,
+                    }
+                )
 
     return table, headers
 
