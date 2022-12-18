@@ -1,9 +1,8 @@
 ---
 Name: BBMap
 URL: http://jgi.doe.gov/data-and-tools/bbtools/bb-tools-user-guide/
-Description: >
-	BBMap is a suite of pre-processing, assembly, alignment, and statistics
-	tools for DNA/RNA sequencing reads.
+Description: >-
+  BBMap is a suite of pre-processing, assembly, alignment, and statistics tools for DNA/RNA sequencing reads.
 ---
 
 The BBMap module produces summary statistics from the

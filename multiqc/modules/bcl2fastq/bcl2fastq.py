@@ -6,8 +6,8 @@ from collections import OrderedDict, defaultdict
 from itertools import islice
 
 from multiqc import config
-from multiqc.plots import bargraph, table
 from multiqc.modules.base_module import BaseMultiqcModule
+from multiqc.plots import bargraph, table
 
 log = logging.getLogger(__name__)
 
@@ -102,7 +102,7 @@ class MultiqcModule(BaseMultiqcModule):
             anchor="bcl2fastq-bysample",
             description="Number of reads per sample.",
             helptext="""Perfect index reads are those that do not have a single mismatch.
-                All samples are aggregated across lanes combinned. Undetermined reads are ignored.
+                All samples are aggregated across lanes combined. Undetermined reads are ignored.
                 Undetermined reads are treated as a separate sample.""",
             plot=bargraph.plot(
                 [self.get_bar_data_from_counts(self.bcl2fastq_bysample), self.bcl2fastq_bysample_lane],

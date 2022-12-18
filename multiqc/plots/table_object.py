@@ -2,9 +2,9 @@
 
 """ MultiQC datatable class, used by tables and beeswarm plots """
 
-from collections import defaultdict, OrderedDict
 import logging
 import re
+from collections import OrderedDict, defaultdict
 
 from multiqc.utils import config, report
 
@@ -186,6 +186,12 @@ class datatable(object):
                         headers[idx][k]["placement"] = float(config.table_columns_placement[pconfig["id"]][k])
                     except (KeyError, ValueError):
                         pass
+
+                # Overwrite any header config if set in config
+                for custom_k, custom_v in (
+                    config.custom_table_header_config.get(pconfig.get("id"), {}).get(k, {}).items()
+                ):
+                    headers[idx][k][custom_k] = custom_v
 
                 # Work out max and min value if not given
                 setdmax = False
