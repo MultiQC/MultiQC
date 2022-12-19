@@ -7,6 +7,7 @@ import logging
 import re
 from collections import OrderedDict
 
+from multiqc import config
 from multiqc.modules.base_module import BaseMultiqcModule
 from multiqc.plots import bargraph
 
@@ -191,6 +192,16 @@ class MultiqcModule(BaseMultiqcModule):
                 if "paired_aligned_mate_none_halved" not in parsed_data and "paired_aligned_none" in parsed_data:
                     parsed_data["paired_aligned_mate_none_halved"] = parsed_data["paired_aligned_none"]
 
+                parsed_data["aligned_one"] = 0
+                parsed_data["aligned_multi"] = 0
+                if self.num_se > 0:
+                    parsed_data["aligned_one"] += parsed_data["unpaired_aligned_one"]
+                    parsed_data["aligned_multi"] += parsed_data["unpaired_aligned_multi"]
+                if self.num_pe > 0:
+                    parsed_data["aligned_one"] = parsed_data["paired_aligned_one"] + parsed_data["paired_aligned_discord_one"] + round(parsed_data["paired_aligned_mate_one_halved"])
+                    parsed_data["aligned_multi"] = parsed_data["paired_aligned_multi"] + round(parsed_data["paired_aligned_mate_multi_halved"])
+                parsed_data["aligned"] = parsed_data["aligned_one"] + parsed_data["aligned_multi"]
+                
                 # Save parsed data
                 if s_name in self.bowtie2_data:
                     log.debug("Duplicate sample name found! Overwriting: {}".format(s_name))
@@ -199,6 +210,7 @@ class MultiqcModule(BaseMultiqcModule):
                 # Reset in case we find more in this log file
                 s_name = f["s_name"]
                 parsed_data = {}
+        #print(self.bowtie2_data)
 
     def bowtie2_general_stats_table(self):
         """Take the parsed stats from the Bowtie 2 report and add it to the
@@ -213,6 +225,36 @@ class MultiqcModule(BaseMultiqcModule):
             "suffix": "%",
             "scale": "YlGn",
         }
+        
+        headers["aligned_one"] = {
+            "title": "{} Unique Aligned".format(config.read_count_prefix),
+            "description": "Uniquely mapped reads ({})".format(config.read_count_desc),
+            "min": 0,
+            "scale": "PuRd",
+            "modify": lambda x: x * config.read_count_multiplier,
+            "shared_key": "read_count",
+            "hidden": True,
+        }
+        
+        headers["aligned_multi"] = {
+            "title": "{} Multiple Aligned".format(config.read_count_prefix),
+            "description": "Multiply mapped reads ({})".format(config.read_count_desc),
+            "min": 0,
+            "scale": "PuRd",
+            "modify": lambda x: x * config.read_count_multiplier,
+            "shared_key": "read_count",
+            "hidden": True,
+        }
+        
+        headers["aligned"] = {
+            "title": "{} Aligned".format(config.read_count_prefix),
+            "description": "Mapped reads ({})".format(config.read_count_desc),
+            "min": 0,
+            "scale": "PuRd",
+            "modify": lambda x: x * config.read_count_multiplier,
+            "shared_key": "read_count",
+        }
+        
         self.general_stats_addcols(self.bowtie2_data, headers)
 
     def bowtie2_alignment_plot(self):
