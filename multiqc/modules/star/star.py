@@ -163,6 +163,10 @@ class MultiqcModule(BaseMultiqcModule):
 
         if len(parsed_data) == 0:
             return None
+            
+        parsed_data["mapped_percent"] = parsed_data["uniquely_mapped_percent"] + parsed_data["multimapped_percent"]
+        parsed_data["mapped"] = parsed_data["uniquely_mapped"] + parsed_data["multimapped"]
+        
         return parsed_data
 
     def parse_star_genecount_report(self, f):
@@ -211,10 +215,35 @@ class MultiqcModule(BaseMultiqcModule):
             "min": 0,
             "suffix": "%",
             "scale": "YlGn",
+            "hidden": True
+        }
+        headers["mapped_percent"] = {
+            "title": "% Aligned",
+            "description": "% Uniquely mapped reads",
+            "max": 100,
+            "min": 0,
+            "suffix": "%",
+            "scale": "YlGn",
         }
         headers["uniquely_mapped"] = {
-            "title": "{} Aligned".format(config.read_count_prefix),
+            "title": "{} Unique Aligned".format(config.read_count_prefix),
             "description": "Uniquely mapped reads ({})".format(config.read_count_desc),
+            "min": 0,
+            "scale": "PuRd",
+            "modify": lambda x: x * config.read_count_multiplier,
+            "shared_key": "read_count",
+        }
+        headers["multimapped"] = {
+            "title": "{} Multi Aligned".format(config.read_count_prefix),
+            "description": "Multiple mapped reads ({})".format(config.read_count_desc),
+            "min": 0,
+            "scale": "PuRd",
+            "modify": lambda x: x * config.read_count_multiplier,
+            "shared_key": "read_count",
+        }
+        headers["mapped"] = {
+            "title": "{} Aligned".format(config.read_count_prefix),
+            "description": "Mapped reads ({})".format(config.read_count_desc),
             "min": 0,
             "scale": "PuRd",
             "modify": lambda x: x * config.read_count_multiplier,
