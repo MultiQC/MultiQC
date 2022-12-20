@@ -31,9 +31,8 @@ class MultiqcModule(DragenBaseMetrics, DragenReadMetrics, DragenFastqcGcMetrics,
 
     def __init__(self):
         super(MultiqcModule, self).__init__(
-            name="DRAGEN-FastQc",
-            anchor="DRAGEN-FastQc",
-            target="DRAGEN-FastQc",
+            name="DRAGEN-FastQC",
+            anchor="dragen-fastqc",
             href="https://www.illumina.com/products/by-type/informatics-products/dragen-bio-it-platform.html",
             info=(
                 " is a Bio-IT Platform that provides ultra-rapid secondary analysis of sequencing data"
