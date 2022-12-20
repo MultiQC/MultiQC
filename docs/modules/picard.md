@@ -100,6 +100,16 @@ picard_config:
 Only values listed in `HsMetrics_table_cols` will be included in the table.
 Anything listed in `HsMetrics_table_cols_hidden` will be hidden by default.
 
+A similar config is available for customising the HsMetrics columns in the General Stats table:
+
+```yaml
+picard_config:
+  HsMetrics_genstats_table_cols:
+    - NEAR_BAIT_BASES
+  HsMetrics_genstats_table_cols_hidden:
+    - MAX_TARGET_COVERAGE
+```
+
 #### InsertSizeMetrics
 
 By default, the insert size plot is smoothed to contain a maximum of 500 data points per sample.

@@ -32,4 +32,9 @@ Thumbs.db
 .idea/
 runTest.sh
 
+# Prevent direnv from cluttering the repo
+.envrc
+.direnv/*
+/result
+
 venv

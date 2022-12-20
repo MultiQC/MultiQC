@@ -14,7 +14,7 @@ it collects the configuration settings from the following places in this order
 5. Config file in the current working directory: `multiqc_config.yaml`
 6. Config file paths specified in the command with `--config` / `-c`
    - You can specify multiple files like this, they can have any filename.
-7. Command line config (`--cl_config`)
+7. Command line config (`--cl-config`)
 8. Specific command line options (_e.g._ `--force`)
 
 ## Sample name cleaning
@@ -379,11 +379,28 @@ up with weird characters in your MultiQC output, you can disable this feature wi
 flag `--no-ansi`. Sadly it's not possible to set this in a config file, as the logger is initilised
 before configs are loaded.
 
+## Checks for new versions
+
+When MultiQC runs it automatically checks to see if there is a new version available to download.
+If so, a log message is printed at the top of the run saying where to download it
+(_MultiQC Version v0.6 now available!_).
+This helps people stay up to date and reduces the number of bug reports that are
+due to outdated MultiQC versions.
+
+The timeout for the version check is set to 5 seconds, so if you're running offline it should
+fail silently and add negligable run time.
+However, if you prefer you can explicitly disable the version check by adding
+`no_version_check: true` to your MultiQC config.
+
+The check is done with the main MultiQC website (<https://multiqc.info>).
+The only statistics that are collected are the number of checks and the version of MultiQC
+that is being run. No identifiable information (eg. IP address etc) is stored.
+
 ## Command-line config
 
 Sometimes it's useful to specify a single small config option just once, where creating
 a config file for the occasion may be overkill. In these cases you can use the
-`--cl_config` option to supply additional config values on the command line.
+`--cl-config` option to supply additional config values on the command line.
 
 Config variables should be given as a YAML string. You will usually need to enclose
 this in quotes. If MultiQC is unable to understand your config you will get an error message
@@ -393,7 +410,7 @@ As an example, the following command configures the coverage levels to use for t
 Qualimap module: _(as [described in the docs](http://multiqc.info/docs/#qualimap))_
 
 ```bash
-multiqc ./datadir --cl_config "qualimap_config: { general_stats_coverage: [20,40,200] }"
+multiqc ./datadir --cl-config "qualimap_config: { general_stats_coverage: [20,40,200] }"
 ```
 
 ## Optimising run-time

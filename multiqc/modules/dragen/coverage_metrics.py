@@ -1,18 +1,19 @@
 #!/usr/bin/env python
 # coding=utf-8
-from __future__ import print_function
+
 
 import itertools
-from multiqc.utils.util_functions import write_data_file
-# Initialise the logger
 import logging
 import re
 from collections import defaultdict
 
 from multiqc.modules.base_module import BaseMultiqcModule
 from multiqc.plots import table
-from .utils import make_headers, Metric
+from multiqc.utils.util_functions import write_data_file
 
+from .utils import Metric, make_headers
+
+# Initialise the logger
 log = logging.getLogger(__name__)
 
 NAMESPACE = "DRAGEN coverage"

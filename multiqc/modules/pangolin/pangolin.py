@@ -2,14 +2,14 @@
 
 """ MultiQC module to parse output from Pangolin """
 
-from __future__ import print_function
-from collections import OrderedDict
-import logging
-import csv
 
-from multiqc.utils import mqc_colour
-from multiqc.plots import table
+import csv
+import logging
+from collections import OrderedDict
+
 from multiqc.modules.base_module import BaseMultiqcModule
+from multiqc.plots import table
+from multiqc.utils import mqc_colour
 
 # Initialise the logger
 log = logging.getLogger(__name__)
@@ -98,7 +98,8 @@ class MultiqcModule(BaseMultiqcModule):
                 if s_name in self.pangolin_data:
                     log.debug("Duplicate sample name found! Overwriting: {}".format(s_name))
                 # Avoid generic header ID that clashes with other modules
-                row["qc_status"] = row.pop("status")
+                if "qc_status" not in row:
+                    row["qc_status"] = row.pop("status")
                 self.pangolin_data[s_name] = row
                 # Just save the lineage key for now - we will sort out the colours later
                 self.lineage_colours[row["lineage"]] = None

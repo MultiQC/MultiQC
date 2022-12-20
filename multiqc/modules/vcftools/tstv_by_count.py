@@ -3,6 +3,7 @@
 """ MultiQC module to parse TsTv by alternative allele count from vcftools TsTv-by-count """
 
 import logging
+
 from multiqc.plots import linegraph
 
 # Initialise the logger

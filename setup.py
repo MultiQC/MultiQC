@@ -21,10 +21,9 @@ See the MultiQC website for documentation and tutorial videos: http://multiqc.in
 MultiQC was written by Phil Ewels (http://phil.ewels.co.uk) at SciLifeLab Sweden (http://www.scilifelab.se)
 """
 
-from setuptools import setup, find_packages
-import sys
+from setuptools import find_packages, setup
 
-version = "1.13dev"
+version = "1.14dev"
 dl_version = "master" if "dev" in version else "v{}".format(version)
 
 print(
@@ -34,40 +33,6 @@ print(
 
 """
 )
-
-# Set version requirements according to what version of Python we're running
-networkx_version = ">=2.5.1"  # Needed for Python 3.9 support
-numpy_version = ""
-matplotlib_version = ">=2.1.1"
-jinja2_version = ">=2.9"
-markdown_version = ""
-kiwisolver_version = "==1.2.0"
-if sys.version_info[0:2] < (3, 6):
-    # Lots of tools have dropped Python 3 support, so limit their versions
-    matplotlib_version += ",<3.0.0"
-    numpy_version = "<1.17"
-    networkx_version = "<2.3"
-    jinja2_version += ",<3.0"
-    markdown_version = "<3.2"
-
-install_requires = [
-    "kiwisolver" + kiwisolver_version,
-    "matplotlib" + matplotlib_version,
-    "networkx" + networkx_version,
-    "numpy" + numpy_version,
-    "click",
-    "coloredlogs",
-    "future>0.14.0",
-    "jinja2" + jinja2_version,
-    "lzstring",
-    "markdown" + markdown_version,
-    "pyyaml>=4",
-    "requests",
-    "rich>=10",
-    "rich-click",
-    "simplejson",
-    "spectra>=0.0.10",
-]
 
 setup(
     name="multiqc",
@@ -83,7 +48,23 @@ setup(
     packages=find_packages(),
     include_package_data=True,
     zip_safe=False,
-    install_requires=install_requires,
+    install_requires=[
+        "matplotlib>=2.1.1",
+        "networkx>=2.5.1",
+        "numpy",
+        "click",
+        "coloredlogs",
+        "future>0.14.0",
+        "jinja2>=3.0.0",
+        "lzstring",
+        "markdown",
+        "pyyaml>=4",
+        "requests",
+        "rich>=10",
+        "rich-click",
+        "simplejson",
+        "spectra>=0.0.10",
+    ],
     entry_points={
         "console_scripts": [
             "multiqc=multiqc.__main__:run_multiqc",

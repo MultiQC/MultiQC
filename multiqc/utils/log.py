@@ -4,12 +4,13 @@
 Code to initilise the MultiQC logging
 """
 
-import coloredlogs
 import logging
 import os
 import shutil
 import sys
 import tempfile
+
+import coloredlogs
 
 from multiqc.utils import config, util_functions
 
@@ -38,7 +39,7 @@ def init_log(logger, loglevel=0, no_ansi=False):
     info_template = "|%(module)18s | %(message)s"
 
     # Remove log handlers left from previous calls to multiqc.run
-    while logger.hasHandlers():
+    while logger.handlers:
         logger.removeHandler(logger.handlers[0])
 
     # Base level setup
