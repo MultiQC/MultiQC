@@ -35,6 +35,7 @@ class DragenFastqcGcMetrics(BaseMultiqcModule):
         # Now add each section in order
         self.gc_content_plot()
         self.gc_content_mean_quality_plot()
+        self.get_avg_gc_content_by_sample()
 
         return self.fastqc_data.keys()
 
@@ -165,3 +166,39 @@ class DragenFastqcGcMetrics(BaseMultiqcModule):
             ''',
             plot=linegraph.plot(data, pconfig)
         )
+
+    def get_avg_gc_content_by_sample(self):
+        data = dict()
+        avg_gc_content_data = dict()
+        GC_GROUP = "READ GC CONTENT"
+        for s_name in sorted(self.fastqc_data):
+            for mate in sorted(self.fastqc_data[s_name]):
+                r_name = "{}_{}".format(s_name, mate)
+                data[r_name] = defaultdict(float)
+                for metric, value in self.fastqc_data[s_name][mate][GC_GROUP].items():
+                    pct = percentage_from_content_metric(metric)
+                    data[r_name][pct] = value
+
+            reads_by_gc_sum = 0
+            total_reads_sum = 0
+            for mate, gc_data in data.items():
+                for pct, num_reads in gc_data.items():
+                    reads_by_gc_sum += (1.0 * pct / 100) * num_reads
+                    total_reads_sum += num_reads
+
+            avg_gc_content_data[s_name] = {
+                "avg_gc_content_percent": ( reads_by_gc_sum * 100 ) / total_reads_sum
+            }
+
+        # Add Avg. GC Content to header
+        headers = OrderedDict()
+        headers["avg_gc_content_percent"] = {
+            "title": "% GC",
+            "description": "Average % GC Content",
+            "max": 100,
+            "min": 0,
+            "suffix": "%",
+            "scale": "Set1",
+            "format": "{:,.0f}",
+        }
+        self.general_stats_addcols(avg_gc_content_data, headers, namespace="DRAGEN FastQC")
