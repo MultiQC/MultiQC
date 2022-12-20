@@ -22,7 +22,7 @@ METRICS = [
         in_genstats="#",
         in_own_tabl="#",
         precision=0,
-        descr=m
+        descr=m,
     )
     for m in METRIC_NAMES
 ]

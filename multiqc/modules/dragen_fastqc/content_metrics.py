@@ -2,26 +2,26 @@
 from __future__ import print_function
 
 import copy
-import re
-import os
 import json
+
+# Initialise the logger
+import logging
+import os
+import re
 from collections import OrderedDict, defaultdict
 
 from multiqc import config
 from multiqc.modules.base_module import BaseMultiqcModule
 from multiqc.modules.dragen.utils import Metric
-from multiqc.plots import linegraph, bargraph, heatmap, table, boxplot
+from multiqc.plots import bargraph, boxplot, heatmap, linegraph, table
 from multiqc.utils import report
 
-from .util import average_pos_from_metric, average_from_range
-
-# Initialise the logger
-import logging
+from .util import average_from_range, average_pos_from_metric
 
 log = logging.getLogger(__name__)
 
 N_QV = 2
-ADAPTER_SEQS = ['AGATCGGAAGAG', 'ATGGAATTCTCG', 'CTGTCTCTTATA']
+ADAPTER_SEQS = ["AGATCGGAAGAG", "ATGGAATTCTCG", "CTGTCTCTTATA"]
 
 
 class DragenContentMetrics(BaseMultiqcModule):
@@ -38,7 +38,7 @@ class DragenContentMetrics(BaseMultiqcModule):
         return self.fastqc_data.keys()
 
     def n_content_plot(self):
-        """ Create the HTML for the per base N content plot """
+        """Create the HTML for the per base N content plot"""
         data = dict()
         totals = defaultdict(int)
         non_n = defaultdict(int)
@@ -67,33 +67,33 @@ class DragenContentMetrics(BaseMultiqcModule):
                     data[r_name][pos] = n_frac
 
         if len(data) == 0:
-            log.debug('per_base_n_content not found in DRAGEN FastQC reports')
+            log.debug("per_base_n_content not found in DRAGEN FastQC reports")
             return None
 
         pconfig = {
-            'id': 'dragenqc_per_base_n_content_plot',
-            'title': 'DRAGEN-QC: Per-Position N Content',
-            'ylab': 'Percentage N-Count',
-            'xlab': 'Position in Read (bp)',
-            'yCeiling': 100,
-            'yMinRange': 5,
-            'ymin': 0,
-            'xmin': 0,
-            'xDecimals': False,
+            "id": "dragenqc_per_base_n_content_plot",
+            "title": "DRAGEN-QC: Per-Position N Content",
+            "ylab": "Percentage N-Count",
+            "xlab": "Position in Read (bp)",
+            "yCeiling": 100,
+            "yMinRange": 5,
+            "ymin": 0,
+            "xmin": 0,
+            "xDecimals": False,
             # 'colors': self.get_status_cols('per_base_n_content'),
-            'tt_label': '<b>Base {point.x}</b>: {point.y:.2f}%',
-            'yPlotBands': [
-                {'from': 20, 'to': 100, 'color': '#e6c3c3'},
-                {'from': 5, 'to': 20, 'color': '#e6dcc3'},
-                {'from': 0, 'to': 5, 'color': '#c3e6c3'},
-            ]
+            "tt_label": "<b>Base {point.x}</b>: {point.y:.2f}%",
+            "yPlotBands": [
+                {"from": 20, "to": 100, "color": "#e6c3c3"},
+                {"from": 5, "to": 20, "color": "#e6dcc3"},
+                {"from": 0, "to": 5, "color": "#c3e6c3"},
+            ],
         }
 
         self.add_section(
-            name='Per-Position N Content',
-            anchor='dragenqc_per_base_n_content',
-            description='The percentage of base calls at each position for which an `N` was called.',
-            helptext='''
+            name="Per-Position N Content",
+            anchor="dragenqc_per_base_n_content",
+            description="The percentage of base calls at each position for which an `N` was called.",
+            helptext="""
             From the [FastQC help](http://www.bioinformatics.babraham.ac.uk/projects/fastqc/Help/3%20Analysis%20Modules/6%20Per%20Base%20N%20Content.html):
             _If a sequencer is unable to make a base call with sufficient confidence then it will
             normally substitute an `N` rather than a conventional base call. This graph shows the
@@ -102,12 +102,12 @@ class DragenContentMetrics(BaseMultiqcModule):
             nearer the end of a sequence. However, if this proportion rises above a few percent
             it suggests that the analysis pipeline was unable to interpret the data well enough to
             make valid base calls._
-            ''',
-            plot=linegraph.plot(data, pconfig)
+            """,
+            plot=linegraph.plot(data, pconfig),
         )
 
     def sequence_content_plot(self):
-        """ Create the epic HTML for the FastQC sequence content heatmap """
+        """Create the epic HTML for the FastQC sequence content heatmap"""
 
         # Prep the data
         data = dict()
@@ -121,7 +121,7 @@ class DragenContentMetrics(BaseMultiqcModule):
                 totals = defaultdict(int)
                 for metric, value in group_data.items():
                     parts = metric.split()
-                    #avg_pos = average_from_range(parts[1])
+                    # avg_pos = average_from_range(parts[1])
                     avg_pos = parts[1]
                     base = parts[-2].lower()
 
@@ -139,16 +139,16 @@ class DragenContentMetrics(BaseMultiqcModule):
                         continue
                     for base in "acgt":
                         try:
-                            data[r_name][pos][base] = (float(data[r_name][pos][base])/float(total)) * 100.0
+                            data[r_name][pos][base] = (float(data[r_name][pos][base]) / float(total)) * 100.0
                         except:
                             pass
                     data[r_name][pos]["base"] = pos
 
         if len(data) == 0:
-            log.debug('sequence_content not found in FastQC reports')
+            log.debug("sequence_content not found in FastQC reports")
             return None
 
-        html = '''<div id="fastqc_per_base_sequence_content_plot_div">
+        html = """<div id="fastqc_per_base_sequence_content_plot_div">
             <div class="alert alert-info">
                <span class="glyphicon glyphicon-hand-up"></span>
                Click a sample row to see a line plot for that dataset.
@@ -170,17 +170,17 @@ class DragenContentMetrics(BaseMultiqcModule):
             <div class="clearfix"></div>
         </div>
         <script type="application/json" class="fastqc_seq_content">{d}</script>
-        '''.format(
+        """.format(
             # Generate unique plot ID, needed in mqc_export_selectplots
-            id=report.save_htmlid('fastqc_per_base_sequence_content_plot'),
-            d=json.dumps([self.anchor.replace('-', '_'), data]),
+            id=report.save_htmlid("fastqc_per_base_sequence_content_plot"),
+            d=json.dumps([self.anchor.replace("-", "_"), data]),
         )
 
         self.add_section(
-            name='Per-Position Sequence Content',
-            anchor='fastqc_per_base_sequence_content',
-            description='The proportion of each base position for which each of the four normal DNA bases has been called.',
-            helptext='''
+            name="Per-Position Sequence Content",
+            anchor="fastqc_per_base_sequence_content",
+            description="The proportion of each base position for which each of the four normal DNA bases has been called.",
+            helptext="""
             To enable multiple samples to be shown in a single plot, the base composition data
             is shown as a heatmap. The colours represent the balance between the four bases:
             an even distribution should give an even muddy brown colour. Hover over the plot
@@ -203,12 +203,12 @@ class DragenContentMetrics(BaseMultiqcModule):
             Whilst this is a true technical bias, it isn't something which can be corrected
             by trimming and in most cases doesn't seem to adversely affect the downstream
             analysis._
-            ''',
-            content=html
+            """,
+            content=html,
         )
 
     def adapter_content_plot(self):
-        """ Create the epic HTML for the FastQC adapter content plot"""
+        """Create the epic HTML for the FastQC adapter content plot"""
 
         # Prep the data
         data = dict()
@@ -229,7 +229,7 @@ class DragenContentMetrics(BaseMultiqcModule):
                     seq = parts[0].split("'")[1]
                     if seq not in ADAPTER_SEQS:
                         continue
-                    # avoid issues with metrics like "'AGATCGGAAGAG' Total Sequence Starts" where 
+                    # avoid issues with metrics like "'AGATCGGAAGAG' Total Sequence Starts" where
                     # code attempts to parse 'Tot' as an integer
                     if not parts[1][:-2].isnumeric():
                         continue
@@ -246,29 +246,29 @@ class DragenContentMetrics(BaseMultiqcModule):
                         data[r_name][pos] = 100.0 * cumsum / total
 
         pconfig = {
-            'id': 'fastqc_adapter_content_plot',
-            'title': 'FastQC: Adapter Content',
-            'ylab': '% of Sequences',
-            'xlab': 'Position (bp)',
-            'yCeiling': 100,
-            'yMinRange': 5,
-            'ymin': 0,
-            'xDecimals': False,
-            'tt_label': '<b>Base {point.x}</b>: {point.y:.2f}%',
-            'hide_empty': True,
-            'yPlotBands': [
-                {'from': 20, 'to': 100, 'color': '#e6c3c3'},
-                {'from': 5, 'to': 20, 'color': '#e6dcc3'},
-                {'from': 0, 'to': 5, 'color': '#c3e6c3'},
+            "id": "fastqc_adapter_content_plot",
+            "title": "FastQC: Adapter Content",
+            "ylab": "% of Sequences",
+            "xlab": "Position (bp)",
+            "yCeiling": 100,
+            "yMinRange": 5,
+            "ymin": 0,
+            "xDecimals": False,
+            "tt_label": "<b>Base {point.x}</b>: {point.y:.2f}%",
+            "hide_empty": True,
+            "yPlotBands": [
+                {"from": 20, "to": 100, "color": "#e6c3c3"},
+                {"from": 5, "to": 20, "color": "#e6dcc3"},
+                {"from": 0, "to": 5, "color": "#c3e6c3"},
             ],
         }
 
         self.add_section(
-            name='Adapter Content',
-            anchor='fastqc_adapter_content',
-            description='''The cumulative percentage count of the proportion of your
-            library which has seen each of the adapter sequences at each position.''',
-            helptext='''
+            name="Adapter Content",
+            anchor="fastqc_adapter_content",
+            description="""The cumulative percentage count of the proportion of your
+            library which has seen each of the adapter sequences at each position.""",
+            helptext="""
             Note that only samples with &ge; 0.1% adapter contamination are shown.
 
             There may be several lines per sample, as one is shown for each adapter
@@ -281,6 +281,6 @@ class DragenContentMetrics(BaseMultiqcModule):
             Once a sequence has been seen in a read it is counted as being present
             right through to the end of the read so the percentages you see will only
             increase as the read length goes on._
-            ''',
-            plot=linegraph.plot(data, pconfig)
+            """,
+            plot=linegraph.plot(data, pconfig),
         )

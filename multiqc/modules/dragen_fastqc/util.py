@@ -24,20 +24,20 @@ def parse_fastqc_metrics_file(f):
     READ BASE CONTENT,Read1,0% A Reads,1997
     ...
     """
-    s_name = re.search(r'(.*).fastqc_metrics.csv', f['fn']).group(1)
+    s_name = re.search(r"(.*).fastqc_metrics.csv", f["fn"]).group(1)
     data_by_sample = initialize_dataset(s_name)
 
-    for line in f['f'].splitlines():
+    for line in f["f"].splitlines():
         # This conforms with the standard DRAGEN metrics format
         # Percentage is currently unused
-        tokens = line.split(',')
+        tokens = line.split(",")
         if len(tokens) == 4:
-            group, mate, metric, value = line.split(',')
+            group, mate, metric, value = line.split(",")
             percentage = None
         elif len(tokens) == 5:
-            group, mate, metric, value, percentage = line.split(',')
+            group, mate, metric, value, percentage = line.split(",")
         else:
-            raise ValueError(f'Unexpected number of values in line {line}')
+            raise ValueError(f"Unexpected number of values in line {line}")
 
         try:
             value = int(value)
@@ -66,12 +66,12 @@ def initialize_dataset(s_name):
 
 
 def average_from_range(metric_range):
-    if '+' in metric_range:
-        metric_range = metric_range.replace('+', '')
-    if '>=' in metric_range:
-        metric_range = metric_range.replace('>=', '')
+    if "+" in metric_range:
+        metric_range = metric_range.replace("+", "")
+    if ">=" in metric_range:
+        metric_range = metric_range.replace(">=", "")
     if "-" in metric_range:
-        start, end = metric_range.split('-')
+        start, end = metric_range.split("-")
         avg_pos = (int(end) + int(start)) / 2.0
     else:
         avg_pos = int(metric_range)
@@ -86,7 +86,7 @@ def average_pos_from_metric(metric):
 
 def average_pos_from_size(metric):
     parts = metric.split()
-    len_range = parts[0].split('bp')[0]
+    len_range = parts[0].split("bp")[0]
     return average_from_range(len_range)
 
 
@@ -100,7 +100,7 @@ def pos_qual_table_cmp(key):
     parts = key.split()
     pos = average_from_range(parts[1])
     pct = int(parts[2][:-1])
-    return (pos * 1000 + pct)
+    return pos * 1000 + pct
 
 
 def sortPosQualTableKeys(data_dict):

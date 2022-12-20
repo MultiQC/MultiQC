@@ -1,19 +1,19 @@
 from __future__ import absolute_import
 
+import logging
 import os
 
 from .base_metrics import DragenBaseMetrics
-from .read_metrics import DragenReadMetrics
-from .gc_metrics import DragenFastqcGcMetrics
 from .content_metrics import DragenContentMetrics
+from .gc_metrics import DragenFastqcGcMetrics
+from .read_metrics import DragenReadMetrics
 from .util import parse_fastqc_metrics_file
 
-import logging
 log = logging.getLogger(__name__)
 
 
 class MultiqcModule(DragenBaseMetrics, DragenReadMetrics, DragenFastqcGcMetrics, DragenContentMetrics):
-    """ DRAGEN provides a number of differrent pipelines and outputs, including base calling, DNA and RNA alignment,
+    """DRAGEN provides a number of differrent pipelines and outputs, including base calling, DNA and RNA alignment,
     post-alignment processing and variant calling, covering virtually all stages of typical NGS data processing.
     However, it can be treated as a fast aligner with additional features on top, as users will unlikely use any
     features without enabling DRAGEN mapping. So we will treat this module as an alignment tool module and
@@ -31,19 +31,28 @@ class MultiqcModule(DragenBaseMetrics, DragenReadMetrics, DragenFastqcGcMetrics,
 
     def __init__(self):
         super(MultiqcModule, self).__init__(
-            name='DRAGEN-FastQc', anchor='DRAGEN-FastQc', target='DRAGEN-FastQc',
-            href='https://www.illumina.com/products/by-type/informatics-products/dragen-bio-it-platform.html',
-            info=(" is a Bio-IT Platform that provides ultra-rapid secondary analysis of sequencing data"
-                  " using field-programmable gate array technology (FPGA)."))
+            name="DRAGEN-FastQc",
+            anchor="DRAGEN-FastQc",
+            target="DRAGEN-FastQc",
+            href="https://www.illumina.com/products/by-type/informatics-products/dragen-bio-it-platform.html",
+            info=(
+                " is a Bio-IT Platform that provides ultra-rapid secondary analysis of sequencing data"
+                " using field-programmable gate array technology (FPGA)."
+            ),
+        )
 
-        self.css = {'assets/css/multiqc_fastqc.css': os.path.join(os.path.dirname(
-            __file__), '..', 'fastqc', 'assets', 'css', 'multiqc_fastqc.css')}
+        self.css = {
+            "assets/css/multiqc_fastqc.css": os.path.join(
+                os.path.dirname(__file__), "..", "fastqc", "assets", "css", "multiqc_fastqc.css"
+            )
+        }
         self.js = {
-            'assets/js/multiqc_fastqc.js': os.path.join(os.path.dirname(__file__), 'assets', 'js', 'multiqc_fastqc.js')}
+            "assets/js/multiqc_fastqc.js": os.path.join(os.path.dirname(__file__), "assets", "js", "multiqc_fastqc.js")
+        }
         self.intro += '<script type="application/json" class="fastqc_passfails">["DRAGEN_FastQc", {"per_base_sequence_content": {"TEST": "pass"}}]</script>'
 
         data_by_sample = {}
-        for f in self.find_log_files('dragen_fastqc'):
+        for f in self.find_log_files("dragen_fastqc"):
             s_name, data_by_mate = parse_fastqc_metrics_file(f)
 
             # Clean sample name and key
@@ -53,8 +62,8 @@ class MultiqcModule(DragenBaseMetrics, DragenReadMetrics, DragenFastqcGcMetrics,
             del new_s_name
 
             if s_name in data_by_sample:
-                log.debug('Duplicate sample name found! Overwriting: {}'.format(f['s_name']))
-            self.add_data_source(f, section='stats')
+                log.debug("Duplicate sample name found! Overwriting: {}".format(f["s_name"]))
+            self.add_data_source(f, section="stats")
             data_by_sample.update(data_by_mate)
 
         # Filter to strip out ignored sample names:

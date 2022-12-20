@@ -2,26 +2,26 @@
 from __future__ import print_function
 
 import copy
-import re
-import os
 import json
+
+# Initialise the logger
+import logging
+import os
+import re
 from collections import OrderedDict, defaultdict
 
 from multiqc import config
 from multiqc.modules.base_module import BaseMultiqcModule
 from multiqc.modules.dragen.utils import Metric
-from multiqc.plots import linegraph, bargraph, heatmap, table, boxplot
+from multiqc.plots import bargraph, boxplot, heatmap, linegraph, table
 from multiqc.utils import report
 
 from .util import average_from_range, percentage_from_content_metric
 
-# Initialise the logger
-import logging
-
 log = logging.getLogger(__name__)
 
 N_QV = 2
-ADAPTER_SEQS = ['AGATCGGAAGAG', 'ATGGAATTCTCG', 'CTGTCTCTTATA']
+ADAPTER_SEQS = ["AGATCGGAAGAG", "ATGGAATTCTCG", "CTGTCTCTTATA"]
 
 
 class DragenFastqcGcMetrics(BaseMultiqcModule):
@@ -40,7 +40,7 @@ class DragenFastqcGcMetrics(BaseMultiqcModule):
         return self.fastqc_data.keys()
 
     def gc_content_plot(self):
-        """ Create the HTML for the FastQC GC content plot """
+        """Create the HTML for the FastQC GC content plot"""
 
         data = dict()
         data_norm = dict()
@@ -70,32 +70,29 @@ class DragenFastqcGcMetrics(BaseMultiqcModule):
                         data_norm[r_name][gc] = (count / total) * 100
 
         if len(data) == 0:
-            log.debug('per_sequence_gc_content not found in FastQC reports')
+            log.debug("per_sequence_gc_content not found in FastQC reports")
             return None
 
         pconfig = {
-            'id': 'dragenqc_per_sequence_gc_content_plot',
-            'title': 'DRAGEN-QC: Per-Sequence GC Content',
-            'xlab': '% GC',
-            'ylab': 'Count',
-            'ymin': 0,
-            'xmax': 100,
-            'xmin': 0,
-            'yDecimals': False,
-            'tt_label': '<b>{point.x}% GC</b>: {point.y}',
+            "id": "dragenqc_per_sequence_gc_content_plot",
+            "title": "DRAGEN-QC: Per-Sequence GC Content",
+            "xlab": "% GC",
+            "ylab": "Count",
+            "ymin": 0,
+            "xmax": 100,
+            "xmin": 0,
+            "yDecimals": False,
+            "tt_label": "<b>{point.x}% GC</b>: {point.y}",
             # 'colors': self.get_status_cols('per_sequence_gc_content'),
-            'data_labels': [
-                {'name': 'Percentages', 'ylab': 'Percentage'},
-                {'name': 'Counts', 'ylab': 'Count'}
-            ]
+            "data_labels": [{"name": "Percentages", "ylab": "Percentage"}, {"name": "Counts", "ylab": "Count"}],
         }
 
         self.add_section(
-            name='Per-Sequence GC Content',
-            anchor='dragenqc_per_sequence_gc_content',
-            description='''The average GC content of reads. Normal random library typically have a
-            roughly normal distribution of GC content.''',
-            helptext='''
+            name="Per-Sequence GC Content",
+            anchor="dragenqc_per_sequence_gc_content",
+            description="""The average GC content of reads. Normal random library typically have a
+            roughly normal distribution of GC content.""",
+            helptext="""
             From the [FastQC help](http://www.bioinformatics.babraham.ac.uk/projects/fastqc/Help/3%20Analysis%20Modules/5%20Per%20Sequence%20GC%20Content.html):
             _This module measures the GC content across the whole length of each sequence
             in a file and compares it to a modelled normal distribution of GC content._
@@ -110,12 +107,12 @@ class DragenFastqcGcMetrics(BaseMultiqcModule):
             is a systematic bias which creates a shifted normal distribution then this won't
             be flagged as an error by the module since it doesn't know what your genome's
             GC content should be._
-            ''',
-            plot=linegraph.plot([data_norm, data], pconfig)
+            """,
+            plot=linegraph.plot([data_norm, data], pconfig),
         )
 
     def gc_content_mean_quality_plot(self):
-        """ Create the HTML for the positional mean-quality score plot """
+        """Create the HTML for the positional mean-quality score plot"""
 
         GROUP = "READ GC CONTENT QUALITY"
         data = dict()
@@ -133,26 +130,26 @@ class DragenFastqcGcMetrics(BaseMultiqcModule):
                         continue
 
         pconfig = {
-            'id': 'fastqc_gc_content_mean_sequence_quality_plot',
-            'title': 'DRAGEN-QC: GC Content Mean Quality Scores',
-            'ylab': 'Phred Quality Score',
-            'xlab': '% GC',
-            'ymin': 0,
-            'xDecimals': False,
-            'tt_label': '<b>Base {point.x}</b>: {point.y:.2f}',
+            "id": "fastqc_gc_content_mean_sequence_quality_plot",
+            "title": "DRAGEN-QC: GC Content Mean Quality Scores",
+            "ylab": "Phred Quality Score",
+            "xlab": "% GC",
+            "ymin": 0,
+            "xDecimals": False,
+            "tt_label": "<b>Base {point.x}</b>: {point.y:.2f}",
             # 'colors': self.get_status_cols('per_base_sequence_quality'),
-            'yPlotBands': [
-                {'from': 28, 'to': 100, 'color': '#c3e6c3'},
-                {'from': 20, 'to': 28, 'color': '#e6dcc3'},
-                {'from': 0, 'to': 20, 'color': '#e6c3c3'},
-            ]
+            "yPlotBands": [
+                {"from": 28, "to": 100, "color": "#c3e6c3"},
+                {"from": 20, "to": 28, "color": "#e6dcc3"},
+                {"from": 0, "to": 20, "color": "#e6c3c3"},
+            ],
         }
 
         self.add_section(
-            name='GC Content Mean Quality Scores',
-            anchor='fastqc_gc_content_mean_sequence_quality',
-            description='The mean quality value across each base position in the read.',
-            helptext='''
+            name="GC Content Mean Quality Scores",
+            anchor="fastqc_gc_content_mean_sequence_quality",
+            description="The mean quality value across each base position in the read.",
+            helptext="""
             To enable multiple samples to be plotted on the same graph, only the mean quality
             scores are plotted (unlike the box plots seen in FastQC reports).
 
@@ -163,8 +160,8 @@ class DragenFastqcGcMetrics(BaseMultiqcModule):
             calls (green), calls of reasonable quality (orange), and calls of poor quality (red).
             The quality of calls on most platforms will degrade as the run progresses, so it is
             common to see base calls falling into the orange area towards the end of a read._
-            ''',
-            plot=linegraph.plot(data, pconfig)
+            """,
+            plot=linegraph.plot(data, pconfig),
         )
 
     def get_avg_gc_content_by_sample(self):
@@ -186,9 +183,7 @@ class DragenFastqcGcMetrics(BaseMultiqcModule):
                     reads_by_gc_sum += (1.0 * pct / 100) * num_reads
                     total_reads_sum += num_reads
 
-            avg_gc_content_data[s_name] = {
-                "avg_gc_content_percent": ( reads_by_gc_sum * 100 ) / total_reads_sum
-            }
+            avg_gc_content_data[s_name] = {"avg_gc_content_percent": (reads_by_gc_sum * 100) / total_reads_sum}
 
         # Add Avg. GC Content to header
         headers = OrderedDict()

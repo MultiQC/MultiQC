@@ -144,13 +144,14 @@ class DragenMappingMetics(BaseMultiqcModule):
 
             if data.get("Mapped reads R2", None) == 0:
                 log.warning(f"single-ended data detected, skipping mapping/paired percentages plot for: {sample_id}")
-            elif (
-                data.get("Not properly paired reads (discordant)", 0)
-                + data.get("Properly paired reads", 0)
-                + data.get("Singleton reads (itself mapped; mate unmapped)", 0)
-                + data.get("Unmapped reads", 0)
-                + (data.get(rrna_filtered_reads_key, 0) if rrna_filtered_reads_key is not None and rrna_filtered_reads_key == "rRNA filtered reads" else 0)
-                != data.get("Total reads in RG", 0)
+            elif data.get("Not properly paired reads (discordant)", 0) + data.get(
+                "Properly paired reads", 0
+            ) + data.get("Singleton reads (itself mapped; mate unmapped)", 0) + data.get("Unmapped reads", 0) + (
+                data.get(rrna_filtered_reads_key, 0)
+                if rrna_filtered_reads_key is not None and rrna_filtered_reads_key == "rRNA filtered reads"
+                else 0
+            ) != data.get(
+                "Total reads in RG", 0
             ):
                 log.warning(
                     "sum of unpaired/discordant/proppaired/unmapped reads not matching total, "
@@ -160,14 +161,14 @@ class DragenMappingMetics(BaseMultiqcModule):
                 paired_reads_data[sample_id] = data
                 add_paired_label = True
 
-
-
-            if (
-                data.get("Number of unique & mapped reads (excl. duplicate marked reads)", 0)
-                + data.get("Number of duplicate marked reads", 0)
-                + data.get("Unmapped reads", 0)
-                + (data.get(rrna_filtered_reads_key, 0) if rrna_filtered_reads_key is not None and rrna_filtered_reads_key == "rRNA filtered reads" else 0)
-                != data.get("Total reads in RG", 0)
+            if data.get("Number of unique & mapped reads (excl. duplicate marked reads)", 0) + data.get(
+                "Number of duplicate marked reads", 0
+            ) + data.get("Unmapped reads", 0) + (
+                data.get(rrna_filtered_reads_key, 0)
+                if rrna_filtered_reads_key is not None and rrna_filtered_reads_key == "rRNA filtered reads"
+                else 0
+            ) != data.get(
+                "Total reads in RG", 0
             ):
                 log.warning(
                     "sum of unique/duplicate/unmapped reads not matching total, "
@@ -200,11 +201,17 @@ class DragenMappingMetics(BaseMultiqcModule):
                 "Unmapped reads": {"color": "#b1084c", "name": "Unmapped"},
             }
             if "Adjustment of reads matching filter contigs" in next(iter(data_by_sample.values())):
-                mapped_chart_labels["Adjustment of reads matching filter contigs"] = {"color": "#43b14a", "name": "rRNA filtered"}
+                mapped_chart_labels["Adjustment of reads matching filter contigs"] = {
+                    "color": "#43b14a",
+                    "name": "rRNA filtered",
+                }
             elif "rRNA filtered reads" in next(iter(data_by_sample.values())):
                 mapped_chart_labels["rRNA filtered reads"] = {"color": "#43b14a", "name": "rRNA filtered"}
             elif "Adjustment of reads matching filter contigs" in next(iter(data_by_sample.values())):
-                mapped_chart_labels["Adjustment of reads matching filter contigs"] = {"color": "#43b14a", "name": "rRNA filtered"}
+                mapped_chart_labels["Adjustment of reads matching filter contigs"] = {
+                    "color": "#43b14a",
+                    "name": "rRNA filtered",
+                }
             category_labels.append(mapped_chart_labels)
             data_labels.append(
                 {"name": "Unique vs duplicated vs unmapped", "ylab": "Reads", "cpswitch_counts_label": "Reads"}
@@ -403,7 +410,9 @@ def parse_mapping_metrics_file(f):
 
     # adding some missing values that we wanna report for consistency
     # Expand data_by_readgroup to values below phenotype level
-    for data in itertools.chain(*[data_by_readgroup[key].values() for key in data_by_readgroup.keys()], data_by_phenotype.values()):
+    for data in itertools.chain(
+        *[data_by_readgroup[key].values() for key in data_by_readgroup.keys()], data_by_phenotype.values()
+    ):
         # fixing when deduplication wasn't performed, or running with single-end data
         for field in [
             "Number of duplicate marked and mate reads removed",
@@ -474,7 +483,9 @@ MAPPING_METRICS = [
     Metric("Mapped reads R1", "Map R1", None, "hid", "reads", "Number of mapped reads R1, {}"),
     Metric("Mapped reads R2", "Map R2", None, "hid", "reads", "Number of mapped reads R2, {}"),
     Metric("Unmapped reads", "Unmap", "%", "%", "reads", "Number of unmapped reads, {}", the_higher_the_worse=True),
-    Metric("rRNA filtered reads", "rRNA", "%", "%", "reads", "Number of rRNA filtered reads, {}", the_higher_the_worse=True),
+    Metric(
+        "rRNA filtered reads", "rRNA", "%", "%", "reads", "Number of rRNA filtered reads, {}", the_higher_the_worse=True
+    ),
     Metric("Reads with MAPQ [40:inf)", "MQ⩾40", None, "hid", "reads", "Number of reads with MAPQ [40:inf), {}"),
     Metric(
         "Number of duplicate marked reads",
@@ -713,12 +724,18 @@ MAPPING_METRICS = [
         "proportion",
         "Fraction of estimated sample contamination",
         precision=2,
-        the_higher_the_worse=True
+        the_higher_the_worse=True,
     ),
     Metric(
         "rRNA filtered reads", "rRNA", "%", "%", "reads", "Number of rRNA filtered reads, {}", the_higher_the_worse=True
     ),
     Metric(
-        "Adjustment of reads matching filter contigs", "rRNA / Filtered Contigs", "%", "%", "reads", "Number of filtered reads, {}", the_higher_the_worse=True
+        "Adjustment of reads matching filter contigs",
+        "rRNA / Filtered Contigs",
+        "%",
+        "%",
+        "reads",
+        "Number of filtered reads, {}",
+        the_higher_the_worse=True,
     ),
 ]

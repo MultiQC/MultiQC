@@ -2,21 +2,21 @@
 from __future__ import print_function
 
 import copy
-import re
-import os
 import json
+
+# Initialise the logger
+import logging
+import os
+import re
 from collections import OrderedDict, defaultdict
 
 from multiqc import config
 from multiqc.modules.base_module import BaseMultiqcModule
 from multiqc.modules.dragen.utils import Metric
-from multiqc.plots import linegraph, bargraph, heatmap, table, boxplot
+from multiqc.plots import bargraph, boxplot, heatmap, linegraph, table
 from multiqc.utils import report
 
-from .util import sortPosQualTableKeys, average_from_range
-
-# Initialise the logger
-import logging
+from .util import average_from_range, sortPosQualTableKeys
 
 log = logging.getLogger(__name__)
 
@@ -60,30 +60,30 @@ class DragenBaseMetrics(BaseMultiqcModule):
                         data[r_name][pos][quantile] = qv
 
         pconfig = {
-            'id': 'fastqc_per_base_sequence_quality_range_plot',
-            'title': 'DRAGEN-QC: Per-Position Quality Range',
-            'ylab': 'Phred Quality Score',
-            'xlab': 'Position (bp)',
-            'ymin': 0,
-            'ymax': 43,
-            'tt_label': '<b>Base {point.x}</b>: {point.y:.2f}',
+            "id": "fastqc_per_base_sequence_quality_range_plot",
+            "title": "DRAGEN-QC: Per-Position Quality Range",
+            "ylab": "Phred Quality Score",
+            "xlab": "Position (bp)",
+            "ymin": 0,
+            "ymax": 43,
+            "tt_label": "<b>Base {point.x}</b>: {point.y:.2f}",
             # 'colors': self.get_status_cols('per_base_sequence_quality'),
-            'yPlotBands': [
-                {'from': 28, 'to': 100, 'color': '#c3e6c3'},
-                {'from': 20, 'to': 28, 'color': '#e6dcc3'},
-                {'from': 0, 'to': 20, 'color': '#e6c3c3'},
-            ]
+            "yPlotBands": [
+                {"from": 28, "to": 100, "color": "#c3e6c3"},
+                {"from": 20, "to": 28, "color": "#e6dcc3"},
+                {"from": 0, "to": 20, "color": "#e6c3c3"},
+            ],
         }
 
         self.add_section(
-            name='Per-Position Quality Score Ranges',
-            anchor='fastqc_pos_qual_ranges',
-            description='The range of quality value across each base position in each sample or read',
-            plot=boxplot.plot(data, pconfig)
+            name="Per-Position Quality Score Ranges",
+            anchor="fastqc_pos_qual_ranges",
+            description="The range of quality value across each base position in each sample or read",
+            plot=boxplot.plot(data, pconfig),
         )
 
     def positional_mean_quality_plot(self):
-        """ Create the HTML for the positional mean-quality score plot """
+        """Create the HTML for the positional mean-quality score plot"""
 
         base_dict = {"A": {}, "C": {}, "G": {}, "T": {}, "N": {}}
 
@@ -133,26 +133,26 @@ class DragenBaseMetrics(BaseMultiqcModule):
                         data[r_name][int(pos)] = qv_sum / total
 
         pconfig = {
-            'id': 'fastqc_per_base_sequence_quality_plot',
-            'title': 'DRAGEN-QC: Per-Position Quality Scores',
-            'ylab': 'Phred Quality Score',
-            'xlab': 'Position (bp)',
-            'ymin': 0,
-            'xDecimals': False,
-            'tt_label': '<b>Base {point.x}</b>: {point.y:.2f}',
+            "id": "fastqc_per_base_sequence_quality_plot",
+            "title": "DRAGEN-QC: Per-Position Quality Scores",
+            "ylab": "Phred Quality Score",
+            "xlab": "Position (bp)",
+            "ymin": 0,
+            "xDecimals": False,
+            "tt_label": "<b>Base {point.x}</b>: {point.y:.2f}",
             # 'colors': self.get_status_cols('per_base_sequence_quality'),
-            'yPlotBands': [
-                {'from': 28, 'to': 100, 'color': '#c3e6c3'},
-                {'from': 20, 'to': 28, 'color': '#e6dcc3'},
-                {'from': 0, 'to': 20, 'color': '#e6c3c3'},
-            ]
+            "yPlotBands": [
+                {"from": 28, "to": 100, "color": "#c3e6c3"},
+                {"from": 20, "to": 28, "color": "#e6dcc3"},
+                {"from": 0, "to": 20, "color": "#e6c3c3"},
+            ],
         }
 
         self.add_section(
-            name='Per-Position Mean Quality Scores',
-            anchor='fastqc_per_base_sequence_quality',
-            description='The mean quality value across each base position in the read.',
-            helptext='''
+            name="Per-Position Mean Quality Scores",
+            anchor="fastqc_per_base_sequence_quality",
+            description="The mean quality value across each base position in the read.",
+            helptext="""
             To enable multiple samples to be plotted on the same graph, only the mean quality
             scores are plotted (unlike the box plots seen in FastQC reports).
 
@@ -163,6 +163,6 @@ class DragenBaseMetrics(BaseMultiqcModule):
             calls (green), calls of reasonable quality (orange), and calls of poor quality (red).
             The quality of calls on most platforms will degrade as the run progresses, so it is
             common to see base calls falling into the orange area towards the end of a read._
-            ''',
-            plot=linegraph.plot(data, pconfig)
+            """,
+            plot=linegraph.plot(data, pconfig),
         )

@@ -251,7 +251,9 @@ class DragenCoverageMetrics(BaseMultiqcModule):
         data_by_sample_by_region = defaultdict(dict)
         sample_names = set()
         for f in self.find_log_files("dragen/qc_region_coverage_metrics"):
-            sample_name, region, data = parse_wgs_coverage_metrics(f, r"(.*)\.qc-coverage-region-([^_]+)_coverage_metrics.csv")
+            sample_name, region, data = parse_wgs_coverage_metrics(
+                f, r"(.*)\.qc-coverage-region-([^_]+)_coverage_metrics.csv"
+            )
             if sample_name in sample_names:
                 log.debug("Duplicate sample name found! Overwriting: {}".format(sample_name))
             sample_names.add(sample_name)
@@ -287,7 +289,9 @@ class DragenCoverageMetrics(BaseMultiqcModule):
         data_by_phenotype_by_sample = defaultdict(dict)
 
         for f in self.find_log_files("dragen/wgs_coverage_metrics"):
-            sample_name, phenotype, data = parse_wgs_coverage_metrics(f, r"(.*)\.wgs_coverage_metrics_?(tumor|normal)?.csv")
+            sample_name, phenotype, data = parse_wgs_coverage_metrics(
+                f, r"(.*)\.wgs_coverage_metrics_?(tumor|normal)?.csv"
+            )
             sample_name = self.clean_s_name(sample_name, f)
             if sample_name in data_by_phenotype_by_sample:
                 log.debug(f"Duplicate sample name found! Overwriting: {sample_name}")
