@@ -30,6 +30,10 @@ class DragenRnaTranscriptCoverage(BaseMultiqcModule):
         if not data_by_sample:
             return set()
 
+        # Only plot data, don't want to write this to a file
+        # (can do so with --export-plots already)
+        # self.write_data_file(data_by_sample, "dragen_transcript_cov")
+
         self.add_section(
             name="RNA Transcript Coverage",
             anchor="rna-transcript-cov",

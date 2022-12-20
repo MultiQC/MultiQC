@@ -38,6 +38,7 @@ class MultiqcModule(DragenBaseMetrics, DragenReadMetrics, DragenFastqcGcMetrics,
                 " is a Bio-IT Platform that provides ultra-rapid secondary analysis of sequencing data"
                 " using field-programmable gate array technology (FPGA)."
             ),
+            # Can't find a DOI // doi=
         )
 
         self.css = {
@@ -67,6 +68,10 @@ class MultiqcModule(DragenBaseMetrics, DragenReadMetrics, DragenFastqcGcMetrics,
 
         # Filter to strip out ignored sample names:
         self.fastqc_data = self.ignore_samples(data_by_sample)
+
+        # TODO: Split this up and write the interesting bits to files
+        # Currently is 13760 lines in my test, which is too much.
+        # self.write_data_file(self.fastqc_data, "dragen_fastqc")
 
         samples_found = set()
 

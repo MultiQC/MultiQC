@@ -45,6 +45,9 @@ class DragenScAtacMetrics(BaseMultiqcModule):
         if not data_by_sample:
             return set()
 
+        # TODO: No test data for this file. No idea if we need this or not.
+        # self.write_data_file(data_by_sample, "dragen_atac_metrics")
+
         gen_stats_headers, table_headers = make_headers(METRIC_NAMES, METRICS)
 
         self.general_stats_addcols(data_by_sample, gen_stats_headers)

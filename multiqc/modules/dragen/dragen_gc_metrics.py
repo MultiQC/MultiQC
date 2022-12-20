@@ -29,6 +29,10 @@ class DragenGcMetrics(BaseMultiqcModule):
         if not data_by_sample:
             return set()
 
+        # Only plot data, don't want to write this to a file
+        # (can do so with --export-plots already)
+        # self.write_data_file(data_by_sample, "dragen_gc_metrics")
+
         hist_data = DragenGcMetrics.__get_normalized_gc_data(data_by_sample)
         smooth_points = 300
         self.add_section(

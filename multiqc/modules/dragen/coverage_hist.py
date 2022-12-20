@@ -37,6 +37,11 @@ class DragenCoverageHist(BaseMultiqcModule):
                 data_by_sample[new_sn] = data_by_phenotype_by_sample[sn][phenotype]
         if not data_by_sample:
             return set()
+
+        # Only plot data, don't want to write this to a file
+        # (can do so with --export-plots already)
+        # self.write_data_file(data_by_sample, "dragen_cov_hist")
+
         dist_data = {sn: dist for sn, (dist, cum, depth_1pc) in data_by_sample.items()}
         cum_data = {sn: cum for sn, (dist, cum, depth_1pc) in data_by_sample.items()}
         depth_1pc = max(depth_1pc for (dist, cum, depth_1pc) in data_by_sample.values())

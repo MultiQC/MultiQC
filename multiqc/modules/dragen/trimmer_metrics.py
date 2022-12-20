@@ -27,6 +27,9 @@ class DragenTrimmerMetrics(BaseMultiqcModule):
         if not data_by_sample:
             return set()
 
+        # Save data file
+        self.write_data_file(data_by_sample, "dragen_trimmer_metrics")
+
         table_data = DragenTrimmerMetrics.__get_table_data(data_by_sample)
         self.add_section(
             name="Trimmer Metrics",
