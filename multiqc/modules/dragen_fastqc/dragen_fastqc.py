@@ -67,11 +67,11 @@ class MultiqcModule(DragenBaseMetrics, DragenReadMetrics, DragenFastqcGcMetrics,
             data_by_sample.update(data_by_mate)
 
         # Filter to strip out ignored sample names:
-        self.fastqc_data = self.ignore_samples(data_by_sample)
+        self.dragen_fastqc_data = self.ignore_samples(data_by_sample)
 
         # TODO: Split this up and write the interesting bits to files
         # Currently is 13760 lines in my test, which is too much.
-        # self.write_data_file(self.fastqc_data, "dragen_fastqc")
+        # self.write_data_file(self.dragen_fastqc_data, "dragen_fastqc")
 
         samples_found = set()
 

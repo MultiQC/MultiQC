@@ -33,21 +33,21 @@ class DragenBaseMetrics(BaseMultiqcModule):
         self.positional_quality_range_plot()
         self.positional_mean_quality_plot()
 
-        return self.fastqc_data.keys()
+        return self.dragen_fastqc_data.keys()
 
     def positional_quality_range_plot(self):
         """STUFF"""
 
         data = OrderedDict()
         GROUP = "POSITIONAL QUALITY"
-        for s_name in sorted(self.fastqc_data):
-            for mate in sorted(self.fastqc_data[s_name]):
+        for s_name in sorted(self.dragen_fastqc_data):
+            for mate in sorted(self.dragen_fastqc_data[s_name]):
                 r_name = "{}_{}".format(s_name, mate)
                 data[r_name] = defaultdict(float)
 
-                sorted_keys = sortPosQualTableKeys(self.fastqc_data[s_name][mate][GROUP])
+                sorted_keys = sortPosQualTableKeys(self.dragen_fastqc_data[s_name][mate][GROUP])
                 for key in sorted_keys:
-                    value = int(self.fastqc_data[s_name][mate][GROUP][key])
+                    value = int(self.dragen_fastqc_data[s_name][mate][GROUP][key])
                     parts = key.split()
                     pos = average_from_range(parts[1])
                     quantile = int(parts[2][:-1])
@@ -91,11 +91,11 @@ class DragenBaseMetrics(BaseMultiqcModule):
         COUNT_GROUP = "POSITIONAL BASE CONTENT"
 
         data = dict()
-        for s_name in sorted(self.fastqc_data):
-            for mate in sorted(self.fastqc_data[s_name]):
+        for s_name in sorted(self.dragen_fastqc_data):
+            for mate in sorted(self.dragen_fastqc_data[s_name]):
                 # Parse our per-base, per-position average qualities into a dictionary
                 avgs = copy.deepcopy(base_dict)
-                for key, value in self.fastqc_data[s_name][mate][AVG_GROUP].items():
+                for key, value in self.dragen_fastqc_data[s_name][mate][AVG_GROUP].items():
                     if value == "NA":
                         continue
                     parts = key.split()
@@ -106,7 +106,7 @@ class DragenBaseMetrics(BaseMultiqcModule):
                 # Parse matching per-base and total counts by position
                 counts = copy.deepcopy(base_dict)
                 totals = defaultdict(int)
-                for key, value in self.fastqc_data[s_name][mate][COUNT_GROUP].items():
+                for key, value in self.dragen_fastqc_data[s_name][mate][COUNT_GROUP].items():
                     parts = key.split()
                     pos = average_from_range(parts[1])
                     base = parts[2].upper()

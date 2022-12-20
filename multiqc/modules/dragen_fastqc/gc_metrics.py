@@ -37,7 +37,7 @@ class DragenFastqcGcMetrics(BaseMultiqcModule):
         self.gc_content_mean_quality_plot()
         self.get_avg_gc_content_by_sample()
 
-        return self.fastqc_data.keys()
+        return self.dragen_fastqc_data.keys()
 
     def gc_content_plot(self):
         """Create the HTML for the FastQC GC content plot"""
@@ -46,20 +46,20 @@ class DragenFastqcGcMetrics(BaseMultiqcModule):
         data_norm = dict()
         LEN_GROUP = "READ LENGTHS"
         GC_GROUP = "READ GC CONTENT"
-        for s_name in sorted(self.fastqc_data):
-            for mate in sorted(self.fastqc_data[s_name]):
+        for s_name in sorted(self.dragen_fastqc_data):
+            for mate in sorted(self.dragen_fastqc_data[s_name]):
                 r_name = "{}_{}".format(s_name, mate)
 
                 # First figure out the baseline
                 max_len = 0
-                for metric, value in self.fastqc_data[s_name][mate][LEN_GROUP].items():
+                for metric, value in self.dragen_fastqc_data[s_name][mate][LEN_GROUP].items():
                     if int(value) > 0:
                         pos = average_from_range(metric.split()[0][:-2])
                         max_len = max(pos, max_len)
 
                 data[r_name] = defaultdict(float)
-                group_data = self.fastqc_data[s_name][mate][GC_GROUP]
-                for metric, value in self.fastqc_data[s_name][mate][GC_GROUP].items():
+                group_data = self.dragen_fastqc_data[s_name][mate][GC_GROUP]
+                for metric, value in self.dragen_fastqc_data[s_name][mate][GC_GROUP].items():
                     pct = percentage_from_content_metric(metric)
                     data[r_name][pct] = value
 
@@ -116,12 +116,12 @@ class DragenFastqcGcMetrics(BaseMultiqcModule):
 
         GROUP = "READ GC CONTENT QUALITY"
         data = dict()
-        for s_name in sorted(self.fastqc_data):
-            for mate in sorted(self.fastqc_data[s_name]):
+        for s_name in sorted(self.dragen_fastqc_data):
+            for mate in sorted(self.dragen_fastqc_data[s_name]):
                 r_name = "{}_{}".format(s_name, mate)
                 data[r_name] = dict()
 
-                for key, value in self.fastqc_data[s_name][mate][GROUP].items():
+                for key, value in self.dragen_fastqc_data[s_name][mate][GROUP].items():
                     parts = key.split()
                     pct = int(parts[0][:-1])
                     try:
@@ -168,11 +168,11 @@ class DragenFastqcGcMetrics(BaseMultiqcModule):
         data = dict()
         avg_gc_content_data = dict()
         GC_GROUP = "READ GC CONTENT"
-        for s_name in sorted(self.fastqc_data):
-            for mate in sorted(self.fastqc_data[s_name]):
+        for s_name in sorted(self.dragen_fastqc_data):
+            for mate in sorted(self.dragen_fastqc_data[s_name]):
                 r_name = "{}_{}".format(s_name, mate)
                 data[r_name] = defaultdict(float)
-                for metric, value in self.fastqc_data[s_name][mate][GC_GROUP].items():
+                for metric, value in self.dragen_fastqc_data[s_name][mate][GC_GROUP].items():
                     pct = percentage_from_content_metric(metric)
                     data[r_name][pct] = value
 

@@ -35,7 +35,7 @@ class DragenContentMetrics(BaseMultiqcModule):
         self.sequence_content_plot()
         self.adapter_content_plot()
 
-        return self.fastqc_data.keys()
+        return self.dragen_fastqc_data.keys()
 
     def n_content_plot(self):
         """Create the HTML for the per base N content plot"""
@@ -43,11 +43,11 @@ class DragenContentMetrics(BaseMultiqcModule):
         totals = defaultdict(int)
         non_n = defaultdict(int)
         GROUP = "POSITIONAL BASE CONTENT"
-        for s_name in sorted(self.fastqc_data):
-            for mate in sorted(self.fastqc_data[s_name]):
+        for s_name in sorted(self.dragen_fastqc_data):
+            for mate in sorted(self.dragen_fastqc_data[s_name]):
 
                 # Count total bases
-                total_group_data = self.fastqc_data[s_name][mate][GROUP]
+                total_group_data = self.dragen_fastqc_data[s_name][mate][GROUP]
                 for metric, value in total_group_data.items():
                     avg_pos = average_pos_from_metric(metric)
                     totals[avg_pos] += value
@@ -112,11 +112,11 @@ class DragenContentMetrics(BaseMultiqcModule):
         # Prep the data
         data = dict()
         GROUP = "POSITIONAL BASE CONTENT"
-        for s_name in sorted(self.fastqc_data):
-            for mate in sorted(self.fastqc_data[s_name]):
+        for s_name in sorted(self.dragen_fastqc_data):
+            for mate in sorted(self.dragen_fastqc_data[s_name]):
                 r_name = "{}_{}".format(s_name, mate)
                 data[r_name] = dict()
-                group_data = self.fastqc_data[s_name][mate][GROUP]
+                group_data = self.dragen_fastqc_data[s_name][mate][GROUP]
 
                 totals = defaultdict(int)
                 for metric, value in group_data.items():
@@ -214,17 +214,17 @@ class DragenContentMetrics(BaseMultiqcModule):
         data = dict()
         COUNT_GROUP = "POSITIONAL BASE CONTENT"
         ADP_GROUP = "SEQUENCE POSITIONS"
-        for s_name in sorted(self.fastqc_data):
-            for mate in sorted(self.fastqc_data[s_name]):
+        for s_name in sorted(self.dragen_fastqc_data):
+            for mate in sorted(self.dragen_fastqc_data[s_name]):
 
                 totals = defaultdict(int)
-                for key, value in self.fastqc_data[s_name][mate][COUNT_GROUP].items():
+                for key, value in self.dragen_fastqc_data[s_name][mate][COUNT_GROUP].items():
                     parts = key.split()
                     pos = average_from_range(parts[1])
                     totals[pos] += int(value)
 
                 adps = defaultdict(int)
-                for key, value in self.fastqc_data[s_name][mate][ADP_GROUP].items():
+                for key, value in self.dragen_fastqc_data[s_name][mate][ADP_GROUP].items():
                     parts = key.split()
                     seq = parts[0].split("'")[1]
                     if seq not in ADAPTER_SEQS:
