@@ -39,11 +39,13 @@ class DragenBaseMetrics(BaseMultiqcModule):
         """STUFF"""
 
         data = OrderedDict()
+        data_labels = []
         GROUP = "POSITIONAL QUALITY"
         for s_name in sorted(self.dragen_fastqc_data):
             for mate in sorted(self.dragen_fastqc_data[s_name]):
                 r_name = "{}_{}".format(s_name, mate)
                 data[r_name] = defaultdict(float)
+                data_labels.append({"name": r_name})
 
                 sorted_keys = sortPosQualTableKeys(self.dragen_fastqc_data[s_name][mate][GROUP])
                 for key in sorted_keys:
@@ -73,6 +75,7 @@ class DragenBaseMetrics(BaseMultiqcModule):
                 {"from": 20, "to": 28, "color": "#e6dcc3"},
                 {"from": 0, "to": 20, "color": "#e6c3c3"},
             ],
+            "data_labels": data_labels,
         }
 
         self.add_section(
