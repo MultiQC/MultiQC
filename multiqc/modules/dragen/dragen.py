@@ -9,8 +9,8 @@ from .mapping_metrics import DragenMappingMetics
 from .ploidy_estimation_metrics import DragenPloidyEstimationMetrics
 from .rna_quant_metrics import DragenRnaQuantMetrics
 from .rna_transcript_cov import DragenRnaTranscriptCoverage
-from .sc_rna_metrics import DragenScRnaMetrics
 from .sc_atac_metrics import DragenScAtacMetrics
+from .sc_rna_metrics import DragenScRnaMetrics
 from .time_metrics import DragenTimeMetrics
 from .trimmer_metrics import DragenTrimmerMetrics
 from .vc_metrics import DragenVCMetrics
