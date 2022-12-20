@@ -60,7 +60,7 @@ class DragenBaseMetrics(BaseMultiqcModule):
                         data[r_name][pos][quantile] = qv
 
         pconfig = {
-            "id": "fastqc_per_base_sequence_quality_range_plot",
+            "id": "dragen_fastqc_per_base_sequence_quality_range_plot",
             "title": "DRAGEN-QC: Per-Position Quality Range",
             "ylab": "Phred Quality Score",
             "xlab": "Position (bp)",
@@ -77,7 +77,7 @@ class DragenBaseMetrics(BaseMultiqcModule):
 
         self.add_section(
             name="Per-Position Quality Score Ranges",
-            anchor="fastqc_pos_qual_ranges",
+            anchor="dragen_fastqc_pos_qual_ranges",
             description="The range of quality value across each base position in each sample or read",
             plot=boxplot.plot(data, pconfig),
         )
@@ -133,7 +133,7 @@ class DragenBaseMetrics(BaseMultiqcModule):
                         data[r_name][int(pos)] = qv_sum / total
 
         pconfig = {
-            "id": "fastqc_per_base_sequence_quality_plot",
+            "id": "dragen_fastqc_per_base_sequence_quality_plot",
             "title": "DRAGEN-QC: Per-Position Quality Scores",
             "ylab": "Phred Quality Score",
             "xlab": "Position (bp)",
@@ -150,7 +150,7 @@ class DragenBaseMetrics(BaseMultiqcModule):
 
         self.add_section(
             name="Per-Position Mean Quality Scores",
-            anchor="fastqc_per_base_sequence_quality",
+            anchor="dragen_fastqc_per_base_sequence_quality",
             description="The mean quality value across each base position in the read.",
             helptext="""
             To enable multiple samples to be plotted on the same graph, only the mean quality

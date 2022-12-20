@@ -148,13 +148,13 @@ class DragenContentMetrics(BaseMultiqcModule):
             log.debug("sequence_content not found in FastQC reports")
             return None
 
-        html = """<div id="fastqc_per_base_sequence_content_plot_div">
+        html = """<div id="dragen_fastqc_per_base_sequence_content_plot_div">
             <div class="alert alert-info">
                <span class="glyphicon glyphicon-hand-up"></span>
                Click a sample row to see a line plot for that dataset.
             </div>
             <h5><span class="s_name text-primary"><span class="glyphicon glyphicon-info-sign"></span> Rollover for sample name</span></h5>
-            <button id="fastqc_per_base_sequence_content_export_btn"><span class="glyphicon glyphicon-download-alt"></span> Export Plot</button>
+            <button id="dragen_fastqc_per_base_sequence_content_export_btn"><span class="glyphicon glyphicon-download-alt"></span> Export Plot</button>
             <div class="fastqc_seq_heatmap_key">
                 Position: <span id="fastqc_seq_heatmap_key_pos">-</span>
                 <div><span id="fastqc_seq_heatmap_key_t"> %T: <span>-</span></span></div>
@@ -163,7 +163,7 @@ class DragenContentMetrics(BaseMultiqcModule):
                 <div><span id="fastqc_seq_heatmap_key_g"> %G: <span>-</span></span></div>
             </div>
             <div id="fastqc_seq_heatmap_div" class="fastqc-overlay-plot">
-                <div id="{id}" class="fastqc_per_base_sequence_content_plot hc-plot has-custom-export">
+                <div id="{id}" class="dragen_fastqc_per_base_sequence_content_plot hc-plot has-custom-export">
                     <canvas id="fastqc_seq_heatmap" height="100%" width="800px" style="width:100%;"></canvas>
                 </div>
             </div>
@@ -172,13 +172,13 @@ class DragenContentMetrics(BaseMultiqcModule):
         <script type="application/json" class="fastqc_seq_content">{d}</script>
         """.format(
             # Generate unique plot ID, needed in mqc_export_selectplots
-            id=report.save_htmlid("fastqc_per_base_sequence_content_plot"),
+            id=report.save_htmlid("dragen_fastqc_per_base_sequence_content_plot"),
             d=json.dumps([self.anchor.replace("-", "_"), data]),
         )
 
         self.add_section(
             name="Per-Position Sequence Content",
-            anchor="fastqc_per_base_sequence_content",
+            anchor="dragen_fastqc_per_base_sequence_content",
             description="The proportion of each base position for which each of the four normal DNA bases has been called.",
             helptext="""
             To enable multiple samples to be shown in a single plot, the base composition data
@@ -246,7 +246,7 @@ class DragenContentMetrics(BaseMultiqcModule):
                         data[r_name][pos] = 100.0 * cumsum / total
 
         pconfig = {
-            "id": "fastqc_adapter_content_plot",
+            "id": "dragen_fastqc_adapter_content_plot",
             "title": "FastQC: Adapter Content",
             "ylab": "% of Sequences",
             "xlab": "Position (bp)",
@@ -265,7 +265,7 @@ class DragenContentMetrics(BaseMultiqcModule):
 
         self.add_section(
             name="Adapter Content",
-            anchor="fastqc_adapter_content",
+            anchor="dragen_fastqc_adapter_content",
             description="""The cumulative percentage count of the proportion of your
             library which has seen each of the adapter sequences at each position.""",
             helptext="""

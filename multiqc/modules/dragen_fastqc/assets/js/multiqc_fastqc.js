@@ -408,10 +408,10 @@ function fastqc_module(module_element, module_key) {
   /////////
 
   // Seq Content heatmap export button
-  module_element.find("#fastqc_per_base_sequence_content_export_btn").click(function (e) {
+  module_element.find("#dragen_fastqc_per_base_sequence_content_export_btn").click(function (e) {
     e.preventDefault();
-    // In case of repeated modules: #fastqc_per_base_sequence_content_plot, #fastqc_per_base_sequence_content_plot-1, ..
-    var plot_id = module_element.find(".fastqc_per_base_sequence_content_plot").attr("id");
+    // In case of repeated modules: #dragen_fastqc_per_base_sequence_content_plot, #dragen_fastqc_per_base_sequence_content_plot-1, ..
+    var plot_id = module_element.find(".dragen_fastqc_per_base_sequence_content_plot").attr("id");
     // Tick only this plot in the toolbox and slide out
     $("#mqc_export_selectplots input").prop("checked", false);
     $('#mqc_export_selectplots input[value="' + plot_id + '"]').prop("checked", true);
@@ -419,10 +419,10 @@ function fastqc_module(module_element, module_key) {
   });
 
   // Export plot
-  module_element.find(".fastqc_per_base_sequence_content_plot").on("mqc_plotexport_image", function (e, cfg) {
+  module_element.find(".dragen_fastqc_per_base_sequence_content_plot").on("mqc_plotexport_image", function (e, cfg) {
     alert("Apologies, it's not yet possible to export this plot.\nPlease take a screengrab or export the JSON data.");
   });
-  module_element.find(".fastqc_per_base_sequence_content_plot").on("mqc_plotexport_data", function (e, cfg) {
+  module_element.find(".dragen_fastqc_per_base_sequence_content_plot").on("mqc_plotexport_data", function (e, cfg) {
     if (cfg["ft"] == "json") {
       json_str = JSON.stringify(fastqc_seq_content[module_key], null, 2);
       var blob = new Blob([json_str], { type: "text/plain;charset=utf-8" });
@@ -460,7 +460,7 @@ function fastqc_module(module_element, module_key) {
       s_status_class = "label-danger";
     }
     module_element
-      .find("#fastqc_per_base_sequence_content_plot_div .s_name")
+      .find("#dragen_fastqc_per_base_sequence_content_plot_div .s_name")
       .html(
         '<span class="glyphicon glyphicon-info-sign"></span> ' +
           s_name +
@@ -501,7 +501,7 @@ function fastqc_module(module_element, module_key) {
   // Remove sample name again when mouse leaves
   module_element.find("#fastqc_seq_heatmap").mouseout(function (e) {
     module_element
-      .find("#fastqc_per_base_sequence_content_plot_div .s_name")
+      .find("#dragen_fastqc_per_base_sequence_content_plot_div .s_name")
       .html('<span class="glyphicon glyphicon-info-sign"></span> Rollover for sample name');
     module_element.find("#fastqc_seq_heatmap_key_pos").text("-");
     module_element.find("#fastqc_seq_heatmap_key_t span").text("-");
@@ -565,7 +565,7 @@ function fastqc_module(module_element, module_key) {
   });
   module_element.on("click", "#fastqc_sequence_content_single_back", function (e) {
     e.preventDefault();
-    module_element.find("#fastqc_per_base_sequence_content_plot_div").slideDown();
+    module_element.find("#dragen_fastqc_per_base_sequence_content_plot_div").slideDown();
     module_element.find("#fastqc_sequence_content_single_wrapper").slideUp(function () {
       $(this).remove();
     });
@@ -605,7 +605,7 @@ function fastqc_module(module_element, module_key) {
 
     // Create plot div if it doesn't exist, and hide overview
     if (module_element.find("#fastqc_sequence_content_single_wrapper").length == 0) {
-      var plot_div = module_element.find("#fastqc_per_base_sequence_content_plot_div");
+      var plot_div = module_element.find("#dragen_fastqc_per_base_sequence_content_plot_div");
       plot_div.slideUp();
       var newplot =
         '<div id="fastqc_sequence_content_single_wrapper"> \
