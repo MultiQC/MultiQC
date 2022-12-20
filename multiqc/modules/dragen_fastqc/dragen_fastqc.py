@@ -48,7 +48,7 @@ class MultiqcModule(DragenBaseMetrics, DragenReadMetrics, DragenFastqcGcMetrics,
         self.js = {
             "assets/js/multiqc_fastqc.js": os.path.join(os.path.dirname(__file__), "assets", "js", "multiqc_fastqc.js")
         }
-        self.intro += '<script type="application/json" class="fastqc_passfails">["DRAGEN_FastQc", {"per_base_sequence_content": {"TEST": "pass"}}]</script>'
+        self.intro += '<script type="application/json" class="fastqc_passfails">["dragen_fastqc", {"per_base_sequence_content": {"TEST": "pass"}}]</script>'
 
         data_by_sample = {}
         for f in self.find_log_files("dragen_fastqc"):

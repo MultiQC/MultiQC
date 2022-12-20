@@ -65,13 +65,9 @@ function fastqc_module(module_element, module_key) {
     // Get sample names, rename and skip hidden samples
     var p_data = {};
     var hidden_samples = 0;
-    console.log(fastqc_seq_content);
-    console.log(module_key);
     $.each(fastqc_seq_content[module_key], function (s_name, data) {
       // rename sample names
       var orig_s_name = s_name;
-      console.log(fastqc_passfails);
-      console.log(module_key);
       var t_status = fastqc_passfails[module_key]["per_base_sequence_content"][s_name];
       $.each(window.mqc_rename_f_texts, function (idx, f_text) {
         if (window.mqc_rename_regex_mode) {
