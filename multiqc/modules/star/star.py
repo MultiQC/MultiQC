@@ -163,10 +163,10 @@ class MultiqcModule(BaseMultiqcModule):
 
         if len(parsed_data) == 0:
             return None
-            
+
         parsed_data["mapped_percent"] = parsed_data["uniquely_mapped_percent"] + parsed_data["multimapped_percent"]
         parsed_data["mapped"] = parsed_data["uniquely_mapped"] + parsed_data["multimapped"]
-        
+
         return parsed_data
 
     def parse_star_genecount_report(self, f):
@@ -215,7 +215,7 @@ class MultiqcModule(BaseMultiqcModule):
             "min": 0,
             "suffix": "%",
             "scale": "YlGn",
-            "hidden": True
+            "hidden": True,
         }
         headers["mapped_percent"] = {
             "title": "% Aligned",
