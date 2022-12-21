@@ -23,6 +23,10 @@
 - [**Cell Ranger**](https://support.10xgenomics.com/single-cell-gene-expression/software/pipelines/latest/what-is-cell-ranger)
   - Works with data from 10X Genomics Chromium. Processes Chromium single cell data to align reads, generate feature-barcode matrices, perform clustering and other secondary analysis, and more.
   - New MultiQC module parses Cell Ranger quality reports from VDJ and count analysis
+- [**DRAGEN-FastQC**](https://www.illumina.com/products/by-type/informatics-products/dragen-bio-it-platform.html)
+  - Illumina Bio-IT Platform that uses FPGA for accelerated primary and secondary analysis
+  - Finally merged the epic 2.5-year-old pull request, with 3.5k new lines of code.
+  - Please report any bugs you find!
 
 ### Module feature additions
 
@@ -45,6 +49,8 @@
   - Create a report even if there's only Custom Content General Stats there
   - Attempt to cooerce line / scatter x-axes into floats so as not to lose labels ([#1242](https://github.com/ewels/MultiQC/issues/1242))
   - Multi-sample line-graph TSV files that have no sample name in row 1 column 1 now use row 1 as x-axis labels ([#1242](https://github.com/ewels/MultiQC/issues/1242))
+- **FastQC**
+  - Report median read-length for fastqc in addition to mean ([#1745](https://github.com/ewels/MultiQC/pull/1745))
 - **Kraken**
   - Fix duplicate heatmap to account for missing taxons ([#1779](https://github.com/ewels/MultiQC/pull/1779))
   - Make heatmap full width
@@ -76,6 +82,7 @@
 - Add timezone to time in reports
 - Add nix flake support
 - Added automatic tweet about new releases
+- Breaking: Removed `--cl_config` option. Please use `--cl-config` instead.
 
 ### Module updates
 

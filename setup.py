@@ -98,6 +98,7 @@ setup(
             "deeptools = multiqc.modules.deeptools:MultiqcModule",
             "disambiguate = multiqc.modules.disambiguate:MultiqcModule",
             "dragen = multiqc.modules.dragen:MultiqcModule",
+            "dragen_fastqc = multiqc.modules.dragen_fastqc:MultiqcModule",
             "eigenstratdatabasetools = multiqc.modules.eigenstratdatabasetools:MultiqcModule",
             "fastp = multiqc.modules.fastp:MultiqcModule",
             "fastq_screen = multiqc.modules.fastq_screen:MultiqcModule",

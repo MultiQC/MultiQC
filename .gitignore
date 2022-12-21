@@ -37,3 +37,4 @@ runTest.sh
 .envrc
 .direnv/*
 /result
+venv
