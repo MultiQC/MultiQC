@@ -175,7 +175,7 @@ class MultiqcModule(BaseMultiqcModule):
             self.fastp_qual_plotdata[k][s_name] = {}
             self.fastp_gc_content_data[k][s_name] = {}
             self.fastp_n_content_data[k][s_name] = {}
-        
+
         # Parse read1 - get number of read (paired for paired-end data) before
         try:
             for k in parsed_json["read1_before_filtering"]:
@@ -184,10 +184,12 @@ class MultiqcModule(BaseMultiqcModule):
                         parsed_json["read1_before_filtering"][k]
                     )
                     if k == "total_reads":
-                        self.fastp_data[s_name]["before_filtering_total_pairs"] = float(parsed_json["read1_before_filtering"][k])
+                        self.fastp_data[s_name]["before_filtering_total_pairs"] = float(
+                            parsed_json["read1_before_filtering"][k]
+                        )
         except KeyError:
             log.debug("fastp JSON did not have a 'read1_before_filtering' keys: '{}'".format(f["fn"]))
-            
+
         # Parse read1 - get number of read (paired for paired-end data) after
         try:
             for k in parsed_json["read1_after_filtering"]:
@@ -196,10 +198,12 @@ class MultiqcModule(BaseMultiqcModule):
                         parsed_json["read1_after_filtering"][k]
                     )
                     if k == "total_reads":
-                        self.fastp_data[s_name]["after_filtering_total_pairs"] = float(parsed_json["read1_before_filtering"][k])
+                        self.fastp_data[s_name]["after_filtering_total_pairs"] = float(
+                            parsed_json["read1_before_filtering"][k]
+                        )
         except KeyError:
             log.debug("fastp JSON did not have a 'read1_after_filtering' keys: '{}'".format(f["fn"]))
-            
+
         # Parse read2 - get number of read (paired for paired-end data) before
         try:
             for k in parsed_json["read2_before_filtering"]:
@@ -208,10 +212,13 @@ class MultiqcModule(BaseMultiqcModule):
                         parsed_json["read2_before_filtering"][k]
                     )
                     if k == "total_reads":
-                        self.fastp_data[s_name]["before_filtering_total_pairs"] = (self.fastp_data[s_name]["before_filtering_total_pairs"]+float(parsed_json["read2_before_filtering"][k]))/2
+                        self.fastp_data[s_name]["before_filtering_total_pairs"] = (
+                            self.fastp_data[s_name]["before_filtering_total_pairs"]
+                            + float(parsed_json["read2_before_filtering"][k])
+                        ) / 2
         except KeyError:
             log.debug("fastp JSON did not have a 'read2_before_filtering' keys: '{}'".format(f["fn"]))
-            
+
         # Parse read2 - get number of read (paired for paired-end data) after
         try:
             for k in parsed_json["read2_after_filtering"]:
@@ -220,10 +227,13 @@ class MultiqcModule(BaseMultiqcModule):
                         parsed_json["read2_after_filtering"][k]
                     )
                     if k == "total_reads":
-                        self.fastp_data[s_name]["after_filtering_total_pairs"] = (self.fastp_data[s_name]["after_filtering_total_pairs"]+float(parsed_json["read2_after_filtering"][k]))/2
+                        self.fastp_data[s_name]["after_filtering_total_pairs"] = (
+                            self.fastp_data[s_name]["after_filtering_total_pairs"]
+                            + float(parsed_json["read2_after_filtering"][k])
+                        ) / 2
         except KeyError:
             log.debug("fastp JSON did not have a 'read2_after_filtering' keys: '{}'".format(f["fn"]))
-            
+
         # Parse after_filtering
         try:
             for k in parsed_json["summary"]["after_filtering"]:
@@ -232,7 +242,7 @@ class MultiqcModule(BaseMultiqcModule):
                 )
         except KeyError:
             log.debug("fastp JSON did not have a 'summary'-'after_filtering' keys: '{}'".format(f["fn"]))
-            
+
         # Parse before_filtering
         try:
             for k in parsed_json["summary"]["before_filtering"]:
@@ -241,14 +251,24 @@ class MultiqcModule(BaseMultiqcModule):
                 )
         except KeyError:
             log.debug("fastp JSON did not have a 'summary'-'before_filtering' keys: '{}'".format(f["fn"]))
-        
+
         # Mean values for read length
         try:
-            self.fastp_data[s_name]["before_filtering_read_mean_length"] = (self.fastp_data[s_name]["before_filtering_read1_mean_length"]+self.fastp_data[s_name]["before_filtering_read2_mean_length"])/2
-            self.fastp_data[s_name]["after_filtering_read_mean_length"] = (self.fastp_data[s_name]["after_filtering_read1_mean_length"]+self.fastp_data[s_name]["after_filtering_read2_mean_length"])/2
+            self.fastp_data[s_name]["before_filtering_read_mean_length"] = (
+                self.fastp_data[s_name]["before_filtering_read1_mean_length"]
+                + self.fastp_data[s_name]["before_filtering_read2_mean_length"]
+            ) / 2
+            self.fastp_data[s_name]["after_filtering_read_mean_length"] = (
+                self.fastp_data[s_name]["after_filtering_read1_mean_length"]
+                + self.fastp_data[s_name]["after_filtering_read2_mean_length"]
+            ) / 2
         except KeyError:
-            self.fastp_data[s_name]["before_filtering_read_mean_length"] = self.fastp_data[s_name]["before_filtering_read1_mean_length"]
-            self.fastp_data[s_name]["after_filtering_read_mean_length"] = self.fastp_data[s_name]["after_filtering_read1_mean_length"]
+            self.fastp_data[s_name]["before_filtering_read_mean_length"] = self.fastp_data[s_name][
+                "before_filtering_read1_mean_length"
+            ]
+            self.fastp_data[s_name]["after_filtering_read_mean_length"] = self.fastp_data[s_name][
+                "after_filtering_read1_mean_length"
+            ]
 
         # Parse filtering_result
         try:
@@ -407,7 +427,7 @@ class MultiqcModule(BaseMultiqcModule):
             "scale": "BuGn",
             "modify": lambda x: x,
         }
-        
+
         headers["pct_surviving"] = {
             "title": "% PF",
             "description": "Percent reads passing filter",
@@ -461,7 +481,7 @@ class MultiqcModule(BaseMultiqcModule):
             "scale": "BuGn",
             "modify": lambda x: x,
         }
-        
+
         headers["pct_duplication"] = {
             "title": "% Duplication",
             "description": "Duplication rate before filtering",
