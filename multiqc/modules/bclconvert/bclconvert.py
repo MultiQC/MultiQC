@@ -68,7 +68,9 @@ class MultiqcModule(BaseMultiqcModule):
             """
             self.per_lane_undetermined_reads = None
 
-        self._parse_top_unknown_barcodes()
+        create_undetermined_barplots = getattr(config, "bclconvert", {}).get("create_undetermined_barcode_barplots", False)
+        if create_undetermined_barplots:
+            self._parse_top_unknown_barcodes()
 
         # Collect counts by lane and sample
         self.bclconvert_bylane = dict()
@@ -181,23 +183,24 @@ class MultiqcModule(BaseMultiqcModule):
         )
 
         # Add section with undetermined barcodes
-        self.add_section(
-            name="Undetermined barcodes by lane",
-            anchor="undetermine_by_lane",
-            description="Undetermined barcodes by lanes",
-            plot=bargraph.plot(
-                self.get_bar_data_from_undetermined(self.bclconvert_bylane),
-                None,
-                {
-                    "id": "bclconvert_undetermined",
-                    "title": "bclconvert: Undetermined barcodes by lane",
-                    "ylab": "Count",
-                    "tt_percentages": False,
-                    "use_legend": True,
-                    "tt_suffix": "reads",
-                },
-            ),
-        )
+        if create_undetermined_barplots:
+            self.add_section(
+                name="Undetermined barcodes by lane",
+                anchor="undetermine_by_lane",
+                description="Undetermined barcodes by lanes",
+                plot=bargraph.plot(
+                    self.get_bar_data_from_undetermined(self.bclconvert_bylane),
+                    None,
+                    {
+                        "id": "bclconvert_undetermined",
+                        "title": "bclconvert: Undetermined barcodes by lane",
+                        "ylab": "Count",
+                        "tt_percentages": False,
+                        "use_legend": True,
+                        "tt_suffix": "reads",
+                    },
+                ),
+            )
 
     def _get_genome_size(self):
         gs = getattr(config, "bclconvert", {}).get("genome_size")

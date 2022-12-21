@@ -28,3 +28,14 @@ The coverage depth will be estimated as the yield Q30 dvivided by the genome siz
 MultiQC comes with effective genome size presets for Human and Mouse, so you can
 provide the genome build name instead, like this: `genome_size: hg38_genome`. The
 following values are supported: `hg19_genome`, `hg38_genome`, `mm10_genome`.
+
+#### Add barplots containing undetermined barcodes
+
+You can specify following parameter in the config when you want to include the barplots of the undetermined barcodes:
+
+```yaml
+bclconvert:
+  create_undetermined_barcode_barplots: True
+```
+
+The default of this configuration value is `False`
