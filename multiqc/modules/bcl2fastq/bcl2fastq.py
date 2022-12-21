@@ -6,8 +6,8 @@ from collections import OrderedDict, defaultdict
 from itertools import islice
 
 from multiqc import config
-from multiqc.plots import bargraph, table
 from multiqc.modules.base_module import BaseMultiqcModule
+from multiqc.plots import bargraph, table
 
 log = logging.getLogger(__name__)
 

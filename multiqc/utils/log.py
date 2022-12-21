@@ -4,12 +4,13 @@
 Code to initilise the MultiQC logging
 """
 
-import coloredlogs
 import logging
 import os
 import shutil
 import sys
 import tempfile
+
+import coloredlogs
 
 from multiqc.utils import config, util_functions
 

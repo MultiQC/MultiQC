@@ -42,6 +42,7 @@ data_format: "tsv"
 module_tag: []
 force: false
 no_ansi: false
+quiet: false
 prepend_dirs: false
 prepend_dirs_depth: 0
 prepend_dirs_sep: " | "
@@ -473,6 +474,10 @@ module_order:
         - RNA
         - umi
   - dragen:
+      module_tag:
+        - DNA
+        - RNA
+  - dragen_fastqc:
       module_tag:
         - DNA
         - RNA
