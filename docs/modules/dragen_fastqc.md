@@ -28,3 +28,19 @@ DRAGEN modules as desired.
   - Positional prevalence of ambiguous bases
   - Positional base content
   - Adapter/Kmer sequence start positions
+
+#### Quality score box plots
+
+By default, the box plots showing the range of quality scores are only shown if there are maximum 2 samples in the report. You can change this threshold with the following MultiQC config (eg. to max 10 samples):
+
+```yaml
+dragen_fastqc:
+  quality_range_boxplots_max_samples: 10
+```
+
+If you prefer, you can force MultiQC to generate these box plots for _all_ samples using the following configuration:
+
+```yaml
+dragen_fastqc:
+  force_quality_range_boxplots: true
+```

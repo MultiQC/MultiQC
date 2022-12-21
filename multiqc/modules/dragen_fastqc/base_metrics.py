@@ -29,14 +29,23 @@ class DragenBaseMetrics(BaseMultiqcModule):
     """
 
     def add_base_metrics(self):
+        num_samples = len(self.dragen_fastqc_data.keys())
         # Add each section in order
-        self.positional_quality_range_plot()
+        dragen_fastqc_config = getattr(config, "dragen_fastqc", {})
+        quality_range_boxplots_max_samples = dragen_fastqc_config.get("quality_range_boxplots_max_samples", 2)
+        force_boxplots = dragen_fastqc_config.get("force_quality_range_boxplots", False)
+        if num_samples <= quality_range_boxplots_max_samples or force_boxplots:
+            self.positional_quality_range_plot()
+        else:
+            log.debug(
+                f"Skipping DRAGEN-FastQC quality range boxplots as > {quality_range_boxplots_max_samples} samples ({num_samples}). See docs for how to override this behaviour using a config."
+            )
         self.positional_mean_quality_plot()
 
         return self.dragen_fastqc_data.keys()
 
     def positional_quality_range_plot(self):
-        """STUFF"""
+        """Box plot image showing range of quality scores at each position"""
 
         data = OrderedDict()
         data_labels = []
