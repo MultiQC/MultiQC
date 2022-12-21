@@ -20,7 +20,7 @@ def update_dict(table, headers, rows_list, col_map, colours, prefix):
             col_id = col_map[col_name]
             table[col_id] = col_data
             title = col_id.title() if col_id[0:1].islower() else col_id
-            for str in ["Bc", "Umi", "Igk", "Igh", "Igl", "Vj"]:
+            for str in ["Bc", "bc", "Umi", "Igk", "Igh", "Igl", "Vj"]:
                 title = title.replace(str, str.upper())
             headers[col_id] = {
                 "rid": "{}_{}".format(prefix, col_id.replace(" ", "_").replace("/", "_")),
@@ -37,6 +37,14 @@ def update_dict(table, headers, rows_list, col_map, colours, prefix):
                         "min": 0,
                     }
                 )
+
+            # Assign shared keys
+            if col_id == "estimated cells":
+                headers[col_id]["shared_key"] = "cell_count"
+                headers[col_id]["format"] = "{:,.0f}"
+            if col_id.endswith("reads/cell"):
+                headers[col_id]["shared_key"] = "reads_per_cell"
+                headers[col_id]["format"] = "{:,.0f}"
 
     return table, headers
 

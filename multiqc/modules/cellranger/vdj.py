@@ -150,7 +150,7 @@ class CellRangerVdjMixin:
                 mydict = mydict["summary"]
                 break
 
-        s_name = mydict["sample"]["id"]
+        s_name = self.clean_s_name(mydict["sample"]["id"], f)
         data = dict()
         data_general_stats = dict()
 
@@ -161,9 +161,9 @@ class CellRangerVdjMixin:
             "Fraction Reads in Cells": "reads in cells",
         }
         colours = {
-            "estimated cells": "",
-            "avg reads/cell": "",
-            "reads in cells": "",
+            "estimated cells": "RdPu",
+            "avg reads/cell": "Blues",
+            "reads in cells": "PuBnGn",
         }
         data_general_stats, self.vdj_general_data_headers = update_dict(
             data_general_stats,
