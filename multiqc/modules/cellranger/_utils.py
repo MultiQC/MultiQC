@@ -1,6 +1,13 @@
 #!/usr/bin/env python
 
 
+def clean_title_case(col_id):
+    title = col_id.title() if col_id[0:1].islower() else col_id
+    for str in ["Bc", "bc", "Umi", "Igk", "Igh", "Igl", "Vj", "q30"]:
+        title = title.replace(str, str.upper())
+    return title
+
+
 def update_dict(table, headers, rows_list, col_map, colours, prefix):
     """update the data dict and headers dict"""
 
@@ -19,12 +26,9 @@ def update_dict(table, headers, rows_list, col_map, colours, prefix):
 
             col_id = col_map[col_name]
             table[col_id] = col_data
-            title = col_id.title() if col_id[0:1].islower() else col_id
-            for str in ["Bc", "bc", "Umi", "Igk", "Igh", "Igl", "Vj"]:
-                title = title.replace(str, str.upper())
             headers[col_id] = {
                 "rid": "{}_{}".format(prefix, col_id.replace(" ", "_").replace("/", "_")),
-                "title": title,
+                "title": clean_title_case(col_id),
                 "description": col_name,
                 "namespace": f"Cell Ranger {prefix}",
                 "scale": colours.get(col_id, "RdYlGn" if is_percentage else "GnBu"),

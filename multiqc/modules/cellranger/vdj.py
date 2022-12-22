@@ -182,20 +182,12 @@ class CellRangerVdjMixin:
             "Q30 Bases in RNA Read 1": "Q30 read1",
             "Q30 Bases in RNA Read 2": "Q30 read2",
         }
-        colours = {
-            # "reads": "",
-            # "valid bc": "",
-            # "Q30 bc": "",
-            # "Q30 UMI": "",
-            # "Q30 read1": "",
-            # "Q30 read2": "",
-        }
         data_general_stats, self.vdj_general_data_headers = update_dict(
             data_general_stats,
             self.vdj_general_data_headers,
             mydict["summary_tab"]["vdj_sequencing"]["table"]["rows"],
             col_dict,
-            colours,
+            {},
             "VDJ",
         )
 
@@ -221,27 +213,12 @@ class CellRangerVdjMixin:
             "Q30 Bases in RNA Read 1": "Q30 read1",
             "Q30 Bases in RNA Read 2": "Q30 read2",
         }
-        colours = {
-            # "reads" "valid bc": "",
-            # "estimated cells": "",
-            # "avg reads/cell": "",
-            # "used reads/cell": "",
-            # "reads in cells": "",
-            # "VDJ reads": "",
-            # "IGH reads": "",
-            # "IGK reads": "",
-            # "IGL reads": "",
-            # "Q30 bc": "",
-            # "Q30 UMI": "",
-            # "Q30 read1": "",
-            # "Q30 read2": "",
-        }
         data, self.vdj_mapping_headers = update_dict(
             data_general_stats,
             self.vdj_mapping_headers,
             data_rows,
             col_dict,
-            colours,
+            {},
             "VDJ",
         )
 
@@ -297,7 +274,7 @@ class CellRangerVdjMixin:
         for alarm in alarms_list:
             warnings[alarm["id"]] = "FAIL"
             self.vdj_warnings_headers[alarm["id"]] = {
-                "title": alarm["id"],
+                "title": clean_title_case(alarm["id"].replace("_", " ")),
                 "description": alarm["title"],
                 "bgcols": {"FAIL": "#f06807"},
             }

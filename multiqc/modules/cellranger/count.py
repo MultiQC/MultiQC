@@ -230,16 +230,6 @@ class CellRangerCountMixin:
             "valid umi": "RdYlGn",
             "median umi/cell": "YlGn",
             "saturation": "YlOdRd",
-            # "Q30 bc": "",
-            # "Q30 UMI": "",
-            # "Q30 read": "",
-            # "reads mapped": "",
-            # "confident reads": "",
-            # "confident transcriptome": "",
-            # "confident exonic": "",
-            # "confident intronic": "",
-            # "confident intergenic": "",
-            # "reads antisense": "",
         }
         data, self.count_data_headers = update_dict(
             data_general_stats,
