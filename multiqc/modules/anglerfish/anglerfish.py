@@ -3,12 +3,13 @@
 """ MultiQC module to parse output from Anglerfish """
 
 from __future__ import print_function
-from collections import OrderedDict
-import logging
-import json
 
-from multiqc.plots import bargraph, beeswarm, table
+import json
+import logging
+from collections import OrderedDict
+
 from multiqc.modules.base_module import BaseMultiqcModule
+from multiqc.plots import bargraph, beeswarm, table
 
 # Initialise the logger
 log = logging.getLogger(__name__)
@@ -77,13 +78,12 @@ class MultiqcModule(BaseMultiqcModule):
         total_reads = 0
         try:
             for k in parsed_json["sample_stats"]:
+                total_reads += float(k.get("#reads", 0))
                 for key in k:
-                    if key != "sample_name":
-                        if key == "#reads":
-                            total_reads += float(k[key])
+                    try:
                         self.anglerfish_data[s_name][f"{key}_{index}"] = float(k[key])
-                    else:
-                        self.anglerfish_data[s_name][f"sample_name_{index}"] = k["sample_name"]
+                    except ValueError:
+                        self.anglerfish_data[s_name][f"{key}_{index}"] = k[key]
                 index += 1
             self.anglerfish_data[s_name]["sample_stats_amount"] = index
             self.anglerfish_data[s_name]["total_read"] = total_reads
