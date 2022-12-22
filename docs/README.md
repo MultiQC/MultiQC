@@ -47,6 +47,7 @@ MultiQC Modules:
     Bismark: modules/bismark.md
     Bowtie 1: modules/bowtie1.md
     Bowtie 2: modules/bowtie2.md
+    Cell Ranger: modules/cellranger.md
     DRAGEN: modules/dragen.md
     HiCPro: modules/hicpro.md
     HiCUP: modules/hicup.md
