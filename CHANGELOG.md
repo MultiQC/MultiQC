@@ -20,6 +20,8 @@
 
 ### New Modules
 
+- [**Anglerfish**](https://github.com/remiolsen/anglerfish)
+  - A tool designed to assess pool balancing, contamination and insert sizes of Illumina library dry runs on Oxford Nanopore data.
 - [**Cell Ranger**](https://support.10xgenomics.com/single-cell-gene-expression/software/pipelines/latest/what-is-cell-ranger)
   - Works with data from 10X Genomics Chromium. Processes Chromium single cell data to align reads, generate feature-barcode matrices, perform clustering and other secondary analysis, and more.
   - New MultiQC module parses Cell Ranger quality reports from VDJ and count analysis
@@ -137,8 +139,6 @@
 
 ### New Modules
 
-- [**Anglerfish**](https://github.com/remiolsen/anglerfish)
-  - A tool designed to assess pool balancing, contamination and insert sizes of Illumina library dry runs on Oxford Nanopore data.
 - [**CheckQC**](https://github.com/Molmed/checkQC)
   - A program designed to check a set of quality criteria against an Illumina runfolder
 - [**pbmarkdup**](https://github.com/PacificBiosciences/pbmarkdup)
