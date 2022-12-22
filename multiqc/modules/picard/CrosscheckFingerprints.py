@@ -2,12 +2,11 @@
 
 import logging
 import re
-
 from collections import OrderedDict
 from csv import DictReader
 from distutils.util import strtobool
-from itertools import chain
-from itertools import groupby
+from itertools import chain, groupby
+
 from multiqc import config
 from multiqc.plots import table
 

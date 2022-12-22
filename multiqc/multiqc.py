@@ -7,27 +7,28 @@ The main function to run MultiQC. Sorry about the messy namespace.
 Primarily called by multiqc.__main__.py
 Imported by __init__.py so available as multiqc.run()
 """
-from distutils import version
-from distutils.dir_util import copy_tree
-from rich.syntax import Syntax
-from urllib.request import urlopen
 import base64
 import errno
 import io
-import jinja2
 import os
 import re
-import rich
-import rich_click as click
 import shutil
 import subprocess
 import sys
 import tempfile
 import time
 import traceback
+from distutils import version
+from distutils.dir_util import copy_tree
+from urllib.request import urlopen
+
+import jinja2
+import rich
+import rich_click as click
+from rich.syntax import Syntax
 
 from .plots import table
-from .utils import report, plugin_hooks, megaqc, util_functions, lint_helpers, config, util_functions, log
+from .utils import config, lint_helpers, log, megaqc, plugin_hooks, report, util_functions
 
 # Set up logging
 start_execution_time = time.time()
@@ -216,8 +217,6 @@ click.rich_click.OPTION_GROUPS = {
     "--data-format",
     "data_format",
     type=click.Choice(config.data_format_extensions.keys()),
-    default=config.data_format,
-    show_default=True,
     help="Output parsed data in a different format.",
 )
 @click.option("-z", "--zip-data-dir", "zip_data_dir", is_flag=True, help="Compress the data directory.")
@@ -350,6 +349,7 @@ def run(
     loglevel = log.LEVELS.get(min(verbose, 1), "INFO")
     if quiet:
         loglevel = "WARNING"
+        config.quiet = True
     log.init_log(logger, loglevel=loglevel, no_ansi=no_ansi)
 
     console = rich.console.Console(
@@ -631,6 +631,9 @@ def run(
 
     # Only run the modules for which any files were found
     non_empty_modules = {key.split("/")[0].lower() for key, files in report.files.items() if len(files) > 0}
+    # Always run custom content, as it can have data purely from a MultiQC config file (no search files)
+    if "custom_content" not in non_empty_modules:
+        non_empty_modules.add("custom_content")
     run_modules = [m for m in run_modules if list(m.keys())[0].lower() in non_empty_modules]
     run_module_names = [list(m.keys())[0] for m in run_modules]
 
@@ -1082,11 +1085,12 @@ def run(
                 report.num_mpl_plots, "s" if report.num_mpl_plots > 1 else ""
             )
         )
-        console.print(
-            "[blue]|           multiqc[/] | "
-            "To force interactive plots, use the [yellow]'--interactive'[/] flag. "
-            "See the [link=https://multiqc.info/docs/#flat--interactive-plots]documentation[/link]."
-        )
+        if not config.plots_force_interactive:
+            console.print(
+                "[blue]|           multiqc[/] | "
+                "To force interactive plots, use the [yellow]'--interactive'[/] flag. "
+                "See the [link=https://multiqc.info/docs/#flat--interactive-plots]documentation[/link]."
+            )
 
     if lint and len(report.lint_errors) > 0:
         logger.error("Found {} linting errors!\n{}".format(len(report.lint_errors), "\n".join(report.lint_errors)))

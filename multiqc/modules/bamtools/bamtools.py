@@ -2,8 +2,8 @@
 
 """ MultiQC module to parse output from Bamtools """
 
-from collections import OrderedDict
 import logging
+from collections import OrderedDict
 
 from multiqc.modules.base_module import BaseMultiqcModule
 

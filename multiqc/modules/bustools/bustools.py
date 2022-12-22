@@ -2,15 +2,15 @@
 
 """ MultiQC module to parse output from bustools inspect """
 
-from __future__ import print_function
-from collections import OrderedDict
+
+import json
 import logging
 import os
-import json
+from collections import OrderedDict
 
+from multiqc.modules.base_module import BaseMultiqcModule
 from multiqc.plots import bargraph, table
 from multiqc.utils import config
-from multiqc.modules.base_module import BaseMultiqcModule
 
 # Initialise the logger
 log = logging.getLogger(__name__)
@@ -80,6 +80,12 @@ class MultiqcModule(BaseMultiqcModule):
             "scale": "YlGn",
             "format": "{:,.0f}",
             "shared_key": "barcodes",
+        }
+        self.headers["medianReadsPerBarcode"] = {
+            "title": "Median reads per barcode",
+            "scale": "RdYlGn",
+            "min": 0,
+            "format": "{:,.2f}",
         }
         self.headers["meanReadsPerBarcode"] = {
             "title": "Mean reads per barcode",

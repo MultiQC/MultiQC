@@ -21,6 +21,7 @@ MultiQC Modules:
     ClipAndMerge: modules/clipandmerge.md
     Cluster Flow: modules/clusterflow.md
     Cutadapt: modules/cutadapt.md
+    DRAGEN-FastQC: modules/dragen_fastqc.md
     Fastp: modules/fastp.md
     FastQ Screen: modules/fastq_screen.md
     FastQC: modules/fastqc.md
@@ -47,6 +48,7 @@ MultiQC Modules:
     Bismark: modules/bismark.md
     Bowtie 1: modules/bowtie1.md
     Bowtie 2: modules/bowtie2.md
+    Cell Ranger: modules/cellranger.md
     DRAGEN: modules/dragen.md
     HiCPro: modules/hicpro.md
     HiCUP: modules/hicup.md

@@ -2,13 +2,14 @@
 
 """ MultiQC submodule to parse output from Picard QualityYieldMetrics """
 
-from collections import OrderedDict, defaultdict
 import logging
 import os
 import re
+from collections import OrderedDict, defaultdict
 
 from multiqc import config
-from multiqc.plots import table, linegraph
+from multiqc.plots import linegraph, table
+
 from .util import read_sample_name
 
 # Initialise the logger

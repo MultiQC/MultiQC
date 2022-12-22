@@ -2,12 +2,12 @@
 
 """ MultiQC functions to plot a table """
 
-from collections import defaultdict, OrderedDict
 import logging
 import random
+from collections import OrderedDict, defaultdict
 
-from multiqc.utils import config, report, util_functions, mqc_colour
-from multiqc.plots import table_object, beeswarm
+from multiqc.plots import beeswarm, table_object
+from multiqc.utils import config, mqc_colour, report, util_functions
 
 logger = logging.getLogger(__name__)
 
