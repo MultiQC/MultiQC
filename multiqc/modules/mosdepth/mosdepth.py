@@ -296,7 +296,9 @@ class MultiqcModule(BaseMultiqcModule):
                 if int(t) in dist_subset:
                     genstats[s_name][f"{t}_x_pc"] = dist_subset[t]
                 else:
-                    genstats[s_name][f"{t}_x_pc"] = 0
+                    log.debug(
+                        f"{t} not found in MosDepth output and will not be included in general stats table for sample {s_name}"
+                    )
 
         for t in threshs:
             genstats_headers[f"{t}_x_pc"] = {
