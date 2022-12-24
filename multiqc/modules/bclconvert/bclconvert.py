@@ -68,8 +68,9 @@ class MultiqcModule(BaseMultiqcModule):
             """
             self.per_lane_undetermined_reads = None
 
-        create_undetermined_barplots = getattr(config, "bclconvert", {}).get(
-            "create_undetermined_barcode_barplots", False
+        create_undetermined_barplots = (
+            getattr(config, "bclconvert", {}).get("create_undetermined_barcode_barplots", False)
+            or self.num_demux_files == 1
         )
         if create_undetermined_barplots:
             self._parse_top_unknown_barcodes()

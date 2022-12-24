@@ -31,7 +31,10 @@ following values are supported: `hg19_genome`, `hg38_genome`, `mm10_genome`.
 
 #### Add barplots containing undetermined barcodes
 
-You can specify following parameter in the config when you want to include the barplots of the undetermined barcodes:
+By default, the bar plot of undetermined barcodes is only shown when reporting from a single demultiplexing run.
+
+If you would like to show it with multiple runs (eg. bclconvert runs are split by lane),
+you can specify following parameter in your MultiQC config:
 
 ```yaml
 bclconvert:
