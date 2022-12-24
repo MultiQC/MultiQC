@@ -292,13 +292,16 @@ class MultiqcModule(BaseMultiqcModule):
     def genstats_cov_thresholds(self, genstats, genstats_headers, cumcov_dist_data, threshs, hidden_threshs):
         for s_name, d in cumcov_dist_data.items():
             dist_subset = {t: data for t, data in d.items() if t in threshs}
+            num_skipped = 0
             for t in threshs:
                 if int(t) in dist_subset:
                     genstats[s_name][f"{t}_x_pc"] = dist_subset[t]
                 else:
-                    log.debug(
-                        f"{t} not found in MosDepth output and will not be included in general stats table for sample {s_name}"
-                    )
+                    num_skipped += 1
+            if num_skipped > 0:
+                log.debug(
+                    f"{num_skipped} thresholds not found in MosDepth output and will not be included in general stats table for sample {s_name}"
+                )
 
         for t in threshs:
             genstats_headers[f"{t}_x_pc"] = {
