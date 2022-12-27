@@ -40,11 +40,11 @@ class DragenContentMetrics(BaseMultiqcModule):
     def n_content_plot(self):
         """Create the HTML for the per base N content plot"""
         data = dict()
-        totals = defaultdict(int)
-        non_n = defaultdict(int)
         GROUP = "POSITIONAL BASE CONTENT"
         for s_name in sorted(self.dragen_fastqc_data):
             for mate in sorted(self.dragen_fastqc_data[s_name]):
+                totals = defaultdict(int)
+                non_n = defaultdict(int)
 
                 # Count total bases
                 total_group_data = self.dragen_fastqc_data[s_name][mate][GROUP]
