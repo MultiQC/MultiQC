@@ -71,12 +71,12 @@ def _contact_area(min_dists, max_dists, reg_len):
     'contact_area' is an area of a trapezoid-shaped section of a right
     triangle of size 'reg_len'.
     The right triangle represents all contacts within a region, and
-    a trapezod section represents contacts within the region, that are
+    a trapezoid section represents contacts within the region, that are
     between 'min_dist' and 'max_dist' in size.
 
     contact_area = outer_area - inner_area
 
-    Paramteres
+    Paramters
     ----------
     min_dist : float | ndarray
         lower boundary of genomic distances
@@ -252,7 +252,7 @@ def read_stats_from_file(file_handle):
         dist_freq_tmp[pair_orientation] = np.zeros(len(_dist_bins) - 1)
 
     # pack distance bins along with dist_freq at least for now
-    stat_from_file["dist_bins"] = _dist_bins
+    stat_from_file["dist_bins"] = list(_dist_bins)
 
     # line by line parsing
     for l in file_handle:
@@ -348,7 +348,7 @@ def read_stats_from_file(file_handle):
     # 2. 'dist_freq'
     # parse distance ranges and orientations to store
     for pair_orientation, distance_range, count in stat_from_file["dist_freq"]:
-        range_index = get_range_index_from_range(distance_range, _dist_bins)
+        range_index = int(get_range_index_from_range(distance_range, _dist_bins))
         # store corresponding value:
         try:
             dist_freq_tmp[pair_orientation][range_index] = count
@@ -364,9 +364,9 @@ def read_stats_from_file(file_handle):
     # unpack chrom1, chrom2, counts into 3 separate ndarrays, mimicking COO sparse matrix:
     chrom1, chrom2, counts = zip(*stat_from_file["chrom_freq"])
     stat_from_file["chrom_freq"] = {}
-    stat_from_file["chrom_freq"]["chrom1"] = np.asarray(chrom1, dtype="U")  # unicode str
-    stat_from_file["chrom_freq"]["chrom2"] = np.asarray(chrom2, dtype="U")  # unicode str
-    stat_from_file["chrom_freq"]["counts"] = np.asarray(counts, dtype=np.int)
+    stat_from_file["chrom_freq"]["chrom1"] = list(np.asarray(chrom1, dtype="U"))  # unicode str
+    stat_from_file["chrom_freq"]["chrom2"] = list(np.asarray(chrom2, dtype="U"))  # unicode str
+    stat_from_file["chrom_freq"]["counts"] = list(np.asarray(counts, dtype=np.int))
 
     # add some fractions for general statistics table:
     stat_from_file["frac_unmapped"] = stat_from_file["total_unmapped"] / stat_from_file["total"] * 100.0

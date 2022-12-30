@@ -36,15 +36,11 @@ class MultiqcModule(BaseMultiqcModule):
     def __init__(self):
 
         # Initialise the parent object
-        super(MultiqcModule, self).__init__(
+        super().__init__(
             name="pairtools",
             anchor="pairtools",
             href="https://github.com/mirnylab/pairtools",
-            info="pairtools is a command-line framework for processing sequencing data"
-            " generated with Chromatin Conformation Capture based experiments:"
-            " pairtools can handle pairs of short-reads aligned to a reference genome,"
-            " extract 3C-specific information and perform common tasks, such as sorting,"
-            " filtering and deduplication.",
+            info="pairtools is a command-line framework for processing sequencing data generated with Chromatin Conformation Capture based experiments.",
             doi="10.5281/zenodo.1490831",
         )
 
@@ -52,7 +48,7 @@ class MultiqcModule(BaseMultiqcModule):
         self.pairtools_stats = dict()
         for f in self.find_log_files("pairtools", filehandles=True):
             s_name = f["s_name"]
-            self.pairtools_stats[s_name] = self.parse_pairtools_stats(f)
+            self.pairtools_stats[s_name] = read_stats_from_file(f["f"])
 
         # Filter to strip out ignored sample names
         self.pairtools_stats = self.ignore_samples(self.pairtools_stats)
@@ -61,6 +57,7 @@ class MultiqcModule(BaseMultiqcModule):
             raise UserWarning("No reports to use.")
 
         log.info(f"Found {len(self.pairtools_stats)} reports")
+        self.write_data_file(self.pairtools_stats, "multiqc_pairtools")
 
         # Add to self.js to be included in template
         self.js = {
@@ -178,14 +175,6 @@ class MultiqcModule(BaseMultiqcModule):
                 Number are reported only for chromosomes/pairs that have >1% of pre-filtered pairs.""",
                 plot=self.coverage_by_chrom(),
             )
-
-    def parse_pairtools_stats(self, f):
-        """
-        Parse a pairtools summary stats
-        """
-        f_handle = f["f"]
-        log.info(f"parsing .stats file: {f_handle.name}")
-        return read_stats_from_file(f_handle)
 
     def pair_types_chart(self):
         """
