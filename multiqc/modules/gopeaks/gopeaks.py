@@ -3,14 +3,15 @@
 """ MultiQC module to parse output from gopeaks """
 
 from __future__ import print_function
-from collections import OrderedDict
-import os
-import logging
+
 import json
+import logging
+import os
+from collections import OrderedDict
 
 from multiqc import config
-from multiqc.plots import bargraph
 from multiqc.modules.base_module import BaseMultiqcModule
+from multiqc.plots import bargraph
 
 # Initialise the logger
 log = logging.getLogger(__name__)
@@ -30,7 +31,7 @@ class MultiqcModule(BaseMultiqcModule):
                   Gopeaks uses a binomial distribution to model the read counts \
                   in sliding windows across the genome and calculate peak regions \
                   that are enriched over the background.",
-            doi="10.1186/s13059-022-02707-w"
+            doi="10.1186/s13059-022-02707-w",
         )
 
         # data vars ---------------------------------------------------------------------
