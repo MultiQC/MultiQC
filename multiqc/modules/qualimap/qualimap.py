@@ -52,6 +52,9 @@ class MultiqcModule(BaseMultiqcModule):
         if sum(n.values()) == 0:
             raise UserWarning
 
+        # Remove filtered samples from general stats table
+        self.general_stats_data = self.ignore_samples(self.general_stats_data)
+
         # Add to the General Stats table (has to be called once per MultiQC module)
         self.general_stats_addcols(self.general_stats_data, self.general_stats_headers)
 

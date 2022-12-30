@@ -72,6 +72,7 @@ setup(
         "multiqc.modules.v1": [
             "adapterRemoval = multiqc.modules.adapterRemoval:MultiqcModule",
             "afterqc = multiqc.modules.afterqc:MultiqcModule",
+            "anglerfish = multiqc.modules.anglerfish:MultiqcModule",
             "bamtools = multiqc.modules.bamtools:MultiqcModule",
             "bbmap = multiqc.modules.bbmap:MultiqcModule",
             "bcftools = multiqc.modules.bcftools:MultiqcModule",
@@ -86,6 +87,7 @@ setup(
             "busco = multiqc.modules.busco:MultiqcModule",
             "bustools = multiqc.modules.bustools:MultiqcModule",
             "ccs = multiqc.modules.ccs:MultiqcModule",
+            "cellranger = multiqc.modules.cellranger:MultiqcModule",
             "checkqc = multiqc.modules.checkqc:MultiqcModule",
             "clipandmerge = multiqc.modules.clipandmerge:MultiqcModule",
             "clusterflow = multiqc.modules.clusterflow:MultiqcModule",
@@ -97,6 +99,7 @@ setup(
             "deeptools = multiqc.modules.deeptools:MultiqcModule",
             "disambiguate = multiqc.modules.disambiguate:MultiqcModule",
             "dragen = multiqc.modules.dragen:MultiqcModule",
+            "dragen_fastqc = multiqc.modules.dragen_fastqc:MultiqcModule",
             "eigenstratdatabasetools = multiqc.modules.eigenstratdatabasetools:MultiqcModule",
             "fastp = multiqc.modules.fastp:MultiqcModule",
             "fastq_screen = multiqc.modules.fastq_screen:MultiqcModule",

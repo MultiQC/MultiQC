@@ -482,6 +482,10 @@ module_order:
       module_tag:
         - DNA
         - RNA
+  - dragen_fastqc:
+      module_tag:
+        - DNA
+        - RNA
   - dedup:
       module_tag:
         - DNA
@@ -613,6 +617,10 @@ module_order:
   - bowtie1:
       module_tag:
         - RNA
+  - cellranger:
+      module_tag:
+        - RNA
+        - single-cell
   - snpsplit:
       module_tag:
         - DNA
@@ -623,7 +631,6 @@ module_order:
       module_tag:
         - DNA
         - pangenome
-
   - pangolin:
       module_tag:
         - DNA
@@ -712,6 +719,11 @@ module_order:
       module_tag:
         - DNA
         - RNA
+  - anglerfish:
+      module_tag:
+        - DNA
+        - Illumina
+        - ONT
   - multivcfanalyzer:
       module_tag:
         - DNA
