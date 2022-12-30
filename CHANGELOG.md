@@ -39,6 +39,7 @@
 
 - **Bcftools stats**
   - Bugfix: Do not show empty bcftools stats variant depth plots[#1777](https://github.com/ewels/MultiQC/pull/1777)
+  - Bugfix: Avoid exception when `PSC nMissing` column is not present ([#1832](https://github.com/ewels/MultiQC/issues/1832))
 - **BclConvert**
   - Handle single-end read data correctly when setting cluster length instead of always assuming paired-end reads ([#1697](https://github.com/ewels/MultiQC/issues/1697))
   - Handle different R1 and R2 read-lengths correctly instead of assuming they are the same ([#1774](https://github.com/ewels/MultiQC/issues/1774))
