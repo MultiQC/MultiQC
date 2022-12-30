@@ -1,16 +1,18 @@
 #!/usr/bin/env python
 """ MultiQC module to parse output from Samtools """
-from __future__ import print_function
-from collections import OrderedDict
+
+
 import logging
+from collections import OrderedDict
 
 from multiqc.modules.base_module import BaseMultiqcModule
 
-# Import the Samtools submodules
-from .stats import StatsReportMixin
 from .flagstat import FlagstatReportMixin
 from .idxstats import IdxstatsReportMixin
 from .rmdup import RmdupReportMixin
+
+# Import the Samtools submodules
+from .stats import StatsReportMixin
 
 # Initialise the logger
 log = logging.getLogger(__name__)

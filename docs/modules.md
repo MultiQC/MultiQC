@@ -191,7 +191,7 @@ name, i.e. `multiqc/modname/modname.py`) which is then imported by the
 `__init__.py` file with:
 
 ```python
-from __future__ import absolute_import
+
 from .modname import MultiqcModule
 ```
 

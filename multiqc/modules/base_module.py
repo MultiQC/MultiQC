@@ -2,18 +2,20 @@
 
 """ MultiQC modules base class, contains helper functions """
 
-from __future__ import print_function
-from collections import OrderedDict
-import io
+
 import fnmatch
+import io
+import itertools
 import logging
-import markdown
 import mimetypes
 import os
 import re
 import textwrap
+from collections import OrderedDict
 
-from multiqc.utils import report, config, util_functions
+import markdown
+
+from multiqc.utils import config, report, util_functions
 
 logger = logging.getLogger(__name__)
 
@@ -108,6 +110,10 @@ class BaseMultiqcModule(object):
         # Allows modules to be called multiple times with different sets of files
         path_filters = getattr(self, "mod_cust_config", {}).get("path_filters")
         path_filters_exclude = getattr(self, "mod_cust_config", {}).get("path_filters_exclude")
+        if type(path_filters) == str:
+            path_filters = [path_filters]
+        if type(path_filters_exclude) == str:
+            path_filters_exclude = [path_filters_exclude]
 
         # Old, depreciated syntax support. Likely to be removed in a future version.
         if isinstance(sp_key, dict):
@@ -131,28 +137,41 @@ class BaseMultiqcModule(object):
 
             # Filter out files based on exclusion patterns
             if path_filters_exclude and len(path_filters_exclude) > 0:
-                exlusion_hits = (fnmatch.fnmatch(report.last_found_file, pfe) for pfe in path_filters_exclude)
+                # Try both the given path and also the path prefixed with the analyis dirs
+                exlusion_hits = itertools.chain(
+                    (fnmatch.fnmatch(report.last_found_file, pfe) for pfe in path_filters_exclude),
+                    *(
+                        (
+                            fnmatch.fnmatch(report.last_found_file, os.path.join(analysis_dir, pfe))
+                            for pfe in path_filters_exclude
+                        )
+                        for analysis_dir in config.analysis_dir
+                    ),
+                )
                 if any(exlusion_hits):
                     logger.debug(
-                        "{} - Skipping '{}' as it matched the path_filters_exclude for '{}'".format(
-                            sp_key, f["fn"], self.name
-                        )
+                        f"{sp_key} - Skipping '{report.last_found_file}' as it matched the path_filters_exclude for '{self.name}'"
                     )
                     continue
 
             # Filter out files based on inclusion patterns
             if path_filters and len(path_filters) > 0:
-                inclusion_hits = (fnmatch.fnmatch(report.last_found_file, pf) for pf in path_filters)
+                # Try both the given path and also the path prefixed with the analyis dirs
+                inclusion_hits = itertools.chain(
+                    (fnmatch.fnmatch(report.last_found_file, pf) for pf in path_filters),
+                    *(
+                        (fnmatch.fnmatch(report.last_found_file, os.path.join(analysis_dir, pf)) for pf in path_filters)
+                        for analysis_dir in config.analysis_dir
+                    ),
+                )
                 if not any(inclusion_hits):
                     logger.debug(
-                        "{} - Skipping '{}' as it didn't match the path_filters for '{}'".format(
-                            sp_key, f["fn"], self.name
-                        )
+                        f"{sp_key} - Skipping '{report.last_found_file}' as it didn't match the path_filters for '{self.name}'"
                     )
                     continue
                 else:
                     logger.debug(
-                        "{} - Selecting '{}' as it matched the path_filters for '{}'".format(sp_key, f["fn"], self.name)
+                        f"{sp_key} - Selecting '{report.last_found_file}' as it matched the path_filters for '{self.name}'"
                     )
 
             # Make a sample name from the filename
@@ -177,9 +196,8 @@ class BaseMultiqcModule(object):
                                 f["f"] = fh.read()
                                 yield f
                 except (IOError, OSError, ValueError, UnicodeDecodeError) as e:
-                    if config.report_readerrors:
-                        logger.debug("Couldn't open filehandle when returning file: {}\n{}".format(f["fn"], e))
-                        f["f"] = None
+                    logger.debug("Couldn't open filehandle when returning file: {}\n{}".format(f["fn"], e))
+                    f["f"] = None
             else:
                 yield f
 

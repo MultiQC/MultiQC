@@ -2,9 +2,9 @@
 
 """ MultiQC module to parse output from RSeQC """
 
-from collections import OrderedDict
 import logging
 import os
+from collections import OrderedDict
 
 from multiqc import config
 from multiqc.modules.base_module import BaseMultiqcModule
@@ -67,7 +67,7 @@ class MultiqcModule(BaseMultiqcModule):
                 if n[sm] > 0:
                     log.info("Found {} {} reports".format(n[sm], sm))
             except (ImportError, AttributeError):
-                log.warning("Could not find RSeQC Section '{}'".format(sm))
+                log.error("Could not find RSeQC Section '{}'".format(sm))
 
         # Exit if we didn't find anything
         if sum(n.values()) == 0:

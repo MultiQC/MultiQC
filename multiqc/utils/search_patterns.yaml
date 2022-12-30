@@ -9,6 +9,9 @@ adapterRemoval:
 afterqc:
   fn: "*.json"
   contents: "allow_mismatch_in_poly"
+anglerfish:
+  fn: "*.json"
+  contents: "anglerfish_version"
 bamtools/stats:
   contents: "Stats for BAM file(s):"
   shared: true
@@ -61,6 +64,9 @@ bbmap/mhist:
 bbmap/qahist:
   contents: "#Deviation"
   num_lines: 1
+bbmap/qchist:
+  contents_re: '#Quality	count1	fraction1\n'
+  num_lines: 1
 bbmap/qhist:
   contents: "#BaseNum	Read1_linear	Read1_log	Read1_measured	Read2_linear	Read2_log	Read2_measured"
   num_lines: 1
@@ -84,6 +90,8 @@ bclconvert/runinfo:
   fn: "RunInfo.xml"
 bclconvert/demux:
   fn: "Demultiplex_Stats.csv"
+bclconvert/quality_metrics:
+  fn: "Quality_Metrics.csv"
 bclconvert/adaptermetrics:
   fn: "Adapter_Metrics.csv"
 bclconvert/unknown_barcodes:
@@ -188,6 +196,23 @@ ccs/v4:
 ccs/v5:
   contents: '"id": "ccs_processing"'
   fn: "*.json"
+cellranger/count_html:
+  - fn: "*.html"
+    contents: '"command":"Cell Ranger","subcommand":"count"'
+    num_lines: 13
+  - fn: "*.html"
+    contents: '"command": "Cell Ranger", "subcommand": "count"'
+    num_lines: 13
+cellranger/vdj_html:
+  - fn: "*.html"
+    contents: '"command":"Cell Ranger","subcommand":"vdj"'
+    num_lines: 13
+  - fn: "*.html"
+    contents: '"command": "Cell Ranger", "subcommand": "vdj"'
+    num_lines: 13
+checkqc:
+  contents: "instrument_and_reagent_type"
+  fn: "*.json"
 custom_content:
   fn_re: '.+_mqc\.(yaml|yml|json|txt|csv|tsv|log|out|png|jpg|jpeg|html)'
 clipandmerge:
@@ -251,18 +276,36 @@ dragen/vc_metrics:
   fn: "*.vc_metrics.csv"
 dragen/ploidy_estimation_metrics:
   fn: "*.ploidy_estimation_metrics.csv"
-dragen/contig_mean_cov:
-  fn_re: '.*\.(wgs|target_bed)_contig_mean_cov_?(tumor|normal)?\.csv'
-dragen/coverage_metrics:
-  fn_re: '.*\.(wgs|target_bed)_coverage_metrics_?(tumor|normal)?\.csv'
-dragen/fine_hist:
-  fn_re: '.*\.(wgs|target_bed)_fine_hist_?(tumor|normal)?\.csv'
+dragen/wgs_contig_mean_cov:
+  fn_re: '.*\.wgs_contig_mean_cov_?(tumor|normal)?\.csv'
+dragen/wgs_coverage_metrics:
+  fn_re: '.*\.wgs_coverage_metrics_?(tumor|normal)?\.csv'
+dragen/qc_region_coverage_metrics:
+  fn_re: '.*\.qc-coverage-region-([^_]+)_coverage_metrics.csv'
+dragen/wgs_fine_hist:
+  fn_re: '.*\.wgs_fine_hist_?(tumor|normal)?\.csv'
 dragen/fragment_length_hist:
   fn: "*.fragment_length_hist.csv"
 dragen/mapping_metrics:
   fn: "*.mapping_metrics.csv"
   contents: "Number of unique reads (excl. duplicate marked reads)"
   num_lines: 50
+dragen/gc_metrics:
+  fn: "*.gc_metrics.csv"
+dragen/trimmer_metrics:
+  fn: "*.trimmer_metrics.csv"
+dragen/time_metrics:
+  fn: "*.time_metrics.csv"
+dragen/rna_quant_metrics:
+  fn: "*.quant.metrics.csv"
+dragen/rna_transcript_cov:
+  fn: "*.quant.transcript_coverage.txt"
+dragen/sc_rna_metrics:
+  fn: "*.scRNA[._]metrics.csv"
+dragen/sc_atac_metrics:
+  fn: "*.scATAC[._]metrics.csv"
+dragen_fastqc:
+  fn: "*.fastqc_metrics.csv"
 eigenstratdatabasetools:
   fn: "*_eigenstrat_coverage.json"
 fastp:
@@ -312,10 +355,10 @@ happy:
 htseq:
   contents: "__too_low_aQual"
 pairtools:
-  contents: 'total_single_sided_mapped'
-  num_lines: 20
-  contents: 'pair_types'
-  num_lines: 20
+  - contents: "total_single_sided_mapped"
+    num_lines: 20
+  - contents: "pair_types"
+    num_lines: 20
 hicexplorer:
   contents: "Min rest. site distance"
   max_filesize: 4096
@@ -371,8 +414,8 @@ kallisto:
   shared: true
 nanostat:
   max_filesize: 4096
-  contents: "Number, percentage and megabases of reads above quality cutoffs"
-  num_lines: 20
+  contents_re: "General summary:\\s*"
+  num_lines: 1
 kat:
   fn: "*.dist_analysis.json"
 kraken:
@@ -419,6 +462,8 @@ mirtrace/mirnacomplexity:
   fn: "mirtrace-stats-mirna-complexity.tsv"
 mtnucratio:
   fn: "*mtnuc.json"
+mosdepth/summary:
+  fn: "*.mosdepth.summary.txt"
 mosdepth/global_dist:
   fn: "*.mosdepth.global.dist.txt"
 mosdepth/region_dist:
@@ -473,6 +518,9 @@ somalier/samples:
 somalier/pairs:
   fn: "*.pairs.tsv"
   contents: "hom_concordance"
+  num_lines: 5
+pbmarkdup:
+  contents_re: "LIBRARY +READS +UNIQUE MOLECULES +DUPLICATE READS"
   num_lines: 5
 phantompeakqualtools/out:
   fn: "*.spp.out"
@@ -637,7 +685,7 @@ salmon/fld:
   fn: "flenDist.txt"
 sambamba/markdup:
   contents: "finding positions of the duplicate reads in the file"
-  num_lines: 5
+  num_lines: 50
 samblaster:
   contents: "samblaster: Version"
   shared: true
@@ -774,3 +822,6 @@ vep/vep_txt:
   max_filesize: 100000
 verifybamid/selfsm:
   fn: "*.selfSM"
+whatshap/stats:
+  contents: "#sample	chromosome	file_name	variants	phased	unphased	singletons"
+  num_lines: 1

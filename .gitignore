@@ -19,6 +19,7 @@ eggs/
 build/
 dist/
 tmp/
+examples/
 
 # OS generated files
 .DS_Store
@@ -31,3 +32,9 @@ Thumbs.db
 
 .idea/
 runTest.sh
+
+# Prevent direnv from cluttering the repo
+.envrc
+.direnv/*
+/result
+venv

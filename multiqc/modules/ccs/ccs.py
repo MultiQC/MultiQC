@@ -5,8 +5,8 @@
 import json
 import logging
 import re
-
 from collections import OrderedDict
+
 from multiqc.modules.base_module import BaseMultiqcModule
 from multiqc.plots import bargraph
 
@@ -154,7 +154,12 @@ class MultiqcModule(BaseMultiqcModule):
 
         # Add filtere reasons (id starts with filtered_) and total passed
         for entry in attributes:
-            if entry["id"].startswith("filtered") or entry["id"] == "zmw_passed_yield":
+            if (
+                entry["id"].startswith("filtered")
+                or entry["id"] == "zmw_passed_yield"
+                or entry["id"].startswith("ccs_processing.filtered")
+                or entry["id"] == "ccs_processing.zmw_passed_yield"
+            ):
                 reasons[entry["name"]] = entry["value"]
 
         return reasons

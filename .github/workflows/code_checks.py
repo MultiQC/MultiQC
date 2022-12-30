@@ -1,10 +1,11 @@
 #!/usr/bin/env python
 """ Crude code-quality checks for running in CI """
 
-from rich import print
 import glob
 import os
 import sys
+
+from rich import print
 
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 MODULES_DIR = os.path.join(BASE_DIR, "multiqc", "modules")

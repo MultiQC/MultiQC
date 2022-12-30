@@ -2,14 +2,14 @@
 
 """ MultiQC module to parse output from Bowtie 1 """
 
-from __future__ import print_function
-from collections import OrderedDict
+
 import logging
 import re
+from collections import OrderedDict
 
 from multiqc import config
-from multiqc.plots import bargraph
 from multiqc.modules.base_module import BaseMultiqcModule
+from multiqc.plots import bargraph
 
 # Initialise the logger
 log = logging.getLogger(__name__)
@@ -58,8 +58,8 @@ class MultiqcModule(BaseMultiqcModule):
         parsed_data = {}
         regexes = {
             "reads_processed": r"# reads processed:\s+(\d+)",
-            "reads_aligned": r"# reads with at least one reported alignment:\s+(\d+)",
-            "reads_aligned_percentage": r"# reads with at least one reported alignment:\s+\d+\s+\(([\d\.]+)%\)",
+            "reads_aligned": r"# reads with at least one(?: reported)? alignment:\s+(\d+)",
+            "reads_aligned_percentage": r"# reads with at least one(?: reported)? alignment:\s+\d+\s+\(([\d\.]+)%\)",
             "not_aligned": r"# reads that failed to align:\s+(\d+)",
             "not_aligned_percentage": r"# reads that failed to align:\s+\d+\s+\(([\d\.]+)%\)",
             "multimapped": r"# reads with alignments suppressed due to -m:\s+(\d+)",

@@ -12,13 +12,16 @@ MultiQC Modules:
   Pre-alignment:
     Adapter Removal: modules/adapterRemoval.md
     AfterQC: modules/afterqc.md
+    Anglerfish: modules/anglerfish.md
     Bcl2fastq: modules/bcl2fastq.md
     BclConvert: modules/bclconvert.md
     BioBloom Tools: modules/biobloomtools.md
     CCS: modules/ccs.md
+    CheckQC: modules/checkqc.md
     ClipAndMerge: modules/clipandmerge.md
     Cluster Flow: modules/clusterflow.md
     Cutadapt: modules/cutadapt.md
+    DRAGEN-FastQC: modules/dragen_fastqc.md
     Fastp: modules/fastp.md
     FastQ Screen: modules/fastq_screen.md
     FastQC: modules/fastqc.md
@@ -31,6 +34,7 @@ MultiQC Modules:
     leeHom: modules/leehom.md
     Lima: modules/lima.md
     minionqc: modules/minionqc.md
+    pbmarkdup: modules/pbmarkdup.md
     Pychopper: modules/pychopper.md
     pycoQC: modules/pycoqc.md
     SeqyClean: modules/seqyclean.md
@@ -44,6 +48,7 @@ MultiQC Modules:
     Bismark: modules/bismark.md
     Bowtie 1: modules/bowtie1.md
     Bowtie 2: modules/bowtie2.md
+    Cell Ranger: modules/cellranger.md
     DRAGEN: modules/dragen.md
     HiCPro: modules/hicpro.md
     HiCUP: modules/hicup.md
@@ -124,6 +129,7 @@ MultiQC Modules:
     VCFTools: modules/vcftools.md
     VEP: modules/vep.md
     verifyBAMID: modules/verifybamid.md
+    WhatsHap: modules/whatshap.md
 Custom Content:
   Introduction: custom_content.md
 Coding with MultiQC:
