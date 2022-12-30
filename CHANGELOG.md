@@ -59,6 +59,8 @@
   - Make heatmap full width
 - **malt**
   - Fixed division by 0 in malt module ([#1683](https://github.com/ewels/MultiQC/issues/1683))
+- **Mosdepth**
+  - Don't pad the General Stats table with zeros for missing data ([#1810](https://github.com/ewels/MultiQC/pull/1810))
 - **Picard**
   - HsMetrics: Allow custom columns in General Stats too, with `HsMetrics_genstats_table_cols` and `HsMetrics_genstats_table_cols_hidden`
 - **RSeQC**
