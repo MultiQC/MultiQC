@@ -7,17 +7,14 @@ from collections import OrderedDict
 
 from multiqc.modules.base_module import BaseMultiqcModule
 from multiqc.plots import bargraph, linegraph, heatmap
-from multiqc.utils import report
 from multiqc import config
-
-from pathlib import Path
 
 import os
 import yaml
 import numpy as np
 from copy import copy
 from random import choice
-from itertools import combinations_with_replacement, zip_longest
+from itertools import zip_longest
 
 from .utils import (
     read_stats_from_file,
@@ -84,9 +81,7 @@ class MultiqcModule(BaseMultiqcModule):
         #############################################
         # e.g. check if all sets of distances are identical,
         # by comparing them all to the last one: (s_name, sorted_dists)
-        cis_dists_mismatch = False
         chromsizes_provided = True
-        chromsizes_mismatch = False
         if len(self.pairtools_stats) > 1:
             random_sample = choice(list(self.pairtools_stats))
             # check if cis-ranges are same across samples
@@ -95,7 +90,6 @@ class MultiqcModule(BaseMultiqcModule):
                 # check is cis_dists (e.g. cis_10kb+) have identical dists across samples
                 # it is [1, 2, 4, 10, 20, 40] as of now in pairtools
                 if self.pairtools_stats[s_name]["cis_dist"]["dists"] != random_dists:
-                    cis_dists_mismatch = True
                     log.warning(
                         f"Samples {s_name} and {random_sample} have different sets of cis-ranges,\n"
                         "pairs by cis range will not be reported !"
@@ -106,7 +100,6 @@ class MultiqcModule(BaseMultiqcModule):
                 if not self.pairtools_stats[s_name]["chromsizes"]:
                     chromsizes_provided = False
                 elif self.pairtools_stats[s_name]["chromsizes"] != random_chromsizes:
-                    chromsizes_mismatch = True
                     chromsizes_provided = False
                     log.warning(f"Samples {s_name} and {random_sample} have different sets of chromsizes.")
 
@@ -346,7 +339,7 @@ class MultiqcModule(BaseMultiqcModule):
         # Config for the plot
         config = {
             "id": "pair_by_orient_cis_ranges",
-            "title": "pairtools: cis pairs broken into ranges and read orintations",
+            "title": "pairtools: cis pairs broken into ranges and read orientations",
             "ylab": "# Reads",
             "cpswitch_counts_label": "Number of Reads",
             "data_labels": data_labels,
@@ -431,8 +424,6 @@ class MultiqcModule(BaseMultiqcModule):
         number of pairs by chromosome pairs
         """
 
-        _report_field = "chrom_freq"
-
         the_data = []
         for s_name in self.pairtools_stats:
             # output not more than 100 chroms, sorted on size ...
@@ -444,7 +435,6 @@ class MultiqcModule(BaseMultiqcModule):
                 return heatmap.plot([])
             # show first 100 chroms only ...
             cov_chroms = all_chroms[:100]
-            chrom_sizes = sizes[:100]
 
             tot_contact = self.pairtools_stats[s_name]["total_nodups"] / self.max_total_reads
             coverage = total_coverage(self.pairtools_stats[s_name]["chrom_freq"], cov_chroms)
