@@ -29,6 +29,8 @@
   - Illumina Bio-IT Platform that uses FPGA for accelerated primary and secondary analysis
   - Finally merged the epic 2.5-year-old pull request, with 3.5k new lines of code.
   - Please report any bugs you find!
+- [**pairtools**](https://github.com/open2c/pairtools)
+  - pairtools - command-line framework to process sequencing data from a Hi-C experiment
 
 ### Module feature additions
 

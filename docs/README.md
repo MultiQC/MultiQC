@@ -95,6 +95,7 @@ MultiQC Modules:
     ngsderive: modules/ngsderive.md
     odgi: modules/odgi.md
     OptiType: modules/optitype.md
+    pairtools: modules/pairtools.md
     Pangolin: modules/pangolin.md
     Peddy: modules/peddy.md
     phantompeakqualtools: modules/phantompeakqualtools.md

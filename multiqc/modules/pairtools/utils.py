@@ -1,0 +1,383 @@
+import re
+from collections import OrderedDict
+from operator import itemgetter
+
+import numpy as np
+
+# given supported python versions see if we still need
+# OrderedDict or could rely on dict
+
+_SEP = "\t"
+_KEY_SEP = "/"
+
+
+def genomic_dist_human_str(dist_in_bp):
+    """
+    turn genomic distance (in basepairs) into
+    human readable string (supports Mb, Kb and bp)
+    """
+    if dist_in_bp:
+        _bp = int(dist_in_bp)
+        if _bp // 1_000_000:
+            return f"{_bp // 1_000_000}Mb"
+        elif _bp // 1_000:
+            return f"{_bp // 1_000}Kb"
+        else:
+            return f"{_bp}"
+    else:
+        return ""
+
+
+def edges_to_intervals(edges):
+    """
+    turn an array of internal edges into an array of
+    intervals, i.e.:
+    [1,2,3] -> [(0,1),(1,2),(2,3),(3,None)]
+    """
+    _edges = np.r_[0, edges, None]
+    zippend_edges = zip(_edges[:-1], _edges[1:])
+    return list(zippend_edges)
+
+
+def cumsums_to_rangesums(cumsums, total):
+    """
+    transform cumulative counts to counts in the intervals
+    using the total counts information, e.g.:
+    [a1,... aN] ->
+    [total, a1,... aN, 0] ->
+    [total-a1, a1-a2, ... aN-0]
+    """
+    _cumcsums = np.r_[total, cumsums, 0]
+    return list(_cumcsums[:-1] - _cumcsums[1:])
+
+
+def _contact_area(min_dists, max_dists, reg_len):
+    """
+    calculate possible number of pairwise contacts "contact area" for
+    a range of genomic distances between 'min_dist', 'max_dist' and
+    assuming region length, 'reg_len'.
+
+    min      max     reg_len
+    * * * * * * * * * *
+      *       *       *
+        *  con- *     *  'inner'
+          *  tact *   *
+            *  area * *
+              *       *
+                *     *  'outer'
+                  *   *
+                    * *
+                      *
+    'contact_area' is an area of a trapezoid-shaped section of a right
+    triangle of size 'reg_len'.
+    The right triangle represents all contacts within a region, and
+    a trapezoid section represents contacts within the region, that are
+    between 'min_dist' and 'max_dist' in size.
+
+    contact_area = outer_area - inner_area
+
+    Paramters
+    ----------
+    min_dist : float | ndarray
+        lower boundary of genomic distances
+        can be a single value or array
+    max_dist : float | ndarray
+        upper boundary of genomic distances
+        can be a single value or array
+    reg_len: float
+        region size
+    """
+    outer_areas = np.maximum(reg_len - min_dists, 0) ** 2
+    inner_areas = np.maximum(reg_len - max_dists, 0) ** 2
+    return 0.5 * (outer_areas - inner_areas)
+
+
+def contact_areas_genomewide(distbins, scaffold_sizes):
+    """
+    calculate possible number of pairwise contacts "contact areas"
+    for a given range of genomic distances given some collection
+    of scaffold sizes.
+
+    "contact_areas" are calculated using all scaffold sizes, i.e.
+    genome-wide, and assuming cis-interactions only.
+
+    Paramteres
+    ----------
+    distbins : ndarray
+        an array of genomic distances, that define
+        edges of the distance bins.
+    scaffold_sizes: [float]
+        length of a scaffold (should be chromsizes)
+    """
+    distbins = distbins.astype(float)
+    scaffold_sizes = scaffold_sizes.astype(float)
+    scaffold_areas = np.zeros(len(distbins) - 1)
+    for scaffold_len in scaffold_sizes:
+        _areas = _contact_area(min_dists=distbins[:-1], max_dists=distbins[1:], reg_len=scaffold_len)
+        scaffold_areas = scaffold_areas + _areas
+    return scaffold_areas
+
+
+def total_coverage(interaction_matrix, chroms):
+    """
+    Calculate genomic read coverage for every chromosome:
+    C_i = V_ii + 0.5*sum(V_ij) + 0.5*sum(V_ji)
+
+    Parameters:
+    ----------
+    interaction_matrix: ([chrom1], [chrom2], [counts]) | \
+                         {"chrom1":[str], "chrom2":[str], "counts":[int]}
+        Matrix of inter- and intra-chromosomal interactions
+        in a COO-like sparse format.
+    chroms: [str]
+        iterable of chromosome names
+    norm: [int]
+        normalization factor for the coverage
+
+    Returns
+    -------
+    coverage: [float]
+        List of read coverage values for chromosomes in chroms.
+    """
+    # unpack interaction matrix
+    if isinstance(interaction_matrix, tuple):
+        chrom1, chrom2, counts = interaction_matrix
+    elif isinstance(interaction_matrix, dict):
+        chrom1 = interaction_matrix["chrom1"]
+        chrom2 = interaction_matrix["chrom2"]
+        counts = interaction_matrix["counts"]
+    else:
+        raise ValueError("input interaction matrix must tuple of 3 or dict")
+
+    coverage = []
+    for i, chrom in enumerate(chroms):
+        _cov = counts[chrom1 == chrom].sum() + counts[chrom2 == chrom].sum()
+        coverage.append(0.5 * _cov)
+
+    return coverage
+
+
+class ParseError(Exception):
+    pass
+
+
+def read_stats_from_file(file_handle):
+    """
+    parse .stats file generated by pairtools into a dictionary.
+    Pairtools-generated .stats file are yaml/json-like, but
+    historically they have adopted a custom syntax using "/" to
+    separate hierarchical keys of nested dictionaries.
+
+    This function will attempt to parse .stats file, filling out
+    output dictionary stat_from_file.
+    It will raise ParseError if .stats is not compliant.
+
+    Parameters
+    ----------
+    file_handle: .stats file handle
+
+    Returns
+    -------
+    stat_from_file : OrderedDict
+        dictionary with stats valued parsed from .stats
+    """
+    # fill in from file - file_handle:
+    stat_from_file = OrderedDict()
+    min_log10_dist = 0
+    max_log10_dist = 9
+    log10_dist_bin_step = 0.25
+    # some variables used for initialization:
+    # genomic distance binning for the ++/--/-+/+- distribution
+    _dist_bins = np.r_[
+        0,
+        np.round(10 ** np.arange(min_log10_dist, max_log10_dist + 0.001, log10_dist_bin_step)).astype(np.int),
+        +np.inf,
+    ]
+
+    def get_range_index_from_range(distance_range, dist_bins=_dist_bins):
+        """
+        turn distance_range (as string) into an index of the pre-defined
+        distance bins _dist_bins
+        """
+        if distance_range.endswith("+"):  # last range "10000+"
+            range_start = distance_range.strip("+")
+        elif "-" in distance_range:  # intermediate range "100-2000"
+            range_start, _end = distance_range.split("-")
+        else:  # unparseable range
+            raise ParseError(f"{invalid_file_msg}cannot parse distance range {distance_range} for dist_freq")
+        # get the index of that bin in a hardcoded array of distance ranges '_dist_bins'
+        return np.searchsorted(dist_bins, int(range_start), "right") - 1
+
+    # common error message for ParseError
+    invalid_file_msg = f"{file_handle.name} is not a valid stats file: "
+    tab_sep_msg = "It has to be a TAB-separated key-value like file."
+
+    # establish structure of an empty _stat:
+    stat_from_file["total"] = 0
+    stat_from_file["total_unmapped"] = 0
+    stat_from_file["total_single_sided_mapped"] = 0
+    # total_mapped = total_dups + total_nodups
+    stat_from_file["total_mapped"] = 0
+    stat_from_file["total_dups"] = 0
+    stat_from_file["total_nodups"] = 0
+    # the rest of stats are based on nodups:
+    stat_from_file["cis"] = 0
+    stat_from_file["trans"] = 0
+    stat_from_file["pair_types"] = {}
+    # to be removed:
+    stat_from_file["dedup"] = {}
+
+    # start using chromsizes
+    stat_from_file["chromsizes"] = OrderedDict()
+
+    # currently we consider following cis distance ranges for the cumulative counts:
+    # cis_1kb+
+    # cis_2kb+
+    # cis_4kb+
+    # cis_10kb+
+    # cis_20kb+
+    # cis_40kb+
+    # we will store such values in a list of (dist_key, cumcount_val)
+    stat_from_file["cis_dist"] = []
+    cis_dist_pattern = r"cis_(\d+)kb\+"
+
+    # store into [(chr1, chr2, count)] as a temporary structure
+    stat_from_file["chrom_freq"] = []
+
+    # store into [(pair_orientation, dist_range, value)] as a temporary struct
+    stat_from_file["dist_freq"] = []
+    # final data structure for this info
+    dist_freq_tmp = OrderedDict()
+    for pair_orientation in ["+-", "-+", "--", "++"]:
+        dist_freq_tmp[pair_orientation] = np.zeros(len(_dist_bins) - 1)
+
+    # pack distance bins along with dist_freq at least for now
+    stat_from_file["dist_bins"] = list(_dist_bins)
+
+    # line by line parsing
+    for l in file_handle:
+        fields = l.strip().split(_SEP)
+        # skip empty or commented lines
+        if l.startswith("#") or (len(fields) == 0):
+            continue
+        # raise exception is it does not look like TAB-separated key,value:
+        elif len(fields) != 2:
+            raise ParseError(f"{invalid_file_msg}{tab_sep_msg}")
+        # otherwise parse key,value and store it in an organized storage per-sample
+        else:
+            # (we should impose a rigid structure of .stats or redo it)
+            # extract key and value, then split the key:
+            _key_tmp, value = fields
+            # skip non-integer fields that we do not use
+            if "frac" in _key_tmp or "complexity" in _key_tmp:
+                continue
+            # make sure all values are integer
+            try:
+                value = int(value)
+            except ValueError as e:
+                raise ParseError(f"{invalid_file_msg}value for {_key_tmp} is not integer") from e
+            # parse temporary key
+            parsed_key_fields = _key_tmp.split(_KEY_SEP)
+            # (A) key is not nested
+            if len(parsed_key_fields) == 1:
+                (key,) = parsed_key_fields
+                # check if key matches "cis_dist_pattern"
+                key_match = re.fullmatch(cis_dist_pattern, key)
+                # extract 'dist' from key-regexp, store as [(dist,count)]
+                if key_match is not None:
+                    dist = int(key_match.group(1))
+                    stat_from_file["cis_dist"].append((dist, value))
+                # store as is, if no match detected
+                else:
+                    if key in stat_from_file:
+                        stat_from_file[key] = value
+                    else:
+                        raise ParseError(f"{invalid_file_msg}unknown field {key} detected")
+            # (B) nested key
+            elif len(parsed_key_fields) > 1:
+                # in this case key must be in ['pair_types','chrom_freq','dist_freq','dedup']
+                # get the first 'key' and keep the remaining in 'parsed_key_fields'
+                root_key = parsed_key_fields.pop(0)
+                # 1. counts by pairtype pair_types/UU
+                if root_key in ["pair_types", "dedup"]:
+                    # assert there is only one element in parsed_key_fields left
+                    # 'pair_types' and 'dedup' treated the same
+                    try:
+                        (sub_key,) = parsed_key_fields
+                        stat_from_file[root_key][sub_key] = value
+                    except ValueError as e:
+                        raise ParseError(f"{invalid_file_msg}{root_key} section implies 1 extra identifier") from e
+                # 2. counts by chrom pairs chrom_freq/chr1/chr2
+                elif root_key in ["chromsizes"]:
+                    # remaining parsed_key_fields must be chromosome name:
+                    try:
+                        (chrom,) = parsed_key_fields
+                        stat_from_file[root_key][chrom] = value
+                    except ValueError as e:
+                        raise ParseError(f"{invalid_file_msg}{root_key} section implies 1 extra identifiers") from e
+                # 3. counts by chrom pairs chromsizes/chrom
+                elif root_key in ["chrom_freq"]:
+                    # remaining parsed_key_fields must be a pair of chromosome names [chr1, chr2]:
+                    try:
+                        chrom1, chrom2 = parsed_key_fields
+                        stat_from_file[root_key].append((chrom1, chrom2, value))
+                    except ValueError as e:
+                        raise ParseError(f"{invalid_file_msg}{root_key} section implies 2 extra identifiers") from e
+                # 4. counts by distance and by pair orientation dist_freq/56234133-100000000/-+
+                elif root_key in ["dist_freq"]:
+                    # remaining parsed_key_fields must be distance range and pair orientation:
+                    try:
+                        distance_range, pair_orientation = parsed_key_fields
+                        stat_from_file[root_key].append((pair_orientation, distance_range, value))
+                    except ValueError as e:
+                        raise ParseError(f"{invalid_file_msg}{root_key} section implies 2 identifiers") from e
+                # 5. unknwn root_key
+                else:
+                    raise ParseError(f"{invalid_file_msg}unknown field {root_key} detected")
+            # (C) empty or unparseable _key_tmp
+            else:
+                raise ParseError(f"{invalid_file_msg}unknown field {_key_tmp} detected")
+
+    # we need to do some further parsing for the following temporary structures:
+    # 1. 'cis_dist':
+    # sort cumulative counts by distance, and split into 2 separate arrays
+    sorted_dists, cumcounts = zip(*sorted(stat_from_file["cis_dist"], key=itemgetter(0)))
+    stat_from_file["cis_dist"] = {}
+    stat_from_file["cis_dist"]["dists"] = sorted_dists
+    stat_from_file["cis_dist"]["counts"] = cumcounts
+    # 2. 'dist_freq'
+    # parse distance ranges and orientations to store
+    for pair_orientation, distance_range, count in stat_from_file["dist_freq"]:
+        range_index = int(get_range_index_from_range(distance_range, _dist_bins))
+        # store corresponding value:
+        try:
+            dist_freq_tmp[pair_orientation][range_index] = count
+        except IndexError as e:
+            raise ParseError(
+                f"{invalid_file_msg}distance range {distance_range} is beyond define grid for dist_freq"
+            ) from e
+        except KeyError as e:
+            raise ParseError(f"{invalid_file_msg}pair orientation {pair_orientation} mismatch for dist_freq") from e
+    # if parsing was successful, replace 'dist_freq' with the new datastructure:
+    stat_from_file["dist_freq"] = dist_freq_tmp
+    # 3. 'chrom_freq'
+    # unpack chrom1, chrom2, counts into 3 separate ndarrays, mimicking COO sparse matrix:
+    chrom1, chrom2, counts = zip(*stat_from_file["chrom_freq"])
+    stat_from_file["chrom_freq"] = {}
+    stat_from_file["chrom_freq"]["chrom1"] = list(np.asarray(chrom1, dtype="U"))  # unicode str
+    stat_from_file["chrom_freq"]["chrom2"] = list(np.asarray(chrom2, dtype="U"))  # unicode str
+    stat_from_file["chrom_freq"]["counts"] = list(np.asarray(counts, dtype=np.int))
+
+    # add some fractions for general statistics table:
+    stat_from_file["frac_unmapped"] = stat_from_file["total_unmapped"] / stat_from_file["total"] * 100.0
+    stat_from_file["frac_single_sided_mapped"] = (
+        stat_from_file["total_single_sided_mapped"] / stat_from_file["total"] * 100.0
+    )
+    # total_mapped = total_dups + total_nodups
+    # should the following be divided by mapped or by total ?!
+    stat_from_file["frac_mapped"] = stat_from_file["total_mapped"] / stat_from_file["total"] * 100.0
+    stat_from_file["frac_dups"] = stat_from_file["total_dups"] / stat_from_file["total"] * 100.0
+    # the rest of stats are based on nodups:
+    stat_from_file["cis_percent"] = stat_from_file["cis"] / stat_from_file["total_nodups"] * 100.0
+
+    return stat_from_file

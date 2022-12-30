@@ -585,6 +585,9 @@ module_order:
   - hicup:
       module_tag:
         - hi-c
+  - pairtools:
+      module_tag:
+        - hi-c
   - hicpro:
       module_tag:
         - hi-c
