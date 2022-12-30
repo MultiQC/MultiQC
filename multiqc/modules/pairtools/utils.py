@@ -1,7 +1,8 @@
 import re
-import numpy as np
-from operator import itemgetter
 from collections import OrderedDict
+from operator import itemgetter
+
+import numpy as np
 
 # given supported python versions see if we still need
 # OrderedDict or could rely on dict

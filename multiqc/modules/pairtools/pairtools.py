@@ -3,28 +3,27 @@
 """ MultiQC module to parse stats output from pairtools """
 
 import logging
-from collections import OrderedDict
-
-from multiqc.modules.base_module import BaseMultiqcModule
-from multiqc.plots import bargraph, linegraph, heatmap
-from multiqc import config
-
 import os
-import yaml
-import numpy as np
+from collections import OrderedDict
 from copy import copy
-from random import choice
 from itertools import zip_longest
+from random import choice
+
+import numpy as np
+import yaml
+
+from multiqc import config
+from multiqc.modules.base_module import BaseMultiqcModule
+from multiqc.plots import bargraph, heatmap, linegraph
 
 from .utils import (
-    read_stats_from_file,
     contact_areas_genomewide,
-    genomic_dist_human_str,
-    edges_to_intervals,
     cumsums_to_rangesums,
+    edges_to_intervals,
+    genomic_dist_human_str,
+    read_stats_from_file,
     total_coverage,
 )
-
 
 # Initialise the logger
 log = logging.getLogger(__name__)
