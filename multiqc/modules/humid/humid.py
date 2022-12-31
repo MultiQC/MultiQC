@@ -20,7 +20,7 @@ class MultiqcModule(BaseMultiqcModule):
             name="HUMID",
             anchor="humid",
             href="https://github.com/jfjlaros/HUMID",
-            info=" is a fast, reference free tool to remove (UMI) duplicates " "from sequencing data",
+            info=" is a fast, reference free tool to remove (UMI) duplicates from sequencing data",
             # No publication / DOI // doi=
         )
 
@@ -37,10 +37,11 @@ class MultiqcModule(BaseMultiqcModule):
         if not self.humid:
             raise UserWarning
 
+        log.info(f"Found {len(self.humid)} reports")
         self.write_data_file(self.humid, "multiqc_humid")
+
         self.add_general_stats()
         self.add_humid_section()
-        log.info(f"Found {len(self.humid)} reports")
 
     def parse_stat_files(self):
         for f in self.find_log_files("humid", filehandles=True):
