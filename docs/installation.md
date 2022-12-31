@@ -161,7 +161,7 @@ Note that support for using the base `multiqc` command was improved in MultiQC v
 ## Using the Docker container
 
 A Docker container is provided on Docker Hub called `ewels/multiqc`.
-It's based on `czentye/matplotlib-minimal` to give the smallest size I could manage (~80MB).
+It's based on an `alpine` base to give the smallest image size possible (~80MB compressed).
 
 To use, call the `docker run` with your current working directory mounted as a volume and working directory. Then just specify the MultiQC command at the end as usual:
 
