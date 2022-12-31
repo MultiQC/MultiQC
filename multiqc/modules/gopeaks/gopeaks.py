@@ -6,10 +6,9 @@ from __future__ import print_function
 
 import json
 import logging
-import os
 from collections import OrderedDict
+from pathlib import Path
 
-from multiqc import config
 from multiqc.modules.base_module import BaseMultiqcModule
 from multiqc.plots import bargraph
 
@@ -43,21 +42,21 @@ class MultiqcModule(BaseMultiqcModule):
             parsed = self.parse_gopeaks_log(f)
 
             if parsed is not None:
+                if f["s_name"] in self.gopeaks_data:
+                    log.debug("Duplicate sample name found in {}! Overwriting: {}".format(f["fn"], f["s_name"]))
+
                 self.gopeaks_data[f["s_name"]] = parsed
 
                 # add gopeaks data to multiqc_source.txt
                 self.add_data_source(f)
 
-            # filter away samples if MultiQC user does not want them
-            self.gopeaks_data = self.ignore_samples(self.gopeaks_data)
-
-            if f["s_name"] in self.gopeaks_data:
-                log.debug("Duplicate sample name found in {}! Overwriting: {}".format(f["fn"], f["s_name"]))
+        # filter away samples if MultiQC user does not want them
+        self.gopeaks_data = self.ignore_samples(self.gopeaks_data)
 
         if len(self.gopeaks_data) == 0:
             raise UserWarning
-        if len(self.gopeaks_data) > 0:
-            log.info("Found {} samples".format(len(self.gopeaks_data)))
+
+        log.info("Found {} samples".format(len(self.gopeaks_data)))
 
         self.write_data_file(self.gopeaks_data, "multiqc_gopeaks")
 
@@ -70,28 +69,22 @@ class MultiqcModule(BaseMultiqcModule):
     # parsing functions -------------------------------------------------------------
 
     def parse_gopeaks_log(self, f):
-
         """
         Read gopeaks json log file and extract number of peaks.
         """
+        with open(Path(f["root"]) / Path(f["fn"])) as f:
+            sample_log = json.load(f)
 
-        d = {}
-        path_to_file = f["root"] + "/" + f["fn"]
-        f = open(path_to_file)
-        sample_log = json.load(f)
-        d["peak_counts"] = sample_log["peak_counts"]
-
-        return d
+        return {"peak_counts": sample_log["peak_counts"]}
 
     def gopeaks_general_stats_table(self):
-
         """
         Put peak counts to the general table.
         """
 
         headers = OrderedDict()
         headers["peak_counts"] = {
-            "title": "GoPeaks Peak Counts",
+            "title": "Peak Counts",
             "description": "Number of peaks per sample",
             "min": 0,
             "scale": "YlGnBu",
@@ -100,14 +93,11 @@ class MultiqcModule(BaseMultiqcModule):
         self.general_stats_addcols(self.gopeaks_data, headers)
 
     def gopeaks_bargraph(self):
-
         """
         Put peak counts to a bargraph.
         """
 
-        cats = OrderedDict()
-        cats["peak_counts"] = {"name": "Peak Counts"}
-
+        cats = {"peak_counts": {"name": "Peak Counts"}}
         config = {
             "id": "GoPeaksBarGraph",
             "title": "GoPeaks: Number of Peaks by Sample",
@@ -119,6 +109,6 @@ class MultiqcModule(BaseMultiqcModule):
         self.add_section(
             name="GoPeaks",
             anchor="gopeaks_bargraph",
-            description="Number of peaks called by GoPeaks",
+            description="Number of peaks called by GoPeaks.",
             plot=bargraph.plot(self.gopeaks_data, cats, config),
         )
