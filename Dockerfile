@@ -8,7 +8,6 @@ LABEL author="Phil Ewels" \
       maintainer="phil.ewels@scilifelab.se"
 
 ARG ALPINE_PACKAGE_VERSION="3.15"
-ARG MATPLOTLIB_VERSION="3.1.2"
 
 ARG USER_NAME="multiqc_user"
 ARG USER_ID="1000"
@@ -41,17 +40,10 @@ RUN echo "Install deps" 1>&2 && \
     ln -fs /usr/bin/python3 /usr/local/bin/python && \
     ln -fs /usr/bin/pip3 /usr/local/bin/pip && \
     echo "Install deps through pip" 1>&2 && \
-    pip3 install -v --no-cache-dir --upgrade \
-      pip && \
-    pip3 install -v --no-cache-dir \
-      numpy && \
-    pip3 install -v --no-cache-dir \
-      matplotlib=="$MATPLOTLIB_VERSION" && \
-    pip3 install -v --no-cache-dir \
-      wheel && \
+    pip3 install -v --no-cache-dir --upgrade pip && \
+    pip3 install -v --no-cache-dir wheel && \
     echo "Install multiqc through pip" 1>&2 && \
-    pip3 install -v --no-cache-dir \
-      . && \
+    pip3 install -v --no-cache-dir . && \
     echo "Clean up apk, remove build deps" 1>&2 && \
     apk del \
       --purge \
@@ -79,7 +71,3 @@ USER "${USER_NAME}"
 
 # Set default workdir to user home
 WORKDIR "/home/${USER_NAME}"
-  
-# Set up entrypoint and cmd for easy docker usage
-CMD [ "multiqc" ]
-
