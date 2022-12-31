@@ -1,0 +1,1 @@
+from .whatshap import MultiqcModule

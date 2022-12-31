@@ -1,0 +1,1 @@
+from .pbmarkdup import MultiqcModule
