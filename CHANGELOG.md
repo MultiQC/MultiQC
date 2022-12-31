@@ -33,6 +33,8 @@
   - GoPeaks is used to call peaks in CUT&TAG/CUT&RUN datasets.
 - [**HUMID**](https://github.com/jfjlaros/dedup)
   - HUMID is a tool to quickly and easily remove duplicate reads from FastQ files, with or without UMIs.
+- [**UMI-tools**](https://umi-tools.readthedocs.io)
+  - Work with Unique Molecular Identifiers (UMIs) / Random Molecular Tags (RMTs) and single cell RNA-Seq cell barcodes.
 
 ### Module feature additions
 

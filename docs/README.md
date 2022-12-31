@@ -126,6 +126,7 @@ MultiQC Modules:
     Stacks: modules/stacks.md
     Supernova: modules/supernova.md
     THeTA2: modules/theta2.md
+    UMI-tools: modules/umitools.md
     VarScan2: modules/varscan2.md
     VCFTools: modules/vcftools.md
     VEP: modules/vep.md
