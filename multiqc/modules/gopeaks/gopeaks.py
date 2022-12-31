@@ -75,7 +75,7 @@ class MultiqcModule(BaseMultiqcModule):
         with open(Path(f["root"]) / Path(f["fn"])) as f:
             sample_log = json.load(f)
 
-        return {"peak_counts": sample_log["peak_counts"]}
+        return sample_log
 
     def gopeaks_general_stats_table(self):
         """
