@@ -65,11 +65,25 @@ class MultiqcModule(BaseMultiqcModule):
 
         # add a section with a deduplicated reads plot to the report
         self.add_section(
-            name="Deduplicated Reads", anchor="umitools-dedup-plot", plot=self.umitools_deduplication_plot()
+            name="Deduplicated Reads",
+            anchor="umitools-dedup-plot",
+            plot=self.umitools_deduplication_plot(),
         )
 
         # add a section with a beeswarm plot of UMI stats to the report
-        self.add_section(name="UMI Stats", anchor="umitools-umi-stats", plot=self.umitools_umi_stats_swarm())
+        self.add_section(
+            name="UMI Stats",
+            anchor="umitools-umi-stats",
+            description="Statistics from running `umi_tools dedeup`",
+            helptext="""
+            - **Positions Dedup**: Total number of positions deduplicated
+            - **Total UMIs**: Total UMIs found in sample
+            - **Unique UMIs**: Unique UMIs found in sample
+            - **Mean #UMI**: Mean number of unique UMIs per position
+            - **Max #UMI**: Max number of unique UMIs per position
+            """,
+            plot=self.umitools_umi_stats_swarm(),
+        )
 
     def parse_logs(self, f):
         # Initialise a dictionary to hold the data from this log file
