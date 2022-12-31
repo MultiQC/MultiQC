@@ -31,6 +31,8 @@
   - Please report any bugs you find!
 - [**GoPeaks**](https://github.com/maxsonBraunLab/gopeaks)
   - GoPeaks is used to call peaks in CUT&TAG/CUT&RUN datasets.
+- [**HUMID**](https://github.com/jfjlaros/dedup)
+  - HUMID is a tool to quickly and easily remove duplicate reads from FastQ files, with or without UMIs.
 
 ### Module feature additions
 
