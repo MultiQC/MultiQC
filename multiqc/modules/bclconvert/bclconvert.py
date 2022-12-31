@@ -67,8 +67,12 @@ class MultiqcModule(BaseMultiqcModule):
                 </div>
             """
             self.per_lane_undetermined_reads = None
-        elif self.num_demux_files == 1:
-            # only possible to calculate barcodes per lane when parsing a single bclconvert run
+
+        create_undetermined_barplots = (
+            getattr(config, "bclconvert", {}).get("create_undetermined_barcode_barplots", False)
+            or self.num_demux_files == 1
+        )
+        if create_undetermined_barplots:
             self._parse_top_unknown_barcodes()
 
         # Collect counts by lane and sample
@@ -182,7 +186,7 @@ class MultiqcModule(BaseMultiqcModule):
         )
 
         # Add section with undetermined barcodes
-        if self.num_demux_files == 1:
+        if create_undetermined_barplots:
             self.add_section(
                 name="Undetermined barcodes by lane",
                 anchor="undetermine_by_lane",
@@ -241,22 +245,33 @@ class MultiqcModule(BaseMultiqcModule):
             return True
         return False
 
+    def _get_r2_length(self, root):
+        for element in root.findall("./Run/Reads/Read"):
+            if element.get("Number") == "3" and element.get("IsIndexedRead") == "N":
+                return element.get("NumCycles")  # single-index paired-end data
+            if element.get("Number") == "4" and element.get("IsIndexedRead") == "N":
+                return element.get("NumCycles")
+
+        log.error(f"Could not figure out read 2 length from RunInfo.xml")
+        raise UserWarning
+
     def _parse_single_runinfo_file(self, runinfo_file):
-        # get run id and readlength from RunInfo.xml
+        # get run id and cluster length from RunInfo.xml
         try:
             root = ET.fromstring(runinfo_file["f"])
             run_id = root.find("Run").get("Id")
-            read_length = root.find("./Run/Reads/Read[1]").get(
+            read_length_r1 = root.find("./Run/Reads/Read[1]").get(
                 "NumCycles"
             )  # ET indexes first element at 1, so here we're getting the first NumCycles
         except:
             log.error(f"Could not parse RunInfo.xml to get RunID and read length in '{runinfo_file['root']}'")
             raise UserWarning
         if self._is_single_end_reads(root):
-            cluster_length = int(read_length)
+            cluster_length = int(read_length_r1)
         else:
-            cluster_length = int(read_length) * 2
-        return {"run_id": run_id, "read_length": int(read_length), "cluster_length": cluster_length}
+            read_length_r2 = self._get_r2_length(root)
+            cluster_length = int(read_length_r1) + int(read_length_r2)
+        return {"run_id": run_id, "cluster_length": cluster_length}
 
     def _find_log_files_and_sort(self, search_pattern, sort_field):
         logs = list()
@@ -281,6 +296,7 @@ class MultiqcModule(BaseMultiqcModule):
             raise UserWarning
 
         for idx, runinfo in enumerate(runinfos):
+
             rundata = self._parse_single_runinfo_file(runinfo)
 
             if runinfo["root"] != demuxes[idx]["root"]:
@@ -302,11 +318,12 @@ class MultiqcModule(BaseMultiqcModule):
 
             self.last_run_id = rundata["run_id"]
 
-            if self.cluster_length and rundata["cluster_length"] != self.cluster_length:
-                log.error(
-                    "Detected different read lengths across the RunXml files. This should not be - read length across all input directories must be the same."
-                )
-                raise UserWarning
+            if len(runinfos) > 1:
+                if self.cluster_length and rundata["cluster_length"] != self.cluster_length:
+                    log.error(
+                        "Detected different read lengths across the RunXml files. We cannot handle this - read length across all input directories must be the same."
+                    )
+                    raise UserWarning
             self.cluster_length = rundata["cluster_length"]
 
         return demuxes, qmetrics

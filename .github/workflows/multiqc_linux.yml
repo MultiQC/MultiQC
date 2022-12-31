@@ -41,7 +41,7 @@ jobs:
 
   run_multiqc:
     name: Linux - Python ${{ matrix.python-version }}
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-20.04
     needs: changes
     strategy:
       matrix:
