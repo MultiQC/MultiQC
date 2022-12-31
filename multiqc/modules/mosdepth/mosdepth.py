@@ -295,8 +295,6 @@ class MultiqcModule(BaseMultiqcModule):
             for t in threshs:
                 if int(t) in dist_subset:
                     genstats[s_name][f"{t}_x_pc"] = dist_subset[t]
-                else:
-                    genstats[s_name][f"{t}_x_pc"] = 0
 
         for t in threshs:
             genstats_headers[f"{t}_x_pc"] = {
