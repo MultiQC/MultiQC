@@ -255,6 +255,7 @@ fn_clean_exts:
   - "_NanoStats"
   - ".cutadapt"
   - ".mosdepth"
+  - _gopeaks
 
 # These are removed after the above, only if sample names
 # start or end with this string. Again, removed in order.
@@ -434,6 +435,11 @@ module_order:
         - DNA
 
   # Post-alignment processing
+  - gopeaks:
+      module_tag:
+        - DNA
+        - CUT&TAG
+        - CUT&RUN
   - homer:
       module_tag:
         - RNA

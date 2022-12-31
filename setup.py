@@ -111,6 +111,7 @@ setup(
             "gffcompare = multiqc.modules.gffcompare:MultiqcModule",
             "gatk = multiqc.modules.gatk:MultiqcModule",
             "goleft_indexcov = multiqc.modules.goleft_indexcov:MultiqcModule",
+            "gopeaks = multiqc.modules.gopeaks:MultiqcModule",
             "happy = multiqc.modules.happy:MultiqcModule",
             "hicexplorer = multiqc.modules.hicexplorer:MultiqcModule",
             "hicpro = multiqc.modules.hicpro:MultiqcModule",

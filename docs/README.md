@@ -76,6 +76,7 @@ MultiQC Modules:
     GATK: modules/gatk.md
     GffCompare: modules/gffcompare.md
     goleft_indexcov: modules/goleft_indexcov.md
+    gopeaks: modules/gopeaks.md
     Hap.py: modules/happy.md
     HiCExplorer: modules/hicexplorer.md
     HOMER: modules/homer.md

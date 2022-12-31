@@ -29,6 +29,8 @@
   - Illumina Bio-IT Platform that uses FPGA for accelerated primary and secondary analysis
   - Finally merged the epic 2.5-year-old pull request, with 3.5k new lines of code.
   - Please report any bugs you find!
+- [**GoPeaks**](https://github.com/maxsonBraunLab/gopeaks)
+  - GoPeaks is used to call peaks in CUT&TAG/CUT&RUN datasets.
 
 ### Module feature additions
 
