@@ -2,12 +2,14 @@
 
 """ MultiQC module to parse output from pycoQC """
 
-from multiqc.modules.base_module import BaseMultiqcModule
-from multiqc.plots import bargraph, table, linegraph
-from multiqc import config
-from collections import OrderedDict
-import yaml
 import logging
+from collections import OrderedDict
+
+import yaml
+
+from multiqc import config
+from multiqc.modules.base_module import BaseMultiqcModule
+from multiqc.plots import bargraph, linegraph, table
 
 log = logging.getLogger(__name__)
 

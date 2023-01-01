@@ -2,6 +2,10 @@
 # (Content Security Policy), you will need the following scripts allowlisted:
 
 script-src 'self'
+    # v1.13
+    'sha256-Yz8frRqxu+ckJJ0Haj9Ywhe/Siomzpq9D/Xe1WX1LrQ=' # multiqc_tables.js
+    'sha256-SlWNKwqjhhmUI3hLXtLPzAl9rm5jXeeYgX1bGZ4S8D8=' # multiqc_dragen_fastqc.js
+
     # v1.12
     'sha256-iV6CFHoCJq7rXjscXMmCioPf05AIE/ZU98tHigtrnoE=' # multiqc.js after 9800862
     'sha256-OqdU34KpZyh/xfGLAlfEQHnEmkvk2rXMqqh2lex89QM=' # multiqc_toolbox.js after b183572

@@ -2,15 +2,15 @@
 
 """ MultiQC module to parse output from Kallisto """
 
-from __future__ import print_function
-from collections import OrderedDict
-import os
+
 import logging
+import os
 import re
+from collections import OrderedDict
 
 from multiqc import config
-from multiqc.plots import bargraph
 from multiqc.modules.base_module import BaseMultiqcModule
+from multiqc.plots import bargraph
 
 # Initialise the logger
 log = logging.getLogger(__name__)
@@ -57,7 +57,7 @@ class MultiqcModule(BaseMultiqcModule):
         for l in f["f"]:
 
             # Get input filename
-            match = re.search(r"\[quant\] will process (pair|file) 1: (\S+)", l)
+            match = re.search(r"\[quant\] will process (pair|file|sample) 1: (\S+)", l)
             if match:
                 s_name = self.clean_s_name(os.path.basename(match.group(2)), f)
 

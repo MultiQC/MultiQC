@@ -2,10 +2,10 @@
 
 """ MultiQC submodule to parse output from Picard InsertSizeMetrics """
 
-from collections import OrderedDict
 import logging
 import os
 import re
+from collections import OrderedDict
 
 from multiqc import config
 from multiqc.plots import linegraph

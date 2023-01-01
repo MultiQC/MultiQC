@@ -3,7 +3,6 @@
 """ MultiQC module to parse output from fgbio GroupReadsByUmi
 """
 
-from __future__ import print_function
 
 import logging
 

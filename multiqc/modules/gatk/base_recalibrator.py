@@ -6,8 +6,8 @@
 import logging
 from collections import namedtuple
 from itertools import groupby
-from multiqc.plots import linegraph
-from multiqc.plots import scatter
+
+from multiqc.plots import linegraph, scatter
 
 # Initialise the logger
 log = logging.getLogger(__name__)

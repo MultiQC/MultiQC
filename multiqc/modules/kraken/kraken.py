@@ -2,15 +2,15 @@
 
 """ MultiQC module to parse output from kraken """
 
-from __future__ import print_function
-from collections import OrderedDict
-import os
+
 import logging
+import os
 import re
+from collections import OrderedDict
 
 from multiqc import config
-from multiqc.plots import bargraph, heatmap
 from multiqc.modules.base_module import BaseMultiqcModule
+from multiqc.plots import bargraph, heatmap
 
 # Initialise the logger
 log = logging.getLogger(__name__)
@@ -423,7 +423,12 @@ class MultiqcModule(BaseMultiqcModule):
         """Add a heatmap showing the minimizer duplication top-5 species"""
 
         duplication = list()
-        pconfig = {"id": "kraken-topfive-duplication_plot", "title": f"Kraken 2: Top {self.top_n} species duplication"}
+        pconfig = {
+            "id": "kraken-topfive-duplication_plot",
+            "title": f"Kraken 2: Top {self.top_n} species duplication",
+            "square": False,
+            "xcats_samples": False,
+        }
 
         rank_code = "S"
         rank_data = dict()
@@ -448,18 +453,24 @@ class MultiqcModule(BaseMultiqcModule):
                     rank_data[s_name] = dict()
                 if s_name not in counts_shown:
                     counts_shown[s_name] = 0
-                for row in d:
-                    if row["rank_code"] == rank_code:
-                        if row["classif"] == classif:
-                            if classif not in rank_data[s_name]:
-                                rank_data[s_name][classif] = 0
-                            try:
-                                rank_data[s_name][classif] = row["minimizer_duplication"]
-                            except KeyError:
-                                del rank_data[s_name]
-                                if not showed_warning:
-                                    log.warning("Kraken2 reports of different versions were found")
-                                    showed_warning = True
+
+                if classif not in rank_data[s_name]:
+                    rank_data[s_name][classif] = None
+
+                try:
+                    row = next(row for row in d if row["rank_code"] == rank_code and row["classif"] == classif)
+                except StopIteration:
+                    # if nothing is found at the rank + classification, leave as 0
+                    continue
+
+                try:
+                    rank_data[s_name][classif] = row["minimizer_duplication"]
+                except KeyError:
+                    del rank_data[s_name]
+                    if not showed_warning:
+                        log.warning("Kraken2 reports of different versions were found")
+                        showed_warning = True
+
         # Strip empty samples
         for sample, vals in dict(rank_data).items():
             if len(vals) == 0:
