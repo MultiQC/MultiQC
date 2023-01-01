@@ -2,10 +2,7 @@
 
 """ MultiQC module to parse output from HiFiasm """
 
-import json
 import logging
-import re
-from collections import OrderedDict
 
 from multiqc.modules.base_module import BaseMultiqcModule
 from multiqc.plots import linegraph
@@ -21,7 +18,7 @@ class MultiqcModule(BaseMultiqcModule):
             name="HiFiasm",
             anchor="hifiasm",
             href="https://github.com/chhylp123/hifiasm",
-            info=": a haplotype-resolved assembler for accurate Hifi reads",
+            info="is a haplotype-resolved assembler for accurate Hifi reads",
             doi="10.1038/s41592-020-01056-5",
         )
 
@@ -40,17 +37,17 @@ class MultiqcModule(BaseMultiqcModule):
 
     def parse_hifiasm_log_files(self):
         for f in self.find_log_files("hifiasm", filehandles=True):
-            filename = f["s_name"]
             self.add_data_source(f)
-            if filename in self.hifiasm_data:
-                log.debug(f"Duplicate sample name found! Overwriting: {filename}")
+            if f["s_name"] in self.hifiasm_data:
+                log.debug(f"Duplicate sample name found! Overwriting: {f['s_name']}")
             data = self.extract_kmer_graph(f["f"])
-            self.hifiasm_data[filename] = data
+            if data:
+                self.hifiasm_data[f["s_name"]] = data
 
     def add_sections(self):
         # Plot configuration
         config = {
-            "id": "hifiasm-kmr-graph",
+            "id": "hifiasm-kmer-graph",
             "title": "HiFiasm: kmer graph",
             "ylab": "Count of kmer occurrence",
             "xlab": "Kmer occurrence",
@@ -66,8 +63,7 @@ class MultiqcModule(BaseMultiqcModule):
                 The kmer distribution graph for the input data. For homozygous
                 samples, there should be one peak around read coverage. For
                 heterozygous samples, there should be two peaks, see the
-                [HiFiasm
-                documentation](https://hifiasm.readthedocs.io/en/latest/interpreting-output.html#hifiasm-log-interpretation)
+                [HiFiasm documentation](https://hifiasm.readthedocs.io/en/latest/interpreting-output.html#hifiasm-log-interpretation)
                 for details.
                 """,
             plot=linegraph.plot(self.hifiasm_data, config),
