@@ -76,6 +76,10 @@ class MultiqcModule(BaseMultiqcModule):
                 for key in list(sample.keys()):
                     new_key = key.lower()
                     sample[new_key] = sample.pop(key)
+                    try:
+                        sample[new_key] = float(sample[new_key])
+                    except ValueError:
+                        pass
 
                 self.nextclade_data[s_name] = sample
             except KeyError:
@@ -119,63 +123,63 @@ class MultiqcModule(BaseMultiqcModule):
             "title": "Total Gaps",
             "description": "Total number of detected nucleotide gaps",
             "min": 0,
-            "scale": "RdBl-rev",
+            "scale": "RdBu-rev",
             "hidden": True,
         }
         headers["totalinsertions"] = {
             "title": "Total Insertions",
             "description": "Total number of detected nucleotide insertions",
             "min": 0,
-            "scale": "RdYlGr-rev",
+            "scale": "RdYlGn-rev",
             "hidden": True,
         }
         headers["totalmissing"] = {
             "title": "Total Missing",
             "description": "Total number of detected missing nucleotides",
             "min": 0,
-            "scale": "RdYlBl-rev",
+            "scale": "RdYlBu-rev",
             "hidden": True,
         }
         headers["totalmutations"] = {
             "title": "Total Mutations",
             "description": "Total number of detected nucleotide mutations",
             "min": 0,
-            "scale": "RdBl-rev",
+            "scale": "RdBu-rev",
             "hidden": True,
         }
         headers["totalnonacgtns"] = {
             "title": "Total Non-ACGTNs",
             "description": "Total number of detected ambiguous nucleotides",
             "min": 0,
-            "scale": "RdYlGr-rev",
+            "scale": "RdYlGn-rev",
             "hidden": True,
         }
         headers["totalpcrprimerchanges"] = {
             "title": "Total PCR Primer Changes",
             "description": "Total number of nucleotide mutations detected in PCR primer regions",
             "min": 0,
-            "scale": "RdYlBl-rev",
+            "scale": "RdYlBu-rev",
             "hidden": True,
         }
         headers["totalaminoacidsubstitutions"] = {
             "title": "Total Amino Acid Substitutions",
             "description": "Total number of detected aminoacid substitutions",
             "min": 0,
-            "scale": "RdBl-rev",
+            "scale": "RdBu-rev",
             "hidden": True,
         }
         headers["totalaminoaciddeletions"] = {
             "title": "Total Amino Acid Deletions",
             "description": "Total number of detected aminoacid substitutions",
             "min": 0,
-            "scale": "RdYlGr-rev",
+            "scale": "RdYlGn-rev",
             "hidden": True,
         }
         headers["alignmentscore"] = {
             "title": "Alignment Score",
             "description": "Indicates to what degree the input sequence and the reference sequence correspond",
             "min": 0,
-            "scale": "RdYlBl-rev",
+            "scale": "RdYlBu-rev",
             "hidden": True,
         }
         headers["alignmentstart"] = {
@@ -191,13 +195,13 @@ class MultiqcModule(BaseMultiqcModule):
         headers["qc_missingdata_missingdatathreshold"] = {
             "title": "QC Missing Data Threshold",
             "description": "The threshold used for the 'Missing data' QC test",
-            "scale": "GrBl",
+            "scale": "GnBu",
             "hidden": True,
         }
         headers["qc_missingdata_score"] = {
             "title": "QC Missing Data Score",
             "description": "Score from the 'Missing data' QC test",
-            "scale": "RdYlGr-rev",
+            "scale": "RdYlGn-rev",
             "hidden": True,
         }
         headers["qc_missingdata_status"] = {
@@ -212,19 +216,19 @@ class MultiqcModule(BaseMultiqcModule):
         headers["qc_missingdata_totalmissing"] = {
             "title": "QC Missing Data Total",
             "description": "Total number of missing nucleotides used in 'Missing data' QC test",
-            "scale": "RdYlBl-rev",
+            "scale": "RdYlBu-rev",
             "hidden": True,
         }
         headers["qc_mixedsites_mixedsitesthreshold"] = {
             "title": "QC Mixed Sites Threshold",
             "description": "Threshold used for 'Mixed sites' QC test",
-            "scale": "GrBl",
+            "scale": "GnBu",
             "hidden": True,
         }
         headers["qc_mixedsites_score"] = {
             "title": "QC Mixed Sites Score",
             "description": "Score from the 'Missing data' QC testScore from the 'Missing data' QC test",
-            "scale": "RdYlGr-rev",
+            "scale": "RdYlGn-rev",
             "hidden": True,
         }
         headers["qc_mixedsites_status"] = {
@@ -239,13 +243,13 @@ class MultiqcModule(BaseMultiqcModule):
         headers["qc_mixedsites_totalmixedsites"] = {
             "title": "QC Mixed Sites Total",
             "description": "Total number of ambiguous nucleotides used for 'Mixed sites' QC test",
-            "scale": "RdYlBl-rev",
+            "scale": "RdYlBu-rev",
             "hidden": True,
         }
         headers["qc_privatemutations_cutoff"] = {
             "title": "QC Private Mutations Cutoff",
             "description": "Cutoff parameter used for 'Private mutations' QC test",
-            "scale": "GrBl",
+            "scale": "GnBu",
             "hidden": True,
         }
         headers["qc_privatemutations_excess"] = {
@@ -257,7 +261,7 @@ class MultiqcModule(BaseMultiqcModule):
         headers["qc_privatemutations_score"] = {
             "title": "QC Private Mutations Score",
             "description": "Score for 'Private mutations' QC rule",
-            "scale": "RdYlGr-rev",
+            "scale": "RdYlGn-rev",
             "hidden": True,
         }
         headers["qc_privatemutations_status"] = {
@@ -273,7 +277,7 @@ class MultiqcModule(BaseMultiqcModule):
         headers["qc_privatemutations_total"] = {
             "title": "QC Private Mutations Total",
             "description": "Total number of private mutations used for 'Private mutations' QC rule",
-            "scale": "RdYlBl-rev",
+            "scale": "RdYlBu-rev",
             "hidden": True,
         }
         headers["qc_snpclusters_clusteredsnps"] = {
@@ -284,7 +288,7 @@ class MultiqcModule(BaseMultiqcModule):
         headers["qc_snpclusters_score"] = {
             "title": "QC SNP Clusters Score",
             "description": "Score for 'SNP clusters' QC test",
-            "scale": "RdYlGr-rev",
+            "scale": "RdYlGn-rev",
             "hidden": True,
         }
         headers["qc_snpclusters_status"] = {
@@ -300,7 +304,7 @@ class MultiqcModule(BaseMultiqcModule):
         headers["qc_snpclusters_totalsnps"] = {
             "title": "QC Total SNPs",
             "description": "Total number of SNPs for 'SNP clusters' QC test",
-            "scale": "RdYlBl-rev",
+            "scale": "RdYlBu-rev",
             "hidden": True,
         }
 
