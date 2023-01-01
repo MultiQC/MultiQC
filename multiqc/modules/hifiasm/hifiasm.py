@@ -57,7 +57,7 @@ class MultiqcModule(BaseMultiqcModule):
 
         self.add_section(
             name="HiFiasm kmer graph",
-            anchor="hifiasm-kmer-graph",
+            anchor="hifiasm-kmer-section",
             description="Kmer counts in the input data",
             helptext="""
                 The kmer distribution graph for the input data. For homozygous
