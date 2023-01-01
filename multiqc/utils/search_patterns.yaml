@@ -599,8 +599,8 @@ picard/markilluminaadapters:
   contents: "MarkIlluminaAdapters"
   shared: true
 porechop:
-  contents_re: ".*Looking for known adapter sets.*"
-  num_lines: 7
+  contents: "Looking for known adapter sets"
+  num_lines: 10
 preseq:
   - contents: "EXPECTED_DISTINCT"
     num_lines: 2
