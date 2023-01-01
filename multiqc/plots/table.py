@@ -135,7 +135,7 @@ def make_table(dt):
         if header["scale"] == False:
             c_scale = None
         else:
-            c_scale = mqc_colour.mqc_colour_scale(header["scale"], header["dmin"], header["dmax"])
+            c_scale = mqc_colour.mqc_colour_scale(header["scale"], header["dmin"], header["dmax"], id=table_id)
 
         # Collect conditional formatting config
         cond_formatting_rules = {}
