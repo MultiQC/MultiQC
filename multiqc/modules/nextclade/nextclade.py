@@ -3,16 +3,18 @@
 """ MultiQC module to parse output from Nextclade """
 
 from __future__ import print_function
-from collections import OrderedDict
-import logging
-from multiqc.modules import nextclade
-import jinja2
+
 import csv
+import logging
+from collections import OrderedDict
+
+import jinja2
 
 from multiqc import config
-from multiqc.utils import mqc_colour
-from multiqc.plots import bargraph, table
+from multiqc.modules import nextclade
 from multiqc.modules.base_module import BaseMultiqcModule
+from multiqc.plots import bargraph, table
+from multiqc.utils import mqc_colour
 
 # Initialise the logger
 log = logging.getLogger(__name__)
