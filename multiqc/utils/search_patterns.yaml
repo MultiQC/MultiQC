@@ -598,6 +598,9 @@ picard/extractilluminabarcodes:
 picard/markilluminaadapters:
   contents: "MarkIlluminaAdapters"
   shared: true
+porechop:
+  contents: "Looking for known adapter sets"
+  num_lines: 10
 preseq:
   - contents: "EXPECTED_DISTINCT"
     num_lines: 2
