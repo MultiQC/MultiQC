@@ -17,7 +17,7 @@
 - Remove Python 2-3 compatability `from __future__` imports
 - Parsing output file column headers is much faster.
 - Fix sorting of table columns with text values
-- Updated `Dockerfile` to enable support to build multi-arch images, run through a non-privileged user and build tools for non precompiled python binaries ([#1541](https://github.com/ewels/MultiQC/pull/1541))
+- Rewrote the `Dockerfile` to enable support to build multi-arch images, run through a non-privileged user and build tools for non precompiled python binaries ([#1541](https://github.com/ewels/MultiQC/pull/1541))
 
 ### New Modules
 
