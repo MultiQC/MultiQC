@@ -83,7 +83,7 @@ class MultiqcModule(BaseMultiqcModule):
                         self.porechop_data[s_name]["Start Trimmed Total"] - self.porechop_data[s_name]["Start Trimmed"]
                     )
                     try:
-                        self.porechop_data[s_name]["Start Trimmed (%)"] = (
+                        self.porechop_data[s_name]["Start Trimmed Percent"] = (
                             self.porechop_data[s_name]["Start Trimmed"]
                             / self.porechop_data[s_name]["Start Trimmed Total"]
                         ) * 100
@@ -103,7 +103,7 @@ class MultiqcModule(BaseMultiqcModule):
                         self.porechop_data[s_name]["End Trimmed Total"] - self.porechop_data[s_name]["End Trimmed"]
                     )
                     try:
-                        self.porechop_data[s_name]["End Trimmed (%)"] = (
+                        self.porechop_data[s_name]["End Trimmed Percent"] = (
                             self.porechop_data[s_name]["End Trimmed"]
                             / self.porechop_data[s_name]["Start Trimmed Total"]
                             * 100
@@ -121,7 +121,7 @@ class MultiqcModule(BaseMultiqcModule):
                         self.porechop_data[s_name]["Middle Split Total"] - self.porechop_data[s_name]["Middle Split"]
                     )
                     try:
-                        self.porechop_data[s_name]["Middle Split (%)"] = (
+                        self.porechop_data[s_name]["Middle Split Percent"] = (
                             self.porechop_data[s_name]["Middle Split"]
                             / self.porechop_data[s_name]["Middle Split Total"]
                             * 100
@@ -149,7 +149,7 @@ class MultiqcModule(BaseMultiqcModule):
             "modify": lambda x: x * config.read_count_multiplier,
             "hidden": True,
         }
-        headers["Start Trimmed (%)"] = {
+        headers["Start Trimmed Percent"] = {
             "title": "Start Trimmed",
             "description": "Percent of reads that had adapters trimmed from the start",
             "suffix": "%",
@@ -166,7 +166,7 @@ class MultiqcModule(BaseMultiqcModule):
             "modify": lambda x: x * config.read_count_multiplier,
             "hidden": True,
         }
-        headers["End Trimmed (%)"] = {
+        headers["End Trimmed Percent"] = {
             "title": "End Trimmed",
             "description": "Percent of reads that had adapters trimmed from the end",
             "suffix": "%",
@@ -181,7 +181,7 @@ class MultiqcModule(BaseMultiqcModule):
             "modify": lambda x: x * config.read_count_multiplier,
             "hidden": True,
         }
-        headers["Middle Split (%)"] = {
+        headers["Middle Split Percent"] = {
             "title": "Middle Split",
             "description": "Percent of reads that were split based on middle adapters",
             "suffix": "%",
@@ -203,7 +203,7 @@ class MultiqcModule(BaseMultiqcModule):
         }
         self.add_section(
             name="Reads adapter-trimmed read start",
-            anchor="porechop-starttrim-barplot",
+            anchor="porechop-starttrim",
             description="Shows the number of reads that had adapters removed from read start.",
             plot=bargraph.plot(self.porechop_data, cats, config),
         )
@@ -220,7 +220,7 @@ class MultiqcModule(BaseMultiqcModule):
         }
         self.add_section(
             name="Reads adapter-trimmed read end",
-            anchor="porechop-endtrim-barplot",
+            anchor="porechop-endtrim",
             description="Shows the number of reads that had adapters removed from read end.",
             plot=bargraph.plot(self.porechop_data, cats, config),
         )
@@ -237,7 +237,7 @@ class MultiqcModule(BaseMultiqcModule):
         }
         self.add_section(
             name="Middle split reads",
-            anchor="porechop-endtrim-barplot",
+            anchor="porechop-middlesplit",
             description="Shows the number of reads that were split due to adapter being present in middle of read.",
             plot=bargraph.plot(self.porechop_data, cats, config),
         )
