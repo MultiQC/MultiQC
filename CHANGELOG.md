@@ -67,6 +67,7 @@
   - Fix duplicate heatmap to account for missing taxons ([#1779](https://github.com/ewels/MultiQC/pull/1779))
   - Make heatmap full width
   - Handle empty kreports gracefully ([#1637](https://github.com/ewels/MultiQC/issues/1637))
+  - Fix regex error with very large numbers of unclassified reads ([#1639](https://github.com/ewels/MultiQC/pull/1639))
 - **malt**
   - Fixed division by 0 in malt module ([#1683](https://github.com/ewels/MultiQC/issues/1683))
 - **Mosdepth**

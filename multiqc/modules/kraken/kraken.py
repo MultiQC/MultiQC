@@ -183,7 +183,7 @@ class MultiqcModule(BaseMultiqcModule):
 
         # Search regexes for stats
         k2_regex = re.compile(
-            r"^\s{1,2}(\d{1,2}\.\d{1,2})\t(\d+)\t(\d+)\t(\d+)\t(\d+)\t([UDKPCOFGS-]\d{0,2})\t(\d+)(\s+)(.+)"
+            r"^\s{0,2}(\d{1,3}\.\d{1,2})\t(\d+)\t(\d+)\t(\d+)\t(\d+)\t([URDKPCOFGS-]\d{0,2})\t(\d+)(\s+)(.+)"
         )
         data = []
         for l in f["f"]:
@@ -202,6 +202,8 @@ class MultiqcModule(BaseMultiqcModule):
                     "classif": match.group(9),
                 }
                 data.append(row)
+            else:
+                log.debug(f"{f['s_name']}: Could not parse line: {l}")
 
         self.kraken_raw_data[f["s_name"]] = data
 
@@ -341,7 +343,7 @@ class MultiqcModule(BaseMultiqcModule):
             "data_labels": list(self.t_ranks.values()),
         }
 
-        for rank_code, rank_name in self.t_ranks.items():
+        for rank_code in self.t_ranks:
             rank_cats = OrderedDict()
             rank_data = dict()
 
