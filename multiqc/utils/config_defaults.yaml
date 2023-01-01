@@ -640,6 +640,10 @@ module_order:
       module_tag:
         - DNA
         - virus
+  - nextclade:
+      module_tag:
+        - RNA
+        - virus
   # Pre-alignment QC
   - humid:
       module_tag:
