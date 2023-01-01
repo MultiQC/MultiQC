@@ -17,6 +17,7 @@
 - Remove Python 2-3 compatability `from __future__` imports
 - Parsing output file column headers is much faster.
 - Fix sorting of table columns with text values
+- Add a new lint test to check that colour scale names are valid ([#1835](https://github.com/ewels/MultiQC/pull/1835))
 
 ### New Modules
 
