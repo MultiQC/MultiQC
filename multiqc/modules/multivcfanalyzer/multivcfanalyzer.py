@@ -193,7 +193,7 @@ class MultiqcModule(BaseMultiqcModule):
         headers["discardedVarCall"] = {
             "title": "Discarded SNP Call",
             "description": "Number of non-reference positions not reaching genotyping or coverage thresholds",
-            "scale": "PuCr",
+            "scale": "PuRd",
             "shared_key": "calls",
             "format": "{:,.0f}",
         }

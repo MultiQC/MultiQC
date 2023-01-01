@@ -1085,11 +1085,12 @@ def run(
                 report.num_mpl_plots, "s" if report.num_mpl_plots > 1 else ""
             )
         )
-        console.print(
-            "[blue]|           multiqc[/] | "
-            "To force interactive plots, use the [yellow]'--interactive'[/] flag. "
-            "See the [link=https://multiqc.info/docs/#flat--interactive-plots]documentation[/link]."
-        )
+        if not config.plots_force_interactive:
+            console.print(
+                "[blue]|           multiqc[/] | "
+                "To force interactive plots, use the [yellow]'--interactive'[/] flag. "
+                "See the [link=https://multiqc.info/docs/#flat--interactive-plots]documentation[/link]."
+            )
 
     if lint and len(report.lint_errors) > 0:
         logger.error("Found {} linting errors!\n{}".format(len(report.lint_errors), "\n".join(report.lint_errors)))
