@@ -27,6 +27,8 @@ MultiQC Modules:
     FastQC: modules/fastqc.md
     FLASh: modules/flash.md
     Flexbar: modules/flexbar.md
+    HiFiasm: modules/hifiasm.md
+    HUMID: modules/humid.md
     InterOp: modules/interop.md
     iVar: modules/ivar.md
     Jellyfish: modules/jellyfish.md
@@ -35,6 +37,7 @@ MultiQC Modules:
     Lima: modules/lima.md
     minionqc: modules/minionqc.md
     pbmarkdup: modules/pbmarkdup.md
+    Porechop: modules/porechop.md
     Pychopper: modules/pychopper.md
     pycoQC: modules/pycoqc.md
     SeqyClean: modules/seqyclean.md
@@ -93,6 +96,7 @@ MultiQC Modules:
     MTNucRatio: modules/mtnucratio.md
     MultiVCFAnalyzer: modules/multivcfanalyzer.md
     NanoStat: modules/nanostat.md
+    Nextclade: modules/nextclade.md
     ngsderive: modules/ngsderive.md
     odgi: modules/odgi.md
     OptiType: modules/optitype.md
@@ -125,6 +129,7 @@ MultiQC Modules:
     Stacks: modules/stacks.md
     Supernova: modules/supernova.md
     THeTA2: modules/theta2.md
+    UMI-tools: modules/umitools.md
     VarScan2: modules/varscan2.md
     VCFTools: modules/vcftools.md
     VEP: modules/vep.md

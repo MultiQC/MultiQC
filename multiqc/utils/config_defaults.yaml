@@ -370,6 +370,11 @@ module_order:
       module_tag:
         - DNA
         - RNA
+  - hifiasm:
+      module_tag:
+        - DNA
+        - Denovo
+        - PacBio
   - quast:
       module_tag:
         - DNA
@@ -571,6 +576,10 @@ module_order:
       module_tag:
         - DNA
         - prokarytotic
+  - umitools:
+      module_tag:
+        - DNA
+        - RNA
 
   # Alignment tool stats
   - bbmap:
@@ -636,7 +645,16 @@ module_order:
       module_tag:
         - DNA
         - virus
+  - nextclade:
+      module_tag:
+        - RNA
+        - virus
   # Pre-alignment QC
+  - humid:
+      module_tag:
+        - DNA
+        - RNA
+        - umi
   - kat:
       module_tag:
         - DNA
@@ -712,6 +730,10 @@ module_order:
   - pychopper:
       module_tag:
         - RNA
+  - porechop:
+      module_tag:
+        - DNA
+        - nanopore
   - pycoqc:
       module_tag:
         - DNA

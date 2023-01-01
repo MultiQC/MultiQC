@@ -18,6 +18,7 @@
 - Parsing output file column headers is much faster.
 - Fix sorting of table columns with text values
 - Rewrote the `Dockerfile` to enable support to build multi-arch images, run through a non-privileged user and build tools for non precompiled python binaries ([#1541](https://github.com/ewels/MultiQC/pull/1541))
+- Add a new lint test to check that colour scale names are valid ([#1835](https://github.com/ewels/MultiQC/pull/1835))
 
 ### New Modules
 
@@ -32,6 +33,16 @@
   - Please report any bugs you find!
 - [**GoPeaks**](https://github.com/maxsonBraunLab/gopeaks)
   - GoPeaks is used to call peaks in CUT&TAG/CUT&RUN datasets.
+- [**HiFiasm**](https://github.com/chhylp123/hifiasm)
+  - A haplotype-resolved assembler for accurate Hifi reads
+- [**HUMID**](https://github.com/jfjlaros/dedup)
+  - HUMID is a tool to quickly and easily remove duplicate reads from FastQ files, with or without UMIs.
+- [**Nextclade**](https://github.com/nextstrain/nextclade)
+  - Tool that assigns clades to SARS-CoV-2 samples
+- [**Porechop**](https://github.com/rrwick/Porechop)
+  - A tool for finding and removing adapters from Oxford Nanopore reads
+- [**UMI-tools**](https://umi-tools.readthedocs.io)
+  - Work with Unique Molecular Identifiers (UMIs) / Random Molecular Tags (RMTs) and single cell RNA-Seq cell barcodes.
 
 ### Module feature additions
 
@@ -60,6 +71,8 @@
 - **Kraken**
   - Fix duplicate heatmap to account for missing taxons ([#1779](https://github.com/ewels/MultiQC/pull/1779))
   - Make heatmap full width
+  - Handle empty kreports gracefully ([#1637](https://github.com/ewels/MultiQC/issues/1637))
+  - Fix regex error with very large numbers of unclassified reads ([#1639](https://github.com/ewels/MultiQC/pull/1639))
 - **malt**
   - Fixed division by 0 in malt module ([#1683](https://github.com/ewels/MultiQC/issues/1683))
 - **Mosdepth**

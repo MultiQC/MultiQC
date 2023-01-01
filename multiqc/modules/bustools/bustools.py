@@ -115,7 +115,7 @@ class MultiqcModule(BaseMultiqcModule):
         }
         self.headers["meanUMIsPerBarcode"] = {
             "title": "Mean UMIs per barcode",
-            "scale": "PuBnGn",
+            "scale": "PuBuGn",
             "min": 0,
             "format": "{:,.2f}",
         }
