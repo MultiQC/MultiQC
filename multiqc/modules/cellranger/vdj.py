@@ -163,7 +163,7 @@ class CellRangerVdjMixin:
         colours = {
             "estimated cells": "RdPu",
             "avg reads/cell": "Blues",
-            "reads in cells": "PuBnGn",
+            "reads in cells": "PuBuGn",
         }
         data_general_stats, self.vdj_general_data_headers = update_dict(
             data_general_stats,

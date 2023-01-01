@@ -175,7 +175,7 @@ class CellRangerCountMixin:
             "Q30 Bases in RNA Read": "Q30 read",
         }
         colours = {
-            "reads": "PuBnGn",
+            "reads": "PuBuGn",
             "valid bc": "RdYlGn",
             "Q30 bc": "RdYlBu",
             "Q30 UMI": "Spectral",
@@ -225,11 +225,11 @@ class CellRangerCountMixin:
             "avg reads/cell": "Blues",
             "genes detected": "Greens",
             "median genes/cell": "Purples",
-            "reads in cells": "PuBnGn",
+            "reads in cells": "PuBuGn",
             "valid bc": "Spectral",
             "valid umi": "RdYlGn",
             "median umi/cell": "YlGn",
-            "saturation": "YlOdRd",
+            "saturation": "YlOrRd",
         }
         data, self.count_data_headers = update_dict(
             data_general_stats,
