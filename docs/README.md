@@ -27,6 +27,7 @@ MultiQC Modules:
     FastQC: modules/fastqc.md
     FLASh: modules/flash.md
     Flexbar: modules/flexbar.md
+    HiFiasm: modules/hifiasm.md
     HUMID: modules/humid.md
     InterOp: modules/interop.md
     iVar: modules/ivar.md
@@ -60,8 +61,6 @@ MultiQC Modules:
     Salmon: modules/salmon.md
     STAR: modules/star.md
     TopHat: modules/tophat.md
-  Assemblers:
-    HiFiasm: modules/hifiasm.md
   Post-alignment:
     Bamtools: modules/bamtools.md
     Bcftools: modules/bcftools.md
