@@ -88,6 +88,7 @@ class MultiqcModule(BaseMultiqcModule):
         headers["clade"] = {
             "title": "Clade",
             "description": "Clade",
+            "scale": False,
         }
         self.general_stats_addcols(self.nextclade_data, headers)
 
@@ -98,6 +99,7 @@ class MultiqcModule(BaseMultiqcModule):
         headers["clade"] = {
             "title": "Clade",
             "description": "The inferred clade from the input sequence and reference tree",
+            "scale": False,
         }
         headers["qc_overallscore"] = {
             "title": "QC Overall Score",
@@ -108,7 +110,10 @@ class MultiqcModule(BaseMultiqcModule):
             "title": "QC Overall Status",
             "description": "Summarizing status of all QC tests",
             "scale": False,
-            "modify": lambda x: "Pass" if x == "good" else "Fail",
+            "cond_formatting_rules": {
+                "pass": [{"s_eq": "good"}],
+                "fail": [{"s_eq": "bad"}],
+            },
         }
         headers["totalgaps"] = {
             "title": "Total Gaps",
@@ -199,7 +204,10 @@ class MultiqcModule(BaseMultiqcModule):
             "title": "QC Missing Data Status",
             "description": "Status for 'Missing data' QC test",
             "scale": False,
-            "modify": lambda x: "Pass" if x == "good" else "Fail",
+            "cond_formatting_rules": {
+                "pass": [{"s_eq": "good"}],
+                "fail": [{"s_eq": "bad"}],
+            },
         }
         headers["qc_missingdata_totalmissing"] = {
             "title": "QC Missing Data Total",
@@ -223,7 +231,10 @@ class MultiqcModule(BaseMultiqcModule):
             "title": "QC Mixed Sites Status",
             "description": "Status for 'Missing data' QC test",
             "scale": False,
-            "modify": lambda x: "Pass" if x == "good" else "Fail",
+            "cond_formatting_rules": {
+                "pass": [{"s_eq": "good"}],
+                "fail": [{"s_eq": "bad"}],
+            },
         }
         headers["qc_mixedsites_totalmixedsites"] = {
             "title": "QC Mixed Sites Total",
@@ -253,7 +264,10 @@ class MultiqcModule(BaseMultiqcModule):
             "title": "QC Private Mutations Status",
             "description": "Status for 'Private mutations' QC rule",
             "scale": False,
-            "modify": lambda x: "Pass" if x == "good" else "Fail",
+            "cond_formatting_rules": {
+                "pass": [{"s_eq": "good"}],
+                "fail": [{"s_eq": "bad"}],
+            },
             "hidden": True,
         }
         headers["qc_privatemutations_total"] = {
@@ -277,7 +291,10 @@ class MultiqcModule(BaseMultiqcModule):
             "title": "QC SNP Clusters Status",
             "description": "Status for 'SNP clusters' QC test",
             "scale": False,
-            "modify": lambda x: "Pass" if x == "good" else "Fail",
+            "cond_formatting_rules": {
+                "pass": [{"s_eq": "good"}],
+                "fail": [{"s_eq": "bad"}],
+            },
             "hidden": True,
         }
         headers["qc_snpclusters_totalsnps"] = {
