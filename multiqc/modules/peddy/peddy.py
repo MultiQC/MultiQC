@@ -2,13 +2,13 @@
 
 """ MultiQC module to parse output from Peddy """
 
-from __future__ import print_function
-from collections import OrderedDict
-import logging
-import json
 
-from multiqc.plots import scatter
+import json
+import logging
+from collections import OrderedDict
+
 from multiqc.modules.base_module import BaseMultiqcModule
+from multiqc.plots import scatter
 
 # Initialise the logger
 log = logging.getLogger(__name__)

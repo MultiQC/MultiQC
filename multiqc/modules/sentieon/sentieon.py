@@ -2,17 +2,14 @@
 
 """ MultiQC module to parse output from Sentieon-dnaseq """
 
-from __future__ import print_function
-from collections import OrderedDict
+
 import logging
+from collections import OrderedDict
 
 from multiqc.modules.base_module import BaseMultiqcModule
 
 # Import the Sentieon submodules
-from . import AlignmentSummaryMetrics
-from . import GcBiasMetrics
-from . import InsertSizeMetrics
-
+from . import AlignmentSummaryMetrics, GcBiasMetrics, InsertSizeMetrics
 
 # Initialise the logger
 log = logging.getLogger(__name__)
