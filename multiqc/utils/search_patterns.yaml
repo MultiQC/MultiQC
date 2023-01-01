@@ -372,6 +372,9 @@ hicpro/mRSstat:
   fn: "*.mRSstat"
 hicpro/assplit:
   fn: "*.assplit.stat"
+hifiasm:
+  contents: "[M::ha_analyze_count]"
+  num_lines: 1
 hisat2:
   contents: "HISAT2 summary stats:"
   shared: true

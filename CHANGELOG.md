@@ -32,6 +32,8 @@
   - Please report any bugs you find!
 - [**GoPeaks**](https://github.com/maxsonBraunLab/gopeaks)
   - GoPeaks is used to call peaks in CUT&TAG/CUT&RUN datasets.
+- [**HiFiasm**](https://github.com/chhylp123/hifiasm)
+  - A haplotype-resolved assembler for accurate Hifi reads
 - [**HUMID**](https://github.com/jfjlaros/dedup)
   - HUMID is a tool to quickly and easily remove duplicate reads from FastQ files, with or without UMIs.
 - [**Nextclade**](https://github.com/nextstrain/nextclade)

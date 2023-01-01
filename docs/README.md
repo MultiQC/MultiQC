@@ -27,6 +27,7 @@ MultiQC Modules:
     FastQC: modules/fastqc.md
     FLASh: modules/flash.md
     Flexbar: modules/flexbar.md
+    HiFiasm: modules/hifiasm.md
     HUMID: modules/humid.md
     InterOp: modules/interop.md
     iVar: modules/ivar.md

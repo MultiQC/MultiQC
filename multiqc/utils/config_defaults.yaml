@@ -370,6 +370,11 @@ module_order:
       module_tag:
         - DNA
         - RNA
+  - hifiasm:
+      module_tag:
+        - DNA
+        - Denovo
+        - PacBio
   - quast:
       module_tag:
         - DNA
