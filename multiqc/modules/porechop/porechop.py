@@ -65,64 +65,69 @@ class MultiqcModule(BaseMultiqcModule):
                 self.porechop_data[s_name] = {}
             ## Find each valid metric, clean up for plain integer
             # 10,000 reads loaded
-            reads_loaded = re.search(r"([\d,]+)\s*reads loaded", l)
-            if reads_loaded:
-                self.porechop_data[s_name]["Input Reads"] = get_float(reads_loaded.group(1))
+            if "reads loaded" in l:
+                reads_loaded = re.search(r"([\d,]+)\s*reads loaded", l)
+                if reads_loaded:
+                    self.porechop_data[s_name]["Input Reads"] = get_float(reads_loaded.group(1))
 
             # 7,100 / 10,000 reads had adapters trimmed from their start (425,196 bp removed)
-            adapter_start = re.search(
-                r"([\d,]+)\s*/\s*([\d,]+)\s*reads had adapters trimmed from their start \(([\d,]+) bp removed\)", l
-            )
-            if adapter_start:
-                self.porechop_data[s_name]["Start Trimmed"] = get_float(adapter_start.group(1))
-                self.porechop_data[s_name]["Start Trimmed Total"] = get_float(adapter_start.group(2))
-                self.porechop_data[s_name]["Start Trimmed (bp)"] = get_float(adapter_start.group(3))
-                self.porechop_data[s_name]["Start Untrimmed"] = (
-                    self.porechop_data[s_name]["Start Trimmed Total"] - self.porechop_data[s_name]["Start Trimmed"]
+            if "reads had adapters trimmed from their start" in l:
+                adapter_start = re.search(
+                    r"([\d,]+)\s*/\s*([\d,]+)\s*reads had adapters trimmed from their start \(([\d,]+) bp removed\)", l
                 )
-                try:
-                    self.porechop_data[s_name]["Start Trimmed (%)"] = (
-                        self.porechop_data[s_name]["Start Trimmed"] / self.porechop_data[s_name]["Start Trimmed Total"]
-                    ) * 100
-                except ZeroDivisionError:
-                    pass
-
-            # 4,849 / 10,000 reads had adapters trimmed from their end (283,192 bp removed)
-            end_trimmed = re.search(
-                r"([\d,]+)\s*/\s*([\d,]+)\s*reads had adapters trimmed from their end \(([\d,]+) bp removed\)", l
-            )
-            if end_trimmed:
-                self.porechop_data[s_name]["End Trimmed"] = get_float(end_trimmed.group(1))
-                self.porechop_data[s_name]["End Trimmed Total"] = get_float(end_trimmed.group(2))
-                self.porechop_data[s_name]["End Trimmed (bp)"] = get_float(end_trimmed.group(3))
-                self.porechop_data[s_name]["End Untrimmed"] = (
-                    self.porechop_data[s_name]["End Trimmed Total"] - self.porechop_data[s_name]["End Trimmed"]
-                )
-                try:
-                    self.porechop_data[s_name]["End Trimmed (%)"] = (
-                        self.porechop_data[s_name]["End Trimmed"]
-                        / self.porechop_data[s_name]["Start Trimmed Total"]
-                        * 100
+                if adapter_start:
+                    self.porechop_data[s_name]["Start Trimmed"] = get_float(adapter_start.group(1))
+                    self.porechop_data[s_name]["Start Trimmed Total"] = get_float(adapter_start.group(2))
+                    self.porechop_data[s_name]["Start Trimmed (bp)"] = get_float(adapter_start.group(3))
+                    self.porechop_data[s_name]["Start Untrimmed"] = (
+                        self.porechop_data[s_name]["Start Trimmed Total"] - self.porechop_data[s_name]["Start Trimmed"]
                     )
-                except ZeroDivisionError:
-                    pass
+                    try:
+                        self.porechop_data[s_name]["Start Trimmed (%)"] = (
+                            self.porechop_data[s_name]["Start Trimmed"]
+                            / self.porechop_data[s_name]["Start Trimmed Total"]
+                        ) * 100
+                    except ZeroDivisionError:
+                        pass
+
+            # 4,849 / 10,000 reads had adapters trimmed from their end (283,192 bp removed)'
+            if "reads had adapters trimmed from their end" in l:
+                end_trimmed = re.search(
+                    r"([\d,]+)\s*/\s*([\d,]+)\s*reads had adapters trimmed from their end \(([\d,]+) bp removed\)", l
+                )
+                if end_trimmed:
+                    self.porechop_data[s_name]["End Trimmed"] = get_float(end_trimmed.group(1))
+                    self.porechop_data[s_name]["End Trimmed Total"] = get_float(end_trimmed.group(2))
+                    self.porechop_data[s_name]["End Trimmed (bp)"] = get_float(end_trimmed.group(3))
+                    self.porechop_data[s_name]["End Untrimmed"] = (
+                        self.porechop_data[s_name]["End Trimmed Total"] - self.porechop_data[s_name]["End Trimmed"]
+                    )
+                    try:
+                        self.porechop_data[s_name]["End Trimmed (%)"] = (
+                            self.porechop_data[s_name]["End Trimmed"]
+                            / self.porechop_data[s_name]["Start Trimmed Total"]
+                            * 100
+                        )
+                    except ZeroDivisionError:
+                        pass
 
             # 7 / 10,000 reads were split based on middle adapters
-            split_stats = re.search(r"([\d,]+)\s*/\s*([\d,]+)\s*reads were split based on middle adapters", l)
-            if split_stats:
-                self.porechop_data[s_name]["Middle Split"] = get_float(split_stats.group(1))
-                self.porechop_data[s_name]["Middle Split Total"] = get_float(split_stats.group(2))
-                self.porechop_data[s_name]["Middle Not-Split"] = (
-                    self.porechop_data[s_name]["Middle Split Total"] - self.porechop_data[s_name]["Middle Split"]
-                )
-                try:
-                    self.porechop_data[s_name]["Middle Split (%)"] = (
-                        self.porechop_data[s_name]["Middle Split"]
-                        / self.porechop_data[s_name]["Middle Split Total"]
-                        * 100
+            if "reads were split based on middle adapters" in l:
+                split_stats = re.search(r"([\d,]+)\s*/\s*([\d,]+)\s*reads were split based on middle adapters", l)
+                if split_stats:
+                    self.porechop_data[s_name]["Middle Split"] = get_float(split_stats.group(1))
+                    self.porechop_data[s_name]["Middle Split Total"] = get_float(split_stats.group(2))
+                    self.porechop_data[s_name]["Middle Not-Split"] = (
+                        self.porechop_data[s_name]["Middle Split Total"] - self.porechop_data[s_name]["Middle Split"]
                     )
-                except ZeroDivisionError:
-                    pass
+                    try:
+                        self.porechop_data[s_name]["Middle Split (%)"] = (
+                            self.porechop_data[s_name]["Middle Split"]
+                            / self.porechop_data[s_name]["Middle Split Total"]
+                            * 100
+                        )
+                    except ZeroDivisionError:
+                        pass
 
     def porechop_general_stats(self):
         """Porechop General Stats Table"""
