@@ -44,6 +44,15 @@ class MultiqcModule(BaseMultiqcModule):
 
     def parse_logs(self, logfile):
         """Parsing Logs. Note: careful of ANSI formatting log"""
+
+        def get_float(val):
+            """Get float from string"""
+            val = val.replace(",", "")
+            try:
+                return float(val)
+            except ValueError:
+                return val
+
         file_content = logfile["f"]
         for l in file_content:
             ## Find line after loading reads, and remove suffixes for sample name
@@ -51,18 +60,18 @@ class MultiqcModule(BaseMultiqcModule):
                 s_name = next(file_content).rstrip()
                 s_name = self.clean_s_name(s_name, logfile)
                 self.add_data_source(logfile, s_name=s_name)
+                if s_name in self.porechop_data:
+                    log.debug(f"Duplicate sample name found! Overwriting: {s_name}")
                 self.porechop_data[s_name] = {}
             ## Find each valid metric, clean up for plain integer
             elif "reads loaded" in l:
                 self.porechop_data[s_name]["Input Reads"] = {}
-                self.porechop_data[s_name]["Input Reads"] = float(l.lstrip().split(" ")[0].replace(",", ""))
+                self.porechop_data[s_name]["Input Reads"] = get_float(l.lstrip().split(" ")[0])
             elif "from their start" in l:
                 self.porechop_data[s_name]["Start Trimmed"] = {}
-                self.porechop_data[s_name]["Start Trimmed"] = float(l.lstrip().split(" ")[0].replace(",", ""))
-                self.porechop_data[s_name]["Start Trimmed Total"] = float(l.lstrip().split(" ")[2].replace(",", ""))
-                self.porechop_data[s_name]["Start Trimmed (bp)"] = float(
-                    l.lstrip().split(" ")[10].strip("(").replace(",", "")
-                )
+                self.porechop_data[s_name]["Start Trimmed"] = get_float(l.lstrip().split(" ")[0])
+                self.porechop_data[s_name]["Start Trimmed Total"] = get_float(l.lstrip().split(" ")[2])
+                self.porechop_data[s_name]["Start Trimmed (bp)"] = get_float(l.lstrip().split(" ")[10].strip("("))
                 self.porechop_data[s_name]["Start Untrimmed"] = (
                     self.porechop_data[s_name]["Start Trimmed Total"] - self.porechop_data[s_name]["Start Trimmed"]
                 )
@@ -73,11 +82,9 @@ class MultiqcModule(BaseMultiqcModule):
                 )
             elif "from their end" in l:
                 self.porechop_data[s_name]["End Trimmed"] = {}
-                self.porechop_data[s_name]["End Trimmed"] = float(l.lstrip().split(" ")[0].replace(",", ""))
-                self.porechop_data[s_name]["End Trimmed Total"] = float(l.lstrip().split(" ")[2].replace(",", ""))
-                self.porechop_data[s_name]["End Trimmed (bp)"] = float(
-                    l.lstrip().split(" ")[10].strip("(").replace(",", "")
-                )
+                self.porechop_data[s_name]["End Trimmed"] = get_float(l.lstrip().split(" ")[0])
+                self.porechop_data[s_name]["End Trimmed Total"] = get_float(l.lstrip().split(" ")[2])
+                self.porechop_data[s_name]["End Trimmed (bp)"] = get_float(l.lstrip().split(" ")[10].strip("("))
                 self.porechop_data[s_name]["End Untrimmed"] = (
                     self.porechop_data[s_name]["End Trimmed Total"] - self.porechop_data[s_name]["End Trimmed"]
                 )
@@ -86,8 +93,8 @@ class MultiqcModule(BaseMultiqcModule):
                 )
             elif "split based on" in l:
                 self.porechop_data[s_name]["Middle Split"] = {}
-                self.porechop_data[s_name]["Middle Split"] = float(l.lstrip().split(" ")[0].replace(",", ""))
-                self.porechop_data[s_name]["Middle Split Total"] = float(l.lstrip().split(" ")[2].replace(",", ""))
+                self.porechop_data[s_name]["Middle Split"] = get_float(l.lstrip().split(" ")[0])
+                self.porechop_data[s_name]["Middle Split Total"] = get_float(l.lstrip().split(" ")[2])
                 self.porechop_data[s_name]["Middle Not-Split"] = (
                     self.porechop_data[s_name]["Middle Split Total"] - self.porechop_data[s_name]["Middle Split"]
                 )
