@@ -4,6 +4,7 @@
 
 import logging
 from collections import OrderedDict
+
 from multiqc import config
 from multiqc.plots import bargraph, linegraph, table
 
@@ -118,7 +119,10 @@ class StatsReportMixin:
                         int(s[3].strip()) + int(s[4].strip()) + int(s[5].strip())
                     )
                     self.bcftools_stats_sample_variants[s_name][sample]["nIndels"] = int(s[8].strip())
-                    nMissing = int(s[13].strip())
+                    if len(s) >= 14:
+                        nMissing = int(s[13].strip())
+                    else:
+                        nMissing = 0
                     nPresent = self.bcftools_stats[s_name]["number_of_records"] - nMissing
                     self.bcftools_stats_sample_variants[s_name][sample]["nOther"] = (
                         nPresent
@@ -186,6 +190,7 @@ class StatsReportMixin:
         self.bcftools_stats_vqc_transi = {k: v for k, v in self.bcftools_stats_vqc_transi.items() if len(v) > 0}
         self.bcftools_stats_vqc_transv = {k: v for k, v in self.bcftools_stats_vqc_transv.items() if len(v) > 0}
         self.bcftools_stats_vqc_indels = {k: v for k, v in self.bcftools_stats_vqc_indels.items() if len(v) > 0}
+        depth_data = {k: v for k, v in depth_data.items() if len(v) > 0}
 
         # Filter to strip out ignored sample names
         self.bcftools_stats = self.ignore_samples(self.bcftools_stats)

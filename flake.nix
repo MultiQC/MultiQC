@@ -13,6 +13,7 @@
       # this will find all dependencies in setup.py
       mkPackage = system: inputs.mach-nix.lib."${system}".buildPythonPackage {src=./.;
                                                                               python = "python38";
+                                                                              requirementsExtra = "setuptools";
                                                                              };
       mkPython = system: inputs.mach-nix.lib."${system}".mkPython {
         python = "python38";

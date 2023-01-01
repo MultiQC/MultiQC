@@ -2,14 +2,14 @@
 
 """ MultiQC module to parse output from mirtop"""
 
-from __future__ import print_function
-from collections import OrderedDict
-import logging
+
 import json
+import logging
+from collections import OrderedDict
 
 from multiqc import config
-from multiqc.plots import bargraph
 from multiqc.modules.base_module import BaseMultiqcModule
+from multiqc.plots import bargraph
 
 # Initialise the logger
 log = logging.getLogger(__name__)
@@ -100,7 +100,10 @@ class MultiqcModule(BaseMultiqcModule):
             parsed_data = content["metrics"][s_name]
             # Sum the isomiR and ref_miRNA counts. Ignore ref_miRNA if it is not present.
             parsed_data["read_count"] = parsed_data["isomiR_sum"] + parsed_data.get("ref_miRNA_sum", 0)
-            parsed_data["isomiR_perc"] = (parsed_data["isomiR_sum"] / parsed_data["read_count"]) * 100
+            if parsed_data["read_count"] > 0:
+                parsed_data["isomiR_perc"] = (parsed_data["isomiR_sum"] / parsed_data["read_count"]) * 100
+            else:
+                parsed_data["isomiR_perc"] = 0.0
             self.mirtop_data[cleaned_s_name] = parsed_data
 
     def aggregate_snps_in_samples(self):

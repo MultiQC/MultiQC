@@ -2,13 +2,14 @@
 
 """ MultiQC module to parse Stacks 2 denovo output"""
 
-from __future__ import print_function
-from collections import OrderedDict
+
 import logging
-import re
 import os
-from multiqc.plots import table, linegraph
+import re
+from collections import OrderedDict
+
 from multiqc.modules.base_module import BaseMultiqcModule
+from multiqc.plots import linegraph, table
 
 # Initialise the logger
 log = logging.getLogger(__name__)

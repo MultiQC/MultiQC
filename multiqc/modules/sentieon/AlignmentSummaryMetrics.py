@@ -3,9 +3,9 @@
 """ MultiQC submodule to parse output from Sentieon AlignmentSummaryMetrics
  (based on the Picard module of the same name) """
 
-from collections import OrderedDict
 import logging
 import os
+from collections import OrderedDict
 
 from multiqc.plots import bargraph
 

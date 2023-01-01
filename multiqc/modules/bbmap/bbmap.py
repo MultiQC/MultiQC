@@ -1,10 +1,12 @@
 #!/usr/bin/env python
-from __future__ import print_function
+
+
 import logging
 from collections import OrderedDict
-from multiqc.utils import config
-from multiqc.plots import table
+
 from multiqc.modules.base_module import BaseMultiqcModule
+from multiqc.plots import table
+from multiqc.utils import config
 
 from .bbmap_filetypes import file_types, section_order
 

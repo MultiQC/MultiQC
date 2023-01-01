@@ -2,12 +2,12 @@
 
 """ MultiQC submodule to parse output from Picard RnaSeqMetrics """
 
-from collections import OrderedDict
 import logging
 import os
 import re
+from collections import OrderedDict
 
-from multiqc.plots import linegraph, bargraph
+from multiqc.plots import bargraph, linegraph
 
 # Initialise the logger
 log = logging.getLogger(__name__)

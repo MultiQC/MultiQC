@@ -3,9 +3,9 @@
 """ MultiQC submodule to parse output from RSeQC infer_experiment.py
 http://rseqc.sourceforge.net/#infer-experiment-py """
 
-from collections import OrderedDict
 import logging
 import re
+from collections import OrderedDict
 
 from multiqc.plots import bargraph
 
