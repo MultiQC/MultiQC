@@ -1,73 +1,26 @@
-FROM alpine:3.15
-
-# Based on teeny-tiny matplotlib image based on alpine (czentye/matplotlib-minimal:3.1.2)
-# But rebuilding here since alpine:latest is a multi-arch build
+FROM python:3.11-slim
 
 LABEL author="Phil Ewels" \
       description="MultiQC" \
-      maintainer="phil.ewels@scilifelab.se"
-
-ARG ALPINE_PACKAGE_VERSION="3.15"
-
-ARG USER_NAME="multiqc_user"
-ARG USER_ID="1000"
-ARG GROUP_NAME="multiqc_user"
-ARG GROUP_ID="1000"
+      maintainer="phil.ewels@seqera.io"
 
 # Add the MultiQC source files to the container
 ADD . /usr/src/multiqc
 WORKDIR /usr/src/multiqc
 
-RUN echo "Install deps" 1>&2 && \
-    apk add --repository "https://dl-cdn.alpinelinux.org/alpine/${ALPINE_PACKAGE_VERSION}/main" \
-            --update \
-            --no-cache \
-            bash \
-            build-base \
-            freetype \
-            freetype-dev \
-            libgfortran \
-            libpng \
-            libpng-dev \
-            libstdc++ \
-            python3 \
-            python3-dev \
-            py3-setuptools \
-            py3-pip \
-            py3-wheel && \
-    echo "Link locals and pythons to defaults" 1>&2 && \
-    ln -fs /usr/include/locale.h /usr/include/xlocale.h && \
-    ln -fs /usr/bin/python3 /usr/local/bin/python && \
-    ln -fs /usr/bin/pip3 /usr/local/bin/pip && \
-    echo "Install deps through pip" 1>&2 && \
-    pip3 install -v --no-cache-dir --upgrade pip && \
-    pip3 install -v --no-cache-dir wheel && \
-    echo "Install multiqc through pip" 1>&2 && \
-    pip3 install -v --no-cache-dir . && \
-    echo "Clean up apk, remove build deps" 1>&2 && \
-    apk del \
-      --purge \
-      build-base \
-      libgfortran \
-      libpng-dev \
-      freetype-dev \
-      python3-dev && \
-    rm -vrf /var/cache/apk/* && \
-    echo "Remove source directory" 1>&2 && \
-    cd / && \
+# - Install `ps` for Nextflow
+# - Install MultiQC through pip
+# - Delete unnecessary Python files
+# - Remove MultiQC source directory
+# - Add custom group and user
+RUN apt-get update && apt-get install -y procps && rm -rf /var/lib/apt/lists/* && \
+    pip install -v --no-cache-dir . && \
+    find /usr/local/lib/python3.11 \( -iname '*.c' -o -iname '*.pxd' -o -iname '*.pyd' -o -iname '__pycache__' \) | xargs rm -r && \
     rm -rf "/usr/src/multiqc/" && \
-    echo "Add user" 1>&2 && \
-    addgroup \
-      -g "${GROUP_ID}" \
-      "${GROUP_NAME}" && \
-    adduser \
-      -D \
-      -G "${GROUP_NAME}" \
-      -u "${USER_ID}" \
-      "${USER_NAME}"
+    groupadd --gid 1000 multiqc && useradd -ms /bin/bash --create-home --gid multiqc --uid 1000 multiqc
 
-# Add the MultiQC source files to the container
-USER "${USER_NAME}"
+# Set to be the new user
+USER multiqc
 
 # Set default workdir to user home
-WORKDIR "/home/${USER_NAME}"
+WORKDIR /home/multiqc
