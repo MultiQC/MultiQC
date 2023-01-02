@@ -160,24 +160,24 @@ Note that support for using the base `multiqc` command was improved in MultiQC v
 
 ## Using the Docker container
 
-A Docker container is provided on Docker Hub called ewels/MultiQC.
-It's based on `czentye/matplotlib-minimal` to give the smallest size I could manage (~80MB).
+A Docker container is provided on Docker Hub called `ewels/multiqc`.
+It's based on an `python-slim` base image to give the smallest image size possible.
 
-To use, call the `docker run` with your current working directory mounted as a volume and working directory:
+To use, call the `docker run` with your current working directory mounted as a volume and working directory. Then just specify the MultiQC command at the end as usual:
 
 ```bash
-docker run -t -v `pwd`:`pwd` -w `pwd` ewels/multiqc
+docker run -t -v `pwd`:`pwd` -w `pwd` ewels/multiqc multiqc .
+```
+
+You can specify additional MultiQC parameters as normal:
+
+```bash
+docker run -t -v `pwd`:`pwd` -w `pwd` ewels/multiqc multiqc . --title "My amazing report" -b "This was made with docker"
 ```
 
 By default, docker will use the `:latest` tag. For MultiQC, this is set to be the most recent release.
 To use the most recent development code, use `ewels/multiqc::dev`.
 You can also specify specific versions, eg: `ewels/multiqc:1.9`.
-
-You can also specify additional MultiQC parameters as normal:
-
-```bash
-docker run -t -v `pwd`:`pwd` -w `pwd` ewels/multiqc . --title "My amazing report" -b "This was made with docker"
-```
 
 Note that all files on the command line (eg. config files) must also be mounted in the docker container to be accessible.
 For more help, look into [the Docker documentation](https://docs.docker.com/engine/reference/commandline/run/)
