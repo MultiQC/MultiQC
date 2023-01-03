@@ -14,6 +14,7 @@ WORKDIR /usr/src/multiqc
 # - Remove MultiQC source directory
 # - Add custom group and user
 RUN apt-get update && apt-get install -y procps && rm -rf /var/lib/apt/lists/* && \
+    pip install --upgrade pip && \
     pip install -v --no-cache-dir . && \
     find /usr/local/lib/python3.11 \( -iname '*.c' -o -iname '*.pxd' -o -iname '*.pyd' -o -iname '__pycache__' \) | xargs rm -r && \
     rm -rf "/usr/src/multiqc/" && \
