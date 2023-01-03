@@ -9,7 +9,7 @@ on:
 jobs:
   push_to_registry:
     if: github.repository == 'ewels/MultiQC'
-    name: Push Docker image to Docker Hub / GitHub Docker Registry
+    name: Build + Push Docker image
     runs-on: ubuntu-latest
     steps:
       - name: Check out the repo
@@ -38,7 +38,7 @@ jobs:
           password: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Push dev image
-        uses: docker/build-push-action@v2
+        uses: docker/build-push-action@v3
         if: github.event_name == 'push'
         with:
           # All available with python:3.11-slim are:
