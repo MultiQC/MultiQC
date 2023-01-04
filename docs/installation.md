@@ -176,7 +176,7 @@ docker run -t -v `pwd`:`pwd` -w `pwd` ewels/multiqc multiqc . --title "My amazin
 ```
 
 By default, docker will use the `:latest` tag. For MultiQC, this is set to be the most recent release.
-To use the most recent development code, use `ewels/multiqc::dev`.
+To use the most recent development code, use `ewels/multiqc:dev`.
 You can also specify specific versions, eg: `ewels/multiqc:1.9`.
 
 Note that all files on the command line (eg. config files) must also be mounted in the docker container to be accessible.
