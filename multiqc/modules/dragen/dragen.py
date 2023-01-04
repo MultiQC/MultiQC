@@ -71,12 +71,8 @@ class MultiqcModule(
         samples_found |= self.add_ploidy_estimation_metrics()
         # <output prefix>.ploidy_estimation_metrics.csv    - add just Ploidy estimation into gen stats
 
-        samples_found |= self.add_wgs_coverage_metrics()
-        # <output prefix>.wgs_coverage_metrics_normal.csv  - general stats table and a dedicated table
-        # <output prefix>.wgs_coverage_metrics_tumor.csv   - same
-
-        samples_found |= self.add_qc_region_coverage_metrics()
-        # <output prefix>.qc-coverage-region-i_coverage_metrics.csv
+        # <output prefix>.<coverage region prefix>_coverage_metrics<arbitrary suffix>.csv
+        samples_found |= self.add_coverage_metrics()
         samples_found |= self.add_coverage_hist()
 
         # <output prefix>.wgs_fine_hist_normal.csv         - coverage distribution and cumulative coverage plots
