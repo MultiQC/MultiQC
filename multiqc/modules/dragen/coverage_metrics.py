@@ -156,7 +156,7 @@ METRICS = {
         QC:{"scale": "Greens",},
     },
     "aligned bases in region" + V2:{
-        "title": "Bases on trg pct", "Max": 100, "scale": "RdGy", "suffix": " %",
+        "title": "Bases on trg pct", "max": 100, "scale": "RdGy", "suffix": " %",
         "colour": "0, 0, 255", "bgcols": {"NA":"#00FFFF",},
 
         WGS:{
@@ -175,7 +175,7 @@ METRICS = {
         "title": "Reads on target", "scale": "RdGy", "colour": "0, 255, 0",
     },
     "aligned reads in region" + V2:{
-        "title": "Reads on trg pct", "Max": 100, "suffix": " %",
+        "title": "Reads on trg pct", "max": 100, "suffix": " %",
         "scale": "RdGy", "colour": "0, 255, 0",
     },
 
@@ -220,7 +220,7 @@ METRICS = {
 
     # PCT of region with coverage [ix, inf)
     "pct of region with coverage [0x:inf)":{
-        "Max": 100, "scale": "Blues", "suffix": " %", "colour": "255, 50, 25",
+        "max": 100, "scale": "Blues", "suffix": " %", "colour": "255, 50, 25",
         WGS:{
             "scale": "Purples",
         },
@@ -256,7 +256,7 @@ METRICS = {
     },
     # PCT of region with coverage [ix, jx)
     "pct of region with coverage [0x:0x)":{
-        "Max": 100, "scale": "Blues", "suffix": " %",
+        "max": 100, "scale": "Blues", "suffix": " %",
         "extra":{
             ("0x", "1x"):{
                 "title": "0x&nbsp;&nbsp;&nbsp;",
@@ -959,7 +959,7 @@ def get_Aligned_configs(match_object):
         if entity == "reads": configs["modify"] = lambda x: x if isinstance(x, str) else x * read_count_multiplier
         else:                 configs["modify"] = lambda x: x if isinstance(x, str) else x * base_count_multiplier
 
-        configs2.update({"min": 0, "Max": 100, "suffix": " %",
+        configs2.update({"min": 0, "max": 100, "suffix": " %",
                         "format": base_format if entity == "bases" else read_format,
                         "description": "Percentage of aligned " + entity + " in " + region + ".",
                         "title": "Aln " + entity + " on trg"})
@@ -1041,7 +1041,7 @@ def get_Uniformity_configs(match_object):
     if entity_match:
         multiplier = entity_match.group(1)
         percent = str(float(multiplier)*100) + "%"
-        configs.update({"suffix": " %", "min": 0, "Max": 100, "title": ">" + multiplier + "*mean",
+        configs.update({"suffix": " %", "min": 0, "max": 100, "title": ">" + multiplier + "*mean",
                         "description": "Percentage of sites with coverage greater than " +
                         percent + " of the mean coverage in " + region + ".",})
 
@@ -1067,7 +1067,7 @@ def get_PCT_configs(match_object):
         left_ix  = entity_match.group(1)
         right_jx = entity_match.group(2)
         configs.update({
-            "suffix": " %", "min": 0, "Max": 100, "hidden": True, "title": entity,
+            "suffix": " %", "min": 0, "max": 100, "hidden": True, "title": entity,
             "description":(
                 "Percentage of sites in " + region + " with no coverage." if (left_ix == "0" and right_jx == "1") else
                ("Percentage of sites in " + region + " with at least " + left_ix + "x coverage.")
