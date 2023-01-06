@@ -16,9 +16,13 @@ WORKDIR /usr/src/multiqc
 RUN apt-get update && apt-get install -y procps && rm -rf /var/lib/apt/lists/* && \
     pip install --upgrade pip && \
     pip install -v --no-cache-dir . && \
-    find /usr/local/lib/python3.11 \( -iname '*.c' -o -iname '*.pxd' -o -iname '*.pyd' -o -iname '__pycache__' \) | xargs rm -r && \
+    apt-get clean -y && \
+    for cache_dir in $(find /usr/local/lib/python3.11 \( -iname '*.c' -o -iname '*.pxd' -o -iname '*.pyd' -o -iname '__pycache__' \)); do \
+      rm -rf "$cache_dir"; \
+    done; \
     rm -rf "/usr/src/multiqc/" && \
-    groupadd --gid 1000 multiqc && useradd -ms /bin/bash --create-home --gid multiqc --uid 1000 multiqc
+    groupadd --gid 1000 multiqc && \
+    useradd -ms /bin/bash --create-home --gid multiqc --uid 1000 multiqc
 
 # Set to be the new user
 USER multiqc
