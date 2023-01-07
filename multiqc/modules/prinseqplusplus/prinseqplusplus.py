@@ -183,7 +183,13 @@ class MultiqcModule(BaseMultiqcModule):
 
         self.add_section(
             name="Filtered Reads",
-            anchor="prinseqplusplus",
+            anchor="prinseqplusplus-filtered-reads",
             description="Shows the number of reads removed by the various PRINSEQ++ filter options",
-            plot=beeswarm.plot(self.prinseqplusplus_data, headers, {"id": "prinseplusplus-beeswarm"}),
+            plot=beeswarm.plot(
+                self.prinseqplusplus_data,
+                headers,
+                {
+                    "id": "prinseplusplus-filtered-reads-beeswarm",
+                },
+            ),
         )
