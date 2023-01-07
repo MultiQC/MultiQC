@@ -38,7 +38,6 @@ class MultiqcModule(BaseMultiqcModule):
         # Write parsed report data to file
         self.write_data_file(self.diamond_data, "diamond")
         self.diamond_general_stats()
-        self.diamond_barplot()
 
     def parse_logs(self, f):
         """Parsing logs""" ""
@@ -56,21 +55,6 @@ class MultiqcModule(BaseMultiqcModule):
             "title": "Queries aligned",
             "description": "number of queries aligned",
             "scale": "YlGn",
+            "format": "{:,.0f}",
         }
         self.general_stats_addcols(self.diamond_data, headers)
-
-    def diamond_barplot(self):
-        """Barplot of number of queries aligned"""
-        cats = OrderedDict()
-        cats["queries_aligned"] = {"name": "Queries Aligned", "color": "#7cb5ec"}
-        config = {
-            "id": "diamond-barplot",
-            "title": "Diamond: Number of queries aligned",
-            "ylab": "Number of queries",
-        }
-        self.add_section(
-            name="Queries aligned",
-            anchor="barplot",
-            description="Shows the number of queries that were aligned to the diamond database.",
-            plot=bargraph.plot(self.diamond_data, cats, config),
-        )
