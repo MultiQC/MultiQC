@@ -75,6 +75,8 @@
   - Fix regex error with very large numbers of unclassified reads ([#1639](https://github.com/ewels/MultiQC/pull/1639))
 - **malt**
   - Fixed division by 0 in malt module ([#1683](https://github.com/ewels/MultiQC/issues/1683))
+- **miRTop**
+  - Avoid `KeyError` - don't assume all fields present in logs ([#1778](https://github.com/ewels/MultiQC/issues/1778))
 - **Mosdepth**
   - Don't pad the General Stats table with zeros for missing data ([#1810](https://github.com/ewels/MultiQC/pull/1810))
 - **Picard**
