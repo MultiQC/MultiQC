@@ -68,6 +68,8 @@
   - Multi-sample line-graph TSV files that have no sample name in row 1 column 1 now use row 1 as x-axis labels ([#1242](https://github.com/ewels/MultiQC/issues/1242))
 - **FastQC**
   - Report median read-length for fastqc in addition to mean ([#1745](https://github.com/ewels/MultiQC/pull/1745))
+- **Kallisto**
+  - Fix `ZeroDivisionError` when a sample has zero reads ([#1746](https://github.com/ewels/MultiQC/issues/1746))
 - **Kraken**
   - Fix duplicate heatmap to account for missing taxons ([#1779](https://github.com/ewels/MultiQC/pull/1779))
   - Make heatmap full width

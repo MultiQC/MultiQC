@@ -81,8 +81,11 @@ class MultiqcModule(BaseMultiqcModule):
                         "total_reads": total_reads,
                         "pseudoaligned_reads": paligned_reads,
                         "not_pseudoaligned_reads": total_reads - paligned_reads,
-                        "percent_aligned": (paligned_reads / total_reads) * 100,
                     }
+                    try:
+                        self.kallisto_data[s_name]["percent_aligned"] = (paligned_reads / total_reads) * 100
+                    except ZeroDivisionError:
+                        self.kallisto_data[s_name]["percent_aligned"] = 0.0
                     if fraglength is not None:
                         self.kallisto_data[s_name]["fragment_length"] = fraglength
                     s_name = total_reads = paligned_reads = fraglength = None
