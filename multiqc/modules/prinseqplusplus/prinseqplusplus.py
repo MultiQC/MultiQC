@@ -76,89 +76,27 @@ class MultiqcModule(BaseMultiqcModule):
 
     def prinseqplusplus_general_stats(self):
         """PRINSEQ++ General Stats Table"""
-        headers = OrderedDict()
-        headers["min_len"] = {
-            "title": "Min. Length Filtered ({})".format(config.read_count_prefix),
-            "description": "Reads falling below min length filter ({})".format(config.read_count_desc),
-            "scale": "Greens",
-            "shared_key": "read_count",
-            "modify": lambda x: x * config.read_count_multiplier,
-        }
-        headers["max_len"] = {
-            "title": "Max. Length Filtered ({})".format(config.read_count_prefix),
-            "description": "Reads execeed max length filter ({})".format(config.read_count_desc),
-            "scale": "Purples",
-            "shared_key": "read_count",
-            "modify": lambda x: x * config.read_count_multiplier,
-        }
-        headers["min_gc"] = {
-            "title": "Min. GC Filtered ({})".format(config.read_count_prefix),
-            "description": "Reads execeed min GC filter ({})".format(config.read_count_desc),
-            "scale": "Greens",
-            "shared_key": "read_count",
-            "modify": lambda x: x * config.read_count_multiplier,
-        }
-        headers["max_gc"] = {
-            "title": "Max. GC Filtered ({})".format(config.read_count_prefix),
-            "description": "Reads exceeding min GC filter ({})".format(config.read_count_desc),
-            "scale": "Purples",
-            "shared_key": "read_count",
-            "modify": lambda x: x * config.read_count_multiplier,
-        }
-        headers["min_qual_score"] = {
-            "title": "Min. Qual. Score Filtered ({})".format(config.read_count_prefix),
-            "description": "Reads falling below min quality score ({})".format(config.read_count_desc),
-            "scale": "Greens",
-            "shared_key": "read_count",
-            "modify": lambda x: x * config.read_count_multiplier,
-        }
-        headers["min_qual_mean"] = {
-            "title": "Min. Qual. Mean Filtered ({})".format(config.read_count_prefix),
-            "description": "Reads falling below min mean quality score ({})".format(config.read_count_desc),
-            "scale": "Purples",
-            "shared_key": "read_count",
-            "modify": lambda x: x * config.read_count_multiplier,
-        }
-        headers["ns_max_n"] = {
-            "title": "Max N Filtered ({})".format(config.read_count_prefix),
-            "description": "Reads with more than max Ns ({})".format(config.read_count_desc),
-            "scale": "Greens",
-            "shared_key": "read_count",
-            "modify": lambda x: x * config.read_count_multiplier,
-        }
-        headers["noiupac"] = {
-            "title": "IUPAC Read Filtered ({})".format(config.read_count_prefix),
-            "description": "Reads with bases other than ACTGN ({})".format(config.read_count_desc),
-            "scale": "Purples",
-            "shared_key": "read_count",
-            "modify": lambda x: x * config.read_count_multiplier,
-        }
-        headers["derep"] = {
-            "title": "Duplicated Reads Filtered ({})".format(config.read_count_prefix),
-            "description": "Duplicated reads removed ({})".format(config.read_count_desc),
-            "scale": "Greens",
-            "shared_key": "read_count",
-            "modify": lambda x: x * config.read_count_multiplier,
-        }
-        headers["lc_entropy"] = {
-            "title": "Entropy Filtered Reads ({})".format(config.read_count_prefix),
-            "description": "Entropy filtered reads removed ({})".format(config.read_count_desc),
-            "scale": "Purples",
-            "shared_key": "read_count",
-            "modify": lambda x: x * config.read_count_multiplier,
-        }
-        headers["lc_dust"] = {
-            "title": "DUST Filtered Reads ({})".format(config.read_count_prefix),
-            "description": "DUST_score filtered reads removed ({})".format(config.read_count_desc),
-            "scale": "Greens",
-            "shared_key": "read_count",
-            "modify": lambda x: x * config.read_count_multiplier,
-        }
+        data = {}
+        for s_name, d in self.prinseqplusplus_data.items():
+            data[s_name] = {"prinseqplusplus_total": sum(d.values())}
 
-        self.general_stats_addcols(self.prinseqplusplus_data, headers)
+        self.general_stats_addcols(
+            data,
+            {
+                "prinseqplusplus_total": {
+                    "title": "Filtered Reads ({})".format(config.read_count_prefix),
+                    "description": "Sum of filtered reads ({})".format(config.read_count_desc),
+                    "scale": "Oranges",
+                    "shared_key": "read_count",
+                    "modify": lambda x: x * config.read_count_multiplier,
+                }
+            },
+        )
 
     def prinseqplusplus_beeswarm_plot(self):
         """Beeswarm plot of all possible filtering results"""
+        # This would be nicer as a stacked-bar plot, but as we don't have
+        # the total read count it doesn't really make sense.
 
         reads = {
             "min": 0,
