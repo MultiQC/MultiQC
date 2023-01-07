@@ -49,24 +49,24 @@ class MultiqcModule(BaseMultiqcModule):
     def parse_logs(self, f):
         """Parses a BBDuk stdout saved in a file"""
 
-        ## Assume take from the name of the file as the includes pair names,
-        ## which we can't 'collapse' into a single one.
-        if f["s_name"] in self.bbduk_data:
-            log.warn("Duplicate sample name found based on filename! Overwriting: {}".format(f["s_name"]))
-        self.bbduk_data[f["s_name"]] = {}
-
-        self.add_data_source(f)
-
+        s_name = f["s_name"]
         for l in f["f"]:
-            ## Find line after loading reads, and remove suffixes for sample name
+            if "jgi.BBDuk" in l and "in1=" in l:
+                s_name = l.split("in1=")[1].split(" ")[0]
+                s_name = self.clean_s_name(s_name, f)
 
             if "Input:" in l:
                 matches = re.search(r"Input:\s+(\d+) reads\s+(\d+) bases", l)
                 if matches:
-                    self.bbduk_data[f["s_name"]]["Input reads"] = int(matches.group(1))
-                    self.bbduk_data[f["s_name"]]["Input bases"] = int(matches.group(2))
+                    self.add_data_source(f, s_name)
+                    if s_name in self.bbduk_data:
+                        log.debug("Duplicate sample name found! Overwriting: {}".format(s_name))
+                    self.bbduk_data[s_name] = dict()
+
+                    self.bbduk_data[s_name]["Input reads"] = int(matches.group(1))
+                    self.bbduk_data[s_name]["Input bases"] = int(matches.group(2))
             # Don't start using regexes until we're in that block
-            elif "Input reads" in self.bbduk_data[f["s_name"]]:
+            elif "Input reads" in self.bbduk_data.get(s_name, {}):
                 cats = [
                     "QTrimmed",
                     "KTrimmed",
@@ -79,10 +79,10 @@ class MultiqcModule(BaseMultiqcModule):
                 for cat in cats:
                     matches = re.search(f"{cat}:\s+(\d+) reads \(([\d\.]+)%\)\s+(\d+) bases \(([\d\.]+)%\)", l)
                     if matches:
-                        self.bbduk_data[f["s_name"]][cat + " reads"] = int(matches.group(1))
-                        self.bbduk_data[f["s_name"]][cat + " percent"] = float(matches.group(2))
-                        self.bbduk_data[f["s_name"]][cat + " bases"] = int(matches.group(3))
-                        self.bbduk_data[f["s_name"]][cat + " bases percent"] = float(matches.group(4))
+                        self.bbduk_data[s_name][cat + " reads"] = int(matches.group(1))
+                        self.bbduk_data[s_name][cat + " percent"] = float(matches.group(2))
+                        self.bbduk_data[s_name][cat + " bases"] = int(matches.group(3))
+                        self.bbduk_data[s_name][cat + " bases percent"] = float(matches.group(4))
                         break
             elif "Reads Processed:" in l:
                 return
