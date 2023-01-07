@@ -72,6 +72,8 @@
   - Don't crash for invalid JSON files ([#1652](https://github.com/ewels/MultiQC/issues/1652))
 - **FastQC**
   - Report median read-length for fastqc in addition to mean ([#1745](https://github.com/ewels/MultiQC/pull/1745))
+- **Kaiju**
+  - Don't crash if we don't have any data for the top-5 barplot ([#1540](https://github.com/ewels/MultiQC/issues/1540))
 - **Kallisto**
   - Fix `ZeroDivisionError` when a sample has zero reads ([#1746](https://github.com/ewels/MultiQC/issues/1746))
 - **Kraken**
