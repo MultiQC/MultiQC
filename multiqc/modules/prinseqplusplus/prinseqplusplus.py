@@ -39,53 +39,39 @@ class MultiqcModule(BaseMultiqcModule):
         self.prinseqplusplus_general_stats()
         self.prinseqplusplus_beeswarm_plot()
 
-    def parse_logs(self, logfile):
+    def parse_logs(self, f):
         """Parsing Logs."""
-        s_name = logfile["fn"]
-        s_name = self.clean_s_name(s_name, logfile)
-
+        s_name = f["s_name"]
         if self.prinseqplusplus_data.get(s_name) is not None:
             log.warn("Duplicate sample name found! Overwriting: {}".format(s_name))
 
         self.prinseqplusplus_data[s_name] = {}
-        self.add_data_source(logfile, s_name=s_name)
-        file_content = logfile["f"]
+        self.add_data_source(f, s_name=s_name)
 
-        for l in file_content:
+        for l in f["f"]:
             ## Find line after loading reads, and remove suffixes for sample name
 
             if "-min_len" in l:
-                self.prinseqplusplus_data[s_name]["min_len"] = {}
                 self.prinseqplusplus_data[s_name]["min_len"] = int(l.lstrip().rstrip().split(" ")[0])
             elif "-max_len" in l:
-                self.prinseqplusplus_data[s_name]["max_len"] = {}
                 self.prinseqplusplus_data[s_name]["max_len"] = int(l.lstrip().rstrip().split(" ")[0])
             elif "-min_cg" in l:  ## This seems to be a typo in the log file of PRINSEQ++, should be gc
-                self.prinseqplusplus_data[s_name]["min_gc"] = {}
                 self.prinseqplusplus_data[s_name]["min_gc"] = int(l.lstrip().rstrip().split(" ")[0])
             elif "-max_cg" in l:
-                self.prinseqplusplus_data[s_name]["max_gc"] = {}
                 self.prinseqplusplus_data[s_name]["max_gc"] = int(l.lstrip().rstrip().split(" ")[0])
             elif "-min_qual_score" in l:
-                self.prinseqplusplus_data[s_name]["min_qual_score"] = {}
                 self.prinseqplusplus_data[s_name]["min_qual_score"] = int(l.lstrip().rstrip().split(" ")[0])
             elif "-min_qual_mean" in l:
-                self.prinseqplusplus_data[s_name]["min_qual_mean"] = {}
                 self.prinseqplusplus_data[s_name]["min_qual_mean"] = int(l.lstrip().rstrip().split(" ")[0])
             elif "-ns_max_n" in l:
-                self.prinseqplusplus_data[s_name]["ns_max_n"] = {}
                 self.prinseqplusplus_data[s_name]["ns_max_n"] = int(l.lstrip().rstrip().split(" ")[0])
             elif "-noiupac" in l:
-                self.prinseqplusplus_data[s_name]["noiupac"] = {}
                 self.prinseqplusplus_data[s_name]["noiupac"] = int(l.lstrip().rstrip().split(" ")[0])
             elif "-derep" in l:
-                self.prinseqplusplus_data[s_name]["derep"] = {}
                 self.prinseqplusplus_data[s_name]["derep"] = int(l.lstrip().rstrip().split(" ")[0])
             elif "-lc_entropy" in l:
-                self.prinseqplusplus_data[s_name]["lc_entropy"] = {}
                 self.prinseqplusplus_data[s_name]["lc_entropy"] = int(l.lstrip().rstrip().split(" ")[0])
             elif "-lc_dust" in l:
-                self.prinseqplusplus_data[s_name]["lc_dust"] = {}
                 self.prinseqplusplus_data[s_name]["lc_dust"] = int(l.lstrip().rstrip().split(" ")[0])
 
     def prinseqplusplus_general_stats(self):
@@ -93,77 +79,77 @@ class MultiqcModule(BaseMultiqcModule):
         headers = OrderedDict()
         headers["min_len"] = {
             "title": "Min. Length Filtered ({})".format(config.read_count_prefix),
-            "description": "Reads falling below min length filter ({})".format(config.read_count_prefix),
+            "description": "Reads falling below min length filter ({})".format(config.read_count_desc),
             "scale": "Greens",
             "shared_key": "read_count",
             "modify": lambda x: x * config.read_count_multiplier,
         }
         headers["max_len"] = {
             "title": "Max. Length Filtered ({})".format(config.read_count_prefix),
-            "description": "Reads execeed max length filter ({})".format(config.read_count_prefix),
+            "description": "Reads execeed max length filter ({})".format(config.read_count_desc),
             "scale": "Purples",
             "shared_key": "read_count",
             "modify": lambda x: x * config.read_count_multiplier,
         }
         headers["min_gc"] = {
             "title": "Min. GC Filtered ({})".format(config.read_count_prefix),
-            "description": "Reads execeed min GC filter ({})".format(config.read_count_prefix),
+            "description": "Reads execeed min GC filter ({})".format(config.read_count_desc),
             "scale": "Greens",
             "shared_key": "read_count",
             "modify": lambda x: x * config.read_count_multiplier,
         }
         headers["max_gc"] = {
             "title": "Max. GC Filtered ({})".format(config.read_count_prefix),
-            "description": "Reads exceeding min GC filter ({})".format(config.read_count_prefix),
+            "description": "Reads exceeding min GC filter ({})".format(config.read_count_desc),
             "scale": "Purples",
             "shared_key": "read_count",
             "modify": lambda x: x * config.read_count_multiplier,
         }
         headers["min_qual_score"] = {
             "title": "Min. Qual. Score Filtered ({})".format(config.read_count_prefix),
-            "description": "Reads falling below min quality score ({})".format(config.read_count_prefix),
+            "description": "Reads falling below min quality score ({})".format(config.read_count_desc),
             "scale": "Greens",
             "shared_key": "read_count",
             "modify": lambda x: x * config.read_count_multiplier,
         }
         headers["min_qual_mean"] = {
             "title": "Min. Qual. Mean Filtered ({})".format(config.read_count_prefix),
-            "description": "Reads falling below min mean quality score ({})".format(config.read_count_prefix),
+            "description": "Reads falling below min mean quality score ({})".format(config.read_count_desc),
             "scale": "Purples",
             "shared_key": "read_count",
             "modify": lambda x: x * config.read_count_multiplier,
         }
         headers["ns_max_n"] = {
             "title": "Max N Filtered ({})".format(config.read_count_prefix),
-            "description": "Reads with more than max Ns ({})".format(config.read_count_prefix),
+            "description": "Reads with more than max Ns ({})".format(config.read_count_desc),
             "scale": "Greens",
             "shared_key": "read_count",
             "modify": lambda x: x * config.read_count_multiplier,
         }
         headers["noiupac"] = {
             "title": "IUPAC Read Filtered ({})".format(config.read_count_prefix),
-            "description": "Reads with bases other than ACTGN ({})".format(config.read_count_prefix),
+            "description": "Reads with bases other than ACTGN ({})".format(config.read_count_desc),
             "scale": "Purples",
             "shared_key": "read_count",
             "modify": lambda x: x * config.read_count_multiplier,
         }
         headers["derep"] = {
             "title": "Duplicated Reads Filtered ({})".format(config.read_count_prefix),
-            "description": "Duplicated reads removed ({})".format(config.read_count_prefix),
+            "description": "Duplicated reads removed ({})".format(config.read_count_desc),
             "scale": "Greens",
             "shared_key": "read_count",
             "modify": lambda x: x * config.read_count_multiplier,
         }
         headers["lc_entropy"] = {
             "title": "Entropy Filtered Reads ({})".format(config.read_count_prefix),
-            "description": "Entropy filtered reads removed ({})".format(config.read_count_prefix),
+            "description": "Entropy filtered reads removed ({})".format(config.read_count_desc),
             "scale": "Purples",
             "shared_key": "read_count",
             "modify": lambda x: x * config.read_count_multiplier,
         }
         headers["lc_dust"] = {
             "title": "DUST Filtered Reads ({})".format(config.read_count_prefix),
-            "description": "DUST_score filtered reads removed ({})".format(config.read_count_prefix),
+            "description": "DUST_score filtered reads removed ({})".format(config.read_count_desc),
             "scale": "Greens",
             "shared_key": "read_count",
             "modify": lambda x: x * config.read_count_multiplier,
@@ -173,7 +159,6 @@ class MultiqcModule(BaseMultiqcModule):
 
     def prinseqplusplus_beeswarm_plot(self):
         """Beeswarm plot of all possible filtering results"""
-        headers = OrderedDict()
 
         reads = {
             "min": 0,
@@ -182,6 +167,7 @@ class MultiqcModule(BaseMultiqcModule):
             "decimalPlaces": 0,
             "shared_key": "read_count",
         }
+        headers = OrderedDict()
         headers["min_len"] = dict(reads, title="min_len")
         headers["max_len"] = dict(reads, title="max_len")
         headers["min_gc"] = dict(reads, title="min_gc")
@@ -197,7 +183,7 @@ class MultiqcModule(BaseMultiqcModule):
 
         self.add_section(
             name="Filtered Reads",
-            anchor="prinseqplusplus-beeswarm",
+            anchor="prinseqplusplus",
             description="Shows the number of reads removed by the various PRINSEQ++ filter options",
-            plot=beeswarm.plot(self.prinseqplusplus_data, headers, {"id": "prinseplusplus"}),
+            plot=beeswarm.plot(self.prinseqplusplus_data, headers, {"id": "prinseplusplus-beeswarm"}),
         )
