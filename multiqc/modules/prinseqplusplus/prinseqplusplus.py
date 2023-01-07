@@ -1,8 +1,8 @@
-from multiqc.modules.base_module import BaseMultiqcModule
 import logging
-import re
 from collections import OrderedDict
+
 from multiqc import config
+from multiqc.modules.base_module import BaseMultiqcModule
 from multiqc.plots import beeswarm
 
 log = logging.getLogger(__name__)
