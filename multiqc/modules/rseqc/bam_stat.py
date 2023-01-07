@@ -1,5 +1,3 @@
-#!/usr/bin/env python
-
 """ MultiQC submodule to parse output from RSeQC bam_stat.py
 http://rseqc.sourceforge.net/#bam-stat-py """
 

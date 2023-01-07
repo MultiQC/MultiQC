@@ -1,10 +1,6 @@
-#!/usr/bin/env python
-
 """ MultiQC submodule to parse output from Picard BaseDistributionByCycleMetrics """
 
 import logging
-import os
-import re
 
 from multiqc.plots import linegraph
 

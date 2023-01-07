@@ -1,10 +1,7 @@
-#!/usr/bin/env python
-
 """ MultiQC module to parse output from kraken """
 
 
 import logging
-import os
 import re
 from collections import OrderedDict
 

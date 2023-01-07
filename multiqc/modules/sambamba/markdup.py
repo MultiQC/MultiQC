@@ -1,8 +1,4 @@
-#!/usr/bin/env python
-
-
 import logging
-import os
 import re
 from collections import OrderedDict
 

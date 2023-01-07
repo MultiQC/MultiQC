@@ -1,5 +1,3 @@
-#!/usr/bin/env python
-
 """ Core MultiQC module to parse output from custom script output """
 
 

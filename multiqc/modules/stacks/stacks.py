@@ -1,5 +1,3 @@
-#!/usr/bin/env python
-
 """ MultiQC module to parse Stacks 2 denovo output"""
 
 

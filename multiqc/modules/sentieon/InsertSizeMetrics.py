@@ -1,5 +1,3 @@
-#!/usr/bin/env python
-
 """ MultiQC submodule to parse output from Sentieon InsertSizeMetrics (based
  on the Picard module of the same name """
 

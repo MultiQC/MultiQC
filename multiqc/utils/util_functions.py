@@ -9,7 +9,6 @@ import os
 import shutil
 import sys
 import time
-from collections import OrderedDict
 
 import yaml
 

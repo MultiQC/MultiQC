@@ -1,5 +1,3 @@
-#!/usr/bin/env python
-
 """ MultiQC submodule to parse output from RSeQC infer_experiment.py
 http://rseqc.sourceforge.net/#infer-experiment-py """
 

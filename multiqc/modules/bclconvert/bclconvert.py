@@ -1,6 +1,4 @@
 import csv
-import decimal
-import json
 import logging
 import operator
 import os

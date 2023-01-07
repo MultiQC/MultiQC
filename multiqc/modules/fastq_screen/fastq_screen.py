@@ -1,11 +1,8 @@
-#!/usr/bin/env python
-
 """ MultiQC module to parse output from FastQ Screen """
 
 
 import json
 import logging
-import re
 from collections import OrderedDict
 
 from multiqc import config

@@ -1,4 +1,3 @@
-#!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
 """ MultiQC submodule to parse output from Samtools stats """
@@ -198,15 +197,15 @@ class StatsReportMixin:
             anchor="samtools-stats-alignment",
             description="Alignment metrics from <code>samtools stats</code>; mapped vs. unmapped reads.",
             helptext="""
-            For a set of samples that have come from the same multiplexed library, 
-            similar numbers of reads for each sample are expected. Large differences in numbers might 
-            indicate issues during the library preparation process. Whilst large differences in read 
-            numbers may be controlled for in downstream processings (e.g. read count normalisation), 
-            you may wish to consider whether the read depths achieved have fallen below recommended 
+            For a set of samples that have come from the same multiplexed library,
+            similar numbers of reads for each sample are expected. Large differences in numbers might
+            indicate issues during the library preparation process. Whilst large differences in read
+            numbers may be controlled for in downstream processings (e.g. read count normalisation),
+            you may wish to consider whether the read depths achieved have fallen below recommended
             levels depending on the applications.
-            
-            Low alignment rates could indicate contamination of samples (e.g. adapter sequences), 
-            low sequencing quality or other artefacts. These can be further investigated in the 
+
+            Low alignment rates could indicate contamination of samples (e.g. adapter sequences),
+            low sequencing quality or other artefacts. These can be further investigated in the
             sequence level QC (e.g. from FastQC).""",
             plot=alignment_chart(bedgraph_data),
         )

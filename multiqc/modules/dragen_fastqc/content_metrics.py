@@ -1,14 +1,8 @@
-#!/usr/bin/env python
-from __future__ import print_function
-
-import copy
 import json
 
 # Initialise the logger
 import logging
-import os
-import re
-from collections import OrderedDict, defaultdict
+from collections import defaultdict
 
 from multiqc import config
 from multiqc.modules.base_module import BaseMultiqcModule

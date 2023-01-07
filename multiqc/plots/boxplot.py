@@ -7,7 +7,6 @@ import io
 import logging
 import os
 import random
-from collections import OrderedDict
 
 from multiqc.utils import config, report
 

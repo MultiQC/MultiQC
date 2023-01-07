@@ -1,8 +1,4 @@
-#!/usr/bin/env python
-
 """ MultiQC module to parse output from Anglerfish """
-
-from __future__ import print_function
 
 import json
 import logging

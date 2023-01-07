@@ -1,5 +1,3 @@
-#!/usr/bin/env python
-
 """ MultiQC submodule to parse output from Bamtools bam_stat.py
 http://bamtools.sourceforge.net/#bam-stat-py """
 
