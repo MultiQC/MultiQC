@@ -328,6 +328,7 @@ fgbio/errorratebyreadposition:
   contents: "read_number	position	bases_total	errors	error_rate	a_to_c_error_rate	a_to_g_error_rate	a_to_t_error_rate	c_to_a_error_rate	c_to_g_error_rate	c_to_t_error_rate"
   num_lines: 3
 filtlong:
+  contents: Scoring long reads
   contents_re: ".*Filtering long reads.*"
   num_lines: 5
 flash/log:
