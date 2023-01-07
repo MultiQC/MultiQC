@@ -46,6 +46,8 @@
   - Tool that assigns clades to SARS-CoV-2 samples
 - [**Porechop**](https://github.com/rrwick/Porechop)
   - A tool for finding and removing adapters from Oxford Nanopore reads
+- [**PRINSEQ++**](https://github.com/Adrian-Cantu/PRINSEQ-plus-plus)
+  - PRINSEQ++ is a C++ of `prinseq-lite.pl` program for filtering, reformating or trimming genomic and metagenomic sequence data.
 - [**UMI-tools**](https://umi-tools.readthedocs.io)
   - Work with Unique Molecular Identifiers (UMIs) / Random Molecular Tags (RMTs) and single cell RNA-Seq cell barcodes.
 

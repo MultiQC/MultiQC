@@ -36,6 +36,7 @@ MultiQC Modules:
     leeHom: modules/leehom.md
     Lima: modules/lima.md
     minionqc: modules/minionqc.md
+    prinseqplusplus: modules/prinseqplusplus.md
     pbmarkdup: modules/pbmarkdup.md
     Porechop: modules/porechop.md
     Pychopper: modules/pychopper.md
