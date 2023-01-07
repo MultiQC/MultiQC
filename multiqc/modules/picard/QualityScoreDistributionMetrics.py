@@ -1,8 +1,6 @@
 """ MultiQC submodule to parse output from Picard QualityScoreDistribution """
 
 import logging
-import os
-import re
 from collections import OrderedDict
 
 from multiqc.plots import linegraph

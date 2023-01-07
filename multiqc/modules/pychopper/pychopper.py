@@ -2,7 +2,6 @@
 
 
 import logging
-import os
 from collections import OrderedDict
 
 from multiqc.modules.base_module import BaseMultiqcModule

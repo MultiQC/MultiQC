@@ -21,6 +21,7 @@
 - Add a new lint test to check that colour scale names are valid ([#1835](https://github.com/ewels/MultiQC/pull/1835))
 - Don't crash if a barplot is given an empty list of categories ([#1540](https://github.com/ewels/MultiQC/issues/1540))
 - Remove unused `#!/usr/bin/env python` hashbangs from module files
+- Add [Pycln](https://hadialqattan.github.io/pycln/#/) pre-commit hook to remove unused imports
 
 ### New Modules
 

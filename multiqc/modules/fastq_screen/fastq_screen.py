@@ -3,7 +3,6 @@
 
 import json
 import logging
-import re
 from collections import OrderedDict
 
 from multiqc import config

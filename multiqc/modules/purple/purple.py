@@ -1,7 +1,6 @@
 """ MultiQC module to parse QC output from PURPLE """
 # Initialise the logger
 import logging
-import re
 from collections import OrderedDict, defaultdict
 
 from multiqc.modules.base_module import BaseMultiqcModule

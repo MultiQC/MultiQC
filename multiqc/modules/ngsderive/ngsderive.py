@@ -4,8 +4,6 @@
 import csv
 import io
 import logging
-import os
-import re
 from collections import OrderedDict
 
 from multiqc.modules.base_module import BaseMultiqcModule

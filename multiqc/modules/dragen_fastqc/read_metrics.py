@@ -1,9 +1,4 @@
-import copy
-import json
 import logging
-import os
-import re
-from collections import OrderedDict, defaultdict
 
 from multiqc import config
 from multiqc.modules.base_module import BaseMultiqcModule
