@@ -1,14 +1,17 @@
 ---
 Name: BBDuk
 URL: https://jgi.doe.gov/data-and-tools/software-tools/bbtools/bb-tools-user-guide/bbduk-guide/
-Description: >
-	"Duk" stands for Decontamination Using Kmers. BBDuk was developed to combine 
-	most common data-quality-related trimming, filtering, and masking operations 
-	into a single high-performance tool.
+Description: Tool for common data-quality-related trimming, filtering, and masking operations
 ---
 
 The BBDuk module produces summary statistics from the stdout logging information
-from the BBDuk tool of the [BBTools](http://jgi.doe.gov/data-and-tools/bbtools/bb-tools-user-guide/) suite of tools. The module can summarise data from the following BBDuk funtionality
+from the BBDuk tool of the [BBTools](http://jgi.doe.gov/data-and-tools/bbtools/bb-tools-user-guide/) suite of tools.
+
+"Duk" stands for Decontamination Using Kmers. BBDuk was developed to combine
+most common data-quality-related trimming, filtering, and masking operations
+into a single high-performance tool.
+
+The module can summarise data from the following BBDuk funtionality
 (descriptions from command line help output):
 
 - `entropy` - entropy filtering
