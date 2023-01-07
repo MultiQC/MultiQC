@@ -2,8 +2,8 @@ from collections import OrderedDict
 
 from multiqc.utils import config
 
-from .plot_basic_hist import plot_basic_hist
 from .plot_aqhist import plot_aqhist
+from .plot_basic_hist import plot_basic_hist
 from .plot_bhist import plot_bhist
 from .plot_bqhist import plot_bqhist
 from .plot_covhist import plot_covhist

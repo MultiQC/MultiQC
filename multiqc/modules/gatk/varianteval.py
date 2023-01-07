@@ -1,10 +1,10 @@
-#!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
 """ MultiQC submodule to parse output from GATK varianteval """
 
 import logging
 from collections import OrderedDict
+
 from multiqc.plots import bargraph, table
 
 # Initialise the logger

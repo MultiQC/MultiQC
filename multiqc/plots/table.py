@@ -2,12 +2,12 @@
 
 """ MultiQC functions to plot a table """
 
-from collections import defaultdict, OrderedDict
 import logging
 import random
+from collections import OrderedDict, defaultdict
 
-from multiqc.utils import config, report, util_functions, mqc_colour
-from multiqc.plots import table_object, beeswarm
+from multiqc.plots import beeswarm, table_object
+from multiqc.utils import config, mqc_colour, report, util_functions
 
 logger = logging.getLogger(__name__)
 
@@ -135,7 +135,7 @@ def make_table(dt):
         if header["scale"] == False:
             c_scale = None
         else:
-            c_scale = mqc_colour.mqc_colour_scale(header["scale"], header["dmin"], header["dmax"])
+            c_scale = mqc_colour.mqc_colour_scale(header["scale"], header["dmin"], header["dmax"], id=table_id)
 
         # Collect conditional formatting config
         cond_formatting_rules = {}

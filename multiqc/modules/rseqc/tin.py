@@ -1,11 +1,8 @@
-#!/usr/bin/env python
-
 """ MultiQC submodule to parse output from RSeQC tin.py
 http://rseqc.sourceforge.net/#tin-py """
 
-from collections import OrderedDict
-import logging
 import csv
+import logging
 
 from multiqc.plots import bargraph
 

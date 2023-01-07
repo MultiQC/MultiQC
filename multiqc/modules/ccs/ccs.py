@@ -1,12 +1,10 @@
-#!/usr/bin/env python
-
 """ MultiQC module to parse output from CCS """
 
 import json
 import logging
 import re
-
 from collections import OrderedDict
+
 from multiqc.modules.base_module import BaseMultiqcModule
 from multiqc.plots import bargraph
 
