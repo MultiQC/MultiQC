@@ -48,10 +48,10 @@ class MultiqcModule(BaseMultiqcModule):
                 self.filtlong_data[f["s_name"]] = {"Target bases": float(l.lstrip().split(" ")[1])}
 
             elif "keeping" in l and f["s_name"] in self.filtlong_data:
-                self.filtlong_data[f["s_name"]]["Keeping bases"] = float(l.lstrip().split(" ")[1])
+                self.filtlong_data[f["s_name"]]["Bases kept"] = float(l.lstrip().split(" ")[1])
 
             elif "fall below" in l and f["s_name"] in self.filtlong_data:
-                self.filtlong_data[f["s_name"]]["Keeping bases"] = float(0)
+                self.filtlong_data[f["s_name"]]["Bases kept"] = float(0)
 
     def filtlong_general_stats(self):
         """Filtlong General Stats Table"""
@@ -63,9 +63,9 @@ class MultiqcModule(BaseMultiqcModule):
             "shared_key": "read_count",
             "modify": lambda x: x * config.read_count_multiplier,
         }
-        headers["Keeping bases"] = {
-            "title": "Keeping bases ({})".format(config.read_count_prefix),
-            "description": "Keeping bases ({})".format(config.read_count_desc),
+        headers["Bases kept"] = {
+            "title": "Bases kept ({})".format(config.read_count_prefix),
+            "description": "Bases kept ({})".format(config.read_count_desc),
             "scale": "Purples",
             "shared_key": "read_count",
             "modify": lambda x: x * config.read_count_multiplier,
