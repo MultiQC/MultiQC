@@ -1,8 +1,8 @@
-#!/usr/bin/env python
 """MultiQC module to parse the output from SNPsplit"""
-from collections import OrderedDict
 import logging
 import re
+from collections import OrderedDict
+
 import yaml
 
 from multiqc import config

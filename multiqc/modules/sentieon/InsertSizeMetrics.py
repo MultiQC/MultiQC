@@ -1,11 +1,9 @@
-#!/usr/bin/env python
-
 """ MultiQC submodule to parse output from Sentieon InsertSizeMetrics (based
  on the Picard module of the same name """
 
-from collections import OrderedDict
 import logging
 import os
+from collections import OrderedDict
 
 from multiqc import config
 from multiqc.plots import linegraph

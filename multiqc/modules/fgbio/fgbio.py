@@ -4,9 +4,8 @@ from collections import OrderedDict
 
 from multiqc.modules.base_module import BaseMultiqcModule
 
-from .groupreadsbyumi import GroupReadsByUmiMixin
 from . import ErrorRateByReadPosition
-
+from .groupreadsbyumi import GroupReadsByUmiMixin
 
 # Initialise the logger
 log = logging.getLogger(__name__)

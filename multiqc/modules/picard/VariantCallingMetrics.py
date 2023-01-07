@@ -1,9 +1,8 @@
-#!/usr/bin/env python
-
 """ MultiQC submodule to parse output from Picard VariantCallingMetrics """
 
 import logging
 from collections import OrderedDict
+
 from multiqc.plots import bargraph
 
 # Initialise the logger

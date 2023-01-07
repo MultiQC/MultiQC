@@ -2,9 +2,8 @@
 
 """ MultiQC functions to plot a bargraph """
 
-from __future__ import print_function
+
 import base64
-from collections import OrderedDict
 import inspect
 import io
 import logging
@@ -13,6 +12,7 @@ import os
 import random
 import re
 import sys
+from collections import OrderedDict
 
 from multiqc.utils import config, report, util_functions
 
@@ -106,6 +106,8 @@ def plot(data, cats=None, pconfig=None):
         except NameError:  # Py3
             if type(cats[0]) is str:
                 cats = [cats]
+        except IndexError:  # Given empty list
+            pass
     # Generate default categories if not supplied
     for idx in range(len(data)):
         try:

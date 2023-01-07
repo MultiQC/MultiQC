@@ -1,16 +1,14 @@
-#!/usr/bin/env python
-
 """ MultiQC module to parse output from odgi stats """
 
-from __future__ import print_function
+
 import logging
 from collections import OrderedDict
+
+import yaml
 
 from multiqc import config
 from multiqc.modules.base_module import BaseMultiqcModule
 from multiqc.plots import bargraph, table
-
-import yaml
 
 # Initialise the logger
 log = logging.getLogger(__name__)
