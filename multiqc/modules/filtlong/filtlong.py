@@ -36,8 +36,6 @@ class MultiqcModule(BaseMultiqcModule):
         # Write data to file
         self.write_data_file(self.filtlong_data, "filtlong")
         self.filtlong_general_stats()
-        self.target_bases_barplot()
-        self.keeping_bases_barplot()
 
     def parse_logs(self, f):
         """Parsing Logs. Note: careful of ANSI formatting log"""
@@ -75,35 +73,3 @@ class MultiqcModule(BaseMultiqcModule):
         }
 
         self.general_stats_addcols(self.filtlong_data, headers)
-
-    def target_bases_barplot(self):
-        """Barplot of number of target bases"""
-        cats = OrderedDict()
-        cats["Target bases"] = {"name": "Target bases", "color": "#7cb5ec"}
-        config = {
-            "id": "filtlong-targetbases-barplot",
-            "title": "Filtlong: Number of target bases",
-            "ylab": "Read Counts",
-        }
-        self.add_section(
-            name="Filtlong-number of target bases",
-            anchor="targetbases-barplot",
-            description="Shows the number of target bases.",
-            plot=bargraph.plot(self.filtlong_data, cats, config),
-        )
-
-    def keeping_bases_barplot(self):
-        """Barplot of number of keeping bases"""
-        cats = OrderedDict()
-        cats["Keeping bases"] = {"name": "Keeping bases", "color": "#7cb5ec"}
-        config = {
-            "id": "filtlong-keepingbases-barplot",
-            "title": "Filtlong: Number of keeping bases",
-            "ylab": "Read Counts",
-        }
-        self.add_section(
-            name="Filtlong-number of keeping bases",
-            anchor="keepingbases-barplot",
-            description="Shows the number of keeping bases.",
-            plot=bargraph.plot(self.filtlong_data, cats, config),
-        )
