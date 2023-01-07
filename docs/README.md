@@ -59,6 +59,7 @@ MultiQC Modules:
     Kallisto: modules/kallisto.md
     Long Ranger: modules/longranger.md
     MALT: modules/malt.md
+    mOTUs: modules/motus.md
     Salmon: modules/salmon.md
     STAR: modules/star.md
     TopHat: modules/tophat.md

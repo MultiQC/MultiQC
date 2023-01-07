@@ -472,6 +472,9 @@ mosdepth/global_dist:
   fn: "*.mosdepth.global.dist.txt"
 mosdepth/region_dist:
   fn: "*.mosdepth.region.dist.txt"
+motus:
+  contents: "Reads are aligned (by BWA) to marker gene sequences in the reference database"
+  num_lines: 2
 multivcfanalyzer:
   fn: "MultiVCFAnalyzer.json"
 disambiguate:

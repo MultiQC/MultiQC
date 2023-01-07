@@ -40,6 +40,8 @@
   - A haplotype-resolved assembler for accurate Hifi reads
 - [**HUMID**](https://github.com/jfjlaros/dedup)
   - HUMID is a tool to quickly and easily remove duplicate reads from FastQ files, with or without UMIs.
+- [**mOTUs**](https://motu-tool.org/)
+  - Microbial profiling through marker gene (MG)-based operational taxonomic units (mOTUs)
 - [**Nextclade**](https://github.com/nextstrain/nextclade)
   - Tool that assigns clades to SARS-CoV-2 samples
 - [**Porechop**](https://github.com/rrwick/Porechop)
