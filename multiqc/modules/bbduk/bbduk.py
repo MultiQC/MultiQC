@@ -1,12 +1,13 @@
 #!/usr/bin/env python
 """ Module to parse output from BBDuk """
 from __future__ import print_function
-from collections import OrderedDict
-from multiqc.utils import config
-from multiqc.plots import beeswarm, bargraph
-from multiqc.modules.base_module import BaseMultiqcModule
 
 import logging
+from collections import OrderedDict
+
+from multiqc.modules.base_module import BaseMultiqcModule
+from multiqc.plots import bargraph, beeswarm
+from multiqc.utils import config
 
 log = logging.getLogger(__name__)
 
