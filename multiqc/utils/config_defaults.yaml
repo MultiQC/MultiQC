@@ -594,6 +594,10 @@ module_order:
       module_tag:
         - DNA
         - methylation
+  - diamond:
+      module_tag:
+        - Protein
+        - DNA
   - hicexplorer:
       module_tag:
         - hi-c

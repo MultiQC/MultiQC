@@ -30,6 +30,8 @@
 - [**Cell Ranger**](https://support.10xgenomics.com/single-cell-gene-expression/software/pipelines/latest/what-is-cell-ranger)
   - Works with data from 10X Genomics Chromium. Processes Chromium single cell data to align reads, generate feature-barcode matrices, perform clustering and other secondary analysis, and more.
   - New MultiQC module parses Cell Ranger quality reports from VDJ and count analysis
+- [**DIAMOND**](https://github.com/bbuchfink/diamond)
+  - A high-throughput program for aligning DNA reads or protein sequences against a protein reference database.
 - [**DRAGEN-FastQC**](https://www.illumina.com/products/by-type/informatics-products/dragen-bio-it-platform.html)
   - Illumina Bio-IT Platform that uses FPGA for accelerated primary and secondary analysis
   - Finally merged the epic 2.5-year-old pull request, with 3.5k new lines of code.
