@@ -4,7 +4,7 @@ import logging
 from collections import OrderedDict
 
 from multiqc.modules.base_module import BaseMultiqcModule
-from multiqc.plots import bargraph, beeswarm
+from multiqc.plots import bargraph
 from multiqc.utils import config
 
 log = logging.getLogger(__name__)
@@ -44,7 +44,6 @@ class MultiqcModule(BaseMultiqcModule):
 
         self.bbduk_general_stats()
         self.bbduk_bargraph_plot()
-        self.bbduk_beeswarm_plot()
 
     def parse_logs(self, f):
         """Parses a BBDuk stdout saved in a file"""
@@ -88,134 +87,31 @@ class MultiqcModule(BaseMultiqcModule):
         """BBDuk read counts for general stats"""
         headers = OrderedDict()
 
+        headers["Total Removed percent"] = {
+            "title": "Total Reads Removed (%)",
+            "description": "Percentage of reads removed after filtering(%)",
+            "scale": "OrRd",
+            "max": 100,
+        }
+        headers["Total Removed reads"] = {
+            "title": "Total Reads Removed ({})".format(config.read_count_prefix),
+            "description": "Total Reads removed ({})".format(config.read_count_desc),
+            "scale": "Reds",
+            "shared_key": "read_count",
+            "modify": lambda x: x * config.read_count_multiplier,
+            "hidden": True,
+        }
         headers["Input reads"] = {
             "title": "Total Input Reads ({})".format(config.read_count_prefix),
             "description": "Total number of input reads to BBDuk ({})".format(config.read_count_desc),
             "scale": "Greens",
             "shared_key": "read_count",
             "modify": lambda x: x * config.read_count_multiplier,
-        }
-        headers["QTrimmed reads"] = {
-            "title": "QTrimmed Reads ({})".format(config.read_count_prefix),
-            "description": "QTrimmed Reads removed ({})".format(config.read_count_desc),
-            "scale": "Greens",
-            "shared_key": "read_count",
-            "modify": lambda x: x * config.read_count_multiplier,
             "hidden": True,
         }
-        headers["QTrimmed percent"] = {
-            "title": "QTrimmed Percent (%)",
-            "description": "Percentage of reads removed through the QTrimmed filter (%)",
-            "scale": "Purples",
-            "format": "{:,.2f}",
-        }
-        headers["KTrimmed reads"] = {
-            "title": "KTrimmed Reads ({})".format(config.read_count_prefix),
-            "description": "KTrimmed Reads removed ({})".format(config.read_count_desc),
-            "scale": "Greens",
-            "shared_key": "read_count",
-            "modify": lambda x: x * config.read_count_multiplier,
-            "hidden": True,
-        }
-        headers["KTrimmed percent"] = {
-            "title": "KTrimmed Percent (%)",
-            "description": "Percentage of reads removed through the KTrimmed filter (%)",
-            "scale": "Purples",
-            "format": "{:,.2f}",
-        }
-        headers["Trimmed by overlap reads"] = {
-            "title": "Trimmed by overlap reads ({})".format(config.read_count_prefix),
-            "description": "Reads removed trimmed by overlap ({})".format(config.read_count_desc),
-            "scale": "Greens",
-            "shared_key": "read_count",
-            "modify": lambda x: x * config.read_count_multiplier,
-            "hidden": True,
-        }
-        headers["Trimmed by overlap percent"] = {
-            "title": "Trimmed by overlap (%)",
-            "description": "Percentage of reads trimmed by overlap (%)",
-            "scale": "Purples",
-            "format": "{:,.2f}",
-        }
-        headers["Low quality discards reads"] = {
-            "title": "Low quality discards Reads ({})".format(config.read_count_prefix),
-            "description": "Reads removed by the Low quality discards filter ({})".format(config.read_count_desc),
-            "scale": "Greens",
-            "shared_key": "read_count",
-            "modify": lambda x: x * config.read_count_multiplier,
-            "hidden": True,
-        }
-        headers["Low quality discards percent"] = {
-            "title": "Low quality discards (%)",
-            "description": "Percentage of reads removed through the Low quality discards filter (%)",
-            "scale": "Purples",
-            "format": "{:,.2f}",
-        }
-        headers["Low entropy discards reads"] = {
-            "title": "Low quality discards Reads ({})".format(config.read_count_prefix),
-            "description": "Reads removed by the Low entropy discards filter ({})".format(config.read_count_desc),
-            "scale": "Greens",
-            "shared_key": "read_count",
-            "modify": lambda x: x * config.read_count_multiplier,
-            "hidden": True,
-        }
-        headers["Low entropy discards percent"] = {
-            "title": "Low entropy discards (%)",
-            "description": "Percentage of reads removed through the Low entropy discards filter (%)",
-            "scale": "Purples",
-            "format": "{:,.2f}",
-        }
-        headers["Total Removed reads"] = {
-            "title": "Total Reads Removed ({})".format(config.read_count_prefix),
-            "description": "Total Reads removed ({})".format(config.read_count_desc),
-            "scale": "Greens",
-            "shared_key": "read_count",
-            "modify": lambda x: x * config.read_count_multiplier,
-            "hidden": True,
-        }
-        headers["Total Removed percent"] = {
-            "title": "Total Reads Removed (%)",
-            "description": "Percentage of reads removed after filtering(%)",
-            "scale": "Purples",
-            "format": "{:,.2f}",
-        }
-        headers["Result reads"] = {
-            "title": "Remaining Reads ({})".format(config.read_count_prefix),
-            "description": "Remaining Reads removed ({})".format(config.read_count_desc),
-            "scale": "Greens",
-            "shared_key": "read_count",
-            "modify": lambda x: x * config.read_count_multiplier,
-            "hidden": True,
-        }
-        headers["Result percent"] = {
-            "title": "Total Reads Remaining (%)",
-            "description": "Percentage of reads retained after filtering (%)",
-            "scale": "Purples",
-            "format": "{:,.2f}",
-        }
-
         self.general_stats_addcols(self.bbduk_data, headers)
 
     def bbduk_bargraph_plot(self):
-        """Bargraph summarising reported filtered reads by BBduk"""
-        cats = [
-            "Total Removed reads",
-            "Result reads",
-        ]
-        config = {
-            "id": "bbduk-bargraph",
-            "title": "BBDuk: Percentage Summary",
-            "ylab": "Percentage of Reads",
-        }
-
-        self.add_section(
-            name="Filtered Reads Percentages",
-            anchor="bbduk-bargraph-percentages",
-            description="Shows summary of reads removed across all BBDuk filters",
-            plot=bargraph.plot(self.bbduk_data, cats, config),
-        )
-
-    def bbduk_beeswarm_plot(self):
         """
         Beeswarm displaying all possible filtering results reported by BBDuk.
 
@@ -223,27 +119,27 @@ class MultiqcModule(BaseMultiqcModule):
         of filters reported don't match exactly the total reads remaining (I
         assume there is additional default filtering carried out)
         """
-        headers = OrderedDict()
-
-        reads = {
-            "min": 0,
-            "modify": lambda x: float(x) * config.read_count_multiplier,
-            "suffix": "{} reads".format(config.read_count_prefix),
-            "decimalPlaces": 0,
-            "shared_key": "read_count",
+        cats = [
+            "Result reads",
+            "QTrimmed reads",
+            "KTrimmed reads",
+            "Trimmed by overlap reads",
+            "Low quality discards reads",
+            "Low entropy discards reads",
+        ]
+        pconfig = {
+            "id": "bbduk-filtered-barplot",
+            "title": "BBDuk: Percentage Summary",
+            "ylab": "Percentage of Reads",
         }
-        headers["Input reads"] = dict(reads, title="Input reads")
-        headers["QTrimmed reads"] = dict(reads, title="QTtrimmed")
-        headers["KTrimmed reads"] = dict(reads, title="KTrimmed")
-        headers["Trimmed by overlap reads"] = dict(reads, title="Trimmed by overlap")
-        headers["Low quality discards reads"] = dict(reads, title="Low quality discards")
-        headers["Low entropy discards reads"] = dict(reads, title="Low entropy discards")
-        headers["Total Removed reads"] = dict(reads, title="Total removed")
-        headers["Result reads"] = dict(reads, title="Final reads")
 
         self.add_section(
-            name="Filtered Reads",
-            anchor="bbduk-beeswarm",
-            description="Shows the number of reads removed by various BBDuk filters",
-            plot=beeswarm.plot(self.bbduk_data, headers, {"id": "bbduk-beeswarm-reads"}),
+            name="BBDuk: Filtered Reads",
+            anchor="bbduk-filtered-reads",
+            description="The number of reads removed by various BBDuk filters",
+            plot=bargraph.plot(
+                self.bbduk_data,
+                cats,
+                pconfig,
+            ),
         )
