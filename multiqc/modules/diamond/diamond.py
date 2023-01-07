@@ -1,11 +1,8 @@
-# !/usr/bin/env python
-
 """ MultiQC module to parse output from DIAMOND """
 
 import logging
 from collections import OrderedDict
 
-from multiqc import config
 from multiqc.modules.base_module import BaseMultiqcModule
 from multiqc.plots import bargraph
 
@@ -28,7 +25,6 @@ class MultiqcModule(BaseMultiqcModule):
         self.diamond_data = dict()
 
         for f in self.find_log_files("diamond", filehandles=True):
-            s_name = f["s_name"]
             self.parse_logs(f)
 
         # Filter to strip out ignored sample names
@@ -44,15 +40,14 @@ class MultiqcModule(BaseMultiqcModule):
         self.diamond_general_stats()
         self.diamond_barplot()
 
-    def parse_logs(self, logfile):
+    def parse_logs(self, f):
         """Parsing logs""" ""
-        file_content = logfile["f"]
-        for l in file_content:
+        for l in f["f"]:
             if "queries aligned" in l:
-                s_name = logfile["s_name"]
-                self.add_data_source(logfile, s_name=s_name)
-                self.diamond_data[s_name] = {}
-                self.diamond_data[s_name]["queries_aligned"] = int(l.split(" ")[0])
+                self.add_data_source(f)
+                if f["s_name"] in self.diamond_data:
+                    log.debug("Duplicate sample name found! Overwriting: {}".format(f["s_name"]))
+                self.diamond_data[f["s_name"]] = {"queries_aligned": int(l.split(" ")[0])}
 
     def diamond_general_stats(self):
         """Diamond General Stats Table"""

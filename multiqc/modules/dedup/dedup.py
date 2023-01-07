@@ -1,7 +1,4 @@
-# !/usr/bin/env python
-
 """ MultiQC module to parse output from DeDup """
-
 
 import json
 import logging
