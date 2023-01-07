@@ -2,17 +2,17 @@
 
 """ MultiQC Utility functions, used in a variety of places. """
 
-from __future__ import print_function
-from collections import OrderedDict
+
 import io
 import json
 import os
-import yaml
-import time
 import shutil
 import sys
+import time
 
-from multiqc import config
+import yaml
+
+from . import config
 
 
 def robust_rmtree(path, logger=None, max_retries=10):
@@ -72,12 +72,20 @@ def write_data_file(data, fn, sort_cols=False, data_format=None):
             try:
                 # Convert keys to strings
                 data = {str(k): v for k, v in data.items()}
-                # Get all headers
-                h = ["Sample"]
-                for sn in sorted(data.keys()):
-                    for k in data[sn].keys():
-                        if type(data[sn][k]) is not dict and k not in h:
-                            h.append(str(k))
+                # Get all headers from the data, except if data is a dictionary (i.e. has >1 dimensions)
+                # Use list -> dict -> list to get only unique values
+                h = list(
+                    dict.fromkeys(
+                        [
+                            str(data_header)
+                            for sample_data in data.values()
+                            for data_header in sample_data.keys()
+                            if type(sample_data[data_header]) is not dict
+                        ]
+                    )
+                )
+                # Add Sample header in to first element
+                h.insert(0, "Sample")
                 if sort_cols:
                     h = sorted(h)
 

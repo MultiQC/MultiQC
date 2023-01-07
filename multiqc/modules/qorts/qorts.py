@@ -1,15 +1,13 @@
-#!/usr/bin/env python
-
 """ MultiQC module to parse output from QoRTs """
 
-from __future__ import print_function
-from collections import OrderedDict
-import re
-import os
-import logging
 
-from multiqc.plots import bargraph
+import logging
+import os
+import re
+from collections import OrderedDict
+
 from multiqc.modules.base_module import BaseMultiqcModule
+from multiqc.plots import bargraph
 
 # Initialise the logger
 log = logging.getLogger(__name__)

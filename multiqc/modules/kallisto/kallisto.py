@@ -1,16 +1,14 @@
-#!/usr/bin/env python
-
 """ MultiQC module to parse output from Kallisto """
 
-from __future__ import print_function
-from collections import OrderedDict
-import os
+
 import logging
+import os
 import re
+from collections import OrderedDict
 
 from multiqc import config
-from multiqc.plots import bargraph
 from multiqc.modules.base_module import BaseMultiqcModule
+from multiqc.plots import bargraph
 
 # Initialise the logger
 log = logging.getLogger(__name__)
@@ -81,8 +79,11 @@ class MultiqcModule(BaseMultiqcModule):
                         "total_reads": total_reads,
                         "pseudoaligned_reads": paligned_reads,
                         "not_pseudoaligned_reads": total_reads - paligned_reads,
-                        "percent_aligned": (paligned_reads / total_reads) * 100,
                     }
+                    try:
+                        self.kallisto_data[s_name]["percent_aligned"] = (paligned_reads / total_reads) * 100
+                    except ZeroDivisionError:
+                        self.kallisto_data[s_name]["percent_aligned"] = 0.0
                     if fraglength is not None:
                         self.kallisto_data[s_name]["fragment_length"] = fraglength
                     s_name = total_reads = paligned_reads = fraglength = None

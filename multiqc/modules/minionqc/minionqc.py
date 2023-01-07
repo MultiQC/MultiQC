@@ -1,13 +1,12 @@
-#!/usr/bin/env python
-
 """ MultiQC submodule to parse output from MinIONQC summary stats """
 
-from collections import OrderedDict
 import copy
-import yaml
+import logging
 import os
 import re
-import logging
+from collections import OrderedDict
+
+import yaml
 
 from multiqc.modules.base_module import BaseMultiqcModule
 from multiqc.plots import linegraph, table

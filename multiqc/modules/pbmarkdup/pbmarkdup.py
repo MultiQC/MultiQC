@@ -1,10 +1,7 @@
-#!/usr/bin/env python
-
 """ MultiQC module to parse output from pbmarkdup"""
 
 import logging
 import re
-
 from collections import OrderedDict
 
 from multiqc.modules.base_module import BaseMultiqcModule

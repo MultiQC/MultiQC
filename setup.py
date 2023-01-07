@@ -21,9 +21,9 @@ See the MultiQC website for documentation and tutorial videos: http://multiqc.in
 MultiQC was written by Phil Ewels (http://phil.ewels.co.uk) at SciLifeLab Sweden (http://www.scilifelab.se)
 """
 
-from setuptools import setup, find_packages
+from setuptools import find_packages, setup
 
-version = "1.13dev"
+version = "1.14dev"
 dl_version = "master" if "dev" in version else "v{}".format(version)
 
 print(
@@ -55,7 +55,7 @@ setup(
         "click",
         "coloredlogs",
         "future>0.14.0",
-        "jinja2>=2.9",
+        "jinja2>=3.0.0",
         "lzstring",
         "markdown",
         "pyyaml>=4",
@@ -72,6 +72,7 @@ setup(
         "multiqc.modules.v1": [
             "adapterRemoval = multiqc.modules.adapterRemoval:MultiqcModule",
             "afterqc = multiqc.modules.afterqc:MultiqcModule",
+            "anglerfish = multiqc.modules.anglerfish:MultiqcModule",
             "bamtools = multiqc.modules.bamtools:MultiqcModule",
             "bbmap = multiqc.modules.bbmap:MultiqcModule",
             "bcftools = multiqc.modules.bcftools:MultiqcModule",
@@ -86,6 +87,7 @@ setup(
             "busco = multiqc.modules.busco:MultiqcModule",
             "bustools = multiqc.modules.bustools:MultiqcModule",
             "ccs = multiqc.modules.ccs:MultiqcModule",
+            "cellranger = multiqc.modules.cellranger:MultiqcModule",
             "checkqc = multiqc.modules.checkqc:MultiqcModule",
             "clipandmerge = multiqc.modules.clipandmerge:MultiqcModule",
             "clusterflow = multiqc.modules.clusterflow:MultiqcModule",
@@ -97,6 +99,7 @@ setup(
             "deeptools = multiqc.modules.deeptools:MultiqcModule",
             "disambiguate = multiqc.modules.disambiguate:MultiqcModule",
             "dragen = multiqc.modules.dragen:MultiqcModule",
+            "dragen_fastqc = multiqc.modules.dragen_fastqc:MultiqcModule",
             "eigenstratdatabasetools = multiqc.modules.eigenstratdatabasetools:MultiqcModule",
             "fastp = multiqc.modules.fastp:MultiqcModule",
             "fastq_screen = multiqc.modules.fastq_screen:MultiqcModule",
@@ -108,14 +111,17 @@ setup(
             "gffcompare = multiqc.modules.gffcompare:MultiqcModule",
             "gatk = multiqc.modules.gatk:MultiqcModule",
             "goleft_indexcov = multiqc.modules.goleft_indexcov:MultiqcModule",
+            "gopeaks = multiqc.modules.gopeaks:MultiqcModule",
             "happy = multiqc.modules.happy:MultiqcModule",
             "hicexplorer = multiqc.modules.hicexplorer:MultiqcModule",
             "hicpro = multiqc.modules.hicpro:MultiqcModule",
             "hicup = multiqc.modules.hicup:MultiqcModule",
+            "hifiasm = multiqc.modules.hifiasm:MultiqcModule",
             "hisat2 = multiqc.modules.hisat2:MultiqcModule",
             "homer = multiqc.modules.homer:MultiqcModule",
             "hops = multiqc.modules.hops:MultiqcModule",
             "htseq = multiqc.modules.htseq:MultiqcModule",
+            "humid = multiqc.modules.humid:MultiqcModule",
             "interop = multiqc.modules.interop:MultiqcModule",
             "ivar = multiqc.modules.ivar:MultiqcModule",
             "jcvi = multiqc.modules.jcvi:MultiqcModule",
@@ -134,9 +140,11 @@ setup(
             "mirtop = multiqc.modules.mirtop:MultiqcModule",
             "mirtrace = multiqc.modules.mirtrace:MultiqcModule",
             "mosdepth = multiqc.modules.mosdepth:MultiqcModule",
+            "motus = multiqc.modules.motus:MultiqcModule",
             "mtnucratio = multiqc.modules.mtnucratio:MultiqcModule",
             "multivcfanalyzer = multiqc.modules.multivcfanalyzer:MultiqcModule",
             "nanostat = multiqc.modules.nanostat:MultiqcModule",
+            "nextclade = multiqc.modules.nextclade:MultiqcModule",
             "ngsderive = multiqc.modules.ngsderive:MultiqcModule",
             "odgi = multiqc.modules.odgi:MultiqcModule",
             "optitype = multiqc.modules.optitype:MultiqcModule",
@@ -145,6 +153,7 @@ setup(
             "peddy = multiqc.modules.peddy:MultiqcModule",
             "phantompeakqualtools = multiqc.modules.phantompeakqualtools:MultiqcModule",
             "picard = multiqc.modules.picard:MultiqcModule",
+            "porechop = multiqc.modules.porechop:MultiqcModule",
             "preseq = multiqc.modules.preseq:MultiqcModule",
             "prinseqplusplus = multiqc.modules.prinseqplusplus:MultiqcModule",
             "prokka = multiqc.modules.prokka:MultiqcModule",
@@ -181,6 +190,7 @@ setup(
             "theta2 = multiqc.modules.theta2:MultiqcModule",
             "tophat = multiqc.modules.tophat:MultiqcModule",
             "trimmomatic = multiqc.modules.trimmomatic:MultiqcModule",
+            "umitools = multiqc.modules.umitools:MultiqcModule",
             "varscan2 = multiqc.modules.varscan2:MultiqcModule",
             "vcftools = multiqc.modules.vcftools:MultiqcModule",
             "vep = multiqc.modules.vep:MultiqcModule",

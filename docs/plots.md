@@ -570,7 +570,7 @@ headers[tablecol] = {
 ### Conditional formatting of data values
 
 MultiQC has configuration options to allow users to configure _"conditional formatting"_,
-with highlighted values in table cells ([see docs](##conditional-formatting)).
+with highlighted values in table cells ([see docs](#conditional-formatting)).
 
 Developers can also make use of this functionality within the header config dictionaries
 for formatting data values.

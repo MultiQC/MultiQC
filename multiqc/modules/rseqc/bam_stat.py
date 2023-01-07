@@ -1,11 +1,9 @@
-#!/usr/bin/env python
-
 """ MultiQC submodule to parse output from RSeQC bam_stat.py
 http://rseqc.sourceforge.net/#bam-stat-py """
 
-from collections import OrderedDict
 import logging
 import re
+from collections import OrderedDict
 
 from multiqc.plots import beeswarm
 
