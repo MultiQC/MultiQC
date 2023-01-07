@@ -1,12 +1,12 @@
 #!/usr/bin/env python
 """ Module to parse output from mOTUs """
-from __future__ import print_function
-from collections import OrderedDict
-from multiqc.utils import config
-from multiqc.plots import beeswarm, bargraph
-from multiqc.modules.base_module import BaseMultiqcModule
 
 import logging
+from collections import OrderedDict
+
+from multiqc.modules.base_module import BaseMultiqcModule
+from multiqc.plots import bargraph
+from multiqc.utils import config
 
 log = logging.getLogger(__name__)
 
@@ -21,7 +21,7 @@ class MultiqcModule(BaseMultiqcModule):
             name="motus",
             anchor="motus",
             href="https://motu-tool.org/",
-            info="""is a tool performing microbial profiling through marker gene (MG)-based operational taxonomic units (mOTUs).""",
+            info="is a tool performing microbial profiling through marker gene (MG)-based operational taxonomic units (mOTUs).",
             doi="10.1038/s41467-019-08844-4",
         )
 
@@ -185,7 +185,11 @@ class MultiqcModule(BaseMultiqcModule):
             plot=bargraph.plot(
                 self.motus_data,
                 cats,
-                {"id": "motus-filtering-reads", "title": "mOTUs: Read filtering information", "ylab": "Reads"},
+                {
+                    "id": "motus-filtering-reads",
+                    "title": "mOTUs: Read filtering information",
+                    "ylab": "Reads",
+                },
             ),
         )
 
@@ -214,7 +218,11 @@ class MultiqcModule(BaseMultiqcModule):
             plot=bargraph.plot(
                 self.motus_data,
                 cats,
-                {"id": "motus-mapping-inserts", "title": "mOTUs: Insert mapping information", "ylab": "Inserts"},
+                {
+                    "id": "motus-mapping-inserts",
+                    "title": "mOTUs: Insert mapping information",
+                    "ylab": "Inserts",
+                },
             ),
         )
 

@@ -1,8 +1,7 @@
 ---
 Name: mOTUs
 URL: https://motu-tool.org/cite.html
-Description: >
-  Microbial profiling through marker gene (MG)-based operational taxonomic units (mOTUs)
+Description: Microbial profiling through marker gene (MG)-based operational taxonomic units (mOTUs)
 ---
 
 [mOTUs](https://github.com/brentp/mosdepth/) performs microbial profiling through marker gene (MG)-based operational taxonomic units (mOTUs).
