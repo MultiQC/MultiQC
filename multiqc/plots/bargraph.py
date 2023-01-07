@@ -106,6 +106,8 @@ def plot(data, cats=None, pconfig=None):
         except NameError:  # Py3
             if type(cats[0]) is str:
                 cats = [cats]
+        except IndexError:  # Given empty list
+            pass
     # Generate default categories if not supplied
     for idx in range(len(data)):
         try:

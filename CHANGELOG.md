@@ -19,6 +19,7 @@
 - Fix sorting of table columns with text values
 - Rewrote the `Dockerfile` to build multi-arch images (amd64 + arm), run through a non-privileged user and build tools for non precompiled python binaries ([#1541](https://github.com/ewels/MultiQC/pull/1541), [#1541](https://github.com/ewels/MultiQC/pull/1541))
 - Add a new lint test to check that colour scale names are valid ([#1835](https://github.com/ewels/MultiQC/pull/1835))
+- Don't crash if a barplot is given an empty list of categories ([#1540](https://github.com/ewels/MultiQC/issues/1540))
 
 ### New Modules
 
