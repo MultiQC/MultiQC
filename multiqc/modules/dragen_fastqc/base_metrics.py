@@ -1,20 +1,12 @@
 #!/usr/bin/env python
-from __future__ import print_function
 
 import copy
-import json
-
-# Initialise the logger
 import logging
-import os
-import re
 from collections import OrderedDict, defaultdict
 
 from multiqc import config
 from multiqc.modules.base_module import BaseMultiqcModule
-from multiqc.modules.dragen.utils import Metric
-from multiqc.plots import bargraph, boxplot, heatmap, linegraph, table
-from multiqc.utils import report
+from multiqc.plots import boxplot, linegraph
 
 from .util import average_from_range, sortPosQualTableKeys
 

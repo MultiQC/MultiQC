@@ -1,8 +1,4 @@
-#!/usr/bin/env python
-
 """ MultiQC module to parse output from Nextclade """
-
-from __future__ import print_function
 
 import csv
 import logging
