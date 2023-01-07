@@ -1,4 +1,3 @@
-#!/usr/bin/env python
 """ Module to parse output from mOTUs """
 
 import logging
@@ -144,6 +143,7 @@ class MultiqcModule(BaseMultiqcModule):
             "title": "Total ref-mOTUs",
             "description": "Total known species mOTUs found",
             "scale": "Purples",
+            "shared_key": "mOTUs",
             "format": "{:,.0f}",
         }
 
@@ -151,6 +151,7 @@ class MultiqcModule(BaseMultiqcModule):
             "title": "Total meta-mOTUs",
             "description": "Total number of unknown metagenome-derived mOTUs found",
             "scale": "Greens",
+            "shared_key": "mOTUs",
             "format": "{:,.0f}",
         }
 
@@ -158,6 +159,7 @@ class MultiqcModule(BaseMultiqcModule):
             "title": "Total ext-mOTUs",
             "description": "Total number of unknown MAG-derived mOTUs found",
             "scale": "Purples",
+            "shared_key": "mOTUs",
             "format": "{:,.0f}",
         }
 
