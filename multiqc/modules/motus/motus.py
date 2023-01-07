@@ -207,10 +207,10 @@ class MultiqcModule(BaseMultiqcModule):
             "shared_key": "read_count",
         }
 
-        cats["Unique mappers"] = dict(common, name="Unique mapped inserts", color="#d1e7dd")
-        cats["Multiple mappers"] = dict(common, name="Multiple mapped inserts", color="#fff3cd")
+        cats["Unique mappers"] = dict(common, name="Unique mapped inserts", color="#3aba5e")
+        cats["Multiple mappers"] = dict(common, name="Multiple mapped inserts", color="#ebbe59")
         cats["Ignored multiple mapper without unique hit"] = dict(
-            common, name="Ignored multi-mapped inserts", color="#f8d7da"
+            common, name="Ignored multi-mapped inserts", color="#cf5565"
         )
 
         self.add_section(
