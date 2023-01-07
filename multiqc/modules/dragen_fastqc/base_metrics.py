@@ -1,5 +1,3 @@
-#!/usr/bin/env python
-
 import copy
 import logging
 from collections import OrderedDict, defaultdict

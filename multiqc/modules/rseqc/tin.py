@@ -1,5 +1,3 @@
-#!/usr/bin/env python
-
 """ MultiQC submodule to parse output from RSeQC tin.py
 http://rseqc.sourceforge.net/#tin-py """
 

@@ -1,6 +1,3 @@
-#!/usr/bin/env python
-
-
 # Initialise the logger
 import logging
 import re

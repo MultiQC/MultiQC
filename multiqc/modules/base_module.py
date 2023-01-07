@@ -1,5 +1,3 @@
-#!/usr/bin/env python
-
 """ MultiQC modules base class, contains helper functions """
 
 

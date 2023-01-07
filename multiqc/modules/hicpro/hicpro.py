@@ -1,4 +1,3 @@
-#!/usr/bin/env python
 ## Nicolas Servant
 ## April 2018
 

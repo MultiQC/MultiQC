@@ -1,5 +1,3 @@
-#!/usr/bin/env python
-
 """ MultiQC submodule to parse output from RSeQC read_GC.py
 http://rseqc.sourceforge.net/#read-gc-py """
 

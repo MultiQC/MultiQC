@@ -1,5 +1,3 @@
-#!/usr/bin/env python
-
 """ MultiQC module to parse QC output from PURPLE """
 # Initialise the logger
 import logging

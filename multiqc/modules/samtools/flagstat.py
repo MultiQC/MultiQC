@@ -1,6 +1,4 @@
 # coding: utf-8
-#!/usr/bin/env python
-
 """ MultiQC submodule to parse output from Samtools flagstat """
 
 import logging

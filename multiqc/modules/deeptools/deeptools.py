@@ -1,4 +1,3 @@
-#!/usr/bin/env python
 """MultiQC module to parse the output from deepTools"""
 import logging
 from collections import OrderedDict
