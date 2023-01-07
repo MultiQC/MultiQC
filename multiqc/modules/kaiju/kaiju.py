@@ -2,12 +2,12 @@
 
 """ MultiQC module to parse output from Kaiju """
 
-from collections import OrderedDict
 import logging
+from collections import OrderedDict
 
 from multiqc import config
-from multiqc.plots import bargraph
 from multiqc.modules.base_module import BaseMultiqcModule
+from multiqc.plots import bargraph
 
 # Initialise the logger
 log = logging.getLogger(__name__)
@@ -154,7 +154,7 @@ class MultiqcModule(BaseMultiqcModule):
             "scale": "RdYlGn",
         }
         headers["assigned"] = {
-            "title": "{} Reads assigned".format(config.read_count_desc),
+            "title": "{} Reads assigned".format(config.read_count_prefix),
             "description": "Number of reads assigned ({})  at {} rank".format(
                 config.read_count_desc, general_taxo_rank
             ),
@@ -272,6 +272,10 @@ class MultiqcModule(BaseMultiqcModule):
             self.write_data_file(rank_data, "multiqc_kaiju_" + rank_name)
             cats.append(rank_cats)
             pd.append(rank_data)
+
+        if len(cats) == 0:
+            log.debug("No data for Kaiju top five barplot. Skipping.")
+            return
 
         self.add_section(
             name="Top taxa",

@@ -10,8 +10,7 @@
 #### Have a look at Kallisto for a simpler example.     ####
 ############################################################
 
-from __future__ import print_function
-from collections import OrderedDict
+
 import io
 import json
 import logging
@@ -19,10 +18,11 @@ import math
 import os
 import re
 import zipfile
+from collections import OrderedDict
 
 from multiqc import config
-from multiqc.plots import linegraph, bargraph, heatmap
 from multiqc.modules.base_module import BaseMultiqcModule
+from multiqc.plots import bargraph, heatmap, linegraph
 from multiqc.utils import report
 
 # Initialise the logger
@@ -195,14 +195,31 @@ class MultiqcModule(BaseMultiqcModule):
             d["measure"]: d["value"] for d in self.fastqc_data[s_name]["basic_statistics"]
         }
 
+        # we sort by the avg of the range, which is effectively
+        # sorting ranges in asc order assuming no overlap
+        sequence_length_distributions = self.fastqc_data[s_name].get("sequence_length_distribution", [])
+        sequence_length_distributions.sort(key=lambda d: self.avg_bp_from_range(d["length"]))
+
         # Calculate the average sequence length (Basic Statistics gives a range)
+        length_reads = 0
         length_bp = 0
-        total_count = 0
-        for d in self.fastqc_data[s_name].get("sequence_length_distribution", {}):
+        total_count = sum(d["count"] for d in sequence_length_distributions)
+        median = None
+
+        for d in sequence_length_distributions:
+            length_reads += d["count"]
             length_bp += d["count"] * self.avg_bp_from_range(d["length"])
-            total_count += d["count"]
+
+            if median is None and length_reads >= total_count / 2:
+                # if the distribution-entry is a range, we use the average of the range.
+                # this isn't technically correct, because we can't know what the distribution
+                # is within that range. Probably good enough though.
+                median = self.avg_bp_from_range(d["length"])
+
         if total_count > 0:
             self.fastqc_data[s_name]["basic_statistics"]["avg_sequence_length"] = length_bp / total_count
+        if median is not None:
+            self.fastqc_data[s_name]["basic_statistics"]["median_sequence_length"] = median
 
     def fastqc_general_stats(self):
         """Add some single-number stats to the basic statistics
@@ -216,6 +233,7 @@ class MultiqcModule(BaseMultiqcModule):
             # Samples with 0 reads and reports with some skipped sections might be missing things here
             data[s_name]["percent_gc"] = bs.get("%GC", 0)
             data[s_name]["avg_sequence_length"] = bs.get("avg_sequence_length", 0)
+            data[s_name]["median_sequence_length"] = bs.get("median_sequence_length", 0)
             data[s_name]["total_sequences"] = bs.get("Total Sequences", 0)
 
             # Log warning about zero-read samples as a courtesy
@@ -242,9 +260,9 @@ class MultiqcModule(BaseMultiqcModule):
                 pass
 
         # Are sequence lengths interesting?
-        seq_lengths = [x["avg_sequence_length"] for x in data.values()]
+        median_seq_lengths = [x["median_sequence_length"] for x in data.values()]
         try:
-            hide_seq_length = False if max(seq_lengths) - min(seq_lengths) > 10 else True
+            hide_seq_length = max(median_seq_lengths) - min(median_seq_lengths) <= 10
         except ValueError:
             # Zero reads
             hide_seq_length = True
@@ -268,8 +286,17 @@ class MultiqcModule(BaseMultiqcModule):
             "format": "{:,.0f}",
         }
         headers["avg_sequence_length"] = {
-            "title": "Read Length",
+            "title": "Average Read Length",
             "description": "Average Read Length (bp)",
+            "min": 0,
+            "suffix": " bp",
+            "scale": "RdYlGn",
+            "format": "{:,.0f}",
+            "hidden": True,
+        }
+        headers["median_sequence_length"] = {
+            "title": "Median Read Length",
+            "description": "Median Read Length (bp)",
             "min": 0,
             "suffix": " bp",
             "scale": "RdYlGn",
@@ -317,8 +344,9 @@ class MultiqcModule(BaseMultiqcModule):
                 )
                 pdata[s_name]["Unique Reads"] = pd["Total Sequences"] - pdata[s_name]["Duplicate Reads"]
                 has_dups = True
-            except KeyError:
-                # Older versions of FastQC don't have duplicate reads
+            # Older versions of FastQC don't have duplicate reads
+            # Very sparse data can report -nan: #Total Deduplicated Percentage  -nan
+            except (KeyError, ValueError):
                 pdata[s_name] = {"Total Sequences": pd["Total Sequences"]}
                 has_total = True
         pcats = list()
@@ -723,7 +751,7 @@ class MultiqcModule(BaseMultiqcModule):
         """Create the HTML for the Sequence Length Distribution plot"""
 
         data = dict()
-        seq_lengths = set()
+        avg_seq_lengths = set()
         multiple_lenths = False
         for s_name in self.fastqc_data:
             try:
@@ -731,7 +759,7 @@ class MultiqcModule(BaseMultiqcModule):
                     self.avg_bp_from_range(d["length"]): d["count"]
                     for d in self.fastqc_data[s_name]["sequence_length_distribution"]
                 }
-                seq_lengths.update(data[s_name].keys())
+                avg_seq_lengths.update(data[s_name].keys())
                 if len(set(data[s_name].keys())) > 1:
                     multiple_lenths = True
             except KeyError:
@@ -741,9 +769,9 @@ class MultiqcModule(BaseMultiqcModule):
             return None
 
         if not multiple_lenths:
-            lengths = "bp , ".join([str(l) for l in list(seq_lengths)])
+            lengths = "bp , ".join([str(l) for l in list(avg_seq_lengths)])
             desc = "All samples have sequences of a single length ({}bp).".format(lengths)
-            if len(seq_lengths) > 1:
+            if len(avg_seq_lengths) > 1:
                 desc += ' See the <a href="#general_stats">General Statistics Table</a>.'
             self.add_section(
                 name="Sequence Length Distribution",

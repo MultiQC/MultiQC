@@ -1,10 +1,11 @@
 """MultiQC module to parse CheckQC JSON output"""
 
-import logging
 import json
+import logging
+import re
 from collections import OrderedDict
 from operator import itemgetter
-import re
+
 from multiqc.modules.base_module import BaseMultiqcModule
 from multiqc.plots import bargraph, table
 
