@@ -1,9 +1,8 @@
-#!/usr/bin/env python
-
 """ MultiQC module to parse TsTv by summary output from vcftools TsTv-summary """
 
 import logging
 from collections import OrderedDict
+
 from multiqc.plots import bargraph
 
 # Initialise the logger

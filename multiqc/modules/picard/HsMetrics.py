@@ -1,14 +1,12 @@
-#!/usr/bin/env python
-
 """ MultiQC submodule to parse output from Picard HsMetrics """
 
-from collections import OrderedDict, defaultdict
 import logging
 import os
 import re
+from collections import OrderedDict, defaultdict
 
 from multiqc import config
-from multiqc.plots import table, linegraph
+from multiqc.plots import linegraph, table
 
 # Initialise the logger
 log = logging.getLogger(__name__)
@@ -138,50 +136,22 @@ def parse_reports(self):
         # Write parsed data to a file
         self.write_data_file(self.picard_HsMetrics_data, "multiqc_picard_HsMetrics")
 
-        # Add to general stats table
         # Swap question marks with -1
         data = self.picard_HsMetrics_data
         for s_name in data:
             if data[s_name]["FOLD_ENRICHMENT"] == "?":
                 data[s_name]["FOLD_ENRICHMENT"] = -1
 
-        self.general_stats_headers["FOLD_ENRICHMENT"] = {
-            "title": "Fold Enrichment",
-            "min": 0,
-            "format": "{:,.0f}",
-            "scale": "Blues",
-            "suffix": " X",
-        }
-        try:
-            covs = config.picard_config["general_stats_target_coverage"]
-            assert type(covs) == list
-            assert len(covs) > 0
-            covs = [str(i) for i in covs]
-            log.debug("Custom Picard coverage thresholds: {}".format(", ".join([i for i in covs])))
-        except (KeyError, AttributeError, TypeError, AssertionError):
-            covs = ["30"]
-        for c in covs:
-            self.general_stats_headers["PCT_TARGET_BASES_{}X".format(c)] = {
-                "id": "picard_target_bases_{}X".format(c),
-                "title": "% Target Bases {}X".format(c),
-                "description": "Percent of target bases with coverage &ge; {}X".format(c),
-                "max": 100,
-                "min": 0,
-                "suffix": "%",
-                "format": "{:,.0f}",
-                "scale": "RdYlGn",
-                "modify": lambda x: self.multiply_hundred(x),
-            }
-        for s_name in data:
-            if s_name not in self.general_stats_data:
-                self.general_stats_data[s_name] = dict()
-            self.general_stats_data[s_name].update(data[s_name])
+        # Add to general stats table
+        general_stats_table(self, data)
+
+        # Add report section
         self.add_section(
             name="HSMetrics",
             anchor="picard_hsmetrics",
             plot=table.plot(
                 data,
-                _get_table_headers(data),
+                _get_table_headers(),
                 {
                     "id": "picard_hsmetrics_table",
                     "namespace": "HsMetrics",
@@ -214,7 +184,61 @@ def parse_reports(self):
     return len(self.picard_HsMetrics_data)
 
 
-def _get_table_headers(data):
+def general_stats_table(self, data):
+    """
+    Generate table header configs for the General Stats table,
+    add config and data to the base module.
+    """
+    # Look for a user config of which table columns we should use
+    picard_config = getattr(config, "picard_config", {})
+    HsMetrics_genstats_table_cols = picard_config.get("HsMetrics_genstats_table_cols", [])
+    HsMetrics_genstats_table_cols_hidden = picard_config.get("HsMetrics_genstats_table_cols_hidden", [])
+
+    # Custom general stats columns
+    if len(HsMetrics_genstats_table_cols) or len(HsMetrics_genstats_table_cols_hidden):
+        for k, v in _generate_table_header_config(
+            HsMetrics_genstats_table_cols, HsMetrics_genstats_table_cols_hidden
+        ).items():
+            self.general_stats_headers[k] = v
+
+    # Default General Stats headers
+    else:
+        self.general_stats_headers["FOLD_ENRICHMENT"] = {
+            "title": "Fold Enrichment",
+            "min": 0,
+            "format": "{:,.0f}",
+            "scale": "Blues",
+            "suffix": " X",
+        }
+        try:
+            covs = picard_config["general_stats_target_coverage"]
+            assert type(covs) == list
+            assert len(covs) > 0
+            covs = [str(i) for i in covs]
+            log.debug("Custom Picard coverage thresholds: {}".format(", ".join([i for i in covs])))
+        except (KeyError, AttributeError, TypeError, AssertionError):
+            covs = ["30"]
+        for c in covs:
+            self.general_stats_headers["PCT_TARGET_BASES_{}X".format(c)] = {
+                "id": "picard_target_bases_{}X".format(c),
+                "title": "% Target Bases {}X".format(c),
+                "description": "Percent of target bases with coverage &ge; {}X".format(c),
+                "max": 100,
+                "min": 0,
+                "suffix": "%",
+                "format": "{:,.0f}",
+                "scale": "RdYlGn",
+                "modify": lambda x: self.multiply_hundred(x),
+            }
+
+    # Add data to general stats table
+    for s_name in data:
+        if s_name not in self.general_stats_data:
+            self.general_stats_data[s_name] = dict()
+        self.general_stats_data[s_name].update(data[s_name])
+
+
+def _get_table_headers():
     # Look for a user config of which table columns we should use
     picard_config = getattr(config, "picard_config", {})
     HsMetrics_table_cols = picard_config.get("HsMetrics_table_cols")
@@ -255,6 +279,14 @@ def _get_table_headers(data):
     if not HsMetrics_table_cols_hidden:
         HsMetrics_table_cols_hidden = ["BAIT_TERRITORY", "TOTAL_READS", "TARGET_TERRITORY", "AT_DROPOUT", "GC_DROPOUT"]
 
+    return _generate_table_header_config(HsMetrics_table_cols, HsMetrics_table_cols_hidden)
+
+
+def _generate_table_header_config(table_cols=[], hidden_table_cols=[]):
+    """
+    Automatically generate some nice table header configs based on what we know about
+    the different types of Picard data fields.
+    """
     title_cleanup = [
         ("CVG", "coverage"),
         ("UQ", "unique"),
@@ -264,12 +296,14 @@ def _get_table_headers(data):
         ("_", " "),
         ("PCT", ""),
     ]
-    headers = OrderedDict()
-    for h in FIELD_DESCRIPTIONS:
 
-        # Skip anything not listed in the above default / config for this table
-        if h not in HsMetrics_table_cols:
-            continue
+    # Warn if we see anything unexpected
+    for c in table_cols + hidden_table_cols:
+        if c not in FIELD_DESCRIPTIONS and c[:17] != "PCT_TARGET_BASES_":
+            log.error(f"Field '{c}' not found in expected Picard fields. Please check your config.")
+
+    headers = OrderedDict()
+    for h in table_cols + hidden_table_cols:
 
         # Set up the configuration for each column
         if h not in headers:
@@ -302,7 +336,7 @@ def _get_table_headers(data):
             # Manual capitilisation for some strings
             headers[h]["title"] = headers[h]["title"].replace("Pf", "PF").replace("snp", "SNP")
 
-            if h in HsMetrics_table_cols_hidden:
+            if h in hidden_table_cols:
                 headers[h]["hidden"] = True
 
     return headers

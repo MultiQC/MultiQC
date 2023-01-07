@@ -1,4 +1,3 @@
-#!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
 """ MultiQC submodule to parse output from GATK BaseRecalibrator """
@@ -6,8 +5,8 @@
 import logging
 from collections import namedtuple
 from itertools import groupby
-from multiqc.plots import linegraph
-from multiqc.plots import scatter
+
+from multiqc.plots import linegraph, scatter
 
 # Initialise the logger
 log = logging.getLogger(__name__)

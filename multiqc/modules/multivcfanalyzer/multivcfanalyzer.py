@@ -1,16 +1,12 @@
-#!/usr/bin/env python
-
 """ MultiQC module to parse output from MultiVCFAnalyzer """
 
-from __future__ import print_function
-from collections import OrderedDict
-import logging
-import json
 
-from multiqc.plots import table
-from multiqc.plots import bargraph
+import json
+import logging
 from collections import OrderedDict
+
 from multiqc.modules.base_module import BaseMultiqcModule
+from multiqc.plots import bargraph, table
 
 # Initialise the logger
 log = logging.getLogger(__name__)
@@ -195,7 +191,7 @@ class MultiqcModule(BaseMultiqcModule):
         headers["discardedVarCall"] = {
             "title": "Discarded SNP Call",
             "description": "Number of non-reference positions not reaching genotyping or coverage thresholds",
-            "scale": "PuCr",
+            "scale": "PuRd",
             "shared_key": "calls",
             "format": "{:,.0f}",
         }

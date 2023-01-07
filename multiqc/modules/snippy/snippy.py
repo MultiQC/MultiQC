@@ -1,13 +1,11 @@
-#!/usr/bin/env python
-
 """ MultiQC module to parse output from Snippy """
 
-from collections import OrderedDict
 import logging
+from collections import OrderedDict
 
 from multiqc import config
-from multiqc.plots import bargraph
 from multiqc.modules.base_module import BaseMultiqcModule
+from multiqc.plots import bargraph
 
 # Initialise the logger
 log = logging.getLogger(__name__)
@@ -54,7 +52,9 @@ class MultiqcModule(BaseMultiqcModule):
             if f["s_name"] in self.snippy_data:
                 log.debug("Duplicate sample name found for snippy! Overwriting: {}".format(f["s_name"]))
             # Add the file data under the key filename
-            self.snippy_data[f["s_name"]] = self.parse_snippy_txt(f["f"])
+            data = self.parse_snippy_txt(f["f"])
+            if data:
+                self.snippy_data[f["s_name"]] = data
 
             self.add_data_source(f, section="snippy")
 
@@ -99,6 +99,8 @@ class MultiqcModule(BaseMultiqcModule):
             split_line = line.strip().split("\t")
             if split_line[0] in self.snippy_col:
                 data[split_line[0]] = int(split_line[1])
+        if len(data) == 0:
+            return False
         for col in self.snippy_col:
             if col not in data:
                 data[col] = 0

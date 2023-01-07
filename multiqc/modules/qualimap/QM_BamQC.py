@@ -1,8 +1,6 @@
-#!/usr/bin/env python
-
 """ MultiQC Submodule to parse output from Qualimap BamQC """
 
-from __future__ import print_function
+
 import logging
 import math
 import re
@@ -81,28 +79,50 @@ def parse_reports(self):
 def parse_genome_results(self, f):
     """Parse the contents of the Qualimap BamQC genome_results.txt file"""
     regexes = {
-        "bam_file": r"bam file = (.+)",
-        "total_reads": r"number of reads = ([\d,]+)",
-        "mapped_reads": r"number of mapped reads = ([\d,]+)",
-        "mapped_bases": r"number of mapped bases = ([\d,]+)",
-        "sequenced_bases": r"number of sequenced bases = ([\d,]+)",
-        "mean_insert_size": r"mean insert size = ([\d,\.]+)",
-        "median_insert_size": r"median insert size = ([\d,\.]+)",
-        "mean_mapping_quality": r"mean mapping quality = ([\d,\.]+)",
-        "general_error_rate": r"general error rate = ([\d,\.]+)",
-        "mean_coverage": r"mean coverageData = ([\d,\.]+)",
+        "Input": {
+            "bam_file": r"bam file = (.+)",
+        },
+        "Globals": {
+            "total_reads": r"number of reads = ([\d,]+)",
+            "mapped_reads": r"number of mapped reads = ([\d,]+)",
+            "mapped_bases": r"number of mapped bases = ([\d,]+)",
+            "sequenced_bases": r"number of sequenced bases = ([\d,]+)",
+        },
+        "Insert size": {
+            "mean_insert_size": r"mean insert size = ([\d,\.]+)",
+            "median_insert_size": r"median insert size = ([\d,\.]+)",
+        },
+        "Mapping quality": {
+            "mean_mapping_quality": r"mean mapping quality = ([\d,\.]+)",
+        },
+        "Mismatches and indels": {
+            "general_error_rate": r"general error rate = ([\d,\.]+)",
+        },
+        "Coverage": {
+            "mean_coverage": r"mean coverageData = ([\d,\.]+)",
+        },
+        "Globals inside": {
+            "regions_size": r"regions size = ([\d,\.]+)",
+            "regions_mapped_reads": r"number of mapped reads = ([\d,]+)",  # WARNING: Same as in Globals
+        },
     }
     d = dict()
-    for k, r in regexes.items():
-        r_search = re.search(r, f["f"], re.MULTILINE)
-        if r_search:
-            if "\d" in r:
-                try:
-                    d[k] = float(r_search.group(1).replace(",", ""))
-                except ValueError:
-                    d[k] = r_search.group(1)
-            else:
-                d[k] = r_search.group(1)
+    section = None
+    for line in f["f"].splitlines():
+        if line.startswith(">>>>>>>"):
+            section = line[8:]
+        elif section:
+            for k, r in regexes.get(section, {}).items():
+                r_search = re.search(r, line)
+                if r_search:
+                    if "\d" in r:
+                        try:
+                            d[k] = float(r_search.group(1).replace(",", ""))
+                        except ValueError:
+                            d[k] = r_search.group(1)
+                    else:
+                        d[k] = r_search.group(1)
+
     # Check we have an input filename
     if "bam_file" not in d:
         log.debug("Couldn't find an input filename in genome_results file {}".format(f["fn"]))
@@ -119,6 +139,8 @@ def parse_genome_results(self, f):
         self.general_stats_data[s_name]["percentage_aligned"] = d["percentage_aligned"]
         self.general_stats_data[s_name]["general_error_rate"] = d["general_error_rate"] * 100
         self.general_stats_data[s_name]["mean_coverage"] = d["mean_coverage"]
+        self.general_stats_data[s_name]["regions_size"] = d["regions_size"]
+        self.general_stats_data[s_name]["regions_mapped_reads"] = d["regions_mapped_reads"]
     except KeyError:
         pass
 
@@ -590,6 +612,20 @@ def general_stats_headers(self):
         "suffix": "%",
         "scale": "OrRd",
         "format": "{0:.2f}",
+        "hidden": True,
+    }
+    self.general_stats_headers["regions_size"] = {
+        "title": "{} Region size".format(config.read_count_prefix),
+        "description": "Size of target region",
+        "suffix": " bp",
+        "scale": "PuBuGn",
+        "hidden": True,
+    }
+    self.general_stats_headers["regions_mapped_reads"] = {
+        "title": "{} Aligned".format(config.read_count_prefix),
+        "description": "Number of mapped reads on target region ({})".format(config.read_count_desc),
+        "scale": "RdYlGn",
+        "shared_key": "read_count",
         "hidden": True,
     }
 
