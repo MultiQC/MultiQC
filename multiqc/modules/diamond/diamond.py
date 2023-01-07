@@ -3,11 +3,11 @@
 """ MultiQC module to parse output from DIAMOND """
 
 import logging
+from collections import OrderedDict
 
+from multiqc import config
 from multiqc.modules.base_module import BaseMultiqcModule
 from multiqc.plots import bargraph
-from collections import OrderedDict
-from multiqc import config
 
 # Initialise the logger
 log = logging.getLogger(__name__)
