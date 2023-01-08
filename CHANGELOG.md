@@ -26,6 +26,7 @@
 - Allow path filters without full paths by trying to prefix analysis dir when filtering ([#1308](https://github.com/ewels/MultiQC/issues/1308))
 - Fix sorting of table columns with text values
 - Don't crash if a barplot is given an empty list of categories ([#1540](https://github.com/ewels/MultiQC/issues/1540))
+- New logos! MultiQC is now developed and maintained at [Seqera Labs](https://seqera.io/). Updated logos and email addresses accordingly.
 
 ### New Modules
 

@@ -18,7 +18,7 @@ For more detailed instructions, run :code:`multiqc -h`
 
 See the MultiQC website for documentation and tutorial videos: http://multiqc.info
 
-MultiQC was written by Phil Ewels (http://phil.ewels.co.uk) at SciLifeLab Sweden (http://www.scilifelab.se)
+MultiQC was written by Phil Ewels (http://phil.ewels.co.uk) at Seqera Labs (https://seqera.io/), originally at SciLifeLab Sweden (http://www.scilifelab.se)
 """
 
 from setuptools import find_packages, setup
@@ -38,7 +38,7 @@ setup(
     name="multiqc",
     version=version,
     author="Phil Ewels",
-    author_email="phil.ewels@scilifelab.se",
+    author_email="phil.ewels@seqera.io",
     description="Create aggregate bioinformatics analysis reports across many samples and tools",
     long_description=__doc__,
     keywords=["bioinformatics", "biology", "sequencing", "NGS", "next generation sequencing", "quality control"],
