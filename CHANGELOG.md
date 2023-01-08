@@ -27,6 +27,8 @@
 
 - [**Anglerfish**](https://github.com/remiolsen/anglerfish)
   - A tool designed to assess pool balancing, contamination and insert sizes of Illumina library dry runs on Oxford Nanopore data.
+- [**BBDuk**](https://jgi.doe.gov/data-and-tools/software-tools/bbtools/bb-tools-user-guide/bbduk-guide/)
+  - Combines most common data-quality-related trimming, filtering, and masking operations via kmers into a single high-performance tool.
 - [**Cell Ranger**](https://support.10xgenomics.com/single-cell-gene-expression/software/pipelines/latest/what-is-cell-ranger)
   - Works with data from 10X Genomics Chromium. Processes Chromium single cell data to align reads, generate feature-barcode matrices, perform clustering and other secondary analysis, and more.
   - New MultiQC module parses Cell Ranger quality reports from VDJ and count analysis

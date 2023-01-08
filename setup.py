@@ -74,6 +74,7 @@ setup(
             "afterqc = multiqc.modules.afterqc:MultiqcModule",
             "anglerfish = multiqc.modules.anglerfish:MultiqcModule",
             "bamtools = multiqc.modules.bamtools:MultiqcModule",
+            "bbduk = multiqc.modules.bbduk:MultiqcModule",
             "bbmap = multiqc.modules.bbmap:MultiqcModule",
             "bcftools = multiqc.modules.bcftools:MultiqcModule",
             "bcl2fastq = multiqc.modules.bcl2fastq:MultiqcModule",
