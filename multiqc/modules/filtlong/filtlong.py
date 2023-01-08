@@ -50,7 +50,7 @@ class MultiqcModule(BaseMultiqcModule):
                 self.filtlong_data[f["s_name"]]["Bases kept"] = float(l.lstrip().split(" ")[1])
 
             elif "fall below" in l and f["s_name"] in self.filtlong_data:
-                self.filtlong_data[f["s_name"]]["Bases kept"] = float(0)
+                log.debug(f"{f['s_name']}: reads already fall below target after filtering")
 
     def filtlong_general_stats(self):
         """Filtlong General Stats Table"""
