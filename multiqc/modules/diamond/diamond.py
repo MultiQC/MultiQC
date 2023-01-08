@@ -40,13 +40,21 @@ class MultiqcModule(BaseMultiqcModule):
         self.diamond_general_stats()
 
     def parse_logs(self, f):
-        """Parsing logs""" ""
+        """Parsing logs"""
+        s_name = self.clean_s_name(f["root"], f)
         for l in f["f"]:
+            # Try to get the sample name from --out, otherwise --query, fallback to directory name
+            if "diamond blastx" in l and "--out" in l:
+                s_name = l.split("--out ")[1].split(" ")[0]
+                s_name = self.clean_s_name(s_name, f)
+            elif "diamond blastx" in l and "--query" in l:
+                s_name = l.split("--query ")[1].split(" ")[0]
+                s_name = self.clean_s_name(s_name, f)
             if "queries aligned" in l:
                 self.add_data_source(f)
-                if f["s_name"] in self.diamond_data:
-                    log.debug("Duplicate sample name found! Overwriting: {}".format(f["s_name"]))
-                self.diamond_data[f["s_name"]] = {"queries_aligned": int(l.split(" ")[0])}
+                if s_name in self.diamond_data:
+                    log.debug("Duplicate sample name found! Overwriting: {}".format(s_name))
+                self.diamond_data[s_name] = {"queries_aligned": int(l.split(" ")[0])}
 
     def diamond_general_stats(self):
         """Diamond General Stats Table"""

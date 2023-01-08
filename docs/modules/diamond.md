@@ -12,4 +12,4 @@ Sequence aligner for protein and translated DNA searches and functions as a drop
 - Low resource requirements and suitable for running on standard desktops or laptops.
 - Various output formats, including BLAST pairwise, tabular and XML, as well as taxonomic classification.
 
-The module takes summary statistics of the number of sequences aligned and displays them in the General Stats table.
+The module takes summary statistics from the `diamond.log` file (`--log` option). It parses and reports the number of sequences aligned and displays them in the General Stats table.

@@ -276,8 +276,7 @@ deeptools/plotProfile:
   contents: "bin labels"
   num_lines: 1
 diamond:
-  contents: "type: Diamond database"
-  fn: "*.log"
+  fn: "diamond.log"
 dragen/vc_metrics:
   fn: "*.vc_metrics.csv"
 dragen/ploidy_estimation_metrics:
