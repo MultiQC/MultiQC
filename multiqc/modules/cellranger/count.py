@@ -242,6 +242,9 @@ class CellRangerCountMixin:
         warnings = dict()
         alarms_list = summary["alarms"].get("alarms", [])
         for alarm in alarms_list:
+            # "Intron mode used" alarm added in Cell Ranger 7.0 lacks id
+            if "id" not in alarm:
+                continue
             warnings[alarm["id"]] = "FAIL"
             self.count_warnings_headers[alarm["id"]] = {
                 "title": alarm["id"],

@@ -8,6 +8,9 @@
 
 ### Module updates
 
+- **Cell Ranger**
+  - Bugfix: avoid `KeyError` exception when parsing Cell Ranger 7.x web_summary.html
+
 ## [MultiQC v1.14](https://github.com/ewels/MultiQC/releases/tag/v1.14) - 2023-01-08
 
 ### MultiQC new features
