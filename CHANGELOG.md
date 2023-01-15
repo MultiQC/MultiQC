@@ -10,6 +10,8 @@
 
 - **Cell Ranger**
   - Bugfix: avoid `KeyError` exception when parsing Cell Ranger 7.x web_summary.html
+- **RSeQC**
+  - Fix `ZeroDivisionError` error for `bam_stat` results when there are 0 reads ([#1735](https://github.com/ewels/MultiQC/issues/1735))
 
 ## [MultiQC v1.14](https://github.com/ewels/MultiQC/releases/tag/v1.14) - 2023-01-08
 
