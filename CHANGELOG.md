@@ -8,6 +8,9 @@
 
 ### Module updates
 
+- **RSeQC**
+  - Fix `ZeroDivisionError` error for `bam_stat` results when there are 0 reads ([#1735](https://github.com/ewels/MultiQC/issues/1735))
+
 ## [MultiQC v1.14](https://github.com/ewels/MultiQC/releases/tag/v1.14) - 2023-01-08
 
 ### MultiQC new features
