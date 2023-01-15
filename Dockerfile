@@ -13,14 +13,24 @@ WORKDIR /usr/src/multiqc
 # - Delete unnecessary Python files
 # - Remove MultiQC source directory
 # - Add custom group and user
-RUN apt-get update && apt-get install -y procps && rm -rf /var/lib/apt/lists/* && \
-    pip install --upgrade pip && \
-    pip install -v --no-cache-dir . && \
+RUN \
+    echo "Docker build log: Run apt-get update" 1>&2 && \
+    apt-get update -y -qq \
+    && \
+    echo "Docker build log: Install procps" 1>&2 && \
+    apt-get install -y -qq procps && \
+    echo "Docker build log: Clean apt cache" 1>&2 && \
+    rm -rf /var/lib/apt/lists/* && \
     apt-get clean -y && \
-    for cache_dir in $(find /usr/local/lib/python3.11 \( -iname '*.c' -o -iname '*.pxd' -o -iname '*.pyd' -o -iname '__pycache__' \)); do \
-      rm -rf "$cache_dir"; \
-    done; \
+    echo "Docker build log: Upgrade pip and install multiqc" 1>&2 && \
+    pip install --quiet --upgrade pip && \
+    pip install --verbose --no-cache-dir . && \
+    echo "Docker build log: Delete python cache directories" 1>&2 && \
+    find /usr/local/lib/python3.11 \( -iname '*.c' -o -iname '*.pxd' -o -iname '*.pyd' -o -iname '__pycache__' \) -printf "\"%p\" " | \
+    xargs rm -rf {} && \
+    echo "Docker build log: Delete /usr/src/multiqc" 1>&2 && \
     rm -rf "/usr/src/multiqc/" && \
+    echo "Docker build log: Add multiqc user and group" 1>&2 && \
     groupadd --gid 1000 multiqc && \
     useradd -ms /bin/bash --create-home --gid multiqc --uid 1000 multiqc
 
@@ -29,3 +39,7 @@ USER multiqc
 
 # Set default workdir to user home
 WORKDIR /home/multiqc
+
+# Check everything is working smoothly
+RUN echo "Docker build log: Testing multiqc" 1>&2 && \
+    multiqc --help \
