@@ -44,10 +44,16 @@ class MultiqcModule(BaseMultiqcModule):
                 self.add_data_source(f)
                 if f["s_name"] in self.filtlong_data:
                     log.debug(f"Duplicate sample name found! Overwriting: {f['s_name']}")
-                self.filtlong_data[f["s_name"]] = {"Target bases": float(l.lstrip().split(" ")[1])}
+                target_bases = l.lstrip().split(" ")[1]
+                # Remove . thousand separators - see ewels/MultiQC#1843
+                target_bases = float(target_bases.replace(".", ""))
+                self.filtlong_data[f["s_name"]] = {"Target bases": target_bases}
 
             elif "keeping" in l and f["s_name"] in self.filtlong_data:
-                self.filtlong_data[f["s_name"]]["Bases kept"] = float(l.lstrip().split(" ")[1])
+                bases_kept = l.lstrip().split(" ")[1]
+                # Remove . thousand separators - see ewels/MultiQC#1843
+                bases_kept = float(bases_kept.replace(".", ""))
+                self.filtlong_data[f["s_name"]]["Bases kept"] = bases_kept
 
             elif "fall below" in l and f["s_name"] in self.filtlong_data:
                 log.debug(f"{f['s_name']}: reads already fall below target after filtering")

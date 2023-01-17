@@ -10,6 +10,8 @@
 
 - **Cell Ranger**
   - Bugfix: avoid `KeyError` exception when parsing Cell Ranger 7.x web_summary.html
+- **filtlong**
+  - Handle reports from locales that use `.` as a thousands separator ([#1843](https://github.com/ewels/MultiQC/issues/1843))
 - **RSeQC**
   - Fix `ZeroDivisionError` error for `bam_stat` results when there are 0 reads ([#1735](https://github.com/ewels/MultiQC/issues/1735))
 
