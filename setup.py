@@ -18,12 +18,12 @@ For more detailed instructions, run :code:`multiqc -h`
 
 See the MultiQC website for documentation and tutorial videos: http://multiqc.info
 
-MultiQC was written by Phil Ewels (http://phil.ewels.co.uk) at SciLifeLab Sweden (http://www.scilifelab.se)
+MultiQC was written by Phil Ewels (http://phil.ewels.co.uk) at Seqera Labs (https://seqera.io/), originally at SciLifeLab Sweden (http://www.scilifelab.se)
 """
 
-from setuptools import setup, find_packages
+from setuptools import find_packages, setup
 
-version = "1.13dev"
+version = "1.15dev"
 dl_version = "master" if "dev" in version else "v{}".format(version)
 
 print(
@@ -38,7 +38,7 @@ setup(
     name="multiqc",
     version=version,
     author="Phil Ewels",
-    author_email="phil.ewels@scilifelab.se",
+    author_email="phil.ewels@seqera.io",
     description="Create aggregate bioinformatics analysis reports across many samples and tools",
     long_description=__doc__,
     keywords=["bioinformatics", "biology", "sequencing", "NGS", "next generation sequencing", "quality control"],
@@ -55,7 +55,7 @@ setup(
         "click",
         "coloredlogs",
         "future>0.14.0",
-        "jinja2>=2.9",
+        "jinja2>=3.0.0",
         "lzstring",
         "markdown",
         "pyyaml>=4",
@@ -72,7 +72,9 @@ setup(
         "multiqc.modules.v1": [
             "adapterRemoval = multiqc.modules.adapterRemoval:MultiqcModule",
             "afterqc = multiqc.modules.afterqc:MultiqcModule",
+            "anglerfish = multiqc.modules.anglerfish:MultiqcModule",
             "bamtools = multiqc.modules.bamtools:MultiqcModule",
+            "bbduk = multiqc.modules.bbduk:MultiqcModule",
             "bbmap = multiqc.modules.bbmap:MultiqcModule",
             "bcftools = multiqc.modules.bcftools:MultiqcModule",
             "bcl2fastq = multiqc.modules.bcl2fastq:MultiqcModule",
@@ -87,6 +89,7 @@ setup(
             "bustools = multiqc.modules.bustools:MultiqcModule",
             "ccs = multiqc.modules.ccs:MultiqcModule",
             "checkatlas = multiqc.modules.checkatlas:MultiqcModule",
+            "cellranger = multiqc.modules.cellranger:MultiqcModule",
             "checkqc = multiqc.modules.checkqc:MultiqcModule",
             "clipandmerge = multiqc.modules.clipandmerge:MultiqcModule",
             "clusterflow = multiqc.modules.clusterflow:MultiqcModule",
@@ -96,8 +99,10 @@ setup(
             "damageprofiler = multiqc.modules.damageprofiler:MultiqcModule",
             "dedup = multiqc.modules.dedup:MultiqcModule",
             "deeptools = multiqc.modules.deeptools:MultiqcModule",
+            "diamond = multiqc.modules.diamond:MultiqcModule",
             "disambiguate = multiqc.modules.disambiguate:MultiqcModule",
             "dragen = multiqc.modules.dragen:MultiqcModule",
+            "dragen_fastqc = multiqc.modules.dragen_fastqc:MultiqcModule",
             "eigenstratdatabasetools = multiqc.modules.eigenstratdatabasetools:MultiqcModule",
             "fastp = multiqc.modules.fastp:MultiqcModule",
             "fastq_screen = multiqc.modules.fastq_screen:MultiqcModule",
@@ -106,17 +111,21 @@ setup(
             "fgbio = multiqc.modules.fgbio:MultiqcModule",
             "flash = multiqc.modules.flash:MultiqcModule",
             "flexbar = multiqc.modules.flexbar:MultiqcModule",
+            "filtlong = multiqc.modules.filtlong:MultiqcModule",
             "gffcompare = multiqc.modules.gffcompare:MultiqcModule",
             "gatk = multiqc.modules.gatk:MultiqcModule",
             "goleft_indexcov = multiqc.modules.goleft_indexcov:MultiqcModule",
+            "gopeaks = multiqc.modules.gopeaks:MultiqcModule",
             "happy = multiqc.modules.happy:MultiqcModule",
             "hicexplorer = multiqc.modules.hicexplorer:MultiqcModule",
             "hicpro = multiqc.modules.hicpro:MultiqcModule",
             "hicup = multiqc.modules.hicup:MultiqcModule",
+            "hifiasm = multiqc.modules.hifiasm:MultiqcModule",
             "hisat2 = multiqc.modules.hisat2:MultiqcModule",
             "homer = multiqc.modules.homer:MultiqcModule",
             "hops = multiqc.modules.hops:MultiqcModule",
             "htseq = multiqc.modules.htseq:MultiqcModule",
+            "humid = multiqc.modules.humid:MultiqcModule",
             "interop = multiqc.modules.interop:MultiqcModule",
             "ivar = multiqc.modules.ivar:MultiqcModule",
             "jcvi = multiqc.modules.jcvi:MultiqcModule",
@@ -135,9 +144,11 @@ setup(
             "mirtop = multiqc.modules.mirtop:MultiqcModule",
             "mirtrace = multiqc.modules.mirtrace:MultiqcModule",
             "mosdepth = multiqc.modules.mosdepth:MultiqcModule",
+            "motus = multiqc.modules.motus:MultiqcModule",
             "mtnucratio = multiqc.modules.mtnucratio:MultiqcModule",
             "multivcfanalyzer = multiqc.modules.multivcfanalyzer:MultiqcModule",
             "nanostat = multiqc.modules.nanostat:MultiqcModule",
+            "nextclade = multiqc.modules.nextclade:MultiqcModule",
             "ngsderive = multiqc.modules.ngsderive:MultiqcModule",
             "odgi = multiqc.modules.odgi:MultiqcModule",
             "optitype = multiqc.modules.optitype:MultiqcModule",
@@ -146,7 +157,9 @@ setup(
             "peddy = multiqc.modules.peddy:MultiqcModule",
             "phantompeakqualtools = multiqc.modules.phantompeakqualtools:MultiqcModule",
             "picard = multiqc.modules.picard:MultiqcModule",
+            "porechop = multiqc.modules.porechop:MultiqcModule",
             "preseq = multiqc.modules.preseq:MultiqcModule",
+            "prinseqplusplus = multiqc.modules.prinseqplusplus:MultiqcModule",
             "prokka = multiqc.modules.prokka:MultiqcModule",
             "purple = multiqc.modules.purple:MultiqcModule",
             "pychopper = multiqc.modules.pychopper:MultiqcModule",
@@ -181,6 +194,7 @@ setup(
             "theta2 = multiqc.modules.theta2:MultiqcModule",
             "tophat = multiqc.modules.tophat:MultiqcModule",
             "trimmomatic = multiqc.modules.trimmomatic:MultiqcModule",
+            "umitools = multiqc.modules.umitools:MultiqcModule",
             "varscan2 = multiqc.modules.varscan2:MultiqcModule",
             "vcftools = multiqc.modules.vcftools:MultiqcModule",
             "vep = multiqc.modules.vep:MultiqcModule",

@@ -3,14 +3,15 @@
 Helper functions to manipulate colours and colour scales
 """
 
-from __future__ import print_function
-import spectra
-import numpy as np
-import os
-import re
 
 # Default logger will be replaced by caller
 import logging
+import re
+
+import numpy as np
+import spectra
+
+from multiqc.utils import config, report
 
 logger = logging.getLogger(__name__)
 
@@ -18,11 +19,12 @@ logger = logging.getLogger(__name__)
 class mqc_colour_scale(object):
     """Class to hold a colour scheme."""
 
-    def __init__(self, name="GnBu", minval=0, maxval=100):
+    def __init__(self, name="GnBu", minval=0, maxval=100, id=None):
         """Initialise class with a colour scale"""
 
-        self.colours = self.get_colours(name)
         self.name = name
+        self.id = id
+        self.colours = self.get_colours(name)
 
         # Sanity checks
         minval = re.sub("[^0-9\.-e]", "", str(minval))
@@ -396,6 +398,12 @@ class mqc_colour_scale(object):
 
         # Default colour scale
         if name not in colorbrewer_scales:
+            errmsg = f"{self.id+': ' if self.id else ''}Colour scale {name} not found - defaulting to GnBu"
+            if config.lint:
+                logger.error(errmsg)
+                report.lint_errors.append(errmsg)
+            else:
+                logger.debug(errmsg)
             name = "GnBu"
 
         # Return colours

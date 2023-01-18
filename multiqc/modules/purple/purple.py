@@ -1,13 +1,10 @@
-#!/usr/bin/env python
-
 """ MultiQC module to parse QC output from PURPLE """
-import re
-from collections import OrderedDict, defaultdict
-from multiqc.modules.base_module import BaseMultiqcModule
-from multiqc.plots import table
-
 # Initialise the logger
 import logging
+from collections import OrderedDict, defaultdict
+
+from multiqc.modules.base_module import BaseMultiqcModule
+from multiqc.plots import table
 
 log = logging.getLogger(__name__)
 

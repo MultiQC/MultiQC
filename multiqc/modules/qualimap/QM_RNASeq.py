@@ -1,11 +1,9 @@
-#!/usr/bin/env python
-
 """ MultiQC Submodule to parse output from Qualimap RNASeq """
 
-from __future__ import print_function
-from collections import OrderedDict
+
 import logging
 import re
+from collections import OrderedDict
 
 from multiqc import config
 from multiqc.plots import bargraph, linegraph

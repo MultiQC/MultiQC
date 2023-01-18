@@ -1,14 +1,12 @@
-#!/usr/bin/env python
-from __future__ import print_function
-
+# Initialise the logger
+import logging
 import re
 from collections import defaultdict
+
 from multiqc.modules.base_module import BaseMultiqcModule
 from multiqc.plots import linegraph
 
 # Initialise the logger
-import logging
-
 log = logging.getLogger(__name__)
 
 
@@ -46,6 +44,10 @@ class DragenFragmentLength(BaseMultiqcModule):
                 if rg in d_rg:
                     rg = rg + " (" + sn + ")"
                 data_by_rg[rg] = d
+
+        # Exit early if we have no valid data, such as from FastQcOnly runs
+        if not data_by_rg:
+            return set()
 
         smooth_points = 300
         self.add_section(

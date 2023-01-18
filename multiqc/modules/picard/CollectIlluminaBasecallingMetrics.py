@@ -1,11 +1,9 @@
-#!/usr/bin/env python
-
 """ MultiQC submodule to parse output from Picard CollectIlluminaBasecallingMetrics """
 
-from collections import OrderedDict
 import logging
+from collections import OrderedDict
 
-from multiqc.plots import table, bargraph
+from multiqc.plots import bargraph, table
 
 # Initialise the logger
 log = logging.getLogger(__name__)

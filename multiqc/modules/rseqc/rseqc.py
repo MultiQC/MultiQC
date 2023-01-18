@@ -1,10 +1,8 @@
-#!/usr/bin/env python
-
 """ MultiQC module to parse output from RSeQC """
 
-from collections import OrderedDict
 import logging
 import os
+from collections import OrderedDict
 
 from multiqc import config
 from multiqc.modules.base_module import BaseMultiqcModule
@@ -74,4 +72,5 @@ class MultiqcModule(BaseMultiqcModule):
             raise UserWarning
 
         # Add to the General Stats table (has to be called once per MultiQC module)
-        self.general_stats_addcols(self.general_stats_data, self.general_stats_headers)
+        if max(len(vals) for vals in self.general_stats_data.values()) > 0:
+            self.general_stats_addcols(self.general_stats_data, self.general_stats_headers)

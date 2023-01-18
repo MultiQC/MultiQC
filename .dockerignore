@@ -1,0 +1,9 @@
+# Git things
+.git/
+.gitignore
+.github
+
+# Python build things
+build/
+dist/
+*.egg-info

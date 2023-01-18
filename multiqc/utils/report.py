@@ -4,23 +4,23 @@
 module. Is available to subsequent modules. Contains
 helper functions to generate markup for report. """
 
-from __future__ import print_function
-from collections import defaultdict, OrderedDict
+
 import fnmatch
 import inspect
 import io
 import json
-import lzstring
 import mimetypes
 import os
 import re
+import time
+from collections import OrderedDict, defaultdict
+
+import lzstring
 import rich
 import rich.progress
-import time
 import yaml
 
-from multiqc import config
-from multiqc.utils import util_functions
+from . import config
 
 logger = config.logger
 
@@ -302,6 +302,7 @@ def get_filelist(run_module_names):
         "[green]{task.completed}/{task.total}",
         "[dim]{task.fields[s_fn]}",
         console=console,
+        disable=config.no_ansi or config.quiet,
     )
     with progress_obj as progress:
         mqc_task = progress.add_task("searching", total=len(searchfiles), s_fn="")

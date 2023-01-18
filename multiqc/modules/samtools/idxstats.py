@@ -1,10 +1,10 @@
-#!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
 """ MultiQC submodule to parse output from Samtools idxstats """
 
 import logging
 from collections import OrderedDict, defaultdict
+
 from multiqc import config
 from multiqc.plots import bargraph, linegraph
 

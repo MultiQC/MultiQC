@@ -22,22 +22,25 @@ This checklist is for my own reference, as I forget the steps every time.
    - Comment out any config in `~/.multiqc_config.yaml`
 
      ```bash
-     mv ~/.multiqc_config.yaml ~/.multiqc_config.yaml.bkup
+     mv ~/.multiqc_config.yml ~/.multiqc_config.yml.bkup
      ```
 
      ```bash
-     mv ~/.multiqc_config.yaml.bkup ~/.multiqc_config.yaml
+     mv ~/.multiqc_config.yml.bkup ~/.multiqc_config.yml
      ```
 
    - Spot any previously unnoticed bugs and fix
    - Upload to the website and push change to Git
 
 8. Commit and push version updates
-9. Make a [release](https://github.com/ewels/MultiQC/releases) on GitHub - paste changelog section.
-10. Check that [PyPI listing page](https://pypi.python.org/pypi/multiqc/) looks sane
-11. Update version numbers to new dev version in `setup.py` + a new section in the changelog for the development version
-12. Commit and push version bump
-13. Make a new release on `bioconda` (assuming new modules were added):
+9. Make a new branch and run the rich-codex screenshots workflow on it manually
+10. PR / merge this branch into master
+11. Make sure that all tests are passing
+12. Make a [release](https://github.com/ewels/MultiQC/releases) on GitHub - paste changelog section.
+13. Check that [PyPI listing page](https://pypi.python.org/pypi/multiqc/) looks sane
+14. Update version numbers to new dev version in `setup.py` + a new section in the changelog for the development version
+15. Commit and push version bump
+16. Make a new release on `bioconda` (assuming new modules were added):
 
     ```bash
     # Update to latest bioconda
@@ -68,6 +71,6 @@ This checklist is for my own reference, as I forget the steps every time.
     # Submit a Pull Request and merge
     ```
 
-14. Tell UPPMAX about the new version and ask for the module system to be updated.
-15. Tweet that new version is released
-16. Continue making more awesome :metal:
+17. Tell UPPMAX about the new version and ask for the module system to be updated.
+18. Tweet that new version is released
+19. Continue making more awesome :metal:

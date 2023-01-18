@@ -1,12 +1,10 @@
-#!/usr/bin/env python
-
 """ MultiQC submodule to parse output from Picard MarkDuplicates """
 
-from collections import OrderedDict
 import logging
 import math
 import os
 import re
+from collections import OrderedDict
 
 from multiqc import config
 from multiqc.plots import bargraph
