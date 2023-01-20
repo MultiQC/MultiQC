@@ -14,6 +14,8 @@
   - Handle reports from locales that use `.` as a thousands separator ([#1843](https://github.com/ewels/MultiQC/issues/1843))
 - **RSeQC**
   - Fix `ZeroDivisionError` error for `bam_stat` results when there are 0 reads ([#1735](https://github.com/ewels/MultiQC/issues/1735))
+- **UMI-tools**
+  - Fix bug that broke the module with paired-end data ([#1845](https://github.com/ewels/MultiQC/issues/1845))
 
 ## [MultiQC v1.14](https://github.com/ewels/MultiQC/releases/tag/v1.14) - 2023-01-08
 
