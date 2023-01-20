@@ -53,6 +53,23 @@ This is problematic for two reasons:
 
 It's usually better to copy and paste a bit in these cases. The code is then easier to understand and easier to customise.
 
+### Colour matters
+
+The emphasis for MultiQC reports is to allow people to quickly scan and spot outlier samples.
+The core of this is data visualisation.
+
+Especially when creating tables, make sure that you think about the [colour scheme](#table-colour-scales-1) for every single column.
+
+- Ensure that adjacent columns do not share the same colour scheme
+  - Makes long tables easier to follow
+  - Allows fast recognition of columns for regular users
+- Think about what the colours suggest
+  - For example, if a large value is a _bad_ thing (eg. percent duplication), use a strong red colour for large values
+  - If values are centred around a point (eg. `0`), use a diverging colour scheme. Values close to the centre will have a weak colour and those at _both_ ends of the distribution will be strongly coloured.
+  - This allows rapid understanding without a lot of thought
+
+This usually comes up for tables, but you can also think about it for bar plots.
+
 ## Core modules / plugins
 
 New modules can either be written as part of MultiQC or in a stand-alone
