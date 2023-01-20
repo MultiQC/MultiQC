@@ -93,13 +93,13 @@ class MultiqcModule(BaseMultiqcModule):
 
         # Make a dictionary to hold the data lookup table and data types
         lookup_dict = {
-            "total_umis": ("INFO total_umis ", int),
-            "unique_umis": ("INFO #umis ", int),
-            "input_reads": ("INFO Reads: Input Reads: ", int),
-            "output_reads": ("INFO Number of reads out: ", int),
-            "positions_deduplicated": ("INFO Total number of positions deduplicated: ", int),
-            "mean_umi_per_pos": ("INFO Mean number of unique UMIs per position: ", float),
-            "max_umi_per_pos": ("INFO Max. number of unique UMIs per position: ", int),
+            "total_umis": "INFO total_umis ",
+            "unique_umis": "INFO #umis ",
+            "input_reads": "INFO Reads: Input Reads: ",
+            "output_reads": "INFO Number of reads out: ",
+            "positions_deduplicated": "INFO Total number of positions deduplicated: ",
+            "mean_umi_per_pos": "INFO Mean number of unique UMIs per position: ",
+            "max_umi_per_pos": "INFO Max. number of unique UMIs per position: ",
         }
 
         # iterate through each line of the log file
@@ -116,11 +116,22 @@ class MultiqcModule(BaseMultiqcModule):
 
             if dedup_log == True and parsed_fname is not None:
                 # iterate through each item in the lookup table
-                for key, value in lookup_dict.items():
-                    # search for the lookup value
-                    if value[0] in line:
-                        # parse the line and write to the data dictionary
-                        logdata[key] = value[1](line.partition(value[0])[2])
+                for key, pattern in lookup_dict.items():
+                    try:
+                        # search for the lookup value
+                        if pattern in line:
+
+                            # Special case: paired-end input_reads
+                            if ", Read pairs:" in line:
+                                regex_would_be_better = line.partition(pattern)[2]
+                                logdata[key] = float(regex_would_be_better.partition(", Read pairs:")[0])
+
+                            # Everything else: parse the line and write to the data dictionary
+                            else:
+                                logdata[key] = float(line.partition(pattern)[2])
+                    except (ValueError, IndexError) as e:
+                        log.warn(f"Could not parse '{key}' for sample '{parsed_fname}'")
+                        log.debug(e)
 
         # calculate a few simple supplementary stats
         try:
