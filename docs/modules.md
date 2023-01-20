@@ -20,7 +20,6 @@ Get this stuff right, and your pull-request is much more likely to be merged qui
 ### Don't add everything
 
 MultiQC was designed to _summarise_ tool outputs.
-
 An end-user should be able to visially scan the report and spot any outlier samples, then go to the underlying tool to look at those samples in more detail.
 
 MultiQC is _not_ designed to replicate every single metric from a tool. Doing so makes the report difficult to read and digest quickly for many samples.
@@ -29,24 +28,25 @@ Module additions that add huge quantities of metrics to reports will be asked to
 ### No images
 
 MultiQC doesn't know how many samples it will need to handle for a report, and as such every module should work with anything from 1-1000 samples.
-
 With images, you can't have more than a couple before the report is unusable. Worse, the file size will bloat the HTML file and it will crash the browser surprisingly fast. It's not accessible and the data cannot be exported into `multiqc_data` for downstream use.
 
 Plots should be _recreated_ within MultiQC by parsing the raw data and generating dynamic plots instead.
 
-I almost never merge modules that include images into reports. So please don't try!
+I almost never merge modules that include images into reports.
+If you really need images in your report, you can do this either via Custom Content or an unofficial plugin module.
+Feel free to discuss on Gitter if you think that your case is an exception. There have been one or two in the past.
 
 ### One at a time
 
 Please try to keep contributions as atomic as possible. In other words, one module = one pull request.
 
-The larger a pull-request, the slower I will be to review and merge it. And I'm very slow at the best of times.
+Don't be afraid to break things up into separate pull-requests coming from different branches.
+Just mention this in the PR comment so that it's clear which order they need to be merged in.
 
 ### Avoid optimising too much
 
 When you are writing a module that generates many similar plots, or table columns, or sections, it can be tempting to write nice efficient code that avoids duplicating these efforts.
-
-Please don't. This is problematic for two reasons:
+This is problematic for two reasons:
 
 - It's bespoke to that module, so more difficult to maintain and comprehend
 - Almost every table column, section and plot should have significant customisation. Descriptions, colour schemes, help text and more. Heavily optimised code will often need a lot of refactoring to pack this in.
@@ -83,8 +83,6 @@ so you will need to pass all lint tests for those checks to pass. This is requir
 for any pull-requests.
 
 ## Code formatting
-
-> If you're used to this, the short version is: use [pre-commit](https://pre-commit.com/)
 
 In addition to testing MultiQC functionality, the MultiQC code base is also checked for
 consistency and formatting.
@@ -127,12 +125,12 @@ pre-commit install # set up pre-commit in the MultiQC repository
 
 This will then automatically run all code checks on the files you have edited when you create a commit. Pre-commit cancels the commit if anything fails - sometimes it will have fixed files for you, in which case just add them and try to commit again. Sometimes you will need to read the logs and fix the problem manually.
 
-Automated continuous integration tests will run using GitHub Actions to check that all files pass the above tests. If any files do not, that test will fail giving a red :x: next to the pull request.
+Automated continuous integration tests will run using GitHub Actions to check that all files pass the above tests. If any files do not, that test will fail giving a red ❌ next to the pull request.
 
 > Make sure that your configuration is working properly and that you're not changing loads of files
 > that you haven't worked with. Pull-requests will not be merged with such changes.
 
-All three tools should be relatively easy to install and run, and have integration with the majority
+These tools should be relatively easy to install and run, and have integration with the majority
 of code editors. Once set up, they can run on save and you'll never need to think about them again.
 
 ## Initial setup
