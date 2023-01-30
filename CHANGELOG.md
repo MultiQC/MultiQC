@@ -4,6 +4,8 @@
 
 ### MultiQC updates
 
+- Table code now tolerates lambda function calls with bad data ([#1739](https://github.com/ewels/MultiQC/issues/1739))
+
 ### New Modules
 
 ### Module updates

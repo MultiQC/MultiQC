@@ -154,7 +154,10 @@ def make_table(dt):
                 dt.raw_vals[s_name][kname] = val
 
                 if "modify" in header and callable(header["modify"]):
-                    val = header["modify"](val)
+                    try:
+                        val = header["modify"](val)
+                    except TypeError as e:
+                        logger.debug(f"Error modifying table value {kname} : {val} - {e}")
 
                 try:
                     dmin = header["dmin"]
