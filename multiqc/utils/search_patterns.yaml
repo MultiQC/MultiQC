@@ -229,7 +229,7 @@ clusterflow/runfiles:
   contents: "Cluster Flow Run File"
   num_lines: 2
 conpair/concordance:
-  contents: "markers (coverage per marker threshold : "
+  contents_re: '.*markers \(coverage per marker threshold\s?: .*'
   num_lines: 3
 conpair/contamination:
   contents: "Tumor sample contamination level: "
