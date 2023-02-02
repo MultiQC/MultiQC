@@ -10,6 +10,8 @@
 
 ### Module updates
 
+- **Conpair**
+  - Bugfix: allow to find and proprely parse the `concordance` output of Conpair, which outputs 2 kinds of format for `concordance` depending if it's ran with or without `--outfile` ([#1851](https://github.com/ewels/MultiQC/issues/1851))
 - **Cell Ranger**
   - Bugfix: avoid `KeyError` exception when parsing Cell Ranger 7.x web_summary.html
 - **filtlong**
