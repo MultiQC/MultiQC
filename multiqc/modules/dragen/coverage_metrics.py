@@ -217,40 +217,26 @@ TARGET_COV_ONLY_METRICS = [
         "%",
         "bases",
         "Number of uniquely mapped bases to the region relative to the number of uniquely mapped bases to the genome.",
-    )
+    ),
 ]
 
 # Note only difference is 'Aligned reads in {}' in target cov but in wgs cov metrics its just 'Aligned reads'
 WGS_COV_ONLY_METRICS = [
-    Metric(
-        "Aligned reads",
-        "Aln reads",
-        "hid",
-        "#",
-        "reads",
-        "Total number of aligned reads."
-    ),
-    Metric(
-        "Aligned bases",
-        "Aln bases",
-        "hid",
-        "#",
-        "bases",
-        "Total number of aligned bases."
-    )
+    Metric("Aligned reads", "Aln reads", "hid", "#", "reads", "Total number of aligned reads."),
+    Metric("Aligned bases", "Aln bases", "hid", "#", "bases", "Total number of aligned bases."),
 ]
 
 WGS_COV_METRICS = [
     Metric(
-            m.id.replace("{}", "genome"),
-            m.title.replace("{}", "genome"),
-            in_genstats=m.in_genstats,
-            in_own_tabl=m.in_own_tabl,
-            unit=m.unit,
-            descr=m.descr.replace("{}", "genome"),
-            namespace=NAMESPACE,
-            precision=m.precision,
-        )
+        m.id.replace("{}", "genome"),
+        m.title.replace("{}", "genome"),
+        in_genstats=m.in_genstats,
+        in_own_tabl=m.in_own_tabl,
+        unit=m.unit,
+        descr=m.descr.replace("{}", "genome"),
+        namespace=NAMESPACE,
+        precision=m.precision,
+    )
     for m in (WGS_COV_ONLY_METRICS + METRICS)
 ]
 
@@ -285,13 +271,15 @@ QC_REGION_COV_METRICS = [
 
 
 class DragenCoverageMetrics(BaseMultiqcModule):
-    def add_coverage_metrics_base_method(self, log_file_path: str,
-                                         coverage_metrics_file_pattern: str,
-                                         data_file_key: str,
-                                         metrics: List,
-                                         table_name: str,
-                                         table_anchor: str
-                                         ):
+    def add_coverage_metrics_base_method(
+        self,
+        log_file_path: str,
+        coverage_metrics_file_pattern: str,
+        data_file_key: str,
+        metrics: List,
+        table_name: str,
+        table_anchor: str,
+    ):
         """
         :param log_file_path: One of
           'dragen/wgs_coverage_metrics',
@@ -319,9 +307,7 @@ class DragenCoverageMetrics(BaseMultiqcModule):
         data_by_phenotype_by_sample = defaultdict(dict)
 
         for f in self.find_log_files(log_file_path):
-            sample_name, region_num, phenotype, data = parse_coverage_metrics(
-                f, coverage_metrics_file_pattern
-            )
+            sample_name, region_num, phenotype, data = parse_coverage_metrics(f, coverage_metrics_file_pattern)
 
             if sample_name is None:
                 # Didn't match regex, continue
@@ -374,23 +360,20 @@ class DragenCoverageMetrics(BaseMultiqcModule):
             data_file_key="dragen_wgs_cov_metrics",
             metrics=WGS_COV_METRICS,
             table_name="WGS Coverage Metrics",
-            table_anchor="dragen-wgs-coverage-metrics"
+            table_anchor="dragen-wgs-coverage-metrics",
         )
 
     def add_qc_region_coverage_metrics(self):
-
         data_by_sample_keys_set = set()
 
         for qc_coverage_num in range(1, 4):  # Only 3 qc coverage files available
-            data_by_sample_keys_set |= (
-                self.add_coverage_metrics_base_method(
-                    log_file_path="dragen/qc_region_coverage_metrics",
-                    coverage_metrics_file_pattern=rf"(.*)\.qc-coverage-region-({qc_coverage_num})_coverage_metrics_?(tumor|normal)?.csv",
-                    data_file_key=f"dragen_qc_region_{qc_coverage_num}_coverage_metrics",
-                    metrics=QC_REGION_COV_METRICS,
-                    table_name=f"QC Region {qc_coverage_num} Coverage Metrics",
-                    table_anchor=f"dragen-qc-region-coverage-metrics-{qc_coverage_num}"
-                )
+            data_by_sample_keys_set |= self.add_coverage_metrics_base_method(
+                log_file_path="dragen/qc_region_coverage_metrics",
+                coverage_metrics_file_pattern=rf"(.*)\.qc-coverage-region-({qc_coverage_num})_coverage_metrics_?(tumor|normal)?.csv",
+                data_file_key=f"dragen_qc_region_{qc_coverage_num}_coverage_metrics",
+                metrics=QC_REGION_COV_METRICS,
+                table_name=f"QC Region {qc_coverage_num} Coverage Metrics",
+                table_anchor=f"dragen-qc-region-coverage-metrics-{qc_coverage_num}",
             )
 
         return data_by_sample_keys_set
@@ -402,11 +385,10 @@ class DragenCoverageMetrics(BaseMultiqcModule):
             data_file_key="dragen_target_bed_coverage_metrics",
             metrics=TARGET_COV_METRICS,
             table_name="Target Bed Coverage Metrics",
-            table_anchor="dragen-target-bed-coverage-metrics"
+            table_anchor="dragen-target-bed-coverage-metrics",
         )
 
     def _create_table(self, data_by_sample, own_tabl_headers, table_name: str, table_anchor: str):
-
         self.add_section(
             name=table_name,
             anchor=table_anchor,
