@@ -117,3 +117,5 @@ def process_stats(stats, s_name):
     except AssertionError:
         log.warning(f"HUMID stats looked wrong, skipping: {s_name}")
         return False
+    finally:
+        return True
