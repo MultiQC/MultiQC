@@ -111,7 +111,7 @@ class MultiqcModule(BaseMultiqcModule):
         }
 
         self.add_section(
-            description="This plot shows the number of reads classfieid by Xenome to human and/or mouse.",
+            description="This plot shows the number of reads classified by Xenome to human and/or mouse.",
             helptext="""
             There are 5 possible categories:
             * **Human**: Read was found only in human.
