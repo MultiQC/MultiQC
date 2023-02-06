@@ -110,6 +110,7 @@ def parse_stat_file(fin, s_name):
         data[field] = int(value)
     return data
 
+
 def process_stats(stats, s_name):
     """Process the statistics, to calculate some useful values"""
     # Copy original statistcs
