@@ -13,7 +13,6 @@ log = logging.getLogger(__name__)
 
 class MultiqcModule(BaseMultiqcModule):
     def __init__(self):
-
         # Initialise the parent object
         super(MultiqcModule, self).__init__(
             name="Kaiju",
@@ -105,7 +104,6 @@ class MultiqcModule(BaseMultiqcModule):
         # are not unfairly over-represented
 
         for rank_name, data in self.kaiju_data.items():
-
             for s_name, samples_values in data.items():
                 # perform sum at first level only
                 if rank_name not in self.kaiju_total_pct:

@@ -109,7 +109,6 @@ def parse_reports(
             # Currently parsing the METRICS table
             #
             if in_stats_block:
-
                 # Split the values columns
                 vals = l.rstrip("\n").split("\t")
 
@@ -129,7 +128,6 @@ def parse_reports(
                 #
                 if keys and vals and len(keys) == len(vals):
                     for i, k in enumerate(keys):
-
                         # More than one library present and merging stats
                         if k in parsed_data:
                             recompute_merged_metrics = True
@@ -155,7 +153,6 @@ def parse_reports(
     self.picard_dupMetrics_data = self.ignore_samples(self.picard_dupMetrics_data)
 
     if len(self.picard_dupMetrics_data) > 0:
-
         # Write parsed data to a file
         self.write_data_file(self.picard_dupMetrics_data, data_filename)
 
@@ -283,7 +280,6 @@ def estimateLibrarySize(d):
     readPairDuplicates = readPairs - uniqueReadPairs
 
     if readPairs > 0 and readPairDuplicates > 0:
-
         m = 1.0
         M = 100.0
 

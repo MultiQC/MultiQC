@@ -15,7 +15,6 @@ log = logging.getLogger(__name__)
 
 class MultiqcModule(BaseMultiqcModule):
     def __init__(self):
-
         # Initialise the parent object
         super(MultiqcModule, self).__init__(
             name="mirtop",
@@ -108,7 +107,6 @@ class MultiqcModule(BaseMultiqcModule):
         """Aggregate info for iso_snp isomiRs (for clarity). "Mean" section will be recomputed"""
         snv_aggr = {}  ## sub dict with all infos except for snps
         for sample in self.mirtop_data:
-
             snv_aggr[sample] = {
                 key: self.mirtop_data[sample][key] for key in self.mirtop_data[sample] if "iso_snp" not in key
             }

@@ -42,7 +42,6 @@ class MultiqcModule(BaseMultiqcModule):
     logs are found."""
 
     def __init__(self):
-
         # Initialise the parent object
         super(MultiqcModule, self).__init__(
             name="Picard",

@@ -16,7 +16,6 @@ log = logging.getLogger(__name__)
 
 class MultiqcModule(BaseMultiqcModule):
     def __init__(self):
-
         # Initialise the parent object
         super(MultiqcModule, self).__init__(
             name="SortMeRNA",
@@ -103,7 +102,6 @@ class MultiqcModule(BaseMultiqcModule):
                     else:
                         err = True
             if post_database_start:
-
                 # Stop when we hit empty lines
                 if not l.strip():
                     break

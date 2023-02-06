@@ -52,7 +52,6 @@ class StatsReportMixin:
         self.samtools_stats = self.ignore_samples(self.samtools_stats)
 
         if len(self.samtools_stats) > 0:
-
             # Write parsed report data to a file
             self.write_data_file(self.samtools_stats, "multiqc_samtools_stats")
 

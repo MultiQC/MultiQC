@@ -67,7 +67,6 @@ def parse_reports(self):
     self.picard_alignment_metrics = self.ignore_samples(self.picard_alignment_metrics)
 
     if len(self.picard_alignment_metrics) > 0:
-
         # Write parsed data to a file
         self.write_data_file(self.picard_alignment_metrics, "multiqc_picard_AlignmentSummaryMetrics")
 

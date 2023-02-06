@@ -16,7 +16,6 @@ log = logging.getLogger(__name__)
 
 class MultiqcModule(BaseMultiqcModule):
     def __init__(self):
-
         # Initialise the parent object
         super(MultiqcModule, self).__init__(
             name="STAR",
@@ -78,7 +77,6 @@ class MultiqcModule(BaseMultiqcModule):
             log.info("Found {} gene count files".format(len(self.star_genecounts_unstranded)))
 
         if len(self.star_data) > 0:
-
             # Write parsed report data to a file
             self.write_data_file(self.star_data, "multiqc_star")
 
