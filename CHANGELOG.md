@@ -8,6 +8,9 @@
 
 ### New Modules
 
+- [**Xenome**](https://github.com/data61/gossamer/blob/master/docs/xenome.md)
+  - A tool for classifying reads from xenograft sources.
+
 ### Module updates
 
 - **Cell Ranger**
