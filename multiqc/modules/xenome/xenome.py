@@ -49,9 +49,8 @@ class MultiqcModule(BaseMultiqcModule):
         # Alignment Rate Plot
         self.xenome_stats_plot()
 
-######
     def parse_xenome_logs(self, f):
-        s_name = f["s_name"].replace('_xenome_stats', '')
+        s_name = f["s_name"].replace('_xenome_stats', "")
         parsed_data = {}
         regexes = {
             "human_reads": r"(\d+)\s+\d+.\d+\s+human",
@@ -66,7 +65,6 @@ class MultiqcModule(BaseMultiqcModule):
                 match = re.search(r, l)
                 if match:
                     parsed_data[k] = float(match.group(1))
-        
         if len(parsed_data) > 0:
             if s_name in self.xenome_data:
                 log.debug("Duplicate sample name found! Overwriting: {}".format(s_name))
