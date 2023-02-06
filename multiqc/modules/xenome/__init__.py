@@ -1,0 +1,1 @@
+from .xenome import MultiqcModule
