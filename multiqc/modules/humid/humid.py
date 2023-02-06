@@ -115,7 +115,7 @@ def process_stats(stats, s_name):
     # Copy original statistcs
     data = stats.copy()
 
-    # Calcuation additional statistics
+    # Calculate additional statistics
     data["filtered"] = data["total"] - data["usable"]
     data["duplicates"] = data["total"] - data["clusters"] - data["filtered"]
 
