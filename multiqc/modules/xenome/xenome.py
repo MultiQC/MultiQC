@@ -26,7 +26,7 @@ class MultiqcModule(BaseMultiqcModule):
         )
 
         # Parse logs
-        # Find and load any Bowtie reports
+        # Find and load any Xenome reports
         self.xenome_data = dict()
         for f in self.find_log_files("xenome"):
             self.parse_xenome_logs(f)
@@ -92,7 +92,7 @@ class MultiqcModule(BaseMultiqcModule):
         self.general_stats_addcols(self.xenome_data, headers)
 
     def xenome_stats_plot(self):
-        """Make the HighCharts HTML to plot the alignment rates"""
+        """Make the HighCharts HTML to plot the classification rates"""
 
         # Specify the order of the different possible categories
         keys = OrderedDict()
@@ -113,12 +113,12 @@ class MultiqcModule(BaseMultiqcModule):
         self.add_section(
             description="This plot shows the number of reads classified by Xenome to human and/or mouse.",
             helptext="""
-            There are 5 possible categories:
-            * **Human**: Read was found only in human.
-            * **Mouse**: Read was found only in mouse.
-            * **Both Species**: Read was found in either mouse or human.
-            * **Neither Species**: Read was found in neither mouse or human.
-            * **Ambiguous**: Read origin could not be adequately determined.
+            There are 5 possible categories:  
+            * **Human**: Read was found only in human.  
+            * **Mouse**: Read was found only in mouse.  
+            * **Both Species**: Read was found in either mouse or human.  
+            * **Neither Species**: Read was found in neither mouse or human.  
+            * **Ambiguous**: Read origin could not be adequately determined.  
             """,
             plot=bargraph.plot(self.xenome_data, keys, config),
         )
