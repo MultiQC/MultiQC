@@ -9,7 +9,6 @@ def update_dict(table, headers, rows_list, col_map, colours, prefix):
     """update the data dict and headers dict"""
 
     for col_name, col_data in rows_list:
-
         if col_name in col_map:
             # Sanitize numeric data
             is_percentage = "%" in col_data

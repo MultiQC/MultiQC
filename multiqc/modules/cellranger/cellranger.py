@@ -20,7 +20,6 @@ class MultiqcModule(BaseMultiqcModule, CellRangerCountMixin, CellRangerVdjMixin)
     """
 
     def __init__(self):
-
         # Initialise the parent object
         super(MultiqcModule, self).__init__(
             name="Cell Ranger",

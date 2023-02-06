@@ -331,7 +331,6 @@ class DragenCoverageMetrics(BaseMultiqcModule):
         )
 
     def _create_table(self, data_by_sample, own_tabl_headers, table_name: str, table_anchor: str):
-
         self.add_section(
             name=table_name,
             anchor=table_anchor,

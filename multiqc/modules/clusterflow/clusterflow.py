@@ -21,7 +21,6 @@ class MultiqcModule(BaseMultiqcModule):
     """
 
     def __init__(self):
-
         # Initialise the parent object
         super(MultiqcModule, self).__init__(
             name="Cluster Flow",
@@ -78,7 +77,6 @@ class MultiqcModule(BaseMultiqcModule):
         job_id = None
         pipeline_id = None
         for l in f["f"]:
-
             # Get pipeline ID
             module_r = re.match(r"Module:\s+(.+)$", l)
             if module_r:

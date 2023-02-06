@@ -518,7 +518,7 @@ class MultiqcModule(BaseMultiqcModule):
         )[:20]
 
         data = {}
-        for (idx, _) in sorted_idx:
+        for idx, _ in sorted_idx:
             sample = self.clean_s_name(idx, f)
 
             if self.is_ignore_sample(sample):

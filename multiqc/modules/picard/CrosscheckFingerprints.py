@@ -40,7 +40,6 @@ def parse_reports(self):
 
     # Go through logs and find Metrics
     for f in self.find_log_files("picard/crosscheckfingerprints", filehandles=True):
-
         self.add_data_source(f, section="CrosscheckFingerprints")
 
         # Parse an individual CrosscheckFingerprints Report

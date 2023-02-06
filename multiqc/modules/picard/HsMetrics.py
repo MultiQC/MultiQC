@@ -132,7 +132,6 @@ def parse_reports(self):
     self.picard_HsMetrics_data = self.ignore_samples(self.picard_HsMetrics_data)
 
     if len(self.picard_HsMetrics_data) > 0:
-
         # Write parsed data to a file
         self.write_data_file(self.picard_HsMetrics_data, "multiqc_picard_HsMetrics")
 
@@ -304,10 +303,8 @@ def _generate_table_header_config(table_cols=[], hidden_table_cols=[]):
 
     headers = OrderedDict()
     for h in table_cols + hidden_table_cols:
-
         # Set up the configuration for each column
         if h not in headers:
-
             # Generate a nice string for the column title
             h_title = h
             for s, r in title_cleanup:

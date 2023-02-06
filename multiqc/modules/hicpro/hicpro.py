@@ -20,7 +20,6 @@ class MultiqcModule(BaseMultiqcModule):
     """HiC-Pro module, parses log and stats files saved by HiC-Pro."""
 
     def __init__(self):
-
         # Initialise the parent object
         super(MultiqcModule, self).__init__(
             name="HiC-Pro",
