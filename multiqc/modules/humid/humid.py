@@ -44,7 +44,11 @@ class MultiqcModule(BaseMultiqcModule):
     def parse_stat_files(self):
         for f in self.find_log_files("humid", filehandles=True):
             s_name = self.clean_s_name(f["root"], f)
+            # Read the raw data
             data = parse_stat_file(f["f"], s_name)
+            # Process the data to a more usable format
+            data = process_stats(data, s_name)
+
             if data:
                 # There is no sample name in the log, so we use the root of the
                 # file as sample name (since the filename is always stats.dat
@@ -100,22 +104,24 @@ class MultiqcModule(BaseMultiqcModule):
 def parse_stat_file(fin, s_name):
     """Parse the stats file"""
     data = dict()
+    # Read the statistics from file
     for line in fin:
         field, value = line.strip().split(": ")
         data[field] = int(value)
-    if process_stats(data, s_name):
-        return data
-
+    return data
 
 def process_stats(stats, s_name):
     """Process the statistics, to calculate some useful values"""
-    stats["filtered"] = stats["total"] - stats["usable"]
-    stats["duplicates"] = stats["total"] - stats["clusters"] - stats["filtered"]
-    # Sanity check
-    try:
-        assert stats["duplicates"] + stats["clusters"] + stats["filtered"] == stats["total"]
-    except AssertionError:
+    # Copy original statistcs
+    data = stats.copy()
+
+    # Calcuation additional statistics
+    data["filtered"] = data["total"] - data["usable"]
+    data["duplicates"] = data["total"] - data["clusters"] - data["filtered"]
+
+    # Make sure we only return data that makes sense
+    if sum(data[field] for field in ["duplicates", "clusters", "filtered"]) == data["total"]:
+        return data
+    else:
         log.warning(f"HUMID stats looked wrong, skipping: {s_name}")
-        return False
-    finally:
-        return True
+        return dict()
