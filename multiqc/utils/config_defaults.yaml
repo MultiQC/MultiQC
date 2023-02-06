@@ -818,3 +818,6 @@ module_order:
   - whatshap:
       module_tag:
         - DNA
+  - xenome:
+      module_tag:
+        - DNA

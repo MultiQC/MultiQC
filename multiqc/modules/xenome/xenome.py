@@ -107,7 +107,7 @@ class MultiqcModule(BaseMultiqcModule):
         # Config for the plot
         config = {
             "id": "xenome_stats",
-            "title": "Xenome Classification Counts",
+            "title": "Xenome: Classification Counts",
             "ylab": "# Reads",
             "cpswitch_counts_label": "Number of Reads",
         }

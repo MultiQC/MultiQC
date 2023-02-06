@@ -48,6 +48,7 @@ MultiQC Modules:
     Skewer: modules/skewer.md
     SortMeRNA: modules/sortmerna.md
     Trimmomatic: modules/trimmomatic.md
+    Xenome: modules/xenome.md
   Aligners:
     BBMap: modules/bbmap.md
     Biscuit: modules/biscuit.md
