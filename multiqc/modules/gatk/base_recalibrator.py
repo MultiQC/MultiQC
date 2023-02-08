@@ -33,7 +33,6 @@ class BaseRecalibratorMixin:
         }
 
         for f in self.find_log_files("gatk/base_recalibrator", filehandles=True):
-
             # Check that we're not ignoring this sample name
             if self.is_ignore_sample(f["s_name"]):
                 continue

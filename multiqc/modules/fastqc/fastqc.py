@@ -29,7 +29,6 @@ log = logging.getLogger(__name__)
 
 class MultiqcModule(BaseMultiqcModule):
     def __init__(self):
-
         # Initialise the parent object
         super(MultiqcModule, self).__init__(
             name="FastQC",
@@ -173,7 +172,7 @@ class MultiqcModule(BaseMultiqcModule):
                 elif s_headers is not None:
                     s = l.split("\t")
                     row = dict()
-                    for (i, v) in enumerate(s):
+                    for i, v in enumerate(s):
                         v.replace("NaN", "0")
                         try:
                             v = float(v)

@@ -19,7 +19,6 @@ class MultiqcModule(BaseMultiqcModule):
     """Pangolin module"""
 
     def __init__(self):
-
         # Initialise the parent module
         super().__init__(
             name="Pangolin",

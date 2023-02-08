@@ -86,7 +86,6 @@ class MultiqcModule(BaseMultiqcModule):
             return chrom_clean
 
     def parse_roc_plot_data(self, f):
-
         header = f["f"].readline()
         sample_names = [self.clean_s_name(x, f) for x in header.strip().split()[2:]]
         for parts in (l.rstrip().split() for l in f["f"]):

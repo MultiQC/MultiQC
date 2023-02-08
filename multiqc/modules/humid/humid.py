@@ -43,15 +43,37 @@ class MultiqcModule(BaseMultiqcModule):
 
     def parse_stat_files(self):
         for f in self.find_log_files("humid", filehandles=True):
+            # There is no sample name in the log, so we use the root of the
+            # file as sample name (since the filename is always stats.dat
             s_name = self.clean_s_name(f["root"], f)
-            data = parse_stat_file(f["f"], s_name)
-            if data:
-                # There is no sample name in the log, so we use the root of the
-                # file as sample name (since the filename is always stats.dat
-                if s_name in self.humid:
-                    log.debug("Duplicate sample name found! Overwriting: {}".format(s_name))
-                self.humid[s_name] = data
-                self.add_data_source(f, s_name)
+
+            # Read the statistics from file
+            d = {}
+            for line in f["f"]:
+                try:
+                    field, value = line.strip().split(": ")
+                    d[field] = int(value)
+                except ValueError:
+                    pass
+
+            try:
+                # Calculate additional statistics
+                d["filtered"] = d["total"] - d["usable"]
+                d["duplicates"] = d["total"] - d["clusters"] - d["filtered"]
+
+                # Make sure we only return data that makes sense
+                if not sum(d[field] for field in ["duplicates", "clusters", "filtered"]) == d["total"]:
+                    log.warning(f"HUMID stats looked wrong, skipping: {s_name}")
+                    continue
+            except KeyError as e:
+                log.warning(f"Expected HUMID keys missing {e}, skipping sample: {s_name}")
+                continue
+
+            # Got this far, data must be good
+            if s_name in self.humid:
+                log.debug("Duplicate sample name found! Overwriting: {}".format(s_name))
+            self.humid[s_name] = d
+            self.add_data_source(f, s_name)
 
     def add_general_stats(self):
         # Add the number of unique reads (=clusters) to the general statistics
@@ -95,25 +117,3 @@ class MultiqcModule(BaseMultiqcModule):
                 """,
             plot=bargraph.plot(self.humid, cats, config),
         )
-
-
-def parse_stat_file(fin, s_name):
-    """Parse the stats file"""
-    data = dict()
-    for line in fin:
-        field, value = line.strip().split(": ")
-        data[field] = int(value)
-    if process_stats(data, s_name):
-        return data
-
-
-def process_stats(stats, s_name):
-    """Process the statistics, to calculate some useful values"""
-    stats["filtered"] = stats["total"] - stats["usable"]
-    stats["duplicates"] = stats["total"] - stats["clusters"] - stats["filtered"]
-    # Sanity check
-    try:
-        assert stats["duplicates"] + stats["clusters"] + stats["filtered"] == stats["total"]
-    except AssertionError:
-        log.warning(f"HUMID stats looked wrong, skipping: {s_name}")
-        return False

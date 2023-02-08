@@ -93,7 +93,6 @@ class CellRangerVdjMixin:
             return 0
 
         else:
-
             self.general_stats_addcols(self.cellrangervdj_general_data, self.vdj_general_data_headers)
 
             # Write parsed report data to a file

@@ -38,7 +38,6 @@ def plot(data, headers=None, pconfig=None):
 
 
 def make_plot(dt):
-
     bs_id = dt.pconfig.get("id", "table_{}".format("".join(random.sample(letters, 4))))
 
     # Sanitise plot ID and check for duplicates
@@ -49,7 +48,6 @@ def make_plot(dt):
     data = []
     for idx, hs in enumerate(dt.headers):
         for k, header in hs.items():
-
             bcol = "rgb({})".format(header.get("colour", "204,204,204"))
 
             categories.append(
@@ -68,9 +66,8 @@ def make_plot(dt):
             # Add the data
             thisdata = []
             these_snames = []
-            for (s_name, samp) in dt.data[idx].items():
+            for s_name, samp in dt.data[idx].items():
                 if k in samp:
-
                     val = samp[k]
 
                     if "modify" in header and callable(header["modify"]):

@@ -25,7 +25,6 @@ def parse_reports(self):
         s_name = None
         in_hist = False
         for l in f["f"]:
-
             # Catch the histogram values
             if s_name is not None and in_hist is True:
                 try:
@@ -117,7 +116,6 @@ def parse_reports(self):
     self.picard_insertSize_data = self.ignore_samples(self.picard_insertSize_data)
 
     if len(self.picard_insertSize_data) > 0:
-
         # Write parsed data to a file
         self.write_data_file(self.picard_insertSize_data, "multiqc_picard_insertSize")
 

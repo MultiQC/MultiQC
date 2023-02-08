@@ -32,7 +32,6 @@ class BaseMultiqcModule(object):
         autoformat_type="markdown",
         doi=[],
     ):
-
         # Custom options from user config that can overwrite base module values
         mod_cust_config = getattr(self, "mod_cust_config", {})
         self.name = mod_cust_config.get("name", name)

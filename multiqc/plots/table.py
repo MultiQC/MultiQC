@@ -73,7 +73,6 @@ def make_table(dt):
         table_title = table_id.replace("_", " ").title()
 
     for idx, k, header in dt.get_headers_in_order():
-
         rid = header["rid"]
 
         # Build the table header cell
@@ -147,7 +146,7 @@ def make_table(dt):
         cond_formatting_colours.extend(config.table_cond_formatting_colours)
 
         # Add the data table cells
-        for (s_name, samp) in dt.data[idx].items():
+        for s_name, samp in dt.data[idx].items():
             if k in samp:
                 val = samp[k]
                 kname = "{}_{}".format(header["namespace"], rid)
@@ -289,7 +288,6 @@ def make_table(dt):
     # Buttons above the table
     html = ""
     if not config.simple_output:
-
         # Copy Table Button
         html += """
         <button type="button" class="mqc_table_copy_btn btn btn-default btn-sm" data-clipboard-target="#{tid}">

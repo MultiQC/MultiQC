@@ -12,7 +12,6 @@ log = logging.getLogger(__name__)
 
 class GroupReadsByUmiMixin:
     def parse_groupreadsbyumi(self):
-
         # Parse data
         self.parse_groupreadsbyumi_log()
 

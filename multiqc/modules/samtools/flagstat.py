@@ -29,7 +29,6 @@ class FlagstatReportMixin:
         self.samtools_flagstat = self.ignore_samples(self.samtools_flagstat)
 
         if len(self.samtools_flagstat) > 0:
-
             # Write parsed report data to a file (restructure first)
             self.write_data_file(self.samtools_flagstat, "multiqc_samtools_flagstat")
 
