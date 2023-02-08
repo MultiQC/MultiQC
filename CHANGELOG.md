@@ -6,6 +6,7 @@
 
 - Table code now tolerates lambda function calls with bad data ([#1739](https://github.com/ewels/MultiQC/issues/1739))
 - Beeswarm plot now saves data to `multiqc_data`, same as tables ([#1861](https://github.com/ewels/MultiQC/issues/1861))
+- Don't print DOI in module if it's set to an empty string.
 
 ### New Modules
 
@@ -23,6 +24,9 @@
   - Fix bug that broke the module with paired-end data ([#1845](https://github.com/ewels/MultiQC/issues/1845))
 - **HUMID**
   - Fix bug that prevent HUMID stats files from being parsed ([#1856](https://github.com/ewels/MultiQC/issues/1856))
+- **Porechop**
+  - Don't render bar graphs if no samples had any adapters trimmed ([#1850](https://github.com/ewels/MultiQC/issues/1850))
+  - Added report section listing samples that had no adapters trimmed
 
 ## [MultiQC v1.14](https://github.com/ewels/MultiQC/releases/tag/v1.14) - 2023-01-08
 

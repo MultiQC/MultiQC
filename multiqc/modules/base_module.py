@@ -63,6 +63,7 @@ class BaseMultiqcModule(object):
         self.doi_link = ""
         if type(self.doi) is str:
             self.doi = [self.doi]
+        self.doi = [i for i in self.doi if i != ""]
         if len(self.doi) > 0:
             doi_links = []
             for doi in self.doi:
