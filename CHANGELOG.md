@@ -18,15 +18,15 @@
   - Restored functionality to show target BED coverage metrics ([#1844](https://github.com/ewels/MultiQC/issues/1844))
 - **filtlong**
   - Handle reports from locales that use `.` as a thousands separator ([#1843](https://github.com/ewels/MultiQC/issues/1843))
-- **RSeQC**
-  - Fix `ZeroDivisionError` error for `bam_stat` results when there are 0 reads ([#1735](https://github.com/ewels/MultiQC/issues/1735))
-- **UMI-tools**
-  - Fix bug that broke the module with paired-end data ([#1845](https://github.com/ewels/MultiQC/issues/1845))
 - **HUMID**
   - Fix bug that prevent HUMID stats files from being parsed ([#1856](https://github.com/ewels/MultiQC/issues/1856))
 - **Porechop**
   - Don't render bar graphs if no samples had any adapters trimmed ([#1850](https://github.com/ewels/MultiQC/issues/1850))
   - Added report section listing samples that had no adapters trimmed
+- **RSeQC**
+  - Fix `ZeroDivisionError` error for `bam_stat` results when there are 0 reads ([#1735](https://github.com/ewels/MultiQC/issues/1735))
+- **UMI-tools**
+  - Fix bug that broke the module with paired-end data ([#1845](https://github.com/ewels/MultiQC/issues/1845))
 
 ## [MultiQC v1.14](https://github.com/ewels/MultiQC/releases/tag/v1.14) - 2023-01-08
 
