@@ -18,9 +18,7 @@ class Stats:
     ########################
     # Info about App
     def __init__(self):
-        self.info = (
-            "Generates a summary report from a set of statistical measures about the input read data."
-        )
+        self.info = "Generates a summary report from a set of statistical measures about the input read data."
         self.type = "both"
         self.read_keys = {
             "St_PE_Base_by_Cycle": "PE",
