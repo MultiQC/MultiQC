@@ -1,11 +1,7 @@
-#!/usr/bin/env python
-
 """ MultiQC submodule to parse output from Picard QualityYieldMetrics """
 
 import logging
-import os
-import re
-from collections import OrderedDict, defaultdict
+from collections import OrderedDict
 
 from multiqc import config
 from multiqc.plots import linegraph, table

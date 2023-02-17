@@ -65,7 +65,7 @@ the following saved:
 
 ```yaml
 report_header_info:
-  - Contact E-mail: "phil.ewels@scilifelab.se"
+  - Contact E-mail: "phil.ewels@seqera.io"
   - Application Type: "RNA-seq"
   - Project Type: "Application"
   - Sequencing Platform: "HiSeq 2500 High Output V4"

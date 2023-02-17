@@ -1,6 +1,3 @@
-#!/usr/bin/env python
-
-
 # Initialise the logger
 import logging
 import re
@@ -47,6 +44,10 @@ class DragenFragmentLength(BaseMultiqcModule):
                 if rg in d_rg:
                     rg = rg + " (" + sn + ")"
                 data_by_rg[rg] = d
+
+        # Exit early if we have no valid data, such as from FastQcOnly runs
+        if not data_by_rg:
+            return set()
 
         smooth_points = 300
         self.add_section(

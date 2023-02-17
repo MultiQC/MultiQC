@@ -181,7 +181,6 @@ class MultiqcModule(BaseMultiqcModule):
         return metrics
 
     def run_metrics_summary_table(self, data):
-
         headers = OrderedDict()
         headers["Yield"] = {
             "rid": "summary_Yield",

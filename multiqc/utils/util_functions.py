@@ -9,7 +9,6 @@ import os
 import shutil
 import sys
 import time
-from collections import OrderedDict
 
 import yaml
 
@@ -51,7 +50,6 @@ def write_data_file(data, fn, sort_cols=False, data_format=None):
     :return: None"""
 
     if config.data_dir is not None:
-
         # Get data format from config
         if data_format is None:
             data_format = config.data_format
@@ -68,17 +66,24 @@ def write_data_file(data, fn, sort_cols=False, data_format=None):
 
         # Some metrics can't be coerced to tab-separated output, test and handle exceptions
         if data_format not in ["json", "yaml"]:
-
             # attempt to reshape data to tsv
             try:
                 # Convert keys to strings
                 data = {str(k): v for k, v in data.items()}
-                # Get all headers
-                h = ["Sample"]
-                for sn in sorted(data.keys()):
-                    for k in data[sn].keys():
-                        if type(data[sn][k]) is not dict and k not in h:
-                            h.append(str(k))
+                # Get all headers from the data, except if data is a dictionary (i.e. has >1 dimensions)
+                # Use list -> dict -> list to get only unique values
+                h = list(
+                    dict.fromkeys(
+                        [
+                            str(data_header)
+                            for sample_data in data.values()
+                            for data_header in sample_data.keys()
+                            if type(sample_data[data_header]) is not dict
+                        ]
+                    )
+                )
+                # Add Sample header in to first element
+                h.insert(0, "Sample")
                 if sort_cols:
                     h = sorted(h)
 

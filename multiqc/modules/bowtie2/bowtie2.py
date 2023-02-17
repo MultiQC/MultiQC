@@ -1,5 +1,3 @@
-#!/usr/bin/env python
-
 """ MultiQC module to parse output from Bowtie 2 """
 
 
@@ -18,7 +16,6 @@ class MultiqcModule(BaseMultiqcModule):
     """Bowtie 2 module, parses stderr logs."""
 
     def __init__(self):
-
         # Initialise the parent object
         super(MultiqcModule, self).__init__(
             name="Bowtie 2 / HiSAT2",

@@ -12,6 +12,8 @@ MultiQC Modules:
   Pre-alignment:
     Adapter Removal: modules/adapterRemoval.md
     AfterQC: modules/afterqc.md
+    Anglerfish: modules/anglerfish.md
+    BBDuk: modules/bbduk.md
     Bcl2fastq: modules/bcl2fastq.md
     BclConvert: modules/bclconvert.md
     BioBloom Tools: modules/biobloomtools.md
@@ -20,11 +22,15 @@ MultiQC Modules:
     ClipAndMerge: modules/clipandmerge.md
     Cluster Flow: modules/clusterflow.md
     Cutadapt: modules/cutadapt.md
+    DRAGEN-FastQC: modules/dragen_fastqc.md
     Fastp: modules/fastp.md
     FastQ Screen: modules/fastq_screen.md
     FastQC: modules/fastqc.md
+    Filtlong: modules/filtlong.md
     FLASh: modules/flash.md
     Flexbar: modules/flexbar.md
+    HiFiasm: modules/hifiasm.md
+    HUMID: modules/humid.md
     InterOp: modules/interop.md
     iVar: modules/ivar.md
     Jellyfish: modules/jellyfish.md
@@ -32,7 +38,9 @@ MultiQC Modules:
     leeHom: modules/leehom.md
     Lima: modules/lima.md
     minionqc: modules/minionqc.md
+    prinseqplusplus: modules/prinseqplusplus.md
     pbmarkdup: modules/pbmarkdup.md
+    Porechop: modules/porechop.md
     Pychopper: modules/pychopper.md
     pycoQC: modules/pycoqc.md
     SeqyClean: modules/seqyclean.md
@@ -46,6 +54,8 @@ MultiQC Modules:
     Bismark: modules/bismark.md
     Bowtie 1: modules/bowtie1.md
     Bowtie 2: modules/bowtie2.md
+    Cell Ranger: modules/cellranger.md
+    DIAMOND: modules/diamond.md
     DRAGEN: modules/dragen.md
     HiCPro: modules/hicpro.md
     HiCUP: modules/hicup.md
@@ -53,6 +63,7 @@ MultiQC Modules:
     Kallisto: modules/kallisto.md
     Long Ranger: modules/longranger.md
     MALT: modules/malt.md
+    mOTUs: modules/motus.md
     Salmon: modules/salmon.md
     STAR: modules/star.md
     TopHat: modules/tophat.md
@@ -73,6 +84,7 @@ MultiQC Modules:
     GATK: modules/gatk.md
     GffCompare: modules/gffcompare.md
     goleft_indexcov: modules/goleft_indexcov.md
+    gopeaks: modules/gopeaks.md
     Hap.py: modules/happy.md
     HiCExplorer: modules/hicexplorer.md
     HOMER: modules/homer.md
@@ -89,6 +101,7 @@ MultiQC Modules:
     MTNucRatio: modules/mtnucratio.md
     MultiVCFAnalyzer: modules/multivcfanalyzer.md
     NanoStat: modules/nanostat.md
+    Nextclade: modules/nextclade.md
     ngsbits: modules/ngsbits.md
     ngsderive: modules/ngsderive.md
     odgi: modules/odgi.md
@@ -122,6 +135,7 @@ MultiQC Modules:
     Stacks: modules/stacks.md
     Supernova: modules/supernova.md
     THeTA2: modules/theta2.md
+    UMI-tools: modules/umitools.md
     VarScan2: modules/varscan2.md
     VCFTools: modules/vcftools.md
     VEP: modules/vep.md

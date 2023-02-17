@@ -256,6 +256,7 @@ fn_clean_exts:
   - ".cutadapt"
   - ".qcML"
   - ".mosdepth"
+  - _gopeaks
 
 # These are removed after the above, only if sample names
 # start or end with this string. Again, removed in order.
@@ -370,6 +371,11 @@ module_order:
       module_tag:
         - DNA
         - RNA
+  - hifiasm:
+      module_tag:
+        - DNA
+        - Denovo
+        - PacBio
   - quast:
       module_tag:
         - DNA
@@ -439,6 +445,11 @@ module_order:
         - RNA
 
   # Post-alignment processing
+  - gopeaks:
+      module_tag:
+        - DNA
+        - CUT&TAG
+        - CUT&RUN
   - homer:
       module_tag:
         - RNA
@@ -479,6 +490,10 @@ module_order:
         - RNA
         - umi
   - dragen:
+      module_tag:
+        - DNA
+        - RNA
+  - dragen_fastqc:
       module_tag:
         - DNA
         - RNA
@@ -566,6 +581,10 @@ module_order:
       module_tag:
         - DNA
         - prokarytotic
+  - umitools:
+      module_tag:
+        - DNA
+        - RNA
 
   # Alignment tool stats
   - bbmap:
@@ -580,6 +599,10 @@ module_order:
       module_tag:
         - DNA
         - methylation
+  - diamond:
+      module_tag:
+        - Protein
+        - DNA
   - hicexplorer:
       module_tag:
         - hi-c
@@ -613,6 +636,10 @@ module_order:
   - bowtie1:
       module_tag:
         - RNA
+  - cellranger:
+      module_tag:
+        - RNA
+        - single-cell
   - snpsplit:
       module_tag:
         - DNA
@@ -623,12 +650,20 @@ module_order:
       module_tag:
         - DNA
         - pangenome
-
   - pangolin:
       module_tag:
         - DNA
         - virus
+  - nextclade:
+      module_tag:
+        - RNA
+        - virus
   # Pre-alignment QC
+  - humid:
+      module_tag:
+        - DNA
+        - RNA
+        - umi
   - kat:
       module_tag:
         - DNA
@@ -637,6 +672,10 @@ module_order:
         - RNA
         - DNA
   - adapterRemoval:
+      module_tag:
+        - RNA
+        - DNA
+  - bbduk:
       module_tag:
         - RNA
         - DNA
@@ -665,6 +704,10 @@ module_order:
         - DNA
         - metagenomics
         - ancient
+  - motus:
+      module_tag:
+        - RNA
+        - DNA
   - trimmomatic:
       module_tag:
         - RNA
@@ -701,9 +744,22 @@ module_order:
       module_tag:
         - RNA
         - DNA
+  - filtlong:
+      module_tag:
+        - DNA
+        - ONT
+        - PacBio
+  - prinseqplusplus:
+      module_tag:
+        - RNA
+        - DNA
   - pychopper:
       module_tag:
         - RNA
+  - porechop:
+      module_tag:
+        - DNA
+        - nanopore
   - pycoqc:
       module_tag:
         - DNA
@@ -712,6 +768,11 @@ module_order:
       module_tag:
         - DNA
         - RNA
+  - anglerfish:
+      module_tag:
+        - DNA
+        - Illumina
+        - ONT
   - multivcfanalyzer:
       module_tag:
         - DNA

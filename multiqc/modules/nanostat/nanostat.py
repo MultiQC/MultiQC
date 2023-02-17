@@ -1,5 +1,3 @@
-#!/usr/bin/env python
-
 """ MultiQC module to parse output from NanoStat """
 
 
@@ -42,7 +40,6 @@ class MultiqcModule(BaseMultiqcModule):
     _stat_types = ("aligned", "seq summary", "fastq", "fasta", "unrecognized")
 
     def __init__(self):
-
         # Initialise the parent object
         super(MultiqcModule, self).__init__(
             name="NanoStat",
@@ -96,7 +93,6 @@ class MultiqcModule(BaseMultiqcModule):
 
         nano_stats = {}
         for line in f["f"]:
-
             parts = line.strip().split(":")
             if len(parts) == 0:
                 continue

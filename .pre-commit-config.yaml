@@ -14,10 +14,22 @@ repos:
       - id: check-merge-conflict
       - id: debug-statements
       # - id: name-tests-test
+  - repo: https://github.com/Lucas-C/pre-commit-hooks
+    rev: v1.3.1
+    hooks:
+      - id: remove-crlf
+
   - repo: https://github.com/pre-commit/mirrors-prettier
     rev: "v2.7.1"
     hooks:
       - id: prettier
+
+  - repo: https://github.com/hadialqattan/pycln
+    rev: v2.1.2 # Possible releases: https://github.com/hadialqattan/pycln/releases
+    hooks:
+      - id: pycln
+        args: [--config=pyproject.toml]
+
   - repo: local
     hooks:
       - id: isort
@@ -29,6 +41,7 @@ repos:
         require_serial: true
         additional_dependencies:
           - isort
+
       - id: black
         name: Black - Auto-formatter.
         description: Black is the uncompromising Python code formatter. Writing to files.
