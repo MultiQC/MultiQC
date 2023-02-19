@@ -1,6 +1,7 @@
 import logging
 
 from .coverage_hist import DragenCoverageHist
+from .overall_mean_cov import DragenOverallMeanCovMetrics
 from .coverage_metrics import DragenCoverageMetrics
 from .coverage_per_contig import DragenCoveragePerContig
 from .dragen_gc_metrics import DragenGcMetrics
@@ -24,6 +25,7 @@ class MultiqcModule(
     DragenPloidyEstimationMetrics,
     DragenVCMetrics,
     DragenCoveragePerContig,
+    DragenOverallMeanCovMetrics,
     DragenCoverageMetrics,
     DragenCoverageHist,
     DragenGcMetrics,
@@ -71,10 +73,14 @@ class MultiqcModule(
         samples_found |= self.add_ploidy_estimation_metrics()
         # <output prefix>.ploidy_estimation_metrics.csv    - add just Ploidy estimation into gen stats
 
-        # <output prefix>.<coverage region prefix>_coverage_metrics<arbitrary suffix>.csv
+        self.collect_overall_mean_cov_data()
+        # <output prefix>.<coverage region prefix>_overall_mean_cov.csv
+        # This data will be used by in the DragenCoverageMetrics.
+        
         samples_found |= self.add_coverage_metrics()
+        # <output prefix>.<coverage region prefix>_coverage_metrics<arbitrary suffix>.csv
+        
         samples_found |= self.add_coverage_hist()
-
         # <output prefix>.wgs_fine_hist_normal.csv         - coverage distribution and cumulative coverage plots
         # <output prefix>.wgs_fine_hist_tumor.csv          - same
 
