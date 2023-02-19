@@ -278,6 +278,8 @@ dragen/ploidy_estimation_metrics:
   fn: "*.ploidy_estimation_metrics.csv"
 dragen/wgs_contig_mean_cov:
   fn_re: '.*\.wgs_contig_mean_cov_?(tumor|normal)?\.csv'
+dragen/overall_mean_cov_metrics:
+  fn_re: '.*_overall_mean_cov.*\.csv'  
 dragen/coverage_metrics:
   fn_re: '.*_coverage_metrics.*\.csv'
 dragen/wgs_fine_hist:
