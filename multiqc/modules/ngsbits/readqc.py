@@ -7,8 +7,6 @@ import logging
 from multiqc import config
 from multiqc.plots import table
 
-import xml.etree.cElementTree
-
 # Initialise the logger
 log = logging.getLogger(__name__)
 
@@ -57,7 +55,6 @@ def parse_reports(self):
     self.readqc = self.ignore_samples(self.readqc)
 
     if len(self.readqc) > 0:
-
         # Convert numbers given in megabases to bases
         self.readqc_keys["bases sequenced"] = ("Bases sequenced in total.", "")
         for _, kv in self.readqc.items():

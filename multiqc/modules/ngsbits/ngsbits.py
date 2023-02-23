@@ -4,8 +4,7 @@
 
 from collections import OrderedDict
 import logging
-import os
-import xml.etree.cElementTree
+import xml.etree.ElementTree
 import re
 
 from multiqc import config
@@ -60,7 +59,7 @@ class MultiqcModule(BaseMultiqcModule):
 
     def parse_qcml_by(self, qcml_contents, tag):
         """Parse a qcML file and return key-value pairs from the quality parameter entries."""
-        root = xml.etree.cElementTree.fromstring(qcml_contents)
+        root = xml.etree.ElementTree.fromstring(qcml_contents)
         values = dict()
         params = dict()
 

@@ -7,7 +7,6 @@ import logging
 from multiqc import config
 from multiqc.plots import table
 
-import xml.etree.cElementTree
 
 # Initialise the logger
 log = logging.getLogger(__name__)
@@ -34,7 +33,6 @@ def parse_reports(self):
     self.mappingqc = self.ignore_samples(self.mappingqc)
 
     if len(self.mappingqc) > 0:
-
         # Convert numbers given in megabases to bases
         self.mappingqc_keys["bases usable"] = ("Bases usable in total.", "")
         for _, kv in self.mappingqc.items():
