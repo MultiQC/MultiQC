@@ -16,7 +16,6 @@ class MultiqcModule(BaseMultiqcModule):
     """gopeaks module"""
 
     def __init__(self):
-
         # Initialise the parent object
         super(MultiqcModule, self).__init__(
             name="GoPeaks",
@@ -34,7 +33,6 @@ class MultiqcModule(BaseMultiqcModule):
         # Find and load any gopeaks reports
         self.gopeaks_data = dict()
         for f in self.find_log_files("gopeaks", filehandles=True):
-
             parsed = self.parse_gopeaks_log(f)
 
             if parsed is not None:

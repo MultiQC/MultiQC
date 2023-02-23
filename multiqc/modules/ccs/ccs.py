@@ -96,7 +96,6 @@ class MultiqcModule(BaseMultiqcModule):
         self.general_stats_addcols(gstats_data, headers)
 
     def add_sections(self):
-
         # First we gather all the filters we encountered
         all_filters = dict()
         for filename in self.ccs_data:

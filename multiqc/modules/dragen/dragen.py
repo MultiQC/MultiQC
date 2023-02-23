@@ -75,6 +75,10 @@ class MultiqcModule(
         # <output prefix>.wgs_coverage_metrics_normal.csv  - general stats table and a dedicated table
         # <output prefix>.wgs_coverage_metrics_tumor.csv   - same
 
+        samples_found |= self.add_target_bed_coverage_metrics()
+        # <output prefix>.target_bed_coverage_metrics_normal.csv  - general stats table and a dedicated table
+        # <output prefix>.target_bed_coverage_metrics_tumor.csv   - same
+
         samples_found |= self.add_qc_region_coverage_metrics()
         # <output prefix>.qc-coverage-region-i_coverage_metrics.csv
         samples_found |= self.add_coverage_hist()

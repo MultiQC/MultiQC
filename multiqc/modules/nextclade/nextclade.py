@@ -18,7 +18,6 @@ log = logging.getLogger(__name__)
 
 class MultiqcModule(BaseMultiqcModule):
     def __init__(self):
-
         # Initialise the parent object
         super(MultiqcModule, self).__init__(
             name="Nextclade",
@@ -53,7 +52,6 @@ class MultiqcModule(BaseMultiqcModule):
         )
 
     def parse_nextclade_log(self, f):
-
         for sample in csv.DictReader(f["f"], delimiter=";"):
             try:
                 s_name = sample.pop("seqName")

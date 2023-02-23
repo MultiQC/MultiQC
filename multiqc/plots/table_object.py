@@ -43,7 +43,6 @@ class datatable(object):
 
         # Go through each table section
         for idx, d in enumerate(data):
-
             # Get the header keys
             try:
                 keys = headers[idx].keys()
@@ -53,7 +52,6 @@ class datatable(object):
 
             # Add header keys from the data
             if pconfig.get("only_defined_headers", True) is False:
-
                 # Get the keys from the data
                 keys = list()
                 for samp in d.values():
@@ -152,7 +150,6 @@ class datatable(object):
                 for ns in config.table_columns_visible.keys():
                     # Make namespace key case insensitive
                     if ns.lower() == headers[idx][k]["namespace"].lower():
-
                         # First - if config value is a bool, set all module columns to that value
                         if isinstance(config.table_columns_visible[ns], bool):
                             headers[idx][k]["hidden"] = not config.table_columns_visible[ns]
@@ -169,7 +166,6 @@ class datatable(object):
                 for ns in config.table_columns_name.keys():
                     # Make namespace key case insensitive
                     if ns.lower() == headers[idx][k]["namespace"].lower():
-
                         # Assume a dict of the specific column IDs
                         try:
                             headers[idx][k]["title"] = config.table_columns_name[ns][k]

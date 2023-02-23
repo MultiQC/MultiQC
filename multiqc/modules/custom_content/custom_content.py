@@ -18,6 +18,7 @@ from multiqc.utils import report
 # Initialise the logger
 log = logging.getLogger(__name__)
 
+
 # Load YAML as an ordered dict
 # From https://stackoverflow.com/a/21912744
 def yaml_ordered_load(stream):
@@ -54,7 +55,6 @@ def custom_module_classes():
     config_data = getattr(config, "custom_data", {})
     mod_cust_config = {}
     for k, f in config_data.items():
-
         # Check that we have a dictionary
         if type(f) != dict:
             log.debug("config.custom_data row was not a dictionary: {}".format(k))
@@ -230,7 +230,6 @@ def custom_module_classes():
     # Go through each data type
     parsed_modules = OrderedDict()
     for c_id, mod in cust_mods.items():
-
         # General Stats
         if mod["config"].get("plot_type") == "generalstats":
             gsheaders = mod["config"].get("pconfig")
@@ -302,7 +301,6 @@ class MultiqcModule(BaseMultiqcModule):
     """Module class, used for each custom content type"""
 
     def __init__(self, c_id, mod):
-
         modname = c_id.replace("_", " ").title()
         mod_info = mod["config"].get("description")
         if "parent_name" in mod["config"]:
@@ -346,7 +344,6 @@ class MultiqcModule(BaseMultiqcModule):
             self.intro = "<p>{}</p>{}".format(self.info, self.extra)
 
     def add_cc_section(self, c_id, mod):
-
         section_name = mod["config"].get("section_name", c_id.replace("_", " ").title())
         if section_name == "" or section_name is None:
             section_name = "Custom Content"

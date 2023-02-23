@@ -132,7 +132,6 @@ def parse_reports(self):
     self.picard_baseDistributionByCycle_data = self.ignore_samples(self.picard_baseDistributionByCycle_data)
 
     if len(self.picard_baseDistributionByCycle_data) > 0:
-
         # Write parsed data to a file
         self.write_data_file(self.picard_baseDistributionByCycle_samplestats, "multiqc_picard_baseContent")
 

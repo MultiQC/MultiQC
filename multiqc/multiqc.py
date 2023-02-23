@@ -490,7 +490,7 @@ def run(
         if len(analysis_dir) > 1:
             raise ValueError("If --file-list is giving, analysis_dir should have only one plain text file.")
         config.analysis_dir = []
-        with (open(analysis_dir[0])) as in_handle:
+        with open(analysis_dir[0]) as in_handle:
             for line in in_handle:
                 if os.path.exists(line.strip()):
                     path = os.path.abspath(line.strip())

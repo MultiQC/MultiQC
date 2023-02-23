@@ -90,7 +90,6 @@ def parse_reports(self):
     self.picard_RnaSeqMetrics_data = self.ignore_samples(self.picard_RnaSeqMetrics_data)
 
     if len(self.picard_RnaSeqMetrics_data) > 0:
-
         # Write parsed data to a file
         self.write_data_file(self.picard_RnaSeqMetrics_data, "multiqc_picard_RnaSeqMetrics")
 

@@ -112,7 +112,7 @@ def plot(data, cats=None, pconfig=None):
     for idx in range(len(data)):
         try:
             cats[idx]
-        except (IndexError):
+        except IndexError:
             cats.append(list())
             for s in data[idx].keys():
                 for k in data[idx][s].keys():
@@ -390,7 +390,6 @@ def matplotlib_bargraph(plotdata, plotsamples, pconfig=None):
 
     # Go through datasets creating plots
     for pidx, pdata in enumerate(plotdata):
-
         # Save plot data to file
         fdata = {}
         for d in pdata:
@@ -412,7 +411,6 @@ def matplotlib_bargraph(plotdata, plotsamples, pconfig=None):
             pdata[idx]["data"] = [x if not math.isnan(x) else 0 for x in d["data"]]
 
         for plot_pct in plot_pcts:
-
             # Plot ID
             pid = pids[pidx]
             hide_plot = False
@@ -459,7 +457,7 @@ def matplotlib_bargraph(plotdata, plotsamples, pconfig=None):
                 if len(values) < len(y_ind):
                     values.extend([0] * (len(y_ind) - len(values)))
                 if plot_pct is True:
-                    for (key, var) in enumerate(values):
+                    for key, var in enumerate(values):
                         s_total = s_totals[key]
                         if s_total == 0:
                             values[key] = 0

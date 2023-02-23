@@ -17,7 +17,6 @@ class MultiqcModule(BaseMultiqcModule):
     """Kraken module"""
 
     def __init__(self):
-
         # Initialise the parent object
         super(MultiqcModule, self).__init__(
             name="Kraken",
@@ -228,7 +227,6 @@ class MultiqcModule(BaseMultiqcModule):
         # are not unfairly over-represented
         for s_name, data in self.kraken_raw_data.items():
             for row in data:
-
                 # Convenience vars that are easier to read
                 rank_code = row["rank_code"]
                 classif = row["classif"]

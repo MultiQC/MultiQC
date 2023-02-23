@@ -5,6 +5,8 @@
 ### MultiQC updates
 
 - Table code now tolerates lambda function calls with bad data ([#1739](https://github.com/ewels/MultiQC/issues/1739))
+- Beeswarm plot now saves data to `multiqc_data`, same as tables ([#1861](https://github.com/ewels/MultiQC/issues/1861))
+- Don't print DOI in module if it's set to an empty string.
 
 ### New Modules
 
@@ -14,8 +16,15 @@
   - Bugfix: allow to find and proprely parse the `concordance` output of Conpair, which may output 2 kinds of format for `concordance` depending if it's ran with or without `--outfile` ([#1851](https://github.com/ewels/MultiQC/issues/1851))
 - **Cell Ranger**
   - Bugfix: avoid `KeyError` exception when parsing Cell Ranger 7.x web_summary.html
+- **DRAGEN**
+  - Restored functionality to show target BED coverage metrics ([#1844](https://github.com/ewels/MultiQC/issues/1844))
 - **filtlong**
   - Handle reports from locales that use `.` as a thousands separator ([#1843](https://github.com/ewels/MultiQC/issues/1843))
+- **HUMID**
+  - Fix bug that prevent HUMID stats files from being parsed ([#1856](https://github.com/ewels/MultiQC/issues/1856))
+- **Porechop**
+  - Don't render bar graphs if no samples had any adapters trimmed ([#1850](https://github.com/ewels/MultiQC/issues/1850))
+  - Added report section listing samples that had no adapters trimmed
 - **RSeQC**
   - Fix `ZeroDivisionError` error for `bam_stat` results when there are 0 reads ([#1735](https://github.com/ewels/MultiQC/issues/1735))
 - **UMI-tools**

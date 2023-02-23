@@ -114,7 +114,6 @@ def parse_reports(self):
             )
             > 0
         ):
-
             # Write data to file
             self.write_data_file(self.qualimap_rnaseq_genome_results, "qualimap_rnaseq_genome_results")
 
@@ -166,7 +165,6 @@ def parse_reports(self):
             log.warning("Found zero aligned reads. Skipping 'Genomic origin of reads' plot.")
 
     if len(self.qualimap_rnaseq_cov_hist) > 0:
-
         # Write data to file
         self.write_data_file(self.qualimap_rnaseq_cov_hist, "qualimap_rnaseq_cov_hist")
 

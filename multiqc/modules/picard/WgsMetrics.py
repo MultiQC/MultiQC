@@ -27,7 +27,6 @@ def parse_reports(self):
         s_name = None
         in_hist = False
         for l in f["f"]:
-
             # Catch the histogram values
             if s_name is not None and in_hist is True and not skip_histo:
                 try:
@@ -85,7 +84,6 @@ def parse_reports(self):
     self.picard_wgsmetrics_data = self.ignore_samples(self.picard_wgsmetrics_data)
 
     if len(self.picard_wgsmetrics_data) > 0:
-
         # Write parsed data to a file
         self.write_data_file(self.picard_wgsmetrics_data, "multiqc_picard_wgsmetrics")
 
@@ -142,7 +140,6 @@ def parse_reports(self):
 
         # Section with histogram plot
         if len(self.picard_wgsmetrics_histogram) > 0 and not skip_histo:
-
             # Figure out where to cut histogram tail
             max_cov = picard_config.get("wgsmetrics_histogram_max_cov")
             if max_cov is None:

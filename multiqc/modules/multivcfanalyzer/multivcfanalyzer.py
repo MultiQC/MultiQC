@@ -16,7 +16,6 @@ class MultiqcModule(BaseMultiqcModule):
     """MultiVCFAnalyzer module"""
 
     def __init__(self):
-
         # Initialise the parent object
         super(MultiqcModule, self).__init__(
             name="MultiVCFAnalyzer",

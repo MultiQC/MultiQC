@@ -63,7 +63,6 @@ def parse_reports(self):
     self.junction_annotation_data = self.ignore_samples(self.junction_annotation_data)
 
     if len(self.junction_annotation_data) > 0:
-
         # Write to file
         self.write_data_file(self.junction_annotation_data, "multiqc_rseqc_junction_annotation")
 

@@ -32,7 +32,6 @@ class MultiqcModule(BaseMultiqcModule):
         self.qfilt_data = dict()  # Stats from quality filtered reads
         self.q_threshold_list = set()  # quality thresholds
         for f in self.find_log_files("minionqc", filehandles=True):
-
             # get sample name
             s_name = self.clean_s_name(os.path.basename(f["root"]), f, root=os.path.dirname(f["root"]))
 

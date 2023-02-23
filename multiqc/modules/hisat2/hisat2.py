@@ -16,7 +16,6 @@ class MultiqcModule(BaseMultiqcModule):
     """HISAT2 module, parses stderr logs."""
 
     def __init__(self):
-
         # Initialise the parent object
         super(MultiqcModule, self).__init__(
             name="HISAT2",
@@ -77,7 +76,6 @@ class MultiqcModule(BaseMultiqcModule):
         parsed_data = {}
 
         for l in f["f"]:
-
             # Attempt in vain to find original hisat2 command, logged by another program
             hscmd = re.search(r"hisat2 .+ -[1U] ([^\s,]+)", l)
             if hscmd:
