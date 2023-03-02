@@ -1,7 +1,7 @@
 ---
-Name: MultiVCFAnalyzer
-URL: http://www.github.com/alexherbig/MultiVCFAnalyzer
-Description: >
+name: MultiVCFAnalyzer
+url: http://www.github.com/alexherbig/MultiVCFAnalyzer
+description: >
   MultiVCFAnalyzer collects multiple VCF files and outputs combined genotype calls in a number of file formats.
 ---
 

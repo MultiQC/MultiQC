@@ -1,7 +1,7 @@
 ---
-Name: GffCompare
-URL: https://ccb.jhu.edu/software/stringtie/gffcompare.shtml
-Description: A tool to compare, merge and annotate one or more GFF files with a reference annotation in GFF format.
+name: GffCompare
+url: https://ccb.jhu.edu/software/stringtie/gffcompare.shtml
+description: A tool to compare, merge and annotate one or more GFF files with a reference annotation in GFF format.
 ---
 
 The program `gffcompare` can be used to compare, merge, annotate and estimate accuracy

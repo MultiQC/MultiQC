@@ -1,7 +1,7 @@
 ---
-Name: Fastp
-URL: https://github.com/OpenGene/fastp
-Description: >
+name: Fastp
+url: https://github.com/OpenGene/fastp
+description: >
   An ultra-fast all-in-one FASTQ preprocessor
 ---
 

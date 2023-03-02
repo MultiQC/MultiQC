@@ -1,7 +1,7 @@
 ---
-Name: SnpEff
-URL: http://snpeff.sourceforge.net/
-Description: >
+name: SnpEff
+url: http://snpeff.sourceforge.net/
+description: >
   SnpEff is a genetic variant annotation and effect prediction toolbox.
   It annotates and predicts the effects of variants on genes (such as amino
   acid changes).

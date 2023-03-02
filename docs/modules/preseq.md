@@ -1,7 +1,7 @@
 ---
-Name: Preseq
-URL: http://smithlabresearch.org/software/preseq/
-Description: >
+name: Preseq
+url: http://smithlabresearch.org/software/preseq/
+description: >
   Preseq estimates the complexity of a library, showing how many additional
   unique reads are sequenced for increasing total read count.
 ---

@@ -1,7 +1,7 @@
 ---
-Name: Sargasso
-URL: http://statbio.github.io/Sargasso/
-Description: >
+name: Sargasso
+url: http://statbio.github.io/Sargasso/
+description: >
   Sargasso is a tool to separate mixed-species RNA-seq reads
   according to their species of origin.
 ---

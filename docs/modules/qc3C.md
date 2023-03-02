@@ -1,7 +1,7 @@
 ---
-Name: qc3C
-URL: http://github.com/cerebis/qc3C
-Description: Reference-free quality control for Hi-C DNA sequencing libraries
+name: qc3C
+url: http://github.com/cerebis/qc3C
+description: Reference-free quality control for Hi-C DNA sequencing libraries
 ---
 
 qc3C allows researchers to assess the fraction of read-pairs within a Hi-C library that are a product of proximity ligation -- in effect the Hi-C signal strength.

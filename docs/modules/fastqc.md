@@ -1,7 +1,7 @@
 ---
-Name: FastQC
-URL: http://www.bioinformatics.babraham.ac.uk/projects/fastqc/
-Description: >
+name: FastQC
+url: http://www.bioinformatics.babraham.ac.uk/projects/fastqc/
+description: >
   FastQC is a quality control tool for high throughput sequence data,
   written by Simon Andrews at the Babraham Institute in Cambridge.
 ---
