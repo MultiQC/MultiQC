@@ -1,7 +1,7 @@
 ---
 title: Running MultiQC
 description: Generating MultiQC reports from your data
-order: 2
+order: 3
 ---
 
 # Running MultiQC
