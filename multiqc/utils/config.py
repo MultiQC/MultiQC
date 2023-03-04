@@ -94,6 +94,7 @@ if len(avail_modules) == 0 or len(avail_templates) == 0:
     )
     sys.exit(1)
 
+
 ##### Functions to load user config files. These are called by the main MultiQC script.
 # Note that config files are loaded in a specific order and values can overwrite each other.
 def mqc_load_userconfig(paths=()):
@@ -271,7 +272,7 @@ def load_show_hide(sh_file):
                         show_hide_mode.append(s[1])
                         show_hide_patterns.append(s[2:])
                         show_hide_regex.append(s[1] not in ["show", "hide"])  # flag whether or not regex is turned on
-        except (AttributeError) as e:
+        except AttributeError as e:
             logger.error("Error loading show patterns file: {}".format(e))
 
     # Prepend a "Show all" button if we have anything

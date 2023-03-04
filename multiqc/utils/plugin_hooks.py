@@ -15,6 +15,7 @@ for entry_point in pkg_resources.iter_entry_points("multiqc.hooks.v1"):
     except KeyError:
         hook_functions[nicename] = [entry_point.load()]
 
+
 # Function to run the hooks
 def mqc_trigger(trigger):
     for hook in hook_functions.get(trigger, []):

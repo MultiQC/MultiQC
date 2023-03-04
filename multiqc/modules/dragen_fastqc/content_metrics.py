@@ -210,7 +210,6 @@ class DragenContentMetrics(BaseMultiqcModule):
         ADP_GROUP = "SEQUENCE POSITIONS"
         for s_name in sorted(self.dragen_fastqc_data):
             for mate in sorted(self.dragen_fastqc_data[s_name]):
-
                 totals = defaultdict(int)
                 for key, value in self.dragen_fastqc_data[s_name][mate][COUNT_GROUP].items():
                     parts = key.split()

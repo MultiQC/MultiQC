@@ -32,7 +32,6 @@ class BaseMultiqcModule(object):
         autoformat_type="markdown",
         doi=[],
     ):
-
         # Custom options from user config that can overwrite base module values
         mod_cust_config = getattr(self, "mod_cust_config", {})
         self.name = mod_cust_config.get("name", name)
@@ -64,6 +63,7 @@ class BaseMultiqcModule(object):
         self.doi_link = ""
         if type(self.doi) is str:
             self.doi = [self.doi]
+        self.doi = [i for i in self.doi if i != ""]
         if len(self.doi) > 0:
             doi_links = []
             for doi in self.doi:

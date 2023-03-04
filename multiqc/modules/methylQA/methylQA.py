@@ -15,7 +15,6 @@ log = logging.getLogger(__name__)
 
 class MultiqcModule(BaseMultiqcModule):
     def __init__(self):
-
         # Initialise the parent object
         super(MultiqcModule, self).__init__(
             name="methylQA",
@@ -51,7 +50,6 @@ class MultiqcModule(BaseMultiqcModule):
         self.add_section(plot=self.methylqa_alignment_plot())
 
     def parse_methylqa_logs(self, f):
-
         # Get s_name from first input file if possible
         s_name = f["s_name"]
         if f["f"][0].startswith("files provided"):

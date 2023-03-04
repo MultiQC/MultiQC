@@ -64,7 +64,6 @@ class MultiqcModule(BaseMultiqcModule):
         # Contains 'Hi-C contacts' --> since 3.2
         hicexplorer_versions = set()
         for s_name in self.hicexplorer_data:
-
             # compatibility to HiCExplorer <= 1.7 version QC files
             if (
                 not "Pairs mappable, unique and high quality" in self.hicexplorer_data[s_name]

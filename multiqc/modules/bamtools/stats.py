@@ -58,7 +58,6 @@ def parse_reports(self):
     self.bamtools_stats_data = self.ignore_samples(self.bamtools_stats_data)
 
     if len(self.bamtools_stats_data) > 0:
-
         # Write to file
         self.write_data_file(self.bamtools_stats_data, "multiqc_bamtools_stats")
 

@@ -42,7 +42,6 @@ def parse_reports(self):
     self.infer_exp = self.ignore_samples(self.infer_exp)
 
     if len(self.infer_exp) > 0:
-
         # Write to file
         self.write_data_file(self.infer_exp, "multiqc_rseqc_infer_experiment")
 

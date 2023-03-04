@@ -22,7 +22,6 @@ def parse_reports(self):
 
     # Go through files and parse data
     for f in self.find_log_files("rseqc/gene_body_coverage"):
-
         # geneBodyCoverage.py
         # RSeQC >= v2.4
         # NB: Capitilisation

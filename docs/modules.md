@@ -12,6 +12,64 @@ through the guide below, you should be on your way in no time!
 If you have any problems, feel free to contact the author - details
 here: [@ewels](https://github.com/ewels)
 
+## Philosophical concepts
+
+These points are important and worth understanding early on.
+Get this stuff right, and your pull-request is much more likely to be merged quickly!
+
+### Don't add everything
+
+MultiQC was designed to _summarise_ tool outputs.
+An end-user should be able to visially scan the report and spot any outlier samples, then go to the underlying tool to look at those samples in more detail.
+
+MultiQC is _not_ designed to replicate every single metric from a tool. Doing so makes the report difficult to read and digest quickly for many samples.
+Module additions that add huge quantities of metrics to reports will be asked to slim down.
+
+### No images
+
+MultiQC doesn't know how many samples it will need to handle for a report, and as such every module should work with anything from 1-1000 samples.
+With images, you can't have more than a couple before the report is unusable. Worse, the file size will bloat the HTML file and it will crash the browser surprisingly fast. It's not accessible and the data cannot be exported into `multiqc_data` for downstream use.
+
+Plots should be _recreated_ within MultiQC by parsing the raw data and generating dynamic plots instead.
+
+I almost never merge modules that include images into reports.
+If you really need images in your report, you can do this either via Custom Content or an unofficial plugin module.
+Feel free to discuss on Gitter if you think that your case is an exception. There have been one or two in the past.
+
+### One at a time
+
+Please try to keep contributions as atomic as possible. In other words, one module = one pull request.
+
+Don't be afraid to break things up into separate pull-requests coming from different branches.
+Just mention this in the PR comment so that it's clear which order they need to be merged in.
+
+### Avoid optimising too much
+
+When you are writing a module that generates many similar plots, or table columns, or sections, it can be tempting to write nice efficient code that avoids duplicating these efforts.
+This is problematic for two reasons:
+
+- It's bespoke to that module, so more difficult to maintain and comprehend
+- Almost every table column, section and plot should have significant customisation. Descriptions, colour schemes, help text and more. Heavily optimised code will often need a lot of refactoring to pack this in.
+
+It's usually better to copy and paste a bit in these cases. The code is then easier to understand and easier to customise.
+
+### Colour matters
+
+The emphasis for MultiQC reports is to allow people to quickly scan and spot outlier samples.
+The core of this is data visualisation.
+
+Especially when creating tables, make sure that you think about the [colour scheme](#table-colour-scales-1) for every single column.
+
+- Ensure that adjacent columns do not share the same colour scheme
+  - Makes long tables easier to follow
+  - Allows fast recognition of columns for regular users
+- Think about what the colours suggest
+  - For example, if a large value is a _bad_ thing (eg. percent duplication), use a strong red colour for large values
+  - If values are centred around a point (eg. `0`), use a diverging colour scheme. Values close to the centre will have a weak colour and those at _both_ ends of the distribution will be strongly coloured.
+  - This allows rapid understanding without a lot of thought
+
+This usually comes up for tables, but you can also think about it for bar plots.
+
 ## Core modules / plugins
 
 New modules can either be written as part of MultiQC or in a stand-alone
@@ -61,99 +119,36 @@ Much like source control, gloves in a lab, and wearing a seatbelt, code formatte
 is an annoying inconvience at first for most people which in time becomes an indespesible
 tool in the maintenance of high quality software.
 
-When it comes to MultiQC, three tools are used to set and check the code base:
+MultiQC uses a range of tools to check the code base. The main two code formatters are:
 
 - [Black](https://github.com/psf/black) - Python Code
 - [Prettier](https://prettier.io/) - Everything else (almost)
-- [markdownlint-cli](https://github.com/igorshubovych/markdownlint-cli) - Stricter markdown rules
 
-**All developers must run these tools when submitting changes via Pull-Requests!**
-Automated continuous integration tests will run using GitHub Actions to check that all files pass the above tests.
-If any files do not, that test will fail giving a red :x: next to the pull request.
+The easiest way to work with these is to install editor plugins that run the tools every time you save a file.
+For example, [Visual Studio Code](https://code.visualstudio.com/) has
+[built-in support for Black](https://code.visualstudio.com/docs/python/editing#_formatting) and
+plugins for [Prettier](https://github.com/prettier/prettier-vscode).
+
+### Pre-commit
+
+MultiQC uses [pre-commit](https://pre-commit.com/) to test your code when you open a pull-request.
+
+It's recommended that you install it yourself in your MultiQC clone directory:
+
+```bash
+pip install pre-commit # install the tool
+pre-commit install # set up pre-commit in the MultiQC repository
+```
+
+This will then automatically run all code checks on the files you have edited when you create a commit. Pre-commit cancels the commit if anything fails - sometimes it will have fixed files for you, in which case just add them and try to commit again. Sometimes you will need to read the logs and fix the problem manually.
+
+Automated continuous integration tests will run using GitHub Actions to check that all files pass the above tests. If any files do not, that test will fail giving a red ❌ next to the pull request.
 
 > Make sure that your configuration is working properly and that you're not changing loads of files
 > that you haven't worked with. Pull-requests will not be merged with such changes.
 
-All three tools should be relatively easy to install and run, and have integration with the majority
+These tools should be relatively easy to install and run, and have integration with the majority
 of code editors. Once set up, they can run on save and you'll never need to think about them again.
-
-For example, [Visual Studio Code](https://code.visualstudio.com/) has
-[built-in support for Black](https://code.visualstudio.com/docs/python/editing#_formatting) and
-plugins for [Prettier](https://github.com/prettier/prettier-vscode) and
-[Markdownlint](https://github.com/DavidAnson/vscode-markdownlint).
-
-Atom also has plugins for [Black](https://atom.io/packages/python-black),
-[Prettier](https://atom.io/packages/prettier-atom) and
-[Markdownlint](https://atom.io/packages/linter-node-markdownlint).
-
-### Use version control
-
-These tools are set up to edit source code in place. If you're not used to working with them,
-make sure that you have saved your changes _and made a commit_ with those changes before running them!
-Then if all goes wrong and they make loads of unexpected changes, you can run `git checkout .` to
-reset everything before trying again.
-
-### Black
-
-MultiQC is written in Python and so the majority of the codebase is Python.
-[Black](https://github.com/psf/black) describes itself as _"The uncompromising code formatter"_
-and has very few configuration options on purpose.
-
-Black is very easy to install and run:
-
-```bash
-pip install black
-black .
-```
-
-Black should automatically find the config file in the root of the directory called
-`pyproject.toml` which configures it to use a line length of 120 characters.
-This should be found automatically.
-
-### Prettier
-
-In addition to Python, MultiQC also has a lot of markdown documentation,
-YAML configuration files, custom JavaScript and more. To format these files
-we use a tool called [Prettier](https://prettier.io/).
-
-Prettier is available via the Node Package Manager (npm). If you've not used this before,
-you'll need to install Node first: <https://nodejs.org/en/download/>
-
-Once `npm` is working, you can [install Prettier](https://prettier.io/docs/en/install.html) globally.
-Then run with the `--write` flag to edit files in place.
-
-```bash
-npm install -g prettier
-prettier --write .
-```
-
-Prettier has two config files in the repository root: `.prettierrc.yaml` and `.prettierignore`.
-These should be found automatically by Prettier.
-One configures Prettier to use longer line lengths of 120 characters and the other tells it to skip
-bundled source files and all HTML files (personally I'm not a fan of what it does with HTML).
-
-### Markdownlint
-
-Prettier formats markdown using [remark](https://github.com/remarkjs/remark), which works great.
-However, [Markdownlint](https://github.com/DavidAnson/markdownlint) has a lot more strict rules
-and checks for a load of additional nice things (eg. specifying code type for syntax highlighting of code blocks).
-
-Markdownlint doesn't fix things in place like the two tools above, instead it just checks files
-and reports problems that must be fixed manually.
-
-MultiQC uses [markdownlint-cli](https://github.com/igorshubovych/markdownlint-cli) to run tests.
-Once `npm` is working (see above), it's a simple install and run:
-
-```bash
-npm install -g markdownlint-cli
-markdownlint .
-```
-
-There is a config file for markdownlint in the root of the repository called `.markdownlint.yaml`
-which disables and tweaks quite a lot of rules. This should be found automatically.
-
-Note that the editor plugins above run this as you edit files, giving little wiggly lines
-to warn you about problems as you type.
 
 ## Initial setup
 

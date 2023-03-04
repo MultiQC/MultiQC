@@ -17,7 +17,7 @@ class MultiqcModule(BaseMultiqcModule):
             anchor="porechop",
             href="https://github.com/rrwick/Porechop",
             info="a tool for finding and removing adapters from Oxford Nanopore reads.",
-            doi="",
+            # doi="",  # No DOI available
         )
 
         # Find and load reports
@@ -38,9 +38,11 @@ class MultiqcModule(BaseMultiqcModule):
         self.write_data_file(self.porechop_data, "porechop")
 
         self.porechop_general_stats()
-        self.start_trim_barplot()
-        self.end_trim_barplot()
-        self.middle_split_barplot()
+        if max(len(v) for v in self.porechop_data.values()) > 1:
+            self.start_trim_barplot()
+            self.end_trim_barplot()
+            self.middle_split_barplot()
+        self.no_adapters_found()
 
     def parse_logs(self, logfile):
         """Parsing Logs. Note: careful of ANSI formatting log"""
@@ -241,3 +243,21 @@ class MultiqcModule(BaseMultiqcModule):
             description="Shows the number of reads that were split due to adapter being present in middle of read.",
             plot=bargraph.plot(self.porechop_data, cats, config),
         )
+
+    def no_adapters_found(self):
+        """Show any samples that did not have any trimming"""
+        no_adapters = []
+        for s_name in self.porechop_data:
+            if len(self.porechop_data[s_name]) == 1:
+                no_adapters.append(s_name)
+        if len(no_adapters):
+            self.add_section(
+                name="No adapters found",
+                anchor="porechop-noadapters",
+                description="The following samples did not have any adapters found - output reads were unchanged from input reads:",
+                content=f"""
+                    <ul>
+                        <li><code>{'</code></li><li><code>'.join(no_adapters)}</code></li>
+                    </ul>
+                """,
+            )

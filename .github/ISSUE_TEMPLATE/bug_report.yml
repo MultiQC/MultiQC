@@ -41,3 +41,23 @@ body:
         |           multiqc | Report      : multiqc_report.html
         |           multiqc | Data        : multiqc_data
         |           multiqc | MultiQC complete
+
+  - type: checkboxes
+    id: checklist
+    attributes:
+      label: Before submitting
+      description: >-
+        Please ensure your bug report fulfills all of the following requirements.
+      options:
+        - label: >-
+            I have read the [troubleshooting documentation](https://multiqc.info/docs/#troubleshooting-1).
+          required: true
+        - label: >-
+            I am using the latest release of MultiQC.
+          required: true
+        - label: >-
+            I have included a full MultiQC log, not truncated.
+          required: true
+        - label: >-
+            I have attached an input file (**.zip** if necessary) that triggers the error.
+          required: true

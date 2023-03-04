@@ -194,7 +194,6 @@ class StatsReportMixin:
         self.bcftools_stats = self.ignore_samples(self.bcftools_stats)
 
         if len(self.bcftools_stats) > 0:
-
             # Write parsed report data to a file
             self.write_data_file(self.bcftools_stats, "multiqc_bcftools_stats")
 

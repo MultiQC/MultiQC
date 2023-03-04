@@ -96,7 +96,6 @@ class MultiqcModule(BaseMultiqcModule):
             self.general_stats_addcols(data, headers)
 
     def parse_logs(self, file_type, root, s_name, fn, f, **kw):
-
         if self.is_ignore_sample(s_name):
             return False
 
