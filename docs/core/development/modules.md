@@ -244,9 +244,9 @@ should have the following structure:
 
 ```markdown
 ---
-Name: Tool Name
-URL: http://www.amazing-bfx-tool.com
-Description: >
+name: Tool Name
+url: http://www.amazing-bfx-tool.com
+description: >
   This amazing tool does some really cool stuff. You can describe it
   here and split onto multiple lines if you want. Not too long though!
 ---
