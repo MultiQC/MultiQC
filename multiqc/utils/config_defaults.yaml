@@ -515,6 +515,9 @@ module_order:
       module_tag:
         - DNA
         - ancient
+  - haplocheck:
+      module_tag:
+        - DNA
   - picard:
       module_tag:
         - DNA
