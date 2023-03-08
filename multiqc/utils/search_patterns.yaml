@@ -363,6 +363,7 @@ goleft_indexcov/ped:
 gopeaks:
   fn: "*_gopeaks.json"
 haplocheck:
+  contents: "Major Heteroplasmy Level"
   fn: "*.raw.txt"
 happy:
   fn: "*.summary.csv"

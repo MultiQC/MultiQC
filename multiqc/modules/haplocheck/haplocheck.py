@@ -26,6 +26,7 @@ class MultiqcModule(BaseMultiqcModule):
         self._samples = samples
         self.add_section(plot=table.plot(data=self._samples, headers=self._setup_headers()))
         self.write_data_file(self._samples, "multiqc_haplocheck")
+        log.info("Found {} samples".format(len(samples)))
 
     def _setup_headers(self):
         headers = OrderedDict()
@@ -69,10 +70,10 @@ class MultiqcModule(BaseMultiqcModule):
     @staticmethod
     def _parse_samples(f, samples):
         for row in csv.DictReader(f["f"], delimiter="\t"):
-            sample_name = row["Sample"].replace(".raw", "")
+            sample_name = row["Sample"]
             row.pop("Sample")
             if sample_name in samples:
-                log.debug("Duplicate sample name found! Overwriting: {}".format(sample_name))
+                log.warning("Duplicate sample name found! Overwriting: {}".format(sample_name))
             samples[sample_name] = row
 
         return samples
