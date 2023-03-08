@@ -86,6 +86,7 @@ MultiQC Modules:
     goleft_indexcov: modules/goleft_indexcov.md
     gopeaks: modules/gopeaks.md
     Hap.py: modules/happy.md
+    haplocheck: modules/haplocheck.md
     HiCExplorer: modules/hicexplorer.md
     HOMER: modules/homer.md
     HOPS: modules/hops.md
