@@ -66,13 +66,6 @@ class MultiqcModule(BaseMultiqcModule):
         }
         return headers
 
-    # @staticmethod
-    # def _parse_samples(log_files: Generator[Any, Any, None]) -> Dict[str, OrderedDict]:
-    #
-    #
-    #     log.info("Found {} sample lines".format(c))
-    #     return samples
-
     @staticmethod
     def _parse_samples(f, samples):
         for row in csv.DictReader(f["f"], delimiter="\t"):
