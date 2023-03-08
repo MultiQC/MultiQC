@@ -1,7 +1,6 @@
 import csv
 import logging
 from collections import OrderedDict
-from typing import Any, Dict, Generator
 
 from multiqc.modules.base_module import BaseMultiqcModule
 from multiqc.plots import table
@@ -19,8 +18,14 @@ class MultiqcModule(BaseMultiqcModule):
             doi="10.1101/gr.256545.119",
         )
         log_files = self.find_log_files("haplocheck", filehandles=True)
-        self._samples: Dict[str, OrderedDict] = self._parse_samples(log_files)
+        samples = {}
+        for f in log_files:
+            samples = self._parse_samples(f, samples)
+            self.add_data_source(f)
+
+        self._samples = samples
         self.add_section(plot=table.plot(data=self._samples, headers=self._setup_headers()))
+        self.write_data_file(self._samples, "multiqc_haplocheck")
 
     def _setup_headers(self):
         headers = OrderedDict()
@@ -61,19 +66,20 @@ class MultiqcModule(BaseMultiqcModule):
         }
         return headers
 
-    @staticmethod
-    def _parse_samples(log_files: Generator[Any, Any, None]) -> Dict[str, OrderedDict]:
-        samples = {}
-        c = 0
-        for f in log_files:
-            for row in csv.DictReader(f["f"], delimiter="\t"):
-                sample_name = row["Sample"].replace(".raw", "")
-                row.pop("Sample")
-                if sample_name in samples:
-                    log.debug("Duplicate sample name found! Overwriting: {}".format(sample_name))
-                else:
-                    c += 1
-                samples[sample_name] = row
+    # @staticmethod
+    # def _parse_samples(log_files: Generator[Any, Any, None]) -> Dict[str, OrderedDict]:
+    #
+    #
+    #     log.info("Found {} sample lines".format(c))
+    #     return samples
 
-        log.info("Found {} sample lines".format(c))
+    @staticmethod
+    def _parse_samples(f, samples):
+        for row in csv.DictReader(f["f"], delimiter="\t"):
+            sample_name = row["Sample"].replace(".raw", "")
+            row.pop("Sample")
+            if sample_name in samples:
+                log.debug("Duplicate sample name found! Overwriting: {}".format(sample_name))
+            samples[sample_name] = row
+
         return samples

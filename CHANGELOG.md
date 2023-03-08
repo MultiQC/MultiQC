@@ -10,6 +10,9 @@
 
 ### New Modules
 
+- [**Haplocheck**](https://github.com/genepi/haplocheck)
+  - Haplocheck detects in-sample contamination in mtDNA or WGS sequencing studies by analyzing the mitchondrial content.
+
 ### Module updates
 
 - **Cell Ranger**
