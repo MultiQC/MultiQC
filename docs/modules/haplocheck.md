@@ -5,14 +5,10 @@ Description: >
   Detects in-sample contamination in mtDNA or WGS sequencing studies by analyzing the mitchondrial content.
 ---
 
-The Haplocheck module parses the `[sample_name].raw.txt` files and creates a table with:
+The Haplocheck module parses the `[sample_name].raw.txt` files and creates a table in the MultiQC report.
 
-- Sample
-- Contamination Status
-- Contamination Level
-- Major Haplogroup
-- Major Heteroplasmy Level
-- Minor Haplogroup
-- Minor Heteroplasmy Level
+Please note that it requires the raw output. Use the `--raw` parameter when calling the program.
+
+`haplocheck --raw --out $sample_id $vcf`
 
 MultiQC has been tested with output from Haplocheck 1.3.3.

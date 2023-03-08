@@ -115,7 +115,7 @@ setup(
             "gatk = multiqc.modules.gatk:MultiqcModule",
             "goleft_indexcov = multiqc.modules.goleft_indexcov:MultiqcModule",
             "gopeaks = multiqc.modules.gopeaks:MultiqcModule",
-            "haplocheck = multiqc.modules.haplocheck.MultiqcModule",
+            "haplocheck = multiqc.modules.haplocheck:MultiqcModule",
             "happy = multiqc.modules.happy:MultiqcModule",
             "hicexplorer = multiqc.modules.hicexplorer:MultiqcModule",
             "hicpro = multiqc.modules.hicpro:MultiqcModule",
