@@ -34,9 +34,11 @@ The FastQC MultiQC module looks for files called `fastqc_data.txt`
 or ending in `_fastqc.zip`. If the zip files are found, they are
 read in memory and `fastqc_data.txt` parsed.
 
-> **Note:** The directory and zip file are often both present. To speed
-> up MultiQC execution, zip files will be skipped if the file name suggests
-> that they will share a sample name with data that has already been parsed.
+:::note
+The directory and zip file are often both present. To speed
+up MultiQC execution, zip files will be skipped if the file name suggests
+that they will share a sample name with data that has already been parsed.
+:::
 
 You can customise the patterns used for finding these files in your
 MultiQC config (see [Module search patterns](#module-search-patterns)).
@@ -49,9 +51,10 @@ sp:
   fastqc/zip:
     fn: "*_fastqc.zip"
 ```
-
-> **Note:** Sample names are discovered by parsing the line beginning
-> `Filename` in `fastqc_data.txt`, _not_ based on the FastQC report names.
+:::note
+Sample names are discovered by parsing the line beginning
+`Filename` in `fastqc_data.txt`, _not_ based on the FastQC report names.
+:::
 
 ### Theoretical GC Content
 

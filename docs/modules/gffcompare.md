@@ -10,8 +10,10 @@ of one or more GFF files (the "query" files), when compared with a reference ann
 The _Sensitivity / Precision_ values are displayed in a single plot,
 different loci levels can be switched by choosing a different dataset.
 
-> **NB:** Please use `gffcompare` only with single samples.
-> Multi-Sample comparisons are not correctly rendered by this MultiQC module.
+:::warning
+Please use `gffcompare` only with single samples.
+Multi-Sample comparisons are not correctly rendered by this MultiQC module.
+:::
 
 Note that exported data in `multiqc_data/multiqc_gffcompare.{tsv,yaml,json}` only works when
 exporting with YAML or JSON - the default `.tsv` output will not contain any data.
