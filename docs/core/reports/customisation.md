@@ -180,7 +180,9 @@ SRR1067510_1	Sample_3	MYBESTSAMP_3
 If supplied, buttons will be generated at the top of the report with your labels.
 Clicking these will populate and apply the Toolbox renaming panel.
 
-> **NB:** Sample renaming works with partial substrings - these will be replaced!
+:::warning
+Sample renaming works with partial substrings - these will be replaced!
+:::
 
 It's also possible to supply such renaming patterns within a config file (useful if you're
 already generating a config file for a run). In this case, you need to set the variables
