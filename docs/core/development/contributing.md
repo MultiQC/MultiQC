@@ -1,6 +1,12 @@
 ---
-
+title: Contributing
+description: Guides for how to contribute to the MultiQC code base
+order: 6
 ---
+
+## Documentation
+
+### Admonitions
 
 :::note
 He had half a mind just to keep on `falling`.
@@ -12,7 +18,7 @@ His face froze for a second or two and then began to do that terribly slow crash
 
 :::warning
 He smiled the smile that Zaphod had wanted to hit and this time `Zaphod` hit it.
-::: 
+:::
 
 :::danger
 One of the troublesome circumstances was the Plural nature of this Galactic Sector, where the possible `continually` interfered with the probable.
