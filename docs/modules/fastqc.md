@@ -51,6 +51,7 @@ sp:
   fastqc/zip:
     fn: "*_fastqc.zip"
 ```
+
 :::note
 Sample names are discovered by parsing the line beginning
 `Filename` in `fastqc_data.txt`, _not_ based on the FastQC report names.

@@ -213,6 +213,7 @@ custom_data:
         col_1: 84.84
         col_2: 1.9
 ```
+
 :::note
 Use a **list** of headers in `pconfig` (keys prepended with `-`) to specify the order
 of columns in the General Statistics table.
