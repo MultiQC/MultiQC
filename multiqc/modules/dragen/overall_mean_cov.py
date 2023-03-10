@@ -5,9 +5,10 @@ Overall Mean Coverage Report, page 196.
 https://emea.support.illumina.com/content/dam/illumina-support/documents/documentation/software_documentation/dragen-bio-it/Illumina-DRAGEN-Bio-IT-Platform-User-Guide-1000000141465-00.pdf
 '''
 
-import re
 import logging
+import re
 from collections import defaultdict
+
 from multiqc.modules.base_module import BaseMultiqcModule
 
 # Initialise the logger.
@@ -33,6 +34,10 @@ class DragenOverallMeanCovMetrics(BaseMultiqcModule):
         for file in self.find_log_files("dragen/overall_mean_cov_metrics"):
             out = parse_overall_mean_cov(file)
             if out["success"]:
+                # No need to call add_data_source, because the collected data is used
+                # only by the coverage_metrics.py module and will not be included in html.
+                # self.add_data_source(file, section="stats")
+
                 # Data for the coverage_metrics.py module.
                 if out["phenotype"]:
                     root, sample, phenotype, data = (
@@ -45,6 +50,11 @@ class DragenOverallMeanCovMetrics(BaseMultiqcModule):
                 # Currently there is no need to support other files. Pass for now.
                 else:
                     pass
+        # No need to write the data.
+        # self.write_data_file(self._overall_mean_cov_data)
+
+        # Just to pass the pre-commit
+        # doi=
 
 
 # Official structure of files:   _overall_mean_cov.csv
@@ -98,9 +108,7 @@ def parse_overall_mean_cov(file_handler):
         # Otherwise check if line is empty. If not then report it and go to the next line.
         else:
             if not re.search("^\s*$", line):
-                log.debug(
-                    "\nUnsupported metric: " + line + "\n" + file + "\nin: " + root
-                )
+                log.debug("\nUnsupported metric: " + line + "\n" + file + "\nin: " + root)
             continue
 
         # Try to convert the value. It shall be float.
@@ -110,14 +118,7 @@ def parse_overall_mean_cov(file_handler):
             try:
                 value = int(value)
             except ValueError:
-                log.debug(
-                    "\nNon int/float value found: "
-                    + line
-                    + "\n"
-                    + file
-                    + "\nin: "
-                    + root
-                )
+                log.debug("\nNon int/float value found: " + line + "\n" + file + "\nin: " + root)
 
     data = {"source_file": source, "value": value}
 

@@ -1,12 +1,12 @@
 import logging
 
 from .coverage_hist import DragenCoverageHist
-from .overall_mean_cov import DragenOverallMeanCovMetrics
 from .coverage_metrics import DragenCoverageMetrics
 from .coverage_per_contig import DragenCoveragePerContig
 from .dragen_gc_metrics import DragenGcMetrics
 from .fragment_length import DragenFragmentLength
 from .mapping_metrics import DragenMappingMetics
+from .overall_mean_cov import DragenOverallMeanCovMetrics
 from .ploidy_estimation_metrics import DragenPloidyEstimationMetrics
 from .rna_quant_metrics import DragenRnaQuantMetrics
 from .rna_transcript_cov import DragenRnaTranscriptCoverage

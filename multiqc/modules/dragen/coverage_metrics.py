@@ -10,17 +10,16 @@ The following sentence from the User-Guide deserves attention:
 Additional coverage metrics can be enabled, and additional coverage regions can be specified.
 """"""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""'''
 
-import re
 import logging
+import re
 from collections import defaultdict
-from typing import List
 
 from multiqc import config
 from multiqc.modules.base_module import BaseMultiqcModule
 from multiqc.plots import table
 from multiqc.utils.util_functions import write_data_file
 
-from .utils import order_headers, clean_headers
+from .utils import clean_headers, order_headers
 
 # Initialise the logger.
 log = logging.getLogger(__name__)
@@ -627,10 +626,7 @@ def check_duplicate_samples(sample_names):
                 for orig_s_name, file in sample_names[s_name][phenotype]:
                     message += line2.format(file["fn"], file["root"])
     if message:
-        message = (
-            "\nDuplicate sample names were found. The last one overwrites previous data."
-            + message
-        )
+        message = "\nDuplicate sample names were found. The last one overwrites previous data." + message
         log.warning(message)
 
 
@@ -647,7 +643,7 @@ def make_data_for_txt_report(coverage_data):
 def make_bed_texts(overall_mean, sample_names):
     """Matches _overall_mean_cov.csv to the corresponding _coverage_metrics.csv
     Extracts coverage bed/target bed/wgs/file names and creates a text for each
-    section (phenotype)."""
+    section (phenotype). The values can be also checked (not implemented)."""
 
     # Each sample.phenotype can have at most 1 corresponding overall_mean_cov.csv file.
     # If it has it, then append the sample to the sources_matched. If not, then
@@ -677,9 +673,11 @@ def make_bed_texts(overall_mean, sample_names):
                 sources_not_matched[phenotype].append(sample)
 
     def extract_source(source_file):
+        # Windows
         if "/" in source_file:
             return source_file.split("/")[-1]
 
+        # Linux
         elif "\\" in source_file:
             return source_file.split("\\")[-1]
 
@@ -703,11 +701,7 @@ def make_bed_texts(overall_mean, sample_names):
             if phenotype in sources_not_matched:
                 # First tell about matched ones.
                 for source in bed_sources:
-                    text += (
-                        "The following samples are based on the "
-                        + extract_source(source)
-                        + ": "
-                    )
+                    text += "The following samples are based on the " + extract_source(source) + ": "
                     for sample in bed_sources[source]:
                         text += sample + ", "
 
@@ -726,19 +720,12 @@ def make_bed_texts(overall_mean, sample_names):
             else:
                 # Just 1 source file for all samples?
                 if len(bed_sources) == 1:
-                    text = (
-                        "All samples are based on the "
-                        + extract_source(list(bed_sources)[0])
-                        + "."
-                    )
+                    text = "All samples are based on the " + extract_source(list(bed_sources)[0]) + "."
+
                 # At least 2 source files are present.
                 else:
                     for source in bed_sources:
-                        text += (
-                            "The following samples are based on the "
-                            + extract_source(source)
-                            + ": "
-                        )
+                        text += "The following samples are based on the " + extract_source(source) + ": "
                         for sample in bed_sources[source]:
                             text += sample + ", "
                         # Get rid of the last ", " and append ".\n\n"
@@ -789,7 +776,6 @@ def create_table_handlers():
 
         return phenotype
 
-
     def make_general_stats(coverage_data, headers):
         """Prepare data and headers for the general table."""
 
@@ -802,15 +788,8 @@ def create_table_handlers():
                 for metric in data:
                     # Data and the corresponding header are included in the report,
                     # only if "exclude" is not presented or False/False-equivalent.
-                    if not (
-                        "exclude" in headers[metric] and headers[metric]["exclude"]
-                    ):
+                    if not ("exclude" in headers[metric] and headers[metric]["exclude"]):
                         # Make exclusive metric ID.
-                        # Please notice that special signs (eg "]") are
-                        # excluded when HTML IDs are created. So, for example:
-                        # PCT of region with coverage [10x: 50x)
-                        # PCT of region with coverage [10x: 50x]
-                        # will both reference the same HTML ID.
                         m_id = "gen table_" + phenotype + "_" + metric
                         """
                         Only the sample is used as key for gen_data.
@@ -887,10 +866,7 @@ def create_table_handlers():
                 data = {sample: {}}
                 headers = {}
                 for metric in real_data:
-                    if not (
-                        "exclude_own" in coverage_headers[metric]
-                        and coverage_headers[metric]["exclude_own"]
-                    ):
+                    if not ("exclude_own" in coverage_headers[metric] and coverage_headers[metric]["exclude_own"]):
                         m_id = "own table_" + phenotype + "_" + metric
                         data[sample][m_id] = real_data[metric]
                         headers[m_id] = coverage_headers[metric].copy()
@@ -902,11 +878,7 @@ def create_table_handlers():
                 plots[phenotype]["headers"].update(headers)
                 regions[phenotype].add(region)
 
-                plots[phenotype]["config"] = {
-                    config: val
-                    for config, val in TABLE_CONFIG.items()
-                    if val is not None
-                }
+                plots[phenotype]["config"] = {config: val for config, val in TABLE_CONFIG.items() if val is not None}
                 if region in REGION_TABLE_CONFIG and REGION_TABLE_CONFIG[region]:
                     plots[phenotype]["config"].update(REGION_TABLE_CONFIG[region])
 
@@ -945,8 +917,7 @@ def create_table_handlers():
                     {
                         "name": improve_own_phenotype(phenotype) + " Metrics",
                         # Spaces are replaced with hyphens to pass MultiQC lint test.
-                        "anchor": "dragen-cov-metrics-own-sec-"
-                        + re.sub("\s+", "-", phenotype),
+                        "anchor": "dragen-cov-metrics-own-sec-" + re.sub("\s+", "-", phenotype),
                         "helptext": helptext,
                         "description": description,
                         "plot": table.plot(
@@ -978,27 +949,19 @@ def construct_coverage_parser():
         "make_configs": None,
     }
     AVG_PAT = {
-        "RGX": re.compile(
-            "^Average (?P<entity>.+?) coverage over (?P<region>.+)", re.IGNORECASE
-        ),
+        "RGX": re.compile("^Average (?P<entity>.+?) coverage over (?P<region>.+)", re.IGNORECASE),
         "make_configs": None,
     }
     PCT_PAT = {
-        "RGX": re.compile(
-            "^PCT of (?P<region>.+?) with coverage (?P<entity>.+)", re.IGNORECASE
-        ),
+        "RGX": re.compile("^PCT of (?P<region>.+?) with coverage (?P<entity>.+)", re.IGNORECASE),
         "make_configs": None,
     }
     UNI_PAT = {
-        "RGX": re.compile(
-            "^Uniformity of coverage (?P<entity>.+?) over (?P<region>.+)", re.IGNORECASE
-        ),
+        "RGX": re.compile("^Uniformity of coverage (?P<entity>.+?) over (?P<region>.+)", re.IGNORECASE),
         "make_configs": None,
     }
     MED_PAT = {
-        "RGX": re.compile(
-            "^Median (?P<entity>.+?) coverage over (?P<region>.+)", re.IGNORECASE
-        ),
+        "RGX": re.compile("^Median (?P<entity>.+?) coverage over (?P<region>.+)", re.IGNORECASE),
         "make_configs": None,
     }
     RAT_PAT = {
@@ -1066,12 +1029,7 @@ def construct_coverage_parser():
 
         pct_case = PCT_PAT["RGX"].search(metric_id)
         if pct_case:
-            metric_id = (
-                "pct of "
-                + pct_case["region"]
-                + " with coverage "
-                + pct_case["entity"].replace(" ", "")
-            )
+            metric_id = "pct of " + pct_case["region"] + " with coverage " + pct_case["entity"].replace(" ", "")
 
         return metric_id
 
@@ -1159,9 +1117,7 @@ def construct_coverage_parser():
                     value1 = float(value1)
                 except ValueError:
                     if not re.search("^NA$", value1, re.IGNORECASE):
-                        log_data["unusual_values"][root_name][file_name][
-                            metric + V2
-                        ] = value1
+                        log_data["unusual_values"][root_name][file_name][metric + V2] = value1
 
             if value2:
                 try:
@@ -1171,9 +1127,7 @@ def construct_coverage_parser():
                         value2 = int(value2)
                     except ValueError:
                         if not re.search("^NA$", value2, re.IGNORECASE):
-                            log_data["unusual_values"][root_name][file_name][
-                                metric + V2
-                            ] = value2
+                            log_data["unusual_values"][root_name][file_name][metric + V2] = value2
 
             metric_id = make_metric_id(metric)
             if metric_id not in headers:
@@ -1191,11 +1145,7 @@ def construct_coverage_parser():
                             cov_headers_support[metric_id]["warning"] = 1
 
                         # First set common configs from the SINGLE_HEADER.
-                        configs = {
-                            config: value
-                            for config, value in SINGLE_HEADER.items()
-                            if value is not None
-                        }
+                        configs = {config: value for config, value in SINGLE_HEADER.items() if value is not None}
 
                         if AUTO_CONFIGS_ENABLED:
                             auto_configs = output_auto["configs"]
@@ -1208,11 +1158,7 @@ def construct_coverage_parser():
                         headers[metric_id] = configs
 
                         if value2:
-                            configs = {
-                                config: value
-                                for config, value in SINGLE_HEADER.items()
-                                if value is not None
-                            }
+                            configs = {config: value for config, value in SINGLE_HEADER.items() if value is not None}
 
                             if AUTO_CONFIGS_ENABLED:
                                 if "configs2" in output_auto:
@@ -1318,22 +1264,14 @@ def construct_coverage_parser():
                 for file in log_data["unusual_values"][root]:
                     log_message += "    " + file + ":\n"
                     for metric in log_data["unusual_values"][root][file]:
-                        log_message += (
-                            "      "
-                            + metric
-                            + " = "
-                            + log_data["unusual_values"][root][file][metric]
-                            + "\n"
-                        )
+                        log_message += "      " + metric + " = " + log_data["unusual_values"][root][file][metric] + "\n"
 
             log.warning(log_message + "\n")
 
     def get_std_configs(configs_dict):
         """Copies the standard real/virtual configurations from configs_dict."""
         return {
-            config: value
-            for config, value in configs_dict.items()
-            if config in SINGLE_HEADER or config in EXTRA_HEADER
+            config: value for config, value in configs_dict.items() if config in SINGLE_HEADER or config in EXTRA_HEADER
         }
 
     def make_user_configs(metric, region):
@@ -1372,9 +1310,7 @@ def construct_coverage_parser():
 
             # Try to match the float and set specific configs.
             if uni_case and "extra" in user_configs and user_configs["extra"]:
-                entity_match = re.search(
-                    r"\(PCT > (\d+\.\d+)\*mean\)", uni_case["entity"], re.IGNORECASE
-                )
+                entity_match = re.search(r"\(PCT > (\d+\.\d+)\*mean\)", uni_case["entity"], re.IGNORECASE)
                 if entity_match:
                     _float = entity_match.group(1)
                     if _float in user_configs["extra"]:
@@ -1399,7 +1335,7 @@ def construct_coverage_parser():
     - optional    region    if presented in a metric and can be extracted easily.
                             Returning it is encouraged.
     - optional    warning   can be returned if metric could not be recognized.
-                            The associated value is irrelevant(shall be equal to True).
+                            The associated value is irrelevant.
 
     Please note: modify lambda/func must check for string input.
     """""""""""""""""""""""""""""""""""""""""""""""""""""""""'''
@@ -1480,13 +1416,9 @@ def construct_coverage_parser():
                     "configs": {
                         "min": 0,
                         "format": base_format,
-                        "description": "Total number ({}) of aligned bases.".format(
-                            config.base_count_desc
-                        ),
+                        "description": "Total number ({}) of aligned bases.".format(config.base_count_desc),
                         "title": config.base_count_prefix + " Aln bases",
-                        "modify": lambda x: x
-                        if isinstance(x, str)
-                        else x * base_count_multiplier,
+                        "modify": lambda x: x if isinstance(x, str) else x * base_count_multiplier,
                     }
                 }
             else:
@@ -1494,13 +1426,9 @@ def construct_coverage_parser():
                     "configs": {
                         "min": 0,
                         "format": read_format,
-                        "description": "Total number ({}) of aligned reads.".format(
-                            config.read_count_desc
-                        ),
+                        "description": "Total number ({}) of aligned reads.".format(config.read_count_desc),
                         "title": config.read_count_prefix + " Aln reads",
-                        "modify": lambda x: x
-                        if isinstance(x, str)
-                        else x * read_count_multiplier,
+                        "modify": lambda x: x if isinstance(x, str) else x * read_count_multiplier,
                     }
                 }
 
@@ -1510,20 +1438,13 @@ def construct_coverage_parser():
             REGION = metric_match["region"]
             region = improve_region(REGION)
             if entity == "bases":
-                description = (
-                    "Number ({}) of uniquely mapped bases to ".format(
-                        config.base_count_desc
-                    )
-                    + region
-                )
+                description = "Number ({}) of uniquely mapped bases to ".format(config.base_count_desc) + region
                 configs = {
                     "min": 0,
                     "format": base_format,
                     "title": config.base_count_prefix + " Aln bases",
                     "description": description + ".",
-                    "modify": lambda x: x
-                    if isinstance(x, str)
-                    else x * base_count_multiplier,
+                    "modify": lambda x: x if isinstance(x, str) else x * base_count_multiplier,
                 }
                 configs2 = {
                     "min": 0,
@@ -1531,14 +1452,11 @@ def construct_coverage_parser():
                     "suffix": " %",
                     "format": base_format,
                     "title": "Aln bases on trg",
-                    "description": description
-                    + " relative to the number of uniquely mapped bases to the genome.",
+                    "description": description + " relative to the number of uniquely mapped bases to the genome.",
                 }
             else:
                 description = (
-                    "Number ({}) of uniquely mapped reads to ".format(
-                        config.read_count_desc
-                    )
+                    "Number ({}) of uniquely mapped reads to ".format(config.read_count_desc)
                     + region
                     + ". DRAGEN V3.4 - V3.8:"
                     + " When region is the target BED, this metric is equivalent to and replaces"
@@ -1551,9 +1469,7 @@ def construct_coverage_parser():
                     "format": read_format,
                     "title": config.read_count_prefix + " Aln reads",
                     "description": description,
-                    "modify": lambda x: x
-                    if isinstance(x, str)
-                    else x * read_count_multiplier,
+                    "modify": lambda x: x if isinstance(x, str) else x * read_count_multiplier,
                 }
                 configs2 = {
                     "min": 0,
@@ -1603,11 +1519,7 @@ def construct_coverage_parser():
         if entity == "alignment":
             configs["title"] = "Depth"
             configs["description"] = (
-                "Number of uniquely mapped bases to "
-                + region
-                + " divided by the number of sites in "
-                + region
-                + "."
+                "Number of uniquely mapped bases to " + region + " divided by the number of sites in " + region + "."
             )
         elif entity == "autosomal":
             configs["title"] = "AvgAutCov"
@@ -1695,9 +1607,7 @@ def construct_coverage_parser():
                 + ".",
             }
             if multiplier == "0.2":
-                configs[
-                    "description"
-                ] += " Demonstrates the uniformity of coverage, the higher the better."
+                configs["description"] += " Demonstrates the uniformity of coverage, the higher the better."
 
             return {"configs": configs, "region": REGION}
 
@@ -1749,9 +1659,8 @@ def construct_coverage_parser():
                 if IX == "0" and JX == "1":
                     description += " with no coverage."
                 else:
-                    description += (
-                        " with at least " + IX + "x but less than " + JX + "x coverage."
-                    )
+                    description += " with at least " + IX + "x but less than " + JX + "x coverage."
+
             return {
                 "configs": {
                     "min": 0,

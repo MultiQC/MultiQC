@@ -154,9 +154,7 @@ def order_headers(headers):
     ordered_headers = {}
     not_ordered_headers = {}
     for metric in headers:
-        if "order_priority" in headers[metric] and isinstance(
-            headers[metric]["order_priority"], (int, float)
-        ):
+        if "order_priority" in headers[metric] and isinstance(headers[metric]["order_priority"], (int, float)):
             order_priority = headers[metric]["order_priority"]
             indexes.add(order_priority)
             if order_priority not in ordered_headers:
@@ -210,8 +208,6 @@ def clean_headers(headers):
     cleaned_headers = OrderedDict()
     for metric in headers:
         cleaned_headers[metric] = {
-            config: val
-            for config, val in headers[metric].items()
-            if config in STD_TABLE_CONFIGS
+            config: val for config, val in headers[metric].items() if config in STD_TABLE_CONFIGS
         }
     return cleaned_headers
