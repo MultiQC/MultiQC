@@ -141,3 +141,77 @@ def make_headers(parsed_metric_ids, metrics):
 
 def exist_and_number(data, *metrics):
     return all(isinstance(data.get(m, None), int) or isinstance(data.get(m, None), float) for m in metrics)
+
+
+def order_headers(headers):
+    """Produces a shallow copy with ordered single headers."""
+    """
+    Collected "order_priority" values are stored as groups to resolve
+    conflicts, which may arise if several metrics have the same priority.
+    The order of headers within the same priority group is not specified.
+    """
+    indexes = set()
+    ordered_headers = {}
+    not_ordered_headers = {}
+    for metric in headers:
+        if "order_priority" in headers[metric] and isinstance(
+            headers[metric]["order_priority"], (int, float)
+        ):
+            order_priority = headers[metric]["order_priority"]
+            indexes.add(order_priority)
+            if order_priority not in ordered_headers:
+                ordered_headers[order_priority] = []
+            ordered_headers[order_priority].append((metric, headers[metric].copy()))
+        else:
+            not_ordered_headers[metric] = headers[metric].copy()
+
+    # Convert to list and sort in ascending order.
+    if indexes:
+        indexes = list(indexes)
+        indexes.sort()
+    else:
+        return headers
+
+    output_headers = OrderedDict()
+    for index in indexes:
+        for metric in ordered_headers[index]:
+            output_headers[metric[0]] = metric[1]
+
+    output_headers.update(not_ordered_headers)
+    return output_headers
+
+
+# STD_TABLE_CONFIGS contains all standard table configurations from:
+# https://github.com/ewels/MultiQC/blob/master/docs/plots.md#creating-a-table
+STD_TABLE_CONFIGS = [
+    "namespace",
+    "title",
+    "description",
+    "max",
+    "min",
+    "ceiling",
+    "floor",
+    "minRange",
+    "scale",
+    "bgcols",
+    "colour",
+    "suffix",
+    "format",
+    "cond_formatting_rules",
+    "cond_formatting_colours",
+    "shared_key",
+    "modify",
+    "hidden",
+    "bars_zero_centrepoint",
+]
+
+
+def clean_headers(headers):
+    cleaned_headers = OrderedDict()
+    for metric in headers:
+        cleaned_headers[metric] = {
+            config: val
+            for config, val in headers[metric].items()
+            if config in STD_TABLE_CONFIGS
+        }
+    return cleaned_headers
