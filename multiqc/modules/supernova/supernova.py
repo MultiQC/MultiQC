@@ -1,5 +1,3 @@
-#!/usr/bin/env python
-
 """ MultiQC module to parse output from Supernova"""
 
 
@@ -369,7 +367,6 @@ class MultiqcModule(BaseMultiqcModule):
             )
 
     def parse_summary(self, content):
-
         stats = {
             "assembly_size": "Asm size",
             "bases_per_read": "Read len",
@@ -494,7 +491,6 @@ class MultiqcModule(BaseMultiqcModule):
         return (sid, data)
 
     def parse_histogram(self, content, cutoff=None):
-
         try:
             cdict = json.loads(content)
         except ValueError as e:

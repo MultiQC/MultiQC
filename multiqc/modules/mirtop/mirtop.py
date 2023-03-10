@@ -1,5 +1,3 @@
-#!/usr/bin/env python
-
 """ MultiQC module to parse output from mirtop"""
 
 
@@ -17,7 +15,6 @@ log = logging.getLogger(__name__)
 
 class MultiqcModule(BaseMultiqcModule):
     def __init__(self):
-
         # Initialise the parent object
         super(MultiqcModule, self).__init__(
             name="mirtop",
@@ -98,10 +95,10 @@ class MultiqcModule(BaseMultiqcModule):
             if cleaned_s_name in self.mirtop_data:
                 log.debug("Duplicate sample name found! Overwriting: {}".format(cleaned_s_name))
             parsed_data = content["metrics"][s_name]
-            # Sum the isomiR and ref_miRNA counts. Ignore ref_miRNA if it is not present.
-            parsed_data["read_count"] = parsed_data["isomiR_sum"] + parsed_data.get("ref_miRNA_sum", 0)
+            # Sum the isomiR and ref_miRNA counts if present.
+            parsed_data["read_count"] = parsed_data.get("isomiR_sum", 0) + parsed_data.get("ref_miRNA_sum", 0)
             if parsed_data["read_count"] > 0:
-                parsed_data["isomiR_perc"] = (parsed_data["isomiR_sum"] / parsed_data["read_count"]) * 100
+                parsed_data["isomiR_perc"] = (parsed_data.get("isomiR_sum", 0) / parsed_data.get("read_count", 0)) * 100
             else:
                 parsed_data["isomiR_perc"] = 0.0
             self.mirtop_data[cleaned_s_name] = parsed_data
@@ -110,7 +107,6 @@ class MultiqcModule(BaseMultiqcModule):
         """Aggregate info for iso_snp isomiRs (for clarity). "Mean" section will be recomputed"""
         snv_aggr = {}  ## sub dict with all infos except for snps
         for sample in self.mirtop_data:
-
             snv_aggr[sample] = {
                 key: self.mirtop_data[sample][key] for key in self.mirtop_data[sample] if "iso_snp" not in key
             }

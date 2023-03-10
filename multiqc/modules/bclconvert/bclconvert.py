@@ -1,6 +1,4 @@
 import csv
-import decimal
-import json
 import logging
 import operator
 import os
@@ -296,7 +294,6 @@ class MultiqcModule(BaseMultiqcModule):
             raise UserWarning
 
         for idx, runinfo in enumerate(runinfos):
-
             rundata = self._parse_single_runinfo_file(runinfo)
 
             if runinfo["root"] != demuxes[idx]["root"]:

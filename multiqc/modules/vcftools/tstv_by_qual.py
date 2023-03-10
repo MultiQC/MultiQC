@@ -1,5 +1,3 @@
-#!/usr/bin/env python
-
 """ MultiQC module to parse TsTv by quality output from vcftools TsTv-by-qual """
 
 import logging

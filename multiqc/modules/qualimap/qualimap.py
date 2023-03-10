@@ -1,5 +1,3 @@
-#!/usr/bin/env python
-
 """ MultiQC module to parse output from QualiMap """
 
 
@@ -19,7 +17,6 @@ class MultiqcModule(BaseMultiqcModule):
     files to reflect this and help with code organisation."""
 
     def __init__(self):
-
         # Initialise the parent object
         super(MultiqcModule, self).__init__(
             name="QualiMap",

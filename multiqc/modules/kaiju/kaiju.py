@@ -1,5 +1,3 @@
-#!/usr/bin/env python
-
 """ MultiQC module to parse output from Kaiju """
 
 import logging
@@ -15,7 +13,6 @@ log = logging.getLogger(__name__)
 
 class MultiqcModule(BaseMultiqcModule):
     def __init__(self):
-
         # Initialise the parent object
         super(MultiqcModule, self).__init__(
             name="Kaiju",
@@ -107,7 +104,6 @@ class MultiqcModule(BaseMultiqcModule):
         # are not unfairly over-represented
 
         for rank_name, data in self.kaiju_data.items():
-
             for s_name, samples_values in data.items():
                 # perform sum at first level only
                 if rank_name not in self.kaiju_total_pct:
@@ -154,7 +150,7 @@ class MultiqcModule(BaseMultiqcModule):
             "scale": "RdYlGn",
         }
         headers["assigned"] = {
-            "title": "{} Reads assigned".format(config.read_count_desc),
+            "title": "{} Reads assigned".format(config.read_count_prefix),
             "description": "Number of reads assigned ({})  at {} rank".format(
                 config.read_count_desc, general_taxo_rank
             ),
@@ -272,6 +268,10 @@ class MultiqcModule(BaseMultiqcModule):
             self.write_data_file(rank_data, "multiqc_kaiju_" + rank_name)
             cats.append(rank_cats)
             pd.append(rank_data)
+
+        if len(cats) == 0:
+            log.debug("No data for Kaiju top five barplot. Skipping.")
+            return
 
         self.add_section(
             name="Top taxa",

@@ -9,7 +9,6 @@ import os
 import shutil
 import sys
 import time
-from collections import OrderedDict
 
 import yaml
 
@@ -51,7 +50,6 @@ def write_data_file(data, fn, sort_cols=False, data_format=None):
     :return: None"""
 
     if config.data_dir is not None:
-
         # Get data format from config
         if data_format is None:
             data_format = config.data_format
@@ -68,7 +66,6 @@ def write_data_file(data, fn, sort_cols=False, data_format=None):
 
         # Some metrics can't be coerced to tab-separated output, test and handle exceptions
         if data_format not in ["json", "yaml"]:
-
             # attempt to reshape data to tsv
             try:
                 # Convert keys to strings

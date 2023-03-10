@@ -1,6 +1,3 @@
-#!/usr/bin/env python
-
-
 import logging
 import re
 from collections import OrderedDict, defaultdict

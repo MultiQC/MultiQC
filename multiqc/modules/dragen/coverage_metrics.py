@@ -13,6 +13,7 @@ Additional coverage metrics can be enabled, and additional coverage regions can 
 import re
 import logging
 from collections import defaultdict
+from typing import List
 
 from multiqc import config
 from multiqc.modules.base_module import BaseMultiqcModule
@@ -787,6 +788,7 @@ def create_table_handlers():
             return "BED" + pheno_match.group(1)
 
         return phenotype
+
 
     def make_general_stats(coverage_data, headers):
         """Prepare data and headers for the general table."""

@@ -1,6 +1,4 @@
-#!/usr/bin/env python
 """ MultiQC module to parse output from Cell Ranger """
-from __future__ import print_function
 
 import logging
 from collections import OrderedDict
@@ -22,7 +20,6 @@ class MultiqcModule(BaseMultiqcModule, CellRangerCountMixin, CellRangerVdjMixin)
     """
 
     def __init__(self):
-
         # Initialise the parent object
         super(MultiqcModule, self).__init__(
             name="Cell Ranger",

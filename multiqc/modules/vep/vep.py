@@ -1,5 +1,3 @@
-#!/usr/bin/env python
-
 """ MultiQC module to parse output from VEP """
 
 
@@ -242,7 +240,7 @@ class MultiqcModule(BaseMultiqcModule):
         p_config["title"] = "VEP: Variant Consequences"
         p_config["ylab"] = p_config["data_labels"][0]
 
-        if max([len(d) for d in plot_data]) == 0:
+        if len(plot_data) == 0 or max([len(d) for d in plot_data]) == 0:
             return
 
         self.add_section(
