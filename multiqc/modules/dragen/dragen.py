@@ -74,13 +74,14 @@ class MultiqcModule(
         # <output prefix>.ploidy_estimation_metrics.csv    - add just Ploidy estimation into gen stats
 
         self.collect_overall_mean_cov_data()
-        # <output prefix>.<coverage region prefix>_overall_mean_cov.csv
+        # <output prefix>.<coverage region prefix>_overall_mean_cov<arbitrary suffix>.csv
         # This data will be used by in the DragenCoverageMetrics.
-        
+
         samples_found |= self.add_coverage_metrics()
         # <output prefix>.<coverage region prefix>_coverage_metrics<arbitrary suffix>.csv
-        
+
         samples_found |= self.add_coverage_hist()
+
         # <output prefix>.wgs_fine_hist_normal.csv         - coverage distribution and cumulative coverage plots
         # <output prefix>.wgs_fine_hist_tumor.csv          - same
 
