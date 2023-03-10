@@ -18,6 +18,7 @@ class DragenOverallMeanCovMetrics(BaseMultiqcModule):
     """Public members of the DragenOverallMeanCovMetrics module are available to
     other dragen modules. Defines 2 public functions and a private data holder.
     """
+
     @property
     def overall_mean_cov_data(self):
         """Getter for data from _overall_mean_cov.csv files."""
@@ -41,22 +42,24 @@ class DragenOverallMeanCovMetrics(BaseMultiqcModule):
                         out["data"],
                     )
                     self._overall_mean_cov_data[root][sample][phenotype] = data
-                # Currently there is no need to support other files. Pass for now. 
+                # Currently there is no need to support other files. Pass for now.
                 else:
                     pass
 
 
 # Official structure of files:   _overall_mean_cov.csv
-# Accepted structure of files: .+_overall_mean_cov.csv
-GEN_FILE_RGX = re.compile("(.+?)_overall_mean_cov.csv")
+# Accepted structure of files: .+_overall_mean_cov.*.csv
+# A suffix after _overall_mean_cov is used to catch extra substrings.
+GEN_FILE_RGX = re.compile(r"(.+?)_overall_mean_cov(.*)\.csv$")
 
 # Special case. Coverage metrics files have the following structure:
 # <output prefix>.<coverage region prefix>_overall_mean_cov<arbitrary suffix>.csv
-COV_FILE_RGX = re.compile(r"^([^.]+)\.(.+?)_overall_mean_cov(.*).csv")
+COV_FILE_RGX = re.compile(r"^([^.]+)\.(.+?)_overall_mean_cov(.*)\.csv$")
 
 # General structure of metrics is not defined.
 # Currently only 1 metric is presented in the standard:
-AVG_RGX = re.compile("^Average alignment coverage over ([^,]+),([^,]+)", re.IGNORECASE)
+AVG_RGX = re.compile("^Average alignment coverage over ([^,]+),([^,]+)$", re.IGNORECASE)
+
 
 def parse_overall_mean_cov(file_handler):
     """Parser for _overall_mean_cov.csv files."""
@@ -81,7 +84,9 @@ def parse_overall_mean_cov(file_handler):
     # There is still a possibility for failing(eg empty file, unknown metric).
     success = 0
     data = {}
-    
+    source = None  # File name from "Average alignment coverage over file" metric.
+    value = None
+
     # A loop is created in advance. Maybe new metrics will be added in the future.
     for line in file_handler["f"].splitlines():
         line_match = AVG_RGX.search(line)
@@ -93,7 +98,9 @@ def parse_overall_mean_cov(file_handler):
         # Otherwise check if line is empty. If not then report it and go to the next line.
         else:
             if not re.search("^\s*$", line):
-                log.debug("\nUnsupported metric: " + line + "\nin: " + root)
+                log.debug(
+                    "\nUnsupported metric: " + line + "\n" + file + "\nin: " + root
+                )
             continue
 
         # Try to convert the value. It shall be float.
@@ -103,10 +110,16 @@ def parse_overall_mean_cov(file_handler):
             try:
                 value = int(value)
             except ValueError:
-                if not re.search("^NA$", value, re.IGNORECASE):
-                    log.debug("\nNon int/float/NA value found: " + line + "\nin: " + root + file)
-        # Currently there shall be only 1 metric, so assignment is in the loop.
-        data = {"source_file": source, "value": value}
+                log.debug(
+                    "\nNon int/float value found: "
+                    + line
+                    + "\n"
+                    + file
+                    + "\nin: "
+                    + root
+                )
+
+    data = {"source_file": source, "value": value}
 
     return {
         "success": success,
