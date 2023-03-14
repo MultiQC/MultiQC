@@ -19,7 +19,7 @@ from multiqc.modules.base_module import BaseMultiqcModule
 from multiqc.plots import table
 from multiqc.utils.util_functions import write_data_file
 
-from .utils import clean_headers, order_headers
+from .utils import clean_headers, make_parsing_log_report, order_headers
 
 # Initialise the logger.
 log = logging.getLogger(__name__)
@@ -598,10 +598,9 @@ class DragenCoverageMetrics(BaseMultiqcModule):
         bed_texts = make_bed_texts(self.overall_mean_cov_data, all_samples)
         coverage_sections = make_cov_sections(cov_data, cov_headers, bed_texts)
 
-        # Special closure for reporting found info/warnings/errors,
-        # which were collected while calling the cov_parser.
-        # You can disable it anytime, if it is not wanted.
-        make_parsing_log_report()
+        # Reporting found info/warnings/errors, which were collected while
+        # calling the cov_parser. You can disable it anytime, if it is not wanted.
+        make_parsing_log_report("coverage_metrics", log_data, log)
 
         for cov_section in coverage_sections:
             self.add_section(
@@ -643,7 +642,7 @@ def make_data_for_txt_report(coverage_data):
 def make_bed_texts(overall_mean, sample_names):
     """Matches _overall_mean_cov.csv to the corresponding _coverage_metrics.csv
     Extracts coverage bed/target bed/wgs/file names and creates a text for each
-    section (phenotype). The values can be also checked (not implemented)."""
+    section (phenotype)."""
 
     # Each sample.phenotype can have at most 1 corresponding overall_mean_cov.csv file.
     # If it has it, then append the sample to the sources_matched. If not, then
@@ -673,11 +672,9 @@ def make_bed_texts(overall_mean, sample_names):
                 sources_not_matched[phenotype].append(sample)
 
     def extract_source(source_file):
-        # Windows
         if "/" in source_file:
             return source_file.split("/")[-1]
 
-        # Linux
         elif "\\" in source_file:
             return source_file.split("\\")[-1]
 
@@ -726,6 +723,7 @@ def make_bed_texts(overall_mean, sample_names):
                 else:
                     for source in bed_sources:
                         text += "The following samples are based on the " + extract_source(source) + ": "
+
                         for sample in bed_sources[source]:
                             text += sample + ", "
                         # Get rid of the last ", " and append ".\n\n"
@@ -790,6 +788,11 @@ def create_table_handlers():
                     # only if "exclude" is not presented or False/False-equivalent.
                     if not ("exclude" in headers[metric] and headers[metric]["exclude"]):
                         # Make exclusive metric ID.
+                        # Please notice that special signs (eg "]") are
+                        # excluded when HTML IDs are created. So, for example:
+                        # PCT of region with coverage [10x: 50x)
+                        # PCT of region with coverage [10x: 50x]
+                        # will both reference the same HTML ID.
                         m_id = "gen table_" + phenotype + "_" + metric
                         """
                         Only the sample is used as key for gen_data.
@@ -917,7 +920,7 @@ def create_table_handlers():
                     {
                         "name": improve_own_phenotype(phenotype) + " Metrics",
                         # Spaces are replaced with hyphens to pass MultiQC lint test.
-                        "anchor": "dragen-cov-metrics-own-sec-" + re.sub("\s+", "-", phenotype),
+                        "anchor": "dragen-cov-metrics-own-section-" + re.sub("\s+", "-", phenotype),
                         "helptext": helptext,
                         "description": description,
                         "plot": table.plot(
@@ -938,9 +941,9 @@ make_general_stats, make_cov_sections = create_table_handlers()
 
 def construct_coverage_parser():
     """Isolation for all parsing machinery.
-    Returns 2 closures:
-    * coverage_metrics_parser: parser for coverage data stored in csv files.
-    * make_log_report: log reporter for found info/warnings/errors."""
+    Returns:
+    * closure coverage_metrics_parser: parser for coverage data stored in csv files.
+    * data with found info/warnings/errors."""
 
     # All regexes are constructed to be as general and simple as possible to speed up the matching.
     # "make_configs" will point later to a function, which automatically sets some header's configs.
@@ -1210,64 +1213,6 @@ def construct_coverage_parser():
             "data": {"metrics_and_values": data, "region": region},
         }
 
-    def make_log_report():
-        """The only purpose of this function is to create a readable and informative log output."""
-
-        if log_data["invalid_file_names"]:
-            log_message = (
-                "\n\nThe file names must conform to the following structure:\n"
-                + "<output prefix>.<coverage region prefix>_coverage_metrics<arbitrary suffix>.csv\n\n"
-                + "The following files are not valid:\n"
-            )
-            for root in log_data["invalid_file_names"]:
-                log_message += "  " + root + ":\n"
-                for file in log_data["invalid_file_names"][root]:
-                    log_message += "    " + file + "\n"
-
-            log.warning(log_message + "\n")
-
-        if log_data["invalid_file_lines"]:
-            log_message = (
-                "\n\nThe lines in files must be:\n"
-                + "COVERAGE SUMMARY,,<metric>,<value1> or "
-                + "COVERAGE SUMMARY,,<metric>,<value1>,<value2>\n\n"
-                + "The following files contain invalid lines:\n"
-            )
-            for root in log_data["invalid_file_lines"]:
-                log_message += "  " + root + ":\n"
-                for file in log_data["invalid_file_lines"][root]:
-                    log_message += "    " + file + ":\n"
-                    for line in log_data["invalid_file_lines"][root][file]:
-                        log_message += "      " + line + "\n"
-
-            log.warning(log_message + "\n")
-
-        if log_data["unknown_metrics"]:
-            log_message = "\n\nThe following files contain unknown metrics:\n"
-
-            for root in log_data["unknown_metrics"]:
-                log_message += "  " + root + ":\n"
-                for file in log_data["unknown_metrics"][root]:
-                    log_message += "    " + file + ":\n"
-                    for metric in log_data["unknown_metrics"][root][file]:
-                        log_message += "      " + metric + "\n"
-
-            log.warning(log_message + "\n")
-
-        if log_data["unusual_values"]:
-            log_message = (
-                "\n\nAll metrics' values except int, float and NA are non-standard.\n"
-                + "The following files contain non-standard values:\n"
-            )
-            for root in log_data["unusual_values"]:
-                log_message += "  " + root + ":\n"
-                for file in log_data["unusual_values"][root]:
-                    log_message += "    " + file + ":\n"
-                    for metric in log_data["unusual_values"][root][file]:
-                        log_message += "      " + metric + " = " + log_data["unusual_values"][root][file][metric] + "\n"
-
-            log.warning(log_message + "\n")
-
     def get_std_configs(configs_dict):
         """Copies the standard real/virtual configurations from configs_dict."""
         return {
@@ -1335,7 +1280,7 @@ def construct_coverage_parser():
     - optional    region    if presented in a metric and can be extracted easily.
                             Returning it is encouraged.
     - optional    warning   can be returned if metric could not be recognized.
-                            The associated value is irrelevant.
+                            The associated value is irrelevant(shall be equal to True).
 
     Please note: modify lambda/func must check for string input.
     """""""""""""""""""""""""""""""""""""""""""""""""""""""""'''
@@ -1840,8 +1785,8 @@ def construct_coverage_parser():
     RAT_PAT["make_configs"] = get_ratio_over_configs
     ANY_PAT["make_configs"] = get_any_configs
 
-    # Finally return the closures.
-    return coverage_metrics_parser, make_log_report
+    # Finally return the closure and collected log data.
+    return coverage_metrics_parser, log_data
 
 
-cov_parser, make_parsing_log_report = construct_coverage_parser()
+cov_parser, log_data = construct_coverage_parser()

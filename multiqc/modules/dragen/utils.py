@@ -211,3 +211,87 @@ def clean_headers(headers):
             config: val for config, val in headers[metric].items() if config in STD_TABLE_CONFIGS
         }
     return cleaned_headers
+
+
+# Used to define module-specific texts for the make_parsing_log_report.
+DRAGEN_MODULE_TEXTS = {
+    "invalid_file_names": {
+        "coverage_metrics": "\n\nThe file names must conform to the following structure:\n"
+        + "<output prefix>.<coverage region prefix>_coverage_metrics<arbitrary suffix>.csv\n\n"
+        + "The following files are not valid:\n",
+    },
+    "invalid_file_lines": {
+        "coverage_metrics": "\n\nThe lines in files must be:\n"
+        + "COVERAGE SUMMARY,,<metric>,<value1> or "
+        + "COVERAGE SUMMARY,,<metric>,<value1>,<value2>\n\n"
+        + "The following files contain invalid lines:\n",
+    },
+    "unknown_metrics": {},
+    "unusual_values": {
+        "coverage_metrics": "\n\nAll metrics' values except int, float and NA are non-standard.\n"
+        + "The following files contain non-standard values:\n",
+    },
+}
+
+
+def make_parsing_log_report(module, log_data, logger):
+    """The only purpose of this function is to create a readable and informative log output
+    about found info/warnings/errors, which were found at the time of executing a parser."""
+
+    if "invalid_file_names" in log_data and log_data["invalid_file_names"]:
+        if module in DRAGEN_MODULE_TEXTS["invalid_file_names"]:
+            log_message = DRAGEN_MODULE_TEXTS["invalid_file_names"][module]
+        else:
+            log_message = "\n\nThe following files are not valid:\n"
+
+        for root in log_data["invalid_file_names"]:
+            log_message += "  " + root + ":\n"
+            for file in log_data["invalid_file_names"][root]:
+                log_message += "    " + file + "\n"
+
+        logger.warning(log_message + "\n")
+
+    if "invalid_file_lines" in log_data and log_data["invalid_file_lines"]:
+        if module in DRAGEN_MODULE_TEXTS["invalid_file_lines"]:
+            log_message = DRAGEN_MODULE_TEXTS["invalid_file_lines"][module]
+        else:
+            log_message = "\n\nThe following files contain invalid lines:\n"
+
+        for root in log_data["invalid_file_lines"]:
+            log_message += "  " + root + ":\n"
+            for file in log_data["invalid_file_lines"][root]:
+                log_message += "    " + file + ":\n"
+                for line in log_data["invalid_file_lines"][root][file]:
+                    log_message += "      " + line + "\n"
+
+        logger.debug(log_message + "\n")
+
+    if "unknown_metrics" in log_data and log_data["unknown_metrics"]:
+        if module in DRAGEN_MODULE_TEXTS["unknown_metrics"]:
+            log_message = DRAGEN_MODULE_TEXTS["unknown_metrics"][module]
+        else:
+            log_message = "\n\nThe following files contain unknown metrics:\n"
+
+        for root in log_data["unknown_metrics"]:
+            log_message += "  " + root + ":\n"
+            for file in log_data["unknown_metrics"][root]:
+                log_message += "    " + file + ":\n"
+                for metric in log_data["unknown_metrics"][root][file]:
+                    log_message += "      " + metric + "\n"
+
+        logger.debug(log_message + "\n")
+
+    if "unusual_values" in log_data and log_data["unusual_values"]:
+        if module in DRAGEN_MODULE_TEXTS["unusual_values"]:
+            log_message = DRAGEN_MODULE_TEXTS["unusual_values"][module]
+        else:
+            log_message = "\n\nThe following files contain non-standard values:\n"
+
+        for root in log_data["unusual_values"]:
+            log_message += "  " + root + ":\n"
+            for file in log_data["unusual_values"][root]:
+                log_message += "    " + file + ":\n"
+                for metric in log_data["unusual_values"][root][file]:
+                    log_message += "      " + metric + " = " + log_data["unusual_values"][root][file][metric] + "\n"
+
+        logger.debug(log_message + "\n")
