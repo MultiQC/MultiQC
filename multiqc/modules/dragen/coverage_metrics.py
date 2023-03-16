@@ -1,5 +1,6 @@
 '''"""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
 This module gathers coverage metrics data and prepares it for the output report.
+
 It relies on the following official sources:
 https://support.illumina.com/content/dam/illumina-support/help/Illumina_DRAGEN_Bio_IT_Platform_v3_7_1000000141465/Content/SW/Informatics/Dragen/CoverageMetricsReport_fDG.htm
 https://support.illumina.com/content/dam/illumina-support/help/Illumina_DRAGEN_Bio_IT_Platform_v3_7_1000000141465/Content/SW/Informatics/Dragen/QCMetricsCoverageReports_fDG_dtSW.htm
@@ -54,7 +55,7 @@ SINGLE_HEADER = {
     "modify": None,  # Lambda function to modify values, special case, see below
     "hidden": True,  # Set to True to hide the column in the general table on page load.
     "hidden_own": False,  # For non-general plots in own coverage sections.
-    # "exclude": True,         # Exclude all headers from the general html table.
+    "exclude": True,  # Exclude all headers from the general html table.
 }
 '''""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
 The EXTRA_HEADER contains the logical keys of the SINGLE_HEADER. These are just extensions,
@@ -296,6 +297,7 @@ METRICS = {
     },
     "average alignment coverage over region": {
         "order_priority": 3,
+        "exclude": False,
         "title": "Depth",
         "scale": "BrBG",
         "colour": "0, 255, 255",
@@ -337,13 +339,13 @@ METRICS = {
     # Well technically you can but it uses the last found region.
     "aligned bases": {
         "order_priority": 8,
-        "title": "Aln bases",
+        # "title": "Aln bases",
         "scale": "RdYlGn",
         "colour": "0, 0, 255",
     },
     "aligned bases in region": {
         "order_priority": 9,
-        "title": "Bases on target",
+        # "title": "Bases on target",
         "scale": "Reds",
         "colour": "0, 0, 255",
         WGS: {
@@ -356,7 +358,7 @@ METRICS = {
     "aligned bases in region"
     + V2: {
         "order_priority": 10,
-        "title": "Bases on trg pct",
+        # "title": "Bases on trg pct",
         "max": 100,
         "suffix": " %",
         "bgcols": {
@@ -366,18 +368,18 @@ METRICS = {
     # The same as "aligned bases".
     "aligned reads": {
         "order_priority": 11,
-        "title": "Aln reads",
+        # "title": "Aln reads",
     },
     "aligned reads in region": {
         "order_priority": 12,
-        "title": "Reads on target",
+        # "title": "Reads on target",
         "scale": "RdGy",
         "colour": "255, 0, 0",
     },
     "aligned reads in region"
     + V2: {
         "order_priority": 13,
-        "title": "Reads on trg pct",
+        # "title": "Reads on trg pct",
         "max": 100,
         "suffix": " %",
         "scale": "RdGy",
@@ -1075,13 +1077,9 @@ def construct_coverage_parser():
             log_data["invalid_file_names"][root_name].append(file_name)
             return {"success": 0}
 
-        sample, phenotype = file_match.group(1), file_match.group(2)
-
-        # phenotype is just concatenated with an arbitrary group, because it is non-standard.
-        # phenotype is used instead of sample, because 2D html plots for table data can be
-        # created only if sample names are the same.
-        if file_match.group(3):
-            phenotype += file_match.group(3)
+        sample, phenotype, normal_tumor = file_match.group(1), file_match.group(2), file_match.group(3)
+        if normal_tumor and not re.search("tumor", normal_tumor, re.IGNORECASE):
+            sample += file_match.group(3)
 
         success = 0
         region = ""

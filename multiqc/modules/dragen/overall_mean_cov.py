@@ -68,7 +68,7 @@ COV_FILE_RGX = re.compile(r"^([^.]+)\.(.+?)_overall_mean_cov(.*)\.csv$")
 
 # General structure of metrics is not defined.
 # Currently only 1 metric is presented in the standard:
-AVG_RGX = re.compile("^Average alignment coverage over ([^,]+),([^,]+)$", re.IGNORECASE)
+AVG_RGX = re.compile("Average alignment coverage over ([^,]+),([^,]+)$", re.IGNORECASE)
 
 
 def parse_overall_mean_cov(file_handler):
@@ -81,9 +81,9 @@ def parse_overall_mean_cov(file_handler):
         sample, phenotype = file_match.group(1), None
         file_match = COV_FILE_RGX.search(file)
         if file_match:
-            sample, phenotype = file_match.group(1), file_match.group(2)
-            if file_match.group(3):
-                phenotype += file_match.group(3)
+            sample, phenotype, normal_tumor = file_match.group(1), file_match.group(2), file_match.group(3)
+            if normal_tumor and not re.search("tumor", normal_tumor, re.IGNORECASE):
+                sample += file_match.group(3)
         else:
             log.debug("\nNot supported: " + file + "\nin: " + root)
     # Else there is no name at all, report and return 0.
