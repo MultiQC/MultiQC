@@ -30,15 +30,11 @@ jobs:
           # TODO: Swtich to master branch once merged
           ref: astro
 
-      - run: echo $PWD
-
-      - uses: jsmrcaga/action-netlify-deploy@v2.0.0
+      - uses: AlbertoPdRF/action-netlify-deploy@add-base-directory
         with:
           NETLIFY_AUTH_TOKEN: ${{ secrets.NETLIFY_AUTH_TOKEN }}
           NETLIFY_SITE_ID: ${{ secrets.NETLIFY_SITE_ID }}
-          install_command: /bin/sh -c "cd MultiQC_website && npm install"
-          build_command: /bin/sh -c "cd MultiQC_website && npm run build"
-          build_directory: MultiQC_website/dist
+          base_directory: ./MultiQC_website
           deploy_alias: MultiQC-PR-${{ github.event.pull_request.number }}
 
       # Create a status check with link to preview
