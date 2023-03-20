@@ -1,4 +1,4 @@
-name: Docs screenshots
+name: Docs - Rich-codex screenshots
 on:
   workflow_dispatch:
 

@@ -36,8 +36,8 @@ jobs:
         with:
           NETLIFY_AUTH_TOKEN: ${{ secrets.NETLIFY_AUTH_TOKEN }}
           NETLIFY_SITE_ID: ${{ secrets.NETLIFY_SITE_ID }}
-          install_command: cd MultiQC_website && npm install
-          build_command: cd MultiQC_website && npm install
+          install_command: "cd MultiQC_website && npm install"
+          build_command: "cd MultiQC_website && npm run build"
           build_directory: MultiQC_website/dist
           deploy_alias: MultiQC-PR-${{ github.event.pull_request.number }}
 
