@@ -2,7 +2,6 @@ name: Docs - Netlify preview
 
 on:
   pull_request:
-    types: [opened, edited, synchronize]
     paths: ["docs/**"]
     # TODO: Remove / rename when new site is live
     branches: [docs-restructure]
@@ -15,13 +14,11 @@ jobs:
       pull-requests: write
 
     steps:
-      # Check out this MultiQC repo
       - name: Checkout MultiQC repo
         uses: actions/checkout@v3
         with:
           path: ./MultiQC
 
-      # Check out the MultiQC website repo
       - name: Checkout MultiQC website repo
         uses: actions/checkout@v3
         with:
@@ -30,18 +27,29 @@ jobs:
           # TODO: Swtich to master branch once merged
           ref: astro
 
-      - uses: AlbertoPdRF/action-netlify-deploy@add-base-directory
+      - name: Set up Node.js 18.x
+        uses: actions/setup-node@v3
         with:
+          node-version: 18.x
+
+      - name: Install npm deps
+        run: npm install
+        with:
+          working-directory: ./MultiQC_website
+
+      - name: Build website
+        run: npm run build
+        with:
+          working-directory: ./MultiQC_website
+
+      - name: Deploy to Netlify
+        uses: nwtgck/actions-netlify@v1.2
+        with:
+          publish-dir: "./dist"
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          deploy-message: "MultiQC PR #${{ github.event.pull_request.number }}"
+          alias: MultiQC-PR-${{ github.event.pull_request.number }}
+        env:
           NETLIFY_AUTH_TOKEN: ${{ secrets.NETLIFY_AUTH_TOKEN }}
           NETLIFY_SITE_ID: ${{ secrets.NETLIFY_SITE_ID }}
-          base_directory: ./MultiQC_website
-          deploy_alias: MultiQC-PR-${{ github.event.pull_request.number }}
-
-      # Create a status check with link to preview
-      - name: Status check
-        uses: Sibz/github-status-action@v1.1.6
-        with:
-          authToken: ${{ secrets.GITHUB_TOKEN }}
-          context: Netlify docs preview
-          state: success
-          target_url: ${{ env.NETLIFY_PREVIEW_URL }}
+        timeout-minutes: 1
