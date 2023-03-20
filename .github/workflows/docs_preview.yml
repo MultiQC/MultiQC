@@ -11,6 +11,9 @@ jobs:
   deploy:
     name: "Deploy"
     runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: ./website
     permissions:
       pull-requests: write
 
