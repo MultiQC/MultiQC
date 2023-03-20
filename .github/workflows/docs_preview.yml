@@ -10,6 +10,9 @@ jobs:
   deploy:
     name: "Deploy"
     runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: ./MultiQC_website
     permissions:
       pull-requests: write
 
@@ -34,18 +37,14 @@ jobs:
 
       - name: Install npm deps
         run: npm install
-        with:
-          working-directory: ./MultiQC_website
 
       - name: Build website
         run: npm run build
-        with:
-          working-directory: ./MultiQC_website
 
       - name: Deploy to Netlify
         uses: nwtgck/actions-netlify@v1.2
         with:
-          publish-dir: "./dist"
+          publish-dir: "./MultiQC_website/dist"
           github-token: ${{ secrets.GITHUB_TOKEN }}
           deploy-message: "MultiQC PR #${{ github.event.pull_request.number }}"
           alias: MultiQC-PR-${{ github.event.pull_request.number }}
