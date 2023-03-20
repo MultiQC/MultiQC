@@ -38,7 +38,7 @@ fn_clean_exts:
 
 This would make the following sample names:
 
-```txt
+```
 mysample.fastq.gz  ->  mysample
 secondsample.fastq.gz_trimming_log.txt  ->  secondsample
 thirdsample.fastq_aligned.sam.gz  ->  thirdsample
@@ -84,7 +84,7 @@ extra_fn_clean_exts:
 
 This rule would produce the following sample names:
 
-```txt
+```
 mysample.fastq.gz  ->  mysample
 thirdsample.fastq_aligned.sam.gz  ->  thirdsample
 ```
@@ -101,7 +101,7 @@ extra_fn_clean_exts:
 
 This rule would produce the following sample names:
 
-```txt
+```
 secondsample.sorted.deduplicated  ->  secondsample.deduplicated
 ```
 
@@ -117,7 +117,7 @@ extra_fn_clean_exts:
 
 This rule would produce the following sample names:
 
-```txt
+```
 processed.thirdsample.processed  ->  thirdsample.processed
 ```
 
@@ -133,7 +133,7 @@ extra_fn_clean_exts:
 
 This rule would produce the following sample names:
 
-```txt
+```
 merged.recalibrated.XZY97.alignment.bam  ->  XZY97
 ```
 
@@ -182,7 +182,7 @@ If the directories are different, this can be avoided with the `--dirs`/`-d` fla
 
 For example, given the following files:
 
-```txt
+```
 ├── analysis_1
 │   └── sample_1.fastq.gz.aligned.log
 ├── analysis_2
@@ -193,7 +193,7 @@ For example, given the following files:
 
 Running `multiqc -d .` will give the following sample names:
 
-```txt
+```
 analysis_1 | sample_1
 analysis_2 | sample_1
 analysis_3 | sample_1
@@ -204,14 +204,14 @@ analysis_3 | sample_1
 If the problem is with filename truncation, you can also use the `--fullnames`/`-s` flag,
 which disables all sample name cleaning. For example:
 
-```txt
+```
 ├── sample_1.fastq.gz.aligned.log
 └── sample_1.fastq.gz.subsampled.fastq.gz.aligned.log
 ```
 
 Running `multiqc -s .` will give the following sample names:
 
-```txt
+```
 sample_1.fastq.gz.aligned.log
 sample_1.fastq.gz.subsampled.fastq.gz.aligned.log
 ```
@@ -293,7 +293,7 @@ option simply adds to all of these).
 
 For example, given the following files:
 
-```txt
+```
 ├── analysis_1
 │   └── sample_1.fastq.gz.aligned.log
 ├── analysis_2
@@ -437,7 +437,7 @@ to the bottom of your report describing how much time it spent searching files a
 what it did with those files. You'll also get a breakdown in the command-line log
 of how long the different steps of MultiQC execution took:
 
-```txt
+```
 [INFO   ]         multiqc : MultiQC complete
 [INFO   ]         multiqc : Run took 35.28 seconds
 [INFO   ]         multiqc :  - 31.01s: Searching files

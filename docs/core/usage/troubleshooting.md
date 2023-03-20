@@ -38,7 +38,7 @@ files. By default, MultiQC skips any file that is larger than 10MB to keep
 execution fast. The verbose log output (`-v` or `multiqc_data/multiqc.log`) will
 show you if files are being skipped with messages such as these:
 
-```txt
+```
 [DEBUG  ]  Ignoring file as too large: filename.txt
 ```
 
@@ -77,7 +77,7 @@ your log files and we can get it fixed.
 
 In this case you run MultiQC and get something like this:
 
-```console
+```
 $ multiqc .
 
 Vendor:  Continuum Analytics, Inc.

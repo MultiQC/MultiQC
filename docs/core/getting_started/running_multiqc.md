@@ -103,7 +103,7 @@ directories from the start of the path.
 
 For example:
 
-```console
+```
 $ multiqc -d .
 # analysis_1 | results | type | sample_1 | file.log
 # analysis_2 | results | type | sample_2 | file.log
@@ -150,7 +150,7 @@ a command line tool able to convert documents between different file formats.
 **You must have Pandoc already installed for this to work**. If you don't have
 Pandoc installed, you will get an error message that looks like this:
 
-```txt
+```
 Error creating PDF - pandoc not found. Is it installed? http://pandoc.org/
 ```
 
@@ -163,7 +163,7 @@ and errors.
 Error messages from Pandoc are piped through to the MultiQC log,
 for example if the xelatex dependency is not installed you will see the following:
 
-```txt
+```
 xelatex not found. Please select a different --pdf-engine or install xelatex
 ```
 

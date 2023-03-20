@@ -164,7 +164,7 @@ The source code for MultiQC is separated into different folders.
 Most of the files you won't have to touch - the relevant files that
 you will need to edit or create are as follows:
 
-```console
+```
 ├── docs
 │   ├── README.md
 │   └── modules
@@ -872,7 +872,7 @@ by using `cProfile` to profile the code execution.
 
 To do this, first find out where your copy of MultiQC is located:
 
-```console
+```
 $ which multiqc
 /Users/you/anaconda/envs/myenv/bin/multiqc
 ```

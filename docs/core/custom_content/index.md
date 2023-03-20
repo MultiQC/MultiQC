@@ -326,7 +326,7 @@ To find out what your custom content section ID is, generate a report and click
 the side navigation to your section. The browser URL should update and show something
 that looks like this:
 
-```txt
+```
 multiqc_report.html#my_cc_section
 ```
 

@@ -98,7 +98,7 @@ samples to line up properly in the _General Statistics_ table.
 To use, create a tab-separated file with two columns. The first column contains the
 search strings and the second the replacement strings:
 
-```tsv
+```
 IDX102934	Sample_1
 IDX102935	Sample_2
 IDX102936	Sample_3
@@ -124,7 +124,7 @@ If you set `sample_names_replace_regex` to `True` in a MultiQC config file
 and then create a file that contains regex search strings and even Python regex
 group identifiers in the replace string. For example:
 
-```tsv
+```
 SAMPLE(\d)_([PS]E)_(\d)	XXX_\1_\2_\3
 ```
 
@@ -170,7 +170,7 @@ It's possible to supply a file with one or more sets of sample names using the `
 command line option. This file should be a tab-delimited file with a header row (used for
 the report button labels) and then any number of renamed sample identifiers. For example:
 
-```tsv
+```
 MultiQC Names	Proper Names	AWESOME NAMES
 SRR1067503_1	Sample_1	MYBESTSAMP_1
 SRR1067505_1	Sample_2	MYBESTSAMP_2
@@ -214,21 +214,21 @@ pattern, opposed to the default globbing, you can use `hide_re` and `show_re`.
 
 For example, to filter on read pair groups, you could use the following file:
 
-```tsv
+```
 Read Group 1	show	_R1
 Read Group 2	show	_R2
 ```
 
 Or in regex mode:
 
-```tsv
+```
 Read Group 1	show_re	.*_R1
 Read Group 2	show_re	.*_R2
 ```
 
 To filter on controls and sample groups you could use:
 
-```tsv
+```
 Controls	show	input_
 Conditions	show	group_1_	group_2_	group_3_
 ```
