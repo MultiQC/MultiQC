@@ -1,4 +1,4 @@
-name: Netlify preview docs
+name: Docs - Netlify preview
 
 on:
   pull_request:
@@ -11,9 +11,6 @@ jobs:
   deploy:
     name: "Deploy"
     runs-on: ubuntu-latest
-    defaults:
-      run:
-        working-directory: ./website
     permissions:
       pull-requests: write
 
@@ -22,14 +19,14 @@ jobs:
       - name: Checkout MultiQC repo
         uses: actions/checkout@v3
         with:
-          path: ../MultiQC
+          path: ./MultiQC
 
       # Check out the MultiQC website repo
       - name: Checkout MultiQC website repo
         uses: actions/checkout@v3
         with:
           repository: ewels/MultiQC_website
-          working-directory: ./website
+          path: ./MultiQC_website
           # TODO: Swtich to master branch once merged
           ref: astro
 
@@ -39,7 +36,9 @@ jobs:
         with:
           NETLIFY_AUTH_TOKEN: ${{ secrets.NETLIFY_AUTH_TOKEN }}
           NETLIFY_SITE_ID: ${{ secrets.NETLIFY_SITE_ID }}
-          build_directory: dist
+          install_command: cd MultiQC_website && npm install
+          build_command: cd MultiQC_website && npm install
+          build_directory: MultiQC_website/dist
           deploy_alias: MultiQC-PR-${{ github.event.pull_request.number }}
 
       # Create a status check with link to preview
