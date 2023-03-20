@@ -46,8 +46,8 @@ jobs:
         with:
           publish-dir: "./MultiQC_website/dist"
           github-token: ${{ secrets.GITHUB_TOKEN }}
-          deploy-message: "MultiQC PR #${{ github.event.pull_request.number }}"
-          alias: MultiQC-PR-${{ github.event.pull_request.number }}
+          deploy-message: "MultiQC PR #${{ github.event.pull_request.number }}: ${{ github.event.pull_request.title }}"
+          alias: mqc-pr-${{ github.event.pull_request.number }}
         env:
           NETLIFY_AUTH_TOKEN: ${{ secrets.NETLIFY_AUTH_TOKEN }}
           NETLIFY_SITE_ID: ${{ secrets.NETLIFY_SITE_ID }}
