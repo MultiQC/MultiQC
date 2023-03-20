@@ -53,7 +53,7 @@ SINGLE_HEADER = {
     "shared_key": None,  # See the link for description
     "modify": None,  # Lambda function to modify values, special case, see below
     "hidden": True,  # Set to True to hide the column in the general table on page load.
-    "hidden_own": False,  # For non-general plots in own coverage sections.
+    "hidden_own": True,  # For non-general plots in own coverage sections.
     "exclude": True,  # Exclude all headers from the general html table.
 }
 '''""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
@@ -86,9 +86,9 @@ other with a single-space string, that is " ".
 '''
 WGS = "genome"
 QC = "qc coverage region"
+BED = "target region"
 # The desired regions can be added:
-# TRGT = "target region"
-BED = "target bed"  # May be incorrect. No real data was available.
+# REGION = "some region"
 
 """
 The REGIONS holds the variables. You can add common region's settings here.
@@ -266,7 +266,7 @@ METRICS = {
         "suffix": " x",
         "colour": "255, 255, 0",
         WGS: {
-            "hidden": False,
+            # "hidden": False,
         },
     },
     "average chr y coverage over region": {
@@ -276,7 +276,7 @@ METRICS = {
         "scale": "YlOrRd",
         "colour": "255, 255, 0",
         WGS: {
-            "hidden": False,
+            # "hidden": False,
         },
     },
     "xavgcov/yavgcov ratio over region": {
@@ -297,6 +297,7 @@ METRICS = {
     "average alignment coverage over region": {
         "order_priority": 3,
         "exclude": False,
+        "hidden_own": False,
         "title": "Depth",
         "scale": "BrBG",
         "colour": "0, 255, 255",
@@ -329,21 +330,22 @@ METRICS = {
     },
     "mean/median autosomal coverage ratio over region": {
         "order_priority": 7.1,
-        "title": "Mean/med aut cov",
+        # "title": "Mean/med aut cov",
+        "hidden_own": False,
         "suffix": " x",
-        "hidden_own": True,
     },
     # "aligned bases" has no support for region-specificity.
     # So, you can not set WGS/QC/BED-specific settings here.
     # Well technically you can but it uses the last found region.
     "aligned bases": {
-        "order_priority": 8,
+        "order_priority": 0.3,
         # "title": "Aln bases",
+        "hidden_own": False,
         "scale": "RdYlGn",
         "colour": "0, 0, 255",
     },
     "aligned bases in region": {
-        "order_priority": 9,
+        "order_priority": 0.4,
         # "title": "Bases on target",
         "scale": "Reds",
         "colour": "0, 0, 255",
@@ -356,9 +358,10 @@ METRICS = {
     },
     "aligned bases in region"
     + V2: {
-        "order_priority": 10,
+        "order_priority": 0.5,
         # "title": "Bases on trg pct",
         "max": 100,
+        "colour": "0, 0, 255",
         "suffix": " %",
         "bgcols": {
             "NA": "#00FFFF",
@@ -366,18 +369,20 @@ METRICS = {
     },
     # The same as "aligned bases".
     "aligned reads": {
-        "order_priority": 11,
+        "order_priority": 0,
+        "hidden_own": False,
+        "colour": "255, 0, 0",
         # "title": "Aln reads",
     },
     "aligned reads in region": {
-        "order_priority": 12,
+        "order_priority": 0.1,
         # "title": "Reads on target",
         "scale": "RdGy",
         "colour": "255, 0, 0",
     },
     "aligned reads in region"
     + V2: {
-        "order_priority": 13,
+        "order_priority": 0.2,
         # "title": "Reads on trg pct",
         "max": 100,
         "suffix": " %",
@@ -397,6 +402,7 @@ METRICS = {
             "0.2": {
                 "scale": "PiYG",
                 "order_priority": 5.2,
+                "hidden_own": False,
                 # "Uniformity of coverage (PCT > 0.2*mean) over QC coverage region" metric.
                 QC: {
                     "description": "Percentage of sites with coverage greater than "
@@ -493,7 +499,7 @@ METRICS = {
                     "description": "Percentage of sites in QC coverage region with no coverage.",
                 },
                 BED: {
-                    "description": "Percentage of sites in target bed with no coverage.",
+                    "description": "Percentage of sites in target region with no coverage.",
                 },
             },
         },
@@ -843,7 +849,7 @@ def create_table_handlers():
     # Regexes for the well-known regions:
     RGX_WGS_REGION = re.compile("^genome$", re.IGNORECASE)
     RGX_QC_REGION = re.compile("^QC coverage region$", re.IGNORECASE)
-    RGX_BED_REGION = re.compile("^target bed$", re.IGNORECASE)
+    RGX_BED_REGION = re.compile("^target region$", re.IGNORECASE)
 
     def improve_region(region):
         """Modify the extracted lower-case region."""
@@ -853,7 +859,7 @@ def create_table_handlers():
         if RGX_WGS_REGION.search(region):
             return "genome"
         if RGX_BED_REGION.search(region):
-            return "target BED"
+            return "target Bed"
 
         return region
 
@@ -902,7 +908,11 @@ def create_table_handlers():
             + "3. Reads with `MAPQ` < `min MAPQ` (default `20`)\n\n"
             + "4. Bases with `BQ` < `min BQ` (default `10`)\n\n"
             + "5. Reads with `MAPQ` = `0` (multimappers)\n\n"
-            + "6. Overlapping mates are double-counted"
+            + "6. Overlapping mates are double-counted\n\n"
+            + "Source file from &#60;output prefix&#62;.overall_mean_cov.csv is present for each "
+            + "corresponding &#60;output prefix&#62;.&#60;coverage region prefix&#62;_coverage_metrics.csv in the section's description. "
+            + "If the input directory does not contain *.overall_mean_cov.csv files, then "
+            + "\"No 'coverage bed/target bed/wgs' source file found\" is printed."
         )
         for phenotype in plots:
             # Make section only if headers are not empty.
@@ -910,12 +920,12 @@ def create_table_handlers():
                 region_text = ""
                 while regions[phenotype]:
                     region_text += improve_region(regions[phenotype].pop()) + ", "
-                region_text = region_text[:-2] + "."
+                region_text = region_text[:-2] + ". "
                 description = (
                     "Coverage metrics over "
                     + region_text
-                    + " Press the `Help` button for details.\n\n"
                     + bed_texts[phenotype]
+                    + "\n\nPress the `Help` button for details."
                 )
                 sections.append(
                     {
@@ -1220,10 +1230,10 @@ def construct_coverage_parser():
         """Creates the user-defined configurations."""
         configs = {}
 
-        # If region is not empty, in REGIONS and defined.
-        if region and region in REGIONS and REGIONS[region]:
+        if region:
             metric = metric.replace(region, "region")
-            configs.update(get_std_configs(REGIONS[region]))
+            if region in REGIONS and REGIONS[region]:
+                configs.update(get_std_configs(REGIONS[region]))
 
         pct_case = PCT_PAT["RGX"].search(metric)
         uni_case = UNI_PAT["RGX"].search(metric)
@@ -1541,7 +1551,7 @@ def construct_coverage_parser():
                 "suffix": " %",
                 "min": 0,
                 "max": 100,
-                "title": ">" + multiplier + "*mean",
+                "title": "Uniformity(>" + multiplier + "&#215;mean)",
                 "description": "Percentage of sites with coverage greater than "
                 + percent
                 + " of the mean coverage in "
@@ -1682,7 +1692,7 @@ def construct_coverage_parser():
             return {
                 "configs": {
                     "suffix": " x",
-                    "title": "Mean/Med aut cov",
+                    "title": "Mean/Med autosomal coverage",
                     "min": 0,
                     "description": "Mean autosomal coverage in "
                     + region
