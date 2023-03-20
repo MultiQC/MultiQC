@@ -8,12 +8,15 @@ on:
 
 jobs:
   deploy:
-    name: "Deploy"
+    name: "Deploy preview"
     runs-on: ubuntu-latest
+    if: github.repository == 'ewels/MultiQC'
     defaults:
       run:
         working-directory: ./MultiQC_website
     permissions:
+      statuses: write
+      deployments: write
       pull-requests: write
 
     steps:
