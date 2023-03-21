@@ -4,11 +4,15 @@ description: Guides for how to contribute to the MultiQC code base
 order: 6
 ---
 
-## Documentation
+# Documentation
 
-### Admonitions
+## Admonitions
 
-#### Notes
+Admonitions, sometimes known as call-outs, can be used to highlight relevant information in the docs so that it stands out of the main flow of text.
+
+The MultiQC website uses [remark-directive](https://github.com/remarkjs/remark-directive) to add a set of custom styled admonition directives to markdown syntax, shown below.
+
+### Notes
 
 ```md
 :::note
@@ -20,7 +24,7 @@ He had half a mind just to keep on `falling`.
 He had half a mind just to keep on `falling`.
 :::
 
-#### Info
+### Info
 
 ```md
 :::info
@@ -32,7 +36,31 @@ His face froze for a second or two and then began to do that terribly slow crash
 His face froze for a second or two and then began to do that terribly slow crashing `trick` that Arctic ice floes do so spectacularly in the spring.
 :::
 
-#### Warnings
+### Tip
+
+```md
+:::tip
+Her remark would have commanded greater attention had it been generally realized that human beings were only the third most intelligent life form present on the planet Earth.
+:::
+```
+
+:::tip
+Her remark would have commanded greater attention had it been generally realized that human beings were only the third most intelligent life form present on the planet Earth.
+:::
+
+### Success
+
+```md
+:::success
+“I’m afraid you cannot leave,' said Zarniwoop, 'you are entwined in the Improbability Field. You cannot escape.'
+:::
+```
+
+:::success
+“I’m afraid you cannot leave,' said Zarniwoop, 'you are entwined in the Improbability Field. You cannot escape.'
+:::
+
+### Warnings
 
 ```md
 :::warning
@@ -44,7 +72,7 @@ He smiled the smile that Zaphod had wanted to hit and this time `Zaphod` hit it.
 He smiled the smile that Zaphod had wanted to hit and this time `Zaphod` hit it.
 :::
 
-#### Danger
+### Danger
 
 ```md
 :::danger
@@ -56,7 +84,7 @@ One of the troublesome circumstances was the Plural nature of this Galactic Sect
 One of the troublesome circumstances was the Plural nature of this Galactic Sector, where the possible `continually` interfered with the probable.
 :::
 
-#### Attributes
+### Custom titles
 
 ```md
 :::note{title="Don't Panic"}
