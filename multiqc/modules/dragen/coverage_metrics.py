@@ -1,6 +1,5 @@
 '''"""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
 This module gathers coverage metrics data and prepares it for the output report.
-
 It relies on the following official sources:
 https://support.illumina.com/content/dam/illumina-support/help/Illumina_DRAGEN_Bio_IT_Platform_v3_7_1000000141465/Content/SW/Informatics/Dragen/CoverageMetricsReport_fDG.htm
 https://support.illumina.com/content/dam/illumina-support/help/Illumina_DRAGEN_Bio_IT_Platform_v3_7_1000000141465/Content/SW/Informatics/Dragen/QCMetricsCoverageReports_fDG_dtSW.htm
