@@ -599,7 +599,8 @@ class DragenCoverageMetrics(BaseMultiqcModule):
 
         # Write data to file.
         out_data = make_data_for_txt_report(cov_data)
-        self.write_data_file(out_data, "dragen_cov_metrics")
+        for phenotype in out_data:
+            self.write_data_file(out_data[phenotype], phenotype)
 
         # Extract coverage bed/target bed/wgs from _overall_mean_cov.csv files.
         # And prepare <coverage region prefix>-specific texts.
@@ -639,11 +640,22 @@ def check_duplicate_samples(sample_names):
 
 def make_data_for_txt_report(coverage_data):
     """Prepare data for the text report."""
-    data = {}
+
+    data = defaultdict(dict)
     for sample in coverage_data:
         for phenotype in coverage_data[sample]:
-            ID = sample + phenotype
-            data[ID] = coverage_data[sample][phenotype]["metrics_and_values"]
+            # Replace any sequence of spaces/hyphens/dots/underscores by single underscore.
+            new_phenotype = re.sub("(\s+|-+|\.+|_+)+", "_", phenotype)
+            # Append 'coverage_section' suffix as in the previous code version.
+            if new_phenotype == "wgs":
+                new_phenotype += "_cov_metrics"
+            elif "qc_coverage_region" in new_phenotype:
+                new_phenotype = new_phenotype.replace("qc_coverage_region", "qc_region") + "_coverage_metrics"
+            else:
+                new_phenotype += "_coverage_metrics"
+            new_phenotype = "dragen_" + new_phenotype
+
+            data[new_phenotype][sample] = coverage_data[sample][phenotype]["metrics_and_values"]
     return data
 
 
