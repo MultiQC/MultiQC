@@ -645,7 +645,7 @@ def make_data_for_txt_report(coverage_data):
     for sample in coverage_data:
         for phenotype in coverage_data[sample]:
             # Replace any sequence of spaces/hyphens/dots/underscores by single underscore.
-            new_phenotype = re.sub("(\s+|-+|\.+|_+)+", "_", phenotype)
+            new_phenotype = re.sub("(\s|-|\.|_)+", "_", phenotype)
             # Append 'coverage_section' suffix as in the previous code version.
             if new_phenotype == "wgs":
                 new_phenotype += "_cov_metrics"
