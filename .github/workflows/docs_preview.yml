@@ -26,7 +26,7 @@ jobs:
       - name: Checkout MultiQC website repo
         uses: actions/checkout@v3
         with:
-          repository: ewels/MultiQC_website
+          repository: MultiQC/website
           path: ./MultiQC_website
           # TODO: Switch to master branch once merged
           ref: astro
