@@ -20,8 +20,7 @@ from multiqc.modules.base_module import BaseMultiqcModule
 from multiqc.plots import table
 from multiqc.utils.util_functions import write_data_file
 
-from .utils import (check_duplicate_samples, clean_headers,
-                    make_parsing_log_report, order_headers)
+from .utils import check_duplicate_samples, clean_headers, make_parsing_log_report, order_headers
 
 # Initialise the logger.
 log = logging.getLogger(__name__)
@@ -991,6 +990,7 @@ log_data = {
     "unusual_values": defaultdict(lambda: defaultdict(dict)),
 }
 
+
 def construct_coverage_parser():
     """Isolation for the parsing codeblock. Returns the closure 'coverage_metrics_parser'."""
 
@@ -1234,9 +1234,7 @@ def create_coverage_headers_handler():
 
     def get_std_configs(configs):
         """Copies the standard real/virtual configurations from configs."""
-        return {
-            config: value for config, value in configs.items() if config in SINGLE_HEADER or config in EXTRA_HEADER
-        }
+        return {config: value for config, value in configs.items() if config in SINGLE_HEADER or config in EXTRA_HEADER}
 
     def make_user_configs(metric, region):
         """Creates the user-defined configurations."""
