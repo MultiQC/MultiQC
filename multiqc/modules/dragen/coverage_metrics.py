@@ -20,7 +20,8 @@ from multiqc.modules.base_module import BaseMultiqcModule
 from multiqc.plots import table
 from multiqc.utils.util_functions import write_data_file
 
-from .utils import clean_headers, make_parsing_log_report, order_headers
+from .utils import (check_duplicate_samples, clean_headers,
+                    make_parsing_log_report, order_headers)
 
 # Initialise the logger.
 log = logging.getLogger(__name__)
@@ -112,8 +113,8 @@ REGIONS = {
     },
 }
 
-'''""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
-The METRICS is the container for "high level" representations of the standard metrics.
+'''"""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
+The METRICS is the container for abstract representations of the standard metrics.
 They are designed to be seen as simple identifiers of the well known metrics.
 You can set any possible real/virtual configuration defined in the SINGLE_HEADER.
 
@@ -148,7 +149,7 @@ Some rules:
     of spaces, replace each such sequence with just one single-space string " ".
   * Single backslashes must be escaped.
   * If it still does not work, then you might need to take a look
-    at the "make_metric_id" and maybe at the "make_user_configs".
+    at the "make_consistent_metric" and maybe at the "make_user_configs".
 
 - Some "title"s below contain the "&nbsp;" html entity to widen the column's title.
   Otherwise long values can overlap with adjacent values in right columns/rows below.
@@ -251,7 +252,7 @@ Final notes:
 AUTO_CONFIGS_ENABLED = True
 USER_CONFIGS_ENABLED = True
 
-V2 = "(second value)"  # Used to create a unique ID if a metric has two values.
+V2 = " pct"  # Used to create a unique ID if a metric has two values.
 
 """ GTQ is the "greater than or equal to" sign.
 Other types can be found in the "Extra Info" comment above.
@@ -340,14 +341,12 @@ METRICS = {
     # Well technically you can but it uses the last found region.
     "aligned bases": {
         "order_priority": 0.3,
-        # "title": "Aln bases",
         "hidden_own": False,
         "scale": "RdYlGn",
         "colour": "0, 0, 255",
     },
     "aligned bases in region": {
         "order_priority": 0.4,
-        # "title": "Bases on target",
         "scale": "Reds",
         "colour": "0, 0, 255",
         WGS: {
@@ -360,7 +359,6 @@ METRICS = {
     "aligned bases in region"
     + V2: {
         "order_priority": 0.5,
-        # "title": "Bases on trg pct",
         "max": 100,
         "colour": "0, 0, 255",
         "suffix": " %",
@@ -373,18 +371,15 @@ METRICS = {
         "order_priority": 0,
         "hidden_own": False,
         "colour": "255, 0, 0",
-        # "title": "Aln reads",
     },
     "aligned reads in region": {
         "order_priority": 0.1,
-        # "title": "Reads on target",
         "scale": "RdGy",
         "colour": "255, 0, 0",
     },
     "aligned reads in region"
     + V2: {
         "order_priority": 0.2,
-        # "title": "Reads on trg pct",
         "max": 100,
         "suffix": " %",
         "scale": "RdGy",
@@ -531,7 +526,7 @@ REGION_TABLE_CONFIG = {
         "table_title": "QC coverage region",
     },
     BED: {
-        "table_title": "Target bed",
+        "table_title": "Target Bed",
     },
 }
 
@@ -552,20 +547,22 @@ class DragenCoverageMetrics(BaseMultiqcModule):
     def add_coverage_metrics(self):
         """The main function of the dragen coverage metrics module.
         The public members of the BaseMultiqcModule and dragen modules defined in
-        MultiqcModule are available within it. Returns either a view object containing
-        a list of sample names, or an empty set if data could not be collected or
-        became empty after ignoring samples."""
+        MultiqcModule are available within it. Returns a set with sample names."""
 
         cov_data = defaultdict(dict)
-        cov_headers = {}
 
         # Stores cleaned sample names with references to file handlers.
         # Used later to check for duplicates and inform about found ones,
-        # and to extract data from _overall_mean_cov.csv files.
-        all_samples = defaultdict(lambda: defaultdict(list))
+        all_samples = defaultdict(list)
+
+        # Used to extract data from *_overall_mean_cov.csv files.
+        samples_with_phenotypes = defaultdict(lambda: defaultdict(list))
+
+        # Metric IDs with original metric strings.
+        all_metrics = {}
 
         for file in self.find_log_files("dragen/coverage_metrics"):
-            out = cov_parser(file, cov_headers)
+            out = coverage_parser(file)
             if out["success"]:
                 self.add_data_source(file, section="stats")
 
@@ -573,15 +570,17 @@ class DragenCoverageMetrics(BaseMultiqcModule):
                 cleaned_sample = self.clean_s_name(original_sample, file)
                 phenotype = out["phenotype"]
 
-                all_samples[cleaned_sample][phenotype].append((original_sample, file))
-
                 # Add/overwrite the sample.
                 cov_data[cleaned_sample][phenotype] = out["data"]
 
-        '''"""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
-        Coverage data is collected now. The headers are also prepared.
-        If other files (eg json) are needed, then these can be found
-        with find_log_files, processed and used afterwards.
+                all_samples[cleaned_sample + "." + phenotype].append(file)
+                samples_with_phenotypes[cleaned_sample][phenotype].append((original_sample, file))
+                all_metrics.update(out["metric_IDs_with_original_names"])
+
+        '''""""""""""""""""""""""""""""
+        Coverage data is collected now.
+        If other files (eg json) are needed, then these can be
+        found with find_log_files, processed and used afterwards.
         See afterqc.py or supernova.py for example.
         CSS/JS can be imported, see fastqc.py for details.
         '''
@@ -591,24 +590,31 @@ class DragenCoverageMetrics(BaseMultiqcModule):
             return set()
 
         # Check samples for duplicates.
-        check_duplicate_samples(all_samples)
+        check_duplicate_samples(all_samples, log)
+
+        cov_headers, cov_regions = make_coverage_headers_and_extract_regions(all_metrics)
+
+        # cov_regions (eg genome, QC coverage region) are inserted into cov_data.
+        # They will be used later to produce section's descriptions.
+        append_regions(cov_data, cov_regions)
 
         # Write data into the general table.
         gen_data, gen_headers = make_general_stats(cov_data, cov_headers)
         self.general_stats_addcols(gen_data, gen_headers, namespace=NAMESPACE)
 
         # Write data to file.
-        out_data = make_data_for_txt_report(cov_data)
+        out_data = make_data_for_txt_report(cov_data, all_metrics)
         for phenotype in out_data:
             self.write_data_file(out_data[phenotype], phenotype)
 
         # Extract coverage bed/target bed/wgs from _overall_mean_cov.csv files.
-        # And prepare <coverage region prefix>-specific texts.
-        bed_texts = make_bed_texts(self.overall_mean_cov_data, all_samples)
+        # And prepare <coverage-region-prefix>-specific texts.
+        bed_texts = make_bed_texts(self.overall_mean_cov_data, samples_with_phenotypes)
         coverage_sections = make_cov_sections(cov_data, cov_headers, bed_texts)
 
-        # Reporting found info/warnings/errors, which were collected while
-        # calling the cov_parser. You can disable it anytime, if it is not wanted.
+        # Report found info/warnings/errors, which were collected while
+        # calling the coverage_parser and constructing cov_headers.
+        # You can disable it anytime, if it is not wanted.
         make_parsing_log_report("coverage_metrics", log_data, log)
 
         for cov_section in coverage_sections:
@@ -619,29 +625,14 @@ class DragenCoverageMetrics(BaseMultiqcModule):
                 helptext=cov_section["helptext"],
                 plot=cov_section["plot"],
             )
-        return cov_data.keys()
+        return {sample + phenotype for sample in cov_data for phenotype in cov_data[sample]}
 
 
-def check_duplicate_samples(sample_names):
-    """Check samples for duplicate names. Warn about found ones."""
-    message = ""
-    line1 = "\n  {}.{} was built from the following samples:"
-    line2 = "\n    {} in {}"
-    for s_name in sample_names:
-        for phenotype in sample_names[s_name]:
-            if len(sample_names[s_name][phenotype]) > 1:
-                message += line1.format(s_name, phenotype)
-                for orig_s_name, file in sample_names[s_name][phenotype]:
-                    message += line2.format(file["fn"], file["root"])
-    if message:
-        message = "\nDuplicate sample names were found. The last one overwrites previous data." + message
-        log.warning(message)
-
-
-def make_data_for_txt_report(coverage_data):
+def make_data_for_txt_report(coverage_data, metrics):
     """Prepare data for the text report."""
 
-    data = defaultdict(dict)
+    data = defaultdict(lambda: defaultdict(dict))
+    V2_len = len(V2)
     for sample in coverage_data:
         for phenotype in coverage_data[sample]:
             # Replace any sequence of spaces/hyphens/dots/underscores by single underscore.
@@ -655,11 +646,32 @@ def make_data_for_txt_report(coverage_data):
                 new_phenotype += "_coverage_metrics"
             new_phenotype = "dragen_" + new_phenotype
 
-            data[new_phenotype][sample] = coverage_data[sample][phenotype]["metrics_and_values"]
+            for metric, value in coverage_data[sample][phenotype]["data"].items():
+                original_metric = metrics[metric] if metric in metrics else metrics[metric[:-V2_len]] + V2
+                data[new_phenotype][sample][original_metric] = value
     return data
 
 
-def make_bed_texts(overall_mean, sample_names):
+def append_regions(cov_data, regions):
+    for sample in cov_data:
+        for phenotype in cov_data[sample]:
+            region = None
+            # Regions shall be quite unique, so we can check if they are present in the metric.
+            for metric in cov_data[sample][phenotype]["data"]:
+                for _region in regions:
+                    if _region in metric:
+                        region = _region
+                        break
+                # Will be found quickly most of the time. No need to iterate further.
+                if region:
+                    break
+            # Can theoretically happen that region was not extracted.
+            if not region:
+                region = "Unknown region"
+            cov_data[sample][phenotype]["region"] = region
+
+
+def make_bed_texts(overall_mean, samples_with_phenotypes):
     """Matches _overall_mean_cov.csv to the corresponding _coverage_metrics.csv
     Extracts coverage bed/target bed/wgs/file names and creates a text for each
     section (phenotype)."""
@@ -671,11 +683,11 @@ def make_bed_texts(overall_mean, sample_names):
     sources_not_matched = defaultdict(list)
     phenotypes = set()  # Stores all found phenotypes.
 
-    for sample in sample_names:
-        for phenotype in sample_names[sample]:
+    for sample in samples_with_phenotypes:
+        for phenotype in samples_with_phenotypes[sample]:
             phenotypes.add(phenotype)
             # Extract the last tuple from list with duplicates.
-            orig_sample, file_handler = sample_names[sample][phenotype][-1]
+            orig_sample, file_handler = samples_with_phenotypes[sample][phenotype][-1]
             root = file_handler["root"]
             # Check if that file is present in the overall_mean_cov data.
             # Presumeably only in rare cases no data can be collected.
@@ -769,28 +781,25 @@ def create_table_handlers():
     * make_general_stats
     * make_own_coverage_sections"""
 
-    # Regexes for the phenotypes:
-    # <coverage region prefix> + <arbitrary suffix>, where
-    # the former is the standard DRAGEN region prefix
-    # and the latter is some string suffix (empty in most cases).
-    RGX_WGS_PHENOTYPE = re.compile("^wgs(.*)", re.IGNORECASE)
-    RGX_QC_PHENOTYPE = re.compile("^qc-coverage-region-(.+)", re.IGNORECASE)
-    RGX_BED_PHENOTYPE = re.compile("^target_bed(.*)", re.IGNORECASE)
+    # Regexes for the well-known standard phenotypes.
+    RGX_WGS_PHENOTYPE = re.compile("^wgs$", re.IGNORECASE)
+    RGX_QC_PHENOTYPE = re.compile("^qc-coverage-region-(?P<number>\d+)$", re.IGNORECASE)
+    RGX_BED_PHENOTYPE = re.compile("^target_bed$", re.IGNORECASE)
 
     def improve_gen_phenotype(phenotype):
         """Improve phenotype's appearance for columns' titles in the general table."""
 
         pheno_match = RGX_QC_PHENOTYPE.search(phenotype)
         if pheno_match:
-            return "QC-" + pheno_match.group(1)
+            return "QC-" + pheno_match["number"]
 
         pheno_match = RGX_WGS_PHENOTYPE.search(phenotype)
         if pheno_match:
-            return "WGS" + pheno_match.group(1)
+            return "WGS"
 
         pheno_match = RGX_BED_PHENOTYPE.search(phenotype)
         if pheno_match:
-            return "BED" + pheno_match.group(1)
+            return "BED"
 
         return phenotype
 
@@ -801,8 +810,7 @@ def create_table_handlers():
         gen_headers = {}
         for sample in coverage_data:
             for phenotype in coverage_data[sample]:
-                data = coverage_data[sample][phenotype]["metrics_and_values"]
-                region = coverage_data[sample][phenotype]["region"]
+                data = coverage_data[sample][phenotype]["data"]
                 for metric in data:
                     # Data and the corresponding header are included in the report,
                     # only if "exclude" is not presented or False/False-equivalent.
@@ -840,24 +848,24 @@ def create_table_handlers():
 
         return gen_data, clean_headers(order_headers(gen_headers))
 
-    def improve_own_phenotype(phenotype):
+    def make_section_name(phenotype):
         """Improve phenotype's appearance for non-general sections' titles."""
 
         pheno_match = RGX_QC_PHENOTYPE.search(phenotype)
         if pheno_match:
-            return "QC coverage region " + pheno_match.group(1)
+            return "QC Region " + pheno_match["number"] + " Coverage Metrics"
 
         pheno_match = RGX_WGS_PHENOTYPE.search(phenotype)
         if pheno_match:
-            return "WGS" + pheno_match.group(1)
+            return "WGS Coverage Metrics"
 
         pheno_match = RGX_BED_PHENOTYPE.search(phenotype)
         if pheno_match:
-            return "Target BED" + pheno_match.group(1)
+            return "Target Bed Coverage Metrics"
 
         # Try to make it better looking a little bit.
-        phenotype = re.sub(r"-|_|\.", " ", phenotype).strip()
-        return phenotype
+        phenotype = re.sub(r"(\s|-|\.|_)+", " ", phenotype).strip()
+        return phenotype + " Coverage Metrics"
 
     # Regexes for the well-known regions:
     RGX_WGS_REGION = re.compile("^genome$", re.IGNORECASE)
@@ -884,7 +892,7 @@ def create_table_handlers():
         regions = defaultdict(set)
         for sample in coverage_data:
             for phenotype in coverage_data[sample]:
-                real_data = coverage_data[sample][phenotype]["metrics_and_values"]
+                real_data = coverage_data[sample][phenotype]["data"]
                 region = coverage_data[sample][phenotype]["region"]
                 data = {sample: {}}
                 headers = {}
@@ -908,24 +916,20 @@ def create_table_handlers():
         sections = []
         helptext = (
             "The following criteria are used when calculating coverage:\n\n"
-            + "* Duplicate reads and clipped bases are ignored.\n\n"
-            + "* DRAGEN V3.4 - 3.7: Only reads with `MAPQ` > `min MAPQ`"
-            + " and bases with `BQ` > `min BQ` are considered\n\n"
-            + "* DRAGEN V3.8 - 4.1: By default, reads with MAPQ < 1"
-            + " and bases with BQ < 0 are ignored."
-            + " You can use the qc-coverage-filters-n option to specify which"
-            + " BQ bases and MAPQ reads to filter out.\n\n"
-            + "Considering only bases usable for variant calling, _i.e._ excluding:\n\n"
-            + "1. Clipped bases\n\n"
-            + "2. Bases in duplicate reads\n\n"
-            + "3. Reads with `MAPQ` < `min MAPQ` (default `20`)\n\n"
-            + "4. Bases with `BQ` < `min BQ` (default `10`)\n\n"
-            + "5. Reads with `MAPQ` = `0` (multimappers)\n\n"
-            + "6. Overlapping mates are double-counted\n\n"
-            + "Source file from &#60;output prefix&#62;.overall_mean_cov.csv is present for each "
-            + "corresponding &#60;output prefix&#62;.&#60;coverage region prefix&#62;_coverage_metrics.csv in the section's description. "
-            + "If the input directory does not contain *.overall_mean_cov.csv files, then "
-            + "\"No 'coverage bed/target bed/wgs' source file found\" is printed."
+            "* Duplicate reads and clipped bases are ignored.\n\n"
+            "* DRAGEN V3.4 - 3.7: Only reads with `MAPQ` > `min MAPQ` and bases with `BQ` > `min BQ` are considered\n\n"
+            "* DRAGEN V3.8 - 4.1: By default, reads with MAPQ < 1 and bases with BQ < 0 are ignored."
+            " You can use the qc-coverage-filters-n option to specify which BQ bases and MAPQ reads to filter out.\n\n"
+            "Considering only bases usable for variant calling, _i.e._ excluding:\n\n"
+            "1. Clipped bases\n\n"
+            "2. Bases in duplicate reads\n\n"
+            "3. Reads with `MAPQ` < `min MAPQ` (default `20`)\n\n"
+            "4. Bases with `BQ` < `min BQ` (default `10`)\n\n"
+            "5. Reads with `MAPQ` = `0` (multimappers)\n\n"
+            "6. Overlapping mates are double-counted\n\n"
+            "Source file from &#60;output-prefix&#62;.overall_mean_cov&#60;arbitrary-suffix&#62;.csv is included for each corresponding "
+            "&#60;output-prefix&#62;.&#60;coverage-region-prefix&#62;_coverage_metrics&#60;arbitrary-suffix&#62;.csv in the section's description."
+            " If input directory does not contain .overall_mean_cov files, then \"No 'coverage bed/target bed/wgs' source file found\" is printed."
         )
         for phenotype in plots:
             # Make section only if headers are not empty.
@@ -942,7 +946,7 @@ def create_table_handlers():
                 )
                 sections.append(
                     {
-                        "name": improve_own_phenotype(phenotype) + " Metrics",
+                        "name": make_section_name(phenotype),
                         # Spaces are replaced with hyphens to pass MultiQC lint test.
                         "anchor": "dragen-cov-metrics-own-section-" + re.sub("\s+", "-", phenotype),
                         "helptext": helptext,
@@ -963,11 +967,191 @@ def create_table_handlers():
 make_general_stats, make_cov_sections = create_table_handlers()
 
 
+'''"""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
+The log_data is the container for found info, warnings and errors.
+Collected data is stored in groups to make the output log file more readable.
+
+warnings:
+- invalid_file_names, which do not conform to the:
+    <output-prefix>.<coverage-region-prefix>_coverage_metrics<arbitrary-suffix>.csv
+
+- invalid_file_lines, which do not conform to:
+    COVERAGE SUMMARY,,<metric>,<value1>  or
+    COVERAGE SUMMARY,,<metric>,<value1>,<value2>
+
+debug/info:
+- unknown_metrics are those, which could not be recognized by the code.
+  Their headers are incomplete, hence uninformative and ugly table's columns.
+- unusual_values are those except for int/float/NA.
+'''
+log_data = {
+    "invalid_file_names": defaultdict(list),
+    "invalid_file_lines": defaultdict(lambda: defaultdict(list)),
+    "unknown_metrics": [],
+    "unusual_values": defaultdict(lambda: defaultdict(dict)),
+}
+
 def construct_coverage_parser():
-    """Isolation for all parsing machinery.
-    Returns:
-    * closure coverage_metrics_parser: parser for coverage data stored in csv files.
-    * data with found info/warnings/errors."""
+    """Isolation for the parsing codeblock. Returns the closure 'coverage_metrics_parser'."""
+
+    '''""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
+    The DRAGEN v3.7 standard does not provide any info about consistency of coverage metrics.
+    In practice two metrics can be inconsistent:
+        PCT of region with coverage [ix, inf)
+        PCT of region with coverage [ix, jx)
+
+    Presumably some part of the DRAGEN tries to improve the appearance of content in csv files.
+    The two mentioned metrics may have a different number of spaces inserted within them.
+    Amount and insertion places seem to depend on the highest number of digits in ix and jx.
+    So, for example:
+        if max ix = jx = 100x   [100x: inf), [ 50x:100x)   then [  0x: inf),  [ 10x: inf)
+                                                            and [  0x:  1x),  [ 10x: 15x)
+    but if max ix = jx = 1500x  [1500x: inf),[1000x:1500x) then [   0x: inf), [  10x: inf)
+                                                            and [   0x:   1x),[  10x:  15x)
+
+    Using such versions of the same metric as keys would result in two columns instead of one.
+    There is a possibility that an input folder contains a mixed data with different versions.
+
+    Assumption: each metric may be inconsistent due to unknown reasons.
+    Solution:   modify each metric.
+
+    To not exaggerate the problem, only the most obvious possible issues are solved.
+    If new metric-specific peculiarities arise, they can be added to the make_consistent_metric.
+    '''
+
+    PCT_RGX = re.compile("^(PCT of .+? with coverage )(.+)", re.IGNORECASE)
+
+    def make_consistent_metric(metric):
+        """Tries to fix consistency issues that may arise in coverage metrics data."""
+        # Single backslashes are escaped.
+        metric = re.sub("\s+", " ", metric).strip()
+
+        pct_case = PCT_RGX.search(metric)
+        if pct_case:
+            metric = pct_case.group(1) + pct_case.group(2).replace(" ", "")
+
+        metric_id = metric.lower()
+
+        # metric will be stored in .txt output.
+        # metric_id will be used for internal purposes.
+        return metric, metric_id
+
+    FILE_RGX = re.compile(r"(.+)\.(.+)_coverage_metrics(.*)\.csv$")
+    LINE_RGX = re.compile("^COVERAGE SUMMARY,,([^,]+),([^,]+),?([^,]*)$")
+
+    def coverage_metrics_parser(file_handler):
+        """Parser for coverage metrics csv files.
+        Input:  file_handler with necessary info - file name/content/root
+        Output: {"success": 0} if file name test failed. Otherwise:
+                {"success": 0/1,
+                 "sample_name": <output-prefix> + <arbitrary-suffix>,
+                 "phenotype": <coverage-region-prefix>,
+                 "data": {"data": extracted_metrics_with_values},
+                 "metric_IDs_with_original_names": {metric_ID: original_metric_name},
+                }, with success 0 if all file's lines are invalid.
+        """
+        """ File name is checked below.
+        Because there is no guarantee that it would be as in the official standard:
+        <output-prefix>.<coverage-region-prefix>_coverage_metrics.csv
+
+        Accepted structure of files:
+        <output-prefix>.<coverage-region-prefix>_coverage_metrics<arbitrary-suffix>.csv
+
+        Some possible file names:
+
+        T_SRR7890936_50pc.wgs_coverage_metrics_normal.csv
+        T_SRR7890936_50pc.wgs_coverage_metrics_tumor.csv
+        T_SRR7890936_50pc.target_bed_coverage_metrics.csv
+        SAMPLE_0_dragen.wgs_coverage_metrics.csv
+        SAMPLE_0_dragen.qc-coverage-region-1_coverage_metrics.csv
+        SAMPLE_0_dragen.qc-coverage-region-2_coverage_metrics.csv
+        """
+        file_name, root_name = file_handler["fn"], file_handler["root"]
+
+        file_match = FILE_RGX.search(file_name)
+        if not file_match:
+            log_data["invalid_file_names"][root_name].append(file_name)
+            return {"success": 0}
+
+        sample, phenotype, normal_tumor = file_match.group(1), file_match.group(2), file_match.group(3)
+        if normal_tumor:
+            # Only non-'tumor' strings are concatenated with the sample.
+            if not re.search("tumor", normal_tumor, re.IGNORECASE):
+                sample += normal_tumor
+
+        # Will store metric IDs with original(almost) metric strings.
+        metric_IDs_with_original_names = {}
+
+        success = False
+        data = {}
+        for line in file_handler["f"].splitlines():
+            # Check the general structure. Maybe a new section will be added in the future.
+            line_match = LINE_RGX.search(line)
+
+            # If line is fine then extract the necessary fields.
+            if line_match:
+                success = True
+                metric, value1, value2 = (
+                    line_match.group(1),
+                    line_match.group(2),
+                    line_match.group(3),
+                )
+            # Otherwise check if line is empty. If not then report it and go to the next line.
+            else:
+                if not re.search("^\s*$", line):
+                    log_data["invalid_file_lines"][root_name][file_name].append(line)
+                continue
+
+            consistent_metric, consistent_metric_id = make_consistent_metric(metric)
+            metric_IDs_with_original_names[consistent_metric_id] = consistent_metric
+
+            """ Check the extracted values.
+            These are int/float and in some cases NA for now. All other values will be reported.
+            The type conversion is only performed to int and float. Other types of data are left
+            unchanged as strings. It has consequences for the "modify" configuration, which are
+            described in the comment for the METRICS.
+            No additional try blocks are required to check other simple types of values(eg None).
+            Just adapt the regexes.
+            """
+            try:
+                value1 = int(value1)
+            except ValueError:
+                try:
+                    value1 = float(value1)
+                except ValueError:
+                    if not re.search("^NA$", value1.strip(), re.IGNORECASE):
+                        log_data["unusual_values"][root_name][file_name][metric] = value1
+
+            data[consistent_metric_id] = value1
+
+            if value2:
+                try:
+                    value2 = float(value2)
+                except ValueError:
+                    try:
+                        value2 = int(value2)
+                    except ValueError:
+                        if not re.search("^NA$", value2.strip(), re.IGNORECASE):
+                            log_data["unusual_values"][root_name][file_name][metric + V2] = value2
+
+                data[consistent_metric_id + V2] = value2
+
+        return {
+            "success": success,
+            "sample_name": sample,
+            "phenotype": phenotype,
+            "data": {"data": data},  # dict is returned, because it will be extended later.
+            "metric_IDs_with_original_names": metric_IDs_with_original_names,
+        }
+
+    return coverage_metrics_parser  # Return the closure.
+
+
+coverage_parser = construct_coverage_parser()
+
+
+def create_coverage_headers_handler():
+    """Isolation for all the machinery, which is used to build headers."""
 
     # All regexes are constructed to be as general and simple as possible to speed up the matching.
     # "make_configs" will point later to a function, which automatically sets some header's configs.
@@ -996,247 +1180,62 @@ def construct_coverage_parser():
         "make_configs": None,
     }
     ANY_PAT = {"RGX": re.compile(".+"), "make_configs": None}
+
     # The order is based on the structure of regexes and amount of patterns found in examined data.
     METRIC_PATTERNS = [PCT_PAT, AVG_PAT, ALN_PAT, UNI_PAT, MED_PAT, RAT_PAT, ANY_PAT]
 
-    '''"""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
-    The log_data is the container for found info, warnings and errors.
-    Collected data is stored in groups to make the output log file more readable.
+    def make_coverage_headers_and_extract_regions(metric_IDs):
+        headers = {}
+        regions = set()
+        for metric_id in metric_IDs:
+            region = None
+            for MPAT in METRIC_PATTERNS:
+                metric_match = MPAT["RGX"].search(metric_id)
+                if metric_match:
+                    output_auto = MPAT["make_configs"](metric_match)
 
-    warnings:
-    - invalid_file_names, which do not conform to the:
-        <output prefix>.<coverage region prefix>_coverage_metrics<arbitrary suffix>.csv
+                    if "region" in output_auto and output_auto["region"]:
+                        region = output_auto["region"]
+                        regions.add(region)
 
-    - invalid_file_lines, which do not conform to:
-        COVERAGE SUMMARY,,<metric>,<value1>  or
-        COVERAGE SUMMARY,,<metric>,<value1>,<value2>
+                    orig_metric = metric_IDs[metric_id]
 
-    debug/info:
-    - unknown_metrics are those, which could not be recognized by the code.
-      Their headers are incomplete, hence uninformative and ugly table's columns.
-    - unusual_values are those except for int/float/NA.
-    '''
-    log_data = {
-        "invalid_file_names": defaultdict(list),
-        "invalid_file_lines": defaultdict(lambda: defaultdict(list)),
-        "unknown_metrics": defaultdict(lambda: defaultdict(list)),
-        "unusual_values": defaultdict(lambda: defaultdict(dict)),
-    }
+                    # Metric could not be recognized.
+                    if "warning" in output_auto and output_auto["warning"]:
+                        log_data["unknown_metrics"].append(orig_metric)
 
-    '''""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
-    The DRAGEN v3.7 standard does not provide any info about consistency of coverage metrics.
-    In practice two metrics can be inconsistent:
-        PCT of region with coverage [ix, inf)
-        PCT of region with coverage [ix, jx)
+                    # First set common configs from the SINGLE_HEADER.
+                    configs = {config: value for config, value in SINGLE_HEADER.items() if value is not None}
+                    configs2 = {config: value for config, value in SINGLE_HEADER.items() if value is not None}
+                    configs["title"], configs["description"] = orig_metric, orig_metric
+                    configs2["title"], configs2["description"] = orig_metric + V2, orig_metric + V2
 
-    Presumably some part of the DRAGEN tries to improve the appearance of content in csv files.
-    The two mentioned metrics may have a different number of spaces inserted within them.
-    Amount and insertion places seem to depend on the highest number of digits in ix and jx.
-    So, for example:
-        if max ix = jx = 100x   [100x: inf), [ 50x:100x)   then [  0x: inf),  [ 10x: inf)
-                                                            and [  0x:  1x),  [ 10x: 15x)
-    but if max ix = jx = 1500x  [1500x: inf),[1000x:1500x) then [   0x: inf), [  10x: inf)
-                                                            and [   0x:   1x),[  10x:  15x)
+                    if AUTO_CONFIGS_ENABLED:
+                        _configs = output_auto["configs"]
+                        configs.update(_configs)
+                        if "configs2" in output_auto:
+                            _configs = output_auto["configs2"]
+                            configs2.update(_configs)
 
-    Using such versions of the same metric as keys would result in two columns instead of one.
-    There is a possibility that an input folder contains a mixed data with different versions.
+                    if USER_CONFIGS_ENABLED:
+                        _configs = make_user_configs(metric_id, region)
+                        configs.update(_configs)
+                        _configs = make_user_configs(metric_id + V2, region)
+                        configs2.update(_configs)
 
-    Assumption: each metric may be inconsistent due to unknown reasons.
-    Solution:   modify each metric.
+                    headers[metric_id] = configs
+                    # Always produce configs for the second value.
+                    # Those, which are not needed will be ignored.
+                    # Simpler code in exchange for some extra space.
+                    headers[metric_id + V2] = configs2
+                    break
 
-    To not exaggerate the problem, only the most obvious possible issues are solved.
-    If new metric-specific peculiarities arise, they can be added to the make_metric_id.
-    '''
+        return headers, regions
 
-    def make_metric_id(metric):
-        """Tries to fix consistency issues that may arise in coverage metrics data."""
-
-        # Single backslashes are escaped.
-        metric_id = re.sub("\s+", " ", metric).strip().lower()
-
-        pct_case = PCT_PAT["RGX"].search(metric_id)
-        if pct_case:
-            metric_id = "pct of " + pct_case["region"] + " with coverage " + pct_case["entity"].replace(" ", "")
-
-        return metric_id
-
-    FILE_RGX = re.compile(r"^([^.]+)\.(.+?)_coverage_metrics(.*)\.csv$")
-    LINE_RGX = re.compile("^COVERAGE SUMMARY,,([^,]+),([^,]+),?([^,]*)$")
-
-    # Stores extracted region for each found metric.
-    cov_headers_support = defaultdict(dict)
-
-    def coverage_metrics_parser(file_handler, headers):
-        """Parser for coverage metrics csv files.
-        Input:  file_handler with necessary info - file name/content/root
-        Output: {"success": 0} if file name test failed. Otherwise:
-                {"success": 0/1, "sample_name": <output prefix>,
-                 "phenotype": <coverage region prefix> + <arbitrary suffix>,
-                 "region": extracted_region,
-                 "data": extracted_metrics_with_values
-                }, with success 0 if all file's lines are invalid.
-        """
-        """ File name is checked below.
-        Because there is no guarantee that it would be as in the official standard:
-        <output prefix>.<coverage region prefix>_coverage_metrics.csv
-
-        Accepted structure of files:
-        <output prefix>.<coverage region prefix>_coverage_metrics<arbitrary suffix>.csv
-
-        Some possible file names:
-
-        T_SRR7890936_50pc.wgs_coverage_metrics_normal.csv
-        T_SRR7890936_50pc.wgs_coverage_metrics_tumor.csv
-        T_SRR7890936_50pc.target_bed_coverage_metrics.csv
-        SAMPLE_0_dragen.wgs_coverage_metrics.csv
-        SAMPLE_0_dragen.qc-coverage-region-1_coverage_metrics.csv
-        SAMPLE_0_dragen.qc-coverage-region-2_coverage_metrics.csv
-        """
-        file_name, root_name = file_handler["fn"], file_handler["root"]
-
-        file_match = FILE_RGX.search(file_name)
-        if not file_match:
-            log_data["invalid_file_names"][root_name].append(file_name)
-            return {"success": 0}
-
-        sample, phenotype, normal_tumor = file_match.group(1), file_match.group(2), file_match.group(3)
-        if normal_tumor and not re.search("tumor", normal_tumor, re.IGNORECASE):
-            sample += file_match.group(3)
-
-        success = 0
-        region = ""
-        data = {}
-        for line in file_handler["f"].splitlines():
-            # Check the general structure. Maybe a new section will be added in the future.
-            line_match = LINE_RGX.search(line)
-
-            # If line is fine then extract the necessary fields.
-            if line_match:
-                metric, value1, value2 = (
-                    line_match.group(1),
-                    line_match.group(2),
-                    line_match.group(3),
-                )
-                success = 1
-
-            # Otherwise check if line is empty. If not then report it and go to the next line.
-            else:
-                if not re.search("^\s*$", line):
-                    log_data["invalid_file_lines"][root_name][file_name].append(line)
-                continue
-
-            """ Check the extracted values.
-            These are int/float and in some cases NA for now. All other values will be reported.
-            The type conversion is only performed to int and float. Other types of data are left
-            unchanged as strings. It has some consequences for the "modify" configuration, which
-            are described in the comment for the METRICS.
-            No additional try blocks are required to check other simple types of values(eg Inf).
-            Just adapt the regexes.
-            """
-            try:
-                value1 = int(value1)
-            except ValueError:
-                try:
-                    value1 = float(value1)
-                except ValueError:
-                    if not re.search("^NA$", value1, re.IGNORECASE):
-                        log_data["unusual_values"][root_name][file_name][metric + V2] = value1
-
-            if value2:
-                try:
-                    value2 = float(value2)
-                except ValueError:
-                    try:
-                        value2 = int(value2)
-                    except ValueError:
-                        if not re.search("^NA$", value2, re.IGNORECASE):
-                            log_data["unusual_values"][root_name][file_name][metric + V2] = value2
-
-            metric_id = make_metric_id(metric)
-            if metric_id not in headers:
-                for MPAT in METRIC_PATTERNS:
-                    metric_match = MPAT["RGX"].search(metric_id)
-                    if metric_match:
-                        output_auto = MPAT["make_configs"](metric_match)
-
-                        if "region" in output_auto and output_auto["region"]:
-                            region = output_auto["region"]
-                            cov_headers_support[metric_id]["region"] = region
-
-                        # Metric could not be recognized.
-                        if "warning" in output_auto and output_auto["warning"]:
-                            cov_headers_support[metric_id]["warning"] = 1
-
-                        # First set common configs from the SINGLE_HEADER.
-                        configs = {config: value for config, value in SINGLE_HEADER.items() if value is not None}
-
-                        if AUTO_CONFIGS_ENABLED:
-                            auto_configs = output_auto["configs"]
-                            configs.update(auto_configs)
-
-                        if USER_CONFIGS_ENABLED:
-                            user_configs = make_user_configs(metric_id, region)
-                            configs.update(user_configs)
-
-                        headers[metric_id] = configs
-
-                        if value2:
-                            configs = {config: value for config, value in SINGLE_HEADER.items() if value is not None}
-
-                            if AUTO_CONFIGS_ENABLED:
-                                if "configs2" in output_auto:
-                                    auto_configs = output_auto["configs2"]
-                                else:
-                                    auto_configs = {
-                                        "title": metric,
-                                        "description": metric,
-                                        "scale": "Reds",
-                                    }
-                                configs.update(auto_configs)
-
-                            if USER_CONFIGS_ENABLED:
-                                user_configs = make_user_configs(metric_id + V2, region)
-                                configs.update(user_configs)
-
-                            headers[metric_id + V2] = configs
-
-                        break
-
-            # In case a second value is found, but the header was not created.
-            # Can happen if metric has a variable number of values and if the first catched
-            # metric has only 1 value, but the same subsequent metric has 2 values.
-            # Since it's very unlikely to happen, a very simple header is constructed.
-            if value2 and (metric_id + V2 not in headers):
-                headers[metric_id + V2] = {
-                    "title": metric,
-                    "description": metric,
-                    "scale": "Reds",
-                }
-
-            if not region and "region" in cov_headers_support[metric_id]:
-                region = cov_headers_support[metric_id]["region"]
-
-            if "warning" in cov_headers_support[metric_id]:
-                log_data["unknown_metrics"][root_name][file_name].append(metric)
-
-            data[metric_id] = value1
-            if value2:
-                data[metric_id + V2] = value2
-
-        if not region:
-            region = "Unknown region"
-
+    def get_std_configs(configs):
+        """Copies the standard real/virtual configurations from configs."""
         return {
-            "success": success,
-            "sample_name": sample,
-            "phenotype": phenotype,
-            "data": {"metrics_and_values": data, "region": region},
-        }
-
-    def get_std_configs(configs_dict):
-        """Copies the standard real/virtual configurations from configs_dict."""
-        return {
-            config: value for config, value in configs_dict.items() if config in SINGLE_HEADER or config in EXTRA_HEADER
+            config: value for config, value in configs.items() if config in SINGLE_HEADER or config in EXTRA_HEADER
         }
 
     def make_user_configs(metric, region):
@@ -1255,34 +1254,34 @@ def construct_coverage_parser():
 
         # Now set region-specific parameters for the given metric.
         if metric in METRICS:
-            user_configs = METRICS[metric]
-            configs.update(get_std_configs(user_configs))
+            _configs = METRICS[metric]
+            configs.update(get_std_configs(_configs))
 
-            if region and region in user_configs and user_configs[region]:
-                configs.update(get_std_configs(user_configs[region]))
+            if region and region in _configs and _configs[region]:
+                configs.update(get_std_configs(_configs[region]))
 
             # Try to set (ix:inf)/(ix:jx)-specific settings.
-            if pct_case and "extra" in user_configs and user_configs["extra"]:
-                ix_jx = re.search(r"\[(\d+x):(inf|\d+x)\)", pct_case["entity"])
-                if ix_jx:
-                    _group = (ix_jx.group(1), ix_jx.group(2))
+            if pct_case and "extra" in _configs and _configs["extra"]:
+                ix_jx_match = re.search(r"\[(\d+x):(inf|\d+x)\)", pct_case["entity"])
+                if ix_jx_match:
+                    ix_jx = (ix_jx_match.group(1), ix_jx_match.group(2))
 
-                    if _group in user_configs["extra"]:
-                        user_configs = user_configs["extra"][_group]
-                        configs.update(get_std_configs(user_configs))
-                        if region in user_configs:
-                            configs.update(get_std_configs(user_configs[region]))
+                    if ix_jx in _configs["extra"]:
+                        _configs = _configs["extra"][ix_jx]
+                        configs.update(get_std_configs(_configs))
+                        if region in _configs:
+                            configs.update(get_std_configs(_configs[region]))
 
             # Try to match the float and set specific configs.
-            if uni_case and "extra" in user_configs and user_configs["extra"]:
-                entity_match = re.search(r"\(PCT > (\d+\.\d+)\*mean\)", uni_case["entity"], re.IGNORECASE)
-                if entity_match:
-                    _float = entity_match.group(1)
-                    if _float in user_configs["extra"]:
-                        user_configs = user_configs["extra"][_float]
-                        configs.update(get_std_configs(user_configs))
-                        if region in user_configs:
-                            configs.update(get_std_configs(user_configs[region]))
+            if uni_case and "extra" in _configs and _configs["extra"]:
+                float_match = re.search(r"\(pct > (\d+\.\d+)\*mean\)", uni_case["entity"])
+                if float_match:
+                    _float = float_match.group(1)
+                    if _float in _configs["extra"]:
+                        _configs = _configs["extra"][_float]
+                        configs.update(get_std_configs(_configs))
+                        if region in _configs:
+                            configs.update(get_std_configs(_configs[region]))
 
         return configs
 
@@ -1458,7 +1457,7 @@ def construct_coverage_parser():
                 "scale": "Purples",
             },
             "configs2": {
-                "title": "Aln " + entity + " V2",
+                "title": "Aln " + entity + V2,
                 "description": metric + ". Second value.",
                 "scale": "Reds",
             },
@@ -1484,7 +1483,13 @@ def construct_coverage_parser():
         if entity == "alignment":
             configs["title"] = "Depth"
             configs["description"] = (
-                "Number of uniquely mapped bases to " + region + " divided by the number of sites in " + region + "."
+                "Coverage depth over "
+                + region
+                + ": number of uniquely mapped bases to "
+                + region
+                + " divided by the number of sites in "
+                + region
+                + "."
             )
         elif entity == "autosomal":
             configs["title"] = "AvgAutCov"
@@ -1539,7 +1544,7 @@ def construct_coverage_parser():
                     "scale": "Purples",
                 },
                 "configs2": {
-                    "title": "Average " + entity + " V2",
+                    "title": "Average " + entity + V2,
                     "description": metric_pattern_match.string + ". Second value.",
                     "scale": "Reds",
                 },
@@ -1584,7 +1589,7 @@ def construct_coverage_parser():
                 "scale": "Purples",
             },
             "configs2": {
-                "title": "Uniformity " + entity + " V2",
+                "title": "Uniformity " + entity + V2,
                 "description": metric_pattern_match.string + ". Second value.",
                 "scale": "Reds",
             },
@@ -1644,7 +1649,7 @@ def construct_coverage_parser():
                 "scale": "Purples",
             },
             "configs2": {
-                "title": "PCT " + entity + " V2",
+                "title": "PCT " + entity + V2,
                 "description": metric_pattern_match.string + ". Second value.",
                 "scale": "Reds",
             },
@@ -1682,7 +1687,7 @@ def construct_coverage_parser():
                 "scale": "Purples",
             },
             "configs2": {
-                "title": "Med " + entity + " V2",
+                "title": "Med " + entity + V2,
                 "description": metric_pattern_match.string + ". Second value.",
                 "scale": "Reds",
             },
@@ -1771,7 +1776,7 @@ def construct_coverage_parser():
                     "scale": "Purples",
                 },
                 "configs2": {
-                    "title": entity + " V2",
+                    "title": entity + V2,
                     "description": metric_pattern_match.string + ". Second value.",
                     "scale": "Reds",
                 },
@@ -1789,8 +1794,8 @@ def construct_coverage_parser():
                 "scale": "Purples",
             },
             "configs2": {
-                "title": metric + " V2",
-                "description": metric + " value2",
+                "title": metric + V2,
+                "description": metric + ". Second value.",
                 "scale": "Reds",
             },
             "warning": 1,
@@ -1805,8 +1810,8 @@ def construct_coverage_parser():
     RAT_PAT["make_configs"] = get_ratio_over_configs
     ANY_PAT["make_configs"] = get_any_configs
 
-    # Finally return the closure and collected log data.
-    return coverage_metrics_parser, log_data
+    # Return the closure.
+    return make_coverage_headers_and_extract_regions
 
 
-cov_parser, log_data = construct_coverage_parser()
+make_coverage_headers_and_extract_regions = create_coverage_headers_handler()
