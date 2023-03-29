@@ -82,8 +82,10 @@ def parse_overall_mean_cov(file_handler):
         file_match = COV_FILE_RGX.search(file)
         if file_match:
             sample, phenotype, normal_tumor = file_match.group(1), file_match.group(2), file_match.group(3)
-            if normal_tumor and not re.search("tumor", normal_tumor, re.IGNORECASE):
-                sample += file_match.group(3)
+            if normal_tumor:
+                # Only non-'tumor' strings are concatenated with the sample.
+                if not re.search("tumor", normal_tumor, re.IGNORECASE):
+                    sample += normal_tumor
         else:
             log.debug("\nNot supported: " + file + "\nin: " + root)
     # Else there is no name at all, report and return 0.
