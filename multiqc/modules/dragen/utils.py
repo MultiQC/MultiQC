@@ -143,6 +143,21 @@ def exist_and_number(data, *metrics):
     return all(isinstance(data.get(m, None), int) or isinstance(data.get(m, None), float) for m in metrics)
 
 
+def check_duplicate_samples(sample_names, logger):
+    """Check samples for duplicate names. Warn about found ones."""
+    message = ""
+    line1 = "\n  {} was built from the following samples:"
+    line2 = "\n    {} in {}"
+    for clean_sample_name in sample_names:
+        if len(sample_names[clean_sample_name]) > 1:
+            message += line1.format(clean_sample_name)
+            for file_handler in sample_names[clean_sample_name]:
+                message += line2.format(file_handler["fn"], file_handler["root"])
+    if message:
+        message = "\n\nDuplicate sample names were found. The last one overwrites previous data." + message
+        logger.warning(message)
+
+
 def order_headers(headers):
     """Produces a shallow copy with ordered single headers."""
     """
@@ -217,19 +232,22 @@ def clean_headers(headers):
 DRAGEN_MODULE_TEXTS = {
     "invalid_file_names": {
         "coverage_metrics": "\n\nThe file names must conform to the following structure:\n"
-        + "<output prefix>.<coverage region prefix>_coverage_metrics<arbitrary suffix>.csv\n\n"
-        + "The following files are not valid:\n",
+        "<output prefix>.<coverage region prefix>_coverage_metrics<arbitrary suffix>.csv\n\n"
+        "The following files are not valid:\n",
     },
     "invalid_file_lines": {
         "coverage_metrics": "\n\nThe lines in files must be:\n"
-        + "COVERAGE SUMMARY,,<metric>,<value1> or "
-        + "COVERAGE SUMMARY,,<metric>,<value1>,<value2>\n\n"
-        + "The following files contain invalid lines:\n",
+        "COVERAGE SUMMARY,,<metric>,<value1> or "
+        "COVERAGE SUMMARY,,<metric>,<value1>,<value2>\n\n"
+        "The following files contain invalid lines:\n",
     },
-    "unknown_metrics": {},
+    "unknown_metrics": {
+        "coverage_metrics": "\n\nThe following metrics could not be recognized. "
+        "Their headers might be incomplete, hence uninformative and ugly table's columns.\n\n"
+    },
     "unusual_values": {
-        "coverage_metrics": "\n\nAll metrics' values except int, float and NA are non-standard.\n"
-        + "The following files contain non-standard values:\n",
+        "coverage_metrics": "\n\nAll metrics' values except for int, float and NA are non-standard.\n"
+        "The following files contain non-standard values:\n",
     },
 }
 
@@ -270,14 +288,10 @@ def make_parsing_log_report(module, log_data, logger):
         if module in DRAGEN_MODULE_TEXTS["unknown_metrics"]:
             log_message = DRAGEN_MODULE_TEXTS["unknown_metrics"][module]
         else:
-            log_message = "\n\nThe following files contain unknown metrics:\n"
+            log_message = "\n\nThe following metrics could not be recognized:\n"
 
-        for root in log_data["unknown_metrics"]:
-            log_message += "  " + root + ":\n"
-            for file in log_data["unknown_metrics"][root]:
-                log_message += "    " + file + ":\n"
-                for metric in log_data["unknown_metrics"][root][file]:
-                    log_message += "      " + metric + "\n"
+        for metric in log_data["unknown_metrics"]:
+            log_message += "  " + metric + "\n"
 
         logger.debug(log_message + "\n")
 
