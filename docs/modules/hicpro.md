@@ -1,7 +1,7 @@
 ---
-Name: HiC-Pro
-URL: https://github.com/nservant/HiC-Pro
-Description: >
+name: HiC-Pro
+url: https://github.com/nservant/HiC-Pro
+description: >
   HiC-Pro is an optimized and flexible pipeline for Hi-C data processing.
 ---
 

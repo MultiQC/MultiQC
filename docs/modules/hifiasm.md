@@ -1,5 +1,5 @@
 ---
-Name: HiFiasm
-URL: https://github.com/chhylp123/hifiasm
-Description: A haplotype-resolved assembler for accurate Hifi reads
+name: HiFiasm
+url: https://github.com/chhylp123/hifiasm
+description: A haplotype-resolved assembler for accurate Hifi reads
 ---

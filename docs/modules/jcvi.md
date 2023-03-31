@@ -1,7 +1,7 @@
 ---
-Name: JCVI Genome Annotation
-URL: https://github.com/tanghaibao/jcvi
-Description: A tool to compute statistics on genome annotation.
+name: JCVI Genome Annotation
+url: https://github.com/tanghaibao/jcvi
+description: A tool to compute statistics on genome annotation.
 ---
 
 JCVI Genome Annotation provides quantitative measures for the assessment of genome
@@ -14,7 +14,7 @@ it is used to draw complementary plots.
 
 A typical result directory will contain:
 
-```txt
+```
 ├── Exon_Count
 │   ├── sample1.txt
 │   └── sample2.txt

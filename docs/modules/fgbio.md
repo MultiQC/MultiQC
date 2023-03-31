@@ -1,7 +1,7 @@
 ---
-Name: Fgbio
-URL: http://fulcrumgenomics.github.io/fgbio/tools/latest/
-Description: >
+name: Fgbio
+url: http://fulcrumgenomics.github.io/fgbio/tools/latest/
+description: >
   Fgbio can be used for processing and evaluating data containing UMIs
 ---
 

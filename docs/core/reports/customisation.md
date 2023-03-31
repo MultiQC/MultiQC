@@ -1,3 +1,9 @@
+---
+title: Customising Reports
+description: Making MultiQC reports bespoke for your use case
+order: 5
+---
+
 # Customising Reports
 
 MultiQC offers a few ways to customise reports to easily add your own
@@ -74,7 +80,7 @@ report_header_info:
 
 Then this will be displayed at the top of reports:
 
-![report project info](images/report_proj_info.png)
+![report project info](../../images/report_proj_info.png)
 
 Note that you can also specify a path to a config file using `-c`.
 
@@ -92,7 +98,7 @@ samples to line up properly in the _General Statistics_ table.
 To use, create a tab-separated file with two columns. The first column contains the
 search strings and the second the replacement strings:
 
-```tsv
+```
 IDX102934	Sample_1
 IDX102935	Sample_2
 IDX102936	Sample_3
@@ -118,7 +124,7 @@ If you set `sample_names_replace_regex` to `True` in a MultiQC config file
 and then create a file that contains regex search strings and even Python regex
 group identifiers in the replace string. For example:
 
-```tsv
+```
 SAMPLE(\d)_([PS]E)_(\d)	XXX_\1_\2_\3
 ```
 
@@ -164,7 +170,7 @@ It's possible to supply a file with one or more sets of sample names using the `
 command line option. This file should be a tab-delimited file with a header row (used for
 the report button labels) and then any number of renamed sample identifiers. For example:
 
-```tsv
+```
 MultiQC Names	Proper Names	AWESOME NAMES
 SRR1067503_1	Sample_1	MYBESTSAMP_1
 SRR1067505_1	Sample_2	MYBESTSAMP_2
@@ -174,7 +180,9 @@ SRR1067510_1	Sample_3	MYBESTSAMP_3
 If supplied, buttons will be generated at the top of the report with your labels.
 Clicking these will populate and apply the Toolbox renaming panel.
 
-> **NB:** Sample renaming works with partial substrings - these will be replaced!
+:::warning
+Sample renaming works with partial substrings - these will be replaced!
+:::
 
 It's also possible to supply such renaming patterns within a config file (useful if you're
 already generating a config file for a run). In this case, you need to set the variables
@@ -206,21 +214,21 @@ pattern, opposed to the default globbing, you can use `hide_re` and `show_re`.
 
 For example, to filter on read pair groups, you could use the following file:
 
-```tsv
+```
 Read Group 1	show	_R1
 Read Group 2	show	_R2
 ```
 
 Or in regex mode:
 
-```tsv
+```
 Read Group 1	show_re	.*_R1
 Read Group 2	show_re	.*_R2
 ```
 
 To filter on controls and sample groups you could use:
 
-```tsv
+```
 Controls	show	input_
 Conditions	show	group_1_	group_2_	group_3_
 ```

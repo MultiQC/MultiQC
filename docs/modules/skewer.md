@@ -1,7 +1,7 @@
 ---
-Name: Skewer
-URL: https://github.com/relipmoc/skewer
-Description: >
+name: Skewer
+url: https://github.com/relipmoc/skewer
+description: >
   Skewer is an adapter trimming tool specially designed for processing
   next-generation sequencing (NGS) paired-end sequences.
 ---

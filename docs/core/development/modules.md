@@ -1,3 +1,9 @@
+---
+title: Writing new modules
+description: Adding support for a new tool
+order: 1
+---
+
 # Writing New Modules
 
 ## Introduction
@@ -158,7 +164,7 @@ The source code for MultiQC is separated into different folders.
 Most of the files you won't have to touch - the relevant files that
 you will need to edit or create are as follows:
 
-```console
+```
 ├── docs
 │   ├── README.md
 │   └── modules
@@ -733,7 +739,7 @@ Colour scales can be reversed by adding the suffix `-rev` to the name. For examp
 
 The following scales are available:
 
-![color brewer](images/cbrewer_scales.png)
+![color brewer](../../images/cbrewer_scales.png)
 
 ## Step 4 - Writing data to a file
 
@@ -866,7 +872,7 @@ by using `cProfile` to profile the code execution.
 
 To do this, first find out where your copy of MultiQC is located:
 
-```console
+```
 $ which multiqc
 /Users/you/anaconda/envs/myenv/bin/multiqc
 ```

@@ -1,7 +1,7 @@
 ---
-Name: minionqc
-URL: https://github.com/roblanf/minion_qc
-Description: >
+name: minionqc
+url: https://github.com/roblanf/minion_qc
+description: >
   Quality control for long reads from ONT (Oxford Nanopore Technologies) sequencing.
 ---
 

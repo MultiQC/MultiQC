@@ -1,7 +1,7 @@
 ---
-Name: goleft indexcov
-URL: https://github.com/brentp/goleft/tree/master/indexcov
-Description: >
+name: goleft indexcov
+url: https://github.com/brentp/goleft/tree/master/indexcov
+description: >
   Quickly estimate coverage from a whole-genome bam index, providing 16KB resolution.
   This is useful as a quick QC to get coverage values across the genome.
 ---

@@ -1,7 +1,7 @@
 ---
-Name: Anglerfish
-URL: https://github.com/remiolsen/anglerfish
-Description: >
+name: Anglerfish
+url: https://github.com/remiolsen/anglerfish
+description: >
   Anglerfish assesses contamination and composition of Illumina sequencing libraries based on a Nanopore trial sequencing with high concordance.
 ---
 

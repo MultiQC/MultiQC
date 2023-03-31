@@ -1,7 +1,7 @@
 ---
-Name: Picard
-URL: http://broadinstitute.github.io/picard/
-Description: >
+name: Picard
+url: http://broadinstitute.github.io/picard/
+description: >
   Picard is a set of Java command line tools for manipulating high-throughput
   sequencing data.
 ---
