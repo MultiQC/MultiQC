@@ -1,7 +1,7 @@
 ---
-Name: DRAGEN
-URL: https://www.illumina.com/products/by-type/informatics-products/dragen-bio-it-platform.html
-Description: >
+name: DRAGEN
+url: https://www.illumina.com/products/by-type/informatics-products/dragen-bio-it-platform.html
+description: >
   Illumina Bio-IT Platform that uses FPGA for secondary NGS analysis.
 ---
 

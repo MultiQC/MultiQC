@@ -1,7 +1,7 @@
 ---
-Name: Bowtie 1
-URL: http://bowtie-bio.sourceforge.net/
-Description: >
+name: Bowtie 1
+url: http://bowtie-bio.sourceforge.net/
+description: >
   Bowtie 1 is an ultrafast, memory-efficient short read aligner.
 ---
 

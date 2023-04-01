@@ -1,7 +1,7 @@
 ---
-Name: Slamdunk
-URL: http://t-neumann.github.io/slamdunk/
-Description: >
+name: Slamdunk
+url: http://t-neumann.github.io/slamdunk/
+description: >
   Slamdunk is a tool to analyze SLAM-Seq data.
 ---
 

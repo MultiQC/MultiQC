@@ -1,7 +1,7 @@
 ---
-Name: Salmon
-URL: http://combine-lab.github.io/salmon/
-Description: >
+name: Salmon
+url: http://combine-lab.github.io/salmon/
+description: >
   Salmon is a tool for quantifying the expression of transcripts using RNA-seq data.
 ---
 

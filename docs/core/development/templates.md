@@ -1,3 +1,9 @@
+---
+title: Writing new templates
+description: Making MultiQC reports your own
+order: 4
+---
+
 # Writing New Templates
 
 MultiQC is built around a templating system that uses the
