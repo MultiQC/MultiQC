@@ -664,7 +664,6 @@ def make_bed_texts(overall_mean, coverage_data):
     texts_for_sections = defaultdict(dict)
     # Now go through the collected phenotypes.
     for phenotype in phenotypes:
-
         # This separation is used to handle the case when input directory has many different
         # sets with samples. So the shorter text goes into description, the longer into 'Help'.
         text_help_dropdown = ""
@@ -682,7 +681,9 @@ def make_bed_texts(overall_mean, coverage_data):
             if phenotype in sources_not_matched:
                 # First tell about matched ones.
                 for source in bed_sources:
-                    text_help_dropdown += "\n\nThe following samples are based on the " + extract_source(source) + ":\n\n"
+                    text_help_dropdown += (
+                        "\n\nThe following samples are based on the " + extract_source(source) + ":\n\n"
+                    )
                     for sample in bed_sources[source]:
                         text_help_dropdown += sample + ", "
                     text_help_dropdown = text_help_dropdown[:-2] + "."  # Get rid of the last ", " and append a "."
@@ -702,7 +703,9 @@ def make_bed_texts(overall_mean, coverage_data):
                 # There are at least 2 source files.
                 else:
                     for source in bed_sources:
-                        text_help_dropdown += "\n\nThe following samples are based on the " + extract_source(source) + ":\n\n"
+                        text_help_dropdown += (
+                            "\n\nThe following samples are based on the " + extract_source(source) + ":\n\n"
+                        )
                         for sample in bed_sources[source]:
                             text_help_dropdown += sample + ", "
                         text_help_dropdown = text_help_dropdown[:-2] + "."  # Get rid of the last ", " and append "."
@@ -879,7 +882,7 @@ def create_table_handlers():
             "5. Reads with `MAPQ` = `0` (multimappers)\n\n"
             "6. Overlapping mates are double-counted\n\n"
             "Each _coverage_metrics.csv file may have an associated _overall_mean_cov.csv file. "
-            "The latter contains the \"Average alignment coverage over &#60;source file&#62;\" metric. "
+            "The latter contains the 'Average alignment coverage over &#60;source file&#62;' metric. "
             " Information about &#60;source file&#62;s can be found in the section's description"
             " or in this drop-list below if the produced text is long."
             " If input directory does not contain _overall_mean_cov files, then "
@@ -1052,7 +1055,6 @@ def construct_coverage_parser():
         success = False
         data = {}
         for line in file_handler["f"].splitlines():
-
             # Check the general structure. Maybe a new section will be added in the future.
             line_match = LINE_RGX.search(line)
 
@@ -1153,7 +1155,6 @@ def create_coverage_headers_handler():
     }
     ANY_PAT = {"RGX": re.compile(".+"), "make_configs": None}
 
-
     # The order is based on the structure of regexes and amount of patterns found in examined data.
     METRIC_PATTERNS_FOR_REGIONS = [PCT_PAT, AVG_PAT, ALN_PAT, UNI_PAT, MED_PAT, RAT_PAT]
 
@@ -1179,7 +1180,6 @@ def create_coverage_headers_handler():
 
         # Previous steps did not work.
         return "Unknown region"
-
 
     # The order is based on the structure of regexes and amount of patterns found in examined data.
     METRIC_PATTERNS_FOR_HEADERS = [PCT_PAT, AVG_PAT, ALN_PAT, R_B_PAT, UNI_PAT, MED_PAT, RAT_PAT, ANY_PAT]
@@ -1553,7 +1553,6 @@ def create_coverage_headers_handler():
             }
         return {"configs": configs, "region": REGION}
 
-
     # Special regex to match (PCT > d.d*mean) substring.
     # Placed here because it may be used more than once.
     RGX_FLOAT = re.compile("\(pct\s*>\s*(\d+\.\d+)\*mean\)")
@@ -1601,7 +1600,6 @@ def create_coverage_headers_handler():
             "warning": True,
             "region": REGION,
         }
-
 
     # Special regex to match the [ix, inf) and [ix, jx)
     # Placed here because it will be used more than once.
