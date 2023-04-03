@@ -11,6 +11,8 @@ from collections import defaultdict
 
 from multiqc.modules.base_module import BaseMultiqcModule
 
+from .utils import make_parsing_log_report
+
 # Initialise the logger.
 log = logging.getLogger(__name__)
 
@@ -21,18 +23,21 @@ class DragenOverallMeanCovMetrics(BaseMultiqcModule):
     """
 
     @property
-    def overall_mean_cov_data(self):
-        """Getter for data from _overall_mean_cov.csv files."""
-        if self._overall_mean_cov_data:
-            return self._overall_mean_cov_data
+    def overall_mean_cov_data_reference(self):
+        """Getter for data from _overall_mean_cov.csv files.
+        Contains only coverage_metrics.csv-associated data."""
+        if self.__overall_mean_cov_data:
+            return self.__overall_mean_cov_data
         else:
             return None
 
     def collect_overall_mean_cov_data(self):
         """Collects raw data for coverage_metrics.py from overall_mean_cov.csv files."""
-        self._overall_mean_cov_data = defaultdict(lambda: defaultdict(dict))
+        self.__overall_mean_cov_data = defaultdict(lambda: defaultdict(dict))
+
         for file in self.find_log_files("dragen/overall_mean_cov_metrics"):
             out = parse_overall_mean_cov(file)
+
             if out["success"]:
                 # No need to call add_data_source, because the collected data is used
                 # only by the coverage_metrics.py module and will not be included in html.
@@ -40,62 +45,79 @@ class DragenOverallMeanCovMetrics(BaseMultiqcModule):
 
                 # Data for the coverage_metrics.py module.
                 if out["phenotype"]:
-                    root, sample, phenotype, data = (
-                        out["root"],
-                        out["sample"],
-                        out["phenotype"],
-                        out["data"],
-                    )
-                    self._overall_mean_cov_data[root][sample][phenotype] = data
+                    sample, phenotype, data = out["sample"], out["phenotype"], out["data"]
+                    self.__overall_mean_cov_data[file["root"]][sample][phenotype] = data
                 # Currently there is no need to support other files. Pass for now.
                 else:
                     pass
+
+        # Report found info/warnings/errors, which were collected while
+        # calling the coverage_parser and constructing cov_headers.
+        # You can disable it anytime, if it is not wanted.
+        make_parsing_log_report("overall_mean_cov_metrics", log_data, log)
+
         # No need to write the data.
-        # self.write_data_file(self._overall_mean_cov_data)
+        # self.write_data_file(self.__overall_mean_cov_data)
 
         # Just to pass the pre-commit
         # doi=
 
 
+'''"""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
+The log_data is the container for found info, warnings and errors.
+Collected data is stored in groups to make the output log file more readable.
+
+warnings:
+- invalid_file_names, which do not conform to the:
+    <output-prefix>_overall_mean_cov<arbitrary-suffix>.csv
+
+debug/info:
+- unknown_metrics are those, which could not be recognized by the code.
+  Such metrics will be ignored.
+- unusual_values are those except for float.
+'''
+log_data = {
+    "invalid_file_names": defaultdict(list),
+    "unknown_metrics": [],
+    "unusual_values": defaultdict(lambda: defaultdict(dict)),
+}
+
 # Official structure of files:   _overall_mean_cov.csv
 # Accepted structure of files: .+_overall_mean_cov.*.csv
-# A suffix after _overall_mean_cov is used to catch extra substrings.
-GEN_FILE_RGX = re.compile(r"(.+?)_overall_mean_cov(.*)\.csv$")
+GEN_FILE_RGX = re.compile("(.+)_overall_mean_cov(.*)\.csv$")
 
 # Special case. Coverage metrics files have the following structure:
-# <output prefix>.<coverage region prefix>_overall_mean_cov<arbitrary suffix>.csv
-COV_FILE_RGX = re.compile(r"^([^.]+)\.(.+?)_overall_mean_cov(.*)\.csv$")
+# <output-prefix>.<coverage-region-prefix>_overall_mean_cov<arbitrary-suffix>.csv
+COV_FILE_RGX = re.compile("(.+)\.(.+)_overall_mean_cov(.*)\.csv$")
 
-# General structure of metrics is not defined.
-# Currently only 1 metric is presented in the standard:
+# General structure of lines is not defined.
+# Currently only 1 metric is present in the standard. It substitutes the line's regex.
 AVG_RGX = re.compile("Average alignment coverage over ([^,]+),([^,]+)$", re.IGNORECASE)
 
 
 def parse_overall_mean_cov(file_handler):
     """Parser for _overall_mean_cov.csv files."""
+
     root = file_handler["root"]
     file = file_handler["fn"]
+
     # First check the general structure.
     file_match = GEN_FILE_RGX.search(file)
     if file_match:
         sample, phenotype = file_match.group(1), None
         file_match = COV_FILE_RGX.search(file)
         if file_match:
-            sample, phenotype, normal_tumor = file_match.group(1), file_match.group(2), file_match.group(3)
-            if normal_tumor:
+            sample, phenotype, suffix = file_match.groups()
+            if suffix:
                 # Only non-'tumor' strings are concatenated with the sample.
-                if not re.search("tumor", normal_tumor, re.IGNORECASE):
-                    sample += normal_tumor
-        else:
-            log.debug("\nNot supported: " + file + "\nin: " + root)
-    # Else there is no name at all, report and return 0.
+                if not re.search("tumor", suffix, re.IGNORECASE):
+                    sample += suffix
     else:
-        log.debug("\nFile name is empty: " + file + "\nin: " + root)
-        return {"success": 0}
+        log_data["invalid_file_names"][root].append(file)
+        return {"success": False}
 
     # There is still a possibility for failing(eg empty file, unknown metric).
-    success = 0
-    data = {}
+    success = False
     source = None  # File name from "Average alignment coverage over file" metric.
     value = None
 
@@ -104,30 +126,24 @@ def parse_overall_mean_cov(file_handler):
         line_match = AVG_RGX.search(line)
         # If line is fine then extract the necessary fields.
         if line_match:
-            success = 1
-            source, value = line_match.group(1), line_match.group(2)
+            success = True
+            source, value = line_match.groups()
 
         # Otherwise check if line is empty. If not then report it and go to the next line.
         else:
             if not re.search("^\s*$", line):
-                log.debug("\nUnsupported metric: " + line + "\n" + file + "\nin: " + root)
+                log_data["unknown_metrics"].append(line)
             continue
 
         # Try to convert the value. It shall be float.
         try:
             value = float(value)
         except ValueError:
-            try:
-                value = int(value)
-            except ValueError:
-                log.debug("\nNon int/float value found: " + line + "\n" + file + "\nin: " + root)
-
-    data = {"source_file": source, "value": value}
+            log_data["unusual_values"][root][file][line] = value
 
     return {
         "success": success,
-        "root": root,
         "sample": sample,
         "phenotype": phenotype,
-        "data": data,
+        "data": {"source_file": source, "value": value},
     }

@@ -229,10 +229,15 @@ def clean_headers(headers):
 
 
 # Used to define module-specific texts for the make_parsing_log_report.
+# Comments are used to separate keys. Though empty lines look better, they are removed by the "Black" formatter.
 DRAGEN_MODULE_TEXTS = {
     "invalid_file_names": {
         "coverage_metrics": "\n\nThe file names must conform to the following structure:\n"
-        "<output prefix>.<coverage region prefix>_coverage_metrics<arbitrary suffix>.csv\n\n"
+        "<output-prefix>.<coverage-region-prefix>_coverage_metrics<arbitrary-suffix>.csv\n\n"
+        "The following files are not valid:\n",
+        # ------------- #
+        "overall_mean_cov_metrics": "\n\nThe file names must conform to the following structure:\n"
+        "<output-prefix>_overall_mean_cov<arbitrary-suffix>.csv\n\n"
         "The following files are not valid:\n",
     },
     "invalid_file_lines": {
@@ -243,10 +248,16 @@ DRAGEN_MODULE_TEXTS = {
     },
     "unknown_metrics": {
         "coverage_metrics": "\n\nThe following metrics could not be recognized. "
-        "Their headers might be incomplete, hence uninformative and ugly table's columns.\n\n"
+        "Their headers might be incomplete, hence uninformative and ugly table's columns.\n",
+        # ------------- #
+        "overall_mean_cov_metrics": "\n\nOnly the 'Average alignment coverage over <file>' metric is supported.\n"
+        "The following metrics could not be recognized and are not included in the report.\n",
     },
     "unusual_values": {
         "coverage_metrics": "\n\nAll metrics' values except for int, float and NA are non-standard.\n"
+        "The following files contain non-standard values:\n",
+        # ------------- #
+        "overall_mean_cov_metrics": "\n\nAll metrics' values except for float are non-standard.\n"
         "The following files contain non-standard values:\n",
     },
 }
