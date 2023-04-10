@@ -21,3 +21,14 @@ class MultiqcModule(BaseMultiqcModule):
           href="https://github.com/andersen-lab/Freyja",
           info="Recover relative lineage abundances from mixed SARS-CoV-2 samples."
         )
+
+    # # To store the summary data
+    #     self.freyja = dict()
+
+    #     # Parse the output files
+    #     self.parse_stat_files()
+
+    #     # Remove filtered samples
+    #     self.freyja = self.ignore_samples(self.freyja)
+
+    myfile = self.find_log_files('freyja', filehandles=True)
