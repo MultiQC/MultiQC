@@ -9,6 +9,8 @@
 - Don't print DOI in module if it's set to an empty string.
 
 ### New Modules
+- [**Freyja**](https://github.com/andersen-lab/Freyja)
+  - Freyja is a tool to recover relative lineage abundances from mixed SARS-CoV-2 samples from a sequencing dataset. 
 
 ### Module updates
 

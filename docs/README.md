@@ -81,6 +81,7 @@ MultiQC Modules:
     EigenStratDatabseTools: modules/eigenstratdatabasetools.md
     featureCounts: modules/featureCounts.md
     fgbio: modules/fgbio.md
+    freyja: modules/freyja.md
     GATK: modules/gatk.md
     GffCompare: modules/gffcompare.md
     goleft_indexcov: modules/goleft_indexcov.md
