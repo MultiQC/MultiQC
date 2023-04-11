@@ -26,7 +26,7 @@ class MultiqcModule(BaseMultiqcModule):
         self.freyja_data = dict()
 
         # Parse the output files
-        self.parse_stat_files()
+        self.parse_summ_files()
 
         # Remove filtered samples
         self.freyja_data = self.ignore_samples(self.freyja_data)
@@ -38,36 +38,39 @@ class MultiqcModule(BaseMultiqcModule):
         log.info(f"Found {len(self.freyja_data)} reports")
         self.write_data_file(self.freyja_data, "multiqc_freyja")
 
-    def parse_stat_files(self, f):    
+    def parse_summ_files(self, f):
+        """
+        Parse the summary file. 
+        Freyja has multiple summary files, but we only need to parse the one from the demix command.
+        More specifically, we only need the line that starts with "summarized".
+        ...
+        summarized	[('BQ.1*', 0.983), ('Omicron', 0.011), ('key', value)]
+        ...
+        """    
         for f in self.find_log_files('freyja'):
             s_name = self.clean_s_name(f["root"], f)
-            data = parse_stat_file(f["f"], s_name)
-            if data:
-                # There is no sample name in the log, so we use the root of the
-                # file as sample name (since the filename is always stats.dat
-                if s_name in self.freyja_data:
-                    log.debug("Duplicate sample name found! Overwriting: {}".format(s_name))
-                self.freyja_data[s_name] = data
-                self.add_data_source(f, s_name)
-                
-# TODO: This needs to be customised for Freyja        
-def parse_stat_file(fin, s_name):
-    """Parse the stats file"""
-    data = dict()
-    for line in fin:
-        field, value = line.strip().split(": ")
-        data[field] = int(value)
-    if process_stats(data, s_name):
-        return data
 
-# TODO: This needs to be customised for Freyja    
-def process_stats(stats, s_name):
-    """Process the statistics, to calculate some useful values"""
-    stats["filtered"] = stats["total"] - stats["usable"]
-    stats["duplicates"] = stats["total"] - stats["clusters"] - stats["filtered"]
-    # Sanity check
-    try:
-        assert stats["duplicates"] + stats["clusters"] + stats["filtered"] == stats["total"]
-    except AssertionError:
-        log.warning(f"HUMID stats looked wrong, skipping: {s_name}")
-        return False
+            # Read the statistics from file
+            d = {}
+            for line in f["f"]:
+                try:
+                    if line.startswith('summarized'):
+                        summarized_line = line
+                        summarized_line = summarized_line.strip().split('\t')[1]
+                        d = eval(summarized_line) # Make sure no input file does not contain any malicious code
+                        d = dict(d)
+                except ValueError:
+                    pass
+            
+            # Percentages don't always add up to 1, show a warning if this is the case
+            if sum(d.values()) != 1 :
+                log.warning(f"Freyja {s_name}: percentages don't sum to 1")
+            
+            
+            # There is no sample name in the log, so we use the root of the
+            # file as sample name (since the filename is always stats.dat
+            if s_name in self.freyja_data:
+                log.debug("Duplicate sample name found! Overwriting: {}".format(s_name))
+            self.freyja_data[s_name] = data
+            self.add_data_source(f, s_name)   
+
