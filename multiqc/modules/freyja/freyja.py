@@ -3,6 +3,8 @@
 """ MultiQC module to parse output from Lima """
 
 import logging
+import random
+import colorsys
 from collections import OrderedDict
 
 from multiqc import config
@@ -57,7 +59,7 @@ class MultiqcModule(BaseMultiqcModule):
                     if line.startswith('summarized'):
                         summarized_line = line
                         summarized_line = summarized_line.strip().split('\t')[1]
-                        d = eval(summarized_line) # Make sure no input file does not contain any malicious code
+                        d = eval(summarized_line) # Make sure no input is corrupted and does not contain any malicious code
                         d = dict(d)
                 except ValueError:
                     pass
@@ -100,3 +102,43 @@ class MultiqcModule(BaseMultiqcModule):
         }
 
         self.general_stats_addcols(top_variant_dict, headers)
+
+    def add_freyja_section(self):
+        cats = list()
+        pconfig = {
+            "id": "Freyja plot",
+            "title": "Freyja: Top variants",
+            "ylab": "relative abundance"
+        }
+
+        rank_cats = OrderedDict()
+
+        rank_cats["other"] = {"name": "Other", "color": "#cccccc"}
+        cats.append(rank_cats)
+
+        self.add_section(
+            name="Freyja Summary",
+            anchor="freyja-summary",
+            description="""
+                Relative lineage abundances from mixed SARS-CoV-2 samples. 
+                """,
+            helptext="""
+                The graph denotes a sum of all lineage abundances in a particular WHO designation, otherwise they are grouped into "Other".
+                lineages abundances are calculated as the number of reads that are assigned to a particular lineage. 
+                Lineages and their corresponding abundances are summarized by constellation. 
+                """,
+            plot=bargraph.plot(self.freyja_data, None, pconfig),
+        )
+    
+    def get_color_with_variation(hex_color):
+        """
+        Generate a color with slight variations in saturation and brightness.
+        So similar lineages will have similar colors, but not the same.
+        """
+        rgb = tuple(int(hex_color[i:i+2], 16) for i in (1, 3, 5))  # Convert HEX to RGB
+        hsv = colorsys.rgb_to_hsv(rgb[0]/255, rgb[1]/255, rgb[2]/255)  # Convert RGB to HSV
+        saturation = hsv[1] + random.uniform(0, 1)  # Add slight variation to saturation
+        brightness = hsv[2] + random.uniform(0, 1)  # Add slight variation to brightness
+        rgb = colorsys.hsv_to_rgb(hsv[0], saturation, brightness)  # Convert HSV to RGB
+        hex_color = '#%02x%02x%02x' % (int(rgb[0] * 255), int(rgb[1] * 255), int(rgb[2] * 255))  # Convert RGB to HEX
+        return hex_color
