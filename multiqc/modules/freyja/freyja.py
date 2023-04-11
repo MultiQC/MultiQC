@@ -66,11 +66,37 @@ class MultiqcModule(BaseMultiqcModule):
             if sum(d.values()) != 1 :
                 log.warning(f"Freyja {s_name}: percentages don't sum to 1")
             
-            
             # There is no sample name in the log, so we use the root of the
             # file as sample name (since the filename is always stats.dat
             if s_name in self.freyja_data:
                 log.debug("Duplicate sample name found! Overwriting: {}".format(s_name))
             self.freyja_data[s_name] = data
-            self.add_data_source(f, s_name)   
+            self.add_data_source(f, s_name)
 
+    def general_stats_cols(self):
+        """Add a single column displaying the most abundant variant to the General Statistics table"""
+        top_variant_dict= {}
+        for s_name, sub_dict in self.freyja_data.items():
+            top_variant = max(sub_dict, key=sub_dict.get)
+            top_variant_value = sub_dict[top_variant]
+            top_variant_dict[s_name] = {
+                "Top variant": top_variant,
+                "Top variant %": top_variant_value
+            }
+        
+        headers = OrderedDict()
+        headers['Top variant'] = {
+            'title': 'Top variant',
+            'description': 'The most abundant variant in the sample',
+            'scale': 'RdYlGn-rev' # Not sure if this is the best scale
+        }
+        headers['Top variant %'] = {
+            'title': 'Top variant %',
+            'description': 'The percentage of the most abundant variant in the sample',
+            'max': 100,
+            'min': 0,
+            'scale': 'Blues',
+            'suffix': '%'
+        }
+
+        self.general_stats_addcols(top_variant_dict, headers)
