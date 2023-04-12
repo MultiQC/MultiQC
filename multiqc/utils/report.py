@@ -168,7 +168,6 @@ def get_filelist(run_module_names):
         logger.info("Skipping {} file search patterns".format(len(skipped_patterns)))
         logger.debug("Skipping search patterns: {}".format(", ".join(skipped_patterns)))
 
-    @profile
     def add_file(fn, root):
         """
         Function applied to each file found when walking the analysis
@@ -331,7 +330,6 @@ def get_filelist(run_module_names):
     logger.debug(f"Summary of files that were skipped by the search: [{'] // ['.join(summaries)}]")
 
 
-@profile
 def search_file(pattern, f, module_key):
     """
     Function to searach a single file for a single search pattern.
