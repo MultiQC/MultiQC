@@ -168,6 +168,7 @@ def get_filelist(run_module_names):
         logger.info("Skipping {} file search patterns".format(len(skipped_patterns)))
         logger.debug("Skipping search patterns: {}".format(", ".join(skipped_patterns)))
 
+    @profile
     def add_file(fn, root):
         """
         Function applied to each file found when walking the analysis
@@ -365,28 +366,30 @@ def search_file(pattern, f, module_key):
         if pattern.get("contents_re") is not None:
             repattern = re.compile(pattern["contents_re"])
         try:
-            file_path = os.path.join(f["root"], f["fn"])
-            with io.open(file_path, "r", encoding="utf-8") as fh:
-                l = 1
-                for line in fh:
-                    # Search by file contents (string)
-                    if pattern.get("contents") is not None:
-                        if pattern["contents"] in line:
-                            contents_matched = True
-                            if pattern.get("fn") is None and pattern.get("fn_re") is None:
-                                return True
+            if f.get("contents_lines") is None:
+                f['contents_lines'] = []
+                with io.open(os.path.join(f["root"], f["fn"]), "r", encoding="utf-8") as fh:
+                    for i, line in enumerate(fh):
+                        # Break if we've searched enough lines for this pattern
+                        if pattern.get("num_lines") and i >= pattern.get("num_lines"):
                             break
-                    # Search by file contents (regex)
-                    elif pattern.get("contents_re") is not None:
-                        if re.search(repattern, line):
-                            contents_matched = True
-                            if pattern.get("fn") is None and pattern.get("fn_re") is None:
-                                return True
-                            break
-                    # Break if we've searched enough lines for this pattern
-                    if pattern.get("num_lines") and l >= pattern.get("num_lines"):
+                        f['contents_lines'].append(line)
+            for line in f['contents_lines']:
+                # Search by file contents (string)
+                if pattern.get("contents") is not None:
+                    if pattern["contents"] in line:
+                        contents_matched = True
+                        if pattern.get("fn") is None and pattern.get("fn_re") is None:
+                            return True
                         break
-                    l += 1
+                # Search by file contents (regex)
+                elif pattern.get("contents_re") is not None:
+                    if re.search(repattern, line):
+                        contents_matched = True
+                        if pattern.get("fn") is None and pattern.get("fn_re") is None:
+                            return True
+                        break
+
         # Can't open file - usually because it's a binary file and we're reading as utf-8
         except (IOError, OSError, ValueError, UnicodeDecodeError) as e:
             if config.report_readerrors:
