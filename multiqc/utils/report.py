@@ -197,6 +197,14 @@ def get_filelist(run_module_names):
                 file_search_stats["skipped_filesize_limit"] += 1
                 return False
 
+        # Use mimetypes to exclude binary files where possible
+        if not re.match(r".+_mqc\.(png|jpg|jpeg)", f["fn"]) and config.ignore_images:
+            (ftype, encoding) = mimetypes.guess_type(os.path.join(f["root"], f["fn"]))
+            if encoding is not None:
+                return False
+            if ftype is not None and ftype.startswith("image"):
+                return False
+
         # Test file for each search pattern
         file_matched = False
         for patterns in spatterns:
@@ -322,6 +330,7 @@ def get_filelist(run_module_names):
     logger.debug(f"Summary of files that were skipped by the search: [{'] // ['.join(summaries)}]")
 
 
+@profile
 def search_file(pattern, f, module_key):
     """
     Function to searach a single file for a single search pattern.
@@ -330,14 +339,6 @@ def search_file(pattern, f, module_key):
     global file_search_stats
     fn_matched = False
     contents_matched = False
-
-    # Use mimetypes to exclude binary files where possible
-    if not re.match(r".+_mqc\.(png|jpg|jpeg)", f["fn"]) and config.ignore_images:
-        (ftype, encoding) = mimetypes.guess_type(os.path.join(f["root"], f["fn"]))
-        if encoding is not None:
-            return False
-        if ftype is not None and ftype.startswith("image"):
-            return False
 
     # Search pattern specific filesize limit
     if pattern.get("max_filesize") is not None and "filesize" in f:
