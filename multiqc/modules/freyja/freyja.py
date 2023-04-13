@@ -14,14 +14,16 @@ from multiqc.plots import bargraph
 # Initialise the logger
 log = logging.getLogger(__name__)
 
+
 class MultiqcModule(BaseMultiqcModule):
     def __init__(self):
         # Initialise the parent object
         super(MultiqcModule, self).__init__(
-            name='Freyja',
-            anchor='freyja',
+            name="Freyja",
+            anchor="freyja",
             href="https://github.com/andersen-lab/Freyja",
-            info="Recover relative lineage abundances from mixed SARS-CoV-2 samples."
+            info="Recover relative lineage abundances from mixed SARS-CoV-2 samples.",
+            doi="10.1038/s41586-022-05049-6",
         )
 
         # To store the summary data
@@ -45,31 +47,33 @@ class MultiqcModule(BaseMultiqcModule):
 
     def parse_summ_files(self):
         """
-        Parse the summary file. 
+        Parse the summary file.
         Freyja has multiple summary files, but we only need to parse the one from the demix command.
         More specifically, we only need the line that starts with "summarized".
         ...
         summarized	[('BQ.1*', 0.983), ('Omicron', 0.011), ('key', value)]
         ...
-        """    
-        for f in self.find_log_files('freyja',filehandles=True):
-            s_name = f['s_name']
+        """
+        for f in self.find_log_files("freyja", filehandles=True):
+            s_name = f["s_name"]
             # Read the statistics from file
             d = {}
             for line in f["f"]:
                 try:
-                    if line.startswith('summarized'):
+                    if line.startswith("summarized"):
                         summarized_line = line
-                        summarized_line = summarized_line.strip().split('\t')[1]
-                        d = eval(summarized_line) # Make sure no input is corrupted and does not contain any malicious code
+                        summarized_line = summarized_line.strip().split("\t")[1]
+                        d = eval(
+                            summarized_line
+                        )  # Make sure no input is corrupted and does not contain any malicious code
                         d = dict(d)
                 except ValueError:
                     pass
-            
+
             # Percentages don't always add up to 1, show a warning if this is the case
-            if sum(d.values()) != 1 :
+            if sum(d.values()) != 1:
                 log.warning(f"Freyja {s_name}: percentages don't sum to 1")
-            
+
             # There is no sample name in the log, so we use the root of the
             # file as sample name (since the filename is always stats.dat
             if s_name in self.freyja_data:
@@ -79,29 +83,29 @@ class MultiqcModule(BaseMultiqcModule):
 
     def general_stats_cols(self):
         """Add a single column displaying the most abundant lineage to the General Statistics table"""
-        top_lineage_dict= {}
+        top_lineage_dict = {}
         for s_name, sub_dict in self.freyja_data.items():
             top_lineage = max(sub_dict, key=sub_dict.get)
             top_lineage_value = sub_dict[top_lineage]
             top_lineage_dict[s_name] = {
                 "Top_lineage_freyja": top_lineage,
-                "Top_lineage_freyja_percentage": top_lineage_value
+                "Top_lineage_freyja_percentage": top_lineage_value,
             }
-        
+
         headers = OrderedDict()
-        headers['Top_lineage_freyja'] = {
-            'title': 'Top lineage (Freyja)',
-            'description': 'The most abundant lineage in the sample',
-            'scale': 'RdYlGn-rev' # Not sure if this is the best scale
+        headers["Top_lineage_freyja"] = {
+            "title": "Top lineage (Freyja)",
+            "description": "The most abundant lineage in the sample",
+            "scale": "RdYlGn-rev",  # Not sure if this is the best scale
         }
-        headers['Top_lineage_freyja_percentage'] = {
-            'title': 'Top lineage (Freyja) %',
-            'description': 'The percentage of the most abundant lineage in the sample',
-            'max': 100,
-            'min': 0,
-            'scale': 'Blues',
+        headers["Top_lineage_freyja_percentage"] = {
+            "title": "Top lineage (Freyja) %",
+            "description": "The percentage of the most abundant lineage in the sample",
+            "max": 100,
+            "min": 0,
+            "scale": "Blues",
             "modify": lambda x: x * 100,
-            'suffix': '%'
+            "suffix": "%",
         }
 
         self.general_stats_addcols(top_lineage_dict, headers)
@@ -113,8 +117,8 @@ class MultiqcModule(BaseMultiqcModule):
             "title": "Freyja: Top lineages",
             "ylab": "relative abundance",
             "yCeiling": 1,
-            'cpswitch': False,
-            'cpswitch_c_active': False
+            "cpswitch": False,
+            "cpswitch_c_active": False,
         }
 
         rank_cats = OrderedDict()
