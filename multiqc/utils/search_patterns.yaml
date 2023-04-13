@@ -346,12 +346,10 @@ flash/hist:
 flexbar:
   contents: "Flexbar - flexible barcode and adapter removal"
   shared: true
-freyja/boot: 
-  fn: "*_summarized.csv"
-  num_lines: 9
-freyja/demix: 
+freyja: 
+  fn: "*.tsv"
   contents: "summarized"
-  num_lines: 7
+  num_lines: 6
 gatk/varianteval:
   contents: "#:GATKTable:TiTvVariantEvaluator"
   shared: true

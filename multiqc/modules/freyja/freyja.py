@@ -40,7 +40,10 @@ class MultiqcModule(BaseMultiqcModule):
         log.info(f"Found {len(self.freyja_data)} reports")
         self.write_data_file(self.freyja_data, "multiqc_freyja")
 
-    def parse_summ_files(self, f):
+        self.general_stats_cols()
+        self.add_freyja_section()
+
+    def parse_summ_files(self):
         """
         Parse the summary file. 
         Freyja has multiple summary files, but we only need to parse the one from the demix command.
@@ -49,9 +52,8 @@ class MultiqcModule(BaseMultiqcModule):
         summarized	[('BQ.1*', 0.983), ('Omicron', 0.011), ('key', value)]
         ...
         """    
-        for f in self.find_log_files('freyja'):
-            s_name = self.clean_s_name(f["root"], f)
-
+        for f in self.find_log_files('freyja',filehandles=True):
+            s_name = f['s_name']
             # Read the statistics from file
             d = {}
             for line in f["f"]:
@@ -61,6 +63,7 @@ class MultiqcModule(BaseMultiqcModule):
                         summarized_line = summarized_line.strip().split('\t')[1]
                         d = eval(summarized_line) # Make sure no input is corrupted and does not contain any malicious code
                         d = dict(d)
+                        log.info(f"Adding top variant for {s_name}, {d}")
                 except ValueError:
                     pass
             
@@ -72,7 +75,7 @@ class MultiqcModule(BaseMultiqcModule):
             # file as sample name (since the filename is always stats.dat
             if s_name in self.freyja_data:
                 log.debug("Duplicate sample name found! Overwriting: {}".format(s_name))
-            self.freyja_data[s_name] = data
+            self.freyja_data[s_name] = d
             self.add_data_source(f, s_name)
 
     def general_stats_cols(self):
@@ -129,16 +132,3 @@ class MultiqcModule(BaseMultiqcModule):
                 """,
             plot=bargraph.plot(self.freyja_data, None, pconfig),
         )
-    
-    def get_color_with_variation(hex_color):
-        """
-        Generate a color with slight variations in saturation and brightness.
-        So similar lineages will have similar colors, but not the same.
-        """
-        rgb = tuple(int(hex_color[i:i+2], 16) for i in (1, 3, 5))  # Convert HEX to RGB
-        hsv = colorsys.rgb_to_hsv(rgb[0]/255, rgb[1]/255, rgb[2]/255)  # Convert RGB to HSV
-        saturation = hsv[1] + random.uniform(0, 1)  # Add slight variation to saturation
-        brightness = hsv[2] + random.uniform(0, 1)  # Add slight variation to brightness
-        rgb = colorsys.hsv_to_rgb(hsv[0], saturation, brightness)  # Convert HSV to RGB
-        hex_color = '#%02x%02x%02x' % (int(rgb[0] * 255), int(rgb[1] * 255), int(rgb[2] * 255))  # Convert RGB to HEX
-        return hex_color
