@@ -346,7 +346,7 @@ flash/hist:
 flexbar:
   contents: "Flexbar - flexible barcode and adapter removal"
   shared: true
-freyja: 
+freyja:
   fn: "*.tsv"
   contents: "summarized"
   num_lines: 6

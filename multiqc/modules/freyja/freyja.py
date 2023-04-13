@@ -3,8 +3,6 @@
 """ MultiQC module to parse output from Lima """
 
 import logging
-import random
-import colorsys
 from collections import OrderedDict
 
 from multiqc import config
