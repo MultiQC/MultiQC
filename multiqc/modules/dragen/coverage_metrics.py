@@ -346,7 +346,10 @@ class DragenCoverageMetrics(BaseMultiqcModule):
 
         # Each table must have unique metric IDs in order to pass the lint test.
         # The exclusive table_name string is used to make an exclusive metric ID.
-        new_data = {sample: {metric + " " + table_name: value for metric, value in data_by_sample[sample].items()} for sample in data_by_sample}
+        new_data = {
+            sample: {metric + " " + table_name: value for metric, value in data_by_sample[sample].items()}
+            for sample in data_by_sample
+        }
 
         # Adjust the headers' metric-IDs accordingly. Also preserve the order.
         gen_headers = OrderedDict()
