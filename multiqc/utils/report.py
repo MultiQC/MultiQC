@@ -364,12 +364,12 @@ def search_file(pattern, f, module_key):
         if pattern.get("contents_re") is not None:
             repattern = re.compile(pattern["contents_re"])
         if not f.get("contents_lines") or config.filesearch_lines_limit < pattern.get("num_lines", 0):
-            f['contents_lines'] = []
+            f["contents_lines"] = []
             file_path = os.path.join(f["root"], f["fn"])
             try:
                 with io.open(file_path, "r", encoding="utf-8") as fh:
                     for i, line in enumerate(fh):
-                        f['contents_lines'].append(line)
+                        f["contents_lines"].append(line)
                         if i >= config.filesearch_lines_limit:
                             break
             # Can't open file - usually because it's a binary file, and we're reading as utf-8
@@ -379,7 +379,7 @@ def search_file(pattern, f, module_key):
                 file_search_stats["skipped_file_contents_search_errors"] += 1
                 return False
 
-        for i, line in enumerate(f['contents_lines']):
+        for i, line in enumerate(f["contents_lines"]):
             # Search by file contents (string)
             if pattern.get("contents") is not None:
                 if pattern["contents"] in line:
