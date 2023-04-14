@@ -1,6 +1,3 @@
-#!/usr/bin/env python
-
-
 import logging
 import os
 import re
@@ -112,7 +109,6 @@ class MultiqcModule(BaseMultiqcModule):
             )
 
     def parse_jcvi(self, f):
-
         s_name = None
 
         # Look at the first three lines, they are always the same
@@ -189,7 +185,6 @@ class MultiqcModule(BaseMultiqcModule):
         self.add_data_source(f, s_name)
 
     def parse_hists(self, stat_file, bin_by=1):
-
         stat_table = {}
 
         vals = []
@@ -225,7 +220,6 @@ class MultiqcModule(BaseMultiqcModule):
         return stat_table
 
     def jcvi_barplot_feature_counts(self):
-
         plot_config = {
             "id": "jcvi_plot_feature_counts_plot",
             "title": "JCVI: Number of features",
@@ -246,7 +240,6 @@ class MultiqcModule(BaseMultiqcModule):
         return bargraph.plot([self.jcvi, self.jcvi, self.jcvi], cats, plot_config)
 
     def jcvi_barplot_feature_lengths(self):
-
         plot_config = {
             "id": "jcvi_plot_features_len",
             "title": "JCVI: Mean sizes of features",

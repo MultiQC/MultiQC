@@ -1,5 +1,3 @@
-#!/usr/bin/env python
-
 """ MultiQC submodule to parse output from Picard RrbsSummaryMetrics """
 
 import logging
@@ -67,7 +65,6 @@ def parse_reports(self):
     self.picard_rrbs_metrics = self.ignore_samples(self.picard_rrbs_metrics)
 
     if len(self.picard_rrbs_metrics) > 0:
-
         # Write parsed data to a file
         self.write_data_file(self.picard_rrbs_metrics, "multiqc_picard_RrbsSummaryMetrics")
 

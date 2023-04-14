@@ -1,7 +1,7 @@
 ---
-Name: Qualimap
-URL: http://qualimap.bioinfo.cipf.es/
-Description: >
+name: Qualimap
+url: http://qualimap.bioinfo.cipf.es/
+description: >
   Qualimap is a platform-independent application to facilitate the quality
   control of alignment sequencing data and its derivatives like feature
   counts.

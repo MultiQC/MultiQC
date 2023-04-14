@@ -1,5 +1,3 @@
-#!/usr/bin/env python
-
 """ MultiQC module to parse output from eigenstrat_snp_coverage """
 
 
@@ -18,7 +16,6 @@ class MultiqcModule(BaseMultiqcModule):
     """eigenstratdatabasetools module"""
 
     def __init__(self):
-
         # Initialise the parent object
         super(MultiqcModule, self).__init__(
             name="eigenstratdatabasetools",

@@ -16,6 +16,9 @@ bamtools/stats:
   contents: "Stats for BAM file(s):"
   shared: true
   num_lines: 10
+bbduk:
+  contents: "Executing jgi.BBDuk"
+  num_lines: 2
 bbmap/stats:
   contents: "#Name	Reads	ReadsPct"
   num_lines: 4
@@ -272,6 +275,8 @@ deeptools/plotPCAData:
 deeptools/plotProfile:
   contents: "bin labels"
   num_lines: 1
+diamond:
+  fn: "diamond.log"
 dragen/vc_metrics:
   fn: "*.vc_metrics.csv"
 dragen/ploidy_estimation_metrics:
@@ -280,8 +285,10 @@ dragen/wgs_contig_mean_cov:
   fn_re: '.*\.wgs_contig_mean_cov_?(tumor|normal)?\.csv'
 dragen/wgs_coverage_metrics:
   fn_re: '.*\.wgs_coverage_metrics_?(tumor|normal)?\.csv'
+dragen/target_bed_coverage_metrics:
+  fn_re: '.*\.target_bed_coverage_metrics_?(tumor|normal)?\.csv'
 dragen/qc_region_coverage_metrics:
-  fn_re: '.*\.qc-coverage-region-([^_]+)_coverage_metrics.csv'
+  fn_re: '.*\.qc-coverage-region-([^_]+)_coverage_metrics_?(tumor|normal)?\.csv'
 dragen/wgs_fine_hist:
   fn_re: '.*\.wgs_fine_hist_?(tumor|normal)?\.csv'
 dragen/fragment_length_hist:
@@ -327,6 +334,10 @@ fgbio/groupreadsbyumi:
 fgbio/errorratebyreadposition:
   contents: "read_number	position	bases_total	errors	error_rate	a_to_c_error_rate	a_to_g_error_rate	a_to_t_error_rate	c_to_a_error_rate	c_to_g_error_rate	c_to_t_error_rate"
   num_lines: 3
+filtlong:
+  contents: Scoring long reads
+  contents_re: ".*Filtering long reads.*"
+  num_lines: 5
 flash/log:
   contents: "[FLASH]"
   shared: true
@@ -349,6 +360,8 @@ goleft_indexcov/roc:
   fn: "*-indexcov.roc"
 goleft_indexcov/ped:
   fn: "*-indexcov.ped"
+gopeaks:
+  fn: "*_gopeaks.json"
 happy:
   fn: "*.summary.csv"
   contents: "Type,Filter,TRUTH"
@@ -370,6 +383,9 @@ hicpro/mRSstat:
   fn: "*.mRSstat"
 hicpro/assplit:
   fn: "*.assplit.stat"
+hifiasm:
+  contents: "[M::ha_analyze_count]"
+  num_lines: 1
 hisat2:
   contents: "HISAT2 summary stats:"
   shared: true
@@ -390,6 +406,10 @@ homer/FreqDistribution:
   fn: "petag.FreqDistribution_1000.txt"
 hops:
   fn: "heatmap_overview_Wevid.json"
+humid:
+  fn: "stats.dat"
+  contents: "total: "
+  num_lines: 1
 interop/summary:
   contents: "Level,Yield,Projected Yield,Aligned,Error Rate,Intensity C1,%>=Q30"
 interop/index-summary:
@@ -463,11 +483,17 @@ mosdepth/global_dist:
   fn: "*.mosdepth.global.dist.txt"
 mosdepth/region_dist:
   fn: "*.mosdepth.region.dist.txt"
+motus:
+  contents: "Reads are aligned (by BWA) to marker gene sequences in the reference database"
+  num_lines: 2
 multivcfanalyzer:
   fn: "MultiVCFAnalyzer.json"
 disambiguate:
   contents: "unique species A pairs"
   num_lines: 2
+nextclade:
+  contents: "seqName;clade;"
+  num_lines: 1
 ngsderive/strandedness:
   contents: "File	TotalReads	ForwardPct	ReversePct	Predicted"
   num_lines: 1
@@ -586,6 +612,9 @@ picard/extractilluminabarcodes:
 picard/markilluminaadapters:
   contents: "MarkIlluminaAdapters"
   shared: true
+porechop:
+  contents: "Looking for known adapter sets"
+  num_lines: 10
 preseq:
   - contents: "EXPECTED_DISTINCT"
     num_lines: 2
@@ -593,6 +622,9 @@ preseq:
     num_lines: 2
 preseq/real_counts:
   fn: "*preseq_real_counts*"
+prinseqplusplus:
+  - contents: "reads removed by -"
+    num_lines: 2
 prokka:
   contents: "contigs:"
   num_lines: 2
@@ -789,6 +821,9 @@ tophat:
 trimmomatic:
   contents: "Trimmomatic"
   shared: true
+umitools:
+  contents: "# UMI-tools version:"
+  num_lines: 3
 varscan2/mpileup2snp:
   contents: "Only SNPs will be reported"
   num_lines: 3

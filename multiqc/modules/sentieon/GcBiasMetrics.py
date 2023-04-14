@@ -1,5 +1,3 @@
-#!/usr/bin/env python
-
 """ MultiQC submodule to parse output from Sentieon GcBiasMetrics
  (based on the Picard module of the same name """
 
@@ -92,7 +90,6 @@ def parse_reports(self):
     self.sentieon_GCbias_data = self.ignore_samples(self.sentieon_GCbias_data)
 
     if len(self.sentieon_GCbias_data) > 0:
-
         # Plot the graph
 
         pconfig = {

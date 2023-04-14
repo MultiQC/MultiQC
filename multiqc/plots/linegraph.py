@@ -121,7 +121,6 @@ def plot(data, pconfig=None):
         thisplotdata = list()
 
         for s in sorted(d.keys()):
-
             # Ensure any overwritten conditionals from data_labels (e.g. ymax) are taken in consideration
             series_config = pconfig.copy()
             if (
@@ -146,7 +145,6 @@ def plot(data, pconfig=None):
                     except KeyError:
                         pairs.append(None)
             else:
-
                 # Discard > ymax or just hide?
                 # If it never comes back into the plot, discard. If it goes above then comes back, just hide.
                 discard_ymax = None
@@ -380,7 +378,6 @@ def matplotlib_linegraph(plotdata, pconfig=None):
 
     # Go through datasets creating plots
     for pidx, pdata in enumerate(plotdata):
-
         # Plot ID
         pid = pids[pidx]
 
@@ -434,7 +431,6 @@ def matplotlib_linegraph(plotdata, pconfig=None):
 
         # Go through data series
         for idx, d in enumerate(pdata):
-
             # Default colour index
             cidx = idx
             while cidx >= len(default_colors):

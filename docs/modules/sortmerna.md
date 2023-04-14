@@ -1,7 +1,7 @@
 ---
-Name: SortMeRNA
-URL: http://bioinfo.lifl.fr/RNA/sortmerna/
-Description: >
+name: SortMeRNA
+url: http://bioinfo.lifl.fr/RNA/sortmerna/
+description: >
   SortMeRNA is a program tool for filtering, mapping and OTU-picking NGS reads
   in metatranscriptomic and metagenomic data.
 ---

@@ -1,7 +1,7 @@
 ---
-Name: GATK
-URL: https://www.broadinstitute.org/gatk/
-Description: Variant Discovery in High-Throughput Sequencing Data
+name: GATK
+url: https://www.broadinstitute.org/gatk/
+description: Variant Discovery in High-Throughput Sequencing Data
 ---
 
 Developed by the [Data Science and Data Engineering](http://www.broadinstitute.org/dsde)

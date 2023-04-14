@@ -1,6 +1,3 @@
-#!/usr/bin/env python
-from __future__ import print_function
-
 # Initialise the logger
 import logging
 import re

@@ -1,5 +1,3 @@
-#!/usr/bin/env python
-
 """ MultiQC module to parse output from featureCounts """
 
 
@@ -17,7 +15,6 @@ log = logging.getLogger(__name__)
 
 class MultiqcModule(BaseMultiqcModule):
     def __init__(self):
-
         # Initialise the parent object
         super(MultiqcModule, self).__init__(
             name="featureCounts",
@@ -94,7 +91,6 @@ class MultiqcModule(BaseMultiqcModule):
             return None
 
         for idx, f_name in enumerate(file_names):
-
             # Clean up sample name
             s_name = self.clean_s_name(f_name, f)
 

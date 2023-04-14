@@ -1,5 +1,3 @@
-#!/usr/bin/env python
-
 """ MultiQC module to parse output from Adapter Removal """
 
 
@@ -16,7 +14,6 @@ log = logging.getLogger(__name__)
 
 class MultiqcModule(BaseMultiqcModule):
     def __init__(self):
-
         # Initialise the parent object
         super(MultiqcModule, self).__init__(
             name="Adapter Removal",
@@ -73,7 +70,6 @@ class MultiqcModule(BaseMultiqcModule):
         self.adapter_removal_length_dist_plot()
 
     def parse_settings_file(self, f):
-
         self.result_data = {
             "total": None,
             "unaligned": None,
@@ -87,7 +83,6 @@ class MultiqcModule(BaseMultiqcModule):
 
         block_title = None
         for i, line in enumerate(f["f"]):
-
             line = line.rstrip("\n")
             if line == "":
                 continue
@@ -220,7 +215,6 @@ class MultiqcModule(BaseMultiqcModule):
             self.result_data["percent_discarded"] = 0
 
     def set_len_dist(self, len_dist_data):
-
         for line in len_dist_data[1:]:
             l_data = line.rstrip("\n").split("\t")
             l_data = list(map(int, l_data))
@@ -266,7 +260,6 @@ class MultiqcModule(BaseMultiqcModule):
                     self.len_dist_plot_data["all"][self.s_name][l_data[0]] = l_data[7]
 
     def adapter_removal_stats_table(self):
-
         headers = OrderedDict()
         headers["percent_aligned"] = {
             "title": "% Trimmed",
@@ -307,7 +300,6 @@ class MultiqcModule(BaseMultiqcModule):
         self.general_stats_addcols(self.adapter_removal_data, headers)
 
     def adapter_removal_retained_chart(self):
-
         pconfig = {
             "title": "Adapter Removal: Discarded Reads",
             "id": "ar_retained_plot",
@@ -346,7 +338,6 @@ class MultiqcModule(BaseMultiqcModule):
         )
 
     def adapter_removal_length_dist_plot(self):
-
         pconfig = {
             "title": "Adapter Removal: Length Distribution",
             "id": "ar_length_count_plot",

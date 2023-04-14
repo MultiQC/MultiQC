@@ -1,7 +1,7 @@
 ---
-Name: MALT
-URL: https://uni-tuebingen.de/fakultaeten/mathematisch-naturwissenschaftliche-fakultaet/fachbereiche/informatik/lehrstuehle/algorithms-in-bioinformatics/software/malt/
-Description: >
+name: MALT
+url: https://uni-tuebingen.de/fakultaeten/mathematisch-naturwissenschaftliche-fakultaet/fachbereiche/informatik/lehrstuehle/algorithms-in-bioinformatics/software/malt/
+description: >
   MEGAN alignment tool
 ---
 

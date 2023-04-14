@@ -1,8 +1,4 @@
-#!/usr/bin/env python
-
 """ MultiQC module to parse output from Anglerfish """
-
-from __future__ import print_function
 
 import json
 import logging
@@ -21,7 +17,6 @@ class MultiqcModule(BaseMultiqcModule):
     """
 
     def __init__(self):
-
         # Initialise the parent object
         super(MultiqcModule, self).__init__(
             name="Anglerfish",

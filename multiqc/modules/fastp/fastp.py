@@ -1,5 +1,3 @@
-#!/usr/bin/env python
-
 """ MultiQC module to parse output from Fastp """
 
 
@@ -21,7 +19,6 @@ class MultiqcModule(BaseMultiqcModule):
     """
 
     def __init__(self):
-
         # Initialise the parent object
         super(MultiqcModule, self).__init__(
             name="fastp",
@@ -153,6 +150,7 @@ class MultiqcModule(BaseMultiqcModule):
         """Parse the JSON output from fastp and save the summary statistics"""
         try:
             parsed_json = json.load(f["f"])
+            parsed_json["command"]
         except:
             log.warning("Could not parse fastp JSON: '{}'".format(f["fn"]))
             return None
