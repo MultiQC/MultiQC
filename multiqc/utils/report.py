@@ -363,7 +363,7 @@ def search_file(pattern, f, module_key):
     if pattern.get("contents") is not None or pattern.get("contents_re") is not None:
         if pattern.get("contents_re") is not None:
             repattern = re.compile(pattern["contents_re"])
-        if not f.get("contents_lines") or len(f["contents_lines"]) < pattern.get("num_lines", 0):
+        if not f.get("contents_lines") or config.filesearch_lines_limit < pattern.get("num_lines", 0):
             f['contents_lines'] = []
             file_path = os.path.join(f["root"], f["fn"])
             try:
@@ -378,8 +378,6 @@ def search_file(pattern, f, module_key):
                     logger.debug(f"Couldn't read file when looking for output: {file_path}, {e}")
                 file_search_stats["skipped_file_contents_search_errors"] += 1
                 return False
-        else:
-            pass
 
         for i, line in enumerate(f['contents_lines']):
             # Search by file contents (string)
