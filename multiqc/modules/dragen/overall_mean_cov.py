@@ -11,7 +11,7 @@ from collections import defaultdict
 
 from multiqc.modules.base_module import BaseMultiqcModule
 
-from .utils import make_parsing_log_report
+from .utils import make_log_report
 
 # Initialise the logger.
 log = logging.getLogger(__name__)
@@ -54,7 +54,7 @@ class DragenOverallMeanCovMetrics(BaseMultiqcModule):
         # Report found info/warnings/errors, which were collected while
         # calling the coverage_parser and constructing cov_headers.
         # You can disable it anytime, if it is not wanted.
-        make_parsing_log_report("overall_mean_cov_metrics", log_data, log)
+        make_log_report("overall_mean_cov_metrics", log_data, log)
 
         # No need to write the data.
         # self.write_data_file(self.__overall_mean_cov_data)

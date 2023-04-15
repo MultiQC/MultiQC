@@ -263,7 +263,7 @@ DRAGEN_MODULE_TEXTS = {
 }
 
 
-def make_parsing_log_report(module, log_data, logger):
+def make_log_report(module, log_data, logger):
     """The only purpose of this function is to create a readable and informative log output
     about found info/warnings/errors, which were found at the time of executing a parser."""
 

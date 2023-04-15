@@ -1,6 +1,5 @@
 '''"""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
 This module gathers coverage metrics data and prepares it for the output report.
-
 It relies on the following official sources:
 https://support.illumina.com/content/dam/illumina-support/help/Illumina_DRAGEN_Bio_IT_Platform_v3_7_1000000141465/Content/SW/Informatics/Dragen/CoverageMetricsReport_fDG.htm
 https://support.illumina.com/content/dam/illumina-support/help/Illumina_DRAGEN_Bio_IT_Platform_v3_7_1000000141465/Content/SW/Informatics/Dragen/QCMetricsCoverageReports_fDG_dtSW.htm
@@ -20,7 +19,7 @@ from multiqc.modules.base_module import BaseMultiqcModule
 from multiqc.plots import table
 from multiqc.utils.util_functions import write_data_file
 
-from .utils import check_duplicate_samples, clean_headers, make_parsing_log_report, order_headers
+from .utils import check_duplicate_samples, clean_headers, make_log_report, order_headers
 
 # Initialise the logger.
 log = logging.getLogger(__name__)
@@ -568,7 +567,7 @@ class DragenCoverageMetrics(BaseMultiqcModule):
 
         # Report found info/warnings/errors, which were collected while
         # calling the coverage_parser and constructing cov_headers.
-        make_parsing_log_report("coverage_metrics", log_data, log)
+        make_log_report("coverage_metrics", log_data, log)
 
         # Write data into the general table.
         gen_data, gen_headers = make_general_stats(cov_data, cov_headers)
