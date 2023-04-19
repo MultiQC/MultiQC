@@ -11,6 +11,7 @@ import base64
 import errno
 import io
 import os
+import platform
 import re
 import shutil
 import subprocess
@@ -20,9 +21,9 @@ import time
 import traceback
 from distutils import version
 from distutils.dir_util import copy_tree
-from urllib.request import urlopen
 
 import jinja2
+import requests
 import rich
 import rich_click as click
 from rich.syntax import Syntax
@@ -381,14 +382,35 @@ def run(
     # Check that we're running the latest version of MultiQC
     if config.no_version_check is not True:
         try:
-            response = urlopen("http://multiqc.info/version.php?v={}".format(config.short_version), timeout=5)
-            remote_version = response.read().decode("utf-8").strip()
-            if version.StrictVersion(re.sub("[^0-9\.]", "", remote_version)) > version.StrictVersion(
-                re.sub("[^0-9\.]", "", config.short_version)
+            # Fetch the version info from the API
+            version_check_url = "https://api.multiqc.info/version"
+            meta = {
+                "version_multiqc": config.short_version,
+                "version_python": platform.python_version(),
+                "operating_system": platform.system(),
+                "is_docker": os.path.exists("/.dockerenv"),
+                "is_singularity": os.path.exists("/.singularity.d"),
+                "is_conda": os.path.exists(os.path.join(sys.prefix, "conda-meta")),
+                "ci_environment": os.getenv("CI", False),
+            }
+            r = requests.get(version_check_url, params=meta)
+            release_info = r.json()
+            # Broadcast log messages if found
+            for msg in release_info.get("broadcast_messages", []):
+                if msg.get("message"):
+                    level = msg.get("level")
+                    if level not in ["debug", "info", "warning", "error", "critical"]:
+                        level = "info"
+                    getattr(logger, level)(msg["message"])
+            # Available update log if newer
+            remote_version = release_info["latest_release"]
+            if version.StrictVersion(re.sub("[^0-9\.]", "", remote_version["version"])) > version.StrictVersion(
+                re.sub(r"[^0-9\.]", "", config.short_version)
             ):
-                logger.warning("MultiQC Version {} now available!".format(remote_version))
-            else:
-                logger.debug("Latest MultiQC version is {}".format(remote_version))
+                logger.warning(f"MultiQC Version {remote_version['version']} now available!")
+            logger.debug(
+                f"Latest MultiQC version is {remote_version['version']}, released {remote_version['release_date']}"
+            )
         except Exception as e:
             logger.debug("Could not connect to multiqc.info for version check: {}".format(e))
 
