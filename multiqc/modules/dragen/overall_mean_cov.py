@@ -54,7 +54,7 @@ class DragenOverallMeanCovMetrics(BaseMultiqcModule):
         # Report found info/warnings/errors, which were collected while
         # calling the coverage_parser and constructing cov_headers.
         # You can disable it anytime, if it is not wanted.
-        make_log_report("overall_mean_cov_metrics", log_data, log)
+        make_log_report(log_data, log, "overall_mean_cov_metrics")
 
         # No need to write the data.
         # self.write_data_file(self.__overall_mean_cov_data)

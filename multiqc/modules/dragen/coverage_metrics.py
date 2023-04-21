@@ -563,11 +563,11 @@ class DragenCoverageMetrics(BaseMultiqcModule):
         cov_headers = make_coverage_headers(all_metrics)
 
         # Check samples for duplicates.
-        check_duplicate_samples(all_samples, log)
+        check_duplicate_samples(all_samples, log, "dragen/coverage_metrics")
 
         # Report found info/warnings/errors, which were collected while
         # calling the coverage_parser and constructing cov_headers.
-        make_log_report("coverage_metrics", log_data, log)
+        make_log_report(log_data, log, "dragen/coverage_metrics")
 
         # Write data into the general table.
         gen_data, gen_headers = make_general_stats(cov_data, cov_headers)
@@ -775,7 +775,7 @@ def create_table_handlers():
                         # PCT of region with coverage [10x: 50x]
                         # will both reference the same HTML ID.
                         # Irrelevant in this module, but may not in general.
-                        m_id = re.sub("(\s|-|\.|_)+", " ", "gen table_" + phenotype + "_" + metric)
+                        m_id = re.sub("(\s|-|\.|_)+", " ", phenotype + "_" + metric)
                         gen_data[sample][m_id] = data[metric]
                         gen_headers[m_id] = coverage_headers[_metric].copy()
                         """
@@ -851,7 +851,7 @@ def create_table_handlers():
                         if metric + region in coverage_headers:
                             _metric += region
                     if not ("exclude_own" in coverage_headers[_metric] and coverage_headers[_metric]["exclude_own"]):
-                        m_id = re.sub("(\s|-|\.|_)+", " ", "own table_" + phenotype + "_" + metric)
+                        m_id = re.sub("(\s|-|\.|_)+", " ", phenotype + "_" + metric)
                         data[sample][m_id] = real_data[metric]
                         headers[m_id] = coverage_headers[_metric].copy()
 

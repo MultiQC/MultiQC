@@ -143,7 +143,7 @@ def exist_and_number(data, *metrics):
     return all(isinstance(data.get(m, None), int) or isinstance(data.get(m, None), float) for m in metrics)
 
 
-def check_duplicate_samples(sample_names, logger):
+def check_duplicate_samples(sample_names, logger, module):
     """Check samples for duplicate names. Warn about found ones."""
     message = ""
     line1 = "\n  {} was built from the following samples:"
@@ -263,7 +263,7 @@ DRAGEN_MODULE_TEXTS = {
 }
 
 
-def make_log_report(module, log_data, logger):
+def make_log_report(log_data, logger, module):
     """The only purpose of this function is to create a readable and informative log output
     about found info/warnings/errors, which were found at the time of executing a parser."""
 
