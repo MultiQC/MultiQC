@@ -818,3 +818,6 @@ module_order:
   - whatshap:
       module_tag:
         - DNA
+  - mosaicatcher:
+      module_tag:
+        - DNA
