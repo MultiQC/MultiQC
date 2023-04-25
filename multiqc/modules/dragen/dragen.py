@@ -1,5 +1,6 @@
 import logging
 
+from .cnv_metrics import DragenCNVMetrics
 from .coverage_hist import DragenCoverageHist
 from .coverage_metrics import DragenCoverageMetrics
 from .coverage_per_contig import DragenCoveragePerContig
@@ -19,6 +20,7 @@ log = logging.getLogger(__name__)
 
 
 class MultiqcModule(
+    DragenCNVMetrics,
     DragenMappingMetics,
     DragenFragmentLength,
     DragenPloidyEstimationMetrics,
@@ -70,6 +72,9 @@ class MultiqcModule(
 
         samples_found |= self.add_ploidy_estimation_metrics()
         # <output prefix>.ploidy_estimation_metrics.csv    - add just Ploidy estimation into gen stats
+
+        samples_found |= self.add_cnv_metrics()
+        # <output prefix>.cnv_metrics.csv
 
         samples_found |= self.add_wgs_coverage_metrics()
         # <output prefix>.wgs_coverage_metrics_normal.csv  - general stats table and a dedicated table
