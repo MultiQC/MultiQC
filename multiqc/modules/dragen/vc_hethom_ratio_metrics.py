@@ -79,7 +79,7 @@ class DragenVCHetHomRatioMetrics(BaseMultiqcModule):
             "DRAGEN calculates a per het/hom ratio per contig. DRAGEN reports the "
             "ratios for both the raw (PREFILTER) and hard-filtered (POSTFILTER) VCF. "
             "Press the `Help` button for details.",
-            helptext = "The metrics are output to the &#60;output-file-prefix&#62;.vc_hethom_ratio_metrics.csv file. "
+            helptext="The metrics are output to the &#60;output-file-prefix&#62;.vc_hethom_ratio_metrics.csv file. "
             "The file contains the following values for each primary contig processed:\n\n"
             "* Contig\n\n"
             "* Number of heterozygous variants\n\n"
@@ -185,8 +185,14 @@ def make_html_for_own_section(DATA):
             "tt_decimals": 0,
             "ylab": "",  # to pass lint test. ylabs are defined in data_labels.
             "data_labels": [
-                {"name": "Het", "ylab": "Number of heterozygous variants",},
-                {"name": "Hom", "ylab": "Number of homozygous variants",},
+                {
+                    "name": "Het",
+                    "ylab": "Number of heterozygous variants",
+                },
+                {
+                    "name": "Hom",
+                    "ylab": "Number of homozygous variants",
+                },
             ],
         }
 
@@ -301,14 +307,14 @@ def make_html_for_own_section(DATA):
         ignore_first_section = True
         for section in all_sections:
             section_id = re.sub("\s+", "_", section)
-            html +=(
+            html += (
                 "section_id = BASE_SECTION_ID+'{}';\n".format(section_id)
-                +"hethom_sections_display_values[section_id] = document.getElementById(section_id).style.display;\n"
+                + "hethom_sections_display_values[section_id] = document.getElementById(section_id).style.display;\n"
             )
             if ignore_first_section:
                 ignore_first_section = False
             else:
-                html+= "document.getElementById(section_id).style.display='none';\n"
+                html += "document.getElementById(section_id).style.display='none';\n"
 
         html += "},1000)});\n"
         html += "</script>"  # "Close" script block.
