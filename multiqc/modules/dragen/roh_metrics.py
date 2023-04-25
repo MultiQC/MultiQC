@@ -103,13 +103,17 @@ Only INCLUDED_SECTIONS will be shown in html table.
 The parser supports only the first value (4th column).
 Can be used as a quick but unreliable way to control html table.
 """
-INCLUDED_SECTIONS = {VARIANT_CALLER: [EMPTY],}
+INCLUDED_SECTIONS = {
+    VARIANT_CALLER: [EMPTY],
+}
 
 # INCLUDED_SECTIONS = {ANY:[ANY]}  # Include all sections/regions/samples.
 
 # Used to detect and report what is not properly supported by the module.
 # Works as INCLUDED_SECTIONS.
-SUPPORTED_SECTIONS = {VARIANT_CALLER: [EMPTY],}
+SUPPORTED_SECTIONS = {
+    VARIANT_CALLER: [EMPTY],
+}
 
 '''"""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
 The STD_METRICS is the container for abstract representations of the standard metrics.
@@ -279,9 +283,7 @@ class DragenROHMetrics(BaseMultiqcModule):
             "the first region to the end of the second region without the gap. There is no maximum size "
             "for regions, but regions always end at chromosome boundaries.",
             plot=table.plot(
-                table_data,
-                own_table_headers,
-                {config: val for config, val in TABLE_CONFIG.items() if val is not None}
+                table_data, own_table_headers, {config: val for config, val in TABLE_CONFIG.items() if val is not None}
             ),
         )
         bargraph_data = make_bargraph_data(roh_data)
