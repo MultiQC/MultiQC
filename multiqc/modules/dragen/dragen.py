@@ -13,12 +13,14 @@ from .sc_atac_metrics import DragenScAtacMetrics
 from .sc_rna_metrics import DragenScRnaMetrics
 from .time_metrics import DragenTimeMetrics
 from .trimmer_metrics import DragenTrimmerMetrics
+from .vc_hethom_ratio_metrics import DragenVCHetHomRatioMetrics
 from .vc_metrics import DragenVCMetrics
 
 log = logging.getLogger(__name__)
 
 
 class MultiqcModule(
+    DragenVCHetHomRatioMetrics,
     DragenMappingMetics,
     DragenFragmentLength,
     DragenPloidyEstimationMetrics,
@@ -70,6 +72,9 @@ class MultiqcModule(
 
         samples_found |= self.add_ploidy_estimation_metrics()
         # <output prefix>.ploidy_estimation_metrics.csv    - add just Ploidy estimation into gen stats
+
+        samples_found |= self.add_vc_hethom_ratio_metrics()
+        # <output prefix>.vc_hethom_ratio_metrics.csv
 
         samples_found |= self.add_wgs_coverage_metrics()
         # <output prefix>.wgs_coverage_metrics_normal.csv  - general stats table and a dedicated table
