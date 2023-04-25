@@ -156,7 +156,8 @@ STD_METRICS = {
         "scale": "Oranges",
         "format": "{:,.0f}",
     },
-    "number of deletions (pass)" + V2: {
+    "number of deletions (pass)"
+    + V2: {
         "order_priority": 3,
         "title": "Deletions%",
         "description": "Percentage of deletions (PASS).",
@@ -170,7 +171,8 @@ STD_METRICS = {
         "scale": "Greens",
         "format": "{:,.0f}",
     },
-    "number of insertions (pass)" + V2: {
+    "number of insertions (pass)"
+    + V2: {
         "order_priority": 5,
         "title": "Insertions%",
         "description": "Percentage of insertions (PASS).",
@@ -184,7 +186,8 @@ STD_METRICS = {
         "scale": "Blues",
         "format": "{:,.0f}",
     },
-    "number of duplications (pass)" + V2: {
+    "number of duplications (pass)"
+    + V2: {
         "order_priority": 7,
         "title": "Duplications%",
         "description": "Percentage of duplications (PASS).",
@@ -198,7 +201,8 @@ STD_METRICS = {
         "scale": "Oranges",
         "format": "{:,.0f}",
     },
-    "number of breakend pairs (pass)" + V2: {
+    "number of breakend pairs (pass)"
+    + V2: {
         "order_priority": 9,
         "title": "BreakendPairs%",
         "description": "Percentage of breakend pairs (PASS).",
@@ -361,6 +365,7 @@ def restructure_data(data):
                         new_sample = sample + "_" + inner_sample
                     else:
                         new_sample = sample
+                    # store data.
                     data_out[new_sample][section][EMPTY] = {
                         metric: value for metric, value in
                         data[sample][section][inner_sample].items()
