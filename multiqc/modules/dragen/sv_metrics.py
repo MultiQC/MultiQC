@@ -367,8 +367,7 @@ def restructure_data(data):
                         new_sample = sample
                     # store data.
                     data_out[new_sample][section][EMPTY] = {
-                        metric: value for metric, value in
-                        data[sample][section][inner_sample].items()
+                        metric: value for metric, value in data[sample][section][inner_sample].items()
                     }
             # Other sections (if any exist) are just copied.
             else:
