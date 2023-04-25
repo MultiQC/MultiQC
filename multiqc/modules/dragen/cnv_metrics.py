@@ -599,16 +599,12 @@ def make_headers(metric_IDs, sample_IDs):
 
         nonlocal order_counter
 
-        configs = {
-            config: val for config, val in SINGLE_HEADER.items() if val is not None
-        }
+        configs = {config: val for config, val in SINGLE_HEADER.items() if val is not None}
 
         configs["order_priority"] = order_counter
         configs["title"] = "Kar " + sample
         configs["colour"] = "0, 255, 255"
-        configs["description"] = (
-            "Estimated sex karyotype for the panel sample " + sample
-        )
+        configs["description"] = "Estimated sex karyotype for the panel sample " + sample
         configs["cond_formatting_rules"] = {
             "red": [{"s_contains": ""}],  # Each value is red by default.
             "green": [{"s_eq": "XX"}, {"s_eq": "YX"}, {"s_eq": "XY"}],
@@ -620,9 +616,8 @@ def make_headers(metric_IDs, sample_IDs):
 
         order_counter += 1
 
-        configs2 = {
-            config: val for config, val in SINGLE_HEADER.items() if val is not None
-        }
+        configs2 = {config: val for config, val in SINGLE_HEADER.items() if val is not None}
+
         configs2["order_priority"] = order_counter
         configs2["title"] = "KarConf " + sample
         configs2["colour"] = "0, 255, 255"
@@ -647,9 +642,8 @@ def make_headers(metric_IDs, sample_IDs):
 
     def make_metric_header(metric, original_metric):
         """Creates a single header for the given metric."""
-        configs = {
-            config: val for config, val in SINGLE_HEADER.items() if val is not None
-        }
+        configs = {config: val for config, val in SINGLE_HEADER.items() if val is not None}
+
         if metric in STD_METRICS:
             configs.update(STD_METRICS[metric])
         # If not, set the bare minimum.
