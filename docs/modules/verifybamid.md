@@ -1,7 +1,7 @@
 ---
-Name: VerifyBAMID
-URL: https://genome.sph.umich.edu/wiki/VerifyBamID
-Description: >
+name: VerifyBAMID
+url: https://genome.sph.umich.edu/wiki/VerifyBamID
+description: >
   VerifyBamID checks whether reads match known genotypes or are
   contaminated as a mixture of two samples.
 ---

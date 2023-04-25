@@ -1,9 +1,6 @@
-#!/usr/bin/env python
-
 """ MultiQC module to parse QC output from PURPLE """
 # Initialise the logger
 import logging
-import re
 from collections import OrderedDict, defaultdict
 
 from multiqc.modules.base_module import BaseMultiqcModule
@@ -20,7 +17,6 @@ class MultiqcModule(BaseMultiqcModule):
     """
 
     def __init__(self):
-
         # Initialise the parent object
         super(MultiqcModule, self).__init__(
             name="PURPLE",

@@ -1,5 +1,3 @@
-#!/usr/bin/env python
-
 """ MultiQC module to parse TsTv by alternative allele count from vcftools TsTv-by-count """
 
 import logging

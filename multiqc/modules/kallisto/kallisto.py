@@ -1,5 +1,3 @@
-#!/usr/bin/env python
-
 """ MultiQC module to parse output from Kallisto """
 
 
@@ -20,7 +18,6 @@ class MultiqcModule(BaseMultiqcModule):
     """Kallisto module"""
 
     def __init__(self):
-
         # Initialise the parent object
         super(MultiqcModule, self).__init__(
             name="Kallisto",
@@ -55,7 +52,6 @@ class MultiqcModule(BaseMultiqcModule):
     def parse_kallisto_log(self, f):
         s_name = total_reads = paligned_reads = fraglength = None
         for l in f["f"]:
-
             # Get input filename
             match = re.search(r"\[quant\] will process (pair|file|sample) 1: (\S+)", l)
             if match:
@@ -81,8 +77,11 @@ class MultiqcModule(BaseMultiqcModule):
                         "total_reads": total_reads,
                         "pseudoaligned_reads": paligned_reads,
                         "not_pseudoaligned_reads": total_reads - paligned_reads,
-                        "percent_aligned": (paligned_reads / total_reads) * 100,
                     }
+                    try:
+                        self.kallisto_data[s_name]["percent_aligned"] = (paligned_reads / total_reads) * 100
+                    except ZeroDivisionError:
+                        self.kallisto_data[s_name]["percent_aligned"] = 0.0
                     if fraglength is not None:
                         self.kallisto_data[s_name]["fragment_length"] = fraglength
                     s_name = total_reads = paligned_reads = fraglength = None

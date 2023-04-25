@@ -1,7 +1,7 @@
 ---
-Name: HOMER
-URL: http://homer.ucsd.edu/homer/
-Description: >
+name: HOMER
+url: http://homer.ucsd.edu/homer/
+description: >
   HOMER is a suite of tools for Motif Discovery and next-gen sequencing analysis.
 ---
 

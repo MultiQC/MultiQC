@@ -1,7 +1,7 @@
 ---
-Name: FLASh
-URL: https://ccb.jhu.edu/software/FLASH/
-Description: >
+name: FLASh
+url: https://ccb.jhu.edu/software/FLASH/
+description: >
   FLASH (Fast Length Adjustment of SHort reads) is a very fast and accurate software tool to merge paired-end reads from NGS data.
 ---
 

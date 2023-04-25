@@ -1,5 +1,3 @@
-#!/usr/bin/env python
-
 """ MultiQC module to parse output from HOMER findpeaks """
 
 import logging
@@ -22,7 +20,6 @@ class FindPeaksReportMixin:
         self.homer_findpeaks = self.ignore_samples(self.homer_findpeaks)
 
         if len(self.homer_findpeaks) > 0:
-
             # Write parsed report data to a file
             self.write_data_file(self.homer_findpeaks, "multiqc_homer_findpeaks")
 

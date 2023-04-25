@@ -1,7 +1,7 @@
 ---
-Name: NanoStat
-URL: https://github.com/wdecoster/nanostat
-Description: >
+name: NanoStat
+url: https://github.com/wdecoster/nanostat
+description: >
   Calculate various statistics from a long read sequencing dataset in fastq, bam or albacore
   sequencing summary format.
 ---

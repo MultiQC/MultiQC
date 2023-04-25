@@ -1,5 +1,3 @@
-#!/usr/bin/env python
-
 """ MultiQC module to parse output from Cell Ranger count """
 
 import json
@@ -95,7 +93,6 @@ class CellRangerVdjMixin:
             return 0
 
         else:
-
             self.general_stats_addcols(self.cellrangervdj_general_data, self.vdj_general_data_headers)
 
             # Write parsed report data to a file
@@ -163,7 +160,7 @@ class CellRangerVdjMixin:
         colours = {
             "estimated cells": "RdPu",
             "avg reads/cell": "Blues",
-            "reads in cells": "PuBnGn",
+            "reads in cells": "PuBuGn",
         }
         data_general_stats, self.vdj_general_data_headers = update_dict(
             data_general_stats,

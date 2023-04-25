@@ -7,7 +7,6 @@ import io
 import logging
 import os
 import random
-from collections import OrderedDict
 
 from multiqc.utils import config, report
 
@@ -127,7 +126,6 @@ def matplotlib_boxplot(plotdata, pconfig=None):
 
     # Go through datasets creating plots
     for pidx, (pname, pdata) in enumerate(plotdata.items()):
-
         # Plot ID
         pid = pids[pidx]
 

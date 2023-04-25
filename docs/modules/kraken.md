@@ -1,7 +1,7 @@
 ---
-Name: Kraken
-URL: https://ccb.jhu.edu/software/kraken2/
-Description: >
+name: Kraken
+url: https://ccb.jhu.edu/software/kraken2/
+description: >
   is a taxonomic classification tool that uses exact k-mer matches to find
   the lowest common ancestor (LCA) of a given sequence.
 ---

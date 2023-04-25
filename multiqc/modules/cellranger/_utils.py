@@ -1,6 +1,3 @@
-#!/usr/bin/env python
-
-
 def clean_title_case(col_id):
     title = col_id.title() if col_id[0:1].islower() else col_id
     for str in ["Bc", "bc", "Umi", "Igk", "Igh", "Igl", "Vj", "q30"]:
@@ -12,7 +9,6 @@ def update_dict(table, headers, rows_list, col_map, colours, prefix):
     """update the data dict and headers dict"""
 
     for col_name, col_data in rows_list:
-
         if col_name in col_map:
             # Sanitize numeric data
             is_percentage = "%" in col_data

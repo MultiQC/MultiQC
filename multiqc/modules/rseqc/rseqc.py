@@ -1,5 +1,3 @@
-#!/usr/bin/env python
-
 """ MultiQC module to parse output from RSeQC """
 
 import logging
@@ -20,7 +18,6 @@ class MultiqcModule(BaseMultiqcModule):
     logs are found."""
 
     def __init__(self):
-
         # Initialise the parent object
         super(MultiqcModule, self).__init__(
             name="RSeQC",
@@ -74,4 +71,5 @@ class MultiqcModule(BaseMultiqcModule):
             raise UserWarning
 
         # Add to the General Stats table (has to be called once per MultiQC module)
-        self.general_stats_addcols(self.general_stats_data, self.general_stats_headers)
+        if max(len(vals) for vals in self.general_stats_data.values()) > 0:
+            self.general_stats_addcols(self.general_stats_data, self.general_stats_headers)

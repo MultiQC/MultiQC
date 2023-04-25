@@ -1,5 +1,3 @@
-#!/usr/bin/env python
-
 """ MultiQC module to parse relatedness output from vcftools relatedness """
 
 import csv

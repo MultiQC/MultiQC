@@ -1,8 +1,8 @@
 ---
-Name: CheckQC
-URL: https://github.com/Molmed/checkQC
-Description: >
-  CheckQC is a program designed to check a set of quality criteria against 
+name: CheckQC
+url: https://github.com/Molmed/checkQC
+description: >
+  CheckQC is a program designed to check a set of quality criteria against
   an Illumina runfolder.
 ---
 
