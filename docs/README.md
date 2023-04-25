@@ -140,6 +140,7 @@ MultiQC Modules:
     VEP: modules/vep.md
     verifyBAMID: modules/verifybamid.md
     WhatsHap: modules/whatshap.md
+    MosaiCatcher: modules/mosaicatcher.md
 Custom Content:
   Introduction: custom_content.md
 Coding with MultiQC:

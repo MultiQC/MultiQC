@@ -855,5 +855,6 @@ verifybamid/selfsm:
 whatshap/stats:
   contents: "#sample	chromosome	file_name	variants	phased	unphased	singletons"
   num_lines: 1
-xenome:
-  fn: "*.info"
+mosaicatcher:
+  fn: "*.info_raw"
+  # fn: "*.info"

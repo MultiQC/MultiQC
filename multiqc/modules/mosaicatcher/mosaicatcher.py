@@ -20,28 +20,162 @@ class MultiqcModule(BaseMultiqcModule):
             ),
             doi="10.1038/s41587-019-0366-x",
         )
-        log_files = self.find_log_files("mosaicatcher", filehandles=True)
-        samples = {}
-        for f in log_files:
-            samples = self._parse_samples(f, samples)
-            self.add_data_source(f)
+        log_files = self.find_log_files("mosaicatcher", filehandles=False)
+        if not log_files:
+            log.warning("No log files found for MosaiCatcher module")
+        else:
+            print("Log files found:", log_files)
+
+        samples = dict()
+        for f in list(log_files):
+            if not f or "f" not in f:
+                log.warning("Malformed log file object: {}".format(f))
+            else:
+                print("Parsing log file:", f["fn"])
+                samples = self._parse_samples(f, samples)
+                self.add_data_source(f)
 
         self._samples = samples
 
-        # self._add_table(samples)
-        # self._add_coverage_plot(samples)
-        # self._add_heteroplasmy_level_plot(samples)
+        self._add_table(samples)
+        self._add_coverage_plot(samples)
 
         self.write_data_file(self._samples, "multiqc_mosaicatcher")
         log.info("Found {} samples".format(len(samples)))
 
+    def _add_table(self, samples):
+        self.add_section(
+            plot=table.plot(data=samples, headers=self._setup_headers()),
+        )
+
+    def _add_coverage_plot(self, samples):
+        coverage_plot = bargraph.plot(
+            data=samples,
+            cats=["mapq", "dupl", "good", "reads2", "suppl"],
+            pconfig={
+                "id": "mosaicatcher-coverage",
+                "title": "MosaiCatcher: coverage",
+                "height": 1024,
+            },
+        )
+        self.add_section(
+            name="Average coverage per sample",
+            anchor="mosaicatcher-coverage-id",
+            description="Average coverage per sample",
+            plot=coverage_plot,
+        )
+
+    def _setup_headers(self):
+        headers = OrderedDict()
+        for k in list(self._samples.values())[0]:
+            headers[k] = {"title": k, "hidden": True}
+
+        headers["sample"] = {
+            "title": "sample",
+            "description": "Sample (has multiple cells)",
+            "hidden": True,
+        }
+        headers["cell"] = {
+            "title": "cell",
+            "description": "Name of the cell.",
+            "hidden": False,
+        }
+        headers["mapped"] = {
+            "title": "mapped",
+            "description": "Total number of reads seen",
+            "hidden": False,
+        }
+        headers["suppl"] = {
+            "title": "suppl",
+            "description": "Supplementary, secondary or QC-failed reads (filtered out)",
+            "hidden": True,
+        }
+        headers["dupl"] = {
+            "title": "dupl",
+            "description": "Reads filtered out as PCR duplicates",
+            "hidden": False,
+        }
+        headers["mapq"] = {
+            "title": "mapq",
+            "description": "Reads filtered out due to low mapping quality",
+            "hidden": True,
+        }
+        headers["read2"] = {
+            "title": "read2",
+            "description": "Reads filtered out as 2nd read of pair",
+            "hidden": True,
+        }
+        headers["good"] = {
+            "title": "good",
+            "description": "Reads used for counting.",
+            "hidden": False,
+        }
+        headers["pass1"] = {
+            "title": "pass1",
+            "description": "Enough coverage? If false, ignore all columns from now",
+            "hidden": False,
+        }
+        headers["nb_p"] = {
+            "title": "nb_p",
+            "description": "Negative Binomial parameter p. Constant for one sample.",
+            "hidden": True,
+        }
+        headers["nb_r"] = {
+            "title": "nb_r",
+            "description": "Negative Binomial parameter r. We use NB(p,r/2) * NB(p,r/2) in WC states, but NB(p,(1-a)*r)*NB(p,a*r) in WW or CC states.",
+            "hidden": True,
+        }
+        headers["nb_a"] = {
+            "title": "nb_a",
+            "description": "Negative Binomial parameter a (alpha) used for zero expectation (see above).",
+            "hidden": True,
+        }
+        headers["bam"] = {
+            "title": "bam",
+            "description": "Bam file of this cell",
+            "hidden": True,
+        }
+        return headers
+
     @staticmethod
     def _parse_samples(f, samples):
-        for row in csv.DictReader(f["f"], delimiter="\t"):
-            sample_name = row["Sample"]
-            row.pop("Sample")
-            if sample_name in samples:
-                log.warning("Duplicate sample name found! Overwriting: {}".format(sample_name))
-            samples[sample_name] = row
+        # Create a dictionary to store the data
 
+        for row in f["f"].split("\n"):
+            tmp_row = row.split("\t")
+            # print(tmp_row)
+            if len(tmp_row) != 14:
+                continue
+
+            if tmp_row[0] == "sample":
+                header = tmp_row
+
+            else:
+                # Extract the cell name from the row
+                cell_name = tmp_row[1]
+
+                # Create a dictionary for this cell if it doesn't exist yet
+                if cell_name not in samples:
+                    samples[cell_name] = {}
+
+                # Loop over the columns in the row and add them to the cell dictionary
+                for i, value in enumerate(tmp_row):
+                    # Use the header value as the key for this column
+                    key = header[i]
+
+                    # Skip the cell column since it's being used as the top-level key
+                    if key == "cell":
+                        continue
+
+                    if key == "pass1":
+                        print(value)
+                        value = True if value == "1" else False
+                        print(value)
+
+                    # Add this column to the cell dictionary
+                    samples[cell_name][key] = value
+
+        from pprint import pprint
+
+        # pprint(samples)
         return samples

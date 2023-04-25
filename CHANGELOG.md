@@ -10,6 +10,9 @@
 
 ### New Modules
 
+- [**MosaiCatcher**](https://github.com/friendsofstrandseq/mosaicatcher/README.md)
+  - MosaiCatcher counts Strand-seq reads and classifies strand states of each chromosome in each cell using a Hidden Markov Model.
+
 ### Module updates
 
 - **Cell Ranger**
