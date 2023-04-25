@@ -96,10 +96,9 @@ This structuring is just an attempt to organize and simplify the whole dragen mo
 could improve readability and make modules more extensible/maintainable in the long run.
 '''
 
-import re
 from collections import OrderedDict, defaultdict
-from multiqc import config
 
+from multiqc import config
 
 read_format = "{:,.1f}"
 if config.read_count_multiplier == 1:
