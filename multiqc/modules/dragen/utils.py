@@ -317,11 +317,7 @@ def make_gen_stats_headers(headers):
         for metric, configs in headers.items()
         if metric in
         # Header is included only if "exclude" is not present or False/False-equivalent.
-        [
-            metric
-            for metric in headers
-            if not ("exclude" in headers[metric] and headers[metric]["exclude"])
-        ]
+        [metric for metric in headers if not ("exclude" in headers[metric] and headers[metric]["exclude"])]
     }
     return clean_headers(order_headers(gen_headers))
 
@@ -333,11 +329,7 @@ def make_own_headers(headers):
         for metric, configs in headers.items()
         if metric in
         # Header is included only if "exclude_own" is not present or False/False-equivalent.
-        [
-            metric
-            for metric in headers
-            if not ("exclude_own" in headers[metric] and headers[metric]["exclude_own"])
-        ]
+        [metric for metric in headers if not ("exclude_own" in headers[metric] and headers[metric]["exclude_own"])]
     }
     for metric in own_headers:
         # "hidden_own" is an extension and must be stored in "hidden"
