@@ -190,7 +190,6 @@ BARGRAPH_CONFIG = {
 }
 
 
-
 class DragenROHMetrics(BaseMultiqcModule):
     """Public members of the DragenROHMetrics module are available to other dragen modules.
     To avoid cluttering up the global dragen space, only one method is defined."""
