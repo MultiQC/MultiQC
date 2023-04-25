@@ -115,13 +115,18 @@ Only INCLUDED_SECTIONS will be shown in html table.
 The parser supports only the first value (4th column).
 Can be used as a quick but unreliable way to control html table.
 """
-INCLUDED_SECTIONS = {PLOIDY_ESTIMATION: [EMPTY], ADDITIONAL_SECTION: [ANY],}
+INCLUDED_SECTIONS = {
+    PLOIDY_ESTIMATION: [EMPTY],
+    ADDITIONAL_SECTION: [ANY],
+}
 
 # INCLUDED_SECTIONS = {ANY:[ANY]}  # Include all sections/regions/samples.
 
 # Used to detect and report what is not properly supported by the module.
 # Works as INCLUDED_SECTIONS.
-SUPPORTED_SECTIONS = {PLOIDY_ESTIMATION: [EMPTY],}
+SUPPORTED_SECTIONS = {
+    PLOIDY_ESTIMATION: [EMPTY],
+}
 
 '''"""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
 The STD_METRICS is the container for abstract representations of the standard metrics.
@@ -363,9 +368,7 @@ class DragenPloidyEstimationMetrics(BaseMultiqcModule):
             "and ignores the tumor reads. If only tumor reads are provided as input, the Ploidy "
             "Estimator estimates sequencing coverage and sex karyotype for the tumor sample.",
             plot=table.plot(
-                table_data,
-                own_table_headers,
-                {config: val for config, val in TABLE_CONFIG.items() if val is not None}
+                table_data, own_table_headers, {config: val for config, val in TABLE_CONFIG.items() if val is not None}
             ),
         )
         # Add own section with linegraph for "Chromosome median / Autosomal median" metrics.
@@ -461,8 +464,7 @@ def make_data_for_linegraph_section(ploidy_data):
     # by iterating through the input data would result in wrong output if the first catched sample has
     # a sequence of metrics, which is distinct from the sequence of the same metrics in other samples.
     CHROMS = [
-        (str(chrom) + " median / autosomal median", str(chrom).upper())
-        for chrom in list(range(1, 23)) + ["x", "y"]
+        (str(chrom) + " median / autosomal median", str(chrom).upper()) for chrom in list(range(1, 23)) + ["x", "y"]
     ]
     for sample in ploidy_data:
         if PLOIDY_ESTIMATION in ploidy_data[sample] and EMPTY in ploidy_data[sample][PLOIDY_ESTIMATION]:
@@ -475,7 +477,9 @@ def make_data_for_linegraph_section(ploidy_data):
                 # in case the first catched sample does not contain all metrics.
                 else:
                     data[sample][chrom] = -1
-                    description = "Ratio of -1 means that metric is not present in the sample or its value is not a number."
+                    description = (
+                        "Ratio of -1 means that metric is not present in the sample or its value is not a number."
+                    )
     return {"data": data, "description": description}
 
 
@@ -523,17 +527,11 @@ def make_headers(metric_IDs):
             configs["order_priority"] = RESERVED + int(autosome_n)  # Order ascendingly.
             configs["title"] = autosome_n + "Med/AutMed"
             configs["description"] = (
-                "Median coverage of autosome "
-                + autosome_n
-                + " devided by the autosomal median coverage."
+                "Median coverage of autosome " + autosome_n + " devided by the autosomal median coverage."
             )
             _configs = STD_METRICS["autosome_n median / autosomal median"]
             configs.update(
-                {
-                    config: val
-                    for config, val in _configs.items()
-                    if config in SINGLE_HEADER or config in EXTRA_HEADER
-                }
+                {config: val for config, val in _configs.items() if config in SINGLE_HEADER or config in EXTRA_HEADER}
             )
             if autosome_n in _configs["extra"] and _configs["extra"][autosome_n]:
                 configs.update(_configs["extra"][autosome_n])
@@ -633,7 +631,8 @@ def create_parser():
             if not (ANY in SUPPORTED_SECTIONS or consistent_section in SUPPORTED_SECTIONS):
                 log_data["unknown_sections"].add(section)
             if not (
-                ANY in SUPPORTED_SECTIONS and ANY in SUPPORTED_SECTIONS[ANY]
+                ANY in SUPPORTED_SECTIONS
+                and ANY in SUPPORTED_SECTIONS[ANY]
                 or (
                     consistent_section in SUPPORTED_SECTIONS
                     and (
