@@ -243,18 +243,12 @@ class datatable(object):
                     )
 
         # Overwrite shared key settings and at the same time assign to buckets for sorting
-        # Within each section of headers, sort explicitly by 'title' if the dict
-        # is not already ordered, so the final ordering is by:
-        # placement > section > explicit_ordering > title
+        # So the final ordering is:
+        #   placement > section > explicit_ordering
         # Of course, the user can shuffle these manually.
         self.headers_in_order = defaultdict(list)
-
         for idx, hs in enumerate(headers):
-            keys_in_section = hs.keys()
-            if type(hs) is not OrderedDict:
-                keys_in_section = sorted(keys_in_section, key=lambda k: headers[idx][k]["title"])
-
-            for k in keys_in_section:
+            for k in hs.keys():
                 sk = headers[idx][k]["shared_key"]
                 if sk is not None:
                     headers[idx][k]["dmax"] = shared_keys[sk]["dmax"]
