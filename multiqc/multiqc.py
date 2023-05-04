@@ -383,7 +383,6 @@ def run(
     if config.no_version_check is not True:
         try:
             # Fetch the version info from the API
-            version_check_url = "https://api.multiqc.info/version"
             meta = {
                 "version_multiqc": config.short_version,
                 "version_python": platform.python_version(),
@@ -393,7 +392,7 @@ def run(
                 "is_conda": os.path.exists(os.path.join(sys.prefix, "conda-meta")),
                 "ci_environment": os.getenv("CI", False),
             }
-            r = requests.get(version_check_url, params=meta)
+            r = requests.get(config.version_check_url, params=meta)
             release_info = r.json()
             # Broadcast log messages if found
             for msg in release_info.get("broadcast_messages", []):
