@@ -58,6 +58,7 @@ setup(
         "jinja2>=3.0.0",
         "lzstring",
         "markdown",
+        "plotly",
         "pyyaml>=4",
         "requests",
         "rich>=10",
@@ -206,6 +207,7 @@ setup(
             "sections = multiqc.templates.sections",
             "simple = multiqc.templates.simple",
             "gathered = multiqc.templates.gathered",
+            "plotly = multiqc.templates.plotly",
             "geo = multiqc.templates.geo",
         ],
         ## See https://multiqc.info/docs/#multiqc-plugins for documentation
