@@ -8,6 +8,7 @@
 - Beeswarm plot now saves data to `multiqc_data`, same as tables ([#1861](https://github.com/ewels/MultiQC/issues/1861))
 - Don't print DOI in module if it's set to an empty string.
 - Don't sort table headers alphabetically if we don't have an `OrderedDict` - regular dicts are fine in Py3 ([#1866](https://github.com/ewels/MultiQC/issues/1866))
+- New back-end to preview + deploy the new website when the docs are edited.
 
 ### New Modules
 
