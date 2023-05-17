@@ -175,7 +175,4 @@ class MultiqcModule(BaseMultiqcModule):
                     # Add this column to the cell dictionary
                     samples[cell_name][key] = value
 
-        from pprint import pprint
-
-        # pprint(samples)
         return samples
