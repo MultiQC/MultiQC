@@ -1,4 +1,3 @@
-import csv
 import logging
 from collections import OrderedDict
 
