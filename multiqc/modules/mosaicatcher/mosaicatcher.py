@@ -56,6 +56,7 @@ class MultiqcModule(BaseMultiqcModule):
                 "title": "MosaiCatcher: coverage",
                 "height": 1024,
                 "ymax": 4e6,
+                "ylab": "Cells",
             },
         )
         self.add_section(
