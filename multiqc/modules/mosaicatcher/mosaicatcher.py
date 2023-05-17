@@ -71,73 +71,73 @@ class MultiqcModule(BaseMultiqcModule):
         for k in list(self._samples.values())[0]:
             headers[k] = {"title": k, "hidden": True}
 
-        headers["sample"] = {
+        headers["mosaicatcher-sample"] = {
             "title": "sample",
             "description": "Sample (has multiple cells)",
             "hidden": True,
         }
-        headers["cell"] = {
+        headers["mosaicatcher-cell"] = {
             "title": "cell",
             "description": "Name of the cell.",
             "hidden": False,
         }
-        headers["mapped"] = {
+        headers["mosaicatcher-mapped"] = {
             "title": "mapped",
             "max": 4e6,
             "description": "Total number of reads seen",
             "scale": "RdYlGn",
             "hidden": False,
         }
-        headers["suppl"] = {
+        headers["mosaicatcher-suppl"] = {
             "title": "suppl",
             "description": "Supplementary, secondary or QC-failed reads (filtered out)",
             "hidden": True,
         }
-        headers["dupl"] = {
+        headers["mosaicatcher-dupl"] = {
             "title": "dupl",
             "max": 3e6,
             "description": "Reads filtered out as PCR duplicates",
             "scale": "OrRd",
             "hidden": False,
         }
-        headers["mapq"] = {
+        headers["mosaicatcher-mapq"] = {
             "title": "mapq",
             "description": "Reads filtered out due to low mapping quality",
             "hidden": True,
         }
-        headers["read2"] = {
+        headers["mosaicatcher-read2"] = {
             "title": "read2",
             "description": "Reads filtered out as 2nd read of pair",
             "hidden": True,
         }
-        headers["good"] = {
+        headers["mosaicatcher-good"] = {
             "title": "good",
             "max": 8e5,
             "scale": "RdYlGn",
             "description": "Reads used for counting.",
             "hidden": False,
         }
-        headers["pass1"] = {
+        headers["mosaicatcher-pass1"] = {
             "title": "pass1",
             "description": "Enough coverage? If false, ignore all columns from now",
             "hidden": False,
         }
-        headers["nb_p"] = {
+        headers["mosaicatcher-nb_p"] = {
             "title": "nb_p",
             "description": "Negative Binomial parameter p. Constant for one sample.",
             "hidden": True,
         }
-        headers["nb_r"] = {
+        headers["mosaicatcher-nb_r"] = {
             "title": "nb_r",
             "description": "Negative Binomial parameter r. We use NB(p,r/2) * NB(p,r/2) in WC states, but NB(p,(1-a)*r)*NB(p,a*r) in WW or CC states.",
             "hidden": True,
         }
-        headers["nb_a"] = {
+        headers["mosaicatcher-nb_a"] = {
             "title": "nb_a",
             "description": "Negative Binomial parameter a (alpha) used for zero expectation (see above).",
             "hidden": True,
         }
-        headers["bam"] = {
+        headers["mosaicatcher-bam"] = {
             "title": "bam",
             "description": "Bam file of this cell",
             "hidden": True,
