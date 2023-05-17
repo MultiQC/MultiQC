@@ -856,5 +856,5 @@ whatshap/stats:
   contents: "#sample	chromosome	file_name	variants	phased	unphased	singletons"
   num_lines: 1
 mosaicatcher:
-  fn: "*.info_raw"
-  # fn: "*.info"
+  contents: "# sample:  Sample (has multiple cells)"
+  fn: "*.mosaicatcher_info_raw.txt"

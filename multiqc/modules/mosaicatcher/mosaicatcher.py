@@ -55,6 +55,7 @@ class MultiqcModule(BaseMultiqcModule):
                 "id": "mosaicatcher-coverage",
                 "title": "MosaiCatcher: coverage",
                 "height": 1024,
+                "ymax": 4e6,
             },
         )
         self.add_section(
@@ -81,7 +82,9 @@ class MultiqcModule(BaseMultiqcModule):
         }
         headers["mapped"] = {
             "title": "mapped",
+            "max": 4e6,
             "description": "Total number of reads seen",
+            "scale": "RdYlGn",
             "hidden": False,
         }
         headers["suppl"] = {
@@ -91,7 +94,9 @@ class MultiqcModule(BaseMultiqcModule):
         }
         headers["dupl"] = {
             "title": "dupl",
+            "max": 3e6,
             "description": "Reads filtered out as PCR duplicates",
+            "scale": "OrRd",
             "hidden": False,
         }
         headers["mapq"] = {
@@ -106,6 +111,8 @@ class MultiqcModule(BaseMultiqcModule):
         }
         headers["good"] = {
             "title": "good",
+            "max": 8e5,
+            "scale": "RdYlGn",
             "description": "Reads used for counting.",
             "hidden": False,
         }
@@ -142,7 +149,6 @@ class MultiqcModule(BaseMultiqcModule):
 
         for row in f["f"].split("\n"):
             tmp_row = row.split("\t")
-            # print(tmp_row)
             if len(tmp_row) != 14:
                 continue
 
@@ -167,9 +173,7 @@ class MultiqcModule(BaseMultiqcModule):
                         continue
 
                     if key == "pass1":
-                        print(value)
                         value = True if value == "1" else False
-                        print(value)
 
                     # Add this column to the cell dictionary
                     samples[cell_name][key] = value
