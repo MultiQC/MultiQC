@@ -7,6 +7,8 @@
 - Table code now tolerates lambda function calls with bad data ([#1739](https://github.com/ewels/MultiQC/issues/1739))
 - Beeswarm plot now saves data to `multiqc_data`, same as tables ([#1861](https://github.com/ewels/MultiQC/issues/1861))
 - Don't print DOI in module if it's set to an empty string.
+- Don't sort table headers alphabetically if we don't have an `OrderedDict` - regular dicts are fine in Py3 ([#1866](https://github.com/ewels/MultiQC/issues/1866))
+- New back-end to preview + deploy the new website when the docs are edited.
 
 ### New Modules
 
@@ -15,7 +17,7 @@
 - **Conpair**
   - Bugfix: allow to find and proprely parse the `concordance` output of Conpair, which may output 2 kinds of format for `concordance` depending if it's ran with or without `--outfile` ([#1851](https://github.com/ewels/MultiQC/issues/1851))
 - **Cell Ranger**
-  - Bugfix: avoid `KeyError` exception when parsing Cell Ranger 7.x web_summary.html
+  - Bugfix: avoid multiple `KeyError` exceptions when parsing Cell Ranger 7.x `web_summary.html` ([#1853](https://github.com/ewels/MultiQC/issues/1853), [#1871](https://github.com/ewels/MultiQC/issues/1871))
 - **DRAGEN**
   - Restored functionality to show target BED coverage metrics ([#1844](https://github.com/ewels/MultiQC/issues/1844))
 - **filtlong**

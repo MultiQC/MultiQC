@@ -301,10 +301,13 @@ remove_sections:
   - second-section-id
 ```
 
+:::tip
 The section ID is the string appended to the URL when clicking a report section in the navigation.
+
 For example, the GATK module has a section with the title _"Compare Overlap"_. When clicking that
 in the report's left hand side navigation, the web browser URL has `#gatk-compare-overlap`
 appended. Here, you would add `gatk-compare-overlap` to the `remove_sections` config.
+:::
 
 Finally, you can prevent MultiQC from finding the files for a module or submodule by customising
 its search pattern. For example, to skip Picard Base Calling metrics, you could use the following:
