@@ -15,7 +15,7 @@
 ### Module updates
 
 - **Cell Ranger**
-  - Bugfix: avoid `KeyError` exception when parsing Cell Ranger 7.x web_summary.html
+  - Bugfix: avoid multiple `KeyError` exceptions when parsing Cell Ranger 7.x `web_summary.html` ([#1853](https://github.com/ewels/MultiQC/issues/1853), [#1871](https://github.com/ewels/MultiQC/issues/1871))
 - **DRAGEN**
   - Restored functionality to show target BED coverage metrics ([#1844](https://github.com/ewels/MultiQC/issues/1844))
 - **filtlong**
