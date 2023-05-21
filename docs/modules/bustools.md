@@ -1,7 +1,7 @@
 ---
-Name: bustools
-URL: https://bustools.github.io/
-Description: >
+name: bustools
+url: https://bustools.github.io/
+description: >
   BUS format is a file format for single-cell RNA-seq data designed to
   facilitate the development of modular workflows for data processing.
 ---

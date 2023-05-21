@@ -1,7 +1,7 @@
 ---
-Name: pbmarkdup
-URL: https://github.com/PacificBiosciences/pbmarkdup
-Description: >
+name: pbmarkdup
+url: https://github.com/PacificBiosciences/pbmarkdup
+description: >
   pbmarkdup takes one or multiple sequencing chips of an amplified libray as
   HiFi reads and marks or removes duplicates.
 ---

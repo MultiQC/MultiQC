@@ -1,7 +1,7 @@
 ---
-Name: Filtlong
-URL: https://github.com/rrwick/Filtlong
-Description: Filtlong is a tool for filtering long reads by quality.
+name: Filtlong
+url: https://github.com/rrwick/Filtlong
+description: Filtlong is a tool for filtering long reads by quality.
 ---
 
 [Filtlong](https://github.com/rrwick/Filtlong) is a tool for filtering long reads by quality.

@@ -1,7 +1,7 @@
 ---
-Name: MTNucRatio
-URL: http://www.github.com/apeltzer/MTNucRatioCalculator
-Description: >
+name: MTNucRatio
+url: http://www.github.com/apeltzer/MTNucRatioCalculator
+description: >
   A simple tool to compute mitochondrial to nuclear genome ratios.
 ---
 

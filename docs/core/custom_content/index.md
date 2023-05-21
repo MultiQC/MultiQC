@@ -1,3 +1,9 @@
+---
+title: Custom Content
+description: Report on your data, even without a MultiQC module
+order: 2
+---
+
 # Introduction
 
 Bioinformatics projects often include non-standardised analyses, with results from custom
@@ -14,9 +20,11 @@ All plot types can be generated using custom content - see the
 [test files](https://github.com/ewels/MultiQC_TestData/tree/master/data/custom_content)
 for examples of how data should be structured.
 
-> **Note**: Use the name `custom_content` to refer to this module within configuration
-> settings that require a module name, such as [`module_order`](#order-of-modules) or
-> [`run_modules`](#removing-modules-or-sections).
+:::note
+Use the name `custom_content` to refer to this module within configuration
+settings that require a module name, such as [`module_order`](#order-of-modules) or
+[`run_modules`](#removing-modules-or-sections).
+:::
 
 ## Data from a released tool
 
@@ -138,8 +146,10 @@ To see examples of typical file structures which are understood, see the
 [test data](https://github.com/ewels/MultiQC_TestData/tree/master/data/custom_content/no_config)
 used to develop this code. Something will be probably be shown, but it may produce unexpected results.
 
-> **Note:** Check [Tricky extras](#tricky-extras) for certain caveats about formatting headers for custom
-> `tsv` or `csv` files, particularly for the first column.
+:::note
+Check [Tricky extras](#tricky-extras) for certain caveats about formatting headers for custom
+`tsv` or `csv` files, particularly for the first column.
+:::
 
 ## Data as part of MultiQC config
 
@@ -204,8 +214,10 @@ custom_data:
         col_2: 1.9
 ```
 
-> **Note:** Use a **list** of headers in `pconfig` (keys prepended with `-`) to specify the order
-> of columns in the General Statistics table.
+:::note
+Use a **list** of headers in `pconfig` (keys prepended with `-`) to specify the order
+of columns in the General Statistics table.
+:::
 
 See the [general statistics docs](http://multiqc.info/docs/#step-3-adding-to-the-general-statistics-table)
 for more information about configuring data for the General Statistics table.
@@ -314,7 +326,7 @@ To find out what your custom content section ID is, generate a report and click
 the side navigation to your section. The browser URL should update and show something
 that looks like this:
 
-```txt
+```
 multiqc_report.html#my_cc_section
 ```
 

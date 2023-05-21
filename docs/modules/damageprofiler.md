@@ -1,7 +1,7 @@
 ---
-Name: DamageProfiler
-URL: https://github.com/Integrative-Transcriptomics/DamageProfiler
-Description: >
+name: DamageProfiler
+url: https://github.com/Integrative-Transcriptomics/DamageProfiler
+description: >
   DNA damage investigation tool for ancient DNA analysis
 ---
 

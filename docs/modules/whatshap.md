@@ -1,7 +1,7 @@
 ---
-Name: WhatsHap
-URL: https://whatshap.readthedocs.io
-Description: >
+name: WhatsHap
+url: https://whatshap.readthedocs.io
+description: >
   WhatsHap is a software for phasing genomic variants using DNA sequencing reads,
   also called read-based phasing or haplotype assembly. It is especially
   suitable for long reads, but works also well with short reads.  ---

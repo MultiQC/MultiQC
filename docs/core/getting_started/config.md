@@ -1,3 +1,9 @@
+---
+title: Configuration
+description: Settings to tweak how MultiQC works
+order: 4
+---
+
 # Configuring MultiQC
 
 Whilst most MultiQC settings can be specified on the command line, MultiQC
@@ -20,9 +26,13 @@ it collects the configuration settings from the following places in this order
 ## Sample name cleaning
 
 MultiQC typically generates sample names by taking the input or log file name,
-and 'cleaning' it. To do this, it uses the `fn_clean_exts` settings and looks
-for any matches. If it finds any matches, everything to the right is removed.
-For example, consider the following config:
+and 'cleaning' it.
+
+### Cleaning extensions
+
+To do this, it uses the `fn_clean_exts` settings and looks for any matches. If it finds any matches, everything to the right is removed.
+
+:::info{title=Example}
 
 ```yaml
 fn_clean_exts:
@@ -30,25 +40,45 @@ fn_clean_exts:
   - ".fastq"
 ```
 
-This would make the following sample names:
+| Input                                    | Cleaned sample name |
+| ---------------------------------------- | ------------------- |
+| `mysample.fastq.gz`                      | `mysample`          |
+| `secondsample.fastq.gz_trimming_log.txt` | `secondsample`      |
+| `thirdsample.vcf.gz_report.txt`          | `thirdsample.vcf`   |
 
-```txt
-mysample.fastq.gz  ->  mysample
-secondsample.fastq.gz_trimming_log.txt  ->  secondsample
-thirdsample.fastq_aligned.sam.gz  ->  thirdsample
-```
+:::
 
-There is also a config list called `fn_clean_trim` which just removes
-strings if they are present at the start or end of the sample name.
-
-Usually you don't want to overwrite the defaults (though you can).
-Instead, add to the special variable names `extra_fn_clean_exts`
-and `extra_fn_clean_trim`:
+To add to the MultiQC defaults instead of overwriting them, use `extra_fn_clean_exts`:
 
 ```yaml
 extra_fn_clean_exts:
   - ".myformat"
   - "_processedFile"
+```
+
+### Trimming extensions
+
+To remove a substring only if it is at the start or end of a sample name, rather than trimming it and everything after it, use `fn_clean_trim`.
+
+:::info{title=Example}
+
+```yaml
+fn_clean_trim:
+  - ".fastq.gz"
+  - "_report.txt"
+```
+
+| Input                                    | Cleaned sample name                      |
+| ---------------------------------------- | ---------------------------------------- |
+| `mysample.fastq.gz`                      | `mysample`                               |
+| `secondsample.fastq.gz_trimming_log.txt` | `secondsample.fastq.gz_trimming_log.txt` |
+| `thirdsample.vcf.gz_report.txt`          | `thirdsample.vcf.gz`                     |
+
+:::
+
+Again, to add to the MultiQC defaults instead of overwriting them, use `extra_fn_clean_trim`:
+
+```yaml
 extra_fn_clean_trim:
   - "#"
   - ".myext"
@@ -56,19 +86,16 @@ extra_fn_clean_trim:
 
 ### Other search types
 
-File name cleaning can also take strings to remove (instead of removing with truncation).
-Also regex strings can be supplied to match patterns and remove or keep matching substrings.
+If needed, you can specify different string matching methods to `fn_clean_exts` and `extra_fn_clean_exts` for more complex sample name cleaning:
 
 #### `truncate` (default)
 
-If you just supply a string, the default behavior is similar to "trim". The filename will be truncated beginning with the matching string.
+This is the default method as described above. The two examples below are equivalent:
 
 ```yaml
 extra_fn_clean_exts:
   - ".fastq"
 ```
-
-The above is equivalent to the more explicit:
 
 ```yaml
 extra_fn_clean_exts:
@@ -76,16 +103,12 @@ extra_fn_clean_exts:
     pattern: ".fastq"
 ```
 
-This rule would produce the following sample names:
+#### `remove`
 
-```txt
-mysample.fastq.gz  ->  mysample
-thirdsample.fastq_aligned.sam.gz  ->  thirdsample
-```
+The `remove` type allows you to remove an exact match from the filename.
+This includes removing a subtring within the middle of a sample name.
 
-#### `remove` (formerly `replace`)
-
-The `remove` type allows you to remove the exact match from the filename.
+:::info{title=Example}
 
 ```yaml
 extra_fn_clean_exts:
@@ -93,15 +116,18 @@ extra_fn_clean_exts:
     pattern: .sorted
 ```
 
-This rule would produce the following sample names:
+| Input                               | Cleaned sample name         |
+| ----------------------------------- | --------------------------- |
+|  `secondsample.sorted.deduplicated` | `secondsample.deduplicated` |
 
-```txt
-secondsample.sorted.deduplicated  ->  secondsample.deduplicated
-```
+:::
 
 #### `regex`
 
-You can also remove a substring with a regular expression. Here's a [good resource](https://regex101.com/) to interactively try it out.
+You can also remove a substring with a regular expression.
+A useful website to work with writing regexes is <https://regex101.com>.
+
+:::info{title=Example}
 
 ```yaml
 extra_fn_clean_exts:
@@ -109,15 +135,18 @@ extra_fn_clean_exts:
     pattern: "^processed."
 ```
 
-This rule would produce the following sample names:
+| Input                             | Cleaned sample name     |
+| --------------------------------- | ----------------------- |
+| `processed.thirdsample.processed` | `thirdsample.processed` |
 
-```txt
-processed.thirdsample.processed  ->  thirdsample.processed
-```
+:::
 
 #### `regex_keep`
 
-If you'd rather like to _keep_ the match of a regular expression you can use the `regex_keep` type. This simplifies things if you can e.g. directly target samples names.
+If you'd rather like to only _keep_ the match of a regular expression and discard everything else, you can use the `regex_keep` type.
+This is particularly useful if you have predictable sample names or identifiers.
+
+:::info{title=Example}
 
 ```yaml
 extra_fn_clean_exts:
@@ -125,11 +154,11 @@ extra_fn_clean_exts:
     pattern: "[A-Z]{3}[1-9]{2}"
 ```
 
-This rule would produce the following sample names:
+| Input                                     | Cleaned sample name |
+| ----------------------------------------- | ------------------- |
+| `merged.recalibrated.XZY97.alignment.bam` | `XZY97`             |
 
-```txt
-merged.recalibrated.XZY97.alignment.bam  ->  XZY97
-```
+:::
 
 #### `module`
 
@@ -176,7 +205,7 @@ If the directories are different, this can be avoided with the `--dirs`/`-d` fla
 
 For example, given the following files:
 
-```txt
+```
 ├── analysis_1
 │   └── sample_1.fastq.gz.aligned.log
 ├── analysis_2
@@ -187,7 +216,7 @@ For example, given the following files:
 
 Running `multiqc -d .` will give the following sample names:
 
-```txt
+```
 analysis_1 | sample_1
 analysis_2 | sample_1
 analysis_3 | sample_1
@@ -198,14 +227,14 @@ analysis_3 | sample_1
 If the problem is with filename truncation, you can also use the `--fullnames`/`-s` flag,
 which disables all sample name cleaning. For example:
 
-```txt
+```
 ├── sample_1.fastq.gz.aligned.log
 └── sample_1.fastq.gz.subsampled.fastq.gz.aligned.log
 ```
 
 Running `multiqc -s .` will give the following sample names:
 
-```txt
+```
 sample_1.fastq.gz.aligned.log
 sample_1.fastq.gz.subsampled.fastq.gz.aligned.log
 ```
@@ -287,7 +316,7 @@ option simply adds to all of these).
 
 For example, given the following files:
 
-```txt
+```
 ├── analysis_1
 │   └── sample_1.fastq.gz.aligned.log
 ├── analysis_2
@@ -431,7 +460,7 @@ to the bottom of your report describing how much time it spent searching files a
 what it did with those files. You'll also get a breakdown in the command-line log
 of how long the different steps of MultiQC execution took:
 
-```txt
+```
 [INFO   ]         multiqc : MultiQC complete
 [INFO   ]         multiqc : Run took 35.28 seconds
 [INFO   ]         multiqc :  - 31.01s: Searching files

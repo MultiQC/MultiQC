@@ -1,7 +1,7 @@
 ---
-Name: QUAST
-URL: http://quast.bioinf.spbau.ru/
-Description: >
+name: QUAST
+url: http://quast.bioinf.spbau.ru/
+description: >
   A Quality Assessment Tool for Genome Assemblies by
   the Center for Algorithmic Biotechnology.
 ---

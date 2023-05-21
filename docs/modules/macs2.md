@@ -1,7 +1,7 @@
 ---
-Name: MACS2
-URL: https://github.com/taoliu/MACS
-Description: >
+name: MACS2
+url: https://github.com/taoliu/MACS
+description: >
   MACS2 identifies transcription factor binding sites in ChIP-seq data.
 ---
 

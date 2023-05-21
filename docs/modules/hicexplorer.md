@@ -1,7 +1,7 @@
 ---
-Name: HiCExplorer
-URL: https://hicexplorer.readthedocs.io
-Description: >
+name: HiCExplorer
+url: https://hicexplorer.readthedocs.io
+description: >
   HiCexplorer addresses the common tasks of Hi-C analysis from processing to visualization.
 ---
 
