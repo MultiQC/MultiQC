@@ -142,7 +142,7 @@ class DragenMappingMetics(BaseMultiqcModule):
                 rrna_filtered_reads_key = None
 
             if data.get("Mapped reads R2", None) == 0:
-                log.warning(f"single-ended data detected, skipping mapping/paired percentages plot for: {sample_id}")
+                log.debug(f"single-ended data detected, skipping mapping/paired percentages plot for: {sample_id}")
             elif data.get("Not properly paired reads (discordant)", 0) + data.get(
                 "Properly paired reads", 0
             ) + data.get("Singleton reads (itself mapped; mate unmapped)", 0) + data.get("Unmapped reads", 0) + (
