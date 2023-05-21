@@ -1,7 +1,7 @@
 ---
-Name: methylQA
-URL: http://methylqa.sourceforge.net/
-Description: >
+name: methylQA
+url: http://methylqa.sourceforge.net/
+description: >
   methylQA is a methylation sequencing data quality assessment tool.
 ---
 

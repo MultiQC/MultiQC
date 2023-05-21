@@ -12,7 +12,7 @@ jobs:
         name: Check out source-code repository
 
       - name: Set up Python 3.7
-        uses: actions/setup-python@v1
+        uses: actions/setup-python@v3
         with:
           python-version: 3.7
 

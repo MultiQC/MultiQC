@@ -1,7 +1,7 @@
 ---
-Name: Kallisto
-URL: http://pachterlab.github.io/kallisto/
-Description: >
+name: Kallisto
+url: http://pachterlab.github.io/kallisto/
+description: >
   kallisto is a program for quantifying abundances of transcripts from RNA-Seq data.
 ---
 
