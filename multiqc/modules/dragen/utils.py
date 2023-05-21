@@ -155,7 +155,7 @@ def check_duplicate_samples(sample_names, logger, module):
                 message += line2.format(file_handler["fn"], file_handler["root"])
     if message:
         message = "\n\nDuplicate sample names were found. The last one overwrites previous data." + message
-        logger.warning(message)
+        logger.debug(message)
 
 
 def order_headers(headers):
