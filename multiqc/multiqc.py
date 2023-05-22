@@ -922,8 +922,7 @@ def run(
                     config.output_fn_name = os.path.basename(config.output_fn)
                 config.data_dir_name = os.path.basename(config.data_dir)
                 config.plots_dir_name = os.path.basename(config.plots_dir)
-                logger.warning("Previous MultiQC output found! Adjusting filenames..")
-                logger.warning("Use -f or --force to overwrite existing reports instead")
+                logger.info("Existing reports found, adding suffix to filenames. Use '--force' to overwrite.")
 
         # Make directories for report if needed
         if config.make_report:
