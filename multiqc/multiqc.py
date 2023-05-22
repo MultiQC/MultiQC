@@ -746,6 +746,12 @@ def run(
         report.runtimes["mods"][run_module_names[mod_idx]] = time.time() - mod_starttime
     report.runtimes["total_mods"] = time.time() - total_mods_starttime
 
+    # Add section for software versions if any are found
+    if report.software_versions:
+        from multiqc.utils import software_versions
+
+        report.modules_output.append(software_versions.MultiqcModule())
+
     # Special-case module if we want to profile the MultiQC running time
     if config.profile_runtime:
         from multiqc.utils import profile_runtime

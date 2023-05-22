@@ -12,6 +12,7 @@ import textwrap
 from collections import OrderedDict
 
 import markdown
+from pkg_resources import packaging
 
 from multiqc.utils import config, report, util_functions
 
@@ -74,6 +75,9 @@ class BaseMultiqcModule(object):
             self.doi_link = '<em class="text-muted small" style="margin-left: 1rem;">DOI: {}.</em>'.format(
                 "; ".join(doi_links)
             )
+
+        # List of software version
+        self.versions = []
 
         if target is None:
             target = self.name
@@ -481,6 +485,27 @@ class BaseMultiqcModule(object):
             report.data_sources[module][section][s_name] = source
         except AttributeError:
             logger.warning("Tried to add data source for {}, but was missing fields data".format(self.name))
+
+    def add_software_version(self, version: str):
+        """Save software versions for module."""
+        # Check if version string is PEP 440 compliant to enable version normalization and proper ordering.
+        # Otherwise use raw string is used for version.
+        # - https://peps.python.org/pep-0440/
+        try:
+            version = packaging.version.parse(version)
+        except packaging.version.InvalidVersion:
+            logger.debug(f"Version '{version}' in module {self.name} does not conform to PEP 440 format")
+
+        if version in self.versions:
+            return
+
+        self.versions.append(version)
+
+        # Sort version in order newest --> oldest
+        self.versions.sort(reverse=True)
+
+        # Update version list for report section.
+        report.software_versions[self.name] = self.versions
 
     def write_data_file(self, data, fn, sort_cols=False, data_format=None):
         """Saves raw data to a dictionary for downstream use, then redirects

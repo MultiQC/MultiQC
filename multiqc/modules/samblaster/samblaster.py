@@ -12,6 +12,8 @@ from multiqc.plots import bargraph
 # Initialise the logger
 log = logging.getLogger(__name__)
 
+VERSION_REGEX = r"Version\ (\d{1}.\d+.\d+)"
+
 
 class MultiqcModule(BaseMultiqcModule):
     """Samblaster"""
@@ -86,6 +88,9 @@ class MultiqcModule(BaseMultiqcModule):
         s_name = None
         fh = f["f"]
         for l in fh:
+            match = re.search(VERSION_REGEX, l)
+            if match is not None:
+                self.add_software_version(match.group(1))
             # try to find name from RG-tag. If bwa mem is used upstream samblaster with pipes, then the bwa mem command
             # including the read group will be written in the log
             match = re.search(rgtag_name_regex, l)
