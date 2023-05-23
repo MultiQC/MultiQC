@@ -639,7 +639,7 @@ The version number here (`0.1.22`) can be extracted using the regex pattern
 
 ```python
 for line in f.splitlines():
-    version = re.search(`r'Version\ (\d{1}.\d+.\d+)'`, line)
+    version = re.search(r'Version\ (\d{1}.\d+.\d+)', line)
     if version is not None:
         self.add_software_version(version.group(1))
 ```
