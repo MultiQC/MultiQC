@@ -749,7 +749,7 @@ def run(
     # Parse software version from separate YAML file if it exists
     versions_from_file = software_versions.load_versions_from_yaml(config.version_fn_name)
     if versions_from_file:
-        name_to_module = {module.name: module for module in report.modules_output}
+        name_to_module = {module.anchor: module for module in report.modules_output}
         for software, versions in versions_from_file.items():
             # Try to find if the software is listed among the executed modules. Unlisted software are still
             # reported in the `Software Versions` section.
