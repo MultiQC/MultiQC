@@ -28,7 +28,7 @@ import rich_click as click
 from rich.syntax import Syntax
 
 from .plots import table
-from .utils import config, lint_helpers, log, megaqc, plugin_hooks, report, util_functions, software_versions
+from .utils import config, lint_helpers, log, megaqc, plugin_hooks, report, software_versions, util_functions
 
 # Set up logging
 start_execution_time = time.time()
