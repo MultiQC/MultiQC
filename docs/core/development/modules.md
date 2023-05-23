@@ -619,6 +619,40 @@ are as shown:
 self.add_data_source(f=None, s_name=None, source=None, module=None, section=None)
 ```
 
+### Saving version information
+
+Software version information may be present in the log files of some tools. The 
+version number can be included in the report by passing it to the method 
+`self.add_software_version`. Let's use this `samblaster` log below as an example.
+
+```bash
+samblaster: Version 0.1.22
+samblaster: Opening /home/vagrant/samblaster_standalone.sam for read.
+samblaster: Outputting to stdout
+samblaster: Loaded 86 header sequence entries.
+samblaster: Marked 0 of 117 (0.00%) read ids as duplicates using 2752k memory in 0.000S CPU seconds and 0S wall time.
+```
+
+The version number here (`0.1.22`) can be extracted using the regex pattern 
+`r'Version\ (\d{1}.\d+.\d+)'`. The we can use the input to call
+ `self.add_software_version`. 
+
+```python
+for line in f.splitlines():
+    version = re.search(`r'Version\ (\d{1}.\d+.\d+)'`, line)
+    if version is not None:
+        self.add_software_version(version.group(1))
+```
+
+The version number will now appear after the module header in the report as 
+well as in the section `Software Versions` in the end of the report. 
+
+:::tip
+For tools that don't output software versions in their logs these can instead 
+be provided in a separate YAML file. See [Customising Reports](https://multiqc.info/docs/reports/customisation/#listing-software-versions) 
+for details.
+:::
+
 ## Step 3 - Adding to the general statistics table
 
 Now that you have your parsed data, you can start inserting it into the

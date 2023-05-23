@@ -84,6 +84,29 @@ Then this will be displayed at the top of reports:
 
 Note that you can also specify a path to a config file using `-c`.
 
+## Listing software versions
+
+For some modules the software version can be parsed from the log files. If version 
+information is not included in the log files you can instead add them by providing 
+a separate YAML file. By default MultiQC will look for a YAML file called 
+`multiqc_versions.yaml` in you current directory. You can also provide the path 
+the YAML file through the parameter `version_fn_name` in you configs, for example:
+
+```yaml
+version_fn_name: path/to/versions.yaml
+```
+
+Software versions are specified in the YAML as pairs of software names and version 
+strings. Multiple version of the same software are specified as lists. Example:
+
+```yaml
+samblaster: "0.1.24"
+samtools:
+  - "1.15"
+  - "1.10"
+some_other_tool: "2023-1"
+```
+
 ## Sample name replacement
 
 Occasionally, when you run MultiQC you may know that you want to change the resulting
