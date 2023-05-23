@@ -28,7 +28,7 @@ import rich_click as click
 from rich.syntax import Syntax
 
 from .plots import table
-from .utils import config, lint_helpers, log, megaqc, plugin_hooks, report, util_functions
+from .utils import config, lint_helpers, log, megaqc, plugin_hooks, report, util_functions, software_versions
 
 # Set up logging
 start_execution_time = time.time()
@@ -746,10 +746,28 @@ def run(
         report.runtimes["mods"][run_module_names[mod_idx]] = time.time() - mod_starttime
     report.runtimes["total_mods"] = time.time() - total_mods_starttime
 
+    # Parse software version from separate YAML file if it exists
+    versions_from_file = software_versions.load_versions_from_yaml(config.version_fn_name)
+    if versions_from_file:
+        name_to_module = {module.name: module for module in report.modules_output}
+        for software, versions in versions_from_file.items():
+            # Try to find if the software is listed among the executed modules. Unlisted software are still
+            # reported in the `Software Versions` section.
+            module_name = software_versions.find_matching_module(software, name_to_module)
+            if module_name is None:
+                logger.debug(
+                    "No executed modules matches '{}' listed in '{}'.".format(software, config.version_fn_name)
+                )
+                versions = list(set(map(str, versions)))
+                versions.sort(reverse=True)
+                report.software_versions[software] = versions
+            else:
+                module = name_to_module[module_name]
+                for version in versions:
+                    module.add_software_version(str(version))
+
     # Add section for software versions if any are found
     if report.software_versions:
-        from multiqc.utils import software_versions
-
         report.modules_output.append(software_versions.MultiqcModule())
 
     # Special-case module if we want to profile the MultiQC running time

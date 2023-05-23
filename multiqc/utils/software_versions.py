@@ -4,9 +4,12 @@
 
 
 import logging
+import os
 
 from multiqc.modules.base_module import BaseMultiqcModule
 from multiqc.utils import report
+
+import yaml
 
 # Initialise the logger
 log = logging.getLogger(__name__)
@@ -37,3 +40,40 @@ class MultiqcModule(BaseMultiqcModule):
         content += "</dl>\n"
 
         self.add_section(name=None, content=content)
+
+
+def load_versions_from_yaml(file_name):
+    """Try to load software versions from any YAML file in current directory."""
+    if not os.path.isfile(file_name):
+        file_name = file_name.replace(".yaml", ".yml")
+
+    if not os.path.isfile(file_name):
+        return {}
+
+    with open(file_name) as f:
+        try:
+            log.debug("Reading software versions settings from: {}".format(file_name))
+            software_versions = yaml.safe_load(f)
+        except yaml.scanner.ScannerError as e:
+            log.error("Error parsing versions YAML: {}".format(e))
+            return {}
+
+    # Parse the versions in YAML and make sure that each software maps to a list of version strings
+    for software in list(software_versions):
+        versions = software_versions[software]
+        if type(versions) != list:
+            versions = [versions]
+        versions = [str(version) for version in versions]
+        software_versions[software] = versions
+
+    return software_versions
+
+
+def find_matching_module(software_name: str, modules):
+    if software_name in modules:
+        return software_name
+
+    if software_name.capitalize() in modules:
+        return software_name.capitalize()
+
+    return None
