@@ -623,25 +623,29 @@ self.add_data_source(f=None, s_name=None, source=None, module=None, section=None
 
 Software version information may be present in the log files of some tools. The
 version number can be included in the report by passing it to the method
-`self.add_software_version`. Let's use this `samblaster` log below as an example.
+`self.add_software_version`. Let's use this `samtools stats` log below as an example.
 
 ```bash
-samblaster: Version 0.1.22
-samblaster: Opening /home/vagrant/samblaster_standalone.sam for read.
-samblaster: Outputting to stdout
-samblaster: Loaded 86 header sequence entries.
-samblaster: Marked 0 of 117 (0.00%) read ids as duplicates using 2752k memory in 0.000S CPU seconds and 0S wall time.
+# This file was produced by samtools stats (1.3+htslib-1.3) and can be plotted using plot-bamstats
+# This file contains statistics for all reads.
+# The command line was:  stats /home/lp113/bcbio-nextgen/tests/test_automated_output/align/Test1/Test1.sorted.bam
+# CHK, Checksum [2]Read Names   [3]Sequences    [4]Qualities
+# CHK, CRC32 of reads which passed filtering followed by addition (32bit overflow)
+CHK     560674ab        1165a6ca        7b309ac6
+# Summary Numbers. Use `grep ^SN | cut -f 2-` to extract this part.
+SN      raw total sequences:    101
+...
 ```
 
-The version number here (`0.1.22`) can be extracted using the regex pattern
-`r'Version\ (\d{1}.\d+.\d+)'`. The we can use the input to call
-`self.add_software_version`.
+The version number here (`1.3`) can be extracted using the regex pattern
+`r"\((\d+.(\d+|\d+.\d+))\+"` that also allows for patches e.g. `1.3.1`. The we can use the input to call
+`self.add_software_version`. We also provide the sample name, `f["s_name"]` in this case, so that we don't add versions for samples that should be ignored.
 
 ```python
 for line in f.splitlines():
-    version = re.search(r'Version\ (\d{1}.\d+.\d+)', line)
+    version = re.search(r"\((\d+.(\d+|\d+.\d+))\+", line)
     if version is not None:
-        self.add_software_version(version.group(1))
+        self.add_software_version(f["s_name"], version.group(1))
 ```
 
 The version number will now appear after the module header in the report as
