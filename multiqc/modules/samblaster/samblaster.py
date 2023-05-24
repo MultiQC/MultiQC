@@ -86,11 +86,12 @@ class MultiqcModule(BaseMultiqcModule):
         rgtag_name_regex = "\\\\tID:(\S*?)\\\\t"
         data = {}
         s_name = None
+        version = None
         fh = f["f"]
         for l in fh:
             match = re.search(VERSION_REGEX, l)
             if match is not None:
-                self.add_software_version(match.group(1))
+                version = match.group(1)
             # try to find name from RG-tag. If bwa mem is used upstream samblaster with pipes, then the bwa mem command
             # including the read group will be written in the log
             match = re.search(rgtag_name_regex, l)
@@ -115,6 +116,9 @@ class MultiqcModule(BaseMultiqcModule):
 
         if s_name is None:
             s_name = f["s_name"]
+
+        if version is not None:
+            self.add_software_version(s_name, version)
 
         if len(data) > 0:
             if s_name in self.samblaster_data:

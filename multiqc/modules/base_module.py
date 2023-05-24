@@ -486,8 +486,12 @@ class BaseMultiqcModule(object):
         except AttributeError:
             logger.warning("Tried to add data source for {}, but was missing fields data".format(self.name))
 
-    def add_software_version(self, version: str):
+    def add_software_version(self, sample: str, version: str):
         """Save software versions for module."""
+        # Don't add if sample is ignored
+        if self.is_ignore_sample(sample):
+            return
+
         # Check if version string is PEP 440 compliant to enable version normalization and proper ordering.
         # Otherwise use raw string is used for version.
         # - https://peps.python.org/pep-0440/
