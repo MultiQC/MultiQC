@@ -580,6 +580,10 @@ module_order:
       module_tag:
         - DNA
         - RNA
+  - fadu:
+      module_tag:
+        - RNA
+        - prokaryotic
 
   # Alignment tool stats
   - bbmap:
