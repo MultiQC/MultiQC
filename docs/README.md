@@ -79,6 +79,7 @@ MultiQC Modules:
     deepTools: modules/deeptools.md
     Disambiguate: modules/disambiguate.md
     EigenStratDatabseTools: modules/eigenstratdatabasetools.md
+    FADU: modules/fadu.md
     featureCounts: modules/featureCounts.md
     fgbio: modules/fgbio.md
     GATK: modules/gatk.md
