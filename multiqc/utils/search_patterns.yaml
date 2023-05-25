@@ -313,6 +313,8 @@ dragen_fastqc:
   fn: "*.fastqc_metrics.csv"
 eigenstratdatabasetools:
   fn: "*_eigenstrat_coverage.json"
+fadu:
+  fn: "*.counts.txt"
 fastp:
   fn: "*fastp.json"
 fastq_screen:
