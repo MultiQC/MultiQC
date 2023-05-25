@@ -12,6 +12,9 @@
 
 ### New Modules
 
+- [**FADU**](https://github.com/IGS/FADU)
+  - FADU (Feature Aggregate Depth Utility) is a quantification tool designed specifically for prokaryotic RNA-Seq analyses.
+
 ### Module updates
 
 - **Cell Ranger**
