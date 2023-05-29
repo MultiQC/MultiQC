@@ -122,6 +122,13 @@ class MultiqcModule(BaseMultiqcModule):
             # Write data to file
             self.write_data_file(cov_dist_data, "mosdepth_cov_dist")
 
+            # Set ymax so that zero coverage values are ignored.
+            ymax = 0
+            for data in cov_dist_data.values():
+                positive_cov = [percent for cov, percent in data.items() if cov > 0]
+                if positive_cov:
+                    ymax = max(ymax, max(positive_cov))
+
             self.add_section(
                 name="Coverage distribution",
                 anchor="mosdepth-coverage-dist-cov",
@@ -134,7 +141,8 @@ class MultiqcModule(BaseMultiqcModule):
                         "title": "Mosdepth: Coverage distribution",
                         "xlab": "Coverage (X)",
                         "ylab": "% bases in genome/regions covered by X reads",
-                        "ymax": 100,
+                        "ymax": ymax * 1.05,
+                        "yCeiling": 100,
                         "xmax": xmax,
                         "tt_label": "<b>{point.x}X</b>: {point.y:.2f}%",
                         "smooth_points": 500,
