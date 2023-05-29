@@ -95,8 +95,11 @@ class MultiqcModule(BaseMultiqcModule):
         log.info(f"Found {num_samples} reports")
 
         if cumcov_dist_data:
-            # Write data to file
-            self.write_data_file(cumcov_dist_data, "mosdepth_cumcov_dist")
+            # Write data to file, sort columns numberically and convert to strings
+            cumcov_dist_data_writeable = {
+                sample: {str(k): v for k, v in sorted(data.items())} for sample, data in cumcov_dist_data.items()
+            }
+            self.write_data_file(cumcov_dist_data_writeable, "mosdepth_cumcov_dist")
 
             self.add_section(
                 name="Cumulative coverage distribution",
@@ -119,8 +122,11 @@ class MultiqcModule(BaseMultiqcModule):
             )
 
         if cov_dist_data:
-            # Write data to file
-            self.write_data_file(cov_dist_data, "mosdepth_cov_dist")
+            # Write data to file, sort columns numberically and convert to strings
+            cov_dist_data_writeable = {
+                sample: {str(k): v for k, v in sorted(data.items())} for sample, data in cov_dist_data.items()
+            }
+            self.write_data_file(cov_dist_data_writeable, "mosdepth_cov_dist")
 
             # Set ymax so that zero coverage values are ignored.
             ymax = 0
