@@ -303,8 +303,7 @@ class MultiqcModule(BaseMultiqcModule):
         for s_name, d in cumcov_dist_data.items():
             dist_subset = {t: data for t, data in d.items() if t in threshs}
             for t in threshs:
-                if int(t) in dist_subset:
-                    genstats[s_name][f"{t}_x_pc"] = dist_subset[t]
+                genstats[s_name][f"{t}_x_pc"] = dist_subset.get(t, 0)
 
         for t in threshs:
             genstats_headers[f"{t}_x_pc"] = {
