@@ -166,6 +166,7 @@ class MultiqcModule(BaseMultiqcModule):
                         "tt_decimals": 1,
                         "tt_suffix": "x",
                         "smooth_points": 500,
+                        "logswitch": True,
                     },
                 )
             else:
