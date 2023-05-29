@@ -230,6 +230,8 @@ class MultiqcModule(BaseMultiqcModule):
                 if chrom.startswith("total"):
                     genstats[s_name]["mean_coverage"] = mean
 
+                    self.add_data_source(f, s_name=s_name, section="summary")
+
         # Parse coverage distributions
         for scope in ("region", "global"):
             for f in self.find_log_files("mosdepth/" + scope + "_dist"):
