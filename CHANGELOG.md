@@ -22,6 +22,13 @@
   - Handle reports from locales that use `.` as a thousands separator ([#1843](https://github.com/ewels/MultiQC/issues/1843))
 - **HUMID**
   - Fix bug that prevent HUMID stats files from being parsed ([#1856](https://github.com/ewels/MultiQC/issues/1856))
+- **Mosdepth**
+  - Fix data not written to `mosdepth_cumcov_dist.txt` and `mosdepth_cov_dist.txt` ([#1868](https://github.com/ewels/MultiQC/issues/1868))
+  - Update documentation with new file `{prefix}.mosdepth.summary.txt` ([#1868](https://github.com/ewels/MultiQC/issues/1868))
+  - Fill in missing values for general stats table ([#1868](https://github.com/ewels/MultiQC/issues/1868))
+  - Include mosdepth/summary file paths in `multiqc_sources.txt` ([#1868](https://github.com/ewels/MultiQC/issues/1868))
+  - Enable log switch for Coverage per contig plot ([#1868](https://github.com/ewels/MultiQC/issues/1868))
+  - Fix y-axis scaling for Coverage distribution plot ([#1868](https://github.com/ewels/MultiQC/issues/1868))
 - **Porechop**
   - Don't render bar graphs if no samples had any adapters trimmed ([#1850](https://github.com/ewels/MultiQC/issues/1850))
   - Added report section listing samples that had no adapters trimmed
