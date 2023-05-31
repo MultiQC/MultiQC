@@ -858,7 +858,7 @@ def run(
     if config.make_report:
         # Compress the report plot JSON data
         runtime_compression_start = time.time()
-        logger.info("Compressing plot data")
+        logger.debug("Compressing plot data")
         report.plot_compressed_json = report.compress_json(report.plot_data)
         report.runtimes["total_compression"] = time.time() - runtime_compression_start
 
@@ -878,6 +878,9 @@ def run(
             config.output_fn = os.path.join(config.output_dir, config.output_fn_name)
         config.data_dir = os.path.join(config.output_dir, config.data_dir_name)
         config.plots_dir = os.path.join(config.output_dir, config.plots_dir_name)
+        deleted_report = False
+        deleted_data_dir = False
+        deleted_export_plots = False
         # Check for existing reports and remove if -f was specified
         if (
             (config.make_report and os.path.exists(config.output_fn))
@@ -886,13 +889,13 @@ def run(
         ):
             if config.force:
                 if config.make_report and os.path.exists(config.output_fn):
-                    logger.warning("Deleting    : {}   (-f was specified)".format(os.path.relpath(config.output_fn)))
+                    deleted_report = True
                     os.remove(config.output_fn)
                 if config.make_data_dir and os.path.exists(config.data_dir):
-                    logger.warning("Deleting    : {}   (-f was specified)".format(os.path.relpath(config.data_dir)))
+                    deleted_data_dir = True
                     shutil.rmtree(config.data_dir)
                 if config.export_plots and os.path.exists(config.plots_dir):
-                    logger.warning("Deleting    : {}   (-f was specified)".format(os.path.relpath(config.plots_dir)))
+                    deleted_export_plots = True
                     shutil.rmtree(config.plots_dir)
             else:
                 # Set up the base names of the report and the data dir
@@ -926,7 +929,12 @@ def run(
         if config.make_report:
             if not os.path.exists(os.path.dirname(config.output_fn)):
                 os.makedirs(os.path.dirname(config.output_fn))
-            logger.info("Report      : {}".format(os.path.relpath(config.output_fn)))
+            logger.info(
+                "Report      : {}{}".format(
+                    os.path.relpath(config.output_fn),
+                    "   (overwritten)" if deleted_report else "",
+                )
+            )
         else:
             logger.info("Report      : None")
 
@@ -934,7 +942,12 @@ def run(
             logger.info("Data        : None")
         else:
             # Make directories for data_dir
-            logger.info("Data        : {}".format(os.path.relpath(config.data_dir)))
+            logger.info(
+                "Data        : {}{}".format(
+                    os.path.relpath(config.data_dir),
+                    "   (overwritten)" if deleted_data_dir else "",
+                )
+            )
             # Modules have run, so data directory should be complete by now. Move its contents.
             logger.debug("Moving data file from '{}' to '{}'".format(config.data_tmp_dir, config.data_dir))
             # Disable preserving of times and mode on purpose to avoid problems with mounted CIFS shares (see #625)
@@ -946,14 +959,19 @@ def run(
             config.plots_dir = os.path.join(config.output_dir, config.plots_dir_name)
             if os.path.exists(config.plots_dir):
                 if config.force:
-                    logger.warning("Deleting    : {}   (-f was specified)".format(os.path.relpath(config.plots_dir)))
+                    deleted_export_plots
                     shutil.rmtree(config.plots_dir)
                 else:
                     logger.error("Output directory {} already exists.".format(config.plots_dir))
                     logger.info("Use -f or --force to overwrite existing reports")
                     shutil.rmtree(tmp_dir)
                     sys.exit(1)
-            logger.info("Plots       : {}".format(os.path.relpath(config.plots_dir)))
+            logger.info(
+                "Plots       : {}{}".format(
+                    os.path.relpath(config.plots_dir),
+                    "   (overwritten)" if deleted_export_plots else "",
+                )
+            )
 
             # Modules have run, so plots directory should be complete by now. Move its contents.
             logger.debug("Moving plots directory from '{}' to '{}'".format(config.plots_tmp_dir, config.plots_dir))
@@ -1067,7 +1085,6 @@ def run(
 
     plugin_hooks.mqc_trigger("execution_finish")
 
-    logger.info("MultiQC complete")
     report.runtimes["total"] = time.time() - start_execution_time
     if config.profile_runtime:
         logger.info("Run took {:.2f} seconds".format(report.runtimes["total"]))
@@ -1080,21 +1097,18 @@ def run(
             )
 
     if report.num_mpl_plots > 0 and not config.plots_force_flat:
-        logger.warning(
-            "{} flat-image plot{} used in the report due to large sample numbers".format(
-                report.num_mpl_plots, "s" if report.num_mpl_plots > 1 else ""
-            )
-        )
         if not config.plots_force_interactive:
             console.print(
                 "[blue]|           multiqc[/] | "
-                "To force interactive plots, use the [yellow]'--interactive'[/] flag. "
-                "See the [link=https://multiqc.info/docs/#flat--interactive-plots]documentation[/link]."
+                "Flat-image plots used. Disable with '--interactive'. "
+                "See [link=https://multiqc.info/docs/#flat--interactive-plots]docs[/link]."
             )
 
     if lint and len(report.lint_errors) > 0:
         logger.error("Found {} linting errors!\n{}".format(len(report.lint_errors), "\n".join(report.lint_errors)))
         sys_exit_code = 1
+
+    logger.info("MultiQC complete")
 
     # Move the log file into the data directory
     log.move_tmp_log(logger)

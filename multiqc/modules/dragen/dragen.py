@@ -6,6 +6,7 @@ from .coverage_per_contig import DragenCoveragePerContig
 from .dragen_gc_metrics import DragenGcMetrics
 from .fragment_length import DragenFragmentLength
 from .mapping_metrics import DragenMappingMetics
+from .overall_mean_cov import DragenOverallMeanCovMetrics
 from .ploidy_estimation_metrics import DragenPloidyEstimationMetrics
 from .rna_quant_metrics import DragenRnaQuantMetrics
 from .rna_transcript_cov import DragenRnaTranscriptCoverage
@@ -26,6 +27,7 @@ class MultiqcModule(
     DragenPloidyEstimationMetrics,
     DragenVCMetrics,
     DragenCoveragePerContig,
+    DragenOverallMeanCovMetrics,
     DragenCoverageMetrics,
     DragenCoverageHist,
     DragenGcMetrics,
@@ -76,16 +78,13 @@ class MultiqcModule(
         samples_found |= self.add_roh_metrics()
         # <output-file-prefix>.roh_metrics.csv
 
-        samples_found |= self.add_wgs_coverage_metrics()
-        # <output prefix>.wgs_coverage_metrics_normal.csv  - general stats table and a dedicated table
-        # <output prefix>.wgs_coverage_metrics_tumor.csv   - same
+        self.collect_overall_mean_cov_data()
+        # <output prefix>.<coverage region prefix>_overall_mean_cov<arbitrary suffix>.csv
+        # This data will be used by in the DragenCoverageMetrics.
 
-        samples_found |= self.add_target_bed_coverage_metrics()
-        # <output prefix>.target_bed_coverage_metrics_normal.csv  - general stats table and a dedicated table
-        # <output prefix>.target_bed_coverage_metrics_tumor.csv   - same
+        samples_found |= self.add_coverage_metrics()
+        # <output prefix>.<coverage region prefix>_coverage_metrics<arbitrary suffix>.csv
 
-        samples_found |= self.add_qc_region_coverage_metrics()
-        # <output prefix>.qc-coverage-region-i_coverage_metrics.csv
         samples_found |= self.add_coverage_hist()
 
         # <output prefix>.wgs_fine_hist_normal.csv         - coverage distribution and cumulative coverage plots
