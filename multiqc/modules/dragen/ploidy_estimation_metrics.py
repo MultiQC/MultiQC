@@ -5,7 +5,6 @@ https://support-docs.illumina.com/SW/DRAGEN_v41/Content/SW/DRAGEN/PloidyEstimato
 Section "Ploidy Calling" p.177:
 https://emea.support.illumina.com/content/dam/illumina-support/documents/documentation/software_documentation/dragen-bio-it/Illumina-DRAGEN-Bio-IT-Platform-User-Guide-1000000141465-00.pdf
 
-
 You can define a closed interval [lower_limit, upper_limit] of acceptable values for the metrics:
 1 median / Autosomal median, 2 median / Autosomal median, ...,  22 median / Autosomal median
 
