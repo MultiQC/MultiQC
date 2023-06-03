@@ -1,5 +1,6 @@
 '''"""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
 This module gathers SV metrics data and prepares it for the output report.
+
 It relies on the following official sources (unfortunately uninformative ones, nothing else could be found):
 https://support-docs.illumina.com/SW/DRAGEN_v41/Content/SW/DRAGEN/MantaStatisticsOutput_fDG.htm
 https://support.illumina.com/help/DRAGEN_Germline_OLH_1000000083701/Content/Source/Informatics/Apps/OutputFiles_swBS_appDRAGGP.htm
