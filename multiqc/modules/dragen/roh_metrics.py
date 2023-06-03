@@ -1,5 +1,6 @@
 '''""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
 This module gathers ROH metrics data and prepares it for the output report.
+
 It relies on the following official sources:
 https://support.illumina.com/help/DRAGEN_Germline_OLH_1000000083701/Content/Source/Informatics/Apps/ROHMetrics_appDRAG.htm
 https://support-docs.illumina.com/SW/DRAGEN_v38/Content/SW/RegionsOfHomozygosity_fDG.htm
