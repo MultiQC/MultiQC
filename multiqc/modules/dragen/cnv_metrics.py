@@ -1,5 +1,6 @@
 '''""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
 This module gathers CNV metrics data and prepares it for the output report.
+
 It relies on the following official sources:
 https://support-docs.illumina.com/SW/DRAGEN_v41/Content/SW/DRAGEN/CNVMetrics.htm
 https://support-docs.illumina.com/SW/DRAGEN_v41/Content/SW/DRAGEN/CNVSampleCorrelationSexGenotyper.htm
