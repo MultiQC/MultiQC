@@ -1,6 +1,5 @@
 '''""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
 This module gathers vc_hethom_ratio_metrics data and prepares it for the output report.
-
 It relies on the following official source:
 https://support-docs.illumina.com/SW/DRAGEN_v41/Content/SW/DRAGEN/QCMetricsCoverageReports.htm?Highlight=Het%2FHom
 '''
