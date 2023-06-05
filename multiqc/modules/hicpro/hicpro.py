@@ -157,7 +157,18 @@ class MultiqcModule(BaseMultiqcModule):
                 s = l.split("\t")
                 if s[0] in self.hicpro_data[s_name]:
                     log.debug("Duplicated keys found! Overwriting: {}".format(s[0]))
-                self.hicpro_data[s_name][s[0]] = int(s[1])
+                # Try to convert the extracted value to a number and store it in hicpro_data.
+                # try-block is used to prevent program crash, because there is no
+                # guarantee that the value (s[1]) can be always converted to integer.
+                try:
+                    self.hicpro_data[s_name][s[0]] = int(s[1])
+                except ValueError:
+                    # Convert to float (also works for inf and scientific (exponential) notation).
+                    try:
+                        self.hicpro_data[s_name][s[0]] = float(s[1])
+                    # Otherwise just store the value as is.
+                    except ValueError:
+                        self.hicpro_data[s_name][s[0]] = s[1]
 
     def hicpro_stats_table(self):
         """Add HiC-Pro stats to the general stats table"""
