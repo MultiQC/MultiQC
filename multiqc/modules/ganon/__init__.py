@@ -1,0 +1,1 @@
+from .ganon import MultiqcModule

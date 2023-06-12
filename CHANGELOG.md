@@ -12,6 +12,9 @@
 
 ### New Modules
 
+- [**ganon**](https://pirovc.github.io/ganon/)
+  - Developed for, but not limited, to the metagenomics classification problem: quickly assign sequence fragments to their closest reference among thousands of references via Interleaved Bloom Filters of k-mer/minimizers.
+
 ### Module updates
 
 - **Cell Ranger**

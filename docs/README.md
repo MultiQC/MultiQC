@@ -64,6 +64,7 @@ MultiQC Modules:
     Long Ranger: modules/longranger.md
     MALT: modules/malt.md
     mOTUs: modules/motus.md
+    ganon: modules/ganon.md
     Salmon: modules/salmon.md
     STAR: modules/star.md
     TopHat: modules/tophat.md
