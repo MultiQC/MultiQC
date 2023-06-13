@@ -229,13 +229,13 @@ class MultiqcModule(BaseMultiqcModule):
         cats["reads_classified"] = {"name": "Classified reads", "color": "#7cb5ec"}
         cats["reads_unclassified"] = {"name": "Unclassified reads", "color": "#f7a35c"}
         config = {
-            "id": "ganon-reads-classified",
+            "id": "ganon-reads-classified-plot",
             "title": "Ganon (classify): classified reads summary",
             "ylab": "Read Counts",
         }
         self.add_section(
             name="Reads classified",
-            anchor="ganon-reads-classified",
+            anchor="ganon-reads-classified-section",
             description="Summary of whether reads were able to be taxonomically assigned. Total should match number of reads processed.",
             plot=bargraph.plot(self.ganon_data, cats, config),
         )
@@ -246,13 +246,13 @@ class MultiqcModule(BaseMultiqcModule):
         cats["unique_matches"] = {"name": "Reads with unique matches", "color": "#7cb5ec"}
         cats["multiple_matches"] = {"name": "Reads with multiple matches", "color": "#f7a35c"}
         config = {
-            "id": "ganon-reads-match-type",
+            "id": "ganon-reads-match-type-plot",
             "title": "Ganon (classify): match type summary",
             "ylab": "Read Counts",
         }
         self.add_section(
             name="Match type distribution",
-            anchor="ganon-reads-match-type",
+            anchor="ganon-reads-match-type-section",
             description="Summary of whether read hits were unique or had multiple matches. Total should match number of reads classified.",
             plot=bargraph.plot(self.ganon_data, cats, config),
         )
@@ -262,13 +262,13 @@ class MultiqcModule(BaseMultiqcModule):
         cats = OrderedDict()
         cats["match_to_read"] = {"name": "Average match to read", "color": "#7cb5ec"}
         config = {
-            "id": "ganon-reads-match-to-read-ratio",
+            "id": "ganon-reads-match-to-read-ratio-plot",
             "title": "Ganon (classify): average number of matches per read",
             "ylab": "Average reads per match",
         }
         self.add_section(
             name="Average match to read",
-            anchor="ganon-reads-match-type",
+            anchor="ganon-reads-match-to-read-ratio-section",
             description="Summary of how many taxonomic matches each read had on average.",
             plot=beeswarm.plot(self.ganon_data, cats, config),
         )
@@ -281,13 +281,13 @@ class MultiqcModule(BaseMultiqcModule):
         cats["taxonomic_entries_removed_mincount_filter"] = {"name": "Min. count filter removed", "color": "#fb9a99"}
 
         config = {
-            "id": "ganon-taxonomic-entries",
+            "id": "ganon-taxonomic-entries-plot",
             "title": "Ganon (classify): distribution of taxonomic entries through filtering",
             "ylab": "Entries",
         }
         self.add_section(
             name="Taxonomic entries",
-            anchor="ganon-taxonomic-entries",
+            anchor="ganon-taxonomic-entries-section",
             description="Summary of how many taxa were identified overall and removed through filtering. Total should match Nr. Taxa Identified.",
             plot=bargraph.plot(self.ganon_data, cats, config),
         )
