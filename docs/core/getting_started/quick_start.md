@@ -28,6 +28,7 @@ Arguably, the easiest way to do this is with Conda
 5. Create a new conda environment:
    ```bash
    conda create --name myenv python=3.11
+   conda activate myenv
    ```
 
 ## Install MultiQC
