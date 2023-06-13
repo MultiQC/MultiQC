@@ -1,7 +1,6 @@
 ---
 title: Using Reports
 description: Getting to grips with MultiQC reports
-order: 3
 ---
 
 # Using MultiQC Reports

@@ -1,7 +1,6 @@
 ---
 title: Common Problems
 description: Troubleshooting difficulties
-order: 8
 ---
 
 # Troubleshooting
