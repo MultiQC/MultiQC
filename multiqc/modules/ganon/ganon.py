@@ -4,7 +4,7 @@ import logging
 from collections import OrderedDict
 
 from multiqc.modules.base_module import BaseMultiqcModule
-from multiqc.plots import bargraph
+from multiqc.plots import bargraph, beeswarm
 from multiqc.utils import config
 
 log = logging.getLogger(__name__)
@@ -27,6 +27,8 @@ class MultiqcModule(BaseMultiqcModule):
         for f in self.find_log_files("ganon"):
             self.parse_logs(f)
 
+        self.calculate_entry_remainder()
+
         # self.ganon_data = self.ignore_samples(self.ganon_data)
 
         # if len(self.ganon_data) == 0:
@@ -38,9 +40,10 @@ class MultiqcModule(BaseMultiqcModule):
         self.write_data_file(self.ganon_data, "ganon")
         self.ganon_general_stats()
 
-        ## TODO: Write to file and printing functions
-
-        # self.ganon_beeswarm_plot()
+        self.barplot_reads_classified()
+        self.barplot_reads_match_type()
+        self.beeswarm_average_matches()
+        self.barplot_taxonomic_entries()
 
     def parse_logs(self, f):
         for l in f["f"].splitlines():
@@ -59,45 +62,53 @@ class MultiqcModule(BaseMultiqcModule):
             ## TODO Functionise?
 
             if l.startswith("ganon-classify processed"):
-                self.ganon_data[s_name]["reads_processed"] = l.split()[2]
+                self.ganon_data[s_name]["reads_processed"] = int(l.split()[2])
                 self.ganon_data[s_name]["mbp_processed"] = l.split()[4].lstrip("(").rstrip(")")
 
             if "reads classified" in l:
-                self.ganon_data[s_name]["reads_classified"] = l.split()[1]
+                self.ganon_data[s_name]["reads_classified"] = int(l.split()[1])
                 self.ganon_data[s_name]["reads_classified_pc"] = l.split()[4].lstrip("(").rstrip(")").rstrip("%")
 
             if "with unique matches" in l:
-                self.ganon_data[s_name]["unique_matches"] = l.split()[1]
+                self.ganon_data[s_name]["unique_matches"] = int(l.split()[1])
                 self.ganon_data[s_name]["unique_matches_pc"] = l.split()[5].lstrip("(").rstrip(")").rstrip("%")
 
             if "with multiple matches" in l:
-                self.ganon_data[s_name]["multiple_matches"] = l.split()[1]
+                self.ganon_data[s_name]["multiple_matches"] = int(l.split()[1])
                 self.ganon_data[s_name]["multiple_matches_pc"] = l.split()[5].lstrip("(").rstrip(")").rstrip("%")
 
             if "matches (avg" in l:
-                self.ganon_data[s_name]["overall_matches"] = l.split()[1]
+                self.ganon_data[s_name]["overall_matches"] = int(l.split()[1])
                 self.ganon_data[s_name]["match_to_read"] = l.split()[4].lstrip("(").rstrip(")")
 
             if "reads unclassified" in l:
-                self.ganon_data[s_name]["reads_unclassified"] = l.split()[1]
+                self.ganon_data[s_name]["reads_unclassified"] = int(l.split()[1])
                 self.ganon_data[s_name]["reads_unclassified_pc"] = l.split()[4].lstrip("(").rstrip(")").rstrip("%")
 
             if "entries reported" in l:
-                self.ganon_data[s_name]["taxonomic_entries_reported"] = l.split()[1]
+                self.ganon_data[s_name]["taxonomic_entries_reported"] = int(l.split()[1])
 
             if "removed not in --ranks" in l:
-                self.ganon_data[s_name]["taxonomic_entries_removed_rank_filter"] = l.split()[1]
+                self.ganon_data[s_name]["taxonomic_entries_removed_rank_filter"] = int(l.split()[1])
 
             if "removed with --min-count" in l:
-                self.ganon_data[s_name]["taxonomic_entries_removed_mincount_filter"] = l.split()[1]
+                self.ganon_data[s_name]["taxonomic_entries_removed_mincount_filter"] = int(l.split()[1])
 
         return
+
+    def calculate_entry_remainder(self):
+        for s_name in self.ganon_data:
+            self.ganon_data[s_name]["taxonomic_entries_retained"] = self.ganon_data[s_name][
+                "taxonomic_entries_reported"
+            ] - (
+                self.ganon_data[s_name]["taxonomic_entries_removed_rank_filter"]
+                + self.ganon_data[s_name]["taxonomic_entries_removed_mincount_filter"]
+            )
 
     def ganon_general_stats(self):
         """ganon General Stats Table"""
         headers = OrderedDict()
 
-        ## TODO Fix read multiplier see error message, something to do with float
         headers["reads_processed"] = {
             "title": "Reads Processed ({})".format(config.read_count_prefix),
             "description": "Number of reads processed by ganon ({})".format(config.read_count_prefix),
@@ -194,6 +205,8 @@ class MultiqcModule(BaseMultiqcModule):
             "max": 100,
         }
 
+        ## I think it is relatively unlikely to get millions of taxonomic entries,
+        ## so not using multiplier here
         headers["taxonomic_entries_reported"] = {
             "title": "Nr. Taxa Identified",
             "description": "Number of taxonomic entries in ganon report",
@@ -214,11 +227,74 @@ class MultiqcModule(BaseMultiqcModule):
 
         self.general_stats_addcols(self.ganon_data, headers)
 
+    def barplot_reads_classified(self):
+        """Barplot of total number of reads classified"""
+        cats = OrderedDict()
+        cats["reads_classified"] = {"name": "Classified reads", "color": "#7cb5ec"}
+        cats["reads_unclassified"] = {"name": "Unclassified reads", "color": "#f7a35c"}
+        config = {
+            "id": "ganon-reads-classified",
+            "title": "Ganon (classify): classified reads summary",
+            "ylab": "Read Counts",
+        }
+        self.add_section(
+            name="Reads classified",
+            anchor="ganon-reads-classified",
+            description="Summary of whether reads were able to be taxonomically assigned. Total should match number of reads processed.",
+            plot=bargraph.plot(self.ganon_data, cats, config),
+        )
 
-## TODO: barplot of reads classified + unclassified (total matches reads processed)
-## TODO: barplot of reads with unique and multiple matches (total matches reads classified)
-## TODO: barplot: total matches
-## TODO: barplot: average matches to reads
+    def barplot_reads_match_type(self):
+        """Barplot of total number of reads classified"""
+        cats = OrderedDict()
+        cats["unique_matches"] = {"name": "Reads with unique matches", "color": "#7cb5ec"}
+        cats["multiple_matches"] = {"name": "Reads with multiple matches", "color": "#f7a35c"}
+        config = {
+            "id": "ganon-reads-match-type",
+            "title": "Ganon (classify): match type summary",
+            "ylab": "Read Counts",
+        }
+        self.add_section(
+            name="Match type distribution",
+            anchor="ganon-reads-match-type",
+            description="Summary of whether read hits were unique or had multiple matches. Total should match number of reads classified.",
+            plot=bargraph.plot(self.ganon_data, cats, config),
+        )
+
+    def beeswarm_average_matches(self):
+        """Barplot of total number of reads classified"""
+        cats = OrderedDict()
+        cats["match_to_read"] = {"name": "Average match to read", "color": "#7cb5ec"}
+        config = {
+            "id": "ganon-reads-match-to-read-ratio",
+            "title": "Ganon (classify): average number of matches per read",
+            "ylab": "Average reads per match",
+        }
+        self.add_section(
+            name="Average match to read",
+            anchor="ganon-reads-match-type",
+            description="Summary of how many taxonomic matches each read had on average.",
+            plot=beeswarm.plot(self.ganon_data, cats, config),
+        )
+
+    def barplot_taxonomic_entries(self):
+        """Barplot of total number of reads classified"""
+        cats = OrderedDict()
+        cats["taxonomic_entries_retained"] = {"name": "Retained Taxonomic assignments", "color": "#7cb5ec"}
+        cats["taxonomic_entries_removed_rank_filter"] = {"name": "Rank filter removed", "color": "#f7a35c"}
+        cats["taxonomic_entries_removed_mincount_filter"] = {"name": "Min. count filter removed", "color": "#fb9a99"}
+
+        config = {
+            "id": "ganon-taxonomic-entries",
+            "title": "Ganon (classify): distribution of taxonomic entries through filtering",
+            "ylab": "Entries",
+        }
+        self.add_section(
+            name="Taxonomic entries",
+            anchor="ganon-taxonomic-entries",
+            description="Summary of how many taxa were identified overall and removed through filtering. Total should match Nr. Taxa Identified.",
+            plot=bargraph.plot(self.ganon_data, cats, config),
+        )
+
+
 ## TODO: barplot: filter removed + filter removed minus total entries (remainder == confident etnries)
-
-## TODO: to make testdataset submission
