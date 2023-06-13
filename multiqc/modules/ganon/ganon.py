@@ -187,7 +187,7 @@ class MultiqcModule(BaseMultiqcModule):
             "description": "Number of reads processed reads without taxonomic classification ({})".format(
                 config.read_count_prefix
             ),
-            "scale": "Blues",
+            "scale": "Reds",
             "shared_key": "read_count",
             "modify": lambda x: x * config.read_count_multiplier,
         }
