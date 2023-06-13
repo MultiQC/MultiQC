@@ -21,7 +21,6 @@ class MultiqcModule(BaseMultiqcModule):
             doi="10.1093/bioinformatics/btaa458",
         )
 
-        ## Define the main ganon multiqc data object
         self.ganon_data = dict()
 
         for f in self.find_log_files("ganon"):
@@ -29,10 +28,10 @@ class MultiqcModule(BaseMultiqcModule):
 
         self.calculate_entry_remainder()
 
-        # self.ganon_data = self.ignore_samples(self.ganon_data)
+        self.ganon_data = self.ignore_samples(self.ganon_data)
 
-        # if len(self.ganon_data) == 0:
-        #     raise UserWarning
+        if len(self.ganon_data) == 0:
+            raise UserWarning
 
         log.info("Found {} reports".format(len(self.ganon_data)))
         print(self.ganon_data)
@@ -48,7 +47,7 @@ class MultiqcModule(BaseMultiqcModule):
     def parse_logs(self, f):
         for l in f["f"].splitlines():
             if l.startswith("--output-prefix"):
-                ## find and set name
+                ## find and set name - we don't clean as can never take from file name
                 s_name = l.split()[1]
 
                 ## check for duplicates
@@ -56,10 +55,7 @@ class MultiqcModule(BaseMultiqcModule):
                     log.debug(f"Duplicate sample name found! Overwriting: {s_name}")
                 self.ganon_data[s_name] = {}
 
-                ## log the file name against the sample name(?)
-                ##self.add_data_source(f, s_name=s_name)
-
-            ## TODO Functionise?
+                self.add_data_source(f, s_name=s_name)
 
             if l.startswith("ganon-classify processed"):
                 self.ganon_data[s_name]["reads_processed"] = int(l.split()[2])
@@ -295,6 +291,3 @@ class MultiqcModule(BaseMultiqcModule):
             description="Summary of how many taxa were identified overall and removed through filtering. Total should match Nr. Taxa Identified.",
             plot=bargraph.plot(self.ganon_data, cats, config),
         )
-
-
-## TODO: barplot: filter removed + filter removed minus total entries (remainder == confident etnries)
