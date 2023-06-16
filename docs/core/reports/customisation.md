@@ -528,20 +528,29 @@ custom_plot_config:
 Much like with the custom plot config above, you can override almost any configuration options for tables.
 To see what's available, read the documentation about [Creating a table](#creating-a-table) below.
 
-Tables have configuration at two levels. Table-wide configs are the same as plot configs and can
-be overridden with `custom_plot_config` as described above.
+Tables have configuration at two levels:
 
-Headers have their own configuration which can be overriden with `custom_table_header_config`.
+1. Entire table
 
-Examples are often more useful for this kind of thing than words, so here are a few:
+- Affects all columns and data. These configs are the same as _plot configs_ and can be overridden with `custom_plot_config` as described in the [Customising plots](#customising-plots) section above.
 
-For the Picard HSMetrics table, we can use a custom table header for the first column
-and change the default minimum value for the colour scale for all columns:
+2. Specific columns
 
-> Here `min` is a _header_ config but we're setting it at table config level.
-> This means it will be used as a default for all columns in the table if the module
-> doesn't itself define anything specific for that column.
-> If it does, you need to overwrite that specific column using `custom_table_header_config`
+- Table columns (headers) have their own configuration scope:`custom_table_header_config`. See below.
+
+Here are a couple of examples:
+
+### Entire table
+
+Here we are customising the _Picard HSMetrics_ table.
+We're setting a non-standard title for the first column (usually _"Sample name"_) and changing the default minimum value for the colour scale for _all_ columns.
+
+:::note
+Here `min` is a _header_ config but we're setting it at _table config_ level.
+This means it will be used as a default for all columns in the table if the module
+doesn't itself define anything specific for that column.
+If it does, you need to overwrite that specific column using `custom_table_header_config`.
+:::
 
 ```yaml
 custom_plot_config:
@@ -550,8 +559,9 @@ custom_plot_config:
     min: 1000
 ```
 
-Now for header-specific changes.
-To change the number of decimals used in the General Statistics table for the Qualimap _Mean Coverage_ column:
+### Specific column
+
+To change the number of decimals used in the General Statistics table for the single column Qualimap _Mean Coverage_:
 
 ```yaml
 custom_table_header_config:
@@ -559,6 +569,13 @@ custom_table_header_config:
     mean_coverage:
       format: "{:,.20f}"
 ```
+
+The first key is the table ID, the second is the header ID for the column you want to change.
+
+:::tip
+The easiest way to find these IDs is by clicking _Configure Columns_ above the table you want to customise.
+The table ID is shown at the top of the modal window. The _ID_ column shows the column (header) ID.
+:::
 
 ### Hiding columns
 

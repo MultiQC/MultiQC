@@ -397,7 +397,7 @@ def make_table(dt):
             <h4 class="modal-title">{title}: Columns</h4>
           </div>
           <div class="modal-body">
-            <p>Uncheck the tick box to hide columns. Click and drag the handle on the left to change order.</p>
+            <p>Uncheck the tick box to hide columns. Click and drag the handle on the left to change order. Table ID: <code>{tid}</code></p>
             <p>
                 <button class="btn btn-default btn-sm mqc_configModal_bulkVisible" data-target="#{tid}" data-action="showAll">Show All</button>
                 <button class="btn btn-default btn-sm mqc_configModal_bulkVisible" data-target="#{tid}" data-action="showNone">Show None</button>
