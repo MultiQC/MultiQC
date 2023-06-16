@@ -531,16 +531,11 @@ To see what's available, read the documentation about [Creating a table](#creati
 Tables have configuration at two levels:
 
 1. Entire table
-
-- Affects all columns and data. These configs are the same as _plot configs_ and can be overridden with `custom_plot_config` as described in the [Customising plots](#customising-plots) section above.
-
+   - Affects all columns and data. These configs are the same as _plot configs_ and can be overridden with `custom_plot_config` as described in the [Customising plots](#customising-plots) section above.
 2. Specific columns
+   - Table columns (headers) have their own configuration scope:`custom_table_header_config`. See below.
 
-- Table columns (headers) have their own configuration scope:`custom_table_header_config`. See below.
-
-Here are a couple of examples:
-
-### Entire table
+### Config for an entire table
 
 Here we are customising the _Picard HSMetrics_ table.
 We're setting a non-standard title for the first column (usually _"Sample name"_) and changing the default minimum value for the colour scale for _all_ columns.
@@ -559,9 +554,9 @@ custom_plot_config:
     min: 1000
 ```
 
-### Specific column
+### Config for a specific column
 
-To change the number of decimals used in the General Statistics table for the single column Qualimap _Mean Coverage_:
+To change the number of decimals used in the General Statistics table for the single column _Qualimap: Mean Coverage_:
 
 ```yaml
 custom_table_header_config:
@@ -574,7 +569,12 @@ The first key is the table ID, the second is the header ID for the column you wa
 
 :::tip
 The easiest way to find these IDs is by clicking _Configure Columns_ above the table you want to customise.
+
+![Table: configure columns button](../../images/table_configure_columns.png)
+
 The table ID is shown at the top of the modal window. The _ID_ column shows the column (header) ID.
+
+![Table: configure columns button](../../images/table_header_ids.png)
 :::
 
 ### Hiding columns
