@@ -533,6 +533,10 @@ be overridden with `custom_plot_config` as described above.
 
 Headers have their own configuration which can be overriden with `custom_table_header_config`.
 
+:::tip
+See the customising plots section above on how to get unique IDs
+:::
+
 Examples are often more useful for this kind of thing than words, so here are a few:
 
 For the Picard HSMetrics table, we can use a custom table header for the first column
