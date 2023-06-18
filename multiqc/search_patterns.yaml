@@ -844,7 +844,7 @@ sincei/scFilterStats:
   num_lines: 1
 sincei/scCountQC:
   fn: "*.cells.tsv"
-  contents: "cell_id	barcodes	sample	n_genes_by_counts	log1p_n_genes_by_counts	total_counts"
+  contents: "Cell_ID	barcodes	sample	n_genes_by_counts	log1p_n_genes_by_counts	total_counts"
 skewer:
   contents: "maximum error ratio allowed (-r):"
 slamdunk/summary:
