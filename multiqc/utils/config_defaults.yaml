@@ -473,6 +473,12 @@ module_order:
   - sambamba:
       module_tag:
         - DNA
+  - sincei:
+      module_tag:
+        - DNA
+        - RNA
+        - umi
+        - single-cell
 
   # Post-alignment processing
   - gopeaks:

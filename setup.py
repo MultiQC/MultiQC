@@ -187,6 +187,7 @@ setup(
             "seqyclean = multiqc.modules.seqyclean:MultiqcModule",
             "sexdeterrmine = multiqc.modules.sexdeterrmine:MultiqcModule",
             "sickle = multiqc.modules.sickle:MultiqcModule",
+            "sincei = multiqc.modules.sincei:MultiqcModule",
             "skewer = multiqc.modules.skewer:MultiqcModule",
             "slamdunk = multiqc.modules.slamdunk:MultiqcModule",
             "snippy = multiqc.modules.snippy:MultiqcModule",
