@@ -6,7 +6,7 @@ from multiqc.modules.base_module import BaseMultiqcModule
 
 # sincei modules
 from .scFilterStats import scFilterStatsMixin
-#from .scCountQC import scCountQCMixin
+from .scCountQC import scCountQCMixin
 
 # Initialise the logger
 log = logging.getLogger(__name__)
@@ -15,7 +15,7 @@ log = logging.getLogger(__name__)
 class MultiqcModule(
     BaseMultiqcModule,
     scFilterStatsMixin,
-#    scCountQCMixin,
+    scCountQCMixin,
 ):
     def __init__(self):
         # Initialise the parent object
@@ -39,9 +39,9 @@ class MultiqcModule(
             log.debug("Found {} sincei scFilterStats samples".format(n["scFilterStats"]))
 
         # scCountQC
- #       n["scCountQC"] = self.parse_scCountQC()
- #       if n["scCountQC"] > 0:
- #           log.debug("Found {} sincei scCountQC samples".format(n["scCountQC"]))
+        n["scCountQC"] = self.parse_scCountQC()
+        if n["scCountQC"] > 0:
+            log.debug("Found {} sincei scCountQC samples".format(n["scCountQC"]))
 
         tot = sum(n.values())
         if tot > 0:

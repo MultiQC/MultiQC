@@ -11,7 +11,7 @@ log = logging.getLogger(__name__)
 
 class scFilterStatsMixin:
     def parse_scFilterStats(self):
-        """Find scFilterStats output. Only the output from --table is supported."""
+        """Find scFilterStats output."""
         self.sincei_scFilterStats = dict()
         for f in self.find_log_files("sincei/scFilterStats"):
             parsed_data = self.parsescFilterStatsFile(f)
@@ -30,7 +30,10 @@ class scFilterStatsMixin:
             self.write_data_file(self.sincei_scFilterStats, "sincei_read_filtering")
 
             header = OrderedDict()
-            header["M Entries"] = {"title": "M entries", "description": "Number of entries in the file (millions)"}
+            header["N Entries"] = {
+                "title": "N entries",
+                "description": "Number of entries sampled from the file"
+                }
             header["pct_Aligned"] = {
                 "title": "% Aligned",
                 "description": "Percent of aligned entries",
@@ -126,21 +129,23 @@ class scFilterStatsMixin:
             for k, v in self.sincei_scFilterStats.items():
                 tdata[k] = {
                     "N Entries": v["total"],
-                    "pct_Filtered": 100.0 * v["filtered"] / float(v["total"]),
-                    "pct_Blacklisted": 100.0 * v["blacklisted"] / float(v["total"]),
-                    "pct_Below_MAPQ": 100.0 * v["mapq"] / float(v["total"]),
-                    "pct_Missing_Flags": 100.0 * v["required_flags"] / float(v["total"]),
-                    "pct_Forbidden_Flags": 100.0 * v["excluded_flags"] / float(v["total"]),
-                    "pct_sincei_Dupes": 100.0 * v["internal_dupes"] / float(v["total"]),
-                    "pct_Duplication": 100.0 * v["external_dupes"] / float(v["total"]),
-                    "pct_Singletons": 100.0 * v["singletons"] / float(v["total"]),
-                    "pct_Excluded_Strand": 100.0 * v["wrong_strand"] / float(v["total"]),
-                    "pct_Excluded_Motif": 100.0 * v["wrong_motif"] / float(v["total"]),
-                    "pct_Excluded_GC": 100.0 * v["unwanted_gc"] / float(v["total"]),
-                    "pct_Low_Aligned_Fraction": 100.0 * v["low_alignedfrac"] / float(v["total"]),
+                    "pct_Filtered": v["filtered"],
+                    "pct_Blacklisted": v["blacklisted"],
+                    "pct_Below_MAPQ": v["mapq"],
+                    "pct_Missing_Flags": v["required_flags"],
+                    "pct_Forbidden_Flags": v["excluded_flags"],
+                    "pct_sincei_Dupes": v["internal_dupes"],
+                    "pct_Duplication": v["external_dupes"],
+                    "pct_Singletons": v["singletons"],
+                    "pct_Excluded_Strand": v["wrong_strand"],
+                    "pct_Excluded_Motif": v["wrong_motif"],
+                    "pct_Excluded_GC": v["unwanted_gc"],
+                    "pct_Low_Aligned_Fraction": v["low_alignedfrac"],
                 }
-
-            config = {"namespace": "sincei bamPEFragmentSize"}
+            config = {
+                    "namespace": "sincei scFilterStats",
+                    "max_table_rows": 10000
+                    }
             self.add_section(
                 name="Filtering metrics",
                 anchor="scFilterStats",
