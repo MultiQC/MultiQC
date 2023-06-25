@@ -88,9 +88,9 @@ def parse_reports(
             #
             # New log starting
             #
-            if "markduplicates" in l.lower() and "input" in l.lower():
+            if "SentieonCommandLine" in l and "-i " in l and "--algo Dedup" in l:
                 # Pull sample name from input
-                fn_search = re.search(r"INPUT(?:=|\s+)(\[?[^\s]+\]?)", l, flags=re.IGNORECASE)
+                fn_search = re.search(r"-i(?:=|\s+)(\[?[^\s]+\]?)", l)
                 if fn_search:
                     s_name = os.path.basename(fn_search.group(1).strip("[]"))
                     s_name = self.clean_s_name(s_name, f)
