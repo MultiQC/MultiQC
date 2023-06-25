@@ -2,7 +2,7 @@
 name: Sentieon
 url: https://www.sentieon.com/products/
 description: >
-  Sentieon-dnaseq produces many outputs. This module deals with 3 Picard
+  Sentieon-dnaseq produces many outputs. This module deals with four Picard
   equivalents which do not transfer well to MultiQC. The code for each script
   is split into its own file and adds a section to the module output if
   logs are found.
@@ -16,6 +16,7 @@ sequencing data.
 
 Supported commands:
 
-- `InsertSizeMetrics`
-- `GcBiasMetrics`
 - `AlignmentSummaryMetrics`
+- `GcBiasMetrics`
+- `InsertSizeMetrics`
+- `SentieonDedupMetrics`

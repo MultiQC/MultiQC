@@ -730,6 +730,10 @@ sargasso:
 sentieon/alignment_metrics:
   contents: "--algo AlignmentStat"
   shared: true
+sentieon/dedup:
+  contents: "--algo Dedup"
+  num_lines: 3
+  shared: true
 sentieon/insertsize:
   contents: "--algo InsertSizeMetricAlgo"
   shared: true

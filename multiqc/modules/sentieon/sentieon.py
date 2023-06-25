@@ -7,7 +7,7 @@ from collections import OrderedDict
 from multiqc.modules.base_module import BaseMultiqcModule
 
 # Import the Sentieon submodules
-from . import AlignmentSummaryMetrics, GcBiasMetrics, InsertSizeMetrics
+from . import AlignmentSummaryMetrics, DedupMetrics, GcBiasMetrics, InsertSizeMetrics
 
 # Initialise the logger
 log = logging.getLogger(__name__)
@@ -38,6 +38,11 @@ class MultiqcModule(BaseMultiqcModule):
         n["AlignmentMetrics"] = AlignmentSummaryMetrics.parse_reports(self)
         if n["AlignmentMetrics"] > 0:
             log.info("Found {} AlignmentSummaryMetrics reports".format(n["AlignmentMetrics"]))
+
+        # Call submodule functions
+        n["DedupMetrics"] = DedupMetrics.parse_reports(self)
+        if n["DedupMetrics"] > 0:
+            log.info("Found {} DedupMetrics reports".format(n["DedupMetrics"]))
 
         n["GcBiasMetrics"] = GcBiasMetrics.parse_reports(self)
         if n["GcBiasMetrics"] > 0:

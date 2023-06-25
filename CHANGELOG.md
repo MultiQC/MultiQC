@@ -27,6 +27,8 @@
   - Added report section listing samples that had no adapters trimmed
 - **RSeQC**
   - Fix `ZeroDivisionError` error for `bam_stat` results when there are 0 reads ([#1735](https://github.com/ewels/MultiQC/issues/1735))
+- **Sentieon**
+  - Added support for metrics from Sentieon's DNAseq function Dedup (corresponding the Picard's Markduplicates). ([#1936](https://github.com/ewels/MultiQC/issues/1936))
 - **UMI-tools**
   - Fix bug that broke the module with paired-end data ([#1845](https://github.com/ewels/MultiQC/issues/1845))
 
