@@ -15,7 +15,6 @@ log = logging.getLogger(__name__)
 
 def parse_reports(
     self,
-    log_key="sentieon/dedup",
     section_name="Sention Dedup",
     section_anchor="sentieon-dedup",
     plot_title="Sentieon: Deduplication Stats",
@@ -77,7 +76,7 @@ def parse_reports(
             parsed_data = {}
 
     # Go through logs and find Metrics
-    for f in self.find_log_files(log_key, filehandles=True):
+    for f in self.find_log_files("sentieon/dedup", filehandles=True):
         s_name = f["s_name"]
         base_s_name = f["s_name"]
         parsed_data = {}
