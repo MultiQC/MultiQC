@@ -781,6 +781,13 @@ snpsplit/new:
 sortmerna:
   contents: "Minimal SW score based on E-value"
   shared: true
+spaceranger/count_html:
+  - fn: "*.html"
+    contents: '"command":"Space Ranger","subcommand":"count"'
+    num_lines: 13
+  - fn: "*.html"
+    contents: '"command": "Space Ranger", "subcommand": "count"'
+    num_lines: 13
 stacks/gstacks:
   fn: "gstacks.log.distribs"
   contents: "BEGIN effective_coverages_per_sample"

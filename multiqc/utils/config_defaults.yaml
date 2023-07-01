@@ -818,3 +818,7 @@ module_order:
   - whatshap:
       module_tag:
         - DNA
+  - spaceranger:
+      module_tag:
+        - RNA
+        - spatial

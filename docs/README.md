@@ -55,6 +55,7 @@ MultiQC Modules:
     Bowtie 1: modules/bowtie1.md
     Bowtie 2: modules/bowtie2.md
     Cell Ranger: modules/cellranger.md
+    Space Ranger: modules/spaceranger.md
     DIAMOND: modules/diamond.md
     DRAGEN: modules/dragen.md
     HiCPro: modules/hicpro.md

@@ -31,6 +31,7 @@ ehthumbs.db
 Thumbs.db
 
 .idea/
+/.vscode
 runTest.sh
 
 # Prevent direnv from cluttering the repo

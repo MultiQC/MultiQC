@@ -12,6 +12,11 @@
 
 ### New Modules
 
+- [**Space Ranger**](https://support.10xgenomics.com/spatial-gene-expression/software/pipelines/latest/what-is-space-ranger)
+  - Works with data from 10X Genomics Visium. Processes sequencing reads and images created using
+    the 10x Visium platform to generate count matrices with spatial information.
+  - New MultiQC module parses Space Ranger quality reports.
+
 ### Module updates
 
 - **Cell Ranger**

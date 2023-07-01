@@ -187,6 +187,7 @@ setup(
             "snpsplit = multiqc.modules.snpsplit:MultiqcModule",
             "somalier = multiqc.modules.somalier:MultiqcModule",
             "sortmerna = multiqc.modules.sortmerna:MultiqcModule",
+            "spaceranger = multiqc.modules.spaceranger:MultiqcModule",
             "stacks = multiqc.modules.stacks:MultiqcModule",
             "star = multiqc.modules.star:MultiqcModule",
             "supernova = multiqc.modules.supernova:MultiqcModule",
