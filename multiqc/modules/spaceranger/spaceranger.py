@@ -1,4 +1,4 @@
-""" MultiQC module to parse output from Cell Ranger """
+""" MultiQC module to parse output from Space Ranger """
 
 import logging
 
@@ -12,7 +12,7 @@ log = logging.getLogger(__name__)
 
 
 class MultiqcModule(BaseMultiqcModule, SpaceRangerCountMixin):
-    """Cell Ranger has 2 main modules: count and vdj.
+    """Space Ranger has 2 main modules: count and vdj.
     This module parses data directly from the web_summary.html and summarise
     data useful for QC in the main sample table as well as generate some module specific plots
     """
@@ -34,7 +34,7 @@ class MultiqcModule(BaseMultiqcModule, SpaceRangerCountMixin):
         # Call submodule functions
         n["count"] = self.parse_count_html()
         if n["count"] > 0:
-            log.info("Found {} Cell Ranger count reports".format(n["count"]))
+            log.info("Found {} Space Ranger count reports".format(n["count"]))
 
         # Exit if we didn't find anything
         if sum(n.values()) == 0:

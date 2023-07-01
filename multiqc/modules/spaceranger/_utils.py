@@ -26,7 +26,7 @@ def update_dict(table, headers, rows_list, col_map, colours, prefix):
                 "rid": "{}_{}".format(prefix, col_id.replace(" ", "_").replace("/", "_")),
                 "title": clean_title_case(col_id),
                 "description": col_name,
-                "namespace": f"Cell Ranger {prefix}",
+                "namespace": f"Space Ranger {prefix}",
                 "scale": colours.get(col_id, "RdYlGn" if is_percentage else "GnBu"),
             }
             if is_percentage:
@@ -62,7 +62,7 @@ def set_hidden_cols(headers, col_names):
 
 
 def parse_bcknee_data(data, s_name, max_idx=1000):
-    """parse data for bc knee plot from cellranger dict"""
+    """parse data for bc knee plot from spaceranger dict"""
 
     value_dict = dict()
     for idx, data_series in enumerate(data):
