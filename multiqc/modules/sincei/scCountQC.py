@@ -8,6 +8,7 @@ from multiqc.plots import table
 # Initialise the logger
 log = logging.getLogger(__name__)
 
+
 class scCountQCMixin:
     def parse_scCountQC(self):
         """Find scCountQC output."""
@@ -29,10 +30,10 @@ class scCountQCMixin:
             self.write_data_file(self.sincei_scCountQC, "sincei_count_qc")
 
             header = OrderedDict()
-#            header["SampleName"] = {
-#                "title": "Sample Name",
-#                "description": "Name of Sample"
-#                }
+            #            header["SampleName"] = {
+            #                "title": "Sample Name",
+            #                "description": "Name of Sample"
+            #                }
             header["n_genes"] = {
                 "title": "# Features",
                 "description": "No. of detected features (bins or genes) with non-zero counts",
@@ -92,16 +93,12 @@ class scCountQCMixin:
                     "pct_500": v["pct_500"],
                     "gini_coefficient": v["gini"],
                 }
-            config = {
-                "namespace": "sincei scCountQC",
-                "max_table_rows": 10000
-                }
+            config = {"namespace": "sincei scCountQC", "max_table_rows": 10000}
             self.add_section(
                 name="Counting Metrics",
                 anchor="scCountQC",
                 description="Statistics of distribution of counts per cells after counting using `scCountQC`",
                 plot=table.plot(tdata, header, config),
-
             )
 
         return len(self.sincei_scCountQC)

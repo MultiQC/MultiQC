@@ -30,10 +30,7 @@ class scFilterStatsMixin:
             self.write_data_file(self.sincei_scFilterStats, "sincei_read_filtering")
 
             header = OrderedDict()
-            header["N Entries"] = {
-                "title": "N entries",
-                "description": "Number of entries sampled from the file"
-                }
+            header["N Entries"] = {"title": "N entries", "description": "Number of entries sampled from the file"}
             header["pct_Aligned"] = {
                 "title": "% Aligned",
                 "description": "Percent of aligned entries",
@@ -142,10 +139,7 @@ class scFilterStatsMixin:
                     "pct_Excluded_GC": v["unwanted_gc"],
                     "pct_Low_Aligned_Fraction": v["low_alignedfrac"],
                 }
-            config = {
-                    "namespace": "sincei scFilterStats",
-                    "max_table_rows": 10000
-                    }
+            config = {"namespace": "sincei scFilterStats", "max_table_rows": 10000}
             self.add_section(
                 name="Filtering metrics",
                 anchor="scFilterStats",
