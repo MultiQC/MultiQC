@@ -15,6 +15,9 @@
 
 ### New Modules
 
+- [**sincei**](http://sincei.rtfd.io/)
+  - a toolkit to explore single-cell (epi)-genomics data. It contains modules for read-level and count-level quality control of such data from BAM files.
+
 ### Module updates
 
 - **GATK**: square the BaseRecalibrator scatter plot ([#2189](https://github.com/ewels/MultiQC/pull/2189))
