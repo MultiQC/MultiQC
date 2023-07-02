@@ -5,8 +5,8 @@ from collections import OrderedDict
 from multiqc.modules.base_module import BaseMultiqcModule
 
 # sincei modules
-from .scFilterStats import scFilterStatsMixin
 from .scCountQC import scCountQCMixin
+from .scFilterStats import scFilterStatsMixin
 
 # Initialise the logger
 log = logging.getLogger(__name__)
