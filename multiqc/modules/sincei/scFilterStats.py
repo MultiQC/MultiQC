@@ -99,7 +99,7 @@ class scFilterStatsMixin:
                 "title": "% Singletons",
                 "suffix": "%",
                 "description": "Percent of alignments that are singletons (i.e., paired-end reads where the mates don't align as a pair",
-                "scale": "OrRd",
+                "scale": "PuRd",
                 "min": 0,
                 "max": 100,
             }
@@ -115,7 +115,7 @@ class scFilterStatsMixin:
                 "title": "% Motif Filtered",
                 "suffix": "%",
                 "description": "Percent of alignments lacking the expected sequence motif",
-                "scale": "OrRd",
+                "scale": "PuRd",
                 "min": 0,
                 "max": 100,
             }
@@ -131,7 +131,7 @@ class scFilterStatsMixin:
                 "title": "% Low_Aligned_Fraction",
                 "suffix": "%",
                 "description": "Percent of alignments where the number of bases that match the reference were lower then desired",
-                "scale": "OrRd",
+                "scale": "PuRd",
                 "min": 0,
                 "max": 100,
             }
@@ -157,7 +157,7 @@ class scFilterStatsMixin:
                 name="Filtering metrics",
                 anchor="scFilterStats",
                 description="Estimated percentages of alignments filtered independently for each setting in `scFilterStats`",
-                plot=table.plot(tdata, header, config),
+                plot=beeswarm.plot(tdata, header, config),
             )
 
         return len(self.sincei_scFilterStats)
