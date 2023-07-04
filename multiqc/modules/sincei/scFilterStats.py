@@ -4,7 +4,7 @@ import logging
 import csv
 from collections import OrderedDict
 
-from multiqc.plots import table
+from multiqc.plots import beeswarm
 
 # Initialise the logger
 log = logging.getLogger(__name__)
