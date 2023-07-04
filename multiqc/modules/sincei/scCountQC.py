@@ -56,7 +56,7 @@ class scCountQCMixin:
             header["pct_100"] = {
                 "title": "% Counts top 100",
                 "description": "Percent of alignments in top 100 features",
-                "scale": "RdYlBu_r",
+                "scale": "BrBG_r",
                 "min": 0,
                 "max": 100,
             }
@@ -70,14 +70,14 @@ class scCountQCMixin:
             header["pct_500"] = {
                 "title": "% Counts top 500",
                 "description": "Percent of alignments in top 500 features",
-                "scale": "RdYlBu_r",
+                "scale": "PuOr_r",
                 "min": 0,
                 "max": 100,
             }
             header["gini_coefficient"] = {
                 "title": "Gini Coefficient",
                 "description": "Gini coefficient of enrichment (inequality) of counts in features.",
-                "scale": "OrRd",
+                "scale": "BrBG",
                 "min": 0,
                 "max": 1,
             }
@@ -98,7 +98,7 @@ class scCountQCMixin:
                 name="Counting Metrics",
                 anchor="scCountQC",
                 description="Statistics of distribution of counts per cells after counting using `scCountQC`",
-                plot=table.plot(tdata, header, config),
+                plot=beeswarm.plot(tdata, header, config),
             )
 
         return len(self.sincei_scCountQC)
