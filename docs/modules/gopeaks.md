@@ -1,7 +1,7 @@
 ---
-Name: GoPeaks
-URL: https://github.com/maxsonBraunLab/gopeaks
-Description: >
+name: GoPeaks
+url: https://github.com/maxsonBraunLab/gopeaks
+description: >
   GoPeaks is used to call peaks in CUT&TAG/CUT&RUN datasets.
 ---
 

@@ -1,3 +1,8 @@
+---
+title: Using MultiQC in pipelines
+description: Integration within your workflow manager of choice
+---
+
 # Using MultiQC in pipelines
 
 MultiQC has been designed to be placed at the end of bioinformatics workflows

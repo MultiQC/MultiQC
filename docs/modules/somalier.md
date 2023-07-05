@@ -1,7 +1,7 @@
 ---
-Name: Somalier
-URL: https://github.com/brentp/somalier
-Description: >
+name: Somalier
+url: https://github.com/brentp/somalier
+description: >
   Somalier does fast genotype :: pedigree correspondence checks
   from BAM/CRAM/VCF
 ---

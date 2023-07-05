@@ -1,7 +1,7 @@
 ---
-Name: Longranger
-URL: https://www.10xgenomics.com/
-Description: >
+name: Longranger
+url: https://www.10xgenomics.com/
+description: >
   A set of analysis pipelines that perform sample demultiplexing, barcode processing, alignment, quality control, variant calling, phasing, and structural variant calling.
 ---
 

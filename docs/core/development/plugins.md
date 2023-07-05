@@ -1,3 +1,8 @@
+---
+title: MultiQC Plugins
+description: Extending core functionality with plugins
+---
+
 # MultiQC Plugins
 
 MultiQC is written around a system designed for extensibility and plugins.

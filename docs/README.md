@@ -185,7 +185,7 @@ These docs can be read in any of three ways:
 - As part of the distributed source code (in `/docs/`)
 
 If you're curious how the website works, check out the
-[MultiQC website repository](https://github.com/ewels/MultiQC_website).
+[MultiQC website repository](https://github.com/MultiQC/website).
 
 ## Contributing to MultiQC
 

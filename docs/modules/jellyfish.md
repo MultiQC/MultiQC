@@ -1,7 +1,7 @@
 ---
-Name: Jellyfish
-URL: http://www.cbcb.umd.edu/software/jellyfish/
-Description: >
+name: Jellyfish
+url: http://www.cbcb.umd.edu/software/jellyfish/
+description: >
   JELLYFISH is a tool for fast, memory-efficient counting of k-mers in DNA.
 ---
 
