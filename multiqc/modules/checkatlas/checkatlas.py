@@ -4,23 +4,23 @@
 
 from __future__ import print_function
 
-import math
-import shutil
-
-import os.path
-from collections import OrderedDict
 import logging
-import re
+import os.path
+import shutil
+from collections import OrderedDict
+
 from multiqc import config
-from multiqc.plots import table, linegraph
 from multiqc.modules.base_module import BaseMultiqcModule
+from multiqc.plots import beeswarm, linegraph, scatter, table
 
 # Initialise the logger
 log = logging.getLogger(__name__)
 
 FIG_PATH = "checkatlas_fig"
 
+CELLINDEX_HEADER = "cell_index"
 QC_HEADER = ["total_counts", "n_genes_by_counts", "pct_counts_mt"]
+QC_RANK_HEADER = ["cellrank_total_counts", "cellrank_n_genes_by_counts", "cellrank_pct_counts_mt"]
 
 LIST_PATTERN = [
     "checkatlas/summary",
@@ -83,7 +83,6 @@ class MultiqcModule(BaseMultiqcModule):
     """checkatlas module, parses stderr logs."""
 
     def __init__(self):
-
         fig_dir = os.path.join(config.data_dir, FIG_PATH)
         os.mkdir(fig_dir)
 
@@ -122,13 +121,19 @@ class MultiqcModule(BaseMultiqcModule):
         self.data_qc_counts = dict()
         self.data_qc_genes = dict()
         self.data_qc_mito = dict()
+        self.data_qcswarm_counts = dict()
+        self.data_qcswarm_genes = dict()
+        self.data_qcswarm_mito = dict()
         for f in self.find_log_files("checkatlas/qc"):
             input_fname = f["s_name"].replace("_checkatlas_qc", "")
             s_name = self.clean_s_name(input_fname, f)
-            data_qc_counts, data_qc_genes, data_qc_mito = parse_qc_logs(f["f"])
-            self.data_qc_counts[s_name] = data_qc_counts
-            self.data_qc_genes[s_name] = data_qc_genes
-            self.data_qc_mito[s_name] = data_qc_mito
+            list_data = parse_qc_logs(f["f"])
+            self.data_qc_counts[s_name] = list_data[0]
+            self.data_qc_genes[s_name] = list_data[1]
+            self.data_qc_mito[s_name] = list_data[2]
+            self.data_qcswarm_counts[s_name] = list_data[3]
+            self.data_qcswarm_genes[s_name] = list_data[4]
+            self.data_qcswarm_mito[s_name] = list_data[5]
             self.add_data_source(f, s_name)
 
         self.data_umap = dict()
@@ -267,11 +272,14 @@ class MultiqcModule(BaseMultiqcModule):
             "title": "QC total_counts",
             "ylab": "total_counts",  # X axis label
             "xlab": "log10(Cell Rank)",  # Y axis label
-            "logswitch": True,
-            "logswitch_active": True,
             "id": "qc_counts",  # HTML ID used for plot
             "categories": False,  # Set to True to use x values as categories instead of numbers.
         }
+
+        print(len(self.data_qc_counts["Tabula_Sapiens_Endothelial"]))
+        print(len(self.data_qc_counts["B-cells_compartment"]))
+        print(self.data_qc_counts.keys())
+
         self.add_section(
             name="QC total_counts",
             anchor="checkatlas-qc_counts",
@@ -281,6 +289,32 @@ class MultiqcModule(BaseMultiqcModule):
                 """,
             content=linegraph.plot(data=self.data_qc_counts, pconfig=config_qc),
         )
+
+        # Config for the plot
+        """ test_beeswarn = {'cell1':{'samp':2.3,'total_counts':3.4,'pct_counts_mt':5.6},
+                         'cell2':{'n_genes_by_counts':4.3,'total_counts':5.4,'pct_counts_mt':6.6},
+                         'cell3':{'n_genes_by_counts':1.3,'total_counts':4.4,'pct_counts_mt':1.6}}
+
+        print(test_beeswarn)
+#        test_beeswarn['percent_chg_meth'] =  {1:2.3,2:3.4,3:5.6}
+#        test_beeswarn['percent_chh_meth'] =  {1:2.3,2:3.4,3:5.6}
+        keys = OrderedDict()
+        defaults = {
+            'max': 100,
+            'min': 0,
+            'suffix': '%',
+            'decimalPlaces': 1
+        }
+        keys['n_genes_by_counts'] = dict(defaults, **{ 'title': 'n_genes_by_counts' })
+        keys['total_counts'] = dict(defaults, **{ 'title': 'Methylated CHG' })
+        keys['pct_counts_mt'] = dict(defaults, **{ 'title': 'Methylated CHH' })
+        self.add_section(
+            name="Beeswarn plot",
+            anchor="Violin_plot",
+            description=".",
+            helptext="",
+            content=beeswarm.plot(test_beeswarn, keys),
+        ) """
 
         config_qc = {
             # Building the plot
@@ -298,7 +332,7 @@ class MultiqcModule(BaseMultiqcModule):
             description="QC of your atlases log10(Cellrank vs n_genes_by_counts.",
             helptext="""
 
-                """,
+        """,
             content=linegraph.plot(data=self.data_qc_genes, pconfig=config_qc),
         )
 
@@ -316,9 +350,7 @@ class MultiqcModule(BaseMultiqcModule):
             name="QC pct_counts_mt",
             anchor="checkatlas-qc_mito",
             description="QC of your atlases log10(Cellrank vs pct_counts_mt.",
-            helptext="""
-
-                """,
+            helptext="",
             content=linegraph.plot(data=self.data_qc_mito, pconfig=config_qc),
         )
 
@@ -403,47 +435,76 @@ def parse_qc_logs(f):
     :param f:
     :return:
     """
-    data_qc_counts = dict()
-    data_qc_genes = dict()
-    data_qc_mito = dict()
-    list_qc_counts = list()
-    list_qc_genes = list()
-    list_qc_mito = list()
     lines = f.splitlines()
     headers = lines[0].split("\t")
+    index_cellid = headers.index(CELLINDEX_HEADER)
     try:
         index_counts = headers.index(QC_HEADER[0])
+        index_rank_counts = headers.index(QC_RANK_HEADER[0])
     except ValueError:
         index_counts = -1
     try:
         index_genes = headers.index(QC_HEADER[1])
+        index_rank_genes = headers.index(QC_RANK_HEADER[1])
     except ValueError:
         index_genes = -1
     try:
         index_mito = headers.index(QC_HEADER[2])
+        index_rank_mito = headers.index(QC_RANK_HEADER[2])
     except ValueError:
         index_mito = -1
 
+    # get data
+    dict_qc_counts = dict()
+    dict_qc_genes = dict()
+    dict_qc_mito = dict()
+    data_qcswarm_counts = dict()
+    data_qcswarm_genes = dict()
+    data_qcswarm_mito = dict()
     for i in range(1, len(lines)):
         line = lines[i].split("\t")
+        cellid = int(line[index_rank_counts])
         if index_counts != -1:
-            list_qc_counts.append(float(line[index_counts]))
+            rank_count = int(line[index_rank_counts])
+            count = float(line[index_counts])
+            dict_qc_counts[rank_count] = count
+            data_qcswarm_counts[cellid] = count
         if index_genes != -1:
-            list_qc_genes.append(float(line[index_genes]))
+            rank_genes = float(line[index_rank_genes])
+            genes = float(line[index_genes])
+            dict_qc_genes[rank_genes] = genes
+            data_qcswarm_genes[cellid] = genes
         if index_mito != -1:
-            list_qc_mito.append(float(line[index_mito]))
-    list_qc_counts.sort(reverse=True)
-    list_qc_genes.sort(reverse=True)
-    list_qc_mito.sort(reverse=True)
+            rank_mito = float(line[index_rank_mito])
+            mito = float(line[index_mito])
+            dict_qc_mito[rank_mito] = mito
+            data_qcswarm_mito[cellid] = mito
 
-    for i in range(1, len(list_qc_counts)):
-        data_qc_counts[math.log10(i)] = list_qc_counts[i]
-    for i in range(1, len(list_qc_genes)):
-        data_qc_genes[math.log10(i)] = list_qc_genes[i]
-    for i in range(1, len(list_qc_mito)):
-        data_qc_mito[math.log10(i)] = list_qc_mito[i]
-
-    return data_qc_counts, data_qc_genes, data_qc_mito
+    # reorder by rank
+    list_qc_rank_counts = list(dict_qc_counts.keys())
+    list_qc_rank_counts.sort()
+    list_qc_rank_genes = list(dict_qc_genes.keys())
+    list_qc_rank_genes.sort()
+    list_qc_rank_mito = list(dict_qc_mito.keys())
+    list_qc_rank_mito.sort()
+    data_qc_counts = dict()
+    data_qc_genes = dict()
+    data_qc_mito = dict()
+    for rank in list_qc_rank_counts:
+        data_qc_counts[rank] = dict_qc_counts[rank]
+    for rank in list_qc_rank_genes:
+        data_qc_genes[rank] = dict_qc_genes[rank]
+    for rank in list_qc_rank_mito:
+        data_qc_mito[rank] = dict_qc_mito[rank]
+    list_data = [
+        data_qc_counts,
+        data_qc_genes,
+        data_qc_mito,
+        data_qcswarm_counts,
+        data_qcswarm_genes,
+        data_qcswarm_mito,
+    ]
+    return list_data
 
 
 def parse_firstline_table_logs(f):
