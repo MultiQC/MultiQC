@@ -46,8 +46,6 @@ def update_dict(table, headers, rows_list, col_map, colours, prefix):
                 headers[col_id]["shared_key"] = "reads_per_cell"
                 headers[col_id]["format"] = "{:,.0f}"
 
-    return table, headers
-
 
 def set_hidden_cols(headers, col_names):
     """Set the hidden columns"""

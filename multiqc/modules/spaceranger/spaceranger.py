@@ -5,7 +5,7 @@ import logging
 from multiqc.modules.base_module import BaseMultiqcModule
 
 # Import the Samtools submodules
-from .count import SpaceRangerCountMixin 
+from .count import SpaceRangerCountMixin
 
 # Initialise the logger
 log = logging.getLogger(__name__)

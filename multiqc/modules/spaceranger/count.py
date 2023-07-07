@@ -8,7 +8,7 @@ from multiqc import config
 from multiqc.plots import linegraph, table
 from multiqc.modules.base_module import BaseMultiqcModule
 
-from ._utils import *
+from ._utils import update_dict
 
 # Initialise the logger
 log = logging.getLogger(__name__)
@@ -23,7 +23,7 @@ class SpaceRangerCountMixin(BaseMultiqcModule):
         self.spacerangercount_warnings = dict()
         self.spacerangercount_plots_conf = {"bc": dict(), "genes": dict()}
         self.spacerangercount_plots_data = {"bc": dict(), "genes": dict()}
-        self.count_general_data_headers = OrderedDict()
+        self.count_general_data_headers = dict()
         self.count_data_headers = OrderedDict()
         self.count_warnings_headers = OrderedDict()
 
@@ -95,7 +95,9 @@ class SpaceRangerCountMixin(BaseMultiqcModule):
                 name="Count - Summary stats",
                 anchor="spaceranger-count-stats",
                 description="Summary QC metrics from Space Ranger count",
-                plot=table.plot(self.spacerangercount_data, self.count_data_headers, {"namespace": "Space Ranger Count"}),
+                plot=table.plot(
+                    self.spacerangercount_data, self.count_data_headers, {"namespace": "Space Ranger Count"}
+                ),
             )
 
             self.add_section(
@@ -137,6 +139,7 @@ class SpaceRangerCountMixin(BaseMultiqcModule):
     def parse_count_report(self, f):
         """Go through the html report of space ranger and extract the data in a dicts"""
 
+        summary = None
         for line in f["f"]:
             line = line.strip()
             if line.startswith("const data"):
@@ -145,81 +148,61 @@ class SpaceRangerCountMixin(BaseMultiqcModule):
                 summary = summary["summary"]
                 break
 
-        s_name = self.clean_s_name(summary["sample"]["id"], f)
-        data_general_stats = dict()
+        assert summary is not None, "Couldn't find JSON summary data in HTML report."
 
-        # Store general stats from cells
-        col_dict = {
-            "Estimated Number of Cells": "estimated cells",
-            "Mean Reads per Cell": "avg reads/cell",
-            "Fraction Reads in Cells": "reads in cells",
-        }
-        colours = {
-            "estimated cells": "PuBu",
-            "avg reads/cell": "GnBu",
-            "reads in cells": "Purples",
-        }
-        data_general_stats, self.count_general_data_headers = update_dict(
-            data_general_stats,
-            self.count_general_data_headers,
-            summary["summary_tab"]["cells"]["table"]["rows"],
-            col_dict,
-            colours,
-            "Count",
+        s_name = self.clean_s_name(summary["sample"]["id"], f)
+        
+        # List of data collated from different tables in cellranger reports. 
+        # This is a list of Tuples (metric name, value)
+        data_rows = (
+            ["Number of Spots Under Tissue", summary["summary_tab"]["filtered_bcs_transcriptome_union"]["metric"]]
+            + summary["summary_tab"]["cells"]["table"]["rows"]
+            + summary["summary_tab"]["sequencing"]["table"]["rows"]
+            + summary["summary_tab"]["mapping"]["table"]["rows"]
         )
 
-        # Store general stats from sequencing tables
+        # Store general stats
         col_dict = {
+            "Number of Spots Under Tissue": "spots under tissue",
+            "Mean Reads per Spot": "avg reads/spot",
+            "Fraction Reads in Spots under Tissue": "reads in spots",
             "Number of Reads": "reads",
             "Valid Barcodes": "valid bc",
-            "Q30 Bases in Barcode": "Q30 bc",
-            "Q30 Bases in UMI": "Q30 UMI",
-            "Q30 Bases in RNA Read": "Q30 read",
         }
         colours = {
+            "spots under tissue": "PuBu",
+            "avg reads/spot": "GnBu",
+            "reads in spots": "Purples",
             "reads": "PuBuGn",
             "valid bc": "RdYlGn",
-            "Q30 bc": "RdYlBu",
-            "Q30 UMI": "Spectral",
-            "Q30 read": "RdBu",
         }
-        data_general_stats, self.count_general_data_headers = update_dict(
+        data_general_stats = {} 
+        update_dict(
             data_general_stats,
             self.count_general_data_headers,
-            summary["summary_tab"]["sequencing"]["table"]["rows"],
+            data_rows,
             col_dict,
             colours,
             "Count",
         )
 
         # Store full data from space ranger count report
-        data = dict()
-        data_rows = (
-            summary["summary_tab"]["sequencing"]["table"]["rows"]
-            + summary["summary_tab"]["cells"]["table"]["rows"]
-            + summary["summary_tab"]["mapping"]["table"]["rows"]
-        )
         col_dict = {
             "Number of Reads": "reads",
-            "Estimated Number of Cells": "estimated cells",
-            "Mean Reads per Cell": "avg reads/cell",
-            "Total Genes Detected": "genes detected",
-            "Median Genes per Cell": "median genes/cell",
-            "Fraction Reads in Cells": "reads in cells",
+            "Number of Spots Under Tissue": "spots under tissue",
+            "Mean Reads per Spot": "avg reads/spot",
+            "Fraction Reads in Spots under Tissue": "reads in spots",
+            "Genes Detected": "genes detected",
+            "Median Genes per Spot": "median genes/cell",
+            "Median UMI Counts per Spot": "median umi/cell",
             "Valid Barcodes": "valid bc",
             "Valid UMIs": "valid umi",
-            "Median UMI Counts per Cell": "median umi/cell",
             "Sequencing Saturation": "saturation",
             "Q30 Bases in Barcode": "Q30 bc",
             "Q30 Bases in UMI": "Q30 UMI",
             "Q30 Bases in RNA Read": "Q30 read",
-            "Reads Mapped to Genome": "reads mapped",
-            "Reads Mapped Confidently to Genome": "confident reads",
-            "Reads Mapped Confidently to Transcriptome": "confident transcriptome",
-            "Reads Mapped Confidently to Exonic Regions": "confident exonic",
-            "Reads Mapped Confidently to Intronic Regions": "confident intronic",
-            "Reads Mapped Confidently to Intergenic Regions": "confident intergenic",
-            "Reads Mapped Antisense to Gene": "reads antisense",
+            "Reads Mapped to Probe Set": "reads mapped",
+            "Reads Mapped Confidently to Probe Set": "confident reads"
         }
         colours = {
             "reads": "YlGn",
@@ -233,8 +216,9 @@ class SpaceRangerCountMixin(BaseMultiqcModule):
             "median umi/cell": "YlGn",
             "saturation": "YlOrRd",
         }
-        data, self.count_data_headers = update_dict(
-            data_general_stats,
+        data = {}
+        update_dict(
+            data,
             self.count_data_headers,
             data_rows,
             col_dict,
