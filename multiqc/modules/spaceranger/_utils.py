@@ -79,9 +79,7 @@ def parse_bcknee_data(data, s_name, max_idx=1000):
 def transform_data(data):
     """Transform x:list,y:list data to a dict of x_val:y_val"""
 
-    value_dict = dict()
-    for idx, row in enumerate(data["x"]):
-        if row > 0 and data["y"][idx] > 0:
-            value_dict[row] = data["y"][idx]
+    return {
+        x: y for x, y in zip(data["x"], data["y"])
+    }
 
-    return value_dict

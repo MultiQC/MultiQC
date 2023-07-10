@@ -6,23 +6,22 @@ from collections import OrderedDict
 
 from multiqc import config
 from multiqc.plots import linegraph, table
-from multiqc.modules.base_module import BaseMultiqcModule
 
-from ._utils import update_dict
+from ._utils import update_dict, parse_bcknee_data, transform_data, set_hidden_cols
 
 # Initialise the logger
 log = logging.getLogger(__name__)
 
 
-class SpaceRangerCountMixin(BaseMultiqcModule):
+class SpaceRangerCountMixin():
     """Space Ranger count report parser"""
 
     def parse_count_html(self):
         self.spacerangercount_data = dict()
         self.spacerangercount_general_data = dict()
         self.spacerangercount_warnings = dict()
-        self.spacerangercount_plots_conf = {"bc": dict(), "genes": dict()}
-        self.spacerangercount_plots_data = {"bc": dict(), "genes": dict()}
+        self.spacerangercount_plots_conf = {"saturation": dict(), "genes": dict(), "genomic_dna": dict()}
+        self.spacerangercount_plots_data = {"saturation": dict(), "genes": dict(), "genomic_dna": dict()}
         self.count_general_data_headers = dict()
         self.count_data_headers = OrderedDict()
         self.count_warnings_headers = OrderedDict()
@@ -60,14 +59,10 @@ class SpaceRangerCountMixin(BaseMultiqcModule):
                 "Q30 bc",
                 "Q30 UMI",
                 "Q30 read",
-                "reads in cells",
-                "avg reads/cell",
+                "reads in spots",
+                "avg reads/spot",
                 "confident reads",
-                "confident transcriptome",
-                "confident intronic",
-                "confident intergenic",
-                "reads antisense",
-                "saturation",
+                "confident filtered reads",
             ],
         )
 
@@ -101,12 +96,12 @@ class SpaceRangerCountMixin(BaseMultiqcModule):
             )
 
             self.add_section(
-                name="Count - BC rank plot",
+                name="Count - UMIs from Genomic DNA",
                 anchor="spaceranger-count-bcrank-plot",
-                description=self.spacerangercount_plots_conf["bc"]["description"],
-                helptext=self.spacerangercount_plots_conf["bc"]["helptext"],
+                description=self.spacerangercount_plots_conf["genomic_dna"]["description"],
+                helptext=self.spacerangercount_plots_conf["genomic_dna"]["helptext"],
                 plot=linegraph.plot(
-                    self.spacerangercount_plots_data["bc"], self.spacerangercount_plots_conf["bc"]["config"]
+                    self.spacerangercount_plots_data["genomic_dna"], self.spacerangercount_plots_conf["genomic_dna"]["config"]
                 ),
             )
 
@@ -120,19 +115,16 @@ class SpaceRangerCountMixin(BaseMultiqcModule):
                 ),
             )
 
-            try:
-                self.add_section(
-                    name="Count - Saturation plot",
-                    anchor="spaceranger-count-saturation-plot",
-                    description=self.spacerangercount_plots_conf["saturation"]["description"],
-                    helptext=self.spacerangercount_plots_conf["saturation"]["helptext"],
-                    plot=linegraph.plot(
-                        self.spacerangercount_plots_data["saturation"],
-                        self.spacerangercount_plots_conf["saturation"]["config"],
-                    ),
-                )
-            except KeyError:
-                pass
+            self.add_section(
+                name="Count - Saturation plot",
+                anchor="spaceranger-count-saturation-plot",
+                description=self.spacerangercount_plots_conf["saturation"]["description"],
+                helptext=self.spacerangercount_plots_conf["saturation"]["helptext"],
+                plot=linegraph.plot(
+                    self.spacerangercount_plots_data["saturation"],
+                    self.spacerangercount_plots_conf["saturation"]["config"],
+                ),
+            )
 
             return len(self.spacerangercount_general_data)
 
@@ -151,14 +143,15 @@ class SpaceRangerCountMixin(BaseMultiqcModule):
         assert summary is not None, "Couldn't find JSON summary data in HTML report."
 
         s_name = self.clean_s_name(summary["sample"]["id"], f)
-        
-        # List of data collated from different tables in cellranger reports. 
+
+        # List of data collated from different tables in cellranger reports.
         # This is a list of Tuples (metric name, value)
         data_rows = (
-            ["Number of Spots Under Tissue", summary["summary_tab"]["filtered_bcs_transcriptome_union"]["metric"]]
+            [["Number of Spots Under Tissue", summary["summary_tab"]["filtered_bcs_transcriptome_union"]["metric"]]]
             + summary["summary_tab"]["cells"]["table"]["rows"]
             + summary["summary_tab"]["sequencing"]["table"]["rows"]
             + summary["summary_tab"]["mapping"]["table"]["rows"]
+            + summary["analysis_tab"]["gdna"]["gems"]["table"]["rows"]
         )
 
         # Store general stats
@@ -176,7 +169,7 @@ class SpaceRangerCountMixin(BaseMultiqcModule):
             "reads": "PuBuGn",
             "valid bc": "RdYlGn",
         }
-        data_general_stats = {} 
+        data_general_stats = {}
         update_dict(
             data_general_stats,
             self.count_general_data_headers,
@@ -193,8 +186,8 @@ class SpaceRangerCountMixin(BaseMultiqcModule):
             "Mean Reads per Spot": "avg reads/spot",
             "Fraction Reads in Spots under Tissue": "reads in spots",
             "Genes Detected": "genes detected",
-            "Median Genes per Spot": "median genes/cell",
-            "Median UMI Counts per Spot": "median umi/cell",
+            "Median Genes per Spot": "median genes/spot",
+            "Median UMI Counts per Spot": "median umi/spot",
             "Valid Barcodes": "valid bc",
             "Valid UMIs": "valid umi",
             "Sequencing Saturation": "saturation",
@@ -202,19 +195,23 @@ class SpaceRangerCountMixin(BaseMultiqcModule):
             "Q30 Bases in UMI": "Q30 UMI",
             "Q30 Bases in RNA Read": "Q30 read",
             "Reads Mapped to Probe Set": "reads mapped",
-            "Reads Mapped Confidently to Probe Set": "confident reads"
+            "Reads Mapped Confidently to Probe Set": "confident reads",
+            "Reads Mapped Confidently to Filtered Probe Set": "confident filtered reads",
+            "Estimated UMIs from Genomic DNA": "genomic umis",
+            "Estimated UMIs from Genomic DNA per Unspliced Probe": "genomic umis/unspliced probe",
         }
         colours = {
             "reads": "YlGn",
-            "estimated cells": "RdPu",
-            "avg reads/cell": "Blues",
+            "spots under tissue": "RdPu",
+            "avg reads/spot": "Blues",
             "genes detected": "Greens",
-            "median genes/cell": "Purples",
-            "reads in cells": "PuBuGn",
+            "median genes/spot": "Purples",
+            "reads in spots": "PuBuGn",
             "valid bc": "Spectral",
             "valid umi": "RdYlGn",
-            "median umi/cell": "YlGn",
+            "median umi/spot": "YlGn",
             "saturation": "YlOrRd",
+            "genomic umis": "YlOrRd"
         }
         data = {}
         update_dict(
@@ -227,7 +224,7 @@ class SpaceRangerCountMixin(BaseMultiqcModule):
         )
 
         # Extract warnings if any
-        warnings = dict()
+        warnings = {}
         alarms_list = summary["alarms"].get("alarms", [])
         for alarm in alarms_list:
             # "Intron mode used" alarm added in Space Ranger 7.0 lacks id
@@ -241,35 +238,8 @@ class SpaceRangerCountMixin(BaseMultiqcModule):
             }
 
         # Extract data for plots
-        help_dict = {x[0]: x[1][0] for x in summary["summary_tab"]["cells"]["help"]["data"]}
         plots = {
-            "bc": {
-                "config": {
-                    "id": "mqc_spaceranger_count_bc_knee",
-                    "title": f"Space Ranger count: {summary['summary_tab']['cells']['barcode_knee_plot']['layout']['title']}",
-                    "xlab": summary["summary_tab"]["cells"]["barcode_knee_plot"]["layout"]["xaxis"]["title"],
-                    "ylab": summary["summary_tab"]["cells"]["barcode_knee_plot"]["layout"]["yaxis"]["title"],
-                    "yLog": True,
-                    "xLog": True,
-                },
-                "description": "Barcode knee plot",
-                "helptext": help_dict["Barcode Rank Plot"],
-            },
-            "genes": {
-                "config": {
-                    "id": "mqc_spaceranger_count_genesXcell",
-                    "title": f"Space Ranger count: {summary['analysis_tab']['median_gene_plot']['help']['title']}",
-                    "xlab": summary["analysis_tab"]["median_gene_plot"]["plot"]["layout"]["xaxis"]["title"],
-                    "ylab": summary["analysis_tab"]["median_gene_plot"]["plot"]["layout"]["yaxis"]["title"],
-                    "yLog": False,
-                    "xLog": False,
-                },
-                "description": "Median gene counts per cell",
-                "helptext": summary["analysis_tab"]["median_gene_plot"]["help"]["helpText"],
-            },
-        }
-        try:
-            plots["saturation"] = {
+            "saturation": {
                 "config": {
                     "id": "mqc_spaceranger_count_saturation",
                     "title": f"Space Ranger count: {summary['analysis_tab']['seq_saturation_plot']['help']['title']}",
@@ -282,20 +252,39 @@ class SpaceRangerCountMixin(BaseMultiqcModule):
                 },
                 "description": "Sequencing saturation",
                 "helptext": summary["analysis_tab"]["seq_saturation_plot"]["help"]["helpText"],
-            }
-        except KeyError:
-            pass
+            },
+            "genes": {
+                "config": {
+                    "id": "mqc_spaceranger_count_genesXspot",
+                    "title": f"Space Ranger count: {summary['analysis_tab']['median_gene_plot']['help']['title']}",
+                    "xlab": summary["analysis_tab"]["median_gene_plot"]["plot"]["layout"]["xaxis"]["title"],
+                    "ylab": summary["analysis_tab"]["median_gene_plot"]["plot"]["layout"]["yaxis"]["title"],
+                    "yLog": False,
+                    "xLog": False,
+                },
+                "description": "Median gene counts per spot",
+                "helptext": summary["analysis_tab"]["median_gene_plot"]["help"]["helpText"],
+            },
+            "genomic_dna": {
+                "config": {
+                    "id": "mqc_spaceranger_count_genomic_dna",
+                    "title": f"Space Ranger count: {summary['analysis_tab']['gdna']['gems']['help']['title']}",
+                    "xlab": summary["analysis_tab"]["gdna"]["plot"]["layout"]["xaxis"]["title"],
+                    "ylab": summary["analysis_tab"]["gdna"]["plot"]["layout"]["yaxis"]["title"],
+                    "yLog": False,
+                    "xLog": False,
+                },
+                "description": "Estimated UMIs from Genomic DNA per Unspliced Probe",
+                "helptext": summary["analysis_tab"]["gdna"]["gems"]["help"]["data"][2][1][0]
+                + "\n\nThis summary graphic in the MultiQC report only shows the estimated mean baseline level of unspliced probe counts.",
+            },
+        }
 
         plots_data = {
-            "bc": parse_bcknee_data(summary["summary_tab"]["cells"]["barcode_knee_plot"]["data"], s_name),
+            "saturation": {s_name: transform_data(summary["analysis_tab"]["seq_saturation_plot"]["plot"]["data"][0])},
             "genes": {s_name: transform_data(summary["analysis_tab"]["median_gene_plot"]["plot"]["data"][0])},
+            "genomic_dna": {s_name: transform_data(summary["analysis_tab"]["gdna"]["plot"]["data"][2])},
         }
-        try:
-            plots_data["saturation"] = {
-                s_name: transform_data(summary["analysis_tab"]["seq_saturation_plot"]["plot"]["data"][0])
-            }
-        except KeyError:
-            pass
 
         if len(data) > 0:
             if s_name in self.spacerangercount_general_data:
