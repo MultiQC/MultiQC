@@ -13,7 +13,7 @@ from ._utils import update_dict, parse_bcknee_data, transform_data, set_hidden_c
 log = logging.getLogger(__name__)
 
 
-class SpaceRangerCountMixin():
+class SpaceRangerCountMixin:
     """Space Ranger count report parser"""
 
     def parse_count_html(self):
@@ -95,15 +95,20 @@ class SpaceRangerCountMixin():
                 ),
             )
 
-            self.add_section(
-                name="Count - UMIs from Genomic DNA",
-                anchor="spaceranger-count-bcrank-plot",
-                description=self.spacerangercount_plots_conf["genomic_dna"]["description"],
-                helptext=self.spacerangercount_plots_conf["genomic_dna"]["helptext"],
-                plot=linegraph.plot(
-                    self.spacerangercount_plots_data["genomic_dna"], self.spacerangercount_plots_conf["genomic_dna"]["config"]
-                ),
-            )
+            # The gDNA plots are only contained for spaceranger workflows with probesets
+            try:
+                self.add_section(
+                    name="Count - UMIs from Genomic DNA",
+                    anchor="spaceranger-count-bcrank-plot",
+                    description=self.spacerangercount_plots_conf["genomic_dna"]["description"],
+                    helptext=self.spacerangercount_plots_conf["genomic_dna"]["helptext"],
+                    plot=linegraph.plot(
+                        self.spacerangercount_plots_data["genomic_dna"],
+                        self.spacerangercount_plots_conf["genomic_dna"]["config"],
+                    ),
+                )
+            except KeyError:
+                pass
 
             self.add_section(
                 name="Count - Median genes",
@@ -151,8 +156,12 @@ class SpaceRangerCountMixin():
             + summary["summary_tab"]["cells"]["table"]["rows"]
             + summary["summary_tab"]["sequencing"]["table"]["rows"]
             + summary["summary_tab"]["mapping"]["table"]["rows"]
-            + summary["analysis_tab"]["gdna"]["gems"]["table"]["rows"]
         )
+        # This is only contained in spaceranger reports for anlayses with probesets
+        try:
+            data_rows.extend(summary["analysis_tab"]["gdna"]["gems"]["table"]["rows"])
+        except KeyError:
+            pass
 
         # Store general stats
         col_dict = {
@@ -211,7 +220,7 @@ class SpaceRangerCountMixin():
             "valid umi": "RdYlGn",
             "median umi/spot": "YlGn",
             "saturation": "YlOrRd",
-            "genomic umis": "YlOrRd"
+            "genomic umis": "YlOrRd",
         }
         data = {}
         update_dict(
@@ -238,34 +247,43 @@ class SpaceRangerCountMixin():
             }
 
         # Extract data for plots
-        plots = {
-            "saturation": {
-                "config": {
-                    "id": "mqc_spaceranger_count_saturation",
-                    "title": f"Space Ranger count: {summary['analysis_tab']['seq_saturation_plot']['help']['title']}",
-                    "xlab": summary["analysis_tab"]["seq_saturation_plot"]["plot"]["layout"]["xaxis"]["title"],
-                    "ylab": summary["analysis_tab"]["seq_saturation_plot"]["plot"]["layout"]["yaxis"]["title"],
-                    "yLog": False,
-                    "xLog": False,
-                    "ymin": 0,
-                    "ymax": 1,
-                },
-                "description": "Sequencing saturation",
-                "helptext": summary["analysis_tab"]["seq_saturation_plot"]["help"]["helpText"],
+        plots = {}
+        plots_data = {}
+        plots["saturation"] = {
+            "config": {
+                "id": "mqc_spaceranger_count_saturation",
+                "title": f"Space Ranger count: {summary['analysis_tab']['seq_saturation_plot']['help']['title']}",
+                "xlab": summary["analysis_tab"]["seq_saturation_plot"]["plot"]["layout"]["xaxis"]["title"],
+                "ylab": summary["analysis_tab"]["seq_saturation_plot"]["plot"]["layout"]["yaxis"]["title"],
+                "yLog": False,
+                "xLog": False,
+                "ymin": 0,
+                "ymax": 1,
             },
-            "genes": {
-                "config": {
-                    "id": "mqc_spaceranger_count_genesXspot",
-                    "title": f"Space Ranger count: {summary['analysis_tab']['median_gene_plot']['help']['title']}",
-                    "xlab": summary["analysis_tab"]["median_gene_plot"]["plot"]["layout"]["xaxis"]["title"],
-                    "ylab": summary["analysis_tab"]["median_gene_plot"]["plot"]["layout"]["yaxis"]["title"],
-                    "yLog": False,
-                    "xLog": False,
-                },
-                "description": "Median gene counts per spot",
-                "helptext": summary["analysis_tab"]["median_gene_plot"]["help"]["helpText"],
+            "description": "Sequencing saturation",
+            "helptext": summary["analysis_tab"]["seq_saturation_plot"]["help"]["helpText"],
+        }
+        plots_data["saturation"] = {
+            s_name: transform_data(summary["analysis_tab"]["seq_saturation_plot"]["plot"]["data"][0])
+        }
+
+        plots["genes"] = {
+            "config": {
+                "id": "mqc_spaceranger_count_genesXspot",
+                "title": f"Space Ranger count: {summary['analysis_tab']['median_gene_plot']['help']['title']}",
+                "xlab": summary["analysis_tab"]["median_gene_plot"]["plot"]["layout"]["xaxis"]["title"],
+                "ylab": summary["analysis_tab"]["median_gene_plot"]["plot"]["layout"]["yaxis"]["title"],
+                "yLog": False,
+                "xLog": False,
             },
-            "genomic_dna": {
+            "description": "Median gene counts per spot",
+            "helptext": summary["analysis_tab"]["median_gene_plot"]["help"]["helpText"],
+        }
+        plots_data["genes"] = {s_name: transform_data(summary["analysis_tab"]["median_gene_plot"]["plot"]["data"][0])}
+
+        # The gDNA plots are only contained for spaceranger workflows with probesets
+        try:
+            plots["genomic_dna"] = {
                 "config": {
                     "id": "mqc_spaceranger_count_genomic_dna",
                     "title": f"Space Ranger count: {summary['analysis_tab']['gdna']['gems']['help']['title']}",
@@ -277,14 +295,10 @@ class SpaceRangerCountMixin():
                 "description": "Estimated UMIs from Genomic DNA per Unspliced Probe",
                 "helptext": summary["analysis_tab"]["gdna"]["gems"]["help"]["data"][2][1][0]
                 + "\n\nThis summary graphic in the MultiQC report only shows the estimated mean baseline level of unspliced probe counts.",
-            },
-        }
-
-        plots_data = {
-            "saturation": {s_name: transform_data(summary["analysis_tab"]["seq_saturation_plot"]["plot"]["data"][0])},
-            "genes": {s_name: transform_data(summary["analysis_tab"]["median_gene_plot"]["plot"]["data"][0])},
-            "genomic_dna": {s_name: transform_data(summary["analysis_tab"]["gdna"]["plot"]["data"][2])},
-        }
+            }
+            plots_data["genomic_dna"] = {s_name: transform_data(summary["analysis_tab"]["gdna"]["plot"]["data"][2])}
+        except KeyError:
+            pass
 
         if len(data) > 0:
             if s_name in self.spacerangercount_general_data:
