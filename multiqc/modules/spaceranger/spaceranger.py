@@ -24,6 +24,7 @@ class MultiqcModule(BaseMultiqcModule, SpaceRangerCountMixin):
             anchor="spaceranger",
             href="https://support.10xgenomics.com/spatial-gene-expression/software/pipelines/latest/what-is-space-ranger",
             info="Space Ranger analyzes 10x Genomics Visium spatial transcriptomics data.",
+            doi=[],
         )
 
         # Set up class objects to hold parsed data
