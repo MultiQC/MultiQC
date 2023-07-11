@@ -249,37 +249,47 @@ class SpaceRangerCountMixin:
         # Extract data for plots
         plots = {}
         plots_data = {}
-        plots["saturation"] = {
-            "config": {
-                "id": "mqc_spaceranger_count_saturation",
-                "title": f"Space Ranger count: {summary['analysis_tab']['seq_saturation_plot']['help']['title']}",
-                "xlab": summary["analysis_tab"]["seq_saturation_plot"]["plot"]["layout"]["xaxis"]["title"],
-                "ylab": summary["analysis_tab"]["seq_saturation_plot"]["plot"]["layout"]["yaxis"]["title"],
-                "yLog": False,
-                "xLog": False,
-                "ymin": 0,
-                "ymax": 1,
-            },
-            "description": "Sequencing saturation",
-            "helptext": summary["analysis_tab"]["seq_saturation_plot"]["help"]["helpText"],
-        }
-        plots_data["saturation"] = {
-            s_name: transform_data(summary["analysis_tab"]["seq_saturation_plot"]["plot"]["data"][0])
-        }
+        # `analysis_tab` may not be present in the report if there are few reads
+        try:
+            plots["saturation"] = {
+                "config": {
+                    "id": "mqc_spaceranger_count_saturation",
+                    "title": f"Space Ranger count: {summary['analysis_tab']['seq_saturation_plot']['help']['title']}",
+                    "xlab": summary["analysis_tab"]["seq_saturation_plot"]["plot"]["layout"]["xaxis"]["title"],
+                    "ylab": summary["analysis_tab"]["seq_saturation_plot"]["plot"]["layout"]["yaxis"]["title"],
+                    "yLog": False,
+                    "xLog": False,
+                    "ymin": 0,
+                    "ymax": 1,
+                },
+                "description": "Sequencing saturation",
+                "helptext": summary["analysis_tab"]["seq_saturation_plot"]["help"]["helpText"],
+            }
+            plots_data["saturation"] = {
+                s_name: transform_data(summary["analysis_tab"]["seq_saturation_plot"]["plot"]["data"][0])
+            }
+        except KeyError:
+            pass
 
-        plots["genes"] = {
-            "config": {
-                "id": "mqc_spaceranger_count_genesXspot",
-                "title": f"Space Ranger count: {summary['analysis_tab']['median_gene_plot']['help']['title']}",
-                "xlab": summary["analysis_tab"]["median_gene_plot"]["plot"]["layout"]["xaxis"]["title"],
-                "ylab": summary["analysis_tab"]["median_gene_plot"]["plot"]["layout"]["yaxis"]["title"],
-                "yLog": False,
-                "xLog": False,
-            },
-            "description": "Median gene counts per spot",
-            "helptext": summary["analysis_tab"]["median_gene_plot"]["help"]["helpText"],
-        }
-        plots_data["genes"] = {s_name: transform_data(summary["analysis_tab"]["median_gene_plot"]["plot"]["data"][0])}
+        # `analysis_tab` may not be present in the report if there are few reads
+        try:
+            plots["genes"] = {
+                "config": {
+                    "id": "mqc_spaceranger_count_genesXspot",
+                    "title": f"Space Ranger count: {summary['analysis_tab']['median_gene_plot']['help']['title']}",
+                    "xlab": summary["analysis_tab"]["median_gene_plot"]["plot"]["layout"]["xaxis"]["title"],
+                    "ylab": summary["analysis_tab"]["median_gene_plot"]["plot"]["layout"]["yaxis"]["title"],
+                    "yLog": False,
+                    "xLog": False,
+                },
+                "description": "Median gene counts per spot",
+                "helptext": summary["analysis_tab"]["median_gene_plot"]["help"]["helpText"],
+            }
+            plots_data["genes"] = {
+                s_name: transform_data(summary["analysis_tab"]["median_gene_plot"]["plot"]["data"][0])
+            }
+        except KeyError:
+            pass
 
         # The gDNA plots are only contained for spaceranger workflows with probesets
         try:
