@@ -167,15 +167,15 @@ class SpaceRangerCountMixin:
         col_dict = {
             "Number of Spots Under Tissue": "spots under tissue",
             "Mean Reads per Spot": "avg reads/spot",
-            "Fraction Reads in Spots under Tissue": "reads in spots",
+            "Fraction Reads in Spots Under Tissue": "reads in spots",
             "Number of Reads": "reads",
             "Valid Barcodes": "valid bc",
         }
         colours = {
-            "spots under tissue": "PuBu",
-            "avg reads/spot": "GnBu",
-            "reads in spots": "Purples",
-            "reads": "PuBuGn",
+            "spots under tissue": "RdPu",
+            "avg reads/spot": "Blues",
+            "reads in spots": "PiYG",
+            "reads": "YlGn",
             "valid bc": "RdYlGn",
         }
         data_general_stats = {}
@@ -193,7 +193,7 @@ class SpaceRangerCountMixin:
             "Number of Reads": "reads",
             "Number of Spots Under Tissue": "spots under tissue",
             "Mean Reads per Spot": "avg reads/spot",
-            "Fraction Reads in Spots under Tissue": "reads in spots",
+            "Fraction Reads in Spots Under Tissue": "reads in spots",
             "Genes Detected": "genes detected",
             "Median Genes per Spot": "median genes/spot",
             "Median UMI Counts per Spot": "median umi/spot",
@@ -219,8 +219,9 @@ class SpaceRangerCountMixin:
             "valid bc": "Spectral",
             "valid umi": "RdYlGn",
             "median umi/spot": "YlGn",
-            "saturation": "YlOrRd",
-            "genomic umis": "YlOrRd",
+            "saturation": "PRGn",
+            "genomic umis": "PuRd",
+            "genomic umis/unspliced probe": "YlOrRd",
         }
         data = {}
         update_dict(
