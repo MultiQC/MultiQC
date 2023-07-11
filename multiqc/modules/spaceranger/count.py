@@ -43,9 +43,6 @@ class SpaceRangerCountMixin:
             "shared_key": "read_count",
             "namespace": "Space Ranger Count",
         }
-        self.count_general_data_headers = set_hidden_cols(
-            self.count_general_data_headers, ["Q30 bc", "Q30 UMI", "Q30 read"]
-        )
 
         self.count_data_headers["reads"] = {
             "rid": "count_data_reads",
@@ -63,6 +60,9 @@ class SpaceRangerCountMixin:
                 "avg reads/spot",
                 "confident reads",
                 "confident filtered reads",
+                "genomic unis/unspliced probe",
+                "valid umi",
+                "saturation",
             ],
         )
 
