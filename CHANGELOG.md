@@ -22,6 +22,9 @@
   - Handle reports from locales that use `.` as a thousands separator ([#1843](https://github.com/ewels/MultiQC/issues/1843))
 - **HUMID**
   - Fix bug that prevent HUMID stats files from being parsed ([#1856](https://github.com/ewels/MultiQC/issues/1856))
+- **picard**
+  - Fix wrong column label in submodule `WgsMetrics` ([#1888]
+    (https://github.com/ewels/MultiQC/issues/1888))
 - **Porechop**
   - Don't render bar graphs if no samples had any adapters trimmed ([#1850](https://github.com/ewels/MultiQC/issues/1850))
   - Added report section listing samples that had no adapters trimmed
