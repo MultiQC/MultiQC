@@ -35,7 +35,6 @@ class MultiqcModule(BaseMultiqcModule):
         self.clusterflow_runfiles = dict()
 
         for f in self.find_log_files("clusterflow/logs", filehandles=True):
-            print("yo")
             self.parse_clusterflow_logs(f)
             self.add_data_source(f, "log")
         for f in self.find_log_files("clusterflow/runfiles", filehandles=True):

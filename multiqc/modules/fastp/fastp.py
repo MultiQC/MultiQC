@@ -365,7 +365,9 @@ class MultiqcModule(BaseMultiqcModule):
         keys["filtering_result_passed_filter_reads"] = {"name": "Passed Filter"}
         keys["filtering_result_low_quality_reads"] = {"name": "Low Quality"}
         keys["filtering_result_too_many_N_reads"] = {"name": "Too Many N"}
-        keys["filtering_result_too_short_reads"] = {"name": "Too short"}
+        keys["filtering_result_low_complexity_reads"] = {"name": "Low Complexity"}
+        keys["filtering_result_too_short_reads"] = {"name": "Too Short"}
+        keys["filtering_result_too_long_reads"] = {"name": "Too Long"}
 
         # Config for the plot
         pconfig = {

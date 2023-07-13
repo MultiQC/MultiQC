@@ -6,7 +6,6 @@ from __future__ import print_function
 
 import logging
 import os.path
-import shutil
 from collections import OrderedDict
 
 from multiqc import config
@@ -26,33 +25,16 @@ LIST_PATTERN = [
     "checkatlas/summary",
     "checkatlas/adata",
     "checkatlas/qc",
-    "checkatlas/umap",
-    "checkatlas/tsne",
     "checkatlas/cluster",
     "checkatlas/annotation",
     "checkatlas/dimred",
     "checkatlas/specificity",
 ]
 
-DICT_EXTENSION = {
-    "checkatlas/summary": "_checkatlas_summ.tsv",
-    "checkatlas/adata": "_checkatlas_adata.tsv",
-    "checkatlas/qc": "_checkatlas_qc.png",
-    "checkatlas/umap": "_checkatlas_umap.png",
-    "checkatlas/tsne": "_checkatlas_tsne.png",
-    "checkatlas/cluster": "_checkatlas_mcluster.tsv",
-    "checkatlas/annotation": "_checkatlas_mannot.tsv",
-    "checkatlas/dimred": "_checkatlas_mdimred.tsv",
-    "checkatlas/specificity": "_checkatlas_mspecificity.tsv",
-}
-
 DICT_NAMING = {
     "checkatlas/summary": "checkatlas_summ",
     "checkatlas/adata": "_checkatlas_adata",
-    "checkatlas/qc_fig": "checkatlas_qc_fig",
     "checkatlas/qc": "checkatlas_qc",
-    "checkatlas/umap": "_checkatlas_umap",
-    "checkatlas/tsne": "checkatlas_tsne",
     "checkatlas/cluster": "_checkatlas_mcluster",
     "checkatlas/annotation": "checkatlas_mannot",
     "checkatlas/dimred": "_checkatlas_mdimred",
@@ -60,32 +42,10 @@ DICT_NAMING = {
 }
 
 
-openpng_html_script = """
-        <script>
-        function openPNG(evt, pngName, tablinks_id, tabcontent_id) {
-          var i, tabcontent, tablinks;
-          tabcontent = document.getElementsByClassName(tabcontent_id);
-          for (i = 0; i < tabcontent.length; i++) {
-            tabcontent[i].style.display = "none";
-          }
-          tablinks = document.getElementsByClassName(tablinks_id);
-          for (i = 0; i < tablinks.length; i++) {
-            tablinks[i].className = tablinks[i].className.replace(" active", "");
-          }
-          document.getElementById(pngName).style.display = "block";
-          evt.currentTarget.className += " active";
-        }
-        </script>
-        """
-
-
 class MultiqcModule(BaseMultiqcModule):
     """checkatlas module, parses stderr logs."""
 
     def __init__(self):
-        fig_dir = os.path.join(config.data_dir, FIG_PATH)
-        os.mkdir(fig_dir)
-
         # Initialise the parent object
         super(MultiqcModule, self).__init__(
             name="CheckAtlas",
@@ -109,21 +69,9 @@ class MultiqcModule(BaseMultiqcModule):
             self.data_adata[s_name] = parse_firstline_table_logs(f["f"])
             self.add_data_source(f, s_name)
 
-        self.data_qc_fig = dict()
-        for f in self.find_log_files("checkatlas/qc_fig"):
-            # copy figures to multiqc data folder
-            shutil.copy2(os.path.join(f["root"], f["fn"]), fig_dir)
-            input_fname = f["s_name"].replace("_checkatlas_qc", "")
-            s_name = self.clean_s_name(input_fname, f)
-            self.data_qc_fig[s_name] = f["fn"]
-            self.add_data_source(f, s_name)
-
         self.data_qc_counts = dict()
         self.data_qc_genes = dict()
         self.data_qc_mito = dict()
-        self.data_qcswarm_counts = dict()
-        self.data_qcswarm_genes = dict()
-        self.data_qcswarm_mito = dict()
         for f in self.find_log_files("checkatlas/qc"):
             input_fname = f["s_name"].replace("_checkatlas_qc", "")
             s_name = self.clean_s_name(input_fname, f)
@@ -131,27 +79,6 @@ class MultiqcModule(BaseMultiqcModule):
             self.data_qc_counts[s_name] = list_data[0]
             self.data_qc_genes[s_name] = list_data[1]
             self.data_qc_mito[s_name] = list_data[2]
-            self.data_qcswarm_counts[s_name] = list_data[3]
-            self.data_qcswarm_genes[s_name] = list_data[4]
-            self.data_qcswarm_mito[s_name] = list_data[5]
-            self.add_data_source(f, s_name)
-
-        self.data_umap = dict()
-        for f in self.find_log_files("checkatlas/umap"):
-            # copy figures to multiqc data folder
-            shutil.copy2(os.path.join(f["root"], f["fn"]), fig_dir)
-            input_fname = f["s_name"].replace("_checkatlas_umap", "")
-            s_name = self.clean_s_name(input_fname, f)
-            self.data_umap[s_name] = f["fn"]
-            self.add_data_source(f, s_name)
-
-        self.data_tsne = dict()
-        for f in self.find_log_files("checkatlas/tsne"):
-            # copy figures to multiqc data folder
-            shutil.copy2(os.path.join(f["root"], f["fn"]), fig_dir)
-            input_fname = f["s_name"].replace("_checkatlas_tsne", "")
-            s_name = self.clean_s_name(input_fname, f)
-            self.data_tsne[s_name] = f["fn"]
             self.add_data_source(f, s_name)
 
         self.data_metric_cluster = dict()
@@ -185,18 +112,12 @@ class MultiqcModule(BaseMultiqcModule):
             log.info("Found {} summary tables".format(len(self.data_summary)))
         if len(self.data_adata) > 0:
             log.info("Found {} adata tables".format(len(self.data_adata)))
-        if len(self.data_qc_fig) > 0:
-            log.info("Found {} QC violin plots".format(len(self.data_qc_counts)))
         if len(self.data_qc_counts) > 0:
             log.info("Found {} QC counts tables".format(len(self.data_qc_counts)))
         if len(self.data_qc_genes) > 0:
             log.info("Found {} QC genes tables".format(len(self.data_qc_genes)))
         if len(self.data_qc_mito) > 0:
             log.info("Found {} QC mito tables".format(len(self.data_qc_mito)))
-        if len(self.data_umap) > 0:
-            log.info("Found {} UMAP figures".format(len(self.data_umap)))
-        if len(self.data_tsne) > 0:
-            log.info("Found {} t-SNE figures".format(len(self.data_tsne)))
         if len(self.data_metric_cluster) > 0:
             log.info("Found {} metric cluster tables".format(len(self.data_metric_cluster)))
 
@@ -205,7 +126,6 @@ class MultiqcModule(BaseMultiqcModule):
         self.write_data_file(self.data_metric_cluster, "multiqc_checkatlas_mcluster")
         self.write_data_file(self.data_metric_annot, "multiqc_checkatlas_mannot")
         self.write_data_file(self.data_metric_dimred, "multiqc_checkatlas_mdimred")
-        # self.general_stats_addcols(self.checkatlas_data)
 
         self.add_sections()
 
@@ -214,10 +134,7 @@ class MultiqcModule(BaseMultiqcModule):
         Add the different sections for checkatlas report
         """
         self.add_summary_section()
-        self.add_qc_fig_section()
         self.add_qc_section()
-        self.add_umap_section()
-        self.add_tsne_section()
         self.add_clustermetrics_section()
         self.add_annotationmetrics_section()
         self.add_dimredmetrics_section()
@@ -252,19 +169,6 @@ class MultiqcModule(BaseMultiqcModule):
             content=table.plot(self.data_adata, headers, pconfig=config_adata),
         )
 
-    def add_qc_fig_section(self):
-        type_viz = DICT_NAMING["checkatlas/qc_fig"]
-        html_content = create_img_html_content(type_viz, self.data_qc_fig)
-        self.add_section(
-            name="QC visualisation",
-            anchor="checkatlas-qc_fig",
-            description="QC of your atlases.",
-            helptext="""
-    
-                """,
-            content=html_content,
-        )
-
     def add_qc_section(self):
         type_viz = DICT_NAMING["checkatlas/qc"]
         config_qc = {
@@ -276,10 +180,6 @@ class MultiqcModule(BaseMultiqcModule):
             "categories": False,  # Set to True to use x values as categories instead of numbers.
         }
 
-        print(len(self.data_qc_counts["Tabula_Sapiens_Endothelial"]))
-        print(len(self.data_qc_counts["B-cells_compartment"]))
-        print(self.data_qc_counts.keys())
-
         self.add_section(
             name="QC total_counts",
             anchor="checkatlas-qc_counts",
@@ -289,32 +189,6 @@ class MultiqcModule(BaseMultiqcModule):
                 """,
             content=linegraph.plot(data=self.data_qc_counts, pconfig=config_qc),
         )
-
-        # Config for the plot
-        """ test_beeswarn = {'cell1':{'samp':2.3,'total_counts':3.4,'pct_counts_mt':5.6},
-                         'cell2':{'n_genes_by_counts':4.3,'total_counts':5.4,'pct_counts_mt':6.6},
-                         'cell3':{'n_genes_by_counts':1.3,'total_counts':4.4,'pct_counts_mt':1.6}}
-
-        print(test_beeswarn)
-#        test_beeswarn['percent_chg_meth'] =  {1:2.3,2:3.4,3:5.6}
-#        test_beeswarn['percent_chh_meth'] =  {1:2.3,2:3.4,3:5.6}
-        keys = OrderedDict()
-        defaults = {
-            'max': 100,
-            'min': 0,
-            'suffix': '%',
-            'decimalPlaces': 1
-        }
-        keys['n_genes_by_counts'] = dict(defaults, **{ 'title': 'n_genes_by_counts' })
-        keys['total_counts'] = dict(defaults, **{ 'title': 'Methylated CHG' })
-        keys['pct_counts_mt'] = dict(defaults, **{ 'title': 'Methylated CHH' })
-        self.add_section(
-            name="Beeswarn plot",
-            anchor="Violin_plot",
-            description=".",
-            helptext="",
-            content=beeswarm.plot(test_beeswarn, keys),
-        ) """
 
         config_qc = {
             # Building the plot
@@ -352,32 +226,6 @@ class MultiqcModule(BaseMultiqcModule):
             description="QC of your atlases log10(Cellrank vs pct_counts_mt.",
             helptext="",
             content=linegraph.plot(data=self.data_qc_mito, pconfig=config_qc),
-        )
-
-    def add_umap_section(self):
-        type_viz = DICT_NAMING["checkatlas/umap"]
-        html_content = create_img_html_content(type_viz, self.data_umap)
-        self.add_section(
-            name="UMAP visualisation",
-            anchor="checkatlas-umap",
-            description="UMAP of your atlases.",
-            helptext="""
-            
-            """,
-            content=html_content,
-        )
-
-    def add_tsne_section(self):
-        type_viz = DICT_NAMING["checkatlas/tsne"]
-        html_content = create_img_html_content(type_viz, self.data_tsne)
-        self.add_section(
-            name="t-SNE visualisation",
-            anchor="checkatlas-tsne",
-            description="t-SNE of your atlases.",
-            helptext="""
-                
-                """,
-            content=html_content,
         )
 
     def add_clustermetrics_section(self):
@@ -541,65 +389,3 @@ def parse_metric_logs(f):
             line_dict[headers[j]] = line[j]
         data[line[0]] = line_dict
     return data
-
-
-def create_img_html_content(type_viz, data):
-    html_content = """
-            <div class="tab">\n"""
-    counter = 0
-    tablinks = type_viz + "_tablinks"
-    tabcontent = type_viz + "_tabcontent"
-    for key, value in data.items():
-        class_tab = tablinks
-        if counter == 0:
-            class_tab = tablinks + " active"
-        html_content += add_selection_img_button(class_tab, type_viz, key, tablinks, tabcontent)
-        counter += 1
-    html_content += """</div>"""
-
-    counter = 0
-    for key, value in data.items():
-        path_fig = os.path.join(config.data_dir_name, FIG_PATH, value)
-        style = "display: none;"
-        if counter == 0:
-            style = "display: block;"
-        html_content += add_div_img(path_fig, type_viz, key, style, tabcontent)
-        counter += 1
-
-    html_content += openpng_html_script
-    return html_content
-
-
-def add_selection_img_button(class_tab, type_viz, key, tablinks, tabcontent):
-    return (
-        """  <button class=\""""
-        + class_tab
-        + """\" onclick="openPNG(event, '"""
-        + type_viz
-        + "_"
-        + key
-        + """',
-                            '"""
-        + tablinks
-        + "','"
-        + tabcontent
-        + """')">"""
-        + key
-        + """</button>\n"""
-    )
-
-
-def add_div_img(path_fig, type_viz, key, style, tabcontent):
-    return (
-        """<div id=\""""
-        + type_viz
-        + "_"
-        + key
-        + """\" class=\""""
-        + tabcontent
-        + """\" style =\""""
-        + style
-        + """\"><img src=\""""
-        + path_fig
-        + """\" >\n</div>\n"""
-    )
