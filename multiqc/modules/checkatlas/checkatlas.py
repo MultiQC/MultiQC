@@ -57,15 +57,13 @@ class MultiqcModule(BaseMultiqcModule):
 
         self.data_summary = dict()
         for f in self.find_log_files("checkatlas/summary"):
-            input_fname = f["s_name"].replace("_checkatlas_summ", "")
-            s_name = self.clean_s_name(input_fname, f)
+            s_name = f["s_name"]
             self.data_summary[s_name] = parse_firstline_table_logs(f["f"])
             self.add_data_source(f, s_name)
 
         self.data_adata = dict()
         for f in self.find_log_files("checkatlas/adata"):
-            input_fname = f["s_name"].replace("_checkatlas_adata", "")
-            s_name = self.clean_s_name(input_fname, f)
+            s_name = f["s_name"]
             self.data_adata[s_name] = parse_firstline_table_logs(f["f"])
             self.add_data_source(f, s_name)
 
@@ -73,8 +71,7 @@ class MultiqcModule(BaseMultiqcModule):
         self.data_qc_genes = dict()
         self.data_qc_mito = dict()
         for f in self.find_log_files("checkatlas/qc"):
-            input_fname = f["s_name"].replace("_checkatlas_qc", "")
-            s_name = self.clean_s_name(input_fname, f)
+            s_name = f["s_name"]
             list_data = parse_qc_logs(f["f"])
             self.data_qc_counts[s_name] = list_data[0]
             self.data_qc_genes[s_name] = list_data[1]
@@ -83,8 +80,7 @@ class MultiqcModule(BaseMultiqcModule):
 
         self.data_metric_cluster = dict()
         for f in self.find_log_files("checkatlas/cluster"):
-            input_fname = f["s_name"].replace("_checkatlas_mcluster", "")
-            s_name = self.clean_s_name(input_fname, f)
+            s_name = f["s_name"]
             data = parse_metric_logs(f["f"])
             for key, item in data.items():
                 self.data_metric_cluster[key] = item
@@ -92,8 +88,7 @@ class MultiqcModule(BaseMultiqcModule):
 
         self.data_metric_annot = dict()
         for f in self.find_log_files("checkatlas/annotation"):
-            input_fname = f["s_name"].replace("_checkatlas_mannot", "")
-            s_name = self.clean_s_name(input_fname, f)
+            s_name = f["s_name"]
             data = parse_metric_logs(f["f"])
             for key, item in data.items():
                 self.data_metric_annot[key] = item
@@ -101,8 +96,7 @@ class MultiqcModule(BaseMultiqcModule):
 
         self.data_metric_dimred = dict()
         for f in self.find_log_files("checkatlas/dimred"):
-            input_fname = f["s_name"].replace("_checkatlas_mdimred", "")
-            s_name = self.clean_s_name(input_fname, f)
+            s_name = f["s_name"]
             data = parse_metric_logs(f["f"])
             for key, item in data.items():
                 self.data_metric_dimred[key] = item
@@ -120,12 +114,10 @@ class MultiqcModule(BaseMultiqcModule):
             log.info("Found {} QC mito tables".format(len(self.data_qc_mito)))
         if len(self.data_metric_cluster) > 0:
             log.info("Found {} metric cluster tables".format(len(self.data_metric_cluster)))
-
-        self.write_data_file(self.data_summary, "multiqc_checkatlas-summary")
-        self.write_data_file(self.data_adata, "multiqc_checkatlas_adata")
-        self.write_data_file(self.data_metric_cluster, "multiqc_checkatlas_mcluster")
-        self.write_data_file(self.data_metric_annot, "multiqc_checkatlas_mannot")
-        self.write_data_file(self.data_metric_dimred, "multiqc_checkatlas_mdimred")
+        if len(self.data_metric_annot) > 0:
+            log.info("Found {} metric annot tables".format(len(self.data_metric_annot)))
+        if len(self.data_metric_dimred) > 0:
+            log.info("Found {} metric diimred tables".format(len(self.data_metric_dimred)))
 
         self.add_sections()
 
@@ -306,9 +298,6 @@ def parse_qc_logs(f):
     dict_qc_counts = dict()
     dict_qc_genes = dict()
     dict_qc_mito = dict()
-    data_qcswarm_counts = dict()
-    data_qcswarm_genes = dict()
-    data_qcswarm_mito = dict()
     for i in range(1, len(lines)):
         line = lines[i].split("\t")
         cellid = int(line[index_rank_counts])
@@ -316,17 +305,14 @@ def parse_qc_logs(f):
             rank_count = int(line[index_rank_counts])
             count = float(line[index_counts])
             dict_qc_counts[rank_count] = count
-            data_qcswarm_counts[cellid] = count
         if index_genes != -1:
             rank_genes = float(line[index_rank_genes])
             genes = float(line[index_genes])
             dict_qc_genes[rank_genes] = genes
-            data_qcswarm_genes[cellid] = genes
         if index_mito != -1:
             rank_mito = float(line[index_rank_mito])
             mito = float(line[index_mito])
             dict_qc_mito[rank_mito] = mito
-            data_qcswarm_mito[cellid] = mito
 
     # reorder by rank
     list_qc_rank_counts = list(dict_qc_counts.keys())
@@ -348,9 +334,6 @@ def parse_qc_logs(f):
         data_qc_counts,
         data_qc_genes,
         data_qc_mito,
-        data_qcswarm_counts,
-        data_qcswarm_genes,
-        data_qcswarm_mito,
     ]
     return list_data
 

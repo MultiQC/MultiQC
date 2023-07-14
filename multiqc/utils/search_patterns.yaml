@@ -200,19 +200,26 @@ ccs/v5:
   contents: '"id": "ccs_processing"'
   fn: "*.json"
 checkatlas/summary:
-  fn: "*_checkatlas_summ.tsv"
+  fn: "*.tsv"
+  contents_re: "^AtlasFileType"
 checkatlas/adata:
-  fn: "*_checkatlas_adata.tsv"
+  fn: "*.tsv"
+  contents_re: "^atlas_obs"
 checkatlas/qc:
-  fn: "*_checkatlas_qc.tsv"
+  fn: "*.tsv"
+  contents_re: "(n_genes_by_counts|total_counts)"
 checkatlas/cluster:
-  fn: "*_checkatlas_mcluster.tsv"
+  fn: "*.tsv"
+  contents_re: "^Clust_Sample"
 checkatlas/annotation:
-  fn: "*_checkatlas_mannot.tsv"
+  fn: "*.tsv"
+  contents_re: "^Annot_Sample"
 checkatlas/dimred:
-  fn: "*_checkatlas_mdimred.tsv"
+  fn: "*.tsv"
+  contents_re: "^Dimred_Sample"
 checkatlas/specificity:
-  fn: "*_checkatlas_mspecificity.tsv"
+  fn: "*.tsv"
+  contents_re: "^Spec_Sample"
 cellranger/count_html:
   - fn: "*.html"
     contents: '"command":"Cell Ranger","subcommand":"count"'
