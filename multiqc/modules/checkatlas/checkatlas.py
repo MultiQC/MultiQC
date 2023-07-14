@@ -153,9 +153,9 @@ class MultiqcModule(BaseMultiqcModule):
         headers["varm"] = {"scale": False}
         headers["uns"] = {"scale": False}
         self.add_section(
-            name="AnnData explorer",
+            name="Atlas object explorer",
             anchor="checkatlas-anndata",
-            description="Exploration of your AnnData",
+            description="Exploration of your Atlas object (Scanpy, Cellanger, Seurat)",
             helptext="""
                 """,
             content=table.plot(self.data_adata, headers, pconfig=config_adata),
