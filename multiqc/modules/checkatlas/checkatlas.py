@@ -102,40 +102,34 @@ class MultiqcModule(BaseMultiqcModule):
                 self.data_metric_dimred[key] = item
             self.add_data_source(f, s_name)
 
+        # Print results and create sections
         if len(self.data_summary) > 0:
             log.info("Found {} summary tables".format(len(self.data_summary)))
-        if len(self.data_adata) > 0:
-            log.info("Found {} adata tables".format(len(self.data_adata)))
+            self.add_summary_section()
         if len(self.data_qc_counts) > 0:
             log.info("Found {} QC counts tables".format(len(self.data_qc_counts)))
+            self.add_qc_counts_section()
         if len(self.data_qc_genes) > 0:
             log.info("Found {} QC genes tables".format(len(self.data_qc_genes)))
+            self.add_qc_ngenes_section()
         if len(self.data_qc_mito) > 0:
             log.info("Found {} QC mito tables".format(len(self.data_qc_mito)))
+            self.add_qc_mito_section()
         if len(self.data_metric_cluster) > 0:
             log.info("Found {} metric cluster tables".format(len(self.data_metric_cluster)))
+            self.add_clustermetrics_section()
         if len(self.data_metric_annot) > 0:
             log.info("Found {} metric annot tables".format(len(self.data_metric_annot)))
+            self.add_annotationmetrics_section()
         if len(self.data_metric_dimred) > 0:
             log.info("Found {} metric dimred tables".format(len(self.data_metric_dimred)))
+            self.add_dimredmetrics_section()
+        if len(self.data_adata) > 0:
+            log.info("Found {} adata tables".format(len(self.data_adata)))
+            self.add_adata_section()
 
         # Save parsed table
         self.write_data_file(self.data_summary, "multiqc_checkatlas_summary")
-
-        # Add all sections
-        self.add_sections()
-
-    def add_sections(self):
-        """
-        Add the different sections for checkatlas report
-        """
-        self.add_summary_section()
-        self.add_qc_section()
-        self.add_clustermetrics_section()
-        self.add_annotationmetrics_section()
-        self.add_dimredmetrics_section()
-        self.add_specificitymetrics_section()
-        self.add_adata_section()
 
     def add_summary_section(self):
         self.add_section(
@@ -165,8 +159,7 @@ class MultiqcModule(BaseMultiqcModule):
             content=table.plot(self.data_adata, headers, pconfig=config_adata),
         )
 
-    def add_qc_section(self):
-        type_viz = DICT_NAMING["checkatlas/qc"]
+    def add_qc_counts_section(self):
         config_qc = {
             # Building the plot
             "title": "Checkatlas: QC total_counts",
@@ -186,6 +179,7 @@ class MultiqcModule(BaseMultiqcModule):
             content=linegraph.plot(data=self.data_qc_counts, pconfig=config_qc),
         )
 
+    def add_qc_ngenes_section(self):
         config_qc = {
             # Building the plot
             "title": "Checkatlas: QC n_genes_by_counts",
@@ -206,6 +200,7 @@ class MultiqcModule(BaseMultiqcModule):
             content=linegraph.plot(data=self.data_qc_genes, pconfig=config_qc),
         )
 
+    def add_qc_mito_section(self):
         config_qc = {
             # Building the plot
             "title": "Checkatlas: QC pct_counts_mt",
