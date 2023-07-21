@@ -119,6 +119,10 @@ class MultiqcModule(BaseMultiqcModule):
         if len(self.data_metric_dimred) > 0:
             log.info("Found {} metric dimred tables".format(len(self.data_metric_dimred)))
 
+        # Save parsed table
+        self.write_data_file(self.data_summary, "multiqc_checkatlas_summary")
+
+        # Add all sections
         self.add_sections()
 
     def add_sections(self):
