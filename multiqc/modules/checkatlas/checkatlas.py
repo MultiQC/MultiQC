@@ -165,7 +165,7 @@ class MultiqcModule(BaseMultiqcModule):
         type_viz = DICT_NAMING["checkatlas/qc"]
         config_qc = {
             # Building the plot
-            "title": "QC total_counts",
+            "title": "Checkatlas: QC total_counts",
             "ylab": "total_counts",  # X axis label
             "xlab": "log10(Cell Rank)",  # Y axis label
             "id": "qc_counts",  # HTML ID used for plot
@@ -184,7 +184,7 @@ class MultiqcModule(BaseMultiqcModule):
 
         config_qc = {
             # Building the plot
-            "title": "QC n_genes_by_counts",
+            "title": "Checkatlas: QC n_genes_by_counts",
             "ylab": "n_genes_by_counts",  # X axis label
             "xlab": "log10(Cell Rank)",  # Y axis label
             "logswitch": True,
@@ -204,7 +204,7 @@ class MultiqcModule(BaseMultiqcModule):
 
         config_qc = {
             # Building the plot
-            "title": "QC pct_counts_mt",
+            "title": "Checkatlas: QC pct_counts_mt",
             "ylab": "pct_counts_mt",  # X axis label
             "xlab": "log10(Cell Rank)",  # Y axis label
             "logswitch": True,
