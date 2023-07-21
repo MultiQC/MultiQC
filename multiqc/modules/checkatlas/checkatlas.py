@@ -117,7 +117,7 @@ class MultiqcModule(BaseMultiqcModule):
         if len(self.data_metric_annot) > 0:
             log.info("Found {} metric annot tables".format(len(self.data_metric_annot)))
         if len(self.data_metric_dimred) > 0:
-            log.info("Found {} metric diimred tables".format(len(self.data_metric_dimred)))
+            log.info("Found {} metric dimred tables".format(len(self.data_metric_dimred)))
 
         self.add_sections()
 
@@ -147,7 +147,7 @@ class MultiqcModule(BaseMultiqcModule):
     def add_adata_section(self):
         config_adata = {"namespace": "adata_table"}
         headers = OrderedDict()
-        headers["obs"] = {"scale": False}
+        headers["atlas_obs"] = {"scale": False}
         headers["obsm"] = {"scale": False}
         headers["var"] = {"scale": False}
         headers["varm"] = {"scale": False}
