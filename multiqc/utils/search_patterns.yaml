@@ -352,6 +352,9 @@ gatk/varianteval:
 gatk/base_recalibrator:
   contents: "#:GATKTable:Arguments:Recalibration"
   num_lines: 3
+gatk/analyze_saturation_mutagenesis:
+  fn: "*.readCounts"
+  num_lines: 3
 gffcompare:
   fn: "*.stats"
   contents: "# gffcompare"
