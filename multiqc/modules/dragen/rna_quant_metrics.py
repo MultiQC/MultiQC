@@ -83,7 +83,7 @@ def parse_time_metrics_file(f):
     RUN TIME,,Time sorting and marking duplicates,00:00:07.368,7.37
     RUN TIME,,Time DRAGStr calibration,00:00:07.069,7.07
     """
-    s_name = re.search(r"(.*).quant.metrics.csv", f["fn"]).group(1)
+    s_name = re.search(r"(.*).quant[.|_]metrics.csv", f["fn"]).group(1)
 
     data = {}
     for line in f["f"].splitlines():
