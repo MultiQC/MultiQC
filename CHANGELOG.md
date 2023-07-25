@@ -12,6 +12,9 @@
 
 ### New Modules
 
+- [**Bakta**](https://github.com/oschwengers/bakta)
+  - Rapid & standardized annotation of bacterial genomes, MAGs & plasmids.
+
 ### Module updates
 
 - **Cell Ranger**

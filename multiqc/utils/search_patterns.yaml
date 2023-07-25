@@ -12,6 +12,10 @@ afterqc:
 anglerfish:
   fn: "*.json"
   contents: "anglerfish_version"
+bakta:
+  fn: "*.txt"
+  contents: "Bakta:"
+  num_lines: 26
 bamtools/stats:
   contents: "Stats for BAM file(s):"
   shared: true
