@@ -153,7 +153,7 @@ class MultiqcModule(BaseMultiqcModule):
         self.add_section(
             name="Atlas object explorer",
             anchor="checkatlas-anndata",
-            description="Exploration of your Atlas object (Scanpy, Cellanger, Seurat)",
+            description="Exploration of your Atlas objects (Scanpy, Cellanger, Seurat)",
             helptext="""
                 """,
             content=table.plot(self.data_adata, headers, pconfig=config_adata),
