@@ -1,7 +1,7 @@
 ---
-Name: phantompeakqualtools
-URL: https://www.encodeproject.org/software/phantompeakqualtools/
-Description: >
+name: phantompeakqualtools
+url: https://www.encodeproject.org/software/phantompeakqualtools/
+description: >
   Computes enrichment and quality measures for ChIP-seq/DNase-seq/FAIRE-seq/MNase-seq data.
 ---
 

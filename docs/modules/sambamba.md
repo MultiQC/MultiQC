@@ -1,8 +1,8 @@
 ---
-Name: Sambamba
-URL: https://lomereiter.github.io/sambamba/
-Description: >
-  Sambamba is a suite of programs written in the D Language for users to 
+name: Sambamba
+url: https://lomereiter.github.io/sambamba/
+description: >
+  Sambamba is a suite of programs written in the D Language for users to
   process high-throughput sequencing data.
 ---
 

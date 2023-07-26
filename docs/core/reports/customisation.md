@@ -1,3 +1,8 @@
+---
+title: Customising Reports
+description: Making MultiQC reports bespoke for your use case
+---
+
 # Customising Reports
 
 MultiQC offers a few ways to customise reports to easily add your own
@@ -74,7 +79,7 @@ report_header_info:
 
 Then this will be displayed at the top of reports:
 
-![report project info](images/report_proj_info.png)
+![report project info](../../images/report_proj_info.png)
 
 Note that you can also specify a path to a config file using `-c`.
 
@@ -92,7 +97,7 @@ samples to line up properly in the _General Statistics_ table.
 To use, create a tab-separated file with two columns. The first column contains the
 search strings and the second the replacement strings:
 
-```tsv
+```
 IDX102934	Sample_1
 IDX102935	Sample_2
 IDX102936	Sample_3
@@ -118,7 +123,7 @@ If you set `sample_names_replace_regex` to `True` in a MultiQC config file
 and then create a file that contains regex search strings and even Python regex
 group identifiers in the replace string. For example:
 
-```tsv
+```
 SAMPLE(\d)_([PS]E)_(\d)	XXX_\1_\2_\3
 ```
 
@@ -164,7 +169,7 @@ It's possible to supply a file with one or more sets of sample names using the `
 command line option. This file should be a tab-delimited file with a header row (used for
 the report button labels) and then any number of renamed sample identifiers. For example:
 
-```tsv
+```
 MultiQC Names	Proper Names	AWESOME NAMES
 SRR1067503_1	Sample_1	MYBESTSAMP_1
 SRR1067505_1	Sample_2	MYBESTSAMP_2
@@ -174,7 +179,9 @@ SRR1067510_1	Sample_3	MYBESTSAMP_3
 If supplied, buttons will be generated at the top of the report with your labels.
 Clicking these will populate and apply the Toolbox renaming panel.
 
-> **NB:** Sample renaming works with partial substrings - these will be replaced!
+:::warning
+Sample renaming works with partial substrings - these will be replaced!
+:::
 
 It's also possible to supply such renaming patterns within a config file (useful if you're
 already generating a config file for a run). In this case, you need to set the variables
@@ -206,21 +213,21 @@ pattern, opposed to the default globbing, you can use `hide_re` and `show_re`.
 
 For example, to filter on read pair groups, you could use the following file:
 
-```tsv
+```
 Read Group 1	show	_R1
 Read Group 2	show	_R2
 ```
 
 Or in regex mode:
 
-```tsv
+```
 Read Group 1	show_re	.*_R1
 Read Group 2	show_re	.*_R2
 ```
 
 To filter on controls and sample groups you could use:
 
-```tsv
+```
 Controls	show	input_
 Conditions	show	group_1_	group_2_	group_3_
 ```
@@ -293,10 +300,13 @@ remove_sections:
   - second-section-id
 ```
 
+:::tip
 The section ID is the string appended to the URL when clicking a report section in the navigation.
+
 For example, the GATK module has a section with the title _"Compare Overlap"_. When clicking that
 in the report's left hand side navigation, the web browser URL has `#gatk-compare-overlap`
 appended. Here, you would add `gatk-compare-overlap` to the `remove_sections` config.
+:::
 
 Finally, you can prevent MultiQC from finding the files for a module or submodule by customising
 its search pattern. For example, to skip Picard Base Calling metrics, you could use the following:
@@ -518,20 +528,24 @@ custom_plot_config:
 Much like with the custom plot config above, you can override almost any configuration options for tables.
 To see what's available, read the documentation about [Creating a table](#creating-a-table) below.
 
-Tables have configuration at two levels. Table-wide configs are the same as plot configs and can
-be overridden with `custom_plot_config` as described above.
+Tables have configuration at two levels:
 
-Headers have their own configuration which can be overriden with `custom_table_header_config`.
+1. Entire table
+   - Affects all columns and data. These configs are the same as _plot configs_ and can be overridden with `custom_plot_config` as described in the [Customising plots](#customising-plots) section above.
+2. Specific columns
+   - Table columns (headers) have their own configuration scope:`custom_table_header_config`. See below.
 
-Examples are often more useful for this kind of thing than words, so here are a few:
+### Config for an entire table
 
-For the Picard HSMetrics table, we can use a custom table header for the first column
-and change the default minimum value for the colour scale for all columns:
+Here we are customising the _Picard HSMetrics_ table.
+We're setting a non-standard title for the first column (usually _"Sample name"_) and changing the default minimum value for the colour scale for _all_ columns.
 
-> Here `min` is a _header_ config but we're setting it at table config level.
-> This means it will be used as a default for all columns in the table if the module
-> doesn't itself define anything specific for that column.
-> If it does, you need to overwrite that specific column using `custom_table_header_config`
+:::note
+Here `min` is a _header_ config but we're setting it at _table config_ level.
+This means it will be used as a default for all columns in the table if the module
+doesn't itself define anything specific for that column.
+If it does, you need to overwrite that specific column using `custom_table_header_config`.
+:::
 
 ```yaml
 custom_plot_config:
@@ -540,8 +554,9 @@ custom_plot_config:
     min: 1000
 ```
 
-Now for header-specific changes.
-To change the number of decimals used in the General Statistics table for the Qualimap _Mean Coverage_ column:
+### Config for a specific column
+
+To change the number of decimals used in the General Statistics table for the single column _Qualimap: Mean Coverage_:
 
 ```yaml
 custom_table_header_config:
@@ -549,6 +564,18 @@ custom_table_header_config:
     mean_coverage:
       format: "{:,.20f}"
 ```
+
+The first key is the table ID, the second is the header ID for the column you want to change.
+
+:::tip
+The easiest way to find these IDs is by clicking _Configure Columns_ above the table you want to customise.
+
+![Table: configure columns button](../../images/table_configure_columns.png)
+
+The table ID is shown at the top of the modal window. The _ID_ column shows the column (header) ID.
+
+![Table: configure columns button](../../images/table_header_ids.png)
+:::
 
 ### Hiding columns
 

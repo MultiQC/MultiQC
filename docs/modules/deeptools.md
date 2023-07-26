@@ -1,7 +1,7 @@
 ---
-Name: deepTools
-URL: http://deeptools.readthedocs.io
-Description: >
+name: deepTools
+url: http://deeptools.readthedocs.io
+description: >
   Tools to process and analyze deep sequencing data.
 ---
 
