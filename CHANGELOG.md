@@ -29,6 +29,7 @@
   - Include mosdepth/summary file paths in `multiqc_sources.txt` ([#1868](https://github.com/ewels/MultiQC/issues/1868))
   - Enable log switch for Coverage per contig plot ([#1868](https://github.com/ewels/MultiQC/issues/1868))
   - Fix y-axis scaling for Coverage distribution plot ([#1868](https://github.com/ewels/MultiQC/issues/1868))
+  - Handle case of intermediate missing coverage x-values in the `*_dist.txt` file causing a distorted Coverage distribution plot ([#1960](https://github.com/ewels/MultiQC/issues/1960))
 - **Porechop**
   - Don't render bar graphs if no samples had any adapters trimmed ([#1850](https://github.com/ewels/MultiQC/issues/1850))
   - Added report section listing samples that had no adapters trimmed

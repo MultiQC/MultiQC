@@ -252,23 +252,12 @@ class MultiqcModule(BaseMultiqcModule):
                     if float(bases_fraction) == 0:
                         continue
 
-                    # Parse cumulative coverage and calculate absolute coverage (global)
+                    # Parse cumulative coverage
                     if contig == "total":
                         cumcov = 100.0 * float(bases_fraction)
                         x = int(cutoff_reads)
                         cumcov_dist_data[s_name][x] = cumcov
-                        # converting cumulative coverage into absoulte coverage:
-                        """
-                        *example*              x:  cumcov:  abscov:
-                        3x                     3x  0      =               0
-                        2x     -               2x  0.10   = 0.10 - 0    = 0.10
-                        1x     --------        1x  0.80   = 0.80 - 0.10 = 0.70
-                        genome ..........      0x  1.00   = 1.00 - 0.80 = 0.20
-                        """
-                        if x + 1 not in cumcov_dist_data[s_name]:
-                            cov_dist_data[s_name][x] = cumcov
-                        else:
-                            cov_dist_data[s_name][x] = cumcov - cumcov_dist_data[s_name][x + 1]
+
                         if cumcov > 1:  # require >1% to prevent long flat tail
                             xmax = max(xmax, x)
 
@@ -303,6 +292,26 @@ class MultiqcModule(BaseMultiqcModule):
         for i in perchrom_avg_data:
             for j in perchrom_avg_data[i]:
                 perchrom_avg_data[i][j] -= 1
+
+        # Calculate absolute coverage distribution (global)
+        for s_name, s_cumcov_dist in cumcov_dist_data.items():
+            # Create sorted list of tuples (x, cumcov)
+            cumcov_dist = sorted(s_cumcov_dist.items())
+
+            # Calculate absolute coverage for the given x by taking the difference between
+            # the current and previous cumulative coverage.
+            #
+            #   *example*              x:  cumcov:  abscov:
+            #   3x                     3x  0      =               0
+            #   2x     -               2x  0.10   = 0.10 - 0    = 0.10
+            #   1x     --------        1x  0.80   = 0.80 - 0.10 = 0.70
+            #   genome ..........      0x  1.00   = 1.00 - 0.80 = 0.20
+            prev_x, prev_cumcov = cumcov_dist.pop()
+            while cumcov_dist:
+                x, cumcov = cumcov_dist.pop()
+                cov_dist_data[s_name][x] = cumcov - prev_cumcov
+                prev_x, prev_cumcov = x, cumcov
+
         return genstats, cumcov_dist_data, cov_dist_data, xmax, perchrom_avg_data
 
     def genstats_cov_thresholds(self, genstats, genstats_headers, cumcov_dist_data, threshs, hidden_threshs):
