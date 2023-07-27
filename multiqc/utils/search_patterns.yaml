@@ -352,7 +352,6 @@ gatk/base_recalibrator:
   num_lines: 3
 gatk/analyze_saturation_mutagenesis:
   fn: "*.readCounts"
-  num_lines: 3
 gffcompare:
   fn: "*.stats"
   contents: "# gffcompare"
