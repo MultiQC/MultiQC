@@ -12,6 +12,9 @@
 
 ### New Modules
 
+- [**Librarian**](https://github.com/DesmondWillowbrook/Librarian)
+  - A tool to predict the sequencing library type from the base composition of a supplied FastQ file.
+
 ### Module updates
 
 - **Cell Ranger**
