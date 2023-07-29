@@ -351,6 +351,8 @@ def search_file(pattern, f, module_key):
             fn_matched = True
             if pattern.get("contents") is None and pattern.get("contents_re") is None:
                 return True
+        else:
+            return False
 
     # Search by file name (regex)
     if pattern.get("fn_re") is not None:
@@ -358,19 +360,21 @@ def search_file(pattern, f, module_key):
             fn_matched = True
             if pattern.get("contents") is None and pattern.get("contents_re") is None:
                 return True
+        else:
+            return False
 
     # Search by file contents
     if pattern.get("contents") is not None or pattern.get("contents_re") is not None:
         if pattern.get("contents_re") is not None:
             repattern = re.compile(pattern["contents_re"])
-        if not f.get("contents_lines") or config.filesearch_lines_limit < pattern.get("num_lines", 0):
+        if "contents_lines" not in f or ("num_lines" in pattern and len(f["contents_lines"]) < pattern["num_lines"]):
             f["contents_lines"] = []
             file_path = os.path.join(f["root"], f["fn"])
             try:
                 with io.open(file_path, "r", encoding="utf-8") as fh:
                     for i, line in enumerate(fh):
                         f["contents_lines"].append(line)
-                        if i >= config.filesearch_lines_limit:
+                        if i >= config.filesearch_lines_limit and i >= pattern.get("num_lines", 0):
                             break
             # Can't open file - usually because it's a binary file, and we're reading as utf-8
             except (IOError, OSError, ValueError, UnicodeDecodeError) as e:
@@ -379,6 +383,7 @@ def search_file(pattern, f, module_key):
                 file_search_stats["skipped_file_contents_search_errors"] += 1
                 return False
 
+        # Go through the parsed file contents
         for i, line in enumerate(f["contents_lines"]):
             # Search by file contents (string)
             if pattern.get("contents") is not None:

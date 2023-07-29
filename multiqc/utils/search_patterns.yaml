@@ -9,6 +9,7 @@ adapterRemoval:
 afterqc:
   fn: "*.json"
   contents: "allow_mismatch_in_poly"
+  num_lines: 10000
 anglerfish:
   fn: "*.json"
   contents: "anglerfish_version"
