@@ -96,9 +96,25 @@ class MultiqcModule(BaseMultiqcModule):
         }
 
         self.add_section(
-            name="Library Type",
+            name="Library Type Prediction",
             anchor="librarian-library-type",
-            description="Predicted library type.",
+            description="""
+                For each projected test library, the location on the Compositions/Probability Map is determined.
+                This plot shows how published library types are represented at the same location.
+            """,
+            helptext="""
+                Some regions on the map are very specific to a certain library type,
+                others are more mixed. Therefore, for some test libraries the results
+                will be much clearer than for others.
+
+                The different plots are intended to provide a good overview of how similar
+                the test library is to published data.
+
+                The cause of any deviations should be inspected;
+                the interpretation will be different depending on how characteristic
+                the composition signature of the library type and how far off the
+                projection of the test sample is.
+            """,
             plot=heatmap.plot(hm_data, hm_library_types, hm_sample_names, pconfig),
         )
 
