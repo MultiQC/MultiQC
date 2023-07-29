@@ -61,7 +61,7 @@ class MultiqcModule(BaseMultiqcModule):
                 if s_name in self.librarian_data:
                     log.debug(f"Duplicate sample name found! Overwriting: {s_name}")
                 self.librarian_data[s_name] = data_float
-                self.add_data_source(f)
+                self.add_data_source(f, s_name=s_name)
 
     def plot_librarian_heatmap(self):
         """Make the heatmap plot"""
