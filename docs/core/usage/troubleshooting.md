@@ -1,7 +1,6 @@
 ---
 title: Common Problems
 description: Troubleshooting difficulties
-order: 8
 ---
 
 # Troubleshooting
@@ -66,6 +65,9 @@ There are a couple of things you can check here:
    a bit of time debugging MultiQC modules only to realise that the output
    files from the tool were empty or incomplete. If your data is missing,
    take a look and the raw files and make sure that there's something to see!
+3. Did you make sure that the logs you're trying to run MultiQC on are the ones
+   expected by the module in question? Check the [module documentation](https://multiqc.info/modules/)
+   and have a look at the [example data](https://github.com/ewels/MultiQC_TestData/tree/master/data/modules) used for CI tests.
 
 If everything looks fine, then MultiQC probably needs extending to support
 your data. Tools have different versions, different parameters and different

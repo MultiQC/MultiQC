@@ -1,7 +1,6 @@
 ---
 title: MultiQC Plugins
 description: Extending core functionality with plugins
-order: 3
 ---
 
 # MultiQC Plugins

@@ -1,7 +1,6 @@
 ---
 title: Writing new modules
 description: Adding support for a new tool
-order: 1
 ---
 
 # Writing New Modules

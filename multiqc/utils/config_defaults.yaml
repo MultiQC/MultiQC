@@ -667,6 +667,10 @@ module_order:
       module_tag:
         - RNA
         - DNA
+  - librarian:
+      module_tag:
+        - RNA
+        - DNA
   - adapterRemoval:
       module_tag:
         - RNA
