@@ -1,7 +1,6 @@
 ---
 title: Writing new templates
 description: Making MultiQC reports your own
-order: 4
 ---
 
 # Writing New Templates

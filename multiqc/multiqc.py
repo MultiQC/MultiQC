@@ -922,8 +922,7 @@ def run(
                     config.output_fn_name = os.path.basename(config.output_fn)
                 config.data_dir_name = os.path.basename(config.data_dir)
                 config.plots_dir_name = os.path.basename(config.plots_dir)
-                logger.warning("Previous MultiQC output found! Adjusting filenames..")
-                logger.warning("Use -f or --force to overwrite existing reports instead")
+                logger.info("Existing reports found, adding suffix to filenames. Use '--force' to overwrite.")
 
         # Make directories for report if needed
         if config.make_report:
@@ -1087,11 +1086,11 @@ def run(
 
     report.runtimes["total"] = time.time() - start_execution_time
     if config.profile_runtime:
-        logger.info("Run took {:.2f} seconds".format(report.runtimes["total"]))
-        logger.info(" - {:.2f}s: Searching files".format(report.runtimes["total_sp"]))
-        logger.info(" - {:.2f}s: Running modules".format(report.runtimes["total_mods"]))
+        logger.warning("Run took {:.2f} seconds".format(report.runtimes["total"]))
+        logger.warning(" - {:.2f}s: Searching files".format(report.runtimes["total_sp"]))
+        logger.warning(" - {:.2f}s: Running modules".format(report.runtimes["total_mods"]))
         if config.make_report:
-            logger.info(" - {:.2f}s: Compressing report data".format(report.runtimes["total_compression"]))
+            logger.warning(" - {:.2f}s: Compressing report data".format(report.runtimes["total_compression"]))
             logger.info(
                 "For more information, see the 'Run Time' section in {}".format(os.path.relpath(config.output_fn))
             )
