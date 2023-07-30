@@ -18,6 +18,7 @@
   - Bugfix: avoid multiple `KeyError` exceptions when parsing Cell Ranger 7.x `web_summary.html` ([#1853](https://github.com/ewels/MultiQC/issues/1853), [#1871](https://github.com/ewels/MultiQC/issues/1871))
 - **DRAGEN**
   - Restored functionality to show target BED coverage metrics ([#1844](https://github.com/ewels/MultiQC/issues/1844))
+  - Update filename pattern in RNA quant metrics ([#1958](https://github.com/ewels/MultiQC/pull/1958))
 - **filtlong**
   - Handle reports from locales that use `.` as a thousands separator ([#1843](https://github.com/ewels/MultiQC/issues/1843))
 - **HUMID**
