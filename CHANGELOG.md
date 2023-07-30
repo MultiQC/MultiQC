@@ -27,7 +27,8 @@
 - **HUMID**
   - Fix bug that prevent HUMID stats files from being parsed ([#1856](https://github.com/ewels/MultiQC/issues/1856))
 - **Picard**
-  - Fix wrong column label in submodule `WgsMetrics` ([#1888](https://github.com/ewels/MultiQC/issues/1888))
+  - WgsMetrics: Fix wrong column label ([#1888](https://github.com/ewels/MultiQC/issues/1888))
+  - HsMetrics: Add missing field descriptions ([#1928](https://github.com/ewels/MultiQC/pull/1928))
 - **Porechop**
   - Don't render bar graphs if no samples had any adapters trimmed ([#1850](https://github.com/ewels/MultiQC/issues/1850))
   - Added report section listing samples that had no adapters trimmed
