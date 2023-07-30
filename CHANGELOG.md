@@ -12,6 +12,8 @@
 
 ### New Modules
 
+- [**Librarian**](https://github.com/DesmondWillowbrook/Librarian)
+  - A tool to predict the sequencing library type from the base composition of a supplied FastQ file.
 - [**Space Ranger**](https://support.10xgenomics.com/spatial-gene-expression/software/pipelines/latest/what-is-space-ranger)
   - Works with data from 10X Genomics Visium. Processes sequencing reads and images created using
     the 10x Visium platform to generate count matrices with spatial information.
@@ -23,10 +25,14 @@
   - Bugfix: avoid multiple `KeyError` exceptions when parsing Cell Ranger 7.x `web_summary.html` ([#1853](https://github.com/ewels/MultiQC/issues/1853), [#1871](https://github.com/ewels/MultiQC/issues/1871))
 - **DRAGEN**
   - Restored functionality to show target BED coverage metrics ([#1844](https://github.com/ewels/MultiQC/issues/1844))
+  - Update filename pattern in RNA quant metrics ([#1958](https://github.com/ewels/MultiQC/pull/1958))
 - **filtlong**
   - Handle reports from locales that use `.` as a thousands separator ([#1843](https://github.com/ewels/MultiQC/issues/1843))
 - **HUMID**
   - Fix bug that prevent HUMID stats files from being parsed ([#1856](https://github.com/ewels/MultiQC/issues/1856))
+- **Picard**
+  - WgsMetrics: Fix wrong column label ([#1888](https://github.com/ewels/MultiQC/issues/1888))
+  - HsMetrics: Add missing field descriptions ([#1928](https://github.com/ewels/MultiQC/pull/1928))
 - **Porechop**
   - Don't render bar graphs if no samples had any adapters trimmed ([#1850](https://github.com/ewels/MultiQC/issues/1850))
   - Added report section listing samples that had no adapters trimmed

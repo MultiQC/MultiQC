@@ -36,6 +36,7 @@ MultiQC Modules:
     Jellyfish: modules/jellyfish.md
     KAT: modules/kat.md
     leeHom: modules/leehom.md
+    Librarian: modules/librarian.md
     Lima: modules/lima.md
     minionqc: modules/minionqc.md
     prinseqplusplus: modules/prinseqplusplus.md
