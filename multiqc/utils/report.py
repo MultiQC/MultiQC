@@ -313,7 +313,8 @@ def get_filelist(run_module_names):
         progress.update(mqc_task, s_fn="")
 
     runtimes["total_sp"] = time.time() - total_sp_starttime
-    logger.info(f"Profile-runtime: Searching files took {runtimes['total_sp']:.2f}s")
+    if config.profile_runtime:
+        logger.info(f"Profile-runtime: Searching files took {runtimes['total_sp']:.2f}s")
 
     # Debug log summary about what we skipped
     summaries = []
