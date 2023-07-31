@@ -53,7 +53,7 @@ class MultiqcModule(BaseMultiqcModule):
         s_name = total_reads = paligned_reads = fraglength = None
         for l in f["f"]:
             # Get input filename
-            match = re.search(r"\[quant\] will process (pair|file|sample) 1: (\S+)", l)
+            match = re.search(r"\[quant\] will process (pair|file) 1: (\S+)", l)
             if match:
                 s_name = self.clean_s_name(os.path.basename(match.group(2)), f)
 

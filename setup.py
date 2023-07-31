@@ -88,6 +88,7 @@ setup(
             "busco = multiqc.modules.busco:MultiqcModule",
             "bustools = multiqc.modules.bustools:MultiqcModule",
             "ccs = multiqc.modules.ccs:MultiqcModule",
+            "checkatlas = multiqc.modules.checkatlas:MultiqcModule",
             "cellranger = multiqc.modules.cellranger:MultiqcModule",
             "checkqc = multiqc.modules.checkqc:MultiqcModule",
             "clipandmerge = multiqc.modules.clipandmerge:MultiqcModule",
