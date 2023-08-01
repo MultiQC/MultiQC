@@ -365,8 +365,8 @@ happy:
   fn: "*.summary.csv"
   contents: "Type,Filter,TRUTH"
 htseq:
-  contents_re: '^\w+\t\d+$'
-  num_lines: 2
+  contents_re: '^(feature\tcount|\w+\t\d+)$'
+  num_lines: 1
 hicexplorer:
   contents: "Min rest. site distance"
   max_filesize: 4096
