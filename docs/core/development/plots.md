@@ -1,7 +1,6 @@
 ---
 title: Plotting Functions
 description: Visualising your data
-order: 2
 ---
 
 # Plotting Functions

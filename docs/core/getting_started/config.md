@@ -1,7 +1,6 @@
 ---
 title: Configuration
 description: Settings to tweak how MultiQC works
-order: 4
 ---
 
 # Configuring MultiQC
