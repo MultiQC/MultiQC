@@ -133,11 +133,16 @@ config = {
 }
 ```
 
-> The keys `id` and `title` should always be passed as a minimum. The `id` is used
-> for the plot name when exporting. If left unset, the Plot Export panel will call
-> the filename `mqc_hcplot_gtucwirdzx.png` (with some other random string).
-> Plots should always have titles, especially as they can stand by themselves
-> when exported. The title should have the format `Modulename: Plot Name`
+:::note
+The keys `id` and `title` should always be passed as a minimum.
+
+The `id` is used for the plot name when exporting.
+If left unset the Plot Export panel will call the filename
+`mqc_hcplot_gtucwirdzx.png` (with some other random string).
+
+Plots should always have titles, especially as they can stand by themselves
+when exported. The title should have the format `Modulename: Plot Name`
+:::
 
 ### Switching datasets
 
@@ -276,11 +281,16 @@ config = {
 html_content = linegraph.plot(data, config)
 ```
 
-> The keys `id` and `title` should always be passed as a minimum. The `id` is used
-> for the plot name when exporting. If left unset, the Plot Export panel will call
-> the filename `mqc_hcplot_gtucwirdzx.png` (with some other random string).
-> Plots should always have titles, especially as they can stand by themselves
-> when exported. The title should have the format `Modulename: Plot Name`
+:::note
+The keys `id` and `title` should always be passed as a minimum.
+
+The `id` is used for the plot name when exporting.
+If left unset the Plot Export panel will call the filename
+`mqc_hcplot_gtucwirdzx.png` (with some other random string).
+
+Plots should always have titles, especially as they can stand by themselves
+when exported. The title should have the format `Modulename: Plot Name`
+:::
 
 ### Switching datasets
 
@@ -720,8 +730,10 @@ pconfig = {
 The javascript bundled in the default MultiQC template has a number of
 helper functions to make your life easier.
 
-> NB: The MultiQC Python functions make use of these, so it's very unlikely
-> that you'll need to use any of this. But it's here for reference.
+:::note
+The MultiQC Python functions make use of these, so it's very unlikely
+that you'll need to use any of this. But it's here for reference.
+:::
 
 ### Plotting line graphs
 

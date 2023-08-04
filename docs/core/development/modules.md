@@ -149,8 +149,10 @@ This will then automatically run all code checks on the files you have edited wh
 
 Automated continuous integration tests will run using GitHub Actions to check that all files pass the above tests. If any files do not, that test will fail giving a red ❌ next to the pull request.
 
-> Make sure that your configuration is working properly and that you're not changing loads of files
-> that you haven't worked with. Pull-requests will not be merged with such changes.
+:::tip
+Make sure that your configuration is working properly and that you're not changing loads of files
+that you haven't worked with. Pull-requests will not be merged with such changes.
+:::
 
 These tools should be relatively easy to install and run, and have integration with the majority
 of code editors. Once set up, they can run on save and you'll never need to think about them again.
@@ -565,9 +567,11 @@ for f in self.find_log_files('mymod'):
 This function has already been applied to the contents of `f['s_name']`,
 so it is only required when using something different for the sample identifier.
 
-> `self.clean_s_name()` **must** be used on sample names parsed from the file
-> contents. Without it, features such as prepending directories (`--dirs`)
-> will not work.
+:::tip
+`self.clean_s_name()` **must** be used on sample names parsed from the file
+contents. Without it, features such as prepending directories (`--dirs`)
+will not work.
+:::
 
 The second argument should be the dictionary returned by the `self.find_log_files()` function.
 The root path is used for `--dirs` and the search pattern key is used

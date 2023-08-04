@@ -302,9 +302,11 @@ Note that some things, such as `parent_name` are taken from the first file that 
 with this `parent_id`. So it's a good idea to specify this in every file.
 `parent_description` and `extra` is taken from the first file where it is set.
 
-> `parent_id` only works within Custom Content.
-> It is not currently possible to add custom content output into a report section
-> from a core MultiQC module.
+:::warning
+`parent_id` only works within Custom Content.
+It is not currently possible to add custom content output into a report section
+from a core MultiQC module.
+:::
 
 ## Order of sections
 
@@ -357,8 +359,10 @@ plot_type:
 pconfig: {} # Configuration for the plot.
 ```
 
-> Data types `generalstats` and `beeswarm` are _only_ possible by setting the above
-> configuration keys (these can't be guessed by data format).
+:::info
+Data types `generalstats` and `beeswarm` are _only_ possible by setting the above
+configuration keys (these can't be guessed by data format).
+:::
 
 Note that any _custom content_ data found with the same section `id` will be merged
 into the same report section / plot. The other section configuration keys are merged
@@ -368,8 +372,10 @@ This approach means that it's possible to have a single file containing data for
 samples, but it's also possible to have one file per sample and still have all of them
 summarised.
 
-> If you're using `plot_type: 'generalstats'` then a report section will not be created and
-> most of the configuration keys above are ignored.
+:::note
+If you're using `plot_type: 'generalstats'` then a report section will not be created and
+most of the configuration keys above are ignored.
+:::
 
 ## Plot configuration
 

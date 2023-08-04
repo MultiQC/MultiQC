@@ -115,8 +115,10 @@ Setting `sample_names_replace_complete` to `True`, the replacement string will b
 as a complete replacement if the search pattern matches at all.
 In the above example, `IDX102934_mytool` would become `Sample_1`.
 
-> NB: Use this method with caution! If aggressive cleaning of sample names results in
-> multiple samples with identical identifiers, they will be overwritten.
+:::warning
+Use this method with caution! If aggressive cleaning of sample names results in
+multiple samples with identical identifiers, they will be overwritten.
+:::
 
 To have more control over replacements, you can use regular expressions.
 If you set `sample_names_replace_regex` to `True` in a MultiQC config file
@@ -419,8 +421,10 @@ report_section_order:
     before: fastqc_raw
 ```
 
-> NB: Currently, you can not list a module name in both `top_modules` and `module_order`.
-> Let me know if this is a problem..
+:::note
+Currently, you can not list a module name in both `top_modules` and `module_order`.
+Let me know if this is a problem..
+:::
 
 ### Order of module and module subsection output
 
@@ -442,8 +446,10 @@ for each section. You can change this number (eg. a very low number to always ge
 of the report or very high to always be at the top), or you can move a section to before or after
 another existing section (has no effect if the other named ID is not in the report).
 
-> Note that module sub-sections can only be move _within_ their module. So you can't have the
-> FastQC _Adapter Content_ section shown under the GATK module header.
+:::note
+Note that module sub-sections can only be move _within_ their module. So you can't have the
+FastQC _Adapter Content_ section shown under the GATK module header.
+:::
 
 You can also use this config option to completely remove module sub-sections.
 To do this, just set the subsection ID to `remove` (NB: no `:` or `-`).
@@ -711,7 +717,10 @@ To find the unique ID for your table / column, right click it in a report and in
 - Tables should look something like `<table id="general_stats_table" class="table table-condensed mqc_table" data-title="General Statistics">`, where `general_stats_table` is the ID.
 - Table cells should look something like `<td class="data-coloured mqc-generalstats-Assigned">`, where the `mqc-generalstats-Assigned` bit is the unique ID.
 
-> I know this isn't the same method of IDs as above and isn't super easy to do. Sorry!
+:::note
+I know this isn't the same method of IDs as above and it isn't super easy to do.
+Sorry about that!
+:::
 
 It's possible to highlight matches in any number of colours. MultiQC comes with the following defaults:
 
