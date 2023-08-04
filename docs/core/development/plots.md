@@ -386,7 +386,7 @@ is **not** suitable for large quantities of data - 20,000 genes might look good
 for one sample, but when someone runs MultiQC with 500 samples, it will crash
 the browser and be impossible to interpret.
 
-See the above docs about line plots for most config options. The scatter plot
+See the documentation about line plots for most config options. The scatter plot
 has a handful of unique ones in addition:
 
 ```python
@@ -574,8 +574,9 @@ headers[tablecol] = {
 
 ### Conditional formatting of data values
 
-MultiQC has configuration options to allow users to configure _"conditional formatting"_,
-with highlighted values in table cells ([see docs](#conditional-formatting)).
+MultiQC has configuration options to allow users to configure
+["Conditional formatting"](../reports/customisation.md#conditional-formatting),
+with highlighted values in table cells.
 
 Developers can also make use of this functionality within the header config dictionaries
 for formatting data values.
@@ -727,7 +728,7 @@ helper functions to make your life easier.
 `plot_xy_line_graph (target, ds)`
 
 Plots a line graph with multiple series of (x,y) data pairs. Used by
-the [linegraph.plot()](http://multiqc.info/docs/#line-graphs)
+the [linegraph.plot()](#line-graphs)
 python function.
 
 Data and configuration must be added to the document level
@@ -811,7 +812,7 @@ An example of the markup expected, with the function being called:
 `plot_stacked_bar_graph (target, ds)`
 
 Plots a bar graph with multiple series containing multiple categories.
-Used by the [bargraph.plot()](http://multiqc.info/docs/#bar-graphs)
+Used by the [bargraph.plot()](#bar-graphs)
 python function.
 
 Data and configuration must be added to the document level

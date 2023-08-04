@@ -10,7 +10,7 @@ branding and some additional report-level information. These features
 are primarily designed for core genomics facilities.
 
 Note that much more extensive customisation of reports is possible using
-[custom templates](http://multiqc.info/docs/#writing-new-templates).
+[custom templates](../development/templates.md).
 
 ## Titles and introductory text
 
@@ -160,7 +160,7 @@ sample_names_replace:
 ## Bulk sample renaming in reports
 
 Although it is possible to rename samples manually and in bulk using the
-[report toolbox](#renaming-samples), it's often desirable to embed such renaming patterns
+[report toolbox](reports.md#renaming-samples), it's often desirable to embed such renaming patterns
 into the report so that they can be shared with others. For example, a typical case could be
 for a sequencing centre that has internal sample IDs and also user-supplied sample names.
 Or public sample identifiers such as SRA numbers as well as more meaningful names.
@@ -200,7 +200,7 @@ sample_names_rename:
 
 ## Show / Hide samples buttons
 
-It is possible to filter which samples are visible through the [report toolbox](#hiding-samples),
+It is possible to filter which samples are visible through the [report toolbox](reports.md#hiding-samples),
 but it can be desirable to embed such patterns into the report so that they can be shared
 with others. One example can be to add filters for batches, to easily scan if certain
 quality metrics overlap between these batches.
@@ -526,12 +526,12 @@ custom_plot_config:
 ## Customising tables
 
 Much like with the custom plot config above, you can override almost any configuration options for tables.
-To see what's available, read the documentation about [Creating a table](#creating-a-table) below.
+To see what's available, read the documentation about [Creating a table](../development/plots.md#creating-a-table).
 
 Tables have configuration at two levels:
 
 1. Entire table
-   - Affects all columns and data. These configs are the same as _plot configs_ and can be overridden with `custom_plot_config` as described in the [Customising plots](#customising-plots) section above.
+   - Affects all columns and data. These configs are the same as _plot configs_ and can be overridden with `custom_plot_config` as described in the [Customising plots](#customising-plots) section.
 2. Specific columns
    - Table columns (headers) have their own configuration scope:`custom_table_header_config`. See below.
 

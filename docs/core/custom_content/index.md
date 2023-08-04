@@ -21,8 +21,8 @@ for examples of how data should be structured.
 
 :::note
 Use the name `custom_content` to refer to this module within configuration
-settings that require a module name, such as [`module_order`](#order-of-modules) or
-[`run_modules`](#removing-modules-or-sections).
+settings that require a module name, such as [`module_order`](../reports/customisation.md#order-of-modules) or
+[`run_modules`](../reports/customisation.md#removing-modules-or-sections).
 :::
 
 ## Data from a released tool
@@ -33,8 +33,8 @@ fully-fledged core MultiQC module is written instead. That way, other users of M
 can also benefit from results parsing.
 
 Note that proper MultiQC modules are more robust and powerful than this custom-content
-feature. You can also [write modules](http://multiqc.info/docs/#writing-new-modules)
-in [MultiQC plugins](http://multiqc.info/docs/#multiqc-plugins) if they're not suitable for
+feature. You can also [write modules](../development/modules.md)
+in [MultiQC plugins](../development/plugins.md) if they're not suitable for
 general release.
 
 ## Images
@@ -153,7 +153,7 @@ Check [Tricky extras](#tricky-extras) for certain caveats about formatting heade
 ## Data as part of MultiQC config
 
 If you are already using a MultiQC config file to add data to your report (for example,
-[titles / introductory text](http://multiqc.info/docs/#customising-reports)), you can
+[titles / introductory text](../getting_started/config.md)), you can
 give data within this file too. This can be in any MultiQC config file (for example,
 passed on the command line with `-c my_yaml_file.yaml`). This is useful as you can
 keep everything contained within a single file (including stuff unrelated to this
@@ -218,7 +218,7 @@ Use a **list** of headers in `pconfig` (keys prepended with `-`) to specify the 
 of columns in the General Statistics table.
 :::
 
-See the [general statistics docs](http://multiqc.info/docs/#step-3-adding-to-the-general-statistics-table)
+See the [general statistics docs](../development/modules.md#step-3---adding-to-the-general-statistics-table)
 for more information about configuring data for the General Statistics table.
 
 ## Separate configuration and data files
@@ -227,12 +227,12 @@ It's not always possible or desirable to include MultiQC configuration within a 
 If this is the case, you can add to the MultiQC configuration to specify how input files
 should be parsed.
 
-As described in the above [_Data as part of MultiQC config_](#data-as-part-of-multiqc-config) section,
+As described in the [Data as part of MultiQC config](#data-as-part-of-multiqc-config) section,
 this configuration should be held within a section called `custom_data` with a section-specific id.
 The only difference is that no `data` subsection is given and a search pattern for the given id must
 be supplied.
 
-Search patterns are added [as with any other module](http://multiqc.info/docs/#module-search-patterns).
+Search patterns are added [as with any other module](../getting_started/config.md#module-search-patterns).
 Ensure that the search pattern key is the same as your `custom_data` section ID.
 
 For example, a MultiQC config file could look as follows:
@@ -278,7 +278,7 @@ custom_data:
     description: "This description comes from multiqc_config.yaml and helps to annotate the Custom Content image."
 ```
 
-As mentioned above - if no configuration is given, MultiQC will do its best to guess how to visualise
+If no configuration is given, MultiQC will do its best to guess how to visualise
 your data appropriately. To see examples of typical file structures which are understood, see the
 [test data](https://github.com/ewels/MultiQC_TestData/tree/master/data/custom_content/no_config)
 used to develop this code.
@@ -375,12 +375,12 @@ summarised.
 
 Configuration of specific plots follows the same syntax as used when writing modules.
 To find out more, please see the later docs. Specifically, the plot config docs for
-[bar graphs](#bar-graphs),
-[line graphs](#line-graphs),
-[scatter plots](#scatter-plots),
-[tables](#creating-a-table),
-[beeswarm plots](#beeswarm-plots-dot-plots) and
-[heatmaps](#heatmaps).
+[bar graphs](../development/plots.md#bar-graphs),
+[line graphs](../development/plots.md#line-graphs),
+[scatter plots](../development/plots.md#scatter-plots),
+[tables](../development/plots.md#creating-a-table),
+[beeswarm plots](../development/plots.md#beeswarm-plots-dot-plots) and
+[heatmaps](../development/plots.md#heatmaps).
 
 Wherever you see `pconfig`, any key can be used within the above syntax.
 

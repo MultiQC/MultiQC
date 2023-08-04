@@ -26,7 +26,7 @@ ended up in the report, look at `multiqc_data/multiqc_sources.txt` which
 lists each source file used.
 
 To solve this, try running MultiQC with the `-d` and `-s` flags.
-The [Clashing sample names](http://multiqc.info/docs/#clashing-sample-names)
+The [Clashing sample names](../getting_started/config.md#clashing-sample-names)
 section of the docs explains this in more detail.
 
 ### Big log files
@@ -53,17 +53,20 @@ log_filesize_limit: 2000000000
 
 ### Long log files
 
-MultiQC detects files to parse for each module by using search patterns,
-for either filenames or file contents.
-Modules that search file contents for specific strings only look in the first
+When MultiQC runs, it first scans all supplied input files to create a shortlist
+of matching files for each module. These filenames are then passed to that module
+in the second phase of the run time to parse.
+
+Files are matches using search patterns that check for either filenames or specific
+strings within a given file. When doing the latter, MultiQC will only look in the first
 1000 lines of each file by default.
 
-This be fine for the majority of users, but if you're concatenating log files
-or otherwise unlucky, the required string may fall beyond this limit.
-There is no log message for this as it's not being skipped - it's just an
+This should be fine for nearly all cases, but if you're concatenating log files
+or are otherwise unlucky, the required string may fall beyond this limit.
+There is no log message for this, as the file isn't being skipped - it's just an
 absence of detection.
 
-You can configure the threshold used by changing `filesearch_lines_limit`.
+You can configure the threshold used by changing `filesearch_lines_limit` in your MultiQC config.
 For example, to load all of every file (as was the default prior to MultiQC v1.15)
 just set it to a very high number:
 
@@ -141,7 +144,7 @@ Problem solved! See more
 [here](https://www.continuum.io/blog/developer-blog/anaconda-25-release-now-mkl-optimizations).
 
 If you're not using Conda, try installing MultiQC with that instead. You
-can find instructions [here](http://multiqc.info/docs/#installing-with-conda).
+can find instructions [here](../getting_started/installation.md#conda).
 
 ## Locale Error Messages
 

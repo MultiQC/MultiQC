@@ -63,7 +63,7 @@ It's usually better to copy and paste a bit in these cases. The code is then eas
 The emphasis for MultiQC reports is to allow people to quickly scan and spot outlier samples.
 The core of this is data visualisation.
 
-Especially when creating tables, make sure that you think about the [colour scheme](#table-colour-scales-1) for every single column.
+Especially when creating tables, make sure that you think about the [colour scheme](../development/plots.md#table-colour-scales) for every single column.
 
 - Ensure that adjacent columns do not share the same colour scheme
   - Makes long tables easier to follow
@@ -377,7 +377,7 @@ The following search criteria sub-keys can then be used:
 - `exclude_contents_re`
   - A regex which will exclude the file if matched within the file contents (checked line by line)
 - `num_lines`
-  - The number of lines to search through for the `contents` string. Defaults to 1000 (`config.filesearch_lines_limit`).
+  - The number of lines to search through for the `contents` string. Defaults to 1000 (configurable via `filesearch_lines_limit`).
 - `shared`
   - By default, once a file has been assigned to a module it is not searched again. Specify `shared: true` when your file can be shared between multiple tools (for example, part of a `stdout` stream).
 - `max_filesize`
@@ -389,15 +389,10 @@ MultiQC execution time.
 :::
 
 :::warning
-Please do not set `num_lines` to a large number, as that will cause every searched file
-to be read in it's entirety, significantly slowing down the file search for all users.
-If you do need to do this, please at least combine it with a `fn` pattern to limit
-which files are loaded (eg. as done with AfterQC).
-:::
-
-:::note
-Note that `exclude_` keys are tested after a file is detected with one or
-more of the other patterns.
+Please do not set `num_lines` to anything over 1000, as this will significantly slow
+down the file search for all users.
+If you do need to search more lines to detect a string, please combine it with
+a `fn` pattern to limit which files are loaded _(as done with AfterQC)_.
 :::
 
 For example, two typical modules could specify search patterns as follows:
@@ -846,8 +841,8 @@ Instead of hardcoding defaults, it's a great idea to allow users to configure
 the behaviour of MultiQC module code.
 
 It's pretty easy to use the built in MultiQC configuration settings to do this,
-so that users can set up their config as described
-[above in the docs](http://multiqc.info/docs/#configuring-multiqc).
+so that users can set up their config as described in the
+[Configuration docs](../getting_started/config.md).
 
 To do this, just assume that your configuration variables are available in the
 MultiQC `config` module and have sensible defaults. For example:
