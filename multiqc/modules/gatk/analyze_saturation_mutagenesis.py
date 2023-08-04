@@ -444,10 +444,12 @@ class AnalyzeSaturationMutagenesisMixin:
             Reads are categorized as WT, a variant, or filtered. Bases can be either evaluated or unevaluated, corresponding to the reads they come from.
             
             Reads are filtered for the following reasons:
+            
             * Unmapped: the map quality is below the minimum MapQ (default = 4)'
             * Low quality reads: Reads are trimmed for quality > minQ (default 30) before calling variants. If the final size is less than the minimum length (default 15), or if the remaining segment does not cover the ORF, the read is filtered.
             
             Paired reads are also split into overlapping and disjoint sets, with further filters for both.
+            
             * Inconsistent: If overlapping reads disagree on the called variant, the read is filtered.
             * Ignored mate: If the pairs are disjoint, the first read of the pair is used for analysis, and the second is ignored.
             * Low quality variation: If the variant includes ambiguous bases (not A, C, G, or T, or -), the read is filtered.
