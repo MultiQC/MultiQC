@@ -1,9 +1,24 @@
 # MultiQC Version History
 
-## MultiQC v1.15dev
+## [MultiQC v1.15](https://github.com/ewels/MultiQC/releases/tag/v1.15) - 2023-08-04
+
+#### Potential breaking change in some edge cases
+
+This release of MultiQC introduces speed improvements to the file search.
+One way it does this is by limiting the number of lines loaded by each search pattern.
+For the vast majority of users, this should have no effect except faster searches.
+However, in some edge cases it may break things. Hypothetically, for example:
+
+- If you concatenate log files from multiple tools
+- If you have a custom plugin module that we haven't tested
+
+See the [troubleshooting docs](https://multiqc.info/docs/usage/troubleshooting/#long-log-files)
+for more information.
 
 ### MultiQC updates
 
+- Refactor file search for performance improvements ([#1904](https://github.com/ewels/MultiQC/pull/1904))
+- Bump `log_filesize_limit` default (to skip large files in the search) from 10MB to 50MB.
 - Table code now tolerates lambda function calls with bad data ([#1739](https://github.com/ewels/MultiQC/issues/1739))
 - Beeswarm plot now saves data to `multiqc_data`, same as tables ([#1861](https://github.com/ewels/MultiQC/issues/1861))
 - Don't print DOI in module if it's set to an empty string.

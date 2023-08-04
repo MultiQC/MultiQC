@@ -33,7 +33,9 @@ section of the docs explains this in more detail.
 
 Another reason that log files can be skipped is if the log filesize is very
 large. For example, this could happen with very long concatenated standard out
-files. By default, MultiQC skips any file that is larger than 10MB to keep
+files.
+
+By default, MultiQC skips any file that is larger than 50MB to keep
 execution fast. The verbose log output (`-v` or `multiqc_data/multiqc.log`) will
 show you if files are being skipped with messages such as these:
 
@@ -48,6 +50,28 @@ size, add the following to your MultiQC config file:
 ```yaml
 log_filesize_limit: 2000000000
 ```
+
+### Long log files
+
+MultiQC detects files to parse for each module by using search patterns,
+for either filenames or file contents.
+Modules that search file contents for specific strings only look in the first
+1000 lines of each file by default.
+
+This be fine for the majority of users, but if you're concatenating log files
+or otherwise unlucky, the required string may fall beyond this limit.
+There is no log message for this as it's not being skipped - it's just an
+absence of detection.
+
+You can configure the threshold used by changing `filesearch_lines_limit`.
+For example, to load all of every file (as was the default prior to MultiQC v1.15)
+just set it to a very high number:
+
+```yaml
+filesearch_lines_limit: 2000000000
+```
+
+This will slow down the initial file search but should otherwise be safe.
 
 ## No logs found for a tool
 

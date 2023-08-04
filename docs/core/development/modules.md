@@ -377,17 +377,28 @@ The following search criteria sub-keys can then be used:
 - `exclude_contents_re`
   - A regex which will exclude the file if matched within the file contents (checked line by line)
 - `num_lines`
-  - The number of lines to search through for the `contents` string. Default: all lines.
+  - The number of lines to search through for the `contents` string. Defaults to 1000 (`config.filesearch_lines_limit`).
 - `shared`
   - By default, once a file has been assigned to a module it is not searched again. Specify `shared: true` when your file can be shared between multiple tools (for example, part of a `stdout` stream).
 - `max_filesize`
-  - Files larger than the `log_filesize_limit` config key (default: 10MB) are skipped. If you know your files will be smaller than this and need to search by contents, you can specify this value (in bytes) to skip any files smaller than this limit.
+  - Files larger than the `log_filesize_limit` config key (default: 50MB) are skipped. If you know your files will be smaller than this and need to search by contents, you can specify this value (in bytes) to skip any files smaller than this limit.
 
+:::tip
 Please try to use `num_lines` and `max_filesize` where possible as they will speed up
 MultiQC execution time.
+:::
 
+:::warning
+Please do not set `num_lines` to a large number, as that will cause every searched file
+to be read in it's entirety, significantly slowing down the file search for all users.
+If you do need to do this, please at least combine it with a `fn` pattern to limit
+which files are loaded (eg. as done with AfterQC).
+:::
+
+:::note
 Note that `exclude_` keys are tested after a file is detected with one or
 more of the other patterns.
+:::
 
 For example, two typical modules could specify search patterns as follows:
 
