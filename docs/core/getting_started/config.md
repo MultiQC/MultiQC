@@ -435,7 +435,7 @@ this in quotes. If MultiQC is unable to understand your config you will get an e
 saying `Could not parse command line config`.
 
 As an example, the following command configures the coverage levels to use for the
-Qualimap module: _(as [described in the docs](../../modules/qualimap.md))_
+Qualimap module: _(as [described in the docs](https://multiqc.info/modules/qualimap/))_
 
 ```bash
 multiqc ./datadir --cl-config "qualimap_config: { general_stats_coverage: [20,40,200] }"
