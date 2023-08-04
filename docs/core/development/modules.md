@@ -63,7 +63,7 @@ It's usually better to copy and paste a bit in these cases. The code is then eas
 The emphasis for MultiQC reports is to allow people to quickly scan and spot outlier samples.
 The core of this is data visualisation.
 
-Especially when creating tables, make sure that you think about the [colour scheme](#table-colour-scales-1) for every single column.
+Especially when creating tables, make sure that you think about the [colour scheme](../development/plots.md#table-colour-scales) for every single column.
 
 - Ensure that adjacent columns do not share the same colour scheme
   - Makes long tables easier to follow
@@ -149,8 +149,10 @@ This will then automatically run all code checks on the files you have edited wh
 
 Automated continuous integration tests will run using GitHub Actions to check that all files pass the above tests. If any files do not, that test will fail giving a red ❌ next to the pull request.
 
-> Make sure that your configuration is working properly and that you're not changing loads of files
-> that you haven't worked with. Pull-requests will not be merged with such changes.
+:::tip
+Make sure that your configuration is working properly and that you're not changing loads of files
+that you haven't worked with. Pull-requests will not be merged with such changes.
+:::
 
 These tools should be relatively easy to install and run, and have integration with the majority
 of code editors. Once set up, they can run on save and you'll never need to think about them again.
@@ -377,17 +379,23 @@ The following search criteria sub-keys can then be used:
 - `exclude_contents_re`
   - A regex which will exclude the file if matched within the file contents (checked line by line)
 - `num_lines`
-  - The number of lines to search through for the `contents` string. Default: all lines.
+  - The number of lines to search through for the `contents` string. Defaults to 1000 (configurable via `filesearch_lines_limit`).
 - `shared`
   - By default, once a file has been assigned to a module it is not searched again. Specify `shared: true` when your file can be shared between multiple tools (for example, part of a `stdout` stream).
 - `max_filesize`
-  - Files larger than the `log_filesize_limit` config key (default: 10MB) are skipped. If you know your files will be smaller than this and need to search by contents, you can specify this value (in bytes) to skip any files smaller than this limit.
+  - Files larger than the `log_filesize_limit` config key (default: 50MB) are skipped. If you know your files will be smaller than this and need to search by contents, you can specify this value (in bytes) to skip any files smaller than this limit.
 
+:::tip
 Please try to use `num_lines` and `max_filesize` where possible as they will speed up
 MultiQC execution time.
+:::
 
-Note that `exclude_` keys are tested after a file is detected with one or
-more of the other patterns.
+:::warning
+Please do not set `num_lines` to anything over 1000, as this will significantly slow
+down the file search for all users.
+If you do need to search more lines to detect a string, please combine it with
+a `fn` pattern to limit which files are loaded _(as done with AfterQC)_.
+:::
 
 For example, two typical modules could specify search patterns as follows:
 
@@ -559,9 +567,11 @@ for f in self.find_log_files('mymod'):
 This function has already been applied to the contents of `f['s_name']`,
 so it is only required when using something different for the sample identifier.
 
-> `self.clean_s_name()` **must** be used on sample names parsed from the file
-> contents. Without it, features such as prepending directories (`--dirs`)
-> will not work.
+:::tip
+`self.clean_s_name()` **must** be used on sample names parsed from the file
+contents. Without it, features such as prepending directories (`--dirs`)
+will not work.
+:::
 
 The second argument should be the dictionary returned by the `self.find_log_files()` function.
 The root path is used for `--dirs` and the search pattern key is used
@@ -835,8 +845,8 @@ Instead of hardcoding defaults, it's a great idea to allow users to configure
 the behaviour of MultiQC module code.
 
 It's pretty easy to use the built in MultiQC configuration settings to do this,
-so that users can set up their config as described
-[above in the docs](http://multiqc.info/docs/#configuring-multiqc).
+so that users can set up their config as described in the
+[Configuration docs](../getting_started/config.md).
 
 To do this, just assume that your configuration variables are available in the
 MultiQC `config` module and have sensible defaults. For example:
