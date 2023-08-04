@@ -6,7 +6,6 @@ from collections import OrderedDict
 
 from multiqc.modules.base_module import BaseMultiqcModule
 
-
 # Import the GATK submodules
 # import varianteval
 from .analyze_saturation_mutagenesis import AnalyzeSaturationMutagenesisMixin
@@ -17,8 +16,7 @@ from .varianteval import VariantEvalMixin
 log = logging.getLogger(__name__)
 
 
-class MultiqcModule(BaseMultiqcModule, AnalyzeSaturationMutagenesisMixin, 
-                    BaseRecalibratorMixin, VariantEvalMixin):
+class MultiqcModule(BaseMultiqcModule, AnalyzeSaturationMutagenesisMixin, BaseRecalibratorMixin, VariantEvalMixin):
     """GATK has a number of different commands and outputs.
     This MultiQC module supports some but not all. The code for
     each script is split into its own file and adds a section to
