@@ -88,67 +88,67 @@ class AnalyzeSaturationMutagenesisMixin:
         for line in file_handle:
             fields = line.split("\t")
 
-            match fields[0]:
-                # First, note whether we are in disjoint or overlapping reads block
-                case ">>Reads in disjoint pairs evaluated separately:":
-                    data["disjoint_pairs"] = int(fields[1])
-                    disjoint_reads = True
+            # First, note whether we are in disjoint or overlapping reads block
 
-                case ">>Reads in overlapping pairs evaluated together:":
-                    data["overlapping_pairs"] = int(fields[1])
-                    disjoint_reads = False
+            if fields[0] == ">>Reads in disjoint pairs evaluated separately:":
+                data["disjoint_pairs"] = int(fields[1])
+                disjoint_reads = True
 
-                # Proceed with the rest of the data
-                case "Total Reads:":
-                    data["total_reads"] = int(fields[1])
+            elif fields[0] == ">>Reads in overlapping pairs evaluated together:":
+                data["overlapping_pairs"] = int(fields[1])
+                disjoint_reads = False
 
-                case ">Unmapped Reads:":
-                    data["unmapped_reads"] = int(fields[1])
+            # Proceed with the rest of the data
+            elif fields[0] == "Total Reads:":
+                data["total_reads"] = int(fields[1])
 
-                case ">LowQ Reads:":
-                    data["lowq_reads"] = int(fields[1])
+            elif fields[0] == ">Unmapped Reads:":
+                data["unmapped_reads"] = int(fields[1])
 
-                case ">Evaluable Reads:":
-                    data["evaluable_reads"] = int(fields[1])
+            elif fields[0] == ">LowQ Reads:":
+                data["lowq_reads"] = int(fields[1])
 
-                case ">>>Wild type:":
-                    if disjoint_reads:
-                        data["wt_reads_disjoint"] = int(fields[1])
-                    else:
-                        data["wt_reads_overlapping"] = int(fields[1])
+            elif fields[0] == ">Evaluable Reads:":
+                data["evaluable_reads"] = int(fields[1])
 
-                case ">>>Called variants:":
-                    if disjoint_reads:
-                        data["called_variants_disjoint"] = int(fields[1])
-                    else:
-                        data["called_variants_overlapping"] = int(fields[1])
+            elif fields[0] == ">>>Wild type:":
+                if disjoint_reads:
+                    data["wt_reads_disjoint"] = int(fields[1])
+                else:
+                    data["wt_reads_overlapping"] = int(fields[1])
 
-                case ">>>Mate ignored:":
-                    data["mate_ignored_disjoint"] = int(fields[1])
+            elif fields[0] == ">>>Called variants:":
+                if disjoint_reads:
+                    data["called_variants_disjoint"] = int(fields[1])
+                else:
+                    data["called_variants_overlapping"] = int(fields[1])
 
-                case ">>>Inconsistent pair:":
-                    data["inconsistent_overlapping"] = int(fields[1])
+            elif fields[0] == ">>>Mate ignored:":
+                data["mate_ignored_disjoint"] = int(fields[1])
 
-                case ">>>Low quality variation:":
-                    if disjoint_reads:
-                        data["low_quality_variation_disjoint"] = int(fields[1])
-                    else:
-                        data["low_quality_variation_overlapping"] = int(fields[1])
+            elif fields[0] == ">>>Inconsistent pair:":
+                data["inconsistent_overlapping"] = int(fields[1])
 
-                case ">>>Insufficient flank:":
-                    if disjoint_reads:
-                        data["insufficient_flank_disjoint"] = int(fields[1])
-                    else:
-                        data["insufficient_flank_overlapping"] = int(fields[1])
+            elif fields[0] == ">>>Low quality variation:":
+                if disjoint_reads:
+                    data["low_quality_variation_disjoint"] = int(fields[1])
+                else:
+                    data["low_quality_variation_overlapping"] = int(fields[1])
 
-                case "Total base calls:":
-                    data["total_base_calls"] = int(fields[1])
+            elif fields[0] == ">>>Insufficient flank:":
+                if disjoint_reads:
+                    data["insufficient_flank_disjoint"] = int(fields[1])
+                else:
+                    data["insufficient_flank_overlapping"] = int(fields[1])
 
-                case ">Base calls evaluated for variants:":
-                    data["evaluated_base_calls"] = int(fields[1])
+            elif fields[0] == "Total base calls:":
+                data["total_base_calls"] = int(fields[1])
 
-                case ">Base calls unevaluated:":
-                    data["unevaluated_base_calls"] = int(fields[1])
+            elif fields[0] == ">Base calls evaluated for variants:":
+                data["evaluated_base_calls"] = int(fields[1])
+
+            elif fields[0] == ">Base calls unevaluated:":
+                data["unevaluated_base_calls"] = int(fields[1])
 
         # Create some summary fields
 
