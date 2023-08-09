@@ -67,7 +67,7 @@ setup(
     ],
     entry_points={
         "console_scripts": [
-            "multiqc=multiqc.__main__:run_multiqc",
+            "multiqc=multiqc.__main__:run_cli",
         ],
         "multiqc.modules.v1": [
             "adapterRemoval = multiqc.modules.adapterRemoval:MultiqcModule",
