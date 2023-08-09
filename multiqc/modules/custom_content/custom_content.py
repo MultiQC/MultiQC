@@ -543,19 +543,22 @@ def _parse_txt(f, conf):
     first_row_str = 0
     for i, l in enumerate(d):
         for j, v in enumerate(l):
-            try:
-                d[i][j] = float(v)
-            except ValueError:
+            if j != 0:  # we don't want to convert sample names to numbers
+                try:
+                    v = float(v)
+                except ValueError:
+                    pass
+            if isinstance(v, str):
                 if (v.startswith('"') and v.endswith('"')) or (v.startswith("'") and v.endswith("'")):
                     v = v[1:-1]
-                d[i][j] = v
                 # Count strings in first row (header?)
                 if i == 0:
                     first_row_str += 1
+            d[i][j] = v
 
     all_numeric = all([type(l) == float for l in d[i][1:] for i in range(1, len(d))])
 
-    # General stat info files - expected to be have atleast 2 rows (first row always being the header)
+    # General stat info files - expected to be have at least 2 rows (first row always being the header)
     # and have atleast 2 columns (first column always being sample name)
     if conf.get("plot_type") == "generalstats" and len(d) >= 2 and ncols >= 2:
         data = defaultdict(dict)
