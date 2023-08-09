@@ -8,6 +8,8 @@
 
 ### Module updates
 
+- fix count reads in `samtools stats` : ( https://github.com/ewels/MultiQC/issues/1971 ) 
+
 ## [MultiQC v1.15](https://github.com/ewels/MultiQC/releases/tag/v1.15) - 2023-08-04
 
 #### Potential breaking change in some edge cases
