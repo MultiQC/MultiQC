@@ -73,15 +73,11 @@ class DragenRnaQuantMetrics(BaseMultiqcModule):
         return data_by_sample.keys()
 
 
-def parse_time_metrics_file(f):
+def parse_quant_metrics_file(f):
     """
-    sample.time_metrics.csv
+    sample.quant_metrics.csv
 
-    RUN TIME,,Time loading reference,00:01:31.289,91.29
-    RUN TIME,,Time aligning reads,00:00:25.190,25.19
-    RUN TIME,,Time duplicate marking,00:00:01.817,1.82
-    RUN TIME,,Time sorting and marking duplicates,00:00:07.368,7.37
-    RUN TIME,,Time DRAGStr calibration,00:00:07.069,7.07
+    ,,Transcript fragments,100
     """
     s_name = re.search(r"(.*).quant[.|_]metrics.csv", f["fn"]).group(1)
 
