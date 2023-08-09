@@ -98,6 +98,7 @@ def run(
 
     Author: Phil Ewels (http://phil.ewels.co.uk)
     """
+    start_execution_time = time.time()
 
     # Set up logging level
     loglevel = log.LEVELS.get(min(verbose, 1), "INFO")

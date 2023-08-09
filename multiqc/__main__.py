@@ -10,8 +10,8 @@ Also available as:
 python -m multiqc .
 """
 import sys
-import time
 
+import pkg_resources
 import rich_click as click
 
 from multiqc import run
@@ -19,7 +19,6 @@ from multiqc import run
 from .utils import config, util_functions
 
 # Set up logging
-start_execution_time = time.time()
 logger = config.logger
 
 # Configuration for rich-click CLI help
@@ -271,6 +270,11 @@ def run_cli(**kwargs):
 
     # Pass on to a regular function that can be used easily without click
     multiqc_run = run(**kwargs)
+
+    # Add any extra plugin command line options
+    for entry_point in pkg_resources.iter_entry_points("multiqc.cli_options.v1"):
+        opt_func = entry_point.load()
+        multiqc_run = opt_func(multiqc_run)
 
     # End execution using the exit code returned from MultiQC
     sys.exit(multiqc_run["sys_exit_code"])
