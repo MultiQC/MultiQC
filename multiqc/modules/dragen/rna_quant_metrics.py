@@ -12,7 +12,7 @@ class DragenRnaQuantMetrics(BaseMultiqcModule):
         data_by_sample = dict()
 
         for f in self.find_log_files("dragen/rna_quant_metrics"):
-            s_name, data = parse_time_metrics_file(f)
+            s_name, data = parse_quant_metrics_file(f)
             s_name = self.clean_s_name(s_name, f)
             if s_name in data_by_sample:
                 log.debug("Duplicate sample name found! Overwriting: {}".format(s_name))
