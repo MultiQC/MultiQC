@@ -61,6 +61,7 @@ it prints the contents of these files into the report.
 <script type="text/javascript">{{ include_file('assets/js/multiqc_tables.js') }}</script>
 <script type="text/javascript">{{ include_file('assets/js/multiqc_plotting.js') }}</script>
 <script type="text/javascript">{{ include_file('assets/js/multiqc_mpl.js') }}</script>
+<script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.1.5/jszip.min.js"></script>
 <script type="text/javascript">{{ include_file('assets/js/multiqc_toolbox.js') }}</script>
 {% set included_js = [] %}
 {%- for m in report.modules_output %}{% if m.js and m.js|length > 0 -%}{% for js_href in m.js.values() %}

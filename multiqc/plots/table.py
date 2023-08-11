@@ -131,7 +131,7 @@ def make_table(dt):
         )
 
         # Make a colour scale
-        if header["scale"] == False:
+        if header["scale"] is False:
             c_scale = None
         else:
             c_scale = mqc_colour.mqc_colour_scale(header["scale"], header["dmin"], header["dmax"], id=table_id)
@@ -162,7 +162,7 @@ def make_table(dt):
                     dmin = header["dmin"]
                     dmax = header["dmax"]
                     percentage = ((float(val) - dmin) / (dmax - dmin)) * 100
-                    # Treat 0 as 0-width and make bars width of absoluate value
+                    # Treat 0 as 0-width and make bars width of absolute value
                     if header.get("bars_zero_centrepoint"):
                         dmax = max(abs(header["dmin"]), abs(header["dmax"]))
                         dmin = 0
