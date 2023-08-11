@@ -4,6 +4,8 @@
 
 ### MultiQC updates
 
+- Removed `simplejson` unused dependency ([#1973](https://github.com/ewels/MultiQC/pull/1973))
+
 ### New Modules
 
 ### Module updates
