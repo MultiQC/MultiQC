@@ -558,8 +558,8 @@ def _parse_txt(f, conf):
 
     all_numeric = all([type(l) == float for l in d[i][1:] for i in range(1, len(d))])
 
-    # General stat info files - expected to be have at least 2 rows (first row always being the header)
-    # and have atleast 2 columns (first column always being sample name)
+    # General stat info files - expected to have at least 2 rows (first row always being the header)
+    # and have at least 2 columns (first column always being sample name)
     if conf.get("plot_type") == "generalstats" and len(d) >= 2 and ncols >= 2:
         data = defaultdict(dict)
         for i, l in enumerate(d[1:], 1):
