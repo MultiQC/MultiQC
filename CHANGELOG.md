@@ -8,6 +8,8 @@
 
 ### Module updates
 
+- Fix Kraken incorrectly assigning ranks to tabs (https://github.com/ewels/MultiQC/issues/1766).
+
 ## [MultiQC v1.15](https://github.com/ewels/MultiQC/releases/tag/v1.15) - 2023-08-04
 
 #### Potential breaking change in some edge cases
