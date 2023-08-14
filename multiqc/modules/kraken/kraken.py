@@ -234,8 +234,7 @@ class MultiqcModule(BaseMultiqcModule):
                 rank_code = row["rank_code"]
                 classif = row["classif"]
 
-                # Skip anything that doesn't exactly fit a tax rank level
-                if row["rank_code"] not in self.t_ranks:
+                if rank_code == "-":
                     continue
 
                 if rank_code not in self.kraken_total_pct:
@@ -334,10 +333,27 @@ class MultiqcModule(BaseMultiqcModule):
 
         pd = []
         cats = list()
-        # Keeping track of encountered codes to display only tabs with available data
-        found_rank_codes = set()
 
-        for rank_code in self.t_ranks:
+        grouped_by_rank_code = dict()
+        for s_name, rows in self.kraken_raw_data.items():
+            for row in rows:
+                rc = row["rank_code"]
+                if rc not in grouped_by_rank_code:
+                    grouped_by_rank_code[rc] = dict()
+                grouped_by_rank_code[rc][s_name] = rows
+
+        rank_codes = grouped_by_rank_code.keys()
+        rank_codes = sorted(rank_codes, key=lambda c: list(self.t_ranks.keys()).index(c[0]) - 1)
+
+        rank_labels = []
+        for rc in rank_codes:
+            if rc in self.t_ranks:
+                rank_labels.append(self.t_ranks[rc])
+            if rc[0] in self.t_ranks:
+                rc = rc[0]
+                rank_labels.append(f"Sub{self.t_ranks[rc][0].lower()}{self.t_ranks[rc][1:]}")
+
+        for rank_code in rank_codes:
             rank_cats = OrderedDict()
             rank_data = dict()
 
@@ -355,29 +371,26 @@ class MultiqcModule(BaseMultiqcModule):
                     break
                 rank_cats[classif] = {"name": classif}
                 # Pull out counts for this rank + classif from each sample
-                for s_name, d in self.kraken_raw_data.items():
+                for s_name, rows in grouped_by_rank_code.get(rank_code, dict()).items():
                     if s_name not in rank_data:
                         rank_data[s_name] = dict()
                     if s_name not in counts_shown:
                         counts_shown[s_name] = 0
 
-                    for row in d:
-                        if row["rank_code"] == rank_code:
-                            found_rank_codes.add(rank_code)
-                            # unclassified are handled separately
-                            if row["rank_code"] != "U":
-                                if row["classif"] == classif:
-                                    if classif not in rank_data[s_name]:
-                                        rank_data[s_name][classif] = 0
-                                    rank_data[s_name][classif] += row["counts_rooted"]
-                                    counts_shown[s_name] += row["counts_rooted"]
+                    for row in rows:
+                        # unclassified are handled separately
+                        if rank_code != "U":
+                            if row["classif"] == classif:
+                                if classif not in rank_data[s_name]:
+                                    rank_data[s_name][classif] = 0
+                                rank_data[s_name][classif] += row["counts_rooted"]
+                                counts_shown[s_name] += row["counts_rooted"]
 
             # Add in unclassified reads and "other" - we presume from other species etc.
-            for s_name, d in self.kraken_raw_data.items():
-                for row in d:
-                    if row["rank_code"] == "U":
-                        rank_data[s_name]["U"] = row["counts_rooted"]
-                        counts_shown[s_name] += row["counts_rooted"]
+            for s_name, rows in grouped_by_rank_code.get("U", dict()).items():
+                for row in rows:
+                    rank_data[s_name]["U"] = row["counts_rooted"]
+                    counts_shown[s_name] += row["counts_rooted"]
                 rank_data[s_name]["other"] = self.kraken_sample_total_readcounts[s_name] - counts_shown[s_name]
 
                 # This should never happen... But it does sometimes if the total read count is a bit off
@@ -399,7 +412,7 @@ class MultiqcModule(BaseMultiqcModule):
             "id": "kraken-topfive-plot",
             "title": "Kraken 2: Top taxa",
             "ylab": "Number of fragments",
-            "data_labels": [v for k, v in self.t_ranks.items() if k in found_rank_codes],
+            "data_labels": rank_labels,
         }
 
         self.add_section(
