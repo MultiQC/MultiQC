@@ -33,8 +33,8 @@ import jinja2
 import rich
 from rich.syntax import Syntax
 
-from .plots import table
-from .utils import config, lint_helpers, log, megaqc, plugin_hooks, report, util_functions
+from multiqc.plots import table
+from multiqc.utils import config, lint_helpers, log, megaqc, plugin_hooks, report, util_functions
 
 config.logger = logging.getLogger(__name__)
 logger = config.logger
