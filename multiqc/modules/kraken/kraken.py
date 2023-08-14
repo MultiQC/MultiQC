@@ -35,6 +35,7 @@ class MultiqcModule(BaseMultiqcModule):
         self.t_ranks["P"] = "Phylum"
         self.t_ranks["K"] = "Kingdom"
         self.t_ranks["D"] = "Domain"
+        self.t_ranks["R1"] = "Superdomain"
         self.t_ranks["R"] = "Root"
         self.t_ranks["U"] = "Unclassified"
 
@@ -97,7 +98,8 @@ class MultiqcModule(BaseMultiqcModule):
         3. Number of fragments assigned directly to this taxon
         4. A rank code, indicating:
             * (U)nclassified
-            * (R)oot
+            * (R)oot (any organism or agent, including viruses)
+            * R1 ("Superdomain" (cellular organisms, viruses, ...)
             * (D)omain
             * (K)ingdom
             * (P)hylum
@@ -146,7 +148,8 @@ class MultiqcModule(BaseMultiqcModule):
            associated with this taxon (new)
         6. A rank code, indicating:
             * (U)nclassified
-            * (R)oot
+            * (R)oot (any organism or agent, including viruses)
+            * R1 ("Superdomain" (cellular organisms, viruses, ...)
             * (D)omain
             * (K)ingdom
             * (P)hylum
@@ -232,7 +235,7 @@ class MultiqcModule(BaseMultiqcModule):
                 classif = row["classif"]
 
                 # Skip anything that doesn't exactly fit a tax rank level
-                if row["rank_code"] == "-" or any(c.isdigit() for c in row["rank_code"]):
+                if row["rank_code"] not in self.t_ranks:
                     continue
 
                 if rank_code not in self.kraken_total_pct:
@@ -331,12 +334,8 @@ class MultiqcModule(BaseMultiqcModule):
 
         pd = []
         cats = list()
-        pconfig = {
-            "id": "kraken-topfive-plot",
-            "title": "Kraken 2: Top taxa",
-            "ylab": "Number of fragments",
-            "data_labels": list(self.t_ranks.values()),
-        }
+        # Keeping track of encountered codes to display only tabs with available data
+        found_rank_codes = set()
 
         for rank_code in self.t_ranks:
             rank_cats = OrderedDict()
@@ -363,9 +362,10 @@ class MultiqcModule(BaseMultiqcModule):
                         counts_shown[s_name] = 0
 
                     for row in d:
-                        # unclassified are handled separately
-                        if row["rank_code"] != "U":
-                            if row["rank_code"] == rank_code:
+                        if row["rank_code"] == rank_code:
+                            found_rank_codes.add(rank_code)
+                            # unclassified are handled separately
+                            if row["rank_code"] != "U":
                                 if row["classif"] == classif:
                                     if classif not in rank_data[s_name]:
                                         rank_data[s_name][classif] = 0
@@ -394,6 +394,13 @@ class MultiqcModule(BaseMultiqcModule):
 
             cats.append(rank_cats)
             pd.append(rank_data)
+
+        pconfig = {
+            "id": "kraken-topfive-plot",
+            "title": "Kraken 2: Top taxa",
+            "ylab": "Number of fragments",
+            "data_labels": [v for k, v in self.t_ranks.items() if k in found_rank_codes],
+        }
 
         self.add_section(
             name="Top taxa",
