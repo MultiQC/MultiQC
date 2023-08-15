@@ -22,7 +22,8 @@ def is_executable(script):
     executable_types = {
         "text/javascript",
         "application/javascript",
-        "module" "text/ecmascript",
+        "module",
+        "text/ecmascript",
         "application/ecmascript",
     }
     script_type = script.attrs.get("type", "text/javascript")
