@@ -4,6 +4,10 @@
 
 ### MultiQC updates
 
+### Module updates
+
+- **Whatshap**
+  - Bugfix: ensure that data tsv file is only split on tab character. Allows sample names with white spaces.
 ### New Modules
 
 ### Module updates
