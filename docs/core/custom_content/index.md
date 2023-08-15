@@ -87,7 +87,7 @@ data:
   sample_4: { x: 9, y: 12 }
 ```
 
-:::warning
+:::note
 This example YAML file is data only, and is not to be confused with a config file (though the two look very similar).
 See the docs [Data as part of MultiQC config](#data-as-part-of-multiqc-config) for more on that.
 :::
@@ -163,10 +163,10 @@ give data within this file too. This can be in any MultiQC config file (for exam
 passed on the command line with `-c my_yaml_file.yaml` or in your launch directory as
 `multiqc_config.yml` - see [Configuration](../getting_started/config.md)).
 
-:::warning
+:::note
 This is not to be confused with the YAML data files described in the above section,
 [MultiQC-specific data file](#multiqc-specific-data-file).
-MultiQC config files will _not_ be found with `_mqc.yml` file extensions, for example.
+For example, MultiQC config files will _not_ be found with `_mqc.yml` file extensions.
 :::
 
 This is useful as you can
