@@ -95,8 +95,11 @@ class MultiqcModule(BaseMultiqcModule):
         log.info(f"Found {num_samples} reports")
 
         if cumcov_dist_data:
-            # Write data to file
-            self.write_data_file(cumcov_dist_data, "mosdepth_cumcov_dist")
+            # Write data to file, sort columns numberically and convert to strings
+            cumcov_dist_data_writeable = {
+                sample: {str(k): v for k, v in sorted(data.items())} for sample, data in cumcov_dist_data.items()
+            }
+            self.write_data_file(cumcov_dist_data_writeable, "mosdepth_cumcov_dist")
 
             self.add_section(
                 name="Cumulative coverage distribution",
@@ -119,8 +122,18 @@ class MultiqcModule(BaseMultiqcModule):
             )
 
         if cov_dist_data:
-            # Write data to file
-            self.write_data_file(cov_dist_data, "mosdepth_cov_dist")
+            # Write data to file, sort columns numberically and convert to strings
+            cov_dist_data_writeable = {
+                sample: {str(k): v for k, v in sorted(data.items())} for sample, data in cov_dist_data.items()
+            }
+            self.write_data_file(cov_dist_data_writeable, "mosdepth_cov_dist")
+
+            # Set ymax so that zero coverage values are ignored.
+            ymax = 0
+            for data in cov_dist_data.values():
+                positive_cov = [percent for cov, percent in data.items() if cov > 0]
+                if positive_cov:
+                    ymax = max(ymax, max(positive_cov))
 
             self.add_section(
                 name="Coverage distribution",
@@ -134,7 +147,8 @@ class MultiqcModule(BaseMultiqcModule):
                         "title": "Mosdepth: Coverage distribution",
                         "xlab": "Coverage (X)",
                         "ylab": "% bases in genome/regions covered by X reads",
-                        "ymax": 100,
+                        "ymax": ymax * 1.05,
+                        "yCeiling": 100,
                         "xmax": xmax,
                         "tt_label": "<b>{point.x}X</b>: {point.y:.2f}%",
                         "smooth_points": 500,
@@ -158,6 +172,7 @@ class MultiqcModule(BaseMultiqcModule):
                         "tt_decimals": 1,
                         "tt_suffix": "x",
                         "smooth_points": 500,
+                        "logswitch": True,
                     },
                 )
             else:
@@ -221,6 +236,8 @@ class MultiqcModule(BaseMultiqcModule):
                 if chrom.startswith("total"):
                     genstats[s_name]["mean_coverage"] = mean
 
+                    self.add_data_source(f, s_name=s_name, section="summary")
+
         # Parse coverage distributions
         for scope in ("region", "global"):
             for f in self.find_log_files("mosdepth/" + scope + "_dist"):
@@ -235,23 +252,12 @@ class MultiqcModule(BaseMultiqcModule):
                     if float(bases_fraction) == 0:
                         continue
 
-                    # Parse cumulative coverage and calculate absolute coverage (global)
+                    # Parse cumulative coverage
                     if contig == "total":
                         cumcov = 100.0 * float(bases_fraction)
                         x = int(cutoff_reads)
                         cumcov_dist_data[s_name][x] = cumcov
-                        # converting cumulative coverage into absoulte coverage:
-                        """
-                        *example*              x:  cumcov:  abscov:
-                        3x                     3x  0      =               0
-                        2x     -               2x  0.10   = 0.10 - 0    = 0.10
-                        1x     --------        1x  0.80   = 0.80 - 0.10 = 0.70
-                        genome ..........      0x  1.00   = 1.00 - 0.80 = 0.20
-                        """
-                        if x + 1 not in cumcov_dist_data[s_name]:
-                            cov_dist_data[s_name][x] = cumcov
-                        else:
-                            cov_dist_data[s_name][x] = cumcov - cumcov_dist_data[s_name][x + 1]
+
                         if cumcov > 1:  # require >1% to prevent long flat tail
                             xmax = max(xmax, x)
 
@@ -286,14 +292,33 @@ class MultiqcModule(BaseMultiqcModule):
         for i in perchrom_avg_data:
             for j in perchrom_avg_data[i]:
                 perchrom_avg_data[i][j] -= 1
+
+        # Calculate absolute coverage distribution (global)
+        for s_name, s_cumcov_dist in cumcov_dist_data.items():
+            # Create sorted list of tuples (x, cumcov)
+            cumcov_dist = sorted(s_cumcov_dist.items())
+
+            # Calculate absolute coverage for the given x by taking the difference between
+            # the current and previous cumulative coverage.
+            #
+            #   *example*              x:  cumcov:  abscov:
+            #   3x                     3x  0      =               0
+            #   2x     -               2x  0.10   = 0.10 - 0    = 0.10
+            #   1x     --------        1x  0.80   = 0.80 - 0.10 = 0.70
+            #   genome ..........      0x  1.00   = 1.00 - 0.80 = 0.20
+            prev_x, prev_cumcov = cumcov_dist.pop()
+            while cumcov_dist:
+                x, cumcov = cumcov_dist.pop()
+                cov_dist_data[s_name][x] = cumcov - prev_cumcov
+                prev_x, prev_cumcov = x, cumcov
+
         return genstats, cumcov_dist_data, cov_dist_data, xmax, perchrom_avg_data
 
     def genstats_cov_thresholds(self, genstats, genstats_headers, cumcov_dist_data, threshs, hidden_threshs):
         for s_name, d in cumcov_dist_data.items():
             dist_subset = {t: data for t, data in d.items() if t in threshs}
             for t in threshs:
-                if int(t) in dist_subset:
-                    genstats[s_name][f"{t}_x_pc"] = dist_subset[t]
+                genstats[s_name][f"{t}_x_pc"] = dist_subset.get(t, 0)
 
         for t in threshs:
             genstats_headers[f"{t}_x_pc"] = {
