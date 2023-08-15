@@ -5,8 +5,11 @@ def clean_title_case(col_id):
     return title
 
 
-def update_dict(table, headers, rows_list, col_map, colours, prefix):
-    """update the data dict and headers dict"""
+def update_dict(table, headers, rows_list, col_map, colours, prefix, int_cols=()):
+    """update the data dict and headers dict
+
+    :param: int_cols columns to be shown as integers in the table
+    """
 
     for col_name, col_data in rows_list:
         if col_name in col_map:
@@ -38,12 +41,7 @@ def update_dict(table, headers, rows_list, col_map, colours, prefix):
                     }
                 )
 
-            # Assign shared keys
-            if col_id == "estimated cells":
-                headers[col_id]["shared_key"] = "cell_count"
-                headers[col_id]["format"] = "{:,.0f}"
-            if col_id.endswith("reads/cell"):
-                headers[col_id]["shared_key"] = "reads_per_cell"
+            if col_id in int_cols:
                 headers[col_id]["format"] = "{:,.0f}"
 
 

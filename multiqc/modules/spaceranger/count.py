@@ -178,14 +178,14 @@ class SpaceRangerCountMixin:
             "reads": "YlGn",
             "valid bc": "RdYlGn",
         }
+        int_cols = [
+            "reads",
+            "spots under tissue",
+            "avg reads/spot",
+        ]
         data_general_stats = {}
         update_dict(
-            data_general_stats,
-            self.count_general_data_headers,
-            data_rows,
-            col_dict,
-            colours,
-            "Count",
+            data_general_stats, self.count_general_data_headers, data_rows, col_dict, colours, "Count", int_cols
         )
 
         # Store full data from space ranger count report
@@ -223,15 +223,16 @@ class SpaceRangerCountMixin:
             "genomic umis": "PuRd",
             "genomic umis/unspliced probe": "YlOrRd",
         }
+        int_cols = [
+            "reads",
+            "spots under tissue",
+            "avg reads/spot",
+            "median genes/spot",
+            "genes detected",
+            "genomic umis/unspliced probe",
+        ]
         data = {}
-        update_dict(
-            data,
-            self.count_data_headers,
-            data_rows,
-            col_dict,
-            colours,
-            "Count",
-        )
+        update_dict(data, self.count_data_headers, data_rows, col_dict, colours, "Count", int_cols)
 
         # Extract warnings if any
         warnings = {}
