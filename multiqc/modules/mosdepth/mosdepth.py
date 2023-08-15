@@ -46,12 +46,12 @@ def read_config():
         log.info('Using "{}" as Y chromosome name'.format(cfg["ychr"]))
 
     # The coverage cutoff to display chromosomes to avoid clutter
-    cutoff = cfg.get("perchrom_fraction_cutoff", 0.001)
+    cutoff = cfg.get("perchrom_fraction_cutoff", 0.0)
     try:
         cutoff = float(cutoff)
     except ValueError:
-        cutoff = 0.001
-    if cutoff != 0.001:
+        cutoff = 0.0
+    if cutoff != 0.0:
         log.info(f"Setting mosdepth per-chrom coverage cutoff to display contigs to: " f"{cutoff * 100.0}%")
     cfg["perchrom_fraction_cutoff"] = cutoff
 
