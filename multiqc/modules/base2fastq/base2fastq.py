@@ -10,7 +10,7 @@ from .plot_samples import *
 import warnings
 import seaborn as sns
 import copy
-
+import uuid
 
 ### Change documentations after development
 class MultiqcModule(BaseMultiqcModule):
@@ -29,9 +29,14 @@ class MultiqcModule(BaseMultiqcModule):
         # Read overall stats json as dictionaries
         for f in self.find_log_files("base2fastq/run"):
             data_dict = json.loads(f["f"])
+            # sample stats not needed at run level - save on memory
             del data_dict["SampleStats"]
-            sampleName = data_dict["RunName"]
-            s_name = self.clean_s_name(sampleName, f)
+            dir_name = os.path.basename(f["root"])
+            run_name = data_dict.get("RunName","UNKNOWN")
+            analysis_id = data_dict.get("AnalysisID",self.get_uuid())[0:8]
+
+            sample_name = "__".join([run_name,analysis_id])
+            s_name = self.clean_s_name(sample_name, f)
             self.b2f_run_data[s_name] = data_dict
 
         # Read project info and make it into a lookup dictionary of {sample:project}:
@@ -40,7 +45,9 @@ class MultiqcModule(BaseMultiqcModule):
             data_dict = json.loads(f["f"])
             samples = data_dict["Samples"]
             runName = data_dict["RunName"]
+            # run stats no longer needed - save on memory
             del data_dict
+            
             project = f["s_name"].replace("_RunStats", "")
             for s in samples:
                 projectLookupDict[runName + "_" + s] = project
@@ -149,6 +156,9 @@ class MultiqcModule(BaseMultiqcModule):
             )
         }
         self.intro += '<script type="application/json" class="fastqc_passfails">["fastqc", {"per_base_sequence_content": {"TEST": "pass"}}]</script>'
+
+    def get_uuid(self):
+        return str(uuid.uuid4()).replace("-", "").lower()
 
     def add_run_plots(self):
         plot_functions = [tabulate_run_stats, plot_run_stats, plot_base_quality_hist, plot_base_quality_by_cycle]
