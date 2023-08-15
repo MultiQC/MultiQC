@@ -6,7 +6,7 @@ from multiqc.utils import report
 import json
 
 """
-Functions for plotting per sample information of base2fastq
+Functions for plotting per sample information of bases2fastq
 """
 
 
@@ -54,7 +54,7 @@ def tabulate_sample_stats(sampleData, groupLookupDict, sampleColor):
     Group: A group tag for assigning colors in the plot. The default group of each sample will be their sequencing
     run name. To customize group tags, you can either
     
-    1) Set the project name when running base2fastq. In this case the group tags will be project name.
+    1) Set the project name when running bases2fastq. In this case the group tags will be project name.
     
     2) Generate a csv file that has the columns "Run Name","Sample Name" and "Group". An easy way of 
     generating this csv will be run multiqc with default grouping, copy this table into a csv file, 
@@ -80,8 +80,8 @@ def sequence_content_plot(sampleData, groupLookupDict, colorDict):
             for base in ["a", "c", "t", "g"]:
                 data[s_name][baseNo][base] = (float(data[s_name][baseNo][base]) / float(tot)) * 100.0
 
-        R2 = sampleData[s_name]["Reads"][0]["Cycles"]
-        for cycle in range(len(R1)):
+        R2 = sampleData[s_name]["Reads"][1]["Cycles"]
+        for cycle in range(len(R2)):
             baseNo = str(cycle + 1 + len(R1))
             data[s_name].update({baseNo: {base.lower(): R2[cycle]["BaseComposition"][base] for base in "ACTG"}})
             data[s_name][baseNo]["base"] = baseNo
@@ -110,13 +110,13 @@ def sequence_content_plot(sampleData, groupLookupDict, colorDict):
         <div class="clearfix"></div>
     </div>
     <script type="application/json" class="fastqc_seq_content">{d}</script>
-    <script type="application/json" class="base2fastq_group_color">{c}</script>
+    <script type="application/json" class="bases2fastq_group_color">{c}</script>
     <script> R1cyclenum = {r}</script>
     """.format(
         # Generate unique plot ID, needed in mqc_export_selectplots
         id=report.save_htmlid("per_base_composition_plot"),
-        d=json.dumps(["base2fastq", data]),
-        c=json.dumps(["base2fastq", colorDict]),
+        d=json.dumps(["bases2fastq", data]),
+        c=json.dumps(["bases2fastq", colorDict]),
         r=len(R1),
     )
     plotName = "Per Cycle Sequence Composition"
@@ -174,9 +174,9 @@ def plot_per_cycle_N_content(sampleData, groupLookupDict, colorDict):
                     {baseNo: R1[cycle]["BaseComposition"]["N"] / sum(R1[cycle]["BaseComposition"].values()) * 100.0}
                 )
 
-        R2 = sampleData[s_name]["Reads"][0]["Cycles"]
+        R2 = sampleData[s_name]["Reads"][1]["Cycles"]
         R2CycleNum = len(R2)
-        for cycle in range(len(R1)):
+        for cycle in range(len(R2)):
             baseNo = str(cycle + 1 + len(R1))
             if sum(R2[cycle]["BaseComposition"].values()) == 0:
                 data[s_name].update({baseNo: 0})

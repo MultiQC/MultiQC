@@ -5,13 +5,13 @@
 ///////////////
 
 // Global vars
-base2fastq_group_color = {}; // { <module>: { <sample>: <color>} }
+bases2fastq_group_color = {}; // { <module>: { <sample>: <color>} }
 fastqc_seq_content = {}; // { <module>: { <sample>: data } }
 
-function load_base2fastq_group_color() {
-  $(".base2fastq_group_color").each(function (i, elem) {
+function load_bases2fastq_group_color() {
+  $(".bases2fastq_group_color").each(function (i, elem) {
     var key_value = JSON.parse(elem.innerHTML);
-    base2fastq_group_color[key_value[0]] = key_value[1];
+    bases2fastq_group_color[key_value[0]] = key_value[1];
   });
 }
 
@@ -25,7 +25,7 @@ function load_fastqc_seq_content() {
 // Set up listeners etc on page load
 $(function () {
   load_fastqc_seq_content();
-  load_base2fastq_group_color();
+  load_bases2fastq_group_color();
   // Go through each FastQC module in case there are multiple
   // #mqc-module-section-fastqc, #mqc-module-section-fastqc-1, ...
   // or #mqc-module-section-configured-anchor, #mqc-module-section-configured-anchor-1, ...
@@ -69,7 +69,7 @@ function fastqc_module(module_element, module_key) {
     $.each(fastqc_seq_content[module_key], function (s_name, data) {
       // rename sample names
       var orig_s_name = s_name;
-      var t_group = base2fastq_group_color[module_key][s_name]
+      var t_group = bases2fastq_group_color[module_key][s_name]
       $.each(window.mqc_rename_f_texts, function (idx, f_text) {
         if (window.mqc_rename_regex_mode) {
           var re = new RegExp(f_text, "g");

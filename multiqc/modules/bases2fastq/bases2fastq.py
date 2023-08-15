@@ -7,18 +7,20 @@ import numpy as np
 import pandas as pd
 from .plot_runs import *
 from .plot_samples import *
-import warnings
 import seaborn as sns
 import copy
 import uuid
+import logging
+
+log = logging.getLogger(__name__)
 
 ### Change documentations after development
 class MultiqcModule(BaseMultiqcModule):
     def __init__(self):
         # Initialise the parent object
         super(MultiqcModule, self).__init__(
-            name="base2fastq",
-            anchor="base2fastq",
+            name="bases2fastq",
+            anchor="bases2fastq",
             href="https://www.elementbiosciences.com/resources",
             info="is used to call sequences from element AVITI sequencing images",
             doi="10.1038/s41587-023-01750-7",
@@ -26,50 +28,81 @@ class MultiqcModule(BaseMultiqcModule):
         self.b2f_data = dict()
         self.b2f_run_data = dict()
 
+        root_to_analysis_id = dict()
+        
         # Read overall stats json as dictionaries
-        for f in self.find_log_files("base2fastq/run"):
+        for f in self.find_log_files("bases2fastq/run"):
             data_dict = json.loads(f["f"])
+            
             # sample stats not needed at run level - save on memory
             del data_dict["SampleStats"]
-            dir_name = os.path.basename(f["root"])
-            run_name = data_dict.get("RunName","UNKNOWN")
-            analysis_id = data_dict.get("AnalysisID",self.get_uuid())[0:8]
 
-            sample_name = "__".join([run_name,analysis_id])
-            s_name = self.clean_s_name(sample_name, f)
-            self.b2f_run_data[s_name] = data_dict
+            if "AnalysisID" not in data_dict.keys():
+                log.warning(f"AnalysisID not found in bases2fastq json [{f['root']}]")
+            
+            run_name = data_dict.get("RunName","UNKNOWN")
+            analysis_id = data_dict.get("AnalysisID","123")[0:3]
+            run_analysis_name = "__".join([run_name,analysis_id])
+
+            run_root = f['root']
+            root_to_analysis_id[run_root] = analysis_id
+        
+            self.b2f_run_data[run_analysis_name] = data_dict
 
         # Read project info and make it into a lookup dictionary of {sample:project}:
         projectLookupDict = {}
-        for f in self.find_log_files("base2fastq/project"):
+        for f in self.find_log_files("bases2fastq/project"):
             data_dict = json.loads(f["f"])
             samples = data_dict["Samples"]
-            runName = data_dict["RunName"]
+            
+            if "AnalysisID" not in data_dict.keys():
+                log.warning(f"AnalysisID not found in bases2fastq json [{f['root']}]")
+
+            run_root = '/'.join(f['root'].split("/")[0:2])
+            run_name = data_dict.get("RunName","UNKNOWN")
+            analysis_id = root_to_analysis_id[run_root]
+            run_analysis_name = "__".join([run_name,analysis_id])
+            
+            #print(data_dict.keys())
+            
             # run stats no longer needed - save on memory
             del data_dict
             
-            project = f["s_name"].replace("_RunStats", "")
-            for s in samples:
-                projectLookupDict[runName + "_" + s] = project
+            project = data_dict.get("Project","DefaultProject")
+
+            for sample_name in samples:
+                run_analysis_sample_name = "__".join([run_analysis_name,sample_name])
+                projectLookupDict[run_analysis_sample_name] = project
 
         # Read per sample stats json as dictionaries
-        s_names = []
-        for f in self.find_log_files("base2fastq/persample"):
+        for f in self.find_log_files("bases2fastq/persample"):
             data_dict = json.loads(f["f"])
-            s_name = data_dict["RunName"] + "_" + data_dict["SampleName"]
+
+            run_root = '/'.join(f['root'].split("/")[0:2])
+            run_name = data_dict.get("RunName","UNKNOWN")
+            analysis_id = root_to_analysis_id[run_root]
+            run_analysis_name = "__".join([run_name,analysis_id])
+
+            sample_name = data_dict["SampleName"]
+            run_analysis_sample_name = "__".join([run_analysis_name,sample_name])
+
             if len(data_dict["Reads"]) == 0:
-                warnings.warn("Skipping {s} because it does not have any assigned reads.".format(s=s_name))
+                log.warning("Skipping {s} because it does not have any assigned reads.".format(s=run_analysis_sample_name))
                 continue
-            self.b2f_data[s_name] = data_dict
-            s_names.append(s_name)
+
+            self.b2f_data[run_analysis_sample_name] = data_dict
+            self.b2f_data[run_analysis_sample_name]["RunName"] = run_analysis_name 
 
         # Group by run name
         self.groupDict = dict()
         self.groupLookupDict = dict()
         for s_name in self.b2f_data.keys():
+            
             s_group = self.b2f_data[s_name]["RunName"]
+
             if not self.groupDict.get(s_group):
                 self.groupDict.update({s_group: []})
+                
             self.groupDict[s_group].append(s_name)
             self.groupLookupDict.update({s_name: s_group})
 
@@ -87,6 +120,7 @@ class MultiqcModule(BaseMultiqcModule):
 
         for s_name in self.b2f_data.keys():
             self.sampleColor.update({s_name: groupColor[self.groupLookupDict[s_name]]})
+        
         # Assign color for each project
         for s_name in self.b2f_data.keys():
             if projectLookupDict.get(s_name):
@@ -98,18 +132,18 @@ class MultiqcModule(BaseMultiqcModule):
 
         # Read custom group info
         self.group_info_exist = False
-        for f in self.find_log_files("base2fastq/group"):
+        for f in self.find_log_files("bases2fastq/group"):
             if self.group_info_exist:
-                warnings.warn(
-                    "More than one group assignment files are found. Please only keep one assignment file in the analysis folder. Base2fastq stats will not be plotted"
+                log.warning(
+                    "More than one group assignment files are found. Please only keep one assignment file in the analysis folder. Bases2fastq stats will not be plotted"
                 )
             groupInfo = pd.read_csv(StringIO(f["f"]))
             for nn in groupInfo.index:
                 s_group = groupInfo.loc[nn, "Group"]
-                if groupInfo.loc[nn, "Run Name"] in groupInfo.loc[nn, "Sample Name"]:
-                    s_name = groupInfo.loc[nn, "Sample Name"]
-                else:
-                    s_name = groupInfo.loc[nn, "Run Name"] + "_" + groupInfo.loc[nn, "Sample Name"]
+                #if groupInfo.loc[nn, "Run Name"] in groupInfo.loc[nn, "Sample Name"]:
+                s_name = groupInfo.loc[nn, "Sample Name"]
+                #else:
+                    #s_name = groupInfo.loc[nn, "Run Name"] + "_" + groupInfo.loc[nn, "Sample Name"]
                 if self.groupDict.get(s_group) is None:
                     self.groupDict.update({s_group: []})
                 self.groupDict[s_group].append(s_name)
@@ -136,9 +170,9 @@ class MultiqcModule(BaseMultiqcModule):
         self.b2f_data = sorted_data
 
         if len(self.b2f_run_data) == 0:
-            warnings.warn("No run stats file found!")
+            log.warning("No run stats file found!")
         if len(self.b2f_data) == 0:
-            warnings.warn("No sample stats file found!")
+            log.warning("No sample stats file found!")
 
         # Add sections
         self.add_run_plots()
@@ -152,7 +186,7 @@ class MultiqcModule(BaseMultiqcModule):
         }
         self.js = {
             "assets/js/multiqc_dragen_fastqc.js": os.path.join(
-                os.path.dirname(__file__), "assets", "js", "multiqc_base2fastq.js"
+                os.path.dirname(__file__), "assets", "js", "multiqc_bases2fastq.js"
             )
         }
         self.intro += '<script type="application/json" class="fastqc_passfails">["fastqc", {"per_base_sequence_content": {"TEST": "pass"}}]</script>'
