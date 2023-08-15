@@ -27,24 +27,26 @@ class MultiqcModule(BaseMultiqcModule):
         )
         self.b2f_data = dict()
         self.b2f_run_data = dict()
+        self.minimum_polonies = 10000
 
         root_to_analysis_id = dict()
         
         # Read overall stats json as dictionaries
+        run_index = None
         for f in self.find_log_files("bases2fastq/run"):
             data_dict = json.loads(f["f"])
             
             # sample stats not needed at run level - save on memory
             del data_dict["SampleStats"]
 
-            if "AnalysisID" not in data_dict.keys():
-                log.warning(f"AnalysisID not found in bases2fastq json [{f['root']}]")
-            
             run_name = data_dict.get("RunName","UNKNOWN")
             analysis_id = data_dict.get("AnalysisID","123")[0:3]
             run_analysis_name = "__".join([run_name,analysis_id])
 
-            run_root = f['root']
+            run_root_arr = f['root'].rstrip('/').split("/")
+            run_index = len(run_root_arr)-1
+            run_root = run_root_arr[run_index]
+
             root_to_analysis_id[run_root] = analysis_id
         
             self.b2f_run_data[run_analysis_name] = data_dict
@@ -54,22 +56,19 @@ class MultiqcModule(BaseMultiqcModule):
         for f in self.find_log_files("bases2fastq/project"):
             data_dict = json.loads(f["f"])
             samples = data_dict["Samples"]
-            
-            if "AnalysisID" not in data_dict.keys():
-                log.warning(f"AnalysisID not found in bases2fastq json [{f['root']}]")
 
-            run_root = '/'.join(f['root'].split("/")[0:2])
+            run_root_arr = f['root'].rstrip('/').split("/")
+            run_root = run_root_arr[run_index]
+
             run_name = data_dict.get("RunName","UNKNOWN")
             analysis_id = root_to_analysis_id[run_root]
             run_analysis_name = "__".join([run_name,analysis_id])
             
-            #print(data_dict.keys())
+            project = data_dict.get("Project","DefaultProject")
             
             # run stats no longer needed - save on memory
             del data_dict
             
-            project = data_dict.get("Project","DefaultProject")
-
             for sample_name in samples:
                 run_analysis_sample_name = "__".join([run_analysis_name,sample_name])
                 projectLookupDict[run_analysis_sample_name] = project
@@ -78,7 +77,9 @@ class MultiqcModule(BaseMultiqcModule):
         for f in self.find_log_files("bases2fastq/persample"):
             data_dict = json.loads(f["f"])
 
-            run_root = '/'.join(f['root'].split("/")[0:2])
+            run_root_arr = f['root'].rstrip('/').split("/")
+            run_root = run_root_arr[run_index]
+
             run_name = data_dict.get("RunName","UNKNOWN")
             analysis_id = root_to_analysis_id[run_root]
             run_analysis_name = "__".join([run_name,analysis_id])
@@ -86,8 +87,11 @@ class MultiqcModule(BaseMultiqcModule):
             sample_name = data_dict["SampleName"]
             run_analysis_sample_name = "__".join([run_analysis_name,sample_name])
 
-            if len(data_dict["Reads"]) == 0:
-                log.warning("Skipping {s} because it does not have any assigned reads.".format(s=run_analysis_sample_name))
+            # todo - check for read length, ensure all samples are the same otherwise exit
+            
+            num_polonies = data_dict["NumPolonies"]
+            if num_polonies < self.minimum_polonies:
+                log.warning(f"Skipping {run_analysis_sample_name} because it has {num_polonies} < {self.minimum_polonies} assigned reads.")
                 continue
 
             self.b2f_data[run_analysis_sample_name] = data_dict

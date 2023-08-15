@@ -213,7 +213,7 @@ def plot_per_read_gc_hist(sampleData, groupLookupDict, sampleColor):
     gcHistDict = dict()
     for s_name in sampleData.keys():
         R1GcCounts = sampleData[s_name]["Reads"][0]["PerReadGCCountHistogram"]
-        R2GcCounts = sampleData[s_name]["Reads"][0]["PerReadGCCountHistogram"]
+        R2GcCounts = sampleData[s_name]["Reads"][1]["PerReadGCCountHistogram"]
         R1R2GcCounts = [r1 + r2 for r1, r2 in zip(R1GcCounts, R2GcCounts)]
         totalReads = sum(R1R2GcCounts)
         gcHistDict.update({s_name: {}})
