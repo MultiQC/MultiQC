@@ -8,6 +8,10 @@
 
 ### Module updates
 
+- **Mosdepth**
+  - Add X/Y relative coverage plot ([#1978](https://github.com/ewels/MultiQC/issues/1978)), analogous to the one in samtools-idxstats.
+  - Added the `perchrom_fraction_cutoff` option into the config to help avoid clutter in contig-level plots
+
 ## [MultiQC v1.15](https://github.com/ewels/MultiQC/releases/tag/v1.15) - 2023-08-04
 
 #### Potential breaking change in some edge cases
