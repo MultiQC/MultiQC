@@ -15,6 +15,49 @@ from multiqc.plots import bargraph, linegraph
 log = logging.getLogger(__name__)
 
 
+def read_config():
+    cfg = getattr(config, "mosdepth_config", dict())
+    if type(cfg) != dict:
+        return {}
+
+    cfg["include_contigs"] = cfg.get("include_contigs", [])
+    if type(cfg["include_contigs"]) != list:
+        cfg["include_contigs"] = []
+
+    cfg["exclude_contigs"] = cfg.get("exclude_contigs", [])
+    if type(cfg["exclude_contigs"]) != list:
+        cfg["exclude_contigs"] = []
+
+    cfg["xchr"] = cfg.get("xchr", None)
+    if type(cfg["xchr"]) != str:
+        cfg["xchr"] = None
+
+    cfg["ychr"] = cfg.get("ychr", None)
+    if type(cfg["ychr"]) != str:
+        cfg["ychr"] = None
+
+    if cfg["include_contigs"]:
+        log.info("Trying to include these contigs in mosdepth: {}".format(", ".join(cfg["include_contigs"])))
+    if cfg["exclude_contigs"]:
+        log.info("Excluding these contigs from mosdepth: {}".format(", ".join(cfg["exclude_contigs"])))
+    if cfg["xchr"]:
+        log.info('Using "{}" as X chromosome name'.format(cfg["xchr"]))
+    if cfg["ychr"]:
+        log.info('Using "{}" as Y chromosome name'.format(cfg["ychr"]))
+
+    # The coverage cutoff to display chromosomes to avoid clutter
+    cutoff = cfg.get("perchrom_fraction_cutoff", 0.001)
+    try:
+        cutoff = float(cutoff)
+    except ValueError:
+        cutoff = 0.001
+    if cutoff != 0.001:
+        log.info(f"Setting mosdepth per-chrom coverage cutoff to display contigs to: " f"{cutoff * 100.0}%")
+    cfg["perchrom_fraction_cutoff"] = cutoff
+
+    return cfg
+
+
 class MultiqcModule(BaseMultiqcModule):
     """
     Mosdepth can generate multiple outputs with a common prefix and different endings.
@@ -78,8 +121,9 @@ class MultiqcModule(BaseMultiqcModule):
             doi="10.1093/bioinformatics/btx699",
         )
 
+        self.cfg = read_config()
         genstats_headers = defaultdict(OrderedDict)
-        genstats, cumcov_dist_data, cov_dist_data, xmax, perchrom_avg_data = self.parse_cov_dist()
+        genstats, cumcov_dist_data, cov_dist_data, xmax, perchrom_avg_data, xy_cov = self.parse_cov_dist()
 
         # Filter out any samples from --ignore-samples
         if genstats:
@@ -87,9 +131,10 @@ class MultiqcModule(BaseMultiqcModule):
         cumcov_dist_data = defaultdict(OrderedDict, self.ignore_samples(cumcov_dist_data))
         cov_dist_data = defaultdict(OrderedDict, self.ignore_samples(cov_dist_data))
         perchrom_avg_data = defaultdict(OrderedDict, self.ignore_samples(perchrom_avg_data))
+        xy_cov = defaultdict(OrderedDict, self.ignore_samples(xy_cov))
 
         # No samples found
-        num_samples = max(len(genstats), len(cumcov_dist_data), len(cov_dist_data), len(perchrom_avg_data))
+        num_samples = max(len(genstats), len(cumcov_dist_data), len(cov_dist_data), len(perchrom_avg_data), len(xy_cov))
         if num_samples == 0:
             raise UserWarning
         log.info(f"Found {num_samples} reports")
@@ -193,6 +238,25 @@ class MultiqcModule(BaseMultiqcModule):
                 description="Average coverage per contig or chromosome",
                 plot=perchrom_plot,
             )
+
+        if xy_cov:
+            xy_keys = OrderedDict()
+            xy_keys["x"] = {"name": self.cfg.get("xchr", "Chromosome X")}
+            xy_keys["y"] = {"name": self.cfg.get("xchr", "Chromosome Y")}
+            pconfig = {
+                "id": "mosdepth-xy-coverage-plot",
+                "title": "Mosdepth: chrXY coverage",
+                "ylab": "Percent of X+Y coverage",
+                "cpswitch_counts_label": "Coverage",
+                "cpswitch_percent_label": "Percent of X+Y coverage",
+                "cpswitch_c_active": False,
+            }
+            self.add_section(
+                name="XY coverage",
+                anchor="mosdepth-xy-coverage",
+                plot=bargraph.plot(xy_cov, xy_keys, pconfig),
+            )
+
         if cumcov_dist_data:
             threshs, hidden_threshs = get_cov_thresholds()
             self.genstats_cov_thresholds(genstats, genstats_headers, cumcov_dist_data, threshs, hidden_threshs)
@@ -209,31 +273,18 @@ class MultiqcModule(BaseMultiqcModule):
         self.general_stats_addcols(genstats, genstats_headers)
 
     def parse_cov_dist(self):
-        genstats = defaultdict(OrderedDict)  # mean coverage
-        cumcov_dist_data = defaultdict(OrderedDict)  # cumulative distribution
-        cov_dist_data = defaultdict(OrderedDict)  # absolute (non-cumulative) coverage
+        genstats = defaultdict(dict)  # mean coverage
+        cumcov_dist_data = defaultdict(dict)  # cumulative distribution
+        cov_dist_data = defaultdict(dict)  # absolute (non-cumulative) coverage
         xmax = 0
-        perchrom_avg_data = defaultdict(OrderedDict)  # per chromosome average coverage
-
-        try:
-            include_contigs = config.mosdepth_config.get("include_contigs", [])
-            assert type(include_contigs) == list, type(include_contigs)
-        except (AttributeError, TypeError, AssertionError):
-            include_contigs = []
-        try:
-            exclude_contigs = config.mosdepth_config.get("exclude_contigs", [])
-            assert type(exclude_contigs) == list, type(exclude_contigs)
-        except (AttributeError, TypeError, AssertionError):
-            exclude_contigs = []
-        log.debug(f"include_contigs: {include_contigs}")
-        log.debug(f"exclude_contigs: {exclude_contigs}")
+        perchrom_avg_data = defaultdict(dict)  # per chromosome average coverage
 
         # Parse mean coverage
         for f in self.find_log_files("mosdepth/summary"):
             s_name = self.clean_s_name(f["fn"], f)
             for line in f["f"].splitlines():
-                chrom, length, bases, mean, min_cov, max_cov = line.split("\t")
-                if chrom.startswith("total"):
+                contig, length, bases, mean, min_cov, max_cov = line.split("\t")
+                if contig.startswith("total"):
                     genstats[s_name]["mean_coverage"] = mean
 
                     self.add_data_source(f, s_name=s_name, section="summary")
@@ -264,17 +315,17 @@ class MultiqcModule(BaseMultiqcModule):
                     # Calculate per-contig coverage
                     else:
                         # filter out contigs based on exclusion patterns
-                        if any(fnmatch.fnmatch(contig, str(pattern)) for pattern in exclude_contigs):
+                        if any(fnmatch.fnmatch(contig, str(pattern)) for pattern in self.cfg["exclude_contigs"]):
                             try:
-                                if config.mosdepth_config["show_excluded_debug_logs"]:
+                                if self.cfg.get("show_excluded_debug_logs") is True:
                                     log.debug(f"Skipping excluded contig '{contig}'")
                             except (AttributeError, KeyError):
                                 pass
                             continue
 
                         # filter out contigs based on inclusion patterns
-                        if len(include_contigs) > 0 and not any(
-                            fnmatch.fnmatch(contig, pattern) for pattern in include_contigs
+                        if len(self.cfg["include_contigs"]) > 0 and not any(
+                            fnmatch.fnmatch(contig, pattern) for pattern in self.cfg["include_contigs"]
                         ):
                             # Commented out since this could be many thousands of contigs!
                             # log.debug(f"Skipping not included contig '{contig}'")
@@ -285,6 +336,65 @@ class MultiqcModule(BaseMultiqcModule):
 
                 if s_name in cumcov_dist_data:
                     self.add_data_source(f, s_name=s_name, section="genome_results")
+
+        # Applying the contig coverage cutoff. First, count the total coverage for
+        # every contig.
+        total_cov_per_contig = defaultdict(lambda: 0)
+        total_cov = 0
+        for s_name, perchrom in perchrom_avg_data.items():
+            for contig, cov in perchrom.items():
+                total_cov_per_contig[contig] += cov
+                total_cov += cov
+
+        # Now, collecting the contigs that passed the cutoff.
+        req_cov = float(total_cov) * self.cfg["perchrom_fraction_cutoff"]
+        passing_contigs = set()
+        for s_name, perchrom in perchrom_avg_data.items():
+            for contig, cov in perchrom.items():
+                if float(total_cov_per_contig[contig]) > req_cov:
+                    if contig not in passing_contigs:
+                        passing_contigs.add(contig)
+
+        rejected_contigs = set()
+        filtered_perchrom_avg_data = defaultdict(dict)
+        for s_name, perchrom in perchrom_avg_data.items():
+            for contig, cov in perchrom.items():
+                if contig not in passing_contigs:
+                    rejected_contigs.add(contig)
+                else:
+                    filtered_perchrom_avg_data[s_name][contig] = cov
+        perchrom_avg_data = filtered_perchrom_avg_data
+
+        if rejected_contigs:
+            if self.cfg.get("show_excluded_debug_logs") is True:
+                log.debug(
+                    f"Skipping {len(rejected_contigs)} contigs not passing the "
+                    f"cutoff of {self.cfg['perchrom_fraction_cutoff']}% of "
+                    f"{total_cov:.2f}x total coverage, which is {req_cov:.2f}x. "
+                    f"Skipping contigs: {''.join(rejected_contigs)}"
+                )
+
+        # Additionally, collect X and Y counts if we have them
+        xy_cov = dict()
+        for s_name, perchrom in perchrom_avg_data.items():
+            x_cov = False
+            y_cov = False
+            for contig, cov in perchrom.items():
+                if self.cfg.get("xchr"):
+                    if str(self.cfg["xchr"]) == str(contig):
+                        x_cov = cov
+                else:
+                    if contig.lower() == "x" or contig.lower() == "chrx":
+                        x_cov = cov
+                if self.cfg.get("ychr"):
+                    if str(self.cfg["ychr"]) == str(contig):
+                        y_cov = cov
+                else:
+                    if contig.lower() == "y" or contig.lower() == "chry":
+                        y_cov = cov
+            # Only save these counts if we have both x and y
+            if x_cov and y_cov:
+                xy_cov[s_name] = {"x": x_cov, "y": y_cov}
 
         # Correct per-contig average, since mosdepth reports cumulative coverage for at least
         # a certain value (see https://github.com/brentp/mosdepth#distribution-output).
@@ -312,7 +422,7 @@ class MultiqcModule(BaseMultiqcModule):
                 cov_dist_data[s_name][x] = cumcov - prev_cumcov
                 prev_x, prev_cumcov = x, cumcov
 
-        return genstats, cumcov_dist_data, cov_dist_data, xmax, perchrom_avg_data
+        return genstats, cumcov_dist_data, cov_dist_data, xmax, perchrom_avg_data, xy_cov
 
     def genstats_cov_thresholds(self, genstats, genstats_headers, cumcov_dist_data, threshs, hidden_threshs):
         for s_name, d in cumcov_dist_data.items():
