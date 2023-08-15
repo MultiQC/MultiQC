@@ -17,6 +17,20 @@ bamtools/stats:
   contents: "Stats for BAM file(s):"
   shared: true
   num_lines: 10
+base2fastq/persample:
+  fn: "*_stats.json"
+  contents: "NumPolonies"
+  num_lines: 10
+base2fastq/run:
+  fn: "RunStats.json"
+  contents: "AnalysisID"
+  num_lines: 2
+base2fastq/project:
+  fn: "*_RunStats.json"
+  contents: "AnalysisID"
+  num_lines: 2
+base2fastq/group:
+  fn: "*_b2fgroup.csv"
 bbduk:
   contents: "Executing jgi.BBDuk"
   num_lines: 2
