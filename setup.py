@@ -23,7 +23,7 @@ MultiQC was written by Phil Ewels (http://phil.ewels.co.uk) at Seqera Labs (http
 
 from setuptools import find_packages, setup
 
-version = "1.16dev"
+version = "1.15dev"
 dl_version = "master" if "dev" in version else "v{}".format(version)
 
 print(
@@ -64,6 +64,7 @@ setup(
         "rich-click",
         "simplejson",
         "spectra>=0.0.10",
+        "seaborn>=0.12.2",
     ],
     entry_points={
         "console_scripts": [
@@ -76,6 +77,7 @@ setup(
             "bamtools = multiqc.modules.bamtools:MultiqcModule",
             "bbduk = multiqc.modules.bbduk:MultiqcModule",
             "bbmap = multiqc.modules.bbmap:MultiqcModule",
+            "base2fastq = multiqc.modules.base2fastq:MultiqcModule",
             "bcftools = multiqc.modules.bcftools:MultiqcModule",
             "bcl2fastq = multiqc.modules.bcl2fastq:MultiqcModule",
             "bclconvert = multiqc.modules.bclconvert:MultiqcModule",
@@ -134,7 +136,6 @@ setup(
             "kat = multiqc.modules.kat:MultiqcModule",
             "kraken = multiqc.modules.kraken:MultiqcModule",
             "leehom = multiqc.modules.leehom:MultiqcModule",
-            "librarian = multiqc.modules.librarian:MultiqcModule",
             "lima = multiqc.modules.lima:MultiqcModule",
             "longranger = multiqc.modules.longranger:MultiqcModule",
             "macs2 = multiqc.modules.macs2:MultiqcModule",
