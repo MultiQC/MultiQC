@@ -17,8 +17,8 @@ class MultiqcModule(BaseMultiqcModule):
     def __init__(self):
         # Initialise the parent object
         super(MultiqcModule, self).__init__(
-            name="base2fastq",
-            anchor="base2fastq",
+            name="bases2fastq",
+            anchor="bases2fastq",
             href="https://www.elementbiosciences.com/resources",
             info="is used to call sequences from element AVITI sequencing images",
             doi="10.1038/s41587-023-01750-7",
@@ -27,33 +27,34 @@ class MultiqcModule(BaseMultiqcModule):
         self.b2f_run_data = dict()
 
         # Read overall stats json as dictionaries
-        for f in self.find_log_files("base2fastq/run"):
+        for f in self.find_log_files("bases2fastq/run"):
             data_dict = json.loads(f["f"])
             del data_dict["SampleStats"]
-            sampleName = data_dict["RunName"]
-            s_name = self.clean_s_name(sampleName, f)
+            s_name = data_dict["RunName"]
             self.b2f_run_data[s_name] = data_dict
 
         # Read project info and make it into a lookup dictionary of {sample:project}:
         projectLookupDict = {}
-        for f in self.find_log_files("base2fastq/project"):
+        for f in self.find_log_files("bases2fastq/project"):
             data_dict = json.loads(f["f"])
             samples = data_dict["Samples"]
             runName = data_dict["RunName"]
             del data_dict
+            s_name = runName
             project = f["s_name"].replace("_RunStats", "")
             for s in samples:
                 projectLookupDict[runName + "_" + s] = project
 
         # Read per sample stats json as dictionaries
         s_names = []
-        for f in self.find_log_files("base2fastq/persample"):
+        for f in self.find_log_files("bases2fastq/persample"):
             data_dict = json.loads(f["f"])
             s_name = data_dict["RunName"] + "_" + data_dict["SampleName"]
             if len(data_dict["Reads"]) == 0:
-                warnings.warn("Skipping {s} because it does not have any assigned reads.".format(s=s_name))
+                warnings.warn("\033[93mSkipping {s} because it does not have any assigned reads.\033[0m".format(s=s_name))
                 continue
             self.b2f_data[s_name] = data_dict
+            self.b2f_data[s_name]["RunName"] = runName 
             s_names.append(s_name)
 
         # Group by run name
@@ -80,6 +81,7 @@ class MultiqcModule(BaseMultiqcModule):
 
         for s_name in self.b2f_data.keys():
             self.sampleColor.update({s_name: groupColor[self.groupLookupDict[s_name]]})
+        
         # Assign color for each project
         for s_name in self.b2f_data.keys():
             if projectLookupDict.get(s_name):
@@ -91,18 +93,18 @@ class MultiqcModule(BaseMultiqcModule):
 
         # Read custom group info
         self.group_info_exist = False
-        for f in self.find_log_files("base2fastq/group"):
+        for f in self.find_log_files("bases2fastq/group"):
             if self.group_info_exist:
                 warnings.warn(
-                    "More than one group assignment files are found. Please only keep one assignment file in the analysis folder. Base2fastq stats will not be plotted"
+                    "\033[93mMore than one group assignment files are found. Please only keep one assignment file in the analysis folder. Bases2fastq stats will not be plotted\033[0m"
                 )
             groupInfo = pd.read_csv(StringIO(f["f"]))
             for nn in groupInfo.index:
                 s_group = groupInfo.loc[nn, "Group"]
-                if groupInfo.loc[nn, "Run Name"] in groupInfo.loc[nn, "Sample Name"]:
-                    s_name = groupInfo.loc[nn, "Sample Name"]
-                else:
-                    s_name = groupInfo.loc[nn, "Run Name"] + "_" + groupInfo.loc[nn, "Sample Name"]
+                #if groupInfo.loc[nn, "Run Name"] in groupInfo.loc[nn, "Sample Name"]:
+                s_name = groupInfo.loc[nn, "Sample Name"]
+                #else:
+                    #s_name = groupInfo.loc[nn, "Run Name"] + "_" + groupInfo.loc[nn, "Sample Name"]
                 if self.groupDict.get(s_group) is None:
                     self.groupDict.update({s_group: []})
                 self.groupDict[s_group].append(s_name)
@@ -129,9 +131,9 @@ class MultiqcModule(BaseMultiqcModule):
         self.b2f_data = sorted_data
 
         if len(self.b2f_run_data) == 0:
-            warnings.warn("No run stats file found!")
+            warnings.warn("\033[93mNo run stats file found!\033[0m")
         if len(self.b2f_data) == 0:
-            warnings.warn("No sample stats file found!")
+            warnings.warn("\033[93mNo sample stats file found!\033[0m")
 
         # Add sections
         self.add_run_plots()
@@ -145,7 +147,7 @@ class MultiqcModule(BaseMultiqcModule):
         }
         self.js = {
             "assets/js/multiqc_dragen_fastqc.js": os.path.join(
-                os.path.dirname(__file__), "assets", "js", "multiqc_base2fastq.js"
+                os.path.dirname(__file__), "assets", "js", "multiqc_bases2fastq.js"
             )
         }
         self.intro += '<script type="application/json" class="fastqc_passfails">["fastqc", {"per_base_sequence_content": {"TEST": "pass"}}]</script>'

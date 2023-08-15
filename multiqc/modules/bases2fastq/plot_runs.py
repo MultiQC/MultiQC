@@ -2,7 +2,7 @@ from multiqc.plots import bargraph, table, linegraph, scatter
 import numpy as np
 
 """
-Functions for plotting per run information of base2fastq
+Functions for plotting per run information of bases2fastq
 """
 
 

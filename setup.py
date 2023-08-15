@@ -77,7 +77,7 @@ setup(
             "bamtools = multiqc.modules.bamtools:MultiqcModule",
             "bbduk = multiqc.modules.bbduk:MultiqcModule",
             "bbmap = multiqc.modules.bbmap:MultiqcModule",
-            "base2fastq = multiqc.modules.base2fastq:MultiqcModule",
+            "bases2fastq = multiqc.modules.bases2fastq:MultiqcModule",
             "bcftools = multiqc.modules.bcftools:MultiqcModule",
             "bcl2fastq = multiqc.modules.bcl2fastq:MultiqcModule",
             "bclconvert = multiqc.modules.bclconvert:MultiqcModule",
