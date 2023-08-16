@@ -80,7 +80,7 @@ class MultiqcModule(BaseMultiqcModule):
             analysis_id = data_dict.get("AnalysisID", None)[0:4]
 
             if not run_name or not analysis_id:
-                log.error(f"Error with {f['Root']}.  Either RunName or AnalysisID is absent.")
+                log.error(f"Error with {f['root']}.  Either RunName or AnalysisID is absent.")
                 log.error("Please visit Elembio docs for more information - https://docs.elembio.io/docs/bases2fastq/")
                 raise UserWarning
 
