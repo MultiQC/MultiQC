@@ -62,7 +62,6 @@ setup(
         "requests",
         "rich>=10",
         "rich-click",
-        "simplejson",
         "spectra>=0.0.10",
         "seaborn>=0.12.2",
     ],
