@@ -32,51 +32,55 @@ class MultiqcModule(BaseMultiqcModule):
         self.b2f_run_data = dict()
         self.missing_runs = set()
 
-        self.run_prefix_to_analysis_id = {}
+        self.sample_id_to_run = dict()
 
         # Read overall stats json as dictionaries
         run_prefix_len = None
         for f in self.find_log_files("bases2fastq/run"):
             data_dict = json.loads(f["f"])
             
+            # get run + analysis
+            run_name = data_dict.get("RunName",None)
+            analysis_id = data_dict.get("AnalysisID",None)
+            
+            if not run_name or not analysis_id:
+                log.error("Error with RunStats.json.  Either RunName or AnalysisID is absent.")
+                log.error("Please visit Elembio docs for more information - https://docs.elembio.io/docs/bases2fastq/")
+                raise UserWarning
+
+            run_analysis_name = "__".join([run_name,analysis_id])
+            
+            # map sample UUIDs to run_analysis_name
+            for sample in data_dict["SampleStats"]:
+                self.sample_id_to_run[sample["SampleID"]] = run_analysis_name
+                
             # sample stats not needed at run level - save on memory
             del data_dict["SampleStats"]
 
-            run_prefix = f['root'].rstrip('/')
-            run_prefix_len = len(run_prefix.split('/'))
-
-            run_name = data_dict.get("RunName","UNKNOWN")
-            analysis_id = data_dict.get("AnalysisID","123")[0:3]
-            self.run_prefix_to_analysis_id[run_prefix] = analysis_id
-            run_analysis_name = "__".join([run_name,analysis_id])
-            
             self.b2f_run_data[run_analysis_name] = data_dict
 
         # if all RunStats.json too large, none will be found.  Guide customer and Exit at this point.
-        if not run_prefix_len:
+        if len(self.sample_id_to_run) == 0:
             log.error("No run-stats were found.  Either file-size above limit or RunStats.json does not exist.")
             log.error("Please visit Elembio docs for more information - https://docs.elembio.io/docs/bases2fastq/")
             raise UserWarning
+        
+        log.info(f"Found {len(self.b2f_run_data)} total RunStats.json")
 
         # Read project info and make it into a lookup dictionary of {sample:project}:
+        project_num = 0
         projectLookupDict = {}
         for f in self.find_log_files("bases2fastq/project"):
             data_dict = json.loads(f["f"])
             samples = data_dict["Samples"]
 
-            run_prefix = '/'.join(f['root'].rstrip('/').split('/')[0:run_prefix_len])
-
-            if run_prefix not in self.run_prefix_to_analysis_id:
-                if run_prefix not in self.missing_runs:
-                    log.warning(f"RunStats.json is missing for run, {run_prefix}.")
-                    log.warning("Either file-size above limit or RunStats.json does not exist.  Modify config log_filesize_limit or remove run.")
-                    self.missing_runs.add(run_prefix)
+            # ensure sample UUID is known to list of runs
+            sample_id = data_dict["SampleID"]
+            if sample_id not in self.sample_id_to_run:
+                log.warning(f"{data_dict['RunName']} RunStats.json is missing for sample, {sample_id}")
                 continue
-
-            run_name = data_dict.get("RunName","UNKNOWN")
-            analysis_id = self.run_prefix_to_analysis_id[run_prefix]
-            run_analysis_name = "__".join([run_name,analysis_id])
-
+            run_analysis_name = self.sample_id_to_run[sample_id]
+            
             project = data_dict.get("Project","DefaultProject")
             
             # run stats no longer needed - save on memory
@@ -85,29 +89,27 @@ class MultiqcModule(BaseMultiqcModule):
             for sample_name in samples:
                 run_analysis_sample_name = "__".join([run_analysis_name,sample_name])
                 projectLookupDict[run_analysis_sample_name] = project
-
+            project_num += 1
+            
+        log.info(f"Found {project_num} Projects within bases2fastq results")
+        
+        total_sample = 0
         # Read per sample stats json as dictionaries
         for f in self.find_log_files("bases2fastq/persample"):
+            total_sample += 1
             data_dict = json.loads(f["f"])
             
-            run_prefix = '/'.join(f['root'].rstrip('/').split('/')[0:run_prefix_len])
-            
-            if run_prefix not in self.run_prefix_to_analysis_id:
-                if run_prefix not in self.missing_runs:
-                    log.warning(f"RunStats.json is missing for run, {run_prefix}.")
-                    log.warning("Either file-size above limit or RunStats.json does not exist.  Modify config log_filesize_limit or remove run.")
-                    self.missing_runs.add(run_prefix)
+            # ensure sample UUID is known to list of runs
+            sample_id = data_dict["SampleID"]
+            if sample_id not in self.sample_id_to_run:
+                log.warning(f"{data_dict['RunName']} RunStats.json is missing for sample, {sample_id}")
                 continue
-
-            run_name = data_dict.get("RunName","UNKNOWN")
-            analysis_id = self.run_prefix_to_analysis_id[run_prefix]
-            run_analysis_name = "__".join([run_name,analysis_id])
-
+            
+            run_analysis_name = self.sample_id_to_run[sample_id]
+    
             sample_name = data_dict["SampleName"]
             run_analysis_sample_name = "__".join([run_analysis_name,sample_name])
 
-            # todo - check for read length, ensure all samples are the same otherwise exit
-            
             num_polonies = data_dict["NumPolonies"]
             if num_polonies < self.minimum_polonies:
                 log.warning(f"Skipping {run_analysis_sample_name} because it has <{self.minimum_polonies} assigned reads [n={num_polonies}].")
@@ -115,7 +117,8 @@ class MultiqcModule(BaseMultiqcModule):
 
             self.b2f_data[run_analysis_sample_name] = data_dict
             self.b2f_data[run_analysis_sample_name]["RunName"] = run_analysis_name 
-
+        log.info(f"Found {total_sample} samples within bases2fastq results, and {len(self.b2f_data)} samples havevi m run information")
+        
         # Group by run name
         self.groupDict = dict()
         self.groupLookupDict = dict()
