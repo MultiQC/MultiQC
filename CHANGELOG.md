@@ -10,8 +10,10 @@
 
 ### Module updates
 
+- **Kraken**
+  - Fix bug where ranks incorrectly assigned to tabs ([#1766](https://github.com/ewels/MultiQC/issues/1766)).
 - **Mosdepth**
-  - Add X/Y relative coverage plot ([#1978](https://github.com/ewels/MultiQC/issues/1978)), analogous to the one in samtools-idxstats.
+  - Add X/Y relative coverage plot, analogous to the one in samtools-idxstats ([#1978](https://github.com/ewels/MultiQC/issues/1978))
   - Added the `perchrom_fraction_cutoff` option into the config to help avoid clutter in contig-level plots
 
 ## [MultiQC v1.15](https://github.com/ewels/MultiQC/releases/tag/v1.15) - 2023-08-04
