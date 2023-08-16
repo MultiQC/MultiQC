@@ -7,6 +7,8 @@
 - Removed `simplejson` unused dependency ([#1973](https://github.com/ewels/MultiQC/pull/1973))
 
 ### New Modules
+- **Bases2fastq**
+  - Adding multiqc support for Element Biosciences AVITI Bases2fastq tool - https://docs.elembio.io/docs/bases2fastq/ 
 
 ### Module updates
 
