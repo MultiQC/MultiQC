@@ -13,6 +13,7 @@
 - **Mosdepth**
   - Add X/Y relative coverage plot ([#1978](https://github.com/ewels/MultiQC/issues/1978)), analogous to the one in samtools-idxstats.
   - Added the `perchrom_fraction_cutoff` option into the config to help avoid clutter in contig-level plots
+  - Fix a bug happening when both `region` and `global` coverage histogram for a sample is available (i.e. when mosdepth was run with `--by`, see [mosdepth docs](https://github.com/brentp/mosdepth#usage)). In this case, data was effectively merged. Instead, summarise it separately and add a separate report section for the region-based coverage data.
 
 ## [MultiQC v1.15](https://github.com/ewels/MultiQC/releases/tag/v1.15) - 2023-08-04
 
