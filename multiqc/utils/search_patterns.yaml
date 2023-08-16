@@ -19,16 +19,10 @@ bamtools/stats:
   num_lines: 10
 bases2fastq/persample:
   fn: "*_stats.json"
-  contents: "NumPolonies"
-  num_lines: 10
 bases2fastq/run:
   fn: "RunStats.json"
-  contents: "AnalysisID"
-  num_lines: 2
 bases2fastq/project:
   fn: "*_RunStats.json"
-  contents: "AnalysisID"
-  num_lines: 2
 bases2fastq/group:
   fn: "*_b2fgroup.csv"
 bbduk:

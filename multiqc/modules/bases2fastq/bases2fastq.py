@@ -32,30 +32,28 @@ class MultiqcModule(BaseMultiqcModule):
         self.b2f_run_data = dict()
         self.missing_runs = set()
 
-        root_to_analysis_id = dict()
-        
+        self.run_prefix_to_analysis_id = {}
+
         # Read overall stats json as dictionaries
-        run_index = None
+        run_prefix_len = None
         for f in self.find_log_files("bases2fastq/run"):
             data_dict = json.loads(f["f"])
             
             # sample stats not needed at run level - save on memory
             del data_dict["SampleStats"]
 
+            run_prefix = f['root'].rstrip('/')
+            run_prefix_len = len(run_prefix.split('/'))
+
             run_name = data_dict.get("RunName","UNKNOWN")
             analysis_id = data_dict.get("AnalysisID","123")[0:3]
+            self.run_prefix_to_analysis_id[run_prefix] = analysis_id
             run_analysis_name = "__".join([run_name,analysis_id])
-
-            run_root_arr = f['root'].rstrip('/').split("/")
-            run_index = len(run_root_arr)-1
-            run_root = run_root_arr[run_index]
-
-            root_to_analysis_id[run_root] = analysis_id
-        
+            
             self.b2f_run_data[run_analysis_name] = data_dict
 
         # if all RunStats.json too large, none will be found.  Guide customer and Exit at this point.
-        if not run_index:
+        if not run_prefix_len:
             log.error("No run-stats were found.  Either file-size above limit or RunStats.json does not exist.")
             log.error("Please visit Elembio docs for more information - https://docs.elembio.io/docs/bases2fastq/")
             raise UserWarning
@@ -66,17 +64,18 @@ class MultiqcModule(BaseMultiqcModule):
             data_dict = json.loads(f["f"])
             samples = data_dict["Samples"]
 
-            run_root_arr = f['root'].rstrip('/').split("/")
-            run_root = run_root_arr[run_index]
+            run_prefix = '/'.join(f['root'].rstrip('/').split('/')[0:run_prefix_len])
+
+            if run_prefix not in self.run_prefix_to_analysis_id:
+                if run_prefix not in self.missing_runs:
+                    log.warning(f"RunStats.json is missing for run, {run_prefix}.")
+                    log.warning("Either file-size above limit or RunStats.json does not exist.  Modify config log_filesize_limit or remove run.")
+                    self.missing_runs.add(run_prefix)
+                continue
 
             run_name = data_dict.get("RunName","UNKNOWN")
-            analysis_id = root_to_analysis_id[run_root]
+            analysis_id = self.run_prefix_to_analysis_id[run_prefix]
             run_analysis_name = "__".join([run_name,analysis_id])
-            
-            if run_name not in self.b2f_run_data and run_name not in self.missing_runs:
-                log.warning(f"{run_name} is missing from run_data - file size is too large, modify config or remove run")
-                self.missing_runs.add(run_name)
-                continue
 
             project = data_dict.get("Project","DefaultProject")
             
@@ -90,18 +89,19 @@ class MultiqcModule(BaseMultiqcModule):
         # Read per sample stats json as dictionaries
         for f in self.find_log_files("bases2fastq/persample"):
             data_dict = json.loads(f["f"])
-
-            run_root_arr = f['root'].rstrip('/').split("/")
-            run_root = run_root_arr[run_index]
+            
+            run_prefix = '/'.join(f['root'].rstrip('/').split('/')[0:run_prefix_len])
+            
+            if run_prefix not in self.run_prefix_to_analysis_id:
+                if run_prefix not in self.missing_runs:
+                    log.warning(f"RunStats.json is missing for run, {run_prefix}.")
+                    log.warning("Either file-size above limit or RunStats.json does not exist.  Modify config log_filesize_limit or remove run.")
+                    self.missing_runs.add(run_prefix)
+                continue
 
             run_name = data_dict.get("RunName","UNKNOWN")
-            analysis_id = root_to_analysis_id[run_root]
+            analysis_id = self.run_prefix_to_analysis_id[run_prefix]
             run_analysis_name = "__".join([run_name,analysis_id])
-
-            if run_name not in self.b2f_run_data and run_name not in self.missing_runs:
-                log.warning(f"{run_name} is missing from run_data - file size is too large, modify config or remove run")
-                self.missing_runs.add(run_name)
-                continue
 
             sample_name = data_dict["SampleName"]
             run_analysis_sample_name = "__".join([run_analysis_name,sample_name])
@@ -110,7 +110,7 @@ class MultiqcModule(BaseMultiqcModule):
             
             num_polonies = data_dict["NumPolonies"]
             if num_polonies < self.minimum_polonies:
-                log.warning(f"Skipping {run_analysis_sample_name} because it has {num_polonies} < {self.minimum_polonies} assigned reads.")
+                log.warning(f"Skipping {run_analysis_sample_name} because it has <{self.minimum_polonies} assigned reads [n={num_polonies}].")
                 continue
 
             self.b2f_data[run_analysis_sample_name] = data_dict
@@ -216,7 +216,7 @@ class MultiqcModule(BaseMultiqcModule):
 
     def get_uuid(self):
         return str(uuid.uuid4()).replace("-", "").lower()
-
+    
     def add_run_plots(self):
         plot_functions = [tabulate_run_stats, plot_run_stats, plot_base_quality_hist, plot_base_quality_by_cycle]
         for func in plot_functions:
