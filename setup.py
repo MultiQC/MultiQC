@@ -63,7 +63,7 @@ setup(
         "rich>=10",
         "rich-click",
         "spectra>=0.0.10",
-        "seaborn>=0.12.2",
+        "seaborn"
     ],
     entry_points={
         "console_scripts": [
@@ -74,9 +74,9 @@ setup(
             "afterqc = multiqc.modules.afterqc:MultiqcModule",
             "anglerfish = multiqc.modules.anglerfish:MultiqcModule",
             "bamtools = multiqc.modules.bamtools:MultiqcModule",
+            "bases2fastq = multiqc.modules.bases2fastq:MultiqcModule",
             "bbduk = multiqc.modules.bbduk:MultiqcModule",
             "bbmap = multiqc.modules.bbmap:MultiqcModule",
-            "bases2fastq = multiqc.modules.bases2fastq:MultiqcModule",
             "bcftools = multiqc.modules.bcftools:MultiqcModule",
             "bcl2fastq = multiqc.modules.bcl2fastq:MultiqcModule",
             "bclconvert = multiqc.modules.bclconvert:MultiqcModule",
@@ -135,6 +135,7 @@ setup(
             "kat = multiqc.modules.kat:MultiqcModule",
             "kraken = multiqc.modules.kraken:MultiqcModule",
             "leehom = multiqc.modules.leehom:MultiqcModule",
+            "librarian = multiqc.modules.librarian:MultiqcModule",
             "lima = multiqc.modules.lima:MultiqcModule",
             "longranger = multiqc.modules.longranger:MultiqcModule",
             "macs2 = multiqc.modules.macs2:MultiqcModule",
