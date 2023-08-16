@@ -155,6 +155,13 @@ def plot_base_quality_hist(runData, colorDict):
 
 def plot_base_quality_by_cycle(runData, colorDict):
     # Prepare plot data for median BQ of each cycle
+    
+    r1r2_split = 0 
+    for s_name in runData.keys():
+        cycleDict = dict()
+        R1CycleNum = len(runData[s_name]["Reads"][0]["Cycles"])
+        r1r2_split = max(r1r2_split, R1CycleNum)
+
     medianDict = {}
     for s_name in runData.keys():
         cycleDict = dict()
@@ -164,7 +171,7 @@ def plot_base_quality_by_cycle(runData, colorDict):
             cycleNo = cycle["Cycle"]
             cycleDict.update({cycleNo: cycle["QualityScore50thPercentile"]})
         for cycle in runData[s_name]["Reads"][1]["Cycles"]:
-            cycleNo = int(cycle["Cycle"]) + R1CycleNum
+            cycleNo = int(cycle["Cycle"]) + r1r2_split
             cycleDict.update({cycleNo: cycle["QualityScore50thPercentile"]})
         medianDict.update({s_name: cycleDict})
 
@@ -179,7 +186,7 @@ def plot_base_quality_by_cycle(runData, colorDict):
             cycleNo = cycle["Cycle"]
             cycleDict.update({cycleNo: cycle["QualityScoreMean"]})
         for cycle in runData[s_name]["Reads"][1]["Cycles"]:
-            cycleNo = int(cycle["Cycle"]) + R1CycleNum
+            cycleNo = int(cycle["Cycle"]) + r1r2_split
             cycleDict.update({cycleNo: cycle["QualityScoreMean"]})
         meanDict.update({s_name: cycleDict})
 
@@ -194,7 +201,7 @@ def plot_base_quality_by_cycle(runData, colorDict):
             cycleNo = cycle["Cycle"]
             cycleDict.update({cycleNo: cycle["PercentQ30"]})
         for cycle in runData[s_name]["Reads"][1]["Cycles"]:
-            cycleNo = int(cycle["Cycle"]) + R1CycleNum
+            cycleNo = int(cycle["Cycle"]) + r1r2_split
             cycleDict.update({cycleNo: cycle["PercentQ30"]})
         Q30Dict.update({s_name: cycleDict})
 
@@ -208,7 +215,7 @@ def plot_base_quality_by_cycle(runData, colorDict):
             cycleNo = cycle["Cycle"]
             cycleDict.update({cycleNo: cycle["PercentQ40"]})
         for cycle in runData[s_name]["Reads"][1]["Cycles"]:
-            cycleNo = int(cycle["Cycle"]) + R1CycleNum
+            cycleNo = int(cycle["Cycle"]) + r1r2_split
             cycleDict.update({cycleNo: cycle["PercentQ40"]})
         Q40Dict.update({s_name: cycleDict})
 
@@ -221,7 +228,7 @@ def plot_base_quality_by_cycle(runData, colorDict):
             {"name": "%Q30", "xlab": "cycle", "ylab": "Percentage", "ymax": 100},
             {"name": "%Q40", "xlab": "cycle", "ylab": "Percentage", "ymax": 100},
         ],
-        "xPlotLines": [{"color": "#FF0000", "width": 2, "value": R1CycleNum, "dashStyle": "Dash"}],
+        "xPlotLines": [{"color": "#FF0000", "width": 2, "value": r1r2_split, "dashStyle": "Dash"}],
         "colors": colorDict,
         "ymin": 0,
     }

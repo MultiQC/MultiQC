@@ -69,6 +69,14 @@ def sequence_content_plot(sampleData, groupLookupDict, colorDict):
 
     # Prep the data
     data = dict()
+
+    r1r2_split = 0
+    for s_name in sorted(sampleData.keys()):
+        data[s_name] = {}
+        R1 = sampleData[s_name]["Reads"][0]["Cycles"]
+        r1r2_split = max(r1r2_split, len(R1))
+
+
     for s_name in sorted(sampleData.keys()):
         data[s_name] = {}
         R1 = sampleData[s_name]["Reads"][0]["Cycles"]
@@ -82,7 +90,7 @@ def sequence_content_plot(sampleData, groupLookupDict, colorDict):
 
         R2 = sampleData[s_name]["Reads"][1]["Cycles"]
         for cycle in range(len(R2)):
-            baseNo = str(cycle + 1 + len(R1))
+            baseNo = str(cycle + 1 + r1r2_split)
             data[s_name].update({baseNo: {base.lower(): R2[cycle]["BaseComposition"][base] for base in "ACTG"}})
             data[s_name][baseNo]["base"] = baseNo
             tot = sum([data[s_name][baseNo][base] for base in ["a", "c", "t", "g"]])
@@ -117,7 +125,7 @@ def sequence_content_plot(sampleData, groupLookupDict, colorDict):
         id=report.save_htmlid("per_base_composition_plot"),
         d=json.dumps(["bases2fastq", data]),
         c=json.dumps(["bases2fastq", colorDict]),
-        r=len(R1),
+        r=r1r2_split,
     )
     plotName = "Per Cycle Sequence Composition"
     anchor = "per_cycle_sequence_content"
@@ -161,6 +169,13 @@ def sequence_content_plot(sampleData, groupLookupDict, colorDict):
 
 def plot_per_cycle_N_content(sampleData, groupLookupDict, colorDict):
     data = dict()
+    r1r2_split = 0 
+    for s_name in sorted(sampleData.keys()):
+        data[s_name] = {}
+        R1 = sampleData[s_name]["Reads"][0]["Cycles"]
+        R1CycleNum = len(R1)
+        r1r2_split = max(r1r2_split, R1CycleNum)
+
     for s_name in sorted(sampleData.keys()):
         data[s_name] = {}
         R1 = sampleData[s_name]["Reads"][0]["Cycles"]
@@ -177,7 +192,7 @@ def plot_per_cycle_N_content(sampleData, groupLookupDict, colorDict):
         R2 = sampleData[s_name]["Reads"][1]["Cycles"]
         R2CycleNum = len(R2)
         for cycle in range(len(R2)):
-            baseNo = str(cycle + 1 + len(R1))
+            baseNo = str(cycle + 1 + r1r2_split)
             if sum(R2[cycle]["BaseComposition"].values()) == 0:
                 data[s_name].update({baseNo: 0})
             else:
@@ -190,7 +205,7 @@ def plot_per_cycle_N_content(sampleData, groupLookupDict, colorDict):
         "xlab": "cycle",
         "ylab": "Base Quality",
         "ymax": 100,
-        "xPlotLines": [{"color": "#FF0000", "width": 2, "value": R1CycleNum, "dashStyle": "Dash"}],
+        "xPlotLines": [{"color": "#FF0000", "width": 2, "value": r1r2_split, "dashStyle": "Dash"}],
         "colors": colorDict,
         "ymin": 0,
     }
@@ -241,6 +256,15 @@ def plot_adapter_content(sampleData, groupLookupDict, sampleColor):
     Plot adapter content per sample
     """
     plotContent = dict()
+    
+    r1r2_split = 0
+    for s_name in sampleData.keys():
+        plotContent.update({s_name: {}})
+        # Read 1
+        cycles = sampleData[s_name]["Reads"][0]["Cycles"]
+        R1CycleNum = len(cycles)
+        r1r2_split = max(r1r2_split, R1CycleNum)
+
     for s_name in sampleData.keys():
         plotContent.update({s_name: {}})
         # Read 1
@@ -254,14 +278,14 @@ def plot_adapter_content(sampleData, groupLookupDict, sampleColor):
         cycles = sampleData[s_name]["Reads"][1]["Cycles"]
         R2CycleNum = len(cycles)
         for cycle in cycles:
-            cycleNo = int(cycle["Cycle"])
+            cycleNo = int(cycle["Cycle"]) + r1r2_split
             adapterPercent = cycle["PercentReadsTrimmed"]
-            plotContent[s_name].update({cycleNo + R1CycleNum: adapterPercent})
+            plotContent[s_name].update({cycleNo: adapterPercent})
     config = {
         "description": "adapter content",
         "xlab": "Cycle",
         "ylab": "Percentage",
-        "xPlotLines": [{"color": "#FF0000", "width": 2, "value": R1CycleNum, "dashStyle": "Dash"}],
+        "xPlotLines": [{"color": "#FF0000", "width": 2, "value": r1r2_split, "dashStyle": "Dash"}],
         "ymax": 100,
     }
     plotName = "Adapter Content"
