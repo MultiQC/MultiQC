@@ -37,22 +37,21 @@ def read_config():
         cfg["ychr"] = None
 
     if cfg["include_contigs"]:
-        log.info("Trying to include these contigs in mosdepth: {}".format(", ".join(cfg["include_contigs"])))
+        log.debug("Trying to include these contigs in mosdepth: {}".format(", ".join(cfg["include_contigs"])))
     if cfg["exclude_contigs"]:
-        log.info("Excluding these contigs from mosdepth: {}".format(", ".join(cfg["exclude_contigs"])))
+        log.debug("Excluding these contigs from mosdepth: {}".format(", ".join(cfg["exclude_contigs"])))
     if cfg["xchr"]:
-        log.info('Using "{}" as X chromosome name'.format(cfg["xchr"]))
+        log.debug('Using "{}" as X chromosome name'.format(cfg["xchr"]))
     if cfg["ychr"]:
-        log.info('Using "{}" as Y chromosome name'.format(cfg["ychr"]))
+        log.debug('Using "{}" as Y chromosome name'.format(cfg["ychr"]))
 
-    # The coverage cutoff to display chromosomes to avoid clutter
     cutoff = cfg.get("perchrom_fraction_cutoff", 0.0)
     try:
         cutoff = float(cutoff)
     except ValueError:
         cutoff = 0.0
     if cutoff != 0.0:
-        log.info(f"Setting mosdepth per-chrom coverage cutoff to display contigs to: " f"{cutoff * 100.0}%")
+        log.debug(f"Setting mosdepth coverage cutoff to display the contigs to " f"{cutoff * 100.0}%")
     cfg["perchrom_fraction_cutoff"] = cutoff
 
     return cfg
@@ -167,7 +166,7 @@ class MultiqcModule(BaseMultiqcModule):
             )
 
         if cov_dist_data:
-            # Write data to file, sort columns numberically and convert to strings
+            # Write data to file, sort columns numerically and convert to strings
             cov_dist_data_writeable = {
                 sample: {str(k): v for k, v in sorted(data.items())} for sample, data in cov_dist_data.items()
             }
@@ -273,11 +272,11 @@ class MultiqcModule(BaseMultiqcModule):
         self.general_stats_addcols(genstats, genstats_headers)
 
     def parse_cov_dist(self):
-        genstats = defaultdict(dict)  # mean coverage
-        cumcov_dist_data = defaultdict(dict)  # cumulative distribution
-        cov_dist_data = defaultdict(dict)  # absolute (non-cumulative) coverage
+        genstats = defaultdict(OrderedDict)  # mean coverage
+        cumcov_dist_data = defaultdict(OrderedDict)  # cumulative distribution
+        cov_dist_data = defaultdict(OrderedDict)  # absolute (non-cumulative) coverage
         xmax = 0
-        perchrom_avg_data = defaultdict(dict)  # per chromosome average coverage
+        perchrom_avg_data = defaultdict(OrderedDict)  # per chromosome average coverage
 
         # Parse mean coverage
         for f in self.find_log_files("mosdepth/summary"):
@@ -356,7 +355,7 @@ class MultiqcModule(BaseMultiqcModule):
                         passing_contigs.add(contig)
 
         rejected_contigs = set()
-        filtered_perchrom_avg_data = defaultdict(dict)
+        filtered_perchrom_avg_data = defaultdict(OrderedDict)
         for s_name, perchrom in perchrom_avg_data.items():
             for contig, cov in perchrom.items():
                 if contig not in passing_contigs:
