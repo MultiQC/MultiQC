@@ -25,9 +25,12 @@ class MultiqcModule(BaseMultiqcModule):
             info="is used to call sequences from element AVITI sequencing images",
             doi="10.1038/s41587-023-01750-7",
         )
+        
+        self.minimum_polonies = 10000
+        
         self.b2f_data = dict()
         self.b2f_run_data = dict()
-        self.minimum_polonies = 10000
+        self.missing_runs = set()
 
         root_to_analysis_id = dict()
         
@@ -51,6 +54,12 @@ class MultiqcModule(BaseMultiqcModule):
         
             self.b2f_run_data[run_analysis_name] = data_dict
 
+        # if all RunStats.json too large, none will be found.  Guide customer and Exit at this point.
+        if not run_index:
+            log.error("No run-stats were found.  Either file-size above limit or RunStats.json does not exist.")
+            log.error("Please visit Elembio docs for more information - https://docs.elembio.io/docs/bases2fastq/")
+            raise UserWarning
+
         # Read project info and make it into a lookup dictionary of {sample:project}:
         projectLookupDict = {}
         for f in self.find_log_files("bases2fastq/project"):
@@ -64,6 +73,11 @@ class MultiqcModule(BaseMultiqcModule):
             analysis_id = root_to_analysis_id[run_root]
             run_analysis_name = "__".join([run_name,analysis_id])
             
+            if run_name not in self.b2f_run_data and run_name not in self.missing_runs:
+                log.warning(f"{run_name} is missing from run_data - file size is too large, modify config or remove run")
+                self.missing_runs.add(run_name)
+                continue
+
             project = data_dict.get("Project","DefaultProject")
             
             # run stats no longer needed - save on memory
@@ -83,6 +97,11 @@ class MultiqcModule(BaseMultiqcModule):
             run_name = data_dict.get("RunName","UNKNOWN")
             analysis_id = root_to_analysis_id[run_root]
             run_analysis_name = "__".join([run_name,analysis_id])
+
+            if run_name not in self.b2f_run_data and run_name not in self.missing_runs:
+                log.warning(f"{run_name} is missing from run_data - file size is too large, modify config or remove run")
+                self.missing_runs.add(run_name)
+                continue
 
             sample_name = data_dict["SampleName"]
             run_analysis_sample_name = "__".join([run_analysis_name,sample_name])
