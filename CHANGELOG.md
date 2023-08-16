@@ -1,16 +1,51 @@
 # MultiQC Version History
 
-## MultiQC v1.15dev
+## MultiQC v1.16dev
 
 ### MultiQC updates
 
+- Removed `simplejson` unused dependency ([#1973](https://github.com/ewels/MultiQC/pull/1973))
+
+### New Modules
+
+### Module updates
+
+- **Kraken**
+  - Fix bug where ranks incorrectly assigned to tabs ([#1766](https://github.com/ewels/MultiQC/issues/1766)).
+- **Mosdepth**
+  - Add X/Y relative coverage plot, analogous to the one in samtools-idxstats ([#1978](https://github.com/ewels/MultiQC/issues/1978))
+  - Added the `perchrom_fraction_cutoff` option into the config to help avoid clutter in contig-level plots
+
+## [MultiQC v1.15](https://github.com/ewels/MultiQC/releases/tag/v1.15) - 2023-08-04
+
+#### Potential breaking change in some edge cases
+
+This release of MultiQC introduces speed improvements to the file search.
+One way it does this is by limiting the number of lines loaded by each search pattern.
+For the vast majority of users, this should have no effect except faster searches.
+However, in some edge cases it may break things. Hypothetically, for example:
+
+- If you concatenate log files from multiple tools
+- If you have a custom plugin module that we haven't tested
+
+See the [troubleshooting docs](https://multiqc.info/docs/usage/troubleshooting/#long-log-files)
+for more information.
+
+### MultiQC updates
+
+- Refactor file search for performance improvements ([#1904](https://github.com/ewels/MultiQC/pull/1904))
+- Bump `log_filesize_limit` default (to skip large files in the search) from 10MB to 50MB.
 - Table code now tolerates lambda function calls with bad data ([#1739](https://github.com/ewels/MultiQC/issues/1739))
 - Beeswarm plot now saves data to `multiqc_data`, same as tables ([#1861](https://github.com/ewels/MultiQC/issues/1861))
 - Don't print DOI in module if it's set to an empty string.
 - Don't sort table headers alphabetically if we don't have an `OrderedDict` - regular dicts are fine in Py3 ([#1866](https://github.com/ewels/MultiQC/issues/1866))
 - New back-end to preview + deploy the new website when the docs are edited.
+- Fixed a _lot_ of broken links in the documentation from the new website change in structure.
 
 ### New Modules
+
+- [**Librarian**](https://github.com/DesmondWillowbrook/Librarian)
+  - A tool to predict the sequencing library type from the base composition of a supplied FastQ file.
 
 ### Module updates
 
@@ -18,10 +53,22 @@
   - Bugfix: avoid multiple `KeyError` exceptions when parsing Cell Ranger 7.x `web_summary.html` ([#1853](https://github.com/ewels/MultiQC/issues/1853), [#1871](https://github.com/ewels/MultiQC/issues/1871))
 - **DRAGEN**
   - Restored functionality to show target BED coverage metrics ([#1844](https://github.com/ewels/MultiQC/issues/1844))
+  - Update filename pattern in RNA quant metrics ([#1958](https://github.com/ewels/MultiQC/pull/1958))
 - **filtlong**
   - Handle reports from locales that use `.` as a thousands separator ([#1843](https://github.com/ewels/MultiQC/issues/1843))
 - **HUMID**
   - Fix bug that prevent HUMID stats files from being parsed ([#1856](https://github.com/ewels/MultiQC/issues/1856))
+- **Mosdepth**
+  - Fix data not written to `mosdepth_cumcov_dist.txt` and `mosdepth_cov_dist.txt` ([#1868](https://github.com/ewels/MultiQC/issues/1868))
+  - Update documentation with new file `{prefix}.mosdepth.summary.txt` ([#1868](https://github.com/ewels/MultiQC/issues/1868))
+  - Fill in missing values for general stats table ([#1868](https://github.com/ewels/MultiQC/issues/1868))
+  - Include mosdepth/summary file paths in `multiqc_sources.txt` ([#1868](https://github.com/ewels/MultiQC/issues/1868))
+  - Enable log switch for Coverage per contig plot ([#1868](https://github.com/ewels/MultiQC/issues/1868))
+  - Fix y-axis scaling for Coverage distribution plot ([#1868](https://github.com/ewels/MultiQC/issues/1868))
+  - Handle case of intermediate missing coverage x-values in the `*_dist.txt` file causing a distorted Coverage distribution plot ([#1960](https://github.com/ewels/MultiQC/issues/1960))
+- **Picard**
+  - WgsMetrics: Fix wrong column label ([#1888](https://github.com/ewels/MultiQC/issues/1888))
+  - HsMetrics: Add missing field descriptions ([#1928](https://github.com/ewels/MultiQC/pull/1928))
 - **Porechop**
   - Don't render bar graphs if no samples had any adapters trimmed ([#1850](https://github.com/ewels/MultiQC/issues/1850))
   - Added report section listing samples that had no adapters trimmed
