@@ -544,13 +544,12 @@ Tables have configuration at two levels:
 ### Config for an entire table
 
 Here we are customising the _Picard HSMetrics_ table.
-We're setting a non-standard title for the first column (usually _"Sample name"_) and changing the default minimum value for the colour scale for _all_ columns.
+We're setting a non-standard title for the first column (usually _"Sample name"_) and changing the minimum value for the colour scale for _all_ columns.
 
 :::note
 Here `min` is a _header_ config but we're setting it at _table config_ level.
-This means it will be used as a default for all columns in the table if the module
-doesn't itself define anything specific for that column.
-If it does, you need to overwrite that specific column using `custom_table_header_config`.
+This means it will be used as a default for all columns in the table, overwriting anything
+that the module defines itself specifically for a given column.
 :::
 
 ```yaml
@@ -558,6 +557,14 @@ custom_plot_config:
   picard_hsmetrics_table:
     col1_header: "Identifiers"
     min: 1000
+```
+
+Another example of how this can be used is to make all columns in the General Statistics table hidden by default:
+
+```yaml
+custom_plot_config:
+  general_stats_table:
+    hidden: true
 ```
 
 ### Config for a specific column
