@@ -5,6 +5,7 @@
 ### MultiQC updates
 
 - Removed `simplejson` unused dependency ([#1973](https://github.com/ewels/MultiQC/pull/1973))
+- Give config `custom_plot_config` priority over column-specific settings set by modules
 
 ### New Modules
 
