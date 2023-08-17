@@ -62,7 +62,6 @@ setup(
         "requests",
         "rich>=10",
         "rich-click",
-        "simplejson",
         "spectra>=0.0.10",
     ],
     entry_points={
