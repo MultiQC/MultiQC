@@ -48,7 +48,7 @@ def plot_run_stats(runData, colorDict):
     Percentage assinged: percentage of reads that has been assigned to any sample
     Data Yield: the total volume of data that has been assigned to any sample
     """
-    return plotHtml, plotName, anchor, description, helptext
+    return plotHtml, plotName, anchor, description, helptext, plotContent
 
 
 def tabulate_run_stats(runData, colorDict):
@@ -99,7 +99,7 @@ def tabulate_run_stats(runData, colorDict):
     Read2 Average Length: the average length of Read 2
     \n
     """
-    return plotHtml, plotName, anchor, description, helptext
+    return plotHtml, plotName, anchor, description, helptext, plotContent
 
 
 def plot_base_quality_hist(runData, colorDict):
@@ -161,7 +161,7 @@ def plot_base_quality_hist(runData, colorDict):
     
     Per read quality histogram plots the distribution of average base quality of each read
     """
-    return plotHtml, plotName, anchor, description, helptext
+    return plotHtml, plotName, anchor, description, helptext, plotContent
 
 
 def plot_base_quality_by_cycle(runData, colorDict):
@@ -256,4 +256,4 @@ def plot_base_quality_by_cycle(runData, colorDict):
     are separated by a red dashed line, such that we can visualize R1 and R2 qualities 
     in one plot.
     """
-    return plotHtml, plotName, anchor, description, helptext
+    return plotHtml, plotName, anchor, description, helptext, plotContent

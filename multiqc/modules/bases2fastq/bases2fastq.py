@@ -59,7 +59,7 @@ class MultiqcModule(BaseMultiqcModule):
             del data_dict["SampleStats"]
 
             self.b2f_run_data[run_analysis_name] = data_dict
-
+            self.add_data_source(f=f, s_name=run_analysis_name, module="bases2fastq")
         # if all RunStats.json too large, none will be found.  Guide customer and Exit at this point.
         if len(self.sample_id_to_run) == 0:
             log.error("No run-stats were found.  Either file-size above limit or RunStats.json does not exist.")
@@ -67,7 +67,20 @@ class MultiqcModule(BaseMultiqcModule):
             raise UserWarning
 
         log.info(f"Found {len(self.b2f_run_data)} total RunStats.json")
-        #run_r2_lens = [len(b2f_run_data[s]["Reads"][0]['Cycles']) for s in b2f_run_data.keys()]
+        run_r1r2_lens = [str(len(self.b2f_run_data[s]["Reads"][0]['Cycles']))+'+'+ str(len(self.b2f_run_data[s]["Reads"][1]['Cycles'])) for s in self.b2f_run_data.keys()]
+        run_r1r2_lens_set = set(run_r1r2_lens)
+        run_r1r2_lens_dict = {}
+        for nn,rl in enumerate(run_r1r2_lens):
+            if not run_r1r2_lens_dict.get(rl):
+                run_r1r2_lens_dict[rl] = []
+            run_r1r2_lens_dict[rl].append(list(self.b2f_run_data.keys())[nn])
+
+        if len(run_r1r2_lens_set) > 1:
+            log.warning(f"More than one read length configurations are found in the dataset:{','.join(run_r1r2_lens_set)}")
+            log.warning(f"Runnning MultiQC with different read length configurations may cause unusual plotting behavior. If possible, please split runs with different read length configurations into different folder and run MultiQC on each")
+            for rl in run_r1r2_lens_dict.keys():
+                log.warning(f"These runs have {rl} read length configuration:{','.join(run_r1r2_lens_dict[rl])}")
+
 
         # Read project info and make it into a lookup dictionary of {sample:project}:
         project_num = 0
@@ -96,6 +109,7 @@ class MultiqcModule(BaseMultiqcModule):
                 run_analysis_sample_name = "__".join([run_analysis_name, sample_name])
                 projectLookupDict[run_analysis_sample_name] = project
             project_num += 1
+            self.add_data_source(f=f, s_name=project, module="bases2fastq")
 
         log.info(f"Found {project_num} Projects within bases2fastq results")
 
@@ -125,9 +139,12 @@ class MultiqcModule(BaseMultiqcModule):
 
             self.b2f_data[run_analysis_sample_name] = data_dict
             self.b2f_data[run_analysis_sample_name]["RunName"] = run_analysis_name
+            
+            self.add_data_source(f=f, s_name=run_analysis_sample_name, module="bases2fastq")
         log.info(
             f"Found {total_sample} samples within bases2fastq results, and {len(self.b2f_data)} samples have run information and enough polonies"
         )
+
 
         # Group by run name
         self.groupDict = dict()
@@ -236,8 +253,11 @@ class MultiqcModule(BaseMultiqcModule):
             plot_base_quality_hist, 
             plot_base_quality_by_cycle]
         for func in plot_functions:
-            plotHtml, plot_name, anchor, description, helptext = func(self.b2f_run_data, self.runColor)
+            plotHtml, plot_name, anchor, description, helptext, plot_data = func(
+                self.b2f_run_data, self.runColor
+                )
             self.add_section(name=plot_name, plot=plotHtml, anchor=anchor, description=description, helptext=helptext)
+            self.write_data_file(plot_data,f"base2fastq:{plot_name}")
 
     def add_sample_plots(self):
         plot_functions = [
@@ -248,7 +268,8 @@ class MultiqcModule(BaseMultiqcModule):
             plot_per_read_gc_hist,
         ]
         for func in plot_functions:
-            plotHtml, plot_name, anchor, description, helptext = func(
+            plotHtml, plot_name, anchor, description, helptext,plot_data = func(
                 self.b2f_data, self.groupLookupDict, self.sampleColor
             )
             self.add_section(name=plot_name, plot=plotHtml, anchor=anchor, description=description, helptext=helptext)
+            self.write_data_file(plot_data,f"base2fastq:{plot_name}")

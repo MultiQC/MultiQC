@@ -61,7 +61,7 @@ def tabulate_sample_stats(sampleData, groupLookupDict, sampleColor):
     and then change group name manually. Then move the csv file into any location under the analyzed 
     directory.
     """
-    return plotHtml, plotName, anchor, description, helptext
+    return plotHtml, plotName, anchor, description, helptext, plotContent
 
 
 def sequence_content_plot(sampleData, groupLookupDict, colorDict):
@@ -164,7 +164,8 @@ def sequence_content_plot(sampleData, groupLookupDict, colorDict):
     by trimming and in most cases doesn't seem to adversely affect the downstream
     analysis._
     """
-    return html, plotName, anchor, description, helptext
+    plotContent = data
+    return html, plotName, anchor, description, helptext, plotContent
 
 
 def plot_per_cycle_N_content(sampleData, groupLookupDict, colorDict):
@@ -220,7 +221,7 @@ def plot_per_cycle_N_content(sampleData, groupLookupDict, colorDict):
     This section plots the percentage of unidentified bases ("N" bases) by each sequencing cycle. 
     Read 1 and Read 2 are separated by a red dashed line
     """
-    return plotHtml, plotName, anchor, description, helptext
+    return plotHtml, plotName, anchor, description, helptext, plotContent
 
 
 def plot_per_read_gc_hist(sampleData, groupLookupDict, sampleColor):
@@ -257,7 +258,7 @@ def plot_per_read_gc_hist(sampleData, groupLookupDict, sampleColor):
     helptext = """
     This section plots the distribution of percentage GC in each reads (range: 0-100)
     """
-    return plotHtml, plotName, anchor, description, helptext
+    return plotHtml, plotName, anchor, description, helptext, plotContent
 
 
 def plot_adapter_content(sampleData, groupLookupDict, sampleColor):
@@ -308,4 +309,4 @@ def plot_adapter_content(sampleData, groupLookupDict, sampleColor):
     helptext = """
     This section plots the adapter content percentage by cycles
     """
-    return plotHtml, plotName, anchor, description, helptext
+    return plotHtml, plotName, anchor, description, helptext, plotContent
