@@ -63,13 +63,13 @@ function fastqc_module(module_element, module_key) {
   function fastqc_seq_content_heatmap() {
     // Get sample names, rename and skip hidden samples
     sample_names = [];
-    sample_groups = []
+    sample_groups = [];
     var p_data = {};
     var hidden_samples = 0;
     $.each(fastqc_seq_content[module_key], function (s_name, data) {
       // rename sample names
       var orig_s_name = s_name;
-      var t_group = bases2fastq_group_color[module_key][s_name]
+      var t_group = bases2fastq_group_color[module_key][s_name];
       $.each(window.mqc_rename_f_texts, function (idx, f_text) {
         if (window.mqc_rename_regex_mode) {
           var re = new RegExp(f_text, "g");
@@ -79,7 +79,7 @@ function fastqc_module(module_element, module_key) {
         }
       });
       orig_s_names[s_name] = orig_s_name;
-      sample_groups[s_name] = t_group
+      sample_groups[s_name] = t_group;
       p_data[s_name] = JSON.parse(JSON.stringify(data)); // clone data
 
       var hide_sample = false;
@@ -205,8 +205,10 @@ function fastqc_module(module_element, module_key) {
           // width+1 to avoid vertical white line gaps.
           ctx.fillRect(xpos, ypos, this_width + 1, s_height);
           xpos += this_width;
-          if (s_no == R1cyclenum - 1) {xpos += this_width/2;}
-          s_no = s_no + 1
+          if (s_no == R1cyclenum - 1) {
+            xpos += this_width / 2;
+          }
+          s_no = s_no + 1;
         });
         // Draw a line under this row if we don't have too many samples
         if (num_samples <= 20) {
@@ -273,12 +275,8 @@ function fastqc_module(module_element, module_key) {
     }
     //Show sample name
     module_element
-    .find("#fastqc_per_base_sequence_content_plot_div .s_name")
-    .html(
-      '<span class="glyphicon glyphicon-info-sign"></span> ' +
-        s_name +
-        "</span>"
-    );
+      .find("#fastqc_per_base_sequence_content_plot_div .s_name")
+      .html('<span class="glyphicon glyphicon-info-sign"></span> ' + s_name + "</span>");
     // Update the key with the raw data for this position
     var hover_bp = Math.max(1, Math.floor((x / c_width) * max_bp));
     var thispoint = fastqc_seq_content[module_key][orig_s_name][hover_bp];
@@ -441,7 +439,7 @@ function fastqc_module(module_element, module_key) {
       xAxis: {
         title: { text: "Position (bp)" },
         allowDecimals: false,
-        plotLines: [{color: "#FF0000", width: 2, value: R1cyclenum, dashStyle: "Dash"}]
+        plotLines: [{ color: "#FF0000", width: 2, value: R1cyclenum, dashStyle: "Dash" }],
       },
       yAxis: {
         title: { text: "% Reads" },

@@ -1,9 +1,9 @@
-from multiqc.plots import bargraph, table, linegraph, scatter
-import numpy as np
-import re
-from collections import OrderedDict
-from multiqc.utils import report
 import json
+
+import numpy as np
+
+from multiqc.plots import bargraph, linegraph, scatter, table
+from multiqc.utils import report
 
 """
 Functions for plotting per sample information of bases2fastq
@@ -75,7 +75,6 @@ def sequence_content_plot(sampleData, groupLookupDict, colorDict):
         data[s_name] = {}
         R1 = sampleData[s_name]["Reads"][0]["Cycles"]
         r1r2_split = max(r1r2_split, len(R1))
-
 
     for s_name in sorted(sampleData.keys()):
         data[s_name] = {}
@@ -170,7 +169,7 @@ def sequence_content_plot(sampleData, groupLookupDict, colorDict):
 
 def plot_per_cycle_N_content(sampleData, groupLookupDict, colorDict):
     data = dict()
-    r1r2_split = 0 
+    r1r2_split = 0
     for s_name in sorted(sampleData.keys()):
         data[s_name] = {}
         R1 = sampleData[s_name]["Reads"][0]["Cycles"]
@@ -209,9 +208,9 @@ def plot_per_cycle_N_content(sampleData, groupLookupDict, colorDict):
         "xPlotLines": [{"color": "#FF0000", "width": 2, "value": r1r2_split, "dashStyle": "Dash"}],
         "colors": colorDict,
         "ymin": 0,
-        "id":"per_cycle_n_content",
-        "title":"bases2fastq: per cycle N content percentage",
-        "ylab":"Percentage"
+        "id": "per_cycle_n_content",
+        "title": "bases2fastq: per cycle N content percentage",
+        "ylab": "Percentage",
     }
     plotHtml = linegraph.plot(plotContent, pconfig=config)
     plotName = "Per Cycle N Content"
@@ -243,13 +242,14 @@ def plot_per_read_gc_hist(sampleData, groupLookupDict, sampleColor):
     plotContent = gcHistDict
     plot_function = linegraph.plot
 
-    config = {"description": "GC", 
-            "xlab": "GC content", 
-            "ylab": "Percentage", 
-            "colors": sampleColor,
-            "id":"gc_hist",
-            "title":"bases2fastq: per sample GC content histogram",
-            "ylab":"Percentage"
+    config = {
+        "description": "GC",
+        "xlab": "GC content",
+        "ylab": "Percentage",
+        "colors": sampleColor,
+        "id": "gc_hist",
+        "title": "bases2fastq: per sample GC content histogram",
+        "ylab": "Percentage",
     }
     plotName = "per sample GC histogram"
     plotHtml = linegraph.plot(plotContent, pconfig=config)
@@ -266,7 +266,7 @@ def plot_adapter_content(sampleData, groupLookupDict, sampleColor):
     Plot adapter content per sample
     """
     plotContent = dict()
-    
+
     r1r2_split = 0
     for s_name in sampleData.keys():
         plotContent.update({s_name: {}})
@@ -297,9 +297,9 @@ def plot_adapter_content(sampleData, groupLookupDict, sampleColor):
         "ylab": "Percentage",
         "xPlotLines": [{"color": "#FF0000", "width": 2, "value": r1r2_split, "dashStyle": "Dash"}],
         "ymax": 100,
-        "id":"per_cycle_adapter_content",
-        "title":"bases2fastq: per cycle adapter content",
-        "ylab":"Percentage"
+        "id": "per_cycle_adapter_content",
+        "title": "bases2fastq: per cycle adapter content",
+        "ylab": "Percentage",
     }
     plotName = "Per Sample Adapter Content"
     config.update({"colors": sampleColor})

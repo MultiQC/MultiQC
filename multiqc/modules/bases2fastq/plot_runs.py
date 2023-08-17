@@ -1,5 +1,6 @@
-from multiqc.plots import bargraph, table, linegraph, scatter
 import numpy as np
+
+from multiqc.plots import bargraph, linegraph, scatter, table
 
 """
 Functions for plotting per run information of bases2fastq
@@ -32,9 +33,9 @@ def plot_run_stats(runData, colorDict):
         "cpswitch": False,
         "stacking": None,
         "description": "Bar plots to compare some general statistics of all found sequencing runs.",
-        "id":"run_stats_bar",
-        "title":"bases2fastq: General Sequencing Run QC stats plot",
-        "ylab":"QC"
+        "id": "run_stats_bar",
+        "title": "bases2fastq: General Sequencing Run QC stats plot",
+        "ylab": "QC",
     }
     plotName = "Sequencing Run QC metrics"
     plotHtml = bargraph.plot(plotContent, pconfig=config)
@@ -69,11 +70,12 @@ def tabulate_run_stats(runData, colorDict):
         plotContent.update({s_name: runStats})
     headers = {header: {"title": header} for header in runStats.keys()}
     headers["#Polonies"].update({"format": "{d}"})
-    config = {"descriptions": "Table of per sequencing run key informations", 
-            "col1_header": "Run Name",
-            "id":"run_stats_table",
-            "title":"bases2fastq: General Sequencing Run QC stats table",
-            "ylab":"QC"
+    config = {
+        "descriptions": "Table of per sequencing run key informations",
+        "col1_header": "Run Name",
+        "id": "run_stats_table",
+        "title": "bases2fastq: General Sequencing Run QC stats table",
+        "ylab": "QC",
     }
     plotName = "Sequencing Run QC metrics table"
     plotHtml = table.plot(plotContent, headers, pconfig=config)
@@ -146,9 +148,9 @@ def plot_base_quality_hist(runData, colorDict):
                 "colors": colorDict,
             },
         ],
-            "id":"per_run_bq_hist",
-            "title":"bases2fastq: Quality Histograms",
-            "ylab":"Percentage"
+        "id": "per_run_bq_hist",
+        "title": "bases2fastq: Quality Histograms",
+        "ylab": "Percentage",
     }
     plotHtml = linegraph.plot(plotContent, pconfig=config)
     plotName = "Per Run Base Quality Histogram"
@@ -166,8 +168,8 @@ def plot_base_quality_hist(runData, colorDict):
 
 def plot_base_quality_by_cycle(runData, colorDict):
     # Prepare plot data for median BQ of each cycle
-    
-    r1r2_split = 0 
+
+    r1r2_split = 0
     for s_name in runData.keys():
         cycleDict = dict()
         R1CycleNum = len(runData[s_name]["Reads"][0]["Cycles"])
@@ -242,9 +244,9 @@ def plot_base_quality_by_cycle(runData, colorDict):
         "xPlotLines": [{"color": "#FF0000", "width": 2, "value": r1r2_split, "dashStyle": "Dash"}],
         "colors": colorDict,
         "ymin": 0,
-        "id":"per_run_quality_by_cycle",
-        "title":"bases2fastq: Quality by cycles",
-        "ylab":"QC"
+        "id": "per_run_quality_by_cycle",
+        "title": "bases2fastq: Quality by cycles",
+        "ylab": "QC",
     }
     plotHtml = linegraph.plot(plotContent, pconfig=config)
     plotName = "Quality statistics by cycle"

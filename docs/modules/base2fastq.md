@@ -14,4 +14,3 @@ size, add the following to your MultiQC config file:
 ```yaml
 log_filesize_limit: 100000000
 ```
-
