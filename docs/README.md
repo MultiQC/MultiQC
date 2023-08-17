@@ -13,6 +13,7 @@ MultiQC Modules:
     Adapter Removal: modules/adapterRemoval.md
     AfterQC: modules/afterqc.md
     Anglerfish: modules/anglerfish.md
+    bases2fastq: modules/bases2fastq.md
     BBDuk: modules/bbduk.md
     Bcl2fastq: modules/bcl2fastq.md
     BclConvert: modules/bclconvert.md

@@ -67,6 +67,7 @@ class MultiqcModule(BaseMultiqcModule):
             raise UserWarning
 
         log.info(f"Found {len(self.b2f_run_data)} total RunStats.json")
+        #run_r2_lens = [len(b2f_run_data[s]["Reads"][0]['Cycles']) for s in b2f_run_data.keys()]
 
         # Read project info and make it into a lookup dictionary of {sample:project}:
         project_num = 0
@@ -229,7 +230,11 @@ class MultiqcModule(BaseMultiqcModule):
         return str(uuid.uuid4()).replace("-", "").lower()
 
     def add_run_plots(self):
-        plot_functions = [tabulate_run_stats, plot_run_stats, plot_base_quality_hist, plot_base_quality_by_cycle]
+        plot_functions = [
+            tabulate_run_stats, 
+            plot_run_stats, 
+            plot_base_quality_hist, 
+            plot_base_quality_by_cycle]
         for func in plot_functions:
             plotHtml, plot_name, anchor, description, helptext = func(self.b2f_run_data, self.runColor)
             self.add_section(name=plot_name, plot=plotHtml, anchor=anchor, description=description, helptext=helptext)

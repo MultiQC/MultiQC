@@ -18,19 +18,19 @@ def tabulate_sample_stats(sampleData, groupLookupDict, sampleColor):
     for s_name in sampleData.keys():
         general_stats = dict()
         general_stats.update({"Run Name": sampleData[s_name]["RunName"]})
-        general_stats.update({"#Polonies": sampleData[s_name]["NumPolonies"]})
-        general_stats.update({"Percentage Q30": sampleData[s_name]["PercentQ30"]})
-        general_stats.update({"Percentage Q40": sampleData[s_name]["PercentQ40"]})
-        general_stats.update({"Average Base Quality": sampleData[s_name]["QualityScoreMean"]})
-        general_stats.update({"Yield(Gb)": sampleData[s_name]["Yield"]})
-        general_stats.update({"Read1 Average Length": sampleData[s_name]["Reads"][0]["MeanReadLength"]})
-        general_stats.update({"Read2 Average Length": sampleData[s_name]["Reads"][1]["MeanReadLength"]})
+        general_stats.update({"Assigned Polonies": sampleData[s_name]["NumPolonies"]})
+        general_stats.update({"Sample Percentage Q30": sampleData[s_name]["PercentQ30"]})
+        general_stats.update({"Sample Percentage Q40": sampleData[s_name]["PercentQ40"]})
+        general_stats.update({"Sample Average Base Quality": sampleData[s_name]["QualityScoreMean"]})
+        general_stats.update({"Assigned Yield(Gb)": sampleData[s_name]["Yield"]})
+        general_stats.update({"Sample Read1 Average Length": sampleData[s_name]["Reads"][0]["MeanReadLength"]})
+        general_stats.update({"Sample Read2 Average Length": sampleData[s_name]["Reads"][1]["MeanReadLength"]})
         general_stats.update({"Group": groupLookupDict[s_name]})
         plotContent.update({s_name: general_stats})
     headers = {header: {"title": header} for header in general_stats.keys()}
-    headers["#Polonies"].update({"format": "{d}"})
+    headers["Assigned Polonies"].update({"format": "{d}"})
     config = {"description": "Table of per sample key informations", "no_beeswarm": True}
-    plotName = "Sample basic informations"
+    plotName = "Sample QC metrics table"
     plotHtml = table.plot(plotContent, headers, pconfig=config)
     anchor = "sample_qc_metrics_table"
     description = "table of general QC metrics by sample"
@@ -208,8 +208,10 @@ def plot_per_cycle_N_content(sampleData, groupLookupDict, colorDict):
         "xPlotLines": [{"color": "#FF0000", "width": 2, "value": r1r2_split, "dashStyle": "Dash"}],
         "colors": colorDict,
         "ymin": 0,
+        "id":"per_cycle_n_content",
+        "title":"bases2fastq: per cycle N content percentage",
+        "ylab":"Percentage"
     }
-
     plotHtml = linegraph.plot(plotContent, pconfig=config)
     plotName = "Per Cycle N Content"
     anchor = "n_content"
@@ -240,8 +242,15 @@ def plot_per_read_gc_hist(sampleData, groupLookupDict, sampleColor):
     plotContent = gcHistDict
     plot_function = linegraph.plot
 
-    config = {"description": "GC", "xlab": "GC content", "ylab": "Percentage", "colors": sampleColor}
-    plotName = "GC histogram"
+    config = {"description": "GC", 
+            "xlab": "GC content", 
+            "ylab": "Percentage", 
+            "colors": sampleColor,
+            "id":"gc_hist",
+            "title":"bases2fastq: per sample GC content histogram",
+            "ylab":"Percentage"
+    }
+    plotName = "per sample GC histogram"
     plotHtml = linegraph.plot(plotContent, pconfig=config)
     anchor = "gc_histogram"
     description = "The histogram of distributions of percentage GC in each read"
@@ -287,8 +296,11 @@ def plot_adapter_content(sampleData, groupLookupDict, sampleColor):
         "ylab": "Percentage",
         "xPlotLines": [{"color": "#FF0000", "width": 2, "value": r1r2_split, "dashStyle": "Dash"}],
         "ymax": 100,
+        "id":"per_cycle_adapter_content",
+        "title":"bases2fastq: per cycle adapter content",
+        "ylab":"Percentage"
     }
-    plotName = "Adapter Content"
+    plotName = "Per Sample Adapter Content"
     config.update({"colors": sampleColor})
     plotHtml = linegraph.plot(plotContent, pconfig=config)
     anchor = "adapter_content"

@@ -32,6 +32,9 @@ def plot_run_stats(runData, colorDict):
         "cpswitch": False,
         "stacking": None,
         "description": "Bar plots to compare some general statistics of all found sequencing runs.",
+        "id":"run_stats_bar",
+        "title":"bases2fastq: General Sequencing Run QC stats plot",
+        "ylab":"QC"
     }
     plotName = "Sequencing Run QC metrics"
     plotHtml = bargraph.plot(plotContent, pconfig=config)
@@ -66,8 +69,13 @@ def tabulate_run_stats(runData, colorDict):
         plotContent.update({s_name: runStats})
     headers = {header: {"title": header} for header in runStats.keys()}
     headers["#Polonies"].update({"format": "{d}"})
-    config = {"descriptions": "Table of per sequencing run key informations", "col1_header": "Run Name"}
-    plotName = "Sequencing Run basic informations"
+    config = {"descriptions": "Table of per sequencing run key informations", 
+            "col1_header": "Run Name",
+            "id":"run_stats_table",
+            "title":"bases2fastq: General Sequencing Run QC stats table",
+            "ylab":"QC"
+    }
+    plotName = "Sequencing Run QC metrics table"
     plotHtml = table.plot(plotContent, headers, pconfig=config)
     anchor = "run_qc_metrics_table"
     description = "table of general QC metrics"
@@ -138,9 +146,12 @@ def plot_base_quality_hist(runData, colorDict):
                 "colors": colorDict,
             },
         ],
+            "id":"per_run_bq_hist",
+            "title":"bases2fastq: Quality Histograms",
+            "ylab":"Percentage"
     }
     plotHtml = linegraph.plot(plotContent, pconfig=config)
-    plotName = "Base Quality Histogram"
+    plotName = "Per Run Base Quality Histogram"
     anchor = "bq_hist"
     description = "Histogram of base qualities"
     helptext = """
@@ -231,11 +242,14 @@ def plot_base_quality_by_cycle(runData, colorDict):
         "xPlotLines": [{"color": "#FF0000", "width": 2, "value": r1r2_split, "dashStyle": "Dash"}],
         "colors": colorDict,
         "ymin": 0,
+        "id":"per_run_quality_by_cycle",
+        "title":"bases2fastq: Quality by cycles",
+        "ylab":"QC"
     }
     plotHtml = linegraph.plot(plotContent, pconfig=config)
     plotName = "Quality statistics by cycle"
     anchor = "per_cycle_quality"
-    description = "Base qualities by cycle"
+    description = "Per Run Base qualities by cycle"
     helptext = """
     This section plots the base qualities by each sequencing cycle. You can choose to show
     either median, mean, percentage Q30 or percentage Q40 of each cycle. Read 1 and Read 2 
