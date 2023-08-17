@@ -11,6 +11,8 @@
 
 ### Module updates
 
+- **Custom content**
+  - Don't convert sample IDs to floats ([#1883](https://github.com/ewels/MultiQC/issues/1883))
 - **Kraken**
   - Fix bug where ranks incorrectly assigned to tabs ([#1766](https://github.com/ewels/MultiQC/issues/1766)).
 - **Mosdepth**
