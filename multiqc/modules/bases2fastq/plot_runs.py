@@ -19,7 +19,9 @@ def plot_run_stats(run_data, color_dict):
     yields = dict()
     for run in run_names:
         num_polonies.update({run: {"Number of Polonies": run_data[run]["NumPolonies"]}})
-        percent_qualities.update({run: {"percent Q30": run_data[run]["PercentQ30"], "percent Q40": run_data[run]["PercentQ40"]}})
+        percent_qualities.update(
+            {run: {"percent Q30": run_data[run]["PercentQ30"], "percent Q40": run_data[run]["PercentQ40"]}}
+        )
         percent_qualities.update({run: {"Successful assigned reads": run_data[run]["PercentAssignedReads"]}})
         yields.update({run: {"Assigned yield": run_data[run]["AssignedYield"]}})
     plot_content = [num_polonies, percent_qualities, percent_qualities, yields]
@@ -125,7 +127,9 @@ def plot_base_quality_hist(run_data, color_dict):
         R1R2_quality_counts = [r1 + r2 for r1, r2 in zip(R1_quality_counts, R2_quality_counts)]
         per_read_quality_hist_dict.update({s_name: {}})
         for meanQuality in range(0, len(R1R2_quality_counts)):
-            per_read_quality_hist_dict[s_name].update({meanQuality: R1R2_quality_counts[meanQuality] / total_reads * 100})
+            per_read_quality_hist_dict[s_name].update(
+                {meanQuality: R1R2_quality_counts[meanQuality] / total_reads * 100}
+            )
     plot_content = [bq_hist_dict, per_read_quality_hist_dict]
 
     # Config for switching dataset
