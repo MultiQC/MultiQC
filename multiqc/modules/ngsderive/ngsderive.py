@@ -503,22 +503,22 @@ class MultiqcModule(BaseMultiqcModule):
         self.general_stats_addcols(general_data, general_headers)
 
         headers = OrderedDict()
-        headers["f+l-"] = {
+        headers["FyLn"] = {
             "title": "f+l- count",
             "description": "Number of reads with the 'first in template' FLAG set and the 'last in template' FLAG unset",
             "format": "{:,.d}",
         }
-        headers["f-l+"] = {
+        headers["FnLy"] = {
             "title": "f-l+ count",
             "description": "Number of reads with the 'first in template' FLAG unset and the 'last in template' FLAG set",
             "format": "{:,.d}",
         }
-        headers["f-l-"] = {
+        headers["FnLn"] = {
             "title": "f-l- count",
             "description": "Number of reads with the 'first in template' FLAG unset and the 'last in template' FLAG unset",
             "format": "{:,.d}",
         }
-        headers["f+l+"] = {
+        headers["FyLy"] = {
             "title": "f+l+ count",
             "description": "Number of reads with the 'first in template' FLAG set and the 'last in template' FLAG set",
             "format": "{:,.d}",
@@ -537,10 +537,10 @@ class MultiqcModule(BaseMultiqcModule):
         table_data = {}
         for sample, endedness_data in self.endedness.items():
             table_data[sample] = {}
-            table_data[sample]["f+l-"] = endedness_data.get("f+l-")
-            table_data[sample]["f-l+"] = endedness_data.get("f-l+")
-            table_data[sample]["f-l-"] = endedness_data.get("f-l-")
-            table_data[sample]["f+l+"] = endedness_data.get("f+l+")
+            table_data[sample]["FyLn"] = endedness_data.get("f+l-")
+            table_data[sample]["FnLy"] = endedness_data.get("f-l+")
+            table_data[sample]["FnLn"] = endedness_data.get("f-l-")
+            table_data[sample]["FyLy"] = endedness_data.get("f+l+")
             table_data[sample]["RPT"] = endedness_data.get("Reads per template")
             table_data[sample]["endedness"] = endedness_data.get("Endedness")
 
