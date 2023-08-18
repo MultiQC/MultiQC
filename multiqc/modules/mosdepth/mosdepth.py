@@ -122,219 +122,239 @@ class MultiqcModule(BaseMultiqcModule):
 
         self.cfg = read_config()
         genstats_headers = defaultdict(OrderedDict)
-        genstats, cumcov_dist_data, cov_dist_data, xmax, perchrom_avg_data, xy_cov = self.parse_cov_dist()
-
-        # Filter out any samples from --ignore-samples
-        if genstats:
-            genstats = defaultdict(OrderedDict, self.ignore_samples(genstats))
-        cumcov_dist_data = defaultdict(OrderedDict, self.ignore_samples(cumcov_dist_data))
-        cov_dist_data = defaultdict(OrderedDict, self.ignore_samples(cov_dist_data))
-        perchrom_avg_data = defaultdict(OrderedDict, self.ignore_samples(perchrom_avg_data))
-        xy_cov = defaultdict(OrderedDict, self.ignore_samples(xy_cov))
-
-        # No samples found
-        num_samples = max(len(genstats), len(cumcov_dist_data), len(cov_dist_data), len(perchrom_avg_data), len(xy_cov))
-        if num_samples == 0:
-            raise UserWarning
-        log.info(f"Found {num_samples} reports")
-
-        if cumcov_dist_data:
-            # Write data to file, sort columns numberically and convert to strings
-            cumcov_dist_data_writeable = {
-                sample: {str(k): v for k, v in sorted(data.items())} for sample, data in cumcov_dist_data.items()
-            }
-            self.write_data_file(cumcov_dist_data_writeable, "mosdepth_cumcov_dist")
-
-            self.add_section(
-                name="Cumulative coverage distribution",
-                anchor="mosdepth-cumcoverage-dist",
-                description="Proportion of bases in the reference genome with, at least, a given depth of coverage",
-                helptext=genome_fraction_helptext,
-                plot=linegraph.plot(
-                    cumcov_dist_data,
-                    {
-                        "id": "mosdepth-cumcoverage-dist-id",
-                        "title": "Mosdepth: Cumulative coverage distribution",
-                        "xlab": "Cumulative Coverage (X)",
-                        "ylab": "% bases in genome/regions covered by at least X reads",
-                        "ymax": 100,
-                        "xmax": xmax,
-                        "tt_label": "<b>{point.x}X</b>: {point.y:.2f}%",
-                        "smooth_points": 500,
-                    },
-                ),
-            )
-
-        if cov_dist_data:
-            # Write data to file, sort columns numerically and convert to strings
-            cov_dist_data_writeable = {
-                sample: {str(k): v for k, v in sorted(data.items())} for sample, data in cov_dist_data.items()
-            }
-            self.write_data_file(cov_dist_data_writeable, "mosdepth_cov_dist")
-
-            # Set ymax so that zero coverage values are ignored.
-            ymax = 0
-            for data in cov_dist_data.values():
-                positive_cov = [percent for cov, percent in data.items() if cov > 0]
-                if positive_cov:
-                    ymax = max(ymax, max(positive_cov))
-
-            self.add_section(
-                name="Coverage distribution",
-                anchor="mosdepth-coverage-dist-cov",
-                description="Proportion of bases in the reference genome with a given depth of coverage",
-                helptext=coverage_histogram_helptext,
-                plot=linegraph.plot(
-                    cov_dist_data,
-                    {
-                        "id": "mosdepth-coverage-dist-id",
-                        "title": "Mosdepth: Coverage distribution",
-                        "xlab": "Coverage (X)",
-                        "ylab": "% bases in genome/regions covered by X reads",
-                        "ymax": ymax * 1.05,
-                        "yCeiling": 100,
-                        "xmax": xmax,
-                        "tt_label": "<b>{point.x}X</b>: {point.y:.2f}%",
-                        "smooth_points": 500,
-                    },
-                ),
-            )
-        if perchrom_avg_data:
-            # Write data to file
-            self.write_data_file(perchrom_avg_data, "mosdepth_perchrom")
-
-            num_contigs = max([len(x.keys()) for x in perchrom_avg_data.values()])
-            if num_contigs > 1:
-                perchrom_plot = linegraph.plot(
-                    perchrom_avg_data,
-                    {
-                        "id": "mosdepth-coverage-per-contig",
-                        "title": "Mosdepth: Coverage per contig",
-                        "xlab": "Region",
-                        "ylab": "Average Coverage",
-                        "categories": True,
-                        "tt_decimals": 1,
-                        "tt_suffix": "x",
-                        "smooth_points": 500,
-                        "logswitch": True,
-                    },
-                )
-            else:
-                perchrom_plot = bargraph.plot(
-                    perchrom_avg_data,
-                    pconfig={
-                        "id": "mosdepth-coverage-per-contig",
-                        "title": "Mosdepth: Coverage per contig",
-                        "xlab": "Sample",
-                        "ylab": "Average Coverage",
-                        "tt_suffix": "x",
-                    },
-                )
-
-            self.add_section(
-                name="Average coverage per contig",
-                anchor="mosdepth-coverage-per-contig-id",
-                description="Average coverage per contig or chromosome",
-                plot=perchrom_plot,
-            )
-
-        if xy_cov:
-            xy_keys = OrderedDict()
-            xy_keys["x"] = {"name": self.cfg.get("xchr", "Chromosome X")}
-            xy_keys["y"] = {"name": self.cfg.get("xchr", "Chromosome Y")}
-            pconfig = {
-                "id": "mosdepth-xy-coverage-plot",
-                "title": "Mosdepth: chrXY coverage",
-                "ylab": "Percent of X+Y coverage",
-                "cpswitch_counts_label": "Coverage",
-                "cpswitch_percent_label": "Percent of X+Y coverage",
-                "cpswitch_c_active": False,
-            }
-            self.add_section(
-                name="XY coverage",
-                anchor="mosdepth-xy-coverage",
-                plot=bargraph.plot(xy_cov, xy_keys, pconfig),
-            )
-
-        if cumcov_dist_data:
-            threshs, hidden_threshs = get_cov_thresholds()
-            self.genstats_cov_thresholds(genstats, genstats_headers, cumcov_dist_data, threshs, hidden_threshs)
-            self.genstats_mediancov(genstats, genstats_headers, cumcov_dist_data)
-
-        # Add mean coverage to General Stats
-        genstats_headers["mean_coverage"] = {
-            "title": "Mean Cov.",
-            "description": "Mean coverage",
-            "min": 0,
-            "suffix": "X",
-            "scale": "BuPu",
-        }
-        self.general_stats_addcols(genstats, genstats_headers)
-
-    def parse_cov_dist(self):
         genstats = defaultdict(OrderedDict)  # mean coverage
-        cumcov_dist_data = defaultdict(OrderedDict)  # cumulative distribution
-        cov_dist_data = defaultdict(OrderedDict)  # absolute (non-cumulative) coverage
-        xmax = 0
-        perchrom_avg_data = defaultdict(OrderedDict)  # per chromosome average coverage
 
         # Parse mean coverage
         for f in self.find_log_files("mosdepth/summary"):
             s_name = self.clean_s_name(f["fn"], f)
             for line in f["f"].splitlines():
-                contig, length, bases, mean, min_cov, max_cov = line.split("\t")
-                if contig.startswith("total"):
+                if line.startswith("total\t"):
+                    contig, length, bases, mean, min_cov, max_cov = line.split("\t")
                     genstats[s_name]["mean_coverage"] = mean
-
                     self.add_data_source(f, s_name=s_name, section="summary")
+        # Filter out any samples from --ignore-samples
+        genstats = defaultdict(OrderedDict, self.ignore_samples(genstats))
+        samples_found = set(genstats.keys())
 
-        # Parse coverage distributions
-        for scope in ("region", "global"):
-            for f in self.find_log_files("mosdepth/" + scope + "_dist"):
-                s_name = self.clean_s_name(f["fn"], f)
-                if s_name in cumcov_dist_data:  # both region and global might exist, prioritizing region
-                    continue
+        data_by_scope = {}
+        for scope in "global", "region":
+            data_by_scope[scope] = self.parse_cov_dist(scope)
+            data_by_scope[scope] = [defaultdict(OrderedDict, self.ignore_samples(d)) for d in data_by_scope[scope]]
+            for d in data_by_scope[scope]:
+                samples_found.update(set(d.keys()))
 
-                for line in f["f"].split("\n"):
-                    if "\t" not in line:
-                        continue
-                    contig, cutoff_reads, bases_fraction = line.split("\t")
-                    if float(bases_fraction) == 0:
-                        continue
+        # No samples found
+        if len(samples_found) == 0:
+            raise UserWarning
+        log.info(f"Found {len(samples_found)} reports")
 
-                    # Parse cumulative coverage
-                    if contig == "total":
-                        cumcov = 100.0 * float(bases_fraction)
-                        x = int(cutoff_reads)
-                        cumcov_dist_data[s_name][x] = cumcov
+        for scope, data in data_by_scope.items():
+            if scope == "global":
+                descr_suf = ". Calculated across the entire genome length"
+                title_suf = ""
+                id_suf = ""
+                fn_suf = ""
+            else:
+                descr_suf = ". Calculated across the target regions"
+                title_suf = " (regions only)"
+                id_suf = "-regions"
+                fn_suf = "_regions"
 
+            cumcov_dist_data, cov_dist_data, perchrom_avg_data, xy_cov = data
+            if cumcov_dist_data:
+                xmax = 0
+                for sample, data in cumcov_dist_data.items():
+                    for x, cumcov in data.items():
                         if cumcov > 1:  # require >1% to prevent long flat tail
                             xmax = max(xmax, x)
 
-                    # Calculate per-contig coverage
-                    else:
-                        # filter out contigs based on exclusion patterns
-                        if any(fnmatch.fnmatch(contig, str(pattern)) for pattern in self.cfg["exclude_contigs"]):
-                            try:
-                                if self.cfg.get("show_excluded_debug_logs") is True:
-                                    log.debug(f"Skipping excluded contig '{contig}'")
-                            except (AttributeError, KeyError):
-                                pass
-                            continue
+                # Write data to file, sort columns numerically and convert to strings
+                cumcov_dist_data_writeable = {
+                    sample: {str(k): v for k, v in sorted(data.items())} for sample, data in cumcov_dist_data.items()
+                }
+                self.write_data_file(cumcov_dist_data_writeable, f"mosdepth_cumcov{fn_suf}_dist")
 
-                        # filter out contigs based on inclusion patterns
-                        if len(self.cfg["include_contigs"]) > 0 and not any(
-                            fnmatch.fnmatch(contig, pattern) for pattern in self.cfg["include_contigs"]
-                        ):
-                            # Commented out since this could be many thousands of contigs!
-                            # log.debug(f"Skipping not included contig '{contig}'")
-                            continue
+                self.add_section(
+                    name=f"Cumulative coverage distribution{title_suf}",
+                    anchor=f"mosdepth-cumcoverage{id_suf}-dist",
+                    description=(
+                        f"Proportion of bases in the reference genome with, "
+                        f"at least, a given depth of coverage{descr_suf}"
+                    ),
+                    helptext=genome_fraction_helptext,
+                    plot=linegraph.plot(
+                        cumcov_dist_data,
+                        {
+                            "id": f"mosdepth-cumcoverage-dist{id_suf}-id",
+                            "title": f"Mosdepth: Cumulative coverage distribution{title_suf}",
+                            "xlab": "Cumulative Coverage (X)",
+                            "ylab": "% bases in genome/regions covered by at least X reads",
+                            "ymax": 100,
+                            "xmax": xmax,
+                            "tt_label": "<b>{point.x}X</b>: {point.y:.2f}%",
+                            "smooth_points": 500,
+                        },
+                    ),
+                )
 
-                        avg = perchrom_avg_data[s_name].get(contig, 0) + float(bases_fraction)
-                        perchrom_avg_data[s_name][contig] = avg
+                assert cov_dist_data, "cov_dist_data is built from the same source and must exist here"
+                # Write data to file, sort columns numerically and convert to strings
+                cov_dist_data_writeable = {
+                    sample: {str(k): v for k, v in sorted(data.items())} for sample, data in cov_dist_data.items()
+                }
+                self.write_data_file(cov_dist_data_writeable, f"mosdepth_cov{fn_suf}_dist")
 
-                if s_name in cumcov_dist_data:
-                    self.add_data_source(f, s_name=s_name, section="genome_results")
+                # Set ymax so that zero coverage values are ignored.
+                ymax = 0
+                for data in cov_dist_data.values():
+                    positive_cov = [percent for cov, percent in data.items() if cov > 0]
+                    if positive_cov:
+                        ymax = max(ymax, max(positive_cov))
+
+                self.add_section(
+                    name=f"Coverage distribution{title_suf}",
+                    anchor=f"mosdepth-coverage-dist{id_suf}-cov",
+                    description=(
+                        f"Proportion of bases in the reference genome with a given " f"depth of coverage{descr_suf}"
+                    ),
+                    helptext=coverage_histogram_helptext,
+                    plot=linegraph.plot(
+                        cov_dist_data,
+                        {
+                            "id": f"mosdepth-coverage-dist{id_suf}-id",
+                            "title": f"Mosdepth: Coverage distribution{title_suf}",
+                            "xlab": "Coverage (X)",
+                            "ylab": "% bases in genome/regions covered by X reads",
+                            "ymax": ymax * 1.05,
+                            "yCeiling": 100,
+                            "xmax": xmax,
+                            "tt_label": "<b>{point.x}X</b>: {point.y:.2f}%",
+                            "smooth_points": 500,
+                        },
+                    ),
+                )
+            if perchrom_avg_data:
+                # Write data to file
+                self.write_data_file(perchrom_avg_data, f"mosdepth_perchrom{fn_suf}")
+
+                num_contigs = max([len(x.keys()) for x in perchrom_avg_data.values()])
+                if num_contigs > 1:
+                    perchrom_plot = linegraph.plot(
+                        perchrom_avg_data,
+                        {
+                            "id": f"mosdepth-coverage-per-contig{id_suf}",
+                            "title": f"Mosdepth: Coverage per contig{title_suf}",
+                            "xlab": "Region",
+                            "ylab": "Average Coverage",
+                            "categories": True,
+                            "tt_decimals": 1,
+                            "tt_suffix": "x",
+                            "smooth_points": 500,
+                            "logswitch": True,
+                        },
+                    )
+                else:
+                    perchrom_plot = bargraph.plot(
+                        perchrom_avg_data,
+                        pconfig={
+                            "id": f"mosdepth-coverage-per-contig{id_suf}",
+                            "title": f"Mosdepth: Coverage per contig{title_suf}",
+                            "xlab": "Sample",
+                            "ylab": "Average Coverage",
+                            "tt_suffix": "x",
+                        },
+                    )
+
+                self.add_section(
+                    name=f"Average coverage per contig{title_suf}",
+                    anchor=f"mosdepth-coverage-per-contig{id_suf}-id",
+                    description=f"Average coverage per contig or chromosome{id_suf}",
+                    plot=perchrom_plot,
+                )
+
+            if xy_cov:
+                xy_keys = OrderedDict()
+                xy_keys["x"] = {"name": self.cfg.get("xchr", "Chromosome X")}
+                xy_keys["y"] = {"name": self.cfg.get("xchr", "Chromosome Y")}
+                pconfig = {
+                    "id": f"mosdepth-xy-coverage-plot{id_suf}",
+                    "title": f"Mosdepth: chrXY coverage{title_suf}",
+                    "ylab": f"Percent of X+Y coverage",
+                    "cpswitch_counts_label": "Coverage",
+                    "cpswitch_percent_label": "Percent of X+Y coverage",
+                    "cpswitch_c_active": False,
+                }
+                self.add_section(
+                    name=f"XY coverage{title_suf}",
+                    anchor=f"mosdepth-xy-coverage{id_suf}",
+                    plot=bargraph.plot(xy_cov, xy_keys, pconfig),
+                )
+
+            if cumcov_dist_data:
+                threshs, hidden_threshs = get_cov_thresholds()
+                self.genstats_cov_thresholds(genstats, genstats_headers, cumcov_dist_data, threshs, hidden_threshs)
+                self.genstats_mediancov(genstats, genstats_headers, cumcov_dist_data)
+
+        # Add mean coverage to General Stats
+        genstats_headers["mean_coverage"] = OrderedDict(
+            {
+                "title": "Mean Cov.",
+                "description": "Mean coverage",
+                "min": 0,
+                "suffix": "X",
+                "scale": "BuPu",
+            }
+        )
+        self.general_stats_addcols(genstats, genstats_headers)
+
+    def parse_cov_dist(self, scope):
+        cumcov_dist_data = defaultdict(OrderedDict)  # cumulative distribution
+        cov_dist_data = defaultdict(OrderedDict)  # absolute (non-cumulative) coverage
+        perchrom_avg_data = defaultdict(OrderedDict)  # per chromosome average coverage
+
+        # Parse coverage distributions
+        for f in self.find_log_files(f"mosdepth/{scope}_dist"):
+            s_name = self.clean_s_name(f["fn"], f)
+            if s_name in cumcov_dist_data:  # both region and global might exist, prioritizing region
+                continue
+
+            for line in f["f"].split("\n"):
+                if "\t" not in line:
+                    continue
+                contig, cutoff_reads, bases_fraction = line.split("\t")
+                if float(bases_fraction) == 0:
+                    continue
+
+                # Parse cumulative coverage
+                if contig == "total":
+                    cumcov = 100.0 * float(bases_fraction)
+                    x = int(cutoff_reads)
+                    cumcov_dist_data[s_name][x] = cumcov
+
+                # Calculate per-contig coverage
+                else:
+                    # filter out contigs based on exclusion patterns
+                    if any(fnmatch.fnmatch(contig, str(pattern)) for pattern in self.cfg["exclude_contigs"]):
+                        try:
+                            if self.cfg.get("show_excluded_debug_logs") is True:
+                                log.debug(f"Skipping excluded contig '{contig}'")
+                        except (AttributeError, KeyError):
+                            pass
+                        continue
+
+                    # filter out contigs based on inclusion patterns
+                    if len(self.cfg["include_contigs"]) > 0 and not any(
+                        fnmatch.fnmatch(contig, pattern) for pattern in self.cfg["include_contigs"]
+                    ):
+                        # Commented out since this could be many thousands of contigs!
+                        # log.debug(f"Skipping not included contig '{contig}'")
+                        continue
+
+                    avg = perchrom_avg_data[s_name].get(contig, 0) + float(bases_fraction)
+                    perchrom_avg_data[s_name][contig] = avg
+
+            if s_name in cumcov_dist_data:
+                self.add_data_source(f, s_name=s_name, section="genome_results")
 
         # Applying the contig coverage cutoff. First, count the total coverage for
         # every contig.
@@ -421,7 +441,7 @@ class MultiqcModule(BaseMultiqcModule):
                 cov_dist_data[s_name][x] = cumcov - prev_cumcov
                 prev_x, prev_cumcov = x, cumcov
 
-        return genstats, cumcov_dist_data, cov_dist_data, xmax, perchrom_avg_data, xy_cov
+        return cumcov_dist_data, cov_dist_data, perchrom_avg_data, xy_cov
 
     def genstats_cov_thresholds(self, genstats, genstats_headers, cumcov_dist_data, threshs, hidden_threshs):
         for s_name, d in cumcov_dist_data.items():
