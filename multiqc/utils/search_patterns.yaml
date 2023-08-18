@@ -23,8 +23,12 @@ bases2fastq/persample:
   num_lines: 100
 bases2fastq/run:
   fn: "RunStats.json"
+  contents_re: ".*NumPolonies.*"
+  num_lines: 100
 bases2fastq/project:
   fn: "*_RunStats.json"
+  contents_re: ".*NumPolonies.*"
+  num_lines: 100
 bases2fastq/group:
   fn: "*_b2fgroup.csv"
 bbduk:
