@@ -13,6 +13,7 @@ from multiqc.modules.base_module import BaseMultiqcModule
 
 from .plot_runs import *
 from .plot_samples import *
+from multiqc.utils import mqc_colour
 
 log = logging.getLogger(__name__)
 
@@ -47,11 +48,12 @@ class MultiqcModule(BaseMultiqcModule):
             analysis_id = data_dict.get("AnalysisID", None)[0:4]
 
             if not run_name or not analysis_id:
-                log.error("Error with RunStats.json.  Either RunName or AnalysisID is absent.")
+                log.error("Error with RunStats.json. Either RunName or AnalysisID is absent.")
                 log.error("Please visit Elembio docs for more information - https://docs.elembio.io/docs/bases2fastq/")
                 raise UserWarning
 
             run_analysis_name = "__".join([run_name, analysis_id])
+            run_analysis_name = self.clean_s_name(run_analysis_name)
 
             # map sample UUIDs to run_analysis_name
             for sample in data_dict["SampleStats"]:
@@ -94,7 +96,7 @@ class MultiqcModule(BaseMultiqcModule):
 
         # Read project info and make it into a lookup dictionary of {sample:project}:
         project_num = 0
-        projectLookupDict = {}
+        project_lookup_dict = {}
         for f in self.find_log_files("bases2fastq/project"):
             data_dict = json.loads(f["f"])
             samples = data_dict["Samples"]
@@ -109,7 +111,8 @@ class MultiqcModule(BaseMultiqcModule):
                 raise UserWarning
 
             run_analysis_name = "__".join([run_name, analysis_id])
-
+            run_analysis_name = self.clean_s_name(run_analysis_name)
+            
             project = data_dict.get("Project", "DefaultProject")
 
             # run stats no longer needed - save on memory
@@ -117,7 +120,7 @@ class MultiqcModule(BaseMultiqcModule):
 
             for sample_name in samples:
                 run_analysis_sample_name = "__".join([run_analysis_name, sample_name])
-                projectLookupDict[run_analysis_sample_name] = project
+                project_lookup_dict[run_analysis_sample_name] = project
             project_num += 1
             self.add_data_source(f=f, s_name=project, module="bases2fastq")
 
@@ -136,10 +139,11 @@ class MultiqcModule(BaseMultiqcModule):
                 continue
 
             run_analysis_name = self.sample_id_to_run[sample_id]
-
+            run_analysis_name = self.clean_s_name(run_analysis_name)
+            
             sample_name = data_dict["SampleName"]
             run_analysis_sample_name = "__".join([run_analysis_name, sample_name])
-
+            run_analysis_name = self.clean_s_name(run_analysis_name)
             num_polonies = data_dict["NumPolonies"]
             if num_polonies < self.minimum_polonies:
                 log.warning(
@@ -151,46 +155,55 @@ class MultiqcModule(BaseMultiqcModule):
             self.b2f_data[run_analysis_sample_name]["RunName"] = run_analysis_name
 
             self.add_data_source(f=f, s_name=run_analysis_sample_name, module="bases2fastq")
+        if len(self.b2f_data) == 0:
+            log.error("No Samples are found.")
+            log.error("Please visit Elembio docs for more information - https://docs.elembio.io/docs/bases2fastq/")
+            raise UserWarning
         log.info(
             f"Found {total_sample} samples within bases2fastq results, and {len(self.b2f_data)} samples have run information and enough polonies"
         )
 
         # Group by run name
-        self.groupDict = dict()
-        self.groupLookupDict = dict()
+        self.group_dict = dict()
+        self.group_lookup_dict = dict()
         for s_name in self.b2f_data.keys():
             s_group = self.b2f_data[s_name]["RunName"]
 
-            if not self.groupDict.get(s_group):
-                self.groupDict.update({s_group: []})
+            if not self.group_dict.get(s_group):
+                self.group_dict.update({s_group: []})
 
-            self.groupDict[s_group].append(s_name)
-            self.groupLookupDict.update({s_name: s_group})
+            self.group_dict[s_group].append(s_name)
+            self.group_lookup_dict.update({s_name: s_group})
 
-        # Assign color for each run
-        n_colors = len(self.groupDict.keys())
+        # Assign project
+        for s_name in self.b2f_data.keys():
+            if project_lookup_dict.get(s_name):
+                s_group = project_lookup_dict[s_name]
+                if not self.group_dict.get(s_group):
+                    self.group_dict.update({s_group: []})
+                self.group_dict[s_group].append(s_name)
+                self.group_lookup_dict.update({s_name: s_group})
+        
+        # Assign color for each group
+        n_colors = len(self.group_dict.keys())
+        """
         palette = [
             "rgba({r},{g},{b},0.5)".format(r=rgb[0] * 255, g=rgb[1] * 255, b=rgb[2] * 255)
             for rgb in sns.color_palette("bright", n_colors)
         ]
-        groupColor = {g: c for g, c in zip(self.groupDict.keys(), palette[: len(self.groupDict.keys())])}
-        self.runColor = copy.deepcopy(groupColor)  #
-        self.sampleColor = dict()
+        """
+        color_getter = mqc_colour.mqc_colour_scale()
+        palette = sum([color_getter.get_colours(hue) for hue in ["Set2","Pastel1","Accent","Set1","Set3","Dark2","Paired","Pastel2"]],[])
+        if len(self.group_dict) > len(palette):
+            hex_range = 2**24
+            extra_colors = [hex(random.randrange(0, hex_range)) for _ in range(len(self.group_dict),len(palette))]
+            palette = palette + extra_colors
+        group_color = {g: c for g, c in zip(self.group_dict.keys(), palette[: len(self.group_dict)])}
+        self.sample_color = dict()
         for s_name in self.b2f_data.keys():
-            self.sampleColor.update({s_name: groupColor[self.groupLookupDict[s_name]]})
-
-        for s_name in self.b2f_data.keys():
-            self.sampleColor.update({s_name: groupColor[self.groupLookupDict[s_name]]})
-
-        # Assign color for each project
-        for s_name in self.b2f_data.keys():
-            if projectLookupDict.get(s_name):
-                s_group = projectLookupDict[s_name]
-                if not self.groupDict.get(s_group):
-                    self.groupDict.update({s_group: []})
-                self.groupDict[s_group].append(s_name)
-                self.groupLookupDict.update({s_name: s_group})
-
+            self.sample_color.update({s_name: group_color[self.group_lookup_dict[s_name]]})
+        self.run_color = copy.deepcopy(group_color)  #Make sure that run colors and group colors match
+        
         # Read custom group info
         self.group_info_exist = False
         for f in self.find_log_files("bases2fastq/group"):
@@ -198,27 +211,35 @@ class MultiqcModule(BaseMultiqcModule):
                 log.warning(
                     "More than one group assignment files are found. Please only keep one assignment file in the analysis folder. Bases2fastq stats will not be plotted"
                 )
-            groupInfo = pd.read_csv(StringIO(f["f"]))
-            for nn in groupInfo.index:
-                s_group = groupInfo.loc[nn, "Group"]
-                # if groupInfo.loc[nn, "Run Name"] in groupInfo.loc[nn, "Sample Name"]:
-                s_name = groupInfo.loc[nn, "Sample Name"]
+            group_info = pd.read_csv(StringIO(f["f"]))
+            for nn in group_info.index:
+                s_group = group_info.loc[nn, "Group"]
+                # if group_info.loc[nn, "Run Name"] in group_info.loc[nn, "Sample Name"]:
+                s_name = group_info.loc[nn, "Sample Name"]
                 # else:
-                # s_name = groupInfo.loc[nn, "Run Name"] + "_" + groupInfo.loc[nn, "Sample Name"]
-                if self.groupDict.get(s_group) is None:
-                    self.groupDict.update({s_group: []})
-                self.groupDict[s_group].append(s_name)
-                self.groupLookupDict.update({s_name: s_group})
+                # s_name = group_info.loc[nn, "Run Name"] + "_" + group_info.loc[nn, "Sample Name"]
+                if self.group_dict.get(s_group) is None:
+                    self.group_dict.update({s_group: []})
+                self.group_dict[s_group].append(s_name)
+                self.group_lookup_dict.update({s_name: s_group})
 
-        n_colors = len(self.groupDict.keys())
+        n_colors = len(self.group_dict)
+        """
         palette = [
             "rgba({r},{g},{b},0.5)".format(r=rgb[0] * 255, g=rgb[1] * 255, b=rgb[2] * 255)
-            for rgb in sns.color_palette("Paired", n_colors)
+            for rgb in sns.color_palette("bright", n_colors)
         ]
-        groupColor = {g: c for g, c in zip(self.groupDict.keys(), palette[: len(self.groupDict.keys())])}
-        self.sampleColor = dict()
+        """
+        color_getter = mqc_colour.mqc_colour_scale()
+        palette = sum([color_getter.get_colours(hue) for hue in ["Set2","Pastel1","Accent","Set1","Set3","Dark2","Paired","Pastel2"]],[])
+        if len(self.group_dict) > len(palette):
+            hex_range = 2**24
+            extra_colors = [hex(random.randrange(0, hex_range)) for _ in range(len(self.group_dict),len(palette))]
+            palette = palette + extra_colors
+        group_color = {g: c for g, c in zip(self.group_dict.keys(), palette[: len(self.group_dict.keys())])}
+        self.sample_color = dict()
         for s_name in self.b2f_data.keys():
-            self.sampleColor.update({s_name: groupColor[self.groupLookupDict[s_name]]})
+            self.sample_color.update({s_name: group_color[self.group_lookup_dict[s_name]]})
 
         # Sort samples alphabetically
         data_keys = list(self.b2f_run_data.keys())
@@ -226,7 +247,7 @@ class MultiqcModule(BaseMultiqcModule):
         sorted_data = {s_name: self.b2f_run_data[s_name] for s_name in data_keys}
         self.b2f_run_data = sorted_data
         data_keys = list(self.b2f_data.keys())
-        sorted_keys = sorted(data_keys, key=lambda x: (self.groupLookupDict[x], x))
+        sorted_keys = sorted(data_keys, key=lambda x: (self.group_lookup_dict[x], x))
         sorted_data = {s_name: self.b2f_data[s_name] for s_name in sorted_keys}
         self.b2f_data = sorted_data
 
@@ -258,8 +279,8 @@ class MultiqcModule(BaseMultiqcModule):
     def add_run_plots(self):
         plot_functions = [tabulate_run_stats, plot_run_stats, plot_base_quality_hist, plot_base_quality_by_cycle]
         for func in plot_functions:
-            plotHtml, plot_name, anchor, description, helptext, plot_data = func(self.b2f_run_data, self.runColor)
-            self.add_section(name=plot_name, plot=plotHtml, anchor=anchor, description=description, helptext=helptext)
+            plot_html, plot_name, anchor, description, helptext, plot_data = func(self.b2f_run_data, self.run_color)
+            self.add_section(name=plot_name, plot=plot_html, anchor=anchor, description=description, helptext=helptext)
             self.write_data_file(plot_data, f"base2fastq:{plot_name}")
 
     def add_sample_plots(self):
@@ -271,8 +292,8 @@ class MultiqcModule(BaseMultiqcModule):
             plot_per_read_gc_hist,
         ]
         for func in plot_functions:
-            plotHtml, plot_name, anchor, description, helptext, plot_data = func(
-                self.b2f_data, self.groupLookupDict, self.sampleColor
+            plot_html, plot_name, anchor, description, helptext, plot_data = func(
+                self.b2f_data, self.group_lookup_dict, self.sample_color
             )
-            self.add_section(name=plot_name, plot=plotHtml, anchor=anchor, description=description, helptext=helptext)
+            self.add_section(name=plot_name, plot=plot_html, anchor=anchor, description=description, helptext=helptext)
             self.write_data_file(plot_data, f"base2fastq:{plot_name}")

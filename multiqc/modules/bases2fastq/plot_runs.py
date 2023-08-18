@@ -7,22 +7,22 @@ Functions for plotting per run information of bases2fastq
 """
 
 
-def plot_run_stats(runData, colorDict):
+def plot_run_stats(run_data, color_dict):
     """
     plot bargraph for polony numbers, Q30/Q40, index assignment rate and yields for each run
     """
-    runNames = list(runData.keys())
-    runNames.sort()
-    NumPolonies = dict()
-    PercentQs = dict()
-    PercentAssigned = dict()
-    Yields = dict()
-    for run in runNames:
-        NumPolonies.update({run: {"Number of Polonies": runData[run]["NumPolonies"]}})
-        PercentQs.update({run: {"percent Q30": runData[run]["PercentQ30"], "percent Q40": runData[run]["PercentQ40"]}})
-        PercentAssigned.update({run: {"Successful assigned reads": runData[run]["PercentAssignedReads"]}})
-        Yields.update({run: {"Assigned yield": runData[run]["AssignedYield"]}})
-    plotContent = [NumPolonies, PercentQs, PercentAssigned, Yields]
+    run_names = list(run_data.keys())
+    run_names.sort()
+    num_polonies = dict()
+    percent_qualities = dict()
+    percent_qualities = dict()
+    yields = dict()
+    for run in run_names:
+        num_polonies.update({run: {"Number of Polonies": run_data[run]["NumPolonies"]}})
+        percent_qualities.update({run: {"percent Q30": run_data[run]["PercentQ30"], "percent Q40": run_data[run]["PercentQ40"]}})
+        percent_qualities.update({run: {"Successful assigned reads": run_data[run]["PercentAssignedReads"]}})
+        yields.update({run: {"Assigned yield": run_data[run]["AssignedYield"]}})
+    plot_content = [num_polonies, percent_qualities, percent_qualities, yields]
     config = {
         "data_labels": [
             {"name": "Polony Numbers", "ylab": "Number of polonies", "format": "{d}"},
@@ -37,8 +37,8 @@ def plot_run_stats(runData, colorDict):
         "title": "bases2fastq: General Sequencing Run QC stats plot",
         "ylab": "QC",
     }
-    plotName = "Sequencing Run QC metrics"
-    plotHtml = bargraph.plot(plotContent, pconfig=config)
+    plot_name = "Sequencing Run QC metrics"
+    plot_html = bargraph.plot(plot_content, pconfig=config)
     anchor = "run_qc_metrics_plot"
     description = "bar plots of general QC metrics"
     helptext = """
@@ -49,26 +49,26 @@ def plot_run_stats(runData, colorDict):
     Percentage assinged: percentage of reads that has been assigned to any sample
     Data Yield: the total volume of data that has been assigned to any sample
     """
-    return plotHtml, plotName, anchor, description, helptext, plotContent
+    return plot_html, plot_name, anchor, description, helptext, plot_content
 
 
-def tabulate_run_stats(runData, colorDict):
+def tabulate_run_stats(run_data, color_dict):
     """
     Tabulate general information and statistics of each run
     """
-    plotContent = dict()
-    for s_name in runData.keys():
-        runStats = dict()
-        runStats.update({"#Polonies": runData[s_name]["NumPolonies"]})
-        runStats.update({"Percentage Assigned": runData[s_name]["PercentAssignedReads"]})
-        runStats.update({"Percentage Q30": runData[s_name]["PercentQ30"]})
-        runStats.update({"PercentageQ40": runData[s_name]["PercentQ40"]})
-        runStats.update({"Average Base Quality": runData[s_name]["QualityScoreMean"]})
-        runStats.update({"Yield(Gb)": runData[s_name]["AssignedYield"]})
-        runStats.update({"Read1 Average Length": runData[s_name]["Reads"][0]["MeanReadLength"]})
-        runStats.update({"Read2 Average Length": runData[s_name]["Reads"][1]["MeanReadLength"]})
-        plotContent.update({s_name: runStats})
-    headers = {header: {"title": header} for header in runStats.keys()}
+    plot_content = dict()
+    for s_name in run_data.keys():
+        run_stats = dict()
+        run_stats.update({"#Polonies": run_data[s_name]["NumPolonies"]})
+        run_stats.update({"Percentage Assigned": run_data[s_name]["PercentAssignedReads"]})
+        run_stats.update({"Percentage Q30": run_data[s_name]["PercentQ30"]})
+        run_stats.update({"PercentageQ40": run_data[s_name]["PercentQ40"]})
+        run_stats.update({"Average Base Quality": run_data[s_name]["QualityScoreMean"]})
+        run_stats.update({"Yield(Gb)": run_data[s_name]["AssignedYield"]})
+        run_stats.update({"Read1 Average Length": run_data[s_name]["Reads"][0]["MeanReadLength"]})
+        run_stats.update({"Read2 Average Length": run_data[s_name]["Reads"][1]["MeanReadLength"]})
+        plot_content.update({s_name: run_stats})
+    headers = {header: {"title": header} for header in run_stats.keys()}
     headers["#Polonies"].update({"format": "{d}"})
     config = {
         "descriptions": "Table of per sequencing run key informations",
@@ -77,8 +77,8 @@ def tabulate_run_stats(runData, colorDict):
         "title": "bases2fastq: General Sequencing Run QC stats table",
         "ylab": "QC",
     }
-    plotName = "Sequencing Run QC metrics table"
-    plotHtml = table.plot(plotContent, headers, pconfig=config)
+    plot_name = "Sequencing Run QC metrics table"
+    plot_html = table.plot(plot_content, headers, pconfig=config)
     anchor = "run_qc_metrics_table"
     description = "table of general QC metrics"
     helptext = """
@@ -101,32 +101,32 @@ def tabulate_run_stats(runData, colorDict):
     Read2 Average Length: the average length of Read 2
     \n
     """
-    return plotHtml, plotName, anchor, description, helptext, plotContent
+    return plot_html, plot_name, anchor, description, helptext, plot_content
 
 
-def plot_base_quality_hist(runData, colorDict):
+def plot_base_quality_hist(run_data, color_dict):
     # Prepare plot data for per base BQ histogram
-    bqHistDict = dict()
-    for s_name in runData.keys():
-        R1BaseQualityCounts = runData[s_name]["Reads"][0]["QualityScoreHistogram"]
-        R2BaseQualityCounts = runData[s_name]["Reads"][1]["QualityScoreHistogram"]
-        R1R2BaseQualityCounts = [r1 + r2 for r1, r2 in zip(R1BaseQualityCounts, R2BaseQualityCounts)]
-        totalBases = sum(R1R2BaseQualityCounts)
-        bqHistDict.update({s_name: {}})
-        for quality in range(0, len(R1R2BaseQualityCounts)):
-            bqHistDict[s_name].update({quality: R1R2BaseQualityCounts[quality] / totalBases * 100})
+    bq_hist_dict = dict()
+    for s_name in run_data.keys():
+        R1_base_quality_counts = run_data[s_name]["Reads"][0]["QualityScoreHistogram"]
+        R2_base_quality_counts = run_data[s_name]["Reads"][1]["QualityScoreHistogram"]
+        R1R2_base_quality_counts = [r1 + r2 for r1, r2 in zip(R1_base_quality_counts, R2_base_quality_counts)]
+        total_bases = sum(R1R2_base_quality_counts)
+        bq_hist_dict.update({s_name: {}})
+        for quality in range(0, len(R1R2_base_quality_counts)):
+            bq_hist_dict[s_name].update({quality: R1R2_base_quality_counts[quality] / total_bases * 100})
 
     # Prepare plot data for per read average BQ histogram
-    perReadQualityHistDict = dict()
-    for s_name in runData.keys():
-        R1QualityCounts = runData[s_name]["Reads"][0]["PerReadMeanQualityScoreHistogram"]
-        R2QualityCounts = runData[s_name]["Reads"][1]["PerReadMeanQualityScoreHistogram"]
-        totalReads = runData[s_name]["NumPolonies"] * 2
-        R1R2QualityCounts = [r1 + r2 for r1, r2 in zip(R1QualityCounts, R2QualityCounts)]
-        perReadQualityHistDict.update({s_name: {}})
-        for meanQuality in range(0, len(R1R2QualityCounts)):
-            perReadQualityHistDict[s_name].update({meanQuality: R1R2QualityCounts[meanQuality] / totalReads * 100})
-    plotContent = [bqHistDict, perReadQualityHistDict]
+    per_read_quality_hist_dict = dict()
+    for s_name in run_data.keys():
+        R1_quality_counts = run_data[s_name]["Reads"][0]["PerReadMeanQualityScoreHistogram"]
+        R2_quality_counts = run_data[s_name]["Reads"][1]["PerReadMeanQualityScoreHistogram"]
+        total_reads = run_data[s_name]["NumPolonies"] * 2
+        R1R2_quality_counts = [r1 + r2 for r1, r2 in zip(R1_quality_counts, R2_quality_counts)]
+        per_read_quality_hist_dict.update({s_name: {}})
+        for meanQuality in range(0, len(R1R2_quality_counts)):
+            per_read_quality_hist_dict[s_name].update({meanQuality: R1R2_quality_counts[meanQuality] / total_reads * 100})
+    plot_content = [bq_hist_dict, per_read_quality_hist_dict]
 
     # Config for switching dataset
     config = {
@@ -137,7 +137,7 @@ def plot_base_quality_hist(runData, colorDict):
                 "ymin": 0,
                 "ylabel": "Percentage at base quality",
                 "xlabel": "base quality",
-                "colors": colorDict,
+                "colors": color_dict,
             },
             {
                 "name": "per read quality histogram",
@@ -145,15 +145,15 @@ def plot_base_quality_hist(runData, colorDict):
                 "ymin": 0,
                 "ylabel": "Percentage at base quality",
                 "xlabel": "base quality",
-                "colors": colorDict,
+                "colors": color_dict,
             },
         ],
         "id": "per_run_bq_hist",
         "title": "bases2fastq: Quality Histograms",
         "ylab": "Percentage",
     }
-    plotHtml = linegraph.plot(plotContent, pconfig=config)
-    plotName = "Per Run Base Quality Histogram"
+    plot_html = linegraph.plot(plot_content, pconfig=config)
+    plot_name = "Per Run Base Quality Histogram"
     anchor = "bq_hist"
     description = "Histogram of base qualities"
     helptext = """
@@ -163,77 +163,77 @@ def plot_base_quality_hist(runData, colorDict):
     
     Per read quality histogram plots the distribution of average base quality of each read
     """
-    return plotHtml, plotName, anchor, description, helptext, plotContent
+    return plot_html, plot_name, anchor, description, helptext, plot_content
 
 
-def plot_base_quality_by_cycle(runData, colorDict):
+def plot_base_quality_by_cycle(run_data, color_dict):
     # Prepare plot data for median BQ of each cycle
 
     r1r2_split = 0
-    for s_name in runData.keys():
-        cycleDict = dict()
-        R1CycleNum = len(runData[s_name]["Reads"][0]["Cycles"])
+    for s_name in run_data.keys():
+        cycle_dict = dict()
+        R1CycleNum = len(run_data[s_name]["Reads"][0]["Cycles"])
         r1r2_split = max(r1r2_split, R1CycleNum)
 
-    medianDict = {}
-    for s_name in runData.keys():
-        cycleDict = dict()
-        R1CycleNum = len(runData[s_name]["Reads"][0]["Cycles"])
-        R2CycleNum = len(runData[s_name]["Reads"][0]["Cycles"])
-        for cycle in runData[s_name]["Reads"][0]["Cycles"]:
-            cycleNo = cycle["Cycle"]
-            cycleDict.update({cycleNo: cycle["QualityScore50thPercentile"]})
-        for cycle in runData[s_name]["Reads"][1]["Cycles"]:
-            cycleNo = int(cycle["Cycle"]) + r1r2_split
-            cycleDict.update({cycleNo: cycle["QualityScore50thPercentile"]})
-        medianDict.update({s_name: cycleDict})
+    median_dict = {}
+    for s_name in run_data.keys():
+        cycle_dict = dict()
+        R1CycleNum = len(run_data[s_name]["Reads"][0]["Cycles"])
+        R2CycleNum = len(run_data[s_name]["Reads"][0]["Cycles"])
+        for cycle in run_data[s_name]["Reads"][0]["Cycles"]:
+            cycle_no = cycle["Cycle"]
+            cycle_dict.update({cycle_no: cycle["QualityScore50thPercentile"]})
+        for cycle in run_data[s_name]["Reads"][1]["Cycles"]:
+            cycle_no = int(cycle["Cycle"]) + r1r2_split
+            cycle_dict.update({cycle_no: cycle["QualityScore50thPercentile"]})
+        median_dict.update({s_name: cycle_dict})
 
     # Prepare plot data for mean BQ of each cycle
-    meanDict = {}
-    for s_name in runData.keys():
+    mean_dict = {}
+    for s_name in run_data.keys():
         ###Update each sample cycle info
-        cycleDict = dict()
-        R1CycleNum = len(runData[s_name]["Reads"][0]["Cycles"])
-        R2CycleNum = len(runData[s_name]["Reads"][0]["Cycles"])
-        for cycle in runData[s_name]["Reads"][0]["Cycles"]:
-            cycleNo = cycle["Cycle"]
-            cycleDict.update({cycleNo: cycle["QualityScoreMean"]})
-        for cycle in runData[s_name]["Reads"][1]["Cycles"]:
-            cycleNo = int(cycle["Cycle"]) + r1r2_split
-            cycleDict.update({cycleNo: cycle["QualityScoreMean"]})
-        meanDict.update({s_name: cycleDict})
+        cycle_dict = dict()
+        R1CycleNum = len(run_data[s_name]["Reads"][0]["Cycles"])
+        R2CycleNum = len(run_data[s_name]["Reads"][0]["Cycles"])
+        for cycle in run_data[s_name]["Reads"][0]["Cycles"]:
+            cycle_no = cycle["Cycle"]
+            cycle_dict.update({cycle_no: cycle["QualityScoreMean"]})
+        for cycle in run_data[s_name]["Reads"][1]["Cycles"]:
+            cycle_no = int(cycle["Cycle"]) + r1r2_split
+            cycle_dict.update({cycle_no: cycle["QualityScoreMean"]})
+        mean_dict.update({s_name: cycle_dict})
 
     # Prepare plot data for %Q30 of each cycle
-    Q30Dict = {}
-    for s_name in runData.keys():
+    Q30_dict = {}
+    for s_name in run_data.keys():
         ###Update each sample cycle info
-        cycleDict = dict()
-        R1CycleNum = len(runData[s_name]["Reads"][0]["Cycles"])
-        R2CycleNum = len(runData[s_name]["Reads"][0]["Cycles"])
-        for cycle in runData[s_name]["Reads"][0]["Cycles"]:
-            cycleNo = cycle["Cycle"]
-            cycleDict.update({cycleNo: cycle["PercentQ30"]})
-        for cycle in runData[s_name]["Reads"][1]["Cycles"]:
-            cycleNo = int(cycle["Cycle"]) + r1r2_split
-            cycleDict.update({cycleNo: cycle["PercentQ30"]})
-        Q30Dict.update({s_name: cycleDict})
+        cycle_dict = dict()
+        R1CycleNum = len(run_data[s_name]["Reads"][0]["Cycles"])
+        R2CycleNum = len(run_data[s_name]["Reads"][0]["Cycles"])
+        for cycle in run_data[s_name]["Reads"][0]["Cycles"]:
+            cycle_no = cycle["Cycle"]
+            cycle_dict.update({cycle_no: cycle["PercentQ30"]})
+        for cycle in run_data[s_name]["Reads"][1]["Cycles"]:
+            cycle_no = int(cycle["Cycle"]) + r1r2_split
+            cycle_dict.update({cycle_no: cycle["PercentQ30"]})
+        Q30_dict.update({s_name: cycle_dict})
 
     # Prepare plot data for %Q40 of each cycle
-    Q40Dict = {}
-    for s_name in runData.keys():
-        cycleDict = dict()
-        R1CycleNum = len(runData[s_name]["Reads"][0]["Cycles"])
-        R2CycleNum = len(runData[s_name]["Reads"][0]["Cycles"])
-        for cycle in runData[s_name]["Reads"][0]["Cycles"]:
-            cycleNo = cycle["Cycle"]
-            cycleDict.update({cycleNo: cycle["PercentQ40"]})
-        for cycle in runData[s_name]["Reads"][1]["Cycles"]:
-            cycleNo = int(cycle["Cycle"]) + r1r2_split
-            cycleDict.update({cycleNo: cycle["PercentQ40"]})
-        Q40Dict.update({s_name: cycleDict})
+    Q40_dict = {}
+    for s_name in run_data.keys():
+        cycle_dict = dict()
+        R1CycleNum = len(run_data[s_name]["Reads"][0]["Cycles"])
+        R2CycleNum = len(run_data[s_name]["Reads"][0]["Cycles"])
+        for cycle in run_data[s_name]["Reads"][0]["Cycles"]:
+            cycle_no = cycle["Cycle"]
+            cycle_dict.update({cycle_no: cycle["PercentQ40"]})
+        for cycle in run_data[s_name]["Reads"][1]["Cycles"]:
+            cycle_no = int(cycle["Cycle"]) + r1r2_split
+            cycle_dict.update({cycle_no: cycle["PercentQ40"]})
+        Q40_dict.update({s_name: cycle_dict})
 
     # aggregate plot data
-    plotContent = [medianDict, meanDict, Q30Dict, Q40Dict]
+    plot_content = [median_dict, mean_dict, Q30_dict, Q40_dict]
     config = {
         "data_labels": [
             {"name": "Median", "xlab": "cycle", "ylab": "Base Quality", "ymax": 50},
@@ -242,14 +242,14 @@ def plot_base_quality_by_cycle(runData, colorDict):
             {"name": "%Q40", "xlab": "cycle", "ylab": "Percentage", "ymax": 100},
         ],
         "xPlotLines": [{"color": "#FF0000", "width": 2, "value": r1r2_split, "dashStyle": "Dash"}],
-        "colors": colorDict,
+        "colors": color_dict,
         "ymin": 0,
         "id": "per_run_quality_by_cycle",
         "title": "bases2fastq: Quality by cycles",
         "ylab": "QC",
     }
-    plotHtml = linegraph.plot(plotContent, pconfig=config)
-    plotName = "Quality statistics by cycle"
+    plot_html = linegraph.plot(plot_content, pconfig=config)
+    plot_name = "Quality statistics by cycle"
     anchor = "per_cycle_quality"
     description = "Per Run Base qualities by cycle"
     helptext = """
@@ -258,4 +258,4 @@ def plot_base_quality_by_cycle(runData, colorDict):
     are separated by a red dashed line, such that we can visualize R1 and R2 qualities 
     in one plot.
     """
-    return plotHtml, plotName, anchor, description, helptext, plotContent
+    return plot_html, plot_name, anchor, description, helptext, plot_content

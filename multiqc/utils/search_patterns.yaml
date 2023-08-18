@@ -19,6 +19,8 @@ bamtools/stats:
   num_lines: 10
 bases2fastq/persample:
   fn: "*_stats.json"
+  contents_re: ".*NumPolonies.*"
+  num_lines: 100
 bases2fastq/run:
   fn: "RunStats.json"
 bases2fastq/project:

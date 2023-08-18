@@ -10,28 +10,28 @@ Functions for plotting per sample information of bases2fastq
 """
 
 
-def tabulate_sample_stats(sampleData, groupLookupDict, sampleColor):
+def tabulate_sample_stats(sample_data, group_lookup_dict, sample_color):
     """
     Tabulate general information and statistics per sample
     """
-    plotContent = dict()
-    for s_name in sampleData.keys():
+    plot_content = dict()
+    for s_name in sample_data.keys():
         general_stats = dict()
-        general_stats.update({"Run Name": sampleData[s_name]["RunName"]})
-        general_stats.update({"Assigned Polonies": sampleData[s_name]["NumPolonies"]})
-        general_stats.update({"Sample Percentage Q30": sampleData[s_name]["PercentQ30"]})
-        general_stats.update({"Sample Percentage Q40": sampleData[s_name]["PercentQ40"]})
-        general_stats.update({"Sample Average Base Quality": sampleData[s_name]["QualityScoreMean"]})
-        general_stats.update({"Assigned Yield(Gb)": sampleData[s_name]["Yield"]})
-        general_stats.update({"Sample Read1 Average Length": sampleData[s_name]["Reads"][0]["MeanReadLength"]})
-        general_stats.update({"Sample Read2 Average Length": sampleData[s_name]["Reads"][1]["MeanReadLength"]})
-        general_stats.update({"Group": groupLookupDict[s_name]})
-        plotContent.update({s_name: general_stats})
+        general_stats.update({"Run Name": sample_data[s_name]["RunName"]})
+        general_stats.update({"Assigned Polonies": sample_data[s_name]["NumPolonies"]})
+        general_stats.update({"Sample Percentage Q30": sample_data[s_name]["PercentQ30"]})
+        general_stats.update({"Sample Percentage Q40": sample_data[s_name]["PercentQ40"]})
+        general_stats.update({"Sample Average Base Quality": sample_data[s_name]["QualityScoreMean"]})
+        general_stats.update({"Assigned Yield(Gb)": sample_data[s_name]["Yield"]})
+        general_stats.update({"Sample Read1 Average Length": sample_data[s_name]["Reads"][0]["MeanReadLength"]})
+        general_stats.update({"Sample Read2 Average Length": sample_data[s_name]["Reads"][1]["MeanReadLength"]})
+        general_stats.update({"Group": group_lookup_dict[s_name]})
+        plot_content.update({s_name: general_stats})
     headers = {header: {"title": header} for header in general_stats.keys()}
     headers["Assigned Polonies"].update({"format": "{d}"})
     config = {"description": "Table of per sample key informations", "no_beeswarm": True}
-    plotName = "Sample QC metrics table"
-    plotHtml = table.plot(plotContent, headers, pconfig=config)
+    plot_name = "Sample QC metrics table"
+    plot_html = table.plot(plot_content, headers, pconfig=config)
     anchor = "sample_qc_metrics_table"
     description = "table of general QC metrics by sample"
     helptext = """
@@ -61,40 +61,40 @@ def tabulate_sample_stats(sampleData, groupLookupDict, sampleColor):
     and then change group name manually. Then move the csv file into any location under the analyzed 
     directory.
     """
-    return plotHtml, plotName, anchor, description, helptext, plotContent
+    return plot_html, plot_name, anchor, description, helptext, plot_content
 
 
-def sequence_content_plot(sampleData, groupLookupDict, colorDict):
+def sequence_content_plot(sample_data, group_lookup_dict, color_dict):
     """Create the epic HTML for the FastQC sequence content heatmap"""
 
     # Prep the data
     data = dict()
 
     r1r2_split = 0
-    for s_name in sorted(sampleData.keys()):
+    for s_name in sorted(sample_data.keys()):
         data[s_name] = {}
-        R1 = sampleData[s_name]["Reads"][0]["Cycles"]
+        R1 = sample_data[s_name]["Reads"][0]["Cycles"]
         r1r2_split = max(r1r2_split, len(R1))
 
-    for s_name in sorted(sampleData.keys()):
+    for s_name in sorted(sample_data.keys()):
         data[s_name] = {}
-        R1 = sampleData[s_name]["Reads"][0]["Cycles"]
+        R1 = sample_data[s_name]["Reads"][0]["Cycles"]
         for cycle in range(len(R1)):
-            baseNo = str(cycle + 1)
-            data[s_name].update({baseNo: {base.lower(): R1[cycle]["BaseComposition"][base] for base in "ACTG"}})
-            data[s_name][baseNo]["base"] = baseNo
-            tot = sum([data[s_name][baseNo][base] for base in ["a", "c", "t", "g"]])
+            base_no = str(cycle + 1)
+            data[s_name].update({base_no: {base.lower(): R1[cycle]["BaseComposition"][base] for base in "ACTG"}})
+            data[s_name][base_no]["base"] = base_no
+            tot = sum([data[s_name][base_no][base] for base in ["a", "c", "t", "g"]])
             for base in ["a", "c", "t", "g"]:
-                data[s_name][baseNo][base] = (float(data[s_name][baseNo][base]) / float(tot)) * 100.0
+                data[s_name][base_no][base] = (float(data[s_name][base_no][base]) / float(tot)) * 100.0
 
-        R2 = sampleData[s_name]["Reads"][1]["Cycles"]
+        R2 = sample_data[s_name]["Reads"][1]["Cycles"]
         for cycle in range(len(R2)):
-            baseNo = str(cycle + 1 + r1r2_split)
-            data[s_name].update({baseNo: {base.lower(): R2[cycle]["BaseComposition"][base] for base in "ACTG"}})
-            data[s_name][baseNo]["base"] = baseNo
-            tot = sum([data[s_name][baseNo][base] for base in ["a", "c", "t", "g"]])
+            base_no = str(cycle + 1 + r1r2_split)
+            data[s_name].update({base_no: {base.lower(): R2[cycle]["BaseComposition"][base] for base in "ACTG"}})
+            data[s_name][base_no]["base"] = base_no
+            tot = sum([data[s_name][base_no][base] for base in ["a", "c", "t", "g"]])
             for base in ["a", "c", "t", "g"]:
-                data[s_name][baseNo][base] = (float(data[s_name][baseNo][base]) / float(tot)) * 100.0
+                data[s_name][base_no][base] = (float(data[s_name][base_no][base]) / float(tot)) * 100.0
     html = """<div id="fastqc_per_base_sequence_content_plot_div">
         <div class="alert alert-info">
             <span class="glyphicon glyphicon-hand-up"></span>
@@ -123,10 +123,10 @@ def sequence_content_plot(sampleData, groupLookupDict, colorDict):
         # Generate unique plot ID, needed in mqc_export_selectplots
         id=report.save_htmlid("per_base_composition_plot"),
         d=json.dumps(["bases2fastq", data]),
-        c=json.dumps(["bases2fastq", colorDict]),
+        c=json.dumps(["bases2fastq", color_dict]),
         r=r1r2_split,
     )
-    plotName = "Per Cycle Sequence Composition"
+    plot_name = "Per Cycle Sequence Composition"
     anchor = "per_cycle_sequence_content"
     description = "The proportion of each base position for which each of the four normal DNA bases has been called."
     helptext = """
@@ -163,134 +163,134 @@ def sequence_content_plot(sampleData, groupLookupDict, colorDict):
     by trimming and in most cases doesn't seem to adversely affect the downstream
     analysis._
     """
-    plotContent = data
-    return html, plotName, anchor, description, helptext, plotContent
+    plot_content = data
+    return html, plot_name, anchor, description, helptext, plot_content
 
 
-def plot_per_cycle_N_content(sampleData, groupLookupDict, colorDict):
+def plot_per_cycle_N_content(sample_data, group_lookup_dict, color_dict):
     data = dict()
     r1r2_split = 0
-    for s_name in sorted(sampleData.keys()):
+    for s_name in sorted(sample_data.keys()):
         data[s_name] = {}
-        R1 = sampleData[s_name]["Reads"][0]["Cycles"]
-        R1CycleNum = len(R1)
-        r1r2_split = max(r1r2_split, R1CycleNum)
+        R1 = sample_data[s_name]["Reads"][0]["Cycles"]
+        R1_cycle_num = len(R1)
+        r1r2_split = max(r1r2_split, R1_cycle_num)
 
-    for s_name in sorted(sampleData.keys()):
+    for s_name in sorted(sample_data.keys()):
         data[s_name] = {}
-        R1 = sampleData[s_name]["Reads"][0]["Cycles"]
-        R1CycleNum = len(R1)
+        R1 = sample_data[s_name]["Reads"][0]["Cycles"]
+        R1_cycle_num = len(R1)
         for cycle in range(len(R1)):
-            baseNo = str(cycle + 1)
+            base_no = str(cycle + 1)
             if sum(R1[cycle]["BaseComposition"].values()) == 0:
-                data[s_name].update({baseNo: 0})
+                data[s_name].update({base_no: 0})
             else:
                 data[s_name].update(
-                    {baseNo: R1[cycle]["BaseComposition"]["N"] / sum(R1[cycle]["BaseComposition"].values()) * 100.0}
+                    {base_no: R1[cycle]["BaseComposition"]["N"] / sum(R1[cycle]["BaseComposition"].values()) * 100.0}
                 )
 
-        R2 = sampleData[s_name]["Reads"][1]["Cycles"]
-        R2CycleNum = len(R2)
+        R2 = sample_data[s_name]["Reads"][1]["Cycles"]
+        R2_cycle_num = len(R2)
         for cycle in range(len(R2)):
-            baseNo = str(cycle + 1 + r1r2_split)
+            base_no = str(cycle + 1 + r1r2_split)
             if sum(R2[cycle]["BaseComposition"].values()) == 0:
-                data[s_name].update({baseNo: 0})
+                data[s_name].update({base_no: 0})
             else:
                 data[s_name].update(
-                    {baseNo: R2[cycle]["BaseComposition"]["N"] / sum(R2[cycle]["BaseComposition"].values()) * 100.0}
+                    {base_no: R2[cycle]["BaseComposition"]["N"] / sum(R2[cycle]["BaseComposition"].values()) * 100.0}
                 )
 
-    plotContent = data
+    plot_content = data
     config = {
         "xlab": "cycle",
         "ylab": "Base Quality",
         "ymax": 100,
         "xPlotLines": [{"color": "#FF0000", "width": 2, "value": r1r2_split, "dashStyle": "Dash"}],
-        "colors": colorDict,
+        "colors": color_dict,
         "ymin": 0,
         "id": "per_cycle_n_content",
         "title": "bases2fastq: per cycle N content percentage",
         "ylab": "Percentage",
     }
-    plotHtml = linegraph.plot(plotContent, pconfig=config)
-    plotName = "Per Cycle N Content"
+    plot_html = linegraph.plot(plot_content, pconfig=config)
+    plot_name = "Per Cycle N Content"
     anchor = "n_content"
     description = "N content by cycle"
     helptext = """
     This section plots the percentage of unidentified bases ("N" bases) by each sequencing cycle. 
     Read 1 and Read 2 are separated by a red dashed line
     """
-    return plotHtml, plotName, anchor, description, helptext, plotContent
+    return plot_html, plot_name, anchor, description, helptext, plot_content
 
 
-def plot_per_read_gc_hist(sampleData, groupLookupDict, sampleColor):
+def plot_per_read_gc_hist(sample_data, group_lookup_dict, sample_color):
     """
     Plot gc histogram per sample
     """
-    gcHistDict = dict()
-    for s_name in sampleData.keys():
-        R1GcCounts = sampleData[s_name]["Reads"][0]["PerReadGCCountHistogram"]
-        R2GcCounts = sampleData[s_name]["Reads"][1]["PerReadGCCountHistogram"]
-        R1R2GcCounts = [r1 + r2 for r1, r2 in zip(R1GcCounts, R2GcCounts)]
-        totalReads = sum(R1R2GcCounts)
-        gcHistDict.update({s_name: {}})
-        RLen = len(R1GcCounts)
+    gc_hist_dict = dict()
+    for s_name in sample_data.keys():
+        R1_gc_counts = sample_data[s_name]["Reads"][0]["PerReadGCCountHistogram"]
+        R2_gc_counts = sample_data[s_name]["Reads"][1]["PerReadGCCountHistogram"]
+        R1R2_gc_counts = [r1 + r2 for r1, r2 in zip(R1_gc_counts, R2_gc_counts)]
+        totalReads = sum(R1R2_gc_counts)
+        gc_hist_dict.update({s_name: {}})
+        RLen = len(R1_gc_counts)
         for gc in range(0, RLen):
-            gcHistDict[s_name].update({gc / RLen * 100: R1R2GcCounts[gc] / totalReads * 100})
+            gc_hist_dict[s_name].update({gc / RLen * 100: R1R2_gc_counts[gc] / totalReads * 100})
 
     # perReadQualityHistogram
-    plotContent = gcHistDict
+    plot_content = gc_hist_dict
     plot_function = linegraph.plot
 
     config = {
         "description": "GC",
         "xlab": "GC content",
         "ylab": "Percentage",
-        "colors": sampleColor,
+        "colors": sample_color,
         "id": "gc_hist",
         "title": "bases2fastq: per sample GC content histogram",
         "ylab": "Percentage",
     }
-    plotName = "per sample GC histogram"
-    plotHtml = linegraph.plot(plotContent, pconfig=config)
+    plot_name = "per sample GC histogram"
+    plot_html = linegraph.plot(plot_content, pconfig=config)
     anchor = "gc_histogram"
     description = "The histogram of distributions of percentage GC in each read"
     helptext = """
     This section plots the distribution of percentage GC in each reads (range: 0-100)
     """
-    return plotHtml, plotName, anchor, description, helptext, plotContent
+    return plot_html, plot_name, anchor, description, helptext, plot_content
 
 
-def plot_adapter_content(sampleData, groupLookupDict, sampleColor):
+def plot_adapter_content(sample_data, group_lookup_dict, sample_color):
     """
     Plot adapter content per sample
     """
-    plotContent = dict()
+    plot_content = dict()
 
     r1r2_split = 0
-    for s_name in sampleData.keys():
-        plotContent.update({s_name: {}})
+    for s_name in sample_data.keys():
+        plot_content.update({s_name: {}})
         # Read 1
-        cycles = sampleData[s_name]["Reads"][0]["Cycles"]
-        R1CycleNum = len(cycles)
-        r1r2_split = max(r1r2_split, R1CycleNum)
+        cycles = sample_data[s_name]["Reads"][0]["Cycles"]
+        R1_cycle_num = len(cycles)
+        r1r2_split = max(r1r2_split, R1_cycle_num)
 
-    for s_name in sampleData.keys():
-        plotContent.update({s_name: {}})
+    for s_name in sample_data.keys():
+        plot_content.update({s_name: {}})
         # Read 1
-        cycles = sampleData[s_name]["Reads"][0]["Cycles"]
-        R1CycleNum = len(cycles)
+        cycles = sample_data[s_name]["Reads"][0]["Cycles"]
+        R1_cycle_num = len(cycles)
         for cycle in cycles:
-            cycleNo = int(cycle["Cycle"])
-            adapterPercent = cycle["PercentReadsTrimmed"]
-            plotContent[s_name].update({cycleNo: adapterPercent})
+            cycle_no = int(cycle["Cycle"])
+            adapter_percent = cycle["PercentReadsTrimmed"]
+            plot_content[s_name].update({cycle_no: adapter_percent})
         # Read 2
-        cycles = sampleData[s_name]["Reads"][1]["Cycles"]
-        R2CycleNum = len(cycles)
+        cycles = sample_data[s_name]["Reads"][1]["Cycles"]
+        R2_cycle_num = len(cycles)
         for cycle in cycles:
-            cycleNo = int(cycle["Cycle"]) + r1r2_split
-            adapterPercent = cycle["PercentReadsTrimmed"]
-            plotContent[s_name].update({cycleNo: adapterPercent})
+            cycle_no = int(cycle["Cycle"]) + r1r2_split
+            adapter_percent = cycle["PercentReadsTrimmed"]
+            plot_content[s_name].update({cycle_no: adapter_percent})
     config = {
         "description": "adapter content",
         "xlab": "Cycle",
@@ -301,12 +301,12 @@ def plot_adapter_content(sampleData, groupLookupDict, sampleColor):
         "title": "bases2fastq: per cycle adapter content",
         "ylab": "Percentage",
     }
-    plotName = "Per Sample Adapter Content"
-    config.update({"colors": sampleColor})
-    plotHtml = linegraph.plot(plotContent, pconfig=config)
+    plot_name = "Per Sample Adapter Content"
+    config.update({"colors": sample_color})
+    plot_html = linegraph.plot(plot_content, pconfig=config)
     anchor = "adapter_content"
     description = "The plot of adapter content by cycle"
     helptext = """
     This section plots the adapter content percentage by cycles
     """
-    return plotHtml, plotName, anchor, description, helptext, plotContent
+    return plot_html, plot_name, anchor, description, helptext, plot_content

@@ -62,8 +62,7 @@ setup(
         "requests",
         "rich>=10",
         "rich-click",
-        "spectra>=0.0.10",
-        "seaborn",
+        "spectra>=0.0.10"
     ],
     entry_points={
         "console_scripts": [
