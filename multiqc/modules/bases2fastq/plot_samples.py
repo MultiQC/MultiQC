@@ -27,9 +27,46 @@ def tabulate_sample_stats(sample_data, group_lookup_dict, sample_color):
         general_stats.update({"Sample Read2 Average Length": sample_data[s_name]["Reads"][1]["MeanReadLength"]})
         general_stats.update({"Group": group_lookup_dict[s_name]})
         plot_content.update({s_name: general_stats})
+
     headers = {header: {"title": header} for header in general_stats.keys()}
-    headers["Assigned Polonies"].update({"format": "{d}"})
+
+    headers["Run Name"] = {
+        "description": "The name of runs",
+        "scale": "Blues",
+    }
+    headers["Assigned Polonies"] = {
+        "description": "Number of polonies assigned to this sample",
+        "format": "{d}",
+        "max": 1000000000,
+        "min": 0,
+        "scale": "RdYlGn",
+    }
+    headers["Sample Percentage Q30"] = {
+        "description": "Percent of reads with perfect index (0 mismatches)",
+        "max": 90,
+        "min": 0,
+        "scale": "RdYlGn",
+        "suffix": "%",
+    }
+    headers["Percentage Q40"] = {
+        "description": "Percent of reads with perfect index (0 mismatches)",
+        "max": 80,
+        "min": 0,
+        "scale": "RdYlGn",
+        "suffix": "%",
+    }
+    headers["Yield(Gb)"] = {"description": "Percent of reads with perfect index (0 mismatches)", "scale": "Greens"}
+    headers["Read1 Average Length"] = {
+        "description": "Percent of reads with perfect index (0 mismatches)",
+        "scale": "Blues",
+    }
+    headers["Read2 Average Length"] = {
+        "description": "Percent of reads with perfect index (0 mismatches)",
+        "scale": "Blues",
+    }
+
     config = {"description": "Table of per sample key informations", "no_beeswarm": True}
+
     plot_name = "Sample QC metrics table"
     plot_html = table.plot(plot_content, headers, pconfig=config)
     anchor = "sample_qc_metrics_table"

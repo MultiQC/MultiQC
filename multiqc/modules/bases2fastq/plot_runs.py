@@ -64,14 +64,59 @@ def tabulate_run_stats(run_data, color_dict):
         run_stats.update({"#Polonies": run_data[s_name]["NumPolonies"]})
         run_stats.update({"Percentage Assigned": run_data[s_name]["PercentAssignedReads"]})
         run_stats.update({"Percentage Q30": run_data[s_name]["PercentQ30"]})
-        run_stats.update({"PercentageQ40": run_data[s_name]["PercentQ40"]})
+        run_stats.update({"Percentage Q40": run_data[s_name]["PercentQ40"]})
         run_stats.update({"Average Base Quality": run_data[s_name]["QualityScoreMean"]})
         run_stats.update({"Yield(Gb)": run_data[s_name]["AssignedYield"]})
         run_stats.update({"Read1 Average Length": run_data[s_name]["Reads"][0]["MeanReadLength"]})
         run_stats.update({"Read2 Average Length": run_data[s_name]["Reads"][1]["MeanReadLength"]})
         plot_content.update({s_name: run_stats})
+
     headers = {header: {"title": header} for header in run_stats.keys()}
-    headers["#Polonies"].update({"format": "{d}"})
+
+    headers["#Polonies"] = {
+        "title": "#Polonies",
+        "format": "{d}",
+        "description": "Percent of reads with perfect index (0 mismatches)",
+        "max": 1000000000,
+        "min": 0,
+        "scale": "RdYlGn",
+    }
+    headers["Percentage Assigned"] = {
+        "title": "Percentage Assigned",
+        "description": "Percent of reads assigned.",
+        "max": 100,
+        "min": 0,
+        "scale": "RdYlGn",
+        "suffix": "%",
+    }
+    headers["Percentage Q30"] = {
+        "title": "Percentage Q30",
+        "description": "Percent of bases >Q30. Q30 indicates an incorrect base call probability of 1 in 1,000, which equals a 99.9% confidence rate.",
+        "max": 90,
+        "min": 0,
+        "scale": "RdYlGn",
+        "suffix": "%",
+    }
+    headers["Percentage Q40"] = {
+        "title": "Percentage Q40",
+        "description": "Percent of bases >Q40. Q40 indicates an incorrect base call probability of 1 in 10,000, which equals a 99.99% confidence rate.",
+        "max": 80,
+        "min": 0,
+        "scale": "RdYlGn",
+        "suffix": "%",
+    }
+    headers["Yield(Gb)"] = {"title": "Yield(Gb)", "description": "Total Yield(GB) of run", "scale": "Greens"}
+    headers["Read1 Average Length"] = {
+        "title": "Read1 Average Length",
+        "description": "Average length of read 1",
+        "scale": "Blues",
+    }
+    headers["Read2 Average Length"] = {
+        "title": "Read2 Average Length",
+        "description": "Average length of read 2",
+        "scale": "Blues",
+    }
+
     config = {
         "descriptions": "Table of per sequencing run key informations",
         "col1_header": "Run Name",
@@ -79,6 +124,7 @@ def tabulate_run_stats(run_data, color_dict):
         "title": "bases2fastq: General Sequencing Run QC stats table",
         "ylab": "QC",
     }
+
     plot_name = "Sequencing Run QC metrics table"
     plot_html = table.plot(plot_content, headers, pconfig=config)
     anchor = "run_qc_metrics_table"
