@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 
-""" MultiQC module to parse output from Lima """
+""" MultiQC module to parse output from Freyja """
 
 import logging
 from collections import OrderedDict
