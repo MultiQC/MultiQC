@@ -2,18 +2,18 @@ import copy
 import json
 import logging
 import os
+import random
 import uuid
 from io import StringIO
-import random
 
 import numpy as np
 import pandas as pd
 
 from multiqc.modules.base_module import BaseMultiqcModule
+from multiqc.utils import mqc_colour
 
 from .plot_runs import *
 from .plot_samples import *
-from multiqc.utils import mqc_colour
 
 log = logging.getLogger(__name__)
 
@@ -65,12 +65,12 @@ class MultiqcModule(BaseMultiqcModule):
             # skip run if in user provider ignore list
             if self.is_ignore_sample(run_analysis_name):
                 continue
-            
+
             num_runs += 1
 
             self.b2f_run_data[run_analysis_name] = data_dict
             self.add_data_source(f=f, s_name=run_analysis_name, module="bases2fastq")
-        
+
         # if all RunStats.json too large, none will be found.  Guide customer and Exit at this point.
         if len(self.sample_id_to_run) == 0:
             log.error("No run-stats were found.  Either file-size above limit or RunStats.json does not exist.")
@@ -79,8 +79,7 @@ class MultiqcModule(BaseMultiqcModule):
 
         log.info(f"Found {num_runs} total RunStats.json")
 
-        
-        #Checking if run lengths configurations are the same for all samples.    
+        # Checking if run lengths configurations are the same for all samples.
         run_r1r2_lens = [
             str(len(self.b2f_run_data[s]["Reads"][0]["Cycles"]))
             + "+"
@@ -104,13 +103,9 @@ class MultiqcModule(BaseMultiqcModule):
             for rl in run_r1r2_lens_dict.keys():
                 log.warning(f"These runs have {rl} read length configuration:{','.join(run_r1r2_lens_dict[rl])}")
 
-        
-        
-        
-        
         # Read project info and make it into a lookup dictionary of {sample:project}:
         project_lookup_dict = {}
-        num_projects=0
+        num_projects = 0
         for f in self.find_log_files("bases2fastq/project"):
             data_dict = json.loads(f["f"])
             samples = data_dict["Samples"]
@@ -126,7 +121,7 @@ class MultiqcModule(BaseMultiqcModule):
 
             run_analysis_name = "__".join([run_name, analysis_id])
             run_analysis_name = self.clean_s_name(run_analysis_name)
-            
+
             project = data_dict.get("Project", "DefaultProject")
 
             # run stats no longer needed - save on memory
@@ -135,19 +130,17 @@ class MultiqcModule(BaseMultiqcModule):
             for sample_name in samples:
                 run_analysis_sample_name = "__".join([run_analysis_name, sample_name])
                 project_lookup_dict[run_analysis_sample_name] = project
-                
+
             # skip project if in user provider ignore list
             if self.is_ignore_sample(run_analysis_name):
                 continue
-            
+
             num_projects += 1
 
             self.add_data_source(f=f, s_name=project, module="bases2fastq")
 
         log.info(f"Found {num_projects} Projects within bases2fastq results")
 
-        
-        
         #
         # Read per sample stats json as dictionaries
         #
@@ -163,7 +156,7 @@ class MultiqcModule(BaseMultiqcModule):
 
             run_analysis_name = self.sample_id_to_run[sample_id]
             run_analysis_name = self.clean_s_name(run_analysis_name)
-            
+
             sample_name = data_dict["SampleName"]
             run_analysis_sample_name = "__".join([run_analysis_name, sample_name])
             run_analysis_name = self.clean_s_name(run_analysis_name)
@@ -184,7 +177,7 @@ class MultiqcModule(BaseMultiqcModule):
             self.b2f_data[run_analysis_sample_name]["RunName"] = run_analysis_name
 
             self.add_data_source(f=f, s_name=run_analysis_sample_name, module="bases2fastq")
-        
+
         # ensure run/sample data found
         if len(self.b2f_data) == 0:
             log.error("No Samples are found.")
@@ -193,7 +186,6 @@ class MultiqcModule(BaseMultiqcModule):
         log.info(
             f"Found {num_samples} samples within bases2fastq results, and {len(self.b2f_data)} samples have run information and enough polonies"
         )
-
 
         # Group by run name
         self.group_dict = dict()
@@ -215,7 +207,7 @@ class MultiqcModule(BaseMultiqcModule):
                     self.group_dict.update({s_group: []})
                 self.group_dict[s_group].append(s_name)
                 self.group_lookup_dict.update({s_name: s_group})
-        
+
         # Assign color for each group
         n_colors = len(self.group_dict.keys())
         """
@@ -225,17 +217,23 @@ class MultiqcModule(BaseMultiqcModule):
         ]
         """
         color_getter = mqc_colour.mqc_colour_scale()
-        palette = sum([color_getter.get_colours(hue) for hue in ["Set2","Pastel1","Accent","Set1","Set3","Dark2","Paired","Pastel2"]],[])
+        palette = sum(
+            [
+                color_getter.get_colours(hue)
+                for hue in ["Set2", "Pastel1", "Accent", "Set1", "Set3", "Dark2", "Paired", "Pastel2"]
+            ],
+            [],
+        )
         if len(self.group_dict) > len(palette):
             hex_range = 2**24
-            extra_colors = [hex(random.randrange(0, hex_range)) for _ in range(len(self.group_dict),len(palette))]
+            extra_colors = [hex(random.randrange(0, hex_range)) for _ in range(len(self.group_dict), len(palette))]
             palette = palette + extra_colors
         group_color = {g: c for g, c in zip(self.group_dict.keys(), palette[: len(self.group_dict)])}
         self.sample_color = dict()
         for s_name in self.b2f_data.keys():
             self.sample_color.update({s_name: group_color[self.group_lookup_dict[s_name]]})
-        self.run_color = copy.deepcopy(group_color)  #Make sure that run colors and group colors match
-        
+        self.run_color = copy.deepcopy(group_color)  # Make sure that run colors and group colors match
+
         # Read custom group info
         self.group_info_exist = False
         for f in self.find_log_files("bases2fastq/group"):
@@ -263,10 +261,16 @@ class MultiqcModule(BaseMultiqcModule):
         ]
         """
         color_getter = mqc_colour.mqc_colour_scale()
-        palette = sum([color_getter.get_colours(hue) for hue in ["Set2","Pastel1","Accent","Set1","Set3","Dark2","Paired","Pastel2"]],[])
+        palette = sum(
+            [
+                color_getter.get_colours(hue)
+                for hue in ["Set2", "Pastel1", "Accent", "Set1", "Set3", "Dark2", "Paired", "Pastel2"]
+            ],
+            [],
+        )
         if len(self.group_dict) > len(palette):
             hex_range = 2**24
-            extra_colors = [hex(random.randrange(0, hex_range)) for _ in range(len(self.group_dict),len(palette))]
+            extra_colors = [hex(random.randrange(0, hex_range)) for _ in range(len(self.group_dict), len(palette))]
             palette = palette + extra_colors
         group_color = {g: c for g, c in zip(self.group_dict.keys(), palette[: len(self.group_dict.keys())])}
         self.sample_color = dict()
