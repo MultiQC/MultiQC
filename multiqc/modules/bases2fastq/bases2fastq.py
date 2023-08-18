@@ -64,6 +64,7 @@ class MultiqcModule(BaseMultiqcModule):
 
             # skip run if in user provider ignore list
             if self.is_ignore_sample(run_analysis_name):
+                log.warning(f"skipping run:{run_analysis_name} due to --ignore-sample selection")
                 continue
 
             num_runs += 1
@@ -122,17 +123,18 @@ class MultiqcModule(BaseMultiqcModule):
             run_analysis_name = "__".join([run_name, analysis_id])
             run_analysis_name = self.clean_s_name(run_analysis_name)
 
-            project = data_dict.get("Project", "DefaultProject")
+            project = self.clean_s_name(data_dict.get("Project", "DefaultProject"))
 
             # run stats no longer needed - save on memory
             del data_dict
 
             for sample_name in samples:
-                run_analysis_sample_name = "__".join([run_analysis_name, sample_name])
+                run_analysis_sample_name = self.clean_s_name("__".join([run_analysis_name, sample_name]))
                 project_lookup_dict[run_analysis_sample_name] = project
 
             # skip project if in user provider ignore list
             if self.is_ignore_sample(run_analysis_name):
+                log.warning(f"skipping project:{run_analysis_name} due to --ignore-sample selection")
                 continue
 
             num_projects += 1
@@ -160,6 +162,7 @@ class MultiqcModule(BaseMultiqcModule):
             sample_name = data_dict["SampleName"]
             run_analysis_sample_name = "__".join([run_analysis_name, sample_name])
             run_analysis_name = self.clean_s_name(run_analysis_name)
+
             num_polonies = data_dict["NumPolonies"]
             if num_polonies < self.minimum_polonies:
                 log.warning(
@@ -168,7 +171,8 @@ class MultiqcModule(BaseMultiqcModule):
                 continue
 
             # skip run if in user provider ignore list
-            if self.is_ignore_sample(run_analysis_name):
+            if self.is_ignore_sample(run_analysis_sample_name):
+                log.warning(f"skipping sample:{run_analysis_sample_name} due to --ignore-sample selection")
                 continue
 
             num_samples += 1
