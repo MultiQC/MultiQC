@@ -33,6 +33,7 @@ class MultiqcModule(BaseMultiqcModule):
         self.readlen = {}
         self.encoding = {}
         self.junctions = {}
+        self.endedness = {}
 
         # parse ngsderive summary file
         expected_header_count_strandedness = 5
@@ -40,6 +41,8 @@ class MultiqcModule(BaseMultiqcModule):
         expected_header_count_readlen = 4
         expected_header_count_encoding = 3
         expected_header_count_junctions = 9
+        expected_header_count_endedness_wo_rpt = 6
+        expected_header_count_endedness_w_rpt = 7
 
         for f in self.find_log_files("ngsderive/strandedness"):
             self.parse(
@@ -81,18 +84,38 @@ class MultiqcModule(BaseMultiqcModule):
                 expected_header_count_junctions,
             )
 
+        for f in self.find_log_files("ngsderive/endedness"):
+            self.parse(
+                self.endedness,
+                f,
+                "endedness",
+                expected_header_count_endedness_wo_rpt,
+            )
+            self.parse(self.endedness, f, "endedness", expected_header_count_endedness_w_rpt)
+
         self.strandedness = self.ignore_samples(self.strandedness)
         self.instrument = self.ignore_samples(self.instrument)
         self.readlen = self.ignore_samples(self.readlen)
         self.encoding = self.ignore_samples(self.encoding)
         self.junctions = self.ignore_samples(self.junctions)
+        self.endedness = self.ignore_samples(self.endedness)
 
         num_results_found = max(
-            [len(d) for d in [self.strandedness, self.instrument, self.readlen, self.encoding, self.junctions]]
+            [
+                len(d)
+                for d in [
+                    self.strandedness,
+                    self.instrument,
+                    self.readlen,
+                    self.encoding,
+                    self.junctions,
+                    self.endedness,
+                ]
+            ]
         )
         if num_results_found == 0:
             raise UserWarning
-        log.info("Found {} reports".format(num_results_found))
+        log.info(f"Found {num_results_found} reports")
 
         if self.strandedness:
             self.add_strandedness_data()
@@ -108,6 +131,9 @@ class MultiqcModule(BaseMultiqcModule):
 
         if self.junctions:
             self.add_junctions_data()
+
+        if self.endedness:
+            self.add_endedness_data()
 
     def probe_file_for_dictreader_kwargs(self, f, expected_header_count):
         """In short, this function was created to figure out which
@@ -454,4 +480,80 @@ class MultiqcModule(BaseMultiqcModule):
             description="""Junction annotations provided by ngsderive. For more information, please see
             [the documentation](https://stjudecloud.github.io/ngsderive/subcommands/junction_annotation/).""",
             plot=bargraph.plot([bardata, bardata], cats, pconfig),
+        )
+
+    def add_endedness_data(self):
+        # Write data to file
+        self.write_data_file(self.endedness, "ngsderive_endedness")
+
+        general_data = {}
+        rpt_present = False
+        for sample, endedness_data in self.endedness.items():
+            general_data[sample] = {
+                "endedness": endedness_data.get("Endedness"),
+            }
+            if "Reads per template" in endedness_data:
+                rpt_present = True
+
+        general_headers = OrderedDict()
+        general_headers["endedness"] = {
+            "title": "Predicted Endedness",
+            "description": "Predicted library endedness from ngsderive",
+        }
+        self.general_stats_addcols(general_data, general_headers)
+
+        headers = OrderedDict()
+        headers["f+l-"] = {
+            "title": "f+l- count",
+            "description": "Number of reads with the 'first in template' FLAG set and the 'last in template' FLAG unset",
+            "format": "{:,.d}",
+        }
+        headers["f-l+"] = {
+            "title": "f-l+ count",
+            "description": "Number of reads with the 'first in template' FLAG unset and the 'last in template' FLAG set",
+            "format": "{:,.d}",
+        }
+        headers["f-l-"] = {
+            "title": "f-l- count",
+            "description": "Number of reads with the 'first in template' FLAG unset and the 'last in template' FLAG unset",
+            "format": "{:,.d}",
+        }
+        headers["f+l+"] = {
+            "title": "f+l+ count",
+            "description": "Number of reads with the 'first in template' FLAG set and the 'last in template' FLAG set",
+            "format": "{:,.d}",
+        }
+        if rpt_present:
+            headers["RPT"] = {
+                "title": "Reads per template",
+                "description": "Average number of reads per QNAME template",
+                "format": "{:,.4f}",
+            }
+        headers["endedness"] = {
+            "title": "Predicted Endedness",
+            "description": "Predicted library endedness from ngsderive",
+        }
+
+        table_data = {}
+        for sample, endedness_data in self.endedness.items():
+            table_data[sample] = {}
+            table_data[sample]["f+l-"] = endedness_data.get("f+l-")
+            table_data[sample]["f-l+"] = endedness_data.get("f-l+")
+            table_data[sample]["f-l-"] = endedness_data.get("f-l-")
+            table_data[sample]["f+l+"] = endedness_data.get("f+l+")
+            table_data[sample]["RPT"] = endedness_data.get("Reads per template")
+            table_data[sample]["endedness"] = endedness_data.get("Endedness")
+
+        # Config for the plot
+        config = {
+            "id": "ngsderive_endedness_plot",
+            "title": "ngsderive: Endedness",
+        }
+
+        self.add_section(
+            name="Endedness",
+            anchor="ngsderive-endedness",
+            description="""Predicted library endedness provided by ngsderive. For more information, please see
+            [the documentation](https://stjudecloud.github.io/ngsderive/subcommands/endedness/).""",
+            plot=table.plot(table_data, headers, config),
         )
