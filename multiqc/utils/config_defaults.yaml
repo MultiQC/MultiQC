@@ -124,7 +124,8 @@ show_hide_patterns: []
 show_hide_regex: []
 show_hide_mode: []
 no_version_check: false
-log_filesize_limit: 10000000
+log_filesize_limit: 50000000
+filesearch_lines_limit: 1000
 report_readerrors: false
 skip_generalstats: false
 data_format_extensions:
@@ -668,6 +669,10 @@ module_order:
       module_tag:
         - DNA
   - leehom:
+      module_tag:
+        - RNA
+        - DNA
+  - librarian:
       module_tag:
         - RNA
         - DNA

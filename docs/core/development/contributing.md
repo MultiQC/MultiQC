@@ -1,7 +1,6 @@
 ---
 title: Contributing
 description: Guides for how to contribute to the MultiQC code base
-order: 6
 ---
 
 # Documentation

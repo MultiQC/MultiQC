@@ -25,11 +25,6 @@ def plot(data, headers=None, pconfig=None):
     if pconfig is None:
         pconfig = {}
 
-    # Allow user to overwrite any given config for this plot
-    if "id" in pconfig and pconfig["id"] and pconfig["id"] in config.custom_plot_config:
-        for k, v in config.custom_plot_config[pconfig["id"]].items():
-            pconfig[k] = v
-
     # Make a datatable object
     dt = table_object.datatable(data, headers, pconfig)
 
@@ -131,7 +126,7 @@ def make_table(dt):
         )
 
         # Make a colour scale
-        if header["scale"] == False:
+        if header["scale"] is False:
             c_scale = None
         else:
             c_scale = mqc_colour.mqc_colour_scale(header["scale"], header["dmin"], header["dmax"], id=table_id)
@@ -162,7 +157,7 @@ def make_table(dt):
                     dmin = header["dmin"]
                     dmax = header["dmax"]
                     percentage = ((float(val) - dmin) / (dmax - dmin)) * 100
-                    # Treat 0 as 0-width and make bars width of absoluate value
+                    # Treat 0 as 0-width and make bars width of absolute value
                     if header.get("bars_zero_centrepoint"):
                         dmax = max(abs(header["dmin"]), abs(header["dmax"]))
                         dmin = 0
@@ -397,7 +392,7 @@ def make_table(dt):
             <h4 class="modal-title">{title}: Columns</h4>
           </div>
           <div class="modal-body">
-            <p>Uncheck the tick box to hide columns. Click and drag the handle on the left to change order.</p>
+            <p>Uncheck the tick box to hide columns. Click and drag the handle on the left to change order. Table ID: <code>{tid}</code></p>
             <p>
                 <button class="btn btn-default btn-sm mqc_configModal_bulkVisible" data-target="#{tid}" data-action="showAll">Show All</button>
                 <button class="btn btn-default btn-sm mqc_configModal_bulkVisible" data-target="#{tid}" data-action="showNone">Show None</button>
