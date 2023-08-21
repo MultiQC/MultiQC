@@ -7,7 +7,6 @@ import uuid
 from io import StringIO
 
 import numpy as np
-import pandas as pd
 
 from multiqc.modules.base_module import BaseMultiqcModule
 from multiqc.utils import mqc_colour
