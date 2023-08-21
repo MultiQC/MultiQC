@@ -95,6 +95,7 @@ MultiQC Modules:
     Kaiju: modules/kaiju.md
     Kraken: modules/kraken.md
     MACS2: modules/macs2.md
+    mapDamage: modules/mapdamage.md
     Methyl QA: modules/methylQA.md
     mirtop: modules/mirtop.md
     miRTrace: modules/mirtrace.md
