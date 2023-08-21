@@ -110,29 +110,6 @@ class MultiqcModule(BaseMultiqcModule):
             log.warning("Could not parse mapDamage misincorporation file: '{}'".format(f["fn"]))
             return None
 
-    ## Parse misincorporation file into a dict with 1 key ('dmg_5p' or 'dmg_3p') and 1 value (list of 2nd column values)
-    def parseMisincorporation_old(self, f):
-        """Parse the misincorporation data from mapDamage output files"""
-        try:
-            open_f = open(f, "r")
-        except Exception as e:
-            print(e)
-            log.warning("Could not parse mapDamage misincorporation file: '{}'".format(f["fn"]))
-            return None
-        misincorporation_dict = {}
-        values = []
-        for line in open_f:
-            if line.startswith("#"):
-                continue
-            else:
-                line = line.rstrip().split("\t")
-                if line[0] == "pos":
-                    readend = line[1][0:2]
-                else:
-                    values.append(float(line[1]))
-        misincorporation_dict["dmg_" + readend] = values
-        return misincorporation_dict
-
     ## Parse length distribution file into a dict with 2 keys ('lendist_fw' and 'lendist_rv') and 1 value each (dict of {length : count})
     def parseLengthDistribution(self, f):
         """Parse the length distribution data from mapDamage output files"""
@@ -156,31 +133,6 @@ class MultiqcModule(BaseMultiqcModule):
             print(e)
             log.warning("Could not parse mapDamage length distribution file: '{}'".format(f["fn"]))
             return None
-
-    ## Parse length distribution file into a dict with 2 keys ('lendist_fw' and 'lendist_rv') and 1 value each (dict of {length : count})
-    def parseLengthDistribution_old(self, f):
-        """Parse the length distribution data from mapDamage output files"""
-        try:
-            open_f = open(f, "r")
-        except Exception as e:
-            print(e)
-            log.warning("Could not parse mapDamage length distribution file: '{}'".format(f["fn"]))
-            return None
-        length_distribution_dict = {"lendist_fw": {}, "lendist_rv": {}}
-        for line in open_f:
-            ## Skip commented lines and header
-            if line.startswith("#") or line.startswith("Std"):
-                continue
-            else:
-                ## Lines are tab-separated, first column is strand, second column is read length, third column is count
-                line = line.rstrip().split("\t")
-                if line[0] == "+":
-                    strand = "fw"
-                else:
-                    strand = "rv"
-
-                length_distribution_dict["lendist_" + strand][line[1]] = int(line[2])
-        return length_distribution_dict
 
     # Parse input files
     def parseInput(self, f):
