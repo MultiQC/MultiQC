@@ -33,7 +33,6 @@ class MultiqcModule(BaseMultiqcModule):
 
         # Find and load JSON file
         for f in self.find_log_files("mapdamage", filehandles=True):
-            log.info("Found mapDamage report {}".format(f))
             self.parseInput(f)
 
         # Filter to strip out ignored sample names
@@ -45,11 +44,6 @@ class MultiqcModule(BaseMultiqcModule):
         # Basic Stats Table, use generic function to add data to general table
         self.dmgprof_misinc_stats(self.threepGtoAfreq_data, "3 Prime", "G>A")
         self.dmgprof_misinc_stats(self.fivepCtoTfreq_data, "5 Prime", "C>T")
-
-        log.info("self.threepGtoAfreq_data: {}".format(self.threepGtoAfreq_data))
-        log.info("self.fivepCtoTfreq_data: {}".format(self.fivepCtoTfreq_data))
-        log.info("self.lgdist_fw_data: {}".format(self.lgdist_fw_data))
-        log.info("self.lgdist_rv_data: {}".format(self.lgdist_rv_data))
 
         # Add plots
         if len(self.threepGtoAfreq_data) > 0:
