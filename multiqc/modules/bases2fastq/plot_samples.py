@@ -1,4 +1,5 @@
 import json
+from collections import OrderedDict
 
 import numpy as np
 
@@ -17,52 +18,54 @@ def tabulate_sample_stats(sample_data, group_lookup_dict, sample_color):
     plot_content = dict()
     for s_name in sample_data.keys():
         general_stats = dict()
-        general_stats.update({"Run Name": sample_data[s_name]["RunName"]})
-        general_stats.update({"Assigned Polonies": sample_data[s_name]["NumPolonies"]})
-        general_stats.update({"Sample Percentage Q30": sample_data[s_name]["PercentQ30"]})
-        general_stats.update({"Sample Percentage Q40": sample_data[s_name]["PercentQ40"]})
-        general_stats.update({"Sample Average Base Quality": sample_data[s_name]["QualityScoreMean"]})
-        general_stats.update({"Assigned Yield(Gb)": sample_data[s_name]["Yield"]})
-        general_stats.update({"Sample Read1 Average Length": sample_data[s_name]["Reads"][0]["MeanReadLength"]})
-        general_stats.update({"Sample Read2 Average Length": sample_data[s_name]["Reads"][1]["MeanReadLength"]})
-        general_stats.update({"Group": group_lookup_dict[s_name]})
+        general_stats.update({"num_polonies_sample": sample_data[s_name]["NumPolonies"]})
+        general_stats.update({"mean_base_quality": sample_data[s_name]["QualityScoreMean"]})
+        general_stats.update({"yield_sample": sample_data[s_name]["Yield"]})
+        general_stats.update({"percent_q30_sample": sample_data[s_name]["PercentQ30"]})
+        general_stats.update({"percent_q40_sample": sample_data[s_name]["PercentQ40"]})
+        general_stats.update({"group": group_lookup_dict[s_name]})
         plot_content.update({s_name: general_stats})
 
-    headers = {header: {"title": header} for header in general_stats.keys()}
+    headers = OrderedDict()
 
-    headers["Run Name"] = {
-        "description": "The name of runs",
-        "scale": "Blues",
+    headers["group"] = {
+        "title": "Group",
+        "description": "Assigned group name. The group name will be project name if given, or run name",
+        "bgcols": sample_color,
     }
-    headers["Assigned Polonies"] = {
+    headers["num_polonies_sample"] = {
+        "title": "#Polonies",
         "description": "Number of polonies assigned to this sample",
         "format": "{d}",
-        "max": 1000000000,
         "min": 0,
-        "scale": "RdYlGn",
+        "scale": "Blues",
     }
-    headers["Sample Percentage Q30"] = {
+    headers["yield_sample"] = {
+        "title": "Yield(Gb)",
         "description": "Percent of reads with perfect index (0 mismatches)",
-        "max": 90,
+        "scale": "Greens",
+    }
+    headers["mean_base_quality"] = {
+        "title": "Average Base Quality",
+        "description": "Average base quality across R1/R2",
+        "min": 0,
+        "scale": "Spectral",
+    }
+    headers["percent_q30_sample"] = {
+        "title": "% Bases Q30",
+        "description": "Percent of reads with perfect index (0 mismatches)",
+        "max": 100,
         "min": 0,
         "scale": "RdYlGn",
         "suffix": "%",
     }
-    headers["Percentage Q40"] = {
+    headers["percent_q40_sample"] = {
+        "title": "% Bases Q40",
         "description": "Percent of reads with perfect index (0 mismatches)",
-        "max": 80,
+        "max": 100,
         "min": 0,
         "scale": "RdYlGn",
         "suffix": "%",
-    }
-    headers["Yield(Gb)"] = {"description": "Percent of reads with perfect index (0 mismatches)", "scale": "Greens"}
-    headers["Read1 Average Length"] = {
-        "description": "Percent of reads with perfect index (0 mismatches)",
-        "scale": "Blues",
-    }
-    headers["Read2 Average Length"] = {
-        "description": "Percent of reads with perfect index (0 mismatches)",
-        "scale": "Blues",
     }
 
     config = {"description": "Table of per sample key informations", "no_beeswarm": True}
@@ -72,21 +75,17 @@ def tabulate_sample_stats(sample_data, group_lookup_dict, sample_color):
     anchor = "sample_qc_metrics_table"
     description = "table of general QC metrics by sample"
     helptext = """
-    This section shows numbers of some metrics that indicate the quality of each sa,[;e]. 
+    This section shows numbers of some metrics that indicate the quality of each bases. 
     
     Polony numbers: total number of polonies assigned to this sample. Each polony yields one read1 and one read2
     
+    Yield: total volume of data that has been assigned to this sample
+
     Percentage Q30: percentage of bases that has >=30 base quality (error rate <= 10^-3) 
     
     Percentage Q40: percentage of bases that has >=40 base quality (error rate <= 10^-4)
     
     Average Base Quality: average base qualities across all bases
-    
-    Yield: total volume of data that has been assigned to any sample
-    
-    Read1 Average Length: the average length of Read 1
-    
-    Read2 Average Length: the average length of Read 2
     
     Group: A group tag for assigning colors in the plot. The default group of each sample will be their sequencing
     run name. To customize group tags, you can either

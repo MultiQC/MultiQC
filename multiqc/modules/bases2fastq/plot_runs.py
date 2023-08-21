@@ -1,3 +1,5 @@
+from collections import OrderedDict
+
 import numpy as np
 
 from multiqc.plots import bargraph, linegraph, scatter, table
@@ -61,67 +63,60 @@ def tabulate_run_stats(run_data, color_dict):
     plot_content = dict()
     for s_name in run_data.keys():
         run_stats = dict()
-        run_stats.update({"#Polonies": run_data[s_name]["NumPolonies"]})
-        run_stats.update({"Percentage Assigned": run_data[s_name]["PercentAssignedReads"]})
-        run_stats.update({"Percentage Q30": run_data[s_name]["PercentQ30"]})
-        run_stats.update({"Percentage Q40": run_data[s_name]["PercentQ40"]})
-        run_stats.update({"Average Base Quality": run_data[s_name]["QualityScoreMean"]})
-        run_stats.update({"Yield(Gb)": run_data[s_name]["AssignedYield"]})
-        run_stats.update({"Read1 Average Length": run_data[s_name]["Reads"][0]["MeanReadLength"]})
-        run_stats.update({"Read2 Average Length": run_data[s_name]["Reads"][1]["MeanReadLength"]})
+        run_stats.update({"num_polonies_run": run_data[s_name]["NumPolonies"]})
+        run_stats.update({"percent_assigned": run_data[s_name]["PercentAssignedReads"]})
+        run_stats.update({"percent_q30_run": run_data[s_name]["PercentQ30"]})
+        run_stats.update({"percent_q40_run": run_data[s_name]["PercentQ40"]})
+        run_stats.update({"mean_base_quality": run_data[s_name]["QualityScoreMean"]})
+        run_stats.update({"yield_run": run_data[s_name]["AssignedYield"]})
         plot_content.update({s_name: run_stats})
 
-    headers = {header: {"title": header} for header in run_stats.keys()}
+    headers = OrderedDict()
 
-    headers["#Polonies"] = {
+    headers["num_polonies_run"] = {
         "title": "#Polonies",
         "format": "{d}",
         "description": "Percent of reads with perfect index (0 mismatches)",
-        "max": 1000000000,
         "min": 0,
         "scale": "RdYlGn",
     }
-    headers["Percentage Assigned"] = {
-        "title": "Percentage Assigned",
-        "description": "Percent of reads assigned.",
+    headers["yield_run"] = {"title": "Yield(Gb)", "description": "Total Yield(GB) of run", "scale": "Blues"}
+    headers["mean_base_quality"] = {
+        "title": "Mean Base Quality",
+        "description": "Average base quality across R1/R2",
+        "min": 0,
+        "scale": "Spectral",
+        "suffix": "%",
+    }
+    headers["percent_q30_run"] = {
+        "title": "% Bases Q30",
+        "description": "Percent of bases >Q30. Q30 indicates an incorrect base call probability of 1 in 1,000, which equals a 99.9% confidence rate.",
         "max": 100,
         "min": 0,
         "scale": "RdYlGn",
         "suffix": "%",
     }
-    headers["Percentage Q30"] = {
-        "title": "Percentage Q30",
-        "description": "Percent of bases >Q30. Q30 indicates an incorrect base call probability of 1 in 1,000, which equals a 99.9% confidence rate.",
-        "max": 90,
-        "min": 0,
-        "scale": "RdYlGn",
-        "suffix": "%",
-    }
-    headers["Percentage Q40"] = {
-        "title": "Percentage Q40",
+    headers["percent_q40_run"] = {
+        "title": "% Bases Q40",
         "description": "Percent of bases >Q40. Q40 indicates an incorrect base call probability of 1 in 10,000, which equals a 99.99% confidence rate.",
-        "max": 80,
+        "max": 100,
         "min": 0,
         "scale": "RdYlGn",
         "suffix": "%",
     }
-    headers["Yield(Gb)"] = {"title": "Yield(Gb)", "description": "Total Yield(GB) of run", "scale": "Greens"}
-    headers["Read1 Average Length"] = {
-        "title": "Read1 Average Length",
-        "description": "Average length of read 1",
-        "scale": "Blues",
-    }
-    headers["Read2 Average Length"] = {
-        "title": "Read2 Average Length",
-        "description": "Average length of read 2",
-        "scale": "Blues",
+    headers["percent_assigned"] = {
+        "title": "Percentage Assigned",
+        "description": "Percent of reads assigned.",
+        "max": 100,
+        "min": 0,
+        "scale": "BuPu",
     }
 
     config = {
+        "title": "bases2fastq: General Sequencing Run QC stats table",
         "descriptions": "Table of per sequencing run key informations",
         "col1_header": "Run Name",
         "id": "run_stats_table",
-        "title": "bases2fastq: General Sequencing Run QC stats table",
         "ylab": "QC",
     }
 
@@ -134,7 +129,7 @@ def tabulate_run_stats(run_data, color_dict):
     \n
     Polony numbers: total number of polonies. Each polony yields one read1 and one read2
     \n
-    Percentage assinged: percentage of reads that has been assigned to any sample
+    Yield: total volume of data that has been assigned to any sample
     \n
     Percentage Q30: percentage of bases that has >=30 base quality (error rate <= 10^-3) 
     \n
@@ -142,11 +137,7 @@ def tabulate_run_stats(run_data, color_dict):
     \n
     Average Base Quality: average base qualities across all bases
     \n
-    Yield: total volume of data that has been assigned to any sample
-    \n
-    Read1 Average Length: the average length of Read 1
-    \n
-    Read2 Average Length: the average length of Read 2
+    Percentage assigned: percentage of reads that has been assigned to any sample
     \n
     """
     return plot_html, plot_name, anchor, description, helptext, plot_content

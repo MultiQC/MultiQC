@@ -94,15 +94,12 @@ class MultiqcModule(BaseMultiqcModule):
             run_r1r2_lens_dict[rl].append(list(self.b2f_run_data.keys())[nn])
 
         if len(run_r1r2_lens_set) > 1:
-            log.warning(
+            log.error(
                 f"More than one read length configurations are found in the dataset:{','.join(run_r1r2_lens_set)}"
             )
-            log.warning(
-                f"Runnning MultiQC with different read length configurations may cause unusual plotting behavior. If possible, please split runs with different read length configurations into different folder and run MultiQC on each"
-            )
             for rl in run_r1r2_lens_dict.keys():
-                log.warning(f"These runs have {rl} read length configuration:{','.join(run_r1r2_lens_dict[rl])}")
-
+                log.error(f"These runs have {rl} read length configuration:{','.join(run_r1r2_lens_dict[rl])}")
+            raise UserWarning
         # Read project info and make it into a lookup dictionary of {sample:project}:
         project_lookup_dict = {}
         num_projects = 0
@@ -186,9 +183,7 @@ class MultiqcModule(BaseMultiqcModule):
             log.error("No Samples are found.")
             log.error("Please visit Elembio docs for more information - https://docs.elembio.io/docs/bases2fastq/")
             raise UserWarning
-        log.info(
-            f"Found {num_samples} samples within bases2fastq results, and {len(self.b2f_data)} samples have run information and enough polonies"
-        )
+        log.info(f"Found {num_samples} samples within bases2fastq results, and {len(self.b2f_data)} samples")
 
         # Group by run name
         self.group_dict = dict()
