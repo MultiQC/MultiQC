@@ -3,7 +3,6 @@
 
 import itertools
 import logging
-import re
 from collections import defaultdict
 
 from multiqc.modules.base_module import BaseMultiqcModule
@@ -24,9 +23,8 @@ class DragenMappingMetics(BaseMultiqcModule):
         data_by_phenotype_by_sample = defaultdict(dict)
 
         for f in self.find_log_files("dragen/mapping_metrics"):
-            s_name, data_by_readgroup, data_by_phenotype = parse_mapping_metrics_file(f)
-            s_name = self.clean_s_name(s_name, f)
-
+            data_by_readgroup, data_by_phenotype = parse_mapping_metrics_file(f)
+            s_name = self.clean_s_name(f["s_name"], f)
             if s_name in data_by_rg_by_sample:
                 log.debug(f"Duplicate DRAGEN output prefix found! Overwriting: {s_name}")
             self.add_data_source(f, section="stats")
@@ -362,8 +360,6 @@ def parse_mapping_metrics_file(f):
     We are reporting summary metrics in the general stats table, and per-read-group in a separate table.
     """
 
-    s_name = re.search(r"(.*)\.mapping_metrics.csv", f["fn"]).group(1)
-
     data_by_readgroup = defaultdict(dict)
     data_by_phenotype = defaultdict(dict)
 
@@ -435,7 +431,7 @@ def parse_mapping_metrics_file(f):
                 if exist_and_number(data, m):
                     data[m + " pct"] = data[m] / data["Total bases"] * 100.0
 
-    return s_name, data_by_readgroup, data_by_phenotype
+    return data_by_readgroup, data_by_phenotype
 
 
 MAPPING_METRICS = [

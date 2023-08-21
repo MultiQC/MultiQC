@@ -257,6 +257,29 @@ fn_clean_exts:
   - ".cutadapt"
   - ".mosdepth"
   - _gopeaks
+  - module: DRAGEN
+    patterns:
+      - "_tumor"
+      - "_normal"
+      - "_metrics"
+      - ".metrics"
+      - ".vc"
+      - ".ploidy_estimation"
+      - ".wgs_contig_mean_cov"
+      - ".overall_mean_cov"
+      - "_coverage"
+      - ".wgs_coverage"
+      - ".wgs_fine_hist"
+      - ".fragment_length_hist"
+      - ".mapping"
+      - ".gc"
+      - ".trimmer"
+      - ".time"
+      - ".transcript_coverage"
+      - ".quant"
+      - ".scRNA"
+      - ".scATAC"
+      - ".fastqc"
 
 # These are removed after the above, only if sample names
 # start or end with this string. Again, removed in order.

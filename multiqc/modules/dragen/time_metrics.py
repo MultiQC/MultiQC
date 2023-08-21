@@ -1,5 +1,4 @@
 import logging
-import re
 from collections import defaultdict
 
 from multiqc.modules.base_module import BaseMultiqcModule
@@ -13,9 +12,8 @@ class DragenTimeMetrics(BaseMultiqcModule):
         data_by_sample = dict()
 
         for f in self.find_log_files("dragen/time_metrics"):
-            s_name, data = parse_time_metrics_file(f)
-            s_name = self.clean_s_name(s_name, f)
-
+            data = parse_time_metrics_file(f)
+            s_name = self.clean_s_name(f["s_name"], f)
             if s_name in data_by_sample:
                 log.debug("Duplicate sample name found! Overwriting: {}".format(s_name))
             self.add_data_source(f, section="stats")
@@ -88,8 +86,6 @@ def parse_time_metrics_file(f):
     RUN TIME,,Time sorting and marking duplicates,00:00:07.368,7.37
     RUN TIME,,Time DRAGStr calibration,00:00:07.069,7.07
     """
-    s_name = re.search(r"(.*).time_metrics.csv", f["fn"]).group(1)
-
     data = defaultdict(dict)
     for line in f["f"].splitlines():
         tokens = line.split(",")
@@ -101,4 +97,4 @@ def parse_time_metrics_file(f):
             pass
         data[metric] = seconds
 
-    return s_name, data
+    return data
