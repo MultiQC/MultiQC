@@ -31,7 +31,7 @@ class MultiqcModule(BaseMultiqcModule):
         self.lgdist_fw_data = dict()
         self.lgdist_rv_data = dict()
 
-        # Find and load JSON file
+        # Find and load log files
         for f in self.find_log_files("mapdamage", filehandles=True):
             self.parseInput(f)
 
@@ -40,6 +40,8 @@ class MultiqcModule(BaseMultiqcModule):
         self.fivepCtoTfreq_data = self.ignore_samples(self.fivepCtoTfreq_data)
         self.lgdist_fw_data = self.ignore_samples(self.lgdist_fw_data)
         self.lgdist_rv_data = self.ignore_samples(self.lgdist_rv_data)
+
+        ## No need to run self.write_data_file as all the data imported is already in a TSV format and can be (almost) directly used for plotting.
 
         # Basic Stats Table, use generic function to add data to general table
         self.dmgprof_misinc_stats(self.threepGtoAfreq_data, "3 Prime", "G>A")
