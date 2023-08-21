@@ -3,7 +3,7 @@
 
 import logging
 from collections import OrderedDict
-from os.path import basename as basename
+import os
 
 from multiqc.modules.base_module import BaseMultiqcModule
 from multiqc.plots import linegraph
@@ -139,7 +139,7 @@ class MultiqcModule(BaseMultiqcModule):
         """Parse the output from mapDamage"""
 
         # Get sample name from result directory name
-        s_name = self.clean_s_name(basename(f["root"]), f)
+        s_name = self.clean_s_name(f["root"], f, root=os.path.dirname(f["root"]))
         self.add_data_source(f, s_name)
 
         if f["fn"].endswith("_freq.txt") and f["fn"].startswith("3p"):
