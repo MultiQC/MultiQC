@@ -138,6 +138,7 @@ setup(
             "longranger = multiqc.modules.longranger:MultiqcModule",
             "macs2 = multiqc.modules.macs2:MultiqcModule",
             "malt = multiqc.modules.malt:MultiqcModule",
+            "mapdamage = multiqc.modules.mapdamage:MultiqcModule",
             "methylQA = multiqc.modules.methylQA:MultiqcModule",
             "minionqc = multiqc.modules.minionqc:MultiqcModule",
             "mirtop = multiqc.modules.mirtop:MultiqcModule",
