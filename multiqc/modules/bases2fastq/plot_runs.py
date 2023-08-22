@@ -94,7 +94,6 @@ def tabulate_run_stats(run_data, color_dict):
     for s_name in run_data.keys():
         run_stats = dict()
         run_stats.update({"num_polonies_run": run_data[s_name]["NumPolonies"]})
-        run_stats.update({"percent_assigned": run_data[s_name]["PercentAssignedReads"]})
         run_stats.update({"percent_q30_run": run_data[s_name]["PercentQ30"]})
         run_stats.update({"percent_q40_run": run_data[s_name]["PercentQ40"]})
         run_stats.update({"mean_base_quality": run_data[s_name]["QualityScoreMean"]})

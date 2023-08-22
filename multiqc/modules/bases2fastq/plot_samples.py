@@ -287,7 +287,7 @@ def plot_per_read_gc_hist(sample_data, group_lookup_dict, sample_color):
         "title": "bases2fastq: per sample GC content histogram",
         "ylab": "Percentage",
     }
-    plot_name = "per sample GC histogram"
+    plot_name = "Per sample GC histogram"
     plot_html = linegraph.plot(plot_content, pconfig=config)
     anchor = "gc_histogram"
     description = "Histogram of distributions of percentage GC in each read"
