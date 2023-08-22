@@ -284,7 +284,7 @@ def plot_per_read_gc_hist(sample_data, group_lookup_dict, sample_color):
         "ylab": "Percentage",
         "colors": sample_color,
         "id": "gc_hist",
-        "title": "bases2fastq: per sample GC content histogram",
+        "title": "bases2fastq: Per sample GC content histogram",
         "ylab": "Percentage",
     }
     plot_name = "Per sample GC histogram"
