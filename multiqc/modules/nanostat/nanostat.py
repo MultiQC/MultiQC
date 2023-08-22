@@ -16,19 +16,21 @@ log = logging.getLogger(__name__)
 class MultiqcModule(BaseMultiqcModule):
     """NanoStat module"""
 
-    _KEYS_NUM = [
-        "Active channels",
-        "Number of reads",
-        "Total bases",
-        "Total bases aligned",
-        "Read length N50",
-        "Mean read length",
-        "Median read length",
-        "Median read quality",
-        "Mean read quality",
-        "Average percent identity",
-        "Median percent identity",
-    ]
+    _KEYS_MAPPING = {
+        "number_of_reads": "Number of reads",
+        "number_of_bases": "Total bases",
+        "number_of_bases_aligned": "Total bases aligned",
+        "fraction_bases_aligned": "Fraction of bases aligned",
+        "median_read_length": "Median read length",
+        "mean_read_length": "Mean read length",
+        "read_length_stdev": "STDEV read length",
+        "n50": "Read length N50",
+        "average_identity": "Average percent identity",
+        "median_identity": "Median percent identity",
+        "active_channels": "Active channels",
+        "mean_qual": "Mean read quality",
+        "median_qual": "Median read quality",
+    }
 
     _KEYS_READ_Q = [
         ">Q5",
@@ -91,21 +93,45 @@ class MultiqcModule(BaseMultiqcModule):
         To avoid overwriting keys from different modes, keys are given a suffix.
         """
 
+        legacy_format = False
         nano_stats = {}
-        for line in f["f"]:
-            parts = line.strip().split(":")
-            if len(parts) == 0:
+        for i, line in enumerate(f["f"]):
+            if i == 0:
+                if line.startswith("Metrics dataset"):
+                    legacy_format = False
+                elif line.startswith("General summary:"):
+                    legacy_format = True
+                else:
+                    raise UserWarning(f"Did not recognise NanoStat file '{f['fn']}'")
                 continue
 
-            key = parts[0]
+            if legacy_format:
+                parts = line.strip().split(":")
+                if len(parts) == 0:
+                    continue
 
-            if key in self._KEYS_NUM:
-                val = float(parts[1].replace(",", ""))
-                nano_stats[key] = val
-            elif key in self._KEYS_READ_Q:
-                # Number of reads above Q score cutoff
-                val = int(parts[1].strip().split()[0])
-                nano_stats[key] = val
+                key = parts[0]
+
+                if key in self._KEYS_MAPPING.values():
+                    val = float(parts[1].replace(",", ""))
+                    nano_stats[key] = val
+                elif key in self._KEYS_READ_Q:
+                    # Number of reads above Q score cutoff
+                    val = int(parts[1].strip().split()[0])
+                    nano_stats[key] = val
+            else:  # new format
+                parts = line.strip().split()
+                if len(parts) == 2 and parts[0] in self._KEYS_MAPPING.keys():
+                    key = self._KEYS_MAPPING.get(parts[0])
+                    if key:
+                        nano_stats[key] = float(parts[1])
+                else:
+                    parts = line.strip().split(":")
+                    key = parts[0].replace("Reads ", "")
+                    if key in self._KEYS_READ_Q:
+                        # Number of reads above Q score cutoff
+                        val = int(parts[1].strip().split()[0])
+                        nano_stats[key] = val
 
         if ">Q5" in nano_stats:
             self.has_qscores = True
