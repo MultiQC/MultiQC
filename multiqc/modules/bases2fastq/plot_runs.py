@@ -1,3 +1,4 @@
+import math
 from collections import OrderedDict
 
 import numpy as np
@@ -17,40 +18,69 @@ def plot_run_stats(run_data, color_dict):
     run_names.sort()
     num_polonies = dict()
     percent_qualities = dict()
-    percent_qualities = dict()
+    percent_assigned_dict = dict()
     yields = dict()
     for run in run_names:
-        num_polonies.update({run: {"Number of Polonies": run_data[run]["NumPolonies"]}})
-        percent_qualities.update(
-            {run: {"percent Q30": run_data[run]["PercentQ30"], "percent Q40": run_data[run]["PercentQ40"]}}
+        ### Index Assignment Polonies and Yields ###
+        percent_assigned = run_data[run]["PercentAssignedReads"]
+        percent_unassigned = run_data[run]["PercentMismatch"]
+        percent_perfect_assigned = (
+            100.00 - run_data[run]["PercentMismatch"]
+        )  # percentage of assigned polonies that has perfect index pairs
+        percent_perfect_total = (
+            0.01 * percent_assigned * percent_perfect_assigned
+        )  # percentage of total polonies that has perfect index pairs
+        percent_imperfect_total = (
+            percent_assigned - percent_perfect_total
+        )  # percentage of total polonies that is assigned but has index mismatch
+
+        num_polonies_run = OrderedDict()
+        polonies = run_data[run]["NumPolonies"]
+        num_polonies_run["Perfect Index"] = math.ceil(polonies * percent_perfect_total * 0.01)
+        num_polonies_run["Mismatched Index"] = math.ceil(polonies * percent_imperfect_total * 0.01)
+        num_polonies_run["Unassigned"] = (
+            polonies - num_polonies_run["Perfect Index"] - num_polonies_run["Mismatched Index"]
         )
-        percent_qualities.update({run: {"Successful assigned reads": run_data[run]["PercentAssignedReads"]}})
-        yields.update({run: {"Assigned yield": run_data[run]["AssignedYield"]}})
-    plot_content = [num_polonies, percent_qualities, percent_qualities, yields]
+        num_polonies[run] = num_polonies_run
+
+        total_yield_run = OrderedDict()
+        total_yield = run_data[run]["TotalYield"]
+        total_yield_run["Perfect Index"] = total_yield * percent_perfect_total * 0.01
+        total_yield_run["Mismatched Index"] = total_yield * percent_imperfect_total * 0.01
+        total_yield_run["Unassigned"] = (
+            total_yield - total_yield_run["Perfect Index"] - total_yield_run["Mismatched Index"]
+        )
+        yields[run] = total_yield_run
+
+    plot_content = [num_polonies, yields]
     config = {
         "data_labels": [
             {"name": "Polony Numbers", "ylab": "Number of polonies", "format": "{d}"},
-            {"name": "Base Qualities", "ylab": "Percentage"},
-            {"name": "Percentage assigned", "ylab": "Percentage"},
             {"name": "Data Yield", "ylab": "Gb"},
         ],
-        "cpswitch": False,
-        "stacking": None,
-        "description": "Bar plots to compare some general statistics of all found sequencing runs.",
+        "cpswitch": True,
+        "stacking": "normal",
+        "description": "Bar plots to compare yields of all found sequencing runs.",
         "id": "run_stats_bar",
         "title": "bases2fastq: General Sequencing Run QC stats plot",
         "ylab": "QC",
     }
-    plot_name = "Sequencing Run QC metrics"
-    plot_html = bargraph.plot(plot_content, pconfig=config)
-    anchor = "run_qc_metrics_plot"
-    description = "bar plots of general QC metrics"
+    cats = [
+        {
+            "Perfect Index": {"name": "Perfect Index", "color": "#7cb4ec"},
+            "Mismatched Index": {"name": "Mismatched Index", "color": "#90ed7d"},
+            "Unassigned": {"name": "Unassigned Index", "color": "#434348"},
+        }
+    ] * 2
+
+    plot_name = "Sequencing Run Yield"
+    plot_html = bargraph.plot(plot_content, cats, pconfig=config)
+    anchor = "run_yield_plot"
+    description = "Bar plots of sequencing run yields. Please see individual run reports for details"
     helptext = """
-    This section shows and compare some metrics that indicate the quality of each sequencing run. 
+    This section shows and compare the yield and index assignment rate of each sequencing run. 
     
     Polony numbers: total number of polonies. Each polony will yield one read1 and one read2
-    Base Qualities: percentage of bases that has >=30 (blue) or >=40 (black) base qualities
-    Percentage assinged: percentage of reads that has been assigned to any sample
     Data Yield: the total volume of data that has been assigned to any sample
     """
     return plot_html, plot_name, anchor, description, helptext, plot_content
@@ -105,7 +135,7 @@ def tabulate_run_stats(run_data, color_dict):
         "suffix": "%",
     }
     headers["percent_assigned"] = {
-        "title": "Percentage Assigned",
+        "title": "% Bases Assigned",
         "description": "Percent of reads assigned.",
         "max": 100,
         "min": 0,
@@ -123,7 +153,7 @@ def tabulate_run_stats(run_data, color_dict):
     plot_name = "Sequencing Run QC metrics table"
     plot_html = table.plot(plot_content, headers, pconfig=config)
     anchor = "run_qc_metrics_table"
-    description = "table of general QC metrics"
+    description = "Table of general QC metrics"
     helptext = """
     This section shows numbers of some metrics that indicate the quality of each sequencing run. 
     \n

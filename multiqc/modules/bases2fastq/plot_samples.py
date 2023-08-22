@@ -290,7 +290,7 @@ def plot_per_read_gc_hist(sample_data, group_lookup_dict, sample_color):
     plot_name = "per sample GC histogram"
     plot_html = linegraph.plot(plot_content, pconfig=config)
     anchor = "gc_histogram"
-    description = "The histogram of distributions of percentage GC in each read"
+    description = "Histogram of distributions of percentage GC in each read"
     helptext = """
     This section plots the distribution of percentage GC in each reads (range: 0-100)
     """
@@ -341,7 +341,7 @@ def plot_adapter_content(sample_data, group_lookup_dict, sample_color):
     config.update({"colors": sample_color})
     plot_html = linegraph.plot(plot_content, pconfig=config)
     anchor = "adapter_content"
-    description = "The plot of adapter content by cycle"
+    description = "Plot of adapter content by cycle"
     helptext = """
     This section plots the adapter content percentage by cycles
     """

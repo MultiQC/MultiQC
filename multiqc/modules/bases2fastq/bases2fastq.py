@@ -80,15 +80,15 @@ class MultiqcModule(BaseMultiqcModule):
         log.info(f"Found {num_runs} total RunStats.json")
 
         # Checking if run lengths configurations are the same for all samples.
-        run_r1r2_lens = [
+        self.run_r1r2_lens = [
             str(len(self.b2f_run_data[s]["Reads"][0]["Cycles"]))
             + "+"
             + str(len(self.b2f_run_data[s]["Reads"][1]["Cycles"]))
             for s in self.b2f_run_data.keys()
         ]
-        run_r1r2_lens_set = set(run_r1r2_lens)
+        run_r1r2_lens_set = set(self.run_r1r2_lens)
         run_r1r2_lens_dict = {}
-        for nn, rl in enumerate(run_r1r2_lens):
+        for nn, rl in enumerate(self.run_r1r2_lens):
             if not run_r1r2_lens_dict.get(rl):
                 run_r1r2_lens_dict[rl] = []
             run_r1r2_lens_dict[rl].append(list(self.b2f_run_data.keys())[nn])
@@ -186,7 +186,7 @@ class MultiqcModule(BaseMultiqcModule):
         log.info(f"Found {num_samples} samples within bases2fastq results, and {len(self.b2f_data)} samples")
 
         # Group by run name
-        self.group_dict = dict()
+        self.group_dict = OrderedDict()
         self.group_lookup_dict = dict()
         for s_name in self.b2f_data.keys():
             s_group = self.b2f_data[s_name]["RunName"]
@@ -214,23 +214,24 @@ class MultiqcModule(BaseMultiqcModule):
             for rgb in sns.color_palette("bright", n_colors)
         ]
         """
-        color_getter = mqc_colour.mqc_colour_scale()
-        palette = sum(
+        self.color_getter = mqc_colour.mqc_colour_scale()
+        self.palette = sum(
             [
-                color_getter.get_colours(hue)
+                self.color_getter.get_colours(hue)
                 for hue in ["Set2", "Pastel1", "Accent", "Set1", "Set3", "Dark2", "Paired", "Pastel2"]
             ],
             [],
         )
-        if len(self.group_dict) > len(palette):
+        if len(self.group_dict) > len(self.palette):
             hex_range = 2**24
             extra_colors = [hex(random.randrange(0, hex_range)) for _ in range(len(self.group_dict), len(palette))]
-            palette = palette + extra_colors
-        group_color = {g: c for g, c in zip(self.group_dict.keys(), palette[: len(self.group_dict)])}
+            self.palette = self.palette + extra_colors
+        self.group_color = {g: c for g, c in zip(self.group_dict.keys(), self.palette[: len(self.group_dict)])}
         self.sample_color = dict()
         for s_name in self.b2f_data.keys():
-            self.sample_color.update({s_name: group_color[self.group_lookup_dict[s_name]]})
-        self.run_color = copy.deepcopy(group_color)  # Make sure that run colors and group colors match
+            self.sample_color.update({s_name: self.group_color[self.group_lookup_dict[s_name]]})
+        self.run_color = copy.deepcopy(self.group_color)  # Make sure that run colors and group colors match
+        self.palette = self.palette[len(self.group_dict) :]
 
         # Read custom group info
         self.group_info_exist = False
@@ -250,30 +251,17 @@ class MultiqcModule(BaseMultiqcModule):
                     self.group_dict.update({s_group: []})
                 self.group_dict[s_group].append(s_name)
                 self.group_lookup_dict.update({s_name: s_group})
-
-        n_colors = len(self.group_dict)
-        """
-        palette = [
-            "rgba({r},{g},{b},0.5)".format(r=rgb[0] * 255, g=rgb[1] * 255, b=rgb[2] * 255)
-            for rgb in sns.color_palette("bright", n_colors)
-        ]
-        """
-        color_getter = mqc_colour.mqc_colour_scale()
-        palette = sum(
-            [
-                color_getter.get_colours(hue)
-                for hue in ["Set2", "Pastel1", "Accent", "Set1", "Set3", "Dark2", "Paired", "Pastel2"]
-            ],
-            [],
-        )
-        if len(self.group_dict) > len(palette):
-            hex_range = 2**24
-            extra_colors = [hex(random.randrange(0, hex_range)) for _ in range(len(self.group_dict), len(palette))]
-            palette = palette + extra_colors
-        group_color = {g: c for g, c in zip(self.group_dict.keys(), palette[: len(self.group_dict.keys())])}
+        for group in self.group_dict.keys():
+            if group not in self.run_color:
+                if len(self.palette) > 0:
+                    self.group_color[group] = self.palette.pop(0)
+                else:
+                    hex_range = 2**24
+                    extra_color = hex(random.randrange(0, hex_range))
+                    self.group_color[group] = extra_color
         self.sample_color = dict()
         for s_name in self.b2f_data.keys():
-            self.sample_color.update({s_name: group_color[self.group_lookup_dict[s_name]]})
+            self.sample_color.update({s_name: self.group_color[self.group_lookup_dict[s_name]]})
 
         # Sort samples alphabetically
         data_keys = list(self.b2f_run_data.keys())
@@ -320,9 +308,9 @@ class MultiqcModule(BaseMultiqcModule):
     def add_sample_plots(self):
         plot_functions = [
             tabulate_sample_stats,
-            plot_adapter_content,
             sequence_content_plot,
             plot_per_cycle_N_content,
+            plot_adapter_content,
             plot_per_read_gc_hist,
         ]
         for func in plot_functions:
