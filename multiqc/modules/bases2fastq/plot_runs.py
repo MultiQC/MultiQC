@@ -111,7 +111,7 @@ def tabulate_run_stats(run_data, color_dict):
         "scale": "RdYlGn",
     }
     headers["yield_run"] = {"title": "Yield(Gb)", "description": "Total Yield(GB) of run", "scale": "Blues"}
-    headers["mean_base_quality"] = {
+    headers["mean_base_quality_sample"] = {
         "title": "Mean Base Quality",
         "description": "Average base quality across R1/R2",
         "min": 0,

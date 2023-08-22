@@ -19,7 +19,7 @@ def tabulate_sample_stats(sample_data, group_lookup_dict, sample_color):
     for s_name in sample_data.keys():
         general_stats = dict()
         general_stats.update({"num_polonies_sample": sample_data[s_name]["NumPolonies"]})
-        general_stats.update({"mean_base_quality": sample_data[s_name]["QualityScoreMean"]})
+        general_stats.update({"mean_base_quality_sample": sample_data[s_name]["QualityScoreMean"]})
         general_stats.update({"yield_sample": sample_data[s_name]["Yield"]})
         general_stats.update({"percent_q30_sample": sample_data[s_name]["PercentQ30"]})
         general_stats.update({"percent_q40_sample": sample_data[s_name]["PercentQ40"]})
@@ -45,8 +45,8 @@ def tabulate_sample_stats(sample_data, group_lookup_dict, sample_color):
         "description": "Percent of reads with perfect index (0 mismatches)",
         "scale": "Greens",
     }
-    headers["mean_base_quality"] = {
-        "title": "Average Base Quality",
+    headers["mean_base_quality_sample"] = {
+        "title": "Mean Base Quality",
         "description": "Average base quality across R1/R2",
         "min": 0,
         "scale": "Spectral",
