@@ -215,7 +215,7 @@ class MultiqcModule(BaseMultiqcModule):
             return None
 
         config = {
-            "id": "length-distribution-{}".format(orientation),
+            "id": "mapdamage-length-distribution-{}".format(orientation),
             "title": "mapDamage: Read length distribution - {} ".format(orientation),
             "ylab": "Number of reads",
             "xlab": "Readlength (bp)",
@@ -243,7 +243,7 @@ class MultiqcModule(BaseMultiqcModule):
             dict_to_add[key] = data
 
         config = {
-            "id": "threeprime_misinc_plot",
+            "id": "mapdamage-threeprime_misinc_plot",
             "title": "mapDamage: 3' G>A misincorporation plot",
             "ylab": "% G to A substituted",
             "xlab": "Nucleotide position from 3'",
@@ -270,7 +270,7 @@ class MultiqcModule(BaseMultiqcModule):
             dict_to_add[key] = data
 
         config = {
-            "id": "fiveprime_misinc_plot",
+            "id": "mapdamage-fiveprime_misinc_plot",
             "title": "mapDamage: 5' C>T misincorporation plot",
             "ylab": "% C to T substituted",
             "xlab": "Nucleotide position from 5'",
