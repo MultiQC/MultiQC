@@ -28,7 +28,7 @@ import rich_click as click
 from rich.syntax import Syntax
 
 from .plots import table
-from .utils import config, log, megaqc, plugin_hooks, report, util_functions
+from .utils import config, lint_helpers, log, megaqc, plugin_hooks, report, util_functions
 
 # Set up logging
 start_execution_time = time.time()
@@ -432,6 +432,7 @@ def run(
         config.plots_force_interactive = True
     if lint:
         config.lint = True
+        lint_helpers.run_tests()
     if make_pdf:
         config.template = "simple"
     if no_megaqc_upload:
