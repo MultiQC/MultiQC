@@ -56,13 +56,23 @@ def check_mods_docs_readme():
     # Check that all modules have a YAML header conforming to the required structure
     for fn in glob.glob(os.path.join(docs_dir, "*.md")):
         with open(fn) as fh:
-            header = yaml.safe_load(fh)
-            if not header:
-                lint_error(
-                    f"LINT: the module doc does not have a YAML header with `name`, "
-                    f"`url`, and `description` fields: {fn}"
-                )
-            else:
-                for field in ["name", "url", "description"]:
-                    if field not in header:
-                        lint_error(f"LINT: the YAML header does not have a '{field}' " f"field: {fn}")
+            # Load the YAML header from the markdown file. YAML header should be placed between --- and --- in the beginning of the file
+            try:
+                header = fh.read().split("---")[1]
+            except IndexError:
+                lint_error(f"LINT: '{fn}' doesn't have a YAML header between '---'")
+                continue
+            try:
+                header = yaml.safe_load(header)
+            except yaml.YAMLError as e:
+                lint_error(f"LINT: '{fn}' contains an incorrectly formatted YAML header: {e}")
+                continue
+            if header is None:
+                lint_error(f"LINT: '{fn}' contains an empty YAML header")
+                continue
+            req_fields = ["name", "url", "description"]
+            for field in req_fields:
+                if field not in header:
+                    lint_error(
+                        f"LINT: the YAML header in '{fn}' does not have a '{field}' field. Required fields: {req_fields}"
+                    )
