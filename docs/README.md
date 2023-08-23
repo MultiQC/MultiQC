@@ -158,27 +158,6 @@ MultiQC is a tool to aggregate bioinformatics results across many samples
 into a single report. It's written in Python and contains modules for a number
 of common tools.
 
-The documentation has the following pages:
-
-- [Docs homepage](README.md) _(this README file)_
-- Using MultiQC
-  - [Installing MultiQC](installation.md)
-  - [Running MultiQC](usage.md)
-  - [Using Reports](reports.md)
-  - [Configuration](config.md)
-  - [Customising Reports](customisation.md)
-  - [Using MultiQC in pipelines](pipelines.md)
-  - [Downstream analysis of MultiQC outputs](downstream.md)
-  - [Common Problems](troubleshooting.md)
-- [MultiQC Modules](modules/)
-- [Custom Content](custom_content.md)
-- Coding with MultiQC
-  - [Writing new modules](modules.md)
-  - [Plotting functions](plots.md)
-  - [MultiQC Plugins](plugins.md)
-  - [Writing new templates](templates.md)
-  - [Updating for compatibility](compatibility.md)
-
 These docs can be read in any of three ways:
 
 - On the MultiQC Website: <http://multiqc.info>
