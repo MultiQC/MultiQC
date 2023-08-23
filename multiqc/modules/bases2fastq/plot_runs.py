@@ -55,20 +55,20 @@ def plot_run_stats(run_data, color_dict):
     plot_content = [num_polonies, yields]
     config = {
         "data_labels": [
-            {"name": "Polony Numbers", "ylab": "Number of polonies", "format": "{d}"},
-            {"name": "Data Yield", "ylab": "Gb"},
+            {"name": "Number of Polonies", "ylab": "Number of Polonies", "format": "{d}"},
+            {"name": "Yield (Gb)", "ylab": "Gb"},
         ],
         "cpswitch": True,
         "stacking": "normal",
         "description": "Bar plots to compare yields of all found sequencing runs.",
-        "id": "run_stats_bar",
-        "title": "bases2fastq: General Sequencing Run QC stats plot",
+        "id": "run_metrics_bar",
+        "title": "bases2fastq: General Sequencing Run QC metrics plot",
         "ylab": "QC",
     }
     cats = [
         {
             "Perfect Index": {"name": "Perfect Index", "color": "#7cb4ec"},
-            "Mismatched Index": {"name": "Mismatched Index", "color": "#90ed7d"},
+            "Mismatched Index": {"name": "Mismatched Index", "color": "#ff7518"},
             "Unassigned": {"name": "Unassigned Index", "color": "#434348"},
         }
     ] * 2
@@ -78,10 +78,9 @@ def plot_run_stats(run_data, color_dict):
     anchor = "run_yield_plot"
     description = "Bar plots of sequencing run yields. Please see individual run reports for details"
     helptext = """
-    This section shows and compare the yield and index assignment rate of each sequencing run. 
-    
-    Polony numbers: total number of polonies. Each polony will yield one read1 and one read2
-    Data Yield: the total volume of data that has been assigned to any sample
+    This section shows and compare the yield and index assignment rate of each sequencing run.\n\n
+       - Number of Polonies: The (total) number of polonies calculated for the run\n
+       - Yield: The run yield based on assigned reads in gigabases
     """
     return plot_html, plot_name, anchor, description, helptext, plot_content
 
@@ -94,58 +93,63 @@ def tabulate_run_stats(run_data, color_dict):
     for s_name in run_data.keys():
         run_stats = dict()
         run_stats.update({"num_polonies_run": run_data[s_name]["NumPolonies"]})
+        run_stats.update({"percent_assigned_run": run_data[s_name]["PercentAssignedReads"]})
+        run_stats.update({"yield_run": run_data[s_name]["AssignedYield"]})
+        run_stats.update({"mean_base_quality_run": run_data[s_name]["QualityScoreMean"]})
         run_stats.update({"percent_q30_run": run_data[s_name]["PercentQ30"]})
         run_stats.update({"percent_q40_run": run_data[s_name]["PercentQ40"]})
-        run_stats.update({"mean_base_quality": run_data[s_name]["QualityScoreMean"]})
-        run_stats.update({"yield_run": run_data[s_name]["AssignedYield"]})
         plot_content.update({s_name: run_stats})
 
     headers = OrderedDict()
 
     headers["num_polonies_run"] = {
-        "title": "#Polonies",
+        "title": "Number of Polonies",
         "format": "{d}",
-        "description": "Percent of reads with perfect index (0 mismatches)",
+        "description": "The (total) number of polonies calculated for the run",
         "min": 0,
         "scale": "RdYlGn",
     }
-    headers["yield_run"] = {"title": "Yield(Gb)", "description": "Total Yield(GB) of run", "scale": "Blues"}
-    headers["mean_base_quality_sample"] = {
-        "title": "Mean Base Quality",
-        "description": "Average base quality across R1/R2",
+    headers["percent_assigned_run"] = {
+        "title": "Percent Assigned Reads",
+        "description": "The percentage of reads assigned to sample(s)",
+        "max": 100,
         "min": 0,
-        "scale": "Spectral",
+        "scale": "BuPu",
         "suffix": "%",
     }
+    headers["yield_run"] = {
+        "title": "Yield (Gb)",
+        "description": "The run yield based on assigned reads in gigabases",
+        "scale": "Blues",
+    }
+    headers["mean_base_quality_run"] = {
+        "title": "Quality Score Mean",
+        "description": "Average base quality across Read 1 and Read 2",
+        "min": 0,
+        "scale": "Spectral",
+    }
     headers["percent_q30_run"] = {
-        "title": "% Bases Q30",
-        "description": "Percent of bases >Q30. Q30 indicates an incorrect base call probability of 1 in 1,000, which equals a 99.9% confidence rate.",
+        "title": "Percent Q30",
+        "description": "The percentage of ≥ Q30 (base) Q-scores for the run, including assigned and unassigned reads",
         "max": 100,
         "min": 0,
         "scale": "RdYlGn",
         "suffix": "%",
     }
     headers["percent_q40_run"] = {
-        "title": "% Bases Q40",
-        "description": "Percent of bases >Q40. Q40 indicates an incorrect base call probability of 1 in 10,000, which equals a 99.99% confidence rate.",
+        "title": "Percent Q40",
+        "description": "The percentage of ≥ Q40 (base) Q-scores for the run, including assigned and unassigned reads",
         "max": 100,
         "min": 0,
         "scale": "RdYlGn",
         "suffix": "%",
     }
-    headers["percent_assigned"] = {
-        "title": "% Bases Assigned",
-        "description": "Percent of reads assigned.",
-        "max": 100,
-        "min": 0,
-        "scale": "BuPu",
-    }
 
     config = {
-        "title": "bases2fastq: General Sequencing Run QC stats table",
-        "descriptions": "Table of per sequencing run key informations",
+        "title": "bases2fastq: General Sequencing Run QC metrics",
+        "descriptions": "Comparision of run metrics across runs",
         "col1_header": "Run Name",
-        "id": "run_stats_table",
+        "id": "run_metrics_table",
         "ylab": "QC",
     }
 
@@ -154,20 +158,14 @@ def tabulate_run_stats(run_data, color_dict):
     anchor = "run_qc_metrics_table"
     description = "Table of general QC metrics"
     helptext = """
-    This section shows numbers of some metrics that indicate the quality of each sequencing run. 
-    \n
-    Polony numbers: total number of polonies. Each polony yields one read1 and one read2
-    \n
-    Yield: total volume of data that has been assigned to any sample
-    \n
-    Percentage Q30: percentage of bases that has >=30 base quality (error rate <= 10^-3) 
-    \n
-    Percentage Q40: percentage of bases that has >=40 base quality (error rate <= 10^-4)
-    \n
-    Average Base Quality: average base qualities across all bases
-    \n
-    Percentage assigned: percentage of reads that has been assigned to any sample
-    \n
+    This section shows numbers of some metrics that indicate the quality of each sequencing run: \n
+       - Run Name: Name showing the (RunName)__(UUID).  (RunName) maps to the AVITI run name.  (UUID) maps to the unique bases2fastq analysis result.\n
+       - Number of Polonies: The (total) number of polonies calculated for the run\n
+       - Percentage Assigned Reads: percentage of reads that has been assigned to any sample
+       - Assigned Yield (Gb): The run yield based on assigned reads in gigabases\n
+       - Quality Score Mean: The average Q-score of base calls for a sample\n
+       - Percent Q30: The percentage of ≥ Q30 (base) Q-scores for the run, including assigned and unassigned reads\n
+       - Percent Q40: The percentage of ≥ Q40 (base) Q-scores for the run, including assigned and unassigned reads
     """
     return plot_html, plot_name, anchor, description, helptext, plot_content
 
@@ -202,18 +200,18 @@ def plot_base_quality_hist(run_data, color_dict):
     config = {
         "data_labels": [
             {
-                "name": "per base quality histogram",
-                "descriptions": "Histogram of bases qualities",
+                "name": "Quality Per Base",
+                "descriptions": "Histogram of bases quality",
                 "ymin": 0,
-                "ylabel": "Percentage at base quality",
+                "ylabel": "Percentage of base quality",
                 "xlabel": "base quality",
                 "colors": color_dict,
             },
             {
-                "name": "per read quality histogram",
-                "descriptions": "Histogram of read average base qualities",
+                "name": "Qualiter Per Read",
+                "descriptions": "Histogram of average read base quality",
                 "ymin": 0,
-                "ylabel": "Percentage at base quality",
+                "ylabel": "Percentage of read quality",
                 "xlabel": "base quality",
                 "colors": color_dict,
             },
@@ -223,15 +221,13 @@ def plot_base_quality_hist(run_data, color_dict):
         "ylab": "Percentage",
     }
     plot_html = linegraph.plot(plot_content, pconfig=config)
-    plot_name = "Per Run Base Quality Histogram"
+    plot_name = "Run Base Quality Histogram"
     anchor = "bq_hist"
-    description = "Histogram of base qualities"
+    description = "Histogram of run base qualities"
     helptext = """
-    This sections plot the base qualities histograms. 
-    
-    Per base quality histogram plots the distribution of each inidividual base qualities.
-    
-    Per read quality histogram plots the distribution of average base quality of each read
+    This sections plot the run base qualities histograms.\n
+       - Quality Per Base: distribution of base qualities.\n
+       - Quality Per Read: distribution of read qualities.
     """
     return plot_html, plot_name, anchor, description, helptext, plot_content
 
@@ -306,8 +302,8 @@ def plot_base_quality_by_cycle(run_data, color_dict):
     plot_content = [median_dict, mean_dict, Q30_dict, Q40_dict]
     config = {
         "data_labels": [
-            {"name": "Median", "xlab": "cycle", "ylab": "Base Quality", "ymax": 50},
-            {"name": "Mean", "ylab": "Quality", "ymax": 50},
+            {"name": "Median Quality", "xlab": "cycle", "ylab": "Quality"},
+            {"name": "Mean Quality", "ylab": "Quality"},
             {"name": "%Q30", "xlab": "cycle", "ylab": "Percentage", "ymax": 100},
             {"name": "%Q40", "xlab": "cycle", "ylab": "Percentage", "ymax": 100},
         ],
@@ -319,13 +315,12 @@ def plot_base_quality_by_cycle(run_data, color_dict):
         "ylab": "QC",
     }
     plot_html = linegraph.plot(plot_content, pconfig=config)
-    plot_name = "Quality statistics by cycle"
+    plot_name = "Quality Metrics By Cycle"
     anchor = "per_cycle_quality"
-    description = "Per Run Base qualities by cycle"
+    description = "Per run base qualities by cycle"
     helptext = """
-    This section plots the base qualities by each sequencing cycle. You can choose to show
-    either median, mean, percentage Q30 or percentage Q40 of each cycle. Read 1 and Read 2 
-    are separated by a red dashed line, such that we can visualize R1 and R2 qualities 
-    in one plot.
+    This section plots the base qualities by each instrument cycle.\n
+    Choose between Median Quality, Mean Quality, Percent Q30 or Percentage Q40 per cycle.\n
+    Read 1 and Read 2 are separated by a red dashed line.
     """
     return plot_html, plot_name, anchor, description, helptext, plot_content

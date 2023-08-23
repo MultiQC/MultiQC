@@ -18,31 +18,31 @@ def tabulate_sample_stats(sample_data, group_lookup_dict, sample_color):
     plot_content = dict()
     for s_name in sample_data.keys():
         general_stats = dict()
+        general_stats.update({"group": group_lookup_dict[s_name]})
         general_stats.update({"num_polonies_sample": sample_data[s_name]["NumPolonies"]})
-        general_stats.update({"mean_base_quality_sample": sample_data[s_name]["QualityScoreMean"]})
         general_stats.update({"yield_sample": sample_data[s_name]["Yield"]})
+        general_stats.update({"mean_base_quality_sample": sample_data[s_name]["QualityScoreMean"]})
         general_stats.update({"percent_q30_sample": sample_data[s_name]["PercentQ30"]})
         general_stats.update({"percent_q40_sample": sample_data[s_name]["PercentQ40"]})
-        general_stats.update({"group": group_lookup_dict[s_name]})
         plot_content.update({s_name: general_stats})
 
     headers = OrderedDict()
 
     headers["group"] = {
         "title": "Group",
-        "description": "Assigned group name. The group name will be project name if given, or run name",
+        "description": "Run/Sample group label.",
         "bgcols": sample_color,
     }
     headers["num_polonies_sample"] = {
-        "title": "#Polonies",
-        "description": "Number of polonies assigned to this sample",
+        "title": "Number of Polonies",
+        "description": "The (total) number of polonies calculated for the sample",
         "format": "{d}",
         "min": 0,
         "scale": "Blues",
     }
     headers["yield_sample"] = {
-        "title": "Yield(Gb)",
-        "description": "Percent of reads with perfect index (0 mismatches)",
+        "title": "Yield (Gb)",
+        "description": "The sample yield based on assigned reads in gigabases",
         "scale": "Greens",
     }
     headers["mean_base_quality_sample"] = {
@@ -52,16 +52,16 @@ def tabulate_sample_stats(sample_data, group_lookup_dict, sample_color):
         "scale": "Spectral",
     }
     headers["percent_q30_sample"] = {
-        "title": "% Bases Q30",
-        "description": "Percent of reads with perfect index (0 mismatches)",
+        "title": "Percent Q30",
+        "description": "The percentage of ≥ Q30 (base) Q-scores for the run, including assigned and unassigned reads",
         "max": 100,
         "min": 0,
         "scale": "RdYlGn",
         "suffix": "%",
     }
     headers["percent_q40_sample"] = {
-        "title": "% Bases Q40",
-        "description": "Percent of reads with perfect index (0 mismatches)",
+        "title": "Percent Q40",
+        "description": "The percentage of ≥ Q40 (base) Q-scores for the run, including assigned and unassigned reads",
         "max": 100,
         "min": 0,
         "scale": "RdYlGn",
@@ -75,27 +75,16 @@ def tabulate_sample_stats(sample_data, group_lookup_dict, sample_color):
     anchor = "sample_qc_metrics_table"
     description = "table of general QC metrics by sample"
     helptext = """
-    This section shows numbers of some metrics that indicate the quality of each bases. 
-    
-    Polony numbers: total number of polonies assigned to this sample. Each polony yields one read1 and one read2
-    
-    Yield: total volume of data that has been assigned to this sample
-
-    Percentage Q30: percentage of bases that has >=30 base quality (error rate <= 10^-3) 
-    
-    Percentage Q40: percentage of bases that has >=40 base quality (error rate <= 10^-4)
-    
-    Average Base Quality: average base qualities across all bases
-    
-    Group: A group tag for assigning colors in the plot. The default group of each sample will be their sequencing
-    run name. To customize group tags, you can either
-    
-    1) Set the project name when running bases2fastq. In this case the group tags will be project name.
-    
-    2) Generate a csv file that has the columns "Run Name","Sample Name" and "Group". An easy way of 
-    generating this csv will be run multiqc with default grouping, copy this table into a csv file, 
-    and then change group name manually. Then move the csv file into any location under the analyzed 
-    directory.
+    This section shows numbers of some metrics that indicate the quality of each sequencing run: \n
+       - Sample Name: Name showing the (RunName)__(UUID)__(SampleName).  (RunName) maps to the AVITI run name.  (UUID) maps to the unique bases2fastq analysis result.  (SampleName) maps to the sample name as specified in the RunManifest.csv.
+       - Group: Run/Sample group label for assigning colors in the plot.  To customize group tags, you can:\n
+           - 1) Set the project name when running bases2fastq. In this case the group tags will be project name.\n
+           - 2) Generate a csv file with the suffix "_b2fgroup.csv", containing the columns "Sample Name" and "Group".\n
+       - Number of Polonies: The (total) number of polonies calculated for the run\n
+       - Assigned Yield (Gb): The run yield based on assigned reads in gigabases\n
+       - Quality Score Mean: The average Q-score of base calls for a sample\n
+       - Percent Q30: The percentage of ≥ Q30 (base) Q-scores for the run, including assigned and unassigned reads\n
+       - Percent Q40: The percentage of ≥ Q40 (base) Q-scores for the run, including assigned and unassigned reads
     """
     return plot_html, plot_name, anchor, description, helptext, plot_content
 
@@ -171,6 +160,7 @@ def sequence_content_plot(sample_data, group_lookup_dict, color_dict):
     2) Read1 and Read2 is co-plotted and separate by a white band in the heatmap and a red dashed in each individual sample plot.
 
     The following is a copy of helptext of the fastqc module:
+    
     To enable multiple samples to be shown in a single plot, the base composition data
     is shown as a heatmap. The colours represent the balance between the four bases:
     an even distribution should give an even muddy brown colour. Hover over the plot
@@ -253,7 +243,7 @@ def plot_per_cycle_N_content(sample_data, group_lookup_dict, color_dict):
     anchor = "n_content"
     description = "N content by cycle"
     helptext = """
-    This section plots the percentage of unidentified bases ("N" bases) by each sequencing cycle. 
+    This section plots the percentage of unidentified bases ("N" bases) by each sequencing cycle.\n
     Read 1 and Read 2 are separated by a red dashed line
     """
     return plot_html, plot_name, anchor, description, helptext, plot_content
@@ -261,7 +251,7 @@ def plot_per_cycle_N_content(sample_data, group_lookup_dict, color_dict):
 
 def plot_per_read_gc_hist(sample_data, group_lookup_dict, sample_color):
     """
-    Plot gc histogram per sample
+    Plot GC Histogram per Sample
     """
     gc_hist_dict = dict()
     for s_name in sample_data.keys():
@@ -284,10 +274,10 @@ def plot_per_read_gc_hist(sample_data, group_lookup_dict, sample_color):
         "ylab": "Percentage",
         "colors": sample_color,
         "id": "gc_hist",
-        "title": "bases2fastq: Per sample GC content histogram",
+        "title": "bases2fastq: Per Sample GC Content Histogram",
         "ylab": "Percentage",
     }
-    plot_name = "Per sample GC histogram"
+    plot_name = "Per Sample GC Histogram"
     plot_html = linegraph.plot(plot_content, pconfig=config)
     anchor = "gc_histogram"
     description = "Histogram of distributions of percentage GC in each read"
@@ -299,7 +289,7 @@ def plot_per_read_gc_hist(sample_data, group_lookup_dict, sample_color):
 
 def plot_adapter_content(sample_data, group_lookup_dict, sample_color):
     """
-    Plot adapter content per sample
+    Plot Adapter Content per Sample
     """
     plot_content = dict()
 

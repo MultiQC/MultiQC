@@ -24,8 +24,8 @@ class MultiqcModule(BaseMultiqcModule):
         super(MultiqcModule, self).__init__(
             name="bases2fastq",
             anchor="bases2fastq",
-            href="https://www.elementbiosciences.com/resources",
-            info="is used to call sequences from element AVITI sequencing images",
+            href="https://docs.elembio.io/docs/bases2fastq/introduction",
+            info="software demultiplexes AVITI sequencing data and converts base calls into FASTQ files.",
             doi="10.1038/s41587-023-01750-7",
         )
 
