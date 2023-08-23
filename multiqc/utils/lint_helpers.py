@@ -4,6 +4,7 @@
 --lint is specified (outside scope of normal functions) """
 
 
+import glob
 import os
 
 import yaml
@@ -19,37 +20,49 @@ def run_tests():
         check_mods_docs_readme()
 
 
+def lint_error(msg):
+    """Add a lint error to the report"""
+    logger.error(msg)
+    report.lint_errors.append(msg)
+
+
 def check_mods_docs_readme():
     """Check that all modules are listed in the YAML index
     at the top of docs/README.md"""
 
     docs_mods = []
 
-    readme_fn = os.path.join(os.path.dirname(config.MULTIQC_DIR), "docs", "README.md")
-    if not os.path.isfile(readme_fn) and os.environ.get("GITHUB_WORKSPACE"):
-        readme_fn = os.path.join(os.environ.get("GITHUB_WORKSPACE"), "docs", "README.md")
-    if not os.path.isfile(readme_fn):
-        logger.warning("Can't check docs readme in lint test as file doesn't exist: {}".format(readme_fn))
+    docs_dir = os.path.join(os.path.dirname(config.MULTIQC_DIR), "docs", "modules")
+    if not os.path.isdir(docs_dir) and os.environ.get("GITHUB_WORKSPACE"):
+        docs_dir = os.path.join(os.environ.get("GITHUB_WORKSPACE"), "docs", "modules")
+    if not os.path.isdir(docs_dir):
+        logger.warning(f"Can't check docs readmes in lint test as directory doesn't exist: {docs_dir}")
         return None
-    logger.info("Checking docs readme '{}' as --lint specified".format(readme_fn))
-    with open(readme_fn) as f:
-        fm = next(yaml.load_all(f, Loader=yaml.SafeLoader))
 
-    for section in fm["MultiQC Modules"]:
-        for name, fn in fm["MultiQC Modules"][section].items():
-            # remove modules/ and .md
-            docs_mods.append(fn[8:-3])
+    for fn in glob.glob(os.path.join(docs_dir, "*.md")):
+        docs_mods.append(os.path.basename(fn)[:-3])
+    logger.info(f"Checking docs readmes in '{docs_dir}' as --lint specified")
 
-    # Check that installed modules are listed in docs/README.md
+    # Check that installed modules are listed in docs/modules
     for m in config.avail_modules.keys():
         if m not in docs_mods and m != "custom_content":
-            errmsg = "LINT: Module '{}' found in installed modules, but not docs/README.md".format(m)
-            logger.error(errmsg)
-            report.lint_errors.append(errmsg)
+            lint_error(f"LINT: Module '{m}' found in installed modules, but not docs/modules")
 
-    # Check that modules in docs/README.md are installed
+    # Check that modules in docs/modules are installed
     for m in docs_mods:
         if m not in config.avail_modules.keys() and m != "custom_content":
-            errmsg = "LINT: Module '{}' found in docs/README.md, but not installed modules".format(m)
-            logger.error(errmsg)
-            report.lint_errors.append(errmsg)
+            lint_error(f"LINT: Module '{m}' found in docs/modules, but not installed modules")
+
+    # Check that all modules have a YAML header conforming to the required structure
+    for fn in glob.glob(os.path.join(docs_dir, "*.md")):
+        with open(fn) as fh:
+            header = yaml.safe_load(fh)
+            if not header:
+                lint_error(
+                    f"LINT: the module doc does not have a YAML header with `name`, "
+                    f"`url`, and `description` fields: {fn}"
+                )
+            else:
+                for field in ["name", "url", "description"]:
+                    if field not in header:
+                        lint_error(f"LINT: the YAML header does not have a '{field}' " f"field: {fn}")
