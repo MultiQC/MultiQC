@@ -33,7 +33,7 @@ class MultiqcModule(BaseMultiqcModule):
 
         # Find and load log files
         for f in self.find_log_files("mapdamage", filehandles=True):
-            self.parseInput(f)
+            self.parse_logs(f)
 
         # Filter to strip out ignored sample names
         self.threepGtoAfreq_data = self.ignore_samples(self.threepGtoAfreq_data)
@@ -77,7 +77,7 @@ class MultiqcModule(BaseMultiqcModule):
             )
             self.add_section(
                 name="Reverse read length distribution",
-                description="Read length distribution for reverse strand (-) reads.",
+                description="Read length distribution for reverse strand (−) reads.",
                 helptext="""
                 This plot shows the read length distribution of the reverse reads in the investigated sample. Reads below lengths of 30bp are typically filtered, so the plot doesn't show these in many cases. A shifted distribution of read lengths towards smaller read lengths (e.g around 30-50bp) is also an indicator of ancient DNA.
                 """,
@@ -85,7 +85,7 @@ class MultiqcModule(BaseMultiqcModule):
             )
 
     ## Parse misincorporation file into a dict with 1 key ('dmg_5p' or 'dmg_3p') and 1 value (list of 2nd column values)
-    def parseMisincorporation(self, f):
+    def parse_misincorporation(self, f):
         """Parse the misincorporation data from mapDamage output files"""
         misincorporation_dict = {}
         values = []
@@ -107,7 +107,7 @@ class MultiqcModule(BaseMultiqcModule):
             return None
 
     ## Parse length distribution file into a dict with 2 keys ('lendist_fw' and 'lendist_rv') and 1 value each (dict of {length : count})
-    def parseLengthDistribution(self, f):
+    def parse_length_distribution(self, f):
         """Parse the length distribution data from mapDamage output files"""
         length_distribution_dict = {"lendist_fw": {}, "lendist_rv": {}}
         try:
@@ -131,7 +131,7 @@ class MultiqcModule(BaseMultiqcModule):
             return None
 
     # Parse input files
-    def parseInput(self, f):
+    def parse_logs(self, f):
         """Parse the output from mapDamage"""
 
         # Get sample name from result directory name
@@ -141,15 +141,15 @@ class MultiqcModule(BaseMultiqcModule):
 
         if f["fn"].endswith("_freq.txt") and f["fn"].startswith("3p"):
             # Add 3' G to A data
-            self.threepGtoAfreq_data[s_name] = self.parseMisincorporation(f)["dmg_3p"]
+            self.threepGtoAfreq_data[s_name] = self.parse_misincorporation(f)["dmg_3p"]
 
         elif f["fn"].endswith("_freq.txt") and f["fn"].startswith("5p"):
             # Add 5' C to T data
-            self.fivepCtoTfreq_data[s_name] = self.parseMisincorporation(f)["dmg_5p"]
+            self.fivepCtoTfreq_data[s_name] = self.parse_misincorporation(f)["dmg_5p"]
 
         elif f["fn"] == "lgdistribution.txt":
             # Add lendist forward & reverse
-            lgdist_data = self.parseLengthDistribution(f)
+            lgdist_data = self.parse_length_distribution(f)
             self.lgdist_fw_data[s_name] = lgdist_data["lendist_fw"]
             self.lgdist_rv_data[s_name] = lgdist_data["lendist_rv"]
 
