@@ -98,7 +98,7 @@ jobs:
         run: |
           multiqc ${{ needs.changes.outputs.single_module }} test_data/data/modules/ --filename all_ignored.html --ignore-samples '*'
           if [[ -f all_ignored.html ]]; then
-            echo "Either self.ignore_samples() was not called in a module, or UserWarning was not raised by the module when no matching files are found" >&2
+            echo "No report should have been generated! Likely due to a module missing self.ignore_samples() or UserWarning when no matching files are found" >&2
             exit 1
           fi
 
