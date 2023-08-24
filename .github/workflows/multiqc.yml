@@ -82,21 +82,17 @@ jobs:
       - name: All modules / Custom report filename
         run: multiqc ${{ needs.changes.outputs.single_module }} --lint test_data/data/modules/ --filename full_report.html
 
-  # More variations of command line flags and inputs. No need to run those across all Python versions.
-  run_linux_311_only:
-    name: Linux - Python 3.11
-    runs-on: ubuntu-20.04
-    needs: [changes, run_linux]
-    timeout-minutes: 10
-
-    steps:
+      # More variations of command line flags and inputs. No need to run those across all Python versions.
       - name: Special case input data
+        if: matrix.python-version == '3.11'
         run: multiqc ${{ needs.changes.outputs.single_module }} test_data/data --ignore test_data/data/modules/
 
       - name: All modules / Log filename as s_name, no cleaning
+        if: matrix.python-version == '3.11'
         run: multiqc ${{ needs.changes.outputs.single_module }} --lint test_data/data/modules/ --fullnames --fn_as_s_name
 
       - name: Filter out all filenames (confirm no report)
+        if: matrix.python-version == '3.11'
         run: |
           multiqc ${{ needs.changes.outputs.single_module }} test_data/data/modules/ --filename all_ignored.html --ignore-samples '*'
           if [[ -f all_ignored.html ]]; then
@@ -105,22 +101,27 @@ jobs:
           fi
 
       - name: File-list input of dirs
+        if: matrix.python-version == '3.11'
         run: |
           cd test_data
           multiqc ${{ needs.changes.outputs.single_module }} --file-list data/special_cases/dir_list.txt
 
       - name: Specific module / Force overwrite / Prepend dirnames / Name and comment / No data dir
+        if: matrix.python-version == '3.11'
         run: multiqc --lint test_data/data/modules/ -m fastqc -f -d -dd 1 -i "Forced Report" -b "This command has lots of options" --filename custom_fn --no-data-dir
 
       - name: For overwrite / Flat plots / Tagged modules only / Exclude module / Ignore samples / Full names / zip data dir / config file
+        if: matrix.python-version == '3.11'
         run: multiqc ${{ needs.changes.outputs.single_module }} --lint test_data/data/modules/ -f --flat --tag methylation --exclude clusterflow --ignore-samples ngi --fullnames --zip-data-dir -c test/config_example.yaml
 
       - name: Specific module / named output dir / dev template / JSON data / File list
+        if: matrix.python-version == '3.11'
         run: |
           cd test_data
           multiqc -m star -o tests/multiqc_report_dev -t default_dev -k json --file-list data/special_cases/file_list.txt
 
       - name: Empty directory (confirm no report)
+        if: matrix.python-version == '3.11'
         run: |
           mkdir empty_dir
           multiqc -n empty empty_dir ${{ needs.changes.outputs.single_module }}
@@ -130,6 +131,7 @@ jobs:
           fi
 
       - name: Test for missing CSPs
+        if: matrix.python-version == '3.11'
         run: python test/print_missing_csp.py --report full_report.html --whitelist CSP.txt
 
   run_windows:
