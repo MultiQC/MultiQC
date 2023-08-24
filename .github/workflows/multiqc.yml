@@ -11,8 +11,9 @@ on:
       - "docs/**"
       - "*.md"
 
+# To reduce code duplication between Win and Linux jobs
 env:
-  core_pytho_deps: "pip setuptools beautifulsoup4"
+  core_python_dependencies: "pip setuptools beautifulsoup4"
 
 jobs:
   changes:
@@ -20,12 +21,6 @@ jobs:
     runs-on: ubuntu-latest
     outputs:
       single_module: ${{ steps.single_module.outputs.value }}
-    #      files_changed: ${{ steps.filter.outputs.changes }}
-    #      n_files_changes: ${{ steps.filter.outputs.changes.all_files_count}}
-    #      modules: ${{ steps.filter.outputs.changes.modules }}
-    #      n_modules: ${{ steps.filter.outputs.changes.modules_count }}
-    #      base_module: ${{ steps.filter.outputs.changes.base_module }}
-    #      changelog: ${{ steps.filter.outputs.changes.changelog }}
 
     steps:
       - uses: actions/checkout@v3
@@ -72,7 +67,7 @@ jobs:
 
       # For CSP checking
       - name: Install dependencies for CI tests
-        run: python -m pip install --upgrade ${{ env.core_pytho_deps }}
+        run: python -m pip install --upgrade ${{ env.core_python_dependencies }}
 
       - name: Install MultiQC
         run: pip install .
@@ -84,11 +79,19 @@ jobs:
           path: test_data
 
       # Run all of the tests!
-      - name: Special case input data
-        run: multiqc ${{ needs.changes.outputs.single_module }} test_data/data --ignore test_data/data/modules/
-
       - name: All modules / Custom report filename
         run: multiqc ${{ needs.changes.outputs.single_module }} --lint test_data/data/modules/ --filename full_report.html
+
+  # More variations of command line flags and inputs. No need to run those across all Python versions.
+  run_linux_311_only:
+    name: Linux - Python 3.11
+    runs-on: ubuntu-20.04
+    needs: [changes, run_linux]
+    timeout-minutes: 10
+
+    steps:
+      - name: Special case input data
+        run: multiqc ${{ needs.changes.outputs.single_module }} test_data/data --ignore test_data/data/modules/
 
       - name: All modules / Log filename as s_name, no cleaning
         run: multiqc ${{ needs.changes.outputs.single_module }} --lint test_data/data/modules/ --fullnames --fn_as_s_name
@@ -154,8 +157,7 @@ jobs:
 
       # Update core packages
       - name: Install dependencies for CI tests
-        run: |
-          python -m pip install --upgrade ${{ env.core_pytho_deps }}
+        run: python -m pip install --upgrade ${{ env.core_pytho_deps }}
 
       # Install MultiQC
       - name: Install MultiQC
