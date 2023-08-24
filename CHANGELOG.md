@@ -25,6 +25,8 @@
   - Fix a bug happening when both `region` and `global` coverage histograms for a sample are available (i.e. when mosdepth was run with `--by`, see [mosdepth docs](https://github.com/brentp/mosdepth#usage)). In this case, data was effectively merged. Instead, summarise it separately and add a separate report section for the region-based coverage data.
 - **RSeQC**
   - Fix "max() arg is an empty sequence" error ([#1985](https://github.com/ewels/MultiQC/issues/1985))
+- **Samtools**
+  - Stats: fix "Percent Mapped" plot when samtools was run with read filtering ([#1971](https://github.com/ewels/MultiQC/issues/1971))
 
 ## [MultiQC v1.15](https://github.com/ewels/MultiQC/releases/tag/v1.15) - 2023-08-04
 
