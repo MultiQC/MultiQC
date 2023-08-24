@@ -14,7 +14,7 @@ class DragenRnaTranscriptCoverage(BaseMultiqcModule):
 
         for f in self.find_log_files("dragen/rna_transcript_cov"):
             data = parse_rna_transcript_cov(f)
-            s_name = self.clean_s_name(f["s_name"], f)
+            s_name = f["s_name"]
             if s_name in data_by_sample:
                 log.debug("Duplicate sample name found! Overwriting: {}".format(s_name))
             self.add_data_source(f, section="stats")

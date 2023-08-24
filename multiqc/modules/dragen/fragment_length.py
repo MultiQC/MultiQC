@@ -18,7 +18,7 @@ class DragenFragmentLength(BaseMultiqcModule):
 
         for f in self.find_log_files("dragen/fragment_length_hist"):
             data_by_rg = parse_fragment_length_hist_file(f)
-            s_name = self.clean_s_name(f["s_name"], f)
+            s_name = f["s_name"]
             if s_name in data_by_rg_by_sample:
                 log.debug(f"Duplicate sample name found! Overwriting: {s_name}")
             self.add_data_source(f, section="stats")

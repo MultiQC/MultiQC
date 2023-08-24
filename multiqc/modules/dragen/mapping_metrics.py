@@ -24,7 +24,7 @@ class DragenMappingMetics(BaseMultiqcModule):
 
         for f in self.find_log_files("dragen/mapping_metrics"):
             data_by_readgroup, data_by_phenotype = parse_mapping_metrics_file(f)
-            s_name = self.clean_s_name(f["s_name"], f)
+            s_name = f["s_name"]
             if s_name in data_by_rg_by_sample:
                 log.debug(f"Duplicate DRAGEN output prefix found! Overwriting: {s_name}")
             self.add_data_source(f, section="stats")

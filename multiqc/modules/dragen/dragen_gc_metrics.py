@@ -17,7 +17,7 @@ class DragenGcMetrics(BaseMultiqcModule):
 
         for f in self.find_log_files("dragen/gc_metrics"):
             data = parse_gc_metrics_file(f)
-            s_name = self.clean_s_name(f["s_name"], f)
+            s_name = f["s_name"]
             if s_name in data_by_sample:
                 log.debug("Duplicate sample name found! Overwriting: {}".format(s_name))
             self.add_data_source(f, section="stats")

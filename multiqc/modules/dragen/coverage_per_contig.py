@@ -15,7 +15,7 @@ class DragenCoveragePerContig(BaseMultiqcModule):
 
         for f in self.find_log_files("dragen/wgs_contig_mean_cov"):
             perchrom_data_by_phenotype = parse_wgs_contig_mean_cov(f)
-            s_name = self.clean_s_name(f["s_name"], f)
+            s_name = f["s_name"]
             if s_name in perchrom_data_by_phenotype_by_sample:
                 log.debug(f"Duplicate sample name found! Overwriting: {s_name}")
             self.add_data_source(f, section="stats")
