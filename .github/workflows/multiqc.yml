@@ -157,7 +157,7 @@ jobs:
 
       # Update core packages
       - name: Install dependencies for CI tests
-        run: python -m pip install --upgrade ${{ env.core_pytho_deps }}
+        run: python -m pip install --upgrade ${{ env.core_python_dependencies }}
 
       # Install MultiQC
       - name: Install MultiQC
