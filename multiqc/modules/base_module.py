@@ -361,6 +361,8 @@ class BaseMultiqcModule(object):
                     s_name = match.group() if match else s_name
                 elif ext.get("type") is None:
                     logger.error('config.fn_clean_exts config was missing "type" key: {}'.format(ext))
+                else:
+                    logger.error("Unrecognised config.fn_clean_exts type: {}".format(ext.get("type")))
             # Trim off characters at the end of names
             for chrs in config.fn_clean_trim:
                 if s_name.endswith(chrs):
