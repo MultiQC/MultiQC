@@ -92,7 +92,10 @@ jobs:
       - name: Filter out all filenames (confirm no report)
         run: |
           multiqc ${{ steps.single_module.outputs.value }} test_data/data/modules/ --filename all_ignored.html --ignore-samples '*'
-          [[ ! -f all_ignored.html ]]
+          if [[ -f all_ignored.html ]]; then
+            echo "Either self.ignore_samples() was not called in a module, or UserWarning was not raised by the module when no matching files are found"
+            exit 1
+          fi
 
       - name: File-list input of dirs
         run: |
