@@ -108,7 +108,7 @@ jobs:
       - name: For overwrite / Flat plots / Tagged modules only / Exclude module / Ignore samples / Full names / zip data dir / config file
         run: multiqc ${{ steps.single_module.outputs.value }} --lint test_data/data/modules/ -f --flat --tag methylation --exclude clusterflow --ignore-samples ngi --fullnames --zip-data-dir -c test/config_example.yaml
 
-      - name: Specfic module / named output dir / dev template / JSON data / File list
+      - name: Specific module / named output dir / dev template / JSON data / File list
         run: |
           cd test_data
           multiqc -m star -o tests/multiqc_report_dev -t default_dev -k json --file-list data/special_cases/file_list.txt
