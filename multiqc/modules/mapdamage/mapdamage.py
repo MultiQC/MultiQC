@@ -41,6 +41,15 @@ class MultiqcModule(BaseMultiqcModule):
         self.lgdist_fw_data = self.ignore_samples(self.lgdist_fw_data)
         self.lgdist_rv_data = self.ignore_samples(self.lgdist_rv_data)
 
+        ## Stop computations if there is no data after ignoring samples
+        if (
+            len(self.threepGtoAfreq_data) == 0
+            or len(self.fivepCtoTfreq_data) == 0
+            or len(self.lgdist_fw_data) == 0
+            or len(self.lgdist_rv_data) == 0
+        ):
+            raise UserWarning
+
         ## No need to run self.write_data_file as all the data imported is already in a TSV format and can be (almost) directly used for plotting.
 
         # Basic Stats Table, use generic function to add data to general table
