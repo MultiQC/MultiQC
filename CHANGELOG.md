@@ -25,6 +25,8 @@
   - Fix "max() arg is an empty sequence" error ([#1985](https://github.com/ewels/MultiQC/issues/1985))
 - **DRAGEN**
   - Make DRAGEN module use `fn_clean_exts` instead of hardcoded file names. Fixes working with arbitrary file names ([#1865])
+- **Samtools**
+  - Stats: fix "Percent Mapped" plot when samtools was run with read filtering ([#1971](https://github.com/ewels/MultiQC/issues/1971))
 
 ## [MultiQC v1.15](https://github.com/ewels/MultiQC/releases/tag/v1.15) - 2023-08-04
 
