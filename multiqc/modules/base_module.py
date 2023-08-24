@@ -345,31 +345,22 @@ class BaseMultiqcModule(object):
                 # Go through different filter types
                 if type(ext) is str:
                     ext = {"type": "truncate", "pattern": ext}
-                if not ext.get("type"):
-                    ext["type"] = "truncate"
-                patterns = ext.get("pattern", ext.get("patterns", []))
-                if isinstance(patterns, str):
-                    patterns = [patterns]
                 if ext.get("type") == "truncate":
-                    for p in patterns:
-                        s_name = s_name.split(p, 1)[0]
+                    s_name = s_name.split(ext["pattern"], 1)[0]
                 elif ext.get("type") in ("remove", "replace"):
                     if ext["type"] == "replace":
                         logger.warning(
                             "use 'config.fn_clean_sample_names.remove' instead "
                             "of 'config.fn_clean_sample_names.replace' [deprecated]"
                         )
-                    for p in patterns:
-                        s_name = s_name.replace(p, "")
+                    s_name = s_name.replace(ext["pattern"], "")
                 elif ext.get("type") == "regex":
-                    for p in patterns:
-                        s_name = re.sub(p, "", s_name)
+                    s_name = re.sub(ext["pattern"], "", s_name)
                 elif ext.get("type") == "regex_keep":
-                    for p in patterns:
-                        match = re.search(p, s_name)
-                        s_name = match.group() if match else s_name
-                else:
-                    logger.error("Unrecognised config.fn_clean_exts type: {}".format(ext.get("type")))
+                    match = re.search(ext["pattern"], s_name)
+                    s_name = match.group() if match else s_name
+                elif ext.get("type") is None:
+                    logger.error('config.fn_clean_exts config was missing "type" key: {}'.format(ext))
             # Trim off characters at the end of names
             for chrs in config.fn_clean_trim:
                 if s_name.endswith(chrs):
