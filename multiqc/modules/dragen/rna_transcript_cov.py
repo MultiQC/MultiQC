@@ -1,6 +1,5 @@
 # Initialise the logger
 import logging
-import re
 from collections import defaultdict
 
 from multiqc.modules.base_module import BaseMultiqcModule
@@ -14,8 +13,8 @@ class DragenRnaTranscriptCoverage(BaseMultiqcModule):
         data_by_sample = defaultdict(dict)
 
         for f in self.find_log_files("dragen/rna_transcript_cov"):
-            s_name, data = parse_rna_transcript_cov(f)
-            s_name = self.clean_s_name(s_name, f)
+            data = parse_rna_transcript_cov(f)
+            s_name = f["s_name"]
             if s_name in data_by_sample:
                 log.debug("Duplicate sample name found! Overwriting: {}".format(s_name))
             self.add_data_source(f, section="stats")
@@ -64,8 +63,6 @@ def parse_rna_transcript_cov(f):
     5	0.308795
     """
 
-    s_name = re.search(r"(.*).quant.transcript_coverage.txt", f["fn"]).group(1)
-
     data = {}
     for line in f["f"].splitlines()[1:]:
         percentile, coverage = line.split()
@@ -80,4 +77,4 @@ def parse_rna_transcript_cov(f):
             pass
         data[percentile] = coverage
 
-    return s_name, data
+    return data

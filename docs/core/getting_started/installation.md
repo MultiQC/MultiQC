@@ -254,7 +254,7 @@ For more help, look into [the Docker documentation](https://docs.docker.com/engi
 The above base command is a little verbose, so if you are using this a lot it may be worth adding the following bash alias to your `~/.bashrc` file:
 
 ```bash
-alias multiqc="docker run -tv `pwd`:`pwd` -w `pwd` ewels/multiqc"
+alias multiqc="docker run -tv `pwd`:`pwd` -w `pwd` ewels/multiqc multiqc"
 ```
 
 Once applied (first log out and in again) you can then just use the `multiqc` command instead:

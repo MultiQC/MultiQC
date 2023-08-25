@@ -183,7 +183,7 @@ class StatsReportMixin:
         bedgraph_data = {}
         for sample_id, data in samples_data.items():
             expected_total = data["raw_total_sequences"]
-            read_sum = data["reads_mapped"] + data["reads_unmapped"]
+            read_sum = data["reads_mapped"] + data["reads_unmapped"] + data["filtered_sequences"]
             if read_sum == expected_total:
                 bedgraph_data[sample_id] = data
             else:

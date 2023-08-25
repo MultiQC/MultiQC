@@ -39,3 +39,5 @@ runTest.sh
 .direnv/*
 /result
 venv
+
+test_data/

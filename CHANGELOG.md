@@ -4,9 +4,30 @@
 
 ### MultiQC updates
 
+- Removed `simplejson` unused dependency ([#1973](https://github.com/ewels/MultiQC/pull/1973))
+- Give config `custom_plot_config` priority over column-specific settings set by modules
+- When exporting plots, make a more clear error message for unsupported FastQC dot plot [#1976](https://github.com/ewels/MultiQC/pull/1976)
+
 ### New Modules
 
 ### Module updates
+
+- **Custom content**
+  - Don't convert sample IDs to floats ([#1883](https://github.com/ewels/MultiQC/issues/1883))
+- **Kraken**
+  - Fix bug where ranks incorrectly assigned to tabs ([#1766](https://github.com/ewels/MultiQC/issues/1766)).
+- **Mosdepth**
+  - Add X/Y relative coverage plot, analogous to the one in samtools-idxstats ([#1978](https://github.com/ewels/MultiQC/issues/1978))
+  - Added the `perchrom_fraction_cutoff` option into the config to help avoid clutter in contig-level plots
+  - Fix a bug happening when both `region` and `global` coverage histograms for a sample are available (i.e. when mosdepth was run with `--by`, see [mosdepth docs](https://github.com/brentp/mosdepth#usage)). In this case, data was effectively merged. Instead, summarise it separately and add a separate report section for the region-based coverage data.
+- **RSeQC**
+  - Fix "max() arg is an empty sequence" error ([#1985](https://github.com/ewels/MultiQC/issues/1985))
+- **DRAGEN**
+  - Make DRAGEN module use `fn_clean_exts` instead of hardcoded file names. Fixes working with arbitrary file names ([#1865])
+- **WhatsHap**
+  - Bugfix: ensure that TSV is only split on tab character. Allows sample names with spaces ([#1981](https://github.com/ewels/MultiQC/pull/1981)]
+- **Samtools**
+  - Stats: fix "Percent Mapped" plot when samtools was run with read filtering ([#1971](https://github.com/ewels/MultiQC/issues/1971))
 
 ## [MultiQC v1.15](https://github.com/ewels/MultiQC/releases/tag/v1.15) - 2023-08-04
 
@@ -52,6 +73,8 @@ for more information.
   - Update filename pattern in RNA quant metrics ([#1958](https://github.com/ewels/MultiQC/pull/1958))
 - **filtlong**
   - Handle reports from locales that use `.` as a thousands separator ([#1843](https://github.com/ewels/MultiQC/issues/1843))
+- **GATK**
+  - Adds support for [AnalyzeSaturationMutagenesis submodule](https://gatk.broadinstitute.org/hc/en-us/articles/360037594771-AnalyzeSaturationMutagenesis-BETA-)
 - **HUMID**
   - Fix bug that prevent HUMID stats files from being parsed ([#1856](https://github.com/ewels/MultiQC/issues/1856))
 - **Mosdepth**
