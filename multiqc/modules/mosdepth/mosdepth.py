@@ -439,7 +439,7 @@ class MultiqcModule(BaseMultiqcModule):
             #   genome ..........      0x  1.00   = 1.00 - 0.80 = 0.20
             prev_x, prev_cumcov = cumcov_dist.pop()
             if not cumcov_dist:
-                cov_dist_data[s_name][prev_x] = 1.
+                cov_dist_data[s_name][prev_x] = 1.0
             else:
                 while cumcov_dist:
                     x, cumcov = cumcov_dist.pop()
