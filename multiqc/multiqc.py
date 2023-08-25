@@ -953,6 +953,8 @@ def run(
             copy_tree(config.data_tmp_dir, config.data_dir, preserve_times=0, preserve_mode=0)
             shutil.rmtree(config.data_tmp_dir)
 
+        logger.debug("Full report path: {}".format(os.path.realpath(config.output_fn)))
+
         # Copy across the static plot images if requested
         if config.export_plots:
             config.plots_dir = os.path.join(config.output_dir, config.plots_dir_name)
@@ -1086,11 +1088,11 @@ def run(
 
     report.runtimes["total"] = time.time() - start_execution_time
     if config.profile_runtime:
-        logger.info("Run took {:.2f} seconds".format(report.runtimes["total"]))
-        logger.info(" - {:.2f}s: Searching files".format(report.runtimes["total_sp"]))
-        logger.info(" - {:.2f}s: Running modules".format(report.runtimes["total_mods"]))
+        logger.warning("Run took {:.2f} seconds".format(report.runtimes["total"]))
+        logger.warning(" - {:.2f}s: Searching files".format(report.runtimes["total_sp"]))
+        logger.warning(" - {:.2f}s: Running modules".format(report.runtimes["total_mods"]))
         if config.make_report:
-            logger.info(" - {:.2f}s: Compressing report data".format(report.runtimes["total_compression"]))
+            logger.warning(" - {:.2f}s: Compressing report data".format(report.runtimes["total_compression"]))
             logger.info(
                 "For more information, see the 'Run Time' section in {}".format(os.path.relpath(config.output_fn))
             )
