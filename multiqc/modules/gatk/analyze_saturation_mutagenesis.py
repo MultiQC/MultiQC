@@ -3,7 +3,7 @@
 """ MultiQC submodule to parse output from GATK tool AnalyzeSaturationMutagenesis """
 
 import logging
-from collections import OrderedDict
+from collections import OrderedDict, defaultdict
 
 from multiqc import config
 from multiqc.plots import bargraph, table
@@ -54,33 +54,25 @@ class AnalyzeSaturationMutagenesisMixin:
         This does not parse percentages, since those are readily calculated
         and MultiQC automatically generates them for plotting."""
 
-        keys = [
-            "disjoint_pairs",
-            "overlapping_pairs",
-            "total_reads",
-            "unmapped_reads",
-            "lowq_reads",
-            "evaluable_reads",
-            "wt_reads_disjoint",
-            "wt_reads_overlapping",
-            "called_variants_disjoint",
-            "called_variants_overlapping",
-            "mate_ignored_disjoint",
-            "inconsistent_overlapping",
-            "low_quality_variation_disjoint",
-            "low_quality_variation_overlapping",
-            "insufficient_flank_disjoint",
-            "insufficient_flank_overlapping",
-            "total_base_calls",
-            "evaluated_base_calls",
-            "unevaluated_base_calls",
-            "wt_total_reads",
-            "variants_total_reads",
-            "filtered_total_reads",
-        ]
+        label_to_key = {
+            "Total Reads:": "total_reads",
+            ">Unmapped Reads:": "unmapped_reads",
+            ">LowQ Reads:": "lowq_reads",
+            ">Evaluable Reads:": "evaluable_reads",
+            ">>Reads in disjoint pairs evaluated separately:": "disjoint_pairs",
+            ">>Reads in overlapping pairs evaluated together:": "overlapping_pairs",
+            ">>>Wild type:": "wt_reads",
+            ">>>Called variants:": "called_variants",
+            ">>>Mate ignored:": "mate_ignored",
+            ">>>Inconsistent pair:": "inconsistent",
+            ">>>Low quality variation:": "low_quality_variation",
+            ">>>Insufficient flank:": "insufficient_flank",
+            "Total base calls:": "total_base_calls",
+            ">Base calls evaluated for variants:": "evaluated_base_calls",
+            ">Base calls unevaluated:": "unevaluated_base_calls",
+        }
 
-        # Initialize dictionary with all keys, since some may be missing
-        data = {key: 0 for key in keys}
+        data = defaultdict(int)
 
         # For keeping track of whether we are in disjoint or overlapping reads
         # Disjoint are first, so set to True initially
@@ -88,83 +80,30 @@ class AnalyzeSaturationMutagenesisMixin:
 
         for line in file_handle:
             fields = line.split("\t")
-
-            # First, note whether we are in disjoint or overlapping reads block
-
-            if fields[0] == ">>Reads in disjoint pairs evaluated separately:":
-                data["disjoint_pairs"] = int(fields[1])
+            label = fields[0]
+            key = label_to_key[label]
+            if key == "disjoint_pairs":
                 disjoint_reads = True
-
-            elif fields[0] == ">>Reads in overlapping pairs evaluated together:":
-                data["overlapping_pairs"] = int(fields[1])
+            elif key == "overlapping_pairs":
                 disjoint_reads = False
-
-            # Proceed with the rest of the data
-            elif fields[0] == "Total Reads:":
-                data["total_reads"] = int(fields[1])
-
-            elif fields[0] == ">Unmapped Reads:":
-                data["unmapped_reads"] = int(fields[1])
-
-            elif fields[0] == ">LowQ Reads:":
-                data["lowq_reads"] = int(fields[1])
-
-            elif fields[0] == ">Evaluable Reads:":
-                data["evaluable_reads"] = int(fields[1])
-
-            elif fields[0] == ">>>Wild type:":
-                if disjoint_reads:
-                    data["wt_reads_disjoint"] = int(fields[1])
-                else:
-                    data["wt_reads_overlapping"] = int(fields[1])
-
-            elif fields[0] == ">>>Called variants:":
-                if disjoint_reads:
-                    data["called_variants_disjoint"] = int(fields[1])
-                else:
-                    data["called_variants_overlapping"] = int(fields[1])
-
-            elif fields[0] == ">>>Mate ignored:":
-                data["mate_ignored_disjoint"] = int(fields[1])
-
-            elif fields[0] == ">>>Inconsistent pair:":
-                data["inconsistent_overlapping"] = int(fields[1])
-
-            elif fields[0] == ">>>Low quality variation:":
-                if disjoint_reads:
-                    data["low_quality_variation_disjoint"] = int(fields[1])
-                else:
-                    data["low_quality_variation_overlapping"] = int(fields[1])
-
-            elif fields[0] == ">>>Insufficient flank:":
-                if disjoint_reads:
-                    data["insufficient_flank_disjoint"] = int(fields[1])
-                else:
-                    data["insufficient_flank_overlapping"] = int(fields[1])
-
-            elif fields[0] == "Total base calls:":
-                data["total_base_calls"] = int(fields[1])
-
-            elif fields[0] == ">Base calls evaluated for variants:":
-                data["evaluated_base_calls"] = int(fields[1])
-
-            elif fields[0] == ">Base calls unevaluated:":
-                data["unevaluated_base_calls"] = int(fields[1])
+            elif label.startswith(">>>"):
+                key = key + "_" + ("disjoint" if disjoint_reads else "overlapping")
+            data[key] = int(fields[1])
 
         # Create some summary fields
-
         data["wt_total_reads"] = data["wt_reads_disjoint"] + data["wt_reads_overlapping"]
         data["variants_total_reads"] = data["called_variants_disjoint"] + data["called_variants_overlapping"]
-        data["filtered_reads"] = (
-            data["lowq_reads"]
-            + data["mate_ignored_disjoint"]
-            + data["inconsistent_overlapping"]
-            + data["low_quality_variation_disjoint"]
-            + data["low_quality_variation_overlapping"]
-            + data["insufficient_flank_disjoint"]
-            + data["insufficient_flank_overlapping"]
+        data["filtered_reads"] = sum(
+            [
+                data["lowq_reads"],
+                data["mate_ignored_disjoint"],
+                data["inconsistent_overlapping"],
+                data["low_quality_variation_disjoint"],
+                data["low_quality_variation_overlapping"],
+                data["insufficient_flank_disjoint"],
+                data["insufficient_flank_overlapping"],
+            ]
         )
-
         return data
 
     def gatk_analyze_saturation_mutagenesis_plot_reads(self, data):
