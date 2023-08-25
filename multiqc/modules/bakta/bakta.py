@@ -19,7 +19,7 @@ class MultiqcModule(BaseMultiqcModule):
             name="Bakta",
             anchor="bakta",
             href="https://github.com/oschwengers/bakta",
-            info="Rapid & standardized annotation of bacterial genomes, MAGs & plasmids",
+            info="is a tool for the rapid & standardized annotation of bacterial genomes, MAGs & plasmids",
             doi="10.1099/mgen.0.000685",
         )
 
@@ -58,7 +58,7 @@ class MultiqcModule(BaseMultiqcModule):
         }
         headers["CDSs"] = {
             "title": "# CDS",
-            "description": "Number of CDS",
+            "description": "Number of found CDS",
             "min": 0,
             "scale": "YlGnBu",
             "format": "{:,d}",
