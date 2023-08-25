@@ -25,8 +25,7 @@ class MultiqcModule(BaseMultiqcModule):
 
         # Parse logs (txt files)
         self.bakta = dict()
-        for f in self.find_log_files("bakta"):  # , filehandles=True):
-            # self.parse_bakta(f)
+        for f in self.find_log_files("bakta"):
             self.bakta[f["s_name"]] = self.parse_bakta(f["f"])
             self.add_data_source(f)
         # Filter out ignored samples (given with --ignore-samples option)
