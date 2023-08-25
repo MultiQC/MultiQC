@@ -1,4 +1,3 @@
-
 ---
 Using MultiQC:
   Installation: installation.md
