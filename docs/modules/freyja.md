@@ -1,6 +1,6 @@
 ---
-Name: Freyja
-URL: https://github.com/andersen-lab/Freyja
+name: Freyja
+url: https://github.com/andersen-lab/Freyja
 description: >
   Freyja: Recover relative lineage abundances from mixed SARS-CoV-2 samples.
 ---
