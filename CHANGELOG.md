@@ -7,6 +7,7 @@
 - Removed `simplejson` unused dependency ([#1973](https://github.com/ewels/MultiQC/pull/1973))
 - Give config `custom_plot_config` priority over column-specific settings set by modules
 - When exporting plots, make a more clear error message for unsupported FastQC dot plot [#1976](https://github.com/ewels/MultiQC/pull/1976)
+- Fixed parsing of `plot_type: "html"` `data` in json custom content
 
 ### New Modules
 
