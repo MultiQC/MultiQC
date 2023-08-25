@@ -34,7 +34,7 @@ Supported commands:
 - `VariantCallingMetrics`
 - `WgsMetrics`
 
-#### Coverage Levels
+### Coverage Levels
 
 It's possible to customise the HsMetrics _"Target Bases 30X"_ coverage and
 WgsMetrics _"Fraction of Bases over 30X"_ that are
@@ -59,7 +59,7 @@ picard_config:
     - 50
 ```
 
-#### CrosscheckFingerprints
+### CrosscheckFingerprints
 
 In addition to adding a table of results, a `Crosschecks All Expected` column will be added to the General Statistics. If all comparisons for a sample were `Expected`, then the value of the field will be `True` and green. If not it will be `False` and Red.
 
@@ -79,7 +79,7 @@ The column names will be normalized, ex `LOD_SCORE -> Lod score`.
 
 Note that if `CALCULATE_TUMOR_AWARE_RESULTS` was set to true on the CLI for any of the CrosscheckFingerprints result files, then the `LOD_SCORE_TUMOR_NORMAL` and `LOD_SCORE_NORMAL_TUMOR` will be displayed.
 
-#### HsMetrics
+### HsMetrics
 
 Note that the _Target Region Coverage_ plot is generated using the `PCT_TARGET_BASES_` table columns from the HsMetrics output (not immediately obvious when looking at the log files).
 
@@ -110,7 +110,7 @@ picard_config:
     - MAX_TARGET_COVERAGE
 ```
 
-#### InsertSizeMetrics
+### InsertSizeMetrics
 
 By default, the insert size plot is smoothed to contain a maximum of 500 data points per sample.
 This is to prevent the MultiQC report from being very large with big datasets.
@@ -129,7 +129,7 @@ picard_config:
   insertsize_xmax: 10000
 ```
 
-#### MarkDuplicates
+### MarkDuplicates
 
 If a `BAM` file contains multiple read groups, Picard MarkDuplicates generates a report
 with multiple metric lines, one for each "library".
@@ -151,7 +151,7 @@ This prevents the merge and recalculation and appends the library name to the sa
 This behaviour is present in MultiQC since version 1.9. Before this, only the metrics from the
 first library were taken and all others were ignored.
 
-#### ValidateSamFile Search Pattern
+### ValidateSamFile Search Pattern
 
 Generally, Picard adds identifiable content to the output of function calls. This is not the case for ValidateSamFile. In order to identify logs the MultiQC Picard submodule `ValidateSamFile` will search for filenames that contain 'validatesamfile' or 'ValidateSamFile'. One can customise the used search pattern by overwriting the `picard/sam_file_validation` pattern in your MultiQC config. For example:
 
@@ -161,7 +161,7 @@ sp:
     fn: "*[Vv]alidate[Ss]am[Ff]ile*"
 ```
 
-#### WgsMetrics
+### WgsMetrics
 
 The coverage histogram from Picard typically shows a normal distribution with a very long tail.
 To make the plot easier to view, by default the module plots the line up to 99% of the data.

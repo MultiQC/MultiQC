@@ -51,4 +51,8 @@ script-src 'self'
     'sha256-1pWjCVoi5AoQvT52zb72qGCpIpfJzlc9trKcbcarXUY=' # multiqc_toolbox.js
     'sha256-gB0osLOAZOyj1tcLhUs/xzf98qK3dfViuIJdX0lI8xA=' # multiqc_fastqc.js
     'unsafe-eval'
+    
+    # 1.16
+    'sha256-wlLs2UDz7n3cvWqY0PTazlKGYhGTOPH77vsElgE7pFw=' # multiqc_fastqc.js
+    'sha256-GueuiCxuV8FbnCv7Txho8dTrz3HODU6GH40tvy5kMks=' # multiqc_dragen_fastqc.js
 ;

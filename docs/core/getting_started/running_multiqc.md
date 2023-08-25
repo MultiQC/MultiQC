@@ -16,7 +16,7 @@ multiqc .
 That's it! MultiQC will scan the specified directories and produce a report
 based on details found in any log files that it recognises.
 
-See [Using MultiQC Reports](http://multiqc.info/docs/#using-multiqc-reports) for more information about how
+See [Using MultiQC Reports](../reports/reports.md) for more information about how
 to use the generated report.
 
 For a description of all command line parameters, run `multiqc --help`.
@@ -154,7 +154,7 @@ different styling by using the `-t`/`--template` option. The available templates
 are listed with `multiqc --help`.
 
 If you're interested in creating your own custom template, see the
-[writing new templates](http://multiqc.info/docs/#writing-new-templates) section.
+[writing new templates](../development/templates.md) section.
 
 ## Parsed data directory
 
