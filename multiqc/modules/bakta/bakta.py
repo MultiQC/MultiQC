@@ -95,7 +95,7 @@ class MultiqcModule(BaseMultiqcModule):
     def parse_bakta(self, f):
         """Parse bakta txt summary files for annotation parameters."""
 
-        metrics_int = (
+        metrics = (
             "Length",
             "Count",
             "N50",
@@ -115,46 +115,43 @@ class MultiqcModule(BaseMultiqcModule):
             "oriVs",
             "oriTs",
         )
-        metrics_float = (
-            "GC",
-            "N ratio",
-            "coding density",
-        )
 
         data = {}
         for line in f["contents_lines"]:
             s = line.strip().split(": ")
-            if s[0] in metrics_int:
-                data[s[0]] = int(s[1])
-            elif s[0] in metrics_float:
-                data[s[0]] = float(s[1])
+            if s[0] in metrics:
+                data[s[0].replace(" ", "_")] = int(s[1])
         return data
 
     def bakta_barplot(self):
         """Make a basic plot of the annotation stats"""
 
         # Specify the order of the different categories
-        keys = OrderedDict()
-        keys["CDSs"] = {"name": "CDS"}
-        keys["rRNAs"] = {"name": "rRNA"}
-        keys["tRNAs"] = {"name": "tRNA"}
-        keys["tmRNAs"] = {"name": "tmRNA"}
-        keys["ncRNAs"] = {"name": "ncRNA"}
-        keys["ncRNA regions"] = {"name": "ncRNA region"}
-        keys["hypotheticals"] = {"name": "hypothetical"}
-        keys["CRISPR arrays"] = {"name": "CRISPR array"}
-        keys["pseudogenes"] = {"name": "pseudogene"}
-        keys["signal peptides"] = {"name": "signal peptide"}
-        keys["sORFs"] = {"name": "sORF"}
-        keys["gaps"] = {"name": "gap"}
-        keys["oriCs"] = {"name": "oriC"}
-        keys["oriVs"] = {"name": "oriV"}
-        keys["oriTs"] = {"name": "oriT"}
+        categories = {
+            metric: {"name": cat}
+            for metric, cat in {
+                "CDSs": "CDS",
+                "rRNAs": "rRNA",
+                "tRNAs": "tRNA",
+                "tmRNAs": "tmRNA",
+                "ncRNAs": "ncRNA",
+                "ncRNA_regions": "ncRNA region",
+                "hypotheticals": "hypothetical",
+                "CRISPR_arrays": "CRISPR array",
+                "pseudogenes": "pseudogene",
+                "signal_peptides": "signal peptide",
+                "sORFs": "sORF",
+                "gaps": "gap",
+                "oriCs": "oriC",
+                "oriVs": "oriV",
+                "oriTs": "oriT",
+            }.items()
+        }
 
         plot_config = {
-            "id": "bakta_plot",
+            "id": "bakta_feature_types",
             "title": "Bakta: Feature Types",
-            "ylab": " Counts",
+            "ylab": "# Contigs",
             "cpswitch_counts_label": "Features",
         }
-        return bargraph.plot(self.bakta, keys, plot_config)
+        return bargraph.plot(self.bakta, categories, plot_config)
