@@ -118,7 +118,11 @@ def custom_module_classes():
                         break
                     parsed_data["id"] = parsed_data.get("id", f["s_name"])
                     # Run sample-name cleaning on the data keys
-                    parsed_data["data"] = {bm.clean_s_name(k, f): v for k, v in parsed_data.get("data", {}).items()}
+                    try:
+                        parsed_data["data"] = {bm.clean_s_name(k, f): v for k, v in parsed_data.get("data", {}).items()}
+                    except AttributeError as e:
+                        # If parsed_data["data"] is a string, this won't work - but that's fine
+                        pass
                 elif f_extension == ".png" or f_extension == ".jpeg" or f_extension == ".jpg":
                     image_string = base64.b64encode(f["f"].read()).decode("utf-8")
                     image_format = "png" if f_extension == ".png" else "jpg"
