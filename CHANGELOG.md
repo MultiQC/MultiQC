@@ -24,6 +24,8 @@
   - Fix "max() arg is an empty sequence" error ([#1985](https://github.com/ewels/MultiQC/issues/1985))
 - **WhatsHap**
   - Bugfix: ensure that TSV is only split on tab character. Allows sample names with spaces ([#1981](https://github.com/ewels/MultiQC/pull/1981)]
+- **Samtools**
+  - Stats: fix "Percent Mapped" plot when samtools was run with read filtering ([#1971](https://github.com/ewels/MultiQC/issues/1971))
 
 ## [MultiQC v1.15](https://github.com/ewels/MultiQC/releases/tag/v1.15) - 2023-08-04
 
