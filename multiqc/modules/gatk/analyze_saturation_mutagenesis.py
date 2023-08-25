@@ -435,9 +435,11 @@ class AnalyzeSaturationMutagenesisMixin:
             "namespace": "GATK",
         }
         # Add module specific prefix to all keys to be safe
-        asm_headers = {f"gatk_ask_{k}": v for k, v in asm_headers.items()}
+        prefix = "gatk_ask_"
+        asm_headers = {f"{prefix}{k}": v for k, v in asm_headers.items()}
+        data = {sn: {f"{prefix}{k}": v for k, v in d.items()} for sn, d in data.items()}
 
-        pconfig = {"id": "gatk_asm_stats", "namespace": "GATK", "table_title": "GATK ASM counts"}
+        pconfig = {"id": f"{prefix}stats", "namespace": "GATK", "table_title": "GATK ASM counts"}
 
         self.add_section(
             name="GATK ASM counts",
