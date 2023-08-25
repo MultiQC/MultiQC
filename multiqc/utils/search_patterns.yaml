@@ -353,6 +353,8 @@ gatk/base_recalibrator:
   num_lines: 3
 gatk/analyze_saturation_mutagenesis:
   fn: "*.readCounts"
+  contents: ">>Reads in disjoint pairs evaluated separately:"
+  num_lines: 10
 gffcompare:
   fn: "*.stats"
   contents: "# gffcompare"

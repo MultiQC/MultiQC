@@ -23,7 +23,7 @@ class AnalyzeSaturationMutagenesisMixin:
             parsed_data = self.parse_read_counts_file(file_handle["f"])
             if len(parsed_data) > 1:
                 if file_handle["s_name"] in self.gatk_analyze_saturation_mutagenesis:
-                    log.debug("Duplicate sample name found! Overwriting: %s", file_handle["s_name"])
+                    log.debug(f"Duplicate sample name found! Overwriting: {file_handle['s_name']}")
                 self.add_data_source(file_handle, section="analyze_saturation_mutagenesis")
                 self.gatk_analyze_saturation_mutagenesis[file_handle["s_name"]] = parsed_data
 
@@ -31,13 +31,13 @@ class AnalyzeSaturationMutagenesisMixin:
         self.gatk_analyze_saturation_mutagenesis = self.ignore_samples(self.gatk_analyze_saturation_mutagenesis)
 
         n_reports_found = len(self.gatk_analyze_saturation_mutagenesis)
-        if n_reports_found > 0:
-            log.info("Found %d AnalyzeSaturationMutagenesis reports", n_reports_found)
+        if n_reports_found == 0:
+            return 0
 
-            # Write parsed report data to a file (restructure first)
-            self.write_data_file(
-                self.gatk_analyze_saturation_mutagenesis, "multiqc_gatk_analyze_saturation_mutagenesis"
-            )
+        log.info("Found %d AnalyzeSaturationMutagenesis reports", n_reports_found)
+
+        # Write parsed report data to a file (restructure first)
+        self.write_data_file(self.gatk_analyze_saturation_mutagenesis, "multiqc_gatk_analyze_saturation_mutagenesis")
 
         self.gatk_analyze_saturation_mutagenesis_table(self.gatk_analyze_saturation_mutagenesis)
         # Add plots
@@ -442,18 +442,18 @@ class AnalyzeSaturationMutagenesisMixin:
             helptext="""
             This table shows the distribution of calls (for reads or for bases) across all samples.
             Reads are categorized as WT, a variant, or filtered. Bases can be either evaluated or unevaluated, corresponding to the reads they come from.
-            
+
             Reads are filtered for the following reasons:
-            
+
             * Unmapped: the map quality is below the minimum MapQ (default = 4)'
             * Low quality reads: Reads are trimmed for quality > minQ (default 30) before calling variants. If the final size is less than the minimum length (default 15), or if the remaining segment does not cover the ORF, the read is filtered.
-            
+
             Paired reads are also split into overlapping and disjoint sets, with further filters for both.
-            
+
             * Inconsistent: If overlapping reads disagree on the called variant, the read is filtered.
             * Ignored mate: If the pairs are disjoint, the first read of the pair is used for analysis, and the second is ignored.
             * Low quality variation: If the variant includes ambiguous bases (not A, C, G, or T, or -), the read is filtered.
-            * Insufficient flank: If the variant does not include a certain number of WT bases (default 2) flanking the variant, the read is filtered. 
+            * Insufficient flank: If the variant does not include a certain number of WT bases (default 2) flanking the variant, the read is filtered.
             """,
             plot=table.plot(data, asm_headers, config),
         )
