@@ -15,6 +15,7 @@ It can generate several output files all with a common prefix and different endi
 - a distribution of proportion of bases covered at or above a given threshhold for each chromosome and genome-wide (`{prefix}.mosdepth.global.dist.txt` and `{prefix}.mosdepth.region.dist.txt`),
 - quantized output that merges adjacent bases as long as they fall in the same coverage bins (`{prefix}.quantized.bed.gz`),
 - threshold output to indicate how many bases in each region are covered at the given thresholds (`{prefix}.thresholds.bed.gz`)
+- summary output providing region length, coverage mean, min, and max for each region. (`{prefix}.mosdepth.summary.txt`)
 
 The MultiQC module plots coverage distributions from 2 kinds of outputs:
 
@@ -69,6 +70,15 @@ mosdepth_config:
 
 Note that exclusion superseeds inclusion for the contig filters.
 
+To additionally avoid cluttering the plot, mosdepth can exclude contigs with a low relative coverage.
+
+```yaml
+mosdepth_config:
+  # Should be a fraction, e.g. 0.001 (exclude contigs with 0.1% coverage of sum of
+  # coverages across all contigs)
+  perchrom_fraction_cutoff: 0.001
+```
+
 If you want to see what is being excluded, you can set `show_excluded_debug_logs` to `True`:
 
 ```yaml
@@ -78,3 +88,17 @@ mosdepth_config:
 
 This will then print a debug log message (use `multiqc -v`) for each excluded contig.
 This is disabled by default as there can be very many in some cases.
+
+Besides the `{prefix}.mosdepth.global.dist.txt` and `{prefix}.mosdepth.region.dist.txt`
+files, the `{prefix}.mosdepth.summary.txt` file is used to get the mean coverage for the
+General Stats table.
+
+The module also plots an X/Y relative chromosome coverage per sample. By default, it finds chromosome named X/Y or chrX/chrY, but that can be customised:
+
+```yaml
+mosdepth_config:
+  # Name of the X and Y chromosomes. If not specified, MultiQC will search for
+  # any chromosome names that look like x, y, chrx or chry (case-insensitive)
+  xchr: myXchr
+  ychr: myYchr
+```
