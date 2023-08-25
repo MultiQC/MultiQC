@@ -434,6 +434,9 @@ class AnalyzeSaturationMutagenesisMixin:
             "modify": lambda x: x / 1000000000,
             "namespace": "GATK",
         }
+        # Add module specific prefix to all keys to be safe
+        asm_headers = {f"gatk_ask_{k}": v for k, v in asm_headers.items()}
+
         pconfig = {"id": "gatk_asm_stats", "namespace": "GATK", "table_title": "GATK ASM counts"}
 
         self.add_section(
