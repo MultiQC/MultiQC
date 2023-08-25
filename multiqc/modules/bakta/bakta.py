@@ -26,7 +26,7 @@ class MultiqcModule(BaseMultiqcModule):
         # Parse logs (txt files)
         self.bakta = dict()
         for f in self.find_log_files("bakta"):
-            self.bakta[f["s_name"]] = self.parse_bakta(f["f"])
+            self.bakta[f["s_name"]] = self.parse_bakta(f)
             self.add_data_source(f)
         # Filter out ignored samples (given with --ignore-samples option)
         self.bakta = self.ignore_samples(self.bakta)
@@ -46,19 +46,23 @@ class MultiqcModule(BaseMultiqcModule):
             "title": "# contigs",
             "description": "Number of contigs",
             "min": 0,
-            "format": "{:i}%",
+            "scale": "Blues",
+            "format": "{:,d}",
         }
         headers["Length"] = {
             "title": "# bases",
-            "description": "Number of bases",
+            "description": "Total number of bases in the contigs",
             "min": 0,
-            "format": "{:i}%",
+            "scale": "YlGn",
+            "format": "{:,d}",
         }
         headers["CDSs"] = {
             "title": "# CDS",
             "description": "Number of CDS",
             "min": 0,
-            "format": "{:i}%",
+            "scale": "YlGnBu",
+            "format": "{:,d}",
+            "shared_key": "gene_count",
         }
         self.general_stats_addcols(self.bakta, headers)
 
@@ -84,7 +88,6 @@ class MultiqcModule(BaseMultiqcModule):
             - oriVs
             - oriTs
 
-
             This barplot shows you the distribution of these different types of features found in each sample.
             """
         self.add_section(plot=self.bakta_barplot(), helptext=helptext, description=descr_plot)
@@ -92,9 +95,10 @@ class MultiqcModule(BaseMultiqcModule):
     def parse_bakta(self, f):
         """Parse bakta txt summary files for annotation parameters."""
 
-        params = (
+        metrics_int = (
             "Length",
             "Count",
+            "N50",
             "tRNAs",
             "tmRNAs",
             "rRNAs",
@@ -111,14 +115,20 @@ class MultiqcModule(BaseMultiqcModule):
             "oriVs",
             "oriTs",
         )
+        metrics_float = (
+            "GC",
+            "N ratio",
+            "coding density",
+        )
 
-        bakta_params = {}
-
-        for l in f.splitlines():
-            s = l.split(": ")
-            if s[0] in params:
-                bakta_params[s[0]] = int(s[1])
-        return bakta_params
+        data = {}
+        for line in f["contents_lines"]:
+            s = line.strip().split(": ")
+            if s[0] in metrics_int:
+                data[s[0]] = int(s[1])
+            elif s[0] in metrics_float:
+                data[s[0]] = float(s[1])
+        return data
 
     def bakta_barplot(self):
         """Make a basic plot of the annotation stats"""
