@@ -25,6 +25,8 @@
   - Fix a bug happening when both `region` and `global` coverage histograms for a sample are available (i.e. when mosdepth was run with `--by`, see [mosdepth docs](https://github.com/brentp/mosdepth#usage)). In this case, data was effectively merged. Instead, summarise it separately and add a separate report section for the region-based coverage data.
 - **RSeQC**
   - Fix "max() arg is an empty sequence" error ([#1985](https://github.com/ewels/MultiQC/issues/1985))
+- **DRAGEN**
+  - Make DRAGEN module use `fn_clean_exts` instead of hardcoded file names. Fixes working with arbitrary file names ([#1865])
 - **WhatsHap**
   - Bugfix: ensure that TSV is only split on tab character. Allows sample names with spaces ([#1981](https://github.com/ewels/MultiQC/pull/1981)]
 - **Samtools**
@@ -70,6 +72,8 @@ for more information.
   - Update filename pattern in RNA quant metrics ([#1958](https://github.com/ewels/MultiQC/pull/1958))
 - **filtlong**
   - Handle reports from locales that use `.` as a thousands separator ([#1843](https://github.com/ewels/MultiQC/issues/1843))
+- **GATK**
+  - Adds support for [AnalyzeSaturationMutagenesis submodule](https://gatk.broadinstitute.org/hc/en-us/articles/360037594771-AnalyzeSaturationMutagenesis-BETA-)
 - **HUMID**
   - Fix bug that prevent HUMID stats files from being parsed ([#1856](https://github.com/ewels/MultiQC/issues/1856))
 - **Mosdepth**
