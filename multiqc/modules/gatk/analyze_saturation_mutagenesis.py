@@ -5,6 +5,7 @@
 import logging
 from collections import OrderedDict
 
+from multiqc import config
 from multiqc.plots import bargraph, table
 
 # Initialise the logger
@@ -170,10 +171,10 @@ class AnalyzeSaturationMutagenesisMixin:
         """Make the plot for GATK AnalyzeSaturationMutagenesis read counts and add the section."""
         cats = OrderedDict()
 
-        cats["filtered_reads"] = {"name": "Filtered reads", "color": "#3182bd"}
-        cats["wt_total_reads"] = {"name": "WT reads", "color": "#9ecae1"}
-        cats["variants_total_reads"] = {"name": "Variant reads", "color": "#deebf7"}
-        config = {
+        cats["filtered_reads"] = {"name": "Filtered reads"}
+        cats["wt_total_reads"] = {"name": "WT reads"}
+        cats["variants_total_reads"] = {"name": "Variant reads"}
+        pconfig = {
             "id": "gatk_ASM_reads_plot",
             "title": "GATK AnalyzeSaturationMutagenesis: Read counts",
             "ylab": "Number of reads",
@@ -186,16 +187,16 @@ class AnalyzeSaturationMutagenesisMixin:
             description="Read counts and read fate. Filtered reads include unmapped, low quality, and other pathologies.",
             helptext="""Reads can be filtered by GATK AnalyzeSaturationMutagenesis for a number of reasons, including low quality, insufficient flank, and other pathologies.
             This plot shows the number of reads that were mapped to WT, called as variants, and the number that were filtered.""",
-            plot=bargraph.plot(data, cats, config),
+            plot=bargraph.plot(data, cats, pconfig),
         )
 
     def gatk_analyze_saturation_mutagenesis_plot_base_calls(self, data):
         """Make the plot for GATK AnalyzeSaturationMutagenesis base calls and add the section."""
         cats = OrderedDict()
 
-        cats["evaluated_base_calls"] = {"name": "Base calls evaluated for variants", "648FFF": "#3182bd"}
-        cats["unevaluated_base_calls"] = {"name": "Base calls not evaluated for variants", "color": "#deebf7"}
-        config = {
+        cats["evaluated_base_calls"] = {"name": "Base calls evaluated for variants"}
+        cats["unevaluated_base_calls"] = {"name": "Base calls not evaluated for variants"}
+        pconfig = {
             "id": "gatk_ASM_base_calls_plot",
             "title": "GATK AnalyzeSaturationMutagenesis: Base calls",
             "ylab": "Number of bases",
@@ -208,7 +209,7 @@ class AnalyzeSaturationMutagenesisMixin:
             description="Base calls evaluated for variants and base calls not evaluated for variants.",
             helptext="""Bases can be filtered by GATK AnalyzeSaturationMutagenesis for a number of reasons, including low quality, insufficient flank, and other pathologies.
              This plot shows the number of base calls that were evaluated for variants and the number of base calls that were not evaluated for variants.""",
-            plot=bargraph.plot(data, cats, config),
+            plot=bargraph.plot(data, cats, pconfig),
         )
 
     def gatk_analyze_saturation_mutagenesis_table(self, data):
@@ -216,79 +217,79 @@ class AnalyzeSaturationMutagenesisMixin:
         asm_headers = {}
 
         asm_headers["total_reads"] = {
-            "title": "Total reads (M)",
-            "description": "Total reads in sample (millions)",
+            "title": f"Total reads ({config.read_count_prefix})",
+            "description": f"Total reads in sample ({config.read_count_desc})",
             "min": 0,
             "scale": "Greys",
             "shared_key": "read_count",
-            "modify": lambda x: x / 1000000,
+            "modify": lambda x: x * config.read_count_multiplier,
             "namespace": "GATK",
         }
         asm_headers["wt_total_reads"] = {
-            "title": "WT reads (M)",
-            "description": "Total evaluated reads mapped to WT (millions)",
+            "title": f"WT reads ({config.read_count_prefix})",
+            "description": f"Total evaluated reads mapped to WT ({config.read_count_desc})",
             "min": 0,
             "scale": "Blues",
             "shared_key": "read_count",
-            "modify": lambda x: x / 1000000,
+            "modify": lambda x: x * config.read_count_multiplier,
             "namespace": "GATK",
         }
         asm_headers["variants_total_reads"] = {
-            "title": "Variant reads (M)",
-            "description": "Reads with a variant called (millions)",
+            "title": f"Variant reads ({config.read_count_prefix})",
+            "description": f"Reads with a variant called ({config.read_count_desc})",
             "min": 0,
             "scale": "Greens",
             "shared_key": "read_count",
-            "modify": lambda x: x / 1000000,
+            "modify": lambda x: x * config.read_count_multiplier,
             "namespace": "GATK",
         }
         asm_headers["filtered_reads"] = {
-            "title": "Filtered reads (M)",
-            "description": "Reads filtered from sample (millions)",
+            "title": f"Filtered reads ({config.read_count_prefix})",
+            "description": f"Reads filtered from sample ({config.read_count_desc})",
             "min": 0,
             "scale": "Reds-rev",
             "shared_key": "read_count",
-            "modify": lambda x: x / 1000000,
+            "modify": lambda x: x * config.read_count_multiplier,
             "namespace": "GATK",
         }
         asm_headers["unmapped_reads"] = {
-            "title": "Unmapped (M)",
-            "description": "Unmapped reads in sample (millions)",
+            "title": f"Unmapped ({config.read_count_prefix})",
+            "description": f"Unmapped reads in sample ({config.read_count_desc})",
             "min": 0,
             "scale": "Purples-rev",
             "shared_key": "read_count",
             "hidden": True,
-            "modify": lambda x: x / 1000000,
+            "modify": lambda x: x * config.read_count_multiplier,
             "namespace": "GATK",
         }
         asm_headers["lowq_reads"] = {
-            "title": "LowQ (M)",
-            "description": "Low quality reads in sample (millions)",
+            "title": f"LowQ ({config.read_count_prefix})",
+            "description": f"Low quality reads in sample ({config.read_count_desc})",
             "min": 0,
             "scale": "Blues-rev",
             "shared_key": "read_count",
             "hidden": True,
-            "modify": lambda x: x / 1000000,
+            "modify": lambda x: x * config.read_count_multiplier,
             "namespace": "GATK",
         }
         asm_headers["evaluable_reads"] = {
-            "title": "Evaluable (M)",
-            "description": "Evaluable reads in sample (millions)",
+            "title": f"Evaluable ({config.read_count_prefix})",
+            "description": f"Evaluable reads in sample ({config.read_count_desc})",
             "min": 0,
             "scale": "Greys",
             "shared_key": "read_count",
             "hidden": True,
-            "modify": lambda x: x / 1000000,
+            "modify": lambda x: x * config.read_count_multiplier,
             "namespace": "GATK",
         }
         asm_headers["disjoint_pairs"] = {
-            "title": "Disjoint (M)",
-            "description": "Reads from disjoint (non-overlapping) paired-end reads in sample (millions)",
+            "title": f"Disjoint ({config.read_count_prefix})",
+            "description": f"Reads from disjoint (non-overlapping) paired-end reads in sample ({config.read_count_desc})",
             "min": 0,
             "scale": "Oranges",
             "shared_key": "read_count",
             "hidden": True,
-            "modify": lambda x: x / 1000000,
+            "modify": lambda x: x * config.read_count_multiplier,
             "namespace": "GATK",
         }
         asm_headers["wt_reads_disjoint"] = {
@@ -343,13 +344,13 @@ class AnalyzeSaturationMutagenesisMixin:
         }
 
         asm_headers["overlapping_pairs"] = {
-            "title": "Overlapping (M)",
-            "description": "Reads from overlapping paired-end reads in sample (millions)",
+            "title": f"Overlapping ({config.read_count_prefix})",
+            "description": f"Reads from overlapping paired-end reads in sample ({config.read_count_desc})",
             "min": 0,
             "scale": "Oranges",
             "shared_key": "read_count",
             "hidden": True,
-            "modify": lambda x: x / 1000000,
+            "modify": lambda x: x * config.read_count_multiplier,
             "namespace": "GATK",
         }
         asm_headers["wt_reads_overlapping"] = {
@@ -433,7 +434,7 @@ class AnalyzeSaturationMutagenesisMixin:
             "modify": lambda x: x / 1000000000,
             "namespace": "GATK",
         }
-        config = {"id": "gatk_asm_stats", "namespace": "GATK", "table_title": "GATK ASM counts"}
+        pconfig = {"id": "gatk_asm_stats", "namespace": "GATK", "table_title": "GATK ASM counts"}
 
         self.add_section(
             name="GATK ASM counts",
@@ -455,5 +456,5 @@ class AnalyzeSaturationMutagenesisMixin:
             * Low quality variation: If the variant includes ambiguous bases (not A, C, G, or T, or -), the read is filtered.
             * Insufficient flank: If the variant does not include a certain number of WT bases (default 2) flanking the variant, the read is filtered.
             """,
-            plot=table.plot(data, asm_headers, config),
+            plot=table.plot(data, asm_headers, pconfig),
         )
