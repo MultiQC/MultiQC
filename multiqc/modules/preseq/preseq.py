@@ -119,7 +119,7 @@ class MultiqcModule(BaseMultiqcModule):
         real_vals_all, real_vals_unq = _prep_real_counts(
             real_cnts_all, real_cnts_unq, is_basepairs, counts_in_1x, x_axis, y_axis
         )
-        pconfig["extra_series"].extend(_real_counts_to_plot_series(data, real_vals_unq, real_vals_all))
+        pconfig["extra_series"].extend(_real_counts_to_plot_series(data, real_vals_unq, real_vals_all, x_lbl, y_lbl))
         if real_vals_unq:
             description += "<p>Points show read count versus deduplicated read counts (externally calculated).</p>"
         elif real_vals_all:
@@ -345,7 +345,7 @@ def _prep_real_counts(real_cnts_all, real_cnts_unq, is_basepairs, counts_in_1x, 
     return real_vals_all, real_vals_unq
 
 
-def _real_counts_to_plot_series(data, yx_by_sample, xs_by_sample):
+def _real_counts_to_plot_series(data, yx_by_sample, xs_by_sample, x_lbl, y_lbl):
     series = []
     if xs_by_sample:
         # Same defaults as HighCharts for consistency
@@ -377,16 +377,18 @@ def _real_counts_to_plot_series(data, yx_by_sample, xs_by_sample):
                 if sn in yx_by_sample:
                     y = float(yx_by_sample[sn])
                     point["data"] = [[x, y]]
-                    point["name"] = sn + ": actual read count vs. deduplicated read count (externally calculated)"
+                    point["name"] = f"{sn}: actual read count vs. deduplicated read count (externally calculated)"
                     series.append(point)
-                    log.debug("Found real counts for {} - Total: {}, Unique: {}".format(sn, x, y))
+                    log.debug(
+                        f"Found real counts for {sn} - Total: {x_lbl.format(value=x)}, Unique: {x_lbl.format(value=y)}"
+                    )
                 else:
                     xs = sorted(data[sn].keys())
                     ys = sorted(data[sn].values())
                     if x > max(xs):
                         log.warning(
-                            "Total reads for {} ({}) > max preseq value ({}) - "
-                            "skipping this point..".format(sn, x, max(xs))
+                            f"Total reads for {sn} ({x_lbl.format(value=x)}) > max preseq value ({x_lbl.format(value=max(xs))}): "
+                            "skipping this point"
                         )
                     else:
                         interp_y = np.interp(x, xs, ys)
@@ -394,8 +396,6 @@ def _real_counts_to_plot_series(data, yx_by_sample, xs_by_sample):
                         point["name"] = sn + ": actual read count (externally calculated)"
                         series.append(point)
                         log.debug(
-                            "Found real count for {} - Total: {:.2f} (preseq unique reads: {:.2f})".format(
-                                sn, x, interp_y
-                            )
+                            f"Found real count for {sn}. Total: {x_lbl.format(value=x)} (preseq unique reads: {x_lbl.format(value=interp_y)})"
                         )
     return series
