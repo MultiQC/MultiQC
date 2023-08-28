@@ -37,58 +37,23 @@ class MultiqcModule(BaseMultiqcModule):
 
         # parse ngsderive summary file
         for f in self.find_log_files("ngsderive/strandedness"):
-            self.parse(
-                self.strandedness,
-                f,
-                "strandedness",
-                expected_header_count=5,
-            )
+            self.parse(self.strandedness, f, "strandedness", expected_header_count=5)
 
         for f in self.find_log_files("ngsderive/instrument"):
-            self.parse(
-                self.instrument,
-                f,
-                "instrument",
-                expected_header_count=4,
-            )
+            self.parse(self.instrument, f, "instrument", expected_header_count=4)
 
         for f in self.find_log_files("ngsderive/readlen"):
-            self.parse(
-                self.readlen,
-                f,
-                "readlen",
-                expected_header_count=4,
-            )
+            self.parse(self.readlen, f, "readlen", expected_header_count=4)
 
         for f in self.find_log_files("ngsderive/encoding"):
-            self.parse(
-                self.encoding,
-                f,
-                "encoding",
-                expected_header_count=3,
-            )
+            self.parse(self.encoding, f, "encoding", expected_header_count=3)
 
         for f in self.find_log_files("ngsderive/junction_annotation"):
-            self.parse(
-                self.junctions,
-                f,
-                "junctions",
-                expected_header_count=9,
-            )
+            self.parse(self.junctions, f, "junctions", expected_header_count=9)
 
         for f in self.find_log_files("ngsderive/endedness"):
-            self.parse(
-                self.endedness,
-                f,
-                "endedness",
-                expected_header_count=6,
-            )
-            self.parse(
-                self.endedness,
-                f,
-                "endedness",
-                expected_header_count=7,
-            )
+            self.parse(self.endedness, f, "endedness", expected_header_count=6)
+            self.parse(self.endedness, f, "endedness", expected_header_count=7)
 
         self.strandedness = self.ignore_samples(self.strandedness)
         self.instrument = self.ignore_samples(self.instrument)
