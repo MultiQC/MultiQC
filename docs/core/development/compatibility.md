@@ -1,7 +1,6 @@
 ---
 title: Updating for compatibility
 description: Notes for upgrading
-order: 5
 ---
 
 # Updating for compatibility

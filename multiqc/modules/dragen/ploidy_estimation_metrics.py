@@ -16,7 +16,6 @@ ploidy_estimation_user_configs:
 '''
 
 import logging
-import re
 from collections import OrderedDict, defaultdict
 
 from multiqc import config
@@ -307,13 +306,15 @@ class DragenPloidyEstimationMetrics(BaseMultiqcModule):
         # Metric IDs with original consistent metric strings.
         all_metrics = {}
 
-        for file in self.find_log_files("dragen/ploidy_estimation_metrics"):
-            out = ploidy_parser(file)
+        for f in self.find_log_files("dragen/ploidy_estimation_metrics"):
+            out = ploidy_parser(f)
             if out["success"]:
+                s_name = f["s_name"]
+                if s_name in ploidy_data:
+                    log.debug(f"Duplicate sample name found! Overwriting: {s_name}")
                 self.add_data_source(file, section="stats")
-                cleaned_sample = self.clean_s_name(out["sample_name"], file)
-                all_samples[cleaned_sample].append(file)
-                ploidy_data[cleaned_sample] = out["data"]  # Add/overwrite the sample.
+                all_samples[s_name].append(f)
+                ploidy_data[s_name] = out["data"]  # Add/overwrite the sample.
                 all_metrics.update(out["metric_IDs"])
 
         # Filter to strip out ignored sample names.
