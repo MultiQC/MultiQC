@@ -60,6 +60,8 @@ class MultiqcModule(BaseMultiqcModule):
         self.has_fasta = False
         for f in self.find_log_files("nanostat", filehandles=True):
             self.parse_nanostat_log(f)
+        for f in self.find_log_files("nanostat/legacy", filehandles=True):
+            self.parse_legacy_nanostat_log(f)
 
         # Filter to strip out ignored sample names
         self.nanostat_data = self.ignore_samples(self.nanostat_data)
@@ -92,47 +94,51 @@ class MultiqcModule(BaseMultiqcModule):
         Note: Tool can be run in two different modes, giving two variants to the output.
         To avoid overwriting keys from different modes, keys are given a suffix.
         """
-
-        legacy_format = False
         nano_stats = {}
-        for i, line in enumerate(f["f"]):
-            if i == 0:
-                if line.startswith("Metrics dataset"):
-                    legacy_format = False
-                elif line.startswith("General summary:"):
-                    legacy_format = True
-                else:
-                    raise UserWarning(f"Did not recognise NanoStat file '{f['fn']}'")
-                continue
-
-            if legacy_format:
+        for line in f["f"]:
+            parts = line.strip().split()
+            if len(parts) == 2 and parts[0] in self._KEYS_MAPPING.keys():
+                key = self._KEYS_MAPPING.get(parts[0])
+                if key:
+                    nano_stats[key] = float(parts[1])
+            else:
                 parts = line.strip().split(":")
-                if len(parts) == 0:
-                    continue
-
-                key = parts[0]
-
-                if key in self._KEYS_MAPPING.values():
-                    val = float(parts[1].replace(",", ""))
-                    nano_stats[key] = val
-                elif key in self._KEYS_READ_Q:
+                key = parts[0].replace("Reads ", "")
+                if key in self._KEYS_READ_Q:
                     # Number of reads above Q score cutoff
                     val = int(parts[1].strip().split()[0])
                     nano_stats[key] = val
-            else:  # new format
-                parts = line.strip().split()
-                if len(parts) == 2 and parts[0] in self._KEYS_MAPPING.keys():
-                    key = self._KEYS_MAPPING.get(parts[0])
-                    if key:
-                        nano_stats[key] = float(parts[1])
-                else:
-                    parts = line.strip().split(":")
-                    key = parts[0].replace("Reads ", "")
-                    if key in self._KEYS_READ_Q:
-                        # Number of reads above Q score cutoff
-                        val = int(parts[1].strip().split()[0])
-                        nano_stats[key] = val
+        self.save_data(f, nano_stats)
 
+    def parse_legacy_nanostat_log(self, f):
+        """Parse legacy output from NanoStat
+
+        Note: Tool can be run in two different modes, giving two variants to the output.
+        To avoid overwriting keys from different modes, keys are given a suffix.
+        """
+        nano_stats = {}
+        for line in f["f"]:
+            parts = line.strip().split(":")
+            if len(parts) == 0:
+                continue
+
+            key = parts[0]
+
+            if key in self._KEYS_MAPPING.values():
+                val = float(parts[1].replace(",", ""))
+                nano_stats[key] = val
+            elif key in self._KEYS_READ_Q:
+                # Number of reads above Q score cutoff
+                val = int(parts[1].strip().split()[0])
+                nano_stats[key] = val
+        self.save_data(f, nano_stats)
+
+    def save_data(self, f, nano_stats):
+        """
+        Normalise fields and save parsed data.
+
+        Used for both legacy and new data formats.
+        """
         if ">Q5" in nano_stats:
             self.has_qscores = True
 

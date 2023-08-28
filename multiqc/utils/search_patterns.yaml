@@ -433,7 +433,11 @@ kallisto:
   shared: true
 nanostat:
   max_filesize: 4096
-  contents_re: "(Metrics dataset|General summary:\\s*)"
+  contents_re: "Metrics dataset\\s*"
+  num_lines: 1
+nanostat/legacy:
+  max_filesize: 4096
+  contents_re: "General summary:\\s*"
   num_lines: 1
 kat:
   fn: "*.dist_analysis.json"
