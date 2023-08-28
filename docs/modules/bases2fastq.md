@@ -1,8 +1,8 @@
 ---
-name: bases2fastq
+name: Bases2Fastq
 url: https://docs.elembio.io/docs/bases2fastq/
 description: >
-  bases2fastq convert raw data from Element AVITI system to fastq and output sequencing run statistics
+  Bases2Fastq converts raw data from Element AVITI system to FastQ and outputs sequencing run statistics.
 ---
 
 Note that the default maximum file size is 50Mb. Some Runstats.json file will exceed that size if you have many samples or longer reads per run. If samples are missing, please check the size of all json files in the folder and change the maximum file size accordingly.
