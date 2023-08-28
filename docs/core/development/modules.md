@@ -167,7 +167,6 @@ you will need to edit or create are as follows:
 
 ```
 ├── docs
-│   ├── README.md
 │   └── modules
 │       └── <your_module>.md
 ├── multiqc
@@ -245,20 +244,19 @@ should have the following structure:
 
 ```markdown
 ---
-Name: Tool Name
-URL: http://www.amazing-bfx-tool.com
-Description: >
-  This amazing tool does some really cool stuff. You can describe it
-  here and split onto multiple lines if you want. Not too long though!
+name: Tool Name
+url: http://www.amazing-bfx-tool.com
+description: >
+  This amazing tool does some really cool stuff. Multiple lines
+  are ok if you want. Not too long though!
 ---
 
-Your documentation goes here. Feel free to use markdown and write whatever
+Your module documentation goes here. Feel free to use markdown and write whatever
 you think would be helpful. Please avoid using heading levels 1 to 3.
 ```
 
-Make a reference to this in the YAML _frontmatter_ list at the top of
-`docs/README.md` - this allows the website to find the file to build
-the documentation.
+The file search patterns will be shown on the website page automatically
+and do not need to be included in this file.
 
 ### Changelog
 

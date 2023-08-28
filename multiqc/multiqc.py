@@ -953,6 +953,8 @@ def run(
             copy_tree(config.data_tmp_dir, config.data_dir, preserve_times=0, preserve_mode=0)
             shutil.rmtree(config.data_tmp_dir)
 
+        logger.debug("Full report path: {}".format(os.path.realpath(config.output_fn)))
+
         # Copy across the static plot images if requested
         if config.export_plots:
             config.plots_dir = os.path.join(config.output_dir, config.plots_dir_name)
