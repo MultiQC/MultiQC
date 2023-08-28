@@ -433,6 +433,10 @@ kallisto:
   shared: true
 nanostat:
   max_filesize: 4096
+  contents_re: "Metrics dataset\\s*"
+  num_lines: 1
+nanostat/legacy:
+  max_filesize: 4096
   contents_re: "General summary:\\s*"
   num_lines: 1
 kat:
@@ -465,6 +469,10 @@ macs2:
 malt:
   contents: "MaltRun - Aligns sequences using MALT (MEGAN alignment tool)"
   num_lines: 2
+mapdamage:
+  - fn: "3p*_freq.txt"
+  - fn: "5p*_freq.txt"
+  - fn: "lgdistribution.txt"
 methylQA:
   fn: "*.report"
   shared: true
