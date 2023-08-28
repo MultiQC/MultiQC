@@ -44,9 +44,9 @@ class MultiqcModule(BaseMultiqcModule):
         ## Stop computations if there is no data after ignoring samples
         if (
             len(self.threepGtoAfreq_data) == 0
-            or len(self.fivepCtoTfreq_data) == 0
-            or len(self.lgdist_fw_data) == 0
-            or len(self.lgdist_rv_data) == 0
+            and len(self.fivepCtoTfreq_data) == 0
+            and len(self.lgdist_fw_data) == 0
+            and len(self.lgdist_rv_data) == 0
         ):
             raise UserWarning
 
