@@ -71,5 +71,5 @@ class MultiqcModule(BaseMultiqcModule):
             raise UserWarning
 
         # Add to the General Stats table (has to be called once per MultiQC module)
-        if max(len(vals) for vals in self.general_stats_data.values()) > 0:
+        if max((len(vals) for vals in self.general_stats_data.values()), default=0) > 0:
             self.general_stats_addcols(self.general_stats_data, self.general_stats_headers)

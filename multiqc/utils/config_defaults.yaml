@@ -125,7 +125,8 @@ show_hide_patterns: []
 show_hide_regex: []
 show_hide_mode: []
 no_version_check: false
-log_filesize_limit: 10000000
+log_filesize_limit: 50000000
+filesearch_lines_limit: 1000
 report_readerrors: false
 skip_generalstats: false
 data_format_extensions:
@@ -256,7 +257,30 @@ fn_clean_exts:
   - "_NanoStats"
   - ".cutadapt"
   - ".mosdepth"
-  - _gopeaks
+  - "_gopeaks"
+  - ".readCounts"
+  - ".wgs_contig_mean_cov"
+  - "_overall_mean_cov"
+  - "_coverage_metrics"
+  - ".wgs_fine_hist"
+  - ".wgs_coverage_metrics"
+  - ".wgs_hist"
+  - ".vc_metrics"
+  - ".ploidy_estimation_metrics"
+  - "_overall_mean_cov"
+  - ".fragment_length_hist"
+  - ".mapping_metrics"
+  - ".gc_metrics"
+  - ".trimmer_metrics"
+  - ".time_metrics"
+  - ".quant_metrics"
+  - ".quant.metrics"
+  - ".quant.transcript_coverage"
+  - ".scRNA_metrics"
+  - ".scRNA.metrics"
+  - ".scATAC_metrics"
+  - ".scATAC.metrics"
+  - ".fastqc_metrics"
 
 # These are removed after the above, only if sample names
 # start or end with this string. Again, removed in order.
@@ -505,6 +529,10 @@ module_order:
       module_tag:
         - DNA
         - ancient
+  - mapdamage:
+      module_tag:
+        - DNA
+        - ancient
   - biobambam2:
       module_tag:
         - DNA
@@ -664,6 +692,10 @@ module_order:
       module_tag:
         - DNA
   - leehom:
+      module_tag:
+        - RNA
+        - DNA
+  - librarian:
       module_tag:
         - RNA
         - DNA

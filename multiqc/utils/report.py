@@ -201,6 +201,14 @@ def get_filelist(run_module_names):
                 file_search_stats["skipped_filesize_limit"] += 1
                 return False
 
+        # Use mimetypes to exclude binary files where possible
+        if not re.match(r".+_mqc\.(png|jpg|jpeg)", f["fn"]) and config.ignore_images:
+            (ftype, encoding) = mimetypes.guess_type(os.path.join(f["root"], f["fn"]))
+            if encoding is not None:
+                return False
+            if ftype is not None and ftype.startswith("image"):
+                return False
+
         # Test file for each search pattern
         file_matched = False
         for patterns in spatterns:
@@ -317,6 +325,8 @@ def get_filelist(run_module_names):
         progress.update(mqc_task, s_fn="")
 
     runtimes["total_sp"] = time.time() - total_sp_starttime
+    if config.profile_runtime:
+        logger.info(f"Profile-runtime: Searching files took {runtimes['total_sp']:.2f}s")
 
     # Debug log summary about what we skipped
     summaries = []
@@ -335,14 +345,6 @@ def search_file(pattern, f, module_key):
     fn_matched = False
     contents_matched = False
 
-    # Use mimetypes to exclude binary files where possible
-    if not re.match(r".+_mqc\.(png|jpg|jpeg)", f["fn"]) and config.ignore_images:
-        (ftype, encoding) = mimetypes.guess_type(os.path.join(f["root"], f["fn"]))
-        if encoding is not None:
-            return False
-        if ftype is not None and ftype.startswith("image"):
-            return False
-
     # Search pattern specific filesize limit
     if pattern.get("max_filesize") is not None and "filesize" in f:
         if f["filesize"] > pattern.get("max_filesize"):
@@ -355,6 +357,8 @@ def search_file(pattern, f, module_key):
             fn_matched = True
             if pattern.get("contents") is None and pattern.get("contents_re") is None:
                 return True
+        else:
+            return False
 
     # Search by file name (regex)
     if pattern.get("fn_re") is not None:
@@ -362,40 +366,48 @@ def search_file(pattern, f, module_key):
             fn_matched = True
             if pattern.get("contents") is None and pattern.get("contents_re") is None:
                 return True
+        else:
+            return False
 
     # Search by file contents
     if pattern.get("contents") is not None or pattern.get("contents_re") is not None:
         if pattern.get("contents_re") is not None:
             repattern = re.compile(pattern["contents_re"])
-        try:
+        if "contents_lines" not in f or ("num_lines" in pattern and len(f["contents_lines"]) < pattern["num_lines"]):
+            f["contents_lines"] = []
             file_path = os.path.join(f["root"], f["fn"])
-            with io.open(file_path, "r", encoding="utf-8") as fh:
-                l = 1
-                for line in fh:
-                    # Search by file contents (string)
-                    if pattern.get("contents") is not None:
-                        if pattern["contents"] in line:
-                            contents_matched = True
-                            if pattern.get("fn") is None and pattern.get("fn_re") is None:
-                                return True
+            try:
+                with io.open(file_path, "r", encoding="utf-8") as fh:
+                    for i, line in enumerate(fh):
+                        f["contents_lines"].append(line)
+                        if i >= config.filesearch_lines_limit and i >= pattern.get("num_lines", 0):
                             break
-                    # Search by file contents (regex)
-                    elif pattern.get("contents_re") is not None:
-                        if re.search(repattern, line):
-                            contents_matched = True
-                            if pattern.get("fn") is None and pattern.get("fn_re") is None:
-                                return True
-                            break
-                    # Break if we've searched enough lines for this pattern
-                    if pattern.get("num_lines") and l >= pattern.get("num_lines"):
-                        break
-                    l += 1
-        # Can't open file - usually because it's a binary file and we're reading as utf-8
-        except (IOError, OSError, ValueError, UnicodeDecodeError) as e:
-            if config.report_readerrors:
-                logger.debug(f"Couldn't read file when looking for output: {file_path}, {e}")
-            file_search_stats["skipped_file_contents_search_errors"] += 1
-            return False
+            # Can't open file - usually because it's a binary file, and we're reading as utf-8
+            except (IOError, OSError, ValueError, UnicodeDecodeError) as e:
+                if config.report_readerrors:
+                    logger.debug(f"Couldn't read file when looking for output: {file_path}, {e}")
+                file_search_stats["skipped_file_contents_search_errors"] += 1
+                return False
+
+        # Go through the parsed file contents
+        for i, line in enumerate(f["contents_lines"]):
+            # Search by file contents (string)
+            if pattern.get("contents") is not None:
+                if pattern["contents"] in line:
+                    contents_matched = True
+                    if pattern.get("fn") is None and pattern.get("fn_re") is None:
+                        return True
+                    break
+            # Search by file contents (regex)
+            elif pattern.get("contents_re") is not None:
+                if re.search(repattern, line):
+                    contents_matched = True
+                    if pattern.get("fn") is None and pattern.get("fn_re") is None:
+                        return True
+                    break
+            # Break if we've searched enough lines for this pattern
+            if pattern.get("num_lines") and i >= pattern.get("num_lines"):
+                break
 
     return fn_matched and contents_matched
 

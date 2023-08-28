@@ -1,7 +1,6 @@
 ---
 title: Using Reports
 description: Getting to grips with MultiQC reports
-order: 3
 ---
 
 # Using MultiQC Reports
@@ -94,9 +93,8 @@ versions as possible. They are also copied to `multiqc_data/multiqc_plots`
 
 You can force reports to use flat plots with the `--flat` command line option.
 
-See the [Large sample numbers](http://multiqc.info/docs/#large-sample-numbers) section of the
-_Configuring MultiQC_ docs for more on how to customise the flat / interactive
-plot behaviour.
+See the [Large sample numbers](../getting_started/config.md#large-sample-numbers) docs
+for more on how to customise the flat / interactive plot behaviour.
 
 ### Exporting plots
 
@@ -209,9 +207,11 @@ Plots with multiple tabs will all be exported as files when using the
 Data tab. For plots with multiple tags, the currently visible plot
 will be exported.
 
-> Note: You can also save static plot images when you run MultiQC.
-> See [Exporting Plots](http://multiqc.info/docs/#exporting-plots)
-> for more information.
+:::note
+You can also save static plot images when you run MultiQC.
+See [Exporting Plots](#exporting-plots)
+for more information.
+:::
 
 ### Save Settings
 
