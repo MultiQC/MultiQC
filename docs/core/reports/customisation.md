@@ -99,24 +99,6 @@ software_versions:
   some_other_tool: "2023-1"
 ```
 
-Alternatively, you can provide them in a separate YAML file. By default, MultiQC will
-look for a YAML file called `multiqc_versions.yaml` in you current directory.
-You can override the default path with `version_fn_name` in you config:
-
-```yaml
-version_fn_name: path/to/versions.yaml
-```
-
-Contents of `path/to/versions.yaml`:
-
-```yaml
-samblaster: "0.1.24"
-samtools:
-  - "1.15"
-  - "1.10"
-some_other_tool: "2023-1"
-```
-
 ## Sample name replacement
 
 Occasionally, when you run MultiQC you may know that you want to change the resulting

@@ -756,9 +756,7 @@ def run(
             versions.sort(reverse=True)
             module = software_versions.find_matching_module(software, report.modules_output)
             if module is None:
-                logger.debug(
-                    "No executed modules matches '{}' listed in '{}'.".format(software, config.version_fn_name)
-                )
+                logger.debug(f"No executed modules matches '{software}' listed in config.software_versions")
             else:
                 software = module.name
                 for version in versions:
