@@ -90,18 +90,17 @@ information is not included in the log files, you can instead add them in config
 Software versions are specified in the YAML as pairs of software names and version
 strings. Multiple version of the same software are specified as lists. Example:
 
-
 ```yaml
 software_versions:
-    samblaster: "0.1.24"
-    samtools:
-      - "1.15"
-      - "1.10"
-    some_other_tool: "2023-1"
+  samblaster: "0.1.24"
+  samtools:
+    - "1.15"
+    - "1.10"
+  some_other_tool: "2023-1"
 ```
 
-Alternatively, you can provide them in a separate YAML file. By default, MultiQC will 
-look for a YAML file called `multiqc_versions.yaml` in you current directory. 
+Alternatively, you can provide them in a separate YAML file. By default, MultiQC will
+look for a YAML file called `multiqc_versions.yaml` in you current directory.
 You can override the default path with `version_fn_name` in you config:
 
 ```yaml
