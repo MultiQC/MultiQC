@@ -190,9 +190,18 @@ kbd {
   border-left: 5px solid #8eb9dd;
   background-color: #e8f1f8;
 }
-.mqc-module-title {
-  display: inline;
-  margin-right: 5px;
+.mqc-module-title-section {
+  display: flex;
+  align-items: flex-end;
+  margin-top: 20px;
+  margin-bottom: 10px;
+  column-gap: 5px;
+}
+h2.mqc-module-title {
+  margin: 0;
+}
+.software_versions dt {
+  text-align: left;
 }
 #analysis_dirs_wrapper {
   max-height: 80px;
