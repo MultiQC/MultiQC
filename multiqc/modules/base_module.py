@@ -31,7 +31,7 @@ class BaseMultiqcModule(object):
         extra=None,
         autoformat=True,
         autoformat_type="markdown",
-        doi=[],
+        doi=None,
     ):
         # Custom options from user config that can overwrite base module values
         mod_cust_config = getattr(self, "mod_cust_config", {})
@@ -42,7 +42,7 @@ class BaseMultiqcModule(object):
         self.info = mod_cust_config.get("info", info)
         self.comment = mod_cust_config.get("comment", comment)
         self.extra = mod_cust_config.get("extra", extra)
-        self.doi = mod_cust_config.get("doi", doi)
+        self.doi = mod_cust_config.get("doi", (doi or []))
 
         # Specific module level config to overwrite (e.g. config.bcftools, config.fastqc)
         config.update({anchor: mod_cust_config.get("custom_config", {})})
