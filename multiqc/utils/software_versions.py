@@ -33,7 +33,7 @@ class MultiqcModule(BaseMultiqcModule):
     def report_software_versions(self):
         """Create section listing software versions."""
         content = "<dl class=dl-horizontal>\n"
-        for tool_name in sorted(report.software_versions):
+        for tool_name in sorted(report.software_versions, key=lambda x: x.lower()):
             versions = [str(version) for version in report.software_versions[tool_name]]
             versions_string = "</code>, <code>".join(versions)
             content += f'  <dt style="text-align:left;">{tool_name}</dt><dd><code>{versions_string}</code></dd>\n'

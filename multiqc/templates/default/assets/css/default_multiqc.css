@@ -200,9 +200,6 @@ kbd {
 h2.mqc-module-title {
   margin: 0;
 }
-.software_versions dt {
-  text-align: left;
-}
 #analysis_dirs_wrapper {
   max-height: 80px;
   overflow: auto;
