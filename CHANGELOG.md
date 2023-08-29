@@ -8,7 +8,7 @@
 - Give config `custom_plot_config` priority over column-specific settings set by modules
 - When exporting plots, make a more clear error message for unsupported FastQC dot plot [#1976](https://github.com/ewels/MultiQC/pull/1976)
 - Fixed parsing of `plot_type: "html"` `data` in json custom content
-- Add software version information to the MultiQC report (thanks [pontushojer](https://github.com/ewels/MultiQC/pull/1927) for the contribution). Modules can parse versions from logs, and users can pass versions with `config.version_fn_name` (default `multiqc_versions.yaml`).
+- Add software version information to the MultiQC report (thanks [pontushojer](https://https://github.com/pontushojer) for the [contribution](https://github.com/ewels/MultiQC/pull/1927)). Modules can parse versions from logs, and users can pass versions with `config.version_fn_name` (default `multiqc_versions.yaml`)
 
 ### New Modules
 
