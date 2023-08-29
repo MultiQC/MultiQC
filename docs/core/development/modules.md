@@ -652,7 +652,7 @@ The version number here (`1.3`) can be extracted using the regex pattern
 for line in f.splitlines():
     version = re.search(r"\((\d+.(\d+|\d+.\d+))\+", line)
     if version is not None:
-        self.add_software_version(f["s_name"], version.group(1))
+        self.add_software_version(version.group(1), f["s_name"])
 ```
 
 The version number will now appear after the module header in the report as

@@ -118,7 +118,7 @@ class MultiqcModule(BaseMultiqcModule):
             s_name = f["s_name"]
 
         if version is not None:
-            self.add_software_version(s_name, version)
+            self.add_software_version(version, s_name)
 
         if len(data) > 0:
             if s_name in self.samblaster_data:
