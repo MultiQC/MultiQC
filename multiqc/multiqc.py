@@ -746,10 +746,10 @@ def run(
         report.runtimes["mods"][run_module_names[mod_idx]] = time.time() - mod_starttime
     report.runtimes["total_mods"] = time.time() - total_mods_starttime
 
-    # Parse software version from separate YAML file if it exists
-    versions_from_file = software_versions.load_versions_from_yaml(config.version_fn_name)
-    if versions_from_file:
-        for software, versions in versions_from_file.items():
+    # Parse software version from config if provided
+    versions_from_config = software_versions.load_versions_from_config(config)
+    if versions_from_config:
+        for software, versions in versions_from_config.items():
             # Try to find if the software is listed among the executed modules.
             # Unlisted software are still reported in the `Software Versions` section.
             versions = list(set(map(str, versions)))
