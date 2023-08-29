@@ -37,22 +37,22 @@ class MultiqcModule(BaseMultiqcModule):
 
         # parse ngsderive summary file
         for f in self.find_log_files("ngsderive/strandedness"):
-            self.parse(self.strandedness, f, "strandedness", expected_header_counts=set([5]))
+            self.parse(self.strandedness, f, "strandedness", expected_header_counts={5})
 
         for f in self.find_log_files("ngsderive/instrument"):
-            self.parse(self.instrument, f, "instrument", expected_header_counts=set([4]))
+            self.parse(self.instrument, f, "instrument", expected_header_counts={4})
 
         for f in self.find_log_files("ngsderive/readlen"):
-            self.parse(self.readlen, f, "readlen", expected_header_counts=set([4]))
+            self.parse(self.readlen, f, "readlen", expected_header_counts={4})
 
         for f in self.find_log_files("ngsderive/encoding"):
-            self.parse(self.encoding, f, "encoding", expected_header_counts=set([3]))
+            self.parse(self.encoding, f, "encoding", expected_header_counts={3})
 
         for f in self.find_log_files("ngsderive/junction_annotation"):
-            self.parse(self.junctions, f, "junctions", expected_header_counts=set([9]))
+            self.parse(self.junctions, f, "junctions", expected_header_counts={9})
 
         for f in self.find_log_files("ngsderive/endedness"):
-            self.parse(self.endedness, f, "endedness", expected_header_counts=set([6, 7]))
+            self.parse(self.endedness, f, "endedness", expected_header_counts={6, 7})
 
         self.strandedness = self.ignore_samples(self.strandedness)
         self.instrument = self.ignore_samples(self.instrument)
