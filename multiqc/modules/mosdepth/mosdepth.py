@@ -251,6 +251,7 @@ class MultiqcModule(BaseMultiqcModule):
                             "tt_suffix": "x",
                             "smooth_points": 500,
                             "logswitch": True,
+                            "hide_zero_cats": False,
                         },
                     )
                 else:
@@ -262,6 +263,7 @@ class MultiqcModule(BaseMultiqcModule):
                             "xlab": "Sample",
                             "ylab": "Average Coverage",
                             "tt_suffix": "x",
+                            "hide_zero_cats": False,
                         },
                     )
 
@@ -436,10 +438,13 @@ class MultiqcModule(BaseMultiqcModule):
             #   1x     --------        1x  0.80   = 0.80 - 0.10 = 0.70
             #   genome ..........      0x  1.00   = 1.00 - 0.80 = 0.20
             prev_x, prev_cumcov = cumcov_dist.pop()
-            while cumcov_dist:
-                x, cumcov = cumcov_dist.pop()
-                cov_dist_data[s_name][x] = cumcov - prev_cumcov
-                prev_x, prev_cumcov = x, cumcov
+            if not cumcov_dist:
+                cov_dist_data[s_name][prev_x] = 1.0
+            else:
+                while cumcov_dist:
+                    x, cumcov = cumcov_dist.pop()
+                    cov_dist_data[s_name][x] = cumcov - prev_cumcov
+                    prev_x, prev_cumcov = x, cumcov
 
         return cumcov_dist_data, cov_dist_data, perchrom_avg_data, xy_cov
 
