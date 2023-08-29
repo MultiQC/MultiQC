@@ -506,7 +506,9 @@ class MultiqcModule(BaseMultiqcModule):
             table_data[sample]["FnLy"] = int(endedness_data.get("f-l+"))
             table_data[sample]["FnLn"] = int(endedness_data.get("f-l-"))
             table_data[sample]["FyLy"] = int(endedness_data.get("f+l+"))
-            table_data[sample]["RPT"] = float(endedness_data.get("Reads per template"))
+            rpt = endedness_data.get("Reads per template")
+            if rpt is not None:
+                table_data[sample]["RPT"] = float(rpt)
             table_data[sample]["endedness"] = endedness_data.get("Endedness")
 
         # Config for the plot
