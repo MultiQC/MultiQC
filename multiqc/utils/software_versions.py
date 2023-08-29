@@ -70,10 +70,8 @@ def load_versions_from_yaml(file_name):
 
 
 def find_matching_module(software_name: str, modules):
-    if software_name in modules:
-        return software_name
-
-    if software_name.capitalize() in modules:
-        return software_name.capitalize()
-
-    return None
+    """
+    Find the module by name, ignoring case.
+    """
+    d = {m.name.lower(): m for m in modules}
+    return d.get(software_name.lower())

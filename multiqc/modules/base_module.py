@@ -486,7 +486,7 @@ class BaseMultiqcModule(object):
         except AttributeError:
             logger.warning("Tried to add data source for {}, but was missing fields data".format(self.name))
 
-    def add_software_version(self, sample: str, version: str):
+    def add_software_version(self, version: str, sample: str = None):
         """Save software versions for module."""
         # Don't add if sample is ignored
         if sample is not None and self.is_ignore_sample(sample):

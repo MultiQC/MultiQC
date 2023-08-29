@@ -749,23 +749,21 @@ def run(
     # Parse software version from separate YAML file if it exists
     versions_from_file = software_versions.load_versions_from_yaml(config.version_fn_name)
     if versions_from_file:
-        name_to_module = {module.anchor: module for module in report.modules_output}
         for software, versions in versions_from_file.items():
-            # Try to find if the software is listed among the executed modules. Unlisted software are still
-            # reported in the `Software Versions` section.
-            module_name = software_versions.find_matching_module(software, name_to_module)
-            if module_name is None:
+            # Try to find if the software is listed among the executed modules.
+            # Unlisted software are still reported in the `Software Versions` section.
+            versions = list(set(map(str, versions)))
+            versions.sort(reverse=True)
+            module = software_versions.find_matching_module(software, report.modules_output)
+            if module is None:
                 logger.debug(
                     "No executed modules matches '{}' listed in '{}'.".format(software, config.version_fn_name)
                 )
-                versions = list(set(map(str, versions)))
-                versions.sort(reverse=True)
-                report.software_versions[software] = versions
             else:
-                module = name_to_module[module_name]
+                software = module.name
                 for version in versions:
-                    # Here we don't care about samples so we pass None
-                    module.add_software_version(sample=None, version=str(version))
+                    module.add_software_version(str(version))
+            report.software_versions[software] = versions
 
     # Add section for software versions if any are found
     if report.software_versions and len(report.modules_output) > 0:
@@ -962,7 +960,7 @@ def run(
         else:
             logger.info("Report      : None")
 
-        if config.make_data_dir == False:
+        if config.make_data_dir is False:
             logger.info("Data        : None")
         else:
             # Make directories for data_dir
