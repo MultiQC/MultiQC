@@ -489,7 +489,7 @@ class BaseMultiqcModule(object):
     def add_software_version(self, sample: str, version: str):
         """Save software versions for module."""
         # Don't add if sample is ignored
-        if self.is_ignore_sample(sample):
+        if sample is not None and self.is_ignore_sample(sample):
             return
 
         # Check if version string is PEP 440 compliant to enable version normalization and proper ordering.

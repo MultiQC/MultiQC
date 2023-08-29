@@ -764,7 +764,8 @@ def run(
             else:
                 module = name_to_module[module_name]
                 for version in versions:
-                    module.add_software_version(str(version))
+                    # Here we don't care about samples so we pass None
+                    module.add_software_version(sample=None, version=str(version))
 
     # Add section for software versions if any are found
     if report.software_versions and len(report.modules_output) > 0:
