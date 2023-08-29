@@ -36,7 +36,7 @@ class MultiqcModule(BaseMultiqcModule):
         for tool_name in sorted(report.software_versions):
             versions = [str(version) for version in report.software_versions[tool_name]]
             versions_string = "</code>, <code>".join(versions)
-            content += f"  <dt>{tool_name}</dt><dd><code>{versions_string}</code></dd>\n"
+            content += f'  <dt style="text-align:left;">{tool_name}</dt><dd><code>{versions_string}</code></dd>\n'
         content += "</dl>\n"
 
         self.add_section(name=None, content=content)
