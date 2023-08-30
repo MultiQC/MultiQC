@@ -8,6 +8,7 @@ from collections import OrderedDict
 from multiqc import config
 from multiqc.modules.base_module import BaseMultiqcModule
 from multiqc.plots import bargraph
+from multiqc.utils import mqc_colour
 
 # Initialise the logger
 log = logging.getLogger(__name__)
@@ -70,7 +71,7 @@ class MultiqcModule(BaseMultiqcModule):
 
             # Percentages don't always add up to 1, show a warning if this is the case
             if sum(d.values()) != 1:
-                log.warning(f"Freyja {s_name}: percentages don't sum to 1")
+                log.warning(f"Freyja {s_name}: percentages don't sum to 1: {sum(d.values())}")
 
             # There is no sample name in the log, so we use the root of the
             # file as sample name (since the filename is always stats.dat
@@ -82,6 +83,7 @@ class MultiqcModule(BaseMultiqcModule):
     def general_stats_cols(self):
         """Add a single column displaying the most abundant lineage to the General Statistics table"""
         top_lineage_dict = {}
+        top_lineages = set()
         for s_name, sub_dict in self.freyja_data.items():
             top_lineage = max(sub_dict, key=sub_dict.get)
             top_lineage_value = sub_dict[top_lineage]
@@ -89,15 +91,17 @@ class MultiqcModule(BaseMultiqcModule):
                 "Top_lineage_freyja": top_lineage,
                 "Top_lineage_freyja_percentage": top_lineage_value,
             }
+            top_lineages.add(top_lineage)
 
         headers = OrderedDict()
+        scale = mqc_colour.mqc_colour_scale("Pastel2", 0, len(top_lineages))
         headers["Top_lineage_freyja"] = {
-            "title": "Top lineage (Freyja)",
+            "title": "Top lineage",
             "description": "The most abundant lineage in the sample",
-            "scale": "RdYlGn-rev",  # Not sure if this is the best scale
+            "bgcols": {val: scale.get_colour(i) for i, val in enumerate(top_lineages)},
         }
         headers["Top_lineage_freyja_percentage"] = {
-            "title": "Top lineage (Freyja) %",
+            "title": "Top lineage %",
             "description": "The percentage of the most abundant lineage in the sample",
             "max": 100,
             "min": 0,
