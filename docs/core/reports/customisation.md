@@ -99,6 +99,10 @@ software_versions:
   some_other_tool: "2023-1"
 ```
 
+:::warning
+Make sure that you write the version in quotes to ensure it being interpreted as a string. As an example a version `1.10` without quotes would be parsed as a float and displayed as version `1.1`.
+:::
+
 ## Sample name replacement
 
 Occasionally, when you run MultiQC you may know that you want to change the resulting
