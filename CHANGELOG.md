@@ -69,6 +69,8 @@ for more information.
 
 ### Module updates
 
+- **Conpair**
+  - Bugfix: allow to find and proprely parse the `concordance` output of Conpair, which may output 2 kinds of format for `concordance` depending if it's ran with or without `--outfile` ([#1851](https://github.com/ewels/MultiQC/issues/1851))
 - **Cell Ranger**
   - Bugfix: avoid multiple `KeyError` exceptions when parsing Cell Ranger 7.x `web_summary.html` ([#1853](https://github.com/ewels/MultiQC/issues/1853), [#1871](https://github.com/ewels/MultiQC/issues/1871))
 - **DRAGEN**
