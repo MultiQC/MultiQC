@@ -44,7 +44,7 @@ class BaseMultiqcModule(object):
         self.extra = mod_cust_config.get("extra", extra)
         self.doi = mod_cust_config.get("doi", (doi or []))
 
-        # List of software version(s) for module
+        # List of software version(s) for module. Don't append directly, use add_software_version()
         self.versions = []
 
         # Specific module level config to overwrite (e.g. config.bcftools, config.fastqc)
