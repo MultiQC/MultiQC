@@ -14,9 +14,9 @@ the output from each module and print it in sections.
       {% if loop.first %}
       <div class="mqc-module-section-first">
         <div class="mqc-module-title-section">
-          <div><h2 class="mqc-module-title" id="{{ m.anchor }}">{{ m.name }}</h2></div>
+          <h2 class="mqc-module-title" id="{{ m.anchor }}">{{ m.name }}</h2>
           {% if m.versions %}
-            <div><em>Version{% if m.versions|length > 1 %}s{% endif %}:</em> <code>{{m.versions|join("</code>, <code>")}}</code></div>
+            <div class="text-muted"><em>Version{% if m.versions|length > 1 %}s{% endif %}:</em> <code>{{m.versions|join("</code>, <code>")}}</code></div>
           {% endif %}
         </div>
         {{ m.intro if m.intro }}
