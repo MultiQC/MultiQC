@@ -7,7 +7,7 @@ import logging
 import os
 
 import yaml
-from pkg_resources import packaging
+import packaging.version
 
 from multiqc.modules.base_module import BaseMultiqcModule
 from multiqc.utils import report
