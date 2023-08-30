@@ -44,6 +44,9 @@ class BaseMultiqcModule(object):
         self.extra = mod_cust_config.get("extra", extra)
         self.doi = mod_cust_config.get("doi", (doi or []))
 
+        # List of software version(s) for module
+        self.versions = []
+
         # Specific module level config to overwrite (e.g. config.bcftools, config.fastqc)
         config.update({anchor: mod_cust_config.get("custom_config", {})})
 
@@ -75,9 +78,6 @@ class BaseMultiqcModule(object):
             self.doi_link = '<em class="text-muted small" style="margin-left: 1rem;">DOI: {}.</em>'.format(
                 "; ".join(doi_links)
             )
-
-        # List of software version
-        self.versions = []
 
         if target is None:
             target = self.name
