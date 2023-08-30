@@ -195,7 +195,7 @@ kbd {
   align-items: flex-end;
   margin-top: 20px;
   margin-bottom: 10px;
-  column-gap: 5px;
+  column-gap: 10px;
 }
 h2.mqc-module-title {
   margin: 0;
