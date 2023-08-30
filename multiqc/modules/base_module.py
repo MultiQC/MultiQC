@@ -14,7 +14,7 @@ from collections import OrderedDict
 import markdown
 from pkg_resources import packaging
 
-from multiqc.utils import config, report, util_functions
+from multiqc.utils import config, report, software_versions, util_functions
 
 logger = logging.getLogger(__name__)
 
@@ -495,17 +495,13 @@ class BaseMultiqcModule(object):
         # Check if version string is PEP 440 compliant to enable version normalization and proper ordering.
         # Otherwise use raw string is used for version.
         # - https://peps.python.org/pep-0440/
-        invalid_version = False
-        try:
-            version = packaging.version.parse(version)
-        except packaging.version.InvalidVersion:
-            # Use a flag so we don't log the same warning multiple times.
-            invalid_version = True
+        # Use flag `is_compliant` so we don't log the same warning multiple times.
+        version, is_compliant = software_versions.parse_version(version)
 
         if version in self.versions:
             return
 
-        if invalid_version:
+        if is_compliant:
             logger.debug(f"Version '{version}' in module {self.name} does not conform to PEP 440 format")
 
         self.versions.append(version)

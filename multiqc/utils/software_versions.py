@@ -5,7 +5,7 @@
 
 import logging
 
-import yaml
+from pkg_resources import packaging
 
 from multiqc.modules.base_module import BaseMultiqcModule
 from multiqc.utils import report
@@ -43,6 +43,16 @@ class MultiqcModule(BaseMultiqcModule):
 
 def load_versions_from_config(config):
     """Try to load software versions from config"""
+
+    def check_versions(versions):
+        for version in versions:
+            version, is_compliant = parse_version(str(version))
+            if not is_compliant:
+                log.debug(
+                    f"'{software}' version '{version}' list in config.software_versions does not conform to PEP 440 format"
+                )
+            yield version
+
     software_versions = getattr(config, "software_versions", dict())
 
     # Parse the versions in YAML and make sure that each software maps to a list of version strings
@@ -50,7 +60,11 @@ def load_versions_from_config(config):
         versions = software_versions[software]
         if type(versions) != list:
             versions = [versions]
-        versions = [str(version) for version in versions]
+
+        # Check if versions are PEP 440 compliant and remove duplicates
+        versions = list(set(check_versions(versions)))
+        versions.sort(reverse=True)
+
         software_versions[software] = versions
 
     return software_versions
@@ -62,3 +76,16 @@ def find_matching_module(software_name: str, modules):
     """
     d = {m.name.lower(): m for m in modules}
     return d.get(software_name.lower())
+
+
+def parse_version(version: str):
+    """
+    Check if version string is PEP 440 compliant to enable version normalization and proper ordering.
+    Returns tuple with version and a boolean indicating if version is PEP 440 compliant.
+    # - https://peps.python.org/pep-0440/
+    """
+    try:
+        version = packaging.version.parse(version)
+    except packaging.version.InvalidVersion:
+        return version, False
+    return version, True
