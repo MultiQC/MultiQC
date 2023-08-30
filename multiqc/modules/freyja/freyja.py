@@ -41,8 +41,8 @@ class MultiqcModule(BaseMultiqcModule):
         log.info(f"Found {len(self.freyja_data)} reports")
         self.write_data_file(self.freyja_data, "multiqc_freyja")
 
-        self.general_stats_cols()
-        self.add_freyja_section()
+        lineages, scale = self.general_stats_cols()
+        self.add_freyja_section(lineages, scale)
 
     def parse_summ_files(self):
         """
@@ -84,6 +84,7 @@ class MultiqcModule(BaseMultiqcModule):
         """Add a single column displaying the most abundant lineage to the General Statistics table"""
         top_lineage_dict = {}
         top_lineages = set()
+        all_lineages = []
         for s_name, sub_dict in self.freyja_data.items():
             top_lineage = max(sub_dict, key=sub_dict.get)
             top_lineage_value = sub_dict[top_lineage]
@@ -92,14 +93,20 @@ class MultiqcModule(BaseMultiqcModule):
                 "Top_lineage_freyja_percentage": top_lineage_value,
             }
             top_lineages.add(top_lineage)
+            all_lineages.append(top_lineage)
+        for s_name, sub_dict in self.freyja_data.items():
+            for lineage, val in sub_dict.items():
+                if val not in all_lineages:
+                    all_lineages.append(lineage)
+        scale = mqc_colour.mqc_colour_scale("Set1", 0, len(all_lineages))
 
         headers = OrderedDict()
-        scale = mqc_colour.mqc_colour_scale("Pastel2", 0, len(top_lineages))
         headers["Top_lineage_freyja"] = {
             "title": "Top lineage",
             "description": "The most abundant lineage in the sample",
-            "bgcols": {val: scale.get_colour(i) for i, val in enumerate(top_lineages)},
+            "bgcols": {val: scale.get_colour(i) for i, val in enumerate(all_lineages)},
         }
+        print(headers["Top_lineage_freyja"])
         headers["Top_lineage_freyja_percentage"] = {
             "title": "Top lineage %",
             "description": "The percentage of the most abundant lineage in the sample",
@@ -111,9 +118,9 @@ class MultiqcModule(BaseMultiqcModule):
         }
 
         self.general_stats_addcols(top_lineage_dict, headers)
+        return all_lineages, scale
 
-    def add_freyja_section(self):
-        cats = list()
+    def add_freyja_section(self, lineages, scale):
         pconfig = {
             "id": "Freyja_plot",
             "title": "Freyja: Top lineages",
@@ -122,12 +129,9 @@ class MultiqcModule(BaseMultiqcModule):
             "cpswitch": False,
             "cpswitch_c_active": False,
         }
-
-        rank_cats = OrderedDict()
-
-        rank_cats["other"] = {"name": "Other", "color": "#cccccc"}
-        cats.append(rank_cats)
-
+        cats = {x: {"name": x, "color": scale.get_colour(i)} for i, x in enumerate(lineages)}
+        print(cats)
+        
         self.add_section(
             name="Freyja Summary",
             anchor="freyja-summary",
@@ -141,5 +145,5 @@ class MultiqcModule(BaseMultiqcModule):
 
                 > **Note**: Lineage designation is based on the used WHO nomenclature, which could vary over time. 
                 """,
-            plot=bargraph.plot(self.freyja_data, None, pconfig),
+            plot=bargraph.plot(self.freyja_data, cats, pconfig),
         )
