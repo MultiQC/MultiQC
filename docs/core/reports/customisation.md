@@ -103,6 +103,24 @@ software_versions:
 Make sure that you write the version in quotes to ensure it being interpreted as a string. As an example a version `1.10` without quotes would be parsed as a float and displayed as version `1.1`.
 :::
 
+Alternatively, you can provide them in a separate YAML file. By default, MultiQC will
+look for a YAML file called `multiqc_versions.yaml` in you current directory.
+You can override the default path with `version_fn_name` in you config:
+
+```yaml
+version_fn_name: path/to/versions.yaml
+```
+
+The content of `path/to/versions.yaml` is expected to be a YAML dictionary:
+
+```yaml
+samblaster: "0.1.24"
+samtools:
+  - "1.15"
+  - "1.10"
+some_other_tool: "2023-1"
+```
+
 ## Sample name replacement
 
 Occasionally, when you run MultiQC you may know that you want to change the resulting

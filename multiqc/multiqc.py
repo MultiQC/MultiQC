@@ -760,7 +760,7 @@ def run(
         # Unlisted software are still reported in the `Software Versions` section.
         module = software_versions.find_matching_module(software, report.modules_output)
         if module is None:
-            logger.debug(f"No executed modules matches '{software}' listed in config.software_versions")
+            logger.debug(f"No executed modules matches '{software}' listed in config")
         else:
             software = module.name
             for version in versions:

@@ -4,7 +4,9 @@
 
 
 import logging
+import os
 
+import yaml
 from pkg_resources import packaging
 
 from multiqc.modules.base_module import BaseMultiqcModule
@@ -50,6 +52,17 @@ def load_versions_from_config(config):
             yield version
 
     software_versions = getattr(config, "software_versions", dict())
+
+    file_name = config.version_fn_name
+    if not os.path.isfile(file_name):
+        file_name = file_name.replace(".yaml", ".yml")
+    if os.path.isfile(file_name):
+        with open(file_name) as f:
+            try:
+                log.debug("Reading software versions settings from: {}".format(file_name))
+                software_versions.update(yaml.safe_load(f))
+            except yaml.scanner.ScannerError as e:
+                log.error("Error parsing versions YAML: {}".format(e))
 
     # Parse the versions in YAML and make sure that each software maps to a list of version strings
     for software in list(software_versions):
