@@ -644,9 +644,9 @@ SN      raw total sequences:    101
 ...
 ```
 
-The version number here (`1.3`) can be extracted using the regex pattern
-`r"\((\d+.(\d+|\d+.\d+))\+"` that also allows for patches e.g. `1.3.1`. The we can use the input to call
-`self.add_software_version`. We also provide the sample name, `f["s_name"]` in this case, so that we don't add versions for samples that should be ignored.
+The version number here (`1.3`) can be extracted using a regular expression (regex).
+We then pass this to the `self.add_software_version()` function.
+Note that we  pass the sample name (`f["s_name"]` in this case) so that we don't add versions for samples that are later ignored.
 
 ```python
 for line in f.splitlines():
@@ -656,7 +656,7 @@ for line in f.splitlines():
 ```
 
 The version number will now appear after the module header in the report as
-well as in the section `Software Versions` in the end of the report.
+well as in the section _Software Versions_ in the end of the report.
 
 :::tip
 For tools that don't output software versions in their logs these can instead
