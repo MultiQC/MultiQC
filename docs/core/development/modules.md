@@ -646,7 +646,7 @@ SN      raw total sequences:    101
 
 The version number here (`1.3`) can be extracted using a regular expression (regex).
 We then pass this to the `self.add_software_version()` function.
-Note that we  pass the sample name (`f["s_name"]` in this case) so that we don't add versions for samples that are later ignored.
+Note that we pass the sample name (`f["s_name"]` in this case) so that we don't add versions for samples that are later ignored.
 
 ```python
 for line in f.splitlines():
