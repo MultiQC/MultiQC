@@ -650,9 +650,11 @@ Note that we pass the sample name (`f["s_name"]` in this case) so that we don't 
 
 ```python
 for line in f.splitlines():
-    version = re.search(r"\((\d+.(\d+|\d+.\d+))\+", line)
+    version = re.search(r"# This file was produced by samtools stats \(([\d\.]+)", line)
     if version is not None:
         self.add_software_version(version.group(1), f["s_name"])
+
+    # ..rest of file parsing
 ```
 
 The version number will now appear after the module header in the report as

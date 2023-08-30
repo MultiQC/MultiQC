@@ -13,7 +13,7 @@ from multiqc.plots import bargraph, beeswarm
 log = logging.getLogger(__name__)
 
 # Regex to grab version number from samtools stats contents
-VERSION_REGEX = r"\((\d+.(\d+|\d+.\d+))\+"
+VERSION_REGEX = r"# This file was produced by samtools stats \(([\d\.]+)"
 
 
 class StatsReportMixin:
