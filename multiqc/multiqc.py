@@ -765,6 +765,10 @@ def run(
             software = module.name
             for version in versions:
                 module.add_software_version(str(version))
+
+            # Get the updated software versions from the module
+            versions = module.versions
+
         report.software_versions[software] = versions
 
     # Add section for software versions if any are found
