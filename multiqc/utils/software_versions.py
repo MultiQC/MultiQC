@@ -20,12 +20,8 @@ class MultiqcModule(BaseMultiqcModule):
         super(MultiqcModule, self).__init__(
             name="Software Versions",
             anchor="multiqc_software_versions",
-            info="Versions of software tools extracted from file contents.",
+            info="lists versions of software tools extracted from file contents.",
         )
-
-        # Don't repeat the Custom Content name in the subtext
-        if self.info or self.extra:
-            self.intro = "<p>{}</p>{}".format(self.info, self.extra)
 
         self.report_software_versions()
 
