@@ -623,20 +623,20 @@ def general_stats_headers(self):
         "scale": "PuBuGn",
         "hidden": True,
     }
-    self.general_stats_headers["regions_mapped_reads"] = {
-        "title": "{} On target".format(config.read_count_prefix),
-        "description": "Number of mapped reads on target region ({})".format(config.read_count_desc),
-        "scale": "RdYlGn",
-        "shared_key": "read_count",
-        "hidden": True,
-    }
     self.general_stats_headers["percentage_aligned_on_target"] = {
         "title": "% On target",
         "description": "% mapped reads on target region",
         "max": 100,
         "min": 0,
         "suffix": "%",
+        "scale": "YlGn",
+    }
+    self.general_stats_headers["regions_mapped_reads"] = {
+        "title": "{} On target".format(config.read_count_prefix),
+        "description": "Number of mapped reads on target region ({})".format(config.read_count_desc),
         "scale": "RdYlGn",
+        "shared_key": "read_count",
+        "hidden": True,
     }
 
 
