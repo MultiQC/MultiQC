@@ -16,7 +16,15 @@ the output from each module and print it in sections.
         <div class="mqc-module-title-section">
           <h2 class="mqc-module-title" id="{{ m.anchor }}">{{ m.name }}</h2>
           {% if m.versions %}
-            <div class="text-muted"><em>Version{% if m.versions|length > 1 %}s{% endif %}:</em> <code>{{m.versions|join("</code>, <code>")}}</code></div>
+            <div class="text-muted">
+              {% for tool, versions in m.versions.items() %}
+                {% if tool == m.name.lower() %}
+                  <em>Version{% if versions|length > 1 %}s{% endif %}:</em> <code>{{versions|join("</code>, <code>")}}</code>
+                {% else %}
+                  <em>{{ tool }}:</em> <code>{{ versions|join("</code>, <code>") }}</code>
+                {% endif %}
+              {% endfor %}
+            </div>
           {% endif %}
         </div>
         {{ m.intro if m.intro }}

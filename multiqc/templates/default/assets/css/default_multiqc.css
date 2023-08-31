@@ -965,3 +965,12 @@ tbody .sorthandle {
 .mqc-custom-content-image img {
   max-width: 100%;
 }
+
+/* MultiQC Software Versions table */
+.mqc_versions_table {
+  width: 100%;
+}
+
+.mqc_versions_table tbody:nth-child(even) {
+  background-color: #f2f2f2;
+}

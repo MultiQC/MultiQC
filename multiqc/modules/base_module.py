@@ -9,7 +9,7 @@ import mimetypes
 import os
 import re
 import textwrap
-from collections import OrderedDict
+from collections import OrderedDict, defaultdict
 
 import markdown
 from pkg_resources import packaging
@@ -45,7 +45,7 @@ class BaseMultiqcModule(object):
         self.doi = mod_cust_config.get("doi", (doi or []))
 
         # List of software version(s) for module. Don't append directly, use add_software_version()
-        self.versions = []
+        self.versions = defaultdict(list)
 
         # Specific module level config to overwrite (e.g. config.bcftools, config.fastqc)
         config.update({anchor: mod_cust_config.get("custom_config", {})})
@@ -486,11 +486,17 @@ class BaseMultiqcModule(object):
         except AttributeError:
             logger.warning("Tried to add data source for {}, but was missing fields data".format(self.name))
 
-    def add_software_version(self, version: str, sample: str = None):
+    def add_software_version(self, version: str, sample: str = None, software_name: str = None):
         """Save software versions for module."""
         # Don't add if sample is ignored
         if sample is not None and self.is_ignore_sample(sample):
             return
+
+        # Use module name as software name if not specified
+        if software_name is None:
+            software_name = self.name
+
+        software_name = software_name.lower()
 
         # Check if version string is PEP 440 compliant to enable version normalization and proper ordering.
         # Otherwise use raw string is used for version.
@@ -498,19 +504,20 @@ class BaseMultiqcModule(object):
         # Use flag `is_compliant` so we don't log the same warning multiple times.
         version, is_compliant = software_versions.parse_version(version)
 
-        if version in self.versions:
+        if version in self.versions[software_name]:
             return
 
-        if is_compliant:
+        if not is_compliant:
             logger.debug(f"Version '{version}' in module {self.name} does not conform to PEP 440 format")
 
-        self.versions.append(version)
+        self.versions[software_name].append(version)
 
         # Sort version in order newest --> oldest
-        self.versions.sort(reverse=True)
+        self.versions[software_name] = software_versions.sort_versions(self.versions[software_name])
 
         # Update version list for report section.
-        report.software_versions[self.name] = self.versions
+        process_name = self.name.lower()
+        report.software_versions[process_name][software_name] = self.versions[software_name]
 
     def write_data_file(self, data, fn, sort_cols=False, data_format=None):
         """Saves raw data to a dictionary for downstream use, then redirects

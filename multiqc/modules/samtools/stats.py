@@ -14,6 +14,7 @@ log = logging.getLogger(__name__)
 
 # Regex to grab version number from samtools stats contents
 VERSION_REGEX = r"# This file was produced by samtools stats \(([\d\.]+)"
+HTSLIB_REGEX = r"\+htslib-([\d\.]+)"
 
 
 class StatsReportMixin:
@@ -31,6 +32,10 @@ class StatsReportMixin:
                     version_match = re.search(VERSION_REGEX, line)
                     if version_match is not None:
                         self.add_software_version(version_match.group(1), f["s_name"])
+
+                    htslib_version_match = re.search(HTSLIB_REGEX, line)
+                    if htslib_version_match is not None:
+                        self.add_software_version(htslib_version_match.group(1), f["s_name"], "htslib")
 
                 if not line.startswith("SN"):
                     continue

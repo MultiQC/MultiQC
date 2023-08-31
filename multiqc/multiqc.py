@@ -755,21 +755,21 @@ def run(
 
     # Parse software version from config if provided
     versions_from_config = software_versions.load_versions_from_config(config)
-    for software, versions in versions_from_config.items():
+    for process, softwares in versions_from_config.items():
         # Try to find if the software is listed among the executed modules.
         # Unlisted software are still reported in the `Software Versions` section.
-        module = software_versions.find_matching_module(software, report.modules_output)
-        if module is None:
-            logger.debug(f"No executed modules matches '{software}' listed in config")
-        else:
-            software = module.name
-            for version in versions:
-                module.add_software_version(str(version))
+        module = software_versions.find_matching_module(process, report.modules_output)
+        for software, versions in softwares.items():
+            # Update versions if the software is listed among the executed modules
+            if module is not None:
+                for version in versions:
+                    module.add_software_version(str(version), software_name=software)
 
-            # Get the updated software versions from the module
-            versions = module.versions
+                # Get the updated software versions from the module
+                versions = module.versions[software]
 
-        report.software_versions[software] = versions
+            # Add updated software versions to the report
+            report.software_versions[process][software] = versions
 
     # Add section for software versions if any are found
     if not no_versions_section and report.software_versions and len(report.modules_output) > 0:
