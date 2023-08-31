@@ -85,51 +85,105 @@ Note that you can also specify a path to a config file using `-c`.
 
 ## Listing software versions
 
-For some modules the software version can be parsed from the log files. If version
-information is not included in the log files, you can instead add them in config.
-Software versions are specified in the YAML as pairs of software names and version
-strings. Multiple version of the same software are specified as lists. Example:
+For modules where version information can be extracted from log files,
+or when not available in log files, you can alternatively add them in
+the configuration. Software versions can be specified in YAML format
+using two options.
+
+### Option 1: Grouping software sersions by process name
+
+For each process, software versions can be organized within a nested YAML
+dictionary with three levels: `process` -> `software` -> `version(s)`.
+Multiple versions of the same software are specified as lists. Here's an
+example:
+
+```yaml
+software_versions:
+  quast:
+    quast:
+      - "5.2.0"
+      - "5.1.0"
+  samtools:
+    samtools: "1.11"
+    htslib: "1.3"
+  some_other_process:
+    some_other_tool:
+      - "2023-1"
+```
+
+:::warning
+Make sure that you write the version in quotes to ensure it being
+interpreted as a string. As an example a version `1.10` without
+quotes would be parsed as a float and displayed as version `1.1`.
+:::
+
+### Option 2: Dictionary of software name and version pairs
+
+An alternative is to specify pairs of software names and version
+strings directly. This option does not group software into processes.
+Instead the software name is used directly for the process name. Example:
 
 ```yaml
 software_versions:
   samblaster: "0.1.24"
-  samtools:
-    - "1.15"
-    - "1.10"
+  quast:
+    - "5.2.0"
+    - "5.1.0"
   some_other_tool: "2023-1"
 ```
 
-:::warning
-Make sure that you write the version in quotes to ensure it being interpreted as a string. As an example a version `1.10` without quotes would be parsed as a float and displayed as version `1.1`.
-:::
+Translated into the same structure as in the previous example, this would
+look like this:
 
-Alternatively, you can provide them in a separate YAML file. By default, MultiQC will
-look for a YAML file called `multiqc_versions.yaml` in you current directory.
-You can override the default path with `version_fn_name` in you config:
+```yaml
+software_versions:
+  samblaster:
+    samblaster: "0.1.24"
+  quast:
+    quast:
+      - "5.2.0"
+      - "5.1.0"
+  some_other_tool:
+    some_other_tool: "2023-1"
+```
+
+### Separate versions YAML
+
+If you prefer to provide versions in a separate YAML file, MultiQC will look
+for a file named `multiqc_versions.yaml` by default. You can modify the path
+using the `version_fn_name` option in your configuration:
 
 ```yaml
 version_fn_name: path/to/versions.yaml
 ```
 
-The content of `path/to/versions.yaml` is expected to be a YAML dictionary:
+The content of the versions.yaml file should be a YAML dictionary, similar to
+the previous examples. Example:
 
 ```yaml
 samblaster: "0.1.24"
-samtools:
-  - "1.15"
-  - "1.10"
+quast:
+  - "5.2.0"
+  - "5.1.0"
 some_other_tool: "2023-1"
 ```
 
-In some applications, such as a pipeline workflow, you may wish to only include version information defined in the config file or in a separate YAML file. For this, it possible to disable parsing versions from the log file through the following config option:
+### Other options
+
+In some applications, such as a pipeline workflow, you may wish to only include
+version information defined in the config file or in a separate YAML file. For
+this, it possible to disable parsing versions from the log file through the
+following config option:
 
 ```yaml
 disable_version_detection: true`
 ```
 
-This will disable version detection for all modules and also remove the version listings next to the section titles.
+This will disable version detection for all modules and also remove the version
+listings next to the section titles.
 
-To exclude the `Software versions` section from the report, set `skip_versions_section: true` in your config file.
+To exclude the _Software Versions_ section from the report, set
+`skip_versions_section: true` in your config file.
 
 ## Sample name replacement
 
