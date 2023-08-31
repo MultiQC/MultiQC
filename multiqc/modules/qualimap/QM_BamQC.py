@@ -630,7 +630,7 @@ def general_stats_headers(self):
         "shared_key": "read_count",
         "hidden": True,
     }
-    self.general_stats_headers["regions_percentage_inside"] = {
+    self.general_stats_headers["percentage_aligned_on_target"] = {
         "title": "% On target",
         "description": "% mapped reads on target region",
         "max": 100,
