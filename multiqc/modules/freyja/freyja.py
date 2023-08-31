@@ -41,7 +41,6 @@ class MultiqcModule(BaseMultiqcModule):
         self.write_data_file(self.freyja_data, "multiqc_freyja")
 
         top_lineages_dict = {}
-        top_lineages = set()
         all_lineages = set()
         for s_name, sub_dict in self.freyja_data.items():
             top_lineage = max(sub_dict, key=sub_dict.get)
@@ -50,14 +49,13 @@ class MultiqcModule(BaseMultiqcModule):
                 "Top_lineage_freyja": top_lineage,
                 "Top_lineage_freyja_percentage": top_lineage_value,
             }
-            top_lineages.add(top_lineage)
             all_lineages.add(top_lineage)
         for s_name, sub_dict in self.freyja_data.items():
             for lineage, val in sub_dict.items():
                 if val not in all_lineages:
                     all_lineages.add(lineage)
 
-        self.scale = mqc_colour.mqc_colour_scale("Highcharts", 0, len(all_lineages))
+        self.scale = mqc_colour.mqc_colour_scale("plot_defaults")
         self.general_stats_cols(top_lineages_dict, all_lineages)
         self.add_freyja_section(all_lineages)
 
