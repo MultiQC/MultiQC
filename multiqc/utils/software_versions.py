@@ -75,16 +75,6 @@ class MultiqcModule(BaseMultiqcModule):
 
 def load_versions_from_config(config):
     """Try to load software versions from config"""
-
-    def check_versions(versions, software):
-        for version in versions:
-            version, is_compliant = parse_version(str(version))
-            if not is_compliant:
-                log.debug(
-                    f"'{software}' version '{version}' list in config.software_versions does not conform to PEP 440 format"
-                )
-            yield version
-
     log.debug("Reading software versions from config.software_versions")
     software_versions_config = getattr(config, "software_versions", defaultdict(lambda: defaultdict(list)))
     software_versions_config, is_valid = validate_software_versions(software_versions_config)
@@ -117,8 +107,8 @@ def load_versions_from_config(config):
         for tool in list(softwares):
             versions = softwares[tool]
 
-            # Check if versions are PEP 440 compliant and remove duplicates
-            versions = list(set(check_versions(versions, process)))
+            # Try and convert version to packaging.versions.Version object and remove duplicates
+            versions = list(set([parse_version(version) for version in versions]))
             versions = sort_versions(versions)
 
             softwares[tool] = versions
@@ -241,7 +231,6 @@ def parse_version(version: str):
     # - https://peps.python.org/pep-0440/
     """
     try:
-        version = packaging.version.parse(version)
+        return packaging.version.parse(version)
     except packaging.version.InvalidVersion:
-        return version, False
-    return version, True
+        return str(version)

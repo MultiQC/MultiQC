@@ -501,14 +501,10 @@ class BaseMultiqcModule(object):
         # Check if version string is PEP 440 compliant to enable version normalization and proper ordering.
         # Otherwise use raw string is used for version.
         # - https://peps.python.org/pep-0440/
-        # Use flag `is_compliant` so we don't log the same warning multiple times.
-        version, is_compliant = software_versions.parse_version(version)
+        version = software_versions.parse_version(version)
 
         if version in self.versions[software_name]:
             return
-
-        if not is_compliant:
-            logger.debug(f"Version '{version}' in module {self.name} does not conform to PEP 440 format")
 
         self.versions[software_name].append(version)
 
