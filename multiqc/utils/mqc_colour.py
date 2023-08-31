@@ -53,8 +53,8 @@ class mqc_colour_scale(object):
         try:
             if self.name in mqc_colour_scale.qualitative_scales:
                 if not isinstance(val, int):
-                    # When we have non-numeric values (e.g. Male/Female, Yes/No, chromosome names, etc.), and a qualitive
-                    # scale (Set1, Set3, etc), we don't want to attempt to parse numbers, otherwise we might end up with all
+                    # When we have non-numeric values (e.g. Male/Female, Yes/No, chromosome names, etc.), and a qualitative
+                    # scale (Set1, Set3, etc.), we don't want to attempt to parse numbers, otherwise we might end up with all
                     # values assigned with the same color. But instead we will get a hash from a string to hope to assign
                     # a unique color for each possible enumeration value.
                     val = hash(val)
@@ -384,7 +384,8 @@ class mqc_colour_scale(object):
                 "#fddaec",
                 "#f2f2f2",
             ],
-            "Highcharts": [
+            # Originally from Highcharts
+            "plot_defaults": [
                 "#7cb5ec",
                 "#434348",
                 "#90ed7d",
@@ -426,7 +427,7 @@ class mqc_colour_scale(object):
         else:
             return colorbrewer_scales[name]
 
-    qualitative_scales = ["Set2", "Accent", "Set1", "Set3", "Dark2", "Paired", "Pastel2", "Pastel1", "Highcharts"]
+    qualitative_scales = ["Set2", "Accent", "Set1", "Set3", "Dark2", "Paired", "Pastel2", "Pastel1", "plot_defaults"]
 
     html_colors = {
         "black": "#000000",
