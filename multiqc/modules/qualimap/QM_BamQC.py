@@ -141,6 +141,8 @@ def parse_genome_results(self, f):
         self.general_stats_data[s_name]["mean_coverage"] = d["mean_coverage"]
         self.general_stats_data[s_name]["regions_size"] = d["regions_size"]
         self.general_stats_data[s_name]["regions_mapped_reads"] = d["regions_mapped_reads"]
+        d["regions_percentage_inside"] = (d["regions_mapped_reads"] / d["mapped_reads"]) * 100
+        self.general_stats_data[s_name]["regions_percentage_inside"] = d["regions_percentage_inside"]
     except KeyError:
         pass
 
@@ -627,6 +629,14 @@ def general_stats_headers(self):
         "scale": "RdYlGn",
         "shared_key": "read_count",
         "hidden": True,
+    }
+    self.general_stats_headers["regions_percentage_inside"] = {
+        "title": "% On target",
+        "description": "% mapped reads on target region",
+        "max": 100,
+        "min": 0,
+        "suffix": "%",
+        "scale": "YlGn",
     }
 
 
