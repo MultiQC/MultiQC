@@ -384,7 +384,8 @@ class mqc_colour_scale(object):
                 "#fddaec",
                 "#f2f2f2",
             ],
-            "Highcharts": [
+            # Originally from Highcharts
+            "plot_defaults": [
                 "#7cb5ec",
                 "#434348",
                 "#90ed7d",
