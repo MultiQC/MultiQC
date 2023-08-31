@@ -12,7 +12,7 @@ import re
 import sys
 from collections import OrderedDict
 
-from multiqc.utils import config, report, util_functions
+from multiqc.utils import config, mqc_colour, report, util_functions
 
 logger = logging.getLogger(__name__)
 
@@ -347,19 +347,7 @@ def matplotlib_linegraph(plotdata, pconfig=None):
     )
     html += '<div class="mqc_mplplot_plotgroup" id="{}">'.format(pconfig["id"])
 
-    # Same defaults as HighCharts for consistency
-    default_colors = [
-        "#7cb5ec",
-        "#434348",
-        "#90ed7d",
-        "#f7a35c",
-        "#8085e9",
-        "#f15c80",
-        "#e4d354",
-        "#2b908f",
-        "#f45b5b",
-        "#91e8e1",
-    ]
+    scale = mqc_colour.mqc_colour_scale("Highcharts")
 
     # Buttons to cycle through different datasets
     if len(plotdata) > 1 and not config.simple_output:
@@ -405,7 +393,7 @@ def matplotlib_linegraph(plotdata, pconfig=None):
                         except (KeyError, IndexError):
                             fdata[d["name"]][str(i)] = x
 
-            # Custom tsv output if the x axis varies
+            # Custom tsv output if the x-axis varies
             if not sharedcats and config.data_format == "tsv":
                 fout = ""
                 for d in pdata:
@@ -433,8 +421,8 @@ def matplotlib_linegraph(plotdata, pconfig=None):
         for idx, d in enumerate(pdata):
             # Default colour index
             cidx = idx
-            while cidx >= len(default_colors):
-                cidx -= len(default_colors)
+            while cidx >= len(scale.colours):
+                cidx -= len(scale.colours)
 
             # Line style
             linestyle = "solid"
@@ -447,7 +435,7 @@ def matplotlib_linegraph(plotdata, pconfig=None):
                     [x[0] for x in d["data"]],
                     [x[1] for x in d["data"]],
                     label=d["name"],
-                    color=d.get("color", default_colors[cidx]),
+                    color=d.get("color", scale.get_colour(cidx)),
                     linestyle=linestyle,
                     linewidth=1,
                     marker=None,
@@ -455,7 +443,7 @@ def matplotlib_linegraph(plotdata, pconfig=None):
             except TypeError:
                 # Categorical data on x axis
                 axes.plot(
-                    d["data"], label=d["name"], color=d.get("color", default_colors[cidx]), linewidth=1, marker=None
+                    d["data"], label=d["name"], color=d.get("color", scale.get_colour(cidx)), linewidth=1, marker=None
                 )
 
         # Tidy up axes
