@@ -213,6 +213,14 @@ def plot(data, pconfig=None):
     except (KeyError, IndexError):
         pass
 
+    # Add colors to the categories if not set. Since the "plot_defaults" scale is
+    # identical to default scale of the Highcharts JS library, this is not strictly
+    # needed. But it future proofs when we replace Highcharts with something else.
+    scale = mqc_colour.mqc_colour_scale("plot_defaults")
+    for si, sd in enumerate(plotdata):
+        for di, d in enumerate(sd):
+            d.setdefault("color", scale.get_colour(di, lighten=1))
+
     # Make a plot - template custom, or interactive or flat
     try:
         return get_template_mod().linegraph(plotdata, pconfig)
@@ -347,8 +355,6 @@ def matplotlib_linegraph(plotdata, pconfig=None):
     )
     html += '<div class="mqc_mplplot_plotgroup" id="{}">'.format(pconfig["id"])
 
-    scale = mqc_colour.mqc_colour_scale("Highcharts")
-
     # Buttons to cycle through different datasets
     if len(plotdata) > 1 and not config.simple_output:
         html += '<div class="btn-group mpl_switch_group mqc_mplplot_bargraph_switchds">\n'
@@ -419,11 +425,6 @@ def matplotlib_linegraph(plotdata, pconfig=None):
 
         # Go through data series
         for idx, d in enumerate(pdata):
-            # Default colour index
-            cidx = idx
-            while cidx >= len(scale.colours):
-                cidx -= len(scale.colours)
-
             # Line style
             linestyle = "solid"
             if d.get("dashStyle", None) == "Dash":
@@ -435,16 +436,14 @@ def matplotlib_linegraph(plotdata, pconfig=None):
                     [x[0] for x in d["data"]],
                     [x[1] for x in d["data"]],
                     label=d["name"],
-                    color=d.get("color", scale.get_colour(cidx)),
+                    color=["color"],
                     linestyle=linestyle,
                     linewidth=1,
                     marker=None,
                 )
             except TypeError:
                 # Categorical data on x axis
-                axes.plot(
-                    d["data"], label=d["name"], color=d.get("color", scale.get_colour(cidx)), linewidth=1, marker=None
-                )
+                axes.plot(d["data"], label=d["name"], color=d["color"], linewidth=1, marker=None)
 
         # Tidy up axes
         axes.tick_params(

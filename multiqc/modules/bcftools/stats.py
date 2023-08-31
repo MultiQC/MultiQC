@@ -218,6 +218,7 @@ class StatsReportMixin:
                 "ylab": "# Substitutions",
                 "cpswitch_counts_label": "Number of Substitutions",
             }
+
             self.add_section(
                 name="Variant Substitution Types",
                 anchor="bcftools-stats_variant_sub_types",
