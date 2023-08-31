@@ -15,7 +15,11 @@ import sys
 from datetime import datetime
 
 import yaml
-from importlib_metadata import entry_points, version
+
+try:
+    from importlib.metadata import entry_points, version
+except ImportError:  # <3.8
+    from importlib_metadata import entry_points, version
 
 import multiqc
 

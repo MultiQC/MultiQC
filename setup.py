@@ -63,7 +63,7 @@ setup(
         "rich>=10",
         "rich-click",
         "spectra>=0.0.10",
-        "importlib-metadata",
+        "importlib-metadata",  # built-in as importlib.metadata in >=3.8
     ],
     entry_points={
         "console_scripts": [
