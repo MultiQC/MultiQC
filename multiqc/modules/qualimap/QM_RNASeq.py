@@ -243,7 +243,7 @@ def parse_reports(self):
     }
     self.general_stats_headers["reads_aligned"] = {
         "title": "{} Aligned".format(config.read_count_prefix),
-        "description": "Reads Aligned ({})".format(config.read_count_desc),
+        "description": "Number of mapped reads ({})".format(config.read_count_desc),
         "min": 0,
         "scale": "RdBu",
         "shared_key": "read_count",
