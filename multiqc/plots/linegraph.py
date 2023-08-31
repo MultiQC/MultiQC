@@ -436,7 +436,7 @@ def matplotlib_linegraph(plotdata, pconfig=None):
                     [x[0] for x in d["data"]],
                     [x[1] for x in d["data"]],
                     label=d["name"],
-                    color=["color"],
+                    color=d["color"],
                     linestyle=linestyle,
                     linewidth=1,
                     marker=None,
