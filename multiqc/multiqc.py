@@ -754,7 +754,7 @@ def run(
         module = software_versions.find_matching_module(process, report.modules_output)
         for software, versions in softwares.items():
             # Update versions if the software is listed among the executed modules
-            if module is not None:
+            if module is not None and not config.disable_version_detection:
                 for version in versions:
                     module.add_software_version(str(version), software_name=software)
 

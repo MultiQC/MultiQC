@@ -488,6 +488,10 @@ class BaseMultiqcModule(object):
 
     def add_software_version(self, version: str, sample: str = None, software_name: str = None):
         """Save software versions for module."""
+        # Don't add if version detection is disabled
+        if config.disable_version_detection:
+            return
+
         # Don't add if sample is ignored
         if sample is not None and self.is_ignore_sample(sample):
             return

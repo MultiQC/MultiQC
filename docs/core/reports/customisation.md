@@ -121,6 +121,14 @@ samtools:
 some_other_tool: "2023-1"
 ```
 
+In some applications, such as a pipeline workflow, you may wish to only include version information defined in the config file or in a separate YAML file. For this, it possible to disable parsing versions from the log file through the following config option:
+
+```yaml
+disable_version_detection: true`
+```
+
+This will disable version detection for all modules and also remove the version listings next to the section titles.
+
 To exclude the `Software versions` section from the report, set `skip_versions_section: true` in your config file.
 
 ## Sample name replacement

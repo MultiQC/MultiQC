@@ -131,6 +131,7 @@ filesearch_lines_limit: 1000
 report_readerrors: false
 skip_generalstats: false
 skip_versions_section: false
+disable_version_detection: false
 data_format_extensions:
   tsv: "txt"
   json: "json"
