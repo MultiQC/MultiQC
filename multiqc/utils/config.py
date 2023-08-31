@@ -14,8 +14,8 @@ import subprocess
 import sys
 from datetime import datetime
 
-from importlib_metadata import version, entry_points
 import yaml
+from importlib_metadata import entry_points, version
 
 import multiqc
 
