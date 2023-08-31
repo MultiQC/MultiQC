@@ -11,7 +11,7 @@ import spectra
 
 from multiqc.modules.base_module import BaseMultiqcModule
 from multiqc.plots import bargraph, heatmap, scatter, table
-from multiqc.utils import mqc_colour
+from multiqc.utils import mqc_color
 
 # Initialise the logger
 log = logging.getLogger(__name__)
@@ -411,8 +411,8 @@ class MultiqcModule(BaseMultiqcModule):
         }
 
         # Get index colour scale
-        cscale = mqc_colour.mqc_colour_scale()
-        extra_colours = cscale.get_colours("Dark2")
+        cscale = mqc_color.mqc_color_scale()
+        extra_colours = cscale.get_colors("Dark2")
         extra_colours = _make_col_alpha(extra_colours, alpha)
 
         extra_colour_idx = 0
@@ -571,7 +571,7 @@ class MultiqcModule(BaseMultiqcModule):
 
     def somalier_ancestry_barplot(self):
         data = dict()
-        c_scale = mqc_colour.mqc_colour_scale(name="Paired").colours
+        c_scale = mqc_color.mqc_color_scale(name="Paired").colors
         cats = OrderedDict()
         anc_cats = self.somalier_ancestry_cats
 
@@ -634,7 +634,7 @@ class MultiqcModule(BaseMultiqcModule):
         d = self.somalier_background_pcs.pop("background_pcs", {})
         if d:
             # generate color scale to match the number of categories
-            c_scale = mqc_colour.mqc_colour_scale(name="Paired").colours
+            c_scale = mqc_color.mqc_color_scale(name="Paired").colors
             cats = self.somalier_ancestry_cats
             ancestry_colors = dict(zip(cats, c_scale[: len(cats)]))
             default_background_color = "rgb(255,192,203,0.3)"

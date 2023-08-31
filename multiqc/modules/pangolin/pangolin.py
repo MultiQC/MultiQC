@@ -9,7 +9,7 @@ from collections import OrderedDict
 
 from multiqc.modules.base_module import BaseMultiqcModule
 from multiqc.plots import table
-from multiqc.utils import mqc_colour
+from multiqc.utils import mqc_color
 
 # Initialise the logger
 log = logging.getLogger(__name__)
@@ -48,9 +48,9 @@ class MultiqcModule(BaseMultiqcModule):
         # First, remove blank / None
         self.lineage_colours.pop("", None)
         self.lineage_colours.pop("None", None)
-        cols = mqc_colour.mqc_colour_scale("Dark2", 0, len(self.lineage_colours))
+        cols = mqc_color.mqc_color_scale("Dark2", 0, len(self.lineage_colours))
         for idx, k in enumerate(self.lineage_colours):
-            self.lineage_colours[k] = cols.get_colour(idx)
+            self.lineage_colours[k] = cols.get_color(idx)
         # Manually add back None as grey
         self.lineage_colours["None"] = "#EFEFEF"
 

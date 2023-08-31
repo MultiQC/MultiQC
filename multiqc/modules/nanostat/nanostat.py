@@ -7,7 +7,7 @@ from collections import OrderedDict
 from multiqc import config
 from multiqc.modules.base_module import BaseMultiqcModule
 from multiqc.plots import bargraph, table
-from multiqc.utils import mqc_colour
+from multiqc.utils import mqc_color
 
 # Initialise the logger
 log = logging.getLogger(__name__)
@@ -340,9 +340,9 @@ class MultiqcModule(BaseMultiqcModule):
 
         cats = OrderedDict()
         keys = reversed(list(_range_names.values()))
-        colours = mqc_colour.mqc_colour_scale("RdYlGn-rev", 0, len(_range_names))
+        colours = mqc_color.mqc_color_scale("RdYlGn-rev", 0, len(_range_names))
         for idx, k in enumerate(keys):
-            cats[k] = {"name": "Reads " + k, "color": colours.get_colour(idx, lighten=1)}
+            cats[k] = {"name": "Reads " + k, "color": colours.get_color(idx, lighten=1)}
 
         # Config for the plot
         config = {

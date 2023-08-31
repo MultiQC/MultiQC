@@ -7,7 +7,7 @@ import random
 from collections import OrderedDict, defaultdict
 
 from multiqc.plots import beeswarm, table_object
-from multiqc.utils import config, mqc_colour, report, util_functions
+from multiqc.utils import config, mqc_color, report, util_functions
 
 logger = logging.getLogger(__name__)
 
@@ -129,7 +129,7 @@ def make_table(dt):
         if header["scale"] is False:
             c_scale = None
         else:
-            c_scale = mqc_colour.mqc_colour_scale(header["scale"], header["dmin"], header["dmax"], id=table_id)
+            c_scale = mqc_color.mqc_color_scale(header["scale"], header["dmin"], header["dmax"], id=table_id)
 
         # Collect conditional formatting config
         cond_formatting_rules = {}
@@ -244,7 +244,7 @@ def make_table(dt):
                 # Build table cell background colour bar
                 elif header["scale"]:
                     if c_scale is not None:
-                        col = " background-color:{} !important;".format(c_scale.get_colour(val))
+                        col = " background-color:{} !important;".format(c_scale.get_color(val))
                     else:
                         col = ""
                     bar_html = '<span class="bar" style="width:{}%;{}"></span>'.format(percentage, col)

@@ -5,7 +5,7 @@ import logging
 from multiqc import config
 from multiqc.modules.base_module import BaseMultiqcModule
 from multiqc.plots import heatmap
-from multiqc.utils import mqc_colour
+from multiqc.utils import mqc_color
 
 # Initialise the logger
 log = logging.getLogger(__name__)
@@ -134,10 +134,10 @@ class MultiqcModule(BaseMultiqcModule):
 
         # Generate colours for library types
         lib_types = list(lib_types)
-        lib_type_colours = mqc_colour.mqc_colour_scale("Paired", 0, len(lib_types))
+        lib_type_colours = mqc_color.mqc_color_scale("Paired", 0, len(lib_types))
         bgcols = {}
         for idx, lib_type in enumerate(lib_types):
-            bgcols[lib_type] = lib_type_colours.get_colour(idx)
+            bgcols[lib_type] = lib_type_colours.get_color(idx)
 
         headers = {
             "most_likely_library_type": {

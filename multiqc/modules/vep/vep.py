@@ -8,7 +8,7 @@ from collections import OrderedDict
 
 from multiqc.modules.base_module import BaseMultiqcModule
 from multiqc.plots import bargraph, table
-from multiqc.utils import mqc_colour
+from multiqc.utils import mqc_color
 
 # Initialise the logger
 log = logging.getLogger(__name__)
@@ -336,9 +336,9 @@ class MultiqcModule(BaseMultiqcModule):
             return
 
         # Nice graduated colours for categories
-        colour_scale = mqc_colour.mqc_colour_scale("YlGnBu", 0, len(plot_cats) - 1)
+        colour_scale = mqc_color.mqc_color_scale("YlGnBu", 0, len(plot_cats) - 1)
         for idx, k in enumerate(plot_cats):
-            plot_cats[k]["color"] = colour_scale.get_colour(idx, lighten=0.8)
+            plot_cats[k]["color"] = colour_scale.get_color(idx, lighten=0.8)
 
         plot_config["cpswitch_c_active"] = False
 

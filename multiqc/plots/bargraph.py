@@ -14,7 +14,7 @@ import re
 import sys
 from collections import OrderedDict
 
-from multiqc.utils import config, mqc_colour, report, util_functions
+from multiqc.utils import config, mqc_color, report, util_functions
 
 logger = logging.getLogger(__name__)
 
@@ -339,7 +339,7 @@ def matplotlib_bargraph(plotdata, plotsamples, pconfig=None):
     )
     html += '<div class="mqc_mplplot_plotgroup" id="{}">'.format(pconfig["id"])
 
-    scale = mqc_colour.mqc_colour_scale("Highcharts")
+    scale = mqc_color.mqc_color_scale("Highcharts")
 
     # Counts / Percentages Switch
     if pconfig.get("cpswitch") is not False and not config.simple_output:
@@ -460,8 +460,8 @@ def matplotlib_bargraph(plotdata, plotsamples, pconfig=None):
                         prevdata[i] += prev_values[i]
                 # Default colour index
                 cidx = idx
-                while cidx >= len(scale.colours):
-                    cidx -= len(scale.colours)
+                while cidx >= len(scale.colors):
+                    cidx -= len(scale.colors)
                 # Save the name of this series
                 dlabels.append(d["name"])
                 # Add the series of bars to the plot
@@ -470,7 +470,7 @@ def matplotlib_bargraph(plotdata, plotsamples, pconfig=None):
                     values,
                     bar_width,
                     left=prevdata,
-                    color=d.get("color", scale.get_colour(cidx)),
+                    color=d.get("color", scale.get_color(cidx)),
                     align="center",
                     linewidth=pconfig.get("borderWidth", 0),
                 )
