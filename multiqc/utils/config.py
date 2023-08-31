@@ -15,13 +15,14 @@ import sys
 from datetime import datetime
 
 import yaml
-from importlib_metadata import entry_points, version
+import importlib_metadata
 
 import multiqc
 
 logger = logging.getLogger("multiqc")
 
 # Get the MultiQC version
+version = importlib_metadata.version("multiqc")
 short_version = version
 script_path = os.path.dirname(os.path.realpath(__file__))
 git_hash = None
@@ -63,7 +64,7 @@ megaqc_access_token = os.environ.get("MEGAQC_ACCESS_TOKEN")
 # Modules must be listed in setup.py under entry_points['multiqc.modules.v1']
 # Get all modules, including those from other extension packages
 avail_modules = dict()
-for entry_point in entry_points(group="multiqc.modules.v1"):
+for entry_point in importlib_metadata.entry_points(group="multiqc.modules.v1"):
     nicename = entry_point.name
     avail_modules[nicename] = entry_point
 
@@ -71,7 +72,7 @@ for entry_point in entry_points(group="multiqc.modules.v1"):
 # Templates must be listed in setup.py under entry_points['multiqc.templates.v1']
 # Get all templates, including those from other extension packages
 avail_templates = {}
-for entry_point in entry_points(group="multiqc.templates.v1"):
+for entry_point in importlib_metadata.entry_points(group="multiqc.templates.v1"):
     nicename = entry_point.name
     avail_templates[nicename] = entry_point
 
