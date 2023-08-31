@@ -13,6 +13,9 @@ afterqc:
 anglerfish:
   fn: "*.json"
   contents: "anglerfish_version"
+bakta:
+  fn: "*.txt"
+  contents: "Bakta:"
 bamtools/stats:
   contents: "Stats for BAM file(s):"
   shared: true
@@ -230,7 +233,7 @@ clusterflow/runfiles:
   contents: "Cluster Flow Run File"
   num_lines: 2
 conpair/concordance:
-  contents: "markers (coverage per marker threshold : "
+  contents: "markers (coverage per marker threshold"
   num_lines: 3
 conpair/contamination:
   contents: "Tumor sample contamination level: "

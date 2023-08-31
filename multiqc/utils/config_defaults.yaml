@@ -553,6 +553,10 @@ module_order:
   - sentieon:
       module_tag:
         - DNA
+  - bakta:
+      module_tag:
+        - bacterial
+        - denovo
   - prokka:
       module_tag:
         - prokarytotic
