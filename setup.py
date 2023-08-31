@@ -63,6 +63,7 @@ setup(
         "rich>=10",
         "rich-click",
         "spectra>=0.0.10",
+        "importlib-metadata",
     ],
     entry_points={
         "console_scripts": [
@@ -72,6 +73,7 @@ setup(
             "adapterRemoval = multiqc.modules.adapterRemoval:MultiqcModule",
             "afterqc = multiqc.modules.afterqc:MultiqcModule",
             "anglerfish = multiqc.modules.anglerfish:MultiqcModule",
+            "bakta = multiqc.modules.bakta:MultiqcModule",
             "bamtools = multiqc.modules.bamtools:MultiqcModule",
             "bbduk = multiqc.modules.bbduk:MultiqcModule",
             "bbmap = multiqc.modules.bbmap:MultiqcModule",
