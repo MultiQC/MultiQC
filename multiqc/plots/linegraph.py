@@ -12,7 +12,7 @@ import re
 import sys
 from collections import OrderedDict
 
-from multiqc.utils import config, mqc_colour, report, util_functions
+from multiqc.utils import config, mqc_color, report, util_functions
 
 logger = logging.getLogger(__name__)
 
@@ -347,7 +347,7 @@ def matplotlib_linegraph(plotdata, pconfig=None):
     )
     html += '<div class="mqc_mplplot_plotgroup" id="{}">'.format(pconfig["id"])
 
-    scale = mqc_colour.mqc_colour_scale("Highcharts")
+    scale = mqc_color.mqc_color_scale("Highcharts")
 
     # Buttons to cycle through different datasets
     if len(plotdata) > 1 and not config.simple_output:
@@ -421,8 +421,8 @@ def matplotlib_linegraph(plotdata, pconfig=None):
         for idx, d in enumerate(pdata):
             # Default colour index
             cidx = idx
-            while cidx >= len(scale.colours):
-                cidx -= len(scale.colours)
+            while cidx >= len(scale.colors):
+                cidx -= len(scale.colors)
 
             # Line style
             linestyle = "solid"
@@ -435,7 +435,7 @@ def matplotlib_linegraph(plotdata, pconfig=None):
                     [x[0] for x in d["data"]],
                     [x[1] for x in d["data"]],
                     label=d["name"],
-                    color=d.get("color", scale.get_colour(cidx)),
+                    color=d.get("color", scale.get_color(cidx)),
                     linestyle=linestyle,
                     linewidth=1,
                     marker=None,
@@ -443,7 +443,7 @@ def matplotlib_linegraph(plotdata, pconfig=None):
             except TypeError:
                 # Categorical data on x axis
                 axes.plot(
-                    d["data"], label=d["name"], color=d.get("color", scale.get_colour(cidx)), linewidth=1, marker=None
+                    d["data"], label=d["name"], color=d.get("color", scale.get_color(cidx)), linewidth=1, marker=None
                 )
 
         # Tidy up axes

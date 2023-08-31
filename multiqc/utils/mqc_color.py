@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 """
-Helper functions to manipulate colours and colour scales
+Helper functions to manipulate colors and color scales
 """
 
 
@@ -16,15 +16,15 @@ from multiqc.utils import config, report
 logger = logging.getLogger(__name__)
 
 
-class mqc_colour_scale(object):
-    """Class to hold a colour scheme."""
+class mqc_color_scale(object):
+    """Class to hold a color scheme."""
 
     def __init__(self, name="GnBu", minval=0, maxval=100, id=None):
-        """Initialise class with a colour scale"""
+        """Initialise class with a color scale"""
 
         self.name = name
         self.id = id
-        self.colours = self.get_colours(name)
+        self.colors = self.get_colors(name)
 
         # Sanity checks
         minval = re.sub("[^0-9\.-e]", "", str(minval))
@@ -43,7 +43,7 @@ class mqc_colour_scale(object):
             self.minval = float(minval)
             self.maxval = float(maxval)
 
-    def get_colour(self, val, colformat="hex", lighten=0.3):
+    def get_color(self, val, colformat="hex", lighten=0.3):
         """Given a value, return a colour within the colour scale"""
 
         # Ported from the original JavaScript for continuity
@@ -51,20 +51,20 @@ class mqc_colour_scale(object):
         rgb_converter = lambda x: max(0, min(1, 1 + ((x - 1) * lighten)))
 
         try:
-            # When we have non-numeric values (e.g. Male/Female, Yes/No, chromosome names, etc), and a qualitive
-            # scale (Set1, Set3, etc), we don't want to attempt to parse numbers, otherwise we will end up with all
-            # values assigned with the same color. But instead we will geta has from a string to hope to assign
+            # When we have non-numeric values (e.g. Male/Female, Yes/No, chromosome names, etc.), and a qualitive
+            # scale (Set1, Set3, etc.), we don't want to attempt to parse numbers, otherwise we will end up with all
+            # values assigned with the same color. But instead we will get a has from a string to hope to assign
             # a unique color for each possible enumeration value.
-            if self.name in mqc_colour_scale.qualitative_scales and isinstance(val, str):
-                thecolour = spectra.html(self.colours[hash(val) % len(self.colours)])
-                thecolour = spectra.rgb(*[rgb_converter(v) for v in thecolour.rgb])
-                return thecolour.hexcode
+            if self.name in mqc_color_scale.qualitative_scales and isinstance(val, str):
+                the_color = spectra.html(self.colors[hash(val) % len(self.colors)])
+                the_color = spectra.rgb(*[rgb_converter(v) for v in the_color.rgb])
+                return the_color.hexcode
 
-            # When there is only 1 color in scale, spectra.scale() will crash with DevisionByZero
-            elif len(self.colours) == 1:
-                thecolour = spectra.html(self.colours[0])
-                thecolour = spectra.rgb(*[rgb_converter(v) for v in thecolour.rgb])
-                return thecolour.hexcode
+            # When there is only 1 color in scale, spectra.scale() will crash with DivisionByZero
+            elif len(self.colors) == 1:
+                the_color = spectra.html(self.colors[0])
+                the_color = spectra.rgb(*[rgb_converter(v) for v in the_color.rgb])
+                return the_color.hexcode
 
             else:
                 # Sanity checks
@@ -75,25 +75,25 @@ class mqc_colour_scale(object):
                 val = max(val, self.minval)
                 val = min(val, self.maxval)
 
-                domain_nums = list(np.linspace(self.minval, self.maxval, len(self.colours)))
-                my_scale = spectra.scale(self.colours).domain(domain_nums)
+                domain_nums = list(np.linspace(self.minval, self.maxval, len(self.colors)))
+                my_scale = spectra.scale(self.colors).domain(domain_nums)
 
-                # Lighten colours
-                thecolour = spectra.rgb(*[rgb_converter(v) for v in my_scale(val).rgb])
+                # Lighten colors
+                the_color = spectra.rgb(*[rgb_converter(v) for v in my_scale(val).rgb])
 
-                return thecolour.hexcode
+                return the_color.hexcode
 
         except:
-            # Shouldn't crash all of MultiQC just for colours
+            # Shouldn't crash all of MultiQC just for colors
             return ""
 
-    def get_colours(self, name="GnBu"):
-        """Function to get a colour scale by name
-        Input: Name of colour scale (suffix with -rev for reversed)
+    def get_colors(self, name="GnBu"):
+        """Function to get a color scale by name
+        Input: Name of color scale (suffix with -rev for reversed)
                Defaults to 'GnBu' if scale not found.
-        Returns: List of hex colours
+        Returns: List of hex colors
         """
-        # ColorBrewer colours, taken from Chroma.js source code
+        # ColorBrewer colors, taken from Chroma.js source code
         # https://github.com/gka/chroma.js
 
         ###    Copyright (c) 2002 Cynthia Brewer, Mark Harrower, and The
@@ -399,18 +399,18 @@ class mqc_colour_scale(object):
         if name.startswith("#"):
             return [name]
 
-        if name in mqc_colour_scale.html_colors:
+        if name in mqc_color_scale.html_colors:
             return [name]
 
-        # Detect reverse colour scales
+        # Detect reverse color scales
         reverse = False
         if str(name).endswith("-rev"):
             reverse = True
             name = name[:-4]
 
-        # Default colour scale
+        # Default color scale
         if name not in colorbrewer_scales:
-            errmsg = f"{self.id+': ' if self.id else ''}Colour scale {name} not found - defaulting to GnBu"
+            errmsg = f"{self.id+': ' if self.id else ''}Color scale {name} not found - defaulting to GnBu"
             if config.lint:
                 logger.error(errmsg)
                 report.lint_errors.append(errmsg)
@@ -418,7 +418,7 @@ class mqc_colour_scale(object):
                 logger.debug(errmsg)
             name = "GnBu"
 
-        # Return colours
+        # Return colors
         if reverse:
             return list(reversed(colorbrewer_scales[name]))
         else:
