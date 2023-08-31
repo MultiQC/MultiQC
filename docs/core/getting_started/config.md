@@ -479,7 +479,7 @@ know you have files for. MultiQC supports a _lot_ of different tools and searche
 for matching files for all of them every time you run it.
 
 You can do this with the `-m` / `--module` flag (can be repeated) or in a MultiQC
-config file by using `config.module_order`. See [Order of modules](../reports/customisation.md#order-of-moduless).
+config file by using `config.module_order`. See [Order of modules](../reports/customisation.md#order-of-modules).
 
 ### Optimise file search patterns
 
