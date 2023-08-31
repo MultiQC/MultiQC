@@ -382,7 +382,7 @@ class mqc_colour_scale(object):
                 "#fddaec",
                 "#f2f2f2",
             ],
-            "HighCharts": [
+            "Highcharts": [
                 "#7cb5ec",
                 "#434348",
                 "#90ed7d",
