@@ -14,7 +14,7 @@ import subprocess
 import sys
 from datetime import datetime
 
-import pkg_resources
+import importlib_metadata
 import yaml
 
 import multiqc
@@ -22,8 +22,8 @@ import multiqc
 logger = logging.getLogger("multiqc")
 
 # Get the MultiQC version
-version = pkg_resources.get_distribution("multiqc").version
-short_version = pkg_resources.get_distribution("multiqc").version
+version = importlib_metadata.version("multiqc")
+short_version = version
 script_path = os.path.dirname(os.path.realpath(__file__))
 git_hash = None
 git_hash_short = None
@@ -64,16 +64,16 @@ megaqc_access_token = os.environ.get("MEGAQC_ACCESS_TOKEN")
 # Modules must be listed in setup.py under entry_points['multiqc.modules.v1']
 # Get all modules, including those from other extension packages
 avail_modules = dict()
-for entry_point in pkg_resources.iter_entry_points("multiqc.modules.v1"):
-    nicename = str(entry_point).split("=")[0].strip()
+for entry_point in importlib_metadata.entry_points(group="multiqc.modules.v1"):
+    nicename = entry_point.name
     avail_modules[nicename] = entry_point
 
 ##### Available templates
 # Templates must be listed in setup.py under entry_points['multiqc.templates.v1']
 # Get all templates, including those from other extension packages
 avail_templates = {}
-for entry_point in pkg_resources.iter_entry_points("multiqc.templates.v1"):
-    nicename = str(entry_point).split("=")[0].strip()
+for entry_point in importlib_metadata.entry_points(group="multiqc.templates.v1"):
+    nicename = entry_point.name
     avail_templates[nicename] = entry_point
 
 ##### Check we have modules & templates
