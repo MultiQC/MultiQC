@@ -64,7 +64,7 @@ megaqc_access_token = os.environ.get("MEGAQC_ACCESS_TOKEN")
 # Get all modules, including those from other extension packages
 avail_modules = dict()
 for entry_point in entry_points(group="multiqc.modules.v1"):
-    nicename = str(entry_point).split("=")[0].strip()
+    nicename = entry_point.name
     avail_modules[nicename] = entry_point
 
 ##### Available templates
@@ -72,7 +72,7 @@ for entry_point in entry_points(group="multiqc.modules.v1"):
 # Get all templates, including those from other extension packages
 avail_templates = {}
 for entry_point in entry_points(group="multiqc.templates.v1"):
-    nicename = str(entry_point).split("=")[0].strip()
+    nicename = entry_point.name
     avail_templates[nicename] = entry_point
 
 ##### Check we have modules & templates
