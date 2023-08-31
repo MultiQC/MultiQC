@@ -5,7 +5,6 @@
 import logging
 from collections import OrderedDict
 
-from multiqc import config
 from multiqc.modules.base_module import BaseMultiqcModule
 from multiqc.plots import bargraph
 from multiqc.utils import mqc_colour
@@ -41,8 +40,26 @@ class MultiqcModule(BaseMultiqcModule):
         log.info(f"Found {len(self.freyja_data)} reports")
         self.write_data_file(self.freyja_data, "multiqc_freyja")
 
-        lineages, scale = self.general_stats_cols()
-        self.add_freyja_section(lineages, scale)
+        top_lineages_dict = {}
+        top_lineages = set()
+        all_lineages = set()
+        for s_name, sub_dict in self.freyja_data.items():
+            top_lineage = max(sub_dict, key=sub_dict.get)
+            top_lineage_value = sub_dict[top_lineage]
+            top_lineages_dict[s_name] = {
+                "Top_lineage_freyja": top_lineage,
+                "Top_lineage_freyja_percentage": top_lineage_value,
+            }
+            top_lineages.add(top_lineage)
+            all_lineages.add(top_lineage)
+        for s_name, sub_dict in self.freyja_data.items():
+            for lineage, val in sub_dict.items():
+                if val not in all_lineages:
+                    all_lineages.add(lineage)
+
+        self.scale = mqc_colour.mqc_colour_scale("Highcharts", 0, len(all_lineages))
+        self.general_stats_cols(top_lineages_dict, all_lineages)
+        self.add_freyja_section(all_lineages)
 
     def parse_summ_files(self):
         """
@@ -80,33 +97,14 @@ class MultiqcModule(BaseMultiqcModule):
             self.freyja_data[s_name] = d
             self.add_data_source(f, s_name)
 
-    def general_stats_cols(self):
+    def general_stats_cols(self, top_lineages_dict, all_lineages):
         """Add a single column displaying the most abundant lineage to the General Statistics table"""
-        top_lineage_dict = {}
-        top_lineages = set()
-        all_lineages = []
-        for s_name, sub_dict in self.freyja_data.items():
-            top_lineage = max(sub_dict, key=sub_dict.get)
-            top_lineage_value = sub_dict[top_lineage]
-            top_lineage_dict[s_name] = {
-                "Top_lineage_freyja": top_lineage,
-                "Top_lineage_freyja_percentage": top_lineage_value,
-            }
-            top_lineages.add(top_lineage)
-            all_lineages.append(top_lineage)
-        for s_name, sub_dict in self.freyja_data.items():
-            for lineage, val in sub_dict.items():
-                if val not in all_lineages:
-                    all_lineages.append(lineage)
-        scale = mqc_colour.mqc_colour_scale("Set1", 0, len(all_lineages))
-
         headers = OrderedDict()
         headers["Top_lineage_freyja"] = {
             "title": "Top lineage",
             "description": "The most abundant lineage in the sample",
-            "bgcols": {val: scale.get_colour(i) for i, val in enumerate(all_lineages)},
+            "bgcols": {x: self.scale.get_colour(i) for i, x in enumerate(all_lineages)},
         }
-        print(headers["Top_lineage_freyja"])
         headers["Top_lineage_freyja_percentage"] = {
             "title": "Top lineage %",
             "description": "The percentage of the most abundant lineage in the sample",
@@ -117,10 +115,9 @@ class MultiqcModule(BaseMultiqcModule):
             "suffix": "%",
         }
 
-        self.general_stats_addcols(top_lineage_dict, headers)
-        return all_lineages, scale
+        self.general_stats_addcols(top_lineages_dict, headers)
 
-    def add_freyja_section(self, lineages, scale):
+    def add_freyja_section(self, lineages):
         pconfig = {
             "id": "Freyja_plot",
             "title": "Freyja: Top lineages",
@@ -129,9 +126,8 @@ class MultiqcModule(BaseMultiqcModule):
             "cpswitch": False,
             "cpswitch_c_active": False,
         }
-        cats = {x: {"name": x, "color": scale.get_colour(i)} for i, x in enumerate(lineages)}
-        print(cats)
-        
+        cats = {x: {"name": x, "color": self.scale.get_colour(i, lighten=1)} for i, x in enumerate(lineages)}
+
         self.add_section(
             name="Freyja Summary",
             anchor="freyja-summary",
