@@ -9,10 +9,7 @@ $ python -m multiqc .
 """
 
 
-try:
-    from importlib.metadata import entry_points
-except ImportError:  # <3.8
-    from importlib_metadata import entry_points
+from importlib_metadata import entry_points
 
 from . import multiqc
 
