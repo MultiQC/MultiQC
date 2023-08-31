@@ -67,6 +67,8 @@ for more information.
 
 ### New Modules
 
+- [**Freyja**](https://github.com/andersen-lab/Freyja)
+  - Freyja is a tool to recover relative lineage abundances from mixed SARS-CoV-2 samples from a sequencing dataset.
 - [**Librarian**](https://github.com/DesmondWillowbrook/Librarian)
   - A tool to predict the sequencing library type from the base composition of a supplied FastQ file.
 
