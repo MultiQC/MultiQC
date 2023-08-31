@@ -141,8 +141,8 @@ def parse_genome_results(self, f):
         self.general_stats_data[s_name]["mean_coverage"] = d["mean_coverage"]
         self.general_stats_data[s_name]["regions_size"] = d["regions_size"]
         self.general_stats_data[s_name]["regions_mapped_reads"] = d["regions_mapped_reads"]
-        d["regions_percentage_inside"] = (d["regions_mapped_reads"] / d["mapped_reads"]) * 100
-        self.general_stats_data[s_name]["regions_percentage_inside"] = d["regions_percentage_inside"]
+        d["percentage_aligned_on_target"] = (d["regions_mapped_reads"] / d["mapped_reads"]) * 100
+        self.general_stats_data[s_name]["percentage_aligned_on_target"] = d["percentage_aligned_on_target"]
     except KeyError:
         pass
 
