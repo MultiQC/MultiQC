@@ -72,7 +72,7 @@ class MultiqcModule(BaseMultiqcModule):
                 if match:
                     parsed_data[k] = float(match.group(1))
                     if k == "concordance_concordance" and not "Concordance" in r:
-                        parsed_data[k] = 100 * parsed_data[k]
+                        parsed_data[k] = 100.0 * float(parsed_data[k])
                     break
 
         def _cp_type(data):
