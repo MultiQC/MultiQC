@@ -121,6 +121,8 @@ samtools:
 some_other_tool: "2023-1"
 ```
 
+To exclude the `Software versions` section from the report, set `skip_versions_section: true` in your config file.
+
 ## Sample name replacement
 
 Occasionally, when you run MultiQC you may know that you want to change the resulting

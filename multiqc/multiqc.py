@@ -246,12 +246,6 @@ click.rich_click.OPTION_GROUPS = {
     help="Don't upload generated report to MegaQC, even if MegaQC options are found",
 )
 @click.option(
-    "--no-versions-section",
-    "no_versions_section",
-    is_flag=True,
-    help="Exclude section 'Software Versions' listing software versions from the report",
-)
-@click.option(
     "-c",
     "--config",
     "config_file",
@@ -328,7 +322,6 @@ def run(
     lint=False,
     make_pdf=False,
     no_megaqc_upload=False,
-    no_versions_section=False,
     config_file=(),
     cl_config=(),
     verbose=0,
@@ -772,7 +765,7 @@ def run(
             report.software_versions[process][software] = versions
 
     # Add section for software versions if any are found
-    if not no_versions_section and report.software_versions and len(report.modules_output) > 0:
+    if not config.skip_software_versions and report.software_versions and len(report.modules_output) > 0:
         report.modules_output.append(software_versions.MultiqcModule())
 
     # Special-case module if we want to profile the MultiQC running time
