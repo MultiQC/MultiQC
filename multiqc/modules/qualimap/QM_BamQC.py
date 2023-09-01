@@ -624,7 +624,7 @@ def general_stats_headers(self):
         "hidden": True,
     }
     self.general_stats_headers["regions_mapped_reads"] = {
-        "title": "{} Aligned".format(config.read_count_prefix),
+        "title": "{} On target".format(config.read_count_prefix),
         "description": "Number of mapped reads on target region ({})".format(config.read_count_desc),
         "scale": "RdYlGn",
         "shared_key": "read_count",
