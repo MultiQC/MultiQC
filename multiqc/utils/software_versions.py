@@ -56,7 +56,6 @@ class MultiqcModule(BaseMultiqcModule):
             html.append("<tbody>")
             for i, (tool, versions) in enumerate(sorted(tmp_versions.items())):
                 versions = list(map(str, versions))
-                versions_html = f"<code>{'</code>,<code>'.join(versions)}</code>"
                 html.append(
                     dedent(
                         f"""\
