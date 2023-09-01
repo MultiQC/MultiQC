@@ -1,7 +1,7 @@
 ---
-Name: Xenome
-URL: https://github.com/data61/gossamer/blob/master/docs/xenome.md
-Description: >
+name: Xenome
+url: https://github.com/data61/gossamer/blob/master/docs/xenome.md
+description: >
   Xenome is a tool for classifying reads from xenograft sources.  ---
 ---
 
