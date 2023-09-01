@@ -83,7 +83,6 @@ def parse_reports(self):
     self.picard_GCbias_data = self.ignore_samples(self.picard_GCbias_data)
 
     if len(self.picard_GCbias_data) > 0:
-
         # Plot the graph
 
         pconfig = {

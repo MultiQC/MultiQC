@@ -15,7 +15,6 @@ class MultiqcModule(BaseMultiqcModule):
     """Malt Module"""
 
     def __init__(self):
-
         # Initialise the parent object
         super(MultiqcModule, self).__init__(
             name="MALT",

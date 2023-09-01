@@ -1,7 +1,7 @@
 ---
-Name: DIAMOND
-URL: https://github.com/bbuchfink/diamond
-Description: >
+name: DIAMOND
+url: https://github.com/bbuchfink/diamond
+description: >
   DIAMOND is a sequence aligner for protein and translated DNA searches, designed for high performance analysis of big sequence data.
 ---
 

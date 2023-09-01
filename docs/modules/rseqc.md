@@ -1,7 +1,7 @@
 ---
-Name: RSeQC
-URL: http://rseqc.sourceforge.net/
-Description: >
+name: RSeQC
+url: http://rseqc.sourceforge.net/
+description: >
   RSeQC is a package that provides a number of useful modules that can
   comprehensively evaluate high throughput RNA-seq data.
 ---

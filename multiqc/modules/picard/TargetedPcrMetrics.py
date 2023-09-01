@@ -53,7 +53,6 @@ def parse_reports(self):
     self.picard_pcrmetrics_data = self.ignore_samples(self.picard_pcrmetrics_data)
 
     if len(self.picard_pcrmetrics_data) > 0:
-
         # Write parsed data to a file
         self.write_data_file(self.picard_pcrmetrics_data, "multiqc_picard_pcrmetrics")
 

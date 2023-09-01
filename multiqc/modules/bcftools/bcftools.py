@@ -20,7 +20,6 @@ class MultiqcModule(BaseMultiqcModule, StatsReportMixin):
     the module output if logs are found."""
 
     def __init__(self):
-
         # Initialise the parent object
         super(MultiqcModule, self).__init__(
             name="Bcftools",

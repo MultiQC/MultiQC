@@ -25,11 +25,6 @@ def plot(data, headers=None, pconfig=None):
     if pconfig is None:
         pconfig = {}
 
-    # Allow user to overwrite any given config for this plot
-    if "id" in pconfig and pconfig["id"] and pconfig["id"] in config.custom_plot_config:
-        for k, v in config.custom_plot_config[pconfig["id"]].items():
-            pconfig[k] = v
-
     # Make a datatable object
     dt = table_object.datatable(data, headers, pconfig)
 
@@ -73,7 +68,6 @@ def make_table(dt):
         table_title = table_id.replace("_", " ").title()
 
     for idx, k, header in dt.get_headers_in_order():
-
         rid = header["rid"]
 
         # Build the table header cell
@@ -132,7 +126,7 @@ def make_table(dt):
         )
 
         # Make a colour scale
-        if header["scale"] == False:
+        if header["scale"] is False:
             c_scale = None
         else:
             c_scale = mqc_colour.mqc_colour_scale(header["scale"], header["dmin"], header["dmax"], id=table_id)
@@ -147,7 +141,7 @@ def make_table(dt):
         cond_formatting_colours.extend(config.table_cond_formatting_colours)
 
         # Add the data table cells
-        for (s_name, samp) in dt.data[idx].items():
+        for s_name, samp in dt.data[idx].items():
             if k in samp:
                 val = samp[k]
                 kname = "{}_{}".format(header["namespace"], rid)
@@ -163,7 +157,7 @@ def make_table(dt):
                     dmin = header["dmin"]
                     dmax = header["dmax"]
                     percentage = ((float(val) - dmin) / (dmax - dmin)) * 100
-                    # Treat 0 as 0-width and make bars width of absoluate value
+                    # Treat 0 as 0-width and make bars width of absolute value
                     if header.get("bars_zero_centrepoint"):
                         dmax = max(abs(header["dmin"]), abs(header["dmax"]))
                         dmin = 0
@@ -238,7 +232,7 @@ def make_table(dt):
                 if badge_col is not None:
                     valstring = '<span class="badge" style="background-color:{}">{}</span>'.format(badge_col, valstring)
 
-                # Categorical backgorund colours supplied
+                # Categorical background colours supplied
                 if val in header.get("bgcols", {}).keys():
                     col = 'style="background-color:{} !important;"'.format(header["bgcols"][val])
                     if s_name not in t_rows:
@@ -289,7 +283,6 @@ def make_table(dt):
     # Buttons above the table
     html = ""
     if not config.simple_output:
-
         # Copy Table Button
         html += """
         <button type="button" class="mqc_table_copy_btn btn btn-default btn-sm" data-clipboard-target="#{tid}">
@@ -399,7 +392,7 @@ def make_table(dt):
             <h4 class="modal-title">{title}: Columns</h4>
           </div>
           <div class="modal-body">
-            <p>Uncheck the tick box to hide columns. Click and drag the handle on the left to change order.</p>
+            <p>Uncheck the tick box to hide columns. Click and drag the handle on the left to change order. Table ID: <code>{tid}</code></p>
             <p>
                 <button class="btn btn-default btn-sm mqc_configModal_bulkVisible" data-target="#{tid}" data-action="showAll">Show All</button>
                 <button class="btn btn-default btn-sm mqc_configModal_bulkVisible" data-target="#{tid}" data-action="showNone">Show None</button>

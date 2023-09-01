@@ -18,7 +18,6 @@ class MultiqcModule(BaseMultiqcModule):
     """Kallisto module"""
 
     def __init__(self):
-
         # Initialise the parent object
         super(MultiqcModule, self).__init__(
             name="Kallisto",
@@ -53,7 +52,6 @@ class MultiqcModule(BaseMultiqcModule):
     def parse_kallisto_log(self, f):
         s_name = total_reads = paligned_reads = fraglength = None
         for l in f["f"]:
-
             # Get input filename
             match = re.search(r"\[quant\] will process (pair|file|sample) 1: (\S+)", l)
             if match:

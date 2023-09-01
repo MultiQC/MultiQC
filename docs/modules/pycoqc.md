@@ -1,7 +1,7 @@
 ---
-Name: pycoQC
-URL: https://a-slide.github.io/pycoQC/
-Description: >
+name: pycoQC
+url: https://a-slide.github.io/pycoQC/
+description: >
   PycoQC computes metrics and generates interactive QC plots
   for Oxford Nanopore technologies sequencing data
 ---

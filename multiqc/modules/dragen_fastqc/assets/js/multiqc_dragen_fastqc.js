@@ -420,7 +420,9 @@ function fastqc_module(module_element, module_key) {
 
   // Export plot
   module_element.find(".dragen_fastqc_per_base_sequence_content_plot").on("mqc_plotexport_image", function (e, cfg) {
-    alert("Apologies, it's not yet possible to export this plot.\nPlease take a screengrab or export the JSON data.");
+    alert(
+      "Apologies, it's not yet possible to export the DRAGEN-FastQC per-base sequence content plot.\nPlease take a screengrab or export the JSON data."
+    );
   });
   module_element.find(".dragen_fastqc_per_base_sequence_content_plot").on("mqc_plotexport_data", function (e, cfg) {
     if (cfg["ft"] == "json") {
@@ -428,7 +430,7 @@ function fastqc_module(module_element, module_key) {
       var blob = new Blob([json_str], { type: "text/plain;charset=utf-8" });
       saveAs(blob, cfg["fname"]);
     } else {
-      alert("Apologies, this plot can only be exported as JSON currently.");
+      alert("Apologies, the DRAGEN-FastQC per-base sequence content plot can only be exported as JSON currently.");
     }
   });
 

@@ -218,7 +218,6 @@ class MultiqcModule(BaseMultiqcModule):
         )
 
     def parse_gstacks(self, file_contents, s_name):
-
         headers = None
         content = None
         out_dict = OrderedDict()
@@ -241,7 +240,6 @@ class MultiqcModule(BaseMultiqcModule):
         return out_dict
 
     def parse_sumstats(self, file_contents, s_name):
-
         out_dict = dict()
         # ["# Pop ID","Private","Num_Indv","P","Obs_Het","Obs_Hom","Exp_Het","Exp_Hom","Pi","Fis"]
         fields = [0, 1, 2, 5, 8, 11, 14, 17, 20, 23]
@@ -261,7 +259,6 @@ class MultiqcModule(BaseMultiqcModule):
         return out_dict
 
     def parse_populations(self, file_contents, s_name):
-
         loci_dict = dict()
         snps_dict = dict()
         pat = re.compile("BEGIN (.*)\n\n{0,1}#.*\n.+\n((?:.+\n)+)END", re.MULTILINE)

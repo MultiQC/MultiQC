@@ -1,7 +1,7 @@
 ---
-Name: Cell Ranger
-URL: https://support.10xgenomics.com/single-cell-gene-expression/software/pipelines/latest/what-is-cell-ranger
-Description: >
+name: Cell Ranger
+url: https://support.10xgenomics.com/single-cell-gene-expression/software/pipelines/latest/what-is-cell-ranger
+description: >
   Summarise quality metrics from Cell Ranger count and vdj.
 ---
 

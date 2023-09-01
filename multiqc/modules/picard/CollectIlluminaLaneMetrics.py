@@ -87,7 +87,6 @@ def parse_reports(self):
     self.picard_lane_metrics = self.ignore_samples(self.picard_lane_metrics)
 
     if len(self.picard_lane_metrics) > 0:
-
         # Write parsed data to a file
         self.write_data_file(self.picard_lane_metrics, "multiqc_picard_IlluminaLaneMetrics")
 

@@ -13,7 +13,6 @@ class SambambaMarkdupMixin:
     """Find and parse Sambamba Markdup output log files and calculate duplication rate"""
 
     def parse_sambamba_markdup(self):
-
         # Clean sample name from 'markdup_sample_1' to 'sample_1'
         # Find and load sambamba logs to markdup_data.
         # Regex for key phrases and calculate duplicate rate.
@@ -23,7 +22,6 @@ class SambambaMarkdupMixin:
         self.markdup_data = dict()
 
         for f in self.find_log_files("sambamba/markdup"):
-
             if f["s_name"] in self.markdup_data:
                 log.debug("Duplicate sample name found in {}! Overwriting: {}".format(f["fn"], f["s_name"]))
 
@@ -107,7 +105,6 @@ class SambambaMarkdupMixin:
         return d
 
     def markdup_general_stats_table(self):
-
         """
         Take parsed stats from sambamba markdup to general stats table at the top of the report.
 
@@ -128,7 +125,6 @@ class SambambaMarkdupMixin:
             self.general_stats_data[s_name]["duplicate_rate"] = data["duplicate_rate"]
 
     def markdup_section(self):
-
         """
         Add markdup statistics as bar graph to multiQC report.
         """

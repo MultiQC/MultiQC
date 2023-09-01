@@ -1,7 +1,7 @@
 ---
-Name: Samblaster
-URL: https://github.com/GregoryFaust/samblaster
-Description: >
+name: Samblaster
+url: https://github.com/GregoryFaust/samblaster
+description: >
   Samblaster is a tool to mark duplicates and extract discordant and split
   reads from sam files.
 ---
