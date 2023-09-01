@@ -44,7 +44,7 @@ class MultiqcModule(BaseMultiqcModule):
                 <table class="table mqc_versions_table">
                     <thead>
                         <tr>
-                            <th> Process Name </th>
+                            <th> Group </th>
                             <th> Software </th>
                             <th> Version  </th>
                         </tr>
@@ -52,7 +52,7 @@ class MultiqcModule(BaseMultiqcModule):
                 """
             )
         ]
-        for process, tmp_versions in sorted(versions.items()):
+        for group, tmp_versions in sorted(versions.items()):
             html.append("<tbody>")
             for i, (tool, versions) in enumerate(sorted(tmp_versions.items())):
                 versions = list(map(str, versions))
@@ -61,7 +61,7 @@ class MultiqcModule(BaseMultiqcModule):
                     dedent(
                         f"""\
                         <tr>
-                            <td><samp>{process if (i == 0) else ''}</samp></td>
+                            <td><samp>{group if (i == 0) else ''}</samp></td>
                             <td><samp>{tool}</samp></td>
                             <td><samp>{', '.join(versions)}</samp></td>
                         </tr>
@@ -102,8 +102,8 @@ def load_versions_from_config(config):
     software_versions = merge(software_versions_config, software_versions_file)
 
     # Parse the aggregated versions
-    for process in list(software_versions):
-        softwares = software_versions[process]
+    for group in list(software_versions):
+        softwares = software_versions[group]
         for tool in list(softwares):
             versions = softwares[tool]
 
@@ -122,18 +122,18 @@ def validate_software_versions(input):
 
     Two main formats are supported:
 
-    (1) A dict of dicts, where the first level is the process name and the second level is the software name.
+    (1) A dict of dicts, where the first level is the group name and the second level is the software name.
         The software name maps to a list of versions or a single version string.
 
-        process_name:
+        group_name:
             software_name:
                 - version1
                 - version2
-        other_process:
+        other_group:
             other_software: version3
 
     (2) A dict of lists, where the key is the software name and the value is a list of versions or a single version string.
-        In this case the process name is set to the software name.
+        In this case the group name is set to the software name.
 
         software_name:
             - version1
@@ -153,7 +153,7 @@ def validate_software_versions(input):
         return output, False
 
     for level1_key, level1_values in input.items():
-        process = level1_key.lower()
+        group = level1_key.lower()
         software = level1_key.lower()
 
         # Check if the input is in format (1)
@@ -169,7 +169,7 @@ def validate_software_versions(input):
                 if not all_strings(versions):
                     return output, False
 
-                output[process][software] = versions
+                output[group][software] = versions
 
         # Check if the input is in format (2)
         elif isinstance(level1_values, (list, str)):
@@ -180,7 +180,7 @@ def validate_software_versions(input):
             if not all_strings(versions):
                 return output, False
 
-            output[process][software] = versions
+            output[group][software] = versions
         else:
             return output, False
 

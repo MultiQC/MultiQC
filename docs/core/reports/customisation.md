@@ -90,11 +90,12 @@ or when not available in log files, you can alternatively add them in
 the configuration. Software versions can be specified in YAML format
 using two options.
 
-### Option 1: Grouping software sersions by process name
+### Option 1: Grouping softwares and versions
 
-For each process, software versions can be organized within a nested YAML
-dictionary with three levels: `process` -> `software` -> `version(s)`.
-Multiple versions of the same software are specified as lists. Here's an
+Here input is provided as a nested YAML
+dictionary with three levels: `group` -> `software(s)` -> `version(s)`.
+One group specifies one or more software names. Eash software specifies
+one or more versions with multiple versions provided as lists. Here's an
 example:
 
 ```yaml
@@ -106,7 +107,7 @@ software_versions:
   samtools:
     samtools: "1.11"
     htslib: "1.3"
-  some_other_process:
+  some_other_group:
     some_other_tool:
       - "2023-1"
 ```
@@ -120,8 +121,8 @@ quotes would be parsed as a float and displayed as version `1.1`.
 ### Option 2: Dictionary of software name and version pairs
 
 An alternative is to specify pairs of software names and version
-strings directly. This option does not group software into processes.
-Instead the software name is used directly for the process name. Example:
+strings directly. This option does not enable grouping of different softwares.
+Instead the software name is used directly for the group name. Example:
 
 ```yaml
 software_versions:

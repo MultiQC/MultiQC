@@ -516,8 +516,8 @@ class BaseMultiqcModule(object):
         self.versions[software_name] = software_versions.sort_versions(self.versions[software_name])
 
         # Update version list for report section.
-        process_name = self.name.lower()
-        report.software_versions[process_name][software_name] = self.versions[software_name]
+        group_name = self.name.lower()
+        report.software_versions[group_name][software_name] = self.versions[software_name]
 
     def write_data_file(self, data, fn, sort_cols=False, data_format=None):
         """Saves raw data to a dictionary for downstream use, then redirects
