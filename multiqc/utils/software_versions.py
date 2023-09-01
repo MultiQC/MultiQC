@@ -12,7 +12,7 @@ import packaging.version
 import yaml
 
 from multiqc.modules.base_module import BaseMultiqcModule
-from multiqc.utils import report
+from multiqc.utils import report as mqc_report
 
 # Initialise the logger
 log = logging.getLogger(__name__)
@@ -31,7 +31,7 @@ class MultiqcModule(BaseMultiqcModule):
 
     def report_software_versions(self):
         """Create section listing software versions."""
-        content = self._make_versions_html(report.software_versions)
+        content = self._make_versions_html(mqc_report.software_versions)
         self.add_section(name=None, content=content)
 
     @staticmethod
@@ -70,6 +70,27 @@ class MultiqcModule(BaseMultiqcModule):
             html.append("</tbody>")
         html.append("</table>")
         return "\n".join(html)
+
+
+def update_versions_from_config(config, report):
+    """Update report with software versions from config if provided"""
+    # Parse software version from config if provided
+    versions_from_config = load_versions_from_config(config)
+    for group, softwares in versions_from_config.items():
+        # Try to find if the software is listed among the executed modules.
+        # Unlisted software are still reported in the `Software Versions` section.
+        module = find_matching_module(group, report.modules_output)
+        for software, versions in softwares.items():
+            # Update versions if the software is listed among the executed modules
+            if module is not None and not config.disable_version_detection:
+                for version in versions:
+                    module.add_software_version(str(version), software_name=software)
+
+                # Get the updated software versions from the module
+                versions = module.versions[software]
+
+            # Add updated software versions to the report
+            report.software_versions[group][software] = versions
 
 
 def load_versions_from_config(config):
