@@ -1,7 +1,7 @@
 ---
-Name: Haplocheck
-URL: https://github.com/genepi/haplocheck
-Description: >
+name: Haplocheck
+url: https://github.com/genepi/haplocheck
+description: >
   Detects in-sample contamination in mtDNA or WGS sequencing studies by analyzing the mitchondrial content.
 ---
 
