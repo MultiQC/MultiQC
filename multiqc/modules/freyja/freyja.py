@@ -84,10 +84,6 @@ class MultiqcModule(BaseMultiqcModule):
                 except ValueError:
                     pass
 
-            # Percentages don't always add up to 1, show a warning if this is the case
-            if sum(d.values()) != 1:
-                log.warning(f"Freyja {s_name}: percentages don't sum to 1: {sum(d.values())}")
-
             # There is no sample name in the log, so we use the root of the
             # file as sample name (since the filename is always stats.dat
             if s_name in self.freyja_data:
