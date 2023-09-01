@@ -14,9 +14,13 @@ use case. However, the concepts should apply for any of the tools that MultiQC s
 
 :::tip
 Remember that you can use [Custom Content](../custom_content/index.md)
-feature to easily collect pipeline-specific metadata (software version numbers,
-pipeline run-time data, links to documentation) in to a format that can be inserted
-in to your report.
+feature to easily collect pipeline-specific metadata (pipeline run-time data,
+links to documentation, etc.) in to a format that can be inserted in to your report.
+:::
+
+:::tip
+Want to include software version information in your report? See the
+[Listing software versions](../reports/customisation.md) documentation.
 :::
 
 If you know exactly which modules will be used by MultiQC, you can use the
