@@ -1,3 +1,8 @@
+---
+title: Plotting Functions
+description: Visualising your data
+---
+
 # Plotting Functions
 
 MultiQC plotting functions are held within `multiqc.plots` submodules.
@@ -128,11 +133,16 @@ config = {
 }
 ```
 
-> The keys `id` and `title` should always be passed as a minimum. The `id` is used
-> for the plot name when exporting. If left unset, the Plot Export panel will call
-> the filename `mqc_hcplot_gtucwirdzx.png` (with some other random string).
-> Plots should always have titles, especially as they can stand by themselves
-> when exported. The title should have the format `Modulename: Plot Name`
+:::note
+The keys `id` and `title` should always be passed as a minimum.
+
+The `id` is used for the plot name when exporting.
+If left unset the Plot Export panel will call the filename
+`mqc_hcplot_gtucwirdzx.png` (with some other random string).
+
+Plots should always have titles, especially as they can stand by themselves
+when exported. The title should have the format `Modulename: Plot Name`
+:::
 
 ### Switching datasets
 
@@ -271,11 +281,16 @@ config = {
 html_content = linegraph.plot(data, config)
 ```
 
-> The keys `id` and `title` should always be passed as a minimum. The `id` is used
-> for the plot name when exporting. If left unset, the Plot Export panel will call
-> the filename `mqc_hcplot_gtucwirdzx.png` (with some other random string).
-> Plots should always have titles, especially as they can stand by themselves
-> when exported. The title should have the format `Modulename: Plot Name`
+:::note
+The keys `id` and `title` should always be passed as a minimum.
+
+The `id` is used for the plot name when exporting.
+If left unset the Plot Export panel will call the filename
+`mqc_hcplot_gtucwirdzx.png` (with some other random string).
+
+Plots should always have titles, especially as they can stand by themselves
+when exported. The title should have the format `Modulename: Plot Name`
+:::
 
 ### Switching datasets
 
@@ -381,7 +396,7 @@ is **not** suitable for large quantities of data - 20,000 genes might look good
 for one sample, but when someone runs MultiQC with 500 samples, it will crash
 the browser and be impossible to interpret.
 
-See the above docs about line plots for most config options. The scatter plot
+See the documentation about line plots for most config options. The scatter plot
 has a handful of unique ones in addition:
 
 ```python
@@ -527,7 +542,7 @@ Colour scales can be reversed by adding the suffix `-rev` to the name. For examp
 
 The following scales are available:
 
-![color brewer](images/cbrewer_scales.png)
+![color brewer](../../images/cbrewer_scales.png)
 
 ### Custom cell background colours
 
@@ -569,8 +584,9 @@ headers[tablecol] = {
 
 ### Conditional formatting of data values
 
-MultiQC has configuration options to allow users to configure _"conditional formatting"_,
-with highlighted values in table cells ([see docs](#conditional-formatting)).
+MultiQC has configuration options to allow users to configure
+["Conditional formatting"](../reports/customisation.md#conditional-formatting),
+with highlighted values in table cells.
 
 Developers can also make use of this functionality within the header config dictionaries
 for formatting data values.
@@ -714,15 +730,17 @@ pconfig = {
 The javascript bundled in the default MultiQC template has a number of
 helper functions to make your life easier.
 
-> NB: The MultiQC Python functions make use of these, so it's very unlikely
-> that you'll need to use any of this. But it's here for reference.
+:::note
+The MultiQC Python functions make use of these, so it's very unlikely
+that you'll need to use any of this. But it's here for reference.
+:::
 
 ### Plotting line graphs
 
 `plot_xy_line_graph (target, ds)`
 
 Plots a line graph with multiple series of (x,y) data pairs. Used by
-the [linegraph.plot()](http://multiqc.info/docs/#line-graphs)
+the [linegraph.plot()](#line-graphs)
 python function.
 
 Data and configuration must be added to the document level
@@ -806,7 +824,7 @@ An example of the markup expected, with the function being called:
 `plot_stacked_bar_graph (target, ds)`
 
 Plots a bar graph with multiple series containing multiple categories.
-Used by the [bargraph.plot()](http://multiqc.info/docs/#bar-graphs)
+Used by the [bargraph.plot()](#bar-graphs)
 python function.
 
 Data and configuration must be added to the document level

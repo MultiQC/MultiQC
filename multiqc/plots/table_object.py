@@ -22,6 +22,11 @@ class datatable(object):
         if pconfig is None:
             pconfig = {}
 
+        # Allow user to overwrite any given config for this plot
+        if "id" in pconfig and pconfig["id"] and pconfig["id"] in config.custom_plot_config:
+            for k, v in config.custom_plot_config[pconfig["id"]].items():
+                pconfig[k] = v
+
         # Given one dataset - turn it into a list
         if type(data) is not list:
             data = [data]
@@ -146,6 +151,12 @@ class datatable(object):
                         cidx -= len(sectcols)
                     headers[idx][k]["colour"] = sectcols[cidx]
 
+                # Overwrite (2nd time) any given config with table-level user config
+                # This is to override column-specific values set by modules
+                if "id" in pconfig and pconfig["id"] and pconfig["id"] in config.custom_plot_config:
+                    for cpc_k, cpc_v in config.custom_plot_config[pconfig["id"]].items():
+                        headers[idx][k][cpc_k] = cpc_v
+
                 # Overwrite hidden if set in user config
                 for ns in config.table_columns_visible.keys():
                     # Make namespace key case insensitive
@@ -243,18 +254,12 @@ class datatable(object):
                     )
 
         # Overwrite shared key settings and at the same time assign to buckets for sorting
-        # Within each section of headers, sort explicitly by 'title' if the dict
-        # is not already ordered, so the final ordering is by:
-        # placement > section > explicit_ordering > title
+        # So the final ordering is:
+        #   placement > section > explicit_ordering
         # Of course, the user can shuffle these manually.
         self.headers_in_order = defaultdict(list)
-
         for idx, hs in enumerate(headers):
-            keys_in_section = hs.keys()
-            if type(hs) is not OrderedDict:
-                keys_in_section = sorted(keys_in_section, key=lambda k: headers[idx][k]["title"])
-
-            for k in keys_in_section:
+            for k in hs.keys():
                 sk = headers[idx][k]["shared_key"]
                 if sk is not None:
                     headers[idx][k]["dmax"] = shared_keys[sk]["dmax"]

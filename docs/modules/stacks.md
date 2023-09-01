@@ -1,7 +1,7 @@
 ---
-Name: Stacks
-URL: http://catchenlab.life.illinois.edu/stacks/
-Description: >
+name: Stacks
+url: http://catchenlab.life.illinois.edu/stacks/
+description: >
   Stacks is a software for analyzing restriction enzyme-based data (e.g. RAD-seq)
 ---
 

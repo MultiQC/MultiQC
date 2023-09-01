@@ -117,16 +117,19 @@ class CellRangerCountMixin:
                 ),
             )
 
-            self.add_section(
-                name="Count - Saturation plot",
-                anchor="cellranger-count-saturation-plot",
-                description=self.cellrangercount_plots_conf["saturation"]["description"],
-                helptext=self.cellrangercount_plots_conf["saturation"]["helptext"],
-                plot=linegraph.plot(
-                    self.cellrangercount_plots_data["saturation"],
-                    self.cellrangercount_plots_conf["saturation"]["config"],
-                ),
-            )
+            try:
+                self.add_section(
+                    name="Count - Saturation plot",
+                    anchor="cellranger-count-saturation-plot",
+                    description=self.cellrangercount_plots_conf["saturation"]["description"],
+                    helptext=self.cellrangercount_plots_conf["saturation"]["helptext"],
+                    plot=linegraph.plot(
+                        self.cellrangercount_plots_data["saturation"],
+                        self.cellrangercount_plots_conf["saturation"]["config"],
+                    ),
+                )
+            except KeyError:
+                pass
 
             return len(self.cellrangercount_general_data)
 
@@ -141,7 +144,7 @@ class CellRangerCountMixin:
                 summary = summary["summary"]
                 break
 
-        s_name = self.clean_s_name(summary["sample"]["id"], f["root"])
+        s_name = self.clean_s_name(summary["sample"]["id"], f)
         data_general_stats = dict()
 
         # Store general stats from cells
@@ -279,7 +282,9 @@ class CellRangerCountMixin:
                 "description": "Median gene counts per cell",
                 "helptext": summary["analysis_tab"]["median_gene_plot"]["help"]["helpText"],
             },
-            "saturation": {
+        }
+        try:
+            plots["saturation"] = {
                 "config": {
                     "id": "mqc_cellranger_count_saturation",
                     "title": f"Cell Ranger count: {summary['analysis_tab']['seq_saturation_plot']['help']['title']}",
@@ -292,13 +297,20 @@ class CellRangerCountMixin:
                 },
                 "description": "Sequencing saturation",
                 "helptext": summary["analysis_tab"]["seq_saturation_plot"]["help"]["helpText"],
-            },
-        }
+            }
+        except KeyError:
+            pass
+
         plots_data = {
             "bc": parse_bcknee_data(summary["summary_tab"]["cells"]["barcode_knee_plot"]["data"], s_name),
             "genes": {s_name: transform_data(summary["analysis_tab"]["median_gene_plot"]["plot"]["data"][0])},
-            "saturation": {s_name: transform_data(summary["analysis_tab"]["seq_saturation_plot"]["plot"]["data"][0])},
         }
+        try:
+            plots_data["saturation"] = {
+                s_name: transform_data(summary["analysis_tab"]["seq_saturation_plot"]["plot"]["data"][0])
+            }
+        except KeyError:
+            pass
 
         if len(data) > 0:
             if s_name in self.cellrangercount_general_data:

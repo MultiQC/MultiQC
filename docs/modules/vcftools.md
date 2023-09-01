@@ -1,7 +1,7 @@
 ---
-Name: VCFTools
-URL: https://vcftools.github.io
-Description: VCFTools is a program for working with and reporting on VCF files.
+name: VCFTools
+url: https://vcftools.github.io
+description: VCFTools is a program for working with and reporting on VCF files.
 ---
 
 ### Important General Note

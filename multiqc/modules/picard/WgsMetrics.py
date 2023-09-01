@@ -104,7 +104,7 @@ def parse_reports(self):
             "hidden": True,
         }
         self.general_stats_headers["SD_COVERAGE"] = {
-            "title": "Median Coverage",
+            "title": "SD Coverage",
             "description": "The standard deviation coverage in bases of the genome territory, after all filters are applied.",
             "min": 0,
             "suffix": "X",

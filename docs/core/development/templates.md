@@ -1,3 +1,8 @@
+---
+title: Writing new templates
+description: Making MultiQC reports your own
+---
+
 # Writing New Templates
 
 MultiQC is built around a templating system that uses the
@@ -14,7 +19,7 @@ back to the main repository.
 
 If it's very specific template, you can create a new Python package which
 acts as a plugin. For more information about this, see the
-[plugins documentation](http://multiqc.info/docs/#multiqc-plugins).
+[plugins documentation](plugins.md).
 
 ## Creating a template skeleton
 

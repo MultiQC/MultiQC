@@ -1,3 +1,8 @@
+---
+title: Using MultiQC in pipelines
+description: Integration within your workflow manager of choice
+---
+
 # Using MultiQC in pipelines
 
 MultiQC has been designed to be placed at the end of bioinformatics workflows
@@ -7,10 +12,12 @@ tips about integration with different workflow tools.
 I'll use FastQC as an example input in all of these examples as it's a common
 use case. However, the concepts should apply for any of the tools that MultiQC supports.
 
-> Remember that you can use [Custom Content](https://multiqc.info/docs/#custom-content)
-> feature to easily collect pipeline-specific metadata (software version numbers,
-> pipeline run-time data, links to documentation) in to a format that can be inserted
-> in to your report.
+:::tip
+Remember that you can use [Custom Content](../custom_content/index.md)
+feature to easily collect pipeline-specific metadata (software version numbers,
+pipeline run-time data, links to documentation) in to a format that can be inserted
+in to your report.
+:::
 
 If you know exactly which modules will be used by MultiQC, you can use the
 `-m`/`--modules` flag to specify just these. This will speed up MultiQC a little.
@@ -95,7 +102,7 @@ This `file` pattern renames each stringtie log file to `stringtie_log1`,
 `stringtie_log2` and so on, ensuring that we avoid any filename clashes.
 
 Note that MultiQC finds output from some tools based on their filename, so use with caution
-(you may need to define some custom [module search patterns](https://multiqc.info/docs/#module-search-patterns)).
+(you may need to define some custom [module search patterns](../getting_started/config.md#module-search-patterns)).
 
 ### Custom run name
 

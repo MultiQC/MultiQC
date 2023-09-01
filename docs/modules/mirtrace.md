@@ -1,7 +1,7 @@
 ---
-Name: miRTrace
-URL: https://github.com/friedlanderlab/mirtrace
-Description: >
+name: miRTrace
+url: https://github.com/friedlanderlab/mirtrace
+description: >
   miRTrace, developed by the team of Marc Friedländer (KTH, Sweden), is a quality
   control software for small RNA sequencing data.
 ---

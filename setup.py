@@ -23,7 +23,7 @@ MultiQC was written by Phil Ewels (http://phil.ewels.co.uk) at Seqera Labs (http
 
 from setuptools import find_packages, setup
 
-version = "1.15dev"
+version = "1.16dev"
 dl_version = "master" if "dev" in version else "v{}".format(version)
 
 print(
@@ -62,8 +62,8 @@ setup(
         "requests",
         "rich>=10",
         "rich-click",
-        "simplejson",
         "spectra>=0.0.10",
+        "importlib-metadata",
     ],
     entry_points={
         "console_scripts": [
@@ -73,6 +73,7 @@ setup(
             "adapterRemoval = multiqc.modules.adapterRemoval:MultiqcModule",
             "afterqc = multiqc.modules.afterqc:MultiqcModule",
             "anglerfish = multiqc.modules.anglerfish:MultiqcModule",
+            "bakta = multiqc.modules.bakta:MultiqcModule",
             "bamtools = multiqc.modules.bamtools:MultiqcModule",
             "bbduk = multiqc.modules.bbduk:MultiqcModule",
             "bbmap = multiqc.modules.bbmap:MultiqcModule",
@@ -111,6 +112,7 @@ setup(
             "flash = multiqc.modules.flash:MultiqcModule",
             "flexbar = multiqc.modules.flexbar:MultiqcModule",
             "filtlong = multiqc.modules.filtlong:MultiqcModule",
+            "freyja = multiqc.modules.freyja:MultiqcModule",
             "gffcompare = multiqc.modules.gffcompare:MultiqcModule",
             "gatk = multiqc.modules.gatk:MultiqcModule",
             "goleft_indexcov = multiqc.modules.goleft_indexcov:MultiqcModule",
@@ -135,10 +137,12 @@ setup(
             "kat = multiqc.modules.kat:MultiqcModule",
             "kraken = multiqc.modules.kraken:MultiqcModule",
             "leehom = multiqc.modules.leehom:MultiqcModule",
+            "librarian = multiqc.modules.librarian:MultiqcModule",
             "lima = multiqc.modules.lima:MultiqcModule",
             "longranger = multiqc.modules.longranger:MultiqcModule",
             "macs2 = multiqc.modules.macs2:MultiqcModule",
             "malt = multiqc.modules.malt:MultiqcModule",
+            "mapdamage = multiqc.modules.mapdamage:MultiqcModule",
             "methylQA = multiqc.modules.methylQA:MultiqcModule",
             "minionqc = multiqc.modules.minionqc:MultiqcModule",
             "mirtop = multiqc.modules.mirtop:MultiqcModule",

@@ -1,7 +1,7 @@
 ---
-Name: SNPsplit
-URL: https://www.bioinformatics.babraham.ac.uk/projects/SNPsplit/
-Description: SNPsplit is an allele-specific alignment sorter, which is designed to read in alignment files in SAM/BAM format and determine the allelic origin of reads that cover known SNP positions.
+name: SNPsplit
+url: https://www.bioinformatics.babraham.ac.uk/projects/SNPsplit/
+description: SNPsplit is an allele-specific alignment sorter, which is designed to read in alignment files in SAM/BAM format and determine the allelic origin of reads that cover known SNP positions.
 ---
 
 Currently only the "Allele-tagging" and "Allele-sorting" reports are supported.

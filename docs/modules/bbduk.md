@@ -1,7 +1,7 @@
 ---
-Name: BBDuk
-URL: https://jgi.doe.gov/data-and-tools/software-tools/bbtools/bb-tools-user-guide/bbduk-guide/
-Description: Tool for common data-quality-related trimming, filtering, and masking operations
+name: BBDuk
+url: https://jgi.doe.gov/data-and-tools/software-tools/bbtools/bb-tools-user-guide/bbduk-guide/
+description: Tool for common data-quality-related trimming, filtering, and masking operations
 ---
 
 The BBDuk module produces summary statistics from the stdout logging information

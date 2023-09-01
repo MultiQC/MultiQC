@@ -1,3 +1,8 @@
+---
+title: Updating for compatibility
+description: Notes for upgrading
+---
+
 # Updating for compatibility
 
 When releasing new versions of MultiQC we aim to maintain compatibility so that your existing

@@ -1,7 +1,7 @@
 ---
-Name: AfterQC
-URL: https://github.com/OpenGene/AfterQC
-Description: >
+name: AfterQC
+url: https://github.com/OpenGene/AfterQC
+description: >
   Automatic Filtering, Trimming, Error Removing and Quality Control for fastq data.
 ---
 

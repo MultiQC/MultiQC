@@ -1,7 +1,7 @@
 ---
-Name: VarScan2
-URL: http://dkoboldt.github.io/varscan/
-Description: Variant detection in massively parallel sequencing data
+name: VarScan2
+url: http://dkoboldt.github.io/varscan/
+description: Variant detection in massively parallel sequencing data
 ---
 
 VarScan is a platform-independent mutation caller for targeted, exome, and whole-genome
