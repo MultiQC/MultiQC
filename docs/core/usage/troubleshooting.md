@@ -1,7 +1,6 @@
 ---
 title: Common Problems
 description: Troubleshooting difficulties
-order: 8
 ---
 
 # Troubleshooting
@@ -27,14 +26,16 @@ ended up in the report, look at `multiqc_data/multiqc_sources.txt` which
 lists each source file used.
 
 To solve this, try running MultiQC with the `-d` and `-s` flags.
-The [Clashing sample names](http://multiqc.info/docs/#clashing-sample-names)
+The [Clashing sample names](../getting_started/config.md#clashing-sample-names)
 section of the docs explains this in more detail.
 
 ### Big log files
 
 Another reason that log files can be skipped is if the log filesize is very
 large. For example, this could happen with very long concatenated standard out
-files. By default, MultiQC skips any file that is larger than 10MB to keep
+files.
+
+By default, MultiQC skips any file that is larger than 50MB to keep
 execution fast. The verbose log output (`-v` or `multiqc_data/multiqc.log`) will
 show you if files are being skipped with messages such as these:
 
@@ -49,6 +50,31 @@ size, add the following to your MultiQC config file:
 ```yaml
 log_filesize_limit: 2000000000
 ```
+
+### Long log files
+
+When MultiQC runs, it first scans all supplied input files to create a shortlist
+of matching files for each module. These filenames are then passed to that module
+in the second phase of the run time to parse.
+
+Files are matches using search patterns that check for either filenames or specific
+strings within a given file. When doing the latter, MultiQC will only look in the first
+1000 lines of each file by default.
+
+This should be fine for nearly all cases, but if you're concatenating log files
+or are otherwise unlucky, the required string may fall beyond this limit.
+There is no log message for this, as the file isn't being skipped - it's just an
+absence of detection.
+
+You can configure the threshold used by changing `filesearch_lines_limit` in your MultiQC config.
+For example, to load all of every file (as was the default prior to MultiQC v1.15)
+just set it to a very high number:
+
+```yaml
+filesearch_lines_limit: 2000000000
+```
+
+This will slow down the initial file search but should otherwise be safe.
 
 ## No logs found for a tool
 
@@ -66,6 +92,9 @@ There are a couple of things you can check here:
    a bit of time debugging MultiQC modules only to realise that the output
    files from the tool were empty or incomplete. If your data is missing,
    take a look and the raw files and make sure that there's something to see!
+3. Did you make sure that the logs you're trying to run MultiQC on are the ones
+   expected by the module in question? Check the [module documentation](https://multiqc.info/modules/)
+   and have a look at the [example data](https://github.com/ewels/MultiQC_TestData/tree/master/data/modules) used for CI tests.
 
 If everything looks fine, then MultiQC probably needs extending to support
 your data. Tools have different versions, different parameters and different
@@ -115,7 +144,7 @@ Problem solved! See more
 [here](https://www.continuum.io/blog/developer-blog/anaconda-25-release-now-mkl-optimizations).
 
 If you're not using Conda, try installing MultiQC with that instead. You
-can find instructions [here](http://multiqc.info/docs/#installing-with-conda).
+can find instructions [here](../getting_started/installation.md#conda).
 
 ## Locale Error Messages
 

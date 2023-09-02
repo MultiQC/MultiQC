@@ -1,7 +1,6 @@
 ---
 title: Downstream analysis
 description: How to use MultiQC raw data outputs
-order: 7
 ---
 
 # Downstream analysis
