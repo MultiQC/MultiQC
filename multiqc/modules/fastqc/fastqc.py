@@ -64,9 +64,16 @@ class MultiqcModule(BaseMultiqcModule):
             # FastQC zip files should have just one directory inside, containing report
             d_name = fqc_zip.namelist()[0]
             try:
-                with fqc_zip.open(os.path.join(d_name, "fastqc_data.txt")) as fh:
-                    r_data = fh.read().decode("utf8")
-                    self.parse_fastqc_report(r_data, s_name, f)
+                path = os.path.join(d_name, "fastqc_data.txt")
+                with fqc_zip.open(path) as fh:
+                    r_data = fh.read()
+                    try:
+                        r_data = r_data.decode("utf8")
+                    except UnicodeDecodeError as e:
+                        log.warning(f"Error reading FastQC data file {path}: {e}. Skipping sample {s_name}.")
+                        continue
+                    else:
+                        self.parse_fastqc_report(r_data, s_name, f)
             except KeyError:
                 log.warning("Error - can't find fastqc_raw_data.txt in {}".format(f))
 
