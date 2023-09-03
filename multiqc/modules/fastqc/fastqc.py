@@ -70,10 +70,13 @@ class MultiqcModule(BaseMultiqcModule):
                     try:
                         r_data = r_data.decode("utf8")
                     except UnicodeDecodeError as e:
-                        log.warning(f"Error reading FastQC data file {path}: {e}. Skipping sample {s_name}.")
-                        continue
-                    else:
-                        self.parse_fastqc_report(r_data, s_name, f)
+                        log.debug(f"Could not parse {path} as Unicode: {e}, attempting the latin-1 encoding")
+                        try:
+                            r_data = r_data.decode("latin-1")
+                        except Exception as e:
+                            log.warning(f"Error reading FastQC data file {path}: {e}. Skipping sample {s_name}.")
+                            continue
+                    self.parse_fastqc_report(r_data, s_name, f)
             except KeyError:
                 log.warning("Error - can't find fastqc_raw_data.txt in {}".format(f))
 
