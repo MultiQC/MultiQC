@@ -7,7 +7,7 @@
 - Table code now tolerates lambda function calls with bad data ([#1739](https://github.com/ewels/MultiQC/issues/1739))
 - Beeswarm plot now saves data to `multiqc_data`, same as tables ([#1861](https://github.com/ewels/MultiQC/issues/1861))
 - Don't print DOI in module if it's set to an empty string.
-- Optimize parsing of 2D data dictionaries in multiqc.utils.utils_functions.write_data_file()
+- Optimize parsing of 2D data dictionaries in multiqc.utils.utils_functions.write_data_file() ([#1891](https://github.com/ewels/MultiQC/pull/1891))
 - Don't sort table headers alphabetically if we don't have an `OrderedDict` - regular dicts are fine in Py3 ([#1866](https://github.com/ewels/MultiQC/issues/1866))
 - New back-end to preview + deploy the new website when the docs are edited.
 
