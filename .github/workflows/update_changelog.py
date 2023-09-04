@@ -11,13 +11,17 @@ Everything else will go under "MultiQC updates" in the changelog, unless it ends
 import os
 import re
 import sys
-
-from multiqc.utils import config
+from pathlib import Path
 
 # Get the PR title and description from the environment
 pr_title = os.environ["PR_TITLE"]
-pr_description = os.environ["PR_DESCRIPTION"]
 pr_number = os.environ["PR_NUMBER"]
+
+# Trim the PR number appended to the end of the tile, e.g. "... (#2026)".
+if not pr_title.endswith(f" (#{pr_number})"):
+    print(f"PR title '{pr_title}' doesn't end with PR number {pr_number}", file=sys.stderr)
+    sys.exit(1)
+pr_title = pr_title.removesuffix(f" (#{pr_number})")
 
 
 # Appending "(chore)" or "(docs)" to the PR title will skip logging this change.
@@ -27,21 +31,58 @@ if pr_title.endswith("(chore)") or pr_title.endswith("(docs)"):
     sys.exit(0)
 
 
-# Default section for non-module updates.
-section = "### MultiQC updates"
-module = None
+def find_module_info(module_name):
+    module_name = module_name.lower()
+    modules_dir = Path("../../multiqc/modules")
+    py_path = None
+    for dir_name in os.listdir(modules_dir):
+        if dir_name.lower() == module_name:
+            module_dir = modules_dir / dir_name
+            py_path = module_dir / f"{dir_name}.py"
+            if not py_path.exists():
+                print(f"Folder for {module_name} exists, but doesn't have a {py_path} file", file=sys.stderr)
+                sys.exit(1)
+            break
 
-if pr_title.startswith("New module: "):
+    if not py_path:  # Module not found
+        return None
+    with py_path.open("r") as f:
+        contents = f.read()
+    if not (m := re.search(r'name="([^"]+)"', contents)):
+        return None
+    name = m.group(1)
+    if not (m := re.search(r'href="([^"]+)"', contents)):
+        return None
+    url = m.group(1)
+    if not (m := re.search(r'info="([^"]+)"', contents)):
+        if not (m := re.search(r'info="""([^"]+)"""', contents)):
+            return None
+    info = m.group(1)
+    # Strip consecutive spaces and newlines.
+    info = re.sub(r"\s+", " ", info)
+    return {"name": name, "url": url, "info": info}
+
+
+mod = None
+section = "### MultiQC updates"  # Default section for non-module updates.
+if pr_title.lower().startswith("new module: "):
     # PR introduces a new module.
     section = "### New modules"
+    module_name = pr_title.split(":")[1].strip()
+    mod = find_module_info(module_name)
+    if not mod:
+        # That should normally never happen because the other CI would fail and block
+        # merging of the PR.
+        print(
+            f"Cannot load a module with name {module_name}",
+            file=sys.stderr,
+        )
+        sys.exit(1)
 else:
     # Checking if it's an existing module update.
-    mods = [m for m in config.avail_modules.values() if m.name != "custom_content"]
     maybe_mod_name = pr_title.split(":")[0]
-    for m in mods:
-        if m.name.lower() == maybe_mod_name.lower():
-            module = m.load()
-    if module is not None:
+    mod = find_module_info(maybe_mod_name)
+    if mod is not None:
         section = "### Module updates"
 
 
@@ -49,13 +90,13 @@ else:
 pr_link = f"([#{pr_number}](https://github.com/ewels/MultiQC/pull/{pr_number}))"
 if section == "### New modules":
     new_lines = [
-        f"- [**{module.name}**]({module.url})\n",
-        f"  - {module.name} {module.info}\n",
+        f"- [**{mod['name']}**]({mod['url']})\n",
+        f"  - {mod['name']} {mod['info']}\n",
     ]
 elif section == "### Module updates":
-    assert module is not None
+    assert mod is not None
     new_lines = [
-        f"- **{module.name}**\n",
+        f"- **{mod['name']}**\n",
         f"  - {pr_title} {pr_link}\n",
     ]
 else:
@@ -114,7 +155,7 @@ while changelog:
         else:
             inside_version_dev = True
 
-    elif inside_version_dev and line.startswith(section):
+    elif inside_version_dev and line.lower().startswith(section.lower()):
         if new_lines is None:
             print(f"Already added new lines into section {section}, is the " f"section duplicated?", file=sys.stderr)
             sys.exit(1)
@@ -123,13 +164,15 @@ while changelog:
         section_lines = []
         while True:
             line = changelog.pop(0)
-            if line.startswith("###"):
+            if line.startswith("##"):
                 new_changelog.append("\n")
                 new_changelog.extend(section_lines)
                 new_changelog.extend(new_lines)
                 new_changelog.append("\n")
-                new_changelog.append(line)
+                print(f"Updated CHANGELOG.md section '{section}' with lines: {new_lines}")
                 new_lines = None
+                # pushing back the next section header line
+                changelog.insert(0, line)
                 break
             elif line.strip():
                 section_lines.append(line)
