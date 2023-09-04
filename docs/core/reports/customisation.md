@@ -101,10 +101,12 @@ Both methods have the same syntax for the YAML configuration, with the exception
 of MultiQC configuration files requiring a top-level `software_versions`.
 The examples below are for a MultiQC config file.
 
+:::info
 If a provided software name exactly matches the name of a module that ran
 (case insensitive), then the version number(s) will be shown alongside the
 section heading. All software versions will be printed at the bottom of the report.
 This is the same behaviour as version numbers found within log files.
+:::
 
 ### Option 1: Dictionary of software name and version pairs
 
@@ -116,7 +118,7 @@ software_versions:
   quast: "5.2.0"
 ```
 
-:::warning
+:::danger
 Make sure that you write the version in quotes to ensure it being
 interpreted as a string. For example, a version `1.10` without
 quotes would be parsed as a float and displayed as version `1.1`.
@@ -167,6 +169,9 @@ software_versions:
       - "5.1.0"
 ```
 
+If a group and software have the same name (eg. `samtools` -> `samtools`),
+the software name will not be repeated in the section header.
+
 ### Software versions YAML file
 
 If you prefer to provide versions in a separate YAML file, MultiQC will look
@@ -209,6 +214,9 @@ To do this, use the following config option:
 ```yaml
 skip_versions_section: true
 ```
+
+Note that setting this in combination with manually added version numbers
+could lead to versions not being included within the report.
 
 ## Sample name replacement
 
