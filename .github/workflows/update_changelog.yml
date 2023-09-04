@@ -31,9 +31,6 @@ jobs:
         with:
           python-version: ${{ matrix.python-version }}
 
-      - name: Install MultiQC
-        run: pip install .
-
       - name: Update CHANGELOG
         run: python update_changelog.py
 
