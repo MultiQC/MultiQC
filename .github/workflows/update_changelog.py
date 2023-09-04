@@ -84,7 +84,7 @@ else:
     mod = find_module_info(maybe_mod_name)
     if mod is not None:
         section = "### Module updates"
-
+        pr_title = pr_title.split(":")[1].strip().capitalize()
 
 # Building the change log line for the PR.
 pr_link = f"([#{pr_number}](https://github.com/ewels/MultiQC/pull/{pr_number}))"
