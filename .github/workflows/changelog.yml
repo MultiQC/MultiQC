@@ -3,7 +3,7 @@ name: Update CHANGELOG.md
 on:
   pull_request_target:
     branches:
-      - changelog-ci
+      - master
     types:
       - closed
   # For manually triggering this workflow
