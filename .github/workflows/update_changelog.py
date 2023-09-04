@@ -16,7 +16,6 @@ from multiqc.utils import config
 
 # Get the PR title and description from the environment
 pr_title = os.environ["PR_TITLE"]
-pr_description = os.environ["PR_DESCRIPTION"]
 pr_number = os.environ["PR_NUMBER"]
 
 

@@ -1,0 +1,52 @@
+name: Update CHANGELOG
+
+on:
+  pull_request_target:
+    branches:
+      - changelog-ci
+    types:
+      - closed
+  # For manually triggering this workflow
+  workflow_dispatch:
+    inputs:
+      number:
+        description: PR number
+        required: true
+env:
+  PR_TITLE: ${{ github.event.pull_request.title }} # this is returning empty
+  PR_NUMBER: ${{ github.event.number }}
+
+jobs:
+  update_changelog:
+    runs-on: ubuntu-latest
+    if: github.event.pull_request.merged == true
+    steps:
+      - uses: actions/checkout@v2
+
+      - name: Check out MultiQC code
+        uses: actions/checkout@v3
+
+      - name: Set up Python ${{ matrix.python-version }}
+        uses: actions/setup-python@v3
+        with:
+          python-version: ${{ matrix.python-version }}
+
+      - name: Install MultiQC
+        run: pip install .
+
+      - name: Update CHANGELOG
+        run: python update_changelog.py
+
+      - name: Check if CHANGELOG.md changed
+        id: checkfile
+        run: |
+          git diff --exit-code CHANGELOG.md || echo "changed=YES" >> $GITHUB_ENV
+          echo "file changed: ${{ env.changed }}"
+
+      - name: Commit and push
+        run: |
+          git config --local user.email "action@github.com"
+          git config --local user.name "GitHub Action"
+          git add CHANGELOG.md
+          git commit -m "Update CHANGELOG.md for PR #${{ github.event.pull_request.number }}"
+          git push
