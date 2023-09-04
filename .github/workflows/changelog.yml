@@ -1,4 +1,4 @@
-name: Update CHANGELOG
+name: Update CHANGELOG.md
 
 on:
   pull_request_target:
@@ -21,15 +21,8 @@ jobs:
     runs-on: ubuntu-latest
     if: github.event.pull_request.merged == true
     steps:
-      - uses: actions/checkout@v2
-
-      - name: Check out MultiQC code
-        uses: actions/checkout@v3
-
-      - name: Set up Python ${{ matrix.python-version }}
-        uses: actions/setup-python@v3
-        with:
-          python-version: ${{ matrix.python-version }}
+      - uses: actions/checkout@v3
+      - uses: actions/setup-python@v3
 
       - name: Update CHANGELOG.md from the PR title
         run: python update_changelog.py
