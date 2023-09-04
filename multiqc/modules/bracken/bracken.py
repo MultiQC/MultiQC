@@ -3,14 +3,13 @@
 """ MultiQC module to parse output from bracken """
 
 from __future__ import print_function
-from collections import OrderedDict
-import os
+
 import logging
 import re
+from collections import OrderedDict
 
-from multiqc import config
-from multiqc.plots import bargraph
 from multiqc.modules.base_module import BaseMultiqcModule
+from multiqc.plots import bargraph
 
 # Initialise the logger
 log = logging.getLogger(__name__)
@@ -20,7 +19,6 @@ class MultiqcModule(BaseMultiqcModule):
     """Bracken module"""
 
     def __init__(self):
-
         # Initialise the parent object
         super(MultiqcModule, self).__init__(
             name="Bracken",
@@ -131,7 +129,6 @@ class MultiqcModule(BaseMultiqcModule):
         # are not unfairly over-represented
         for s_name, data in self.bracken_raw_data.items():
             for row in data:
-
                 # Convenience vars that are easier to read
                 rank_code = row["rank_code"]
                 classif = row["classif"]
@@ -197,7 +194,7 @@ class MultiqcModule(BaseMultiqcModule):
         for s_name, d in self.bracken_raw_data.items():
             tdata[s_name] = {}
             for row in d:
-                percent = (row['counts_rooted'] / self.bracken_sample_total_readcounts[s_name]) * 100
+                percent = (row["counts_rooted"] / self.bracken_sample_total_readcounts[s_name]) * 100
                 if row["rank_code"] == top_rank_code and row["classif"] in top_five:
                     tdata[s_name]["% Top 5"] = percent + tdata[s_name].get("% Top 5", 0)
                 if row["rank_code"] == top_rank_code and row["classif"] == top_five[0]:
@@ -253,7 +250,6 @@ class MultiqcModule(BaseMultiqcModule):
 
             # Add in unclassified reads and "other" - we presume from other species etc.
             for s_name, d in self.bracken_raw_data.items():
-                
                 rank_data[s_name]["other"] = self.bracken_sample_total_readcounts[s_name] - counts_shown[s_name]
 
                 # This should never happen... But it does sometimes if the total read count is a bit off
