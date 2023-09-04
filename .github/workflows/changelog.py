@@ -1,5 +1,5 @@
 """
-To be called by a CI action, assumes PR_TITLE and PR_NUMBER environment variables are set.
+To be called by a CI action, assumes PR_TITLE and PR_NUMBER, and GITHUB_WORKSPACE environment variables are set.
 
 Adds a line into the CHANGELOG.md:
 If a PR title starts with "New module: ", adds a line under the ""### New modules" section.
@@ -17,22 +17,17 @@ import re
 import sys
 from pathlib import Path
 
-CHANGELOG_PATH = "../../CHANGELOG.md"
 REPO_URL = "https://github.com/ewels/MultiQC"
 
-# Get the PR title and description from the environment
+# Assumes the environment is set by the GitHub action.
 pr_title = os.environ["PR_TITLE"]
 pr_number = os.environ["PR_NUMBER"]
+base_path = Path(os.environ.get("GITHUB_WORKSPACE", ""))
 
-# Trim the PR number automatically appended when GitHub squashes commits, e.g. "Module: Updated (#2026)".
-if not pr_title.endswith(f" (#{pr_number})"):
-    print(
-        f"Note: the PR title '{pr_title}' doesn't end with PR number {pr_number}, which "
-        f"likely means it was pushed directly into master, or wasn't squashed",
-        file=sys.stderr,
-    )
-    sys.exit(0)
+# Trim the PR number added when GitHub squashes commits, e.g. "Module: Updated (#2026)"
 pr_title = pr_title.removesuffix(f" (#{pr_number})")
+
+changelog_path = base_path / "CHANGELOG.md"
 
 
 # If "(chore)" or "(docs)" is appended to the PR title, it indicates that we don't want to log this change.
@@ -48,7 +43,7 @@ def find_module_info(module_name):
     But that's good - we avoid installing and importing MultiQC here, and the action runs faster.
     """
     module_name = module_name.lower()
-    modules_dir = Path("../../multiqc/modules")
+    modules_dir = base_path / "multiqc/modules"
     py_path = None
     for dir_name in os.listdir(modules_dir):
         if dir_name.lower() == module_name:
@@ -123,7 +118,7 @@ else:
 # Finally, updating the changelog.
 # Read the current changelog lines. We will print them back as is, except for one new
 # entry, corresponding to this new PR.
-with open(CHANGELOG_PATH, "r") as f:
+with changelog_path.open("r") as f:
     orig_lines = f.readlines()
 updated_lines = []
 
@@ -184,7 +179,7 @@ while orig_lines:
                 updated_lines.extend(section_lines)
                 updated_lines.extend(new_lines)
                 updated_lines.append("\n")
-                print(f"Updated {CHANGELOG_PATH} section '{section}' with lines: {new_lines}")
+                print(f"Updated {changelog_path} section '{section}' with lines: {new_lines}")
                 new_lines = None
                 # Pushing back the next section header line
                 orig_lines.insert(0, line)
@@ -196,5 +191,5 @@ while orig_lines:
 
 
 # Finally, writing the updated lines back.
-with open(CHANGELOG_PATH, "w") as f:
+with changelog_path.open("w") as f:
     f.writelines(updated_lines)
