@@ -1,11 +1,15 @@
 """
-From a PR title and description, add a line into the CHANGELOG.
+To be called by a CI action, assumes PR_TITLE and PR_NUMBER environment variables are set.
 
-If a PR starts with "New module: ", add a line under "New modules" in the changelog.
+Adds a line into the CHANGELOG.md:
+If a PR title starts with "New module: ", adds a line under the ""### New modules" section.
+If a PR starts with a name of an existing module, adds a line under "### Module updates".
+Everything else will go under "MultiQC updates" in the changelog, unless "(chore)" or "(docs)" is appended to the title.
 
-If a PR starts with a name of an existing module, add a line under "Module updates" in the changelog.
-
-Everything else will go under "MultiQC updates" in the changelog, unless it ends with "(chore)" or "(docs)".
+Other assumptions:
+- CHANGELOG.md has a running section for an ongoing "dev" version (i.e. titled "## MultiQC vX.Ydev").
+- Under that section, there are sections "### MultiQC updates", "### New modules" and "### Module updates".
+- For module meta info, checks the file multiqc/modules/<module_name>/<module_name>.py.
 """
 
 import os
@@ -13,25 +17,36 @@ import re
 import sys
 from pathlib import Path
 
+CHANGELOG_PATH = "../../CHANGELOG.md"
+REPO_URL = "https://github.com/ewels/MultiQC"
+
 # Get the PR title and description from the environment
 pr_title = os.environ["PR_TITLE"]
 pr_number = os.environ["PR_NUMBER"]
 
-# Trim the PR number appended to the end of the tile, e.g. "... (#2026)".
+# Trim the PR number automatically appended when GitHub squashes commits, e.g. "Module: Updated (#2026)".
 if not pr_title.endswith(f" (#{pr_number})"):
-    print(f"PR title '{pr_title}' doesn't end with PR number {pr_number}", file=sys.stderr)
-    sys.exit(1)
+    print(
+        f"Note: the PR title '{pr_title}' doesn't end with PR number {pr_number}, which "
+        f"likely means it was pushed directly into master, or wasn't squashed",
+        file=sys.stderr,
+    )
+    sys.exit(0)
 pr_title = pr_title.removesuffix(f" (#{pr_number})")
 
 
-# Appending "(chore)" or "(docs)" to the PR title will skip logging this change.
+# If "(chore)" or "(docs)" is appended to the PR title, it indicates that we don't want to log this change.
 if pr_title.endswith("(chore)") or pr_title.endswith("(docs)"):
-    section = None
     print("Skipping logging this change as it's a chore or docs update")
     sys.exit(0)
 
 
 def find_module_info(module_name):
+    """
+    Helper function to load module meta info. With current setup, can't really just import
+    the module and call `mod.info`, as the module does the heavy work on initialization.
+    But that's good - we avoid installing and importing MultiQC here, and the action runs faster.
+    """
     module_name = module_name.lower()
     modules_dir = Path("../../multiqc/modules")
     py_path = None
@@ -58,13 +73,14 @@ def find_module_info(module_name):
         if not (m := re.search(r'info="""([^"]+)"""', contents)):
             return None
     info = m.group(1)
-    # Strip consecutive spaces and newlines.
+    # Reduce consecutive spaces and newlines.
     info = re.sub(r"\s+", " ", info)
     return {"name": name, "url": url, "info": info}
 
 
+# Determine the type of the PR: new module, module update, or core update.
 mod = None
-section = "### MultiQC updates"  # Default section for non-module updates.
+section = "### MultiQC updates"  # Default section for non-module (core) updates.
 if pr_title.lower().startswith("new module: "):
     # PR introduces a new module.
     section = "### New modules"
@@ -86,8 +102,8 @@ else:
         section = "### Module updates"
         pr_title = pr_title.split(":")[1].strip().capitalize()
 
-# Building the change log line for the PR.
-pr_link = f"([#{pr_number}](https://github.com/ewels/MultiQC/pull/{pr_number}))"
+# Now that we determined the PR type, preparing the change log entry.
+pr_link = f"([#{pr_number}]({REPO_URL}/pull/{pr_number}))"
 if section == "### New modules":
     new_lines = [
         f"- [**{mod['name']}**]({mod['url']})\n",
@@ -104,11 +120,12 @@ else:
         f"- {pr_title} {pr_link}\n",
     ]
 
-# Get the current changelog lines. We will print them back as is, except for one new
-# line corresponding to this new PR.
-with open("../../CHANGELOG.md", "r") as f:
-    changelog = f.readlines()
-new_changelog = []
+# Finally, updating the changelog.
+# Read the current changelog lines. We will print them back as is, except for one new
+# entry, corresponding to this new PR.
+with open(CHANGELOG_PATH, "r") as f:
+    orig_lines = f.readlines()
+updated_lines = []
 
 # Find the next line in the change log that matches the pattern "## MultiQC v.*dev"
 # If it doesn't exist, exist with code 1 (let's assume that a new section is added
@@ -117,11 +134,11 @@ new_changelog = []
 # under it (we also assume that section headers are added already).
 inside_version_dev = False
 after_version_dev = False
-while changelog:
-    line = changelog.pop(0)
+while orig_lines:
+    line = orig_lines.pop(0)
 
-    if line.startswith("## "):
-        new_changelog.append(line)
+    if line.startswith("## "):  # Version header
+        updated_lines.append(line)
         if after_version_dev:
             continue
 
@@ -155,32 +172,31 @@ while changelog:
         else:
             inside_version_dev = True
 
-    elif inside_version_dev and line.lower().startswith(section.lower()):
+    elif inside_version_dev and line.lower().startswith(section.lower()):  # Section of interest header
         if new_lines is None:
             print(f"Already added new lines into section {section}, is the section duplicated?", file=sys.stderr)
             sys.exit(1)
-        new_changelog.append(line)
+        updated_lines.append(line)
         # Collecting lines until the next section.
         section_lines = []
         while True:
-            line = changelog.pop(0)
+            line = orig_lines.pop(0)
             if line.startswith("##"):
-                new_changelog.append("\n")
-                new_changelog.extend(section_lines)
-                new_changelog.extend(new_lines)
-                new_changelog.append("\n")
-                print(f"Updated CHANGELOG.md section '{section}' with lines: {new_lines}")
+                updated_lines.append("\n")
+                updated_lines.extend(section_lines)
+                updated_lines.extend(new_lines)
+                updated_lines.append("\n")
+                print(f"Updated {CHANGELOG_PATH} section '{section}' with lines: {new_lines}")
                 new_lines = None
                 # pushing back the next section header line
-                changelog.insert(0, line)
+                orig_lines.insert(0, line)
                 break
             elif line.strip():
                 section_lines.append(line)
     else:
-        new_changelog.append(line)
+        updated_lines.append(line)
 
 
-# Get the current changelog lines. We will print them back as is, except for one new
-# line corresponding to this new PR.
-with open("../../CHANGELOG.md", "w") as f:
-    f.writelines(new_changelog)
+# Finally, writing the updated lines back.
+with open(CHANGELOG_PATH, "w") as f:
+    f.writelines(updated_lines)
