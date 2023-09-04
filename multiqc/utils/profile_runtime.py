@@ -2,14 +2,13 @@
 
 """ Super Special-Case MultiQC module to produce report section on MultiQC run time """
 
-from __future__ import print_function
-from collections import OrderedDict
-import logging
-import re
 
-from multiqc.utils import report
-from multiqc.plots import bargraph
+import logging
+from collections import OrderedDict
+
 from multiqc.modules.base_module import BaseMultiqcModule
+from multiqc.plots import bargraph
+from multiqc.utils import report
 
 # Initialise the logger
 log = logging.getLogger(__name__)
@@ -17,7 +16,6 @@ log = logging.getLogger(__name__)
 
 class MultiqcModule(BaseMultiqcModule):
     def __init__(self):
-
         # Initialise the parent object
         super(MultiqcModule, self).__init__(
             name="Run Time",

@@ -7,47 +7,123 @@ The main function to run MultiQC. Sorry about the messy namespace.
 Primarily called by multiqc.__main__.py
 Imported by __init__.py so available as multiqc.run()
 """
-from __future__ import print_function
-
 import base64
-import click
-from distutils import version
-from distutils.dir_util import copy_tree
 import errno
 import io
-import jinja2
 import os
 import re
-import rich
 import shutil
 import subprocess
 import sys
 import tempfile
 import time
 import traceback
+from distutils import version
+from distutils.dir_util import copy_tree
+from urllib.request import urlopen
 
+import jinja2
+import rich
+import rich_click as click
 from rich.syntax import Syntax
 
-try:
-    # Python 3 imports
-    from urllib.request import urlopen
-except ImportError:
-    # Python 2 imports
-    from urllib2 import urlopen
-
-    # Use UTF-8 encoding by default
-    reload(sys)
-    sys.setdefaultencoding("utf8")
-
 from .plots import table
-from .utils import report, plugin_hooks, megaqc, util_functions, lint_helpers, config, log, mqc_colour
+from .utils import config, lint_helpers, log, megaqc, plugin_hooks, report, util_functions
 
+# Set up logging
 start_execution_time = time.time()
 logger = config.logger
 
+# Configuration for rich-click CLI help
+click.rich_click.USE_RICH_MARKUP = True
+click.rich_click.SHOW_METAVARS_COLUMN = False
+click.rich_click.APPEND_METAVARS_HELP = True
+click.rich_click.HEADER_TEXT = (
+    f"[blue]/[/][green]/[/][red]/[/] [bold][link=https://multiqc.info]MultiQC[/link][/] :mag: [dim]| v{config.version}"
+)
+click.rich_click.FOOTER_TEXT = "See [link=http://multiqc.info]http://multiqc.info[/] for more details."
+click.rich_click.ERRORS_SUGGESTION = f"This is MultiQC [cyan]v{config.version}[/]\nFor more help, run '[yellow]multiqc --help[/]' or visit [link=http://multiqc.info]http://multiqc.info[/]"
+click.rich_click.STYLE_ERRORS_SUGGESTION = ""
+click.rich_click.OPTION_GROUPS = {
+    "multiqc": [
+        {
+            "name": "Main options",
+            "options": [
+                "--force",
+                "--config",
+                "--cl-config",
+                "--filename",
+                "--outdir",
+                "--ignore",
+                "--ignore-samples",
+                "--ignore-symlinks",
+                "--file-list",
+            ],
+        },
+        {
+            "name": "Choosing modules to run",
+            "options": [
+                "--module",
+                "--exclude",
+                "--tag",
+                "--view-tags",
+            ],
+        },
+        {
+            "name": "Sample handling",
+            "options": [
+                "--dirs",
+                "--dirs-depth",
+                "--fullnames",
+                "--fn_as_s_name",
+                "--rename-sample-names",
+                "--replace-names",
+            ],
+        },
+        {
+            "name": "Report customisation",
+            "options": [
+                "--title",
+                "--comment",
+                "--template",
+                "--sample-names",
+                "--sample-filters",
+                "--custom-css-file",
+            ],
+        },
+        {
+            "name": "Output files",
+            "options": [
+                "--flat",
+                "--interactive",
+                "--export",
+                "--data-dir",
+                "--no-data-dir",
+                "--data-format",
+                "--zip-data-dir",
+                "--no-report",
+                "--pdf",
+            ],
+        },
+        {
+            "name": "MultiQC behaviour",
+            "options": [
+                "--verbose",
+                "--quiet",
+                "--lint",
+                "--profile-runtime",
+                "--no-megaqc-upload",
+                "--no-ansi",
+                "--version",
+                "--help",
+            ],
+        },
+    ],
+}
+
 
 @click.command(context_settings=dict(help_option_names=["-h", "--help"]))
-@click.argument("analysis_dir", type=click.Path(exists=True), nargs=-1, required=True, metavar="<analysis directory>")
+@click.argument("analysis_dir", type=click.Path(exists=True), nargs=-1, required=True, metavar="[ANALYSIS DIRECTORY]")
 @click.option("-f", "--force", is_flag=True, help="Overwrite any existing reports")
 @click.option("-d", "--dirs", is_flag=True, help="Prepend directory to sample names")
 @click.option(
@@ -55,10 +131,14 @@ logger = config.logger
     "--dirs-depth",
     "dirs_depth",
     type=int,
-    help="Prepend [INT] directories to sample names. Negative number to take from start of path.",
+    help="Prepend [yellow i]n[/] directories to sample names. Negative number to take from start of path.",
 )
 @click.option(
-    "-s", "--fullnames", "no_clean_sname", is_flag=True, help="Do not clean the sample names (leave as full file name)"
+    "-s",
+    "--fullnames",
+    "no_clean_sname",
+    is_flag=True,
+    help="Do not clean the sample names [i](leave as full file name)[/]",
 )
 @click.option(
     "-i",
@@ -69,24 +149,23 @@ logger = config.logger
 @click.option(
     "-b", "--comment", "report_comment", type=str, help="Custom comment, will be printed at the top of the report."
 )
-@click.option("-n", "--filename", type=str, help="Report filename. Use 'stdout' to print to standard out.")
+@click.option("-n", "--filename", type=str, help="Report filename. Use '[yellow i]stdout[/]' to print to standard out.")
 @click.option("-o", "--outdir", type=str, help="Create report in the specified output directory.")
-@click.option("-t", "--template", type=click.Choice(config.avail_templates), help="Report template to use.")
 @click.option(
-    "--tag", "module_tag", type=str, multiple=True, help="Use only modules which tagged with this keyword, eg. RNA"
+    "-t", "--template", type=click.Choice(config.avail_templates), metavar=None, help="Report template to use."
 )
+@click.option("--tag", "module_tag", type=str, multiple=True, help="Use only modules which tagged with this keyword")
 @click.option(
     "--view-tags",
-    "--view_tags",
     is_flag=True,
     callback=util_functions.view_all_tags,
     expose_value=False,
     is_eager=True,
     help="View the available tags and which modules they load",
 )
-@click.option("-x", "--ignore", type=str, multiple=True, help="Ignore analysis files (glob expression)")
+@click.option("-x", "--ignore", type=str, multiple=True, metavar="GLOB EXPRESSION", help="Ignore analysis files")
 @click.option(
-    "--ignore-samples", "ignore_samples", type=str, multiple=True, help="Ignore sample names (glob expression)"
+    "--ignore-samples", "ignore_samples", type=str, multiple=True, metavar="GLOB EXPRESSION", help="Ignore sample names"
 )
 @click.option("--ignore-symlinks", "ignore_symlinks", is_flag=True, help="Ignore symlinked directories and files")
 @click.option(
@@ -96,19 +175,19 @@ logger = config.logger
     "--replace-names",
     "replace_names",
     type=click.Path(exists=True, readable=True),
-    help="Path to TSV file to rename sample names during report generation",
+    help="TSV file to rename sample names during report generation",
 )
 @click.option(
     "--sample-names",
     "sample_names",
     type=click.Path(exists=True, readable=True),
-    help="Path to TSV file containing alternative sample names for renaming buttons in the report",
+    help="TSV file containing alternative sample names for renaming buttons in the report",
 )
 @click.option(
     "--sample-filters",
     "sample_filters",
     type=click.Path(exists=True, readable=True),
-    help="Path to TSV file containing show/hide patterns for the report",
+    help="TSV file containing show/hide patterns for the report",
 )
 @click.option(
     "-l", "--file-list", is_flag=True, help="Supply a file containing a list of file paths to be searched, one per row"
@@ -116,7 +195,7 @@ logger = config.logger
 @click.option(
     "-e",
     "--exclude",
-    metavar="[module name]",
+    metavar="[MODULE NAME]",
     type=click.Choice(sorted(["general_stats"] + list(config.avail_modules.keys()))),
     multiple=True,
     help="Do not use this module. Can specify multiple times.",
@@ -124,7 +203,7 @@ logger = config.logger
 @click.option(
     "-m",
     "--module",
-    metavar="[module name]",
+    metavar="[MODULE NAME]",
     type=click.Choice(sorted(config.avail_modules.keys())),
     multiple=True,
     help="Use only this module. Can specify multiple times.",
@@ -138,23 +217,27 @@ logger = config.logger
     "--data-format",
     "data_format",
     type=click.Choice(config.data_format_extensions.keys()),
-    help="Output parsed data in a different format. Default: {}".format(config.data_format),
+    help="Output parsed data in a different format.",
 )
 @click.option("-z", "--zip-data-dir", "zip_data_dir", is_flag=True, help="Compress the data directory.")
 @click.option("--no-report", "no_report", is_flag=True, help="Do not generate a report, only export data and plots")
 @click.option(
     "-p", "--export", "export_plots", is_flag=True, help="Export plots as static images in addition to the report"
 )
-@click.option("-fp", "--flat", "plots_flat", is_flag=True, help="Use only flat plots (static images)")
+@click.option("-fp", "--flat", "plots_flat", is_flag=True, help="Use only flat plots [i](static images)[/]")
 @click.option(
-    "-ip", "--interactive", "plots_interactive", is_flag=True, help="Use only interactive plots (HighCharts Javascript)"
+    "-ip",
+    "--interactive",
+    "plots_interactive",
+    is_flag=True,
+    help="Use only interactive plots [i](in-browser Javascript)[/]",
 )
 @click.option("--lint", "lint", is_flag=True, help="Use strict linting (validation) to help code development")
 @click.option(
     "--pdf",
     "make_pdf",
     is_flag=True,
-    help="Creates PDF report with 'simple' template. Requires Pandoc to be installed.",
+    help="Creates PDF report with the [i]'simple'[/] template. Requires [link=https://pandoc.org/]Pandoc[/] to be installed.",
 )
 @click.option(
     "--no-megaqc-upload",
@@ -170,9 +253,7 @@ logger = config.logger
     multiple=True,
     help="Specific config file to load, after those in MultiQC dir / home dir / working dir.",
 )
-@click.option(
-    "--cl-config", "--cl_config", type=str, multiple=True, help="Specify MultiQC config YAML on the command line"
-)
+@click.option("--cl-config", type=str, multiple=True, help="Specify MultiQC config YAML on the command line")
 @click.option("-v", "--verbose", count=True, default=0, help="Increase output verbosity.")
 @click.option("-q", "--quiet", is_flag=True, help="Only show log warnings")
 @click.option("--profile-runtime", is_flag=True, help="Add analysis of how long MultiQC takes to run to the report")
@@ -185,48 +266,7 @@ logger = config.logger
     help="Custom CSS file to add to the final report",
 )
 @click.version_option(config.version, prog_name="multiqc")
-def run_cli(
-    analysis_dir,
-    dirs,
-    dirs_depth,
-    no_clean_sname,
-    title,
-    report_comment,
-    template,
-    module_tag,
-    module,
-    exclude,
-    outdir,
-    ignore,
-    ignore_samples,
-    use_filename_as_sample_name,
-    replace_names,
-    sample_names,
-    sample_filters,
-    file_list,
-    filename,
-    make_data_dir,
-    no_data_dir,
-    data_format,
-    zip_data_dir,
-    force,
-    ignore_symlinks,
-    export_plots,
-    no_report,
-    plots_flat,
-    plots_interactive,
-    lint,
-    make_pdf,
-    no_megaqc_upload,
-    config_file,
-    cl_config,
-    verbose,
-    quiet,
-    profile_runtime,
-    no_ansi,
-    custom_css_files,
-    **kwargs,
-):
+def run_cli(**kwargs):
     # Main MultiQC run command for use with the click command line, complete with all click function decorators.
     # To make it easy to use MultiQC within notebooks and other locations that don't need click, we simply pass the
     # parsed variables on to a vanilla python function.
@@ -238,56 +278,11 @@ def run_cli(
     bioinformatics tools.
 
     To run, supply with one or more directory to scan for analysis results.
-    To run here, use 'multiqc .'
-
-    See http://multiqc.info for more details.
-
-    Author: Phil Ewels (http://phil.ewels.co.uk)
+    For example, to run in the current working directory, use '[blue bold]multiqc .[/]'
     """
 
-    # Use keyword arguments in case things get rearranged in the future
-    multiqc_run = run(
-        analysis_dir=analysis_dir,
-        dirs=dirs,
-        dirs_depth=dirs_depth,
-        no_clean_sname=no_clean_sname,
-        title=title,
-        report_comment=report_comment,
-        template=template,
-        module_tag=module_tag,
-        module=module,
-        exclude=exclude,
-        outdir=outdir,
-        ignore=ignore,
-        ignore_samples=ignore_samples,
-        use_filename_as_sample_name=use_filename_as_sample_name,
-        replace_names=replace_names,
-        sample_names=sample_names,
-        sample_filters=sample_filters,
-        file_list=file_list,
-        filename=filename,
-        make_data_dir=make_data_dir,
-        no_data_dir=no_data_dir,
-        data_format=data_format,
-        zip_data_dir=zip_data_dir,
-        force=force,
-        ignore_symlinks=ignore_symlinks,
-        no_report=no_report,
-        export_plots=export_plots,
-        plots_flat=plots_flat,
-        plots_interactive=plots_interactive,
-        lint=lint,
-        make_pdf=make_pdf,
-        no_megaqc_upload=no_megaqc_upload,
-        config_file=config_file,
-        cl_config=cl_config,
-        verbose=verbose,
-        quiet=quiet,
-        profile_runtime=profile_runtime,
-        no_ansi=no_ansi,
-        custom_css_files=custom_css_files,
-        kwargs=kwargs,
-    )
+    # Pass on to a regular function that can be used easily without click
+    multiqc_run = run(**kwargs)
 
     # End execution using the exit code returned from MultiQC
     sys.exit(multiqc_run["sys_exit_code"])
@@ -334,7 +329,7 @@ def run(
     profile_runtime=False,
     no_ansi=False,
     custom_css_files=(),
-    kwargs={},
+    **kwargs,
 ):
     """MultiQC aggregates results from bioinformatics analyses across many samples into a single report.
 
@@ -354,13 +349,17 @@ def run(
     loglevel = log.LEVELS.get(min(verbose, 1), "INFO")
     if quiet:
         loglevel = "WARNING"
+        config.quiet = True
     log.init_log(logger, loglevel=loglevel, no_ansi=no_ansi)
 
-    console = rich.console.Console(stderr=True, highlight=False, force_terminal=log.force_term_colors())
+    console = rich.console.Console(
+        stderr=True,
+        highlight=False,
+        force_terminal=util_functions.force_term_colors(),
+        color_system=None if no_ansi else "auto",
+    )
     console.print(
-        "\n  [blue]/[/][green]/[/][red]/[/] [bold][link=https://multiqc.info]MultiQC[/link][/] :mag: [dim]| v{}\n".format(
-            config.version
-        )
+        f"\n  [blue]/[/][green]/[/][red]/[/] [bold][link=https://multiqc.info]MultiQC[/link][/] :mag: [dim]| v{config.version}\n"
     )
     logger.debug("This is MultiQC v{}".format(config.version))
 
@@ -456,6 +455,8 @@ def run(
         config.exclude_modules = exclude
     if profile_runtime:
         config.profile_runtime = True
+    if no_ansi:
+        config.no_ansi = True
     if custom_css_files:
         config.custom_css_files.extend(custom_css_files)
     config.kwargs = kwargs  # Plugin command line options
@@ -466,7 +467,6 @@ def run(
 
     plugin_hooks.mqc_trigger("execution_start")
 
-    logger.debug("Command     : {}".format(" ".join(sys.argv)))
     logger.debug("Working dir : {}".format(os.getcwd()))
     if make_pdf:
         logger.info("--pdf specified. Using non-interactive HTML template.")
@@ -490,7 +490,7 @@ def run(
         if len(analysis_dir) > 1:
             raise ValueError("If --file-list is giving, analysis_dir should have only one plain text file.")
         config.analysis_dir = []
-        with (open(analysis_dir[0])) as in_handle:
+        with open(analysis_dir[0]) as in_handle:
             for line in in_handle:
                 if os.path.exists(line.strip()):
                     path = os.path.abspath(line.strip())
@@ -631,6 +631,9 @@ def run(
 
     # Only run the modules for which any files were found
     non_empty_modules = {key.split("/")[0].lower() for key, files in report.files.items() if len(files) > 0}
+    # Always run custom content, as it can have data purely from a MultiQC config file (no search files)
+    if "custom_content" not in non_empty_modules:
+        non_empty_modules.add("custom_content")
     run_modules = [m for m in run_modules if list(m.keys())[0].lower() in non_empty_modules]
     run_module_names = [list(m.keys())[0] for m in run_modules]
 
@@ -715,7 +718,11 @@ def run(
                     panel_width = max(tb_width, log_width)
                     return rich.console.Measurement(panel_width, panel_width)
 
-            console = rich.console.Console(stderr=True, force_terminal=log.force_term_colors())
+            console = rich.console.Console(
+                stderr=True,
+                force_terminal=util_functions.force_term_colors(),
+                color_system=None if no_ansi else "auto",
+            )
             console.print(
                 rich.panel.Panel(
                     CustomTraceback(),
@@ -851,7 +858,7 @@ def run(
     if config.make_report:
         # Compress the report plot JSON data
         runtime_compression_start = time.time()
-        logger.info("Compressing plot data")
+        logger.debug("Compressing plot data")
         report.plot_compressed_json = report.compress_json(report.plot_data)
         report.runtimes["total_compression"] = time.time() - runtime_compression_start
 
@@ -871,6 +878,9 @@ def run(
             config.output_fn = os.path.join(config.output_dir, config.output_fn_name)
         config.data_dir = os.path.join(config.output_dir, config.data_dir_name)
         config.plots_dir = os.path.join(config.output_dir, config.plots_dir_name)
+        deleted_report = False
+        deleted_data_dir = False
+        deleted_export_plots = False
         # Check for existing reports and remove if -f was specified
         if (
             (config.make_report and os.path.exists(config.output_fn))
@@ -879,13 +889,13 @@ def run(
         ):
             if config.force:
                 if config.make_report and os.path.exists(config.output_fn):
-                    logger.warning("Deleting    : {}   (-f was specified)".format(os.path.relpath(config.output_fn)))
+                    deleted_report = True
                     os.remove(config.output_fn)
                 if config.make_data_dir and os.path.exists(config.data_dir):
-                    logger.warning("Deleting    : {}   (-f was specified)".format(os.path.relpath(config.data_dir)))
+                    deleted_data_dir = True
                     shutil.rmtree(config.data_dir)
                 if config.export_plots and os.path.exists(config.plots_dir):
-                    logger.warning("Deleting    : {}   (-f was specified)".format(os.path.relpath(config.plots_dir)))
+                    deleted_export_plots = True
                     shutil.rmtree(config.plots_dir)
             else:
                 # Set up the base names of the report and the data dir
@@ -912,14 +922,18 @@ def run(
                     config.output_fn_name = os.path.basename(config.output_fn)
                 config.data_dir_name = os.path.basename(config.data_dir)
                 config.plots_dir_name = os.path.basename(config.plots_dir)
-                logger.warning("Previous MultiQC output found! Adjusting filenames..")
-                logger.warning("Use -f or --force to overwrite existing reports instead")
+                logger.info("Existing reports found, adding suffix to filenames. Use '--force' to overwrite.")
 
         # Make directories for report if needed
         if config.make_report:
             if not os.path.exists(os.path.dirname(config.output_fn)):
                 os.makedirs(os.path.dirname(config.output_fn))
-            logger.info("Report      : {}".format(os.path.relpath(config.output_fn)))
+            logger.info(
+                "Report      : {}{}".format(
+                    os.path.relpath(config.output_fn),
+                    "   (overwritten)" if deleted_report else "",
+                )
+            )
         else:
             logger.info("Report      : None")
 
@@ -927,26 +941,38 @@ def run(
             logger.info("Data        : None")
         else:
             # Make directories for data_dir
-            logger.info("Data        : {}".format(os.path.relpath(config.data_dir)))
+            logger.info(
+                "Data        : {}{}".format(
+                    os.path.relpath(config.data_dir),
+                    "   (overwritten)" if deleted_data_dir else "",
+                )
+            )
             # Modules have run, so data directory should be complete by now. Move its contents.
             logger.debug("Moving data file from '{}' to '{}'".format(config.data_tmp_dir, config.data_dir))
             # Disable preserving of times and mode on purpose to avoid problems with mounted CIFS shares (see #625)
             copy_tree(config.data_tmp_dir, config.data_dir, preserve_times=0, preserve_mode=0)
             shutil.rmtree(config.data_tmp_dir)
 
+        logger.debug("Full report path: {}".format(os.path.realpath(config.output_fn)))
+
         # Copy across the static plot images if requested
         if config.export_plots:
             config.plots_dir = os.path.join(config.output_dir, config.plots_dir_name)
             if os.path.exists(config.plots_dir):
                 if config.force:
-                    logger.warning("Deleting    : {}   (-f was specified)".format(os.path.relpath(config.plots_dir)))
+                    deleted_export_plots
                     shutil.rmtree(config.plots_dir)
                 else:
                     logger.error("Output directory {} already exists.".format(config.plots_dir))
                     logger.info("Use -f or --force to overwrite existing reports")
                     shutil.rmtree(tmp_dir)
                     sys.exit(1)
-            logger.info("Plots       : {}".format(os.path.relpath(config.plots_dir)))
+            logger.info(
+                "Plots       : {}{}".format(
+                    os.path.relpath(config.plots_dir),
+                    "   (overwritten)" if deleted_export_plots else "",
+                )
+            )
 
             # Modules have run, so plots directory should be complete by now. Move its contents.
             logger.debug("Moving plots directory from '{}' to '{}'".format(config.plots_tmp_dir, config.plots_dir))
@@ -1060,33 +1086,30 @@ def run(
 
     plugin_hooks.mqc_trigger("execution_finish")
 
-    logger.info("MultiQC complete")
     report.runtimes["total"] = time.time() - start_execution_time
     if config.profile_runtime:
-        logger.info("Run took {:.2f} seconds".format(report.runtimes["total"]))
-        logger.info(" - {:.2f}s: Searching files".format(report.runtimes["total_sp"]))
-        logger.info(" - {:.2f}s: Running modules".format(report.runtimes["total_mods"]))
+        logger.warning("Run took {:.2f} seconds".format(report.runtimes["total"]))
+        logger.warning(" - {:.2f}s: Searching files".format(report.runtimes["total_sp"]))
+        logger.warning(" - {:.2f}s: Running modules".format(report.runtimes["total_mods"]))
         if config.make_report:
-            logger.info(" - {:.2f}s: Compressing report data".format(report.runtimes["total_compression"]))
+            logger.warning(" - {:.2f}s: Compressing report data".format(report.runtimes["total_compression"]))
             logger.info(
                 "For more information, see the 'Run Time' section in {}".format(os.path.relpath(config.output_fn))
             )
 
     if report.num_mpl_plots > 0 and not config.plots_force_flat:
-        logger.warning(
-            "{} flat-image plot{} used in the report due to large sample numbers".format(
-                report.num_mpl_plots, "s" if report.num_mpl_plots > 1 else ""
+        if not config.plots_force_interactive:
+            console.print(
+                "[blue]|           multiqc[/] | "
+                "Flat-image plots used. Disable with '--interactive'. "
+                "See [link=https://multiqc.info/docs/#flat--interactive-plots]docs[/link]."
             )
-        )
-        console.print(
-            "[blue]|           multiqc[/] | "
-            "To force interactive plots, use the [yellow]'--interactive'[/] flag. "
-            "See the [link=https://multiqc.info/docs/#flat--interactive-plots]documentation[/link]."
-        )
 
     if lint and len(report.lint_errors) > 0:
         logger.error("Found {} linting errors!\n{}".format(len(report.lint_errors), "\n".join(report.lint_errors)))
         sys_exit_code = 1
+
+    logger.info("MultiQC complete")
 
     # Move the log file into the data directory
     log.move_tmp_log(logger)

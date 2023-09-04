@@ -1,15 +1,13 @@
-#!/usr/bin/env python
-
 """ MultiQC module to parse output from Slamdunk """
 
-from __future__ import print_function
+
 import logging
 import re
 from collections import OrderedDict
 
 from multiqc import config
 from multiqc.modules.base_module import BaseMultiqcModule
-from multiqc.plots import table, bargraph, linegraph, scatter
+from multiqc.plots import bargraph, linegraph, scatter, table
 
 # Initialise the logger
 log = logging.getLogger(__name__)
@@ -21,7 +19,6 @@ class MultiqcModule(BaseMultiqcModule):
     """
 
     def __init__(self):
-
         # Initialise the parent object
         super(MultiqcModule, self).__init__(
             name="Slamdunk",
@@ -140,7 +137,6 @@ class MultiqcModule(BaseMultiqcModule):
             log.info("Found {} reports".format(num_reports))
 
     def parsePCA(self, f):
-
         # Skip header
         next(f["f"])
 
@@ -154,7 +150,6 @@ class MultiqcModule(BaseMultiqcModule):
             self.PCA_data[sample] = [{"x": float(PC1), "y": float(PC2)}]
 
     def parseUtrRates(self, f):
-
         # Skip comment line #
         next(f["f"])
 
@@ -162,7 +157,6 @@ class MultiqcModule(BaseMultiqcModule):
         line = next(f["f"])
 
         if "Conversions=" in line:
-
             sample = f["s_name"]
             self.utrates_data[sample] = OrderedDict()
 
@@ -176,7 +170,6 @@ class MultiqcModule(BaseMultiqcModule):
             log.warning("Malformed UTR rates header. Conversion rates per UTR plot will be affected.")
 
     def parseSlamdunkRates(self, f):
-
         sample = f["s_name"]
 
         # Skip comment line #
@@ -236,7 +229,6 @@ class MultiqcModule(BaseMultiqcModule):
                         self.rates_data_plus[sample][fromBase + ">" + toBase] = baseDict[fromBase][toBase]
 
     def parseSlamdunkTCPerReadpos(self, f):
-
         sample = f["s_name"]
 
         # Skip comment line #
@@ -269,7 +261,6 @@ class MultiqcModule(BaseMultiqcModule):
             pos += 1
 
     def parseSlamdunkTCPerUtrpos(self, f):
-
         sample = f["s_name"]
 
         # Skip comment line #
@@ -302,7 +293,6 @@ class MultiqcModule(BaseMultiqcModule):
             pos += 1
 
     def parseSummary(self, f):
-
         # Skip comment line #
         next(f["f"])
 
@@ -310,7 +300,6 @@ class MultiqcModule(BaseMultiqcModule):
         columnCount = next(f["f"]).count("\t") + 1
 
         for line in f["f"]:
-
             fields = line.rstrip().split("\t")
             s_name = self.clean_s_name(fields[0], f)
             self.slamdunk_data[s_name] = dict()

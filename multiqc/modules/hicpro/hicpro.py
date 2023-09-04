@@ -1,17 +1,16 @@
-#!/usr/bin/env python
 ## Nicolas Servant
 ## April 2018
 
 """ MultiQC module to parse output from HiC-Pro """
 
-from __future__ import print_function
-from collections import OrderedDict
-import os.path
+
 import logging
+import os.path
+from collections import OrderedDict
 
 from multiqc import config
-from multiqc.plots import bargraph
 from multiqc.modules.base_module import BaseMultiqcModule
+from multiqc.plots import bargraph
 
 # Initialise the logger
 log = logging.getLogger(__name__)
@@ -21,7 +20,6 @@ class MultiqcModule(BaseMultiqcModule):
     """HiC-Pro module, parses log and stats files saved by HiC-Pro."""
 
     def __init__(self):
-
         # Initialise the parent object
         super(MultiqcModule, self).__init__(
             name="HiC-Pro",

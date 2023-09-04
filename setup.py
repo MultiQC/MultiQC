@@ -18,61 +18,27 @@ For more detailed instructions, run :code:`multiqc -h`
 
 See the MultiQC website for documentation and tutorial videos: http://multiqc.info
 
-MultiQC was written by Phil Ewels (http://phil.ewels.co.uk) at SciLifeLab Sweden (http://www.scilifelab.se)
+MultiQC was written by Phil Ewels (http://phil.ewels.co.uk) at Seqera Labs (https://seqera.io/), originally at SciLifeLab Sweden (http://www.scilifelab.se)
 """
 
-from setuptools import setup, find_packages
-import sys
+from setuptools import find_packages, setup
 
-version = "1.12dev"
+version = "1.16dev"
 dl_version = "master" if "dev" in version else "v{}".format(version)
 
 print(
-    """-----------------------------------
- Installing MultiQC version {}
+    f"""-----------------------------------
+ Installing MultiQC version {version}
 -----------------------------------
 
-""".format(
-        version
-    )
+"""
 )
-
-# Set version requirements according to what version of Python we're running
-networkx_version = ">=2.5.1"  # Needed for Python 3.9 support
-numpy_version = ""
-matplotlib_version = ">=2.1.1"
-jinja2_version = ">=2.9"
-markdown_version = ""
-if sys.version_info[0:2] < (3, 6):
-    # Lots of tools have dropped Python 3 support, so limit their versions
-    matplotlib_version += ",<3.0.0"
-    numpy_version = "<1.17"
-    networkx_version = "<2.3"
-    jinja2_version += ",<3.0"
-    markdown_version = "<3.2"
-
-install_requires = [
-    "matplotlib" + matplotlib_version,
-    "networkx" + networkx_version,
-    "numpy" + numpy_version,
-    "click",
-    "coloredlogs",
-    "future>0.14.0",
-    "jinja2" + jinja2_version,
-    "lzstring",
-    "markdown" + markdown_version,
-    "pyyaml>=4",
-    "requests",
-    "rich>=10",
-    "simplejson",
-    "spectra>=0.0.10",
-]
 
 setup(
     name="multiqc",
     version=version,
     author="Phil Ewels",
-    author_email="phil.ewels@scilifelab.se",
+    author_email="phil.ewels@seqera.io",
     description="Create aggregate bioinformatics analysis reports across many samples and tools",
     long_description=__doc__,
     keywords=["bioinformatics", "biology", "sequencing", "NGS", "next generation sequencing", "quality control"],
@@ -82,15 +48,34 @@ setup(
     packages=find_packages(),
     include_package_data=True,
     zip_safe=False,
-    install_requires=install_requires,
+    install_requires=[
+        "matplotlib>=2.1.1",
+        "networkx>=2.5.1",
+        "numpy",
+        "click",
+        "coloredlogs",
+        "future>0.14.0",
+        "jinja2>=3.0.0",
+        "lzstring",
+        "markdown",
+        "pyyaml>=4",
+        "requests",
+        "rich>=10",
+        "rich-click",
+        "spectra>=0.0.10",
+        "importlib-metadata",
+    ],
     entry_points={
         "console_scripts": [
-            "multiqc=multiqc.__main__:multiqc",
+            "multiqc=multiqc.__main__:run_multiqc",
         ],
         "multiqc.modules.v1": [
             "adapterRemoval = multiqc.modules.adapterRemoval:MultiqcModule",
             "afterqc = multiqc.modules.afterqc:MultiqcModule",
+            "anglerfish = multiqc.modules.anglerfish:MultiqcModule",
+            "bakta = multiqc.modules.bakta:MultiqcModule",
             "bamtools = multiqc.modules.bamtools:MultiqcModule",
+            "bbduk = multiqc.modules.bbduk:MultiqcModule",
             "bbmap = multiqc.modules.bbmap:MultiqcModule",
             "bcftools = multiqc.modules.bcftools:MultiqcModule",
             "bcl2fastq = multiqc.modules.bcl2fastq:MultiqcModule",
@@ -105,6 +90,7 @@ setup(
             "busco = multiqc.modules.busco:MultiqcModule",
             "bustools = multiqc.modules.bustools:MultiqcModule",
             "ccs = multiqc.modules.ccs:MultiqcModule",
+            "cellranger = multiqc.modules.cellranger:MultiqcModule",
             "checkqc = multiqc.modules.checkqc:MultiqcModule",
             "clipandmerge = multiqc.modules.clipandmerge:MultiqcModule",
             "clusterflow = multiqc.modules.clusterflow:MultiqcModule",
@@ -114,8 +100,10 @@ setup(
             "damageprofiler = multiqc.modules.damageprofiler:MultiqcModule",
             "dedup = multiqc.modules.dedup:MultiqcModule",
             "deeptools = multiqc.modules.deeptools:MultiqcModule",
+            "diamond = multiqc.modules.diamond:MultiqcModule",
             "disambiguate = multiqc.modules.disambiguate:MultiqcModule",
             "dragen = multiqc.modules.dragen:MultiqcModule",
+            "dragen_fastqc = multiqc.modules.dragen_fastqc:MultiqcModule",
             "eigenstratdatabasetools = multiqc.modules.eigenstratdatabasetools:MultiqcModule",
             "fastp = multiqc.modules.fastp:MultiqcModule",
             "fastq_screen = multiqc.modules.fastq_screen:MultiqcModule",
@@ -124,17 +112,22 @@ setup(
             "fgbio = multiqc.modules.fgbio:MultiqcModule",
             "flash = multiqc.modules.flash:MultiqcModule",
             "flexbar = multiqc.modules.flexbar:MultiqcModule",
+            "filtlong = multiqc.modules.filtlong:MultiqcModule",
+            "freyja = multiqc.modules.freyja:MultiqcModule",
             "gffcompare = multiqc.modules.gffcompare:MultiqcModule",
             "gatk = multiqc.modules.gatk:MultiqcModule",
             "goleft_indexcov = multiqc.modules.goleft_indexcov:MultiqcModule",
+            "gopeaks = multiqc.modules.gopeaks:MultiqcModule",
             "happy = multiqc.modules.happy:MultiqcModule",
             "hicexplorer = multiqc.modules.hicexplorer:MultiqcModule",
             "hicpro = multiqc.modules.hicpro:MultiqcModule",
             "hicup = multiqc.modules.hicup:MultiqcModule",
+            "hifiasm = multiqc.modules.hifiasm:MultiqcModule",
             "hisat2 = multiqc.modules.hisat2:MultiqcModule",
             "homer = multiqc.modules.homer:MultiqcModule",
             "hops = multiqc.modules.hops:MultiqcModule",
             "htseq = multiqc.modules.htseq:MultiqcModule",
+            "humid = multiqc.modules.humid:MultiqcModule",
             "interop = multiqc.modules.interop:MultiqcModule",
             "ivar = multiqc.modules.ivar:MultiqcModule",
             "jcvi = multiqc.modules.jcvi:MultiqcModule",
@@ -144,26 +137,33 @@ setup(
             "kat = multiqc.modules.kat:MultiqcModule",
             "kraken = multiqc.modules.kraken:MultiqcModule",
             "leehom = multiqc.modules.leehom:MultiqcModule",
+            "librarian = multiqc.modules.librarian:MultiqcModule",
             "lima = multiqc.modules.lima:MultiqcModule",
             "longranger = multiqc.modules.longranger:MultiqcModule",
             "macs2 = multiqc.modules.macs2:MultiqcModule",
             "malt = multiqc.modules.malt:MultiqcModule",
+            "mapdamage = multiqc.modules.mapdamage:MultiqcModule",
             "methylQA = multiqc.modules.methylQA:MultiqcModule",
             "minionqc = multiqc.modules.minionqc:MultiqcModule",
             "mirtop = multiqc.modules.mirtop:MultiqcModule",
             "mirtrace = multiqc.modules.mirtrace:MultiqcModule",
             "mosdepth = multiqc.modules.mosdepth:MultiqcModule",
+            "motus = multiqc.modules.motus:MultiqcModule",
             "mtnucratio = multiqc.modules.mtnucratio:MultiqcModule",
             "multivcfanalyzer = multiqc.modules.multivcfanalyzer:MultiqcModule",
             "nanostat = multiqc.modules.nanostat:MultiqcModule",
+            "nextclade = multiqc.modules.nextclade:MultiqcModule",
             "ngsderive = multiqc.modules.ngsderive:MultiqcModule",
             "odgi = multiqc.modules.odgi:MultiqcModule",
             "optitype = multiqc.modules.optitype:MultiqcModule",
             "pangolin = multiqc.modules.pangolin:MultiqcModule",
+            "pbmarkdup = multiqc.modules.pbmarkdup:MultiqcModule",
             "peddy = multiqc.modules.peddy:MultiqcModule",
             "phantompeakqualtools = multiqc.modules.phantompeakqualtools:MultiqcModule",
             "picard = multiqc.modules.picard:MultiqcModule",
+            "porechop = multiqc.modules.porechop:MultiqcModule",
             "preseq = multiqc.modules.preseq:MultiqcModule",
+            "prinseqplusplus = multiqc.modules.prinseqplusplus:MultiqcModule",
             "prokka = multiqc.modules.prokka:MultiqcModule",
             "purple = multiqc.modules.purple:MultiqcModule",
             "pychopper = multiqc.modules.pychopper:MultiqcModule",
@@ -198,10 +198,12 @@ setup(
             "theta2 = multiqc.modules.theta2:MultiqcModule",
             "tophat = multiqc.modules.tophat:MultiqcModule",
             "trimmomatic = multiqc.modules.trimmomatic:MultiqcModule",
+            "umitools = multiqc.modules.umitools:MultiqcModule",
             "varscan2 = multiqc.modules.varscan2:MultiqcModule",
             "vcftools = multiqc.modules.vcftools:MultiqcModule",
             "vep = multiqc.modules.vep:MultiqcModule",
             "verifybamid = multiqc.modules.verifybamid:MultiqcModule",
+            "whatshap = multiqc.modules.whatshap:MultiqcModule",
         ],
         "multiqc.templates.v1": [
             "default = multiqc.templates.default",
@@ -212,18 +214,18 @@ setup(
             "geo = multiqc.templates.geo",
         ],
         ## See https://multiqc.info/docs/#multiqc-plugins for documentation
-        #       'multiqc.cli_options.v1': [
-        #           'my-new-option = myplugin.cli:new_option'
-        #       ],
-        #       'multiqc.hooks.v1': [
-        #           'before_config = myplugin.hooks:before_config',
-        #           'config_loaded = myplugin.hooks:config_loaded',
-        #           'execution_start = myplugin.hooks:execution_start',
-        #           'before_modules = myplugin.hooks:before_modules',
-        #           'after_modules = myplugin.hooks:after_modules',
-        #           'before_report_generation = myplugin.hooks:before_report_generation',
-        #           'execution_finish = myplugin.hooks:execution_finish',
-        #       ]
+        # 'multiqc.cli_options.v1': [
+        #     'my-new-option = myplugin.cli:new_option'
+        # ],
+        # 'multiqc.hooks.v1': [
+        #     'before_config = myplugin.hooks:before_config',
+        #     'config_loaded = myplugin.hooks:config_loaded',
+        #     'execution_start = myplugin.hooks:execution_start',
+        #     'before_modules = myplugin.hooks:before_modules',
+        #     'after_modules = myplugin.hooks:after_modules',
+        #     'before_report_generation = myplugin.hooks:before_report_generation',
+        #     'execution_finish = myplugin.hooks:execution_finish',
+        # ]
     },
     classifiers=[
         "Development Status :: 5 - Production/Stable",

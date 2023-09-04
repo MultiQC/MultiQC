@@ -1,13 +1,12 @@
-#!/usr/bin/env python
-
 """ MultiQC module to parse output from HOMER tagdirectory """
 
 import logging
 import math
 import os
 import re
-from multiqc.plots import bargraph, linegraph
 from collections import OrderedDict
+
+from multiqc.plots import bargraph, linegraph
 
 # Initialise the logger
 log = logging.getLogger(__name__)
@@ -56,7 +55,6 @@ class TagDirReportMixin:
         self.tagdir_data["GCcontent"] = self.ignore_samples(self.tagdir_data["GCcontent"])
 
         if len(self.tagdir_data["GCcontent"]) > 0:
-
             self.add_section(
                 name="Per Sequence GC Content",
                 anchor="homer_per_sequence_gc_content",
@@ -382,7 +380,6 @@ class TagDirReportMixin:
         return parsed_data
 
     def restriction_dist_chart(self):
-
         """Make the petagRestrictionDistribution plot"""
 
         pconfig = {
@@ -397,7 +394,6 @@ class TagDirReportMixin:
         return linegraph.plot(datasets, pconfig)
 
     def length_dist_chart(self):
-
         """Make the tagLengthDistribution plot"""
 
         pconfig = {
@@ -428,7 +424,6 @@ class TagDirReportMixin:
         return linegraph.plot(self.tagdir_data["GCcontent"], pconfig)
 
     def tag_info_chart(self):
-
         """Make the taginfo.txt plot"""
 
         ## TODO: human chrs on hg19. How will this work with GRCh genome or other, non human, genomes?

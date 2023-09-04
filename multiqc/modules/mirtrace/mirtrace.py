@@ -1,15 +1,14 @@
-#!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
 """ MultiQC module to parse output files from miRTrace """
 
-from __future__ import print_function
-from collections import OrderedDict
-import logging
 
 import json
-from multiqc.plots import bargraph, linegraph
+import logging
+from collections import OrderedDict
+
 from multiqc.modules.base_module import BaseMultiqcModule
+from multiqc.plots import bargraph, linegraph
 
 # Initialise the logger
 log = logging.getLogger(__name__)
@@ -17,7 +16,6 @@ log = logging.getLogger(__name__)
 
 class MultiqcModule(BaseMultiqcModule):
     def __init__(self):
-
         # Initialise the parent object
         super(MultiqcModule, self).__init__(
             name="miRTrace",
@@ -92,7 +90,6 @@ class MultiqcModule(BaseMultiqcModule):
 
     # Parse a miRTrace results.json file
     def parse_summary(self, f):
-
         try:
             cdict = json.loads(f["f"])
         except ValueError as e:

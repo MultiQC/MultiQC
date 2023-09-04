@@ -1,15 +1,13 @@
-#!/usr/bin/env python
-
 """ MultiQC module to parse output from Bismark """
 
-from __future__ import print_function
-from collections import OrderedDict
+
 import logging
 import re
+from collections import OrderedDict
 
 from multiqc import config
-from multiqc.plots import beeswarm, linegraph, bargraph
 from multiqc.modules.base_module import BaseMultiqcModule
+from multiqc.plots import bargraph, beeswarm, linegraph
 
 # Initialise the logger
 log = logging.getLogger(__name__)
@@ -62,7 +60,6 @@ regexes = {
 
 class MultiqcModule(BaseMultiqcModule):
     def __init__(self):
-
         # Initialise the parent object
         super(MultiqcModule, self).__init__(
             name="Bismark",

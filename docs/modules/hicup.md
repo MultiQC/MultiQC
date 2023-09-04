@@ -1,7 +1,7 @@
 ---
-Name: HiCUP
-URL: http://www.bioinformatics.babraham.ac.uk/projects/hicup/
-Description: >
+name: HiCUP
+url: http://www.bioinformatics.babraham.ac.uk/projects/hicup/
+description: >
   HiCUP (Hi-C User Pipeline) is a tool for mapping and performing quality
   control on Hi-C data.
 ---

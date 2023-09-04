@@ -2,13 +2,14 @@
 
 https://github.com/brentp/goleft/tree/master/indexcov
 """
-from __future__ import print_function
+
+
 import collections
 import logging
 
 from multiqc import config
-from multiqc.plots import linegraph, scatter
 from multiqc.modules.base_module import BaseMultiqcModule
+from multiqc.plots import linegraph, scatter
 
 # Initialise the logger
 log = logging.getLogger(__name__)
@@ -85,7 +86,6 @@ class MultiqcModule(BaseMultiqcModule):
             return chrom_clean
 
     def parse_roc_plot_data(self, f):
-
         header = f["f"].readline()
         sample_names = [self.clean_s_name(x, f) for x in header.strip().split()[2:]]
         for parts in (l.rstrip().split() for l in f["f"]):

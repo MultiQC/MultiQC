@@ -1,13 +1,12 @@
-#!/usr/bin/env python
-
 """ MultiQC submodule to parse output from MinIONQC summary stats """
 
-from collections import OrderedDict
 import copy
-import yaml
+import logging
 import os
 import re
-import logging
+from collections import OrderedDict
+
+import yaml
 
 from multiqc.modules.base_module import BaseMultiqcModule
 from multiqc.plots import linegraph, table
@@ -33,7 +32,6 @@ class MultiqcModule(BaseMultiqcModule):
         self.qfilt_data = dict()  # Stats from quality filtered reads
         self.q_threshold_list = set()  # quality thresholds
         for f in self.find_log_files("minionqc", filehandles=True):
-
             # get sample name
             s_name = self.clean_s_name(os.path.basename(f["root"]), f, root=os.path.dirname(f["root"]))
 

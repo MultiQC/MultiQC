@@ -1,14 +1,20 @@
-from __future__ import absolute_import
-
-from .mapping_metrics import DragenMappingMetics
-from .fragment_length import DragenFragmentLength
-from .ploidy_estimation_metrics import DragenPloidyEstimationMetrics
-from .vc_metrics import DragenVCMetrics
-from .coverage_per_contig import DragenCoveragePerContig
-from .coverage_metrics import DragenCoverageMetrics
-from .coverage_hist import DragenCoverageHist
-
 import logging
+
+from .coverage_hist import DragenCoverageHist
+from .coverage_metrics import DragenCoverageMetrics
+from .coverage_per_contig import DragenCoveragePerContig
+from .dragen_gc_metrics import DragenGcMetrics
+from .fragment_length import DragenFragmentLength
+from .mapping_metrics import DragenMappingMetics
+from .overall_mean_cov import DragenOverallMeanCovMetrics
+from .ploidy_estimation_metrics import DragenPloidyEstimationMetrics
+from .rna_quant_metrics import DragenRnaQuantMetrics
+from .rna_transcript_cov import DragenRnaTranscriptCoverage
+from .sc_atac_metrics import DragenScAtacMetrics
+from .sc_rna_metrics import DragenScRnaMetrics
+from .time_metrics import DragenTimeMetrics
+from .trimmer_metrics import DragenTrimmerMetrics
+from .vc_metrics import DragenVCMetrics
 
 log = logging.getLogger(__name__)
 
@@ -19,8 +25,16 @@ class MultiqcModule(
     DragenPloidyEstimationMetrics,
     DragenVCMetrics,
     DragenCoveragePerContig,
+    DragenOverallMeanCovMetrics,
     DragenCoverageMetrics,
     DragenCoverageHist,
+    DragenGcMetrics,
+    DragenTrimmerMetrics,
+    DragenTimeMetrics,
+    DragenRnaQuantMetrics,
+    DragenRnaTranscriptCoverage,
+    DragenScRnaMetrics,
+    DragenScAtacMetrics,
 ):
     """DRAGEN provides a number of differrent pipelines and outputs, including base calling, DNA and RNA alignment,
     post-alignment processing and variant calling, covering virtually all stages of typical NGS data processing.
@@ -50,35 +64,54 @@ class MultiqcModule(
         )
 
         samples_found = set()
+        samples_found |= self.add_mapping_metrics()
+        # <output prefix>.mapping_metrics.csv              - general stats table, a dedicated table, and a few barplots
 
-        # <output prefix>.vc_metrics.csv
-        # a dedicated table and the total number of Variants into the general stats table
         samples_found |= self.add_vc_metrics()
+        # <output prefix>.vc_metrics.csv                   - a dedicated table and the total number of Variants into the general stats table
 
-        # <output prefix>.ploidy_estimation_metrics.csv
-        # a "Ploidy estimation" column in the general stats table
         samples_found |= self.add_ploidy_estimation_metrics()
+        # <output prefix>.ploidy_estimation_metrics.csv    - add just Ploidy estimation into gen stats
 
-        # <output prefix>.(wgs|target_bed)_fine_hist_(tumor|normal)?.csv
-        # coverage distribution and cumulative coverage plots
+        self.collect_overall_mean_cov_data()
+        # <output prefix>.<coverage region prefix>_overall_mean_cov<arbitrary suffix>.csv
+        # This data will be used by in the DragenCoverageMetrics.
+
+        samples_found |= self.add_coverage_metrics()
+        # <output prefix>.<coverage region prefix>_coverage_metrics<arbitrary suffix>.csv
+
         samples_found |= self.add_coverage_hist()
 
-        # <output prefix>.(wgs|target_bed)_coverage_metrics_(tumor|normal)?.csv
-        # general stats table and a dedicated table
-        samples_found |= self.add_coverage_metrics()
+        # <output prefix>.wgs_fine_hist_normal.csv         - coverage distribution and cumulative coverage plots
+        # <output prefix>.wgs_fine_hist_tumor.csv          - same
 
-        # <output prefix>.(wgs|target_bed)_contig_mean_cov_(tumor|normal)?.csv
-        # a histogram like in mosdepth, with each chrom as a category on X axis, plus a category
-        # for autosomal chromosomes average
         samples_found |= self.add_coverage_per_contig()
+        # <output prefix>.wgs_contig_mean_cov_normal.csv   - a histogram like in mosdepth, with each chrom as a category on X axis, plus a category for autosomal chromosomes average
+        # <output prefix>.wgs_contig_mean_cov_tumor.csv    - same
 
-        # general stats table, a dedicated table, and a few barplots
-        # <output prefix>.mapping_metrics.csv
-        samples_found |= self.add_mapping_metrics()
-
-        # a histogram plot
-        # <output prefix>.fragment_length_hist.csv
         samples_found |= self.add_fragment_length_hist()
+        # <output prefix>.fragment_length_hist.csv         - a histogram plot
+
+        samples_found |= self.add_gc_metrics_hist()
+        # <output prefix>.gc_metrics.csv
+
+        samples_found |= self.add_trimmer_metrics()
+        # <output prefix>.trimmer_metrics.csv
+
+        samples_found |= self.add_time_metrics()
+        # <output prefix>.time_metrics.csv
+
+        samples_found |= self.add_rna_metrics()
+        # <output prefix>.quant.metrics.csv
+
+        samples_found |= self.add_rna_transcript_coverage()
+        # <output prefix>.quant.transcript_coverage.txt
+
+        samples_found |= self.add_sc_rna_metrics()
+        # <output prefix>.scRNA.metrics.csv or <output prefix>.scRNA_metrics.csv
+
+        samples_found |= self.add_sc_atac_metrics()
+        # <output prefix>.scATAC.metrics.csv or <output prefix>.scATAC_metrics.csv
 
         if len(samples_found) == 0:
             raise UserWarning

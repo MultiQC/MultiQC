@@ -1,28 +1,28 @@
-#!/usr/bin/env python
 """ MultiQC module to parse output from GATK """
-from __future__ import print_function
-from collections import OrderedDict
+
+
 import logging
+from collections import OrderedDict
 
 from multiqc.modules.base_module import BaseMultiqcModule
 
 # Import the GATK submodules
 # import varianteval
-from .varianteval import VariantEvalMixin
+from .analyze_saturation_mutagenesis import AnalyzeSaturationMutagenesisMixin
 from .base_recalibrator import BaseRecalibratorMixin
+from .varianteval import VariantEvalMixin
 
 # Initialise the logger
 log = logging.getLogger(__name__)
 
 
-class MultiqcModule(BaseMultiqcModule, BaseRecalibratorMixin, VariantEvalMixin):
+class MultiqcModule(BaseMultiqcModule, AnalyzeSaturationMutagenesisMixin, BaseRecalibratorMixin, VariantEvalMixin):
     """GATK has a number of different commands and outputs.
     This MultiQC module supports some but not all. The code for
     each script is split into its own file and adds a section to
     the module output if logs are found."""
 
     def __init__(self):
-
         # Initialise the parent object
         super(MultiqcModule, self).__init__(
             name="GATK",
@@ -39,6 +39,7 @@ class MultiqcModule(BaseMultiqcModule, BaseRecalibratorMixin, VariantEvalMixin):
 
         # Call submodule functions
         n_reports_found = 0
+        n_reports_found += self.parse_gatk_analyze_saturation_mutagenesis()
         n_reports_found += self.parse_gatk_base_recalibrator()
         n_reports_found += self.parse_gatk_varianteval()
 

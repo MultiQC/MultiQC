@@ -1,15 +1,15 @@
-#!/usr/bin/env python
-
 """ MultiQC module to parse output from Preseq """
 
-from __future__ import print_function
+
 import logging
-import numpy as np
 from collections import OrderedDict
 
+import numpy as np
+
 from multiqc import config
-from multiqc.plots import linegraph
 from multiqc.modules.base_module import BaseMultiqcModule
+from multiqc.plots import linegraph
+from multiqc.utils import mqc_colour
 
 # Initialise the logger
 log = logging.getLogger(__name__)
@@ -17,7 +17,6 @@ log = logging.getLogger(__name__)
 
 class MultiqcModule(BaseMultiqcModule):
     def __init__(self):
-
         # Initialise the parent object
         super(MultiqcModule, self).__init__(
             name="Preseq",
@@ -121,7 +120,9 @@ class MultiqcModule(BaseMultiqcModule):
         real_vals_all, real_vals_unq = _prep_real_counts(
             real_cnts_all, real_cnts_unq, is_basepairs, counts_in_1x, x_axis, y_axis
         )
-        pconfig["extra_series"].extend(_real_counts_to_plot_series(data, real_vals_unq, real_vals_all))
+        pconfig["extra_series"].extend(
+            _real_counts_to_plot_series(data, real_vals_unq, real_vals_all, x_lbl, y_lbl, y_tt_lbl)
+        )
         if real_vals_unq:
             description += "<p>Points show read count versus deduplicated read counts (externally calculated).</p>"
         elif real_vals_all:
@@ -137,7 +138,7 @@ class MultiqcModule(BaseMultiqcModule):
                 if data[max_sn][x] > max_y and x > real_vals_all.get(max_sn, 0) and x > real_vals_unq.get(max_sn, 0):
                     break
             pconfig["xmax"] = max_x
-            description += "<p>Note that the x axis is trimmed at the point where all the datasets \
+            description += "<p>Note that the x-axis is trimmed at the point where all the datasets \
                 show 80% of their maximum y-value, to avoid ridiculous scales.</p>"
 
         # Plot perfect library as dashed line
@@ -347,57 +348,43 @@ def _prep_real_counts(real_cnts_all, real_cnts_unq, is_basepairs, counts_in_1x, 
     return real_vals_all, real_vals_unq
 
 
-def _real_counts_to_plot_series(data, yx_by_sample, xs_by_sample):
+def _real_counts_to_plot_series(data, yx_by_sample, xs_by_sample, x_lbl, y_lbl, y_tt_lbl):
+    scale = mqc_colour.mqc_colour_scale("Highcharts")
+
     series = []
-    if xs_by_sample:
-        # Same defaults as HighCharts for consistency
-        default_colors = [
-            "#7cb5ec",
-            "#434348",
-            "#90ed7d",
-            "#f7a35c",
-            "#8085e9",
-            "#f15c80",
-            "#e4d354",
-            "#2b908f",
-            "#f45b5b",
-            "#91e8e1",
-        ]
-        for si, sn in enumerate(sorted(data.keys())):
-            if sn in xs_by_sample:
-                x = float(xs_by_sample[sn])
-                point = {
-                    "color": default_colors[si % len(default_colors)],
-                    "showInLegend": False,
-                    "marker": {
-                        "enabled": True,
-                        "symbol": "diamond",
-                        "lineColor": "black",
-                        "lineWidth": 1,
-                    },
-                }
-                if sn in yx_by_sample:
-                    y = float(yx_by_sample[sn])
-                    point["data"] = [[x, y]]
-                    point["name"] = sn + ": actual read count vs. deduplicated read count (externally calculated)"
-                    series.append(point)
-                    log.debug("Found real counts for {} - Total: {}, Unique: {}".format(sn, x, y))
+    for si, sn in enumerate(sorted(data.keys())):
+        if sn in xs_by_sample:
+            x = float(xs_by_sample[sn])
+            point = {
+                "color": scale.get_colour(si),
+                "showInLegend": False,
+                "marker": {
+                    "enabled": True,
+                    "symbol": "diamond",
+                    "lineColor": "black",
+                    "lineWidth": 1,
+                },
+            }
+            if sn in yx_by_sample:
+                y = float(yx_by_sample[sn])
+                point["data"] = [[x, y]]
+                point["name"] = f"{sn}: actual read count vs. deduplicated read count (externally calculated)"
+                series.append(point)
+                y = y_tt_lbl.replace("point.y", "y").format(y=y)
+                log.debug(f"Real counts for {sn}: {x_lbl.format(value=x)}, ({y})")
+            else:
+                xs = sorted(data[sn].keys())
+                ys = sorted(data[sn].values())
+                if x > max(xs):
+                    log.warning(
+                        f"Total reads for {sn} ({x_lbl.format(value=x)}) > max preseq value ({x_lbl.format(value=max(xs))}): "
+                        "skipping this point"
+                    )
                 else:
-                    xs = sorted(data[sn].keys())
-                    ys = sorted(data[sn].values())
-                    if x > max(xs):
-                        log.warning(
-                            "Total reads for {} ({}) > max preseq value ({}) - "
-                            "skipping this point..".format(sn, x, max(xs))
-                        )
-                    else:
-                        interp_y = np.interp(x, xs, ys)
-                        point["data"] = [[x, interp_y]]
-                        point["name"] = sn + ": actual read count (externally calculated)"
-                        series.append(point)
-                        log.debug(
-                            "Found real count for {} - Total: {:.2f} (preseq unique reads: {:.2f})".format(
-                                sn, x, interp_y
-                            )
-                        )
+                    interp_y = np.interp(x, xs, ys)
+                    point["data"] = [[x, interp_y]]
+                    point["name"] = sn + ": actual read count (externally calculated)"
+                    series.append(point)
+                    y = y_tt_lbl.replace("point.y", "y").format(y=interp_y)
+                    log.debug(f"Real count for {sn}: {x_lbl.format(value=x)} ({y})")
     return series

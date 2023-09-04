@@ -1,9 +1,9 @@
 ---
-Name: HOPS
-URL: https://www.github.com/rhubler/HOPS
-Description: >
-  This tool performs screening of output from the ancient DNA optimised 
-  BLAST-replacement tool MALT, to identify taxa that have expected ancient 
+name: HOPS
+url: https://www.github.com/rhubler/HOPS
+description: >
+  This tool performs screening of output from the ancient DNA optimised
+  BLAST-replacement tool MALT, to identify taxa that have expected ancient
   DNA characteristics.
 ---
 

@@ -1,7 +1,7 @@
 ---
-Name: Conpair
-URL: https://github.com/nygenome/Conpair
-Description: >
+name: Conpair
+url: https://github.com/nygenome/Conpair
+description: >
   Conpair estimates concordance and contamination for tumour–normal pairs
 ---
 

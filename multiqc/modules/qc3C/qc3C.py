@@ -1,18 +1,17 @@
-#!/usr/bin/env python
-
 """ MultiQC module to parse output from qc3C """
 
-from __future__ import print_function
-from collections import OrderedDict, defaultdict
+
 import itertools
 import json
 import logging
-import numpy as np
 import os
 import re
+from collections import OrderedDict, defaultdict
+
+import numpy as np
 
 from multiqc.modules.base_module import BaseMultiqcModule
-from multiqc.plots import table, bargraph, linegraph
+from multiqc.plots import bargraph, linegraph, table
 
 log = logging.getLogger(__name__)
 
@@ -161,7 +160,6 @@ class MultiqcModule(BaseMultiqcModule):
         log.info("Found {} reports".format(n_reports))
 
         if len(self.qc3c_data["bam"]) > 0:
-
             self.write_data_file(self.qc3c_data["bam"], "multiqc_qc3c_bam")
             log.debug("Found {} BAM analysis reports".format(len(self.qc3c_data["bam"])))
 
@@ -316,7 +314,6 @@ class MultiqcModule(BaseMultiqcModule):
                 )
 
         if len(self.qc3c_data["kmer"]) > 0:
-
             self.write_data_file(self.qc3c_data["kmer"], "multiqc_qc3c_kmer")
             log.debug("Found {} k-mer analysis reports".format(len(self.qc3c_data["kmer"])))
 
@@ -408,7 +405,6 @@ class MultiqcModule(BaseMultiqcModule):
         return s.split()[-1]
 
     def bam_runtime_table(self):
-
         config = {"id": "qc3C_bam_runtime_table", "namespace": "qc3C", "col1_header": "Sample"}
 
         headers = OrderedDict(
@@ -548,7 +544,6 @@ class MultiqcModule(BaseMultiqcModule):
         return bargraph.plot(self.qc3c_data["bam"], categories, config)
 
     def bam_signal_table(self):
-
         config = {"id": "qc3C_bam_signal_table", "namespace": "qc3C", "hide_zero_cats": False, "col1_header": "Sample"}
 
         headers = OrderedDict(
@@ -638,7 +633,6 @@ class MultiqcModule(BaseMultiqcModule):
         return table.plot(self.qc3c_data["bam"], headers, config)
 
     def bam_hicpro_table(self):
-
         config = {"id": "qc3C_bam_hicpro_table", "namespace": "qc3C", "hide_zero_cats": False, "col1_header": "Sample"}
 
         headers = OrderedDict(
@@ -725,7 +719,6 @@ class MultiqcModule(BaseMultiqcModule):
         return bargraph.plot(self.qc3c_data["bam"], categories, config)
 
     def bam_fragment_histogram(self):
-
         median_lines = []
         for smpl in self.qc3c_data["bam"]:
             median_lines.append(
@@ -760,7 +753,6 @@ class MultiqcModule(BaseMultiqcModule):
         return linegraph.plot(data, config)
 
     def kmer_runtime_table(self):
-
         config = {"id": "qc3C_kmer_runtime_table", "namespace": "qc3C", "col1_header": "Sample"}
 
         headers = OrderedDict(
@@ -856,7 +848,6 @@ class MultiqcModule(BaseMultiqcModule):
         return table.plot(self.qc3c_data["kmer"], headers, config)
 
     def kmer_signal_table(self):
-
         config = {"id": "qc3C_kmer_signal_table", "namespace": "qc3C", "col1_header": "Sample"}
 
         headers = OrderedDict(
@@ -1064,7 +1055,6 @@ class MultiqcModule(BaseMultiqcModule):
                 self.qc3c_data["bam"][s_name]["frag_hist"] = fhist
 
             elif analysis_mode == "kmer":
-
                 for k in "raw_fraction", "adj_fraction", "unobs_fraction":
                     if parsed[k] is None:
                         parsed[k] = "Error - adjusted value would exceed 100"

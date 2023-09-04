@@ -1,10 +1,9 @@
-#!/usr/bin/env python
-
 """ MultiQC module to parse relatedness output from vcftools relatedness """
 
 import csv
 import logging
 from collections import defaultdict
+
 from multiqc.plots import heatmap
 
 # Initialise the logger

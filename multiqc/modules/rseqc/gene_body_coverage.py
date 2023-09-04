@@ -1,10 +1,8 @@
-#!/usr/bin/env python
-
 """ MultiQC submodule to parse output from RSeQC geneBody_coverage.py
 http://rseqc.sourceforge.net/#genebody-coverage-py """
 
-from collections import OrderedDict
 import logging
+from collections import OrderedDict
 
 from multiqc.plots import linegraph
 
@@ -24,7 +22,6 @@ def parse_reports(self):
 
     # Go through files and parse data
     for f in self.find_log_files("rseqc/gene_body_coverage"):
-
         # geneBodyCoverage.py
         # RSeQC >= v2.4
         # NB: Capitilisation
@@ -83,18 +80,21 @@ def parse_reports(self):
         # Write data to file
         self.write_data_file(self.gene_body_cov_hist_counts, "rseqc_gene_body_cov")
 
-        # Make a normalised percentage version of the data
+        # Make a normalised coverage for plotting using the formula (cov - min_cov) / (max_cov - min_cov)
         for s_name in self.gene_body_cov_hist_counts:
             self.gene_body_cov_hist_percent[s_name] = OrderedDict()
             total = sum(self.gene_body_cov_hist_counts[s_name].values())
+            # min_cov and max_cov are required to compute the normalized coverage
+            min_cov = min(self.gene_body_cov_hist_counts[s_name].values())
+            max_cov = max(self.gene_body_cov_hist_counts[s_name].values())
             for k, v in self.gene_body_cov_hist_counts[s_name].items():
-                self.gene_body_cov_hist_percent[s_name][k] = (v / total) * 100
+                self.gene_body_cov_hist_percent[s_name][k] = (v - min_cov) / (max_cov - min_cov)
 
         # Add line graph to section
         pconfig = {
             "id": "rseqc_gene_body_coverage_plot",
             "title": "RSeQC: Gene Body Coverage",
-            "ylab": "% Coverage",
+            "ylab": "Coverage",
             "xlab": "Gene Body Percentile (5' -> 3')",
             "xmin": 0,
             "xmax": 100,

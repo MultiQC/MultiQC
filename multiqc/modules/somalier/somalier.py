@@ -1,18 +1,17 @@
-#!/usr/bin/env python
-
 """ MultiQC module to parse output from somalier """
 
-from __future__ import print_function
-from collections import OrderedDict, defaultdict
-from math import isnan, isinf
+
 import csv
 import logging
 import random
+from collections import OrderedDict, defaultdict
+from math import isinf, isnan
+
 import spectra
 
+from multiqc.modules.base_module import BaseMultiqcModule
 from multiqc.plots import bargraph, heatmap, scatter, table
 from multiqc.utils import mqc_colour
-from multiqc.modules.base_module import BaseMultiqcModule
 
 # Initialise the logger
 log = logging.getLogger(__name__)
@@ -24,7 +23,6 @@ class MultiqcModule(BaseMultiqcModule):
     """
 
     def __init__(self):
-
         # Initialise the parent object
         super(MultiqcModule, self).__init__(
             name="Somalier",
@@ -545,9 +543,13 @@ class MultiqcModule(BaseMultiqcModule):
 
         for s_name, d in self.somalier_data.items():
             if "X_depth_mean" in d and "original_pedigree_sex" in d:
+                if d["gt_depth_mean"] == 0:
+                    y = 0
+                else:
+                    y = 2 * d["X_depth_mean"] / d["gt_depth_mean"]
                 data[s_name] = {
                     "x": (random.random() - 0.5) * 0.1 + sex_index.get(d["original_pedigree_sex"], 2),
-                    "y": 2 * d["X_depth_mean"] / d["gt_depth_mean"],
+                    "y": y,
                 }
 
         if len(data) > 0:

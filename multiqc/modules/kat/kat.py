@@ -1,9 +1,7 @@
-#!/usr/bin/env python
-
 """ MultiQC module to parse output from KAT """
+import json
 import logging
 from collections import OrderedDict
-import json
 
 from multiqc.modules.base_module import BaseMultiqcModule
 from multiqc.plots import table

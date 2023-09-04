@@ -1,8 +1,8 @@
-#!/usr/bin/env python
 """ MultiQC module to parse output from Sambamba """
-from __future__ import print_function
-from collections import OrderedDict
+
+
 import logging
+from collections import OrderedDict
 
 from multiqc.modules.base_module import BaseMultiqcModule
 
@@ -20,7 +20,6 @@ class MultiqcModule(BaseMultiqcModule, SambambaMarkdupMixin):
     the module output if logs are found."""
 
     def __init__(self):
-
         # Initialise the parent object
         super(MultiqcModule, self).__init__(
             name="Sambamba",

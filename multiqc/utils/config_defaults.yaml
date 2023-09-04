@@ -41,6 +41,8 @@ plots_dir_name: "multiqc_plots"
 data_format: "tsv"
 module_tag: []
 force: false
+no_ansi: false
+quiet: false
 prepend_dirs: false
 prepend_dirs_depth: 0
 prepend_dirs_sep: " | "
@@ -91,11 +93,13 @@ remove_sections: []
 section_comments: {}
 lint: False
 custom_plot_config: {}
+custom_table_header_config: {}
 
 ignore_symlinks: false
 ignore_images: true
 fn_ignore_dirs:
   - "multiqc_data"
+  - ".git"
   - "icarus_viewers" # quast
   - "runs_per_reference" # quast
   - "not_aligned" # quast
@@ -120,7 +124,8 @@ show_hide_patterns: []
 show_hide_regex: []
 show_hide_mode: []
 no_version_check: false
-log_filesize_limit: 10000000
+log_filesize_limit: 50000000
+filesearch_lines_limit: 1000
 report_readerrors: false
 skip_generalstats: false
 data_format_extensions:
@@ -155,6 +160,7 @@ fn_clean_exts:
   - ".vcf"
   - ".dat"
   - "_tophat"
+  - ".pbmarkdup.log"
   - ".log"
   - ".stderr"
   - ".out"
@@ -250,6 +256,30 @@ fn_clean_exts:
   - "_NanoStats"
   - ".cutadapt"
   - ".mosdepth"
+  - "_gopeaks"
+  - ".readCounts"
+  - ".wgs_contig_mean_cov"
+  - "_overall_mean_cov"
+  - "_coverage_metrics"
+  - ".wgs_fine_hist"
+  - ".wgs_coverage_metrics"
+  - ".wgs_hist"
+  - ".vc_metrics"
+  - ".ploidy_estimation_metrics"
+  - "_overall_mean_cov"
+  - ".fragment_length_hist"
+  - ".mapping_metrics"
+  - ".gc_metrics"
+  - ".trimmer_metrics"
+  - ".time_metrics"
+  - ".quant_metrics"
+  - ".quant.metrics"
+  - ".quant.transcript_coverage"
+  - ".scRNA_metrics"
+  - ".scRNA.metrics"
+  - ".scATAC_metrics"
+  - ".scATAC.metrics"
+  - ".fastqc_metrics"
 
 # These are removed after the above, only if sample names
 # start or end with this string. Again, removed in order.
@@ -276,6 +306,7 @@ fn_clean_trim:
   - "_matrix"
   - ".stats"
   - ".hist"
+  - ".phased"
 
 # Files to ignore when indexing files.
 # Grep file match patterns.
@@ -363,6 +394,11 @@ module_order:
       module_tag:
         - DNA
         - RNA
+  - hifiasm:
+      module_tag:
+        - DNA
+        - Denovo
+        - PacBio
   - quast:
       module_tag:
         - DNA
@@ -428,6 +464,11 @@ module_order:
         - DNA
 
   # Post-alignment processing
+  - gopeaks:
+      module_tag:
+        - DNA
+        - CUT&TAG
+        - CUT&RUN
   - homer:
       module_tag:
         - RNA
@@ -471,11 +512,23 @@ module_order:
       module_tag:
         - DNA
         - RNA
+  - dragen_fastqc:
+      module_tag:
+        - DNA
+        - RNA
   - dedup:
       module_tag:
         - DNA
         - ancient
+  - pbmarkdup:
+      module_tag:
+        - DNA
+        - RNA
   - damageprofiler:
+      module_tag:
+        - DNA
+        - ancient
+  - mapdamage:
       module_tag:
         - DNA
         - ancient
@@ -500,6 +553,10 @@ module_order:
   - sentieon:
       module_tag:
         - DNA
+  - bakta:
+      module_tag:
+        - bacterial
+        - denovo
   - prokka:
       module_tag:
         - prokarytotic
@@ -551,6 +608,10 @@ module_order:
       module_tag:
         - DNA
         - prokarytotic
+  - umitools:
+      module_tag:
+        - DNA
+        - RNA
 
   # Alignment tool stats
   - bbmap:
@@ -565,6 +626,10 @@ module_order:
       module_tag:
         - DNA
         - methylation
+  - diamond:
+      module_tag:
+        - Protein
+        - DNA
   - hicexplorer:
       module_tag:
         - hi-c
@@ -598,6 +663,10 @@ module_order:
   - bowtie1:
       module_tag:
         - RNA
+  - cellranger:
+      module_tag:
+        - RNA
+        - single-cell
   - snpsplit:
       module_tag:
         - DNA
@@ -608,12 +677,25 @@ module_order:
       module_tag:
         - DNA
         - pangenome
-
   - pangolin:
       module_tag:
         - DNA
         - virus
+  - nextclade:
+      module_tag:
+        - RNA
+        - virus
+  - freyja:
+      module_tag:
+        - DNA
+        - RNA
+        - virus
   # Pre-alignment QC
+  - humid:
+      module_tag:
+        - DNA
+        - RNA
+        - umi
   - kat:
       module_tag:
         - DNA
@@ -621,7 +703,15 @@ module_order:
       module_tag:
         - RNA
         - DNA
+  - librarian:
+      module_tag:
+        - RNA
+        - DNA
   - adapterRemoval:
+      module_tag:
+        - RNA
+        - DNA
+  - bbduk:
       module_tag:
         - RNA
         - DNA
@@ -654,6 +744,10 @@ module_order:
         - DNA
         - metagenomics
         - ancient
+  - motus:
+      module_tag:
+        - RNA
+        - DNA
   - trimmomatic:
       module_tag:
         - RNA
@@ -690,9 +784,22 @@ module_order:
       module_tag:
         - RNA
         - DNA
+  - filtlong:
+      module_tag:
+        - DNA
+        - ONT
+        - PacBio
+  - prinseqplusplus:
+      module_tag:
+        - RNA
+        - DNA
   - pychopper:
       module_tag:
         - RNA
+  - porechop:
+      module_tag:
+        - DNA
+        - nanopore
   - pycoqc:
       module_tag:
         - DNA
@@ -701,6 +808,11 @@ module_order:
       module_tag:
         - DNA
         - RNA
+  - anglerfish:
+      module_tag:
+        - DNA
+        - Illumina
+        - ONT
   - multivcfanalyzer:
       module_tag:
         - DNA
@@ -748,3 +860,6 @@ module_order:
         - DNA
         - RNA
         - HLATyping
+  - whatshap:
+      module_tag:
+        - DNA

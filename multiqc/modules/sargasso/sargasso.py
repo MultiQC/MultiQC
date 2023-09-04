@@ -1,14 +1,12 @@
-#!/usr/bin/env python
-
 """ MultiQC module to parse output from sargasso """
 
-from __future__ import print_function
-from collections import OrderedDict
+
 import logging
+from collections import OrderedDict
 
 from multiqc import config
-from multiqc.plots import bargraph
 from multiqc.modules.base_module import BaseMultiqcModule
+from multiqc.plots import bargraph
 
 # Initialise the logger
 log = logging.getLogger(__name__)
@@ -16,7 +14,6 @@ log = logging.getLogger(__name__)
 
 class MultiqcModule(BaseMultiqcModule):
     def __init__(self):
-
         # Initialise the parent object
         super(MultiqcModule, self).__init__(
             name="sargasso",
@@ -105,7 +102,6 @@ class MultiqcModule(BaseMultiqcModule):
         self.sargasso_keys = items
 
         for idx, f_name in enumerate(self.sargasso_data.keys()):
-
             # Reorganised parsed data for this sample
             # Collect total READ count number
             self.sargasso_data[f_name]["Total"] = 0

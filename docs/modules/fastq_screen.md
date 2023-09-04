@@ -1,7 +1,7 @@
 ---
-Name: FastQ Screen
-URL: http://www.bioinformatics.babraham.ac.uk/projects/fastq_screen/
-Description: >
+name: FastQ Screen
+url: http://www.bioinformatics.babraham.ac.uk/projects/fastq_screen/
+description: >
   FastQ Screen allows you to screen a library of sequences in FastQ format
   against a set of sequence databases so you can see if the composition of
   the library matches with what you expect.

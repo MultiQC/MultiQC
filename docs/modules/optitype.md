@@ -1,7 +1,7 @@
 ---
-Name: OptiType
-URL: https://github.com/FRED-2/OptiType
-Description: >
+name: OptiType
+url: https://github.com/FRED-2/OptiType
+description: >
   Precision HLA typing from next-generation sequencing data
 ---
 

@@ -1,10 +1,6 @@
-#!/usr/bin/env python
-
-from __future__ import print_function
-from collections import OrderedDict
-import os
 import logging
 import re
+from collections import OrderedDict
 
 from multiqc import config
 from multiqc.plots import bargraph
@@ -17,7 +13,6 @@ class SambambaMarkdupMixin:
     """Find and parse Sambamba Markdup output log files and calculate duplication rate"""
 
     def parse_sambamba_markdup(self):
-
         # Clean sample name from 'markdup_sample_1' to 'sample_1'
         # Find and load sambamba logs to markdup_data.
         # Regex for key phrases and calculate duplicate rate.
@@ -27,7 +22,6 @@ class SambambaMarkdupMixin:
         self.markdup_data = dict()
 
         for f in self.find_log_files("sambamba/markdup"):
-
             if f["s_name"] in self.markdup_data:
                 log.debug("Duplicate sample name found in {}! Overwriting: {}".format(f["fn"], f["s_name"]))
 
@@ -84,14 +78,18 @@ class SambambaMarkdupMixin:
             if m:
                 d[key] = int(m[1])
         if len(d) != len(regexes):
-            log.debug("Could not find all markdup fields for '{}' - skippiung".format(f["fn"]))
+            log.debug("Could not find all markdup fields for '{}' - skipping".format(f["fn"]))
             return None
 
         # Calculate duplicate rate
         # NB: Single-end data will have 0 for sorted_end_pairs and single_unmatched_pairs
-        d["duplicate_rate"] = (
-            d["duplicate_reads"] / ((d["sorted_end_pairs"] * 2) + (d["single_ends"] - d["single_unmatched_pairs"]))
-        ) * 100.0
+        try:
+            d["duplicate_rate"] = (
+                d["duplicate_reads"] / ((d["sorted_end_pairs"] * 2) + (d["single_ends"] - d["single_unmatched_pairs"]))
+            ) * 100.0
+        except ZeroDivisionError:
+            d["duplicate_rate"] = 0
+            log.debug("Sambamba Markdup: zero division error for '{}'".format(f["fn"]))
 
         # Calculate some read counts from pairs - Paired End
         if d["sorted_end_pairs"] > 0:
@@ -107,7 +105,6 @@ class SambambaMarkdupMixin:
         return d
 
     def markdup_general_stats_table(self):
-
         """
         Take parsed stats from sambamba markdup to general stats table at the top of the report.
 
@@ -128,7 +125,6 @@ class SambambaMarkdupMixin:
             self.general_stats_data[s_name]["duplicate_rate"] = data["duplicate_rate"]
 
     def markdup_section(self):
-
         """
         Add markdup statistics as bar graph to multiQC report.
         """

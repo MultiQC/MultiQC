@@ -1,17 +1,15 @@
-#!/usr/bin/env python
-
 """ MultiQC module to parse output from Cluster Flow """
 
-from __future__ import print_function
-from collections import OrderedDict
+
 import datetime
 import logging
-import re
 import os
+import re
 import time
+from collections import OrderedDict
 
-from multiqc.plots import table
 from multiqc.modules.base_module import BaseMultiqcModule
+from multiqc.plots import table
 
 # Initialise the logger
 log = logging.getLogger(__name__)
@@ -23,7 +21,6 @@ class MultiqcModule(BaseMultiqcModule):
     """
 
     def __init__(self):
-
         # Initialise the parent object
         super(MultiqcModule, self).__init__(
             name="Cluster Flow",
@@ -80,7 +77,6 @@ class MultiqcModule(BaseMultiqcModule):
         job_id = None
         pipeline_id = None
         for l in f["f"]:
-
             # Get pipeline ID
             module_r = re.match(r"Module:\s+(.+)$", l)
             if module_r:

@@ -73,6 +73,10 @@ multiqc .
 That's it! MultiQC will scan the specified directory (`.` is the current dir)
 and produce a report detailing whatever it finds.
 
+<!-- RICH-CODEX fake_command: "multiqc ." -->
+
+![`cd test_data/data/modules/fastqc/v0.10.1 && multiqc .`](docs/images/screenshots/fastqc-run.svg)
+
 The report is created in `multiqc_report.html` by default. Tab-delimited data
 files are also created in `multiqc_data/`, containing extra information.
 These can be easily inspected using Excel (use `--data-format` to get `yaml`
@@ -126,13 +130,14 @@ things with the package author and other developers:
 <https://gitter.im/ewels/MultiQC>
 
 If in doubt, feel free to get in touch with the author directly:
-[@ewels](https://github.com/ewels) (phil.ewels@scilifelab.se)
+[@ewels](https://github.com/ewels) (phil.ewels@seqera.io)
 
 ### Contributors
 
-Project lead and main author: [@ewels](https://github.com/ewels)
+MultiQC is developed and maintained by Phil Ewels ([@ewels](https://github.com/ewels)) at [Seqera Labs](https://seqera.io/).
+It was originally written at the [National Genomics Infrastructure](https://ngisweden.scilifelab.se/), part of [SciLifeLab](https://www.scilifelab.se/) in Sweden.
 
-There are a lot of other code contributors though!
+A huge thank you to all code contributors - there are a lot of you!
 See the [Contributors Graph](https://github.com/ewels/MultiQC/graphs/contributors) for details.
 
 MultiQC is released under the GPL v3 or later licence.
