@@ -133,32 +133,30 @@ updated_lines = []
 # Else, find the next line that matches the `section` variable, and insert a new line
 # under it (we also assume that section headers are added already).
 inside_version_dev = False
-after_version_dev = False
 while orig_lines:
     line = orig_lines.pop(0)
 
-    if line.startswith("## "):  # Version header
+    if line.startswith("## "):  # Version header, e.g. "## MultiQC v1.10dev"
         updated_lines.append(line)
-        if after_version_dev:
-            continue
 
         # Parse version from the line ## MultiQC v1.10dev or
         # ## [MultiQC v1.15](https://github.com/ewels/MultiQC/releases/tag/v1.15) ...
-        m = re.match(r".*MultiQC (v\d+\.\d+(dev)?).*", line)
-        if m is None:
+        if not (m := re.match(r".*MultiQC (v\d+\.\d+(dev)?).*", line)):
             print(f"Cannot parse version from line {line.strip()}.", file=sys.stderr)
             sys.exit(1)
         version = m.group(1)
 
-        if not inside_version_dev and not version.endswith("dev"):
-            print(
-                "Can't find a 'dev' version section in the changelog. Make sure "
-                "it's created, and sections MultiQC updates, New modules and "
-                "Module updates are added under it.",
-                file=sys.stderr,
-            )
-            sys.exit(1)
-        if inside_version_dev:
+        if not inside_version_dev:
+            if not version.endswith("dev"):
+                print(
+                    "Can't find a 'dev' version section in the changelog. Make sure "
+                    "it's created, and sections MultiQC updates, New modules and "
+                    "Module updates are added under it.",
+                    file=sys.stderr,
+                )
+                sys.exit(1)
+            inside_version_dev = True
+        else:
             if version.endswith("dev"):
                 print(
                     f"Found another 'dev' version section in the changelog, make"
@@ -167,10 +165,9 @@ while orig_lines:
                     file=sys.stderr,
                 )
                 sys.exit(1)
-            inside_version_dev = False
-            after_version_dev = True
-        else:
-            inside_version_dev = True
+            # We are past the dev version, so just add back the rest of the lines and break.
+            updated_lines.extend(orig_lines)
+            break
 
     elif inside_version_dev and line.lower().startswith(section.lower()):  # Section of interest header
         if new_lines is None:
@@ -182,13 +179,14 @@ while orig_lines:
         while True:
             line = orig_lines.pop(0)
             if line.startswith("##"):
+                # Found the next section header, so need to put all the lines we collected.
                 updated_lines.append("\n")
                 updated_lines.extend(section_lines)
                 updated_lines.extend(new_lines)
                 updated_lines.append("\n")
                 print(f"Updated {CHANGELOG_PATH} section '{section}' with lines: {new_lines}")
                 new_lines = None
-                # pushing back the next section header line
+                # Pushing back the next section header line
                 orig_lines.insert(0, line)
                 break
             elif line.strip():
