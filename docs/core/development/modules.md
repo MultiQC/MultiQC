@@ -663,8 +663,8 @@ well as in the section _Software Versions_ in the end of the report.
 
 :::tip
 For tools that don't output software versions in their logs these can instead
-be provided in a separate YAML file. See [Customising Reports](https://multiqc.info/docs/reports/customisation/#listing-software-versions)
-for details.
+be provided in a separate YAML file.
+See [Customising Reports](../reports/customisation.md#listing-software-versions) for details.
 :::
 
 In the example provided, the version of htslib is shown alongside the
