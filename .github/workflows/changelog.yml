@@ -19,13 +19,13 @@ env:
 jobs:
   update_changelog:
     runs-on: ubuntu-latest
-    if: github.event.pull_request.merged == true
+    if: github.repository_owner == 'ewels'
     steps:
       - uses: actions/checkout@v3
       - uses: actions/setup-python@v3
 
       - name: Update CHANGELOG.md from the PR title
-        run: python python ${GITHUB_WORKSPACE}/.github/workflows/changelog.py
+        run: python ${GITHUB_WORKSPACE}/.github/workflows/changelog.py
 
       - name: Check if CHANGELOG.md actually changed
         id: checkfile
