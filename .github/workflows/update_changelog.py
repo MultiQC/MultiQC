@@ -157,7 +157,7 @@ while changelog:
 
     elif inside_version_dev and line.lower().startswith(section.lower()):
         if new_lines is None:
-            print(f"Already added new lines into section {section}, is the " f"section duplicated?", file=sys.stderr)
+            print(f"Already added new lines into section {section}, is the section duplicated?", file=sys.stderr)
             sys.exit(1)
         new_changelog.append(line)
         # Collecting lines until the next section.
