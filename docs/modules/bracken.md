@@ -1,8 +1,8 @@
 ---
-Name: Bracken
-URL: https://ccb.jhu.edu/software/bracken/
-Description: >
-  a highly accurate statistical method that computes the abundance of species
+name: Bracken
+url: https://ccb.jhu.edu/software/bracken/
+description: >
+  is a highly accurate statistical method that computes the abundance of species
   in DNA sequences from a metagenomics sample
 ---
 
