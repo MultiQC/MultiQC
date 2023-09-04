@@ -85,44 +85,45 @@ Note that you can also specify a path to a config file using `-c`.
 
 ## Listing software versions
 
-For modules where version information can be extracted from log files,
-or when not available in log files, you can alternatively add them in
-the configuration. Software versions can be specified in YAML format
-using two options.
+If a software tool prints its version number in log output, MultiQC
+attempts to find this information and print it in reports
+(see [Saving version information](../development/modules.md#saving-version-information))
+for module developer documentation.
+However, not all tools make version information available in their log files.
+Additionally, some situations may require bespoke version number reporting,
+for example if software is found within multiple scopes in an analysis pipeline.
 
-### Option 1: Grouping softwares and versions
+In these cases, you can manually add software version information to a report.
+This can be done in two different ways: by adding them in to the MultiQC configuration,
+or by creating stand-alone YAML files with specific filenames and formats.
 
-Here input is provided as a nested YAML
-dictionary with three levels: `group` -> `software(s)` -> `version(s)`.
-One group specifies one or more software names. Eash software specifies
-one or more versions with multiple versions provided as lists. Here's an
-example:
+Both methods have the same syntax for the YAML configuration, with the exception
+of MultiQC configuration files requiring a top-level `software_versions`.
+The examples below are for a MultiQC config file.
+
+If a provided software name exactly matches the name of a module that ran
+(case insensitive), then the version number(s) will be shown alongside the
+section heading. All software versions will be printed at the bottom of the report.
+This is the same behaviour as version numbers found within log files.
+
+### Option 1: Dictionary of software name and version pairs
+
+The simplest way to provide version numbers to give names and versions:
 
 ```yaml
 software_versions:
-  quast:
-    quast:
-      - "5.2.0"
-      - "5.1.0"
-  samtools:
-    samtools: "1.11"
-    htslib: "1.3"
-  some_other_group:
-    some_other_tool:
-      - "2023-1"
+  samblaster: "0.1.24"
+  quast: "5.2.0"
 ```
 
 :::warning
 Make sure that you write the version in quotes to ensure it being
-interpreted as a string. As an example a version `1.10` without
+interpreted as a string. For example, a version `1.10` without
 quotes would be parsed as a float and displayed as version `1.1`.
 :::
 
-### Option 2: Dictionary of software name and version pairs
-
-An alternative is to specify pairs of software names and version
-strings directly. This option does not enable grouping of different softwares.
-Instead the software name is used directly for the group name. Example:
+If you have run a tool multiple times and have multiple software versions,
+you can provide a list of versions:
 
 ```yaml
 software_versions:
@@ -130,25 +131,43 @@ software_versions:
   quast:
     - "5.2.0"
     - "5.1.0"
-  some_other_tool: "2023-1"
 ```
 
-Translated into the same structure as in the previous example, this would
-look like this:
+### Option 2: Grouping softwares and versions
+
+In more complex scenarios, you may have multiple version _names_ that you
+want to group. For example, a tool that wraps other tools, or
+listing software version numbers grouped by analysis pipeline step.
+
+Here, input is provided as a nested YAML dictionary with three levels:
+`group` -> `software(s)` -> `version(s)`.
 
 ```yaml
 software_versions:
-  samblaster:
-    samblaster: "0.1.24"
+  samtools:
+    samtools: "1.11"
+    htslib: "1.3"
   quast:
     quast:
       - "5.2.0"
       - "5.1.0"
-  some_other_tool:
-    some_other_tool: "2023-1"
 ```
 
-### Separate versions YAML
+```yaml
+software_versions:
+  analysis_stage_1:
+    samtools: "1.3"
+    htslib: "1.3"
+  analysis_stage_2:
+    samtools: "1.11"
+    htslib: "1.11"
+  analysis_stage_3:
+    quast:
+      - "5.2.0"
+      - "5.1.0"
+```
+
+### Software versions YAML file
 
 If you prefer to provide versions in a separate YAML file, MultiQC will look
 for a file named `multiqc_versions.yaml` by default. You can modify the path
@@ -159,7 +178,8 @@ version_fn_name: path/to/versions.yaml
 ```
 
 The content of the versions.yaml file should be a YAML dictionary, similar to
-the previous examples. Example:
+the previous examples but without the top level `software_versions`.
+For example:
 
 ```yaml
 samblaster: "0.1.24"
@@ -169,22 +189,26 @@ quast:
 some_other_tool: "2023-1"
 ```
 
-### Other options
+### Disabling automatic versions
 
-In some applications, such as a pipeline workflow, you may wish to only include
+In some applications, such as a pipeline workflow, you may wish to _only_ include
 version information defined in the config file or in a separate YAML file. For
 this, it possible to disable parsing versions from the log file through the
 following config option:
 
 ```yaml
-disable_version_detection: true`
+disable_version_detection: true
 ```
 
-This will disable version detection for all modules and also remove the version
-listings next to the section titles.
+### Disabling software version report section
 
-To exclude the _Software Versions_ section from the report, set
-`skip_versions_section: true` in your config file.
+If you like, you can remove the _Software Versions_ report section.
+Software versions will still be shown inline with the headings, where possible.
+To do this, use the following config option:
+
+```yaml
+skip_versions_section: true
+```
 
 ## Sample name replacement
 
