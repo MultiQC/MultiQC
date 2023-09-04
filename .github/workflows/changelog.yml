@@ -25,7 +25,7 @@ jobs:
       - uses: actions/setup-python@v3
 
       - name: Update CHANGELOG.md from the PR title
-        run: python update_changelog.py
+        run: python python ${GITHUB_WORKSPACE}/.github/workflows/changelog.py
 
       - name: Check if CHANGELOG.md actually changed
         id: checkfile
