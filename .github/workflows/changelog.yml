@@ -1,11 +1,11 @@
 name: Update CHANGELOG.md
 
 on:
-  pull_request_target:
+  pull_request_review:
     branches:
       - master
     types:
-      - closed
+      - submitted
   # For manually triggering this workflow
   workflow_dispatch:
     inputs:
@@ -14,12 +14,12 @@ on:
         required: true
 env:
   PR_TITLE: ${{ github.event.pull_request.title }} # this is returning empty
-  PR_NUMBER: ${{ github.event.number }}
+  PR_NUMBER: ${{ github.event.pull_request.number }}
 
 jobs:
   update_changelog:
+    if: github.repository_owner == 'ewels' && github.event.review.state == 'approved'
     runs-on: ubuntu-latest
-    if: github.repository_owner == 'ewels'
     steps:
       - uses: actions/checkout@v3
       - uses: actions/setup-python@v3
@@ -28,7 +28,6 @@ jobs:
         run: python ${GITHUB_WORKSPACE}/.github/workflows/changelog.py
 
       - name: Check if CHANGELOG.md actually changed
-        id: checkfile
         run: |
           git diff --exit-code CHANGELOG.md || echo "changed=YES" >> $GITHUB_ENV
           echo "file changed: ${{ env.changed }}"
@@ -39,5 +38,9 @@ jobs:
           git config --local user.email "action@github.com"
           git config --local user.name "GitHub Action"
           git add CHANGELOG.md
-          git commit -m "Update CHANGELOG.md for PR #${{ github.event.pull_request.number }}"
-          git push
+          git commit -m "Update CHANGELOG.md"
+          # Fetch the latest changes from the PR's branch
+          git fetch origin ${{ github.event.pull_request.head.ref }}  
+          # Rebase your local changes on top of the latest changes in the PR's branch
+          git rebase FETCH_HEAD  
+          git push origin HEAD:${{ github.event.pull_request.head.ref }}
