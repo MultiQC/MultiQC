@@ -164,12 +164,14 @@ jobs:
       - name: Install MultiQC
         run: pip install .
 
+      # Fetch the MultiQC test data
+      # NB: Download zip file instead of git clone, as Windows complains about reserved filenames and certain characters
       - name: Download test data
-        uses: actions/checkout@v3
-        with:
-          repository: ewels/MultiQC_TestData
-          path: test_data
+        run: |
+          curl -fsSL https://github.com/ewels/MultiQC_TestData/archive/master.zip -o test_data.zip
+          7z x test_data.zip -y -o"test_data"
+          dir test_data\MultiQC_TestData-master
 
       # Run all of the tests! Remember the BACKslash path separator!
       - name: All modules / Custom report filename
-        run: multiqc ${{ needs.changes.outputs.single_module }} --lint test_data\data\modules\ --filename full_report.html
+        run: multiqc ${{ needs.changes.outputs.single_module }} --lint test_data\MultiQC_TestData-master\data\modules\ --filename full_report.html
