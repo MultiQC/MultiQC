@@ -281,7 +281,7 @@ diamond:
 dragen/vc_metrics:
   fn: "*.vc_metrics.csv"
 dragen/ploidy_estimation_metrics:
-  fn_re: '.*\.ploidy_estimation_metrics\.csv'
+  fn: "*.ploidy_estimation_metrics.csv"
 dragen/wgs_contig_mean_cov:
   fn_re: '.*\.wgs_contig_mean_cov_?(tumor|normal)?\.csv'
 dragen/overall_mean_cov_metrics:
