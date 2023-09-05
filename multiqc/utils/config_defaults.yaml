@@ -689,6 +689,11 @@ module_order:
       module_tag:
         - RNA
         - virus
+  - freyja:
+      module_tag:
+        - DNA
+        - RNA
+        - virus
   # Pre-alignment QC
   - humid:
       module_tag:

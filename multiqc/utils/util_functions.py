@@ -71,17 +71,14 @@ def write_data_file(data, fn, sort_cols=False, data_format=None):
                 # Convert keys to strings
                 data = {str(k): v for k, v in data.items()}
                 # Get all headers from the data, except if data is a dictionary (i.e. has >1 dimensions)
-                # Use list -> dict -> list to get only unique values
-                h = list(
-                    dict.fromkeys(
-                        [
-                            str(data_header)
-                            for sample_data in data.values()
-                            for data_header in sample_data.keys()
-                            if type(sample_data[data_header]) is not dict
-                        ]
-                    )
-                )
+                h = set()
+                for values in data.values():
+                    first_sub_value = next(iter(values))
+                    if isinstance(first_sub_value, dict):
+                        continue
+                    h |= values.keys()
+                h = [str(item) for item in h]
+
                 # Add Sample header in to first element
                 h.insert(0, "Sample")
                 if sort_cols:

@@ -232,7 +232,7 @@ def make_table(dt):
                 if badge_col is not None:
                     valstring = '<span class="badge" style="background-color:{}">{}</span>'.format(badge_col, valstring)
 
-                # Categorical backgorund colours supplied
+                # Categorical background colours supplied
                 if val in header.get("bgcols", {}).keys():
                     col = 'style="background-color:{} !important;"'.format(header["bgcols"][val])
                     if s_name not in t_rows:
