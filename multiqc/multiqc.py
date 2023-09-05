@@ -624,6 +624,10 @@ def run(
     except AttributeError:
         pass  # custom_data not in config
 
+    # Always run software_versions module to collect version YAML files
+    if "software_versions" not in run_module_names:
+        run_module_names.append("software_versions")
+
     # Get the list of files to search
     for d in config.analysis_dir:
         logger.info("Search path : {}".format(os.path.abspath(d)))

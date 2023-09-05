@@ -38,7 +38,6 @@ base_count_desc: "millions"
 output_fn_name: "multiqc_report.html"
 data_dir_name: "multiqc_data"
 plots_dir_name: "multiqc_plots"
-version_fn_name: "multiqc_versions.yaml"
 data_format: "tsv"
 module_tag: []
 force: false

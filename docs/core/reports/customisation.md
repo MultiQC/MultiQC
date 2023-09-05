@@ -174,17 +174,11 @@ the software name will not be repeated in the section header.
 
 ### Software versions YAML file
 
-If you prefer to provide versions in a separate YAML file, MultiQC will look
-for a file named `multiqc_versions.yaml` by default. You can modify the path
-using the `version_fn_name` option in your configuration:
-
-```yaml
-version_fn_name: path/to/versions.yaml
-```
-
-The content of the versions.yaml file should be a YAML dictionary, similar to
-the previous examples but without the top level `software_versions`.
-For example:
+If you prefer to provide versions in a separate YAML file, MultiQC will also
+look for filenames ending in `*_mqc_versions.(yml|yaml)` in your search path,
+for example `rnaseq_mqc_versions.yml` or `mapping_mqc_versions.yaml`. The
+content of these YAML files should be a YAML dictionary, similar to the
+previous examples but without the top level `software_versions`. For example:
 
 ```yaml
 samblaster: "0.1.24"
@@ -193,6 +187,9 @@ quast:
   - "5.1.0"
 some_other_tool: "2023-1"
 ```
+
+If multiple YAML files are found the content of these will be merged
+together.
 
 ### Disabling automatic versions
 

@@ -104,20 +104,22 @@ def load_versions_from_config(config):
         log.error("Software versions loaded config.software_versions is not in a valid format")
 
     software_versions_file = defaultdict(lambda: defaultdict(list))
-    file_name = config.version_fn_name
-    if not os.path.isfile(file_name):
-        file_name = file_name.replace(".yaml", ".yml")
-    if os.path.isfile(file_name):
+    for f in mqc_report.files.get("software_versions", []):
+        file_name = os.path.join(f["root"], f["fn"])
         with open(file_name) as f:
             try:
                 log.debug("Reading software versions settings from: {}".format(file_name))
-                software_versions_file = yaml.safe_load(f)
+                software_versions_file_tmp = yaml.safe_load(f)
             except yaml.scanner.ScannerError as e:
                 log.error("Error parsing versions YAML: {}".format(e))
 
-    software_versions_file, is_valid = validate_software_versions(software_versions_file)
-    if not is_valid:
-        log.error("Software versions loaded from {} is not in a valid format".format(file_name))
+        software_versions_file_tmp, is_valid = validate_software_versions(software_versions_file_tmp)
+
+        if not is_valid:
+            log.error("Software versions loaded from {} is not in a valid format".format(file_name))
+            continue
+
+        software_versions_file = merge(software_versions_file, software_versions_file_tmp)
 
     # Aggregate versions listed in config and file
     software_versions = merge(software_versions_config, software_versions_file)
@@ -218,7 +220,7 @@ def merge(a: dict, b: dict, path=None):
         if key in a:
             if isinstance(a[key], dict) and isinstance(b[key], dict):
                 merge(a[key], b[key], path + [str(key)])
-            elif a[key] != b[key] and isinstance(a[key], list) and isinstance(b[key], list):
+            elif isinstance(a[key], list) and isinstance(b[key], list):
                 a[key].extend(b[key])
             else:
                 raise Exception("Conflict at " + ".".join(path + [str(key)]))
