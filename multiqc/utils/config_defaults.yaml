@@ -132,6 +132,7 @@ report_readerrors: false
 skip_generalstats: false
 skip_versions_section: false
 disable_version_detection: false
+versions_table_group_header: "Group"
 data_format_extensions:
   tsv: "txt"
   json: "json"

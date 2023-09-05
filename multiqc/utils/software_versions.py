@@ -12,6 +12,7 @@ import packaging.version
 import yaml
 
 from multiqc.modules.base_module import BaseMultiqcModule
+from multiqc.utils import config as mqc_config
 from multiqc.utils import report as mqc_report
 
 # Initialise the logger
@@ -40,11 +41,11 @@ class MultiqcModule(BaseMultiqcModule):
         # source: https://github.com/nf-core/rnaseq/blob/3bec2331cac2b5ff88a1dc71a21fab6529b57a0f/modules/nf-core/custom/dumpsoftwareversions/templates/dumpsoftwareversions.py#L12
         html = [
             dedent(
-                """\
+                f"""\
                 <table class="table mqc_versions_table">
                     <thead>
                         <tr>
-                            <th> Group </th>
+                            <th> {mqc_config.versions_table_group_header} </th>
                             <th> Software </th>
                             <th> Version  </th>
                         </tr>

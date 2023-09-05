@@ -218,6 +218,14 @@ skip_versions_section: true
 Note that setting this in combination with manually added version numbers
 could lead to versions not being included within the report.
 
+### Customize software versions table header
+
+In the _Software Versions_ report section the default table header for the column, listing groups of software, is "Group". This can be changed by setting the config option `versions_table_group_header` to your desired header name. For example:
+
+```yaml
+versions_table_group_header: "Analysis Pipeline Step"
+```
+
 ## Sample name replacement
 
 Occasionally, when you run MultiQC you may know that you want to change the resulting
