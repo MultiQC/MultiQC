@@ -64,6 +64,8 @@ class MultiqcModule(BaseMultiqcModule):
 
         log.info("Found {} reports".format(len(self.kraken_raw_data)))
 
+        self.write_data_file(self.kraken_raw_data, f"multiqc_{self.anchor}")
+
         # Sum counts across all samples, so that we can pick top 5
         self.kraken_total_pct = dict()
         self.kraken_total_counts = dict()
