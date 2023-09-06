@@ -18,7 +18,7 @@
 
 ### New Modules
 
-- **Sourmash**
+- [** Sourmash**](https://github.com/sourmash-bio/sourmash)
   - create MultiQC module to parse the output of sourmash compare
 
 ### Module feature additions

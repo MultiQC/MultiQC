@@ -13,7 +13,7 @@ from multiqc.plots import heatmap
 log = logging.getLogger(__name__)
 
 
-class compare:
+class Compare:
     def parse_compare(self):
         """
         Modeled after vcftools relatedness2 module, which also has many samples represented in the parsed file.
@@ -68,7 +68,7 @@ class compare:
         return len(matrices)
 
 
-class compare2matrix:
+class Compare2Matrix:
     def __init__(self, compare_file):
         self.data = []
         self.comparelabels = set()
