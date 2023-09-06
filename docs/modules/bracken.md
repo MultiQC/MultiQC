@@ -6,7 +6,7 @@ description: >
   in DNA sequences from a metagenomics sample
 ---
 
-This module works with bracken output files that resemble kraken reports. They look like the following:
+This module works with Bracken output files that resemble Kraken reports. They look like the following:
 
 ```ts
 100.00	1188381	0	R	1	root
@@ -18,6 +18,7 @@ This module works with bracken output files that resemble kraken reports. They l
 99.98	1188147	0	F	543	            Enterobacteriaceae
 ```
 
-A bar graph is generated that shows the number of fragments for each sample that
-fall into the top categories for each taxa rank. The top categories are calculated
-by summing the library percentages across all samples.
+The main assumption to tell Bracken reports from Kraken is that the former don't have
+an "unassigned" category at the head of the file, and instead start with "root".
+
+A bar graph is generated identical to that of Kraken.
