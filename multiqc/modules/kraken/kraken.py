@@ -5,7 +5,6 @@ import logging
 import re
 from collections import OrderedDict
 
-from multiqc import config
 from multiqc.modules.base_module import BaseMultiqcModule
 from multiqc.plots import bargraph, heatmap
 
@@ -16,16 +15,21 @@ log = logging.getLogger(__name__)
 class MultiqcModule(BaseMultiqcModule):
     """Kraken module"""
 
-    def __init__(self):
-        # Initialise the parent object
+    def __init__(
+        self,
+        name="Kraken",
+        anchor="kraken",
+        href="https://ccb.jhu.edu/software/kraken/",
+        info="is a taxonomic classification tool that uses exact k-mer matches to find the lowest common ancestor (LCA) of a given sequence.",
+        doi="10.1186/gb-2014-15-3-r46",
+    ):
         super(MultiqcModule, self).__init__(
-            name="Kraken",
-            anchor="kraken",
-            href="https://ccb.jhu.edu/software/kraken/",
-            info="is a taxonomic classification tool that uses exact k-mer matches to find the lowest common ancestor (LCA) of a given sequence.",
-            doi="10.1186/gb-2014-15-3-r46",
+            name=name,
+            anchor=anchor,
+            href=href,
+            info=info,
+            doi=doi,
         )
-
         self.t_ranks = OrderedDict()
         self.t_ranks["S"] = "Species"
         self.t_ranks["G"] = "Genus"
@@ -43,7 +47,7 @@ class MultiqcModule(BaseMultiqcModule):
         # Find and load any kraken reports
         self.kraken_raw_data = dict()
         new_report_present = False
-        for f in self.find_log_files("kraken", filehandles=True):
+        for f in self.find_log_files(self.anchor, filehandles=True):
             log_version = self.get_log_version(f)
             f["f"].seek(0)
             if log_version == "old":
@@ -57,9 +61,6 @@ class MultiqcModule(BaseMultiqcModule):
 
         if len(self.kraken_raw_data) == 0:
             raise UserWarning
-
-        # Data is in wrong format for writing to file
-        # self.write_data_file(self.kraken_raw_data, "kraken")
 
         log.info("Found {} reports".format(len(self.kraken_raw_data)))
 
@@ -393,15 +394,15 @@ class MultiqcModule(BaseMultiqcModule):
             pd.append(rank_data)
 
         pconfig = {
-            "id": "kraken-topfive-plot",
-            "title": "Kraken 2: Top taxa",
+            "id": f"{self.anchor}-topfive-plot",
+            "title": f"{self.name}: Top taxa",
             "ylab": "Number of fragments",
             "data_labels": [v for k, v in self.t_ranks.items() if k in found_rank_codes],
         }
 
         self.add_section(
             name="Top taxa",
-            anchor="kraken-topfive",
+            anchor=f"{self.anchor}-topfive",
             description=f"The number of reads falling into the top {self.top_n} taxa across different ranks.",
             helptext=f"""
                 To make this plot, the percentage of each sample assigned to a given taxa is summed across all samples.
@@ -425,8 +426,8 @@ class MultiqcModule(BaseMultiqcModule):
 
         duplication = list()
         pconfig = {
-            "id": "kraken-topfive-duplication_plot",
-            "title": f"Kraken 2: Top {self.top_n} species duplication",
+            "id": f"{self.anchor}-topfive-duplication_plot",
+            "title": f"{self.name}: Top {self.top_n} species duplication",
             "square": False,
             "xcats_samples": False,
         }
@@ -485,7 +486,7 @@ class MultiqcModule(BaseMultiqcModule):
 
         self.add_section(
             name="Duplication rate of top species",
-            anchor="kraken-duplication-topfive",
+            anchor=f"{self.anchor}-duplication-topfive",
             description=f"The duplication rate of minimizer falling into the top {self.top_n} species",
             helptext=f"""
                 To make this plot, the minimizer duplication rate is computed for the top {self.top_n} most abundant species in all samples.
