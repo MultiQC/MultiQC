@@ -232,10 +232,10 @@ def merge(a: dict, b: dict, path=None):
 def sort_versions(versions):
     """Sort list of versions in descending order. Accepts list with both strings and packaging.version.Version objects."""
     try:
-        versions.sort(reverse=True)
+        versions.sort()
     except TypeError:
         # If there is a mix, sort all as strings
-        versions.sort(reverse=True, key=str)
+        versions.sort(key=str)
     return versions
 
 
