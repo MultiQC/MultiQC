@@ -4,23 +4,22 @@
 
 import logging
 
-from multiqc import config
 from multiqc.modules.base_module import BaseMultiqcModule
 
-from .compare import compare
+from .compare import CompareMixin
 from .gather import gather
 
 # Initialise the logger
 log = logging.getLogger(__name__)
 
 
-class MultiqcModule(BaseMultiqcModule, compare, gather):
+class MultiqcModule(BaseMultiqcModule, CompareMixin, gather):
     def __init__(self):
         super(MultiqcModule, self).__init__(
-            name="sourmash",
+            name="Sourmash",
             anchor="sourmash",
             href="https://github.com/sourmash-bio/sourmash",
-            info="Quickly search, compare, and analyze genomic and metagenomic data sets.",
+            info="quickly searches, compares, and analyzes genomic and metagenomic data sets.",
             doi="10.21105/joss.00027",
         )
 
