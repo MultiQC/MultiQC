@@ -22,11 +22,11 @@ This checklist is for my own reference, as I forget the steps every time.
    - Comment out any config in `~/.multiqc_config.yaml`
 
      ```bash
-     mv ~/.multiqc_config.yaml ~/.multiqc_config.yaml.bkup
+     mv ~/.multiqc_config.yml ~/.multiqc_config.yml.bkup
      ```
 
      ```bash
-     mv ~/.multiqc_config.yaml.bkup ~/.multiqc_config.yaml
+     mv ~/.multiqc_config.yml.bkup ~/.multiqc_config.yml
      ```
 
    - Spot any previously unnoticed bugs and fix

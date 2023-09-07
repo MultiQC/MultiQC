@@ -1,5 +1,3 @@
-#!/usr/bin/env python
-
 """ MultiQC submodule to parse output from RSeQC geneBody_coverage.py
 http://rseqc.sourceforge.net/#genebody-coverage-py """
 
@@ -24,7 +22,6 @@ def parse_reports(self):
 
     # Go through files and parse data
     for f in self.find_log_files("rseqc/gene_body_coverage"):
-
         # geneBodyCoverage.py
         # RSeQC >= v2.4
         # NB: Capitilisation

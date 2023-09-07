@@ -1,5 +1,3 @@
-#!/usr/bin/env python
-
 """ MultiQC module to parse output from bustools inspect """
 
 
@@ -18,7 +16,6 @@ log = logging.getLogger(__name__)
 
 class MultiqcModule(BaseMultiqcModule):
     def __init__(self):
-
         # Initialise the parent object
         super(MultiqcModule, self).__init__(
             name="Bustools",
@@ -115,7 +112,7 @@ class MultiqcModule(BaseMultiqcModule):
         }
         self.headers["meanUMIsPerBarcode"] = {
             "title": "Mean UMIs per barcode",
-            "scale": "PuBnGn",
+            "scale": "PuBuGn",
             "min": 0,
             "format": "{:,.2f}",
         }

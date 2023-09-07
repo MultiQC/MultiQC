@@ -6,11 +6,12 @@ Helper functions to manipulate colours and colour scales
 
 # Default logger will be replaced by caller
 import logging
-import os
 import re
 
 import numpy as np
 import spectra
+
+from multiqc.utils import config, report
 
 logger = logging.getLogger(__name__)
 
@@ -18,11 +19,12 @@ logger = logging.getLogger(__name__)
 class mqc_colour_scale(object):
     """Class to hold a colour scheme."""
 
-    def __init__(self, name="GnBu", minval=0, maxval=100):
+    def __init__(self, name="GnBu", minval=0, maxval=100, id=None):
         """Initialise class with a colour scale"""
 
-        self.colours = self.get_colours(name)
         self.name = name
+        self.id = id
+        self.colours = self.get_colours(name)
 
         # Sanity checks
         minval = re.sub("[^0-9\.-e]", "", str(minval))
@@ -49,12 +51,14 @@ class mqc_colour_scale(object):
         rgb_converter = lambda x: max(0, min(1, 1 + ((x - 1) * lighten)))
 
         try:
-            # When we have non-numeric values (e.g. Male/Female, Yes/No, chromosome names, etc), and a qualitive
-            # scale (Set1, Set3, etc), we don't want to attempt to parse numbers, otherwise we will end up with all
-            # values assigned with the same color. But instead we will geta has from a string to hope to assign
-            # a unique color for each possible enumeration value.
-            if self.name in mqc_colour_scale.qualitative_scales and isinstance(val, str):
-                thecolour = spectra.html(self.colours[hash(val) % len(self.colours)])
+            if self.name in mqc_colour_scale.qualitative_scales:
+                if not isinstance(val, int):
+                    # When we have non-numeric values (e.g. Male/Female, Yes/No, chromosome names, etc.), and a qualitative
+                    # scale (Set1, Set3, etc.), we don't want to attempt to parse numbers, otherwise we might end up with all
+                    # values assigned with the same color. But instead we will get a hash from a string to hope to assign
+                    # a unique color for each possible enumeration value.
+                    val = hash(val)
+                thecolour = spectra.html(self.colours[val % len(self.colours)])
                 thecolour = spectra.rgb(*[rgb_converter(v) for v in thecolour.rgb])
                 return thecolour.hexcode
 
@@ -380,6 +384,19 @@ class mqc_colour_scale(object):
                 "#fddaec",
                 "#f2f2f2",
             ],
+            # Originally from Highcharts
+            "plot_defaults": [
+                "#7cb5ec",
+                "#434348",
+                "#90ed7d",
+                "#f7a35c",
+                "#8085e9",
+                "#f15c80",
+                "#e4d354",
+                "#2b908f",
+                "#f45b5b",
+                "#91e8e1",
+            ],
         }
 
         if name.startswith("#"):
@@ -396,6 +413,12 @@ class mqc_colour_scale(object):
 
         # Default colour scale
         if name not in colorbrewer_scales:
+            errmsg = f"{self.id+': ' if self.id else ''}Colour scale {name} not found - defaulting to GnBu"
+            if config.lint:
+                logger.error(errmsg)
+                report.lint_errors.append(errmsg)
+            else:
+                logger.debug(errmsg)
             name = "GnBu"
 
         # Return colours
@@ -404,7 +427,7 @@ class mqc_colour_scale(object):
         else:
             return colorbrewer_scales[name]
 
-    qualitative_scales = ["Set2", "Accent", "Set1", "Set3", "Dark2", "Paired", "Pastel2", "Pastel1"]
+    qualitative_scales = ["Set2", "Accent", "Set1", "Set3", "Dark2", "Paired", "Pastel2", "Pastel1", "plot_defaults"]
 
     html_colors = {
         "black": "#000000",

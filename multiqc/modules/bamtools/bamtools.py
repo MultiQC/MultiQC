@@ -1,5 +1,3 @@
-#!/usr/bin/env python
-
 """ MultiQC module to parse output from Bamtools """
 
 import logging
@@ -21,7 +19,6 @@ class MultiqcModule(BaseMultiqcModule):
     logs are found."""
 
     def __init__(self):
-
         # Initialise the parent object
         super(MultiqcModule, self).__init__(
             name="Bamtools",
