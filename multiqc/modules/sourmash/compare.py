@@ -3,6 +3,7 @@
 """ MultiQC module to parse similarity matrix output by sourmash compare """
 
 import logging
+import os
 import re
 
 import numpy
@@ -13,7 +14,7 @@ from multiqc.plots import heatmap
 log = logging.getLogger(__name__)
 
 
-class Compare:
+class CompareMixin:
     def parse_compare(self):
         """
         Modeled after vcftools relatedness2 module, which also has many samples represented in the parsed file.
@@ -21,20 +22,26 @@ class Compare:
         matrices = {}
 
         for f in self.find_log_files("sourmash/compare", filehandles=True):
-            m = compare2matrix(f)
-            if m.data and m.comparelabels:
-                matrices[f["s_name"]] = m
-            self.add_data_source(f, section="compare")
+            labels = [x.strip() for x in f["f"]]
+            if labels:
+                matrix_path = re.sub(".labels.txt", "", f["f"].name)
+                if not os.path.exists(matrix_path):
+                    raise RuntimeError(
+                        f"Expected to find the matrix binary file {matrix_path} "
+                        f"complementing the labels file {f['f'].name}"
+                    )
+                with open(matrix_path, "rb") as fh:
+                    matrix = numpy.load(fh)
+                matrices[f["s_name"]] = (labels, matrix.tolist())
+                self.add_data_source(f, section="compare")
 
         matrices = self.ignore_samples(matrices)
-
         if len(matrices) == 0:
             return 0
 
         log.info("Found {} valid compare results".format(len(matrices)))
 
-        # The matrices cannot be written to a file in their current format
-        # self.write_data_file(matrices, "sourmash_compare")
+        self.write_data_file(matrices, "sourmash_compare")
 
         helptext = """
         Sourmash compare outputs a similarity score between two samples. A higher score indicates a higher degree of
@@ -43,22 +50,20 @@ class Compare:
         """
 
         idx = 0
-        for name, m in matrices.items():
+        for name, (labels, data) in matrices.items():
             idx += 1
             self.add_section(
-                name="compare: Sample Similarity",
+                name="Compare: Sample Similarity",
                 anchor="sourmash-compare-{}".format(idx),
-                description="**Input:** `{}`.\n\n Heatmap of similarity values from the output of sourmash compare".format(
-                    name
-                ),
+                description=f"**Input:** `{name}`.\n\n Heatmap of similarity values from the output of sourmash compare",
                 helptext=helptext,
                 plot=heatmap.plot(
-                    m.data,
-                    xcats=m.comparelabels,
-                    ycats=m.comparelabels,
+                    data,
+                    xcats=labels,
+                    ycats=labels,
                     pconfig={
                         "id": "sourmash-compare-heatmap-{}".format(idx),
-                        "title": "sourmash: compare",
+                        "title": "Sourmash: Compare",
                         "square": True,
                         "decimalPlaces": 7,
                     },
@@ -66,33 +71,3 @@ class Compare:
             )
 
         return len(matrices)
-
-
-class Compare2Matrix:
-    def __init__(self, compare_file):
-        self.data = []
-        self.comparelabels = set()
-
-        self.load_matrix_and_labels(compare_file["f"])
-
-    def load_matrix_and_labels(self, f):
-        """
-        source for first two lines: https://github.com/sourmash-bio/sourmash/blob/9083d20aabcb77c67ba050b727efdd3f5d0a0398/src/sourmash/fig.py#L13
-        """
-        self.comparelabels = [x.strip() for x in f]
-        basefile = re.sub(".labels.txt", "", str(f.name))
-        comparematrix = numpy.load(open(basefile, "rb"))
-        comparedict = {}
-        for i in range(len(self.comparelabels)):
-            comparevalues = list(comparematrix[i])
-            res = {self.comparelabels[i]: comparevalues[i] for i in range(len(self.comparelabels))}
-            comparedict[self.comparelabels[i]] = res
-
-        # impose alphabetical order and avoid json serialisation errors in utils.report
-        self.comparelabels = sorted(self.comparelabels)
-
-        for x in self.comparelabels:
-            line = []
-            for y in self.comparelabels:
-                line.append(comparedict[x][y])
-            self.data.append(line)
