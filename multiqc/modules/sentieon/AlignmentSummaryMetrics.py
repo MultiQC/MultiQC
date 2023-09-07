@@ -1,5 +1,3 @@
-#!/usr/bin/env python
-
 """ MultiQC submodule to parse output from Sentieon AlignmentSummaryMetrics
  (based on the Picard module of the same name) """
 
@@ -72,7 +70,6 @@ def parse_reports(self):
     self.sentieon_alignment_metrics = self.ignore_samples(self.sentieon_alignment_metrics)
 
     if len(self.sentieon_alignment_metrics) > 0:
-
         # Write parsed data to a file
         self.write_data_file(self.sentieon_alignment_metrics, "multiqc_sentieon_AlignmentSummaryMetrics")
 

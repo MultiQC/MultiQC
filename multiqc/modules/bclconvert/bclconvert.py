@@ -1,6 +1,4 @@
 import csv
-import decimal
-import json
 import logging
 import operator
 import os
@@ -67,8 +65,12 @@ class MultiqcModule(BaseMultiqcModule):
                 </div>
             """
             self.per_lane_undetermined_reads = None
-        elif self.num_demux_files == 1:
-            # only possible to calculate barcodes per lane when parsing a single bclconvert run
+
+        create_undetermined_barplots = (
+            getattr(config, "bclconvert", {}).get("create_undetermined_barcode_barplots", False)
+            or self.num_demux_files == 1
+        )
+        if create_undetermined_barplots:
             self._parse_top_unknown_barcodes()
 
         # Collect counts by lane and sample
@@ -182,7 +184,7 @@ class MultiqcModule(BaseMultiqcModule):
         )
 
         # Add section with undetermined barcodes
-        if self.num_demux_files == 1:
+        if create_undetermined_barplots:
             self.add_section(
                 name="Undetermined barcodes by lane",
                 anchor="undetermine_by_lane",
@@ -243,11 +245,12 @@ class MultiqcModule(BaseMultiqcModule):
 
     def _get_r2_length(self, root):
         for element in root.findall("./Run/Reads/Read"):
+            if element.get("Number") == "3" and element.get("IsIndexedRead") == "N":
+                return element.get("NumCycles")  # single-index paired-end data
             if element.get("Number") == "4" and element.get("IsIndexedRead") == "N":
                 return element.get("NumCycles")
-        log.error(
-            f"Expected RunInfo.xml file to have an element with property Number=4, IsIndexedRead=N, and a NumCycles property"
-        )
+
+        log.error(f"Could not figure out read 2 length from RunInfo.xml")
         raise UserWarning
 
     def _parse_single_runinfo_file(self, runinfo_file):
@@ -291,7 +294,6 @@ class MultiqcModule(BaseMultiqcModule):
             raise UserWarning
 
         for idx, runinfo in enumerate(runinfos):
-
             rundata = self._parse_single_runinfo_file(runinfo)
 
             if runinfo["root"] != demuxes[idx]["root"]:

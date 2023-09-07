@@ -1,5 +1,3 @@
-#!/usr/bin/env python
-
 """ MultiQC submodule to parse output from Rockhopper summary files
 https://cs.wellesley.edu/~btjaden/Rockhopper/ """
 
@@ -18,7 +16,6 @@ log = logging.getLogger(__name__)
 
 class MultiqcModule(BaseMultiqcModule):
     def __init__(self):
-
         # Initialize the parent object
         super(MultiqcModule, self).__init__(
             name="Rockhopper",
@@ -72,7 +69,6 @@ class MultiqcModule(BaseMultiqcModule):
         self.rh_data[s_name] = results
 
     def parse_rockhopper_summary(self, f):
-
         s_name = None
 
         # Initialize stats fields
@@ -96,7 +92,6 @@ class MultiqcModule(BaseMultiqcModule):
         # Parse rockhopper output line-by-line since there may be many genomes
         lines = f["f"].split("\n")
         for i, line in enumerate(lines):
-
             # Get sample name
             if line.startswith("Aligning sequencing reads from file:"):
                 # When reaching a new sample add the previous sample to
@@ -122,7 +117,6 @@ class MultiqcModule(BaseMultiqcModule):
 
             # Get number of reads aligned to each genome
             elif line.startswith("Successfully aligned reads"):
-
                 # Get number of aligned reads
                 genome_reads = int(re.search("Successfully aligned reads:\s*(\d*)", line).group(1))
 

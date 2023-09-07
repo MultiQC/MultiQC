@@ -1,5 +1,3 @@
-#!/usr/bin/env python
-
 """ MultiQC submodule to parse output from Bcftools stats """
 
 import logging
@@ -119,7 +117,10 @@ class StatsReportMixin:
                         int(s[3].strip()) + int(s[4].strip()) + int(s[5].strip())
                     )
                     self.bcftools_stats_sample_variants[s_name][sample]["nIndels"] = int(s[8].strip())
-                    nMissing = int(s[13].strip())
+                    if len(s) >= 14:
+                        nMissing = int(s[13].strip())
+                    else:
+                        nMissing = 0
                     nPresent = self.bcftools_stats[s_name]["number_of_records"] - nMissing
                     self.bcftools_stats_sample_variants[s_name][sample]["nOther"] = (
                         nPresent
@@ -193,7 +194,6 @@ class StatsReportMixin:
         self.bcftools_stats = self.ignore_samples(self.bcftools_stats)
 
         if len(self.bcftools_stats) > 0:
-
             # Write parsed report data to a file
             self.write_data_file(self.bcftools_stats, "multiqc_bcftools_stats")
 

@@ -14,6 +14,7 @@ from . import config
 
 log = config.logger
 
+
 # Custom encoder to handle lambda functions
 class MQCJSONEncoder(json.JSONEncoder):
     def default(self, obj):

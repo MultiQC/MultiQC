@@ -1,7 +1,7 @@
 ---
-Name: RSEM
-URL: https://deweylab.github.io/RSEM/
-Description: >
+name: RSEM
+url: https://deweylab.github.io/RSEM/
+description: >
   RSEM (RNA-Seq by Expectation-Maximization) is a software package for
   estimating gene and isoform expression levels from RNA-Seq data.
 ---

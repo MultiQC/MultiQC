@@ -1,5 +1,3 @@
-#!/usr/bin/env python
-
 """ MultiQC module to parse output from Longranger """
 
 
@@ -19,7 +17,6 @@ class MultiqcModule(BaseMultiqcModule):
     """Longranger module"""
 
     def __init__(self):
-
         # Initialise the parent object
         super(MultiqcModule, self).__init__(
             name="Long Ranger",
@@ -400,7 +397,6 @@ class MultiqcModule(BaseMultiqcModule):
         return sid
 
     def parse_summary(self, content):
-
         out_dict = OrderedDict()
         lines = content.splitlines()
         data = list(zip(lines[0].strip().split(","), lines[1].strip().split(",")))

@@ -1,5 +1,3 @@
-#!/usr/bin/env python
-
 """ MultiQC Submodule to parse output from Qualimap BamQC """
 
 

@@ -1,5 +1,3 @@
-#!/usr/bin/env python
-
 """ MultiQC module to parse TsTv by summary output from vcftools TsTv-summary """
 
 import logging

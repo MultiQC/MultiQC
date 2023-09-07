@@ -1,5 +1,3 @@
-#!/usr/bin/env python
-
 """ MultiQC module to parse output from MultiVCFAnalyzer """
 
 
@@ -18,7 +16,6 @@ class MultiqcModule(BaseMultiqcModule):
     """MultiVCFAnalyzer module"""
 
     def __init__(self):
-
         # Initialise the parent object
         super(MultiqcModule, self).__init__(
             name="MultiVCFAnalyzer",
@@ -193,7 +190,7 @@ class MultiqcModule(BaseMultiqcModule):
         headers["discardedVarCall"] = {
             "title": "Discarded SNP Call",
             "description": "Number of non-reference positions not reaching genotyping or coverage thresholds",
-            "scale": "PuCr",
+            "scale": "PuRd",
             "shared_key": "calls",
             "format": "{:,.0f}",
         }

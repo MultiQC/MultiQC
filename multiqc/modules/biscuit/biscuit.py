@@ -1,5 +1,3 @@
-#!/usr/bin/env python
-
 """ MultiQC module to parse output from BISCUITqc """
 
 
@@ -103,7 +101,6 @@ class MultiqcModule(BaseMultiqcModule):
         # Find and parse alignment reports
         for k in self.mdata:
             for f in self.find_log_files("biscuit/{}".format(k)):
-
                 s_name = f["fn"]
                 for suffix in file_suffixes:
                     s_name = s_name.replace(suffix, "")

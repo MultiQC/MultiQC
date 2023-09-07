@@ -1,0 +1,1 @@
+from .mapdamage import MultiqcModule
