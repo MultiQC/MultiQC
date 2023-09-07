@@ -26,10 +26,12 @@ class CompareMixin:
             if labels:
                 matrix_path = re.sub(".labels.txt", "", f["f"].name)
                 if not os.path.exists(matrix_path):
-                    raise RuntimeError(
-                        f"Expected to find the matrix binary file {matrix_path} "
-                        f"complementing the labels file {f['f'].name}"
+                    log.warning(
+                        f"Found a 'labels' file expected by Sourmash: '{f['f'].name}', "
+                        f"however, could not find a accompanying matrix binary file "
+                        f"'{matrix_path}'. So assuming that wasn't a Sourmash result"
                     )
+                    continue
                 with open(matrix_path, "rb") as fh:
                     matrix = numpy.load(fh)
                 matrices[f["s_name"]] = (labels, matrix.tolist())
