@@ -878,4 +878,5 @@ whatshap/stats:
   num_lines: 1
 mosaicatcher:
   contents: "# sample:  Sample (has multiple cells)"
+  num_lines: 1
   fn: "*.mosaicatcher_info_raw.txt"
