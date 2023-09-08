@@ -36,6 +36,12 @@ class MultiqcModule(BaseMultiqcModule):
 
         self._samples = samples
 
+        # Filter to strip out ignored sample names
+        self._samples = self.ignore_samples(self._samples)
+
+        if len(self._samples) == 0:
+            raise UserWarning
+
         self._add_table(samples)
         self._add_coverage_plot(samples)
 
@@ -60,87 +66,86 @@ class MultiqcModule(BaseMultiqcModule):
             },
         )
         self.add_section(
-            name="Average coverage per sample",
+            name="Average coverage per cell",
             anchor="mosaicatcher-coverage-id",
-            description="Average coverage per sample",
+            description="Average coverage per cell",
             plot=coverage_plot,
         )
 
     def _setup_headers(self):
+        unwanted_keys = ["medbin", "nb_p", "nb_a", "nb_r", "bam"]
+
         headers = OrderedDict()
         for k in list(self._samples.values())[0]:
+            if k in unwanted_keys:
+                continue
             headers[k] = {"title": k, "hidden": True}
 
         headers["sample"] = {
-            "title": "sample",
+            "title": "Sample",
             "description": "Sample (has multiple cells)",
             "hidden": True,
+            "namespace": "MosaiCatcher",
         }
         headers["cell"] = {
-            "title": "cell",
+            "title": "Cell",
             "description": "Name of the cell.",
             "hidden": False,
+            "namespace": "MosaiCatcher",
         }
         headers["mapped"] = {
-            "title": "mapped",
+            "title": "Mapped reads",
             "max": 4e6,
             "description": "Total number of reads seen",
+            "format": "{:,d}",
             "scale": "RdYlGn",
             "hidden": False,
+            "namespace": "MosaiCatcher",
         }
         headers["suppl"] = {
-            "title": "suppl",
+            "title": "Supplementary reads",
             "description": "Supplementary, secondary or QC-failed reads (filtered out)",
+            "format": "{:,d}",
             "hidden": True,
+            "namespace": "MosaiCatcher",
         }
         headers["dupl"] = {
-            "title": "dupl",
+            "title": "Duplicate reads",
             "max": 3e6,
             "description": "Reads filtered out as PCR duplicates",
+            "format": "{:,d}",
             "scale": "OrRd",
             "hidden": False,
+            "namespace": "MosaiCatcher",
         }
         headers["mapq"] = {
-            "title": "mapq",
+            "title": "Mapping quality",
             "description": "Reads filtered out due to low mapping quality",
+            "format": "{:,d}",
             "hidden": True,
+            "namespace": "MosaiCatcher",
         }
         headers["read2"] = {
-            "title": "read2",
+            "title": "2nd read of pair",
             "description": "Reads filtered out as 2nd read of pair",
+            "format": "{:,d}",
             "hidden": True,
+            "namespace": "MosaiCatcher",
         }
         headers["good"] = {
-            "title": "good",
+            "title": "Good quality reads",
             "max": 8e5,
             "scale": "RdYlGn",
             "description": "Reads used for counting.",
+            "format": "{:,d}",
             "hidden": False,
+            "namespace": "MosaiCatcher",
         }
         headers["pass1"] = {
-            "title": "pass1",
+            "title": "Enough coverage?",
             "description": "Enough coverage? If false, ignore all columns from now",
             "hidden": False,
-        }
-        headers["nb_p"] = {
-            "title": "nb_p",
-            "description": "Negative Binomial parameter p. Constant for one sample.",
-            "hidden": True,
-        }
-        headers["nb_r"] = {
-            "title": "nb_r",
-            "description": "Negative Binomial parameter r. We use NB(p,r/2) * NB(p,r/2) in WC states, but NB(p,(1-a)*r)*NB(p,a*r) in WW or CC states.",
-            "hidden": True,
-        }
-        headers["nb_a"] = {
-            "title": "nb_a",
-            "description": "Negative Binomial parameter a (alpha) used for zero expectation (see above).",
-            "hidden": True,
-        }
-        headers["bam"] = {
-            "title": "bam",
-            "description": "Bam file of this cell",
-            "hidden": True,
+            "namespace": "MosaiCatcher",
         }
         return headers
 
@@ -174,7 +179,7 @@ class MultiqcModule(BaseMultiqcModule):
                         continue
 
                     if key == "pass1":
-                        value = True if value == "1" else False
+                        value = "pass" if value == "1" else "fail"
 
                     # Add this column to the cell dictionary
                     samples[cell_name][key] = value
