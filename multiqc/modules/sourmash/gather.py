@@ -12,7 +12,7 @@ from multiqc.plots import bargraph
 log = logging.getLogger(__name__)
 
 
-class gather:
+class GatherMixin:
     def parse_gather(self):
         """
         Modeled after the kraken module and the sourmash compare module.
@@ -23,10 +23,18 @@ class gather:
         # find and load gather reports
         self.gather_raw_data = dict()
         for f in self.find_log_files("sourmash/gather", filehandles=True):
-            d = gather2data(f)
-            d.load_gather()
-            if d.data:
-                self.gather_raw_data[f["s_name"]] = d.data
+            data = []
+            for line in csv.DictReader(f["f"]):
+                data.append(
+                    {
+                        "query_name": line["query_name"],
+                        "match_name": line["name"],
+                        "pct_unique_weighted": float(line["f_unique_weighted"]) * 100,
+                        "pct_match": float(line["f_match"]) * 100,
+                    }
+                )
+            if data:
+                self.gather_raw_data[f["s_name"]] = data
             self.add_data_source(f, section="gather")
 
         self.gather_raw_data = self.ignore_samples(self.gather_raw_data)
@@ -34,8 +42,7 @@ class gather:
         if len(self.gather_raw_data) == 0:
             return 0
 
-        # data is in wrong format for writing to file
-        # self.write_data_file(self.gather_raw_data, "gather")
+        self.write_data_file(self.gather_raw_data, "gather")
 
         log.info("Found {} gather results".format(len(self.gather_raw_data)))
 
@@ -48,7 +55,6 @@ class gather:
         # run functions to summarize information
         self.calculate_pct_per_match_all_samples()
         self.calculate_pct_unclassified_per_sample()
-        # self.calculate_top_five_matches()
         self.calculate_pct_top_five_per_sample()
 
         # run functions to build multiqc report components
@@ -60,14 +66,16 @@ class gather:
 
     def calculate_pct_per_match_all_samples(self):
         """
-        sum the percent of each genome match across queries.
-        e.g. if e. coli k12 is found to be 10% in sample A and 20% in sample B, the output would be e. coli k12 : 30.
-        the output is a dictionary, gather_pc_per_match_all_samples, with match_names (genomes) as keys and summed percents as values.
-        these values are used to identify the top 5 matches identified across all samples.
+        Sum the percent of each genome match across queries,
+        e.g. if "E. coli K12" is found to be 10% in sample A, and 20% in sample B, the
+        output would be "E. coli K12": 30".
+
+        The output is a dictionary with `match_names` (genomes) as keys, and summed
+        percents as values. These values are used to identify the top 5 matches
+        identified across all samples.
         """
         for s_name, data in self.gather_raw_data.items():
             for row in data:
-                # convienence vars to make code easier to read
                 match_name = row["match_name"]
                 # loop over all samples and sum different variables
                 if match_name not in self.gather_pct_per_match_all_samples:
@@ -76,8 +84,7 @@ class gather:
 
     def calculate_pct_unclassified_per_sample(self):
         """
-        calculate the percent of each sample that was unclassified.
-        the output is a dictionary, gather_pct_unclassified_per_sample, with s_name (samples) as keys and the percent of the sample unclassified as values.
+        Calculate the percent of each sample that was unclassified.
         """
         for s_name, data in self.gather_raw_data.items():
             for row in data:
@@ -90,8 +97,9 @@ class gather:
 
     def calculate_pct_top_five_per_sample(self):
         """
-        calculate the percent of each sample that is attributable to the top 5 genomes across all samples.
-        the output is a dictionary, gather_pct_top_five_per_sample, with s_name (samples) as keys as the summed percent for the top 5 genomes as values.
+        Calculate the percent of each sample that is attributable to the top 5 genomes
+        across all samples. The output is a dictionary with samples as keys and
+        the summed percent for the top 5 genomes as values.
         """
         # get top genomes matched across samples
         sorted_pct = sorted(self.gather_pct_per_match_all_samples.items(), key=lambda x: x[1], reverse=True)
@@ -141,18 +149,24 @@ class gather:
         self.general_stats_addcols(tdata, headers)
 
     def top_five_barplot(self):
-        """Add a bar plot showing the percentage of top-5 genomes, the percentage of other genomes, and the unclassified percentage"""
+        """
+        Add a bar plot showing the percentage of top-5 genomes, the percentage of other
+        genomes, and the unclassified percentage
+        """
 
         pd = []  # plot data
-        cats = (
-            list()
-        )  # a list of categories to be shown as a color on the plot. includes the top 5 genomes, other, and unclassified
+        # A list of categories to be shown as a color on the plot. includes the
+        # top 5 genomes, other, and unclassified
+        cats = list()
         pconfig = {
             "id": "gather-topfive-plot",
-            "title": "sourmash: gather top genomes",
-            "ylab": "percentages",
-            "cpswitch": False,  # do not show the 'Counts / Percentages' switch, since gather only reports percentages
-            "cpswitch_c_active": False,  # Initial display should show percentage, not counts
+            "title": "Sourmash gather: top genomes",
+            "ylab": "% of sample covered by top 5 genomes",
+            # do not show the 'Counts / Percentages' switch, since gather only reports
+            # percentages
+            "cpswitch": False,
+            # Initial display should show percentage, not counts
+            "cpswitch_c_active": False,
         }
 
         # create dictionaries for plot fill names and data (match percentages)
@@ -193,7 +207,7 @@ class gather:
         pd.append(match_data)
 
         self.add_section(
-            name="gather: Top Genomes",
+            name="Gather: Top Genomes",
             anchor="gather-topfive",
             description=f"The percentage of the sample falling into the top {self.top_n} genome matches.",
             helptext=f"""
@@ -205,23 +219,3 @@ class gather:
             """,
             plot=bargraph.plot(pd, cats, pconfig),
         )
-
-
-class gather2data:
-    """class to read in and parse the gather csv into a list of dictionaries."""
-
-    def __init__(self, gather_file):
-        self.data = []
-
-        self.gather_file = gather_file
-
-    def load_gather(self):
-        gatherr = csv.DictReader(self.gather_file["f"])
-        for line in gatherr:
-            row = {
-                "query_name": line["query_name"],
-                "match_name": line["name"],
-                "pct_unique_weighted": float(line["f_unique_weighted"]) * 100,
-                "pct_match": float(line["f_match"]) * 100,
-            }
-            self.data.append(row)

@@ -7,13 +7,13 @@ import logging
 from multiqc.modules.base_module import BaseMultiqcModule
 
 from .compare import CompareMixin
-from .gather import gather
+from .gather import GatherMixin
 
 # Initialise the logger
 log = logging.getLogger(__name__)
 
 
-class MultiqcModule(BaseMultiqcModule, CompareMixin, gather):
+class MultiqcModule(BaseMultiqcModule, CompareMixin, GatherMixin):
     def __init__(self):
         super(MultiqcModule, self).__init__(
             name="Sourmash",
