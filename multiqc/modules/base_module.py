@@ -95,18 +95,6 @@ class BaseMultiqcModule(ABC):
                 if self.autoformat_type == "markdown":
                     self.comment = markdown.markdown(self.comment)
 
-    # def add_to_report(self, report: Report):
-    #     self.report = report
-    #
-    #     # Sanitise anchor ID and check for duplicates
-    #     self.anchor = self.report.save_htmlid(self.anchor)
-    #
-    #     # See if we have a user comment in the config
-    #     if self.anchor in config.section_comments:
-    #         self.comment = config.section_comments[self.anchor]
-    #
-    #     self.build()
-
     @abstractmethod
     def build(self):
         """
