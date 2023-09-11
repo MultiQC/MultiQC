@@ -6,18 +6,19 @@
 import logging
 import random
 
-from multiqc.utils import config, report
+from multiqc.utils import config
 
 logger = logging.getLogger(__name__)
 
 letters = "abcdefghijklmnopqrstuvwxyz"
 
 
-def plot(data, xcats, ycats=None, pconfig=None):
+def plot(report, data, xcats, ycats=None, pconfig=None):
     """Plot a 2D heatmap.
+    :param report: MultiQC Report object
     :param data: List of lists, each a representing a row of values.
-    :param xcats: Labels for x axis
-    :param ycats: Labels for y axis. Defaults to same as x.
+    :param xcats: Labels for x-axis
+    :param ycats: Labels for y-axis. Defaults to same as x.
     :param pconfig: optional dict with config key:value pairs.
     :return: HTML and JS, ready to be inserted into the page
     """
@@ -34,10 +35,10 @@ def plot(data, xcats, ycats=None, pconfig=None):
         ycats = xcats
 
     # Make a plot
-    return highcharts_heatmap(data, xcats, ycats, pconfig)
+    return highcharts_heatmap(report, data, xcats, ycats, pconfig)
 
 
-def highcharts_heatmap(data, xcats, ycats, pconfig=None):
+def highcharts_heatmap(report, data, xcats, ycats, pconfig=None):
     """
     Build the HTML needed for a HighCharts line graph. Should be
     called by plot_xy_data, which properly formats input data.

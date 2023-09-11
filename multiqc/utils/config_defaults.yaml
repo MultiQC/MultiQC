@@ -857,5 +857,3 @@ module_order:
         - RNA
         - HLATyping
   - whatshap:
-      module_tag:
-        - DNA

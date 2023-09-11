@@ -20,6 +20,7 @@ import time
 import traceback
 from distutils import version
 from distutils.dir_util import copy_tree
+from typing import Dict, List, Set
 from urllib.request import urlopen
 
 import jinja2
@@ -28,7 +29,8 @@ import rich_click as click
 from rich.syntax import Syntax
 
 from .plots import table
-from .utils import config, lint_helpers, log, megaqc, plugin_hooks, report, util_functions
+from .utils import config, lint_helpers, log, megaqc, plugin_hooks, util_functions
+from .utils.report import Report, compress_json
 
 # Set up logging
 start_execution_time = time.time()
@@ -372,10 +374,7 @@ def run(
     if len(cl_config) > 0:
         config.mqc_cl_config(cl_config)
 
-    report.init()
-
-    # Log the command used to launch MultiQC
-    report.multiqc_command = " ".join(sys.argv)
+    report = Report(multiqc_command=" ".join(sys.argv))
     logger.debug("Command used: {}".format(report.multiqc_command))
 
     # Check that we're running the latest version of MultiQC
@@ -531,9 +530,9 @@ def run(
         logger.info("Prepending directory to sample names")
 
     # Prep module configs
-    config.top_modules = [m if type(m) is dict else {m: {}} for m in config.top_modules]
-    config.module_order = [m if type(m) is dict else {m: {}} for m in config.module_order]
-    mod_keys = [list(m.keys())[0] for m in config.module_order]
+    config.top_modules: List[Dict] = [m if type(m) is dict else {m: {}} for m in config.top_modules]
+    config.module_order: List[Dict] = [m if type(m) is dict else {m: {}} for m in config.module_order]
+    mod_keys: List[str] = [list(m.keys())[0] for m in config.module_order]
 
     # Lint the module configs
     if config.lint:
@@ -550,18 +549,20 @@ def run(
                         report.lint_errors.append(errmsg)
 
     # Get the available tags to decide which modules to run.
-    modules_from_tags = set()
+    modules_from_tags: Set[str] = set()
     if config.module_tag is not None:
-        tags = config.module_tag
+        tags: List[str] = config.module_tag
         for m in config.module_order:
-            module_name = list(m.keys())[0]  # only one name in each dict
+            module_name: str = list(m.keys())[0]  # only one name in each dict
             for tag in tags:
                 for t in m[module_name].get("module_tag", []):
                     if tag.lower() == t.lower():
                         modules_from_tags.add(module_name)
 
     # Get the list of modules we want to run, in the order that we want them
-    run_modules = [m for m in config.top_modules if list(m.keys())[0] in config.avail_modules.keys()]
+    run_modules: List[Dict[str:Dict]] = [
+        m for m in config.top_modules if list(m.keys())[0] in config.avail_modules.keys()
+    ]
     run_modules.extend([{m: {}} for m in config.avail_modules.keys() if m not in mod_keys and m not in run_modules])
     run_modules.extend(
         [
@@ -587,20 +588,20 @@ def run(
     if len(run_modules) == 0:
         logger.critical("No analysis modules specified!")
         sys.exit(1)
-    run_module_names = [list(m.keys())[0] for m in run_modules]
+    run_module_names: list[str] = [list(m.keys())[0] for m in run_modules]
     logger.debug("Analysing modules: {}".format(", ".join(run_module_names)))
 
     # Create the temporary working directories
     tmp_dir = tempfile.mkdtemp()
     logger.debug("Using temporary directory for creating report: {}".format(tmp_dir))
     config.data_tmp_dir = os.path.join(tmp_dir, "multiqc_data")
-    if filename != "stdout" and config.make_data_dir == True:
+    if filename != "stdout" and config.make_data_dir is True:
         config.data_dir = config.data_tmp_dir
         os.makedirs(config.data_dir)
     else:
         config.data_dir = None
     config.plots_tmp_dir = os.path.join(tmp_dir, "multiqc_plots")
-    if filename != "stdout" and config.export_plots == True:
+    if filename != "stdout" and config.export_plots is True:
         config.plots_dir = config.plots_tmp_dir
         os.makedirs(config.plots_dir)
     else:
@@ -630,37 +631,29 @@ def run(
     report.get_filelist(run_module_names)
 
     # Only run the modules for which any files were found
-    non_empty_modules = {key.split("/")[0].lower() for key, files in report.files.items() if len(files) > 0}
+    non_empty_modules: Set[str] = {key.split("/")[0].lower() for key, files in report.files.items() if len(files) > 0}
     # Always run custom content, as it can have data purely from a MultiQC config file (no search files)
     if "custom_content" not in non_empty_modules:
         non_empty_modules.add("custom_content")
-    run_modules = [m for m in run_modules if list(m.keys())[0].lower() in non_empty_modules]
-    run_module_names = [list(m.keys())[0] for m in run_modules]
+    run_modules: List[Dict[str, Dict]] = [m for m in run_modules if list(m.keys())[0].lower() in non_empty_modules]
+    run_module_names: List[str] = [list(m.keys())[0] for m in run_modules]
 
     # Run the modules!
     plugin_hooks.mqc_trigger("before_modules")
-    report.modules_output = list()
     sys_exit_code = 0
     total_mods_starttime = time.time()
     for mod_idx, mod_dict in enumerate(run_modules):
         mod_starttime = time.time()
         try:
-            this_module = list(mod_dict.keys())[0]
-            mod_cust_config = list(mod_dict.values())[0]
-            if mod_cust_config is None:
-                mod_cust_config = {}
-            mod = config.avail_modules[this_module].load()
-            mod.mod_cust_config = mod_cust_config  # feels bad doing this, but seems to work
-            output = mod()
-            if type(output) != list:
-                output = [output]
-            for m in output:
-                report.modules_output.append(m)
+            this_module: str = list(mod_dict.keys())[0]
+            mod_cust_config: Dict = list(mod_dict.values())[0] or {}
+            mod = config.avail_modules[this_module].load()(mod_cust_config=mod_cust_config)
+            report.add_module(mod)
 
             if config.make_report:
                 # Copy over css & js files if requested by the theme
                 try:
-                    for to, path in report.modules_output[-1].css.items():
+                    for to, path in report.modules[-1].css.items():
                         copy_to = os.path.join(tmp_dir, to)
                         os.makedirs(os.path.dirname(copy_to))
                         shutil.copyfile(path, copy_to)
@@ -672,7 +665,7 @@ def run(
                 except AttributeError:
                     pass
                 try:
-                    for to, path in report.modules_output[-1].js.items():
+                    for to, path in report.modules[-1].js.items():
                         copy_to = os.path.join(tmp_dir, to)
                         os.makedirs(os.path.dirname(copy_to))
                         shutil.copyfile(path, copy_to)
@@ -750,11 +743,11 @@ def run(
     if config.profile_runtime:
         from multiqc.utils import profile_runtime
 
-        report.modules_output.append(profile_runtime.MultiqcModule())
+        report.add_module(profile_runtime.MultiqcModule())
 
     # Did we find anything?
-    if len(report.modules_output) == 0:
-        logger.warning("No analysis results found. Cleaning up..")
+    if len(report.get_modules()) == 0:
+        logger.warning("No analysis results found. Cleaning up...")
         shutil.rmtree(tmp_dir)
         logger.info("MultiQC complete")
         # Exit with an error code if a module broke
@@ -763,59 +756,7 @@ def run(
     if config.make_report:
         # Sort the report module output if we have a config
         if len(getattr(config, "report_section_order", {})) > 0:
-            section_id_order = {}
-            idx = 10
-            for mod in reversed(report.modules_output):
-                section_id_order[mod.anchor] = idx
-                idx += 10
-            for anchor, ss in config.report_section_order.items():
-                if anchor not in section_id_order.keys():
-                    logger.debug("Reordering sections: anchor '{}' not found.".format(anchor))
-                    continue
-                if ss.get("order") is not None:
-                    section_id_order[anchor] = ss["order"]
-                if ss.get("after") in section_id_order.keys():
-                    section_id_order[anchor] = section_id_order[ss["after"]] + 1
-                if ss.get("before") in section_id_order.keys():
-                    section_id_order[anchor] = section_id_order[ss["before"]] - 1
-            sorted_ids = sorted(section_id_order, key=section_id_order.get)
-            report.modules_output = [
-                mod for i in reversed(sorted_ids) for mod in report.modules_output if mod.anchor == i
-            ]
-
-        # Sort the report sections if we have a config
-        # Basically the same as above, but sections within a module
-        if len(getattr(config, "report_section_order", {})) > 0:
-            # Go through each module
-            for midx, mod in enumerate(report.modules_output):
-                section_id_order = {}
-                # Get a list of the section anchors
-                idx = 10
-                for s in mod.sections:
-                    section_id_order[s["anchor"]] = idx
-                    idx += 10
-                # Go through each section to be reordered
-                for anchor, ss in config.report_section_order.items():
-                    # Section to be moved is not in this module
-                    if anchor not in section_id_order.keys():
-                        logger.debug(
-                            "Reordering sections: anchor '{}' not found for module '{}'.".format(anchor, mod.name)
-                        )
-                        continue
-                    if ss == "remove":
-                        section_id_order[anchor] = False
-                        continue
-                    if ss.get("order") is not None:
-                        section_id_order[anchor] = ss["order"]
-                    if ss.get("after") in section_id_order.keys():
-                        section_id_order[anchor] = section_id_order[ss["after"]] + 1
-                    if ss.get("before") in section_id_order.keys():
-                        section_id_order[anchor] = section_id_order[ss["before"]] - 1
-                # Remove module sections
-                section_id_order = {s: o for s, o in section_id_order.items() if o is not False}
-                # Sort the module sections
-                sorted_ids = sorted(section_id_order, key=section_id_order.get)
-                report.modules_output[midx].sections = [s for i in sorted_ids for s in mod.sections if s["anchor"] == i]
+            report.sort_modules(config.report_section_order)
 
     plugin_hooks.mqc_trigger("after_modules")
 
@@ -844,7 +785,7 @@ def run(
             "save_file": True,
             "raw_data_fn": "multiqc_general_stats",
         }
-        report.general_stats_html = table.plot(report.general_stats_data, report.general_stats_headers, pconfig)
+        report.general_stats_html = table.plot(report, report.general_stats_data, report.general_stats_headers, pconfig)
     else:
         config.skip_generalstats = True
 
@@ -859,7 +800,7 @@ def run(
         # Compress the report plot JSON data
         runtime_compression_start = time.time()
         logger.debug("Compressing plot data")
-        report.plot_compressed_json = report.compress_json(report.plot_data)
+        report.plot_compressed_json = compress_json(report.plot_data)
         report.runtimes["total_compression"] = time.time() - runtime_compression_start
 
     plugin_hooks.mqc_trigger("before_report_generation")

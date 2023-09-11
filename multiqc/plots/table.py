@@ -7,26 +7,23 @@ import random
 from collections import OrderedDict, defaultdict
 
 from multiqc.plots import beeswarm, table_object
-from multiqc.utils import config, mqc_colour, report, util_functions
+from multiqc.plots.table_object import DataTable
+from multiqc.utils import config, mqc_colour, util_functions
 
 logger = logging.getLogger(__name__)
 
 letters = "abcdefghijklmnopqrstuvwxyz"
 
 
-def plot(data, headers=None, pconfig=None):
+def plot(report, data, headers=None, pconfig=None):
     """Return HTML for a MultiQC table.
+    :param report: MultiQC Report object
     :param data: 2D dict, first keys as sample names, then x:y data pairs
     :param headers: list of optional dicts with column config in key:value pairs.
     :return: HTML ready to be inserted into the page
     """
-    if headers is None:
-        headers = []
-    if pconfig is None:
-        pconfig = {}
-
     # Make a datatable object
-    dt = table_object.datatable(data, headers, pconfig)
+    dt = table_object.DataTable(report, data, headers, pconfig)
 
     # Collect unique sample names
     s_names = set()
@@ -48,14 +45,14 @@ def plot(data, headers=None, pconfig=None):
         return make_table(dt)
 
 
-def make_table(dt):
+def make_table(dt: DataTable):
     """
     Build the HTML needed for a MultiQC table.
-    :param data: MultiQC datatable object
+    :param dt: MultiQC DataTable object
     """
 
     table_id = dt.pconfig.get("id", "table_{}".format("".join(random.sample(letters, 4))))
-    table_id = report.save_htmlid(table_id)
+    table_id = dt.report.save_htmlid(table_id)
     t_headers = OrderedDict()
     t_modal_headers = OrderedDict()
     t_rows = OrderedDict()
@@ -423,6 +420,6 @@ def make_table(dt):
     if dt.pconfig.get("save_file") is True:
         fn = dt.pconfig.get("raw_data_fn", "multiqc_{}".format(table_id))
         util_functions.write_data_file(dt.raw_vals, fn)
-        report.saved_raw_data[fn] = dt.raw_vals
+        dt.report.saved_raw_data[fn] = dt.raw_vals
 
     return html

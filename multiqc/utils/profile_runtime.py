@@ -8,7 +8,6 @@ from collections import OrderedDict
 
 from multiqc.modules.base_module import BaseMultiqcModule
 from multiqc.plots import bargraph
-from multiqc.utils import report
 
 # Initialise the logger
 log = logging.getLogger(__name__)
@@ -31,6 +30,7 @@ class MultiqcModule(BaseMultiqcModule):
 
         log.info("Running run time profiling module")
 
+    def build(self):
         self.file_search_stats_section()
 
         self.search_pattern_times_section()
@@ -40,14 +40,14 @@ class MultiqcModule(BaseMultiqcModule):
 
         pdata = OrderedDict()
         pcats = OrderedDict()
-        for key in sorted(report.file_search_stats, key=report.file_search_stats.get, reverse=True):
+        for key in sorted(self.report.file_search_stats, key=self.report.file_search_stats.get, reverse=True):
             if "skipped_" in key:
                 s_name = "Skipped: {}".format(key.replace("skipped_", "").replace("_", " ").capitalize())
                 pcats[key] = {"name": key, "color": "#999999"}
             else:
                 s_name = key
                 pcats[key] = {"name": key, "color": "#7cb5ec"}
-            pdata[s_name] = {key: report.file_search_stats[key]}
+            pdata[s_name] = {key: self.report.file_search_stats[key]}
 
         pconfig = {
             "id": "multiqc_runtime_files_searched_plot",
@@ -64,7 +64,7 @@ class MultiqcModule(BaseMultiqcModule):
                 Number of files searched by MultiQC, categorised by what happened to them.
                 **Total file searches: {}**.
             """.format(
-                sum(report.file_search_stats.values())
+                sum(self.report.file_search_stats.values())
             ),
             helptext="""
                 Note that only files are considered in this plot - skipped directories are not shown.
@@ -85,8 +85,8 @@ class MultiqcModule(BaseMultiqcModule):
         """Section with a bar plot showing the time spent on each search pattern"""
 
         pdata = OrderedDict()
-        for key in sorted(report.runtimes["sp"], key=report.runtimes["sp"].get, reverse=True):
-            pdata[key] = {"time": report.runtimes["sp"][key]}
+        for key in sorted(self.report.runtimes["sp"], key=self.report.runtimes["sp"].get, reverse=True):
+            pdata[key] = {"time": self.report.runtimes["sp"][key]}
 
         pconfig = {
             "id": "multiqc_runtime_search_patterns_plot",
@@ -103,7 +103,7 @@ class MultiqcModule(BaseMultiqcModule):
                 Time spent running each search pattern to find files for MultiQC modules.
                 **Total file search time: {:.2f} seconds**.
             """.format(
-                report.runtimes["total_sp"]
+                self.report.runtimes["total_sp"]
             ),
             helptext="""
                 **NOTE: Usually, MultiQC run time is fairly insignificant - in the order of seconds.

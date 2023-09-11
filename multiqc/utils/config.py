@@ -13,6 +13,7 @@ import os
 import subprocess
 import sys
 from datetime import datetime
+from typing import Dict
 
 import importlib_metadata
 import yaml
@@ -63,7 +64,7 @@ megaqc_access_token = os.environ.get("MEGAQC_ACCESS_TOKEN")
 ##### Available modules
 # Modules must be listed in setup.py under entry_points['multiqc.modules.v1']
 # Get all modules, including those from other extension packages
-avail_modules = dict()
+avail_modules: Dict[str, importlib_metadata.EntryPoint] = dict()
 for entry_point in importlib_metadata.entry_points(group="multiqc.modules.v1"):
     nicename = entry_point.name
     avail_modules[nicename] = entry_point
@@ -71,7 +72,7 @@ for entry_point in importlib_metadata.entry_points(group="multiqc.modules.v1"):
 ##### Available templates
 # Templates must be listed in setup.py under entry_points['multiqc.templates.v1']
 # Get all templates, including those from other extension packages
-avail_templates = {}
+avail_templates: Dict[str, importlib_metadata.EntryPoint] = {}
 for entry_point in importlib_metadata.entry_points(group="multiqc.templates.v1"):
     nicename = entry_point.name
     avail_templates[nicename] = entry_point
@@ -260,7 +261,7 @@ def load_replace_names(rnames_file):
 
 
 def load_show_hide(sh_file):
-    global show_hide_buttons, show_hide_patterns, show_hide_mode
+    global show_hide_buttons, show_hide_patterns, show_hide_mode, show_hide_regex
     if sh_file:
         try:
             with open(sh_file, "r") as f:

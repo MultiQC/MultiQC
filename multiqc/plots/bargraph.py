@@ -14,7 +14,7 @@ import re
 import sys
 from collections import OrderedDict
 
-from multiqc.utils import config, mqc_colour, report, util_functions
+from multiqc.utils import config, mqc_colour, util_functions
 
 logger = logging.getLogger(__name__)
 
@@ -47,10 +47,11 @@ def get_template_mod():
     return _template_mod
 
 
-def plot(data, cats=None, pconfig=None):
+def plot(report, data, cats=None, pconfig=None):
     """Plot a horizontal bar graph. Expects a 2D dict of sample
     data. Also can take info about categories. There are quite a
     few variants of how to use this function, see the docs for details.
+    :param report: MultiQC Report object
     :param data: 2D dict, first keys as sample names, then x:y data pairs
                  Can supply a list of dicts and will have buttons to switch
     :param cats: optional list, dict or OrderedDict with plot categories
@@ -95,19 +96,13 @@ def plot(data, cats=None, pconfig=None):
         data = [data]
 
     # Make list of cats from different inputs
-    if cats is None:
-        cats = list()
-    elif type(cats) is not list:
+    if not cats:
+        cats = []
+    elif not isinstance(cats, list):
         cats = [cats]
-    else:
-        try:  # Py2
-            if type(cats[0]) is str or type(cats[0]) is unicode:
-                cats = [cats]
-        except NameError:  # Py3
-            if type(cats[0]) is str:
-                cats = [cats]
-        except IndexError:  # Given empty list
-            pass
+    elif isinstance(cats[0], str):
+        cats = [cats]
+
     # Generate default categories if not supplied
     for idx in range(len(data)):
         try:
@@ -129,6 +124,8 @@ def plot(data, cats=None, pconfig=None):
         else:
             for c in cat:
                 if "name" not in cat[c]:
+                    if isinstance(cats[idx][c], str):
+                        print(":(", cats)
                     cats[idx][c]["name"] = c
 
     # Allow user to overwrite a given category config for this plot
@@ -214,10 +211,10 @@ def plot(data, cats=None, pconfig=None):
                     logger.error("############### Error making MatPlotLib figure! Plot not exported.")
                     logger.debug(e, exc_info=True)
             # Return HTML for HighCharts dynamic plot
-            return highcharts_bargraph(plotdata, plotsamples, pconfig)
+            return highcharts_bargraph(report, plotdata, plotsamples, pconfig)
 
 
-def highcharts_bargraph(plotdata, plotsamples=None, pconfig=None):
+def highcharts_bargraph(report, plotdata, plotsamples=None, pconfig=None):
     """
     Build the HTML needed for a HighCharts bar graph. Should be
     called by plot_bargraph, which properly formats input data.
@@ -312,7 +309,7 @@ def highcharts_bargraph(plotdata, plotsamples=None, pconfig=None):
     return html
 
 
-def matplotlib_bargraph(plotdata, plotsamples, pconfig=None):
+def matplotlib_bargraph(report, plotdata, plotsamples, pconfig=None):
     """
     Plot a bargraph with Matplot lib and return a HTML string. Either embeds a base64
     encoded image within HTML or writes the plot and links to it. Should be called by

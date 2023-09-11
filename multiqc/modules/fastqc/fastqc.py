@@ -39,6 +39,7 @@ class MultiqcModule(BaseMultiqcModule):
             # No publication / DOI // doi=
         )
 
+    def build(self):
         self.fastqc_data = dict()
 
         # Find and parse unzipped FastQC reports

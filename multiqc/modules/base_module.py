@@ -9,49 +9,53 @@ import mimetypes
 import os
 import re
 import textwrap
+from abc import ABC, abstractmethod
 from collections import OrderedDict
+from typing import Dict, List, Optional, Union
 
 import markdown
 
-from multiqc.utils import config, report, util_functions
+from multiqc.plots import bargraph, beeswarm, boxplot, heatmap, linegraph, scatter, table
+from multiqc.utils import config, util_functions
 
 logger = logging.getLogger(__name__)
 
 
-class BaseMultiqcModule(object):
+class BaseMultiqcModule(ABC):
     def __init__(
         self,
-        name="base",
-        anchor="base",
-        target=None,
-        href=None,
-        info=None,
-        comment=None,
-        extra=None,
-        autoformat=True,
-        autoformat_type="markdown",
-        doi=[],
+        name: str = "base",
+        anchor: str = "base",
+        target: Optional[str] = None,
+        href: Optional[str] = None,
+        info: Optional[str] = None,
+        comment: Optional[str] = None,
+        extra: Optional[str] = None,
+        autoformat: bool = True,
+        autoformat_type: str = "markdown",
+        doi: Optional[Union[str, List]] = None,
+        mod_cust_config: Optional[Dict] = None,
     ):
+        mod_cust_config = mod_cust_config or {}
         # Custom options from user config that can overwrite base module values
-        mod_cust_config = getattr(self, "mod_cust_config", {})
         self.name = mod_cust_config.get("name", name)
         self.anchor = mod_cust_config.get("anchor", anchor)
-        target = mod_cust_config.get("target", target)
+        self.target = mod_cust_config.get("target", target)
         self.href = mod_cust_config.get("href", href)
         self.info = mod_cust_config.get("info", info)
         self.comment = mod_cust_config.get("comment", comment)
         self.extra = mod_cust_config.get("extra", extra)
         self.doi = mod_cust_config.get("doi", doi)
+        self.autoformat = mod_cust_config.get("autoformat", autoformat)
+        self.autoformat_type = mod_cust_config.get("autoformat", autoformat_type)
+
+        self.report = None
+        self.sections = list()
+        self.css = dict()
+        self.js = dict()
 
         # Specific module level config to overwrite (e.g. config.bcftools, config.fastqc)
         config.update({anchor: mod_cust_config.get("custom_config", {})})
-
-        # Sanitise anchor ID and check for duplicates
-        self.anchor = report.save_htmlid(self.anchor)
-
-        # See if we have a user comment in the config
-        if self.anchor in config.section_comments:
-            self.comment = config.section_comments[self.anchor]
 
         if self.info is None:
             self.info = ""
@@ -75,25 +79,43 @@ class BaseMultiqcModule(object):
                 "; ".join(doi_links)
             )
 
-        if target is None:
-            target = self.name
+        if self.target is None:
+            self.target = self.name
         if self.href is not None:
-            self.mname = '<a href="{}" target="_blank">{}</a>'.format(self.href, target)
+            self.mname = '<a href="{}" target="_blank">{}</a>'.format(self.href, self.target)
         else:
-            self.mname = target
+            self.mname = self.target
         if self.href or self.info or self.extra or self.doi_link:
             self.intro = "<p>{} {}{}</p>{}".format(self.mname, self.info, self.doi_link, self.extra)
 
         # Format the markdown strings
-        if autoformat:
+        if self.autoformat:
             if self.comment is not None:
                 self.comment = textwrap.dedent(self.comment)
-                if autoformat_type == "markdown":
+                if self.autoformat_type == "markdown":
                     self.comment = markdown.markdown(self.comment)
 
-        self.sections = list()
+    # def add_to_report(self, report: Report):
+    #     self.report = report
+    #
+    #     # Sanitise anchor ID and check for duplicates
+    #     self.anchor = self.report.save_htmlid(self.anchor)
+    #
+    #     # See if we have a user comment in the config
+    #     if self.anchor in config.section_comments:
+    #         self.comment = config.section_comments[self.anchor]
+    #
+    #     self.build()
 
-    def find_log_files(self, sp_key, filecontents=True, filehandles=False):
+    @abstractmethod
+    def build(self):
+        """
+        Abstract method to implement in subclasses. This is where the module
+        should do its work and add content to the report.
+        """
+        pass
+
+    def find_log_files(self, sp_key: str, filecontents=True, filehandles=False):
         """
         Return matches log files of interest.
         :param sp_key: Search pattern key specified in config
@@ -115,13 +137,13 @@ class BaseMultiqcModule(object):
 
         # Old, depreciated syntax support. Likely to be removed in a future version.
         if isinstance(sp_key, dict):
-            report.files[self.name] = list()
-            for sf in report.searchfiles:
-                if report.search_file(sp_key, {"fn": sf[0], "root": sf[1]}, module_key=None):
-                    report.files[self.name].append({"fn": sf[0], "root": sf[1]})
+            self.report.files[self.name] = list()
+            for sf in self.report.searchfiles:
+                if self.report.search_file(sp_key, {"fn": sf[0], "root": sf[1]}, module_key=None):
+                    self.report.files[self.name].append({"fn": sf[0], "root": sf[1]})
             sp_key = self.name
             logwarn = "Depreciation Warning: {} - Please use new style for find_log_files()".format(self.name)
-            if len(report.files[self.name]) > 0:
+            if len(self.report.files[self.name]) > 0:
                 logger.warning(logwarn)
             else:
                 logger.debug(logwarn)
@@ -129,18 +151,18 @@ class BaseMultiqcModule(object):
             logger.warning("Did not understand find_log_files() search key")
             return
 
-        for f in report.files[sp_key]:
+        for f in self.report.files[sp_key]:
             # Make a note of the filename so that we can report it if something crashes
-            report.last_found_file = os.path.join(f["root"], f["fn"])
+            self.report.last_found_file = os.path.join(f["root"], f["fn"])
 
             # Filter out files based on exclusion patterns
             if path_filters_exclude and len(path_filters_exclude) > 0:
                 # Try both the given path and also the path prefixed with the analyis dirs
                 exlusion_hits = itertools.chain(
-                    (fnmatch.fnmatch(report.last_found_file, pfe) for pfe in path_filters_exclude),
+                    (fnmatch.fnmatch(self.report.last_found_file, pfe) for pfe in path_filters_exclude),
                     *(
                         (
-                            fnmatch.fnmatch(report.last_found_file, os.path.join(analysis_dir, pfe))
+                            fnmatch.fnmatch(self.report.last_found_file, os.path.join(analysis_dir, pfe))
                             for pfe in path_filters_exclude
                         )
                         for analysis_dir in config.analysis_dir
@@ -148,7 +170,7 @@ class BaseMultiqcModule(object):
                 )
                 if any(exlusion_hits):
                     logger.debug(
-                        f"{sp_key} - Skipping '{report.last_found_file}' as it matched the path_filters_exclude for '{self.name}'"
+                        f"{sp_key} - Skipping '{self.report.last_found_file}' as it matched the path_filters_exclude for '{self.name}'"
                     )
                     continue
 
@@ -156,20 +178,23 @@ class BaseMultiqcModule(object):
             if path_filters and len(path_filters) > 0:
                 # Try both the given path and also the path prefixed with the analyis dirs
                 inclusion_hits = itertools.chain(
-                    (fnmatch.fnmatch(report.last_found_file, pf) for pf in path_filters),
+                    (fnmatch.fnmatch(self.report.last_found_file, pf) for pf in path_filters),
                     *(
-                        (fnmatch.fnmatch(report.last_found_file, os.path.join(analysis_dir, pf)) for pf in path_filters)
+                        (
+                            fnmatch.fnmatch(self.report.last_found_file, os.path.join(analysis_dir, pf))
+                            for pf in path_filters
+                        )
                         for analysis_dir in config.analysis_dir
                     ),
                 )
                 if not any(inclusion_hits):
                     logger.debug(
-                        f"{sp_key} - Skipping '{report.last_found_file}' as it didn't match the path_filters for '{self.name}'"
+                        f"{sp_key} - Skipping '{self.report.last_found_file}' as it didn't match the path_filters for '{self.name}'"
                     )
                     continue
                 else:
                     logger.debug(
-                        f"{sp_key} - Selecting '{report.last_found_file}' as it matched the path_filters for '{self.name}'"
+                        f"{sp_key} - Selecting '{self.report.last_found_file}' as it matched the path_filters for '{self.name}'"
                     )
 
             # Make a sample name from the filename
@@ -228,7 +253,7 @@ class BaseMultiqcModule(object):
             anchor = "{}_{}".format(mod_cust_config["anchor"], anchor)
 
         # Sanitise anchor ID and check for duplicates
-        anchor = report.save_htmlid(anchor)
+        anchor = self.report.save_htmlid(anchor)
 
         # Skip if user has a config to remove this module section
         if anchor in config.remove_sections:
@@ -465,8 +490,8 @@ class BaseMultiqcModule(object):
                 headers[k]["description"] = headers[k].get("title", k)
 
         # Append to report.general_stats for later assembly into table
-        report.general_stats_data.append(data)
-        report.general_stats_headers.append(headers)
+        self.report.general_stats_data.append(data)
+        self.report.general_stats_headers.append(headers)
 
     def add_data_source(self, f=None, s_name=None, source=None, module=None, section=None):
         try:
@@ -478,7 +503,7 @@ class BaseMultiqcModule(object):
                 s_name = f["s_name"]
             if source is None:
                 source = os.path.abspath(os.path.join(f["root"], f["fn"]))
-            report.data_sources[module][section][s_name] = source
+            self.report.data_sources[module][section][s_name] = source
         except AttributeError:
             logger.warning("Tried to add data source for {}, but was missing fields data".format(self.name))
 
@@ -494,12 +519,12 @@ class BaseMultiqcModule(object):
         # Generate a unique filename if the file already exists (running module multiple times)
         i = 1
         base_fn = fn
-        while fn in report.saved_raw_data:
+        while fn in self.report.saved_raw_data:
             fn = "{}_{}".format(base_fn, i)
             i += 1
 
         # Save the file
-        report.saved_raw_data[fn] = data
+        self.report.saved_raw_data[fn] = data
         util_functions.write_data_file(data, fn, sort_cols, data_format)
 
     ##################################################
@@ -519,3 +544,24 @@ class BaseMultiqcModule(object):
         if pconfig is None:
             pconfig = {}
         return linegraph.plot(data, pconfig)
+
+    def bargraph(self, data, cats=None, pconfig=None):
+        return bargraph.plot(self.report, data, cats, pconfig)
+
+    def linegraph(self, data, pconfig=None):
+        return linegraph.plot(self.report, data, pconfig)
+
+    def scatter(self, data, pconfig=None):
+        return scatter.plot(self.report, data, pconfig)
+
+    def beeswarm(self, data, pconfig=None):
+        return beeswarm.plot(self.report, data, pconfig)
+
+    def boxplot(self, data, pconfig=None):
+        return boxplot.plot(self.report, data, pconfig)
+
+    def heatmap(self, data, pconfig=None):
+        return heatmap.plot(self.report, data, pconfig)
+
+    def table(self, data, headers=None, pconfig=None):
+        return table.plot(self.report, data, headers, pconfig)
