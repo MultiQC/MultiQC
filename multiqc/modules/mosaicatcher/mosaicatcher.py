@@ -46,7 +46,11 @@ class MultiqcModule(BaseMultiqcModule):
 
     def _add_table(self, samples):
         self.add_section(
-            plot=table.plot(data=samples, headers=self._setup_headers()),
+            plot=table.plot(
+                data=samples, 
+                headers=self._setup_headers(),
+                pconfig={"id": "mosaicatcher_table", "namespace": "MosaiCatcher"}
+            ),
         )
 
     def _add_coverage_plot(self, samples):
