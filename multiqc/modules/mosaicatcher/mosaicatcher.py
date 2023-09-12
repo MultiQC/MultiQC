@@ -20,10 +20,6 @@ class MultiqcModule(BaseMultiqcModule):
             doi="10.1038/s41587-019-0366-x",
         )
         log_files = self.find_log_files("mosaicatcher", filehandles=False)
-        if not log_files:
-            log.warning("No log files found for MosaiCatcher module")
-        else:
-            print("Log files found:", log_files)
 
         samples = dict()
         for f in list(log_files):
