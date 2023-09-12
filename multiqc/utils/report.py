@@ -72,23 +72,7 @@ class Report:
 
         # Make a dict of discovered files for each search key
         self.files = dict()
-        self._modules = []
-
-    def add_module(self, mod):
-        """
-        Build the sections implemented in the module.
-        """
-        mod.report = self
-        self._modules.append(mod)
-
-        # Sanitise anchor ID and check for duplicates
-        mod.anchor = self.save_htmlid(mod.anchor)
-
-        # See if we have a user comment in the config
-        if mod.anchor in config.section_comments:
-            mod.comment = config.section_comments[mod.anchor]
-
-        mod.build()
+        self.modules = []
 
     def get_filelist(self, run_module_names):
         """
@@ -461,7 +445,7 @@ class Report:
         """Find all DOIs listed in report sections and write to a file"""
         # Collect DOIs
         dois = {"MultiQC": ["10.1093/bioinformatics/btw354"]}
-        for mod in self.get_modules():
+        for mod in self.modules:
             if mod.doi is not None and mod.doi != "" and mod.doi != []:
                 dois[mod.anchor] = mod.doi
         # Write to a file
@@ -534,7 +518,7 @@ class Report:
         """
         section_id_order = {}
         idx = 10
-        for mod in reversed(self._modules):
+        for mod in reversed(self.modules):
             section_id_order[mod.anchor] = idx
             idx += 10
         for anchor, ss in report_section_order.items():
@@ -548,10 +532,10 @@ class Report:
             if ss.get("before") in section_id_order.keys():
                 section_id_order[anchor] = section_id_order[ss["before"]] - 1
         sorted_ids = sorted(section_id_order, key=section_id_order.get)
-        self._modules = [mod for i in reversed(sorted_ids) for mod in self._modules if mod.anchor == i]
+        self.modules = [mod for i in reversed(sorted_ids) for mod in self.modules if mod.anchor == i]
 
         # Now, sort the report sections within a module
-        for midx, mod in enumerate(self._modules):
+        for midx, mod in enumerate(self.modules):
             section_id_order = {}
             # Get a list of the section anchors
             idx = 10
@@ -577,10 +561,7 @@ class Report:
             section_id_order = {s: o for s, o in section_id_order.items() if o is not False}
             # Sort the module sections
             sorted_ids = sorted(section_id_order, key=section_id_order.get)
-            self._modules[midx].sections = [s for i in sorted_ids for s in mod.sections if s["anchor"] == i]
-
-    def get_modules(self):
-        return self._modules
+            self.modules[midx].sections = [s for i in sorted_ids for s in mod.sections if s["anchor"] == i]
 
 
 def compress_json(data):

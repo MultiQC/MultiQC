@@ -17,6 +17,7 @@ import markdown
 
 from multiqc.plots import bargraph, beeswarm, boxplot, heatmap, linegraph, scatter, table
 from multiqc.utils import config, util_functions
+from multiqc.utils.report import Report
 
 logger = logging.getLogger(__name__)
 
@@ -94,6 +95,16 @@ class BaseMultiqcModule(ABC):
                 self.comment = textwrap.dedent(self.comment)
                 if self.autoformat_type == "markdown":
                     self.comment = markdown.markdown(self.comment)
+
+    def add_to_report(self, report: Report):
+        self.report = report
+        report.modules.append(self)
+        # Sanitise anchor ID and check for duplicates
+        self.anchor = report.save_htmlid(self.anchor)
+        # See if we have a user comment in the config
+        if self.anchor in config.section_comments:
+            self.comment = config.section_comments[self.anchor]
+        self.build()
 
     @abstractmethod
     def build(self):

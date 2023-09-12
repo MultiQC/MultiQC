@@ -648,7 +648,7 @@ def run(
             this_module: str = list(mod_dict.keys())[0]
             mod_cust_config: Dict = list(mod_dict.values())[0] or {}
             mod = config.avail_modules[this_module].load()(mod_cust_config=mod_cust_config)
-            report.add_module(mod)
+            mod.add_to_report(report)
 
             if config.make_report:
                 # Copy over css & js files if requested by the theme
@@ -743,10 +743,10 @@ def run(
     if config.profile_runtime:
         from multiqc.utils import profile_runtime
 
-        report.add_module(profile_runtime.MultiqcModule())
+        report.modules.append(profile_runtime.MultiqcModule())
 
     # Did we find anything?
-    if len(report.get_modules()) == 0:
+    if len(report.modules) == 0:
         logger.warning("No analysis results found. Cleaning up...")
         shutil.rmtree(tmp_dir)
         logger.info("MultiQC complete")
