@@ -27,6 +27,7 @@ class MultiqcModule(BaseMultiqcModule):
             doi="10.1093/bioinformatics/btt656",
         )
 
+    def build(self):
         # Find and load any featureCounts reports
         self.featurecounts_data = dict()
         self.featurecounts_keys = list()

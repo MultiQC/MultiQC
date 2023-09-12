@@ -31,6 +31,7 @@ class MultiqcModule(BaseMultiqcModule):
             doi=["10.1016/j.ymeth.2019.03.026", "10.1186/s13059-014-0572-2", "10.1093/nar/gkt444"],
         )
 
+    def build(self):
         # Set up vars
         self.rh_data = dict()
 

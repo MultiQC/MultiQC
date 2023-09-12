@@ -53,7 +53,8 @@ class MultiqcModule(DragenBaseMetrics, DragenReadMetrics, DragenFastqcGcMetrics,
         }
         self.intro += '<script type="application/json" class="fastqc_passfails">["dragen_fastqc", {"per_base_sequence_content": {"TEST": "pass"}}]</script>'
 
-        data_by_sample = {}
+    def build(self):
+        self.dragen_fastqc_data = {}
         for f in self.find_log_files("dragen_fastqc"):
             s_name, data_by_mate = parse_fastqc_metrics_file(f)
 
@@ -63,13 +64,13 @@ class MultiqcModule(DragenBaseMetrics, DragenReadMetrics, DragenFastqcGcMetrics,
             s_name = new_s_name
             del new_s_name
 
-            if s_name in data_by_sample:
+            if s_name in self.dragen_fastqc_data:
                 log.debug("Duplicate sample name found! Overwriting: {}".format(f["s_name"]))
             self.add_data_source(f, section="stats")
-            data_by_sample.update(data_by_mate)
+            self.dragen_fastqc_data.update(data_by_mate)
 
         # Filter to strip out ignored sample names:
-        self.dragen_fastqc_data = self.ignore_samples(data_by_sample)
+        self.dragen_fastqc_data = self.ignore_samples(self.dragen_fastqc_data)
 
         # TODO: Split this up and write the interesting bits to files
         # Currently is 13760 lines in my test, which is too much.

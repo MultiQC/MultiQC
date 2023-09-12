@@ -26,6 +26,7 @@ class MultiqcModule(BaseMultiqcModule):
             doi=["10.1186/gb-2013-14-4-r36", "10.1093/bioinformatics/btp120"],
         )
 
+    def build(self):
         # Find and load any Tophat reports
         self.tophat_data = dict()
         for f in self.find_log_files("tophat"):

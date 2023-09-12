@@ -35,6 +35,7 @@ class MultiqcModule(BaseMultiqcModule):
             # No publication / DOI // doi=
         )
 
+    def build(self):
         self.happy_raw_sample_names = set()
         self.happy_indel_data = dict()
         self.happy_snp_data = dict()

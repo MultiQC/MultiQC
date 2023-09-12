@@ -29,6 +29,7 @@ class MultiqcModule(BaseMultiqcModule):
             doi="10.1038/nmeth.2375",
         )
 
+    def build(self):
         # Find and load any Preseq reports
         data_is_bases = None
         data = dict()

@@ -26,6 +26,9 @@ class MultiqcModule(BaseMultiqcModule):
             # doi="", No DOI available
         )
 
+    def build(self):
+        self.anglerfish_data = dict()
+
         # Find and load any anglerfish reports
         self.anglerfish_data = dict()
 

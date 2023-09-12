@@ -24,6 +24,7 @@ class MultiqcModule(BaseMultiqcModule, Relatedness2Mixin, TsTvByCountMixin, TsTv
             doi="10.1093/bioinformatics/btr330",
         )
 
+    def build(self):
         n = dict()
         n["relatedness2"] = self.parse_relatedness2()
 

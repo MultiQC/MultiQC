@@ -27,6 +27,7 @@ class MultiqcModule(BaseMultiqcModule):
             doi="10.1016/j.ajhg.2017.01.017",
         )
 
+    def build(self):
         # Find and load any Peddy reports
         self.peddy_data = dict()
         self.peddy_length_counts = dict()

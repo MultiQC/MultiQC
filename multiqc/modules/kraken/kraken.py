@@ -26,6 +26,7 @@ class MultiqcModule(BaseMultiqcModule):
             doi="10.1186/gb-2014-15-3-r46",
         )
 
+    def build(self):
         self.t_ranks = OrderedDict()
         self.t_ranks["S"] = "Species"
         self.t_ranks["G"] = "Genus"

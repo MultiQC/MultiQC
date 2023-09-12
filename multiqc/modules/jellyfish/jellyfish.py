@@ -21,6 +21,7 @@ class MultiqcModule(BaseMultiqcModule):
             doi="10.1093/bioinformatics/btr011",
         )
 
+    def build(self):
         self.jellyfish_data = dict()
         self.jellyfish_max_x = 0
         for f in self.find_log_files("jellyfish", filehandles=True):

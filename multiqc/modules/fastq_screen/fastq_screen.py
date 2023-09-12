@@ -27,6 +27,7 @@ class MultiqcModule(BaseMultiqcModule):
             doi="10.12688/f1000research.15931.2",
         )
 
+    def build(self):
         # Find and load any FastQ Screen reports
         self.fq_screen_data = dict()
         self.num_orgs = 0

@@ -32,6 +32,7 @@ class MultiqcModule(BaseMultiqcModule):
             doi="10.14806/ej.17.1.200",
         )
 
+    def build(self):
         # Find and load any Cutadapt reports
         self.cutadapt_data = dict()
         self.cutadapt_length_counts = {"default": dict()}

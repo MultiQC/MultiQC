@@ -23,7 +23,7 @@ class MultiqcModule(BaseMultiqcModule):
             doi=["10.1101/gr.136184.111", "10.1038/nbt.1508"],
         )
 
-        # Parse logs
+    def build(self):
         self.phantompeakqualtools_data = dict()
         for f in self.find_log_files("phantompeakqualtools/out", filehandles=False):
             self.parse_phantompeakqualtools(f)

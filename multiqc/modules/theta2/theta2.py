@@ -23,6 +23,7 @@ class MultiqcModule(BaseMultiqcModule):
             doi=["10.1093/bioinformatics/btu651", "10.1186/gb-2013-14-7-r80"],
         )
 
+    def build(self):
         # Find and load any THetA2 reports
         self.theta2_data = dict()
         for f in self.find_log_files("theta2", filehandles=True):

@@ -28,8 +28,7 @@ class MultiqcModule(BaseMultiqcModule):
             doi="10.1186/s13059-022-02707-w",
         )
 
-        # data vars ---------------------------------------------------------------------
-
+    def build(self):
         # Find and load any gopeaks reports
         self.gopeaks_data = dict()
         for f in self.find_log_files("gopeaks", filehandles=True):
@@ -59,8 +58,6 @@ class MultiqcModule(BaseMultiqcModule):
 
         # Add sample log info to bargraph
         self.gopeaks_bargraph()
-
-    # parsing functions -------------------------------------------------------------
 
     def parse_gopeaks_log(self, f):
         """

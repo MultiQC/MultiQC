@@ -141,6 +141,7 @@ class MultiqcModule(BaseMultiqcModule):
             doi="10.1371/journal.pcbi.1008839",
         )
 
+    def build(self):
         self.qc3c_data = defaultdict(dict)
         # additional members for conditional plotting of per-genotype junction frequency
         self.do_digest_plot = False

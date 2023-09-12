@@ -25,6 +25,7 @@ class MultiqcModule(BaseMultiqcModule):
             doi="10.1093/gigascience/gix090",
         )
 
+    def build(self):
         # Parse ROC data
         self.roc_plot_data = collections.defaultdict(lambda: collections.defaultdict(dict))
         for f in self.find_log_files("goleft_indexcov/roc", filehandles=True):

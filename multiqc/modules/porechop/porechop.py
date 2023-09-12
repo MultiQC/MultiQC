@@ -23,6 +23,7 @@ class MultiqcModule(BaseMultiqcModule):
         # Find and load reports
         self.porechop_data = dict()
 
+    def build(self):
         # Find all files for porechop
         for f in self.find_log_files("porechop", filehandles=True):
             self.parse_logs(f)

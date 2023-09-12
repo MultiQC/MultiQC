@@ -22,6 +22,7 @@ class MultiqcModule(BaseMultiqcModule):
             doi="10.12688/f1000research.125325.1",
         )
 
+    def build(self):
         # To store the summary data
         self.librarian_data = dict()
 

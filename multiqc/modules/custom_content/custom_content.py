@@ -322,6 +322,9 @@ class MultiqcModule(BaseMultiqcModule):
         if self.info or self.extra:
             self.intro = "<p>{}</p>{}".format(self.info, self.extra)
 
+    def build(self):
+        pass
+
     def update_init(self, c_id, mod):
         """
         This function runs when we have already initialised a module

@@ -23,6 +23,7 @@ class MultiqcModule(BaseMultiqcModule):
             doi=["10.1101/496521", "10.1186/gb-2008-9-9-r137"],
         )
 
+    def build(self):
         # Parse logs
         self.macs_data = dict()
         for f in self.find_log_files("macs2", filehandles=True):

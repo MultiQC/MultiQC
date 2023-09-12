@@ -24,6 +24,7 @@ class MultiqcModule(BaseMultiqcModule):
             doi=["10.1186/s13104-016-1900-2", "10.1186/1756-0500-5-337"],
         )
 
+    def build(self):
         self.__read_type = None
         self.__any_paired = False
         self.__collapsed = None

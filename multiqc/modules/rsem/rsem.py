@@ -28,6 +28,7 @@ class MultiqcModule(BaseMultiqcModule):
             doi="10.1186/1471-2105-12-323",
         )
 
+    def build(self):
         self.rsem_mapped_data = dict()
         self.rsem_multimapping_data = dict()
 

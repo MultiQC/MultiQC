@@ -26,6 +26,7 @@ class MultiqcModule(BaseMultiqcModule):
             doi="10.1038/nature13591",
         )
 
+    def build(self):
         # Find and load any MultiVCFAnalyzer reports
         self.mvcf_data = dict()
 

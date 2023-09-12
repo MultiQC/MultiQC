@@ -26,6 +26,8 @@ class MultiqcModule(BaseMultiqcModule):
 
         # Parse logs
         self.qorts_data = dict()
+
+    def build(self):
         for f in self.find_log_files("qorts", filehandles=True):
             self.parse_qorts(f)
             self.add_data_source(f)

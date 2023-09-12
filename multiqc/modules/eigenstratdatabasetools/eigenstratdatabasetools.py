@@ -6,7 +6,6 @@ import logging
 from collections import OrderedDict
 
 from multiqc.modules.base_module import BaseMultiqcModule
-from multiqc.plots import bargraph, scatter
 
 # Initialise the logger
 log = logging.getLogger(__name__)
@@ -25,6 +24,7 @@ class MultiqcModule(BaseMultiqcModule):
             # No publication / DOI // doi=
         )
 
+    def build(self):
         # Find and load any DeDup reports
         self.snp_cov_data = dict()
 

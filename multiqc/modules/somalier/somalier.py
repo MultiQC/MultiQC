@@ -32,6 +32,7 @@ class MultiqcModule(BaseMultiqcModule):
             doi="10.1186/s13073-020-00761-2",
         )
 
+    def build(self):
         # Find and load any somalier reports
         self.somalier_data = dict()
         self.somalier_background_pcs = dict()

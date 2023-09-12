@@ -27,6 +27,8 @@ class MultiqcModule(BaseMultiqcModule):
 
         # Find and load any STAR reports
         self.star_data = dict()
+
+    def build(self):
         for f in self.find_log_files("star"):
             parsed_data = self.parse_star_report(f["f"])
             if parsed_data is not None:

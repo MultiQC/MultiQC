@@ -27,6 +27,7 @@ class MultiqcModule(BaseMultiqcModule):
             doi="10.1186/gb-2009-10-3-r25",
         )
 
+    def build(self):
         # Find and load any Bowtie reports
         self.bowtie_data = dict()
         for f in self.find_log_files("bowtie1"):

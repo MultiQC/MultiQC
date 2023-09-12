@@ -28,6 +28,7 @@ class MultiqcModule(BaseMultiqcModule):
             doi="10.1186/s12859-019-2849-7",
         )
 
+    def build(self):
         num_reports = 0
 
         self.plot_cols = [

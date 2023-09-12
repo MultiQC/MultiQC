@@ -30,6 +30,7 @@ class MultiqcModule(BaseMultiqcModule):
             doi=["10.1038/nmeth.1923", "10.1038/nmeth.3317", "10.1038/s41587-019-0201-4"],
         )
 
+    def build(self):
         # Find and load any Bowtie 2 reports
         self.bowtie2_data = dict()
         self.num_se = 0

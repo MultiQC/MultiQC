@@ -21,6 +21,7 @@ class MultiqcModule(BaseMultiqcModule):
             # No DOI // doi=
         )
 
+    def build(self):
         # parse list of log files
         self.sickle_data = dict()
         for f in self.find_log_files("sickle"):

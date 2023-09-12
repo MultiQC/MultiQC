@@ -69,6 +69,7 @@ class MultiqcModule(BaseMultiqcModule):
             doi="10.1093/bioinformatics/btr167",
         )
 
+    def build(self):
         # Set up data structures
         self.bismark_data = {"alignment": {}, "dedup": {}, "methextract": {}, "bam2nuc": {}}
         self.bismark_mbias_data = {

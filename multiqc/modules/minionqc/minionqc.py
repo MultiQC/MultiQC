@@ -26,6 +26,7 @@ class MultiqcModule(BaseMultiqcModule):
             doi="10.1093/bioinformatics/bty654",
         )
 
+    def build(self):
         # Find and load any minionqc reports
         self.minionqc_raw_data = dict()  # main dataset in original YAML format
         self.minionqc_data = dict()  # main dataset. Stats from all reads

@@ -24,6 +24,7 @@ class MultiqcModule(BaseMultiqcModule):
             doi="10.1093/bioinformatics/btu558",
         )
 
+    def build(self):
         # Find and load any BioBloom Tools reports
         self.bbt_data = dict()
         self.num_orgs = 0

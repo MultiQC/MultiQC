@@ -28,6 +28,8 @@ class MultiqcModule(BaseMultiqcModule):
         # Find and load any HTSeq Count reports
         self.htseq_data = dict()
         self.htseq_keys = list()
+
+    def build(self):
         for f in self.find_log_files("htseq", filehandles=True):
             parsed_data = self.parse_htseq_report(f)
             if parsed_data is not None:

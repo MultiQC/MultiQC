@@ -21,6 +21,7 @@ class MultiqcModule(BaseMultiqcModule):
             doi="10.12688/f1000research.23297.1",
         )
 
+    def build(self):
         # Parse stats file
         # Everything is hardcoded with linenumbers, needs to be adjusted if output should change.
         # Other versions of GffCompare with different ouptut formats might not work.

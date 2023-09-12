@@ -29,6 +29,7 @@ class MultiqcModule(BaseMultiqcModule):
             doi="10.1186/s13059-015-0831-x",
         )
 
+    def build(self):
         # Find and load any HiC-Pro summary reports
         self.hicpro_data = dict()
         for k in ["mmapstat", "mpairstat", "mergestat", "mRSstat", "assplit"]:

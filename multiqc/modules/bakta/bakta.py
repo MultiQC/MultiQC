@@ -4,9 +4,8 @@
 import logging
 from collections import OrderedDict
 
-from multiqc import config
 from multiqc.modules.base_module import BaseMultiqcModule
-from multiqc.plots import bargraph, table
+from multiqc.plots import bargraph
 
 # Initialise the logger
 log = logging.getLogger(__name__)
@@ -23,6 +22,7 @@ class MultiqcModule(BaseMultiqcModule):
             doi="10.1099/mgen.0.000685",
         )
 
+    def build(self):
         # Parse logs (txt files)
         self.bakta = dict()
         for f in self.find_log_files("bakta"):

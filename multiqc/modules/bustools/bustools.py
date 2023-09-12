@@ -29,6 +29,7 @@ class MultiqcModule(BaseMultiqcModule):
 
         self.prepare_data()
 
+    def build(self):
         log.info("Found {} logs".format(len(self.bustools_data)))
         self.write_data_file(self.bustools_data, "multiqc_macs")
 

@@ -23,6 +23,7 @@ class MultiqcModule(BaseMultiqcModule):
             doi="10.1101/gr.214874.116",
         )
 
+    def build(self):
         # Headers for the supernova Table
         self.headers = OrderedDict()
         self.headers["Asm size"] = {

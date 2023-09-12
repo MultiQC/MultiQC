@@ -25,7 +25,7 @@ class MultiqcModule(BaseMultiqcModule):
             doi="10.1093/bioinformatics/bts611",
         )
 
-        # Parse logs
+    def build(self):
         self.sortmerna = dict()
         for f in self.find_log_files("sortmerna", filehandles=True):
             self.parse_sortmerna(f)

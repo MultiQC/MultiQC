@@ -29,6 +29,7 @@ class MultiqcModule(BaseMultiqcModule, SambambaMarkdupMixin):
             doi="10.1093/bioinformatics/btv098",
         )
 
+    def build(self):
         # Set up class objects to hold parsed data
         self.general_stats_headers = OrderedDict()
         self.general_stats_data = dict()

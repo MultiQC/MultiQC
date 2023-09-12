@@ -26,6 +26,7 @@ class MultiqcModule(BaseMultiqcModule):
             doi="10.1093/bioinformatics/btu548",
         )
 
+    def build(self):
         # Find and load any optitype reports
         self.optitype_data = dict()
 

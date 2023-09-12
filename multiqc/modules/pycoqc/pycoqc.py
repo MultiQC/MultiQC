@@ -23,6 +23,7 @@ class MultiqcModule(BaseMultiqcModule):
             doi="10.21105/joss.01236",
         )
 
+    def build(self):
         self.pycoqc_data = {}
         for f in self.find_log_files("pycoqc"):
             if f["s_name"] in self.pycoqc_data:

@@ -7,6 +7,8 @@ from collections import OrderedDict, defaultdict
 
 from multiqc.modules.base_module import BaseMultiqcModule
 
+from . import QM_BamQC, QM_RNASeq
+
 # Initialise the logger
 log = logging.getLogger(__name__)
 
@@ -28,9 +30,7 @@ class MultiqcModule(BaseMultiqcModule):
             doi=["10.1093/bioinformatics/btv566", "10.1093/bioinformatics/bts503"],
         )
 
-        # Initialise the submodules
-        from . import QM_BamQC, QM_RNASeq
-
+    def build(self):
         # Set up class objects to hold parsed data()
         self.general_stats_headers = OrderedDict()
         self.general_stats_data = defaultdict(lambda: dict())

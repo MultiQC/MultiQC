@@ -23,6 +23,7 @@ class MultiqcModule(BaseMultiqcModule):
             doi="10.1038/s41596-018-0029-2",
         )
 
+    def build(self):
         # Find and load any Sargasso reports
         self.sargasso_data = dict()
         self.sargasso_files = list()

@@ -27,6 +27,8 @@ class MultiqcModule(BaseMultiqcModule):
         )
 
         self.samblaster_data = dict()
+
+    def build(self):
         for f in self.find_log_files("samblaster", filehandles=True):
             self.parse_samblaster(f)
 

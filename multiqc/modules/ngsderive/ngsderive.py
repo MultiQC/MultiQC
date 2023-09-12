@@ -28,6 +28,7 @@ class MultiqcModule(BaseMultiqcModule):
             # Can't find a DOI // doi=
         )
 
+    def build(self):
         self.strandedness = {}
         self.instrument = {}
         self.readlen = {}

@@ -25,6 +25,7 @@ class MultiqcModule(BaseMultiqcModule):
             doi="10.1016/j.ymeth.2014.10.032",
         )
 
+    def build(self):
         # Find and load any methylQA reports
         self.methylqa_data = dict()
         self.methylqa_coverage_counts = dict()

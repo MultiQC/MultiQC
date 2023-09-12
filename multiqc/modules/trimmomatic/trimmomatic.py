@@ -24,6 +24,7 @@ class MultiqcModule(BaseMultiqcModule):
             doi="10.1093/bioinformatics/btu170",
         )
 
+    def build(self):
         # Parse logs
         self.trimmomatic = dict()
         for f in self.find_log_files("trimmomatic", filehandles=True):

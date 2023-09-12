@@ -18,6 +18,7 @@ class MultiqcModule(BaseMultiqcModule):
             # doi="", # No DOI
         )
 
+    def build(self):
         # Find and load reports
         self.filtlong_data = dict()
 

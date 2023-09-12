@@ -24,6 +24,7 @@ class MultiqcModule(BaseMultiqcModule):
             doi="10.5281/zenodo.45385",  # Zenodo won't load this page for me as I write this, but it's the listed DOI.
         )
 
+    def build(self):
         # Find and load any mirtop reports
         self.mirtop_data = dict()
         for f in self.find_log_files("mirtop"):
