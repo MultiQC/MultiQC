@@ -79,6 +79,8 @@ class MultiqcModule(BaseMultiqcModule):
         for k in list(self._samples.values())[0]:
             if k in unwanted_keys:
                 continue
+            if k == "mapped":
+                k = "mapped_reads"
             headers[k] = {"title": k, "hidden": True}
 
         headers["sample"] = {
@@ -93,7 +95,7 @@ class MultiqcModule(BaseMultiqcModule):
             "hidden": False,
             "namespace": "MosaiCatcher",
         }
-        headers["mapped"] = {
+        headers["mapped_reads"] = {
             "title": "Mapped reads",
             "max": 4e6,
             "description": "Total number of reads seen",
