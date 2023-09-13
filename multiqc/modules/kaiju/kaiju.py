@@ -75,6 +75,7 @@ class MultiqcModule(BaseMultiqcModule):
     def parse_kaiju2table_report(self, f):
         """Search a kaiju with a set of regexes"""
         parsed_data = {}
+        taxo_rank = None
 
         for l in f["f"]:
             if l.startswith("file\t"):

@@ -31,13 +31,17 @@
 - **RSeQC**
   - Fix "max() arg is an empty sequence" error ([#1985](https://github.com/ewels/MultiQC/issues/1985))
 - **NanoStat**
-  - Support new format ([#1995](https://github.com/ewels/MultiQC/issues/1995)).
+  - Support new format ([#1997](https://github.com/ewels/MultiQC/pull/1997)).
 - **DRAGEN**
-  - Make DRAGEN module use `fn_clean_exts` instead of hardcoded file names. Fixes working with arbitrary file names ([#1865])
+  - Make DRAGEN module use `fn_clean_exts` instead of hardcoded file names. Fixes working with arbitrary file names ([#1994](https://github.com/ewels/MultiQC/pull/1994))
 - **WhatsHap**
-  - Bugfix: ensure that TSV is only split on tab character. Allows sample names with spaces ([#1981](https://github.com/ewels/MultiQC/pull/1981)]
+  - Bugfix: ensure that TSV is only split on tab character. Allows sample names with spaces ([#1981](https://github.com/ewels/MultiQC/pull/1981))
 - **Samtools**
-  - Stats: fix "Percent Mapped" plot when samtools was run with read filtering ([#1971](https://github.com/ewels/MultiQC/issues/1971))
+  - Stats: fix "Percent Mapped" plot when samtools was run with read filtering ([#1972](https://github.com/ewels/MultiQC/pull/1972))
+- **FastQC**:
+  - fix `UnicodeDecodeError` when parsing `fastqc_data.txt`: try latin-1 or fail gracefully ([#2024](https://github.com/ewels/MultiQC/issues/2024))
+- **Kaiju**:
+  - Fix `UnboundLocalError` on outputs when Kanju was run with the `-e` flag ([#2023](https://github.com/ewels/MultiQC/pull/2023))
 
 ## [MultiQC v1.15](https://github.com/ewels/MultiQC/releases/tag/v1.15) - 2023-08-04
 
@@ -61,6 +65,7 @@ for more information.
 - Table code now tolerates lambda function calls with bad data ([#1739](https://github.com/ewels/MultiQC/issues/1739))
 - Beeswarm plot now saves data to `multiqc_data`, same as tables ([#1861](https://github.com/ewels/MultiQC/issues/1861))
 - Don't print DOI in module if it's set to an empty string.
+- Optimize parsing of 2D data dictionaries in multiqc.utils.utils_functions.write_data_file() ([#1891](https://github.com/ewels/MultiQC/pull/1891))
 - Don't sort table headers alphabetically if we don't have an `OrderedDict` - regular dicts are fine in Py3 ([#1866](https://github.com/ewels/MultiQC/issues/1866))
 - New back-end to preview + deploy the new website when the docs are edited.
 - Fixed a _lot_ of broken links in the documentation from the new website change in structure.
