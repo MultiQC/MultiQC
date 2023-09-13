@@ -35,20 +35,20 @@ class BaseMultiqcModule(ABC):
         autoformat: bool = True,
         autoformat_type: str = "markdown",
         doi: Optional[Union[str, List]] = None,
-        mod_cust_config: Optional[Dict] = None,
+        custom_config: Optional[Dict] = None,
+        report: Optional[Report] = None,
     ):
-        mod_cust_config = mod_cust_config or {}
         # Custom options from user config that can overwrite base module values
-        self.name = mod_cust_config.get("name", name)
-        self.anchor = mod_cust_config.get("anchor", anchor)
-        self.target = mod_cust_config.get("target", target)
-        self.href = mod_cust_config.get("href", href)
-        self.info = mod_cust_config.get("info", info)
-        self.comment = mod_cust_config.get("comment", comment)
-        self.extra = mod_cust_config.get("extra", extra)
-        self.doi = mod_cust_config.get("doi", doi)
-        self.autoformat = mod_cust_config.get("autoformat", autoformat)
-        self.autoformat_type = mod_cust_config.get("autoformat", autoformat_type)
+        self.name = name
+        self.anchor = anchor
+        self.target = target
+        self.href = href
+        self.info = info
+        self.comment = comment
+        self.extra = extra
+        self.doi = doi
+        self.autoformat = autoformat
+        self.autoformat_type = autoformat_type
 
         self.report = None
         self.sections = list()
@@ -56,7 +56,10 @@ class BaseMultiqcModule(ABC):
         self.js = dict()
 
         # Specific module level config to overwrite (e.g. config.bcftools, config.fastqc)
-        config.update({anchor: mod_cust_config.get("custom_config", {})})
+        if custom_config:
+            mod_conf = getattr(config, anchor, {})
+            mod_conf.update(custom_config)
+            setattr(config, anchor, mod_conf)
 
         if self.info is None:
             self.info = ""
@@ -96,15 +99,16 @@ class BaseMultiqcModule(ABC):
                 if self.autoformat_type == "markdown":
                     self.comment = markdown.markdown(self.comment)
 
-    def add_to_report(self, report: Report):
+        if report:
+            self.set_report(report)
+
+    def set_report(self, report: Report):
         self.report = report
-        report.modules.append(self)
         # Sanitise anchor ID and check for duplicates
         self.anchor = report.save_htmlid(self.anchor)
         # See if we have a user comment in the config
         if self.anchor in config.section_comments:
             self.comment = config.section_comments[self.anchor]
-        self.build()
 
     @abstractmethod
     def build(self):

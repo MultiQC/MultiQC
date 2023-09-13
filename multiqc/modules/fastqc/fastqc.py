@@ -21,7 +21,6 @@ from collections import OrderedDict
 from multiqc import config
 from multiqc.modules.base_module import BaseMultiqcModule
 from multiqc.plots import bargraph, heatmap, linegraph
-from multiqc.utils import report
 
 # Initialise the logger
 log = logging.getLogger(__name__)
@@ -543,7 +542,7 @@ class MultiqcModule(BaseMultiqcModule):
         <script type="application/json" class="fastqc_seq_content">{d}</script>
         """.format(
             # Generate unique plot ID, needed in mqc_export_selectplots
-            id=report.save_htmlid("fastqc_per_base_sequence_content_plot"),
+            id=self.report.save_htmlid("fastqc_per_base_sequence_content_plot"),
             d=json.dumps([self.anchor.replace("-", "_"), data]),
         )
 

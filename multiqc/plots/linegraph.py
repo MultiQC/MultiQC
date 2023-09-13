@@ -13,6 +13,7 @@ import sys
 from collections import OrderedDict
 
 from multiqc.utils import config, mqc_colour, util_functions
+from multiqc.utils.report import lint_errors
 
 logger = logging.getLogger(__name__)
 
@@ -81,14 +82,14 @@ def plot(report, data, pconfig=None):
             if k not in pconfig:
                 errmsg = "LINT: {}Linegraph pconfig was missing key '{}'".format(modname, k)
                 logger.error(errmsg)
-                report.lint_errors.append(errmsg)
+                lint_errors.append(errmsg)
         # Check plot title format
         if not re.match(r"^[^:]*\S: \S[^:]*$", pconfig.get("title", "")):
             errmsg = "LINT: {} Linegraph title did not match format 'Module: Plot Name' (found '{}')".format(
                 modname, pconfig.get("title", "")
             )
             logger.error(errmsg)
-            report.lint_errors.append(errmsg)
+            lint_errors.append(errmsg)
 
     # Smooth dataset if requested in config
     if pconfig.get("smooth_points", None) is not None:

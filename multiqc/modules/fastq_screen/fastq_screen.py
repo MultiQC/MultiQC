@@ -8,7 +8,6 @@ from collections import OrderedDict
 from multiqc import config
 from multiqc.modules.base_module import BaseMultiqcModule
 from multiqc.plots import bargraph
-from multiqc.utils import report
 
 # Initialise the logger
 log = logging.getLogger(__name__)
@@ -198,7 +197,7 @@ class MultiqcModule(BaseMultiqcModule):
                     td["linkedTo"] = ":previous"
                 data.append(td)
 
-        plot_id = report.save_htmlid("fq_screen_plot")
+        plot_id = self.report.save_htmlid("fq_screen_plot")
         html = """<div id={plot_id} class="fq_screen_plot hc-plot"></div>
         <script type="application/json" class="fq_screen_dict">{dict}</script>
         """.format(

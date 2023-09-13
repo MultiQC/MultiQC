@@ -30,7 +30,7 @@ from rich.syntax import Syntax
 
 from .plots import table
 from .utils import config, lint_helpers, log, megaqc, plugin_hooks, util_functions
-from .utils.report import Report, compress_json
+from .utils.report import Report, compress_json, lint_errors
 
 # Set up logging
 start_execution_time = time.time()
@@ -540,13 +540,13 @@ def run(
             if m not in mod_keys:
                 errmsg = "LINT: Module '{}' not found in config.module_order".format(m)
                 logger.error(errmsg)
-                report.lint_errors.append(errmsg)
+                lint_errors.append(errmsg)
             else:
                 for mo in config.module_order:
-                    if m != "custom_content" and m in mo.keys() and "module_tag" not in mo[m]:
+                    if m != "custom_content" and mo.get(m) and "module_tag" not in mo[m]:
                         errmsg = "LINT: Module '{}' in config.module_order did not have 'module_tag' config".format(m)
                         logger.error(errmsg)
-                        report.lint_errors.append(errmsg)
+                        lint_errors.append(errmsg)
 
     # Get the available tags to decide which modules to run.
     modules_from_tags: Set[str] = set()
@@ -647,8 +647,14 @@ def run(
         try:
             this_module: str = list(mod_dict.keys())[0]
             mod_cust_config: Dict = list(mod_dict.values())[0] or {}
-            mod = config.avail_modules[this_module].load()(mod_cust_config=mod_cust_config)
-            mod.add_to_report(report)
+            mod_factory = config.avail_modules[this_module].load()
+            if this_module == "custom_content":
+                mods = mod_factory(report)
+                report.modules.extend(mods)
+            else:
+                mod = mod_factory(report, **mod_cust_config)
+                report.modules.append(mod)
+                mod.build()
 
             if config.make_report:
                 # Copy over css & js files if requested by the theme
@@ -1046,8 +1052,8 @@ def run(
                 "See [link=https://multiqc.info/docs/#flat--interactive-plots]docs[/link]."
             )
 
-    if lint and len(report.lint_errors) > 0:
-        logger.error("Found {} linting errors!\n{}".format(len(report.lint_errors), "\n".join(report.lint_errors)))
+    if lint and len(lint_errors) > 0:
+        logger.error("Found {} linting errors!\n{}".format(len(lint_errors), "\n".join(lint_errors)))
         sys_exit_code = 1
 
     logger.info("MultiQC complete")

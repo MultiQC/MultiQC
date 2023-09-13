@@ -15,6 +15,7 @@ import sys
 from collections import OrderedDict
 
 from multiqc.utils import config, mqc_colour, util_functions
+from multiqc.utils.report import lint_errors
 
 logger = logging.getLogger(__name__)
 
@@ -82,14 +83,14 @@ def plot(report, data, cats=None, pconfig=None):
             if k not in pconfig:
                 errmsg = "LINT: {}Bargraph pconfig was missing key '{}'".format(modname, k)
                 logger.error(errmsg)
-                report.lint_errors.append(errmsg)
+                lint_errors.append(errmsg)
         # Check plot title format
         if not re.match(r"^[^:]*\S: \S[^:]*$", pconfig.get("title", "")):
             errmsg = "LINT: {} Bargraph title did not match format 'Module: Plot Name' (found '{}')".format(
                 modname, pconfig.get("title", "")
             )
             logger.error(errmsg)
-            report.lint_errors.append(errmsg)
+            lint_errors.append(errmsg)
 
     # Given one dataset - turn it into a list
     if type(data) is not list:

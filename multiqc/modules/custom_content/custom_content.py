@@ -13,7 +13,6 @@ import yaml
 from multiqc import config
 from multiqc.modules.base_module import BaseMultiqcModule
 from multiqc.plots import bargraph, beeswarm, heatmap, linegraph, scatter, table
-from multiqc.utils import report
 
 # Initialise the logger
 log = logging.getLogger(__name__)
@@ -33,7 +32,7 @@ def yaml_ordered_load(stream):
     return yaml.load(stream, OrderedLoader)
 
 
-def custom_module_classes():
+def custom_module_classes(report):
     """
     MultiQC Custom Content class. This module does a lot of different
     things depending on the input and is as flexible as possible.

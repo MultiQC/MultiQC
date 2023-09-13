@@ -32,6 +32,10 @@ yaml.add_representer(defaultdict, Representer.represent_dict)
 yaml.add_representer(OrderedDict, Representer.represent_dict)
 
 
+global lint_errors
+lint_errors = list()
+
+
 class Report:
     def __init__(
         self,
@@ -45,7 +49,6 @@ class Report:
         self.data_sources = defaultdict(lambda: defaultdict(lambda: defaultdict()))
         self.plot_data = dict()
         self.html_ids = list()
-        self.lint_errors = list()
         self.num_hc_plots = 0
         self.num_mpl_plots = 0
         self.saved_raw_data = dict()
@@ -495,7 +498,7 @@ class Report:
                     modname, html_id, html_id_clean, codeline
                 )
                 logger.error(errmsg)
-                self.lint_errors.append(errmsg)
+                lint_errors.append(errmsg)
 
         # Check for duplicates
         i = 1
@@ -506,7 +509,7 @@ class Report:
             if config.lint and not skiplint:
                 errmsg = "LINT: {}HTML ID was a duplicate ({}) ## {}".format(modname, html_id_clean, codeline)
                 logger.error(errmsg)
-                self.lint_errors.append(errmsg)
+                lint_errors.append(errmsg)
 
         # Remember and return
         self.html_ids.append(html_id_clean)
