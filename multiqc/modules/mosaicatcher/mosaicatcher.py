@@ -49,7 +49,7 @@ class MultiqcModule(BaseMultiqcModule):
             plot=table.plot(
                 data=samples,
                 headers=self._setup_headers(),
-                pconfig={"id": "mosaicatcher_table", "namespace": "MosaiCatcher"},
+                pconfig={"id": "mosaicatcher-table", "namespace": "MosaiCatcher"},
             )
         )
 
