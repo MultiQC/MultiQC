@@ -22,6 +22,8 @@ class MultiqcModule(BaseMultiqcModule):
 
         # Parse logs
         self.seqyclean_data = dict()
+
+    def build(self):
         for f in self.find_log_files("seqyclean"):
             rows = f["f"].splitlines()
             headers = rows[0].split("\t")

@@ -120,6 +120,7 @@ class MultiqcModule(BaseMultiqcModule):
             doi="10.1093/bioinformatics/btx699",
         )
 
+    def build(self):
         self.cfg = read_config()
         genstats_headers = defaultdict(OrderedDict)
         genstats = defaultdict(OrderedDict)  # mean coverage

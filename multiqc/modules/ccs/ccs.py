@@ -23,6 +23,7 @@ class MultiqcModule(BaseMultiqcModule):
             # Can't find a DOI // doi=
         )
 
+    def build(self):
         # To store the mod data
         self.ccs_data = dict()
         self.parse_v4_log_files()

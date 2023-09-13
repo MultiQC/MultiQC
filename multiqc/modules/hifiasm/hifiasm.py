@@ -20,6 +20,7 @@ class MultiqcModule(BaseMultiqcModule):
             doi="10.1038/s41592-020-01056-5",
         )
 
+    def build(self):
         # To store the mod data
         self.hifiasm_data = dict()
         self.parse_hifiasm_log_files()

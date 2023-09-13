@@ -8,7 +8,7 @@ import logging
 import os
 import random
 
-from multiqc.utils import config, report
+from multiqc.utils import config
 
 logger = logging.getLogger(__name__)
 
@@ -41,7 +41,7 @@ def get_template_mod():
     return _template_mod
 
 
-def plot(data, pconfig=None):
+def plot(report, data, pconfig=None):
     """Plot a box-and-whisker plot
     :param data: 2D dict, first keys as read positions, then as quantile:QV pairs
     :param pconfig: optional dict with config key:value pairs. See CONTRIBUTING.md
@@ -51,7 +51,7 @@ def plot(data, pconfig=None):
         pconfig = {}
 
     # Make a plot
-    return matplotlib_boxplot(data, pconfig)
+    return matplotlib_boxplot(report, data, pconfig)
 
 
 def mock_data(data):
@@ -75,7 +75,7 @@ def mock_dataset(data):
     return res
 
 
-def matplotlib_boxplot(plotdata, pconfig=None):
+def matplotlib_boxplot(report, plotdata, pconfig=None):
     """
     Plot a line graph with Matplot lib and return a HTML string. Either embeds a base64
     encoded image within HTML or writes the plot and links to it. Should be called by

@@ -28,6 +28,7 @@ class MultiqcModule(BaseMultiqcModule):
             doi="10.1101/gr.209601.116",
         )
 
+    def build(self):
         # Find and load any umitools log files
         self.umitools_data = dict()
         for f in self.find_log_files("umitools"):

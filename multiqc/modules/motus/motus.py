@@ -23,9 +23,9 @@ class MultiqcModule(BaseMultiqcModule):
             doi="10.1038/s41467-019-08844-4",
         )
 
-        ## Define the main motus multiqc data object
         self.motus_data = dict()
 
+    def build(self):
         for f in self.find_log_files("motus", filehandles=True):
             self.parse_logs(f)
 

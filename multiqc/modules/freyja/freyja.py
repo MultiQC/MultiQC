@@ -24,6 +24,7 @@ class MultiqcModule(BaseMultiqcModule):
             doi="10.1038/s41586-022-05049-6",
         )
 
+    def build(self):
         # To store the summary data
         self.freyja_data = dict()
 

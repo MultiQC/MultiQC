@@ -24,6 +24,7 @@ class MultiqcModule(BaseMultiqcModule):
             doi="10.1101/050559 ",
         )
 
+    def build(self):
         # Find and load Malt reports
         self.malt_data = dict()
 

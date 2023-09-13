@@ -5,7 +5,6 @@ from collections import OrderedDict
 
 import yaml
 
-from multiqc import config
 from multiqc.modules.base_module import BaseMultiqcModule
 from multiqc.plots import bargraph
 
@@ -24,6 +23,7 @@ class MultiqcModule(BaseMultiqcModule):
             doi="10.12688/f1000research.9037.2",
         )
 
+    def build(self):
         self.snpsplit_data = dict()
 
         # Parse log files generated with newer versions of SNPsplit (YAML)

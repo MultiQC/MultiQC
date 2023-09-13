@@ -22,6 +22,7 @@ class MultiqcModule(BaseMultiqcModule):
             # Can't find a DOI // doi=
         )
 
+    def build(self):
         # Parse stats file
         self.pychopper_data = {}
         for f in self.find_log_files("pychopper"):

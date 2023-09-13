@@ -1,10 +1,7 @@
 import logging
 
-from multiqc import config
 from multiqc.modules.base_module import BaseMultiqcModule
-from multiqc.modules.dragen.utils import Metric
-from multiqc.plots import bargraph, boxplot, heatmap, linegraph, table
-from multiqc.utils import report
+from multiqc.plots import linegraph
 
 from .util import average_pos_from_size
 

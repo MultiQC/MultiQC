@@ -25,6 +25,7 @@ class MultiqcModule(BaseMultiqcModule):
             doi="10.12688/f1000research.7334.1",
         )
 
+    def build(self):
         # Find and load any HiCUP summary reports
         self.hicup_data = dict()
         for f in self.find_log_files("hicup"):

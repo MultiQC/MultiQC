@@ -25,6 +25,7 @@ class MultiqcModule(BaseMultiqcModule):
             doi="10.1186/1471-2105-15-182",
         )
 
+    def build(self):
         self.skewer_data = dict()
         self.skewer_readlen_dist = dict()
 

@@ -6,21 +6,22 @@ import logging
 import re
 from collections import OrderedDict, defaultdict
 
-from multiqc.utils import config, report
+from multiqc.utils import config
 
 logger = logging.getLogger(__name__)
 
 
-class datatable(object):
+class DataTable:
     """Data table class. Prepares and holds data and configuration
     for either a table or a beeswarm plot."""
 
-    def __init__(self, data, headers=None, pconfig=None):
+    def __init__(self, report, data, headers=None, pconfig=None):
         """Prepare data for use in a table or plot"""
         if headers is None:
             headers = []
         if pconfig is None:
             pconfig = {}
+        self.report = report
 
         # Allow user to overwrite any given config for this plot
         if "id" in pconfig and pconfig["id"] and pconfig["id"] in config.custom_plot_config:
@@ -44,7 +45,6 @@ class datatable(object):
             "247,129,191",
             "153,153,153",
         ]
-        shared_keys = defaultdict(lambda: dict())
 
         # Go through each table section
         for idx, d in enumerate(data):

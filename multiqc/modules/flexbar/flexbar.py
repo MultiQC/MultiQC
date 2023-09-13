@@ -23,6 +23,7 @@ class MultiqcModule(BaseMultiqcModule):
             doi="10.1093/bioinformatics/btx330",
         )
 
+    def build(self):
         # Parse logs
         self.flexbar_data = dict()
         for f in self.find_log_files("flexbar", filehandles=True):

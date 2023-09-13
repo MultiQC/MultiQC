@@ -27,6 +27,7 @@ class MultiqcModule(BaseMultiqcModule):
             doi="10.21105/joss.03773",
         )
 
+    def build(self):
         # Parse logs
         self.nextclade_data = dict()
         for f in self.find_log_files("nextclade", filehandles=True):

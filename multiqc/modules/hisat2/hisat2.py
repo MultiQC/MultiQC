@@ -27,6 +27,7 @@ class MultiqcModule(BaseMultiqcModule):
             doi=["10.1038/nmeth.3317", "10.1038/s41587-019-0201-4"],
         )
 
+    def build(self):
         # Find and load any HISAT2 reports
         self.hisat2_data = dict()
         for f in self.find_log_files("hisat2", filehandles=True):

@@ -30,6 +30,7 @@ class MultiqcModule(BaseMultiqcModule, FindPeaksReportMixin, TagDirReportMixin):
             doi="10.1016/j.molcel.2010.05.004",
         )
 
+    def build(self):
         # Set up class objects to hold parsed data
         self.general_stats_headers = OrderedDict()
         self.general_stats_data = dict()

@@ -3,7 +3,6 @@
 import logging
 from collections import OrderedDict
 
-from multiqc import config
 from multiqc.modules.base_module import BaseMultiqcModule
 from multiqc.plots import bargraph
 
@@ -27,6 +26,7 @@ class MultiqcModule(BaseMultiqcModule):
             # Can't find a DOI // doi=
         )
 
+    def build(self):
         self.snippy_data = {}
         self.snippy_core_data = {}
         self.snippy_col = [

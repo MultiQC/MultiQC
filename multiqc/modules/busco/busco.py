@@ -25,6 +25,7 @@ class MultiqcModule(BaseMultiqcModule):
             doi="10.1093/bioinformatics/btv351",
         )
 
+    def build(self):
         # Keys and strings, used for parsing and for plot
         self.busco_keys = {
             "complete": "Complete BUSCOs",

@@ -23,6 +23,7 @@ class MultiqcModule(BaseMultiqcModule):
             doi=["10.1093/bioinformatics/btab135", "10.1093/bioinformatics/bts196"],
         )
 
+    def build(self):
         # Parse metrics from RNA-SeQC v1
         self.rna_seqc_metrics = dict()
         for f in self.find_log_files("rna_seqc/metrics_v1", filehandles=True):

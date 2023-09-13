@@ -26,6 +26,7 @@ class MultiqcModule(BaseMultiqcModule):
             doi="10.1186/s13059-016-0918-z",
         )
 
+    def build(self):
         # Find and load any ClipAndMerge reports
         self.clipandmerge_data = dict()
         for f in self.find_log_files("clipandmerge"):

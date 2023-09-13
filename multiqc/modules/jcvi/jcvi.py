@@ -23,6 +23,7 @@ class MultiqcModule(BaseMultiqcModule):
             doi="10.5281/zenodo.31631",
         )
 
+    def build(self):
         # Parse logs
         self.jcvi = dict()
         for f in self.find_log_files("jcvi", filehandles=True):

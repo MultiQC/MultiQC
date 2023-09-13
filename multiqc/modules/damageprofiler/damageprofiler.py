@@ -27,8 +27,7 @@ class MultiqcModule(BaseMultiqcModule):
             doi="10.1093/bioinformatics/btab190",
         )
 
-        # Init empty dictionaries
-
+    def build(self):
         self.threepGtoAfreq_data = dict()
         self.fivepCtoTfreq_data = dict()
         self.lgdist_fw_data = dict()

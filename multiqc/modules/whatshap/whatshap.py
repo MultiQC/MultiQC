@@ -4,7 +4,6 @@ import logging
 from collections import OrderedDict, defaultdict
 
 from multiqc.modules.base_module import BaseMultiqcModule
-from multiqc.plots import bargraph, table
 
 # Initialise the logger
 log = logging.getLogger(__name__)
@@ -15,9 +14,9 @@ class MultiqcModule(BaseMultiqcModule):
     WhatsHap module class, parses WhatsHap output.
     """
 
-    def __init__(self):
+    def __init__(self, *args, **kwargs):
         # Initialise the parent object
-        super(MultiqcModule, self).__init__(
+        super().__init__(
             name="WhatsHap",
             anchor="whatshap",
             href="https://whatshap.readthedocs.io/",
@@ -27,8 +26,11 @@ class MultiqcModule(BaseMultiqcModule):
                     short reads.
                     """,
             doi="10.1101/085050",
+            *args,
+            **kwargs,
         )
 
+    def build(self):
         # Store the whatshap stats results
         self.whatshap_stats = dict()
 
@@ -249,7 +251,7 @@ class MultiqcModule(BaseMultiqcModule):
                     This plot show the total number of phased base pairs for
                     each sample.
                 """,
-            plot=bargraph.plot(pdata, keys, configuration),
+            plot=self.bargraph(pdata, keys, configuration),
         )
 
     def add_stats_table(self):
@@ -436,4 +438,4 @@ class MultiqcModule(BaseMultiqcModule):
 
             general[sample] = stats
 
-        self.add_section(name="WhatsHap statistics", anchor="whatshap-table", plot=table.plot(general, stats_headers))
+        self.add_section(name="WhatsHap statistics", anchor="whatshap-table", plot=self.table(general, stats_headers))

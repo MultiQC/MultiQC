@@ -29,6 +29,7 @@ class MultiqcModule(BaseMultiqcModule):
             # Can't find a DOI // doi=
         )
 
+    def build(self):
         self.pbmarkdup = dict()
 
         for logfile in self.find_log_files("pbmarkdup", filehandles=True):

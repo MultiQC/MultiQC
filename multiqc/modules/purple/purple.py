@@ -29,6 +29,7 @@ class MultiqcModule(BaseMultiqcModule):
             doi="10.1038/s41586-019-1689-y",
         )
 
+    def build(self):
         data_by_sample = defaultdict(dict)
 
         for f in self.find_log_files("purple/qc"):

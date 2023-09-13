@@ -30,6 +30,7 @@ class MultiqcModule(BaseMultiqcModule, StatsReportMixin):
             doi="10.1093/gigascience/giab008",
         )
 
+    def build(self):
         # Set up class objects to hold parsed data
         self.general_stats_headers = OrderedDict()
         self.general_stats_data = dict()

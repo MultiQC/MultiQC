@@ -26,6 +26,7 @@ class MultiqcModule(BaseMultiqcModule):
             doi="10.1101/383513",
         )
 
+    def build(self):
         # Find and load iVar trim results
         self.ivar_data = dict()
         self.ivar_primers = dict()

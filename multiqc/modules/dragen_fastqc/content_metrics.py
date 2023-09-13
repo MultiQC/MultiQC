@@ -4,11 +4,8 @@ import json
 import logging
 from collections import defaultdict
 
-from multiqc import config
 from multiqc.modules.base_module import BaseMultiqcModule
-from multiqc.modules.dragen.utils import Metric
-from multiqc.plots import bargraph, boxplot, heatmap, linegraph, table
-from multiqc.utils import report
+from multiqc.plots import linegraph
 
 from .util import average_from_range, average_pos_from_metric
 
@@ -166,7 +163,7 @@ class DragenContentMetrics(BaseMultiqcModule):
         <script type="application/json" class="fastqc_seq_content">{d}</script>
         """.format(
             # Generate unique plot ID, needed in mqc_export_selectplots
-            id=report.save_htmlid("dragen_fastqc_per_base_sequence_content_plot"),
+            id=self.report.save_htmlid("dragen_fastqc_per_base_sequence_content_plot"),
             d=json.dumps([self.anchor.replace("-", "_"), data]),
         )
 

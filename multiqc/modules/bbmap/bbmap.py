@@ -3,7 +3,6 @@ from collections import OrderedDict
 
 from multiqc.modules.base_module import BaseMultiqcModule
 from multiqc.plots import table
-from multiqc.utils import config
 
 from .bbmap_filetypes import file_types, section_order
 
@@ -29,6 +28,7 @@ class MultiqcModule(BaseMultiqcModule):
             # doi="10.1371/journal.pone.0185056",
         )
 
+    def build(self):
         # Init data dict
         self.mod_data = {key: {} for key in file_types}
 

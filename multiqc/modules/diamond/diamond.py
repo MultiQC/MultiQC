@@ -4,7 +4,6 @@ import logging
 from collections import OrderedDict
 
 from multiqc.modules.base_module import BaseMultiqcModule
-from multiqc.plots import bargraph
 
 # Initialise the logger
 log = logging.getLogger(__name__)
@@ -21,6 +20,7 @@ class MultiqcModule(BaseMultiqcModule):
             doi="10.1038/s41592-021-01101-x",
         )
 
+    def build(self):
         # Find and load any DIAMOND reports
         self.diamond_data = dict()
 

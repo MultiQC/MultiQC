@@ -28,6 +28,7 @@ class MultiqcModule(BaseMultiqcModule):
             doi="10.1093/ve/veab064",
         )
 
+    def build(self):
         # Find and parse the sample files
         self.pangolin_data = dict()
         self.lineage_colours = dict()

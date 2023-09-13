@@ -12,7 +12,8 @@ import re
 import sys
 from collections import OrderedDict
 
-from multiqc.utils import config, mqc_colour, report, util_functions
+from multiqc.utils import config, mqc_colour, util_functions
+from multiqc.utils.report import lint_errors
 
 logger = logging.getLogger(__name__)
 
@@ -45,8 +46,9 @@ def get_template_mod():
     return _template_mod
 
 
-def plot(data, pconfig=None):
+def plot(report, data, pconfig=None):
     """Plot a line graph with X,Y data.
+    :param report: MultiQC Report object
     :param data: 2D dict, first keys as sample names, then x:y data pairs
     :param pconfig: optional dict with config key:value pairs. See CONTRIBUTING.md
     :return: HTML and JS, ready to be inserted into the page
@@ -80,14 +82,14 @@ def plot(data, pconfig=None):
             if k not in pconfig:
                 errmsg = "LINT: {}Linegraph pconfig was missing key '{}'".format(modname, k)
                 logger.error(errmsg)
-                report.lint_errors.append(errmsg)
+                lint_errors.append(errmsg)
         # Check plot title format
         if not re.match(r"^[^:]*\S: \S[^:]*$", pconfig.get("title", "")):
             errmsg = "LINT: {} Linegraph title did not match format 'Module: Plot Name' (found '{}')".format(
                 modname, pconfig.get("title", "")
             )
             logger.error(errmsg)
-            report.lint_errors.append(errmsg)
+            lint_errors.append(errmsg)
 
     # Smooth dataset if requested in config
     if pconfig.get("smooth_points", None) is not None:
@@ -243,7 +245,7 @@ def plot(data, pconfig=None):
             return highcharts_linegraph(plotdata, pconfig)
 
 
-def highcharts_linegraph(plotdata, pconfig=None):
+def highcharts_linegraph(report, plotdata, pconfig=None):
     """
     Build the HTML needed for a HighCharts line graph. Should be
     called by linegraph.plot(), which properly formats input data.
@@ -321,7 +323,7 @@ def highcharts_linegraph(plotdata, pconfig=None):
     return html
 
 
-def matplotlib_linegraph(plotdata, pconfig=None):
+def matplotlib_linegraph(report, plotdata, pconfig=None):
     """
     Plot a line graph with Matplot lib and return a HTML string. Either embeds a base64
     encoded image within HTML or writes the plot and links to it. Should be called by

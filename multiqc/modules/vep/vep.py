@@ -28,6 +28,7 @@ class MultiqcModule(BaseMultiqcModule):
             doi="10.1186/s13059-016-0974-4",
         )
 
+    def build(self):
         self.vep_data = dict()
 
         # Scan for VEP stats in plain html format

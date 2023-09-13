@@ -23,6 +23,7 @@ class MultiqcModule(BaseMultiqcModule):
             # Can't find a DOI // doi=
         )
 
+    def build(self):
         # Gather data from all json files
         self.bcl2fastq_data = dict()
         for f in self.find_log_files("bcl2fastq"):

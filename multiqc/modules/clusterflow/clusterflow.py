@@ -30,6 +30,7 @@ class MultiqcModule(BaseMultiqcModule):
             doi="10.12688/f1000research.10335.2",
         )
 
+    def build(self):
         # Find and load any Cluster Flow reports
         self.clusterflow_commands = dict()
         self.clusterflow_runfiles = dict()

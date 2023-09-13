@@ -27,6 +27,7 @@ class MultiqcModule(BaseMultiqcModule):
             doi="10.1038/nbt.3519",
         )
 
+    def build(self):
         # Find and load any Kallisto reports
         self.kallisto_data = dict()
         for f in self.find_log_files("kallisto", filehandles=True):

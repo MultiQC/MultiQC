@@ -7,7 +7,7 @@ from collections import OrderedDict
 
 from multiqc import config
 from multiqc.modules.base_module import BaseMultiqcModule
-from multiqc.plots import bargraph, beeswarm, linegraph, table
+from multiqc.plots import bargraph, beeswarm, linegraph
 
 # Initialize the logger
 log = logging.getLogger(__name__)
@@ -33,6 +33,7 @@ class MultiqcModule(BaseMultiqcModule):
             # Can't find a DOI // doi=
         )
 
+    def build(self):
         # Set up data structures
         self.mdata = {
             # General statistics

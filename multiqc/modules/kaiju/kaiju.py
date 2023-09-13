@@ -22,6 +22,7 @@ class MultiqcModule(BaseMultiqcModule):
             doi="10.1038/ncomms11257",
         )
 
+    def build(self):
         # Set up data structures
         self.kaiju_data = {}
         self.taxonomic_ranks = ["species", "genus", "family", "order", "class", "phylum"]

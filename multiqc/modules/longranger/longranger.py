@@ -236,6 +236,7 @@ class MultiqcModule(BaseMultiqcModule):
             "scale": False,
         }
 
+    def build(self):
         ### Parse the data
         self.longranger_data = dict()
         self.paths_dict = dict()

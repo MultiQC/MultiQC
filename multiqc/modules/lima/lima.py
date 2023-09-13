@@ -23,6 +23,7 @@ class MultiqcModule(BaseMultiqcModule):
             # No publication / DOI // doi=
         )
 
+    def build(self):
         # To store the summary data
         self.lima_summary = dict()
         self.lima_counts = dict()

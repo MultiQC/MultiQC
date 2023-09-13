@@ -20,6 +20,7 @@ class MultiqcModule(BaseMultiqcModule):
             doi="10.12688/f1000research.10082.1",
         )
 
+    def build(self):
         self.data = {}
 
         for f in self.find_log_files("disambiguate"):

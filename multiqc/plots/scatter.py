@@ -5,14 +5,14 @@
 import logging
 import random
 
-from multiqc.utils import config, report
+from multiqc.utils import config
 
 logger = logging.getLogger(__name__)
 
 letters = "abcdefghijklmnopqrstuvwxyz"
 
 
-def plot(data, pconfig=None):
+def plot(report, data, pconfig=None):
     """Plot a scatter plot with X,Y data.
     :param data: 2D dict, first keys as sample names, then x:y data pairs
     :param pconfig: optional dict with config key:value pairs. See CONTRIBUTING.md
@@ -88,7 +88,7 @@ def plot(data, pconfig=None):
     return highcharts_scatter_plot(plotdata, pconfig)
 
 
-def highcharts_scatter_plot(plotdata, pconfig=None):
+def highcharts_scatter_plot(report, plotdata, pconfig=None):
     """
     Build the HTML needed for a HighCharts scatter plot. Should be
     called by scatter.plot(), which properly formats input data.

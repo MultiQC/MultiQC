@@ -37,6 +37,8 @@ class MultiqcModule(BaseMultiqcModule, StatsReportMixin, FlagstatReportMixin, Id
         # Set up class objects to hold parsed data
         self.general_stats_headers = OrderedDict()
         self.general_stats_data = dict()
+
+    def build(self):
         n = dict()
 
         # Call submodule functions

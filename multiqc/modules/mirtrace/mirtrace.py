@@ -25,6 +25,7 @@ class MultiqcModule(BaseMultiqcModule):
             doi="10.1186/s13059-018-1588-9",
         )
 
+    def build(self):
         # Find and load miRTrace summary statistics table
         self.summary_data = dict()
         for f in self.find_log_files("mirtrace/summary"):

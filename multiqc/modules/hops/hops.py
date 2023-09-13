@@ -22,6 +22,7 @@ class MultiqcModule(BaseMultiqcModule):
             doi="10.1186/s13059-019-1903-0",
         )
 
+    def build(self):
         # Find and load any HOPS post-processing JSONs
         self.hops_data = dict()
 

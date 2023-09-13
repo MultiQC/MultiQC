@@ -29,6 +29,7 @@ class MultiqcModule(BaseMultiqcModule):
             # Can't find a DOI // doi=
         )
 
+    def build(self):
         # Parse odgi stats data
         self.odgi_stats_map = dict()
         for f in self.find_log_files("odgi", filehandles=True):

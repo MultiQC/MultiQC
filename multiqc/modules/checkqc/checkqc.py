@@ -32,6 +32,7 @@ class MultiqcModule(BaseMultiqcModule):
             doi="10.21105/joss.00556",
         )
 
+    def build(self):
         self.checkqc_data = dict()
         self.runs = set()
 

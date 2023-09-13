@@ -63,6 +63,7 @@ class MultiqcModule(
             # Can't find a DOI // doi=
         )
 
+    def build(self):
         samples_found = set()
         samples_found |= self.add_mapping_metrics()
         # <output prefix>.mapping_metrics.csv              - general stats table, a dedicated table, and a few barplots

@@ -24,6 +24,7 @@ class MultiqcModule(BaseMultiqcModule):
             doi="10.1038/nmeth.4197",
         )
 
+    def build(self):
         # Parse meta information. JSON win!
         self.salmon_meta = dict()
         for f in self.find_log_files("salmon/meta"):

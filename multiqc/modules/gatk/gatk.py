@@ -33,6 +33,7 @@ class MultiqcModule(BaseMultiqcModule, AnalyzeSaturationMutagenesisMixin, BaseRe
             doi=["10.1101/201178", "10.1002/0471250953.bi1110s43", "10.1038/ng.806", "10.1101/gr.107524.110"],
         )
 
+    def build(self):
         # Set up class objects to hold parsed data
         self.general_stats_headers = OrderedDict()
         self.general_stats_data = dict()

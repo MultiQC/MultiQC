@@ -31,6 +31,7 @@ class MultiqcModule(BaseMultiqcModule):
             doi="10.1093/bioinformatics/btr507",
         )
 
+    def build(self):
         # Find all log files with flash msgs
         self.flash_data = OrderedDict()
         for logfile in self.find_log_files("flash/log"):

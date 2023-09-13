@@ -23,6 +23,7 @@ class MultiqcModule(BaseMultiqcModule):
             doi="10.1093/bioinformatics/btu153",
         )
 
+    def build(self):
         # Parse logs
         self.prokka = dict()
         for f in self.find_log_files("prokka", filehandles=True):

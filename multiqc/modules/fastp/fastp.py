@@ -28,6 +28,7 @@ class MultiqcModule(BaseMultiqcModule):
             doi="10.1093/bioinformatics/bty560",
         )
 
+    def build(self):
         # Find and load any fastp reports
         self.fastp_data = dict()
         self.fastp_duplication_plotdata = dict()

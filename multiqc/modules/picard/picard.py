@@ -51,6 +51,7 @@ class MultiqcModule(BaseMultiqcModule):
             # No DOI to cite // doi=
         )
 
+    def build(self):
         # Set up class objects to hold parsed data
         self.general_stats_headers = OrderedDict()
         self.general_stats_data = dict()

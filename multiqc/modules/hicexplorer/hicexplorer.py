@@ -23,6 +23,8 @@ class MultiqcModule(BaseMultiqcModule):
         )
 
         self.hicexplorer_data = dict()
+
+    def build(self):
         for f in self.find_log_files("hicexplorer"):
             if f["fn"] != "QC_table.txt":
                 # Parse the log file

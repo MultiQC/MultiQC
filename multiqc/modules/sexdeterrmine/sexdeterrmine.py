@@ -26,6 +26,7 @@ class MultiqcModule(BaseMultiqcModule):
             doi="10.1038/s41467-018-07483-5",
         )
 
+    def build(self):
         # Find and load any DeDup reports
         self.sexdet_data = dict()
 

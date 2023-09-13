@@ -26,6 +26,7 @@ class MultiqcModule(BaseMultiqcModule):
             doi="10.1093/nar/gku699",
         )
 
+    def build(self):
         # Find and load any leeHom reports
         self.leehom_data = dict()
 

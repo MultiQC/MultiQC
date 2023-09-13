@@ -26,6 +26,7 @@ class MultiqcModule(BaseMultiqcModule):
             doi="10.4161/fly.19695",
         )
 
+    def build(self):
         self.snpeff_data = dict()
         self.snpeff_section_totals = dict()
         self.snpeff_qualities = dict()

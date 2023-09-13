@@ -27,9 +27,10 @@ class MultiqcModule(BaseMultiqcModule):
             info="Automatic Filtering, Trimming, Error Removing and Quality Control for fastq data.",
             doi="10.1186/s12859-017-1469-3",
         )
-
-        # Find and load any Afterqc reports
         self.afterqc_data = dict()
+
+    def build(self):
+        # Find and load any Afterqc reports
         for f in self.find_log_files("afterqc", filehandles=True):
             self.parse_afterqc_log(f)
 

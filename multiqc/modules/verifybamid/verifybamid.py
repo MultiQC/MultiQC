@@ -27,6 +27,7 @@ class MultiqcModule(BaseMultiqcModule):
             doi="10.1016/j.ajhg.2012.09.004",
         )
 
+    def build(self):
         # flag to hide columns if no chip data
         self.hide_chip_columns = True
 

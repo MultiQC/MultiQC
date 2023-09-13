@@ -119,6 +119,7 @@ class MultiqcModule(BaseMultiqcModule):
             "max": 1,
         }
 
+    def build(self):
         num_files = 0
         # Parse gstacks data
         self.cov_data = OrderedDict()

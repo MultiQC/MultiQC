@@ -22,6 +22,7 @@ class MultiqcModule(BaseMultiqcModule):
         # Find and load reports
         self.prinseqplusplus_data = dict()
 
+    def build(self):
         # Find all files for prinseqplusplus
         for f in self.find_log_files("prinseqplusplus", filehandles=True):
             self.parse_logs(f)

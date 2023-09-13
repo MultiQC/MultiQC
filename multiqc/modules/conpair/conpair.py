@@ -28,6 +28,7 @@ class MultiqcModule(BaseMultiqcModule):
             doi="bioinformatics/btw389",
         )
 
+    def build(self):
         self.conpair_data = dict()
 
         for f in self.find_log_files("conpair/concordance"):

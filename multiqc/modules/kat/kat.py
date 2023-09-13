@@ -21,6 +21,7 @@ class MultiqcModule(BaseMultiqcModule):
             doi="10.1093/bioinformatics/btw663",
         )
 
+    def build(self):
         # Find and load any KAT dist analysis reports
         self.kat_data = dict()
         for f in self.find_log_files("kat"):
