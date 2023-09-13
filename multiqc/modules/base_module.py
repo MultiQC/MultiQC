@@ -456,9 +456,7 @@ class BaseMultiqcModule(object):
         # Add the module name to the description if not already done
         keys = headers.keys()
         for k in keys:
-            # Use the module name as the namespace if not supplied
-            if "namespace" not in headers[k]:
-                headers[k]["namespace"] = self.name
+            headers[k]["namespace"] = self.name
             if "description" not in headers[k]:
                 headers[k]["description"] = headers[k].get("title", k)
 

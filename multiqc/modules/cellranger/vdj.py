@@ -43,7 +43,6 @@ class CellRangerVdjMixin:
             "description": "Number of reads ({})".format(config.read_count_desc),
             "modify": lambda x: x * config.read_count_multiplier,
             "shared_key": "read_count",
-            "namespace": "Cell Ranger VDJ",
         }
         self.vdj_general_data_headers = set_hidden_cols(
             self.vdj_general_data_headers,
@@ -93,6 +92,12 @@ class CellRangerVdjMixin:
             return 0
 
         else:
+            for k in self.vdj_general_data_headers.keys():
+                self.vdj_general_data_headers[k]["title"] = f"{self.vdj_general_data_headers[k]['title']} (VDJ)"
+                self.vdj_general_data_headers[k][
+                    "description"
+                ] = f"{self.vdj_general_data_headers[k]['description']} (VDJ)"
+
             self.general_stats_addcols(self.cellrangervdj_general_data, self.vdj_general_data_headers)
 
             # Write parsed report data to a file

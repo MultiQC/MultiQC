@@ -41,7 +41,6 @@ class CellRangerCountMixin:
             "description": "Number of reads ({})".format(config.read_count_desc),
             "modify": lambda x: x * config.read_count_multiplier,
             "shared_key": "read_count",
-            "namespace": "Cell Ranger Count",
         }
         self.count_general_data_headers = set_hidden_cols(
             self.count_general_data_headers, ["Q30 bc", "Q30 UMI", "Q30 read"]
