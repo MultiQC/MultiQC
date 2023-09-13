@@ -162,7 +162,7 @@ class MultiqcModule(BaseMultiqcModule):
             "suffix": " bp",
         }
 
-        self.general_stats_addcols(data, headers, "anglerfish")
+        self.general_stats_addcols(data, headers)
 
     def anglerfish_sample_stats(self):
         """Generate plot for read length from sample stats.

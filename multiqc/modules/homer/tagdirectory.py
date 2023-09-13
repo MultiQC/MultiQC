@@ -229,7 +229,7 @@ class TagDirReportMixin:
             "min": 0,
             "format": "{:,.2f}",
         }
-        self.general_stats_addcols(self.tagdir_data["header"], headers, "HOMER")
+        self.general_stats_addcols(self.tagdir_data["header"], headers)
 
     def homer_stats_table_interChr(self):
         """Add core HOMER stats to the general stats table from FrequencyDistribution file"""

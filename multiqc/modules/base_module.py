@@ -428,7 +428,7 @@ class BaseMultiqcModule(object):
         re_match = any(re.match(sn, s_name) for sn in config.sample_names_ignore_re)
         return glob_match or re_match
 
-    def general_stats_addcols(self, data, headers=None, namespace=None):
+    def general_stats_addcols(self, data, headers=None):
         """Helper function to add to the General Statistics variable.
         Adds to report.general_stats and does not return anything. Fills
         in required config variables if not supplied.
@@ -441,9 +441,6 @@ class BaseMultiqcModule(object):
         """
         if headers is None:
             headers = {}
-        # Use the module namespace as the name if not supplied
-        if namespace is None:
-            namespace = self.name
 
         # Guess the column headers from the data if not supplied
         if headers is None or len(headers) == 0:
@@ -459,8 +456,6 @@ class BaseMultiqcModule(object):
         # Add the module name to the description if not already done
         keys = headers.keys()
         for k in keys:
-            if "namespace" not in headers[k]:
-                headers[k]["namespace"] = namespace
             if "description" not in headers[k]:
                 headers[k]["description"] = headers[k].get("title", k)
 
