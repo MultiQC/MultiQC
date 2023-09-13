@@ -17,7 +17,6 @@ from collections import defaultdict
 from multiqc import config
 from multiqc.modules.base_module import BaseMultiqcModule
 from multiqc.plots import table
-from multiqc.utils.util_functions import write_data_file
 
 from .utils import check_duplicate_samples, clean_headers, make_log_report, order_headers
 
@@ -571,7 +570,7 @@ class DragenCoverageMetrics(BaseMultiqcModule):
 
         # Write data into the general table.
         gen_data, gen_headers = make_general_stats(cov_data, cov_headers)
-        self.general_stats_addcols(gen_data, gen_headers, namespace=NAMESPACE)
+        self.general_stats_addcols(gen_data, gen_headers)
 
         # Write data to file.
         out_data = make_data_for_txt_reports(cov_data, all_metrics)

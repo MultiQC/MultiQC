@@ -240,7 +240,7 @@ class TagDirReportMixin:
             "description": "Fraction of Reads forming inter chromosomal interactions",
             "format": "{:,.4f}",
         }
-        self.general_stats_addcols(self.tagdir_data["FreqDistribution"], headers, "Homer-InterChr")
+        self.general_stats_addcols(self.tagdir_data["FreqDistribution"], headers)
 
     def normalize(self, mydict, target=100):
         raw = sum(mydict.values())

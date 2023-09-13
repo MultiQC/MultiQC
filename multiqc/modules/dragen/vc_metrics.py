@@ -39,7 +39,7 @@ class DragenVCMetrics(BaseMultiqcModule):
 
         gen_stats_headers, vc_table_headers = make_headers(all_metric_names, VC_METRICS)
 
-        self.general_stats_addcols(data_by_sample, gen_stats_headers, namespace=NAMESPACE)
+        self.general_stats_addcols(data_by_sample, gen_stats_headers)
 
         self.add_section(
             name="Variant calling",

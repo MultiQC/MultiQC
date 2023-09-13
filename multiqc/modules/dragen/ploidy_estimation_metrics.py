@@ -36,7 +36,7 @@ class DragenPloidyEstimationMetrics(BaseMultiqcModule):
             "description": "Sex chromosome ploidy estimation (XX, XY, X0, 00, etc.)",
             "scale": "Set3",
         }
-        self.general_stats_addcols(data_by_sample, headers, namespace=NAMESPACE)
+        self.general_stats_addcols(data_by_sample, headers)
         return data_by_sample.keys()
 
 
