@@ -19,8 +19,9 @@ links to documentation, etc.) in to a format that can be inserted in to your rep
 :::
 
 :::tip
-Want to include software version information in your report? See the
-[Listing software versions](../reports/customisation.md) documentation.
+Want to include software version information in your report?
+Even group versions by the step in the pipeline? You can! 🎉
+See the [Listing software versions](../reports/customisation.md#listing-software-versions) documentation.
 :::
 
 If you know exactly which modules will be used by MultiQC, you can use the

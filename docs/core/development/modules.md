@@ -667,6 +667,7 @@ be provided in a separate YAML file.
 See [Customising Reports](../reports/customisation.md#listing-software-versions) for details.
 :::
 
+In some cases, a log may include multiple version numbers for a single tool.
 In the example provided, the version of htslib is shown alongside the
 previously extracted samtools version. This information is valuable and
 should be incorporated into the report. To achieve this, we need to
