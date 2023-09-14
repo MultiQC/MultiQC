@@ -1,0 +1,1 @@
+from .sourmash import MultiqcModule
