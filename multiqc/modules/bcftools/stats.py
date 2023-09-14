@@ -200,7 +200,7 @@ class StatsReportMixin:
             # Stats Table
             stats_headers = self.bcftools_stats_genstats_headers()
             if getattr(config, "bcftools", {}).get("write_general_stats", True):
-                self.general_stats_addcols(self.bcftools_stats, stats_headers, "Bcftools Stats")
+                self.general_stats_addcols(self.bcftools_stats, stats_headers)
             if getattr(config, "bcftools", {}).get("write_separate_table", False):
                 self.add_section(
                     name="Bcftools Stats",
