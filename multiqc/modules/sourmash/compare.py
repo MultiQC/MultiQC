@@ -34,6 +34,8 @@ class CompareMixin:
                     continue
                 with open(matrix_path, "rb") as fh:
                     matrix = numpy.load(fh)
+                # Note that "s_name" here is not a sample name, but the name of the
+                # input file, that contains a comparison matrix across multiple samples.
                 matrices[f["s_name"]] = (labels, matrix.tolist())
                 self.add_data_source(f, section="compare")
 
@@ -41,7 +43,7 @@ class CompareMixin:
         if len(matrices) == 0:
             return 0
 
-        log.info("Found {} valid compare results".format(len(matrices)))
+        log.info(f"Found {len(matrices)} valid compare results")
 
         self.write_data_file(matrices, "sourmash_compare")
 
@@ -52,6 +54,8 @@ class CompareMixin:
         """
 
         for name, (labels, data) in matrices.items():
+            # Note that "name" here is not a sample name, but the name of the input file,
+            # that contains a comparison matrix across multiple samples.
             id = name.lower().strip().replace(" ", "-")
             self.add_section(
                 name=f"Sample similarity (<code>{name}</code>)",
