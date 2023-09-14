@@ -755,7 +755,7 @@ def run(
     software_versions.update_versions_from_config(config, report)
 
     # Add section for software versions if any are found
-    if not config.skip_versions_section and report.software_versions and len(report.modules_output) > 0:
+    if not config.skip_versions_section and report.software_versions:
         report.modules_output.append(software_versions.MultiqcModule())
 
     # Special-case module if we want to profile the MultiQC running time
