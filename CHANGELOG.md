@@ -65,6 +65,8 @@ This idea goes way back to [issue #290](https://github.com/ewels/MultiQC/issues/
   - fix `UnicodeDecodeError` when parsing `fastqc_data.txt`: try latin-1 or fail gracefully ([#2024](https://github.com/ewels/MultiQC/issues/2024))
 - **Kaiju**:
   - Fix `UnboundLocalError` on outputs when Kanju was run with the `-e` flag ([#2023](https://github.com/ewels/MultiQC/pull/2023))
+- **Qualimap**
+  - BamQC: Include `% On Target` in General Stats table ([#2019](https://github.com/ewels/MultiQC/issues/2019))
 
 ## [MultiQC v1.15](https://github.com/ewels/MultiQC/releases/tag/v1.15) - 2023-08-04
 
