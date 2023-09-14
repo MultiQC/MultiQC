@@ -41,7 +41,7 @@ class MultiqcModule(BaseMultiqcModule):
         # TSV only allows 2 levels of nesting.
         if mqc_config.data_format == "tsv":
             flat_software_versions = {
-                group: {software: ",".join(software_versions) for software, software_versions in versions.items()}
+                group: {software: ", ".join(software_versions) for software, software_versions in versions.items()}
                 for group, versions in flat_software_versions.items()
             }
         # Write to a file for downstream use
@@ -55,11 +55,15 @@ class MultiqcModule(BaseMultiqcModule):
     @staticmethod
     def _make_versions_html(versions):
         """Generate a tabular HTML output of all versions."""
+        table_id = mqc_report.save_htmlid("mqc_versions_table")
         # source: https://github.com/nf-core/rnaseq/blob/3bec2331cac2b5ff88a1dc71a21fab6529b57a0f/modules/nf-core/custom/dumpsoftwareversions/templates/dumpsoftwareversions.py#L12
         html = [
             dedent(
                 f"""\
-                <table class="table mqc_versions_table">
+                <button type="button" class="mqc_table_copy_btn btn btn-default btn-sm" data-clipboard-target="#{table_id}">
+                    <span class="glyphicon glyphicon-copy"></span> Copy table
+                </button>
+                <table class="table mqc_versions_table" id="{table_id}">
                     <thead>
                         <tr>
                             <th>{mqc_config.versions_table_group_header}</th>
