@@ -58,6 +58,7 @@ setup(
         "jinja2>=3.0.0",
         "lzstring",
         "markdown",
+        "packaging",
         "pyyaml>=4",
         "requests",
         "rich>=10",
