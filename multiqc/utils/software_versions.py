@@ -14,6 +14,7 @@ import yaml
 from multiqc.modules.base_module import BaseMultiqcModule
 from multiqc.utils import config as mqc_config
 from multiqc.utils import report as mqc_report
+from multiqc.utils import util_functions
 
 # Initialise the logger
 log = logging.getLogger(__name__)
@@ -30,6 +31,22 @@ class MultiqcModule(BaseMultiqcModule):
 
         self.report_software_versions()
 
+        # Get rid of the default dicts and Version objects
+        flat_software_versions = {
+            group: {
+                software: [str(ver) for ver in software_versions] for software, software_versions in versions.items()
+            }
+            for group, versions in mqc_report.software_versions.items()
+        }
+        # TSV only allows 2 levels of nesting.
+        if mqc_config.data_format == "tsv":
+            flat_software_versions = {
+                group: {software: ",".join(software_versions) for software, software_versions in versions.items()}
+                for group, versions in flat_software_versions.items()
+            }
+        # Write to a file for downstream use
+        util_functions.write_data_file(flat_software_versions, "multiqc_software_versions")
+
     def report_software_versions(self):
         """Create section listing software versions."""
         content = self._make_versions_html(mqc_report.software_versions)
@@ -45,9 +62,9 @@ class MultiqcModule(BaseMultiqcModule):
                 <table class="table mqc_versions_table">
                     <thead>
                         <tr>
-                            <th> {mqc_config.versions_table_group_header} </th>
-                            <th> Software </th>
-                            <th> Version  </th>
+                            <th>{mqc_config.versions_table_group_header}</th>
+                            <th>Software</th>
+                            <th>Version</th>
                         </tr>
                     </thead>
                 """
