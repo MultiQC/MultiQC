@@ -100,6 +100,7 @@ class MultiqcModule(BaseMultiqcModule):
         s_name = None
         end = "default"
         cutadapt_version = None
+        python_version = None
         parsing_version = "1.7"
         log_section = None
         for l in fh:
@@ -121,6 +122,11 @@ class MultiqcModule(BaseMultiqcModule):
                     cutadapt_version = c_version_old.group(1)
                     # The pattern "cutadapt version XX" is only pre-1.6
                     parsing_version = "1.6"
+                # Get python version
+                python_version = None
+                python_version_match = re.match(r".*with Python ([\d\.rc]+)", l)
+                if python_version_match:
+                    python_version = python_version_match.group(1)
             # Get sample name from end of command line params
             if l.startswith("Command line parameters"):
                 for cli in reversed(l.split()):
@@ -139,6 +145,13 @@ class MultiqcModule(BaseMultiqcModule):
                     self.cutadapt_data[s_name]["cutadapt_version"] = cutadapt_version
 
             if s_name is not None:
+                # Add version info to module
+                if cutadapt_version is not None:
+                    self.add_software_version(cutadapt_version, s_name)
+
+                if python_version is not None:
+                    self.add_software_version(python_version, s_name, "python")
+
                 self.add_data_source(f, s_name)
 
                 # Search regexes for overview stats
