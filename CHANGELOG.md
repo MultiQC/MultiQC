@@ -30,6 +30,7 @@
   - Do not fail when all input samples have no coverage ([#2005](https://github.com/ewels/MultiQC/pull/2005)).
 - **RSeQC**
   - Fix "max() arg is an empty sequence" error ([#1985](https://github.com/ewels/MultiQC/issues/1985))
+  - Fix division by zero on all-zero input ([#2040](https://github.com/ewels/MultiQC/pull/2040))
 - **NanoStat**
   - Support new format ([#1997](https://github.com/ewels/MultiQC/pull/1997)).
 - **DRAGEN**
