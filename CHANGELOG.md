@@ -141,10 +141,8 @@ for more information.
 - Don't crash if a barplot is given an empty list of categories ([#1540](https://github.com/ewels/MultiQC/issues/1540))
 - New logos! MultiQC is now developed and maintained at [Seqera Labs](https://seqera.io/). Updated logos and email addresses accordingly.
 
-### Module feature additions
+### New Modules
 
-- **Fastp**
-  - Add total read count (after filtering) to general stats table ([#1744](https://github.com/ewels/MultiQC/issues/1744))
 - [**Anglerfish**](https://github.com/remiolsen/anglerfish)
   - A tool designed to assess pool balancing, contamination and insert sizes of Illumina library dry runs on Oxford Nanopore data.
 - [**BBDuk**](https://jgi.doe.gov/data-and-tools/software-tools/bbtools/bb-tools-user-guide/bbduk-guide/)
