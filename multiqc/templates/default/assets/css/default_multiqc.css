@@ -190,6 +190,16 @@ kbd {
   border-left: 5px solid #8eb9dd;
   background-color: #e8f1f8;
 }
+.mqc-module-title-section {
+  display: flex;
+  align-items: flex-end;
+  margin-top: 20px;
+  margin-bottom: 10px;
+  column-gap: 10px;
+}
+h2.mqc-module-title {
+  margin: 0;
+}
 #analysis_dirs_wrapper {
   max-height: 80px;
   overflow: auto;
@@ -954,4 +964,13 @@ tbody .sorthandle {
 
 .mqc-custom-content-image img {
   max-width: 100%;
+}
+
+/* MultiQC Software Versions table */
+.mqc_versions_table {
+  width: 100%;
+}
+
+.mqc_versions_table tbody:nth-child(even) {
+  background-color: #f2f2f2;
 }

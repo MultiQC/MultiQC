@@ -100,6 +100,10 @@ def init():
     global files
     files = dict()
 
+    # Map of software tools to a set of unique version strings
+    global software_versions
+    software_versions = defaultdict(lambda: defaultdict(list))
+
 
 def get_filelist(run_module_names):
     """
@@ -387,6 +391,10 @@ def search_file(pattern, f, module_key):
 
         # Go through the parsed file contents
         for i, line in enumerate(f["contents_lines"]):
+            # Break if we've searched enough lines for this pattern
+            if pattern.get("num_lines") and i >= pattern.get("num_lines"):
+                break
+
             # Search by file contents (string)
             if pattern.get("contents") is not None:
                 if pattern["contents"] in line:
@@ -401,9 +409,6 @@ def search_file(pattern, f, module_key):
                     if pattern.get("fn") is None and pattern.get("fn_re") is None:
                         return True
                     break
-            # Break if we've searched enough lines for this pattern
-            if pattern.get("num_lines") and i >= pattern.get("num_lines"):
-                break
 
     return fn_matched and contents_matched
 

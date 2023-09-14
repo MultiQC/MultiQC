@@ -268,7 +268,7 @@ class MultiqcModule(BaseMultiqcModule):
             "shared_key": "read_count",
         }
 
-        self.general_stats_addcols(self.hicpro_data, headers, "HiC-Pro")
+        self.general_stats_addcols(self.hicpro_data, headers)
 
     def hicpro_mapping_chart(self):
         """Generate the HiC-Pro Aligned reads plot"""

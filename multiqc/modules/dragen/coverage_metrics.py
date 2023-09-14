@@ -17,7 +17,6 @@ from collections import defaultdict
 from multiqc import config
 from multiqc.modules.base_module import BaseMultiqcModule
 from multiqc.plots import table
-from multiqc.utils.util_functions import write_data_file
 
 from .utils import check_duplicate_samples, clean_headers, make_log_report, order_headers
 
@@ -25,7 +24,7 @@ from .utils import check_duplicate_samples, clean_headers, make_log_report, orde
 log = logging.getLogger(__name__)
 
 
-NAMESPACE = "DRAGEN coverage"
+NAMESPACE = "Coverage"
 
 
 '''""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
