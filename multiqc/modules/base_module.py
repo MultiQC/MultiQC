@@ -12,7 +12,6 @@ import textwrap
 from collections import OrderedDict, defaultdict
 
 import markdown
-from pkg_resources import packaging
 
 from multiqc.utils import config, report, software_versions, util_functions
 
@@ -441,7 +440,8 @@ class BaseMultiqcModule(object):
         :param headers: Dict / OrderedDict with information for the headers,
                         such as colour scales, min and max values etc.
                         See docs/writing_python.md for more information.
-        :param namespace: Append to the module name in the display
+        :param namespace: Append to the module name in the table column description.
+                          Can be e.g. a submodule name.
         :return: None
         """
         if headers is None:
