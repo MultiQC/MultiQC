@@ -28,7 +28,7 @@ import rich_click as click
 from rich.syntax import Syntax
 
 from .plots import table
-from .utils import config, lint_helpers, log, megaqc, plugin_hooks, report, util_functions
+from .utils import config, lint_helpers, log, megaqc, plugin_hooks, report, software_versions, util_functions
 
 # Set up logging
 start_execution_time = time.time()
@@ -624,6 +624,11 @@ def run(
     except AttributeError:
         pass  # custom_data not in config
 
+    # Always run software_versions module to collect version YAML files
+    # Use config.skip_versions_section to exclude from report
+    if "software_versions" not in run_module_names:
+        run_module_names.append("software_versions")
+
     # Get the list of files to search
     for d in config.analysis_dir:
         logger.info("Search path : {}".format(os.path.abspath(d)))
@@ -745,6 +750,13 @@ def run(
 
         report.runtimes["mods"][run_module_names[mod_idx]] = time.time() - mod_starttime
     report.runtimes["total_mods"] = time.time() - total_mods_starttime
+
+    # Update report with software versions provided in configs
+    software_versions.update_versions_from_config(config, report)
+
+    # Add section for software versions if any are found
+    if not config.skip_versions_section and report.software_versions:
+        report.modules_output.append(software_versions.MultiqcModule())
 
     # Special-case module if we want to profile the MultiQC running time
     if config.profile_runtime:
@@ -937,7 +949,7 @@ def run(
         else:
             logger.info("Report      : None")
 
-        if config.make_data_dir == False:
+        if config.make_data_dir is False:
             logger.info("Data        : None")
         else:
             # Make directories for data_dir
