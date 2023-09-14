@@ -1,6 +1,7 @@
 """ MultiQC submodule to parse output from Bcftools stats """
 
 import logging
+import re
 from collections import OrderedDict
 
 from multiqc import config
@@ -8,6 +9,9 @@ from multiqc.plots import bargraph, linegraph, table
 
 # Initialise the logger
 log = logging.getLogger(__name__)
+
+VERSION_REGEX = r"# This file was produced by bcftools stats \(([\d\.]+)"
+HTSLIB_REGEX = r"\+htslib-([\d\.]+)"
 
 
 class StatsReportMixin:
@@ -41,6 +45,16 @@ class StatsReportMixin:
         for f in self.find_log_files("bcftools/stats"):
             s_names = list()
             for line in f["f"].splitlines():
+                # Get version number from file contents
+                if line.startswith("# This file was produced by bcftools stats"):
+                    version_match = re.search(VERSION_REGEX, line)
+                    if version_match is not None:
+                        self.add_software_version(version_match.group(1), f["s_name"])
+
+                    htslib_version_match = re.search(HTSLIB_REGEX, line)
+                    if htslib_version_match is not None:
+                        self.add_software_version(htslib_version_match.group(1), f["s_name"], "htslib")
+
                 s = line.split("\t")
                 # Get the sample names - one per 'set'
                 if s[0] == "ID":
