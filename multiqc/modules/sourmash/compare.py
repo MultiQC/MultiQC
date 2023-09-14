@@ -34,6 +34,8 @@ class CompareMixin:
                     continue
                 with open(matrix_path, "rb") as fh:
                     matrix = numpy.load(fh)
+                # Note that "s_name" here is not a sample name, but the name of the
+                # input file, that contains a comparison matrix across multiple samples.
                 matrices[f["s_name"]] = (labels, matrix.tolist())
                 self.add_data_source(f, section="compare")
 
@@ -41,30 +43,31 @@ class CompareMixin:
         if len(matrices) == 0:
             return 0
 
-        log.info("Found {} valid compare results".format(len(matrices)))
+        log.info(f"Found {len(matrices)} valid compare results")
 
         self.write_data_file(matrices, "sourmash_compare")
 
         helptext = """
-        Sourmash compare outputs a similarity score between two samples. A higher score indicates a higher degree of
+        Sourmash `compare` calculates the similarity score between samples. A higher score indicates a higher degree of
         similarity, up to a maximum of 1. Samples are clustered by similarity on each axis, and specific IDs can be
         found in the graph with the Highlight tab.
         """
 
-        idx = 0
         for name, (labels, data) in matrices.items():
-            idx += 1
+            # Note that "name" here is not a sample name, but the name of the input file,
+            # that contains a comparison matrix across multiple samples.
+            id = name.lower().strip().replace(" ", "-").replace(".labels.txt", "")
             self.add_section(
-                name="Compare: Sample Similarity",
-                anchor="sourmash-compare-{}".format(idx),
-                description=f"**Input:** `{name}`.\n\n Heatmap of similarity values from the output of sourmash compare",
+                name=f"Sample similarity (<code>{name}</code>)",
+                anchor=f"sourmash-compare-{id}",
+                description=f"Heatmap of similarity values from the output of `sourmash compare` run on <code>{name}</code>",
                 helptext=helptext,
                 plot=heatmap.plot(
                     data,
                     xcats=labels,
                     ycats=labels,
                     pconfig={
-                        "id": "sourmash-compare-heatmap-{}".format(idx),
+                        "id": f"sourmash-compare-heatmap-{id}",
                         "title": "Sourmash: Compare",
                         "square": True,
                         "decimalPlaces": 7,

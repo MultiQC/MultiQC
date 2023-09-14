@@ -2,6 +2,25 @@
 
 ## MultiQC v1.16dev
 
+### Highlight: Software versions
+
+New in v1.16 - software version information can now automatically parsed from log output where available,
+and added to MultiQC in a standardised manner. It's shown in the MultiQC report next to section
+headings and in a dedicated report section, as well as being saved to `multiqc_data`.
+Where version information is not available in logs, it can be submitted manually by using a new
+special file type with filename pattern `*_mqc_versions.yml`.
+There's the option of representing groups of versions, useful for a tool that uses sub-tools,
+or pipelines that want to report version numbers per analysis step.
+
+There are a handful of new config scopes to control behaviour:
+`software_versions`, `skip_versions_section`, `disable_version_detection`, `versions_table_group_header`.
+See the documentation for more ([writing modules](https://multiqc.info/docs/development/modules/#saving-version-information),
+[supplying stand-alone](https://multiqc.info/docs/reports/customisation/#listing-software-versions))
+
+Huge thanks to [@pontushojer](https://https://github.com/pontushojer) for the
+contribution ([#1927](https://github.com/ewels/MultiQC/pull/1927)).
+This idea goes way back to [issue #290](https://github.com/ewels/MultiQC/issues/290), made in 2016!
+
 ### MultiQC updates
 
 - Removed `simplejson` unused dependency ([#1973](https://github.com/ewels/MultiQC/pull/1973))
@@ -9,6 +28,7 @@
 - When exporting plots, make a more clear error message for unsupported FastQC dot plot [#1976](https://github.com/ewels/MultiQC/pull/1976)
 - Fixed parsing of `plot_type: "html"` `data` in json custom content
 - Replace deprecated `pkg_resources`
+- [Fix](https://github.com/ewels/MultiQC/issues/2032) the module groups configuration for modules where the namespace is passed explicitly to `general_stats_addcols`. Namespace is now always appended to the module name in the general stats ([2037](https://github.com/ewels/MultiQC/pull/2037)).
 
 ### New Modules
 
@@ -32,6 +52,7 @@
   - Do not fail when all input samples have no coverage ([#2005](https://github.com/ewels/MultiQC/pull/2005)).
 - **RSeQC**
   - Fix "max() arg is an empty sequence" error ([#1985](https://github.com/ewels/MultiQC/issues/1985))
+  - Fix division by zero on all-zero input ([#2040](https://github.com/ewels/MultiQC/pull/2040))
 - **NanoStat**
   - Support new format ([#1997](https://github.com/ewels/MultiQC/pull/1997)).
 - **DRAGEN**
@@ -44,6 +65,8 @@
   - fix `UnicodeDecodeError` when parsing `fastqc_data.txt`: try latin-1 or fail gracefully ([#2024](https://github.com/ewels/MultiQC/issues/2024))
 - **Kaiju**:
   - Fix `UnboundLocalError` on outputs when Kanju was run with the `-e` flag ([#2023](https://github.com/ewels/MultiQC/pull/2023))
+- **Qualimap**
+  - BamQC: Include `% On Target` in General Stats table ([#2019](https://github.com/ewels/MultiQC/issues/2019))
 
 ## [MultiQC v1.15](https://github.com/ewels/MultiQC/releases/tag/v1.15) - 2023-08-04
 
