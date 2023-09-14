@@ -625,6 +625,7 @@ def run(
         pass  # custom_data not in config
 
     # Always run software_versions module to collect version YAML files
+    # Use config.skip_versions_section to exclude from report
     if "software_versions" not in run_module_names:
         run_module_names.append("software_versions")
 
