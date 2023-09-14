@@ -2,13 +2,31 @@
 
 ## MultiQC v1.16dev
 
+### Highlight: Software versions
+
+New in v1.16 - software version information can now automatically parsed from log output where available,
+and added to MultiQC in a standardised manner. It's shown in the MultiQC report next to section
+headings and in a dedicated report section, as well as being saved to `multiqc_data`.
+Where version information is not available in logs, it can be submitted manually by using a new
+special file type with filename pattern `*_mqc_versions.yml`.
+There's the option of representing groups of versions, useful for a tool that uses sub-tools,
+or pipelines that want to report version numbers per analysis step.
+
+There are a handful of new config scopes to control behaviour:
+`software_versions`, `skip_versions_section`, `disable_version_detection`, `versions_table_group_header`.
+See the documentation for more ([writing modules](https://multiqc.info/docs/development/modules/#saving-version-information),
+[supplying stand-alone](https://multiqc.info/docs/reports/customisation/#listing-software-versions))
+
+Huge thanks to [@pontushojer](https://https://github.com/pontushojer) for the
+contribution ([#1927](https://github.com/ewels/MultiQC/pull/1927)).
+This idea goes way back to [issue #290](https://github.com/ewels/MultiQC/issues/290), made in 2016!
+
 ### MultiQC updates
 
 - Removed `simplejson` unused dependency ([#1973](https://github.com/ewels/MultiQC/pull/1973))
 - Give config `custom_plot_config` priority over column-specific settings set by modules
 - When exporting plots, make a more clear error message for unsupported FastQC dot plot [#1976](https://github.com/ewels/MultiQC/pull/1976)
 - Fixed parsing of `plot_type: "html"` `data` in json custom content
-- Add software version information to the MultiQC report (thanks [pontushojer](https://https://github.com/pontushojer) for the [contribution](https://github.com/ewels/MultiQC/pull/1927)). Modules can parse versions from logs, and users can pass versions with `config.software_versions`.
 - Replace deprecated `pkg_resources`
 
 ### New Modules
