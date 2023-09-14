@@ -12,7 +12,6 @@ import textwrap
 from collections import OrderedDict, defaultdict
 
 import markdown
-from pkg_resources import packaging
 
 from multiqc.utils import config, report, software_versions, util_functions
 
@@ -441,13 +440,14 @@ class BaseMultiqcModule(object):
         :param headers: Dict / OrderedDict with information for the headers,
                         such as colour scales, min and max values etc.
                         See docs/writing_python.md for more information.
+        :param namespace: Append to the module name in the table column description.
+                          Can be e.g. a submodule name.
         :return: None
         """
         if headers is None:
             headers = {}
-        # Use the module namespace as the name if not supplied
-        if namespace is None:
-            namespace = self.name
+        # Deepish copy of headers so that we can modify it in place
+        headers = {k: v.copy() for k, v in headers.items()}
 
         # Guess the column headers from the data if not supplied
         if headers is None or len(headers) == 0:
@@ -463,8 +463,11 @@ class BaseMultiqcModule(object):
         # Add the module name to the description if not already done
         keys = headers.keys()
         for k in keys:
-            if "namespace" not in headers[k]:
-                headers[k]["namespace"] = namespace
+            # Prepend the namespace displayed in the table with the module name
+            namespace = headers[k].get("namespace", namespace)
+            headers[k]["namespace"] = self.name
+            if namespace:
+                headers[k]["namespace"] = self.name + " " + namespace
             if "description" not in headers[k]:
                 headers[k]["description"] = headers[k].get("title", k)
 

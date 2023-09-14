@@ -200,12 +200,12 @@ class StatsReportMixin:
             # Stats Table
             stats_headers = self.bcftools_stats_genstats_headers()
             if getattr(config, "bcftools", {}).get("write_general_stats", True):
-                self.general_stats_addcols(self.bcftools_stats, stats_headers)
+                self.general_stats_addcols(self.bcftools_stats, stats_headers, "Stats")
             if getattr(config, "bcftools", {}).get("write_separate_table", False):
                 self.add_section(
                     name="Bcftools Stats",
                     anchor="bcftools-stats_stats",
-                    plot=table.plot(self.bcftools_stats, stats_headers),
+                    plot=table.plot(self.bcftools_stats, stats_headers, {"namespace": "Stats"}),
                 )
 
             # Make bargraph plot of substitution types
