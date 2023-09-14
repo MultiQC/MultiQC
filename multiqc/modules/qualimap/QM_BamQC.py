@@ -135,14 +135,17 @@ def parse_genome_results(self, f):
     try:
         self.general_stats_data[s_name]["total_reads"] = d["total_reads"]
         self.general_stats_data[s_name]["mapped_reads"] = d["mapped_reads"]
-        d["percentage_aligned"] = (d["mapped_reads"] / d["total_reads"]) * 100
-        self.general_stats_data[s_name]["percentage_aligned"] = d["percentage_aligned"]
-        self.general_stats_data[s_name]["general_error_rate"] = d["general_error_rate"] * 100
+        self.general_stats_data[s_name]["general_error_rate"] = d["general_error_rate"] * 100.0
         self.general_stats_data[s_name]["mean_coverage"] = d["mean_coverage"]
         self.general_stats_data[s_name]["regions_size"] = d["regions_size"]
         self.general_stats_data[s_name]["regions_mapped_reads"] = d["regions_mapped_reads"]
-        d["percentage_aligned_on_target"] = (d["regions_mapped_reads"] / d["mapped_reads"]) * 100
-        self.general_stats_data[s_name]["percentage_aligned_on_target"] = d["percentage_aligned_on_target"]
+        try:
+            d["percentage_aligned"] = (d["mapped_reads"] / d["total_reads"]) * 100.0
+            self.general_stats_data[s_name]["percentage_aligned"] = d["percentage_aligned"]
+            d["percentage_aligned_on_target"] = (d["regions_mapped_reads"] / d["mapped_reads"]) * 100.0
+            self.general_stats_data[s_name]["percentage_aligned_on_target"] = d["percentage_aligned_on_target"]
+        except ZeroDivisionError:
+            pass
     except KeyError:
         pass
 
@@ -584,6 +587,38 @@ def general_stats_headers(self):
         "suffix": "X",
         "scale": "BuPu",
     }
+    self.general_stats_headers["percentage_aligned_on_target"] = {
+        "title": "% On target",
+        "description": "% mapped reads on target region",
+        "max": 100,
+        "min": 0,
+        "suffix": "%",
+        "scale": "YlGn",
+    }
+    self.general_stats_headers["regions_size"] = {
+        "title": "{} Region size".format(config.read_count_prefix),
+        "description": "Size of target region",
+        "suffix": " bp",
+        "scale": "PuBuGn",
+        "hidden": True,
+    }
+    self.general_stats_headers["regions_mapped_reads"] = {
+        "title": "{} On target".format(config.read_count_prefix),
+        "description": "Number of mapped reads on target region ({})".format(config.read_count_desc),
+        "scale": "RdYlGn",
+        "shared_key": "read_count",
+        "hidden": True,
+    }
+    self.general_stats_headers["general_error_rate"] = {
+        "title": "Error rate",
+        "description": "Alignment error rate. Total edit distance (SAM NM field) over the number of mapped bases",
+        "max": 100,
+        "min": 0,
+        "suffix": "%",
+        "scale": "OrRd",
+        "format": "{0:.2f}",
+        "hidden": True,
+    }
     self.general_stats_headers["percentage_aligned"] = {
         "title": "% Aligned",
         "description": "% mapped reads",
@@ -605,38 +640,6 @@ def general_stats_headers(self):
         "scale": "Blues",
         "shared_key": "read_count",
         "hidden": True,
-    }
-    self.general_stats_headers["general_error_rate"] = {
-        "title": "Error rate",
-        "description": "Alignment error rate. Total edit distance (SAM NM field) over the number of mapped bases",
-        "max": 100,
-        "min": 0,
-        "suffix": "%",
-        "scale": "OrRd",
-        "format": "{0:.2f}",
-        "hidden": True,
-    }
-    self.general_stats_headers["regions_size"] = {
-        "title": "{} Region size".format(config.read_count_prefix),
-        "description": "Size of target region",
-        "suffix": " bp",
-        "scale": "PuBuGn",
-        "hidden": True,
-    }
-    self.general_stats_headers["regions_mapped_reads"] = {
-        "title": "{} On target".format(config.read_count_prefix),
-        "description": "Number of mapped reads on target region ({})".format(config.read_count_desc),
-        "scale": "RdYlGn",
-        "shared_key": "read_count",
-        "hidden": True,
-    }
-    self.general_stats_headers["percentage_aligned_on_target"] = {
-        "title": "% On target",
-        "description": "% mapped reads on target region",
-        "max": 100,
-        "min": 0,
-        "suffix": "%",
-        "scale": "YlGn",
     }
 
 
