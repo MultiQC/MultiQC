@@ -9,6 +9,7 @@ import numpy as np
 from multiqc import config
 from multiqc.modules.base_module import BaseMultiqcModule
 from multiqc.plots import linegraph
+from multiqc.utils import mqc_colour
 
 # Initialise the logger
 log = logging.getLogger(__name__)
@@ -348,25 +349,14 @@ def _prep_real_counts(real_cnts_all, real_cnts_unq, is_basepairs, counts_in_1x, 
 
 
 def _real_counts_to_plot_series(data, yx_by_sample, xs_by_sample, x_lbl, y_lbl, y_tt_lbl):
-    # Same defaults as HighCharts for consistency
-    default_colors = [
-        "#7cb5ec",
-        "#434348",
-        "#90ed7d",
-        "#f7a35c",
-        "#8085e9",
-        "#f15c80",
-        "#e4d354",
-        "#2b908f",
-        "#f45b5b",
-        "#91e8e1",
-    ]
+    scale = mqc_colour.mqc_colour_scale("Highcharts")
+
     series = []
     for si, sn in enumerate(sorted(data.keys())):
         if sn in xs_by_sample:
             x = float(xs_by_sample[sn])
             point = {
-                "color": default_colors[si % len(default_colors)],
+                "color": scale.get_colour(si),
                 "showInLegend": False,
                 "marker": {
                     "enabled": True,

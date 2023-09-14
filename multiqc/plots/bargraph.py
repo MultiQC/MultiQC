@@ -14,7 +14,7 @@ import re
 import sys
 from collections import OrderedDict
 
-from multiqc.utils import config, report, util_functions
+from multiqc.utils import config, mqc_colour, report, util_functions
 
 logger = logging.getLogger(__name__)
 
@@ -183,6 +183,14 @@ def plot(data, cats=None, pconfig=None):
         logger.warning(f"Tried to make bar plot, but had no data: {pconfig.get('id')}")
         return '<p class="text-danger">Error - was not able to plot data.</p>'
 
+    # Add colors to the categories if not set. Since the "plot_defaults" scale is
+    # identical to default scale of the Highcharts JS library, this is not strictly
+    # needed. But it future proofs when we replace Highcharts with something else.
+    scale = mqc_colour.mqc_colour_scale("plot_defaults")
+    for si, sd in enumerate(plotdata):
+        for di, d in enumerate(sd):
+            d.setdefault("color", scale.get_colour(di, lighten=1))
+
     # Make a plot - custom, interactive or flat
     try:
         return get_template_mod().bargraph(plotdata, plotsamples, pconfig)
@@ -339,20 +347,6 @@ def matplotlib_bargraph(plotdata, plotsamples, pconfig=None):
     )
     html += '<div class="mqc_mplplot_plotgroup" id="{}">'.format(pconfig["id"])
 
-    # Same defaults as HighCharts for consistency
-    default_colors = [
-        "#7cb5ec",
-        "#434348",
-        "#90ed7d",
-        "#f7a35c",
-        "#8085e9",
-        "#f15c80",
-        "#e4d354",
-        "#2b908f",
-        "#f45b5b",
-        "#91e8e1",
-    ]
-
     # Counts / Percentages Switch
     if pconfig.get("cpswitch") is not False and not config.simple_output:
         if pconfig.get("cpswitch_c_active", True) is True:
@@ -470,10 +464,6 @@ def matplotlib_bargraph(plotdata, plotsamples, pconfig=None):
                 else:
                     for i, p in enumerate(prevdata):
                         prevdata[i] += prev_values[i]
-                # Default colour index
-                cidx = idx
-                while cidx >= len(default_colors):
-                    cidx -= len(default_colors)
                 # Save the name of this series
                 dlabels.append(d["name"])
                 # Add the series of bars to the plot
@@ -482,7 +472,7 @@ def matplotlib_bargraph(plotdata, plotsamples, pconfig=None):
                     values,
                     bar_width,
                     left=prevdata,
-                    color=d.get("color", default_colors[cidx]),
+                    color=d["color"],
                     align="center",
                     linewidth=pconfig.get("borderWidth", 0),
                 )

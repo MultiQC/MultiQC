@@ -626,6 +626,70 @@ are as shown:
 self.add_data_source(f=None, s_name=None, source=None, module=None, section=None)
 ```
 
+### Saving version information
+
+Software version information may be present in the log files of some tools. The
+version number can be included in the report by passing it to the method
+`self.add_software_version`. Let's use this `samtools stats` log below as an example.
+
+```bash
+# This file was produced by samtools stats (1.3+htslib-1.3) and can be plotted using plot-bamstats
+# This file contains statistics for all reads.
+# The command line was:  stats /home/lp113/bcbio-nextgen/tests/test_automated_output/align/Test1/Test1.sorted.bam
+# CHK, Checksum [2]Read Names   [3]Sequences    [4]Qualities
+# CHK, CRC32 of reads which passed filtering followed by addition (32bit overflow)
+CHK     560674ab        1165a6ca        7b309ac6
+# Summary Numbers. Use `grep ^SN | cut -f 2-` to extract this part.
+SN      raw total sequences:    101
+...
+```
+
+The version number here (`1.3`) can be extracted using a regular expression (regex).
+We then pass this to the `self.add_software_version()` function.
+Note that we pass the sample name (`f["s_name"]` in this case) so that we don't
+add versions for samples that are later ignored.
+
+```python
+for line in f.splitlines():
+    version = re.search(r"# This file was produced by samtools stats \(([\d\.]+)", line)
+    if version is not None:
+        self.add_software_version(version.group(1), f["s_name"])
+
+    # ..rest of file parsing
+```
+
+The version number will now appear after the module header in the report as
+well as in the section _Software Versions_ in the end of the report.
+
+:::tip
+For tools that don't output software versions in their logs these can instead
+be provided in a separate YAML file.
+See [Customising Reports](../reports/customisation.md#listing-software-versions) for details.
+:::
+
+In some cases, a log may include multiple version numbers for a single tool.
+In the example provided, the version of htslib is shown alongside the
+previously extracted samtools version. This information is valuable and
+should be incorporated into the report. To achieve this, we need to
+extract the new version string and provide it to the
+`self.add_software_version()` function. Include the relevant software
+name (in this case, `htslib`) as well. This will ensure that the htslib
+version is listed separately from the main module's software version.
+Example:
+
+```python
+for line in f.splitlines():
+    version = re.search(r"# This file was produced by samtools stats \(([\d\.]+)", line)
+    if version is not None:
+        self.add_software_version(version.group(1), f["s_name"])
+
+    htslib_version = re.search(r"\+htslib-([\d\.]+)", line)
+    if htslib_version is not None:
+        self.add_software_version(htslib_version.group(1), f["s_name"], software_name="htslib")
+
+    # ..rest of file parsing
+```
+
 ## Step 3 - Adding to the general statistics table
 
 Now that you have your parsed data, you can start inserting it into the

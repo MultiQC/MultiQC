@@ -4,11 +4,11 @@
 to run their own custom subroutines at predefined
 trigger points during MultiQC execution. """
 
-import pkg_resources
+from importlib_metadata import entry_points
 
 # Load the hooks
 hook_functions = {}
-for entry_point in pkg_resources.iter_entry_points("multiqc.hooks.v1"):
+for entry_point in entry_points(group="multiqc.hooks.v1"):
     nicename = str(entry_point).split("=")[0].strip()
     try:
         hook_functions[nicename].append(entry_point.load())

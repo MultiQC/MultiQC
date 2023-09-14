@@ -13,6 +13,9 @@ afterqc:
 anglerfish:
   fn: "*.json"
   contents: "anglerfish_version"
+bakta:
+  fn: "*.txt"
+  contents: "Bakta:"
 bamtools/stats:
   contents: "Stats for BAM file(s):"
   shared: true
@@ -244,7 +247,7 @@ clusterflow/runfiles:
   contents: "Cluster Flow Run File"
   num_lines: 2
 conpair/concordance:
-  contents: "markers (coverage per marker threshold : "
+  contents: "markers (coverage per marker threshold"
   num_lines: 3
 conpair/contamination:
   contents: "Tumor sample contamination level: "
@@ -359,6 +362,10 @@ flash/hist:
 flexbar:
   contents: "Flexbar - flexible barcode and adapter removal"
   shared: true
+freyja:
+  fn: "*.tsv"
+  contents: "summarized\t["
+  num_lines: 6
 gatk/varianteval:
   contents: "#:GATKTable:TiTvVariantEvaluator"
   shared: true
@@ -568,6 +575,8 @@ somalier/pairs:
   fn: "*.pairs.tsv"
   contents: "hom_concordance"
   num_lines: 5
+sourmash/compare:
+  fn: "*.labels.txt"
 pbmarkdup:
   contents_re: "LIBRARY +READS +UNIQUE MOLECULES +DUPLICATE READS"
   num_lines: 5
@@ -808,6 +817,8 @@ snpsplit/old:
   num_lines: 2
 snpsplit/new:
   fn: "*SNPsplit_report.yaml"
+software_versions:
+  fn_re: ".+_mqc_versions\\.(yaml|yml)"
 sortmerna:
   contents: "Minimal SW score based on E-value"
   shared: true

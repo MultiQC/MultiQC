@@ -88,9 +88,8 @@ def make_table(dt):
             header["dmax"], header["dmin"], header["namespace"], shared_key
         )
 
-        cell_contents = '<span class="mqc_table_tooltip" title="{}: {}">{}</span>'.format(
-            header["namespace"], header["description"], header["title"]
-        )
+        ns = f'{header["namespace"]}: ' if header["namespace"] else ""
+        cell_contents = f'<span class="mqc_table_tooltip" title="{ns}{header["description"]}">{header["title"]}</span>'
 
         t_headers[rid] = '<th id="header_{rid}" class="{rid} {h}" {da}>{c}</th>'.format(
             rid=rid, h=hide, da=data_attr, c=cell_contents
@@ -232,7 +231,7 @@ def make_table(dt):
                 if badge_col is not None:
                     valstring = '<span class="badge" style="background-color:{}">{}</span>'.format(badge_col, valstring)
 
-                # Categorical backgorund colours supplied
+                # Categorical background colours supplied
                 if val in header.get("bgcols", {}).keys():
                     col = 'style="background-color:{} !important;"'.format(header["bgcols"][val])
                     if s_name not in t_rows:
