@@ -52,9 +52,10 @@ class CompareMixin:
         """
 
         for name, (labels, data) in matrices.items():
+            id = name.lower().strip().replace(" ", "-")
             self.add_section(
                 name=f"Sample similarity (<code>{name}</code>)",
-                anchor=f"sourmash-compare-{name}",
+                anchor=f"sourmash-compare-{id}",
                 description=f"Heatmap of similarity values from the output of `sourmash compare` run on <code>{name}</code>",
                 helptext=helptext,
                 plot=heatmap.plot(
@@ -62,7 +63,7 @@ class CompareMixin:
                     xcats=labels,
                     ycats=labels,
                     pconfig={
-                        "id": f"sourmash-compare-heatmap-{name}",
+                        "id": f"sourmash-compare-heatmap-{id}",
                         "title": "Sourmash: Compare",
                         "square": True,
                         "decimalPlaces": 7,
