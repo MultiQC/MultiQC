@@ -231,7 +231,7 @@ class TagDirReportMixin:
         }
         self.general_stats_addcols(self.tagdir_data["header"], headers)
 
-    def homer_stats_table_interChr(self):
+    def homer_stats_table_interchr(self):
         """Add core HOMER stats to the general stats table from FrequencyDistribution file"""
 
         headers = OrderedDict()
@@ -240,7 +240,7 @@ class TagDirReportMixin:
             "description": "Fraction of Reads forming inter chromosomal interactions",
             "format": "{:,.4f}",
         }
-        self.general_stats_addcols(self.tagdir_data["FreqDistribution"], headers)
+        self.general_stats_addcols(self.tagdir_data["FreqDistribution"], headers, "InterChr")
 
     def normalize(self, mydict, target=100):
         raw = sum(mydict.values())

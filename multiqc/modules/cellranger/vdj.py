@@ -43,6 +43,7 @@ class CellRangerVdjMixin:
             "description": "Number of reads ({})".format(config.read_count_desc),
             "modify": lambda x: x * config.read_count_multiplier,
             "shared_key": "read_count",
+            "namespace": "VDJ",
         }
         self.vdj_general_data_headers = set_hidden_cols(
             self.vdj_general_data_headers,
@@ -110,25 +111,21 @@ class CellRangerVdjMixin:
                     name="VDJ - Warnings",
                     anchor="cellranger-vdj-warnings",
                     description="Warnings encountered during the analysis",
-                    plot=table.plot(
-                        self.cellrangervdj_warnings, self.vdj_warnings_headers, {"namespace": "Cell Ranger VDJ"}
-                    ),
+                    plot=table.plot(self.cellrangervdj_warnings, self.vdj_warnings_headers, {"namespace": "VDJ"}),
                 )
 
             self.add_section(
                 name="VDJ - Summary stats",
                 anchor="cellranger-vdj-stats",
                 description="Summary QC metrics from Cell Ranger count",
-                plot=table.plot(self.cellrangervdj_mapping, self.vdj_mapping_headers, {"namespace": "Cell Ranger VDJ"}),
+                plot=table.plot(self.cellrangervdj_mapping, self.vdj_mapping_headers, {"namespace": "VDJ"}),
             )
 
             self.add_section(
                 name="VDJ - Annotations",
                 anchor="cellranger-vdj-annot",
                 description="V(D)J annotations from Cell Ranger VDJ analysis",
-                plot=table.plot(
-                    self.cellrangervdj_annotations, self.vdj_annotations_headers, {"namespace": "Cell Ranger VDJ"}
-                ),
+                plot=table.plot(self.cellrangervdj_annotations, self.vdj_annotations_headers, {"namespace": "VDJ"}),
             )
 
             self.add_section(

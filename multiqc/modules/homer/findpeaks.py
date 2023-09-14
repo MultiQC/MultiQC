@@ -41,7 +41,7 @@ class FindPeaksReportMixin:
                 "format": "{:,.0f}",
                 "scale": "PuRd",
             }
-            self.general_stats_addcols(self.homer_findpeaks, stats_headers)
+            self.general_stats_addcols(self.homer_findpeaks, stats_headers, "findpeaks")
 
         return len(self.homer_findpeaks)
 

@@ -95,7 +95,7 @@ class DragenMappingMetics(BaseMultiqcModule):
         # and making headers
         genstats_headers, own_tabl_headers = make_headers(all_metric_names, MAPPING_METRICS)
 
-        self.general_stats_addcols(data_by_sample, genstats_headers)
+        self.general_stats_addcols(data_by_sample, genstats_headers, namespace=NAMESPACE)
 
         self.add_section(
             name="Mapping metrics",

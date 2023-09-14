@@ -24,7 +24,7 @@ from .utils import check_duplicate_samples, clean_headers, make_log_report, orde
 log = logging.getLogger(__name__)
 
 
-NAMESPACE = "DRAGEN coverage"
+NAMESPACE = "coverage"
 
 
 '''""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
@@ -570,7 +570,7 @@ class DragenCoverageMetrics(BaseMultiqcModule):
 
         # Write data into the general table.
         gen_data, gen_headers = make_general_stats(cov_data, cov_headers)
-        self.general_stats_addcols(gen_data, gen_headers)
+        self.general_stats_addcols(gen_data, gen_headers, namespace=NAMESPACE)
 
         # Write data to file.
         out_data = make_data_for_txt_reports(cov_data, all_metrics)

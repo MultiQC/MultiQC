@@ -184,4 +184,4 @@ class DragenFastqcGcMetrics(BaseMultiqcModule):
             "scale": "Set1",
             "format": "{:,.0f}",
         }
-        self.general_stats_addcols(avg_gc_content_data, headers)
+        self.general_stats_addcols(avg_gc_content_data, headers, namespace="FastQC")

@@ -432,7 +432,7 @@ class BaseMultiqcModule(object):
         re_match = any(re.match(sn, s_name) for sn in config.sample_names_ignore_re)
         return glob_match or re_match
 
-    def general_stats_addcols(self, data, headers=None):
+    def general_stats_addcols(self, data, headers=None, namespace=None):
         """Helper function to add to the General Statistics variable.
         Adds to report.general_stats and does not return anything. Fills
         in required config variables if not supplied.
@@ -441,10 +441,13 @@ class BaseMultiqcModule(object):
         :param headers: Dict / OrderedDict with information for the headers,
                         such as colour scales, min and max values etc.
                         See docs/writing_python.md for more information.
+        :param namespace: Append to the module name in the display
         :return: None
         """
         if headers is None:
             headers = {}
+        # Deepish copy of headers so that we can modify it in place
+        headers = {k: v.copy() for k, v in headers.items()}
 
         # Guess the column headers from the data if not supplied
         if headers is None or len(headers) == 0:
@@ -460,7 +463,11 @@ class BaseMultiqcModule(object):
         # Add the module name to the description if not already done
         keys = headers.keys()
         for k in keys:
+            # Prepend the namespace displayed in the table with the module name
+            namespace = headers[k].get("namespace", namespace)
             headers[k]["namespace"] = self.name
+            if namespace:
+                headers[k]["namespace"] = self.name + " " + namespace
             if "description" not in headers[k]:
                 headers[k]["description"] = headers[k].get("title", k)
 

@@ -73,7 +73,7 @@ class VariantEvalMixin:
                 "scale": "Blues",
                 "shared_key": "titv_ratio",
             }
-            self.general_stats_addcols(self.gatk_varianteval, varianteval_headers)
+            self.general_stats_addcols(self.gatk_varianteval, varianteval_headers, "GATK VariantEval")
 
             # Variant Counts plot
             self.add_section(
