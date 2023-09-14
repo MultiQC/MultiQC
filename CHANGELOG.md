@@ -10,7 +10,7 @@
 - Fixed parsing of `plot_type: "html"` `data` in json custom content
 - Add software version information to the MultiQC report (thanks [pontushojer](https://https://github.com/pontushojer) for the [contribution](https://github.com/ewels/MultiQC/pull/1927)). Modules can parse versions from logs, and users can pass versions with `config.software_versions`.
 - Replace deprecated `pkg_resources`
-- [Fix](https://github.com/ewels/MultiQC/issues/2032) module groups configuration where namespace is set explicitly in `general_stats_addcols`. Namespace is now always appended to the module name in general stats ([2037](https://github.com/ewels/MultiQC/pull/2037))
+- [Fix](https://github.com/ewels/MultiQC/issues/2032) the module groups configuration for modules where the namespace is passed explicitly to `general_stats_addcols`. Namespace is now always appended to the module name in the general stats ([2037](https://github.com/ewels/MultiQC/pull/2037)).
 
 ### New Modules
 

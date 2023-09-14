@@ -24,7 +24,7 @@ from .utils import check_duplicate_samples, clean_headers, make_log_report, orde
 log = logging.getLogger(__name__)
 
 
-NAMESPACE = "coverage"
+NAMESPACE = "Coverage"
 
 
 '''""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
