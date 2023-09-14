@@ -10,7 +10,7 @@ log = logging.getLogger(__name__)
 class DragenGcMetrics(BaseMultiqcModule):
     """Not to be confused with DragenFastqcGcMetrics"""
 
-    NAMESPACE = "Dragen GC Metrics"
+    NAMESPACE = "GC Metrics"
 
     def add_gc_metrics_hist(self):
         data_by_sample = dict()
