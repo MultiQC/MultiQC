@@ -56,7 +56,7 @@ class CompareMixin:
         for name, (labels, data) in matrices.items():
             # Note that "name" here is not a sample name, but the name of the input file,
             # that contains a comparison matrix across multiple samples.
-            id = name.lower().strip().replace(" ", "-")
+            id = name.lower().strip().replace(" ", "-").replace(".labels.txt", "")
             self.add_section(
                 name=f"Sample similarity (<code>{name}</code>)",
                 anchor=f"sourmash-compare-{id}",
