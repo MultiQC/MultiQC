@@ -1,12 +1,9 @@
 import copy
-import json
 import logging
 import os
 import random
 import uuid
 from io import StringIO
-
-import numpy as np
 
 from multiqc.modules.base_module import BaseMultiqcModule
 from multiqc.utils import mqc_colour
@@ -224,7 +221,7 @@ class MultiqcModule(BaseMultiqcModule):
         )
         if len(self.group_dict) > len(self.palette):
             hex_range = 2**24
-            extra_colors = [hex(random.randrange(0, hex_range)) for _ in range(len(self.group_dict), len(palette))]
+            extra_colors = [hex(random.randrange(0, hex_range)) for _ in range(len(self.group_dict), len(self.palette))]
             self.palette = self.palette + extra_colors
         self.group_color = {g: c for g, c in zip(self.group_dict.keys(), self.palette[: len(self.group_dict)])}
         self.sample_color = dict()

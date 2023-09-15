@@ -1,9 +1,7 @@
 import math
 from collections import OrderedDict
 
-import numpy as np
-
-from multiqc.plots import bargraph, linegraph, scatter, table
+from multiqc.plots import bargraph, linegraph, table
 
 """
 Functions for plotting per run information of bases2fastq
@@ -225,10 +223,18 @@ def plot_base_quality_hist(run_data, color_dict):
     anchor = "bq_hist"
     description = "Histogram of run base qualities"
     helptext = """
-    This sections plot the run base qualities histograms.\n
+    Run base qualities histogram, summarised by bases and reads. 
+    Use tabs to switch between the views:\n
        - Quality Per Base: distribution of base qualities.\n
-       - Quality Per Read: distribution of read qualities.
+       - Quality Per Read: distribution of read qualities.\n
+    \n
+    _The y-axis on the graph shows the quality scores. The higher the score, the better
+    the base call. The background of the graph divides the y-axis into very good quality
+    calls (green), calls of reasonable quality (orange), and calls of poor quality (red).
+    The quality of calls on most platforms will degrade as the run progresses, so it is
+    common to see base calls falling into the orange area towards the end of a read._
     """
+
     return plot_html, plot_name, anchor, description, helptext, plot_content
 
 

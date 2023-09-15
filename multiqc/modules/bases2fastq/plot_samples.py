@@ -1,9 +1,7 @@
 import json
 from collections import OrderedDict
 
-import numpy as np
-
-from multiqc.plots import bargraph, linegraph, scatter, table
+from multiqc.plots import linegraph, table
 from multiqc.utils import report
 
 """
@@ -155,11 +153,11 @@ def sequence_content_plot(sample_data, group_lookup_dict, color_dict):
     anchor = "per_cycle_sequence_content"
     description = "The proportion of each base position for which each of the four normal DNA bases has been called."
     helptext = """
-    The heatmap is formatted in a similar way as fastqc per base sequence content. The differences are:
-    1) The pass/fail flag in the original fastqc module are replaced with a color reflecting the group tag of the samples
+    The heatmap is formatted in a similar way as FastQC per base sequence content. The differences are:
+    1) The pass/fail flag in the original FastQC module are replaced with a color reflecting the group tag of the samples
     2) Read1 and Read2 is co-plotted and separate by a white band in the heatmap and a red dashed in each individual sample plot.
 
-    The following is a copy of helptext of the fastqc module:
+    The following is a copy of helptext of the FastQC module:
     
     To enable multiple samples to be shown in a single plot, the base composition data
     is shown as a heatmap. The colours represent the balance between the four bases:
@@ -229,22 +227,30 @@ def plot_per_cycle_N_content(sample_data, group_lookup_dict, color_dict):
     plot_content = data
     config = {
         "xlab": "cycle",
-        "ylab": "Base Quality",
+        "ylab": "Percentage",
         "ymax": 100,
         "xPlotLines": [{"color": "#FF0000", "width": 2, "value": r1r2_split, "dashStyle": "Dash"}],
         "colors": color_dict,
         "ymin": 0,
         "id": "per_cycle_n_content",
-        "title": "bases2fastq: per cycle N content percentage",
-        "ylab": "Percentage",
+        "title": "Per Cycle N Content Percentage",
     }
     plot_html = linegraph.plot(plot_content, pconfig=config)
     plot_name = "Per Cycle N Content"
     anchor = "n_content"
-    description = "N content by cycle"
-    helptext = """
-    This section plots the percentage of unidentified bases ("N" bases) by each sequencing cycle.\n
+    description = """
+    Percentage of unidentified bases ("N" bases) by each sequencing cycle.
     Read 1 and Read 2 are separated by a red dashed line
+    """
+    helptext = """
+    If a sequencer is unable to make a base call with sufficient confidence then it will
+    normally substitute an `N` rather than a conventional base call. This graph shows the
+    percentage of base calls at each position for which an `N` was called.
+
+    It's not unusual to see a very low proportion of Ns appearing in a sequence, especially
+    nearer the end of a sequence. However, if this proportion rises above a few percent
+    it suggests that the analysis pipeline was unable to interpret the data well enough to
+    make valid base calls.
     """
     return plot_html, plot_name, anchor, description, helptext, plot_content
 
@@ -269,20 +275,31 @@ def plot_per_read_gc_hist(sample_data, group_lookup_dict, sample_color):
     plot_function = linegraph.plot
 
     config = {
-        "description": "GC",
-        "xlab": "GC content",
+        "xlab": "% GC",
         "ylab": "Percentage",
         "colors": sample_color,
         "id": "gc_hist",
         "title": "bases2fastq: Per Sample GC Content Histogram",
-        "ylab": "Percentage",
     }
     plot_name = "Per Sample GC Histogram"
     plot_html = linegraph.plot(plot_content, pconfig=config)
     anchor = "gc_histogram"
     description = "Histogram of distributions of percentage GC in each read"
     helptext = """
-    This section plots the distribution of percentage GC in each reads (range: 0-100)
+    GC content across the whole length of each sequence.
+    
+    In a normal random library you would expect to see a roughly normal distribution
+    of GC content where the central peak corresponds to the overall GC content of
+    the underlying genome. Since we don't know the GC content of the genome the
+    modal GC content is calculated from the observed data and used to build a
+    reference distribution.
+
+    An unusually shaped distribution could indicate a contaminated library or
+    some other kinds of biased subset. A normal distribution which is shifted
+    indicates some systematic bias which is independent of base position. If there
+    is a systematic bias which creates a shifted normal distribution then this won't
+    be flagged as an error by the module since it doesn't know what your genome's
+    GC content should be.
     """
     return plot_html, plot_name, anchor, description, helptext, plot_content
 
@@ -318,21 +335,23 @@ def plot_adapter_content(sample_data, group_lookup_dict, sample_color):
             adapter_percent = cycle["PercentReadsTrimmed"]
             plot_content[s_name].update({cycle_no: adapter_percent})
     config = {
-        "description": "adapter content",
+        "id": "per_cycle_adapter_content",
+        "title": "bases2fastq: Per Cycle Adapter Content",
         "xlab": "Cycle",
-        "ylab": "Percentage",
+        "ylab": "% of Sequences",
         "xPlotLines": [{"color": "#FF0000", "width": 2, "value": r1r2_split, "dashStyle": "Dash"}],
         "ymax": 100,
-        "id": "per_cycle_adapter_content",
-        "title": "bases2fastq: per cycle adapter content",
-        "ylab": "Percentage",
     }
     plot_name = "Per Sample Adapter Content"
     config.update({"colors": sample_color})
     plot_html = linegraph.plot(plot_content, pconfig=config)
     anchor = "adapter_content"
-    description = "Plot of adapter content by cycle"
+    description = "Adapter content per cycle"
     helptext = """
-    This section plots the adapter content percentage by cycles
+    The plot shows a cumulative percentage count of the proportion
+    of your library which has seen each of the adapter sequences at each cycle.
+    Once a sequence has been seen in a read, it is counted as being present
+    right through to the end of the read, so the percentages you see will only
+    increase as the read length goes on.
     """
     return plot_html, plot_name, anchor, description, helptext, plot_content
