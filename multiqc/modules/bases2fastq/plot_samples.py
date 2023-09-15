@@ -16,7 +16,7 @@ def tabulate_sample_stats(sample_data, group_lookup_dict, sample_color):
     plot_content = dict()
     for s_name in sample_data.keys():
         general_stats = dict()
-        general_stats.update({"group": group_lookup_dict[s_name].replace(" ", "&nbsp;")})
+        general_stats.update({"group": group_lookup_dict[s_name]})
         general_stats.update({"num_polonies_sample": sample_data[s_name]["NumPolonies"]})
         general_stats.update({"yield_sample": sample_data[s_name]["Yield"]})
         general_stats.update({"mean_base_quality_sample": sample_data[s_name]["QualityScoreMean"]})
@@ -30,6 +30,7 @@ def tabulate_sample_stats(sample_data, group_lookup_dict, sample_color):
         "title": "Group",
         "description": "Run/Sample group label.",
         "bgcols": sample_color,
+        "scale": False,
     }
     headers["num_polonies_sample"] = {
         "title": f"# Polonies ({config.base_count_prefix})",
