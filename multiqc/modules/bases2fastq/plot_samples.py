@@ -2,7 +2,7 @@ import json
 from collections import OrderedDict
 
 from multiqc.plots import linegraph, table
-from multiqc.utils import report
+from multiqc.utils import config, report
 
 """
 Functions for plotting per sample information of bases2fastq
@@ -16,7 +16,7 @@ def tabulate_sample_stats(sample_data, group_lookup_dict, sample_color):
     plot_content = dict()
     for s_name in sample_data.keys():
         general_stats = dict()
-        general_stats.update({"group": group_lookup_dict[s_name]})
+        general_stats.update({"group": group_lookup_dict[s_name].replace(" ", "&nbsp;")})
         general_stats.update({"num_polonies_sample": sample_data[s_name]["NumPolonies"]})
         general_stats.update({"yield_sample": sample_data[s_name]["Yield"]})
         general_stats.update({"mean_base_quality_sample": sample_data[s_name]["QualityScoreMean"]})
@@ -32,11 +32,11 @@ def tabulate_sample_stats(sample_data, group_lookup_dict, sample_color):
         "bgcols": sample_color,
     }
     headers["num_polonies_sample"] = {
-        "title": "Number of Polonies",
-        "description": "The (total) number of polonies calculated for the sample",
-        "format": "{d}",
+        "title": f"# Polonies ({config.base_count_prefix})",
+        "description": f"The (total) number of polonies calculated for the sample ({config.base_count_desc})",
         "min": 0,
         "scale": "Blues",
+        "shared_key": "base_count",
     }
     headers["yield_sample"] = {
         "title": "Yield (Gb)",
@@ -66,10 +66,10 @@ def tabulate_sample_stats(sample_data, group_lookup_dict, sample_color):
         "suffix": "%",
     }
 
-    config = {"description": "Table of per sample key informations", "no_beeswarm": True}
+    pconfig = {"description": "Table of per sample key information", "no_beeswarm": True}
 
     plot_name = "Sample QC metrics table"
-    plot_html = table.plot(plot_content, headers, pconfig=config)
+    plot_html = table.plot(plot_content, headers, pconfig=pconfig)
     anchor = "sample_qc_metrics_table"
     description = "table of general QC metrics by sample"
     helptext = """
@@ -214,7 +214,6 @@ def plot_per_cycle_N_content(sample_data, group_lookup_dict, color_dict):
                 )
 
         R2 = sample_data[s_name]["Reads"][1]["Cycles"]
-        R2_cycle_num = len(R2)
         for cycle in range(len(R2)):
             base_no = str(cycle + 1 + r1r2_split)
             if sum(R2[cycle]["BaseComposition"].values()) == 0:
@@ -225,7 +224,7 @@ def plot_per_cycle_N_content(sample_data, group_lookup_dict, color_dict):
                 )
 
     plot_content = data
-    config = {
+    pconfig = {
         "xlab": "cycle",
         "ylab": "Percentage",
         "ymax": 100,
@@ -235,7 +234,7 @@ def plot_per_cycle_N_content(sample_data, group_lookup_dict, color_dict):
         "id": "per_cycle_n_content",
         "title": "Per Cycle N Content Percentage",
     }
-    plot_html = linegraph.plot(plot_content, pconfig=config)
+    plot_html = linegraph.plot(plot_content, pconfig=pconfig)
     plot_name = "Per Cycle N Content"
     anchor = "n_content"
     description = """
@@ -272,9 +271,8 @@ def plot_per_read_gc_hist(sample_data, group_lookup_dict, sample_color):
 
     # perReadQualityHistogram
     plot_content = gc_hist_dict
-    plot_function = linegraph.plot
 
-    config = {
+    pconfig = {
         "xlab": "% GC",
         "ylab": "Percentage",
         "colors": sample_color,
@@ -282,7 +280,7 @@ def plot_per_read_gc_hist(sample_data, group_lookup_dict, sample_color):
         "title": "bases2fastq: Per Sample GC Content Histogram",
     }
     plot_name = "Per Sample GC Histogram"
-    plot_html = linegraph.plot(plot_content, pconfig=config)
+    plot_html = linegraph.plot(plot_content, pconfig=pconfig)
     anchor = "gc_histogram"
     description = "Histogram of distributions of percentage GC in each read"
     helptext = """
@@ -329,12 +327,11 @@ def plot_adapter_content(sample_data, group_lookup_dict, sample_color):
             plot_content[s_name].update({cycle_no: adapter_percent})
         # Read 2
         cycles = sample_data[s_name]["Reads"][1]["Cycles"]
-        R2_cycle_num = len(cycles)
         for cycle in cycles:
             cycle_no = int(cycle["Cycle"]) + r1r2_split
             adapter_percent = cycle["PercentReadsTrimmed"]
             plot_content[s_name].update({cycle_no: adapter_percent})
-    config = {
+    pconfig = {
         "id": "per_cycle_adapter_content",
         "title": "bases2fastq: Per Cycle Adapter Content",
         "xlab": "Cycle",
@@ -343,8 +340,8 @@ def plot_adapter_content(sample_data, group_lookup_dict, sample_color):
         "ymax": 100,
     }
     plot_name = "Per Sample Adapter Content"
-    config.update({"colors": sample_color})
-    plot_html = linegraph.plot(plot_content, pconfig=config)
+    pconfig.update({"colors": sample_color})
+    plot_html = linegraph.plot(plot_content, pconfig=pconfig)
     anchor = "adapter_content"
     description = "Adapter content per cycle"
     helptext = """
