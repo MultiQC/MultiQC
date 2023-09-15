@@ -2,6 +2,7 @@ import math
 from collections import OrderedDict
 
 from multiqc.plots import bargraph, linegraph, table
+from multiqc.utils import config
 
 """
 Functions for plotting per run information of bases2fastq
@@ -10,18 +11,15 @@ Functions for plotting per run information of bases2fastq
 
 def plot_run_stats(run_data, color_dict):
     """
-    plot bargraph for polony numbers, Q30/Q40, index assignment rate and yields for each run
+    Plot a bar graph for polony numbers, Q30/Q40, index assignment rate and yields for each run
     """
     run_names = list(run_data.keys())
     run_names.sort()
     num_polonies = dict()
-    percent_qualities = dict()
-    percent_assigned_dict = dict()
     yields = dict()
     for run in run_names:
-        ### Index Assignment Polonies and Yields ###
+        # Index Assignment Polonies and Yields ###
         percent_assigned = run_data[run]["PercentAssignedReads"]
-        percent_unassigned = run_data[run]["PercentMismatch"]
         percent_perfect_assigned = (
             100.00 - run_data[run]["PercentMismatch"]
         )  # percentage of assigned polonies that has perfect index pairs
@@ -51,7 +49,7 @@ def plot_run_stats(run_data, color_dict):
         yields[run] = total_yield_run
 
     plot_content = [num_polonies, yields]
-    config = {
+    pconfig = {
         "data_labels": [
             {"name": "Number of Polonies", "ylab": "Number of Polonies", "format": "{d}"},
             {"name": "Yield (Gb)", "ylab": "Gb"},
@@ -72,7 +70,7 @@ def plot_run_stats(run_data, color_dict):
     ] * 2
 
     plot_name = "Sequencing Run Yield"
-    plot_html = bargraph.plot(plot_content, cats, pconfig=config)
+    plot_html = bargraph.plot(plot_content, cats, pconfig=pconfig)
     anchor = "run_yield_plot"
     description = "Bar plots of sequencing run yields. Please see individual run reports for details"
     helptext = """
@@ -90,7 +88,7 @@ def tabulate_run_stats(run_data, color_dict):
     plot_content = dict()
     for s_name in run_data.keys():
         run_stats = dict()
-        run_stats.update({"num_polonies_run": run_data[s_name]["NumPolonies"]})
+        run_stats.update({"num_polonies_run": int(run_data[s_name]["NumPolonies"])})
         run_stats.update({"percent_assigned_run": run_data[s_name]["PercentAssignedReads"]})
         run_stats.update({"yield_run": run_data[s_name]["AssignedYield"]})
         run_stats.update({"mean_base_quality_run": run_data[s_name]["QualityScoreMean"]})
@@ -101,14 +99,14 @@ def tabulate_run_stats(run_data, color_dict):
     headers = OrderedDict()
 
     headers["num_polonies_run"] = {
-        "title": "Number of Polonies",
-        "format": "{d}",
-        "description": "The (total) number of polonies calculated for the run",
+        "title": f"# Polonies ({config.base_count_prefix})",
+        "description": f"The (total) number of polonies calculated for the run ({config.base_count_desc})",
         "min": 0,
         "scale": "RdYlGn",
+        "shared_key": "base_count",
     }
     headers["percent_assigned_run"] = {
-        "title": "Percent Assigned Reads",
+        "title": "% Assigned Reads",
         "description": "The percentage of reads assigned to sample(s)",
         "max": 100,
         "min": 0,
@@ -143,16 +141,16 @@ def tabulate_run_stats(run_data, color_dict):
         "suffix": "%",
     }
 
-    config = {
+    pconfig = {
         "title": "bases2fastq: General Sequencing Run QC metrics",
-        "descriptions": "Comparision of run metrics across runs",
+        "descriptions": "Comparison of run metrics across runs",
         "col1_header": "Run Name",
         "id": "run_metrics_table",
         "ylab": "QC",
     }
 
     plot_name = "Sequencing Run QC metrics table"
-    plot_html = table.plot(plot_content, headers, pconfig=config)
+    plot_html = table.plot(plot_content, headers, pconfig=pconfig)
     anchor = "run_qc_metrics_table"
     description = "Table of general QC metrics"
     helptext = """
@@ -195,7 +193,7 @@ def plot_base_quality_hist(run_data, color_dict):
     plot_content = [bq_hist_dict, per_read_quality_hist_dict]
 
     # Config for switching dataset
-    config = {
+    pconfig = {
         "data_labels": [
             {
                 "name": "Quality Per Base",
@@ -218,7 +216,7 @@ def plot_base_quality_hist(run_data, color_dict):
         "title": "bases2fastq: Quality Histograms",
         "ylab": "Percentage",
     }
-    plot_html = linegraph.plot(plot_content, pconfig=config)
+    plot_html = linegraph.plot(plot_content, pconfig=pconfig)
     plot_name = "Run Base Quality Histogram"
     anchor = "bq_hist"
     description = "Histogram of run base qualities"
@@ -263,10 +261,8 @@ def plot_base_quality_by_cycle(run_data, color_dict):
     # Prepare plot data for mean BQ of each cycle
     mean_dict = {}
     for s_name in run_data.keys():
-        ###Update each sample cycle info
+        # Update each sample cycle info
         cycle_dict = dict()
-        R1CycleNum = len(run_data[s_name]["Reads"][0]["Cycles"])
-        R2CycleNum = len(run_data[s_name]["Reads"][0]["Cycles"])
         for cycle in run_data[s_name]["Reads"][0]["Cycles"]:
             cycle_no = cycle["Cycle"]
             cycle_dict.update({cycle_no: cycle["QualityScoreMean"]})
@@ -278,10 +274,8 @@ def plot_base_quality_by_cycle(run_data, color_dict):
     # Prepare plot data for %Q30 of each cycle
     Q30_dict = {}
     for s_name in run_data.keys():
-        ###Update each sample cycle info
+        # Update each sample cycle info
         cycle_dict = dict()
-        R1CycleNum = len(run_data[s_name]["Reads"][0]["Cycles"])
-        R2CycleNum = len(run_data[s_name]["Reads"][0]["Cycles"])
         for cycle in run_data[s_name]["Reads"][0]["Cycles"]:
             cycle_no = cycle["Cycle"]
             cycle_dict.update({cycle_no: cycle["PercentQ30"]})
@@ -294,8 +288,6 @@ def plot_base_quality_by_cycle(run_data, color_dict):
     Q40_dict = {}
     for s_name in run_data.keys():
         cycle_dict = dict()
-        R1CycleNum = len(run_data[s_name]["Reads"][0]["Cycles"])
-        R2CycleNum = len(run_data[s_name]["Reads"][0]["Cycles"])
         for cycle in run_data[s_name]["Reads"][0]["Cycles"]:
             cycle_no = cycle["Cycle"]
             cycle_dict.update({cycle_no: cycle["PercentQ40"]})
@@ -306,7 +298,7 @@ def plot_base_quality_by_cycle(run_data, color_dict):
 
     # aggregate plot data
     plot_content = [median_dict, mean_dict, Q30_dict, Q40_dict]
-    config = {
+    pconfig = {
         "data_labels": [
             {"name": "Median Quality", "xlab": "cycle", "ylab": "Quality"},
             {"name": "Mean Quality", "ylab": "Quality"},
@@ -320,7 +312,7 @@ def plot_base_quality_by_cycle(run_data, color_dict):
         "title": "bases2fastq: Quality by cycles",
         "ylab": "QC",
     }
-    plot_html = linegraph.plot(plot_content, pconfig=config)
+    plot_html = linegraph.plot(plot_content, pconfig=pconfig)
     plot_name = "Quality Metrics By Cycle"
     anchor = "per_cycle_quality"
     description = "Per run base qualities by cycle"
