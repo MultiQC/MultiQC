@@ -232,7 +232,7 @@ def plot_per_cycle_N_content(sample_data, group_lookup_dict, color_dict):
         "colors": color_dict,
         "ymin": 0,
         "id": "per_cycle_n_content",
-        "title": "Per Cycle N Content Percentage",
+        "title": "bases2fastq: Per Cycle N Content Percentage",
     }
     plot_html = linegraph.plot(plot_content, pconfig=pconfig)
     plot_name = "Per Cycle N Content"
