@@ -321,7 +321,6 @@ def plot_adapter_content(sample_data, group_lookup_dict, sample_color):
         plot_content.update({s_name: {}})
         # Read 1
         cycles = sample_data[s_name]["Reads"][0]["Cycles"]
-        R1_cycle_num = len(cycles)
         for cycle in cycles:
             cycle_no = int(cycle["Cycle"])
             adapter_percent = cycle["PercentReadsTrimmed"]

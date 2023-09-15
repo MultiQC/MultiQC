@@ -340,7 +340,7 @@ class MultiqcModule(BaseMultiqcModule):
                     )
                 total_reads_per_lane[lane_id] = reads
 
-        run_data = self.bclconvert_data[self.last_run_id]  # in this situaiton we have only one run id
+        run_data = self.bclconvert_data[self.last_run_id]  # in this situation we have only one run id
         for lane_id, lane in run_data.items():
             determined_reads = 0
             for sample_id, sample in lane["samples"].items():
