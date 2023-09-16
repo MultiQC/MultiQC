@@ -312,7 +312,7 @@ class DragenPloidyEstimationMetrics(BaseMultiqcModule):
                 s_name = f["s_name"]
                 if s_name in ploidy_data:
                     log.debug(f"Duplicate sample name found! Overwriting: {s_name}")
-                self.add_data_source(file, section="stats")
+                self.add_data_source(f, section="stats")
                 all_samples[s_name].append(f)
                 ploidy_data[s_name] = out["data"]  # Add/overwrite the sample.
                 all_metrics.update(out["metric_IDs"])
