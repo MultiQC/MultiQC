@@ -22,7 +22,6 @@ from collections import OrderedDict, defaultdict
 from multiqc import config
 from multiqc.modules.base_module import BaseMultiqcModule
 from multiqc.plots import linegraph, table
-from multiqc.utils.util_functions import write_data_file
 
 from .utils import check_duplicate_samples, flatten_4D_data, make_gen_stats_headers, make_log_report, make_own_headers
 
