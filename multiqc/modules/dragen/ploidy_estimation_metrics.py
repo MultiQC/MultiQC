@@ -16,6 +16,7 @@ ploidy_estimation_user_configs:
 '''
 
 import logging
+import re
 from collections import OrderedDict, defaultdict
 
 from multiqc import config
