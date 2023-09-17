@@ -93,4 +93,3 @@ class MultiqcModule(BaseMultiqcModule):
             }
         # Write to a file for downstream use
         util_functions.write_data_file(flat_software_versions, "multiqc_software_versions")
-
