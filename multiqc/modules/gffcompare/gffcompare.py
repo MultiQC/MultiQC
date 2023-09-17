@@ -3,7 +3,7 @@
 
 import logging
 
-from multiqc.modules.base_module import BaseMultiqcModule
+from multiqc.modules.base_module import BaseMultiqcModule, ModuleNoSamplesFound
 from multiqc.plots import bargraph, scatter
 
 # Initialise the logger
@@ -103,7 +103,7 @@ class MultiqcModule(BaseMultiqcModule):
 
         # Raise user warning if no data found
         if len(self.gffcompare_data) == 0:
-            raise UserWarning
+            raise ModuleNoSamplesFound
 
         log.info("Found {} reports".format(len(self.gffcompare_data)))
 

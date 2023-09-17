@@ -7,7 +7,7 @@ from collections import OrderedDict, defaultdict
 from itertools import islice
 
 from multiqc import config
-from multiqc.modules.base_module import BaseMultiqcModule
+from multiqc.modules.base_module import BaseMultiqcModule, ModuleNoSamplesFound
 from multiqc.plots import bargraph, table
 
 log = logging.getLogger(__name__)
@@ -45,7 +45,7 @@ class MultiqcModule(BaseMultiqcModule):
             self.parse_qmetrics_data(qmetric)
 
         if self.num_demux_files == 0:
-            raise UserWarning
+            raise ModuleNoSamplesFound
         elif self.num_demux_files > 1 and not self.multiple_sequencing_runs:
             log.warning("Found multiple runs from the same sequencer output")
             self.intro += """
@@ -87,7 +87,7 @@ class MultiqcModule(BaseMultiqcModule):
 
         # Return with Warning if no files are found
         if len(self.bclconvert_bylane) == 0 and len(self.bclconvert_bysample) == 0:
-            raise UserWarning
+            raise ModuleNoSamplesFound
         log.info("{} lanes and {} samples found".format(len(self.bclconvert_bylane), len(self.bclconvert_bysample)))
 
         # Print source files
@@ -251,7 +251,7 @@ class MultiqcModule(BaseMultiqcModule):
                 return element.get("NumCycles")
 
         log.error(f"Could not figure out read 2 length from RunInfo.xml")
-        raise UserWarning
+        raise ModuleNoSamplesFound
 
     def _parse_single_runinfo_file(self, runinfo_file):
         # get run id and cluster length from RunInfo.xml
@@ -263,7 +263,7 @@ class MultiqcModule(BaseMultiqcModule):
             )  # ET indexes first element at 1, so here we're getting the first NumCycles
         except:
             log.error(f"Could not parse RunInfo.xml to get RunID and read length in '{runinfo_file['root']}'")
-            raise UserWarning
+            raise ModuleNoSamplesFound
         if self._is_single_end_reads(root):
             cluster_length = int(read_length_r1)
         else:
@@ -291,7 +291,7 @@ class MultiqcModule(BaseMultiqcModule):
             log.error(
                 f"Different amount of Demux Stats files and RunInfoXML files found: '{len(demuxes)}' and '{len(runinfos)}'"
             )
-            raise UserWarning
+            raise ModuleNoSamplesFound
 
         for idx, runinfo in enumerate(runinfos):
             rundata = self._parse_single_runinfo_file(runinfo)
@@ -300,7 +300,7 @@ class MultiqcModule(BaseMultiqcModule):
                 log.error(
                     f"Expected RunInfo.xml file in '{runinfo['root']}' and Demultiplex_Stats.csv in '{demuxes[idx]['root']}' to be in the same directory"
                 )
-                raise UserWarning
+                raise ModuleNoSamplesFound
             else:
                 demuxes[idx]["run_id"] = rundata["run_id"]
                 try:
@@ -320,7 +320,7 @@ class MultiqcModule(BaseMultiqcModule):
                     log.error(
                         "Detected different read lengths across the RunXml files. We cannot handle this - read length across all input directories must be the same."
                     )
-                    raise UserWarning
+                    raise ModuleNoSamplesFound
             self.cluster_length = rundata["cluster_length"]
 
         return demuxes, qmetrics

@@ -3,7 +3,7 @@
 
 import logging
 
-from multiqc.modules.base_module import BaseMultiqcModule
+from multiqc.modules.base_module import BaseMultiqcModule, ModuleNoSamplesFound
 from multiqc.plots import linegraph
 
 # Initialise the logger
@@ -36,7 +36,7 @@ class MultiqcModule(BaseMultiqcModule):
         self.jellyfish_data = self.ignore_samples(self.jellyfish_data)
 
         if len(self.jellyfish_data) == 0:
-            raise UserWarning
+            raise ModuleNoSamplesFound
 
         # Write data to file
         self.write_data_file(self.jellyfish_data, "jellyfish")

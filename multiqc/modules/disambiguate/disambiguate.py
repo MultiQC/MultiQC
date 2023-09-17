@@ -3,7 +3,7 @@
 import logging
 from collections import OrderedDict
 
-from multiqc.modules.base_module import BaseMultiqcModule
+from multiqc.modules.base_module import BaseMultiqcModule, ModuleNoSamplesFound
 from multiqc.plots import bargraph
 
 log = logging.getLogger(__name__)
@@ -40,7 +40,7 @@ class MultiqcModule(BaseMultiqcModule):
         self.data = self.ignore_samples(self.data)
 
         if len(self.data) == 0:
-            raise UserWarning
+            raise ModuleNoSamplesFound
 
         log.info("Found %d reports", len(self.data))
 

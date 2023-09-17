@@ -5,7 +5,7 @@ from collections import OrderedDict
 
 import numpy as np
 
-from multiqc.modules.base_module import BaseMultiqcModule
+from multiqc.modules.base_module import BaseMultiqcModule, ModuleNoSamplesFound
 from multiqc.plots import bargraph, linegraph
 
 # Initialise the logger
@@ -32,7 +32,7 @@ class MultiqcModule(BaseMultiqcModule):
         self.jcvi = self.ignore_samples(self.jcvi)
 
         if len(self.jcvi) == 0:
-            raise UserWarning
+            raise ModuleNoSamplesFound
 
         log.info("Found {} logs".format(len(self.jcvi)))
         self.write_data_file(self.jcvi, "multiqc_jcvi")

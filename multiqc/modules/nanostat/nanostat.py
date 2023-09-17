@@ -5,7 +5,7 @@ import logging
 from collections import OrderedDict
 
 from multiqc import config
-from multiqc.modules.base_module import BaseMultiqcModule
+from multiqc.modules.base_module import BaseMultiqcModule, ModuleNoSamplesFound
 from multiqc.plots import bargraph, table
 from multiqc.utils import mqc_colour
 
@@ -67,7 +67,7 @@ class MultiqcModule(BaseMultiqcModule):
         self.nanostat_data = self.ignore_samples(self.nanostat_data)
 
         if len(self.nanostat_data) == 0:
-            raise UserWarning
+            raise ModuleNoSamplesFound
 
         log.info("Found {} reports".format(len(self.nanostat_data)))
 

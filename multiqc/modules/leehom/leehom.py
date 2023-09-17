@@ -5,7 +5,7 @@ import logging
 import re
 
 from multiqc import config
-from multiqc.modules.base_module import BaseMultiqcModule
+from multiqc.modules.base_module import BaseMultiqcModule, ModuleNoSamplesFound
 
 # Initialise the logger
 log = logging.getLogger(__name__)
@@ -39,7 +39,7 @@ class MultiqcModule(BaseMultiqcModule):
         self.leehom_data = self.ignore_samples(self.leehom_data)
 
         if len(self.leehom_data) == 0:
-            raise UserWarning
+            raise ModuleNoSamplesFound
 
         log.info("Found {} reports".format(len(self.leehom_data)))
 

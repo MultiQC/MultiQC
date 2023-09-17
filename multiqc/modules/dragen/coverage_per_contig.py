@@ -2,7 +2,7 @@ import logging
 import re
 from collections import OrderedDict, defaultdict
 
-from multiqc.modules.base_module import BaseMultiqcModule
+from multiqc.modules.base_module import BaseMultiqcModule, ModuleNoSamplesFound
 from multiqc.plots import linegraph
 
 # Initialise the logger

@@ -5,7 +5,7 @@ import json
 import logging
 from collections import OrderedDict
 
-from multiqc.modules.base_module import BaseMultiqcModule
+from multiqc.modules.base_module import BaseMultiqcModule, ModuleNoSamplesFound
 from multiqc.plots import bargraph, scatter
 
 # Initialise the logger
@@ -38,7 +38,7 @@ class MultiqcModule(BaseMultiqcModule):
 
         # Return if no samples found
         if len(self.sexdet_data) == 0:
-            raise UserWarning
+            raise ModuleNoSamplesFound
 
         # Save data output file
         self.write_data_file(self.sexdet_data, "multiqc_sexdeter_metrics")

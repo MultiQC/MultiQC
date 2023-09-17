@@ -6,7 +6,7 @@ import re
 from collections import OrderedDict
 
 from multiqc import config
-from multiqc.modules.base_module import BaseMultiqcModule
+from multiqc.modules.base_module import BaseMultiqcModule, ModuleNoSamplesFound
 from multiqc.plots import bargraph, beeswarm, linegraph
 
 # Initialise the logger
@@ -134,7 +134,7 @@ class MultiqcModule(BaseMultiqcModule):
         num_parsed += len(self.bismark_mbias_data["meth"]["CpG_R1"])
         num_parsed += len(self.bismark_data["bam2nuc"])
         if num_parsed == 0:
-            raise UserWarning
+            raise ModuleNoSamplesFound
 
         # Basic Stats Table
         self.bismark_stats_table()

@@ -1,7 +1,7 @@
 import logging
 from collections import OrderedDict
 
-from multiqc.modules.base_module import BaseMultiqcModule
+from multiqc.modules.base_module import BaseMultiqcModule, ModuleNoSamplesFound
 from multiqc.plots import table
 from multiqc.utils import config
 
@@ -42,7 +42,7 @@ class MultiqcModule(BaseMultiqcModule):
                     data_found = True
 
         if not data_found:
-            raise UserWarning
+            raise ModuleNoSamplesFound
         else:
             num_samples = max([len(self.mod_data[ft].keys()) for ft in self.mod_data])
             log.info("Found {} reports".format(num_samples))

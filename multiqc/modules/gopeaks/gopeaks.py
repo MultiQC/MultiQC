@@ -5,7 +5,7 @@ import logging
 from collections import OrderedDict
 from pathlib import Path
 
-from multiqc.modules.base_module import BaseMultiqcModule
+from multiqc.modules.base_module import BaseMultiqcModule, ModuleNoSamplesFound
 from multiqc.plots import bargraph
 
 # Initialise the logger
@@ -48,7 +48,7 @@ class MultiqcModule(BaseMultiqcModule):
         self.gopeaks_data = self.ignore_samples(self.gopeaks_data)
 
         if len(self.gopeaks_data) == 0:
-            raise UserWarning
+            raise ModuleNoSamplesFound
 
         log.info("Found {} samples".format(len(self.gopeaks_data)))
 

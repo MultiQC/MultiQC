@@ -3,7 +3,7 @@
 import logging
 
 from multiqc import config
-from multiqc.modules.base_module import BaseMultiqcModule
+from multiqc.modules.base_module import BaseMultiqcModule, ModuleNoSamplesFound
 from multiqc.plots import heatmap
 from multiqc.utils import mqc_colour
 
@@ -33,7 +33,7 @@ class MultiqcModule(BaseMultiqcModule):
 
         # Write the data files to disk
         if not self.librarian_data:
-            raise UserWarning
+            raise ModuleNoSamplesFound
         log.info("Found {} samples".format(len(self.librarian_data)))
 
         if self.librarian_data:

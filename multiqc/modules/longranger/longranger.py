@@ -6,7 +6,7 @@ import os
 import re
 from collections import OrderedDict
 
-from multiqc.modules.base_module import BaseMultiqcModule
+from multiqc.modules.base_module import BaseMultiqcModule, ModuleNoSamplesFound
 from multiqc.plots import bargraph, table
 
 # Initialise the logger
@@ -263,7 +263,7 @@ class MultiqcModule(BaseMultiqcModule):
         self.longranger_data = self.ignore_samples(self.longranger_data)
 
         if len(self.longranger_data) == 0:
-            raise UserWarning
+            raise ModuleNoSamplesFound
         log.info("Found {} reports".format(len(self.longranger_data.keys())))
 
         # Write parsed report data to a file

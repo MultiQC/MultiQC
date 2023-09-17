@@ -689,7 +689,7 @@ def run(
                 except AttributeError:
                     pass
 
-        except UserWarning:
+        except ModuleNoSamplesFound:
             logger.debug("No samples found: {}".format(list(mod_dict.keys())[0]))
         except KeyboardInterrupt:
             shutil.rmtree(tmp_dir)

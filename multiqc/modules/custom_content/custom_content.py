@@ -11,7 +11,7 @@ from collections import OrderedDict, defaultdict
 import yaml
 
 from multiqc import config
-from multiqc.modules.base_module import BaseMultiqcModule
+from multiqc.modules.base_module import BaseMultiqcModule, ModuleNoSamplesFound
 from multiqc.plots import bargraph, beeswarm, heatmap, linegraph, scatter, table
 from multiqc.utils import report
 
@@ -222,7 +222,7 @@ def custom_module_classes():
         del cust_mods[k]
 
     if len(cust_mods) == 0:
-        raise UserWarning
+        raise ModuleNoSamplesFound
 
     # Go through each data type
     parsed_modules = OrderedDict()
@@ -289,7 +289,7 @@ def custom_module_classes():
         if mod["config"].get("plot_type") == "generalstats":
             sorted_modules = [bm]
         else:
-            raise UserWarning
+            raise ModuleNoSamplesFound
 
     return sorted_modules
 

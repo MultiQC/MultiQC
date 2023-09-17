@@ -6,7 +6,7 @@
 import logging
 from collections import OrderedDict
 
-from multiqc.modules.base_module import BaseMultiqcModule
+from multiqc.modules.base_module import BaseMultiqcModule, ModuleNoSamplesFound
 
 # Initialise the logger
 log = logging.getLogger(__name__)
@@ -33,7 +33,7 @@ class MultiqcModule(BaseMultiqcModule):
 
         # Warning when no files are found
         if len(self.phantompeakqualtools_data) == 0:
-            raise UserWarning
+            raise ModuleNoSamplesFound
 
         # Log
         log.info("Found {} logs".format(len(self.phantompeakqualtools_data)))

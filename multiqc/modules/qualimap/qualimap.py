@@ -5,7 +5,7 @@ import logging
 import os
 from collections import OrderedDict, defaultdict
 
-from multiqc.modules.base_module import BaseMultiqcModule
+from multiqc.modules.base_module import BaseMultiqcModule, ModuleNoSamplesFound
 
 # Initialise the logger
 log = logging.getLogger(__name__)
@@ -47,7 +47,7 @@ class MultiqcModule(BaseMultiqcModule):
 
         # Exit if we didn't find anything
         if sum(n.values()) == 0:
-            raise UserWarning
+            raise ModuleNoSamplesFound
 
         # Remove filtered samples from general stats table
         self.general_stats_data = self.ignore_samples(self.general_stats_data)

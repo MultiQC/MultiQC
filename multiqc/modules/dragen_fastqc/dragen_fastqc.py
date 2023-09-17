@@ -90,5 +90,5 @@ class MultiqcModule(DragenBaseMetrics, DragenReadMetrics, DragenFastqcGcMetrics,
         samples_found |= self.add_content_metrics()
 
         if len(samples_found) == 0:
-            raise UserWarning
+            raise ModuleNoSamplesFound
         log.info("Found {} reports".format(len(samples_found)))

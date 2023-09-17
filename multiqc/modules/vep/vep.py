@@ -6,7 +6,7 @@ import logging
 import re
 from collections import OrderedDict
 
-from multiqc.modules.base_module import BaseMultiqcModule
+from multiqc.modules.base_module import BaseMultiqcModule, ModuleNoSamplesFound
 from multiqc.plots import bargraph, table
 from multiqc.utils import mqc_colour
 
@@ -45,7 +45,7 @@ class MultiqcModule(BaseMultiqcModule):
 
         # Stop if we didn't get any samples
         if len(self.vep_data) == 0:
-            raise UserWarning
+            raise ModuleNoSamplesFound
         log.info("Found {} VEP summaries".format(len(self.vep_data)))
 
         # Write data to file

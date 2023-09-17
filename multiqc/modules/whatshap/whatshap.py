@@ -3,7 +3,7 @@
 import logging
 from collections import OrderedDict, defaultdict
 
-from multiqc.modules.base_module import BaseMultiqcModule
+from multiqc.modules.base_module import BaseMultiqcModule, ModuleNoSamplesFound
 from multiqc.plots import bargraph, table
 
 # Initialise the logger
@@ -41,9 +41,8 @@ class MultiqcModule(BaseMultiqcModule):
         # Filter to strip out ignored sample names
         self.whatshap_stats = self.ignore_samples(self.whatshap_stats)
 
-        # Raise UserWarning if we didn't find any data
         if not self.whatshap_stats:
-            raise UserWarning
+            raise ModuleNoSamplesFound
 
         # Write parsed report data to a file
         self.write_data_file(self.whatshap_stats, "multiqc_whatshap_stats")

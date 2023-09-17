@@ -18,6 +18,19 @@ from multiqc.utils import config, report, software_versions, util_functions
 logger = logging.getLogger(__name__)
 
 
+class ModuleNoSamplesFound(Exception):
+    """Module checked all input files but couldn't find any data to use"""
+
+
+class ModuleBadInputError(Exception):
+    """Something with the input files, so we cannot proceed running the module"""
+
+
+class ModuleFatalError(Exception):
+    """Module decides that something is so badly wrong that the entire
+    MultiQC run needs to stop (exit code 1)"""
+
+
 class BaseMultiqcModule(object):
     def __init__(
         self,

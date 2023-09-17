@@ -4,7 +4,7 @@
 
 import logging
 
-from multiqc.modules.base_module import BaseMultiqcModule
+from multiqc.modules.base_module import BaseMultiqcModule, ModuleNoSamplesFound
 
 from .compare import CompareMixin
 
@@ -28,4 +28,4 @@ class MultiqcModule(BaseMultiqcModule, CompareMixin):
             log.info("Found {} compare results".format(n["compare"]))
 
         if sum(n.values()) == 0:
-            raise UserWarning
+            raise ModuleNoSamplesFound

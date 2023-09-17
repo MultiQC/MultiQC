@@ -6,7 +6,7 @@ from collections import OrderedDict
 import yaml
 
 from multiqc import config
-from multiqc.modules.base_module import BaseMultiqcModule
+from multiqc.modules.base_module import BaseMultiqcModule, ModuleNoSamplesFound
 from multiqc.plots import bargraph, linegraph, table
 
 log = logging.getLogger(__name__)
@@ -37,7 +37,7 @@ class MultiqcModule(BaseMultiqcModule):
 
         # Stop if we didn't find anything
         if len(self.pycoqc_data) == 0:
-            raise UserWarning
+            raise ModuleNoSamplesFound
 
         log.info("Found {} reports".format(len(self.pycoqc_data)))
 

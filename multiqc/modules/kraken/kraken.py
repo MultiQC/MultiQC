@@ -6,7 +6,7 @@ import re
 from collections import OrderedDict
 
 from multiqc import config
-from multiqc.modules.base_module import BaseMultiqcModule
+from multiqc.modules.base_module import BaseMultiqcModule, ModuleNoSamplesFound
 from multiqc.plots import bargraph, heatmap
 
 # Initialise the logger
@@ -56,7 +56,7 @@ class MultiqcModule(BaseMultiqcModule):
         self.kraken_raw_data = self.ignore_samples(self.kraken_raw_data)
 
         if len(self.kraken_raw_data) == 0:
-            raise UserWarning
+            raise ModuleNoSamplesFound
 
         # Data is in wrong format for writing to file
         # self.write_data_file(self.kraken_raw_data, "kraken")
@@ -216,7 +216,7 @@ class MultiqcModule(BaseMultiqcModule):
         # Check that we had some counts for some samples, exit if not
         if total_all_samples == 0:
             log.warning("No samples had any reads")
-            raise UserWarning
+            raise ModuleNoSamplesFound
 
     def sum_sample_counts(self):
         """Sum counts across all samples for kraken data"""

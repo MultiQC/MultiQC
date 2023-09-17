@@ -4,7 +4,7 @@ import json
 import logging
 from collections import OrderedDict
 
-from multiqc.modules.base_module import BaseMultiqcModule
+from multiqc.modules.base_module import BaseMultiqcModule, ModuleNoSamplesFound
 from multiqc.plots import bargraph, beeswarm, table
 
 # Initialise the logger
@@ -37,7 +37,7 @@ class MultiqcModule(BaseMultiqcModule):
 
         # Stop execution of the data if no anglerfish data is found.
         if len(self.anglerfish_data) == 0:
-            raise UserWarning
+            raise ModuleNoSamplesFound
 
         log.info(f"Found {len(self.anglerfish_data)} reports")
 

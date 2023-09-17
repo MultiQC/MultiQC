@@ -8,7 +8,7 @@ import jinja2
 
 from multiqc import config
 from multiqc.modules import nextclade
-from multiqc.modules.base_module import BaseMultiqcModule
+from multiqc.modules.base_module import BaseMultiqcModule, ModuleNoSamplesFound
 from multiqc.plots import bargraph, table
 from multiqc.utils import mqc_colour
 
@@ -38,7 +38,7 @@ class MultiqcModule(BaseMultiqcModule):
 
         # Check if we found any samples
         if len(self.nextclade_data) == 0:
-            raise UserWarning
+            raise ModuleNoSamplesFound
 
         log.info("Found {} samples".format(len(self.nextclade_data)))
         self.write_data_file(self.nextclade_data, "multiqc_nextclade")

@@ -6,7 +6,7 @@ import logging
 from collections import OrderedDict
 
 from multiqc import config
-from multiqc.modules.base_module import BaseMultiqcModule
+from multiqc.modules.base_module import BaseMultiqcModule, ModuleNoSamplesFound
 from multiqc.plots import bargraph
 from multiqc.utils import report
 
@@ -42,7 +42,7 @@ class MultiqcModule(BaseMultiqcModule):
         self.fq_screen_data = self.ignore_samples(self.fq_screen_data)
 
         if len(self.fq_screen_data) == 0:
-            raise UserWarning
+            raise ModuleNoSamplesFound
 
         log.info("Found {} reports".format(len(self.fq_screen_data)))
 

@@ -6,7 +6,7 @@ import logging
 from collections import OrderedDict, defaultdict
 
 from multiqc import config
-from multiqc.modules.base_module import BaseMultiqcModule
+from multiqc.modules.base_module import BaseMultiqcModule, ModuleNoSamplesFound
 
 # Initialise the logger
 from multiqc.modules.qualimap.QM_BamQC import coverage_histogram_helptext, genome_fraction_helptext
@@ -145,7 +145,7 @@ class MultiqcModule(BaseMultiqcModule):
 
         # No samples found
         if len(samples_found) == 0:
-            raise UserWarning
+            raise ModuleNoSamplesFound
         log.info(f"Found {len(samples_found)} reports")
 
         for scope, data in data_by_scope.items():

@@ -5,7 +5,7 @@
 import logging
 from collections import OrderedDict
 
-from multiqc.modules.base_module import BaseMultiqcModule
+from multiqc.modules.base_module import BaseMultiqcModule, ModuleNoSamplesFound
 from multiqc.plots import bargraph
 from multiqc.utils import mqc_colour
 
@@ -35,7 +35,7 @@ class MultiqcModule(BaseMultiqcModule):
 
         # Let MultiQC know this module found no data
         if len(self.freyja_data) == 0:
-            raise UserWarning
+            raise ModuleNoSamplesFound
 
         log.info(f"Found {len(self.freyja_data)} reports")
         self.write_data_file(self.freyja_data, "multiqc_freyja")

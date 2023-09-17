@@ -2,7 +2,7 @@ import logging
 from collections import OrderedDict
 
 from multiqc import config
-from multiqc.modules.base_module import BaseMultiqcModule
+from multiqc.modules.base_module import BaseMultiqcModule, ModuleNoSamplesFound
 from multiqc.plots import beeswarm
 
 log = logging.getLogger(__name__)
@@ -29,7 +29,7 @@ class MultiqcModule(BaseMultiqcModule):
         self.prinseqplusplus_data = self.ignore_samples(self.prinseqplusplus_data)
 
         if len(self.prinseqplusplus_data) == 0:
-            raise UserWarning
+            raise ModuleNoSamplesFound
 
         log.info("Found {} reports".format(len(self.prinseqplusplus_data)))
 

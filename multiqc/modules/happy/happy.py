@@ -5,7 +5,7 @@ import csv
 import logging
 from collections import OrderedDict
 
-from multiqc.modules.base_module import BaseMultiqcModule
+from multiqc.modules.base_module import BaseMultiqcModule, ModuleNoSamplesFound
 from multiqc.plots import table
 
 log = logging.getLogger(__name__)
@@ -44,7 +44,7 @@ class MultiqcModule(BaseMultiqcModule):
             self.add_data_source(f)
 
         if len(self.happy_raw_sample_names) == 0:
-            raise UserWarning
+            raise ModuleNoSamplesFound
 
         # print number of happy reports found and parsed
         log.info("Found {} reports".format(len(self.happy_raw_sample_names)))

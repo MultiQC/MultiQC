@@ -2,7 +2,7 @@
 
 import logging
 
-from multiqc.modules.base_module import BaseMultiqcModule
+from multiqc.modules.base_module import BaseMultiqcModule, ModuleNoSamplesFound
 from multiqc.plots import linegraph
 
 # Initialise the logger
@@ -27,7 +27,7 @@ class MultiqcModule(BaseMultiqcModule):
 
         # If we found no data
         if not self.hifiasm_data:
-            raise UserWarning
+            raise ModuleNoSamplesFound
         log.info("Found {} reports".format(len(self.hifiasm_data)))
 
         self.write_data_file(self.hifiasm_data, "multiqc_hifiasm_report")

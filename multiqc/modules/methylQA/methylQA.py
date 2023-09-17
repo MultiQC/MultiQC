@@ -6,7 +6,7 @@ import os
 import re
 from collections import OrderedDict
 
-from multiqc.modules.base_module import BaseMultiqcModule
+from multiqc.modules.base_module import BaseMultiqcModule, ModuleNoSamplesFound
 from multiqc.plots import linegraph
 
 # Initialise the logger
@@ -36,7 +36,7 @@ class MultiqcModule(BaseMultiqcModule):
         self.methylqa_data = self.ignore_samples(self.methylqa_data)
 
         if len(self.methylqa_data) == 0:
-            raise UserWarning
+            raise ModuleNoSamplesFound
 
         log.info("Found {} reports".format(len(self.methylqa_data)))
 

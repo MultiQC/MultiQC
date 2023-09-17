@@ -5,7 +5,7 @@ import logging
 import os
 from collections import OrderedDict
 
-from multiqc.modules.base_module import BaseMultiqcModule
+from multiqc.modules.base_module import BaseMultiqcModule, ModuleNoSamplesFound
 from multiqc.plots import linegraph
 
 # Initialise the logger
@@ -48,7 +48,7 @@ class MultiqcModule(BaseMultiqcModule):
             and len(self.lgdist_fw_data) == 0
             and len(self.lgdist_rv_data) == 0
         ):
-            raise UserWarning
+            raise ModuleNoSamplesFound
 
         ## No need to run self.write_data_file as all the data imported is already in a TSV format and can be (almost) directly used for plotting.
 

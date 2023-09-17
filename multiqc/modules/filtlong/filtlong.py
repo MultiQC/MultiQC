@@ -2,7 +2,7 @@ import logging
 from collections import OrderedDict
 
 from multiqc import config
-from multiqc.modules.base_module import BaseMultiqcModule
+from multiqc.modules.base_module import BaseMultiqcModule, ModuleNoSamplesFound
 
 log = logging.getLogger(__name__)
 
@@ -28,7 +28,7 @@ class MultiqcModule(BaseMultiqcModule):
         self.filtlong_data = self.ignore_samples(self.filtlong_data)
 
         if len(self.filtlong_data) == 0:
-            raise UserWarning
+            raise ModuleNoSamplesFound
 
         log.info(f"Found {len(self.filtlong_data)} reports")
 

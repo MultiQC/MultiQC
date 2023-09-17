@@ -8,7 +8,7 @@ from collections import OrderedDict
 
 import yaml
 
-from multiqc.modules.base_module import BaseMultiqcModule
+from multiqc.modules.base_module import BaseMultiqcModule, ModuleNoSamplesFound
 from multiqc.plots import linegraph, table
 
 # Initialise the logger
@@ -48,7 +48,7 @@ class MultiqcModule(BaseMultiqcModule):
         # Filter to strip out ignored sample names
         self.minionqc_data = self.ignore_samples(self.minionqc_data)
         if len(self.minionqc_data) == 0:
-            raise UserWarning
+            raise ModuleNoSamplesFound
 
         log.info("Found {} reports".format(len(self.minionqc_data)))
 

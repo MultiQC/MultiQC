@@ -4,7 +4,7 @@
 import logging
 from collections import OrderedDict
 
-from multiqc.modules.base_module import BaseMultiqcModule
+from multiqc.modules.base_module import BaseMultiqcModule, ModuleNoSamplesFound
 from multiqc.plots import bargraph, linegraph
 
 # Initialise the logger
@@ -37,7 +37,7 @@ class MultiqcModule(BaseMultiqcModule):
         self.snpeff_data = self.ignore_samples(self.snpeff_data)
 
         if len(self.snpeff_data) == 0:
-            raise UserWarning
+            raise ModuleNoSamplesFound
 
         log.info("Found {} reports".format(len(self.snpeff_data)))
 

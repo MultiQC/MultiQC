@@ -6,7 +6,7 @@ import logging
 import os
 from collections import OrderedDict
 
-from multiqc.modules.base_module import BaseMultiqcModule
+from multiqc.modules.base_module import BaseMultiqcModule, ModuleNoSamplesFound
 from multiqc.plots import linegraph
 
 # Initialise the logger
@@ -53,7 +53,7 @@ class MultiqcModule(BaseMultiqcModule):
         self.salmon_fld = self.ignore_samples(self.salmon_fld)
 
         if len(self.salmon_meta) == 0 and len(self.salmon_fld) == 0:
-            raise UserWarning
+            raise ModuleNoSamplesFound
 
         if len(self.salmon_meta) > 0:
             log.info("Found {} meta reports".format(len(self.salmon_meta)))
