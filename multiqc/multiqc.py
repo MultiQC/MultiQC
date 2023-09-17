@@ -27,7 +27,7 @@ import rich
 import rich_click as click
 from rich.syntax import Syntax
 
-from .modules.base_module import ModuleNoSamplesFound
+from .modules.base_module import ModuleNoSamplesFound, ModuleBadInputError
 from .plots import table
 from .utils import config, lint_helpers, log, megaqc, plugin_hooks, report, software_versions, util_functions
 
@@ -692,6 +692,8 @@ def run(
 
         except ModuleNoSamplesFound:
             logger.debug("No samples found: {}".format(list(mod_dict.keys())[0]))
+        except ModuleBadInputError:
+            logger.debug("Could not parse inputs: {}".format(list(mod_dict.keys())[0]))
         except KeyboardInterrupt:
             shutil.rmtree(tmp_dir)
             logger.critical(
