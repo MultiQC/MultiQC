@@ -265,7 +265,7 @@ class MultiqcModule(BaseMultiqcModule):
                     data[s_name][org] = self.fq_screen_data[s_name][org]["counts"]["one_hit_one_library"]
                 except KeyError:
                     log.error(
-                        "No counts found for '{}' ('{}'). Could be malformed or very old FastQ Screen results.".format(
+                        "No counts found for '{}' ('{}'). Could be malformed or very old FastQ Screen results. Skipping sample".format(
                             org, s_name
                         )
                     )

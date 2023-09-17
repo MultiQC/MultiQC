@@ -7,7 +7,7 @@ from collections import OrderedDict
 import numpy as np
 
 from multiqc import config
-from multiqc.modules.base_module import BaseMultiqcModule, ModuleNoSamplesFound
+from multiqc.modules.base_module import BaseMultiqcModule, ModuleNoSamplesFound, ModuleBadInputError
 from multiqc.plots import linegraph
 from multiqc.utils import mqc_colour
 
@@ -42,7 +42,7 @@ class MultiqcModule(BaseMultiqcModule):
 
             if data_is_bases is not None and sample_data_is_bases != data_is_bases:
                 log.error("Preseq: mixed 'TOTAL_READS' and 'TOTAL_BASES' reports")
-                raise ModuleNoSamplesFound
+                raise ModuleBadInputError
             data_is_bases = sample_data_is_bases
 
             data[f["s_name"]] = sample_data_raw

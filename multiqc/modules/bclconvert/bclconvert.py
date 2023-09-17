@@ -7,7 +7,7 @@ from collections import OrderedDict, defaultdict
 from itertools import islice
 
 from multiqc import config
-from multiqc.modules.base_module import BaseMultiqcModule, ModuleNoSamplesFound
+from multiqc.modules.base_module import BaseMultiqcModule, ModuleNoSamplesFound, ModuleBadInputError
 from multiqc.plots import bargraph, table
 
 log = logging.getLogger(__name__)
@@ -320,7 +320,7 @@ class MultiqcModule(BaseMultiqcModule):
                     log.error(
                         "Detected different read lengths across the RunXml files. We cannot handle this - read length across all input directories must be the same."
                     )
-                    raise ModuleNoSamplesFound
+                    raise ModuleBadInputError
             self.cluster_length = rundata["cluster_length"]
 
         return demuxes, qmetrics

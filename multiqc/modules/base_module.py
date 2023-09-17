@@ -25,6 +25,12 @@ class ModuleNoSamplesFound(Exception):
 class ModuleBadInputError(Exception):
     """Something with the input files, so we cannot proceed running the module"""
 
+    def __init__(self):
+        # Overriding the default init to explicitly forbid passing messages.
+        # We want users to print their own messages with log.error(), so it
+        # is gets automatically labelled with the module name in the log.
+        super().__init__()
+
 
 class ModuleFatalError(Exception):
     """Module decides that something is so badly wrong that the entire
