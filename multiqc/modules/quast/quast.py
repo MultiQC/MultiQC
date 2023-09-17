@@ -6,11 +6,7 @@ import re
 from collections import OrderedDict
 
 from multiqc import config
-from multiqc.modules.base_module import (
-    BaseMultiqcModule,
-    ModuleBadInputError,
-    ModuleNoSamplesFound,
-)
+from multiqc.modules.base_module import BaseMultiqcModule, ModuleBadInputError, ModuleNoSamplesFound
 from multiqc.plots import bargraph, table
 
 # Initialise the logger

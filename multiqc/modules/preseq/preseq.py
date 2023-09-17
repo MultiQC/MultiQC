@@ -7,7 +7,7 @@ from collections import OrderedDict
 import numpy as np
 
 from multiqc import config
-from multiqc.modules.base_module import BaseMultiqcModule, ModuleNoSamplesFound, ModuleBadInputError
+from multiqc.modules.base_module import BaseMultiqcModule, ModuleBadInputError, ModuleNoSamplesFound
 from multiqc.plots import linegraph
 from multiqc.utils import mqc_colour
 
