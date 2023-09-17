@@ -28,7 +28,8 @@ import rich_click as click
 from rich.syntax import Syntax
 
 from .plots import table
-from .utils import config, lint_helpers, log, megaqc, plugin_hooks, report, software_versions, util_functions
+from .utils import config, lint_helpers, log, megaqc, plugin_hooks, report, \
+    software_versions, util_functions
 
 # Set up logging
 start_execution_time = time.time()
@@ -763,9 +764,7 @@ def run(
     # Special-case module if we want to profile the MultiQC running time
     if config.profile_runtime:
         from multiqc.modules.profile_runtime import MultiqcModule
-        from multiqc.utils import profile_runtime
-
-        report.modules_output.append(profile_runtime.MultiqcModule())
+        report.modules_output.append(MultiqcModule())
 
     # Did we find anything?
     if len(report.modules_output) == 0:
