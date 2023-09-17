@@ -8,7 +8,6 @@ from collections import OrderedDict
 from multiqc import config
 from multiqc.modules.base_module import (
     BaseMultiqcModule,
-    ModuleNoSamplesFound,
     ModuleBadInputError,
     ModuleNoSamplesFound,
 )
