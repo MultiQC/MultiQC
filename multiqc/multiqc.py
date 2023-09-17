@@ -758,10 +758,13 @@ def run(
 
     # Add section for software versions if any are found
     if not config.skip_versions_section and report.software_versions:
-        report.modules_output.append(software_versions.MultiqcModule())
+        # Importing here to avoid circular imports
+        from multiqc.modules.software_versions import MultiqcModule
+        report.modules_output.append(MultiqcModule())
 
     # Special-case module if we want to profile the MultiQC running time
     if config.profile_runtime:
+        from multiqc.modules.profile_runtime import MultiqcModule
         from multiqc.utils import profile_runtime
 
         report.modules_output.append(profile_runtime.MultiqcModule())
