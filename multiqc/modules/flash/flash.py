@@ -173,7 +173,7 @@ class MultiqcModule(BaseMultiqcModule):
             if (d["inniepairs"] > 0 or d["outiepairs"] > 0) and d["combopairs"] > 0:
                 del data[s_name]["combopairs"]
 
-        return bargraph.plot(data, cats, splotconfig)
+        return self.bargraph(data, cats, splotconfig)
 
     @staticmethod
     def parse_hist_files(histf):
@@ -253,7 +253,7 @@ class MultiqcModule(BaseMultiqcModule):
             ],
             "colors": dict(zip(data.keys(), MultiqcModule.get_colors(len(data)))),
         }
-        return linegraph.plot([data, rel_data], fplotconfig)
+        return self.linegraph([data, rel_data], fplotconfig)
 
     def hist_results(self):
         """process flash numeric histograms"""

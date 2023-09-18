@@ -137,5 +137,5 @@ class MultiqcModule(BaseMultiqcModule):
             A red category typically indicates a good candidate for further investigation
             in downstream analysis.
             """,
-            plot=heatmap.plot(levels, xcats=taxa, ycats=samples, pconfig=pconfig),
+            plot=self.heatmap(levels, xcats=taxa, ycats=samples, pconfig=pconfig),
         )

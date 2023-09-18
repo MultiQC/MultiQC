@@ -120,7 +120,7 @@ def parse_reports(self):
             anchor="sentieon-alignmentsummary",
             description="Please note that Sentieon's read counts are divided \
                  by two for paired-end data.",
-            plot=bargraph.plot(pdata, keys, pconfig),
+            plot=self.bargraph(pdata, keys, pconfig),
         )
 
     # Return the number of detected samples to the parent module

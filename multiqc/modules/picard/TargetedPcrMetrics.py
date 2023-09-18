@@ -105,7 +105,7 @@ def parse_reports(self):
             * `OFF_AMPLICON_BASES`: The number of `PF_BASES_ALIGNED` that mapped neither on or near an amplicon.
 
             For more information see the [Picard documentation](https://broadinstitute.github.io/picard/picard-metric-definitions.html#TargetedPcrMetrics).""",
-            plot=bargraph.plot(self.picard_pcrmetrics_data, keys, pconfig),
+            plot=self.bargraph(self.picard_pcrmetrics_data, keys, pconfig),
         )
 
     # Return the number of detected samples to the parent module

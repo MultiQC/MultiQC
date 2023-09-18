@@ -207,5 +207,5 @@ class MultiqcModule(BaseMultiqcModule):
             different regions of the genome, accounting for
             sense and antisense alignment, if relevant.
             """,
-            plot=bargraph.plot(self.rh_data, keys, pconfig),
+            plot=self.bargraph(self.rh_data, keys, pconfig),
         )

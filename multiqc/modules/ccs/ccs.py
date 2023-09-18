@@ -140,7 +140,7 @@ class MultiqcModule(BaseMultiqcModule):
                 The number of ZMWs that passed all filters is shown as **ZMWs pass filters**. All other categories that
                 are shown in the graph represent the number of ZMWs that were dropped for the specified reason.
             """,
-            plot=bargraph.plot(plot_data, plot_cats, config),
+            plot=self.bargraph(plot_data, plot_cats, config),
         )
 
     def filter_and_pass(self, data):

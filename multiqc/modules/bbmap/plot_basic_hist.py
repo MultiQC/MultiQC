@@ -3,7 +3,7 @@ from itertools import chain
 from multiqc.plots import linegraph
 
 
-def plot_basic_hist(samples, file_type, **plot_args):
+def plot_basic_hist(report, samples, file_type, **plot_args):
     """Create line graph plot for basic histogram data for 'file_type'.
 
     The 'samples' parameter could be from the bbmap mod_data dictionary:
@@ -30,6 +30,6 @@ def plot_basic_hist(samples, file_type, **plot_args):
 
     plot_params = {"id": "bbmap-" + file_type + "_plot", "title": "BBTools: " + plot_args["plot_title"], "xmax": xmax}
     plot_params.update(plot_args["plot_params"])
-    plot = linegraph.plot(data, plot_params)
+    plot = linegraph.plot(report, data, plot_params)
 
     return plot

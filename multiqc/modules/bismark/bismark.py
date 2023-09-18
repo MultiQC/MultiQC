@@ -358,7 +358,7 @@ class MultiqcModule(BaseMultiqcModule):
         self.add_section(
             name="Alignment Rates",
             anchor="bismark-alignment",
-            plot=bargraph.plot(self.bismark_data["alignment"], keys, config),
+            plot=self.bargraph(self.bismark_data["alignment"], keys, config),
         )
 
     def bismark_strand_chart(self):
@@ -399,7 +399,7 @@ class MultiqcModule(BaseMultiqcModule):
             name="Strand Alignment",
             anchor="bismark-strands",
             description=d_mode,
-            plot=bargraph.plot(self.bismark_data["alignment"], keys, config),
+            plot=self.bargraph(self.bismark_data["alignment"], keys, config),
         )
 
     def bismark_dedup_chart(self):
@@ -422,7 +422,7 @@ class MultiqcModule(BaseMultiqcModule):
         self.add_section(
             name="Deduplication",
             anchor="bismark-deduplication",
-            plot=bargraph.plot(self.bismark_data["dedup"], keys, config),
+            plot=self.bargraph(self.bismark_data["dedup"], keys, config),
         )
 
     def bismark_methlyation_chart(self):
@@ -438,7 +438,7 @@ class MultiqcModule(BaseMultiqcModule):
         self.add_section(
             name="Cytosine Methylation",
             anchor="bismark-methylation",
-            plot=beeswarm.plot(self.bismark_data["methextract"], keys, {"id": "bismark-methylation-dp"}),
+            plot=self.beeswarm(self.bismark_data["methextract"], keys, {"id": "bismark-methylation-dp"}),
         )
 
     def bismark_mbias_plot(self):
@@ -478,5 +478,5 @@ class MultiqcModule(BaseMultiqcModule):
             datasets.append(self.bismark_mbias_data["meth"]["CHH_R2"])
 
         self.add_section(
-            name="M-Bias", anchor="bismark-mbias", description=description, plot=linegraph.plot(datasets, pconfig)
+            name="M-Bias", anchor="bismark-mbias", description=description, plot=self.linegraph(datasets, pconfig)
         )

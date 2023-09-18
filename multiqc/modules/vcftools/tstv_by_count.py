@@ -55,7 +55,7 @@ class TsTvByCountMixin:
             anchor="vcftools-tstv-by-count",
             description="Plot of `TSTV-BY-COUNT` - the transition to transversion ratio as a function of alternative allele count from the output of vcftools TsTv-by-count.",
             helptext=helptext,
-            plot=linegraph.plot(self.vcftools_tstv_by_count, pconfig),
+            plot=self.linegraph(self.vcftools_tstv_by_count, pconfig),
         )
 
         return len(self.vcftools_tstv_by_count)

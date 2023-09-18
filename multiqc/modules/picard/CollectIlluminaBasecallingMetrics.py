@@ -76,7 +76,7 @@ def lane_metrics_table(data):
     tdata = {}
     for lane_number, lane in data.items():
         tdata[f"L{lane_number}"] = lane
-    return table.plot(tdata, headers, table_config)
+    return self.table(tdata, headers, table_config)
 
 
 def lane_metrics_plot(data):
@@ -104,4 +104,4 @@ def lane_metrics_plot(data):
         lane["NPF_READS"] = int(lane["TOTAL_READS"]) - int(lane["PF_READS"])
         lane["NPF_CLUSTERS"] = int(lane["TOTAL_CLUSTERS"]) - int(lane["PF_CLUSTERS"])
         tdata[f"L{lane_number}"] = lane
-    return bargraph.plot([tdata, tdata, tdata], plot_cats, plot_config)
+    return self.bargraph([tdata, tdata, tdata], plot_cats, plot_config)

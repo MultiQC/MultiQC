@@ -399,7 +399,7 @@ class MultiqcModule(BaseMultiqcModule):
             name="Statistics",
             anchor="somalier-stats",
             description="Various statistics from the somalier report.",
-            plot=table.plot(self.somalier_data, headers, t_config),
+            plot=self.table(self.somalier_data, headers, t_config),
         )
 
     def somalier_relatedness_plot(self):
@@ -461,7 +461,7 @@ class MultiqcModule(BaseMultiqcModule):
                 Points are coloured by degree of expected-relatedness: {}""".format(
                     colours_legend
                 ),
-                plot=scatter.plot(data, pconfig),
+                plot=self.scatter(data, pconfig),
             )
 
     def somalier_relatedness_heatmap_plot(self):
@@ -502,7 +502,7 @@ class MultiqcModule(BaseMultiqcModule):
                 name="Relatedness Heatmap",
                 anchor="somalier-relatedness-heatmap",
                 description="Heatmap displaying relatedness of sample pairs.",
-                plot=heatmap.plot(
+                plot=self.heatmap(
                     data=data,
                     xcats=labels,
                     ycats=labels,
@@ -535,7 +535,7 @@ class MultiqcModule(BaseMultiqcModule):
                 description="Standard devation of heterozygous allele balance against mean depth.",
                 helptext="A high standard deviation in allele balance suggests contamination.",
                 anchor="somalier-hetcheck",
-                plot=scatter.plot(data, pconfig),
+                plot=self.scatter(data, pconfig),
             )
 
     def somalier_sex_check_plot(self):
@@ -567,7 +567,7 @@ class MultiqcModule(BaseMultiqcModule):
                 description="Predicted sex against scaled depth on X",
                 helptext="Higher values of depth, low values suggest male.",
                 anchor="somalier-sexcheck",
-                plot=scatter.plot(data, pconfig),
+                plot=self.scatter(data, pconfig),
             )
 
     def somalier_ancestry_barplot(self):
@@ -615,7 +615,7 @@ class MultiqcModule(BaseMultiqcModule):
                 non-interactive flat image.
                 """,
                 anchor="somalier-ancestry",
-                plot=bargraph.plot(data=data, cats=cats, pconfig=pconfig),
+                plot=self.bargraph(data=data, cats=cats, pconfig=pconfig),
             )
 
     def somalier_ancestry_pca_plot(self):
@@ -671,7 +671,7 @@ class MultiqcModule(BaseMultiqcModule):
                 the samples cluster as expected.
                 """,
                 anchor="somalier-ancestry-pca",
-                plot=scatter.plot(data, pconfig),
+                plot=self.scatter(data, pconfig),
             )
 
 

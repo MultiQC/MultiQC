@@ -288,5 +288,5 @@ class MultiqcModule(BaseMultiqcModule):
                 The category _"Other"_ shows the difference between the above total assingned read count and the sum of the read counts
                 in the top 5 taxa shown. This should cover all taxa _not_ in the top 5.
             """,
-            plot=bargraph.plot(pd, cats, pconfig),
+            plot=self.bargraph(pd, cats, pconfig),
         )

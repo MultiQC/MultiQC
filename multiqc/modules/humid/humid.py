@@ -116,5 +116,5 @@ class MultiqcModule(BaseMultiqcModule):
                 - **Duplicate reads** are the reads that were determined to be duplicates of the **Unique reads**.
                 - **Filtered reads** were reads that could not be analysed, due to N nucleotides, or because the UMI or sequences were too short to use.
                 """,
-            plot=bargraph.plot(self.humid, cats, config),
+            plot=self.bargraph(self.humid, cats, config),
         )

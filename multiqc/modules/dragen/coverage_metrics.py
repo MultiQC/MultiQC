@@ -581,7 +581,7 @@ class DragenCoverageMetrics(BaseMultiqcModule):
         # Extract coverage bed/target bed/wgs from _overall_mean_cov.csv files.
         # And prepare <coverage-region-prefix>-specific texts.
         bed_texts = make_bed_texts(self.overall_mean_cov_data_reference, match_overall_mean_cov)
-        coverage_sections = make_cov_sections(cov_data, cov_headers, bed_texts)
+        coverage_sections = make_cov_sections(self.report, cov_data, cov_headers, bed_texts)
 
         for cov_section in coverage_sections:
             self.add_section(
@@ -833,7 +833,7 @@ def create_table_handlers():
 
         return region
 
-    def make_own_coverage_sections(coverage_data, coverage_headers, bed_texts):
+    def make_own_coverage_sections(report, coverage_data, coverage_headers, bed_texts):
         """Create non-general phenotype-specific sections."""
 
         plots = defaultdict(lambda: defaultdict(dict))
@@ -907,6 +907,7 @@ def create_table_handlers():
                         "helptext": helptext + bed_texts[phenotype]["helptext"],
                         "description": description,
                         "plot": table.plot(
+                            report,
                             plots[phenotype]["data"],
                             clean_headers(order_headers(plots[phenotype]["headers"])),
                             plots[phenotype]["config"],

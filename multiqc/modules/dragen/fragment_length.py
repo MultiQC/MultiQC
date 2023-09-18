@@ -59,7 +59,7 @@ class DragenFragmentLength(BaseMultiqcModule):
             """.format(
                 MIN_CNT_TO_SHOW_ON_PLOT
             ),
-            plot=linegraph.plot(
+            plot=self.linegraph(
                 data_by_rg,
                 {
                     "id": "dragen_fragment_length",

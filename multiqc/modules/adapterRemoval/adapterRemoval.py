@@ -335,7 +335,7 @@ class MultiqcModule(BaseMultiqcModule):
             name="Retained and Discarded Reads",
             anchor="adapter_removal_retained_plot",
             description=retained_chart_description,
-            plot=bargraph.plot(self.adapter_removal_data, cats_pec, pconfig),
+            plot=self.bargraph(self.adapter_removal_data, cats_pec, pconfig),
         )
 
     def adapter_removal_length_dist_plot(self):
@@ -379,5 +379,5 @@ class MultiqcModule(BaseMultiqcModule):
             name="Length Distribution",
             anchor="ar_length_count",
             description="The length distribution of reads after processing adapter alignment.",
-            plot=linegraph.plot(lineplot_data, pconfig),
+            plot=self.linegraph(lineplot_data, pconfig),
         )

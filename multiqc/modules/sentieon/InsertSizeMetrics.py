@@ -198,7 +198,7 @@ def parse_reports(self):
                 anchor="sentieon-insertsize",
                 description="Plot shows the number of reads at a given insert\
                      size. Reads with different orientations are summed.",
-                plot=linegraph.plot([self.sentieon_insertSize_histogram, data_percent], pconfig),
+                plot=self.linegraph([self.sentieon_insertSize_histogram, data_percent], pconfig),
             )
 
     # Return the number of detected samples to the parent module

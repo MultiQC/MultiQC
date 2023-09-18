@@ -48,7 +48,7 @@ class DragenCoverageHist(BaseMultiqcModule):
             anchor="dragen-coverage-distribution",
             description="Number of locations in the reference genome with a given depth of coverage.",
             helptext=coverage_histogram_helptext,
-            plot=linegraph.plot(
+            plot=self.linegraph(
                 dist_data,
                 {
                     "id": "dragen_coverage_dist",
@@ -69,7 +69,7 @@ class DragenCoverageHist(BaseMultiqcModule):
             anchor="dragen-cum-coverage-histogram",
             description="Number of locations in the reference genome with at least given depth of coverage.",
             helptext=genome_fraction_helptext,
-            plot=linegraph.plot(
+            plot=self.linegraph(
                 cum_data,
                 {
                     "id": "dragen_cumulative_coverage_hist",

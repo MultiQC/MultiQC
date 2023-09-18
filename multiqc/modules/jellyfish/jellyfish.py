@@ -98,5 +98,5 @@ class MultiqcModule(BaseMultiqcModule):
             anchor="jellyfish_kmer_plot",
             description="The K-mer plot lets you estimate library complexity and coverage from k-mer content.",
             helptext=helptext,
-            plot=linegraph.plot(self.jellyfish_data, pconfig),
+            plot=self.linegraph(self.jellyfish_data, pconfig),
         )

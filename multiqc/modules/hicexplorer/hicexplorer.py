@@ -330,4 +330,4 @@ class MultiqcModule(BaseMultiqcModule):
             "cpswitch_counts_label": "Number of Reads",
         }
 
-        return bargraph.plot(self.hicexplorer_data, keys, config)
+        return self.bargraph(self.hicexplorer_data, keys, config)

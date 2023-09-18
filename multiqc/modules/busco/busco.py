@@ -98,4 +98,4 @@ class MultiqcModule(BaseMultiqcModule):
             "cpswitch_counts_label": "Number of BUSCOs",
         }
 
-        return bargraph.plot(data, keys, config)
+        return self.bargraph(data, keys, config)

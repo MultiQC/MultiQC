@@ -156,5 +156,5 @@ class SambambaMarkdupMixin:
                 * `Total Single End Reads = Single Ends - (2 * Single Unmatched Pairs)`
                 * `Total Single Unmatched Reads = 2 * Single Unmatched Pairs`
             """,
-            plot=bargraph.plot(self.markdup_data, cats, config),
+            plot=self.bargraph(self.markdup_data, cats, config),
         )

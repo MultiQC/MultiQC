@@ -129,4 +129,4 @@ class MultiqcModule(BaseMultiqcModule):
                 {"name": "Percentages", "ylab": "% CpGs", "ymax": 100},
             ],
         }
-        return linegraph.plot([self.methylqa_coverage_counts, self.methylqa_coverage_percentages], pconfig)
+        return self.linegraph([self.methylqa_coverage_counts, self.methylqa_coverage_percentages], pconfig)

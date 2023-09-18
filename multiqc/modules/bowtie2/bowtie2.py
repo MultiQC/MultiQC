@@ -250,7 +250,7 @@ class MultiqcModule(BaseMultiqcModule):
                 * **SE multimapped**: Read has multiple occurence.
                 * **SE not aligned**: Read has no occurence.
                 """,
-                plot=bargraph.plot(self.bowtie2_data, sekeys, config),
+                plot=self.bargraph(self.bowtie2_data, sekeys, config),
             )
 
         if self.num_pe > 0:
@@ -278,5 +278,5 @@ class MultiqcModule(BaseMultiqcModule):
                 * **PE one mate multimapped**: One read of a pair has multiple occurence.
                 * **PE neither mate aligned**: Pair has no occurence.
                 """,
-                plot=bargraph.plot(self.bowtie2_data, pekeys, config),
+                plot=self.bargraph(self.bowtie2_data, pekeys, config),
             )

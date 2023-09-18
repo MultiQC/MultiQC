@@ -418,7 +418,7 @@ class MultiqcModule(BaseMultiqcModule):
 
                 Note that any taxon that does not exactly fit a taxon rank (eg. `-` or `G2`) is ignored.
             """,
-            plot=bargraph.plot(pd, cats, pconfig),
+            plot=self.bargraph(pd, cats, pconfig),
         )
 
     def top_five_duplication_heatmap(self):
@@ -495,5 +495,5 @@ class MultiqcModule(BaseMultiqcModule):
 
                 A low coverage and high duplication rate (`>> 1`) is often sign of read stacking, which probably indicates of false positive hit.
             """,
-            plot=heatmap.plot(duplication, xlabels, ylabels, pconfig),
+            plot=self.heatmap(duplication, xlabels, ylabels, pconfig),
         )

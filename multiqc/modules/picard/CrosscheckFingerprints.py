@@ -91,7 +91,7 @@ def parse_reports(self):
             helptext="""
             Checks that all data in the set of input files comes from the same individual, based on the selected group granularity.
             """,
-            plot=table.plot(
+            plot=self.table(
                 self.picard_CrosscheckFingerprints_data,
                 _get_table_headers(self.picard_CrosscheckFingerprints_data),
                 {

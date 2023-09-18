@@ -150,4 +150,4 @@ class MultiqcModule(BaseMultiqcModule):
             "cpswitch_counts_label": "Number of Reads",
             "hide_zero_cats": False,
         }
-        return bargraph.plot(self.afterqc_data, keys, pconfig)
+        return self.bargraph(self.afterqc_data, keys, pconfig)

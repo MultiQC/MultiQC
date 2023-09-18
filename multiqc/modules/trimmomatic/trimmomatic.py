@@ -133,4 +133,4 @@ class MultiqcModule(BaseMultiqcModule):
             "cpswitch_counts_label": "Number of Reads",
         }
 
-        self.add_section(plot=bargraph.plot(self.trimmomatic, keys, pconfig))
+        self.add_section(plot=self.bargraph(self.trimmomatic, keys, pconfig))

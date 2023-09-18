@@ -163,5 +163,5 @@ class MultiqcModule(BaseMultiqcModule):
                 anchor="ivar-primers-heatmap",
                 description="Counts observed for each primer per sample.",
                 helptext="This lists the number of times a specific primer was found in the respective sample.",
-                plot=heatmap.plot(final_data, final_xcats, final_ycats, pconfig),
+                plot=self.heatmap(final_data, final_xcats, final_ycats, pconfig),
             )

@@ -497,7 +497,7 @@ class MultiqcModule(BaseMultiqcModule):
             }
         )
 
-        return table.plot(self.qc3c_data["bam"], headers, config)
+        return self.table(self.qc3c_data["bam"], headers, config)
 
     def bam_longrange_plot(self):
         config = {
@@ -518,7 +518,7 @@ class MultiqcModule(BaseMultiqcModule):
             }
         )
 
-        return bargraph.plot(self.qc3c_data["bam"], categories, config)
+        return self.bargraph(self.qc3c_data["bam"], categories, config)
 
     def bam_acceptance_plot(self):
         config = {
@@ -542,7 +542,7 @@ class MultiqcModule(BaseMultiqcModule):
                 "b_n_skipped_reads": {"name": "Skipped", "color": rev_8[0]},
             }
         )
-        return bargraph.plot(self.qc3c_data["bam"], categories, config)
+        return self.bargraph(self.qc3c_data["bam"], categories, config)
 
     def bam_signal_table(self):
         config = {"id": "qc3C_bam_signal_table", "namespace": "qc3C", "hide_zero_cats": False, "col1_header": "Sample"}
@@ -631,7 +631,7 @@ class MultiqcModule(BaseMultiqcModule):
                 # },
             }
         )
-        return table.plot(self.qc3c_data["bam"], headers, config)
+        return self.table(self.qc3c_data["bam"], headers, config)
 
     def bam_hicpro_table(self):
         config = {"id": "qc3C_bam_hicpro_table", "namespace": "qc3C", "hide_zero_cats": False, "col1_header": "Sample"}
@@ -677,7 +677,7 @@ class MultiqcModule(BaseMultiqcModule):
                 },
             }
         )
-        return table.plot(self.qc3c_data["bam"], headers, config)
+        return self.table(self.qc3c_data["bam"], headers, config)
 
     def bam_valid_plot(self):
         config = {
@@ -700,7 +700,7 @@ class MultiqcModule(BaseMultiqcModule):
                 "b_n_uninformative_ffrr": {"name": "Invalid FF|RR", "color": "#ef3b2c"},
             }
         )
-        return bargraph.plot(self.qc3c_data["bam"], categories, config)
+        return self.bargraph(self.qc3c_data["bam"], categories, config)
 
     def bam_junction_plot(self):
         config = {
@@ -717,7 +717,7 @@ class MultiqcModule(BaseMultiqcModule):
             for vi in v:
                 categories[vi["name"]] = vi
 
-        return bargraph.plot(self.qc3c_data["bam"], categories, config)
+        return self.bargraph(self.qc3c_data["bam"], categories, config)
 
     def bam_fragment_histogram(self):
         median_lines = []
@@ -751,7 +751,7 @@ class MultiqcModule(BaseMultiqcModule):
         for smpl in self.qc3c_data["bam"]:
             data[smpl] = self.qc3c_data["bam"][smpl]["frag_hist"]
 
-        return linegraph.plot(data, config)
+        return self.linegraph(data, config)
 
     def kmer_runtime_table(self):
         config = {"id": "qc3C_kmer_runtime_table", "namespace": "qc3C", "col1_header": "Sample"}
@@ -846,7 +846,7 @@ class MultiqcModule(BaseMultiqcModule):
                 },
             }
         )
-        return table.plot(self.qc3c_data["kmer"], headers, config)
+        return self.table(self.qc3c_data["kmer"], headers, config)
 
     def kmer_signal_table(self):
         config = {"id": "qc3C_kmer_signal_table", "namespace": "qc3C", "col1_header": "Sample"}
@@ -880,7 +880,7 @@ class MultiqcModule(BaseMultiqcModule):
                 },
             }
         )
-        return table.plot(self.qc3c_data["kmer"], headers, config)
+        return self.table(self.qc3c_data["kmer"], headers, config)
 
     def kmer_acceptance_plot(self):
         config = {
@@ -904,7 +904,7 @@ class MultiqcModule(BaseMultiqcModule):
                 "k_n_skipped": {"name": "Skipped", "color": rev_8[0]},
             }
         )
-        return bargraph.plot(self.qc3c_data["kmer"], categories, config)
+        return self.bargraph(self.qc3c_data["kmer"], categories, config)
 
     def kmer_signal_plot(self):
         config = {
@@ -925,7 +925,7 @@ class MultiqcModule(BaseMultiqcModule):
                 "k_adj_fraction": {"name": "Adjusted Hi-C fraction", "color": "#41ab5d"},
             }
         )
-        return bargraph.plot(self.qc3c_data["kmer"], categories, config)
+        return self.bargraph(self.qc3c_data["kmer"], categories, config)
 
     def kmer_junction_plot(self):
         config = {
@@ -942,7 +942,7 @@ class MultiqcModule(BaseMultiqcModule):
             for vi in _cat:
                 categories[vi["name"]] = vi
 
-        return bargraph.plot(self.qc3c_data["kmer"], categories, config)
+        return self.bargraph(self.qc3c_data["kmer"], categories, config)
 
     def parse_qc3c_log(self, f):
         def _none_to(x, y):

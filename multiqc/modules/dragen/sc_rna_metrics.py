@@ -58,7 +58,7 @@ class DragenScRnaMetrics(BaseMultiqcModule):
             description="""
             Summary metrics for single-cell RNA.
             """,
-            plot=table.plot(
+            plot=self.table(
                 {
                     sample_name: {
                         metric_name: int(stat) for metric_name, stat in metric.items() if metric_name in METRIC_NAMES

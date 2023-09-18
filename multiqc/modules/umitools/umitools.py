@@ -167,7 +167,7 @@ class MultiqcModule(BaseMultiqcModule):
             "cpswitch_counts_label": "Number of Reads",
         }
 
-        return bargraph.plot(self.umitools_data, keys, config)
+        return self.bargraph(self.umitools_data, keys, config)
 
     def umitools_umi_stats_swarm(self):
         """Generate a swarmplot of umi stats for the main report"""
@@ -215,4 +215,4 @@ class MultiqcModule(BaseMultiqcModule):
             "table_title": "UMI-tools: UMI stats",
         }
 
-        return beeswarm.plot(self.umitools_data, headers, config)
+        return self.beeswarm(self.umitools_data, headers, config)

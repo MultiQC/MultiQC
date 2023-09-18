@@ -72,7 +72,7 @@ class plotCoverageMixin:
             self.add_section(
                 name="Coverage metrics",
                 anchor="deeptools_coverage_metrics",
-                plot=table.plot(self.deeptools_plotCoverageStdout, header, config),
+                plot=self.table(self.deeptools_plotCoverageStdout, header, config),
             )
 
         if len(self.deeptools_plotCoverageOutRawCounts) > 0:
@@ -89,7 +89,7 @@ class plotCoverageMixin:
                 name="Coverage distribution",
                 anchor="deeptools_coverage_distribution",
                 description="The fraction of bases with a given number of read/fragment coverage",
-                plot=linegraph.plot(self.deeptools_plotCoverageOutRawCounts, config),
+                plot=self.linegraph(self.deeptools_plotCoverageOutRawCounts, config),
             )
 
         return len(self.deeptools_plotCoverageStdout), len(self.deeptools_plotCoverageOutRawCounts)

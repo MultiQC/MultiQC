@@ -149,7 +149,7 @@ class MultiqcModule(BaseMultiqcModule):
             Outliers in these plots can indicate biological variations or the presence of large mapping problems.
             They may also suggest the presence of large, highly-expressed, unannotated transcripts or genes.
             """,
-            plot=bargraph.plot(self.qorts_data, cats, pconfig),
+            plot=self.bargraph(self.qorts_data, cats, pconfig),
         )
 
     def qorts_splice_loci_barplot(self):
@@ -206,7 +206,7 @@ class MultiqcModule(BaseMultiqcModule):
             abnormalities observed in the other plots are of sufficient severity to impact splice junction mapping and
             thus potentially compromise such analyses.
             """,
-            plot=bargraph.plot(self.qorts_data, cats, pconfig),
+            plot=self.bargraph(self.qorts_data, cats, pconfig),
         )
 
     def qorts_splice_events_barplot(self):
@@ -258,7 +258,7 @@ class MultiqcModule(BaseMultiqcModule):
             In general, abnormalities in the splice junction rates are generally a symptom of larger issues which will
             often be picked up by other metrics.
             """,
-            plot=bargraph.plot(self.qorts_data, cats, pconfig),
+            plot=self.bargraph(self.qorts_data, cats, pconfig),
         )
 
     def qorts_strandedness_plot(self):
@@ -296,5 +296,5 @@ class MultiqcModule(BaseMultiqcModule):
             stranded data library type option. For unstranded libraries, one would expect close to 50-50
             First Strand - Second Strand. For stranded libraries, all points should fall closer to 99% one or the other.
             """,
-            plot=bargraph.plot(self.qorts_data, cats, pconfig),
+            plot=self.bargraph(self.qorts_data, cats, pconfig),
         )

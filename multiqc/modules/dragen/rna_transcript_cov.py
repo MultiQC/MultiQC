@@ -36,7 +36,7 @@ class DragenRnaTranscriptCoverage(BaseMultiqcModule):
             description="""
             RNA transcript coverage.  This is the average coverage at the position along the transcripts.
             """,
-            plot=linegraph.plot(
+            plot=self.linegraph(
                 data_by_sample,
                 pconfig={
                     "id": "dragen_rna_transcript_cov",

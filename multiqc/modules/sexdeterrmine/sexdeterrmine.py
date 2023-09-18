@@ -124,7 +124,7 @@ class MultiqcModule(BaseMultiqcModule):
             name="Read Counts",
             anchor="sexdeterrmine-readcounts",
             description="The number of reads covering positions on the autosomes, X and Y chromosomes.",
-            plot=bargraph.plot(self.sexdet_data, cats, config),
+            plot=self.bargraph(self.sexdet_data, cats, config),
         )
 
     def snp_rate_scatterplot(self):
@@ -152,7 +152,7 @@ class MultiqcModule(BaseMultiqcModule):
                 Males are expected to have a roughly equal X- and Y-rates, while females are expected to have a Y-rate of 0 and an X-rate of 1.
                 Placement between the two clusters can be indicative of contamination, while placement with higher than expected X- and/or Y-rates can be indicative of sex chromosome aneuploidy.
                 """,
-                plot=scatter.plot(data, config),
+                plot=self.scatter(data, config),
             )
 
     def snp_count_barplot(self):
@@ -168,5 +168,5 @@ class MultiqcModule(BaseMultiqcModule):
             name="SNP Counts",
             anchor="sexdeterrmine-snps",
             description="Total number of SNP positions. When supplied with a BED file, this includes only positions specified there.",
-            plot=bargraph.plot(self.sexdet_data, cats, config),
+            plot=self.bargraph(self.sexdet_data, cats, config),
         )

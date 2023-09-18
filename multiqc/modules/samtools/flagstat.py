@@ -97,7 +97,7 @@ class FlagstatReportMixin:
                 name="Samtools Flagstat",
                 anchor="samtools-flagstat",
                 description="This module parses the output from <code>samtools flagstat</code>. All numbers in millions.",
-                plot=beeswarm.plot(self.samtools_flagstat, keys, {"id": "samtools-flagstat-dp"}),
+                plot=self.beeswarm(self.samtools_flagstat, keys, {"id": "samtools-flagstat-dp"}),
             )
 
         # Return the number of logs that were found

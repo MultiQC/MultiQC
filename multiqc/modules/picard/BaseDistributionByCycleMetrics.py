@@ -165,7 +165,7 @@ def parse_reports(self):
             name="Base Distribution",
             anchor="picard-base-distribution-by-cycle",
             description="Plot shows the distribution of bases by cycle.",
-            plot=linegraph.plot(linegraph_data, pconfig),
+            plot=self.linegraph(linegraph_data, pconfig),
         )
 
     # Return the number of detected samples to the parent module

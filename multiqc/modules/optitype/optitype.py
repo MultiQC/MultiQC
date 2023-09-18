@@ -137,5 +137,5 @@ class MultiqcModule(BaseMultiqcModule):
             name="Summary of alleles",
             description="Number of samples sharing the same allele.",
             anchor="optitype_summary",
-            plot=bargraph.plot(data, pconfig=pconfig),
+            plot=self.bargraph(data, pconfig=pconfig),
         )

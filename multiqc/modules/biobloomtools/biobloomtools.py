@@ -99,4 +99,4 @@ class MultiqcModule(BaseMultiqcModule):
         cats["multiMatch"] = {"name": "Multiple Genomes", "color": "#820000"}
         cats["noMatch"] = {"name": "No Match", "color": "#cccccc"}
 
-        return bargraph.plot(data, cats, pconfig)
+        return self.bargraph(data, cats, pconfig)

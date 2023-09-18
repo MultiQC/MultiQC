@@ -152,7 +152,7 @@ def parse_reports(self):
             anchor="picard-rna-assignment",
             description="Number of bases in primary alignments that align to regions in the reference genome."
             + warn_rrna,
-            plot=bargraph.plot(self.picard_RnaSeqMetrics_data, bg_cats, pconfig),
+            plot=self.bargraph(self.picard_RnaSeqMetrics_data, bg_cats, pconfig),
         )
 
         # Bar plot of strand mapping
@@ -175,7 +175,7 @@ def parse_reports(self):
                 name="RnaSeqMetrics Strand Mapping",
                 anchor="picard-rna-strand",
                 description="Number of aligned reads that map to the correct strand.",
-                plot=bargraph.plot(self.picard_RnaSeqMetrics_data, bg_cats, pconfig),
+                plot=self.bargraph(self.picard_RnaSeqMetrics_data, bg_cats, pconfig),
             )
 
         # Section with histogram plot
@@ -195,7 +195,7 @@ def parse_reports(self):
             self.add_section(
                 name="Gene Coverage",
                 anchor="picard-rna-coverage",
-                plot=linegraph.plot(self.picard_RnaSeqMetrics_histogram, pconfig),
+                plot=self.linegraph(self.picard_RnaSeqMetrics_histogram, pconfig),
             )
 
     # Return the number of detected samples to the parent module

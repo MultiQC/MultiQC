@@ -41,7 +41,7 @@ class DragenRnaQuantMetrics(BaseMultiqcModule):
             name="RNA Quantification Metrics",
             anchor="dragen-rna-quant-metrics",
             description="RNA quantification metrics for DRAGEN.",
-            plot=bargraph.plot(
+            plot=self.bargraph(
                 [
                     {
                         sample: {metric: stat for metric, stat in data.items() if metric in metric_names}

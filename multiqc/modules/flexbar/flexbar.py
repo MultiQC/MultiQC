@@ -120,4 +120,4 @@ class MultiqcModule(BaseMultiqcModule):
             "hide_zero_cats": False,
         }
 
-        self.add_section(plot=bargraph.plot(self.flexbar_data, keys, pconfig))
+        self.add_section(plot=self.bargraph(self.flexbar_data, keys, pconfig))

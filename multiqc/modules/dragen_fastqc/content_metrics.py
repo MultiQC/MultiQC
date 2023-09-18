@@ -94,7 +94,7 @@ class DragenContentMetrics(BaseMultiqcModule):
             it suggests that the analysis pipeline was unable to interpret the data well enough to
             make valid base calls._
             """,
-            plot=linegraph.plot(data, pconfig),
+            plot=self.linegraph(data, pconfig),
         )
 
     def sequence_content_plot(self):
@@ -272,5 +272,5 @@ class DragenContentMetrics(BaseMultiqcModule):
             right through to the end of the read so the percentages you see will only
             increase as the read length goes on._
             """,
-            plot=linegraph.plot(data, pconfig),
+            plot=self.linegraph(data, pconfig),
         )

@@ -227,7 +227,7 @@ class MultiqcModule(BaseMultiqcModule):
         }
 
         if len(data) > 0:
-            self.add_section(name="PCA Plot", anchor="peddy-pca-plot", plot=scatter.plot(data, pconfig))
+            self.add_section(name="PCA Plot", anchor="peddy-pca-plot", plot=self.scatter(data, pconfig))
 
     def peddy_relatedness_plot(self):
         data = dict()
@@ -257,7 +257,7 @@ class MultiqcModule(BaseMultiqcModule):
                 <span style="color: #6DA4CA;">less than 0.25</span>,
                 <span style="color: #FAA051;">0.25 - 0.5</span>,
                 <span style="color: #2B9F2B;">greather than 0.5</span>.""",
-                plot=scatter.plot(data, pconfig),
+                plot=self.scatter(data, pconfig),
             )
 
     def peddy_het_check_plot(self):
@@ -289,7 +289,7 @@ class MultiqcModule(BaseMultiqcModule):
                 See [the main peddy documentation](https://peddy.readthedocs.io/en/latest/output.html#het-check) for more details about the `het_check` command.
                 """,
                 anchor="peddy-hetcheck-plot",
-                plot=scatter.plot(data, pconfig),
+                plot=self.scatter(data, pconfig),
             )
 
     def peddy_sex_check_plot(self):
@@ -318,5 +318,5 @@ class MultiqcModule(BaseMultiqcModule):
                 See [the main peddy documentation](http://peddy.readthedocs.io/en/latest/#sex-check) for more details about the `het_check` command.
                 """,
                 anchor="peddy-sexcheck-plot",
-                plot=scatter.plot(data, pconfig),
+                plot=self.scatter(data, pconfig),
             )

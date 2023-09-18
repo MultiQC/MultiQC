@@ -301,7 +301,7 @@ class MultiqcModule(BaseMultiqcModule):
         cats["Multiple Genomes"] = {"name": "Multiple Genomes", "color": "#820000"}
         cats["No hits"] = {"name": "No hits", "color": "#cccccc"}
 
-        return bargraph.plot(data, cats, pconfig)
+        return self.bargraph(data, cats, pconfig)
 
     def fqscreen_bisulfite_plot(self):
         """Make a stacked barplot for the bisulfite data, if we have any"""
@@ -359,5 +359,5 @@ class MultiqcModule(BaseMultiqcModule):
             return None
 
         self.add_section(
-            name="Bisulfite Reads", anchor="fastq_screen_bisulfite", plot=bargraph.plot(pdata, pcats, pconfig)
+            name="Bisulfite Reads", anchor="fastq_screen_bisulfite", plot=self.bargraph(pdata, pcats, pconfig)
         )

@@ -431,7 +431,7 @@ class MultiqcModule(BaseMultiqcModule):
             name="Filter statistics",
             anchor="slamdunk_filtering",
             description="This table shows the number of reads filtered with each filter criterion during filtering phase of slamdunk.",
-            plot=table.plot(self.slamdunk_data, headers, pconfig),
+            plot=self.table(self.slamdunk_data, headers, pconfig),
         )
 
     def slamdunkOverallRatesPlot(self):
@@ -470,7 +470,7 @@ class MultiqcModule(BaseMultiqcModule):
                         It shows these conversion rates strand-specific: This means for a properly labeled
                         sample you would see a T&gt;C excess on the plus-strand and an A&gt;G excess on the minus strand
                         (see the <a href="http://t-neumann.github.io/slamdunk/docs.html#rates" target="_blank">slamdunk docs</a>).""",
-            plot=bargraph.plot([self.rates_data_plus, self.rates_data_minus], cats, pconfig),
+            plot=self.bargraph([self.rates_data_plus, self.rates_data_minus], cats, pconfig),
         )
 
     def slamdunkUtrRatesPlot(self):
@@ -499,7 +499,7 @@ class MultiqcModule(BaseMultiqcModule):
             anchor="slamdunk_utr_rates",
             description="""This plot shows the individual conversion rates for all UTRs
                         (see the <a href="http://t-neumann.github.io/slamdunk/docs.html#utrrates" target="_blank">slamdunk docs</a>).""",
-            plot=bargraph.plot(self.utrates_data, cats, pconfig),
+            plot=self.bargraph(self.utrates_data, cats, pconfig),
         )
 
     def slamdunkPCAPlot(self):
@@ -519,7 +519,7 @@ class MultiqcModule(BaseMultiqcModule):
             description="""This plot shows the principal components of samples based
                         on the distribution of reads with T&gt;C conversions within UTRs
                         (see the <a href="http://t-neumann.github.io/slamdunk/docs.html#summary" target="_blank">slamdunk docs</a>).""",
-            plot=scatter.plot(self.PCA_data, pconfig),
+            plot=self.scatter(self.PCA_data, pconfig),
         )
 
     def slamdunkTcPerReadPosPlot(self):
@@ -558,7 +558,7 @@ class MultiqcModule(BaseMultiqcModule):
             anchor="slamdunk_nontcperreadpos",
             description="""This plot shows the distribution of non T&gt;C mismatches across read positions
                         (see the <a href="http://t-neumann.github.io/slamdunk/docs.html#tcperreadpos" target="_blank">slamdunk docs</a>).""",
-            plot=linegraph.plot([self.nontc_per_readpos_plus, self.nontc_per_readpos_minus], pconfig_nontc),
+            plot=self.linegraph([self.nontc_per_readpos_plus, self.nontc_per_readpos_minus], pconfig_nontc),
         )
 
         self.add_section(
@@ -566,7 +566,7 @@ class MultiqcModule(BaseMultiqcModule):
             anchor="slamdunk_tcperreadpos",
             description="""This plot shows the distribution of T&gt;C conversions across read positions
                         (see the <a href="http://t-neumann.github.io/slamdunk/docs.html#tcperreadpos" target="_blank">slamdunk docs</a>).""",
-            plot=linegraph.plot([self.tc_per_readpos_plus, self.tc_per_readpos_minus], pconfig_tc),
+            plot=self.linegraph([self.tc_per_readpos_plus, self.tc_per_readpos_minus], pconfig_tc),
         )
 
     def slamdunkTcPerUTRPosPlot(self):
@@ -605,7 +605,7 @@ class MultiqcModule(BaseMultiqcModule):
             anchor="slamdunk_nontcperutrpos",
             description="""This plot shows the distribution of non T&gt;C mismatches across UTR positions for the last 250 bp from the 3\' UTR end
                         (see the <a href="http://t-neumann.github.io/slamdunk/docs.html#tcperutrpos" target="_blank">slamdunk docs</a>).""",
-            plot=linegraph.plot([self.nontc_per_utrpos_plus, self.nontc_per_utrpos_minus], pconfig_nontc),
+            plot=self.linegraph([self.nontc_per_utrpos_plus, self.nontc_per_utrpos_minus], pconfig_nontc),
         )
 
         self.add_section(
@@ -613,5 +613,5 @@ class MultiqcModule(BaseMultiqcModule):
             anchor="tcperutrpos",
             description="""This plot shows the distribution of T&gt;C conversions across UTR positions for the last 250 bp from the 3\' UTR end
                         (see the <a href="http://t-neumann.github.io/slamdunk/docs.html#tcperutrpos" target="_blank">slamdunk docs</a>).""",
-            plot=linegraph.plot([self.tc_per_utrpos_plus, self.tc_per_utrpos_minus], pconfig_tc),
+            plot=self.linegraph([self.tc_per_utrpos_plus, self.tc_per_utrpos_minus], pconfig_tc),
         )

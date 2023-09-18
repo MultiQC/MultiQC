@@ -148,7 +148,7 @@ class MultiqcModule(BaseMultiqcModule):
                 "ylab": "# Reads",
                 "cpswitch_counts_label": "Number of Reads",
             }
-            self.add_section(plot=bargraph.plot(sedata, sekeys, pconfig))
+            self.add_section(plot=self.bargraph(sedata, sekeys, pconfig))
 
         if len(pedata) > 0:
             pekeys = OrderedDict()
@@ -166,5 +166,5 @@ class MultiqcModule(BaseMultiqcModule):
             }
             self.add_section(
                 description="<em>Please note that single mate alignment counts are halved to tally with pair counts properly.</em>",
-                plot=bargraph.plot(pedata, pekeys, pconfig),
+                plot=self.bargraph(pedata, pekeys, pconfig),
             )

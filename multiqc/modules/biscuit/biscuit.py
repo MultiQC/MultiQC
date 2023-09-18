@@ -281,7 +281,7 @@ class MultiqcModule(BaseMultiqcModule):
                 that are optimally aligned. Note, suboptimally aligned reads
                 include both non-unique alignments and imperfect alignments.
             """,
-            plot=bargraph.plot(pd, pheader, pconfig),
+            plot=self.bargraph(pd, pheader, pconfig),
         )
 
         #
@@ -316,7 +316,7 @@ class MultiqcModule(BaseMultiqcModule):
                 A good quality sample should have a high quality mapping score
                 for the majority of alignments.
             """,
-            plot=linegraph.plot(pd_mapq, pconfig),
+            plot=self.linegraph(pd_mapq, pconfig),
         )
 
     ########################################
@@ -408,7 +408,7 @@ class MultiqcModule(BaseMultiqcModule):
                     Note that PBAT and many single-cell / low input
                     libraries may not follow this assumption.
                 """,
-                plot=bargraph.plot([pd1, pd2], [pheader, pheader], pconfig),
+                plot=self.bargraph([pd1, pd2], [pheader, pheader], pconfig),
             )
 
     ########################################
@@ -487,7 +487,7 @@ class MultiqcModule(BaseMultiqcModule):
                 Insert sizes are calculated for reads with a _"mapped in
                 proper pair"_ `samtools` flag, and `MAPQ >= 40`.
             """,
-            plot=linegraph.plot([pd_p, pd_r], pconfig),
+            plot=self.linegraph([pd_p, pd_r], pconfig),
         )
 
     ########################################
@@ -562,7 +562,7 @@ class MultiqcModule(BaseMultiqcModule):
                     `MAPQ >= 40` shows the duplicate rate for just the reads reads
                     with a mapping quality score of `MAPQ >= 40`.
                 """,
-                plot=bargraph.plot([pd1, pd2], [pheader, pheader], pconfig),
+                plot=self.bargraph([pd1, pd2], [pheader, pheader], pconfig),
             )
 
     ########################################
@@ -800,7 +800,7 @@ class MultiqcModule(BaseMultiqcModule):
                     * _Low GC_ - Bases / CpGs that overlap with the bottom 10% of 100bp windows for GC-content
 
                 """,
-                plot=beeswarm.plot(pd, pheader, pconfig),
+                plot=self.beeswarm(pd, pheader, pconfig),
             )
 
     ########################################
@@ -961,7 +961,7 @@ class MultiqcModule(BaseMultiqcModule):
                 * _High GC_ - Coverage for reads that overlap with the top 10% of 100bp windows for GC-content
                 * _Low GC_ - Coverage for reads that overlap with the bottom 10% of 100bp windows for GC-content
             """,
-            plot=linegraph.plot(pd, pconfig),
+            plot=self.linegraph(pd, pconfig),
         )
 
     def chart_covdist_all_base_botgc(self):
@@ -1116,7 +1116,7 @@ class MultiqcModule(BaseMultiqcModule):
             name="Retention vs. Base Position in Read",
             anchor="biscuit-retention-cytosine",
             description="Distribution of cytosine retention rates across base positions in the read (a.k.a. _M-bias_ plot).",
-            plot=linegraph.plot(pd, pconfig),
+            plot=self.linegraph(pd, pconfig),
         )
 
     def parse_logs_cph_retention_readpos(self, f, fn):
@@ -1231,7 +1231,7 @@ class MultiqcModule(BaseMultiqcModule):
                 Note, if a sample is missing from the Base-averaged Retention table,
                 there wasn't sufficient data to plot that sample.
             """,
-            plot=bargraph.plot([pdata_byread, pdata_bybase], [pheader_byread, pheader_bybase], pconfig),
+            plot=self.bargraph([pdata_byread, pdata_bybase], [pheader_byread, pheader_bybase], pconfig),
         )
 
     def parse_logs_base_avg_retention_rate(self, f, fn):

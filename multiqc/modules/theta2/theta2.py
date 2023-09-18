@@ -97,4 +97,4 @@ class MultiqcModule(BaseMultiqcModule):
             "tt_suffix": "%",
         }
 
-        return bargraph.plot(self.theta2_data, keys, pconfig)
+        return self.bargraph(self.theta2_data, keys, pconfig)

@@ -141,4 +141,4 @@ class MultiqcModule(BaseMultiqcModule):
         # Config for the plot
         pconfig = {"id": "sortmerna-detailed-plot", "title": "SortMeRNA: Hit Counts", "ylab": "Reads"}
 
-        self.add_section(plot=bargraph.plot(self.sortmerna, sorted(keys), pconfig))
+        self.add_section(plot=self.bargraph(self.sortmerna, sorted(keys), pconfig))

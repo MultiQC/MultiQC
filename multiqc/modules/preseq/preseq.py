@@ -156,7 +156,7 @@ class MultiqcModule(BaseMultiqcModule):
         )
 
         self.add_section(
-            name="Complexity curve", description=description, anchor="preseq-plot", plot=linegraph.plot(data, pconfig)
+            name="Complexity curve", description=description, anchor="preseq-plot", plot=self.linegraph(data, pconfig)
         )
 
     def _parse_real_counts(self, sample_names):

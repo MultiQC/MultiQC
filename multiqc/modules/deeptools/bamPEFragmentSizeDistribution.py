@@ -42,7 +42,7 @@ class bamPEFragmentSizeDistributionMixin:
                 name="Fragment size distribution",
                 anchor="fragment_size_distribution",
                 description="Distribution of paired-end fragment sizes",
-                plot=linegraph.plot(self.deeptools_bamPEFragmentSizeDistribution, config),
+                plot=self.linegraph(self.deeptools_bamPEFragmentSizeDistribution, config),
             )
 
         return len(self.deeptools_bamPEFragmentSizeDistribution)

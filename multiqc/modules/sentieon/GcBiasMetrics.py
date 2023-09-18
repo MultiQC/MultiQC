@@ -113,7 +113,7 @@ def parse_reports(self):
             description="This plot shows bias in coverage across regions of "
             "the genome with varying GC content. A perfect "
             "library would be a flat line at <code>y = 1</code>.",
-            plot=linegraph.plot(self.sentieon_GCbias_data, pconfig),
+            plot=self.linegraph(self.sentieon_GCbias_data, pconfig),
         )
 
     if len(self.sentieon_GCbiasSummary_data) > 0:

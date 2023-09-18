@@ -226,7 +226,7 @@ class MultiqcModule(BaseMultiqcModule):
             name="Summary table",
             anchor="bustools-inspect",
             description="This is a table of the complete output of bustools inspect. Note that some columns are hidden by default (click <em>Configure Columns</em> to show).",
-            plot=table.plot(self.bustools_data, self.headers, tconfig),
+            plot=self.table(self.bustools_data, self.headers, tconfig),
         )
 
         # also make some nice barplots
@@ -242,7 +242,7 @@ class MultiqcModule(BaseMultiqcModule):
             helptext="Each unique barcode represents a cell and each Unique Molecular Identifier (UMI) represents "
             "a unique transcript molecule. By counting the mean number of UMIs per barcode, you "
             "effectively calculate the average number of unique transcripts per cell.",
-            plot=bargraph.plot(
+            plot=self.bargraph(
                 mean_umis,
                 pconfig={
                     "id": "bus_umis",
@@ -269,7 +269,7 @@ class MultiqcModule(BaseMultiqcModule):
             helptext="Each unique barcode from the whitelist represents a cell. The percentage of "
             "reads with barcode / barcodes in the whitelist is a measure of percentage of reads that could "
             "be asigned to a cell.",
-            plot=bargraph.plot(
+            plot=self.bargraph(
                 percentage_whitelist,
                 pconfig={
                     "id": "bus_reads",

@@ -305,5 +305,5 @@ class MultiqcModule(BaseMultiqcModule):
 
             _Copied from the [VerifyBAMID documentation](https://genome.sph.umich.edu/wiki/VerifyBamID) - see the link for more details._
             """,
-            plot=table.plot(self.verifybamid_data, headers, tconfig),
+            plot=self.table(self.verifybamid_data, headers, tconfig),
         )

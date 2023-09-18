@@ -285,7 +285,7 @@ class MultiqcModule(BaseMultiqcModule):
             name="Filtered Reads",
             anchor="cutadapt_filtered_reads",
             description="This plot shows the number of reads (SE) / pairs (PE) removed by Cutadapt.",
-            plot=bargraph.plot(self.cutadapt_data, cats, pconfig),
+            plot=self.bargraph(self.cutadapt_data, cats, pconfig),
         )
 
     def cutadapt_length_trimmed_plot(self):
@@ -320,5 +320,5 @@ class MultiqcModule(BaseMultiqcModule):
                 See the [cutadapt documentation](http://cutadapt.readthedocs.org/en/latest/guide.html#how-to-read-the-report)
                 for more information on how these numbers are generated.
                 """,
-                plot=linegraph.plot([self.cutadapt_length_counts[end], self.cutadapt_length_obsexp[end]], pconfig),
+                plot=self.linegraph([self.cutadapt_length_counts[end], self.cutadapt_length_obsexp[end]], pconfig),
             )

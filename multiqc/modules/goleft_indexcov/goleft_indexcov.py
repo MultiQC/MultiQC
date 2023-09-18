@@ -132,7 +132,7 @@ class MultiqcModule(BaseMultiqcModule):
                 Lower coverage samples have shorter curves where the proportion of regions covered
                 drops off more quickly. This indicates a higher fraction of low coverage regions.
             """,
-            plot=linegraph.plot([self.roc_plot_data[c] for c in chroms], pconfig),
+            plot=self.linegraph([self.roc_plot_data[c] for c in chroms], pconfig),
         )
 
     def parse_bin_plot_data(self, f):
@@ -185,6 +185,6 @@ class MultiqcModule(BaseMultiqcModule):
                 See the [goleft indexcov bin documentation](https://github.com/brentp/goleft/blob/master/docs/indexcov/help-bin.md)
                 for more details.
             """,
-            plot=scatter.plot(self.bin_plot_data, pconfig),
+            plot=self.scatter(self.bin_plot_data, pconfig),
             content=extra,
         )

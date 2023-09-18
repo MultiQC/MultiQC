@@ -111,7 +111,7 @@ def parse_reports(self):
             " calculates read coverage over gene bodies."
             " This is used to check if reads coverage is uniform and"
             " if there is any 5' or 3' bias.",
-            plot=linegraph.plot([self.gene_body_cov_hist_percent, self.gene_body_cov_hist_counts], pconfig),
+            plot=self.linegraph([self.gene_body_cov_hist_percent, self.gene_body_cov_hist_counts], pconfig),
         )
 
     # Return number of samples found

@@ -152,7 +152,7 @@ class MultiqcModule(BaseMultiqcModule):
             name="Mapped Reads",
             anchor="rsem_mapped_reads",
             description="A breakdown of how all reads were aligned for each sample.",
-            plot=bargraph.plot(self.rsem_mapped_data, keys, config),
+            plot=self.bargraph(self.rsem_mapped_data, keys, config),
         )
 
     def rsem_multimapping_plot(self):
@@ -176,5 +176,5 @@ class MultiqcModule(BaseMultiqcModule):
                 reference. However, due to factors such as repeititve sequences, short reads and sequencing errors,
                 reads can be align to the reference 0, 1 or more times. This plot shows the frequency of each factor
                 of multimapping. Good samples should have the majority of reads aligning once.""",
-            plot=linegraph.plot(self.rsem_multimapping_data, pconfig),
+            plot=self.linegraph(self.rsem_multimapping_data, pconfig),
         )

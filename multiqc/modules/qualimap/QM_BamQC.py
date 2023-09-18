@@ -372,7 +372,7 @@ def report_sections(self):
             anchor="qualimap-coverage-histogram",
             description="Distribution of the number of locations in the reference genome with a given depth of coverage.",
             helptext=coverage_histogram_helptext,
-            plot=linegraph.plot(
+            plot=self.linegraph(
                 self.qualimap_bamqc_coverage_hist,
                 {
                     "id": "qualimap_coverage_histogram",
@@ -393,7 +393,7 @@ def report_sections(self):
             anchor="qualimap-cumulative-genome-fraction-coverage",
             description="Percentage of the reference genome with at least the given depth of coverage.",
             helptext=genome_fraction_helptext,
-            plot=linegraph.plot(
+            plot=self.linegraph(
                 rates_within_threshs,
                 {
                     "id": "qualimap_genome_fraction",
@@ -458,7 +458,7 @@ def report_sections(self):
             anchor="qualimap-insert-size-histogram",
             description="Distribution of estimated insert sizes of mapped reads.",
             helptext=insert_size_helptext,
-            plot=linegraph.plot(
+            plot=self.linegraph(
                 self.qualimap_bamqc_insert_size_hist,
                 {
                     "id": "qualimap_insert_size",
@@ -529,7 +529,7 @@ def report_sections(self):
             anchor="qualimap-gc-distribution",
             description=desc,
             helptext=gc_content_helptext,
-            plot=linegraph.plot(self.qualimap_bamqc_gc_content_dist, lg_config),
+            plot=self.linegraph(self.qualimap_bamqc_gc_content_dist, lg_config),
         )
 
 

@@ -210,7 +210,7 @@ class MultiqcModule(BaseMultiqcModule):
             name="General Statistics",
             anchor="vep-general-statistics",
             helptext="Table showing general statistics of VEP annotaion run",
-            plot=table.plot(table_data, table_cats, table_config),
+            plot=self.table(table_data, table_cats, table_config),
         )
 
     def bar_graph_variant_classes(self):
@@ -225,7 +225,7 @@ class MultiqcModule(BaseMultiqcModule):
             name=title,
             anchor=htmlid,
             description="Classes of variants found in the data.",
-            plot=bargraph.plot(plot_data, plot_cats, plot_config),
+            plot=self.bargraph(plot_data, plot_cats, plot_config),
         )
 
     def bar_graph_consequences(self):
@@ -248,7 +248,7 @@ class MultiqcModule(BaseMultiqcModule):
             name="Consequences",
             anchor="consequences",
             description="Predicted consequences of variations.",
-            plot=bargraph.plot(p_data, p_cats, p_config),
+            plot=self.bargraph(p_data, p_cats, p_config),
         )
 
     def bar_graph_sift(self):
@@ -276,7 +276,7 @@ class MultiqcModule(BaseMultiqcModule):
             name=title,
             anchor=htmlid,
             description="SIFT variant effect prediction.",
-            plot=bargraph.plot(plot_data, p_cats, plot_config),
+            plot=self.bargraph(plot_data, p_cats, plot_config),
         )
 
     def bar_graph_polyphen(self):
@@ -304,7 +304,7 @@ class MultiqcModule(BaseMultiqcModule):
             name=title,
             anchor=htmlid,
             description="PolyPhen variant effect prediction.",
-            plot=bargraph.plot(plot_data, p_cats, plot_config),
+            plot=self.bargraph(plot_data, p_cats, plot_config),
         )
 
     def bar_graph_variants_by_chromosome(self):
@@ -326,7 +326,7 @@ class MultiqcModule(BaseMultiqcModule):
             name=title,
             anchor=htmlid,
             description="Number of variants found on each chromosome.",
-            plot=bargraph.plot(plot_data, p_cats, plot_config),
+            plot=self.bargraph(plot_data, p_cats, plot_config),
         )
 
     def bar_graph_position_in_protein(self):
@@ -347,7 +347,7 @@ class MultiqcModule(BaseMultiqcModule):
             name=title,
             anchor=htmlid,
             description="Relative position of affected amino acids in protein.",
-            plot=bargraph.plot(plot_data, plot_cats, plot_config),
+            plot=self.bargraph(plot_data, plot_cats, plot_config),
         )
 
     def _prep_bar_graph(self, title):

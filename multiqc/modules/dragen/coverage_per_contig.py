@@ -51,7 +51,7 @@ class DragenCoveragePerContig(BaseMultiqcModule):
             with MAPQ=0, and clipped bases), divided by the length of the contig or
             (if a target bed is used) the total length of the target region spanning that contig.
             """,
-            plot=linegraph.plot(
+            plot=self.linegraph(
                 main_contigs_by_sample,
                 pconfig={
                     "id": "dragen_coverage_per_contig",
@@ -74,7 +74,7 @@ class DragenCoveragePerContig(BaseMultiqcModule):
                 unlocalized (*_random), unplaced (chrU_*), alts (*_alt), mitochondria (chrM), EBV, HLA.
                 Zoom in to see more contigs as all labels don\'t fit the screen.
                 """,
-                plot=linegraph.plot(
+                plot=self.linegraph(
                     other_contigs_by_sample,
                     pconfig={
                         "id": "dragen_coverage_per_non_main_contig",

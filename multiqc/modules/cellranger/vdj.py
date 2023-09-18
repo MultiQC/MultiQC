@@ -105,7 +105,7 @@ class CellRangerVdjMixin:
                     name="VDJ - Warnings",
                     anchor="cellranger-vdj-warnings",
                     description="Warnings encountered during the analysis",
-                    plot=table.plot(
+                    plot=self.table(
                         self.cellrangervdj_warnings, self.vdj_warnings_headers, {"namespace": "Cell Ranger VDJ"}
                     ),
                 )
@@ -114,14 +114,14 @@ class CellRangerVdjMixin:
                 name="VDJ - Summary stats",
                 anchor="cellranger-vdj-stats",
                 description="Summary QC metrics from Cell Ranger count",
-                plot=table.plot(self.cellrangervdj_mapping, self.vdj_mapping_headers, {"namespace": "Cell Ranger VDJ"}),
+                plot=self.table(self.cellrangervdj_mapping, self.vdj_mapping_headers, {"namespace": "Cell Ranger VDJ"}),
             )
 
             self.add_section(
                 name="VDJ - Annotations",
                 anchor="cellranger-vdj-annot",
                 description="V(D)J annotations from Cell Ranger VDJ analysis",
-                plot=table.plot(
+                plot=self.table(
                     self.cellrangervdj_annotations, self.vdj_annotations_headers, {"namespace": "Cell Ranger VDJ"}
                 ),
             )
@@ -131,7 +131,7 @@ class CellRangerVdjMixin:
                 anchor="cellranger-vdj-bcrank-plot",
                 description=self.cellrangervdj_plots_conf["bc"]["description"],
                 helptext=self.cellrangervdj_plots_conf["bc"]["helptext"],
-                plot=linegraph.plot(self.cellrangervdj_plots_data["bc"], self.cellrangervdj_plots_conf["bc"]["config"]),
+                plot=self.linegraph(self.cellrangervdj_plots_data["bc"], self.cellrangervdj_plots_conf["bc"]["config"]),
             )
 
             return len(self.cellrangervdj_general_data)

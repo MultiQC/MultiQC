@@ -33,7 +33,7 @@ class DragenTimeMetrics(BaseMultiqcModule):
             anchor="dragen-time-metrics",
             description="Time metrics for DRAGEN run.  Total run time is less than the sum of individual "
             "steps because of parallelization.",
-            plot=bargraph.plot(
+            plot=self.bargraph(
                 [
                     {
                         sample: {

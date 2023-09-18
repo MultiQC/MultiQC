@@ -50,7 +50,7 @@ class plotFingerprintMixin:
                 name="Fingerprint plot",
                 anchor="deeptools_fingerprint",
                 description="Signal fingerprint according to plotFingerprint",
-                plot=linegraph.plot(
+                plot=self.linegraph(
                     self.deeptools_plotFingerprintOutRawCounts,
                     {
                         "id": "deeptools_fingerprint_plot",
@@ -73,7 +73,7 @@ class plotFingerprintMixin:
                 name="Fingerprint quality metrics",
                 anchor="plotFingerprint",
                 description="Various quality metrics returned by plotFingerprint",
-                plot=linegraph.plot(
+                plot=self.linegraph(
                     self.deeptools_plotFingerprintOutQualityMetrics,
                     {
                         "id": "plotFingerprint_quality_metrics",

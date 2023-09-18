@@ -205,7 +205,7 @@ class StatsReportMixin:
                 self.add_section(
                     name="Bcftools Stats",
                     anchor="bcftools-stats_stats",
-                    plot=table.plot(self.bcftools_stats, stats_headers),
+                    plot=self.table(self.bcftools_stats, stats_headers),
                 )
 
             # Make bargraph plot of substitution types
@@ -221,7 +221,7 @@ class StatsReportMixin:
             self.add_section(
                 name="Variant Substitution Types",
                 anchor="bcftools-stats_variant_sub_types",
-                plot=bargraph.plot(self.bcftools_stats, keys, pconfig),
+                plot=self.bargraph(self.bcftools_stats, keys, pconfig),
             )
 
             # Make histograms of variant quality
@@ -245,7 +245,7 @@ class StatsReportMixin:
                 self.add_section(
                     name="Variant Quality",
                     anchor="bcftools-stats_variant_quality_plot",
-                    plot=linegraph.plot(
+                    plot=self.linegraph(
                         [
                             self.bcftools_stats_vqc_snp,
                             self.bcftools_stats_vqc_transi,
@@ -269,7 +269,7 @@ class StatsReportMixin:
                 self.add_section(
                     name="Indel Distribution",
                     anchor="bcftools-stats_indel_plot",
-                    plot=linegraph.plot(self.bcftools_stats_indels, pconfig),
+                    plot=self.linegraph(self.bcftools_stats_indels, pconfig),
                 )
             # Make line graph of variants per depth
             if len(depth_data) > 0:
@@ -286,7 +286,7 @@ class StatsReportMixin:
                     name="Variant depths",
                     anchor="bcftools-stats_depth_plot",
                     description="Read depth support distribution for called variants",
-                    plot=linegraph.plot(depth_data, pconfig),
+                    plot=self.linegraph(depth_data, pconfig),
                 )
 
             # Make bargraph plot of missing sites
@@ -301,7 +301,7 @@ class StatsReportMixin:
                 self.add_section(
                     name="Sites per sample",
                     anchor="bcftools-stats_sites_per_sample",
-                    plot=bargraph.plot(
+                    plot=self.bargraph(
                         list(self.bcftools_stats_sample_variants.values()), ["nSNPs", "nIndels", "nOther"], pconfig
                     ),
                 )
@@ -319,7 +319,7 @@ class StatsReportMixin:
                 self.add_section(
                     name="Ts/Tv",
                     anchor="bcftools-stats_ts_tv",
-                    plot=bargraph.plot(list(self.bcftools_stats_sample_tstv.values()), ["tstv"], pconfig),
+                    plot=self.bargraph(list(self.bcftools_stats_sample_tstv.values()), ["tstv"], pconfig),
                 )
 
             # Make bargraph plot of singletons stats
@@ -335,7 +335,7 @@ class StatsReportMixin:
                 self.add_section(
                     name="Number of Singletons",
                     anchor="bcftools-stats_singletones",
-                    plot=bargraph.plot(
+                    plot=self.bargraph(
                         list(self.bcftools_stats_sample_singletons.values()), ["singletons", "rest"], pconfig
                     ),
                 )
@@ -353,7 +353,7 @@ class StatsReportMixin:
                 self.add_section(
                     name="Sequencing depth",
                     anchor="bcftools-stats_sequencing_depth",
-                    plot=bargraph.plot(list(self.bcftools_stats_sample_depth.values()), ["depth"], pconfig),
+                    plot=self.bargraph(list(self.bcftools_stats_sample_depth.values()), ["depth"], pconfig),
                 )
 
         # Return the number of logs that were found

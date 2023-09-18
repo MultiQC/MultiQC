@@ -184,7 +184,7 @@ class MultiqcModule(BaseMultiqcModule):
                         This data is obtained from the gstacks program run after builing sample and catalog loci merge
                         paired-ends and call variants.
                         These numbers are obtained from the `gstacks.log.distribs` file""",
-            plot=table.plot(self.cov_data, self.gsheaders, config_table),
+            plot=self.table(self.cov_data, self.gsheaders, config_table),
         )
         # Write population sumstats table
         config_table = {"id": "sumstats_table", "namespace": "stacks"}
@@ -196,7 +196,7 @@ class MultiqcModule(BaseMultiqcModule):
                         where the population ID is defined in the input population map file.
                         This information is obtained from the Stacks program `population` and the file populations.sumstats_summary.tsv
                         """,
-            plot=table.plot(self.sumstats_data, self.sheaders, config_table),
+            plot=self.table(self.sumstats_data, self.sheaders, config_table),
         )
         config_distribs = {
             "id": "distribs_plot",
@@ -215,7 +215,7 @@ class MultiqcModule(BaseMultiqcModule):
             description="Plots showing, 1) the number of loci shared by number of samples and 2) the number of SNPs per sample",
             helptext="""The distributions are obtained from the Stacks program `populations` and it's output file `populations.log.distribs`.
             These numbers are Stacks' post-filtering.""",
-            plot=linegraph.plot([self.distribs_loci, self.distribs_snps], config_distribs),
+            plot=self.linegraph([self.distribs_loci, self.distribs_snps], config_distribs),
         )
 
     def parse_gstacks(self, file_contents, s_name):

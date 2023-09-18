@@ -128,7 +128,7 @@ def parse_reports(self):
             name="Alignment Summary",
             anchor="picard-alignmentsummary",
             description="Please note that Picard's read counts are divided by two for paired-end data. Total bases (including unaligned) is not provided.",
-            plot=bargraph.plot([pdata, self.picard_alignment_metrics], keys, pconfig),
+            plot=self.bargraph([pdata, self.picard_alignment_metrics], keys, pconfig),
         )
 
         # Make a bar plot of mean read length
@@ -145,7 +145,7 @@ def parse_reports(self):
             name="Mean read length",
             anchor="picard_alignment_readlength",
             description="The mean read length of the set of reads examined.",
-            plot=bargraph.plot(self.picard_alignment_metrics, keys, pconfig),
+            plot=self.bargraph(self.picard_alignment_metrics, keys, pconfig),
         )
 
     # Return the number of detected samples to the parent module

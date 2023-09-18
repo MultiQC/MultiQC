@@ -101,5 +101,5 @@ class MultiqcModule(BaseMultiqcModule):
             name="GoPeaks",
             anchor="gopeaks_bargraph",
             description="Number of peaks called by GoPeaks.",
-            plot=bargraph.plot(self.gopeaks_data, cats, config),
+            plot=self.bargraph(self.gopeaks_data, cats, config),
         )

@@ -136,5 +136,5 @@ class MultiqcModule(BaseMultiqcModule):
 
                 > **Note**: Lineage designation is based on the used WHO nomenclature, which could vary over time. 
                 """,
-            plot=bargraph.plot(self.freyja_data, cats, pconfig),
+            plot=self.bargraph(self.freyja_data, cats, pconfig),
         )

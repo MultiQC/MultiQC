@@ -123,7 +123,7 @@ class MultiqcModule(BaseMultiqcModule):
             data_classification[sample] = self.pychopper_data[sample]["Classification"]
 
         cats = ["Primers_found", "Rescue", "Unusable"]
-        return bargraph.plot(data_classification, cats, pconfig)
+        return self.bargraph(data_classification, cats, pconfig)
 
     def plot_orientation(self):
         """Generate the read strand orientation plot"""
@@ -143,4 +143,4 @@ class MultiqcModule(BaseMultiqcModule):
             data_orientation[sample] = self.pychopper_data[sample]["Strand"]
 
         cats = ["+", "-"]
-        return bargraph.plot(data_orientation, cats, pconfig)
+        return self.bargraph(data_orientation, cats, pconfig)

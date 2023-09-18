@@ -164,7 +164,7 @@ def parse_reports(self):
         self.add_section(
             name="HSMetrics",
             anchor="picard_hsmetrics",
-            plot=table.plot(
+            plot=self.table(
                 data,
                 _get_table_headers(),
                 {
@@ -376,7 +376,7 @@ def _add_target_bases(data):
         "name": "Target Region Coverage",
         "anchor": "picard_hsmetrics_target_bases",
         "description": "The percentage of all target bases with at least <code>x</code> fold coverage.",
-        "plot": linegraph.plot(data_clean, pconfig),
+        "plot": self.linegraph(data_clean, pconfig),
     }
 
 
@@ -402,4 +402,4 @@ def hs_penalty_plot(data):
     }
 
     if any_non_zero:
-        return linegraph.plot(data_clean, pconfig)
+        return self.linegraph(data_clean, pconfig)

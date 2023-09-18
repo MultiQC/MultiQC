@@ -78,7 +78,7 @@ class MultiqcModule(BaseMultiqcModule):
             anchor="kat-first",
             description="Table showing k-mer coverage distributions and if available GC distributions",
             helptext="This table can give a quick idea of potential contaminants that can be identified via unexpected numbers of k-mer or gc peaks in the data",
-            plot=table.plot(self.kat_data, headers, kat_config),
+            plot=self.table(self.kat_data, headers, kat_config),
         )
 
     def parse_kat_report(self, content):

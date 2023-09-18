@@ -146,4 +146,4 @@ class MultiqcModule(BaseMultiqcModule):
             "hide_zero_cats": False,
         }
 
-        self.add_section(plot=bargraph.plot(data, keys, pconfig))
+        self.add_section(plot=self.bargraph(data, keys, pconfig))

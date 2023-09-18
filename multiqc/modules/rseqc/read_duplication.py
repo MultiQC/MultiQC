@@ -55,7 +55,7 @@ def parse_reports(self):
             description='<a href="http://rseqc.sourceforge.net/#read-duplication-py" target="_blank">read_duplication.py</a>'
             " calculates how many alignment positions have a certain number of exact duplicates."
             " Note - plot truncated at 500 occurrences and binned.</p>",
-            plot=linegraph.plot(self.read_dups, pconfig),
+            plot=self.linegraph(self.read_dups, pconfig),
         )
 
     # Return number of samples found

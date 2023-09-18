@@ -186,7 +186,7 @@ class MultiqcModule(BaseMultiqcModule):
             for dataset in datasets
         ]
 
-        return scatter.plot(data_classification, pconfig)
+        return self.scatter(data_classification, pconfig)
 
     # Plot number of novel and missing transcripts
     def plot_novel(self):
@@ -222,7 +222,7 @@ class MultiqcModule(BaseMultiqcModule):
             for dataset in datasets
         ]
 
-        return bargraph.plot(data_novel, cats, pconfig)
+        return self.bargraph(data_novel, cats, pconfig)
 
     def plot_missed(self):
         """Generate GffCompare missed elements plot"""
@@ -257,4 +257,4 @@ class MultiqcModule(BaseMultiqcModule):
             for dataset in datasets
         ]
 
-        return bargraph.plot(data_missed, cats, pconfig)
+        return self.bargraph(data_missed, cats, pconfig)

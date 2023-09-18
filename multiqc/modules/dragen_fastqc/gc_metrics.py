@@ -96,7 +96,7 @@ class DragenFastqcGcMetrics(BaseMultiqcModule):
             be flagged as an error by the module since it doesn't know what your genome's
             GC content should be._
             """,
-            plot=linegraph.plot([data_norm, data], pconfig),
+            plot=self.linegraph([data_norm, data], pconfig),
         )
 
     def gc_content_mean_quality_plot(self):
@@ -149,7 +149,7 @@ class DragenFastqcGcMetrics(BaseMultiqcModule):
             The quality of calls on most platforms will degrade as the run progresses, so it is
             common to see base calls falling into the orange area towards the end of a read._
             """,
-            plot=linegraph.plot(data, pconfig),
+            plot=self.linegraph(data, pconfig),
         )
 
     def get_avg_gc_content_by_sample(self):

@@ -133,4 +133,4 @@ class MultiqcModule(BaseMultiqcModule):
             "cpswitch_counts_label": "Number of Reads",
         }
 
-        return bargraph.plot(self.kallisto_data, keys, config)
+        return self.bargraph(self.kallisto_data, keys, config)

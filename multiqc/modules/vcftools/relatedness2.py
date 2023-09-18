@@ -45,7 +45,7 @@ class Relatedness2Mixin:
                     name
                 ),
                 helptext=helptext,
-                plot=heatmap.plot(
+                plot=self.heatmap(
                     m.data,
                     xcats=m.x_labels,
                     ycats=m.y_labels,

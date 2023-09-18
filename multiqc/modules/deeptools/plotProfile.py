@@ -104,7 +104,7 @@ class plotProfileMixin:
                     {}""".format(
                     plotBandHelp
                 ),
-                plot=linegraph.plot(self.deeptools_plotProfile, config),
+                plot=self.linegraph(self.deeptools_plotProfile, config),
             )
 
         return len(self.deeptools_plotProfile)

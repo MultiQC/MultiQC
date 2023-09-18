@@ -81,7 +81,7 @@ class DragenBaseMetrics(BaseMultiqcModule):
             name="Per-Position Quality Score Ranges",
             anchor="dragen_fastqc_pos_qual_ranges",
             description="The range of quality value across each base position in each sample or read",
-            plot=boxplot.plot(data, pconfig),
+            plot=self.boxplot(data, pconfig),
         )
 
     def positional_mean_quality_plot(self):
@@ -166,5 +166,5 @@ class DragenBaseMetrics(BaseMultiqcModule):
             The quality of calls on most platforms will degrade as the run progresses, so it is
             common to see base calls falling into the orange area towards the end of a read._
             """,
-            plot=linegraph.plot(data, pconfig),
+            plot=self.linegraph(data, pconfig),
         )

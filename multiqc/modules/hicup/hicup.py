@@ -180,7 +180,7 @@ class MultiqcModule(BaseMultiqcModule):
             "cpswitch_counts_label": "Number of Reads",
         }
 
-        return bargraph.plot(data, keys, config)
+        return self.bargraph(data, keys, config)
 
     def hicup_alignment_chart(self):
         """Generate the HiCUP Aligned reads plot"""
@@ -226,7 +226,7 @@ class MultiqcModule(BaseMultiqcModule):
             "cpswitch_counts_label": "Number of Reads",
         }
 
-        return bargraph.plot(data, keys, config)
+        return self.bargraph(data, keys, config)
 
     def hicup_filtering_chart(self):
         """Generate the HiCUP filtering plot"""
@@ -250,7 +250,7 @@ class MultiqcModule(BaseMultiqcModule):
             "cpswitch_c_active": False,
         }
 
-        return bargraph.plot(self.hicup_data, keys, config)
+        return self.bargraph(self.hicup_data, keys, config)
 
     def hicup_dedup_chart(self):
         """Generate the HiCUP Deduplication plot"""
@@ -271,4 +271,4 @@ class MultiqcModule(BaseMultiqcModule):
             "cpswitch_c_active": False,
         }
 
-        return bargraph.plot(self.hicup_data, keys, config)
+        return self.bargraph(self.hicup_data, keys, config)

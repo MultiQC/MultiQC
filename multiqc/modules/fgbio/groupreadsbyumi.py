@@ -72,5 +72,5 @@ class GroupReadsByUmiMixin:
 
             The histogram shows tag family size counts or percentages.
             """,
-            plot=linegraph.plot([self.fgbio_umi_data, self.fgbio_umi_data_normed], config),
+            plot=self.linegraph([self.fgbio_umi_data, self.fgbio_umi_data_normed], config),
         )

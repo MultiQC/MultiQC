@@ -212,7 +212,7 @@ class MultiqcModule(BaseMultiqcModule):
                 * `No match`: Reads overlap informative SNPs, but don't contain the expected nucleotide for either genome
                 * `C->T SNP`: (Bisulfite sequencing data only) Read SNPs involved some form of C->T transition, rendering it non-informative for allele-assignment
                 """,
-            plot=bargraph.plot(plot_data, cats, pconfig),
+            plot=self.bargraph(plot_data, cats, pconfig),
         )
 
     def allele_sorting_section(self):
@@ -267,5 +267,5 @@ class MultiqcModule(BaseMultiqcModule):
                 Similarly, if two reads in a pair are tagged as arising from different genomes
                 then the pair becomes unassignable.
             """,
-            plot=bargraph.plot(self.snpsplit_data, cats, pconfig),
+            plot=self.bargraph(self.snpsplit_data, cats, pconfig),
         )

@@ -197,9 +197,9 @@ class MultiqcModule(BaseMultiqcModule):
         # Plot table if less than 10 samples exist, beeswarm if more
         p = ""
         if total_samples < 10:
-            p = table.plot(data, None, config)
+            p = self.table(data, None, config)
         else:
-            p = beeswarm.plot(data, None, config)
+            p = self.beeswarm(data, None, config)
         self.add_section(
             name="Read Lengths Summary",
             anchor="anglerfish-sample-statistics",
@@ -237,5 +237,5 @@ class MultiqcModule(BaseMultiqcModule):
         self.add_section(
             name="Undetermined Indexes",
             anchor="anglerfish-undetermined-indexes",
-            plot=bargraph.plot(data, None, config),
+            plot=self.bargraph(data, None, config),
         )

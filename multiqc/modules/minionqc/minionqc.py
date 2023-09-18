@@ -177,7 +177,7 @@ class MultiqcModule(BaseMultiqcModule):
             name="Stats: All reads",
             anchor="minionqc-stats-qAll",
             description="MinIONQC statistics for all reads",
-            plot=table.plot(
+            plot=self.table(
                 self.minionqc_data,
                 self.headers_to_use(),
                 {
@@ -211,7 +211,7 @@ class MultiqcModule(BaseMultiqcModule):
             name="Stats: Quality filtered reads",
             anchor="minionqc-stats-qFilt",
             description=description,
-            plot=table.plot(
+            plot=self.table(
                 self.qfilt_data,
                 self.headers_to_use(),
                 {
@@ -257,5 +257,5 @@ class MultiqcModule(BaseMultiqcModule):
             name="Read length output",
             anchor="minionqc-read-length-output",
             description="Number of reads / bp sequenced at given read length thresholds.",
-            plot=linegraph.plot(pdata, pconfig=pconfig),
+            plot=self.linegraph(pdata, pconfig=pconfig),
         )

@@ -79,7 +79,7 @@ def parse_reports(self):
             description='<a href="http://rseqc.sourceforge.net/#infer-experiment-py" target="_blank">Infer experiment</a>'
             " counts the percentage of reads and read pairs that match the strandedness of overlapping transcripts."
             " It can be used to infer whether RNA-seq library preps are stranded (sense or antisense).",
-            plot=bargraph.plot(pdata, keys, pconfig),
+            plot=self.bargraph(pdata, keys, pconfig),
         )
 
     # Return number of samples found

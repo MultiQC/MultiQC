@@ -90,7 +90,7 @@ class MultiqcModule(BaseMultiqcModule):
             "ReadsKept",  # 454
             "DiscardedTotal",
         ]
-        return bargraph.plot(self.seqyclean_data, self._clean_keys(keys), config)
+        return self.bargraph(self.seqyclean_data, self._clean_keys(keys), config)
 
     def seqyclean_analysis(self):
         config = {
@@ -113,7 +113,7 @@ class MultiqcModule(BaseMultiqcModule):
             "ReadsWithVector_found",
             "ReadsWithContam_found",
         ]
-        return bargraph.plot(self.seqyclean_data, self._clean_keys(keys), config)
+        return self.bargraph(self.seqyclean_data, self._clean_keys(keys), config)
 
     def seqyclean_discarded(self):
         config = {
@@ -131,7 +131,7 @@ class MultiqcModule(BaseMultiqcModule):
             "DiscByContam",  # 454 data
             "DiscByLength",
         ]
-        return bargraph.plot(self.seqyclean_data, self._clean_keys(keys), config)
+        return self.bargraph(self.seqyclean_data, self._clean_keys(keys), config)
 
     def seqyclean_general_stats_table(self):
         headers = OrderedDict()

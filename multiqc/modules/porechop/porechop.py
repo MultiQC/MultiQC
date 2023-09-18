@@ -208,7 +208,7 @@ class MultiqcModule(BaseMultiqcModule):
             name="Reads adapter-trimmed read start",
             anchor="porechop-starttrim",
             description="Shows the number of reads that had adapters removed from read start.",
-            plot=bargraph.plot(self.porechop_data, cats, config),
+            plot=self.bargraph(self.porechop_data, cats, config),
         )
 
     def end_trim_barplot(self):
@@ -225,7 +225,7 @@ class MultiqcModule(BaseMultiqcModule):
             name="Reads adapter-trimmed read end",
             anchor="porechop-endtrim",
             description="Shows the number of reads that had adapters removed from read end.",
-            plot=bargraph.plot(self.porechop_data, cats, config),
+            plot=self.bargraph(self.porechop_data, cats, config),
         )
 
     def middle_split_barplot(self):
@@ -242,7 +242,7 @@ class MultiqcModule(BaseMultiqcModule):
             name="Middle split reads",
             anchor="porechop-middlesplit",
             description="Shows the number of reads that were split due to adapter being present in middle of read.",
-            plot=bargraph.plot(self.porechop_data, cats, config),
+            plot=self.bargraph(self.porechop_data, cats, config),
         )
 
     def no_adapters_found(self):

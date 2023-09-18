@@ -80,7 +80,7 @@ class MultiqcModule(BaseMultiqcModule):
             description="Number of reads per lane (with number of perfect index reads).",
             helptext="""Perfect index reads are those that do not have a single mismatch.
                 All samples of a lane are combined. Undetermined reads are treated as a third category.""",
-            plot=bargraph.plot(
+            plot=self.bargraph(
                 self.get_bar_data_from_counts(self.bcl2fastq_bylane),
                 cats,
                 {
@@ -105,7 +105,7 @@ class MultiqcModule(BaseMultiqcModule):
             helptext="""Perfect index reads are those that do not have a single mismatch.
                 All samples are aggregated across lanes combined. Undetermined reads are ignored.
                 Undetermined reads are treated as a separate sample.""",
-            plot=bargraph.plot(
+            plot=self.bargraph(
                 [self.get_bar_data_from_counts(self.bcl2fastq_bysample), self.bcl2fastq_bysample_lane],
                 [cats, lcats],
                 {
@@ -123,7 +123,7 @@ class MultiqcModule(BaseMultiqcModule):
             name="Undetermined barcodes by lane",
             anchor="undetermine_by_lane",
             description="Count of the top twenty most abundant undetermined barcodes by lanes",
-            plot=bargraph.plot(
+            plot=self.bargraph(
                 self.get_bar_data_from_undetermined(self.bcl2fastq_bylane),
                 None,
                 {
@@ -489,7 +489,7 @@ class MultiqcModule(BaseMultiqcModule):
             "col1_header": "Run ID - Lane",
             "no_beeswarm": True,
         }
-        return table.plot(self.bcl2fastq_bylane, headers, table_config)
+        return self.table(self.bcl2fastq_bylane, headers, table_config)
 
     def prepend_runid(self, runId, rest):
         return str(runId) + " - " + str(rest)

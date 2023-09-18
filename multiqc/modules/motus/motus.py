@@ -183,7 +183,7 @@ class MultiqcModule(BaseMultiqcModule):
             name="mOTUs: Read filtering information",
             anchor="motus-filtering",
             description="Read filtering statistics (i.e. mapping of reads to the mOTUs marker database).",
-            plot=bargraph.plot(
+            plot=self.bargraph(
                 self.motus_data,
                 cats,
                 {
@@ -216,7 +216,7 @@ class MultiqcModule(BaseMultiqcModule):
             name="mOTUs: Insert mapping information",
             anchor="motus-mapping",
             description="How inserts was classified after alignment to MGCs.",
-            plot=bargraph.plot(
+            plot=self.bargraph(
                 self.motus_data,
                 cats,
                 {
@@ -244,7 +244,7 @@ class MultiqcModule(BaseMultiqcModule):
             name="mOTUs: mOTU identification information",
             anchor="motus-identification",
             description="Distribution of the types of mOTUs found.",
-            plot=bargraph.plot(
+            plot=self.bargraph(
                 self.motus_data,
                 cats,
                 {

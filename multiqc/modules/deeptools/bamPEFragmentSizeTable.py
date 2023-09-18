@@ -84,7 +84,7 @@ class bamPEFragmentSizeTableMixin:
             self.add_section(
                 name="Read length metrics",
                 anchor="deeptools_readlengths",
-                plot=table.plot(self.deeptools_bamPEFragmentSize, headersSE, config),
+                plot=self.table(self.deeptools_bamPEFragmentSize, headersSE, config),
             )
 
             headersPE = OrderedDict()
@@ -150,7 +150,7 @@ class bamPEFragmentSizeTableMixin:
                 self.add_section(
                     name="Fragment length metrics",
                     anchor="deeptools_fragmentlengths",
-                    plot=table.plot(self.deeptools_bamPEFragmentSize, headersPE, config),
+                    plot=self.table(self.deeptools_bamPEFragmentSize, headersPE, config),
                 )
 
             # Read length plot
@@ -213,7 +213,7 @@ class bamPEFragmentSizeTableMixin:
             self.add_section(
                 name="Read/fragment length distribution",
                 anchor="deeptools_fragmentlengths_dist",
-                plot=linegraph.plot([SE, PE], config),
+                plot=self.linegraph([SE, PE], config),
             )
 
         return len(self.deeptools_bamPEFragmentSize)

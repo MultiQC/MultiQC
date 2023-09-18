@@ -218,4 +218,4 @@ class MultiqcModule(BaseMultiqcModule):
             "table_title": "Pangolin Run details",
         }
 
-        return table.plot(self.pangolin_data, headers, table_config)
+        return self.table(self.pangolin_data, headers, table_config)

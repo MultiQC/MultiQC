@@ -66,7 +66,7 @@ class MultiqcModule(BaseMultiqcModule):
             PURPLE summary. See details at the
             <a href=https://github.com/hartwigmedical/hmftools/tree/master/purity-ploidy-estimator#purity-file>
             documentation</a>.""",
-            plot=table.plot(
+            plot=self.table(
                 data_by_sample,
                 headers,
                 {

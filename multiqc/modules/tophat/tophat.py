@@ -143,4 +143,4 @@ class MultiqcModule(BaseMultiqcModule):
             "cpswitch_counts_label": "Number of Reads",
         }
 
-        self.add_section(plot=bargraph.plot(self.tophat_data, keys, config))
+        self.add_section(plot=self.bargraph(self.tophat_data, keys, config))

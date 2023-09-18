@@ -118,4 +118,4 @@ class MultiqcModule(BaseMultiqcModule):
             "hide_zero_cats": False,
             "cpswitch_counts_label": "Number of Reads",
         }
-        return bargraph.plot(self.htseq_data, cats, config)
+        return self.bargraph(self.htseq_data, cats, config)

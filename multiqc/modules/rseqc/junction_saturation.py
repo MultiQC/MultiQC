@@ -78,7 +78,7 @@ def parse_reports(self):
                   <span class="glyphicon glyphicon-hand-up"></span>
                   Click a line to see the data side by side (as in the original RSeQC plot).
                 </div><p>""",
-            plot=linegraph.plot(
+            plot=self.linegraph(
                 [self.junction_saturation_all, self.junction_saturation_known, self.junction_saturation_novel], pconfig
             ),
         )

@@ -94,4 +94,4 @@ class MultiqcModule(BaseMultiqcModule):
                 "xmin": 0,
                 "tt_label": "<b>{point.x:,.0f} bp</b>: {point.y:,.0f}",
             }
-            self.add_section(plot=linegraph.plot(self.salmon_fld, pconfig))
+            self.add_section(plot=self.linegraph(self.salmon_fld, pconfig))

@@ -3,7 +3,7 @@ from itertools import chain
 from multiqc.plots import linegraph
 
 
-def plot_qahist(samples, file_type, **plot_args):
+def plot_qahist(report, samples, file_type, **plot_args):
     """Create line graph plot of histogram data for BBMap 'qahist' output.
 
     The 'samples' parameter could be from the bbmap mod_data dictionary:
@@ -71,6 +71,6 @@ def plot_qahist(samples, file_type, **plot_args):
     }
 
     plot_params.update(plot_args["plot_params"])
-    plot = linegraph.plot(plot_data, plot_params)
+    plot = linegraph.plot(report, plot_data, plot_params)
 
     return plot

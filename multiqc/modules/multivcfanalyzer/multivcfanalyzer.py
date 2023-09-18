@@ -253,7 +253,7 @@ class MultiqcModule(BaseMultiqcModule):
             "id": "mvcf-table",  # ID used for the table
             "table_title": "MultiVCFAnalyzer Results",  # Title of the table. Used in the column config modal
         }
-        tab = table.plot(self.mvcf_data, headers, table_config)
+        tab = self.table(self.mvcf_data, headers, table_config)
         return tab
 
     def addBarplot(self):
@@ -287,4 +287,4 @@ class MultiqcModule(BaseMultiqcModule):
             "stacking": "normal",  # Set to None to have category bars side by side
             "use_legend": True,  # Show / hide the legend
         }
-        return bargraph.plot(self.mvcf_data, cats, config)
+        return self.bargraph(self.mvcf_data, cats, config)

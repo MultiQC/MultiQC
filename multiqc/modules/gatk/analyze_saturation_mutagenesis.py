@@ -126,7 +126,7 @@ class AnalyzeSaturationMutagenesisMixin:
             description="Read counts and read fate. Filtered reads include unmapped, low quality, and other pathologies.",
             helptext="""Reads can be filtered by GATK AnalyzeSaturationMutagenesis for a number of reasons, including low quality, insufficient flank, and other pathologies.
             This plot shows the number of reads that were mapped to WT, called as variants, and the number that were filtered.""",
-            plot=bargraph.plot(data, cats, pconfig),
+            plot=self.bargraph(data, cats, pconfig),
         )
 
     def gatk_analyze_saturation_mutagenesis_plot_base_calls(self, data):
@@ -148,7 +148,7 @@ class AnalyzeSaturationMutagenesisMixin:
             description="Base calls evaluated for variants and base calls not evaluated for variants.",
             helptext="""Bases can be filtered by GATK AnalyzeSaturationMutagenesis for a number of reasons, including low quality, insufficient flank, and other pathologies.
              This plot shows the number of base calls that were evaluated for variants and the number of base calls that were not evaluated for variants.""",
-            plot=bargraph.plot(data, cats, pconfig),
+            plot=self.bargraph(data, cats, pconfig),
         )
 
     def gatk_analyze_saturation_mutagenesis_table(self, data):
@@ -400,5 +400,5 @@ class AnalyzeSaturationMutagenesisMixin:
             * Low quality variation: If the variant includes ambiguous bases (not A, C, G, or T, or -), the read is filtered.
             * Insufficient flank: If the variant does not include a certain number of WT bases (default 2) flanking the variant, the read is filtered.
             """,
-            plot=table.plot(data, asm_headers, pconfig),
+            plot=self.table(data, asm_headers, pconfig),
         )

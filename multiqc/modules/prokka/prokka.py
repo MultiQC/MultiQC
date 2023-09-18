@@ -197,7 +197,7 @@ class MultiqcModule(BaseMultiqcModule):
             "min": 0,
         }
 
-        return table.plot(self.prokka, headers, table_config)
+        return self.table(self.prokka, headers, table_config)
 
     def prokka_barplot(self):
         """Make a basic plot of the annotation stats"""
@@ -219,4 +219,4 @@ class MultiqcModule(BaseMultiqcModule):
             "cpswitch_counts_label": "Features",
         }
 
-        return bargraph.plot(self.prokka, keys, plot_config)
+        return self.bargraph(self.prokka, keys, plot_config)

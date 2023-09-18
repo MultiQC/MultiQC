@@ -131,7 +131,7 @@ def parse_reports(self):
             name="Bam Stat",
             anchor="rseqc-bam_stat",
             description="All numbers reported in millions.",
-            plot=beeswarm.plot(self.bam_stat_data, keys, pconfig),
+            plot=self.beeswarm(self.bam_stat_data, keys, pconfig),
         )
 
     # Return number of samples found

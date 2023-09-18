@@ -56,7 +56,7 @@ class TsTvByQualMixin:
             anchor="vcftools-tstv-by-qual",
             description="Plot of `TSTV-BY-QUAL` - the transition to transversion ratio as a function of SNP quality from the output of vcftools TsTv-by-qual.",
             helptext=helptext,
-            plot=linegraph.plot(self.vcftools_tstv_by_qual, pconfig),
+            plot=self.linegraph(self.vcftools_tstv_by_qual, pconfig),
         )
 
         return len(self.vcftools_tstv_by_qual)

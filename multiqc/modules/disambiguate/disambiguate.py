@@ -105,4 +105,4 @@ class MultiqcModule(BaseMultiqcModule):
             "ylab": "# Reads",
         }
 
-        self.add_section(plot=bargraph.plot(self.data, keys, plot_config))
+        self.add_section(plot=self.bargraph(self.data, keys, plot_config))

@@ -159,7 +159,7 @@ class MultiqcModule(BaseMultiqcModule):
             name="BBDuk: Filtered Reads",
             anchor="bbduk-filtered-reads",
             description="The number of reads removed by various BBDuk filters",
-            plot=bargraph.plot(
+            plot=self.bargraph(
                 [self.bbduk_data, self.bbduk_data],
                 [
                     [f"{cat} reads" for cat in cats],

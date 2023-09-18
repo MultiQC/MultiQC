@@ -310,4 +310,4 @@ class MultiqcModule(BaseMultiqcModule):
             "table_title": "Nextclade Run details",
         }
 
-        return table.plot(self.nextclade_data, headers, table_config)
+        return self.table(self.nextclade_data, headers, table_config)

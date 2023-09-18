@@ -288,7 +288,7 @@ class MultiqcModule(BaseMultiqcModule):
                     output directory of Longranger. If `_invocation` is not found
                     the sample IDs will be missing and they will be given a running
                     number. E.g., `longranger#1` and `longranger#2`.""",
-            plot=table.plot(self.longranger_data, self.headers, config_table),
+            plot=self.table(self.longranger_data, self.headers, config_table),
         )
 
         ### Bar plot of phasing stats
@@ -335,7 +335,7 @@ class MultiqcModule(BaseMultiqcModule):
                         * % Genes Phased
                             * Percentage of genes shorter than 100kb with >1 heterozygous SNP that are phased into a single phase block.
                         """,
-                plot=bargraph.plot(
+                plot=self.bargraph(
                     [phase_pdata, snps_phased_pct, genes_phased_pct],
                     phase_plot_cats,
                     {
@@ -375,7 +375,7 @@ class MultiqcModule(BaseMultiqcModule):
             name="Alignment",
             anchor="longranger-alignment",
             description="Long Ranger alignment against the reference genome. To be marked as PCR duplicates, reads must have the same mapping extents on the genome and the same 10x barcode.",
-            plot=bargraph.plot(
+            plot=self.bargraph(
                 mapping_counts_data,
                 mapping_counts_cats,
                 {

@@ -112,7 +112,7 @@ class MultiqcModule(BaseMultiqcModule):
             name="Metagenomic Mappability",
             anchor="malt-mappability",
             description="Number of mapped reads.",
-            plot=bargraph.plot(self.malt_data, cats, config),
+            plot=self.bargraph(self.malt_data, cats, config),
         )
 
     def taxonomic_assignation_barplot(self):
@@ -130,7 +130,7 @@ class MultiqcModule(BaseMultiqcModule):
             name="Taxonomic assignment success",
             anchor="malt-taxonomic-success",
             description="Shows the number of mapped reads assigned to a taxonomic node.",
-            plot=bargraph.plot(self.malt_data, cats, config),
+            plot=self.bargraph(self.malt_data, cats, config),
         )
 
     def malt_general_stats(self):

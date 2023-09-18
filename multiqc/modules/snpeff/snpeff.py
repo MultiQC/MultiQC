@@ -253,7 +253,7 @@ class MultiqcModule(BaseMultiqcModule):
             "logswitch": True,
         }
 
-        return bargraph.plot(self.snpeff_data, pkeys, pconfig)
+        return self.bargraph(self.snpeff_data, pkeys, pconfig)
 
     def effects_plot(self):
         """Generate the SnpEff Counts by Effects plot"""
@@ -274,7 +274,7 @@ class MultiqcModule(BaseMultiqcModule):
             "ylab": "# Reads",
             "logswitch": False,
         }
-        return bargraph.plot(self.snpeff_data, pkeys, pconfig)
+        return self.bargraph(self.snpeff_data, pkeys, pconfig)
 
     def effects_impact_plot(self):
         """Generate the SnpEff Counts by Effects Impact plot"""
@@ -295,7 +295,7 @@ class MultiqcModule(BaseMultiqcModule):
             "logswitch": True,
         }
 
-        return bargraph.plot(self.snpeff_data, pkeys, pconfig)
+        return self.bargraph(self.snpeff_data, pkeys, pconfig)
 
     def effects_function_plot(self):
         """Generate the SnpEff Counts by Functional Class plot"""
@@ -316,7 +316,7 @@ class MultiqcModule(BaseMultiqcModule):
             "logswitch": True,
         }
 
-        return bargraph.plot(self.snpeff_data, pkeys, pconfig)
+        return self.bargraph(self.snpeff_data, pkeys, pconfig)
 
     def qualities_plot(self):
         """Generate the qualities plot"""
@@ -331,4 +331,4 @@ class MultiqcModule(BaseMultiqcModule):
             "ymin": 0,
         }
 
-        return linegraph.plot(self.snpeff_qualities, pconfig)
+        return self.linegraph(self.snpeff_qualities, pconfig)

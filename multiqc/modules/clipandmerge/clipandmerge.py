@@ -113,4 +113,4 @@ class MultiqcModule(BaseMultiqcModule):
             "hide_zero_cats": False,
         }
 
-        return bargraph.plot(self.clipandmerge_data, keys, config)
+        return self.bargraph(self.clipandmerge_data, keys, config)

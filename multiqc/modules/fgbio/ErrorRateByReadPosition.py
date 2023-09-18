@@ -162,7 +162,7 @@ def parse_reports(self):
         * Bases with base quality < `--min-base-quality` (default: `0`)
         * Bases where either the read base or the reference base is non-ACGT
         """,
-        plot=linegraph.plot(linegraph_data, pconfig),
+        plot=self.linegraph(linegraph_data, pconfig),
     )
 
     # Add to general stats table

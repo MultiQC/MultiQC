@@ -236,7 +236,7 @@ class MultiqcModule(BaseMultiqcModule):
             * **Intronic Rate** is the fraction mapping within introns.
             * **Intergenic Rate** is the fraction mapping in the genomic space between genes.
             """,
-            plot=bargraph.plot(self.rna_seqc_metrics, keys, pconfig),
+            plot=self.bargraph(self.rna_seqc_metrics, keys, pconfig),
         )
 
     def plot_correlation_heatmap(self):
@@ -258,7 +258,7 @@ class MultiqcModule(BaseMultiqcModule):
             self.add_section(
                 name="{} Correlation".format(corr_type),
                 anchor="rseqc-rna_seqc_correlation",
-                plot=heatmap.plot(data[1], data[0], data[0], pconfig),
+                plot=self.heatmap(data[1], data[0], data[0], pconfig),
             )
 
     def strand_barplot(self):
@@ -283,7 +283,7 @@ class MultiqcModule(BaseMultiqcModule):
 
             End 1/2 Antisense are the number of End 1 or 2 reads that were sequenced in the antisense direction
             """,
-            plot=bargraph.plot(self.rna_seqc_metrics, keys, pconfig),
+            plot=self.bargraph(self.rna_seqc_metrics, keys, pconfig),
         )
 
     def coverage_lineplot(self):
@@ -315,7 +315,7 @@ class MultiqcModule(BaseMultiqcModule):
                 name="Gene Body Coverage",
                 anchor="rseqc-rna_seqc_mean_coverage",
                 helptext="The metrics are calculated across the transcripts with tiered expression levels.",
-                plot=linegraph.plot(data, pconfig),
+                plot=self.linegraph(data, pconfig),
             )
 
     def bam_statplot(self):
@@ -351,5 +351,5 @@ class MultiqcModule(BaseMultiqcModule):
             anchor="rna_seqc_bam_stat",
             description="Number of reads ({}) falling into different categories.".format(config.read_count_desc),
             helptext="Note that many of these statistics are only available from RNA-SeQC v2.x",
-            plot=beeswarm.plot(self.rna_seqc_metrics, keys, pconfig),
+            plot=self.beeswarm(self.rna_seqc_metrics, keys, pconfig),
         )

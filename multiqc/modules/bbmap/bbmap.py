@@ -175,7 +175,7 @@ class MultiqcModule(BaseMultiqcModule):
         plot_title = file_types[file_type]["title"]
         plot_func = file_types[file_type]["plot_func"]
         plot_params = file_types[file_type]["plot_params"]
-        return plot_func(samples, file_type, plot_title=plot_title, plot_params=plot_params)
+        return plot_func(self.report, samples, file_type, plot_title=plot_title, plot_params=plot_params)
 
     def make_basic_table(self, file_type):
         """Create table of key-value items in 'file_type'."""
@@ -197,4 +197,4 @@ class MultiqcModule(BaseMultiqcModule):
                     table_data[sample][key] = float(value)
                 except ValueError:
                     pass
-        return table.plot(table_data, table_headers, tconfig)
+        return self.table(table_data, table_headers, tconfig)

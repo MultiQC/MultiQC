@@ -153,4 +153,4 @@ class MultiqcModule(BaseMultiqcModule):
         }
 
         # We only want to plot the READs at the moment
-        return bargraph.plot(self.sargasso_data, [name for name in self.sargasso_keys if "Reads" in name], config)
+        return self.bargraph(self.sargasso_data, [name for name in self.sargasso_keys if "Reads" in name], config)

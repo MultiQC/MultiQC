@@ -280,7 +280,7 @@ class MultiqcModule(BaseMultiqcModule):
             "found in the folder `sampleID/outs/`. If available the stats in the report "
             "file will be superseded by the higher precision numbers found in the file "
             "`sampleID/outs/assembly/stats/summary.json`",
-            plot=table.plot(reports, self.headers, config_table),
+            plot=self.table(reports, self.headers, config_table),
         )
 
         # N50 barcharts
@@ -307,7 +307,7 @@ class MultiqcModule(BaseMultiqcModule):
             "* **Edge N50** - N50 size of raw graph assembly edges in bases, \n"
             "* **Phase block N50** - N50 size of phase blocks in bases. \n\n"
             "[(source)](https://support.10xgenomics.com/de-novo-assembly/software/pipelines/latest/output/asm-stats)",
-            plot=bargraph.plot([reports, reports, reports, reports], n50_cats, config_n50),
+            plot=self.bargraph([reports, reports, reports, reports], n50_cats, config_n50),
         )
 
         # Conditional sections
@@ -336,7 +336,7 @@ class MultiqcModule(BaseMultiqcModule):
                 "keeping in mind that the mean molecule length from the report is a length-weighted mean. "
                 "See the [source code](https://github.com/10XGenomics/supernova/search?q=lw_mean_mol_len&type=) "
                 "for how this value is calculated.",
-                plot=linegraph.plot(molecules, config_molecules),
+                plot=self.linegraph(molecules, config_molecules),
             )
         if len(kmers) > 0:
             # Remove the long tail, or fail if this is a legacy empty json file
@@ -364,7 +364,7 @@ class MultiqcModule(BaseMultiqcModule):
                 "and the y-axis the number of k-mers at this level of multiplicity. "
                 "A careful reading of this plot can give some insights into the levels of heterozygosity and repeats "
                 "in the genome that was sequenced and indications if the sequencing experiment was successful.",
-                plot=linegraph.plot(kmers, config_kmers),
+                plot=self.linegraph(kmers, config_kmers),
             )
 
     def parse_summary(self, content):

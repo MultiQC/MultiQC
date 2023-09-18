@@ -125,7 +125,7 @@ class IdxstatsReportMixin:
                 self.add_section(
                     name="XY counts",
                     anchor="samtools-idxstats-xy-counts",
-                    plot=bargraph.plot(xy_counts, xy_keys, pconfig),
+                    plot=self.bargraph(xy_counts, xy_keys, pconfig),
                 )
 
             # Mapped reads per chr line plot
@@ -150,7 +150,7 @@ class IdxstatsReportMixin:
                 + "Chromosomes with &lt; {}% of the total aligned reads are omitted from this plot.".format(
                     cutoff * 100
                 ),
-                plot=linegraph.plot([pdata_norm, pdata_obs_exp, pdata], pconfig),
+                plot=self.linegraph([pdata_norm, pdata_obs_exp, pdata], pconfig),
             )
 
         # Return the number of logs that were found

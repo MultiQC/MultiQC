@@ -217,7 +217,7 @@ def count_variants_barplot(data):
         "ylab": "# Variants",
         "cpswitch_counts_label": "Number of Variants",
     }
-    return bargraph.plot(data, keys, plot_conf)
+    return self.bargraph(data, keys, plot_conf)
 
 
 def comp_overlap_table(data):
@@ -264,5 +264,5 @@ def comp_overlap_table(data):
         "min": 0,
         "modify": lambda x: float(x) / 1000000.0,
     }
-    table_html = table.plot(data, headers, {"id": "gatk_compare_overlap", "table_title": "GATK - Compare Overlap"})
+    table_html = self.table(data, headers, {"id": "gatk_compare_overlap", "table_title": "GATK - Compare Overlap"})
     return table_html

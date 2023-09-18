@@ -155,7 +155,7 @@ class MultiqcModule(BaseMultiqcModule):
             name="Commands",
             anchor="clusterflow-commands",
             description=desc,
-            plot=table.plot(tool_cmds, headers, table_config),
+            plot=self.table(tool_cmds, headers, table_config),
         )
 
     def _replace_variable_chunks(self, cmds):
@@ -334,7 +334,7 @@ class MultiqcModule(BaseMultiqcModule):
             name="Pipelines",
             anchor="clusterflow-pipelines",
             description="Information about pipelines is parsed from <code>*.run</code> files. {}".format(pids_guessed),
-            plot=table.plot(data, headers, table_config),
+            plot=self.table(data, headers, table_config),
             content=self.clusterflow_pipelines_printout(),
         )
 

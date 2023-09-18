@@ -43,7 +43,7 @@ def parse_reports(self):
         name="Base Quality Distribution",
         anchor="picard-quality-score-distribution",
         description="Plot shows the count of each base quality score.",
-        plot=linegraph.plot([lg], pconfig),
+        plot=self.linegraph([lg], pconfig),
     )
 
     # Return the number of detected samples to the parent module

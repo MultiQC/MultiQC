@@ -45,7 +45,7 @@ def lane_metrics_table(data):
     for run_name, run in data.items():
         for lane_number, lane in run.items():
             tdata[f"{run_name} - L{lane_number}"] = lane
-    return table.plot(tdata, headers, table_config)
+    return self.table(tdata, headers, table_config)
 
 
 def parse_reports(self):

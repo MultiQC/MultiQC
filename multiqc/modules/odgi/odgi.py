@@ -243,7 +243,7 @@ class MultiqcModule(BaseMultiqcModule):
         self.add_section(
             name="Detailed ODGI stats table.",
             anchor="extended_odgi_stats",
-            plot=table.plot(prefix_data, prefix_headers, tconfig),
+            plot=self.table(prefix_data, prefix_headers, tconfig),
         )
 
     def plot_sum_of_path_nodes_distances(self):
@@ -277,7 +277,7 @@ class MultiqcModule(BaseMultiqcModule):
             helptext="""
                 This value allows you to evaluate the sorting goodness - how linear the graph is.
             """,
-            plot=bargraph.plot([self.odgi_stats_map, self.odgi_stats_map], cats, pconfig),
+            plot=self.bargraph([self.odgi_stats_map, self.odgi_stats_map], cats, pconfig),
         )
 
     def plot_mean_links_length(self):
@@ -311,7 +311,7 @@ class MultiqcModule(BaseMultiqcModule):
             helptext="""
                 This value allows you to evaluate the sorting goodness - how linear the graph is.
             """,
-            plot=bargraph.plot([self.odgi_stats_map, self.odgi_stats_map], cats, pconfig),
+            plot=self.bargraph([self.odgi_stats_map, self.odgi_stats_map], cats, pconfig),
         )
 
     def extract_sample_name(self, file_name):

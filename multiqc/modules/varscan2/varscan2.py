@@ -226,5 +226,5 @@ class MultiqcModule(BaseMultiqcModule):
             description="""
             This plot shows the total number of variant positions, broken down by those that were reported or not.
             """,
-            plot=bargraph.plot([self.varscan2_data, self.varscan2_data], cats, pconfig),
+            plot=self.bargraph([self.varscan2_data, self.varscan2_data], cats, pconfig),
         )

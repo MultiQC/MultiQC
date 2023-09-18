@@ -226,7 +226,7 @@ def parse_reports(
             * `READS_IN_DUPLICATE_UNPAIRED = UNPAIRED_READ_DUPLICATES`
             * `READS_UNMAPPED = UNMAPPED_READS`
             """,
-            plot=bargraph.plot(self.picard_dupMetrics_data, keys, pconfig),
+            plot=self.bargraph(self.picard_dupMetrics_data, keys, pconfig),
         )
 
     # Return the number of detected samples to the parent module

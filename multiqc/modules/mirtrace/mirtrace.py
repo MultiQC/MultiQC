@@ -218,7 +218,7 @@ class MultiqcModule(BaseMultiqcModule):
             "cpswitch_counts_label": "Number of Reads",
         }
 
-        return bargraph.plot(self.summary_data, keys, config)
+        return self.bargraph(self.summary_data, keys, config)
 
     # miRTrace Read Length Distribution
     def mirtrace_length_plot(self):
@@ -251,7 +251,7 @@ class MultiqcModule(BaseMultiqcModule):
             ],
         }
 
-        return linegraph.plot(data, config)
+        return self.linegraph(data, config)
 
     # miRTrace RNA Categories
     def mirtrace_rna_categories(self):
@@ -273,7 +273,7 @@ class MultiqcModule(BaseMultiqcModule):
             "cpswitch_counts_label": "Number of Reads",
         }
 
-        return bargraph.plot(self.summary_data, keys, config)
+        return self.bargraph(self.summary_data, keys, config)
 
     # miRTrace Contamination Check
     def mirtrace_contamination_check(self):
@@ -327,7 +327,7 @@ class MultiqcModule(BaseMultiqcModule):
             "cpswitch_counts_label": "Number of detected miRNA",
         }
 
-        return bargraph.plot(self.contamination_data, keys, config)
+        return self.bargraph(self.contamination_data, keys, config)
 
     # miRTrace Read Length Distribution
     def mirtrace_complexity_plot(self):
@@ -354,4 +354,4 @@ class MultiqcModule(BaseMultiqcModule):
             "tt_label": "<b>Number of Sequencing Reads {point.x}</b>: {point.y} Distinct miRNA Count",
         }
 
-        return linegraph.plot(data, config)
+        return self.linegraph(data, config)

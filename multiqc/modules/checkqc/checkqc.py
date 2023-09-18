@@ -161,7 +161,7 @@ class MultiqcModule(BaseMultiqcModule):
             helptext="""The value specified in the configuration is interpreted as the number of reads demanded for a single sample,
             i.e. the number of reads per sample on a lane which has multiple samples is the threshold divided by the total number of samples on the lane.
             """,
-            plot=bargraph.plot(data, cats, pconfig),
+            plot=self.bargraph(data, cats, pconfig),
         )
 
     def get_cluster_pf_data(self, issues, run, f):
@@ -232,7 +232,7 @@ class MultiqcModule(BaseMultiqcModule):
             name="Clusters passing filters",
             anchor="checkqc-clusterpf",
             description="Checks that the number of clusters passing filter (PF) on a sequencing lane passes the set criteria. See [docuementation](https://checkqc.readthedocs.io/en/latest/checkQC.handlers.cluster_pf_handler.html).",
-            plot=bargraph.plot(data, cats, pconfig),
+            plot=self.bargraph(data, cats, pconfig),
         )
 
     def get_q30_data(self, issues, run, f):
@@ -301,7 +301,7 @@ class MultiqcModule(BaseMultiqcModule):
             name="%Q30 too low",
             anchor="checkqc-q30",
             description="Checks that the percentage of bases in read 1 or read 2 with base quality over 30 (%Q30) passes the set criteria. See [documentation](https://checkqc.readthedocs.io/en/latest/checkQC.handlers.q30_handler.html).",
-            plot=bargraph.plot(data, cats, pconfig),
+            plot=self.bargraph(data, cats, pconfig),
         )
 
     def get_error_rate_data(self, issues, run, f):
@@ -370,7 +370,7 @@ class MultiqcModule(BaseMultiqcModule):
             name="Error rate too high",
             anchor="checkqc-errorrate",
             description="Checks that the sequencing error rate per lane and read are below the specified threshold. See [documentation](https://checkqc.readthedocs.io/en/latest/checkQC.handlers.error_rate_handler.html).",
-            plot=bargraph.plot(data, cats, pconfig),
+            plot=self.bargraph(data, cats, pconfig),
         )
 
     def get_undetermined_percentage_data(self, issues, run, f):
@@ -453,7 +453,7 @@ class MultiqcModule(BaseMultiqcModule):
             name="% Undetermined indexes",
             anchor="checkqc-undetermined-rate",
             description="This checks that the percentage of undetermined reads on a lane is below the specified threshold. If there are no indexes specified for the lane, this will be skipped. See [documentation](https://checkqc.readthedocs.io/en/latest/checkQC.handlers.undetermined_percentage_handler.html).",
-            plot=bargraph.plot(data, cats, pconfig),
+            plot=self.bargraph(data, cats, pconfig),
         )
 
     def add_undetermined_percentage_zero_yield_section(self):
@@ -480,7 +480,7 @@ class MultiqcModule(BaseMultiqcModule):
             name="Lanes with zero yield",
             anchor="checkqc-zero-yield",
             description="Some lanes have zero yield, no undetermined percentage computation possible.",
-            plot=table.plot(data, headers, pconfig),
+            plot=self.table(data, headers, pconfig),
         )
 
     def get_unidentified_index_data(self, issues, run, f):
@@ -571,7 +571,7 @@ class MultiqcModule(BaseMultiqcModule):
             anchor="checkqc-unidentifiedpercentage",
             description="This check attempts to identify any indexes that are highly represented within unidentified reads. See the [documentation](https://checkqc.readthedocs.io/en/latest/checkQC.handlers.unidentified_index_handler.html).",
             helptext="This check ignores any indexes which have `N`’s in them. These are assumed to be read errors.",
-            plot=bargraph.plot(data, cats, pconfig),
+            plot=self.bargraph(data, cats, pconfig),
         )
 
     @staticmethod

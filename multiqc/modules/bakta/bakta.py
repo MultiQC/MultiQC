@@ -154,4 +154,4 @@ class MultiqcModule(BaseMultiqcModule):
             "ylab": "# Contigs",
             "cpswitch_counts_label": "Features",
         }
-        return bargraph.plot(self.bakta, categories, plot_config)
+        return self.bargraph(self.bakta, categories, plot_config)

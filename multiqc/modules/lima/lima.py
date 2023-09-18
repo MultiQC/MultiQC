@@ -170,7 +170,7 @@ class MultiqcModule(BaseMultiqcModule):
                 all other categories that are shown in the graph represent the number of ZMWs that
                 were dropped for the specified reason.
             """,
-            plot=bargraph.plot(plot_data, all_filters, config),
+            plot=self.bargraph(plot_data, all_filters, config),
         )
 
     def filter_and_pass(self, data):
@@ -221,7 +221,7 @@ class MultiqcModule(BaseMultiqcModule):
                 For instructions on how to display sample names instead of `barcode--barcode` pairs,
                 please see the [MultiQC Lima documentation](https://multiqc.info/docs/#lima).
             """,
-            plot=table.plot(counts, headers, tconfig),
+            plot=self.table(counts, headers, tconfig),
         )
 
     def add_general_stats(self, counts, headers):

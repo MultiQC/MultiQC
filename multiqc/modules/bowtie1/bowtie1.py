@@ -140,5 +140,5 @@ class MultiqcModule(BaseMultiqcModule):
             * **Multimapped**: Read has multiple occurence.
             * **Not aligned**: Read has no occurence.
             """,
-            plot=bargraph.plot(self.bowtie_data, keys, config),
+            plot=self.bargraph(self.bowtie_data, keys, config),
         )

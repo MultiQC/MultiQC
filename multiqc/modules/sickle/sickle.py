@@ -118,5 +118,5 @@ class MultiqcModule(BaseMultiqcModule):
             name="Sequence counts",
             anchor="sickle_sequence_counts",
             description="Number of reads discarded by Sickle.",
-            plot=bargraph.plot(self.sickle_data, pcats, pconfig),
+            plot=self.bargraph(self.sickle_data, pcats, pconfig),
         )

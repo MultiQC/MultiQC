@@ -232,7 +232,7 @@ class MultiqcModule(BaseMultiqcModule):
         self.add_section(
             name="Statistics",
             anchor="pycoqc_stats",
-            plot=table.plot(self.table_data, pycoqc_table_headers, pycoqc_table_config),
+            plot=self.table(self.table_data, pycoqc_table_headers, pycoqc_table_config),
         )
 
     def read_base_count_plot(self):
@@ -259,7 +259,7 @@ class MultiqcModule(BaseMultiqcModule):
         base_cats["non_passed_bases"] = {"name": "Failed Bases"}
 
         # Make the plot
-        bargraph_plot = bargraph.plot([self.reads_data, self.bases_data], [read_cats, base_cats], read_bar_config)
+        bargraph_plot = self.bargraph([self.reads_data, self.bases_data], [read_cats, base_cats], read_bar_config)
 
         self.add_section(
             name="Read / Base counts",
@@ -286,7 +286,7 @@ class MultiqcModule(BaseMultiqcModule):
             name="Read length",
             anchor="pycoqc_read_len",
             description="Distribution of read length for all / passed reads.",
-            plot=linegraph.plot(self.read_length_plot_data, read_length_config),
+            plot=self.linegraph(self.read_length_plot_data, read_length_config),
         )
 
     def make_quality_plot(self):
@@ -307,5 +307,5 @@ class MultiqcModule(BaseMultiqcModule):
             name="Quality scores",
             anchor="pycoqc_read_qual",
             description="Distribution of quality scores for all / passed reads.",
-            plot=linegraph.plot(self.quality_plot_data, qual_config),
+            plot=self.linegraph(self.quality_plot_data, qual_config),
         )

@@ -74,7 +74,7 @@ class MultiqcModule(BaseMultiqcModule):
                 name="Duplication Rates",
                 anchor="fastp-duprates",
                 description="Duplication rates of sampled reads.",
-                plot=linegraph.plot(
+                plot=self.linegraph(
                     self.fastp_duplication_plotdata,
                     {
                         "id": "fastp-duprates-plot",
@@ -96,7 +96,7 @@ class MultiqcModule(BaseMultiqcModule):
                 name="Insert Sizes",
                 anchor="fastp-insert-size",
                 description="Insert size estimation of sampled reads.",
-                plot=linegraph.plot(
+                plot=self.linegraph(
                     self.fastp_insert_size_data,
                     {
                         "id": "fastp-insert-size-plot",
@@ -378,7 +378,7 @@ class MultiqcModule(BaseMultiqcModule):
             "cpswitch_counts_label": "Number of Reads",
             "hide_zero_cats": False,
         }
-        return bargraph.plot(self.fastp_data, keys, pconfig)
+        return self.bargraph(self.fastp_data, keys, pconfig)
 
     def fastp_read_qual_plot(self):
         """Make the read quality plot for Fastp"""
@@ -392,7 +392,7 @@ class MultiqcModule(BaseMultiqcModule):
             "xDecimals": False,
             "data_labels": data_labels,
         }
-        return linegraph.plot(pdata, pconfig)
+        return self.linegraph(pdata, pconfig)
 
     def fastp_read_gc_plot(self):
         """Make the read GC plot for Fastp"""
@@ -409,7 +409,7 @@ class MultiqcModule(BaseMultiqcModule):
             "tt_label": "{point.x}: {point.y:.2f}%",
             "data_labels": data_labels,
         }
-        return linegraph.plot(pdata, pconfig)
+        return self.linegraph(pdata, pconfig)
 
     def fastp_read_n_plot(self):
         """Make the read N content plot for Fastp"""
@@ -427,7 +427,7 @@ class MultiqcModule(BaseMultiqcModule):
             "tt_label": "{point.x}: {point.y:.2f}%",
             "data_labels": data_labels,
         }
-        return linegraph.plot(pdata, pconfig)
+        return self.linegraph(pdata, pconfig)
 
     def filter_pconfig_pdata_subplots(self, data, label):
         data_labels = []

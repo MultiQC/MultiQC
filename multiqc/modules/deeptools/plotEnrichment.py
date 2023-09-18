@@ -52,7 +52,7 @@ class plotEnrichmentMixin:
                 name="Feature enrichment",
                 description="Signal enrichment per feature according to plotEnrichment",
                 anchor="deeptools_enrichment",
-                plot=linegraph.plot([dCounts, dPercents], pconfig=config),
+                plot=self.linegraph([dCounts, dPercents], pconfig=config),
             )
 
         return len(self.deeptools_plotEnrichment)

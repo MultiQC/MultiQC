@@ -67,7 +67,7 @@ def parse_reports(self):
             anchor="rseqc-read_gc",
             description='<a href="http://rseqc.sourceforge.net/#read-gc-py" target="_blank">read_GC</a>'
             " calculates a histogram of read GC content.</p>",
-            plot=linegraph.plot([self.read_gc, self.read_gc_pct], pconfig),
+            plot=self.linegraph([self.read_gc, self.read_gc_pct], pconfig),
         )
 
     # Return number of samples found

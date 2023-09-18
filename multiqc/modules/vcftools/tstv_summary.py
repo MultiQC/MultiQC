@@ -46,7 +46,7 @@ class TsTvSummaryMixin:
             name="TsTv Summary",
             anchor="vcftools-tstv-summary",
             description="Plot of `TSTV-SUMMARY` - count of different types of transition and transversion SNPs.",
-            plot=bargraph.plot(self.vcftools_tstv_summary, keys, pconfig),
+            plot=self.bargraph(self.vcftools_tstv_summary, keys, pconfig),
         )
 
         return len(self.vcftools_tstv_summary)

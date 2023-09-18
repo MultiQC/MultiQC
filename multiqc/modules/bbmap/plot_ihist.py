@@ -3,7 +3,7 @@ from itertools import chain
 from multiqc.plots import linegraph
 
 
-def plot_ihist(samples, file_type, **plot_args):
+def plot_ihist(report, samples, file_type, **plot_args):
     """Create line graph plot for basic histogram data for 'ihist'.
 
     The 'samples' parameter could be from the bbmap mod_data dictionary:
@@ -36,6 +36,6 @@ def plot_ihist(samples, file_type, **plot_args):
         "ylab": "Read count",
     }
     plot_params.update(plot_args["plot_params"])
-    plot = linegraph.plot(data, plot_params)
+    plot = linegraph.plot(report, data, plot_params)
 
     return plot

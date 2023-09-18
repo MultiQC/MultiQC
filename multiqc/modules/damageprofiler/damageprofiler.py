@@ -229,7 +229,7 @@ class MultiqcModule(BaseMultiqcModule):
             "ymin": 0,
             "xmin": 0,
         }
-        return linegraph.plot(data, config)
+        return self.linegraph(data, config)
 
     # Linegraph plot for 3pGtoA
     def threeprime_plot(self):
@@ -257,7 +257,7 @@ class MultiqcModule(BaseMultiqcModule):
             "xmin": 1,
         }
 
-        return linegraph.plot(dict_to_add, config)
+        return self.linegraph(dict_to_add, config)
 
     # Linegraph plot for 5pCtoT
     def fiveprime_plot(self):
@@ -284,4 +284,4 @@ class MultiqcModule(BaseMultiqcModule):
             "xmin": 1,
         }
 
-        return linegraph.plot(dict_to_add, config)
+        return self.linegraph(dict_to_add, config)

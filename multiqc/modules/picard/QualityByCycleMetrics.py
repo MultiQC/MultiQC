@@ -50,7 +50,7 @@ def parse_reports(self):
         Spikes in quality within reads are not expected and may indicate that technical
         problems occurred during sequencing.
         """,
-        plot=linegraph.plot([lg], pconfig),
+        plot=self.linegraph([lg], pconfig),
     )
 
     # Return the number of detected samples to the parent module

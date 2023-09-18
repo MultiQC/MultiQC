@@ -105,7 +105,7 @@ class DragenMappingMetics(BaseMultiqcModule):
             Shown on per read group level. To see per-sample level metrics, refer to the general
             stats table.
             """,
-            plot=table.plot(data_by_rg, own_tabl_headers, pconfig={"namespace": NAMESPACE}),
+            plot=self.table(data_by_rg, own_tabl_headers, pconfig={"namespace": NAMESPACE}),
         )
 
         # Skip adding the barplot if it's not informative, such as if all
@@ -219,7 +219,7 @@ class DragenMappingMetics(BaseMultiqcModule):
             name="Mapped / paired / duplicated",
             anchor="dragen-mapped-paired-duplicated",
             description="Distribution of reads based on pairing, duplication and mapping.",
-            plot=bargraph.plot(
+            plot=self.bargraph(
                 data_to_plot,
                 category_labels,
                 {

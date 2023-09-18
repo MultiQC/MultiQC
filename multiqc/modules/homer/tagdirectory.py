@@ -391,7 +391,7 @@ class TagDirReportMixin:
         }
         datasets = [self.tagdir_data["restriction"], self.tagdir_data["restriction_norm"]]
 
-        return linegraph.plot(datasets, pconfig)
+        return self.linegraph(datasets, pconfig)
 
     def length_dist_chart(self):
         """Make the tagLengthDistribution plot"""
@@ -403,7 +403,7 @@ class TagDirReportMixin:
             "ylab": "Fraction of Tags",
             "xlab": "Tag Length (bp)",
         }
-        return linegraph.plot(self.tagdir_data["length"], pconfig)
+        return self.linegraph(self.tagdir_data["length"], pconfig)
 
     def GCcontent_plot(self):
         """Create the HTML for the Homer GC content plot"""
@@ -421,7 +421,7 @@ class TagDirReportMixin:
             "yDecimals": True,
             "tt_label": "<b>{point.x}% GC</b>: {point.y}",
         }
-        return linegraph.plot(self.tagdir_data["GCcontent"], pconfig)
+        return self.linegraph(self.tagdir_data["GCcontent"], pconfig)
 
     def tag_info_chart(self):
         """Make the taginfo.txt plot"""
@@ -446,7 +446,7 @@ class TagDirReportMixin:
         else:
             chrs = ensembl
 
-        return bargraph.plot(self.tagdir_data["taginfo_total"], chrs, pconfig)
+        return self.bargraph(self.tagdir_data["taginfo_total"], chrs, pconfig)
 
     def FreqDist_chart(self):
         """Make the petag.FreqDistribution_1000 plot"""
@@ -470,4 +470,4 @@ class TagDirReportMixin:
             "smooth_points_sumcounts": False,
             "yLog": True,
         }
-        return linegraph.plot(pdata, pconfig)
+        return self.linegraph(pdata, pconfig)

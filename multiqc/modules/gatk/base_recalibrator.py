@@ -109,7 +109,7 @@ class BaseRecalibratorMixin:
                 {"name": "{} Percent".format(rt_type_name.capitalize().replace("_", "-")), "ylab": "Percent"}
             )
 
-        plot = linegraph.plot(
+        plot = self.linegraph(
             sample_data,
             pconfig={
                 "title": "GATK: Observed Quality Score Counts",
@@ -172,7 +172,7 @@ class BaseRecalibratorMixin:
 
             # Build data label configs for this data type
             data_labels.append({"name": "{} Reported vs. Empirical Quality", "ylab": "Empirical quality score"})
-        plot = scatter.plot(
+        plot = self.scatter(
             sample_data,
             pconfig={
                 "title": "Reported vs. Empirical Quality",

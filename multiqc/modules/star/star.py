@@ -240,7 +240,7 @@ class MultiqcModule(BaseMultiqcModule):
             "cpswitch_counts_label": "Number of Reads",
         }
 
-        return bargraph.plot(self.star_data, keys, pconfig)
+        return self.bargraph(self.star_data, keys, pconfig)
 
     def star_genecount_chart(self):
         """Make a plot for the ReadsPerGene output"""
@@ -266,4 +266,4 @@ class MultiqcModule(BaseMultiqcModule):
             self.star_genecounts_first_strand,
             self.star_genecounts_second_strand,
         ]
-        return bargraph.plot(datasets, [keys, keys, keys, keys], pconfig)
+        return self.bargraph(datasets, [keys, keys, keys, keys], pconfig)

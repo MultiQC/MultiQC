@@ -183,7 +183,7 @@ class MultiqcModule(BaseMultiqcModule):
                         f"at least, a given depth of coverage{descr_suf}"
                     ),
                     helptext=genome_fraction_helptext,
-                    plot=linegraph.plot(
+                    plot=self.linegraph(
                         cumcov_dist_data,
                         {
                             "id": f"mosdepth-cumcoverage-dist{id_suf}-id",
@@ -219,7 +219,7 @@ class MultiqcModule(BaseMultiqcModule):
                         f"Proportion of bases in the reference genome with a given " f"depth of coverage{descr_suf}"
                     ),
                     helptext=coverage_histogram_helptext,
-                    plot=linegraph.plot(
+                    plot=self.linegraph(
                         cov_dist_data,
                         {
                             "id": f"mosdepth-coverage-dist{id_suf}-id",
@@ -240,7 +240,7 @@ class MultiqcModule(BaseMultiqcModule):
 
                 num_contigs = max([len(x.keys()) for x in perchrom_avg_data.values()])
                 if num_contigs > 1:
-                    perchrom_plot = linegraph.plot(
+                    perchrom_plot = self.linegraph(
                         perchrom_avg_data,
                         {
                             "id": f"mosdepth-coverage-per-contig{id_suf}",
@@ -256,7 +256,7 @@ class MultiqcModule(BaseMultiqcModule):
                         },
                     )
                 else:
-                    perchrom_plot = bargraph.plot(
+                    perchrom_plot = self.bargraph(
                         perchrom_avg_data,
                         pconfig={
                             "id": f"mosdepth-coverage-per-contig{id_suf}",
@@ -290,7 +290,7 @@ class MultiqcModule(BaseMultiqcModule):
                 self.add_section(
                     name=f"XY coverage{title_suf}",
                     anchor=f"mosdepth-xy-coverage{id_suf}",
-                    plot=bargraph.plot(xy_cov, xy_keys, pconfig),
+                    plot=self.bargraph(xy_cov, xy_keys, pconfig),
                 )
 
             if cumcov_dist_data:

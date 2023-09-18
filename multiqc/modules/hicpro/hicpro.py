@@ -305,7 +305,7 @@ class MultiqcModule(BaseMultiqcModule):
             ],
         }
 
-        return bargraph.plot(data, [keys, keys], config)
+        return self.bargraph(data, [keys, keys], config)
 
     def hicpro_pairing_chart(self):
         """Generate Pairing chart"""
@@ -326,7 +326,7 @@ class MultiqcModule(BaseMultiqcModule):
             "cpswitch_counts_label": "Number of Reads",
         }
 
-        return bargraph.plot(self.hicpro_data, keys, config)
+        return self.bargraph(self.hicpro_data, keys, config)
 
     def hicpro_filtering_chart(self):
         """Generate the HiC-Pro filtering plot"""
@@ -351,7 +351,7 @@ class MultiqcModule(BaseMultiqcModule):
             "cpswitch_counts_label": "Number of Read Pairs",
         }
 
-        return bargraph.plot(self.hicpro_data, keys, config)
+        return self.bargraph(self.hicpro_data, keys, config)
 
     def hicpro_contact_chart(self):
         """Generate the HiC-Pro interaction plot"""
@@ -371,7 +371,7 @@ class MultiqcModule(BaseMultiqcModule):
             "cpswitch_counts_label": "Number of Pairs",
         }
 
-        return bargraph.plot(self.hicpro_data, keys, config)
+        return self.bargraph(self.hicpro_data, keys, config)
 
     def hicpro_as_chart(self):
         """Generate Allele-specific plot"""
@@ -413,7 +413,7 @@ class MultiqcModule(BaseMultiqcModule):
             "cpswitch_counts_label": "Number of Pairs",
         }
 
-        return bargraph.plot(self.hicpro_data, keys, config)
+        return self.bargraph(self.hicpro_data, keys, config)
 
     def hicpro_capture_chart(self):
         """Generate Capture Hi-C plot"""
@@ -439,4 +439,4 @@ class MultiqcModule(BaseMultiqcModule):
             "cpswitch_counts_label": "Number of Pairs",
         }
 
-        return bargraph.plot(self.hicpro_data, keys, config)
+        return self.bargraph(self.hicpro_data, keys, config)

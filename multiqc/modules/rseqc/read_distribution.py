@@ -125,7 +125,7 @@ def parse_reports(self):
                 anchor="rseqc-read_distribution",
                 description='<a href="http://rseqc.sourceforge.net/#read-distribution-py" target="_blank">Read Distribution</a>'
                 " calculates how mapped reads are distributed over genome features.",
-                plot=bargraph.plot(self.read_dist, keys, pconfig),
+                plot=self.bargraph(self.read_dist, keys, pconfig),
             )
         else:
             self.add_section(

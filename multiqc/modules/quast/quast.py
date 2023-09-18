@@ -252,7 +252,7 @@ class MultiqcModule(BaseMultiqcModule):
             "namespace": "QUAST",
             "min": 0,
         }
-        return table.plot(self.quast_data, headers, config)
+        return self.table(self.quast_data, headers, config)
 
     def quast_contigs_barplot(self):
         """Make a bar plot showing the number and length of contigs for each assembly"""
@@ -290,7 +290,7 @@ class MultiqcModule(BaseMultiqcModule):
             "yDecimals": False,
         }
 
-        return bargraph.plot(data, categories, pconfig)
+        return self.bargraph(data, categories, pconfig)
 
     def quast_predicted_genes_barplot(self, partial=False):
         """
@@ -339,7 +339,7 @@ class MultiqcModule(BaseMultiqcModule):
         all_categories = [label for k, label in sorted(list(set(all_categories)))]
 
         if len(all_categories) > 0:
-            return bargraph.plot(
+            return self.bargraph(
                 data,
                 all_categories,
                 {

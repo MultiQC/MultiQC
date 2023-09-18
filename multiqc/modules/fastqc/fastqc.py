@@ -386,7 +386,7 @@ class MultiqcModule(BaseMultiqcModule):
             _The duplication detection requires an exact sequence match over the whole length of
             the sequence. Any reads over 75bp in length are truncated to 50bp for this analysis._
             """,
-            plot=bargraph.plot(pdata, pcats, pconfig),
+            plot=self.bargraph(pdata, pcats, pconfig),
         )
 
     def sequence_quality_plot(self):
@@ -436,7 +436,7 @@ class MultiqcModule(BaseMultiqcModule):
             The quality of calls on most platforms will degrade as the run progresses, so it is
             common to see base calls falling into the orange area towards the end of a read._
             """,
-            plot=linegraph.plot(data, pconfig),
+            plot=self.linegraph(data, pconfig),
         )
 
     def per_seq_quality_plot(self):
@@ -482,7 +482,7 @@ class MultiqcModule(BaseMultiqcModule):
             subset of sequences will have universally poor quality, however these should
             represent only a small percentage of the total sequences._
             """,
-            plot=linegraph.plot(data, pconfig),
+            plot=self.linegraph(data, pconfig),
         )
 
     def sequence_content_plot(self):
@@ -697,7 +697,7 @@ class MultiqcModule(BaseMultiqcModule):
             be flagged as an error by the module since it doesn't know what your genome's
             GC content should be._
             """,
-            plot=linegraph.plot([data_norm, data], pconfig),
+            plot=self.linegraph([data_norm, data], pconfig),
         )
 
     def n_content_plot(self):
@@ -751,7 +751,7 @@ class MultiqcModule(BaseMultiqcModule):
             it suggests that the analysis pipeline was unable to interpret the data well enough to
             make valid base calls._
             """,
-            plot=linegraph.plot(data, pconfig),
+            plot=self.linegraph(data, pconfig),
         )
 
     def seq_length_dist_plot(self):
@@ -802,7 +802,7 @@ class MultiqcModule(BaseMultiqcModule):
                 anchor="fastqc_sequence_length_distribution",
                 description="""The distribution of fragment sizes (read lengths) found.
                     See the [FastQC help](http://www.bioinformatics.babraham.ac.uk/projects/fastqc/Help/3%20Analysis%20Modules/7%20Sequence%20Length%20Distribution.html)""",
-                plot=linegraph.plot(data, pconfig),
+                plot=self.linegraph(data, pconfig),
             )
 
     def seq_dup_levels_plot(self):
@@ -871,7 +871,7 @@ class MultiqcModule(BaseMultiqcModule):
             the presence of low complexity contaminants will tend to produce spikes towards the
             right of the plot._
             """,
-            plot=linegraph.plot(data, pconfig),
+            plot=self.linegraph(data, pconfig),
         )
 
     def overrepresented_sequences(self):
@@ -926,7 +926,7 @@ class MultiqcModule(BaseMultiqcModule):
                 len(data)
             )
         else:
-            plot_html = bargraph.plot(data, cats, pconfig)
+            plot_html = self.bargraph(data, cats, pconfig)
 
         self.add_section(
             name="Overrepresented sequences",
@@ -1003,7 +1003,7 @@ class MultiqcModule(BaseMultiqcModule):
         }
 
         if len(data) > 0:
-            plot_html = linegraph.plot(data, pconfig)
+            plot_html = self.linegraph(data, pconfig)
         else:
             plot_html = '<div class="alert alert-info">No samples found with any adapter contamination > 0.1%</div>'
 
@@ -1100,7 +1100,7 @@ class MultiqcModule(BaseMultiqcModule):
                 Note that not all FastQC sections have plots in MultiQC reports, but all status checks
                 are shown in this heatmap.
             """,
-            plot=heatmap.plot(data, list(status_cats.values()), s_names, pconfig),
+            plot=self.heatmap(data, list(status_cats.values()), s_names, pconfig),
         )
 
     def avg_bp_from_range(self, bp):

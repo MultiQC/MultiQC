@@ -238,7 +238,7 @@ class MultiqcModule(BaseMultiqcModule):
         cats[1]["transcripts"] = {"name": "transcripts"}
         cats[2]["exons"] = {"name": "exons"}
 
-        return bargraph.plot([self.jcvi, self.jcvi, self.jcvi], cats, plot_config)
+        return self.bargraph([self.jcvi, self.jcvi, self.jcvi], cats, plot_config)
 
     def jcvi_barplot_feature_lengths(self):
         plot_config = {
@@ -259,7 +259,7 @@ class MultiqcModule(BaseMultiqcModule):
         cats[1]["mean_transcript_size"] = {"name": "Mean transcript size"}
         cats[2]["mean_exons_size"] = {"name": "Mean exons size"}
 
-        return bargraph.plot([self.jcvi, self.jcvi, self.jcvi], cats, plot_config)
+        return self.bargraph([self.jcvi, self.jcvi, self.jcvi], cats, plot_config)
 
     def jcvi_barplot_features_per_gene(self):
         cats = [OrderedDict(), OrderedDict()]
@@ -279,7 +279,7 @@ class MultiqcModule(BaseMultiqcModule):
             ],
         }
 
-        return bargraph.plot([self.jcvi, self.jcvi], cats, plot_config)
+        return self.bargraph([self.jcvi, self.jcvi], cats, plot_config)
 
     def jcvi_barplot_isoforms(self):
         keys = OrderedDict()
@@ -292,7 +292,7 @@ class MultiqcModule(BaseMultiqcModule):
             "cpswitch": False,
         }
 
-        return bargraph.plot(self.jcvi, keys, plot_config)
+        return self.bargraph(self.jcvi, keys, plot_config)
 
     def jcvi_linegraph_feature_length(self):
         plot_config = {
@@ -323,7 +323,7 @@ class MultiqcModule(BaseMultiqcModule):
         if len(plot_data) == 0:
             return None
 
-        return linegraph.plot(plot_data, plot_config)
+        return self.linegraph(plot_data, plot_config)
 
     def jcvi_linegraph_exon_count(self):
         plot_config = {
@@ -340,4 +340,4 @@ class MultiqcModule(BaseMultiqcModule):
         if not plot_data:
             return None
 
-        return linegraph.plot(plot_data, plot_config)
+        return self.linegraph(plot_data, plot_config)

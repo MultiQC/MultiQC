@@ -49,7 +49,7 @@ def parse_reports(self):
             See the [Picard Docuementation](https://broadinstitute.github.io/picard/command-line-overview.html#MarkIlluminaAdapters) for details.
         """,
         anchor="picard-mark-illumina-adapters",
-        plot=linegraph.plot(lg, pconfig),
+        plot=self.linegraph(lg, pconfig),
     )
 
     # Return the number of detected samples to the parent module

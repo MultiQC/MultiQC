@@ -159,7 +159,7 @@ def parse_reports(self):
                 anchor="qualimap-reads-genomic-origin",
                 description="Classification of mapped reads as originating in exonic, intronic or intergenic regions. These can be displayed as either the number or percentage of mapped reads.",
                 helptext=genomic_origin_helptext,
-                plot=bargraph.plot(self.qualimap_rnaseq_genome_results, gorigin_cats, gorigin_pconfig),
+                plot=self.bargraph(self.qualimap_rnaseq_genome_results, gorigin_cats, gorigin_pconfig),
             )
         else:
             log.warning("Found zero aligned reads. Skipping 'Genomic origin of reads' plot.")
@@ -233,7 +233,7 @@ def parse_reports(self):
             anchor="qualimap-genome-fraction-coverage",
             description="Mean distribution of coverage depth across the length of all mapped transcripts.",
             helptext=coverage_profile_helptext,
-            plot=linegraph.plot([self.qualimap_rnaseq_cov_hist, self.qualimap_rnaseq_cov_hist_percent], pconfig),
+            plot=self.linegraph([self.qualimap_rnaseq_cov_hist, self.qualimap_rnaseq_cov_hist_percent], pconfig),
         )
 
     #### General Stats

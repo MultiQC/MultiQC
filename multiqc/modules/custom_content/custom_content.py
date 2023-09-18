@@ -374,28 +374,28 @@ class MultiqcModule(BaseMultiqcModule):
         if mod["config"].get("plot_type") == "table":
             pconfig["sortRows"] = pconfig.get("sortRows", False)
             headers = mod["config"].get("headers")
-            plot = table.plot(mod["data"], headers, pconfig)
+            plot = self.table(mod["data"], headers, pconfig)
 
         # Bar plot
         elif mod["config"].get("plot_type") == "bargraph":
             mod["data"] = {k: v for k, v in sorted(mod["data"].items())}
-            plot = bargraph.plot(mod["data"], mod["config"].get("categories"), pconfig)
+            plot = self.bargraph(mod["data"], mod["config"].get("categories"), pconfig)
 
         # Line plot
         elif mod["config"].get("plot_type") == "linegraph":
-            plot = linegraph.plot(mod["data"], pconfig)
+            plot = self.linegraph(mod["data"], pconfig)
 
         # Scatter plot
         elif mod["config"].get("plot_type") == "scatter":
-            plot = scatter.plot(mod["data"], pconfig)
+            plot = self.scatter(mod["data"], pconfig)
 
         # Heatmap
         elif mod["config"].get("plot_type") == "heatmap":
-            plot = heatmap.plot(mod["data"], mod["config"].get("xcats"), mod["config"].get("ycats"), pconfig)
+            plot = self.heatmap(mod["data"], mod["config"].get("xcats"), mod["config"].get("ycats"), pconfig)
 
         # Beeswarm plot
         elif mod["config"].get("plot_type") == "beeswarm":
-            plot = beeswarm.plot(mod["data"], pconfig)
+            plot = self.beeswarm(mod["data"], pconfig)
 
         # Raw HTML
         elif mod["config"].get("plot_type") == "html":

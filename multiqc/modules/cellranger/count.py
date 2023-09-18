@@ -85,7 +85,7 @@ class CellRangerCountMixin:
                     name="Count - Warnings",
                     anchor="cellranger-count-warnings",
                     description="Warnings encountered during the analysis",
-                    plot=table.plot(
+                    plot=self.table(
                         self.cellrangercount_warnings, self.count_warnings_headers, {"namespace": "Cell Ranger Count"}
                     ),
                 )
@@ -94,7 +94,7 @@ class CellRangerCountMixin:
                 name="Count - Summary stats",
                 anchor="cellranger-count-stats",
                 description="Summary QC metrics from Cell Ranger count",
-                plot=table.plot(self.cellrangercount_data, self.count_data_headers, {"namespace": "Cell Ranger Count"}),
+                plot=self.table(self.cellrangercount_data, self.count_data_headers, {"namespace": "Cell Ranger Count"}),
             )
 
             self.add_section(
@@ -102,7 +102,7 @@ class CellRangerCountMixin:
                 anchor="cellranger-count-bcrank-plot",
                 description=self.cellrangercount_plots_conf["bc"]["description"],
                 helptext=self.cellrangercount_plots_conf["bc"]["helptext"],
-                plot=linegraph.plot(
+                plot=self.linegraph(
                     self.cellrangercount_plots_data["bc"], self.cellrangercount_plots_conf["bc"]["config"]
                 ),
             )
@@ -112,7 +112,7 @@ class CellRangerCountMixin:
                 anchor="cellranger-count-genes-plot",
                 description=self.cellrangercount_plots_conf["genes"]["description"],
                 helptext=self.cellrangercount_plots_conf["genes"]["helptext"],
-                plot=linegraph.plot(
+                plot=self.linegraph(
                     self.cellrangercount_plots_data["genes"], self.cellrangercount_plots_conf["genes"]["config"]
                 ),
             )
@@ -123,7 +123,7 @@ class CellRangerCountMixin:
                     anchor="cellranger-count-saturation-plot",
                     description=self.cellrangercount_plots_conf["saturation"]["description"],
                     helptext=self.cellrangercount_plots_conf["saturation"]["helptext"],
-                    plot=linegraph.plot(
+                    plot=self.linegraph(
                         self.cellrangercount_plots_data["saturation"],
                         self.cellrangercount_plots_conf["saturation"]["config"],
                     ),

@@ -202,7 +202,7 @@ class MultiqcModule(BaseMultiqcModule):
             miRNAs is displayed in a different color.
             """
             + self.general_helptext,
-            plot=bargraph.plot(self.filter_plot_data("sum"), self.get_plot_cats("sum"), p_config),
+            plot=self.bargraph(self.filter_plot_data("sum"), self.get_plot_cats("sum"), p_config),
         )
 
     def mirtop_unique_read_count(self):
@@ -224,7 +224,7 @@ class MultiqcModule(BaseMultiqcModule):
             For each sample, the number of miRNAs with each type of isomiRs, is displayed in a different color.
             """
             + self.general_helptext,
-            plot=bargraph.plot(self.filter_plot_data("count"), self.get_plot_cats("count"), p_config),
+            plot=self.bargraph(self.filter_plot_data("count"), self.get_plot_cats("count"), p_config),
         )
 
     def mirtop_mean_read_count(self):
@@ -242,5 +242,5 @@ class MultiqcModule(BaseMultiqcModule):
             For each sample, the mean counts of each type of isomiRs over all detected miRNAs is displayed in a different color.
             """
             + self.general_helptext,
-            plot=bargraph.plot(self.filter_plot_data("mean"), self.get_plot_cats("mean"), p_config),
+            plot=self.bargraph(self.filter_plot_data("mean"), self.get_plot_cats("mean"), p_config),
         )

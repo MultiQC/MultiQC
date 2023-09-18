@@ -65,7 +65,7 @@ class MultiqcModule(BaseMultiqcModule):
                 [HiFiasm documentation](https://hifiasm.readthedocs.io/en/latest/interpreting-output.html#hifiasm-log-interpretation)
                 for details.
                 """,
-            plot=linegraph.plot(self.hifiasm_data, config),
+            plot=self.linegraph(self.hifiasm_data, config),
         )
 
     def extract_kmer_graph(self, fin):

@@ -42,7 +42,7 @@ class DragenGcMetrics(BaseMultiqcModule):
                 A histogram of the normalized coverage vs GC content.  This shows how GC
                 content in the genome impacts sequencing coverage.
                 """,
-            plot=linegraph.plot(
+            plot=self.linegraph(
                 hist_data,
                 {
                     "id": "gc-bias-hist",
@@ -65,7 +65,7 @@ class DragenGcMetrics(BaseMultiqcModule):
             description="""
             Summary GC metrics shown on the sample level.
             """,
-            plot=table.plot(table_data, pconfig={"namespace": DragenGcMetrics.NAMESPACE}),
+            plot=self.table(table_data, pconfig={"namespace": DragenGcMetrics.NAMESPACE}),
         )
 
         return data_by_sample.keys()

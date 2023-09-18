@@ -173,7 +173,7 @@ class StatsReportMixin:
                 name="Alignment metrics",
                 anchor="samtools-stats",
                 description="This module parses the output from <code>samtools stats</code>. All numbers in millions.",
-                plot=beeswarm.plot(self.samtools_stats, keys, {"id": "samtools-stats-dp"}),
+                plot=self.beeswarm(self.samtools_stats, keys, {"id": "samtools-stats-dp"}),
             )
 
         # Return the number of logs that were found
@@ -223,4 +223,4 @@ def alignment_chart(data):
         "ylab": "# Reads",
         "cpswitch_counts_label": "Number of Reads",
     }
-    return bargraph.plot(data, keys, plot_conf)
+    return self.bargraph(data, keys, plot_conf)

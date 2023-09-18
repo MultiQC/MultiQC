@@ -234,7 +234,7 @@ class MultiqcModule(BaseMultiqcModule):
             for key in data[s_name]["summary"]:
                 tdata["{} - {}".format(s_name, key)] = data[s_name]["summary"][key]
 
-        return table.plot(tdata, headers, table_config)
+        return self.table(tdata, headers, table_config)
 
     def run_metrics_details_table(self, data):
         headers = OrderedDict()
@@ -365,7 +365,7 @@ class MultiqcModule(BaseMultiqcModule):
             for key in data[s_name]["details"]:
                 tdata["{} - {}".format(s_name, key)] = data[s_name]["details"][key]
 
-        return table.plot(tdata, headers, table_config)
+        return self.table(tdata, headers, table_config)
 
     def index_metrics_summary_table(self, data):
         headers = OrderedDict()
@@ -408,7 +408,7 @@ class MultiqcModule(BaseMultiqcModule):
             for key in data[s_name]["summary"]:
                 tdata["{} - {}".format(s_name, key)] = data[s_name]["summary"][key]
 
-        return table.plot(tdata, headers, table_config)
+        return self.table(tdata, headers, table_config)
 
     def index_metrics_details_table(self, data):
         headers = OrderedDict()
@@ -432,4 +432,4 @@ class MultiqcModule(BaseMultiqcModule):
             for key in data[s_name]["details"]:
                 tdata["{} - {}".format(s_name, key)] = data[s_name]["details"][key]
 
-        return table.plot(tdata, headers, table_config)
+        return self.table(tdata, headers, table_config)

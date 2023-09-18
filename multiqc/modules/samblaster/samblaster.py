@@ -68,7 +68,7 @@ class MultiqcModule(BaseMultiqcModule):
             "title": "Samblaster: Number of duplicate reads",
             "ylab": "Number of reads",
         }
-        self.add_section(plot=bargraph.plot(self.samblaster_data, cats, pconfig))
+        self.add_section(plot=self.bargraph(self.samblaster_data, cats, pconfig))
 
     def parse_samblaster(self, f):
         """Go through log file looking for samblaster output.

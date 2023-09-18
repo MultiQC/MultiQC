@@ -77,7 +77,7 @@ class DragenReadMetrics(BaseMultiqcModule):
             subset of sequences will have universally poor quality, however these should
             represent only a small percentage of the total sequences._
             """,
-            plot=linegraph.plot(data, pconfig),
+            plot=self.linegraph(data, pconfig),
         )
 
     def seq_length_dist_plot(self):
@@ -136,5 +136,5 @@ class DragenReadMetrics(BaseMultiqcModule):
                 anchor="dragenqc_sequence_length_distribution",
                 description="""The distribution of fragment sizes (read lengths) found.
                     See the [FastQC help](http://www.bioinformatics.babraham.ac.uk/projects/fastqc/Help/3%20Analysis%20Modules/7%20Sequence%20Length%20Distribution.html)""",
-                plot=linegraph.plot(data, pconfig),
+                plot=self.linegraph(data, pconfig),
             )

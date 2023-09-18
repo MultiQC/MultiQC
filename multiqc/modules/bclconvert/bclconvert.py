@@ -146,7 +146,7 @@ class MultiqcModule(BaseMultiqcModule):
             description="Number of reads per lane (with number of perfect index reads)." + extra,
             helptext="""Perfect index reads are those that do not have a single mismatch.
                 All samples of a lane are combined. Undetermined reads are treated as a third category.""",
-            plot=bargraph.plot(
+            plot=self.bargraph(
                 self.get_bar_data_from_counts(self.bclconvert_bylane),
                 cats,
                 {
@@ -171,7 +171,7 @@ class MultiqcModule(BaseMultiqcModule):
             helptext="""Perfect index reads are those that do not have a single mismatch.
                 All samples are aggregated across lanes combinned. Undetermined reads are ignored.
                 Undetermined reads are treated as a separate sample.""",
-            plot=bargraph.plot(
+            plot=self.bargraph(
                 [self.get_bar_data_from_counts(self.bclconvert_bysample), self.bclconvert_bysample_lane],
                 [cats, lcats],
                 {
@@ -190,7 +190,7 @@ class MultiqcModule(BaseMultiqcModule):
                 name="Undetermined barcodes by lane",
                 anchor="undetermine_by_lane",
                 description="Undetermined barcodes by lanes",
-                plot=bargraph.plot(
+                plot=self.bargraph(
                     self.get_bar_data_from_undetermined(self.bclconvert_bylane),
                     None,
                     {
@@ -676,7 +676,7 @@ class MultiqcModule(BaseMultiqcModule):
             "no_beeswarm": True,
         }
 
-        return table.plot(sample_stats_data, headers, table_config)
+        return self.table(sample_stats_data, headers, table_config)
 
     def lane_stats_table(self):
         for lane_id, lane in self.bclconvert_bylane.items():
@@ -776,7 +776,7 @@ class MultiqcModule(BaseMultiqcModule):
             for key, value in lanestats.items():
                 bclconvert_bylane_foroutput[laneid][key + "-lane"] = value
 
-        return table.plot(bclconvert_bylane_foroutput, headers, table_config)
+        return self.table(bclconvert_bylane_foroutput, headers, table_config)
 
     def prepend_runid(self, runId, rest):
         return str(runId) + " - " + str(rest)

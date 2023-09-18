@@ -232,17 +232,17 @@ def plot(report, data, pconfig=None):
         ):
             try:
                 report.num_mpl_plots += 1
-                return matplotlib_linegraph(plotdata, pconfig)
+                return matplotlib_linegraph(report, plotdata, pconfig)
             except Exception as e:
                 logger.error("############### Error making MatPlotLib figure! Falling back to HighCharts.")
                 logger.debug(e, exc_info=True)
-                return highcharts_linegraph(plotdata, pconfig)
+                return highcharts_linegraph(report, plotdata, pconfig)
         else:
             # Use MatPlotLib to generate static plots if requested
             if config.export_plots:
-                matplotlib_linegraph(plotdata, pconfig)
+                matplotlib_linegraph(report, plotdata, pconfig)
             # Return HTML for HighCharts dynamic plot
-            return highcharts_linegraph(plotdata, pconfig)
+            return highcharts_linegraph(report, plotdata, pconfig)
 
 
 def highcharts_linegraph(report, plotdata, pconfig=None):

@@ -287,7 +287,7 @@ class MultiqcModule(BaseMultiqcModule):
             name="{} stats".format(stat_type.replace("_", " ").capitalize()),
             anchor="nanostat_{}_stats".format(stat_type.replace(" ", "_")),
             description=description,
-            plot=table.plot(self.nanostat_data, headers, table_config),
+            plot=self.table(self.nanostat_data, headers, table_config),
         )
 
     def reads_by_quality_plot(self):
@@ -367,5 +367,5 @@ class MultiqcModule(BaseMultiqcModule):
                 Data may come from NanoPlot reports generated with sequencing summary files or alignment stats.
                 If a sample has data from both, the sequencing summary is preferred.
             """,
-            plot=bargraph.plot(bar_data, cats, config),
+            plot=self.bargraph(bar_data, cats, config),
         )

@@ -123,7 +123,7 @@ class estimateReadFilteringMixin:
                 name="Filtering metrics",
                 anchor="estimateReadFiltering",
                 description="Estimated percentages of alignments filtered independently for each setting in `estimateReadFiltering`",
-                plot=table.plot(tdata, header, config),
+                plot=self.table(tdata, header, config),
             )
 
         return len(self.deeptools_estimateReadFiltering)

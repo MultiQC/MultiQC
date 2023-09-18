@@ -183,7 +183,7 @@ class MultiqcModule(BaseMultiqcModule):
             anchor="ngsderive-strandedness",
             description="""Predicted strandedness provided by ngsderive. For more information, please see
             [the documentation](https://stjudecloud.github.io/ngsderive/subcommands/strandedness/).""",
-            plot=bargraph.plot(bardata, ["forward", "reverse"], pconfig),
+            plot=self.bargraph(bardata, ["forward", "reverse"], pconfig),
         )
 
     def add_instrument_data(self):
@@ -260,7 +260,7 @@ class MultiqcModule(BaseMultiqcModule):
             anchor="ngsderive-instrument",
             description="""Predicted instrument provided by ngsderive. For more information, please see
             [the documentation](https://stjudecloud.github.io/ngsderive/subcommands/instrument/).""",
-            plot=table.plot(table_data, headers, config),
+            plot=self.table(table_data, headers, config),
         )
 
     def add_readlen_data(self):
@@ -322,7 +322,7 @@ class MultiqcModule(BaseMultiqcModule):
             anchor="ngsderive-readlen",
             description="""Predicted read length provided by ngsderive. For more information, please see
             [the documentation](https://stjudecloud.github.io/ngsderive/subcommands/readlen/).""",
-            plot=linegraph.plot(linedata, pconfig),
+            plot=self.linegraph(linedata, pconfig),
         )
 
     def add_encoding_data(self):
@@ -454,5 +454,5 @@ class MultiqcModule(BaseMultiqcModule):
             anchor="ngsderive-junctions",
             description="""Junction annotations provided by ngsderive. For more information, please see
             [the documentation](https://stjudecloud.github.io/ngsderive/subcommands/junction_annotation/).""",
-            plot=bargraph.plot([bardata, bardata], cats, pconfig),
+            plot=self.bargraph([bardata, bardata], cats, pconfig),
         )

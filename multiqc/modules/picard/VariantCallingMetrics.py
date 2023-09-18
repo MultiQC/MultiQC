@@ -220,7 +220,7 @@ def compare_variant_type_plot(data):
         "hide_zero_cats": False,
         "data_labels": [{"name": "Total"}, {"name": "Known"}, {"name": "Novel"}],
     }
-    return bargraph.plot(
+    return self.bargraph(
         data=[total_variants, known_variants, novel_variants], cats=[keys, keys, keys], pconfig=plot_conf
     )
 
@@ -238,7 +238,7 @@ def compare_variants_label_plot(data):
         "ylab": "Counts of Variants",
     }
 
-    return bargraph.plot(data, cats=keys, pconfig=pconfig)
+    return self.bargraph(data, cats=keys, pconfig=pconfig)
 
 
 def merge_two_dicts(x, y):

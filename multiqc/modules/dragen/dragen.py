@@ -52,8 +52,8 @@ class MultiqcModule(
     a section into the report.
     """
 
-    def __init__(self):
-        super(MultiqcModule, self).__init__(
+    def __init__(self, **kwargs):
+        super().__init__(
             name="DRAGEN",
             anchor="DRAGEN",
             target="DRAGEN",
@@ -61,6 +61,7 @@ class MultiqcModule(
             info=""" is a Bio-IT Platform that provides ultra-rapid secondary analysis of sequencing data
                      using field-programmable gate array technology (FPGA).""",
             # Can't find a DOI // doi=
+            **kwargs,
         )
 
     def build(self):

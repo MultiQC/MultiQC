@@ -116,7 +116,7 @@ class MultiqcModule(BaseMultiqcModule):
                 the composition signature of the library type and how far off the
                 projection of the test sample is.
             """,
-            plot=heatmap.plot(hm_data, hm_library_types, hm_sample_names, pconfig),
+            plot=self.heatmap(hm_data, hm_library_types, hm_sample_names, pconfig),
         )
 
     def add_general_stats(self):

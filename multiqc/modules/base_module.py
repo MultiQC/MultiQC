@@ -37,6 +37,7 @@ class BaseMultiqcModule(ABC):
         doi: Optional[Union[str, List]] = None,
         custom_config: Optional[Dict] = None,
         report: Optional[Report] = None,
+        module_tag: Optional[List[str]] = None,
     ):
         # Custom options from user config that can overwrite base module values
         self.name = name
@@ -69,10 +70,10 @@ class BaseMultiqcModule(ABC):
         if self.extra is None:
             self.extra = ""
         self.doi_link = ""
-        if type(self.doi) is str:
-            self.doi = [self.doi]
-        self.doi = [i for i in self.doi if i != ""]
-        if len(self.doi) > 0:
+        if self.doi:
+            if isinstance(self.doi, str):
+                self.doi = [self.doi]
+            self.doi = [i for i in self.doi if i != ""]
             doi_links = []
             for doi in self.doi:
                 # Build the HTML link for the DOI
@@ -538,7 +539,7 @@ class BaseMultiqcModule(ABC):
 
         if pconfig is None:
             pconfig = {}
-        return bargraph.plot(data, cats, pconfig)
+        return self.bargraph(data, cats, pconfig)
 
     def plot_xy_data(self, data, pconfig=None):
         """Depreciated function. Forwards to new location."""
@@ -546,7 +547,7 @@ class BaseMultiqcModule(ABC):
 
         if pconfig is None:
             pconfig = {}
-        return linegraph.plot(data, pconfig)
+        return self.linegraph(data, pconfig)
 
     def bargraph(self, data, cats=None, pconfig=None):
         return bargraph.plot(self.report, data, cats, pconfig)

@@ -178,7 +178,7 @@ class MultiqcModule(BaseMultiqcModule):
         self.add_section(
             name="Snippy Variants",
             anchor="snippy_variants_stats",
-            plot=bargraph.plot(bargraph_data, pconfig=pconfig),
+            plot=self.bargraph(bargraph_data, pconfig=pconfig),
             description="This plot shows the different variant types reported by snippy.",
         )
 
@@ -208,7 +208,7 @@ class MultiqcModule(BaseMultiqcModule):
         self.add_section(
             name="Snippy-Core Alignment Statistics",
             anchor="snippy_core_alignment_stats",
-            plot=bargraph.plot(bargraph_data, pconfig=pconfig),
+            plot=self.bargraph(bargraph_data, pconfig=pconfig),
             description="Different categories of sites in a snippy-core genome alignment.",
         )
 
