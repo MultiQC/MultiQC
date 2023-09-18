@@ -10,6 +10,8 @@ from multiqc.utils import config
 
 log = logging.getLogger(__name__)
 
+VERSION_REGEX = r"Version ([\d\.]+)"
+
 
 class MultiqcModule(BaseMultiqcModule):
     """BBDuk Module"""
@@ -53,6 +55,11 @@ class MultiqcModule(BaseMultiqcModule):
             if "jgi.BBDuk" in l and "in1=" in l:
                 s_name = l.split("in1=")[1].split(" ")[0]
                 s_name = self.clean_s_name(s_name, f)
+
+            if l.startswith("Version"):
+                version_match = re.search(VERSION_REGEX, l)
+                if version_match:
+                    self.add_software_version(version_match.group(1), s_name)
 
             if "Input:" in l:
                 matches = re.search(r"Input:\s+(\d+) reads\s+(\d+) bases", l)
