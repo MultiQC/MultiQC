@@ -13,7 +13,7 @@ log = logging.getLogger(__name__)
 class MultiqcModule(BaseMultiqcModule):
     """motus Module"""
 
-    def __init__(self):
+    def __init__(self, **kwargs):
         # Initialise the parent object
         super().__init__(
             name="motus",
@@ -21,6 +21,7 @@ class MultiqcModule(BaseMultiqcModule):
             href="https://motu-tool.org/",
             info="is a tool performing microbial profiling through marker gene (MG)-based operational taxonomic units (mOTUs).",
             doi="10.1038/s41467-019-08844-4",
+            **kwargs,
         )
 
         self.motus_data = dict()

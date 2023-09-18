@@ -16,7 +16,7 @@ class MultiqcModule(BaseMultiqcModule):
     """
 
     # -------------------------------------------------------------------------#
-    def __init__(self):
+    def __init__(self, **kwargs):
         # Initialise the parent object
         super().__init__(
             name="Snippy",
@@ -24,6 +24,7 @@ class MultiqcModule(BaseMultiqcModule):
             href="https://github.com/tseemann/snippy",
             info="is used for rapid haploid variant calling and core genome alignment.",
             # Can't find a DOI // doi=
+            **kwargs,
         )
 
     def build(self):

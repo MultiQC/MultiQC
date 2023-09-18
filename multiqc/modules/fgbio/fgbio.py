@@ -17,7 +17,7 @@ class MultiqcModule(BaseMultiqcModule, GroupReadsByUmiMixin):
     each script is split into its own file and adds a section to
     the module output if logs are found."""
 
-    def __init__(self):
+    def __init__(self, **kwargs):
         # Initialise the parent object
         super().__init__(
             name="fgbio",
@@ -26,6 +26,7 @@ class MultiqcModule(BaseMultiqcModule, GroupReadsByUmiMixin):
             href="http://fulcrumgenomics.github.io/fgbio/",
             info=" is a command line toolkit for working with genomic and particularly next generation sequencing data..",
             # No publication / DOI // doi=
+            **kwargs,
         )
 
     def build(self):

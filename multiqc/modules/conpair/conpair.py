@@ -15,7 +15,7 @@ class MultiqcModule(BaseMultiqcModule):
     Conpair module class.
     """
 
-    def __init__(self):
+    def __init__(self, **kwargs):
         # Initialise the parent object
         super().__init__(
             name="Conpair",

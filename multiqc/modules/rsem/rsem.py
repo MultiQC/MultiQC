@@ -17,7 +17,7 @@ class MultiqcModule(BaseMultiqcModule):
     RSEM module class, parses .cnt file .
     """
 
-    def __init__(self):
+    def __init__(self, **kwargs):
         # Initialise the parent object
         super().__init__(
             name="Rsem",

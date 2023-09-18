@@ -20,6 +20,7 @@ class MultiqcModule(BaseMultiqcModule):
             href="https://hicexplorer.readthedocs.io",
             info=" addresses the common tasks of Hi-C analysis from processing to visualization.",
             doi=["10.1093/nar/gky504", "10.1093/nar/gkaa220"],
+            **kwargs,
         )
 
         self.hicexplorer_data = dict()

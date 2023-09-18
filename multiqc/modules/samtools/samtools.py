@@ -23,7 +23,7 @@ class MultiqcModule(BaseMultiqcModule, StatsReportMixin, FlagstatReportMixin, Id
     each script is split into its own file and adds a section to
     the module output if logs are found."""
 
-    def __init__(self):
+    def __init__(self, **kwargs):
         # Initialise the parent object
         super().__init__(
             name="Samtools",
@@ -32,6 +32,7 @@ class MultiqcModule(BaseMultiqcModule, StatsReportMixin, FlagstatReportMixin, Id
             href="http://www.htslib.org",
             info=" is a suite of programs for interacting with high-throughput sequencing data.",
             doi="10.1093/bioinformatics/btp352",
+            **kwargs,
         )
 
         # Set up class objects to hold parsed data

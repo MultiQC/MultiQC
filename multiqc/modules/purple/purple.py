@@ -16,7 +16,7 @@ class MultiqcModule(BaseMultiqcModule):
     purity and copy number profile of a tumor sample.
     """
 
-    def __init__(self):
+    def __init__(self, **kwargs):
         # Initialise the parent object
         super().__init__(
             name="PURPLE",

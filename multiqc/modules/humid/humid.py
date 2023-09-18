@@ -20,6 +20,7 @@ class MultiqcModule(BaseMultiqcModule):
             href="https://github.com/jfjlaros/HUMID",
             info=" is a fast, reference free tool to remove (UMI) duplicates from sequencing data",
             # No publication / DOI // doi=
+            **kwargs,
         )
 
     def build(self):

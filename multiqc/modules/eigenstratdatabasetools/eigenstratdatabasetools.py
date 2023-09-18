@@ -14,7 +14,7 @@ log = logging.getLogger(__name__)
 class MultiqcModule(BaseMultiqcModule):
     """eigenstratdatabasetools module"""
 
-    def __init__(self):
+    def __init__(self, **kwargs):
         # Initialise the parent object
         super().__init__(
             name="eigenstratdatabasetools",
@@ -22,6 +22,7 @@ class MultiqcModule(BaseMultiqcModule):
             href="https://github.com/TCLamnidis/EigenStratDatabaseTools",
             info="A set of tools to compare and manipulate the contents of EingenStrat databases, and to calculate SNP coverage statistics in such databases.",
             # No publication / DOI // doi=
+            **kwargs,
         )
 
     def build(self):

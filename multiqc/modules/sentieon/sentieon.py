@@ -19,7 +19,7 @@ class MultiqcModule(BaseMultiqcModule):
     is split into its own file and adds a section to the module output if
     logs are found."""
 
-    def __init__(self):
+    def __init__(self, **kwargs):
         # Initialise the parent object
         super().__init__(
             name="Sentieon",
@@ -27,6 +27,7 @@ class MultiqcModule(BaseMultiqcModule):
             href="https://www.sentieon.com/products/",
             info="contains a suite of QC tools. The ones represented in this module are analogues of Picard QC metrics.",
             # Can't find a DOI // doi=
+            **kwargs,
         )
 
     def build(self):

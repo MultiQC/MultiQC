@@ -18,6 +18,7 @@ class MultiqcModule(BaseMultiqcModule):
             href="https://github.com/rrwick/Porechop",
             info="a tool for finding and removing adapters from Oxford Nanopore reads.",
             # doi="",  # No DOI available
+            **kwargs,
         )
 
         # Find and load reports

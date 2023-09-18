@@ -18,7 +18,7 @@ log = logging.getLogger(__name__)
 class MultiqcModule(BaseMultiqcModule):
     """Pangolin module"""
 
-    def __init__(self):
+    def __init__(self, **kwargs):
         # Initialise the parent module
         super().__init__(
             name="Pangolin",

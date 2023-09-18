@@ -22,6 +22,7 @@ class MultiqcModule(BaseMultiqcModule):
             href="https://github.com/miRTop/mirtop/",
             info="is a command line tool to annotate miRNAs and isomiRs and compute general statistics using the mirGFF3 format.",
             doi="10.5281/zenodo.45385",  # Zenodo won't load this page for me as I write this, but it's the listed DOI.
+            **kwargs,
         )
 
     def build(self):

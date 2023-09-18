@@ -19,7 +19,7 @@ class MultiqcModule(BaseMultiqcModule):
     The MultiQC module to parse and plot odgi stats output.
     """
 
-    def __init__(self):
+    def __init__(self, **kwargs):
         # Initialise the parent object
         super().__init__(
             name="ODGI",
@@ -27,6 +27,7 @@ class MultiqcModule(BaseMultiqcModule):
             href="https://github.com/pangenome/odgi",
             info="is an optimized dynamic graph/genome implementation, for efficient analysis and manipulation of pangenome graphs structured in the variation graph model.",
             # Can't find a DOI // doi=
+            **kwargs,
         )
 
     def build(self):

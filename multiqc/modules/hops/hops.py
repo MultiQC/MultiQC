@@ -5,8 +5,6 @@ import json
 import logging
 
 from multiqc.modules.base_module import BaseMultiqcModule
-from multiqc.plots import heatmap
-from multiqc.utils import config
 
 log = logging.getLogger(__name__)
 

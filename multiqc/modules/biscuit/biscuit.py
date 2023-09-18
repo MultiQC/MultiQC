@@ -23,7 +23,7 @@ class MultiqcModule(BaseMultiqcModule):
         BISCUIT report for MultiQC
     """
 
-    def __init__(self):
+    def __init__(self, **kwargs):
         # Initialize the parent object
         super().__init__(
             name="BISCUIT",
@@ -31,6 +31,7 @@ class MultiqcModule(BaseMultiqcModule):
             href="https://github.com/huishenlab/biscuit",
             info="is a tool to map bisulfite converted DNA sequence reads and determine cytosine methylation states.",
             # Can't find a DOI // doi=
+            **kwargs,
         )
 
     def build(self):

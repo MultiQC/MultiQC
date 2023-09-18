@@ -14,7 +14,7 @@ log = logging.getLogger(__name__)
 class MultiqcModule(BaseMultiqcModule):
     """BBDuk Module"""
 
-    def __init__(self):
+    def __init__(self, **kwargs):
         # Initialise the parent object
         super().__init__(
             name="BBDuk",
@@ -23,7 +23,8 @@ class MultiqcModule(BaseMultiqcModule):
             info="""is a tool performing common data-quality-related trimming,
             filtering, and masking operations with a kmer based approach""",
             # One publication, but only for the merge tool:
-            # doi="10.1371/journal.pone.0185056", **kwargs
+            # doi="10.1371/journal.pone.0185056",
+            **kwargs,
         )
 
     def build(self):

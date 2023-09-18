@@ -39,23 +39,35 @@ class BaseMultiqcModule(ABC):
         report: Optional[Report] = None,
     ):
         # Custom options from user config that can overwrite base module values
-        self.name = mod_cust_config.get("name", name)
-        self.anchor = mod_cust_config.get("anchor", anchor)
-        self.target = mod_cust_config.get("target", target)
-        self.href = mod_cust_config.get("href", href)
-        self.info = mod_cust_config.get("info", info)
-        self.comment = mod_cust_config.get("comment", comment)
-        self.extra = mod_cust_config.get("extra", extra)
-        self.doi = mod_cust_config.get("doi", doi)
+        self.name = name
+        self.anchor = anchor
+        self.target = target
+        self.href = href
+        self.info = info
+        self.comment = comment
+        self.extra = extra
+        self.doi = doi
+        self.path_filters = None
+        self.path_filters_exclude = None
 
-        # Pick up path filters if specified.
-        # Allows modules to be called multiple times with different sets of files
-        path_filters = mod_cust_config.get("path_filters", None)
-        path_filters_exclude = mod_cust_config.get("path_filters_exclude", None)
-        self.path_filters = path_filters if isinstance(path_filters, list) else path_filters
-        self.path_filters_exclude = (
-            path_filters_exclude if isinstance(path_filters_exclude, list) else path_filters_exclude
-        )
+        if mod_cust_config:
+            self.name = mod_cust_config.get("name", self.name)
+            self.anchor = mod_cust_config.get("anchor", self.anchor)
+            self.target = mod_cust_config.get("target", self.target)
+            self.href = mod_cust_config.get("href", self.href)
+            self.info = mod_cust_config.get("info", self.info)
+            self.comment = mod_cust_config.get("comment", self.comment)
+            self.extra = mod_cust_config.get("extra", self.extra)
+            self.doi = mod_cust_config.get("doi", self.doi)
+
+            # Pick up path filters if specified.
+            # Allows modules to be called multiple times with different sets of files
+            path_filters = mod_cust_config.get("path_filters", None)
+            path_filters_exclude = mod_cust_config.get("path_filters_exclude", None)
+            self.path_filters = path_filters if isinstance(path_filters, list) else path_filters
+            self.path_filters_exclude = (
+                path_filters_exclude if isinstance(path_filters_exclude, list) else path_filters_exclude
+            )
 
         self.autoformat = autoformat
         self.autoformat_type = autoformat_type

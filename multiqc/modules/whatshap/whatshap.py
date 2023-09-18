@@ -14,7 +14,7 @@ class MultiqcModule(BaseMultiqcModule):
     WhatsHap module class, parses WhatsHap output.
     """
 
-    def __init__(self, *args, **kwargs):
+    def __init__(self, **kwargs):
         # Initialise the parent object
         super().__init__(
             name="WhatsHap",
@@ -27,7 +27,6 @@ class MultiqcModule(BaseMultiqcModule):
                     """,
             doi="10.1101/085050",
             *args,
-            **kwargs,
             **kwargs,
         )
 

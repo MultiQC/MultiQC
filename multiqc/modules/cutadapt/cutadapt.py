@@ -20,7 +20,7 @@ class MultiqcModule(BaseMultiqcModule):
     (which contain cutadapt logs)
     """
 
-    def __init__(self):
+    def __init__(self, **kwargs):
         # Initialise the parent object
         super().__init__(
             name="Cutadapt",

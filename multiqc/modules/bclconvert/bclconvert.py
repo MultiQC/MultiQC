@@ -22,6 +22,7 @@ class MultiqcModule(BaseMultiqcModule):
             href="https://support.illumina.com/",
             info="can be used to both demultiplex data and convert BCL files to FASTQ file formats for downstream analysis.",
             # Can't find a DOI // doi=
+            **kwargs,
         )
 
     def build(self):
@@ -32,7 +33,7 @@ class MultiqcModule(BaseMultiqcModule):
 
         # set up and collate bclconvert run and demux files
         bclconvert_demuxes, bclconvert_qmetrics = self._collate_log_files()
-        num_demux_files = len(bclconvert_demuxes)
+        self.num_demux_files = len(bclconvert_demuxes)
 
         for demux in bclconvert_demuxes:
             self.bclconvert_data[demux["run_id"]] = dict()
@@ -46,9 +47,9 @@ class MultiqcModule(BaseMultiqcModule):
         for qmetric in bclconvert_qmetrics:
             self.parse_qmetrics_data(qmetric)
 
-        if num_demux_files == 0:
+        if self.num_demux_files == 0:
             raise UserWarning
-        elif num_demux_files > 1 and not self.multiple_sequencing_runs:
+        elif self.num_demux_files > 1 and not self.multiple_sequencing_runs:
             log.warning("Found multiple runs from the same sequencer output")
             self.intro += """
                 <div class="alert alert-warning">
@@ -69,7 +70,8 @@ class MultiqcModule(BaseMultiqcModule):
             self.per_lane_undetermined_reads = None
 
         create_undetermined_barplots = (
-            getattr(config, "bclconvert", {}).get("create_undetermined_barcode_barplots", False) or num_demux_files == 1
+            getattr(config, "bclconvert", {}).get("create_undetermined_barcode_barplots", False)
+            or self.num_demux_files == 1
         )
         if create_undetermined_barplots:
             self._parse_top_unknown_barcodes()
@@ -126,7 +128,7 @@ class MultiqcModule(BaseMultiqcModule):
         cats["imperfect"] = {"name": "Mismatched Index Reads"}
         cats["undetermined"] = {"name": "Undetermined Reads"}
         extra = ""
-        if num_demux_files > 1 and not self.multiple_sequencing_runs:
+        if self.num_demux_files > 1 and not self.multiple_sequencing_runs:
             extra = """
                 <div class="alert alert-warning">
                     <strong>Warning:</strong> Found multiple runs from the same sequencer output.
@@ -404,7 +406,7 @@ class MultiqcModule(BaseMultiqcModule):
                 row["# Reads"]
             )  # add up number of reads, regardless of undetermined or not
 
-            if num_demux_files == 1 and sample == "Undetermined":
+            if self.num_demux_files == 1 and sample == "Undetermined":
                 self.per_lane_undetermined_reads[lane_id] += int(row["# Reads"])
 
     def parse_qmetrics_data(self, myfile):

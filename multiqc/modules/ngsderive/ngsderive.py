@@ -18,7 +18,7 @@ class MultiqcModule(BaseMultiqcModule):
     ngsderive module class, parses stderr logs.
     """
 
-    def __init__(self):
+    def __init__(self, **kwargs):
         # Initialise the parent object
         super().__init__(
             name="ngsderive",
@@ -26,6 +26,7 @@ class MultiqcModule(BaseMultiqcModule):
             href="https://github.com/stjudecloud/ngsderive",
             info="attempts to predict library information from next-generation sequencing data.",
             # Can't find a DOI // doi=
+            **kwargs,
         )
 
     def build(self):

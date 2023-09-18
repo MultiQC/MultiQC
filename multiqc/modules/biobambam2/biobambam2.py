@@ -15,7 +15,7 @@ class MultiqcModule(BaseMultiqcModule):
     """This module is super weird. The output from this tools is essentially
     identical to Picard MarkDuplicates, so we just hijack that module instead"""
 
-    def __init__(self):
+    def __init__(self, **kwargs):
         # Initialise the parent object
         super().__init__(
             name="biobambam2",

@@ -33,6 +33,7 @@ class MultiqcModule(BaseMultiqcModule):
             href="https://github.com/Illumina/hap.py",
             info="is a set of programs based on htslib to benchmark variant calls against gold standard truth datasets.",
             # No publication / DOI // doi=
+            **kwargs,
         )
 
     def build(self):

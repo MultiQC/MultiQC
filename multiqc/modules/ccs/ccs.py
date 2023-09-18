@@ -21,6 +21,7 @@ class MultiqcModule(BaseMultiqcModule):
             href="https://github.com/PacificBiosciences/ccs",
             info=" is used to generate highly accurate single-molecule consensus reads from PacBio sequencing.",
             # Can't find a DOI // doi=
+            **kwargs,
         )
 
     def build(self):

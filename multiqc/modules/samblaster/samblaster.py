@@ -16,7 +16,7 @@ log = logging.getLogger(__name__)
 class MultiqcModule(BaseMultiqcModule):
     """Samblaster"""
 
-    def __init__(self):
+    def __init__(self, **kwargs):
         # Initialise the parent object
         super().__init__(
             name="Samblaster",
@@ -24,6 +24,7 @@ class MultiqcModule(BaseMultiqcModule):
             href="https://github.com/GregoryFaust/samblaster",
             info="is a tool to mark duplicates and extract discordant and split reads from sam files.",
             doi="10.1093/bioinformatics/btu314",
+            **kwargs,
         )
 
         self.samblaster_data = dict()

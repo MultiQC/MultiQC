@@ -18,7 +18,7 @@ class MultiqcModule(BaseMultiqcModule):
     into its own file and adds a section to the module ooutput if
     logs are found."""
 
-    def __init__(self):
+    def __init__(self, **kwargs):
         # Initialise the parent object
         super().__init__(
             name="Bamtools",

@@ -62,7 +62,6 @@ class MultiqcModule(
                      using field-programmable gate array technology (FPGA).""",
             # Can't find a DOI // doi=
             **kwargs,
-            **kwargs,
         )
 
     def build(self):

@@ -21,6 +21,7 @@ class MultiqcModule(BaseMultiqcModule):
             href="http://catchenlab.life.illinois.edu/stacks/",
             info="A software for analyzing restriction enzyme-based data (e.g. RAD-seq).",
             doi="10.1111/mec.12354",
+            **kwargs,
         )
 
         self.gsheaders = OrderedDict()

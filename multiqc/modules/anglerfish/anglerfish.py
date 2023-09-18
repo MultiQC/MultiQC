@@ -16,7 +16,7 @@ class MultiqcModule(BaseMultiqcModule):
     Anglerfish module class
     """
 
-    def __init__(self):
+    def __init__(self, **kwargs):
         # Initialise the parent object
         super().__init__(
             name="Anglerfish",
@@ -24,6 +24,7 @@ class MultiqcModule(BaseMultiqcModule):
             href="https://github.com/remiolsen/anglerfish",
             info="A tool to assess Illumina libraries sequenced on Oxford Nanopore for the purpose of quality control.",
             # doi="", No DOI available
+            **kwargs,
         )
 
     def build(self):

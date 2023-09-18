@@ -18,7 +18,7 @@ class MultiqcModule(BaseMultiqcModule):
     AfterQC module class
     """
 
-    def __init__(self):
+    def __init__(self, **kwargs):
         # Initialise the parent object
         super().__init__(
             name="AfterQC",
@@ -26,6 +26,7 @@ class MultiqcModule(BaseMultiqcModule):
             href="https://github.com/OpenGene/AfterQC",
             info="Automatic Filtering, Trimming, Error Removing and Quality Control for fastq data.",
             doi="10.1186/s12859-017-1469-3",
+            **kwargs,
         )
         self.afterqc_data = dict()
 

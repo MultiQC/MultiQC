@@ -41,7 +41,7 @@ class MultiqcModule(BaseMultiqcModule):
     ]
     _stat_types = ("aligned", "seq summary", "fastq", "fasta", "unrecognized")
 
-    def __init__(self):
+    def __init__(self, **kwargs):
         # Initialise the parent object
         super().__init__(
             name="NanoStat",

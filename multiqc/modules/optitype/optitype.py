@@ -16,7 +16,7 @@ class MultiqcModule(BaseMultiqcModule):
     optitype module class, parses TSV output from optitype.
     """
 
-    def __init__(self):
+    def __init__(self, **kwargs):
         # Initialise the parent object
         super().__init__(
             name="OptiType",

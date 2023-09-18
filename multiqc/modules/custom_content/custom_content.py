@@ -296,7 +296,7 @@ def custom_module_classes(report):
 class MultiqcModule(BaseMultiqcModule):
     """Module class, used for each custom content type"""
 
-    def __init__(self, c_id, mod):
+    def __init__(self, c_id, mod, **kwargs):
         modname = c_id.replace("_", " ").title()
         mod_info = mod["config"].get("description")
         if "parent_name" in mod["config"]:
@@ -315,6 +315,7 @@ class MultiqcModule(BaseMultiqcModule):
             info=mod_info,
             extra=mod["config"].get("extra"),
             # No DOI here.. // doi=
+            **kwargs,
         )
 
         # Don't repeat the Custom Content name in the subtext

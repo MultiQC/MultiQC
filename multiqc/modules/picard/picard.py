@@ -41,7 +41,7 @@ class MultiqcModule(BaseMultiqcModule):
     into its own file and adds a section to the module output if
     logs are found."""
 
-    def __init__(self):
+    def __init__(self, **kwargs):
         # Initialise the parent object
         super().__init__(
             name="Picard",
@@ -49,6 +49,7 @@ class MultiqcModule(BaseMultiqcModule):
             href="http://broadinstitute.github.io/picard/",
             info="is a set of Java command line tools for manipulating high-" "throughput sequencing data.",
             # No DOI to cite // doi=
+            **kwargs,
         )
 
     def build(self):

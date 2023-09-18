@@ -18,7 +18,7 @@ class MultiqcModule(BaseMultiqcModule):
     BamQC, RNASeq and Counts.. This module is split into separate
     files to reflect this and help with code organisation."""
 
-    def __init__(self):
+    def __init__(self, **kwargs):
         # Initialise the parent object
         super().__init__(
             name="QualiMap",

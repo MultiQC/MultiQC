@@ -36,6 +36,7 @@ class MultiqcModule(BaseMultiqcModule):
             info="is a quality control tool for high throughput sequence data,"
             " written by Simon Andrews at the Babraham Institute in Cambridge.",
             # No publication / DOI // doi=
+            **kwargs,
         )
 
     def build(self):

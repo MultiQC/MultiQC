@@ -19,7 +19,7 @@ class MultiqcModule(BaseMultiqcModule, CellRangerCountMixin, CellRangerVdjMixin)
     data useful for QC in the main sample table as well as generate some module specific plots
     """
 
-    def __init__(self):
+    def __init__(self, **kwargs):
         # Initialise the parent object
         super().__init__(
             name="Cell Ranger",

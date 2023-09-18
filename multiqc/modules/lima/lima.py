@@ -21,6 +21,7 @@ class MultiqcModule(BaseMultiqcModule):
             href="https://github.com/PacificBiosciences/barcoding",
             info=" is used to demultiplex PacBio single-molecule sequencing reads.",
             # No publication / DOI // doi=
+            **kwargs,
         )
 
     def build(self):

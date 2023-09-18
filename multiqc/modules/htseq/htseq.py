@@ -23,6 +23,7 @@ class MultiqcModule(BaseMultiqcModule):
             info=" is part of the HTSeq Python package - it takes a file with aligned sequencing "
             "reads, plus a list of genomic features and counts how many reads map to each feature.",
             doi="10.1093/bioinformatics/btu638",
+            **kwargs,
         )
 
         # Find and load any HTSeq Count reports

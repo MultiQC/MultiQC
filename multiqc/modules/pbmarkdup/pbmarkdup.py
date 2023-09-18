@@ -15,7 +15,7 @@ class MultiqcModule(BaseMultiqcModule):
     pbmarkdup module class, parses pbmarkdup output.
     """
 
-    def __init__(self):
+    def __init__(self, **kwargs):
         super().__init__(
             name="pbmarkdup",
             anchor="pbmarkdup",
@@ -27,6 +27,7 @@ class MultiqcModule(BaseMultiqcModule):
                  """
             ),
             # Can't find a DOI // doi=
+            **kwargs,
         )
 
     def build(self):

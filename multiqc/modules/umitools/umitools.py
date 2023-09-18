@@ -18,7 +18,7 @@ class MultiqcModule(BaseMultiqcModule):
     umitools module class, parses dedup logs
     """
 
-    def __init__(self):
+    def __init__(self, **kwargs):
         # Initialise the parent object
         super().__init__(
             name="UMI-tools",

@@ -16,7 +16,7 @@ log = logging.getLogger(__name__)
 class MultiqcModule(BaseMultiqcModule):
     """Longranger module"""
 
-    def __init__(self):
+    def __init__(self, **kwargs):
         # Initialise the parent object
         super().__init__(
             name="Long Ranger",
@@ -26,6 +26,7 @@ class MultiqcModule(BaseMultiqcModule):
             "barcode processing, alignment, quality control, variant calling, phasing, "
             "and structural variant calling.",
             doi="10.1101/gr.234443.118",
+            **kwargs,
         )
 
         def try_float_lambda(x, func, base):

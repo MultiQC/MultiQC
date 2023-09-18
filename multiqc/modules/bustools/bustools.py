@@ -25,6 +25,7 @@ class MultiqcModule(BaseMultiqcModule):
             "designed to facilitate the development of modular workflows for data "
             "processing.",
             doi="10.1093/bioinformatics/btz279",
+            **kwargs,
         )
 
         self.prepare_data()

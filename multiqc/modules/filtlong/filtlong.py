@@ -16,6 +16,7 @@ class MultiqcModule(BaseMultiqcModule):
             href="https://github.com/rrwick/Filtlong",
             info="A tool for filtering long reads by quality.",
             # doi="", # No DOI
+            **kwargs,
         )
 
     def build(self):

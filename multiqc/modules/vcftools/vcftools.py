@@ -15,7 +15,7 @@ log = logging.getLogger(__name__)
 
 
 class MultiqcModule(BaseMultiqcModule, Relatedness2Mixin, TsTvByCountMixin, TsTvByQualMixin, TsTvSummaryMixin):
-    def __init__(self):
+    def __init__(self, **kwargs):
         super().__init__(
             name="VCFTools",
             anchor="vcftools",

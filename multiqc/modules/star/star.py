@@ -23,6 +23,7 @@ class MultiqcModule(BaseMultiqcModule):
             href="https://github.com/alexdobin/STAR",
             info="is an ultrafast universal RNA-seq aligner.",
             doi="10.1093/bioinformatics/bts635",
+            **kwargs,
         )
 
         # Find and load any STAR reports

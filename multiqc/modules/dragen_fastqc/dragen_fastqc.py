@@ -29,7 +29,7 @@ class MultiqcModule(DragenBaseMetrics, DragenReadMetrics, DragenFastqcGcMetrics,
     a section into the report.
     """
 
-    def __init__(self):
+    def __init__(self, **kwargs):
         super().__init__(
             name="DRAGEN-FastQC",
             anchor="dragen-fastqc",
@@ -39,6 +39,7 @@ class MultiqcModule(DragenBaseMetrics, DragenReadMetrics, DragenFastqcGcMetrics,
                 " using field-programmable gate array technology (FPGA)."
             ),
             # Can't find a DOI // doi=
+            **kwargs,
         )
 
         self.css = {
