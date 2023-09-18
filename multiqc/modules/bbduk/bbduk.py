@@ -16,14 +16,14 @@ class MultiqcModule(BaseMultiqcModule):
 
     def __init__(self):
         # Initialise the parent object
-        super(MultiqcModule, self).__init__(
+        super().__init__(
             name="BBDuk",
             anchor="bbduk",
             href="https://jgi.doe.gov/data-and-tools/software-tools/bbtools/bb-tools-user-guide/bbduk-guide/",
             info="""is a tool performing common data-quality-related trimming,
             filtering, and masking operations with a kmer based approach""",
             # One publication, but only for the merge tool:
-            # doi="10.1371/journal.pone.0185056",
+            # doi="10.1371/journal.pone.0185056", **kwargs
         )
 
     def build(self):

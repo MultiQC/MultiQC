@@ -13,14 +13,15 @@ log = logging.getLogger(__name__)
 
 
 class MultiqcModule(BaseMultiqcModule):
-    def __init__(self):
+    def __init__(self, **kwargs):
         # Initialise the parent object
-        super(MultiqcModule, self).__init__(
+        super().__init__(
             name="JCVI Genome Annotation",
             anchor="jcvi",
             href="https://pypi.org/project/jcvi/",
             info="computes statistics on genome annotation.",
             doi="10.5281/zenodo.31631",
+            **kwargs,
         )
 
     def build(self):

@@ -18,7 +18,7 @@ class MultiqcModule(BaseMultiqcModule):
     # -------------------------------------------------------------------------#
     def __init__(self):
         # Initialise the parent object
-        super(MultiqcModule, self).__init__(
+        super().__init__(
             name="Snippy",
             anchor="snippy",
             href="https://github.com/tseemann/snippy",

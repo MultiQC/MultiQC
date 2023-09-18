@@ -10,14 +10,15 @@ log = logging.getLogger(__name__)
 
 
 class MultiqcModule(BaseMultiqcModule):
-    def __init__(self):
+    def __init__(self, **kwargs):
         # Initialse the parent object
-        super(MultiqcModule, self).__init__(
+        super().__init__(
             name="HiFiasm",
             anchor="hifiasm",
             href="https://github.com/chhylp123/hifiasm",
             info="is a haplotype-resolved assembler for accurate Hifi reads",
             doi="10.1038/s41592-020-01056-5",
+            **kwargs,
         )
 
     def build(self):

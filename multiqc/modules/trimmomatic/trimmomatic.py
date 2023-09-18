@@ -14,14 +14,15 @@ log = logging.getLogger(__name__)
 
 
 class MultiqcModule(BaseMultiqcModule):
-    def __init__(self):
+    def __init__(self, **kwargs):
         # Initialise the parent object
-        super(MultiqcModule, self).__init__(
+        super().__init__(
             name="Trimmomatic",
             anchor="trimmomatic",
             href="http://www.usadellab.org/cms/?page=trimmomatic",
             info="is a flexible read trimming tool for Illumina NGS data.",
             doi="10.1093/bioinformatics/btu170",
+            **kwargs,
         )
 
     def build(self):

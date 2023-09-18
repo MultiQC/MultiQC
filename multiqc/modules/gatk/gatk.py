@@ -24,13 +24,14 @@ class MultiqcModule(BaseMultiqcModule, AnalyzeSaturationMutagenesisMixin, BaseRe
 
     def __init__(self):
         # Initialise the parent object
-        super(MultiqcModule, self).__init__(
+        super().__init__(
             name="GATK",
             anchor="gatk",
             target="GATK",
             href="https://www.broadinstitute.org/gatk/",
             info=" is a toolkit offering a wide variety of tools with a primary focus on variant discovery and genotyping.",
             doi=["10.1101/201178", "10.1002/0471250953.bi1110s43", "10.1038/ng.806", "10.1101/gr.107524.110"],
+            **kwargs,
         )
 
     def build(self):

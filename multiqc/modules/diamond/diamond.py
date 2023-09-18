@@ -10,14 +10,15 @@ log = logging.getLogger(__name__)
 
 
 class MultiqcModule(BaseMultiqcModule):
-    def __init__(self):
+    def __init__(self, **kwargs):
         # Initialise the parent object
-        super(MultiqcModule, self).__init__(
+        super().__init__(
             name="DIAMOND",
             anchor="diamond",
             href="https://github.com/bbuchfink/diamond",
             info="a sequence aligner for protein and translated DNA searches, designed for high performance analysis of big sequence data.",
             doi="10.1038/s41592-021-01101-x",
+            **kwargs,
         )
 
     def build(self):

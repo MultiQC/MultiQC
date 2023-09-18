@@ -13,14 +13,15 @@ log = logging.getLogger(__name__)
 
 
 class MultiqcModule(BaseMultiqcModule):
-    def __init__(self):
+    def __init__(self, **kwargs):
         # Initialise the parent object
-        super(MultiqcModule, self).__init__(
+        super().__init__(
             name="phantompeakqualtools",
             anchor="phantompeakqualtools",
             href="https://www.encodeproject.org/software/phantompeakqualtools",
             info="computes informative enrichment and quality measures for ChIP-seq/DNase-seq/FAIRE-seq/MNase-seq data.",
             doi=["10.1101/gr.136184.111", "10.1038/nbt.1508"],
+            **kwargs,
         )
 
     def build(self):

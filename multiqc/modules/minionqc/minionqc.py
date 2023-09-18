@@ -16,14 +16,15 @@ log = logging.getLogger(__name__)
 
 
 class MultiqcModule(BaseMultiqcModule):
-    def __init__(self):
+    def __init__(self, **kwargs):
         # Initialise the parent object
-        super(MultiqcModule, self).__init__(
+        super().__init__(
             name="MinIONQC",
             anchor="minionqc",
             href="https://github.com/roblanf/minion_qc",
             info=" is a QC tool for Oxford Nanopore sequencing data",
             doi="10.1093/bioinformatics/bty654",
+            **kwargs,
         )
 
     def build(self):

@@ -11,14 +11,15 @@ log = logging.getLogger(__name__)
 
 
 class MultiqcModule(BaseMultiqcModule):
-    def __init__(self):
+    def __init__(self, **kwargs):
         # Initialise the parent object
-        super(MultiqcModule, self).__init__(
+        super().__init__(
             name="K-mer Analysis Toolkit",
             anchor="kat",
             href="https://github.com/TGAC/KAT",
             info="is a toolkit for analysing sequencing data via its k-mer spectra.",
             doi="10.1093/bioinformatics/btw663",
+            **kwargs,
         )
 
     def build(self):

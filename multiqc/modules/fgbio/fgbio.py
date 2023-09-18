@@ -19,7 +19,7 @@ class MultiqcModule(BaseMultiqcModule, GroupReadsByUmiMixin):
 
     def __init__(self):
         # Initialise the parent object
-        super(MultiqcModule, self).__init__(
+        super().__init__(
             name="fgbio",
             anchor="fgbio",
             target="fgbio",

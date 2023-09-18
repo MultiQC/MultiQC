@@ -12,15 +12,16 @@ log = logging.getLogger(__name__)
 
 
 class MultiqcModule(BaseMultiqcModule):
-    def __init__(self):
+    def __init__(self, **kwargs):
         # Initialise the parent object
-        super(MultiqcModule, self).__init__(
+        super().__init__(
             name="THetA2",
             anchor="theta2",
             href="http://compbio.cs.brown.edu/projects/theta/",
             info="<em>(Tumor Heterogeneity Analysis)</em> estimates tumour purity "
             "and clonal / subclonal copy number.",
             doi=["10.1093/bioinformatics/btu651", "10.1186/gb-2013-14-7-r80"],
+            **kwargs,
         )
 
     def build(self):

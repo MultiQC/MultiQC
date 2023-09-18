@@ -17,12 +17,13 @@ class MultiqcModule(BaseMultiqcModule):
 
     def __init__(self):
         # Initialise the parent object
-        super(MultiqcModule, self).__init__(
+        super().__init__(
             name="mapDamage",
             anchor="mapdamage",
             href="https://github.com/ginolhac/mapDamage",
             info="mapDamage: tracking and quantifying damage patterns in ancient DNA sequences.",
             doi="https://doi.org/10.1093/bioinformatics/btt193",
+            **kwargs,
         )
 
     def build(self):

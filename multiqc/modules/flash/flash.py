@@ -23,12 +23,13 @@ class MultiqcModule(BaseMultiqcModule):
 
     def __init__(self):
         # Initialise the parent object
-        super(MultiqcModule, self).__init__(
+        super().__init__(
             name="FLASh",
             anchor="flash",
             href="https://ccb.jhu.edu/software/FLASH/",
             info="is a very fast and accurate software tool to merge paired-end reads from next-generation sequencing experiments.",
             doi="10.1093/bioinformatics/btr507",
+            **kwargs,
         )
 
     def build(self):

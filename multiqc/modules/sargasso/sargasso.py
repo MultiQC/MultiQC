@@ -13,14 +13,15 @@ log = logging.getLogger(__name__)
 
 
 class MultiqcModule(BaseMultiqcModule):
-    def __init__(self):
+    def __init__(self, **kwargs):
         # Initialise the parent object
-        super(MultiqcModule, self).__init__(
+        super().__init__(
             name="sargasso",
             anchor="sargasso",
             href="http://biomedicalinformaticsgroup.github.io/Sargasso/",
             info="is a tool to separate mixed-species RNA-seq reads" "according to their species of origin.",
             doi="10.1038/s41596-018-0029-2",
+            **kwargs,
         )
 
     def build(self):

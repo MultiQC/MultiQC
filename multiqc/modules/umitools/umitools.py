@@ -20,12 +20,13 @@ class MultiqcModule(BaseMultiqcModule):
 
     def __init__(self):
         # Initialise the parent object
-        super(MultiqcModule, self).__init__(
+        super().__init__(
             name="UMI-tools",
             anchor="umitools",
             href="https://github.com/CGATOxford/UMI-tools",
             info="contains tools for dealing with Unique Molecular Identifiers (UMIs)/(RMTs) and scRNA-Seq barcodes.",
             doi="10.1101/gr.209601.116",
+            **kwargs,
         )
 
     def build(self):

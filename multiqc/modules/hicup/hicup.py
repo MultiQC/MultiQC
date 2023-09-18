@@ -17,12 +17,13 @@ class MultiqcModule(BaseMultiqcModule):
 
     def __init__(self):
         # Initialise the parent object
-        super(MultiqcModule, self).__init__(
+        super().__init__(
             name="HiCUP",
             anchor="hicup",
             href="http://www.bioinformatics.babraham.ac.uk/projects/hicup/",
             info="(Hi-C User Pipeline) is a tool for mapping and performing quality control on Hi-C data.",
             doi="10.12688/f1000research.7334.1",
+            **kwargs,
         )
 
     def build(self):

@@ -17,13 +17,14 @@ class MultiqcModule(BaseMultiqcModule):
 
     def __init__(self):
         # Initialise the parent object
-        super(MultiqcModule, self).__init__(
+        super().__init__(
             name="MultiVCFAnalyzer",
             anchor="multivcfanalyzer",
             href="https://github.com/alexherbig/MultiVCFAnalyzer",
             info="""combines multiple VCF files in a coherent way,
             can produce summary statistics and downstream analysis formats for phylogeny reconstruction.""",
             doi="10.1038/nature13591",
+            **kwargs,
         )
 
     def build(self):

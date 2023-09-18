@@ -19,13 +19,14 @@ class MultiqcModule(BaseMultiqcModule):
 
     def __init__(self):
         # Initialise the parent object
-        super(MultiqcModule, self).__init__(
+        super().__init__(
             name="RSeQC",
             anchor="rseqc",
             href="http://rseqc.sourceforge.net/",
             info="package provides a number of useful modules that can"
             " comprehensively evaluate high throughput RNA-seq data.",
             doi="10.1093/bioinformatics/bts356",
+            **kwargs,
         )
 
     def build(self):

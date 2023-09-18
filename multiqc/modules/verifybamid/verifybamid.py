@@ -19,12 +19,13 @@ class MultiqcModule(BaseMultiqcModule):
 
     def __init__(self):
         # Initialise the parent object
-        super(MultiqcModule, self).__init__(
+        super().__init__(
             name="VerifyBAMID",
             anchor="verifybamid",
             href="https://genome.sph.umich.edu/wiki/VerifyBamID",
             info="detects sample contamination and/or sample swaps.",
             doi="10.1016/j.ajhg.2012.09.004",
+            **kwargs,
         )
 
     def build(self):

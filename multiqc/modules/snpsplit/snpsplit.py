@@ -13,14 +13,15 @@ log = logging.getLogger(__name__)
 
 
 class MultiqcModule(BaseMultiqcModule):
-    def __init__(self):
-        super(MultiqcModule, self).__init__(
+    def __init__(self, **kwargs):
+        super().__init__(
             name="SNPsplit",
             anchor="SNPsplit",
             target="SNPsplit",
             href="https://www.bioinformatics.babraham.ac.uk/projects/SNPsplit/",
             info="A tool to determine allele-specific alignments from high-throughput sequencing experiments that have been aligned to N-masked genomes",
             doi="10.12688/f1000research.9037.2",
+            **kwargs,
         )
 
     def build(self):

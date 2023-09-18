@@ -43,12 +43,13 @@ class MultiqcModule(BaseMultiqcModule):
 
     def __init__(self):
         # Initialise the parent object
-        super(MultiqcModule, self).__init__(
+        super().__init__(
             name="NanoStat",
             anchor="nanostat",
             href="https://github.com/wdecoster/nanostat/",
             info="various statistics from a long read sequencing dataset in fastq, bam or sequencing summary format.",
             doi="10.1093/bioinformatics/bty149",
+            **kwargs,
         )
 
     def build(self):

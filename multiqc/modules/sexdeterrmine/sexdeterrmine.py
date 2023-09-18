@@ -17,13 +17,14 @@ class MultiqcModule(BaseMultiqcModule):
 
     def __init__(self):
         # Initialise the parent object
-        super(MultiqcModule, self).__init__(
+        super().__init__(
             name="SexDetErrmine",
             anchor="sexdeterrmine",
             href="https://github.com/TCLamnidis/Sex.DetERRmine",
             info="""A python script to calculate the relative coverage of X and Y chromosomes,
             and their associated error bars, from the depth of coverage at specified SNPs.""",
             doi="10.1038/s41467-018-07483-5",
+            **kwargs,
         )
 
     def build(self):

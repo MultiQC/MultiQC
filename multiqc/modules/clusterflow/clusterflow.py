@@ -22,12 +22,13 @@ class MultiqcModule(BaseMultiqcModule):
 
     def __init__(self):
         # Initialise the parent object
-        super(MultiqcModule, self).__init__(
+        super().__init__(
             name="Cluster Flow",
             anchor="clusterflow",
             href="http://clusterflow.io",
             info="is a simple and flexible bioinformatics pipeline tool.",
             doi="10.12688/f1000research.10335.2",
+            **kwargs,
         )
 
     def build(self):

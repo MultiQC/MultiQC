@@ -21,12 +21,13 @@ class MultiqcModule(BaseMultiqcModule, CellRangerCountMixin, CellRangerVdjMixin)
 
     def __init__(self):
         # Initialise the parent object
-        super(MultiqcModule, self).__init__(
+        super().__init__(
             name="Cell Ranger",
             anchor="cellranger",
             href="https://support.10xgenomics.com/single-cell-gene-expression/software/pipelines/latest/what-is-cell-ranger",
             info="Cell Ranger analyzes single cell expression or VDJ data produced by 10X Genomics.",
             doi="10.1038/ncomms14049",
+            **kwargs,
         )
 
     def build(self):

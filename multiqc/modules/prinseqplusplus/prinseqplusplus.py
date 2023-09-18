@@ -9,9 +9,9 @@ log = logging.getLogger(__name__)
 
 
 class MultiqcModule(BaseMultiqcModule):
-    def __init__(self):
+    def __init__(self, **kwargs):
         # Initialise the parent object
-        super(MultiqcModule, self).__init__(
+        super().__init__(
             name="PRINSEQ++",
             anchor="prinseqplusplus",
             href="https://github.com/Adrian-Cantu/PRINSEQ-plus-plus",

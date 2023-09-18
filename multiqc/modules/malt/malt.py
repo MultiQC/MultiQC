@@ -16,12 +16,13 @@ class MultiqcModule(BaseMultiqcModule):
 
     def __init__(self):
         # Initialise the parent object
-        super(MultiqcModule, self).__init__(
+        super().__init__(
             name="MALT",
             anchor="malt",
             href="http://ab.inf.uni-tuebingen.de/software/malt/",
             info="performs alignment of metagenomic reads against a database of reference sequences (such as NR, GenBank or Silva) and produces a MEGAN RMA file as output.",
             doi="10.1101/050559 ",
+            **kwargs,
         )
 
     def build(self):

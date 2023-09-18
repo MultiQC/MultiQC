@@ -17,12 +17,13 @@ class MultiqcModule(BaseMultiqcModule):
 
     def __init__(self):
         # Initialise the parent object
-        super(MultiqcModule, self).__init__(
+        super().__init__(
             name="BUSCO",
             anchor="busco",
             href="http://busco.ezlab.org/",
             info="assesses genome assembly and annotation completeness with Benchmarking Universal Single-Copy Orthologs.",
             doi="10.1093/bioinformatics/btv351",
+            **kwargs,
         )
 
     def build(self):

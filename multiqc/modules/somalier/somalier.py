@@ -24,12 +24,13 @@ class MultiqcModule(BaseMultiqcModule):
 
     def __init__(self):
         # Initialise the parent object
-        super(MultiqcModule, self).__init__(
+        super().__init__(
             name="Somalier",
             anchor="somalier",
             href="https://github.com/brentp/somalier",
             info="calculates genotype :: pedigree correspondence checks from sketches derived from BAM/CRAM or VCF",
             doi="10.1186/s13073-020-00761-2",
+            **kwargs,
         )
 
     def build(self):

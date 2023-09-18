@@ -28,6 +28,7 @@ class MultiqcModule(BaseMultiqcModule):
             doi="10.1101/085050",
             *args,
             **kwargs,
+            **kwargs,
         )
 
     def build(self):

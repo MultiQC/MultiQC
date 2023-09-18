@@ -12,14 +12,15 @@ log = logging.getLogger(__name__)
 
 
 class MultiqcModule(BaseMultiqcModule):
-    def __init__(self):
+    def __init__(self, **kwargs):
         # Initialise the parent object
-        super(MultiqcModule, self).__init__(
+        super().__init__(
             name="HOPS",
             anchor="hops",
             href="https://github.com/rhuebler/HOPS/",
             info="is an ancient DNA characteristics screening tool of output from the metagenomic aligner MALT.",
             doi="10.1186/s13059-019-1903-0",
+            **kwargs,
         )
 
     def build(self):

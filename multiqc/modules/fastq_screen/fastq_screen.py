@@ -14,9 +14,9 @@ log = logging.getLogger(__name__)
 
 
 class MultiqcModule(BaseMultiqcModule):
-    def __init__(self):
+    def __init__(self, **kwargs):
         # Initialise the parent object
-        super(MultiqcModule, self).__init__(
+        super().__init__(
             name="FastQ Screen",
             anchor="fastq_screen",
             href="http://www.bioinformatics.babraham.ac.uk/projects/fastq_screen/",
@@ -24,6 +24,7 @@ class MultiqcModule(BaseMultiqcModule):
             " a set of sequence databases so you can see if the composition of the"
             " library matches with what you expect.",
             doi="10.12688/f1000research.15931.2",
+            **kwargs,
         )
 
     def build(self):

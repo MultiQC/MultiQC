@@ -20,12 +20,13 @@ class MultiqcModule(BaseMultiqcModule):
 
     def __init__(self):
         # Initialise the parent object
-        super(MultiqcModule, self).__init__(
+        super().__init__(
             name="fastp",
             anchor="fastp",
             href="https://github.com/OpenGene/fastp",
             info="An ultra-fast all-in-one FASTQ preprocessor (QC, adapters, trimming, filtering, splitting...)",
             doi="10.1093/bioinformatics/bty560",
+            **kwargs,
         )
 
     def build(self):

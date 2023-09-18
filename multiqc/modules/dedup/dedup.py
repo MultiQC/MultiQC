@@ -17,12 +17,13 @@ class MultiqcModule(BaseMultiqcModule):
 
     def __init__(self):
         # Initialise the parent object
-        super(MultiqcModule, self).__init__(
+        super().__init__(
             name="DeDup",
             anchor="dedup",
             href="http://www.github.com/apeltzer/DeDup",
             info="is a tool for duplicate removal for merged/collapsed reads in ancient DNA analysis.",
             doi="10.1186/s13059-016-0918-z",
+            **kwargs,
         )
 
     def build(self):

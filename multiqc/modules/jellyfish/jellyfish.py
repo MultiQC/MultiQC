@@ -11,14 +11,15 @@ log = logging.getLogger(__name__)
 
 
 class MultiqcModule(BaseMultiqcModule):
-    def __init__(self):
+    def __init__(self, **kwargs):
         # Initialise the parent object
-        super(MultiqcModule, self).__init__(
+        super().__init__(
             name="Jellyfish",
             anchor="jellyfish",
             href="https://github.com/gmarcais/Jellyfish",
             info="is a tool for fast, memory-efficient counting of k-mers in DNA.",
             doi="10.1093/bioinformatics/btr011",
+            **kwargs,
         )
 
     def build(self):

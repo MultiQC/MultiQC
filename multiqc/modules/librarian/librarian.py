@@ -12,14 +12,15 @@ log = logging.getLogger(__name__)
 
 
 class MultiqcModule(BaseMultiqcModule):
-    def __init__(self):
+    def __init__(self, **kwargs):
         # Initialse the parent object
-        super(MultiqcModule, self).__init__(
+        super().__init__(
             name="Librarian",
             anchor="librarian",
             href="https://github.com/DesmondWillowbrook/Librarian",
             info=" - a tool to predict the sequencing library type from the base composition of a FastQ file.",
             doi="10.12688/f1000research.125325.1",
+            **kwargs,
         )
 
     def build(self):

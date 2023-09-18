@@ -17,7 +17,7 @@ class MultiqcModule(BaseMultiqcModule):
 
     def __init__(self):
         # Initialise the parent object
-        super(MultiqcModule, self).__init__(
+        super().__init__(
             name="HISAT2",
             anchor="hisat2",
             href="https://ccb.jhu.edu/software/hisat2/",
@@ -25,6 +25,7 @@ class MultiqcModule(BaseMultiqcModule):
             "NGS reads (both DNA and RNA) against a reference genome or "
             "population of reference genomes.",
             doi=["10.1038/nmeth.3317", "10.1038/s41587-019-0201-4"],
+            **kwargs,
         )
 
     def build(self):

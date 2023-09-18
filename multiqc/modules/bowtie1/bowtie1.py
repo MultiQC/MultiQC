@@ -18,13 +18,14 @@ class MultiqcModule(BaseMultiqcModule):
 
     def __init__(self):
         # Initialise the parent object
-        super(MultiqcModule, self).__init__(
+        super().__init__(
             name="Bowtie 1",
             anchor="bowtie1",
             target="Bowtie 1",
             href="http://bowtie-bio.sourceforge.net/",
             info="is an ultrafast, memory-efficient short read aligner.",
             doi="10.1186/gb-2009-10-3-r25",
+            **kwargs,
         )
 
     def build(self):

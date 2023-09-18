@@ -22,7 +22,7 @@ class MultiqcModule(BaseMultiqcModule):
 
     def __init__(self):
         # Initialise the parent object
-        super(MultiqcModule, self).__init__(
+        super().__init__(
             name="Cutadapt",
             anchor="cutadapt",
             href="https://cutadapt.readthedocs.io/",
@@ -30,6 +30,7 @@ class MultiqcModule(BaseMultiqcModule):
                     tails and other types of unwanted sequence from your high-throughput
                     sequencing reads.""",
             doi="10.14806/ej.17.1.200",
+            **kwargs,
         )
 
     def build(self):

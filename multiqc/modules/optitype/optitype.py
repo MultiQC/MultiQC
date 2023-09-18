@@ -18,12 +18,13 @@ class MultiqcModule(BaseMultiqcModule):
 
     def __init__(self):
         # Initialise the parent object
-        super(MultiqcModule, self).__init__(
+        super().__init__(
             name="OptiType",
             anchor="optitype",
             href="https://github.com/FRED-2/OptiType",
             info="Precision HLA typing from next-generation sequencing data.",
             doi="10.1093/bioinformatics/btu548",
+            **kwargs,
         )
 
     def build(self):

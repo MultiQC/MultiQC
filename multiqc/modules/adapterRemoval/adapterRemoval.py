@@ -13,15 +13,16 @@ log = logging.getLogger(__name__)
 
 
 class MultiqcModule(BaseMultiqcModule):
-    def __init__(self):
+    def __init__(self, **kwargs):
         # Initialise the parent object
-        super(MultiqcModule, self).__init__(
+        super().__init__(
             name="Adapter Removal",
             anchor="adapterRemoval",
             target="Adapter Removal",
             href="https://github.com/MikkelSchubert/adapterremoval",
             info=" rapid adapter trimming, identification, and read merging ",
             doi=["10.1186/s13104-016-1900-2", "10.1186/1756-0500-5-337"],
+            **kwargs,
         )
 
     def build(self):

@@ -16,14 +16,15 @@ log = logging.getLogger(__name__)
 
 
 class MultiqcModule(BaseMultiqcModule):
-    def __init__(self):
+    def __init__(self, **kwargs):
         # Initialise the parent object
-        super(MultiqcModule, self).__init__(
+        super().__init__(
             name="VarScan2",
             anchor="varscan",
             href="http://dkoboldt.github.io/varscan/",
             info="variant detection in massively parallel sequencing data",
             doi=["10.1101/gr.129684.111", "10.1093/bioinformatics/btp373"],
+            **kwargs,
         )
 
     def build(self):

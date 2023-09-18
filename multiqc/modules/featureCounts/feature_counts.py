@@ -14,9 +14,9 @@ log = logging.getLogger(__name__)
 
 
 class MultiqcModule(BaseMultiqcModule):
-    def __init__(self):
+    def __init__(self, **kwargs):
         # Initialise the parent object
-        super(MultiqcModule, self).__init__(
+        super().__init__(
             name="featureCounts",
             anchor="featurecounts",
             target="Subread featureCounts",
@@ -25,6 +25,7 @@ class MultiqcModule(BaseMultiqcModule):
             " that counts mapped reads for genomic features such as genes, exons,"
             " promoter, gene bodies, genomic bins and chromosomal locations.",
             doi="10.1093/bioinformatics/btt656",
+            **kwargs,
         )
 
     def build(self):

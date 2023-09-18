@@ -18,14 +18,14 @@ class MultiqcModule(BaseMultiqcModule):
     """
 
     def __init__(self):
-        super(MultiqcModule, self).__init__(
+        super().__init__(
             name="BBTools",
             anchor="bbmap",
             href="http://jgi.doe.gov/data-and-tools/bbtools/",
             info="""is a suite of fast multithreaded bioinformatics tools
             designed for the analysis of DNA and RNA sequence data.""",
             # One publication, but only for the merge tool:
-            # doi="10.1371/journal.pone.0185056",
+            # doi="10.1371/journal.pone.0185056", **kwargs
         )
 
     def build(self):

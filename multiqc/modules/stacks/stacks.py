@@ -14,8 +14,8 @@ log = logging.getLogger(__name__)
 
 
 class MultiqcModule(BaseMultiqcModule):
-    def __init__(self):
-        super(MultiqcModule, self).__init__(
+    def __init__(self, **kwargs):
+        super().__init__(
             name="Stacks",
             anchor="stacks",
             href="http://catchenlab.life.illinois.edu/stacks/",

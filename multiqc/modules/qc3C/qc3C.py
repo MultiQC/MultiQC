@@ -131,14 +131,15 @@ def color_picker(degen):
 
 
 class MultiqcModule(BaseMultiqcModule):
-    def __init__(self):
+    def __init__(self, **kwargs):
         # Initialise the parent object
-        super(MultiqcModule, self).__init__(
+        super().__init__(
             name="qc3C",
             anchor="qc3C",
             href="http://github.com/cerebis/qc3C",
             info="provides reference-free and BAM based quality control for Hi-C data",
             doi="10.1371/journal.pcbi.1008839",
+            **kwargs,
         )
 
     def build(self):

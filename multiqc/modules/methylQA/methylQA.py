@@ -14,15 +14,16 @@ log = logging.getLogger(__name__)
 
 
 class MultiqcModule(BaseMultiqcModule):
-    def __init__(self):
+    def __init__(self, **kwargs):
         # Initialise the parent object
-        super(MultiqcModule, self).__init__(
+        super().__init__(
             name="methylQA",
             anchor="methylqa",
             target="methylQA",
             href="http://methylqa.sourceforge.net/",
             info=" - a methylation sequencing data quality assessment tool.",
             doi="10.1016/j.ymeth.2014.10.032",
+            **kwargs,
         )
 
     def build(self):

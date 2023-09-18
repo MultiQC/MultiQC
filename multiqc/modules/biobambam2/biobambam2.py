@@ -17,12 +17,13 @@ class MultiqcModule(BaseMultiqcModule):
 
     def __init__(self):
         # Initialise the parent object
-        super(MultiqcModule, self).__init__(
+        super().__init__(
             name="biobambam2",
             anchor="biobambam2",
             href="https://gitlab.com/german.tischler/biobambam2",
             info="provides tools for early stage alignment file processing",
             doi="10.1186/1751-0473-9-13",
+            **kwargs,
         )
 
     def build(self):

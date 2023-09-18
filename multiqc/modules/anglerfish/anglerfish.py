@@ -18,7 +18,7 @@ class MultiqcModule(BaseMultiqcModule):
 
     def __init__(self):
         # Initialise the parent object
-        super(MultiqcModule, self).__init__(
+        super().__init__(
             name="Anglerfish",
             anchor="Anglerfish",
             href="https://github.com/remiolsen/anglerfish",

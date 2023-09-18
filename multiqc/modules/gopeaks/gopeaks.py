@@ -17,7 +17,7 @@ class MultiqcModule(BaseMultiqcModule):
 
     def __init__(self):
         # Initialise the parent object
-        super(MultiqcModule, self).__init__(
+        super().__init__(
             name="GoPeaks",
             anchor="gopeaks",
             href="https://github.com/maxsonBraunLab/gopeaks",
@@ -26,6 +26,7 @@ class MultiqcModule(BaseMultiqcModule):
                   in sliding windows across the genome and calculate peak regions \
                   that are enriched over the background.",
             doi="10.1186/s13059-022-02707-w",
+            **kwargs,
         )
 
     def build(self):

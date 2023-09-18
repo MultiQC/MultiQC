@@ -20,7 +20,7 @@ class MultiqcModule(BaseMultiqcModule):
 
     def __init__(self):
         # Initialise the parent object
-        super(MultiqcModule, self).__init__(
+        super().__init__(
             name="QualiMap",
             anchor="qualimap",
             href="http://qualimap.bioinfo.cipf.es/",
@@ -28,6 +28,7 @@ class MultiqcModule(BaseMultiqcModule):
             " control of alignment sequencing data and its derivatives like"
             " feature counts.",
             doi=["10.1093/bioinformatics/btv566", "10.1093/bioinformatics/bts503"],
+            **kwargs,
         )
 
     def build(self):

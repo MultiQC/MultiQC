@@ -15,9 +15,9 @@ log = logging.getLogger(__name__)
 
 
 class MultiqcModule(BaseMultiqcModule):
-    def __init__(self):
+    def __init__(self, **kwargs):
         # Initialize the parent object
-        super(MultiqcModule, self).__init__(
+        super().__init__(
             name="Rockhopper",
             anchor="rockhopper",
             href="https://cs.wellesley.edu/~btjaden/Rockhopper/",
@@ -29,6 +29,7 @@ class MultiqcModule(BaseMultiqcModule):
             transcripts such as small RNAs.
             """,
             doi=["10.1016/j.ymeth.2019.03.026", "10.1186/s13059-014-0572-2", "10.1093/nar/gkt444"],
+            **kwargs,
         )
 
     def build(self):

@@ -18,7 +18,7 @@ class MultiqcModule(BaseMultiqcModule):
 
     def __init__(self):
         # Initialise the parent object
-        super(MultiqcModule, self).__init__(
+        super().__init__(
             name="Samblaster",
             anchor="samblaster",
             href="https://github.com/GregoryFaust/samblaster",

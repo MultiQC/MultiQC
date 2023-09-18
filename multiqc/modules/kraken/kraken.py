@@ -18,12 +18,13 @@ class MultiqcModule(BaseMultiqcModule):
 
     def __init__(self):
         # Initialise the parent object
-        super(MultiqcModule, self).__init__(
+        super().__init__(
             name="Kraken",
             anchor="kraken",
             href="https://ccb.jhu.edu/software/kraken/",
             info="is a taxonomic classification tool that uses exact k-mer matches to find the lowest common ancestor (LCA) of a given sequence.",
             doi="10.1186/gb-2014-15-3-r46",
+            **kwargs,
         )
 
     def build(self):

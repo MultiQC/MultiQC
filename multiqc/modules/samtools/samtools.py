@@ -25,7 +25,7 @@ class MultiqcModule(BaseMultiqcModule, StatsReportMixin, FlagstatReportMixin, Id
 
     def __init__(self):
         # Initialise the parent object
-        super(MultiqcModule, self).__init__(
+        super().__init__(
             name="Samtools",
             anchor="Samtools",
             target="Samtools",

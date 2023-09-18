@@ -12,9 +12,9 @@ log = logging.getLogger(__name__)
 
 
 class MultiqcModule(BaseMultiqcModule):
-    def __init__(self):
+    def __init__(self, **kwargs):
         # Initialise the parent object
-        super(MultiqcModule, self).__init__(
+        super().__init__(
             name="BioBloom Tools",
             anchor="biobloomtools",
             href="https://github.com/bcgsc/biobloom/",
@@ -22,6 +22,7 @@ class MultiqcModule(BaseMultiqcModule):
             "sequences. This is faster than alignment and can be used for pre-processing "
             "and QC applications such as contamination detection.",
             doi="10.1093/bioinformatics/btu558",
+            **kwargs,
         )
 
     def build(self):

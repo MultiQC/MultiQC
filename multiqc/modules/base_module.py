@@ -35,19 +35,28 @@ class BaseMultiqcModule(ABC):
         autoformat: bool = True,
         autoformat_type: str = "markdown",
         doi: Optional[Union[str, List]] = None,
-        custom_config: Optional[Dict] = None,
+        mod_cust_config: Optional[Dict] = None,
         report: Optional[Report] = None,
-        module_tag: Optional[List[str]] = None,
     ):
         # Custom options from user config that can overwrite base module values
-        self.name = name
-        self.anchor = anchor
-        self.target = target
-        self.href = href
-        self.info = info
-        self.comment = comment
-        self.extra = extra
-        self.doi = doi
+        self.name = mod_cust_config.get("name", name)
+        self.anchor = mod_cust_config.get("anchor", anchor)
+        self.target = mod_cust_config.get("target", target)
+        self.href = mod_cust_config.get("href", href)
+        self.info = mod_cust_config.get("info", info)
+        self.comment = mod_cust_config.get("comment", comment)
+        self.extra = mod_cust_config.get("extra", extra)
+        self.doi = mod_cust_config.get("doi", doi)
+
+        # Pick up path filters if specified.
+        # Allows modules to be called multiple times with different sets of files
+        path_filters = mod_cust_config.get("path_filters", None)
+        path_filters_exclude = mod_cust_config.get("path_filters_exclude", None)
+        self.path_filters = path_filters if isinstance(path_filters, list) else path_filters
+        self.path_filters_exclude = (
+            path_filters_exclude if isinstance(path_filters_exclude, list) else path_filters_exclude
+        )
+
         self.autoformat = autoformat
         self.autoformat_type = autoformat_type
 
@@ -57,9 +66,9 @@ class BaseMultiqcModule(ABC):
         self.js = dict()
 
         # Specific module level config to overwrite (e.g. config.bcftools, config.fastqc)
-        if custom_config:
+        if mod_cust_config:
             mod_conf = getattr(config, anchor, {})
-            mod_conf.update(custom_config)
+            mod_conf.update(mod_cust_config)
             setattr(config, anchor, mod_conf)
 
         if self.info is None:
@@ -129,16 +138,6 @@ class BaseMultiqcModule(ABC):
                  for the current matched file (f).
                  As yield is used, the results can be iterated over without loading all files at once
         """
-
-        # Pick up path filters if specified.
-        # Allows modules to be called multiple times with different sets of files
-        path_filters = getattr(self, "mod_cust_config", {}).get("path_filters")
-        path_filters_exclude = getattr(self, "mod_cust_config", {}).get("path_filters_exclude")
-        if type(path_filters) == str:
-            path_filters = [path_filters]
-        if type(path_filters_exclude) == str:
-            path_filters_exclude = [path_filters_exclude]
-
         # Old, depreciated syntax support. Likely to be removed in a future version.
         if isinstance(sp_key, dict):
             self.report.files[self.name] = list()
@@ -160,14 +159,14 @@ class BaseMultiqcModule(ABC):
             self.report.last_found_file = os.path.join(f["root"], f["fn"])
 
             # Filter out files based on exclusion patterns
-            if path_filters_exclude and len(path_filters_exclude) > 0:
+            if self.path_filters_exclude and len(self.path_filters_exclude) > 0:
                 # Try both the given path and also the path prefixed with the analyis dirs
                 exlusion_hits = itertools.chain(
-                    (fnmatch.fnmatch(self.report.last_found_file, pfe) for pfe in path_filters_exclude),
+                    (fnmatch.fnmatch(self.report.last_found_file, pfe) for pfe in self.path_filters_exclude),
                     *(
                         (
                             fnmatch.fnmatch(self.report.last_found_file, os.path.join(analysis_dir, pfe))
-                            for pfe in path_filters_exclude
+                            for pfe in self.path_filters_exclude
                         )
                         for analysis_dir in config.analysis_dir
                     ),
@@ -179,14 +178,14 @@ class BaseMultiqcModule(ABC):
                     continue
 
             # Filter out files based on inclusion patterns
-            if path_filters and len(path_filters) > 0:
+            if self.path_filters and len(self.path_filters) > 0:
                 # Try both the given path and also the path prefixed with the analyis dirs
                 inclusion_hits = itertools.chain(
-                    (fnmatch.fnmatch(self.report.last_found_file, pf) for pf in path_filters),
+                    (fnmatch.fnmatch(self.report.last_found_file, pf) for pf in self.path_filters),
                     *(
                         (
                             fnmatch.fnmatch(self.report.last_found_file, os.path.join(analysis_dir, pf))
-                            for pf in path_filters
+                            for pf in self.path_filters
                         )
                         for analysis_dir in config.analysis_dir
                     ),

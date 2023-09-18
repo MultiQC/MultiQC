@@ -25,9 +25,9 @@ METRICS = OrderedDict(
 
 
 class MultiqcModule(BaseMultiqcModule):
-    def __init__(self):
+    def __init__(self, **kwargs):
         """MultiQC module for processing hap.py output logs"""
-        super(MultiqcModule, self).__init__(
+        super().__init__(
             name="hap.py",
             anchor="happy",
             href="https://github.com/Illumina/hap.py",

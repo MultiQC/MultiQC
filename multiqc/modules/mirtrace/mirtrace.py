@@ -15,14 +15,15 @@ log = logging.getLogger(__name__)
 
 
 class MultiqcModule(BaseMultiqcModule):
-    def __init__(self):
+    def __init__(self, **kwargs):
         # Initialise the parent object
-        super(MultiqcModule, self).__init__(
+        super().__init__(
             name="miRTrace",
             anchor="mirtrace",
             href="https://github.com/friedlanderlab/mirtrace",
             info="is a quality control software for small RNA sequencing data developed by Friedländer lab (KTH, Sweden).",
             doi="10.1186/s13059-018-1588-9",
+            **kwargs,
         )
 
     def build(self):

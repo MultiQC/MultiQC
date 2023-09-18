@@ -308,7 +308,7 @@ class MultiqcModule(BaseMultiqcModule):
             modname = "Custom Content"
 
         # Initialise the parent object
-        super(MultiqcModule, self).__init__(
+        super().__init__(
             name=modname,
             anchor=mod["config"].get("section_anchor", c_id),
             href=mod["config"].get("section_href"),

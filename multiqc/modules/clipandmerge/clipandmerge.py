@@ -18,12 +18,13 @@ class MultiqcModule(BaseMultiqcModule):
 
     def __init__(self):
         # Initialise the parent object
-        super(MultiqcModule, self).__init__(
+        super().__init__(
             name="ClipAndMerge",
             anchor="clipandmerge",
             href="http://www.github.com/apeltzer/ClipAndMerge",
             info="is a tool for adapter clipping and read merging for ancient DNA data.",
             doi="10.1186/s13059-016-0918-z",
+            **kwargs,
         )
 
     def build(self):

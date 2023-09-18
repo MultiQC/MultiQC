@@ -16,9 +16,8 @@ log = logging.getLogger(__name__)
 
 
 class MultiqcModule(BaseMultiqcModule):
-    def __init__(self):
-        # Initialise the parent object
-        super(MultiqcModule, self).__init__(
+    def __init__(self, **kwargs):
+        super().__init__(
             name="Preseq",
             anchor="preseq",
             href="http://smithlabresearch.org/software/preseq/",
@@ -27,6 +26,7 @@ class MultiqcModule(BaseMultiqcModule):
                     A shallow curve indicates complexity saturation. The dashed line
                     shows a perfectly complex library where total reads = unique reads.""",
             doi="10.1038/nmeth.2375",
+            **kwargs,
         )
 
     def build(self):

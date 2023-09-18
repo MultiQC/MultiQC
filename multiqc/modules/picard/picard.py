@@ -43,7 +43,7 @@ class MultiqcModule(BaseMultiqcModule):
 
     def __init__(self):
         # Initialise the parent object
-        super(MultiqcModule, self).__init__(
+        super().__init__(
             name="Picard",
             anchor="picard",
             href="http://broadinstitute.github.io/picard/",

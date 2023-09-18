@@ -21,7 +21,7 @@ class MultiqcModule(BaseMultiqcModule):
 
     def __init__(self):
         # Initialise the parent object
-        super(MultiqcModule, self).__init__(
+        super().__init__(
             name="Sentieon",
             anchor="sentieon",
             href="https://www.sentieon.com/products/",

@@ -13,18 +13,19 @@ log = logging.getLogger(__name__)
 
 
 class MultiqcModule(BaseMultiqcModule):
-    def __init__(self):
+    def __init__(self, **kwargs):
         """
         damageprofiler module class
         """
 
         # Initialise the parent object
-        super(MultiqcModule, self).__init__(
+        super().__init__(
             name="DamageProfiler",
             anchor="damageprofiler",
             href="https://github.com/Integrative-Transcriptomics/DamageProfiler",
             info="a tool to determine damage patterns on ancient DNA.",
             doi="10.1093/bioinformatics/btab190",
+            **kwargs,
         )
 
     def build(self):

@@ -16,7 +16,7 @@ class MultiqcModule(BaseMultiqcModule):
     """
 
     def __init__(self):
-        super(MultiqcModule, self).__init__(
+        super().__init__(
             name="pbmarkdup",
             anchor="pbmarkdup",
             href="https://github.com/PacificBiosciences/pbmarkdup",

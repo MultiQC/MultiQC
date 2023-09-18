@@ -21,12 +21,13 @@ class MultiqcModule(BaseMultiqcModule, SambambaMarkdupMixin):
 
     def __init__(self):
         # Initialise the parent object
-        super(MultiqcModule, self).__init__(
+        super().__init__(
             name="Sambamba",
             anchor="sambamba",
             href="https://lomereiter.github.io/sambamba/",
             info=" is a suite of programs for interacting with high-throughput sequencing data.",
             doi="10.1093/bioinformatics/btv098",
+            **kwargs,
         )
 
     def build(self):

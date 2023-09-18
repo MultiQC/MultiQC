@@ -15,14 +15,15 @@ log = logging.getLogger(__name__)
 
 
 class MultiqcModule(BaseMultiqcModule):
-    def __init__(self):
+    def __init__(self, **kwargs):
         # Initialise the parent object
-        super(MultiqcModule, self).__init__(
+        super().__init__(
             name="SortMeRNA",
             anchor="sortmerna",
             href="http://bioinfo.lifl.fr/RNA/sortmerna/",
             info="is a program for filtering, mapping and OTU-picking NGS reads in metatranscriptomic and metagenomic data.",
             doi="10.1093/bioinformatics/bts611",
+            **kwargs,
         )
 
     def build(self):

@@ -16,14 +16,15 @@ log = logging.getLogger(__name__)
 
 
 class MultiqcModule(BaseMultiqcModule):
-    def __init__(self):
+    def __init__(self, **kwargs):
         # Initialise the parent object
-        super(MultiqcModule, self).__init__(
+        super().__init__(
             name="iVar",
             anchor="iVar",
             href="https://github.com/andersen-lab/ivar",
             info="is a computational package that contains functions broadly useful for viral amplicon-based sequencing.",
             doi="10.1101/383513",
+            **kwargs,
         )
 
     def build(self):

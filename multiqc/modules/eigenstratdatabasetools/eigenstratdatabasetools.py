@@ -16,7 +16,7 @@ class MultiqcModule(BaseMultiqcModule):
 
     def __init__(self):
         # Initialise the parent object
-        super(MultiqcModule, self).__init__(
+        super().__init__(
             name="eigenstratdatabasetools",
             anchor="eigenstrat",
             href="https://github.com/TCLamnidis/EigenStratDatabaseTools",

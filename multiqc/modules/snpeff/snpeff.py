@@ -16,7 +16,7 @@ class MultiqcModule(BaseMultiqcModule):
 
     def __init__(self):
         # Initialise the parent object
-        super(MultiqcModule, self).__init__(
+        super().__init__(
             name="SnpEff",
             anchor="snpeff",
             href="http://snpeff.sourceforge.net/",
@@ -24,6 +24,7 @@ class MultiqcModule(BaseMultiqcModule):
             "toolbox. It annotates and predicts the effects of variants "
             "on genes (such as amino acid changes). ",
             doi="10.4161/fly.19695",
+            **kwargs,
         )
 
     def build(self):

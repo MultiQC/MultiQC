@@ -13,14 +13,15 @@ log = logging.getLogger(__name__)
 
 
 class MultiqcModule(BaseMultiqcModule):
-    def __init__(self):
+    def __init__(self, **kwargs):
         # Initialise the parent object
-        super(MultiqcModule, self).__init__(
+        super().__init__(
             name="Prokka",
             anchor="prokka",
             href="http://www.vicbioinformatics.com/software.prokka.shtml",
             info="is a software tool for the rapid annotation of prokaryotic genomes.",
             doi="10.1093/bioinformatics/btu153",
+            **kwargs,
         )
 
     def build(self):

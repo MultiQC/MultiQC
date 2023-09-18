@@ -17,14 +17,15 @@ log = logging.getLogger(__name__)
 
 
 class MultiqcModule(BaseMultiqcModule):
-    def __init__(self):
+    def __init__(self, **kwargs):
         # Initialise the parent object
-        super(MultiqcModule, self).__init__(
+        super().__init__(
             name="Nextclade",
             anchor="nextclade",
             href="https://github.com/nextstrain/nextclade",
             info="does viral genome alignment, clade assignment, mutation calling, and quality checks",
             doi="10.21105/joss.03773",
+            **kwargs,
         )
 
     def build(self):

@@ -14,14 +14,15 @@ log = logging.getLogger(__name__)
 
 
 class MultiqcModule(BaseMultiqcModule):
-    def __init__(self):
+    def __init__(self, **kwargs):
         # Initialise the parent object
-        super(MultiqcModule, self).__init__(
+        super().__init__(
             name="Freyja",
             anchor="freyja",
             href="https://github.com/andersen-lab/Freyja",
             info="Recover relative lineage abundances from mixed SARS-CoV-2 samples.",
             doi="10.1038/s41586-022-05049-6",
+            **kwargs,
         )
 
     def build(self):

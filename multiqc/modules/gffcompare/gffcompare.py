@@ -11,14 +11,15 @@ log = logging.getLogger(__name__)
 
 
 class MultiqcModule(BaseMultiqcModule):
-    def __init__(self):
+    def __init__(self, **kwargs):
         # Initialise the parent object
-        super(MultiqcModule, self).__init__(
+        super().__init__(
             name="GffCompare",
             anchor="gffcompare",
             href="https://ccb.jhu.edu/software/stringtie/gffcompare.shtml",
             info="is a tool to compare, merge and annotate one or more GFF files with a reference annotation in GFF format.",
             doi="10.12688/f1000research.23297.1",
+            **kwargs,
         )
 
     def build(self):

@@ -17,12 +17,13 @@ class MultiqcModule(BaseMultiqcModule):
 
     def __init__(self):
         # Initialise the parent object
-        super(MultiqcModule, self).__init__(
+        super().__init__(
             name="mtnucratio",
             anchor="mtnucratio",
             href="http://www.github.com/apeltzer/MTNucRatioCalculator",
             info="is a tool to compute mt/nuc ratios for NGS datasets.",
             doi="10.1186/s13059-016-0918-z",
+            **kwargs,
         )
 
     def build(self):

@@ -17,7 +17,7 @@ class MultiqcModule(BaseMultiqcModule):
 
     def __init__(self):
         # Initialise the parent object
-        super(MultiqcModule, self).__init__(
+        super().__init__(
             name="Conpair",
             anchor="conpair",
             href="https://github.com/nygenome/Conpair",
@@ -26,6 +26,7 @@ class MultiqcModule(BaseMultiqcModule):
             "cross-individual contamination level estimation in "
             "whole-genome and whole-exome sequencing experiments.",
             doi="bioinformatics/btw389",
+            **kwargs,
         )
 
     def build(self):

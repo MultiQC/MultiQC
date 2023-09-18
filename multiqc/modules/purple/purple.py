@@ -18,7 +18,7 @@ class MultiqcModule(BaseMultiqcModule):
 
     def __init__(self):
         # Initialise the parent object
-        super(MultiqcModule, self).__init__(
+        super().__init__(
             name="PURPLE",
             anchor="purple",
             href="https://github.com/hartwigmedical/hmftools/",
@@ -27,6 +27,7 @@ class MultiqcModule(BaseMultiqcModule):
                     of a tumor sample, and also predicts gender, the MSI status, tumor mutational
                     load and burden, clonality and the whole genome duplication status.""",
             doi="10.1038/s41586-019-1689-y",
+            **kwargs,
         )
 
     def build(self):

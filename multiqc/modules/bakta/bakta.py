@@ -12,14 +12,15 @@ log = logging.getLogger(__name__)
 
 
 class MultiqcModule(BaseMultiqcModule):
-    def __init__(self):
+    def __init__(self, **kwargs):
         # Initialise the parent object
-        super(MultiqcModule, self).__init__(
+        super().__init__(
             name="Bakta",
             anchor="bakta",
             href="https://github.com/oschwengers/bakta",
             info="is a tool for the rapid & standardized annotation of bacterial genomes, MAGs & plasmids",
             doi="10.1099/mgen.0.000685",
+            **kwargs,
         )
 
     def build(self):

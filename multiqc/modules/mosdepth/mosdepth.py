@@ -112,12 +112,13 @@ class MultiqcModule(BaseMultiqcModule):
 
     def __init__(self):
         # Initialise the parent object
-        super(MultiqcModule, self).__init__(
+        super().__init__(
             name="mosdepth",
             anchor="mosdepth",
             href="https://github.com/brentp/mosdepth",
             info="performs fast BAM/CRAM depth calculation for WGS, exome, or targeted sequencing",
             doi="10.1093/bioinformatics/btx699",
+            **kwargs,
         )
 
     def build(self):

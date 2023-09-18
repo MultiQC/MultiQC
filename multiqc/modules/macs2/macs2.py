@@ -13,14 +13,15 @@ log = logging.getLogger(__name__)
 
 
 class MultiqcModule(BaseMultiqcModule):
-    def __init__(self):
+    def __init__(self, **kwargs):
         # Initialise the parent object
-        super(MultiqcModule, self).__init__(
+        super().__init__(
             name="MACS2",
             anchor="macs",
             href="https://macs3-project.github.io/MACS/",
             info="identifies transcription factor binding sites in ChIP-seq data.",
             doi=["10.1101/496521", "10.1186/gb-2008-9-9-r137"],
+            **kwargs,
         )
 
     def build(self):

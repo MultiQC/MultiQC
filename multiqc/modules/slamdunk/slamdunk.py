@@ -20,12 +20,13 @@ class MultiqcModule(BaseMultiqcModule):
 
     def __init__(self):
         # Initialise the parent object
-        super(MultiqcModule, self).__init__(
+        super().__init__(
             name="Slamdunk",
             anchor="slamdunk",
             href="http://t-neumann.github.io/slamdunk/",
             info="is a tool to analyze SLAMSeq data.",
             doi="10.1186/s12859-019-2849-7",
+            **kwargs,
         )
 
     def build(self):

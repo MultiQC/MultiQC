@@ -22,14 +22,15 @@ handlers = (
 
 
 class MultiqcModule(BaseMultiqcModule):
-    def __init__(self):
+    def __init__(self, **kwargs):
         # Initialise the parent object
-        super(MultiqcModule, self).__init__(
+        super().__init__(
             name="CheckQC",
             anchor="checkqc",
             href="https://github.com/Molmed/checkQC",
             info="is a program designed to check a set of quality criteria against an Illumina runfolder. Samples are only shown in the report if they fail a check.",
             doi="10.21105/joss.00556",
+            **kwargs,
         )
 
     def build(self):

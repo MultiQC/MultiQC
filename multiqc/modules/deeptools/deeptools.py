@@ -34,13 +34,14 @@ class MultiqcModule(
 ):
     def __init__(self):
         # Initialise the parent object
-        super(MultiqcModule, self).__init__(
+        super().__init__(
             name="deepTools",
             anchor="deepTools",
             target="deepTools",
             href="http://deeptools.readthedocs.io",
             info=" is a suite of tools to process and analyze deep sequencing data.",
             doi="10.1093/nar/gkw257",
+            **kwargs,
         )
 
     def build(self):

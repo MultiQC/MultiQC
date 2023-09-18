@@ -14,13 +14,14 @@ log = logging.getLogger(__name__)
 
 
 class MultiqcModule(BaseMultiqcModule):
-    def __init__(self):
-        super(MultiqcModule, self).__init__(
+    def __init__(self, **kwargs):
+        super().__init__(
             name="Supernova",
             anchor="supernova",
             href="https://www.10xgenomics.com/",
             info="is a de novo genome assembler 10X Genomics linked-reads.",
             doi="10.1101/gr.214874.116",
+            **kwargs,
         )
 
     def build(self):

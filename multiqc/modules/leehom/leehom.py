@@ -18,12 +18,13 @@ class MultiqcModule(BaseMultiqcModule):
 
     def __init__(self):
         # Initialise the parent object
-        super(MultiqcModule, self).__init__(
+        super().__init__(
             name="leeHom",
             anchor="leehom",
             href="https://github.com/grenaud/leeHom",
             info="is a program for the Bayesian reconstruction of ancient DNA",
             doi="10.1093/nar/gku699",
+            **kwargs,
         )
 
     def build(self):

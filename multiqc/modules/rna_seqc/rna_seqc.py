@@ -13,14 +13,15 @@ log = logging.getLogger(__name__)
 
 
 class MultiqcModule(BaseMultiqcModule):
-    def __init__(self):
+    def __init__(self, **kwargs):
         # Initialise the parent object
-        super(MultiqcModule, self).__init__(
+        super().__init__(
             name="RNA-SeQC",
             anchor="rna_seqc",
             href="https://github.com/getzlab/rnaseqc",
             info="Fast, efficient RNA-Seq metrics for quality control and process optimization",
             doi=["10.1093/bioinformatics/btab135", "10.1093/bioinformatics/bts196"],
+            **kwargs,
         )
 
     def build(self):

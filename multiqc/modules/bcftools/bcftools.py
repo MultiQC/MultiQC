@@ -21,13 +21,14 @@ class MultiqcModule(BaseMultiqcModule, StatsReportMixin):
 
     def __init__(self):
         # Initialise the parent object
-        super(MultiqcModule, self).__init__(
+        super().__init__(
             name="Bcftools",
             anchor="bcftools",
             target="Bcftools",
             href="https://samtools.github.io/bcftools/",
             info=" contains utilities for variant calling and manipulating VCFs and BCFs.",
             doi="10.1093/gigascience/giab008",
+            **kwargs,
         )
 
     def build(self):

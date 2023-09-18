@@ -22,12 +22,13 @@ class MultiqcModule(BaseMultiqcModule, FindPeaksReportMixin, TagDirReportMixin):
 
     def __init__(self):
         # Initialise the parent object
-        super(MultiqcModule, self).__init__(
+        super().__init__(
             name="HOMER",
             anchor="homer",
             href="http://homer.ucsd.edu/homer/",
             info="is a suite of tools for Motif Discovery and next-gen sequencing analysis.",
             doi="10.1016/j.molcel.2010.05.004",
+            **kwargs,
         )
 
     def build(self):

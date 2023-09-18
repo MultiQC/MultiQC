@@ -21,12 +21,13 @@ class MultiqcModule(BaseMultiqcModule):
 
     def __init__(self):
         # Initialise the parent object
-        super(MultiqcModule, self).__init__(
+        super().__init__(
             name="HiC-Pro",
             anchor="hicpro",
             href="https://github.com/nservant/HiC-Pro",
             info="is an efficient and flexible pipeline for Hi-C data processing. The MultiQC module is supported since HiC-Pro v2.11.0.",
             doi="10.1186/s13059-015-0831-x",
+            **kwargs,
         )
 
     def build(self):

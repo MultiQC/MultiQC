@@ -19,12 +19,13 @@ class MultiqcModule(BaseMultiqcModule):
 
     def __init__(self):
         # Initialise the parent object
-        super(MultiqcModule, self).__init__(
+        super().__init__(
             name="Kallisto",
             anchor="kallisto",
             href="http://pachterlab.github.io/kallisto/",
             info="is a program for quantifying abundances of transcripts from RNA-Seq data.",
             doi="10.1038/nbt.3519",
+            **kwargs,
         )
 
     def build(self):

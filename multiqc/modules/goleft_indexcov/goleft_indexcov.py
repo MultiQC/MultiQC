@@ -16,13 +16,14 @@ log = logging.getLogger(__name__)
 
 
 class MultiqcModule(BaseMultiqcModule):
-    def __init__(self):
-        super(MultiqcModule, self).__init__(
+    def __init__(self, **kwargs):
+        super().__init__(
             name="goleft indexcov",
             anchor="goleft_indexcov",
             href="https://github.com/brentp/goleft/tree/master/indexcov",
             info="quickly estimates coverage from a whole-genome bam index.",
             doi="10.1093/gigascience/gix090",
+            **kwargs,
         )
 
     def build(self):

@@ -17,12 +17,13 @@ class MultiqcModule(BaseMultiqcModule):
 
     def __init__(self):
         # Initialise the parent object
-        super(MultiqcModule, self).__init__(
+        super().__init__(
             name="Skewer",
             anchor="skewer",
             href="https://github.com/relipmoc/skewer",
             info="is an adapter trimming tool specially designed for processing next-generation sequencing (NGS) paired-end sequences.",
             doi="10.1186/1471-2105-15-182",
+            **kwargs,
         )
 
     def build(self):
