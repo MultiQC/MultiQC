@@ -6,7 +6,7 @@ import re
 from collections import OrderedDict
 
 from multiqc import config
-from multiqc.modules.base_module import BaseMultiqcModule, ModuleBadInputError, ModuleNoSamplesFound
+from multiqc.modules.base_module import BaseMultiqcModule, ModuleNoSamplesFound
 from multiqc.plots import bargraph, table
 
 # Initialise the logger
@@ -327,11 +327,6 @@ class MultiqcModule(BaseMultiqcModule):
                 cat = (low, "{}-{} bp".format(low, high))
                 all_categories.append(cat)
                 plot_data[cat[1]] = d[data_key.format(low)] - d[data_key.format(high)]
-
-            try:
-                assert sum(plot_data.values()) == d[data_key.format(0)]
-            except AssertionError:
-                raise ModuleBadInputError('Predicted gene counts didn\'t add up properly for "{}"'.format(s_name))
 
             data[s_name] = plot_data
 

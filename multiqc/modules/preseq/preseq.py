@@ -41,8 +41,7 @@ class MultiqcModule(BaseMultiqcModule):
                 log.debug("Duplicate sample name found! Overwriting: {}".format(f["s_name"]))
 
             if data_is_bases is not None and sample_data_is_bases != data_is_bases:
-                log.error("Preseq: mixed 'TOTAL_READS' and 'TOTAL_BASES' reports")
-                raise ModuleBadInputError
+                raise ModuleBadInputError("Mixed 'TOTAL_READS' and 'TOTAL_BASES' reports")
             data_is_bases = sample_data_is_bases
 
             data[f["s_name"]] = sample_data_raw

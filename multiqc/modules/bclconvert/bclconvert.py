@@ -317,10 +317,9 @@ class MultiqcModule(BaseMultiqcModule):
 
             if len(runinfos) > 1:
                 if self.cluster_length and rundata["cluster_length"] != self.cluster_length:
-                    log.error(
+                    raise ModuleBadInputError(
                         "Detected different read lengths across the RunXml files. We cannot handle this - read length across all input directories must be the same."
                     )
-                    raise ModuleBadInputError
             self.cluster_length = rundata["cluster_length"]
 
         return demuxes, qmetrics

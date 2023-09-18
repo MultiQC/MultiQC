@@ -650,11 +650,11 @@ def run(
     total_mods_starttime = time.time()
     for mod_idx, mod_dict in enumerate(run_modules):
         mod_starttime = time.time()
+        this_module = list(mod_dict.keys())[0]
+        mod_cust_config = list(mod_dict.values())[0]
+        if mod_cust_config is None:
+            mod_cust_config = {}
         try:
-            this_module = list(mod_dict.keys())[0]
-            mod_cust_config = list(mod_dict.values())[0]
-            if mod_cust_config is None:
-                mod_cust_config = {}
             mod = config.avail_modules[this_module].load()
             mod.mod_cust_config = mod_cust_config  # feels bad doing this, but seems to work
             output = mod()
@@ -662,7 +662,6 @@ def run(
                 output = [output]
             for m in output:
                 report.modules_output.append(m)
-
             if config.make_report:
                 # Copy over css & js files if requested by the theme
                 try:
@@ -690,10 +689,10 @@ def run(
                 except AttributeError:
                     pass
 
-        except ModuleNoSamplesFound:
-            logger.debug("No samples found: {}".format(list(mod_dict.keys())[0]))
-        except ModuleBadInputError:
-            logger.debug("Could not parse inputs: {}".format(list(mod_dict.keys())[0]))
+        except (ModuleNoSamplesFound, UserWarning):  # UserWarning deprecated from 1.16
+            logger.debug(f"{this_module}: no samples found")
+        except ModuleBadInputError as e:
+            logger.error(f"{this_module}: could not run module: {e}")
         except KeyboardInterrupt:
             shutil.rmtree(tmp_dir)
             logger.critical(
