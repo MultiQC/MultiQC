@@ -8,7 +8,7 @@ from multiqc.plots import linegraph
 log = logging.getLogger(__name__)
 
 
-class plotProfileMixin:
+class PlotProfileMixin:
     def parse_plotProfile(self):
         """Find plotProfile output"""
         self.deeptools_plotProfile = dict()

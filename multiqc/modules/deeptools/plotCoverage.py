@@ -9,7 +9,7 @@ from multiqc.plots import linegraph, table
 log = logging.getLogger(__name__)
 
 
-class plotCoverageMixin:
+class PlotCoverageMixin:
     def parse_plotCoverage(self):
         """Find plotCoverage output. Both stdout and --outRawCounts"""
         self.deeptools_plotCoverageStdout = dict()

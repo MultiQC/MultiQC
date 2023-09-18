@@ -8,7 +8,7 @@ from multiqc.plots import scatter
 log = logging.getLogger(__name__)
 
 
-class plotPCAMixin:
+class PlotPCAMixin:
     def parse_plotPCA(self):
         """Find plotPCA output"""
         self.deeptools_plotPCAData = dict()

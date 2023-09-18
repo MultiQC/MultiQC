@@ -9,7 +9,7 @@ from multiqc.plots import linegraph, table
 log = logging.getLogger(__name__)
 
 
-class bamPEFragmentSizeTableMixin:
+class BamPEFragmentSizeTableMixin:
     def parse_bamPEFragmentSize(self):
         """Find bamPEFragmentSize output. Supports the --table option"""
         self.deeptools_bamPEFragmentSize = dict()

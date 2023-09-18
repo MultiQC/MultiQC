@@ -8,7 +8,7 @@ from multiqc.plots import linegraph
 log = logging.getLogger(__name__)
 
 
-class bamPEFragmentSizeDistributionMixin:
+class BamPEFragmentSizeDistributionMixin:
     def parse_bamPEFragmentSizeDistribution(self):
         """Find bamPEFragmentSize output. Supports the --outRawFragmentLengths option"""
         self.deeptools_bamPEFragmentSizeDistribution = dict()

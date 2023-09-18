@@ -11,7 +11,7 @@ from multiqc.plots import linegraph
 log = logging.getLogger(__name__)
 
 
-class plotFingerprintMixin:
+class PlotFingerprintMixin:
     def parse_plotFingerprint(self):
         """Find plotFingerprint output. Both --outQualityMetrics and --outRawCounts"""
         self.deeptools_plotFingerprintOutQualityMetrics = dict()

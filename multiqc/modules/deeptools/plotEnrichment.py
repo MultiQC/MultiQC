@@ -9,7 +9,7 @@ from multiqc.plots import linegraph
 log = logging.getLogger(__name__)
 
 
-class plotEnrichmentMixin:
+class PlotEnrichmentMixin:
     def parse_plotEnrichment(self):
         """Find plotEnrichment output."""
         self.deeptools_plotEnrichment = dict()

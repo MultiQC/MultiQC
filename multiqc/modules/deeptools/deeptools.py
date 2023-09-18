@@ -4,17 +4,17 @@ from collections import OrderedDict
 
 from multiqc.modules.base_module import BaseMultiqcModule
 
-from .bamPEFragmentSizeDistribution import bamPEFragmentSizeDistributionMixin
+from .bamPEFragmentSizeDistribution import BamPEFragmentSizeDistributionMixin
 
 # deepTools modules
-from .bamPEFragmentSizeTable import bamPEFragmentSizeTableMixin
-from .estimateReadFiltering import estimateReadFilteringMixin
-from .plotCorrelation import plotCorrelationMixin
-from .plotCoverage import plotCoverageMixin
-from .plotEnrichment import plotEnrichmentMixin
-from .plotFingerprint import plotFingerprintMixin
-from .plotPCA import plotPCAMixin
-from .plotProfile import plotProfileMixin
+from .bamPEFragmentSizeTable import BamPEFragmentSizeTableMixin
+from .estimateReadFiltering import EstimateReadFilteringMixin
+from .plotCorrelation import PlotCorrelationMixin
+from .plotCoverage import PlotCoverageMixin
+from .plotEnrichment import PlotEnrichmentMixin
+from .plotFingerprint import PlotFingerprintMixin
+from .plotPCA import PlotPCAMixin
+from .plotProfile import PlotProfileMixin
 
 # Initialise the logger
 log = logging.getLogger(__name__)
@@ -22,15 +22,15 @@ log = logging.getLogger(__name__)
 
 class MultiqcModule(
     BaseMultiqcModule,
-    bamPEFragmentSizeTableMixin,
-    bamPEFragmentSizeDistributionMixin,
-    estimateReadFilteringMixin,
-    plotCoverageMixin,
-    plotEnrichmentMixin,
-    plotFingerprintMixin,
-    plotProfileMixin,
-    plotPCAMixin,
-    plotCorrelationMixin,
+    BamPEFragmentSizeTableMixin,
+    BamPEFragmentSizeDistributionMixin,
+    EstimateReadFilteringMixin,
+    PlotCoverageMixin,
+    PlotEnrichmentMixin,
+    PlotFingerprintMixin,
+    PlotProfileMixin,
+    PlotPCAMixin,
+    PlotCorrelationMixin,
 ):
     def __init__(self, **kwargs):
         # Initialise the parent object

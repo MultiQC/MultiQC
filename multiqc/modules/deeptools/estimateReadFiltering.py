@@ -9,7 +9,7 @@ from multiqc.plots import table
 log = logging.getLogger(__name__)
 
 
-class estimateReadFilteringMixin:
+class EstimateReadFilteringMixin:
     def parse_estimateReadFiltering(self):
         """Find estimateReadFiltering output. Only the output from --table is supported."""
         self.deeptools_estimateReadFiltering = dict()
