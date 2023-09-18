@@ -542,41 +542,23 @@ class BaseMultiqcModule(ABC):
         self.report.saved_raw_data[fn] = data
         util_functions.write_data_file(data, fn, sort_cols, data_format)
 
-    ##################################################
-    #### DEPRECATED FORWARDERS
-    def plot_bargraph(self, data, cats=None, pconfig=None):
-        """Depreciated function. Forwards to new location."""
-        from multiqc.plots import bargraph
+    def bargraph(self, *args, **kwargs):
+        return bargraph.plot(self.report, *args, **kwargs)
 
-        if pconfig is None:
-            pconfig = {}
-        return self.bargraph(data, cats, pconfig)
+    def linegraph(self, *args, **kwargs):
+        return linegraph.plot(self.report, *args, **kwargs)
 
-    def plot_xy_data(self, data, pconfig=None):
-        """Depreciated function. Forwards to new location."""
-        from multiqc.plots import linegraph
+    def scatter(self, *args, **kwargs):
+        return scatter.plot(self.report, *args, **kwargs)
 
-        if pconfig is None:
-            pconfig = {}
-        return self.linegraph(data, pconfig)
+    def beeswarm(self, *args, **kwargs):
+        return beeswarm.plot(self.report, *args, **kwargs)
 
-    def bargraph(self, data, cats=None, pconfig=None):
-        return bargraph.plot(self.report, data, cats, pconfig)
+    def boxplot(self, *args, **kwargs):
+        return boxplot.plot(self.report, *args, **kwargs)
 
-    def linegraph(self, data, pconfig=None):
-        return linegraph.plot(self.report, data, pconfig)
+    def heatmap(self, *args, **kwargs):
+        return heatmap.plot(self.report, *args, **kwargs)
 
-    def scatter(self, data, pconfig=None):
-        return scatter.plot(self.report, data, pconfig)
-
-    def beeswarm(self, data, pconfig=None):
-        return beeswarm.plot(self.report, data, pconfig)
-
-    def boxplot(self, data, pconfig=None):
-        return boxplot.plot(self.report, data, pconfig)
-
-    def heatmap(self, data, pconfig=None):
-        return heatmap.plot(self.report, data, pconfig)
-
-    def table(self, data, headers=None, pconfig=None):
-        return table.plot(self.report, data, headers, pconfig)
+    def table(self, *args, **kwargs):
+        return table.plot(self.report, *args, **kwargs)
