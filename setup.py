@@ -150,6 +150,7 @@ setup(
             "nanostat = multiqc.modules.nanostat:MultiqcModule",
             "nextclade = multiqc.modules.nextclade:MultiqcModule",
             "ngsderive = multiqc.modules.ngsderive:MultiqcModule",
+            "ngsbits = multiqc.modules.ngsbits:MultiqcModule",
             "odgi = multiqc.modules.odgi:MultiqcModule",
             "optitype = multiqc.modules.optitype:MultiqcModule",
             "pangolin = multiqc.modules.pangolin:MultiqcModule",

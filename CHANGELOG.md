@@ -372,6 +372,8 @@ for more information.
 - [**VEP**](https://www.ensembl.org/info/docs/tools/vep/index.html)
   - Added MultiQC module to add summary statistics of Ensembl VEP annotations.
   - Handle error from missing variants in VEP stats file. ([#1446](https://github.com/ewels/MultiQC/issues/1446))
+- [**ngs-bits**](https://github.com/imgag/ngs-bits)
+  - Added MultiQC module to include ReadQC and MappingQC statistics
 
 ### Module feature additions
 

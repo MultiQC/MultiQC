@@ -255,6 +255,7 @@ fn_clean_exts:
   - "ccs"
   - "_NanoStats"
   - ".cutadapt"
+  - ".qcML"
   - ".mosdepth"
   - _gopeaks
 
@@ -439,6 +440,10 @@ module_order:
   - sambamba:
       module_tag:
         - DNA
+  - ngsbits:
+      module_tag:
+        - DNA
+        - RNA
 
   # Post-alignment processing
   - gopeaks:

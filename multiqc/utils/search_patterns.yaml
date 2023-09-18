@@ -854,6 +854,17 @@ vep/vep_txt:
   max_filesize: 100000
 verifybamid/selfsm:
   fn: "*.selfSM"
+ngsbits/readqc:
+  - fn: "*.qcML"
+    contents: "ReadQC"
+    num_lines: 20
+  - fn: "*.qcML"
+    contents: "SeqPurge"
+    num_lines: 20
+ngsbits/mappingqc:
+  - fn: "*.qcML"
+    contents: "MappingQC"
+    num_lines: 20
 whatshap/stats:
   contents: "#sample	chromosome	file_name	variants	phased	unphased	singletons"
   num_lines: 1
