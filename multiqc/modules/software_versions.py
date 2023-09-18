@@ -6,7 +6,7 @@
 import logging
 from textwrap import dedent
 
-from multiqc.modules.base_module import BaseMultiqcModule, ModuleNoSamplesFound
+from multiqc.modules.base_module import BaseMultiqcModule
 from multiqc.utils import config as mqc_config
 from multiqc.utils import report as mqc_report
 from multiqc.utils import util_functions
