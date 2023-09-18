@@ -652,7 +652,7 @@ def run(
                 mods = mod_factory(report)
                 report.modules.extend(mods)
             else:
-                mod = mod_factory(**mod_cust_config, report=report)
+                mod = mod_factory(mod_cust_config=mod_cust_config, report=report)
                 report.modules.append(mod)
                 mod.build()
 
