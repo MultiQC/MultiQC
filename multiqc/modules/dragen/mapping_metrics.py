@@ -14,7 +14,7 @@ from .utils import Metric, exist_and_number, make_headers
 log = logging.getLogger(__name__)
 
 
-NAMESPACE = "DRAGEN mapping"
+NAMESPACE = "Mapping"
 
 
 class DragenMappingMetics(BaseMultiqcModule):

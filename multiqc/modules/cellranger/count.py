@@ -42,7 +42,7 @@ class CellRangerCountMixin:
             "description": "Number of reads ({})".format(config.read_count_desc),
             "modify": lambda x: x * config.read_count_multiplier,
             "shared_key": "read_count",
-            "namespace": "Cell Ranger Count",
+            "namespace": "Count",
         }
         self.count_general_data_headers = set_hidden_cols(
             self.count_general_data_headers, ["Q30 bc", "Q30 UMI", "Q30 read"]
@@ -86,16 +86,14 @@ class CellRangerCountMixin:
                     name="Count - Warnings",
                     anchor="cellranger-count-warnings",
                     description="Warnings encountered during the analysis",
-                    plot=table.plot(
-                        self.cellrangercount_warnings, self.count_warnings_headers, {"namespace": "Cell Ranger Count"}
-                    ),
+                    plot=table.plot(self.cellrangercount_warnings, self.count_warnings_headers, {"namespace": "Count"}),
                 )
 
             self.add_section(
                 name="Count - Summary stats",
                 anchor="cellranger-count-stats",
                 description="Summary QC metrics from Cell Ranger count",
-                plot=table.plot(self.cellrangercount_data, self.count_data_headers, {"namespace": "Cell Ranger Count"}),
+                plot=table.plot(self.cellrangercount_data, self.count_data_headers, {"namespace": "Count"}),
             )
 
             self.add_section(
