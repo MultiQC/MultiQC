@@ -1128,7 +1128,7 @@ class MultiqcModule(BaseMultiqcModule):
         except KeyError as ex:
             log.error(
                 "The entry {} was not found in the qc3C JSON file '{}', skipping sample {}".format(
-                    str(ex), os.path.join(f["root"], f["fn"], f["s_name"])
+                    str(ex), os.path.join(f["root"], f["fn"]), f["s_name"]
                 )
             )
             return
