@@ -85,7 +85,7 @@ def plot(report, data, pconfig=None):
         pass
 
     # Make a plot
-    return highcharts_scatter_plot(plotdata, pconfig)
+    return highcharts_scatter_plot(report, plotdata, pconfig)
 
 
 def highcharts_scatter_plot(report, plotdata, pconfig=None):

@@ -8,7 +8,7 @@ from multiqc.plots import heatmap
 log = logging.getLogger(__name__)
 
 
-class plotCorrelationMixin:
+class PlotCorrelationMixin:
     def parse_plotCorrelation(self):
         """Find plotCorrelation output"""
         self.deeptools_plotCorrelationData = dict()
