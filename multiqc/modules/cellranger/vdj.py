@@ -2,6 +2,7 @@
 
 import json
 import logging
+import re
 from collections import OrderedDict
 
 from multiqc import config
@@ -148,6 +149,17 @@ class CellRangerVdjMixin:
                 break
 
         s_name = self.clean_s_name(mydict["sample"]["id"], f)
+
+        # Extract software version
+        try:
+            version_pair = mydict["summary_tab"]["pipeline_info_table"]["rows"][-1]
+            assert version_pair[0] == "Pipeline Version"
+            version_match = re.search(r"cellranger-([\d\.]+)", version_pair[1])
+            if version_match:
+                self.add_software_version(version_match.group(1), s_name)
+        except (KeyError, AssertionError):
+            log.debug("Unable to parse version for sample {}".format(s_name))
+
         data = dict()
         data_general_stats = dict()
 
