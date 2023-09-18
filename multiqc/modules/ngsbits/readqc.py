@@ -3,6 +3,7 @@
 """ MultiQC module to parse output from ngs-bits ReadQC tool """
 
 import logging
+import xml.etree.cElementTree
 
 from multiqc import config
 from multiqc.plots import table
