@@ -1,29 +1,22 @@
 import json
 import os
 from collections import Counter
+from pprint import pprint
 
 import requests
 
+from multiqc.utils.software_versions import parse_version
+
 
 def main():
-    latest_version = get_latest_version()
-    print(f"Latest Version: {latest_version}")
-
-    pypi_stats = fetch_pypi_stats()
-
-    github_token = os.environ.get("GITHUB_TOKEN")
-    github_clones_stats = fetch_github_clones_stats(github_token)
-    github_releases_stats = fetch_github_releases_stats(github_token)
-
-    print(f"PyPI downloads: {pypi_stats.get('total_downloads')}")
-    print(f"GutHub clones: {github_clones_stats.get('total_clones')}")
-    print(f"GitHub downloads: {github_releases_stats.get('total_downloads')}")
-
-    dockerhub_stats = fetch_dockerhub_stats()
-    biocontainers_stats = fetch_biocontainers_stats()
-
-    print(f"DockerHub pulls: {dockerhub_stats.get('total_pulls')}")
-    print(f"BioContainers pulls: {biocontainers_stats.get('total_pulls')}")
+    stats = {}
+    stats |= pypi_stats()
+    stats |= bioconda_stats()
+    stats |= github_clones_stats()
+    stats |= github_releases_stats()
+    stats |= dockerhub_stats()
+    # stats |= biocontainers_stats()
+    pprint(stats)
 
 
 def get_latest_version() -> str:
@@ -36,7 +29,7 @@ def get_latest_version() -> str:
     return latest_version
 
 
-def fetch_pypi_stats():
+def pypi_stats():
     pepy_url = "https://api.pepy.tech/api/v2/projects/multiqc"
 
     total_downloads = None
@@ -47,19 +40,43 @@ def fetch_pypi_stats():
     if response.status_code == 200:
         data = json.loads(response.text)
         total_downloads = data["total_downloads"]
-        for date, downloads_by_version in data["downloads"].items():
-            for version, downloads in downloads_by_version.items():
+        for date, date_downloads_by_version in data["downloads"].items():
+            for version, downloads in date_downloads_by_version.items():
                 downloads_by_version[version] += downloads
     else:
         print("Failed to fetch data from pepy.tech")
 
+    downloads_by_version = {parse_version(k): v for k, v in downloads_by_version.items()}
     return {
-        "total_downloads": total_downloads,
-        "downloads_by_version": downloads_by_version,
+        "pypi_downloads": total_downloads,
+        "pypi_downloads_by_version": downloads_by_version,
     }
 
 
-def fetch_github_clones_stats(github_token=os.environ.get("GITHUB_TOKEN")):
+def bioconda_stats():
+    url = "https://raw.githubusercontent.com/bioconda/bioconda-plots/main/plots/multiqc/versions.json"
+    # [{"date":"2023-09-05","total":15949,"delta":18,"version":"1.10.1"}, ...
+
+    downloads_by_version = dict()
+
+    response = requests.get(url)
+    if response.status_code == 200:
+        data = json.loads(response.text)
+        downloads_by_version = Counter()
+        for version in data:
+            downloads_by_version[version["version"]] = version["total"]
+    else:
+        print("Failed to fetch data from bioconda")
+
+    downloads_by_version = {parse_version(k): v for k, v in downloads_by_version.items()}
+    return {
+        "bioconda_downloads": sum(downloads_by_version.values()),
+        "bioconda_downloads_by_version": downloads_by_version,
+    }
+
+
+def github_clones_stats():
+    github_token = os.environ.get("GITHUB_TOKEN")
     url = "https://api.github.com/repos/ewels/MultiQC/traffic/clones"
     headers = {"Authorization": f"token {github_token}"}
 
@@ -71,24 +88,30 @@ def fetch_github_clones_stats(github_token=os.environ.get("GITHUB_TOKEN")):
         print(f"Failed to fetch data from GitHub, status code: {response.status_code}, url: {url}")
         clone_count = None
 
-    return {"total_clones": clone_count}
+    return {"github_clones": clone_count}
 
 
-def fetch_github_releases_stats(github_token):
+def github_releases_stats():
+    github_token = os.environ.get("GITHUB_TOKEN")
     url = "https://api.github.com/repos/ewels/MultiQC/releases"
     headers = {"Authorization": f"token {github_token}"}
-    total_downloads = 0
+
+    downloads_by_version = Counter()
 
     response = requests.get(url, headers=headers)
     if response.status_code == 200:
         data = json.loads(response.text)
         for release in data:
+            version = parse_version(release["tag_name"])
             for asset in release["assets"]:
-                total_downloads += asset["download_count"]
+                downloads_by_version[version] += asset["download_count"]
     else:
         print(f"Failed to fetch release data from GitHub, status code: {response.status_code}, url: {url}")
 
-    return {"total_downloads": total_downloads}
+    return {
+        "github_releases_downloads": sum(downloads_by_version.values()),
+        "github_releases_downloads_by_version": downloads_by_version,
+    }
 
 
 def _fetch_dockerhub_count(repo):
@@ -113,26 +136,18 @@ def _fetch_quay_count(repo):
         return None
 
 
-def fetch_dockerhub_stats():
-    return {"total_pulls": _fetch_dockerhub_count("ewels/multiqc/")}
+def dockerhub_stats():
+    return {"dockerhub_pulls": _fetch_dockerhub_count("ewels/multiqc/")}
 
 
-def fetch_biocontainers_stats():
+def biocontainers_stats():
     dockerhub = _fetch_dockerhub_count("biocontainers/multiqc/")
     quay = _fetch_quay_count("biocontainers/multiqc/")
     if dockerhub is not None and quay is not None:
         total = dockerhub + quay
     else:
         total = None
-    return {"total_pulls": total}
-
-
-def fetch_galaxy_stats():
-    # Fetching statistics from Galaxy can be a bit challenging because it doesn't
-    # offer a simple API endpoint for getting tool usage statistics directly.
-    # Moreover, Galaxy instances can be independent from each other, and the tool
-    # might be hosted on multiple instances.
-    pass
+    return {"biocontainers_pulls": total}
 
 
 if __name__ == "__main__":
