@@ -773,7 +773,7 @@ def run(
         shutil.rmtree(tmp_dir)
         logger.info("MultiQC complete")
         # Exit with an error code if a module broke
-        sys.exit(sys_exit_code)
+        return {"report": report, "config": config, "sys_exit_code": sys_exit_code}
 
     if config.make_report:
         # Sort the report module output if we have a config
