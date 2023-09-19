@@ -30,8 +30,8 @@ class MultiqcModule(BaseMultiqcModule):
         )
 
         # Find and load any Preseq reports
-        data_is_bases = None
-        data = dict()
+        reads_data = dict()
+        bases_data = dict()
         for f in self.find_log_files("preseq"):
             sample_data_raw, sample_data_is_bases = _parse_preseq_logs(f)
             if sample_data_raw is None:
@@ -40,24 +40,30 @@ class MultiqcModule(BaseMultiqcModule):
             if f["s_name"] in sample_data_raw:
                 log.debug("Duplicate sample name found! Overwriting: {}".format(f["s_name"]))
 
-            if data_is_bases is not None and sample_data_is_bases != data_is_bases:
-                raise ModuleBadInputError("Mixed 'TOTAL_READS' and 'TOTAL_BASES' reports")
-            data_is_bases = sample_data_is_bases
+            if sample_data_is_bases:
+                bases_data[f["s_name"]] = sample_data_raw
+            else:
+                reads_data[f["s_name"]] = sample_data_raw
 
-            data[f["s_name"]] = sample_data_raw
             self.add_data_source(f)
 
         # Filter to strip out ignored sample names
-        data = self.ignore_samples(data)
-        if len(data) == 0:
+        bases_data = self.ignore_samples(bases_data)
+        reads_data = self.ignore_samples(reads_data)
+        all_data = {**bases_data, **reads_data}
+        if not all_data:
             raise ModuleNoSamplesFound
-        log.info("Found {} reports".format(len(data)))
-
+        if bases_data and reads_data:
+            log.warning("Mixed 'TOTAL_READS' and 'TOTAL_BASES' reports. Will build two separate plots")
+        log.info("Found {} reports".format(len(all_data)))
         # Write data to file
-        self.write_data_file(data, "preseq")
+        self.write_data_file(all_data, "preseq")
 
-        # Preseq plot
-        self._make_preseq_length_trimmed_plot(data, data_is_bases)
+        # Preseq plot. If mixed logs are found, build two separate plots.
+        if bases_data:
+            self._make_preseq_length_trimmed_plot(bases_data, True)
+        if reads_data:
+            self._make_preseq_length_trimmed_plot(reads_data, False)
 
     def _make_preseq_length_trimmed_plot(self, data_raw, is_basepairs):
         """Generate the preseq plot.
@@ -100,6 +106,7 @@ class MultiqcModule(BaseMultiqcModule):
             is_basepairs, max_y_cov, x_axis, y_axis
         )
 
+        name = "Complexity curve"
         description = ""
         pconfig = {
             "id": "preseq_plot",
@@ -113,6 +120,10 @@ class MultiqcModule(BaseMultiqcModule):
             "yLabelFormat": y_lbl,
             "extra_series": [],
         }
+        if not is_basepairs:
+            pconfig["title"] += " (molecule count)"
+            pconfig["id"] += "_molecules"
+            name += " (molecule count)"
 
         # Parse the real counts if we have them
         real_cnts_all, real_cnts_unq = self._parse_real_counts(data.keys())
@@ -153,9 +164,7 @@ class MultiqcModule(BaseMultiqcModule):
             }
         )
 
-        self.add_section(
-            name="Complexity curve", description=description, anchor="preseq-plot", plot=linegraph.plot(data, pconfig)
-        )
+        self.add_section(name=name, description=description, anchor="preseq-plot", plot=linegraph.plot(data, pconfig))
 
     def _parse_real_counts(self, sample_names):
         real_counts_file_raw = None
