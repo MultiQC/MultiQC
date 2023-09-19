@@ -1,11 +1,16 @@
+#!/usr/bin/env python
+
+"""
+Fetch MultiQC download stats from various sources and print them as JSON.
+"""
+
 import json
 import os
 from collections import Counter
 from pprint import pprint
 
+import packaging.version
 import requests
-
-from multiqc.utils.software_versions import parse_version
 
 
 def main():
@@ -15,7 +20,7 @@ def main():
     stats |= github_clones_stats()
     stats |= github_releases_stats()
     stats |= dockerhub_stats()
-    # stats |= biocontainers_stats()
+    stats |= biocontainers_stats()
     pprint(stats)
 
 
@@ -46,10 +51,10 @@ def pypi_stats():
     else:
         print("Failed to fetch data from pepy.tech")
 
-    downloads_by_version = {parse_version(k): v for k, v in downloads_by_version.items()}
+    downloads_by_version = {packaging.version.parse(k): v for k, v in downloads_by_version.items()}
     return {
-        "pypi_downloads": total_downloads,
-        "pypi_downloads_by_version": downloads_by_version,
+        "pypi": total_downloads,
+        "pypi_by_version": downloads_by_version,
     }
 
 
@@ -68,10 +73,10 @@ def bioconda_stats():
     else:
         print("Failed to fetch data from bioconda")
 
-    downloads_by_version = {parse_version(k): v for k, v in downloads_by_version.items()}
+    downloads_by_version = {packaging.version.parse(k): v for k, v in downloads_by_version.items()}
     return {
-        "bioconda_downloads": sum(downloads_by_version.values()),
-        "bioconda_downloads_by_version": downloads_by_version,
+        "bioconda": sum(downloads_by_version.values()),
+        "bioconda_by_version": downloads_by_version,
     }
 
 
@@ -102,52 +107,68 @@ def github_releases_stats():
     if response.status_code == 200:
         data = json.loads(response.text)
         for release in data:
-            version = parse_version(release["tag_name"])
+            version = packaging.version.parse(release["tag_name"])
             for asset in release["assets"]:
                 downloads_by_version[version] += asset["download_count"]
     else:
         print(f"Failed to fetch release data from GitHub, status code: {response.status_code}, url: {url}")
 
     return {
-        "github_releases_downloads": sum(downloads_by_version.values()),
-        "github_releases_downloads_by_version": downloads_by_version,
+        "github_releases": sum(downloads_by_version.values()),
+        "github_releases_by_version": downloads_by_version,
     }
 
 
 def _fetch_dockerhub_count(repo):
     url = f"https://hub.docker.com/v2/repositories/{repo}"
     response = requests.get(url)
-    if response.status_code == 200:
-        data = json.loads(response.text)
-        return data.get("pull_count", 0)
-    else:
+    if response.status_code != 200:
         print(f"Failed to fetch data from DockerHub, status code: {response.status_code}, url: {url}")
         return None
+    data = json.loads(response.text)
+    return data.get("pull_count", 0)
 
 
 def _fetch_quay_count(repo):
     url = f"https://quay.io/api/v1/repository/{repo}"
     response = requests.get(url)
-    if response.status_code == 200:
-        data = json.loads(response.text)
-        return data.get("pull_count", 0)
-    else:
+    if response.status_code != 200:
         print(f"Failed to fetch data from Quay.io, status code: {response.status_code}, url: {url}")
         return None
+    data = json.loads(response.text)
+    return data.get("pull_count", 0)
 
 
 def dockerhub_stats():
-    return {"dockerhub_pulls": _fetch_dockerhub_count("ewels/multiqc/")}
+    return {"dockerhub": _fetch_dockerhub_count("ewels/multiqc/")}
+
+
+def _biocontainers_aws():
+    url = "https://api.us-east-1.gallery.ecr.aws/getRepositoryCatalogData"
+    headers = {"Content-Type": "application/json"}
+    data = {"registryAliasName": "biocontainers", "repositoryName": "multiqc"}
+    response = requests.post(url, headers=headers, json=data)
+
+    if response.status_code != 200:
+        print(f"Failed to fetch data from {url}:", response.status_code, response.text)
+        return None
+
+    try:
+        count = response.json()["insightData"]["downloadCount"]
+    except IndexError:
+        print(f"Cannot extract insightData/downloadCount from response:", response.text)
+        return None
+    return count
 
 
 def biocontainers_stats():
-    dockerhub = _fetch_dockerhub_count("biocontainers/multiqc/")
-    quay = _fetch_quay_count("biocontainers/multiqc/")
-    if dockerhub is not None and quay is not None:
-        total = dockerhub + quay
-    else:
-        total = None
-    return {"biocontainers_pulls": total}
+    out = {
+        "biocontainers_dockerhub": _fetch_dockerhub_count("biocontainers/multiqc/"),
+        "biocontainers_quay": _fetch_quay_count("biocontainers/multiqc/"),
+        "biocontainers_aws": _biocontainers_aws(),
+    }
+    out["biocontainers"] = sum(v for v in out.values() if v is not None)
+    return out
 
 
 if __name__ == "__main__":
