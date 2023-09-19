@@ -691,8 +691,6 @@ def run(
 
         except (ModuleNoSamplesFound, UserWarning):  # UserWarning deprecated from 1.16
             logger.debug(f"{this_module}: no samples found")
-        except ModuleBadInputError as e:
-            logger.error(f"{this_module}: could not run module: {e}")
         except KeyboardInterrupt:
             shutil.rmtree(tmp_dir)
             logger.critical(
