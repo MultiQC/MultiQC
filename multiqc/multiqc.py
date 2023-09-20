@@ -868,7 +868,7 @@ def run(
         report.data_sources_tofile()
 
         # Create a file with the module DOIs
-        report.dois_tofile()
+        report.dois_tofile(report.modules_output)
 
     if config.make_report:
         # Compress the report plot JSON data
