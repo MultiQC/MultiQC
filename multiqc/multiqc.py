@@ -586,7 +586,7 @@ def run(
         run_modules = [m for m in run_modules if list(m.keys())[0] not in config.exclude_modules]
     if len(run_modules) == 0:
         logger.critical("No analysis modules specified!")
-        sys.exit(1)
+        return {"report": report, "config": config, "sys_exit_code": 1}
     run_module_names = [list(m.keys())[0] for m in run_modules]
     logger.debug("Analysing modules: {}".format(", ".join(run_module_names)))
 
@@ -981,7 +981,7 @@ def run(
                     logger.error("Output directory {} already exists.".format(config.plots_dir))
                     logger.info("Use -f or --force to overwrite existing reports")
                     shutil.rmtree(tmp_dir)
-                    sys.exit(1)
+                    return {"report": report, "config": config, "sys_exit_code": 1}
             logger.info(
                 "Plots       : {}{}".format(
                     os.path.relpath(config.plots_dir),
