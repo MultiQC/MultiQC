@@ -67,6 +67,11 @@ This idea goes way back to [issue #290](https://github.com/ewels/MultiQC/issues/
   - Fix `UnboundLocalError` on outputs when Kanju was run with the `-e` flag ([#2023](https://github.com/ewels/MultiQC/pull/2023))
 - **Qualimap**
   - BamQC: Include `% On Target` in General Stats table ([#2019](https://github.com/ewels/MultiQC/issues/2019))
+- **BCL Convert**
+  - Work correctly with multiple runs across different cluster lengths, so the module doesn't bail on the data anymore.
+  - Fix bug with when a mixture of post-3.9.3 runs and pre-3.9.3 runs are passed, and the quality metrics files aren't available for some runs.
+- **Preseq**
+  - Work correctly with a mixture of cluster-based and basepair-based logs, generate one plot for each set.
 
 ## [MultiQC v1.15](https://github.com/ewels/MultiQC/releases/tag/v1.15) - 2023-08-04
 
@@ -203,7 +208,7 @@ for more information.
 - **Bcftools stats**
   - Bugfix: Do not show empty bcftools stats variant depth plots ([#1777](https://github.com/ewels/MultiQC/pull/1777))
   - Bugfix: Avoid exception when `PSC nMissing` column is not present ([#1832](https://github.com/ewels/MultiQC/issues/1832))
-- **BclConvert**
+- **BCL Convert**
   - Handle single-end read data correctly when setting cluster length instead of always assuming paired-end reads ([#1697](https://github.com/ewels/MultiQC/issues/1697))
   - Handle different R1 and R2 read-lengths correctly instead of assuming they are the same ([#1774](https://github.com/ewels/MultiQC/issues/1774))
   - Handle single-index paired-end data correctly
@@ -341,7 +346,7 @@ for more information.
 
 - **BBMap**
   - Correctly handle adapter stats files with additional columns ([#1556](https://github.com/ewels/MultiQC/issues/1556))
-- **bclconvert**
+- **BCL Convert**
   - Handle change in output format in v3.9.3 with new `Quality_Metrics.csv` file ([#1563](https://github.com/ewels/MultiQC/issues/1563))
 - **bowtie**
   - Minor update to handle new log wording in bowtie v1.3.0 ([#1615](https://github.com/ewels/MultiQC/issues/1615))
@@ -416,7 +421,7 @@ for more information.
 
 ### New Modules
 
-- [**BclConvert**](https://support.illumina.com/sequencing/sequencing_software/bcl-convert.html)
+- [**BCL Convert**](https://support.illumina.com/sequencing/sequencing_software/bcl-convert.html)
   - Tool that converts / demultiplexes Illumina Binary Base Call (BCL) files to FASTQ files
 - [**Bustools**](https://bustools.github.io/)
   - Tools for working with BUS files

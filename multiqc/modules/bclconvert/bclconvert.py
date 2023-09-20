@@ -252,7 +252,7 @@ class MultiqcModule(BaseMultiqcModule):
         raise ModuleNoSamplesFound
 
     def _parse_single_runinfo_file(self, runinfo_file):
-        # get run id and cluster length from RunInfo.xml
+        # Get run id and cluster length from RunInfo.xml
         try:
             root = ET.fromstring(runinfo_file["f"])
             run_id = root.find("Run").get("Id")
@@ -357,15 +357,14 @@ class MultiqcModule(BaseMultiqcModule):
                     run_data[lane_id] = lane
                     self.per_lane_undetermined_reads[lane_id] = 0
 
-                sample = row["SampleID"]
-                if sample != "Undetermined":
+                if (sname := row["SampleID"]) != "Undetermined":
                     # Don't include undetermined reads at all in any of the calculations...
-                    if sample not in lane["samples"]:
-                        lane["samples"][sample] = self._reads_dictionary()
-                        lane["samples"][sample]["filename"] = os.path.join(demux_file["root"], demux_file["fn"])
-                        lane["samples"][sample]["samples"] = {}
+                    if sname not in lane["samples"]:
+                        lane["samples"][sname] = self._reads_dictionary()
+                        lane["samples"][sname]["filename"] = os.path.join(demux_file["root"], demux_file["fn"])
+                        lane["samples"][sname]["samples"] = {}
 
-                    lane_sample = lane["samples"][sample]  # this sample in this lane
+                    sample = lane["samples"][sname]  # this sample in this lane
 
                     # total lane stats
                     lane["reads"] += int(row["# Reads"])
@@ -375,14 +374,14 @@ class MultiqcModule(BaseMultiqcModule):
                     lane["basesQ30"] += int(row.get("# of >= Q30 Bases (PF)", "0"))  # Column only present pre v3.9.3
 
                     # stats for this sample in this lane
-                    lane_sample["reads"] += int(row["# Reads"])
-                    lane_sample["yield"] += int(row["# Reads"]) * demux_file["cluster_length"]
-                    lane_sample["perfect_index_reads"] += int(row["# Perfect Index Reads"])
-                    lane_sample["one_mismatch_index_reads"] += int(row["# One Mismatch Index Reads"])
+                    sample["reads"] += int(row["# Reads"])
+                    sample["yield"] += int(row["# Reads"]) * demux_file["cluster_length"]
+                    sample["perfect_index_reads"] += int(row["# Perfect Index Reads"])
+                    sample["one_mismatch_index_reads"] += int(row["# One Mismatch Index Reads"])
                     # Column only present pre v3.9.3
-                    lane_sample["basesQ30"] += int(row.get("# of >= Q30 Bases (PF)", 0))
+                    sample["basesQ30"] += int(row.get("# of >= Q30 Bases (PF)", 0))
                     # Column only present pre v3.9.3
-                    lane_sample["mean_quality"] += float(row.get("Mean Quality Score (PF)", 0))
+                    sample["mean_quality"] += float(row.get("Mean Quality Score (PF)", 0))
 
                 if lane_id not in total_reads_in_lane:
                     total_reads_in_lane[lane_id] = 0
@@ -390,7 +389,7 @@ class MultiqcModule(BaseMultiqcModule):
                 # Add up number of reads, regardless of undetermined or not
                 total_reads_in_lane[lane_id] += int(row["# Reads"])
 
-                if num_demux_files == 1 and sample == "Undetermined":
+                if num_demux_files == 1 and sname == "Undetermined":
                     self.per_lane_undetermined_reads[lane_id] += int(row["# Reads"])
 
         self.total_reads_in_lane_per_file[filename] = total_reads_in_lane
