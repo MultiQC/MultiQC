@@ -102,7 +102,7 @@ bclconvert/quality_metrics:
 bclconvert/adaptermetrics:
   fn: "Adapter_Metrics.csv"
 bclconvert/unknown_barcodes:
-  fn: "Top_Unknown_Barcodes.csv"
+  fn: "Top_Unk"
 biobambam2/bamsormadup:
   contents: "# bamsormadup"
   num_lines: 2
