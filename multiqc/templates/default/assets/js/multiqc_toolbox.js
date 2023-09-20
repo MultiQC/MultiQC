@@ -344,6 +344,7 @@ $(function () {
         var f_scale = parseInt($("#mqc_export_scaling").val());
         var f_width = parseInt($("#mqc_exp_width").val()) / f_scale;
         var f_height = parseInt($("#mqc_exp_height").val()) / f_scale;
+        var zip = new JSZip();
         $("#mqc_export_selectplots input:checked").each(function () {
           var fname = $(this).val();
           var hc = $("#" + fname).highcharts();
@@ -355,7 +356,9 @@ $(function () {
             scale: f_scale,
           };
           if (hc !== undefined) {
-            hc.exportChartLocal(cfg);
+            var svg = hc.getSVG();
+            // add svg to a zip archive
+            zip.file(fname + ".svg", svg);
           } else if ($("#" + fname).hasClass("has-custom-export")) {
             $("#" + fname).trigger("mqc_plotexport_image", cfg);
           } else {
@@ -369,6 +372,10 @@ $(function () {
               " plots skipped.\n\nNote that it is not currently possible to export dot plot images from reports. Data exports do work."
           );
         }
+        // Save the zip and trigger a download
+        zip.generateAsync({ type: "blob" }).then(function (content) {
+          saveAs(content, "multiqc_plots.zip");
+        });
       }
       ////// EXPORT PLOT DATA
       //////
