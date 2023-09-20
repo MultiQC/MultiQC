@@ -7,7 +7,7 @@ from collections import OrderedDict, defaultdict
 from itertools import islice
 
 from multiqc import config
-from multiqc.modules.base_module import BaseMultiqcModule, ModuleBadInputError, ModuleNoSamplesFound
+from multiqc.modules.base_module import BaseMultiqcModule, ModuleNoSamplesFound
 from multiqc.plots import bargraph, table
 
 log = logging.getLogger(__name__)
@@ -31,9 +31,9 @@ class MultiqcModule(BaseMultiqcModule):
         self.per_lane_undetermined_reads = dict()
         self.total_reads_in_lane_per_file = dict()
         bclconvert_data = dict()
-        for demux in demuxes:
+        for demux in demuxes.values():
             self.parse_demux_data(demux, bclconvert_data, len(demuxes))
-        for qmetric in qmetrics:
+        for qmetric in qmetrics.values():
             self.parse_qmetrics_data(bclconvert_data, qmetric)
 
         if len(demuxes) == 0:
@@ -283,39 +283,36 @@ class MultiqcModule(BaseMultiqcModule):
         # because demux files don't contain run-ids we need to match demux and runinfo
         # logs from the same directory, but find_log_files() does not guarantee order;
         # however it provides root dir, so we use that.
-        demuxes = self._find_log_files_and_sort("bclconvert/demux", "root")
-        qmetrics = self._find_log_files_and_sort("bclconvert/quality_metrics", "root")  # v3.9.3 and above
-        runinfos = self._find_log_files_and_sort("bclconvert/runinfo", "root")
+        demuxes_by_root = {f["root"]: f for f in self.find_log_files("bclconvert/demux")}
+        runinfos_by_root = {f["root"]: f for f in self.find_log_files("bclconvert/runinfo")}
+        qmetrics_by_root = {f["root"]: f for f in self.find_log_files("bclconvert/quality_metrics")}
 
-        if not len(demuxes) == len(runinfos):
-            raise ModuleBadInputError(
-                f"Different amount of Demux Stats files and RunInfoXML files found: "
-                f"'{len(demuxes)}', '{len(runinfos)}'"
-            )
+        for root in runinfos_by_root.copy().keys():
+            if root not in demuxes_by_root:
+                log.error(f"Found RunInfo.xml file in {root} but no Demux Stats file, skipping")
+                del runinfos_by_root[root]
+                continue
+        for root in demuxes_by_root.copy().keys():
+            if root not in runinfos_by_root:
+                log.error(f"Found Demux Stats file in {root} but no RunInfo.xml file, skipping")
+                del demuxes_by_root[root]
+                continue
 
         multiple_sequencing_runs = None
         last_run_id = None
-        for idx, f in enumerate(runinfos):
-            runinfo = self._parse_single_runinfo_file(f)
-
-            if f["root"] != demuxes[idx]["root"]:
-                raise ModuleBadInputError(
-                    f"Expected RunInfo.xml file in '{f['root']}' and Demultiplex_Stats.csv in '{demuxes[idx]['root']}' to be in the same directory"
-                )
-
-            demuxes[idx]["run_id"] = runinfo["run_id"]
-            demuxes[idx]["cluster_length"] = runinfo["cluster_length"]
-            try:
-                qmetrics[idx]["run_id"] = runinfo["run_id"]
-            except IndexError:
-                pass
+        for root, demux in demuxes_by_root.items():
+            runinfo = self._parse_single_runinfo_file(runinfos_by_root[root])
+            demux["run_id"] = runinfo["run_id"]
+            demux["cluster_length"] = runinfo["cluster_length"]
+            if qmetrics := qmetrics_by_root.get(root):
+                qmetrics["run_id"] = runinfo["run_id"]
 
             if last_run_id and runinfo["run_id"] != last_run_id:
                 # this will mean we supress unknown reads, since we can't do a recalculation
                 multiple_sequencing_runs = True
             last_run_id = runinfo["run_id"]
 
-        return demuxes, qmetrics, multiple_sequencing_runs, last_run_id
+        return demuxes_by_root, qmetrics_by_root, multiple_sequencing_runs, last_run_id
 
     def _recalculate_undetermined(self, bclconvert_data, last_run_id):
         # We have to calculate "corrected" unknown read counts when parsing more than
@@ -382,19 +379,16 @@ class MultiqcModule(BaseMultiqcModule):
                     lane_sample["yield"] += int(row["# Reads"]) * demux_file["cluster_length"]
                     lane_sample["perfect_index_reads"] += int(row["# Perfect Index Reads"])
                     lane_sample["one_mismatch_index_reads"] += int(row["# One Mismatch Index Reads"])
-                    lane_sample["basesQ30"] += int(
-                        row.get("# of >= Q30 Bases (PF)", "0")
-                    )  # Column only present pre v3.9.3
-                    lane_sample["mean_quality"] += float(
-                        row.get("Mean Quality Score (PF)", "0")
-                    )  # Column only present pre v3.9.3
+                    # Column only present pre v3.9.3
+                    lane_sample["basesQ30"] += int(row.get("# of >= Q30 Bases (PF)", 0))
+                    # Column only present pre v3.9.3
+                    lane_sample["mean_quality"] += float(row.get("Mean Quality Score (PF)", 0))
 
                 if lane_id not in total_reads_in_lane:
                     total_reads_in_lane[lane_id] = 0
 
-                total_reads_in_lane[lane_id] += int(
-                    row["# Reads"]
-                )  # add up number of reads, regardless of undetermined or not
+                # Add up number of reads, regardless of undetermined or not
+                total_reads_in_lane[lane_id] += int(row["# Reads"])
 
                 if num_demux_files == 1 and sample == "Undetermined":
                     self.per_lane_undetermined_reads[lane_id] += int(row["# Reads"])
@@ -419,7 +413,7 @@ class MultiqcModule(BaseMultiqcModule):
             sample = row["SampleID"]
             if sample != "Undetermined":  # don't include undetermined reads at all in any of the calculations...
                 if sample not in run_data[lane_id]["samples"]:
-                    log.warn(f"Found unrecognised sample {sample} in Quality Metrics file, skipping")
+                    log.warning(f"Found unrecognised sample {sample} in Quality Metrics file, skipping")
                     continue
                 lane_sample = run_data[lane_id]["samples"][sample]  # this sample in this lane
 
@@ -550,7 +544,7 @@ class MultiqcModule(BaseMultiqcModule):
         depth_available = False
 
         for sample_id, sample in bclconvert_by_sample.items():
-            # percent stats for bclconvert-bysample i.e. stats for sample across all lanes
+            # Percent stats for bclconvert-bysample i.e. stats for sample across all lanes
             try:
                 perfect_percent = "{0:.1f}".format(float(100.0 * sample["perfect_index_reads"] / sample["reads"]))
             except ZeroDivisionError:

@@ -27,7 +27,7 @@ import rich
 import rich_click as click
 from rich.syntax import Syntax
 
-from .modules.base_module import ModuleBadInputError, ModuleNoSamplesFound
+from .modules.base_module import ModuleNoSamplesFound
 from .plots import table
 from .utils import config, lint_helpers, log, megaqc, plugin_hooks, report, software_versions, util_functions
 
