@@ -7,7 +7,7 @@ from collections import OrderedDict, defaultdict
 from itertools import islice
 
 from multiqc import config
-from multiqc.modules.base_module import BaseMultiqcModule, ModuleBadInputError, ModuleNoSamplesFound
+from multiqc.modules.base_module import BaseMultiqcModule, ModuleNoSamplesFound
 from multiqc.plots import bargraph, table
 
 log = logging.getLogger(__name__)
@@ -317,7 +317,7 @@ class MultiqcModule(BaseMultiqcModule):
 
             if len(runinfos) > 1:
                 if self.cluster_length and rundata["cluster_length"] != self.cluster_length:
-                    raise ModuleBadInputError(
+                    raise UserWarning(
                         "Detected different read lengths across the RunXml files. We cannot handle this - read length across all input directories must be the same."
                     )
             self.cluster_length = rundata["cluster_length"]

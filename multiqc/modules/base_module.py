@@ -22,19 +22,6 @@ class ModuleNoSamplesFound(Exception):
     """Module checked all input files but couldn't find any data to use"""
 
 
-class ModuleBadInputError(Exception):
-    """
-    Something is wrong with input files, and the module cannot run at all.
-    In can happen in the situations when the module needs to collate logs
-    across all samples, and it can't do that because one log is malformed.
-    """
-
-
-class ModuleFatalError(Exception):
-    """Module decides that something is so badly wrong that the entire
-    MultiQC run needs to stop (exit code 1)"""
-
-
 class BaseMultiqcModule(object):
     def __init__(
         self,
