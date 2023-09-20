@@ -304,7 +304,8 @@ class MultiqcModule(BaseMultiqcModule):
             runinfo = self._parse_single_runinfo_file(runinfos_by_root[root])
             demux["run_id"] = runinfo["run_id"]
             demux["cluster_length"] = runinfo["cluster_length"]
-            if qmetrics := qmetrics_by_root.get(root):
+            qmetrics = qmetrics_by_root.get(root)
+            if qmetrics:
                 qmetrics["run_id"] = runinfo["run_id"]
 
             if last_run_id and runinfo["run_id"] != last_run_id:
@@ -357,7 +358,8 @@ class MultiqcModule(BaseMultiqcModule):
                     run_data[lane_id] = lane
                     self.per_lane_undetermined_reads[lane_id] = 0
 
-                if (sname := row["SampleID"]) != "Undetermined":
+                sname = row["SampleID"]
+                if sname != "Undetermined":
                     # Don't include undetermined reads at all in any of the calculations...
                     if sname not in lane["samples"]:
                         lane["samples"][sname] = self._reads_dictionary()
