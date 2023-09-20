@@ -67,11 +67,11 @@ class MultiqcModule(BaseMultiqcModule):
             html.append("<tbody>")
             for i, (tool, versions) in enumerate(sorted(tmp_versions.items())):
                 rows = [
-                    f"<td><samp>{tool}</samp></td>",
+                    f"<td>{tool}</td>",
                     f"<td><samp>{', '.join(list(map(str, versions)))}</samp></td>",
                 ]
                 if not ignore_groups:
-                    rows.insert(0, f"<td><samp>{group if (i == 0) else ''}</samp></td>")
+                    rows.insert(0, f"<td>{group if (i == 0) else ''}</td>")
                 html.append(f"<tr>{''.join(rows)}</tr>")
             html.append("</tbody>")
         html.append("</table>")
