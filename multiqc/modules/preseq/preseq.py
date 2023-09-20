@@ -164,7 +164,7 @@ class MultiqcModule(BaseMultiqcModule):
             }
         )
 
-        self.add_section(name=name, description=description, anchor="preseq-plot", plot=linegraph.plot(data, pconfig))
+        self.add_section(name=name, description=description, anchor=pconfig["id"], plot=linegraph.plot(data, pconfig))
 
     def _parse_real_counts(self, sample_names):
         real_counts_file_raw = None

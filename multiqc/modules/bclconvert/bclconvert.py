@@ -158,7 +158,7 @@ class MultiqcModule(BaseMultiqcModule):
             anchor="bclconvert-bysample",
             description="Number of reads per sample.",
             helptext="""Perfect index reads are those that do not have a single mismatch.
-                All samples are aggregated across lanes combinned. Undetermined reads are ignored.
+                All samples are aggregated across lanes combined. Undetermined reads are ignored.
                 Undetermined reads are treated as a separate sample.""",
             plot=bargraph.plot(
                 [
