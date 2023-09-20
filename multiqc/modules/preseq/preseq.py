@@ -108,8 +108,9 @@ class MultiqcModule(BaseMultiqcModule):
 
         name = "Complexity curve"
         description = ""
+        section_id = "preseq_plot"
         pconfig = {
-            "id": "preseq_plot",
+            "id": "preseq_complexity_plot",
             "title": "Preseq: Complexity curve",
             "xlab": x_axis_name,
             "ylab": y_axis_name,
@@ -124,6 +125,7 @@ class MultiqcModule(BaseMultiqcModule):
             pconfig["title"] += " (molecule count)"
             pconfig["id"] += "_molecules"
             name += " (molecule count)"
+            section_id += "_molecules"
 
         # Parse the real counts if we have them
         real_cnts_all, real_cnts_unq = self._parse_real_counts(data.keys())
@@ -164,7 +166,7 @@ class MultiqcModule(BaseMultiqcModule):
             }
         )
 
-        self.add_section(name=name, description=description, anchor=pconfig["id"], plot=linegraph.plot(data, pconfig))
+        self.add_section(name=name, description=description, anchor=section_id, plot=linegraph.plot(data, pconfig))
 
     def _parse_real_counts(self, sample_names):
         real_counts_file_raw = None
