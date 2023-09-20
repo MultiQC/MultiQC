@@ -103,6 +103,11 @@ class MultiqcModule(BaseMultiqcModule):
                 parsed_data["isomiR_perc"] = 0.0
             self.mirtop_data[cleaned_s_name] = parsed_data
 
+        version = content.get("meta", {}).get("version")
+        if version is not None:
+            version = version.strip("v")
+            self.add_software_version(version, cleaned_s_name)
+
     def aggregate_snps_in_samples(self):
         """Aggregate info for iso_snp isomiRs (for clarity). "Mean" section will be recomputed"""
         snv_aggr = {}  ## sub dict with all infos except for snps
