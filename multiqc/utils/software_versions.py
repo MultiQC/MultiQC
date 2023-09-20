@@ -16,6 +16,11 @@ from multiqc.utils import report as mqc_report
 log = logging.getLogger(__name__)
 
 
+def normalize_name(name: str):
+    """Normalize software name to lowercase and remove spaces, underscores and dashes"""
+    return name.lower().replace(" ", "").replace("-", "").replace("_", "")
+
+
 def update_versions_from_config(config, report):
     """Update report with software versions from config if provided"""
     # Parse software version from config if provided
@@ -24,9 +29,21 @@ def update_versions_from_config(config, report):
         # Try to find if the software is listed among the executed modules.
         # Unlisted software are still reported in the `Software Versions` section.
         module = find_matching_module(group, report.modules_output)
+
+        # Map normalized module software names to the nicely formatted names.
+        module_softwares = {}
+        if module is not None:
+            module_softwares = {normalize_name(m_software): m_software for m_software in module.versions}
+
+            # Use the nicely formatted module name as group name
+            group = module.name
+
         for software, versions in softwares.items():
             # Update versions if the software is listed among the executed modules
             if module is not None and not config.disable_version_detection:
+                # Update software name to match the module name format if found
+                software = module_softwares.get(normalize_name(software), software)
+
                 for version in versions:
                     module.add_software_version(str(version), software_name=software)
 
@@ -119,13 +136,13 @@ def validate_software_versions(input):
         return output, False
 
     for level1_key, level1_values in input.items():
-        group = level1_key.lower()
-        software = level1_key.lower()
+        group = level1_key
+        software = level1_key
 
         # Check if the input is in format (1)
         if isinstance(level1_values, dict):
             for level2_key, versions in level1_values.items():
-                software = level2_key.lower()
+                software = level2_key
                 if isinstance(versions, str):
                     versions = [versions]
 
@@ -184,10 +201,10 @@ def sort_versions(versions):
 
 def find_matching_module(software_name: str, modules):
     """
-    Find the module by name, ignoring case.
+    Find the module by name
     """
-    d = {m.name.lower(): m for m in modules}
-    return d.get(software_name.lower())
+    d = {normalize_name(m.name): m for m in modules}
+    return d.get(normalize_name(software_name))
 
 
 def parse_version(version: str):

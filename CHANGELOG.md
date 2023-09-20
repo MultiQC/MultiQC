@@ -67,6 +67,8 @@ This idea goes way back to [issue #290](https://github.com/ewels/MultiQC/issues/
   - Fix `UnboundLocalError` on outputs when Kanju was run with the `-e` flag ([#2023](https://github.com/ewels/MultiQC/pull/2023))
 - **Qualimap**
   - BamQC: Include `% On Target` in General Stats table ([#2019](https://github.com/ewels/MultiQC/issues/2019))
+- **BcfTools**
+  - Stats: fix parsing multi-sample logs ([#2052](https://github.com/ewels/MultiQC/issues/2052))
 - **BCL Convert**
   - Work correctly with multiple runs across different cluster lengths, so the module doesn't bail on the data anymore.
   - Fix bug with when a mixture of post-3.9.3 runs and pre-3.9.3 runs are passed, and the quality metrics files aren't available for some runs.
