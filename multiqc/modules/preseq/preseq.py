@@ -359,7 +359,7 @@ def _prep_real_counts(real_cnts_all, real_cnts_unq, is_basepairs, counts_in_1x, 
 
 
 def _real_counts_to_plot_series(data, yx_by_sample, xs_by_sample, x_lbl, y_lbl, y_tt_lbl):
-    scale = mqc_colour.mqc_colour_scale("Highcharts")
+    scale = mqc_colour.mqc_colour_scale("plot_defaults")
 
     series = []
     for si, sn in enumerate(sorted(data.keys())):

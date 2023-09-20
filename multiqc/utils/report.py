@@ -533,8 +533,6 @@ def save_htmlid(html_id, skiplint=False):
     # Check for duplicates
     i = 1
     html_id_base = html_id_clean
-    if html_id_base.startswith("preseq"):
-        print()
     while html_id_clean in html_ids:
         html_id_clean = "{}-{}".format(html_id_base, i)
         i += 1

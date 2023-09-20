@@ -221,7 +221,7 @@ class MultiqcModule(BaseMultiqcModule):
     @staticmethod
     def _reads_dictionary():
         return {
-            "reads": 0,
+            "clusters": 0,
             "yield": 0,
             "perfect_index_reads": 0,
             "one_mismatch_index_reads": 0,
@@ -336,7 +336,7 @@ class MultiqcModule(BaseMultiqcModule):
         for lane_id, lane in run_data.items():
             determined_reads = 0
             for sample_id, sample in lane["samples"].items():
-                determined_reads += sample["reads"]
+                determined_reads += sample["clusters"]
             self.per_lane_undetermined_reads[lane_id] = total_reads_per_lane[lane_id] - determined_reads
 
     def parse_demux_data(self, demux_file, bclconvert_data, num_demux_files):
@@ -367,14 +367,14 @@ class MultiqcModule(BaseMultiqcModule):
                     sample = lane["samples"][sname]  # this sample in this lane
 
                     # total lane stats
-                    lane["reads"] += int(row["# Reads"])
+                    lane["clusters"] += int(row["# Reads"])
                     lane["yield"] += int(row["# Reads"]) * demux_file["cluster_length"]
                     lane["perfect_index_reads"] += int(row["# Perfect Index Reads"])
                     lane["one_mismatch_index_reads"] += int(row["# One Mismatch Index Reads"])
                     lane["basesQ30"] += int(row.get("# of >= Q30 Bases (PF)", "0"))  # Column only present pre v3.9.3
 
                     # stats for this sample in this lane
-                    sample["reads"] += int(row["# Reads"])
+                    sample["clusters"] += int(row["# Reads"])
                     sample["yield"] += int(row["# Reads"]) * demux_file["cluster_length"]
                     sample["perfect_index_reads"] += int(row["# Perfect Index Reads"])
                     sample["one_mismatch_index_reads"] += int(row["# One Mismatch Index Reads"])
@@ -436,27 +436,27 @@ class MultiqcModule(BaseMultiqcModule):
     def _total_reads_for_run(self, bclconvert_data, run_id):
         totalreads = 0
         for lane_id, lane in bclconvert_data[run_id].items():
-            totalreads += lane["reads"]
+            totalreads += lane["clusters"]
         return totalreads
 
     def _total_reads_all_runs(self, bclconvert_data):
         totalreads = 0
         for key, run_data in bclconvert_data.items():
             for lane_id, lane in run_data.items():
-                totalreads += lane["reads"]
+                totalreads += lane["clusters"]
         return totalreads
 
     def _set_lane_percentage_stats(self, data, cluster_length):
         try:
-            data["percent_Q30"] = (float(data["basesQ30"]) / float(data["reads"] * cluster_length)) * 100.0
+            data["percent_Q30"] = (float(data["basesQ30"]) / float(data["clusters"] * cluster_length)) * 100.0
         except ZeroDivisionError:
             data["percent_Q30"] = "NA"
         try:
-            data["percent_perfectIndex"] = (float(data["perfect_index_reads"]) / float(data["reads"])) * 100.0
+            data["percent_perfectIndex"] = (float(data["perfect_index_reads"]) / float(data["clusters"])) * 100.0
         except ZeroDivisionError:
             data["percent_perfectIndex"] = "NA"
         try:
-            data["percent_oneMismatch"] = float(data["one_mismatch_index_reads"]) / float(data["reads"]) * 100.0
+            data["percent_oneMismatch"] = float(data["one_mismatch_index_reads"]) / float(data["clusters"]) * 100.0
         except ZeroDivisionError:
             data["percent_oneMismatch"] = "NA"
         try:
@@ -481,7 +481,7 @@ class MultiqcModule(BaseMultiqcModule):
                 lane_key_name = self.prepend_runid(run_id, lane_id)
                 bclconvert_by_lane[lane_key_name] = {
                     "depth": lane["depth"],
-                    "reads": lane["reads"],
+                    "clusters": lane["clusters"],
                     "yield": lane["yield"],
                     "perfect_index_reads": lane["perfect_index_reads"],
                     "one_mismatch_index_reads": lane["one_mismatch_index_reads"],
@@ -501,7 +501,7 @@ class MultiqcModule(BaseMultiqcModule):
 
                     s = bclconvert_by_sample[sample_id]
 
-                    s["reads"] += int(sample["reads"])
+                    s["clusters"] += int(sample["clusters"])
                     s["yield"] += int(sample["yield"])
                     s["perfect_index_reads"] += int(sample["perfect_index_reads"])
                     s["one_mismatch_index_reads"] += int(sample["one_mismatch_index_reads"])
@@ -545,12 +545,12 @@ class MultiqcModule(BaseMultiqcModule):
         for sample_id, sample in bclconvert_by_sample.items():
             # Percent stats for bclconvert-bysample i.e. stats for sample across all lanes
             try:
-                perfect_percent = "{0:.1f}".format(float(100.0 * sample["perfect_index_reads"] / sample["reads"]))
+                perfect_percent = "{0:.1f}".format(float(100.0 * sample["perfect_index_reads"] / sample["clusters"]))
             except ZeroDivisionError:
                 perfect_percent = "0.0"
             try:
                 one_mismatch_pecent = "{0:.1f}".format(
-                    float(100.0 * sample["one_mismatch_index_reads"] / sample["reads"])
+                    float(100.0 * sample["one_mismatch_index_reads"] / sample["clusters"])
                 )
             except ZeroDivisionError:
                 one_mismatch_pecent = "0.0"
@@ -566,14 +566,14 @@ class MultiqcModule(BaseMultiqcModule):
                 percent_yield = "NA"
 
             try:
-                percent_reads = (float(sample["reads"]) / float(total_reads)) * 100.0
+                percent_reads = (float(sample["clusters"]) / float(total_reads)) * 100.0
             except ZeroDivisionError:
                 percent_reads = "NA"
 
             sample_stats_data[sample_id] = {
                 "depth": sample["depth"],
                 "basesQ30": sample["basesQ30"],
-                "reads": sample["reads"],
+                "clusters": sample["clusters"],
                 "percent_reads": percent_reads,
                 "yield": sample["yield"],
                 "percent_yield": percent_yield,
@@ -599,7 +599,7 @@ class MultiqcModule(BaseMultiqcModule):
                 "scale": "BuPu",
             }
 
-        headers["reads"] = {
+        headers["clusters"] = {
             "title": "{} Clusters".format(config.read_count_prefix),
             "description": "Total number of clusters (read pairs) for this sample as determined by bclconvert demultiplexing ({})".format(
                 config.read_count_desc
@@ -788,7 +788,7 @@ class MultiqcModule(BaseMultiqcModule):
         for key, value in counts.items():
             bar_data[key] = {
                 "perfect": value["perfect_index_reads"],
-                "imperfect": value["reads"] - value["perfect_index_reads"],
+                "imperfect": value["clusters"] - value["perfect_index_reads"],
             }
             try:
                 if key.startswith(
