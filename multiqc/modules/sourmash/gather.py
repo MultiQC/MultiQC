@@ -7,6 +7,7 @@ import logging
 from collections import OrderedDict
 
 from multiqc.plots import bargraph
+from multiqc.utils import config
 
 # Initialise the logger
 log = logging.getLogger(__name__)
@@ -18,7 +19,7 @@ class GatherMixin:
         Modeled after the kraken module and the sourmash compare module.
         """
 
-        self.top_n = 5
+        self.top_n = getattr(config, "sourmash", {}).get("gather", {}).get("top_n", 5)
 
         # find and load gather reports
         self.gather_raw_data = dict()

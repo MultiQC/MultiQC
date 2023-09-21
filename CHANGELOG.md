@@ -69,6 +69,8 @@ This idea goes way back to [issue #290](https://github.com/ewels/MultiQC/issues/
   - BamQC: Include `% On Target` in General Stats table ([#2019](https://github.com/ewels/MultiQC/issues/2019))
 - **BcfTools**
   - Stats: fix parsing multi-sample logs ([#2052](https://github.com/ewels/MultiQC/issues/2052))
+- **Kraken**
+  - Parametrize Top-N through config
 
 ## [MultiQC v1.15](https://github.com/ewels/MultiQC/releases/tag/v1.15) - 2023-08-04
 
