@@ -29,13 +29,24 @@ class StatsReportMixin:
             for line in f["f"].splitlines():
                 # Get version number from file contents
                 if line.startswith("# This file was produced by samtools stats"):
+                    # Look for Samtools version
                     version_match = re.search(VERSION_REGEX, line)
-                    if version_match is not None:
-                        self.add_software_version(version_match.group(1), f["s_name"])
+                    if version_match is None:
+                        continue
 
+                    # Add Samtools version
+                    samtools_version = version_match.group(1)
+                    self.add_software_version(samtools_version, f["s_name"])
+
+                    # Look for HTSlib version
                     htslib_version_match = re.search(HTSLIB_REGEX, line)
-                    if htslib_version_match is not None:
-                        self.add_software_version(htslib_version_match.group(1), f["s_name"], "htslib")
+                    if htslib_version_match is None:
+                        continue
+
+                    # Add HTSlib version if different from Samtools version
+                    htslib_version = htslib_version_match.group(1)
+                    if htslib_version != samtools_version:
+                        self.add_software_version(htslib_version, f["s_name"], "HTSlib")
 
                 if not line.startswith("SN"):
                     continue
