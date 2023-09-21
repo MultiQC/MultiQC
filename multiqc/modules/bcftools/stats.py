@@ -47,13 +47,24 @@ class StatsReportMixin:
             for line in f["f"].splitlines():
                 # Get version number from file contents
                 if line.startswith("# This file was produced by bcftools stats"):
+                    # Look for BCFtools version
                     version_match = re.search(VERSION_REGEX, line)
-                    if version_match is not None:
-                        self.add_software_version(version_match.group(1), f["s_name"])
+                    if version_match is None:
+                        continue
 
+                    # Add BCFtools version
+                    bcftools_version = version_match.group(1)
+                    self.add_software_version(bcftools_version, f["s_name"])
+
+                    # Look for HTSlib version
                     htslib_version_match = re.search(HTSLIB_REGEX, line)
-                    if htslib_version_match is not None:
-                        self.add_software_version(htslib_version_match.group(1), f["s_name"], "htslib")
+                    if htslib_version_match is None:
+                        continue
+
+                    # Add HTSlib version if different from BCFtools version
+                    htslib_version = htslib_version_match.group(1)
+                    if htslib_version != bcftools_version:
+                        self.add_software_version(htslib_version, f["s_name"], "HTSlib")
 
                 s = line.split("\t")
                 # Get the sample names - one per 'set'
