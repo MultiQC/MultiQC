@@ -71,7 +71,7 @@ This idea goes way back to [issue #290](https://github.com/ewels/MultiQC/issues/
 - **BcfTools**
   - Stats: fix parsing multi-sample logs ([#2052](https://github.com/ewels/MultiQC/issues/2052))
 - **Kraken**
-  - Parametrize Top-N through config
+  - Parametrize top-N through config ([#2060](https://github.com/ewels/MultiQC/pull/2060))
 
 ## [MultiQC v1.15](https://github.com/ewels/MultiQC/releases/tag/v1.15) - 2023-08-04
 
