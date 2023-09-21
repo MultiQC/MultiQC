@@ -208,7 +208,7 @@ class GatherMixin:
 
         self.add_section(
             name="Gather: Top Genomes",
-            anchor="gather-topfive",
+            anchor="sourmash-gather-top",
             description=f"The percentage of the sample falling into the top {self.top_n} genome matches.",
             helptext=f"""
                 To make this plot, the percentage of each sample assigned to a given genome is summed across all samples.
