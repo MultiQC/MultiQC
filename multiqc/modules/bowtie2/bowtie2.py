@@ -1,14 +1,12 @@
-#!/usr/bin/env python
-
 """ MultiQC module to parse output from Bowtie 2 """
 
-from __future__ import print_function
-from collections import OrderedDict
+
 import logging
 import re
+from collections import OrderedDict
 
-from multiqc.plots import bargraph
 from multiqc.modules.base_module import BaseMultiqcModule
+from multiqc.plots import bargraph
 
 # Initialise the logger
 log = logging.getLogger(__name__)
@@ -18,7 +16,6 @@ class MultiqcModule(BaseMultiqcModule):
     """Bowtie 2 module, parses stderr logs."""
 
     def __init__(self):
-
         # Initialise the parent object
         super(MultiqcModule, self).__init__(
             name="Bowtie 2 / HiSAT2",

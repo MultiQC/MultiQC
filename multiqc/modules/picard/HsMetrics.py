@@ -1,14 +1,12 @@
-#!/usr/bin/env python
-
 """ MultiQC submodule to parse output from Picard HsMetrics """
 
-from collections import OrderedDict, defaultdict
 import logging
 import os
 import re
+from collections import OrderedDict, defaultdict
 
 from multiqc import config
-from multiqc.plots import table, linegraph
+from multiqc.plots import linegraph, table
 
 # Initialise the logger
 log = logging.getLogger(__name__)
@@ -21,8 +19,16 @@ FIELD_DESCRIPTIONS = {
     "FOLD_80_BASE_PENALTY": 'The fold over-coverage necessary to raise 80% of bases in "non-zero-cvg" targets to the mean coverage level in those targets.',
     "FOLD_ENRICHMENT": "The fold by which the baited region has been amplified above genomic background.",
     "GC_DROPOUT": "A measure of how undercovered >= 50% GC regions are relative to the mean.",
+    "GENOME_SIZE": "The number of bases in the reference genome used for alignment.",
     "HET_SNP_Q": "The Phred Scaled Q Score of the theoretical HET SNP sensitivity.",
     "HET_SNP_SENSITIVITY": "The theoretical HET SNP sensitivity.",
+    "HS_LIBRARY_SIZE": "The estimated number of unique molecules in the selected part of the library.",
+    "HS_PENALTY_100X": "The 'hybrid selection penalty' incurred to get 80% of target bases to 100X. This metric should be interpreted as: if I have a design with 10 megabases of target, and want to get 100X coverage I need to sequence until PF_ALIGNED_BASES = 10^7 * 100 * HS_PENALTY_100X.",
+    "HS_PENALTY_10X": "The 'hybrid selection penalty' incurred to get 80% of target bases to 10X. This metric should be interpreted as: if I have a design with 10 megabases of target, and want to get 10X coverage I need to sequence until PF_ALIGNED_BASES = 10^7 * 10 * HS_PENALTY_10X.",
+    "HS_PENALTY_20X": "The 'hybrid selection penalty' incurred to get 80% of target bases to 20X. This metric should be interpreted as: if I have a design with 10 megabases of target, and want to get 20X coverage I need to sequence until PF_ALIGNED_BASES = 10^7 * 20 * HS_PENALTY_20X.",
+    "HS_PENALTY_30X": "The 'hybrid selection penalty' incurred to get 80% of target bases to 30X. This metric should be interpreted as: if I have a design with 10 megabases of target, and want to get 30X coverage I need to sequence until PF_ALIGNED_BASES = 10^7 * 30 * HS_PENALTY_30X.",
+    "HS_PENALTY_40X": "The 'hybrid selection penalty' incurred to get 80% of target bases to 40X.  This metric should be interpreted as: if I have a design with 10 megabases of target, and want to get 40X coverage I need to sequence until PF_ALIGNED_BASES = 10^7 * 40 * HS_PENALTY_40X.",
+    "HS_PENALTY_50X": "The 'hybrid selection penalty' incurred to get 80% of target bases to 50X.  This metric should be interpreted as: if I have a design with 10 megabases of target, and want to get 50X coverage I need to sequence until PF_ALIGNED_BASES = 10^7 * 50 * HS_PENALTY_50X.",
     "MAX_TARGET_COVERAGE": "The maximum coverage of reads that mapped to target regions of an experiment.",
     "MEAN_BAIT_COVERAGE": "The mean coverage of all baits in the experiment.",
     "MEAN_TARGET_COVERAGE": "The mean coverage of targets.",
@@ -43,6 +49,14 @@ FIELD_DESCRIPTIONS = {
     "PCT_PF_UQ_READS_ALIGNED": "PF Reads Aligned / PF Reads.",
     "PCT_PF_UQ_READS": "PF Unique Reads / Total Reads.",
     "PCT_SELECTED_BASES": "On+Near Bait Bases / PF Bases Aligned.",
+    "PCT_TARGET_BASES_100X": "The fraction of all target bases achieving 100X or greater coverage.",
+    "PCT_TARGET_BASES_10X": "The fraction of all target bases achieving 10X or greater coverage.",
+    "PCT_TARGET_BASES_1X": "The fraction of all target bases achieving 1X or greater coverage.",
+    "PCT_TARGET_BASES_20X": "The fraction of all target bases achieving 20X or greater coverage.",
+    "PCT_TARGET_BASES_2X": "The fraction of all target bases achieving 2X or greater coverage.",
+    "PCT_TARGET_BASES_30X": "The fraction of all target bases achieving 30X or greater coverage.",
+    "PCT_TARGET_BASES_40X": "The fraction of all target bases achieving 40X or greater coverage.",
+    "PCT_TARGET_BASES_50X": "The fraction of all target bases achieving 50X or greater coverage.",
     "PCT_USABLE_BASES_ON_BAIT": "The number of aligned, de-duped, on-bait bases out of the PF bases available.",
     "PCT_USABLE_BASES_ON_TARGET": "The number of aligned, de-duped, on-target bases out of the PF bases available.",
     "PF_BASES_ALIGNED": "The number of PF unique bases that are aligned with mapping score > 0 to the reference genome.",
@@ -134,49 +148,33 @@ def parse_reports(self):
     self.picard_HsMetrics_data = self.ignore_samples(self.picard_HsMetrics_data)
 
     if len(self.picard_HsMetrics_data) > 0:
-
         # Write parsed data to a file
         self.write_data_file(self.picard_HsMetrics_data, "multiqc_picard_HsMetrics")
 
-        # Add to general stats table
         # Swap question marks with -1
         data = self.picard_HsMetrics_data
         for s_name in data:
             if data[s_name]["FOLD_ENRICHMENT"] == "?":
                 data[s_name]["FOLD_ENRICHMENT"] = -1
 
-        self.general_stats_headers["FOLD_ENRICHMENT"] = {
-            "title": "Fold Enrichment",
-            "min": 0,
-            "format": "{:,.0f}",
-            "scale": "Blues",
-            "suffix": " X",
-        }
-        try:
-            covs = config.picard_config["general_stats_target_coverage"]
-            assert type(covs) == list
-            assert len(covs) > 0
-            covs = [str(i) for i in covs]
-            log.debug("Custom Picard coverage thresholds: {}".format(", ".join([i for i in covs])))
-        except (KeyError, AttributeError, TypeError, AssertionError):
-            covs = ["30"]
-        for c in covs:
-            self.general_stats_headers["PCT_TARGET_BASES_{}X".format(c)] = {
-                "id": "picard_target_bases_{}X".format(c),
-                "title": "% Target Bases {}X".format(c),
-                "description": "Percent of target bases with coverage &ge; {}X".format(c),
-                "max": 100,
-                "min": 0,
-                "suffix": "%",
-                "format": "{:,.0f}",
-                "scale": "RdYlGn",
-                "modify": lambda x: self.multiply_hundred(x),
-            }
-        for s_name in data:
-            if s_name not in self.general_stats_data:
-                self.general_stats_data[s_name] = dict()
-            self.general_stats_data[s_name].update(data[s_name])
-        self.add_section(name="HSMetrics", anchor="picard_hsmetrics", plot=table.plot(data, _get_table_headers(data)))
+        # Add to general stats table
+        general_stats_table(self, data)
+
+        # Add report section
+        self.add_section(
+            name="HSMetrics",
+            anchor="picard_hsmetrics",
+            plot=table.plot(
+                data,
+                _get_table_headers(),
+                {
+                    "id": "picard_hsmetrics_table",
+                    "namespace": "HsMetrics",
+                    "scale": "RdYlGn",
+                    "min": 0,
+                },
+            ),
+        )
         tbases = _add_target_bases(data)
         self.add_section(
             name=tbases["name"], anchor=tbases["anchor"], description=tbases["description"], plot=tbases["plot"]
@@ -201,7 +199,61 @@ def parse_reports(self):
     return len(self.picard_HsMetrics_data)
 
 
-def _get_table_headers(data):
+def general_stats_table(self, data):
+    """
+    Generate table header configs for the General Stats table,
+    add config and data to the base module.
+    """
+    # Look for a user config of which table columns we should use
+    picard_config = getattr(config, "picard_config", {})
+    HsMetrics_genstats_table_cols = picard_config.get("HsMetrics_genstats_table_cols", [])
+    HsMetrics_genstats_table_cols_hidden = picard_config.get("HsMetrics_genstats_table_cols_hidden", [])
+
+    # Custom general stats columns
+    if len(HsMetrics_genstats_table_cols) or len(HsMetrics_genstats_table_cols_hidden):
+        for k, v in _generate_table_header_config(
+            HsMetrics_genstats_table_cols, HsMetrics_genstats_table_cols_hidden
+        ).items():
+            self.general_stats_headers[k] = v
+
+    # Default General Stats headers
+    else:
+        self.general_stats_headers["FOLD_ENRICHMENT"] = {
+            "title": "Fold Enrichment",
+            "min": 0,
+            "format": "{:,.0f}",
+            "scale": "Blues",
+            "suffix": " X",
+        }
+        try:
+            covs = picard_config["general_stats_target_coverage"]
+            assert type(covs) == list
+            assert len(covs) > 0
+            covs = [str(i) for i in covs]
+            log.debug("Custom Picard coverage thresholds: {}".format(", ".join([i for i in covs])))
+        except (KeyError, AttributeError, TypeError, AssertionError):
+            covs = ["30"]
+        for c in covs:
+            self.general_stats_headers["PCT_TARGET_BASES_{}X".format(c)] = {
+                "id": "picard_target_bases_{}X".format(c),
+                "title": "% Target Bases {}X".format(c),
+                "description": "Percent of target bases with coverage &ge; {}X".format(c),
+                "max": 100,
+                "min": 0,
+                "suffix": "%",
+                "format": "{:,.0f}",
+                "scale": "RdYlGn",
+                "modify": lambda x: self.multiply_hundred(x),
+            }
+
+    # Add data to general stats table
+    for s_name in data:
+        if s_name not in self.general_stats_data:
+            self.general_stats_data[s_name] = dict()
+        self.general_stats_data[s_name].update(data[s_name])
+
+
+def _get_table_headers():
     # Look for a user config of which table columns we should use
     picard_config = getattr(config, "picard_config", {})
     HsMetrics_table_cols = picard_config.get("HsMetrics_table_cols")
@@ -242,6 +294,14 @@ def _get_table_headers(data):
     if not HsMetrics_table_cols_hidden:
         HsMetrics_table_cols_hidden = ["BAIT_TERRITORY", "TOTAL_READS", "TARGET_TERRITORY", "AT_DROPOUT", "GC_DROPOUT"]
 
+    return _generate_table_header_config(HsMetrics_table_cols, HsMetrics_table_cols_hidden)
+
+
+def _generate_table_header_config(table_cols=[], hidden_table_cols=[]):
+    """
+    Automatically generate some nice table header configs based on what we know about
+    the different types of Picard data fields.
+    """
     title_cleanup = [
         ("CVG", "coverage"),
         ("UQ", "unique"),
@@ -251,16 +311,16 @@ def _get_table_headers(data):
         ("_", " "),
         ("PCT", ""),
     ]
+
+    # Warn if we see anything unexpected
+    for c in table_cols + hidden_table_cols:
+        if c not in FIELD_DESCRIPTIONS and c[:17] != "PCT_TARGET_BASES_":
+            log.error(f"Field '{c}' not found in expected Picard fields. Please check your config.")
+
     headers = OrderedDict()
-    for h in FIELD_DESCRIPTIONS:
-
-        # Skip anything not listed in the above default / config for this table
-        if h not in HsMetrics_table_cols:
-            continue
-
+    for h in table_cols + hidden_table_cols:
         # Set up the configuration for each column
         if h not in headers:
-
             # Generate a nice string for the column title
             h_title = h
             for s, r in title_cleanup:
@@ -269,9 +329,6 @@ def _get_table_headers(data):
             headers[h] = {
                 "title": h_title.strip().lower().capitalize(),
                 "description": FIELD_DESCRIPTIONS[h] if h in FIELD_DESCRIPTIONS else None,
-                "scale": "RdYlGn",
-                "min": 0,
-                "namespace": "HsMetrics",
             }
             if h.find("PCT") > -1:
                 headers[h]["title"] = "% {}".format(headers[h]["title"])
@@ -292,7 +349,7 @@ def _get_table_headers(data):
             # Manual capitilisation for some strings
             headers[h]["title"] = headers[h]["title"].replace("Pf", "PF").replace("snp", "SNP")
 
-            if h in HsMetrics_table_cols_hidden:
+            if h in hidden_table_cols:
                 headers[h]["hidden"] = True
 
     return headers

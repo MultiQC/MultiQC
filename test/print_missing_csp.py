@@ -1,10 +1,10 @@
-from __future__ import print_function
-from io import open
 import argparse
-import logging
-import re
 import base64
 import hashlib
+import logging
+import re
+from io import open
+
 from bs4 import BeautifulSoup
 
 logger = logging.getLogger(__name__)
@@ -22,7 +22,8 @@ def is_executable(script):
     executable_types = {
         "text/javascript",
         "application/javascript",
-        "module" "text/ecmascript",
+        "module",
+        "text/ecmascript",
         "application/ecmascript",
     }
     script_type = script.attrs.get("type", "text/javascript")

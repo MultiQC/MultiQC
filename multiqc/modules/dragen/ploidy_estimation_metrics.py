@@ -1,13 +1,9 @@
-#!/usr/bin/env python
-from __future__ import print_function
-
-import re
+import logging
 from collections import OrderedDict, defaultdict
+
 from multiqc.modules.base_module import BaseMultiqcModule
 
 # Initialise the logger
-import logging
-
 log = logging.getLogger(__name__)
 
 
@@ -20,10 +16,11 @@ class DragenPloidyEstimationMetrics(BaseMultiqcModule):
 
         for f in self.find_log_files("dragen/ploidy_estimation_metrics"):
             data = parse_ploidy_estimation_metrics_file(f)
-            if f["s_name"] in data_by_sample:
-                log.debug("Duplicate sample name found! Overwriting: {}".format(f["s_name"]))
+            s_name = f["s_name"]
+            if s_name in data_by_sample:
+                log.debug(f"Duplicate sample name found! Overwriting: {s_name}")
             self.add_data_source(f, section="stats")
-            data_by_sample[f["s_name"]] = data
+            data_by_sample[s_name] = data
 
         # Filter to strip out ignored sample names:
         data_by_sample = self.ignore_samples(data_by_sample)
@@ -54,8 +51,6 @@ def parse_ploidy_estimation_metrics_file(f):
     PLOIDY ESTIMATION,,Y median / Autosomal median,0.00
     PLOIDY ESTIMATION,,Ploidy estimation,X0
     """
-
-    f["s_name"] = re.search(r"(.*)\.ploidy_estimation_metrics.csv", f["fn"]).group(1)
 
     data = defaultdict(dict)
 

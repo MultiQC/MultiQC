@@ -1,10 +1,8 @@
-#!/usr/bin/env python
-
 """ MultiQC submodule to parse output from Picard ExtractIlluminaBarcodes """
 
-from collections import OrderedDict
 import logging
 import re
+from collections import OrderedDict
 
 from multiqc.plots import bargraph
 
@@ -33,7 +31,7 @@ def parse_reports(self):
                 if lane_search:
                     lane = lane_search[0]
                     self.picard_barcode_metrics[lane] = {}
-            if "ExtractIlluminaBarcodes" in line and "## METRICS CLASS" in line:
+            if ("ExtractIlluminaBarcodes" in line or "BarcodeMetric" in line) and "## METRICS CLASS" in line:
                 keys = f["f"].readline().strip("\n").split("\t")
             elif keys:
                 vals = line.strip("\n").split("\t")

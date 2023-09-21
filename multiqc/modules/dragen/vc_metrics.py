@@ -1,19 +1,15 @@
-#!/usr/bin/env python
-from __future__ import print_function
+import logging
 
-import re
 from multiqc.modules.base_module import BaseMultiqcModule
 from multiqc.plots import table
 
-from .utils import make_headers, Metric, exist_and_number
+from .utils import Metric, exist_and_number, make_headers
 
 # Initialise the logger
-import logging
-
 log = logging.getLogger(__name__)
 
 
-NAMESPACE = "DRAGEN variant calling"
+NAMESPACE = "Variant calling"
 
 
 class DragenVCMetrics(BaseMultiqcModule):
@@ -22,10 +18,11 @@ class DragenVCMetrics(BaseMultiqcModule):
 
         for f in self.find_log_files("dragen/vc_metrics"):
             data = parse_vc_metrics_file(f)
-            if f["s_name"] in data_by_sample:
-                log.debug("Duplicate sample name found! Overwriting: {}".format(f["s_name"]))
+            s_name = f["s_name"]
+            if s_name in data_by_sample:
+                log.debug(f"Duplicate sample name found! Overwriting: {s_name}")
             self.add_data_source(f, section="stats")
-            data_by_sample[f["s_name"]] = data
+            data_by_sample[s_name] = data
 
         # Filter to strip out ignored sample names:
         data_by_sample = self.ignore_samples(data_by_sample)
@@ -332,8 +329,6 @@ def parse_vc_metrics_file(f):
     VARIANT CALLER POSTFILTER,T_SRR7890936_50pc,Percent Callability,NA
     VARIANT CALLER POSTFILTER,T_SRR7890936_50pc,Percent Autosome Callability,NA
     """
-
-    f["s_name"] = re.search(r"(.*)\.vc_metrics.csv", f["fn"]).group(1)
 
     summary_data = dict()
     prefilter_data = dict()

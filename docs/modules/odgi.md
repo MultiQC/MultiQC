@@ -1,7 +1,7 @@
 ---
-Name: odgi
-URL: https://github.com/pangenome/odgi
-Description: >
+name: odgi
+url: https://github.com/pangenome/odgi
+description: >
   is an optimized dynamic graph/genome implementation.
 ---
 

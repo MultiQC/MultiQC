@@ -1,15 +1,13 @@
-#!/usr/bin/env python
-
 """ MultiQC module to parse output from BISCUITqc """
 
-from __future__ import print_function
-from collections import OrderedDict
+
 import logging
 import re
+from collections import OrderedDict
 
 from multiqc import config
-from multiqc.plots import linegraph, bargraph, table, beeswarm
 from multiqc.modules.base_module import BaseMultiqcModule
+from multiqc.plots import bargraph, beeswarm, linegraph, table
 
 # Initialize the logger
 log = logging.getLogger(__name__)
@@ -103,7 +101,6 @@ class MultiqcModule(BaseMultiqcModule):
         # Find and parse alignment reports
         for k in self.mdata:
             for f in self.find_log_files("biscuit/{}".format(k)):
-
                 s_name = f["fn"]
                 for suffix in file_suffixes:
                     s_name = s_name.replace(suffix, "")

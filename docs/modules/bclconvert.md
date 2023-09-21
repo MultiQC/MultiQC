@@ -1,7 +1,7 @@
 ---
-Name: bclconvert
-URL: https://support.illumina.com/sequencing/sequencing_software/bcl-convert.html
-Description: >
+name: bclconvert
+url: https://support.illumina.com/sequencing/sequencing_software/bcl-convert.html
+description: >
   bclconvert can be used to both demultiplex data and convert BCL files to
   FASTQ file formats for downstream analysis.
 ---
@@ -28,3 +28,17 @@ The coverage depth will be estimated as the yield Q30 dvivided by the genome siz
 MultiQC comes with effective genome size presets for Human and Mouse, so you can
 provide the genome build name instead, like this: `genome_size: hg38_genome`. The
 following values are supported: `hg19_genome`, `hg38_genome`, `mm10_genome`.
+
+#### Add barplots containing undetermined barcodes
+
+By default, the bar plot of undetermined barcodes is only shown when reporting from a single demultiplexing run.
+
+If you would like to show it with multiple runs (eg. bclconvert runs are split by lane),
+you can specify following parameter in your MultiQC config:
+
+```yaml
+bclconvert:
+  create_undetermined_barcode_barplots: True
+```
+
+The default of this configuration value is `False`

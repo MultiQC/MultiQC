@@ -1,9 +1,8 @@
-#!/usr/bin/env python
-
 """ MultiQC submodule to parse output from fgbio ErrorRateByReadPosition """
 
 
 from distutils.util import strtobool
+
 from multiqc.plots import linegraph
 
 
@@ -173,7 +172,7 @@ def parse_reports(self):
             "description": "Percent error across all read positions",
             "min": 0,
             "max": 100.0,
-            "scale": "GnYlRd",
+            "scale": "RdYlGn-rev",
             "suffix": "%",
             "format": "{:,.2f}",
             "modify": lambda x: 100.0 * x,

@@ -1,9 +1,6 @@
-#!/usr/bin/env python
-
 """ MultiQC module to parse output from fgbio GroupReadsByUmi
 """
 
-from __future__ import print_function
 
 import logging
 
@@ -15,7 +12,6 @@ log = logging.getLogger(__name__)
 
 class GroupReadsByUmiMixin:
     def parse_groupreadsbyumi(self):
-
         # Parse data
         self.parse_groupreadsbyumi_log()
 

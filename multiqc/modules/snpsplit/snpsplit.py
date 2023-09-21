@@ -1,8 +1,8 @@
-#!/usr/bin/env python
 """MultiQC module to parse the output from SNPsplit"""
-from collections import OrderedDict
 import logging
 import re
+from collections import OrderedDict
+
 import yaml
 
 from multiqc import config
@@ -97,7 +97,7 @@ class MultiqcModule(BaseMultiqcModule):
                 # Allele-specific sorting report
                 ["sorting_conflicting", r"Reads contained conflicting SNP information:\W+(\d+)"],
             ]
-            for (k, regex) in regex_patterns:
+            for k, regex in regex_patterns:
                 match = re.match(regex, line)
                 if match:
                     d[k] = int(match.group(1))
@@ -123,7 +123,7 @@ class MultiqcModule(BaseMultiqcModule):
                 ["sorting_G2_UA_total", "Read pairs were a mix of G2 and UA"],
                 ["sorting_G1_G2_total", "Read pairs were a mix of G1 and G2"],
             ]
-            for (k, pattern) in sorting_patterns:
+            for k, pattern in sorting_patterns:
                 if line.startswith(pattern):
                     try:
                         d[k] = int(line.split("\t")[-1].split()[0])

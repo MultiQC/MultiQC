@@ -1,11 +1,9 @@
-#!/usr/bin/env python
-
 """ MultiQC module to parse output from mtnucratio """
 
-from __future__ import print_function
-from collections import OrderedDict
-import logging
+
 import json
+import logging
+from collections import OrderedDict
 
 from multiqc import config
 from multiqc.modules.base_module import BaseMultiqcModule
@@ -18,7 +16,6 @@ class MultiqcModule(BaseMultiqcModule):
     """mtnucratio module"""
 
     def __init__(self):
-
         # Initialise the parent object
         super(MultiqcModule, self).__init__(
             name="mtnucratio",

@@ -1,20 +1,20 @@
-#!/usr/bin/env python
 """MultiQC module to parse the output from deepTools"""
-from collections import OrderedDict
 import logging
+from collections import OrderedDict
 
 from multiqc.modules.base_module import BaseMultiqcModule
 
+from .bamPEFragmentSizeDistribution import bamPEFragmentSizeDistributionMixin
+
 # deepTools modules
 from .bamPEFragmentSizeTable import bamPEFragmentSizeTableMixin
-from .bamPEFragmentSizeDistribution import bamPEFragmentSizeDistributionMixin
 from .estimateReadFiltering import estimateReadFilteringMixin
+from .plotCorrelation import plotCorrelationMixin
 from .plotCoverage import plotCoverageMixin
 from .plotEnrichment import plotEnrichmentMixin
 from .plotFingerprint import plotFingerprintMixin
-from .plotProfile import plotProfileMixin
 from .plotPCA import plotPCAMixin
-from .plotCorrelation import plotCorrelationMixin
+from .plotProfile import plotProfileMixin
 
 # Initialise the logger
 log = logging.getLogger(__name__)
@@ -33,7 +33,6 @@ class MultiqcModule(
     plotCorrelationMixin,
 ):
     def __init__(self):
-
         # Initialise the parent object
         super(MultiqcModule, self).__init__(
             name="deepTools",

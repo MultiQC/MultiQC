@@ -1,11 +1,9 @@
-#!/usr/bin/env python
-
 """ MultiQC submodule to parse output from RSeQC infer_experiment.py
 http://rseqc.sourceforge.net/#infer-experiment-py """
 
-from collections import OrderedDict
 import logging
 import re
+from collections import OrderedDict
 
 from multiqc.plots import bargraph
 
@@ -44,7 +42,6 @@ def parse_reports(self):
     self.infer_exp = self.ignore_samples(self.infer_exp)
 
     if len(self.infer_exp) > 0:
-
         # Write to file
         self.write_data_file(self.infer_exp, "multiqc_rseqc_infer_experiment")
 

@@ -1,12 +1,12 @@
-#!/usr/bin/env python
 """ MultiQC module to parse output from MALT """
-from __future__ import print_function
-from collections import OrderedDict
-from multiqc import config
-from multiqc.plots import bargraph
-from multiqc.modules.base_module import BaseMultiqcModule
+
 
 import logging
+from collections import OrderedDict
+
+from multiqc import config
+from multiqc.modules.base_module import BaseMultiqcModule
+from multiqc.plots import bargraph
 
 log = logging.getLogger(__name__)
 
@@ -15,7 +15,6 @@ class MultiqcModule(BaseMultiqcModule):
     """Malt Module"""
 
     def __init__(self):
-
         # Initialise the parent object
         super(MultiqcModule, self).__init__(
             name="MALT",
@@ -77,14 +76,20 @@ class MultiqcModule(BaseMultiqcModule):
                                 self.malt_data[s_name]["No Assig. Taxonomy"] = (
                                     self.malt_data[s_name]["Total reads"] - self.malt_data[s_name]["Assig. Taxonomy"]
                                 )
-                                self.malt_data[s_name]["Mappability"] = (
-                                    float(self.malt_data[s_name]["Total reads"])
-                                    / float(self.malt_data[s_name]["Num. of queries"])
-                                ) * 100.0
-                                self.malt_data[s_name]["Taxonomic assignment success"] = (
-                                    float(self.malt_data[s_name]["Assig. Taxonomy"])
-                                    / float(self.malt_data[s_name]["Total reads"])
-                                ) * 100.0
+                                try:
+                                    self.malt_data[s_name]["Mappability"] = (
+                                        float(self.malt_data[s_name]["Total reads"])
+                                        / float(self.malt_data[s_name]["Num. of queries"])
+                                    ) * 100.0
+                                except ZeroDivisionError:
+                                    self.malt_data[s_name]["Mappability"] = 0
+                                try:
+                                    self.malt_data[s_name]["Taxonomic assignment success"] = (
+                                        float(self.malt_data[s_name]["Assig. Taxonomy"])
+                                        / float(self.malt_data[s_name]["Total reads"])
+                                    ) * 100.0
+                                except ZeroDivisionError:
+                                    self.malt_data[s_name]["Taxonomic assignment success"] = 0
                             except KeyError:
                                 pass
                             reading = False

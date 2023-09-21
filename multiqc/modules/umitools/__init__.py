@@ -1,0 +1,1 @@
+from .umitools import MultiqcModule

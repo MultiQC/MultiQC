@@ -1,13 +1,12 @@
-#!/usr/bin/env python
-
 """ MultiQC module to parse output from BUSCO """
 
-from __future__ import print_function
-from collections import OrderedDict
+
 import logging
 import re
-from multiqc.plots import bargraph
+from collections import OrderedDict
+
 from multiqc.modules.base_module import BaseMultiqcModule
+from multiqc.plots import bargraph
 
 # Initialise the logger
 log = logging.getLogger(__name__)
@@ -17,7 +16,6 @@ class MultiqcModule(BaseMultiqcModule):
     """BUSCO module"""
 
     def __init__(self):
-
         # Initialise the parent object
         super(MultiqcModule, self).__init__(
             name="BUSCO",
@@ -85,8 +83,8 @@ class MultiqcModule(BaseMultiqcModule):
             if self.busco_data[s_name].get("lineage_dataset") == lin:
                 data[s_name] = self.busco_data[s_name]
 
-        plot_keys = ["complete_single_copy", "complete_duplicated", "fragmented", "missing"]
-        plot_cols = ["#7CB5EC", "#434348", "#F7A35C", "#FF3C50"]
+        plot_keys = ["complete_single_copy", "fragmented", "complete_duplicated", "missing"]
+        plot_cols = ["#31a354", "#fee8c8", "#fdbb84", "#e34a33"]
         keys = OrderedDict()
         for k, col in zip(plot_keys, plot_cols):
             keys[k] = {"name": self.busco_keys[k], "color": col}

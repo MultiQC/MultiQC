@@ -1,11 +1,9 @@
-#!/usr/bin/env python
-
 """ MultiQC submodule to parse output from RSeQC read_distribution.py
 http://rseqc.sourceforge.net/#read-distribution-py """
 
-from collections import OrderedDict
 import logging
 import re
+from collections import OrderedDict
 
 from multiqc.plots import bargraph
 
@@ -59,7 +57,10 @@ def parse_reports(self):
             for k in d:
                 if k.endswith("_tag_count"):
                     pk = "{}_tag_pct".format(k[:-10])
-                    pcts[pk] = (float(d[k]) / t) * 100.0
+                    try:
+                        pcts[pk] = (float(d[k]) / t) * 100.0
+                    except ZeroDivisionError:
+                        pcts[pk] = 0
             d.update(pcts)
 
         if len(d) > 0:
@@ -118,13 +119,22 @@ def parse_reports(self):
             "cpswitch_c_active": False,
         }
 
-        self.add_section(
-            name="Read Distribution",
-            anchor="rseqc-read_distribution",
-            description='<a href="http://rseqc.sourceforge.net/#read-distribution-py" target="_blank">Read Distribution</a>'
-            " calculates how mapped reads are distributed over genome features.",
-            plot=bargraph.plot(self.read_dist, keys, pconfig),
-        )
+        if max([d["total_tags"] for d in self.read_dist.values()]) > 0:
+            self.add_section(
+                name="Read Distribution",
+                anchor="rseqc-read_distribution",
+                description='<a href="http://rseqc.sourceforge.net/#read-distribution-py" target="_blank">Read Distribution</a>'
+                " calculates how mapped reads are distributed over genome features.",
+                plot=bargraph.plot(self.read_dist, keys, pconfig),
+            )
+        else:
+            self.add_section(
+                name="Read Distribution",
+                anchor="rseqc-read_distribution",
+                description='<a href="http://rseqc.sourceforge.net/#read-distribution-py" target="_blank">Read Distribution</a>'
+                " calculates how mapped reads are distributed over genome features.",
+                content='<div class="alert alert-info">All samples had zero tags.</div>',
+            )
 
     # Return number of samples found
     return len(self.read_dist)

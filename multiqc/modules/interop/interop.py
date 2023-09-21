@@ -1,9 +1,10 @@
-from multiqc.modules.base_module import BaseMultiqcModule
 import logging
-from collections import OrderedDict
-from multiqc import config
-from multiqc.plots import table
 import re
+from collections import OrderedDict
+
+from multiqc import config
+from multiqc.modules.base_module import BaseMultiqcModule
+from multiqc.plots import table
 
 log = logging.getLogger(__name__)
 
@@ -180,7 +181,6 @@ class MultiqcModule(BaseMultiqcModule):
         return metrics
 
     def run_metrics_summary_table(self, data):
-
         headers = OrderedDict()
         headers["Yield"] = {
             "rid": "summary_Yield",

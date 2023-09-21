@@ -1,15 +1,12 @@
-#!/usr/bin/env python
-
 """ MultiQC module to parse output from RNA-SeQC """
 
-from __future__ import print_function
-from collections import OrderedDict
+
 import logging
+from collections import OrderedDict
 
 from multiqc import config
 from multiqc.modules.base_module import BaseMultiqcModule
-from multiqc.plots import bargraph, beeswarm, linegraph, heatmap
-
+from multiqc.plots import bargraph, beeswarm, heatmap, linegraph
 
 # Initialise the logger
 log = logging.getLogger(__name__)
