@@ -29,6 +29,7 @@ This idea goes way back to [issue #290](https://github.com/ewels/MultiQC/issues/
 - Fixed parsing of `plot_type: "html"` `data` in json custom content
 - Replace deprecated `pkg_resources`
 - [Fix](https://github.com/ewels/MultiQC/issues/2032) the module groups configuration for modules where the namespace is passed explicitly to `general_stats_addcols`. Namespace is now always appended to the module name in the general stats ([2037](https://github.com/ewels/MultiQC/pull/2037)).
+- Do not call `sys.exit()` in the `multiqc.run()` function, to avoid breaking interactive environments. [#2055](https://github.com/ewels/MultiQC/pull/2055)
 
 ### New Modules
 
