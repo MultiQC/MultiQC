@@ -1,7 +1,7 @@
 ---
-Name: Iso-Seq
-URL: https://github.com/PacificBiosciences/IsoSeq
-Description: >
+name: Iso-Seq
+url: https://github.com/PacificBiosciences/IsoSeq
+description: >
   Iso-Seq contains the newest tools to identify transcripts in PacBio single-molecule 
   sequencing data (HiFi reads).
 ---

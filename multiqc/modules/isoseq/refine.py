@@ -85,7 +85,7 @@ class RefineMixin:
             "title": "# full-length reads",
             "description": "Number of CCS where both primers have been detected",
             "suffix": " fl",
-            "scale": "spectral",
+            "scale": "GnBu",
         }
         headers["num_reads_flnc"] = {
             "title": "# non-chimeric full-length reads",
@@ -97,7 +97,7 @@ class RefineMixin:
             "title": "# poly(A) free non-chimeric full-length reads",
             "description": "Number of non-chimeric CCS where both primers have been detected and the poly(A) tail has been removed",
             "suffix": " flnc_polya",
-            "scale": "spectral",
+            "scale": "GnBu",
         }
         self.general_stats_addcols(gstats_data, headers, namespace="refine")
 
@@ -115,7 +115,7 @@ class RefineMixin:
         headers["min_fivelen"] = {
             "title": "Min 5' primer length",
             "description": "The minimum 5' primer length in base pair",
-            "scale": "spectral",
+            "scale": "GnBu",
         }
         headers["mean_fivelen"] = {
             "title": "Mean 5' primer length",
@@ -125,12 +125,12 @@ class RefineMixin:
         headers["std_fivelen"] = {
             "title": "Std of 5' primer length",
             "description": "The standard deviation of 5' primer length in base pair",
-            "scale": "spectral",
+            "scale": "GnBu",
         }
         headers["max_fivelen"] = {
             "title": "Max 5' primer length",
             "description": "The maximum 5' primer length in base pair",
-            "scale": "RdYlGn",
+            "scale": "GnBu",
         }
 
         # 3' primer length
@@ -143,7 +143,7 @@ class RefineMixin:
         headers["min_threelen"] = {
             "title": "Min 3' primer length",
             "description": "The minimum 3' primer length in base pair",
-            "scale": "spectral",
+            "scale": "GnBu",
         }
         headers["mean_threelen"] = {
             "title": "Mean 3' primer length",
@@ -153,7 +153,7 @@ class RefineMixin:
         headers["std_threelen"] = {
             "title": "Std of 3' primer length",
             "description": "The standard deviation of 3' primer length in base pair",
-            "scale": "spectral",
+            "scale": "GnBu",
         }
         headers["max_threelen"] = {
             "title": "Max 3' primer length",
@@ -171,7 +171,7 @@ class RefineMixin:
         headers["min_polyAlen"] = {
             "title": "Min polyA tail length",
             "description": "The minimum polyA tail length in base pair",
-            "scale": "spectral",
+            "scale": "GnBu",
         }
         headers["mean_polyAlen"] = {
             "title": "Mean polyA tail length",
@@ -181,7 +181,7 @@ class RefineMixin:
         headers["std_polyAlen"] = {
             "title": "Std of polyA tail length",
             "description": "The standard deviation of polyA tail length in base pair",
-            "scale": "spectral",
+            "scale": "GnBu",
         }
         headers["max_polyAlen"] = {
             "title": "Max polyA tail length",
@@ -199,7 +199,7 @@ class RefineMixin:
         headers["min_insertlen"] = {
             "title": "Min insert length",
             "description": "The minimum insert length in base pair",
-            "scale": "spectral",
+            "scale": "GnBu",
         }
         headers["mean_insertlen"] = {
             "title": "Mean insert length",
@@ -209,7 +209,7 @@ class RefineMixin:
         headers["std_insertlen"] = {
             "title": "Std of insert length",
             "description": "The standard deviation of insert length in base pair",
-            "scale": "spectral",
+            "scale": "GnBu",
         }
         headers["max_insertlen"] = {
             "title": "Max insert length",
