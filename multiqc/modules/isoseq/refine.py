@@ -101,16 +101,17 @@ class RefineMixin:
         }
         self.general_stats_addcols(gstats_data, headers, namespace="refine")
 
-    def add_section_fivelen(self, data):
-        plot_data = dict()
-        for s_name, data in data.items():
-            plot_data[s_name] = dict()
+    def add_table_refine(self, data_by_sample):
+        headers = dict()
+        plot_data = {s_name: dict() for s_name in data_by_sample}
+
+        # 5' primer length
+        for s_name, data in data_by_sample.items():
             plot_data[s_name]["min_fivelen"] = data["min_fivelen"]
             plot_data[s_name]["mean_fivelen"] = data["mean_fivelen"]
             plot_data[s_name]["std_fivelen"] = data["std_fivelen"]
             plot_data[s_name]["max_fivelen"] = data["max_fivelen"]
 
-        headers = dict()
         headers["min_fivelen"] = {
             "title": "Min 5' primer length",
             "description": "The minimum 5' primer length in base pair",
@@ -132,33 +133,13 @@ class RefineMixin:
             "scale": "RdYlGn",
         }
 
-        config = {
-            "id": "isoseq3_refine_5p_tab",
-            "title": "isoseq3 refine: 5 prime primer",
-        }
-
-        self.add_section(
-            name="5' primer",
-            anchor="fivep-stats",
-            description="Descriptive stats about 5' primer length.",
-            helptext="""
-            The .report.csv file contains information about 5' prime and 3' primers length, insert length
-            poly(A) length, and couple of primers detected for each CCS.
-            The table presents min, max, mean, standard deviation for each parameter.
-            """,
-            plot=table.plot(plot_data, headers, config),
-        )
-
-    def add_section_threelen(self, data):
-        plot_data = dict()
-        for s_name, data in data.items():
-            plot_data[s_name] = dict()
+        # 3' primer length
+        for s_name, data in data_by_sample.items():
             plot_data[s_name]["min_threelen"] = data["min_threelen"]
             plot_data[s_name]["mean_threelen"] = data["mean_threelen"]
             plot_data[s_name]["std_threelen"] = data["std_threelen"]
             plot_data[s_name]["max_threelen"] = data["max_threelen"]
 
-        headers = dict()
         headers["min_threelen"] = {
             "title": "Min 3' primer length",
             "description": "The minimum 3' primer length in base pair",
@@ -180,33 +161,13 @@ class RefineMixin:
             "scale": "RdYlGn",
         }
 
-        config = {
-            "id": "isoseq3_refine_3p_tab",
-            "title": "isoseq3 refine: 3 prime primer",
-        }
-
-        self.add_section(
-            name="3' primer",
-            anchor="threep-stats",
-            description="Descriptive stats about 3' primer length.",
-            helptext="""
-            The .report.csv file contains information about 5' prime and 3' primers length, insert length,\\ 
-            poly(A) length, and couple of primers detected for each CCS.
-            The table presents min, max, mean, standard deviation for each parameter.
-            """,
-            plot=table.plot(plot_data, headers, config),
-        )
-
-    def add_section_polyalen(self, data):
-        plot_data = dict()
-        for s_name, data in data.items():
-            plot_data[s_name] = dict()
+        # Poly-A tail length
+        for s_name, data in data_by_sample.items():
             plot_data[s_name]["min_polyAlen"] = data["min_polyAlen"]
             plot_data[s_name]["mean_polyAlen"] = data["mean_polyAlen"]
             plot_data[s_name]["std_polyAlen"] = data["std_polyAlen"]
             plot_data[s_name]["max_polyAlen"] = data["max_polyAlen"]
 
-        headers = dict()
         headers["min_polyAlen"] = {
             "title": "Min polyA tail length",
             "description": "The minimum polyA tail length in base pair",
@@ -228,33 +189,13 @@ class RefineMixin:
             "scale": "RdYlGn",
         }
 
-        config = {
-            "id": "isoseq3_refine_polya_tab",
-            "title": "isoseq3 refine: polyA tail",
-        }
-
-        self.add_section(
-            name="polyA tails",
-            anchor="polya-stats",
-            description="Descriptive stats about polyA tail length.",
-            helptext="""
-            The .report.csv file contains information about 5' prime and 3' primers length, insert length,\\ 
-            poly(A) length, and couple of primers detected for each CCS.
-            The table presents min, max, mean, standard deviation for each parameter.
-            """,
-            plot=table.plot(plot_data, headers, config),
-        )
-
-    def add_section_insertlen(self, data):
-        plot_data = dict()
-        for s_name, data in data.items():
-            plot_data[s_name] = dict()
+        # Insert length
+        for s_name, data in data_by_sample.items():
             plot_data[s_name]["min_insertlen"] = data["min_insertlen"]
             plot_data[s_name]["mean_insertlen"] = data["mean_insertlen"]
             plot_data[s_name]["std_insertlen"] = data["std_insertlen"]
             plot_data[s_name]["max_insertlen"] = data["max_insertlen"]
 
-        headers = dict()
         headers["min_insertlen"] = {
             "title": "Min insert length",
             "description": "The minimum insert length in base pair",
@@ -277,16 +218,16 @@ class RefineMixin:
         }
 
         config = {
-            "id": "isoseq3_refine_insert_tab",
-            "title": "isoseq3 refine: insert",
+            "id": "isoseq_refine_table",
+            "title": "Iso-Seq refine",
         }
 
         self.add_section(
-            name="Insert length",
-            anchor="insert-stats",
-            description="Descriptives stats about insert length.",
+            name="Iso-Seq refine",
+            anchor="insert-refine-stats",
+            description="Iso-Seq refine statistics",
             helptext="""
-            The .report.csv file contains information about 5' prime and 3' primers length, insert length,\\ 
+            The .report.csv file contains information about 5' prime and 3' primers length, insert length,
             poly(A) length, and couple of primers detected for each CCS.
             The table presents min, max, mean, standard deviation for each parameter.
             """,

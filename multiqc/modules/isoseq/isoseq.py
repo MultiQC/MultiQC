@@ -39,10 +39,7 @@ class MultiqcModule(BaseMultiqcModule, RefineMixin, ClusterMixin):
 
         if refine_data:
             self.add_general_stats_refine(refine_data)
-            self.add_section_fivelen(refine_data)
-            self.add_section_insertlen(refine_data)
-            self.add_section_polyalen(refine_data)
-            self.add_section_threelen(refine_data)
+            self.add_table_refine(refine_data)
 
         if cluster_data:
             self.add_general_stats_cluster(cluster_data)

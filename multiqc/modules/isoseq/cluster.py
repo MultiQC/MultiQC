@@ -86,8 +86,8 @@ class ClusterMixin:
         }
 
         config = {
-            "id": "isoseq3_cluster_cluster_size_histogram",  # HTML ID used for plot
-            "title": "isoseq3 cluster: Histogram of cluster size.",  # Plot title - should be in format "Module Name: Plot Title"
+            "id": "isoseq_cluster_cluster_size_histogram",  # HTML ID used for plot
+            "title": "Iso-Seq cluster: Histogram of cluster size.",  # Plot title - should be in format "Module Name: Plot Title"
             "xlab": "Cluster size",  # X axis label
             "ylab": "Count",  # Y axis label
         }
@@ -97,8 +97,8 @@ class ClusterMixin:
             anchor="cluster-distribution",
             description="A distribution of cluster size (number of CC clustered to form one Hifi read).",
             helptext="""
-            The csv file produced by isoseq3 cluster shows which CCS have been clustered together to form \\  
-            one Hifi reads. The bargraph represent the distribution of the cluster size using four \\
+            The csv file produced by Iso-Seq cluster shows which CCS have been clustered together to form 
+            one Hifi reads. The bargraph represent the distribution of the cluster size using four 
             categories : -2, 3-10, 11-100, >100.
             """,
             plot=bargraph.plot(plot_data, cats, config),
