@@ -29,6 +29,8 @@ This idea goes way back to [issue #290](https://github.com/ewels/MultiQC/issues/
 - Fixed parsing of `plot_type: "html"` `data` in json custom content
 - Replace deprecated `pkg_resources`
 - [Fix](https://github.com/ewels/MultiQC/issues/2032) the module groups configuration for modules where the namespace is passed explicitly to `general_stats_addcols`. Namespace is now always appended to the module name in the general stats ([2037](https://github.com/ewels/MultiQC/pull/2037)).
+- Do not call `sys.exit()` in the `multiqc.run()` function, to avoid breaking interactive environments. [#2055](https://github.com/ewels/MultiQC/pull/2055)
+- Fixed the DOI exports in `multiqc_data` to include more than just the MultiQC paper ([#2058](https://github.com/ewels/MultiQC/pull/2058))
 
 ### New Modules
 
@@ -74,6 +76,8 @@ This idea goes way back to [issue #290](https://github.com/ewels/MultiQC/issues/
   - Fix bug with when a mixture of post-3.9.3 runs and pre-3.9.3 runs are passed, and the quality metrics files aren't available for some runs.
 - **Preseq**
   - Work correctly with a mixture of cluster-based and basepair-based logs, generate one plot for each set.
+- **Kraken**
+  - Parametrize top-N through config ([#2060](https://github.com/ewels/MultiQC/pull/2060))
 
 ## [MultiQC v1.15](https://github.com/ewels/MultiQC/releases/tag/v1.15) - 2023-08-04
 
