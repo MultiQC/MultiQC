@@ -129,7 +129,7 @@ setup(
             "htseq = multiqc.modules.htseq:MultiqcModule",
             "humid = multiqc.modules.humid:MultiqcModule",
             "interop = multiqc.modules.interop:MultiqcModule",
-            "isoseq3_refine = multiqc.modules.isoseq3_refine:MultiqcModule",
+            "isoseq = multiqc.modules.isoseq:MultiqcModule",
             "ivar = multiqc.modules.ivar:MultiqcModule",
             "jcvi = multiqc.modules.jcvi:MultiqcModule",
             "jellyfish = multiqc.modules.jellyfish:MultiqcModule",

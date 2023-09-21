@@ -82,19 +82,19 @@ class RefineMixin:
 
         headers = dict()
         headers["num_reads_fl"] = {
-            "title": "Number of full length reads",
+            "title": "# full-length reads",
             "description": "Number of CCS where both primers have been detected",
             "suffix": " fl",
             "scale": "spectral",
         }
         headers["num_reads_flnc"] = {
-            "title": "Number of non-chimeric full length reads",
+            "title": "# non-chimeric full-length reads",
             "description": "Number of non-chimeric CCS where both primers have been detected",
             "suffix": " flnc",
             "scale": "RdYlGn",
         }
         headers["num_reads_flnc_polya"] = {
-            "title": "Number of poly(A) free non chimeric full length reads",
+            "title": "# poly(A) free non-chimeric full-length reads",
             "description": "Number of non-chimeric CCS where both primers have been detected and the poly(A) tail has been removed",
             "suffix": " flnc_polya",
             "scale": "spectral",
@@ -142,7 +142,7 @@ class RefineMixin:
             anchor="fivep-stats",
             description="Descriptive stats about 5' primer length.",
             helptext="""
-            The .report.csv file contains information about 5' prime and 3' primers length, insert length,\\ 
+            The .report.csv file contains information about 5' prime and 3' primers length, insert length
             poly(A) length, and couple of primers detected for each CCS.
             The table presents min, max, mean, standard deviation for each parameter.
             """,

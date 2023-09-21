@@ -425,12 +425,16 @@ interop/summary:
   contents: "Level,Yield,Projected Yield,Aligned,Error Rate,Intensity C1,%>=Q30"
 interop/index-summary:
   contents: "Total Reads,PF Reads,% Read Identified (PF),CV,Min,Max"
-isoseq3_refine/json:
+isoseq/refine-json:
   contents: '"num_reads_fl"'
   fn: "*.json"
-isoseq3_refine/csv:
+isoseq/refine-csv:
   contents: "id,strand,fivelen,threelen,polyAlen,insertlen,primer"
   fn: "*.csv"
+isoseq/cluster-csv:
+  contents: "cluster_id"
+  fn: "*cluster_report.csv"
+  num_lines: 1
 ivar/trim:
   contents: "Number of references"
   num_lines: 8
