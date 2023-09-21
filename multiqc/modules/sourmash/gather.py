@@ -42,7 +42,7 @@ class GatherMixin:
         if len(self.gather_raw_data) == 0:
             return 0
 
-        self.write_data_file(self.gather_raw_data, "gather")
+        self.write_data_file(self.gather_raw_data, "multiqc_sourmash_gather")
 
         log.info("Found {} gather results".format(len(self.gather_raw_data)))
 
