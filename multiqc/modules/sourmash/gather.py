@@ -159,7 +159,7 @@ class GatherMixin:
         # top 5 genomes, other, and unclassified
         cats = list()
         pconfig = {
-            "id": "gather-topfive-plot",
+            "id": "sourmash-gather-top-plot",
             "title": "Sourmash gather: top genomes",
             "ylab": "% of sample covered by top 5 genomes",
             # do not show the 'Counts / Percentages' switch, since gather only reports
