@@ -44,8 +44,6 @@ class GatherMixin:
 
         self.write_data_file(self.gather_raw_data, "multiqc_sourmash_gather")
 
-        log.info("Found {} gather results".format(len(self.gather_raw_data)))
-
         # initialize variables to store summarized information
         self.gather_pct_per_match_all_samples = dict()
         self.gather_pct_unclassified_per_sample = dict()
@@ -71,7 +69,7 @@ class GatherMixin:
         output would be "E. coli K12": 30".
 
         The output is a dictionary with `match_names` (genomes) as keys, and summed
-        percents as values. These values are used to identify the top 5 matches
+        percents as values. These values are used to identify the top N matches
         identified across all samples.
         """
         for s_name, data in self.gather_raw_data.items():
@@ -97,16 +95,16 @@ class GatherMixin:
 
     def calculate_pct_top_five_per_sample(self):
         """
-        Calculate the percent of each sample that is attributable to the top 5 genomes
+        Calculate the percent of each sample that is attributable to the top genomes
         across all samples. The output is a dictionary with samples as keys and
-        the summed percent for the top 5 genomes as values.
+        the summed percent for the top genomes as values.
         """
         # get top genomes matched across samples
         sorted_pct = sorted(self.gather_pct_per_match_all_samples.items(), key=lambda x: x[1], reverse=True)
         for pct_sum in sorted_pct[: self.top_n]:
             self.gather_top_five_matches.append(pct_sum[0])  # append the genome name to the top five list
 
-        # calculate the pct attributable to the top 5 matches per sample
+        # calculate the pct attributable to the top matches per sample
         for match_name in self.gather_top_five_matches:
             for s_name, data in self.gather_raw_data.items():
                 if s_name not in self.gather_pct_top_five_per_sample:
@@ -117,15 +115,13 @@ class GatherMixin:
 
     def general_stats_columns(self):
         """
-        add columns to the general statistics table for % top 5 matches and % unclassified
+        add columns to the general statistics table for % top matches and % unclassified
         """
         # Column headers
         headers = OrderedDict()
-        headers["% Top 5"] = {
-            "title": "% Top 5 Genomes",
-            "description": "Percentage of sample that was classified as one of the top 5 genomes ({})".format(
-                ", ".join(self.gather_top_five_matches)
-            ),
+        headers[f"% Top {self.top_n}"] = {
+            "title": f"% Top {self.top_n} Genomes",
+            "description": f"Percentage of sample that was classified as one of the top {self.top_n} genomes ({', '.join(self.gather_top_five_matches)})",
             "suffix": "%",
             "max": 100,
             "scale": "PuBu",
@@ -144,24 +140,24 @@ class GatherMixin:
         for s_name, data in self.gather_raw_data.items():
             tdata[s_name] = {}
             tdata[s_name]["% Unclassified"] = self.gather_pct_unclassified_per_sample[s_name]
-            tdata[s_name]["% Top 5"] = self.gather_pct_top_five_per_sample[s_name]
+            tdata[s_name][f"% Top {self.top_n}"] = self.gather_pct_top_five_per_sample[s_name]
 
         self.general_stats_addcols(tdata, headers)
 
     def top_five_barplot(self):
         """
-        Add a bar plot showing the percentage of top-5 genomes, the percentage of other
+        Add a bar plot showing the percentage of top genomes, the percentage of other
         genomes, and the unclassified percentage
         """
 
         pd = []  # plot data
         # A list of categories to be shown as a color on the plot. includes the
-        # top 5 genomes, other, and unclassified
+        # top genomes, other, and unclassified
         cats = list()
         pconfig = {
             "id": "sourmash-gather-top-plot",
             "title": "Sourmash gather: top genomes",
-            "ylab": "% of sample covered by top 5 genomes",
+            "ylab": f"% of sample covered by top {self.top_n} genomes",
             # do not show the 'Counts / Percentages' switch, since gather only reports
             # percentages
             "cpswitch": False,
@@ -190,7 +186,7 @@ class GatherMixin:
                         match_data[s_name][match_name] += row["pct_unique_weighted"]
                         pct_shown[s_name] += row["pct_unique_weighted"]
 
-        # Add in unclassified pct and other accounted for by genomes matches not in the top 5
+        # Add in unclassified pct and other accounted for by genomes matches not in the top
         for s_name, data in self.gather_raw_data.items():
             # unclassified
             match_data[s_name]["unclassified"] = self.gather_pct_unclassified_per_sample[s_name]
@@ -212,7 +208,7 @@ class GatherMixin:
             description=f"The percentage of the sample falling into the top {self.top_n} genome matches.",
             helptext=f"""
                 To make this plot, the percentage of each sample assigned to a given genome is summed across all samples.
-                The percentages for these top five genomes are then plotted, as well as the unclassified percentage.
+                The percentages for these top {self.top_n} genomes are then plotted, as well as the unclassified percentage.
                 The unclassified count is always shown across all taxa ranks.
                 The category _"Other"_ shows the difference between the above total percentages and the sum of the percentages
                 in the top {self.top_n} genomes shown + unclassified. This should cover all genomes _not_ in the top {self.top_n}, +/- any rounding errors.
