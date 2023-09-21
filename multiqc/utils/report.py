@@ -100,6 +100,10 @@ def init():
     global files
     files = dict()
 
+    # Map of software tools to a set of unique version strings
+    global software_versions
+    software_versions = defaultdict(lambda: defaultdict(list))
+
 
 def get_filelist(run_module_names):
     """

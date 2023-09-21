@@ -74,10 +74,10 @@ class StatsReportMixin:
                 if s[0] == "TSTV" and len(s_names) > 0:
                     s_name = s_names[int(s[1])]
                     fields = ["ts", "tv", "tstv", "ts_1st_ALT", "tv_1st_ALT", "tstv_1st_ALT"]
-                    for i, f in enumerate(fields):
+                    for i, field in enumerate(fields):
                         value = float(s[i + 2].strip())
 
-                        self.bcftools_stats[s_name][f] = value
+                        self.bcftools_stats[s_name][field] = value
 
                 # Parse substitution types
                 if s[0] == "ST" and len(s_names) > 0:
@@ -105,8 +105,8 @@ class StatsReportMixin:
                 if s[0] == "PSC" and len(s_names) > 0:
                     s_name = s_names[int(s[1])]
                     fields = ["variations_hom", "variations_het"]
-                    for i, f in enumerate(fields):
-                        self.bcftools_stats[s_name][f] = int(s[i + 4].strip())
+                    for i, field in enumerate(fields):
+                        self.bcftools_stats[s_name][field] = int(s[i + 4].strip())
 
                 # Per-sample variant stats
                 if s[0] == "PSC" and len(s_names) > 0:
@@ -200,12 +200,12 @@ class StatsReportMixin:
             # Stats Table
             stats_headers = self.bcftools_stats_genstats_headers()
             if getattr(config, "bcftools", {}).get("write_general_stats", True):
-                self.general_stats_addcols(self.bcftools_stats, stats_headers, "Bcftools Stats")
+                self.general_stats_addcols(self.bcftools_stats, stats_headers, "Stats")
             if getattr(config, "bcftools", {}).get("write_separate_table", False):
                 self.add_section(
                     name="Bcftools Stats",
                     anchor="bcftools-stats_stats",
-                    plot=table.plot(self.bcftools_stats, stats_headers),
+                    plot=table.plot(self.bcftools_stats, stats_headers, {"namespace": "Stats"}),
                 )
 
             # Make bargraph plot of substitution types

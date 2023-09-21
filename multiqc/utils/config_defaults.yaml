@@ -94,6 +94,7 @@ section_comments: {}
 lint: False
 custom_plot_config: {}
 custom_table_header_config: {}
+software_versions: {}
 
 ignore_symlinks: false
 ignore_images: true
@@ -128,6 +129,9 @@ log_filesize_limit: 50000000
 filesearch_lines_limit: 1000
 report_readerrors: false
 skip_generalstats: false
+skip_versions_section: false
+disable_version_detection: false
+versions_table_group_header: "Group"
 data_format_extensions:
   tsv: "txt"
   json: "json"
@@ -280,6 +284,7 @@ fn_clean_exts:
   - ".scATAC_metrics"
   - ".scATAC.metrics"
   - ".fastqc_metrics"
+  - ".labels"
 
 # These are removed after the above, only if sample names
 # start or end with this string. Again, removed in order.
@@ -727,6 +732,11 @@ module_order:
       module_tag:
         - RNA
         - DNA
+  - sourmash:
+      module_tag:
+        - DNA
+        - RNA
+        - metagenomics
   - kaiju:
       module_tag:
         - DNA
