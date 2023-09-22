@@ -26,6 +26,8 @@ from multiqc.utils import report
 # Initialise the logger
 log = logging.getLogger(__name__)
 
+VERSION_REGEX = r"FastQC\t([\d\.]+)"
+
 
 class MultiqcModule(BaseMultiqcModule):
     def __init__(self):
@@ -157,6 +159,10 @@ class MultiqcModule(BaseMultiqcModule):
         s_headers = None
         self.dup_keys = []
         for l in file_contents.splitlines():
+            if l.startswith("##FastQC"):
+                version_match = re.search(VERSION_REGEX, l)
+                if version_match:
+                    self.add_software_version(version_match.group(1), s_name)
             if l == ">>END_MODULE":
                 section = None
                 s_headers = None

@@ -2,6 +2,7 @@
 
 
 import logging
+import re
 from collections import OrderedDict
 
 from multiqc import config
@@ -10,6 +11,8 @@ from multiqc.plots import bargraph, linegraph
 
 # Initialise the logger
 log = logging.getLogger(__name__)
+
+VERSION_REGEX = r"AdapterRemoval ver. ([\d\.]+)"
 
 
 class MultiqcModule(BaseMultiqcModule):
@@ -86,6 +89,11 @@ class MultiqcModule(BaseMultiqcModule):
             line = line.rstrip("\n")
             if line == "":
                 continue
+
+            if line.startswith("AdapterRemoval"):
+                version_match = re.search(VERSION_REGEX, line)
+                if version_match:
+                    self.add_software_version(version_match.group(1), self.s_name)
 
             if not block_title:
                 block_title = "header"
