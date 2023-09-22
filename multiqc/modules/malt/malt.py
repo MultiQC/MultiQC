@@ -75,7 +75,6 @@ class MultiqcModule(BaseMultiqcModule):
                 self.malt_data[s_name] = {}
                 if version is not None:
                     self.add_software_version(version, s_name)
-                    print(s_name, version)
 
             elif reading:
                 for k in keys:

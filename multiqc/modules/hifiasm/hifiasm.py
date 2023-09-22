@@ -80,7 +80,6 @@ class MultiqcModule(BaseMultiqcModule):
             if not line.startswith("[M::main]"):
                 continue
 
-            print(line)
             version_match = re.search(VERSION_REGEX, line)
             if version_match:
                 return version_match.group(1)
