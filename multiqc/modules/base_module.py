@@ -503,8 +503,6 @@ class BaseMultiqcModule(object):
         if software_name is None:
             software_name = self.name
 
-        software_name = software_name.lower()
-
         # Check if version string is PEP 440 compliant to enable version normalization and proper ordering.
         # Otherwise use raw string is used for version.
         # - https://peps.python.org/pep-0440/
@@ -519,7 +517,7 @@ class BaseMultiqcModule(object):
         self.versions[software_name] = software_versions.sort_versions(self.versions[software_name])
 
         # Update version list for report section.
-        group_name = self.name.lower()
+        group_name = self.name
         report.software_versions[group_name][software_name] = self.versions[software_name]
 
     def write_data_file(self, data, fn, sort_cols=False, data_format=None):

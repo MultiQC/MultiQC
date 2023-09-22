@@ -12,6 +12,8 @@ from multiqc.plots import bargraph, linegraph
 # Initialize log
 log = logging.getLogger(__name__)
 
+VERSION_REGEX = r"\[FLASH\] FLASH v([\d\.]+) complete!"
+
 
 class MultiqcModule(BaseMultiqcModule):
     """FLASh MultiQC module
@@ -105,6 +107,8 @@ class MultiqcModule(BaseMultiqcModule):
         """parse flash logs"""
         data = OrderedDict()
         samplelogs = self.split_log(logf["f"])
+        version_match = re.search(VERSION_REGEX, logf["f"])
+
         for slog in samplelogs:
             try:
                 sample = dict()
@@ -113,6 +117,9 @@ class MultiqcModule(BaseMultiqcModule):
                 if s_name is None:
                     continue
                 sample["s_name"] = s_name
+
+                if version_match:
+                    self.add_software_version(version_match.group(1), s_name)
 
                 ## Log attributes ##
                 sample["totalpairs"] = self.get_field("Total pairs", slog)

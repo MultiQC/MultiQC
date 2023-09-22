@@ -27,8 +27,8 @@ class mqc_colour_scale(object):
         self.colours = self.get_colours(name)
 
         # Sanity checks
-        minval = re.sub("[^0-9\.-e]", "", str(minval))
-        maxval = re.sub("[^0-9\.-e]", "", str(maxval))
+        minval = re.sub(r"[^0-9\.\-e]", "", str(minval))
+        maxval = re.sub(r"[^0-9\.\-e]", "", str(maxval))
         if minval == "":
             minval = 0
         if maxval == "":
@@ -70,7 +70,7 @@ class mqc_colour_scale(object):
 
             else:
                 # Sanity checks
-                val = re.sub("[^0-9\.-e]", "", str(val))
+                val = re.sub(r"[^0-9\.\-e]", "", str(val))
                 if val == "":
                     val = self.minval
                 val = float(val)

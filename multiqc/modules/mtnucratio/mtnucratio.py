@@ -67,6 +67,10 @@ class MultiqcModule(BaseMultiqcModule):
         # Add all in the main data_table
         self.mtnuc_data[s_name] = metrics_dict
 
+        # Add version info
+        version = parsed_json["metadata"]["version"]
+        self.add_software_version(version, s_name)
+
     def mtnucratio_general_stats_table(self):
         """Take the parsed stats from the mtnucratio report and add it to the
         basic stats table at the top of the report"""

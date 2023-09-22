@@ -577,6 +577,9 @@ somalier/pairs:
   num_lines: 5
 sourmash/compare:
   fn: "*.labels.txt"
+sourmash/gather:
+  contents: "intersect_bp,f_orig_query,f_match,f_unique_to_query,f_unique_weighted,"
+  num_lines: 1
 pbmarkdup:
   contents_re: "LIBRARY +READS +UNIQUE MOLECULES +DUPLICATE READS"
   num_lines: 5
