@@ -6,6 +6,9 @@
 
 ### New Modules
 
+- [**Bracken**](https://ccb.jhu.edu/software/bracken/)
+  - A highly accurate statistical method that computes the abundance of species in DNA sequences from a metagenomics sample.
+
 ### Module updates
 
 ## [MultiQC v1.16](https://github.com/ewels/MultiQC/releases/tag/v1.16) - 2023-09-22
