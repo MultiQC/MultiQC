@@ -7,6 +7,8 @@ from multiqc.plots import bargraph
 
 log = logging.getLogger(__name__)
 
+VERSION_REGEX = r"sambamba ([\d\.]+)"
+
 
 class SambambaMarkdupMixin:
 
@@ -32,6 +34,11 @@ class SambambaMarkdupMixin:
 
             # filter away samples if MultiQC user does not want them
             self.markdup_data = self.ignore_samples(self.markdup_data)
+
+            # add sambamba version to software table
+            version_match = re.search(VERSION_REGEX, f["f"])
+            if version_match:
+                self.add_software_version(version_match.group(1), f["s_name"])
 
             # add results to multiqc_sources.txt
             self.add_data_source(f)
