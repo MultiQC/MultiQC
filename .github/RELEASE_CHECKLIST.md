@@ -25,7 +25,13 @@ This checklist is for my own reference, as I forget the steps every time.
      mv ~/.multiqc_config.yml ~/.multiqc_config.yml.bkup
      ```
 
-   - Generate reports in the multiqc/website repo:
+   - Install `NationalGenomicsInfrastructure/MultiQC_NGI`:
+
+     ```bash
+     pip install git+https://github.com/NationalGenomicsInfrastructure/MultiQC_NGI@0.7.1
+     ```
+
+   - Generate reports in the multiqc/website repo.
 
      ```bash
      bash update_examples.sh
