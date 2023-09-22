@@ -163,14 +163,11 @@ class MultiqcModule(BaseMultiqcModule):
             self.add_data_source(f=f, s_name=run_analysis_sample_name, module="bases2fastq")
 
         # ensure run/sample data found
-        if num_projects == 0 or num_samples == 0:
+        if num_projects == 0 and num_samples == 0:
             log.error("No samples or projects are found. Either file-size above limit or RunStats.json does not exist.")
             log.error("Please visit Elembio docs for more information - https://docs.elembio.io/docs/bases2fastq/")
             raise UserWarning
-        log.info(
-            f"Found {num_samples} samples and {num_projects} projects within "
-            f"bases2fastq results, and {len(self.b2f_data)} samples"
-        )
+        log.info(f"Found {num_samples} samples and {num_projects} projects within the bases2fastq results")
 
         # Group by run name
         self.group_dict = OrderedDict()
