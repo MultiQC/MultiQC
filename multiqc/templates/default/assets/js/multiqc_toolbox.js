@@ -338,6 +338,9 @@ $(function () {
     $("#mqc_exportplots").submit(function (e) {
       e.preventDefault();
       var checked_plots = $("#mqc_export_selectplots input:checked");
+      if (checked_plots.length > zip_threshold) {
+        var zip = new JSZip();
+      }
       var skipped_plots = 0;
       ////// EXPORT PLOT IMAGES
       //////
@@ -346,7 +349,6 @@ $(function () {
         var f_scale = parseInt($("#mqc_export_scaling").val());
         var f_width = parseInt($("#mqc_exp_width").val()) / f_scale;
         var f_height = parseInt($("#mqc_exp_height").val()) / f_scale;
-        var zip = new JSZip();
         checked_plots.each(function () {
           var fname = $(this).val();
           var hc = $("#" + fname).highcharts();
@@ -390,7 +392,6 @@ $(function () {
       ////// EXPORT PLOT DATA
       //////
       else if ($("#mqc_data_download").is(":visible")) {
-        var zip = new JSZip();
         checked_plots.each(function () {
           try {
             var target = $(this).val();
