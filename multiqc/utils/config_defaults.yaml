@@ -843,6 +843,11 @@ module_order:
         - RNA
         - DNA
         - methylation
+  - bases2fastq:
+      module_tag:
+        - RNA
+        - DNA
+        - methylation
   - interop:
       module_tag:
         - RNA
