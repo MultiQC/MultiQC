@@ -2,6 +2,12 @@
 # (Content Security Policy), you will need the following scripts allowlisted:
 
 script-src 'self'
+
+    # 1.16
+    'sha256-wlLs2UDz7n3cvWqY0PTazlKGYhGTOPH77vsElgE7pFw=' # multiqc_fastqc.js
+    'sha256-GueuiCxuV8FbnCv7Txho8dTrz3HODU6GH40tvy5kMks=' # multiqc_dragen_fastqc.js
+    'sha256-hIFZ1vmk96/M7KC/5pKRHXLn7lYPVKut6szAcGeiW2M=' # jszip.min.js
+
     # v1.13
     'sha256-Yz8frRqxu+ckJJ0Haj9Ywhe/Siomzpq9D/Xe1WX1LrQ=' # multiqc_tables.js
     'sha256-SlWNKwqjhhmUI3hLXtLPzAl9rm5jXeeYgX1bGZ4S8D8=' # multiqc_dragen_fastqc.js
@@ -51,10 +57,4 @@ script-src 'self'
     'sha256-1pWjCVoi5AoQvT52zb72qGCpIpfJzlc9trKcbcarXUY=' # multiqc_toolbox.js
     'sha256-gB0osLOAZOyj1tcLhUs/xzf98qK3dfViuIJdX0lI8xA=' # multiqc_fastqc.js
     'unsafe-eval'
-    
-    # 1.16
-    'sha256-wlLs2UDz7n3cvWqY0PTazlKGYhGTOPH77vsElgE7pFw=' # multiqc_fastqc.js
-    'sha256-GueuiCxuV8FbnCv7Txho8dTrz3HODU6GH40tvy5kMks=' # multiqc_dragen_fastqc.js
-    'sha256-rMfkFFWoB2W1/Zx+4bgHim0WC7vKRVrq6FTeZclH1Z4=' # jszip.js
-    'sha256-hIFZ1vmk96/M7KC/5pKRHXLn7lYPVKut6szAcGeiW2M=' # jszip.min.js
 ;
