@@ -436,8 +436,6 @@ for more information.
 
 - [**BclConvert**](https://support.illumina.com/sequencing/sequencing_software/bcl-convert.html)
   - Tool that converts / demultiplexes Illumina Binary Base Call (BCL) files to FASTQ files
-- [**Bracken**](https://ccb.jhu.edu/software/bracken/)
-  - A highly accurate statistical method that computes the abundance of species in DNA sequences from a metagenomics sample.
 - [**Bustools**](https://bustools.github.io/)
   - Tools for working with BUS files
 - [**ccs**](https://github.com/PacificBiosciences/ccs)
