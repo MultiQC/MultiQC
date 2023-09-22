@@ -1,9 +1,9 @@
 import copy
+import csv
 import logging
 import os
 import random
 import uuid
-from io import StringIO
 
 from multiqc.modules.base_module import BaseMultiqcModule
 from multiqc.utils import mqc_colour
@@ -46,7 +46,7 @@ class MultiqcModule(BaseMultiqcModule):
             if not run_name or not analysis_id:
                 log.error("Error with RunStats.json. Either RunName or AnalysisID is absent.")
                 log.error("Please visit Elembio docs for more information - https://docs.elembio.io/docs/bases2fastq/")
-                raise UserWarning
+                continue
 
             run_analysis_name = "__".join([run_name, analysis_id])
             run_analysis_name = self.clean_s_name(run_analysis_name)
@@ -69,12 +69,8 @@ class MultiqcModule(BaseMultiqcModule):
             self.add_data_source(f=f, s_name=run_analysis_name, module="bases2fastq")
 
         # if all RunStats.json too large, none will be found.  Guide customer and Exit at this point.
-        if len(self.sample_id_to_run) == 0:
-            log.error("No run-stats were found.  Either file-size above limit or RunStats.json does not exist.")
-            log.error("Please visit Elembio docs for more information - https://docs.elembio.io/docs/bases2fastq/")
-            raise UserWarning
-
-        log.info(f"Found {num_runs} total RunStats.json")
+        if len(self.sample_id_to_run) != 0:
+            log.info(f"Found {num_runs} total RunStats.json")
 
         # Checking if run lengths configurations are the same for all samples.
         self.run_r1r2_lens = [
@@ -90,13 +86,6 @@ class MultiqcModule(BaseMultiqcModule):
                 run_r1r2_lens_dict[rl] = []
             run_r1r2_lens_dict[rl].append(list(self.b2f_run_data.keys())[nn])
 
-        if len(run_r1r2_lens_set) > 1:
-            log.error(
-                f"More than one read length configurations are found in the dataset:{','.join(run_r1r2_lens_set)}"
-            )
-            for rl in run_r1r2_lens_dict.keys():
-                log.error(f"These runs have {rl} read length configuration:{','.join(run_r1r2_lens_dict[rl])}")
-            raise UserWarning
         # Read project info and make it into a lookup dictionary of {sample:project}:
         project_lookup_dict = {}
         num_projects = 0
@@ -111,7 +100,7 @@ class MultiqcModule(BaseMultiqcModule):
             if not run_name or not analysis_id:
                 log.error(f"Error with {f['root']}.  Either RunName or AnalysisID is absent.")
                 log.error("Please visit Elembio docs for more information - https://docs.elembio.io/docs/bases2fastq/")
-                raise UserWarning
+                continue
 
             run_analysis_name = "__".join([run_name, analysis_id])
             run_analysis_name = self.clean_s_name(run_analysis_name)
@@ -133,8 +122,6 @@ class MultiqcModule(BaseMultiqcModule):
             num_projects += 1
 
             self.add_data_source(f=f, s_name=project, module="bases2fastq")
-
-        log.info(f"Found {num_projects} Projects within bases2fastq results")
 
         #
         # Read per sample stats json as dictionaries
@@ -176,11 +163,14 @@ class MultiqcModule(BaseMultiqcModule):
             self.add_data_source(f=f, s_name=run_analysis_sample_name, module="bases2fastq")
 
         # ensure run/sample data found
-        if len(self.b2f_data) == 0:
-            log.error("No Samples are found.")
+        if num_projects == 0 or num_samples == 0:
+            log.error("No samples or projects are found. Either file-size above limit or RunStats.json does not exist.")
             log.error("Please visit Elembio docs for more information - https://docs.elembio.io/docs/bases2fastq/")
             raise UserWarning
-        log.info(f"Found {num_samples} samples within bases2fastq results, and {len(self.b2f_data)} samples")
+        log.info(
+            f"Found {num_samples} samples and {num_projects} projects within "
+            f"bases2fastq results, and {len(self.b2f_data)} samples"
+        )
 
         # Group by run name
         self.group_dict = OrderedDict()
@@ -235,19 +225,17 @@ class MultiqcModule(BaseMultiqcModule):
         for f in self.find_log_files("bases2fastq/group"):
             if self.group_info_exist:
                 log.warning(
-                    "More than one group assignment files are found. Please only keep one assignment file in the analysis folder. Bases2fastq stats will not be plotted"
+                    "More than one group assignment files are found. Please only keep "
+                    "one assignment file in the analysis folder. Bases2fastq stats will "
+                    "not be plotted"
                 )
-            group_info = pd.read_csv(StringIO(f["f"]))
-            for nn in group_info.index:
-                s_group = group_info.loc[nn, "Group"]
-                # if group_info.loc[nn, "Run Name"] in group_info.loc[nn, "Sample Name"]:
-                s_name = group_info.loc[nn, "Sample Name"]
-                # else:
-                # s_name = group_info.loc[nn, "Run Name"] + "_" + group_info.loc[nn, "Sample Name"]
+            for row in csv.DictReader(f["f"]):
+                s_group = row["Group"]
+                s_name = row["Sample Name"]
                 if self.group_dict.get(s_group) is None:
-                    self.group_dict.update({s_group: []})
+                    self.group_dict[s_group] = []
                 self.group_dict[s_group].append(s_name)
-                self.group_lookup_dict.update({s_name: s_group})
+                self.group_lookup_dict[s_name] = s_group
         for group in self.group_dict.keys():
             if group not in self.run_color:
                 if len(self.palette) > 0:
