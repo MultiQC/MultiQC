@@ -354,14 +354,15 @@ class mqc_colour_scale(object):
 
         try:
             if self.name in mqc_colour_scale.qualitative_scales and isinstance(val, float):
-                sequential_scales = [
-                    s for s in mqc_colour_scale.COLORBREWER_SCALES if s not in mqc_colour_scale.qualitative_scales
-                ]
-                logger.warning(
-                    f"A qualitative scale is used for float values. Consider using "
-                    f"one of the sequential scales instead: {', '.join(sequential_scales)}"
-                )
-            if self.name in mqc_colour_scale.qualitative_scales:
+                if config.lint:
+                    sequential_scales = [
+                        s for s in mqc_colour_scale.COLORBREWER_SCALES if s not in mqc_colour_scale.qualitative_scales
+                    ]
+                    logger.warning(
+                        f"A qualitative scale {self.name} is used for float values ({val}). "
+                        f"Consider using one of the sequential scales instead: {', '.join(sequential_scales)}"
+                    )
+            elif self.name in mqc_colour_scale.qualitative_scales:
                 if not isinstance(val, int):
                     # When we have non-numeric values (e.g. Male/Female, Yes/No, chromosome names, etc.), and a qualitative
                     # scale (Set1, Set3, etc.), we don't want to attempt to parse numbers, otherwise we might end up with all
