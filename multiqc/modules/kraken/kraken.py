@@ -7,6 +7,7 @@ from collections import OrderedDict
 
 from multiqc.modules.base_module import BaseMultiqcModule
 from multiqc.plots import bargraph, heatmap
+from multiqc.utils import config
 
 # Initialise the logger
 log = logging.getLogger(__name__)
