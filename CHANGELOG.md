@@ -32,6 +32,7 @@ This idea goes way back to [issue #290](https://github.com/ewels/MultiQC/issues/
 - Do not call `sys.exit()` in the `multiqc.run()` function, to avoid breaking interactive environments. [#2055](https://github.com/ewels/MultiQC/pull/2055)
 - Fixed the DOI exports in `multiqc_data` to include more than just the MultiQC paper ([#2058](https://github.com/ewels/MultiQC/pull/2058))
 - Fix table column color scaling then there are negative numbers ([1869](https://github.com/ewels/MultiQC/issues/1869))
+- Export plots as static images and data in a ZIP archive. Fixes the [issue](https://github.com/ewels/MultiQC/issues/1873) when only 10 plots maximum were downloaded due to the browser limitation.
 
 ### New Modules
 
