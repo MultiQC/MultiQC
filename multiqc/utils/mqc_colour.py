@@ -357,10 +357,12 @@ class mqc_colour_scale(object):
                 sequential_scales = [
                     s for s in mqc_colour_scale.COLORBREWER_SCALES if s not in mqc_colour_scale.qualitative_scales
                 ]
-                logger.warning(
-                    f"A qualitative scale '{self.name}' is used for float values ({val}). "
+                errmsg = (
+                    f"A categorical scale '{self.name}' is used for float values ({val}). "
                     f"Consider using one of the sequential scales instead: {', '.join(sequential_scales)}"
                 )
+                logger.error(errmsg)
+                report.lint_errors.append(errmsg)
             elif self.name in mqc_colour_scale.qualitative_scales:
                 if not isinstance(val, int):
                     # When we have non-numeric values (e.g. Male/Female, Yes/No, chromosome names, etc.), and a qualitative
