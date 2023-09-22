@@ -23,7 +23,7 @@ MultiQC was written by Phil Ewels (http://phil.ewels.co.uk) at Seqera Labs (http
 
 from setuptools import find_packages, setup
 
-version = "1.16"
+version = "1.17dev"
 dl_version = "master" if "dev" in version else "v{}".format(version)
 
 print(
