@@ -188,21 +188,21 @@ class MultiqcModule(BaseMultiqcModule):
         headers["N"] = {
             "title": "N",
             "description": "Number of `N` basis in the graph.",
-            "scale": "Set3",
+            "scale": "BuGn",
             "format": "{:,.0f}",
             "shared_key": "nucleotides",
         }
         headers["total"] = {
             "title": "Self Loops Nodes",
             "description": "Total number of nodes having self loops in the graph.",
-            "scale": "Set1",
+            "scale": "YlGn",
             "hidden": True,
             "format": "{:,.0f}",
         }
         headers["unique"] = {
             "title": "Unique Self Loops Nodes",
             "description": "Number of unique nodes having self loops in the graph.",
-            "scale": "Set2",
+            "scale": "BuGn",
             "hidden": True,
             "format": "{:,.0f}",
         }
