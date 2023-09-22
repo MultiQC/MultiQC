@@ -345,7 +345,7 @@ class mqc_colour_scale(object):
             self.minval = float(minval)
             self.maxval = float(maxval)
 
-    def get_colour(self, val, colformat="hex", lighten=0.3):
+    def get_colour(self, val, colformat="hex", lighten=0.3, source=None):
         """Given a value, return a colour within the colour scale"""
 
         # Ported from the original JavaScript for continuity
@@ -353,16 +353,18 @@ class mqc_colour_scale(object):
         rgb_converter = lambda x: max(0, min(1, 1 + ((x - 1) * lighten)))
 
         try:
-            if self.name in mqc_colour_scale.qualitative_scales and isinstance(val, float) and config.lint:
-                sequential_scales = [
-                    s for s in mqc_colour_scale.COLORBREWER_SCALES if s not in mqc_colour_scale.qualitative_scales
-                ]
-                errmsg = (
-                    f"A categorical scale '{self.name}' is used for float values ({val}). "
-                    f"Consider using one of the sequential scales instead: {', '.join(sequential_scales)}"
-                )
-                logger.error(errmsg)
-                report.lint_errors.append(errmsg)
+            if self.name in mqc_colour_scale.qualitative_scales and isinstance(val, float):
+                if config.lint:
+                    sequential_scales = [
+                        s for s in mqc_colour_scale.COLORBREWER_SCALES if s not in mqc_colour_scale.qualitative_scales
+                    ]
+                    source = f"{source}: " if source else ""
+                    errmsg = (
+                        f"{source}A categorical scale '{self.name}' is used for float values ({val}). "
+                        f"Consider using one of the sequential scales instead: {', '.join(sequential_scales)}"
+                    )
+                    logger.error(errmsg)
+                    report.lint_errors.append(errmsg)
             elif self.name in mqc_colour_scale.qualitative_scales:
                 if not isinstance(val, int):
                     # When we have non-numeric values (e.g. Male/Female, Yes/No, chromosome names, etc.), and a qualitative
