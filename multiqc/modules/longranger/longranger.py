@@ -256,7 +256,7 @@ class MultiqcModule(BaseMultiqcModule):
                 running_name += 1
 
             self.longranger_data[sid] = data
-
+            self.add_software_version(data["longranger_version"], sid)
             self.add_data_source(f)
 
         # Filter to strip out ignored sample names

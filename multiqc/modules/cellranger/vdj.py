@@ -2,6 +2,7 @@
 
 import json
 import logging
+import re
 from collections import OrderedDict
 
 from multiqc import config
@@ -43,7 +44,7 @@ class CellRangerVdjMixin:
             "description": "Number of reads ({})".format(config.read_count_desc),
             "modify": lambda x: x * config.read_count_multiplier,
             "shared_key": "read_count",
-            "namespace": "Cell Ranger VDJ",
+            "namespace": "VDJ",
         }
         self.vdj_general_data_headers = set_hidden_cols(
             self.vdj_general_data_headers,
@@ -93,6 +94,12 @@ class CellRangerVdjMixin:
             return 0
 
         else:
+            for k in self.vdj_general_data_headers.keys():
+                self.vdj_general_data_headers[k]["title"] = f"{self.vdj_general_data_headers[k]['title']} (VDJ)"
+                self.vdj_general_data_headers[k][
+                    "description"
+                ] = f"{self.vdj_general_data_headers[k]['description']} (VDJ)"
+
             self.general_stats_addcols(self.cellrangervdj_general_data, self.vdj_general_data_headers)
 
             # Write parsed report data to a file
@@ -105,25 +112,21 @@ class CellRangerVdjMixin:
                     name="VDJ - Warnings",
                     anchor="cellranger-vdj-warnings",
                     description="Warnings encountered during the analysis",
-                    plot=table.plot(
-                        self.cellrangervdj_warnings, self.vdj_warnings_headers, {"namespace": "Cell Ranger VDJ"}
-                    ),
+                    plot=table.plot(self.cellrangervdj_warnings, self.vdj_warnings_headers, {"namespace": "VDJ"}),
                 )
 
             self.add_section(
                 name="VDJ - Summary stats",
                 anchor="cellranger-vdj-stats",
                 description="Summary QC metrics from Cell Ranger count",
-                plot=table.plot(self.cellrangervdj_mapping, self.vdj_mapping_headers, {"namespace": "Cell Ranger VDJ"}),
+                plot=table.plot(self.cellrangervdj_mapping, self.vdj_mapping_headers, {"namespace": "VDJ"}),
             )
 
             self.add_section(
                 name="VDJ - Annotations",
                 anchor="cellranger-vdj-annot",
                 description="V(D)J annotations from Cell Ranger VDJ analysis",
-                plot=table.plot(
-                    self.cellrangervdj_annotations, self.vdj_annotations_headers, {"namespace": "Cell Ranger VDJ"}
-                ),
+                plot=table.plot(self.cellrangervdj_annotations, self.vdj_annotations_headers, {"namespace": "VDJ"}),
             )
 
             self.add_section(
@@ -148,6 +151,17 @@ class CellRangerVdjMixin:
                 break
 
         s_name = self.clean_s_name(mydict["sample"]["id"], f)
+
+        # Extract software version
+        try:
+            version_pair = mydict["summary_tab"]["pipeline_info_table"]["rows"][-1]
+            assert version_pair[0] == "Pipeline Version"
+            version_match = re.search(r"cellranger-([\d\.]+)", version_pair[1])
+            if version_match:
+                self.add_software_version(version_match.group(1), s_name)
+        except (KeyError, AssertionError):
+            log.debug("Unable to parse version for sample {}".format(s_name))
+
         data = dict()
         data_general_stats = dict()
 

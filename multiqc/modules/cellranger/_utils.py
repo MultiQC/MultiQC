@@ -5,7 +5,7 @@ def clean_title_case(col_id):
     return title
 
 
-def update_dict(table, headers, rows_list, col_map, colours, prefix):
+def update_dict(table, headers, rows_list, col_map, colours, namespace):
     """update the data dict and headers dict"""
 
     for col_name, col_data in rows_list:
@@ -23,10 +23,10 @@ def update_dict(table, headers, rows_list, col_map, colours, prefix):
             col_id = col_map[col_name]
             table[col_id] = col_data
             headers[col_id] = {
-                "rid": "{}_{}".format(prefix, col_id.replace(" ", "_").replace("/", "_")),
+                "rid": "{}_{}".format(namespace, col_id.replace(" ", "_").replace("/", "_")).lower(),
                 "title": clean_title_case(col_id),
                 "description": col_name,
-                "namespace": f"Cell Ranger {prefix}",
+                "namespace": namespace,
                 "scale": colours.get(col_id, "RdYlGn" if is_percentage else "GnBu"),
             }
             if is_percentage:

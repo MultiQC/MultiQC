@@ -23,7 +23,7 @@ MultiQC was written by Phil Ewels (http://phil.ewels.co.uk) at Seqera Labs (http
 
 from setuptools import find_packages, setup
 
-version = "1.16dev"
+version = "1.17dev"
 dl_version = "master" if "dev" in version else "v{}".format(version)
 
 print(
@@ -58,11 +58,13 @@ setup(
         "jinja2>=3.0.0",
         "lzstring",
         "markdown",
+        "packaging",
         "pyyaml>=4",
         "requests",
         "rich>=10",
         "rich-click",
         "spectra>=0.0.10",
+        "importlib-metadata",
     ],
     entry_points={
         "console_scripts": [
@@ -72,6 +74,7 @@ setup(
             "adapterRemoval = multiqc.modules.adapterRemoval:MultiqcModule",
             "afterqc = multiqc.modules.afterqc:MultiqcModule",
             "anglerfish = multiqc.modules.anglerfish:MultiqcModule",
+            "bakta = multiqc.modules.bakta:MultiqcModule",
             "bamtools = multiqc.modules.bamtools:MultiqcModule",
             "bbduk = multiqc.modules.bbduk:MultiqcModule",
             "bbmap = multiqc.modules.bbmap:MultiqcModule",
@@ -110,6 +113,7 @@ setup(
             "flash = multiqc.modules.flash:MultiqcModule",
             "flexbar = multiqc.modules.flexbar:MultiqcModule",
             "filtlong = multiqc.modules.filtlong:MultiqcModule",
+            "freyja = multiqc.modules.freyja:MultiqcModule",
             "gffcompare = multiqc.modules.gffcompare:MultiqcModule",
             "ganon = multiqc.modules.ganon:MultiqcModule",
             "gatk = multiqc.modules.gatk:MultiqcModule",
@@ -139,6 +143,7 @@ setup(
             "longranger = multiqc.modules.longranger:MultiqcModule",
             "macs2 = multiqc.modules.macs2:MultiqcModule",
             "malt = multiqc.modules.malt:MultiqcModule",
+            "mapdamage = multiqc.modules.mapdamage:MultiqcModule",
             "methylQA = multiqc.modules.methylQA:MultiqcModule",
             "minionqc = multiqc.modules.minionqc:MultiqcModule",
             "mirtop = multiqc.modules.mirtop:MultiqcModule",
@@ -188,6 +193,7 @@ setup(
             "snpsplit = multiqc.modules.snpsplit:MultiqcModule",
             "somalier = multiqc.modules.somalier:MultiqcModule",
             "sortmerna = multiqc.modules.sortmerna:MultiqcModule",
+            "sourmash = multiqc.modules.sourmash:MultiqcModule",
             "stacks = multiqc.modules.stacks:MultiqcModule",
             "star = multiqc.modules.star:MultiqcModule",
             "supernova = multiqc.modules.supernova:MultiqcModule",

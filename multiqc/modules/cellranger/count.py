@@ -2,6 +2,7 @@
 
 import json
 import logging
+import re
 from collections import OrderedDict
 
 from multiqc import config
@@ -41,7 +42,7 @@ class CellRangerCountMixin:
             "description": "Number of reads ({})".format(config.read_count_desc),
             "modify": lambda x: x * config.read_count_multiplier,
             "shared_key": "read_count",
-            "namespace": "Cell Ranger Count",
+            "namespace": "Count",
         }
         self.count_general_data_headers = set_hidden_cols(
             self.count_general_data_headers, ["Q30 bc", "Q30 UMI", "Q30 read"]
@@ -85,16 +86,14 @@ class CellRangerCountMixin:
                     name="Count - Warnings",
                     anchor="cellranger-count-warnings",
                     description="Warnings encountered during the analysis",
-                    plot=table.plot(
-                        self.cellrangercount_warnings, self.count_warnings_headers, {"namespace": "Cell Ranger Count"}
-                    ),
+                    plot=table.plot(self.cellrangercount_warnings, self.count_warnings_headers, {"namespace": "Count"}),
                 )
 
             self.add_section(
                 name="Count - Summary stats",
                 anchor="cellranger-count-stats",
                 description="Summary QC metrics from Cell Ranger count",
-                plot=table.plot(self.cellrangercount_data, self.count_data_headers, {"namespace": "Cell Ranger Count"}),
+                plot=table.plot(self.cellrangercount_data, self.count_data_headers, {"namespace": "Count"}),
             )
 
             self.add_section(
@@ -145,6 +144,17 @@ class CellRangerCountMixin:
                 break
 
         s_name = self.clean_s_name(summary["sample"]["id"], f)
+
+        # Extract software version
+        try:
+            version_pair = summary["summary_tab"]["pipeline_info_table"]["rows"][-1]
+            assert version_pair[0] == "Pipeline Version"
+            version_match = re.search(r"cellranger-([\d\.]+)", version_pair[1])
+            if version_match:
+                self.add_software_version(version_match.group(1), s_name)
+        except (KeyError, AssertionError):
+            log.debug("Unable to parse version for sample {}".format(s_name))
+
         data_general_stats = dict()
 
         # Store general stats from cells
