@@ -554,7 +554,7 @@ def general_stats_headers(self):
         "min": 0,
         "suffix": "%",
         "scale": "PuRd",
-        "format": "{:,.2f}",
+        "format": "{:,.0f}",
     }
     self.general_stats_headers["median_insert_size"] = {
         "title": "Ins. size",
