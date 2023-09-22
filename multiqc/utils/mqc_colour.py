@@ -353,15 +353,14 @@ class mqc_colour_scale(object):
         rgb_converter = lambda x: max(0, min(1, 1 + ((x - 1) * lighten)))
 
         try:
-            if self.name in mqc_colour_scale.qualitative_scales and isinstance(val, float):
-                if config.lint:
-                    sequential_scales = [
-                        s for s in mqc_colour_scale.COLORBREWER_SCALES if s not in mqc_colour_scale.qualitative_scales
-                    ]
-                    logger.warning(
-                        f"A qualitative scale {self.name} is used for float values ({val}). "
-                        f"Consider using one of the sequential scales instead: {', '.join(sequential_scales)}"
-                    )
+            if self.name in mqc_colour_scale.qualitative_scales and isinstance(val, float) and config.lint:
+                sequential_scales = [
+                    s for s in mqc_colour_scale.COLORBREWER_SCALES if s not in mqc_colour_scale.qualitative_scales
+                ]
+                logger.warning(
+                    f"A qualitative scale '{self.name}' is used for float values ({val}). "
+                    f"Consider using one of the sequential scales instead: {', '.join(sequential_scales)}"
+                )
             elif self.name in mqc_colour_scale.qualitative_scales:
                 if not isinstance(val, int):
                     # When we have non-numeric values (e.g. Male/Female, Yes/No, chromosome names, etc.), and a qualitative
