@@ -4,6 +4,7 @@
 
 var mqc_colours_idx = 0;
 var mqc_colours = ["#e41a1c", "#377eb8", "#4daf4a", "#984ea3", "#ff7f00", "#ffff33", "#a65628", "#f781bf", "#999999"];
+var zip_threshold = 8;
 
 //////////////////////////////////////////////////////
 // TOOLBOX LISTENERS
@@ -336,6 +337,10 @@ $(function () {
     // Export the plots
     $("#mqc_exportplots").submit(function (e) {
       e.preventDefault();
+      var checked_plots = $("#mqc_export_selectplots input:checked");
+      if (checked_plots.length > zip_threshold) {
+        var zip = new JSZip();
+      }
       var skipped_plots = 0;
       ////// EXPORT PLOT IMAGES
       //////
@@ -344,7 +349,7 @@ $(function () {
         var f_scale = parseInt($("#mqc_export_scaling").val());
         var f_width = parseInt($("#mqc_exp_width").val()) / f_scale;
         var f_height = parseInt($("#mqc_exp_height").val()) / f_scale;
-        $("#mqc_export_selectplots input:checked").each(function () {
+        checked_plots.each(function () {
           var fname = $(this).val();
           var hc = $("#" + fname).highcharts();
           var cfg = {
@@ -355,7 +360,15 @@ $(function () {
             scale: f_scale,
           };
           if (hc !== undefined) {
-            hc.exportChartLocal(cfg);
+            if (checked_plots.length <= zip_threshold) {
+              // Not many plots to export, just trigger a download for each
+              hc.exportChartLocal(cfg);
+            } else {
+              // Lots of plots - generate a zip file for download.
+              //   - add this svg to a zip archive
+              var svg = hc.getSVG();
+              zip.file(fname + ".svg", svg);
+            }
           } else if ($("#" + fname).hasClass("has-custom-export")) {
             $("#" + fname).trigger("mqc_plotexport_image", cfg);
           } else {
@@ -369,11 +382,17 @@ $(function () {
               " plots skipped.\n\nNote that it is not currently possible to export dot plot images from reports. Data exports do work."
           );
         }
+        // Save the zip and trigger a download
+        if (checked_plots.length > zip_threshold) {
+          zip.generateAsync({ type: "blob" }).then(function (content) {
+            saveAs(content, "multiqc_plots.zip");
+          });
+        }
       }
       ////// EXPORT PLOT DATA
       //////
       else if ($("#mqc_data_download").is(":visible")) {
-        $("#mqc_export_selectplots input:checked").each(function () {
+        checked_plots.each(function () {
           try {
             var target = $(this).val();
             var ft = $("#mqc_export_data_ft").val();
@@ -391,7 +410,14 @@ $(function () {
             else if (ft == "json") {
               json_str = JSON.stringify(mqc_plots[target], null, 2);
               var blob = new Blob([json_str], { type: "text/plain;charset=utf-8" });
-              saveAs(blob, fname);
+              if (checked_plots.length <= zip_threshold) {
+                // Not many plots to export, just trigger a download for each
+                saveAs(blob, fname);
+              } else {
+                // Lots of plots - generate a zip file for download.
+                // Add to a zip archive
+                zip.file(fname, blob);
+              }
             }
             // Beeswarm plots must be done manually
             else if (mqc_plots[target]["plot_type"] == "beeswarm") {
@@ -416,7 +442,14 @@ $(function () {
                 datastring += rows[j].join(sep) + "\n";
               }
               var blob = new Blob([datastring], { type: "text/plain;charset=utf-8" });
-              saveAs(blob, fname);
+              if (checked_plots.length <= zip_threshold) {
+                // Not many plots to export, just trigger a download for each
+                saveAs(blob, fname);
+              } else {
+                // Lots of plots - generate a zip file for download.
+                // Add to a zip archive
+                zip.file(fname, blob);
+              }
             }
             // Normal plot - use HighCharts plugin to get the data from the plot
             else if (ft == "tsv" || ft == "csv") {
@@ -424,7 +457,14 @@ $(function () {
               if (hc !== undefined) {
                 hc.update({ exporting: { csv: { itemDelimiter: sep } } });
                 var blob = new Blob([hc.getCSV()], { type: "text/plain;charset=utf-8" });
-                saveAs(blob, fname);
+                if (checked_plots.length <= zip_threshold) {
+                  // Not many plots to export, just trigger a download for each
+                  saveAs(blob, fname);
+                } else {
+                  // Lots of plots - generate a zip file for download.
+                  // Add to a zip archive
+                  zip.file(fname, blob);
+                }
               } else {
                 skipped_plots += 1;
               }
@@ -438,6 +478,12 @@ $(function () {
         });
         if (skipped_plots > 0) {
           alert("Warning: Could not export data from " + skipped_plots + " plots.");
+        }
+        // Save the zip and trigger a download
+        if (checked_plots.length > zip_threshold) {
+          zip.generateAsync({ type: "blob" }).then(function (content) {
+            saveAs(content, "multiqc_data.zip");
+          });
         }
       } else {
         alert("Error - don't know what to export!");
