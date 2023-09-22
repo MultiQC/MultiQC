@@ -234,7 +234,7 @@ def parse_insert_size(self, f):
 
 def parse_gc_dist(self, f):
     """Parse the contents of the Qualimap BamQC Mapped Reads GC content distribution file"""
-    # Get the sample name from the parent parent directory
+    # Get the sample name from the parent directory
     # Typical path: <sample name>/raw_data_qualimapReport/mapped_reads_gc-content_distribution.txt
     s_name = self.get_s_name(f)
 
@@ -553,7 +553,7 @@ def general_stats_headers(self):
         "max": 100,
         "min": 0,
         "suffix": "%",
-        "scale": "Set1",
+        "scale": "PuRd",
         "format": "{:,.0f}",
     }
     self.general_stats_headers["median_insert_size"] = {

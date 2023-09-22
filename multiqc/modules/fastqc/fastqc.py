@@ -295,7 +295,7 @@ class MultiqcModule(BaseMultiqcModule):
             "max": 100,
             "min": 0,
             "suffix": "%",
-            "scale": "Set1",
+            "scale": "PuRd",
             "format": "{:,.0f}",
         }
         headers["avg_sequence_length"] = {
