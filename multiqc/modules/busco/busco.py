@@ -11,6 +11,8 @@ from multiqc.plots import bargraph
 # Initialise the logger
 log = logging.getLogger(__name__)
 
+VERSION_REGEX = r"# BUSCO version is: ([\d\.]+)"
+
 
 class MultiqcModule(BaseMultiqcModule):
     """BUSCO module"""
@@ -63,6 +65,11 @@ class MultiqcModule(BaseMultiqcModule):
     def parse_busco_log(self, f):
         parsed_data = {}
         for l in f["f"].splitlines():
+            if l.startswith("# BUSCO version is"):
+                version_match = re.search(VERSION_REGEX, l)
+                if version_match:
+                    self.add_software_version(version_match.group(1), f["s_name"])
+
             for key, string in self.busco_keys.items():
                 if string in l:
                     s = l.strip().split("\t")

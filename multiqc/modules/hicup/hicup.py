@@ -151,7 +151,7 @@ class MultiqcModule(BaseMultiqcModule):
             "suffix": "%",
             "scale": "YlGn",
         }
-        self.general_stats_addcols(self.hicup_data, headers, "HiCUP")
+        self.general_stats_addcols(self.hicup_data, headers)
 
     def hicup_truncating_chart(self):
         """Generate the HiCUP Truncated reads plot"""

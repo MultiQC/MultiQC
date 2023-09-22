@@ -39,6 +39,9 @@ class MultiqcModule(BaseMultiqcModule):
                 if f["s_name"] in self.gopeaks_data:
                     log.debug("Duplicate sample name found in {}! Overwriting: {}".format(f["fn"], f["s_name"]))
 
+                if "gopeaks_version" in parsed:
+                    self.add_software_version(parsed["gopeaks_version"], f["s_name"])
+
                 self.gopeaks_data[f["s_name"]] = parsed
 
                 # add gopeaks data to multiqc_source.txt

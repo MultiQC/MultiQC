@@ -100,6 +100,10 @@ def init():
     global files
     files = dict()
 
+    # Map of software tools to a set of unique version strings
+    global software_versions
+    software_versions = defaultdict(lambda: defaultdict(list))
+
 
 def get_filelist(run_module_names):
     """
@@ -468,7 +472,7 @@ def data_sources_tofile():
             print(body.encode("utf-8", "ignore").decode("utf-8"), file=f)
 
 
-def dois_tofile():
+def dois_tofile(modules_output):
     """Find all DOIs listed in report sections and write to a file"""
     # Collect DOIs
     dois = {"MultiQC": ["10.1093/bioinformatics/btw354"]}

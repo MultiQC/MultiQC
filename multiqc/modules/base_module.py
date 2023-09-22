@@ -9,11 +9,11 @@ import mimetypes
 import os
 import re
 import textwrap
-from collections import OrderedDict
+from collections import OrderedDict, defaultdict
 
 import markdown
 
-from multiqc.utils import config, report, util_functions
+from multiqc.utils import config, report, software_versions, util_functions
 
 logger = logging.getLogger(__name__)
 
@@ -30,7 +30,7 @@ class BaseMultiqcModule(object):
         extra=None,
         autoformat=True,
         autoformat_type="markdown",
-        doi=[],
+        doi=None,
     ):
         # Custom options from user config that can overwrite base module values
         mod_cust_config = getattr(self, "mod_cust_config", {})
@@ -41,7 +41,10 @@ class BaseMultiqcModule(object):
         self.info = mod_cust_config.get("info", info)
         self.comment = mod_cust_config.get("comment", comment)
         self.extra = mod_cust_config.get("extra", extra)
-        self.doi = mod_cust_config.get("doi", doi)
+        self.doi = mod_cust_config.get("doi", (doi or []))
+
+        # List of software version(s) for module. Don't append directly, use add_software_version()
+        self.versions = defaultdict(list)
 
         # Specific module level config to overwrite (e.g. config.bcftools, config.fastqc)
         config.update({anchor: mod_cust_config.get("custom_config", {})})
@@ -437,13 +440,14 @@ class BaseMultiqcModule(object):
         :param headers: Dict / OrderedDict with information for the headers,
                         such as colour scales, min and max values etc.
                         See docs/writing_python.md for more information.
+        :param namespace: Append to the module name in the table column description.
+                          Can be e.g. a submodule name.
         :return: None
         """
         if headers is None:
             headers = {}
-        # Use the module namespace as the name if not supplied
-        if namespace is None:
-            namespace = self.name
+        # Deepish copy of headers so that we can modify it in place
+        headers = {k: v.copy() for k, v in headers.items()}
 
         # Guess the column headers from the data if not supplied
         if headers is None or len(headers) == 0:
@@ -459,8 +463,11 @@ class BaseMultiqcModule(object):
         # Add the module name to the description if not already done
         keys = headers.keys()
         for k in keys:
-            if "namespace" not in headers[k]:
-                headers[k]["namespace"] = namespace
+            # Prepend the namespace displayed in the table with the module name
+            namespace = headers[k].get("namespace", namespace)
+            headers[k]["namespace"] = self.name
+            if namespace:
+                headers[k]["namespace"] = self.name + " " + namespace
             if "description" not in headers[k]:
                 headers[k]["description"] = headers[k].get("title", k)
 
@@ -481,6 +488,37 @@ class BaseMultiqcModule(object):
             report.data_sources[module][section][s_name] = source
         except AttributeError:
             logger.warning("Tried to add data source for {}, but was missing fields data".format(self.name))
+
+    def add_software_version(self, version: str, sample: str = None, software_name: str = None):
+        """Save software versions for module."""
+        # Don't add if version detection is disabled
+        if config.disable_version_detection:
+            return
+
+        # Don't add if sample is ignored
+        if sample is not None and self.is_ignore_sample(sample):
+            return
+
+        # Use module name as software name if not specified
+        if software_name is None:
+            software_name = self.name
+
+        # Check if version string is PEP 440 compliant to enable version normalization and proper ordering.
+        # Otherwise use raw string is used for version.
+        # - https://peps.python.org/pep-0440/
+        version = software_versions.parse_version(version)
+
+        if version in self.versions[software_name]:
+            return
+
+        self.versions[software_name].append(version)
+
+        # Sort version in order newest --> oldest
+        self.versions[software_name] = software_versions.sort_versions(self.versions[software_name])
+
+        # Update version list for report section.
+        group_name = self.name
+        report.software_versions[group_name][software_name] = self.versions[software_name]
 
     def write_data_file(self, data, fn, sort_cols=False, data_format=None):
         """Saves raw data to a dictionary for downstream use, then redirects

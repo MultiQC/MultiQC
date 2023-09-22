@@ -19,5 +19,12 @@ It works with report files generated using the `--report` flag, that look like t
 ```
 
 A bar graph is generated that shows the number of fragments for each sample that
-fall into the top categories for each taxa rank. The top categories are calculated
+fall into the top-5 categories for each taxa rank. The top categories are calculated
 by summing the library percentages across all samples.
+
+The number of top categories to plot can be customized in the config file:
+
+```yaml
+kraken:
+  top_n: 5
+```
