@@ -55,4 +55,6 @@ script-src 'self'
     # 1.16
     'sha256-wlLs2UDz7n3cvWqY0PTazlKGYhGTOPH77vsElgE7pFw=' # multiqc_fastqc.js
     'sha256-GueuiCxuV8FbnCv7Txho8dTrz3HODU6GH40tvy5kMks=' # multiqc_dragen_fastqc.js
+    'sha256-GueuiCxuV8FbnCv7Txho8dTrz3HODU6GH40tvy5kMks=' # multiqc_dragen_fastqc.js
+    'sha256-fyoI4BaYhqhHHrqpYtL1OZRQOM4mKOdDwUXPf6YS7AA=' # multiqc_bases2fastq.js
 ;
