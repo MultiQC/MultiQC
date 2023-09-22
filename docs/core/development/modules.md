@@ -812,6 +812,8 @@ The following scales are available:
 
 ![color brewer](../../images/cbrewer_scales.png)
 
+For categorical metrics that can take a value from a predefined set, use one of the categorical color scales: Set2, Accent, Set1, Set3, Dark2, Paired, Pastel2, Pastel1. For numerical metrics, consider one the "sequential" color scales from the table above.
+
 ## Step 4 - Writing data to a file
 
 In addition to printing data to the General Stats, MultiQC modules typically
