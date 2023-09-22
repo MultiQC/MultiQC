@@ -89,12 +89,6 @@ class MultiqcModule(BaseMultiqcModule):
                 plot=self.index_metrics_details_table(self.indexSummary),
             )
 
-    def parse_version(self, f):
-        """Extract the version from file contents"""
-        for line in f:
-            print(line)
-        return None
-
     def parse_summary_csv(self, f):
         metrics = {"summary": {}, "details": {}}
         header = []
