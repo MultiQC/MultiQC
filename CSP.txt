@@ -7,7 +7,7 @@ script-src 'self'
     'sha256-wlLs2UDz7n3cvWqY0PTazlKGYhGTOPH77vsElgE7pFw=' # multiqc_fastqc.js
     'sha256-GueuiCxuV8FbnCv7Txho8dTrz3HODU6GH40tvy5kMks=' # multiqc_dragen_fastqc.js
     'sha256-rMfkFFWoB2W1/Zx+4bgHim0WC7vKRVrq6FTeZclH1Z4=' # jszip.min.js
-    'sha256-AuwmuugFGy2Amulo2ZesQS91iaaKRSnuZHN+Dc+U3sQ=' # multiqc_toolbox.js
+    'sha256-TIAwTE0Bkh4IONwQfoLEBxyQjPi7q+Jr1Fs3+kiAYzY=' # multiqc_toolbox.js
 
     # v1.13
     'sha256-Yz8frRqxu+ckJJ0Haj9Ywhe/Siomzpq9D/Xe1WX1LrQ=' # multiqc_tables.js
