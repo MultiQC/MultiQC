@@ -1,9 +1,7 @@
-#!/usr/bin/env python
-
 """ MultiQC module to parse output from WhatsHap """
 
-from collections import defaultdict, OrderedDict
 import logging
+from collections import OrderedDict, defaultdict
 
 from multiqc.modules.base_module import BaseMultiqcModule
 from multiqc.plots import bargraph, table
@@ -18,7 +16,6 @@ class MultiqcModule(BaseMultiqcModule):
     """
 
     def __init__(self):
-
         # Initialise the parent object
         super(MultiqcModule, self).__init__(
             name="WhatsHap",
@@ -88,20 +85,22 @@ class MultiqcModule(BaseMultiqcModule):
         # we are parsing an empty file
         sample = logfile["s_name"]
         # Get the header and remove the "#" character from the first field
-        header = next(file_content).strip().split()
+        header = next(file_content).strip().split("\t")
         header[0] = header[0].lstrip("#")
 
         # The results from this log file, a dictionary for every chromosome
         results = defaultdict(dict)
         # Parse the lines that have the data
         for line in file_content:
-            spline = line.strip().split()
+            spline = line.strip().split("\t")
             data = {field: value for field, value in zip(header, spline)}
-            process_data(data)
 
             # Remove the sample and chromsome from the data
             sample = str(data.pop("sample"))
             chromosome = data.pop("chromosome")
+
+            # Process the remaining data fields
+            process_data(data)
 
             # Calculate the fraction of heterozygous variants that were phased
             try:

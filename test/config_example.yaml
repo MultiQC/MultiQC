@@ -118,3 +118,11 @@ table_columns_visible:
 table_columns_name:
   FastQC:
     percent_fails: "Percent not pass"
+
+software_versions:
+  mosdepth: "0.3.4"
+  quast:
+    - "5.2.0"
+    - "5.1.0"
+  some_other_tool: "2023-1"
+  some_other_tool_with_a_way_too_long_name: "v1.0"

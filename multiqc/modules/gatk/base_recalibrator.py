@@ -1,4 +1,3 @@
-#!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
 """ MultiQC submodule to parse output from GATK BaseRecalibrator """
@@ -6,8 +5,8 @@
 import logging
 from collections import namedtuple
 from itertools import groupby
-from multiqc.plots import linegraph
-from multiqc.plots import scatter
+
+from multiqc.plots import linegraph, scatter
 
 # Initialise the logger
 log = logging.getLogger(__name__)
@@ -34,7 +33,6 @@ class BaseRecalibratorMixin:
         }
 
         for f in self.find_log_files("gatk/base_recalibrator", filehandles=True):
-
             # Check that we're not ignoring this sample name
             if self.is_ignore_sample(f["s_name"]):
                 continue

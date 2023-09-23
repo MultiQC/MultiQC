@@ -1,14 +1,12 @@
-#!/usr/bin/env python
-
 """ MultiQC module to parse output from DamageProfiler """
 
-from __future__ import print_function
-from collections import OrderedDict
-import logging
-import json
 
-from multiqc.plots import linegraph
+import json
+import logging
+from collections import OrderedDict
+
 from multiqc.modules.base_module import BaseMultiqcModule
+from multiqc.plots import linegraph
 
 # Initialise the logger
 log = logging.getLogger(__name__)
@@ -109,6 +107,10 @@ class MultiqcModule(BaseMultiqcModule):
         # Get sample name from JSON first
         s_name = self.clean_s_name(parsed_json["metadata"]["sample_name"], f)
         self.add_data_source(f, s_name)
+
+        # Add version info
+        version = parsed_json["metadata"]["version"]
+        self.add_software_version(version, s_name)
 
         # Add 3' G to A data
         self.threepGtoAfreq_data[s_name] = parsed_json["dmg_3p"]

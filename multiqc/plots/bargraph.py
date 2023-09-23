@@ -2,9 +2,8 @@
 
 """ MultiQC functions to plot a bargraph """
 
-from __future__ import print_function
+
 import base64
-from collections import OrderedDict
 import inspect
 import io
 import logging
@@ -13,8 +12,9 @@ import os
 import random
 import re
 import sys
+from collections import OrderedDict
 
-from multiqc.utils import config, report, util_functions
+from multiqc.utils import config, mqc_colour, report, util_functions
 
 logger = logging.getLogger(__name__)
 
@@ -106,11 +106,13 @@ def plot(data, cats=None, pconfig=None):
         except NameError:  # Py3
             if type(cats[0]) is str:
                 cats = [cats]
+        except IndexError:  # Given empty list
+            pass
     # Generate default categories if not supplied
     for idx in range(len(data)):
         try:
             cats[idx]
-        except (IndexError):
+        except IndexError:
             cats.append(list())
             for s in data[idx].keys():
                 for k in data[idx][s].keys():
@@ -180,6 +182,14 @@ def plot(data, cats=None, pconfig=None):
     if len(plotdata) == 0:
         logger.warning(f"Tried to make bar plot, but had no data: {pconfig.get('id')}")
         return '<p class="text-danger">Error - was not able to plot data.</p>'
+
+    # Add colors to the categories if not set. Since the "plot_defaults" scale is
+    # identical to default scale of the Highcharts JS library, this is not strictly
+    # needed. But it future proofs when we replace Highcharts with something else.
+    scale = mqc_colour.mqc_colour_scale("plot_defaults")
+    for si, sd in enumerate(plotdata):
+        for di, d in enumerate(sd):
+            d.setdefault("color", scale.get_colour(di, lighten=1))
 
     # Make a plot - custom, interactive or flat
     try:
@@ -337,20 +347,6 @@ def matplotlib_bargraph(plotdata, plotsamples, pconfig=None):
     )
     html += '<div class="mqc_mplplot_plotgroup" id="{}">'.format(pconfig["id"])
 
-    # Same defaults as HighCharts for consistency
-    default_colors = [
-        "#7cb5ec",
-        "#434348",
-        "#90ed7d",
-        "#f7a35c",
-        "#8085e9",
-        "#f15c80",
-        "#e4d354",
-        "#2b908f",
-        "#f45b5b",
-        "#91e8e1",
-    ]
-
     # Counts / Percentages Switch
     if pconfig.get("cpswitch") is not False and not config.simple_output:
         if pconfig.get("cpswitch_c_active", True) is True:
@@ -388,7 +384,6 @@ def matplotlib_bargraph(plotdata, plotsamples, pconfig=None):
 
     # Go through datasets creating plots
     for pidx, pdata in enumerate(plotdata):
-
         # Save plot data to file
         fdata = {}
         for d in pdata:
@@ -410,7 +405,6 @@ def matplotlib_bargraph(plotdata, plotsamples, pconfig=None):
             pdata[idx]["data"] = [x if not math.isnan(x) else 0 for x in d["data"]]
 
         for plot_pct in plot_pcts:
-
             # Plot ID
             pid = pids[pidx]
             hide_plot = False
@@ -457,7 +451,7 @@ def matplotlib_bargraph(plotdata, plotsamples, pconfig=None):
                 if len(values) < len(y_ind):
                     values.extend([0] * (len(y_ind) - len(values)))
                 if plot_pct is True:
-                    for (key, var) in enumerate(values):
+                    for key, var in enumerate(values):
                         s_total = s_totals[key]
                         if s_total == 0:
                             values[key] = 0
@@ -470,10 +464,6 @@ def matplotlib_bargraph(plotdata, plotsamples, pconfig=None):
                 else:
                     for i, p in enumerate(prevdata):
                         prevdata[i] += prev_values[i]
-                # Default colour index
-                cidx = idx
-                while cidx >= len(default_colors):
-                    cidx -= len(default_colors)
                 # Save the name of this series
                 dlabels.append(d["name"])
                 # Add the series of bars to the plot
@@ -482,7 +472,7 @@ def matplotlib_bargraph(plotdata, plotsamples, pconfig=None):
                     values,
                     bar_width,
                     left=prevdata,
-                    color=d.get("color", default_colors[cidx]),
+                    color=d["color"],
                     align="center",
                     linewidth=pconfig.get("borderWidth", 0),
                 )

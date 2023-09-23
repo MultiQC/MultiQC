@@ -1,12 +1,12 @@
-#!/usr/bin/env python
 """ MultiQC module to parse output from HiCExplorer """
-from __future__ import print_function
-from collections import OrderedDict
+
+
 import logging
+from collections import OrderedDict
 
 from multiqc import config
-from multiqc.plots import bargraph
 from multiqc.modules.base_module import BaseMultiqcModule
+from multiqc.plots import bargraph
 
 log = logging.getLogger(__name__)
 
@@ -64,7 +64,6 @@ class MultiqcModule(BaseMultiqcModule):
         # Contains 'Hi-C contacts' --> since 3.2
         hicexplorer_versions = set()
         for s_name in self.hicexplorer_data:
-
             # compatibility to HiCExplorer <= 1.7 version QC files
             if (
                 not "Pairs mappable, unique and high quality" in self.hicexplorer_data[s_name]

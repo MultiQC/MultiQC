@@ -1,10 +1,8 @@
-#!/usr/bin/env python
-
 """ MultiQC submodule to parse output from RSeQC inner_distance.py
 http://rseqc.sourceforge.net/#inner-distance-py """
 
-from collections import OrderedDict
 import logging
+from collections import OrderedDict
 
 from multiqc.plots import linegraph
 
@@ -50,6 +48,8 @@ def parse_reports(self):
         for s_name in self.inner_distance:
             self.inner_distance_pct[s_name] = OrderedDict()
             total = sum(self.inner_distance[s_name].values())
+            if total == 0:
+                continue
             for k, v in self.inner_distance[s_name].items():
                 self.inner_distance_pct[s_name][k] = (v / total) * 100
 

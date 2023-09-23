@@ -1,11 +1,9 @@
-#!/usr/bin/env python
-
 """ MultiQC submodule to parse output from RSeQC junction_saturation.py
 http://rseqc.sourceforge.net/#junction-saturation-py """
 
-from collections import OrderedDict
 import logging
 import re
+from collections import OrderedDict
 
 from multiqc.plots import linegraph
 
@@ -49,7 +47,6 @@ def parse_reports(self):
     self.junction_saturation_novel = self.ignore_samples(self.junction_saturation_novel)
 
     if len(self.junction_saturation_all) > 0:
-
         # Write data to file
         self.write_data_file(self.junction_saturation_all, "rseqc_junction_saturation_all")
         self.write_data_file(self.junction_saturation_known, "junction_saturation_known")

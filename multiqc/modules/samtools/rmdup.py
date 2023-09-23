@@ -1,10 +1,9 @@
-#!/usr/bin/env python
-
 """ MultiQC module to parse output from Samtools rmdup """
 
 import logging
 import re
 from collections import OrderedDict
+
 from multiqc.plots import bargraph
 
 # Initialise the logger

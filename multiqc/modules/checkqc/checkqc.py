@@ -1,10 +1,11 @@
 """MultiQC module to parse CheckQC JSON output"""
 
-import logging
 import json
+import logging
+import re
 from collections import OrderedDict
 from operator import itemgetter
-import re
+
 from multiqc.modules.base_module import BaseMultiqcModule
 from multiqc.plots import bargraph, table
 
@@ -517,7 +518,7 @@ class MultiqcModule(BaseMultiqcModule):
         )[:20]
 
         data = {}
-        for (idx, _) in sorted_idx:
+        for idx, _ in sorted_idx:
             sample = self.clean_s_name(idx, f)
 
             if self.is_ignore_sample(sample):

@@ -1,15 +1,13 @@
-#!/usr/bin/env python
-
 """ MultiQC module to parse output from featureCounts """
 
-from __future__ import print_function
-from collections import OrderedDict
+
 import logging
 import re
+from collections import OrderedDict
 
 from multiqc import config
-from multiqc.plots import bargraph
 from multiqc.modules.base_module import BaseMultiqcModule
+from multiqc.plots import bargraph
 
 # Initialise the logger
 log = logging.getLogger(__name__)
@@ -17,7 +15,6 @@ log = logging.getLogger(__name__)
 
 class MultiqcModule(BaseMultiqcModule):
     def __init__(self):
-
         # Initialise the parent object
         super(MultiqcModule, self).__init__(
             name="featureCounts",
@@ -94,7 +91,6 @@ class MultiqcModule(BaseMultiqcModule):
             return None
 
         for idx, f_name in enumerate(file_names):
-
             # Clean up sample name
             s_name = self.clean_s_name(f_name, f)
 

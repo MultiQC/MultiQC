@@ -1,13 +1,11 @@
-#!/usr/bin/env python
-
 """ MultiQC submodule to parse output from Picard RnaSeqMetrics """
 
-from collections import OrderedDict
 import logging
 import os
 import re
+from collections import OrderedDict
 
-from multiqc.plots import linegraph, bargraph
+from multiqc.plots import bargraph, linegraph
 
 # Initialise the logger
 log = logging.getLogger(__name__)
@@ -92,7 +90,6 @@ def parse_reports(self):
     self.picard_RnaSeqMetrics_data = self.ignore_samples(self.picard_RnaSeqMetrics_data)
 
     if len(self.picard_RnaSeqMetrics_data) > 0:
-
         # Write parsed data to a file
         self.write_data_file(self.picard_RnaSeqMetrics_data, "multiqc_picard_RnaSeqMetrics")
 

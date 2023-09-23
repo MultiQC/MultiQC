@@ -1,14 +1,9 @@
-#!/usr/bin/env python
-
 """ MultiQC module to parse output from ngsderive """
 
-from __future__ import print_function
+
 import csv
 import io
 import logging
-import os
-import re
-
 from collections import OrderedDict
 
 from multiqc.modules.base_module import BaseMultiqcModule
@@ -24,7 +19,6 @@ class MultiqcModule(BaseMultiqcModule):
     """
 
     def __init__(self):
-
         # Initialise the parent object
         super(MultiqcModule, self).__init__(
             name="ngsderive",
@@ -160,7 +154,7 @@ class MultiqcModule(BaseMultiqcModule):
 
         bardata = OrderedDict()
         sorted_data = sorted(data.items(), key=lambda x: x[1].get("forward"))
-        for (k, v) in sorted_data:
+        for k, v in sorted_data:
             bardata[k] = v
 
         headers = {
@@ -423,7 +417,7 @@ class MultiqcModule(BaseMultiqcModule):
 
         bardata = OrderedDict()
         sorted_junction_data = sorted(data.items(), key=lambda x: int(x[1].get("total_junctions")), reverse=True)
-        for (k, v) in sorted_junction_data:
+        for k, v in sorted_junction_data:
             bardata[k] = {
                 "known_junctions": v["known_junctions"],
                 "partial_novel_junctions": v["partial_novel_junctions"],

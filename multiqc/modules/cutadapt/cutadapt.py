@@ -1,15 +1,13 @@
-#!/usr/bin/env python
-
 """ MultiQC module to parse output from Cutadapt """
 
-from __future__ import print_function
-from collections import OrderedDict
-from distutils.version import StrictVersion
+
 import logging
 import re
+from collections import OrderedDict
+from distutils.version import StrictVersion
 
-from multiqc.plots import bargraph, linegraph
 from multiqc.modules.base_module import BaseMultiqcModule
+from multiqc.plots import bargraph, linegraph
 
 # Initialise the logger
 log = logging.getLogger(__name__)
@@ -23,7 +21,6 @@ class MultiqcModule(BaseMultiqcModule):
     """
 
     def __init__(self):
-
         # Initialise the parent object
         super(MultiqcModule, self).__init__(
             name="Cutadapt",
@@ -142,6 +139,10 @@ class MultiqcModule(BaseMultiqcModule):
                     self.cutadapt_data[s_name]["cutadapt_version"] = cutadapt_version
 
             if s_name is not None:
+                # Add version info to module
+                if cutadapt_version is not None:
+                    self.add_software_version(cutadapt_version, s_name)
+
                 self.add_data_source(f, s_name)
 
                 # Search regexes for overview stats

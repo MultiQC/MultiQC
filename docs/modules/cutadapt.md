@@ -1,7 +1,7 @@
 ---
-Name: Cutadapt
-URL: https://cutadapt.readthedocs.io/
-Description: >
+name: Cutadapt
+url: https://cutadapt.readthedocs.io/
+description: >
   Cutadapt is a tool to find and remove adapter sequences, primers, poly-A
   tails and other types of unwanted sequence from your high-throughput
   sequencing reads.

@@ -1,7 +1,7 @@
 ---
-Name: TopHat
-URL: https://ccb.jhu.edu/software/tophat/
-Description: >
+name: TopHat
+url: https://ccb.jhu.edu/software/tophat/
+description: >
   TopHat is a fast splice junction mapper for RNA-Seq reads. It aligns
   RNA-Seq reads to mammalian-sized genomes.
 ---

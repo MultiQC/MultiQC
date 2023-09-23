@@ -1,11 +1,9 @@
-#!/usr/bin/env python
-
 """ MultiQC submodule to parse output from RSeQC junction_annotation.py
 http://rseqc.sourceforge.net/#junction-annotation-py """
 
-from collections import OrderedDict
 import logging
 import re
+from collections import OrderedDict
 
 from multiqc.plots import bargraph
 
@@ -65,7 +63,6 @@ def parse_reports(self):
     self.junction_annotation_data = self.ignore_samples(self.junction_annotation_data)
 
     if len(self.junction_annotation_data) > 0:
-
         # Write to file
         self.write_data_file(self.junction_annotation_data, "multiqc_rseqc_junction_annotation")
 

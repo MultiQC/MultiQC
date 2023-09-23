@@ -1,14 +1,12 @@
-#!/usr/bin/env python
-
 """ MultiQC module to parse output from eigenstrat_snp_coverage """
 
-from __future__ import print_function
-from collections import OrderedDict
-import logging
-import json
 
-from multiqc.plots import bargraph, scatter
+import json
+import logging
+from collections import OrderedDict
+
 from multiqc.modules.base_module import BaseMultiqcModule
+from multiqc.plots import bargraph, scatter
 
 # Initialise the logger
 log = logging.getLogger(__name__)
@@ -18,7 +16,6 @@ class MultiqcModule(BaseMultiqcModule):
     """eigenstratdatabasetools module"""
 
     def __init__(self):
-
         # Initialise the parent object
         super(MultiqcModule, self).__init__(
             name="eigenstratdatabasetools",
@@ -59,13 +56,18 @@ class MultiqcModule(BaseMultiqcModule):
             return
 
         # Parse JSON data to a dict
+        version = None
         for s_name in data:
             if s_name == "Metadata":
+                version = data["Metadata"]["version"]
                 continue
 
             s_clean = self.clean_s_name(s_name, f)
             if s_clean in self.snp_cov_data:
                 log.debug("Duplicate sample name found! Overwriting: {}".format(s_clean))
+
+            if version is not None:
+                self.add_software_version(version, s_clean)
 
             self.add_data_source(f, s_clean)
             self.snp_cov_data[s_clean] = dict()

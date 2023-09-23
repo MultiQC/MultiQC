@@ -1,16 +1,14 @@
-#!/usr/bin/env python
-
 """ MultiQC module to parse output from VEP """
 
-from __future__ import print_function
 
-from collections import OrderedDict
 import ast
 import logging
 import re
+from collections import OrderedDict
+
+from multiqc.modules.base_module import BaseMultiqcModule
 from multiqc.plots import bargraph, table
 from multiqc.utils import mqc_colour
-from multiqc.modules.base_module import BaseMultiqcModule
 
 # Initialise the logger
 log = logging.getLogger(__name__)
@@ -242,7 +240,7 @@ class MultiqcModule(BaseMultiqcModule):
         p_config["title"] = "VEP: Variant Consequences"
         p_config["ylab"] = p_config["data_labels"][0]
 
-        if max([len(d) for d in plot_data]) == 0:
+        if len(plot_data) == 0 or max([len(d) for d in plot_data]) == 0:
             return
 
         self.add_section(
