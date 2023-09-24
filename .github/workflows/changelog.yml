@@ -32,7 +32,6 @@ jobs:
       - uses: actions/setup-python@v3
 
       - name: Update CHANGELOG.md from the PR title
-        if: env.changelog_modified == 'false'
         env:
           PR_TITLE: ${{ github.event.pull_request.title }}
           PR_NUMBER: ${{ github.event.pull_request.number }}
