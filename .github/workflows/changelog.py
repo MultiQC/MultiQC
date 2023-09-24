@@ -25,6 +25,9 @@ pr_number = os.environ["PR_NUMBER"]
 comment = os.environ.get("COMMENT", "")
 base_path = Path(os.environ.get("GITHUB_WORKSPACE", ""))
 
+assert pr_title, pr_title
+assert pr_number, pr_number
+
 # Trim the PR number added when GitHub squashes commits, e.g. "Module: Updated (#2026)"
 pr_title = pr_title.removesuffix(f" (#{pr_number})")
 
@@ -95,7 +98,7 @@ else:
 
 # Now that we determined the PR type, preparing the change log entry.
 pr_link = f"([#{pr_number}]({REPO_URL}/pull/{pr_number}))"
-if comment := comment.removeprefix("/changelog ").strip():
+if comment := comment.removeprefix("@multiqc-bot changelog").strip():
     new_lines = [
         f"- {comment} {pr_link}\n",
     ]
