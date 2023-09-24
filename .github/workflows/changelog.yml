@@ -1,58 +1,54 @@
 name: Update CHANGELOG.md
-
 on:
-  pull_request_review:
-    branches:
-      - master
-    types:
-      - submitted
+  issue_comment:
+    types: [created]
+
   # For manually triggering this workflow
   workflow_dispatch:
     inputs:
       number:
         description: PR number
         required: true
+
 env:
   PR_TITLE: ${{ github.event.pull_request.title }}
   PR_NUMBER: ${{ github.event.pull_request.number }}
-  GH_TOKEN: ${{ github.token }} # This is needed for the GitHub CLI
+  GH_TOKEN: ${{ github.token }}
 
 jobs:
   update_changelog:
-    if: github.repository_owner == 'ewels' && github.event.review.state == 'approved'
     runs-on: ubuntu-latest
+    # Only run if comment is on a PR with the main repo, and if it contains the magic keywords
+    if: >
+      github.repository_owner == 'ewels' &&
+      github.event.issue.pull_request &&
+      contains(github.event.comment.body, '/changelog')
+
     steps:
       - uses: actions/checkout@v3
-      - uses: actions/setup-python@v3
+        with:
+          token: ${{ secrets.MQC_BOT_GITHUB_TOKEN }}
 
-      - name: Check if CHANGELOG.md was modified by other commits (including previous runs of this workflow)
-        run: |
-          pr_number=${{ github.event.pull_request.number }}
-          files=$(gh pr diff $pr_number --name-only)
-          if [[ $files == *"CHANGELOG.md"* ]]; then
-            echo "CHANGELOG.md was modified in this PR"
-            echo "changelog_modified=true" >> $GITHUB_ENV
-          else
-            echo "CHANGELOG.md was not modified in this PR"
-            echo "changelog_modified=false" >> $GITHUB_ENV
-          fi
+      - uses: actions/setup-python@v3
 
       - name: Update CHANGELOG.md from the PR title
         if: env.changelog_modified == 'false'
+        env:
+          PR_TITLE: ${{ github.event.pull_request.title }}
+          PR_NUMBER: ${{ github.event.pull_request.number }}
         run: python ${GITHUB_WORKSPACE}/.github/workflows/changelog.py
 
       - name: Check if CHANGELOG.md actually changed
         run: |
-          git diff --exit-code CHANGELOG.md || echo "changed=YES" >> $GITHUB_ENV
+          git diff --exit-code ${GITHUB_WORKSPACE}/CHANGELOG.md || echo "changed=YES" >> $GITHUB_ENV
           echo "file changed: ${{ env.changed }}"
 
-      - name: Commit and push if changed
-        if: env.changed == 'YES'
+      - name: Push changes
         run: |
-          git config --local user.email "action@github.com"
-          git config --local user.name "GitHub Action"
-          git add CHANGELOG.md
-          git commit -m "Update CHANGELOG.md"
-          git fetch origin ${{ github.event.pull_request.head.ref }}  # Fetch the latest changes from the PR's branch
-          git rebase FETCH_HEAD # Rebase your local changes on top of the latest changes in the PR's branch
-          git push origin HEAD:${{ github.event.pull_request.head.ref }}
+          git config user.name 'MultiQC Bot'
+          git config user.email 'multiqc-bot@seqera.io'
+          git config push.default upstream
+          git add ${GITHUB_WORKSPACE}/CHANGELOG.md
+          git status
+          git commit -m "[automated] Update CHANGELOG.md"
+          git push

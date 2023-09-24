@@ -30,17 +30,12 @@ pr_title = pr_title.removesuffix(f" (#{pr_number})")
 changelog_path = base_path / "CHANGELOG.md"
 
 
-# If "(chore)" or "(docs)" is appended to the PR title, it indicates that we don't want to log this change.
-if pr_title.endswith("(chore)") or pr_title.endswith("(docs)"):
-    print("Skipping logging this change as it's a chore or docs update")
-    sys.exit(0)
-
-
 def find_module_info(module_name):
     """
-    Helper function to load module meta info. With current setup, can't really just import
-    the module and call `mod.info`, as the module does the heavy work on initialization.
-    But that's good - we avoid installing and importing MultiQC here, and the action runs faster.
+    Helper function to load module meta info. With current setup, can't really just
+    import the module and call `mod.info`, as the module does the heavy work on
+    initialization. But that's actually alright: we avoid installing and importing
+    MultiQC and the action runs faster.
     """
     module_name = module_name.lower()
     modules_dir = base_path / "multiqc/modules"
@@ -179,13 +174,23 @@ while orig_lines:
                 updated_lines.extend(section_lines)
                 updated_lines.extend(new_lines)
                 updated_lines.append("\n")
-                print(f"Updated {changelog_path} section '{section}' with lines: {new_lines}")
+                print(f"Updated {changelog_path} section '{section}' with lines:\n" + "".join(new_lines))
                 new_lines = None
                 # Pushing back the next section header line
                 orig_lines.insert(0, line)
                 break
             elif line.strip():
-                section_lines.append(line)
+                # if the line already contains a link to the PR, don't add it again.
+                if line.strip().endswith(pr_link):
+                    if "\n".join(new_lines) == line:
+                        print(f"Found existing identical entry for this pull request #{pr_number}:")
+                        print(line.strip())
+                        sys.exit(0)
+                    else:
+                        print(f"Found existing entry for this pull request #{pr_number}. It will be replaced:")
+                        print(line.strip())
+                else:
+                    section_lines.append(line)
     else:
         updated_lines.append(line)
 
