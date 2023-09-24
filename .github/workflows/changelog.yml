@@ -22,7 +22,7 @@ jobs:
     if: >
       github.repository_owner == 'ewels' &&
       github.event.issue.pull_request &&
-      contains(github.event.comment.body, '/changelog')
+      startsWith(github.event.comment.body, '/changelog')
 
     steps:
       - uses: actions/checkout@v3
@@ -36,6 +36,7 @@ jobs:
         env:
           PR_TITLE: ${{ github.event.pull_request.title }}
           PR_NUMBER: ${{ github.event.pull_request.number }}
+          COMMENT: ${{ github.event.comment.body }}
         run: python ${GITHUB_WORKSPACE}/.github/workflows/changelog.py
 
       - name: Check if CHANGELOG.md actually changed

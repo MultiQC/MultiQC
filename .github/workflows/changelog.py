@@ -22,6 +22,7 @@ REPO_URL = "https://github.com/ewels/MultiQC"
 # Assumes the environment is set by the GitHub action.
 pr_title = os.environ["PR_TITLE"]
 pr_number = os.environ["PR_NUMBER"]
+comment = os.environ.get("COMMENT", "")
 base_path = Path(os.environ.get("GITHUB_WORKSPACE", ""))
 
 # Trim the PR number added when GitHub squashes commits, e.g. "Module: Updated (#2026)"
@@ -94,9 +95,13 @@ else:
 
 # Now that we determined the PR type, preparing the change log entry.
 pr_link = f"([#{pr_number}]({REPO_URL}/pull/{pr_number}))"
-if section == "### New modules":
+if comment := comment.removeprefix("/changelog ").strip():
     new_lines = [
-        f"- [**{mod['name']}**]({mod['url']})\n",
+        f"- {comment} {pr_link}\n",
+    ]
+elif section == "### New modules":
+    new_lines = [
+        f"- [**{mod['name']}**]({mod['url']}) {pr_link}\n",
         f"  - {mod['name']} {mod['info']}\n",
     ]
 elif section == "### Module updates":
@@ -182,13 +187,16 @@ while orig_lines:
             elif line.strip():
                 # if the line already contains a link to the PR, don't add it again.
                 if line.strip().endswith(pr_link):
-                    if "\n".join(new_lines) == line:
+                    existing = line + "".join(orig_lines[: len(new_lines) - 1])
+                    if "".join(new_lines) == existing:
                         print(f"Found existing identical entry for this pull request #{pr_number}:")
-                        print(line.strip())
+                        print(existing)
                         sys.exit(0)
                     else:
                         print(f"Found existing entry for this pull request #{pr_number}. It will be replaced:")
-                        print(line.strip())
+                        print(existing)
+                        for _ in range(len(new_lines) - 1):
+                            orig_lines.pop(0)
                 else:
                     section_lines.append(line)
     else:
