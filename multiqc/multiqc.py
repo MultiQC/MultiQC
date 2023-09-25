@@ -662,6 +662,7 @@ def run(
                 output = [output]
             for m in output:
                 report.modules_output.append(m)
+
             if config.make_report:
                 # Copy over css & js files if requested by the theme
                 try:
@@ -690,7 +691,7 @@ def run(
                     pass
 
         except (ModuleNoSamplesFound, UserWarning):  # UserWarning deprecated from 1.16
-            logger.debug(f"{this_module}: no samples found")
+            logger.debug(f"No samples found: {this_module}")
         except KeyboardInterrupt:
             shutil.rmtree(tmp_dir)
             logger.critical(
