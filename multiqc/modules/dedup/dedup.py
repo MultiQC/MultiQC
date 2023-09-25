@@ -72,6 +72,10 @@ class MultiqcModule(BaseMultiqcModule):
         s_name = self.clean_s_name(parsed_json["metadata"]["sample_name"], f)
         self.add_data_source(f, s_name)
 
+        # Add version info
+        version = parsed_json["metadata"]["version"]
+        self.add_software_version(version, s_name)
+
         metrics_dict = parsed_json["metrics"]
 
         for k in metrics_dict:

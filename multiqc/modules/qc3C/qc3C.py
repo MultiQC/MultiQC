@@ -964,6 +964,10 @@ class MultiqcModule(BaseMultiqcModule):
         if s_name in self.qc3c_data:
             log.debug("Duplicate sample name found! Overwriting: {}".format(f["s_name"]))
 
+        # Add version info
+        version = parsed["runtime_info"]["qc3C_version"].split()[-1]
+        self.add_software_version(version, f["s_name"])
+
         try:
             analysis_mode = parsed["mode"]
             if "unobs_fraction" not in parsed and "unobs_frac" in parsed:
