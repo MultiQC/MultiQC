@@ -915,8 +915,8 @@ class MultiqcModule(BaseMultiqcModule):
             return None
 
         cats = OrderedDict()
-        cats["top_overrepresented"] = {"name": "Top over-represented sequence"}
-        cats["remaining_overrepresented"] = {"name": "Sum of remaining over-represented sequences"}
+        cats["top_overrepresented"] = {"name": "Top overrepresented sequence"}
+        cats["remaining_overrepresented"] = {"name": "Sum of remaining overrepresented sequences"}
 
         # Config for the plot
         pconfig = {
@@ -942,13 +942,13 @@ class MultiqcModule(BaseMultiqcModule):
             plot_html = bargraph.plot(data, cats, pconfig)
 
         self.add_section(
-            name="Overrepresented sequences sample summary",
+            name="Overrepresented sequences by sample",
             anchor="fastqc_overrepresented_sequences",
             description="The total amount of overrepresented sequences found in each library.",
             helptext="""
             FastQC calculates and lists overrepresented sequences in FastQ files. It would not be
             possible to show this for all samples in a MultiQC report, so instead this plot shows
-            the _number of sequences_ categorized as over represented.
+            the _number of sequences_ categorized as overrepresented.
 
             Sometimes, a single sequence  may account for a large number of reads in a dataset.
             To show this, the bars are split into two: the first shows the overrepresented reads
@@ -962,7 +962,7 @@ class MultiqcModule(BaseMultiqcModule):
             sequence is very overrepresented in the set either means that it is highly biologically
             significant, or indicates that the library is contaminated, or not as diverse as you expected._
 
-            _FastQC lists all of the sequences which make up more than 0.1% of the total.
+            _FastQC lists all the sequences which make up more than 0.1% of the total.
             To conserve memory only sequences which appear in the first 100,000 sequences are tracked
             to the end of the file. It is therefore possible that a sequence which is overrepresented
             but doesn't appear at the start of the file for some reason could be missed by this module._
@@ -970,7 +970,7 @@ class MultiqcModule(BaseMultiqcModule):
             plot=plot_html,
         )
 
-        # Get top overrepresented_seqs
+        # Top overrepresented sequences across all samples
         top_n = getattr(config, "fastqc_config", {}).get("top_overrepresented_sequences", 20)
         by = getattr(config, "fastqc_config", {}).get("top_overrepresented_sequences_by", "samples")
         if by == "samples":
@@ -1008,19 +1008,19 @@ class MultiqcModule(BaseMultiqcModule):
             else "total number of times they occur across all samples"
         )
         self.add_section(
-            name="Overrepresented sequences global summary",
-            anchor="fastqc_overrepresented_sequences_table",
+            name="Top overrepresented sequences",
+            anchor="fastqc_top_overrepresented_sequences",
             description=f"""
-            Overrepresented sequences across all samples. The table shows the top 
-            {top_n} overrepresented sequences across all samples, ranked by {ranked_by}.
+            Top overrepresented sequences across all samples. The table shows {top_n} 
+            most overrepresented sequences across all samples, ranked by {ranked_by}.
             """,
             plot=table.plot(
                 data,
                 headers,
                 {
                     "namespace": self.name,
-                    "id": f"{self.anchor}_overrepresented_sequences_table",
-                    "table_title": "FastQC: Overrepresented sequences across all samples",
+                    "id": f"fastqc_top_overrepresented_sequences_table",
+                    "table_title": "FastQC: Top overrepresented sequences",
                     "col1_header": "Overrepresented sequence",
                     "sortRows": False,
                 },
