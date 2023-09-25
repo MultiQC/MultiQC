@@ -16,11 +16,11 @@ import math
 import os
 import re
 import zipfile
-from collections import OrderedDict
+from collections import Counter, OrderedDict
 
 from multiqc import config
 from multiqc.modules.base_module import BaseMultiqcModule
-from multiqc.plots import bargraph, heatmap, linegraph
+from multiqc.plots import bargraph, heatmap, linegraph, table
 from multiqc.utils import report
 
 # Initialise the logger
@@ -884,6 +884,9 @@ class MultiqcModule(BaseMultiqcModule):
         """Sum the percentages of overrepresented sequences and display them in a bar plot"""
 
         data = dict()
+        # Count the number of samples where a sequence is overrepresented
+        overrep_by_sample = Counter()
+        overrep_total_cnt = Counter()
         for s_name in self.fastqc_data:
             data[s_name] = dict()
             try:
@@ -894,11 +897,15 @@ class MultiqcModule(BaseMultiqcModule):
                 data[s_name]["total_overrepresented"] = total_pcnt
                 data[s_name]["top_overrepresented"] = max_pcnt
                 data[s_name]["remaining_overrepresented"] = total_pcnt - max_pcnt
+                for d in self.fastqc_data[s_name]["overrepresented_sequences"]:
+                    overrep_by_sample[d["sequence"]] += 1
+                    overrep_total_cnt[d["sequence"]] += int(d["count"])
             except KeyError:
                 if self.fastqc_data[s_name]["statuses"].get("overrepresented_sequences") == "pass":
                     data[s_name]["total_overrepresented"] = 0
                     data[s_name]["top_overrepresented"] = 0
                     data[s_name]["remaining_overrepresented"] = 0
+                    data[s_name]["overrepresented_sequences"] = []
                 else:
                     del data[s_name]
                     log.debug("Couldn't find data for {}, invalid Key".format(s_name))
@@ -914,7 +921,7 @@ class MultiqcModule(BaseMultiqcModule):
         # Config for the plot
         pconfig = {
             "id": "fastqc_overrepresented_sequences_plot",
-            "title": "FastQC: Overrepresented sequences",
+            "title": "FastQC: Overrepresented sequences sample summary",
             "ymin": 0,
             "yCeiling": 100,
             "yMinRange": 20,
@@ -935,7 +942,7 @@ class MultiqcModule(BaseMultiqcModule):
             plot_html = bargraph.plot(data, cats, pconfig)
 
         self.add_section(
-            name="Overrepresented sequences",
+            name="Overrepresented sequences sample summary",
             anchor="fastqc_overrepresented_sequences",
             description="The total amount of overrepresented sequences found in each library.",
             helptext="""
@@ -961,6 +968,63 @@ class MultiqcModule(BaseMultiqcModule):
             but doesn't appear at the start of the file for some reason could be missed by this module._
             """,
             plot=plot_html,
+        )
+
+        # Get top overrepresented_seqs
+        top_n = getattr(config, "fastqc_config", {}).get("top_overrepresented_sequences", 20)
+        by = getattr(config, "fastqc_config", {}).get("top_overrepresented_sequences_by", "samples")
+        if by == "samples":
+            top_seqs = overrep_by_sample.most_common(top_n)
+        else:
+            top_seqs = overrep_total_cnt.most_common(top_n)
+        headers = {
+            "samples": {
+                "title": "Samples",
+                "description": "Number of samples where this sequence is overrepresented",
+                "scale": "Blues",
+                "min": 0,
+                "format": "{:,.d}",
+            },
+            "count": {
+                "title": "Total count",
+                "description": "Total number of occurrences in samples where the sequence is overrepresented",
+                "scale": "Blues",
+                "min": 0,
+                "format": "{:,.d}",
+            },
+        }
+        data = {
+            seq: {
+                "sequence": seq,
+                "count": overrep_total_cnt[seq],
+                "samples": overrep_by_sample[seq],
+            }
+            for seq, _ in top_seqs
+        }
+
+        ranked_by = (
+            "the number of samples they occur in"
+            if by == "samples"
+            else "total number of times they occur across all samples"
+        )
+        self.add_section(
+            name="Overrepresented sequences global summary",
+            anchor="fastqc_overrepresented_sequences_table",
+            description=f"""
+            Overrepresented sequences across all samples. The table shows the top 
+            {top_n} overrepresented sequences across all samples, ranked by {ranked_by}.
+            """,
+            plot=table.plot(
+                data,
+                headers,
+                {
+                    "namespace": self.name,
+                    "id": f"{self.anchor}_overrepresented_sequences_table",
+                    "table_title": "FastQC: Overrepresented sequences across all samples",
+                    "col1_header": "Overrepresented sequence",
+                    "sortRows": False,
+                },
+            ),
         )
 
     def adapter_content_plot(self):
