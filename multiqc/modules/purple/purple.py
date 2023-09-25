@@ -46,6 +46,7 @@ class MultiqcModule(BaseMultiqcModule):
                     log.debug("Duplicate PURPLE output prefix found! Overwriting: {}".format(f["s_name"]))
                 self.add_data_source(f, section="stats")
                 data_by_sample[f["s_name"]].update(data)
+                self.add_software_version(data["version"], f["s_name"])
 
         # Filter to strip out ignored sample names:
         data_by_sample = self.ignore_samples(data_by_sample)

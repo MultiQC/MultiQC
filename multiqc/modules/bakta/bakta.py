@@ -121,6 +121,9 @@ class MultiqcModule(BaseMultiqcModule):
             s = line.strip().split(": ")
             if s[0] in metrics:
                 data[s[0].replace(" ", "_")] = int(s[1])
+
+            if s[0] == "Software":
+                self.add_software_version(s[1].strip("v"), f["s_name"])
         return data
 
     def bakta_barplot(self):

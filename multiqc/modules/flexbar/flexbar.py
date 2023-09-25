@@ -11,6 +11,8 @@ from multiqc.plots import bargraph
 # Initialise the logger
 log = logging.getLogger(__name__)
 
+VERSION_REGEX = r"Flexbar - flexible barcode and adapter removal, version ([\d\.]+)"
+
 
 class MultiqcModule(BaseMultiqcModule):
     def __init__(self):
@@ -82,12 +84,21 @@ class MultiqcModule(BaseMultiqcModule):
         }
         s_name = f["s_name"]
         parsed_data = dict()
+        version = None
         for l in f["f"]:
+            # The version appears in the before the sample name in the log so we
+            # assign it to a variable for now.
+            version_match = re.search(VERSION_REGEX, l)
+            if version_match:
+                version = version_match.group(1)
+
             for k, r in regexes.items():
                 match = re.search(r, l)
                 if match:
                     if k == "output_filename":
                         s_name = self.clean_s_name(match.group(1), f)
+                        if version is not None:
+                            self.add_software_version(version, s_name)
                     else:
                         parsed_data[k] = int(match.group(1))
 

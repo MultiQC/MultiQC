@@ -47,7 +47,7 @@ class MultiqcModule(BaseMultiqcModule):
             name="NanoStat",
             anchor="nanostat",
             href="https://github.com/wdecoster/nanostat/",
-            info="various statistics from a long read sequencing dataset in fastq, bam or sequencing summary format.",
+            info="reports various statistics from a long read sequencing dataset in FASTQ, BAM or sequencing summary format.",
             doi="10.1093/bioinformatics/bty149",
         )
 
@@ -272,20 +272,9 @@ class MultiqcModule(BaseMultiqcModule):
         }
 
         # Add the report section
-        description = ""
-        if stat_type == "fasta":
-            description = "NanoStat statistics from FASTA files."
-        if stat_type == "fastq":
-            description = "NanoStat statistics from FastQ files."
-        if stat_type == "aligned":
-            description = "NanoStat statistics from BAM files."
-        if stat_type == "seq summary":
-            description = "NanoStat statistics from albacore or guppy summary files."
-
         self.add_section(
-            name="{} stats".format(stat_type.replace("_", " ").capitalize()),
+            name="Summary Statistics",
             anchor="nanostat_{}_stats".format(stat_type.replace(" ", "_")),
-            description=description,
             plot=table.plot(self.nanostat_data, headers, table_config),
         )
 
@@ -356,15 +345,12 @@ class MultiqcModule(BaseMultiqcModule):
         self.add_section(
             name="Reads by quality",
             anchor=f"nanostat_read_qualities",
-            description="Read counts categorised by read quality (phred score).",
+            description="Read counts categorised by read quality (Phred score).",
             helptext="""
-                Sequencing machines assign each generated read a quality score using the
-                [Phred scale](https://en.wikipedia.org/wiki/Phred_quality_score).
-                The phred score represents the liklelyhood that a given read contains errors.
-                So, high quality reads have a high score.
-
-                Data may come from NanoPlot reports generated with sequencing summary files or alignment stats.
-                If a sample has data from both, the sequencing summary is preferred.
+            Sequencing machines assign each generated read a quality score using the
+            [Phred scale](https://en.wikipedia.org/wiki/Phred_quality_score).
+            The phred score represents the liklelyhood that a given read contains errors.
+            High quality reads have a high score.
             """,
             plot=bargraph.plot(bar_data, cats, config),
         )

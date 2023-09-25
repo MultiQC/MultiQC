@@ -67,6 +67,9 @@ class MultiqcModule(BaseMultiqcModule):
         self.add_data_source(f, s_name)
         self.anglerfish_data[s_name] = {}
 
+        # Add version info
+        self.add_software_version(parsed_json["anglerfish_version"], s_name)
+
         # Parse Sample Stats
         ## Index for each sample and their reads in order to iterate without knowing sample names
         index = 0

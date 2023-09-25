@@ -139,6 +139,10 @@ class MultiqcModule(BaseMultiqcModule):
                     self.cutadapt_data[s_name]["cutadapt_version"] = cutadapt_version
 
             if s_name is not None:
+                # Add version info to module
+                if cutadapt_version is not None:
+                    self.add_software_version(cutadapt_version, s_name)
+
                 self.add_data_source(f, s_name)
 
                 # Search regexes for overview stats

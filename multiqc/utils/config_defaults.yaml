@@ -741,6 +741,10 @@ module_order:
       module_tag:
         - DNA
         - metagenomics
+  - bracken:
+      module_tag:
+        - DNA
+        - metagenomics
   - kraken:
       module_tag:
         - DNA

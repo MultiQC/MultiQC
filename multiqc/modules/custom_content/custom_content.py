@@ -131,11 +131,11 @@ def custom_module_classes():
                     parsed_data = {"id": f["s_name"], "plot_type": "html", "data": f["f"]}
                     parsed_data.update(_find_html_file_header(f))
 
-                if isinstance(parsed_data.get("data"), dict):
-                    # Run sample-name cleaning on the data keys
-                    parsed_data["data"] = {bm.clean_s_name(k, f): v for k, v in parsed_data["data"].items()}
-
                 if parsed_data is not None:
+                    if isinstance(parsed_data.get("data"), dict):
+                        # Run sample-name cleaning on the data keys
+                        parsed_data["data"] = {bm.clean_s_name(k, f): v for k, v in parsed_data["data"].items()}
+
                     c_id = parsed_data.get("id", k)
                     if len(parsed_data.get("data", {})) > 0:
                         if isinstance(parsed_data["data"], dict):

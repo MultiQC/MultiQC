@@ -82,11 +82,16 @@ class MultiqcModule(BaseMultiqcModule):
             log.warning("Could not parse MultiVCFAnalyzer JSON: '{}'".format(f["fn"]))
             return
 
+        version = data.get("metadata", {}).get("version", None)
+
         # Parse JSON data to a dict
         for s_name, metrics in data.get("metrics", {}).items():
             s_clean = self.clean_s_name(s_name, f)
             if s_clean in self.mvcf_data:
                 log.debug("Duplicate sample name found! Overwriting: {}".format(s_clean))
+
+            if version is not None:
+                self.add_software_version(version, s_clean)
 
             self.add_data_source(f, s_clean)
             self.mvcf_data[s_clean] = dict()
