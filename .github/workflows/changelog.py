@@ -192,8 +192,7 @@ elif section == "### Module updates":
     assert mod is not None
     descr = pr_title.split(":", maxsplit=1)[1].strip().capitalize()
     new_lines = [
-        f"- **{mod['name']}**\n",
-        f"  - {descr} {pr_link}\n",
+        f"- **{mod['name']}**: {descr} {pr_link}\n",
     ]
 else:
     new_lines = [
@@ -208,14 +207,39 @@ with changelog_path.open("r") as f:
     orig_lines = f.readlines()
 updated_lines = []
 
+
+def _skip_existing_entry_for_this_pr(line, same_section=True):
+    if line.strip().endswith(pr_link):
+        existing = line + "".join(orig_lines[: len(new_lines) - 1])
+        if "".join(new_lines) == existing and same_section:
+            print(f"Found existing identical entry for this pull request #{pr_number}:")
+            print(existing)
+            sys.exit(0)
+        else:
+            print(
+                f"Found existing entry for this pull request #{pr_number}. It will be replaced and/or moved to proper section"
+            )
+            print(existing)
+            for _ in range(len(new_lines)):
+                try:
+                    line = orig_lines.pop(0)
+                except IndexError:
+                    break
+    return line
+
+
 # Find the next line in the change log that matches the pattern "## MultiQC v.*dev"
 # If it doesn't exist, exist with code 1 (let's assume that a new section is added
 # manually or by CI when a release is pushed).
 # Else, find the next line that matches the `section` variable, and insert a new line
 # under it (we also assume that section headers are added already).
 inside_version_dev = False
+already_added_entry = False
 while orig_lines:
     line = orig_lines.pop(0)
+
+    # If the line already contains a link to the PR, don't add it again.
+    line = _skip_existing_entry_for_this_pr(line, same_section=False)
 
     if line.startswith("## "):  # Version header, e.g. "## MultiQC v1.10dev"
         updated_lines.append(line)
@@ -247,11 +271,16 @@ while orig_lines:
                 )
                 sys.exit(1)
             # We are past the dev version, so just add back the rest of the lines and break.
-            updated_lines.extend(orig_lines)
+            while orig_lines:
+                line = orig_lines.pop(0)
+                line = _skip_existing_entry_for_this_pr(line, same_section=False)
+                if line:
+                    updated_lines.append(line)
             break
+        continue
 
-    elif inside_version_dev and line.lower().startswith(section.lower()):  # Section of interest header
-        if new_lines is None:
+    if inside_version_dev and line.lower().startswith(section.lower()):  # Section of interest header
+        if already_added_entry:
             print(f"Already added new lines into section {section}, is the section duplicated?", file=sys.stderr)
             sys.exit(1)
         updated_lines.append(line)
@@ -262,29 +291,16 @@ while orig_lines:
             if line.startswith("##"):
                 # Found the next section header, so need to put all the lines we collected.
                 updated_lines.append("\n")
-                updated_lines.extend(section_lines)
-                updated_lines.extend(new_lines)
+                updated_lines.extend(sorted([_l for _l in section_lines + new_lines if _l.strip()]))
                 updated_lines.append("\n")
                 print(f"Updated {changelog_path} section '{section}' with lines:\n" + "".join(new_lines))
-                new_lines = None
+                already_added_entry = True
                 # Pushing back the next section header line
                 orig_lines.insert(0, line)
                 break
-            elif line.strip():
-                # if the line already contains a link to the PR, don't add it again.
-                if line.strip().endswith(pr_link):
-                    existing = line + "".join(orig_lines[: len(new_lines) - 1])
-                    if "".join(new_lines) == existing:
-                        print(f"Found existing identical entry for this pull request #{pr_number}:")
-                        print(existing)
-                        sys.exit(0)
-                    else:
-                        print(f"Found existing entry for this pull request #{pr_number}. It will be replaced:")
-                        print(existing)
-                        for _ in range(len(new_lines) - 1):
-                            orig_lines.pop(0)
-                else:
-                    section_lines.append(line)
+            # If the line already contains a link to the PR, don't add it again.
+            line = _skip_existing_entry_for_this_pr(line, same_section=True)
+            section_lines.append(line)
     else:
         updated_lines.append(line)
 
