@@ -4,14 +4,10 @@
 
 ### MultiQC updates
 
-- New super awesome update ([#2026](https://github.com/ewels/MultiQC/pull/2026))
-
 ### New Modules
 
 - [**Bracken**](https://ccb.jhu.edu/software/bracken/)
   - A highly accurate statistical method that computes the abundance of species in DNA sequences from a metagenomics sample.
-- [**BBDuk**](https://jgi.doe.gov/data-and-tools/software-tools/bbtools/bb-tools-user-guide/bbduk-guide/) ([#2026](https://github.com/ewels/MultiQC/pull/2026))
-  - BBDuk is a tool performing common data-quality-related trimming, filtering, and masking operations with a kmer based approach
 
 ### Module updates
 
@@ -2123,3 +2119,4 @@ Bugfixes:
 - The first public release of MultiQC, after a month of development. Basic
   structure in place and modules for FastQC, FastQ Screen, Cutadapt, Bismark,
   STAR, Bowtie, Subread featureCounts and Picard MarkDuplicates. Approaching
+  stability, though still under fairly heavy development.
