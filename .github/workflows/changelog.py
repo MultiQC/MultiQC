@@ -4,7 +4,7 @@ To be called by a CI action, assumes PR_TITLE and PR_NUMBER, and GITHUB_WORKSPAC
 Adds a line into the CHANGELOG.md:
 If a PR title starts with "New module: ", adds a line under the ""### New modules" section.
 If a PR starts with a name of an existing module, adds a line under "### Module updates".
-Everything else will go under "MultiQC updates" in the changelog, unless "(chore)" or "(docs)" is appended to the title.
+Everything else will go under "### MultiQC updates" in the changelog.
 
 Other assumptions:
 - CHANGELOG.md has a running section for an ongoing "dev" version (i.e. titled "## MultiQC vX.Ydev").
