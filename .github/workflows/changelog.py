@@ -1,29 +1,37 @@
 """
-To be called by a CI action, assumes PR_TITLE and PR_NUMBER, and GITHUB_WORKSPACE environment variables are set.
+To be called by a CI action. Assumes the following environment variables are set:
+PR_TITLE, PR_NUMBER, GITHUB_WORKSPACE.
 
 Adds a line into the CHANGELOG.md:
-If a PR title starts with "New module: ", adds a line under the ""### New modules" section.
-If a PR starts with a name of an existing module, adds a line under "### Module updates".
-Everything else will go under "### MultiQC updates" in the changelog.
+* If a PR title starts with "New module: ", checks that a single module is added,
+ and appends an entry under the ""### New modules" section. 
+* If a single module was modified, checks that the PR starts with a name of the
+ modified module (e.g. "FastQC: new stuff") and adds a line under "### Module updates".
+* All other change will go under the "### MultiQC updates" section.
+* If an entry for the PR is already added, will replace it.
 
 Other assumptions:
-- CHANGELOG.md has a running section for an ongoing "dev" version (i.e. titled "## MultiQC vX.Ydev").
-- Under that section, there are sections "### MultiQC updates", "### New modules" and "### Module updates".
-- For module meta info, checks the file multiqc/modules/<module_name>/<module_name>.py.
+- CHANGELOG.md has a running section for an ongoing "dev" version 
+(i.e. titled "## MultiQC vX.Ydev").
+- Under that section, there are sections "### MultiQC updates", "### New modules" 
+and "### Module updates".
+- For module's info, checks the file multiqc/modules/<module_name>/<module_name>.py.
 """
 
 import os
 import re
+import subprocess
 import sys
 from pathlib import Path
 
 REPO_URL = "https://github.com/ewels/MultiQC"
+MODULES_DIR = "multiqc/modules"
 
 # Assumes the environment is set by the GitHub action.
 pr_title = os.environ["PR_TITLE"]
 pr_number = os.environ["PR_NUMBER"]
 comment = os.environ.get("COMMENT", "")
-base_path = Path(os.environ.get("GITHUB_WORKSPACE", ""))
+workspace_path = Path(os.environ.get("GITHUB_WORKSPACE", ""))
 
 assert pr_title, pr_title
 assert pr_number, pr_number
@@ -31,92 +39,176 @@ assert pr_number, pr_number
 # Trim the PR number added when GitHub squashes commits, e.g. "Module: Updated (#2026)"
 pr_title = pr_title.removesuffix(f" (#{pr_number})")
 
-changelog_path = base_path / "CHANGELOG.md"
+changelog_path = workspace_path / "CHANGELOG.md"
 
 
-def find_module_info(module_name):
+def _find_module_info(py_path: Path) -> dict[str]:
     """
     Helper function to load module meta info. With current setup, can't really just
     import the module and call `mod.info`, as the module does the heavy work on
     initialization. But that's actually alright: we avoid installing and importing
     MultiQC and the action runs faster.
     """
-    module_name = module_name.lower()
-    modules_dir = base_path / "multiqc/modules"
-    py_path = None
-    for dir_name in os.listdir(modules_dir):
-        if dir_name.lower() == module_name:
-            module_dir = modules_dir / dir_name
-            py_path = module_dir / f"{dir_name}.py"
-            if not py_path.exists():
-                print(f"Folder for {module_name} exists, but doesn't have a {py_path} file", file=sys.stderr)
-                sys.exit(1)
-            break
-
-    if not py_path:  # Module not found
-        return None
     with py_path.open("r") as f:
         contents = f.read()
+
     if not (m := re.search(r'name="([^"]+)"', contents)):
-        return None
+        return {}
     name = m.group(1)
+
+    if not (m := re.search(r'anchor="([^"]+)"', contents)):
+        return {}
+    anchor = m.group(1)
+
     if not (m := re.search(r'href="([^"]+)"', contents)):
-        return None
+        return {}
     url = m.group(1)
+
     if not (m := re.search(r'info="([^"]+)"', contents)):
         if not (m := re.search(r'info="""([^"]+)"""', contents)):
-            return None
+            return {}
     info = m.group(1)
+
     # Reduce consecutive spaces and newlines.
     info = re.sub(r"\s+", " ", info)
-    return {"name": name, "url": url, "info": info}
+    return {"name": name, "anchor": anchor, "url": url, "info": info}
+
+
+def _files_altered_by_pr(pr_number, types=None) -> set[Path]:
+    """
+    Returns a list of files added by the PR.
+    """
+    if types is None:
+        types = {"added"}
+
+    cmd = f"cd {workspace_path} && gh pr diff {pr_number}"
+    print(cmd)
+    result = subprocess.run(cmd, shell=True, capture_output=True, text=True)
+    if result.returncode != 0:
+        raise RuntimeError(f"Error executing command: {result.stderr}")
+
+    paths = set()
+    lines = result.stdout.splitlines()
+    while lines:
+        line = lines.pop(0)
+        if line.startswith("index "):
+            a = lines.pop(0)
+            b = lines.pop(0)
+            if a.startswith("--- /dev/null") and b.startswith("+++ b/") and "added" in types:
+                paths.add(Path(b.removeprefix("+++ b/")))
+            elif a.startswith("--- a/") and b.startswith("+++ /dev/null") and "deleted" in types:
+                paths.add(Path(a.removeprefix("--- a/")))
+            elif a.startswith("--- a/") and b.startswith("+++ b/") and "modified" in types:
+                paths.add(Path(a.removeprefix("--- a/")))
+    return paths
+
+
+def _modules_added_by_pr(pr_number) -> list[Path]:
+    """
+    Returns paths to the modules added by the PR.
+    """
+    mod_py_files = []
+    altered_files = _files_altered_by_pr(pr_number, {"added"})
+    for path in altered_files:
+        if path.name == "__init__.py" and str(path).startswith(f"{MODULES_DIR}/"):
+            mod_anchor = path.parent.name
+            if (mod_py := path.parent / f"{mod_anchor}.py") in altered_files:
+                if (mod_py := workspace_path / mod_py).exists():
+                    mod_py_files.append(mod_py)
+    return mod_py_files
+
+
+def _modules_modified_by_pr(pr_number) -> list[Path]:
+    """
+    Returns paths to the modules modified by the PR.
+    """
+    mod_py_files = []
+    altered_files = _files_altered_by_pr(pr_number, {"modified"})
+    for path in altered_files:
+        if str(path).startswith(f"{MODULES_DIR}/"):
+            mod_anchor = path.parent.name
+            mod_py = path.parent / f"{mod_anchor}.py"
+            if (mod_py := workspace_path / mod_py).exists():
+                mod_py_files.append(mod_py)
+    return mod_py_files
+
+
+def _determine_change_type(pr_title, pr_number) -> tuple[str, dict, str]:
+    """
+    Determine the type of the PR: new module, module update, or core update.
+    """
+
+    if pr_title.lower().capitalize().startswith("New module: "):
+        mod_py_files = _modules_added_by_pr(pr_number)
+        if len(mod_py_files) == 0:
+            raise RuntimeError(
+                f"Could not find a new folder in '{MODULES_DIR}' with expected python files for the new module"
+            )
+        if len(mod_py_files) > 1:
+            RuntimeError(f"Found multiple added modules: {mod_py_files}")
+        else:
+            mod_info = _find_module_info(mod_py_files[0])
+            proper_pr_title = f"New module: {mod_info['name']}"
+            if pr_title != proper_pr_title:
+                cmd = f"cd {workspace_path}; gh pr edit --title '{proper_pr_title}'"
+                print(cmd)
+                try:
+                    subprocess.run(cmd, shell=True)
+                except subprocess.CalledProcessError as e:
+                    print(
+                        f"Error executing command: {e}. Please alter the title manually: '{proper_pr_title}'",
+                        file=sys.stderr,
+                    )
+            return "### New modules", mod_info, ""
+
+    # Check what modules were changed by the PR, and if the title starts with on
+    # of the names of the changed modules, assume it's a module update.
+    modified_mod_py_files = _modules_modified_by_pr(pr_number)
+    if len(modified_mod_py_files) == 1:
+        mod_info = _find_module_info(modified_mod_py_files.pop())
+        if pr_title.lower().startswith(f"{mod_info['name'].lower()}: "):
+            descr = pr_title.split(":", maxsplit=1)[1].strip().capitalize()
+            return "### Module updates", mod_info, descr
+
+    section = "### MultiQC updates"  # Default section for non-module (core) updates.
+    return section, {}, pr_title
 
 
 # Determine the type of the PR: new module, module update, or core update.
-mod = None
-section = "### MultiQC updates"  # Default section for non-module (core) updates.
-if pr_title.lower().startswith("new module: "):
-    # PR introduces a new module.
-    section = "### New modules"
-    module_name = pr_title.split(":")[1].strip()
-    mod = find_module_info(module_name)
-    if not mod:
-        # That should normally never happen because the other CI would fail and block
-        # merging of the PR.
-        print(
-            f"Cannot load a module with name {module_name}",
-            file=sys.stderr,
-        )
-        sys.exit(1)
-else:
-    # Checking if it's an existing module update.
-    maybe_mod_name = pr_title.split(":")[0]
-    mod = find_module_info(maybe_mod_name)
-    if mod is not None:
-        section = "### Module updates"
-        pr_title = pr_title.split(":")[1].strip().capitalize()
+section, mod_info, descr = _determine_change_type(pr_title, pr_number)
+
+
+def _build_entry(comment, section, mod, descr, pr_number):
+    """
+    Prepare the change log entry.
+    """
+    pr_link = f"([#{pr_number}]({REPO_URL}/pull/{pr_number}))"
+    if comment := comment.removeprefix("@multiqc-bot changelog").strip():
+        new_lines = [
+            f"- {comment} {pr_link}\n",
+        ]
+    elif section == "### New modules":
+        new_lines = [
+            f"- [**{mod['name']}**]({mod['url']}) {pr_link}\n",
+            f"  - {mod['name']} {mod['info']}\n",
+        ]
+    elif section == "### Module updates":
+        assert mod is not None
+        new_lines = [
+            f"- **{mod['name']}**\n",
+            f"  - {descr} {pr_link}\n",
+        ]
+    else:
+        new_lines = [
+            f"- {descr} {pr_link}\n",
+        ]
+
+    return new_lines, pr_link
+
 
 # Now that we determined the PR type, preparing the change log entry.
-pr_link = f"([#{pr_number}]({REPO_URL}/pull/{pr_number}))"
-if comment := comment.removeprefix("@multiqc-bot changelog").strip():
-    new_lines = [
-        f"- {comment} {pr_link}\n",
-    ]
-elif section == "### New modules":
-    new_lines = [
-        f"- [**{mod['name']}**]({mod['url']}) {pr_link}\n",
-        f"  - {mod['name']} {mod['info']}\n",
-    ]
-elif section == "### Module updates":
-    assert mod is not None
-    new_lines = [
-        f"- **{mod['name']}**\n",
-        f"  - {pr_title} {pr_link}\n",
-    ]
-else:
-    new_lines = [
-        f"- {pr_title} {pr_link}\n",
-    ]
+new_lines, pr_link = _build_entry(comment, section, mod_info, descr, pr_number)
+
 
 # Finally, updating the changelog.
 # Read the current changelog lines. We will print them back as is, except for one new
