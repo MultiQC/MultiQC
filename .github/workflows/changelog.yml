@@ -27,9 +27,9 @@ jobs:
       # Action runs on the issue comment, so we don't get the PR by default.
       # Use the GitHub CLI to check out the PR:
       - name: Checkout Pull Request
-        run: gh pr checkout ${{ github.event.issue.number }}
         env:
-          GITHUB_TOKEN: ${{ secrets.nf_core_bot_auth_token }}
+          GH_TOKEN: ${{ secrets.MQC_BOT_GITHUB_TOKEN }}
+        run: gh pr checkout ${{ github.event.issue.number }}
 
       - uses: actions/setup-python@v3
 
@@ -38,6 +38,7 @@ jobs:
           PR_TITLE: ${{ github.event.issue.title }}
           PR_NUMBER: ${{ github.event.issue.number }}
           COMMENT: ${{ github.event.comment.body }}
+          GH_TOKEN: ${{ secrets.MQC_BOT_GITHUB_TOKEN }}
         run: python ${GITHUB_WORKSPACE}/.github/workflows/changelog.py
 
       - name: Check if CHANGELOG.md actually changed
