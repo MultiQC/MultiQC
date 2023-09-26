@@ -10,11 +10,6 @@ on:
         description: PR number
         required: true
 
-env:
-  PR_TITLE: ${{ github.event.pull_request.title }}
-  PR_NUMBER: ${{ github.event.pull_request.number }}
-  GH_TOKEN: ${{ github.token }}
-
 jobs:
   update_changelog:
     runs-on: ubuntu-latest
@@ -40,8 +35,8 @@ jobs:
 
       - name: Update CHANGELOG.md from the PR title
         env:
-          PR_TITLE: ${{ github.event.pull_request.title }}
-          PR_NUMBER: ${{ github.event.pull_request.number }}
+          PR_TITLE: ${{ github.event.issue.title }}
+          PR_NUMBER: ${{ github.event.issue.number }}
           COMMENT: ${{ github.event.comment.body }}
         run: python ${GITHUB_WORKSPACE}/.github/workflows/changelog.py
 
