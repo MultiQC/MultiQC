@@ -133,9 +133,10 @@ def _modules_modified_by_pr(pr_number) -> list[Path]:
     return mod_py_files
 
 
-def _determine_change_type(pr_title, pr_number) -> tuple[str, dict, str]:
+def _determine_change_type(pr_title, pr_number) -> tuple[str, dict]:
     """
     Determine the type of the PR: new module, module update, or core update.
+    Returns a tuple of the section name and the module info.
     """
 
     if pr_title.lower().capitalize().startswith("New module: "):
@@ -159,7 +160,7 @@ def _determine_change_type(pr_title, pr_number) -> tuple[str, dict, str]:
                         f"Error executing command: {e}. Please alter the title manually: '{proper_pr_title}'",
                         file=sys.stderr,
                     )
-            return "### New modules", mod_info, ""
+            return "### New modules", mod_info
 
     # Check what modules were changed by the PR, and if the title starts with on
     # of the names of the changed modules, assume it's a module update.
@@ -167,47 +168,37 @@ def _determine_change_type(pr_title, pr_number) -> tuple[str, dict, str]:
     if len(modified_mod_py_files) == 1:
         mod_info = _find_module_info(modified_mod_py_files.pop())
         if pr_title.lower().startswith(f"{mod_info['name'].lower()}: "):
-            descr = pr_title.split(":", maxsplit=1)[1].strip().capitalize()
-            return "### Module updates", mod_info, descr
+            return "### Module updates", mod_info
 
     section = "### MultiQC updates"  # Default section for non-module (core) updates.
-    return section, {}, pr_title
+    return section, {}
 
 
 # Determine the type of the PR: new module, module update, or core update.
-section, mod_info, descr = _determine_change_type(pr_title, pr_number)
+section, mod = _determine_change_type(pr_title, pr_number)
 
-
-def _build_entry(comment, section, mod, descr, pr_number):
-    """
-    Prepare the change log entry.
-    """
-    pr_link = f"([#{pr_number}]({REPO_URL}/pull/{pr_number}))"
-    if comment := comment.removeprefix("@multiqc-bot changelog").strip():
-        new_lines = [
-            f"- {comment} {pr_link}\n",
-        ]
-    elif section == "### New modules":
-        new_lines = [
-            f"- [**{mod['name']}**]({mod['url']}) {pr_link}\n",
-            f"  - {mod['name']} {mod['info']}\n",
-        ]
-    elif section == "### Module updates":
-        assert mod is not None
-        new_lines = [
-            f"- **{mod['name']}**\n",
-            f"  - {descr} {pr_link}\n",
-        ]
-    else:
-        new_lines = [
-            f"- {descr} {pr_link}\n",
-        ]
-
-    return new_lines, pr_link
-
-
-# Now that we determined the PR type, preparing the change log entry.
-new_lines, pr_link = _build_entry(comment, section, mod_info, descr, pr_number)
+# Prepare the change log entry.
+pr_link = f"([#{pr_number}]({REPO_URL}/pull/{pr_number}))"
+if comment := comment.removeprefix("@multiqc-bot changelog").strip().capitalize():
+    new_lines = [
+        f"- {comment.capitalize()} {pr_link}\n",
+    ]
+elif section == "### New modules":
+    new_lines = [
+        f"- [**{mod['name']}**]({mod['url']}) {pr_link}\n",
+        f"  - {mod['name']} {mod['info']}\n",
+    ]
+elif section == "### Module updates":
+    assert mod is not None
+    descr = pr_title.split(":", maxsplit=1)[1].strip().capitalize()
+    new_lines = [
+        f"- **{mod['name']}**\n",
+        f"  - {descr} {pr_link}\n",
+    ]
+else:
+    new_lines = [
+        f"- {pr_title.capitalize()} {pr_link}\n",
+    ]
 
 
 # Finally, updating the changelog.
