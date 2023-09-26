@@ -341,9 +341,11 @@ to the pull request with the following text:
 The bot will automatically build a proper entry based on the meta-information in
 the MultiqcModule class.
 
-Make sure to run this command if you only change an existing module, or
-do a non-module change. The CI will populate the entry based on the pull
-request title.
+You can also run this command if you only change an existing module, or
+do a non-module codebase change: the CI will populate the entry based on the
+pull request title. If your pull request starts with a module name followed
+by a colon (e.g. "Samtools: new feature"), it will be assumed that the PR changes
+a module; otherwise, a core change will be assumed.
 
 ## Step 1 - Find log files
 
