@@ -332,20 +332,34 @@ Log messages can come in a range of formats:
 
 ### Changelog
 
-Last but not least, remember to add your new module to the `CHANGELOG.md`,
-so that people know that it's there. Note that you can do that by sending a comment
-to the pull request with the following text:
+Almost all changes deserve an entry in the `CHANGELOG.md` file,
+so that people know that it's there.
 
-> @multiqc-bot changelog
+Whilst you can do this yourself, we prefer to automate this using our
+friendly MultiQC bot, just before merging. By doing the changelog entry
+at the last minute we reduce the risk of having to solve merge conflicts.
 
-The bot will automatically build a proper entry based on the meta-information in
-the MultiqcModule class.
+The MultiQC changelog bot works by using the pull-request title.
+**Your job is to ensure that your pull-request follows one of the following 3 conventions:**
 
-You can also run this command if you only change an existing module, or
-do a non-module codebase change: the CI will populate the entry based on the
-pull request title. If your pull request starts with a module name followed
-by a colon (e.g. "Samtools: new feature"), it will be assumed that the PR changes
-a module; otherwise, a core change will be assumed.
+- `New module: XYZ` - adding a new module named `XYZ`
+- `XYZ: Change something in this existing module` - updating module `XYZ`
+- `Some other change` - anything else, eg. core MultiQC changes
+
+The MultiQC bot will automatically build a proper changelog entry based on this title
+and (for new modules / module changes) the meta-information in the `MultiqcModule` class.
+
+The MultiQC bot is triggered by adding the following comment on an open pull request:
+
+```md
+@multiqc-bot changelog
+```
+
+This triggers a GitHub Action script which inspects the PR, updates the changelog
+and commits the update back to your PR.
+
+Whilst you can trigger this yourself, it's expected that the core MultiQC
+maintainers will do this for you immediately prior to merging.
 
 ## Step 1 - Find log files
 
