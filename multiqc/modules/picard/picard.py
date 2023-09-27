@@ -47,7 +47,7 @@ class MultiqcModule(BaseMultiqcModule):
             name="Picard",
             anchor="picard",
             href="http://broadinstitute.github.io/picard/",
-            info="is a set of Java command line tools for manipulating high-" "throughput sequencing data.",
+            info="is a set of Java command line tools for manipulating high-throughput sequencing data.",
             # No DOI to cite // doi=
         )
 

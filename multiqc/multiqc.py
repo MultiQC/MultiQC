@@ -18,6 +18,7 @@ import sys
 import tempfile
 import time
 import traceback
+import warnings
 from distutils import version
 from distutils.dir_util import copy_tree
 from urllib.request import urlopen
@@ -690,7 +691,10 @@ def run(
                 except AttributeError:
                     pass
 
-        except (ModuleNoSamplesFound, UserWarning):  # UserWarning deprecated from 1.16
+        except ModuleNoSamplesFound:
+            logger.debug(f"No samples found: {this_module}")
+        except UserWarning:  # UserWarning deprecated from 1.16
+            warnings.warn(f"Please raise ModuleNoSamplesFound instead of UserWarning", DeprecationWarning)
             logger.debug(f"No samples found: {this_module}")
         except KeyboardInterrupt:
             shutil.rmtree(tmp_dir)
