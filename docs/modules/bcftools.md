@@ -1,7 +1,7 @@
 ---
-Name: Bcftools
-URL: https://samtools.github.io/bcftools/
-Description: >
+name: Bcftools
+url: https://samtools.github.io/bcftools/
+description: >
   BCFtools is a set of utilities that manipulate variant calls in the
   Variant Call Format (VCF) and its binary counterpart BCF.
 ---

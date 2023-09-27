@@ -1,5 +1,6 @@
 name: Docs screenshots
-on: [push]
+on:
+  workflow_dispatch:
 
 jobs:
   rich_codex:
@@ -25,3 +26,4 @@ jobs:
         with:
           clean_img_paths: docs/images/screenshots/*.svg
           commit_changes: "true"
+          skip_git_checks: "true"

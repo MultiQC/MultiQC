@@ -1,23 +1,23 @@
-#!/usr/bin/env python
-
 """ Core MultiQC module to parse output from custom script output """
 
-from __future__ import print_function
+
 import base64
-from collections import defaultdict, OrderedDict
-import logging
 import json
+import logging
 import os
 import re
+from collections import OrderedDict, defaultdict
+
 import yaml
 
 from multiqc import config
-from multiqc.utils import report
 from multiqc.modules.base_module import BaseMultiqcModule
-from multiqc.plots import table, bargraph, linegraph, scatter, heatmap, beeswarm
+from multiqc.plots import bargraph, beeswarm, heatmap, linegraph, scatter, table
+from multiqc.utils import report
 
 # Initialise the logger
 log = logging.getLogger(__name__)
+
 
 # Load YAML as an ordered dict
 # From https://stackoverflow.com/a/21912744
@@ -42,11 +42,11 @@ def custom_module_classes():
     """
 
     # Dict to hold parsed data. Each key should contain a custom data type
-    # eg. output from a particular script. Note that this script may pick
+    # e.g. output from a particular script. Note that this script may pick
     # up many different types of data from many different sources.
     # Second level keys should be 'config' and 'data'. Data key should then
     # contain sample names, and finally data.
-    cust_mods = defaultdict(lambda: defaultdict(lambda: OrderedDict()))
+    cust_mods = defaultdict(lambda: defaultdict(lambda: dict()))
 
     # Dictionary to hold search patterns - start with those defined in the config
     search_patterns = ["custom_content"]
@@ -55,14 +55,13 @@ def custom_module_classes():
     config_data = getattr(config, "custom_data", {})
     mod_cust_config = {}
     for k, f in config_data.items():
-
         # Check that we have a dictionary
         if type(f) != dict:
             log.debug("config.custom_data row was not a dictionary: {}".format(k))
             continue
         c_id = f.get("id", k)
 
-        # Data supplied in with config (eg. from a multiqc_config.yaml file in working directory)
+        # Data supplied in with config (e.g. from a multiqc_config.yaml file in working directory)
         if "data" in f:
             try:
                 cust_mods[c_id]["data"].update(f["data"])
@@ -103,12 +102,6 @@ def custom_module_classes():
                         log.debug("YAML error: {}".format(e), exc_info=True)
                         break
                     parsed_data["id"] = parsed_data.get("id", f["s_name"])
-                    # Run sample-name cleaning on the data keys
-                    try:
-                        parsed_data["data"] = {bm.clean_s_name(k, f): v for k, v in parsed_data.get("data", {}).items()}
-                    except AttributeError as e:
-                        # If parsed_data["data"] is a string, this won't work - but that's fine
-                        pass
                 elif f_extension == ".json":
                     try:
                         # Use OrderedDict for objects so that column order is honoured
@@ -118,8 +111,6 @@ def custom_module_classes():
                         log.warning("JSON error: {}".format(e))
                         break
                     parsed_data["id"] = parsed_data.get("id", f["s_name"])
-                    # Run sample-name cleaning on the data keys
-                    parsed_data["data"] = {bm.clean_s_name(k, f): v for k, v in parsed_data.get("data", {}).items()}
                 elif f_extension == ".png" or f_extension == ".jpeg" or f_extension == ".jpg":
                     image_string = base64.b64encode(f["f"].read()).decode("utf-8")
                     image_format = "png" if f_extension == ".png" else "jpg"
@@ -139,13 +130,18 @@ def custom_module_classes():
                 elif f_extension == ".html":
                     parsed_data = {"id": f["s_name"], "plot_type": "html", "data": f["f"]}
                     parsed_data.update(_find_html_file_header(f))
+
                 if parsed_data is not None:
+                    if isinstance(parsed_data.get("data"), dict):
+                        # Run sample-name cleaning on the data keys
+                        parsed_data["data"] = {bm.clean_s_name(k, f): v for k, v in parsed_data["data"].items()}
+
                     c_id = parsed_data.get("id", k)
                     if len(parsed_data.get("data", {})) > 0:
-                        if type(parsed_data["data"]) == str:
-                            cust_mods[c_id]["data"] = parsed_data["data"]
-                        else:
+                        if isinstance(parsed_data["data"], dict):
                             cust_mods[c_id]["data"].update(parsed_data["data"])
+                        else:
+                            cust_mods[c_id]["data"] = parsed_data["data"]
                         cust_mods[c_id]["config"].update({j: k for j, k in parsed_data.items() if j != "data"})
                     else:
                         log.warning("No data found in {}".format(f["fn"]))
@@ -231,7 +227,6 @@ def custom_module_classes():
     # Go through each data type
     parsed_modules = OrderedDict()
     for c_id, mod in cust_mods.items():
-
         # General Stats
         if mod["config"].get("plot_type") == "generalstats":
             gsheaders = mod["config"].get("pconfig")
@@ -291,7 +286,10 @@ def custom_module_classes():
 
     # If we only have General Stats columns then there are no module outputs
     if len(sorted_modules) == 0:
-        raise UserWarning
+        if mod["config"].get("plot_type") == "generalstats":
+            sorted_modules = [bm]
+        else:
+            raise UserWarning
 
     return sorted_modules
 
@@ -300,7 +298,6 @@ class MultiqcModule(BaseMultiqcModule):
     """Module class, used for each custom content type"""
 
     def __init__(self, c_id, mod):
-
         modname = c_id.replace("_", " ").title()
         mod_info = mod["config"].get("description")
         if "parent_name" in mod["config"]:
@@ -344,7 +341,6 @@ class MultiqcModule(BaseMultiqcModule):
             self.intro = "<p>{}</p>{}".format(self.info, self.extra)
 
     def add_cc_section(self, c_id, mod):
-
         section_name = mod["config"].get("section_name", c_id.replace("_", " ").title())
         if section_name == "" or section_name is None:
             section_name = "Custom Content"
@@ -364,6 +360,13 @@ class MultiqcModule(BaseMultiqcModule):
         if not isinstance(mod["data"], str):
             self.write_data_file(mod["data"], "multiqc_{}".format(pconfig["id"]))
             pconfig["save_data_file"] = False
+
+        # Try to cooerce x-axis to numeric
+        if mod["config"].get("plot_type") in ["linegraph", "scatter"]:
+            try:
+                mod["data"] = {k: {float(x): v[x] for x in v} for k, v in mod["data"].items()}
+            except ValueError:
+                pass
 
         # Table
         if mod["config"].get("plot_type") == "table":
@@ -537,20 +540,23 @@ def _parse_txt(f, conf):
     first_row_str = 0
     for i, l in enumerate(d):
         for j, v in enumerate(l):
-            try:
-                d[i][j] = float(v)
-            except ValueError:
+            if j != 0:  # we don't want to convert sample names to numbers
+                try:
+                    v = float(v)
+                except ValueError:
+                    pass
+            if isinstance(v, str):
                 if (v.startswith('"') and v.endswith('"')) or (v.startswith("'") and v.endswith("'")):
                     v = v[1:-1]
-                d[i][j] = v
                 # Count strings in first row (header?)
                 if i == 0:
                     first_row_str += 1
+            d[i][j] = v
 
     all_numeric = all([type(l) == float for l in d[i][1:] for i in range(1, len(d))])
 
-    # General stat info files - expected to be have atleast 2 rows (first row always being the header)
-    # and have atleast 2 columns (first column always being sample name)
+    # General stat info files - expected to have at least 2 rows (first row always being the header)
+    # and have at least 2 columns (first column always being sample name)
     if conf.get("plot_type") == "generalstats" and len(d) >= 2 and ncols >= 2:
         data = defaultdict(dict)
         for i, l in enumerate(d[1:], 1):
@@ -640,12 +646,23 @@ def _parse_txt(f, conf):
 
     if conf.get("plot_type") == "linegraph":
         data = dict()
+        # If the first row has no header, use it as axis labels
+        x_labels = []
+        if d[0][0].strip() == "":
+            x_labels = d.pop(0)[1:]
         # Use 1..n range for x values
         for s in d:
             data[s[0]] = dict()
             for i, v in enumerate(s[1:]):
-                j = i + 1
-                data[s[0]][i + 1] = v
+                try:
+                    x_val = x_labels[i]
+                    try:
+                        x_val = float(x_val)
+                    except ValueError:
+                        pass
+                except IndexError:
+                    x_val = i + 1
+                data[s[0]][x_val] = v
         return (data, conf)
 
     # Got to the end and haven't returned. It's a mystery, capn'!

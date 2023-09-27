@@ -1,11 +1,9 @@
-#!/usr/bin/env python
-
 """ MultiQC submodule to parse output from RSeQC bam_stat.py
 http://rseqc.sourceforge.net/#bam-stat-py """
 
-from collections import OrderedDict
 import logging
 import re
+from collections import OrderedDict
 
 from multiqc.plots import beeswarm
 
@@ -50,10 +48,14 @@ def parse_reports(self):
         # Calculate some percentages
         if "total_records" in d:
             t = float(d["total_records"])
-            if "mapq_gte_mapq_cut_unique" in d:
+            try:
                 d["unique_percent"] = (float(d["mapq_gte_mapq_cut_unique"]) / t) * 100.0
-            if "reads_mapped_in_proper_pairs" in d:
+            except (KeyError, ZeroDivisionError):
+                pass
+            try:
                 d["proper_pairs_percent"] = (float(d["reads_mapped_in_proper_pairs"]) / t) * 100.0
+            except (KeyError, ZeroDivisionError):
+                pass
 
         if len(d) > 0:
             if f["s_name"] in self.bam_stat_data:

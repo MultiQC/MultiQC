@@ -1,25 +1,24 @@
-#!/usr/bin/env python
-
 """ MultiQC module to parse output from FastQ Screen """
 
-from __future__ import print_function
-from collections import OrderedDict
+
 import json
 import logging
 import re
+from collections import OrderedDict
 
 from multiqc import config
-from multiqc.plots import bargraph
 from multiqc.modules.base_module import BaseMultiqcModule
+from multiqc.plots import bargraph
 from multiqc.utils import report
 
 # Initialise the logger
 log = logging.getLogger(__name__)
 
+VERSION_REGEX = r"Fastq_screen version: ([\d\.]+)"
+
 
 class MultiqcModule(BaseMultiqcModule):
     def __init__(self):
-
         # Initialise the parent object
         super(MultiqcModule, self).__init__(
             name="FastQ Screen",
@@ -81,6 +80,9 @@ class MultiqcModule(BaseMultiqcModule):
         for l in f["f"]:
             # Skip comment lines
             if l.startswith("#"):
+                version_match = re.search(VERSION_REGEX, l)
+                if version_match:
+                    self.add_software_version(version_match.group(1), f["s_name"])
                 continue
             if l.startswith("%Hit_no_genomes:") or l.startswith("%Hit_no_libraries:"):
                 nohits_pct = float(l.split(":", 1)[1])

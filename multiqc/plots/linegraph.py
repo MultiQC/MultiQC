@@ -2,8 +2,6 @@
 
 """ MultiQC functions to plot a linegraph """
 
-from __future__ import print_function, division
-from collections import OrderedDict
 import base64
 import inspect
 import io
@@ -12,8 +10,9 @@ import os
 import random
 import re
 import sys
+from collections import OrderedDict
 
-from multiqc.utils import config, report, util_functions
+from multiqc.utils import config, mqc_colour, report, util_functions
 
 logger = logging.getLogger(__name__)
 
@@ -122,7 +121,6 @@ def plot(data, pconfig=None):
         thisplotdata = list()
 
         for s in sorted(d.keys()):
-
             # Ensure any overwritten conditionals from data_labels (e.g. ymax) are taken in consideration
             series_config = pconfig.copy()
             if (
@@ -147,7 +145,6 @@ def plot(data, pconfig=None):
                     except KeyError:
                         pairs.append(None)
             else:
-
                 # Discard > ymax or just hide?
                 # If it never comes back into the plot, discard. If it goes above then comes back, just hide.
                 discard_ymax = None
@@ -215,6 +212,14 @@ def plot(data, pconfig=None):
                     plotdata[i].append(s)
     except (KeyError, IndexError):
         pass
+
+    # Add colors to the categories if not set. Since the "plot_defaults" scale is
+    # identical to default scale of the Highcharts JS library, this is not strictly
+    # needed. But it future proofs when we replace Highcharts with something else.
+    scale = mqc_colour.mqc_colour_scale("plot_defaults")
+    for si, sd in enumerate(plotdata):
+        for di, d in enumerate(sd):
+            d.setdefault("color", scale.get_colour(di, lighten=1))
 
     # Make a plot - template custom, or interactive or flat
     try:
@@ -350,20 +355,6 @@ def matplotlib_linegraph(plotdata, pconfig=None):
     )
     html += '<div class="mqc_mplplot_plotgroup" id="{}">'.format(pconfig["id"])
 
-    # Same defaults as HighCharts for consistency
-    default_colors = [
-        "#7cb5ec",
-        "#434348",
-        "#90ed7d",
-        "#f7a35c",
-        "#8085e9",
-        "#f15c80",
-        "#e4d354",
-        "#2b908f",
-        "#f45b5b",
-        "#91e8e1",
-    ]
-
     # Buttons to cycle through different datasets
     if len(plotdata) > 1 and not config.simple_output:
         html += '<div class="btn-group mpl_switch_group mqc_mplplot_bargraph_switchds">\n'
@@ -381,7 +372,6 @@ def matplotlib_linegraph(plotdata, pconfig=None):
 
     # Go through datasets creating plots
     for pidx, pdata in enumerate(plotdata):
-
         # Plot ID
         pid = pids[pidx]
 
@@ -392,21 +382,24 @@ def matplotlib_linegraph(plotdata, pconfig=None):
             sharedcats = True
             for d in pdata:
                 fdata[d["name"]] = OrderedDict()
+
+                # Check to see if all categories are the same
+                if len(d["data"]) > 0 and type(d["data"][0]) is list:
+                    if lastcats is None:
+                        lastcats = [x[0] for x in d["data"]]
+                    elif lastcats != [x[0] for x in d["data"]]:
+                        sharedcats = False
+
                 for i, x in enumerate(d["data"]):
                     if type(x) is list:
                         fdata[d["name"]][str(x[0])] = x[1]
-                        # Check to see if all categories are the same
-                        if lastcats is None:
-                            lastcats = [x[0] for x in d["data"]]
-                        elif lastcats != [x[0] for x in d["data"]]:
-                            sharedcats = False
                     else:
                         try:
                             fdata[d["name"]][pconfig["categories"][i]] = x
                         except (KeyError, IndexError):
                             fdata[d["name"]][str(i)] = x
 
-            # Custom tsv output if the x axis varies
+            # Custom tsv output if the x-axis varies
             if not sharedcats and config.data_format == "tsv":
                 fout = ""
                 for d in pdata:
@@ -432,12 +425,6 @@ def matplotlib_linegraph(plotdata, pconfig=None):
 
         # Go through data series
         for idx, d in enumerate(pdata):
-
-            # Default colour index
-            cidx = idx
-            while cidx >= len(default_colors):
-                cidx -= len(default_colors)
-
             # Line style
             linestyle = "solid"
             if d.get("dashStyle", None) == "Dash":
@@ -449,16 +436,14 @@ def matplotlib_linegraph(plotdata, pconfig=None):
                     [x[0] for x in d["data"]],
                     [x[1] for x in d["data"]],
                     label=d["name"],
-                    color=d.get("color", default_colors[cidx]),
+                    color=d["color"],
                     linestyle=linestyle,
                     linewidth=1,
                     marker=None,
                 )
             except TypeError:
                 # Categorical data on x axis
-                axes.plot(
-                    d["data"], label=d["name"], color=d.get("color", default_colors[cidx]), linewidth=1, marker=None
-                )
+                axes.plot(d["data"], label=d["name"], color=d["color"], linewidth=1, marker=None)
 
         # Tidy up axes
         axes.tick_params(

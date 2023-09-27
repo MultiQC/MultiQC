@@ -1,10 +1,8 @@
-#!/usr/bin/env python
-
 """ MultiQC submodule to parse output from RSeQC read_GC.py
 http://rseqc.sourceforge.net/#read-gc-py """
 
-from collections import OrderedDict
 import logging
+from collections import OrderedDict
 
 from multiqc.plots import linegraph
 
@@ -21,7 +19,6 @@ def parse_reports(self):
 
     # Go through files and parse data
     for f in self.find_log_files("rseqc/read_gc"):
-
         if f["f"].startswith("GC%	read_count"):
             gc = list()
             counts = list()

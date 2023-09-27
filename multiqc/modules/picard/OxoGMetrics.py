@@ -1,5 +1,3 @@
-#!/usr/bin/env python
-
 """ MultiQC submodule to parse output from Picard OxoGMetrics """
 
 import logging
@@ -72,7 +70,6 @@ def parse_reports(self):
     self.picard_OxoGMetrics_data = self.ignore_samples(self.picard_OxoGMetrics_data)
 
     if len(self.picard_OxoGMetrics_data) > 0:
-
         # Write parsed data to a file
         # Collapse into 2D structure with sample_context keys
         print_data = {

@@ -1,14 +1,12 @@
-#!/usr/bin/env python
-
 """ MultiQC module to parse output from HISAT2 """
 
-from __future__ import print_function
-from collections import OrderedDict
+
 import logging
 import re
+from collections import OrderedDict
 
-from multiqc.plots import bargraph
 from multiqc.modules.base_module import BaseMultiqcModule
+from multiqc.plots import bargraph
 
 # Initialise the logger
 log = logging.getLogger(__name__)
@@ -18,7 +16,6 @@ class MultiqcModule(BaseMultiqcModule):
     """HISAT2 module, parses stderr logs."""
 
     def __init__(self):
-
         # Initialise the parent object
         super(MultiqcModule, self).__init__(
             name="HISAT2",
@@ -79,7 +76,6 @@ class MultiqcModule(BaseMultiqcModule):
         parsed_data = {}
 
         for l in f["f"]:
-
             # Attempt in vain to find original hisat2 command, logged by another program
             hscmd = re.search(r"hisat2 .+ -[1U] ([^\s,]+)", l)
             if hscmd:

@@ -1,11 +1,9 @@
-#!/usr/bin/env python
-
 """ MultiQC submodule to parse output from Sentieon InsertSizeMetrics (based
  on the Picard module of the same name """
 
-from collections import OrderedDict
 import logging
 import os
+from collections import OrderedDict
 
 from multiqc import config
 from multiqc.plots import linegraph
@@ -27,7 +25,6 @@ def parse_reports(self):
         s_name = None
         in_hist = False
         for line in f["f"]:
-
             # Catch the histogram values
             if s_name is not None and in_hist is True:
                 try:
@@ -126,7 +123,6 @@ def parse_reports(self):
     self.sentieon_insertSize_data = self.ignore_samples(self.sentieon_insertSize_data)
 
     if len(self.sentieon_insertSize_data) > 0:
-
         # Write parsed data to a file
         self.write_data_file(self.sentieon_insertSize_data, "multiqc_sentieon_insertSize")
 

@@ -1,6 +1,4 @@
 # coding: utf-8
-#!/usr/bin/env python
-
 """ MultiQC submodule to parse output from Samtools flagstat """
 
 import logging
@@ -31,19 +29,17 @@ class FlagstatReportMixin:
         self.samtools_flagstat = self.ignore_samples(self.samtools_flagstat)
 
         if len(self.samtools_flagstat) > 0:
-
             # Write parsed report data to a file (restructure first)
             self.write_data_file(self.samtools_flagstat, "multiqc_samtools_flagstat")
 
             # General Stats Table
-            flagstats_headers = dict()
+            flagstats_headers = OrderedDict()
             flagstats_headers["flagstat_total"] = {
                 "title": "{} Reads".format(config.read_count_prefix),
                 "description": "Total reads in the bam file ({})".format(config.read_count_desc),
                 "min": 0,
                 "modify": lambda x: x * config.read_count_multiplier,
                 "shared_key": "read_count",
-                "placement": 100.0,
                 "hidden": True,
             }
             flagstats_headers["mapped_passed"] = {
@@ -52,7 +48,15 @@ class FlagstatReportMixin:
                 "min": 0,
                 "modify": lambda x: x * config.read_count_multiplier,
                 "shared_key": "read_count",
-                "placement": 101.0,
+            }
+            flagstats_headers["mapped_passed_pct"] = {
+                "title": "% Reads Mapped",
+                "description": "% Reads Mapped in the bam file",
+                "min": 0,
+                "max": 100,
+                "suffix": "%",
+                "scale": "RdYlGn",
+                "hidden": True,
             }
             self.general_stats_addcols(self.samtools_flagstat, flagstats_headers)
 

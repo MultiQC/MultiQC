@@ -1,9 +1,8 @@
-#!/usr/bin/env python
-
 """ MultiQC submodule to parse output from deepTools plotFingerprint """
 
 import logging
 from collections import OrderedDict
+
 import numpy as np
 
 from multiqc.plots import linegraph

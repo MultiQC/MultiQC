@@ -1,15 +1,13 @@
-#!/usr/bin/env python
-
 """ MultiQC module to parse output from Fastp """
 
-from __future__ import print_function
-from collections import OrderedDict
-import logging
+
 import json
+import logging
+from collections import OrderedDict
 
 from multiqc import config
-from multiqc.plots import bargraph, linegraph
 from multiqc.modules.base_module import BaseMultiqcModule
+from multiqc.plots import bargraph, linegraph
 
 # Initialise the logger
 log = logging.getLogger(__name__)
@@ -21,7 +19,6 @@ class MultiqcModule(BaseMultiqcModule):
     """
 
     def __init__(self):
-
         # Initialise the parent object
         super(MultiqcModule, self).__init__(
             name="fastp",
@@ -153,6 +150,7 @@ class MultiqcModule(BaseMultiqcModule):
         """Parse the JSON output from fastp and save the summary statistics"""
         try:
             parsed_json = json.load(f["f"])
+            parsed_json["command"]
         except:
             log.warning("Could not parse fastp JSON: '{}'".format(f["fn"]))
             return None
@@ -323,6 +321,14 @@ class MultiqcModule(BaseMultiqcModule):
             "scale": "GnBu",
             "shared_key": "base_count",
             "hidden": True,
+        }
+        headers["filtering_result_passed_filter_reads"] = {
+            "title": "{} Reads After Filtering".format(config.read_count_prefix),
+            "description": "Total reads after filtering ({})".format(config.read_count_desc),
+            "min": 0,
+            "scale": "Blues",
+            "modify": lambda x: x * config.read_count_multiplier,
+            "shared_key": "read_count",
         }
         headers["after_filtering_gc_content"] = {
             "title": "GC content",

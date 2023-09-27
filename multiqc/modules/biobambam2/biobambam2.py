@@ -1,10 +1,8 @@
-#!/usr/bin/env python
-
 """ MultiQC module to parse output from biobambam2 """
 
-from __future__ import print_function
-from collections import OrderedDict
+
 import logging
+from collections import OrderedDict
 
 from multiqc.modules.base_module import BaseMultiqcModule
 from multiqc.modules.picard import MarkDuplicates

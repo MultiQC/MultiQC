@@ -1,10 +1,10 @@
-#!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
 """ MultiQC submodule to parse output from Samtools idxstats """
 
 import logging
 from collections import OrderedDict, defaultdict
+
 from multiqc import config
 from multiqc.plots import bargraph, linegraph
 
@@ -29,7 +29,6 @@ class IdxstatsReportMixin:
         self.samtools_idxstats = self.ignore_samples(self.samtools_idxstats)
 
         if len(self.samtools_idxstats) > 0:
-
             # Write parsed report data to a file (restructure first)
             self.write_data_file(self.samtools_idxstats, "multiqc_samtools_idxstats")
 
@@ -99,7 +98,6 @@ class IdxstatsReportMixin:
                 pdata_obs_exp[s_name] = OrderedDict()
                 genome_size = float(sum([stats[1] for stats in self.samtools_idxstats[s_name].values()]))
                 for k in keys:
-
                     try:
                         pdata[s_name][k] = self.samtools_idxstats[s_name][k][0]
                         pdata_norm[s_name][k] = float(self.samtools_idxstats[s_name][k][0]) / sample_mapped[s_name]

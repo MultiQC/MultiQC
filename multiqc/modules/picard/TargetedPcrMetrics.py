@@ -1,11 +1,9 @@
-#!/usr/bin/env python
-
 """ MultiQC submodule to parse output from Picard TargetedPcrMetrics """
 
-from collections import OrderedDict
 import logging
 import os
 import re
+from collections import OrderedDict
 
 from multiqc.plots import bargraph
 
@@ -55,7 +53,6 @@ def parse_reports(self):
     self.picard_pcrmetrics_data = self.ignore_samples(self.picard_pcrmetrics_data)
 
     if len(self.picard_pcrmetrics_data) > 0:
-
         # Write parsed data to a file
         self.write_data_file(self.picard_pcrmetrics_data, "multiqc_picard_pcrmetrics")
 

@@ -1,15 +1,13 @@
-#!/usr/bin/env python
-
 """ MultiQC module to parse output from Longranger """
 
-from __future__ import print_function
-from collections import OrderedDict
+
 import logging
-import re
 import os
+import re
+from collections import OrderedDict
 
 from multiqc.modules.base_module import BaseMultiqcModule
-from multiqc.plots import table, bargraph
+from multiqc.plots import bargraph, table
 
 # Initialise the logger
 log = logging.getLogger(__name__)
@@ -19,7 +17,6 @@ class MultiqcModule(BaseMultiqcModule):
     """Longranger module"""
 
     def __init__(self):
-
         # Initialise the parent object
         super(MultiqcModule, self).__init__(
             name="Long Ranger",
@@ -259,7 +256,7 @@ class MultiqcModule(BaseMultiqcModule):
                 running_name += 1
 
             self.longranger_data[sid] = data
-
+            self.add_software_version(data["longranger_version"], sid)
             self.add_data_source(f)
 
         # Filter to strip out ignored sample names
@@ -400,7 +397,6 @@ class MultiqcModule(BaseMultiqcModule):
         return sid
 
     def parse_summary(self, content):
-
         out_dict = OrderedDict()
         lines = content.splitlines()
         data = list(zip(lines[0].strip().split(","), lines[1].strip().split(",")))

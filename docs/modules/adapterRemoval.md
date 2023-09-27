@@ -1,7 +1,7 @@
 ---
-Name: Adapter Removal
-URL: https://github.com/mikkelschubert/adapterremoval
-Description: >
+name: Adapter Removal
+url: https://github.com/mikkelschubert/adapterremoval
+description: >
   Removes adapter sequences and trims low quality bases from the 3' end of reads.
   Overlapping paired-ended reads can be merged into consensus sequences
   and adapter sequence can be found for paired-ended data if not known.
