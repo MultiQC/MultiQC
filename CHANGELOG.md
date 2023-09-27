@@ -4,6 +4,8 @@
 
 ### MultiQC updates
 
+- Add CI action [changelog.yml](.github%2Fworkflows%2Fchangelog.yml) to populate the changelog from PR titles, triggered by a comment `@multiqc-bot changelog` ([#2025](https://github.com/ewels/MultiQC/pull/2025))
+
 ### New Modules
 
 - [**Bracken**](https://ccb.jhu.edu/software/bracken/)
