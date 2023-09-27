@@ -332,34 +332,18 @@ Log messages can come in a range of formats:
 
 ### Changelog
 
-Almost all changes deserve an entry in the `CHANGELOG.md` file,
-so that people know that it's there.
+When opening a pull-request, please ensure that the PR title is
+formatted as `New module: XYZ`, where `XYZ` is the name of your module.
 
-Whilst you can do this yourself, we prefer to automate this using our
-friendly MultiQC bot, just before merging. By doing the changelog entry
-at the last minute we reduce the risk of having to solve merge conflicts.
+The changelog entry will be automatically generated for you, based on
+the meta-information that you add to the module `MultiqcModule` class.
 
-The MultiQC changelog bot works by using the pull-request title.
-**Your job is to ensure that your pull-request follows one of the following 3 conventions:**
+:::tip
+Please do not add anything to the `CHANGELOG.md` file!
+This is now handled by our friendly MultiQC bot 🤖
 
-- `New module: XYZ` - adding a new module named `XYZ`
-- `XYZ: Change something in this existing module` - updating module `XYZ`
-- `Some other change` - anything else, eg. core MultiQC changes
-
-The MultiQC bot will automatically build a proper changelog entry based on this title
-and (for new modules / module changes) the meta-information in the `MultiqcModule` class.
-
-The MultiQC bot is triggered by adding the following comment on an open pull request:
-
-```md
-@multiqc-bot changelog
-```
-
-This triggers a GitHub Action script which inspects the PR, updates the changelog
-and commits the update back to your PR.
-
-Whilst you can trigger this yourself, it's expected that the core MultiQC
-maintainers will do this for you immediately prior to merging.
+For more information about how it works, see the [contributing docs](contributing.md#changelog).
+:::
 
 ## Step 1 - Find log files
 
