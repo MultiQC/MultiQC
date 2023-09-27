@@ -90,7 +90,7 @@ def parse_reports(
             #
             if "markduplicates" in l.lower() and "input" in l.lower():
                 # Pull sample name from input
-                fn_search = re.search(r"INPUT(?:=|\s+)(\[?[^\s]+\]?)", l, flags=re.IGNORECASE)
+                fn_search = re.search(r"INPUT(?:=|\s+)(\[?[^\s]+]?)", l, flags=re.IGNORECASE)
                 if fn_search:
                     s_name = os.path.basename(fn_search.group(1).strip("[]"))
                     s_name = self.clean_s_name(s_name, f)
@@ -131,17 +131,24 @@ def parse_reports(
                         # More than one library present and merging stats
                         if k in parsed_data:
                             recompute_merged_metrics = True
-                            try:
-                                parsed_data[k] += float(vals[i])
-                            except (ValueError, TypeError):
-                                parsed_data[k] += " / " + vals[i]
 
-                        # First library
+                        val = vals[i].strip()
+                        try:
+                            val_float = float(val)
+                        except ValueError:
+                            # Account for string values
+                            if k not in parsed_data:  # First library
+                                parsed_data[k] = val
+                            else:
+                                parsed_data[k] += "/" + val
                         else:
-                            try:
-                                parsed_data[k] = float(vals[i])
-                            except ValueError:
-                                parsed_data[k] = vals[i]
+                            # Numerical values we can just add up
+                            if k not in parsed_data:  # First library
+                                parsed_data[k] = val_float
+                            elif isinstance(parsed_data[k], float):
+                                parsed_data[k] += val_float
+                            else:
+                                parsed_data[k] += "/" + val
 
         # Files with no extra lines after last library
         if in_stats_block:
