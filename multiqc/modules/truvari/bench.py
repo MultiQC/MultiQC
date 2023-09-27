@@ -96,14 +96,14 @@ class BenchSummary:
         # Descriptions taken from: https://github.com/ACEnglish/truvari/wiki/bench
         keys = OrderedDict()
         keys["TP-base"] = {
-            "title": "TP-base",
+            "title": "TP (base)",
             "description": "Number of the base VCF calls matching the comp VCF",
             "scale": "BuPu",
             "format": "{:,.d}",
             "min": 0,
         }
         keys["TP-call"] = {
-            "title": "TP-call",
+            "title": "TP (comp)",
             "description": "Number of the comp VCF calls matching the base VCF",
             "scale": "PuBu",
             "format": "{:,.d}",
@@ -130,14 +130,14 @@ class BenchSummary:
         keys["f1"] = dict(bench_headers["f1"], hidden=True)
 
         keys["base cnt"] = {
-            "title": "Base",
+            "title": "Base calls",
             "description": "Number of calls in the base VCF",
             "scale": "Oranges",
             "format": "{:,.d}",
             "min": 0,
         }
         keys["call cnt"] = {
-            "title": "Call",
+            "title": "Comp calls",
             "description": "Number of calls in the comp VCF",
             "scale": "Blues",
             "format": "{:,.d}",
@@ -214,7 +214,7 @@ class BenchSummary:
             "xlab": "Precision (%)",
             "ylab": "Recall (%)",
             "square": True,
-            "title": "Truvari bench: Precision-Recall",
+            "title": "Truvari bench: precision-recall",
             "tt_label": "Precision: {point.x:>4.1f}%<br/> Recall: {point.y:>6.1f}%",
         }
         self.add_section(
