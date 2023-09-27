@@ -4,6 +4,8 @@
 
 ### MultiQC updates
 
+- Just run ci on the oldest + newest supported python versions ([#2074](https://github.com/ewels/MultiQC/pull/2074))
+
 ### New Modules
 
 - [**Bracken**](https://ccb.jhu.edu/software/bracken/)
