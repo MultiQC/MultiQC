@@ -22,7 +22,6 @@ class MultiqcModule(BaseMultiqcModule, BenchSummary):
         super(MultiqcModule, self).__init__(
             name="Truvari",
             anchor="truvari",
-            target="truvari",
             href="https://github.com/ACEnglish/truvari",
             info="is a toolkit for benchmarking, merging, and annotating structural variants",
             doi="https://doi.org/10.1101/2022.02.21.481353",

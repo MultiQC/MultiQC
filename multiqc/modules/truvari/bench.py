@@ -70,28 +70,25 @@ class BenchSummary:
         bench_headers = dict()
         bench_headers["precision"] = {
             "title": "Precision",
-            "description": "Precision for SV calls. Definition: TP-call / (TP-call + FP)",
-            "min": -0.001,
-            "max": 1.0,
-            "format": "{:.1%}",
+            "description": "Precision of the SV calls. Definition: TP-call / (TP-call + FP)",
+            "suffix": "%",
+            "modify": lambda x: x * 100,
             "placement": 100,
             "scale": "RdYlGn",
         }
         bench_headers["recall"] = {
             "title": "Recall",
-            "description": "Recall for SV calls. Definition: TP-base / (TP-base + FN)",
-            "min": -0.001,
-            "max": 1.0,
-            "format": "{:.1%}",
+            "description": "Recall of the SV calls. Definition: TP-base / (TP-base + FN)",
+            "suffix": "%",
+            "modify": lambda x: x * 100,
             "placement": 101,
             "scale": "RdYlGn",
         }
         bench_headers["f1"] = {
             "title": "F1",
-            "description": "F1 score for SV calls. Definition: 2 * ((recall * precision) / (recall + precision))",
-            "min": -0.001,
-            "max": 1.0,
-            "format": "{:.1%}",
+            "description": "F1 score of the SV calls. Definition: 2 * ((recall * precision) / (recall + precision))",
+            "suffix": "%",
+            "modify": lambda x: x * 100,
             "placement": 102,
             "scale": "RdYlGn",
         }
@@ -102,27 +99,31 @@ class BenchSummary:
         keys = OrderedDict()
         keys["TP-base"] = {
             "title": "TP-base",
-            "description": "Number of matching calls from the base vcf",
+            "description": "Number of the base VCF calls matching the comp VCF",
             "scale": "BuPu",
-            "format": "{:,.0f}",
+            "format": "{:,.d}",
+            "min": 0,
         }
         keys["TP-call"] = {
             "title": "TP-call",
-            "description": "Number of matching calls from the comp vcf",
+            "description": "Number of the comp VCF calls matching the base VCF",
             "scale": "PuBu",
-            "format": "{:,.0f}",
+            "format": "{:,.d}",
+            "min": 0,
         }
         keys["FP"] = {
             "title": "FP",
-            "description": "Number of non-matching calls from the comp vcf",
+            "description": "Number of the comp VCF calls non-matching the base VCF",
             "scale": "OrRd",
-            "format": "{:,.0f}",
+            "format": "{:,.d}",
+            "min": 0,
         }
         keys["FN"] = {
             "title": "FN",
-            "description": "Number of non-matching calls from the base vcf",
+            "description": "Number of the base VCF calls non-matching the comp VCF",
             "scale": "BuGn",
-            "format": "{:,.0f}",
+            "format": "{:,.d}",
+            "min": 0,
         }
 
         # Reuse info from bench_headers but hide by default
@@ -131,57 +132,64 @@ class BenchSummary:
         keys["f1"] = dict(bench_headers["f1"], hidden=True)
 
         keys["base cnt"] = {
-            "title": "nBase",
-            "description": "Number of calls in the base vcf",
+            "title": "Base",
+            "description": "Number of calls in the base VCF",
             "scale": "Oranges",
-            "format": "{:,.0f}",
+            "format": "{:,.d}",
+            "min": 0,
         }
         keys["call cnt"] = {
-            "title": "nCall",
-            "description": "Number of calls in the comp vcf",
+            "title": "Call",
+            "description": "Number of calls in the comp VCF",
             "scale": "Blues",
-            "format": "{:,.0f}",
+            "format": "{:,.d}",
+            "min": 0,
         }
         keys["TP-call_TP-gt"] = {
-            "title": "TP-call_TP-gt",
+            "title": "TP-call with GT match",
             "description": "TP-call with genotype match",
             "hidden": True,
             "scale": "Greens",
-            "format": "{:,.0f}",
+            "format": "{:,.d}",
+            "min": 0,
         }
         keys["TP-call_FP-gt"] = {
-            "title": "TP-call_FP-gt",
+            "title": "TP-call w/o GT match",
             "description": "TP-call without genotype match",
             "hidden": True,
             "scale": "YlGn",
-            "format": "{:,.0f}",
+            "format": "{:,.d}",
+            "min": 0,
         }
         keys["TP-base_TP-gt"] = {
-            "title": "TP-base_TP-gt",
+            "title": "TP-base with GT match",
             "description": "TP-base with genotype match",
             "hidden": True,
             "scale": "RdPu",
-            "format": "{:,.0f}",
+            "format": "{:,.d}",
+            "min": 0,
         }
         keys["TP-base_FP-gt"] = {
-            "title": "TP-call_FP-gt",
+            "title": "TP-base w/o GT match",
             "description": "TP-base without genotype match",
             "hidden": True,
             "scale": "Purples",
-            "format": "{:,.0f}",
+            "format": "{:,.d}",
+            "min": 0,
         }
         keys["gt_concordance"] = {
-            "title": "gt Concordance",
-            "description": "Genotype concordance. Definition: TP-call_TP-gt / (TP-call_TP-gt + TP-call_FP-gt)",
+            "title": "GT concordance",
+            "description": "Genotype concordance. Definition: TP-call with GT / (TP-call with GT + TP-call w/o GT)",
             "hidden": True,
             "scale": "GnBu",
-            "format": "{:.1%}",
+            "suffix": "%",
+            "modify": lambda x: x * 100,
         }
 
         self.add_section(
             name="Truvari bench",
             anchor="truvari-bench",
-            description="This module parses the output from <code>truvari bench</code>.",
+            description="Concordance statistics parsed from the output from <code>truvari bench</code>.",
             plot=table.plot(data, keys, {"id": "truvari-bench-summary"}),
         )
         # Generate shuffled list of colors to label samples
@@ -197,8 +205,8 @@ class BenchSummary:
         scatter_data = {}
         for (sample, sample_data), color in zip(data.items(), colors):
             scatter_data[sample] = {
-                "x": sample_data["precision"] * 100,
-                "y": sample_data["recall"] * 100,
+                "x": sample_data["precision"] * 100.0,
+                "y": sample_data["recall"] * 100.0,
                 "color": mcolors.to_hex(color),
             }
 
@@ -216,9 +224,9 @@ class BenchSummary:
             "tt_label": "Precision: {point.x:.1f}%, Recall: {point.y:.1f}%",
         }
         self.add_section(
-            name="Truvari bench - Precision-Recall",
+            name="Truvari bench: precision vs. recall",
             anchor="truvari-bench-pre-rec",
-            description="This module parses the output from <code>truvari bench</code>.",
+            description="Precision vs. recall for each sample. Parsed from the <code>truvari bench</code> output.",
             plot=scatter.plot(scatter_data, scatter_config),
         )
 
