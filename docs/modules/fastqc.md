@@ -126,7 +126,7 @@ fastqc_config:
   top_overrepresented_sequences: 50
 ```
 
-You can also choose to show the top sequences by the total number of occurrences
+You can also choose to rank the top sequences by the total number of reads
 rather than by number of samples:
 
 ```yaml

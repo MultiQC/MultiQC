@@ -970,6 +970,11 @@ class MultiqcModule(BaseMultiqcModule):
             plot=plot_html,
         )
 
+        # Add a table of the top overrepresented sequences
+        # Recalculate counts to percentages for readability:
+        total_read_count = sum([int(d["basic_statistics"]["Total Sequences"]) for d in self.fastqc_data.values()])
+        total_read_count = {seq: (cnt / total_read_count) * 100 for seq, cnt in overrep_total_cnt.items()}
+
         # Top overrepresented sequences across all samples
         top_n = getattr(config, "fastqc_config", {}).get("top_overrepresented_sequences", 20)
         by = getattr(config, "fastqc_config", {}).get("top_overrepresented_sequences_by", "samples")
@@ -985,27 +990,27 @@ class MultiqcModule(BaseMultiqcModule):
                 "min": 0,
                 "format": "{:,.d}",
             },
-            "count": {
-                "title": "Total count",
-                "description": "Total number of occurrences in samples where the sequence is overrepresented",
-                "scale": "Blues",
+            "total_percent": {
+                "title": "% of total reads",
+                "description": "Total count in samples where the sequence is overrepresented, as a percentage of all reads",
+                "scale": "YlOrRd",
                 "min": 0,
-                "format": "{:,.d}",
+                "max": 100,
+                "suffix": "%",
+                "format": "{:,.4f}",
             },
         }
         data = {
             seq: {
                 "sequence": seq,
-                "count": overrep_total_cnt[seq],
+                "total_percent": total_read_count[seq],
                 "samples": overrep_by_sample[seq],
             }
             for seq, _ in top_seqs
         }
 
         ranked_by = (
-            "the number of samples they occur in"
-            if by == "samples"
-            else "total number of times they occur across all samples"
+            "the number of samples they occur in" if by == "samples" else "the percent of all reads in all samples"
         )
         self.add_section(
             name="Top overrepresented sequences",
