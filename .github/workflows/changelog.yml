@@ -37,9 +37,10 @@ jobs:
       - name: Check if CHANGELOG.md actually changed
         run: |
           git diff --exit-code ${GITHUB_WORKSPACE}/CHANGELOG.md || echo "changed=YES" >> $GITHUB_ENV
-          echo "file changed: ${{ env.changed }}"
+          echo "File changed: ${{ env.changed }}"
 
-      - name: Push changes
+      - name: Commit and push changes
+        if: env.changed == 'YES'
         run: |
           git config user.name 'MultiQC Bot'
           git config user.email 'multiqc-bot@seqera.io'
