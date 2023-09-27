@@ -1,7 +1,6 @@
 ---
 title: Configuration
 description: Settings to tweak how MultiQC works
-order: 4
 ---
 
 # Configuring MultiQC
@@ -270,7 +269,7 @@ sp:
 
 Search patterns can specify a filename match (`fn`) or a file contents
 match (`contents`), as well as a number of additional search keys.
-See [below](#step-1-find-log-files) for the full reference.
+See [below](../development/modules.md#step-1---find-log-files) for the full reference.
 
 ## Using log filenames as sample names
 
@@ -300,7 +299,7 @@ use_filename_as_sample_name:
   - picard/markdups
 ```
 
-Note that this should be the search pattern key (see above) and not just the module name.
+Note that this should be the search pattern key and not just the module name.
 This is because some modules search for multiple files.
 
 The log filename will still be cleaned. To use the raw log filenames,
@@ -436,7 +435,7 @@ this in quotes. If MultiQC is unable to understand your config you will get an e
 saying `Could not parse command line config`.
 
 As an example, the following command configures the coverage levels to use for the
-Qualimap module: _(as [described in the docs](http://multiqc.info/docs/#qualimap))_
+Qualimap module: _(as [described in the docs](https://multiqc.info/modules/qualimap/))_
 
 ```bash
 multiqc ./datadir --cl-config "qualimap_config: { general_stats_coverage: [20,40,200] }"
@@ -480,7 +479,7 @@ know you have files for. MultiQC supports a _lot_ of different tools and searche
 for matching files for all of them every time you run it.
 
 You can do this with the `-m` / `--module` flag (can be repeated) or in a MultiQC
-config file by using `config.module_order`. See [Order of modules](#order-of-modules).
+config file by using `config.module_order`. See [Order of modules](../reports/customisation.md#order-of-modules).
 
 ### Optimise file search patterns
 
@@ -539,10 +538,12 @@ sp:
 ```
 
 This can speed up execution a bit if you really want to squeeze that running time.
-The [MultiQC Modules documentation](#multiqc-modules) shows the search patterns for every module.
+The [MultiQC Modules documentation](../development/modules.md) shows the search patterns for every module.
 
-> Note that it's only worth using `skip: true` on search patterns if you want to use one from a module that has several.
-> Usually it's better to just [specify which modules you want to run](#be-picky-with-which-modules-are-run) instead.
+:::tip
+Note that it's only worth using `skip: true` on search patterns if you want to use one from a module that has several.
+Usually it's better to just [specify which modules you want to run](#be-picky-with-which-modules-are-run) instead.
+:::
 
 ### Force interactive plots
 

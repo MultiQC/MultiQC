@@ -16,16 +16,21 @@ log = logging.getLogger(__name__)
 class MultiqcModule(BaseMultiqcModule):
     """Kraken module"""
 
-    def __init__(self):
-        # Initialise the parent object
+    def __init__(
+        self,
+        name="Kraken",
+        anchor="kraken",
+        href="https://ccb.jhu.edu/software/kraken/",
+        info="is a taxonomic classification tool that uses exact k-mer matches to find the lowest common ancestor (LCA) of a given sequence.",
+        doi="10.1186/gb-2014-15-3-r46",
+    ):
         super(MultiqcModule, self).__init__(
-            name="Kraken",
-            anchor="kraken",
-            href="https://ccb.jhu.edu/software/kraken/",
-            info="is a taxonomic classification tool that uses exact k-mer matches to find the lowest common ancestor (LCA) of a given sequence.",
-            doi="10.1186/gb-2014-15-3-r46",
+            name=name,
+            anchor=anchor,
+            href=href,
+            info=info,
+            doi=doi,
         )
-
         self.t_ranks = OrderedDict()
         self.t_ranks["S"] = "Species"
         self.t_ranks["G"] = "Genus"
@@ -38,12 +43,12 @@ class MultiqcModule(BaseMultiqcModule):
         self.t_ranks["R"] = "Root"
         self.t_ranks["U"] = "Unclassified"
 
-        self.top_n = 5
+        self.top_n = getattr(config, "kraken", {}).get("top_n", 5)
 
         # Find and load any kraken reports
         self.kraken_raw_data = dict()
         new_report_present = False
-        for f in self.find_log_files("kraken", filehandles=True):
+        for f in self.find_log_files(self.anchor, filehandles=True):
             log_version = self.get_log_version(f)
             f["f"].seek(0)
             if log_version == "old":
@@ -58,12 +63,11 @@ class MultiqcModule(BaseMultiqcModule):
         if len(self.kraken_raw_data) == 0:
             raise UserWarning
 
-        # Data is in wrong format for writing to file
-        # self.write_data_file(self.kraken_raw_data, "kraken")
-
         log.info("Found {} reports".format(len(self.kraken_raw_data)))
 
-        # Sum counts across all samples, so that we can pick top 5
+        self.write_data_file(self.kraken_raw_data, f"multiqc_{self.anchor}")
+
+        # Sum counts across all samples, so that we can pick top species
         self.kraken_total_pct = dict()
         self.kraken_total_counts = dict()
         self.kraken_sample_total_readcounts = dict()
@@ -71,9 +75,9 @@ class MultiqcModule(BaseMultiqcModule):
         self.sum_sample_counts()
 
         self.general_stats_cols()
-        self.top_five_barplot()
+        self.top_taxa_barplot()
         if new_report_present:
-            self.top_five_duplication_heatmap()
+            self.top_taxa_duplication_heatmap()
 
     def get_log_version(self, f):
         """Check which version of Kraken report file is used
@@ -222,7 +226,7 @@ class MultiqcModule(BaseMultiqcModule):
         """Sum counts across all samples for kraken data"""
 
         # Sum the percentages for each taxa across all samples
-        # Allows us to pick top-5 for each rank
+        # Allows us to pick the top taxa for each rank
         # Use percentages instead of counts so that deeply-sequences samples
         # are not unfairly over-represented
         for s_name, data in self.kraken_raw_data.items():
@@ -254,14 +258,14 @@ class MultiqcModule(BaseMultiqcModule):
         """Add a couple of columns to the General Statistics table"""
 
         # Get top taxa in most specific taxa rank that we have
-        top_five = []
+        top_taxa = []
         top_rank_code = None
         top_rank_name = None
         for rank_code, rank_name in self.t_ranks.items():
             try:
                 sorted_pct = sorted(self.kraken_total_pct[rank_code].items(), key=lambda x: x[1], reverse=True)
                 for classif, pct_sum in sorted_pct[: self.top_n]:
-                    top_five.append(classif)
+                    top_taxa.append(classif)
                 top_rank_code = rank_code
                 top_rank_name = rank_name
                 break
@@ -274,24 +278,22 @@ class MultiqcModule(BaseMultiqcModule):
 
         top_one_hkey = None
 
-        # don't include top-5 % in general stats if all is unclassified.
+        # don't include top-N % in general stats if all is unclassified.
         # unclassified is included separately, so also don't include twice
         if top_rank_code != "U":
-            top_one_hkey = "% {}".format(top_five[0])
+            top_one_hkey = "% {}".format(top_taxa[0])
             headers[top_one_hkey] = {
                 "title": top_one_hkey,
                 "description": "Percentage of reads that were the top {} over all samples - {}".format(
-                    top_rank_name, top_five[0]
+                    top_rank_name, top_taxa[0]
                 ),
                 "suffix": "%",
                 "max": 100,
                 "scale": "PuBuGn",
             }
-            headers["% Top 5"] = {
-                "title": "% Top 5 {}".format(top_rank_name),
-                "description": "Percentage of reads that were classified by one of the top 5 {} ({})".format(
-                    top_rank_name, ", ".join(top_five)
-                ),
+            headers["% Top"] = {
+                "title": f"% Top {self.top_n} {top_rank_name}",
+                "description": f"Percentage of reads that were classified by one of the top-{self.top_n} {top_rank_name} ({', '.join(top_taxa)})",
                 "suffix": "%",
                 "max": 100,
                 "scale": "PuBu",
@@ -316,9 +318,9 @@ class MultiqcModule(BaseMultiqcModule):
                     percent = 0
                 if row["rank_code"] == "U":
                     tdata[s_name]["% Unclassified"] = percent
-                if row["rank_code"] == top_rank_code and row["classif"] in top_five:
-                    tdata[s_name]["% Top 5"] = percent + tdata[s_name].get("% Top 5", 0)
-                if row["rank_code"] == top_rank_code and row["classif"] == top_five[0]:
+                if row["rank_code"] == top_rank_code and row["classif"] in top_taxa:
+                    tdata[s_name]["% Top"] = percent + tdata[s_name].get("% Top", 0)
+                if row["rank_code"] == top_rank_code and row["classif"] == top_taxa[0]:
                     tdata[s_name][top_one_hkey] = percent
 
             if top_one_hkey is not None and top_one_hkey not in tdata[s_name]:
@@ -326,23 +328,19 @@ class MultiqcModule(BaseMultiqcModule):
 
         self.general_stats_addcols(tdata, headers)
 
-    def top_five_barplot(self):
-        """Add a bar plot showing the top-5 from each taxa rank"""
+    def top_taxa_barplot(self):
+        """Add a bar plot showing the top-N from each taxa rank"""
 
         pd = []
         cats = list()
-        pconfig = {
-            "id": "kraken-topfive-plot",
-            "title": "Kraken 2: Top taxa",
-            "ylab": "Number of fragments",
-            "data_labels": list(self.t_ranks.values()),
-        }
+        # Keeping track of encountered codes to display only tabs with available data
+        found_rank_codes = set()
 
         for rank_code in self.t_ranks:
             rank_cats = OrderedDict()
             rank_data = dict()
 
-            # Loop through the summed tax percentages to get the top 5 across all samples
+            # Loop through the summed tax percentages to get the top-N across all samples
             try:
                 sorted_pct = sorted(self.kraken_total_pct[rank_code].items(), key=lambda x: x[1], reverse=True)
             except KeyError:
@@ -363,9 +361,10 @@ class MultiqcModule(BaseMultiqcModule):
                         counts_shown[s_name] = 0
 
                     for row in d:
-                        # unclassified are handled separately
-                        if row["rank_code"] != "U":
-                            if row["rank_code"] == rank_code:
+                        if row["rank_code"] == rank_code:
+                            found_rank_codes.add(rank_code)
+                            # unclassified are handled separately
+                            if row["rank_code"] != "U":
                                 if row["classif"] == classif:
                                     if classif not in rank_data[s_name]:
                                         rank_data[s_name][classif] = 0
@@ -395,13 +394,20 @@ class MultiqcModule(BaseMultiqcModule):
             cats.append(rank_cats)
             pd.append(rank_data)
 
+        pconfig = {
+            "id": f"{self.anchor}-top-n-plot",
+            "title": f"{self.name}: Top taxa",
+            "ylab": "Number of fragments",
+            "data_labels": [v for k, v in self.t_ranks.items() if k in found_rank_codes],
+        }
+
         self.add_section(
             name="Top taxa",
-            anchor="kraken-topfive",
+            anchor=f"{self.anchor}-top-n",
             description=f"The number of reads falling into the top {self.top_n} taxa across different ranks.",
             helptext=f"""
                 To make this plot, the percentage of each sample assigned to a given taxa is summed across all samples.
-                The counts for these top five taxa are then plotted for each of the 9 different taxa ranks.
+                The counts for these top {self.top_n} taxa are then plotted for each of the 9 different taxa ranks.
                 The unclassified count is always shown across all taxa ranks.
 
                 The total number of reads is approximated by dividing the number of `unclassified` reads by the percentage of
@@ -416,20 +422,20 @@ class MultiqcModule(BaseMultiqcModule):
             plot=bargraph.plot(pd, cats, pconfig),
         )
 
-    def top_five_duplication_heatmap(self):
-        """Add a heatmap showing the minimizer duplication top-5 species"""
+    def top_taxa_duplication_heatmap(self):
+        """Add a heatmap showing the minimizer duplication of the top taxa"""
 
         duplication = list()
         pconfig = {
-            "id": "kraken-topfive-duplication_plot",
-            "title": f"Kraken 2: Top {self.top_n} species duplication",
+            "id": f"{self.anchor}-top-duplication_plot",
+            "title": f"{self.name}: Top {self.top_n} species duplication",
             "square": False,
             "xcats_samples": False,
         }
 
         rank_code = "S"
         rank_data = dict()
-        # Loop through the summed tax percentages to get the top 5 across all samples
+        # Loop through the summed tax percentages to get the top taxa across all samples
         try:
             sorted_pct = sorted(self.kraken_total_pct[rank_code].items(), key=lambda x: x[1], reverse=True)
         except KeyError:
@@ -481,7 +487,7 @@ class MultiqcModule(BaseMultiqcModule):
 
         self.add_section(
             name="Duplication rate of top species",
-            anchor="kraken-duplication-topfive",
+            anchor=f"{self.anchor}-duplication-topfive",
             description=f"The duplication rate of minimizer falling into the top {self.top_n} species",
             helptext=f"""
                 To make this plot, the minimizer duplication rate is computed for the top {self.top_n} most abundant species in all samples.

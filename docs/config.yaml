@@ -1,6 +1,7 @@
 nav:
   - Getting Started:
       - index.md
+      - getting_started/quick_start.md
       - getting_started/installation.md
       - getting_started/running_multiqc.md
       - getting_started/config.md

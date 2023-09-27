@@ -26,6 +26,8 @@ from multiqc.utils import report
 # Initialise the logger
 log = logging.getLogger(__name__)
 
+VERSION_REGEX = r"FastQC\t([\d\.]+)"
+
 
 class MultiqcModule(BaseMultiqcModule):
     def __init__(self):
@@ -64,8 +66,18 @@ class MultiqcModule(BaseMultiqcModule):
             # FastQC zip files should have just one directory inside, containing report
             d_name = fqc_zip.namelist()[0]
             try:
-                with fqc_zip.open(os.path.join(d_name, "fastqc_data.txt")) as fh:
-                    r_data = fh.read().decode("utf8")
+                path = os.path.join(d_name, "fastqc_data.txt")
+                with fqc_zip.open(path) as fh:
+                    r_data = fh.read()
+                    try:
+                        r_data = r_data.decode("utf8")
+                    except UnicodeDecodeError as e:
+                        log.debug(f"Could not parse {path} as Unicode: {e}, attempting the latin-1 encoding")
+                        try:
+                            r_data = r_data.decode("latin-1")
+                        except Exception as e:
+                            log.warning(f"Error reading FastQC data file {path}: {e}. Skipping sample {s_name}.")
+                            continue
                     self.parse_fastqc_report(r_data, s_name, f)
             except KeyError:
                 log.warning("Error - can't find fastqc_raw_data.txt in {}".format(f))
@@ -147,6 +159,10 @@ class MultiqcModule(BaseMultiqcModule):
         s_headers = None
         self.dup_keys = []
         for l in file_contents.splitlines():
+            if l.startswith("##FastQC"):
+                version_match = re.search(VERSION_REGEX, l)
+                if version_match:
+                    self.add_software_version(version_match.group(1), s_name)
             if l == ">>END_MODULE":
                 section = None
                 s_headers = None
@@ -279,7 +295,7 @@ class MultiqcModule(BaseMultiqcModule):
             "max": 100,
             "min": 0,
             "suffix": "%",
-            "scale": "Set1",
+            "scale": "PuRd",
             "format": "{:,.0f}",
         }
         headers["avg_sequence_length"] = {

@@ -1,5 +1,4 @@
 import logging
-import re
 from collections import defaultdict
 
 from multiqc.modules.base_module import BaseMultiqcModule
@@ -11,17 +10,18 @@ log = logging.getLogger(__name__)
 class DragenGcMetrics(BaseMultiqcModule):
     """Not to be confused with DragenFastqcGcMetrics"""
 
-    NAMESPACE = "Dragen GC Metrics"
+    NAMESPACE = "GC Metrics"
 
     def add_gc_metrics_hist(self):
         data_by_sample = dict()
 
         for f in self.find_log_files("dragen/gc_metrics"):
             data = parse_gc_metrics_file(f)
-            if f["s_name"] in data_by_sample:
-                log.debug("Duplicate sample name found! Overwriting: {}".format(f["s_name"]))
+            s_name = f["s_name"]
+            if s_name in data_by_sample:
+                log.debug("Duplicate sample name found! Overwriting: {}".format(s_name))
             self.add_data_source(f, section="stats")
-            data_by_sample[f["s_name"]] = data
+            data_by_sample[s_name] = data
 
         # Filter to strip out ignored sample names:
         data_by_sample = self.ignore_samples(data_by_sample)
@@ -118,8 +118,6 @@ def parse_gc_metrics_file(f):
     GC METRICS SUMMARY,,AT Dropout,0.58
     GC METRICS SUMMARY,,GC Dropout,2.01
     """
-
-    f["s_name"] = re.search(r"(.*).gc_metrics.csv", f["fn"]).group(1)
 
     data = defaultdict(dict)
     for line in f["f"].splitlines():

@@ -1,6 +1,7 @@
 """ MultiQC submodule to parse output from Bcftools stats """
 
 import logging
+import re
 from collections import OrderedDict
 
 from multiqc import config
@@ -8,6 +9,9 @@ from multiqc.plots import bargraph, linegraph, table
 
 # Initialise the logger
 log = logging.getLogger(__name__)
+
+VERSION_REGEX = r"# This file was produced by bcftools stats \(([\d\.]+)"
+HTSLIB_REGEX = r"\+htslib-([\d\.]+)"
 
 
 class StatsReportMixin:
@@ -41,6 +45,27 @@ class StatsReportMixin:
         for f in self.find_log_files("bcftools/stats"):
             s_names = list()
             for line in f["f"].splitlines():
+                # Get version number from file contents
+                if line.startswith("# This file was produced by bcftools stats"):
+                    # Look for BCFtools version
+                    version_match = re.search(VERSION_REGEX, line)
+                    if version_match is None:
+                        continue
+
+                    # Add BCFtools version
+                    bcftools_version = version_match.group(1)
+                    self.add_software_version(bcftools_version, f["s_name"])
+
+                    # Look for HTSlib version
+                    htslib_version_match = re.search(HTSLIB_REGEX, line)
+                    if htslib_version_match is None:
+                        continue
+
+                    # Add HTSlib version if different from BCFtools version
+                    htslib_version = htslib_version_match.group(1)
+                    if htslib_version != bcftools_version:
+                        self.add_software_version(htslib_version, f["s_name"], "HTSlib")
+
                 s = line.split("\t")
                 # Get the sample names - one per 'set'
                 if s[0] == "ID":
@@ -74,10 +99,10 @@ class StatsReportMixin:
                 if s[0] == "TSTV" and len(s_names) > 0:
                     s_name = s_names[int(s[1])]
                     fields = ["ts", "tv", "tstv", "ts_1st_ALT", "tv_1st_ALT", "tstv_1st_ALT"]
-                    for i, f in enumerate(fields):
+                    for i, field in enumerate(fields):
                         value = float(s[i + 2].strip())
 
-                        self.bcftools_stats[s_name][f] = value
+                        self.bcftools_stats[s_name][field] = value
 
                 # Parse substitution types
                 if s[0] == "ST" and len(s_names) > 0:
@@ -105,8 +130,8 @@ class StatsReportMixin:
                 if s[0] == "PSC" and len(s_names) > 0:
                     s_name = s_names[int(s[1])]
                     fields = ["variations_hom", "variations_het"]
-                    for i, f in enumerate(fields):
-                        self.bcftools_stats[s_name][f] = int(s[i + 4].strip())
+                    for i, field in enumerate(fields):
+                        self.bcftools_stats[s_name][field] = int(s[i + 4].strip())
 
                 # Per-sample variant stats
                 if s[0] == "PSC" and len(s_names) > 0:
@@ -200,12 +225,12 @@ class StatsReportMixin:
             # Stats Table
             stats_headers = self.bcftools_stats_genstats_headers()
             if getattr(config, "bcftools", {}).get("write_general_stats", True):
-                self.general_stats_addcols(self.bcftools_stats, stats_headers, "Bcftools Stats")
+                self.general_stats_addcols(self.bcftools_stats, stats_headers, "Stats")
             if getattr(config, "bcftools", {}).get("write_separate_table", False):
                 self.add_section(
                     name="Bcftools Stats",
                     anchor="bcftools-stats_stats",
-                    plot=table.plot(self.bcftools_stats, stats_headers),
+                    plot=table.plot(self.bcftools_stats, stats_headers, {"namespace": "Stats"}),
                 )
 
             # Make bargraph plot of substitution types

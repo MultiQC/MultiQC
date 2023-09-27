@@ -42,11 +42,11 @@ def custom_module_classes():
     """
 
     # Dict to hold parsed data. Each key should contain a custom data type
-    # eg. output from a particular script. Note that this script may pick
+    # e.g. output from a particular script. Note that this script may pick
     # up many different types of data from many different sources.
     # Second level keys should be 'config' and 'data'. Data key should then
     # contain sample names, and finally data.
-    cust_mods = defaultdict(lambda: defaultdict(lambda: OrderedDict()))
+    cust_mods = defaultdict(lambda: defaultdict(lambda: dict()))
 
     # Dictionary to hold search patterns - start with those defined in the config
     search_patterns = ["custom_content"]
@@ -61,7 +61,7 @@ def custom_module_classes():
             continue
         c_id = f.get("id", k)
 
-        # Data supplied in with config (eg. from a multiqc_config.yaml file in working directory)
+        # Data supplied in with config (e.g. from a multiqc_config.yaml file in working directory)
         if "data" in f:
             try:
                 cust_mods[c_id]["data"].update(f["data"])
@@ -102,12 +102,6 @@ def custom_module_classes():
                         log.debug("YAML error: {}".format(e), exc_info=True)
                         break
                     parsed_data["id"] = parsed_data.get("id", f["s_name"])
-                    # Run sample-name cleaning on the data keys
-                    try:
-                        parsed_data["data"] = {bm.clean_s_name(k, f): v for k, v in parsed_data.get("data", {}).items()}
-                    except AttributeError as e:
-                        # If parsed_data["data"] is a string, this won't work - but that's fine
-                        pass
                 elif f_extension == ".json":
                     try:
                         # Use OrderedDict for objects so that column order is honoured
@@ -117,8 +111,6 @@ def custom_module_classes():
                         log.warning("JSON error: {}".format(e))
                         break
                     parsed_data["id"] = parsed_data.get("id", f["s_name"])
-                    # Run sample-name cleaning on the data keys
-                    parsed_data["data"] = {bm.clean_s_name(k, f): v for k, v in parsed_data.get("data", {}).items()}
                 elif f_extension == ".png" or f_extension == ".jpeg" or f_extension == ".jpg":
                     image_string = base64.b64encode(f["f"].read()).decode("utf-8")
                     image_format = "png" if f_extension == ".png" else "jpg"
@@ -138,13 +130,18 @@ def custom_module_classes():
                 elif f_extension == ".html":
                     parsed_data = {"id": f["s_name"], "plot_type": "html", "data": f["f"]}
                     parsed_data.update(_find_html_file_header(f))
+
                 if parsed_data is not None:
+                    if isinstance(parsed_data.get("data"), dict):
+                        # Run sample-name cleaning on the data keys
+                        parsed_data["data"] = {bm.clean_s_name(k, f): v for k, v in parsed_data["data"].items()}
+
                     c_id = parsed_data.get("id", k)
                     if len(parsed_data.get("data", {})) > 0:
-                        if type(parsed_data["data"]) == str:
-                            cust_mods[c_id]["data"] = parsed_data["data"]
-                        else:
+                        if isinstance(parsed_data["data"], dict):
                             cust_mods[c_id]["data"].update(parsed_data["data"])
+                        else:
+                            cust_mods[c_id]["data"] = parsed_data["data"]
                         cust_mods[c_id]["config"].update({j: k for j, k in parsed_data.items() if j != "data"})
                     else:
                         log.warning("No data found in {}".format(f["fn"]))
@@ -543,20 +540,23 @@ def _parse_txt(f, conf):
     first_row_str = 0
     for i, l in enumerate(d):
         for j, v in enumerate(l):
-            try:
-                d[i][j] = float(v)
-            except ValueError:
+            if j != 0:  # we don't want to convert sample names to numbers
+                try:
+                    v = float(v)
+                except ValueError:
+                    pass
+            if isinstance(v, str):
                 if (v.startswith('"') and v.endswith('"')) or (v.startswith("'") and v.endswith("'")):
                     v = v[1:-1]
-                d[i][j] = v
                 # Count strings in first row (header?)
                 if i == 0:
                     first_row_str += 1
+            d[i][j] = v
 
     all_numeric = all([type(l) == float for l in d[i][1:] for i in range(1, len(d))])
 
-    # General stat info files - expected to be have atleast 2 rows (first row always being the header)
-    # and have atleast 2 columns (first column always being sample name)
+    # General stat info files - expected to have at least 2 rows (first row always being the header)
+    # and have at least 2 columns (first column always being sample name)
     if conf.get("plot_type") == "generalstats" and len(d) >= 2 and ncols >= 2:
         data = defaultdict(dict)
         for i, l in enumerate(d[1:], 1):

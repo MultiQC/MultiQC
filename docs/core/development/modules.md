@@ -1,7 +1,6 @@
 ---
 title: Writing new modules
 description: Adding support for a new tool
-order: 1
 ---
 
 # Writing New Modules
@@ -26,7 +25,7 @@ Get this stuff right, and your pull-request is much more likely to be merged qui
 ### Don't add everything
 
 MultiQC was designed to _summarise_ tool outputs.
-An end-user should be able to visially scan the report and spot any outlier samples, then go to the underlying tool to look at those samples in more detail.
+An end-user should be able to visually scan the report and spot any outlier samples, then go to the underlying tool to look at those samples in more detail.
 
 MultiQC is _not_ designed to replicate every single metric from a tool. Doing so makes the report difficult to read and digest quickly for many samples.
 Module additions that add huge quantities of metrics to reports will be asked to slim down.
@@ -64,7 +63,7 @@ It's usually better to copy and paste a bit in these cases. The code is then eas
 The emphasis for MultiQC reports is to allow people to quickly scan and spot outlier samples.
 The core of this is data visualisation.
 
-Especially when creating tables, make sure that you think about the [colour scheme](#table-colour-scales-1) for every single column.
+Especially when creating tables, make sure that you think about the [colour scheme](../development/plots.md#table-colour-scales) for every single column.
 
 - Ensure that adjacent columns do not share the same colour scheme
   - Makes long tables easier to follow
@@ -122,7 +121,7 @@ Better still, many of these tools can automatically change the formatting so tha
 can write code in whatever style they prefer and defer this task to automation.
 
 Much like source control, gloves in a lab, and wearing a seatbelt, code formatters and code linting
-is an annoying inconvience at first for most people which in time becomes an indespesible
+is an annoying inconvenience at first for most people which in time becomes an indispensable
 tool in the maintenance of high quality software.
 
 MultiQC uses a range of tools to check the code base. The main two code formatters are:
@@ -150,8 +149,10 @@ This will then automatically run all code checks on the files you have edited wh
 
 Automated continuous integration tests will run using GitHub Actions to check that all files pass the above tests. If any files do not, that test will fail giving a red ❌ next to the pull request.
 
-> Make sure that your configuration is working properly and that you're not changing loads of files
-> that you haven't worked with. Pull-requests will not be merged with such changes.
+:::tip
+Make sure that your configuration is working properly and that you're not changing loads of files
+that you haven't worked with. Pull-requests will not be merged with such changes.
+:::
 
 These tools should be relatively easy to install and run, and have integration with the majority
 of code editors. Once set up, they can run on save and you'll never need to think about them again.
@@ -166,7 +167,6 @@ you will need to edit or create are as follows:
 
 ```
 ├── docs
-│   ├── README.md
 │   └── modules
 │       └── <your_module>.md
 ├── multiqc
@@ -239,30 +239,24 @@ module show up on the [MultiQC homepage](http://multiqc.info) so that everyone
 knows it exists. This process is automated once the file is added to the core
 repository.
 
-This docs file should be placed in `docs/modules/<your_module_name>.md` and
+These docs file should be placed in `docs/modules/<your_module_name>.md` and
 should have the following structure:
 
 ```markdown
 ---
-Name: Tool Name
-URL: http://www.amazing-bfx-tool.com
-Description: >
-  This amazing tool does some really cool stuff. You can describe it
-  here and split onto multiple lines if you want. Not too long though!
+name: Tool Name
+url: http://www.amazing-bfx-tool.com
+description: >
+  This amazing tool does some really cool stuff. Multiple lines
+  are ok if you want. Not too long though!
 ---
 
-Your documentation goes here. Feel free to use markdown and write whatever
+Your module documentation goes here. Feel free to use markdown and write whatever
 you think would be helpful. Please avoid using heading levels 1 to 3.
 ```
 
-Make a reference to this in the YAML _frontmatter_ list at the top of
-`docs/README.md` - this allows the website to find the file to build
-the documentation.
-
-### Changelog
-
-Last but not least, remember to add your new module to the `CHANGELOG.md`,
-so that people know that it's there.
+The file search patterns will be shown on the website page automatically
+and do not need to be included in this file.
 
 ### MultiqcModule Class
 
@@ -336,6 +330,23 @@ Log messages can come in a range of formats:
 - `log.error` and `log.critical`
   - Not often used, these are for show-stopping problems
 
+### Changelog
+
+Last but not least, remember to add your new module to the `CHANGELOG.md`,
+so that people know that it's there. Note that you can do that by sending a comment
+to the pull request with the following text:
+
+> @multiqc-bot changelog
+
+The bot will automatically build a proper entry based on the meta-information in
+the MultiqcModule class.
+
+You can also run this command if you only change an existing module, or
+do a non-module codebase change: the CI will populate the entry based on the
+pull request title. If your pull request starts with a module name followed
+by a colon (e.g. "Samtools: new feature"), it will be assumed that the PR changes
+a module; otherwise, a core change will be assumed.
+
 ## Step 1 - Find log files
 
 The first thing that your module will need to do is to find analysis log
@@ -378,17 +389,23 @@ The following search criteria sub-keys can then be used:
 - `exclude_contents_re`
   - A regex which will exclude the file if matched within the file contents (checked line by line)
 - `num_lines`
-  - The number of lines to search through for the `contents` string. Default: all lines.
+  - The number of lines to search through for the `contents` string. Defaults to 1000 (configurable via `filesearch_lines_limit`).
 - `shared`
   - By default, once a file has been assigned to a module it is not searched again. Specify `shared: true` when your file can be shared between multiple tools (for example, part of a `stdout` stream).
 - `max_filesize`
-  - Files larger than the `log_filesize_limit` config key (default: 10MB) are skipped. If you know your files will be smaller than this and need to search by contents, you can specify this value (in bytes) to skip any files smaller than this limit.
+  - Files larger than the `log_filesize_limit` config key (default: 50MB) are skipped. If you know your files will be smaller than this and need to search by contents, you can specify this value (in bytes) to skip any files smaller than this limit.
 
+:::tip
 Please try to use `num_lines` and `max_filesize` where possible as they will speed up
 MultiQC execution time.
+:::
 
-Note that `exclude_` keys are tested after a file is detected with one or
-more of the other patterns.
+:::warning
+Please do not set `num_lines` to anything over 1000, as this will significantly slow
+down the file search for all users.
+If you do need to search more lines to detect a string, please combine it with
+a `fn` pattern to limit which files are loaded _(as done with AfterQC)_.
+:::
 
 For example, two typical modules could specify search patterns as follows:
 
@@ -560,9 +577,11 @@ for f in self.find_log_files('mymod'):
 This function has already been applied to the contents of `f['s_name']`,
 so it is only required when using something different for the sample identifier.
 
-> `self.clean_s_name()` **must** be used on sample names parsed from the file
-> contents. Without it, features such as prepending directories (`--dirs`)
-> will not work.
+:::tip
+`self.clean_s_name()` **must** be used on sample names parsed from the file
+contents. Without it, features such as prepending directories (`--dirs`)
+will not work.
+:::
 
 The second argument should be the dictionary returned by the `self.find_log_files()` function.
 The root path is used for `--dirs` and the search pattern key is used
@@ -617,6 +636,70 @@ are as shown:
 
 ```python
 self.add_data_source(f=None, s_name=None, source=None, module=None, section=None)
+```
+
+### Saving version information
+
+Software version information may be present in the log files of some tools. The
+version number can be included in the report by passing it to the method
+`self.add_software_version`. Let's use this `samtools stats` log below as an example.
+
+```bash
+# This file was produced by samtools stats (1.3+htslib-1.3) and can be plotted using plot-bamstats
+# This file contains statistics for all reads.
+# The command line was:  stats /home/lp113/bcbio-nextgen/tests/test_automated_output/align/Test1/Test1.sorted.bam
+# CHK, Checksum [2]Read Names   [3]Sequences    [4]Qualities
+# CHK, CRC32 of reads which passed filtering followed by addition (32bit overflow)
+CHK     560674ab        1165a6ca        7b309ac6
+# Summary Numbers. Use `grep ^SN | cut -f 2-` to extract this part.
+SN      raw total sequences:    101
+...
+```
+
+The version number here (`1.3`) can be extracted using a regular expression (regex).
+We then pass this to the `self.add_software_version()` function.
+Note that we pass the sample name (`f["s_name"]` in this case) so that we don't
+add versions for samples that are later ignored.
+
+```python
+for line in f.splitlines():
+    version = re.search(r"# This file was produced by samtools stats \(([\d\.]+)", line)
+    if version is not None:
+        self.add_software_version(version.group(1), f["s_name"])
+
+    # ..rest of file parsing
+```
+
+The version number will now appear after the module header in the report as
+well as in the section _Software Versions_ in the end of the report.
+
+:::tip
+For tools that don't output software versions in their logs these can instead
+be provided in a separate YAML file.
+See [Customising Reports](../reports/customisation.md#listing-software-versions) for details.
+:::
+
+In some cases, a log may include multiple version numbers for a single tool.
+In the example provided, the version of htslib is shown alongside the
+previously extracted samtools version. This information is valuable and
+should be incorporated into the report. To achieve this, we need to
+extract the new version string and provide it to the
+`self.add_software_version()` function. Include the relevant software
+name (in this case, `htslib`) as well. This will ensure that the htslib
+version is listed separately from the main module's software version.
+Example:
+
+```python
+for line in f.splitlines():
+    version = re.search(r"# This file was produced by samtools stats \(([\d\.]+)", line)
+    if version is not None:
+        self.add_software_version(version.group(1), f["s_name"])
+
+    htslib_version = re.search(r"\+htslib-([\d\.]+)", line)
+    if htslib_version is not None:
+        self.add_software_version(htslib_version.group(1), f["s_name"], software_name="htslib")
+
+    # ..rest of file parsing
 ```
 
 ## Step 3 - Adding to the general statistics table
@@ -741,6 +824,8 @@ The following scales are available:
 
 ![color brewer](../../images/cbrewer_scales.png)
 
+For categorical metrics that can take a value from a predefined set, use one of the categorical color scales: Set2, Accent, Set1, Set3, Dark2, Paired, Pastel2, Pastel1. For numerical metrics, consider one the "sequential" color scales from the table above.
+
 ## Step 4 - Writing data to a file
 
 In addition to printing data to the General Stats, MultiQC modules typically
@@ -836,8 +921,8 @@ Instead of hardcoding defaults, it's a great idea to allow users to configure
 the behaviour of MultiQC module code.
 
 It's pretty easy to use the built in MultiQC configuration settings to do this,
-so that users can set up their config as described
-[above in the docs](http://multiqc.info/docs/#configuring-multiqc).
+so that users can set up their config as described in the
+[Configuration docs](../getting_started/config.md).
 
 To do this, just assume that your configuration variables are available in the
 MultiQC `config` module and have sensible defaults. For example:

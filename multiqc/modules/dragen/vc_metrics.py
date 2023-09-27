@@ -1,5 +1,4 @@
 import logging
-import re
 
 from multiqc.modules.base_module import BaseMultiqcModule
 from multiqc.plots import table
@@ -10,7 +9,7 @@ from .utils import Metric, exist_and_number, make_headers
 log = logging.getLogger(__name__)
 
 
-NAMESPACE = "DRAGEN variant calling"
+NAMESPACE = "Variant calling"
 
 
 class DragenVCMetrics(BaseMultiqcModule):
@@ -18,8 +17,8 @@ class DragenVCMetrics(BaseMultiqcModule):
         data_by_sample = dict()
 
         for f in self.find_log_files("dragen/vc_metrics"):
-            s_name, data = parse_vc_metrics_file(f)
-            s_name = self.clean_s_name(s_name, f)
+            data = parse_vc_metrics_file(f)
+            s_name = f["s_name"]
             if s_name in data_by_sample:
                 log.debug(f"Duplicate sample name found! Overwriting: {s_name}")
             self.add_data_source(f, section="stats")
@@ -331,8 +330,6 @@ def parse_vc_metrics_file(f):
     VARIANT CALLER POSTFILTER,T_SRR7890936_50pc,Percent Autosome Callability,NA
     """
 
-    s_name = re.search(r"(.*)\.vc_metrics.csv", f["fn"]).group(1)
-
     summary_data = dict()
     prefilter_data = dict()
     postfilter_data = dict()
@@ -425,4 +422,4 @@ def parse_vc_metrics_file(f):
     ):
         data["Filtered indels pct"] = data["Filtered indels"] / prefilter_data["Indels"] * 100.0
 
-    return s_name, data
+    return data
