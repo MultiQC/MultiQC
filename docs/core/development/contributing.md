@@ -3,6 +3,8 @@ title: Contributing
 description: Guides for how to contribute to the MultiQC code base
 ---
 
+# Contributing
+
 ## Changelog
 
 Almost all changes deserve an entry in the `CHANGELOG.md` file,
