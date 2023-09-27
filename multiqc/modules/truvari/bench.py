@@ -1,14 +1,14 @@
 #!/usr/bin/env python
 """ MultiQC submodule to parse output from truvari bench """
 import json
-import os
 import logging
+import os
 import random
 from collections import OrderedDict
 
 import matplotlib.colors as mcolors
 
-from multiqc.plots import table, scatter
+from multiqc.plots import scatter, table
 
 # Initialise the logger
 log = logging.getLogger(__name__)
@@ -18,10 +18,10 @@ class BenchSummary:
     def parse_bench_stats(self):
         """Find truvari bench logs and parse their data"""
         data = {}
-        versions = set()  # Not used at the moment
         for f in self.find_log_files("truvari/bench"):
             collect_stats = False
             stats = ""
+            version = None
             for line in f["f"].splitlines():
                 if "Stats:" in line:
                     collect_stats = True
@@ -34,7 +34,7 @@ class BenchSummary:
                         collect_stats = False
 
                 if "Truvari version:" in line:
-                    versions.add(line.strip().split(":")[-1])
+                    version = line.strip().split(":")[-1]
 
             if stats:
                 # Use output directory as sample name
@@ -52,6 +52,9 @@ class BenchSummary:
 
                 self.add_data_source(f, section="bench")
                 data[f["s_name"]] = stats
+
+                if version is not None:
+                    self.add_software_version(version, f["s_name"])
 
         # Filter to strip out ignored sample names
         data = self.ignore_samples(data)
