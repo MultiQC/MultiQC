@@ -973,7 +973,7 @@ class MultiqcModule(BaseMultiqcModule):
         # Add a table of the top overrepresented sequences
         # Recalculate counts to percentages for readability:
         total_read_count = sum([int(d["basic_statistics"]["Total Sequences"]) for d in self.fastqc_data.values()])
-        total_read_count = {seq: (cnt / total_read_count) * 100 for seq, cnt in overrep_total_cnt.items()}
+        overrep_total_pct = {seq: (cnt / total_read_count) * 100 for seq, cnt in overrep_total_cnt.items()}
 
         # Top overrepresented sequences across all samples
         top_n = getattr(config, "fastqc_config", {}).get("top_overrepresented_sequences", 20)
@@ -986,14 +986,21 @@ class MultiqcModule(BaseMultiqcModule):
             "samples": {
                 "title": "Samples",
                 "description": "Number of samples where this sequence is overrepresented",
+                "scale": "Greens",
+                "min": 0,
+                "format": "{:,.d}",
+            },
+            "total_count": {
+                "title": "Occurrences",
+                "description": "Total number of occurrences of the sequence (among the samples where the sequence is overrepresented)",
                 "scale": "Blues",
                 "min": 0,
                 "format": "{:,.d}",
             },
             "total_percent": {
-                "title": "% of total reads",
-                "description": "Total count in samples where the sequence is overrepresented, as a percentage of all reads",
-                "scale": "YlOrRd",
+                "title": "% of all reads",
+                "description": "Total number of occurrences as the percentage of all reads (among samples where the sequence is overrepresented)",
+                "scale": "Blues",
                 "min": 0,
                 "max": 100,
                 "suffix": "%",
@@ -1003,14 +1010,15 @@ class MultiqcModule(BaseMultiqcModule):
         data = {
             seq: {
                 "sequence": seq,
-                "total_percent": total_read_count[seq],
+                "total_percent": overrep_total_pct[seq],
+                "total_count": overrep_total_cnt[seq],
                 "samples": overrep_by_sample[seq],
             }
             for seq, _ in top_seqs
         }
 
         ranked_by = (
-            "the number of samples they occur in" if by == "samples" else "the percent of all reads in all samples"
+            "the number of samples they occur in" if by == "samples" else "the number of occurrences across all samples"
         )
         self.add_section(
             name="Top overrepresented sequences",
@@ -1038,17 +1046,15 @@ class MultiqcModule(BaseMultiqcModule):
         data = dict()
         for s_name in self.fastqc_data:
             try:
-                for d in self.fastqc_data[s_name]["adapter_content"]:
-                    pos = self.avg_bp_from_range(d["position"])
-                    for r in self.fastqc_data[s_name]["adapter_content"]:
-                        pos = self.avg_bp_from_range(r["position"])
-                        for a in r.keys():
-                            k = "{} - {}".format(s_name, a)
-                            if a != "position":
-                                try:
-                                    data[k][pos] = r[a]
-                                except KeyError:
-                                    data[k] = {pos: r[a]}
+                for adapters in self.fastqc_data[s_name]["adapter_content"]:
+                    pos = self.avg_bp_from_range(adapters["position"])
+                    for adapter_name, percent in adapters.items():
+                        k = "{} - {}".format(s_name, adapter_name)
+                        if adapter_name != "position":
+                            try:
+                                data[k][pos] = percent
+                            except KeyError:
+                                data[k] = {pos: percent}
             except KeyError:
                 pass
         if len(data) == 0:
