@@ -18,14 +18,13 @@ import sys
 import tempfile
 import time
 import traceback
-import warnings
-from distutils import version
 from distutils.dir_util import copy_tree
 from urllib.request import urlopen
 
 import jinja2
 import rich
 import rich_click as click
+from packaging import version
 from rich.syntax import Syntax
 
 from .modules.base_module import ModuleNoSamplesFound
@@ -385,8 +384,8 @@ def run(
         try:
             response = urlopen("http://multiqc.info/version.php?v={}".format(config.short_version), timeout=5)
             remote_version = response.read().decode("utf-8").strip()
-            if version.StrictVersion(re.sub("[^0-9\.]", "", remote_version)) > version.StrictVersion(
-                re.sub("[^0-9\.]", "", config.short_version)
+            if version.StrictVersion(re.sub(r"[^0-9.]", "", remote_version)) > version.StrictVersion(
+                re.sub(r"[^0-9.]", "", config.short_version)
             ):
                 logger.warning("MultiQC Version {} now available!".format(remote_version))
             else:
@@ -515,7 +514,7 @@ def run(
         logger.info("Printing report to stdout")
     else:
         if title is not None and filename is None:
-            filename = re.sub("[^\w\.-]", "", re.sub("[-\s]+", "-", title)).strip()
+            filename = re.sub(r"[^\w.-]", "", re.sub(r"[-\s]+", "-", title)).strip()
             filename += "_multiqc_report"
         if filename is not None:
             if filename.endswith(".html"):
@@ -694,7 +693,12 @@ def run(
         except ModuleNoSamplesFound:
             logger.debug(f"No samples found: {this_module}")
         except UserWarning:  # UserWarning deprecated from 1.16
-            warnings.warn(f"Please raise ModuleNoSamplesFound instead of UserWarning", DeprecationWarning)
+            msg = f"Please raise ModuleNoSamplesFound instead of UserWarning (in module: {this_module})"
+            if config.lint:
+                logger.error(msg)
+                report.lint_errors.append(msg)
+            else:
+                logger.debug(msg)
             logger.debug(f"No samples found: {this_module}")
         except KeyboardInterrupt:
             shutil.rmtree(tmp_dir)
