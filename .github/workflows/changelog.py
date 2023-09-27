@@ -76,7 +76,8 @@ def _find_module_info(py_path: Path) -> dict[str]:
 
 def _files_altered_by_pr(pr_number, types=None) -> set[Path]:
     """
-    Returns a list of files added by the PR.
+    Returns a list of files added or modified by the PR (depending on `types`,
+    which can be a subset of `{'added', 'modified'}`)
     """
     if types is None:
         types = {"added"}
