@@ -3,13 +3,6 @@ on:
   issue_comment:
     types: [created]
 
-  # For manually triggering this workflow
-  workflow_dispatch:
-    inputs:
-      number:
-        description: PR number
-        required: true
-
 jobs:
   update_changelog:
     runs-on: ubuntu-latest
