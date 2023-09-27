@@ -3,12 +3,10 @@
 import json
 import logging
 import os
-import random
 from collections import OrderedDict
 
-import matplotlib.colors as mcolors
-
 from multiqc.plots import scatter, table
+from multiqc.utils.mqc_colour import mqc_colour_scale
 
 # Initialise the logger
 log = logging.getLogger(__name__)
@@ -192,22 +190,18 @@ class BenchSummary:
             description="Concordance statistics parsed from the output from <code>truvari bench</code>.",
             plot=table.plot(data, keys, {"id": "truvari-bench-summary"}),
         )
-        # Generate shuffled list of colors to label samples
-        colors = list(mcolors.CSS4_COLORS)
-        random.shuffle(colors)
-
-        # Check that not too many samples for scatter plot
-        if len(data) > len(colors):
-            log.debug("Too many samples ({}) to generate scatter plot.".format(len(data)))
-            return len(data)
+        # Generate color scale to label samples. The "plot_defaults"
+        # scale contains 10 colors so if there are more samples than
+        # that, we will reuse colors.
+        color_scale = mqc_colour_scale("plot_defaults")
 
         # Make scatter plot
         scatter_data = {}
-        for (sample, sample_data), color in zip(data.items(), colors):
+        for i, (sample, sample_data) in enumerate(data.items()):
             scatter_data[sample] = {
                 "x": sample_data["precision"] * 100.0,
                 "y": sample_data["recall"] * 100.0,
-                "color": mcolors.to_hex(color),
+                "color": color_scale.get_colour(i, lighten=0.9),
             }
 
         scatter_config = {
@@ -221,7 +215,7 @@ class BenchSummary:
             "ylab": "Recall (%)",
             "square": True,
             "title": "Truvari bench: Precision-Recall",
-            "tt_label": "Precision: {point.x:.1f}%, Recall: {point.y:.1f}%",
+            "tt_label": "Precision: {point.x:>4.1f}%<br/> Recall: {point.y:>6.1f}%",
         }
         self.add_section(
             name="Truvari bench: precision vs. recall",
