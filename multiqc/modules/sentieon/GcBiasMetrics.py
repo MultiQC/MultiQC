@@ -76,6 +76,10 @@ def parse_reports(self):
                         except ValueError:
                             self.sentieon_GCbiasSummary_data[s_name][k] = vals[i]
 
+            # Superfluous function call to confirm that it is used in this module
+            # Replace None with actual version if it is available
+            self.add_software_version(None, s_name)
+
         for s_name in list(self.sentieon_GCbias_data.keys()):
             if len(self.sentieon_GCbias_data[s_name]) == 0:
                 self.sentieon_GCbias_data.pop(s_name, None)

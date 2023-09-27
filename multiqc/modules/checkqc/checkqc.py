@@ -43,6 +43,10 @@ class MultiqcModule(BaseMultiqcModule):
             self.parse_checkqc_json(raw_content, f)
             self.add_data_source(f)
 
+            # Superfluous function call to confirm that it is used in this module
+            # Replace None with actual version if it is available
+            self.add_software_version(None, f["s_name"])
+
         if not self.checkqc_data:
             raise UserWarning
         log.info(f"Found {len(self.log_files)} run and {len(self.checkqc_data)} samples")

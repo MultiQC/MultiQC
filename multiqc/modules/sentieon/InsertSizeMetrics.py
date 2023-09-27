@@ -94,6 +94,10 @@ def parse_reports(self):
                     self.sentieon_insertSize_histogram[s_name] = OrderedDict()
                     in_hist = True
 
+        # Superfluous function call to confirm that it is used in this module
+        # Replace None with actual version if it is available
+        self.add_software_version(None, s_name)
+
         for key in list(self.sentieon_insertSize_data.keys()):
             if len(self.sentieon_insertSize_data[key]) == 0:
                 self.sentieon_insertSize_data.pop(key, None)

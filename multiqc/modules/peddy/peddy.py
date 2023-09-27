@@ -45,6 +45,10 @@ class MultiqcModule(BaseMultiqcModule):
                         self.peddy_data[cleaned_s_name] = parsed_data[s_name]
                 self.add_data_source(f)
 
+                # Superfluous function call to confirm that it is used in this module
+                # Replace None with actual version if it is available
+                self.add_software_version(None, cleaned_s_name)
+
         # parse peddy CSV files
         for pattern in ["het_check", "ped_check", "sex_check"]:
             sp_key = "peddy/{}".format(pattern)

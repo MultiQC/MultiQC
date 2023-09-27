@@ -36,6 +36,10 @@ class MultiqcModule(BaseMultiqcModule):
                 self.hicexplorer_data[s_name] = parsed_data
                 self.add_data_source(f, s_name=s_name)
 
+                # Superfluous function call to confirm that it is used in this module
+                # Replace None with actual version if it is available
+                self.add_software_version(None, s_name)
+
         self.hicexplorer_data = self.ignore_samples(self.hicexplorer_data)
 
         if len(self.hicexplorer_data) == 0:

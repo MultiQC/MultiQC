@@ -58,6 +58,10 @@ class MultiqcModule(BaseMultiqcModule):
                 self.parse_logs_minimizer(f)
             self.add_data_source(f)
 
+            # Superfluous function call to confirm that it is used in this module
+            # Replace None with actual version if it is available
+            self.add_software_version(None, f["s_name"])
+
         self.kraken_raw_data = self.ignore_samples(self.kraken_raw_data)
 
         if len(self.kraken_raw_data) == 0:

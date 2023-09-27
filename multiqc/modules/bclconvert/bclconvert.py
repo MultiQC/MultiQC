@@ -99,6 +99,10 @@ class MultiqcModule(BaseMultiqcModule):
                 section="bclconvert-bysample",
             )
 
+            # Superfluous function call to confirm that it is used in this module
+            # Replace None with actual version if it is available
+            self.add_software_version(None, s)
+
         self.write_data_file(
             {str(k): self.bclconvert_bylane[k] for k in self.bclconvert_bylane.keys()}, "multiqc_bclconvert_bylane"
         )

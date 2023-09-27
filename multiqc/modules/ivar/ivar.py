@@ -32,6 +32,10 @@ class MultiqcModule(BaseMultiqcModule):
         for f in self.find_log_files("ivar/trim", filehandles=True):
             self.parse_ivar(f)
 
+            # Superfluous function call to confirm that it is used in this module
+            # Replace None with actual version if it is available
+            self.add_software_version(None, f["s_name"])
+
         # Filter to strip out ignored sample names
         self.ivar_data = self.ignore_samples(self.ivar_data)
         self.ivar_primers = self.ignore_samples(self.ivar_primers)

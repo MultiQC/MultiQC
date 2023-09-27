@@ -31,6 +31,10 @@ class MultiqcModule(BaseMultiqcModule):
             except KeyError:
                 logging.warning("Error loading file {}".format(f["fn"]))
 
+            # Superfluous function call to confirm that it is used in this module
+            # Replace None with actual version if it is available
+            self.add_software_version(None, f["s_name"])
+
         self.hops_data = self.ignore_samples(self.hops_data)
 
         if len(self.hops_data) == 0:
