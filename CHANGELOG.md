@@ -13,6 +13,8 @@
 
 ### Module updates
 
+- **Picard**: fix parsing mixed strings/numbers, account for trailing tab ([#2083](https://github.com/ewels/MultiQC/pull/2083))
+
 ## [MultiQC v1.16](https://github.com/ewels/MultiQC/releases/tag/v1.16) - 2023-09-22
 
 ### Highlight: Software versions
