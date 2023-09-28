@@ -37,6 +37,10 @@ class MultiqcModule(BaseMultiqcModule):
                 self.varscan2_data[s_name] = parsed_data
                 self.add_data_source(f, s_name, section="mpileup2snp")
 
+                # Superfluous function call to confirm that it is used in this module
+                # Replace None with actual version if it is available
+                self.add_software_version(None, s_name)
+
         for f in self.find_log_files("varscan2/mpileup2indel", filehandles=True):
             parsed_data = self.parse_varscan(f)
             s_name = self.clean_s_name(parsed_data["sample_name"], f)

@@ -59,6 +59,9 @@ class MultiqcModule(BaseMultiqcModule):
             log.warning("Could not parse SexDeterrmine JSON: '{}'".format(f["fn"]))
             return
 
+        # Get the version
+        version = str(data["Metadata"]["version"])
+
         # Parse JSON data to a dict
         for s_name in data:
             if s_name == "Metadata":
@@ -69,6 +72,7 @@ class MultiqcModule(BaseMultiqcModule):
                 log.debug("Duplicate sample name found! Overwriting: {}".format(s_clean))
 
             self.add_data_source(f, s_clean)
+            self.add_software_version(version, s_clean)
             self.sexdet_data[s_clean] = dict()
 
             for k, v in data[s_name].items():

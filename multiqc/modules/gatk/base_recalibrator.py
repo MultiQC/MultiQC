@@ -37,6 +37,10 @@ class BaseRecalibratorMixin:
             if self.is_ignore_sample(f["s_name"]):
                 continue
 
+            # Superfluous function call to confirm that it is used in this module
+            # Replace None with actual version if it is available
+            self.add_software_version(None, f["s_name"])
+
             parsed_data = self.parse_report(f["f"].readlines(), report_table_headers)
             rt_type = determine_recal_table_type(parsed_data)
             if len(parsed_data) > 0:

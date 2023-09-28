@@ -132,6 +132,11 @@ class MultiqcModule(BaseMultiqcModule):
                     contig, length, bases, mean, min_cov, max_cov = line.split("\t")
                     genstats[s_name]["mean_coverage"] = mean
                     self.add_data_source(f, s_name=s_name, section="summary")
+
+            # Superfluous function call to confirm that it is used in this module
+            # Replace None with actual version if it is available
+            self.add_software_version(None, s_name)
+
         # Filter out any samples from --ignore-samples
         genstats = defaultdict(OrderedDict, self.ignore_samples(genstats))
         samples_found = set(genstats.keys())

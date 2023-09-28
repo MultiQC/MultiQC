@@ -34,6 +34,10 @@ class MultiqcModule(BaseMultiqcModule):
                 self.htseq_data[f["s_name"]] = parsed_data
                 self.add_data_source(f)
 
+                # Superfluous function call to confirm that it is used in this module
+                # Replace None with actual version if it is available
+                self.add_software_version(None, f["s_name"])
+
         # Filter to strip out ignored sample names
         self.htseq_data = self.ignore_samples(self.htseq_data)
 

@@ -83,6 +83,10 @@ def parse_reports(self):
             error_rate = 0.0 if bases_total == 0 else errors / float(bases_total)
             error_rates[s_name] = {"error_rate": error_rate}
 
+        # Superfluous function call to confirm that it is used in this module
+        # Replace None with actual version if it is available
+        self.add_software_version(None, f["s_name"])
+
     # ignore samples
     all_data = self.ignore_samples(all_data)
 

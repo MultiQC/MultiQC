@@ -90,6 +90,10 @@ class MultiqcModule(BaseMultiqcModule):
                 self.lima_summary[f["s_name"]] = data
                 self.add_data_source(f)
 
+                # Superfluous function call to confirm that it is used in this module
+                # Replace None with actual version if it is available
+                self.add_software_version(None, f["s_name"])
+
     def parse_counts_files(self):
         for f in self.find_log_files("lima/counts", filehandles=True):
             data = self.parse_lima_counts(f["f"], f)

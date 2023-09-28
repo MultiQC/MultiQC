@@ -26,6 +26,10 @@ class MultiqcModule(BaseMultiqcModule):
         for f in self.find_log_files("jellyfish", filehandles=True):
             self.parse_jellyfish_data(f)
 
+            # Superfluous function call to confirm that it is used in this module
+            # Replace None with actual version if it is available
+            self.add_software_version(None, f["s_name"])
+
         if self.jellyfish_max_x < 100:
             # the maximum is below 100, we display anyway up to 200
             self.jellyfish_max_x = 200

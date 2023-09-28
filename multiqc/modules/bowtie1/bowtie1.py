@@ -62,6 +62,11 @@ class MultiqcModule(BaseMultiqcModule):
             "multimapped": r"# reads with alignments suppressed due to -m:\s+(\d+)",
             "multimapped_percentage": r"# reads with alignments suppressed due to -m:\s+\d+\s+\(([\d\.]+)%\)",
         }
+
+        # Superfluous function call to confirm that it is used in this module
+        # Replace None with actual version if it is available
+        self.add_software_version(None, s_name)
+
         for l in f["f"].splitlines():
             # Attempt in vain to find original bowtie1 command, logged by another program
             if "bowtie" in l and "q.gz" in l:
