@@ -9,16 +9,18 @@ import math
 from collections import defaultdict
 
 from multiqc.plots import table
+from multiqc.utils import config
 
-log = logging.getLogger(__name__)
+logger = logging.getLogger(__name__)
 
 
 class RefineMixin:
     def parse_refine_log(self):
-        data = dict()
+        json_data = dict()
+        csv_data = dict()
 
         for f in self.find_log_files("isoseq/refine-json", filehandles=True):
-            data[f["s_name"]] = json.load(f["f"])
+            json_data[f["s_name"]] = json.load(f["f"])
             self.add_data_source(f)
 
         for f in self.find_log_files("isoseq/refine-csv", filehandles=True):
@@ -60,23 +62,30 @@ class RefineMixin:
                     d[f"max_{column}"] = maxs[column]
                 d["strand_counts"] = dict(strand_counts)
                 d["primer_counts"] = dict(primer_counts)
-                if d:
-                    if f["s_name"] in data:
-                        data[f["s_name"]].update(d)
-                    else:
-                        data[f["s_name"]] = d
-                    self.add_data_source(f)
+                csv_data[f["s_name"]] = d
+                self.add_data_source(f)
+
+        if config.use_filename_as_sample_name:
+            logger.error(
+                f"Iso-Seq refine won't work properly with --fn_as_s_name / config.use_filename_as_sample_name, "
+                f"as it uses the file name cleaning patterns to get the sample names "
+                f"from the file names, and it needs to match JSON and CSV files"
+            )
+        elif json_data.keys() != csv_data.keys():
+            logger.error(
+                f"Iso-Seq refine: different sets of JSON and CSV files found: "
+                f"{json_data.keys()} vs {csv_data.keys()} Make sure that there is "
+                f"a JSON and a CSV file for each sample"
+            )
+        data = dict()
+        for s_name in json_data.keys() | csv_data.keys():
+            data[s_name] = json_data.get(s_name, {})
+            data[s_name].update(csv_data.get(s_name, {}))
+
         self.write_data_file(data, "multiqc_isoseq_refine_report")
         return data
 
-    def add_general_stats_refine(self, data):
-        gstats_data = {}
-        for s_name, attrs in data.items():
-            gstats_data[s_name] = {}
-            gstats_data[s_name]["num_reads_fl"] = attrs["num_reads_fl"]
-            gstats_data[s_name]["num_reads_flnc"] = attrs["num_reads_flnc"]
-            gstats_data[s_name]["num_reads_flnc_polya"] = attrs["num_reads_flnc_polya"]
-
+    def add_general_stats_refine(self, data_by_sample):
         headers = dict()
         headers["num_reads_fl"] = {
             "title": "Full-length",
@@ -96,19 +105,10 @@ class RefineMixin:
             "scale": "GnBu",
             "format": "{:,.d}",
         }
-        self.general_stats_addcols(gstats_data, headers, namespace="refine")
+        self.general_stats_addcols(data_by_sample, headers, namespace="refine")
 
     def add_table_refine(self, data_by_sample):
         headers = dict()
-        plot_data = {s_name: dict() for s_name in data_by_sample}
-
-        # 5' primer length
-        for s_name, data in data_by_sample.items():
-            plot_data[s_name]["min_fivelen"] = data["min_fivelen"]
-            plot_data[s_name]["mean_fivelen"] = data["mean_fivelen"]
-            plot_data[s_name]["std_fivelen"] = data["std_fivelen"]
-            plot_data[s_name]["max_fivelen"] = data["max_fivelen"]
-
         headers["min_fivelen"] = {
             "title": "Min 5' primer length",
             "description": "The minimum 5' primer length in base pair",
@@ -129,14 +129,6 @@ class RefineMixin:
             "description": "The maximum 5' primer length in base pair",
             "scale": "GnBu",
         }
-
-        # 3' primer length
-        for s_name, data in data_by_sample.items():
-            plot_data[s_name]["min_threelen"] = data["min_threelen"]
-            plot_data[s_name]["mean_threelen"] = data["mean_threelen"]
-            plot_data[s_name]["std_threelen"] = data["std_threelen"]
-            plot_data[s_name]["max_threelen"] = data["max_threelen"]
-
         headers["min_threelen"] = {
             "title": "Min 3' primer length",
             "description": "The minimum 3' primer length in base pair",
@@ -157,14 +149,6 @@ class RefineMixin:
             "description": "The maximum 3' primer length in base pair",
             "scale": "RdYlGn",
         }
-
-        # Poly-A tail length
-        for s_name, data in data_by_sample.items():
-            plot_data[s_name]["min_polyAlen"] = data["min_polyAlen"]
-            plot_data[s_name]["mean_polyAlen"] = data["mean_polyAlen"]
-            plot_data[s_name]["std_polyAlen"] = data["std_polyAlen"]
-            plot_data[s_name]["max_polyAlen"] = data["max_polyAlen"]
-
         headers["min_polyAlen"] = {
             "title": "Min polyA tail length",
             "description": "The minimum polyA tail length in base pair",
@@ -185,14 +169,6 @@ class RefineMixin:
             "description": "The maximum polyA tail length in base pair",
             "scale": "RdYlGn",
         }
-
-        # Insert length
-        for s_name, data in data_by_sample.items():
-            plot_data[s_name]["min_insertlen"] = data["min_insertlen"]
-            plot_data[s_name]["mean_insertlen"] = data["mean_insertlen"]
-            plot_data[s_name]["std_insertlen"] = data["std_insertlen"]
-            plot_data[s_name]["max_insertlen"] = data["max_insertlen"]
-
         headers["min_insertlen"] = {
             "title": "Min insert length",
             "description": "The minimum insert length in base pair",
@@ -228,5 +204,5 @@ class RefineMixin:
             poly(A) length, and couple of primers detected for each CCS.
             The table presents min, max, mean, standard deviation for each parameter.
             """,
-            plot=table.plot(plot_data, headers, config),
+            plot=table.plot(data_by_sample, headers, config),
         )
