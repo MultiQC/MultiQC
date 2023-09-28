@@ -195,6 +195,10 @@ def plot(data, cats=None, pconfig=None):
     try:
         return get_template_mod().bargraph(plotdata, plotsamples, pconfig)
     except (AttributeError, TypeError):
+        if os.environ.get("MULTIQC_DEBUG", False):
+            # Pass the exception through to help with interactive debugging
+            raise
+
         if config.plots_force_flat or (
             not config.plots_force_interactive and len(plotsamples[0]) > config.plots_flat_numseries
         ):

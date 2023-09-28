@@ -699,6 +699,10 @@ def run(
             )
             sys.exit(1)
         except:
+            if os.environ.get("MULTIQC_DEBUG", False):
+                # Pass the exception through to help with interactive debugging
+                raise
+
             # Flag the error, but carry on
             class CustomTraceback:
                 def __rich_console__(self, console: rich.console.Console, options: rich.console.ConsoleOptions):
