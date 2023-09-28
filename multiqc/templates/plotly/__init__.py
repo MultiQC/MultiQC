@@ -17,7 +17,7 @@ template_dir = os.path.dirname(__file__)
 base_fn = "base.html"
 
 
-def custom_linegraph(plotdata, pconfig):
+def custom_linegraph(plot_data, pconfig):
     return "<h1>Awesome line graph here</h1>"
 
 
