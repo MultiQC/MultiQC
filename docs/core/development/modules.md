@@ -548,12 +548,14 @@ Note that this function should be used _after_ cleaning the sample name with
 ### No files found
 
 If your module cannot find any matching files, it needs to raise an
-exception of type `UserWarning`. This tells the core MultiQC program
+exception of type `ModuleNoSamplesFound`. This tells the core MultiQC program
 that no modules were found. For example:
 
 ```python
+from multiqc.modules.base_module import ModuleNoSamplesFound
+
 if len(self.mod_data) == 0:
-    raise UserWarning
+    raise ModuleNoSamplesFound
 ```
 
 Note that this has to be raised as early as possible, so that it halts
