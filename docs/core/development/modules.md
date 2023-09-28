@@ -332,20 +332,18 @@ Log messages can come in a range of formats:
 
 ### Changelog
 
-Last but not least, remember to add your new module to the `CHANGELOG.md`,
-so that people know that it's there. Note that you can do that by sending a comment
-to the pull request with the following text:
+When opening a pull-request, please ensure that the PR title is
+formatted as `New module: XYZ`, where `XYZ` is the name of your module.
 
-> @multiqc-bot changelog
+The changelog entry will be automatically generated for you, based on
+the meta-information that you add to the module `MultiqcModule` class.
 
-The bot will automatically build a proper entry based on the meta-information in
-the MultiqcModule class.
+:::tip
+Please do not add anything to the `CHANGELOG.md` file!
+This is now handled by our friendly MultiQC bot 🤖
 
-You can also run this command if you only change an existing module, or
-do a non-module codebase change: the CI will populate the entry based on the
-pull request title. If your pull request starts with a module name followed
-by a colon (e.g. "Samtools: new feature"), it will be assumed that the PR changes
-a module; otherwise, a core change will be assumed.
+For more information about how it works, see the [contributing docs](contributing.md#changelog).
+:::
 
 ## Step 1 - Find log files
 
