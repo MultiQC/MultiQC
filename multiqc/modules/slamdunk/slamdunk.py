@@ -12,6 +12,8 @@ from multiqc.plots import bargraph, linegraph, scatter, table
 # Initialise the logger
 log = logging.getLogger(__name__)
 
+VERSION_REGEX = r"# slamdunk summary v([\d\.]+)"
+
 
 class MultiqcModule(BaseMultiqcModule):
     """
@@ -293,8 +295,12 @@ class MultiqcModule(BaseMultiqcModule):
             pos += 1
 
     def parseSummary(self, f):
-        # Skip comment line #
-        next(f["f"])
+        # Parse version form first line
+        first = next(f["f"])
+        version = None
+        match = re.search(VERSION_REGEX, first)
+        if match:
+            version = match.group(1)
 
         # Skip header line "FileName..."
         columnCount = next(f["f"]).count("\t") + 1
@@ -317,6 +323,7 @@ class MultiqcModule(BaseMultiqcModule):
                 self.slamdunk_data[s_name]["counted"] = int(fields[12])
 
         self.add_data_source(f)
+        self.add_software_version(version, s_name)
 
     def slamdunkGeneralStatsTable(self):
         """Take the parsed summary stats from Slamdunk and add it to the
