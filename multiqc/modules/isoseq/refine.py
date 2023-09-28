@@ -7,7 +7,6 @@ import json
 import logging
 import math
 from collections import defaultdict
-from pprint import pprint
 
 from multiqc.plots import table
 
@@ -74,30 +73,28 @@ class RefineMixin:
         gstats_data = {}
         for s_name, attrs in data.items():
             gstats_data[s_name] = {}
-            if "num_reads_fl" not in attrs:
-                pprint(data)
             gstats_data[s_name]["num_reads_fl"] = attrs["num_reads_fl"]
             gstats_data[s_name]["num_reads_flnc"] = attrs["num_reads_flnc"]
             gstats_data[s_name]["num_reads_flnc_polya"] = attrs["num_reads_flnc_polya"]
 
         headers = dict()
         headers["num_reads_fl"] = {
-            "title": "# full-length reads",
+            "title": "Full-length",
             "description": "Number of CCS where both primers have been detected",
-            "suffix": " fl",
             "scale": "GnBu",
+            "format": "{:,.d}",
         }
         headers["num_reads_flnc"] = {
-            "title": "# non-chimeric full-length reads",
+            "title": "Non-chimeric full-length",
             "description": "Number of non-chimeric CCS where both primers have been detected",
-            "suffix": " flnc",
             "scale": "RdYlGn",
+            "format": "{:,.d}",
         }
         headers["num_reads_flnc_polya"] = {
-            "title": "# poly(A) free non-chimeric full-length reads",
+            "title": "Poly(A) free non-chimeric full-length",
             "description": "Number of non-chimeric CCS where both primers have been detected and the poly(A) tail has been removed",
-            "suffix": " flnc_polya",
             "scale": "GnBu",
+            "format": "{:,.d}",
         }
         self.general_stats_addcols(gstats_data, headers, namespace="refine")
 

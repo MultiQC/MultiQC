@@ -37,14 +37,15 @@ class ClusterMixin:
 
         headers = dict()
         headers["n_cluster"] = {
-            "title": "# clusters",
+            "title": "Clusters",
             "description": "Number of clusters created during the clustering. (1 cluster = 1 transcript)",
+            "format": "{:,.d}",
             "scale": "spectral",
         }
         headers["mean_cluster_size"] = {
             "title": "Mean cluster size",
             "description": "Average number of CCS clustered to form transcripts.",
-            "format": "{:,0f}",
+            "format": "{:,.2f}",
             "scale": "RdYlGn",
         }
 
