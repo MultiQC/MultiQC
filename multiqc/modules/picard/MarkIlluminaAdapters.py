@@ -42,6 +42,10 @@ def parse_reports(self):
     for s_name in all_data:
         lg[s_name] = {clipped_bases: data["read_count"] for clipped_bases, data in all_data[s_name].items()}
 
+        # Superfluous function call to confirm that it is used in this module
+        # Replace None with actual version if it is available
+        self.add_software_version(None, s_name)
+
     self.add_section(
         name="Mark Illumina Adapters",
         description="""

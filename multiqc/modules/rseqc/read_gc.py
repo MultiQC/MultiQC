@@ -41,6 +41,10 @@ def parse_reports(self):
                     self.read_gc[f["s_name"]][gc[i]] = counts[i]
                     self.read_gc_pct[f["s_name"]][gc[i]] = (counts[i] / total) * 100
 
+        # Superfluous function call to confirm that it is used in this module
+        # Replace None with actual version if it is available
+        self.add_software_version(None, f["s_name"])
+
     # Filter to strip out ignored sample names
     self.read_gc = self.ignore_samples(self.read_gc)
 
