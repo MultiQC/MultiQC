@@ -5,7 +5,7 @@ import logging
 from collections import OrderedDict
 
 from multiqc import config
-from multiqc.modules.base_module import BaseMultiqcModule
+from multiqc.modules.base_module import BaseMultiqcModule, ModuleNoSamplesFound
 from multiqc.plots import bargraph, table
 
 # Initialise the logger
@@ -28,11 +28,15 @@ class MultiqcModule(BaseMultiqcModule):
         for f in self.find_log_files("prokka", filehandles=True):
             self.parse_prokka(f)
 
+            # Superfluous function call to confirm that it is used in this module
+            # Replace None with actual version if it is available
+            self.add_software_version(None, f["s_name"])
+
         # Filter to strip out ignored sample names
         self.prokka = self.ignore_samples(self.prokka)
 
         if len(self.prokka) == 0:
-            raise UserWarning
+            raise ModuleNoSamplesFound
 
         log.info("Found {} logs".format(len(self.prokka)))
         self.write_data_file(self.prokka, "multiqc_prokka")

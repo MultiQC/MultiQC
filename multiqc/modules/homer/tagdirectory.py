@@ -42,6 +42,10 @@ class TagDirReportMixin:
                 self.add_data_source(f, s_name, section="GCcontent")
                 self.tagdir_data["GCcontent"][s_name] = parsed_data
 
+            # Superfluous function call to confirm that it is used in this module
+            # Replace None with actual version if it is available
+            self.add_software_version(None, s_name)
+
         ## get esimated genome content distribution:
         for f in self.find_log_files("homer/genomeGCcontent", filehandles=True):
             parsed_data = self.parse_twoCol_file(f)

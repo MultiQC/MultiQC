@@ -5,7 +5,7 @@ from collections import OrderedDict
 
 import numpy as np
 
-from multiqc.modules.base_module import BaseMultiqcModule
+from multiqc.modules.base_module import BaseMultiqcModule, ModuleNoSamplesFound
 from multiqc.plots import bargraph, linegraph
 
 # Initialise the logger
@@ -28,11 +28,15 @@ class MultiqcModule(BaseMultiqcModule):
         for f in self.find_log_files("jcvi", filehandles=True):
             self.parse_jcvi(f)
 
+            # Superfluous function call to confirm that it is used in this module
+            # Replace None with actual version if it is available
+            self.add_software_version(None, f["s_name"])
+
         # Filter to strip out ignored sample names
         self.jcvi = self.ignore_samples(self.jcvi)
 
         if len(self.jcvi) == 0:
-            raise UserWarning
+            raise ModuleNoSamplesFound
 
         log.info("Found {} logs".format(len(self.jcvi)))
         self.write_data_file(self.jcvi, "multiqc_jcvi")

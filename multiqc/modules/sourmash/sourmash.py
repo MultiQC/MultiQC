@@ -4,7 +4,7 @@
 
 import logging
 
-from multiqc.modules.base_module import BaseMultiqcModule
+from multiqc.modules.base_module import BaseMultiqcModule, ModuleNoSamplesFound
 
 from .compare import CompareMixin
 from .gather import GatherMixin
@@ -33,4 +33,4 @@ class MultiqcModule(BaseMultiqcModule, CompareMixin, GatherMixin):
             log.info("Found {} gather results".format(n["gather"]))
 
         if sum(n.values()) == 0:
-            raise UserWarning
+            raise ModuleNoSamplesFound

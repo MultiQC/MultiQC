@@ -67,6 +67,10 @@ def parse_reports(self):
             row["TUMOR_AWARENESS"] = tumor_awareness
             self.picard_CrosscheckFingerprints_data[i] = row
 
+            # Superfluous function call to confirm that it is used in this module
+            # Replace None with actual version if it is available
+            self.add_software_version(None, i)
+
     # Only add sections if we found data
     if len(self.picard_CrosscheckFingerprints_data) > 0:
         # Write data to file

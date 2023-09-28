@@ -99,6 +99,10 @@ def parse_reports(self):
                 self.picard_insertSize_histogram.pop(s_name, None)
                 log.debug("Ignoring '{}' histogram as no data parsed".format(s_name))
 
+            # Superfluous function call to confirm that it is used in this module
+            # Replace None with actual version if it is available
+            self.add_software_version(None, s_name)
+
     # Calculate summed mean values for all read orientations
     for s_name, v in self.picard_insertSize_samplestats.items():
         self.picard_insertSize_samplestats[s_name]["summed_mean"] = v["meansum"] / v["total_pairs"]
