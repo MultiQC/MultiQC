@@ -702,6 +702,22 @@ for line in f.splitlines():
     # ..rest of file parsing
 ```
 
+Even if the logs does not contain any version information, you should still
+add a superfluous `self.add_software_version()` call to the module. This
+will help maintainers to check if new modules or submodules parse any version
+information that might exist. The call should also include a note that it is
+a dummy call. Example:
+
+```python
+for f in self.find_log_files("mymodule/submodule"):
+    sample = f["s_name"]
+    data[sample] = parse_file(f)
+
+    # Superfluous function call to confirm that it is used in this module
+    # Replace None with actual version if it is available
+    self.add_software_version(None, sample)
+```
+
 ## Step 3 - Adding to the general statistics table
 
 Now that you have your parsed data, you can start inserting it into the
