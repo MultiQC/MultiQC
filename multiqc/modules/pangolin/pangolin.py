@@ -85,6 +85,10 @@ class MultiqcModule(BaseMultiqcModule):
         )
 
     def parse_pangolin_log(self, f):
+        def add_version_not_none(version, sample, name):
+            if version is not None:
+                self.add_software_version(version, sample, name)
+
         for row in csv.DictReader(f["f"]):
             try:
                 taxon_name = row["taxon"]
@@ -103,6 +107,19 @@ class MultiqcModule(BaseMultiqcModule):
                 # Just save the lineage key for now - we will sort out the colours later
                 self.lineage_colours[row["lineage"]] = None
                 self.lineage_colours[row["scorpio_call"]] = None
+
+                # Version info
+                # Note: Excluded "version" field from software versions as this refers to
+                #       how the reference data was prepared. This info is still available
+                #       in the "Run table" table
+                add_version_not_none(row.get("pangolin_version"), s_name, self.name)
+                add_version_not_none(row.get("pango_version"), s_name, "Pango")
+                add_version_not_none(row.get("pangoLEARN_version"), s_name, "PangoLEARN")
+                add_version_not_none(row.get("scorpio_version"), s_name, "Scorpio")
+                # constellation_version is someimes "TRUE" or "FALSE" - ignore these
+                constellation_version = row.get("constellation_version")
+                if constellation_version not in {None, "TRUE", "FALSE"}:
+                    self.add_software_version(constellation_version, s_name, "Constellations")
             except KeyError:
                 log.debug("File '{}' could not be parsed - no taxon field found.".format(f["fn"]))
 

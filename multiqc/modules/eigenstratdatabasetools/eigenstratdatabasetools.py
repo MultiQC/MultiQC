@@ -56,13 +56,18 @@ class MultiqcModule(BaseMultiqcModule):
             return
 
         # Parse JSON data to a dict
+        version = None
         for s_name in data:
             if s_name == "Metadata":
+                version = data["Metadata"]["version"]
                 continue
 
             s_clean = self.clean_s_name(s_name, f)
             if s_clean in self.snp_cov_data:
                 log.debug("Duplicate sample name found! Overwriting: {}".format(s_clean))
+
+            if version is not None:
+                self.add_software_version(version, s_clean)
 
             self.add_data_source(f, s_clean)
             self.snp_cov_data[s_clean] = dict()

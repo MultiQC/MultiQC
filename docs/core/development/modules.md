@@ -25,7 +25,7 @@ Get this stuff right, and your pull-request is much more likely to be merged qui
 ### Don't add everything
 
 MultiQC was designed to _summarise_ tool outputs.
-An end-user should be able to visially scan the report and spot any outlier samples, then go to the underlying tool to look at those samples in more detail.
+An end-user should be able to visually scan the report and spot any outlier samples, then go to the underlying tool to look at those samples in more detail.
 
 MultiQC is _not_ designed to replicate every single metric from a tool. Doing so makes the report difficult to read and digest quickly for many samples.
 Module additions that add huge quantities of metrics to reports will be asked to slim down.
@@ -121,7 +121,7 @@ Better still, many of these tools can automatically change the formatting so tha
 can write code in whatever style they prefer and defer this task to automation.
 
 Much like source control, gloves in a lab, and wearing a seatbelt, code formatters and code linting
-is an annoying inconvience at first for most people which in time becomes an indespesible
+is an annoying inconvenience at first for most people which in time becomes an indispensable
 tool in the maintenance of high quality software.
 
 MultiQC uses a range of tools to check the code base. The main two code formatters are:
@@ -239,7 +239,7 @@ module show up on the [MultiQC homepage](http://multiqc.info) so that everyone
 knows it exists. This process is automated once the file is added to the core
 repository.
 
-This docs file should be placed in `docs/modules/<your_module_name>.md` and
+These docs file should be placed in `docs/modules/<your_module_name>.md` and
 should have the following structure:
 
 ```markdown
@@ -257,11 +257,6 @@ you think would be helpful. Please avoid using heading levels 1 to 3.
 
 The file search patterns will be shown on the website page automatically
 and do not need to be included in this file.
-
-### Changelog
-
-Last but not least, remember to add your new module to the `CHANGELOG.md`,
-so that people know that it's there.
 
 ### MultiqcModule Class
 
@@ -334,6 +329,23 @@ Log messages can come in a range of formats:
   - Alert user about problems that don't halt execution
 - `log.error` and `log.critical`
   - Not often used, these are for show-stopping problems
+
+### Changelog
+
+Last but not least, remember to add your new module to the `CHANGELOG.md`,
+so that people know that it's there. Note that you can do that by sending a comment
+to the pull request with the following text:
+
+> @multiqc-bot changelog
+
+The bot will automatically build a proper entry based on the meta-information in
+the MultiqcModule class.
+
+You can also run this command if you only change an existing module, or
+do a non-module codebase change: the CI will populate the entry based on the
+pull request title. If your pull request starts with a module name followed
+by a colon (e.g. "Samtools: new feature"), it will be assumed that the PR changes
+a module; otherwise, a core change will be assumed.
 
 ## Step 1 - Find log files
 
@@ -811,6 +823,8 @@ Colour scales can be reversed by adding the suffix `-rev` to the name. For examp
 The following scales are available:
 
 ![color brewer](../../images/cbrewer_scales.png)
+
+For categorical metrics that can take a value from a predefined set, use one of the categorical color scales: Set2, Accent, Set1, Set3, Dark2, Paired, Pastel2, Pastel1. For numerical metrics, consider one the "sequential" color scales from the table above.
 
 ## Step 4 - Writing data to a file
 

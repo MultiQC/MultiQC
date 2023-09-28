@@ -9,11 +9,10 @@ from importlib_metadata import entry_points
 # Load the hooks
 hook_functions = {}
 for entry_point in entry_points(group="multiqc.hooks.v1"):
-    nicename = str(entry_point).split("=")[0].strip()
     try:
-        hook_functions[nicename].append(entry_point.load())
+        hook_functions[entry_point.name].append(entry_point.load())
     except KeyError:
-        hook_functions[nicename] = [entry_point.load()]
+        hook_functions[entry_point.name] = [entry_point.load()]
 
 
 # Function to run the hooks
