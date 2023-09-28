@@ -693,7 +693,7 @@ def run(
         except ModuleNoSamplesFound:
             logger.debug(f"No samples found: {this_module}")
         except UserWarning:  # UserWarning deprecated from 1.16
-            msg = f"Please raise ModuleNoSamplesFound instead of UserWarning (in module: {this_module})"
+            msg = f"DEPRECIATED: Please raise 'ModuleNoSamplesFound' instead of 'UserWarning' in module: {this_module}"
             if config.lint:
                 logger.error(msg)
                 report.lint_errors.append(msg)
