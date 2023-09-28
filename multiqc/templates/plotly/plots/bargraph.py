@@ -11,7 +11,7 @@ def plotly_bargraph(plot_data, plot_series, pconfig):
 
     # NOTE: Only first plot for now, if multiple plots
     # Height has a default, then adjusted by the number of samples
-    plt_height = len(plot_series[0]) / 186  # Default, empirically determined
+    plt_height = len(plot_series[0]) // 186  # Default, empirically determined
     plt_height = max(600, plt_height)  # At least 512px tall
     plt_height = min(2560, plt_height)  # Cap at 2560 tall
     fig = go.Figure()
