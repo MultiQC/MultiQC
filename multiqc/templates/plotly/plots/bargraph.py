@@ -1,28 +1,38 @@
 """Plotly bargraph functionality."""
 import math
-import typing
+from typing import Dict, List, cast
 
 import plotly.graph_objects as go
 
 from multiqc.utils import mqc_colour
 
 
-def plotly_bargraph(data_by_cat_lists, samples_lists, pconfig):
-    # NOTE: Only first plot for now, if multiple plots.
-    samples = samples_lists[0]  # List of bar names (i.e., sample names)
-    data_by_cat = data_by_cat_lists[0]  # List of dicts with the keys {name, color, data}
-
+def plotly_bargraph(
+    data_by_cat_lists: List[List[Dict]],
+    samples_lists: List[List[str]],
+    pconfig: Dict,
+) -> str:
+    """
+    :param data_by_cat_lists: List of lists of dicts with the keys: {name, color, data},
+        where `name` is the category name, `color` is the color of the bar,
+        and `data` is a list of values for each sample. Each outer list will
+        correspond a separate tab.
+    :param samples_lists: List of lists of bar names (i.e., sample names). Similarly,
+        each outer list will correspond to a separate tab.
+    :param pconfig: Plot parameters.
+    :return: Plotly HTML
+    """
+    max_n_samples = max(len(samples) for samples in samples_lists)
     # Height has a default, then adjusted by the number of samples
-    plt_height = len(samples) // 186  # Default, empirically determined
+    plt_height = max_n_samples // 186  # Default, empirically determined
     plt_height = max(600, plt_height)  # At least 512px tall
     plt_height = min(2560, plt_height)  # Cap at 2560 tall
 
-    # If cpswitch is not True, create normal bar graph
     fig = go.Figure()
-    for data in data_by_cat:
+    for data in data_by_cat_lists[0]:
         fig.add_trace(
             go.Bar(
-                y=samples,
+                y=samples_lists[0],
                 x=data["data"],
                 name=data["name"],
                 orientation="h",
@@ -30,9 +40,15 @@ def plotly_bargraph(data_by_cat_lists, samples_lists, pconfig):
             ),
         )
 
+    # NOTE: Only first plot for now, if multiple plots. To support multiple plots,
+    # need to figure out a way to make the switch buttons reactive, so you can
+    # switch both between the datasets and log/percentages/counts at the same time.
+    data_by_cat = data_by_cat_lists[0]
+    samples_lists = samples_lists[0]
+
     # Regular bar graph layout configurations here...
     fig.update_layout(
-        typing.cast(
+        cast(  # The function expects a dictionary, even though go.Layout works just fine
             dict,
             go.Layout(
                 title=dict(
