@@ -34,7 +34,7 @@ jobs:
 
       - name: Run pre-commit
         run: |
-          pre-commit run --all-files
+          pre-commit run --all-files || true
 
       - name: Check if any files changed
         run: |
