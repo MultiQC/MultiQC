@@ -332,20 +332,18 @@ Log messages can come in a range of formats:
 
 ### Changelog
 
-Last but not least, remember to add your new module to the `CHANGELOG.md`,
-so that people know that it's there. Note that you can do that by sending a comment
-to the pull request with the following text:
+When opening a pull-request, please ensure that the PR title is
+formatted as `New module: XYZ`, where `XYZ` is the name of your module.
 
-> @multiqc-bot changelog
+The changelog entry will be automatically generated for you, based on
+the meta-information that you add to the module `MultiqcModule` class.
 
-The bot will automatically build a proper entry based on the meta-information in
-the MultiqcModule class.
+:::tip
+Please do not add anything to the `CHANGELOG.md` file!
+This is now handled by our friendly MultiQC bot 🤖
 
-You can also run this command if you only change an existing module, or
-do a non-module codebase change: the CI will populate the entry based on the
-pull request title. If your pull request starts with a module name followed
-by a colon (e.g. "Samtools: new feature"), it will be assumed that the PR changes
-a module; otherwise, a core change will be assumed.
+For more information about how it works, see the [contributing docs](contributing.md#changelog).
+:::
 
 ## Step 1 - Find log files
 
@@ -702,6 +700,22 @@ for line in f.splitlines():
         self.add_software_version(htslib_version.group(1), f["s_name"], software_name="htslib")
 
     # ..rest of file parsing
+```
+
+Even if the logs does not contain any version information, you should still
+add a superfluous `self.add_software_version()` call to the module. This
+will help maintainers to check if new modules or submodules parse any version
+information that might exist. The call should also include a note that it is
+a dummy call. Example:
+
+```python
+for f in self.find_log_files("mymodule/submodule"):
+    sample = f["s_name"]
+    data[sample] = parse_file(f)
+
+    # Superfluous function call to confirm that it is used in this module
+    # Replace None with actual version if it is available
+    self.add_software_version(None, sample)
 ```
 
 ## Step 3 - Adding to the general statistics table

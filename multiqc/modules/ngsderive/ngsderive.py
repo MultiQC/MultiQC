@@ -49,6 +49,10 @@ class MultiqcModule(BaseMultiqcModule):
                 expected_header_count_strandedness,
             )
 
+            # Superfluous function call to confirm that it is used in this module
+            # Replace None with actual version if it is available
+            self.add_software_version(None, f["s_name"])
+
         for f in self.find_log_files("ngsderive/instrument"):
             self.parse(
                 self.instrument,

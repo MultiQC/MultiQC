@@ -6,6 +6,7 @@
 
 - Add CI action [changelog.yml](.github%2Fworkflows%2Fchangelog.yml) to populate the changelog from PR titles, triggered by a comment `@multiqc-bot changelog` ([#2025](https://github.com/ewels/MultiQC/pull/2025))
 - Use custom exception type instead of `UserWarning` when no samples are found. ([#2049](https://github.com/ewels/MultiQC/pull/2049))
+- Lint modules for missing `self.add_software_version` ([#2081](https://github.com/ewels/MultiQC/pull/2081))
 
 ### New Modules
 

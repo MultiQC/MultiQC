@@ -38,6 +38,10 @@ class MultiqcModule(BaseMultiqcModule):
                 self.add_data_source(f, section="SummaryLog")
                 self.star_data[s_name] = parsed_data
 
+                # Superfluous function call to confirm that it is used in this module
+                # Replace None with actual version if it is available
+                self.add_software_version(None, s_name)
+
         # Find and load any STAR gene count tables
         self.star_genecounts_unstranded = dict()
         self.star_genecounts_first_strand = dict()

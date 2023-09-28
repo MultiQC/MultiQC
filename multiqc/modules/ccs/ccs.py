@@ -46,6 +46,10 @@ class MultiqcModule(BaseMultiqcModule):
             self.ccs_data[filename] = v5_data
             self.add_data_source(f)
 
+            # Superfluous function call to confirm that it is used in this module
+            # Replace None with actual version if it is available
+            self.add_software_version(None, filename)
+
     def parse_v5_log_files(self):
         for f in self.find_log_files("ccs/v5", filehandles=True):
             v5_data = json.load(f["f"])

@@ -39,6 +39,11 @@ class MultiqcModule(BaseMultiqcModule):
                                 taxo_rank, s_name
                             )
                         )
+
+                    # Superfluous function call to confirm that it is used in this module
+                    # Replace None with actual version if it is available
+                    self.add_software_version(None, s_name)
+
                 self.add_data_source(f)
                 if taxo_rank in self.kaiju_data.keys():
                     self.kaiju_data[taxo_rank].update(parsed_data)

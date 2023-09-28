@@ -65,6 +65,11 @@ class MultiqcModule(BaseMultiqcModule):
                 if s_name in self.porechop_data:
                     log.debug(f"Duplicate sample name found! Overwriting: {s_name}")
                 self.porechop_data[s_name] = {}
+
+                # Superfluous function call to confirm that it is used in this module
+                # Replace None with actual version if it is available
+                self.add_software_version(None, s_name)
+
             ## Find each valid metric, clean up for plain integer
             # 10,000 reads loaded
             if "reads loaded" in l:

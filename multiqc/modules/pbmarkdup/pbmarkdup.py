@@ -39,6 +39,10 @@ class MultiqcModule(BaseMultiqcModule):
                 self.pbmarkdup[s_name] = data
                 self.add_data_source(logfile)
 
+                # Superfluous function call to confirm that it is used in this module
+                # Replace None with actual version if it is available
+                self.add_software_version(None, s_name)
+
         # Filter to strip out ignored sample names
         self.pbmarkdup = self.ignore_samples(self.pbmarkdup)
 

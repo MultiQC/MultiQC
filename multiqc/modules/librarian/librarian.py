@@ -63,6 +63,10 @@ class MultiqcModule(BaseMultiqcModule):
                 self.librarian_data[s_name] = data_float
                 self.add_data_source(f, s_name=s_name)
 
+                # Superfluous function call to confirm that it is used in this module
+                # Replace None with actual version if it is available
+                self.add_software_version(None, s_name)
+
     def plot_librarian_heatmap(self):
         """Make the heatmap plot"""
         # Get all library types

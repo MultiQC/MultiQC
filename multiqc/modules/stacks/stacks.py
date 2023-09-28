@@ -132,6 +132,10 @@ class MultiqcModule(BaseMultiqcModule):
             except:
                 log.error("Could not parse gstacks.distribs file in {}".format(f["s_name"]))
 
+            # Superfluous function call to confirm that it is used in this module
+            # Replace None with actual version if it is available
+            self.add_software_version(None, s_name)
+
         # Parse populations data
         self.distribs_loci = OrderedDict()
         self.distribs_snps = OrderedDict()

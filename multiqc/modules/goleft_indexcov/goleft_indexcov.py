@@ -46,6 +46,10 @@ class MultiqcModule(BaseMultiqcModule):
             self.parse_bin_plot_data(f)
             self.add_data_source(f)
 
+            # Superfluous function call to confirm that it is used in this module
+            # Replace None with actual version if it is available
+            self.add_software_version(None, f["s_name"])
+
         # Filter to strip out ignored sample names
         self.bin_plot_data = self.ignore_samples(self.bin_plot_data)
 

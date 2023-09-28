@@ -35,6 +35,10 @@ class MultiqcModule(BaseMultiqcModule):
             # get sample name
             s_name = self.clean_s_name(os.path.basename(f["root"]), f, root=os.path.dirname(f["root"]))
 
+            # Superfluous function call to confirm that it is used in this module
+            # Replace None with actual version if it is available
+            self.add_software_version(None, s_name)
+
             # parses minionqc summary data
             parsed_dict = self.parse_minionqc_report(s_name, f["f"])
 

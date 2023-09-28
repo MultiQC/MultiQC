@@ -29,6 +29,10 @@ class MultiqcModule(BaseMultiqcModule):
             self.parse_metrics_rnaseqc_v1(f)
             self.add_data_source(f, section="v1")
 
+            # Superfluous function call to confirm that it is used in this module
+            # Replace None with actual version if it is available
+            self.add_software_version(None, f["s_name"])
+
         # Parse metrics from RNA-SeQC v2
         for f in self.find_log_files("rna_seqc/metrics_v2", filehandles=True):
             self.parse_metrics_rnaseqc_v2(f)

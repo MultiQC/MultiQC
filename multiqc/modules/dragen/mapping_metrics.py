@@ -36,6 +36,10 @@ class DragenMappingMetics(BaseMultiqcModule):
                         log.debug(f"Duplicate read group name {rg} found for output prefix {s_name}! Overwriting")
             data_by_rg_by_sample[s_name].update(data_by_readgroup)
 
+            # Superfluous function call to confirm that it is used in this module
+            # Replace None with actual version if it is available
+            self.add_software_version(None, s_name)
+
         # filter to strip out ignored sample names:
         data_by_rg_by_sample = self.ignore_samples(data_by_rg_by_sample)
         data_by_phenotype_by_sample = self.ignore_samples(data_by_phenotype_by_sample)

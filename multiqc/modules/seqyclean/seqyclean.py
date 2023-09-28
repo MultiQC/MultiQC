@@ -29,6 +29,10 @@ class MultiqcModule(BaseMultiqcModule):
 
             self.seqyclean_data[f["s_name"]] = dict()
             for header, col in zip(headers, cols):
+                # Add verions info
+                if header == "Version":
+                    self.add_software_version(col, f["s_name"])
+
                 # Attempt to convert into a float if we can
                 try:
                     col = float(col)

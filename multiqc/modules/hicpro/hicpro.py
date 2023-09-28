@@ -35,6 +35,10 @@ class MultiqcModule(BaseMultiqcModule):
             for f in self.find_log_files("hicpro/{}".format(k)):
                 self.parse_hicpro_stats(f, k)
 
+                # Superfluous function call to confirm that it is used in this module
+                # Replace None with actual version if it is available
+                self.add_software_version(None, f["s_name"])
+
         # Update current statistics
         for s_name in self.hicpro_data:
             data = self.hicpro_data[s_name]

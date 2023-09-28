@@ -33,6 +33,10 @@ class MultiqcModule(BaseMultiqcModule):
             self.parse_nextclade_log(f)
             self.add_data_source(f)
 
+            # Superfluous function call to confirm that it is used in this module
+            # Replace None with actual version if it is available
+            self.add_software_version(None, f["s_name"])
+
         # Remove ignored samples
         self.nextclade_data = self.ignore_samples(self.nextclade_data)
 

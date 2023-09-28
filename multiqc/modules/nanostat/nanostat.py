@@ -60,6 +60,11 @@ class MultiqcModule(BaseMultiqcModule):
         self.has_fasta = False
         for f in self.find_log_files("nanostat", filehandles=True):
             self.parse_nanostat_log(f)
+
+            # Superfluous function call to confirm that it is used in this module
+            # Replace None with actual version if it is available
+            self.add_software_version(None, f["s_name"])
+
         for f in self.find_log_files("nanostat/legacy", filehandles=True):
             self.parse_legacy_nanostat_log(f)
 

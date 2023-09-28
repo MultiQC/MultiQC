@@ -91,6 +91,10 @@ class MultiqcModule(BaseMultiqcModule):
             self.freyja_data[s_name] = d
             self.add_data_source(f, s_name)
 
+            # Superfluous function call to confirm that it is used in this module
+            # Replace None with actual version if it is available
+            self.add_software_version(None, s_name)
+
     def general_stats_cols(self, top_lineages_dict, all_lineages):
         """Add a single column displaying the most abundant lineage to the General Statistics table"""
         headers = OrderedDict()

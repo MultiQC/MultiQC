@@ -47,6 +47,10 @@ class MultiqcModule(BaseMultiqcModule):
             # file as sample name (since the filename is always stats.dat
             s_name = self.clean_s_name(f["root"], f)
 
+            # Superfluous function call to confirm that it is used in this module
+            # Replace None with actual version if it is available
+            self.add_software_version(None, s_name)
+
             # Read the statistics from file
             d = {}
             for line in f["f"]:

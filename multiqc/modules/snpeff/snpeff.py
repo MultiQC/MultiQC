@@ -2,6 +2,7 @@
 
 
 import logging
+import re
 from collections import OrderedDict
 
 from multiqc.modules.base_module import BaseMultiqcModule, ModuleNoSamplesFound
@@ -9,6 +10,8 @@ from multiqc.plots import bargraph, linegraph
 
 # Initialise the logger
 log = logging.getLogger(__name__)
+
+VERSION_REGEX = r"SnpEff_version , SnpEff ([\d\.a-z]+)"
 
 
 class MultiqcModule(BaseMultiqcModule):
@@ -164,8 +167,15 @@ class MultiqcModule(BaseMultiqcModule):
         }
         parsed_data = {}
         section = None
+        version = None
         for l in f["f"]:
             l = l.strip()
+
+            # Parse version
+            match = re.search(VERSION_REGEX, l)
+            if match:
+                version = match.group(1)
+
             if l[:1] == "#":
                 section = l
                 self.snpeff_section_totals[section] = dict()
@@ -211,6 +221,7 @@ class MultiqcModule(BaseMultiqcModule):
                 log.debug("Duplicate sample name found! Overwriting: {}".format(f["s_name"]))
             self.add_data_source(f)
             self.snpeff_data[f["s_name"]] = parsed_data
+            self.add_software_version(version, f["s_name"])
 
     def general_stats(self):
         """Add key SnpEff stats to the general stats table"""

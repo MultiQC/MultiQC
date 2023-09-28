@@ -555,6 +555,10 @@ class DragenCoverageMetrics(BaseMultiqcModule):
                 match_overall_mean_cov[cleaned_sample][phenotype] = (original_sample, file["root"])
                 all_metrics.update(out["metric_IDs_with_original_names"])
 
+                # Superfluous function call to confirm that it is used in this module
+                # Replace None with actual version if it is available
+                self.add_software_version(None, cleaned_sample)
+
         cov_data = self.ignore_samples(cov_data)
         if not cov_data:
             return set()

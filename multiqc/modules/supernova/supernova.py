@@ -204,6 +204,10 @@ class MultiqcModule(BaseMultiqcModule):
             reports[s_name] = data
             self.add_data_source(f, s_name=s_name, section="supernova-table")
 
+            # Superfluous function call to confirm that it is used in this module
+            # Replace None with actual version if it is available
+            self.add_software_version(None, s_name)
+
         # summary.json files
         for f in self.find_log_files("supernova/summary"):
             log.debug("Found summary.json in: {}".format(f["root"]))

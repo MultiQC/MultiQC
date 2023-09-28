@@ -69,6 +69,10 @@ class MultiqcModule(DragenBaseMetrics, DragenReadMetrics, DragenFastqcGcMetrics,
             self.add_data_source(f, section="stats")
             data_by_sample.update(data_by_mate)
 
+            # Superfluous function call to confirm that it is used in this module
+            # Replace None with actual version if it is available
+            self.add_software_version(None, s_name)
+
         # Filter to strip out ignored sample names:
         self.dragen_fastqc_data = self.ignore_samples(data_by_sample)
 
