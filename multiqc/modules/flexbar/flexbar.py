@@ -5,7 +5,7 @@ import logging
 import re
 from collections import OrderedDict
 
-from multiqc.modules.base_module import BaseMultiqcModule
+from multiqc.modules.base_module import BaseMultiqcModule, ModuleNoSamplesFound
 from multiqc.plots import bargraph
 
 # Initialise the logger
@@ -35,7 +35,7 @@ class MultiqcModule(BaseMultiqcModule):
         self.flexbar_data = self.ignore_samples(self.flexbar_data)
 
         if len(self.flexbar_data) == 0:
-            raise UserWarning
+            raise ModuleNoSamplesFound
 
         log.info("Found {} logs".format(len(self.flexbar_data)))
         self.write_data_file(self.flexbar_data, "multiqc_flexbar")

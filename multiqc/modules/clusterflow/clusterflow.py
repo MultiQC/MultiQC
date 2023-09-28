@@ -8,7 +8,7 @@ import re
 import time
 from collections import OrderedDict
 
-from multiqc.modules.base_module import BaseMultiqcModule
+from multiqc.modules.base_module import BaseMultiqcModule, ModuleNoSamplesFound
 from multiqc.plots import table
 
 # Initialise the logger
@@ -53,7 +53,7 @@ class MultiqcModule(BaseMultiqcModule):
         self.clusterflow_runfiles = self.ignore_samples(self.clusterflow_runfiles)
 
         if len(self.clusterflow_commands) == 0 and len(self.clusterflow_runfiles) == 0:
-            raise UserWarning
+            raise ModuleNoSamplesFound
 
         # Count pipelines
         num_log_pipelines = len(self.clusterflow_commands)

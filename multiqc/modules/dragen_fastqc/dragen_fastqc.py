@@ -3,6 +3,7 @@ from __future__ import absolute_import
 import logging
 import os
 
+from ..base_module import ModuleNoSamplesFound
 from .base_metrics import DragenBaseMetrics
 from .content_metrics import DragenContentMetrics
 from .gc_metrics import DragenFastqcGcMetrics
@@ -94,5 +95,5 @@ class MultiqcModule(DragenBaseMetrics, DragenReadMetrics, DragenFastqcGcMetrics,
         samples_found |= self.add_content_metrics()
 
         if len(samples_found) == 0:
-            raise UserWarning
+            raise ModuleNoSamplesFound
         log.info("Found {} reports".format(len(samples_found)))

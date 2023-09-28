@@ -6,7 +6,7 @@ import os
 import re
 from collections import OrderedDict
 
-from multiqc.modules.base_module import BaseMultiqcModule
+from multiqc.modules.base_module import BaseMultiqcModule, ModuleNoSamplesFound
 from multiqc.plots import linegraph, table
 
 # Initialise the logger
@@ -170,7 +170,7 @@ class MultiqcModule(BaseMultiqcModule):
         self.sumstats_data = self.ignore_samples(self.sumstats_data)
 
         if len(self.cov_data) == 0 and len(self.sumstats_data) == 0 and len(self.distribs_loci) == 0:
-            raise UserWarning
+            raise ModuleNoSamplesFound
         log.info("Found {} reports".format(num_files))
 
         # Write parsed report data to a file

@@ -6,7 +6,7 @@ import re
 from collections import OrderedDict
 from operator import itemgetter
 
-from multiqc.modules.base_module import BaseMultiqcModule
+from multiqc.modules.base_module import BaseMultiqcModule, ModuleNoSamplesFound
 from multiqc.plots import bargraph, table
 
 log = logging.getLogger(__name__)
@@ -48,7 +48,7 @@ class MultiqcModule(BaseMultiqcModule):
             self.add_software_version(None, f["s_name"])
 
         if not self.checkqc_data:
-            raise UserWarning
+            raise ModuleNoSamplesFound
         log.info(f"Found {len(self.log_files)} run and {len(self.checkqc_data)} samples")
 
         self.write_data_file(self.checkqc_data, "multiqc_checkqc")

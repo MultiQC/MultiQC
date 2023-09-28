@@ -2,7 +2,7 @@ import logging
 import re
 from collections import OrderedDict
 
-from multiqc.modules.base_module import BaseMultiqcModule
+from multiqc.modules.base_module import BaseMultiqcModule, ModuleNoSamplesFound
 from multiqc.plots import bargraph
 
 # Initialise the logger
@@ -43,12 +43,12 @@ class MultiqcModule(BaseMultiqcModule):
             self.add_data_source(f)
 
         if len(self.seqyclean_data) == 0:
-            raise UserWarning
+            raise ModuleNoSamplesFound
 
         self.seqyclean_data = self.ignore_samples(self.seqyclean_data)
 
         if len(self.seqyclean_data) == 0:
-            raise UserWarning
+            raise ModuleNoSamplesFound
 
         log.info("Found {} logs".format(len(self.seqyclean_data)))
 

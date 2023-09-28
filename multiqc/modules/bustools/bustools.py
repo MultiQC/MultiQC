@@ -6,7 +6,7 @@ import logging
 import os
 from collections import OrderedDict
 
-from multiqc.modules.base_module import BaseMultiqcModule
+from multiqc.modules.base_module import BaseMultiqcModule, ModuleNoSamplesFound
 from multiqc.plots import bargraph, table
 from multiqc.utils import config
 
@@ -52,7 +52,7 @@ class MultiqcModule(BaseMultiqcModule):
         self.bustools_data = self.ignore_samples(self.bustools_data)
 
         if len(self.bustools_data) == 0:
-            raise UserWarning
+            raise ModuleNoSamplesFound
 
         # now fill out the table(s) headers
         self.headers = OrderedDict()

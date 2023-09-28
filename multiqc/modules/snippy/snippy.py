@@ -4,7 +4,7 @@ import logging
 from collections import OrderedDict
 
 from multiqc import config
-from multiqc.modules.base_module import BaseMultiqcModule
+from multiqc.modules.base_module import BaseMultiqcModule, ModuleNoSamplesFound
 from multiqc.plots import bargraph
 
 # Initialise the logger
@@ -77,7 +77,7 @@ class MultiqcModule(BaseMultiqcModule):
 
         # Raise warning if no logs were found.
         if len(self.snippy_data) == 0 and len(self.snippy_core_data) == 0:
-            raise UserWarning
+            raise ModuleNoSamplesFound
 
         # Run analysis if txt files found
         if len(self.snippy_data) > 0:

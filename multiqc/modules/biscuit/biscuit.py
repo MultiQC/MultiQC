@@ -6,7 +6,7 @@ import re
 from collections import OrderedDict
 
 from multiqc import config
-from multiqc.modules.base_module import BaseMultiqcModule
+from multiqc.modules.base_module import BaseMultiqcModule, ModuleNoSamplesFound
 from multiqc.plots import bargraph, beeswarm, linegraph, table
 
 # Initialize the logger
@@ -124,7 +124,7 @@ class MultiqcModule(BaseMultiqcModule):
         n_samples = max([len(self.mdata[k]) for k in self.mdata])
 
         if n_samples == 0:
-            raise UserWarning
+            raise ModuleNoSamplesFound
 
         log.info("Found {} samples".format(n_samples))
 

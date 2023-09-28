@@ -5,7 +5,7 @@ import logging
 from collections import defaultdict
 
 from multiqc import config
-from multiqc.modules.base_module import BaseMultiqcModule
+from multiqc.modules.base_module import BaseMultiqcModule, ModuleNoSamplesFound
 from multiqc.modules.dragen.utils import Metric
 from multiqc.plots import bargraph, boxplot, heatmap, linegraph, table
 from multiqc.utils import report

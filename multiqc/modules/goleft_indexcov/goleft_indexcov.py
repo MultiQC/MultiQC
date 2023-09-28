@@ -8,7 +8,7 @@ import collections
 import logging
 
 from multiqc import config
-from multiqc.modules.base_module import BaseMultiqcModule
+from multiqc.modules.base_module import BaseMultiqcModule, ModuleNoSamplesFound
 from multiqc.plots import linegraph, scatter
 
 # Initialise the logger
@@ -59,7 +59,7 @@ class MultiqcModule(BaseMultiqcModule):
         # Stop execution if no samples
         num_samples = max(len(self.bin_plot_data), num_roc_samples)
         if num_samples == 0:
-            raise UserWarning
+            raise ModuleNoSamplesFound
 
         log.info("Found {} samples".format(num_samples))
 

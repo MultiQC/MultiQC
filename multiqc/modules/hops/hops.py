@@ -4,7 +4,7 @@
 import json
 import logging
 
-from multiqc.modules.base_module import BaseMultiqcModule
+from multiqc.modules.base_module import BaseMultiqcModule, ModuleNoSamplesFound
 from multiqc.plots import heatmap
 from multiqc.utils import config
 
@@ -38,7 +38,7 @@ class MultiqcModule(BaseMultiqcModule):
         self.hops_data = self.ignore_samples(self.hops_data)
 
         if len(self.hops_data) == 0:
-            raise UserWarning
+            raise ModuleNoSamplesFound
 
         # Write data to file
         self.write_data_file(self.hops_data, "hops")

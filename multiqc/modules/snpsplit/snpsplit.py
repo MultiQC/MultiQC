@@ -6,7 +6,7 @@ from collections import OrderedDict
 import yaml
 
 from multiqc import config
-from multiqc.modules.base_module import BaseMultiqcModule
+from multiqc.modules.base_module import BaseMultiqcModule, ModuleNoSamplesFound
 from multiqc.plots import bargraph
 
 # Initialise the logger
@@ -40,7 +40,7 @@ class MultiqcModule(BaseMultiqcModule):
         self.snpsplit_data = self.ignore_samples(self.snpsplit_data)
 
         if len(self.snpsplit_data) == 0:
-            raise UserWarning
+            raise ModuleNoSamplesFound
         log.info("Found {} reports".format(len(self.snpsplit_data)))
 
         self.write_data_file(self.snpsplit_data, "multiqc_snpsplit")

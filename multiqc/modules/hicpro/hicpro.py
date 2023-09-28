@@ -9,7 +9,7 @@ import os.path
 from collections import OrderedDict
 
 from multiqc import config
-from multiqc.modules.base_module import BaseMultiqcModule
+from multiqc.modules.base_module import BaseMultiqcModule, ModuleNoSamplesFound
 from multiqc.plots import bargraph
 
 # Initialise the logger
@@ -64,7 +64,7 @@ class MultiqcModule(BaseMultiqcModule):
         self.hicpro_data = self.ignore_samples(self.hicpro_data)
 
         if len(self.hicpro_data) == 0:
-            raise UserWarning
+            raise ModuleNoSamplesFound
 
         log.info("Found {} HiC-Pro reports".format(len(self.hicpro_data)))
 

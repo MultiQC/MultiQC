@@ -18,6 +18,10 @@ from multiqc.utils import config, report, software_versions, util_functions
 logger = logging.getLogger(__name__)
 
 
+class ModuleNoSamplesFound(Exception):
+    """Module checked all input files but couldn't find any data to use"""
+
+
 class BaseMultiqcModule(object):
     def __init__(
         self,

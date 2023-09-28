@@ -8,7 +8,7 @@ import re
 from collections import OrderedDict
 
 from multiqc import config
-from multiqc.modules.base_module import BaseMultiqcModule
+from multiqc.modules.base_module import BaseMultiqcModule, ModuleNoSamplesFound
 from multiqc.plots import bargraph, heatmap
 
 # Initialise the logger
@@ -43,7 +43,7 @@ class MultiqcModule(BaseMultiqcModule):
         # Stop if no files are found
         num_samples = max(len(self.ivar_data), len(self.ivar_primers))
         if num_samples == 0:
-            raise UserWarning
+            raise ModuleNoSamplesFound
 
         # Log number of reports
         log.info("Found {} reports".format(num_samples))

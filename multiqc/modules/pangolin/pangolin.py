@@ -7,7 +7,7 @@ import csv
 import logging
 from collections import OrderedDict
 
-from multiqc.modules.base_module import BaseMultiqcModule
+from multiqc.modules.base_module import BaseMultiqcModule, ModuleNoSamplesFound
 from multiqc.plots import table
 from multiqc.utils import mqc_colour
 
@@ -40,7 +40,7 @@ class MultiqcModule(BaseMultiqcModule):
 
         # Stop if we didn't find anything
         if len(self.pangolin_data) == 0:
-            raise UserWarning
+            raise ModuleNoSamplesFound
         log.info("Found {} samples".format(len(self.pangolin_data)))
         self.write_data_file(self.pangolin_data, "multiqc_pangolin")
 

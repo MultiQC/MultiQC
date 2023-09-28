@@ -6,7 +6,7 @@ import re
 from collections import OrderedDict
 
 from multiqc import config
-from multiqc.modules.base_module import BaseMultiqcModule
+from multiqc.modules.base_module import BaseMultiqcModule, ModuleNoSamplesFound
 from multiqc.plots import bargraph, linegraph, scatter, table
 
 # Initialise the logger
@@ -134,7 +134,7 @@ class MultiqcModule(BaseMultiqcModule):
             num_reports = max(num_reports, len(self.nontc_per_utrpos_plus))
 
         if num_reports == 0:
-            raise UserWarning
+            raise ModuleNoSamplesFound
         else:
             log.info("Found {} reports".format(num_reports))
 

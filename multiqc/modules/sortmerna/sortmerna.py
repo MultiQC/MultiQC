@@ -7,7 +7,7 @@ import re
 from collections import OrderedDict
 
 from multiqc import config
-from multiqc.modules.base_module import BaseMultiqcModule
+from multiqc.modules.base_module import BaseMultiqcModule, ModuleNoSamplesFound
 from multiqc.plots import bargraph
 
 # Initialise the logger
@@ -39,7 +39,7 @@ class MultiqcModule(BaseMultiqcModule):
         self.sortmerna = self.ignore_samples(self.sortmerna)
 
         if len(self.sortmerna) == 0:
-            raise UserWarning
+            raise ModuleNoSamplesFound
 
         log.info("Found {} logs".format(len(self.sortmerna)))
         self.write_data_file(self.sortmerna, "multiqc_sortmerna")

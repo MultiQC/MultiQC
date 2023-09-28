@@ -4,7 +4,7 @@ import logging
 from collections import OrderedDict
 
 from multiqc import config
-from multiqc.modules.base_module import BaseMultiqcModule
+from multiqc.modules.base_module import BaseMultiqcModule, ModuleNoSamplesFound
 from multiqc.plots import bargraph
 
 # Initialise the logger
@@ -61,11 +61,11 @@ class MultiqcModule(BaseMultiqcModule):
             num_samples = max([len(taxo_rank) for taxo_rank in self.kaiju_data.values()])
         except ValueError:
             # No log files so didn't get any taxo_ranks
-            raise UserWarning
+            raise ModuleNoSamplesFound
 
         # no file found
         if num_samples == 0:
-            raise UserWarning
+            raise ModuleNoSamplesFound
 
         log.info("Found {} reports".format(num_samples))
 

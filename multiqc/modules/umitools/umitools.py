@@ -6,7 +6,7 @@ import re
 from collections import OrderedDict
 
 from multiqc import config
-from multiqc.modules.base_module import BaseMultiqcModule
+from multiqc.modules.base_module import BaseMultiqcModule, ModuleNoSamplesFound
 from multiqc.plots import bargraph, beeswarm
 
 # Initialise the logger
@@ -51,7 +51,7 @@ class MultiqcModule(BaseMultiqcModule):
 
         # If no files are found, raise an exception
         if len(self.umitools_data) == 0:
-            raise UserWarning
+            raise ModuleNoSamplesFound
 
         # Log the number of reports found
         log.info("Found {} reports".format(len(self.umitools_data)))

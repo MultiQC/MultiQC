@@ -5,7 +5,7 @@ import logging
 import re
 from collections import OrderedDict
 
-from multiqc.modules.base_module import BaseMultiqcModule
+from multiqc.modules.base_module import BaseMultiqcModule, ModuleNoSamplesFound
 from multiqc.plots import bargraph
 
 # Initialise the logger
@@ -31,7 +31,7 @@ class MultiqcModule(BaseMultiqcModule):
 
         # If we found no data
         if not self.ccs_data:
-            raise UserWarning
+            raise ModuleNoSamplesFound
         log.info("Found {} reports".format(len(self.ccs_data)))
 
         self.write_data_file(self.ccs_data, "multiqc_ccs_report")

@@ -6,7 +6,7 @@ import re
 from collections import OrderedDict
 
 from multiqc import config
-from multiqc.modules.base_module import BaseMultiqcModule
+from multiqc.modules.base_module import BaseMultiqcModule, ModuleNoSamplesFound
 from multiqc.plots import bargraph
 
 # Initialise the logger
@@ -38,7 +38,7 @@ class MultiqcModule(BaseMultiqcModule):
         self.trimmomatic = self.ignore_samples(self.trimmomatic)
 
         if len(self.trimmomatic) == 0:
-            raise UserWarning
+            raise ModuleNoSamplesFound
 
         log.info("Found {} logs".format(len(self.trimmomatic)))
         self.write_data_file(self.trimmomatic, "multiqc_trimmomatic")

@@ -6,7 +6,7 @@ import logging
 import re
 from collections import OrderedDict
 
-from multiqc.modules.base_module import BaseMultiqcModule
+from multiqc.modules.base_module import BaseMultiqcModule, ModuleNoSamplesFound
 from multiqc.plots import bargraph, linegraph, table
 
 # Initialise the logger
@@ -267,7 +267,7 @@ class MultiqcModule(BaseMultiqcModule):
         kmers = self.ignore_samples(kmers)
 
         if len(reports) == 0:
-            raise UserWarning
+            raise ModuleNoSamplesFound
         else:
             log.info("Found {} reports".format(len(reports.keys())))
 
