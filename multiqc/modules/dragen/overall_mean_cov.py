@@ -51,6 +51,10 @@ class DragenOverallMeanCovMetrics(BaseMultiqcModule):
                 else:
                     pass
 
+            # Superfluous function call to confirm that it is used in this module
+            # Replace None with actual version if it is available
+            self.add_software_version(None, file["s_name"])
+
         # Report found info/warnings/errors, which were collected while
         # calling the coverage_parser and constructing cov_headers.
         # You can disable it anytime, if it is not wanted.
