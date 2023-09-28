@@ -5,7 +5,7 @@ import logging
 from collections import OrderedDict
 
 from multiqc import config
-from multiqc.modules.base_module import BaseMultiqcModule
+from multiqc.modules.base_module import BaseMultiqcModule, ModuleNoSamplesFound
 from multiqc.plots import bargraph
 
 # Initialise the logger
@@ -33,11 +33,15 @@ class MultiqcModule(BaseMultiqcModule):
             self.sargasso_files.append(f)
             self.add_data_source(f)
 
+            # Superfluous function call to confirm that it is used in this module
+            # Replace None with actual version if it is available
+            self.add_software_version(None, f["s_name"])
+
         # log.info('Removing ignored samples...')
         self.sargasso_data = self.ignore_samples(self.sargasso_data)
 
         if len(self.sargasso_data) == 0:
-            raise UserWarning
+            raise ModuleNoSamplesFound
 
         log.info("Found {} reports".format(len(self.sargasso_files)))
 

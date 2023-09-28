@@ -150,6 +150,10 @@ def parse_reports(
                             else:
                                 parsed_data[k] += "/" + val
 
+        # Superfluous function call to confirm that it is used in this module
+        # Replace None with actual version if it is available
+        self.add_software_version(None, s_name)
+
         # Files with no extra lines after last library
         if in_stats_block:
             save_table_results(s_name, base_s_name, keys, parsed_data, recompute_merged_metrics)

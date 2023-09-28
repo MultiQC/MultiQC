@@ -6,7 +6,7 @@ import logging
 from collections import OrderedDict
 
 from multiqc import config
-from multiqc.modules.base_module import BaseMultiqcModule
+from multiqc.modules.base_module import BaseMultiqcModule, ModuleNoSamplesFound
 
 # Initialise the logger
 log = logging.getLogger(__name__)
@@ -35,7 +35,7 @@ class MultiqcModule(BaseMultiqcModule):
         self.mtnuc_data = self.ignore_samples(self.mtnuc_data)
 
         if len(self.mtnuc_data) == 0:
-            raise UserWarning
+            raise ModuleNoSamplesFound
 
         log.info("Found {} reports".format(len(self.mtnuc_data)))
 

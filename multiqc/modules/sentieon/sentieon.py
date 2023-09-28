@@ -4,7 +4,7 @@
 import logging
 from collections import OrderedDict
 
-from multiqc.modules.base_module import BaseMultiqcModule
+from multiqc.modules.base_module import BaseMultiqcModule, ModuleNoSamplesFound
 
 # Import the Sentieon submodules
 from . import AlignmentSummaryMetrics, GcBiasMetrics, InsertSizeMetrics
@@ -49,7 +49,7 @@ class MultiqcModule(BaseMultiqcModule):
 
         # Exit if we didn't find anything
         if sum(n.values()) == 0:
-            raise UserWarning
+            raise ModuleNoSamplesFound
 
         # Add to the General Stats table (has to be called once per
         # MultiQC module)

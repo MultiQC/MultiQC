@@ -5,7 +5,7 @@
 import logging
 from collections import OrderedDict
 
-from multiqc.modules.base_module import BaseMultiqcModule
+from multiqc.modules.base_module import BaseMultiqcModule, ModuleNoSamplesFound
 from multiqc.plots import bargraph
 from multiqc.utils import mqc_colour
 
@@ -35,7 +35,7 @@ class MultiqcModule(BaseMultiqcModule):
 
         # Let MultiQC know this module found no data
         if len(self.freyja_data) == 0:
-            raise UserWarning
+            raise ModuleNoSamplesFound
 
         log.info(f"Found {len(self.freyja_data)} reports")
         self.write_data_file(self.freyja_data, "multiqc_freyja")
@@ -90,6 +90,10 @@ class MultiqcModule(BaseMultiqcModule):
                 log.debug("Duplicate sample name found! Overwriting: {}".format(s_name))
             self.freyja_data[s_name] = d
             self.add_data_source(f, s_name)
+
+            # Superfluous function call to confirm that it is used in this module
+            # Replace None with actual version if it is available
+            self.add_software_version(None, s_name)
 
     def general_stats_cols(self, top_lineages_dict, all_lineages):
         """Add a single column displaying the most abundant lineage to the General Statistics table"""
