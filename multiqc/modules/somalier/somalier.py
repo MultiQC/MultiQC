@@ -51,6 +51,10 @@ class MultiqcModule(BaseMultiqcModule):
                     self.add_data_source(f, s_name)
                     self.somalier_data[s_name] = parsed_data[s_name_raw]
 
+                    # Superfluous function call to confirm that it is used in this module
+                    # Replace None with actual version if it is available
+                    self.add_software_version(None, s_name)
+
         # parse somalier CSV files
         for f in self.find_log_files("somalier/pairs"):
             parsed_data = self.parse_somalier_pairs_tsv(f)

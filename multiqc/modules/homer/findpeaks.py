@@ -16,6 +16,10 @@ class FindPeaksReportMixin:
         for f in self.find_log_files("homer/findpeaks", filehandles=True):
             self.parse_findPeaks(f)
 
+            # Superfluous function call to confirm that it is used in this module
+            # Replace None with actual version if it is available
+            self.add_software_version(None, f["s_name"])
+
         # Filter to strip out ignored sample names
         self.homer_findpeaks = self.ignore_samples(self.homer_findpeaks)
 
@@ -41,7 +45,7 @@ class FindPeaksReportMixin:
                 "format": "{:,.0f}",
                 "scale": "PuRd",
             }
-            self.general_stats_addcols(self.homer_findpeaks, stats_headers, "HOMER findpeaks")
+            self.general_stats_addcols(self.homer_findpeaks, stats_headers, "findpeaks")
 
         return len(self.homer_findpeaks)
 

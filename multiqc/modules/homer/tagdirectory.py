@@ -42,6 +42,10 @@ class TagDirReportMixin:
                 self.add_data_source(f, s_name, section="GCcontent")
                 self.tagdir_data["GCcontent"][s_name] = parsed_data
 
+            # Superfluous function call to confirm that it is used in this module
+            # Replace None with actual version if it is available
+            self.add_software_version(None, s_name)
+
         ## get esimated genome content distribution:
         for f in self.find_log_files("homer/genomeGCcontent", filehandles=True):
             parsed_data = self.parse_twoCol_file(f)
@@ -229,9 +233,9 @@ class TagDirReportMixin:
             "min": 0,
             "format": "{:,.2f}",
         }
-        self.general_stats_addcols(self.tagdir_data["header"], headers, "HOMER")
+        self.general_stats_addcols(self.tagdir_data["header"], headers)
 
-    def homer_stats_table_interChr(self):
+    def homer_stats_table_interchr(self):
         """Add core HOMER stats to the general stats table from FrequencyDistribution file"""
 
         headers = OrderedDict()
@@ -240,7 +244,7 @@ class TagDirReportMixin:
             "description": "Fraction of Reads forming inter chromosomal interactions",
             "format": "{:,.4f}",
         }
-        self.general_stats_addcols(self.tagdir_data["FreqDistribution"], headers, "Homer-InterChr")
+        self.general_stats_addcols(self.tagdir_data["FreqDistribution"], headers, "InterChr")
 
     def normalize(self, mydict, target=100):
         raw = sum(mydict.values())

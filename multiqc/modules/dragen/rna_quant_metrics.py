@@ -1,5 +1,4 @@
 import logging
-import re
 
 from multiqc.modules.base_module import BaseMultiqcModule
 from multiqc.plots import bargraph
@@ -12,12 +11,16 @@ class DragenRnaQuantMetrics(BaseMultiqcModule):
         data_by_sample = dict()
 
         for f in self.find_log_files("dragen/rna_quant_metrics"):
-            s_name, data = parse_time_metrics_file(f)
-            s_name = self.clean_s_name(s_name, f)
+            data = parse_time_metrics_file(f)
+            s_name = f["s_name"]
             if s_name in data_by_sample:
                 log.debug("Duplicate sample name found! Overwriting: {}".format(s_name))
             self.add_data_source(f, section="stats")
             data_by_sample[s_name] = data
+
+            # Superfluous function call to confirm that it is used in this module
+            # Replace None with actual version if it is available
+            self.add_software_version(None, s_name)
 
         # Filter to strip out ignored sample names:
         data_by_sample = self.ignore_samples(data_by_sample)
@@ -83,8 +86,6 @@ def parse_time_metrics_file(f):
     RUN TIME,,Time sorting and marking duplicates,00:00:07.368,7.37
     RUN TIME,,Time DRAGStr calibration,00:00:07.069,7.07
     """
-    s_name = re.search(r"(.*).quant.metrics.csv", f["fn"]).group(1)
-
     data = {}
     for line in f["f"].splitlines():
         tokens = line.split(",")
@@ -102,4 +103,4 @@ def parse_time_metrics_file(f):
             pass
         data[metric] = stat
 
-    return s_name, data
+    return data

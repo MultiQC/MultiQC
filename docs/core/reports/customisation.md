@@ -1,7 +1,6 @@
 ---
 title: Customising Reports
 description: Making MultiQC reports bespoke for your use case
-order: 5
 ---
 
 # Customising Reports
@@ -11,7 +10,7 @@ branding and some additional report-level information. These features
 are primarily designed for core genomics facilities.
 
 Note that much more extensive customisation of reports is possible using
-[custom templates](http://multiqc.info/docs/#writing-new-templates).
+[custom templates](../development/templates.md).
 
 ## Titles and introductory text
 
@@ -84,6 +83,146 @@ Then this will be displayed at the top of reports:
 
 Note that you can also specify a path to a config file using `-c`.
 
+## Listing software versions
+
+If a software tool prints its version number in log output, MultiQC
+attempts to find this information and print it in reports
+(see [Saving version information](../development/modules.md#saving-version-information))
+for module developer documentation.
+However, not all tools make version information available in their log files.
+Additionally, some situations may require bespoke version number reporting,
+for example if software is found within multiple scopes in an analysis pipeline.
+
+In these cases, you can manually add software version information to a report.
+This can be done in two different ways: by adding them in to the MultiQC configuration,
+or by creating stand-alone YAML files with specific filenames and formats.
+
+Both methods have the same syntax for the YAML configuration, with the exception
+of MultiQC configuration files requiring a top-level `software_versions`.
+The examples below are for a MultiQC config file.
+
+:::info
+If a provided software name exactly matches the name of a module that ran
+(case insensitive), then the version number(s) will be shown alongside the
+section heading. All software versions will be printed at the bottom of the report.
+This is the same behaviour as version numbers found within log files.
+:::
+
+### Option 1: Dictionary of software name and version pairs
+
+The simplest way to provide version numbers to give names and versions:
+
+```yaml
+software_versions:
+  samblaster: "0.1.24"
+  quast: "5.2.0"
+```
+
+:::danger
+Make sure that you write the version in quotes to ensure it being
+interpreted as a string. For example, a version `1.10` without
+quotes would be parsed as a float and displayed as version `1.1`.
+:::
+
+If you have run a tool multiple times and have multiple software versions,
+you can provide a list of versions:
+
+```yaml
+software_versions:
+  samblaster: "0.1.24"
+  quast:
+    - "5.2.0"
+    - "5.1.0"
+```
+
+### Option 2: Grouping softwares and versions
+
+In more complex scenarios, you may have multiple version _names_ that you
+want to group. For example, a tool that wraps other tools, or
+listing software version numbers grouped by analysis pipeline step.
+
+Here, input is provided as a nested YAML dictionary with three levels:
+`group` -> `software(s)` -> `version(s)`.
+
+```yaml
+software_versions:
+  samtools:
+    samtools: "1.11"
+    htslib: "1.3"
+  quast:
+    quast:
+      - "5.2.0"
+      - "5.1.0"
+```
+
+```yaml
+software_versions:
+  analysis_stage_1:
+    samtools: "1.3"
+    htslib: "1.3"
+  analysis_stage_2:
+    samtools: "1.11"
+    htslib: "1.11"
+  analysis_stage_3:
+    quast:
+      - "5.2.0"
+      - "5.1.0"
+```
+
+If a group and software have the same name (eg. `samtools` -> `samtools`),
+the software name will not be repeated in the section header.
+
+### Software versions YAML file
+
+If you prefer to provide versions in a separate YAML file, MultiQC will also
+look for filenames ending in `*_mqc_versions.(yml|yaml)` in your search path,
+for example `rnaseq_mqc_versions.yml` or `mapping_mqc_versions.yaml`. The
+content of these YAML files should be a YAML dictionary, similar to the
+previous examples but without the top level `software_versions`. For example:
+
+```yaml
+samblaster: "0.1.24"
+quast:
+  - "5.2.0"
+  - "5.1.0"
+some_other_tool: "2023-1"
+```
+
+If multiple YAML files are found the content of these will be merged
+together.
+
+### Disabling automatic versions
+
+In some applications, such as a pipeline workflow, you may wish to _only_ include
+version information defined in the config file or in a separate YAML file. For
+this, it possible to disable parsing versions from the log file through the
+following config option:
+
+```yaml
+disable_version_detection: true
+```
+
+### Disabling software version report section
+
+If you like, you can remove the _Software Versions_ report section.
+Software versions will still be shown inline with the headings, where possible.
+To do this, use the following config option:
+
+```yaml
+skip_versions_section: true
+```
+
+Note that setting this in combination with manually added version numbers
+could lead to versions not being included within the report.
+
+### Customize software versions table header
+
+In the _Software Versions_ report section the default table header for the column, listing groups of software, is "Group". This can be changed by setting the config option `versions_table_group_header` to your desired header name. For example:
+
+```yaml
+versions_table_group_header: "Analysis Pipeline Step"
+```
+
 ## Sample name replacement
 
 Occasionally, when you run MultiQC you may know that you want to change the resulting
@@ -116,8 +255,10 @@ Setting `sample_names_replace_complete` to `True`, the replacement string will b
 as a complete replacement if the search pattern matches at all.
 In the above example, `IDX102934_mytool` would become `Sample_1`.
 
-> NB: Use this method with caution! If aggressive cleaning of sample names results in
-> multiple samples with identical identifiers, they will be overwritten.
+:::warning
+Use this method with caution! If aggressive cleaning of sample names results in
+multiple samples with identical identifiers, they will be overwritten.
+:::
 
 To have more control over replacements, you can use regular expressions.
 If you set `sample_names_replace_regex` to `True` in a MultiQC config file
@@ -161,7 +302,7 @@ sample_names_replace:
 ## Bulk sample renaming in reports
 
 Although it is possible to rename samples manually and in bulk using the
-[report toolbox](#renaming-samples), it's often desirable to embed such renaming patterns
+[report toolbox](reports.md#renaming-samples), it's often desirable to embed such renaming patterns
 into the report so that they can be shared with others. For example, a typical case could be
 for a sequencing centre that has internal sample IDs and also user-supplied sample names.
 Or public sample identifiers such as SRA numbers as well as more meaningful names.
@@ -201,7 +342,7 @@ sample_names_rename:
 
 ## Show / Hide samples buttons
 
-It is possible to filter which samples are visible through the [report toolbox](#hiding-samples),
+It is possible to filter which samples are visible through the [report toolbox](reports.md#hiding-samples),
 but it can be desirable to embed such patterns into the report so that they can be shared
 with others. One example can be to add filters for batches, to easily scan if certain
 quality metrics overlap between these batches.
@@ -301,10 +442,13 @@ remove_sections:
   - second-section-id
 ```
 
+:::tip
 The section ID is the string appended to the URL when clicking a report section in the navigation.
+
 For example, the GATK module has a section with the title _"Compare Overlap"_. When clicking that
 in the report's left hand side navigation, the web browser URL has `#gatk-compare-overlap`
 appended. Here, you would add `gatk-compare-overlap` to the `remove_sections` config.
+:::
 
 Finally, you can prevent MultiQC from finding the files for a module or submodule by customising
 its search pattern. For example, to skip Picard Base Calling metrics, you could use the following:
@@ -417,8 +561,10 @@ report_section_order:
     before: fastqc_raw
 ```
 
-> NB: Currently, you can not list a module name in both `top_modules` and `module_order`.
-> Let me know if this is a problem..
+:::note
+Currently, you can not list a module name in both `top_modules` and `module_order`.
+Let me know if this is a problem..
+:::
 
 ### Order of module and module subsection output
 
@@ -440,8 +586,10 @@ for each section. You can change this number (eg. a very low number to always ge
 of the report or very high to always be at the top), or you can move a section to before or after
 another existing section (has no effect if the other named ID is not in the report).
 
-> Note that module sub-sections can only be move _within_ their module. So you can't have the
-> FastQC _Adapter Content_ section shown under the GATK module header.
+:::note
+Note that module sub-sections can only be move _within_ their module. So you can't have the
+FastQC _Adapter Content_ section shown under the GATK module header.
+:::
 
 You can also use this config option to completely remove module sub-sections.
 To do this, just set the subsection ID to `remove` (NB: no `:` or `-`).
@@ -524,22 +672,25 @@ custom_plot_config:
 ## Customising tables
 
 Much like with the custom plot config above, you can override almost any configuration options for tables.
-To see what's available, read the documentation about [Creating a table](#creating-a-table) below.
+To see what's available, read the documentation about [Creating a table](../development/plots.md#creating-a-table).
 
-Tables have configuration at two levels. Table-wide configs are the same as plot configs and can
-be overridden with `custom_plot_config` as described above.
+Tables have configuration at two levels:
 
-Headers have their own configuration which can be overriden with `custom_table_header_config`.
+1. Entire table
+   - Affects all columns and data. These configs are the same as _plot configs_ and can be overridden with `custom_plot_config` as described in the [Customising plots](#customising-plots) section.
+2. Specific columns
+   - Table columns (headers) have their own configuration scope:`custom_table_header_config`. See below.
 
-Examples are often more useful for this kind of thing than words, so here are a few:
+### Config for an entire table
 
-For the Picard HSMetrics table, we can use a custom table header for the first column
-and change the default minimum value for the colour scale for all columns:
+Here we are customising the _Picard HSMetrics_ table.
+We're setting a non-standard title for the first column (usually _"Sample name"_) and changing the minimum value for the colour scale for _all_ columns.
 
-> Here `min` is a _header_ config but we're setting it at table config level.
-> This means it will be used as a default for all columns in the table if the module
-> doesn't itself define anything specific for that column.
-> If it does, you need to overwrite that specific column using `custom_table_header_config`
+:::note
+Here `min` is a _header_ config but we're setting it at _table config_ level.
+This means it will be used as a default for all columns in the table, overwriting anything
+that the module defines itself specifically for a given column.
+:::
 
 ```yaml
 custom_plot_config:
@@ -548,8 +699,17 @@ custom_plot_config:
     min: 1000
 ```
 
-Now for header-specific changes.
-To change the number of decimals used in the General Statistics table for the Qualimap _Mean Coverage_ column:
+Another example of how this can be used is to make all columns in the General Statistics table hidden by default:
+
+```yaml
+custom_plot_config:
+  general_stats_table:
+    hidden: true
+```
+
+### Config for a specific column
+
+To change the number of decimals used in the General Statistics table for the single column _Qualimap: Mean Coverage_:
 
 ```yaml
 custom_table_header_config:
@@ -557,6 +717,18 @@ custom_table_header_config:
     mean_coverage:
       format: "{:,.20f}"
 ```
+
+The first key is the table ID, the second is the header ID for the column you want to change.
+
+:::tip
+The easiest way to find these IDs is by clicking _Configure Columns_ above the table you want to customise.
+
+![Table: configure columns button](../../images/table_configure_columns.png)
+
+The table ID is shown at the top of the modal window. The _ID_ column shows the column (header) ID.
+
+![Table: configure columns button](../../images/table_header_ids.png)
+:::
 
 ### Hiding columns
 
@@ -692,7 +864,10 @@ To find the unique ID for your table / column, right click it in a report and in
 - Tables should look something like `<table id="general_stats_table" class="table table-condensed mqc_table" data-title="General Statistics">`, where `general_stats_table` is the ID.
 - Table cells should look something like `<td class="data-coloured mqc-generalstats-Assigned">`, where the `mqc-generalstats-Assigned` bit is the unique ID.
 
-> I know this isn't the same method of IDs as above and isn't super easy to do. Sorry!
+:::note
+I know this isn't the same method of IDs as above and it isn't super easy to do.
+Sorry about that!
+:::
 
 It's possible to highlight matches in any number of colours. MultiQC comes with the following defaults:
 

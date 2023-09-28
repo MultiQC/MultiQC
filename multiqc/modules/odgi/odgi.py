@@ -34,6 +34,10 @@ class MultiqcModule(BaseMultiqcModule):
         for f in self.find_log_files("odgi", filehandles=True):
             self.parse_odgi_stats_report(f)
 
+            # Superfluous function call to confirm that it is used in this module
+            # Replace None with actual version if it is available
+            self.add_software_version(None, f["s_name"])
+
         self.odgi_stats_map = self.ignore_samples(self.odgi_stats_map)
 
         # No samples found
@@ -188,21 +192,21 @@ class MultiqcModule(BaseMultiqcModule):
         headers["N"] = {
             "title": "N",
             "description": "Number of `N` basis in the graph.",
-            "scale": "Set3",
+            "scale": "BuGn",
             "format": "{:,.0f}",
             "shared_key": "nucleotides",
         }
         headers["total"] = {
             "title": "Self Loops Nodes",
             "description": "Total number of nodes having self loops in the graph.",
-            "scale": "Set1",
+            "scale": "YlGn",
             "hidden": True,
             "format": "{:,.0f}",
         }
         headers["unique"] = {
             "title": "Unique Self Loops Nodes",
             "description": "Number of unique nodes having self loops in the graph.",
-            "scale": "Set2",
+            "scale": "BuGn",
             "hidden": True,
             "format": "{:,.0f}",
         }

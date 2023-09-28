@@ -38,6 +38,10 @@ class MultiqcModule(BaseMultiqcModule):
             self.whatshap_stats[sample] = data
             self.add_data_source(f)
 
+            # Superfluous function call to confirm that it is used in this module
+            # Replace None with actual version if it is available
+            self.add_software_version(None, sample)
+
         # Filter to strip out ignored sample names
         self.whatshap_stats = self.ignore_samples(self.whatshap_stats)
 
@@ -85,14 +89,14 @@ class MultiqcModule(BaseMultiqcModule):
         # we are parsing an empty file
         sample = logfile["s_name"]
         # Get the header and remove the "#" character from the first field
-        header = next(file_content).strip().split()
+        header = next(file_content).strip().split("\t")
         header[0] = header[0].lstrip("#")
 
         # The results from this log file, a dictionary for every chromosome
         results = defaultdict(dict)
         # Parse the lines that have the data
         for line in file_content:
-            spline = line.strip().split()
+            spline = line.strip().split("\t")
             data = {field: value for field, value in zip(header, spline)}
 
             # Remove the sample and chromsome from the data

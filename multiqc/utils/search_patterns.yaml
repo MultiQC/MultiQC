@@ -9,9 +9,13 @@ adapterRemoval:
 afterqc:
   fn: "*.json"
   contents: "allow_mismatch_in_poly"
+  num_lines: 10000
 anglerfish:
   fn: "*.json"
   contents: "anglerfish_version"
+bakta:
+  fn: "*.txt"
+  contents: "Bakta:"
 bamtools/stats:
   contents: "Stats for BAM file(s):"
   shared: true
@@ -186,6 +190,9 @@ bowtie2:
     - "bisulfite"
     - "HiC-Pro"
   shared: true
+bracken:
+  contents_re: '^(\d{1,3}\.\d{1,2})\t(\d+)\t(\d+)\t((\d+)\t(\d+)\t)?([URDKPCOFGS-]\d{0,2})\t(\d+)(\s+)root'
+  num_lines: 1
 busco:
   fn: "short_summary*"
   contents: "BUSCO version is:"
@@ -229,7 +236,7 @@ clusterflow/runfiles:
   contents: "Cluster Flow Run File"
   num_lines: 2
 conpair/concordance:
-  contents: "markers (coverage per marker threshold : "
+  contents: "markers (coverage per marker threshold"
   num_lines: 3
 conpair/contamination:
   contents: "Tumor sample contamination level: "
@@ -283,12 +290,10 @@ dragen/ploidy_estimation_metrics:
   fn: "*.ploidy_estimation_metrics.csv"
 dragen/wgs_contig_mean_cov:
   fn_re: '.*\.wgs_contig_mean_cov_?(tumor|normal)?\.csv'
-dragen/wgs_coverage_metrics:
-  fn_re: '.*\.wgs_coverage_metrics_?(tumor|normal)?\.csv'
-dragen/target_bed_coverage_metrics:
-  fn_re: '.*\.target_bed_coverage_metrics_?(tumor|normal)?\.csv'
-dragen/qc_region_coverage_metrics:
-  fn_re: '.*\.qc-coverage-region-([^_]+)_coverage_metrics_?(tumor|normal)?\.csv'
+dragen/overall_mean_cov_metrics:
+  fn_re: '.*_overall_mean_cov.*\.csv'
+dragen/coverage_metrics:
+  fn_re: '.*_coverage_metrics.*\.csv'
 dragen/wgs_fine_hist:
   fn_re: '.*\.wgs_fine_hist_?(tumor|normal)?\.csv'
 dragen/fragment_length_hist:
@@ -304,7 +309,7 @@ dragen/trimmer_metrics:
 dragen/time_metrics:
   fn: "*.time_metrics.csv"
 dragen/rna_quant_metrics:
-  fn: "*.quant.metrics.csv"
+  fn: "*.quant[._]metrics.csv"
 dragen/rna_transcript_cov:
   fn: "*.quant.transcript_coverage.txt"
 dragen/sc_rna_metrics:
@@ -346,12 +351,20 @@ flash/hist:
 flexbar:
   contents: "Flexbar - flexible barcode and adapter removal"
   shared: true
+freyja:
+  fn: "*.tsv"
+  contents: "summarized\t["
+  num_lines: 6
 gatk/varianteval:
   contents: "#:GATKTable:TiTvVariantEvaluator"
   shared: true
 gatk/base_recalibrator:
   contents: "#:GATKTable:Arguments:Recalibration"
   num_lines: 3
+gatk/analyze_saturation_mutagenesis:
+  fn: "*.readCounts"
+  contents: ">>Reads in disjoint pairs evaluated separately:"
+  num_lines: 10
 gffcompare:
   fn: "*.stats"
   contents: "# gffcompare"
@@ -366,7 +379,8 @@ happy:
   fn: "*.summary.csv"
   contents: "Type,Filter,TRUTH"
 htseq:
-  contents: "__too_low_aQual"
+  contents_re: '^(feature\tcount|\w+\t\d+)$'
+  num_lines: 1
 hicexplorer:
   contents: "Min rest. site distance"
   max_filesize: 4096
@@ -429,13 +443,19 @@ kallisto:
   shared: true
 nanostat:
   max_filesize: 4096
+  contents_re: "Metrics dataset\\s*"
+  num_lines: 1
+nanostat/legacy:
+  max_filesize: 4096
   contents_re: "General summary:\\s*"
   num_lines: 1
 kat:
   fn: "*.dist_analysis.json"
 kraken:
-  contents_re: '^\s{0,2}(\d{1,3}\.\d{1,2})\t(\d+)\t(\d+)\t([\dUDKRPCOFGS-]{1,3})\t(\d+)\s+(.+)'
-  num_lines: 2
+  contents_re: '^\s{0,2}(\d{1,3}\.\d{1,2})\t(\d+)\t(\d+)\t((\d+)\t(\d+)\t)?([URDKPCOFGS-]\d{0,2})\t(\d+)(\s+)unclassified'
+  num_lines: 1
+librarian:
+  fn: "librarian_heatmap.txt"
 leehom:
   contents: "Adapter dimers/chimeras"
   shared: true
@@ -459,6 +479,10 @@ macs2:
 malt:
   contents: "MaltRun - Aligns sequences using MALT (MEGAN alignment tool)"
   num_lines: 2
+mapdamage:
+  - fn: "3p*_freq.txt"
+  - fn: "5p*_freq.txt"
+  - fn: "lgdistribution.txt"
 methylQA:
   fn: "*.report"
   shared: true
@@ -540,6 +564,11 @@ somalier/pairs:
   fn: "*.pairs.tsv"
   contents: "hom_concordance"
   num_lines: 5
+sourmash/compare:
+  fn: "*.labels.txt"
+sourmash/gather:
+  contents: "intersect_bp,f_orig_query,f_match,f_unique_to_query,f_unique_weighted,"
+  num_lines: 1
 pbmarkdup:
   contents_re: "LIBRARY +READS +UNIQUE MOLECULES +DUPLICATE READS"
   num_lines: 5
@@ -780,6 +809,8 @@ snpsplit/old:
   num_lines: 2
 snpsplit/new:
   fn: "*SNPsplit_report.yaml"
+software_versions:
+  fn_re: ".+_mqc_versions\\.(yaml|yml)"
 sortmerna:
   contents: "Minimal SW score based on E-value"
   shared: true

@@ -146,6 +146,10 @@ class MultiqcModule(BaseMultiqcModule):
         # Clean / prepend directories to sample names
         runId = self.clean_s_name(content["RunId"], f)
 
+        # Superfluous function call to confirm that it is used in this module
+        # Replace None with actual version if it is available
+        self.add_software_version(None, runId)
+
         if runId not in self.bcl2fastq_data:
             self.bcl2fastq_data[runId] = dict()
         run_data = self.bcl2fastq_data[runId]

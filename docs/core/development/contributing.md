@@ -1,10 +1,43 @@
 ---
 title: Contributing
 description: Guides for how to contribute to the MultiQC code base
-order: 6
 ---
 
-# Documentation
+# Contributing
+
+## Changelog
+
+Almost all changes deserve an entry in the `CHANGELOG.md` file, so that people
+know what updates are present between versions.
+
+Whilst you can do this yourself by manually editing the file, we prefer to automate
+the process by using our friendly MultiQC bot, just before merging.
+By doing the changelog entry at the last minute we reduce the risk of having to
+solve changelog merge conflicts.
+
+The MultiQC changelog bot works by using the pull-request title.
+**Your job is to ensure that your pull-request follows one of the following 3 conventions:**
+
+- `New module: XYZ` - adding a new module named `XYZ`
+- `XYZ: Change something in this existing module` - updating module `XYZ`
+- `Some other change` - anything else, eg. core MultiQC changes
+
+The MultiQC bot will automatically build a proper changelog entry based on this title
+and (for new modules / module changes) the meta-information in the `MultiqcModule` class.
+
+The MultiQC bot is triggered by adding the following comment on an open pull request:
+
+```md
+@multiqc-bot changelog
+```
+
+This triggers a GitHub Action script which inspects the PR, updates the changelog
+and commits the update back to your PR.
+
+:::tip
+Whilst you can trigger the bot yourself, it's expected that the core MultiQC
+maintainers will do this for you immediately prior to merging.
+:::
 
 ## Admonitions
 

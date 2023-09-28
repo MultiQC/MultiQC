@@ -33,6 +33,10 @@ class MultiqcModule(BaseMultiqcModule):
         for f in self.find_log_files("conpair/concordance"):
             self.parse_conpair_logs(f)
 
+            # Superfluous function call to confirm that it is used in this module
+            # Replace None with actual version if it is available
+            self.add_software_version(None, f["s_name"])
+
         for f in self.find_log_files("conpair/contamination"):
             self.parse_conpair_logs(f)
 
@@ -55,21 +59,25 @@ class MultiqcModule(BaseMultiqcModule):
         One parser to rule them all."""
 
         conpair_regexes = {
-            "concordance_concordance": r"Concordance: ([\d\.]+)%",
-            "concordance_used_markers": r"Based on (\d+)/\d+ markers",
-            "concordance_total_markers": r"Based on \d+/(\d+) markers",
-            "concordance_marker_threshold": r"\(coverage per marker threshold : (\d+) reads\)",
-            "concordance_min_mapping_quality": r"Minimum mappinq quality: (\d+)",
-            "concordance_min_base_quality": r"Minimum base quality: (\d+)",
-            "contamination_normal": r"Normal sample contamination level: ([\d\.]+)%",
-            "contamination_tumor": r"Tumor sample contamination level: ([\d\.]+)%",
+            "concordance_concordance": [r"Concordance: ([\d\.]+)%\nBased.*", r"(\d\.\d+)\nBased.*"],
+            "concordance_used_markers": [r"Based on (\d+)/\d+ markers"],
+            "concordance_total_markers": [r"Based on \d+/(\d+) markers"],
+            "concordance_marker_threshold": [r"\(coverage per marker threshold : (\d+) reads\)"],
+            "concordance_min_mapping_quality": [r"Minimum mappinq quality: (\d+)"],
+            "concordance_min_base_quality": [r"Minimum base quality: (\d+)"],
+            "contamination_normal": [r"Normal sample contamination level: ([\d\.]+)%"],
+            "contamination_tumor": [r"Tumor sample contamination level: ([\d\.]+)%"],
         }
 
         parsed_data = {}
-        for k, r in conpair_regexes.items():
-            match = re.search(r, f["f"])
-            if match:
-                parsed_data[k] = float(match.group(1))
+        for k, r_arr in conpair_regexes.items():
+            for r in r_arr:
+                match = re.search(r, f["f"])
+                if match:
+                    parsed_data[k] = float(match.group(1))
+                    if k == "concordance_concordance" and not "Concordance" in r:
+                        parsed_data[k] = 100.0 * float(parsed_data[k])
+                    break
 
         def _cp_type(data):
             if "concordance_concordance" in parsed_data:

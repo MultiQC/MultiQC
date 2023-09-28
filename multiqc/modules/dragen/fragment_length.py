@@ -1,6 +1,5 @@
 # Initialise the logger
 import logging
-import re
 from collections import defaultdict
 
 from multiqc.modules.base_module import BaseMultiqcModule
@@ -18,8 +17,8 @@ class DragenFragmentLength(BaseMultiqcModule):
         data_by_rg_by_sample = defaultdict(dict)
 
         for f in self.find_log_files("dragen/fragment_length_hist"):
-            s_name, data_by_rg = parse_fragment_length_hist_file(f)
-            s_name = self.clean_s_name(s_name, f)
+            data_by_rg = parse_fragment_length_hist_file(f)
+            s_name = f["s_name"]
             if s_name in data_by_rg_by_sample:
                 log.debug(f"Duplicate sample name found! Overwriting: {s_name}")
             self.add_data_source(f, section="stats")
@@ -28,6 +27,10 @@ class DragenFragmentLength(BaseMultiqcModule):
                 if any(rg in d_rg for sn, d_rg in data_by_rg_by_sample.items()):
                     log.debug(f"Duplicate read group name {rg} found for {s_name}! Overwriting")
             data_by_rg_by_sample[s_name].update(data_by_rg)
+
+            # Superfluous function call to confirm that it is used in this module
+            # Replace None with actual version if it is available
+            self.add_software_version(None, s_name)
 
         # Filter to strip out ignored sample names:
         data_by_rg_by_sample = self.ignore_samples(data_by_rg_by_sample)
@@ -102,8 +105,6 @@ def parse_fragment_length_hist_file(f):
     39317,1
     """
 
-    s_name = re.search(r"(.*)\.fragment_length_hist.csv", f["fn"]).group(1)
-
     data_by_rg = defaultdict(dict)
 
     read_group = None
@@ -122,4 +123,4 @@ def parse_fragment_length_hist_file(f):
                 if cnt >= MIN_CNT_TO_SHOW_ON_PLOT:  # to prevent long flat tail
                     data_by_rg[read_group][frag_len] = cnt
 
-    return s_name, data_by_rg
+    return data_by_rg

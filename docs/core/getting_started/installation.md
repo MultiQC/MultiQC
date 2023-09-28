@@ -1,7 +1,6 @@
 ---
 title: Installation
 description: How to install MultiQC on your system
-order: 2
 ---
 
 # Installing MultiQC
@@ -22,36 +21,44 @@ This page can be a little overwhelming. If in doubt:
 
 Know what you're doing with this kind of thing? Here's a quick reference:
 
-#### Pip
+<table><thead><tr><th>Method</th><th>Command</th></tr></thead><tbody>
+<tr><td>Pip</td><td>
 
 ```bash
 pip install multiqc
 ```
 
-#### Pip (dev version)
+</td></tr>
+<tr><td>Pip (dev version)</td><td>
 
 ```bash
 pip install --upgrade --force-reinstall git+https://github.com/ewels/MultiQC.git
 ```
 
-#### Conda
+</td></tr>
+<tr><td>Conda</td><td>
 
 ```bash
 conda install multiqc
 ```
 
-#### Docker
+</td></tr>
+<tr><td>Docker</td><td>
 
 ```bash
 docker run -t -v `pwd`:`pwd` -w `pwd` ewels/multiqc multiqc .
 ```
 
+</td></tr>
+</tbody></table>
+
 :::
 
-## Python
+## Installing Python
 
-Most people running MultiQC manually install it directly into their local Python environment.
+MultiQC is written in Python and needs a Python installation to run.
 
+To run MultiQC manually install, you'll typically install it into a local Python environment.
 MultiQC requires Python version 3.6 or above.
 
 ### System Python
@@ -59,13 +66,13 @@ MultiQC requires Python version 3.6 or above.
 Python comes installed on most operating systems. You can install MultiQC directly here, but it is _not_ recommended. This often causes problems and it's a little risky to mess with it.
 
 :::danger
-If you find yourself prepending `sudo` to any MultiQC commands, take a step back and think about Python virtual environments / conda instead (see below).
+If you find yourself prepending `sudo` to any MultiQC commands, take a step back and think about Python virtual environments / conda instead.
 :::
 
 ### Python with Conda
 
 To see if you have python installed, run `python --version` on the command line.
-MultiQC needs Python version 2.7+, 3.4+ or 3.5+.
+MultiQC needs Python version 3.6+.
 
 We recommend using virtual environments to manage your Python installation.
 Our favourite is _conda_, a cross-platform tool to manage Python environments.
@@ -75,12 +82,12 @@ You can installation instructions for Miniconda
 Once conda is installed, you can create a Python environment with the following commands:
 
 ```bash
-conda create --name py3.7 python=3.7
-conda activate py3.7
+conda create --name py3.11 python=3.11
+conda activate py3.11
 ```
 
-You'll want to add the `conda activate py3.7` line to your `.bashrc` file so
-that the environment is loaded every time you load the terminal.
+You'll want to add the `conda activate py3.11` line to your `.bashrc` file,
+so that the environment is loaded every time you load the terminal.
 
 ### Using a specific python interpreter
 
@@ -95,27 +102,43 @@ python3 -m multiqc .
 ~/my_env/bin/python -m multiqc .
 ```
 
-## Local installation
+## Installing MultiQC locally
 
 There are a few different ways to install MultiQC into your local Python environment:
 
 ### Conda
 
 MultiQC is available on [BioConda](https://bioconda.github.io/).
-First, [configure your conda channels](https://bioconda.github.io/#usage) then install with:
 
 ```bash
 conda install multiqc
 ```
 
-:::warning
-The order of conda channels is important. Do not use `-c bioconda` in the installation command, weird stuff can happen (like only being able to install very old versions).
+:::info
+
+The order of conda channels is important!
+Please make sure that you have [configured your conda channels](https://bioconda.github.io/#usage) prior to installing anything with BioConda:
+
+```bash
+conda config --add channels defaults
+conda config --add channels bioconda
+conda config --add channels conda-forge
+conda config --set channel_priority strict
+```
+
 :::
 
-### Pip
+:::warning
+
+In the past we used `-c bioconda` in the installation command, but this is no longer the correct usage.
+Doing so will likely cause weird stuff to happen (like only being able to install very old versions).
+
+:::
+
+### Pip / PyPI
 
 This is the easiest way to install MultiQC. `pip` is the package manager for the Python Package Manager. It comes bundled with recent versions of Python,
-otherwise you can find installation instructions [here](http://pip.readthedocs.org/en/stable installing/).
+otherwise you can find installation instructions [here](https://pip.pypa.io/en/stable/installation/).
 
 You can install MultiQC from [PyPI](https://pypi.python.org/pypi/multiqc) as follows:
 
@@ -140,7 +163,36 @@ your home directory with the `--user` parameter:
 pip install --user multiqc
 ```
 
-### Manual
+### Spack
+
+MultiQC [is available](https://spack.readthedocs.io/en/latest/package_list.html#py-multiqc) on [Spack](https://spack.io/) as `py-multiqc`:
+
+```
+spack install py-multiqc
+```
+
+### FreeBSD
+
+If you're using the [FreeBSD](https://www.freebsd.org/) operating system, you can install MultiQC via [FreeBSD ports](https://www.freebsd.org/ports/):
+
+```bash
+pkg install py39-multiqc
+```
+
+This will install a prebuilt binary using only highly-portable
+optimizations.
+
+FreeBSD ports can also be built and installed from source:
+
+```bash
+cd /usr/ports/biology/py-multiqc
+make install
+```
+
+To report issues with a FreeBSD port, please submit a PR on the
+[FreeBSD bug reports page](https://www.freebsd.org/support/bugreports.html).
+
+### Cloning the repository
 
 If you'd rather not use either of these tools, you can clone the code and install the code yourself:
 
@@ -161,17 +213,15 @@ cd MultiQC-master
 pip install .
 ```
 
-## Within a Python script
+### Nix
 
-You can import and run MultiQC from within a Python script, using
-the `multiqc.run()` function as follows:
+If you're using the [nix package manager](https://nixos.org/download.html#download-nixm) with [flakes](https://nixos.wiki/wiki/Flakes) enabled, you can
+run `nix develop`in the cloned MultiQC repository to enter a shell
+with required dependencies. To build MultiQC, run `nix build`.
 
-```python
-import multiqc
-multiqc.run("/path/to/dir")
-```
+## MultiQC container images
 
-## Docker
+### Docker
 
 A Docker container is provided on Docker Hub called `ewels/multiqc`.
 It's based on an `python-slim` base image to give the smallest image size possible.
@@ -194,7 +244,7 @@ docker run -t -v `pwd`:`pwd` -w `pwd` ewels/multiqc multiqc . --title "My amazin
 
 By default, docker will use the `:latest` tag. For MultiQC, this is set to be the most recent release.
 To use the most recent development code, use `ewels/multiqc:dev`.
-You can also specify specific versions, eg: `ewels/multiqc:1.9`.
+You can also specify specific versions, eg: `ewels/multiqc:1.14`.
 
 Note that all files on the command line (eg. config files) must also be mounted in the docker container to be accessible.
 For more help, look into [the Docker documentation](https://docs.docker.com/engine/reference/commandline/run/).
@@ -204,7 +254,7 @@ For more help, look into [the Docker documentation](https://docs.docker.com/engi
 The above base command is a little verbose, so if you are using this a lot it may be worth adding the following bash alias to your `~/.bashrc` file:
 
 ```bash
-alias multiqc="docker run -tv `pwd`:`pwd` -w `pwd` ewels/multiqc"
+alias multiqc="docker run -tv `pwd`:`pwd` -w `pwd` ewels/multiqc multiqc"
 ```
 
 Once applied (first log out and in again) you can then just use the `multiqc` command instead:
@@ -215,11 +265,9 @@ multiqc .
 
 :::
 
-## Singularity
+### Singularity
 
-Although there is no dedicated Singularity image available for MultiQC, you can use the above Docker container.
-
-First, build a singularity container image from the docker image (change `1.14` to the current MultiQC version):
+To build a singularity container image from the docker image, use the following command: _(change `1.14` to the current MultiQC version)_
 
 ```bash
 singularity build multiqc-1.14.sif docker://ewels/multiqc:1.14
@@ -240,19 +288,30 @@ The giveaway for when this is the problem is that traceback will list python pac
 To fix this, run the command `export PYTHONNOUSERSITE=1` before running MultiQC. This variable [tells Python](https://docs.python.org/3/using/cmdline.html#envvar-PYTHONNOUSERSITE) not to add site-packages to the system path when loading, which should avoid the conflicts.
 :::
 
-## Spack
+:::tip
 
-MultiQC [is available](https://spack.readthedocs.io/en/latest/package_list.html#py-multiqc) on [Spack](https://spack.io/) as `py-multiqc`:
+If you prefer, you can download a pre-built Singularity image from BioContainers, see below.
 
+:::
+
+### BioContainers
+
+[BioContainers](https://biocontainers.pro/) is a project that automatically builds Docker and Singularity container images from [BioConda](https://bioconda.github.io/). The images are less fine-tuned for MultiQC so tend to have a larger filesize, but they should work well and are convenient.
+
+To see available images, visit the BioContainers [registry page for MultiQC](https://biocontainers.pro/tools/multiqc).
+
+## Using MultiQC in a Python script
+
+You can import and run MultiQC from within a Python script, using
+the `multiqc.run()` function as follows:
+
+```python
+import multiqc
+multiqc.run("/path/to/dir")
 ```
-spack install py-multiqc
-```
 
-## Nix
-
-If you're using the [nix package manager](https://nixos.org/download.html#download-nixm) with [flakes](https://nixos.wiki/wiki/Flakes) enabled, you can
-run `nix develop`in the MultiQC repository to enter a shell
-with required dependencies. To build MultiQC, run `nix build`.
+More development of interactive usage is planned for the future.
+Currently you can't do a lot more than just running MultiQC.
 
 ## Galaxy
 
@@ -263,30 +322,6 @@ The easiest and fast manner to use MutliQC is to use the [usegalaxy.org](https:/
 ### On your instance
 
 You can install MultiQC on your own Galaxy instance through your Galaxy admin space, searching on the [main Toolshed](https://toolshed.g2.bx.psu.edu/) for the [MultiQC repository](https://toolshed.g2.bx.psu.edu/view/iuc/multiqc/3bad335ccea9) available under the _visualization_, _statistics_ and _Fastq Manipulation_ sections.
-
-## FreeBSD
-
-If you're using FreeBSD you can install MultiQC via the FreeBSD ports system:
-
-```bash
-pkg install py36-multiqc
-```
-
-_(or `py27-multiqc`, `py37-multiqc`, or any other currently mainstream python version)._
-
-This will install a prebuilt binary using only highly-portable
-optimizations, much like `apt`, `yum`, etc.
-
-FreeBSD ports can also be built and installed from source:
-
-```bash
-cd /usr/ports/biology/py-multiqc
-make install
-```
-
-To report issues with a FreeBSD port, please submit a PR on the
-[FreeBSD bug reports page](https://www.freebsd.org/support/bugreports.html).
-For more information, visit [https://www.freebsd.org/ports/](https://www.freebsd.org/ports/index.html)
 
 ## Environment modules
 

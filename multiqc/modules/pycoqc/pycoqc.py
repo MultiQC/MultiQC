@@ -31,6 +31,7 @@ class MultiqcModule(BaseMultiqcModule):
             # Function can return None if YAML parsing failed
             if data:
                 self.pycoqc_data[f["s_name"]] = data
+                self.add_software_version(data["pycoqc"]["version"], f["s_name"])
             self.add_data_source(f)
 
         self.pycoqc_data = self.ignore_samples(self.pycoqc_data)

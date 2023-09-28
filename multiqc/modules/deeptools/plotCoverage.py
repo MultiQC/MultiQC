@@ -23,6 +23,10 @@ class plotCoverageMixin:
             if len(parsed_data) > 0:
                 self.add_data_source(f, section="plotCoverage")
 
+            # Superfluous function call to confirm that it is used in this module
+            # Replace None with actual version if it is available
+            self.add_software_version(None, f["s_name"])
+
         self.deeptools_plotCoverageOutRawCounts = dict()
         for f in self.find_log_files("deeptools/plotCoverageOutRawCounts"):
             parsed_data = self.parsePlotCoverageOutRawCounts(f)
