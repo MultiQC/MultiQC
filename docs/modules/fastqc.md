@@ -117,9 +117,9 @@ fastqc_config:
 
 ### Overrepresented sequences
 
-The overrepresented sequences table shows the most common sequences at the top,
+The overrepresented sequences table shows the most common sequences found,
 measured by the number of samples they occur as overrepresented. By default, the
-table shows top 20 sequences, which this can be customised in the config:
+table shows top 20 sequences. This can be customised in the config:
 
 ```yaml
 fastqc_config:
