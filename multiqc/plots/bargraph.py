@@ -353,6 +353,9 @@ def matplotlib_bargraph(plotdata, plotsamples, pconfig=None):
 
     # Counts / Percentages Switch
     if pconfig.get("cpswitch") is not False and not config.simple_output:
+        if len(plotdata) > 1:
+            print(f"{pids}: both multiplots and logswitch requested")
+
         if pconfig.get("cpswitch_c_active", True) is True:
             c_active = "active"
             p_active = ""
