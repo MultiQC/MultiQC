@@ -7,7 +7,7 @@ import re
 from collections import OrderedDict
 
 from multiqc import config
-from multiqc.modules.base_module import BaseMultiqcModule
+from multiqc.modules.base_module import BaseMultiqcModule, ModuleNoSamplesFound
 from multiqc.plots import bargraph
 from multiqc.utils import report
 
@@ -45,7 +45,7 @@ class MultiqcModule(BaseMultiqcModule):
         self.fq_screen_data = self.ignore_samples(self.fq_screen_data)
 
         if len(self.fq_screen_data) == 0:
-            raise UserWarning
+            raise ModuleNoSamplesFound
 
         log.info("Found {} reports".format(len(self.fq_screen_data)))
 
@@ -271,7 +271,7 @@ class MultiqcModule(BaseMultiqcModule):
                     data[s_name][org] = self.fq_screen_data[s_name][org]["counts"]["one_hit_one_library"]
                 except KeyError:
                     log.error(
-                        "No counts found for '{}' ('{}'). Could be malformed or very old FastQ Screen results.".format(
+                        "No counts found for '{}' ('{}'). Could be malformed or very old FastQ Screen results. Skipping sample".format(
                             org, s_name
                         )
                     )

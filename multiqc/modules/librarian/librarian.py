@@ -3,7 +3,7 @@
 import logging
 
 from multiqc import config
-from multiqc.modules.base_module import BaseMultiqcModule
+from multiqc.modules.base_module import BaseMultiqcModule, ModuleNoSamplesFound
 from multiqc.plots import heatmap
 from multiqc.utils import mqc_colour
 
@@ -33,7 +33,7 @@ class MultiqcModule(BaseMultiqcModule):
 
         # Write the data files to disk
         if not self.librarian_data:
-            raise UserWarning
+            raise ModuleNoSamplesFound
         log.info("Found {} samples".format(len(self.librarian_data)))
 
         if self.librarian_data:
@@ -62,6 +62,10 @@ class MultiqcModule(BaseMultiqcModule):
                     log.debug(f"Duplicate sample name found! Overwriting: {s_name}")
                 self.librarian_data[s_name] = data_float
                 self.add_data_source(f, s_name=s_name)
+
+                # Superfluous function call to confirm that it is used in this module
+                # Replace None with actual version if it is available
+                self.add_software_version(None, s_name)
 
     def plot_librarian_heatmap(self):
         """Make the heatmap plot"""

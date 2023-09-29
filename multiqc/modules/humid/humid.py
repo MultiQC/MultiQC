@@ -4,7 +4,7 @@ import logging
 from collections import OrderedDict
 
 from multiqc import config
-from multiqc.modules.base_module import BaseMultiqcModule
+from multiqc.modules.base_module import BaseMultiqcModule, ModuleNoSamplesFound
 from multiqc.plots import bargraph
 
 # Initialise the logger
@@ -33,7 +33,7 @@ class MultiqcModule(BaseMultiqcModule):
 
         # Let MultiQC know this module found no data
         if not self.humid:
-            raise UserWarning
+            raise ModuleNoSamplesFound
 
         log.info(f"Found {len(self.humid)} reports")
         self.write_data_file(self.humid, "multiqc_humid")
@@ -46,6 +46,10 @@ class MultiqcModule(BaseMultiqcModule):
             # There is no sample name in the log, so we use the root of the
             # file as sample name (since the filename is always stats.dat
             s_name = self.clean_s_name(f["root"], f)
+
+            # Superfluous function call to confirm that it is used in this module
+            # Replace None with actual version if it is available
+            self.add_software_version(None, s_name)
 
             # Read the statistics from file
             d = {}

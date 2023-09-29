@@ -61,6 +61,10 @@ def parse_reports(self):
             self.add_data_source(f, s_name, section="RrbsSummaryMetrics")
             self.picard_rrbs_metrics[s_name] = parsed_data[s_name]
 
+            # Superfluous function call to confirm that it is used in this module
+            # Replace None with actual version if it is available
+            self.add_software_version(None, s_name)
+
     # Filter to strip out ignored sample names
     self.picard_rrbs_metrics = self.ignore_samples(self.picard_rrbs_metrics)
 

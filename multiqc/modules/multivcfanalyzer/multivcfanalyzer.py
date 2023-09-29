@@ -5,7 +5,7 @@ import json
 import logging
 from collections import OrderedDict
 
-from multiqc.modules.base_module import BaseMultiqcModule
+from multiqc.modules.base_module import BaseMultiqcModule, ModuleNoSamplesFound
 from multiqc.plots import bargraph, table
 
 # Initialise the logger
@@ -38,7 +38,7 @@ class MultiqcModule(BaseMultiqcModule):
 
         # Return if no samples found
         if len(self.mvcf_data) == 0:
-            raise UserWarning
+            raise ModuleNoSamplesFound
 
         # Add in extra columns to data file
         self.compute_perc_hets()

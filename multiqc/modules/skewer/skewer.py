@@ -5,11 +5,13 @@ import logging
 import re
 from collections import OrderedDict
 
-from multiqc.modules.base_module import BaseMultiqcModule
+from multiqc.modules.base_module import BaseMultiqcModule, ModuleNoSamplesFound
 from multiqc.plots import linegraph
 
 # Initialise the logger
 log = logging.getLogger(__name__)
+
+VERSION_REGEX = r"skewer v([\d\.]+) \[.+\]"
 
 
 class MultiqcModule(BaseMultiqcModule):
@@ -35,7 +37,7 @@ class MultiqcModule(BaseMultiqcModule):
         self.skewer_data = self.ignore_samples(self.skewer_data)
 
         if len(self.skewer_data) == 0:
-            raise UserWarning
+            raise ModuleNoSamplesFound
 
         headers = OrderedDict()
         headers["pct_trimmed"] = {
@@ -110,6 +112,11 @@ class MultiqcModule(BaseMultiqcModule):
         readlen_dist = OrderedDict()
 
         for l in fh:
+            if l.startswith("skewer"):
+                match = re.search(VERSION_REGEX, l)
+                if match:
+                    data["version"] = match.group(1)
+
             for k, r in regexes.items():
                 match = re.search(r, l)
                 if match:
@@ -128,6 +135,7 @@ class MultiqcModule(BaseMultiqcModule):
             self.add_data_source(f, s_name)
             self.add_skewer_data(s_name, data, f)
             self.skewer_readlen_dist[s_name] = readlen_dist
+            self.add_software_version(data.get("version"), s_name)
 
         if data["fq2"] is not None:
             s_name = self.clean_s_name(data["fq1"], f)
@@ -136,6 +144,7 @@ class MultiqcModule(BaseMultiqcModule):
             self.add_data_source(f, s_name)
             self.add_skewer_data(s_name, data, f)
             self.skewer_readlen_dist[s_name] = readlen_dist
+            self.add_software_version(data.get("version"), s_name)
 
     def add_skewer_data(self, s_name, data, f):
         stats = ["r_processed", "r_short_filtered", "r_empty_filtered", "r_avail", "r_trimmed", "r_untrimmed"]
