@@ -44,11 +44,11 @@ def plotly_bargraph(
     # need to figure out a way to make the switch buttons reactive, so you can
     # switch both between the datasets and log/percentages/counts at the same time.
     data_by_cat = data_by_cat_lists[0]
-    samples_lists = samples_lists[0]
+    samples = samples_lists[0]
 
     # Regular bar graph layout configurations here...
     fig.update_layout(
-        cast(  # The function expects a dictionary, even though go.Layout works just fine
+        cast(  # The function expects a dict, even though go.Layout works just fine
             dict,
             go.Layout(
                 title=dict(
