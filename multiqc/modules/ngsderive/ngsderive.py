@@ -145,13 +145,20 @@ class MultiqcModule(BaseMultiqcModule):
 
         data = {}
         for sample, strandedness in self.strandedness.items():
-            if strandedness.get("ForwardPct")[::-1].find(".") == 4:  # pre-v4. Must convert to PCT
+            if float(strandedness.get("ForwardPct")) == 0 and float(strandedness.get("ReversePct")) == 0:
+                # TODO how to present this case? No reads found for this Read Group.
+                continue
+            if (
+                float(strandedness.get("ForwardPct")) + float(strandedness.get("ReversePct")) < 2
+            ):  # pre-v4. Must convert to PCT
                 data[sample] = {
                     "predicted": strandedness.get("Predicted"),
                     "forward": round(float(strandedness.get("ForwardPct")) * 100.0, 2),
                     "reverse": round(float(strandedness.get("ReversePct")) * 100.0, 2),
                 }
-            elif strandedness.get("ForwardPct")[::-1].find(".") == 2:  # v4 or later. Already a PCT
+            elif (
+                float(strandedness.get("ForwardPct")) + float(strandedness.get("ReversePct")) > 98
+            ):  # v4 or later. Already a PCT
                 data[sample] = {
                     "predicted": strandedness.get("Predicted"),
                     "forward": float(strandedness.get("ForwardPct")),
@@ -279,11 +286,19 @@ class MultiqcModule(BaseMultiqcModule):
 
         data = {}
         for sample, readlen in self.readlen.items():
-            data[sample] = {
-                "evidence": readlen.get("Evidence"),
-                "majoritypctdetected": round(float(readlen.get("MajorityPctDetected")) * 100.0, 2),
-                "consensusreadlength": int(readlen.get("ConsensusReadLength")),
-            }
+            if float(readlen.get("MajorityPctDetected")) > 1:  # v4 or later. Already a PCT.
+                # TODO what if v4 returns 0.57%? Will get parsed as pre-v4 and multiplied by 100.
+                data[sample] = {
+                    "evidence": readlen.get("Evidence"),
+                    "majoritypctdetected": float(readlen.get("MajorityPctDetected")),
+                    "consensusreadlength": int(readlen.get("ConsensusReadLength")),
+                }
+            elif float(readlen.get("MajorityPctDetected")) <= 1:  # pre-v4. Must convert to a PCT.
+                data[sample] = {
+                    "evidence": readlen.get("Evidence"),
+                    "majoritypctdetected": round(float(readlen.get("MajorityPctDetected")) * 100.0, 2),
+                    "consensusreadlength": int(readlen.get("ConsensusReadLength")),
+                }
 
         headers = OrderedDict()
         headers["consensusreadlength"] = {
