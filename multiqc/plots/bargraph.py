@@ -13,7 +13,6 @@ import random
 import re
 import sys
 from collections import OrderedDict
-from typing import Dict, List
 
 from multiqc.utils import config, mqc_colour, report, util_functions
 
@@ -317,7 +316,7 @@ def highcharts_bargraph(plotdata, plotsamples=None, pconfig=None):
     return html
 
 
-def static_bargraph(plotdata, plotsamples, pconfig=None):
+def matplotlib_bargraph(plotdata, plotsamples, pconfig=None):
     """
     Plot a bargraph with Matplot lib and return a HTML string. Either embeds a base64
     encoded image within HTML or writes the plot and links to it. Should be called by
@@ -354,9 +353,6 @@ def static_bargraph(plotdata, plotsamples, pconfig=None):
 
     # Counts / Percentages Switch
     if pconfig.get("cpswitch") is not False and not config.simple_output:
-        if len(plotdata) > 1:
-            print(f"{pids}: both multiplots and logswitch requested")
-
         if pconfig.get("cpswitch_c_active", True) is True:
             c_active = "active"
             p_active = ""
@@ -439,172 +435,136 @@ def static_bargraph(plotdata, plotsamples, pconfig=None):
 
             bar_width = 0.8
 
-            # Make sure all values array are of the same length: full with zeros
-            for d in pdata:
-                d["values"] = [x for x in d["data"]]
-                if len(d["values"]) < len(plotsamples[pidx]):
-                    d["values"].extend([0] * (len(plotsamples[pidx]) - len(d["values"])))
+            fig = plt.figure(figsize=(14, plt_height), frameon=False)
+            axes = fig.add_subplot(111)
+            y_ind = range(len(plotsamples[pidx]))
 
+            # Count totals for each sample
             if plot_pct is True:
-                # Count totals for each sample
                 s_totals = [0 for _ in pdata[0]["data"]]
-                for d in pdata:
+                for series_idx, d in enumerate(pdata):
                     for sample_idx, v in enumerate(d["data"]):
                         s_totals[sample_idx] += v
 
-                # Count percentages for all samples
-                for d in pdata:
-                    for i, val in enumerate(d["values"]):
-                        s_total = s_totals[i]
-                        if s_total == 0:
-                            d["values"][i] = 0
-                        else:
-                            d["values"][i] = (float(val + 0.0) / float(s_total)) * 100
             # Plot bars
-            try:
-                html += plotly_static_fig(
-                    pdata, plotsamples[pidx], pidx, pid, pconfig, plot_pct, hide_plot, plt_height, bar_width
+            dlabels = []
+            prev_values = None
+            for idx, d in enumerate(pdata):
+                # Plot percentages
+                values = [x for x in d["data"]]
+                if len(values) < len(y_ind):
+                    values.extend([0] * (len(y_ind) - len(values)))
+                if plot_pct is True:
+                    for key, var in enumerate(values):
+                        s_total = s_totals[key]
+                        if s_total == 0:
+                            values[key] = 0
+                        else:
+                            values[key] = (float(var + 0.0) / float(s_total)) * 100
+
+                # Get offset for stacked bars
+                if idx == 0:
+                    prevdata = [0] * len(plotsamples[pidx])
+                else:
+                    for i, p in enumerate(prevdata):
+                        prevdata[i] += prev_values[i]
+                # Save the name of this series
+                dlabels.append(d["name"])
+                # Add the series of bars to the plot
+                axes.barh(
+                    y_ind,
+                    values,
+                    bar_width,
+                    left=prevdata,
+                    color=d["color"],
+                    align="center",
+                    linewidth=pconfig.get("borderWidth", 0),
                 )
-            except:
-                html += matplotlib_fig(
-                    pdata, plotsamples[pidx], pidx, pid, pconfig, plot_pct, hide_plot, plt_height, bar_width
+                prev_values = values
+
+            # Tidy up axes
+            axes.tick_params(
+                labelsize=pconfig.get("labelSize", 8), direction="out", left=False, right=False, top=False, bottom=False
+            )
+            axes.set_xlabel(pconfig.get("ylab", ""))  # I know, I should fix the fact that the config is switched
+            axes.set_ylabel(pconfig.get("xlab", ""))
+            axes.set_yticks(y_ind)  # Specify where to put the labels
+            axes.set_yticklabels(plotsamples[pidx])  # Set y axis sample name labels
+            axes.set_ylim((-0.5, len(y_ind) - 0.5))  # Reduce padding around plot area
+            if plot_pct is True:
+                axes.set_xlim((0, 100))
+                # Add percent symbols
+                vals = axes.get_xticks()
+                axes.set_xticks(axes.get_xticks())
+                axes.set_xticklabels(["{:.0f}%".format(x) for x in vals])
+            else:
+                default_xlimits = axes.get_xlim()
+                axes.set_xlim((pconfig.get("ymin", default_xlimits[0]), pconfig.get("ymax", default_xlimits[1])))
+            if "title" in pconfig:
+                top_gap = 1 + (0.5 / plt_height)
+                plt.text(
+                    0.5, top_gap, pconfig["title"], horizontalalignment="center", fontsize=16, transform=axes.transAxes
                 )
+            axes.grid(True, zorder=0, which="both", axis="x", linestyle="-", color="#dedede", linewidth=1)
+            axes.set_axisbelow(True)
+            axes.spines["right"].set_visible(False)
+            axes.spines["top"].set_visible(False)
+            axes.spines["bottom"].set_visible(False)
+            axes.spines["left"].set_visible(False)
+            plt.gca().invert_yaxis()  # y axis is reverse sorted otherwise
+
+            # Hide some labels if we have a lot of samples
+            show_nth = max(1, math.ceil(len(pdata[0]["data"]) / 150))
+            for idx, label in enumerate(axes.get_yticklabels()):
+                if idx % show_nth != 0:
+                    label.set_visible(False)
+
+            # Legend
+            bottom_gap = -1 * (1 - ((plt_height - 1.5) / plt_height))
+            lgd = axes.legend(
+                dlabels,
+                loc="lower center",
+                bbox_to_anchor=(0, bottom_gap, 1, 0.102),
+                ncol=5,
+                mode="expand",
+                fontsize=pconfig.get("labelSize", 8),
+                frameon=False,
+            )
+
+            # Should this plot be hidden on report load?
+            hidediv = ""
+            if pidx > 0 or hide_plot:
+                hidediv = ' style="display:none;"'
+
+            # Save the plot to the data directory if export is requested
+            if config.export_plots:
+                for fformat in config.export_plot_formats:
+                    # Make the directory if it doesn't already exist
+                    plot_dir = os.path.join(config.plots_dir, fformat)
+                    if not os.path.exists(plot_dir):
+                        os.makedirs(plot_dir)
+                    # Save the plot
+                    plot_fn = os.path.join(plot_dir, "{}.{}".format(pid, fformat))
+                    fig.savefig(plot_fn, format=fformat, bbox_extra_artists=(lgd,), bbox_inches="tight")
+
+            # Output the figure to a base64 encoded string
+            if getattr(get_template_mod(), "base64_plots", True) is True:
+                img_buffer = io.BytesIO()
+                fig.savefig(img_buffer, format="png", bbox_inches="tight")
+                b64_img = base64.b64encode(img_buffer.getvalue()).decode("utf8")
+                img_buffer.close()
+                html += '<div class="mqc_mplplot" id="{}"{}><img src="data:image/png;base64,{}" /></div>'.format(
+                    pid, hidediv, b64_img
+                )
+
+            # Link to the saved image
+            else:
+                plot_relpath = os.path.join(config.plots_dir_name, "png", "{}.png".format(pid))
+                html += '<div class="mqc_mplplot" id="{}"{}><img src="{}" /></div>'.format(pid, hidediv, plot_relpath)
+
+            plt.close(fig)
 
     # Close wrapping div
     html += "</div>"
 
-    return html
-
-
-def plotly_static_fig(
-    pdata: List,
-    samples: List,
-    pidx: int,
-    pid: str,
-    pconfig: Dict,
-    plot_pct: bool,
-    hide_plot: bool,
-    plt_height: float,
-    bar_width: float,
-):
-    pass
-
-
-def matplotlib_fig(
-    pdata: List,
-    samples: List,
-    pidx: int,
-    pid: str,
-    pconfig: Dict,
-    plot_pct: bool,
-    hide_plot: bool,
-    plt_height: float,
-    bar_width: float,
-):
-    fig = plt.figure(figsize=(14, plt_height), frameon=False)
-    axes = fig.add_subplot(111)
-    dlabels = []
-    prevdata = []
-    prev_values = []
-    for idx, d in enumerate(pdata):
-        # Get offset for stacked bars
-        if idx == 0:
-            prevdata = [0] * len(samples)
-        else:
-            for i, p in enumerate(prevdata):
-                prevdata[i] += prev_values[i]
-        # Save the name of this series
-        dlabels.append(d["name"])
-        # Add the series of bars to the plot
-        axes.barh(
-            range(len(samples)),
-            d["values"],
-            bar_width,
-            left=prevdata,
-            color=d["color"],
-            align="center",
-            linewidth=pconfig.get("borderWidth", 0),
-        )
-        prev_values = d["values"]
-
-    # Tidy up axes
-    axes.tick_params(
-        labelsize=pconfig.get("labelSize", 8), direction="out", left=False, right=False, top=False, bottom=False
-    )
-    axes.set_xlabel(pconfig.get("ylab", ""))  # I know, I should fix the fact that the config is switched
-    axes.set_ylabel(pconfig.get("xlab", ""))
-    axes.set_yticks(range(len(samples)))  # Specify where to put the labels
-    axes.set_yticklabels(samples)  # Set y axis sample name labels
-    axes.set_ylim((-0.5, len(samples) - 0.5))  # Reduce padding around plot area
-    if plot_pct is True:
-        axes.set_xlim((0, 100))
-        # Add percent symbols
-        vals = axes.get_xticks()
-        axes.set_xticks(axes.get_xticks())
-        axes.set_xticklabels(["{:.0f}%".format(x) for x in vals])
-    else:
-        default_xlimits = axes.get_xlim()
-        axes.set_xlim((pconfig.get("ymin", default_xlimits[0]), pconfig.get("ymax", default_xlimits[1])))
-    if "title" in pconfig:
-        top_gap = 1 + (0.5 / plt_height)
-        plt.text(0.5, top_gap, pconfig["title"], horizontalalignment="center", fontsize=16, transform=axes.transAxes)
-    axes.grid(True, zorder=0, which="both", axis="x", linestyle="-", color="#dedede", linewidth=1)
-    axes.set_axisbelow(True)
-    axes.spines["right"].set_visible(False)
-    axes.spines["top"].set_visible(False)
-    axes.spines["bottom"].set_visible(False)
-    axes.spines["left"].set_visible(False)
-    plt.gca().invert_yaxis()  # y-axis is reverse sorted otherwise
-
-    # Hide some labels if we have a lot of samples
-    show_nth = max(1, math.ceil(len(pdata[0]["data"]) / 150))
-    for idx, label in enumerate(axes.get_yticklabels()):
-        if idx % show_nth != 0:
-            label.set_visible(False)
-
-    # Legend
-    bottom_gap = -1 * (1 - ((plt_height - 1.5) / plt_height))
-    lgd = axes.legend(
-        dlabels,
-        loc="lower center",
-        bbox_to_anchor=(0, bottom_gap, 1, 0.102),
-        ncol=5,
-        mode="expand",
-        fontsize=pconfig.get("labelSize", 8),
-        frameon=False,
-    )
-
-    # Should this plot be hidden on report load?
-    hidediv = ""
-    if pidx > 0 or hide_plot:
-        hidediv = ' style="display:none;"'
-
-    # Save the plot to the data directory if export is requested
-    if config.export_plots:
-        for fformat in config.export_plot_formats:
-            # Make the directory if it doesn't already exist
-            plot_dir = os.path.join(config.plots_dir, fformat)
-            if not os.path.exists(plot_dir):
-                os.makedirs(plot_dir)
-            # Save the plot
-            plot_fn = os.path.join(plot_dir, "{}.{}".format(pid, fformat))
-            fig.savefig(plot_fn, format=fformat, bbox_extra_artists=(lgd,), bbox_inches="tight")
-
-    html = ""
-    # Output the figure to a base64 encoded string
-    if getattr(get_template_mod(), "base64_plots", True) is True:
-        img_buffer = io.BytesIO()
-        fig.savefig(img_buffer, format="png", bbox_inches="tight")
-        b64_img = base64.b64encode(img_buffer.getvalue()).decode("utf8")
-        img_buffer.close()
-        html += '<div class="mqc_mplplot" id="{}"{}><img src="data:image/png;base64,{}" /></div>'.format(
-            pid, hidediv, b64_img
-        )
-
-    # Link to the saved image
-    else:
-        plot_relpath = os.path.join(config.plots_dir_name, "png", "{}.png".format(pid))
-        html += '<div class="mqc_mplplot" id="{}"{}><img src="{}" /></div>'.format(pid, hidediv, plot_relpath)
-
-    plt.close(fig)
     return html
