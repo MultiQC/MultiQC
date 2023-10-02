@@ -17,11 +17,8 @@
 
 ### Module updates
 
-  - Add top overrepresented sequences table ([#2075](https://github.com/ewels/MultiQC/pull/2075))
-  - Fix parsing mixed strings/numbers, account for trailing tab ([#2083](https://github.com/ewels/MultiQC/pull/2083))
-- **FastQC**:
-- **Picard**:
-- **Picard**: MarkDuplicates: account for missing trailing `0` ([#2094](https://github.com/ewels/MultiQC/pull/2094))
+- **FastQC**: Add top overrepresented sequences table ([#2075](https://github.com/ewels/MultiQC/pull/2075))
+- **Picard**: MarkDuplicates: Fix parsing mixed strings/numbers, account for missing trailing `0` ([#2083](https://github.com/ewels/MultiQC/pull/2083), [#2094](https://github.com/ewels/MultiQC/pull/2094))
 
 ## [MultiQC v1.16](https://github.com/ewels/MultiQC/releases/tag/v1.16) - 2023-09-22
 
