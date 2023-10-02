@@ -3,7 +3,7 @@ import re
 from collections import OrderedDict
 
 from multiqc import config
-from multiqc.modules.base_module import BaseMultiqcModule
+from multiqc.modules.base_module import BaseMultiqcModule, ModuleNoSamplesFound
 from multiqc.plots import table
 
 log = logging.getLogger(__name__)
@@ -51,7 +51,7 @@ class MultiqcModule(BaseMultiqcModule):
         # No samples
         num_samples = max(len(self.runSummary), len(self.indexSummary))
         if num_samples == 0:
-            raise UserWarning
+            raise ModuleNoSamplesFound
 
         log.info("Found {} reports".format(num_samples))
 

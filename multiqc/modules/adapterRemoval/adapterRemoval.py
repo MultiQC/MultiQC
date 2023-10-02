@@ -6,7 +6,7 @@ import re
 from collections import OrderedDict
 
 from multiqc import config
-from multiqc.modules.base_module import BaseMultiqcModule
+from multiqc.modules.base_module import BaseMultiqcModule, ModuleNoSamplesFound
 from multiqc.plots import bargraph, linegraph
 
 # Initialise the logger
@@ -49,7 +49,7 @@ class MultiqcModule(BaseMultiqcModule):
             self.s_name = f["s_name"]
             try:
                 parsed_data = self.parse_settings_file(f)
-            except UserWarning:
+            except ModuleNoSamplesFound:
                 continue
             if parsed_data is not None:
                 self.adapter_removal_data[self.s_name] = parsed_data
@@ -59,7 +59,7 @@ class MultiqcModule(BaseMultiqcModule):
         self.adapter_removal_data = self.ignore_samples(self.adapter_removal_data)
 
         if len(self.adapter_removal_data) == 0:
-            raise UserWarning
+            raise ModuleNoSamplesFound
 
         log.info("Found {} reports".format(len(self.adapter_removal_data)))
 
@@ -134,7 +134,7 @@ class MultiqcModule(BaseMultiqcModule):
         # biological/technical relevance is not clear -> skip
         if self.__read_type == "single" and self.__collapsed:
             log.warning("Case single-end and collapse is not " "implemented -> File %s skipped" % self.s_name)
-            raise UserWarning
+            raise ModuleNoSamplesFound
 
     def set_trim_stat(self, trim_data):
         required = [

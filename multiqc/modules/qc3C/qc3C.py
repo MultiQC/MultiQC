@@ -10,7 +10,7 @@ from collections import OrderedDict, defaultdict
 
 import numpy as np
 
-from multiqc.modules.base_module import BaseMultiqcModule
+from multiqc.modules.base_module import BaseMultiqcModule, ModuleNoSamplesFound
 from multiqc.plots import bargraph, linegraph, table
 
 log = logging.getLogger(__name__)
@@ -155,7 +155,7 @@ class MultiqcModule(BaseMultiqcModule):
         # check that any non-empty records were stored under one of the two analysis modes
         n_reports = len(self.qc3c_data["kmer"]) + len(self.qc3c_data["bam"])
         if n_reports == 0:
-            raise UserWarning("No reports found")
+            raise ModuleNoSamplesFound
 
         log.info("Found {} reports".format(n_reports))
 
@@ -1131,8 +1131,8 @@ class MultiqcModule(BaseMultiqcModule):
 
         except KeyError as ex:
             log.error(
-                "The entry {} was not found in the qc3C JSON file '{}'".format(
-                    str(ex), os.path.join(f["root"], f["fn"])
+                "The entry {} was not found in the qc3C JSON file '{}', skipping sample {}".format(
+                    str(ex), os.path.join(f["root"], f["fn"]), f["s_name"]
                 )
             )
             return

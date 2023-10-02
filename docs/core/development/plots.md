@@ -433,24 +433,24 @@ The default header keys are:
 
 ```python
 single_header = {
-    'namespace': '',                # Name for grouping. Prepends desc and is in Config Columns modal
-    'title': '[ dict key ]',        # Short title, table column title
-    'description': '[ dict key ]',  # Longer description, goes in mouse hover text
-    'max': None,                    # Minimum value in range, for bar / colour coding
-    'min': None,                    # Maximum value in range, for bar / colour coding
-    'ceiling': None,                # Maximum value for automatic bar limit
-    'floor': None,                  # Minimum value for automatic bar limit
-    'minRange': None,               # Minimum range for automatic bar
-    'scale': 'GnBu',                # Colour scale for colour coding. False to disable.
-    'bgcols': None,                 # Dict with values: background colours for categorical data.
-    'colour': '<auto>',             # Colour for column grouping
-    'suffix': None,                 # Suffix for value (eg. '%')
-    'format': '{:,.1f}',            # Value format string - default 1 decimal place
-    'cond_formatting_rules': None,  # Rules for conditional formatting table cell values - see docs below
+    'namespace': '',                 # Name for grouping. Prepends desc and is in Config Columns modal
+    'title': '[ dict key ]',         # Short title, table column title
+    'description': '[ dict key ]',   # Longer description, goes in mouse hover text
+    'max': None,                     # Minimum value in range, for bar / colour coding
+    'min': None,                     # Maximum value in range, for bar / colour coding
+    'ceiling': None,                 # Maximum value for automatic bar limit
+    'floor': None,                   # Minimum value for automatic bar limit
+    'minRange': None,                # Minimum range for automatic bar
+    'scale': 'GnBu',                 # Colour scale for colour coding. False to disable.
+    'bgcols': None,                  # Dict with values: background colours for categorical data.
+    'colour': '<auto>',              # Colour for column grouping
+    'suffix': None,                  # Suffix for value (eg. '%')
+    'format': '{:,.1f}',             # Value format string - default 1 decimal place
+    'cond_formatting_rules': None,   # Rules for conditional formatting table cell values - see docs below
     'cond_formatting_colours': None, # Styles for conditional formatting of table cell values
-    'shared_key': None              # See below for description
-    'modify': None,                 # Lambda function to modify values
-    'hidden': False                 # Set to True to hide the column on page load
+    'shared_key': None,              # See below for description
+    'modify': None,                  # Lambda function to modify values
+    'hidden': False                  # Set to True to hide the column on page load
 }
 ```
 
@@ -458,15 +458,15 @@ A third parameter can be specified with settings for the whole table:
 
 ```python
 table_config = {
-    'namespace': '',                         # Name for grouping. Prepends desc and is in Config Columns modal
-    'id': '<random string>',                 # ID used for the table
-    'table_title': '<table id>',             # Title of the table. Used in the column config modal
-    'save_file': False,                      # Whether to save the table data to a file
-    'raw_data_fn':'multiqc_<table_id>_table' # File basename to use for raw data file
-    'sortRows': True                         # Whether to sort rows alphabetically
-    'only_defined_headers': True             # Only show columns that are defined in the headers config
-    'col1_header': 'Sample Name'             # The header used for the first column
-    'no_beeswarm': False    # Force a table to always be plotted (beeswarm by default if many rows)
+    'namespace': '',                           # Name for grouping. Prepends desc and is in Config Columns modal
+    'id': '<random string>',                   # ID used for the table
+    'table_title': '<table id>',               # Title of the table. Used in the column config modal
+    'save_file': False,                        # Whether to save the table data to a file
+    'raw_data_fn': 'multiqc_<table_id>_table', # File basename to use for raw data file
+    'sortRows': True,                          # Whether to sort rows alphabetically
+    'only_defined_headers': True,              # Only show columns that are defined in the headers config
+    'col1_header': 'Sample Name',              # The header used for the first column
+    'no_beeswarm': False,                      # Force a table to always be plotted (beeswarm by default if many rows)
 }
 ```
 
@@ -692,7 +692,7 @@ pconfig = {
     'square': True,                # Force the plot to stay square? (Maintain aspect ratio)
     'xcats_samples': True,         # Is the x-axis sample names? Set to False to prevent report toolbox from affecting.
     'ycats_samples': True,         # Is the y-axis sample names? Set to False to prevent report toolbox from affecting.
-    'colstops': []                 # Scale colour stops. See below.
+    'colstops': [],                # Scale colour stops. See below.
     'reverseColors': False,        # Reverse the order of the colour axis
     'decimalPlaces': 2,            # Number of decimal places for tooltip
     'legend': True,                # Colour axis key enabled or not

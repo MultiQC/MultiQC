@@ -38,6 +38,10 @@ class GatherMixin:
                 self.gather_raw_data[f["s_name"]] = data
             self.add_data_source(f, section="gather")
 
+            # Superfluous function call to confirm that it is used in this module
+            # Replace None with actual version if it is available
+            self.add_software_version(None, f["s_name"])
+
         self.gather_raw_data = self.ignore_samples(self.gather_raw_data)
 
         if len(self.gather_raw_data) == 0:

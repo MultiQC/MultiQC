@@ -6,7 +6,7 @@ import logging
 import re
 from collections import OrderedDict
 
-from multiqc.modules.base_module import BaseMultiqcModule
+from multiqc.modules.base_module import BaseMultiqcModule, ModuleNoSamplesFound
 from multiqc.plots import bargraph, table
 from multiqc.utils import mqc_colour
 
@@ -40,12 +40,26 @@ class MultiqcModule(BaseMultiqcModule):
             self.parse_vep_txt(f)
             self.add_data_source(f)
 
+        # Add version information
+        for sample, data in self.vep_data.items():
+            if "VEP run statistics" not in data:
+                print(data.keys())
+                continue
+
+            print(data["VEP run statistics"]["VEP version (API)"])
+            vep_version, api_version = data["VEP run statistics"]["VEP version (API)"].strip().split(" ")
+            api_version = api_version.replace("(", "").replace(")", "")
+            self.add_software_version(vep_version, sample)
+            # Only add API version if it's different to VEP version
+            if vep_version != api_version:
+                self.add_software_version(api_version, sample, "VEP API")
+            print()
         # Filter to strip out ignored sample names
         self.vep_data = self.ignore_samples(self.vep_data)
 
         # Stop if we didn't get any samples
         if len(self.vep_data) == 0:
-            raise UserWarning
+            raise ModuleNoSamplesFound
         log.info("Found {} VEP summaries".format(len(self.vep_data)))
 
         # Write data to file

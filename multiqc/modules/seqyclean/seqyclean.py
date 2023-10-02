@@ -2,7 +2,7 @@ import logging
 import re
 from collections import OrderedDict
 
-from multiqc.modules.base_module import BaseMultiqcModule
+from multiqc.modules.base_module import BaseMultiqcModule, ModuleNoSamplesFound
 from multiqc.plots import bargraph
 
 # Initialise the logger
@@ -29,6 +29,10 @@ class MultiqcModule(BaseMultiqcModule):
 
             self.seqyclean_data[f["s_name"]] = dict()
             for header, col in zip(headers, cols):
+                # Add verions info
+                if header == "Version":
+                    self.add_software_version(col, f["s_name"])
+
                 # Attempt to convert into a float if we can
                 try:
                     col = float(col)
@@ -39,12 +43,12 @@ class MultiqcModule(BaseMultiqcModule):
             self.add_data_source(f)
 
         if len(self.seqyclean_data) == 0:
-            raise UserWarning
+            raise ModuleNoSamplesFound
 
         self.seqyclean_data = self.ignore_samples(self.seqyclean_data)
 
         if len(self.seqyclean_data) == 0:
-            raise UserWarning
+            raise ModuleNoSamplesFound
 
         log.info("Found {} logs".format(len(self.seqyclean_data)))
 

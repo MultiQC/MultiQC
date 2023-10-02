@@ -6,7 +6,7 @@ import logging
 from collections import OrderedDict, defaultdict
 
 from multiqc import config
-from multiqc.modules.base_module import BaseMultiqcModule
+from multiqc.modules.base_module import BaseMultiqcModule, ModuleNoSamplesFound
 
 # Initialise the logger
 from multiqc.modules.qualimap.QM_BamQC import coverage_histogram_helptext, genome_fraction_helptext
@@ -132,6 +132,11 @@ class MultiqcModule(BaseMultiqcModule):
                     contig, length, bases, mean, min_cov, max_cov = line.split("\t")
                     genstats[s_name]["mean_coverage"] = mean
                     self.add_data_source(f, s_name=s_name, section="summary")
+
+            # Superfluous function call to confirm that it is used in this module
+            # Replace None with actual version if it is available
+            self.add_software_version(None, s_name)
+
         # Filter out any samples from --ignore-samples
         genstats = defaultdict(OrderedDict, self.ignore_samples(genstats))
         samples_found = set(genstats.keys())
@@ -145,7 +150,7 @@ class MultiqcModule(BaseMultiqcModule):
 
         # No samples found
         if len(samples_found) == 0:
-            raise UserWarning
+            raise ModuleNoSamplesFound
         log.info(f"Found {len(samples_found)} reports")
 
         for scope, data in data_by_scope.items():

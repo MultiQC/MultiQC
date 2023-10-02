@@ -6,7 +6,7 @@ import io
 import logging
 from collections import OrderedDict
 
-from multiqc.modules.base_module import BaseMultiqcModule
+from multiqc.modules.base_module import BaseMultiqcModule, ModuleNoSamplesFound
 from multiqc.plots import bargraph, linegraph, table
 
 # Initialise the logger
@@ -38,6 +38,10 @@ class MultiqcModule(BaseMultiqcModule):
         # parse ngsderive summary file
         for f in self.find_log_files("ngsderive/strandedness"):
             self.parse(self.strandedness, f, "strandedness", expected_header_counts={5})
+
+            # Superfluous function call to confirm that it is used in this module
+            # Replace None with actual version if it is available
+            self.add_software_version(None, f["s_name"])
 
         for f in self.find_log_files("ngsderive/instrument"):
             self.parse(self.instrument, f, "instrument", expected_header_counts={4})
@@ -75,8 +79,8 @@ class MultiqcModule(BaseMultiqcModule):
             ]
         )
         if num_results_found == 0:
-            raise UserWarning
-        log.info(f"Found {num_results_found} reports")
+            raise ModuleNoSamplesFound
+        log.info("Found {} reports".format(num_results_found))
 
         if self.strandedness:
             self.add_strandedness_data()

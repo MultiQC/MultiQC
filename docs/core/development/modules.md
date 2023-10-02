@@ -25,7 +25,7 @@ Get this stuff right, and your pull-request is much more likely to be merged qui
 ### Don't add everything
 
 MultiQC was designed to _summarise_ tool outputs.
-An end-user should be able to visially scan the report and spot any outlier samples, then go to the underlying tool to look at those samples in more detail.
+An end-user should be able to visually scan the report and spot any outlier samples, then go to the underlying tool to look at those samples in more detail.
 
 MultiQC is _not_ designed to replicate every single metric from a tool. Doing so makes the report difficult to read and digest quickly for many samples.
 Module additions that add huge quantities of metrics to reports will be asked to slim down.
@@ -121,7 +121,7 @@ Better still, many of these tools can automatically change the formatting so tha
 can write code in whatever style they prefer and defer this task to automation.
 
 Much like source control, gloves in a lab, and wearing a seatbelt, code formatters and code linting
-is an annoying inconvience at first for most people which in time becomes an indespesible
+is an annoying inconvenience at first for most people which in time becomes an indispensable
 tool in the maintenance of high quality software.
 
 MultiQC uses a range of tools to check the code base. The main two code formatters are:
@@ -239,7 +239,7 @@ module show up on the [MultiQC homepage](http://multiqc.info) so that everyone
 knows it exists. This process is automated once the file is added to the core
 repository.
 
-This docs file should be placed in `docs/modules/<your_module_name>.md` and
+These docs file should be placed in `docs/modules/<your_module_name>.md` and
 should have the following structure:
 
 ```markdown
@@ -257,11 +257,6 @@ you think would be helpful. Please avoid using heading levels 1 to 3.
 
 The file search patterns will be shown on the website page automatically
 and do not need to be included in this file.
-
-### Changelog
-
-Last but not least, remember to add your new module to the `CHANGELOG.md`,
-so that people know that it's there.
 
 ### MultiqcModule Class
 
@@ -334,6 +329,21 @@ Log messages can come in a range of formats:
   - Alert user about problems that don't halt execution
 - `log.error` and `log.critical`
   - Not often used, these are for show-stopping problems
+
+### Changelog
+
+When opening a pull-request, please ensure that the PR title is
+formatted as `New module: XYZ`, where `XYZ` is the name of your module.
+
+The changelog entry will be automatically generated for you, based on
+the meta-information that you add to the module `MultiqcModule` class.
+
+:::tip
+Please do not add anything to the `CHANGELOG.md` file!
+This is now handled by our friendly MultiQC bot 🤖
+
+For more information about how it works, see the [contributing docs](contributing.md#changelog).
+:::
 
 ## Step 1 - Find log files
 
@@ -536,12 +546,14 @@ Note that this function should be used _after_ cleaning the sample name with
 ### No files found
 
 If your module cannot find any matching files, it needs to raise an
-exception of type `UserWarning`. This tells the core MultiQC program
+exception of type `ModuleNoSamplesFound`. This tells the core MultiQC program
 that no modules were found. For example:
 
 ```python
+from multiqc.modules.base_module import ModuleNoSamplesFound
+
 if len(self.mod_data) == 0:
-    raise UserWarning
+    raise ModuleNoSamplesFound
 ```
 
 Note that this has to be raised as early as possible, so that it halts
@@ -688,6 +700,22 @@ for line in f.splitlines():
         self.add_software_version(htslib_version.group(1), f["s_name"], software_name="htslib")
 
     # ..rest of file parsing
+```
+
+Even if the logs does not contain any version information, you should still
+add a superfluous `self.add_software_version()` call to the module. This
+will help maintainers to check if new modules or submodules parse any version
+information that might exist. The call should also include a note that it is
+a dummy call. Example:
+
+```python
+for f in self.find_log_files("mymodule/submodule"):
+    sample = f["s_name"]
+    data[sample] = parse_file(f)
+
+    # Superfluous function call to confirm that it is used in this module
+    # Replace None with actual version if it is available
+    self.add_software_version(None, sample)
 ```
 
 ## Step 3 - Adding to the general statistics table

@@ -31,6 +31,10 @@ def parse_reports(self):
         # Add file to multiqc_sources.txt
         self.add_data_source(f)
 
+        # Superfluous function call to confirm that it is used in this module
+        # Replace None with actual version if it is available
+        self.add_software_version(None, s_name)
+
     # Filter to strip out ignored sample names
     self.tin_data = self.ignore_samples(self.tin_data)
 
