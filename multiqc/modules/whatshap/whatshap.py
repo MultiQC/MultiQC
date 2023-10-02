@@ -173,7 +173,7 @@ class MultiqcModule(BaseMultiqcModule):
         return sample, results
 
     @staticmethod
-    def get_summary_field(sample_stats, sample):
+    def get_summary_field(sample_stats):
         """
         Return the summary field for sample_stats
 
@@ -188,11 +188,6 @@ class MultiqcModule(BaseMultiqcModule):
             summary_field = list(sample_stats)[0]
         else:
             summary_field = ALL_CHROM
-            if summary_field not in sample_stats:
-                log.warning(
-                    f"Could not find the {summary_field} chromosome for {sample}. Make sure that the input is not truncated. Will summarize information for all available chromosomes instead."
-                )
-                return None
         return summary_field
 
     def whatshap_add_general_stats(self):
@@ -251,9 +246,7 @@ class MultiqcModule(BaseMultiqcModule):
         general = dict()
         for sample, sample_stats in self.whatshap_stats.items():
             # Get the summary field
-            summary_field = self.get_summary_field(sample_stats, sample)
-            if not summary_field:
-                continue
+            summary_field = self.get_summary_field(sample_stats)
 
             # The summary data we are adding to the general statistics
             summary_data = sample_stats[summary_field]
@@ -269,9 +262,8 @@ class MultiqcModule(BaseMultiqcModule):
         pdata = dict()
         for sample, sample_stats in self.whatshap_stats.items():
             # Get the summary field
-            summary_field = self.get_summary_field(sample_stats, sample)
-            if summary_field:
-                pdata[sample] = {"Phased Base Pairs": sample_stats[summary_field]["bp_per_block_sum"]}
+            summary_field = self.get_summary_field(sample_stats)
+            pdata[sample] = {"Phased Base Pairs": sample_stats[summary_field]["bp_per_block_sum"]}
 
         configuration = {
             "id": "multiqc_whatshap_phased_bp_plot",
@@ -482,9 +474,7 @@ class MultiqcModule(BaseMultiqcModule):
         general = dict()
         for sample, sample_stats in self.whatshap_stats.items():
             # Get the summary field
-            summary_field = self.get_summary_field(sample_stats, sample)
-            if not summary_field:
-                continue
+            summary_field = self.get_summary_field(sample_stats)
 
             # The summary data we are adding to the general statistics
             summary_data = sample_stats[summary_field]
