@@ -17,12 +17,12 @@ def basic_figure(pconfig: Dict, plt_height: int) -> go.Figure:
             font=dict(size=20),
         ),
         yaxis=dict(
-            title=dict(text=pconfig["ylab"]),
+            title=dict(text=pconfig.get("ylab")),
             showgrid=False,
             categoryorder="category descending",
         ),
         xaxis=dict(
-            title=dict(text=pconfig["xlab"]),
+            title=dict(text=pconfig.get("xlab")),
             gridcolor="rgba(0,0,0,0.1)",
         ),
         paper_bgcolor="rgba(0,0,0,0)",
@@ -32,8 +32,8 @@ def basic_figure(pconfig: Dict, plt_height: int) -> go.Figure:
         font={"color": "Black", "family": "Lucida Grande"},
         colorway=mqc_colour.mqc_colour_scale.COLORBREWER_SCALES["plot_defaults"],
     )
-
-    fig = go.Figure(
+    fig = go.Figure()
+    fig.update_layout(
         # The function expects a dict, even though go.Layout works just fine
         cast(dict, layout),
         legend=dict(

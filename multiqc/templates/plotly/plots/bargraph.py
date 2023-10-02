@@ -5,7 +5,21 @@ from typing import Dict, List
 import plotly.graph_objects as go
 
 from multiqc.templates.plotly.plots import basic_figure
-from multiqc.utils import report
+from multiqc.utils import config
+
+"""
+Currently, we have to implement the plots twice: interactive ones with highcharts 
+and static versions with matplotlib.
+
+With Plotly, we will be able to build a plot once, and then export it to both
+interactive and static versions with fig.to_html() (or fig.to_plotly_json() followed
+by JavaScript rendering), and with fig.write_image().
+
+However, for static images, we would still need some interactivity, namely the buttons
+to switch between percentages/logarithmic scales and counts, as well as support plots
+for multiple datasets. With matplotlib, this is achieved by creating a separate
+figure for each dataset, and then using the `subplots` functionality to combine them
+"""
 
 
 def plotly_bargraph(
@@ -27,9 +41,12 @@ def plotly_bargraph(
     # Height has a default, then adjusted by the number of samples
     plt_height = max_n_samples // 186  # Default, empirically determined
     plt_height = max(600, plt_height)  # At least 512px tall
-    plt_height = min(2560, plt_height)  # Cap at 2560 tall
+    plt_height = min(2560, plt_height)  # Cap at 2560px tall
 
     fig = basic_figure(pconfig, plt_height)
+
+    if pconfig["id"] == "snpeff_effects":
+        print()
 
     for data in data_by_cat_lists[0]:
         fig.add_trace(
@@ -42,19 +59,20 @@ def plotly_bargraph(
             ),
         )
 
-    for data_by_cat, samples in zip(data_by_cat_lists, samples_lists):
+    for data, samples in zip(data_by_cat_lists, samples_lists):
         add_pct_tab = pconfig.get("cpswitch", True)
         add_log_tab = pconfig.get("logswitch", False)
         if add_pct_tab or add_log_tab:
             pct_by_cat = []
             if add_pct_tab:
                 # Count totals for each category
-                sums = [0 for _ in data_by_cat[0]["data"]]
-                for cat_idx, d in enumerate(data_by_cat):
+                sums = [0 for _ in data[0]["data"]]
+                for cat_idx, d in enumerate(data):
                     for sample_idx, v in enumerate(d["data"]):
-                        sums[sample_idx] += v
+                        if not math.isnan(v):
+                            sums[sample_idx] += v
                 # Now, calculate percentages for each category
-                for cat_idx, d in enumerate(data_by_cat):
+                for cat_idx, d in enumerate(data):
                     values = [x for x in d["data"]]
                     if len(values) < len(samples):
                         values.extend([0] * (len(samples) - len(values)))
@@ -68,7 +86,7 @@ def plotly_bargraph(
 
             log_by_cat = []
             if add_log_tab:
-                for cat_idx, d in enumerate(data_by_cat):
+                for cat_idx, d in enumerate(data):
                     values = [x for x in d["data"]]
                     if len(values) < len(samples):
                         values.extend([0] * (len(samples) - len(values)))
@@ -85,25 +103,29 @@ def plotly_bargraph(
                         type="buttons",
                         direction="left",
                         buttons=[
-                            dict(
-                                args=["x", [data["data"] for data in data_by_cat]],
-                                label=pconfig.get("cpswitch_counts_label", "Counts"),
-                                method="restyle",
-                            ),
-                            dict(
-                                args=["x", pct_by_cat],
-                                label=pconfig.get("cpswitch_percent_label", "Percentages"),
-                                method="restyle",
-                            )
-                            if add_pct_tab
-                            else None,
-                            dict(
-                                args=["x", log_by_cat],
-                                label=pconfig.get("logswitch_label", "Log10"),
-                                method="restyle",
-                            )
-                            if add_log_tab
-                            else None,
+                            b
+                            for b in [
+                                dict(
+                                    args=["x", [data["data"] for data in data]],
+                                    label=pconfig.get("cpswitch_counts_label", "Counts"),
+                                    method="restyle",
+                                ),
+                                dict(
+                                    args=["x", pct_by_cat],
+                                    label=pconfig.get("cpswitch_percent_label", "Percentages"),
+                                    method="restyle",
+                                )
+                                if add_pct_tab
+                                else None,
+                                dict(
+                                    args=["x", log_by_cat],
+                                    label=pconfig.get("logswitch_label", "Log10"),
+                                    method="restyle",
+                                )
+                                if add_log_tab
+                                else None,
+                            ]
+                            if b
                         ],
                         yanchor="top",
                         xanchor="left",
@@ -115,20 +137,21 @@ def plotly_bargraph(
 
     # json = fig.to_plotly_json(full_html=False, include_plotlyjs=None)
     html = fig.to_html(full_html=False, include_plotlyjs=None)
-    html = """
-    <div class="plotly-plot-wrapper"{height}>
-        <div id="{id}" class="plotly-plot not_rendered plotly-bar-plot"><small>loading..</small></div>
-    </div></div>""".format(
-        id=pconfig["id"],
-        height=f' style="height:{pconfig["height"]}px"' if "height" in pconfig else "",
-    )
 
-    report.num_hc_plots += 1
-
-    report.plot_data[pconfig["id"]] = {
-        "plot_type": "bar_graph",
-        "samples": samples_lists,
-        "datasets": data_by_cat_lists,
-        "config": pconfig,
-    }
+    # html = """
+    # <div class="plotly-plot-wrapper"{height}>
+    #     <div id="{id}" class="plotly-plot not_rendered plotly-bar-plot"><small>loading..</small></div>
+    # </div></div>""".format(
+    #     id=pconfig["id"],
+    #     height=f' style="height:{pconfig["height"]}px"' if "height" in pconfig else "",
+    # )
+    #
+    # report.num_hc_plots += 1
+    #
+    # report.plot_data[pconfig["id"]] = {
+    #     "plot_type": "bar_graph",
+    #     "samples": samples_lists,
+    #     "datasets": data_by_cat_lists,
+    #     "config": pconfig,
+    # }
     return html
