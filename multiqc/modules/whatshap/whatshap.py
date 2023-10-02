@@ -97,9 +97,6 @@ class MultiqcModule(BaseMultiqcModule):
         header = next(file_content).strip().split("\t")
         header[0] = header[0].lstrip("#")
 
-        if sample == "GM24385_0_1x_full_opt":
-            pass
-
         # The results from this log file, a dictionary for every chromosome
         results = defaultdict(dict)
         # Parse the lines that have the data
