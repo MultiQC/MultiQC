@@ -17,6 +17,8 @@
 
 ### Module updates
 
+- **ngsderive**
+  - Support for newest subcommand, `endedness` ([#1992](https://github.com/ewels/MultiQC/pull/1992))
 - **FastQC**:
   - Add top overrepresented sequences table ([#2075](https://github.com/ewels/MultiQC/pull/2075))
 - **Picard**:

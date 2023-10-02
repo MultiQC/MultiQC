@@ -33,70 +33,55 @@ class MultiqcModule(BaseMultiqcModule):
         self.readlen = {}
         self.encoding = {}
         self.junctions = {}
+        self.endedness = {}
 
         # parse ngsderive summary file
-        expected_header_count_strandedness = 5
-        expected_header_count_instrument = 4
-        expected_header_count_readlen = 4
-        expected_header_count_encoding = 3
-        expected_header_count_junctions = 9
-
         for f in self.find_log_files("ngsderive/strandedness"):
-            self.parse(
-                self.strandedness,
-                f,
-                "strandedness",
-                expected_header_count_strandedness,
-            )
+            self.parse(self.strandedness, f, "strandedness", expected_header_counts={5, 6})
 
             # Superfluous function call to confirm that it is used in this module
             # Replace None with actual version if it is available
             self.add_software_version(None, f["s_name"])
 
         for f in self.find_log_files("ngsderive/instrument"):
-            self.parse(
-                self.instrument,
-                f,
-                "instrument",
-                expected_header_count_instrument,
-            )
+            self.parse(self.instrument, f, "instrument", expected_header_counts={4})
 
         for f in self.find_log_files("ngsderive/readlen"):
-            self.parse(
-                self.readlen,
-                f,
-                "readlen",
-                expected_header_count_readlen,
-            )
+            self.parse(self.readlen, f, "readlen", expected_header_counts={4})
 
         for f in self.find_log_files("ngsderive/encoding"):
-            self.parse(
-                self.encoding,
-                f,
-                "encoding",
-                expected_header_count_encoding,
-            )
+            self.parse(self.encoding, f, "encoding", expected_header_counts={3})
 
         for f in self.find_log_files("ngsderive/junction_annotation"):
-            self.parse(
-                self.junctions,
-                f,
-                "junctions",
-                expected_header_count_junctions,
-            )
+            self.parse(self.junctions, f, "junctions", expected_header_counts={9})
+
+        for f in self.find_log_files("ngsderive/endedness"):
+            self.parse(self.endedness, f, "endedness", expected_header_counts={6, 7, 8})
 
         self.strandedness = self.ignore_samples(self.strandedness)
         self.instrument = self.ignore_samples(self.instrument)
         self.readlen = self.ignore_samples(self.readlen)
         self.encoding = self.ignore_samples(self.encoding)
         self.junctions = self.ignore_samples(self.junctions)
+        self.endedness = self.ignore_samples(self.endedness)
 
+        # TODO report per-subcommand
         num_results_found = max(
-            [len(d) for d in [self.strandedness, self.instrument, self.readlen, self.encoding, self.junctions]]
+            [
+                len(d)
+                for d in [
+                    self.strandedness,
+                    self.instrument,
+                    self.readlen,
+                    self.encoding,
+                    self.junctions,
+                    self.endedness,
+                ]
+            ]
         )
         if num_results_found == 0:
             raise ModuleNoSamplesFound
-        log.info("Found {} reports".format(num_results_found))
+        log.info(f"Found {num_results_found} reports")
 
         if self.strandedness:
             self.add_strandedness_data()
@@ -113,7 +98,10 @@ class MultiqcModule(BaseMultiqcModule):
         if self.junctions:
             self.add_junctions_data()
 
-    def probe_file_for_dictreader_kwargs(self, f, expected_header_count):
+        if self.endedness:
+            self.add_endedness_data()
+
+    def probe_file_for_dictreader_kwargs(self, f, expected_header_counts):
         """In short, this function was created to figure out which
         kwargs need to be passed to csv.DictReader. First,
         it tries to extract commonly known delimiters without
@@ -124,7 +112,7 @@ class MultiqcModule(BaseMultiqcModule):
         f.seek(0)
 
         for delim in ["\t", ",", " ", "|"]:
-            if delim in header and len(header.split(delim)) == expected_header_count:
+            if delim in header and len(header.split(delim)) in expected_header_counts:
                 return {"delimiter": delim}
 
         log.warn("Could not easily detect delimiter for file. Trying csv.Sniffer()")
@@ -132,17 +120,24 @@ class MultiqcModule(BaseMultiqcModule):
         f.seek(0)
         return {"dialect": dialect}
 
-    def parse(self, sample_dict, found_file, subcommand, expected_header_count):
-        kwargs = self.probe_file_for_dictreader_kwargs(io.StringIO(found_file["f"]), expected_header_count)
+    def parse(self, sample_dict, found_file, subcommand, expected_header_counts):
+        kwargs = self.probe_file_for_dictreader_kwargs(io.StringIO(found_file["f"]), expected_header_counts)
         for row in csv.DictReader(io.StringIO(found_file["f"]), **kwargs):
             if not row.get("File"):
                 continue
             sample_name = self.clean_s_name(row.get("File"), found_file)
+            read_group = row.get("ReadGroup")
+            if read_group and read_group != "overall":
+                sample_name += "-" + read_group
+                row["is_read_group"] = True
+            else:
+                row["is_read_group"] = False
             if sample_name in sample_dict:
-                log.debug("Duplicate sample name found! Overwriting: {}".format(sample_name))
+                log.debug(f"Duplicate sample name found for {subcommand}! Overwriting: {sample_name}")
 
             sample_dict[sample_name] = row
-            self.add_data_source(f=found_file, s_name=sample_name)
+            if not row["is_read_group"]:
+                self.add_data_source(f=found_file, s_name=sample_name)
 
     def add_strandedness_data(self):
         # Write data to file
@@ -150,11 +145,28 @@ class MultiqcModule(BaseMultiqcModule):
 
         data = {}
         for sample, strandedness in self.strandedness.items():
-            data[sample] = {
-                "predicted": strandedness.get("Predicted"),
-                "forward": round(float(strandedness.get("ForwardPct")) * 100.0, 2),
-                "reverse": round(float(strandedness.get("ReversePct")) * 100.0, 2),
-            }
+            if float(strandedness.get("ForwardPct")) == 0 and float(strandedness.get("ReversePct")) == 0:
+                # TODO how to present this case? No reads found for this Read Group.
+                continue
+            if (
+                float(strandedness.get("ForwardPct")) + float(strandedness.get("ReversePct")) < 2
+            ):  # pre-v4. Must convert to PCT
+                data[sample] = {
+                    "predicted": strandedness.get("Predicted"),
+                    "forward": round(float(strandedness.get("ForwardPct")) * 100.0, 2),
+                    "reverse": round(float(strandedness.get("ReversePct")) * 100.0, 2),
+                }
+            elif (
+                float(strandedness.get("ForwardPct")) + float(strandedness.get("ReversePct")) > 98
+            ):  # v4 or later. Already a PCT
+                data[sample] = {
+                    "predicted": strandedness.get("Predicted"),
+                    "forward": float(strandedness.get("ForwardPct")),
+                    "reverse": float(strandedness.get("ReversePct")),
+                }
+            else:
+                log.warning("Could not determine version of `strandedness`!")
+                # TODO error handle
 
         bardata = OrderedDict()
         sorted_data = sorted(data.items(), key=lambda x: x[1].get("forward"))
@@ -173,6 +185,7 @@ class MultiqcModule(BaseMultiqcModule):
         pconfig = {
             "id": "ngsderive_strandedness_plot",
             "title": "ngsderive: Strandedness",
+            "namespace": "ngsderive",
             "ylab": "% Read Evidence",
             "ymin": 0,
             "ymax": 100,
@@ -256,6 +269,7 @@ class MultiqcModule(BaseMultiqcModule):
         config = {
             "id": "ngsderive_instruments_plot",
             "title": "ngsderive: Instruments",
+            "namespace": "ngsderive",
         }
 
         self.add_section(
@@ -272,17 +286,25 @@ class MultiqcModule(BaseMultiqcModule):
 
         data = {}
         for sample, readlen in self.readlen.items():
-            data[sample] = {
-                "evidence": readlen.get("Evidence"),
-                "majoritypctdetected": round(float(readlen.get("MajorityPctDetected")) * 100.0, 2),
-                "consensusreadlength": int(readlen.get("ConsensusReadLength")),
-            }
+            if float(readlen.get("MajorityPctDetected")) > 1:  # v4 or later. Already a PCT.
+                # TODO what if v4 returns 0.57%? Will get parsed as pre-v4 and multiplied by 100.
+                data[sample] = {
+                    "evidence": readlen.get("Evidence"),
+                    "majoritypctdetected": float(readlen.get("MajorityPctDetected")),
+                    "consensusreadlength": int(readlen.get("ConsensusReadLength")),
+                }
+            elif float(readlen.get("MajorityPctDetected")) <= 1:  # pre-v4. Must convert to a PCT.
+                data[sample] = {
+                    "evidence": readlen.get("Evidence"),
+                    "majoritypctdetected": round(float(readlen.get("MajorityPctDetected")) * 100.0, 2),
+                    "consensusreadlength": int(readlen.get("ConsensusReadLength")),
+                }
 
         headers = OrderedDict()
         headers["consensusreadlength"] = {
             "title": "Read Length (bp)",
             "description": "Predicted read length from ngsderive.",
-            "format": "{:,.d}",
+            "format": "{:,d}",
         }
         headers["majoritypctdetected"] = {
             "title": "Read Length: % Supporting",
@@ -312,6 +334,7 @@ class MultiqcModule(BaseMultiqcModule):
         pconfig = {
             "id": "ngsderive_readlen_plot",
             "title": "ngsderive: Read Length",
+            "namespace": "ngsderive",
             "xlab": "Read Length",
             "ylab": "% Evidence for Read Length",
             "data_labels": [
@@ -357,16 +380,31 @@ class MultiqcModule(BaseMultiqcModule):
 
         data = {}
         for sample, junctions_data in self.junctions.items():
-            data[sample] = {
-                "total_junctions": junctions_data.get("total_junctions"),
-                "known_junctions": junctions_data.get("known_junctions"),
-                "partial_novel_junctions": junctions_data.get("partial_novel_junctions"),
-                "novel_junctions": junctions_data.get("complete_novel_junctions"),
-                "total_splice_events": junctions_data.get("total_splice_events"),
-                "known_spliced_reads": junctions_data.get("known_spliced_reads"),
-                "partial_novel_spliced_reads": junctions_data.get("partial_novel_spliced_reads"),
-                "novel_spliced_reads": junctions_data.get("complete_novel_spliced_reads"),
-            }
+            if "total_junctions" in junctions_data:  # pre-v4
+                data[sample] = {
+                    "total_junctions": int(junctions_data.get("total_junctions")),
+                    "known_junctions": int(junctions_data.get("known_junctions")),
+                    "partial_novel_junctions": int(junctions_data.get("partial_novel_junctions")),
+                    "novel_junctions": int(junctions_data.get("complete_novel_junctions")),
+                    "total_splice_events": int(junctions_data.get("total_splice_events")),
+                    "known_spliced_reads": int(junctions_data.get("known_spliced_reads")),
+                    "partial_novel_spliced_reads": int(junctions_data.get("partial_novel_spliced_reads")),
+                    "novel_spliced_reads": int(junctions_data.get("complete_novel_spliced_reads")),
+                }
+            elif "TotalJunctions" in junctions_data:  # v4 or later
+                data[sample] = {
+                    "total_junctions": int(junctions_data.get("TotalJunctions")),
+                    "known_junctions": int(junctions_data.get("KnownJunctions")),
+                    "partial_novel_junctions": int(junctions_data.get("PartialNovelJunctions")),
+                    "novel_junctions": int(junctions_data.get("CompleteNovelJunctions")),
+                    "total_splice_events": int(junctions_data.get("TotalSpliceEvents")),
+                    "known_spliced_reads": int(junctions_data.get("KnownSplicedReads")),
+                    "partial_novel_spliced_reads": int(junctions_data.get("PartialNovelSplicedReads")),
+                    "novel_spliced_reads": int(junctions_data.get("CompleteNovelSplicedReads")),
+                }
+            else:
+                log.warning("Could not determine `junction-annotation` version!")
+                # TODO error handling
 
         headers = OrderedDict(
             {
@@ -435,6 +473,7 @@ class MultiqcModule(BaseMultiqcModule):
         pconfig = {
             "id": "ngsderive_junctions_plot",
             "title": "ngsderive: Junction Annotation",
+            "namespace": "ngsderive",
             "cpswitch_counts_label": "Number",
             "yDecimals": False,
             "ylab": "Number of junctions",
@@ -458,4 +497,87 @@ class MultiqcModule(BaseMultiqcModule):
             description="""Junction annotations provided by ngsderive. For more information, please see
             [the documentation](https://stjudecloud.github.io/ngsderive/subcommands/junction_annotation/).""",
             plot=bargraph.plot([bardata, bardata], cats, pconfig),
+        )
+
+    def add_endedness_data(self):
+        # Write data to file
+        self.write_data_file(self.endedness, "ngsderive_endedness")
+
+        general_data = {}
+        rpt_present = False
+        for sample, endedness_data in self.endedness.items():
+            general_data[sample] = {
+                "endedness": endedness_data.get("Endedness"),
+            }
+            if "Reads per template" in endedness_data or "ReadsPerTemplate" in endedness_data:
+                rpt_present = True
+
+        general_headers = OrderedDict()
+        general_headers["endedness"] = {
+            "title": "Predicted Endedness",
+            "description": "Predicted library endedness from ngsderive",
+        }
+        self.general_stats_addcols(general_data, general_headers)
+
+        headers = OrderedDict()
+        headers["FyLn"] = {
+            "title": "f+l- count",
+            "description": "Number of reads with the 'first in template' FLAG set and the 'last in template' FLAG unset",
+            "format": "{:,d}",
+        }
+        headers["FnLy"] = {
+            "title": "f-l+ count",
+            "description": "Number of reads with the 'first in template' FLAG unset and the 'last in template' FLAG set",
+            "format": "{:,d}",
+        }
+        headers["FnLn"] = {
+            "title": "f-l- count",
+            "description": "Number of reads with the 'first in template' FLAG unset and the 'last in template' FLAG unset",
+            "format": "{:,d}",
+        }
+        headers["FyLy"] = {
+            "title": "f+l+ count",
+            "description": "Number of reads with the 'first in template' FLAG set and the 'last in template' FLAG set",
+            "format": "{:,d}",
+        }
+        if rpt_present:
+            headers["RPT"] = {
+                "title": "Reads per template",
+                "description": "Average number of reads per QNAME template",
+                "format": "{:,.4f}",
+            }
+        headers["endedness"] = {
+            "title": "Predicted Endedness",
+            "description": "Predicted library endedness from ngsderive",
+        }
+
+        table_data = {}
+        for sample, endedness_data in self.endedness.items():
+            table_data[sample] = {}
+            table_data[sample]["FyLn"] = int(endedness_data.get("f+l-"))
+            table_data[sample]["FnLy"] = int(endedness_data.get("f-l+"))
+            table_data[sample]["FnLn"] = int(endedness_data.get("f-l-"))
+            table_data[sample]["FyLy"] = int(endedness_data.get("f+l+"))
+            rpt = endedness_data.get("Reads per template")
+            if rpt is not None:  # pre-v4
+                table_data[sample]["RPT"] = float(rpt)
+            else:
+                rpt = endedness_data.get("ReadsPerTemplate")
+                if rpt is not None:  # v4 or later
+                    table_data[sample]["RPT"] = float(rpt)
+            table_data[sample]["endedness"] = endedness_data.get("Endedness")
+
+        # Config for the plot
+        config = {
+            "id": "ngsderive_endedness_plot",
+            "title": "ngsderive: Endedness",
+            "namespace": "ngsderive",
+        }
+
+        self.add_section(
+            name="Endedness",
+            anchor="ngsderive-endedness",
+            description="""Predicted library endedness provided by ngsderive. For more information, please see
+            [the documentation](https://stjudecloud.github.io/ngsderive/subcommands/endedness/).""",
+            plot=table.plot(table_data, headers, config),
         )

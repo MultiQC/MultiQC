@@ -519,7 +519,7 @@ nextclade:
   contents: "seqName;clade;"
   num_lines: 1
 ngsderive/strandedness:
-  contents: "File	TotalReads	ForwardPct	ReversePct	Predicted"
+  contents: "	TotalReads	ForwardPct	ReversePct	Predicted"
   num_lines: 1
 ngsderive/instrument:
   contents: "File	Instrument	Confidence	Basis"
@@ -531,7 +531,12 @@ ngsderive/encoding:
   contents: "File	Evidence	ProbableEncoding"
   num_lines: 1
 ngsderive/junction_annotation:
-  contents: "File	total_junctions	total_splice_events	known_junctions	partial_novel_junctions	complete_novel_junctions	known_spliced_reads	partial_novel_spliced_reads	complete_novel_spliced_reads"
+  - contents: "File	total_junctions	total_splice_events	known_junctions	partial_novel_junctions	complete_novel_junctions	known_spliced_reads	partial_novel_spliced_reads	complete_novel_spliced_reads"
+    num_lines: 1
+  - contents: "File	TotalJunctions	TotalSpliceEvents	KnownJunctions	PartialNovelJunctions	CompleteNovelJunctions	KnownSplicedReads	PartialNovelSplicedReads	CompleteNovelSplicedReads"
+    num_lines: 1
+ngsderive/endedness:
+  contents: "	f+l-	f-l+	f-l-	f+l+	"
   num_lines: 1
 optitype:
   contents: "	A1	A2	B1	B2	C1	C2	Reads	Objective"
