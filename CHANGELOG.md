@@ -9,6 +9,7 @@
 - Lint modules for missing `self.add_software_version` ([#2081](https://github.com/ewels/MultiQC/pull/2081))
 - Add GitHub Actions bot workflow to fix code linting from a PR comment ([#2082](https://github.com/ewels/MultiQC/pull/2082))
 - Just run CI on the oldest + newest supported Python versions ([#2074](https://github.com/ewels/MultiQC/pull/2074))
+- Trigger changelog entry addition on PR creation, in addition to an explicit comment to multiqc-bot ([#2102](https://github.com/ewels/MultiQC/pull/2102))
 
 ### New Modules
 
