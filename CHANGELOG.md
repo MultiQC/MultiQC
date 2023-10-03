@@ -9,6 +9,7 @@
 - Lint modules for missing `self.add_software_version` ([#2081](https://github.com/ewels/MultiQC/pull/2081))
 - Add GitHub Actions bot workflow to fix code linting from a PR comment ([#2082](https://github.com/ewels/MultiQC/pull/2082))
 - Just run CI on the oldest + newest supported Python versions ([#2074](https://github.com/ewels/MultiQC/pull/2074))
+- Strict mode: rename `config.lint` to `config.strict`, crash early on module or template error. Add `MULTIQC_STRICT=1` ([#2101](https://github.com/ewels/MultiQC/pull/2101))
 
 ### New Modules
 
