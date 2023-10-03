@@ -1,0 +1,1 @@
+from .sentieon import MultiqcModule

@@ -1,0 +1,1 @@
+from .ngsderive import MultiqcModule

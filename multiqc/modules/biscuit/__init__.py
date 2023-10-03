@@ -1,0 +1,1 @@
+from .biscuit import MultiqcModule

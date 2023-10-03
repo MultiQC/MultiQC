@@ -1,0 +1,1 @@
+from .purple import MultiqcModule

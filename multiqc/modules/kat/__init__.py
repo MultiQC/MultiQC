@@ -1,0 +1,1 @@
+from .kat import MultiqcModule

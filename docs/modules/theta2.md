@@ -1,8 +1,8 @@
 ---
-Name: THeTA2
-URL: http://compbio.cs.brown.edu/projects/theta/
-Description: >
-    THeTA2 estimates tumour purity and clonal / subclonal copy number.
+name: THeTA2
+url: http://compbio.cs.brown.edu/projects/theta/
+description: >
+  THeTA2 estimates tumour purity and clonal / subclonal copy number.
 ---
 
 [THeTA2](http://compbio.cs.brown.edu/projects/theta/) (Tumor Heterogeneity Analysis)

@@ -1,0 +1,1 @@
+from .mirtrace import MultiqcModule

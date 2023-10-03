@@ -1,0 +1,51 @@
+{# #######################
+  content.html
+##########################
+
+This block prints the main content of the report - it should loop through
+the output from each module and print it to a single section.
+
+#}
+
+<div id="mqc-module-section-detailed-stats" class="mqc-module-section">
+  <h2 id="detailed_stats">Detailed Statistics</h2>
+  <div class="mqc-section mqc-section-detailed-stats">
+  {% for m in report.modules_output %}
+    {% if m.sections | length > 0 %}
+      {% if m['comment'] %}<blockquote class="mqc-section-comment">{{ m['comment'] }}</blockquote>{% endif %}
+      {% for s in m.sections %}
+        {% if s['print_section'] %}
+          {% if (s['name'] is none or s['name'] | length == 0) and s['helptext'] is not none and s['helptext'] | length > 0 %}
+            <button class="btn btn-default btn-sm pull-right btn-help" type="button" data-toggle="collapse" data-target="#{{ s['anchor'] }}_helptext" aria-expanded="false" aria-controls="{{ s['anchor'] }}_helptext">
+              <span class="glyphicon glyphicon-question-sign" aria-hidden="true"></span>
+              Help
+            </button>
+          {% endif %}
+            {% if s['name'] is not none and s['name'] | length > 0 %}
+              <h3 id="{{ s['anchor'] }}">
+                  {{ s['name'] }}
+                  {% if s['helptext'] is not none and s['helptext'] | length > 0 %}
+                    <button class="btn btn-default btn-sm pull-right btn-help" type="button" data-toggle="collapse" data-target="#{{ s['anchor'] }}_helptext" aria-expanded="false" aria-controls="{{ s['anchor'] }}_helptext">
+                      <span class="glyphicon glyphicon-question-sign" aria-hidden="true"></span>
+                      Help
+                    </button>
+                  {% endif %}
+              </h3>
+            {% endif %}
+            {% if s['description'] is not none and s['description'] | length > 0 %}<div class="mqc-section-description">{{ s['description'] }}</div>{% endif %}
+            {% if s['comment'] is not none and s['comment'] | length > 0 %}<blockquote class="mqc-section-comment">{{ s['comment'] }}</blockquote>{% endif %}
+            {% if s['helptext'] is not none and s['helptext'] | length > 0 %}
+              <div class="collapse mqc-section-helptext " id="{{ s['anchor'] }}_helptext">
+                <div class="well">{{ s['helptext'] }}</div>
+              </div>
+            {% endif %}
+            {% if s['plot'] is not none %}<div class="mqc-section-plot">{{ s['plot'] }}</div>{% endif %}
+            {{ s['content'] if s['content'] }}
+            {{ '<hr>' if not loop.last }}
+        {% endif %}
+    {% endfor %}
+    {{ '<hr>' if not loop.last }}
+    {% endif %}
+  {% endfor %}
+  </div>
+</div>

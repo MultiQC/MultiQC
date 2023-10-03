@@ -1,0 +1,1 @@
+from .multivcfanalyzer import MultiqcModule

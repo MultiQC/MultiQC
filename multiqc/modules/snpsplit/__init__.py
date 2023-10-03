@@ -1,0 +1,1 @@
+from .snpsplit import MultiqcModule

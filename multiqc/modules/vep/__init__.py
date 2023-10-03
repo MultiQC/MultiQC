@@ -1,0 +1,1 @@
+from .vep import MultiqcModule

@@ -1,0 +1,1 @@
+from .minionqc import MultiqcModule

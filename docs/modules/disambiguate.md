@@ -1,9 +1,9 @@
 ---
-Name: Disambiguate
-URL: https://github.com/AstraZeneca-NGS/disambiguate
-Description: >
-    Disambiguation algorithm for reads aligned to two species (e.g. human and
-    mouse genomes) from Tophat, Hisat2, STAR or BWA mem.
+name: Disambiguate
+url: https://github.com/AstraZeneca-NGS/disambiguate
+description: >
+  Disambiguation algorithm for reads aligned to two species (e.g. human and
+  mouse genomes) from Tophat, Hisat2, STAR or BWA mem.
 ---
 
 Disambiguation algorithm for reads aligned to two species (e.g. human and mouse

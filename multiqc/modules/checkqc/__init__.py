@@ -1,0 +1,1 @@
+from .checkqc import MultiqcModule

@@ -1,0 +1,1 @@
+from .pychopper import MultiqcModule

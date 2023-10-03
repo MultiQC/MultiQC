@@ -1,0 +1,1 @@
+from .gffcompare import MultiqcModule

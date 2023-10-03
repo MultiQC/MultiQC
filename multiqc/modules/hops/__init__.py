@@ -1,0 +1,1 @@
+from .hops import MultiqcModule

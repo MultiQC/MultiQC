@@ -1,0 +1,1 @@
+from .nanostat import MultiqcModule

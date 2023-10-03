@@ -1,0 +1,1 @@
+from .damageprofiler import MultiqcModule

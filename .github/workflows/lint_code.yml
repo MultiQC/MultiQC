@@ -1,0 +1,23 @@
+name: Lint Code Base
+on:
+  push:
+    branches: [master]
+  pull_request:
+
+jobs:
+  pre-commit:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - uses: actions/setup-python@v3
+      - uses: pre-commit/action@v2.0.3
+  CodeChecks:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Install dependencies
+        run: pip install rich
+
+      - name: Run manual code style checks
+        run: python ${GITHUB_WORKSPACE}/.github/workflows/code_checks.py

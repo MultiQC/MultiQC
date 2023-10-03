@@ -1,0 +1,1 @@
+from .sickle import MultiqcModule

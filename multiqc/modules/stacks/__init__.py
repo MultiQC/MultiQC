@@ -1,0 +1,1 @@
+from .stacks import MultiqcModule

@@ -1,0 +1,1 @@
+from .mirtop import MultiqcModule

@@ -1,0 +1,1 @@
+from .dragen import MultiqcModule

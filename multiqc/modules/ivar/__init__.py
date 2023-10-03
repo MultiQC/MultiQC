@@ -1,0 +1,1 @@
+from .ivar import MultiqcModule

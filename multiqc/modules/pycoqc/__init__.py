@@ -1,0 +1,1 @@
+from .pycoqc import MultiqcModule

@@ -1,0 +1,1 @@
+from .lima import MultiqcModule

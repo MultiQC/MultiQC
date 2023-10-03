@@ -1,0 +1,1 @@
+from .odgi import MultiqcModule

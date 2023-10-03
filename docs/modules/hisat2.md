@@ -1,9 +1,9 @@
 ---
-Name: HISAT2
-URL: https://ccb.jhu.edu/software/hisat2/
-Description: >
-    HISAT2 is a fast and sensitive alignment program for mapping NGS reads
-    (both DNA and RNA) to reference genomes.
+name: HISAT2
+url: https://ccb.jhu.edu/software/hisat2/
+description: >
+  HISAT2 is a fast and sensitive alignment program for mapping NGS reads
+  (both DNA and RNA) to reference genomes.
 ---
 
 [HISAT2](https://ccb.jhu.edu/software/hisat2/)

@@ -1,0 +1,1 @@
+from .happy import MultiqcModule

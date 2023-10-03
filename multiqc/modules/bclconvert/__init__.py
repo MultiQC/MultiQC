@@ -1,0 +1,1 @@
+from .bclconvert import MultiqcModule

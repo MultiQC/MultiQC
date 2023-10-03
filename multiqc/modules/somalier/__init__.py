@@ -1,0 +1,1 @@
+from .somalier import MultiqcModule

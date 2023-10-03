@@ -1,0 +1,1 @@
+from .jcvi import MultiqcModule

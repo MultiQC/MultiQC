@@ -1,0 +1,1 @@
+from .fgbio import MultiqcModule

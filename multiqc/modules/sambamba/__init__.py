@@ -1,0 +1,1 @@
+from .sambamba import MultiqcModule

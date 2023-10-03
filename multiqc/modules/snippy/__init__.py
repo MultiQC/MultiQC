@@ -1,0 +1,1 @@
+from .snippy import MultiqcModule

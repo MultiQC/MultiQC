@@ -1,0 +1,1 @@
+from .sexdeterrmine import MultiqcModule

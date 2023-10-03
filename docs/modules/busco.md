@@ -1,9 +1,9 @@
 ---
-Name: BUSCO
-URL: http://busco.ezlab.org/
-Description: >
-    BUSCO assesses genome assembly and annotation completeness with
-    Benchmarking Universal Single-Copy Orthologs.
+name: BUSCO
+url: http://busco.ezlab.org/
+description: >
+  BUSCO assesses genome assembly and annotation completeness with
+  Benchmarking Universal Single-Copy Orthologs.
 ---
 
 BUSCO v2 provides quantitative measures for the assessment of genome

@@ -1,0 +1,1 @@
+from .fastp import MultiqcModule

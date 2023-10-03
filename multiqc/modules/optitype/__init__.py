@@ -1,0 +1,1 @@
+from .optitype import MultiqcModule

@@ -1,0 +1,1 @@
+from .ccs import MultiqcModule
