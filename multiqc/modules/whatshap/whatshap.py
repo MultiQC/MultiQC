@@ -127,7 +127,7 @@ class MultiqcModule(BaseMultiqcModule):
         # as a fictional 'ALL' chromosome.
         if ALL_CHROM not in results and len(results) > 1:
             log.warning(
-                f"Could not find the 'ALL' chromosome for {sample}. Make sure that the input is not truncated. Will summarize information for all available chromosomes instead."
+                f"Could not find the 'ALL' chromosome for {sample}. Make sure that the input is not truncated. MultiQC will summarize information for all available chromosomes instead."
             )
             sum_fields = {
                 "variants",
