@@ -151,7 +151,7 @@ sample_merge_groups:
     - type: regex
       pattern: "_[12]$"
     - type: regex
-      pattern: '_R[12][\._\- \Z]'
+      pattern: '_R[12][\._\-]'
   pre_post_trimming:
     - "_trimmed"
     - ".trimmed"
@@ -159,7 +159,7 @@ sample_merge_groups:
     - type: regex
       pattern: "_[12]$"
     - type: regex
-      pattern: '_R[12][\._\- \Z]'
+      pattern: '_R[12][\._\-]'
     - "_trimmed"
     - ".trimmed"
 

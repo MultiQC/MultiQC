@@ -453,21 +453,6 @@ class BaseMultiqcModule(object):
             sample_groups[g_name].append(s_name)
         return sample_groups
 
-    def split_data_by_group(self, s_groups, data):
-        """
-        Takes output from self.group_samples along with a regular MultiQC data structure
-        (dict where each key is a sample name) and returns the data organised into lists.
-        Sample names are sorted and the first member of each group is returned in the
-        first list item. The second of each group in the second and so on.
-        """
-        gdata = list()
-        for n in range(max(len(k) for k in s_groups.values())):
-            gdata.append(dict())
-        for s_names in s_groups.values():
-            for idx, s_name in enumerate(s_names):
-                gdata[idx][s_name] = data[s_name]
-        return gdata
-
     def ignore_samples(self, data):
         """Strip out samples which match `sample_names_ignore`"""
         try:

@@ -17,6 +17,7 @@ import os
 import re
 import zipfile
 from collections import Counter, OrderedDict
+from typing import Dict, List
 
 from multiqc import config
 from multiqc.modules.base_module import BaseMultiqcModule, ModuleNoSamplesFound
@@ -1322,9 +1323,12 @@ class MultiqcModule(BaseMultiqcModule):
             colours[s_name] = self.status_colours[status]
         return colours
 
-    def split_fastqc_data_by_group(self, data, pconfig={}):
-        # Split into Read 1 and Read 2 / Raw and Trimmed
-        data = self.split_data_by_group(self.fastqc_trimmed_pairs, data)
+    def split_fastqc_data_by_group(self, data: Dict[str, Dict], pconfig=None):
+        """
+        Split into Read 1 and Read 2 / Raw and Trimmed
+        """
+        pconfig = pconfig or {}
+        data = _split_data_by_group(self.fastqc_trimmed_pairs, data)
         pconfig["data_labels"] = list()
         # Special case - 2 classes could be R1/R2 or Raw/Trimmed
         if len(data) == 2:
@@ -1338,3 +1342,19 @@ class MultiqcModule(BaseMultiqcModule):
                 read_type = "(trimmed)" if i % 2 else "(raw)"
                 pconfig["data_labels"].append({"name": "Read {} {}".format(read_num, read_type)})
         return data, pconfig
+
+
+def _split_data_by_group(s_groups, data: Dict[str, Dict]):
+    """
+    Takes output from self.group_samples along with a regular MultiQC data structure
+    (dict where each key is a sample name) and returns the data organised into lists.
+    Sample names are sorted and the first member of each group is returned in the
+    first list item. The second of each group in the second and so on.
+    """
+    gdata: List[Dict[str, Dict]] = list()
+    for n in range(max(len(k) for k in s_groups.values())):
+        gdata.append(dict())
+    for s_names in s_groups.values():
+        for idx, s_name in enumerate(s_names):
+            gdata[idx][s_name] = data[s_name]
+    return gdata
