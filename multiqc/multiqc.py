@@ -233,7 +233,17 @@ click.rich_click.OPTION_GROUPS = {
     is_flag=True,
     help="Use only interactive plots [i](in-browser Javascript)[/]",
 )
-@click.option("--lint", "lint", is_flag=True, help="Use strict linting (validation) to help code development")
+@click.option(
+    "--strict",
+    "--lint",
+    "strict",
+    is_flag=True,
+    help="Strict mode. MultiQC will stop whenever a module or a template raised an "
+    "unexpected exception. The module code will be additionally validated "
+    "(linted) to help code development, and any validation issues will be printed "
+    "to the console in the end of the run, and also cause MultiQC to exist with "
+    "a non-0 code",
+)
 @click.option(
     "--pdf",
     "make_pdf",
@@ -320,7 +330,7 @@ def run(
     export_plots=False,
     plots_flat=False,
     plots_interactive=False,
-    lint=False,
+    strict=False,
     make_pdf=False,
     no_megaqc_upload=False,
     config_file=(),
@@ -431,8 +441,8 @@ def run(
         config.plots_force_flat = True
     if plots_interactive:
         config.plots_force_interactive = True
-    if lint:
-        config.lint = True
+    if strict:
+        config.strict = True
         lint_helpers.run_tests()
     if make_pdf:
         config.template = "simple"
@@ -472,8 +482,8 @@ def run(
     if make_pdf:
         logger.info("--pdf specified. Using non-interactive HTML template.")
     logger.debug("Template    : {}".format(config.template))
-    if lint:
-        logger.info("--lint specified. Being strict with validation.")
+    if strict:
+        logger.info("--strict specified. Being strict with validation.")
 
     # Throw a warning if we are running on Python 2
     if sys.version_info[0] < 3:
@@ -537,7 +547,7 @@ def run(
     mod_keys = [list(m.keys())[0] for m in config.module_order]
 
     # Lint the module configs
-    if config.lint:
+    if config.strict:
         for m in config.avail_modules.keys():
             if m not in mod_keys:
                 errmsg = "LINT: Module '{}' not found in config.module_order".format(m)
@@ -694,7 +704,7 @@ def run(
             logger.debug(f"No samples found: {this_module}")
         except UserWarning:  # UserWarning deprecated from 1.16
             msg = f"DEPRECIATED: Please raise 'ModuleNoSamplesFound' instead of 'UserWarning' in module: {this_module}"
-            if config.lint:
+            if config.strict:
                 logger.error(msg)
                 report.lint_errors.append(msg)
             else:
@@ -708,6 +718,11 @@ def run(
             )
             sys.exit(1)
         except:
+            if (
+                config.strict
+            ):  # Crash quickly in the strict mode. This can be helpful for interactive debugging of modules.
+                raise
+
             # Flag the error, but carry on
             class CustomTraceback:
                 def __rich_console__(self, console: rich.console.Console, options: rich.console.ConsoleOptions):
@@ -1129,7 +1144,7 @@ def run(
                 "See [link=https://multiqc.info/docs/#flat--interactive-plots]docs[/link]."
             )
 
-    if lint and len(report.lint_errors) > 0:
+    if strict and len(report.lint_errors) > 0:
         logger.error("Found {} linting errors!\n{}".format(len(report.lint_errors), "\n".join(report.lint_errors)))
         sys_exit_code = 1
 

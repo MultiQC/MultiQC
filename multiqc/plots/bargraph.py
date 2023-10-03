@@ -67,7 +67,7 @@ def plot(data, cats=None, pconfig=None):
             pconfig[k] = v
 
     # Validate config if linting
-    if config.lint:
+    if config.strict:
         # Get module name
         modname = ""
         callstack = inspect.stack()
@@ -195,6 +195,9 @@ def plot(data, cats=None, pconfig=None):
     try:
         return get_template_mod().bargraph(plotdata, plotsamples, pconfig)
     except (AttributeError, TypeError):
+        if config.strict:  # Crash quickly in the strict mode. This can be helpful for interactive debugging of modules.
+            raise
+
         if config.plots_force_flat or (
             not config.plots_force_interactive and len(plotsamples[0]) > config.plots_flat_numseries
         ):
