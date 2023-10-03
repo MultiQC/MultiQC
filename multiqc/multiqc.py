@@ -441,8 +441,11 @@ def run(
         config.plots_force_flat = True
     if plots_interactive:
         config.plots_force_interactive = True
+    if config.lint:  # Deprecated since v1.17
+        strict = True
     if strict:
         config.strict = True
+        config.lint = True  # Deprecated since v1.17
         lint_helpers.run_tests()
     if make_pdf:
         config.template = "simple"
@@ -482,7 +485,7 @@ def run(
     if make_pdf:
         logger.info("--pdf specified. Using non-interactive HTML template.")
     logger.debug("Template    : {}".format(config.template))
-    if strict:
+    if config.strict:
         logger.info("--strict specified. Being strict with validation.")
 
     # Throw a warning if we are running on Python 2
@@ -1144,7 +1147,7 @@ def run(
                 "See [link=https://multiqc.info/docs/#flat--interactive-plots]docs[/link]."
             )
 
-    if strict and len(report.lint_errors) > 0:
+    if config.strict and len(report.lint_errors) > 0:
         logger.error("Found {} linting errors!\n{}".format(len(report.lint_errors), "\n".join(report.lint_errors)))
         sys_exit_code = 1
 
