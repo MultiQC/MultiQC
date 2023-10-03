@@ -133,6 +133,10 @@ def parse_reports(self):
             if len(parsed_data[s_name]) == 0:
                 parsed_data.pop(s_name, None)
 
+            # Superfluous function call to confirm that it is used in this module
+            # Replace None with actual version if it is available
+            self.add_software_version(None, s_name)
+
         # Manipulate sample names if multiple baits found
         for s_name in parsed_data.keys():
             for j in parsed_data[s_name].keys():

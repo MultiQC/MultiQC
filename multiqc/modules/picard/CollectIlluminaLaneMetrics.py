@@ -83,6 +83,10 @@ def parse_reports(self):
                         self.picard_lane_metrics[run_name][lane] = {}
                     self.picard_lane_metrics[run_name][lane].update(d)
 
+        # Superfluous function call to confirm that it is used in this module
+        # Replace None with actual version if it is available
+        self.add_software_version(None, run_name)
+
     # Filter to strip out ignored sample names
     self.picard_lane_metrics = self.ignore_samples(self.picard_lane_metrics)
 

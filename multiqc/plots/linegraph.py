@@ -66,7 +66,7 @@ def plot(data, pconfig=None):
         data = [data]
 
     # Validate config if linting
-    if config.lint:
+    if config.strict:
         # Get module name
         modname = ""
         callstack = inspect.stack()
@@ -225,6 +225,9 @@ def plot(data, pconfig=None):
     try:
         return get_template_mod().linegraph(plotdata, pconfig)
     except (AttributeError, TypeError):
+        if config.strict:  # Crash quickly in the strict mode. This can be helpful for interactive debugging of modules.
+            raise
+
         if config.plots_force_flat or (
             not config.plots_force_interactive and plotdata and len(plotdata[0]) > config.plots_flat_numseries
         ):

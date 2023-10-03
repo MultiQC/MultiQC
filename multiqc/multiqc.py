@@ -18,15 +18,16 @@ import sys
 import tempfile
 import time
 import traceback
-from distutils import version
 from distutils.dir_util import copy_tree
 from urllib.request import urlopen
 
 import jinja2
 import rich
 import rich_click as click
+from packaging import version
 from rich.syntax import Syntax
 
+from .modules.base_module import ModuleNoSamplesFound
 from .plots import table
 from .utils import config, lint_helpers, log, megaqc, plugin_hooks, report, software_versions, util_functions
 
@@ -232,7 +233,17 @@ click.rich_click.OPTION_GROUPS = {
     is_flag=True,
     help="Use only interactive plots [i](in-browser Javascript)[/]",
 )
-@click.option("--lint", "lint", is_flag=True, help="Use strict linting (validation) to help code development")
+@click.option(
+    "--strict",
+    "--lint",
+    "strict",
+    is_flag=True,
+    help="Strict mode. MultiQC will stop whenever a module or a template raised an "
+    "unexpected exception. The module code will be additionally validated "
+    "(linted) to help code development, and any validation issues will be printed "
+    "to the console in the end of the run, and also cause MultiQC to exist with "
+    "a non-0 code",
+)
 @click.option(
     "--pdf",
     "make_pdf",
@@ -319,7 +330,7 @@ def run(
     export_plots=False,
     plots_flat=False,
     plots_interactive=False,
-    lint=False,
+    strict=False,
     make_pdf=False,
     no_megaqc_upload=False,
     config_file=(),
@@ -383,8 +394,8 @@ def run(
         try:
             response = urlopen("http://multiqc.info/version.php?v={}".format(config.short_version), timeout=5)
             remote_version = response.read().decode("utf-8").strip()
-            if version.StrictVersion(re.sub("[^0-9\.]", "", remote_version)) > version.StrictVersion(
-                re.sub("[^0-9\.]", "", config.short_version)
+            if version.StrictVersion(re.sub(r"[^0-9.]", "", remote_version)) > version.StrictVersion(
+                re.sub(r"[^0-9.]", "", config.short_version)
             ):
                 logger.warning("MultiQC Version {} now available!".format(remote_version))
             else:
@@ -430,8 +441,11 @@ def run(
         config.plots_force_flat = True
     if plots_interactive:
         config.plots_force_interactive = True
-    if lint:
-        config.lint = True
+    if config.lint:  # Deprecated since v1.17
+        strict = True
+    if strict:
+        config.strict = True
+        config.lint = True  # Deprecated since v1.17
         lint_helpers.run_tests()
     if make_pdf:
         config.template = "simple"
@@ -471,8 +485,8 @@ def run(
     if make_pdf:
         logger.info("--pdf specified. Using non-interactive HTML template.")
     logger.debug("Template    : {}".format(config.template))
-    if lint:
-        logger.info("--lint specified. Being strict with validation.")
+    if config.strict:
+        logger.info("--strict specified. Being strict with validation.")
 
     # Throw a warning if we are running on Python 2
     if sys.version_info[0] < 3:
@@ -513,7 +527,7 @@ def run(
         logger.info("Printing report to stdout")
     else:
         if title is not None and filename is None:
-            filename = re.sub("[^\w\.-]", "", re.sub("[-\s]+", "-", title)).strip()
+            filename = re.sub(r"[^\w.-]", "", re.sub(r"[-\s]+", "-", title)).strip()
             filename += "_multiqc_report"
         if filename is not None:
             if filename.endswith(".html"):
@@ -536,7 +550,7 @@ def run(
     mod_keys = [list(m.keys())[0] for m in config.module_order]
 
     # Lint the module configs
-    if config.lint:
+    if config.strict:
         for m in config.avail_modules.keys():
             if m not in mod_keys:
                 errmsg = "LINT: Module '{}' not found in config.module_order".format(m)
@@ -649,11 +663,11 @@ def run(
     total_mods_starttime = time.time()
     for mod_idx, mod_dict in enumerate(run_modules):
         mod_starttime = time.time()
+        this_module = list(mod_dict.keys())[0]
+        mod_cust_config = list(mod_dict.values())[0]
+        if mod_cust_config is None:
+            mod_cust_config = {}
         try:
-            this_module = list(mod_dict.keys())[0]
-            mod_cust_config = list(mod_dict.values())[0]
-            if mod_cust_config is None:
-                mod_cust_config = {}
             mod = config.avail_modules[this_module].load()
             mod.mod_cust_config = mod_cust_config  # feels bad doing this, but seems to work
             output = mod()
@@ -689,8 +703,16 @@ def run(
                 except AttributeError:
                     pass
 
-        except UserWarning:
-            logger.debug("No samples found: {}".format(list(mod_dict.keys())[0]))
+        except ModuleNoSamplesFound:
+            logger.debug(f"No samples found: {this_module}")
+        except UserWarning:  # UserWarning deprecated from 1.16
+            msg = f"DEPRECIATED: Please raise 'ModuleNoSamplesFound' instead of 'UserWarning' in module: {this_module}"
+            if config.strict:
+                logger.error(msg)
+                report.lint_errors.append(msg)
+            else:
+                logger.debug(msg)
+            logger.debug(f"No samples found: {this_module}")
         except KeyboardInterrupt:
             shutil.rmtree(tmp_dir)
             logger.critical(
@@ -699,8 +721,9 @@ def run(
             )
             sys.exit(1)
         except:
-            if os.environ.get("MULTIQC_DEBUG", False):
-                # Pass the exception through to help with interactive debugging
+            if (
+                config.strict
+            ):  # Crash quickly in the strict mode. This can be helpful for interactive debugging of modules.
                 raise
 
             # Flag the error, but carry on
@@ -1124,7 +1147,7 @@ def run(
                 "See [link=https://multiqc.info/docs/#flat--interactive-plots]docs[/link]."
             )
 
-    if lint and len(report.lint_errors) > 0:
+    if config.strict and len(report.lint_errors) > 0:
         logger.error("Found {} linting errors!\n{}".format(len(report.lint_errors), "\n".join(report.lint_errors)))
         sys_exit_code = 1
 

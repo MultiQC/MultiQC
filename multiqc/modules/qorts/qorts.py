@@ -6,7 +6,7 @@ import os
 import re
 from collections import OrderedDict
 
-from multiqc.modules.base_module import BaseMultiqcModule
+from multiqc.modules.base_module import BaseMultiqcModule, ModuleNoSamplesFound
 from multiqc.plots import bargraph
 
 # Initialise the logger
@@ -30,6 +30,10 @@ class MultiqcModule(BaseMultiqcModule):
             self.parse_qorts(f)
             self.add_data_source(f)
 
+            # Superfluous function call to confirm that it is used in this module
+            # Replace None with actual version if it is available
+            self.add_software_version(None, f["s_name"])
+
         # Remove empty samples
         self.qorts_data = {s: v for s, v in self.qorts_data.items() if len(v) > 0}
 
@@ -37,7 +41,7 @@ class MultiqcModule(BaseMultiqcModule):
         self.qorts_data = self.ignore_samples(self.qorts_data)
 
         if len(self.qorts_data) == 0:
-            raise UserWarning
+            raise ModuleNoSamplesFound
 
         log.info("Found {} logs".format(len(self.qorts_data)))
         self.write_data_file(self.qorts_data, "multiqc_qorts")

@@ -6,7 +6,7 @@ import re
 from collections import OrderedDict
 
 from multiqc import config
-from multiqc.modules.base_module import BaseMultiqcModule
+from multiqc.modules.base_module import BaseMultiqcModule, ModuleNoSamplesFound
 from multiqc.plots import bargraph, beeswarm
 
 # Initialise the logger
@@ -43,13 +43,15 @@ class MultiqcModule(BaseMultiqcModule):
                 self.umitools_data[f["s_name"]] = data
                 # Add the log file information to the multiqc_sources.txt
                 self.add_data_source(f)
+                # Add version info
+                self.add_software_version(data["version"], f["s_name"])
 
         # Check the log files against the user supplied list of samples to ignore
         self.umitools_data = self.ignore_samples(self.umitools_data)
 
         # If no files are found, raise an exception
         if len(self.umitools_data) == 0:
-            raise UserWarning
+            raise ModuleNoSamplesFound
 
         # Log the number of reports found
         log.info("Found {} reports".format(len(self.umitools_data)))
@@ -109,11 +111,15 @@ class MultiqcModule(BaseMultiqcModule):
             "positions_deduplicated": r"INFO Total number of positions deduplicated: (\d+)",
             "mean_umi_per_pos": r"INFO Mean number of unique UMIs per position: ([\d\.]+)",
             "max_umi_per_pos": r"INFO Max. number of unique UMIs per position: (\d+)",
+            "version": r"# UMI-tools version: ([\d\.]+)",
         }
         for key, regex in regexes.items():
             re_matches = re.search(regex, f["f"])
             if re_matches:
-                data[key] = float(re_matches.group(1))
+                if key == "version":
+                    data[key] = re_matches.group(1)
+                else:
+                    data[key] = float(re_matches.group(1))
 
         # calculate a few simple supplementary stats
         try:

@@ -430,11 +430,11 @@ MultiQC has been developed to be as forgiving as possible and will handle lots o
 invalid or ignored configurations. This is useful for most users but can make life
 difficult when getting MultiQC to work with a new custom content format.
 
-To help with this, you can run with the `--lint` flag, which will give explicit
+To help with this, you can run with the `--strict` flag, which will give explicit
 warnings about anything that is not optimally configured. For example:
 
 ```bash
-multiqc --lint test_data
+multiqc --strict test_data
 ```
 
 # Examples

@@ -1,16 +1,16 @@
-name: Update CHANGELOG.md
+name: Fix linting
 on:
   issue_comment:
     types: [created]
 
 jobs:
-  update_changelog:
+  fix_linting:
     runs-on: ubuntu-latest
     # Only run if comment is on a PR with the main repo, and if it contains the magic keywords
     if: >
       github.repository_owner == 'ewels' &&
       github.event.issue.pull_request &&
-      startsWith(github.event.comment.body, '@multiqc-bot changelog')
+      startsWith(github.event.comment.body, '@multiqc-bot fix linting')
 
     steps:
       - uses: actions/checkout@v3
@@ -21,23 +21,25 @@ jobs:
       # Use the GitHub CLI to check out the PR:
       - name: Checkout Pull Request
         env:
-          GH_TOKEN: ${{ secrets.MQC_BOT_GITHUB_TOKEN }}
+          GITHUB_TOKEN: ${{ secrets.MQC_BOT_GITHUB_TOKEN }}
         run: gh pr checkout ${{ github.event.issue.number }}
 
       - uses: actions/setup-python@v3
 
-      - name: Update CHANGELOG.md from the PR title
-        env:
-          PR_TITLE: ${{ github.event.issue.title }}
-          PR_NUMBER: ${{ github.event.issue.number }}
-          COMMENT: ${{ github.event.comment.body }}
-          GH_TOKEN: ${{ secrets.MQC_BOT_GITHUB_TOKEN }}
-        run: python ${GITHUB_WORKSPACE}/.github/workflows/changelog.py
-
-      - name: Check if CHANGELOG.md actually changed
+      - name: Install pre-commit
         run: |
-          git diff --exit-code ${GITHUB_WORKSPACE}/CHANGELOG.md || echo "changed=YES" >> $GITHUB_ENV
-          echo "File changed: ${{ env.changed }}"
+          python -m pip install --upgrade pip
+          pip install pre-commit
+          pre-commit install
+
+      - name: Run pre-commit
+        run: |
+          pre-commit run --all-files || true
+
+      - name: Check if any files changed
+        run: |
+          git diff --exit-code || echo "changed=YES" >> $GITHUB_ENV
+          echo "Files changed: ${{ env.changed }}"
 
       - name: Commit and push changes
         if: env.changed == 'YES'
@@ -45,7 +47,7 @@ jobs:
           git config user.name 'MultiQC Bot'
           git config user.email 'multiqc-bot@seqera.io'
           git config push.default upstream
-          git add ${GITHUB_WORKSPACE}/CHANGELOG.md
+          git add .
           git status
-          git commit -m "[automated] Update CHANGELOG.md"
+          git commit -m "[automated] Fix code linting"
           git push

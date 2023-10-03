@@ -73,6 +73,10 @@ def parse_reports(self):
                 del self.gene_body_cov_hist_counts[f["s_name"]]
                 log.warning("Empty geneBodyCoverage file found: {}".format(f["fn"]))
 
+        # Superfluous function call to confirm that it is used in this module
+        # Replace None with actual version if it is available
+        self.add_software_version(None, f["s_name"])
+
     # Filter to strip out ignored sample names
     self.gene_body_cov_hist_counts = self.ignore_samples(self.gene_body_cov_hist_counts)
 
