@@ -4,7 +4,7 @@ import logging
 import math
 import os
 import re
-from collections import OrderedDict
+from collections import OrderedDict, defaultdict
 
 from multiqc import config
 from multiqc.plots import bargraph
@@ -80,7 +80,7 @@ def parse_reports(
     for f in self.find_log_files(log_key, filehandles=True):
         s_name = f["s_name"]
         base_s_name = f["s_name"]
-        parsed_data = {}
+        parsed_lists = defaultdict(list)
         keys = None
         in_stats_block = False
         recompute_merged_metrics = False
@@ -112,13 +112,14 @@ def parse_reports(
                 # Split the values columns
                 vals = l.rstrip("\n").split("\t")
 
-                # End of the METRICS table, or multiple libraries and we're not merging them
-                if len(vals) < 6 or (not merge_multiple_libraries and len(parsed_data) > 0):
+                # End of the METRICS table, or multiple libraries, and we're not merging them
+                if len(vals) < 6 or (not merge_multiple_libraries and len(parsed_lists) > 0):
+                    parsed_data = {k: parsed_list[0] for k, parsed_list in parsed_lists.items()}
                     if save_table_results(s_name, base_s_name, keys, parsed_data, recompute_merged_metrics):
                         # Reset for next file if returned True
                         s_name = f["s_name"]
                         base_s_name = f["s_name"]
-                        parsed_data = {}
+                        parsed_lists = defaultdict(list)
                         keys = None
                         in_stats_block = False
                         recompute_merged_metrics = False
@@ -129,26 +130,24 @@ def parse_reports(
                 if keys and vals and len(keys) == len(vals):
                     for i, k in enumerate(keys):
                         # More than one library present and merging stats
-                        if k in parsed_data:
+                        if k in parsed_lists:
                             recompute_merged_metrics = True
 
                         val = vals[i].strip()
                         try:
                             val_float = float(val)
                         except ValueError:
-                            # Account for string values
-                            if k not in parsed_data:  # First library
-                                parsed_data[k] = val
-                            else:
-                                parsed_data[k] += "/" + val
+                            parsed_lists[k].append(val)
                         else:
-                            # Numerical values we can just add up
-                            if k not in parsed_data:  # First library
-                                parsed_data[k] = val_float
-                            elif isinstance(parsed_data[k], float):
-                                parsed_data[k] += val_float
-                            else:
-                                parsed_data[k] += "/" + val
+                            parsed_lists[k].append(val_float)
+
+        parsed_data = {}
+        for k in parsed_lists:
+            # Sometimes a numerical column will an empty string, so converting "" to 0.0
+            if all(isinstance(x, float) or x == "" for x in parsed_lists[k]):
+                parsed_data[k] = sum(0.0 if x == "" else x for x in parsed_lists[k])
+            else:
+                parsed_data[k] = "/".join(str(x) for x in parsed_lists[k])
 
         # Superfluous function call to confirm that it is used in this module
         # Replace None with actual version if it is available
