@@ -443,6 +443,8 @@ def run(
         config.plots_force_interactive = True
     if config.lint:  # Deprecated since v1.17
         strict = True
+    if os.environ.get("MULTIQC_STRICT"):
+        strict = True
     if strict:
         config.strict = True
         config.lint = True  # Deprecated since v1.17

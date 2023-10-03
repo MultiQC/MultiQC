@@ -108,6 +108,12 @@ Note that the automated MultiQC continuous integration testing runs in this mode
 so you will need to pass all lint tests for those checks to pass. This is required
 for any pull-requests.
 
+You can alternatively enable the strict mode using an environment variable:
+
+```bash
+export MULTIQC_STRICT=true
+```
+
 ## Code formatting
 
 In addition to testing MultiQC functionality, the MultiQC code base is also checked for
