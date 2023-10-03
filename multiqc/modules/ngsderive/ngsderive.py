@@ -161,8 +161,8 @@ class MultiqcModule(BaseMultiqcModule):
             ):  # v4 or later. Already a PCT
                 data[sample] = {
                     "predicted": strandedness.get("Predicted"),
-                    "forward": float(strandedness.get("ForwardPct")),
-                    "reverse": float(strandedness.get("ReversePct")),
+                    "forward": float(strandedness.get("ForwardPct").strip("%")),
+                    "reverse": float(strandedness.get("ReversePct").strip("%")),
                 }
             else:
                 log.warning("Could not determine version of `strandedness`!")
@@ -286,11 +286,10 @@ class MultiqcModule(BaseMultiqcModule):
 
         data = {}
         for sample, readlen in self.readlen.items():
-            if float(readlen.get("MajorityPctDetected")) > 1:  # v4 or later. Already a PCT.
-                # TODO what if v4 returns 0.57%? Will get parsed as pre-v4 and multiplied by 100.
+            if "%" in readlen.get("MajorityPctDetected"):  # v4 or later. Already a PCT.
                 data[sample] = {
                     "evidence": readlen.get("Evidence"),
-                    "majoritypctdetected": float(readlen.get("MajorityPctDetected")),
+                    "majoritypctdetected": float(readlen.get("MajorityPctDetected").strip("%")),
                     "consensusreadlength": int(readlen.get("ConsensusReadLength")),
                 }
             elif float(readlen.get("MajorityPctDetected")) <= 1:  # pre-v4. Must convert to a PCT.
@@ -299,6 +298,9 @@ class MultiqcModule(BaseMultiqcModule):
                     "majoritypctdetected": round(float(readlen.get("MajorityPctDetected")) * 100.0, 2),
                     "consensusreadlength": int(readlen.get("ConsensusReadLength")),
                 }
+            else:
+                # TODO error handle this case
+                log.warning("Could not determine version of `readlen`!")
 
         headers = OrderedDict()
         headers["consensusreadlength"] = {
