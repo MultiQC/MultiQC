@@ -3,15 +3,15 @@ import base64
 import io
 import math
 import os
+import random
 import string
 from collections import namedtuple
 from pathlib import Path
-from random import random
 from typing import Dict, List
 
 import plotly.graph_objects as go
 
-from multiqc.templates.plotly.plots import basic_figure
+from multiqc.templates.plotly.plots import PlotSettings, basic_figure, get_template_mod
 from multiqc.utils import config, report, util_functions
 
 """
@@ -29,26 +29,11 @@ figure for each dataset, and then using the `subplots` functionality to combine 
 """
 
 
-# Load the template so that we can access its configuration
-# Do this lazily to mitigate import-spaghetti when running unit tests
-_template_mod = None
-
-
-def get_template_mod():
-    global _template_mod
-    if not _template_mod:
-        _template_mod = config.avail_templates[config.template].load()
-    return _template_mod
-
-
 def _bargraph_plotly_plot(
+    fig: go.Figure,
     data_by_cat: List[Dict],
     sample_names: List[str],
-    pconfig: Dict,
-    plt_height: int = None,
 ):
-    plt_height = plt_height or pconfig.get("height")
-    fig = basic_figure(pconfig, plt_height)
     for data in data_by_cat:
         fig.add_trace(
             go.Bar(
@@ -65,7 +50,7 @@ def _bargraph_plotly_plot(
 def plotly_bargraph(
     data_by_cat_lists: List[List[Dict]],
     samples_lists: List[List[str]],
-    pconfig: Dict = None,
+    pconfig: Dict,
 ) -> str:
     """
     :param data_by_cat_lists: List of lists of dicts with the keys: {name, color, data},
@@ -77,79 +62,52 @@ def plotly_bargraph(
     :param pconfig: Plot parameters.
     :return: Plotly HTML
     """
-    if pconfig is None:
-        pconfig = {}
+    settings = PlotSettings(pconfig)
 
-    plt_height = pconfig.get("height")
-    if not plt_height:
+    if not settings.height:
         max_n_samples = max(len(samples) for samples in samples_lists)
         # Height has a default, then adjusted by the number of samples
-        plt_height = max_n_samples // 186  # Default, empirically determined
-        plt_height = max(600, plt_height)  # At least 512px tall
-        plt_height = min(2560, plt_height)  # Cap at 2560px tall
+        settings.height = max_n_samples // 186  # Default, empirically determined
+        settings.height = max(600, settings.height)  # At least 512px tall
+        settings.height = min(2560, settings.height)  # Cap at 2560px tall
 
     uniq_suffix = "".join(random.sample(string.ascii_lowercase, 10))
     is_static_suf = "static_" if config.plots_force_flat else ""
-    # Plot group ID
-    if pconfig.get("id") is None:
-        pconfig["id"] = f"mqc_{is_static_suf}plot_{uniq_suffix}"
-    # Sanitise plot ID and check for duplicates
-    pconfig["id"] = report.save_htmlid(pconfig["id"])
+    if settings.id is None:  # ID of the plot group
+        settings.id = f"mqc_{is_static_suf}plot_{uniq_suffix}"
 
     if config.plots_force_flat:
         return _static_bargraph(
             data_by_cat_lists,
             samples_lists,
-            pconfig,
-            plt_height,
+            settings,
         )
 
-    fig = _bargraph_plotly_plot(
-        data_by_cat_lists[0],
-        samples_lists[0],
-        pconfig,
-        plt_height,
-    )
+    # fig = _bargraph_plotly_plot(
+    #     basic_figure(settings),
+    #     data_by_cat_lists[0],
+    #     samples_lists[0],
+    # )
+
+    html = '<div class="mqc_hcplot_plotgroup">'
 
     # Counts / Percentages / Log Switches
-    if pconfig.get("cpswitch") is not False or pconfig.get("logswitch") is True:
-        if pconfig.get("logswitch_active") is True:
-            c_active = ""
-            p_active = ""
-            l_active = "active"
-        elif pconfig.get("cpswitch_c_active", True) is True:
-            c_active = "active"
-            p_active = ""
-            l_active = ""
-        else:
-            c_active = ""
-            p_active = "active"
-            l_active = ""
-            pconfig["stacking"] = "percent"
-        c_label = pconfig.get("cpswitch_counts_label", "Counts")
-        p_label = pconfig.get("cpswitch_percent_label", "Percentages")
-        l_label = pconfig.get("logswitch_label", "Log10")
+    if settings.add_pct_tab or settings.add_log_tab:
         html += '<div class="btn-group hc_switch_group"> \n'
-        html += '<button class="btn btn-default btn-sm {c_a}" data-action="set_numbers" data-target="{id}" data-ylab="{c_l}">{c_l}</button> \n'.format(
-            id=pconfig["id"], c_a=c_active, c_l=c_label
-        )
-        if pconfig.get("cpswitch", True) is True:
-            html += '<button class="btn btn-default btn-sm {p_a}" data-action="set_percent" data-target="{id}" data-ylab="{p_l}">{p_l}</button> \n'.format(
-                id=pconfig["id"], p_a=p_active, p_l=p_label
-            )
-        if pconfig.get("logswitch") is True:
-            html += '<button class="btn btn-default btn-sm {l_a}" data-action="set_log" data-target="{id}" data-ylab="{l_l}">{l_l}</button> \n'.format(
-                id=pconfig["id"], l_a=l_active, l_l=l_label
-            )
-            pconfig["reversedStacks"] = True
+        btn = f'<button class="btn btn-default btn-sm {{active}}" data-action="set_numbers" data-target="{settings.id}" data-ylab="{{label}}">{{label}}</button> \n'
+        html += btn.format(active=settings.c_active, label=settings.c_label)
+        if settings.add_pct_tab:
+            html += btn.format(active=settings.p_active, label=settings.p_label)
+        if settings.add_log_tab:
+            html += btn.format(active=settings.l_active, label=settings.l_label)
         html += "</div> "
-        if len(plotdata) > 1:
+        if len(data_by_cat_lists) > 1:
             html += " &nbsp; &nbsp; "
 
     # Buttons to cycle through different datasets
-    if len(plotdata) > 1:
+    if len(data_by_cat_lists) > 1:
         html += '<div class="btn-group hc_switch_group">\n'
-        for k, p in enumerate(plotdata):
+        for k, p in enumerate(data_by_cat_lists):
             active = "active" if k == 0 else ""
             try:
                 name = pconfig["data_labels"][k]["name"]
@@ -159,32 +117,31 @@ def plotly_bargraph(
                 except:
                     name = k + 1
             try:
-                ylab = 'data-ylab="{}"'.format(pconfig["data_labels"][k]["ylab"])
+                ylab = f'data-ylab="{settings.data_labels[k]["ylab"]}"'
             except:
-                ylab = 'data-ylab="{}"'.format(name) if name != k + 1 else ""
+                ylab = f'data-ylab="{name}"' if name != k + 1 else ""
             try:
-                ymax = 'data-ymax="{}"'.format(pconfig["data_labels"][k]["ymax"])
+                ymax = f'data-ymax="{settings.data_labels[k]["ymax"]}"'
             except:
                 ymax = ""
-            html += '<button class="btn btn-default btn-sm {a}" data-action="set_data" {y} {ym} data-newdata="{k}" data-target="{id}">{n}</button>\n'.format(
-                a=active, id=pconfig["id"], n=name, y=ylab, ym=ymax, k=k
-            )
+            html += f'<button class="btn btn-default btn-sm {active}" data-action="set_data" {ylab} {ymax} data-newdata="{k}" data-target="{settings.id}">{name}</button>\n'
         html += "</div>\n\n"
 
     # Plot HTML
     html += """<div class="hc-plot-wrapper"{height}>
         <div id="{id}" class="hc-plot not_rendered hc-bar-plot"><small>loading..</small></div>
     </div></div>""".format(
-        id=pconfig["id"],
-        height=f' style="height:{pconfig["height"]}px"' if "height" in pconfig else "",
+        id=settings.id,
+        height=f' style="height:{settings.height}px"' if settings.height else "",
     )
 
     report.num_hc_plots += 1
 
-    report.plot_data[pconfig["id"]] = {
+    report.plot_data[settings.id] = {
         "plot_type": "bar_graph",
-        "samples": plotsamples,
-        "datasets": plotdata,
+        "samples": samples_lists,
+        "datasets": data_by_cat_lists,
+        # "colors": [d["color"] for d in data_by_cat_lists[0]],
         "config": pconfig,
     }
 
@@ -267,7 +224,7 @@ def plotly_bargraph(
     # )
 
     # json = fig.to_plotly_json(full_html=False, include_plotlyjs=None)
-    html = fig.to_html(full_html=False, include_plotlyjs=None)
+    # html = fig.to_html(full_html=False, include_plotlyjs=None)
 
     # html = """
     # <div class="plotly-plot-wrapper"{height}>
@@ -285,23 +242,22 @@ def plotly_bargraph(
     #     "datasets": data_by_cat_lists,
     #     "config": pconfig,
     # }
-    return html
+    # return html
 
 
 def _static_bargraph(
     data_by_cat_lists: List,
     samples_lists: List,
-    pconfig: Dict,
-    plt_height: int = None,
+    settings: PlotSettings,
 ):
     # Individual plot IDs
     pids = []
     for k in range(len(data_by_cat_lists)):
         try:
-            name = pconfig["data_labels"][k]
+            name = settings.data_labels[k]
         except KeyError:
             name = k + 1
-        pid = report.save_htmlid(f"{pconfig['id']}_{name}", skiplint=True)
+        pid = report.save_htmlid(f"{settings.id}_{name}", skiplint=True)
         pids.append(pid)
 
     html = (
@@ -309,26 +265,13 @@ def _static_bargraph(
         + "Flat image plot. Toolbox functions such as highlighting / hiding samples will not work "
         + '(see the <a href="http://multiqc.info/docs/#flat--interactive-plots" target="_blank">docs</a>).</small></p>'
     )
-    html += f'<div class="mqc_mplplot_plotgroup" id="{pconfig["id"]}">'
+    html += f'<div class="mqc_mplplot_plotgroup" id="{settings.id}">'
 
     # Counts / Percentages Switch
-    add_pct_tab = pconfig.get("cpswitch", True) is not False
-    add_log_tab = pconfig.get("logswitch", False)
-    pct_active = pconfig.get("cpswitch_c_active", True) is False or not add_pct_tab
-    c_label = pconfig.get("cpswitch_counts_label", "Counts")
-    p_label = pconfig.get("cpswitch_percent_label", "Percentages")
-
-    if add_pct_tab and not config.simple_output:
-        if not pct_active:
-            c_active = "active"
-            p_active = ""
-        else:
-            c_active = ""
-            p_active = "active"
-            pconfig["stacking"] = "percent"
+    if settings.add_pct_tab and not config.simple_output:
         html += f'<div class="btn-group mpl_switch_group mqc_mplplot_bargraph_setcountspcnt"> \n\
-            <button class="btn btn-default btn-sm {c_active} counts">{c_label}</button> \n\
-            <button class="btn btn-default btn-sm {p_active} pcnt">{p_label}</button> \n\
+            <button class="btn btn-default btn-sm {settings.c_active} counts">{settings.c_label}</button> \n\
+            <button class="btn btn-default btn-sm {settings.p_active} pcnt">{settings.p_label}</button> \n\
         </div> '
         if len(data_by_cat_lists) > 1:
             html += " &nbsp; &nbsp; "
@@ -340,12 +283,10 @@ def _static_bargraph(
             pid = pids[k]
             active = "active" if k == 0 else ""
             try:
-                name = pconfig["data_labels"][k]
+                name = settings.data_labels[k]
             except:
                 name = k + 1
-            html += '<button class="btn btn-default btn-sm {a}" data-target="#{pid}">{n}</button>\n'.format(
-                a=active, pid=pid, n=name
-            )
+            html += f'<button class="btn btn-default btn-sm {active}" data-target="#{pid}">{name}</button>\n'
         html += "</div>\n\n"
 
         # Collect all categories, and fill in with zeroes for samples that having any of cats missing
@@ -377,7 +318,7 @@ def _static_bargraph(
                 if s_name not in fdata:
                     fdata[s_name] = dict()
                 fdata[s_name][d["name"]] = dval
-        if pconfig.get("save_data_file", True):
+        if settings.save_data_file:
             util_functions.write_data_file(fdata, pids[pidx])
 
         # Switch out NaN for 0s
@@ -387,9 +328,9 @@ def _static_bargraph(
         # Calculate percentages and log10 values
         pct_by_cat = []
         log_by_cat = []
-        if add_pct_tab or add_log_tab:
+        if settings.add_pct_tab or settings.add_log_tab:
             pct_by_cat = []
-            if add_pct_tab:
+            if settings.add_pct_tab:
                 # Count totals for each category
                 sums = [0 for _ in data_by_cat[0]["data"]]
                 for cat_idx, d in enumerate(data_by_cat):
@@ -410,7 +351,7 @@ def _static_bargraph(
                     pct_by_cat.append(values)
 
             log_by_cat = []
-            if add_log_tab:
+            if settings.add_log_tab:
                 for cat_idx, d in enumerate(data_by_cat):
                     values = [x for x in d["data"]]
                     if len(values) < len(samples):
@@ -434,12 +375,12 @@ def _static_bargraph(
         views = [
             View(
                 data_by_cat,
-                active=not pct_active,
+                active=not settings.pct_active,
                 suffix="",
-                label=pconfig.get("cpswitch_counts_label", "Counts"),
+                label=settings.c_label,
             ),
         ]
-        if add_pct_tab:
+        if settings.add_pct_tab:
             views.append(
                 View(
                     [
@@ -450,12 +391,12 @@ def _static_bargraph(
                         }
                         for i, vals in enumerate(pct_by_cat)
                     ],
-                    active=pct_active,
+                    active=settings.pct_active,
                     suffix="_pc",
-                    label=pconfig.get("cpswitch_percent_label", "Percentages"),
+                    label=settings.p_label,
                 )
             )
-        if add_log_tab:
+        if settings.add_log_tab:
             views.append(
                 View(
                     [
@@ -468,23 +409,23 @@ def _static_bargraph(
                     ],
                     active=False,
                     suffix="_log",
-                    label=pconfig.get("logswitch_label", "Log10"),
+                    label=settings.l_label,
                 )
             )
 
         for view in views:
-            pid = f"{pids[pidx]}{view.suffix}"
             plot = _bargraph_plotly_plot(
+                basic_figure(settings),
                 data_by_cat=view.values_by_cat,
                 sample_names=samples_lists[pidx],
-                pconfig=pconfig,
-                plt_height=plt_height,
             )
 
             # Should this plot be hidden on report load?
             hide_div = ""
             if pidx > 0 or not view.active:
                 hide_div = ' style="display:none;"'
+
+            pid = f"{pids[pidx]}{view.suffix}"
 
             # Save the plot to the data directory if export is requested
             if config.export_plots:
@@ -494,7 +435,7 @@ def _static_bargraph(
                     if not os.path.exists(plot_dir):
                         os.makedirs(plot_dir)
                     # Save the plot
-                    plot_fn = os.path.join(plot_dir, "{}.{}".format(pid, fformat))
+                    plot_fn = os.path.join(plot_dir, f"{pid}.{fformat}")
                     plot.write_image(
                         plot_fn, format=fformat, width=plot.layout.width, height=plot.layout.height, scale=1
                     )
@@ -505,8 +446,8 @@ def _static_bargraph(
                 plot.write_image(img_buffer, format="png", width=plot.layout.width, height=plot.layout.height, scale=1)
                 b64_img = base64.b64encode(img_buffer.getvalue()).decode("utf8")
                 img_buffer.close()
-                html += '<div class="mqc_mplplot" id="{}"{}><img src="data:image/png;base64,{}" /></div>'.format(
-                    pid, hide_div, b64_img
+                html += (
+                    f'<div class="mqc_mplplot" id="{pid}"{hide_div}><img src="data:image/png;base64,{b64_img}" /></div>'
                 )
 
             # Link to the saved image
