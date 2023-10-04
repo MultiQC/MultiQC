@@ -25,42 +25,6 @@ $(function () {
   // Decompress the JSON plot data
   mqc_plots = JSON.parse(LZString.decompressFromBase64(mqc_compressed_plotdata));
 
-  // HighCharts Defaults
-  window.HCDefaults = $.extend(true, {}, Highcharts.getOptions(), {});
-  Highcharts.setOptions({
-    credits: {
-      enabled: true,
-      text: "Created with MultiQC",
-      href: "http://multiqc.info",
-    },
-    lang: {
-      decimalPoint: mqc_config["decimalPoint_format"] == undefined ? "." : mqc_config["decimalPoint_format"],
-      thousandsSep: mqc_config["thousandsSep_format"] == undefined ? " " : mqc_config["thousandsSep_format"],
-    },
-    exporting: {
-      buttons: {
-        contextButton: {
-          menuItems: null,
-          onclick: function () {
-            // Tick only this plot in the toolbox and slide out
-            $("#mqc_export_selectplots input").prop("checked", false);
-            $('#mqc_export_selectplots input[value="' + this.renderTo.id + '"]').prop("checked", true);
-            // Special case - Table scatter plots are in a modal, need to close this first
-            if (this.renderTo.id == "tableScatterPlot") {
-              $("#tableScatterModal").modal("hide");
-            }
-            mqc_toolbox_openclose("#mqc_exportplots", true);
-          },
-          text: '<span style="color:#999999;">Export Plot</span>',
-          symbol:
-            "url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABIAAAASCAYAAABWzo5XAAAAAXNSR0IArs4c6QAAAAlwSFlzAAALEwAACxMBAJqcGAAAAVlpVFh0WE1MOmNvbS5hZG9iZS54bXAAAAAAADx4OnhtcG1ldGEgeG1sbnM6eD0iYWRvYmU6bnM6bWV0YS8iIHg6eG1wdGs9IlhNUCBDb3JlIDUuNC4wIj4KICAgPHJkZjpSREYgeG1sbnM6cmRmPSJodHRwOi8vd3d3LnczLm9yZy8xOTk5LzAyLzIyLXJkZi1zeW50YXgtbnMjIj4KICAgICAgPHJkZjpEZXNjcmlwdGlvbiByZGY6YWJvdXQ9IiIKICAgICAgICAgICAgeG1sbnM6dGlmZj0iaHR0cDovL25zLmFkb2JlLmNvbS90aWZmLzEuMC8iPgogICAgICAgICA8dGlmZjpPcmllbnRhdGlvbj4xPC90aWZmOk9yaWVudGF0aW9uPgogICAgICA8L3JkZjpEZXNjcmlwdGlvbj4KICAgPC9yZGY6UkRGPgo8L3g6eG1wbWV0YT4KTMInWQAAAXNJREFUOBHNUsuqwkAMPX2g4kJd+wOCuKgL//8btAXXIogvtOhCax9xzkBqveLg8gamHZKck+RMgP9mnquh5XIpaZrC8zx0Oh1EUfQ1P3QRkeR6vcL3fdxuN1cqnERhGIKHREEQOIl8V1RE0DyuXCeRC/g39iFeHMdSlqUV+HK5oCgKeyew1+vZEauqwnQ6fcN+aJTnObbbLdrtttWGL0bjiBT/fr9jMBhYX/PzxsrA4/EQ8+zY7/dotVpgdRoFZ5F+v4/ZbPaBCw+Hg8znc5s8Ho8J9kxV04DAxCwZg6aAJWEO7XQ6yWKxQJZlGI1Gr+fXEZhkls8zCTUZfexkMpmg2+2+dUMci1qNlKS5K0YjC0iSRDgSO1EfiblfxOmpxaaDr3Q8HqWpC1+NFbnhu91OSMKC5/OZ19pqIoq5Xq+xWq3qIAnoZxFdCQ3Sx65o9WisqsYENb0rofr1T3Iexi1qs9mIgjTp1z9JhsPhq/qvwG95Tw3FukJt8JteAAAAAElFTkSuQmCC)",
-          symbolX: 23,
-          symbolY: 19,
-        },
-      },
-    },
-  });
-
   // Render plots on page load
   $(".hc-plot.not_rendered:visible:not(.gt_max_num_ds)").each(function () {
     var target = $(this).attr("id");
@@ -333,10 +297,13 @@ function plot_xy_line_graph(target, ds) {
     return false;
   }
   var config = mqc_plots[target]["config"];
-  var data = mqc_plots[target]["datasets"];
+
   if (ds === undefined) {
     ds = 0;
   }
+  // Make a clone of the data, so that we can mess with it,
+  // while keeping the original data intact
+  var data = JSON.parse(JSON.stringify(mqc_plots[target]["datasets"][ds]));
 
   if (config["tt_label"] === undefined) {
     config["tt_label"] = "{point.x}: {point.y:.2f}";
@@ -388,10 +355,6 @@ function plot_xy_line_graph(target, ds) {
   } else {
     var minTickInt = undefined;
   }
-
-  // Make a clone of the data, so that we can mess with it,
-  // while keeping the original data in tact
-  var data = JSON.parse(JSON.stringify(mqc_plots[target]["datasets"][ds]));
 
   // Rename samples
   if (window.mqc_rename_f_texts.length > 0) {
@@ -566,10 +529,10 @@ function plot_stacked_bar_graph(target, ds) {
     ds = 0;
   }
 
-  // Make a clone of the everything, so that we can mess with it,
-  // while keeping the original data in tact
+  // Make a clone of everything, so that we can mess with it,
+  // while keeping the original data intact
   var data = JSON.parse(JSON.stringify(mqc_plots[target]["datasets"][ds]));
-  var cats = JSON.parse(JSON.stringify(mqc_plots[target]["samples"][ds]));
+  var samples = JSON.parse(JSON.stringify(mqc_plots[target]["samples"][ds]));
   var config = JSON.parse(JSON.stringify(mqc_plots[target]["config"]));
 
   if (config["stacking"] === undefined) {
@@ -619,13 +582,13 @@ function plot_stacked_bar_graph(target, ds) {
 
   // Rename samples
   if (window.mqc_rename_f_texts.length > 0) {
-    $.each(cats, function (j, s_name) {
+    $.each(samples, function (j, s_name) {
       $.each(window.mqc_rename_f_texts, function (idx, f_text) {
         if (window.mqc_rename_regex_mode) {
           var re = new RegExp(f_text, "g");
-          cats[j] = cats[j].replace(re, window.mqc_rename_t_texts[idx]);
+          samples[j] = samples[j].replace(re, window.mqc_rename_t_texts[idx]);
         } else {
-          cats[j] = cats[j].replace(f_text, window.mqc_rename_t_texts[idx]);
+          samples[j] = samples[j].replace(f_text, window.mqc_rename_t_texts[idx]);
         }
       });
     });
@@ -633,7 +596,7 @@ function plot_stacked_bar_graph(target, ds) {
 
   // Highlight samples
   if (window.mqc_highlight_f_texts.length > 0) {
-    $.each(cats, function (j, s_name) {
+    $.each(samples, function (j, s_name) {
       $.each(window.mqc_highlight_f_texts, function (idx, f_text) {
         if (f_text == "") {
           return true;
@@ -669,10 +632,10 @@ function plot_stacked_bar_graph(target, ds) {
     .show();
   if (window.mqc_hide_f_texts.length > 0) {
     var num_hidden = 0;
-    var num_total = cats.length;
-    var j = cats.length;
+    var num_total = samples.length;
+    var j = samples.length;
     while (j--) {
-      var s_name = cats[j];
+      var s_name = samples[j];
       var match = false;
       for (i = 0; i < window.mqc_hide_f_texts.length; i++) {
         var f_text = window.mqc_hide_f_texts[i];
@@ -690,7 +653,7 @@ function plot_stacked_bar_graph(target, ds) {
         match = !match;
       }
       if (match) {
-        cats.splice(j, 1);
+        samples.splice(j, 1);
         $.each(data, function (k, d) {
           data[k]["data"].splice(j, 1);
         });
@@ -716,94 +679,157 @@ function plot_stacked_bar_graph(target, ds) {
     }
   }
 
-  // Make the highcharts plot
-  Highcharts.chart(target, {
-    chart: {
-      type: "bar",
-      zoomType: "x",
-    },
+  // Assuming you have your config, datasets, and other required data ready
+  let layout = {
     title: {
       text: config["title"],
+      xanchor: "center",
+      x: 0.5,
+      font: { size: 20 },
     },
-    xAxis: {
-      categories: cats,
-      min: 0,
-      title: {
-        text: config["xlab"],
-      },
+    yaxis: {
+      title: { text: config["ylab"] },
+      showgrid: false,
+      categoryorder: "category descending",
     },
-    yAxis: {
-      title: {
-        text: config["ylab"],
-      },
-      labels: { format: config["yLabelFormat"] ? config["yLabelFormat"] : "{value}" },
-      ceiling: config["yCeiling"],
-      floor: config["yFloor"],
-      minRange: config["yMinRange"],
-      max: config["ymax"],
-      min: config["ymin"],
-      type: config["ytype"],
-      labels: {
-        format: config["ylab_format"],
-      },
-      allowDecimals: config["yDecimals"],
-      reversedStacks: config["reversedStacks"],
-      minorTickInterval: minTickInt,
+    xaxis: {
+      title: { text: config["xlab"] },
+      gridcolor: "rgba(0,0,0,0.1)",
     },
-    plotOptions: {
-      series: {
-        stacking: config["stacking"],
-        pointPadding: config["pointPadding"],
-        groupPadding: config["groupPadding"],
-        borderWidth: config["borderWidth"],
-      },
-      cursor: config["cursor"],
-      point: {
-        events: {
-          click: config["click_func"],
-        },
-      },
-    },
+    paper_bgcolor: "rgba(0,0,0,0)",
+    plot_bgcolor: "rgba(0,0,0,0)",
+    hovermode: "y unified",
+    font: { color: "Black", family: "Lucida Grande" },
     legend: {
-      enabled: config["use_legend"],
+      orientation: "h",
+      yanchor: "top",
+      y: -0.2,
+      xanchor: "center",
+      x: 0.5,
     },
-    tooltip: {
-      formatter: function () {
-        var colspan = config["tt_percentages"] ? 3 : 2;
-        var s =
-          '<table><tr><th colspan="' +
-          colspan +
-          '" style="font-weight:bold; text-decoration:underline;">' +
-          this.x +
-          "</th></tr>";
-        $.each(this.points, function () {
-          yval =
-            Highcharts.numberFormat(this.y, config["tt_decimals"] == undefined ? 0 : config["tt_decimals"]) +
-            (config["tt_suffix"] || "");
-          ypct = Highcharts.numberFormat(this.percentage, 1);
-          s +=
-            '<tr> \
-            <td style="font-weight:bold; color:' +
-            this.series.color +
-            '; border-bottom:1px solid #dedede;">' +
-            this.series.name +
-            ':</td>\
-            <td style="text-align:right; border-bottom:1px solid #dedede; padding: 0 15px;">' +
-            yval +
-            "</td>";
-          if (config["tt_percentages"]) {
-            s += '<td style="text-align:right; border-bottom:1px solid #dedede;">(' + ypct + "%)</td>";
-          }
-          s += "</tr>";
-        });
-        s += "</table>";
-        return s;
+    barmode: "stack",
+    height: config["height"],
+    annotations: [
+      {
+        xanchor: "right",
+        yanchor: "bottom",
+        x: 1.1,
+        y: -0.3,
+        text: "Created with MultiQC",
+        xref: "paper",
+        yref: "paper",
+        showarrow: false,
+        font: { size: 10, color: "rgba(0,0,0,0.5)" },
       },
-      shared: true,
-      useHTML: true,
-    },
-    series: data,
-  });
+    ],
+  };
+
+  let series = [];
+  for (let cat of data) {
+    let trace = {
+      type: "bar",
+      y: samples,
+      x: cat.data,
+      name: cat.name,
+      orientation: "h",
+      marker: {
+        color: cat.color,
+        line: { width: 0 },
+      },
+    };
+    series.push(trace);
+  }
+
+  Plotly.newPlot(target, series, layout); // Assumes you have a <div id="myDiv"></div> in your HTML
+
+  // // Make the highcharts plot
+  // Highcharts.chart(target, {
+  //   chart: {
+  //     type: "bar",
+  //     zoomType: "x",
+  //   },
+  //   title: {
+  //     text: config["title"],
+  //   },
+  //   xAxis: {
+  //     categories: cats,
+  //     min: 0,
+  //     title: {
+  //       text: config["xlab"],
+  //     },
+  //   },
+  //   yAxis: {
+  //     title: {
+  //       text: config["ylab"],
+  //     },
+  //     labels: { format: config["yLabelFormat"] ? config["yLabelFormat"] : "{value}" },
+  //     ceiling: config["yCeiling"],
+  //     floor: config["yFloor"],
+  //     minRange: config["yMinRange"],
+  //     max: config["ymax"],
+  //     min: config["ymin"],
+  //     type: config["ytype"],
+  //     labels: {
+  //       format: config["ylab_format"],
+  //     },
+  //     allowDecimals: config["yDecimals"],
+  //     reversedStacks: config["reversedStacks"],
+  //     minorTickInterval: minTickInt,
+  //   },
+  //   plotOptions: {
+  //     series: {
+  //       stacking: config["stacking"],
+  //       pointPadding: config["pointPadding"],
+  //       groupPadding: config["groupPadding"],
+  //       borderWidth: config["borderWidth"],
+  //     },
+  //     cursor: config["cursor"],
+  //     point: {
+  //       events: {
+  //         click: config["click_func"],
+  //       },
+  //     },
+  //   },
+  //   legend: {
+  //     enabled: config["use_legend"],
+  //   },
+  //   tooltip: {
+  //     formatter: function () {
+  //       var colspan = config["tt_percentages"] ? 3 : 2;
+  //       var s =
+  //         '<table><tr><th colspan="' +
+  //         colspan +
+  //         '" style="font-weight:bold; text-decoration:underline;">' +
+  //         this.x +
+  //         "</th></tr>";
+  //       $.each(this.points, function () {
+  //         yval =
+  //           Highcharts.numberFormat(this.y, config["tt_decimals"] == undefined ? 0 : config["tt_decimals"]) +
+  //           (config["tt_suffix"] || "");
+  //         ypct = Highcharts.numberFormat(this.percentage, 1);
+  //         s +=
+  //           '<tr> \
+  //           <td style="font-weight:bold; color:' +
+  //           this.series.color +
+  //           '; border-bottom:1px solid #dedede;">' +
+  //           this.series.name +
+  //           ':</td>\
+  //           <td style="text-align:right; border-bottom:1px solid #dedede; padding: 0 15px;">' +
+  //           yval +
+  //           "</td>";
+  //         if (config["tt_percentages"]) {
+  //           s += '<td style="text-align:right; border-bottom:1px solid #dedede;">(' + ypct + "%)</td>";
+  //         }
+  //         s += "</tr>";
+  //       });
+  //       s += "</table>";
+  //       return s;
+  //     },
+  //     shared: true,
+  //     useHTML: true,
+  //   },
+  //   series: data,
+  // });
 }
 
 // Scatter plot
