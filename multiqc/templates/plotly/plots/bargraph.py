@@ -65,7 +65,7 @@ def _bargraph_plotly_plot(
 def plotly_bargraph(
     data_by_cat_lists: List[List[Dict]],
     samples_lists: List[List[str]],
-    pconfig: Dict,
+    pconfig: Dict = None,
 ) -> str:
     """
     :param data_by_cat_lists: List of lists of dicts with the keys: {name, color, data},
@@ -77,6 +77,9 @@ def plotly_bargraph(
     :param pconfig: Plot parameters.
     :return: Plotly HTML
     """
+    if pconfig is None:
+        pconfig = {}
+
     plt_height = pconfig.get("height")
     if not plt_height:
         max_n_samples = max(len(samples) for samples in samples_lists)
@@ -85,8 +88,21 @@ def plotly_bargraph(
         plt_height = max(600, plt_height)  # At least 512px tall
         plt_height = min(2560, plt_height)  # Cap at 2560px tall
 
+    uniq_suffix = "".join(random.sample(string.ascii_lowercase, 10))
+    is_static_suf = "static_" if config.plots_force_flat else ""
+    # Plot group ID
+    if pconfig.get("id") is None:
+        pconfig["id"] = f"mqc_{is_static_suf}plot_{uniq_suffix}"
+    # Sanitise plot ID and check for duplicates
+    pconfig["id"] = report.save_htmlid(pconfig["id"])
+
     if config.plots_force_flat:
-        return _static_bargraph(data_by_cat_lists, samples_lists, pconfig, plt_height)
+        return _static_bargraph(
+            data_by_cat_lists,
+            samples_lists,
+            pconfig,
+            plt_height,
+        )
 
     fig = _bargraph_plotly_plot(
         data_by_cat_lists[0],
@@ -94,6 +110,85 @@ def plotly_bargraph(
         pconfig,
         plt_height,
     )
+
+    # Counts / Percentages / Log Switches
+    if pconfig.get("cpswitch") is not False or pconfig.get("logswitch") is True:
+        if pconfig.get("logswitch_active") is True:
+            c_active = ""
+            p_active = ""
+            l_active = "active"
+        elif pconfig.get("cpswitch_c_active", True) is True:
+            c_active = "active"
+            p_active = ""
+            l_active = ""
+        else:
+            c_active = ""
+            p_active = "active"
+            l_active = ""
+            pconfig["stacking"] = "percent"
+        c_label = pconfig.get("cpswitch_counts_label", "Counts")
+        p_label = pconfig.get("cpswitch_percent_label", "Percentages")
+        l_label = pconfig.get("logswitch_label", "Log10")
+        html += '<div class="btn-group hc_switch_group"> \n'
+        html += '<button class="btn btn-default btn-sm {c_a}" data-action="set_numbers" data-target="{id}" data-ylab="{c_l}">{c_l}</button> \n'.format(
+            id=pconfig["id"], c_a=c_active, c_l=c_label
+        )
+        if pconfig.get("cpswitch", True) is True:
+            html += '<button class="btn btn-default btn-sm {p_a}" data-action="set_percent" data-target="{id}" data-ylab="{p_l}">{p_l}</button> \n'.format(
+                id=pconfig["id"], p_a=p_active, p_l=p_label
+            )
+        if pconfig.get("logswitch") is True:
+            html += '<button class="btn btn-default btn-sm {l_a}" data-action="set_log" data-target="{id}" data-ylab="{l_l}">{l_l}</button> \n'.format(
+                id=pconfig["id"], l_a=l_active, l_l=l_label
+            )
+            pconfig["reversedStacks"] = True
+        html += "</div> "
+        if len(plotdata) > 1:
+            html += " &nbsp; &nbsp; "
+
+    # Buttons to cycle through different datasets
+    if len(plotdata) > 1:
+        html += '<div class="btn-group hc_switch_group">\n'
+        for k, p in enumerate(plotdata):
+            active = "active" if k == 0 else ""
+            try:
+                name = pconfig["data_labels"][k]["name"]
+            except:
+                try:
+                    name = pconfig["data_labels"][k]
+                except:
+                    name = k + 1
+            try:
+                ylab = 'data-ylab="{}"'.format(pconfig["data_labels"][k]["ylab"])
+            except:
+                ylab = 'data-ylab="{}"'.format(name) if name != k + 1 else ""
+            try:
+                ymax = 'data-ymax="{}"'.format(pconfig["data_labels"][k]["ymax"])
+            except:
+                ymax = ""
+            html += '<button class="btn btn-default btn-sm {a}" data-action="set_data" {y} {ym} data-newdata="{k}" data-target="{id}">{n}</button>\n'.format(
+                a=active, id=pconfig["id"], n=name, y=ylab, ym=ymax, k=k
+            )
+        html += "</div>\n\n"
+
+    # Plot HTML
+    html += """<div class="hc-plot-wrapper"{height}>
+        <div id="{id}" class="hc-plot not_rendered hc-bar-plot"><small>loading..</small></div>
+    </div></div>""".format(
+        id=pconfig["id"],
+        height=f' style="height:{pconfig["height"]}px"' if "height" in pconfig else "",
+    )
+
+    report.num_hc_plots += 1
+
+    report.plot_data[pconfig["id"]] = {
+        "plot_type": "bar_graph",
+        "samples": plotsamples,
+        "datasets": plotdata,
+        "config": pconfig,
+    }
+
+    return html
 
     # for data, samples in zip(data_by_cat_lists, samples_lists):
     #     add_pct_tab = pconfig.get("cpswitch", True)
@@ -199,12 +294,6 @@ def _static_bargraph(
     pconfig: Dict,
     plt_height: int = None,
 ):
-    # Plot group ID
-    if pconfig.get("id") is None:
-        pconfig["id"] = "mqc_mplplot_" + "".join(random.sample(string.ascii_lowercase, 10))
-    # Sanitise plot ID and check for duplicates
-    pconfig["id"] = report.save_htmlid(pconfig["id"])
-
     # Individual plot IDs
     pids = []
     for k in range(len(data_by_cat_lists)):
@@ -212,7 +301,7 @@ def _static_bargraph(
             name = pconfig["data_labels"][k]
         except KeyError:
             name = k + 1
-        pid = report.save_htmlid(f"mqc_{pconfig['id']}_{name}", skiplint=True)
+        pid = report.save_htmlid(f"{pconfig['id']}_{name}", skiplint=True)
         pids.append(pid)
 
     html = (
