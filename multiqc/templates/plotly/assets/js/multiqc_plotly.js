@@ -78,37 +78,45 @@ $(function () {
     var action = $(this).data("action");
     // Switch between values and percentages
     if (action == "set_percent" || action == "set_numbers") {
-      var sym = action == "set_percent" ? "%" : "#";
-      var stack_type = action == "set_percent" ? "percent" : "normal";
-      mqc_plots[target]["config"]["stacking"] = stack_type;
-      mqc_plots[target]["config"]["ytype"] = "linear";
+      Plotly.relayout(target, "xaxis.type", "linear");
+      ylab = mqc_plots[target].config.ylab;
+      ylab = action == "set_percent" ? ylab.replace("#", "%") : ylab.replace("%", "#");
+      Plotly.relayout(target, "yaxis.title.text", ylab);
+
+      // Recalculate the numbers so each horizontal bar fills the whole width of the plot
+      var data = mqc_plots[target]["datasets"][0];
+      Plotly.restyle(target, "x", data.dataPct);
+
+      // Plotly.newPlot(target, newData, mqc_plots[target]["layout"], mqc_plots[target]["config"]);
+      // var stack_type = action == "set_percent" ? "percent" : "normal";
+      // mqc_plots[target]["config"]["stacking"] = stack_type;
+      // mqc_plots[target]["config"]["ytype"] = "linear";
       // Workaround for manually set y-axis maximums on the % stacked plot
-      if (action == "set_percent") {
-        mqc_plots[target]["config"]["old_ymax"] = mqc_plots[target]["config"]["ymax"];
-        delete mqc_plots[target]["config"]["ymax"];
-      } else {
-        if ("old_ymax" in mqc_plots[target]["config"]) {
-          mqc_plots[target]["config"]["ymax"] = mqc_plots[target]["config"]["old_ymax"];
-        }
-      }
-      plot_graph(target);
-      var ylab = $(this).data("ylab");
-      if (ylab != undefined) {
-        $("#" + target)
-          .highcharts()
-          .yAxis[0].setTitle({ text: ylab });
-      }
-      var xlab = $(this).data("xlab");
-      if (xlab != undefined) {
-        $("#" + target)
-          .highcharts()
-          .xAxis[0].setTitle({ text: xlab });
-      }
+      // if (action == "set_percent") {
+      //   mqc_plots[target]["config"]["old_ymax"] = mqc_plots[target]["config"]["ymax"];
+      //   delete mqc_plots[target]["config"]["ymax"];
+      // } else {
+      //   if ("old_ymax" in mqc_plots[target]["config"]) {
+      //     mqc_plots[target]["config"]["ymax"] = mqc_plots[target]["config"]["old_ymax"];
+      //   }
+      // }
+      // plot_graph(target);
+      // var ylab = $(this).data("ylab");
+      // if (ylab != undefined) {
+      //   $("#" + target)
+      //     .highcharts()
+      //     .yAxis[0].setTitle({ text: ylab });
+      // }
+      // var xlab = $(this).data("xlab");
+      // if (xlab != undefined) {
+      //   $("#" + target)
+      //     .highcharts()
+      //     .xAxis[0].setTitle({ text: xlab });
+      // }
     }
     // Switch to log10 axis
     if (action == "set_log") {
-      mqc_plots[target]["config"]["ytype"] = "logarithmic";
-      plot_graph(target);
+      Plotly.relayout(target, "xaxis.type", "log");
     }
     // Switch data source
     if (action == "set_data") {
@@ -740,7 +748,7 @@ function plot_stacked_bar_graph(target, ds) {
     series.push(trace);
   }
 
-  Plotly.newPlot(target, series, layout); // Assumes you have a <div id="myDiv"></div> in your HTML
+  mqc_plots[target].plot = Plotly.newPlot(target, series, layout);
 
   // // Make the highcharts plot
   // Highcharts.chart(target, {

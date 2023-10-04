@@ -114,7 +114,6 @@ $(function () {
     var action = $(this).data("action");
     // Switch between values and percentages
     if (action == "set_percent" || action == "set_numbers") {
-      var sym = action == "set_percent" ? "%" : "#";
       var stack_type = action == "set_percent" ? "percent" : "normal";
       mqc_plots[target]["config"]["stacking"] = stack_type;
       mqc_plots[target]["config"]["ytype"] = "linear";

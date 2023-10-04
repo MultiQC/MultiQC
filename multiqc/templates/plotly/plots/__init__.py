@@ -46,7 +46,7 @@ class PlotSettings:
                 self.p_active = "active"
                 self.stacking = "percent"
 
-        self.data_labels = pconfig.get("data_labels", [])
+        self.data_labels = pconfig.get("data_labels", {})
         self.save_data_file = pconfig.get("save_data_file", True)
 
     @property

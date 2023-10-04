@@ -76,6 +76,32 @@ def plotly_bargraph(
     if settings.id is None:  # ID of the plot group
         settings.id = f"mqc_{is_static_suf}plot_{uniq_suffix}"
 
+    for pidx, (samples, data_by_cat) in enumerate(zip(samples_lists, data_by_cat_lists)):
+        # Switch out NaN for 0s
+        for idx, d in enumerate(data_by_cat):
+            data_by_cat[idx]["data"] = [x if not math.isnan(x) else 0 for x in d["data"]]
+
+        # Calculate and save percentages
+        if settings.add_pct_tab:
+            # Count totals for each category
+            sums = [0 for _ in data_by_cat[0]["data"]]
+            for cat_idx, d in enumerate(data_by_cat):
+                for sample_idx, v in enumerate(d["data"]):
+                    if not math.isnan(v):
+                        sums[sample_idx] += v
+            # Now, calculate percentages for each category
+            for cat_idx, d in enumerate(data_by_cat):
+                values = [x for x in d["data"]]
+                if len(values) < len(samples):
+                    values.extend([0] * (len(samples) - len(values)))
+                for key, var in enumerate(values):
+                    sum_for_cat = sums[key]
+                    if sum_for_cat == 0:
+                        values[key] = 0
+                    else:
+                        values[key] = (float(var + 0.0) / float(sum_for_cat)) * 100
+                d["dataPct"] = values
+
     if config.plots_force_flat:
         return _static_bargraph(
             data_by_cat_lists,
@@ -83,23 +109,23 @@ def plotly_bargraph(
             settings,
         )
 
-    # fig = _bargraph_plotly_plot(
-    #     basic_figure(settings),
-    #     data_by_cat_lists[0],
-    #     samples_lists[0],
-    # )
+    fig = _bargraph_plotly_plot(
+        basic_figure(settings),
+        data_by_cat_lists[0],
+        samples_lists[0],
+    )
 
     html = '<div class="mqc_hcplot_plotgroup">'
 
     # Counts / Percentages / Log Switches
     if settings.add_pct_tab or settings.add_log_tab:
         html += '<div class="btn-group hc_switch_group"> \n'
-        btn = f'<button class="btn btn-default btn-sm {{active}}" data-action="set_numbers" data-target="{settings.id}" data-ylab="{{label}}">{{label}}</button> \n'
-        html += btn.format(active=settings.c_active, label=settings.c_label)
+        btn = f'<button class="btn btn-default btn-sm {{active}}" data-action="{{action}}" data-target="{settings.id}" data-ylab="{{label}}">{{label}}</button> \n'
+        html += btn.format(active=settings.c_active, label=settings.c_label, action="set_numbers")
         if settings.add_pct_tab:
-            html += btn.format(active=settings.p_active, label=settings.p_label)
+            html += btn.format(active=settings.p_active, label=settings.p_label, action="set_percent")
         if settings.add_log_tab:
-            html += btn.format(active=settings.l_active, label=settings.l_label)
+            html += btn.format(active=settings.l_active, label=settings.l_label, action="set_log")
         html += "</div> "
         if len(data_by_cat_lists) > 1:
             html += " &nbsp; &nbsp; "
@@ -302,6 +328,8 @@ def _static_bargraph(
                             "name": cat,
                             "color": color,
                             "data": [0 for _ in samples_lists[0]],
+                            "dataPct": [0.0 for _ in samples_lists[0]],
+                            "dataLog": [0.0 for _ in samples_lists[0]],
                         }
                     )
         # Sort categories by name
@@ -325,43 +353,18 @@ def _static_bargraph(
         for idx, d in enumerate(data_by_cat):
             data_by_cat[idx]["data"] = [x if not math.isnan(x) else 0 for x in d["data"]]
 
-        # Calculate percentages and log10 values
-        pct_by_cat = []
-        log_by_cat = []
-        if settings.add_pct_tab or settings.add_log_tab:
-            pct_by_cat = []
-            if settings.add_pct_tab:
-                # Count totals for each category
-                sums = [0 for _ in data_by_cat[0]["data"]]
-                for cat_idx, d in enumerate(data_by_cat):
-                    for sample_idx, v in enumerate(d["data"]):
-                        if not math.isnan(v):
-                            sums[sample_idx] += v
-                # Now, calculate percentages for each category
-                for cat_idx, d in enumerate(data_by_cat):
-                    values = [x for x in d["data"]]
-                    if len(values) < len(samples):
-                        values.extend([0] * (len(samples) - len(values)))
-                    for key, var in enumerate(values):
-                        sum_for_cat = sums[key]
-                        if sum_for_cat == 0:
-                            values[key] = 0
-                        else:
-                            values[key] = (float(var + 0.0) / float(sum_for_cat)) * 100
-                    pct_by_cat.append(values)
-
-            log_by_cat = []
-            if settings.add_log_tab:
-                for cat_idx, d in enumerate(data_by_cat):
-                    values = [x for x in d["data"]]
-                    if len(values) < len(samples):
-                        values.extend([0] * (len(samples) - len(values)))
-                    for key, var in enumerate(values):
-                        if var == 0:
-                            values[key] = 0
-                        else:
-                            values[key] = math.log10(var)
-                    log_by_cat.append(values)
+        # Calculate log10 values
+        if settings.add_log_tab:
+            for cat_idx, d in enumerate(data_by_cat):
+                values = [x for x in d["data"]]
+                if len(values) < len(samples):
+                    values.extend([0] * (len(samples) - len(values)))
+                for key, var in enumerate(values):
+                    if var == 0:
+                        values[key] = 0
+                    else:
+                        values[key] = math.log10(var)
+                d["dataLog"] = values
 
         View = namedtuple(
             "View",
@@ -375,7 +378,7 @@ def _static_bargraph(
         views = [
             View(
                 data_by_cat,
-                active=not settings.pct_active,
+                active=not settings.p_active,
                 suffix="",
                 label=settings.c_label,
             ),
@@ -385,13 +388,13 @@ def _static_bargraph(
                 View(
                     [
                         {
-                            "data": vals,
+                            "data": data_by_cat[i]["dataPct"],
                             "name": data_by_cat[i]["name"],
                             "color": data_by_cat[i]["color"],
                         }
-                        for i, vals in enumerate(pct_by_cat)
+                        for i, vals in enumerate(data_by_cat)
                     ],
-                    active=settings.pct_active,
+                    active=settings.p_active,
                     suffix="_pc",
                     label=settings.p_label,
                 )
@@ -401,11 +404,11 @@ def _static_bargraph(
                 View(
                     [
                         {
-                            "data": vals,
+                            "data": data_by_cat[i]["dataLog"],
                             "name": data_by_cat[i]["name"],
                             "color": data_by_cat[i]["color"],
                         }
-                        for i, vals in enumerate(log_by_cat)
+                        for i, vals in enumerate(data_by_cat)
                     ],
                     active=False,
                     suffix="_log",
