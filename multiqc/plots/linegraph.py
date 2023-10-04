@@ -238,6 +238,8 @@ def plot(data, pconfig=None):
             report.num_mpl_plots += 1
             return matplotlib_linegraph(plotdata, pconfig)
         except Exception as e:
+            if config.strict:
+                raise
             logger.error("############### Error making MatPlotLib figure! Falling back to HighCharts.")
             logger.debug(e, exc_info=True)
             return highcharts_linegraph(plotdata, pconfig)
