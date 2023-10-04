@@ -80,39 +80,47 @@ $(function () {
     if (action == "set_percent" || action == "set_numbers") {
       Plotly.relayout(target, "xaxis.type", "linear");
       ylab = mqc_plots[target].config.ylab;
-      ylab = action == "set_percent" ? ylab.replace("#", "%") : ylab.replace("%", "#");
-      Plotly.relayout(target, "yaxis.title.text", ylab);
-
-      // Recalculate the numbers so each horizontal bar fills the whole width of the plot
-      var data = mqc_plots[target]["datasets"][0];
-      Plotly.restyle(target, "x", data.dataPct);
-
-      // Plotly.newPlot(target, newData, mqc_plots[target]["layout"], mqc_plots[target]["config"]);
-      // var stack_type = action == "set_percent" ? "percent" : "normal";
-      // mqc_plots[target]["config"]["stacking"] = stack_type;
-      // mqc_plots[target]["config"]["ytype"] = "linear";
-      // Workaround for manually set y-axis maximums on the % stacked plot
-      // if (action == "set_percent") {
-      //   mqc_plots[target]["config"]["old_ymax"] = mqc_plots[target]["config"]["ymax"];
-      //   delete mqc_plots[target]["config"]["ymax"];
-      // } else {
-      //   if ("old_ymax" in mqc_plots[target]["config"]) {
-      //     mqc_plots[target]["config"]["ymax"] = mqc_plots[target]["config"]["old_ymax"];
+      var data_by_cat = JSON.parse(JSON.stringify(mqc_plots[target]["datasets"][0]));
+      var samples = JSON.parse(JSON.stringify(mqc_plots[target]["samples"][0]));
+      // if mqc_plots[target].datasets[0].pctSeries is not defined, calculate it
+      // let series = []
+      // for (let cat of data) {
+      //   let trace = {
+      //     type: "bar",
+      //     y: samples,
+      //     x: (action == "set_percent") ? cat.dataPct : cat.data,
+      //     name: cat.name,
+      //     orientation: "h",
+      //     marker: {
+      //       color: cat.color,
+      //       line: { width: 0 },
+      //     },
+      //   };
+      //   series.push(trace);
+      // }
+      // Console.log(series);
+      // for (let s of series) {
+      //   let total = 0;
+      //   for (let x of s.x) {
+      //     total += x;
       //   }
+      //   let pct = [];
+      //   for (let x of s.x) {
+      //     pct.push((x / total) * 100);
+      //   }
+      //   mqc_plots[target].datasets[0].pctSeries.push(pct);
       // }
-      // plot_graph(target);
-      // var ylab = $(this).data("ylab");
-      // if (ylab != undefined) {
-      //   $("#" + target)
-      //     .highcharts()
-      //     .yAxis[0].setTitle({ text: ylab });
       // }
-      // var xlab = $(this).data("xlab");
-      // if (xlab != undefined) {
-      //   $("#" + target)
-      //     .highcharts()
-      //     .xAxis[0].setTitle({ text: xlab });
-      // }
+      let x = [];
+      for (let cat of data_by_cat) {
+        x.push(action == "set_percent" ? cat.dataPct : cat.data);
+      }
+      Plotly.restyle(target, "x", x);
+      if (action == "set_percent") {
+        Plotly.relayout(target, "yaxis.title.text", ylab.replace("#", "%"));
+      } else {
+        Plotly.relayout(target, "yaxis.title.text", ylab.replace("%", "#"));
+      }
     }
     // Switch to log10 axis
     if (action == "set_log") {
@@ -687,7 +695,7 @@ function plot_stacked_bar_graph(target, ds) {
     }
   }
 
-  // Assuming you have your config, datasets, and other required data ready
+  // Make the plotly plot
   let layout = {
     title: {
       text: config["title"],
@@ -731,7 +739,6 @@ function plot_stacked_bar_graph(target, ds) {
       },
     ],
   };
-
   let series = [];
   for (let cat of data) {
     let trace = {
@@ -748,7 +755,8 @@ function plot_stacked_bar_graph(target, ds) {
     series.push(trace);
   }
 
-  mqc_plots[target].plot = Plotly.newPlot(target, series, layout);
+  mqc_plots[target].datasets[ds].series = series;
+  Plotly.newPlot(target, series, layout);
 
   // // Make the highcharts plot
   // Highcharts.chart(target, {
