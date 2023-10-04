@@ -10,6 +10,9 @@ from multiqc.plots import bargraph, table
 log = logging.getLogger(__name__)
 
 
+ALL_CHROM = "ALL"
+
+
 class MultiqcModule(BaseMultiqcModule):
     """
     WhatsHap module class, parses WhatsHap output.
@@ -64,12 +67,12 @@ class MultiqcModule(BaseMultiqcModule):
     def parse_whatshap_stats(self, logfile):
         """Parse WhatsHap stats file"""
 
-        def process_data(data):
+        def parse_numeric_values(data):
             """
             Process the data to convert it to the proper format
 
             In practice, this only involves the following changes:
-                - Convert all numeric values to integers
+                - Convert all numeric values to integers or floats
                 - Replace 'nan' values with zero
             """
             for key, value in data.items():
@@ -77,7 +80,10 @@ class MultiqcModule(BaseMultiqcModule):
                 try:
                     data[key] = int(data[key])
                 except ValueError:
-                    pass
+                    try:
+                        data[key] = float(data[key])
+                    except ValueError:
+                        pass
 
                 # Replace 'nan' with zero
                 if value == "nan":
@@ -103,25 +109,63 @@ class MultiqcModule(BaseMultiqcModule):
             chromosome = data.pop("chromosome")
 
             # Process the remaining data fields
-            process_data(data)
-
-            # Calculate the fraction of heterozygous variants that were phased
-            try:
-                frac_het_phased = data["phased"] / data["heterozygous_variants"]
-            except ZeroDivisionError:
-                frac_het_phased = 0
-            data["frac_het_phased"] = frac_het_phased
+            parse_numeric_values(data)
 
             # Insert the current line under chromosome
             results[chromosome] = data
 
         # If we were parsing an empty file, we return dummy data (basically all
         # zero) so the sample statistics are consistent, which eases parsing
-        # later on. WhatsHap uses the fictional 'ALL' chromsome to store the
+        # later on. WhatsHap uses the fictional 'ALL' chromosome to store the
         # summary for all results, so we re-use that to store all zero's
         if not results:
             results = dict()
-            results["ALL"] = defaultdict(int)
+            results[ALL_CHROM] = defaultdict(int)
+
+        # If ALL chromosome is not present, and there are multiple contigs available,
+        # e.g. in case of a truncated input file, we summarize available contigs
+        # as a fictional 'ALL' chromosome.
+        if ALL_CHROM not in results and len(results) > 1:
+            log.warning(
+                f"Could not find the 'ALL' chromosome for {sample}. Make sure that the input is not truncated. MultiQC will summarize information for all available chromosomes instead."
+            )
+            sum_fields = {
+                "variants",
+                "phased",
+                "unphased",
+                "singletons",
+                "blocks",
+                "bp_per_block_sum",
+                "heterozygous_variants",
+                "heterozygous_snvs",
+                "phased_snvs",
+            }
+            avg_fields = {
+                "bp_per_block_avg",
+                "variant_per_block_avg",
+                "bp_per_block_avg",
+            }
+            results[ALL_CHROM] = defaultdict(int)
+            for chrom in results:
+                if chrom == ALL_CHROM:
+                    continue
+                for field in results[chrom]:
+                    val = results[chrom][field]
+                    if val:
+                        if field in sum_fields:
+                            results[ALL_CHROM][field] += int(results[chrom][field])
+                        elif field in avg_fields:
+                            results[ALL_CHROM][field] += float(results[chrom][field]) * results[chrom]["blocks"]
+            for field in avg_fields:
+                results[ALL_CHROM][field] /= results[ALL_CHROM]["blocks"]
+
+        # Calculate the fraction of heterozygous variants that were phased
+        for chrom, data in results.items():
+            try:
+                frac_het_phased = data["phased"] / data["heterozygous_variants"]
+            except ZeroDivisionError:
+                frac_het_phased = 0
+            results[chrom]["frac_het_phased"] = frac_het_phased
 
         # Clean the sample name
         sample = self.clean_s_name(sample, logfile["root"])
@@ -143,7 +187,7 @@ class MultiqcModule(BaseMultiqcModule):
         if len(sample_stats) == 1:
             summary_field = list(sample_stats)[0]
         else:
-            summary_field = "ALL"
+            summary_field = ALL_CHROM
         return summary_field
 
     def whatshap_add_general_stats(self):

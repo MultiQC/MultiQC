@@ -29,7 +29,7 @@ from rich.syntax import Syntax
 
 from .modules.base_module import ModuleNoSamplesFound
 from .plots import table
-from .utils import config, lint_helpers, log, megaqc, plugin_hooks, report, software_versions, util_functions
+from .utils import config, log, megaqc, plugin_hooks, report, software_versions, strict_helpers, util_functions
 
 # Set up logging
 start_execution_time = time.time()
@@ -111,7 +111,7 @@ click.rich_click.OPTION_GROUPS = {
             "options": [
                 "--verbose",
                 "--quiet",
-                "--lint",
+                "--strict",
                 "--profile-runtime",
                 "--no-megaqc-upload",
                 "--no-ansi",
@@ -235,7 +235,6 @@ click.rich_click.OPTION_GROUPS = {
 )
 @click.option(
     "--strict",
-    "--lint",
     "strict",
     is_flag=True,
     help="Strict mode. MultiQC will stop whenever a module or a template raised an "
@@ -244,6 +243,7 @@ click.rich_click.OPTION_GROUPS = {
     "to the console in the end of the run, and also cause MultiQC to exist with "
     "a non-0 code",
 )
+@click.option("--lint", "lint", is_flag=True, hidden=True, help="DEPRECATED: use --strict instead")
 @click.option(
     "--pdf",
     "make_pdf",
@@ -331,6 +331,7 @@ def run(
     plots_flat=False,
     plots_interactive=False,
     strict=False,
+    lint=False,  # Deprecated since v1.17
     make_pdf=False,
     no_megaqc_upload=False,
     config_file=(),
@@ -441,14 +442,19 @@ def run(
         config.plots_force_flat = True
     if plots_interactive:
         config.plots_force_interactive = True
-    if config.lint:  # Deprecated since v1.17
+    if lint or config.lint:  # Deprecated since v1.17
+        logger.warning(
+            "DEPRECIATED: The --lint option is renamed to --strict since MultiQC 1.17. "
+            "The old option will be removed in future MultiQC versions, please "
+            "update your command line and/or configs."
+        )
         strict = True
     if os.environ.get("MULTIQC_STRICT"):
         strict = True
     if strict:
         config.strict = True
         config.lint = True  # Deprecated since v1.17
-        lint_helpers.run_tests()
+        strict_helpers.run_tests()
     if make_pdf:
         config.template = "simple"
     if no_megaqc_upload:
@@ -723,9 +729,8 @@ def run(
             )
             sys.exit(1)
         except:
-            if (
-                config.strict
-            ):  # Crash quickly in the strict mode. This can be helpful for interactive debugging of modules.
+            if config.strict:
+                # Crash quickly in the strict mode. This can be helpful for interactive debugging of modules.
                 raise
 
             # Flag the error, but carry on
