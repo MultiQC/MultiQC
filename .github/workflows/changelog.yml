@@ -8,12 +8,13 @@ on:
 jobs:
   update_changelog:
     runs-on: ubuntu-latest
-    # Only run if comment is on a PR with the main repo, and if it contains the magic keywords
-    if: >
-      github.repository_owner == 'ewels' &&
-      (github.event_name == 'pull_request_target' || 
-      github.event.issue.pull_request && 
-      startsWith(github.event.comment.body, '@multiqc-bot changelog'))
+    # Run if comment is on a PR with the main repo, and if it contains the magic keywords.
+    # Or run on PR creation, unless asked otherwise in the title.
+    if: |
+      github.repository_owner == 'ewels' && (
+        github.event_name == 'pull_request_target' ||
+        github.event.issue.pull_request && startsWith(github.event.comment.body, '@multiqc-bot changelog')
+      )
 
     steps:
       - uses: actions/checkout@v3
