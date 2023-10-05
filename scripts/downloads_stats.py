@@ -8,7 +8,6 @@ import json
 import logging
 import os
 from collections import Counter
-from pprint import pprint
 
 import packaging.version
 import requests
@@ -24,7 +23,7 @@ def main():
     stats |= github_releases_stats()
     stats |= dockerhub_stats()
     stats |= biocontainers_stats()
-    pprint(stats)
+    print(json.dumps(stats, indent=2, sort_keys=True))
 
 
 def get_latest_version() -> str:
