@@ -25,6 +25,10 @@ class IdxstatsReportMixin:
                 self.add_data_source(f, section="idxstats")
                 self.samtools_idxstats[f["s_name"]] = parsed_data
 
+                # Superfluous function call to confirm that it is used in this module
+                # Replace None with actual version if it is available
+                self.add_software_version(None, f["s_name"])
+
         # Filter to strip out ignored sample names
         self.samtools_idxstats = self.ignore_samples(self.samtools_idxstats)
 

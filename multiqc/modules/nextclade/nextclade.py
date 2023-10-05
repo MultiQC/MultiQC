@@ -8,7 +8,7 @@ import jinja2
 
 from multiqc import config
 from multiqc.modules import nextclade
-from multiqc.modules.base_module import BaseMultiqcModule
+from multiqc.modules.base_module import BaseMultiqcModule, ModuleNoSamplesFound
 from multiqc.plots import bargraph, table
 from multiqc.utils import mqc_colour
 
@@ -33,12 +33,16 @@ class MultiqcModule(BaseMultiqcModule):
             self.parse_nextclade_log(f)
             self.add_data_source(f)
 
+            # Superfluous function call to confirm that it is used in this module
+            # Replace None with actual version if it is available
+            self.add_software_version(None, f["s_name"])
+
         # Remove ignored samples
         self.nextclade_data = self.ignore_samples(self.nextclade_data)
 
         # Check if we found any samples
         if len(self.nextclade_data) == 0:
-            raise UserWarning
+            raise ModuleNoSamplesFound
 
         log.info("Found {} samples".format(len(self.nextclade_data)))
         self.write_data_file(self.nextclade_data, "multiqc_nextclade")

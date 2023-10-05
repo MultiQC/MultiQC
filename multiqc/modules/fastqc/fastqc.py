@@ -16,15 +16,17 @@ import math
 import os
 import re
 import zipfile
-from collections import OrderedDict
+from collections import Counter, OrderedDict
 
 from multiqc import config
-from multiqc.modules.base_module import BaseMultiqcModule
-from multiqc.plots import bargraph, heatmap, linegraph
+from multiqc.modules.base_module import BaseMultiqcModule, ModuleNoSamplesFound
+from multiqc.plots import bargraph, heatmap, linegraph, table
 from multiqc.utils import report
 
 # Initialise the logger
 log = logging.getLogger(__name__)
+
+VERSION_REGEX = r"FastQC\t([\d\.]+)"
 
 
 class MultiqcModule(BaseMultiqcModule):
@@ -83,7 +85,7 @@ class MultiqcModule(BaseMultiqcModule):
         # Filter to strip out ignored sample names
         self.fastqc_data = self.ignore_samples(self.fastqc_data)
         if len(self.fastqc_data) == 0:
-            raise UserWarning
+            raise ModuleNoSamplesFound
 
         log.info("Found {} reports".format(len(self.fastqc_data)))
 
@@ -157,6 +159,10 @@ class MultiqcModule(BaseMultiqcModule):
         s_headers = None
         self.dup_keys = []
         for l in file_contents.splitlines():
+            if l.startswith("##FastQC"):
+                version_match = re.search(VERSION_REGEX, l)
+                if version_match:
+                    self.add_software_version(version_match.group(1), s_name)
             if l == ">>END_MODULE":
                 section = None
                 s_headers = None
@@ -289,7 +295,7 @@ class MultiqcModule(BaseMultiqcModule):
             "max": 100,
             "min": 0,
             "suffix": "%",
-            "scale": "Set1",
+            "scale": "PuRd",
             "format": "{:,.0f}",
         }
         headers["avg_sequence_length"] = {
@@ -878,6 +884,9 @@ class MultiqcModule(BaseMultiqcModule):
         """Sum the percentages of overrepresented sequences and display them in a bar plot"""
 
         data = dict()
+        # Count the number of samples where a sequence is overrepresented
+        overrep_by_sample = Counter()
+        overrep_total_cnt = Counter()
         for s_name in self.fastqc_data:
             data[s_name] = dict()
             try:
@@ -888,11 +897,15 @@ class MultiqcModule(BaseMultiqcModule):
                 data[s_name]["total_overrepresented"] = total_pcnt
                 data[s_name]["top_overrepresented"] = max_pcnt
                 data[s_name]["remaining_overrepresented"] = total_pcnt - max_pcnt
+                for d in self.fastqc_data[s_name]["overrepresented_sequences"]:
+                    overrep_by_sample[d["sequence"]] += 1
+                    overrep_total_cnt[d["sequence"]] += int(d["count"])
             except KeyError:
                 if self.fastqc_data[s_name]["statuses"].get("overrepresented_sequences") == "pass":
                     data[s_name]["total_overrepresented"] = 0
                     data[s_name]["top_overrepresented"] = 0
                     data[s_name]["remaining_overrepresented"] = 0
+                    data[s_name]["overrepresented_sequences"] = []
                 else:
                     del data[s_name]
                     log.debug("Couldn't find data for {}, invalid Key".format(s_name))
@@ -902,13 +915,13 @@ class MultiqcModule(BaseMultiqcModule):
             return None
 
         cats = OrderedDict()
-        cats["top_overrepresented"] = {"name": "Top over-represented sequence"}
-        cats["remaining_overrepresented"] = {"name": "Sum of remaining over-represented sequences"}
+        cats["top_overrepresented"] = {"name": "Top overrepresented sequence"}
+        cats["remaining_overrepresented"] = {"name": "Sum of remaining overrepresented sequences"}
 
         # Config for the plot
         pconfig = {
             "id": "fastqc_overrepresented_sequences_plot",
-            "title": "FastQC: Overrepresented sequences",
+            "title": "FastQC: Overrepresented sequences sample summary",
             "ymin": 0,
             "yCeiling": 100,
             "yMinRange": 20,
@@ -929,13 +942,13 @@ class MultiqcModule(BaseMultiqcModule):
             plot_html = bargraph.plot(data, cats, pconfig)
 
         self.add_section(
-            name="Overrepresented sequences",
+            name="Overrepresented sequences by sample",
             anchor="fastqc_overrepresented_sequences",
             description="The total amount of overrepresented sequences found in each library.",
             helptext="""
             FastQC calculates and lists overrepresented sequences in FastQ files. It would not be
             possible to show this for all samples in a MultiQC report, so instead this plot shows
-            the _number of sequences_ categorized as over represented.
+            the _number of sequences_ categorized as overrepresented.
 
             Sometimes, a single sequence  may account for a large number of reads in a dataset.
             To show this, the bars are split into two: the first shows the overrepresented reads
@@ -949,12 +962,82 @@ class MultiqcModule(BaseMultiqcModule):
             sequence is very overrepresented in the set either means that it is highly biologically
             significant, or indicates that the library is contaminated, or not as diverse as you expected._
 
-            _FastQC lists all of the sequences which make up more than 0.1% of the total.
+            _FastQC lists all the sequences which make up more than 0.1% of the total.
             To conserve memory only sequences which appear in the first 100,000 sequences are tracked
             to the end of the file. It is therefore possible that a sequence which is overrepresented
             but doesn't appear at the start of the file for some reason could be missed by this module._
             """,
             plot=plot_html,
+        )
+
+        # Add a table of the top overrepresented sequences
+        # Recalculate counts to percentages for readability:
+        total_read_count = sum([int(d["basic_statistics"]["Total Sequences"]) for d in self.fastqc_data.values()])
+        overrep_total_pct = {seq: (cnt / total_read_count) * 100 for seq, cnt in overrep_total_cnt.items()}
+
+        # Top overrepresented sequences across all samples
+        top_n = getattr(config, "fastqc_config", {}).get("top_overrepresented_sequences", 20)
+        by = getattr(config, "fastqc_config", {}).get("top_overrepresented_sequences_by", "samples")
+        if by == "samples":
+            top_seqs = overrep_by_sample.most_common(top_n)
+        else:
+            top_seqs = overrep_total_cnt.most_common(top_n)
+        headers = {
+            "samples": {
+                "title": "Samples",
+                "description": "Number of samples where this sequence is overrepresented",
+                "scale": "Greens",
+                "min": 0,
+                "format": "{:,.d}",
+            },
+            "total_count": {
+                "title": "Occurrences",
+                "description": "Total number of occurrences of the sequence (among the samples where the sequence is overrepresented)",
+                "scale": "Blues",
+                "min": 0,
+                "format": "{:,.d}",
+            },
+            "total_percent": {
+                "title": "% of all reads",
+                "description": "Total number of occurrences as the percentage of all reads (among samples where the sequence is overrepresented)",
+                "scale": "Blues",
+                "min": 0,
+                "max": 100,
+                "suffix": "%",
+                "format": "{:,.4f}",
+            },
+        }
+        data = {
+            seq: {
+                "sequence": seq,
+                "total_percent": overrep_total_pct[seq],
+                "total_count": overrep_total_cnt[seq],
+                "samples": overrep_by_sample[seq],
+            }
+            for seq, _ in top_seqs
+        }
+
+        ranked_by = (
+            "the number of samples they occur in" if by == "samples" else "the number of occurrences across all samples"
+        )
+        self.add_section(
+            name="Top overrepresented sequences",
+            anchor="fastqc_top_overrepresented_sequences",
+            description=f"""
+            Top overrepresented sequences across all samples. The table shows {top_n} 
+            most overrepresented sequences across all samples, ranked by {ranked_by}.
+            """,
+            plot=table.plot(
+                data,
+                headers,
+                {
+                    "namespace": self.name,
+                    "id": f"fastqc_top_overrepresented_sequences_table",
+                    "table_title": "FastQC: Top overrepresented sequences",
+                    "col1_header": "Overrepresented sequence",
+                    "sortRows": False,
+                },
+            ),
         )
 
     def adapter_content_plot(self):
@@ -963,17 +1046,15 @@ class MultiqcModule(BaseMultiqcModule):
         data = dict()
         for s_name in self.fastqc_data:
             try:
-                for d in self.fastqc_data[s_name]["adapter_content"]:
-                    pos = self.avg_bp_from_range(d["position"])
-                    for r in self.fastqc_data[s_name]["adapter_content"]:
-                        pos = self.avg_bp_from_range(r["position"])
-                        for a in r.keys():
-                            k = "{} - {}".format(s_name, a)
-                            if a != "position":
-                                try:
-                                    data[k][pos] = r[a]
-                                except KeyError:
-                                    data[k] = {pos: r[a]}
+                for adapters in self.fastqc_data[s_name]["adapter_content"]:
+                    pos = self.avg_bp_from_range(adapters["position"])
+                    for adapter_name, percent in adapters.items():
+                        k = "{} - {}".format(s_name, adapter_name)
+                        if adapter_name != "position":
+                            try:
+                                data[k][pos] = percent
+                            except KeyError:
+                                data[k] = {pos: percent}
             except KeyError:
                 pass
         if len(data) == 0:

@@ -37,6 +37,10 @@ def parse_reports(self):
         if len(parsed_data) > 0:
             self.inner_distance[f["s_name"]] = parsed_data
 
+        # Superfluous function call to confirm that it is used in this module
+        # Replace None with actual version if it is available
+        self.add_software_version(None, f["s_name"])
+
     # Filter to strip out ignored sample names
     self.inner_distance = self.ignore_samples(self.inner_distance)
 

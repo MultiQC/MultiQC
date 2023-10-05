@@ -18,6 +18,10 @@ from multiqc.utils import config, report, software_versions, util_functions
 logger = logging.getLogger(__name__)
 
 
+class ModuleNoSamplesFound(Exception):
+    """Module checked all input files but couldn't find any data to use"""
+
+
 class BaseMultiqcModule(object):
     def __init__(
         self,
@@ -489,8 +493,14 @@ class BaseMultiqcModule(object):
         except AttributeError:
             logger.warning("Tried to add data source for {}, but was missing fields data".format(self.name))
 
-    def add_software_version(self, version: str, sample: str = None, software_name: str = None):
+    def add_software_version(self, version: str = None, sample: str = None, software_name: str = None):
         """Save software versions for module."""
+        # Don't add if version is None. This allows every module to call this function
+        # even those without a version to add. This is useful to check that all modules
+        # are calling this function.
+        if version is None:
+            return
+
         # Don't add if version detection is disabled
         if config.disable_version_detection:
             return
@@ -502,8 +512,6 @@ class BaseMultiqcModule(object):
         # Use module name as software name if not specified
         if software_name is None:
             software_name = self.name
-
-        software_name = software_name.lower()
 
         # Check if version string is PEP 440 compliant to enable version normalization and proper ordering.
         # Otherwise use raw string is used for version.
@@ -519,7 +527,7 @@ class BaseMultiqcModule(object):
         self.versions[software_name] = software_versions.sort_versions(self.versions[software_name])
 
         # Update version list for report section.
-        group_name = self.name.lower()
+        group_name = self.name
         report.software_versions[group_name][software_name] = self.versions[software_name]
 
     def write_data_file(self, data, fn, sort_cols=False, data_format=None):

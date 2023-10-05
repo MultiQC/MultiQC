@@ -190,6 +190,9 @@ bowtie2:
     - "bisulfite"
     - "HiC-Pro"
   shared: true
+bracken:
+  contents_re: '^(\d{1,3}\.\d{1,2})\t(\d+)\t(\d+)\t((\d+)\t(\d+)\t)?([URDKPCOFGS-]\d{0,2})\t(\d+)(\s+)root'
+  num_lines: 1
 busco:
   fn: "short_summary*"
   contents: "BUSCO version is:"
@@ -449,8 +452,8 @@ nanostat/legacy:
 kat:
   fn: "*.dist_analysis.json"
 kraken:
-  contents_re: '^\s{0,2}(\d{1,3}\.\d{1,2})\t(\d+)\t(\d+)\t([\dUDKRPCOFGS-]{1,3})\t(\d+)\s+(.+)'
-  num_lines: 2
+  contents_re: '^\s{0,2}(\d{1,3}\.\d{1,2})\t(\d+)\t(\d+)\t((\d+)\t(\d+)\t)?([URDKPCOFGS-]\d{0,2})\t(\d+)(\s+)unclassified'
+  num_lines: 1
 librarian:
   fn: "librarian_heatmap.txt"
 leehom:
@@ -563,6 +566,9 @@ somalier/pairs:
   num_lines: 5
 sourmash/compare:
   fn: "*.labels.txt"
+sourmash/gather:
+  contents: "intersect_bp,f_orig_query,f_match,f_unique_to_query,f_unique_weighted,"
+  num_lines: 1
 pbmarkdup:
   contents_re: "LIBRARY +READS +UNIQUE MOLECULES +DUPLICATE READS"
   num_lines: 5

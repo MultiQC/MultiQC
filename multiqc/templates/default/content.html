@@ -18,7 +18,7 @@ the output from each module and print it in sections.
           {% if m.versions %}
             <div class="text-muted">
               {% for tool, versions in m.versions.items() %}
-                {% if tool == m.name.lower() %}
+                {% if tool == m.name %}
                   <em>Version{% if versions|length > 1 %}s{% endif %}:</em> <code>{{versions|join("</code>, <code>")}}</code>
                 {% else %}
                   <em>{{ tool }}:</em> <code>{{ versions|join("</code>, <code>") }}</code>

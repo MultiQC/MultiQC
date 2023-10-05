@@ -6,7 +6,7 @@ import re
 from collections import OrderedDict
 
 from multiqc import config
-from multiqc.modules.base_module import BaseMultiqcModule
+from multiqc.modules.base_module import BaseMultiqcModule, ModuleNoSamplesFound
 from multiqc.plots import bargraph
 
 # Initialise the logger
@@ -36,7 +36,7 @@ class MultiqcModule(BaseMultiqcModule):
         self.bowtie_data = self.ignore_samples(self.bowtie_data)
 
         if len(self.bowtie_data) == 0:
-            raise UserWarning
+            raise ModuleNoSamplesFound
 
         log.info("Found {} reports".format(len(self.bowtie_data)))
 
@@ -62,6 +62,11 @@ class MultiqcModule(BaseMultiqcModule):
             "multimapped": r"# reads with alignments suppressed due to -m:\s+(\d+)",
             "multimapped_percentage": r"# reads with alignments suppressed due to -m:\s+\d+\s+\(([\d\.]+)%\)",
         }
+
+        # Superfluous function call to confirm that it is used in this module
+        # Replace None with actual version if it is available
+        self.add_software_version(None, s_name)
+
         for l in f["f"].splitlines():
             # Attempt in vain to find original bowtie1 command, logged by another program
             if "bowtie" in l and "q.gz" in l:

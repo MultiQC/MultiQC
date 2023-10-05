@@ -3,10 +3,12 @@ import re
 from collections import OrderedDict
 
 from multiqc import config
-from multiqc.modules.base_module import BaseMultiqcModule
+from multiqc.modules.base_module import BaseMultiqcModule, ModuleNoSamplesFound
 from multiqc.plots import table
 
 log = logging.getLogger(__name__)
+
+VERSION_REGEX = r"# Version: v([\d\.]+)"
 
 
 class MultiqcModule(BaseMultiqcModule):
@@ -26,16 +28,22 @@ class MultiqcModule(BaseMultiqcModule):
         self.runSummary = {}
         self.indexSummary = {}
         for f in self.find_log_files("interop/summary", filehandles=True):
-            parsed_data = self.parse_summary_csv(f["f"])
+            parsed_data, version = self.parse_summary_csv(f["f"])
             if max(len(parsed_data["summary"]), len(parsed_data["details"])) > 0:
                 self.runSummary[f["s_name"]] = parsed_data
                 self.add_data_source(f)
 
+            if version is not None:
+                self.add_software_version(version, f["s_name"])
+
         for f in self.find_log_files("interop/index-summary", filehandles=True):
-            parsed_data = self.parse_index_summary_csv(f["f"])
+            parsed_data, version = self.parse_index_summary_csv(f["f"])
             if max(len(parsed_data["summary"]), len(parsed_data["details"])) > 0:
                 self.indexSummary[f["s_name"]] = parsed_data
                 self.add_data_source(f)
+
+            if version is not None:
+                self.add_software_version(version, f["s_name"])
 
         self.runSummary = self.ignore_samples(self.runSummary)
         self.indexSummary = self.ignore_samples(self.indexSummary)
@@ -43,7 +51,7 @@ class MultiqcModule(BaseMultiqcModule):
         # No samples
         num_samples = max(len(self.runSummary), len(self.indexSummary))
         if num_samples == 0:
-            raise UserWarning
+            raise ModuleNoSamplesFound
 
         log.info("Found {} reports".format(num_samples))
 
@@ -86,9 +94,17 @@ class MultiqcModule(BaseMultiqcModule):
         header = []
         section = None
         read = None
+        version = None
         for line in f:
             line = line.strip()
             # assume fixed file format
+
+            # find version
+            if line.startswith("# Version"):
+                match = re.search(VERSION_REGEX, line)
+                if match:
+                    version = match.group(1)
+
             # find summary header
             if line.startswith("Level,Yield,Projected Yield,Aligned,Error Rate,Intensity C1,%>=Q30"):
                 # set section to summary
@@ -136,7 +152,7 @@ class MultiqcModule(BaseMultiqcModule):
                         linedata[header[idx]] = re.sub(pattern="\+/-.*", repl="", string=data[idx])
                 metrics["details"]["Lane {} - {}".format(data[0], read)] = linedata
 
-        return metrics
+        return metrics, version
 
     def parse_index_summary_csv(self, f):
         metrics = {"summary": {}, "details": {}}
@@ -146,10 +162,16 @@ class MultiqcModule(BaseMultiqcModule):
 
         summary = {}
         details = {}
-
+        version = None
         for line in f:
             line = line.strip()
             # assume fixed file format
+            # find version
+            if line.startswith("# Version"):
+                match = re.search(VERSION_REGEX, line)
+                if match:
+                    version = match.group(1)
+
             if line.startswith("Lane"):
                 # set lane
                 lane = line
@@ -178,7 +200,7 @@ class MultiqcModule(BaseMultiqcModule):
         metrics["summary"] = summary
         metrics["details"] = details
 
-        return metrics
+        return metrics, version
 
     def run_metrics_summary_table(self, data):
         headers = OrderedDict()

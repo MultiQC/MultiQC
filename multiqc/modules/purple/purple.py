@@ -3,7 +3,7 @@
 import logging
 from collections import OrderedDict, defaultdict
 
-from multiqc.modules.base_module import BaseMultiqcModule
+from multiqc.modules.base_module import BaseMultiqcModule, ModuleNoSamplesFound
 from multiqc.plots import table
 
 log = logging.getLogger(__name__)
@@ -46,11 +46,12 @@ class MultiqcModule(BaseMultiqcModule):
                     log.debug("Duplicate PURPLE output prefix found! Overwriting: {}".format(f["s_name"]))
                 self.add_data_source(f, section="stats")
                 data_by_sample[f["s_name"]].update(data)
+                self.add_software_version(data["version"], f["s_name"])
 
         # Filter to strip out ignored sample names:
         data_by_sample = self.ignore_samples(data_by_sample)
         if not data_by_sample:
-            raise UserWarning
+            raise ModuleNoSamplesFound
         log.info("Found {} reports".format(len(data_by_sample)))
 
         # Write data to file

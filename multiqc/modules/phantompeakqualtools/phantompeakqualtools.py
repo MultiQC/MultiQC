@@ -6,7 +6,7 @@
 import logging
 from collections import OrderedDict
 
-from multiqc.modules.base_module import BaseMultiqcModule
+from multiqc.modules.base_module import BaseMultiqcModule, ModuleNoSamplesFound
 
 # Initialise the logger
 log = logging.getLogger(__name__)
@@ -28,12 +28,16 @@ class MultiqcModule(BaseMultiqcModule):
         for f in self.find_log_files("phantompeakqualtools/out", filehandles=False):
             self.parse_phantompeakqualtools(f)
 
+            # Superfluous function call to confirm that it is used in this module
+            # Replace None with actual version if it is available
+            self.add_software_version(None, f["s_name"])
+
         # Filter to strip out ignored sample names
         self.phantompeakqualtools_data = self.ignore_samples(self.phantompeakqualtools_data)
 
         # Warning when no files are found
         if len(self.phantompeakqualtools_data) == 0:
-            raise UserWarning
+            raise ModuleNoSamplesFound
 
         # Log
         log.info("Found {} logs".format(len(self.phantompeakqualtools_data)))

@@ -4,7 +4,7 @@
 import logging
 import re
 
-from multiqc.modules.base_module import BaseMultiqcModule
+from multiqc.modules.base_module import BaseMultiqcModule, ModuleNoSamplesFound
 
 # Initialise the logger
 log = logging.getLogger(__name__)
@@ -33,6 +33,10 @@ class MultiqcModule(BaseMultiqcModule):
         for f in self.find_log_files("conpair/concordance"):
             self.parse_conpair_logs(f)
 
+            # Superfluous function call to confirm that it is used in this module
+            # Replace None with actual version if it is available
+            self.add_software_version(None, f["s_name"])
+
         for f in self.find_log_files("conpair/contamination"):
             self.parse_conpair_logs(f)
 
@@ -40,7 +44,7 @@ class MultiqcModule(BaseMultiqcModule):
         self.conpair_data = self.ignore_samples(self.conpair_data)
 
         if len(self.conpair_data) == 0:
-            raise UserWarning
+            raise ModuleNoSamplesFound
 
         log.info("Found {} reports".format(len(self.conpair_data)))
 
