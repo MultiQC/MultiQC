@@ -5,12 +5,15 @@ Fetch MultiQC download stats from various sources and print them as JSON.
 """
 
 import json
+import logging
 import os
 from collections import Counter
 from pprint import pprint
 
 import packaging.version
 import requests
+
+logging.basicConfig(level=logging.INFO)
 
 
 def main():
@@ -49,9 +52,9 @@ def pypi_stats():
             for version, downloads in date_downloads_by_version.items():
                 downloads_by_version[version] += downloads
     else:
-        print("Failed to fetch data from pepy.tech")
+        logging.error("Failed to fetch data from pepy.tech")
 
-    downloads_by_version = {packaging.version.parse(k): v for k, v in downloads_by_version.items()}
+    downloads_by_version = {str(packaging.version.parse(k)): v for k, v in downloads_by_version.items()}
     return {
         "pypi": total_downloads,
         "pypi_by_version": downloads_by_version,
@@ -71,9 +74,9 @@ def bioconda_stats():
         for version in data:
             downloads_by_version[version["version"]] = version["total"]
     else:
-        print("Failed to fetch data from bioconda")
+        logging.error("Failed to fetch data from bioconda")
 
-    downloads_by_version = {packaging.version.parse(k): v for k, v in downloads_by_version.items()}
+    downloads_by_version = {str(packaging.version.parse(k)): v for k, v in downloads_by_version.items()}
     return {
         "bioconda": sum(downloads_by_version.values()),
         "bioconda_by_version": downloads_by_version,
@@ -90,7 +93,7 @@ def github_clones_stats():
         github_data = json.loads(response.text)
         clone_count = github_data.get("count", 0)
     else:
-        print(f"Failed to fetch data from GitHub, status code: {response.status_code}, url: {url}")
+        logging.error(f"Failed to fetch data from GitHub, status code: {response.status_code}, url: {url}")
         clone_count = None
 
     return {"github_clones": clone_count}
@@ -109,13 +112,13 @@ def github_releases_stats():
         for release in data:
             version = packaging.version.parse(release["tag_name"])
             for asset in release["assets"]:
-                downloads_by_version[version] += asset["download_count"]
+                downloads_by_version[str(version)] += asset["download_count"]
     else:
-        print(f"Failed to fetch release data from GitHub, status code: {response.status_code}, url: {url}")
+        logging.error(f"Failed to fetch release data from GitHub, status code: {response.status_code}, url: {url}")
 
     return {
         "github_releases": sum(downloads_by_version.values()),
-        "github_releases_by_version": downloads_by_version,
+        "github_releases_by_version": dict(downloads_by_version),
     }
 
 
@@ -123,7 +126,7 @@ def _fetch_dockerhub_count(repo):
     url = f"https://hub.docker.com/v2/repositories/{repo}"
     response = requests.get(url)
     if response.status_code != 200:
-        print(f"Failed to fetch data from DockerHub, status code: {response.status_code}, url: {url}")
+        logging.error(f"Failed to fetch data from DockerHub, status code: {response.status_code}, url: {url}")
         return None
     data = json.loads(response.text)
     return data.get("pull_count", 0)
@@ -133,7 +136,7 @@ def _fetch_quay_count(repo):
     url = f"https://quay.io/api/v1/repository/{repo}"
     response = requests.get(url)
     if response.status_code != 200:
-        print(f"Failed to fetch data from Quay.io, status code: {response.status_code}, url: {url}")
+        logging.error(f"Failed to fetch data from Quay.io, status code: {response.status_code}, url: {url}")
         return None
     data = json.loads(response.text)
     return data.get("pull_count", 0)
@@ -150,13 +153,13 @@ def _biocontainers_aws():
     response = requests.post(url, headers=headers, json=data)
 
     if response.status_code != 200:
-        print(f"Failed to fetch data from {url}:", response.status_code, response.text)
+        logging.error(f"Failed to fetch data from {url}:", response.status_code, response.text)
         return None
 
     try:
         count = response.json()["insightData"]["downloadCount"]
     except IndexError:
-        print(f"Cannot extract insightData/downloadCount from response:", response.text)
+        logging.error(f"Cannot extract insightData/downloadCount from response:", response.text)
         return None
     return count
 
