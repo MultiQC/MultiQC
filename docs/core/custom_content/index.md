@@ -430,12 +430,15 @@ MultiQC has been developed to be as forgiving as possible and will handle lots o
 invalid or ignored configurations. This is useful for most users but can make life
 difficult when getting MultiQC to work with a new custom content format.
 
-To help with this, you can run with the `--strict` flag, which will give explicit
-warnings about anything that is not optimally configured. For example:
+To help with this, you can run MultiQC with the `--strict` flag, which will give
+explicit warnings about anything that is not optimally configured. For example:
 
 ```bash
 multiqc --strict test_data
 ```
+
+You can alternatively enable the strict mode by setting the environment variable
+`MULTIQC_STRICT`, or by setting it into the [config](http://multiqc.info/docs/#configuring-multiqc): `strict: true`.
 
 # Examples
 
