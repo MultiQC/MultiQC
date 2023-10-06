@@ -7,12 +7,12 @@ import random
 import string
 from collections import namedtuple
 from pathlib import Path
-from typing import Dict, List
+from typing import Dict, List, cast
 
 import plotly.graph_objects as go
 
 from multiqc.templates.plotly.plots import PlotSettings, basic_figure, get_template_mod
-from multiqc.utils import config, report, util_functions
+from multiqc.utils import config, mqc_colour, report, util_functions
 
 """
 Currently, we have to implement the plots twice: interactive ones with highcharts 
@@ -29,11 +29,64 @@ figure for each dataset, and then using the `subplots` functionality to combine 
 """
 
 
+def barplot_layout(settings: PlotSettings) -> go.Layout:
+    return go.Layout(
+        title=dict(
+            text=settings.title,
+            xanchor="center",
+            x=0.5,
+            font=dict(size=20),
+        ),
+        yaxis=dict(
+            title=dict(text="# " + settings.ylab),
+            showgrid=False,
+            categoryorder="category descending",
+        ),
+        xaxis=dict(
+            title=dict(text=settings.xlab),
+            gridcolor="rgba(0,0,0,0.1)",
+        ),
+        paper_bgcolor="rgba(0,0,0,0)",
+        plot_bgcolor="rgba(0,0,0,0)",
+        hovermode="y unified",
+        # template="simple_white",
+        font={"color": "Black", "family": "Lucida Grande"},
+        colorway=mqc_colour.mqc_colour_scale.COLORBREWER_SCALES["plot_defaults"],
+        legend=dict(
+            orientation="h",
+            yanchor="top",
+            y=-0.2,
+            xanchor="center",
+            x=0.5,
+        ),
+        barmode="stack",
+        height=settings.height,
+        annotations=[
+            dict(
+                xanchor="right",
+                yanchor="bottom",
+                x=1.07,
+                y=-0.35,
+                text="Created with MultiQC",
+                xref="paper",
+                yref="paper",
+                showarrow=False,
+                font=dict(size=10, color="rgba(0,0,0,0.5)"),
+            )
+        ],
+    )
+
+
 def _bargraph_plotly_plot(
-    fig: go.Figure,
+    layout: go.Layout,
     data_by_cat: List[Dict],
     sample_names: List[str],
-):
+) -> go.Figure:
+    fig = go.Figure()
+    fig.update_layout(
+        # The function expects a dict, even though go.Layout works just fine
+        cast(dict, layout),
+    )
     for data in data_by_cat:
         fig.add_trace(
             go.Bar(
@@ -100,7 +153,7 @@ def plotly_bargraph(
                         values[key] = 0
                     else:
                         values[key] = (float(var + 0.0) / float(sum_for_cat)) * 100
-                d["dataPct"] = values
+                d["data_pct"] = values
 
     if config.plots_force_flat:
         return _static_bargraph(
@@ -109,38 +162,42 @@ def plotly_bargraph(
             settings,
         )
 
-    fig = _bargraph_plotly_plot(
-        basic_figure(settings),
-        data_by_cat_lists[0],
-        samples_lists[0],
-    )
-
     html = '<div class="mqc_hcplot_plotgroup">'
 
+    btn_tmpl = (
+        f'<button class="{{cls}} btn btn-default btn-sm {{active}}" data-target="{settings.id}" data-ylab="{{label}}">{{label}}'
+        f"</button> \n"
+    )
     # Counts / Percentages / Log Switches
     if settings.add_pct_tab or settings.add_log_tab:
-        html += '<div class="btn-group hc_switch_group"> \n'
-        btn = f'<button class="btn btn-default btn-sm {{active}}" data-action="{{action}}" data-target="{settings.id}" data-ylab="{{label}}">{{label}}</button> \n'
-        html += btn.format(active=settings.c_active, label=settings.c_label, action="set_numbers")
+        # html += '<div class="btn-group hc_switch_group"> \n'
         if settings.add_pct_tab:
-            html += btn.format(active=settings.p_active, label=settings.p_label, action="set_percent")
+            html += btn_tmpl.format(
+                active=settings.p_active,
+                label=settings.p_label,
+                cls="switch_percent",
+            )
         if settings.add_log_tab:
-            html += btn.format(active=settings.l_active, label=settings.l_label, action="set_log")
-        html += "</div> "
+            html += btn_tmpl.format(
+                active=settings.l_active,
+                label=settings.l_label,
+                cls="switch_log10",
+            )
+        # html += "</div> "
         if len(data_by_cat_lists) > 1:
             html += " &nbsp; &nbsp; "
 
     # Buttons to cycle through different datasets
     if len(data_by_cat_lists) > 1:
-        html += '<div class="btn-group hc_switch_group">\n'
+        html += '<div class="btn-group dataset_switch_group">\n'
         for k, p in enumerate(data_by_cat_lists):
             active = "active" if k == 0 else ""
             try:
-                name = pconfig["data_labels"][k]["name"]
-            except:
+                name = settings.data_labels[k]["name"]
+            except (TypeError, KeyError):
                 try:
-                    name = pconfig["data_labels"][k]
-                except:
+                    name = settings.data_labels[k]
+                except KeyError:
                     name = k + 1
             try:
                 ylab = f'data-ylab="{settings.data_labels[k]["ylab"]}"'
@@ -150,7 +207,7 @@ def plotly_bargraph(
                 ymax = f'data-ymax="{settings.data_labels[k]["ymax"]}"'
             except:
                 ymax = ""
-            html += f'<button class="btn btn-default btn-sm {active}" data-action="set_data" {ylab} {ymax} data-newdata="{k}" data-target="{settings.id}">{name}</button>\n'
+            html += f'<button class="btn btn-default btn-sm {active}" {ylab} {ymax} data-dataset_index="{k}" data-target="{settings.id}">{name}</button>\n'
         html += "</div>\n\n"
 
     # Plot HTML
@@ -167,108 +224,14 @@ def plotly_bargraph(
         "plot_type": "bar_graph",
         "samples": samples_lists,
         "datasets": data_by_cat_lists,
-        # "colors": [d["color"] for d in data_by_cat_lists[0]],
         "config": pconfig,
+        "layout": barplot_layout(settings).to_plotly_json(),
+        "active_dataset_idx": 0,
+        "p_active": settings.p_active,
+        "l_active": settings.l_active,
     }
 
     return html
-
-    # for data, samples in zip(data_by_cat_lists, samples_lists):
-    #     add_pct_tab = pconfig.get("cpswitch", True)
-    #     add_log_tab = pconfig.get("logswitch", False)
-    #     if add_pct_tab or add_log_tab:
-    #         pct_by_cat = []
-    #         if add_pct_tab:
-    #             # Count totals for each category
-    #             sums = [0 for _ in data[0]["data"]]
-    #             for cat_idx, d in enumerate(data):
-    #                 for sample_idx, v in enumerate(d["data"]):
-    #                     if not math.isnan(v):
-    #                         sums[sample_idx] += v
-    #             # Now, calculate percentages for each category
-    #             for cat_idx, d in enumerate(data):
-    #                 values = [x for x in d["data"]]
-    #                 if len(values) < len(samples):
-    #                     values.extend([0] * (len(samples) - len(values)))
-    #                 for key, var in enumerate(values):
-    #                     sum_for_cat = sums[key]
-    #                     if sum_for_cat == 0:
-    #                         values[key] = 0
-    #                     else:
-    #                         values[key] = (float(var + 0.0) / float(sum_for_cat)) * 100
-    #                 pct_by_cat.append(values)
-    #
-    #         log_by_cat = []
-    #         if add_log_tab:
-    #             for cat_idx, d in enumerate(data):
-    #                 values = [x for x in d["data"]]
-    #                 if len(values) < len(samples):
-    #                     values.extend([0] * (len(samples) - len(values)))
-    #                 for key, var in enumerate(values):
-    #                     if var == 0:
-    #                         values[key] = 0
-    #                     else:
-    #                         values[key] = math.log10(var)
-    #                 log_by_cat.append(values)
-
-    # fig.update_layout(
-    #     updatemenus=[
-    #         go.layout.Updatemenu(
-    #             type="buttons",
-    #             direction="left",
-    #             buttons=[
-    #                 b
-    #                 for b in [
-    #                     dict(
-    #                         args=["x", [data["data"] for data in data]],
-    #                         label=pconfig.get("cpswitch_counts_label", "Counts"),
-    #                         method="restyle",
-    #                     ),
-    #                     dict(
-    #                         args=["x", pct_by_cat],
-    #                         label=pconfig.get("cpswitch_percent_label", "Percentages"),
-    #                         method="restyle",
-    #                     )
-    #                     if add_pct_tab
-    #                     else None,
-    #                     dict(
-    #                         args=["x", log_by_cat],
-    #                         label=pconfig.get("logswitch_label", "Log10"),
-    #                         method="restyle",
-    #                     )
-    #                     if add_log_tab
-    #                     else None,
-    #                 ]
-    #                 if b
-    #             ],
-    #             yanchor="top",
-    #             xanchor="left",
-    #             x=1,
-    #             y=1.2,
-    #         ),
-    #     ]
-    # )
-
-    # json = fig.to_plotly_json(full_html=False, include_plotlyjs=None)
-    # html = fig.to_html(full_html=False, include_plotlyjs=None)
-
-    # html = """
-    # <div class="plotly-plot-wrapper"{height}>
-    #     <div id="{id}" class="plotly-plot not_rendered plotly-bar-plot"><small>loading..</small></div>
-    # </div></div>""".format(
-    #     id=pconfig["id"],
-    #     height=f' style="height:{pconfig["height"]}px"' if "height" in pconfig else "",
-    # )
-    #
-    # report.num_hc_plots += 1
-    #
-    # report.plot_data[pconfig["id"]] = {
-    #     "plot_type": "bar_graph",
-    #     "samples": samples_lists,
-    #     "datasets": data_by_cat_lists,
-    #     "config": pconfig,
-    # }
-    # return html
 
 
 def _static_bargraph(
@@ -315,7 +278,8 @@ def _static_bargraph(
             html += f'<button class="btn btn-default btn-sm {active}" data-target="#{pid}">{name}</button>\n'
         html += "</div>\n\n"
 
-        # Collect all categories, and fill in with zeroes for samples that having any of cats missing
+        # Collect all categories, and fill in with zeroes for samples that having
+        # any of cats missing
         cat_to_color = dict()
         for p in data_by_cat_lists:
             for d in p:
@@ -328,8 +292,8 @@ def _static_bargraph(
                             "name": cat,
                             "color": color,
                             "data": [0 for _ in samples_lists[0]],
-                            "dataPct": [0.0 for _ in samples_lists[0]],
-                            "dataLog": [0.0 for _ in samples_lists[0]],
+                            "data_pct": [0.0 for _ in samples_lists[0]],
+                            "data_log": [0.0 for _ in samples_lists[0]],
                         }
                     )
         # Sort categories by name
@@ -364,7 +328,7 @@ def _static_bargraph(
                         values[key] = 0
                     else:
                         values[key] = math.log10(var)
-                d["dataLog"] = values
+                d["data_log"] = values
 
         View = namedtuple(
             "View",
@@ -388,7 +352,7 @@ def _static_bargraph(
                 View(
                     [
                         {
-                            "data": data_by_cat[i]["dataPct"],
+                            "data": data_by_cat[i]["data_pct"],
                             "name": data_by_cat[i]["name"],
                             "color": data_by_cat[i]["color"],
                         }
@@ -404,7 +368,7 @@ def _static_bargraph(
                 View(
                     [
                         {
-                            "data": data_by_cat[i]["dataLog"],
+                            "data": data_by_cat[i]["data_log"],
                             "name": data_by_cat[i]["name"],
                             "color": data_by_cat[i]["color"],
                         }
@@ -418,7 +382,7 @@ def _static_bargraph(
 
         for view in views:
             plot = _bargraph_plotly_plot(
-                basic_figure(settings),
+                barplot_layout(settings),
                 data_by_cat=view.values_by_cat,
                 sample_names=samples_lists[pidx],
             )

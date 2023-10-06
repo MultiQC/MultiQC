@@ -69,85 +69,72 @@ $(function () {
     });
   });
 
-  // Switch a HighCharts axis or data source
-  $(".hc_switch_group button").click(function (e) {
+  $("button.switch_percent").click(function (e) {
+    e.preventDefault();
+    var target = $(this).data("target");
+    var active_dataset_idx = mqc_plots[target].active_dataset_idx;
+    var dataset = mqc_plots[target].datasets[active_dataset_idx];
+
+    // Toggling flags
+    mqc_plots[target].p_active = !$(this).hasClass("active");
+    $(this).toggleClass("active");
+
+    let x = [];
+    for (let cat of dataset) {
+      x.push(mqc_plots[target].p_active ? cat.data_pct : cat.data);
+    }
+    Plotly.restyle(target, "x", x);
+    Plotly.relayout(
+      target,
+      "yaxis.title.text",
+      (mqc_plots[target].p_active ? "% " : "# ") + mqc_plots[target].config.ylab,
+    );
+  });
+
+  $("button.switch_log10").click(function (e) {
+    e.preventDefault();
+    var target = $(this).data("target");
+
+    // Toggling flags
+    mqc_plots[target].l_active = !$(this).hasClass("active");
+    $(this).toggleClass("active");
+
+    Plotly.relayout(target, "xaxis.type", mqc_plots[target].l_active ? "log" : "linear");
+  });
+
+  // Switch data source
+  $(".dataset_switch_group button").click(function (e) {
     e.preventDefault();
     $(this).siblings("button.active").removeClass("active");
     $(this).addClass("active");
     var target = $(this).data("target");
-    var action = $(this).data("action");
-    // Switch between values and percentages
-    if (action == "set_percent" || action == "set_numbers") {
-      Plotly.relayout(target, "xaxis.type", "linear");
-      ylab = mqc_plots[target].config.ylab;
-      var data_by_cat = JSON.parse(JSON.stringify(mqc_plots[target]["datasets"][0]));
-      var samples = JSON.parse(JSON.stringify(mqc_plots[target]["samples"][0]));
-      // if mqc_plots[target].datasets[0].pctSeries is not defined, calculate it
-      // let series = []
-      // for (let cat of data) {
-      //   let trace = {
-      //     type: "bar",
-      //     y: samples,
-      //     x: (action == "set_percent") ? cat.dataPct : cat.data,
-      //     name: cat.name,
-      //     orientation: "h",
-      //     marker: {
-      //       color: cat.color,
-      //       line: { width: 0 },
-      //     },
-      //   };
-      //   series.push(trace);
-      // }
-      // Console.log(series);
-      // for (let s of series) {
-      //   let total = 0;
-      //   for (let x of s.x) {
-      //     total += x;
-      //   }
-      //   let pct = [];
-      //   for (let x of s.x) {
-      //     pct.push((x / total) * 100);
-      //   }
-      //   mqc_plots[target].datasets[0].pctSeries.push(pct);
-      // }
-      // }
-      let x = [];
-      for (let cat of data_by_cat) {
-        x.push(action == "set_percent" ? cat.dataPct : cat.data);
-      }
-      Plotly.restyle(target, "x", x);
-      if (action == "set_percent") {
-        Plotly.relayout(target, "yaxis.title.text", ylab.replace("#", "%"));
-      } else {
-        Plotly.relayout(target, "yaxis.title.text", ylab.replace("%", "#"));
-      }
+    var active_dataset_idx = mqc_plots[target].active_dataset_idx;
+    var new_dataset_idx = $(this).data("dataset_index");
+    mqc_plots[target].active_dataset_idx = new_dataset_idx;
+    if (active_dataset_idx === new_dataset_idx) {
+      return;
     }
-    // Switch to log10 axis
-    if (action == "set_log") {
-      Plotly.relayout(target, "xaxis.type", "log");
+    var dataset = mqc_plots[target]["datasets"][new_dataset_idx];
+
+    let x = [];
+    for (let cat of dataset) {
+      x.push(dataset.p_active ? cat.data_pct : cat.data);
     }
-    // Switch data source
-    if (action == "set_data") {
-      var ds = $(this).data("newdata");
-      plot_graph(target, ds);
-      var ylab = $(this).data("ylab");
-      var xlab = $(this).data("xlab");
-      var ymax = $(this).data("ymax");
-      if (ylab != undefined) {
-        $("#" + target)
-          .highcharts()
-          .yAxis[0].setTitle({ text: ylab });
-      }
-      if (xlab != undefined) {
-        $("#" + target)
-          .highcharts()
-          .xAxis[0].setTitle({ text: xlab });
-      }
-      if (ymax != undefined) {
-        $("#" + target)
-          .highcharts()
-          .yAxis[0].setExtremes(null, ymax);
-      }
+    Plotly.restyle(target, "x", x);
+
+    // plot_graph(target, ds_idx);
+    // Plotly.relayout(target, "title.text", $(this).data("title"));
+    var xlab = $(this).data("xlab");
+    var ylab = $(this).data("ylab");
+    var ymax = $(this).data("xmax");
+    if (xlab) {
+      Plotly.relayout(target, "xaxis.title.text", xlab);
+    }
+    if (ylab) {
+      Plotly.relayout(target, "yaxis.title.text", ylab);
+    }
+    if (ymax) {
+      Plotly.relayout(target, "yaxis.range", [null, ymax]);
     }
   });
 
@@ -550,6 +537,7 @@ function plot_stacked_bar_graph(target, ds) {
   var data = JSON.parse(JSON.stringify(mqc_plots[target]["datasets"][ds]));
   var samples = JSON.parse(JSON.stringify(mqc_plots[target]["samples"][ds]));
   var config = JSON.parse(JSON.stringify(mqc_plots[target]["config"]));
+  var layout = JSON.parse(JSON.stringify(mqc_plots[target]["layout"]));
 
   if (config["stacking"] === undefined) {
     config["stacking"] = "normal";
@@ -696,49 +684,6 @@ function plot_stacked_bar_graph(target, ds) {
   }
 
   // Make the plotly plot
-  let layout = {
-    title: {
-      text: config["title"],
-      xanchor: "center",
-      x: 0.5,
-      font: { size: 20 },
-    },
-    yaxis: {
-      title: { text: config["ylab"] },
-      showgrid: false,
-      categoryorder: "category descending",
-    },
-    xaxis: {
-      title: { text: config["xlab"] },
-      gridcolor: "rgba(0,0,0,0.1)",
-    },
-    paper_bgcolor: "rgba(0,0,0,0)",
-    plot_bgcolor: "rgba(0,0,0,0)",
-    hovermode: "y unified",
-    font: { color: "Black", family: "Lucida Grande" },
-    legend: {
-      orientation: "h",
-      yanchor: "top",
-      y: -0.2,
-      xanchor: "center",
-      x: 0.5,
-    },
-    barmode: "stack",
-    height: config["height"],
-    annotations: [
-      {
-        xanchor: "right",
-        yanchor: "bottom",
-        x: 1.1,
-        y: -0.3,
-        text: "Created with MultiQC",
-        xref: "paper",
-        yref: "paper",
-        showarrow: false,
-        font: { size: 10, color: "rgba(0,0,0,0.5)" },
-      },
-    ],
-  };
   let series = [];
   for (let cat of data) {
     let trace = {
@@ -757,95 +702,6 @@ function plot_stacked_bar_graph(target, ds) {
 
   mqc_plots[target].datasets[ds].series = series;
   Plotly.newPlot(target, series, layout);
-
-  // // Make the highcharts plot
-  // Highcharts.chart(target, {
-  //   chart: {
-  //     type: "bar",
-  //     zoomType: "x",
-  //   },
-  //   title: {
-  //     text: config["title"],
-  //   },
-  //   xAxis: {
-  //     categories: cats,
-  //     min: 0,
-  //     title: {
-  //       text: config["xlab"],
-  //     },
-  //   },
-  //   yAxis: {
-  //     title: {
-  //       text: config["ylab"],
-  //     },
-  //     labels: { format: config["yLabelFormat"] ? config["yLabelFormat"] : "{value}" },
-  //     ceiling: config["yCeiling"],
-  //     floor: config["yFloor"],
-  //     minRange: config["yMinRange"],
-  //     max: config["ymax"],
-  //     min: config["ymin"],
-  //     type: config["ytype"],
-  //     labels: {
-  //       format: config["ylab_format"],
-  //     },
-  //     allowDecimals: config["yDecimals"],
-  //     reversedStacks: config["reversedStacks"],
-  //     minorTickInterval: minTickInt,
-  //   },
-  //   plotOptions: {
-  //     series: {
-  //       stacking: config["stacking"],
-  //       pointPadding: config["pointPadding"],
-  //       groupPadding: config["groupPadding"],
-  //       borderWidth: config["borderWidth"],
-  //     },
-  //     cursor: config["cursor"],
-  //     point: {
-  //       events: {
-  //         click: config["click_func"],
-  //       },
-  //     },
-  //   },
-  //   legend: {
-  //     enabled: config["use_legend"],
-  //   },
-  //   tooltip: {
-  //     formatter: function () {
-  //       var colspan = config["tt_percentages"] ? 3 : 2;
-  //       var s =
-  //         '<table><tr><th colspan="' +
-  //         colspan +
-  //         '" style="font-weight:bold; text-decoration:underline;">' +
-  //         this.x +
-  //         "</th></tr>";
-  //       $.each(this.points, function () {
-  //         yval =
-  //           Highcharts.numberFormat(this.y, config["tt_decimals"] == undefined ? 0 : config["tt_decimals"]) +
-  //           (config["tt_suffix"] || "");
-  //         ypct = Highcharts.numberFormat(this.percentage, 1);
-  //         s +=
-  //           '<tr> \
-  //           <td style="font-weight:bold; color:' +
-  //           this.series.color +
-  //           '; border-bottom:1px solid #dedede;">' +
-  //           this.series.name +
-  //           ':</td>\
-  //           <td style="text-align:right; border-bottom:1px solid #dedede; padding: 0 15px;">' +
-  //           yval +
-  //           "</td>";
-  //         if (config["tt_percentages"]) {
-  //           s += '<td style="text-align:right; border-bottom:1px solid #dedede;">(' + ypct + "%)</td>";
-  //         }
-  //         s += "</tr>";
-  //       });
-  //       s += "</table>";
-  //       return s;
-  //     },
-  //     shared: true,
-  //     useHTML: true,
-  //   },
-  //   series: data,
-  // });
 }
 
 // Scatter plot
@@ -895,7 +751,7 @@ function plot_scatter_plot(target, ds) {
   }
 
   // Make a clone of the data, so that we can mess with it,
-  // while keeping the original data in tact
+  // while keeping the original data intact
   var data = JSON.parse(JSON.stringify(mqc_plots[target]["datasets"][ds]));
 
   // Rename samples

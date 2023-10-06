@@ -1,5 +1,5 @@
 from dataclasses import dataclass
-from typing import Dict, cast
+from typing import Dict, List, cast
 
 import plotly.graph_objects as go
 
@@ -46,7 +46,7 @@ class PlotSettings:
                 self.p_active = "active"
                 self.stacking = "percent"
 
-        self.data_labels = pconfig.get("data_labels", {})
+        self.data_labels: List = pconfig.get("data_labels", [])
         self.save_data_file = pconfig.get("save_data_file", True)
 
     @property
@@ -59,58 +59,13 @@ class PlotSettings:
         self._id = report.save_htmlid(id)
 
 
-def basic_figure(settings: PlotSettings) -> go.Figure:
+def basic_figure(layout) -> go.Figure:
     """
     Plotly Figure object suitable for all plots.
     """
-    layout = go.Layout(
-        title=dict(
-            text=settings.title,
-            xanchor="center",
-            x=0.5,
-            font=dict(size=20),
-        ),
-        yaxis=dict(
-            title=dict(text=settings.ylab),
-            showgrid=False,
-            categoryorder="category descending",
-        ),
-        xaxis=dict(
-            title=dict(text=settings.xlab),
-            gridcolor="rgba(0,0,0,0.1)",
-        ),
-        paper_bgcolor="rgba(0,0,0,0)",
-        plot_bgcolor="rgba(0,0,0,0)",
-        hovermode="y unified",
-        # template="simple_white",
-        font={"color": "Black", "family": "Lucida Grande"},
-        colorway=mqc_colour.mqc_colour_scale.COLORBREWER_SCALES["plot_defaults"],
-    )
     fig = go.Figure()
     fig.update_layout(
         # The function expects a dict, even though go.Layout works just fine
         cast(dict, layout),
-        legend=dict(
-            orientation="h",
-            yanchor="top",
-            y=-0.2,
-            xanchor="center",
-            x=0.5,
-        ),
-        barmode="stack",
-        height=settings.height,
     )
-
-    fig.add_annotation(
-        xanchor="right",
-        yanchor="bottom",
-        x=1.1,
-        y=-0.3,
-        text="Created with MultiQC",
-        xref="paper",
-        yref="paper",
-        showarrow=False,
-        font=dict(size=10, color="rgba(0,0,0,0.5)"),
-    )
-
     return fig
