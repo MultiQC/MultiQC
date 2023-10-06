@@ -25,7 +25,7 @@ Get this stuff right, and your pull-request is much more likely to be merged qui
 ### Don't add everything
 
 MultiQC was designed to _summarise_ tool outputs.
-An end-user should be able to visially scan the report and spot any outlier samples, then go to the underlying tool to look at those samples in more detail.
+An end-user should be able to visually scan the report and spot any outlier samples, then go to the underlying tool to look at those samples in more detail.
 
 MultiQC is _not_ designed to replicate every single metric from a tool. Doing so makes the report difficult to read and digest quickly for many samples.
 Module additions that add huge quantities of metrics to reports will be asked to slim down.
@@ -121,7 +121,7 @@ Better still, many of these tools can automatically change the formatting so tha
 can write code in whatever style they prefer and defer this task to automation.
 
 Much like source control, gloves in a lab, and wearing a seatbelt, code formatters and code linting
-is an annoying inconvience at first for most people which in time becomes an indespesible
+is an annoying inconvenience at first for most people which in time becomes an indispensable
 tool in the maintenance of high quality software.
 
 MultiQC uses a range of tools to check the code base. The main two code formatters are:
@@ -239,7 +239,7 @@ module show up on the [MultiQC homepage](http://multiqc.info) so that everyone
 knows it exists. This process is automated once the file is added to the core
 repository.
 
-This docs file should be placed in `docs/modules/<your_module_name>.md` and
+These docs file should be placed in `docs/modules/<your_module_name>.md` and
 should have the following structure:
 
 ```markdown
@@ -257,11 +257,6 @@ you think would be helpful. Please avoid using heading levels 1 to 3.
 
 The file search patterns will be shown on the website page automatically
 and do not need to be included in this file.
-
-### Changelog
-
-Last but not least, remember to add your new module to the `CHANGELOG.md`,
-so that people know that it's there.
 
 ### MultiqcModule Class
 
@@ -334,6 +329,21 @@ Log messages can come in a range of formats:
   - Alert user about problems that don't halt execution
 - `log.error` and `log.critical`
   - Not often used, these are for show-stopping problems
+
+### Changelog
+
+When opening a pull-request, please ensure that the PR title is
+formatted as `New module: XYZ`, where `XYZ` is the name of your module.
+
+The changelog entry will be automatically generated for you, based on
+the meta-information that you add to the module `MultiqcModule` class.
+
+:::tip
+Please do not add anything to the `CHANGELOG.md` file!
+This is now handled by our friendly MultiQC bot 🤖
+
+For more information about how it works, see the [contributing docs](contributing.md#changelog).
+:::
 
 ## Step 1 - Find log files
 
@@ -536,12 +546,14 @@ Note that this function should be used _after_ cleaning the sample name with
 ### No files found
 
 If your module cannot find any matching files, it needs to raise an
-exception of type `UserWarning`. This tells the core MultiQC program
+exception of type `ModuleNoSamplesFound`. This tells the core MultiQC program
 that no modules were found. For example:
 
 ```python
+from multiqc.modules.base_module import ModuleNoSamplesFound
+
 if len(self.mod_data) == 0:
-    raise UserWarning
+    raise ModuleNoSamplesFound
 ```
 
 Note that this has to be raised as early as possible, so that it halts
@@ -624,6 +636,86 @@ are as shown:
 
 ```python
 self.add_data_source(f=None, s_name=None, source=None, module=None, section=None)
+```
+
+### Saving version information
+
+Software version information may be present in the log files of some tools. The
+version number can be included in the report by passing it to the method
+`self.add_software_version`. Let's use this `samtools stats` log below as an example.
+
+```bash
+# This file was produced by samtools stats (1.3+htslib-1.3) and can be plotted using plot-bamstats
+# This file contains statistics for all reads.
+# The command line was:  stats /home/lp113/bcbio-nextgen/tests/test_automated_output/align/Test1/Test1.sorted.bam
+# CHK, Checksum [2]Read Names   [3]Sequences    [4]Qualities
+# CHK, CRC32 of reads which passed filtering followed by addition (32bit overflow)
+CHK     560674ab        1165a6ca        7b309ac6
+# Summary Numbers. Use `grep ^SN | cut -f 2-` to extract this part.
+SN      raw total sequences:    101
+...
+```
+
+The version number here (`1.3`) can be extracted using a regular expression (regex).
+We then pass this to the `self.add_software_version()` function.
+Note that we pass the sample name (`f["s_name"]` in this case) so that we don't
+add versions for samples that are later ignored.
+
+```python
+for line in f.splitlines():
+    version = re.search(r"# This file was produced by samtools stats \(([\d\.]+)", line)
+    if version is not None:
+        self.add_software_version(version.group(1), f["s_name"])
+
+    # ..rest of file parsing
+```
+
+The version number will now appear after the module header in the report as
+well as in the section _Software Versions_ in the end of the report.
+
+:::tip
+For tools that don't output software versions in their logs these can instead
+be provided in a separate YAML file.
+See [Customising Reports](../reports/customisation.md#listing-software-versions) for details.
+:::
+
+In some cases, a log may include multiple version numbers for a single tool.
+In the example provided, the version of htslib is shown alongside the
+previously extracted samtools version. This information is valuable and
+should be incorporated into the report. To achieve this, we need to
+extract the new version string and provide it to the
+`self.add_software_version()` function. Include the relevant software
+name (in this case, `htslib`) as well. This will ensure that the htslib
+version is listed separately from the main module's software version.
+Example:
+
+```python
+for line in f.splitlines():
+    version = re.search(r"# This file was produced by samtools stats \(([\d\.]+)", line)
+    if version is not None:
+        self.add_software_version(version.group(1), f["s_name"])
+
+    htslib_version = re.search(r"\+htslib-([\d\.]+)", line)
+    if htslib_version is not None:
+        self.add_software_version(htslib_version.group(1), f["s_name"], software_name="htslib")
+
+    # ..rest of file parsing
+```
+
+Even if the logs does not contain any version information, you should still
+add a superfluous `self.add_software_version()` call to the module. This
+will help maintainers to check if new modules or submodules parse any version
+information that might exist. The call should also include a note that it is
+a dummy call. Example:
+
+```python
+for f in self.find_log_files("mymodule/submodule"):
+    sample = f["s_name"]
+    data[sample] = parse_file(f)
+
+    # Superfluous function call to confirm that it is used in this module
+    # Replace None with actual version if it is available
+    self.add_software_version(None, sample)
 ```
 
 ## Step 3 - Adding to the general statistics table
@@ -747,6 +839,8 @@ Colour scales can be reversed by adding the suffix `-rev` to the name. For examp
 The following scales are available:
 
 ![color brewer](../../images/cbrewer_scales.png)
+
+For categorical metrics that can take a value from a predefined set, use one of the categorical color scales: Set2, Accent, Set1, Set3, Dark2, Paired, Pastel2, Pastel1. For numerical metrics, consider one the "sequential" color scales from the table above.
 
 ## Step 4 - Writing data to a file
 

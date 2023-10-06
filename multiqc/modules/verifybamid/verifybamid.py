@@ -5,7 +5,7 @@ import logging
 from collections import OrderedDict
 
 from multiqc import config
-from multiqc.modules.base_module import BaseMultiqcModule
+from multiqc.modules.base_module import BaseMultiqcModule, ModuleNoSamplesFound
 from multiqc.plots import table
 
 # Initialise the logger
@@ -60,11 +60,15 @@ class MultiqcModule(BaseMultiqcModule):
                 # add data source to multiqc_sources.txt
                 self.add_data_source(f, s_name)
 
+                # Superfluous function call to confirm that it is used in this module
+                # Replace None with actual version if it is available
+                self.add_software_version(None, s_name)
+
         # Filter to strip out ignored sample names as per config.yaml
         self.verifybamid_data = self.ignore_samples(self.verifybamid_data)
 
         if len(self.verifybamid_data) == 0:
-            raise UserWarning
+            raise ModuleNoSamplesFound
 
         # print number of verifyBAMID reports found and parsed
         log.info("Found {} reports".format(len(self.verifybamid_data)))

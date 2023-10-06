@@ -6,7 +6,7 @@ import logging
 from collections import OrderedDict
 
 from multiqc import config
-from multiqc.modules.base_module import BaseMultiqcModule
+from multiqc.modules.base_module import BaseMultiqcModule, ModuleNoSamplesFound
 from multiqc.plots import bargraph
 
 # Initialise the logger
@@ -35,7 +35,7 @@ class MultiqcModule(BaseMultiqcModule):
 
         # Raise error if dict is empty
         if len(self.mirtop_data) == 0:
-            raise UserWarning
+            raise ModuleNoSamplesFound
 
         log.info("Found {} reports".format(len(self.mirtop_data)))
 
@@ -102,6 +102,11 @@ class MultiqcModule(BaseMultiqcModule):
             else:
                 parsed_data["isomiR_perc"] = 0.0
             self.mirtop_data[cleaned_s_name] = parsed_data
+
+        version = content.get("meta", {}).get("version")
+        if version is not None:
+            version = version.strip("v")
+            self.add_software_version(version, cleaned_s_name)
 
     def aggregate_snps_in_samples(self):
         """Aggregate info for iso_snp isomiRs (for clarity). "Mean" section will be recomputed"""

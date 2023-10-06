@@ -23,7 +23,7 @@ MultiQC was written by Phil Ewels (http://phil.ewels.co.uk) at Seqera Labs (http
 
 from setuptools import find_packages, setup
 
-version = "1.16dev"
+version = "1.17dev"
 dl_version = "master" if "dev" in version else "v{}".format(version)
 
 print(
@@ -58,6 +58,7 @@ setup(
         "jinja2>=3.0.0",
         "lzstring",
         "markdown",
+        "packaging",
         "pyyaml>=4",
         "requests",
         "rich>=10",
@@ -86,6 +87,7 @@ setup(
             "bismark = multiqc.modules.bismark:MultiqcModule",
             "bowtie1 = multiqc.modules.bowtie1:MultiqcModule",
             "bowtie2 = multiqc.modules.bowtie2:MultiqcModule",
+            "bracken = multiqc.modules.bracken:MultiqcModule",
             "busco = multiqc.modules.busco:MultiqcModule",
             "bustools = multiqc.modules.bustools:MultiqcModule",
             "ccs = multiqc.modules.ccs:MultiqcModule",
@@ -191,6 +193,7 @@ setup(
             "snpsplit = multiqc.modules.snpsplit:MultiqcModule",
             "somalier = multiqc.modules.somalier:MultiqcModule",
             "sortmerna = multiqc.modules.sortmerna:MultiqcModule",
+            "sourmash = multiqc.modules.sourmash:MultiqcModule",
             "stacks = multiqc.modules.stacks:MultiqcModule",
             "star = multiqc.modules.star:MultiqcModule",
             "supernova = multiqc.modules.supernova:MultiqcModule",

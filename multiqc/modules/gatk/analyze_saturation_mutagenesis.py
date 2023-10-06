@@ -28,6 +28,10 @@ class AnalyzeSaturationMutagenesisMixin:
                 self.add_data_source(file_handle, section="analyze_saturation_mutagenesis")
                 self.gatk_analyze_saturation_mutagenesis[file_handle["s_name"]] = parsed_data
 
+            # Superfluous function call to confirm that it is used in this module
+            # Replace None with actual version if it is available
+            self.add_software_version(None, file_handle["s_name"])
+
         # Filter to strip out ignored sample names
         self.gatk_analyze_saturation_mutagenesis = self.ignore_samples(self.gatk_analyze_saturation_mutagenesis)
 

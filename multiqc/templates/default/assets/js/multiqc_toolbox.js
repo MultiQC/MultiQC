@@ -4,6 +4,7 @@
 
 var mqc_colours_idx = 0;
 var mqc_colours = ["#e41a1c", "#377eb8", "#4daf4a", "#984ea3", "#ff7f00", "#ffff33", "#a65628", "#f781bf", "#999999"];
+var zip_threshold = 8;
 
 //////////////////////////////////////////////////////
 // TOOLBOX LISTENERS
@@ -35,7 +36,7 @@ $(function () {
             tt +
             '" /> \
           <button type="button" class="close" aria-label="Close"><span aria-hidden="true">&times;</span></button> \
-        </li>'
+        </li>',
         );
       }
       apply_mqc_renamesamples();
@@ -81,7 +82,7 @@ $(function () {
       $("#mqc_hidesamples_filters").append(
         '<li><input class="f_text" value="' +
           val +
-          '" /><button type="button" class="close" aria-label="Close"><span aria-hidden="true">&times;</span></button></li>'
+          '" /><button type="button" class="close" aria-label="Close"><span aria-hidden="true">&times;</span></button></li>',
       );
     });
     apply_mqc_hidesamples(show_hide_mode);
@@ -136,7 +137,7 @@ $(function () {
         ajax_promises.push(
           $.get("https://api.crossref.org/works/" + doi + "/transform/application/x-bibtex", function (data) {
             bibtex_string += data + "\n";
-          })
+          }),
         );
       }
       // Wait until all API calls are done
@@ -170,7 +171,7 @@ $(function () {
         f_text +
         '" tabindex="' +
         mqc_colours_idx +
-        '" /><button type="button" class="close" aria-label="Close"><span aria-hidden="true">&times;</span></button></li>'
+        '" /><button type="button" class="close" aria-label="Close"><span aria-hidden="true">&times;</span></button></li>',
     );
     $("#mqc_cols_apply").attr("disabled", false).removeClass("btn-default").addClass("btn-primary");
     $("#mqc_colour_filter").val("");
@@ -274,7 +275,7 @@ $(function () {
         f_text +
         '" tabindex="' +
         mqc_hidesamples_idx +
-        '" /><button type="button" class="close" aria-label="Close"><span aria-hidden="true">&times;</span></button></li>'
+        '" /><button type="button" class="close" aria-label="Close"><span aria-hidden="true">&times;</span></button></li>',
     );
     $("#mqc_hide_apply").attr("disabled", false).removeClass("btn-default").addClass("btn-primary");
     $("#mqc_hidesamples_filter").val("");
@@ -303,7 +304,11 @@ $(function () {
     $(".hc-plot").each(function () {
       var fname = $(this).attr("id");
       $("#mqc_export_selectplots").append(
-        '<div class="checkbox"><label><input type="checkbox" value="' + fname + '" checked> ' + fname + "</label></div>"
+        '<div class="checkbox"><label><input type="checkbox" value="' +
+          fname +
+          '" checked> ' +
+          fname +
+          "</label></div>",
       );
     });
     // Select all / none for checkboxes
@@ -336,6 +341,10 @@ $(function () {
     // Export the plots
     $("#mqc_exportplots").submit(function (e) {
       e.preventDefault();
+      var checked_plots = $("#mqc_export_selectplots input:checked");
+      if (checked_plots.length > zip_threshold) {
+        var zip = new JSZip();
+      }
       var skipped_plots = 0;
       ////// EXPORT PLOT IMAGES
       //////
@@ -344,7 +353,7 @@ $(function () {
         var f_scale = parseInt($("#mqc_export_scaling").val());
         var f_width = parseInt($("#mqc_exp_width").val()) / f_scale;
         var f_height = parseInt($("#mqc_exp_height").val()) / f_scale;
-        $("#mqc_export_selectplots input:checked").each(function () {
+        checked_plots.each(function () {
           var fname = $(this).val();
           var hc = $("#" + fname).highcharts();
           var cfg = {
@@ -355,7 +364,15 @@ $(function () {
             scale: f_scale,
           };
           if (hc !== undefined) {
-            hc.exportChartLocal(cfg);
+            if (checked_plots.length <= zip_threshold) {
+              // Not many plots to export, just trigger a download for each
+              hc.exportChartLocal(cfg);
+            } else {
+              // Lots of plots - generate a zip file for download.
+              //   - add this svg to a zip archive
+              var svg = hc.getSVG();
+              zip.file(fname + ".svg", svg);
+            }
           } else if ($("#" + fname).hasClass("has-custom-export")) {
             $("#" + fname).trigger("mqc_plotexport_image", cfg);
           } else {
@@ -366,14 +383,20 @@ $(function () {
           alert(
             "Warning: " +
               skipped_plots +
-              " plots skipped.\n\nNote that it is not currently possible to export dot plot images from reports. Data exports do work."
+              " plots skipped.\n\nNote that it is not currently possible to export dot plot images from reports. Data exports do work.",
           );
+        }
+        // Save the zip and trigger a download
+        if (checked_plots.length > zip_threshold) {
+          zip.generateAsync({ type: "blob" }).then(function (content) {
+            saveAs(content, "multiqc_plots.zip");
+          });
         }
       }
       ////// EXPORT PLOT DATA
       //////
       else if ($("#mqc_data_download").is(":visible")) {
-        $("#mqc_export_selectplots input:checked").each(function () {
+        checked_plots.each(function () {
           try {
             var target = $(this).val();
             var ft = $("#mqc_export_data_ft").val();
@@ -391,7 +414,14 @@ $(function () {
             else if (ft == "json") {
               json_str = JSON.stringify(mqc_plots[target], null, 2);
               var blob = new Blob([json_str], { type: "text/plain;charset=utf-8" });
-              saveAs(blob, fname);
+              if (checked_plots.length <= zip_threshold) {
+                // Not many plots to export, just trigger a download for each
+                saveAs(blob, fname);
+              } else {
+                // Lots of plots - generate a zip file for download.
+                // Add to a zip archive
+                zip.file(fname, blob);
+              }
             }
             // Beeswarm plots must be done manually
             else if (mqc_plots[target]["plot_type"] == "beeswarm") {
@@ -416,7 +446,14 @@ $(function () {
                 datastring += rows[j].join(sep) + "\n";
               }
               var blob = new Blob([datastring], { type: "text/plain;charset=utf-8" });
-              saveAs(blob, fname);
+              if (checked_plots.length <= zip_threshold) {
+                // Not many plots to export, just trigger a download for each
+                saveAs(blob, fname);
+              } else {
+                // Lots of plots - generate a zip file for download.
+                // Add to a zip archive
+                zip.file(fname, blob);
+              }
             }
             // Normal plot - use HighCharts plugin to get the data from the plot
             else if (ft == "tsv" || ft == "csv") {
@@ -424,7 +461,14 @@ $(function () {
               if (hc !== undefined) {
                 hc.update({ exporting: { csv: { itemDelimiter: sep } } });
                 var blob = new Blob([hc.getCSV()], { type: "text/plain;charset=utf-8" });
-                saveAs(blob, fname);
+                if (checked_plots.length <= zip_threshold) {
+                  // Not many plots to export, just trigger a download for each
+                  saveAs(blob, fname);
+                } else {
+                  // Lots of plots - generate a zip file for download.
+                  // Add to a zip archive
+                  zip.file(fname, blob);
+                }
               } else {
                 skipped_plots += 1;
               }
@@ -438,6 +482,12 @@ $(function () {
         });
         if (skipped_plots > 0) {
           alert("Warning: Could not export data from " + skipped_plots + " plots.");
+        }
+        // Save the zip and trigger a download
+        if (checked_plots.length > zip_threshold) {
+          zip.generateAsync({ type: "blob" }).then(function (content) {
+            saveAs(content, "multiqc_data.zip");
+          });
         }
       } else {
         alert("Error - don't know what to export!");
@@ -1011,7 +1061,7 @@ function populate_mqc_saveselect() {
         'you have the <em>"Block third-party cookies and site data"</em> setting ticked (Chrome) ' +
         "or equivalent in other browsers.</p><p>Please " +
         '<a href="https://www.google.se/search?q=Block+third-party+cookies+and+site+data" target="_blank">change this browser setting</a>' +
-        " to save MultiQC report configs.</p>"
+        " to save MultiQC report configs.</p>",
     );
   }
 }
@@ -1093,7 +1143,7 @@ function load_mqc_config(name) {
           hashCode(f_text + f_col) +
           '"><span class="hc_handle"><span></span><span></span></span><input class="f_text" value="' +
           f_text +
-          '" /><button type="button" class="close" aria-label="Close"><span aria-hidden="true">&times;</span></button></li>'
+          '" /><button type="button" class="close" aria-label="Close"><span aria-hidden="true">&times;</span></button></li>',
       );
       window.mqc_highlight_f_texts.push(f_text);
       window.mqc_highlight_f_cols.push(f_col);
@@ -1130,7 +1180,7 @@ function load_mqc_config(name) {
       $("#mqc_hidesamples_filters").append(
         '<li><input class="f_text" value="' +
           f_text +
-          '" /><button type="button" class="close" aria-label="Close"><span aria-hidden="true">&times;</span></button></li>'
+          '" /><button type="button" class="close" aria-label="Close"><span aria-hidden="true">&times;</span></button></li>',
       );
       window.mqc_hide_f_texts.push(f_text);
     });

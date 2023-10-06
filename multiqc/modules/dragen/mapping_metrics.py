@@ -5,7 +5,7 @@ import itertools
 import logging
 from collections import defaultdict
 
-from multiqc.modules.base_module import BaseMultiqcModule
+from multiqc.modules.base_module import BaseMultiqcModule, ModuleNoSamplesFound
 from multiqc.plots import bargraph, table
 
 from .utils import Metric, exist_and_number, make_headers
@@ -14,7 +14,7 @@ from .utils import Metric, exist_and_number, make_headers
 log = logging.getLogger(__name__)
 
 
-NAMESPACE = "DRAGEN mapping"
+NAMESPACE = "Mapping"
 
 
 class DragenMappingMetics(BaseMultiqcModule):
@@ -35,6 +35,10 @@ class DragenMappingMetics(BaseMultiqcModule):
                     if any(rg in d_rg for sn, d_rg in data_by_rg_by_sample.items()):
                         log.debug(f"Duplicate read group name {rg} found for output prefix {s_name}! Overwriting")
             data_by_rg_by_sample[s_name].update(data_by_readgroup)
+
+            # Superfluous function call to confirm that it is used in this module
+            # Replace None with actual version if it is available
+            self.add_software_version(None, s_name)
 
         # filter to strip out ignored sample names:
         data_by_rg_by_sample = self.ignore_samples(data_by_rg_by_sample)

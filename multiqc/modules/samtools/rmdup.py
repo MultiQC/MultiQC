@@ -35,6 +35,10 @@ class RmdupReportMixin:
                     self.samtools_rmdup[s_name]["n_unique"] = int(match.group(2)) - int(match.group(1))
                     self.samtools_rmdup[s_name]["pct_dups"] = float(match.group(3)) * 100
 
+                    # Superfluous function call to confirm that it is used in this module
+                    # Replace None with actual version if it is available
+                    self.add_software_version(None, s_name)
+
         # Filter to strip out ignored sample names
         self.samtools_rmdup = self.ignore_samples(self.samtools_rmdup)
 

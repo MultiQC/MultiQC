@@ -9,7 +9,7 @@ import os.path
 from collections import OrderedDict
 
 from multiqc import config
-from multiqc.modules.base_module import BaseMultiqcModule
+from multiqc.modules.base_module import BaseMultiqcModule, ModuleNoSamplesFound
 from multiqc.plots import bargraph
 
 # Initialise the logger
@@ -34,6 +34,10 @@ class MultiqcModule(BaseMultiqcModule):
         for k in ["mmapstat", "mpairstat", "mergestat", "mRSstat", "assplit"]:
             for f in self.find_log_files("hicpro/{}".format(k)):
                 self.parse_hicpro_stats(f, k)
+
+                # Superfluous function call to confirm that it is used in this module
+                # Replace None with actual version if it is available
+                self.add_software_version(None, f["s_name"])
 
         # Update current statistics
         for s_name in self.hicpro_data:
@@ -60,7 +64,7 @@ class MultiqcModule(BaseMultiqcModule):
         self.hicpro_data = self.ignore_samples(self.hicpro_data)
 
         if len(self.hicpro_data) == 0:
-            raise UserWarning
+            raise ModuleNoSamplesFound
 
         log.info("Found {} HiC-Pro reports".format(len(self.hicpro_data)))
 
@@ -268,7 +272,7 @@ class MultiqcModule(BaseMultiqcModule):
             "shared_key": "read_count",
         }
 
-        self.general_stats_addcols(self.hicpro_data, headers, "HiC-Pro")
+        self.general_stats_addcols(self.hicpro_data, headers)
 
     def hicpro_mapping_chart(self):
         """Generate the HiC-Pro Aligned reads plot"""

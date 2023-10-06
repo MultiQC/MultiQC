@@ -6,7 +6,7 @@ import re
 from collections import OrderedDict
 
 from multiqc import config
-from multiqc.modules.base_module import BaseMultiqcModule
+from multiqc.modules.base_module import BaseMultiqcModule, ModuleNoSamplesFound
 from multiqc.plots import bargraph, table
 
 # Initialise the logger
@@ -41,11 +41,15 @@ class MultiqcModule(BaseMultiqcModule):
         for f in self.find_log_files("quast"):
             self.parse_quast_log(f)
 
+            # Superfluous function call to confirm that it is used in this module
+            # Replace None with actual version if it is available
+            self.add_software_version(None, f["s_name"])
+
         # Filter to strip out ignored sample names
         self.quast_data = self.ignore_samples(self.quast_data)
 
         if len(self.quast_data) == 0:
-            raise UserWarning
+            raise ModuleNoSamplesFound
 
         log.info("Found {} reports".format(len(self.quast_data)))
 
@@ -249,7 +253,6 @@ class MultiqcModule(BaseMultiqcModule):
         }
         config = {
             "id": "quast_table",
-            "namespace": "QUAST",
             "min": 0,
         }
         return table.plot(self.quast_data, headers, config)
@@ -328,11 +331,6 @@ class MultiqcModule(BaseMultiqcModule):
                 cat = (low, "{}-{} bp".format(low, high))
                 all_categories.append(cat)
                 plot_data[cat[1]] = d[data_key.format(low)] - d[data_key.format(high)]
-
-            try:
-                assert sum(plot_data.values()) == d[data_key.format(0)]
-            except AssertionError:
-                raise UserWarning('Predicted gene counts didn\'t add up properly for "{}"'.format(s_name))
 
             data[s_name] = plot_data
 

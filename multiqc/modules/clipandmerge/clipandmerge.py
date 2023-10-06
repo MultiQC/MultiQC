@@ -6,7 +6,7 @@ import os
 import re
 from collections import OrderedDict
 
-from multiqc.modules.base_module import BaseMultiqcModule
+from multiqc.modules.base_module import BaseMultiqcModule, ModuleNoSamplesFound
 from multiqc.plots import bargraph
 
 # Initialise the logger
@@ -35,7 +35,7 @@ class MultiqcModule(BaseMultiqcModule):
         self.clipandmerge_data = self.ignore_samples(self.clipandmerge_data)
 
         if len(self.clipandmerge_data) == 0:
-            raise UserWarning
+            raise ModuleNoSamplesFound
 
         log.info("Found {} reports".format(len(self.clipandmerge_data)))
 
@@ -58,12 +58,17 @@ class MultiqcModule(BaseMultiqcModule):
             "usable_forward_no_pairing_reverse": r"Number of usable forward reads with no pairing reverse read:\s+(\d+)",
             "usable_reverse_no_pairing_forward": r"Number of usable reverse reads with no pairing forward read:\s+(\d+)",
             "identifier": r"SampleID:\s+(\S+)",
+            "version": r"ClipAndMerge \(v. ([\d\.]+)\)",
         }
 
         parsed_data = dict()
         for k, r in regexes.items():
             r_search = re.search(r, f["f"], re.MULTILINE)
             if r_search:
+                if k == "versions":
+                    parsed_data[k] = r_search.group(1)
+                    continue
+
                 try:
                     parsed_data[k] = float(r_search.group(1))
                 except ValueError:
@@ -74,6 +79,10 @@ class MultiqcModule(BaseMultiqcModule):
             if "identifier" in parsed_data:
                 s_name = self.clean_s_name(parsed_data["identifier"], f)
             self.clipandmerge_data[s_name] = parsed_data
+
+            if "version" in parsed_data:
+                self.add_software_version(parsed_data["version"], s_name)
+
             self.add_data_source(f)
 
     def clipandmerge_general_stats_table(self):

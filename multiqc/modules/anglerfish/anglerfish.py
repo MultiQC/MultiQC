@@ -4,7 +4,7 @@ import json
 import logging
 from collections import OrderedDict
 
-from multiqc.modules.base_module import BaseMultiqcModule
+from multiqc.modules.base_module import BaseMultiqcModule, ModuleNoSamplesFound
 from multiqc.plots import bargraph, beeswarm, table
 
 # Initialise the logger
@@ -37,7 +37,7 @@ class MultiqcModule(BaseMultiqcModule):
 
         # Stop execution of the data if no anglerfish data is found.
         if len(self.anglerfish_data) == 0:
-            raise UserWarning
+            raise ModuleNoSamplesFound
 
         log.info(f"Found {len(self.anglerfish_data)} reports")
 
@@ -66,6 +66,9 @@ class MultiqcModule(BaseMultiqcModule):
         s_name = f["s_name"]
         self.add_data_source(f, s_name)
         self.anglerfish_data[s_name] = {}
+
+        # Add version info
+        self.add_software_version(parsed_json["anglerfish_version"], s_name)
 
         # Parse Sample Stats
         ## Index for each sample and their reads in order to iterate without knowing sample names
@@ -162,7 +165,7 @@ class MultiqcModule(BaseMultiqcModule):
             "suffix": " bp",
         }
 
-        self.general_stats_addcols(data, headers, "anglerfish")
+        self.general_stats_addcols(data, headers)
 
     def anglerfish_sample_stats(self):
         """Generate plot for read length from sample stats.

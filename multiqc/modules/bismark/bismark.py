@@ -6,7 +6,7 @@ import re
 from collections import OrderedDict
 
 from multiqc import config
-from multiqc.modules.base_module import BaseMultiqcModule
+from multiqc.modules.base_module import BaseMultiqcModule, ModuleNoSamplesFound
 from multiqc.plots import bargraph, beeswarm, linegraph
 
 # Initialise the logger
@@ -35,6 +35,7 @@ regexes = {
         "strand_ctob": r"GA(?:\/CT)?\/GA:\s+(\d+)\s+\(complementary to \(converted\) bottom strand\)",
         "strand_ob": r"CT(?:\/GA)?\/GA:\s+(\d+)\s+\(\(converted\) bottom strand\)",
         "strand_directional": r"Option '--(directional)' specified \(default mode\): alignments to complementary strands \(CTOT, CTOB\) were ignored \(i.e. not performed\)",
+        "version": r"Bismark report for: .+ \(version: v([\d\.]+)\)",
     },
     "dedup": {
         "aligned_reads": r"Total number of alignments analysed in .+:\s+(\d+)",
@@ -54,6 +55,7 @@ regexes = {
         "percent_cpg_meth": r"C methylated in CpG context:\s+([\d\.]+)%",
         "percent_chg_meth": r"C methylated in CHG context:\s+([\d\.]+)%",
         "percent_chh_meth": r"C methylated in CHH context:\s+([\d\.]+)%",
+        "version": r"Bismark Extractor Version: v([\d\.]+)",
     },
 }
 
@@ -80,6 +82,9 @@ class MultiqcModule(BaseMultiqcModule):
         for f in self.find_log_files("bismark/align"):
             parsed_data = self.parse_bismark_report(f["f"], regexes["alignment"])
             if parsed_data is not None:
+                if "version" in parsed_data:
+                    self.add_software_version(parsed_data["version"], f["s_name"])
+
                 # Calculate percent_aligned - doubles as a good check that stuff has worked
                 try:
                     parsed_data["percent_aligned"] = (parsed_data["aligned_reads"] / parsed_data["total_reads"]) * 100
@@ -107,6 +112,10 @@ class MultiqcModule(BaseMultiqcModule):
             if parsed_data is not None:
                 if s_name in self.bismark_data["methextract"]:
                     log.debug("Duplicate methylation extraction sample log found! Overwriting: {}".format(s_name))
+
+                if "version" in parsed_data:
+                    self.add_software_version(parsed_data["version"], s_name)
+
                 self.add_data_source(f, s_name, section="methylation_extraction")
                 self.bismark_data["methextract"][s_name] = parsed_data
 
@@ -134,7 +143,7 @@ class MultiqcModule(BaseMultiqcModule):
         num_parsed += len(self.bismark_mbias_data["meth"]["CpG_R1"])
         num_parsed += len(self.bismark_data["bam2nuc"])
         if num_parsed == 0:
-            raise UserWarning
+            raise ModuleNoSamplesFound
 
         # Basic Stats Table
         self.bismark_stats_table()

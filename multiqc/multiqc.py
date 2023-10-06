@@ -18,17 +18,18 @@ import sys
 import tempfile
 import time
 import traceback
-from distutils import version
 from distutils.dir_util import copy_tree
 from urllib.request import urlopen
 
 import jinja2
 import rich
 import rich_click as click
+from packaging import version
 from rich.syntax import Syntax
 
+from .modules.base_module import ModuleNoSamplesFound
 from .plots import table
-from .utils import config, lint_helpers, log, megaqc, plugin_hooks, report, util_functions
+from .utils import config, lint_helpers, log, megaqc, plugin_hooks, report, software_versions, util_functions
 
 # Set up logging
 start_execution_time = time.time()
@@ -383,8 +384,8 @@ def run(
         try:
             response = urlopen("http://multiqc.info/version.php?v={}".format(config.short_version), timeout=5)
             remote_version = response.read().decode("utf-8").strip()
-            if version.StrictVersion(re.sub("[^0-9\.]", "", remote_version)) > version.StrictVersion(
-                re.sub("[^0-9\.]", "", config.short_version)
+            if version.StrictVersion(re.sub(r"[^0-9.]", "", remote_version)) > version.StrictVersion(
+                re.sub(r"[^0-9.]", "", config.short_version)
             ):
                 logger.warning("MultiQC Version {} now available!".format(remote_version))
             else:
@@ -513,7 +514,7 @@ def run(
         logger.info("Printing report to stdout")
     else:
         if title is not None and filename is None:
-            filename = re.sub("[^\w\.-]", "", re.sub("[-\s]+", "-", title)).strip()
+            filename = re.sub(r"[^\w.-]", "", re.sub(r"[-\s]+", "-", title)).strip()
             filename += "_multiqc_report"
         if filename is not None:
             if filename.endswith(".html"):
@@ -586,7 +587,7 @@ def run(
         run_modules = [m for m in run_modules if list(m.keys())[0] not in config.exclude_modules]
     if len(run_modules) == 0:
         logger.critical("No analysis modules specified!")
-        sys.exit(1)
+        return {"report": report, "config": config, "sys_exit_code": 1}
     run_module_names = [list(m.keys())[0] for m in run_modules]
     logger.debug("Analysing modules: {}".format(", ".join(run_module_names)))
 
@@ -624,6 +625,11 @@ def run(
     except AttributeError:
         pass  # custom_data not in config
 
+    # Always run software_versions module to collect version YAML files
+    # Use config.skip_versions_section to exclude from report
+    if "software_versions" not in run_module_names:
+        run_module_names.append("software_versions")
+
     # Get the list of files to search
     for d in config.analysis_dir:
         logger.info("Search path : {}".format(os.path.abspath(d)))
@@ -644,11 +650,11 @@ def run(
     total_mods_starttime = time.time()
     for mod_idx, mod_dict in enumerate(run_modules):
         mod_starttime = time.time()
+        this_module = list(mod_dict.keys())[0]
+        mod_cust_config = list(mod_dict.values())[0]
+        if mod_cust_config is None:
+            mod_cust_config = {}
         try:
-            this_module = list(mod_dict.keys())[0]
-            mod_cust_config = list(mod_dict.values())[0]
-            if mod_cust_config is None:
-                mod_cust_config = {}
             mod = config.avail_modules[this_module].load()
             mod.mod_cust_config = mod_cust_config  # feels bad doing this, but seems to work
             output = mod()
@@ -684,8 +690,16 @@ def run(
                 except AttributeError:
                     pass
 
-        except UserWarning:
-            logger.debug("No samples found: {}".format(list(mod_dict.keys())[0]))
+        except ModuleNoSamplesFound:
+            logger.debug(f"No samples found: {this_module}")
+        except UserWarning:  # UserWarning deprecated from 1.16
+            msg = f"DEPRECIATED: Please raise 'ModuleNoSamplesFound' instead of 'UserWarning' in module: {this_module}"
+            if config.lint:
+                logger.error(msg)
+                report.lint_errors.append(msg)
+            else:
+                logger.debug(msg)
+            logger.debug(f"No samples found: {this_module}")
         except KeyboardInterrupt:
             shutil.rmtree(tmp_dir)
             logger.critical(
@@ -746,11 +760,21 @@ def run(
         report.runtimes["mods"][run_module_names[mod_idx]] = time.time() - mod_starttime
     report.runtimes["total_mods"] = time.time() - total_mods_starttime
 
+    # Update report with software versions provided in configs
+    software_versions.update_versions_from_config(config, report)
+
+    # Add section for software versions if any are found
+    if not config.skip_versions_section and report.software_versions:
+        # Importing here to avoid circular imports
+        from multiqc.modules.software_versions import MultiqcModule
+
+        report.modules_output.append(MultiqcModule())
+
     # Special-case module if we want to profile the MultiQC running time
     if config.profile_runtime:
-        from multiqc.utils import profile_runtime
+        from multiqc.modules.profile_runtime import MultiqcModule
 
-        report.modules_output.append(profile_runtime.MultiqcModule())
+        report.modules_output.append(MultiqcModule())
 
     # Did we find anything?
     if len(report.modules_output) == 0:
@@ -758,7 +782,7 @@ def run(
         shutil.rmtree(tmp_dir)
         logger.info("MultiQC complete")
         # Exit with an error code if a module broke
-        sys.exit(sys_exit_code)
+        return {"report": report, "config": config, "sys_exit_code": sys_exit_code}
 
     if config.make_report:
         # Sort the report module output if we have a config
@@ -853,7 +877,7 @@ def run(
         report.data_sources_tofile()
 
         # Create a file with the module DOIs
-        report.dois_tofile()
+        report.dois_tofile(report.modules_output)
 
     if config.make_report:
         # Compress the report plot JSON data
@@ -937,7 +961,7 @@ def run(
         else:
             logger.info("Report      : None")
 
-        if config.make_data_dir == False:
+        if config.make_data_dir is False:
             logger.info("Data        : None")
         else:
             # Make directories for data_dir
@@ -966,7 +990,7 @@ def run(
                     logger.error("Output directory {} already exists.".format(config.plots_dir))
                     logger.info("Use -f or --force to overwrite existing reports")
                     shutil.rmtree(tmp_dir)
-                    sys.exit(1)
+                    return {"report": report, "config": config, "sys_exit_code": 1}
             logger.info(
                 "Plots       : {}{}".format(
                     os.path.relpath(config.plots_dir),

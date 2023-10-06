@@ -1,13 +1,16 @@
 """ MultiQC module to parse output from DIAMOND """
 
 import logging
+import re
 from collections import OrderedDict
 
-from multiqc.modules.base_module import BaseMultiqcModule
+from multiqc.modules.base_module import BaseMultiqcModule, ModuleNoSamplesFound
 from multiqc.plots import bargraph
 
 # Initialise the logger
 log = logging.getLogger(__name__)
+
+VERSION_REGEX = r"diamond v([\d\.]+)"
 
 
 class MultiqcModule(BaseMultiqcModule):
@@ -31,7 +34,7 @@ class MultiqcModule(BaseMultiqcModule):
         self.diamond_data = self.ignore_samples(self.diamond_data)
 
         if len(self.diamond_data) == 0:
-            raise UserWarning
+            raise ModuleNoSamplesFound
 
         log.info("Found {} reports".format(len(self.diamond_data)))
 
@@ -50,6 +53,12 @@ class MultiqcModule(BaseMultiqcModule):
             elif "diamond blastx" in l and "--query" in l:
                 s_name = l.split("--query ")[1].split(" ")[0]
                 s_name = self.clean_s_name(s_name, f)
+
+            # Get version
+            version_match = re.search(VERSION_REGEX, l)
+            if version_match:
+                self.add_software_version(version_match.group(1), s_name)
+
             if "queries aligned" in l:
                 self.add_data_source(f)
                 if s_name in self.diamond_data:

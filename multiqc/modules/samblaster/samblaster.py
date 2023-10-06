@@ -6,11 +6,13 @@ import os
 import re
 from collections import OrderedDict
 
-from multiqc.modules.base_module import BaseMultiqcModule
+from multiqc.modules.base_module import BaseMultiqcModule, ModuleNoSamplesFound
 from multiqc.plots import bargraph
 
 # Initialise the logger
 log = logging.getLogger(__name__)
+
+VERSION_REGEX = r"Version\ (\d{1}.\d+.\d+)"
 
 
 class MultiqcModule(BaseMultiqcModule):
@@ -34,7 +36,7 @@ class MultiqcModule(BaseMultiqcModule):
         self.samblaster_data = self.ignore_samples(self.samblaster_data)
 
         if len(self.samblaster_data) == 0:
-            raise UserWarning
+            raise ModuleNoSamplesFound
 
         headers = OrderedDict()
         headers["pct_dups"] = {
@@ -84,8 +86,12 @@ class MultiqcModule(BaseMultiqcModule):
         rgtag_name_regex = "\\\\tID:(\S*?)\\\\t"
         data = {}
         s_name = None
+        version = None
         fh = f["f"]
         for l in fh:
+            match = re.search(VERSION_REGEX, l)
+            if match is not None:
+                version = match.group(1)
             # try to find name from RG-tag. If bwa mem is used upstream samblaster with pipes, then the bwa mem command
             # including the read group will be written in the log
             match = re.search(rgtag_name_regex, l)
@@ -110,6 +116,9 @@ class MultiqcModule(BaseMultiqcModule):
 
         if s_name is None:
             s_name = f["s_name"]
+
+        if version is not None:
+            self.add_software_version(version, s_name)
 
         if len(data) > 0:
             if s_name in self.samblaster_data:

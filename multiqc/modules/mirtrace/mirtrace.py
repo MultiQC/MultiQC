@@ -7,7 +7,7 @@ import json
 import logging
 from collections import OrderedDict
 
-from multiqc.modules.base_module import BaseMultiqcModule
+from multiqc.modules.base_module import BaseMultiqcModule, ModuleNoSamplesFound
 from multiqc.plots import bargraph, linegraph
 
 # Initialise the logger
@@ -29,6 +29,10 @@ class MultiqcModule(BaseMultiqcModule):
         self.summary_data = dict()
         for f in self.find_log_files("mirtrace/summary"):
             self.parse_summary(f)
+
+            # Superfluous function call to confirm that it is used in this module
+            # Replace None with actual version if it is available
+            self.add_software_version(None, f["s_name"])
 
         # Find and load miRTrace read length table
         self.length_data = dict()
@@ -56,7 +60,7 @@ class MultiqcModule(BaseMultiqcModule):
             max(len(self.summary_data), len(self.length_data), len(self.contamination_data), len(self.complexity_data))
             == 0
         ):
-            raise UserWarning
+            raise ModuleNoSamplesFound
 
         # Write parsed data to a file
         self.write_data_file(self.summary_data, "multiqc_mirtrace_summary")

@@ -88,9 +88,8 @@ def make_table(dt):
             header["dmax"], header["dmin"], header["namespace"], shared_key
         )
 
-        cell_contents = '<span class="mqc_table_tooltip" title="{}: {}">{}</span>'.format(
-            header["namespace"], header["description"], header["title"]
-        )
+        ns = f'{header["namespace"]}: ' if header["namespace"] else ""
+        cell_contents = f'<span class="mqc_table_tooltip" title="{ns}{header["description"]}">{header["title"]}</span>'
 
         t_headers[rid] = '<th id="header_{rid}" class="{rid} {h}" {da}>{c}</th>'.format(
             rid=rid, h=hide, da=data_attr, c=cell_contents
@@ -244,7 +243,9 @@ def make_table(dt):
                 # Build table cell background colour bar
                 elif header["scale"]:
                     if c_scale is not None:
-                        col = " background-color:{} !important;".format(c_scale.get_colour(val))
+                        col = " background-color:{} !important;".format(
+                            c_scale.get_colour(val, source=f"Table {table_id}, column {k}")
+                        )
                     else:
                         col = ""
                     bar_html = '<span class="bar" style="width:{}%;{}"></span>'.format(percentage, col)

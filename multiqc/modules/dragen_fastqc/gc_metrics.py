@@ -1,11 +1,8 @@
 import logging
 from collections import OrderedDict, defaultdict
 
-from multiqc import config
-from multiqc.modules.base_module import BaseMultiqcModule
-from multiqc.modules.dragen.utils import Metric
-from multiqc.plots import bargraph, boxplot, heatmap, linegraph, table
-from multiqc.utils import report
+from multiqc.modules.base_module import BaseMultiqcModule, ModuleNoSamplesFound
+from multiqc.plots import linegraph
 
 from .util import average_from_range, percentage_from_content_metric
 
@@ -187,4 +184,4 @@ class DragenFastqcGcMetrics(BaseMultiqcModule):
             "scale": "Set1",
             "format": "{:,.0f}",
         }
-        self.general_stats_addcols(avg_gc_content_data, headers, namespace="DRAGEN FastQC")
+        self.general_stats_addcols(avg_gc_content_data, headers, namespace="FastQC")

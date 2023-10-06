@@ -5,7 +5,7 @@ import json
 import logging
 from collections import OrderedDict
 
-from multiqc.modules.base_module import BaseMultiqcModule
+from multiqc.modules.base_module import BaseMultiqcModule, ModuleNoSamplesFound
 from multiqc.plots import linegraph
 
 # Initialise the logger
@@ -47,7 +47,7 @@ class MultiqcModule(BaseMultiqcModule):
         self.summary_metrics_data = self.ignore_samples(self.summary_metrics_data)
 
         if len(self.summary_metrics_data) == 0:
-            raise UserWarning
+            raise ModuleNoSamplesFound
 
         # Write parsed report data to a file
         self.write_data_file(self.summary_metrics_data, "multiqc_damageprofiler_metrics")
@@ -107,6 +107,10 @@ class MultiqcModule(BaseMultiqcModule):
         # Get sample name from JSON first
         s_name = self.clean_s_name(parsed_json["metadata"]["sample_name"], f)
         self.add_data_source(f, s_name)
+
+        # Add version info
+        version = parsed_json["metadata"]["version"]
+        self.add_software_version(version, s_name)
 
         # Add 3' G to A data
         self.threepGtoAfreq_data[s_name] = parsed_json["dmg_3p"]

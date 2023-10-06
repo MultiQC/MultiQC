@@ -3,15 +3,18 @@
 
 import json
 import logging
+import re
 from collections import OrderedDict
 
 from multiqc import config
-from multiqc.modules.base_module import BaseMultiqcModule
+from multiqc.modules.base_module import BaseMultiqcModule, ModuleNoSamplesFound
 from multiqc.plots import bargraph
 from multiqc.utils import report
 
 # Initialise the logger
 log = logging.getLogger(__name__)
+
+VERSION_REGEX = r"Fastq_screen version: ([\d\.]+)"
 
 
 class MultiqcModule(BaseMultiqcModule):
@@ -42,7 +45,7 @@ class MultiqcModule(BaseMultiqcModule):
         self.fq_screen_data = self.ignore_samples(self.fq_screen_data)
 
         if len(self.fq_screen_data) == 0:
-            raise UserWarning
+            raise ModuleNoSamplesFound
 
         log.info("Found {} reports".format(len(self.fq_screen_data)))
 
@@ -77,6 +80,9 @@ class MultiqcModule(BaseMultiqcModule):
         for l in f["f"]:
             # Skip comment lines
             if l.startswith("#"):
+                version_match = re.search(VERSION_REGEX, l)
+                if version_match:
+                    self.add_software_version(version_match.group(1), f["s_name"])
                 continue
             if l.startswith("%Hit_no_genomes:") or l.startswith("%Hit_no_libraries:"):
                 nohits_pct = float(l.split(":", 1)[1])
@@ -265,7 +271,7 @@ class MultiqcModule(BaseMultiqcModule):
                     data[s_name][org] = self.fq_screen_data[s_name][org]["counts"]["one_hit_one_library"]
                 except KeyError:
                     log.error(
-                        "No counts found for '{}' ('{}'). Could be malformed or very old FastQ Screen results.".format(
+                        "No counts found for '{}' ('{}'). Could be malformed or very old FastQ Screen results. Skipping sample".format(
                             org, s_name
                         )
                     )
