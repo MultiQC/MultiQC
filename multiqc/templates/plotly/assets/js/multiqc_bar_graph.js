@@ -1,36 +1,17 @@
-////////////////////////////////////////////////
-// HighCharts Plotting Code
-////////////////////////////////////////////////
-
-// Global plot data variable
-mqc_plots = {};
-
-// Initialise the toolbox filters
-window.mqc_highlight_f_texts = [];
-window.mqc_highlight_f_cols = [];
-window.mqc_highlight_regex_mode = false;
-window.mqc_rename_f_texts = [];
-window.mqc_rename_t_texts = [];
-window.mqc_rename_regex_mode = false;
-window.mqc_hide_mode = "hide";
-window.mqc_hide_f_texts = [];
-window.mqc_hide_regex_mode = false;
-window.HCDefaults = undefined;
-
 // Stacked Bar Graph
-function plot_stacked_bar_graph(target, ds) {
-  if (mqc_plots[target] === undefined || mqc_plots[target]["plot_type"] !== "bar_graph") {
+function plot_stacked_bar_graph(plot, target, dataset_idx) {
+  if (plot === undefined || plot["plot_type"] !== "bar_graph") {
     return false;
   }
-  if (ds === undefined) {
-    ds = 0;
+  if (dataset_idx === undefined) {
+    dataset_idx = 0;
   }
 
   // Make a clone of everything, so that we can mess with it,
   // while keeping the original data intact
-  var data = JSON.parse(JSON.stringify(mqc_plots[target]["datasets"][ds]));
-  var samples = JSON.parse(JSON.stringify(mqc_plots[target]["samples"][ds]));
-  var layout = JSON.parse(JSON.stringify(mqc_plots[target]["layout"]));
+  var data = JSON.parse(JSON.stringify(plot["datasets"][dataset_idx]));
+  var samples = JSON.parse(JSON.stringify(plot["samples"][dataset_idx]));
+  var layout = JSON.parse(JSON.stringify(plot["layout"]));
 
   // Rename samples
   if (window.mqc_rename_f_texts.length > 0) {
@@ -123,11 +104,6 @@ function plot_stacked_bar_graph(target, ds) {
       return false;
     }
   }
-  _replot(target, data, layout, samples, ds, highlight_colors);
-  // layout["autosize"] = true;
-}
-
-function _replot(target, data, layout, samples, dataset_idx, highlight_colors) {
   // Render the plotly plot
   let series = [];
   for (let cat of data) {
@@ -147,6 +123,6 @@ function _replot(target, data, layout, samples, dataset_idx, highlight_colors) {
     };
     series.push(trace);
   }
-  mqc_plots[target].datasets[dataset_idx].series = series;
+  plot.datasets[dataset_idx].series = series;
   Plotly.newPlot(target, series, layout);
 }
