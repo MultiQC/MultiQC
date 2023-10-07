@@ -207,7 +207,7 @@ function plot_graph(target, ds, max_num) {
   if (ds === undefined) {
     var ds_btns = $('.hc_switch_group button[data-action="set_data"][data-target="' + target + '"]');
     if (ds_btns.length) {
-      ds = ds_btns.filter(".active").data("newdata");
+      ds = ds_btns.filter(".active").data("dataset_index");
     }
   }
 

@@ -63,6 +63,9 @@ def barplot_layout(settings: PlotSettings) -> go.Layout:
         ),
         barmode="stack",
         autosize=True,
+        margin=dict(
+            pad=10,  # pad sample names a bit
+        ),
         annotations=[
             dict(
                 text="Created with MultiQC",
@@ -123,7 +126,7 @@ def plotly_bargraph(
         max_n_samples = max(len(samples) for samples in samples_lists)
         # Height has a default, then adjusted by the number of samples
         settings.height = max_n_samples // 186  # Default, empirically determined
-        settings.height = max(700, settings.height)
+        settings.height = max(600, settings.height)
         settings.height = min(2560, settings.height)
 
     uniq_suffix = "".join(random.sample(string.ascii_lowercase, 10))
@@ -209,8 +212,8 @@ def plotly_bargraph(
         html += "</div>\n\n"
 
     # Plot HTML
-    html += """<div class="container-fluid hc-plot-wrapper"{height}>
-        <div id="{id}" class="hc-plot not_rendered hc-bar-plot"><small>loading..</small></div>
+    html += """<div class="hc-plot-wrapper"{height}>
+        <div id="{id}" class="hc-plot not_rendered hc-bar-plot"></div>
     </div></div>""".format(
         id=settings.id,
         height=f' style="height:{settings.height}px"' if settings.height else "",
