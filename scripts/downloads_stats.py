@@ -132,7 +132,7 @@ def _fetch_dockerhub_count(repo):
 
 
 def _fetch_quay_count(repo):
-    url = f"https://quay.io/api/v1/repository/{repo}"
+    url = f"https://quay.io/api/v1/repository/{repo}".strip("/")
     response = requests.get(url)
     if response.status_code != 200:
         logging.error(f"Failed to fetch data from Quay.io, status code: {response.status_code}, url: {url}")
