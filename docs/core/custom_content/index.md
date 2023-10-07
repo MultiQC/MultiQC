@@ -407,7 +407,7 @@ Wherever you see `pconfig`, any key can be used within the above syntax.
 ## Tricky extras
 
 Because of the way this module works, there are a few specifics that can trip you up.
-Most of these should probably be fixed one day. Feel free to complain on gitter or submit a pull request!
+Most of these should probably be fixed one day. Feel free to ask for help on the [community forum](https://community.seqera.io/c/multiqc/6), or submit a pull request!
 I'll try to keep a list here to help the wary...
 
 ### Differences between Tables and General Stats
