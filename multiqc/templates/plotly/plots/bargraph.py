@@ -38,12 +38,14 @@ def barplot_layout(settings: PlotSettings) -> go.Layout:
             font=dict(size=20),
         ),
         yaxis=dict(
-            title=dict(text="# " + settings.ylab),
+            # the plot is "transposed", so yaxis corresponds to the horizontal axis
+            title=dict(text=settings.xlab),
             showgrid=False,
             categoryorder="category descending",
+            automargin=True,
         ),
         xaxis=dict(
-            title=dict(text=settings.xlab),
+            title=dict(text=settings.ylab),
             gridcolor="rgba(0,0,0,0.1)",
         ),
         paper_bgcolor="rgba(0,0,0,0)",
@@ -60,18 +62,19 @@ def barplot_layout(settings: PlotSettings) -> go.Layout:
             x=0.5,
         ),
         barmode="stack",
-        height=settings.height,
+        # height=settings.height,
+        autosize=True,
         annotations=[
             dict(
+                text="Created with MultiQC",
+                font=dict(size=10, color="rgba(0,0,0,0.5)"),
                 xanchor="right",
                 yanchor="bottom",
                 x=1.07,
                 y=-0.35,
-                text="Created with MultiQC",
                 xref="paper",
                 yref="paper",
                 showarrow=False,
-                font=dict(size=10, color="rgba(0,0,0,0.5)"),
             )
         ],
     )
@@ -121,8 +124,8 @@ def plotly_bargraph(
         max_n_samples = max(len(samples) for samples in samples_lists)
         # Height has a default, then adjusted by the number of samples
         settings.height = max_n_samples // 186  # Default, empirically determined
-        settings.height = max(600, settings.height)  # At least 512px tall
-        settings.height = min(2560, settings.height)  # Cap at 2560px tall
+        settings.height = max(700, settings.height)
+        settings.height = min(2560, settings.height)
 
     uniq_suffix = "".join(random.sample(string.ascii_lowercase, 10))
     is_static_suf = "static_" if config.plots_force_flat else ""
@@ -165,7 +168,7 @@ def plotly_bargraph(
     html = '<div class="mqc_hcplot_plotgroup">'
 
     btn_tmpl = (
-        f'<button class="{{cls}} btn btn-default btn-sm {{active}}" data-target="{settings.id}" data-ylab="{{label}}">{{label}}'
+        f'<button class="{{cls}} btn btn-default btn-sm {{active}}" data-target="{settings.id}">{{label}}'
         f"</button> \n"
     )
     # Counts / Percentages / Log Switches
@@ -200,18 +203,14 @@ def plotly_bargraph(
                 except KeyError:
                     name = k + 1
             try:
-                ylab = f'data-ylab="{settings.data_labels[k]["ylab"]}"'
-            except:
-                ylab = f'data-ylab="{name}"' if name != k + 1 else ""
-            try:
                 ymax = f'data-ymax="{settings.data_labels[k]["ymax"]}"'
             except:
                 ymax = ""
-            html += f'<button class="btn btn-default btn-sm {active}" {ylab} {ymax} data-dataset_index="{k}" data-target="{settings.id}">{name}</button>\n'
+            html += f'<button class="btn btn-default btn-sm {active}" {ymax} data-dataset_index="{k}" data-target="{settings.id}">{name}</button>\n'
         html += "</div>\n\n"
 
     # Plot HTML
-    html += """<div class="hc-plot-wrapper"{height}>
+    html += """<div class="container-fluid hc-plot-wrapper"{height}>
         <div id="{id}" class="hc-plot not_rendered hc-bar-plot"><small>loading..</small></div>
     </div></div>""".format(
         id=settings.id,
@@ -244,7 +243,7 @@ def _static_bargraph(
     for k in range(len(data_by_cat_lists)):
         try:
             name = settings.data_labels[k]
-        except KeyError:
+        except IndexError:
             name = k + 1
         pid = report.save_htmlid(f"{settings.id}_{name}", skiplint=True)
         pids.append(pid)
@@ -404,13 +403,23 @@ def _static_bargraph(
                     # Save the plot
                     plot_fn = os.path.join(plot_dir, f"{pid}.{fformat}")
                     plot.write_image(
-                        plot_fn, format=fformat, width=plot.layout.width, height=plot.layout.height, scale=1
+                        plot_fn,
+                        format=fformat,
+                        width=plot.layout.width,
+                        height=plot.layout.height,
+                        scale=1,
                     )
 
             # Output the figure to a base64 encoded string
             if getattr(get_template_mod(), "base64_plots", True) is True:
                 img_buffer = io.BytesIO()
-                plot.write_image(img_buffer, format="png", width=plot.layout.width, height=plot.layout.height, scale=1)
+                plot.write_image(
+                    img_buffer,
+                    format="png",
+                    width=plot.layout.width,
+                    height=plot.layout.height,
+                    scale=1,
+                )
                 b64_img = base64.b64encode(img_buffer.getvalue()).decode("utf8")
                 img_buffer.close()
                 html += (
@@ -422,7 +431,11 @@ def _static_bargraph(
                 plot_relpath = Path(config.plots_dir_name) / "png" / f"{pid}.png"
                 plot_relpath.parent.mkdir(parents=True, exist_ok=True)
                 plot.write_image(
-                    plot_relpath, format="png", width=plot.layout.width, height=plot.layout.height, scale=1
+                    plot_relpath,
+                    format="png",
+                    width=900,
+                    height=plot.layout.height,
+                    scale=1,
                 )
                 html += f'<div class="mqc_mplplot" id="{pid}"{hide_div}><img src="{plot_relpath}" /></div>'
 
