@@ -136,6 +136,10 @@ $(function () {
   });
   $(".hc-plot-handle").on("mousedown", function (e) {
     var wrapper = $(this).parent();
+    var target = wrapper.children()[0].id;
+    // $("#" + plot_id).find(".svg-container").height();
+    // var plot_svg = $("#" + plot_id + " > .plot_container > .svg-container");
+    // find .svg-container which is an immediate child of wrapper
     var startHeight = wrapper.height();
     var pY = e.pageY;
     $(document).on("mouseup", function (e) {
@@ -147,7 +151,10 @@ $(function () {
       $(wrapper.parent().find(".hc-plot, .beeswarm-plot")).trigger("mqc_plotresize");
     });
     $(document).on("mousemove", function (me) {
-      wrapper.css("height", startHeight + (me.pageY - pY));
+      var newHeight = startHeight + (me.pageY - pY);
+      // container.css("height", newHeight);
+      wrapper.css("height", newHeight);
+      Plotly.relayout(target, { height: newHeight });
     });
   });
 

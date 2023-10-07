@@ -30,53 +30,7 @@ function plot_stacked_bar_graph(target, ds) {
   // while keeping the original data intact
   var data = JSON.parse(JSON.stringify(mqc_plots[target]["datasets"][ds]));
   var samples = JSON.parse(JSON.stringify(mqc_plots[target]["samples"][ds]));
-  var config = JSON.parse(JSON.stringify(mqc_plots[target]["config"]));
   var layout = JSON.parse(JSON.stringify(mqc_plots[target]["layout"]));
-
-  if (config["stacking"] === undefined) {
-    config["stacking"] = "normal";
-  }
-  if (config["stacking"] === "normal") {
-    config["groupPadding"] = "0.02";
-    config["pointPadding"] = "0.1";
-  } else {
-    config["groupPadding"] = "0.1";
-    config["pointPadding"] = 0;
-  }
-  if (config["ytype"] === undefined) {
-    config["ytype"] = "linear";
-  }
-  if (config["reversedStacks"] === undefined) {
-    config["reversedStacks"] = false;
-  }
-  if (config["use_legend"] === undefined) {
-    config["use_legend"] = true;
-  }
-  if (config["yDecimals"] === undefined) {
-    config["yDecimals"] = true;
-  }
-  if (config["click_func"] === undefined) {
-    config["click_func"] = function () {};
-  } else {
-    if (config["cursor"] === undefined) {
-      config["cursor"] = "pointer";
-    }
-  }
-  if (config["tt_percentages"] === undefined) {
-    config["tt_percentages"] = true;
-  }
-  if (config["borderWidth"] === undefined) {
-    config["borderWidth"] = 0;
-  }
-
-  if (config["ytype"] == "logarithmic") {
-    if (config["ymin"] == 0 || config["ymin"] == undefined) {
-      config["ymin"] = 1;
-    }
-    var minTickInt = "auto";
-  } else {
-    var minTickInt = undefined;
-  }
 
   // Rename samples
   if (window.mqc_rename_f_texts.length > 0) {
@@ -92,11 +46,13 @@ function plot_stacked_bar_graph(target, ds) {
     });
   }
 
+  var highlight_colors = [];
   // Highlight samples
   if (window.mqc_highlight_f_texts.length > 0) {
-    $.each(samples, function (j, s_name) {
+    $.each(samples, function (sample_idx, s_name) {
+      highlight_colors[sample_idx] = null;
       $.each(window.mqc_highlight_f_texts, function (idx, f_text) {
-        if (f_text == "") {
+        if (f_text === "") {
           return true;
         } // skip blanks
         if (
@@ -104,19 +60,10 @@ function plot_stacked_bar_graph(target, ds) {
           (!window.mqc_highlight_regex_mode && s_name.indexOf(f_text) > -1)
         ) {
           // Make the data point in each series with this index have a border colour
-          $.each(data, function (k, d) {
-            data[k]["data"][j] = {
-              y: data[k]["data"][j],
-              borderColor: window.mqc_highlight_f_cols[idx],
-            };
-          });
+          highlight_colors[sample_idx] = window.mqc_highlight_f_cols[idx];
         }
       });
     });
-    // Bump the borderWidth to make the highlights more obvious
-    if (config["borderWidth"] <= 2) {
-      config["borderWidth"] = 2;
-    }
   }
 
   // Hide samples
@@ -176,8 +123,12 @@ function plot_stacked_bar_graph(target, ds) {
       return false;
     }
   }
+  _replot(target, data, layout, samples, ds, highlight_colors);
+  // layout["autosize"] = true;
+}
 
-  // Make the plotly plot
+function _replot(target, data, layout, samples, dataset_idx, highlight_colors) {
+  // Render the plotly plot
   let series = [];
   for (let cat of data) {
     let trace = {
@@ -187,13 +138,15 @@ function plot_stacked_bar_graph(target, ds) {
       name: cat.name,
       orientation: "h",
       marker: {
-        color: cat.color,
-        line: { width: 0 },
+        line: {
+          color: highlight_colors,
+          width: highlight_colors.map((x) => (x ? 2 : 0)),
+        },
       },
+      marker_color: cat.color,
     };
     series.push(trace);
   }
-
-  mqc_plots[target].datasets[ds].series = series;
+  mqc_plots[target].datasets[dataset_idx].series = series;
   Plotly.newPlot(target, series, layout);
 }

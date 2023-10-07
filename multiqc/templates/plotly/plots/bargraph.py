@@ -62,7 +62,6 @@ def barplot_layout(settings: PlotSettings) -> go.Layout:
             x=0.5,
         ),
         barmode="stack",
-        # height=settings.height,
         autosize=True,
         annotations=[
             dict(
