@@ -87,22 +87,39 @@ you can write it as part of a custom plugin. The process is almost identical,
 though it keeps the code bases separate. For more information about this,
 see the docs about _MultiQC Plugins_ below.
 
-## MultiQC Lint Tests
+## Strict mode validation
 
 MultiQC has been developed to be as forgiving as possible and will handle lots of
-invalid or ignored code. This is useful most of the time but can be difficult when
-writing new MultiQC modules (especially during pull-request reviews).
+invalid or ignored code. Even if a module raised an unexpected exception, MultiQC
+will log that error, and continue running.
 
-To help with this, you can run with the `--lint` flag, which will give explicit
-warnings about anything that is not optimally configured. For example:
+This is useful most of the time, but can be difficult when writing new MultiQC
+modules (especially during pull-request reviews). To help with this, you can run
+MultiQC with the `--strict` flag. It will give explicit warnings about anything that
+is not optimally configured, and will also make MultiQC exit early if a module crashed.
+
+For example:
 
 ```bash
-multiqc --lint test_data
+multiqc --strict test_data
 ```
 
 Note that the automated MultiQC continuous integration testing runs in this mode,
 so you will need to pass all lint tests for those checks to pass. This is required
 for any pull-requests.
+
+You can alternatively enable the strict mode using an environment variable:
+
+```bash
+export MULTIQC_STRICT=true
+```
+
+Or set it in the [config](http://multiqc.info/docs/#configuring-multiqc):
+
+```yaml
+# In multiqc_config.yaml
+strict: True
+```
 
 ## Code formatting
 
