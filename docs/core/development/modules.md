@@ -39,7 +39,7 @@ Plots should be _recreated_ within MultiQC by parsing the raw data and generatin
 
 I almost never merge modules that include images into reports.
 If you really need images in your report, you can do this either via Custom Content or an unofficial plugin module.
-Feel free to discuss on Gitter if you think that your case is an exception. There have been one or two in the past.
+Feel free to discuss on the community forum if you think that your case is an exception. There have been one or two in the past.
 
 ### One at a time
 
