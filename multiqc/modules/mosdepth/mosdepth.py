@@ -128,7 +128,11 @@ class MultiqcModule(BaseMultiqcModule):
         for f in self.find_log_files("mosdepth/summary"):
             s_name = self.clean_s_name(f["fn"], f)
             for line in f["f"].splitlines():
-                if line.startswith("total\t"):
+                # The first column can be a contig name, "total", "total_region".
+                # We want to use "total_region" if available. It is available when
+                # --by is specified. It always goes after "total", so we can just
+                # assume it will override the information collected for "total":
+                if line.startswith("total\t") or line.startswith("total_region\t"):
                     contig, length, bases, mean, min_cov, max_cov = line.split("\t")
                     genstats[s_name]["mean_coverage"] = mean
                     self.add_data_source(f, s_name=s_name, section="summary")
