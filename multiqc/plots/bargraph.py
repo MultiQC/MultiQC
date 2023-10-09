@@ -208,6 +208,8 @@ def plot(data, cats=None, pconfig=None):
             report.num_mpl_plots += 1
             return matplotlib_bargraph(plotdata, plotsamples, pconfig)
         except Exception as e:
+            if config.strict:
+                raise
             logger.error("############### Error making MatPlotLib figure! Falling back to HighCharts.")
             logger.debug(e, exc_info=True)
             return highcharts_bargraph(plotdata, plotsamples, pconfig)
@@ -300,10 +302,8 @@ def highcharts_bargraph(plotdata, plotsamples=None, pconfig=None):
 
     # Plot HTML
     html += """<div class="hc-plot-wrapper"{height}>
-        <div id="{id}" class="hc-plot not_rendered hc-bar-plot">
-            <small>loading..</small></div>
-        </div>
-    </div>""".format(
+        <div id="{id}" class="hc-plot not_rendered hc-bar-plot"><small>loading..</small></div>
+    </div></div>""".format(
         id=pconfig["id"],
         height=f' style="height:{pconfig["height"]}px"' if "height" in pconfig else "",
     )

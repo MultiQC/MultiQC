@@ -39,7 +39,7 @@ Plots should be _recreated_ within MultiQC by parsing the raw data and generatin
 
 I almost never merge modules that include images into reports.
 If you really need images in your report, you can do this either via Custom Content or an unofficial plugin module.
-Feel free to discuss on Gitter if you think that your case is an exception. There have been one or two in the past.
+Feel free to discuss on the community forum if you think that your case is an exception. There have been one or two in the past.
 
 ### One at a time
 
@@ -87,16 +87,16 @@ you can write it as part of a custom plugin. The process is almost identical,
 though it keeps the code bases separate. For more information about this,
 see the docs about _MultiQC Plugins_ below.
 
-## MultiQC lint tests
+## Strict mode validation
 
 MultiQC has been developed to be as forgiving as possible and will handle lots of
 invalid or ignored code. Even if a module raised an unexpected exception, MultiQC
 will log that error, and continue running.
 
 This is useful most of the time, but can be difficult when writing new MultiQC
-modules (especially during pull-request reviews). To help with this, you can run with
-the `--strict` flag. It will give explicit warnings about anything that is not
-optimally configured, and will also cause MultiQC exit early if a module crashed.
+modules (especially during pull-request reviews). To help with this, you can run
+MultiQC with the `--strict` flag. It will give explicit warnings about anything that
+is not optimally configured, and will also make MultiQC exit early if a module crashed.
 
 For example:
 
@@ -112,6 +112,13 @@ You can alternatively enable the strict mode using an environment variable:
 
 ```bash
 export MULTIQC_STRICT=true
+```
+
+Or set it in the [config](http://multiqc.info/docs/#configuring-multiqc):
+
+```yaml
+# In multiqc_config.yaml
+strict: True
 ```
 
 ## Code formatting

@@ -237,11 +237,7 @@ click.rich_click.OPTION_GROUPS = {
     "--strict",
     "strict",
     is_flag=True,
-    help="Strict mode. MultiQC will stop whenever a module or a template raised an "
-    "unexpected exception. The module code will be additionally validated "
-    "(linted) to help code development, and any validation issues will be printed "
-    "to the console in the end of the run, and also cause MultiQC to exist with "
-    "a non-0 code",
+    help="Don't catch exceptions, run additional code checks to help development.",
 )
 @click.option("--lint", "lint", is_flag=True, hidden=True, help="DEPRECATED: use --strict instead")
 @click.option(
