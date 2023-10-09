@@ -57,13 +57,6 @@ def read_config():
     return cfg
 
 
-class MosdepthData:
-    xy_cov = dict()
-    perchrom_avg_data = defaultdict(dict)
-    abs_cov_dist_data = defaultdict(dict)
-    cum_cov_dist_data = defaultdict(dict)
-
-
 class MultiqcModule(BaseMultiqcModule):
     """
     Mosdepth can generate multiple outputs with a common prefix and different endings.
@@ -150,7 +143,7 @@ class MultiqcModule(BaseMultiqcModule):
 
         # Filter out any samples from --ignore-samples
         genstats = defaultdict(OrderedDict, self.ignore_samples(genstats))
-        samples_summary = set(genstats.keys())
+        samples_in_summary = set(genstats.keys())
 
         data_dicts_global = self.parse_cov_dist("global")
         data_dicts_region = self.parse_cov_dist("region")
@@ -159,7 +152,7 @@ class MultiqcModule(BaseMultiqcModule):
 
         samples_global = set.union(*(set(d.keys()) for d in data_dicts_global))
         samples_region = set.union(*(set(d.keys()) for d in data_dicts_region))
-        samples_found = samples_summary | samples_global | samples_region
+        samples_found = samples_in_summary | samples_global | samples_region
         if not samples_found:
             raise ModuleNoSamplesFound
         log.info(f"Found reports for {len(samples_found)} samples")
