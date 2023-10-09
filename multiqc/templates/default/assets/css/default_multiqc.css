@@ -974,3 +974,7 @@ tbody .sorthandle {
 .mqc_versions_table tbody:nth-child(even) {
   background-color: #f2f2f2;
 }
+
+g.annotation {
+  position: absolute !important;
+}

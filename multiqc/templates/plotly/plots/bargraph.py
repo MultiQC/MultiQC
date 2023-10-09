@@ -71,14 +71,23 @@ def barplot_layout(settings: PlotSettings) -> go.Layout:
                 text="Created with MultiQC",
                 font=dict(size=10, color="rgba(0,0,0,0.5)"),
                 xanchor="right",
-                yanchor="bottom",
-                x=1.07,
-                y=-0.35,
+                yanchor="top",
+                x=1.05,
+                y=1.05,
+                textangle=-90,
+                # yanchor="bottom",
+                # x=1.07,
+                # y=-0.35,
                 xref="paper",
                 yref="paper",
                 showarrow=False,
             )
         ],
+        modebar=dict(
+            bgcolor="rgba(0, 0, 0, 0)",
+            color="rgba(0, 0, 0, 0.5)",
+            activecolor="rgba(0, 0, 0, 1)",
+        ),
     )
 
 

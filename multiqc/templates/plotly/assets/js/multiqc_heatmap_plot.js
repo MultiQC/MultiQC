@@ -372,140 +372,140 @@ function plot_heatmap(plot, target, dataset_idx) {
     colstops.reverse();
   }
 
-  // Make the highcharts plot
-  Highcharts.chart(
-    target,
-    {
-      chart: {
-        type: "heatmap",
-        zoomType: "xy",
-        height: config["square"] ? 500 : undefined,
-        width: config["square"] ? 530 : undefined,
-        marginTop: config["title"] ? 60 : 50,
-      },
-      plotOptions: {
-        series: {
-          states: {
-            hover: {
-              borderWidth: 2,
-              borderColor: "red",
-            },
-          },
-        },
-      },
-      title: {
-        text: config["title"],
-      },
-      xAxis: {
-        endOnTick: false,
-        maxPadding: 0,
-        categories: xcats,
-        title: { enabled: true, text: config["xTitle"] },
-        labels: {
-          formatter: function () {
-            try {
-              return this.value.substr(0, 20);
-            } catch (err) {
-              return this.value;
-            }
-          },
-        },
-      },
-      yAxis: {
-        endOnTick: false,
-        maxPadding: 0,
-        categories: ycats,
-        reversed: true,
-        opposite: true,
-        title: config["yTitle"],
-        labels: {
-          formatter: function () {
-            try {
-              return this.value.substr(0, 20);
-            } catch (err) {
-              return this.value;
-            }
-          },
-        },
-      },
-      colorAxis: {
-        reversed: config["reverseColors"],
-        stops: colstops,
-        min: config["min"],
-        max: config["max"],
-      },
-      legend: {
-        align: "right",
-        layout: "vertical",
-        margin: 0,
-        verticalAlign: "top",
-        y: 25,
-        symbolHeight: 280,
-        enabled: config["legend"],
-      },
-      tooltip: {
-        useHTML: true,
-        formatter: function () {
-          return (
-            'X: <span style="font-weight:bold; font-family:monospace;">' +
-            this.series.xAxis.categories[this.point.x] +
-            "</span><br>" +
-            'Y: <span style="font-weight:bold; font-family:monospace;">' +
-            this.series.yAxis.categories[this.point.y] +
-            "</span><br>" +
-            '<div style="background-color:' +
-            this.point.color +
-            '; display:inline-block; height: 10px; width: 10px; border:1px solid #333;"></div> ' +
-            '<span style="font-weight: bold; text-decoration:underline;">' +
-            Highcharts.numberFormat(this.point.value, config["decimalPlaces"]) +
-            "</span>"
-          );
-        },
-      },
-      series: [
-        {
-          turboThreshold: 0,
-          borderWidth: config["borderWidth"],
-          data: data,
-          dataLabels: {
-            enabled: datalabels,
-            format: "{point.value:." + config["decimalPlaces"] + "f}",
-            color: config["datalabel_colour"],
-          },
-        },
-      ],
-    },
-    function (this_chart) {
-      // Maintain aspect ratio as chart size changes
-      if (config["square"]) {
-        var resizeCh = function (chart) {
-          // Extra width for legend
-          var lWidth = chart.options.legend.enabled ? 30 : 0;
-          // Work out new chart width, assuming needs to be narrower
-          var chHeight = $(chart.renderTo).height();
-          var chWidth = $(chart.renderTo).width();
-          var nChHeight = chHeight;
-          var nChWidth = chHeight + lWidth;
-          // Chart is already too narrow, make it less tall
-          if (chWidth < nChWidth) {
-            nChHeight = chWidth - lWidth;
-            nChWidth = chWidth;
-          }
-          chart.setSize(nChWidth, nChHeight);
-        };
-        // Resize on load
-        resizeCh(this_chart);
-        // Resize on graph resize
-        $(this_chart.renderTo).on("mqc_plotresize", function (e) {
-          try {
-            resizeCh(this_chart);
-          } catch (e) {
-            plot_heatmap($(this).attr("id"));
-          }
-        });
-      }
-    },
-  );
+  // // Make the highcharts plot
+  // Highcharts.chart(
+  //   target,
+  //   {
+  //     chart: {
+  //       type: "heatmap",
+  //       zoomType: "xy",
+  //       height: config["square"] ? 500 : undefined,
+  //       width: config["square"] ? 530 : undefined,
+  //       marginTop: config["title"] ? 60 : 50,
+  //     },
+  //     plotOptions: {
+  //       series: {
+  //         states: {
+  //           hover: {
+  //             borderWidth: 2,
+  //             borderColor: "red",
+  //           },
+  //         },
+  //       },
+  //     },
+  //     title: {
+  //       text: config["title"],
+  //     },
+  //     xAxis: {
+  //       endOnTick: false,
+  //       maxPadding: 0,
+  //       categories: xcats,
+  //       title: { enabled: true, text: config["xTitle"] },
+  //       labels: {
+  //         formatter: function () {
+  //           try {
+  //             return this.value.substr(0, 20);
+  //           } catch (err) {
+  //             return this.value;
+  //           }
+  //         },
+  //       },
+  //     },
+  //     yAxis: {
+  //       endOnTick: false,
+  //       maxPadding: 0,
+  //       categories: ycats,
+  //       reversed: true,
+  //       opposite: true,
+  //       title: config["yTitle"],
+  //       labels: {
+  //         formatter: function () {
+  //           try {
+  //             return this.value.substr(0, 20);
+  //           } catch (err) {
+  //             return this.value;
+  //           }
+  //         },
+  //       },
+  //     },
+  //     colorAxis: {
+  //       reversed: config["reverseColors"],
+  //       stops: colstops,
+  //       min: config["min"],
+  //       max: config["max"],
+  //     },
+  //     legend: {
+  //       align: "right",
+  //       layout: "vertical",
+  //       margin: 0,
+  //       verticalAlign: "top",
+  //       y: 25,
+  //       symbolHeight: 280,
+  //       enabled: config["legend"],
+  //     },
+  //     tooltip: {
+  //       useHTML: true,
+  //       formatter: function () {
+  //         return (
+  //           'X: <span style="font-weight:bold; font-family:monospace;">' +
+  //           this.series.xAxis.categories[this.point.x] +
+  //           "</span><br>" +
+  //           'Y: <span style="font-weight:bold; font-family:monospace;">' +
+  //           this.series.yAxis.categories[this.point.y] +
+  //           "</span><br>" +
+  //           '<div style="background-color:' +
+  //           this.point.color +
+  //           '; display:inline-block; height: 10px; width: 10px; border:1px solid #333;"></div> ' +
+  //           '<span style="font-weight: bold; text-decoration:underline;">' +
+  //           Highcharts.numberFormat(this.point.value, config["decimalPlaces"]) +
+  //           "</span>"
+  //         );
+  //       },
+  //     },
+  //     series: [
+  //       {
+  //         turboThreshold: 0,
+  //         borderWidth: config["borderWidth"],
+  //         data: data,
+  //         dataLabels: {
+  //           enabled: datalabels,
+  //           format: "{point.value:." + config["decimalPlaces"] + "f}",
+  //           color: config["datalabel_colour"],
+  //         },
+  //       },
+  //     ],
+  //   },
+  //   function (this_chart) {
+  //     // Maintain aspect ratio as chart size changes
+  //     if (config["square"]) {
+  //       var resizeCh = function (chart) {
+  //         // Extra width for legend
+  //         var lWidth = chart.options.legend.enabled ? 30 : 0;
+  //         // Work out new chart width, assuming needs to be narrower
+  //         var chHeight = $(chart.renderTo).height();
+  //         var chWidth = $(chart.renderTo).width();
+  //         var nChHeight = chHeight;
+  //         var nChWidth = chHeight + lWidth;
+  //         // Chart is already too narrow, make it less tall
+  //         if (chWidth < nChWidth) {
+  //           nChHeight = chWidth - lWidth;
+  //           nChWidth = chWidth;
+  //         }
+  //         chart.setSize(nChWidth, nChHeight);
+  //       };
+  //       // Resize on load
+  //       resizeCh(this_chart);
+  //       // Resize on graph resize
+  //       $(this_chart.renderTo).on("mqc_plotresize", function (e) {
+  //         try {
+  //           resizeCh(this_chart);
+  //         } catch (e) {
+  //           plot_heatmap($(this).attr("id"));
+  //         }
+  //       });
+  //     }
+  //   },
+  // );
 
   // Listeners for range slider
   $(".mqc_hcplot_range_sliders input").on("keyup change input", function () {

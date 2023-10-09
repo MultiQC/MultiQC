@@ -210,137 +210,137 @@ function plot_beeswarm_graph(target, dataset_idx) {
       });
     }
 
-    $('<div class="beeswarm-plot" />')
-      .appendTo("#" + target + " .beeswarm-plots")
-      .css({
-        "border-left": "2px solid " + borderCol,
-        height: 100 / categories.length + "%",
-      })
-      .highcharts({
-        chart: {
-          type: "scatter",
-          spacingTop: 0,
-          marginBottom: 0,
-          marginRight: 20,
-          marginLeft: 180,
-          backgroundColor: "transparent",
-          // Horrible hacky HighCharts reflow problem.
-          // TODO: Come back and find a better solution!
-          events: {
-            load: function (chart) {
-              setTimeout(function () {
-                chart.target.reflow();
-              }, 200);
-            },
-          },
-        },
-        title: {
-          text: label,
-          align: "left",
-          verticalAlign: "middle",
-          y: 10,
-          useHTML: true,
-          style: {
-            fontSize: "12px",
-          },
-        },
-        yAxis: {
-          title: { text: null },
-          max: 1,
-          min: -1,
-          gridLineWidth: 0,
-          title: { text: null },
-          labels: { enabled: false },
-          lineWidth: 0,
-        },
-        xAxis: {
-          lineWidth: 0,
-          tickWidth: 0,
-          tickPixelInterval: 200,
-          labels: {
-            reserveSpace: false,
-            y: -1 * (pheight / 2) + 5,
-            zIndex: 1,
-            style: {
-              color: "#999999",
-            },
-          },
-          min: minx,
-          max: maxx,
-        },
-        tooltip: {
-          valueSuffix: ttSuffix,
-          valueDecimals: decimalPlaces,
-          formatter: function () {
-            var value = Highcharts.numberFormat(this.point.x, this.series.tooltipOptions.valueDecimals);
-            var suff = this.series.tooltipOptions.valueSuffix;
-            var ttstring =
-              '<span style="float:right;">' +
-              this.series.name +
-              "</span><samp>" +
-              this.point.name +
-              "</samp>: &nbsp; <strong>" +
-              value +
-              " " +
-              suff +
-              "</strong>";
-            $("#" + target + " .beeswarm-hovertext").html(ttstring);
-            return false;
-          },
-        },
-        plotOptions: {
-          series: {
-            name: label_long,
-            turboThreshold: 0,
-            marker: {
-              radius: markerRadius,
-              states: {
-                hover: {
-                  radiusPlus: 4,
-                  lineWidthPlus: 2,
-                  lineColor: "#333333",
-                },
-              },
-            },
-            stickyTracking: false,
-            point: {
-              events: {
-                mouseOver: function (e) {
-                  var hovName = this.name;
-                  $("#" + target + " .beeswarm-plot").each(function () {
-                    var plot = $(this).highcharts();
-                    for (i = 0; i < plot.series[0].data.length; ++i) {
-                      if (plot.series[0].data[i].name == hovName) {
-                        plot.series[0].data[i].setState("hover");
-                      }
-                    }
-                  });
-                },
-                mouseOut: function () {
-                  $("#" + target + " .beeswarm-plot").each(function () {
-                    var plot = $(this).highcharts();
-                    for (i = 0; i < plot.series[0].data.length; ++i) {
-                      plot.series[0].data[i].setState();
-                    }
-                  });
-                  $("#" + target + " .beeswarm-hovertext").html(
-                    '<em class="placeholder">Hover over a data point for more information</em>',
-                  );
-                },
-              },
-            },
-          },
-        },
-        legend: { enabled: false },
-        credits: { enabled: false },
-        exporting: { enabled: false },
-        series: [
-          {
-            data: xydata,
-            // Workaround for HighCharts bug. See https://github.com/highcharts/highcharts/issues/1440
-            marker: { states: { hover: { fillColor: {} } } },
-          },
-        ],
-      });
+    //   $('<div class="beeswarm-plot" />')
+    //     .appendTo("#" + target + " .beeswarm-plots")
+    //     .css({
+    //       "border-left": "2px solid " + borderCol,
+    //       height: 100 / categories.length + "%",
+    //     })
+    //     .highcharts({
+    //       chart: {
+    //         type: "scatter",
+    //         spacingTop: 0,
+    //         marginBottom: 0,
+    //         marginRight: 20,
+    //         marginLeft: 180,
+    //         backgroundColor: "transparent",
+    //         // Horrible hacky HighCharts reflow problem.
+    //         // TODO: Come back and find a better solution!
+    //         events: {
+    //           load: function (chart) {
+    //             setTimeout(function () {
+    //               chart.target.reflow();
+    //             }, 200);
+    //           },
+    //         },
+    //       },
+    //       title: {
+    //         text: label,
+    //         align: "left",
+    //         verticalAlign: "middle",
+    //         y: 10,
+    //         useHTML: true,
+    //         style: {
+    //           fontSize: "12px",
+    //         },
+    //       },
+    //       yAxis: {
+    //         title: { text: null },
+    //         max: 1,
+    //         min: -1,
+    //         gridLineWidth: 0,
+    //         title: { text: null },
+    //         labels: { enabled: false },
+    //         lineWidth: 0,
+    //       },
+    //       xAxis: {
+    //         lineWidth: 0,
+    //         tickWidth: 0,
+    //         tickPixelInterval: 200,
+    //         labels: {
+    //           reserveSpace: false,
+    //           y: -1 * (pheight / 2) + 5,
+    //           zIndex: 1,
+    //           style: {
+    //             color: "#999999",
+    //           },
+    //         },
+    //         min: minx,
+    //         max: maxx,
+    //       },
+    //       tooltip: {
+    //         valueSuffix: ttSuffix,
+    //         valueDecimals: decimalPlaces,
+    //         formatter: function () {
+    //           var value = Highcharts.numberFormat(this.point.x, this.series.tooltipOptions.valueDecimals);
+    //           var suff = this.series.tooltipOptions.valueSuffix;
+    //           var ttstring =
+    //             '<span style="float:right;">' +
+    //             this.series.name +
+    //             "</span><samp>" +
+    //             this.point.name +
+    //             "</samp>: &nbsp; <strong>" +
+    //             value +
+    //             " " +
+    //             suff +
+    //             "</strong>";
+    //           $("#" + target + " .beeswarm-hovertext").html(ttstring);
+    //           return false;
+    //         },
+    //       },
+    //       plotOptions: {
+    //         series: {
+    //           name: label_long,
+    //           turboThreshold: 0,
+    //           marker: {
+    //             radius: markerRadius,
+    //             states: {
+    //               hover: {
+    //                 radiusPlus: 4,
+    //                 lineWidthPlus: 2,
+    //                 lineColor: "#333333",
+    //               },
+    //             },
+    //           },
+    //           stickyTracking: false,
+    //           point: {
+    //             events: {
+    //               mouseOver: function (e) {
+    //                 var hovName = this.name;
+    //                 $("#" + target + " .beeswarm-plot").each(function () {
+    //                   var plot = $(this).highcharts();
+    //                   for (i = 0; i < plot.series[0].data.length; ++i) {
+    //                     if (plot.series[0].data[i].name == hovName) {
+    //                       plot.series[0].data[i].setState("hover");
+    //                     }
+    //                   }
+    //                 });
+    //               },
+    //               mouseOut: function () {
+    //                 $("#" + target + " .beeswarm-plot").each(function () {
+    //                   var plot = $(this).highcharts();
+    //                   for (i = 0; i < plot.series[0].data.length; ++i) {
+    //                     plot.series[0].data[i].setState();
+    //                   }
+    //                 });
+    //                 $("#" + target + " .beeswarm-hovertext").html(
+    //                   '<em class="placeholder">Hover over a data point for more information</em>',
+    //                 );
+    //               },
+    //             },
+    //           },
+    //         },
+    //       },
+    //       legend: { enabled: false },
+    //       credits: { enabled: false },
+    //       exporting: { enabled: false },
+    //       series: [
+    //         {
+    //           data: xydata,
+    //           // Workaround for HighCharts bug. See https://github.com/highcharts/highcharts/issues/1440
+    //           marker: { states: { hover: { fillColor: {} } } },
+    //         },
+    //       ],
+    //     });
   }
 }

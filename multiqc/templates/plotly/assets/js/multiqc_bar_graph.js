@@ -9,16 +9,16 @@ function plot_stacked_bar_graph(plot, target, dataset_idx) {
 
   // Make a clone of everything, so that we can mess with it,
   // while keeping the original data intact
-  var data = JSON.parse(JSON.stringify(plot["datasets"][dataset_idx]));
-  var samples = JSON.parse(JSON.stringify(plot["samples"][dataset_idx]));
-  var layout = JSON.parse(JSON.stringify(plot["layout"]));
+  let data = JSON.parse(JSON.stringify(plot["datasets"][dataset_idx]));
+  let samples = JSON.parse(JSON.stringify(plot["samples"][dataset_idx]));
+  let layout = JSON.parse(JSON.stringify(plot["layout"]));
 
   // Rename samples
   if (window.mqc_rename_f_texts.length > 0) {
     $.each(samples, function (j, s_name) {
       $.each(window.mqc_rename_f_texts, function (idx, f_text) {
         if (window.mqc_rename_regex_mode) {
-          var re = new RegExp(f_text, "g");
+          const re = new RegExp(f_text, "g");
           samples[j] = samples[j].replace(re, window.mqc_rename_t_texts[idx]);
         } else {
           samples[j] = samples[j].replace(f_text, window.mqc_rename_t_texts[idx]);
@@ -27,8 +27,8 @@ function plot_stacked_bar_graph(plot, target, dataset_idx) {
     });
   }
 
-  var highlight_colors = [];
   // Highlight samples
+  let highlight_colors = [];
   if (window.mqc_highlight_f_texts.length > 0) {
     $.each(samples, function (sample_idx, s_name) {
       highlight_colors[sample_idx] = null;
@@ -48,23 +48,18 @@ function plot_stacked_bar_graph(plot, target, dataset_idx) {
   }
 
   // Hide samples
-  $("#" + target)
-    .closest(".mqc_hcplot_plotgroup")
-    .parent()
-    .find(".samples-hidden-warning")
-    .remove();
-  $("#" + target)
-    .closest(".mqc_hcplot_plotgroup")
-    .show();
+  let plot_group_div = $("#" + target).closest(".mqc_hcplot_plotgroup");
+  plot_group_div.parent().find(".samples-hidden-warning").remove();
+  plot_group_div.show();
   if (window.mqc_hide_f_texts.length > 0) {
-    var num_hidden = 0;
-    var num_total = samples.length;
-    var j = samples.length;
+    let num_hidden = 0;
+    let num_total = samples.length;
+    let j = samples.length;
     while (j--) {
-      var s_name = samples[j];
-      var match = false;
-      for (i = 0; i < window.mqc_hide_f_texts.length; i++) {
-        var f_text = window.mqc_hide_f_texts[i];
+      let s_name = samples[j];
+      let match = false;
+      for (let i = 0; i < window.mqc_hide_f_texts.length; i++) {
+        const f_text = window.mqc_hide_f_texts[i];
         if (window.mqc_hide_regex_mode) {
           if (s_name.match(f_text)) {
             match = true;
@@ -75,7 +70,7 @@ function plot_stacked_bar_graph(plot, target, dataset_idx) {
           }
         }
       }
-      if (window.mqc_hide_mode == "show") {
+      if (window.mqc_hide_mode === "show") {
         match = !match;
       }
       if (match) {
@@ -88,22 +83,19 @@ function plot_stacked_bar_graph(plot, target, dataset_idx) {
     }
     // Some series hidden. Show a warning text string.
     if (num_hidden > 0) {
-      var alert =
+      const alert =
         '<div class="samples-hidden-warning alert alert-warning"><span class="glyphicon glyphicon-info-sign"></span> <strong>Warning:</strong> ' +
         num_hidden +
         ' samples hidden. <a href="#mqc_hidesamples" class="alert-link" onclick="mqc_toolbox_openclose(\'#mqc_hidesamples\', true); return false;">See toolbox.</a></div>';
-      $("#" + target)
-        .closest(".mqc_hcplot_plotgroup")
-        .before(alert);
+      plot_group_div.before(alert);
     }
     // All series hidden. Hide the graph.
-    if (num_hidden == num_total) {
-      $("#" + target)
-        .closest(".mqc_hcplot_plotgroup")
-        .hide();
+    if (num_hidden === num_total) {
+      plot_group_div.hide();
       return false;
     }
   }
+
   // Render the plotly plot
   let series = [];
   for (let cat of data) {
@@ -124,5 +116,18 @@ function plot_stacked_bar_graph(plot, target, dataset_idx) {
     series.push(trace);
   }
   plot.datasets[dataset_idx].series = series;
-  Plotly.newPlot(target, series, layout);
+  Plotly.newPlot(target, series, layout, {
+    displayModeBar: true,
+    displaylogo: false,
+    modeBarButtonsToRemove: [
+      "lasso2d",
+      "autoScale2d",
+      "pan2d",
+      "select2d",
+      "zoom2d",
+      "zoomIn2d",
+      "zoomOut2d",
+      "resetScale2d",
+    ],
+  });
 }
