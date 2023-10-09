@@ -338,11 +338,9 @@ $(function () {
       }
     });
 
-    function data_url_to_blob(data_url) {
+    function data_url_to_blob(data_url, mime) {
       // Split the data URL at the comma
-      const parts = data_url.split(",");
-      const mime = parts[0].match(/:(.*?);/)[1];
-      const byte_str = atob(parts[1]);
+      const byte_str = atob(data_url.split(",")[1]);
       const byte_numbers = new Array(byte_str.length);
       for (let i = 0; i < byte_str.length; i++) {
         byte_numbers[i] = byte_str.charCodeAt(i);
@@ -356,35 +354,40 @@ $(function () {
       e.preventDefault();
       let checked_plots = $("#mqc_export_selectplots input:checked");
       let zip = new JSZip();
-      let skipped_plots = 0;
       let promises = [];
+      //////
       ////// EXPORT PLOT IMAGES
       //////
       if ($("#mqc_image_download").is(":visible")) {
-        let format = $("#mqc_export_ft").val().replace("image/", "");
+        let mime = $("#mqc_export_ft").val();
+        let format = mime.replace("image/", "").split("+")[0];
         const f_scale = parseInt($("#mqc_export_scaling").val());
         const f_width = parseInt($("#mqc_exp_width").val()) * f_scale;
         const f_height = parseInt($("#mqc_exp_height").val()) * f_scale;
         checked_plots.each(function () {
-          let target = $(this).val();
-          promises.push(
-            Plotly.toImage(target, {
+          const target = $(this).val();
+          if (checked_plots.length <= zip_threshold) {
+            // Not many plots to export, just trigger a download for each:"
+            Plotly.Snapshot.downloadImage(target, {
               format: format,
               width: f_width,
               height: f_height,
-            }).then(function (data_url) {
-              const fname = target + "." + format;
-              if (checked_plots.length <= zip_threshold) {
-                // Not many plots to export, just trigger a download for each
-                let blob = data_url_to_blob(data_url);
-                saveAs(blob, fname);
-              } else {
-                let idx = data_url.indexOf("base64,") + "base64,".length;
-                let content = data_url.substring(idx);
-                zip.file(fname, content, { base64: true });
-              }
-            }),
-          );
+              filename: target,
+            });
+          } else {
+            // Lots of plots - add to a zip file for download:
+            promises.push(
+              Plotly.toImage(target, {
+                format: format,
+                width: f_width,
+                height: f_height,
+                imageDataOnly: true, // Otherwise will return a Data URL
+              }).then(function (content) {
+                const fname = target + "." + format;
+                zip.file(fname, content, { base64: format !== "svg" });
+              }),
+            );
+          }
         });
         if (checked_plots.length > zip_threshold) {
           // Wait for all promises to resolve
@@ -395,74 +398,76 @@ $(function () {
           });
         }
       }
+      //////
       ////// EXPORT PLOT DATA
       //////
       else if ($("#mqc_data_download").is(":visible")) {
+        const format = $("#mqc_export_data_ft").val();
+        console.log("Exporting data in " + format + " format");
+        const sep = format === "tsv" ? "\t" : ",";
+        let skipped_plots = 0;
         checked_plots.each(function () {
           try {
-            var target = $(this).val();
-            var ft = $("#mqc_export_data_ft").val();
-            var fname = target + "." + ft;
-            var sep = ft == "tsv" ? "\t" : ",";
+            const target = $(this).val();
+            const fname = target + "." + format;
             // Custom plot not in mqc_plots
             if (mqc_plots[target] === undefined) {
-              if ($("#" + target).hasClass("has-custom-export")) {
-                $("#" + target).trigger("mqc_plotexport_data", { target: target, ft: ft, fname: fname, sep: sep });
+              const plot_div = $("#" + target);
+              if (plot_div.hasClass("has-custom-export")) {
+                plot_div.trigger("mqc_plotexport_data", { target: target, ft: format, fname: fname, sep: sep });
               } else {
                 skipped_plots += 1;
               }
             }
             // If JSON then just dump everything
-            else if (ft === "json") {
-              json_str = JSON.stringify(mqc_plots[target], null, 2);
-              var blob = new Blob([json_str], { type: "text/plain;charset=utf-8" });
+            else if (format === "json") {
+              const json_str = JSON.stringify(mqc_plots[target], null, 2);
+              const blob = new Blob([json_str], { type: "text/plain;charset=utf-8" });
               if (checked_plots.length <= zip_threshold) {
                 // Not many plots to export, just trigger a download for each
                 saveAs(blob, fname);
               } else {
-                // Lots of plots - generate a zip file for download.
-                // Add to a zip archive
+                // Lots of plots - add to a zip file for download
                 zip.file(fname, blob);
               }
             }
             // Beeswarm plots must be done manually
             else if (mqc_plots[target]["plot_type"] === "beeswarm") {
               // Header line
-              datastring = "Sample";
-              for (var j = 0; j < mqc_plots[target]["categories"].length; j++) {
-                datastring += sep + mqc_plots[target]["categories"][j]["description"];
+              let data_str = "Sample";
+              for (let j = 0; j < mqc_plots[target]["categories"].length; j++) {
+                data_str += sep + mqc_plots[target]["categories"][j]["description"];
               }
-              datastring += "\n";
+              data_str += "\n";
               // This assumes that the same samples are in all rows
               // TODO: Check and throw error if this isn't the case
-              var rows = Array();
-              for (var j = 0; j < mqc_plots[target]["samples"][0].length; j++) {
+              let rows = Array();
+              for (let j = 0; j < mqc_plots[target]["samples"][0].length; j++) {
                 rows[j] = Array(mqc_plots[target]["samples"][0][j]);
               }
-              for (var j = 0; j < mqc_plots[target]["datasets"].length; j++) {
-                for (var k = 0; k < mqc_plots[target]["datasets"][j].length; k++) {
+              for (let j = 0; j < mqc_plots[target]["datasets"].length; j++) {
+                for (let k = 0; k < mqc_plots[target]["datasets"][j].length; k++) {
                   rows[k].push(mqc_plots[target]["datasets"][j][k]);
                 }
               }
-              for (var j = 0; j < rows.length; j++) {
-                datastring += rows[j].join(sep) + "\n";
+              for (let j = 0; j < rows.length; j++) {
+                data_str += rows[j].join(sep) + "\n";
               }
-              var blob = new Blob([datastring], { type: "text/plain;charset=utf-8" });
+              let blob = new Blob([data_str], { type: "text/plain;charset=utf-8" });
               if (checked_plots.length <= zip_threshold) {
                 // Not many plots to export, just trigger a download for each
                 saveAs(blob, fname);
               } else {
-                // Lots of plots - generate a zip file for download.
-                // Add to a zip archive
+                // Lots of plots - add to a zip file for download
                 zip.file(fname, blob);
               }
             }
             // Normal plot - use HighCharts plugin to get the data from the plot
-            else if (ft == "tsv" || ft == "csv") {
+            else if (format === "tsv" || format === "csv") {
               var hc = $("#" + target).highcharts();
               if (hc !== undefined) {
                 hc.update({ exporting: { csv: { itemDelimiter: sep } } });
-                var blob = new Blob([hc.getCSV()], { type: "text/plain;charset=utf-8" });
+                const blob = new Blob([hc.getCSV()], { type: "text/plain;charset=utf-8" });
                 if (checked_plots.length <= zip_threshold) {
                   // Not many plots to export, just trigger a download for each
                   saveAs(blob, fname);
