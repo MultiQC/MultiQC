@@ -185,9 +185,9 @@ class BenchSummary:
         }
 
         self.add_section(
-            name="Truvari bench",
+            name="Statistics",
             anchor="truvari-bench",
-            description="Concordance statistics parsed from the output from <code>truvari bench</code>.",
+            description="Concordance statistics parsed from the output from `truvari bench`.",
             plot=table.plot(data, keys, {"id": "truvari-bench-summary"}),
         )
         # Generate color scale to label samples. The "plot_defaults"
@@ -218,7 +218,7 @@ class BenchSummary:
             "tt_label": "Precision: {point.x:>4.1f}%<br/> Recall: {point.y:>6.1f}%",
         }
         self.add_section(
-            name="Truvari bench: precision vs. recall",
+            name="Precision vs. recall",
             anchor="truvari-bench-pre-rec",
             description="Precision vs. recall for each sample. Parsed from the <code>truvari bench</code> output.",
             plot=scatter.plot(scatter_data, scatter_config),
