@@ -3,6 +3,7 @@
 import json
 import logging
 import os
+import re
 from collections import OrderedDict
 
 from multiqc.plots import bargraph, scatter, table
@@ -10,6 +11,8 @@ from multiqc.utils.mqc_colour import mqc_colour_scale
 
 # Initialise the logger
 log = logging.getLogger(__name__)
+
+VERSION_REGEX = r"(\d+\.\d+\.[\d\.\-\w]+)"
 
 
 class BenchSummary:
@@ -31,8 +34,15 @@ class BenchSummary:
                     if line.startswith("}"):
                         collect_stats = False
 
-                if "Truvari version:" in line:
-                    version = line.strip().split(":")[-1]
+                # Get version from log
+                # Log lines look like:
+                #   2022-12-01 18:25:54,715 [INFO] Truvari v4.0.0.dev0+detached
+                # or
+                #   2022-08-25 00:31:16,781 [INFO] Truvari version: 3.5.0-dev
+                if "Truvari" in line:
+                    match = re.search(VERSION_REGEX, line)
+                    if match:
+                        version = match.group(1)
 
             if stats:
                 # Use output directory as sample name
