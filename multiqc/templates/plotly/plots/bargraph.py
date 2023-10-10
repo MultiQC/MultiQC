@@ -50,7 +50,6 @@ class Plot(AbstractPlot):
                 showgrid=False,
                 categoryorder="category descending",
                 automargin=True,
-                tickformat=".2%",
             ),
             xaxis=dict(
                 title=dict(text=self.ylab),
@@ -174,7 +173,7 @@ class Plot(AbstractPlot):
                         if sum_for_cat == 0:
                             values[key] = 0
                         else:
-                            values[key] = (float(var + 0.0) / float(sum_for_cat)) * 100
+                            values[key] = float(var + 0.0) / float(sum_for_cat)
                     d["data_pct"] = values
 
         if config.plots_force_flat:
@@ -364,6 +363,7 @@ class Plot(AbstractPlot):
                     "active",
                     "suffix",
                     "label",
+                    "xaxis_tickformat",
                 ],
             )
             views = [
@@ -372,6 +372,7 @@ class Plot(AbstractPlot):
                     active=not self.p_active,
                     suffix="",
                     label=self.c_label,
+                    xaxis_tickformat="",
                 ),
             ]
             if self.add_pct_tab:
@@ -388,6 +389,7 @@ class Plot(AbstractPlot):
                         active=self.p_active,
                         suffix="_pc",
                         label=self.p_label,
+                        xaxis_tickformat=".0%",
                     )
                 )
             if self.add_log_tab:
@@ -404,15 +406,18 @@ class Plot(AbstractPlot):
                         active=False,
                         suffix="_log",
                         label=self.l_label,
+                        xaxis_tickformat="",
                     )
                 )
 
             for view in views:
-                plot = self._figure(
+                fig = self._figure(
                     self._layout(),
                     data_by_cat=view.values_by_cat,
                     sample_names=samples_lists[pidx],
                 )
+                if view.xaxis_tickformat:
+                    fig.update_layout({"xaxis": {"tickformat": view.xaxis_tickformat}})
 
                 # Should this plot be hidden on report load?
                 hide_div = ""
@@ -430,22 +435,22 @@ class Plot(AbstractPlot):
                             os.makedirs(plot_dir)
                         # Save the plot
                         plot_fn = os.path.join(plot_dir, f"{pid}.{fformat}")
-                        plot.write_image(
+                        fig.write_image(
                             plot_fn,
                             format=fformat,
-                            width=plot.layout.width,
-                            height=plot.layout.height,
+                            width=fig.layout.width,
+                            height=fig.layout.height,
                             scale=1,
                         )
 
                 # Output the figure to a base64 encoded string
                 if getattr(get_template_mod(), "base64_plots", True) is True:
                     img_buffer = io.BytesIO()
-                    plot.write_image(
+                    fig.write_image(
                         img_buffer,
                         format="png",
-                        width=plot.layout.width,
-                        height=plot.layout.height,
+                        width=fig.layout.width,
+                        height=fig.layout.height,
                         scale=1,
                     )
                     b64_img = base64.b64encode(img_buffer.getvalue()).decode("utf8")
@@ -456,11 +461,11 @@ class Plot(AbstractPlot):
                 else:
                     plot_relpath = Path(config.plots_dir_name) / "png" / f"{pid}.png"
                     plot_relpath.parent.mkdir(parents=True, exist_ok=True)
-                    plot.write_image(
+                    fig.write_image(
                         plot_relpath,
                         format="png",
                         width=900,
-                        height=plot.layout.height,
+                        height=fig.layout.height,
                         scale=1,
                     )
                     html += f'<div class="mqc_mplplot" id="{pid}"{hide_div}><img src="{plot_relpath}" /></div>'

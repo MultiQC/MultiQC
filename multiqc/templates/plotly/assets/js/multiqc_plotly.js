@@ -83,6 +83,7 @@ $(function () {
       x.push(mqc_plots[target].p_active ? cat.data_pct : cat.data);
     }
     Plotly.restyle(target, "x", x);
+    Plotly.relayout(target, "xaxis.tickformat", mqc_plots[target].p_active ? ".0%" : "");
   });
 
   $("button.switch_log10").click(function (e) {
