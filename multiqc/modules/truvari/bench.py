@@ -260,7 +260,7 @@ class BenchSummary:
         ]
 
         bar_config = {
-            "id": "truvari-bench-classifications",
+            "id": "truvari-bench-classifications-plot",
             "title": "Truvari: Classifications",
             "ylab": "Number of calls",
             "tt_suffix": " calls",
