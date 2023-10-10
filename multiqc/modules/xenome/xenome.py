@@ -71,6 +71,10 @@ class MultiqcModule(BaseMultiqcModule):
             self.add_data_source(f, s_name)
             self.xenome_data[s_name] = parsed_data
 
+            # Superfluous function call to confirm that it is used in this module
+            # Replace None with actual version if it is available
+            self.add_software_version(None, s_name)
+
     def xenome_general_stats_table(self):
         """Take the parsed stats from the Xenome log and add it to the
         basic stats table at the top of the report"""
