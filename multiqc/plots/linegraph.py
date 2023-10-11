@@ -337,6 +337,7 @@ def matplotlib_linegraph(plotdata, pconfig=None):
     """
     if pconfig is None:
         pconfig = {}
+
     # Plot group ID
     if pconfig.get("id") is None:
         pconfig["id"] = "mqc_mplplot_" + "".join(random.sample(letters, 10))
@@ -455,7 +456,7 @@ def matplotlib_linegraph(plotdata, pconfig=None):
         # Log scale
         if pconfig.get("xLog", False):
             axes.set_xscale("log")
-        if pconfic.get("yLog", False):
+        if pconfig.get("yLog", False):
             axes.set_yscale("log")
 
         # Tidy up axes

@@ -11,6 +11,7 @@
 - Just run CI on the oldest + newest supported Python versions ([#2074](https://github.com/ewels/MultiQC/pull/2074))
 - Strict mode: rename `config.lint` to `config.strict`, crash early on module or template error. Add `MULTIQC_STRICT=1` ([#2101](https://github.com/ewels/MultiQC/pull/2101))
 - Trigger changelog entry addition on PR creation, in addition to an explicit comment to multiqc-bot ([#2102](https://github.com/ewels/MultiQC/pull/2102))
+- Matplotlib line plots now respect `xLog: True` and `yLog: True` in config ([#1632](https://github.com/ewels/MultiQC/pull/1632))
 
 ### New Modules
 
@@ -286,7 +287,6 @@ for more information.
 
 - Major spruce of the command line help, using the new [rich-click](https://github.com/ewels/rich-click) package
 - Drop some of the Python 2k compatability code (eg. custom requirements)
-- Matplotlib line plots now respect `xLog: True` and `yLog: True` in config ([#1631](https://github.com/ewels/MultiQC/issues/1631))
 - Improvements for running MultiQC in a Python environment, such as a Jupyter Notebook or script
   - Fixed bug raised when removing logging file handlers between calls that arose when configuring the root logger with dictConfig ([#1643](https://github.com/ewels/MultiQC/issues/1643))
 - Added new config option `custom_table_header_config` to override any config for any table header
