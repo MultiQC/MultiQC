@@ -230,18 +230,12 @@ class BenchSummary:
             plot=bargraph.plot(bar_data, bar_categories, pconfig=bar_config),
         )
 
-        # Generate color scale to label samples. The "plot_defaults"
-        # scale contains 10 colors so if there are more samples than
-        # that, we will reuse colors.
-        color_scale = mqc_colour_scale("plot_defaults")
-
         # Make scatter plot
         scatter_data = {}
         for i, (sample, sample_data) in enumerate(data.items()):
             scatter_data[sample] = {
                 "x": sample_data["precision"] * 100.0,
                 "y": sample_data["recall"] * 100.0,
-                "color": color_scale.get_colour(i, lighten=0.9),
             }
 
         scatter_config = {
