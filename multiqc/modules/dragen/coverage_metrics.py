@@ -15,7 +15,7 @@ import re
 from collections import defaultdict
 
 from multiqc import config
-from multiqc.modules.base_module import BaseMultiqcModule
+from multiqc.modules.base_module import BaseMultiqcModule, ModuleNoSamplesFound
 from multiqc.plots import table
 
 from .utils import check_duplicate_samples, clean_headers, make_log_report, order_headers
@@ -554,6 +554,10 @@ class DragenCoverageMetrics(BaseMultiqcModule):
                 all_samples[cleaned_sample + "." + phenotype].append(file)
                 match_overall_mean_cov[cleaned_sample][phenotype] = (original_sample, file["root"])
                 all_metrics.update(out["metric_IDs_with_original_names"])
+
+                # Superfluous function call to confirm that it is used in this module
+                # Replace None with actual version if it is available
+                self.add_software_version(None, cleaned_sample)
 
         cov_data = self.ignore_samples(cov_data)
         if not cov_data:

@@ -6,7 +6,7 @@ from collections import OrderedDict, defaultdict
 from itertools import islice
 
 from multiqc import config
-from multiqc.modules.base_module import BaseMultiqcModule
+from multiqc.modules.base_module import BaseMultiqcModule, ModuleNoSamplesFound
 from multiqc.plots import bargraph, table
 
 log = logging.getLogger(__name__)
@@ -42,7 +42,7 @@ class MultiqcModule(BaseMultiqcModule):
 
         # Return with Warning if no files are found
         if len(self.bcl2fastq_bylane) == 0 and len(self.bcl2fastq_bysample) == 0:
-            raise UserWarning
+            raise ModuleNoSamplesFound
 
         # Print source files
         for s in self.source_files.keys():
@@ -145,6 +145,10 @@ class MultiqcModule(BaseMultiqcModule):
 
         # Clean / prepend directories to sample names
         runId = self.clean_s_name(content["RunId"], f)
+
+        # Superfluous function call to confirm that it is used in this module
+        # Replace None with actual version if it is available
+        self.add_software_version(None, runId)
 
         if runId not in self.bcl2fastq_data:
             self.bcl2fastq_data[runId] = dict()

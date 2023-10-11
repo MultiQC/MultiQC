@@ -97,6 +97,10 @@ def parse_reports(self):
             for name in s_names.values():
                 self.add_data_source(f, name, section="BaseDistributionByCycle")
 
+                # Superfluous function call to confirm that it is used in this module
+                # Replace None with actual version if it is available
+                self.add_software_version(None, s_name)
+
             for read_end in s_names:
                 data_by_cycle = data[read_end]
                 s_name = s_names[read_end]

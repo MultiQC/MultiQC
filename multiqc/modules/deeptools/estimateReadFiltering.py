@@ -23,6 +23,10 @@ class estimateReadFilteringMixin:
             if len(parsed_data) > 0:
                 self.add_data_source(f, section="estimateReadFiltering")
 
+            # Superfluous function call to confirm that it is used in this module
+            # Replace None with actual version if it is available
+            self.add_software_version(None, f["s_name"])
+
         self.deeptools_estimateReadFiltering = self.ignore_samples(self.deeptools_estimateReadFiltering)
 
         if len(self.deeptools_estimateReadFiltering) > 0:

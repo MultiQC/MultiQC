@@ -7,7 +7,7 @@ from collections import OrderedDict
 import yaml
 
 from multiqc import config
-from multiqc.modules.base_module import BaseMultiqcModule
+from multiqc.modules.base_module import BaseMultiqcModule, ModuleNoSamplesFound
 from multiqc.plots import bargraph, table
 
 # Initialise the logger
@@ -34,11 +34,15 @@ class MultiqcModule(BaseMultiqcModule):
         for f in self.find_log_files("odgi", filehandles=True):
             self.parse_odgi_stats_report(f)
 
+            # Superfluous function call to confirm that it is used in this module
+            # Replace None with actual version if it is available
+            self.add_software_version(None, f["s_name"])
+
         self.odgi_stats_map = self.ignore_samples(self.odgi_stats_map)
 
         # No samples found
         if len(self.odgi_stats_map) == 0:
-            raise UserWarning
+            raise ModuleNoSamplesFound
 
         log.info("Found {} report{}".format(len(self.odgi_stats_map), "s" if len(self.odgi_stats_map) > 1 else ""))
 

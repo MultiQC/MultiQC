@@ -4,7 +4,7 @@ import logging
 from collections import OrderedDict
 
 from multiqc import config
-from multiqc.modules.base_module import BaseMultiqcModule
+from multiqc.modules.base_module import BaseMultiqcModule, ModuleNoSamplesFound
 from multiqc.plots import bargraph
 
 # Initialise the logger
@@ -55,6 +55,7 @@ class MultiqcModule(BaseMultiqcModule):
             data = self.parse_snippy_txt(f["f"])
             if data:
                 self.snippy_data[f["s_name"]] = data
+                self.add_software_version(data["version"], f["s_name"])
 
             self.add_data_source(f, section="snippy")
 
@@ -76,7 +77,7 @@ class MultiqcModule(BaseMultiqcModule):
 
         # Raise warning if no logs were found.
         if len(self.snippy_data) == 0 and len(self.snippy_core_data) == 0:
-            raise UserWarning
+            raise ModuleNoSamplesFound
 
         # Run analysis if txt files found
         if len(self.snippy_data) > 0:
@@ -99,6 +100,10 @@ class MultiqcModule(BaseMultiqcModule):
             split_line = line.strip().split("\t")
             if split_line[0] in self.snippy_col:
                 data[split_line[0]] = int(split_line[1])
+
+            if split_line[0] == "Software":
+                data["version"] = split_line[1].split(" ")[1]
+
         if len(data) == 0:
             return False
         for col in self.snippy_col:

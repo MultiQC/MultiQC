@@ -3,7 +3,7 @@
 import logging
 from collections import OrderedDict, defaultdict
 
-from multiqc.modules.base_module import BaseMultiqcModule
+from multiqc.modules.base_module import BaseMultiqcModule, ModuleNoSamplesFound
 from multiqc.plots import table
 
 log = logging.getLogger(__name__)
@@ -51,7 +51,7 @@ class MultiqcModule(BaseMultiqcModule):
         # Filter to strip out ignored sample names:
         data_by_sample = self.ignore_samples(data_by_sample)
         if not data_by_sample:
-            raise UserWarning
+            raise ModuleNoSamplesFound
         log.info("Found {} reports".format(len(data_by_sample)))
 
         # Write data to file
