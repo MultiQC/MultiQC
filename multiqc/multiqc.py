@@ -669,19 +669,8 @@ def run(
     run_modules = [m for m in run_modules if list(m.keys())[0].lower() in non_empty_modules]
     run_module_names = [list(m.keys())[0] for m in run_modules]
 
-    if config.require_logs:
-        # Check that all explicitly requested modules have log files
-        required_modules_with_no_logs = [
-            m
-            for m in getattr(config, "run_modules", [])
-            if m not in run_module_names and m not in getattr(config, "exclude_modules", [])
-        ]
-        if required_modules_with_no_logs:
-            logger.critical(
-                "The following modules were explicitly requested but no log files "
-                "were found: {}".format(", ".join(required_modules_with_no_logs))
-            )
-            return {"report": report, "config": config, "sys_exit_code": 1}
+    if not _required_logs_found(run_module_names):
+        return {"report": report, "config": config, "sys_exit_code": 1}
 
     # Run the modules!
     plugin_hooks.mqc_trigger("before_modules")
@@ -803,6 +792,11 @@ def run(
 
         report.runtimes["mods"][run_module_names[mod_idx]] = time.time() - mod_starttime
     report.runtimes["total_mods"] = time.time() - total_mods_starttime
+
+    # Again, if config.require_logs is set, check if for all explicitly requested
+    # modules samples were found.
+    if not _required_logs_found([m.anchor for m in report.modules_output]):
+        return {"report": report, "config": config, "sys_exit_code": 1}
 
     # Update report with software versions provided in configs
     software_versions.update_versions_from_config(config, report)
@@ -1189,3 +1183,20 @@ def run(
     # * appropriate error code (eg. 1 if a module broke, 0 on success)
     #
     return {"report": report, "config": config, "sys_exit_code": sys_exit_code}
+
+
+def _required_logs_found(modules_with_logs):
+    if config.require_logs:
+        required_modules_with_no_logs = [
+            m
+            for m in getattr(config, "run_modules", [])
+            if m.lower() not in [m.lower() for m in modules_with_logs]
+            and m.lower() not in getattr(config, "exclude_modules", [])
+        ]
+        if required_modules_with_no_logs:
+            logger.critical(
+                "The following modules were explicitly requested but no log files "
+                "were found: {}".format(", ".join(required_modules_with_no_logs))
+            )
+            return False
+    return True
