@@ -3,14 +3,15 @@ function plot_xy_line_graph(plot, target, dataset_idx) {
   if (plot === undefined || plot["plot_type"] !== "xy_line") {
     return false;
   }
-  var config = plot["config"];
-
+  // var config = plot["config"];
   if (dataset_idx === undefined) {
     dataset_idx = 0;
   }
   // Make a clone of the data, so that we can mess with it,
   // while keeping the original data intact
-  var data = JSON.parse(JSON.stringify(plot["datasets"][dataset_idx]));
+  let data = JSON.parse(JSON.stringify(plot["datasets"][dataset_idx]));
+  let samples = JSON.parse(JSON.stringify(plot["samples"][dataset_idx]));
+  let layout = JSON.parse(JSON.stringify(plot["layout"]));
 
   // if (config["tt_label"] === undefined) {
   //   config["tt_label"] = "{point.x}: {point.y:.2f}";
@@ -35,13 +36,13 @@ function plot_xy_line_graph(plot, target, dataset_idx) {
 
   // Rename samples
   if (window.mqc_rename_f_texts.length > 0) {
-    $.each(data, function (j, s) {
+    $.each(data, function (sample_idx, s_name) {
       $.each(window.mqc_rename_f_texts, function (idx, f_text) {
         if (window.mqc_rename_regex_mode) {
-          var re = new RegExp(f_text, "g");
-          data[j]["name"] = data[j]["name"].replace(re, window.mqc_rename_t_texts[idx]);
+          const re = new RegExp(f_text, "g");
+          data[sample_idx]["name"] = data[sample_idx]["name"].replace(re, window.mqc_rename_t_texts[idx]);
         } else {
-          data[j]["name"] = data[j]["name"].replace(f_text, window.mqc_rename_t_texts[idx]);
+          data[sample_idx]["name"] = data[sample_idx]["name"].replace(f_text, window.mqc_rename_t_texts[idx]);
         }
       });
     });
@@ -49,35 +50,33 @@ function plot_xy_line_graph(plot, target, dataset_idx) {
 
   // Highlight samples
   if (window.mqc_highlight_f_texts.length > 0) {
-    $.each(data, function (j, s) {
+    $.each(data, function (sample_idx, s_name) {
       $.each(window.mqc_highlight_f_texts, function (idx, f_text) {
+        if (f_text === "") {
+          return true;
+        } // skip blanks
         if (
-          (window.mqc_highlight_regex_mode && data[j]["name"].match(f_text)) ||
-          (!window.mqc_highlight_regex_mode && data[j]["name"].indexOf(f_text) > -1)
+          (window.mqc_highlight_regex_mode && data[sample_idx]["name"].match(f_text)) ||
+          (!window.mqc_highlight_regex_mode && data[sample_idx]["name"].indexOf(f_text) > -1)
         ) {
-          data[j]["color"] = window.mqc_highlight_f_cols[idx];
+          data[sample_idx]["color"] = window.mqc_highlight_f_cols[idx];
         }
       });
     });
   }
 
   // Hide samples
-  $("#" + target)
-    .closest(".mqc_hcplot_plotgroup")
-    .parent()
-    .find(".samples-hidden-warning")
-    .remove();
-  $("#" + target)
-    .closest(".mqc_hcplot_plotgroup")
-    .show();
+  let plot_group_div = $("#" + target).closest(".mqc_hcplot_plotgroup");
+  plot_group_div.parent().find(".samples-hidden-warning").remove();
+  plot_group_div.show();
   if (window.mqc_hide_f_texts.length > 0) {
-    var num_hidden = 0;
-    var num_total = data.length;
-    var j = data.length;
+    let num_hidden = 0;
+    let num_total = data.length;
+    let j = data.length;
     while (j--) {
-      var match = false;
-      for (i = 0; i < window.mqc_hide_f_texts.length; i++) {
-        var f_text = window.mqc_hide_f_texts[i];
+      let match = false;
+      for (let i = 0; i < window.mqc_hide_f_texts.length; i++) {
+        const f_text = window.mqc_hide_f_texts[i];
         if (window.mqc_hide_regex_mode) {
           if (data[j]["name"].match(f_text)) {
             match = true;
@@ -88,7 +87,7 @@ function plot_xy_line_graph(plot, target, dataset_idx) {
           }
         }
       }
-      if (window.mqc_hide_mode == "show") {
+      if (window.mqc_hide_mode === "show") {
         match = !match;
       }
       if (match) {
@@ -98,19 +97,15 @@ function plot_xy_line_graph(plot, target, dataset_idx) {
     }
     // Some series hidden. Show a warning text string.
     if (num_hidden > 0) {
-      var alert =
+      const alert =
         '<div class="samples-hidden-warning alert alert-warning"><span class="glyphicon glyphicon-info-sign"></span> <strong>Warning:</strong> ' +
         num_hidden +
         ' samples hidden. <a href="#mqc_hidesamples" class="alert-link" onclick="mqc_toolbox_openclose(\'#mqc_hidesamples\', true); return false;">See toolbox.</a></div>';
-      $("#" + target)
-        .closest(".mqc_hcplot_plotgroup")
-        .before(alert);
+      plot_group_div.before(alert);
     }
     // All series hidden. Hide the graph.
-    if (num_hidden == num_total) {
-      $("#" + target)
-        .closest(".mqc_hcplot_plotgroup")
-        .hide();
+    if (num_hidden === num_total) {
+      plot_group_div.hide();
       return false;
     }
   }

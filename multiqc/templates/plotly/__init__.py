@@ -19,5 +19,5 @@ base_fn = "base.html"
 base64_plots = False
 
 
-bargraph = bargraph.plot
-linegraph = linegraph.plot
+bargraph = bargraph.bargraph
+linegraph = linegraph.linegraph
