@@ -4,7 +4,6 @@ import json
 import logging
 import os
 import re
-from collections import OrderedDict
 
 from multiqc.plots import bargraph, scatter, table
 from multiqc.utils.mqc_colour import mqc_colour_scale
@@ -115,156 +114,79 @@ class BenchSummary:
             "min": 0,
             "scale": "RdYlGn",
         }
-        self.general_stats_addcols(data, bench_headers)
-
-        # Make table
-        # Descriptions taken from: https://github.com/ACEnglish/truvari/wiki/bench
-        keys = OrderedDict()
-        keys["TP-base"] = {
-            "title": "TP (base)",
-            "description": "Number of the base VCF calls matching the comp VCF",
-            "scale": "BuPu",
-            "format": "{:,.d}",
-            "min": 0,
-        }
-        keys["TP-comp"] = {
-            "title": "TP (comp)",
-            "description": "Number of the comp VCF calls matching the base VCF",
-            "scale": "PuBu",
-            "format": "{:,.d}",
-            "min": 0,
-        }
-        keys["FP"] = {
-            "title": "FP",
-            "description": "Number of the comp VCF calls non-matching the base VCF",
-            "scale": "OrRd",
-            "format": "{:,.d}",
-            "min": 0,
-        }
-        keys["FN"] = {
-            "title": "FN",
-            "description": "Number of the base VCF calls non-matching the comp VCF",
-            "scale": "BuGn",
-            "format": "{:,.d}",
-            "min": 0,
-        }
-
-        # Reuse info from bench_headers but hide by default
-        keys["precision"] = dict(bench_headers["precision"], hidden=True)
-        keys["recall"] = dict(bench_headers["recall"], hidden=True)
-        keys["f1"] = dict(bench_headers["f1"], hidden=True)
-
-        keys["base cnt"] = {
-            "title": "Base calls",
-            "description": "Number of calls in the base VCF",
-            "scale": "Oranges",
-            "format": "{:,.d}",
-            "min": 0,
-        }
-        keys["comp cnt"] = {
-            "title": "Comp calls",
-            "description": "Number of calls in the comp VCF",
-            "scale": "Blues",
-            "format": "{:,.d}",
-            "min": 0,
-        }
-        keys["TP-comp_TP-gt"] = {
-            "title": "TP (comp) with GT match",
-            "description": "TP (comp) with genotype match",
-            "hidden": True,
-            "scale": "Greens",
-            "format": "{:,.d}",
-            "min": 0,
-        }
-        keys["TP-comp_FP-gt"] = {
-            "title": "TP (comp) w/o GT match",
-            "description": "TP (comp) without genotype match",
-            "hidden": True,
-            "scale": "YlGn",
-            "format": "{:,.d}",
-            "min": 0,
-        }
-        keys["TP-base_TP-gt"] = {
-            "title": "TP (base) with GT match",
-            "description": "TP (base) with genotype match",
-            "hidden": True,
-            "scale": "RdPu",
-            "format": "{:,.d}",
-            "min": 0,
-        }
-        keys["TP-base_FP-gt"] = {
-            "title": "TP (base) w/o GT match",
-            "description": "TP (base) without genotype match",
-            "hidden": True,
-            "scale": "Purples",
-            "format": "{:,.d}",
-            "min": 0,
-        }
-        keys["gt_concordance"] = {
+        bench_headers["gt_concordance"] = {
             "title": "GT concordance",
             "description": "Genotype concordance. Definition: TP-comp with GT / (TP-comp with GT + TP-comp w/o GT)",
             "hidden": True,
             "scale": "GnBu",
             "suffix": "%",
+            "placement": 103,
+            "max": 100,
+            "min": 0,
+            "hidden": True,
             "modify": lambda x: x * 100,
         }
 
-        self.add_section(
-            name="Statistics",
-            anchor="truvari-bench",
-            description="Performance statistics parsed from the output from `truvari bench`.",
-            helptext="""
-            Performance metrics from comparison of two VCFs, one truth set ("base") and one to be evaluated ("call").
-
-            - **TP (base)**:	Number of matching calls from the base VCF
-            - **TP (comp)**: Number of matching calls from the comp VCF
-            - **FP**: Number of non-matching calls from the comp VCF
-            - **FN**: Number of non-matching calls from the base VCF
-            - **Precision**: Precision metric. Definition: TP-comp / (TP-comp + FP)
-            - **Recall**: Recall metric. Definition: TP-base / (TP-base + FN)
-            - **F1**: F1 score metric. Definition: 2 * ((Recall * Precision) / (Recall + Precision))
-            - **Base calls**: Number of calls in the base vcf. Should be same as TP-base + FN
-            - **Comp calls**: Number of calls in the comp vcf. Should be same as TP-comp + FP
-            - **TP-comp_TP-gt**: TP (comp) with genotype match
-            - **TP-comp_FP-gt**: TP (comp) without genotype match
-            - **TP-base_TP-gt**: TP (base) with genotype match
-            - **TP-base_FP-gt**: TP (base) without genotype match
-            - **GT concordance**: Genotype concordance. Definition: TP-comp_TP-gt / (TP-comp_TP-gt + TP-comp_FP-gt)
-
-            For more information, see the [truvari benwiki](https://github.com/acenglish/truvari/wiki/bench)
-            """,
-            plot=table.plot(data, keys, {"id": "truvari-bench-summary"}),
-        )
+        self.general_stats_addcols(data, bench_headers)
 
         # Make bar graph
-        bar_data = [{}, {}]
+        bar_data = [{}, {}, {}, {}]
         for sample, sample_data in data.items():
+            # Comp
             bar_data[0][sample] = {
                 "TP": sample_data["TP-comp"],
                 "FP": sample_data["FP"],
             }
+            # Base
             bar_data[1][sample] = {
                 "TP": sample_data["TP-base"],
                 "FN": sample_data["FN"],
             }
+            # TP (comp) GT
+            bar_data[2][sample] = {
+                "Match": sample_data["TP-comp_TP-gt"],
+                "No match": sample_data["TP-comp_FP-gt"],
+            }
+            # TP (base) GT
+            bar_data[3][sample] = {
+                "Match": sample_data["TP-base_TP-gt"],
+                "No match": sample_data["TP-base_FP-gt"],
+            }
 
         bar_categories = [
+            # Comp
             {
                 "TP": {"name": "TP", "color": "#648FFF"},
                 "FP": {"name": "FP", "color": "#DC267F"},
             },
+            # Base
             {
                 "TP": {"name": "TP", "color": "#648FFF"},
                 "FN": {"name": "FN", "color": "#FFB000"},
+            },
+            # TP (comp) GT
+            {
+                "Match": {"name": "Match", "color": "#785EF0"},
+                "No match": {"name": "No match", "color": "#FE6100"},
+            },
+            # TP (base) GT
+            {
+                "Match": {"name": "Match", "color": "#785EF0"},
+                "No match": {"name": "No match", "color": "#FE6100"},
             },
         ]
 
         bar_config = {
             "id": "truvari-bench-classifications-plot",
             "title": "Truvari: Classifications",
-            "ylab": "Number of calls",
+            "ylab": "Counts",
             "tt_suffix": " calls",
-            "data_labels": ["Comp", "Base"],
+            "data_labels": [
+                {"name": "Comp", "ylab": "Counts"},
+                {"name": "Base", "ylab": "Counts"},
+                {"name": "TP (comp) GT", "ylab": "Counts"},
+                {"name": "TP (base) GT", "ylab": "Counts"},
+            ],
         }
 
         self.add_section(
@@ -272,17 +194,38 @@ class BenchSummary:
             anchor="truvari-bench-classifications",
             description="Bargraph of SV call classifications parsed from the output from `truvari bench`",
             helptext="""
-            Bargraph of SV call classifications from the perspectives of the *comp* and *base* ("truth") VCFs.
+            Bargraph of SV call classifications from the perspectives of the *comp* and
+            *base* ("truth") VCFs. Four different groups of calls are shown:
 
-            For *comp* calls, the classifications are:
+            #### Comp
+            Compares TP and FP calls in the *comp* VCF relative the *base*. The
+            classifications are:
 
             - **TP**: Comp call matches a base call
             - **FP**: Comp call does not match a base call
 
-            For *base* calls, the classifications are:
+            #### Base
+            Compares TP and FN calls in the *base* VCF relative the *comp*. The
+            classifications are:
 
             - **TP**: Base call matches a comp call
             - **FN**: Base call does not match a comp call
+
+            #### TP (comp) GT
+            Compares TP calls in the *comp* VCF relative to the *base* VCF for
+            matching genotypes. The classifications are:
+
+            - **Match**: TP call in comp has matching genotype in base
+            - **No match**: TP call in comp does not have matching genotype in base
+
+            #### TP (base) GT
+            Compares TP calls in the *base* VCF relative to the *comp* VCF for
+            matching genotypes. The classifications are:
+
+            - **Match**: TP call in base has matching genotype in comp
+            - **No match**: TP call in base does not have matching genotype in comp
+
+            For more information, see the [truvari bench wiki](https://github.com/acenglish/truvari/wiki/bench)
             """,
             plot=bargraph.plot(bar_data, bar_categories, pconfig=bar_config),
         )
@@ -317,13 +260,23 @@ class BenchSummary:
         self.add_section(
             name="Precision vs. Recall",
             anchor="truvari-bench-pre-rec",
-            description="Precision vs. Recall for each sample. Parsed from the <code>truvari bench</code> output.",
+            description="Precision vs. Recall for each sample. Parsed from the output of `truvari bench`",
             helptext="""
-            Scatter plot of precision vs. recall for each sample. The precision and recall values are
-            calculated as follows:
+            Scatter plot of precision vs. recall comparing SV calls between two VCFs,
+            one truth set ("base") and one to be evaluated ("comp"). The precision and
+            recall values are calculated as follows:
 
             - **Precision**: TP-comp / (TP-comp + FP)
             - **Recall**: TP-base / (TP-base + FN)
+
+            The TP, FP, and FN values are intrun defined as follows:
+
+            - **TP (base)**: Number of matching calls from the base ('truth') VCF
+            - **TP (comp)**: Number of matching calls from the comp VCF
+            - **FP**: Number of non-matching calls from the comp VCF
+            - **FN**: Number of non-matching calls from the base ('truth') VCF
+
+            For more information, see the [truvari bench wiki](https://github.com/acenglish/truvari/wiki/bench)
             """,
             plot=scatter.plot(scatter_data, scatter_config),
         )
