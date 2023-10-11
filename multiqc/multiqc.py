@@ -209,6 +209,12 @@ click.rich_click.OPTION_GROUPS = {
     multiple=True,
     help="Use only this module. Can specify multiple times.",
 )
+@click.option(
+    "--require-logs",
+    "require_logs",
+    is_flag=True,
+    help="Require all explicitly requested modules to have log files. If not, MultiQC will exit with an error.",
+)
 @click.option("--data-dir", "make_data_dir", is_flag=True, help="Force the parsed data directory to be created.")
 @click.option(
     "--no-data-dir", "no_data_dir", is_flag=True, help="Prevent the parsed data directory from being created."
@@ -306,6 +312,7 @@ def run(
     template=None,
     module_tag=(),
     module=(),
+    require_logs=False,
     exclude=(),
     outdir=None,
     ignore=(),
@@ -471,6 +478,8 @@ def run(
         config.run_modules = module
     if len(exclude) > 0:
         config.exclude_modules = exclude
+    if require_logs:
+        config.require_logs = True
     if profile_runtime:
         config.profile_runtime = True
     if no_ansi:
@@ -659,6 +668,20 @@ def run(
         non_empty_modules.add("custom_content")
     run_modules = [m for m in run_modules if list(m.keys())[0].lower() in non_empty_modules]
     run_module_names = [list(m.keys())[0] for m in run_modules]
+
+    if config.require_logs:
+        # Check that all explicitly requested modules have log files
+        required_modules_with_no_logs = [
+            m
+            for m in getattr(config, "run_modules", [])
+            if m not in run_module_names and m not in getattr(config, "exclude_modules", [])
+        ]
+        if required_modules_with_no_logs:
+            logger.critical(
+                "The following modules were explicitly requested but no log files "
+                "were found: {}".format(", ".join(required_modules_with_no_logs))
+            )
+            return {"report": report, "config": config, "sys_exit_code": 1}
 
     # Run the modules!
     plugin_hooks.mqc_trigger("before_modules")
