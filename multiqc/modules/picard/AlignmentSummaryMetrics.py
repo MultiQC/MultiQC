@@ -18,7 +18,7 @@ def parse_reports(self):
     self.picard_alignment_metrics = dict()
 
     # Go through logs and find Metrics
-    for f in self.find_log_files("picard/alignment_metrics", filehandles=True):
+    for f in self.find_log_files(f"{self.anchor}/alignment_metrics", filehandles=True):
         parsed_data = dict()
         s_name = None
         keys = None
@@ -32,24 +32,33 @@ def parse_reports(self):
                 if fn_search:
                     s_name = os.path.basename(fn_search.group(1).strip("[]"))
                     s_name = self.clean_s_name(s_name, f)
-                    parsed_data[s_name] = dict()
 
-            if s_name is not None:
-                if "AlignmentSummaryMetrics" in l and "## METRICS CLASS" in l:
-                    keys = f["f"].readline().strip("\n").split("\t")
-                elif keys:
-                    vals = l.strip("\n").split("\t")
-                    if len(vals) == len(keys):
-                        # Ignore the FIRST_OF_PAIR / SECOND_OF_PAIR data to simplify things
-                        if vals[0] == "PAIR" or vals[0] == "UNPAIRED":
-                            for i, k in enumerate(keys):
-                                try:
-                                    parsed_data[s_name][k] = float(vals[i])
-                                except ValueError:
-                                    parsed_data[s_name][k] = vals[i]
-                    else:
-                        s_name = None
-                        keys = None
+            if s_name is None and "AlignmentStat" in l:
+                # Pull sample name from filename
+                s_name = os.path.basename(f["s_name"])
+                s_name = self.clean_s_name(s_name, f)
+                parsed_data[s_name] = dict()
+                keys = None
+
+            if ("AlignmentSummaryMetrics" in l and "## METRICS CLASS" in l) or (
+                "AlignmentStat" in l and "#SentieonCommandLine" in l
+            ):
+                keys = f["f"].readline().strip("\n").split("\t")
+            elif keys:
+                if s_name not in parsed_data:
+                    parsed_data[s_name] = dict()
+                vals = l.strip("\n").split("\t")
+                if len(vals) == len(keys):
+                    # Ignore the FIRST_OF_PAIR / SECOND_OF_PAIR data to simplify things
+                    if vals[0] == "PAIR" or vals[0] == "UNPAIRED":
+                        for i, k in enumerate(keys):
+                            try:
+                                parsed_data[s_name][k] = float(vals[i])
+                            except ValueError:
+                                parsed_data[s_name][k] = vals[i]
+                else:
+                    s_name = None
+                    keys = None
 
         # Superfluous function call to confirm that it is used in this module
         # Replace None with actual version if it is available
@@ -72,7 +81,7 @@ def parse_reports(self):
 
     if len(self.picard_alignment_metrics) > 0:
         # Write parsed data to a file
-        self.write_data_file(self.picard_alignment_metrics, "multiqc_picard_AlignmentSummaryMetrics")
+        self.write_data_file(self.picard_alignment_metrics, f"multiqc_{self.anchor}_AlignmentSummaryMetrics")
 
         # Add to general stats table
         self.general_stats_headers["PCT_PF_READS_ALIGNED"] = {
@@ -110,8 +119,8 @@ def parse_reports(self):
 
         # Config for the plot
         pconfig = {
-            "id": "picard_alignment_summary",
-            "title": "Picard: Alignment Summary",
+            "id": f"{self.anchor}_alignment_summary",
+            "title": f"{self.name}: Alignment Summary",
             "ylab": "# Reads",
             "data_labels": [
                 {
@@ -130,16 +139,16 @@ def parse_reports(self):
         # The different data sets we want to plot
         self.add_section(
             name="Alignment Summary",
-            anchor="picard-alignmentsummary",
-            description="Please note that Picard's read counts are divided by two for paired-end data. Total bases (including unaligned) is not provided.",
+            anchor=f"{self.anchor}-alignmentsummary",
+            description=f"Please note that {self.name}'s read counts are divided by two for paired-end data. Total bases (including unaligned) is not provided.",
             plot=bargraph.plot([pdata, self.picard_alignment_metrics], keys, pconfig),
         )
 
         # Make a bar plot of mean read length
         keys = {"MEAN_READ_LENGTH": {"name": "Mean Read Length"}}
         pconfig = {
-            "id": "picard_alignment_readlength_plot",
-            "title": "Picard: Mean Read Length",
+            "id": f"{self.anchor}_alignment_readlength_plot",
+            "title": f"{self.name}: Mean Read Length",
             "ylab": "Base pairs",
             "cpswitch": False,
         }
@@ -147,7 +156,7 @@ def parse_reports(self):
         # The different data sets we want to plot
         self.add_section(
             name="Mean read length",
-            anchor="picard_alignment_readlength",
+            anchor=f"{self.anchor}_alignment_readlength",
             description="The mean read length of the set of reads examined.",
             plot=bargraph.plot(self.picard_alignment_metrics, keys, pconfig),
         )
