@@ -13,6 +13,7 @@ from .rna_quant_metrics import DragenRnaQuantMetrics
 from .rna_transcript_cov import DragenRnaTranscriptCoverage
 from .sc_atac_metrics import DragenScAtacMetrics
 from .sc_rna_metrics import DragenScRnaMetrics
+from .sv_metrics import DragenSVMetrics
 from .time_metrics import DragenTimeMetrics
 from .trimmer_metrics import DragenTrimmerMetrics
 from .vc_metrics import DragenVCMetrics
@@ -21,6 +22,7 @@ log = logging.getLogger(__name__)
 
 
 class MultiqcModule(
+    DragenSVMetrics,
     DragenMappingMetics,
     DragenFragmentLength,
     DragenPloidyEstimationMetrics,
@@ -73,6 +75,9 @@ class MultiqcModule(
 
         samples_found |= self.add_ploidy_estimation_metrics()
         # <output prefix>.ploidy_estimation_metrics.csv    - add just Ploidy estimation into gen stats
+
+        samples_found |= self.add_sv_metrics()
+        # <output prefix>.sv_metrics.csv
 
         self.collect_overall_mean_cov_data()
         # <output prefix>.<coverage region prefix>_overall_mean_cov<arbitrary suffix>.csv
