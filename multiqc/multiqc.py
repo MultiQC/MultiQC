@@ -1049,8 +1049,9 @@ def run(
         except AttributeError:
             pass  # Not a child theme
 
-        # Copy the template files to the tmp directory (distutils overwrites parent theme files)
-        shutil.copytree(template_mod.template_dir, tmp_dir)
+        # Copy the template files to the tmp directory (`dirs_exist_ok` makes sure
+        # parent template files are overwritten)
+        shutil.copytree(template_mod.template_dir, tmp_dir, dirs_exist_ok=True)
 
         # Function to include file contents in Jinja template
         def include_file(name, fdir=tmp_dir, b64=False):
