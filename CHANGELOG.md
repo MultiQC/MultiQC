@@ -11,6 +11,7 @@
 - Just run CI on the oldest + newest supported Python versions ([#2074](https://github.com/ewels/MultiQC/pull/2074))
 - Strict mode: rename `config.lint` to `config.strict`, crash early on module or template error. Add `MULTIQC_STRICT=1` ([#2101](https://github.com/ewels/MultiQC/pull/2101))
 - Trigger changelog entry addition on PR creation, in addition to an explicit comment to multiqc-bot ([#2102](https://github.com/ewels/MultiQC/pull/2102))
+- Reuse picard AlignmentSummary and GcBias funcs for Sentieon ([#2110](https://github.com/ewels/MultiQC/pull/2110))
 
 ### New Modules
 
