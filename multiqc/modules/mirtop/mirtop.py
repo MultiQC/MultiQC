@@ -6,7 +6,7 @@ import logging
 from collections import OrderedDict
 
 from multiqc import config
-from multiqc.modules.base_module import BaseMultiqcModule
+from multiqc.modules.base_module import BaseMultiqcModule, ModuleNoSamplesFound
 from multiqc.plots import bargraph
 
 # Initialise the logger
@@ -35,7 +35,7 @@ class MultiqcModule(BaseMultiqcModule):
 
         # Raise error if dict is empty
         if len(self.mirtop_data) == 0:
-            raise UserWarning
+            raise ModuleNoSamplesFound
 
         log.info("Found {} reports".format(len(self.mirtop_data)))
 

@@ -115,6 +115,25 @@ fastqc_config:
   fastqc_theoretical_gc: "/path/to/your/custom_fastqc_theoretical_gc.txt"
 ```
 
+### Overrepresented sequences
+
+The overrepresented sequences table shows the most common sequences found,
+measured by the number of samples they occur as overrepresented. By default, the
+table shows top 20 sequences. This can be customised in the config:
+
+```yaml
+fastqc_config:
+  top_overrepresented_sequences: 50
+```
+
+You can also choose to rank the top sequences by the total number of reads
+rather than by number of samples:
+
+```yaml
+fastqc_config:
+  top_overrepresented_sequences_by: "total"
+```
+
 ### Changing the order of sections
 
 Remember that it is possible to customise the order in which the different module sections appear

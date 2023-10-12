@@ -66,7 +66,7 @@ def plot(data, pconfig=None):
         data = [data]
 
     # Validate config if linting
-    if config.lint:
+    if config.strict:
         # Get module name
         modname = ""
         callstack = inspect.stack()
@@ -222,25 +222,33 @@ def plot(data, pconfig=None):
             d.setdefault("color", scale.get_colour(di, lighten=1))
 
     # Make a plot - template custom, or interactive or flat
-    try:
-        return get_template_mod().linegraph(plotdata, pconfig)
-    except (AttributeError, TypeError):
-        if config.plots_force_flat or (
-            not config.plots_force_interactive and plotdata and len(plotdata[0]) > config.plots_flat_numseries
-        ):
-            try:
-                report.num_mpl_plots += 1
-                return matplotlib_linegraph(plotdata, pconfig)
-            except Exception as e:
-                logger.error("############### Error making MatPlotLib figure! Falling back to HighCharts.")
-                logger.debug(e, exc_info=True)
-                return highcharts_linegraph(plotdata, pconfig)
-        else:
-            # Use MatPlotLib to generate static plots if requested
-            if config.export_plots:
-                matplotlib_linegraph(plotdata, pconfig)
-            # Return HTML for HighCharts dynamic plot
+    mod = get_template_mod()
+    if "linegraph" in mod.__dict__ and callable(mod.linegraph):
+        try:
+            return mod.linegraph(plotdata, pconfig)
+        except:
+            if config.strict:
+                # Crash quickly in the strict mode. This can be helpful for interactive
+                # debugging of modules
+                raise
+    if config.plots_force_flat or (
+        not config.plots_force_interactive and plotdata and len(plotdata[0]) > config.plots_flat_numseries
+    ):
+        try:
+            report.num_mpl_plots += 1
+            return matplotlib_linegraph(plotdata, pconfig)
+        except Exception as e:
+            if config.strict:
+                raise
+            logger.error("############### Error making MatPlotLib figure! Falling back to HighCharts.")
+            logger.debug(e, exc_info=True)
             return highcharts_linegraph(plotdata, pconfig)
+    else:
+        # Use MatPlotLib to generate static plots if requested
+        if config.export_plots:
+            matplotlib_linegraph(plotdata, pconfig)
+        # Return HTML for HighCharts dynamic plot
+        return highcharts_linegraph(plotdata, pconfig)
 
 
 def highcharts_linegraph(plotdata, pconfig=None):

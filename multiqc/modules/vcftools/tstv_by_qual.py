@@ -24,6 +24,10 @@ class TsTvByQualMixin:
             self.vcftools_tstv_by_qual[f["s_name"]] = d
             self.add_data_source(f, "TsTv by quality")
 
+            # Superfluous function call to confirm that it is used in this module
+            # Replace None with actual version if it is available
+            self.add_software_version(None, f["s_name"])
+
         # Filter out ignored sample names
         self.vcftools_tstv_by_qual = self.ignore_samples(self.vcftools_tstv_by_qual)
 

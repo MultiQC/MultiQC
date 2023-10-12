@@ -6,7 +6,7 @@ from collections import OrderedDict
 import yaml
 
 from multiqc import config
-from multiqc.modules.base_module import BaseMultiqcModule
+from multiqc.modules.base_module import BaseMultiqcModule, ModuleNoSamplesFound
 from multiqc.plots import bargraph
 
 # Initialise the logger
@@ -40,7 +40,7 @@ class MultiqcModule(BaseMultiqcModule):
         self.snpsplit_data = self.ignore_samples(self.snpsplit_data)
 
         if len(self.snpsplit_data) == 0:
-            raise UserWarning
+            raise ModuleNoSamplesFound
         log.info("Found {} reports".format(len(self.snpsplit_data)))
 
         self.write_data_file(self.snpsplit_data, "multiqc_snpsplit")
@@ -55,6 +55,7 @@ class MultiqcModule(BaseMultiqcModule):
             log.debug("Replacing duplicate sample {}".format(s_name))
         self.snpsplit_data[s_name] = parsed[1]
         self.add_data_source(f, s_name=s_name)
+        self.add_software_version(parsed[1].get("version"), s_name)
 
     def parse_new_snpsplit_log(self, f):
         data = next(yaml.load_all(f["f"], Loader=yaml.SafeLoader))
@@ -68,6 +69,7 @@ class MultiqcModule(BaseMultiqcModule):
                 flat_key = "{}_{}".format(k.lower(), key)
                 flat_data[flat_key] = data[k][sk]
         input_fn = data["Meta"]["infile"]
+        flat_data["version"] = data["Meta"]["version"]
         return [input_fn, flat_data]
 
     def parse_old_snpsplit_log(self, f):

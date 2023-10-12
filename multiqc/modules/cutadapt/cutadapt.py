@@ -6,7 +6,7 @@ import re
 from collections import OrderedDict
 from distutils.version import StrictVersion
 
-from multiqc.modules.base_module import BaseMultiqcModule
+from multiqc.modules.base_module import BaseMultiqcModule, ModuleNoSamplesFound
 from multiqc.plots import bargraph, linegraph
 
 # Initialise the logger
@@ -49,7 +49,7 @@ class MultiqcModule(BaseMultiqcModule):
         self.cutadapt_data = self.ignore_samples(self.cutadapt_data)
 
         if len(self.cutadapt_data) == 0:
-            raise UserWarning
+            raise ModuleNoSamplesFound
 
         log.info("Found {} reports".format(len(self.cutadapt_data)))
 
@@ -239,7 +239,7 @@ class MultiqcModule(BaseMultiqcModule):
         ):
             log.error("Something went wrong...")
             log.debug("Keys in trimmed length data differed")
-            raise UserWarning
+            raise ModuleNoSamplesFound
 
         if len(self.cutadapt_length_counts["default"]) == 0:
             self.cutadapt_length_counts.pop("default")

@@ -38,6 +38,10 @@ def parse_reports(self):
             self.add_data_source(f, section="infer_experiment")
             self.infer_exp[f["s_name"]] = d
 
+        # Superfluous function call to confirm that it is used in this module
+        # Replace None with actual version if it is available
+        self.add_software_version(None, f["s_name"])
+
     # Filter to strip out ignored sample names
     self.infer_exp = self.ignore_samples(self.infer_exp)
 

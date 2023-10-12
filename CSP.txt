@@ -3,6 +3,14 @@
 
 script-src 'self'
 
+    # 1.17
+    'sha256-krKzkLmKjisEgw0YGKglUFqLmEh6sK08Qw6xPmmo/10=' # ////////////////////////////////////////////////// Base JS for MultiQC Reports//
+    'sha256-8k3VwupzY7v2YyNWjgl7LjJRpDHztn+213IxxMtlhGU=' # ////////////////////////////////////////////////// HighCharts Plotting Code/////
+    'sha256-F/Ns5XO/YJO5xM4MiEoOb0Oo02hP7aTlfRywlFde9G4=' # ////////////////////////////////////////////////// MultiQC Report Toolbox Code//
+    'sha256-lD87d8oI1kNPJlsmI02I4WwpZwxfpFZnvq5MdsR3yaE=' # // Return JS code required for plotting a single sample// RSeQC plot. Attempt to
+    'sha256-Nbg17DNbGUiybFNgr6wbIU1w5j833X0XIK/iycwTXDQ=' # // Javascript for the FastQC MultiQC Mod///////////////// Per Base Sequence Cont
+    'sha256-Y19Ab/rDOuOgOuoftOFGSCo6C6kLjM/LSa2eQgrOCUM=' # // Javascript for the FastQC MultiQC Mod///////////////// Per Base Sequence Cont
+
     # 1.16
     'sha256-wlLs2UDz7n3cvWqY0PTazlKGYhGTOPH77vsElgE7pFw=' # multiqc_fastqc.js
     'sha256-GueuiCxuV8FbnCv7Txho8dTrz3HODU6GH40tvy5kMks=' # multiqc_dragen_fastqc.js
