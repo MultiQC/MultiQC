@@ -16,6 +16,8 @@
 
 - [**Bracken**](https://ccb.jhu.edu/software/bracken/)
   - A highly accurate statistical method that computes the abundance of species in DNA sequences from a metagenomics sample.
+- [**Truvari**](https://github.com/ACEnglish/truvari) ([#1751](https://github.com/ewels/MultiQC/pull/1751))
+  - Truvari is a toolkit for benchmarking, merging, and annotating structural variants
 
 ### Module updates
 
