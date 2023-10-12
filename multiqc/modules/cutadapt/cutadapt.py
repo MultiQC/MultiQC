@@ -4,7 +4,8 @@
 import logging
 import re
 from collections import OrderedDict
-from distutils.version import StrictVersion
+
+from packaging import version
 
 from multiqc.modules.base_module import BaseMultiqcModule, ModuleNoSamplesFound
 from multiqc.plots import bargraph, linegraph
@@ -112,7 +113,7 @@ class MultiqcModule(BaseMultiqcModule):
                 if c_version:
                     cutadapt_version = c_version.group(1)
                     try:
-                        assert StrictVersion(c_version.group(1)) <= StrictVersion("1.6")
+                        assert version.parse(c_version.group(1)) <= version.parse("1.6")
                         parsing_version = "1.6"
                     except:
                         parsing_version = "1.7"
