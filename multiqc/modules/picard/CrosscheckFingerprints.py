@@ -7,8 +7,8 @@ from csv import DictReader
 from itertools import chain, groupby
 
 from multiqc import config
-from multiqc.modules.picard.picard import strtobool
 from multiqc.plots import table
+from multiqc.utils.util_functions import strtobool
 
 # Initialize the logger
 log = logging.getLogger(__name__)
