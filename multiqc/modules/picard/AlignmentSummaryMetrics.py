@@ -1,8 +1,6 @@
 """ MultiQC submodule to parse output from Picard AlignmentSummaryMetrics """
 
 import logging
-import os
-import re
 from collections import OrderedDict
 
 from multiqc.plots import bargraph
@@ -12,7 +10,9 @@ log = logging.getLogger(__name__)
 
 
 def parse_reports(self):
-    """Find Picard AlignmentSummaryMetrics reports and parse their data"""
+    """
+    Find Picard AlignmentSummaryMetrics reports and parse their data.
+    """
 
     # Set up vars
     self.picard_alignment_metrics = dict()
@@ -20,57 +20,53 @@ def parse_reports(self):
     # Go through logs and find Metrics
     for f in self.find_log_files(f"{self.anchor}/alignment_metrics", filehandles=True):
         parsed_data = dict()
-        s_name = None
-        keys = None
+        # A file can be concatenated from multiple samples, so we need to keep track of
+        # the current sample name and header.
+        current_keys = None
+        # Sample name from input file name by default.
+        current_s_name = f["s_name"]
         for l in f["f"]:
-            # New log starting
-            if "AlignmentSummaryMetrics" in l and "INPUT" in l:
-                s_name = None
-                keys = None
-                # Pull sample name from input
-                fn_search = re.search(r"INPUT(?:=|\s+)(\[?[^\s]+\]?)", l, flags=re.IGNORECASE)
-                if fn_search:
-                    s_name = os.path.basename(fn_search.group(1).strip("[]"))
-                    s_name = self.clean_s_name(s_name, f)
+            # if self.is_line_right_before_header(l):
+            maybe_s_name = self.extract_sample_name(l, f)
+            if maybe_s_name:
+                # Starts information for a new sample
+                current_s_name = maybe_s_name
+                current_keys = None
 
-            if s_name is None and "AlignmentStat" in l:
-                # Pull sample name from filename
-                s_name = os.path.basename(f["s_name"])
-                s_name = self.clean_s_name(s_name, f)
-                parsed_data[s_name] = dict()
-                keys = None
-
-            if ("AlignmentSummaryMetrics" in l and "## METRICS CLASS" in l) or (
-                "AlignmentStat" in l and "#SentieonCommandLine" in l
-            ):
-                keys = f["f"].readline().strip("\n").split("\t")
-            elif keys:
-                if s_name not in parsed_data:
-                    parsed_data[s_name] = dict()
+            if self.is_line_right_before_table(l):
+                l = next(f["f"])
+                current_keys = l.strip("\n").split("\t")
+            elif current_keys:
+                if current_s_name not in parsed_data:
+                    parsed_data[current_s_name] = dict()
                 vals = l.strip("\n").split("\t")
-                if len(vals) == len(keys):
+                if len(vals) == len(current_keys):
                     # Ignore the FIRST_OF_PAIR / SECOND_OF_PAIR data to simplify things
                     if vals[0] == "PAIR" or vals[0] == "UNPAIRED":
-                        for i, k in enumerate(keys):
+                        for i, k in enumerate(current_keys):
                             try:
-                                parsed_data[s_name][k] = float(vals[i])
+                                parsed_data[current_s_name][k] = float(vals[i])
                             except ValueError:
-                                parsed_data[s_name][k] = vals[i]
+                                parsed_data[current_s_name][k] = vals[i]
                 else:
-                    s_name = None
-                    keys = None
+                    current_s_name = None
+                    current_keys = None
 
-        # Superfluous function call to confirm that it is used in this module
-        # Replace None with actual version if it is available
-        self.add_software_version(None, s_name)
+        # When there is only one sample, using the file name to extract the sample name.
+        if len(parsed_data) == 1:
+            parsed_data = {f["s_name"]: list(parsed_data.values())[0]}
 
         # Remove empty dictionaries
         for s_name in list(parsed_data.keys()):
             if len(parsed_data[s_name]) == 0:
                 parsed_data.pop(s_name, None)
 
+            # Superfluous function call to confirm that it is used in this module
+            # Replace None with actual version if it is available
+            self.add_software_version(None, current_s_name)
+
         # Manipulate sample names if multiple baits found
-        for s_name in parsed_data.keys():
+        for s_name in parsed_data:
             if s_name in self.picard_alignment_metrics:
                 log.debug("Duplicate sample name found in {}! Overwriting: {}".format(f["fn"], s_name))
             self.add_data_source(f, s_name, section="AlignmentSummaryMetrics")

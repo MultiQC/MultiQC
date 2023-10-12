@@ -2,7 +2,10 @@
 
 
 import logging
+import os
+import re
 from collections import OrderedDict
+from typing import Dict, Optional
 
 from multiqc.modules.base_module import BaseMultiqcModule, ModuleNoSamplesFound
 
@@ -36,19 +39,26 @@ log = logging.getLogger(__name__)
 
 
 class MultiqcModule(BaseMultiqcModule):
-    """Picard is a collection of scripts. This MultiQC module
-    supports some but not all. The code for each script is split
-    into its own file and adds a section to the module output if
-    logs are found."""
+    """
+    Picard is a collection of scripts. This MultiQC module supports some but not all.
+    The code for each script is split into its own file and adds a section to the
+    module output if logs are found.
+    """
 
-    def __init__(self):
+    def __init__(
+        self,
+        name="Picard",
+        anchor="picard",
+        href="http://broadinstitute.github.io/picard/",
+        info="is a set of Java command line tools for manipulating high-throughput sequencing data.",
+        # No DOI to cite // doi=
+    ):
         # Initialise the parent object
         super(MultiqcModule, self).__init__(
-            name="Picard",
-            anchor="picard",
-            href="http://broadinstitute.github.io/picard/",
-            info="is a set of Java command line tools for manipulating high-throughput sequencing data.",
-            # No DOI to cite // doi=
+            name=name,
+            anchor=anchor,
+            href=href,
+            info=info,
         )
 
         # Set up class objects to hold parsed data
@@ -61,87 +71,87 @@ class MultiqcModule(BaseMultiqcModule):
         if n["AlignmentMetrics"] > 0:
             log.info("Found {} AlignmentSummaryMetrics reports".format(n["AlignmentMetrics"]))
 
-        n["BaseDistributionByCycleMetrics"] = BaseDistributionByCycleMetrics.parse_reports(self)
-        if n["BaseDistributionByCycleMetrics"] > 0:
-            log.info("Found {} BaseDistributionByCycleMetrics reports".format(n["BaseDistributionByCycleMetrics"]))
-
-        n["CrosscheckFingerprints"] = CrosscheckFingerprints.parse_reports(self)
-        if n["CrosscheckFingerprints"] > 0:
-            log.info("Found {} CrosscheckFingerprints reports".format(n["CrosscheckFingerprints"]))
-
-        n["GcBiasMetrics"] = GcBiasMetrics.parse_reports(self)
-        if n["GcBiasMetrics"] > 0:
-            log.info("Found {} GcBiasMetrics reports".format(n["GcBiasMetrics"]))
-
-        n["HsMetrics"] = HsMetrics.parse_reports(self)
-        if n["HsMetrics"] > 0:
-            log.info("Found {} HsMetrics reports".format(n["HsMetrics"]))
-
-        n["InsertSizeMetrics"] = InsertSizeMetrics.parse_reports(self)
-        if n["InsertSizeMetrics"] > 0:
-            log.info("Found {} InsertSizeMetrics reports".format(n["InsertSizeMetrics"]))
-
-        n["MarkDuplicates"] = MarkDuplicates.parse_reports(self)
-        if n["MarkDuplicates"] > 0:
-            log.info("Found {} MarkDuplicates reports".format(n["MarkDuplicates"]))
-
-        n["OxoGMetrics"] = OxoGMetrics.parse_reports(self)
-        if n["OxoGMetrics"] > 0:
-            log.info("Found {} OxoGMetrics reports".format(n["OxoGMetrics"]))
-
-        n["QualityByCycleMetrics"] = QualityByCycleMetrics.parse_reports(self)
-        if n["QualityByCycleMetrics"] > 0:
-            log.info("Found {} QualityByCycleMetrics reports".format(n["QualityByCycleMetrics"]))
-
-        n["QualityScoreDistributionMetrics"] = QualityScoreDistributionMetrics.parse_reports(self)
-        if n["QualityScoreDistributionMetrics"] > 0:
-            log.info("Found {} QualityScoreDistributionMetrics reports".format(n["QualityScoreDistributionMetrics"]))
-
-        n["QualityYieldMetrics"] = QualityYieldMetrics.parse_reports(self)
-        if n["QualityYieldMetrics"] > 0:
-            log.info("Found {} QualityYieldMetrics reports".format(n["QualityYieldMetrics"]))
-
-        n["RnaSeqMetrics"] = RnaSeqMetrics.parse_reports(self)
-        if n["RnaSeqMetrics"] > 0:
-            log.info("Found {} RnaSeqMetrics reports".format(n["RnaSeqMetrics"]))
-
-        n["RrbsSummaryMetrics"] = RrbsSummaryMetrics.parse_reports(self)
-        if n["RrbsSummaryMetrics"] > 0:
-            log.info("Found {} RrbsSummaryMetrics reports".format(n["RrbsSummaryMetrics"]))
-
-        n["TargetedPcrMetrics"] = TargetedPcrMetrics.parse_reports(self)
-        if n["TargetedPcrMetrics"] > 0:
-            log.info("Found {} TargetedPcrMetrics reports".format(n["TargetedPcrMetrics"]))
-
-        n["VariantCallingMetrics"] = VariantCallingMetrics.parse_reports(self)
-        if n["VariantCallingMetrics"] > 0:
-            log.info("Found {} VariantCallingMetrics reports".format(n["VariantCallingMetrics"]))
-
-        n["ValidateSamFile"] = ValidateSamFile.parse_reports(self)
-        if n["ValidateSamFile"] > 0:
-            log.info("Found {} ValidateSamFile reports".format(n["ValidateSamFile"]))
-
-        n["WgsMetrics"] = WgsMetrics.parse_reports(self)
-        if n["WgsMetrics"] > 0:
-            log.info("Found {} WgsMetrics reports".format(n["WgsMetrics"]))
-
-        n["CollectIlluminaBasecallingMetrics"] = CollectIlluminaBasecallingMetrics.parse_reports(self)
-        if n["CollectIlluminaBasecallingMetrics"] > 0:
-            log.info(
-                "Found {} CollectIlluminaBasecallingMetrics reports".format(n["CollectIlluminaBasecallingMetrics"])
-            )
-
-        n["CollectIlluminaLaneMetrics"] = CollectIlluminaLaneMetrics.parse_reports(self)
-        if n["CollectIlluminaLaneMetrics"] > 0:
-            log.info("Found {} CollectIlluminaLaneMetrics reports".format(n["CollectIlluminaLaneMetrics"]))
-
-        n["ExtractIlluminaBarcodes"] = ExtractIlluminaBarcodes.parse_reports(self)
-        if n["ExtractIlluminaBarcodes"] > 0:
-            log.info("Found {} ExtractIlluminaBarcodes reports".format(n["ExtractIlluminaBarcodes"]))
-
-        n["MarkIlluminaAdapters"] = MarkIlluminaAdapters.parse_reports(self)
-        if n["MarkIlluminaAdapters"] > 0:
-            log.info("Found {} MarkIlluminaAdapters reports".format(n["MarkIlluminaAdapters"]))
+        # n["BaseDistributionByCycleMetrics"] = BaseDistributionByCycleMetrics.parse_reports(self)
+        # if n["BaseDistributionByCycleMetrics"] > 0:
+        #     log.info("Found {} BaseDistributionByCycleMetrics reports".format(n["BaseDistributionByCycleMetrics"]))
+        #
+        # n["CrosscheckFingerprints"] = CrosscheckFingerprints.parse_reports(self)
+        # if n["CrosscheckFingerprints"] > 0:
+        #     log.info("Found {} CrosscheckFingerprints reports".format(n["CrosscheckFingerprints"]))
+        #
+        # n["GcBiasMetrics"] = GcBiasMetrics.parse_reports(self)
+        # if n["GcBiasMetrics"] > 0:
+        #     log.info("Found {} GcBiasMetrics reports".format(n["GcBiasMetrics"]))
+        #
+        # n["HsMetrics"] = HsMetrics.parse_reports(self)
+        # if n["HsMetrics"] > 0:
+        #     log.info("Found {} HsMetrics reports".format(n["HsMetrics"]))
+        #
+        # n["InsertSizeMetrics"] = InsertSizeMetrics.parse_reports(self)
+        # if n["InsertSizeMetrics"] > 0:
+        #     log.info("Found {} InsertSizeMetrics reports".format(n["InsertSizeMetrics"]))
+        #
+        # n["MarkDuplicates"] = MarkDuplicates.parse_reports(self)
+        # if n["MarkDuplicates"] > 0:
+        #     log.info("Found {} MarkDuplicates reports".format(n["MarkDuplicates"]))
+        #
+        # n["OxoGMetrics"] = OxoGMetrics.parse_reports(self)
+        # if n["OxoGMetrics"] > 0:
+        #     log.info("Found {} OxoGMetrics reports".format(n["OxoGMetrics"]))
+        #
+        # n["QualityByCycleMetrics"] = QualityByCycleMetrics.parse_reports(self)
+        # if n["QualityByCycleMetrics"] > 0:
+        #     log.info("Found {} QualityByCycleMetrics reports".format(n["QualityByCycleMetrics"]))
+        #
+        # n["QualityScoreDistributionMetrics"] = QualityScoreDistributionMetrics.parse_reports(self)
+        # if n["QualityScoreDistributionMetrics"] > 0:
+        #     log.info("Found {} QualityScoreDistributionMetrics reports".format(n["QualityScoreDistributionMetrics"]))
+        #
+        # n["QualityYieldMetrics"] = QualityYieldMetrics.parse_reports(self)
+        # if n["QualityYieldMetrics"] > 0:
+        #     log.info("Found {} QualityYieldMetrics reports".format(n["QualityYieldMetrics"]))
+        #
+        # n["RnaSeqMetrics"] = RnaSeqMetrics.parse_reports(self)
+        # if n["RnaSeqMetrics"] > 0:
+        #     log.info("Found {} RnaSeqMetrics reports".format(n["RnaSeqMetrics"]))
+        #
+        # n["RrbsSummaryMetrics"] = RrbsSummaryMetrics.parse_reports(self)
+        # if n["RrbsSummaryMetrics"] > 0:
+        #     log.info("Found {} RrbsSummaryMetrics reports".format(n["RrbsSummaryMetrics"]))
+        #
+        # n["TargetedPcrMetrics"] = TargetedPcrMetrics.parse_reports(self)
+        # if n["TargetedPcrMetrics"] > 0:
+        #     log.info("Found {} TargetedPcrMetrics reports".format(n["TargetedPcrMetrics"]))
+        #
+        # n["VariantCallingMetrics"] = VariantCallingMetrics.parse_reports(self)
+        # if n["VariantCallingMetrics"] > 0:
+        #     log.info("Found {} VariantCallingMetrics reports".format(n["VariantCallingMetrics"]))
+        #
+        # n["ValidateSamFile"] = ValidateSamFile.parse_reports(self)
+        # if n["ValidateSamFile"] > 0:
+        #     log.info("Found {} ValidateSamFile reports".format(n["ValidateSamFile"]))
+        #
+        # n["WgsMetrics"] = WgsMetrics.parse_reports(self)
+        # if n["WgsMetrics"] > 0:
+        #     log.info("Found {} WgsMetrics reports".format(n["WgsMetrics"]))
+        #
+        # n["CollectIlluminaBasecallingMetrics"] = CollectIlluminaBasecallingMetrics.parse_reports(self)
+        # if n["CollectIlluminaBasecallingMetrics"] > 0:
+        #     log.info(
+        #         "Found {} CollectIlluminaBasecallingMetrics reports".format(n["CollectIlluminaBasecallingMetrics"])
+        #     )
+        #
+        # n["CollectIlluminaLaneMetrics"] = CollectIlluminaLaneMetrics.parse_reports(self)
+        # if n["CollectIlluminaLaneMetrics"] > 0:
+        #     log.info("Found {} CollectIlluminaLaneMetrics reports".format(n["CollectIlluminaLaneMetrics"]))
+        #
+        # n["ExtractIlluminaBarcodes"] = ExtractIlluminaBarcodes.parse_reports(self)
+        # if n["ExtractIlluminaBarcodes"] > 0:
+        #     log.info("Found {} ExtractIlluminaBarcodes reports".format(n["ExtractIlluminaBarcodes"]))
+        #
+        # n["MarkIlluminaAdapters"] = MarkIlluminaAdapters.parse_reports(self)
+        # if n["MarkIlluminaAdapters"] > 0:
+        #     log.info("Found {} MarkIlluminaAdapters reports".format(n["MarkIlluminaAdapters"]))
 
         # Exit if we didn't find anything
         if sum(n.values()) == 0:
@@ -150,8 +160,36 @@ class MultiqcModule(BaseMultiqcModule):
         # Add to the General Stats table (has to be called once per MultiQC module)
         self.general_stats_addcols(self.general_stats_data, self.general_stats_headers)
 
-    # Helper functions
-    def multiply_hundred(self, val):
+    def is_line_right_before_table(self, line: str) -> bool:
+        """
+        Picard logs from different samples can be concatenated together, so the module
+        needs to know a marker to find where new sample information starts.
+
+        Many tools and platforms - e.g. Sentieon, supported by MultiQC - use Picard
+        internally for QC, while adding their own headers. So we can't assume that
+        the headers will be the same for the same, and need to allow to override
+        this function.
+        """
+        return line.startswith("## METRICS CLASS")
+
+    def extract_sample_name(self, line: str, f: Dict) -> Optional[str]:
+        """
+        A file can be concatenated from multiple samples, so we can't just extract
+        the sample name from the file name, and need a way to find sample name in the
+        header. The copy of the originally used command is the best bet, as it's
+        usually logged by Picard.
+        """
+        if line.startswith("# picard.analysis.") and ("INPUT=" in line or "INPUT" in line.split()):
+            # Pull sample name from the input file name, recorded in the command line:
+            fn_search = re.search(r"INPUT(?:=|\s+)(\[?[^\s]+\]?)", line, flags=re.IGNORECASE)
+            if fn_search:
+                s_name = os.path.basename(fn_search.group(1).strip("[]"))
+                s_name = self.clean_s_name(s_name, f)
+                return s_name
+        return None
+
+    @staticmethod
+    def multiply_hundred(val):
         try:
             val = float(val) * 100
         except ValueError:

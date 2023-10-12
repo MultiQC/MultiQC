@@ -134,7 +134,7 @@ def parse_reports(self):
                 "suffix": "%",
                 "format": "{:,.0f}",
                 "scale": "RdYlGn",
-                "modify": lambda x: self.multiply_hundred(x),
+                "modify": lambda x: multiply_hundred(x),
             }
 
         for s_name in self.picard_wgsmetrics_data:

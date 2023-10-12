@@ -102,7 +102,7 @@ def parse_reports(self):
             "suffix": "%",
             "format": "{:,.0f}",
             "scale": "RdYlGn-rev",
-            "modify": lambda x: self.multiply_hundred(x),
+            "modify": lambda x: multiply_hundred(x),
         }
         for s_name in data:
             if s_name not in self.general_stats_data:

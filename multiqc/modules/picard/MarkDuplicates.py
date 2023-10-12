@@ -174,7 +174,7 @@ def parse_reports(
             "min": 0,
             "suffix": "%",
             "scale": "OrRd",
-            "modify": lambda x: self.multiply_hundred(x),
+            "modify": lambda x: multiply_hundred(x),
         }
         for s_name in self.picard_dupMetrics_data:
             if s_name not in self.general_stats_data:

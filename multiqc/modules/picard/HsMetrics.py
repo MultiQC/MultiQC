@@ -247,7 +247,7 @@ def general_stats_table(self, data):
                 "suffix": "%",
                 "format": "{:,.0f}",
                 "scale": "RdYlGn",
-                "modify": lambda x: self.multiply_hundred(x),
+                "modify": lambda x: multiply_hundred(x),
             }
 
     # Add data to general stats table

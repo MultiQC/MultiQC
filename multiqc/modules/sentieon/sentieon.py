@@ -2,26 +2,26 @@
 
 
 import logging
-from collections import OrderedDict
+import os
+import re
+from typing import Dict, Optional
 
-from multiqc.modules.base_module import BaseMultiqcModule, ModuleNoSamplesFound
-
-# Import the Sentieon submodules
-from . import AlignmentSummaryMetrics, GcBiasMetrics, InsertSizeMetrics
+from multiqc.modules.picard import MultiqcModule as PicardModule
 
 # Initialise the logger
 log = logging.getLogger(__name__)
 
 
-class MultiqcModule(BaseMultiqcModule):
-    """Sentieon-dnaseq produces many outputs. This module deals with 3 Picard
-    equivalents which do not transfer well to MultiQC. The code for each script
-    is split into its own file and adds a section to the module output if
-    logs are found."""
+class MultiqcModule(PicardModule):
+    """
+    Module for collecting QC stats from Sentieon-dnaseq, all of them are produced
+    by Picard tools internally, though containing different headers compared to
+    the original Picard tools output.
+    """
 
     def __init__(self):
-        # Initialise the parent object
-        super(MultiqcModule, self).__init__(
+        # Inherit from Picard MultiqcModule rather than base MultiqcModule
+        super().__init__(
             name="Sentieon",
             anchor="sentieon",
             href="https://www.sentieon.com/products/",
@@ -29,36 +29,29 @@ class MultiqcModule(BaseMultiqcModule):
             # Can't find a DOI // doi=
         )
 
-        # Set up class objects to hold parsed data
-        self.general_stats_headers = OrderedDict()
-        self.general_stats_data = dict()
-        n = dict()
+    def is_line_right_before_table(self, line: str) -> bool:
+        """
+        Picard logs from different samples can be concatenated together, so the module
+        needs to know a marker to find where new sample information starts.
 
-        # Call submodule functions
-        n["AlignmentMetrics"] = AlignmentSummaryMetrics.parse_reports(self)
-        if n["AlignmentMetrics"] > 0:
-            log.info("Found {} AlignmentSummaryMetrics reports".format(n["AlignmentMetrics"]))
+        Sentieon uses Picard tools, but adds its own header.
+        """
+        return line.startswith("#SentieonCommandLine:")
 
-        n["GcBiasMetrics"] = GcBiasMetrics.parse_reports(self)
-        if n["GcBiasMetrics"] > 0:
-            log.info("Found {} GcBiasMetrics reports".format(n["GcBiasMetrics"]))
+    def extract_sample_name(self, line: str, f: Dict) -> Optional[str]:
+        """
+        A file can be concatenated from multiple samples, so we can't just extract
+        the sample name from the file name, and need a way to find sample name in the
+        header. The copy of the originally used command is the best bet, as it's
+        usually logged by Picard.
 
-        n["InsertSizeMetrics"] = InsertSizeMetrics.parse_reports(self)
-        if n["InsertSizeMetrics"] > 0:
-            log.info("Found {} InsertSizeMetrics reports".format(n["InsertSizeMetrics"]))
-
-        # Exit if we didn't find anything
-        if sum(n.values()) == 0:
-            raise ModuleNoSamplesFound
-
-        # Add to the General Stats table (has to be called once per
-        # MultiQC module)
-        self.general_stats_addcols(self.general_stats_data, self.general_stats_headers)
-
-    # Helper functions
-    def multiply_hundred(self, val):
-        try:
-            val = float(val) * 100
-        except ValueError:
-            pass
-        return val
+        Sentieon uses Picard tools, but adds its own header.
+        """
+        if line.startswith("#SentieonCommandLine:") and " --algo " in line and " -i " in line:
+            # Pull sample name from the input file name, recorded in the command line:
+            fn_search = re.search(r" -i\s+(\[?\S+\]?)", line, flags=re.IGNORECASE)
+            if fn_search:
+                s_name = os.path.basename(fn_search.group(1).strip("[]"))
+                s_name = self.clean_s_name(s_name, f)
+                return s_name
+        return None

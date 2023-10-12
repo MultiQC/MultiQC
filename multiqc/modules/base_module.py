@@ -142,7 +142,7 @@ class BaseMultiqcModule(object):
 
             # Filter out files based on exclusion patterns
             if path_filters_exclude and len(path_filters_exclude) > 0:
-                # Try both the given path and also the path prefixed with the analyis dirs
+                # Try both the given path and also the path prefixed with the analysis dirs
                 exlusion_hits = itertools.chain(
                     (fnmatch.fnmatch(report.last_found_file, pfe) for pfe in path_filters_exclude),
                     *(
