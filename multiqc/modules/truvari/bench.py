@@ -19,19 +19,19 @@ class BenchSummary:
         """Find truvari bench logs and parse their data"""
         data = {}
         for f in self.find_log_files("truvari/bench"):
-            collect_stats = False
-            stats = ""
+            inside_json_block = False
+            json_text = ""
             version = None
             for line in f["f"].splitlines():
                 if "Stats:" in line:
-                    collect_stats = True
-                    stats = "{\n"
+                    inside_json_block = True
+                    json_text = "{\n"
                     continue
 
-                if collect_stats:
-                    stats += line
+                if inside_json_block:
+                    json_text += line
                     if line.startswith("}"):
-                        collect_stats = False
+                        inside_json_block = False
 
                 # Get version from log
                 # Log lines look like:
@@ -43,34 +43,37 @@ class BenchSummary:
                     if match:
                         version = match.group(1)
 
-            if stats:
-                # Use output directory as sample name
-                f["s_name"] = os.path.basename(f["root"])
-                f["s_name"] = self.clean_s_name(f["s_name"], f, root=os.path.dirname(f["root"]))
+            if not json_text:
+                log.warning("Could not find the 'Stats' JSON block in file: {}".format(f["fn"]))
+                continue
 
-                # Load stats
-                try:
-                    stats = json.loads(str(stats))
-                except json.decoder.JSONDecodeError as e:
-                    log.debug(e)
-                    log.warning("Could not parse stats from file: {}".format(f["fn"]))
+            # Load stats
+            try:
+                stats = json.loads(str(json_text))
+            except json.decoder.JSONDecodeError as e:
+                log.debug(e)
+                log.warning("Could not parse the 'Stats' JSON block in file: {}".format(f["fn"]))
+                continue
 
-                if f["s_name"] in data:
-                    log.debug("Duplicate sample name found! Overwriting: {}".format(f["s_name"]))
+            # Use output directory as sample name
+            f["s_name"] = os.path.basename(f["root"])
+            f["s_name"] = self.clean_s_name(f["s_name"], f, root=os.path.dirname(f["root"]))
+            if f["s_name"] in data:
+                log.debug("Duplicate sample name found! Overwriting: {}".format(f["s_name"]))
 
-                # Some stats were renamed in truvari 4.0.0 (commit 6e37058)
-                # This renames them back to the old names for backwards compatibility
-                if all(key in stats for key in ["TP-call_TP-gt", "TP-call_FP-gt", "TP-call", "call cnt"]):
-                    stats["TP-comp_TP-gt"] = stats["TP-call_TP-gt"]
-                    stats["TP-comp_FP-gt"] = stats["TP-call_FP-gt"]
-                    stats["TP-comp"] = stats["TP-call"]
-                    stats["comp cnt"] = stats["call cnt"]
+            # Some stats were renamed in truvari 4.0.0 (commit 6e37058)
+            # This renames them back to the old names for backwards compatibility
+            if all(key in stats for key in ["TP-call_TP-gt", "TP-call_FP-gt", "TP-call", "call cnt"]):
+                stats["TP-comp_TP-gt"] = stats["TP-call_TP-gt"]
+                stats["TP-comp_FP-gt"] = stats["TP-call_FP-gt"]
+                stats["TP-comp"] = stats["TP-call"]
+                stats["comp cnt"] = stats["call cnt"]
 
-                self.add_data_source(f, section="bench")
-                data[f["s_name"]] = stats
+            self.add_data_source(f, section="bench")
+            data[f["s_name"]] = stats
 
-                if version is not None:
-                    self.add_software_version(version, f["s_name"])
+            if version is not None:
+                self.add_software_version(version, f["s_name"])
 
         # Filter to strip out ignored sample names
         data = self.ignore_samples(data)
@@ -117,7 +120,6 @@ class BenchSummary:
         bench_headers["gt_concordance"] = {
             "title": "GT concordance",
             "description": "Genotype concordance. Definition: TP-comp with GT / (TP-comp with GT + TP-comp w/o GT)",
-            "hidden": True,
             "scale": "GnBu",
             "suffix": "%",
             "placement": 103,
