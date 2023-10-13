@@ -13,7 +13,7 @@ from multiqc.plots import table
 # Initialize the logger
 log = logging.getLogger(__name__)
 
-# This is a subset, the rest of the fields are self descriptive
+# This is a subset, the rest of the fields are self-descriptive
 FIELD_DESCRIPTIONS = {
     "LEFT_SAMPLE": "The name of the left sample.",
     "LEFT_GROUP_VALUE": "The name of the left data-type group.",
@@ -39,13 +39,11 @@ def parse_reports(self):
     self.picard_CrosscheckFingerprints_data = dict()
 
     # Go through logs and find Metrics
-    for f in self.find_log_files("picard/crosscheckfingerprints", filehandles=True):
-        self.add_data_source(f, section="CrosscheckFingerprints")
-
+    for f in self.find_log_files(f"{self.anchor}/crosscheckfingerprints", filehandles=True):
         # Parse an individual CrosscheckFingerprints Report
         (metrics, comments) = _take_till(f["f"], lambda line: line.startswith("#") or line == "\n")
         header = next(metrics).rstrip("\n").split("\t")
-        if not "LEFT_GROUP_VALUE" in header:
+        if "LEFT_GROUP_VALUE" not in header:
             # Not a CrosscheckFingerprints Report
             continue
         reader = DictReader(metrics, fieldnames=header, delimiter="\t")
@@ -67,14 +65,12 @@ def parse_reports(self):
             row["TUMOR_AWARENESS"] = tumor_awareness
             self.picard_CrosscheckFingerprints_data[i] = row
 
-            # Superfluous function call to confirm that it is used in this module
-            # Replace None with actual version if it is available
-            self.add_software_version(None, i)
+            self.add_data_source(f, section="CrosscheckFingerprints")
 
     # Only add sections if we found data
     if len(self.picard_CrosscheckFingerprints_data) > 0:
         # Write data to file
-        self.write_data_file(self.picard_CrosscheckFingerprints_data, "picard_crosscheckfingerprints")
+        self.write_data_file(self.picard_CrosscheckFingerprints_data, f"{self.anchor}_crosscheckfingerprints")
 
         # For each sample, flag if any comparisons that don't start with "Expected"
         # A sample that does not have all "Expected" will show as `False` and be Red
@@ -90,7 +86,7 @@ def parse_reports(self):
         # Add a table section to the report
         self.add_section(
             name="Crosscheck Fingerprints",
-            anchor="picard-crosscheckfingerprints",
+            anchor=f"{self.anchor}-crosscheckfingerprints",
             description="Pairwise identity checking betwen samples and groups.",
             helptext="""
             Checks that all data in the set of input files comes from the same individual, based on the selected group granularity.
@@ -99,9 +95,9 @@ def parse_reports(self):
                 self.picard_CrosscheckFingerprints_data,
                 _get_table_headers(self.picard_CrosscheckFingerprints_data),
                 {
-                    "namespace": "Picard",
-                    "id": "picard_crosscheckfingerprints_table",
-                    "table_title": "Picard: Crosscheck Fingerprints",
+                    "namespace": self.name,
+                    "id": f"{self.anchor}_crosscheckfingerprints_table",
+                    "table_title": f"{self.name}: Crosscheck Fingerprints",
                     "save_file": True,
                     "col1_header": "ID",
                     "no_beeswarm": True,

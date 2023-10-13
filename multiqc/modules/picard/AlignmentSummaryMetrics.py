@@ -22,55 +22,50 @@ def parse_reports(self):
         parsed_data = dict()
         # A file can be concatenated from multiple samples, so we need to keep track of
         # the current sample name and header.
-        current_keys = None
+        keys = None
         # Sample name from input file name by default.
-        current_s_name = f["s_name"]
+        s_name = None
         for l in f["f"]:
-            # if self.is_line_right_before_header(l):
             maybe_s_name = self.extract_sample_name(l, f)
             if maybe_s_name:
                 # Starts information for a new sample
-                current_s_name = maybe_s_name
-                current_keys = None
+                s_name = maybe_s_name
+                keys = None
+                if s_name in self.picard_alignment_metrics or s_name in parsed_data:
+                    log.debug("Duplicate sample name found in {}! Overwriting: {}".format(f["fn"], s_name))
 
             if self.is_line_right_before_table(l):
                 l = next(f["f"])
-                current_keys = l.strip("\n").split("\t")
-            elif current_keys:
-                if current_s_name not in parsed_data:
-                    parsed_data[current_s_name] = dict()
+                keys = l.strip("\n").split("\t")
+            elif s_name and keys:
+                if s_name not in parsed_data:
+                    parsed_data[s_name] = dict()
                 vals = l.strip("\n").split("\t")
-                if len(vals) == len(current_keys):
+                if len(vals) == len(keys):
                     # Ignore the FIRST_OF_PAIR / SECOND_OF_PAIR data to simplify things
                     if vals[0] == "PAIR" or vals[0] == "UNPAIRED":
-                        for i, k in enumerate(current_keys):
+                        for i, k in enumerate(keys):
                             try:
-                                parsed_data[current_s_name][k] = float(vals[i])
+                                parsed_data[s_name][k] = float(vals[i])
                             except ValueError:
-                                parsed_data[current_s_name][k] = vals[i]
+                                parsed_data[s_name][k] = vals[i]
                 else:
-                    current_s_name = None
-                    current_keys = None
-
-        # When there is only one sample, using the file name to extract the sample name.
-        if len(parsed_data) == 1:
-            parsed_data = {f["s_name"]: list(parsed_data.values())[0]}
+                    s_name = None
+                    keys = None
 
         # Remove empty dictionaries
         for s_name in list(parsed_data.keys()):
             if len(parsed_data[s_name]) == 0:
                 parsed_data.pop(s_name, None)
 
-            # Superfluous function call to confirm that it is used in this module
-            # Replace None with actual version if it is available
-            self.add_software_version(None, current_s_name)
+        # When there is only one sample, using the file name to extract the sample name.
+        if len(parsed_data) == 1:
+            parsed_data = {f["s_name"]: list(parsed_data.values())[0]}
 
-        # Manipulate sample names if multiple baits found
+        self.picard_alignment_metrics.update(parsed_data)
+
         for s_name in parsed_data:
-            if s_name in self.picard_alignment_metrics:
-                log.debug("Duplicate sample name found in {}! Overwriting: {}".format(f["fn"], s_name))
             self.add_data_source(f, s_name, section="AlignmentSummaryMetrics")
-            self.picard_alignment_metrics[s_name] = parsed_data[s_name]
 
     # Filter to strip out ignored sample names
     self.picard_alignment_metrics = self.ignore_samples(self.picard_alignment_metrics)

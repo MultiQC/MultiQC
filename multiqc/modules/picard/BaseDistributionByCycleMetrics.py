@@ -4,8 +4,6 @@ import logging
 
 from multiqc.plots import linegraph
 
-from .util import read_sample_name
-
 # Initialise the logger
 log = logging.getLogger(__name__)
 
@@ -13,7 +11,7 @@ log = logging.getLogger(__name__)
 def read_base_distrib_data(line_iter):
     """
     Consumes lines from the provided line_iter and parses those lines
-    for base distribution data.  Data should be tab separated and
+    for base distribution data.  Data should be tab-separated and
     immediately preceded by a line of headers:
 
     READ_END  CYCLE  PCT_A  PCT_C  PCT_G  PCT_T  PCT_N
@@ -63,17 +61,19 @@ def parse_reports(self):
     self.picard_baseDistributionByCycle_samplestats = dict()
 
     # Go through logs and find Metrics
-    base_dist_files = self.find_log_files("picard/basedistributionbycycle", filehandles=True)
+    base_dist_files = self.find_log_files(f"{self.anchor}/basedistributionbycycle", filehandles=True)
 
     for f in base_dist_files:
+        s_name = None
         try:
             lines = iter(f["f"])
 
-            # read through the header of the file to obtain the
-            # sample name
-            clean_fn = lambda n: self.clean_s_name(n, f)
-            s_name = read_sample_name(lines, clean_fn, "BaseDistributionByCycle")
-            assert s_name is not None
+            for line in lines:
+                maybe_s_name = self.extract_sample_name(line, f)
+                if maybe_s_name:
+                    # Starts information for a new sample
+                    s_name = maybe_s_name
+                    break
 
             # pull out the data
             data = read_base_distrib_data(lines)
@@ -81,7 +81,7 @@ def parse_reports(self):
 
             # data should be a hierarchical dict
             # data[read_end][cycle]
-            assert not (set(data) - set([1, 2]))
+            assert not (set(data) - {1, 2})
 
             # set up the set of s_names
             if 2 in set(data):
@@ -97,15 +97,15 @@ def parse_reports(self):
             for name in s_names.values():
                 self.add_data_source(f, name, section="BaseDistributionByCycle")
 
-                # Superfluous function call to confirm that it is used in this module
-                # Replace None with actual version if it is available
-                self.add_software_version(None, s_name)
+                # # Superfluous function call to confirm that it is used in this module
+                # # Replace None with actual version if it is available
+                # self.add_software_version(None, s_name)
 
             for read_end in s_names:
                 data_by_cycle = data[read_end]
                 s_name = s_names[read_end]
                 self.picard_baseDistributionByCycle_data[s_name] = data_by_cycle
-                samplestats = {
+                sample_stats = {
                     "sum_pct_a": 0,
                     "sum_pct_c": 0,
                     "sum_pct_g": 0,
@@ -113,15 +113,15 @@ def parse_reports(self):
                     "sum_pct_n": 0,
                     "cycle_count": 0,
                 }
-                self.picard_baseDistributionByCycle_samplestats[s_name] = samplestats
+                self.picard_baseDistributionByCycle_samplestats[s_name] = sample_stats
                 for c, row in data_by_cycle.items():
                     pct_a, pct_c, pct_g, pct_t, pct_n = row
-                    samplestats["sum_pct_a"] += pct_a
-                    samplestats["sum_pct_c"] += pct_c
-                    samplestats["sum_pct_g"] += pct_g
-                    samplestats["sum_pct_t"] += pct_t
-                    samplestats["sum_pct_n"] += pct_n
-                samplestats["cycle_count"] += len(data_by_cycle.keys())
+                    sample_stats["sum_pct_a"] += pct_a
+                    sample_stats["sum_pct_c"] += pct_c
+                    sample_stats["sum_pct_g"] += pct_g
+                    sample_stats["sum_pct_t"] += pct_t
+                    sample_stats["sum_pct_n"] += pct_n
+                sample_stats["cycle_count"] += len(data_by_cycle.keys())
         except AssertionError:
             pass
 

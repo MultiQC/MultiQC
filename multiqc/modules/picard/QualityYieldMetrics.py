@@ -4,9 +4,6 @@ import logging
 from collections import OrderedDict
 
 from multiqc import config
-from multiqc.plots import linegraph, table
-
-from .util import read_sample_name
 
 # Initialise the logger
 log = logging.getLogger(__name__)
@@ -36,31 +33,20 @@ def parse_reports(self):
     header = list(DESC.keys())
 
     # Go through logs and find Metrics
-    for f in self.find_log_files("picard/quality_yield_metrics", filehandles=True):
-        self.add_data_source(f, section="QualityYieldMetrics")
-
-        parsed_data = dict()
+    for f in self.find_log_files(f"{self.anchor}/quality_yield_metrics", filehandles=True):
         s_name = None
-        keys = None
-        commadecimal = None
 
         lines = iter(f["f"])
-
-        clean_fn = lambda n: self.clean_s_name(n, f)
-        s_name = read_sample_name(lines, clean_fn, "CollectQualityYieldMetrics")
-
-        if s_name is None:
-            continue
-
-        # Superfluous function call to confirm that it is used in this module
-        # Replace None with actual version if it is available
-        self.add_software_version(None, s_name)
+        for line in lines:
+            maybe_s_name = self.extract_sample_name(line, f)
+            if maybe_s_name:
+                s_name = maybe_s_name
 
         sample_data = dict()
         try:
             # skip to the histogram
             line = next(lines)
-            while not line.startswith("## METRICS CLASS"):
+            while not self.is_line_right_before_table(line):
                 line = next(lines)
 
             # check the header
@@ -78,6 +64,11 @@ def parse_reports(self):
         if sample_data:
             all_data[s_name] = OrderedDict(zip(header, fields))
 
+            self.add_data_source(f, section="QualityYieldMetrics")
+            # Superfluous function call to confirm that it is used in this module
+            # Replace None with actual version if it is available
+            self.add_software_version(None, s_name)
+
     # Filter to strip out ignored sample names
     all_data = self.ignore_samples(all_data)
 
@@ -85,7 +76,7 @@ def parse_reports(self):
         return 0
 
     # Write parsed data to a file
-    self.write_data_file(all_data, "multiqc_picard_QualityYieldMetrics")
+    self.write_data_file(all_data, f"multiqc_{self.anchor}_QualityYieldMetrics")
 
     # Add to the general stats table
     headers = {

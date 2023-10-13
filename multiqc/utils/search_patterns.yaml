@@ -764,8 +764,17 @@ sentieon/alignment_metrics:
 sentieon/insertsize:
   contents: "--algo InsertSizeMetricAlgo"
   shared: true
+sentieon/markdups:
+  contents: "--algo Dedup"
+  shared: true
 sentieon/gcbias:
   contents: "--algo GCBias"
+  shared: true
+sentieon/quality_by_cycle:
+  contents: "--algo MeanQualityByCycle"
+  shared: true
+sentieon/quality_score_distribution:
+  contents: "--algo QualDistribution"
   shared: true
 seqyclean:
   fn: "*_SummaryStatistics.tsv"

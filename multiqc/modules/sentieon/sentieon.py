@@ -29,6 +29,16 @@ class MultiqcModule(PicardModule):
             # Can't find a DOI // doi=
         )
 
+    def available_tools(self):
+        return {
+            "AlignmentSummaryMetrics",
+            "GcBiasMetrics",
+            "InsertSizeMetrics",
+            "MarkDuplicates",
+            "QualityByCycleMetrics",
+            "QualityScoreDistributionMetrics",
+        }
+
     def is_line_right_before_table(self, line: str) -> bool:
         """
         Picard logs from different samples can be concatenated together, so the module

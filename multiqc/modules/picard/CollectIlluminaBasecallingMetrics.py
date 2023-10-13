@@ -16,7 +16,7 @@ def parse_reports(self):
     self.picard_basecalling_metrics = dict()
 
     # Go through logs and find Metrics
-    for f in self.find_log_files("picard/collectilluminabasecallingmetrics", filehandles=True):
+    for f in self.find_log_files(f"{self.anchor}/collectilluminabasecallingmetrics", filehandles=True):
         self.add_data_source(f, section="CollectIlluminaBasecallingMetrics")
 
         keys = None
@@ -41,11 +41,11 @@ def parse_reports(self):
 
     if len(self.picard_basecalling_metrics) > 0:
         # Write parsed data to a file
-        self.write_data_file(self.picard_basecalling_metrics, "multiqc_picard_IlluminaBasecallingMetrics")
+        self.write_data_file(self.picard_basecalling_metrics, f"multiqc_{self.anchor}_IlluminaBasecallingMetrics")
 
         self.add_section(
             name="Basecalling Metrics",
-            anchor="picard-illuminabasecallingmetrics",
+            anchor=f"{self.anchor}-illuminabasecallingmetrics",
             description="Quality control metrics for each lane of an Illumina flowcell.",
             helptext="""
             For full details, please see the [Picard Documentation](http://broadinstitute.github.io/picard/picard-metric-definitions.html#IlluminaBasecallingMetrics).
@@ -56,14 +56,14 @@ def parse_reports(self):
 
             `NPF` stands for _"not passing filter"_ and is calculated by subtracting the `PF_` metric from the `TOTAL_` Picard metrics.
             """,
-            plot=lane_metrics_plot(self.picard_basecalling_metrics),
+            plot=lane_metrics_plot(self, self.picard_basecalling_metrics),
         )
 
     # Return the number of detected samples to the parent module
     return len(self.picard_basecalling_metrics)
 
 
-def lane_metrics_table(data):
+def lane_metrics_table(self, data):
     headers = OrderedDict()
     headers["TOTAL_BASES"] = {"title": "Total Bases"}
     headers["PF_BASES"] = {"title": "Passing Filter Bases"}
@@ -73,9 +73,9 @@ def lane_metrics_table(data):
     headers["PF_CLUSTERS"] = {"title": "Passing Filter Clusters"}
 
     table_config = {
-        "id": "picard-illumina-basecalling-metrics-table",
-        "namespace": "Picard",
-        "table_title": "Picard Illumina Base Calling Metrics",
+        "id": f"{self.anchor}-illumina-basecalling-metrics-table",
+        "namespace": self.name,
+        "table_title": f"{self.name} Illumina Base Calling Metrics",
     }
     tdata = {}
     for lane_number, lane in data.items():
@@ -83,10 +83,10 @@ def lane_metrics_table(data):
     return table.plot(tdata, headers, table_config)
 
 
-def lane_metrics_plot(data):
+def lane_metrics_plot(self, data):
     plot_config = {
-        "id": "plot-picard-illuminabasecallingmetrics",
-        "title": "Picard: Illumina Basecalling Metrics",
+        "id": f"plot-{self.anchor}-illuminabasecallingmetrics",
+        "title": f"{self.name}: Illumina Basecalling Metrics",
         "ylab": "Lane",
         "data_labels": [
             {"name": "Bases", "ylab": "Number of Bases"},

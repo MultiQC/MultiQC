@@ -1,65 +1,29 @@
-import os
-import re
-from collections import OrderedDict
-
-
-def read_sample_name(line_iter, clean_fn, program_name):
-    """
-    Consumes lines from the provided line_iter and parses those lines
-    as a header for the picard base distribution file.  The header
-    file is assumed to contain a line with both 'INPUT' and
-    'BaseDistributionByCycle'.
-
-    If the header parses correctly, the sample name is returned.  If
-    the header does not parse correctly, None is returned.
-    """
-    try:
-        while True:
-            new_line = next(line_iter)
-            new_line = new_line.strip()
-            if program_name in new_line and "INPUT" in new_line:
-                # Pull sample name from input
-                fn_search = re.search(r"INPUT=?\s*(\[?[^\s]+\]?)", new_line, flags=re.IGNORECASE)
-                if fn_search:
-                    s_name = os.path.basename(fn_search.group(1).strip("[]"))
-                    s_name = clean_fn(s_name)
-                    return s_name
-    except StopIteration:
-        return None
-
-
-def read_histogram(self, program_key, program_name, headers, formats):
+def read_histogram(self, program_key, headers, formats):
     """
     Reads a Picard HISTOGRAM file.
 
     Args:
         self: the Picard QC module
         program_key: the key used to find the program (ex. picard/quality_by_cycle)
-        program_name: the program key in the header to find the I/INPUT line
         headers: the list of expected headers for the histogram
         formats: the list of methods to apply to re-format each field (on a given row)
     """
-    all_data = OrderedDict()
+    all_data = dict()
 
     assert len(formats) == len(headers)
 
     # Go through logs and find Metrics
     for f in self.find_log_files(program_key, filehandles=True):
-        self.add_data_source(f, section="Histogram")
+        s_name = f["s_name"]
         lines = iter(f["f"])
+        for l in lines:
+            maybe_s_name = self.extract_sample_name(l, f)
+            if maybe_s_name:
+                s_name = maybe_s_name
+            if l.startswith("## HISTOGRAM"):
+                break
 
-        # read through the header of the file to obtain the
-        # sample name
-        clean_fn = lambda n: self.clean_s_name(n, f)
-        s_name = read_sample_name(lines, clean_fn, program_name)
-        if s_name is None:
-            continue
-
-        # Superfluous function call to confirm that it is used in this module
-        # Replace None with actual version if it is available
-        self.add_software_version(None, s_name)
-
-        sample_data = OrderedDict()
+        sample_data = dict()
 
         try:
             # skip to the histogram
@@ -80,7 +44,7 @@ def read_histogram(self, program_key, program_name, headers, formats):
                 for i in range(len(fields)):
                     fields[i] = formats[i](fields[i])
 
-                sample_data[fields[0]] = OrderedDict(zip(headers, fields))
+                sample_data[fields[0]] = dict(zip(headers, fields))
                 line = next(lines).rstrip()
 
         except StopIteration:
@@ -90,9 +54,14 @@ def read_histogram(self, program_key, program_name, headers, formats):
         if sample_data:
             all_data[s_name] = sample_data
 
+            self.add_data_source(f, s_name, section="Histogram")
+            # Superfluous function call to confirm that it is used in this module
+            # Replace None with actual version if it is available
+            self.add_software_version(None, s_name)
+
     data = self.ignore_samples(all_data)
 
     # Write data to file
-    self.write_data_file(data, "picard_histogram")
+    self.write_data_file(data, f"{self.anchor}_histogram")
 
     return data

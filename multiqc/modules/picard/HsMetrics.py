@@ -179,11 +179,11 @@ def parse_reports(self):
                 },
             ),
         )
-        tbases = _add_target_bases(data)
+        tbases = _add_target_bases(self, data)
         self.add_section(
             name=tbases["name"], anchor=tbases["anchor"], description=tbases["description"], plot=tbases["plot"]
         )
-        hs_pen_plot = hs_penalty_plot(data)
+        hs_pen_plot = hs_penalty_plot(self, data)
         if hs_pen_plot is not None:
             self.add_section(
                 name="HS Penalty",
@@ -234,12 +234,12 @@ def general_stats_table(self, data):
             assert type(covs) == list
             assert len(covs) > 0
             covs = [str(i) for i in covs]
-            log.debug("Custom Picard coverage thresholds: {}".format(", ".join([i for i in covs])))
+            log.debug("Custom picad coverage thresholds: {}".format(", ".join([i for i in covs])))
         except (KeyError, AttributeError, TypeError, AssertionError):
             covs = ["30"]
         for c in covs:
             self.general_stats_headers["PCT_TARGET_BASES_{}X".format(c)] = {
-                "id": "picard_target_bases_{}X".format(c),
+                "id": f"{self.anchor}_target_bases_{c}X",
                 "title": "% Target Bases {}X".format(c),
                 "description": "Percent of target bases with coverage &ge; {}X".format(c),
                 "max": 100,
@@ -247,7 +247,7 @@ def general_stats_table(self, data):
                 "suffix": "%",
                 "format": "{:,.0f}",
                 "scale": "RdYlGn",
-                "modify": lambda x: multiply_hundred(x),
+                "modify": lambda x: self.multiply_hundred(x),
             }
 
     # Add data to general stats table
@@ -359,7 +359,7 @@ def _generate_table_header_config(table_cols=[], hidden_table_cols=[]):
     return headers
 
 
-def _add_target_bases(data):
+def _add_target_bases(self, data):
     data_clean = defaultdict(dict)
     for s in data:
         for h in data[s]:
@@ -378,13 +378,13 @@ def _add_target_bases(data):
     }
     return {
         "name": "Target Region Coverage",
-        "anchor": "picard_hsmetrics_target_bases",
+        "anchor": f"{self.anchor}_hsmetrics_target_bases",
         "description": "The percentage of all target bases with at least <code>x</code> fold coverage.",
         "plot": linegraph.plot(data_clean, pconfig),
     }
 
 
-def hs_penalty_plot(data):
+def hs_penalty_plot(self, data):
     data_clean = defaultdict(dict)
     any_non_zero = False
     for s in data:
@@ -395,8 +395,8 @@ def hs_penalty_plot(data):
                     any_non_zero = True
 
     pconfig = {
-        "id": "picard_hybrid_selection_penalty",
-        "title": "Picard: Hybrid Selection Penalty",
+        "id": f"{self.anchor}_hybrid_selection_penalty",
+        "title": f"{self.name}: Hybrid Selection Penalty",
         "xlab": "Fold Coverage",
         "ylab": "Penalty",
         "ymin": 0,

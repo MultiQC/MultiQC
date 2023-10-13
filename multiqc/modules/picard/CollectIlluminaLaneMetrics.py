@@ -11,11 +11,11 @@ from multiqc.plots import table
 log = logging.getLogger(__name__)
 
 
-def lane_metrics_table(data):
+def lane_metrics_table(self, data):
     headers = OrderedDict()
     headers["CLUSTER_DENSITY"] = {
         "title": "Cluster Density",
-        "description": "The number of clusters per unit area on the this lane (cluster / mm^2`)",
+        "description": "The number of clusters per unit area on this lane (cluster / mm^2`)",
         "scale": "Greens",
     }
     headers["TYPE_NAME"] = {
@@ -37,9 +37,9 @@ def lane_metrics_table(data):
     }
 
     table_config = {
-        "id": "picard-illumina-lane-metrics-table",
-        "namespace": "Picard",
-        "table_title": "Picard Illumina Lane Metrics",
+        "id": f"{self.anchor}-illumina-lane-metrics-table",
+        "namespace": self.name,
+        "table_title": f"{self.name} Illumina Lane Metrics",
     }
     tdata = {}
     for run_name, run in data.items():
@@ -92,7 +92,7 @@ def parse_reports(self):
 
     if len(self.picard_lane_metrics) > 0:
         # Write parsed data to a file
-        self.write_data_file(self.picard_lane_metrics, "multiqc_picard_IlluminaLaneMetrics")
+        self.write_data_file(self.picard_lane_metrics, f"multiqc_{self.anchor}_IlluminaLaneMetrics")
 
         self.add_section(
             name="Lane Metrics",

@@ -2,8 +2,6 @@
 
 import logging
 import math
-import os
-import re
 from collections import OrderedDict, defaultdict
 
 from multiqc import config
@@ -13,15 +11,7 @@ from multiqc.plots import bargraph
 log = logging.getLogger(__name__)
 
 
-def parse_reports(
-    self,
-    log_key="picard/markdups",
-    section_name="Mark Duplicates",
-    section_anchor="picard-markduplicates",
-    plot_title="Picard: Deduplication Stats",
-    plot_id="picard_deduplication",
-    data_filename="multiqc_picard_dups",
-):
+def parse_reports(self):
     """Find Picard MarkDuplicates reports and parse their dataself.
     This function is also used by the biobambam2 module, hence the parameters.
     """
@@ -36,7 +26,7 @@ def parse_reports(
         merge_multiple_libraries = True
 
     # Function to save results at end of table
-    def save_table_results(s_name, base_s_name, keys, parsed_data, recompute_merged_metrics):
+    def save_table_results(s_name, keys, parsed_data, recompute_merged_metrics):
         # No data
         if len(keys) == 0 or len(parsed_data) == 0:
             return
@@ -73,13 +63,11 @@ def parse_reports(
 
         # On to the next library if not merging
         else:
-            s_name = base_s_name
-            parsed_data = {}
+            return False
 
     # Go through logs and find Metrics
-    for f in self.find_log_files(log_key, filehandles=True):
+    for f in self.find_log_files(f"{self.anchor}/markdups", filehandles=True):
         s_name = f["s_name"]
-        base_s_name = f["s_name"]
         parsed_lists = defaultdict(list)
         keys = None
         in_stats_block = False
@@ -88,13 +76,9 @@ def parse_reports(
             #
             # New log starting
             #
-            if "markduplicates" in l.lower() and "input" in l.lower():
-                # Pull sample name from input
-                fn_search = re.search(r"INPUT(?:=|\s+)(\[?[^\s]+\]?)", l, flags=re.IGNORECASE)
-                if fn_search:
-                    s_name = os.path.basename(fn_search.group(1).strip("[]"))
-                    s_name = self.clean_s_name(s_name, f)
-                    base_s_name = s_name
+            maybe_s_name = self.extract_sample_name(l, f)
+            if maybe_s_name:
+                s_name = maybe_s_name
                 continue
 
             #
@@ -115,10 +99,9 @@ def parse_reports(
                 # End of the METRICS table, or multiple libraries, and we're not merging them
                 if len(vals) < 6 or (not merge_multiple_libraries and len(parsed_lists) > 0):
                     parsed_data = {k: parsed_list[0] for k, parsed_list in parsed_lists.items()}
-                    if save_table_results(s_name, base_s_name, keys, parsed_data, recompute_merged_metrics):
+                    if save_table_results(s_name, keys, parsed_data, recompute_merged_metrics):
                         # Reset for next file if returned True
                         s_name = f["s_name"]
-                        base_s_name = f["s_name"]
                         parsed_lists = defaultdict(list)
                         keys = None
                         in_stats_block = False
@@ -149,13 +132,9 @@ def parse_reports(
             else:
                 parsed_data[k] = "/".join(str(x) for x in parsed_lists[k])
 
-        # Superfluous function call to confirm that it is used in this module
-        # Replace None with actual version if it is available
-        self.add_software_version(None, s_name)
-
         # Files with no extra lines after last library
         if in_stats_block:
-            save_table_results(s_name, base_s_name, keys, parsed_data, recompute_merged_metrics)
+            save_table_results(s_name, keys, parsed_data, recompute_merged_metrics)
 
     #
     # Filter to strip out ignored sample names
@@ -164,17 +143,17 @@ def parse_reports(
 
     if len(self.picard_dupMetrics_data) > 0:
         # Write parsed data to a file
-        self.write_data_file(self.picard_dupMetrics_data, data_filename)
+        self.write_data_file(self.picard_dupMetrics_data, f"multiqc_{self.anchor}_dups")
 
         # Add to general stats table
         self.general_stats_headers["PERCENT_DUPLICATION"] = {
             "title": "% Dups",
-            "description": "{} - Percent Duplication".format(section_name),
+            "description": "Mark Duplicates - Percent Duplication",
             "max": 100,
             "min": 0,
             "suffix": "%",
             "scale": "OrRd",
-            "modify": lambda x: multiply_hundred(x),
+            "modify": lambda x: self.multiply_hundred(x),
         }
         for s_name in self.picard_dupMetrics_data:
             if s_name not in self.general_stats_data:
@@ -210,16 +189,16 @@ def parse_reports(
 
         # Config for the plot
         pconfig = {
-            "id": plot_id,
-            "title": plot_title,
+            "id": f"{self.anchor}_deduplication",
+            "title": f"{self.name}: Deduplication Stats",
             "ylab": "# Reads",
             "cpswitch_counts_label": "Number of Reads",
             "cpswitch_c_active": False,
         }
 
         self.add_section(
-            name=section_name,
-            anchor=section_anchor,
+            name="Mark Duplicates",
+            anchor=f"{self.anchor}-markduplicates",
             description="Number of reads, categorised by duplication state. **Pair counts are doubled** - see help text for details.",
             helptext="""
             The table in the Picard metrics file contains some columns referring

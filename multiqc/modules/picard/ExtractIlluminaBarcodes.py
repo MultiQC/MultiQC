@@ -17,7 +17,7 @@ def parse_reports(self):
     self.picard_barcode_metrics = dict()
 
     # Go through logs and find Metrics
-    for f in self.find_log_files("picard/extractilluminabarcodes", filehandles=True):
+    for f in self.find_log_files(f"{self.anchor}/extractilluminabarcodes", filehandles=True):
         self.add_data_source(f, section="ExtractIlluminaBarcodes")
 
         lane = None
@@ -55,15 +55,15 @@ def parse_reports(self):
         return 0
 
     # Write parsed data to a file
-    self.write_data_file(self.picard_barcode_metrics, "multiqc_picard_ExtractIlluminaBarcodes")
+    self.write_data_file(self.picard_barcode_metrics, f"multiqc_{self.anchor}_ExtractIlluminaBarcodes")
 
     plot_data = {}
     plot_data["per_lane"] = reads_per_lane(self.picard_barcode_metrics)
     plot_data["per_bc"] = reads_per_barcode(self.picard_barcode_metrics)
 
     per_lane_plot_config = {
-        "id": "plot-picard-illuminabarcodemetrics-readsperlane",
-        "title": "Picard ExtractIlluminaBarcodes: Reads per lane",
+        "id": f"plot-{self.anchor}-illuminabarcodemetrics-readsperlane",
+        "title": f"{self.name} ExtractIlluminaBarcodes: Reads per lane",
         "ylab": "Lane",
         "data_labels": [
             {"name": "Reads", "ylab": "Number of Reads"},
@@ -72,8 +72,8 @@ def parse_reports(self):
         ],
     }
     per_barcode_plot_config = {
-        "id": "plot-picard-illuminabarcodemetrics-readsperbarcode",
-        "title": "Picard ExtractIlluminaBarcodes: Reads per barcode",
+        "id": f"plot-{self.anchor}-illuminabarcodemetrics-readsperbarcode",
+        "title": f"{self.name} ExtractIlluminaBarcodes: Reads per barcode",
         "ylab": "Lane",
         "data_labels": [
             {"name": "Reads", "ylab": "Number of Reads"},
@@ -91,7 +91,7 @@ def parse_reports(self):
 
     self.add_section(
         name="Barcode Metrics Per Lane",
-        anchor="picard-illuminabarcodemetrics-perlane",
+        anchor=f"{self.anchor}-illuminabarcodemetrics-perlane",
         description="""
             Indicates the number of matches (and mismatches) between the barcode reads and the actual barcodes.
             See the [Picard Documentation](https://broadinstitute.github.io/picard/picard-metric-definitions.html#ExtractIlluminaBarcodes.BarcodeMetric) for details.
@@ -105,7 +105,7 @@ def parse_reports(self):
 
     self.add_section(
         name="Barcode Metrics Per Barcode",
-        anchor="picard-illuminabarcodemetrics-perbarcode",
+        anchor=f"{self.anchor}-illuminabarcodemetrics-perbarcode",
         description="""
             Indicates the number of matches (and mismatches) between the barcode reads and the actual barcodes.
             See the [Picard Documentation](https://broadinstitute.github.io/picard/picard-metric-definitions.html#ExtractIlluminaBarcodes.BarcodeMetric) for details.

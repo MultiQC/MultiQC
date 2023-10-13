@@ -1,8 +1,6 @@
 """ MultiQC submodule to parse output from Picard GcBiasMetrics """
 
 import logging
-import os
-import re
 
 from multiqc.plots import linegraph
 
@@ -22,37 +20,30 @@ def parse_reports(self):
         s_name = None
         gc_col = None
         cov_col = None
+        data = dict()
+        summary_data = dict()
         for l in f["f"]:
-            if s_name is None and "--algo GCBias" in l:  # Sentieon
-                s_name = os.path.basename(f["s_name"])
-                s_name = self.clean_s_name(s_name, f)
-
-            if "GcBiasMetrics" in l and "INPUT" in l:
-                s_name = None
-                # Pull sample name from input
-                fn_search = re.search(r"INPUT(?:=|\s+)(\[?[^\s]+\]?)", l, flags=re.IGNORECASE)
-                if fn_search:
-                    s_name = os.path.basename(fn_search.group(1).strip("[]"))
-                    s_name = self.clean_s_name(s_name, f)
+            maybe_s_name = self.extract_sample_name(l, f)
+            if maybe_s_name:
+                # Starts information for a new sample
+                s_name = maybe_s_name
 
             if s_name is not None:
                 if gc_col is not None and cov_col is not None:
                     try:
                         # Note that GC isn't always the first column.
                         s = l.strip("\n").split("\t")
-                        self.picard_gc_bias_data[s_name][int(s[gc_col])] = float(s[cov_col])
+                        data[s_name][int(s[gc_col])] = float(s[cov_col])
                     except IndexError:
                         s_name = None
                         gc_col = None
                         cov_col = None
 
-                if ("GcBiasDetailMetrics" in l and "## METRICS CLASS" in l) or (
-                    "#SentieonCommandLine" in l and "--algo GCBias" in l and "Summary" not in s_name
-                ):
-                    if s_name in self.picard_gc_bias_data:
+            if s_name is not None:
+                if self.is_line_right_before_table(l):
+                    if s_name in self.picard_gc_bias_data or s_name in data:
                         log.debug("Duplicate sample name found in {}! Overwriting: {}".format(f["fn"], s_name))
-                    self.add_data_source(f, s_name, section="GcBiasDetailMetrics")
-                    self.picard_gc_bias_data[s_name] = dict()
+                    data[s_name] = dict()
                     # Get header - find columns with the data we want
                     l = f["f"].readline()
                     s = l.strip("\n").split("\t")
@@ -68,33 +59,39 @@ def parse_reports(self):
                 if any(kw in l for kw in ("ACCUMULATION_LEVEL", "GC_DROPOUT")):
                     # Summary metrics
                     # if "GcBiasSummaryMetrics" in l and "## METRICS CLASS" in l:
-                    if s_name in self.picard_gc_bias_summary_data:
+                    if s_name in self.picard_gc_bias_summary_data or s_name in data:
                         log.debug(f"Duplicate sample name found in {f['fn']}! Overwriting: {s_name}")
-                    self.add_data_source(f, s_name, section="GcBiasSummaryMetrics")
-                    self.picard_gc_bias_summary_data[s_name] = dict()
+                    summary_data[s_name] = dict()
 
                     keys = f["f"].readline().rstrip("\n").split("\t")
                     vals = f["f"].readline().rstrip("\n").split("\t")
-                    for i, k in enumerate(keys):
+                    assert len(keys) == len(vals), (keys, vals, f)
+                    for k, v in zip(keys, vals):
                         try:
-                            self.picard_gc_bias_summary_data[s_name][k] = float(vals[i])
+                            summary_data[s_name][k] = float(v)
                         except ValueError:
-                            self.picard_gc_bias_summary_data[s_name][k] = vals[i]
+                            summary_data[s_name][k] = v
 
-            for s_name in list(self.picard_gc_bias_data.keys()):
-                if len(self.picard_gc_bias_data[s_name]) == 0:
-                    self.picard_gc_bias_data.pop(s_name, None)
-                    log.debug("Removing {} as no data parsed".format(s_name))
+        # When there is only one sample, using the file name to extract the sample name.
+        if len(data) <= 1 and len(summary_data):
+            data = {f["s_name"]: list(data.values())[0]}
+            summary_data = {f["s_name"]: list(summary_data.values())[0]}
 
-            for s_name in list(self.picard_gc_bias_summary_data.keys()):
-                if len(self.picard_gc_bias_summary_data[s_name]) == 0:
-                    self.picard_gc_bias_summary_data.pop(s_name, None)
-                    log.debug("Removing {} as no data parsed".format(s_name))
+        self.picard_gc_bias_data.update(data)
+        self.picard_gc_bias_summary_data.update(summary_data)
 
-            for s_name in set(self.picard_gc_bias_data.keys()) | set(self.picard_gc_bias_summary_data.keys()):
-                # Superfluous function call to confirm that it is used in this module
-                # Replace None with actual version if it is available
-                self.add_software_version(None, s_name)
+        for s_name in set(data.keys()) | set(summary_data.keys()):
+            self.add_data_source(f, s_name, section="GcBiasMetrics")
+
+    for s_name in list(self.picard_gc_bias_data.keys()):
+        if len(self.picard_gc_bias_data[s_name]) == 0:
+            self.picard_gc_bias_data.pop(s_name, None)
+            log.debug("Removing {} as no data parsed".format(s_name))
+
+    for s_name in list(self.picard_gc_bias_summary_data.keys()):
+        if len(self.picard_gc_bias_summary_data[s_name]) == 0:
+            self.picard_gc_bias_summary_data.pop(s_name, None)
+            log.debug("Removing {} as no data parsed".format(s_name))
 
     # Filter to strip out ignored sample names
     self.picard_gc_bias_data = self.ignore_samples(self.picard_gc_bias_data)
