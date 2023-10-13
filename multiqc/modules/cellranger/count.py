@@ -6,7 +6,7 @@ import re
 from collections import OrderedDict
 
 from multiqc import config
-from multiqc.plots import linegraph, table
+from multiqc.plots import linegraph, table, bargraph
 
 from ._utils import *
 
@@ -19,18 +19,22 @@ class CellRangerCountMixin:
 
     def parse_count_html(self):
         self.cellrangercount_data = dict()
+        self.cellrangercount_antibody_data = dict()
         self.cellrangercount_general_data = dict()
         self.cellrangercount_warnings = dict()
         self.cellrangercount_plots_conf = {"bc": dict(), "genes": dict()}
         self.cellrangercount_plots_data = {"bc": dict(), "genes": dict()}
         self.count_general_data_headers = OrderedDict()
         self.count_data_headers = OrderedDict()
+        self.antibody_data_headers = OrderedDict()
         self.count_warnings_headers = OrderedDict()
 
         for f in self.find_log_files("cellranger/count_html", filehandles=True):
             self.parse_count_report(f)
 
         self.cellrangercount_data = self.ignore_samples(self.cellrangercount_data)
+        if self.cellrangercount_antibody_data:
+            self.cellrangercount_antibody_data = self.ignore_samples(self.cellrangercount_antibody_data)
         self.cellrangercount_general_data = self.ignore_samples(self.cellrangercount_general_data)
         self.cellrangercount_warnings = self.ignore_samples(self.cellrangercount_warnings)
         for k in self.cellrangercount_plots_data.keys():
@@ -71,6 +75,18 @@ class CellRangerCountMixin:
             ],
         )
 
+        if self.cellrangercount_antibody_data:
+            self.antibody_data_headers["reads"] = {
+                "rid": "antibody_data_reads",
+                "title": "{} Reads".format(config.read_count_prefix),
+                "description": "Number of reads ({})".format(config.read_count_desc),
+                "modify": lambda x: x * config.read_count_multiplier,
+            }
+            self.antibody_data_headers = set_hidden_cols(
+                self.antibody_data_headers,
+                ["Q30 bc", "Q30 UMI", "Q30 read", "saturation", "umi per cell", "reads in aggregate bc"],
+            )
+
         if len(self.cellrangercount_general_data) == 0:
             return 0
 
@@ -79,6 +95,8 @@ class CellRangerCountMixin:
 
             # Write parsed report data to a file
             self.write_data_file(self.cellrangercount_data, "multiqc_cellranger_count")
+            if self.cellrangercount_antibody_data:
+                self.write_data_file(self.cellrangercount_antibody_data, "multiqc_cellranger_antibody_count")
 
             # Add sections to the report
             if len(self.cellrangercount_warnings) > 0:
@@ -90,11 +108,21 @@ class CellRangerCountMixin:
                 )
 
             self.add_section(
-                name="Count - Summary stats",
+                name="Gene Expression - Summary stats",
                 anchor="cellranger-count-stats",
                 description="Summary QC metrics from Cell Ranger count",
                 plot=table.plot(self.cellrangercount_data, self.count_data_headers, {"namespace": "Count"}),
             )
+
+            if self.cellrangercount_antibody_data:
+                self.add_section(
+                    name="Antibody - Summary stats",
+                    anchor="cellranger-antibody-stats",
+                    description="Summary QC metrics from Cell Ranger count",
+                    plot=table.plot(
+                        self.cellrangercount_antibody_data, self.antibody_data_headers, {"namespace": "Antibody"}
+                    ),
+                )
 
             self.add_section(
                 name="Count - BC rank plot",
@@ -105,6 +133,21 @@ class CellRangerCountMixin:
                     self.cellrangercount_plots_data["bc"], self.cellrangercount_plots_conf["bc"]["config"]
                 ),
             )
+
+            try:
+                self.add_section(
+                    name="Antibody - Counts Distribution Bargraph",
+                    anchor="cellranger-antibody-counts",
+                    description=self.cellrangercount_plots_conf["antibody_counts"]["description"],
+                    helptext=self.cellrangercount_plots_conf["antibody_counts"]["helptext"],
+                    plot=bargraph.plot(
+                        self.cellrangercount_plots_data["antibody_counts"],
+                        self.cellrangercount_plots_conf["antibody_counts"]["keys"],
+                        self.cellrangercount_plots_conf["antibody_counts"]["config"],
+                    ),
+                )
+            except KeyError:
+                pass
 
             self.add_section(
                 name="Count - Median genes",
@@ -322,11 +365,103 @@ class CellRangerCountMixin:
         except KeyError:
             pass
 
+        # Store full data for ANTIBODY capture
+        if "antibody_tab" in summary:
+            antibody_data = dict()
+            data_rows = (
+                summary["summary_tab"]["ANTIBODY_sequencing"]["table"]["rows"]
+                + summary["summary_tab"]["ANTIBODY_application"]["table"]["rows"]
+            )
+            col_dict = {
+                "Number of Reads": "reads",
+                "Valid Barcodes": "valid bc",
+                "Valid UMIs": "valid umi",
+                "Sequencing Saturation": "saturation",
+                "Q30 Bases in Barcode": "Q30 bc",
+                "Q30 Bases in Antibody Read": "Q30 read",
+                "Q30 Bases in UMI": "Q30 UMI",
+                "Fraction Antibody Reads": "antibody reads",
+                "Fraction Antibody Reads Usable": "antibody reads usable",
+                "Antibody Reads Usable per Cell": "antibody reads usable/cell",
+                "Fraction Antibody Reads in Aggregate Barcodes": "reads in aggregate bc",
+                "Fraction Unrecognized Antibody": "unrecognized antibody",
+                "Antibody Reads in Cells": "antibody reads in cells",
+                "Median UMIs per Cell (summed over all recognized antibody barcodes)": "umi per cell",
+            }
+            colours = {
+                "reads": "YlGn",
+                "antibody reads": "RdPu",
+                "reads in cells": "Blues",
+                "reads usable": "Greens",
+                "reads usable per cell": "Purples",
+                "reads in aggregate bc": "PuBuGn",
+                "valid bc": "Spectral",
+                "valid umi": "RdYlGn",
+                "Q30 bc": "YlGn",
+                "saturation": "YlOrRd",
+            }
+            antibody_data, self.antibody_data_headers = update_dict(
+                antibody_data,
+                self.antibody_data_headers,
+                data_rows,
+                col_dict,
+                colours,
+                "Antibody",
+            )
+
+            # Extract labels and values for the bargraph data
+            combined_data = {}
+            for label, value in zip(
+                summary["antibody_tab"]["antibody_treemap_plot"]["plot"]["data"][0]["labels"],
+                summary["antibody_tab"]["antibody_treemap_plot"]["plot"]["data"][0]["values"],
+            ):
+                label_match = re.search(r"<b>(.*?)\s+\((.*?)%\)</b>", label)
+                if label_match:
+                    label_value = label_match.group(1)
+                    value_ = round(value * 100, 2)
+                    combined_data[label_value] = value_
+
+            # Extract labels and number of cells for labelling the bargraph
+            combined_label = {}
+            for label, cells in zip(
+                summary["antibody_tab"]["antibody_treemap_plot"]["plot"]["data"][0]["labels"],
+                summary["antibody_tab"]["antibody_treemap_plot"]["plot"]["data"][0]["text"],
+            ):
+                label_match = re.search(r"<b>(.*?)\s+\((.*?)%\)</b>", label)
+                if label_match:
+                    label_value = label_match.group(1)
+                    combined_label[label_value] = label_value + ": " + cells
+
+            # Use the label from `combined_label` for the plot
+            keys = OrderedDict()
+            for key, value in combined_label.items():
+                keys[key] = {"name": value}
+
+            plots["antibody_counts"] = {
+                "config": {
+                    "id": "mqc_cellranger_antibody_counts",
+                    "title": "Cell Ranger: Distribution of Antibody Counts",
+                    "ylab": "% Total UMI",
+                    "ymax": 100,
+                    "cpswitch": False,
+                    "use_legend": False,
+                    "tt_decimals": 2,
+                    "tt_suffix": "%",
+                    "tt_percentages": False,
+                },
+                "keys": keys,
+                "description": "Antibody Counts Distribution Plot",
+                "helptext": "Relative composition of antibody counts for features with at least 1 UMI. Box size represents fraction of total UMIs from cell barcodes that are derived from this antibody. Hover over a box to view more information on a particular antibody, including number of associated barcodes.",
+            }
+            plots_data["antibody_counts"] = {s_name: combined_data}
+
         if len(data) > 0:
             if s_name in self.cellrangercount_general_data:
                 log.debug("Duplicate sample name found in {}! Overwriting: {}".format(f["fn"], s_name))
             self.add_data_source(f, s_name, module="cellranger", section="count")
             self.cellrangercount_data[s_name] = data
+            if "antibody_tab" in summary:
+                self.cellrangercount_antibody_data[s_name] = antibody_data
             self.cellrangercount_general_data[s_name] = data_general_stats
             if len(warnings) > 0:
                 self.cellrangercount_warnings[s_name] = warnings
