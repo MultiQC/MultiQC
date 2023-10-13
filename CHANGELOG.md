@@ -12,6 +12,7 @@
 - Strict mode: rename `config.lint` to `config.strict`, crash early on module or template error. Add `MULTIQC_STRICT=1` ([#2101](https://github.com/ewels/MultiQC/pull/2101))
 - Trigger changelog entry addition on PR creation, in addition to an explicit comment to multiqc-bot ([#2102](https://github.com/ewels/MultiQC/pull/2102))
 - Added support for fature barcode data i.e Antibody (CITE-seq) in cellranger module ([#1909](https://github.com/ewels/MultiQC/issues/1909))
+- Cellranger count module updated to parse Gene Expression + Antibody Capture summary files ([#2118](https://github.com/ewels/MultiQC/pull/2118))
 
 ### New Modules
 
