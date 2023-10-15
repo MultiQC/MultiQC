@@ -619,6 +619,10 @@ module_order:
       module_tag:
         - DNA
         - RNA
+  - truvari:
+      module_tag:
+        - DNA
+        - WGS
 
   # Alignment tool stats
   - bbmap:
