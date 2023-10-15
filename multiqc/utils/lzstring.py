@@ -1,8 +1,13 @@
 #!/usr/bin/python
 
 """
-Full copy of Geza Kovacs's https://github.com/gkovacs/lz-string-python
+lz-string for python v1.0.4 (https://github.com/gkovacs/lz-string-python)
+
+(c) Geza Kovacs
+
 + Python 2 dropped, Python 3.12 added
+
+License: https://github.com/gkovacs/lz-string-python/blob/master/LICENSE.md
 """
 
 import math
