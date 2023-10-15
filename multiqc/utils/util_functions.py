@@ -162,18 +162,3 @@ def strtobool(val):
         return 0
     else:
         raise ValueError("invalid truth value %r" % (val,))
-
-
-def copytree_overwrite(parent_dir, child_dir):
-    """
-    Replicates the behaviour of `shutil.copytree(..., dirs_exist_ok=True)` (which is
-    not available before Python 3.8) to overwrite files in `parent_dir` with files
-    in `child_dir`.
-    """
-    # Copy files from src to dst that already exist in dst (i.e., overwrite them)
-    for dir_name, sub_dirs, filenames in os.walk(parent_dir):
-        for filename in filenames:
-            src_file_path = os.path.join(dir_name, filename)
-            dst_file_path = os.path.join(child_dir, os.path.relpath(src_file_path, parent_dir))
-            os.makedirs(os.path.dirname(dst_file_path), exist_ok=True)
-            shutil.copy2(src_file_path, dst_file_path)
