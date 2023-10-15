@@ -6,7 +6,7 @@ import re
 from collections import OrderedDict
 
 from multiqc import config
-from multiqc.plots import linegraph, table, bargraph
+from multiqc.plots import bargraph, linegraph, table
 
 from ._utils import *
 
@@ -90,90 +90,83 @@ class CellRangerCountMixin:
         if len(self.cellrangercount_general_data) == 0:
             return 0
 
-        else:
-            self.general_stats_addcols(self.cellrangercount_general_data, self.count_general_data_headers)
+        self.general_stats_addcols(self.cellrangercount_general_data, self.count_general_data_headers)
 
-            # Write parsed report data to a file
-            self.write_data_file(self.cellrangercount_data, "multiqc_cellranger_count")
-            if self.cellrangercount_antibody_data:
-                self.write_data_file(self.cellrangercount_antibody_data, "multiqc_cellranger_antibody_count")
+        # Write parsed report data to a file
+        self.write_data_file(self.cellrangercount_data, "multiqc_cellranger_count")
+        if self.cellrangercount_antibody_data:
+            self.write_data_file(self.cellrangercount_antibody_data, "multiqc_cellranger_antibody_count")
 
-            # Add sections to the report
-            if len(self.cellrangercount_warnings) > 0:
-                self.add_section(
-                    name="Count - Warnings",
-                    anchor="cellranger-count-warnings",
-                    description="Warnings encountered during the analysis",
-                    plot=table.plot(self.cellrangercount_warnings, self.count_warnings_headers, {"namespace": "Count"}),
-                )
-
+        # Add sections to the report
+        if len(self.cellrangercount_warnings) > 0:
             self.add_section(
-                name="Gene Expression - Summary stats",
-                anchor="cellranger-count-stats",
+                name="Count - Warnings",
+                anchor="cellranger-count-warnings",
+                description="Warnings encountered during the analysis",
+                plot=table.plot(self.cellrangercount_warnings, self.count_warnings_headers, {"namespace": "Count"}),
+            )
+
+        self.add_section(
+            name="Gene Expression - Summary stats",
+            anchor="cellranger-count-stats",
+            description="Summary QC metrics from Cell Ranger count",
+            plot=table.plot(self.cellrangercount_data, self.count_data_headers, {"namespace": "Count"}),
+        )
+
+        if self.cellrangercount_antibody_data:
+            self.add_section(
+                name="Antibody - Summary stats",
+                anchor="cellranger-antibody-stats",
                 description="Summary QC metrics from Cell Ranger count",
-                plot=table.plot(self.cellrangercount_data, self.count_data_headers, {"namespace": "Count"}),
-            )
-
-            if self.cellrangercount_antibody_data:
-                self.add_section(
-                    name="Antibody - Summary stats",
-                    anchor="cellranger-antibody-stats",
-                    description="Summary QC metrics from Cell Ranger count",
-                    plot=table.plot(
-                        self.cellrangercount_antibody_data, self.antibody_data_headers, {"namespace": "Antibody"}
-                    ),
-                )
-
-            self.add_section(
-                name="Count - BC rank plot",
-                anchor="cellranger-count-bcrank-plot",
-                description=self.cellrangercount_plots_conf["bc"]["description"],
-                helptext=self.cellrangercount_plots_conf["bc"]["helptext"],
-                plot=linegraph.plot(
-                    self.cellrangercount_plots_data["bc"], self.cellrangercount_plots_conf["bc"]["config"]
+                plot=table.plot(
+                    self.cellrangercount_antibody_data, self.antibody_data_headers, {"namespace": "Antibody"}
                 ),
             )
 
-            try:
-                self.add_section(
-                    name="Antibody - Counts Distribution Bargraph",
-                    anchor="cellranger-antibody-counts",
-                    description=self.cellrangercount_plots_conf["antibody_counts"]["description"],
-                    helptext=self.cellrangercount_plots_conf["antibody_counts"]["helptext"],
-                    plot=bargraph.plot(
-                        self.cellrangercount_plots_data["antibody_counts"],
-                        self.cellrangercount_plots_conf["antibody_counts"]["keys"],
-                        self.cellrangercount_plots_conf["antibody_counts"]["config"],
-                    ),
-                )
-            except KeyError:
-                pass
+        self.add_section(
+            name="Count - BC rank plot",
+            anchor="cellranger-count-bcrank-plot",
+            description=self.cellrangercount_plots_conf["bc"]["description"],
+            helptext=self.cellrangercount_plots_conf["bc"]["helptext"],
+            plot=linegraph.plot(self.cellrangercount_plots_data["bc"], self.cellrangercount_plots_conf["bc"]["config"]),
+        )
 
+        if "antibody_counts" in self.cellrangercount_plots_conf:
             self.add_section(
-                name="Count - Median genes",
-                anchor="cellranger-count-genes-plot",
-                description=self.cellrangercount_plots_conf["genes"]["description"],
-                helptext=self.cellrangercount_plots_conf["genes"]["helptext"],
-                plot=linegraph.plot(
-                    self.cellrangercount_plots_data["genes"], self.cellrangercount_plots_conf["genes"]["config"]
+                name="Antibody - Counts Distribution Bargraph",
+                anchor="cellranger-antibody-counts",
+                description=self.cellrangercount_plots_conf["antibody_counts"]["description"],
+                helptext=self.cellrangercount_plots_conf["antibody_counts"]["helptext"],
+                plot=bargraph.plot(
+                    self.cellrangercount_plots_data["antibody_counts"],
+                    self.cellrangercount_plots_conf["antibody_counts"]["keys"],
+                    self.cellrangercount_plots_conf["antibody_counts"]["config"],
                 ),
             )
 
-            try:
-                self.add_section(
-                    name="Count - Saturation plot",
-                    anchor="cellranger-count-saturation-plot",
-                    description=self.cellrangercount_plots_conf["saturation"]["description"],
-                    helptext=self.cellrangercount_plots_conf["saturation"]["helptext"],
-                    plot=linegraph.plot(
-                        self.cellrangercount_plots_data["saturation"],
-                        self.cellrangercount_plots_conf["saturation"]["config"],
-                    ),
-                )
-            except KeyError:
-                pass
+        self.add_section(
+            name="Count - Median genes",
+            anchor="cellranger-count-genes-plot",
+            description=self.cellrangercount_plots_conf["genes"]["description"],
+            helptext=self.cellrangercount_plots_conf["genes"]["helptext"],
+            plot=linegraph.plot(
+                self.cellrangercount_plots_data["genes"], self.cellrangercount_plots_conf["genes"]["config"]
+            ),
+        )
 
-            return len(self.cellrangercount_general_data)
+        if "saturation" in self.cellrangercount_plots_data:
+            self.add_section(
+                name="Count - Saturation plot",
+                anchor="cellranger-count-saturation-plot",
+                description=self.cellrangercount_plots_conf["saturation"]["description"],
+                helptext=self.cellrangercount_plots_conf["saturation"]["helptext"],
+                plot=linegraph.plot(
+                    self.cellrangercount_plots_data["saturation"],
+                    self.cellrangercount_plots_conf["saturation"]["config"],
+                ),
+            )
+
+        return len(self.cellrangercount_general_data)
 
     def parse_count_report(self, f):
         """Go through the html report of cell ranger and extract the data in a dicts"""
@@ -245,7 +238,6 @@ class CellRangerCountMixin:
         )
 
         # Store full data from cell ranger count report
-        data = dict()
         data_rows = (
             summary["summary_tab"]["sequencing"]["table"]["rows"]
             + summary["summary_tab"]["cells"]["table"]["rows"]
@@ -285,7 +277,7 @@ class CellRangerCountMixin:
             "median umi/cell": "YlGn",
             "saturation": "YlOrRd",
         }
-        data, self.count_data_headers = update_dict(
+        table, self.count_data_headers = update_dict(
             data_general_stats,
             self.count_data_headers,
             data_rows,
@@ -293,6 +285,8 @@ class CellRangerCountMixin:
             colours,
             "Count",
         )
+        if not table:
+            return None
 
         # Extract warnings if any
         warnings = dict()
@@ -358,16 +352,14 @@ class CellRangerCountMixin:
             "bc": parse_bcknee_data(summary["summary_tab"]["cells"]["barcode_knee_plot"]["data"], s_name),
             "genes": {s_name: transform_data(summary["analysis_tab"]["median_gene_plot"]["plot"]["data"][0])},
         }
-        try:
+        if "seq_saturation_plot" in summary["analysis_tab"]:
             plots_data["saturation"] = {
                 s_name: transform_data(summary["analysis_tab"]["seq_saturation_plot"]["plot"]["data"][0])
             }
-        except KeyError:
-            pass
 
         # Store full data for ANTIBODY capture
-        if "antibody_tab" in summary:
-            antibody_data = dict()
+        antibody_data = dict()
+        if "ANTIBODY_sequencing" in summary["summary_tab"]:
             data_rows = (
                 summary["summary_tab"]["ANTIBODY_sequencing"]["table"]["rows"]
                 + summary["summary_tab"]["ANTIBODY_application"]["table"]["rows"]
@@ -433,7 +425,7 @@ class CellRangerCountMixin:
                     combined_label[label_value] = label_value + ": " + cells
 
             # Use the label from `combined_label` for the plot
-            keys = OrderedDict()
+            keys = dict()
             for key, value in combined_label.items():
                 keys[key] = {"name": value}
 
@@ -455,18 +447,17 @@ class CellRangerCountMixin:
             }
             plots_data["antibody_counts"] = {s_name: combined_data}
 
-        if len(data) > 0:
-            if s_name in self.cellrangercount_general_data:
-                log.debug("Duplicate sample name found in {}! Overwriting: {}".format(f["fn"], s_name))
-            self.add_data_source(f, s_name, module="cellranger", section="count")
-            self.cellrangercount_data[s_name] = data
-            if "antibody_tab" in summary:
-                self.cellrangercount_antibody_data[s_name] = antibody_data
-            self.cellrangercount_general_data[s_name] = data_general_stats
-            if len(warnings) > 0:
-                self.cellrangercount_warnings[s_name] = warnings
-            self.cellrangercount_plots_conf = plots
-            for k in plots_data.keys():
-                if k not in self.cellrangercount_plots_data.keys():
-                    self.cellrangercount_plots_data[k] = dict()
-                self.cellrangercount_plots_data[k].update(plots_data[k])
+        if s_name in self.cellrangercount_general_data:
+            log.debug("Duplicate sample name found in {}! Overwriting: {}".format(f["fn"], s_name))
+        self.add_data_source(f, s_name, module="cellranger", section="count")
+        self.cellrangercount_data[s_name] = table
+        if "antibody_tab" in summary:
+            self.cellrangercount_antibody_data[s_name] = antibody_data
+        self.cellrangercount_general_data[s_name] = data_general_stats
+        if len(warnings) > 0:
+            self.cellrangercount_warnings[s_name] = warnings
+        self.cellrangercount_plots_conf.update(plots)
+        for k in plots_data.keys():
+            if k not in self.cellrangercount_plots_data.keys():
+                self.cellrangercount_plots_data[k] = dict()
+            self.cellrangercount_plots_data[k].update(plots_data[k])
