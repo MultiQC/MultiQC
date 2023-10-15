@@ -1,18 +1,13 @@
-#!/usr/bin/env python
-
 """ MultiQC module to parse output from Sentieon-dnaseq """
 
-from __future__ import print_function
-from collections import OrderedDict
-import logging
 
-from multiqc.modules.base_module import BaseMultiqcModule
+import logging
+from collections import OrderedDict
+
+from multiqc.modules.base_module import BaseMultiqcModule, ModuleNoSamplesFound
 
 # Import the Sentieon submodules
-from . import AlignmentSummaryMetrics
-from . import GcBiasMetrics
-from . import InsertSizeMetrics
-
+from . import AlignmentSummaryMetrics, GcBiasMetrics, InsertSizeMetrics
 
 # Initialise the logger
 log = logging.getLogger(__name__)
@@ -25,7 +20,6 @@ class MultiqcModule(BaseMultiqcModule):
     logs are found."""
 
     def __init__(self):
-
         # Initialise the parent object
         super(MultiqcModule, self).__init__(
             name="Sentieon",
@@ -55,7 +49,7 @@ class MultiqcModule(BaseMultiqcModule):
 
         # Exit if we didn't find anything
         if sum(n.values()) == 0:
-            raise UserWarning
+            raise ModuleNoSamplesFound
 
         # Add to the General Stats table (has to be called once per
         # MultiQC module)

@@ -1,10 +1,11 @@
 #!/usr/bin/env python
 """ Crude code-quality checks for running in CI """
 
-from rich import print
 import glob
 import os
 import sys
+
+from rich import print
 
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 MODULES_DIR = os.path.join(BASE_DIR, "multiqc", "modules")
@@ -14,6 +15,7 @@ checks = {
     "self.add_data_source": "self.find_log_files",
     "self.write_data_file": "self.find_log_files",
     "doi=": "super(MultiqcModule, self).__init__(",
+    "self.add_software_version": "self.find_log_files",
 }
 
 # Check that add_data_source() is called for each module

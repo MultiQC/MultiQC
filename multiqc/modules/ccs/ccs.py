@@ -1,13 +1,11 @@
-#!/usr/bin/env python
-
 """ MultiQC module to parse output from CCS """
 
 import json
 import logging
 import re
-
 from collections import OrderedDict
-from multiqc.modules.base_module import BaseMultiqcModule
+
+from multiqc.modules.base_module import BaseMultiqcModule, ModuleNoSamplesFound
 from multiqc.plots import bargraph
 
 # Initialise the logger
@@ -33,7 +31,7 @@ class MultiqcModule(BaseMultiqcModule):
 
         # If we found no data
         if not self.ccs_data:
-            raise UserWarning
+            raise ModuleNoSamplesFound
         log.info("Found {} reports".format(len(self.ccs_data)))
 
         self.write_data_file(self.ccs_data, "multiqc_ccs_report")
@@ -47,6 +45,10 @@ class MultiqcModule(BaseMultiqcModule):
             filename = f["s_name"]
             self.ccs_data[filename] = v5_data
             self.add_data_source(f)
+
+            # Superfluous function call to confirm that it is used in this module
+            # Replace None with actual version if it is available
+            self.add_software_version(None, filename)
 
     def parse_v5_log_files(self):
         for f in self.find_log_files("ccs/v5", filehandles=True):
@@ -98,7 +100,6 @@ class MultiqcModule(BaseMultiqcModule):
         self.general_stats_addcols(gstats_data, headers)
 
     def add_sections(self):
-
         # First we gather all the filters we encountered
         all_filters = dict()
         for filename in self.ccs_data:

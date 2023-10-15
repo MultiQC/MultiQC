@@ -1,13 +1,12 @@
 """ MultiQC module to parse output from HOPS postprocessing script """
 
-from __future__ import print_function
-from collections import OrderedDict
-import logging
-import json
 
+import json
+import logging
+
+from multiqc.modules.base_module import BaseMultiqcModule, ModuleNoSamplesFound
 from multiqc.plots import heatmap
 from multiqc.utils import config
-from multiqc.modules.base_module import BaseMultiqcModule
 
 log = logging.getLogger(__name__)
 
@@ -32,10 +31,14 @@ class MultiqcModule(BaseMultiqcModule):
             except KeyError:
                 logging.warning("Error loading file {}".format(f["fn"]))
 
+            # Superfluous function call to confirm that it is used in this module
+            # Replace None with actual version if it is available
+            self.add_software_version(None, f["s_name"])
+
         self.hops_data = self.ignore_samples(self.hops_data)
 
         if len(self.hops_data) == 0:
-            raise UserWarning
+            raise ModuleNoSamplesFound
 
         # Write data to file
         self.write_data_file(self.hops_data, "hops")

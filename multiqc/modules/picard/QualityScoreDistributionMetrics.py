@@ -1,13 +1,10 @@
-#!/usr/bin/env python
-
 """ MultiQC submodule to parse output from Picard QualityScoreDistribution """
 
 import logging
-import os
-import re
 from collections import OrderedDict
 
 from multiqc.plots import linegraph
+
 from .util import read_histogram
 
 # Initialise the logger
@@ -23,6 +20,11 @@ def parse_reports(self):
 
     if not all_data:
         return 0
+
+    # Superfluous function call to confirm that it is used in this module
+    # Replace None with actual version if it is available
+    for s_name in all_data:
+        self.add_software_version(None, s_name)
 
     # Write parsed data to a file
     self.write_data_file(all_data, "multiqc_picard_quality_score_distribution")

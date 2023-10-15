@@ -487,7 +487,7 @@ function plot_xy_line_graph(target, ds) {
         config["ymin"] +
         '" data-target="#' +
         target +
-        '">Y-Limits: <span class="mqc_switch on">on</span></span>'
+        '">Y-Limits: <span class="mqc_switch on">on</span></span>',
     );
     wrapper.after('<div class="clearfix" />');
   }
@@ -1068,7 +1068,7 @@ function plot_scatter_plot(target, ds) {
           resizeCh(this_chart);
         });
       }
-    }
+    },
   );
 }
 
@@ -1192,7 +1192,7 @@ function plot_beeswarm_graph(target, ds) {
 
   // Clear the loading text and add hover text placeholder
   $("#" + target).html(
-    '<div class="beeswarm-hovertext"><em class="placeholder">Hover over a data point for more information</em></div><div class="beeswarm-plots"></div>'
+    '<div class="beeswarm-hovertext"><em class="placeholder">Hover over a data point for more information</em></div><div class="beeswarm-plots"></div>',
   );
   // Resize the parent draggable div
   $("#" + target)
@@ -1398,7 +1398,7 @@ function plot_beeswarm_graph(target, ds) {
                     }
                   });
                   $("#" + target + " .beeswarm-hovertext").html(
-                    '<em class="placeholder">Hover over a data point for more information</em>'
+                    '<em class="placeholder">Hover over a data point for more information</em>',
                   );
                 },
               },
@@ -1925,7 +1925,7 @@ function plot_heatmap(target, ds) {
           }
         });
       }
-    }
+    },
   );
 
   // Listeners for range slider
@@ -1940,7 +1940,7 @@ function plot_heatmap(target, ds) {
       chart.colorAxis[0].update({ max: $(this).val() });
     }
     $("#" + target + "_range_slider_" + minmax + ", #" + target + "_range_slider_" + minmax + "_txt").val(
-      $(this).val()
+      $(this).val(),
     );
   });
 }

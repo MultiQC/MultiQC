@@ -1,14 +1,11 @@
-#!/usr/bin/env python
-
-from __future__ import print_function
-from collections import OrderedDict
 import logging
 import os
 import re
+from collections import OrderedDict
 
 import numpy as np
 
-from multiqc.modules.base_module import BaseMultiqcModule
+from multiqc.modules.base_module import BaseMultiqcModule, ModuleNoSamplesFound
 from multiqc.plots import bargraph, linegraph
 
 # Initialise the logger
@@ -31,11 +28,15 @@ class MultiqcModule(BaseMultiqcModule):
         for f in self.find_log_files("jcvi", filehandles=True):
             self.parse_jcvi(f)
 
+            # Superfluous function call to confirm that it is used in this module
+            # Replace None with actual version if it is available
+            self.add_software_version(None, f["s_name"])
+
         # Filter to strip out ignored sample names
         self.jcvi = self.ignore_samples(self.jcvi)
 
         if len(self.jcvi) == 0:
-            raise UserWarning
+            raise ModuleNoSamplesFound
 
         log.info("Found {} logs".format(len(self.jcvi)))
         self.write_data_file(self.jcvi, "multiqc_jcvi")
@@ -112,7 +113,6 @@ class MultiqcModule(BaseMultiqcModule):
             )
 
     def parse_jcvi(self, f):
-
         s_name = None
 
         # Look at the first three lines, they are always the same
@@ -189,7 +189,6 @@ class MultiqcModule(BaseMultiqcModule):
         self.add_data_source(f, s_name)
 
     def parse_hists(self, stat_file, bin_by=1):
-
         stat_table = {}
 
         vals = []
@@ -225,7 +224,6 @@ class MultiqcModule(BaseMultiqcModule):
         return stat_table
 
     def jcvi_barplot_feature_counts(self):
-
         plot_config = {
             "id": "jcvi_plot_feature_counts_plot",
             "title": "JCVI: Number of features",
@@ -246,7 +244,6 @@ class MultiqcModule(BaseMultiqcModule):
         return bargraph.plot([self.jcvi, self.jcvi, self.jcvi], cats, plot_config)
 
     def jcvi_barplot_feature_lengths(self):
-
         plot_config = {
             "id": "jcvi_plot_features_len",
             "title": "JCVI: Mean sizes of features",

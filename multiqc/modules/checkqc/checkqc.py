@@ -1,11 +1,12 @@
 """MultiQC module to parse CheckQC JSON output"""
 
-import logging
 import json
+import logging
+import re
 from collections import OrderedDict
 from operator import itemgetter
-import re
-from multiqc.modules.base_module import BaseMultiqcModule
+
+from multiqc.modules.base_module import BaseMultiqcModule, ModuleNoSamplesFound
 from multiqc.plots import bargraph, table
 
 log = logging.getLogger(__name__)
@@ -42,8 +43,12 @@ class MultiqcModule(BaseMultiqcModule):
             self.parse_checkqc_json(raw_content, f)
             self.add_data_source(f)
 
+            # Superfluous function call to confirm that it is used in this module
+            # Replace None with actual version if it is available
+            self.add_software_version(None, f["s_name"])
+
         if not self.checkqc_data:
-            raise UserWarning
+            raise ModuleNoSamplesFound
         log.info(f"Found {len(self.log_files)} run and {len(self.checkqc_data)} samples")
 
         self.write_data_file(self.checkqc_data, "multiqc_checkqc")
@@ -517,7 +522,7 @@ class MultiqcModule(BaseMultiqcModule):
         )[:20]
 
         data = {}
-        for (idx, _) in sorted_idx:
+        for idx, _ in sorted_idx:
             sample = self.clean_s_name(idx, f)
 
             if self.is_ignore_sample(sample):

@@ -2,14 +2,14 @@
 
 """ MultiQC module to parse output from Pangolin """
 
-from __future__ import print_function
-from collections import OrderedDict
-import logging
-import csv
 
-from multiqc.utils import mqc_colour
+import csv
+import logging
+from collections import OrderedDict
+
+from multiqc.modules.base_module import BaseMultiqcModule, ModuleNoSamplesFound
 from multiqc.plots import table
-from multiqc.modules.base_module import BaseMultiqcModule
+from multiqc.utils import mqc_colour
 
 # Initialise the logger
 log = logging.getLogger(__name__)
@@ -19,7 +19,6 @@ class MultiqcModule(BaseMultiqcModule):
     """Pangolin module"""
 
     def __init__(self):
-
         # Initialise the parent module
         super().__init__(
             name="Pangolin",
@@ -41,7 +40,7 @@ class MultiqcModule(BaseMultiqcModule):
 
         # Stop if we didn't find anything
         if len(self.pangolin_data) == 0:
-            raise UserWarning
+            raise ModuleNoSamplesFound
         log.info("Found {} samples".format(len(self.pangolin_data)))
         self.write_data_file(self.pangolin_data, "multiqc_pangolin")
 
@@ -86,6 +85,10 @@ class MultiqcModule(BaseMultiqcModule):
         )
 
     def parse_pangolin_log(self, f):
+        def add_version_not_none(version, sample, name):
+            if version is not None:
+                self.add_software_version(version, sample, name)
+
         for row in csv.DictReader(f["f"]):
             try:
                 taxon_name = row["taxon"]
@@ -98,11 +101,25 @@ class MultiqcModule(BaseMultiqcModule):
                 if s_name in self.pangolin_data:
                     log.debug("Duplicate sample name found! Overwriting: {}".format(s_name))
                 # Avoid generic header ID that clashes with other modules
-                row["qc_status"] = row.pop("status")
+                if "qc_status" not in row:
+                    row["qc_status"] = row.pop("status")
                 self.pangolin_data[s_name] = row
                 # Just save the lineage key for now - we will sort out the colours later
                 self.lineage_colours[row["lineage"]] = None
                 self.lineage_colours[row["scorpio_call"]] = None
+
+                # Version info
+                # Note: Excluded "version" field from software versions as this refers to
+                #       how the reference data was prepared. This info is still available
+                #       in the "Run table" table
+                add_version_not_none(row.get("pangolin_version"), s_name, self.name)
+                add_version_not_none(row.get("pango_version"), s_name, "Pango")
+                add_version_not_none(row.get("pangoLEARN_version"), s_name, "PangoLEARN")
+                add_version_not_none(row.get("scorpio_version"), s_name, "Scorpio")
+                # constellation_version is someimes "TRUE" or "FALSE" - ignore these
+                constellation_version = row.get("constellation_version")
+                if constellation_version not in {None, "TRUE", "FALSE"}:
+                    self.add_software_version(constellation_version, s_name, "Constellations")
             except KeyError:
                 log.debug("File '{}' could not be parsed - no taxon field found.".format(f["fn"]))
 
@@ -137,7 +154,7 @@ class MultiqcModule(BaseMultiqcModule):
             "description": "Conflict between categories in decision tree",
             "min": 0,
             "max": 1,
-            "scale": "RdBl-rev",
+            "scale": "RdBu-rev",
         }
 
         headers["ambiguity_score"] = {
@@ -159,7 +176,7 @@ class MultiqcModule(BaseMultiqcModule):
             "description": "Scorpio: The proportion of defining variants which have the alternative allele in the sequence.",
             "min": 0,
             "max": 1,
-            "scale": "RdYlBl",
+            "scale": "RdYlBu",
         }
 
         headers["scorpio_conflict"] = {

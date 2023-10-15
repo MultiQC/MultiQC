@@ -1,11 +1,9 @@
-#!/usr/bin/env python
-
 """ MultiQC submodule to parse output from Picard InsertSizeMetrics """
 
-from collections import OrderedDict
 import logging
 import os
 import re
+from collections import OrderedDict
 
 from multiqc import config
 from multiqc.plots import linegraph
@@ -27,7 +25,6 @@ def parse_reports(self):
         s_name = None
         in_hist = False
         for l in f["f"]:
-
             # Catch the histogram values
             if s_name is not None and in_hist is True:
                 try:
@@ -102,6 +99,10 @@ def parse_reports(self):
                 self.picard_insertSize_histogram.pop(s_name, None)
                 log.debug("Ignoring '{}' histogram as no data parsed".format(s_name))
 
+            # Superfluous function call to confirm that it is used in this module
+            # Replace None with actual version if it is available
+            self.add_software_version(None, s_name)
+
     # Calculate summed mean values for all read orientations
     for s_name, v in self.picard_insertSize_samplestats.items():
         self.picard_insertSize_samplestats[s_name]["summed_mean"] = v["meansum"] / v["total_pairs"]
@@ -119,7 +120,6 @@ def parse_reports(self):
     self.picard_insertSize_data = self.ignore_samples(self.picard_insertSize_data)
 
     if len(self.picard_insertSize_data) > 0:
-
         # Write parsed data to a file
         self.write_data_file(self.picard_insertSize_data, "multiqc_picard_insertSize")
 

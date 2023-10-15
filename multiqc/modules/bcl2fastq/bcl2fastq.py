@@ -6,8 +6,8 @@ from collections import OrderedDict, defaultdict
 from itertools import islice
 
 from multiqc import config
+from multiqc.modules.base_module import BaseMultiqcModule, ModuleNoSamplesFound
 from multiqc.plots import bargraph, table
-from multiqc.modules.base_module import BaseMultiqcModule
 
 log = logging.getLogger(__name__)
 
@@ -42,7 +42,7 @@ class MultiqcModule(BaseMultiqcModule):
 
         # Return with Warning if no files are found
         if len(self.bcl2fastq_bylane) == 0 and len(self.bcl2fastq_bysample) == 0:
-            raise UserWarning
+            raise ModuleNoSamplesFound
 
         # Print source files
         for s in self.source_files.keys():
@@ -102,7 +102,7 @@ class MultiqcModule(BaseMultiqcModule):
             anchor="bcl2fastq-bysample",
             description="Number of reads per sample.",
             helptext="""Perfect index reads are those that do not have a single mismatch.
-                All samples are aggregated across lanes combinned. Undetermined reads are ignored.
+                All samples are aggregated across lanes combined. Undetermined reads are ignored.
                 Undetermined reads are treated as a separate sample.""",
             plot=bargraph.plot(
                 [self.get_bar_data_from_counts(self.bcl2fastq_bysample), self.bcl2fastq_bysample_lane],
@@ -145,6 +145,10 @@ class MultiqcModule(BaseMultiqcModule):
 
         # Clean / prepend directories to sample names
         runId = self.clean_s_name(content["RunId"], f)
+
+        # Superfluous function call to confirm that it is used in this module
+        # Replace None with actual version if it is available
+        self.add_software_version(None, runId)
 
         if runId not in self.bcl2fastq_data:
             self.bcl2fastq_data[runId] = dict()

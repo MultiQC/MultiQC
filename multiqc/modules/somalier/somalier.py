@@ -1,18 +1,17 @@
-#!/usr/bin/env python
-
 """ MultiQC module to parse output from somalier """
 
-from __future__ import print_function
-from collections import OrderedDict, defaultdict
-from math import isnan, isinf
+
 import csv
 import logging
 import random
+from collections import OrderedDict, defaultdict
+from math import isinf, isnan
+
 import spectra
 
+from multiqc.modules.base_module import BaseMultiqcModule, ModuleNoSamplesFound
 from multiqc.plots import bargraph, heatmap, scatter, table
 from multiqc.utils import mqc_colour
-from multiqc.modules.base_module import BaseMultiqcModule
 
 # Initialise the logger
 log = logging.getLogger(__name__)
@@ -24,7 +23,6 @@ class MultiqcModule(BaseMultiqcModule):
     """
 
     def __init__(self):
-
         # Initialise the parent object
         super(MultiqcModule, self).__init__(
             name="Somalier",
@@ -53,6 +51,10 @@ class MultiqcModule(BaseMultiqcModule):
                     self.add_data_source(f, s_name)
                     self.somalier_data[s_name] = parsed_data[s_name_raw]
 
+                    # Superfluous function call to confirm that it is used in this module
+                    # Replace None with actual version if it is available
+                    self.add_software_version(None, s_name)
+
         # parse somalier CSV files
         for f in self.find_log_files("somalier/pairs"):
             parsed_data = self.parse_somalier_pairs_tsv(f)
@@ -72,7 +74,7 @@ class MultiqcModule(BaseMultiqcModule):
         self.somalier_data = self.ignore_samples(self.somalier_data)
 
         if len(self.somalier_data) == 0:
-            raise UserWarning
+            raise ModuleNoSamplesFound
 
         log.info("Found {} reports".format(len(self.somalier_data)))
 
@@ -545,9 +547,13 @@ class MultiqcModule(BaseMultiqcModule):
 
         for s_name, d in self.somalier_data.items():
             if "X_depth_mean" in d and "original_pedigree_sex" in d:
+                if d["gt_depth_mean"] == 0:
+                    y = 0
+                else:
+                    y = 2 * d["X_depth_mean"] / d["gt_depth_mean"]
                 data[s_name] = {
                     "x": (random.random() - 0.5) * 0.1 + sex_index.get(d["original_pedigree_sex"], 2),
-                    "y": 2 * d["X_depth_mean"] / d["gt_depth_mean"],
+                    "y": y,
                 }
 
         if len(data) > 0:

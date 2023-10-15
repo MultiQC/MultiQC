@@ -1,15 +1,14 @@
-#!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
 """ MultiQC module to parse output files from miRTrace """
 
-from __future__ import print_function
-from collections import OrderedDict
-import logging
 
 import json
+import logging
+from collections import OrderedDict
+
+from multiqc.modules.base_module import BaseMultiqcModule, ModuleNoSamplesFound
 from multiqc.plots import bargraph, linegraph
-from multiqc.modules.base_module import BaseMultiqcModule
 
 # Initialise the logger
 log = logging.getLogger(__name__)
@@ -17,7 +16,6 @@ log = logging.getLogger(__name__)
 
 class MultiqcModule(BaseMultiqcModule):
     def __init__(self):
-
         # Initialise the parent object
         super(MultiqcModule, self).__init__(
             name="miRTrace",
@@ -31,6 +29,10 @@ class MultiqcModule(BaseMultiqcModule):
         self.summary_data = dict()
         for f in self.find_log_files("mirtrace/summary"):
             self.parse_summary(f)
+
+            # Superfluous function call to confirm that it is used in this module
+            # Replace None with actual version if it is available
+            self.add_software_version(None, f["s_name"])
 
         # Find and load miRTrace read length table
         self.length_data = dict()
@@ -58,7 +60,7 @@ class MultiqcModule(BaseMultiqcModule):
             max(len(self.summary_data), len(self.length_data), len(self.contamination_data), len(self.complexity_data))
             == 0
         ):
-            raise UserWarning
+            raise ModuleNoSamplesFound
 
         # Write parsed data to a file
         self.write_data_file(self.summary_data, "multiqc_mirtrace_summary")
@@ -92,7 +94,6 @@ class MultiqcModule(BaseMultiqcModule):
 
     # Parse a miRTrace results.json file
     def parse_summary(self, f):
-
         try:
             cdict = json.loads(f["f"])
         except ValueError as e:

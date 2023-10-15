@@ -1,7 +1,7 @@
 ---
-Name: Rockhopper
-URL: https://cs.wellesley.edu/~btjaden/Rockhopper/index.html
-Description: >
+name: Rockhopper
+url: https://cs.wellesley.edu/~btjaden/Rockhopper/index.html
+description: >
   Rockhopper is a comprehensive and user-friendly system for computational analysis of bacterial RNA-seq data.
 ---
 

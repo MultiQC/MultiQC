@@ -1,21 +1,25 @@
-#!/usr/bin/env python
-
 """ MultiQC modules base class, contains helper functions """
 
-from __future__ import print_function
-from collections import OrderedDict
-import io
+
 import fnmatch
+import io
+import itertools
 import logging
-import markdown
 import mimetypes
 import os
 import re
 import textwrap
+from collections import OrderedDict, defaultdict
 
-from multiqc.utils import report, config, util_functions
+import markdown
+
+from multiqc.utils import config, report, software_versions, util_functions
 
 logger = logging.getLogger(__name__)
+
+
+class ModuleNoSamplesFound(Exception):
+    """Module checked all input files but couldn't find any data to use"""
 
 
 class BaseMultiqcModule(object):
@@ -30,9 +34,8 @@ class BaseMultiqcModule(object):
         extra=None,
         autoformat=True,
         autoformat_type="markdown",
-        doi=[],
+        doi=None,
     ):
-
         # Custom options from user config that can overwrite base module values
         mod_cust_config = getattr(self, "mod_cust_config", {})
         self.name = mod_cust_config.get("name", name)
@@ -42,7 +45,10 @@ class BaseMultiqcModule(object):
         self.info = mod_cust_config.get("info", info)
         self.comment = mod_cust_config.get("comment", comment)
         self.extra = mod_cust_config.get("extra", extra)
-        self.doi = mod_cust_config.get("doi", doi)
+        self.doi = mod_cust_config.get("doi", (doi or []))
+
+        # List of software version(s) for module. Don't append directly, use add_software_version()
+        self.versions = defaultdict(list)
 
         # Specific module level config to overwrite (e.g. config.bcftools, config.fastqc)
         config.update({anchor: mod_cust_config.get("custom_config", {})})
@@ -64,6 +70,7 @@ class BaseMultiqcModule(object):
         self.doi_link = ""
         if type(self.doi) is str:
             self.doi = [self.doi]
+        self.doi = [i for i in self.doi if i != ""]
         if len(self.doi) > 0:
             doi_links = []
             for doi in self.doi:
@@ -135,7 +142,17 @@ class BaseMultiqcModule(object):
 
             # Filter out files based on exclusion patterns
             if path_filters_exclude and len(path_filters_exclude) > 0:
-                exlusion_hits = (fnmatch.fnmatch(report.last_found_file, pfe) for pfe in path_filters_exclude)
+                # Try both the given path and also the path prefixed with the analyis dirs
+                exlusion_hits = itertools.chain(
+                    (fnmatch.fnmatch(report.last_found_file, pfe) for pfe in path_filters_exclude),
+                    *(
+                        (
+                            fnmatch.fnmatch(report.last_found_file, os.path.join(analysis_dir, pfe))
+                            for pfe in path_filters_exclude
+                        )
+                        for analysis_dir in config.analysis_dir
+                    ),
+                )
                 if any(exlusion_hits):
                     logger.debug(
                         f"{sp_key} - Skipping '{report.last_found_file}' as it matched the path_filters_exclude for '{self.name}'"
@@ -144,7 +161,14 @@ class BaseMultiqcModule(object):
 
             # Filter out files based on inclusion patterns
             if path_filters and len(path_filters) > 0:
-                inclusion_hits = (fnmatch.fnmatch(report.last_found_file, pf) for pf in path_filters)
+                # Try both the given path and also the path prefixed with the analyis dirs
+                inclusion_hits = itertools.chain(
+                    (fnmatch.fnmatch(report.last_found_file, pf) for pf in path_filters),
+                    *(
+                        (fnmatch.fnmatch(report.last_found_file, os.path.join(analysis_dir, pf)) for pf in path_filters)
+                        for analysis_dir in config.analysis_dir
+                    ),
+                )
                 if not any(inclusion_hits):
                     logger.debug(
                         f"{sp_key} - Skipping '{report.last_found_file}' as it didn't match the path_filters for '{self.name}'"
@@ -177,9 +201,8 @@ class BaseMultiqcModule(object):
                                 f["f"] = fh.read()
                                 yield f
                 except (IOError, OSError, ValueError, UnicodeDecodeError) as e:
-                    if config.report_readerrors:
-                        logger.debug("Couldn't open filehandle when returning file: {}\n{}".format(f["fn"], e))
-                        f["f"] = None
+                    logger.debug("Couldn't open filehandle when returning file: {}\n{}".format(f["fn"], e))
+                    f["f"] = None
             else:
                 yield f
 
@@ -421,13 +444,14 @@ class BaseMultiqcModule(object):
         :param headers: Dict / OrderedDict with information for the headers,
                         such as colour scales, min and max values etc.
                         See docs/writing_python.md for more information.
+        :param namespace: Append to the module name in the table column description.
+                          Can be e.g. a submodule name.
         :return: None
         """
         if headers is None:
             headers = {}
-        # Use the module namespace as the name if not supplied
-        if namespace is None:
-            namespace = self.name
+        # Deepish copy of headers so that we can modify it in place
+        headers = {k: v.copy() for k, v in headers.items()}
 
         # Guess the column headers from the data if not supplied
         if headers is None or len(headers) == 0:
@@ -443,8 +467,11 @@ class BaseMultiqcModule(object):
         # Add the module name to the description if not already done
         keys = headers.keys()
         for k in keys:
-            if "namespace" not in headers[k]:
-                headers[k]["namespace"] = namespace
+            # Prepend the namespace displayed in the table with the module name
+            namespace = headers[k].get("namespace", namespace)
+            headers[k]["namespace"] = self.name
+            if namespace:
+                headers[k]["namespace"] = self.name + " " + namespace
             if "description" not in headers[k]:
                 headers[k]["description"] = headers[k].get("title", k)
 
@@ -465,6 +492,43 @@ class BaseMultiqcModule(object):
             report.data_sources[module][section][s_name] = source
         except AttributeError:
             logger.warning("Tried to add data source for {}, but was missing fields data".format(self.name))
+
+    def add_software_version(self, version: str = None, sample: str = None, software_name: str = None):
+        """Save software versions for module."""
+        # Don't add if version is None. This allows every module to call this function
+        # even those without a version to add. This is useful to check that all modules
+        # are calling this function.
+        if version is None:
+            return
+
+        # Don't add if version detection is disabled
+        if config.disable_version_detection:
+            return
+
+        # Don't add if sample is ignored
+        if sample is not None and self.is_ignore_sample(sample):
+            return
+
+        # Use module name as software name if not specified
+        if software_name is None:
+            software_name = self.name
+
+        # Check if version string is PEP 440 compliant to enable version normalization and proper ordering.
+        # Otherwise use raw string is used for version.
+        # - https://peps.python.org/pep-0440/
+        version = software_versions.parse_version(version)
+
+        if version in self.versions[software_name]:
+            return
+
+        self.versions[software_name].append(version)
+
+        # Sort version in order newest --> oldest
+        self.versions[software_name] = software_versions.sort_versions(self.versions[software_name])
+
+        # Update version list for report section.
+        group_name = self.name
+        report.software_versions[group_name][software_name] = self.versions[software_name]
 
     def write_data_file(self, data, fn, sort_cols=False, data_format=None):
         """Saves raw data to a dictionary for downstream use, then redirects

@@ -1,10 +1,10 @@
-#!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
 """ MultiQC submodule to parse output from GATK varianteval """
 
 import logging
 from collections import OrderedDict
+
 from multiqc.plots import bargraph, table
 
 # Initialise the logger
@@ -23,6 +23,10 @@ class VariantEvalMixin:
                     log.debug("Duplicate sample name found! Overwriting: {}".format(f["s_name"]))
                 self.add_data_source(f, section="varianteval")
                 self.gatk_varianteval[f["s_name"]] = parsed_data
+
+            # Superfluous function call to confirm that it is used in this module
+            # Replace None with actual version if it is available
+            self.add_software_version(None, f["s_name"])
 
         # Filter to strip out ignored sample names
         self.gatk_varianteval = self.ignore_samples(self.gatk_varianteval)

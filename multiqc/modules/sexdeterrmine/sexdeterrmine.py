@@ -1,14 +1,12 @@
-#!/usr/bin/env python
-
 """ MultiQC module to parse output from SexdetErrmine """
 
-from __future__ import print_function
-from collections import OrderedDict
-import logging
-import json
 
+import json
+import logging
+from collections import OrderedDict
+
+from multiqc.modules.base_module import BaseMultiqcModule, ModuleNoSamplesFound
 from multiqc.plots import bargraph, scatter
-from multiqc.modules.base_module import BaseMultiqcModule
 
 # Initialise the logger
 log = logging.getLogger(__name__)
@@ -18,7 +16,6 @@ class MultiqcModule(BaseMultiqcModule):
     """SexDeterrmine module"""
 
     def __init__(self):
-
         # Initialise the parent object
         super(MultiqcModule, self).__init__(
             name="SexDetErrmine",
@@ -41,7 +38,7 @@ class MultiqcModule(BaseMultiqcModule):
 
         # Return if no samples found
         if len(self.sexdet_data) == 0:
-            raise UserWarning
+            raise ModuleNoSamplesFound
 
         # Save data output file
         self.write_data_file(self.sexdet_data, "multiqc_sexdeter_metrics")
@@ -62,6 +59,9 @@ class MultiqcModule(BaseMultiqcModule):
             log.warning("Could not parse SexDeterrmine JSON: '{}'".format(f["fn"]))
             return
 
+        # Get the version
+        version = str(data["Metadata"]["version"])
+
         # Parse JSON data to a dict
         for s_name in data:
             if s_name == "Metadata":
@@ -72,6 +72,7 @@ class MultiqcModule(BaseMultiqcModule):
                 log.debug("Duplicate sample name found! Overwriting: {}".format(s_clean))
 
             self.add_data_source(f, s_clean)
+            self.add_software_version(version, s_clean)
             self.sexdet_data[s_clean] = dict()
 
             for k, v in data[s_name].items():

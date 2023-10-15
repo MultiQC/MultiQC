@@ -2,13 +2,14 @@
 
 https://github.com/brentp/goleft/tree/master/indexcov
 """
-from __future__ import print_function
+
+
 import collections
 import logging
 
 from multiqc import config
+from multiqc.modules.base_module import BaseMultiqcModule, ModuleNoSamplesFound
 from multiqc.plots import linegraph, scatter
-from multiqc.modules.base_module import BaseMultiqcModule
 
 # Initialise the logger
 log = logging.getLogger(__name__)
@@ -45,6 +46,10 @@ class MultiqcModule(BaseMultiqcModule):
             self.parse_bin_plot_data(f)
             self.add_data_source(f)
 
+            # Superfluous function call to confirm that it is used in this module
+            # Replace None with actual version if it is available
+            self.add_software_version(None, f["s_name"])
+
         # Filter to strip out ignored sample names
         self.bin_plot_data = self.ignore_samples(self.bin_plot_data)
 
@@ -54,7 +59,7 @@ class MultiqcModule(BaseMultiqcModule):
         # Stop execution if no samples
         num_samples = max(len(self.bin_plot_data), num_roc_samples)
         if num_samples == 0:
-            raise UserWarning
+            raise ModuleNoSamplesFound
 
         log.info("Found {} samples".format(num_samples))
 
@@ -85,7 +90,6 @@ class MultiqcModule(BaseMultiqcModule):
             return chrom_clean
 
     def parse_roc_plot_data(self, f):
-
         header = f["f"].readline()
         sample_names = [self.clean_s_name(x, f) for x in header.strip().split()[2:]]
         for parts in (l.rstrip().split() for l in f["f"]):

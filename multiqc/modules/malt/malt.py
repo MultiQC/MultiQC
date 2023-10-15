@@ -1,21 +1,23 @@
-#!/usr/bin/env python
 """ MultiQC module to parse output from MALT """
-from __future__ import print_function
-from collections import OrderedDict
-from multiqc import config
-from multiqc.plots import bargraph
-from multiqc.modules.base_module import BaseMultiqcModule
+
 
 import logging
+import re
+from collections import OrderedDict
+
+from multiqc import config
+from multiqc.modules.base_module import BaseMultiqcModule, ModuleNoSamplesFound
+from multiqc.plots import bargraph
 
 log = logging.getLogger(__name__)
+
+VERSION_REGEX = r"Version\s+MALT \(version ([\d\.]+),.*"
 
 
 class MultiqcModule(BaseMultiqcModule):
     """Malt Module"""
 
     def __init__(self):
-
         # Initialise the parent object
         super(MultiqcModule, self).__init__(
             name="MALT",
@@ -34,7 +36,7 @@ class MultiqcModule(BaseMultiqcModule):
         self.malt_data = self.ignore_samples(self.malt_data)
 
         if len(self.malt_data) == 0:
-            raise UserWarning
+            raise ModuleNoSamplesFound
 
         # Write data to file
         self.write_data_file(self.malt_data, "malt")
@@ -55,8 +57,14 @@ class MultiqcModule(BaseMultiqcModule):
             "Aligned queries",
             "Num. alignments",
         ]
+        version = None
         for line in f["f"]:
             line = line.rstrip()
+            if line.startswith("Version"):
+                version_match = re.search(VERSION_REGEX, line)
+                if version_match:
+                    version = version_match.group(1)
+
             if line.startswith("+++++ Aligning file:") and reading == False:
                 reading = True
                 s_name = line.split()[-1]
@@ -65,6 +73,9 @@ class MultiqcModule(BaseMultiqcModule):
                     log.debug("Duplicate sample name found! Overwriting: {}".format(s_name))
                 self.add_data_source(f, s_name=s_name)
                 self.malt_data[s_name] = {}
+                if version is not None:
+                    self.add_software_version(version, s_name)
+
             elif reading:
                 for k in keys:
                     if line.startswith(k):
@@ -77,14 +88,20 @@ class MultiqcModule(BaseMultiqcModule):
                                 self.malt_data[s_name]["No Assig. Taxonomy"] = (
                                     self.malt_data[s_name]["Total reads"] - self.malt_data[s_name]["Assig. Taxonomy"]
                                 )
-                                self.malt_data[s_name]["Mappability"] = (
-                                    float(self.malt_data[s_name]["Total reads"])
-                                    / float(self.malt_data[s_name]["Num. of queries"])
-                                ) * 100.0
-                                self.malt_data[s_name]["Taxonomic assignment success"] = (
-                                    float(self.malt_data[s_name]["Assig. Taxonomy"])
-                                    / float(self.malt_data[s_name]["Total reads"])
-                                ) * 100.0
+                                try:
+                                    self.malt_data[s_name]["Mappability"] = (
+                                        float(self.malt_data[s_name]["Total reads"])
+                                        / float(self.malt_data[s_name]["Num. of queries"])
+                                    ) * 100.0
+                                except ZeroDivisionError:
+                                    self.malt_data[s_name]["Mappability"] = 0
+                                try:
+                                    self.malt_data[s_name]["Taxonomic assignment success"] = (
+                                        float(self.malt_data[s_name]["Assig. Taxonomy"])
+                                        / float(self.malt_data[s_name]["Total reads"])
+                                    ) * 100.0
+                                except ZeroDivisionError:
+                                    self.malt_data[s_name]["Taxonomic assignment success"] = 0
                             except KeyError:
                                 pass
                             reading = False

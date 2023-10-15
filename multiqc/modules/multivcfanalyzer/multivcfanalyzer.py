@@ -1,16 +1,12 @@
-#!/usr/bin/env python
-
 """ MultiQC module to parse output from MultiVCFAnalyzer """
 
-from __future__ import print_function
-from collections import OrderedDict
-import logging
-import json
 
-from multiqc.plots import table
-from multiqc.plots import bargraph
+import json
+import logging
 from collections import OrderedDict
-from multiqc.modules.base_module import BaseMultiqcModule
+
+from multiqc.modules.base_module import BaseMultiqcModule, ModuleNoSamplesFound
+from multiqc.plots import bargraph, table
 
 # Initialise the logger
 log = logging.getLogger(__name__)
@@ -20,7 +16,6 @@ class MultiqcModule(BaseMultiqcModule):
     """MultiVCFAnalyzer module"""
 
     def __init__(self):
-
         # Initialise the parent object
         super(MultiqcModule, self).__init__(
             name="MultiVCFAnalyzer",
@@ -43,7 +38,7 @@ class MultiqcModule(BaseMultiqcModule):
 
         # Return if no samples found
         if len(self.mvcf_data) == 0:
-            raise UserWarning
+            raise ModuleNoSamplesFound
 
         # Add in extra columns to data file
         self.compute_perc_hets()
@@ -87,11 +82,16 @@ class MultiqcModule(BaseMultiqcModule):
             log.warning("Could not parse MultiVCFAnalyzer JSON: '{}'".format(f["fn"]))
             return
 
+        version = data.get("metadata", {}).get("version", None)
+
         # Parse JSON data to a dict
         for s_name, metrics in data.get("metrics", {}).items():
             s_clean = self.clean_s_name(s_name, f)
             if s_clean in self.mvcf_data:
                 log.debug("Duplicate sample name found! Overwriting: {}".format(s_clean))
+
+            if version is not None:
+                self.add_software_version(version, s_clean)
 
             self.add_data_source(f, s_clean)
             self.mvcf_data[s_clean] = dict()
@@ -195,7 +195,7 @@ class MultiqcModule(BaseMultiqcModule):
         headers["discardedVarCall"] = {
             "title": "Discarded SNP Call",
             "description": "Number of non-reference positions not reaching genotyping or coverage thresholds",
-            "scale": "PuCr",
+            "scale": "PuRd",
             "shared_key": "calls",
             "format": "{:,.0f}",
         }

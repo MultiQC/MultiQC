@@ -1,10 +1,8 @@
-#!/usr/bin/env python
-
 """ MultiQC submodule to parse output from RSeQC read_GC.py
 http://rseqc.sourceforge.net/#read-gc-py """
 
-from collections import OrderedDict
 import logging
+from collections import OrderedDict
 
 from multiqc.plots import linegraph
 
@@ -21,7 +19,6 @@ def parse_reports(self):
 
     # Go through files and parse data
     for f in self.find_log_files("rseqc/read_gc"):
-
         if f["f"].startswith("GC%	read_count"):
             gc = list()
             counts = list()
@@ -43,6 +40,10 @@ def parse_reports(self):
                 for i in sorted_gc_keys:
                     self.read_gc[f["s_name"]][gc[i]] = counts[i]
                     self.read_gc_pct[f["s_name"]][gc[i]] = (counts[i] / total) * 100
+
+        # Superfluous function call to confirm that it is used in this module
+        # Replace None with actual version if it is available
+        self.add_software_version(None, f["s_name"])
 
     # Filter to strip out ignored sample names
     self.read_gc = self.ignore_samples(self.read_gc)

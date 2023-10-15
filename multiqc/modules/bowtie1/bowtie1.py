@@ -1,15 +1,13 @@
-#!/usr/bin/env python
-
 """ MultiQC module to parse output from Bowtie 1 """
 
-from __future__ import print_function
-from collections import OrderedDict
+
 import logging
 import re
+from collections import OrderedDict
 
 from multiqc import config
+from multiqc.modules.base_module import BaseMultiqcModule, ModuleNoSamplesFound
 from multiqc.plots import bargraph
-from multiqc.modules.base_module import BaseMultiqcModule
 
 # Initialise the logger
 log = logging.getLogger(__name__)
@@ -19,7 +17,6 @@ class MultiqcModule(BaseMultiqcModule):
     """Bowtie 1 module, parses stderr logs."""
 
     def __init__(self):
-
         # Initialise the parent object
         super(MultiqcModule, self).__init__(
             name="Bowtie 1",
@@ -39,7 +36,7 @@ class MultiqcModule(BaseMultiqcModule):
         self.bowtie_data = self.ignore_samples(self.bowtie_data)
 
         if len(self.bowtie_data) == 0:
-            raise UserWarning
+            raise ModuleNoSamplesFound
 
         log.info("Found {} reports".format(len(self.bowtie_data)))
 
@@ -65,6 +62,11 @@ class MultiqcModule(BaseMultiqcModule):
             "multimapped": r"# reads with alignments suppressed due to -m:\s+(\d+)",
             "multimapped_percentage": r"# reads with alignments suppressed due to -m:\s+\d+\s+\(([\d\.]+)%\)",
         }
+
+        # Superfluous function call to confirm that it is used in this module
+        # Replace None with actual version if it is available
+        self.add_software_version(None, s_name)
+
         for l in f["f"].splitlines():
             # Attempt in vain to find original bowtie1 command, logged by another program
             if "bowtie" in l and "q.gz" in l:

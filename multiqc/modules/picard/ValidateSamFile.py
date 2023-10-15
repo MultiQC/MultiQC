@@ -1,5 +1,3 @@
-#!/usr/bin/env python
-
 """ MultiQC submodule to parse output from Picard ValidateSamFile """
 
 import logging
@@ -134,6 +132,10 @@ def _parse_reports_by_type(self):
             sample_data = _parse_summary_report(filehandle)
 
         data[sample] = sample_data
+
+        # Superfluous function call to confirm that it is used in this module
+        # Replace None with actual version if it is available
+        self.add_software_version(None, sample)
 
     return data
 

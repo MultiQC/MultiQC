@@ -1,15 +1,13 @@
-#!/usr/bin/env python
-
 """ MultiQC module to parse output from Cutadapt """
 
-from __future__ import print_function
-from collections import OrderedDict
-from distutils.version import StrictVersion
+
 import logging
 import re
+from collections import OrderedDict
+from distutils.version import StrictVersion
 
+from multiqc.modules.base_module import BaseMultiqcModule, ModuleNoSamplesFound
 from multiqc.plots import bargraph, linegraph
-from multiqc.modules.base_module import BaseMultiqcModule
 
 # Initialise the logger
 log = logging.getLogger(__name__)
@@ -23,7 +21,6 @@ class MultiqcModule(BaseMultiqcModule):
     """
 
     def __init__(self):
-
         # Initialise the parent object
         super(MultiqcModule, self).__init__(
             name="Cutadapt",
@@ -52,7 +49,7 @@ class MultiqcModule(BaseMultiqcModule):
         self.cutadapt_data = self.ignore_samples(self.cutadapt_data)
 
         if len(self.cutadapt_data) == 0:
-            raise UserWarning
+            raise ModuleNoSamplesFound
 
         log.info("Found {} reports".format(len(self.cutadapt_data)))
 
@@ -142,6 +139,10 @@ class MultiqcModule(BaseMultiqcModule):
                     self.cutadapt_data[s_name]["cutadapt_version"] = cutadapt_version
 
             if s_name is not None:
+                # Add version info to module
+                if cutadapt_version is not None:
+                    self.add_software_version(cutadapt_version, s_name)
+
                 self.add_data_source(f, s_name)
 
                 # Search regexes for overview stats
@@ -238,7 +239,7 @@ class MultiqcModule(BaseMultiqcModule):
         ):
             log.error("Something went wrong...")
             log.debug("Keys in trimmed length data differed")
-            raise UserWarning
+            raise ModuleNoSamplesFound
 
         if len(self.cutadapt_length_counts["default"]) == 0:
             self.cutadapt_length_counts.pop("default")

@@ -1,5 +1,3 @@
-#!/usr/bin/env python
-
 """ MultiQC submodule to parse output from deepTools plotPCA """
 
 import logging
@@ -22,6 +20,10 @@ class plotPCAMixin:
                 self.deeptools_plotPCAData[k] = v
             if len(parsed_data) > 0:
                 self.add_data_source(f, section="plotPCA")
+
+            # Superfluous function call to confirm that it is used in this module
+            # Replace None with actual version if it is available
+            self.add_software_version(None, f["s_name"])
 
         self.deeptools_plotPCAData = self.ignore_samples(self.deeptools_plotPCAData)
 

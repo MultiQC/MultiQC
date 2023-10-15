@@ -1,16 +1,13 @@
-#!/usr/bin/env python
-
 """ MultiQC module to parse output from NanoStat """
 
-from __future__ import print_function
-from collections import OrderedDict
+
 import logging
-import jinja2
+from collections import OrderedDict
 
 from multiqc import config
-from multiqc.utils import mqc_colour
+from multiqc.modules.base_module import BaseMultiqcModule, ModuleNoSamplesFound
 from multiqc.plots import bargraph, table
-from multiqc.modules.base_module import BaseMultiqcModule
+from multiqc.utils import mqc_colour
 
 # Initialise the logger
 log = logging.getLogger(__name__)
@@ -19,42 +16,44 @@ log = logging.getLogger(__name__)
 class MultiqcModule(BaseMultiqcModule):
     """NanoStat module"""
 
-    _KEYS_NUM = [
-        "Active channels",
-        "Number of reads",
-        "Total bases",
-        "Total bases aligned",
-        "Read length N50",
-        "Mean read length",
-        "Median read length",
-        "Median read quality",
-        "Mean read quality",
-        "Average percent identity",
-        "Median percent identity",
-    ]
+    _KEYS_MAPPING = {
+        "number_of_reads": "Number of reads",
+        "number_of_bases": "Total bases",
+        "number_of_bases_aligned": "Total bases aligned",
+        "fraction_bases_aligned": "Fraction of bases aligned",
+        "median_read_length": "Median read length",
+        "mean_read_length": "Mean read length",
+        "read_length_stdev": "STDEV read length",
+        "n50": "Read length N50",
+        "average_identity": "Average percent identity",
+        "median_identity": "Median percent identity",
+        "active_channels": "Active channels",
+        "mean_qual": "Mean read quality",
+        "median_qual": "Median read quality",
+    }
 
     _KEYS_READ_Q = [
-        "&gt;Q5",
-        "&gt;Q7",
-        "&gt;Q10",
-        "&gt;Q12",
-        "&gt;Q15",
+        ">Q5",
+        ">Q7",
+        ">Q10",
+        ">Q12",
+        ">Q15",
     ]
     _stat_types = ("aligned", "seq summary", "fastq", "fasta", "unrecognized")
 
     def __init__(self):
-
         # Initialise the parent object
         super(MultiqcModule, self).__init__(
             name="NanoStat",
             anchor="nanostat",
             href="https://github.com/wdecoster/nanostat/",
-            info="various statistics from a long read sequencing dataset in fastq, bam or sequencing summary format.",
+            info="reports various statistics from a long read sequencing dataset in FASTQ, BAM or sequencing summary format.",
             doi="10.1093/bioinformatics/bty149",
         )
 
         # Find and load any NanoStat reports
         self.nanostat_data = dict()
+        self.has_qscores = False
         self.has_aligned = False
         self.has_seq_summary = False
         self.has_fastq = False
@@ -62,11 +61,18 @@ class MultiqcModule(BaseMultiqcModule):
         for f in self.find_log_files("nanostat", filehandles=True):
             self.parse_nanostat_log(f)
 
+            # Superfluous function call to confirm that it is used in this module
+            # Replace None with actual version if it is available
+            self.add_software_version(None, f["s_name"])
+
+        for f in self.find_log_files("nanostat/legacy", filehandles=True):
+            self.parse_legacy_nanostat_log(f)
+
         # Filter to strip out ignored sample names
         self.nanostat_data = self.ignore_samples(self.nanostat_data)
 
         if len(self.nanostat_data) == 0:
-            raise UserWarning
+            raise ModuleNoSamplesFound
 
         log.info("Found {} reports".format(len(self.nanostat_data)))
 
@@ -84,7 +90,7 @@ class MultiqcModule(BaseMultiqcModule):
             self.nanostat_stats_table("fasta")
 
         # Quality distribution Plot
-        if self.has_aligned or self.has_seq_summary or self.has_fastq:
+        if self.has_qscores:
             self.reads_by_quality_plot()
 
     def parse_nanostat_log(self, f):
@@ -93,24 +99,53 @@ class MultiqcModule(BaseMultiqcModule):
         Note: Tool can be run in two different modes, giving two variants to the output.
         To avoid overwriting keys from different modes, keys are given a suffix.
         """
-
         nano_stats = {}
         for line in f["f"]:
+            parts = line.strip().split()
+            if len(parts) == 2 and parts[0] in self._KEYS_MAPPING.keys():
+                key = self._KEYS_MAPPING.get(parts[0])
+                if key:
+                    nano_stats[key] = float(parts[1])
+            else:
+                parts = line.strip().split(":")
+                key = parts[0].replace("Reads ", "")
+                if key in self._KEYS_READ_Q:
+                    # Number of reads above Q score cutoff
+                    val = int(parts[1].strip().split()[0])
+                    nano_stats[key] = val
+        self.save_data(f, nano_stats)
 
-            line = jinja2.escape(line)
+    def parse_legacy_nanostat_log(self, f):
+        """Parse legacy output from NanoStat
+
+        Note: Tool can be run in two different modes, giving two variants to the output.
+        To avoid overwriting keys from different modes, keys are given a suffix.
+        """
+        nano_stats = {}
+        for line in f["f"]:
             parts = line.strip().split(":")
             if len(parts) == 0:
                 continue
 
             key = parts[0]
 
-            if key in self._KEYS_NUM:
+            if key in self._KEYS_MAPPING.values():
                 val = float(parts[1].replace(",", ""))
                 nano_stats[key] = val
             elif key in self._KEYS_READ_Q:
                 # Number of reads above Q score cutoff
                 val = int(parts[1].strip().split()[0])
                 nano_stats[key] = val
+        self.save_data(f, nano_stats)
+
+    def save_data(self, f, nano_stats):
+        """
+        Normalise fields and save parsed data.
+
+        Used for both legacy and new data formats.
+        """
+        if ">Q5" in nano_stats:
+            self.has_qscores = True
 
         if "Total bases aligned" in nano_stats:
             stat_type = "aligned"
@@ -242,20 +277,9 @@ class MultiqcModule(BaseMultiqcModule):
         }
 
         # Add the report section
-        description = ""
-        if stat_type == "fasta":
-            description = "NanoStat statistics from FASTA files."
-        if stat_type == "fastq":
-            description = "NanoStat statistics from FastQ files."
-        if stat_type == "aligned":
-            description = "NanoStat statistics from BAM files."
-        if stat_type == "seq summary":
-            description = "NanoStat statistics from albacore or guppy summary files."
-
         self.add_section(
-            name="{} stats".format(stat_type.replace("_", " ").capitalize()),
+            name="Summary Statistics",
             anchor="nanostat_{}_stats".format(stat_type.replace(" ", "_")),
-            description=description,
             plot=table.plot(self.nanostat_data, headers, table_config),
         )
 
@@ -274,12 +298,12 @@ class MultiqcModule(BaseMultiqcModule):
         stat_type = "unrecognized"
         # Order of keys, from >Q5 to >Q15
         _range_names = {
-            "&gt;Q5": "&lt;Q5",
-            "&gt;Q7": "Q5-7",
-            "&gt;Q10": "Q7-10",
-            "&gt;Q12": "Q10-12",
-            "&gt;Q15": "Q12-15",
-            "rest": "&gt;Q15",
+            ">Q5": "<Q5",
+            ">Q7": "Q5-7",
+            ">Q10": "Q7-10",
+            ">Q12": "Q10-12",
+            ">Q15": "Q12-15",
+            "rest": ">Q15",
         }
         for s_name, data_dict in self.nanostat_data.items():
             reads_total, stat_type = _get_total_reads(data_dict)
@@ -305,7 +329,7 @@ class MultiqcModule(BaseMultiqcModule):
                         log.error(f"Error on {s_name} {range_name} {data_key} . Negative number of reads")
                     prev_reads = reads_gt
                 else:
-                    data_key = f"&gt;Q15_{stat_type}"
+                    data_key = f">Q15_{stat_type}"
                     bar_data[s_name][range_name] = data_dict[data_key]
 
         cats = OrderedDict()
@@ -326,15 +350,12 @@ class MultiqcModule(BaseMultiqcModule):
         self.add_section(
             name="Reads by quality",
             anchor=f"nanostat_read_qualities",
-            description="Read counts categorised by read quality (phred score).",
+            description="Read counts categorised by read quality (Phred score).",
             helptext="""
-                Sequencing machines assign each generated read a quality score using the
-                [Phred scale](https://en.wikipedia.org/wiki/Phred_quality_score).
-                The phred score represents the liklelyhood that a given read contains errors.
-                So, high quality reads have a high score.
-
-                Data may come from NanoPlot reports generated with sequencing summary files or alignment stats.
-                If a sample has data from both, the sequencing summary is preferred.
+            Sequencing machines assign each generated read a quality score using the
+            [Phred scale](https://en.wikipedia.org/wiki/Phred_quality_score).
+            The phred score represents the liklelyhood that a given read contains errors.
+            High quality reads have a high score.
             """,
             plot=bargraph.plot(bar_data, cats, config),
         )

@@ -1,10 +1,9 @@
-#!/usr/bin/env python
-from __future__ import print_function
 import logging
 from collections import OrderedDict
-from multiqc.utils import config
+
+from multiqc.modules.base_module import BaseMultiqcModule, ModuleNoSamplesFound
 from multiqc.plots import table
-from multiqc.modules.base_module import BaseMultiqcModule
+from multiqc.utils import config
 
 from .bbmap_filetypes import file_types, section_order
 
@@ -42,8 +41,12 @@ class MultiqcModule(BaseMultiqcModule):
                     self.add_data_source(f)
                     data_found = True
 
+                    # Superfluous function call to confirm that it is used in this module
+                    # Replace None with actual version if it is available
+                    self.add_software_version(None, f["s_name"])
+
         if not data_found:
-            raise UserWarning
+            raise ModuleNoSamplesFound
         else:
             num_samples = max([len(self.mod_data[ft].keys()) for ft in self.mod_data])
             log.info("Found {} reports".format(num_samples))
@@ -97,7 +100,6 @@ class MultiqcModule(BaseMultiqcModule):
             self.general_stats_addcols(data, headers)
 
     def parse_logs(self, file_type, root, s_name, fn, f, **kw):
-
         if self.is_ignore_sample(s_name):
             return False
 

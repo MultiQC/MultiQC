@@ -1,7 +1,7 @@
 ---
-Name: KAT
-URL: https://github.com/TGAC/KAT
-Description: >
+name: KAT
+url: https://github.com/TGAC/KAT
+description: >
   The K-mer Analysis Toolkit (KAT) contains a number of tools that analyse and compare K-mer spectra.
 ---
 

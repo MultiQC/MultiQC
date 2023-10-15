@@ -1,36 +1,35 @@
-#!/usr/bin/env python
-
 """ MultiQC module to parse output from Picard """
 
-from __future__ import print_function
-from collections import OrderedDict
-import logging
 
-from multiqc.modules.base_module import BaseMultiqcModule
+import logging
+from collections import OrderedDict
+
+from multiqc.modules.base_module import BaseMultiqcModule, ModuleNoSamplesFound
 
 # Import the Picard submodules
-from . import AlignmentSummaryMetrics
-from . import BaseDistributionByCycleMetrics
-from . import CollectIlluminaBasecallingMetrics
-from . import CollectIlluminaLaneMetrics
-from . import CrosscheckFingerprints
-from . import ExtractIlluminaBarcodes
-from . import GcBiasMetrics
-from . import HsMetrics
-from . import InsertSizeMetrics
-from . import MarkDuplicates
-from . import MarkIlluminaAdapters
-from . import OxoGMetrics
-from . import QualityByCycleMetrics
-from . import QualityScoreDistributionMetrics
-from . import QualityYieldMetrics
-from . import RnaSeqMetrics
-from . import RrbsSummaryMetrics
-from . import TargetedPcrMetrics
-from . import ValidateSamFile
-from . import VariantCallingMetrics
-from . import WgsMetrics
-
+from . import (
+    AlignmentSummaryMetrics,
+    BaseDistributionByCycleMetrics,
+    CollectIlluminaBasecallingMetrics,
+    CollectIlluminaLaneMetrics,
+    CrosscheckFingerprints,
+    ExtractIlluminaBarcodes,
+    GcBiasMetrics,
+    HsMetrics,
+    InsertSizeMetrics,
+    MarkDuplicates,
+    MarkIlluminaAdapters,
+    OxoGMetrics,
+    QualityByCycleMetrics,
+    QualityScoreDistributionMetrics,
+    QualityYieldMetrics,
+    RnaSeqMetrics,
+    RrbsSummaryMetrics,
+    TargetedPcrMetrics,
+    ValidateSamFile,
+    VariantCallingMetrics,
+    WgsMetrics,
+)
 
 # Initialise the logger
 log = logging.getLogger(__name__)
@@ -43,13 +42,12 @@ class MultiqcModule(BaseMultiqcModule):
     logs are found."""
 
     def __init__(self):
-
         # Initialise the parent object
         super(MultiqcModule, self).__init__(
             name="Picard",
             anchor="picard",
             href="http://broadinstitute.github.io/picard/",
-            info="is a set of Java command line tools for manipulating high-" "throughput sequencing data.",
+            info="is a set of Java command line tools for manipulating high-throughput sequencing data.",
             # No DOI to cite // doi=
         )
 
@@ -147,7 +145,7 @@ class MultiqcModule(BaseMultiqcModule):
 
         # Exit if we didn't find anything
         if sum(n.values()) == 0:
-            raise UserWarning
+            raise ModuleNoSamplesFound
 
         # Add to the General Stats table (has to be called once per MultiQC module)
         self.general_stats_addcols(self.general_stats_data, self.general_stats_headers)

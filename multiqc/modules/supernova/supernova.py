@@ -1,14 +1,13 @@
-#!/usr/bin/env python
-
 """ MultiQC module to parse output from Supernova"""
 
-from __future__ import print_function
-from collections import OrderedDict
+
+import json
 import logging
 import re
-import json
-from multiqc.plots import table, linegraph, bargraph
-from multiqc.modules.base_module import BaseMultiqcModule
+from collections import OrderedDict
+
+from multiqc.modules.base_module import BaseMultiqcModule, ModuleNoSamplesFound
+from multiqc.plots import bargraph, linegraph, table
 
 # Initialise the logger
 log = logging.getLogger(__name__)
@@ -205,6 +204,10 @@ class MultiqcModule(BaseMultiqcModule):
             reports[s_name] = data
             self.add_data_source(f, s_name=s_name, section="supernova-table")
 
+            # Superfluous function call to confirm that it is used in this module
+            # Replace None with actual version if it is available
+            self.add_software_version(None, s_name)
+
         # summary.json files
         for f in self.find_log_files("supernova/summary"):
             log.debug("Found summary.json in: {}".format(f["root"]))
@@ -264,7 +267,7 @@ class MultiqcModule(BaseMultiqcModule):
         kmers = self.ignore_samples(kmers)
 
         if len(reports) == 0:
-            raise UserWarning
+            raise ModuleNoSamplesFound
         else:
             log.info("Found {} reports".format(len(reports.keys())))
 
@@ -368,7 +371,6 @@ class MultiqcModule(BaseMultiqcModule):
             )
 
     def parse_summary(self, content):
-
         stats = {
             "assembly_size": "Asm size",
             "bases_per_read": "Read len",
@@ -493,7 +495,6 @@ class MultiqcModule(BaseMultiqcModule):
         return (sid, data)
 
     def parse_histogram(self, content, cutoff=None):
-
         try:
             cdict = json.loads(content)
         except ValueError as e:

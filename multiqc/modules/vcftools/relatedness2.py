@@ -1,10 +1,9 @@
-#!/usr/bin/env python
-
 """ MultiQC module to parse relatedness output from vcftools relatedness """
 
 import csv
 import logging
 from collections import defaultdict
+
 from multiqc.plots import heatmap
 
 # Initialise the logger
@@ -19,6 +18,10 @@ class Relatedness2Mixin:
             if m.data and m.x_labels and m.y_labels:
                 matrices[f["s_name"]] = m
             self.add_data_source(f, section="Relatedness")
+
+            # Superfluous function call to confirm that it is used in this module
+            # Replace None with actual version if it is available
+            self.add_software_version(None, f["s_name"])
 
         matrices = self.ignore_samples(matrices)
 

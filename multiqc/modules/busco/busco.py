@@ -1,23 +1,23 @@
-#!/usr/bin/env python
-
 """ MultiQC module to parse output from BUSCO """
 
-from __future__ import print_function
-from collections import OrderedDict
+
 import logging
 import re
+from collections import OrderedDict
+
+from multiqc.modules.base_module import BaseMultiqcModule, ModuleNoSamplesFound
 from multiqc.plots import bargraph
-from multiqc.modules.base_module import BaseMultiqcModule
 
 # Initialise the logger
 log = logging.getLogger(__name__)
+
+VERSION_REGEX = r"# BUSCO version is: ([\d\.]+)"
 
 
 class MultiqcModule(BaseMultiqcModule):
     """BUSCO module"""
 
     def __init__(self):
-
         # Initialise the parent object
         super(MultiqcModule, self).__init__(
             name="BUSCO",
@@ -46,7 +46,7 @@ class MultiqcModule(BaseMultiqcModule):
         self.busco_data = self.ignore_samples(self.busco_data)
 
         if len(self.busco_data) == 0:
-            raise UserWarning
+            raise ModuleNoSamplesFound
 
         log.info("Found {} reports".format(len(self.busco_data)))
 
@@ -65,6 +65,11 @@ class MultiqcModule(BaseMultiqcModule):
     def parse_busco_log(self, f):
         parsed_data = {}
         for l in f["f"].splitlines():
+            if l.startswith("# BUSCO version is"):
+                version_match = re.search(VERSION_REGEX, l)
+                if version_match:
+                    self.add_software_version(version_match.group(1), f["s_name"])
+
             for key, string in self.busco_keys.items():
                 if string in l:
                     s = l.strip().split("\t")
@@ -85,8 +90,8 @@ class MultiqcModule(BaseMultiqcModule):
             if self.busco_data[s_name].get("lineage_dataset") == lin:
                 data[s_name] = self.busco_data[s_name]
 
-        plot_keys = ["complete_single_copy", "complete_duplicated", "fragmented", "missing"]
-        plot_cols = ["#7CB5EC", "#434348", "#F7A35C", "#FF3C50"]
+        plot_keys = ["complete_single_copy", "fragmented", "complete_duplicated", "missing"]
+        plot_cols = ["#31a354", "#fee8c8", "#fdbb84", "#e34a33"]
         keys = OrderedDict()
         for k, col in zip(plot_keys, plot_cols):
             keys[k] = {"name": self.busco_keys[k], "color": col}

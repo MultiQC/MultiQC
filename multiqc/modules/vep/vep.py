@@ -1,16 +1,14 @@
-#!/usr/bin/env python
-
 """ MultiQC module to parse output from VEP """
 
-from __future__ import print_function
 
-from collections import OrderedDict
 import ast
 import logging
 import re
+from collections import OrderedDict
+
+from multiqc.modules.base_module import BaseMultiqcModule, ModuleNoSamplesFound
 from multiqc.plots import bargraph, table
 from multiqc.utils import mqc_colour
-from multiqc.modules.base_module import BaseMultiqcModule
 
 # Initialise the logger
 log = logging.getLogger(__name__)
@@ -42,12 +40,26 @@ class MultiqcModule(BaseMultiqcModule):
             self.parse_vep_txt(f)
             self.add_data_source(f)
 
+        # Add version information
+        for sample, data in self.vep_data.items():
+            if "VEP run statistics" not in data:
+                print(data.keys())
+                continue
+
+            print(data["VEP run statistics"]["VEP version (API)"])
+            vep_version, api_version = data["VEP run statistics"]["VEP version (API)"].strip().split(" ")
+            api_version = api_version.replace("(", "").replace(")", "")
+            self.add_software_version(vep_version, sample)
+            # Only add API version if it's different to VEP version
+            if vep_version != api_version:
+                self.add_software_version(api_version, sample, "VEP API")
+            print()
         # Filter to strip out ignored sample names
         self.vep_data = self.ignore_samples(self.vep_data)
 
         # Stop if we didn't get any samples
         if len(self.vep_data) == 0:
-            raise UserWarning
+            raise ModuleNoSamplesFound
         log.info("Found {} VEP summaries".format(len(self.vep_data)))
 
         # Write data to file
@@ -125,18 +137,16 @@ class MultiqcModule(BaseMultiqcModule):
                 if len(cells) == 2:
                     key = cells[0][4:-5]
                     value = cells[1][4:-5]
-                    try:
-                        if key == "Novel / existing variants":
-                            values = value.split("/")
-                            novel = values[0].split("(")[0].replace(" ", "")
-                            existing = values[1].split("(")[0].replace(" ", "")
-                            self.vep_data[f["s_name"]][title]["Novel variants"] = int(novel)
-                            self.vep_data[f["s_name"]][title]["Existing variants"] = int(existing)
-                        else:
-                            self.vep_data[f["s_name"]][title][key] = int(value)
-                    except (IndexError, ValueError):
-                        # Table cells can just have "-". Don't log values if so. See issue #1597
-                        pass
+                    if value == "-":
+                        continue
+                    if key == "Novel / existing variants":
+                        values = value.split("/")
+                        novel = values[0].split("(")[0].replace(" ", "")
+                        existing = values[1].split("(")[0].replace(" ", "")
+                        self.vep_data[f["s_name"]][title]["Novel variants"] = int(novel)
+                        self.vep_data[f["s_name"]][title]["Existing variants"] = int(existing)
+                    else:
+                        self.vep_data[f["s_name"]][title][key] = int(value)
 
     def parse_vep_txt(self, f):
         """This Function will parse VEP summary files with plain text format"""
@@ -155,11 +165,9 @@ class MultiqcModule(BaseMultiqcModule):
                 txt_data[title] = {}
                 continue
             key, value = line.split("\t")
+            if value == "-":
+                continue
             if key == "Novel / existing variants":
-                if value == "-":
-                    txt_data[title]["Novel variants"] = 0
-                    txt_data[title]["Existing variants"] = 0
-                    continue
                 values = value.split("/")
                 novel = values[0].split("(")[0].replace(" ", "")
                 existing = values[1].split("(")[0].replace(" ", "")
@@ -246,7 +254,7 @@ class MultiqcModule(BaseMultiqcModule):
         p_config["title"] = "VEP: Variant Consequences"
         p_config["ylab"] = p_config["data_labels"][0]
 
-        if max([len(d) for d in plot_data]) == 0:
+        if len(plot_data) == 0 or max([len(d) for d in plot_data]) == 0:
             return
 
         self.add_section(

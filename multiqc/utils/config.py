@@ -3,26 +3,27 @@
 """ MultiQC config module. Holds a single copy of
 config variables to be used across all other modules """
 
-from __future__ import print_function
-from datetime import datetime
-import inspect
+
 import collections
+import inspect
+
+# Default logger will be replaced by caller
+import logging
 import os
-import pkg_resources
 import subprocess
 import sys
+from datetime import datetime
+
+import importlib_metadata
 import yaml
 
 import multiqc
 
-# Default logger will be replaced by caller
-import logging
-
 logger = logging.getLogger("multiqc")
 
 # Get the MultiQC version
-version = pkg_resources.get_distribution("multiqc").version
-short_version = pkg_resources.get_distribution("multiqc").version
+version = importlib_metadata.version("multiqc")
+short_version = version
 script_path = os.path.dirname(os.path.realpath(__file__))
 git_hash = None
 git_hash_short = None
@@ -53,7 +54,7 @@ with open(searchp_fn) as f:
 # Other defaults that can't be set in YAML
 data_tmp_dir = "/tmp"  # will be overwritten by core script
 modules_dir = os.path.join(MULTIQC_DIR, "modules")
-creation_date = datetime.now().strftime("%Y-%m-%d, %H:%M")
+creation_date = datetime.now().astimezone().strftime("%Y-%m-%d, %H:%M %Z")
 working_dir = os.getcwd()
 analysis_dir = [os.getcwd()]
 output_dir = os.path.realpath(os.getcwd())
@@ -63,16 +64,16 @@ megaqc_access_token = os.environ.get("MEGAQC_ACCESS_TOKEN")
 # Modules must be listed in setup.py under entry_points['multiqc.modules.v1']
 # Get all modules, including those from other extension packages
 avail_modules = dict()
-for entry_point in pkg_resources.iter_entry_points("multiqc.modules.v1"):
-    nicename = str(entry_point).split("=")[0].strip()
+for entry_point in importlib_metadata.entry_points(group="multiqc.modules.v1"):
+    nicename = entry_point.name
     avail_modules[nicename] = entry_point
 
 ##### Available templates
 # Templates must be listed in setup.py under entry_points['multiqc.templates.v1']
 # Get all templates, including those from other extension packages
 avail_templates = {}
-for entry_point in pkg_resources.iter_entry_points("multiqc.templates.v1"):
-    nicename = str(entry_point).split("=")[0].strip()
+for entry_point in importlib_metadata.entry_points(group="multiqc.templates.v1"):
+    nicename = entry_point.name
     avail_templates[nicename] = entry_point
 
 ##### Check we have modules & templates
@@ -92,6 +93,7 @@ if len(avail_modules) == 0 or len(avail_templates) == 0:
         file=sys.stderr,
     )
     sys.exit(1)
+
 
 ##### Functions to load user config files. These are called by the main MultiQC script.
 # Note that config files are loaded in a specific order and values can overwrite each other.
@@ -132,8 +134,6 @@ def mqc_load_config(yaml_config):
         except yaml.scanner.ScannerError as e:
             logger.error("Error parsing config YAML: {}".format(e))
             sys.exit(1)
-    else:
-        logger.debug("No MultiQC config found: {}".format(yaml_config))
 
 
 def mqc_cl_config(cl_config):
@@ -157,19 +157,23 @@ def mqc_cl_config(cl_config):
 def mqc_add_config(conf, conf_path=None):
     """Add to the global config with given MultiQC config dict"""
     global custom_css_files, fn_clean_exts, fn_clean_trim
+    log_new_config = {}
+    log_filename_patterns = []
+    log_filename_clean_extensions = []
+    log_filename_clean_trimmings = []
     for c, v in conf.items():
         if c == "sp":
             # Merge filename patterns instead of replacing
             sp.update(v)
-            logger.debug("Added to filename patterns: {}".format(v))
+            log_filename_patterns.append(v)
         elif c == "extra_fn_clean_exts":
             # Prepend to filename cleaning patterns instead of replacing
             fn_clean_exts[0:0] = v
-            logger.debug("Added to filename clean extensions: {}".format(v))
+            log_filename_clean_extensions.append(v)
         elif c == "extra_fn_clean_trim":
             # Prepend to filename cleaning patterns instead of replacing
             fn_clean_trim[0:0] = v
-            logger.debug("Added to filename clean trimmings: {}".format(v))
+            log_filename_clean_trimmings.append(v)
         elif c in ["custom_logo"] and v:
             # Resolve file paths - absolute or cwd, or relative to config file
             fpath = v
@@ -180,7 +184,7 @@ def mqc_add_config(conf, conf_path=None):
             else:
                 logger.error("Config '{}' path not found, skipping ({})".format(c, fpath))
                 continue
-            logger.debug("New config '{}': {}".format(c, fpath))
+            log_new_config[c] = fpath
             update({c: fpath})
         elif c == "custom_css_files":
             for fpath in v:
@@ -196,8 +200,16 @@ def mqc_add_config(conf, conf_path=None):
                     custom_css_files = []
                 custom_css_files.append(fpath)
         else:
-            logger.debug("New config '{}': {}".format(c, v))
+            log_new_config[c] = v
             update({c: v})
+    if len(log_new_config) > 0:
+        logger.debug(f"New config: {log_new_config}")
+    if len(log_filename_patterns) > 0:
+        logger.debug(f"Added to filename patterns: {log_filename_patterns}")
+    if len(log_filename_clean_extensions) > 0:
+        logger.debug(f"Added to filename clean extensions: {log_filename_clean_extensions}")
+    if len(log_filename_clean_trimmings) > 0:
+        logger.debug(f"Added to filename clean trimmings: {log_filename_clean_trimmings}")
 
 
 #### Function to load file containing a list of alternative sample-name swaps
@@ -260,7 +272,7 @@ def load_show_hide(sh_file):
                         show_hide_mode.append(s[1])
                         show_hide_patterns.append(s[2:])
                         show_hide_regex.append(s[1] not in ["show", "hide"])  # flag whether or not regex is turned on
-        except (AttributeError) as e:
+        except AttributeError as e:
             logger.error("Error loading show patterns file: {}".format(e))
 
     # Prepend a "Show all" button if we have anything
