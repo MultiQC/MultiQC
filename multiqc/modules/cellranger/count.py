@@ -107,7 +107,7 @@ class CellRangerCountMixin:
             )
 
         self.add_section(
-            name="Gene Expression - Summary stats",
+            name="Count - Summary stats",
             anchor="cellranger-count-stats",
             description="Summary QC metrics from Cell Ranger count",
             plot=table.plot(self.cellrangercount_data, self.count_data_headers, {"namespace": "Count"}),
