@@ -12,6 +12,7 @@
 - Strict mode: rename `config.lint` to `config.strict`, crash early on module or template error. Add `MULTIQC_STRICT=1` ([#2101](https://github.com/ewels/MultiQC/pull/2101))
 - Trigger changelog entry addition on PR creation, in addition to an explicit comment to multiqc-bot ([#2102](https://github.com/ewels/MultiQC/pull/2102))
 - Fix adding changelog entries with backticks from PR titles ([#2115](https://github.com/ewels/MultiQC/pull/2115))
+- Cellranger: Count submodule updated to parse Antibody Capture summary ([#2118](https://github.com/ewels/MultiQC/pull/2118))
 
 ### New Modules
 
@@ -25,7 +26,6 @@
 - **FastQC**: Add top overrepresented sequences table ([#2075](https://github.com/ewels/MultiQC/pull/2075))
 - **Picard**: MarkDuplicates: Fix parsing mixed strings/numbers, account for missing trailing `0` ([#2083](https://github.com/ewels/MultiQC/pull/2083), [#2094](https://github.com/ewels/MultiQC/pull/2094))
 - **WhatsHap**: Process truncated input with no ALL chromosome ([#2095](https://github.com/ewels/MultiQC/pull/2095))
-- **Cellranger**: Count module updated to parse Gene Expression + Antibody Capture summary files ([#2118](https://github.com/ewels/MultiQC/pull/2118))
 
 ## [MultiQC v1.16](https://github.com/ewels/MultiQC/releases/tag/v1.16) - 2023-09-22
 
