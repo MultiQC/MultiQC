@@ -14,6 +14,7 @@
 - Fix adding changelog entries with backticks from PR titles ([#2115](https://github.com/ewels/MultiQC/pull/2115))
 - Fix for python 3.12: replace removed `distutils` ([#2113](https://github.com/ewels/MultiQC/pull/2113))
 - Bundle lzstring to fix Python 3.12 ([#2119](https://github.com/ewels/MultiQC/pull/2119))
+- Drop Python 3.6 and 3.7 support, add 3.12 ([#2121](https://github.com/ewels/MultiQC/pull/2121))
 
 ### New Modules
 
