@@ -286,6 +286,8 @@ fn_clean_exts:
   - ".scATAC.metrics"
   - ".fastqc_metrics"
   - ".labels"
+  - "_Summary.txt"
+  - "_pretext"
 
 # These are removed after the above, only if sample names
 # start or end with this string. Again, removed in order.
@@ -405,6 +407,18 @@ module_order:
         - DNA
         - Denovo
         - PacBio
+  - genomescope2:
+      module_tag:
+        - Denovo
+        - kmer
+  - merqury:
+      module_tag:
+        - DNA
+        - Denovo
+  - pretext:
+      module_tag:
+        - HiC
+        - pretext
   - quast:
       module_tag:
         - DNA

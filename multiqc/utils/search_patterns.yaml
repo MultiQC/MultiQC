@@ -194,7 +194,7 @@ bracken:
   contents_re: '^(\d{1,3}\.\d{1,2})\t(\d+)\t(\d+)\t((\d+)\t(\d+)\t)?([URDKPCOFGS-]\d{0,2})\t(\d+)(\s+)root'
   num_lines: 1
 busco:
-  fn: "short_summary*"
+  fn: "*short_summary*"
   contents: "BUSCO version is:"
   num_lines: 1
 bustools:
@@ -361,6 +361,11 @@ gatk/varianteval:
 gatk/base_recalibrator:
   contents: "#:GATKTable:Arguments:Recalibration"
   num_lines: 3
+genomescope2/summary:
+  fn: "*_Summary.txt"
+  contents: "GenomeScope"
+genomescope2/png:
+  fn: "*_plot*.png"
 gatk/analyze_saturation_mutagenesis:
   fn: "*.readCounts"
   contents: ">>Reads in disjoint pairs evaluated separately:"
@@ -486,6 +491,18 @@ mapdamage:
 methylQA:
   fn: "*.report"
   shared: true
+merqury/completeness:
+  fn: "*_merqury.completeness.tab"
+merqury/qv:
+  fn: "*_merqury.qv.tab"
+merqury/spectra:
+  - fn: "*.spectra*.hist"
+merqury/png:
+  - fn: "*.spectra*.png"
+  - fn: "*.phased_block*.png"
+  - fn: "*.hapmers.blob*.png"
+  - fn: "*.continuity.N*.png"
+  - fn: "*.block.N*.png"
 minionqc:
   fn: "summary.yaml"
   contents: "total.gigabases"
@@ -539,6 +556,8 @@ optitype:
 pangolin:
   contents: "pangolin_version"
   num_lines: 1
+pretext/png:
+  fn: "*_pretext*.png"
 odgi:
   - fn: "*.og.stats.yaml"
   - fn: "*.og.stats.yml"
@@ -687,7 +706,7 @@ qualimap/rnaseq/rnaseq_results:
 qualimap/rnaseq/coverage:
   fn: "coverage_profile_along_genes_(total).txt"
 quast:
-  fn: "report.tsv"
+  fn: "*report.tsv"
   shared: true
 rna_seqc/metrics_v1:
   fn: "*metrics.tsv"
