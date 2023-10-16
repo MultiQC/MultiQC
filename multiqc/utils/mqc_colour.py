@@ -354,7 +354,7 @@ class mqc_colour_scale(object):
 
         try:
             if self.name in mqc_colour_scale.qualitative_scales and isinstance(val, float):
-                if config.lint:
+                if config.strict:
                     sequential_scales = [
                         s for s in mqc_colour_scale.COLORBREWER_SCALES if s not in mqc_colour_scale.qualitative_scales
                     ]
@@ -424,7 +424,7 @@ class mqc_colour_scale(object):
         # Default colour scale
         if name not in mqc_colour_scale.COLORBREWER_SCALES:
             errmsg = f"{self.id+': ' if self.id else ''}Colour scale {name} not found - defaulting to GnBu"
-            if config.lint:
+            if config.strict:
                 logger.error(errmsg)
                 report.lint_errors.append(errmsg)
             else:

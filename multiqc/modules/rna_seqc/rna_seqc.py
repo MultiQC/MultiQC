@@ -5,7 +5,7 @@ import logging
 from collections import OrderedDict
 
 from multiqc import config
-from multiqc.modules.base_module import BaseMultiqcModule
+from multiqc.modules.base_module import BaseMultiqcModule, ModuleNoSamplesFound
 from multiqc.plots import bargraph, beeswarm, heatmap, linegraph
 
 # Initialise the logger
@@ -28,6 +28,10 @@ class MultiqcModule(BaseMultiqcModule):
         for f in self.find_log_files("rna_seqc/metrics_v1", filehandles=True):
             self.parse_metrics_rnaseqc_v1(f)
             self.add_data_source(f, section="v1")
+
+            # Superfluous function call to confirm that it is used in this module
+            # Replace None with actual version if it is available
+            self.add_software_version(None, f["s_name"])
 
         # Parse metrics from RNA-SeQC v2
         for f in self.find_log_files("rna_seqc/metrics_v2", filehandles=True):
@@ -65,7 +69,7 @@ class MultiqcModule(BaseMultiqcModule):
 
         # Stop here if we didn't find anything
         if num_found == 0:
-            raise UserWarning
+            raise ModuleNoSamplesFound
 
         log.info("Found {} samples".format(num_found))
 

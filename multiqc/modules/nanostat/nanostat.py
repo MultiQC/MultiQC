@@ -5,7 +5,7 @@ import logging
 from collections import OrderedDict
 
 from multiqc import config
-from multiqc.modules.base_module import BaseMultiqcModule
+from multiqc.modules.base_module import BaseMultiqcModule, ModuleNoSamplesFound
 from multiqc.plots import bargraph, table
 from multiqc.utils import mqc_colour
 
@@ -60,6 +60,11 @@ class MultiqcModule(BaseMultiqcModule):
         self.has_fasta = False
         for f in self.find_log_files("nanostat", filehandles=True):
             self.parse_nanostat_log(f)
+
+            # Superfluous function call to confirm that it is used in this module
+            # Replace None with actual version if it is available
+            self.add_software_version(None, f["s_name"])
+
         for f in self.find_log_files("nanostat/legacy", filehandles=True):
             self.parse_legacy_nanostat_log(f)
 
@@ -67,7 +72,7 @@ class MultiqcModule(BaseMultiqcModule):
         self.nanostat_data = self.ignore_samples(self.nanostat_data)
 
         if len(self.nanostat_data) == 0:
-            raise UserWarning
+            raise ModuleNoSamplesFound
 
         log.info("Found {} reports".format(len(self.nanostat_data)))
 

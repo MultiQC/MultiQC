@@ -515,7 +515,7 @@ def save_htmlid(html_id, skiplint=False):
     html_id_clean = re.sub("[^a-zA-Z0-9_-]+", "_", html_id_clean)
 
     # Validate if linting
-    if config.lint and not skiplint:
+    if config.strict and not skiplint:
         modname = ""
         codeline = ""
         callstack = inspect.stack()
@@ -525,7 +525,7 @@ def save_htmlid(html_id, skiplint=False):
                 modname = ">{}< ".format(callpath)
                 codeline = n[4][0].strip()
                 break
-    if config.lint and not skiplint and html_id != html_id_clean:
+    if config.strict and not skiplint and html_id != html_id_clean:
         errmsg = "LINT: {}HTML ID was not clean ('{}' -> '{}') ## {}".format(modname, html_id, html_id_clean, codeline)
         logger.error(errmsg)
         lint_errors.append(errmsg)
@@ -536,7 +536,7 @@ def save_htmlid(html_id, skiplint=False):
     while html_id_clean in html_ids:
         html_id_clean = "{}-{}".format(html_id_base, i)
         i += 1
-        if config.lint and not skiplint:
+        if config.strict and not skiplint:
             errmsg = "LINT: {}HTML ID was a duplicate ({}) ## {}".format(modname, html_id_clean, codeline)
             logger.error(errmsg)
             lint_errors.append(errmsg)

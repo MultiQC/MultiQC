@@ -1,5 +1,6 @@
 import logging
 
+from ..base_module import ModuleNoSamplesFound
 from .coverage_hist import DragenCoverageHist
 from .coverage_metrics import DragenCoverageMetrics
 from .coverage_per_contig import DragenCoveragePerContig
@@ -114,5 +115,5 @@ class MultiqcModule(
         # <output prefix>.scATAC.metrics.csv or <output prefix>.scATAC_metrics.csv
 
         if len(samples_found) == 0:
-            raise UserWarning
+            raise ModuleNoSamplesFound
         log.info("Found {} reports".format(len(samples_found)))

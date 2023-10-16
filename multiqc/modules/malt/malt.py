@@ -6,7 +6,7 @@ import re
 from collections import OrderedDict
 
 from multiqc import config
-from multiqc.modules.base_module import BaseMultiqcModule
+from multiqc.modules.base_module import BaseMultiqcModule, ModuleNoSamplesFound
 from multiqc.plots import bargraph
 
 log = logging.getLogger(__name__)
@@ -36,7 +36,7 @@ class MultiqcModule(BaseMultiqcModule):
         self.malt_data = self.ignore_samples(self.malt_data)
 
         if len(self.malt_data) == 0:
-            raise UserWarning
+            raise ModuleNoSamplesFound
 
         # Write data to file
         self.write_data_file(self.malt_data, "malt")

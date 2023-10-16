@@ -862,6 +862,10 @@ tophat:
 trimmomatic:
   contents: "Trimmomatic"
   shared: true
+truvari/bench:
+  contents_re: ".*truvari.* bench.*"
+  fn: "log.txt"
+  num_lines: 2
 umitools:
   contents: "# UMI-tools version:"
   num_lines: 3

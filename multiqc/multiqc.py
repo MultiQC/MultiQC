@@ -18,17 +18,18 @@ import sys
 import tempfile
 import time
 import traceback
-from distutils import version
 from distutils.dir_util import copy_tree
 from urllib.request import urlopen
 
 import jinja2
 import rich
 import rich_click as click
+from packaging import version
 from rich.syntax import Syntax
 
+from .modules.base_module import ModuleNoSamplesFound
 from .plots import table
-from .utils import config, lint_helpers, log, megaqc, plugin_hooks, report, software_versions, util_functions
+from .utils import config, log, megaqc, plugin_hooks, report, software_versions, strict_helpers, util_functions
 
 # Set up logging
 start_execution_time = time.time()
@@ -110,7 +111,7 @@ click.rich_click.OPTION_GROUPS = {
             "options": [
                 "--verbose",
                 "--quiet",
-                "--lint",
+                "--strict",
                 "--profile-runtime",
                 "--no-megaqc-upload",
                 "--no-ansi",
@@ -232,7 +233,13 @@ click.rich_click.OPTION_GROUPS = {
     is_flag=True,
     help="Use only interactive plots [i](in-browser Javascript)[/]",
 )
-@click.option("--lint", "lint", is_flag=True, help="Use strict linting (validation) to help code development")
+@click.option(
+    "--strict",
+    "strict",
+    is_flag=True,
+    help="Don't catch exceptions, run additional code checks to help development.",
+)
+@click.option("--lint", "lint", is_flag=True, hidden=True, help="DEPRECATED: use --strict instead")
 @click.option(
     "--pdf",
     "make_pdf",
@@ -319,7 +326,8 @@ def run(
     export_plots=False,
     plots_flat=False,
     plots_interactive=False,
-    lint=False,
+    strict=False,
+    lint=False,  # Deprecated since v1.17
     make_pdf=False,
     no_megaqc_upload=False,
     config_file=(),
@@ -383,8 +391,8 @@ def run(
         try:
             response = urlopen("http://multiqc.info/version.php?v={}".format(config.short_version), timeout=5)
             remote_version = response.read().decode("utf-8").strip()
-            if version.StrictVersion(re.sub("[^0-9\.]", "", remote_version)) > version.StrictVersion(
-                re.sub("[^0-9\.]", "", config.short_version)
+            if version.StrictVersion(re.sub(r"[^0-9.]", "", remote_version)) > version.StrictVersion(
+                re.sub(r"[^0-9.]", "", config.short_version)
             ):
                 logger.warning("MultiQC Version {} now available!".format(remote_version))
             else:
@@ -430,9 +438,19 @@ def run(
         config.plots_force_flat = True
     if plots_interactive:
         config.plots_force_interactive = True
-    if lint:
-        config.lint = True
-        lint_helpers.run_tests()
+    if lint or config.lint:  # Deprecated since v1.17
+        logger.warning(
+            "DEPRECIATED: The --lint option is renamed to --strict since MultiQC 1.17. "
+            "The old option will be removed in future MultiQC versions, please "
+            "update your command line and/or configs."
+        )
+        strict = True
+    if os.environ.get("MULTIQC_STRICT"):
+        strict = True
+    if strict:
+        config.strict = True
+        config.lint = True  # Deprecated since v1.17
+        strict_helpers.run_tests()
     if make_pdf:
         config.template = "simple"
     if no_megaqc_upload:
@@ -471,8 +489,8 @@ def run(
     if make_pdf:
         logger.info("--pdf specified. Using non-interactive HTML template.")
     logger.debug("Template    : {}".format(config.template))
-    if lint:
-        logger.info("--lint specified. Being strict with validation.")
+    if config.strict:
+        logger.info("--strict specified. Being strict with validation.")
 
     # Throw a warning if we are running on Python 2
     if sys.version_info[0] < 3:
@@ -513,7 +531,7 @@ def run(
         logger.info("Printing report to stdout")
     else:
         if title is not None and filename is None:
-            filename = re.sub("[^\w\.-]", "", re.sub("[-\s]+", "-", title)).strip()
+            filename = re.sub(r"[^\w.-]", "", re.sub(r"[-\s]+", "-", title)).strip()
             filename += "_multiqc_report"
         if filename is not None:
             if filename.endswith(".html"):
@@ -536,7 +554,7 @@ def run(
     mod_keys = [list(m.keys())[0] for m in config.module_order]
 
     # Lint the module configs
-    if config.lint:
+    if config.strict:
         for m in config.avail_modules.keys():
             if m not in mod_keys:
                 errmsg = "LINT: Module '{}' not found in config.module_order".format(m)
@@ -649,11 +667,11 @@ def run(
     total_mods_starttime = time.time()
     for mod_idx, mod_dict in enumerate(run_modules):
         mod_starttime = time.time()
+        this_module = list(mod_dict.keys())[0]
+        mod_cust_config = list(mod_dict.values())[0]
+        if mod_cust_config is None:
+            mod_cust_config = {}
         try:
-            this_module = list(mod_dict.keys())[0]
-            mod_cust_config = list(mod_dict.values())[0]
-            if mod_cust_config is None:
-                mod_cust_config = {}
             mod = config.avail_modules[this_module].load()
             mod.mod_cust_config = mod_cust_config  # feels bad doing this, but seems to work
             output = mod()
@@ -689,8 +707,16 @@ def run(
                 except AttributeError:
                     pass
 
-        except UserWarning:
-            logger.debug("No samples found: {}".format(list(mod_dict.keys())[0]))
+        except ModuleNoSamplesFound:
+            logger.debug(f"No samples found: {this_module}")
+        except UserWarning:  # UserWarning deprecated from 1.16
+            msg = f"DEPRECIATED: Please raise 'ModuleNoSamplesFound' instead of 'UserWarning' in module: {this_module}"
+            if config.strict:
+                logger.error(msg)
+                report.lint_errors.append(msg)
+            else:
+                logger.debug(msg)
+            logger.debug(f"No samples found: {this_module}")
         except KeyboardInterrupt:
             shutil.rmtree(tmp_dir)
             logger.critical(
@@ -699,6 +725,10 @@ def run(
             )
             sys.exit(1)
         except:
+            if config.strict:
+                # Crash quickly in the strict mode. This can be helpful for interactive debugging of modules.
+                raise
+
             # Flag the error, but carry on
             class CustomTraceback:
                 def __rich_console__(self, console: rich.console.Console, options: rich.console.ConsoleOptions):
@@ -1120,7 +1150,7 @@ def run(
                 "See [link=https://multiqc.info/docs/#flat--interactive-plots]docs[/link]."
             )
 
-    if lint and len(report.lint_errors) > 0:
+    if config.strict and len(report.lint_errors) > 0:
         logger.error("Found {} linting errors!\n{}".format(len(report.lint_errors), "\n".join(report.lint_errors)))
         sys_exit_code = 1
 

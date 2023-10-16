@@ -5,7 +5,7 @@ import re
 from collections import OrderedDict
 
 from multiqc import config
-from multiqc.modules.base_module import BaseMultiqcModule
+from multiqc.modules.base_module import BaseMultiqcModule, ModuleNoSamplesFound
 from multiqc.plots import bargraph, table
 
 # Initialise the logger
@@ -37,7 +37,7 @@ class MultiqcModule(BaseMultiqcModule):
 
         # Write the data files to disk
         if not self.lima_summary and not self.lima_counts:
-            raise UserWarning
+            raise ModuleNoSamplesFound
         log.info("Found {} reports".format(len(self.lima_summary)))
         log.info("Found {} samples".format(len(self.lima_counts)))
 
@@ -89,6 +89,10 @@ class MultiqcModule(BaseMultiqcModule):
                     log.debug(f"Duplicate summary sample name found! Overwriting: {f['s_name']}")
                 self.lima_summary[f["s_name"]] = data
                 self.add_data_source(f)
+
+                # Superfluous function call to confirm that it is used in this module
+                # Replace None with actual version if it is available
+                self.add_software_version(None, f["s_name"])
 
     def parse_counts_files(self):
         for f in self.find_log_files("lima/counts", filehandles=True):

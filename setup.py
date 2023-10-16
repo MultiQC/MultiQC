@@ -201,6 +201,7 @@ setup(
             "theta2 = multiqc.modules.theta2:MultiqcModule",
             "tophat = multiqc.modules.tophat:MultiqcModule",
             "trimmomatic = multiqc.modules.trimmomatic:MultiqcModule",
+            "truvari = multiqc.modules.truvari:MultiqcModule",
             "umitools = multiqc.modules.umitools:MultiqcModule",
             "varscan2 = multiqc.modules.varscan2:MultiqcModule",
             "vcftools = multiqc.modules.vcftools:MultiqcModule",

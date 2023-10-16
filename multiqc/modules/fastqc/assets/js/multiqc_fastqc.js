@@ -116,17 +116,15 @@ function fastqc_module(module_element, module_key) {
         .prepend('<p class="fastqc-heatmap-no-samples text-muted">No samples found.</p>');
     }
     if (hidden_samples > 0) {
-      module_element
-        .find("#fastqc_seq_heatmap_div")
-        .prepend(
-          '<div class="samples-hidden-warning alert alert-warning"> \
+      module_element.find("#fastqc_seq_heatmap_div").prepend(
+        '<div class="samples-hidden-warning alert alert-warning"> \
                 <span class="glyphicon glyphicon-info-sign"></span> \
                 <strong>Warning:</strong> ' +
-            hidden_samples +
-            ' samples hidden in toolbox. \
+          hidden_samples +
+          ' samples hidden in toolbox. \
                 <a href="#mqc_hidesamples" class="alert-link" onclick="mqc_toolbox_openclose(\'#mqc_hidesamples\', true); return false;">See toolbox.</a>\
-            </div>'
-        );
+            </div>',
+      );
     }
     if (num_samples == 0) {
       return;
@@ -356,7 +354,7 @@ function fastqc_module(module_element, module_key) {
           f_col +
           ';"><span class="hc_handle"><span></span><span></span></span><input class="f_text" value="' +
           f_text +
-          '"/><button type="button" class="close" aria-label="Close"><span aria-hidden="true">&times;</span></button></li>'
+          '"/><button type="button" class="close" aria-label="Close"><span aria-hidden="true">&times;</span></button></li>',
       );
     }
     // Apply highlights and open toolbox
@@ -394,7 +392,7 @@ function fastqc_module(module_element, module_key) {
       $("#mqc_hidesamples_filters").append(
         '<li><input class="f_text" value="' +
           f_text +
-          '" /><button type="button" class="close" aria-label="Close"><span aria-hidden="true">&times;</span></button></li>'
+          '" /><button type="button" class="close" aria-label="Close"><span aria-hidden="true">&times;</span></button></li>',
       );
     }
     // Apply highlights and open toolbox
@@ -422,7 +420,7 @@ function fastqc_module(module_element, module_key) {
   // Export plot
   module_element.find(".fastqc_per_base_sequence_content_plot").on("mqc_plotexport_image", function (e, cfg) {
     alert(
-      "Apologies, it's not yet possible to export the FastQC per-base sequence content plot.\nPlease take a screengrab or export the JSON data."
+      "Apologies, it's not yet possible to export the FastQC per-base sequence content plot.\nPlease take a screengrab or export the JSON data.",
     );
   });
   module_element.find(".fastqc_per_base_sequence_content_plot").on("mqc_plotexport_data", function (e, cfg) {
@@ -471,7 +469,7 @@ function fastqc_module(module_element, module_key) {
           s_status_class +
           '">' +
           s_status +
-          "</span>"
+          "</span>",
       );
 
     // Update the key with the raw data for this position
@@ -663,7 +661,7 @@ function fastqc_module(module_element, module_key) {
                 '; padding-left:5px; margin-bottom: 2px;"></div>' +
                 this.y.toFixed(1) +
                 this.series.name +
-                "</span>"
+                "</span>",
             );
             bars.push(
               '<div class="progress-bar" style="width:' +
@@ -672,7 +670,7 @@ function fastqc_module(module_element, module_key) {
                 this.color +
                 ';">' +
                 this.series.name.replace("%", "").trim() +
-                "</div>"
+                "</div>",
             );
             if (this.point.name) {
               xlabel = this.point.name;

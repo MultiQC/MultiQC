@@ -41,6 +41,10 @@ def parse_reports(self):
             log.warning("Couldn't find an input filename in genome_results file {}/{}".format(f["root"], f["fn"]))
             return None
 
+        # Superfluous function call to confirm that it is used in this module
+        # Replace None with actual version if it is available
+        self.add_software_version(None, s_name)
+
         # Check for and 'fix' European style decimal places / thousand separators
         comma_regex = re.search(r"exonic\s*=\s*[\d\.]+ \(\d{1,3},\d+%\)", f["f"], re.MULTILINE)
         if comma_regex:

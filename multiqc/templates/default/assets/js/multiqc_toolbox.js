@@ -36,7 +36,7 @@ $(function () {
             tt +
             '" /> \
           <button type="button" class="close" aria-label="Close"><span aria-hidden="true">&times;</span></button> \
-        </li>'
+        </li>',
         );
       }
       apply_mqc_renamesamples();
@@ -82,7 +82,7 @@ $(function () {
       $("#mqc_hidesamples_filters").append(
         '<li><input class="f_text" value="' +
           val +
-          '" /><button type="button" class="close" aria-label="Close"><span aria-hidden="true">&times;</span></button></li>'
+          '" /><button type="button" class="close" aria-label="Close"><span aria-hidden="true">&times;</span></button></li>',
       );
     });
     apply_mqc_hidesamples(show_hide_mode);
@@ -137,7 +137,7 @@ $(function () {
         ajax_promises.push(
           $.get("https://api.crossref.org/works/" + doi + "/transform/application/x-bibtex", function (data) {
             bibtex_string += data + "\n";
-          })
+          }),
         );
       }
       // Wait until all API calls are done
@@ -171,7 +171,7 @@ $(function () {
         f_text +
         '" tabindex="' +
         mqc_colours_idx +
-        '" /><button type="button" class="close" aria-label="Close"><span aria-hidden="true">&times;</span></button></li>'
+        '" /><button type="button" class="close" aria-label="Close"><span aria-hidden="true">&times;</span></button></li>',
     );
     $("#mqc_cols_apply").attr("disabled", false).removeClass("btn-default").addClass("btn-primary");
     $("#mqc_colour_filter").val("");
@@ -275,7 +275,7 @@ $(function () {
         f_text +
         '" tabindex="' +
         mqc_hidesamples_idx +
-        '" /><button type="button" class="close" aria-label="Close"><span aria-hidden="true">&times;</span></button></li>'
+        '" /><button type="button" class="close" aria-label="Close"><span aria-hidden="true">&times;</span></button></li>',
     );
     $("#mqc_hide_apply").attr("disabled", false).removeClass("btn-default").addClass("btn-primary");
     $("#mqc_hidesamples_filter").val("");
@@ -304,7 +304,11 @@ $(function () {
     $(".hc-plot").each(function () {
       var fname = $(this).attr("id");
       $("#mqc_export_selectplots").append(
-        '<div class="checkbox"><label><input type="checkbox" value="' + fname + '" checked> ' + fname + "</label></div>"
+        '<div class="checkbox"><label><input type="checkbox" value="' +
+          fname +
+          '" checked> ' +
+          fname +
+          "</label></div>",
       );
     });
     // Select all / none for checkboxes
@@ -379,7 +383,7 @@ $(function () {
           alert(
             "Warning: " +
               skipped_plots +
-              " plots skipped.\n\nNote that it is not currently possible to export dot plot images from reports. Data exports do work."
+              " plots skipped.\n\nNote that it is not currently possible to export dot plot images from reports. Data exports do work.",
           );
         }
         // Save the zip and trigger a download
@@ -1057,7 +1061,7 @@ function populate_mqc_saveselect() {
         'you have the <em>"Block third-party cookies and site data"</em> setting ticked (Chrome) ' +
         "or equivalent in other browsers.</p><p>Please " +
         '<a href="https://www.google.se/search?q=Block+third-party+cookies+and+site+data" target="_blank">change this browser setting</a>' +
-        " to save MultiQC report configs.</p>"
+        " to save MultiQC report configs.</p>",
     );
   }
 }
@@ -1139,7 +1143,7 @@ function load_mqc_config(name) {
           hashCode(f_text + f_col) +
           '"><span class="hc_handle"><span></span><span></span></span><input class="f_text" value="' +
           f_text +
-          '" /><button type="button" class="close" aria-label="Close"><span aria-hidden="true">&times;</span></button></li>'
+          '" /><button type="button" class="close" aria-label="Close"><span aria-hidden="true">&times;</span></button></li>',
       );
       window.mqc_highlight_f_texts.push(f_text);
       window.mqc_highlight_f_cols.push(f_col);
@@ -1176,7 +1180,7 @@ function load_mqc_config(name) {
       $("#mqc_hidesamples_filters").append(
         '<li><input class="f_text" value="' +
           f_text +
-          '" /><button type="button" class="close" aria-label="Close"><span aria-hidden="true">&times;</span></button></li>'
+          '" /><button type="button" class="close" aria-label="Close"><span aria-hidden="true">&times;</span></button></li>',
       );
       window.mqc_hide_f_texts.push(f_text);
     });
