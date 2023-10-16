@@ -13,6 +13,7 @@
 - Trigger changelog entry addition on PR creation, in addition to an explicit comment to multiqc-bot ([#2102](https://github.com/ewels/MultiQC/pull/2102))
 - Fix adding changelog entries with backticks from PR titles ([#2115](https://github.com/ewels/MultiQC/pull/2115))
 - Fix for python 3.12: replace removed `distutils` ([#2113](https://github.com/ewels/MultiQC/pull/2113))
+- <img src="./multiqc/templates/default/assets/img/favicon-16x16.png" alt="///" width="10px"/> New logo
 
 ### New Modules
 
