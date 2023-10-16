@@ -1,5 +1,3 @@
-#!/usr/bin/env python
-
 """ MultiQC module to parse output from qc3C """
 
 
@@ -12,7 +10,7 @@ from collections import OrderedDict, defaultdict
 
 import numpy as np
 
-from multiqc.modules.base_module import BaseMultiqcModule
+from multiqc.modules.base_module import BaseMultiqcModule, ModuleNoSamplesFound
 from multiqc.plots import bargraph, linegraph, table
 
 log = logging.getLogger(__name__)
@@ -157,12 +155,11 @@ class MultiqcModule(BaseMultiqcModule):
         # check that any non-empty records were stored under one of the two analysis modes
         n_reports = len(self.qc3c_data["kmer"]) + len(self.qc3c_data["bam"])
         if n_reports == 0:
-            raise UserWarning("No reports found")
+            raise ModuleNoSamplesFound
 
         log.info("Found {} reports".format(n_reports))
 
         if len(self.qc3c_data["bam"]) > 0:
-
             self.write_data_file(self.qc3c_data["bam"], "multiqc_qc3c_bam")
             log.debug("Found {} BAM analysis reports".format(len(self.qc3c_data["bam"])))
 
@@ -317,7 +314,6 @@ class MultiqcModule(BaseMultiqcModule):
                 )
 
         if len(self.qc3c_data["kmer"]) > 0:
-
             self.write_data_file(self.qc3c_data["kmer"], "multiqc_qc3c_kmer")
             log.debug("Found {} k-mer analysis reports".format(len(self.qc3c_data["kmer"])))
 
@@ -409,7 +405,6 @@ class MultiqcModule(BaseMultiqcModule):
         return s.split()[-1]
 
     def bam_runtime_table(self):
-
         config = {"id": "qc3C_bam_runtime_table", "namespace": "qc3C", "col1_header": "Sample"}
 
         headers = OrderedDict(
@@ -549,7 +544,6 @@ class MultiqcModule(BaseMultiqcModule):
         return bargraph.plot(self.qc3c_data["bam"], categories, config)
 
     def bam_signal_table(self):
-
         config = {"id": "qc3C_bam_signal_table", "namespace": "qc3C", "hide_zero_cats": False, "col1_header": "Sample"}
 
         headers = OrderedDict(
@@ -639,7 +633,6 @@ class MultiqcModule(BaseMultiqcModule):
         return table.plot(self.qc3c_data["bam"], headers, config)
 
     def bam_hicpro_table(self):
-
         config = {"id": "qc3C_bam_hicpro_table", "namespace": "qc3C", "hide_zero_cats": False, "col1_header": "Sample"}
 
         headers = OrderedDict(
@@ -726,7 +719,6 @@ class MultiqcModule(BaseMultiqcModule):
         return bargraph.plot(self.qc3c_data["bam"], categories, config)
 
     def bam_fragment_histogram(self):
-
         median_lines = []
         for smpl in self.qc3c_data["bam"]:
             median_lines.append(
@@ -761,7 +753,6 @@ class MultiqcModule(BaseMultiqcModule):
         return linegraph.plot(data, config)
 
     def kmer_runtime_table(self):
-
         config = {"id": "qc3C_kmer_runtime_table", "namespace": "qc3C", "col1_header": "Sample"}
 
         headers = OrderedDict(
@@ -857,7 +848,6 @@ class MultiqcModule(BaseMultiqcModule):
         return table.plot(self.qc3c_data["kmer"], headers, config)
 
     def kmer_signal_table(self):
-
         config = {"id": "qc3C_kmer_signal_table", "namespace": "qc3C", "col1_header": "Sample"}
 
         headers = OrderedDict(
@@ -974,6 +964,10 @@ class MultiqcModule(BaseMultiqcModule):
         if s_name in self.qc3c_data:
             log.debug("Duplicate sample name found! Overwriting: {}".format(f["s_name"]))
 
+        # Add version info
+        version = parsed["runtime_info"]["qc3C_version"].split()[-1]
+        self.add_software_version(version, f["s_name"])
+
         try:
             analysis_mode = parsed["mode"]
             if "unobs_fraction" not in parsed and "unobs_frac" in parsed:
@@ -1065,7 +1059,6 @@ class MultiqcModule(BaseMultiqcModule):
                 self.qc3c_data["bam"][s_name]["frag_hist"] = fhist
 
             elif analysis_mode == "kmer":
-
                 for k in "raw_fraction", "adj_fraction", "unobs_fraction":
                     if parsed[k] is None:
                         parsed[k] = "Error - adjusted value would exceed 100"
@@ -1138,8 +1131,8 @@ class MultiqcModule(BaseMultiqcModule):
 
         except KeyError as ex:
             log.error(
-                "The entry {} was not found in the qc3C JSON file '{}'".format(
-                    str(ex), os.path.join(f["root"], f["fn"])
+                "The entry {} was not found in the qc3C JSON file '{}', skipping sample {}".format(
+                    str(ex), os.path.join(f["root"], f["fn"]), f["s_name"]
                 )
             )
             return

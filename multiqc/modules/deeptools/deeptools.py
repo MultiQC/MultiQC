@@ -1,9 +1,8 @@
-#!/usr/bin/env python
 """MultiQC module to parse the output from deepTools"""
 import logging
 from collections import OrderedDict
 
-from multiqc.modules.base_module import BaseMultiqcModule
+from multiqc.modules.base_module import BaseMultiqcModule, ModuleNoSamplesFound
 
 from .bamPEFragmentSizeDistribution import bamPEFragmentSizeDistributionMixin
 
@@ -34,7 +33,6 @@ class MultiqcModule(
     plotCorrelationMixin,
 ):
     def __init__(self):
-
         # Initialise the parent object
         super(MultiqcModule, self).__init__(
             name="deepTools",
@@ -121,7 +119,7 @@ class MultiqcModule(
         if tot > 0:
             log.info("Found {} total deepTools samples".format(tot))
         else:
-            raise UserWarning
+            raise ModuleNoSamplesFound
 
     def _int(self, val):
         """Avoids Python3 error:

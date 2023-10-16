@@ -1,5 +1,3 @@
-#!/usr/bin/env python
-
 """ MultiQC module to parse output from Afterqc """
 
 
@@ -8,7 +6,7 @@ import logging
 from collections import OrderedDict
 
 from multiqc import config
-from multiqc.modules.base_module import BaseMultiqcModule
+from multiqc.modules.base_module import BaseMultiqcModule, ModuleNoSamplesFound
 from multiqc.plots import bargraph
 
 # Initialise the logger
@@ -21,7 +19,6 @@ class MultiqcModule(BaseMultiqcModule):
     """
 
     def __init__(self):
-
         # Initialise the parent object
         super(MultiqcModule, self).__init__(
             name="AfterQC",
@@ -36,11 +33,15 @@ class MultiqcModule(BaseMultiqcModule):
         for f in self.find_log_files("afterqc", filehandles=True):
             self.parse_afterqc_log(f)
 
+            # Superfluous function call to confirm that it is used in this module
+            # Replace None with actual version if it is available
+            self.add_software_version(None, f["s_name"])
+
         # Filter to strip out ignored sample names
         self.afterqc_data = self.ignore_samples(self.afterqc_data)
 
         if len(self.afterqc_data) == 0:
-            raise UserWarning
+            raise ModuleNoSamplesFound
 
         log.info("Found {} reports".format(len(self.afterqc_data)))
 

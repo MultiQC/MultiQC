@@ -1,5 +1,3 @@
-#!/usr/bin/env python
-
 """ MultiQC module to parse output from Tophat """
 
 
@@ -9,7 +7,7 @@ import re
 from collections import OrderedDict
 
 from multiqc import config
-from multiqc.modules.base_module import BaseMultiqcModule
+from multiqc.modules.base_module import BaseMultiqcModule, ModuleNoSamplesFound
 from multiqc.plots import bargraph
 
 # Initialise the logger
@@ -18,7 +16,6 @@ log = logging.getLogger(__name__)
 
 class MultiqcModule(BaseMultiqcModule):
     def __init__(self):
-
         # Initialise the parent object
         super(MultiqcModule, self).__init__(
             name="Tophat",
@@ -44,11 +41,15 @@ class MultiqcModule(BaseMultiqcModule):
                 self.add_data_source(f, s_name)
                 self.tophat_data[s_name] = parsed_data
 
+                # Superfluous function call to confirm that it is used in this module
+                # Replace None with actual version if it is available
+                self.add_software_version(None, s_name)
+
         # Filter to strip out ignored sample names
         self.tophat_data = self.ignore_samples(self.tophat_data)
 
         if len(self.tophat_data) == 0:
-            raise UserWarning
+            raise ModuleNoSamplesFound
 
         log.info("Found {} reports".format(len(self.tophat_data)))
 

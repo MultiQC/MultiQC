@@ -1,5 +1,3 @@
-#!/usr/bin/env python
-
 """ MultiQC submodule to parse output from Picard GcBiasMetrics """
 
 import logging
@@ -76,6 +74,10 @@ def parse_reports(self):
                 self.picard_GCbias_data.pop(s_name, None)
                 log.debug("Removing {} as no data parsed".format(s_name))
 
+            # Superfluous function call to confirm that it is used in this module
+            # Replace None with actual version if it is available
+            self.add_software_version(None, s_name)
+
         for s_name in list(self.picard_GCbiasSummary_data.keys()):
             if len(self.picard_GCbiasSummary_data[s_name]) == 0:
                 self.picard_GCbiasSummary_data.pop(s_name, None)
@@ -85,7 +87,6 @@ def parse_reports(self):
     self.picard_GCbias_data = self.ignore_samples(self.picard_GCbias_data)
 
     if len(self.picard_GCbias_data) > 0:
-
         # Plot the graph
 
         pconfig = {

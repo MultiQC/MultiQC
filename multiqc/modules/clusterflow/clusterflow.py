@@ -1,5 +1,3 @@
-#!/usr/bin/env python
-
 """ MultiQC module to parse output from Cluster Flow """
 
 
@@ -10,7 +8,7 @@ import re
 import time
 from collections import OrderedDict
 
-from multiqc.modules.base_module import BaseMultiqcModule
+from multiqc.modules.base_module import BaseMultiqcModule, ModuleNoSamplesFound
 from multiqc.plots import table
 
 # Initialise the logger
@@ -23,7 +21,6 @@ class MultiqcModule(BaseMultiqcModule):
     """
 
     def __init__(self):
-
         # Initialise the parent object
         super(MultiqcModule, self).__init__(
             name="Cluster Flow",
@@ -40,6 +37,11 @@ class MultiqcModule(BaseMultiqcModule):
         for f in self.find_log_files("clusterflow/logs", filehandles=True):
             self.parse_clusterflow_logs(f)
             self.add_data_source(f, "log")
+
+            # Superfluous function call to confirm that it is used in this module
+            # Replace None with actual version if it is available
+            self.add_software_version(None, f["s_name"])
+
         for f in self.find_log_files("clusterflow/runfiles", filehandles=True):
             parsed_data = self.parse_clusterflow_runfiles(f)
             if parsed_data is not None:
@@ -51,7 +53,7 @@ class MultiqcModule(BaseMultiqcModule):
         self.clusterflow_runfiles = self.ignore_samples(self.clusterflow_runfiles)
 
         if len(self.clusterflow_commands) == 0 and len(self.clusterflow_runfiles) == 0:
-            raise UserWarning
+            raise ModuleNoSamplesFound
 
         # Count pipelines
         num_log_pipelines = len(self.clusterflow_commands)
@@ -80,7 +82,6 @@ class MultiqcModule(BaseMultiqcModule):
         job_id = None
         pipeline_id = None
         for l in f["f"]:
-
             # Get pipeline ID
             module_r = re.match(r"Module:\s+(.+)$", l)
             if module_r:

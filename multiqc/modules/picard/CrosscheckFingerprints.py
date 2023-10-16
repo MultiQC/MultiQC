@@ -40,7 +40,6 @@ def parse_reports(self):
 
     # Go through logs and find Metrics
     for f in self.find_log_files("picard/crosscheckfingerprints", filehandles=True):
-
         self.add_data_source(f, section="CrosscheckFingerprints")
 
         # Parse an individual CrosscheckFingerprints Report
@@ -67,6 +66,10 @@ def parse_reports(self):
             row["LOD_THRESHOLD"] = lod_threshold
             row["TUMOR_AWARENESS"] = tumor_awareness
             self.picard_CrosscheckFingerprints_data[i] = row
+
+            # Superfluous function call to confirm that it is used in this module
+            # Replace None with actual version if it is available
+            self.add_software_version(None, i)
 
     # Only add sections if we found data
     if len(self.picard_CrosscheckFingerprints_data) > 0:

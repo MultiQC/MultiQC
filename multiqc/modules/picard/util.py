@@ -1,5 +1,3 @@
-#!/usr/bin/env python
-
 import os
 import re
 from collections import OrderedDict
@@ -56,6 +54,10 @@ def read_histogram(self, program_key, program_name, headers, formats):
         s_name = read_sample_name(lines, clean_fn, program_name)
         if s_name is None:
             continue
+
+        # Superfluous function call to confirm that it is used in this module
+        # Replace None with actual version if it is available
+        self.add_software_version(None, s_name)
 
         sample_data = OrderedDict()
 

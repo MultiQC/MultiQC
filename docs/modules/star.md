@@ -1,7 +1,7 @@
 ---
-Name: STAR
-URL: https://github.com/alexdobin/STAR
-Description: >
+name: STAR
+url: https://github.com/alexdobin/STAR
+description: >
   STAR is an ultrafast universal RNA-seq aligner.
 ---
 

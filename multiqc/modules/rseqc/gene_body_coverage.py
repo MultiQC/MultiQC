@@ -1,5 +1,3 @@
-#!/usr/bin/env python
-
 """ MultiQC submodule to parse output from RSeQC geneBody_coverage.py
 http://rseqc.sourceforge.net/#genebody-coverage-py """
 
@@ -24,7 +22,6 @@ def parse_reports(self):
 
     # Go through files and parse data
     for f in self.find_log_files("rseqc/gene_body_coverage"):
-
         # geneBodyCoverage.py
         # RSeQC >= v2.4
         # NB: Capitilisation
@@ -75,6 +72,10 @@ def parse_reports(self):
             if nrows == 0:
                 del self.gene_body_cov_hist_counts[f["s_name"]]
                 log.warning("Empty geneBodyCoverage file found: {}".format(f["fn"]))
+
+        # Superfluous function call to confirm that it is used in this module
+        # Replace None with actual version if it is available
+        self.add_software_version(None, f["s_name"])
 
     # Filter to strip out ignored sample names
     self.gene_body_cov_hist_counts = self.ignore_samples(self.gene_body_cov_hist_counts)

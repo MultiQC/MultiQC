@@ -1,5 +1,3 @@
-#!/usr/bin/env python
-
 """ MultiQC submodule to parse output from RSeQC read_distribution.py
 http://rseqc.sourceforge.net/#read-distribution-py """
 
@@ -70,6 +68,10 @@ def parse_reports(self):
                 log.debug("Duplicate sample name found! Overwriting: {}".format(f["s_name"]))
             self.add_data_source(f, section="read_distribution")
             self.read_dist[f["s_name"]] = d
+
+        # Superfluous function call to confirm that it is used in this module
+        # Replace None with actual version if it is available
+        self.add_software_version(None, f["s_name"])
 
     # Filter to strip out ignored sample names
     self.read_dist = self.ignore_samples(self.read_dist)

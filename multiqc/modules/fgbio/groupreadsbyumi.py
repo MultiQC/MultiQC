@@ -1,5 +1,3 @@
-#!/usr/bin/env python
-
 """ MultiQC module to parse output from fgbio GroupReadsByUmi
 """
 
@@ -14,7 +12,6 @@ log = logging.getLogger(__name__)
 
 class GroupReadsByUmiMixin:
     def parse_groupreadsbyumi(self):
-
         # Parse data
         self.parse_groupreadsbyumi_log()
 
@@ -39,6 +36,10 @@ class GroupReadsByUmiMixin:
 
             umi_data[f["s_name"]] = {int(s): int(d[1]) for s, d in enumerate(family_size, 1)}
             umi_data_normed[f["s_name"]] = {int(s): float(d[2]) * 100.0 for s, d in enumerate(family_size, 1)}
+
+            # Superfluous function call to confirm that it is used in this module
+            # Replace None with actual version if it is available
+            self.add_software_version(None, f["s_name"])
 
         # Filter samples
         self.fgbio_umi_data = self.ignore_samples(umi_data)

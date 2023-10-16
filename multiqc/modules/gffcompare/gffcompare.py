@@ -1,22 +1,20 @@
-#!/usr/bin/env python
-
 """ MultiQC module to parse output from gffcompare """
 
 
 import logging
-import os
-from collections import OrderedDict
+import re
 
-from multiqc.modules.base_module import BaseMultiqcModule
+from multiqc.modules.base_module import BaseMultiqcModule, ModuleNoSamplesFound
 from multiqc.plots import bargraph, scatter
 
 # Initialise the logger
 log = logging.getLogger(__name__)
 
+VERSION_REGEX = r"# gffcompare v([\d\.]+)"
+
 
 class MultiqcModule(BaseMultiqcModule):
     def __init__(self):
-
         # Initialise the parent object
         super(MultiqcModule, self).__init__(
             name="GffCompare",
@@ -41,6 +39,11 @@ class MultiqcModule(BaseMultiqcModule):
             sample = f["s_name"]
             self.gffcompare_data[sample] = {}
             lines = f["f"].splitlines()
+
+            # Version info
+            version_match = re.search(VERSION_REGEX, lines[0])
+            if version_match:
+                self.add_software_version(version_match.group(1), sample)
 
             ## Transcript and loci numbers:
             # Query
@@ -108,7 +111,7 @@ class MultiqcModule(BaseMultiqcModule):
 
         # Raise user warning if no data found
         if len(self.gffcompare_data) == 0:
-            raise UserWarning
+            raise ModuleNoSamplesFound
 
         log.info("Found {} reports".format(len(self.gffcompare_data)))
 

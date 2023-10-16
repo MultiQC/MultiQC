@@ -1,16 +1,12 @@
-#!/usr/bin/env python
-
 """ MultiQC module to parse output from ngsderive """
 
 
 import csv
 import io
 import logging
-import os
-import re
 from collections import OrderedDict
 
-from multiqc.modules.base_module import BaseMultiqcModule
+from multiqc.modules.base_module import BaseMultiqcModule, ModuleNoSamplesFound
 from multiqc.plots import bargraph, linegraph, table
 
 # Initialise the logger
@@ -23,7 +19,6 @@ class MultiqcModule(BaseMultiqcModule):
     """
 
     def __init__(self):
-
         # Initialise the parent object
         super(MultiqcModule, self).__init__(
             name="ngsderive",
@@ -53,6 +48,10 @@ class MultiqcModule(BaseMultiqcModule):
                 "strandedness",
                 expected_header_count_strandedness,
             )
+
+            # Superfluous function call to confirm that it is used in this module
+            # Replace None with actual version if it is available
+            self.add_software_version(None, f["s_name"])
 
         for f in self.find_log_files("ngsderive/instrument"):
             self.parse(
@@ -96,7 +95,7 @@ class MultiqcModule(BaseMultiqcModule):
             [len(d) for d in [self.strandedness, self.instrument, self.readlen, self.encoding, self.junctions]]
         )
         if num_results_found == 0:
-            raise UserWarning
+            raise ModuleNoSamplesFound
         log.info("Found {} reports".format(num_results_found))
 
         if self.strandedness:
@@ -159,7 +158,7 @@ class MultiqcModule(BaseMultiqcModule):
 
         bardata = OrderedDict()
         sorted_data = sorted(data.items(), key=lambda x: x[1].get("forward"))
-        for (k, v) in sorted_data:
+        for k, v in sorted_data:
             bardata[k] = v
 
         headers = {
@@ -422,7 +421,7 @@ class MultiqcModule(BaseMultiqcModule):
 
         bardata = OrderedDict()
         sorted_junction_data = sorted(data.items(), key=lambda x: int(x[1].get("total_junctions")), reverse=True)
-        for (k, v) in sorted_junction_data:
+        for k, v in sorted_junction_data:
             bardata[k] = {
                 "known_junctions": v["known_junctions"],
                 "partial_novel_junctions": v["partial_novel_junctions"],

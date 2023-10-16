@@ -1,5 +1,3 @@
-#!/usr/bin/env python
-
 """ MultiQC module to parse output from bustools inspect """
 
 
@@ -8,7 +6,7 @@ import logging
 import os
 from collections import OrderedDict
 
-from multiqc.modules.base_module import BaseMultiqcModule
+from multiqc.modules.base_module import BaseMultiqcModule, ModuleNoSamplesFound
 from multiqc.plots import bargraph, table
 from multiqc.utils import config
 
@@ -18,7 +16,6 @@ log = logging.getLogger(__name__)
 
 class MultiqcModule(BaseMultiqcModule):
     def __init__(self):
-
         # Initialise the parent object
         super(MultiqcModule, self).__init__(
             name="Bustools",
@@ -47,11 +44,15 @@ class MultiqcModule(BaseMultiqcModule):
             self.bustools_data[s_name] = content
             self.add_data_source(f)
 
+            # Superfluous function call to confirm that it is used in this module
+            # Replace None with actual version if it is available
+            self.add_software_version(None, s_name)
+
         # Filter to strip out ignored sample names
         self.bustools_data = self.ignore_samples(self.bustools_data)
 
         if len(self.bustools_data) == 0:
-            raise UserWarning
+            raise ModuleNoSamplesFound
 
         # now fill out the table(s) headers
         self.headers = OrderedDict()
@@ -81,6 +82,12 @@ class MultiqcModule(BaseMultiqcModule):
             "format": "{:,.0f}",
             "shared_key": "barcodes",
         }
+        self.headers["medianReadsPerBarcode"] = {
+            "title": "Median reads per barcode",
+            "scale": "RdYlGn",
+            "min": 0,
+            "format": "{:,.2f}",
+        }
         self.headers["meanReadsPerBarcode"] = {
             "title": "Mean reads per barcode",
             "scale": "BuGn",
@@ -109,7 +116,7 @@ class MultiqcModule(BaseMultiqcModule):
         }
         self.headers["meanUMIsPerBarcode"] = {
             "title": "Mean UMIs per barcode",
-            "scale": "PuBnGn",
+            "scale": "PuBuGn",
             "min": 0,
             "format": "{:,.2f}",
         }

@@ -1,5 +1,3 @@
-#!/usr/bin/env python
-
 """ MultiQC module to parse output from Fastp """
 
 
@@ -8,7 +6,7 @@ import logging
 from collections import OrderedDict
 
 from multiqc import config
-from multiqc.modules.base_module import BaseMultiqcModule
+from multiqc.modules.base_module import BaseMultiqcModule, ModuleNoSamplesFound
 from multiqc.plots import bargraph, linegraph
 
 # Initialise the logger
@@ -21,7 +19,6 @@ class MultiqcModule(BaseMultiqcModule):
     """
 
     def __init__(self):
-
         # Initialise the parent object
         super(MultiqcModule, self).__init__(
             name="fastp",
@@ -47,11 +44,15 @@ class MultiqcModule(BaseMultiqcModule):
         for f in self.find_log_files("fastp", filehandles=True):
             self.parse_fastp_log(f)
 
+            # Superfluous function call to confirm that it is used in this module
+            # Replace None with actual version if it is available
+            self.add_software_version(None, f["s_name"])
+
         # Filter to strip out ignored sample names
         self.fastp_data = self.ignore_samples(self.fastp_data)
 
         if len(self.fastp_data) == 0:
-            raise UserWarning
+            raise ModuleNoSamplesFound
 
         log.info("Found {} reports".format(len(self.fastp_data)))
 
@@ -153,6 +154,7 @@ class MultiqcModule(BaseMultiqcModule):
         """Parse the JSON output from fastp and save the summary statistics"""
         try:
             parsed_json = json.load(f["f"])
+            parsed_json["command"]
         except:
             log.warning("Could not parse fastp JSON: '{}'".format(f["fn"]))
             return None
@@ -324,7 +326,7 @@ class MultiqcModule(BaseMultiqcModule):
             "shared_key": "base_count",
             "hidden": True,
         }
-        headers["after_filtering_total_reads"] = {
+        headers["filtering_result_passed_filter_reads"] = {
             "title": "{} Reads After Filtering".format(config.read_count_prefix),
             "description": "Total reads after filtering ({})".format(config.read_count_desc),
             "min": 0,

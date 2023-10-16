@@ -1,11 +1,7 @@
-#!/usr/bin/env python
-
 """ MultiQC submodule to parse output from Picard QualityYieldMetrics """
 
 import logging
-import os
-import re
-from collections import OrderedDict, defaultdict
+from collections import OrderedDict
 
 from multiqc import config
 from multiqc.plots import linegraph, table
@@ -55,6 +51,10 @@ def parse_reports(self):
 
         if s_name is None:
             continue
+
+        # Superfluous function call to confirm that it is used in this module
+        # Replace None with actual version if it is available
+        self.add_software_version(None, s_name)
 
         sample_data = dict()
         try:

@@ -1,5 +1,3 @@
-#!/usr/bin/env python
-
 """ MultiQC submodule to parse output from Picard TargetedPcrMetrics """
 
 import logging
@@ -51,11 +49,14 @@ def parse_reports(self):
                             except ValueError:
                                 self.picard_pcrmetrics_data[s_name][k] = vals[i]
 
+        # Superfluous function call to confirm that it is used in this module
+        # Replace None with actual version if it is available
+        self.add_software_version(None, s_name)
+
     # Filter to strip out ignored sample names
     self.picard_pcrmetrics_data = self.ignore_samples(self.picard_pcrmetrics_data)
 
     if len(self.picard_pcrmetrics_data) > 0:
-
         # Write parsed data to a file
         self.write_data_file(self.picard_pcrmetrics_data, "multiqc_picard_pcrmetrics")
 

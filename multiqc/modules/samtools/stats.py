@@ -1,9 +1,9 @@
-#!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
 """ MultiQC submodule to parse output from Samtools stats """
 
 import logging
+import re
 from collections import OrderedDict
 
 from multiqc import config
@@ -11,6 +11,10 @@ from multiqc.plots import bargraph, beeswarm
 
 # Initialise the logger
 log = logging.getLogger(__name__)
+
+# Regex to grab version number from samtools stats contents
+VERSION_REGEX = r"# This file was produced by samtools stats \(([\d\.]+)"
+HTSLIB_REGEX = r"\+htslib-([\d\.]+)"
 
 
 class StatsReportMixin:
@@ -23,6 +27,27 @@ class StatsReportMixin:
         for f in self.find_log_files("samtools/stats"):
             parsed_data = dict()
             for line in f["f"].splitlines():
+                # Get version number from file contents
+                if line.startswith("# This file was produced by samtools stats"):
+                    # Look for Samtools version
+                    version_match = re.search(VERSION_REGEX, line)
+                    if version_match is None:
+                        continue
+
+                    # Add Samtools version
+                    samtools_version = version_match.group(1)
+                    self.add_software_version(samtools_version, f["s_name"])
+
+                    # Look for HTSlib version
+                    htslib_version_match = re.search(HTSLIB_REGEX, line)
+                    if htslib_version_match is None:
+                        continue
+
+                    # Add HTSlib version if different from Samtools version
+                    htslib_version = htslib_version_match.group(1)
+                    if htslib_version != samtools_version:
+                        self.add_software_version(htslib_version, f["s_name"], "HTSlib")
+
                 if not line.startswith("SN"):
                     continue
                 sections = line.split("\t")
@@ -53,7 +78,6 @@ class StatsReportMixin:
         self.samtools_stats = self.ignore_samples(self.samtools_stats)
 
         if len(self.samtools_stats) > 0:
-
             # Write parsed report data to a file
             self.write_data_file(self.samtools_stats, "multiqc_samtools_stats")
 
@@ -185,7 +209,7 @@ class StatsReportMixin:
         bedgraph_data = {}
         for sample_id, data in samples_data.items():
             expected_total = data["raw_total_sequences"]
-            read_sum = data["reads_mapped"] + data["reads_unmapped"]
+            read_sum = data["reads_mapped"] + data["reads_unmapped"] + data["filtered_sequences"]
             if read_sum == expected_total:
                 bedgraph_data[sample_id] = data
             else:
@@ -198,15 +222,15 @@ class StatsReportMixin:
             anchor="samtools-stats-alignment",
             description="Alignment metrics from <code>samtools stats</code>; mapped vs. unmapped reads.",
             helptext="""
-            For a set of samples that have come from the same multiplexed library, 
-            similar numbers of reads for each sample are expected. Large differences in numbers might 
-            indicate issues during the library preparation process. Whilst large differences in read 
-            numbers may be controlled for in downstream processings (e.g. read count normalisation), 
-            you may wish to consider whether the read depths achieved have fallen below recommended 
+            For a set of samples that have come from the same multiplexed library,
+            similar numbers of reads for each sample are expected. Large differences in numbers might
+            indicate issues during the library preparation process. Whilst large differences in read
+            numbers may be controlled for in downstream processings (e.g. read count normalisation),
+            you may wish to consider whether the read depths achieved have fallen below recommended
             levels depending on the applications.
-            
-            Low alignment rates could indicate contamination of samples (e.g. adapter sequences), 
-            low sequencing quality or other artefacts. These can be further investigated in the 
+
+            Low alignment rates could indicate contamination of samples (e.g. adapter sequences),
+            low sequencing quality or other artefacts. These can be further investigated in the
             sequence level QC (e.g. from FastQC).""",
             plot=alignment_chart(bedgraph_data),
         )

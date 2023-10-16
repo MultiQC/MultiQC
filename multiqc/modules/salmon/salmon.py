@@ -1,5 +1,3 @@
-#!/usr/bin/env python
-
 """ MultiQC module to parse output from Salmon """
 
 
@@ -8,7 +6,7 @@ import logging
 import os
 from collections import OrderedDict
 
-from multiqc.modules.base_module import BaseMultiqcModule
+from multiqc.modules.base_module import BaseMultiqcModule, ModuleNoSamplesFound
 from multiqc.plots import linegraph
 
 # Initialise the logger
@@ -17,7 +15,6 @@ log = logging.getLogger(__name__)
 
 class MultiqcModule(BaseMultiqcModule):
     def __init__(self):
-
         # Initialise the parent object
         super(MultiqcModule, self).__init__(
             name="Salmon",
@@ -34,6 +31,7 @@ class MultiqcModule(BaseMultiqcModule):
             s_name = os.path.basename(os.path.dirname(f["root"]))
             s_name = self.clean_s_name(s_name, f)
             self.salmon_meta[s_name] = json.loads(f["f"])
+            self.add_software_version(self.salmon_meta[s_name]["salmon_version"], s_name)
 
         # Parse Fragment Length Distribution logs
         self.salmon_fld = dict()
@@ -56,7 +54,7 @@ class MultiqcModule(BaseMultiqcModule):
         self.salmon_fld = self.ignore_samples(self.salmon_fld)
 
         if len(self.salmon_meta) == 0 and len(self.salmon_fld) == 0:
-            raise UserWarning
+            raise ModuleNoSamplesFound
 
         if len(self.salmon_meta) > 0:
             log.info("Found {} meta reports".format(len(self.salmon_meta)))

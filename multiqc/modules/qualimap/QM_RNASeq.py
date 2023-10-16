@@ -1,5 +1,3 @@
-#!/usr/bin/env python
-
 """ MultiQC Submodule to parse output from Qualimap RNASeq """
 
 
@@ -42,6 +40,10 @@ def parse_reports(self):
         else:
             log.warning("Couldn't find an input filename in genome_results file {}/{}".format(f["root"], f["fn"]))
             return None
+
+        # Superfluous function call to confirm that it is used in this module
+        # Replace None with actual version if it is available
+        self.add_software_version(None, s_name)
 
         # Check for and 'fix' European style decimal places / thousand separators
         comma_regex = re.search(r"exonic\s*=\s*[\d\.]+ \(\d{1,3},\d+%\)", f["f"], re.MULTILINE)
@@ -116,7 +118,6 @@ def parse_reports(self):
             )
             > 0
         ):
-
             # Write data to file
             self.write_data_file(self.qualimap_rnaseq_genome_results, "qualimap_rnaseq_genome_results")
 
@@ -168,7 +169,6 @@ def parse_reports(self):
             log.warning("Found zero aligned reads. Skipping 'Genomic origin of reads' plot.")
 
     if len(self.qualimap_rnaseq_cov_hist) > 0:
-
         # Write data to file
         self.write_data_file(self.qualimap_rnaseq_cov_hist, "qualimap_rnaseq_cov_hist")
 

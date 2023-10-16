@@ -1,5 +1,3 @@
-#!/usr/bin/env python
-
 """ MultiQC submodule to parse output from RSeQC junction_saturation.py
 http://rseqc.sourceforge.net/#junction-saturation-py """
 
@@ -43,13 +41,16 @@ def parse_reports(self):
                     self.junction_saturation_known[f["s_name"]][v] = parsed["y"][k]
                     self.junction_saturation_novel[f["s_name"]][v] = parsed["w"][k]
 
+        # Superfluous function call to confirm that it is used in this module
+        # Replace None with actual version if it is available
+        self.add_software_version(None, f["s_name"])
+
     # Filter to strip out ignored sample names
     self.junction_saturation_all = self.ignore_samples(self.junction_saturation_all)
     self.junction_saturation_known = self.ignore_samples(self.junction_saturation_known)
     self.junction_saturation_novel = self.ignore_samples(self.junction_saturation_novel)
 
     if len(self.junction_saturation_all) > 0:
-
         # Write data to file
         self.write_data_file(self.junction_saturation_all, "rseqc_junction_saturation_all")
         self.write_data_file(self.junction_saturation_known, "junction_saturation_known")

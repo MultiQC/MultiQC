@@ -1,5 +1,3 @@
-#!/usr/bin/env python
-
 """ MultiQC submodule to parse output from deepTools plotEnrichment """
 
 import logging
@@ -24,6 +22,10 @@ class plotEnrichmentMixin:
 
             if len(parsed_data) > 0:
                 self.add_data_source(f, section="plotEnrichment")
+
+            # Superfluous function call to confirm that it is used in this module
+            # Replace None with actual version if it is available
+            self.add_software_version(None, f["s_name"])
 
         self.deeptools_plotEnrichment = self.ignore_samples(self.deeptools_plotEnrichment)
 

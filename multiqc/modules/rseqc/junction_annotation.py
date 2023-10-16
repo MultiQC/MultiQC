@@ -1,5 +1,3 @@
-#!/usr/bin/env python
-
 """ MultiQC submodule to parse output from RSeQC junction_annotation.py
 http://rseqc.sourceforge.net/#junction-annotation-py """
 
@@ -61,11 +59,14 @@ def parse_reports(self):
             self.add_data_source(f, section="junction_annotation")
             self.junction_annotation_data[f["s_name"]] = d
 
+        # Superfluous function call to confirm that it is used in this module
+        # Replace None with actual version if it is available
+        self.add_software_version(None, f["s_name"])
+
     # Filter to strip out ignored sample names
     self.junction_annotation_data = self.ignore_samples(self.junction_annotation_data)
 
     if len(self.junction_annotation_data) > 0:
-
         # Write to file
         self.write_data_file(self.junction_annotation_data, "multiqc_rseqc_junction_annotation")
 

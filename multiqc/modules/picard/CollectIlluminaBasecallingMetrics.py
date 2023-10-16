@@ -1,5 +1,3 @@
-#!/usr/bin/env python
-
 """ MultiQC submodule to parse output from Picard CollectIlluminaBasecallingMetrics """
 
 import logging
@@ -33,6 +31,10 @@ def parse_reports(self):
                         data.pop("MOLECULAR_BARCODE_SEQUENCE_1")
                         data.pop("MOLECULAR_BARCODE_NAME")
                         self.picard_basecalling_metrics[data["LANE"]] = data
+
+                        # Superfluous function call to confirm that it is used in this module
+                        # Replace None with actual version if it is available
+                        self.add_software_version(None, data["LANE"])
 
     # Filter to strip out ignored sample names
     self.picard_basecalling_metrics = self.ignore_samples(self.picard_basecalling_metrics)

@@ -1,5 +1,3 @@
-#!/usr/bin/env python
-
 """ MultiQC module to parse output from STAR """
 
 
@@ -9,7 +7,7 @@ import re
 from collections import OrderedDict
 
 from multiqc import config
-from multiqc.modules.base_module import BaseMultiqcModule
+from multiqc.modules.base_module import BaseMultiqcModule, ModuleNoSamplesFound
 from multiqc.plots import bargraph
 
 # Initialise the logger
@@ -18,7 +16,6 @@ log = logging.getLogger(__name__)
 
 class MultiqcModule(BaseMultiqcModule):
     def __init__(self):
-
         # Initialise the parent object
         super(MultiqcModule, self).__init__(
             name="STAR",
@@ -40,6 +37,10 @@ class MultiqcModule(BaseMultiqcModule):
                     log.debug("Duplicate sample name found! Overwriting: {}".format(s_name))
                 self.add_data_source(f, section="SummaryLog")
                 self.star_data[s_name] = parsed_data
+
+                # Superfluous function call to confirm that it is used in this module
+                # Replace None with actual version if it is available
+                self.add_software_version(None, s_name)
 
         # Find and load any STAR gene count tables
         self.star_genecounts_unstranded = dict()
@@ -65,7 +66,7 @@ class MultiqcModule(BaseMultiqcModule):
         self.star_genecounts_second_strand = self.ignore_samples(self.star_genecounts_second_strand)
 
         if len(self.star_data) == 0 and len(self.star_genecounts_unstranded) == 0:
-            raise UserWarning
+            raise ModuleNoSamplesFound
 
         if len(self.star_data) > 0:
             if len(self.star_genecounts_unstranded) > 0:
@@ -80,7 +81,6 @@ class MultiqcModule(BaseMultiqcModule):
             log.info("Found {} gene count files".format(len(self.star_genecounts_unstranded)))
 
         if len(self.star_data) > 0:
-
             # Write parsed report data to a file
             self.write_data_file(self.star_data, "multiqc_star")
 

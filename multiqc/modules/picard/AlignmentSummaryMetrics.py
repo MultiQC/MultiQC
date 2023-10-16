@@ -1,5 +1,3 @@
-#!/usr/bin/env python
-
 """ MultiQC submodule to parse output from Picard AlignmentSummaryMetrics """
 
 import logging
@@ -53,6 +51,10 @@ def parse_reports(self):
                         s_name = None
                         keys = None
 
+        # Superfluous function call to confirm that it is used in this module
+        # Replace None with actual version if it is available
+        self.add_software_version(None, s_name)
+
         # Remove empty dictionaries
         for s_name in list(parsed_data.keys()):
             if len(parsed_data[s_name]) == 0:
@@ -69,7 +71,6 @@ def parse_reports(self):
     self.picard_alignment_metrics = self.ignore_samples(self.picard_alignment_metrics)
 
     if len(self.picard_alignment_metrics) > 0:
-
         # Write parsed data to a file
         self.write_data_file(self.picard_alignment_metrics, "multiqc_picard_AlignmentSummaryMetrics")
 

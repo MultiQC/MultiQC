@@ -1,4 +1,3 @@
-#!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
 """ MultiQC module to parse output files from iVar """
@@ -9,7 +8,7 @@ import re
 from collections import OrderedDict
 
 from multiqc import config
-from multiqc.modules.base_module import BaseMultiqcModule
+from multiqc.modules.base_module import BaseMultiqcModule, ModuleNoSamplesFound
 from multiqc.plots import bargraph, heatmap
 
 # Initialise the logger
@@ -18,7 +17,6 @@ log = logging.getLogger(__name__)
 
 class MultiqcModule(BaseMultiqcModule):
     def __init__(self):
-
         # Initialise the parent object
         super(MultiqcModule, self).__init__(
             name="iVar",
@@ -34,6 +32,10 @@ class MultiqcModule(BaseMultiqcModule):
         for f in self.find_log_files("ivar/trim", filehandles=True):
             self.parse_ivar(f)
 
+            # Superfluous function call to confirm that it is used in this module
+            # Replace None with actual version if it is available
+            self.add_software_version(None, f["s_name"])
+
         # Filter to strip out ignored sample names
         self.ivar_data = self.ignore_samples(self.ivar_data)
         self.ivar_primers = self.ignore_samples(self.ivar_primers)
@@ -41,7 +43,7 @@ class MultiqcModule(BaseMultiqcModule):
         # Stop if no files are found
         num_samples = max(len(self.ivar_data), len(self.ivar_primers))
         if num_samples == 0:
-            raise UserWarning
+            raise ModuleNoSamplesFound
 
         # Log number of reports
         log.info("Found {} reports".format(num_samples))

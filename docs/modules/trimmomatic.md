@@ -1,7 +1,7 @@
 ---
-Name: Trimmomatic
-URL: http://www.usadellab.org/cms/?page=trimmomatic
-Description: >
+name: Trimmomatic
+url: http://www.usadellab.org/cms/?page=trimmomatic
+description: >
   Trimmomatic is a flexible read trimming tool for Illumina NGS data
 ---
 

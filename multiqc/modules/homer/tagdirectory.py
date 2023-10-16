@@ -1,5 +1,3 @@
-#!/usr/bin/env python
-
 """ MultiQC module to parse output from HOMER tagdirectory """
 
 import logging
@@ -44,6 +42,10 @@ class TagDirReportMixin:
                 self.add_data_source(f, s_name, section="GCcontent")
                 self.tagdir_data["GCcontent"][s_name] = parsed_data
 
+            # Superfluous function call to confirm that it is used in this module
+            # Replace None with actual version if it is available
+            self.add_software_version(None, s_name)
+
         ## get esimated genome content distribution:
         for f in self.find_log_files("homer/genomeGCcontent", filehandles=True):
             parsed_data = self.parse_twoCol_file(f)
@@ -57,7 +59,6 @@ class TagDirReportMixin:
         self.tagdir_data["GCcontent"] = self.ignore_samples(self.tagdir_data["GCcontent"])
 
         if len(self.tagdir_data["GCcontent"]) > 0:
-
             self.add_section(
                 name="Per Sequence GC Content",
                 anchor="homer_per_sequence_gc_content",
@@ -232,9 +233,9 @@ class TagDirReportMixin:
             "min": 0,
             "format": "{:,.2f}",
         }
-        self.general_stats_addcols(self.tagdir_data["header"], headers, "HOMER")
+        self.general_stats_addcols(self.tagdir_data["header"], headers)
 
-    def homer_stats_table_interChr(self):
+    def homer_stats_table_interchr(self):
         """Add core HOMER stats to the general stats table from FrequencyDistribution file"""
 
         headers = OrderedDict()
@@ -243,7 +244,7 @@ class TagDirReportMixin:
             "description": "Fraction of Reads forming inter chromosomal interactions",
             "format": "{:,.4f}",
         }
-        self.general_stats_addcols(self.tagdir_data["FreqDistribution"], headers, "Homer-InterChr")
+        self.general_stats_addcols(self.tagdir_data["FreqDistribution"], headers, "InterChr")
 
     def normalize(self, mydict, target=100):
         raw = sum(mydict.values())
@@ -383,7 +384,6 @@ class TagDirReportMixin:
         return parsed_data
 
     def restriction_dist_chart(self):
-
         """Make the petagRestrictionDistribution plot"""
 
         pconfig = {
@@ -398,7 +398,6 @@ class TagDirReportMixin:
         return linegraph.plot(datasets, pconfig)
 
     def length_dist_chart(self):
-
         """Make the tagLengthDistribution plot"""
 
         pconfig = {
@@ -429,7 +428,6 @@ class TagDirReportMixin:
         return linegraph.plot(self.tagdir_data["GCcontent"], pconfig)
 
     def tag_info_chart(self):
-
         """Make the taginfo.txt plot"""
 
         ## TODO: human chrs on hg19. How will this work with GRCh genome or other, non human, genomes?

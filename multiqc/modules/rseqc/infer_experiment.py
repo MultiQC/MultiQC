@@ -1,5 +1,3 @@
-#!/usr/bin/env python
-
 """ MultiQC submodule to parse output from RSeQC infer_experiment.py
 http://rseqc.sourceforge.net/#infer-experiment-py """
 
@@ -40,11 +38,14 @@ def parse_reports(self):
             self.add_data_source(f, section="infer_experiment")
             self.infer_exp[f["s_name"]] = d
 
+        # Superfluous function call to confirm that it is used in this module
+        # Replace None with actual version if it is available
+        self.add_software_version(None, f["s_name"])
+
     # Filter to strip out ignored sample names
     self.infer_exp = self.ignore_samples(self.infer_exp)
 
     if len(self.infer_exp) > 0:
-
         # Write to file
         self.write_data_file(self.infer_exp, "multiqc_rseqc_infer_experiment")
 
