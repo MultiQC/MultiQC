@@ -56,7 +56,6 @@ setup(
         "coloredlogs",
         "future>0.14.0",
         "jinja2>=3.0.0",
-        "lzstring",
         "markdown",
         "packaging",
         "pyyaml>=4",
