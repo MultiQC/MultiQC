@@ -361,10 +361,15 @@ def _generate_table_header_config(table_cols=[], hidden_table_cols=[]):
 
 def _add_target_bases(data):
     data_clean = defaultdict(dict)
+    max_non_zero_cov = 0
     for s in data:
         for h in data[s]:
             if h.startswith("PCT_TARGET"):
-                data_clean[s][int(h.replace("PCT_TARGET_BASES_", "")[:-1])] = data[s][h] * 100.0
+                cov = int(h.replace("PCT_TARGET_BASES_", "")[:-1])
+                bases_pct = data[s][h]
+                data_clean[s][cov] = bases_pct * 100.0
+                if bases_pct > 0 and cov > max_non_zero_cov:
+                    max_non_zero_cov = cov
 
     pconfig = {
         "id": "picard_percentage_target_bases",
@@ -374,6 +379,7 @@ def _add_target_bases(data):
         "ymax": 100,
         "ymin": 0,
         "xmin": 0,
+        "xmax": max_non_zero_cov,
         "tt_label": "<b>{point.x}X</b>: {point.y:.2f}%",
     }
     return {
