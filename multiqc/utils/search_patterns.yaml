@@ -379,7 +379,7 @@ happy:
   fn: "*.summary.csv"
   contents: "Type,Filter,TRUTH"
 htseq:
-  contents_re: '^(feature\tcount|\w+\t\d+)$'
+  contents_re: '^(feature\tcount|\w+.*\t\d+)$'
   num_lines: 1
 hicexplorer:
   contents: "Min rest. site distance"
