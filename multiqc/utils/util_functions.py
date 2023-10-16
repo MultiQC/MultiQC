@@ -140,3 +140,40 @@ def force_term_colors():
     if os.getenv("GITHUB_ACTIONS") or os.getenv("FORCE_COLOR") or os.getenv("PY_COLORS"):
         return True
     return None
+
+
+def strtobool(val):
+    """
+    Replaces deprecated https://docs.python.org/3.9/distutils/apiref.html#distutils.util.strtobool
+    The deprecation recommendation is to re-implement the function https://peps.python.org/pep-0632/
+
+    ------------------------------------------------------------
+
+    Convert a string representation of truth to true (1) or false (0).
+
+    True values are 'y', 'yes', 't', 'true', 'on', and '1'; false values
+    are 'n', 'no', 'f', 'false', 'off', and '0'.  Raises ValueError if
+    'val' is anything else.
+    """
+    val = val.lower()
+    if val in ("y", "yes", "t", "true", "on", "1"):
+        return 1
+    elif val in ("n", "no", "f", "false", "off", "0"):
+        return 0
+    else:
+        raise ValueError("invalid truth value %r" % (val,))
+
+
+def copytree_overwrite(parent_dir, child_dir):
+    """
+    Replicates the behaviour of `shutil.copytree(..., dirs_exist_ok=True)` (which is
+    not available before Python 3.8) to overwrite files in `parent_dir` with files
+    in `child_dir`.
+    """
+    # Copy files from src to dst that already exist in dst (i.e., overwrite them)
+    for dir_name, sub_dirs, filenames in os.walk(parent_dir):
+        for filename in filenames:
+            src_file_path = os.path.join(dir_name, filename)
+            dst_file_path = os.path.join(child_dir, os.path.relpath(src_file_path, parent_dir))
+            os.makedirs(os.path.dirname(dst_file_path), exist_ok=True)
+            shutil.copy2(src_file_path, dst_file_path)

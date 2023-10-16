@@ -1,9 +1,8 @@
 """ MultiQC submodule to parse output from fgbio ErrorRateByReadPosition """
 
 
-from distutils.util import strtobool
-
 from multiqc.plots import linegraph
+from multiqc.utils.util_functions import strtobool
 
 
 def parse_reports(self):

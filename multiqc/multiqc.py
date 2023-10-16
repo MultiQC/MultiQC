@@ -18,7 +18,6 @@ import sys
 import tempfile
 import time
 import traceback
-from distutils.dir_util import copy_tree
 from urllib.request import urlopen
 
 import jinja2
@@ -994,8 +993,15 @@ def run(
             )
             # Modules have run, so data directory should be complete by now. Move its contents.
             logger.debug("Moving data file from '{}' to '{}'".format(config.data_tmp_dir, config.data_dir))
-            # Disable preserving of times and mode on purpose to avoid problems with mounted CIFS shares (see #625)
-            copy_tree(config.data_tmp_dir, config.data_dir, preserve_times=0, preserve_mode=0)
+            shutil.copytree(
+                config.data_tmp_dir,
+                config.data_dir,
+                # Override default shutil.copy2 function to copy files. The default
+                # function copies times and mode, which we want to avoid on purpose
+                # to get around the problem with mounted CIFS shares (see #625).
+                # shutil.copyfile only copies the file without any metadata.
+                copy_function=shutil.copyfile,
+            )
             shutil.rmtree(config.data_tmp_dir)
 
         logger.debug("Full report path: {}".format(os.path.realpath(config.output_fn)))
@@ -1021,8 +1027,15 @@ def run(
 
             # Modules have run, so plots directory should be complete by now. Move its contents.
             logger.debug("Moving plots directory from '{}' to '{}'".format(config.plots_tmp_dir, config.plots_dir))
-            # Disable preserving of times and mode on purpose to avoid problems with mounted CIFS shares (see #625)
-            copy_tree(config.plots_tmp_dir, config.plots_dir, preserve_times=0, preserve_mode=0)
+            shutil.copytree(
+                config.plots_tmp_dir,
+                config.plots_dir,
+                # Override default shutil.copy2 function to copy files. The default
+                # function copies times and mode, which we want to avoid on purpose
+                # to get around the problem with mounted CIFS shares (see #625).
+                # shutil.copyfile only copies the file without any metadata.
+                copy_function=shutil.copyfile,
+            )
             shutil.rmtree(config.plots_tmp_dir)
 
     plugin_hooks.mqc_trigger("before_template")
@@ -1032,12 +1045,12 @@ def run(
         # Load in parent template files first if a child theme
         try:
             parent_template = config.avail_templates[template_mod.template_parent].load()
-            copy_tree(parent_template.template_dir, tmp_dir)
+            shutil.copytree(parent_template.template_dir, tmp_dir)
         except AttributeError:
             pass  # Not a child theme
 
-        # Copy the template files to the tmp directory (distutils overwrites parent theme files)
-        copy_tree(template_mod.template_dir, tmp_dir)
+        # Copy the template files to the tmp directory
+        util_functions.copytree_overwrite(template_mod.template_dir, tmp_dir)
 
         # Function to include file contents in Jinja template
         def include_file(name, fdir=tmp_dir, b64=False):
@@ -1078,7 +1091,7 @@ def run(
                 for f in template_mod.copy_files:
                     fn = os.path.join(tmp_dir, f)
                     dest_dir = os.path.join(os.path.dirname(config.output_fn), f)
-                    copy_tree(fn, dest_dir)
+                    shutil.copytree(fn, dest_dir)
             except AttributeError:
                 pass  # No files to copy
 
