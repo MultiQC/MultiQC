@@ -12,6 +12,7 @@
 - Strict mode: rename `config.lint` to `config.strict`, crash early on module or template error. Add `MULTIQC_STRICT=1` ([#2101](https://github.com/ewels/MultiQC/pull/2101))
 - Trigger changelog entry addition on PR creation, in addition to an explicit comment to multiqc-bot ([#2102](https://github.com/ewels/MultiQC/pull/2102))
 - Fix adding changelog entries with backticks from PR titles ([#2115](https://github.com/ewels/MultiQC/pull/2115))
+- Hicpro: fix parsing scientific notation in hicpro-ashic. Thanks @Just-Roma ([#2126](https://github.com/ewels/MultiQC/pull/2126))
 
 ### New Modules
 
