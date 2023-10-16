@@ -11,11 +11,14 @@
 - Just run CI on the oldest + newest supported Python versions ([#2074](https://github.com/ewels/MultiQC/pull/2074))
 - Strict mode: rename `config.lint` to `config.strict`, crash early on module or template error. Add `MULTIQC_STRICT=1` ([#2101](https://github.com/ewels/MultiQC/pull/2101))
 - Trigger changelog entry addition on PR creation, in addition to an explicit comment to multiqc-bot ([#2102](https://github.com/ewels/MultiQC/pull/2102))
+- Fix adding changelog entries with backticks from PR titles ([#2115](https://github.com/ewels/MultiQC/pull/2115))
 
 ### New Modules
 
 - [**Bracken**](https://ccb.jhu.edu/software/bracken/)
   - A highly accurate statistical method that computes the abundance of species in DNA sequences from a metagenomics sample.
+- [**Truvari**](https://github.com/ACEnglish/truvari) ([#1751](https://github.com/ewels/MultiQC/pull/1751))
+  - Truvari is a toolkit for benchmarking, merging, and annotating structural variants
 
 ### Module updates
 
