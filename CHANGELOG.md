@@ -14,6 +14,7 @@
 - Fix adding changelog entries with backticks from PR titles ([#2115](https://github.com/ewels/MultiQC/pull/2115))
 - Fix for python 3.12: replace removed `distutils` ([#2113](https://github.com/ewels/MultiQC/pull/2113))
 - Bundle lzstring to fix Python 3.12 ([#2119](https://github.com/ewels/MultiQC/pull/2119))
+- <img src="./multiqc/templates/default/assets/img/favicon-16x16.png" alt="///" width="10px"/> New logo
 
 ### New Modules
 
