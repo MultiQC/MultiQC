@@ -21,7 +21,7 @@ class DragenFragmentLength(BaseMultiqcModule):
             s_name = f["s_name"]
             if s_name in data_by_rg_by_sample:
                 log.debug(f"Duplicate sample name found! Overwriting: {s_name}")
-            self.add_data_source(f, section="stats")
+            self.add_data_source(f, section="fragment_length_hist")
 
             for rg, data in data_by_rg.items():
                 if any(rg in d_rg for sn, d_rg in data_by_rg_by_sample.items()):
