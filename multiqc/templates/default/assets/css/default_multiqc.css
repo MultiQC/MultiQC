@@ -183,7 +183,7 @@ kbd {
   margin: 0 0 20px;
 }
 #page_title img {
-  max-width: 260px;
+  max-width: 320px;
 }
 .report_comment,
 .mqc-section-comment {
@@ -247,6 +247,16 @@ h2.mqc-module-title {
 .footer a {
   color: #999;
   text-decoration: underline;
+}
+.footer .seqera-logo img {
+  height: 24px;
+  padding-right: 30px;
+  margin-top: 8px;
+  opacity: 80%;
+  transition: opacity 0.2s;
+}
+.footer .seqera-logo:hover img {
+  opacity: 100%;
 }
 
 /* Epic scroll bar of joy */
@@ -647,6 +657,17 @@ input.form-control[type="color"] {
 .regex_example_demo input {
   margin-bottom: 8px;
   font-family: "Consolas", "Monaco", "Courier New", Courier, monospace;
+}
+
+.mqc-toolbox-wrapper .seqera-logo img {
+  height: 24px;
+  max-width: 80%;
+  opacity: 60%;
+  margin-top: 10px;
+  transition: opacity 0.2s;
+}
+.mqc-toolbox-wrapper .seqera-logo a:hover img {
+  opacity: 100%;
 }
 
 /* MultiQC tables */

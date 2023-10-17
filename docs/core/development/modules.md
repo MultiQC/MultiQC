@@ -359,7 +359,7 @@ the meta-information that you add to the module `MultiqcModule` class.
 Please do not add anything to the `CHANGELOG.md` file!
 This is now handled by our friendly MultiQC bot 🤖
 
-For more information about how it works, see the [contributing docs](contributing.md#changelog).
+For more information about how it works, see the [contributing docs](../development/contributing.md#changelog).
 :::
 
 ## Step 1 - Find log files
