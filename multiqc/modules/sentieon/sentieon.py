@@ -4,9 +4,12 @@
 import logging
 import os
 import re
-from typing import Dict, Optional
+from typing import Dict, List, Optional
 
+# Import the Picard submodules
+from multiqc.modules.picard import AlignmentSummaryMetrics, GcBiasMetrics, HsMetrics, InsertSizeMetrics, MarkDuplicates
 from multiqc.modules.picard import MultiqcModule as PicardModule
+from multiqc.modules.picard import QualityByCycleMetrics, QualityScoreDistributionMetrics
 
 # Initialise the logger
 log = logging.getLogger(__name__)
@@ -29,14 +32,15 @@ class MultiqcModule(PicardModule):
             # Can't find a DOI // doi=
         )
 
-    def available_tools(self):
+    def available_tools(self) -> Dict:
         return {
-            "AlignmentSummaryMetrics",
-            "GcBiasMetrics",
-            "InsertSizeMetrics",
-            "MarkDuplicates",
-            "QualityByCycleMetrics",
-            "QualityScoreDistributionMetrics",
+            "AlignmentSummaryMetrics": AlignmentSummaryMetrics,
+            "HsMetrics": HsMetrics,
+            "GcBiasMetrics": GcBiasMetrics,
+            "InsertSizeMetrics": InsertSizeMetrics,
+            "MarkDuplicates": MarkDuplicates,
+            "QualityByCycleMetrics": QualityByCycleMetrics,
+            "QualityScoreDistributionMetrics": QualityScoreDistributionMetrics,
         }
 
     def is_line_right_before_table(self, line: str) -> bool:
@@ -48,7 +52,12 @@ class MultiqcModule(PicardModule):
         """
         return line.startswith("#SentieonCommandLine:")
 
-    def extract_sample_name(self, line: str, f: Dict) -> Optional[str]:
+    def extract_sample_name(
+        self,
+        line: str,
+        f: Dict,
+        extra_labels: Optional[str | List] = None,
+    ) -> Optional[str]:
         """
         A file can be concatenated from multiple samples, so we can't just extract
         the sample name from the file name, and need a way to find sample name in the
@@ -57,11 +66,20 @@ class MultiqcModule(PicardModule):
 
         Sentieon uses Picard tools, but adds its own header.
         """
-        if line.startswith("#SentieonCommandLine:") and " --algo " in line and " -i " in line:
+        extra_labels = extra_labels or []
+        if isinstance(extra_labels, str):
+            extra_labels = [extra_labels]
+
+        if (
+            line.startswith("#SentieonCommandLine:")
+            and " --algo " in line
+            and " -i " in line
+            and all([l in line for l in extra_labels])
+        ):
             # Pull sample name from the input file name, recorded in the command line:
             fn_search = re.search(r" -i\s+(\[?\S+\]?)", line, flags=re.IGNORECASE)
             if fn_search:
-                s_name = os.path.basename(fn_search.group(1).strip("[]"))
-                s_name = self.clean_s_name(s_name, f)
+                f_name = os.path.basename(fn_search.group(1).strip("[]"))
+                s_name = self.clean_s_name(f_name, f)
                 return s_name
         return None

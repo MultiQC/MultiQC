@@ -1,8 +1,6 @@
 """ MultiQC submodule to parse output from Picard HsMetrics """
 
 import logging
-import os
-import re
 from collections import OrderedDict, defaultdict
 
 from multiqc import config
@@ -74,56 +72,56 @@ def parse_reports(self):
     """Find Picard HsMetrics reports and parse their data"""
 
     # Set up vars
-    self.picard_HsMetrics_data = dict()
+    self.picard_hs_metrics_data = dict()
 
     # Go through logs and find Metrics
-    for f in self.find_log_files("picard/hsmetrics", filehandles=True):
-        parsed_data = dict()
-        s_name = None
+    for f in self.find_log_files(f"{self.anchor}/hsmetrics", filehandles=True):
+        s_name = f["s_name"]
+        parsed_data = {s_name: dict()}
         keys = None
         commadecimal = None
+
         for l in f["f"]:
-            # New log starting
-            if "CalculateHsMetrics" in l or "CollectHsMetrics" in l and "INPUT" in l:
-                s_name = None
+            maybe_s_name = self.extract_sample_name(l, f, "HsMetrics")
+            if maybe_s_name:
+                # Starts information for a new sample
+                s_name = maybe_s_name
                 keys = None
+                if s_name in parsed_data:
+                    log.debug("Duplicate sample name found in {}! " "Overwriting: {}".format(f["fn"], s_name))
+                parsed_data[s_name] = dict()
 
-                # Pull sample name from input
-                fn_search = re.search(r"INPUT(?:=|\s+)(\[?[^\s]+\]?)", l, flags=re.IGNORECASE)
-                if fn_search:
-                    s_name = os.path.basename(fn_search.group(1).strip("[]"))
-                    s_name = self.clean_s_name(s_name, f)
-                    parsed_data[s_name] = dict()
+            if s_name is None:
+                continue
 
-            if s_name is not None:
-                if "HsMetrics" in l and "## METRICS CLASS" in l:
-                    keys = f["f"].readline().strip("\n").split("\t")
-                elif keys:
-                    vals = l.strip("\n").split("\t")
-                    if len(vals) == len(keys):
-                        j = "NA"
-                        if keys[0] == "BAIT_SET":
-                            j = vals[0]
-                        parsed_data[s_name][j] = dict()
-                        # Check that we're not using commas for decimal places
-                        if commadecimal is None:
-                            commadecimal = False
-                            for i, k in enumerate(keys):
-                                if "PCT" in k or "BAIT" in k or "MEAN" in k:
-                                    if "," in vals[i]:
-                                        commadecimal = True
-                                        break
+            if self.is_line_right_before_table(l):
+                keys = f["f"].readline().strip("\n").split("\t")
+            elif keys:
+                vals = l.strip("\n").split("\t")
+                if len(vals) == len(keys):
+                    j = "NA"
+                    if keys[0] == "BAIT_SET":
+                        j = vals[0]
+                    parsed_data[s_name][j] = dict()
+                    # Check that we're not using commas for decimal places
+                    if commadecimal is None:
+                        commadecimal = False
                         for i, k in enumerate(keys):
-                            try:
-                                if commadecimal:
-                                    vals[i] = vals[i].replace(".", "")
-                                    vals[i] = vals[i].replace(",", ".")
-                                parsed_data[s_name][j][k] = float(vals[i])
-                            except ValueError:
-                                parsed_data[s_name][j][k] = vals[i]
-                    else:
-                        s_name = None
-                        keys = None
+                            if "PCT" in k or "BAIT" in k or "MEAN" in k:
+                                if "," in vals[i]:
+                                    commadecimal = True
+                                    break
+                    for i, k in enumerate(keys):
+                        try:
+                            if commadecimal:
+                                vals[i] = vals[i].replace(".", "")
+                                vals[i] = vals[i].replace(",", ".")
+                            parsed_data[s_name][j][k] = float(vals[i])
+                        except ValueError:
+                            parsed_data[s_name][j][k] = vals[i]
+                else:
+                    s_name = None
+                    keys = None
 
         # Remove empty dictionaries
         for s_name in list(parsed_data.keys()):
@@ -133,74 +131,77 @@ def parse_reports(self):
             if len(parsed_data[s_name]) == 0:
                 parsed_data.pop(s_name, None)
 
-            # Superfluous function call to confirm that it is used in this module
-            # Replace None with actual version if it is available
-            self.add_software_version(None, s_name)
+        # When there is only one sample, using the file name to extract the sample name.
+        if len(parsed_data) == 1:
+            parsed_data = {f["s_name"]: list(parsed_data.values())[0]}
 
         # Manipulate sample names if multiple baits found
         for s_name in parsed_data.keys():
             for j in parsed_data[s_name].keys():
                 this_s_name = s_name
+                # If there are multiple baits, append the bait name to the sample name
                 if len(parsed_data[s_name]) > 1:
                     this_s_name = "{}: {}".format(s_name, j)
-                if this_s_name in self.picard_HsMetrics_data:
+                if this_s_name in self.picard_hs_metrics_data:
                     log.debug("Duplicate sample name found in {}! Overwriting: {}".format(f["fn"], this_s_name))
+                self.picard_hs_metrics_data[this_s_name] = parsed_data[s_name][j]
                 self.add_data_source(f, this_s_name, section="HsMetrics")
-                self.picard_HsMetrics_data[this_s_name] = parsed_data[s_name][j]
 
     # Filter to strip out ignored sample names
-    self.picard_HsMetrics_data = self.ignore_samples(self.picard_HsMetrics_data)
+    self.picard_hs_metrics_data = self.ignore_samples(self.picard_hs_metrics_data)
 
-    if len(self.picard_HsMetrics_data) > 0:
-        # Write parsed data to a file
-        self.write_data_file(self.picard_HsMetrics_data, "multiqc_picard_HsMetrics")
+    if len(self.picard_hs_metrics_data) == 0:
+        return 0
 
-        # Swap question marks with -1
-        data = self.picard_HsMetrics_data
-        for s_name in data:
-            if data[s_name]["FOLD_ENRICHMENT"] == "?":
-                data[s_name]["FOLD_ENRICHMENT"] = -1
+    # Write parsed data to a file
+    self.write_data_file(self.picard_hs_metrics_data, f"multiqc_{self.anchor}_HsMetrics")
 
-        # Add to general stats table
-        general_stats_table(self, data)
+    # Swap question marks with -1
+    data = self.picard_hs_metrics_data
+    for s_name in data:
+        if data[s_name]["FOLD_ENRICHMENT"] == "?":
+            data[s_name]["FOLD_ENRICHMENT"] = -1
 
-        # Add report section
+    # Add to general stats table
+    general_stats_table(self, data)
+
+    # Add report section
+    self.add_section(
+        name="HSMetrics",
+        anchor=f"{self.anchor}_hsmetrics",
+        plot=table.plot(
+            data,
+            _get_table_headers(),
+            {
+                "id": f"{self.anchor}_hsmetrics_table",
+                "namespace": "HsMetrics",
+                "scale": "RdYlGn",
+                "min": 0,
+            },
+        ),
+    )
+    tbases = _add_target_bases(self, data)
+    self.add_section(
+        name=tbases["name"], anchor=tbases["anchor"], description=tbases["description"], plot=tbases["plot"]
+    )
+    hs_pen_plot = hs_penalty_plot(self, data)
+    if hs_pen_plot is not None:
         self.add_section(
-            name="HSMetrics",
-            anchor="picard_hsmetrics",
-            plot=table.plot(
-                data,
-                _get_table_headers(),
-                {
-                    "id": "picard_hsmetrics_table",
-                    "namespace": "HsMetrics",
-                    "scale": "RdYlGn",
-                    "min": 0,
-                },
-            ),
-        )
-        tbases = _add_target_bases(self, data)
-        self.add_section(
-            name=tbases["name"], anchor=tbases["anchor"], description=tbases["description"], plot=tbases["plot"]
-        )
-        hs_pen_plot = hs_penalty_plot(self, data)
-        if hs_pen_plot is not None:
-            self.add_section(
-                name="HS Penalty",
-                anchor="picard_hsmetrics_hs_penalty",
-                description='The "hybrid selection penalty" incurred to get 80% of target bases to a given coverage.',
-                helptext="""
-                    Can be used with the following formula:
+            name="HS Penalty",
+            anchor=f"{self.anchor}_hsmetrics_hs_penalty",
+            description='The "hybrid selection penalty" incurred to get 80% of target bases to a given coverage.',
+            helptext="""
+                Can be used with the following formula:
 
-                    ```
-                    required_aligned_bases = bait_size_bp * desired_coverage * hs_penalty
-                    ```
-                """,
-                plot=hs_pen_plot,
-            )
+                ```
+                required_aligned_bases = bait_size_bp * desired_coverage * hs_penalty
+                ```
+            """,
+            plot=hs_pen_plot,
+        )
 
     # Return the number of detected samples to the parent module
-    return len(self.picard_HsMetrics_data)
+    return len(self.picard_hs_metrics_data)
 
 
 def general_stats_table(self, data):
@@ -367,8 +368,8 @@ def _add_target_bases(self, data):
                 data_clean[s][int(h.replace("PCT_TARGET_BASES_", "")[:-1])] = data[s][h] * 100.0
 
     pconfig = {
-        "id": "picard_percentage_target_bases",
-        "title": "Picard: Percentage of target bases",
+        "id": f"{self.anchor}_percentage_target_bases",
+        "title": f"{self.name}: Percentage of target bases",
         "xlab": "Fold Coverage",
         "ylab": "Pct of bases",
         "ymax": 100,

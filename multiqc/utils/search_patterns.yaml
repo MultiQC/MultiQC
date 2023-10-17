@@ -761,6 +761,9 @@ sargasso:
 sentieon/alignment_metrics:
   contents: "--algo AlignmentStat"
   shared: true
+sentieon/hsmetrics:
+  contents: "--algo HsMetricAlgo"
+  shared: true
 sentieon/insertsize:
   contents: "--algo InsertSizeMetricAlgo"
   shared: true

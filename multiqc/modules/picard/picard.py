@@ -5,7 +5,7 @@ import logging
 import os
 import re
 from collections import OrderedDict
-from typing import Dict, Optional
+from typing import Dict, List, Optional
 
 from multiqc.modules.base_module import BaseMultiqcModule, ModuleNoSamplesFound
 
@@ -66,8 +66,8 @@ class MultiqcModule(BaseMultiqcModule):
         self.general_stats_data = dict()
         n = dict()
 
-        for tool in self.available_tools():
-            func = getattr(globals()[tool], "parse_reports", None)
+        for tool, mod in self.available_tools().items():
+            func = getattr(mod, "parse_reports", None)
             if func is not None:
                 n[tool] = func(self)
                 if n[tool] > 0:
@@ -80,30 +80,30 @@ class MultiqcModule(BaseMultiqcModule):
         # Add to the General Stats table (has to be called once per MultiQC module)
         self.general_stats_addcols(self.general_stats_data, self.general_stats_headers)
 
-    def available_tools(self):
-        return [
-            "AlignmentSummaryMetrics",
-            "BaseDistributionByCycleMetrics",
-            "CrosscheckFingerprints",
-            "GcBiasMetrics",
-            "HsMetrics",
-            "InsertSizeMetrics",
-            "MarkDuplicates",
-            "OxoGMetrics",
-            "QualityByCycleMetrics",
-            "QualityScoreDistributionMetrics",
-            "QualityYieldMetrics",
-            "RnaSeqMetrics",
-            "RrbsSummaryMetrics",
-            "TargetedPcrMetrics",
-            "VariantCallingMetrics",
-            "ValidateSamFile",
-            "WgsMetrics",
-            "CollectIlluminaBasecallingMetrics",
-            "CollectIlluminaLaneMetrics",
-            "ExtractIlluminaBarcodes",
-            "MarkIlluminaAdapters",
-        ]
+    def available_tools(self) -> Dict:
+        return {
+            "AlignmentSummaryMetrics": AlignmentSummaryMetrics,
+            "BaseDistributionByCycleMetrics": BaseDistributionByCycleMetrics,
+            "CrosscheckFingerprints": CrosscheckFingerprints,
+            "GcBiasMetrics": GcBiasMetrics,
+            "HsMetrics": HsMetrics,
+            "InsertSizeMetrics": InsertSizeMetrics,
+            "MarkDuplicates": MarkDuplicates,
+            "OxoGMetrics": OxoGMetrics,
+            "QualityByCycleMetrics": QualityByCycleMetrics,
+            "QualityScoreDistributionMetrics": QualityScoreDistributionMetrics,
+            "QualityYieldMetrics": QualityYieldMetrics,
+            "RnaSeqMetrics": RnaSeqMetrics,
+            "RrbsSummaryMetrics": RrbsSummaryMetrics,
+            "TargetedPcrMetrics": TargetedPcrMetrics,
+            "VariantCallingMetrics": VariantCallingMetrics,
+            "ValidateSamFile": ValidateSamFile,
+            "WgsMetrics": WgsMetrics,
+            "CollectIlluminaBasecallingMetrics": CollectIlluminaBasecallingMetrics,
+            "CollectIlluminaLaneMetrics": CollectIlluminaLaneMetrics,
+            "ExtractIlluminaBarcodes": ExtractIlluminaBarcodes,
+            "MarkIlluminaAdapters": MarkIlluminaAdapters,
+        }
 
     def is_line_right_before_table(self, line: str) -> bool:
         """
@@ -117,19 +117,32 @@ class MultiqcModule(BaseMultiqcModule):
         """
         return line.startswith("## METRICS CLASS")
 
-    def extract_sample_name(self, line: str, f: Dict) -> Optional[str]:
+    def extract_sample_name(
+        self,
+        line: str,
+        f: Dict,
+        extra_labels: Optional[str | List] = None,
+    ) -> Optional[str]:
         """
         A file can be concatenated from multiple samples, so we can't just extract
         the sample name from the file name, and need a way to find sample name in the
         header. The copy of the originally used command is the best bet, as it's
         usually logged by Picard.
         """
-        if line.startswith("# picard.analysis.") and ("INPUT=" in line or "INPUT" in line.split()):
+        extra_labels = extra_labels or []
+        if isinstance(extra_labels, str):
+            extra_labels = [extra_labels]
+
+        if (
+            line.startswith("# ")
+            and ("INPUT=" in line or "INPUT" in line.split())
+            and all([l in line for l in extra_labels])
+        ):
             # Pull sample name from the input file name, recorded in the command line:
             fn_search = re.search(r"INPUT(?:=|\s+)(\[?[^\s]+\]?)", line, flags=re.IGNORECASE)
             if fn_search:
-                s_name = os.path.basename(fn_search.group(1).strip("[]"))
-                s_name = self.clean_s_name(s_name, f)
+                f_name = os.path.basename(fn_search.group(1).strip("[]"))
+                s_name = self.clean_s_name(f_name, f)
                 return s_name
         return None
 

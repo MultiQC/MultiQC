@@ -15,7 +15,12 @@ def parse_reports(self):
 
     headers = ["clipped_bases", "read_count"]
     formats = [int, int]
-    all_data = read_histogram(self, "picard/markilluminaadapters", "MarkIlluminaAdapters", headers, formats)
+    all_data = read_histogram(
+        self,
+        program_key="picard/markilluminaadapters",
+        headers=headers,
+        formats=formats,
+    )
 
     # Filter to strip out ignored sample names
     all_data = self.ignore_samples(all_data)
