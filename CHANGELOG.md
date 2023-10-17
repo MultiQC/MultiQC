@@ -41,6 +41,7 @@ Highlights:
 ### Module updates
 
 - **Dragen**: make sure all inputs are recorded in multiqc_sources.txt ([#2128](https://github.com/ewels/MultiQC/pull/2128))
+- **Cellranger**: Count submodule updated to parse Antibody Capture summary ([#2118](https://github.com/ewels/MultiQC/pull/2118))
 - **fastp**: parse unescaped sample names with white spaces ([#2108](https://github.com/ewels/MultiQC/pull/2108))
 - **FastQC**: Add top overrepresented sequences table ([#2075](https://github.com/ewels/MultiQC/pull/2075))
 - **HiCPro**: Fix parsing scientific notation in hicpro-ashic. Thanks @Just-Roma ([#2126](https://github.com/ewels/MultiQC/pull/2126))
