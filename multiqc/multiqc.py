@@ -112,6 +112,7 @@ click.rich_click.OPTION_GROUPS = {
                 "--verbose",
                 "--quiet",
                 "--strict",
+                "--require-logs",
                 "--profile-runtime",
                 "--no-megaqc-upload",
                 "--no-ansi",
