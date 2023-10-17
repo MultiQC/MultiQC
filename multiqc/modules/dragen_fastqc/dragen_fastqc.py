@@ -14,7 +14,7 @@ log = logging.getLogger(__name__)
 
 
 class MultiqcModule(DragenBaseMetrics, DragenReadMetrics, DragenFastqcGcMetrics, DragenContentMetrics):
-    """DRAGEN provides a number of differrent pipelines and outputs, including base calling, DNA and RNA alignment,
+    """DRAGEN provides a number of different pipelines and outputs, including base calling, DNA and RNA alignment,
     post-alignment processing and variant calling, covering virtually all stages of typical NGS data processing.
     However, it can be treated as a fast aligner with additional features on top, as users will unlikely use any
     features without enabling DRAGEN mapping. So we will treat this module as an alignment tool module and
