@@ -35,6 +35,7 @@
 - **Samtools**: Add MQ0 reads to the Percent Mapped barplot in Stats submodule ([#2123](https://github.com/ewels/MultiQC/pull/2123))
 - **Picard**: Adapt WgsMetrics to parabricks bammetrics outputs ([#2127](https://github.com/ewels/MultiQC/pull/2127))
 - **WhatsHap**: Process truncated input with no ALL chromosome ([#2095](https://github.com/ewels/MultiQC/pull/2095))
+- **fastp**: parse unescaped sample names with white spaces ([#2108](https://github.com/ewels/MultiQC/pull/2108))
 - **mosdepth**: fix prioritizing region over global information ([#2106](https://github.com/ewels/MultiQC/pull/2106))
 - **Dragen**: make sure all inputs are recorded in multiqc_sources.txt ([#2128](https://github.com/ewels/MultiQC/pull/2128))
 - **HTSeq Count**: allow counts files with more than 2 columns ([#2129](https://github.com/ewels/MultiQC/pull/2129))

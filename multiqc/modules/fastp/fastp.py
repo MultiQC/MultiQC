@@ -3,6 +3,7 @@
 
 import json
 import logging
+import re
 from collections import OrderedDict
 
 from multiqc import config
@@ -154,19 +155,24 @@ class MultiqcModule(BaseMultiqcModule):
         """Parse the JSON output from fastp and save the summary statistics"""
         try:
             parsed_json = json.load(f["f"])
-            parsed_json["command"]
-        except:
-            log.warning("Could not parse fastp JSON: '{}'".format(f["fn"]))
+        except json.JSONDecodeError as e:
+            log.warning(f"Could not parse fastp JSON: '{f['fn']}': {e}")
+            return None
+        if not isinstance(parsed_json, dict) or "command" not in parsed_json:
+            log.warning(f"Could not find 'command' field in JSON: '{f['fn']}'")
             return None
 
-        # Fetch a sample name from the command
-        s_name = f["s_name"]
-        cmd = parsed_json["command"].split()
-        for i, v in enumerate(cmd):
-            if v == "-i":
-                s_name = self.clean_s_name(cmd[i + 1], f)
-        if s_name == "fastp":
-            log.warning("Could not parse sample name from fastp command: {}".format(f["fn"]))
+        cmd = parsed_json["command"].strip()
+
+        # Fetch a sample name from the command. The command won't have file names with
+        # spaces escaped properly, so we need to account for that:
+        # fastp -c -g -y -i Campaign 3 sample 1_1.fastq.gz -o ...
+        # Using a regex that extracts everything between "-i " and " -":
+        m = re.search(r"-i\s(.+?)(?:\s-|$)", cmd)
+        if not m:
+            log.warning(f"Could not parse sample name from fastp command: {f['fn']}")
+            return None
+        s_name = self.clean_s_name(m.group(1), f)
 
         self.add_data_source(f, s_name)
         self.fastp_data[s_name] = {}
