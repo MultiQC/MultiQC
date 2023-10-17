@@ -100,6 +100,11 @@ Sometimes, it's desirable to choose which MultiQC modules run. This could be bec
 
 You can do this by using `-m`/`--modules` to explicitly define which modules you want to run. Alternatively, use `-e`/`--exclude` to run all modules _except_ those listed.
 
+If an explicitly requested module couldn't find any expected input files, MultiQC will
+just continue with other modules. You can change this behaviour and make MultiQC
+strict about missing input by setting the `--require-log` flag.
+If set, MultiQC will exit with an error and exit code `1` if any of the modules specified with `-m` did not produce a section in the report.
+
 ## Directory prefixes in sample names
 
 Sometimes, the same samples may be processed in different ways. If MultiQC

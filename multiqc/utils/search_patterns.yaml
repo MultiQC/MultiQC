@@ -379,7 +379,7 @@ happy:
   fn: "*.summary.csv"
   contents: "Type,Filter,TRUTH"
 htseq:
-  contents_re: '^(feature\tcount|\w+\t\d+)$'
+  contents_re: '^(feature\tcount|\w+.*\t\d+)$'
   num_lines: 1
 hicexplorer:
   contents: "Min rest. site distance"
@@ -622,12 +622,12 @@ picard/rrbs_metrics:
 picard/sam_file_validation:
   fn: "*[Vv]alidate[Ss]am[Ff]ile*"
 picard/variant_calling_metrics:
-  # This looks wrong but I think it's intentional - tests fail if I "fix" it
+  # This looks wrong, but I think it's intentional - tests fail if I "fix" it
   fn: "*.variant_calling_detail_metrics"
   contents: "CollectVariantCallingMetrics"
   shared: true
 picard/wgs_metrics:
-  contents: "CollectWgsMetrics"
+  contents: "WgsMetrics"
   shared: true
 picard/collectilluminabasecallingmetrics:
   contents: "CollectIlluminaBasecallingMetrics"

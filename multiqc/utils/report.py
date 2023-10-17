@@ -15,10 +15,11 @@ import re
 import time
 from collections import OrderedDict, defaultdict
 
-import lzstring
 import rich
 import rich.progress
 import yaml
+
+from multiqc.utils import lzstring
 
 from . import config
 

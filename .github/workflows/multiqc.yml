@@ -15,7 +15,7 @@ env:
   # To reduce code duplication between Win and Linux jobs
   core_python_dependencies: "pip setuptools beautifulsoup4"
   # No need to run test variations across all Python versions
-  latest_python: "3.11"
+  latest_python: "3.12"
 
 jobs:
   changes:
@@ -56,7 +56,7 @@ jobs:
     strategy:
       matrix:
         # Just test the oldest and newest supported Python versions
-        python-version: ["3.6", "3.11"]
+        python-version: ["3.8", "3.12"]
     timeout-minutes: 10
 
     steps:
@@ -155,7 +155,7 @@ jobs:
       - name: Set up Python
         uses: actions/setup-python@v3
         with:
-          python-version: "3.11"
+          python-version: "3.12"
 
       # Update core packages
       - name: Install dependencies for CI tests
