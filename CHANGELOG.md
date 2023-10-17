@@ -12,6 +12,8 @@
 - Strict mode: rename `config.lint` to `config.strict`, crash early on module or template error. Add `MULTIQC_STRICT=1` ([#2101](https://github.com/ewels/MultiQC/pull/2101))
 - Trigger changelog entry addition on PR creation, in addition to an explicit comment to multiqc-bot ([#2102](https://github.com/ewels/MultiQC/pull/2102))
 - Fix adding changelog entries with backticks from PR titles ([#2115](https://github.com/ewels/MultiQC/pull/2115))
+- Fix matplotlib linegraph and bargraph for the case when `xmax` `<` `xmin` in config ([#2124](https://github.com/ewels/MultiQC/pull/2124))
+- Add `--require-logs` flag to error out if requested modules not used ([#2109](https://github.com/ewels/MultiQC/pull/2109))
 - Fix for python 3.12: replace removed `distutils` ([#2113](https://github.com/ewels/MultiQC/pull/2113))
 - Bundle lzstring to fix Python 3.12 ([#2119](https://github.com/ewels/MultiQC/pull/2119))
 - Drop Python 3.6 and 3.7 support, add 3.12 ([#2121](https://github.com/ewels/MultiQC/pull/2121))
@@ -31,6 +33,7 @@
 - **Picard**: MarkDuplicates: Fix parsing mixed strings/numbers, account for missing trailing `0` ([#2083](https://github.com/ewels/MultiQC/pull/2083), [#2094](https://github.com/ewels/MultiQC/pull/2094))
 - **WhatsHap**: Process truncated input with no ALL chromosome ([#2095](https://github.com/ewels/MultiQC/pull/2095))
 - **Dragen**: make sure all inputs are recorded in multiqc_sources.txt ([#2128](https://github.com/ewels/MultiQC/pull/2128))
+- **HTSeq Count**: allow counts files with more than 2 columns ([#2129](https://github.com/ewels/MultiQC/pull/2129))
 
 ## [MultiQC v1.16](https://github.com/ewels/MultiQC/releases/tag/v1.16) - 2023-09-22
 

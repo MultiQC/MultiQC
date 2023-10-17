@@ -47,6 +47,7 @@ prepend_dirs: false
 prepend_dirs_depth: 0
 prepend_dirs_sep: " | "
 file_list: false
+require_logs: false
 
 make_data_dir: true
 zip_data_dir: false
