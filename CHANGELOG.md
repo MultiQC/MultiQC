@@ -20,6 +20,7 @@
 - Drop Python 3.6 and 3.7 support, add 3.12 ([#2121](https://github.com/ewels/MultiQC/pull/2121))
 - <img src="./multiqc/templates/default/assets/img/favicon-16x16.png" alt="///" width="10px"/> New logo
 - Set name and anchor for the custom content "module" [#2131](https://github.com/ewels/MultiQC/pull/2131)
+- Fix use of `shutil.copytree` when overriding existing template files in `tmp_dir` ([#2133](https://github.com/ewels/MultiQC/pull/2133))
 
 ### New Modules
 
