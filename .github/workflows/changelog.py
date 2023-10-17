@@ -24,6 +24,8 @@ import subprocess
 import sys
 from pathlib import Path
 
+import yaml
+
 REPO_URL = "https://github.com/ewels/MultiQC"
 MODULES_DIR = "multiqc/modules"
 
@@ -119,6 +121,18 @@ def _modules_added_by_pr(pr_number) -> list[Path]:
     return mod_py_files
 
 
+def _load_file_before_pr(path) -> str:
+    """
+    Returns the contents of the file before the PR.
+    """
+    cmd = f"cd {workspace_path} && git show HEAD~1:{path}"
+    print(cmd)
+    result = subprocess.run(cmd, shell=True, capture_output=True, text=True)
+    if result.returncode != 0:
+        raise RuntimeError(f"Error executing command: {result.stderr}")
+    return result.stdout
+
+
 def _modules_modified_by_pr(pr_number) -> list[Path]:
     """
     Returns paths to the modules modified by the PR.
@@ -131,6 +145,27 @@ def _modules_modified_by_pr(pr_number) -> list[Path]:
             mod_py = path.parent / f"{mod_anchor}.py"
             if (mod_py := workspace_path / mod_py).exists():
                 mod_py_files.append(mod_py)
+        if path.name == "search_patterns.yaml":
+            before_text = _load_file_before_pr(path)
+            with (workspace_path / path).open() as f:
+                after_text = f.read()
+            before_data = yaml.safe_load(before_text)
+            after_data = yaml.safe_load(after_text)
+            # find modules that changed, e.g. collect "htseq":
+            # htseq:
+            #   - contents_re: '^(feature\tcount|\w+\t\d+)$'
+            #   + contents_re: '^(feature\tcount|\w+.*\t\d+)$'
+            #   num_lines: 1
+            for mod_anchor, mod_data in after_data.items():
+                if mod_anchor not in before_data:
+                    mod_py_files.append(workspace_path / path)
+                else:
+                    for key in mod_data:
+                        if key not in before_data[mod_anchor]:
+                            mod_py_files.append(workspace_path / path)
+                        elif mod_data[key] != before_data[mod_anchor][key]:
+                            mod_py_files.append(workspace_path / path)
+
     return mod_py_files
 
 
@@ -163,7 +198,7 @@ def _determine_change_type(pr_title, pr_number) -> tuple[str, dict]:
                     )
             return "### New modules", mod_info
 
-    # Check what modules were changed by the PR, and if the title starts with on
+    # Check what modules were changed by the PR, and if the title starts with one
     # of the names of the changed modules, assume it's a module update.
     modified_mod_py_files = _modules_modified_by_pr(pr_number)
     if len(modified_mod_py_files) == 1:
