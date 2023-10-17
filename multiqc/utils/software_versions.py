@@ -6,6 +6,7 @@
 import logging
 import os
 from collections import defaultdict
+from typing import List
 
 import packaging.version
 import yaml
@@ -128,8 +129,13 @@ def validate_software_versions(input):
     Returns a dict of dicts of list in the format (1) and a boolean indicating if the input is valid.
     """
 
-    def all_strings(lst):
-        return all(isinstance(item, str) for item in lst)
+    def _list_of_versions_is_good(lst: List[str]) -> bool:
+        good = True
+        for item in lst:
+            if not packaging.version.parse(item):
+                log.error(f"Invalid version: '{item}'")
+                good = False
+        return good
 
     output = defaultdict(lambda: defaultdict(list))
     if not isinstance(input, dict):
@@ -143,29 +149,22 @@ def validate_software_versions(input):
         if isinstance(level1_values, dict):
             for level2_key, versions in level1_values.items():
                 software = level2_key
-                if isinstance(versions, str):
-                    versions = [versions]
-
                 if not isinstance(versions, list):
+                    versions = [versions]
+                versions = [str(v) for v in versions]
+                if not _list_of_versions_is_good(versions):
                     return output, False
-
-                if not all_strings(versions):
-                    return output, False
-
                 output[group][software] = versions
 
         # Check if the input is in format (2)
-        elif isinstance(level1_values, (list, str)):
-            versions = level1_values
-            if isinstance(versions, str):
-                versions = [versions]
-
-            if not all_strings(versions):
-                return output, False
-
-            output[group][software] = versions
         else:
-            return output, False
+            versions = level1_values
+            if not isinstance(versions, list):
+                versions = [versions]
+            versions = [str(v) for v in versions]
+            if not _list_of_versions_is_good(versions):
+                return output, False
+            output[group][software] = versions
 
     return output, True
 
