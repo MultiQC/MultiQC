@@ -11,6 +11,7 @@
 - Just run CI on the oldest + newest supported Python versions ([#2074](https://github.com/ewels/MultiQC/pull/2074))
 - Strict mode: rename `config.lint` to `config.strict`, crash early on module or template error. Add `MULTIQC_STRICT=1` ([#2101](https://github.com/ewels/MultiQC/pull/2101))
 - Trigger changelog entry addition on PR creation, in addition to an explicit comment to multiqc-bot ([#2102](https://github.com/ewels/MultiQC/pull/2102))
+- Matplotlib line plots now respect `xLog: True` and `yLog: True` in config ([#1632](https://github.com/ewels/MultiQC/pull/1632))
 - Fix adding changelog entries with backticks from PR titles ([#2115](https://github.com/ewels/MultiQC/pull/2115))
 - Fix matplotlib linegraph and bargraph for the case when `xmax` `<` `xmin` in config ([#2124](https://github.com/ewels/MultiQC/pull/2124))
 - Add `--require-logs` flag to error out if requested modules not used ([#2109](https://github.com/ewels/MultiQC/pull/2109))
