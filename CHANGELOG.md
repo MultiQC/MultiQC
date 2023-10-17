@@ -30,6 +30,7 @@ Highlights:
 - Just run CI on the oldest + newest supported Python versions ([#2074](https://github.com/ewels/MultiQC/pull/2074))
 - <img src="./multiqc/templates/default/assets/img/favicon-16x16.png" alt="///" width="10px"/> New logo
 - Set name and anchor for the custom content "module" [#2131](https://github.com/ewels/MultiQC/pull/2131)
+- Fix use of `shutil.copytree` when overriding existing template files in `tmp_dir` ([#2133](https://github.com/ewels/MultiQC/pull/2133))
 
 ### New Modules
 

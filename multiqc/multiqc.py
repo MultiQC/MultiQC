@@ -1063,9 +1063,10 @@ def run(
         # Load in parent template files first if a child theme
         try:
             parent_template = config.avail_templates[template_mod.template_parent].load()
-            shutil.copytree(parent_template.template_dir, tmp_dir)
         except AttributeError:
             pass  # Not a child theme
+        else:
+            shutil.copytree(parent_template.template_dir, tmp_dir, dirs_exist_ok=True)
 
         # Copy the template files to the tmp directory (`dirs_exist_ok` makes sure
         # parent template files are overwritten)
