@@ -453,6 +453,12 @@ def matplotlib_linegraph(plotdata, pconfig=None):
                 # Categorical data on x axis
                 axes.plot(d["data"], label=d["name"], color=d["color"], linewidth=1, marker=None)
 
+        # Log scale
+        if pconfig.get("xLog", False):
+            axes.set_xscale("log")
+        if pconfig.get("yLog", False):
+            axes.set_yscale("log")
+
         # Tidy up axes
         axes.tick_params(
             labelsize=pconfig.get("labelSize", 8), direction="out", left=False, right=False, top=False, bottom=False
@@ -500,7 +506,7 @@ def matplotlib_linegraph(plotdata, pconfig=None):
         elif "xCeiling" in pconfig:
             xmax = min(pconfig["xCeiling"], default_xlimits[1])
         if (xmax - xmin) < pconfig.get("xMinRange", 0):
-            xmax = xmin + pconfig["xMinRange"]
+            xmax = xmin + pconfig.get("xMinRange", 0)
         axes.set_xlim((xmin, xmax))
 
         # Plot title

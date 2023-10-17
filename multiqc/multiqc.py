@@ -111,6 +111,7 @@ click.rich_click.OPTION_GROUPS = {
                 "--verbose",
                 "--quiet",
                 "--strict",
+                "--require-logs",
                 "--profile-runtime",
                 "--no-megaqc-upload",
                 "--no-ansi",
@@ -207,6 +208,12 @@ click.rich_click.OPTION_GROUPS = {
     type=click.Choice(sorted(config.avail_modules.keys())),
     multiple=True,
     help="Use only this module. Can specify multiple times.",
+)
+@click.option(
+    "--require-logs",
+    "require_logs",
+    is_flag=True,
+    help="Require all explicitly requested modules to have log files. If not, MultiQC will exit with an error.",
 )
 @click.option("--data-dir", "make_data_dir", is_flag=True, help="Force the parsed data directory to be created.")
 @click.option(
@@ -305,6 +312,7 @@ def run(
     template=None,
     module_tag=(),
     module=(),
+    require_logs=False,
     exclude=(),
     outdir=None,
     ignore=(),
@@ -470,6 +478,8 @@ def run(
         config.run_modules = module
     if len(exclude) > 0:
         config.exclude_modules = exclude
+    if require_logs:
+        config.require_logs = True
     if profile_runtime:
         config.profile_runtime = True
     if no_ansi:
@@ -659,6 +669,9 @@ def run(
     run_modules = [m for m in run_modules if list(m.keys())[0].lower() in non_empty_modules]
     run_module_names = [list(m.keys())[0] for m in run_modules]
 
+    if not _required_logs_found(run_module_names):
+        return {"report": report, "config": config, "sys_exit_code": 1}
+
     # Run the modules!
     plugin_hooks.mqc_trigger("before_modules")
     report.modules_output = list()
@@ -779,6 +792,11 @@ def run(
 
         report.runtimes["mods"][run_module_names[mod_idx]] = time.time() - mod_starttime
     report.runtimes["total_mods"] = time.time() - total_mods_starttime
+
+    # Again, if config.require_logs is set, check if for all explicitly requested
+    # modules samples were found.
+    if not _required_logs_found([m.anchor for m in report.modules_output]):
+        return {"report": report, "config": config, "sys_exit_code": 1}
 
     # Update report with software versions provided in configs
     software_versions.update_versions_from_config(config, report)
@@ -1180,3 +1198,20 @@ def run(
     # * appropriate error code (eg. 1 if a module broke, 0 on success)
     #
     return {"report": report, "config": config, "sys_exit_code": sys_exit_code}
+
+
+def _required_logs_found(modules_with_logs):
+    if config.require_logs:
+        required_modules_with_no_logs = [
+            m
+            for m in getattr(config, "run_modules", [])
+            if m.lower() not in [m.lower() for m in modules_with_logs]
+            and m.lower() not in getattr(config, "exclude_modules", [])
+        ]
+        if required_modules_with_no_logs:
+            logger.critical(
+                "The following modules were explicitly requested but no log files "
+                "were found: {}".format(", ".join(required_modules_with_no_logs))
+            )
+            return False
+    return True

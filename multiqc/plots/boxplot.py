@@ -176,7 +176,7 @@ def matplotlib_boxplot(plotdata, pconfig=None):
         elif "xCeiling" in pconfig:
             xmax = min(pconfig["xCeiling"], default_xlimits[1])
         if (xmax - xmin) < pconfig.get("xMinRange", 0):
-            xmax = xmin + pconfig["xMinRange"]
+            xmax = xmin + pconfig.get("xMinRange", 0)
         axes.set_xlim((xmin, xmax))
 
         # Plot title

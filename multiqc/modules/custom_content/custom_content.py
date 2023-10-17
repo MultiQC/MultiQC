@@ -83,7 +83,7 @@ def custom_module_classes():
         mod_cust_config[c_id] = f
 
     # Now go through each of the file search patterns
-    bm = BaseMultiqcModule()
+    bm = BaseMultiqcModule(name="Custom content", anchor="custom_content")
     for k in search_patterns:
         num_sp_found_files = 0
         for f in bm.find_log_files(k):
