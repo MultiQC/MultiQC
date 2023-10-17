@@ -113,16 +113,6 @@ class CellRangerCountMixin:
             plot=table.plot(self.cellrangercount_data, self.count_data_headers, {"namespace": "Count"}),
         )
 
-        if self.cellrangercount_antibody_data:
-            self.add_section(
-                name="Antibody - Summary stats",
-                anchor="cellranger-antibody-stats",
-                description="Summary QC metrics from Cell Ranger count",
-                plot=table.plot(
-                    self.cellrangercount_antibody_data, self.antibody_data_headers, {"namespace": "Antibody"}
-                ),
-            )
-
         self.add_section(
             name="Count - BC rank plot",
             anchor="cellranger-count-bcrank-plot",
@@ -130,19 +120,6 @@ class CellRangerCountMixin:
             helptext=self.cellrangercount_plots_conf["bc"]["helptext"],
             plot=linegraph.plot(self.cellrangercount_plots_data["bc"], self.cellrangercount_plots_conf["bc"]["config"]),
         )
-
-        if "antibody_counts" in self.cellrangercount_plots_conf:
-            self.add_section(
-                name="Antibody - Counts Distribution Bargraph",
-                anchor="cellranger-antibody-counts",
-                description=self.cellrangercount_plots_conf["antibody_counts"]["description"],
-                helptext=self.cellrangercount_plots_conf["antibody_counts"]["helptext"],
-                plot=bargraph.plot(
-                    self.cellrangercount_plots_data["antibody_counts"],
-                    self.cellrangercount_plots_conf["antibody_counts"]["keys"],
-                    self.cellrangercount_plots_conf["antibody_counts"]["config"],
-                ),
-            )
 
         self.add_section(
             name="Count - Median genes",
@@ -163,6 +140,29 @@ class CellRangerCountMixin:
                 plot=linegraph.plot(
                     self.cellrangercount_plots_data["saturation"],
                     self.cellrangercount_plots_conf["saturation"]["config"],
+                ),
+            )
+
+        if self.cellrangercount_antibody_data:
+            self.add_section(
+                name="Antibody - Summary stats",
+                anchor="cellranger-antibody-stats",
+                description="Summary QC metrics from Cell Ranger count",
+                plot=table.plot(
+                    self.cellrangercount_antibody_data, self.antibody_data_headers, {"namespace": "Antibody"}
+                ),
+            )
+
+        if "antibody_counts" in self.cellrangercount_plots_conf:
+            self.add_section(
+                name="Antibody - Counts Distribution Bargraph",
+                anchor="cellranger-antibody-counts",
+                description=self.cellrangercount_plots_conf["antibody_counts"]["description"],
+                helptext=self.cellrangercount_plots_conf["antibody_counts"]["helptext"],
+                plot=bargraph.plot(
+                    self.cellrangercount_plots_data["antibody_counts"],
+                    self.cellrangercount_plots_conf["antibody_counts"]["keys"],
+                    self.cellrangercount_plots_conf["antibody_counts"]["config"],
                 ),
             )
 
