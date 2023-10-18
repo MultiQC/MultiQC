@@ -184,6 +184,100 @@ class MultiqcModule(BaseMultiqcModule):
             self.fastp_gc_content_data[k][s_name] = {}
             self.fastp_n_content_data[k][s_name] = {}
 
+        # Parse read1 - get number of read (paired for paired-end data) before
+        try:
+            for k in parsed_json["read1_before_filtering"]:
+                if type(parsed_json["read1_before_filtering"][k]) in [int, float]:
+                    self.fastp_data[s_name]["read1_before_filtering_{}".format(k)] = float(
+                        parsed_json["read1_before_filtering"][k]
+                    )
+                    if k == "total_reads":
+                        self.fastp_data[s_name]["before_filtering_total_pairs"] = float(
+                            parsed_json["read1_before_filtering"][k]
+                        )
+        except KeyError:
+            log.debug("fastp JSON did not have a 'read1_before_filtering' keys: '{}'".format(f["fn"]))
+
+        # Parse read1 - get number of read (paired for paired-end data) after
+        try:
+            for k in parsed_json["read1_after_filtering"]:
+                if type(parsed_json["read1_after_filtering"][k]) in [int, float]:
+                    self.fastp_data[s_name]["read1_after_filtering_{}".format(k)] = float(
+                        parsed_json["read1_after_filtering"][k]
+                    )
+                    if k == "total_reads":
+                        self.fastp_data[s_name]["after_filtering_total_pairs"] = float(
+                            parsed_json["read1_before_filtering"][k]
+                        )
+        except KeyError:
+            log.debug("fastp JSON did not have a 'read1_after_filtering' keys: '{}'".format(f["fn"]))
+
+        # Parse read2 - get number of read (paired for paired-end data) before
+        try:
+            for k in parsed_json["read2_before_filtering"]:
+                if type(parsed_json["read2_before_filtering"][k]) in [int, float]:
+                    self.fastp_data[s_name]["read2_before_filtering_{}".format(k)] = float(
+                        parsed_json["read2_before_filtering"][k]
+                    )
+                    if k == "total_reads":
+                        self.fastp_data[s_name]["before_filtering_total_pairs"] = (
+                            self.fastp_data[s_name]["before_filtering_total_pairs"]
+                            + float(parsed_json["read2_before_filtering"][k])
+                        ) / 2
+        except KeyError:
+            log.debug("fastp JSON did not have a 'read2_before_filtering' keys: '{}'".format(f["fn"]))
+
+        # Parse read2 - get number of read (paired for paired-end data) after
+        try:
+            for k in parsed_json["read2_after_filtering"]:
+                if type(parsed_json["read2_after_filtering"][k]) in [int, float]:
+                    self.fastp_data[s_name]["read2_after_filtering_{}".format(k)] = float(
+                        parsed_json["read2_after_filtering"][k]
+                    )
+                    if k == "total_reads":
+                        self.fastp_data[s_name]["after_filtering_total_pairs"] = (
+                            self.fastp_data[s_name]["after_filtering_total_pairs"]
+                            + float(parsed_json["read2_after_filtering"][k])
+                        ) / 2
+        except KeyError:
+            log.debug("fastp JSON did not have a 'read2_after_filtering' keys: '{}'".format(f["fn"]))
+
+        # Parse after_filtering
+        try:
+            for k in parsed_json["summary"]["after_filtering"]:
+                self.fastp_data[s_name]["after_filtering_{}".format(k)] = float(
+                    parsed_json["summary"]["after_filtering"][k]
+                )
+        except KeyError:
+            log.debug("fastp JSON did not have a 'summary'-'after_filtering' keys: '{}'".format(f["fn"]))
+
+        # Parse before_filtering
+        try:
+            for k in parsed_json["summary"]["before_filtering"]:
+                self.fastp_data[s_name]["before_filtering_{}".format(k)] = float(
+                    parsed_json["summary"]["before_filtering"][k]
+                )
+        except KeyError:
+            log.debug("fastp JSON did not have a 'summary'-'before_filtering' keys: '{}'".format(f["fn"]))
+
+        # Mean values for read length
+        try:
+            self.fastp_data[s_name]["before_filtering_read_mean_length"] = (
+                self.fastp_data[s_name]["before_filtering_read1_mean_length"]
+                + self.fastp_data[s_name]["before_filtering_read2_mean_length"]
+            ) / 2
+            self.fastp_data[s_name]["after_filtering_read_mean_length"] = (
+                self.fastp_data[s_name]["after_filtering_read1_mean_length"]
+                + self.fastp_data[s_name]["after_filtering_read2_mean_length"]
+            ) / 2
+        except KeyError:
+            self.fastp_data[s_name]["before_filtering_read_mean_length"] = self.fastp_data[s_name][
+                "before_filtering_read1_mean_length"
+            ]
+            self.fastp_data[s_name]["after_filtering_read_mean_length"] = self.fastp_data[s_name][
+                "after_filtering_read1_mean_length"
+            ]
+
         # Parse filtering_result
         try:
             for k in parsed_json["filtering_result"]:
@@ -196,15 +290,6 @@ class MultiqcModule(BaseMultiqcModule):
             self.fastp_data[s_name]["pct_duplication"] = float(parsed_json["duplication"]["rate"] * 100.0)
         except KeyError:
             log.debug("fastp JSON did not have a 'duplication' key: '{}'".format(f["fn"]))
-
-        # Parse after_filtering
-        try:
-            for k in parsed_json["summary"]["after_filtering"]:
-                self.fastp_data[s_name]["after_filtering_{}".format(k)] = float(
-                    parsed_json["summary"]["after_filtering"][k]
-                )
-        except KeyError:
-            log.debug("fastp JSON did not have a 'summary'-'after_filtering' keys: '{}'".format(f["fn"]))
 
         # Parse data required to calculate Pct reads surviving
         try:
@@ -305,6 +390,106 @@ class MultiqcModule(BaseMultiqcModule):
         General Statistics table at the top of the report"""
 
         headers = OrderedDict()
+        headers["before_filtering_total_pairs"] = {
+            "title": "{} Reads (pairs) Before Filtering".format(config.read_count_prefix),
+            "description": "Total reads (pairs) before filtering ({})".format(config.read_count_desc),
+            "min": 0,
+            "scale": "Blues",
+            "modify": lambda x: x * config.read_count_multiplier,
+            "shared_key": "read_count",
+        }
+        headers["read1_before_filtering_total_reads"] = {
+            "title": "{} Read 1 (pairs) Before Filtering".format(config.read_count_prefix),
+            "description": "Total read 1 (pairs) before filtering ({})".format(config.read_count_desc),
+            "min": 0,
+            "scale": "Blues",
+            "modify": lambda x: x * config.read_count_multiplier,
+            "shared_key": "read_count",
+        }
+        headers["read2_before_filtering_total_reads"] = {
+            "title": "{} Read 2 (pairs) Before Filtering".format(config.read_count_prefix),
+            "description": "Total read 2 (pairs) before filtering ({})".format(config.read_count_desc),
+            "min": 0,
+            "scale": "Blues",
+            "modify": lambda x: x * config.read_count_multiplier,
+            "shared_key": "read_count",
+        }
+        headers["before_filtering_read_mean_length"] = {
+            "title": "Read Length Before Filtering",
+            "description": "Mean read length before filtering",
+            "min": 0,
+            "scale": "BuGn",
+            "modify": lambda x: x,
+        }
+        headers["before_filtering_read1_mean_length"] = {
+            "title": "Read 1 Length Before Filtering",
+            "description": "Mean read 1 length before filtering",
+            "min": 0,
+            "scale": "BuGn",
+            "modify": lambda x: x,
+        }
+        headers["before_filtering_read2_mean_length"] = {
+            "title": "Read 2 Length Before Filtering",
+            "description": "Mean read 2 length before filtering",
+            "min": 0,
+            "scale": "BuGn",
+            "modify": lambda x: x,
+        }
+
+        headers["pct_surviving"] = {
+            "title": "% PF",
+            "description": "Percent reads passing filter",
+            "max": 100,
+            "min": 0,
+            "suffix": "%",
+            "scale": "BuGn",
+        }
+        headers["after_filtering_total_pairs"] = {
+            "title": "{} Reads (pairs) After Filtering".format(config.read_count_prefix),
+            "description": "Total reads (pairs) after filtering ({})".format(config.read_count_desc),
+            "min": 0,
+            "scale": "Blues",
+            "modify": lambda x: x * config.read_count_multiplier,
+            "shared_key": "read_count",
+        }
+        headers["read1_after_filtering_total_reads"] = {
+            "title": "{} Read 1 (pairs) After Filtering".format(config.read_count_prefix),
+            "description": "Total read 1 (pairs) after filtering ({})".format(config.read_count_desc),
+            "min": 0,
+            "scale": "Blues",
+            "modify": lambda x: x * config.read_count_multiplier,
+            "shared_key": "read_count",
+        }
+        headers["read2_after_filtering_total_reads"] = {
+            "title": "{} Read 2 (pairs) After Filtering".format(config.read_count_prefix),
+            "description": "Total read 2 (pairs) after filtering ({})".format(config.read_count_desc),
+            "min": 0,
+            "scale": "Blues",
+            "modify": lambda x: x * config.read_count_multiplier,
+            "shared_key": "read_count",
+        }
+        headers["after_filtering_read_mean_length"] = {
+            "title": "Read Length After Filtering",
+            "description": "Mean read length after filtering",
+            "min": 0,
+            "scale": "BuGn",
+            "modify": lambda x: x,
+        }
+        headers["after_filtering_read1_mean_length"] = {
+            "title": "Read 1 Length After Filtering",
+            "description": "Mean read 1 length after filtering",
+            "min": 0,
+            "scale": "BuGn",
+            "modify": lambda x: x,
+        }
+        headers["after_filtering_read2_mean_length"] = {
+            "title": "Read 2 Length After Filtering",
+            "description": "Mean read 2 length after filtering",
+            "min": 0,
+            "scale": "BuGn",
+            "modify": lambda x: x,
+        }
+
         headers["pct_duplication"] = {
             "title": "% Duplication",
             "description": "Duplication rate before filtering",
@@ -332,14 +517,6 @@ class MultiqcModule(BaseMultiqcModule):
             "shared_key": "base_count",
             "hidden": True,
         }
-        headers["filtering_result_passed_filter_reads"] = {
-            "title": "{} Reads After Filtering".format(config.read_count_prefix),
-            "description": "Total reads after filtering ({})".format(config.read_count_desc),
-            "min": 0,
-            "scale": "Blues",
-            "modify": lambda x: x * config.read_count_multiplier,
-            "shared_key": "read_count",
-        }
         headers["after_filtering_gc_content"] = {
             "title": "GC content",
             "description": "GC content after filtering",
@@ -348,14 +525,6 @@ class MultiqcModule(BaseMultiqcModule):
             "suffix": "%",
             "scale": "Blues",
             "modify": lambda x: x * 100.0,
-        }
-        headers["pct_surviving"] = {
-            "title": "% PF",
-            "description": "Percent reads passing filter",
-            "max": 100,
-            "min": 0,
-            "suffix": "%",
-            "scale": "BuGn",
         }
         headers["pct_adapter"] = {
             "title": "% Adapter",
