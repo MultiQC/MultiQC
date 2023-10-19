@@ -82,7 +82,7 @@ def parse_reports(self):
         commadecimal = None
 
         for l in f["f"]:
-            maybe_s_name = self.extract_sample_name(l, f, "HsMetrics")
+            maybe_s_name = self.extract_sample_name(l, f, picard_tool="CollectHsMetrics", sentieon_algo="HsMetricAlgo")
             if maybe_s_name:
                 # Starts information for a new sample
                 s_name = maybe_s_name
@@ -94,7 +94,7 @@ def parse_reports(self):
             if s_name is None:
                 continue
 
-            if self.is_line_right_before_table(l):
+            if self.is_line_right_before_table(l, picard_class="HsMetrics", sentieon_algo="HsMetricAlgo"):
                 keys = f["f"].readline().strip("\n").split("\t")
             elif keys:
                 vals = l.strip("\n").split("\t")
@@ -132,8 +132,8 @@ def parse_reports(self):
                 parsed_data.pop(s_name, None)
 
         # When there is only one sample, using the file name to extract the sample name.
-        if len(parsed_data) == 1:
-            parsed_data = {f["s_name"]: list(parsed_data.values())[0]}
+        # if len(parsed_data) == 1:
+        #     parsed_data = {f["s_name"]: list(parsed_data.values())[0]}
 
         # Manipulate sample names if multiple baits found
         for s_name in parsed_data.keys():

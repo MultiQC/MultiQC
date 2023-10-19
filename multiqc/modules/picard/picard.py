@@ -5,7 +5,7 @@ import logging
 import os
 import re
 from collections import OrderedDict
-from typing import Dict, List, Optional
+from typing import Dict, Optional
 
 from multiqc.modules.base_module import BaseMultiqcModule, ModuleNoSamplesFound
 
@@ -105,7 +105,12 @@ class MultiqcModule(BaseMultiqcModule):
             "MarkIlluminaAdapters": MarkIlluminaAdapters,
         }
 
-    def is_line_right_before_table(self, line: str) -> bool:
+    @staticmethod
+    def is_line_right_before_table(
+        line: str,
+        picard_class: str,
+        sentieon_algo: str,
+    ) -> bool:
         """
         Picard logs from different samples can be concatenated together, so the module
         needs to know a marker to find where new sample information starts.
@@ -115,13 +120,19 @@ class MultiqcModule(BaseMultiqcModule):
         tools and platforms - e.g. Sentieon and Parabricks  - while adding their own
         headers, so we need to handle them as well.
         """
-        return any(line.startswith(prefix) for prefix in ["## METRICS CLASS", "#SentieonCommandLine:"])
+        return (
+            line.startswith("## METRICS CLASS")
+            and picard_class in line
+            or line.startswith("#SentieonCommandLine:")
+            and f" --algo {sentieon_algo}" in line
+        )
 
     def extract_sample_name(
         self,
         line: str,
         f: Dict,
-        extra_labels: Optional[str | List] = None,
+        picard_tool: str,
+        sentieon_algo: str,
     ) -> Optional[str]:
         """
         Picard logs from different samples can be concatenated together, so we can't
@@ -130,13 +141,11 @@ class MultiqcModule(BaseMultiqcModule):
         originally used to invoke itself, which is the best bet. Sentieon does the same,
         but slightly differently.
         """
-        extra_labels = extra_labels or []
-        if isinstance(extra_labels, str):
-            extra_labels = [extra_labels]
-
-        picard_command = line.startswith("# ") and ("INPUT=" in line or "INPUT" in line.split())
-        sentieon_command = line.startswith("#SentieonCommandLine:") and " --algo " in line and " -i " in line
-        if (picard_command or sentieon_command) and all([l in line for l in extra_labels]):
+        picard_command = line.startswith("# ") and ("INPUT=" in line or "INPUT" in line.split()) and picard_tool in line
+        sentieon_command = (
+            line.startswith("#SentieonCommandLine:") and f" --algo {sentieon_algo}" in line and " -i " in line
+        )
+        if picard_command or sentieon_command:
             # Pull sample name from the input file name, recorded in the command line:
             fn_search = re.search(r"INPUT(?:=|\s+)(\[?[^\s]+\]?)", line, flags=re.IGNORECASE)
             if not fn_search:  # sentieon?
