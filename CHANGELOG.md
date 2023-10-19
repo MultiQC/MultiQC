@@ -1,25 +1,44 @@
 # MultiQC Version History
 
-## MultiQC v1.17dev
+## MultiQC v1.18dev
 
 ### MultiQC updates
 
-- Add CI action [changelog.yml](.github%2Fworkflows%2Fchangelog.yml) to populate the changelog from PR titles, triggered by a comment `@multiqc-bot changelog` ([#2025](https://github.com/ewels/MultiQC/pull/2025))
+### New Modules
+
+### Module updates
+
+## [MultiQC v1.17](https://github.com/ewels/MultiQC/releases/tag/v1.17) - 2023-10-17
+
+### The one with the new logo
+
+Highlights:
+
+- Introducing the new MultiQC logo!
+- Adding support for Python 3.12 and dropping support for Python 3.7
+- New `--require-logs` to fail if expected tool outputs are not found
+- Rename `--lint` to `--strict`
+- Modules should now use `ModuleNotFoundError` instead of `UserWarning` when no logs are found
+- 2 new modules and updates to 9 modules.
+
+### MultiQC updates
+
+- Add CI action [changelog.yml](.github%2Fworkflows%2Fchangelog.yml) to populate the changelog from PR titles, triggered by a comment `@multiqc-bot changelog` ([#2025](https://github.com/ewels/MultiQC/pull/2025), [#2102](https://github.com/ewels/MultiQC/pull/2102), [#2115](https://github.com/ewels/MultiQC/pull/2115))
+- Add GitHub Actions bot workflow to fix code linting from a PR comment ([#2082](https://github.com/ewels/MultiQC/pull/2082))
 - Use custom exception type instead of `UserWarning` when no samples are found. ([#2049](https://github.com/ewels/MultiQC/pull/2049))
 - Lint modules for missing `self.add_software_version` ([#2081](https://github.com/ewels/MultiQC/pull/2081))
-- Add GitHub Actions bot workflow to fix code linting from a PR comment ([#2082](https://github.com/ewels/MultiQC/pull/2082))
-- Just run CI on the oldest + newest supported Python versions ([#2074](https://github.com/ewels/MultiQC/pull/2074))
 - Strict mode: rename `config.lint` to `config.strict`, crash early on module or template error. Add `MULTIQC_STRICT=1` ([#2101](https://github.com/ewels/MultiQC/pull/2101))
-- Trigger changelog entry addition on PR creation, in addition to an explicit comment to multiqc-bot ([#2102](https://github.com/ewels/MultiQC/pull/2102))
 - Matplotlib line plots now respect `xLog: True` and `yLog: True` in config ([#1632](https://github.com/ewels/MultiQC/pull/1632))
-- Fix adding changelog entries with backticks from PR titles ([#2115](https://github.com/ewels/MultiQC/pull/2115))
 - Fix matplotlib linegraph and bargraph for the case when `xmax` `<` `xmin` in config ([#2124](https://github.com/ewels/MultiQC/pull/2124))
 - Add `--require-logs` flag to error out if requested modules not used ([#2109](https://github.com/ewels/MultiQC/pull/2109))
-- Fix for python 3.12: replace removed `distutils` ([#2113](https://github.com/ewels/MultiQC/pull/2113))
-- Bundle lzstring to fix Python 3.12 ([#2119](https://github.com/ewels/MultiQC/pull/2119))
+- Fixes for python 3.12
+  - Replace removed `distutils` ([#2113](https://github.com/ewels/MultiQC/pull/2113))
+  - Bundle lzstring ([#2119](https://github.com/ewels/MultiQC/pull/2119))
 - Drop Python 3.6 and 3.7 support, add 3.12 ([#2121](https://github.com/ewels/MultiQC/pull/2121))
+- Just run CI on the oldest + newest supported Python versions ([#2074](https://github.com/ewels/MultiQC/pull/2074))
 - <img src="./multiqc/templates/default/assets/img/favicon-16x16.png" alt="///" width="10px"/> New logo
 - Set name and anchor for the custom content "module" [#2131](https://github.com/ewels/MultiQC/pull/2131)
+- Fix use of `shutil.copytree` when overriding existing template files in `tmp_dir` ([#2133](https://github.com/ewels/MultiQC/pull/2133))
 
 ### New Modules
 
@@ -30,17 +49,17 @@
 
 ### Module updates
 
+- **Dragen**: make sure all inputs are recorded in multiqc_sources.txt ([#2128](https://github.com/ewels/MultiQC/pull/2128))
+- **Cellranger**: Count submodule updated to parse Antibody Capture summary ([#2118](https://github.com/ewels/MultiQC/pull/2118))
+- **fastp**: parse unescaped sample names with white spaces ([#2108](https://github.com/ewels/MultiQC/pull/2108))
 - **FastQC**: Add top overrepresented sequences table ([#2075](https://github.com/ewels/MultiQC/pull/2075))
 - **HiCPro**: Fix parsing scientific notation in hicpro-ashic. Thanks @Just-Roma ([#2126](https://github.com/ewels/MultiQC/pull/2126))
+- **HTSeq Count**: allow counts files with more than 2 columns ([#2129](https://github.com/ewels/MultiQC/pull/2129))
+- **mosdepth**: fix prioritizing region over global information ([#2106](https://github.com/ewels/MultiQC/pull/2106))
+- **Picard**: Adapt WgsMetrics to parabricks bammetrics outputs ([#2127](https://github.com/ewels/MultiQC/pull/2127))
 - **Picard**: MarkDuplicates: Fix parsing mixed strings/numbers, account for missing trailing `0` ([#2083](https://github.com/ewels/MultiQC/pull/2083), [#2094](https://github.com/ewels/MultiQC/pull/2094))
 - **Samtools**: Add MQ0 reads to the Percent Mapped barplot in Stats submodule ([#2123](https://github.com/ewels/MultiQC/pull/2123))
-- **Picard**: Adapt WgsMetrics to parabricks bammetrics outputs ([#2127](https://github.com/ewels/MultiQC/pull/2127))
 - **WhatsHap**: Process truncated input with no ALL chromosome ([#2095](https://github.com/ewels/MultiQC/pull/2095))
-- **fastp**: parse unescaped sample names with white spaces ([#2108](https://github.com/ewels/MultiQC/pull/2108))
-- **mosdepth**: fix prioritizing region over global information ([#2106](https://github.com/ewels/MultiQC/pull/2106))
-- **Dragen**: make sure all inputs are recorded in multiqc_sources.txt ([#2128](https://github.com/ewels/MultiQC/pull/2128))
-- **HTSeq Count**: allow counts files with more than 2 columns ([#2129](https://github.com/ewels/MultiQC/pull/2129))
-- **Cellranger**: Count submodule updated to parse Antibody Capture summary ([#2118](https://github.com/ewels/MultiQC/pull/2118))
 
 ## [MultiQC v1.16](https://github.com/ewels/MultiQC/releases/tag/v1.16) - 2023-09-22
 
