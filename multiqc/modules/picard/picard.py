@@ -108,7 +108,7 @@ class MultiqcModule(BaseMultiqcModule):
     @staticmethod
     def is_line_right_before_table(
         line: str,
-        picard_class: Union[str, List[str]],
+        picard_class: Union[None, str, List[str]] = None,
         sentieon_algo: Optional[str] = None,
     ) -> bool:
         """
@@ -120,10 +120,15 @@ class MultiqcModule(BaseMultiqcModule):
         tools and platforms - e.g. Sentieon and Parabricks  - while adding their own
         headers, so we need to handle them as well.
         """
-        picard_classes = [picard_class] if isinstance(picard_class, str) else picard_class
+        if isinstance(picard_class, list):
+            picard_classes = picard_class
+        elif picard_class is None:
+            picard_classes = []
+        else:
+            picard_classes = [picard_class]
         return (
-            line.startswith("## METRICS CLASS")
-            and any(c in line for c in picard_classes)
+            (line.startswith("## METRICS CLASS") or line.startswith("## HISTOGRAM"))
+            and (not picard_classes or any(c in line for c in picard_classes))
             or sentieon_algo
             and line.startswith("#SentieonCommandLine:")
             and f" --algo {sentieon_algo}" in line

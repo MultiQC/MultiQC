@@ -20,6 +20,7 @@ def parse_reports(self):
         program_key="picard/markilluminaadapters",
         headers=headers,
         formats=formats,
+        picard_tool="MarkIlluminaAdapters",
     )
 
     # Filter to strip out ignored sample names

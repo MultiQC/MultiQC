@@ -69,7 +69,7 @@ def parse_reports(self):
             lines = iter(f["f"])
 
             for line in lines:
-                maybe_s_name = self.extract_sample_name(line, f)
+                maybe_s_name = self.extract_sample_name(line, f, picard_tool="CollectBaseDistributionByCycleMetrics")
                 if maybe_s_name:
                     # Starts information for a new sample
                     s_name = maybe_s_name

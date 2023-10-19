@@ -15,7 +15,14 @@ def parse_reports(self):
 
     headers = ["CYCLE", "MEAN_QUALITY"]
     formats = [int, float]
-    all_data = read_histogram(self, f"{self.anchor}/quality_by_cycle", headers, formats)
+    all_data = read_histogram(
+        self,
+        f"{self.anchor}/quality_by_cycle",
+        headers,
+        formats,
+        picard_tool="MeanQualityByCycle",
+        sentieon_algo="MeanQualityByCycle",
+    )
 
     if not all_data:
         return 0

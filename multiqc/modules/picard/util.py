@@ -1,4 +1,4 @@
-def read_histogram(self, program_key, headers, formats):
+def read_histogram(self, program_key, headers, formats, picard_tool, sentieon_algo=None):
     """
     Reads a Picard HISTOGRAM file.
 
@@ -7,6 +7,8 @@ def read_histogram(self, program_key, headers, formats):
         program_key: the key used to find the program (ex. picard/quality_by_cycle)
         headers: the list of expected headers for the histogram
         formats: the list of methods to apply to re-format each field (on a given row)
+        picard_tool: the name of the Picard tool to be found in the header, e.g. MeanQualityByCycle
+        sentieon_algo: the name of the Sentieon algorithm to be found in the header, e.g. MeanQualityByCycle
     """
     all_data = dict()
 
@@ -15,29 +17,31 @@ def read_histogram(self, program_key, headers, formats):
     # Go through logs and find Metrics
     for f in self.find_log_files(program_key, filehandles=True):
         s_name = f["s_name"]
-        lines = iter(f["f"])
-        for l in lines:
-            maybe_s_name = self.extract_sample_name(l, f)
+        lines = list(f["f"])
+        for line in lines:
+            maybe_s_name = self.extract_sample_name(line, f, picard_tool=picard_tool, sentieon_algo=sentieon_algo)
             if maybe_s_name:
                 s_name = maybe_s_name
-            if l.startswith("## HISTOGRAM"):
+            if self.is_line_right_before_table(line, sentieon_algo=sentieon_algo):
                 break
 
         sample_data = dict()
 
-        try:
-            # skip to the histogram
-            line = next(lines)
-            while not line.startswith("## HISTOGRAM"):
-                line = next(lines)
+        # skip to the histogram
+        if lines:
+            line = lines.pop(0)
+            while lines and not self.is_line_right_before_table(line, sentieon_algo=sentieon_algo):
+                line = lines.pop(0)
 
-            # check the header
-            line = next(lines)
+        # check the header
+        if lines:
+            line = lines.pop(0)
             if headers != line.strip().split("\t"):
                 continue
 
-            # slurp the data
-            line = next(lines).rstrip()
+        # slurp the data
+        if lines:
+            line = lines.pop(0).rstrip()
             while line:
                 fields = line.split("\t")
                 assert len(fields) == len(headers)
@@ -45,10 +49,8 @@ def read_histogram(self, program_key, headers, formats):
                     fields[i] = formats[i](fields[i])
 
                 sample_data[fields[0]] = dict(zip(headers, fields))
-                line = next(lines).rstrip()
-
-        except StopIteration:
-            pass
+                if lines:
+                    line = lines.pop(0).rstrip()
 
         # append the data
         if sample_data:

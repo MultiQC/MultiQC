@@ -16,7 +16,14 @@ def parse_reports(self):
 
     headers = ["QUALITY", "COUNT_OF_Q"]
     formats = [int, int]
-    all_data = read_histogram(self, f"{self.anchor}/quality_score_distribution", headers, formats)
+    all_data = read_histogram(
+        self,
+        f"{self.anchor}/quality_score_distribution",
+        headers,
+        formats,
+        picard_tool="QualityScoreDistribution",
+        sentieon_algo="QualDistribution",
+    )
 
     if not all_data:
         return 0
