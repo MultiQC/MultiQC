@@ -98,7 +98,7 @@ def parse_reports(self):
             name="Lane Metrics",
             anchor="picard-illuminalanemetrics",
             description="Quality control metrics on cluster density for each lane of an Illumina flowcell. For more information, see the [Picard Documentation](https://broadinstitute.github.io/picard/picard-metric-definitions.html#IlluminaLaneMetrics).",
-            plot=lane_metrics_table(self.picard_lane_metrics),
+            plot=lane_metrics_table(self, self.picard_lane_metrics),
         )
 
     # Return the number of detected samples to the parent module

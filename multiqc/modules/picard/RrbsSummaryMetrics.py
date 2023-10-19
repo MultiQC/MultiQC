@@ -81,7 +81,7 @@ def parse_reports(self):
             "suffix": "%",
             "format": "{:,.0f}",
             "scale": "RdYlGn-rev",
-            "modify": lambda x: 100 - multiply_hundred(x),
+            "modify": lambda x: 100 - self.multiply_hundred(x),
         }
         self.general_stats_headers["PCT_NON_CPG_BASES_CONVERTED"] = {
             "title": "% Non-CpG Methylated",
@@ -91,7 +91,7 @@ def parse_reports(self):
             "suffix": "%",
             "format": "{:,.0f}",
             "scale": "RdYlGn",
-            "modify": lambda x: 100 - multiply_hundred(x),
+            "modify": lambda x: 100 - self.multiply_hundred(x),
         }
         self.general_stats_headers["MEDIAN_CPG_COVERAGE"] = {
             "title": "Median CpG Cov",
