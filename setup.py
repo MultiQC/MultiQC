@@ -23,7 +23,7 @@ MultiQC was written by Phil Ewels (http://phil.ewels.co.uk) at Seqera Labs (http
 
 from setuptools import find_packages, setup
 
-version = "1.17dev"
+version = "1.18dev"
 dl_version = "master" if "dev" in version else "v{}".format(version)
 
 print(
@@ -56,7 +56,6 @@ setup(
         "coloredlogs",
         "future>0.14.0",
         "jinja2>=3.0.0",
-        "lzstring",
         "markdown",
         "plotly",
         "packaging",
@@ -201,6 +200,7 @@ setup(
             "theta2 = multiqc.modules.theta2:MultiqcModule",
             "tophat = multiqc.modules.tophat:MultiqcModule",
             "trimmomatic = multiqc.modules.trimmomatic:MultiqcModule",
+            "truvari = multiqc.modules.truvari:MultiqcModule",
             "umitools = multiqc.modules.umitools:MultiqcModule",
             "varscan2 = multiqc.modules.varscan2:MultiqcModule",
             "vcftools = multiqc.modules.vcftools:MultiqcModule",

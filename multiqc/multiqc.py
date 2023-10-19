@@ -18,7 +18,6 @@ import sys
 import tempfile
 import time
 import traceback
-from distutils.dir_util import copy_tree
 from urllib.request import urlopen
 
 import jinja2
@@ -40,7 +39,7 @@ click.rich_click.USE_RICH_MARKUP = True
 click.rich_click.SHOW_METAVARS_COLUMN = False
 click.rich_click.APPEND_METAVARS_HELP = True
 click.rich_click.HEADER_TEXT = (
-    f"[blue]/[/][green]/[/][red]/[/] [bold][link=https://multiqc.info]MultiQC[/link][/] :mag: [dim]| v{config.version}"
+    f"[dark_orange]///[/] [bold][link=https://multiqc.info]MultiQC[/link][/] :mag: [dim]| v{config.version}"
 )
 click.rich_click.FOOTER_TEXT = "See [link=http://multiqc.info]http://multiqc.info[/] for more details."
 click.rich_click.ERRORS_SUGGESTION = f"This is MultiQC [cyan]v{config.version}[/]\nFor more help, run '[yellow]multiqc --help[/]' or visit [link=http://multiqc.info]http://multiqc.info[/]"
@@ -112,6 +111,7 @@ click.rich_click.OPTION_GROUPS = {
                 "--verbose",
                 "--quiet",
                 "--strict",
+                "--require-logs",
                 "--profile-runtime",
                 "--no-megaqc-upload",
                 "--no-ansi",
@@ -208,6 +208,12 @@ click.rich_click.OPTION_GROUPS = {
     type=click.Choice(sorted(config.avail_modules.keys())),
     multiple=True,
     help="Use only this module. Can specify multiple times.",
+)
+@click.option(
+    "--require-logs",
+    "require_logs",
+    is_flag=True,
+    help="Require all explicitly requested modules to have log files. If not, MultiQC will exit with an error.",
 )
 @click.option("--data-dir", "make_data_dir", is_flag=True, help="Force the parsed data directory to be created.")
 @click.option(
@@ -306,6 +312,7 @@ def run(
     template=None,
     module_tag=(),
     module=(),
+    require_logs=False,
     exclude=(),
     outdir=None,
     ignore=(),
@@ -367,7 +374,7 @@ def run(
         color_system=None if no_ansi else "auto",
     )
     console.print(
-        f"\n  [blue]/[/][green]/[/][red]/[/] [bold][link=https://multiqc.info]MultiQC[/link][/] :mag: [dim]| v{config.version}\n"
+        f"\n  [dark_orange]///[/] [bold][link=https://multiqc.info]MultiQC[/link][/] :mag: [dim]| v{config.version}\n"
     )
     logger.debug("This is MultiQC v{}".format(config.version))
 
@@ -471,6 +478,8 @@ def run(
         config.run_modules = module
     if len(exclude) > 0:
         config.exclude_modules = exclude
+    if require_logs:
+        config.require_logs = True
     if profile_runtime:
         config.profile_runtime = True
     if no_ansi:
@@ -660,6 +669,9 @@ def run(
     run_modules = [m for m in run_modules if list(m.keys())[0].lower() in non_empty_modules]
     run_module_names = [list(m.keys())[0] for m in run_modules]
 
+    if not _required_logs_found(run_module_names):
+        return {"report": report, "config": config, "sys_exit_code": 1}
+
     # Run the modules!
     plugin_hooks.mqc_trigger("before_modules")
     report.modules_output = list()
@@ -780,6 +792,11 @@ def run(
 
         report.runtimes["mods"][run_module_names[mod_idx]] = time.time() - mod_starttime
     report.runtimes["total_mods"] = time.time() - total_mods_starttime
+
+    # Again, if config.require_logs is set, check if for all explicitly requested
+    # modules samples were found.
+    if not _required_logs_found([m.anchor for m in report.modules_output]):
+        return {"report": report, "config": config, "sys_exit_code": 1}
 
     # Update report with software versions provided in configs
     software_versions.update_versions_from_config(config, report)
@@ -994,8 +1011,15 @@ def run(
             )
             # Modules have run, so data directory should be complete by now. Move its contents.
             logger.debug("Moving data file from '{}' to '{}'".format(config.data_tmp_dir, config.data_dir))
-            # Disable preserving of times and mode on purpose to avoid problems with mounted CIFS shares (see #625)
-            copy_tree(config.data_tmp_dir, config.data_dir, preserve_times=0, preserve_mode=0)
+            shutil.copytree(
+                config.data_tmp_dir,
+                config.data_dir,
+                # Override default shutil.copy2 function to copy files. The default
+                # function copies times and mode, which we want to avoid on purpose
+                # to get around the problem with mounted CIFS shares (see #625).
+                # shutil.copyfile only copies the file without any metadata.
+                copy_function=shutil.copyfile,
+            )
             shutil.rmtree(config.data_tmp_dir)
 
         logger.debug("Full report path: {}".format(os.path.realpath(config.output_fn)))
@@ -1021,8 +1045,15 @@ def run(
 
             # Modules have run, so plots directory should be complete by now. Move its contents.
             logger.debug("Moving plots directory from '{}' to '{}'".format(config.plots_tmp_dir, config.plots_dir))
-            # Disable preserving of times and mode on purpose to avoid problems with mounted CIFS shares (see #625)
-            copy_tree(config.plots_tmp_dir, config.plots_dir, preserve_times=0, preserve_mode=0)
+            shutil.copytree(
+                config.plots_tmp_dir,
+                config.plots_dir,
+                # Override default shutil.copy2 function to copy files. The default
+                # function copies times and mode, which we want to avoid on purpose
+                # to get around the problem with mounted CIFS shares (see #625).
+                # shutil.copyfile only copies the file without any metadata.
+                copy_function=shutil.copyfile,
+            )
             shutil.rmtree(config.plots_tmp_dir)
 
     plugin_hooks.mqc_trigger("before_template")
@@ -1032,12 +1063,14 @@ def run(
         # Load in parent template files first if a child theme
         try:
             parent_template = config.avail_templates[template_mod.template_parent].load()
-            copy_tree(parent_template.template_dir, tmp_dir)
         except AttributeError:
             pass  # Not a child theme
+        else:
+            shutil.copytree(parent_template.template_dir, tmp_dir, dirs_exist_ok=True)
 
-        # Copy the template files to the tmp directory (distutils overwrites parent theme files)
-        copy_tree(template_mod.template_dir, tmp_dir)
+        # Copy the template files to the tmp directory (`dirs_exist_ok` makes sure
+        # parent template files are overwritten)
+        shutil.copytree(template_mod.template_dir, tmp_dir, dirs_exist_ok=True)
 
         # Function to include file contents in Jinja template
         def include_file(name, fdir=tmp_dir, b64=False):
@@ -1078,7 +1111,7 @@ def run(
                 for f in template_mod.copy_files:
                     fn = os.path.join(tmp_dir, f)
                     dest_dir = os.path.join(os.path.dirname(config.output_fn), f)
-                    copy_tree(fn, dest_dir)
+                    shutil.copytree(fn, dest_dir)
             except AttributeError:
                 pass  # No files to copy
 
@@ -1166,3 +1199,20 @@ def run(
     # * appropriate error code (eg. 1 if a module broke, 0 on success)
     #
     return {"report": report, "config": config, "sys_exit_code": sys_exit_code}
+
+
+def _required_logs_found(modules_with_logs):
+    if config.require_logs:
+        required_modules_with_no_logs = [
+            m
+            for m in getattr(config, "run_modules", [])
+            if m.lower() not in [m.lower() for m in modules_with_logs]
+            and m.lower() not in getattr(config, "exclude_modules", [])
+        ]
+        if required_modules_with_no_logs:
+            logger.critical(
+                "The following modules were explicitly requested but no log files "
+                "were found: {}".format(", ".join(required_modules_with_no_logs))
+            )
+            return False
+    return True
