@@ -471,7 +471,7 @@ class BaseMultiqcModule(object):
             namespace = headers[k].get("namespace", namespace)
             headers[k]["namespace"] = self.name
             if namespace:
-                headers[k]["namespace"] = self.name + " " + namespace
+                headers[k]["namespace"] = self.name + ": " + namespace
             if "description" not in headers[k]:
                 headers[k]["description"] = headers[k].get("title", k)
 

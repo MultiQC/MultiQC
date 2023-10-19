@@ -24,7 +24,7 @@ def parse_reports(self):
 
     # Go through logs and find Metrics
     for f in self.find_log_files("picard/wgs_metrics", filehandles=True):
-        s_name = None
+        s_name = f["s_name"]
         in_hist = False
         for l in f["f"]:
             # Catch the histogram values

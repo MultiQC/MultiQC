@@ -4,11 +4,11 @@ import logging
 import re
 from collections import OrderedDict
 from csv import DictReader
-from distutils.util import strtobool
 from itertools import chain, groupby
 
 from multiqc import config
 from multiqc.plots import table
+from multiqc.utils.util_functions import strtobool
 
 # Initialize the logger
 log = logging.getLogger(__name__)
