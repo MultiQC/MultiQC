@@ -20,13 +20,15 @@ def parse_reports(self):
 
     # Go through logs and find Metrics
     for f in self.find_log_files(f"{self.anchor}/insertsize", filehandles=True):
-        s_name = None
+        s_name = f["s_name"]
         in_hist = False
         data = dict()
         histogram = dict()
         samplestats = dict()
         for line in f["f"]:
-            maybe_s_name = self.extract_sample_name(line, f)
+            maybe_s_name = self.extract_sample_name(
+                line, f, picard_tool="CollectInsertSizeMetrics", sentieon_algo="InsertSizeMetricAlgo"
+            )
             if maybe_s_name:
                 # Starts information for a new sample
                 s_name = maybe_s_name
@@ -44,7 +46,9 @@ def parse_reports(self):
                     s_name = None
                     in_hist = False
 
-            if s_name is not None and self.is_line_right_before_table(line):
+            if s_name is not None and self.is_line_right_before_table(
+                line, picard_class="InsertSizeMetrics", sentieon_algo="InsertSizeMetricAlgo"
+            ):
                 if s_name in data or s_name in self.picard_insertSize_data:
                     log.debug("Duplicate sample name found in {}! Overwriting: {}".format(f["fn"], s_name))
                 keys = f["f"].readline().strip("\n").split("\t")

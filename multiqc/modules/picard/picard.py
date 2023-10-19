@@ -5,7 +5,7 @@ import logging
 import os
 import re
 from collections import OrderedDict
-from typing import Dict, List, Optional
+from typing import Dict, List, Optional, Union
 
 from multiqc.modules.base_module import BaseMultiqcModule, ModuleNoSamplesFound
 
@@ -108,8 +108,8 @@ class MultiqcModule(BaseMultiqcModule):
     @staticmethod
     def is_line_right_before_table(
         line: str,
-        picard_class: str | List[str],
-        sentieon_algo: str,
+        picard_class: Union[str, List[str]],
+        sentieon_algo: Optional[str] = None,
     ) -> bool:
         """
         Picard logs from different samples can be concatenated together, so the module
@@ -124,7 +124,8 @@ class MultiqcModule(BaseMultiqcModule):
         return (
             line.startswith("## METRICS CLASS")
             and any(c in line for c in picard_classes)
-            or line.startswith("#SentieonCommandLine:")
+            or sentieon_algo
+            and line.startswith("#SentieonCommandLine:")
             and f" --algo {sentieon_algo}" in line
         )
 
@@ -133,7 +134,7 @@ class MultiqcModule(BaseMultiqcModule):
         line: str,
         f: Dict,
         picard_tool: str,
-        sentieon_algo: str,
+        sentieon_algo: Optional[str] = None,
     ) -> Optional[str]:
         """
         Picard logs from different samples can be concatenated together, so we can't
@@ -144,17 +145,21 @@ class MultiqcModule(BaseMultiqcModule):
         """
         picard_command = line.startswith("# ") and ("INPUT=" in line or "INPUT" in line.split()) and picard_tool in line
         sentieon_command = (
-            line.startswith("#SentieonCommandLine:") and f" --algo {sentieon_algo}" in line and " -i " in line
+            sentieon_algo
+            and line.startswith("#SentieonCommandLine:")
+            and f" --algo {sentieon_algo}" in line
+            and " -i " in line
         )
-        if picard_command or sentieon_command:
-            # Pull sample name from the input file name, recorded in the command line:
+        # Pull sample name from the input file name, recorded in the command line:
+        fn_search = None
+        if picard_command:
             fn_search = re.search(r"INPUT(?:=|\s+)(\[?[^\s]+\]?)", line, flags=re.IGNORECASE)
-            if not fn_search:  # sentieon?
-                fn_search = re.search(r" -i\s+(\[?\S+\]?)", line, flags=re.IGNORECASE)
-            if fn_search:
-                f_name = os.path.basename(fn_search.group(1).strip("[]"))
-                s_name = self.clean_s_name(f_name, f)
-                return s_name
+        elif sentieon_command:
+            fn_search = re.search(r" -i\s+(\[?\S+\]?)", line, flags=re.IGNORECASE)
+        if fn_search:
+            f_name = os.path.basename(fn_search.group(1).strip("[]"))
+            s_name = self.clean_s_name(f_name, f)
+            return s_name
         return None
 
     @staticmethod

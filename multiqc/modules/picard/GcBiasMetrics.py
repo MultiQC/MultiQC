@@ -17,8 +17,7 @@ def parse_reports(self):
 
     # Go through logs and find Metrics
     for f in self.find_log_files(f"{self.anchor}/gcbias", filehandles=True):
-        s_name = None
-        keys = None
+        s_name = f["s_name"]
         gc_col = None
         cov_col = None
         data = dict()

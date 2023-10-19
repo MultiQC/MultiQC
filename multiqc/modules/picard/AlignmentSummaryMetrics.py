@@ -27,7 +27,9 @@ def parse_reports(self):
         keys = None
 
         for l in f["f"]:
-            maybe_s_name = self.extract_sample_name(l, f, "AlignmentSummaryMetrics")
+            maybe_s_name = self.extract_sample_name(
+                l, f, picard_tool="CollectAlignmentSummaryMetrics", sentieon_algo="AlignmentStat"
+            )
             if maybe_s_name:
                 # Starts information for a new sample
                 s_name = maybe_s_name
@@ -39,7 +41,9 @@ def parse_reports(self):
             if s_name is None:
                 continue
 
-            if self.is_line_right_before_table(l):
+            if self.is_line_right_before_table(
+                l, picard_class="AlignmentSummaryMetrics", sentieon_algo="AlignmentStat"
+            ):
                 keys = f["f"].readline().strip("\n").split("\t")
             elif keys:
                 if s_name not in parsed_data:

@@ -1,8 +1,6 @@
 """ MultiQC submodule to parse output from Picard WgsMetrics """
 
 import logging
-import os
-import re
 from collections import OrderedDict
 
 from multiqc import config
@@ -39,38 +37,32 @@ def parse_reports(self):
                     s_name = None
                     in_hist = False
 
-            # New log starting
-            if "WgsMetrics" in l and "INPUT" in l:
-                s_name = None
-                # Pull sample name from input
-                fn_search = re.search(r"INPUT(?:=|\s+)(\[?[^\s]+\]?)", l, flags=re.IGNORECASE)
-                if fn_search:
-                    s_name = os.path.basename(fn_search.group(1).strip("[]"))
-                    s_name = self.clean_s_name(s_name, f)
+            maybe_s_name = self.extract_sample_name(l, f, picard_tool="CollectWgsMetrics")
+            if maybe_s_name:
+                # Starts information for a new sample
+                s_name = maybe_s_name
 
-            if s_name is not None:
-                metric_names = ["CollectWgsMetrics$WgsMetrics", "picard.analysis.WgsMetrics"]
-                if any(n in l for n in metric_names) and "## METRICS CLASS" in l:
-                    if s_name in self.picard_wgsmetrics_data:
-                        log.debug("Duplicate sample name found in {}! Overwriting: {}".format(f["fn"], s_name))
-                    self.add_data_source(f, s_name, section="WgsMetrics")
-                    self.picard_wgsmetrics_data[s_name] = dict()
-                    keys = f["f"].readline().strip("\n").split("\t")
-                    vals = f["f"].readline().strip("\n").split("\t")
-                    if len(vals) == len(keys):
-                        for i, k in enumerate(keys):
-                            try:
-                                self.picard_wgsmetrics_data[s_name][k] = float(vals[i])
-                            except ValueError:
-                                self.picard_wgsmetrics_data[s_name][k] = vals[i]
+            if s_name is not None and self.is_line_right_before_table(l, picard_class="WgsMetrics"):
+                if s_name in self.picard_wgsmetrics_data:
+                    log.debug("Duplicate sample name found in {}! Overwriting: {}".format(f["fn"], s_name))
+                self.add_data_source(f, s_name, section="WgsMetrics")
+                self.picard_wgsmetrics_data[s_name] = dict()
+                keys = f["f"].readline().strip("\n").split("\t")
+                vals = f["f"].readline().strip("\n").split("\t")
+                if len(vals) == len(keys):
+                    for i, k in enumerate(keys):
+                        try:
+                            self.picard_wgsmetrics_data[s_name][k] = float(vals[i])
+                        except ValueError:
+                            self.picard_wgsmetrics_data[s_name][k] = vals[i]
 
-                    # Skip lines on to histogram
-                    next(f["f"])
-                    next(f["f"])
-                    next(f["f"])
+                # Skip lines on to histogram
+                next(f["f"])
+                next(f["f"])
+                next(f["f"])
 
-                    self.picard_wgsmetrics_histogram[s_name] = OrderedDict()
-                    in_hist = True
+                self.picard_wgsmetrics_histogram[s_name] = OrderedDict()
+                in_hist = True
 
         for key in list(self.picard_wgsmetrics_data.keys()):
             if len(self.picard_wgsmetrics_data[key]) == 0:
@@ -134,7 +126,7 @@ def parse_reports(self):
                 "suffix": "%",
                 "format": "{:,.0f}",
                 "scale": "RdYlGn",
-                "modify": lambda x: multiply_hundred(x),
+                "modify": lambda x: self.multiply_hundred(x),
             }
 
         for s_name in self.picard_wgsmetrics_data:
