@@ -34,44 +34,24 @@ def parse_reports(self):
 
     # Go through logs and find Metrics
     for f in self.find_log_files(f"{self.anchor}/quality_yield_metrics", filehandles=True):
-        s_name = None
-
-        lines = iter(f["f"])
-        for line in lines:
+        s_name = f["s_name"]
+        for line in f["f"]:
             maybe_s_name = self.extract_sample_name(line, f, picard_tool="CollectQualityYieldMetrics")
             if maybe_s_name:
                 s_name = maybe_s_name
 
-        sample_data = dict()
-        try:
-            # skip to the histogram
-            line = next(lines)
-            while not self.is_line_right_before_table(line):
-                line = next(lines)
-
-            # check the header
-            line = next(lines)
-            if header != line.strip().split("\t"):
-                continue
-
-            # one row
-            line = next(lines)
-            fields = [int(field) for field in line.strip("\n").split("\t")]
-            sample_data = OrderedDict(zip(header, fields))
-        except StopIteration:
-            pass
-
-        if sample_data:
-            all_data[s_name] = OrderedDict(zip(header, fields))
-
-            self.add_data_source(f, section="QualityYieldMetrics")
-            # Superfluous function call to confirm that it is used in this module
-            # Replace None with actual version if it is available
-            self.add_software_version(None, s_name)
+            if self.is_line_right_before_table(line, picard_class="QualityYieldMetrics"):
+                if header != f["f"].readline().strip().split("\t"):
+                    continue
+                line = f["f"].readline()
+                fields = [int(field) for field in line.strip("\n").split("\t")]
+                if s_name in all_data:
+                    log.debug("Duplicate sample name found in {}! Overwriting: {}".format(f["fn"], s_name))
+                all_data[s_name] = dict(zip(header, fields))
+                self.add_data_source(f, section="QualityYieldMetrics")
 
     # Filter to strip out ignored sample names
     all_data = self.ignore_samples(all_data)
-
     if not all_data:
         return 0
 

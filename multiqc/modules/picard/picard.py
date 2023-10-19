@@ -148,7 +148,16 @@ class MultiqcModule(BaseMultiqcModule):
         originally used to invoke itself, which is the best bet. Sentieon does the same,
         but slightly differently.
         """
-        picard_command = line.startswith("# ") and ("INPUT=" in line or "INPUT" in line.split()) and picard_tool in line
+        picard_command = (
+            line.startswith("# ")
+            and picard_tool in line
+            and (
+                " input=" in line.lower()
+                or " --input=" in line.lower()
+                or "input" in line.lower().split()
+                or "--input" in line.lower().split()
+            )
+        )
         sentieon_command = (
             sentieon_algo
             and line.startswith("#SentieonCommandLine:")

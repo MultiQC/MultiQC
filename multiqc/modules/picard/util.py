@@ -1,3 +1,9 @@
+import logging
+
+# Initialise the logger
+log = logging.getLogger(__name__)
+
+
 def read_histogram(self, program_key, headers, formats, picard_tool, sentieon_algo=None):
     """
     Reads a Picard HISTOGRAM file.
@@ -11,49 +17,37 @@ def read_histogram(self, program_key, headers, formats, picard_tool, sentieon_al
         sentieon_algo: the name of the Sentieon algorithm to be found in the header, e.g. MeanQualityByCycle
     """
     all_data = dict()
-
     assert len(formats) == len(headers)
+    sample_data = None
 
     # Go through logs and find Metrics
     for f in self.find_log_files(program_key, filehandles=True):
         s_name = f["s_name"]
-        lines = list(f["f"])
-        for line in lines:
+        for line in f["f"]:
             maybe_s_name = self.extract_sample_name(line, f, picard_tool=picard_tool, sentieon_algo=sentieon_algo)
             if maybe_s_name:
                 s_name = maybe_s_name
+                sample_data = None
+
             if self.is_line_right_before_table(line, sentieon_algo=sentieon_algo):
-                break
+                # check the header
+                line = f["f"].readline()
+                if line.strip().split("\t") == headers:
+                    sample_data = dict()
+                else:
+                    sample_data = None
 
-        sample_data = dict()
-
-        # skip to the histogram
-        if lines:
-            line = lines.pop(0)
-            while lines and not self.is_line_right_before_table(line, sentieon_algo=sentieon_algo):
-                line = lines.pop(0)
-
-        # check the header
-        if lines:
-            line = lines.pop(0)
-            if headers != line.strip().split("\t"):
-                continue
-
-        # slurp the data
-        if lines:
-            line = lines.pop(0).rstrip()
-            while line:
-                fields = line.split("\t")
-                assert len(fields) == len(headers)
-                for i in range(len(fields)):
-                    fields[i] = formats[i](fields[i])
-
-                sample_data[fields[0]] = dict(zip(headers, fields))
-                if lines:
-                    line = lines.pop(0).rstrip()
+            elif sample_data is not None:
+                fields = line.strip().split("\t")
+                if len(fields) == len(headers):
+                    for i in range(len(fields)):
+                        fields[i] = formats[i](fields[i])
+                    sample_data[fields[0]] = dict(zip(headers, fields))
 
         # append the data
         if sample_data:
+            if s_name in all_data:
+                log.debug("Duplicate sample name found in {}! Overwriting: {}".format(f["fn"], s_name))
             all_data[s_name] = sample_data
 
             self.add_data_source(f, s_name, section="Histogram")
