@@ -28,7 +28,7 @@ from typing import Set
 import yaml
 
 REPO_URL = "https://github.com/ewels/MultiQC"
-MODULES_DIR = "multiqc/modules"
+MODULES_DIR = Path("multiqc/modules")
 
 # Assumes the environment is set by the GitHub action.
 pr_title = os.environ["PR_TITLE"]
@@ -107,6 +107,32 @@ def _files_altered_by_pr(pr_number, types=None) -> set[Path]:
     return paths
 
 
+def _diff_for_a_file(pr_number, path) -> str:
+    """
+    Returns the diff for a specific file altered in the PR.
+    """
+    cmd = f"cd {workspace_path} && gh pr diff {pr_number}"
+    print(cmd)
+    result = subprocess.run(cmd, shell=True, capture_output=True, text=True)
+    if result.returncode != 0:
+        raise RuntimeError(f"Error executing command: {result.stderr}")
+
+    lines = result.stdout.splitlines()
+    while lines:
+        line = lines.pop(0)
+        if line.startswith("index "):
+            a = lines.pop(0)
+            b = lines.pop(0)
+            if a == f"--- a/{path}" and b == f"+++ b/{path}":
+                diff = []
+                while lines:
+                    line = lines.pop(0)
+                    if line.startswith("diff "):
+                        break
+                    diff.append(line)
+                return "\n".join(diff)
+
+
 def _modules_added_by_pr(pr_number) -> list[Path]:
     """
     Returns paths to the modules added by the PR.
@@ -122,56 +148,75 @@ def _modules_added_by_pr(pr_number) -> list[Path]:
     return mod_py_files
 
 
-def _load_file_before_pr(path) -> str:
+def _load_file_content_after_pr(path) -> str:
     """
-    Returns the contents of the file before the PR.
+    Returns the contents of the file changed by the PR.
     """
-    cmd = f"cd {workspace_path} && git show HEAD~1:{path}"
+    cmd = f"cd {workspace_path} && gh pr checkout {pr_number}"
     print(cmd)
     result = subprocess.run(cmd, shell=True, capture_output=True, text=True)
     if result.returncode != 0:
         raise RuntimeError(f"Error executing command: {result.stderr}")
-    return result.stdout
+
+    with (workspace_path / path).open() as f:
+        text = f.read()
+
+    cmd = f"cd {workspace_path} && git checkout master"
+    print(cmd)
+    subprocess.run(cmd, shell=True, capture_output=True, text=True)
+
+    return text
 
 
 def _modules_modified_by_pr(pr_number) -> Set[Path]:
     """
-    Returns paths to the modules modified by the PR.
+    Returns paths to the "<module>.py" files of the altered modules.
     """
-    mod_py_files = set()
     altered_files = _files_altered_by_pr(pr_number, {"modified"})
-    for path in altered_files:
-        if str(path).startswith(f"{MODULES_DIR}/"):
-            new_mod = path.parent.name
-            mod_py = path.parent / f"{new_mod}.py"
-            if (mod_py := workspace_path / mod_py).exists():
-                mod_py_files.append(mod_py)
-        if path.name == "search_patterns.yaml":
-            # Find modules that changed, e.g. collect "htseq":
-            # htseq:
-            #   - contents_re: '^(feature\tcount|\w+\t\d+)$'
-            #   + contents_re: '^(feature\tcount|\w+.*\t\d+)$'
-            #   num_lines: 1
-            old_text = _load_file_before_pr(path)
-            with (workspace_path / path).open() as f:
-                new_text = f.read()
+
+    # First, special case for search patterns.
+    modules_modified_in_search_patterns = set()
+    sp_paths = [f for f in altered_files if f.name == "search_patterns.yaml"]
+    if sp_paths:
+        sp_path = sp_paths[0]
+        # Find modules that changed, e.g. collect "htseq":
+        # htseq:
+        #   - contents_re: '^(feature\tcount|\w+\t\d+)$'
+        #   + contents_re: '^(feature\tcount|\w+.*\t\d+)$'
+        #   num_lines: 1
+        with (workspace_path / sp_path).open() as f:
+            old_text = f.read()
+        new_text = _load_file_content_after_pr(sp_path)
+        if old_text != new_text:
             old_data = yaml.safe_load(old_text)
             new_data = yaml.safe_load(new_text)
-            if old_data == new_data:
-                continue
-
             for new_mod in new_data:
                 # Added module?
                 if new_mod not in old_data:
-                    mod_py_files.add(workspace_path / path)
+                    modules_modified_in_search_patterns.add(new_mod)
             for old_mod in old_data:
                 # Removed module?
                 if old_mod not in new_data:
-                    mod_py_files.add(workspace_path / path)
+                    modules_modified_in_search_patterns.add(old_mod)
                 # Modified module?
-                else:
-                    if old_data.get(old_mod) != new_data.get(old_mod):
-                        mod_py_files.add(workspace_path / path)
+                elif old_data.get(old_mod) != new_data.get(old_mod):
+                    modules_modified_in_search_patterns.add(old_mod)
+
+    mod_py_files = set()
+    if modules_modified_in_search_patterns:
+        mod_name = modules_modified_in_search_patterns.pop()
+        mod_py = MODULES_DIR / mod_name / f"{mod_name}.py"
+        if (mod_py := workspace_path / mod_py).exists():
+            mod_py_files.add(mod_py)
+
+    # Now adding module-specific files
+    for path in altered_files:
+        if str(path).startswith(f"{MODULES_DIR}/"):
+            mod_name = path.parent.name
+            mod_py = path.parent / f"{mod_name}.py"
+            if (mod_py := workspace_path / mod_py).exists():
+                mod_py_files.add(mod_py)
+
     return mod_py_files
 
 
