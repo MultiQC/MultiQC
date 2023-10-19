@@ -23,6 +23,7 @@ import re
 import subprocess
 import sys
 from pathlib import Path
+from typing import Set
 
 import yaml
 
@@ -133,39 +134,44 @@ def _load_file_before_pr(path) -> str:
     return result.stdout
 
 
-def _modules_modified_by_pr(pr_number) -> list[Path]:
+def _modules_modified_by_pr(pr_number) -> Set[Path]:
     """
     Returns paths to the modules modified by the PR.
     """
-    mod_py_files = []
+    mod_py_files = set()
     altered_files = _files_altered_by_pr(pr_number, {"modified"})
     for path in altered_files:
         if str(path).startswith(f"{MODULES_DIR}/"):
-            mod_anchor = path.parent.name
-            mod_py = path.parent / f"{mod_anchor}.py"
+            new_mod = path.parent.name
+            mod_py = path.parent / f"{new_mod}.py"
             if (mod_py := workspace_path / mod_py).exists():
                 mod_py_files.append(mod_py)
         if path.name == "search_patterns.yaml":
-            before_text = _load_file_before_pr(path)
-            with (workspace_path / path).open() as f:
-                after_text = f.read()
-            before_data = yaml.safe_load(before_text)
-            after_data = yaml.safe_load(after_text)
-            # find modules that changed, e.g. collect "htseq":
+            # Find modules that changed, e.g. collect "htseq":
             # htseq:
             #   - contents_re: '^(feature\tcount|\w+\t\d+)$'
             #   + contents_re: '^(feature\tcount|\w+.*\t\d+)$'
             #   num_lines: 1
-            for mod_anchor, mod_data in after_data.items():
-                if mod_anchor not in before_data:
-                    mod_py_files.append(workspace_path / path)
-                else:
-                    for key in mod_data:
-                        if key not in before_data[mod_anchor]:
-                            mod_py_files.append(workspace_path / path)
-                        elif mod_data[key] != before_data[mod_anchor][key]:
-                            mod_py_files.append(workspace_path / path)
+            old_text = _load_file_before_pr(path)
+            with (workspace_path / path).open() as f:
+                new_text = f.read()
+            old_data = yaml.safe_load(old_text)
+            new_data = yaml.safe_load(new_text)
+            if old_data == new_data:
+                continue
 
+            for new_mod in new_data:
+                # Added module?
+                if new_mod not in old_data:
+                    mod_py_files.add(workspace_path / path)
+            for old_mod in old_data:
+                # Removed module?
+                if old_mod not in new_data:
+                    mod_py_files.add(workspace_path / path)
+                # Modified module?
+                else:
+                    if old_data.get(old_mod) != new_data.get(old_mod):
+                        mod_py_files.add(workspace_path / path)
     return mod_py_files
 
 
