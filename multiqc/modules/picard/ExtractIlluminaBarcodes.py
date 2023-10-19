@@ -43,16 +43,16 @@ def parse_reports(self):
         for bc_data in raw_data:
             self.picard_barcode_metrics[bc_data["LANE"]][bc_data["BARCODE"]] = bc_data
 
-            # Superfluous function call to confirm that it is used in this module
-            # Replace None with actual version if it is available
-            self.add_software_version(None, bc_data["LANE"])
-
     # Filter to strip out ignored sample names
     self.picard_barcode_metrics = self.ignore_samples(self.picard_barcode_metrics)
 
     # Stop if we didn't find anything
     if len(self.picard_barcode_metrics) == 0:
         return 0
+
+    # Superfluous function call to confirm that it is used in this module
+    # Replace None with actual version if it is available
+    self.add_software_version(None)
 
     # Write parsed data to a file
     self.write_data_file(self.picard_barcode_metrics, f"multiqc_{self.anchor}_ExtractIlluminaBarcodes")

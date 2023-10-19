@@ -29,8 +29,7 @@ def parse_reports(self):
 
     # Superfluous function call to confirm that it is used in this module
     # Replace None with actual version if it is available
-    for s_name in all_data:
-        self.add_software_version(None, s_name)
+    self.add_software_version(None)
 
     # Write parsed data to a file
     self.write_data_file(all_data, f"multiqc_{self.anchor}_quality_by_cycle")

@@ -91,9 +91,16 @@ def parse_reports(self):
     # Filter to strip out ignored sample names
     self.picard_gc_bias_data = self.ignore_samples(self.picard_gc_bias_data)
 
-    if len(self.picard_gc_bias_data) > 0:
-        # Plot the graph
+    n_samples = len(self.picard_gc_bias_data.keys() | self.picard_gc_bias_summary_data.keys())
+    if n_samples == 0:
+        return 0
 
+    # Superfluous function call to confirm that it is used in this module
+    # Replace None with actual version if it is available
+    self.add_software_version(None)
+
+    if self.picard_gc_bias_data:
+        # Plot the graph
         pconfig = {
             "id": f"{self.anchor}_gcbias_plot",
             "title": f"{self.name}: GC Coverage Bias",
@@ -117,9 +124,9 @@ def parse_reports(self):
             plot=linegraph.plot(self.picard_gc_bias_data, pconfig),
         )
 
-    if len(self.picard_gc_bias_summary_data) > 0:
+    if self.picard_gc_bias_summary_data:
         # Write parsed summary data to a file
         self.write_data_file(self.picard_gc_bias_summary_data, f"multiqc_{self.anchor}_gcbias")
 
     # Return the number of detected samples to the parent module
-    return len(self.picard_gc_bias_data)
+    return n_samples

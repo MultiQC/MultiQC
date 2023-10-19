@@ -27,8 +27,12 @@ def parse_reports(self):
     all_data = self.ignore_samples(all_data)
 
     # Stop if we don't have anything
-    if not all_data or len(all_data) == 0:
+    if not all_data:
         return 0
+
+    # Superfluous function call to confirm that it is used in this module
+    # Replace None with actual version if it is available
+    self.add_software_version(None)
 
     # Write parsed data to a file
     self.write_data_file(all_data, "multiqc_picard_mark_illumina_adapters")
@@ -47,10 +51,6 @@ def parse_reports(self):
     lg = {}
     for s_name in all_data:
         lg[s_name] = {clipped_bases: data["read_count"] for clipped_bases, data in all_data[s_name].items()}
-
-        # Superfluous function call to confirm that it is used in this module
-        # Replace None with actual version if it is available
-        self.add_software_version(None, s_name)
 
     self.add_section(
         name="Mark Illumina Adapters",

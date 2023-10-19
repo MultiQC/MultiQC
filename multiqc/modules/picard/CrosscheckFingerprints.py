@@ -36,7 +36,7 @@ def parse_reports(self):
     does pairwise comparisons between samples at the level selected by `--CROSSCHECK_BY`.
     """
 
-    self.picard_CrosscheckFingerprints_data = dict()
+    self.picard_crosscheck_fingerprints_data = dict()
 
     # Go through logs and find Metrics
     for f in self.find_log_files(f"{self.anchor}/crosscheckfingerprints", filehandles=True):
@@ -63,49 +63,53 @@ def parse_reports(self):
             # Set the cli options of interest for this file
             row["LOD_THRESHOLD"] = lod_threshold
             row["TUMOR_AWARENESS"] = tumor_awareness
-            self.picard_CrosscheckFingerprints_data[i] = row
+            self.picard_crosscheck_fingerprints_data[i] = row
 
             self.add_data_source(f, section="CrosscheckFingerprints")
 
     # Only add sections if we found data
-    if len(self.picard_CrosscheckFingerprints_data) > 0:
-        # Write data to file
-        self.write_data_file(self.picard_CrosscheckFingerprints_data, f"{self.anchor}_crosscheckfingerprints")
+    if len(self.picard_crosscheck_fingerprints_data) == 0:
+        # Superfluous function call to confirm that it is used in this module
+        # Replace None with actual version if it is available
+        self.add_software_version(None)
 
-        # For each sample, flag if any comparisons that don't start with "Expected"
-        # A sample that does not have all "Expected" will show as `False` and be Red
-        general_stats_data = _create_general_stats_data(self.picard_CrosscheckFingerprints_data)
-        general_stats_headers = {
-            "Crosschecks All Expected": {
-                "title": "Crosschecks",
-                "description": "All results for samples CrosscheckFingerprints were as expected.",
-            }
+    # Write data to file
+    self.write_data_file(self.picard_crosscheck_fingerprints_data, f"{self.anchor}_crosscheckfingerprints")
+
+    # For each sample, flag if any comparisons that don't start with "Expected"
+    # A sample that does not have all "Expected" will show as `False` and be Red
+    general_stats_data = _create_general_stats_data(self.picard_crosscheck_fingerprints_data)
+    general_stats_headers = {
+        "Crosschecks All Expected": {
+            "title": "Crosschecks",
+            "description": "All results for samples CrosscheckFingerprints were as expected.",
         }
-        self.general_stats_addcols(general_stats_data, general_stats_headers)
+    }
+    self.general_stats_addcols(general_stats_data, general_stats_headers)
 
-        # Add a table section to the report
-        self.add_section(
-            name="Crosscheck Fingerprints",
-            anchor=f"{self.anchor}-crosscheckfingerprints",
-            description="Pairwise identity checking betwen samples and groups.",
-            helptext="""
-            Checks that all data in the set of input files comes from the same individual, based on the selected group granularity.
-            """,
-            plot=table.plot(
-                self.picard_CrosscheckFingerprints_data,
-                _get_table_headers(self.picard_CrosscheckFingerprints_data),
-                {
-                    "namespace": self.name,
-                    "id": f"{self.anchor}_crosscheckfingerprints_table",
-                    "table_title": f"{self.name}: Crosscheck Fingerprints",
-                    "save_file": True,
-                    "col1_header": "ID",
-                    "no_beeswarm": True,
-                },
-            ),
-        )
+    # Add a table section to the report
+    self.add_section(
+        name="Crosscheck Fingerprints",
+        anchor=f"{self.anchor}-crosscheckfingerprints",
+        description="Pairwise identity checking betwen samples and groups.",
+        helptext="""
+        Checks that all data in the set of input files comes from the same individual, based on the selected group granularity.
+        """,
+        plot=table.plot(
+            self.picard_crosscheck_fingerprints_data,
+            _get_table_headers(self.picard_crosscheck_fingerprints_data),
+            {
+                "namespace": self.name,
+                "id": f"{self.anchor}_crosscheckfingerprints_table",
+                "table_title": f"{self.name}: Crosscheck Fingerprints",
+                "save_file": True,
+                "col1_header": "ID",
+                "no_beeswarm": True,
+            },
+        ),
+    )
 
-    return len(self.picard_CrosscheckFingerprints_data)
+    return len(self.picard_crosscheck_fingerprints_data)
 
 
 def _take_till(iterator, fn):

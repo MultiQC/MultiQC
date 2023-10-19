@@ -52,8 +52,13 @@ def parse_reports(self):
 
     # Filter to strip out ignored sample names
     all_data = self.ignore_samples(all_data)
+
     if not all_data:
         return 0
+
+    # Superfluous function call to confirm that it is used in this module
+    # Replace None with actual version if it is available
+    self.add_software_version(None)
 
     # Write parsed data to a file
     self.write_data_file(all_data, f"multiqc_{self.anchor}_QualityYieldMetrics")

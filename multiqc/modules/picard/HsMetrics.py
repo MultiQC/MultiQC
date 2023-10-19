@@ -153,6 +153,10 @@ def parse_reports(self):
     if len(self.picard_hs_metrics_data) == 0:
         return 0
 
+    # Superfluous function call to confirm that it is used in this module
+    # Replace None with actual version if it is available
+    self.add_software_version(None)
+
     # Write parsed data to a file
     self.write_data_file(self.picard_hs_metrics_data, f"multiqc_{self.anchor}_HsMetrics")
 

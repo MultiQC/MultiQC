@@ -131,82 +131,88 @@ def parse_reports(self):
     # Filter to strip out ignored sample names
     self.picard_dup_metrics_data = self.ignore_samples(self.picard_dup_metrics_data)
 
-    if len(self.picard_dup_metrics_data) > 0:
-        # Write parsed data to a file
-        self.write_data_file(self.picard_dup_metrics_data, f"multiqc_{self.anchor}_dups")
+    if len(self.picard_dup_metrics_data) == 0:
+        return 0
 
-        # Add to general stats table
-        self.general_stats_headers["PERCENT_DUPLICATION"] = {
-            "title": "% Dups",
-            "description": "Mark Duplicates - Percent Duplication",
-            "max": 100,
-            "min": 0,
-            "suffix": "%",
-            "scale": "OrRd",
-            "modify": lambda x: self.multiply_hundred(x),
-        }
-        for s_name in self.picard_dup_metrics_data:
-            if s_name not in self.general_stats_data:
-                self.general_stats_data[s_name] = dict()
-            self.general_stats_data[s_name].update(self.picard_dup_metrics_data[s_name])
+    # Superfluous function call to confirm that it is used in this module
+    # Replace None with actual version if it is available
+    self.add_software_version(None)
 
-        # Make the bar plot and add to the MarkDuplicates section
-        #
-        # The table in the Picard metrics file contains some columns referring
-        # read pairs and some referring to single reads.
-        for s_name, metr in self.picard_dup_metrics_data.items():
-            metr["READS_IN_DUPLICATE_PAIRS"] = 2.0 * metr["READ_PAIR_DUPLICATES"]
-            metr["READS_IN_UNIQUE_PAIRS"] = 2.0 * (metr["READ_PAIRS_EXAMINED"] - metr["READ_PAIR_DUPLICATES"])
-            metr["READS_IN_UNIQUE_UNPAIRED"] = metr["UNPAIRED_READS_EXAMINED"] - metr["UNPAIRED_READ_DUPLICATES"]
-            metr["READS_IN_DUPLICATE_PAIRS_OPTICAL"] = 2.0 * metr["READ_PAIR_OPTICAL_DUPLICATES"]
-            metr["READS_IN_DUPLICATE_PAIRS_NONOPTICAL"] = (
-                metr["READS_IN_DUPLICATE_PAIRS"] - metr["READS_IN_DUPLICATE_PAIRS_OPTICAL"]
-            )
-            metr["READS_IN_DUPLICATE_UNPAIRED"] = metr["UNPAIRED_READ_DUPLICATES"]
-            metr["READS_UNMAPPED"] = metr["UNMAPPED_READS"]
+    # Write parsed data to a file
+    self.write_data_file(self.picard_dup_metrics_data, f"multiqc_{self.anchor}_dups")
 
-        keys = dict()
-        keys_r = [
-            "READS_IN_UNIQUE_PAIRS",
-            "READS_IN_UNIQUE_UNPAIRED",
-            "READS_IN_DUPLICATE_PAIRS_OPTICAL",
-            "READS_IN_DUPLICATE_PAIRS_NONOPTICAL",
-            "READS_IN_DUPLICATE_UNPAIRED",
-            "READS_UNMAPPED",
-        ]
-        for k in keys_r:
-            keys[k] = {"name": k.replace("READS_", "").replace("IN_", "").replace("_", " ").title()}
+    # Add to general stats table
+    self.general_stats_headers["PERCENT_DUPLICATION"] = {
+        "title": "% Dups",
+        "description": "Mark Duplicates - Percent Duplication",
+        "max": 100,
+        "min": 0,
+        "suffix": "%",
+        "scale": "OrRd",
+        "modify": lambda x: self.multiply_hundred(x),
+    }
+    for s_name in self.picard_dup_metrics_data:
+        if s_name not in self.general_stats_data:
+            self.general_stats_data[s_name] = dict()
+        self.general_stats_data[s_name].update(self.picard_dup_metrics_data[s_name])
 
-        # Config for the plot
-        pconfig = {
-            "id": f"{self.anchor}_deduplication",
-            "title": f"{self.name}: Deduplication Stats",
-            "ylab": "# Reads",
-            "cpswitch_counts_label": "Number of Reads",
-            "cpswitch_c_active": False,
-        }
-
-        self.add_section(
-            name="Mark Duplicates",
-            anchor=f"{self.anchor}-markduplicates",
-            description="Number of reads, categorised by duplication state. **Pair counts are doubled** - see help text for details.",
-            helptext="""
-            The table in the Picard metrics file contains some columns referring
-            read pairs and some referring to single reads.
-
-            To make the numbers in this plot sum correctly, values referring to pairs are doubled
-            according to the scheme below:
-
-            * `READS_IN_DUPLICATE_PAIRS = 2 * READ_PAIR_DUPLICATES`
-            * `READS_IN_UNIQUE_PAIRS = 2 * (READ_PAIRS_EXAMINED - READ_PAIR_DUPLICATES)`
-            * `READS_IN_UNIQUE_UNPAIRED = UNPAIRED_READS_EXAMINED - UNPAIRED_READ_DUPLICATES`
-            * `READS_IN_DUPLICATE_PAIRS_OPTICAL = 2 * READ_PAIR_OPTICAL_DUPLICATES`
-            * `READS_IN_DUPLICATE_PAIRS_NONOPTICAL = READS_IN_DUPLICATE_PAIRS - READS_IN_DUPLICATE_PAIRS_OPTICAL`
-            * `READS_IN_DUPLICATE_UNPAIRED = UNPAIRED_READ_DUPLICATES`
-            * `READS_UNMAPPED = UNMAPPED_READS`
-            """,
-            plot=bargraph.plot(self.picard_dup_metrics_data, keys, pconfig),
+    # Make the bar plot and add to the MarkDuplicates section
+    #
+    # The table in the Picard metrics file contains some columns referring
+    # read pairs and some referring to single reads.
+    for s_name, metr in self.picard_dup_metrics_data.items():
+        metr["READS_IN_DUPLICATE_PAIRS"] = 2.0 * metr["READ_PAIR_DUPLICATES"]
+        metr["READS_IN_UNIQUE_PAIRS"] = 2.0 * (metr["READ_PAIRS_EXAMINED"] - metr["READ_PAIR_DUPLICATES"])
+        metr["READS_IN_UNIQUE_UNPAIRED"] = metr["UNPAIRED_READS_EXAMINED"] - metr["UNPAIRED_READ_DUPLICATES"]
+        metr["READS_IN_DUPLICATE_PAIRS_OPTICAL"] = 2.0 * metr["READ_PAIR_OPTICAL_DUPLICATES"]
+        metr["READS_IN_DUPLICATE_PAIRS_NONOPTICAL"] = (
+            metr["READS_IN_DUPLICATE_PAIRS"] - metr["READS_IN_DUPLICATE_PAIRS_OPTICAL"]
         )
+        metr["READS_IN_DUPLICATE_UNPAIRED"] = metr["UNPAIRED_READ_DUPLICATES"]
+        metr["READS_UNMAPPED"] = metr["UNMAPPED_READS"]
+
+    keys = dict()
+    keys_r = [
+        "READS_IN_UNIQUE_PAIRS",
+        "READS_IN_UNIQUE_UNPAIRED",
+        "READS_IN_DUPLICATE_PAIRS_OPTICAL",
+        "READS_IN_DUPLICATE_PAIRS_NONOPTICAL",
+        "READS_IN_DUPLICATE_UNPAIRED",
+        "READS_UNMAPPED",
+    ]
+    for k in keys_r:
+        keys[k] = {"name": k.replace("READS_", "").replace("IN_", "").replace("_", " ").title()}
+
+    # Config for the plot
+    pconfig = {
+        "id": f"{self.anchor}_deduplication",
+        "title": f"{self.name}: Deduplication Stats",
+        "ylab": "# Reads",
+        "cpswitch_counts_label": "Number of Reads",
+        "cpswitch_c_active": False,
+    }
+
+    self.add_section(
+        name="Mark Duplicates",
+        anchor=f"{self.anchor}-markduplicates",
+        description="Number of reads, categorised by duplication state. **Pair counts are doubled** - see help text for details.",
+        helptext="""
+        The table in the Picard metrics file contains some columns referring
+        read pairs and some referring to single reads.
+
+        To make the numbers in this plot sum correctly, values referring to pairs are doubled
+        according to the scheme below:
+
+        * `READS_IN_DUPLICATE_PAIRS = 2 * READ_PAIR_DUPLICATES`
+        * `READS_IN_UNIQUE_PAIRS = 2 * (READ_PAIRS_EXAMINED - READ_PAIR_DUPLICATES)`
+        * `READS_IN_UNIQUE_UNPAIRED = UNPAIRED_READS_EXAMINED - UNPAIRED_READ_DUPLICATES`
+        * `READS_IN_DUPLICATE_PAIRS_OPTICAL = 2 * READ_PAIR_OPTICAL_DUPLICATES`
+        * `READS_IN_DUPLICATE_PAIRS_NONOPTICAL = READS_IN_DUPLICATE_PAIRS - READS_IN_DUPLICATE_PAIRS_OPTICAL`
+        * `READS_IN_DUPLICATE_UNPAIRED = UNPAIRED_READ_DUPLICATES`
+        * `READS_UNMAPPED = UNMAPPED_READS`
+        """,
+        plot=bargraph.plot(self.picard_dup_metrics_data, keys, pconfig),
+    )
 
     # Return the number of detected samples to the parent module
     return len(self.picard_dup_metrics_data)

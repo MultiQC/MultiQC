@@ -57,7 +57,7 @@ def parse_reports(self):
     """Find Picard BaseDistributionByCycleMetrics reports and parse their data"""
 
     # Set up vars
-    self.picard_baseDistributionByCycle_data = dict()
+    self.picard_base_distribution_by_cycle_data = dict()
     self.picard_baseDistributionByCycle_samplestats = dict()
 
     # Go through logs and find Metrics
@@ -89,7 +89,7 @@ def parse_reports(self):
             else:
                 s_names = {1: s_name}
 
-            previously_used = set(s_names.values()) & set(self.picard_baseDistributionByCycle_data)
+            previously_used = set(s_names.values()) & set(self.picard_base_distribution_by_cycle_data)
 
             if previously_used:
                 for duped_name in previously_used:
@@ -97,14 +97,10 @@ def parse_reports(self):
             for name in s_names.values():
                 self.add_data_source(f, name, section="BaseDistributionByCycle")
 
-                # # Superfluous function call to confirm that it is used in this module
-                # # Replace None with actual version if it is available
-                # self.add_software_version(None, s_name)
-
             for read_end in s_names:
                 data_by_cycle = data[read_end]
                 s_name = s_names[read_end]
-                self.picard_baseDistributionByCycle_data[s_name] = data_by_cycle
+                self.picard_base_distribution_by_cycle_data[s_name] = data_by_cycle
                 sample_stats = {
                     "sum_pct_a": 0,
                     "sum_pct_c": 0,
@@ -133,44 +129,50 @@ def parse_reports(self):
         v["mean_pct_t"] = v["sum_pct_t"] / v["cycle_count"]
 
     # Filter to strip out ignored sample names
-    self.picard_baseDistributionByCycle_data = self.ignore_samples(self.picard_baseDistributionByCycle_data)
+    self.picard_base_distribution_by_cycle_data = self.ignore_samples(self.picard_base_distribution_by_cycle_data)
 
-    if len(self.picard_baseDistributionByCycle_data) > 0:
-        # Write parsed data to a file
-        self.write_data_file(self.picard_baseDistributionByCycle_samplestats, "multiqc_picard_baseContent")
+    if len(self.picard_base_distribution_by_cycle_data) == 0:
+        return 0
 
-        # Plot the data and add section
-        pconfig = {
-            "id": "picard_base_distribution_by_cycle",
-            "title": "Picard: Base Distribution",
-            "ylab": "%",
-            "xlab": "Cycle #",
-            "xDecimals": False,
-            "tt_label": "<b>cycle {point.x}</b>: {point.y:.2f} %",
-            "ymax": 100,
-            "ymin": 0,
-            "data_labels": [
-                {"name": "% Adenine", "ylab": "% Adenine"},
-                {"name": "% Cytosine", "ylab": "% Cytosine"},
-                {"name": "% Guanine", "ylab": "% Guanine"},
-                {"name": "% Thymine", "ylab": "% Thymine"},
-                {"name": "% Undetermined", "ylab": "% Undetermined"},
-            ],
-        }
+    # Superfluous function call to confirm that it is used in this module
+    # Replace None with actual version if it is available
+    self.add_software_version(None)
 
-        # build list of linegraphs
-        linegraph_data = [{}, {}, {}, {}, {}]
-        for s_name, cycles in self.picard_baseDistributionByCycle_data.items():
-            reformat_items = lambda n: {cycle: tup[n] for cycle, tup in cycles.items()}
-            for lg, index in zip(linegraph_data, range(5)):
-                lg[s_name] = reformat_items(index)
+    # Write parsed data to a file
+    self.write_data_file(self.picard_baseDistributionByCycle_samplestats, "multiqc_picard_baseContent")
 
-        self.add_section(
-            name="Base Distribution",
-            anchor="picard-base-distribution-by-cycle",
-            description="Plot shows the distribution of bases by cycle.",
-            plot=linegraph.plot(linegraph_data, pconfig),
-        )
+    # Plot the data and add section
+    pconfig = {
+        "id": "picard_base_distribution_by_cycle",
+        "title": "Picard: Base Distribution",
+        "ylab": "%",
+        "xlab": "Cycle #",
+        "xDecimals": False,
+        "tt_label": "<b>cycle {point.x}</b>: {point.y:.2f} %",
+        "ymax": 100,
+        "ymin": 0,
+        "data_labels": [
+            {"name": "% Adenine", "ylab": "% Adenine"},
+            {"name": "% Cytosine", "ylab": "% Cytosine"},
+            {"name": "% Guanine", "ylab": "% Guanine"},
+            {"name": "% Thymine", "ylab": "% Thymine"},
+            {"name": "% Undetermined", "ylab": "% Undetermined"},
+        ],
+    }
+
+    # build list of linegraphs
+    linegraph_data = [{}, {}, {}, {}, {}]
+    for s_name, cycles in self.picard_base_distribution_by_cycle_data.items():
+        reformat_items = lambda n: {cycle: tup[n] for cycle, tup in cycles.items()}
+        for lg, index in zip(linegraph_data, range(5)):
+            lg[s_name] = reformat_items(index)
+
+    self.add_section(
+        name="Base Distribution",
+        anchor="picard-base-distribution-by-cycle",
+        description="Plot shows the distribution of bases by cycle.",
+        plot=linegraph.plot(linegraph_data, pconfig),
+    )
 
     # Return the number of detected samples to the parent module
-    return len(self.picard_baseDistributionByCycle_data)
+    return len(self.picard_base_distribution_by_cycle_data)

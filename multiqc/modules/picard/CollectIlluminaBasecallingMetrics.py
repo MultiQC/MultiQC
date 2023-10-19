@@ -32,32 +32,34 @@ def parse_reports(self):
                         data.pop("MOLECULAR_BARCODE_NAME")
                         self.picard_basecalling_metrics[data["LANE"]] = data
 
-                        # Superfluous function call to confirm that it is used in this module
-                        # Replace None with actual version if it is available
-                        self.add_software_version(None, data["LANE"])
-
     # Filter to strip out ignored sample names
     self.picard_basecalling_metrics = self.ignore_samples(self.picard_basecalling_metrics)
 
-    if len(self.picard_basecalling_metrics) > 0:
-        # Write parsed data to a file
-        self.write_data_file(self.picard_basecalling_metrics, f"multiqc_{self.anchor}_IlluminaBasecallingMetrics")
+    if len(self.picard_basecalling_metrics) == 0:
+        return 0
 
-        self.add_section(
-            name="Basecalling Metrics",
-            anchor=f"{self.anchor}-illuminabasecallingmetrics",
-            description="Quality control metrics for each lane of an Illumina flowcell.",
-            helptext="""
-            For full details, please see the [Picard Documentation](http://broadinstitute.github.io/picard/picard-metric-definitions.html#IlluminaBasecallingMetrics).
+    # Superfluous function call to confirm that it is used in this module
+    # Replace None with actual version if it is available
+    self.add_software_version(None)
 
-            * `PF_BASES` / `NPF_BASES` :  The total number of passing-filter / not-passing-filter bases assigned to the index.
-            * `PF_READS` / `NPF_READS` :  The total number of passing-filter / not-passing-filter reads assigned to the index.
-            * `PF_CLUSTERS` / `NPF_CLUSTERS` :  The total number of passing-filter / not-passing-filter clusters assigned to the index.
+    # Write parsed data to a file
+    self.write_data_file(self.picard_basecalling_metrics, f"multiqc_{self.anchor}_IlluminaBasecallingMetrics")
 
-            `NPF` stands for _"not passing filter"_ and is calculated by subtracting the `PF_` metric from the `TOTAL_` Picard metrics.
-            """,
-            plot=lane_metrics_plot(self, self.picard_basecalling_metrics),
-        )
+    self.add_section(
+        name="Basecalling Metrics",
+        anchor=f"{self.anchor}-illuminabasecallingmetrics",
+        description="Quality control metrics for each lane of an Illumina flowcell.",
+        helptext="""
+        For full details, please see the [Picard Documentation](http://broadinstitute.github.io/picard/picard-metric-definitions.html#IlluminaBasecallingMetrics).
+
+        * `PF_BASES` / `NPF_BASES` :  The total number of passing-filter / not-passing-filter bases assigned to the index.
+        * `PF_READS` / `NPF_READS` :  The total number of passing-filter / not-passing-filter reads assigned to the index.
+        * `PF_CLUSTERS` / `NPF_CLUSTERS` :  The total number of passing-filter / not-passing-filter clusters assigned to the index.
+
+        `NPF` stands for _"not passing filter"_ and is calculated by subtracting the `PF_` metric from the `TOTAL_` Picard metrics.
+        """,
+        plot=lane_metrics_plot(self, self.picard_basecalling_metrics),
+    )
 
     # Return the number of detected samples to the parent module
     return len(self.picard_basecalling_metrics)
