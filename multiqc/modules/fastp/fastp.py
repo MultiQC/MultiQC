@@ -156,23 +156,29 @@ class MultiqcModule(BaseMultiqcModule):
         try:
             parsed_json = json.load(f["f"])
         except json.JSONDecodeError as e:
-            log.warning(f"Could not parse fastp JSON: '{f['fn']}': {e}")
+            log.warning(f"Could not parse fastp JSON: '{f['fn']}': {e}, skipping sample")
             return None
         if not isinstance(parsed_json, dict) or "command" not in parsed_json:
-            log.warning(f"Could not find 'command' field in JSON: '{f['fn']}'")
+            log.warning(f"Could not find 'command' field in JSON: '{f['fn']}', skipping sample")
             return None
 
         cmd = parsed_json["command"].strip()
 
         # Fetch a sample name from the command. The command won't have file names with
         # spaces escaped properly, so we need to account for that:
-        # fastp -c -g -y -i Campaign 3 sample 1_1.fastq.gz -o ...
-        # Using a regex that extracts everything between "-i " and " -":
-        m = re.search(r"-i\s(.+?)(?:\s-|$)", cmd)
-        if not m:
-            log.warning(f"Could not parse sample name from fastp command: {f['fn']}")
-            return None
-        s_name = self.clean_s_name(m.group(1), f)
+        # "fastp -c -g -y -i Sample 1_1.fastq.gz -o ..."
+        # "fastp -c -g -y --in1 Sample 1_1.fastq.gz --out1 ..."
+        # "fastp -c -g -y --in1 Sample 1_1.fastq.gz --in2 Sample 1_2.fastq.gz --out1 ..."
+        # Using a regex that extracts everything between "-i " or "--in1 " and " -":
+        m = re.search(r"(-i|--in1)\s(.+?)(?:\s-|$)", cmd)
+        if m:
+            s_name = self.clean_s_name(m.group(2), f)
+        else:
+            s_name = f["s_name"]
+            log.warning(
+                f"Could not parse sample name from fastp command. Falling back to "
+                f"extracting it from the file name: \"{f['fn']}\" -> \"{s_name}\""
+            )
 
         self.add_data_source(f, s_name)
         self.fastp_data[s_name] = {}
