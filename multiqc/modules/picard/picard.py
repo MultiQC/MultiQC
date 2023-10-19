@@ -110,12 +110,12 @@ class MultiqcModule(BaseMultiqcModule):
         Picard logs from different samples can be concatenated together, so the module
         needs to know a marker to find where new sample information starts.
 
-        Many tools and platforms - e.g. Sentieon, supported by MultiQC - use Picard
-        internally for QC, while adding their own headers. So we can't assume that
-        the headers will be the same for the same, and need to allow to override
-        this function.
+        The command line Picard tools themselves use the "## METRICS CLASS" header
+        line for that purpose; however, the Picard classes often used by other
+        tools and platforms - e.g. Sentieon and Parabricks  - while adding their own
+        headers, so we need to handle them as well.
         """
-        return line.startswith("## METRICS CLASS")
+        return any(line.startswith(prefix) for prefix in ["## METRICS CLASS", "#SentieonCommandLine:"])
 
     def extract_sample_name(
         self,
@@ -124,22 +124,23 @@ class MultiqcModule(BaseMultiqcModule):
         extra_labels: Optional[str | List] = None,
     ) -> Optional[str]:
         """
-        A file can be concatenated from multiple samples, so we can't just extract
-        the sample name from the file name, and need a way to find sample name in the
-        header. The copy of the originally used command is the best bet, as it's
-        usually logged by Picard.
+        Picard logs from different samples can be concatenated together, so we can't
+        just extract the sample name from the file name. We need an alternative way
+        to find sample names in the header lines instead. Picard records the command
+        originally used to invoke itself, which is the best bet. Sentieon does the same,
+        but slightly differently.
         """
         extra_labels = extra_labels or []
         if isinstance(extra_labels, str):
             extra_labels = [extra_labels]
 
-        if (
-            line.startswith("# ")
-            and ("INPUT=" in line or "INPUT" in line.split())
-            and all([l in line for l in extra_labels])
-        ):
+        picard_command = line.startswith("# ") and ("INPUT=" in line or "INPUT" in line.split())
+        sentieon_command = line.startswith("#SentieonCommandLine:") and " --algo " in line and " -i " in line
+        if (picard_command or sentieon_command) and all([l in line for l in extra_labels]):
             # Pull sample name from the input file name, recorded in the command line:
             fn_search = re.search(r"INPUT(?:=|\s+)(\[?[^\s]+\]?)", line, flags=re.IGNORECASE)
+            if not fn_search:  # sentieon?
+                fn_search = re.search(r" -i\s+(\[?\S+\]?)", line, flags=re.IGNORECASE)
             if fn_search:
                 f_name = os.path.basename(fn_search.group(1).strip("[]"))
                 s_name = self.clean_s_name(f_name, f)

@@ -46,31 +46,31 @@ def parse_reports(self):
                     data[s_name] = dict()
                     # Get header - find columns with the data we want
                     l = f["f"].readline()
-                    s = l.strip("\n").split("\t")
-                    try:
-                        gc_col = s.index("GC")
-                    except ValueError:
-                        pass
-                    try:
-                        cov_col = s.index("NORMALIZED_COVERAGE")
-                    except ValueError:
-                        pass
+                    keys = l.strip("\n").split("\t")
 
-                if any(kw in l for kw in ("ACCUMULATION_LEVEL", "GC_DROPOUT")):
-                    # Summary metrics
-                    # if "GcBiasSummaryMetrics" in l and "## METRICS CLASS" in l:
-                    if s_name in self.picard_gc_bias_summary_data or s_name in data:
-                        log.debug(f"Duplicate sample name found in {f['fn']}! Overwriting: {s_name}")
-                    summary_data[s_name] = dict()
+                    if set(keys) & {"ACCUMULATION_LEVEL", "GC_DROPOUT"}:
+                        # Summary metrics
+                        if s_name in self.picard_gc_bias_summary_data or s_name in data:
+                            log.debug(f"Duplicate sample name found in {f['fn']}! Overwriting: {s_name}")
+                        summary_data[s_name] = dict()
 
-                    keys = f["f"].readline().rstrip("\n").split("\t")
-                    vals = f["f"].readline().rstrip("\n").split("\t")
-                    assert len(keys) == len(vals), (keys, vals, f)
-                    for k, v in zip(keys, vals):
+                        vals = f["f"].readline().rstrip("\n").split("\t")
+                        assert len(keys) == len(vals), (keys, vals, f)
+                        for k, v in zip(keys, vals):
+                            try:
+                                summary_data[s_name][k] = float(v)
+                            except ValueError:
+                                summary_data[s_name][k] = v
+
+                    else:
                         try:
-                            summary_data[s_name][k] = float(v)
+                            gc_col = keys.index("GC")
                         except ValueError:
-                            summary_data[s_name][k] = v
+                            pass
+                        try:
+                            cov_col = keys.index("NORMALIZED_COVERAGE")
+                        except ValueError:
+                            pass
 
         # When there is only one sample, using the file name to extract the sample name.
         if len(data) <= 1 and len(summary_data):

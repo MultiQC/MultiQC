@@ -63,8 +63,8 @@ def parse_reports(self):
                 parsed_data.pop(s_name, None)
 
         # When there is only one sample, using the file name to extract the sample name.
-        if len(parsed_data) == 1:
-            parsed_data = {f["s_name"]: list(parsed_data.values())[0]}
+        # if len(parsed_data) == 1:
+        #     parsed_data = {f["s_name"]: list(parsed_data.values())[0]}
 
         self.picard_alignment_metrics.update(parsed_data)
 

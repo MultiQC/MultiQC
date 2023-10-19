@@ -95,10 +95,10 @@ def parse_reports(self):
                 log.debug("Ignoring '{}' histogram as no data parsed".format(s_name))
 
         # When there is only one sample, using the file name to extract the sample name.
-        if len(data) <= 1 and len(histogram) <= 1 and len(samplestats) <= 1:
-            data = {f["s_name"]: list(data.values())[0]}
-            histogram = {f["s_name"]: list(histogram.values())[0]}
-            samplestats = {f["s_name"]: list(samplestats.values())[0]}
+        if max(len(data), len(histogram), len(samplestats)) == 1:
+            data = {f["s_name"]: list(data.values())[0]} if data else dict()
+            histogram = {f["s_name"]: list(histogram.values())[0]} if histogram else dict()
+            samplestats = {f["s_name"]: list(samplestats.values())[0]} if samplestats else dict()
 
         self.picard_insertSize_data.update(data)
         self.picard_insertSize_histogram.update(histogram)
