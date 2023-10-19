@@ -162,23 +162,31 @@ class MultiqcModule(BaseMultiqcModule):
             log.warning(f"Could not find 'command' field in JSON: '{f['fn']}', skipping sample")
             return None
 
-        cmd = parsed_json["command"].strip()
-
-        # Fetch a sample name from the command. The command won't have file names with
-        # spaces escaped properly, so we need to account for that:
-        # "fastp -c -g -y -i Sample 1_1.fastq.gz -o ..."
-        # "fastp -c -g -y --in1 Sample 1_1.fastq.gz --out1 ..."
-        # "fastp -c -g -y --in1 Sample 1_1.fastq.gz --in2 Sample 1_2.fastq.gz --out1 ..."
-        # Using a regex that extracts everything between "-i " or "--in1 " and " -":
-        m = re.search(r"(-i|--in1)\s(.+?)(?:\s-|$)", cmd)
-        if m:
-            s_name = self.clean_s_name(m.group(2), f)
-        else:
-            s_name = f["s_name"]
-            log.warning(
-                f"Could not parse sample name from fastp command. Falling back to "
-                f"extracting it from the file name: \"{f['fn']}\" -> \"{s_name}\""
-            )
+        s_name = f["s_name"]
+        # The default output file name is "fastp.json", which doesn't contain the
+        # sample name, so we need to fall back to another way to find the possible
+        # sample name. The best bet is to parse the "command" line usually found
+        # in the JSON, and parse the input FASTQ file name.
+        if f["fn"] == "fastp.json":
+            cmd = parsed_json["command"].strip()
+            # On caveat is that the command won't have file names escaped properly,
+            # so we need some special logic to account for names with spaces:
+            # "fastp -c -g -y -i Sample 1 1.fastq.gz -o ..."
+            # "fastp -c -g -y --in1 Sample 1 1.fastq.gz --out1 ..."
+            # "fastp -c -g -y --in1 Sample 1 1.fastq.gz --in2 Sample 1_2.fastq.gz --out1 ..."
+            #
+            # Using a regex that extracts everything between "-i " or "--in1 " and " -".
+            # It still won't work exactly right for file names with dashes following a
+            # space, but that's a pretty rare case, and will still extract something
+            # meaningful.
+            m = re.search(r"(-i|--in1)\s(.+?)(?:\s-|$)", cmd)
+            if m:
+                s_name = self.clean_s_name(m.group(2), f)
+            else:
+                log.warning(
+                    f"Could not parse sample name from fastp command. Falling back to "
+                    f"extracting it from the file name: \"{f['fn']}\" -> \"{s_name}\""
+                )
 
         self.add_data_source(f, s_name)
         self.fastp_data[s_name] = {}
