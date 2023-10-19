@@ -5,7 +5,7 @@ import logging
 import os
 import re
 from collections import OrderedDict
-from typing import Dict, Optional
+from typing import Dict, List, Optional
 
 from multiqc.modules.base_module import BaseMultiqcModule, ModuleNoSamplesFound
 
@@ -108,7 +108,7 @@ class MultiqcModule(BaseMultiqcModule):
     @staticmethod
     def is_line_right_before_table(
         line: str,
-        picard_class: str,
+        picard_class: str | List[str],
         sentieon_algo: str,
     ) -> bool:
         """
@@ -120,9 +120,10 @@ class MultiqcModule(BaseMultiqcModule):
         tools and platforms - e.g. Sentieon and Parabricks  - while adding their own
         headers, so we need to handle them as well.
         """
+        picard_classes = [picard_class] if isinstance(picard_class, str) else picard_class
         return (
             line.startswith("## METRICS CLASS")
-            and picard_class in line
+            and any(c in line for c in picard_classes)
             or line.startswith("#SentieonCommandLine:")
             and f" --algo {sentieon_algo}" in line
         )

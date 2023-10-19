@@ -18,12 +18,13 @@ def parse_reports(self):
     # Go through logs and find Metrics
     for f in self.find_log_files(f"{self.anchor}/gcbias", filehandles=True):
         s_name = None
+        keys = None
         gc_col = None
         cov_col = None
         data = dict()
         summary_data = dict()
         for l in f["f"]:
-            maybe_s_name = self.extract_sample_name(l, f)
+            maybe_s_name = self.extract_sample_name(l, f, picard_tool="CollectGcBiasMetrics", sentieon_algo="GCBias")
             if maybe_s_name:
                 # Starts information for a new sample
                 s_name = maybe_s_name
@@ -39,21 +40,26 @@ def parse_reports(self):
                         gc_col = None
                         cov_col = None
 
-            if s_name is not None:
-                if self.is_line_right_before_table(l):
-                    if s_name in self.picard_gc_bias_data or s_name in data:
-                        log.debug("Duplicate sample name found in {}! Overwriting: {}".format(f["fn"], s_name))
-                    data[s_name] = dict()
+                elif self.is_line_right_before_table(
+                    l, picard_class=["GcBiasDetailMetrics", "GcBiasSummaryMetrics"], sentieon_algo="GCBias"
+                ):
                     # Get header - find columns with the data we want
                     l = f["f"].readline()
                     keys = l.strip("\n").split("\t")
 
-                    if set(keys) & {"ACCUMULATION_LEVEL", "GC_DROPOUT"}:
-                        # Summary metrics
-                        if s_name in self.picard_gc_bias_summary_data or s_name in data:
+                    if "GC" in keys and "NORMALIZED_COVERAGE" in keys:
+                        # Detail metrics: one line per GC percentage
+                        if s_name in self.picard_gc_bias_data or s_name in data:
+                            log.debug("Duplicate sample name found in {}! Overwriting: {}".format(f["fn"], s_name))
+                        data[s_name] = dict()
+                        gc_col = keys.index("GC")
+                        cov_col = keys.index("NORMALIZED_COVERAGE")
+
+                    elif "ACCUMULATION_LEVEL" in keys and "GC_DROPOUT" in keys:
+                        # Summary metrics - just one line below the header
+                        if s_name in self.picard_gc_bias_summary_data or s_name in summary_data:
                             log.debug(f"Duplicate sample name found in {f['fn']}! Overwriting: {s_name}")
                         summary_data[s_name] = dict()
-
                         vals = f["f"].readline().rstrip("\n").split("\t")
                         assert len(keys) == len(vals), (keys, vals, f)
                         for k, v in zip(keys, vals):
@@ -62,20 +68,10 @@ def parse_reports(self):
                             except ValueError:
                                 summary_data[s_name][k] = v
 
-                    else:
-                        try:
-                            gc_col = keys.index("GC")
-                        except ValueError:
-                            pass
-                        try:
-                            cov_col = keys.index("NORMALIZED_COVERAGE")
-                        except ValueError:
-                            pass
-
         # When there is only one sample, using the file name to extract the sample name.
-        if len(data) <= 1 and len(summary_data):
-            data = {f["s_name"]: list(data.values())[0]}
-            summary_data = {f["s_name"]: list(summary_data.values())[0]}
+        # if len(data) <= 1 and len(summary_data):
+        #     data = {f["s_name"]: list(data.values())[0]}
+        #     summary_data = {f["s_name"]: list(summary_data.values())[0]}
 
         self.picard_gc_bias_data.update(data)
         self.picard_gc_bias_summary_data.update(summary_data)
