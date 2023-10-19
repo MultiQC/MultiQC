@@ -8,6 +8,8 @@
 
 ### Module updates
 
+- **fastp**: correctly parse sample name from --in1/--in2 command. Fallback to file name ([#2139](https://github.com/ewels/MultiQC/pull/2139))
+
 ## [MultiQC v1.17](https://github.com/ewels/MultiQC/releases/tag/v1.17) - 2023-10-17
 
 ### The one with the new logo
