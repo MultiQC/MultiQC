@@ -503,7 +503,7 @@ def matplotlib_bargraph(plotdata, plotsamples, pconfig=None):
             axes.spines["top"].set_visible(False)
             axes.spines["bottom"].set_visible(False)
             axes.spines["left"].set_visible(False)
-            plt.gca().invert_yaxis()  # y axis is reverse sorted otherwise
+            plt.gca().invert_yaxis()  # y-axis is reverse sorted otherwise
 
             # Hide some labels if we have a lot of samples
             show_nth = max(1, math.ceil(len(pdata[0]["data"]) / 150))
