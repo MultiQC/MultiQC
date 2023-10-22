@@ -501,14 +501,14 @@ def run(
     if config.strict:
         logger.info("--strict specified. Being strict with validation.")
 
-    # Throw a warning if we are running on Python 2
-    if sys.version_info[0] < 3:
+    # Throw a warning if we are running with < Python 3.8
+    if sys.version_info.major < 3 or (sys.version_info.major == 3 and sys.version_info.minor < 8):
         logger.error(
             "You are running MultiQC with Python {}.{}.{}".format(
-                sys.version_info[0], sys.version_info[1], sys.version_info[2]
+                sys.version_info.major, sys.version_info.minor, sys.version_info.micro
             )
         )
-        logger.critical("Please upgrade Python! MultiQC does not support Python < 3.6, things will break.")
+        logger.critical("Please upgrade Python! MultiQC does not support this version of Python, things will break.")
     else:
         logger.debug("Running Python {}".format(sys.version.replace("\n", " ")))
 
