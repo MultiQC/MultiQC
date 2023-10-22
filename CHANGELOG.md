@@ -4,8 +4,6 @@
 
 ### MultiQC updates
 
-- Docs + warning - supports 3.8+ not 3.6+ (skip changelog) ([#2147](https://github.com/ewels/MultiQC/pull/2147))
-
 ### New Modules
 
 ### Module updates
