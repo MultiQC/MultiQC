@@ -4,6 +4,8 @@
 
 ### MultiQC updates
 
+- Fix Python and MultiQC version checks ([#2148](https://github.com/ewels/MultiQC/pull/2148))
+
 ### New Modules
 
 ### Module updates
