@@ -359,6 +359,16 @@ def run(
 
     Author: Phil Ewels (http://phil.ewels.co.uk)
     """
+    # Throw an error if we are using an unsupported version of Python
+    OLDEST_SUPPORTED_PY = "3.8.0"
+    if sys.version_info[:3] < tuple(map(int, OLDEST_SUPPORTED_PY.split("."))):
+        current_version = ".".join(str(component) for component in sys.version_info[:3])
+        logger.critical(
+            "You are running MultiQC with Python {}. "
+            "Please upgrade Python! MultiQC does not support Python < {}, "
+            "things will break.".format(current_version, OLDEST_SUPPORTED_PY)
+        )
+        return {"report": None, "config": None, "sys_exit_code": 1}
 
     # Set up logging level
     loglevel = log.LEVELS.get(min(verbose, 1), "INFO")
@@ -398,7 +408,7 @@ def run(
         try:
             response = urlopen("http://multiqc.info/version.php?v={}".format(config.short_version), timeout=5)
             remote_version = response.read().decode("utf-8").strip()
-            if version.StrictVersion(re.sub(r"[^0-9.]", "", remote_version)) > version.StrictVersion(
+            if version.parse(re.sub(r"[^0-9.]", "", remote_version)) > version.parse(
                 re.sub(r"[^0-9.]", "", config.short_version)
             ):
                 logger.warning("MultiQC Version {} now available!".format(remote_version))
@@ -500,17 +510,7 @@ def run(
     logger.debug("Template    : {}".format(config.template))
     if config.strict:
         logger.info("--strict specified. Being strict with validation.")
-
-    # Throw a warning if we are running on Python 2
-    if sys.version_info[0] < 3:
-        logger.error(
-            "You are running MultiQC with Python {}.{}.{}".format(
-                sys.version_info[0], sys.version_info[1], sys.version_info[2]
-            )
-        )
-        logger.critical("Please upgrade Python! MultiQC does not support Python < 3.6, things will break.")
-    else:
-        logger.debug("Running Python {}".format(sys.version.replace("\n", " ")))
+    logger.debug("Running Python {}".format(sys.version.replace("\n", " ")))
 
     # Add files if --file-list option is given
     if file_list:
