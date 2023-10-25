@@ -1,13 +1,13 @@
 """ MultiQC module to parse output from the Seqera Platform CLI """
+
 import json
 import logging
 import os
 import tarfile
 from collections import defaultdict
-from pprint import pprint
 
 from multiqc.modules.base_module import BaseMultiqcModule, ModuleNoSamplesFound
-from multiqc.plots import scatter, table
+from multiqc.plots import bargraph
 
 log = logging.getLogger(__name__)
 
@@ -27,7 +27,37 @@ def _read_json_from_tar_gz(tar_file, fname):
     return data
 
 
+def _parse_workflow_json(data):
+    return {k: data.get(k) for k in ["repository", "start", "complete", "revision"]}
+
+
+def _parse_workflow_load_json(data):
+    return {
+        k: data.get(k)
+        for k in [
+            "cpuEfficiency",
+            "memoryEfficiency",
+            "cpuTime",
+            "readBytes",
+            "writeBytes",
+            "cost",
+            "pending",
+            "submitted",
+            "running",
+            "succeeded",
+            "failed",
+            "cached",
+        ]
+    }
+
+
 class MultiqcModule(BaseMultiqcModule):
+    """
+    Seqera Platform CLI module for MultiQC. Should be able to process logs dump
+    usually written in a form of a tar-gz archive, as well as its uncompressed version.
+    that is reading workflow.json and workflow-load.json files directly.
+    """
+
     def __init__(self):
         super(MultiqcModule, self).__init__(
             name="Seqera Platform CLI",
@@ -39,25 +69,46 @@ class MultiqcModule(BaseMultiqcModule):
 
         data_by_run = defaultdict(dict)
 
-        keys_by_file = {
-            "workflow.json": ["repository", "start", "complete"],
-            "workflow-load.json": ["cpuEfficiency", "memoryEfficiency", "cpuTime", "readBytes", "writeBytes", "cost"],
-        }
-
+        # Parsing the tar-gz dump
         for f in self.find_log_files("seqera_cli/run_dump", filecontents=False):
             with tarfile.open(os.path.join(f["root"], f["fn"])) as tar_file:
-                for fname in tar_file.getnames():
-                    if fname in keys_by_file:
-                        d = _read_json_from_tar_gz(tar_file, fname)
-                        for k in keys_by_file[fname]:
-                            if k in d:
-                                data_by_run[f["s_name"]][k] = d[k]
+                if "workflow.json" not in tar_file.getnames():
+                    continue
+                d = _read_json_from_tar_gz(tar_file, "workflow.json")
+                run_id = d.get("id")
+                if not run_id:
+                    continue
+                d = _parse_workflow_json(d)
+                if not d:
+                    continue
+                self.add_data_source(f)
+                self.add_software_version(d.get("revision"))
+                data_by_run[run_id].update(d)
 
+                # Check if also workflow-load.json sits next to workflow.json
+                if "workflow-load.json" in tar_file.getnames():
+                    d = _read_json_from_tar_gz(tar_file, "workflow-load.json")
+                    data_by_run[run_id].update(_parse_workflow_load_json(d))
+
+        # Parsing the json files directly
+        for f in self.find_log_files("seqera_cli/workflow"):
+            d = json.loads(f["f"])
+            run_id = d.get("id")
+            if not run_id:
+                continue
+            d = _parse_workflow_json(d)
+            if not d:
+                continue
             self.add_data_source(f)
+            self.add_software_version(d.get("revision"))
+            data_by_run[run_id].update(d)
 
-            # Superfluous function call to confirm that it is used in this module
-            # Replace None with actual version if it is available
-            self.add_software_version(None)
+            # Check if also workflow-load.json sits next to workflow.json
+            workflow_load_path = os.path.join(f["root"], "workflow-load.json")
+            if os.path.isfile(workflow_load_path):
+                with open(workflow_load_path) as fh:
+                    d = json.load(fh)
+                    data_by_run[run_id].update(_parse_workflow_load_json(d))
 
         # Filter to strip out ignored sample names
         data_by_run = self.ignore_samples(data_by_run)
@@ -69,8 +120,6 @@ class MultiqcModule(BaseMultiqcModule):
 
         # Write parsed report data to a file
         self.write_data_file(data_by_run, "multiqc_seqera_cli")
-
-        pprint(data_by_run)
 
         headers = {
             "repository": {
@@ -106,7 +155,7 @@ class MultiqcModule(BaseMultiqcModule):
                 "description": "Total CPU time used by the workflow",
                 "format": "{:,.2f}",
                 "scale": "Greys",
-                "suffix": " h",
+                "suffix": "&nbsp;h",
                 "modify": lambda x: x / 1000 / 3600,
             },
             "readBytes": {
@@ -114,7 +163,7 @@ class MultiqcModule(BaseMultiqcModule):
                 "description": "Total gigabytes read by the workflow",
                 "format": "{:,.2f}",
                 "scale": "Blues",
-                "suffix": " GB",
+                "suffix": "&nbsp;GB",
                 "modify": lambda x: x / 1024 / 1024 / 1024,
             },
             "writeBytes": {
@@ -122,7 +171,7 @@ class MultiqcModule(BaseMultiqcModule):
                 "description": "Total gigabytes written by the workflow",
                 "format": "{:,.2f}",
                 "scale": "Greens",
-                "suffix": " GB",
+                "suffix": "&nbsp;GB",
                 "modify": lambda x: x / 1024 / 1024 / 1024,
             },
             "cost": {
@@ -132,9 +181,22 @@ class MultiqcModule(BaseMultiqcModule):
                 "scale": "Reds",
             },
         }
+        self.general_stats_addcols(data_by_run, headers)
 
+        pconfig = {
+            "id": "seqera_cli_process_status",
+            "title": "Seqera Platform CLI: processes statuses",
+        }
+        keys = [
+            "pending",
+            "submitted",
+            "running",
+            "succeeded",
+            "failed",
+            "cached",
+        ]
         self.add_section(
             name="Seqera Platform CLI",
             anchor="seqera-platform-cli",
-            plot=table.plot(data_by_run, headers),
+            plot=bargraph.plot(data_by_run, keys, pconfig),
         )
