@@ -176,6 +176,7 @@ setup(
             "rockhopper = multiqc.modules.rockhopper:MultiqcModule",
             "rsem = multiqc.modules.rsem:MultiqcModule",
             "rseqc = multiqc.modules.rseqc:MultiqcModule",
+            "seqera_cli = multiqc.modules.seqera_cli:MultiqcModule",
             "salmon = multiqc.modules.salmon:MultiqcModule",
             "sambamba = multiqc.modules.sambamba:MultiqcModule",
             "samblaster = multiqc.modules.samblaster:MultiqcModule",

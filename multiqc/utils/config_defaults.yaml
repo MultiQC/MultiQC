@@ -315,6 +315,8 @@ fn_clean_trim:
   - ".stats"
   - ".hist"
   - ".phased"
+  - ".tar"
+  - "runs_"
 
 # Files to ignore when indexing files.
 # Grep file match patterns.

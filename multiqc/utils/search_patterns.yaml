@@ -554,8 +554,8 @@ peddy/sex_check:
   fn: "*.sex_check.csv"
 peddy/background_pca:
   fn: "*.background_pca.json"
-somalier/somalier-ancestry:
-  fn: "*.somalier-ancestry.tsv"
+seqera_cli/run_dump:
+  fn: "runs_*.tar.gz"
 somalier/samples:
   fn: "*.samples.tsv"
   contents: "#family_id"
