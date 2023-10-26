@@ -56,7 +56,7 @@ jobs:
     strategy:
       matrix:
         # Just test the oldest and newest supported Python versions
-        python-version: ["3.7", "3.12"]
+        python-version: ["3.8", "3.12"]
     timeout-minutes: 10
 
     steps:

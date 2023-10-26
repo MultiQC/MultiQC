@@ -369,6 +369,15 @@ def run(
         config.quiet = True
     log.init_log(logger, loglevel=loglevel, no_ansi=no_ansi)
 
+    # Throw an error if we are using an unsupported version of Python
+    if sys.version_info < tuple(map(int, OLDEST_SUPPORTED_PYTHON_VERSION.split("."))):
+        logger.critical(
+            "You are running MultiQC with Python {}. "
+            "Please upgrade Python! MultiQC does not support Python < {}, "
+            "things will break.".format(sys.version_info, OLDEST_SUPPORTED_PYTHON_VERSION)
+        )
+        return {"report": None, "config": None, "sys_exit_code": 1}
+
     console = rich.console.Console(
         stderr=True,
         highlight=False,
@@ -503,15 +512,7 @@ def run(
     if config.strict:
         logger.info("--strict specified. Being strict with validation.")
 
-    # Throw a warning if we are running with an unsupported Python version
-    if sys.version_info < tuple(map(int, OLDEST_SUPPORTED_PYTHON_VERSION.split("."))):
-        logger.critical(
-            "You are running MultiQC with Python {}. "
-            "Please upgrade Python! MultiQC does not support Python < {}, "
-            "things will break.".format(sys.version_info, OLDEST_SUPPORTED_PYTHON_VERSION)
-        )
-    else:
-        logger.debug("Running Python {}".format(sys.version.replace("\n", " ")))
+    logger.debug("Running Python {}".format(sys.version.replace("\n", " ")))
 
     # Add files if --file-list option is given
     if file_list:
