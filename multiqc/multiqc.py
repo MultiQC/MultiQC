@@ -34,6 +34,8 @@ from .utils import config, log, megaqc, plugin_hooks, report, software_versions,
 start_execution_time = time.time()
 logger = config.logger
 
+OLDEST_SUPPORTED_PYTHON_VERSION = "3.8"
+
 # Configuration for rich-click CLI help
 click.rich_click.USE_RICH_MARKUP = True
 click.rich_click.SHOW_METAVARS_COLUMN = False
@@ -398,7 +400,7 @@ def run(
         try:
             response = urlopen("http://multiqc.info/version.php?v={}".format(config.short_version), timeout=5)
             remote_version = response.read().decode("utf-8").strip()
-            if version.StrictVersion(re.sub(r"[^0-9.]", "", remote_version)) > version.StrictVersion(
+            if version.parse(re.sub(r"[^0-9.]", "", remote_version)) > version.parse(
                 re.sub(r"[^0-9.]", "", config.short_version)
             ):
                 logger.warning("MultiQC Version {} now available!".format(remote_version))
@@ -501,14 +503,13 @@ def run(
     if config.strict:
         logger.info("--strict specified. Being strict with validation.")
 
-    # Throw a warning if we are running with < Python 3.8
-    if sys.version_info.major < 3 or (sys.version_info.major == 3 and sys.version_info.minor < 8):
-        logger.error(
-            "You are running MultiQC with Python {}.{}.{}".format(
-                sys.version_info.major, sys.version_info.minor, sys.version_info.micro
-            )
+    # Throw a warning if we are running with an unsupported Python version
+    if sys.version_info < tuple(map(int, OLDEST_SUPPORTED_PYTHON_VERSION.split("."))):
+        logger.critical(
+            "You are running MultiQC with Python {}. "
+            "Please upgrade Python! MultiQC does not support Python < {}, "
+            "things will break.".format(sys.version_info, OLDEST_SUPPORTED_PYTHON_VERSION)
         )
-        logger.critical("Please upgrade Python! MultiQC does not support this version of Python, things will break.")
     else:
         logger.debug("Running Python {}".format(sys.version.replace("\n", " ")))
 
