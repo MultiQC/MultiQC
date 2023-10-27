@@ -6,7 +6,6 @@ from collections import OrderedDict
 
 import yaml
 
-from multiqc import config
 from multiqc.modules.base_module import BaseMultiqcModule, ModuleNoSamplesFound
 from multiqc.plots import bargraph, table
 
@@ -340,9 +339,9 @@ class MultiqcModule(BaseMultiqcModule):
         """
         mean_links_length = data["mean_links_length"]
         # we have to find the entry with path: 'all_paths', because odgi stats could emit a list of path names
-        for l in mean_links_length:
-            if l["length"]["path"] == "all_paths":
-                length = l["length"]
+        for line in mean_links_length:
+            if line["length"]["path"] == "all_paths":
+                length = line["length"]
         sum_of_path_nodes_distances = data["sum_of_path_node_distances"]
         # we have to find the entry with path: 'all_paths', because odgi stats could emit a list of path names
         for d in sum_of_path_nodes_distances:

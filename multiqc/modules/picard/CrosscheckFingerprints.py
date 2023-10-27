@@ -45,7 +45,7 @@ def parse_reports(self):
         # Parse an individual CrosscheckFingerprints Report
         (metrics, comments) = _take_till(f["f"], lambda line: line.startswith("#") or line == "\n")
         header = next(metrics).rstrip("\n").split("\t")
-        if not "LEFT_GROUP_VALUE" in header:
+        if "LEFT_GROUP_VALUE" not in header:
             # Not a CrosscheckFingerprints Report
             continue
         reader = DictReader(metrics, fieldnames=header, delimiter="\t")
@@ -193,9 +193,8 @@ def _get_table_headers(data):
         ]
 
     # Add Left and Right Sample names / groups, keeping it as minimal as possible
-    sample_group_are_same = (
-        lambda x: x["LEFT_SAMPLE"] == x["LEFT_GROUP_VALUE"] and x["RIGHT_SAMPLE"] == x["RIGHT_GROUP_VALUE"]
-    )
+    def sample_group_are_same(x):
+        return x["LEFT_SAMPLE"] == x["LEFT_GROUP_VALUE"] and x["RIGHT_SAMPLE"] == x["RIGHT_GROUP_VALUE"]
 
     if all(sample_group_are_same(values) for values in data.values()):
         crosscheckfingerprints_table_cols = [

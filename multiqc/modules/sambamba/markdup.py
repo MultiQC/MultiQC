@@ -2,7 +2,6 @@ import logging
 import re
 from collections import OrderedDict
 
-from multiqc import config
 from multiqc.plots import bargraph
 
 log = logging.getLogger(__name__)

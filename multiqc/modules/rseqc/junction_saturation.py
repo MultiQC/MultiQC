@@ -22,8 +22,8 @@ def parse_reports(self):
     # Go through files and parse data
     for f in self.find_log_files("rseqc/junction_saturation"):
         parsed = dict()
-        for l in f["f"].splitlines():
-            r = re.search(r"^([xyzw])=c\(([\d,]+)\)$", l)
+        for line in f["f"].splitlines():
+            r = re.search(r"^([xyzw])=c\(([\d,]+)\)$", line)
             if r:
                 parsed[r.group(1)] = [float(i) for i in r.group(2).split(",")]
         if len(parsed) == 4:

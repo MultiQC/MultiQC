@@ -22,12 +22,12 @@ def parse_reports(self):
         if f["f"].startswith("GC%	read_count"):
             gc = list()
             counts = list()
-            for l in f["f"].splitlines():
-                s = l.split()
+            for line in f["f"].splitlines():
+                s = line.split()
                 try:
                     gc.append(float(s[0]))
                     counts.append(float(s[1]))
-                except:
+                except Exception:
                     pass
             if len(gc) > 0:
                 sorted_gc_keys = sorted(range(len(gc)), key=lambda k: gc[k])

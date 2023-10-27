@@ -66,7 +66,7 @@ def parse_reports(self):
             if "CollectIlluminaLaneMetrics" in line and "RUN_DIRECTORY" in line:
                 run_dir_search = re.search(r"RUN_DIRECTORY(?:=|\s+)(\[?[^\s]+\]?)", line, flags=re.IGNORECASE)
                 run_name = os.path.basename(run_dir_search[0])
-                if not run_name in self.picard_lane_metrics:
+                if run_name not in self.picard_lane_metrics:
                     self.picard_lane_metrics[run_name] = {}
 
             if run_name is not None:
@@ -79,7 +79,7 @@ def parse_reports(self):
 
                 for d in parsed_data:
                     lane = d["LANE"]
-                    if not lane in self.picard_lane_metrics[run_name]:
+                    if lane not in self.picard_lane_metrics[run_name]:
                         self.picard_lane_metrics[run_name][lane] = {}
                     self.picard_lane_metrics[run_name][lane].update(d)
 

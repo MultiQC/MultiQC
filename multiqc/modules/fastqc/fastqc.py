@@ -158,21 +158,21 @@ class MultiqcModule(BaseMultiqcModule):
         section = None
         s_headers = None
         self.dup_keys = []
-        for l in file_contents.splitlines():
-            if l.startswith("##FastQC"):
-                version_match = re.search(VERSION_REGEX, l)
+        for line in file_contents.splitlines():
+            if line.startswith("##FastQC"):
+                version_match = re.search(VERSION_REGEX, line)
                 if version_match:
                     self.add_software_version(version_match.group(1), s_name)
-            if l == ">>END_MODULE":
+            if line == ">>END_MODULE":
                 section = None
                 s_headers = None
-            elif l.startswith(">>"):
-                (section, status) = l[2:].split("\t", 1)
+            elif line.startswith(">>"):
+                (section, status) = line[2:].split("\t", 1)
                 section = section.lower().replace(" ", "_")
                 self.fastqc_data[s_name]["statuses"][section] = status
             elif section is not None:
-                if l.startswith("#"):
-                    s_headers = l[1:].split("\t")
+                if line.startswith("#"):
+                    s_headers = line[1:].split("\t")
                     # Special case: Total Deduplicated Percentage header line
                     if s_headers[0] == "Total Deduplicated Percentage":
                         self.fastqc_data[s_name]["basic_statistics"].append(
@@ -186,7 +186,7 @@ class MultiqcModule(BaseMultiqcModule):
                         self.fastqc_data[s_name][section] = list()
 
                 elif s_headers is not None:
-                    s = l.split("\t")
+                    s = line.split("\t")
                     row = dict()
                     for i, v in enumerate(s):
                         v.replace("NaN", "0")
@@ -651,11 +651,11 @@ class MultiqcModule(BaseMultiqcModule):
                     theoretical_gc_raw = None
         if theoretical_gc_raw is not None:
             theoretical_gc = list()
-            for l in theoretical_gc_raw.splitlines():
-                if "# FastQC theoretical GC content curve:" in l:
-                    theoretical_gc_name = l[39:]
-                elif not l.startswith("#"):
-                    s = l.split()
+            for line in theoretical_gc_raw.splitlines():
+                if "# FastQC theoretical GC content curve:" in line:
+                    theoretical_gc_name = line[39:]
+                elif not line.startswith("#"):
+                    s = line.split()
                     try:
                         theoretical_gc.append([float(s[0]), float(s[1])])
                     except (TypeError, IndexError):
@@ -782,7 +782,7 @@ class MultiqcModule(BaseMultiqcModule):
             return None
 
         if not multiple_lenths:
-            lengths = "bp , ".join([str(l) for l in list(avg_seq_lengths)])
+            lengths = "bp , ".join([str(line) for line in list(avg_seq_lengths)])
             desc = "All samples have sequences of a single length ({}bp).".format(lengths)
             if len(avg_seq_lengths) > 1:
                 desc += ' See the <a href="#general_stats">General Statistics Table</a>.'
@@ -1032,7 +1032,7 @@ class MultiqcModule(BaseMultiqcModule):
                 headers,
                 {
                     "namespace": self.name,
-                    "id": f"fastqc_top_overrepresented_sequences_table",
+                    "id": "fastqc_top_overrepresented_sequences_table",
                     "table_title": "FastQC: Top overrepresented sequences",
                     "col1_header": "Overrepresented sequence",
                     "sortRows": False,

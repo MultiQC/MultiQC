@@ -84,13 +84,13 @@ def parse_reports(
         keys = None
         in_stats_block = False
         recompute_merged_metrics = False
-        for l in f["f"]:
+        for line in f["f"]:
             #
             # New log starting
             #
-            if "markduplicates" in l.lower() and "input" in l.lower():
+            if "markduplicates" in line.lower() and "input" in line.lower():
                 # Pull sample name from input
-                fn_search = re.search(r"INPUT(?:=|\s+)(\[?[^\s]+\]?)", l, flags=re.IGNORECASE)
+                fn_search = re.search(r"INPUT(?:=|\s+)(\[?[^\s]+\]?)", line, flags=re.IGNORECASE)
                 if fn_search:
                     s_name = os.path.basename(fn_search.group(1).strip("[]"))
                     s_name = self.clean_s_name(s_name, f)
@@ -100,9 +100,9 @@ def parse_reports(
             #
             # Start of the METRICS table
             #
-            if "UNPAIRED_READ_DUPLICATES" in l:
+            if "UNPAIRED_READ_DUPLICATES" in line:
                 in_stats_block = True
-                keys = l.rstrip("\n").split("\t")
+                keys = line.rstrip("\n").split("\t")
                 continue
 
             #
@@ -110,7 +110,7 @@ def parse_reports(
             #
             if in_stats_block:
                 # Split the values columns
-                vals = l.rstrip("\n").split("\t")
+                vals = line.rstrip("\n").split("\t")
 
                 # End of the METRICS table, or multiple libraries, and we're not merging them
                 if len(vals) < 6 or (not merge_multiple_libraries and len(parsed_lists) > 0):

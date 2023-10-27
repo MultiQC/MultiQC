@@ -67,16 +67,16 @@ class MultiqcModule(BaseMultiqcModule):
         # Replace None with actual version if it is available
         self.add_software_version(None, s_name)
 
-        for l in f["f"].splitlines():
+        for line in f["f"].splitlines():
             # Attempt in vain to find original bowtie1 command, logged by another program
-            if "bowtie" in l and "q.gz" in l:
-                fqmatch = re.search(r"([^\s,]+\.f(ast)?q.gz)", l)
+            if "bowtie" in line and "q.gz" in line:
+                fqmatch = re.search(r"([^\s,]+\.f(ast)?q.gz)", line)
                 if fqmatch:
                     s_name = self.clean_s_name(fqmatch.group(1), f)
                     log.debug("Found a bowtie command, updating sample name to '{}'".format(s_name))
 
             # End of log, reset in case there is another in this file
-            if "Overall time:" in l:
+            if "Overall time:" in line:
                 if len(parsed_data) > 0:
                     if s_name in self.bowtie_data:
                         log.debug("Duplicate sample name found! Overwriting: {}".format(s_name))
@@ -86,7 +86,7 @@ class MultiqcModule(BaseMultiqcModule):
                 parsed_data = {}
 
             for k, r in regexes.items():
-                match = re.search(r, l)
+                match = re.search(r, line)
                 if match:
                     parsed_data[k] = float(match.group(1).replace(",", ""))
 

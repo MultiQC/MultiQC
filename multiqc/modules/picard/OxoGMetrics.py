@@ -22,15 +22,15 @@ def parse_reports(self):
         s_files = list()
         s_name = None
         keys = None
-        for l in f["f"]:
+        for line in f["f"]:
             # New log starting
-            if ("CollectOxoGMetrics" in l or "ConvertSequencingArtifactToOxoG" in l) and "INPUT" in l:
+            if ("CollectOxoGMetrics" in line or "ConvertSequencingArtifactToOxoG" in line) and "INPUT" in line:
                 s_name = None
                 keys = None
                 context_col = None
 
                 # Pull sample name from input
-                fn_search = re.search(r"INPUT(?:_BASE)?(?:=|\s+)(\[?[^\s]+\]?)", l, flags=re.IGNORECASE)
+                fn_search = re.search(r"INPUT(?:_BASE)?(?:=|\s+)(\[?[^\s]+\]?)", line, flags=re.IGNORECASE)
                 if fn_search:
                     s_name = os.path.basename(fn_search.group(1).strip("[]"))
                     s_name = self.clean_s_name(s_name, f)
@@ -39,11 +39,11 @@ def parse_reports(self):
                     s_files.append(f)
 
             if s_name is not None:
-                if "CollectOxoGMetrics$CpcgMetrics" in l and "## METRICS CLASS" in l:
+                if "CollectOxoGMetrics$CpcgMetrics" in line and "## METRICS CLASS" in line:
                     keys = f["f"].readline().strip("\n").split("\t")
                     context_col = keys.index("CONTEXT")
                 elif keys:
-                    vals = l.strip("\n").split("\t")
+                    vals = line.strip("\n").split("\t")
                     if len(vals) == len(keys) and context_col is not None:
                         context = vals[context_col]
                         parsed_data[-1][context] = dict()

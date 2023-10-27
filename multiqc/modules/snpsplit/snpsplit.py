@@ -5,7 +5,6 @@ from collections import OrderedDict
 
 import yaml
 
-from multiqc import config
 from multiqc.modules.base_module import BaseMultiqcModule, ModuleNoSamplesFound
 from multiqc.plots import bargraph
 

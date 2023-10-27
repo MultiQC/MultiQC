@@ -187,16 +187,16 @@ class MultiqcModule(BaseMultiqcModule):
             "format": "{:,.0f}",
         }
         headers_base["Median read length"] = {
-            "title": f"Median length",
-            "description": f"Median read length (bp)",
+            "title": "Median length",
+            "description": "Median read length (bp)",
             "suffix": " bp",
             "format": "{:,.0f}",
             "shared_key": "nucleotides",
             "scale": "BuPu",
         }
         headers_base["Mean read length"] = {
-            "title": f"Mean length",
-            "description": f"Mean read length (bp)",
+            "title": "Mean length",
+            "description": "Mean read length (bp)",
             "suffix": " bp",
             "scale": "Purples",
             "format": "{:,.0f}",
@@ -349,7 +349,7 @@ class MultiqcModule(BaseMultiqcModule):
         # Add the report section
         self.add_section(
             name="Reads by quality",
-            anchor=f"nanostat_read_qualities",
+            anchor="nanostat_read_qualities",
             description="Read counts categorised by read quality (Phred score).",
             helptext="""
             Sequencing machines assign each generated read a quality score using the

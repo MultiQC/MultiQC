@@ -28,8 +28,8 @@ def parse_reports(self):
         if f["f"].startswith("Percentile"):
             keys = []
             nrows = 0
-            for l in f["f"].splitlines():
-                s = l.split("\t")
+            for line in f["f"].splitlines():
+                s = line.split("\t")
                 # Check that this is the right file type (detection by capitilisation is pretty weak!)
                 if len(s) < 3:
                     break
@@ -57,8 +57,8 @@ def parse_reports(self):
             self.add_data_source(f, section="gene_body_coverage")
             self.gene_body_cov_hist_counts[f["s_name"]] = OrderedDict()
             nrows = 0
-            for l in f["f"].splitlines():
-                s = l.split("\t")
+            for line in f["f"].splitlines():
+                s = line.split("\t")
                 # Check that this is the right file type (detection by capitilisation is pretty weak!)
                 if len(s) > 2:
                     break
@@ -87,7 +87,6 @@ def parse_reports(self):
         # Make a normalised coverage for plotting using the formula (cov - min_cov) / (max_cov - min_cov)
         for s_name in self.gene_body_cov_hist_counts:
             self.gene_body_cov_hist_percent[s_name] = OrderedDict()
-            total = sum(self.gene_body_cov_hist_counts[s_name].values())
             # min_cov and max_cov are required to compute the normalized coverage
             min_cov = min(self.gene_body_cov_hist_counts[s_name].values())
             max_cov = max(self.gene_body_cov_hist_counts[s_name].values())

@@ -182,21 +182,21 @@ def _histogram_data(iterator):
     """Yields only the row contents that contain the histogram entries"""
     histogram_started = False
     header_passed = False
-    for l in iterator:
-        if "## HISTOGRAM" in l:
+    for line in iterator:
+        if "## HISTOGRAM" in line:
             histogram_started = True
         elif histogram_started:
             if header_passed:
-                values = l.rstrip().split("\t")
+                values = line.rstrip().split("\t")
                 if len(values) == 1:
                     continue
                 try:
                     problem_type, name = values[0].split(":")
-                except ValueError as e:
+                except ValueError:
                     log.warn("Line did not look like normal picard 'ERROR:NAME' format, ignoring: {}".format(values[0]))
                     continue
                 yield problem_type, name, int(values[1])
-            elif l.startswith("Error Type"):
+            elif line.startswith("Error Type"):
                 header_passed = True
 
 

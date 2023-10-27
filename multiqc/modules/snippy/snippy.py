@@ -3,7 +3,6 @@
 import logging
 from collections import OrderedDict
 
-from multiqc import config
 from multiqc.modules.base_module import BaseMultiqcModule, ModuleNoSamplesFound
 from multiqc.plots import bargraph
 

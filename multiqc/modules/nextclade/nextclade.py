@@ -4,13 +4,9 @@ import csv
 import logging
 from collections import OrderedDict
 
-import jinja2
 
-from multiqc import config
-from multiqc.modules import nextclade
 from multiqc.modules.base_module import BaseMultiqcModule, ModuleNoSamplesFound
-from multiqc.plots import bargraph, table
-from multiqc.utils import mqc_colour
+from multiqc.plots import table
 
 # Initialise the logger
 log = logging.getLogger(__name__)

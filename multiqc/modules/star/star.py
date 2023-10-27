@@ -174,8 +174,8 @@ class MultiqcModule(BaseMultiqcModule):
         second_strand = {"N_genes": 0}
         num_errors = 0
         num_genes = 0
-        for l in f["f"]:
-            s = l.split("\t")
+        for line in f["f"]:
+            s = line.split("\t")
             try:
                 for i in [1, 2, 3]:
                     s[i] = float(s[i])

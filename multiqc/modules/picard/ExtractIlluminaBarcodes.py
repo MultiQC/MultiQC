@@ -127,7 +127,7 @@ def reads_per_barcode(data):
     reads_per_barcode = {}
     for lane, barcodes in data.items():
         for barcode, barcode_data in barcodes.items():
-            if not barcode in reads_per_barcode:
+            if barcode not in reads_per_barcode:
                 reads_per_barcode[barcode] = {
                     "READS": 0,
                     "PERFECT_MATCHES": 0,

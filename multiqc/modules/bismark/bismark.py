@@ -204,22 +204,22 @@ class MultiqcModule(BaseMultiqcModule):
         self.bismark_mbias_data["cov"]["CHG_R2"][s] = {}
         self.bismark_mbias_data["cov"]["CHH_R2"][s] = {}
         key = None
-        for l in f["f"]:
-            if "context" in l:
-                if "CpG" in l:
+        for line in f["f"]:
+            if "context" in line:
+                if "CpG" in line:
                     key = "CpG"
-                elif "CHG" in l:
+                elif "CHG" in line:
                     key = "CHG"
-                elif "CHH" in l:
+                elif "CHH" in line:
                     key = "CHH"
-                if "(R1)" in l:
+                if "(R1)" in line:
                     key += "_R1"
-                elif "(R2)" in l:
+                elif "(R2)" in line:
                     key += "_R2"
                 else:
                     key += "_R1"
             if key is not None:
-                sections = l.split()
+                sections = line.split()
                 try:
                     pos = int(sections[0])
                     self.bismark_mbias_data["meth"][key][s][pos] = float(sections[3])
@@ -244,15 +244,16 @@ class MultiqcModule(BaseMultiqcModule):
         self.bismark_data["bam2nuc"][f["s_name"]] = dict()
 
         headers = None
-        for l in f["f"]:
-            sections = l.rstrip().split("\t")
+        for line in f["f"]:
+            sections = line.rstrip().split("\t")
             if headers is None:
                 headers = sections
             else:
+                k = None
                 for i, h in enumerate(headers):
                     if i == 0:
                         k = sections[0]
-                    else:
+                    elif k is not None:
                         key = "{}_{}".format(k, h.lower().replace(" ", "_"))
                         self.bismark_data["bam2nuc"][f["s_name"]][key] = sections[i]
 

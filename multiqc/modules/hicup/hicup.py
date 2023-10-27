@@ -71,8 +71,8 @@ class MultiqcModule(BaseMultiqcModule):
             return None
         header = []
         lines = f["f"].splitlines()
-        for l in lines:
-            s = l.split("\t")
+        for line in lines:
+            s = line.split("\t")
             if len(header) == 0:
                 if s[0] != "File":
                     return None
@@ -85,7 +85,7 @@ class MultiqcModule(BaseMultiqcModule):
                 for idx, num in enumerate(s[1:]):
                     try:
                         parsed_data[header[idx]] = float(num)
-                    except:
+                    except ValueError:
                         parsed_data[header[idx]] = num
                 parsed_data["Duplicate_Read_Pairs"] = (
                     parsed_data["Valid_Pairs"] - parsed_data["Deduplication_Read_Pairs_Uniques"]

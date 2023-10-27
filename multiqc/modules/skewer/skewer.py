@@ -63,7 +63,7 @@ class MultiqcModule(BaseMultiqcModule):
 
         for s_name in self.skewer_readlen_dist:
             for xval in all_x_values:
-                if not xval in self.skewer_readlen_dist[s_name]:
+                if xval not in self.skewer_readlen_dist[s_name]:
                     self.skewer_readlen_dist[s_name][xval] = 0.0
 
             # After adding new elements, the ordereddict needs to be re-sorted
@@ -111,18 +111,18 @@ class MultiqcModule(BaseMultiqcModule):
         data["fq2"] = None
         readlen_dist = OrderedDict()
 
-        for l in fh:
-            if l.startswith("skewer"):
-                match = re.search(VERSION_REGEX, l)
+        for line in fh:
+            if line.startswith("skewer"):
+                match = re.search(VERSION_REGEX, line)
                 if match:
                     data["version"] = match.group(1)
 
             for k, r in regexes.items():
-                match = re.search(r, l)
+                match = re.search(r, line)
                 if match:
                     data[k] = match.group(1).replace(",", "")
 
-            match = re.search(regex_hist, l)
+            match = re.search(regex_hist, line)
             if match:
                 read_length = int(match.group(1))
                 pct_at_rl = float(match.group(3))

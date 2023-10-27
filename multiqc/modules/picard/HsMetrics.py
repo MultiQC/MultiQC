@@ -82,24 +82,24 @@ def parse_reports(self):
         s_name = None
         keys = None
         commadecimal = None
-        for l in f["f"]:
+        for line in f["f"]:
             # New log starting
-            if "CalculateHsMetrics" in l or "CollectHsMetrics" in l and "INPUT" in l:
+            if "CalculateHsMetrics" in line or "CollectHsMetrics" in line and "INPUT" in line:
                 s_name = None
                 keys = None
 
                 # Pull sample name from input
-                fn_search = re.search(r"INPUT(?:=|\s+)(\[?[^\s]+\]?)", l, flags=re.IGNORECASE)
+                fn_search = re.search(r"INPUT(?:=|\s+)(\[?[^\s]+\]?)", line, flags=re.IGNORECASE)
                 if fn_search:
                     s_name = os.path.basename(fn_search.group(1).strip("[]"))
                     s_name = self.clean_s_name(s_name, f)
                     parsed_data[s_name] = dict()
 
             if s_name is not None:
-                if "HsMetrics" in l and "## METRICS CLASS" in l:
+                if "HsMetrics" in line and "## METRICS CLASS" in line:
                     keys = f["f"].readline().strip("\n").split("\t")
                 elif keys:
-                    vals = l.strip("\n").split("\t")
+                    vals = line.strip("\n").split("\t")
                     if len(vals) == len(keys):
                         j = "NA"
                         if keys[0] == "BAIT_SET":
@@ -231,7 +231,7 @@ def general_stats_table(self, data):
         }
         try:
             covs = picard_config["general_stats_target_coverage"]
-            assert type(covs) == list
+            assert isinstance(covs, list)
             assert len(covs) > 0
             covs = [str(i) for i in covs]
             log.debug("Custom Picard coverage thresholds: {}".format(", ".join([i for i in covs])))

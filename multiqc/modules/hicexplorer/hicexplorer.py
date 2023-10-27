@@ -70,7 +70,7 @@ class MultiqcModule(BaseMultiqcModule):
         for s_name in self.hicexplorer_data:
             # compatibility to HiCExplorer <= 1.7 version QC files
             if (
-                not "Pairs mappable, unique and high quality" in self.hicexplorer_data[s_name]
+                "Pairs mappable, unique and high quality" not in self.hicexplorer_data[s_name]
                 and "Pairs considered" in self.hicexplorer_data[s_name]
             ):
                 hicexplorer_versions.add("1.7")
@@ -228,11 +228,11 @@ class MultiqcModule(BaseMultiqcModule):
     def parse_logs(self, f):
         """Parse a given HiCExplorer log file from hicBuildMatrix."""
         data = {}
-        for l in f.splitlines():
+        for line in f.splitlines():
             # catch empty lines
-            if len(l) == 0:
+            if len(line) == 0:
                 continue
-            s = l.split("\t")
+            s = line.split("\t")
             # Skip header
             if s[0].startswith("#"):
                 continue

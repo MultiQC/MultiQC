@@ -133,50 +133,50 @@ class MultiqcModule(BaseMultiqcModule):
         s_name = f["s_name"]
         parsed_data = {}
 
-        for l in f["f"]:
+        for line in f["f"]:
             # Attempt in vain to find original bowtie2 command, logged by another program
-            btcmd = re.search(r"bowtie2 .+ -[1U] ([^\s,]+)", l)
+            btcmd = re.search(r"bowtie2 .+ -[1U] ([^\s,]+)", line)
             if btcmd:
                 s_name = self.clean_s_name(btcmd.group(1), f)
                 log.debug("Found a bowtie2 command, updating sample name to '{}'".format(s_name))
 
             # Total reads
-            total = re.search(r"(\d+) reads; of these:", l)
+            total = re.search(r"(\d+) reads; of these:", line)
             if total:
                 parsed_data["total_reads"] = int(total.group(1))
 
             # Single end reads
-            unpaired = re.search(r"(\d+) \([\d\.]+%\) were unpaired; of these:", l)
+            unpaired = re.search(r"(\d+) \([\d\.]+%\) were unpaired; of these:", line)
             if unpaired:
                 parsed_data["unpaired_total"] = int(unpaired.group(1))
                 self.num_se += 1
 
                 # Do nested loop whilst we have this level of indentation
-                l = f["f"].readline()
-                while l.startswith("    "):
+                line = f["f"].readline()
+                while line.startswith("    "):
                     for k, r in regexes["unpaired"].items():
-                        match = re.search(r, l)
+                        match = re.search(r, line)
                         if match:
                             parsed_data[k] = int(match.group(1))
-                    l = f["f"].readline()
+                    line = f["f"].readline()
 
             # Paired end reads
-            paired = re.search(r"(\d+) \([\d\.]+%\) were paired; of these:", l)
+            paired = re.search(r"(\d+) \([\d\.]+%\) were paired; of these:", line)
             if paired:
                 parsed_data["paired_total"] = int(paired.group(1))
                 self.num_pe += 1
 
                 # Do nested loop whilst we have this level of indentation
-                l = f["f"].readline()
-                while l.startswith("    "):
+                line = f["f"].readline()
+                while line.startswith("    "):
                     for k, r in regexes["paired"].items():
-                        match = re.search(r, l)
+                        match = re.search(r, line)
                         if match:
                             parsed_data[k] = int(match.group(1))
-                    l = f["f"].readline()
+                    line = f["f"].readline()
 
             # Overall alignment rate
-            overall = re.search(r"([\d\.]+)% overall alignment rate", l)
+            overall = re.search(r"([\d\.]+)% overall alignment rate", line)
             if overall:
                 parsed_data["overall_alignment_rate"] = float(overall.group(1))
 

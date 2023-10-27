@@ -77,18 +77,18 @@ class MultiqcModule(BaseMultiqcModule):
         nohits_pct = None
         headers = None
         bs_headers = None
-        for l in f["f"]:
+        for line in f["f"]:
             # Skip comment lines
-            if l.startswith("#"):
-                version_match = re.search(VERSION_REGEX, l)
+            if line.startswith("#"):
+                version_match = re.search(VERSION_REGEX, line)
                 if version_match:
                     self.add_software_version(version_match.group(1), f["s_name"])
                 continue
-            if l.startswith("%Hit_no_genomes:") or l.startswith("%Hit_no_libraries:"):
-                nohits_pct = float(l.split(":", 1)[1])
+            if line.startswith("%Hit_no_genomes:") or line.startswith("%Hit_no_libraries:"):
+                nohits_pct = float(line.split(":", 1)[1])
                 parsed_data["No hits"] = {"percentages": {"one_hit_one_library": nohits_pct}}
             else:
-                s = l.strip().split("\t")
+                s = line.strip().split("\t")
 
                 # Regular FastQ Screen table section
                 if len(s) == 12:

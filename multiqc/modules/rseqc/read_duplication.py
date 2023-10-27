@@ -23,12 +23,12 @@ def parse_reports(self):
                 log.debug("Duplicate sample name found! Overwriting: {}".format(f["s_name"]))
             self.add_data_source(f, section="read_duplication")
             self.read_dups[f["s_name"]] = OrderedDict()
-            for l in f["f"].splitlines():
-                s = l.split()
+            for line in f["f"].splitlines():
+                s = line.split()
                 try:
                     if int(s[0]) <= 500:
                         self.read_dups[f["s_name"]][int(s[0])] = int(s[1])
-                except:
+                except Exception:
                     pass
 
         # Superfluous function call to confirm that it is used in this module

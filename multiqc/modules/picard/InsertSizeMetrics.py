@@ -24,11 +24,11 @@ def parse_reports(self):
     for f in self.find_log_files("picard/insertsize", filehandles=True):
         s_name = None
         in_hist = False
-        for l in f["f"]:
+        for line in f["f"]:
             # Catch the histogram values
             if s_name is not None and in_hist is True:
                 try:
-                    sections = l.split("\t")
+                    sections = line.split("\t")
                     ins = int(sections[0])
                     tot_count = sum([int(x) for x in sections[1:]])
                     self.picard_insertSize_histogram[s_name][ins] = tot_count
@@ -39,16 +39,16 @@ def parse_reports(self):
                     in_hist = False
 
             # New log starting
-            if "InsertSizeMetrics" in l and "INPUT" in l:
+            if "InsertSizeMetrics" in line and "INPUT" in line:
                 s_name = None
                 # Pull sample name from input
-                fn_search = re.search(r"INPUT(?:=|\s+)(\[?[^\s]+\]?)", l, flags=re.IGNORECASE)
+                fn_search = re.search(r"INPUT(?:=|\s+)(\[?[^\s]+\]?)", line, flags=re.IGNORECASE)
                 if fn_search:
                     s_name = os.path.basename(fn_search.group(1).strip("[]"))
                     s_name = self.clean_s_name(s_name, f)
 
             if s_name is not None:
-                if "InsertSizeMetrics" in l and "## METRICS CLASS" in l:
+                if "InsertSizeMetrics" in line and "## METRICS CLASS" in line:
                     if s_name in self.picard_insertSize_data:
                         log.debug("Duplicate sample name found in {}! Overwriting: {}".format(f["fn"], s_name))
                     self.add_data_source(f, s_name, section="InsertSizeMetrics")
@@ -85,8 +85,8 @@ def parse_reports(self):
                         vals = f["f"].readline().strip("\n").split("\t")
 
                     # Skip lines on to histogram
-                    l = f["f"].readline().strip("\n")
-                    l = f["f"].readline().strip("\n")
+                    line = f["f"].readline().strip("\n")
+                    line = f["f"].readline().strip("\n")
 
                     self.picard_insertSize_histogram[s_name] = OrderedDict()
                     in_hist = True

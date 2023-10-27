@@ -4,7 +4,6 @@ http://rseqc.sourceforge.net/#tin-py """
 import csv
 import logging
 
-from multiqc.plots import bargraph
 
 # Initialise the logger
 log = logging.getLogger(__name__)

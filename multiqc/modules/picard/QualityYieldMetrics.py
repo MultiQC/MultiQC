@@ -4,7 +4,6 @@ import logging
 from collections import OrderedDict
 
 from multiqc import config
-from multiqc.plots import linegraph, table
 
 from .util import read_sample_name
 
@@ -39,14 +38,11 @@ def parse_reports(self):
     for f in self.find_log_files("picard/quality_yield_metrics", filehandles=True):
         self.add_data_source(f, section="QualityYieldMetrics")
 
-        parsed_data = dict()
-        s_name = None
-        keys = None
-        commadecimal = None
-
         lines = iter(f["f"])
 
-        clean_fn = lambda n: self.clean_s_name(n, f)
+        def clean_fn(n):
+            return self.clean_s_name(n, f)
+
         s_name = read_sample_name(lines, clean_fn, "CollectQualityYieldMetrics")
 
         if s_name is None:

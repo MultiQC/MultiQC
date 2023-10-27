@@ -83,7 +83,7 @@ class MultiqcModule(BaseMultiqcModule):
 
             yaml.add_constructor(yaml.resolver.BaseResolver.DEFAULT_MAPPING_TAG, dict_constructor)
             summary_dict = yaml.safe_load(f)
-        except Exception as e:
+        except Exception:
             log.error("Error parsing MinIONQC input file: {}".format(f))
             return
 

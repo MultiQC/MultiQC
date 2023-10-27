@@ -6,7 +6,6 @@ import logging
 from collections import OrderedDict
 
 from multiqc.modules.base_module import BaseMultiqcModule, ModuleNoSamplesFound
-from multiqc.plots import bargraph, scatter
 
 # Initialise the logger
 log = logging.getLogger(__name__)

@@ -1,7 +1,7 @@
 import logging
 from collections import OrderedDict, defaultdict
 
-from multiqc.modules.base_module import BaseMultiqcModule, ModuleNoSamplesFound
+from multiqc.modules.base_module import BaseMultiqcModule
 from multiqc.plots import linegraph
 
 from .util import average_from_range, percentage_from_content_metric
@@ -46,7 +46,6 @@ class DragenFastqcGcMetrics(BaseMultiqcModule):
                         max_len = max(pos, max_len)
 
                 data[r_name] = defaultdict(float)
-                group_data = self.dragen_fastqc_data[s_name][mate][GC_GROUP]
                 for metric, value in self.dragen_fastqc_data[s_name][mate][GC_GROUP].items():
                     pct = percentage_from_content_metric(metric)
                     data[r_name][pct] = value
@@ -114,7 +113,7 @@ class DragenFastqcGcMetrics(BaseMultiqcModule):
                     pct = int(parts[0][:-1])
                     try:
                         data[r_name][pct] = float(value)
-                    except:
+                    except Exception:
                         continue
 
         pconfig = {

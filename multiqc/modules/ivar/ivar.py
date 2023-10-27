@@ -9,7 +9,7 @@ from collections import OrderedDict
 
 from multiqc import config
 from multiqc.modules.base_module import BaseMultiqcModule, ModuleNoSamplesFound
-from multiqc.plots import bargraph, heatmap
+from multiqc.plots import heatmap
 
 # Initialise the logger
 log = logging.getLogger(__name__)
@@ -74,15 +74,15 @@ class MultiqcModule(BaseMultiqcModule):
         primer_regex = re.compile(r"^(.*)(?:\t+)(\d+$)")
         parsed_data = dict()
         primers = OrderedDict()
-        for l in f["f"]:
+        for line in f["f"]:
             # Search count regexes for stats
             for k, count_regex in count_regexes.items():
-                count_match = count_regex.search(l)
+                count_match = count_regex.search(line)
                 if count_match:
                     parsed_data[k] = int(count_match.group(1))
 
             # Try to match the primer regex
-            primer_match = primer_regex.search(l)
+            primer_match = primer_regex.search(line)
             if primer_match:
                 primers[primer_match.group(1)] = int(primer_match.group(2))
 
