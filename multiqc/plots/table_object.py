@@ -28,9 +28,9 @@ class datatable(object):
                 pconfig[k] = v
 
         # Given one dataset - turn it into a list
-        if type(data) is not list:
+        if not isinstance(data, list):
             data = [data]
-        if type(headers) is not list:
+        if not isinstance(headers, list):
             headers = [headers]
 
         sectcols = [

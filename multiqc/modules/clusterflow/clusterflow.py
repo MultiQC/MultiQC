@@ -81,12 +81,12 @@ class MultiqcModule(BaseMultiqcModule):
         module = None
         job_id = None
         pipeline_id = None
-        for l in f["f"]:
+        for line in f["f"]:
             # Get pipeline ID
-            module_r = re.match(r"Module:\s+(.+)$", l)
+            module_r = re.match(r"Module:\s+(.+)$", line)
             if module_r:
                 module = module_r.group(1)
-            job_id_r = re.match(r"Job ID:\s+(.+)$", l)
+            job_id_r = re.match(r"Job ID:\s+(.+)$", line)
             if job_id_r:
                 job_id = job_id_r.group(1)
                 if module is not None:
@@ -95,12 +95,12 @@ class MultiqcModule(BaseMultiqcModule):
                         pipeline_id = pipeline_r.group(1)
 
             # Get commands that have been run
-            if l.startswith("###CFCMD"):
+            if line.startswith("###CFCMD"):
                 if pipeline_id is None:
                     pipeline_id = "unknown"
                 if pipeline_id not in self.clusterflow_commands.keys():
                     self.clusterflow_commands[pipeline_id] = list()
-                self.clusterflow_commands[pipeline_id].append(l[8:])
+                self.clusterflow_commands[pipeline_id].append(line[8:])
 
     def clusterflow_commands_table(self):
         """Make a table of the Cluster Flow commands"""
@@ -201,44 +201,44 @@ class MultiqcModule(BaseMultiqcModule):
         in_comment = False
         seen_pipeline = False
         cf_file = False
-        for l in f["f"]:
-            l = l.rstrip()
+        for line in f["f"]:
+            line = line.rstrip()
             # Check that this is from Cluster Flow
-            if "Cluster Flow" in l:
+            if "Cluster Flow" in line:
                 cf_file = True
             # Header
-            if l.startswith("Pipeline: "):
-                data["pipeline_name"] = l[10:]
-            if l.startswith("Pipeline ID: "):
-                data["pipeline_id"] = l[13:]
-            if l.startswith("Created at "):
-                data["pipeline_start"] = l[11:]
+            if line.startswith("Pipeline: "):
+                data["pipeline_name"] = line[10:]
+            if line.startswith("Pipeline ID: "):
+                data["pipeline_id"] = line[13:]
+            if line.startswith("Created at "):
+                data["pipeline_start"] = line[11:]
             # Config settings
-            if l.startswith("@"):
-                s = l.split(None, 1)
+            if line.startswith("@"):
+                s = line.split(None, 1)
                 key = s[0].replace("@", "").strip()
                 try:
                     data[key] = "\t".join(s[1:])
                 except IndexError:
                     data[key] = True
             # Comments
-            if l.startswith("/*"):
+            if line.startswith("/*"):
                 in_comment = True
-            if l.startswith("*/"):
+            if line.startswith("*/"):
                 in_comment = False
             if in_comment:
                 if "comment" not in data:
                     data["comment"] = ""
-                data["comment"] += l + "\n"
+                data["comment"] += line + "\n"
             # Pipeline steps
-            if l.strip().startswith("#"):
+            if line.strip().startswith("#"):
                 if "pipeline_steps" not in data:
                     data["pipeline_steps"] = []
-                data["pipeline_steps"].append(l)
+                data["pipeline_steps"].append(line)
                 seen_pipeline = True
             # Step output files
             elif seen_pipeline:
-                s = l.split("\t")
+                s = line.split("\t")
                 if len(s) > 1:
                     if "files" not in data:
                         data["files"] = OrderedDict()

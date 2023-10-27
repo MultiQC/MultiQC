@@ -22,23 +22,23 @@ def parse_reports(self):
         parsed_data = dict()
         s_name = None
         keys = None
-        for l in f["f"]:
+        for line in f["f"]:
             # New log starting
-            if "AlignmentSummaryMetrics" in l and "INPUT" in l:
+            if "AlignmentSummaryMetrics" in line and "INPUT" in line:
                 s_name = None
                 keys = None
                 # Pull sample name from input
-                fn_search = re.search(r"INPUT(?:=|\s+)(\[?[^\s]+\]?)", l, flags=re.IGNORECASE)
+                fn_search = re.search(r"INPUT(?:=|\s+)(\[?[^\s]+\]?)", line, flags=re.IGNORECASE)
                 if fn_search:
                     s_name = os.path.basename(fn_search.group(1).strip("[]"))
                     s_name = self.clean_s_name(s_name, f)
                     parsed_data[s_name] = dict()
 
             if s_name is not None:
-                if "AlignmentSummaryMetrics" in l and "## METRICS CLASS" in l:
+                if "AlignmentSummaryMetrics" in line and "## METRICS CLASS" in line:
                     keys = f["f"].readline().strip("\n").split("\t")
                 elif keys:
-                    vals = l.strip("\n").split("\t")
+                    vals = line.strip("\n").split("\t")
                     if len(vals) == len(keys):
                         # Ignore the FIRST_OF_PAIR / SECOND_OF_PAIR data to simplify things
                         if vals[0] == "PAIR" or vals[0] == "UNPAIRED":

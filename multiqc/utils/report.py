@@ -18,6 +18,7 @@ from collections import OrderedDict, defaultdict
 import rich
 import rich.progress
 import yaml
+from yaml.representer import Representer
 
 from multiqc.utils import lzstring
 
@@ -25,15 +26,9 @@ from . import config
 
 logger = config.logger
 
-# Treat defaultdict and OrderedDict as normal dicts for YAML output
-from yaml.representer import Representer, SafeRepresenter
-
+# Treat defaultdict as normal dict for YAML output
 yaml.add_representer(defaultdict, Representer.represent_dict)
 yaml.add_representer(OrderedDict, Representer.represent_dict)
-try:
-    yaml.add_representer(unicode, SafeRepresenter.represent_unicode)
-except NameError:
-    pass  # Python 3
 
 
 # Set up global variables shared across modules
@@ -469,7 +464,7 @@ def data_sources_tofile():
                 for sec in data_sources[mod]:
                     for s_name, source in data_sources[mod][sec].items():
                         lines.append([mod, sec, s_name, source])
-            body = "\n".join(["\t".join(l) for l in lines])
+            body = "\n".join(["\t".join(line) for line in lines])
             print(body.encode("utf-8", "ignore").decode("utf-8"), file=f)
 
 

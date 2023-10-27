@@ -27,7 +27,7 @@ def plot(data, pconfig=None):
             pconfig[k] = v
 
     # Given one dataset - turn it into a list
-    if type(data) is not list:
+    if not isinstance(data, list):
         data = [data]
 
     # Generate the data dict structure expected by HighCharts series
@@ -37,12 +37,12 @@ def plot(data, pconfig=None):
         for s_name in ds:
             # Ensure any overwritting conditionals from data_labels (e.g. ymax) are taken in consideration
             series_config = pconfig.copy()
-            if (
-                "data_labels" in pconfig and type(pconfig["data_labels"][data_index]) is dict
+            if "data_labels" in pconfig and isinstance(
+                pconfig["data_labels"][data_index], dict
             ):  # if not a dict: only dataset name is provided
                 series_config.update(pconfig["data_labels"][data_index])
 
-            if type(ds[s_name]) is not list:
+            if not isinstance(ds[s_name], list):
                 ds[s_name] = [ds[s_name]]
             for k in ds[s_name]:
                 if k["x"] is not None:
@@ -74,9 +74,9 @@ def plot(data, pconfig=None):
     try:
         if pconfig.get("extra_series"):
             extra_series = pconfig["extra_series"]
-            if type(pconfig["extra_series"]) == dict:
+            if isinstance(pconfig["extra_series"], dict):
                 extra_series = [[pconfig["extra_series"]]]
-            elif type(pconfig["extra_series"]) == list and type(pconfig["extra_series"][0]) == dict:
+            elif isinstance(pconfig["extra_series"], list) and isinstance(pconfig["extra_series"][0], dict):
                 extra_series = [pconfig["extra_series"]]
             for i, es in enumerate(extra_series):
                 for s in es:
@@ -113,19 +113,19 @@ def highcharts_scatter_plot(plotdata, pconfig=None):
             active = "active" if k == 0 else ""
             try:
                 name = pconfig["data_labels"][k]["name"]
-            except:
+            except (IndexError, KeyError):
                 name = k + 1
             try:
                 ylab = 'data-ylab="{}"'.format(pconfig["data_labels"][k]["ylab"])
-            except:
+            except (IndexError, KeyError):
                 ylab = 'data-ylab="{}"'.format(name) if name != k + 1 else ""
             try:
                 ymax = 'data-ymax="{}"'.format(pconfig["data_labels"][k]["ymax"])
-            except:
+            except (IndexError, KeyError):
                 ymax = ""
             try:
                 xlab = 'data-xlab="{}"'.format(pconfig["data_labels"][k]["xlab"])
-            except:
+            except (IndexError, KeyError):
                 xlab = 'data-xlab="{}"'.format(name) if name != k + 1 else ""
             html += '<button class="btn btn-default btn-sm {a}" data-action="set_data" {y} {ym} {xl} data-newdata="{k}" data-target="{id}">{n}</button>\n'.format(
                 a=active, id=pconfig["id"], n=name, y=ylab, ym=ymax, xl=xlab, k=k

@@ -350,7 +350,8 @@ class mqc_colour_scale(object):
 
         # Ported from the original JavaScript for continuity
         # Seems to work better than adjusting brightness / saturation / luminosity
-        rgb_converter = lambda x: max(0, min(1, 1 + ((x - 1) * lighten)))
+        def rgb_converter(x):
+            return max(0, min(1, 1 + ((x - 1) * lighten)))
 
         try:
             if self.name in mqc_colour_scale.qualitative_scales and isinstance(val, float):
@@ -399,7 +400,7 @@ class mqc_colour_scale(object):
 
                 return thecolour.hexcode
 
-        except:
+        except Exception:
             # Shouldn't crash all of MultiQC just for colours
             return ""
 

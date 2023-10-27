@@ -91,23 +91,16 @@ def plot(data, cats=None, pconfig=None):
             report.lint_errors.append(errmsg)
 
     # Given one dataset - turn it into a list
-    if type(data) is not list:
+    if not isinstance(data, list):
         data = [data]
 
     # Make list of cats from different inputs
     if cats is None:
         cats = list()
-    elif type(cats) is not list:
+    elif not isinstance(cats, list):
         cats = [cats]
-    else:
-        try:  # Py2
-            if type(cats[0]) is str or type(cats[0]) is unicode:
-                cats = [cats]
-        except NameError:  # Py3
-            if type(cats[0]) is str:
-                cats = [cats]
-        except IndexError:  # Given empty list
-            pass
+    elif cats and isinstance(cats[0], str):
+        cats = [cats]
     # Generate default categories if not supplied
     for idx in range(len(data)):
         try:
@@ -121,7 +114,7 @@ def plot(data, cats=None, pconfig=None):
 
     # If we have cats in lists, turn them into dicts
     for idx, cat in enumerate(cats):
-        if type(cat) is list:
+        if isinstance(cat, list):
             newcats = OrderedDict()
             for c in cat:
                 newcats[c] = {"name": c}
@@ -134,9 +127,10 @@ def plot(data, cats=None, pconfig=None):
     # Allow user to overwrite a given category config for this plot
     if "id" in pconfig and pconfig["id"] and pconfig["id"] in config.custom_plot_config:
         for k, v in config.custom_plot_config[pconfig["id"]].items():
-            if k in cats[idx].keys():
-                for kk, vv in v.items():
-                    cats[idx][k][kk] = vv
+            for idx in range(len(cats)):
+                if k in cats[idx].keys():
+                    for kk, vv in v.items():
+                        cats[idx][k][kk] = vv
 
     # Parse the data into a chart friendly format
     plotsamples = list()
@@ -196,7 +190,7 @@ def plot(data, cats=None, pconfig=None):
     if "bargraph" in mod.__dict__ and callable(mod.bargraph):
         try:
             return mod.bargraph(plotdata, plotsamples, pconfig)
-        except:
+        except:  # noqa: E722
             if config.strict:
                 # Crash quickly in the strict mode. This can be helpful for interactive
                 # debugging of modules
@@ -282,18 +276,18 @@ def highcharts_bargraph(plotdata, plotsamples=None, pconfig=None):
             active = "active" if k == 0 else ""
             try:
                 name = pconfig["data_labels"][k]["name"]
-            except:
+            except (KeyError, IndexError):
                 try:
                     name = pconfig["data_labels"][k]
-                except:
+                except (KeyError, IndexError):
                     name = k + 1
             try:
                 ylab = 'data-ylab="{}"'.format(pconfig["data_labels"][k]["ylab"])
-            except:
+            except (KeyError, IndexError):
                 ylab = 'data-ylab="{}"'.format(name) if name != k + 1 else ""
             try:
                 ymax = 'data-ymax="{}"'.format(pconfig["data_labels"][k]["ymax"])
-            except:
+            except (KeyError, IndexError):
                 ymax = ""
             html += '<button class="btn btn-default btn-sm {a}" data-action="set_data" {y} {ym} data-newdata="{k}" data-target="{id}">{n}</button>\n'.format(
                 a=active, id=pconfig["id"], n=name, y=ylab, ym=ymax, k=k
@@ -342,7 +336,7 @@ def matplotlib_bargraph(plotdata, plotsamples, pconfig=None):
     for k in range(len(plotdata)):
         try:
             name = pconfig["data_labels"][k]
-        except:
+        except (KeyError, IndexError):
             name = k + 1
         pid = "mqc_{}_{}".format(pconfig["id"], name)
         pid = report.save_htmlid(pid, skiplint=True)
@@ -381,7 +375,7 @@ def matplotlib_bargraph(plotdata, plotsamples, pconfig=None):
             active = "active" if k == 0 else ""
             try:
                 name = pconfig["data_labels"][k]
-            except:
+            except (KeyError, IndexError):
                 name = k + 1
             html += '<button class="btn btn-default btn-sm {a}" data-target="#{pid}">{n}</button>\n'.format(
                 a=active, pid=pid, n=name

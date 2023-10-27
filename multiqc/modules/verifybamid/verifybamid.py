@@ -89,9 +89,9 @@ class MultiqcModule(BaseMultiqcModule):
         # set a empty variable which denotes if the headers have been read
         headers = None
         # for each line in the file
-        for l in f["f"].splitlines():
+        for line in f["f"].splitlines():
             # split the line on tab
-            s = l.split("\t")
+            s = line.split("\t")
             # if we haven't already read the header line
             if headers is None:
                 # assign this list to headers variable

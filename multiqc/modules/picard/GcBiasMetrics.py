@@ -22,13 +22,13 @@ def parse_reports(self):
         s_name = None
         gc_col = None
         cov_col = None
-        for l in f["f"]:
+        for line in f["f"]:
             # New log starting
-            if "GcBiasMetrics" in l and "INPUT" in l:
+            if "GcBiasMetrics" in line and "INPUT" in line:
                 s_name = None
 
                 # Pull sample name from input
-                fn_search = re.search(r"INPUT(?:=|\s+)(\[?[^\s]+\]?)", l, flags=re.IGNORECASE)
+                fn_search = re.search(r"INPUT(?:=|\s+)(\[?[^\s]+\]?)", line, flags=re.IGNORECASE)
                 if fn_search:
                     s_name = os.path.basename(fn_search.group(1).strip("[]"))
                     s_name = self.clean_s_name(s_name, f)
@@ -37,25 +37,25 @@ def parse_reports(self):
                 if gc_col is not None and cov_col is not None:
                     try:
                         # Note that GC isn't always the first column.
-                        s = l.strip("\n").split("\t")
+                        s = line.strip("\n").split("\t")
                         self.picard_GCbias_data[s_name][int(s[gc_col])] = float(s[cov_col])
                     except IndexError:
                         s_name = None
                         gc_col = None
                         cov_col = None
 
-                if "GcBiasDetailMetrics" in l and "## METRICS CLASS" in l:
+                if "GcBiasDetailMetrics" in line and "## METRICS CLASS" in line:
                     if s_name in self.picard_GCbias_data:
                         log.debug("Duplicate sample name found in {}! Overwriting: {}".format(f["fn"], s_name))
                     self.add_data_source(f, s_name, section="GcBiasDetailMetrics")
                     self.picard_GCbias_data[s_name] = dict()
                     # Get header - find columns with the data we want
-                    l = f["f"].readline()
-                    s = l.strip("\n").split("\t")
+                    line = f["f"].readline()
+                    s = line.strip("\n").split("\t")
                     gc_col = s.index("GC")
                     cov_col = s.index("NORMALIZED_COVERAGE")
 
-                if "GcBiasSummaryMetrics" in l and "## METRICS CLASS" in l:
+                if "GcBiasSummaryMetrics" in line and "## METRICS CLASS" in line:
                     if s_name in self.picard_GCbiasSummary_data:
                         log.debug("Duplicate sample name found in {}! Overwriting: {}".format(f["fn"], s_name))
                     self.add_data_source(f, s_name, section="GcBiasSummaryMetrics")

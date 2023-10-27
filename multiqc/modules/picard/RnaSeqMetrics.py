@@ -22,11 +22,11 @@ def parse_reports(self):
     for f in self.find_log_files("picard/rnaseqmetrics", filehandles=True):
         s_name = None
         in_hist = False
-        for l in f["f"]:
+        for line in f["f"]:
             # Catch the histogram values
             if s_name is not None and in_hist is True:
                 try:
-                    sections = l.split("\t")
+                    sections = line.split("\t")
                     pos = int(sections[0])
                     coverage = float(sections[1])
                     self.picard_RnaSeqMetrics_histogram[s_name][pos] = coverage
@@ -36,16 +36,16 @@ def parse_reports(self):
                     in_hist = False
 
             # New log starting
-            if "rnaseqmetrics" in l.lower() and "INPUT" in l:
+            if "rnaseqmetrics" in line.lower() and "INPUT" in line:
                 s_name = None
                 # Pull sample name from input
-                fn_search = re.search(r"INPUT(?:=|\s+)(\[?[^\s]+\]?)", l, flags=re.IGNORECASE)
+                fn_search = re.search(r"INPUT(?:=|\s+)(\[?[^\s]+\]?)", line, flags=re.IGNORECASE)
                 if fn_search:
                     s_name = os.path.basename(fn_search.group(1).strip("[]"))
                     s_name = self.clean_s_name(s_name, f)
 
             if s_name is not None:
-                if "rnaseqmetrics" in l.lower() and "## METRICS CLASS" in l:
+                if "rnaseqmetrics" in line.lower() and "## METRICS CLASS" in line:
                     if s_name in self.picard_RnaSeqMetrics_data:
                         log.debug("Duplicate sample name found in {}! Overwriting: {}".format(f["fn"], s_name))
                     self.picard_RnaSeqMetrics_data[s_name] = dict()
@@ -74,7 +74,7 @@ def parse_reports(self):
                             - self.picard_RnaSeqMetrics_data[s_name]["PF_ALIGNED_BASES"]
                         )
 
-            if s_name is not None and "normalized_position	All_Reads.normalized_coverage" in l:
+            if s_name is not None and "normalized_position	All_Reads.normalized_coverage" in line:
                 self.picard_RnaSeqMetrics_histogram[s_name] = dict()
                 in_hist = True
 

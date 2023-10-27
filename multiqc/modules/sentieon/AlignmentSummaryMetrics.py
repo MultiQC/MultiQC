@@ -22,9 +22,9 @@ def parse_reports(self):
         parsed_data = dict()
         s_name = None
         keys = None
-        for l in f["f"]:
+        for line in f["f"]:
             # New log starting
-            if s_name is None and "AlignmentStat" in l:
+            if s_name is None and "AlignmentStat" in line:
                 keys = None
                 # Pull sample name from filename
                 s_name = os.path.basename(f["s_name"])
@@ -32,10 +32,10 @@ def parse_reports(self):
                 parsed_data[s_name] = dict()
 
             if s_name is not None:
-                if "AlignmentStat" in l and "#SentieonCommandLine" in l:
+                if "AlignmentStat" in line and "#SentieonCommandLine" in line:
                     keys = f["f"].readline().strip("\n").split("\t")
                 elif keys:
-                    vals = l.strip("\n").split("\t")
+                    vals = line.strip("\n").split("\t")
                     if len(vals) == len(keys):
                         # Ignore the FIRST_OF_PAIR / SECOND_OF_PAIR data
                         # to simplify things

@@ -60,7 +60,7 @@ def write_data_file(data, fn, sort_cols=False, data_format=None):
                 if callable(obj):
                     try:
                         return obj(1)
-                    except:
+                    except Exception:
                         return None
                 return json.JSONEncoder.default(self, obj)
 
@@ -88,12 +88,12 @@ def write_data_file(data, fn, sort_cols=False, data_format=None):
                 rows = ["\t".join(h)]
                 for sn in sorted(data.keys()):
                     # Make a list starting with the sample name, then each field in order of the header cols
-                    l = [str(sn)] + [str(data[sn].get(k, "")) for k in h[1:]]
-                    rows.append("\t".join(l))
+                    line = [str(sn)] + [str(data[sn].get(k, "")) for k in h[1:]]
+                    rows.append("\t".join(line))
 
                 body = "\n".join(rows)
 
-            except:
+            except Exception:
                 data_format = "yaml"
                 config.logger.debug(f"{fn} could not be saved as tsv/csv. Falling back to YAML.")
 

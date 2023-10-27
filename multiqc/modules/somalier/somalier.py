@@ -104,8 +104,8 @@ class MultiqcModule(BaseMultiqcModule):
         parsed_data = dict()
         headers = None
         sample_i = -100
-        for l in f["f"].splitlines():
-            s = l.split("\t")
+        for line in f["f"].splitlines():
+            s = line.split("\t")
             if headers is None:
                 s[0] = s[0].lstrip("#")
                 headers = s
@@ -127,8 +127,8 @@ class MultiqcModule(BaseMultiqcModule):
         parsed_data = dict()
         headers = None
         s_name_idx = None
-        for l in f["f"].splitlines():
-            s = l.lstrip("#").split("\t")
+        for line in f["f"].splitlines():
+            s = line.lstrip("#").split("\t")
             if headers is None:
                 headers = s
                 try:
@@ -165,7 +165,7 @@ class MultiqcModule(BaseMultiqcModule):
         bg_pc2 = []
         bg_ancestry = []
 
-        reader = csv.DictReader(f["f"], dialect="excel-tab")
+        reader: csv.DictReader = csv.DictReader(f["f"], dialect="excel-tab")
         idx = "#sample_id"
 
         # check file not empty, else parse file
@@ -676,7 +676,7 @@ class MultiqcModule(BaseMultiqcModule):
 
 
 def _make_col_alpha(cols, alpha):
-    """Take a HTML colour value and return a rgba string with alpha"""
+    """Take an HTML colour value and return a rgba string with alpha"""
     cols_return = []
     for col in cols:
         col_srgb = spectra.html(col)

@@ -62,7 +62,7 @@ def plot(data, pconfig=None):
             pconfig[k] = v
 
     # Given one dataset - turn it into a list
-    if type(data) is not list:
+    if not isinstance(data, list):
         data = [data]
 
     # Validate config if linting
@@ -93,7 +93,7 @@ def plot(data, pconfig=None):
     if pconfig.get("smooth_points", None) is not None:
         sumcounts = pconfig.get("smooth_points_sumcounts", True)
         for i, d in enumerate(data):
-            if type(sumcounts) is list:
+            if isinstance(sumcounts, list):
                 sumc = sumcounts[i]
             else:
                 sumc = sumcounts
@@ -123,15 +123,15 @@ def plot(data, pconfig=None):
         for s in sorted(d.keys()):
             # Ensure any overwritten conditionals from data_labels (e.g. ymax) are taken in consideration
             series_config = pconfig.copy()
-            if (
-                "data_labels" in pconfig and type(pconfig["data_labels"][data_index]) is dict
+            if "data_labels" in pconfig and isinstance(
+                pconfig["data_labels"][data_index], dict
             ):  # if not a dict: only dataset name is provided
                 series_config.update(pconfig["data_labels"][data_index])
 
             pairs = list()
             maxval = 0
             if "categories" in series_config:
-                if "categories" not in pconfig or type(pconfig["categories"]) is not list:
+                if "categories" not in pconfig or not isinstance(pconfig["categories"], list):
                     pconfig["categories"] = list()
                 # Add any new categories
                 for k in d[s].keys():
@@ -194,7 +194,7 @@ def plot(data, pconfig=None):
                 this_series = {"name": s, "data": pairs}
                 try:
                     this_series["color"] = series_config["colors"][s]
-                except:
+                except (KeyError, IndexError):
                     pass
                 thisplotdata.append(this_series)
         plotdata.append(thisplotdata)
@@ -203,9 +203,9 @@ def plot(data, pconfig=None):
     try:
         if pconfig.get("extra_series"):
             extra_series = pconfig["extra_series"]
-            if type(pconfig["extra_series"]) == dict:
+            if isinstance(pconfig["extra_series"], dict):
                 extra_series = [[pconfig["extra_series"]]]
-            elif type(pconfig["extra_series"]) == list and type(pconfig["extra_series"][0]) == dict:
+            elif isinstance(pconfig["extra_series"], list) and isinstance(pconfig["extra_series"][0], dict):
                 extra_series = [pconfig["extra_series"]]
             for i, es in enumerate(extra_series):
                 for s in es:
@@ -226,7 +226,7 @@ def plot(data, pconfig=None):
     if "linegraph" in mod.__dict__ and callable(mod.linegraph):
         try:
             return mod.linegraph(plotdata, pconfig)
-        except:
+        except:  # noqa: E722
             if config.strict:
                 # Crash quickly in the strict mode. This can be helpful for interactive
                 # debugging of modules
@@ -297,19 +297,19 @@ def highcharts_linegraph(plotdata, pconfig=None):
             active = "active" if k == 0 else ""
             try:
                 name = pconfig["data_labels"][k]["name"]
-            except:
+            except (IndexError, KeyError):
                 name = k + 1
             try:
                 ylab = 'data-ylab="{}"'.format(pconfig["data_labels"][k]["ylab"])
-            except:
+            except (IndexError, KeyError):
                 ylab = 'data-ylab="{}"'.format(name) if name != k + 1 else ""
             try:
                 ymax = 'data-ymax="{}"'.format(pconfig["data_labels"][k]["ymax"])
-            except:
+            except (IndexError, KeyError):
                 ymax = ""
             try:
                 xlab = 'data-xlab="{}"'.format(pconfig["data_labels"][k]["xlab"])
-            except:
+            except (IndexError, KeyError):
                 xlab = ""
             html += '<button class="btn btn-default btn-sm {a}" data-action="set_data" {y} {ym} {x} data-newdata="{k}" data-target="{id}">{n}</button>\n'.format(
                 a=active, id=pconfig["id"], n=name, y=ylab, ym=ymax, x=xlab, k=k
@@ -350,7 +350,7 @@ def matplotlib_linegraph(plotdata, pconfig=None):
     for k in range(len(plotdata)):
         try:
             name = pconfig["data_labels"][k]["name"]
-        except:
+        except (IndexError, KeyError):
             name = k + 1
         pid = "mqc_{}_{}".format(pconfig["id"], name)
         pid = report.save_htmlid(pid, skiplint=True)
@@ -371,7 +371,7 @@ def matplotlib_linegraph(plotdata, pconfig=None):
             active = "active" if k == 0 else ""
             try:
                 name = pconfig["data_labels"][k]["name"]
-            except:
+            except (IndexError, KeyError):
                 name = k + 1
             html += '<button class="btn btn-default btn-sm {a}" data-target="#{pid}">{n}</button>\n'.format(
                 a=active, pid=pid, n=name
@@ -392,14 +392,14 @@ def matplotlib_linegraph(plotdata, pconfig=None):
                 fdata[d["name"]] = OrderedDict()
 
                 # Check to see if all categories are the same
-                if len(d["data"]) > 0 and type(d["data"][0]) is list:
+                if len(d["data"]) > 0 and isinstance(d["data"][0], list):
                     if lastcats is None:
                         lastcats = [x[0] for x in d["data"]]
                     elif lastcats != [x[0] for x in d["data"]]:
                         sharedcats = False
 
                 for i, x in enumerate(d["data"]):
-                    if type(x) is list:
+                    if isinstance(x, list):
                         fdata[d["name"]][str(x[0])] = x[1]
                     else:
                         try:
@@ -469,7 +469,7 @@ def matplotlib_linegraph(plotdata, pconfig=None):
         # Dataset specific y label
         try:
             axes.set_ylabel(pconfig["data_labels"][pidx]["ylab"])
-        except:
+        except (IndexError, KeyError):
             pass
 
         # Axis limits
@@ -491,7 +491,7 @@ def matplotlib_linegraph(plotdata, pconfig=None):
         # Dataset specific ymax
         try:
             axes.set_ylim((ymin, pconfig["data_labels"][pidx]["ymax"]))
-        except:
+        except (IndexError, KeyError):
             pass
 
         default_xlimits = axes.get_xlim()

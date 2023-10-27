@@ -22,9 +22,9 @@ def parse_reports(self):
         s_name = None
         gc_col = None
         cov_col = None
-        for l in f["f"]:
+        for line in f["f"]:
             # New log starting
-            if s_name is None and "--algo GCBias" in l:
+            if s_name is None and "--algo GCBias" in line:
                 # Pull sample name from filename
                 s_name = os.path.basename(f["s_name"])
                 s_name = self.clean_s_name(s_name, f)
@@ -33,14 +33,14 @@ def parse_reports(self):
                 if gc_col is not None and cov_col is not None:
                     try:
                         # Note that GC isn't always the first column.
-                        s = l.strip("\n").split("\t")
+                        s = line.strip("\n").split("\t")
                         self.sentieon_GCbias_data[s_name][int(s[gc_col])] = float(s[cov_col])
                     except IndexError:
                         s_name = None
                         gc_col = None
                         cov_col = None
 
-                if "#SentieonCommandLine" in l and "--algo GCBias" in l and "Summary" not in s_name:
+                if "#SentieonCommandLine" in line and "--algo GCBias" in line and "Summary" not in s_name:
                     if s_name in self.sentieon_GCbias_data:
                         log.debug("Duplicate sample name found in {}! Overwriting: {}".format(f["fn"], s_name))
                     self.add_data_source(f, s_name, section="GcBiasDetailMetrics")
@@ -57,7 +57,7 @@ def parse_reports(self):
                     except ValueError:
                         pass
 
-                if "#SentieonCommandLine" in l and "--algo GCBias" in l and "Summary" in s_name:
+                if "#SentieonCommandLine" in line and "--algo GCBias" in line and "Summary" in s_name:
                     if s_name in self.sentieon_GCbiasSummary_data:
                         log.debug(
                             "Duplicate sample name found in {}!\

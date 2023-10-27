@@ -560,8 +560,8 @@ def run(
         logger.info("Prepending directory to sample names")
 
     # Prep module configs
-    config.top_modules = [m if type(m) is dict else {m: {}} for m in config.top_modules]
-    config.module_order = [m if type(m) is dict else {m: {}} for m in config.module_order]
+    config.top_modules = [m if isinstance(m, dict) else {m: {}} for m in config.top_modules]
+    config.module_order = [m if isinstance(m, dict) else {m: {}} for m in config.module_order]
     mod_keys = [list(m.keys())[0] for m in config.module_order]
 
     # Lint the module configs
@@ -623,13 +623,13 @@ def run(
     tmp_dir = tempfile.mkdtemp()
     logger.debug("Using temporary directory for creating report: {}".format(tmp_dir))
     config.data_tmp_dir = os.path.join(tmp_dir, "multiqc_data")
-    if filename != "stdout" and config.make_data_dir == True:
+    if filename != "stdout" and config.make_data_dir is True:
         config.data_dir = config.data_tmp_dir
         os.makedirs(config.data_dir)
     else:
         config.data_dir = None
     config.plots_tmp_dir = os.path.join(tmp_dir, "multiqc_plots")
-    if filename != "stdout" and config.export_plots == True:
+    if filename != "stdout" and config.export_plots is True:
         config.plots_dir = config.plots_tmp_dir
         os.makedirs(config.plots_dir)
     else:
@@ -689,7 +689,7 @@ def run(
             mod = config.avail_modules[this_module].load()
             mod.mod_cust_config = mod_cust_config  # feels bad doing this, but seems to work
             output = mod()
-            if type(output) != list:
+            if not isinstance(output, list):
                 output = [output]
             for m in output:
                 report.modules_output.append(m)
@@ -738,7 +738,7 @@ def run(
                 + "User Cancelled Execution!\nExiting MultiQC..."
             )
             sys.exit(1)
-        except:
+        except:  # noqa: E722
             if config.strict:
                 # Crash quickly in the strict mode. This can be helpful for interactive debugging of modules.
                 raise
@@ -759,7 +759,7 @@ def run(
                     yield Syntax(traceback.format_exc(), "python")
 
                 def __rich_measure__(self, console: rich.console.Console, options: rich.console.ConsoleOptions):
-                    tb_width = max([len(l) for l in traceback.format_exc().split("\n")])
+                    tb_width = max([len(line) for line in traceback.format_exc().split("\n")])
                     try:
                         log_width = 71 + len(report.last_found_file)
                     except TypeError:
@@ -1093,7 +1093,7 @@ def run(
             env = jinja2.Environment(loader=jinja2.FileSystemLoader(tmp_dir))
             env.globals["include_file"] = include_file
             j_template = env.get_template(template_mod.base_fn)
-        except:
+        except:  # noqa: E722
             raise IOError("Could not load {} template file '{}'".format(config.template, template_mod.base_fn))
 
         # Use jinja2 to render the template and overwrite

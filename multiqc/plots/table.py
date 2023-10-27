@@ -171,7 +171,7 @@ def make_table(dt):
                         valstring = str(header["format"].format(float(val)))
                     except ValueError:
                         valstring = str(val)
-                except:
+                except Exception:
                     valstring = str(val)
 
                 # This is horrible, but Python locale settings are worse
@@ -216,7 +216,7 @@ def make_table(dt):
                                         cmatches[ftype] = True
                                     if "lt" in cmp and float(cmp["lt"]) > float(val):
                                         cmatches[ftype] = True
-                                except:
+                                except Exception:
                                     logger.warning(
                                         "Not able to apply table conditional formatting to '{}' ({})".format(val, cmp)
                                     )

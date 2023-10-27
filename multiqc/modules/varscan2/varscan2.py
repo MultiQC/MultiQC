@@ -99,10 +99,10 @@ class MultiqcModule(BaseMultiqcModule):
             "variant_reported_snps": r"(?:\d+)(?:\svariant positions reported \()(\d+)",
             "variant_reported_indels": r"(?:\d+)(?:\svariant positions reported \()(?:\d+ SNP, )(\d+)",
         }
-        for l in f["f"]:
+        for line in f["f"]:
             # Search regexes for stats
             for k, r in regexes.items():
-                match = re.search(r, l)
+                match = re.search(r, line)
                 if match:
                     if k not in ["sample_name", "p_val_threshold", "min_var_freq"]:
                         parsed[k] = int(match.group(1))
@@ -191,7 +191,7 @@ class MultiqcModule(BaseMultiqcModule):
         }
         headers["bases_in_pileup"] = {
             "title": "{} Bases in Pileup".format(config.base_count_prefix),
-            "description": "Number of bases in pileup input for VarScan2 ()".format(config.base_count_desc),
+            "description": "Number of bases in pileup input for VarScan2 ()".format(),
             "scale": "Greens",
             "modify": lambda x: x * config.base_count_multiplier,
             "shared_key": "base_count",
