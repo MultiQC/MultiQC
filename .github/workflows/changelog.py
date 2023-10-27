@@ -282,7 +282,7 @@ else:
             f"- **{mod['name']}**: {descr} {pr_link}\n",
         ]
 if not new_lines:
-    if "[skip changelog]" not in pr_title:
+    if "skip changelog" not in pr_title and "no changelog" not in pr_title:
         new_lines = [
             f"- {pr_title} {pr_link}\n",
         ]
