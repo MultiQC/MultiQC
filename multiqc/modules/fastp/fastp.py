@@ -5,6 +5,7 @@ import json
 import logging
 import re
 from collections import OrderedDict
+from typing import Dict, Optional, Tuple
 
 from multiqc import config
 from multiqc.modules.base_module import BaseMultiqcModule, ModuleNoSamplesFound
@@ -29,6 +30,21 @@ class MultiqcModule(BaseMultiqcModule):
             doi="10.1093/bioinformatics/bty560",
         )
 
+        data_by_sample = dict()
+        for f in self.find_log_files("fastp", filehandles=True):
+            s_name, parsed_json = self.parse_fastp_log(f)
+            if not s_name:
+                continue
+            if s_name in data_by_sample:
+                log.debug("Duplicate sample name found! Overwriting: {}".format(s_name))
+            data_by_sample[s_name] = parsed_json
+
+        # Filter to strip out ignored sample names
+        data_by_sample = self.ignore_samples(data_by_sample)
+        if len(data_by_sample) == 0:
+            raise ModuleNoSamplesFound
+        log.info("Found {} reports".format(len(data_by_sample)))
+
         # Find and load any fastp reports
         self.fastp_data = dict()
         self.fastp_duplication_plotdata = dict()
@@ -41,24 +57,10 @@ class MultiqcModule(BaseMultiqcModule):
             self.fastp_qual_plotdata[k] = dict()
             self.fastp_gc_content_data[k] = dict()
             self.fastp_n_content_data[k] = dict()
+        for s_name, parsed_json in data_by_sample.items():
+            self.process_parsed_data(parsed_json, s_name)
 
-        for f in self.find_log_files("fastp", filehandles=True):
-            self.parse_fastp_log(f)
-
-            # Superfluous function call to confirm that it is used in this module
-            # Replace None with actual version if it is available
-            self.add_software_version(None, f["s_name"])
-
-        # Filter to strip out ignored sample names
-        self.fastp_data = self.ignore_samples(self.fastp_data)
-
-        if len(self.fastp_data) == 0:
-            raise ModuleNoSamplesFound
-
-        log.info("Found {} reports".format(len(self.fastp_data)))
-
-        # Write parsed report data to a file
-        ## Parse whole JSON to save all its content
+        # Save entire original parsed JSON
         self.write_data_file(self.fastp_all_data, "multiqc_fastp")
 
         # General Stats Table
@@ -151,23 +153,24 @@ class MultiqcModule(BaseMultiqcModule):
         except RuntimeError:
             log.debug("No data found for 'N content' plot")
 
-    def parse_fastp_log(self, f):
+    def parse_fastp_log(self, f) -> Tuple[Optional[str], Dict]:
         """Parse the JSON output from fastp and save the summary statistics"""
         try:
             parsed_json = json.load(f["f"])
         except json.JSONDecodeError as e:
             log.warning(f"Could not parse fastp JSON: '{f['fn']}': {e}, skipping sample")
-            return None
+            return None, {}
         if not isinstance(parsed_json, dict) or "command" not in parsed_json:
             log.warning(f"Could not find 'command' field in JSON: '{f['fn']}', skipping sample")
-            return None
+            return None, {}
 
-        s_name = f["s_name"]
-        # The default output file name is "fastp.json", which doesn't contain the
-        # sample name, so we need to fall back to another way to find the possible
-        # sample name. The best bet is to parse the "command" line usually found
-        # in the JSON, and parse the input FASTQ file name.
-        if f["fn"] == "fastp.json":
+        s_name = None
+        if getattr(config, "fastp", {}).get("s_name_filenames", False):
+            s_name = f["s_name"]
+
+        if s_name is None:
+            # Parse the "command" line usually found in the JSON, and use the first input
+            # FastQ file name to fetch the sample name.
             cmd = parsed_json["command"].strip()
             # On caveat is that the command won't have file names escaped properly,
             # so we need some special logic to account for names with spaces:
@@ -183,12 +186,20 @@ class MultiqcModule(BaseMultiqcModule):
             if m:
                 s_name = self.clean_s_name(m.group(2), f)
             else:
+                s_name = f["s_name"]
                 log.warning(
-                    f"Could not parse sample name from fastp command. Falling back to "
-                    f"extracting it from the file name: \"{f['fn']}\" -> \"{s_name}\""
+                    f"Could not parse sample name from the fastp command:\n{cmd}\n"
+                    f"Falling back to extracting it from the file name: "
+                    f"\"{f['fn']}\" -> \"{s_name}\""
                 )
+                return None, {}
 
         self.add_data_source(f, s_name)
+        return s_name, parsed_json
+
+    def process_parsed_data(self, parsed_json: Dict, s_name: str):
+        """Process the JSON extracted from logs"""
+
         self.fastp_data[s_name] = {}
         self.fastp_duplication_plotdata[s_name] = {}
         self.fastp_insert_size_data[s_name] = {}
@@ -203,13 +214,13 @@ class MultiqcModule(BaseMultiqcModule):
             for k in parsed_json["filtering_result"]:
                 self.fastp_data[s_name]["filtering_result_{}".format(k)] = float(parsed_json["filtering_result"][k])
         except KeyError:
-            log.debug("fastp JSON did not have 'filtering_result' key: '{}'".format(f["fn"]))
+            log.debug(f"fastp JSON did not have 'filtering_result' key: '{s_name}'")
 
         # Parse duplication
         try:
             self.fastp_data[s_name]["pct_duplication"] = float(parsed_json["duplication"]["rate"] * 100.0)
         except KeyError:
-            log.debug("fastp JSON did not have a 'duplication' key: '{}'".format(f["fn"]))
+            log.debug(f"fastp JSON did not have a 'duplication' key: '{s_name}'")
 
         # Parse after_filtering
         try:
@@ -218,7 +229,7 @@ class MultiqcModule(BaseMultiqcModule):
                     parsed_json["summary"]["after_filtering"][k]
                 )
         except KeyError:
-            log.debug("fastp JSON did not have a 'summary'-'after_filtering' keys: '{}'".format(f["fn"]))
+            log.debug(f"fastp JSON did not have a 'summary'-'after_filtering' keys: '{s_name}'")
 
         # Parse data required to calculate Pct reads surviving
         try:
@@ -226,7 +237,7 @@ class MultiqcModule(BaseMultiqcModule):
                 parsed_json["summary"]["before_filtering"]["total_reads"]
             )
         except KeyError:
-            log.debug("Could not find pre-filtering # reads: '{}'".format(f["fn"]))
+            log.debug(f"Could not find pre-filtering # reads: '{s_name}'")
 
         try:
             self.fastp_data[s_name]["pct_surviving"] = (
@@ -234,7 +245,7 @@ class MultiqcModule(BaseMultiqcModule):
                 / self.fastp_data[s_name]["before_filtering_total_reads"]
             ) * 100.0
         except (KeyError, ZeroDivisionError) as e:
-            log.debug("Could not calculate 'pct_surviving' ({}): {}".format(e.__class__.__name__, f["fn"]))
+            log.debug(f"Could not calculate 'pct_surviving' ({e.__class__.__name__}): {s_name}")
 
         # Parse adapter_cutting
         try:
@@ -244,7 +255,7 @@ class MultiqcModule(BaseMultiqcModule):
                 except (ValueError, TypeError):
                     pass
         except KeyError:
-            log.debug("fastp JSON did not have a 'adapter_cutting' key, skipping: '{}'".format(f["fn"]))
+            log.debug(f"fastp JSON did not have a 'adapter_cutting' key, skipping: '{s_name}'")
 
         try:
             self.fastp_data[s_name]["pct_adapter"] = (
@@ -252,7 +263,7 @@ class MultiqcModule(BaseMultiqcModule):
                 / self.fastp_data[s_name]["before_filtering_total_reads"]
             ) * 100.0
         except (KeyError, ZeroDivisionError) as e:
-            log.debug("Could not calculate 'pct_adapter' ({}): {}".format(e.__class__.__name__, f["fn"]))
+            log.debug(f"Could not calculate 'pct_adapter' ({e.__class__.__name__}): {s_name}")
 
         # Duplication rate plot data
         try:
@@ -266,7 +277,7 @@ class MultiqcModule(BaseMultiqcModule):
             for i, v in enumerate(parsed_json["duplication"]["histogram"]):
                 self.fastp_duplication_plotdata[s_name][i + 1] = (float(v) / float(total_reads)) * 100.0
         except KeyError:
-            log.debug("No duplication rate plot data: {}".format(f["fn"]))
+            log.debug(f"No duplication rate plot data: {s_name}")
 
         # Insert size plot data
         try:
@@ -284,7 +295,7 @@ class MultiqcModule(BaseMultiqcModule):
                 if i <= max_i:
                     self.fastp_insert_size_data[s_name][i + 1] = (float(v) / float(total_reads)) * 100.0
         except KeyError:
-            log.debug("No insert size plot data: {}".format(f["fn"]))
+            log.debug(f"No insert size plot data: {s_name}")
 
         for k in ["read1_before_filtering", "read2_before_filtering", "read1_after_filtering", "read2_after_filtering"]:
             # Read quality data
@@ -292,7 +303,7 @@ class MultiqcModule(BaseMultiqcModule):
                 for i, v in enumerate(parsed_json[k]["quality_curves"]["mean"]):
                     self.fastp_qual_plotdata[k][s_name][i + 1] = float(v)
             except KeyError:
-                log.debug("Read quality {} not found: {}".format(k, f["fn"]))
+                log.debug(f"Read quality {k} not found: {s_name}")
 
             # GC and N content plots
             try:
@@ -301,7 +312,7 @@ class MultiqcModule(BaseMultiqcModule):
                 for i, v in enumerate(parsed_json[k]["content_curves"]["N"]):
                     self.fastp_n_content_data[k][s_name][i + 1] = float(v) * 100.0
             except KeyError:
-                log.debug("Content curve data {} not found: {}".format(k, f["fn"]))
+                log.debug(f"Content curve data {k} not found: {s_name}")
 
         # Remove empty dicts
         if len(self.fastp_data[s_name]) == 0:
@@ -313,6 +324,10 @@ class MultiqcModule(BaseMultiqcModule):
         if len(self.fastp_all_data[s_name]) == 0:
             del self.fastp_all_data[s_name]
         # Don't delete dicts with subkeys, messes up multi-panel plots
+
+        # Superfluous function call to confirm that it is used in this module
+        # Replace None with actual version if it is available
+        self.add_software_version(None)
 
     def fastp_general_stats_table(self):
         """Take the parsed stats from the fastp report and add it to the
