@@ -29,13 +29,4 @@ repos:
     rev: v0.1.3
     hooks:
       - id: ruff
-#      - id: mypy
-#        name: mypy - Static type checking
-#        description: Mypy helps ensure that we use our functions and variables correctly by checking the types.
-#        entry: mypy
-#        language: python
-#        types: [python]
-#        exclude: ^examples/
-#        require_serial: true
-#        additional_dependencies:
-#          - mypy
+        args: [--fix, --exit-non-zero-on-fix]
