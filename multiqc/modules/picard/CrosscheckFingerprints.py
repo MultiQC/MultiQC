@@ -69,9 +69,11 @@ def parse_reports(self):
 
     # Only add sections if we found data
     if len(self.picard_crosscheck_fingerprints_data) == 0:
-        # Superfluous function call to confirm that it is used in this module
-        # Replace None with actual version if it is available
-        self.add_software_version(None)
+        return 0
+
+    # Superfluous function call to confirm that it is used in this module
+    # Replace None with actual version if it is available
+    self.add_software_version(None)
 
     # Write data to file
     self.write_data_file(self.picard_crosscheck_fingerprints_data, f"{self.anchor}_crosscheckfingerprints")
@@ -91,7 +93,7 @@ def parse_reports(self):
     self.add_section(
         name="Crosscheck Fingerprints",
         anchor=f"{self.anchor}-crosscheckfingerprints",
-        description="Pairwise identity checking betwen samples and groups.",
+        description="Pairwise identity checking between samples and groups.",
         helptext="""
         Checks that all data in the set of input files comes from the same individual, based on the selected group granularity.
         """,

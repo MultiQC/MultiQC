@@ -5,19 +5,21 @@ import math
 from collections import defaultdict
 
 from multiqc import config
+from multiqc.modules.picard import util
 from multiqc.plots import bargraph
 
 # Initialise the logger
 log = logging.getLogger(__name__)
 
 
-def parse_reports(self):
+def parse_reports(self, sp_key="markdups"):
     """
     Find Picard MarkDuplicates reports and parse their data.
-    Note that this function is also used by the biobambam2 module.
+    Note that this function is also used by the biobambam2 module, that's why
+    the parameter.
     """
 
-    self.picard_dup_metrics_data = dict()
+    data_by_sample = dict()
 
     # Get custom config value
     try:
@@ -52,9 +54,9 @@ def parse_reports(self):
             parsed_data["ESTIMATED_LIBRARY_SIZE"] = estimate_library_size(parsed_data)
 
         # Save the data
-        if s_name in self.picard_dup_metrics_data:
+        if s_name in data_by_sample:
             log.debug("Duplicate sample name found in {}! Overwriting: {}".format(f["fn"], s_name))
-        self.picard_dup_metrics_data[s_name] = parsed_data
+        data_by_sample[s_name] = parsed_data
         self.add_data_source(f, s_name, section="DuplicationMetrics")
 
         # End of metrics table - reset for next sample
@@ -66,29 +68,29 @@ def parse_reports(self):
             return False
 
     # Go through logs and find Metrics
-    for f in self.find_log_files(f"{self.anchor}/markdups", filehandles=True):
+    for f in self.find_log_files(f"{self.anchor}/{sp_key}", filehandles=True):
         s_name = f["s_name"]
         parsed_lists = defaultdict(list)
         keys = None
         in_stats_block = False
         recompute_merged_metrics = False
-        for l in f["f"]:
+        for line in f["f"]:
             # New log starting
-            maybe_s_name = self.extract_sample_name(l, f, picard_tool="MarkDuplicates", sentieon_algo="Dedup")
+            maybe_s_name = util.extract_sample_name(self, line, f, picard_tool="MarkDuplicates", sentieon_algo="Dedup")
             if maybe_s_name:
                 s_name = maybe_s_name
                 continue
 
             # Start of the METRICS table
-            if "UNPAIRED_READ_DUPLICATES" in l:
+            if "UNPAIRED_READ_DUPLICATES" in line:
                 in_stats_block = True
-                keys = l.rstrip("\n").split("\t")
+                keys = line.rstrip("\n").split("\t")
                 continue
 
             # Currently parsing the METRICS table
             if in_stats_block:
                 # Split the values columns
-                vals = l.rstrip("\n").split("\t")
+                vals = line.rstrip("\n").split("\t")
 
                 # End of the METRICS table, or multiple libraries, and we're not merging them
                 if len(vals) < 6 or (not merge_multiple_libraries and len(parsed_lists) > 0):
@@ -129,9 +131,8 @@ def parse_reports(self):
             save_table_results(s_name, keys, parsed_data, recompute_merged_metrics)
 
     # Filter to strip out ignored sample names
-    self.picard_dup_metrics_data = self.ignore_samples(self.picard_dup_metrics_data)
-
-    if len(self.picard_dup_metrics_data) == 0:
+    data_by_sample = self.ignore_samples(data_by_sample)
+    if len(data_by_sample) == 0:
         return 0
 
     # Superfluous function call to confirm that it is used in this module
@@ -139,7 +140,7 @@ def parse_reports(self):
     self.add_software_version(None)
 
     # Write parsed data to a file
-    self.write_data_file(self.picard_dup_metrics_data, f"multiqc_{self.anchor}_dups")
+    self.write_data_file(data_by_sample, f"multiqc_{self.anchor}_dups")
 
     # Add to general stats table
     self.general_stats_headers["PERCENT_DUPLICATION"] = {
@@ -149,18 +150,18 @@ def parse_reports(self):
         "min": 0,
         "suffix": "%",
         "scale": "OrRd",
-        "modify": lambda x: self.multiply_hundred(x),
+        "modify": lambda x: util.multiply_hundred(x),
     }
-    for s_name in self.picard_dup_metrics_data:
+    for s_name in data_by_sample:
         if s_name not in self.general_stats_data:
             self.general_stats_data[s_name] = dict()
-        self.general_stats_data[s_name].update(self.picard_dup_metrics_data[s_name])
+        self.general_stats_data[s_name].update(data_by_sample[s_name])
 
     # Make the bar plot and add to the MarkDuplicates section
     #
     # The table in the Picard metrics file contains some columns referring
     # read pairs and some referring to single reads.
-    for s_name, metr in self.picard_dup_metrics_data.items():
+    for s_name, metr in data_by_sample.items():
         metr["READS_IN_DUPLICATE_PAIRS"] = 2.0 * metr["READ_PAIR_DUPLICATES"]
         metr["READS_IN_UNIQUE_PAIRS"] = 2.0 * (metr["READ_PAIRS_EXAMINED"] - metr["READ_PAIR_DUPLICATES"])
         metr["READS_IN_UNIQUE_UNPAIRED"] = metr["UNPAIRED_READS_EXAMINED"] - metr["UNPAIRED_READ_DUPLICATES"]
@@ -211,11 +212,11 @@ def parse_reports(self):
         * `READS_IN_DUPLICATE_UNPAIRED = UNPAIRED_READ_DUPLICATES`
         * `READS_UNMAPPED = UNMAPPED_READS`
         """,
-        plot=bargraph.plot(self.picard_dup_metrics_data, keys, pconfig),
+        plot=bargraph.plot(data_by_sample, keys, pconfig),
     )
 
     # Return the number of detected samples to the parent module
-    return len(self.picard_dup_metrics_data)
+    return len(data_by_sample)
 
 
 def calculate_percentage_duplication(d):

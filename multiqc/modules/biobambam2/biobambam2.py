@@ -30,7 +30,7 @@ class MultiqcModule(BaseMultiqcModule):
         self.general_stats_data = dict()
         n = dict()
 
-        n["bamsormadup"] = MarkDuplicates.parse_reports(self)
+        n["bamsormadup"] = MarkDuplicates.parse_reports(self, "bamsormadup")
         if n["bamsormadup"] > 0:
             log.info("Found {} bamsormadup reports".format(n["bamsormadup"]))
 

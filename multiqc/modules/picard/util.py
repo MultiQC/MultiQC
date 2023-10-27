@@ -1,4 +1,9 @@
 import logging
+import os
+import re
+from typing import Dict, List, Optional, Union
+
+from multiqc.utils import config
 
 # Initialise the logger
 log = logging.getLogger(__name__)
@@ -61,3 +66,86 @@ def read_histogram(self, program_key, headers, formats, picard_tool, sentieon_al
     self.write_data_file(data, f"{self.anchor}_histogram")
 
     return data
+
+
+def is_line_right_before_table(
+    line: str,
+    picard_class: Union[None, str, List[str]] = None,
+    sentieon_algo: Optional[str] = None,
+) -> bool:
+    """
+    Picard logs from different samples can be concatenated together, so the module
+    needs to know a marker to find where new sample information starts.
+
+    The command line Picard tools themselves use the "## METRICS CLASS" header
+    line for that purpose; however, the Picard classes often used by other
+    tools and platforms - e.g. Sentieon and Parabricks  - while adding their own
+    headers, so we need to handle them as well.
+    """
+    if isinstance(picard_class, list):
+        picard_classes = picard_class
+    elif picard_class is None:
+        picard_classes = []
+    else:
+        picard_classes = [picard_class]
+    return (
+        (line.startswith("## METRICS CLASS") or line.startswith("## HISTOGRAM"))
+        and (not picard_classes or any(c in line for c in picard_classes))
+        or sentieon_algo
+        and line.startswith("#SentieonCommandLine:")
+        and f" --algo {sentieon_algo}" in line
+    )
+
+
+def extract_sample_name(
+    mod,
+    line: str,
+    f: Dict,
+    picard_tool: str,
+    sentieon_algo: Optional[str] = None,
+) -> Optional[str]:
+    """
+    Historically, MultiQC supported Picard tools QC outputs merged together into
+    one file from different samples and tools. In order to handle this correctly,
+    MultiQC needs to take the sample name elsewhere rather than the file name,
+    so it tries to parse the command line recorded in the output header.
+
+    This approach can be disabled with `config.picard_config.s_name_filenames`
+    """
+    if getattr(config, "picard_config", {}).get("s_name_filenames", False):
+        return None
+    picard_command = (
+        line.startswith("# ")
+        and picard_tool in line
+        and (
+            " input=" in line.lower()
+            or " --input=" in line.lower()
+            or "input" in line.lower().split()
+            or "--input" in line.lower().split()
+        )
+    )
+    sentieon_command = (
+        sentieon_algo
+        and line.startswith("#SentieonCommandLine:")
+        and f" --algo {sentieon_algo}" in line
+        and " -i " in line
+    )
+    # Pull sample name from the input file name, recorded in the command line:
+    fn_search = None
+    if picard_command:
+        fn_search = re.search(r"INPUT(?:=|\s+)(\[?[^\s]+\]?)", line, flags=re.IGNORECASE)
+    elif sentieon_command:
+        fn_search = re.search(r" -i\s+(\[?\S+\]?)", line, flags=re.IGNORECASE)
+    if fn_search:
+        f_name = os.path.basename(fn_search.group(1).strip("[]"))
+        s_name = mod.clean_s_name(f_name, f)
+        return s_name
+    return None
+
+
+def multiply_hundred(val):
+    try:
+        val = float(val) * 100
+    except ValueError:
+        pass
+    return val

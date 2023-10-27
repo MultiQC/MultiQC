@@ -10,24 +10,24 @@ from multiqc.plots import linegraph
 log = logging.getLogger(__name__)
 
 
-def parse_reports(self):
+def parse_reports(module):
     """Find Picard InsertSizeMetrics reports and parse their data"""
 
     # Set up vars
-    self.picard_insert_size_data = dict()
-    self.picard_insert_size_histogram = dict()
-    self.picard_insert_size_samplestats = dict()
+    module.picard_insert_size_data = dict()
+    module.picard_insert_size_histogram = dict()
+    module.picard_insert_size_samplestats = dict()
 
     # Go through logs and find Metrics
-    for f in self.find_log_files(f"{self.anchor}/insertsize", filehandles=True):
+    for f in module.find_log_files(f"{module.anchor}/insertsize", filehandles=True):
         s_name = f["s_name"]
         in_hist = False
         data = dict()
         histogram = dict()
         samplestats = dict()
         for line in f["f"]:
-            maybe_s_name = self.extract_sample_name(
-                line, f, picard_tool="CollectInsertSizeMetrics", sentieon_algo="InsertSizeMetricAlgo"
+            maybe_s_name = module.extract_sample_name(
+                module, line, f, picard_tool="CollectInsertSizeMetrics", sentieon_algo="InsertSizeMetricAlgo"
             )
             if maybe_s_name:
                 # Starts information for a new sample
@@ -46,10 +46,10 @@ def parse_reports(self):
                     s_name = None
                     in_hist = False
 
-            if s_name is not None and self.is_line_right_before_table(
+            if s_name is not None and module.is_line_right_before_table(
                 line, picard_class="InsertSizeMetrics", sentieon_algo="InsertSizeMetricAlgo"
             ):
-                if s_name in data or s_name in self.picard_insert_size_data:
+                if s_name in data or s_name in module.picard_insert_size_data:
                     log.debug("Duplicate sample name found in {}! Overwriting: {}".format(f["fn"], s_name))
                 keys = f["f"].readline().strip("\n").split("\t")
                 vals = f["f"].readline().strip("\n").split("\t")
@@ -104,50 +104,50 @@ def parse_reports(self):
         #     histogram = {f["s_name"]: list(histogram.values())[0]} if histogram else dict()
         #     samplestats = {f["s_name"]: list(samplestats.values())[0]} if samplestats else dict()
 
-        self.picard_insert_size_data.update(data)
-        self.picard_insert_size_histogram.update(histogram)
-        self.picard_insert_size_samplestats.update(samplestats)
+        module.picard_insert_size_data.update(data)
+        module.picard_insert_size_histogram.update(histogram)
+        module.picard_insert_size_samplestats.update(samplestats)
 
         for s_name in data:
-            self.add_data_source(f, s_name, section="InsertSizeMetrics")
+            module.add_data_source(f, s_name, section="InsertSizeMetrics")
 
     # Calculate summed mean values for all read orientations
-    for s_name, v in self.picard_insert_size_samplestats.items():
+    for s_name, v in module.picard_insert_size_samplestats.items():
         try:
-            self.picard_insert_size_samplestats[s_name]["summed_mean"] = v["meansum"] / v["total_pairs"]
+            module.picard_insert_size_samplestats[s_name]["summed_mean"] = v["meansum"] / v["total_pairs"]
         except ZeroDivisionError:
             # The mean of zero elements is zero
-            self.picard_insert_size_samplestats[s_name]["summed_mean"] = 0
+            module.picard_insert_size_samplestats[s_name]["summed_mean"] = 0
 
     # Calculate summed median values for all read orientations
-    for s_name in self.picard_insert_size_histogram:
+    for s_name in module.picard_insert_size_histogram:
         j = 0
-        for idx, c in self.picard_insert_size_histogram[s_name].items():
+        for idx, c in module.picard_insert_size_histogram[s_name].items():
             j += c
-            if j > (self.picard_insert_size_samplestats[s_name]["total_count"] / 2):
-                self.picard_insert_size_samplestats[s_name]["summed_median"] = idx
+            if j > (module.picard_insert_size_samplestats[s_name]["total_count"] / 2):
+                module.picard_insert_size_samplestats[s_name]["summed_median"] = idx
                 break
 
     # Filter to strip out ignored sample names
-    self.picard_insert_size_data = self.ignore_samples(self.picard_insert_size_data)
-    if len(self.picard_insert_size_data) == 0:
+    module.picard_insert_size_data = module.ignore_samples(module.picard_insert_size_data)
+    if len(module.picard_insert_size_data) == 0:
         return 0
 
     # Superfluous function call to confirm that it is used in this module
     # Replace None with actual version if it is available
-    self.add_software_version(None)
+    module.add_software_version(None)
 
     # Write parsed data to a file
-    self.write_data_file(self.picard_insert_size_data, f"multiqc_{self.anchor}_insertSize")
+    module.write_data_file(module.picard_insert_size_data, f"multiqc_{module.anchor}_insertSize")
 
     # Do we have median insert sizes?
     missing_medians = False
-    for v in self.picard_insert_size_samplestats.values():
+    for v in module.picard_insert_size_samplestats.values():
         if "summed_median" not in v:
             missing_medians = True
 
     # Add to general stats table
-    self.general_stats_headers["summed_median"] = {
+    module.general_stats_headers["summed_median"] = {
         "title": "Insert Size",
         "description": "Median Insert Size, all read orientations (bp)",
         "min": 0,
@@ -155,7 +155,7 @@ def parse_reports(self):
         "format": "{:,.0f}",
         "scale": "GnBu",
     }
-    self.general_stats_headers["summed_mean"] = {
+    module.general_stats_headers["summed_mean"] = {
         "title": "Mean Insert Size",
         "description": "Mean Insert Size, all read orientations (bp)",
         "min": 0,
@@ -164,16 +164,16 @@ def parse_reports(self):
         "scale": "GnBu",
         "hidden": False if missing_medians else True,
     }
-    for s_name in self.picard_insert_size_samplestats:
-        if s_name not in self.general_stats_data:
-            self.general_stats_data[s_name] = dict()
-        self.general_stats_data[s_name].update(self.picard_insert_size_samplestats[s_name])
+    for s_name in module.picard_insert_size_samplestats:
+        if s_name not in module.general_stats_data:
+            module.general_stats_data[s_name] = dict()
+        module.general_stats_data[s_name].update(module.picard_insert_size_samplestats[s_name])
 
     # Section with histogram plot
-    if len(self.picard_insert_size_histogram) > 0:
+    if len(module.picard_insert_size_histogram) > 0:
         # Make a normalised percentage version of the data
         data_percent = {}
-        for s_name, data in self.picard_insert_size_histogram.items():
+        for s_name, data in module.picard_insert_size_histogram.items():
             data_percent[s_name] = OrderedDict()
             total = float(sum(data.values()))
             for k, v in data.items():
@@ -190,8 +190,8 @@ def parse_reports(self):
         pconfig = {
             "smooth_points": insertsize_smooth_points,
             "smooth_points_sumcounts": [True, False],
-            "id": f"{self.anchor}_insert_size",
-            "title": f"{self.name}: Insert Size",
+            "id": f"{module.anchor}_insert_size",
+            "title": f"{module.name}: Insert Size",
             "ylab": "Count",
             "xlab": "Insert Size (bp)",
             "xDecimals": False,
@@ -207,12 +207,12 @@ def parse_reports(self):
         except (AttributeError, KeyError):
             pass
 
-        self.add_section(
+        module.add_section(
             name="Insert Size",
-            anchor=f"{self.anchor}-insertsize",
+            anchor=f"{module.anchor}-insertsize",
             description="Plot shows the number of reads at a given insert size. Reads with different orientations are summed.",
-            plot=linegraph.plot([self.picard_insert_size_histogram, data_percent], pconfig),
+            plot=linegraph.plot([module.picard_insert_size_histogram, data_percent], pconfig),
         )
 
     # Return the number of detected samples to the parent module
-    return len(self.picard_insert_size_data)
+    return len(module.picard_insert_size_data)

@@ -575,10 +575,8 @@ pbmarkdup:
 phantompeakqualtools/out:
   fn: "*.spp.out"
 picard/alignment_metrics:
-  - contents: "AlignmentSummaryMetrics"
-    shared: true
+  - contents: "picard.analysis.AlignmentSummaryMetrics"
   - contents: "--algo AlignmentStat"
-    shared: true
 picard/basedistributionbycycle:
   contents: "BaseDistributionByCycleMetrics"
   shared: true
@@ -586,25 +584,21 @@ picard/crosscheckfingerprints:
   contents: "CrosscheckFingerprints"
   shared: true
 picard/gcbias:
-  - contents: "GcBias"
-    shared: true
+  - contents: "GcBiasDetailMetrics"
+  - contents: "GcBiasSummaryMetrics"
   - contents: "--algo GCBias"
-    shared: true
 picard/hsmetrics:
   - contents: "HsMetrics"
     shared: true
   - contents: "--algo HsMetricAlgo"
     shared: true
 picard/insertsize:
-  - contents: "InsertSizeMetrics"
-    shared: true
+  - contents: "picard.analysis.InsertSizeMetrics"
   - contents: "--algo InsertSizeMetricAlgo"
-    shared: true
 picard/markdups:
-  - contents: "DuplicationMetrics"
-    shared: true
+  - contents: "picard.sam.DuplicationMetrics"
+  - contents: "markduplicates.DuplicationMetrics"
   - contents: "--algo Dedup"
-    shared: true
 picard/oxogmetrics:
   contents: "OxoGMetrics"
   shared: true
