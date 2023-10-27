@@ -154,7 +154,7 @@ class MultiqcModule(BaseMultiqcModule):
             self.bcl2fastq_data[runId] = dict()
         run_data = self.bcl2fastq_data[runId]
         for conversionResult in content.get("ConversionResults", []):
-            l = conversionResult["LaneNumber"]
+            lane_num = conversionResult["LaneNumber"]
             lane = "L{}".format(conversionResult["LaneNumber"])
             if lane in run_data:
                 log.debug(
@@ -174,7 +174,7 @@ class MultiqcModule(BaseMultiqcModule):
             # Add undetermined barcodes
             unknown_barcode = dict()
             for lane_data in content.get("UnknownBarcodes", list()):
-                if lane_data["Lane"] == l:
+                if lane_data["Lane"] == lane_num:
                     unknown_barcode = lane_data["Barcodes"]
                     break
             run_data[lane]["unknown_barcodes"] = unknown_barcode

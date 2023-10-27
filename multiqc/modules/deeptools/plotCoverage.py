@@ -128,7 +128,7 @@ class plotCoverageMixin:
                 d[s_name]["50%"] = float(cols[5])
                 d[s_name]["75%"] = float(cols[6])
                 d[s_name]["max"] = float(cols[7])
-            except:
+            except:  # noqa: E722
                 log.warning(
                     "{} was initially flagged as the standard output from plotCoverage, but that seems to not be the case. Skipping...".format(
                         f["fn"]

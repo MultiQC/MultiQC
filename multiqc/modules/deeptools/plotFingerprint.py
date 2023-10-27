@@ -132,7 +132,7 @@ class plotFingerprintMixin:
                     if header[i] == "AUC" or header[i] == "Synthetic AUC":
                         continue
                     d[s_name][header[i]] = float(c)
-            except:
+            except:  # noqa: E722
                 log.warning(
                     "{} was initially flagged as the output from plotFingerprint --outQualityMetrics, but that seems to not be the case. Skipping...".format(
                         f["fn"]

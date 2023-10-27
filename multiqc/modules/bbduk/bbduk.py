@@ -51,18 +51,18 @@ class MultiqcModule(BaseMultiqcModule):
         """Parses a BBDuk stdout saved in a file"""
 
         s_name = f["s_name"]
-        for l in f["f"]:
-            if "jgi.BBDuk" in l and "in1=" in l:
-                s_name = l.split("in1=")[1].split(" ")[0]
+        for line in f["f"]:
+            if "jgi.BBDuk" in line and "in1=" in line:
+                s_name = line.split("in1=")[1].split(" ")[0]
                 s_name = self.clean_s_name(s_name, f)
 
-            if l.startswith("Version"):
-                version_match = re.search(VERSION_REGEX, l)
+            if line.startswith("Version"):
+                version_match = re.search(VERSION_REGEX, line)
                 if version_match:
                     self.add_software_version(version_match.group(1), s_name)
 
-            if "Input:" in l:
-                matches = re.search(r"Input:\s+(\d+) reads\s+(\d+) bases", l)
+            if "Input:" in line:
+                matches = re.search(r"Input:\s+(\d+) reads\s+(\d+) bases", line)
                 if matches:
                     self.add_data_source(f, s_name)
                     if s_name in self.bbduk_data:
@@ -83,14 +83,14 @@ class MultiqcModule(BaseMultiqcModule):
                     "Result",
                 ]
                 for cat in cats:
-                    matches = re.search(f"{cat}:\s+(\d+) reads \(([\d\.]+)%\)\s+(\d+) bases \(([\d\.]+)%\)", l)
+                    matches = re.search(f"{cat}:\s+(\d+) reads \(([\d\.]+)%\)\s+(\d+) bases \(([\d\.]+)%\)", line)
                     if matches:
                         self.bbduk_data[s_name][cat + " reads"] = int(matches.group(1))
                         self.bbduk_data[s_name][cat + " reads percent"] = float(matches.group(2))
                         self.bbduk_data[s_name][cat + " bases"] = int(matches.group(3))
                         self.bbduk_data[s_name][cat + " bases percent"] = float(matches.group(4))
                         break
-            elif "Reads Processed:" in l:
+            elif "Reads Processed:" in line:
                 return
 
     def bbduk_general_stats(self):

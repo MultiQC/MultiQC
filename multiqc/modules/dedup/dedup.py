@@ -3,6 +3,7 @@
 import json
 import logging
 from collections import OrderedDict
+from json import JSONDecodeError
 
 from multiqc.modules.base_module import BaseMultiqcModule, ModuleNoSamplesFound
 from multiqc.plots import bargraph

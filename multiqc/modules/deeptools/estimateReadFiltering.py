@@ -167,7 +167,7 @@ class estimateReadFilteringMixin:
                 d[s_name]["dupes"] = float(cols[9])
                 d[s_name]["singletons"] = float(cols[10])
                 d[s_name]["strand"] = float(cols[11])
-            except:
+            except:  # noqa: E722
                 # Obviously this isn't really the output from estimateReadFiltering
                 log.warning(
                     "{} was initially flagged as the output from estimateReadFiltering, but that seems to not be the case. Skipping...".format(

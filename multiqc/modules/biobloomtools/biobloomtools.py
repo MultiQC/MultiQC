@@ -62,8 +62,8 @@ class MultiqcModule(BaseMultiqcModule):
         """Parse the BioBloom Tools output into a 3D dict"""
         parsed_data = OrderedDict()
         headers = None
-        for l in fh:
-            s = l.split("\t")
+        for line in fh:
+            s = line.split("\t")
             if headers is None:
                 headers = s
             else:

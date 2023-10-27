@@ -63,7 +63,7 @@ class MultiqcModule(BaseMultiqcModule):
         """Parse the JSON output from AfterQC and save the summary statistics"""
         try:
             parsed_json = json.load(f["f"])
-        except:
+        except Exception:
             log.warning("Could not parse AfterQC JSON: '{}'".format(f["fn"]))
             return None
 

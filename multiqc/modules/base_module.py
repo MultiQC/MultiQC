@@ -68,7 +68,7 @@ class BaseMultiqcModule(object):
         if self.extra is None:
             self.extra = ""
         self.doi_link = ""
-        if type(self.doi) is str:
+        if isinstance(self.doi, str):
             self.doi = [self.doi]
         self.doi = [i for i in self.doi if i != ""]
         if len(self.doi) > 0:
@@ -115,9 +115,9 @@ class BaseMultiqcModule(object):
         # Allows modules to be called multiple times with different sets of files
         path_filters = getattr(self, "mod_cust_config", {}).get("path_filters")
         path_filters_exclude = getattr(self, "mod_cust_config", {}).get("path_filters_exclude")
-        if type(path_filters) == str:
+        if isinstance(path_filters, str):
             path_filters = [path_filters]
-        if type(path_filters_exclude) == str:
+        if isinstance(path_filters_exclude, str):
             path_filters_exclude = [path_filters_exclude]
 
         # Old, depreciated syntax support. Likely to be removed in a future version.
@@ -344,13 +344,13 @@ class BaseMultiqcModule(object):
             for ext in config.fn_clean_exts:
                 # Check if this config is limited to a module
                 if "module" in ext:
-                    if type(ext["module"]) is str:
+                    if isinstance(ext["module"], str):
                         ext["module"] = [ext["module"]]
                     if not any([m == self.anchor for m in ext["module"]]):
                         continue
 
                 # Go through different filter types
-                if type(ext) is str:
+                if isinstance(ext, str):
                     ext = {"type": "truncate", "pattern": ext}
                 if ext.get("type") == "truncate":
                     s_name = s_name.split(ext["pattern"], 1)[0]

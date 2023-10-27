@@ -103,28 +103,28 @@ class MultiqcModule(BaseMultiqcModule):
         cutadapt_version = None
         parsing_version = "1.7"
         log_section = None
-        for l in fh:
+        for line in fh:
             # New log starting
-            if "This is cutadapt" in l or "cutadapt version" in l:
+            if "This is cutadapt" in line or "cutadapt version" in line:
                 s_name = None
                 end = "default"
                 cutadapt_version = None
-                c_version = re.match(r"This is cutadapt ([\d\.]+)", l)
+                c_version = re.match(r"This is cutadapt ([\d\.]+)", line)
                 if c_version:
                     cutadapt_version = c_version.group(1)
                     try:
                         assert version.parse(c_version.group(1)) <= version.parse("1.6")
                         parsing_version = "1.6"
-                    except:
+                    except Exception:
                         parsing_version = "1.7"
-                c_version_old = re.match(r"cutadapt version ([\d\.]+)", l)
+                c_version_old = re.match(r"cutadapt version ([\d\.]+)", line)
                 if c_version_old:
                     cutadapt_version = c_version_old.group(1)
                     # The pattern "cutadapt version XX" is only pre-1.6
                     parsing_version = "1.6"
             # Get sample name from end of command line params
-            if l.startswith("Command line parameters"):
-                for cli in reversed(l.split()):
+            if line.startswith("Command line parameters"):
+                for cli in reversed(line.split()):
                     if not cli.startswith("-"):
                         s_name = cli
                         break
@@ -148,22 +148,22 @@ class MultiqcModule(BaseMultiqcModule):
 
                 # Search regexes for overview stats
                 for k, r in regexes[parsing_version].items():
-                    match = re.search(r, l)
+                    match = re.search(r, line)
                     if match:
                         self.cutadapt_data[s_name][k] = int(match.group(1).replace(",", ""))
 
                 # Starting a new section
-                if "===" in l:
-                    log_section = l.strip().strip("=").strip()
+                if "===" in line:
+                    log_section = line.strip().strip("=").strip()
 
                 # Detect whether 3' or 5'
-                end_regex = re.search("Type: regular (\d)'", l)
+                end_regex = re.search("Type: regular (\d)'", line)
                 if end_regex:
                     end = end_regex.group(1)
 
-                if "Overview of removed sequences" in l:
-                    if "' end" in l:
-                        res = re.search("(\d)' end", l)
+                if "Overview of removed sequences" in line:
+                    if "' end" in line:
+                        res = re.search("(\d)' end", line)
                         end = res.group(1)
 
                     # Initilise dictionaries for length data if not already done
@@ -173,7 +173,7 @@ class MultiqcModule(BaseMultiqcModule):
                         self.cutadapt_length_obsexp[end] = dict()
 
                 # Histogram showing lengths trimmed
-                if "length" in l and "count" in l and "expect" in l:
+                if "length" in line and "count" in line and "expect" in line:
                     plot_sname = s_name
                     if log_section is not None:
                         plot_sname = "{} - {}".format(s_name, log_section)
@@ -182,8 +182,8 @@ class MultiqcModule(BaseMultiqcModule):
                     self.cutadapt_length_obsexp[end][plot_sname] = dict()
 
                     # Nested loop to read this section while the regex matches
-                    for l in fh:
-                        r_seqs = re.search("^(\d+)\s+(\d+)\s+([\d\.]+)", l)
+                    for line in fh:
+                        r_seqs = re.search("^(\d+)\s+(\d+)\s+([\d\.]+)", line)
                         if r_seqs:
                             a_len = int(r_seqs.group(1))
                             self.cutadapt_length_counts[end][plot_sname][a_len] = int(r_seqs.group(2))

@@ -252,7 +252,7 @@ class MultiqcModule(BaseMultiqcModule):
             if element.get("Number") == "4" and element.get("IsIndexedRead") == "N":
                 return element.get("NumCycles")
 
-        log.error(f"Could not figure out read 2 length from RunInfo.xml")
+        log.error("Could not figure out read 2 length from RunInfo.xml")
         raise ModuleNoSamplesFound
 
     def _parse_single_runinfo_file(self, runinfo_file):
@@ -263,7 +263,7 @@ class MultiqcModule(BaseMultiqcModule):
             read_length_r1 = root.find("./Run/Reads/Read[1]").get(
                 "NumCycles"
             )  # ET indexes first element at 1, so here we're getting the first NumCycles
-        except:
+        except:  # noqa: E722
             log.error(f"Could not parse RunInfo.xml to get RunID and read length in '{runinfo_file['root']}'")
             raise ModuleNoSamplesFound
         if self._is_single_end_reads(root):

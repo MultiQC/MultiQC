@@ -6,9 +6,9 @@ import re
 from collections import OrderedDict
 
 from multiqc import config
+from multiqc.modules.cellranger.utils import set_hidden_cols, update_dict, parse_bcknee_data, transform_data
 from multiqc.plots import bargraph, linegraph, table
 
-from ._utils import *
 
 # Initialise the logger
 log = logging.getLogger(__name__)

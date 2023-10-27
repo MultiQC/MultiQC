@@ -89,7 +89,7 @@ class plotEnrichmentMixin:
             try:
                 d[s_name][cols[1]]["percent"] = float(cols[2])
                 d[s_name][cols[1]]["count"] = self._int(cols[3])
-            except:
+            except:  # noqa: E722
                 log.warning(
                     "{} was initially flagged as the output from plotEnrichment, but that seems to not be the case. Skipping...".format(
                         f["fn"]

@@ -57,7 +57,7 @@ class MultiqcModule(BaseMultiqcModule):
         """Parse the JSON output from Anglerfish and save the summary statistics"""
         try:
             parsed_json = json.load(f["f"])
-        except:
+        except Exception:
             file = f["fn"]
             log.warning(f"Could not parse Anglerfish JSON: '{file}'")
             return

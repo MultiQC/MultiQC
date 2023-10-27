@@ -56,7 +56,7 @@ def custom_module_classes():
     mod_cust_config = {}
     for k, f in config_data.items():
         # Check that we have a dictionary
-        if type(f) != dict:
+        if not isinstance(f, dict):
             log.debug("config.custom_data row was not a dictionary: {}".format(k))
             continue
         c_id = f.get("id", k)
@@ -194,7 +194,7 @@ def custom_module_classes():
                             if conf.get("id") is not None:
                                 c_id = conf.get("id")
                             # heatmap - special data type
-                            if type(parsed_data) == list:
+                            if not isinstance(parsed_data, list):
                                 cust_mods[c_id]["data"] = parsed_data
                             elif conf.get("plot_type") == "html":
                                 cust_mods[c_id]["data"] = parsed_data
@@ -241,7 +241,7 @@ def custom_module_classes():
                     gsheaders[h] = dict()
 
             # Headers is a list of dicts
-            if type(gsheaders) == list:
+            if isinstance(gsheaders, list):
                 gsheaders_dict = OrderedDict()
                 for gsheader in gsheaders:
                     for col_id, col_data in gsheader.items():
@@ -404,7 +404,7 @@ class MultiqcModule(BaseMultiqcModule):
             content = mod["data"]
 
         # Not supplied
-        elif mod["config"].get("plot_type") == None:
+        elif mod["config"].get("plot_type") is None:
             log.warning("Plot type not found for content ID '{}'".format(c_id))
 
         # Not recognised
@@ -427,9 +427,9 @@ class MultiqcModule(BaseMultiqcModule):
 def _find_file_header(f):
     # Collect commented out header lines
     hlines = []
-    for l in f["f"].splitlines():
-        if l.startswith("#"):
-            hlines.append(l[1:])
+    for line in f["f"].splitlines():
+        if line.startswith("#"):
+            hlines.append(line[1:])
     if len(hlines) == 0:
         return None
     hconfig = None
@@ -473,12 +473,12 @@ def _guess_file_format(f):
     commas = []
     spaces = []
     j = 0
-    for l in f["f"].splitlines():
-        if not l.startswith("#"):
+    for line in f["f"].splitlines():
+        if not line.startswith("#"):
             j += 1
-            tabs.append(len(l.split("\t")))
-            commas.append(len(l.split(",")))
-            spaces.append(len(l.split()))
+            tabs.append(len(line.split("\t")))
+            commas.append(len(line.split(",")))
+            spaces.append(len(line.split()))
         if j == 10:
             break
     tab_mode = max(set(tabs), key=tabs.count)
@@ -519,16 +519,16 @@ def _parse_txt(f, conf):
 
     # Check for special case - HTML
     if conf.get("plot_type") == "html":
-        for l in lines:
-            if l and not l.startswith("#"):
-                d.append(l)
+        for line in lines:
+            if line and not line.startswith("#"):
+                d.append(line)
         return ("\n".join(d), conf)
 
     # Not HTML, need to parse data
     ncols = None
-    for l in lines:
-        if l and not l.startswith("#"):
-            sections = l.split(sep)
+    for line in lines:
+        if line and not line.startswith("#"):
+            sections = line.split(sep)
             d.append(sections)
             if ncols is None:
                 ncols = len(sections)
@@ -538,8 +538,8 @@ def _parse_txt(f, conf):
 
     # Convert values to floats if we can
     first_row_str = 0
-    for i, l in enumerate(d):
-        for j, v in enumerate(l):
+    for i, line in enumerate(d):
+        for j, v in enumerate(line):
             if j != 0:  # we don't want to convert sample names to numbers
                 try:
                     v = float(v)
@@ -553,15 +553,15 @@ def _parse_txt(f, conf):
                     first_row_str += 1
             d[i][j] = v
 
-    all_numeric = all([type(l) == float for l in d[i][1:] for i in range(1, len(d))])
+    all_numeric = all([isinstance(line, float) for i in range(1, len(d)) for line in d[i][1:]])
 
     # General stat info files - expected to have at least 2 rows (first row always being the header)
     # and have at least 2 columns (first column always being sample name)
     if conf.get("plot_type") == "generalstats" and len(d) >= 2 and ncols >= 2:
         data = defaultdict(dict)
-        for i, l in enumerate(d[1:], 1):
-            for j, v in enumerate(l[1:], 1):
-                data[l[0]][d[0][j]] = v
+        for i, line in enumerate(d[1:], 1):
+            for j, v in enumerate(line[1:], 1):
+                data[line[0]][d[0][j]] = v
         return (data, conf)
 
     # Heatmap: Number of headers == number of lines
@@ -586,7 +586,7 @@ def _parse_txt(f, conf):
             allfloats = True
             for r in d[1:]:
                 for v in r[1:]:
-                    allfloats = allfloats and type(v) == float
+                    allfloats = allfloats and isinstance(v, float)
             if allfloats:
                 conf["plot_type"] = "bargraph"
             else:
@@ -606,9 +606,9 @@ def _parse_txt(f, conf):
     if (
         conf.get("plot_type") is None
         and len(d[0]) == 3
-        and type(d[0][0]) != float
-        and type(d[0][1]) == float
-        and type(d[0][2]) == float
+        and not isinstance(d[0][0], float)
+        and isinstance(d[0][1], float)
+        and isinstance(d[0][2], float)
     ):
         conf["plot_type"] = "scatter"
 
@@ -624,10 +624,10 @@ def _parse_txt(f, conf):
     # Single sample line / bar graph - first row has two columns
     if len(d[0]) == 2:
         # Line graph - num : num
-        if conf.get("plot_type") is None and type(d[0][0]) == float and type(d[0][1]) == float:
+        if conf.get("plot_type") is None and isinstance(d[0][0], float) and isinstance(d[0][1], float):
             conf["plot_type"] = "linegraph"
         # Bar graph - str : num
-        if conf.get("plot_type") is None and type(d[0][0]) != float and type(d[0][1]) == float:
+        if conf.get("plot_type") is None and not isinstance(d[0][0], float) and isinstance(d[0][1], float):
             conf["plot_type"] = "bargraph"
 
         # Data structure is the same

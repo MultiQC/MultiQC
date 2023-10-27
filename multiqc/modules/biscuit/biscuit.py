@@ -7,7 +7,7 @@ from collections import OrderedDict
 
 from multiqc import config
 from multiqc.modules.base_module import BaseMultiqcModule, ModuleNoSamplesFound
-from multiqc.plots import bargraph, beeswarm, linegraph, table
+from multiqc.plots import bargraph, beeswarm, linegraph
 
 # Initialize the logger
 log = logging.getLogger(__name__)
@@ -205,8 +205,8 @@ class MultiqcModule(BaseMultiqcModule):
             return {}
 
         mapq = {}
-        for l in file_data:
-            s = l.split()
+        for line in file_data:
+            s = line.split()
             mapq[s[0]] = s[1]  # mapq[MAPQ] = number of reads
 
         data = {
@@ -218,7 +218,6 @@ class MultiqcModule(BaseMultiqcModule):
         }
         if len(mapq) > 0:
             total = sum([int(cnt) for _, cnt in mapq.items() if _ != "unmapped"])
-            cnts = [0 for _ in range(61)]
             for mq, cnt in mapq.items():
                 if mq == "unmapped":
                     data["not_align"] += int(cnt)
@@ -434,8 +433,8 @@ class MultiqcModule(BaseMultiqcModule):
             return {"no_data_available": 1}
 
         data = {"percent": {}, "readcnt": {}}
-        for l in file_data:
-            fields = l.split("\t")
+        for line in file_data:
+            fields = line.split("\t")
             data["percent"][int(fields[0])] = 100.0 * float(fields[1])
             data["readcnt"][int(fields[0])] = float(fields[2])
 
@@ -837,8 +836,8 @@ class MultiqcModule(BaseMultiqcModule):
             return dict(zip([i for i in range(31)], [-1 for _ in range(31)]))
 
         dd = {}
-        for l in file_data:
-            fields = l.split()
+        for line in file_data:
+            fields = line.split()
             dd[int(float(fields[0]))] = int(float(fields[1]))
 
         covs = sorted([k for k in dd])[:31]
@@ -1034,8 +1033,8 @@ class MultiqcModule(BaseMultiqcModule):
 
         r1 = {"C": {}, "R": {}}
         r2 = {"C": {}, "R": {}}
-        for l in file_data:
-            fields = l.strip().split("\t")
+        for line in file_data:
+            fields = line.strip().split("\t")
 
             if fields[0] not in ["1", "2"] or fields[2] not in ["C", "R"]:
                 return {}
@@ -1148,8 +1147,8 @@ class MultiqcModule(BaseMultiqcModule):
             return {"no_data_available": 1}
 
         data = {}
-        for l in file_data:
-            fields = l.split("\t")
+        for line in file_data:
+            fields = line.split("\t")
             # Skip rows that have NaNs as something went wrong in processing
             if "nan" in fields:
                 log.debug("Found NaN in {}. Skipping.".format(fn))
@@ -1255,8 +1254,8 @@ class MultiqcModule(BaseMultiqcModule):
             return {"no_data_available": 1}
 
         data = {}
-        for l in file_data:
-            fields = l.split("\t")
+        for line in file_data:
+            fields = line.split("\t")
             # Skip rows that have NaNs as something went wrong in processing
             if "nan" in fields:
                 log.debug("Found NaN in {}. Skipping.".format(fn))

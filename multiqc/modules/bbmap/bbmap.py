@@ -3,8 +3,6 @@ from collections import OrderedDict
 
 from multiqc.modules.base_module import BaseMultiqcModule, ModuleNoSamplesFound
 from multiqc.plots import table
-from multiqc.utils import config
-
 from .bbmap_filetypes import file_types, section_order
 
 """ MultiQC module to parse output from BBMap """
@@ -104,7 +102,7 @@ class MultiqcModule(BaseMultiqcModule):
             return False
 
         log.debug("Parsing %s/%s", root, fn)
-        if not file_type in file_types:
+        if file_type not in file_types:
             log.error("Unknown output type '%s'. Error in config?", file_type)
             return False
         log_descr = file_types[file_type]
