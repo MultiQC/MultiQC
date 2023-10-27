@@ -143,12 +143,12 @@ tool in the maintenance of high quality software.
 
 MultiQC uses a range of tools to check the code base. The main two code formatters are:
 
-- [Black](https://github.com/psf/black) - Python Code
+- [Ruff](https://docs.astral.sh/ruff/) - Python Code
 - [Prettier](https://prettier.io/) - Everything else (almost)
 
 The easiest way to work with these is to install editor plugins that run the tools every time you save a file.
 For example, [Visual Studio Code](https://code.visualstudio.com/) has
-[built-in support for Black](https://code.visualstudio.com/docs/python/editing#_formatting) and
+[built-in support for Ruff](https://marketplace.visualstudio.com/items?itemName=charliermarsh.ruff) and
 plugins for [Prettier](https://github.com/prettier/prettier-vscode).
 
 ### Pre-commit

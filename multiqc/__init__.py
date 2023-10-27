@@ -13,7 +13,6 @@ Makes the following available under the main multiqc namespace:
 
 import logging
 
-from .multiqc import run
 from .utils import config
 
 config.logger = logging.getLogger(__name__)
