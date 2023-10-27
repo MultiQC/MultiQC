@@ -2,7 +2,7 @@
 import logging
 from collections import defaultdict
 
-from multiqc.modules.base_module import BaseMultiqcModule, ModuleNoSamplesFound
+from multiqc.modules.base_module import BaseMultiqcModule
 from multiqc.plots import linegraph
 
 # Initialise the logger
@@ -60,9 +60,7 @@ class DragenFragmentLength(BaseMultiqcModule):
             Distribution of estimated fragment lengths of mapped reads per read group.
             Only points supported by at least {} reads are shown to prevent long flat tail.
             The plot is also smoothed down to showing 300 points on the X axis to reduce noise.
-            """.format(
-                MIN_CNT_TO_SHOW_ON_PLOT
-            ),
+            """.format(MIN_CNT_TO_SHOW_ON_PLOT),
             plot=linegraph.plot(
                 data_by_rg,
                 {

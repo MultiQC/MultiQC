@@ -1213,8 +1213,9 @@ def _required_logs_found(modules_with_logs):
         ]
         if required_modules_with_no_logs:
             logger.critical(
-                "The following modules were explicitly requested but no log files "
-                "were found: {}".format(", ".join(required_modules_with_no_logs))
+                "The following modules were explicitly requested but no log files were found: {}".format(
+                    ", ".join(required_modules_with_no_logs)
+                )
             )
             return False
     return True
