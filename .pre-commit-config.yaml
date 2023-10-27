@@ -9,7 +9,7 @@ repos:
       - id: check-hooks-apply
 
   - repo: https://github.com/pre-commit/pre-commit-hooks
-    rev: "v4.4.0" # Use the ref you want to point at
+    rev: "v4.5.0" # Use the ref you want to point at
     hooks:
       - id: check-added-large-files
       - id: check-merge-conflict
@@ -26,7 +26,7 @@ repos:
       - id: prettier
 
   - repo: https://github.com/hadialqattan/pycln
-    rev: "v2.2.2" # Possible releases: https://github.com/hadialqattan/pycln/releases
+    rev: "v2.3.0" # Possible releases: https://github.com/hadialqattan/pycln/releases
     hooks:
       - id: pycln
         args: [--config=pyproject.toml]
