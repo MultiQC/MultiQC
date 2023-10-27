@@ -35,9 +35,7 @@ def plot_qhist(samples, file_type, **plot_args):
     for column_type in columns_to_plot:
         plot_data.append(
             {
-                sample
-                + "."
-                + column_name: {
+                sample + "." + column_name: {
                     x: samples[sample]["data"][x][column] if x in samples[sample]["data"] else 0 for x in all_x
                 }
                 for sample in samples
