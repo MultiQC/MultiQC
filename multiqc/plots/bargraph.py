@@ -369,9 +369,7 @@ def matplotlib_bargraph(plotdata, plotsamples, pconfig=None):
         html += '<div class="btn-group mpl_switch_group mqc_mplplot_bargraph_setcountspcnt"> \n\
             <button class="btn btn-default btn-sm {c_a} counts">{c_l}</button> \n\
             <button class="btn btn-default btn-sm {p_a} pcnt">{p_l}</button> \n\
-        </div> '.format(
-            c_a=c_active, p_a=p_active, c_l=c_label, p_l=p_label
-        )
+        </div> '.format(c_a=c_active, p_a=p_active, c_l=c_label, p_l=p_label)
         if len(plotdata) > 1:
             html += " &nbsp; &nbsp; "
 

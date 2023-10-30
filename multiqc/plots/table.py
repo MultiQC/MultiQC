@@ -98,9 +98,7 @@ def make_table(dt):
         empty_cells[rid] = '<td class="data-coloured {rid} {h}"></td>'.format(rid=rid, h=hide)
 
         # Build the modal table row
-        t_modal_headers[
-            rid
-        ] = """
+        t_modal_headers[rid] = """
         <tr class="{rid}{muted}" style="background-color: rgba({col}, 0.15);">
           <td class="sorthandle ui-sortable-handle">||</span></td>
           <td style="text-align:center;">
@@ -296,9 +294,7 @@ def make_table(dt):
         <button type="button" class="mqc_table_copy_btn btn btn-default btn-sm" data-clipboard-target="#{tid}">
             <span class="glyphicon glyphicon-copy"></span> Copy table
         </button>
-        """.format(
-            tid=table_id
-        )
+        """.format(tid=table_id)
 
         # Configure Columns Button
         if len(t_headers) > 1:
@@ -306,18 +302,14 @@ def make_table(dt):
             <button type="button" class="mqc_table_configModal_btn btn btn-default btn-sm" data-toggle="modal" data-target="#{tid}_configModal">
                 <span class="glyphicon glyphicon-th"></span> Configure Columns
             </button>
-            """.format(
-                tid=table_id
-            )
+            """.format(tid=table_id)
 
         # Sort By Highlight button
         html += """
         <button type="button" class="mqc_table_sortHighlight btn btn-default btn-sm" data-target="#{tid}" data-direction="desc" style="display:none;">
             <span class="glyphicon glyphicon-sort-by-attributes-alt"></span> Sort by highlight
         </button>
-        """.format(
-            tid=table_id
-        )
+        """.format(tid=table_id)
 
         # Scatter Plot Button
         if len(t_headers) > 1:
@@ -325,9 +317,7 @@ def make_table(dt):
             <button type="button" class="mqc_table_makeScatter btn btn-default btn-sm" data-toggle="modal" data-target="#tableScatterModal" data-table="#{tid}">
                 <span class="glyphicon glyphicon glyphicon-stats"></span> Plot
             </button>
-            """.format(
-                tid=table_id
-            )
+            """.format(tid=table_id)
 
         # "Showing x of y columns" text
         row_visibilities = [all(t_rows_empty[s_name].values()) for s_name in t_rows_empty]
@@ -351,9 +341,7 @@ def make_table(dt):
         # Build table header text
         html += """
         <small id="{tid}_numrows_text" class="mqc_table_numrows_text">{rows}{cols}.</small>
-        """.format(
-            tid=table_id, rows=t_showing_rows_txt, cols=t_showing_cols_txt
-        )
+        """.format(tid=table_id, rows=t_showing_rows_txt, cols=t_showing_cols_txt)
 
     # Build the table itself
     collapse_class = "mqc-table-collapse" if len(t_rows) > 10 and config.collapse_tables else ""
@@ -361,9 +349,7 @@ def make_table(dt):
         <div id="{tid}_container" class="mqc_table_container">
             <div class="table-responsive mqc-table-responsive {cc}">
                 <table id="{tid}" class="table table-condensed mqc_table" data-title="{title}">
-        """.format(
-        tid=table_id, title=table_title, cc=collapse_class
-    )
+        """.format(tid=table_id, title=table_title, cc=collapse_class)
 
     # Build the header row
     col1_header = dt.pconfig.get("col1_header", "Sample Name")
@@ -423,9 +409,7 @@ def make_table(dt):
             </table>
         </div>
         <div class="modal-footer"> <button type="button" class="btn btn-default" data-dismiss="modal">Close</button> </div>
-    </div> </div> </div>""".format(
-            tid=table_id, title=table_title, trows="".join(t_modal_headers.values())
-        )
+    </div> </div> </div>""".format(tid=table_id, title=table_title, trows="".join(t_modal_headers.values()))
 
     # Save the raw values to a file if requested
     if dt.pconfig.get("save_file") is True:
