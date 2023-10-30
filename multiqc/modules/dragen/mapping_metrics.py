@@ -5,7 +5,7 @@ import itertools
 import logging
 from collections import defaultdict
 
-from multiqc.modules.base_module import BaseMultiqcModule, ModuleNoSamplesFound
+from multiqc.modules.base_module import BaseMultiqcModule
 from multiqc.plots import bargraph, table
 
 from .utils import Metric, exist_and_number, make_headers
@@ -151,9 +151,7 @@ class DragenMappingMetics(BaseMultiqcModule):
                 data.get(rrna_filtered_reads_key, 0)
                 if rrna_filtered_reads_key is not None and rrna_filtered_reads_key == "rRNA filtered reads"
                 else 0
-            ) != data.get(
-                "Total reads in RG", 0
-            ):
+            ) != data.get("Total reads in RG", 0):
                 log.warning(
                     "sum of unpaired/discordant/proppaired/unmapped reads not matching total, "
                     "skipping mapping/paired percentages plot for: {}".format(sample_id)
@@ -168,9 +166,7 @@ class DragenMappingMetics(BaseMultiqcModule):
                 data.get(rrna_filtered_reads_key, 0)
                 if rrna_filtered_reads_key is not None and rrna_filtered_reads_key == "rRNA filtered reads"
                 else 0
-            ) != data.get(
-                "Total reads in RG", 0
-            ):
+            ) != data.get("Total reads in RG", 0):
                 log.warning(
                     "sum of unique/duplicate/unmapped reads not matching total, "
                     "skipping mapping/duplicates percentages plot for: {}".format(sample_id)

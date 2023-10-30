@@ -144,9 +144,7 @@ def parse_reports(self):
           <span class="glyphicon glyphicon-warning-sign"></span>
           Picard was run without an rRNA annotation file {}, therefore the ribosomal assignment is not available. To correct, rerun with the <code>RIBOSOMAL_INTERVALS</code> parameter, as documented <a href="https://broadinstitute.github.io/picard/command-line-overview.html#CollectRnaSeqMetrics" target="_blank">here</a>.
         </div>
-        """.format(
-            missing_samples
-        )
+        """.format(missing_samples)
 
     pconfig = {
         "id": "picard_rnaseqmetrics_assignment_plot",

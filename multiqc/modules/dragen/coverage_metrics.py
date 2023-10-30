@@ -15,7 +15,7 @@ import re
 from collections import defaultdict
 
 from multiqc import config
-from multiqc.modules.base_module import BaseMultiqcModule, ModuleNoSamplesFound
+from multiqc.modules.base_module import BaseMultiqcModule
 from multiqc.plots import table
 
 from .utils import check_duplicate_samples, clean_headers, make_log_report, order_headers
@@ -269,8 +269,7 @@ METRICS = {
         "scale": "RdGy",
         "colour": "255, 0, 0",
     },
-    "aligned reads in region"
-    + V2: {
+    "aligned reads in region" + V2: {
         "order_priority": 0.2,
         "max": 100,
         "suffix": " %",
@@ -294,8 +293,7 @@ METRICS = {
             "scale": "Oranges",
         },
     },
-    "aligned bases in region"
-    + V2: {
+    "aligned bases in region" + V2: {
         "order_priority": 0.5,
         "max": 100,
         "colour": "0, 0, 255",

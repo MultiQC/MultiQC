@@ -355,7 +355,5 @@ class MultiqcModule(BaseMultiqcModule):
                     <div class="panel-heading"><h3 class="panel-title">Pipeline Steps: {} (<code>{}</code>)</h3></div>
                     <pre class="panel-body" style="border:0; background-color:transparent; padding:0 15px; margin:0; color:#666; font-size:90%;">{}</pre>
                 </div>
-                """.format(
-                pid, d[0], d[1]
-            )
+                """.format(pid, d[0], d[1])
         return html
