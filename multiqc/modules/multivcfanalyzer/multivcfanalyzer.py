@@ -112,9 +112,9 @@ class MultiqcModule(BaseMultiqcModule):
     def computeSnpHom(self):
         """Computes snp(hom) for data present by MultiVCFAnalyzer"""
         for sample in self.mvcf_data:
-            self.mvcf_data[sample]["SNP Calls (hom)"] = (self.mvcf_data[sample]["SNP Calls (all)"]) - self.mvcf_data[
-                sample
-            ]["SNP Calls (het)"]
+            self.mvcf_data[sample]["SNP Calls (hom)"] = (
+                (self.mvcf_data[sample]["SNP Calls (all)"]) - self.mvcf_data[sample]["SNP Calls (het)"]
+            )
 
     def addSummaryMetrics(self):
         """Take the parsed stats from MultiVCFAnalyzer and add it to the main plot"""
