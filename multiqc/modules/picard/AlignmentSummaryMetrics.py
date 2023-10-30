@@ -13,7 +13,6 @@ log = logging.getLogger(__name__)
 def parse_reports(module):
     """Find Picard AlignmentSummaryMetrics reports and parse their data"""
 
-    # Set up vars
     data_by_sample = dict()
 
     # Go through logs and find Metrics
@@ -24,28 +23,28 @@ def parse_reports(module):
         # the current sample name and header.
         keys = None
 
-        for l in f["f"]:
+        for line in f["f"]:
             maybe_s_name = util.extract_sample_name(
-                module, l, f, picard_tool="CollectAlignmentSummaryMetrics", sentieon_algo="AlignmentStat"
+                module, line, f, picard_tool="CollectAlignmentSummaryMetrics", sentieon_algo="AlignmentStat"
             )
             if maybe_s_name:
                 # Starts information for a new sample
                 s_name = maybe_s_name
                 keys = None
                 if s_name in data_by_sample:
-                    log.debug("Duplicate sample name found in {}! Overwriting: {}".format(f["fn"], s_name))
+                    log.debug(f"Duplicate sample name found in {f['fn']}! Overwriting: {s_name}")
 
             if s_name is None:
                 continue
 
             if util.is_line_right_before_table(
-                l, picard_class="AlignmentSummaryMetrics", sentieon_algo="AlignmentStat"
+                line, picard_class="AlignmentSummaryMetrics", sentieon_algo="AlignmentStat"
             ):
                 keys = f["f"].readline().strip("\n").split("\t")
             elif keys:
                 if s_name not in data_by_sample:
                     data_by_sample[s_name] = dict()
-                vals = l.strip("\n").split("\t")
+                vals = line.strip("\n").split("\t")
                 if len(vals) == len(keys):
                     # Ignore the FIRST_OF_PAIR / SECOND_OF_PAIR data to simplify things
                     if vals[0] == "PAIR" or vals[0] == "UNPAIRED":

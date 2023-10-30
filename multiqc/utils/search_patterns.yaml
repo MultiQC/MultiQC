@@ -579,7 +579,6 @@ picard/alignment_metrics:
   - contents: "--algo AlignmentStat"
 picard/basedistributionbycycle:
   contents: "BaseDistributionByCycleMetrics"
-  shared: true
 picard/crosscheckfingerprints:
   contents: "CrosscheckFingerprints"
   shared: true
