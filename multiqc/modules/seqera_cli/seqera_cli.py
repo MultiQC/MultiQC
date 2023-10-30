@@ -134,8 +134,7 @@ class MultiqcModule(BaseMultiqcModule):
                 "title": "Repository",
                 "description": "Name of the repository",
                 "scale": False,
-                "modify": lambda x: f'<a href="{x}">{x}</a>',
-                "hidden": True,
+                "modify": lambda x: f'<a href="{x}">{x.replace("https://", "").replace("http://", "").replace("github.com/", "")}</a>',
             },
             "start": {
                 "title": "Start",
