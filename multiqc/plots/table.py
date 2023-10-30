@@ -128,7 +128,13 @@ def make_table(dt):
         if header["scale"] is False:
             c_scale = None
         else:
-            c_scale = mqc_colour.mqc_colour_scale(header["scale"], header["dmin"], header["dmax"], id=table_id)
+            c_scale = mqc_colour.mqc_colour_scale(
+                name=header["scale"],
+                minval=header["dmin"],
+                maxval=header["dmax"],
+                to_float_fn=header.get("to_float"),
+                id=table_id,
+            )
 
         # Collect conditional formatting config
         cond_formatting_rules = {}
@@ -155,7 +161,8 @@ def make_table(dt):
                 try:
                     dmin = header["dmin"]
                     dmax = header["dmax"]
-                    percentage = ((float(val) - dmin) / (dmax - dmin)) * 100
+                    to_float = header.get("to_float", float)
+                    percentage = ((to_float(val) - dmin) / (dmax - dmin)) * 100
                     # Treat 0 as 0-width and make bars width of absolute value
                     if header.get("bars_zero_centrepoint"):
                         dmax = max(abs(header["dmin"]), abs(header["dmax"]))

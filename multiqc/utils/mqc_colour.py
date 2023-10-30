@@ -321,20 +321,23 @@ class mqc_colour_scale(object):
         ],
     }
 
-    def __init__(self, name="GnBu", minval=0, maxval=100, id=None):
+    def __init__(self, name="GnBu", minval=0, maxval=100, to_float_fn=None, id=None):
         """Initialise class with a colour scale"""
 
         self.name = name
         self.id = id
         self.colours = self.get_colours(name)
+        self.to_float_fn = to_float_fn
 
-        # Sanity checks
+        # if to_float_fn is None:
         minval = re.sub(r"[^0-9\.\-e]", "", str(minval))
         maxval = re.sub(r"[^0-9\.\-e]", "", str(maxval))
         if minval == "":
             minval = 0
         if maxval == "":
             maxval = 100
+            # to_float_fn = float
+        # else:
         if float(minval) == float(maxval):
             self.minval = float(minval)
             self.maxval = float(minval) + 1.0
@@ -350,10 +353,13 @@ class mqc_colour_scale(object):
 
         # Ported from the original JavaScript for continuity
         # Seems to work better than adjusting brightness / saturation / luminosity
-        rgb_converter = lambda x: max(0, min(1, 1 + ((x - 1) * lighten)))
+        def rgb_converter(x):
+            return max(0, min(1, 1 + ((x - 1) * lighten)))
 
         try:
-            if self.name in mqc_colour_scale.qualitative_scales and isinstance(val, float):
+            if self.name in mqc_colour_scale.qualitative_scales and (
+                isinstance(val, float) or self.to_float_fn is not None
+            ):
                 if config.strict:
                     sequential_scales = [
                         s for s in mqc_colour_scale.COLORBREWER_SCALES if s not in mqc_colour_scale.qualitative_scales
@@ -376,18 +382,20 @@ class mqc_colour_scale(object):
                 thecolour = spectra.rgb(*[rgb_converter(v) for v in thecolour.rgb])
                 return thecolour.hexcode
 
-            # When there is only 1 color in scale, spectra.scale() will crash with DevisionByZero
+            # When there is only 1 color in scale, spectra.scale() will crash with DivisionByZero
             elif len(self.colours) == 1:
                 thecolour = spectra.html(self.colours[0])
                 thecolour = spectra.rgb(*[rgb_converter(v) for v in thecolour.rgb])
                 return thecolour.hexcode
 
             else:
-                # Sanity checks
-                val = re.sub(r"[^0-9\.\-e]", "", str(val))
-                if val == "":
-                    val = self.minval
-                val = float(val)
+                if self.to_float_fn is not None:
+                    val = self.to_float_fn(val)
+                else:
+                    val = re.sub(r"[^0-9\.\-e]", "", str(val))
+                    if val == "":
+                        val = self.minval
+                    val = float(val)
                 val = max(val, self.minval)
                 val = min(val, self.maxval)
 
@@ -399,8 +407,9 @@ class mqc_colour_scale(object):
 
                 return thecolour.hexcode
 
-        except:
+        except Exception as e:
             # Shouldn't crash all of MultiQC just for colours
+            logging.warning(f"{self.id + ': ' if self.id else ''}Error getting colour: {e}")
             return ""
 
     def get_colours(self, name="GnBu"):
@@ -423,7 +432,7 @@ class mqc_colour_scale(object):
 
         # Default colour scale
         if name not in mqc_colour_scale.COLORBREWER_SCALES:
-            errmsg = f"{self.id+': ' if self.id else ''}Colour scale {name} not found - defaulting to GnBu"
+            errmsg = f"{self.id + ': ' if self.id else ''}Colour scale {name} not found - defaulting to GnBu"
             if config.strict:
                 logger.error(errmsg)
                 report.lint_errors.append(errmsg)

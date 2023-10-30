@@ -1,5 +1,6 @@
 """ MultiQC module to parse output from the Seqera Platform CLI """
 
+import datetime
 import json
 import logging
 import os
@@ -16,39 +17,47 @@ def _read_json_from_tar_gz(tar_file, fname):
     try:
         fh = tar_file.extractfile(tar_file.getmember(fname))
         contents = fh.read()
-    except:
-        log.warning(f"Could not extract file {fname} from archive {tar_file}")
+    except Exception as e:
+        log.warning(f"Could not extract file {fname} from archive {tar_file}: {e}")
         return {}
     try:
         data = json.loads(contents)
-    except:
-        log.warning(f"Could parse JSON from {fname} in {tar_file}")
+    except Exception as e:
+        log.warning(f"Could parse JSON from {fname} in {tar_file}: {e}")
         return {}
     return data
 
 
 def _parse_workflow_json(data):
-    return {k: data.get(k) for k in ["repository", "start", "complete", "revision"]}
+    keys = ["repository", "start", "complete", "revision"]
+    data = {k: data.get(k) for k in keys}
+    # "start" and "complete" are time stamps like time stamps like 2023-10-22T14:39:01Z
+    # parse them with a library, take the difference "complete" - "start" to get the
+    # duration, and convert the duration it to a human-readable format.
+    if "start" in data and "complete" in data:
+        start = datetime.datetime.strptime(data["start"], "%Y-%m-%dT%H:%M:%SZ")
+        complete = datetime.datetime.strptime(data["complete"], "%Y-%m-%dT%H:%M:%SZ")
+        data["duration"] = complete - start
+    return data
 
 
 def _parse_workflow_load_json(data):
-    return {
-        k: data.get(k)
-        for k in [
-            "cpuEfficiency",
-            "memoryEfficiency",
-            "cpuTime",
-            "readBytes",
-            "writeBytes",
-            "cost",
-            "pending",
-            "submitted",
-            "running",
-            "succeeded",
-            "failed",
-            "cached",
-        ]
-    }
+    keys = [
+        "cpuEfficiency",
+        "memoryEfficiency",
+        "cpuTime",
+        "readBytes",
+        "writeBytes",
+        "cost",
+        "pending",
+        "submitted",
+        "running",
+        "succeeded",
+        "failed",
+        "cached",
+    ]
+    data = {k: data.get(k) for k in keys}
+    return data
 
 
 class MultiqcModule(BaseMultiqcModule):
@@ -115,8 +124,7 @@ class MultiqcModule(BaseMultiqcModule):
 
         if len(data_by_run) == 0:
             raise ModuleNoSamplesFound
-
-        log.info("Found {} reports".format(len(data_by_run)))
+        log.info(f"Found {len(data_by_run)} reports")
 
         # Write parsed report data to a file
         self.write_data_file(data_by_run, "multiqc_seqera_cli")
@@ -127,16 +135,25 @@ class MultiqcModule(BaseMultiqcModule):
                 "description": "Name of the repository",
                 "scale": False,
                 "modify": lambda x: f'<a href="{x}">{x}</a>',
+                "hidden": True,
             },
             "start": {
                 "title": "Start",
                 "description": "Start time of the workflow",
                 "scale": False,
+                "hidden": True,
             },
             "complete": {
                 "title": "Complete",
                 "description": "End time of the workflow",
                 "scale": False,
+                "hidden": True,
+            },
+            "duration": {
+                "title": "Duration",
+                "description": "Duration of the workflow",
+                "scale": "BuPu",
+                "to_float": lambda x: x.total_seconds(),
             },
             "cpuEfficiency": {
                 "title": "CPU Efficiency",
@@ -148,7 +165,7 @@ class MultiqcModule(BaseMultiqcModule):
                 "title": "Memory Efficiency",
                 "description": "Percentage of memory used by the workflow",
                 "format": "{:,.2f}",
-                "scale": "RdYlGn",
+                "scale": "YlGn",
             },
             "cpuTime": {
                 "title": "CPU Time",
@@ -187,16 +204,16 @@ class MultiqcModule(BaseMultiqcModule):
             "id": "seqera_cli_process_status",
             "title": "Seqera Platform CLI: processes statuses",
         }
-        keys = [
-            "pending",
-            "submitted",
-            "running",
-            "succeeded",
-            "failed",
-            "cached",
-        ]
+        cats = {
+            "pending": {"name": "Pending", "color": "#8f4199"},
+            "submitted": {"name": "Submitted", "color": "#e68642"},
+            "running": {"name": "Running", "color": "#4256e7"},
+            "cached": {"name": "Cached", "color": "#939598"},
+            "succeeded": {"name": "Succeeded", "color": "#28ae61"},
+            "failed": {"name": "Failed", "color": "#e7363e"},
+        }
         self.add_section(
             name="Seqera Platform CLI",
             anchor="seqera-platform-cli",
-            plot=bargraph.plot(data_by_run, keys, pconfig),
+            plot=bargraph.plot(data_by_run, cats, pconfig),
         )
