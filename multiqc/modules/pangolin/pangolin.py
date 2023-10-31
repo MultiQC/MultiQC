@@ -257,10 +257,7 @@ def _format_qc_notes(raw: str) -> str:
         )
         proportion_n = float(split[1])
         percent_n = int(proportion_n * 100)
-        return f"Ambiguous Content: {percent_n}% N"
-
-    if raw == "failed to map":
-        return "Failed to Map"
+        return f"Ambiguous content: {percent_n}%"
 
     # unrecognized notes, just return them, capitalized
     return raw.capitalize()
