@@ -200,16 +200,16 @@ class MultiqcModule(BaseMultiqcModule):
             "hidden": True,
         }
 
-        headers["pangoLEARN_version"] = {
-            "title": "PangoLEARN version",
-            "description": "The dated version of the pangoLEARN model installed.",
+        headers["scorpio_version"] = {
+            "title": "Scorpio version",
+            "description": "The version of the scorpio software installed.",
             "scale": False,
             "hidden": True,
         }
 
-        headers["pango_version"] = {
-            "title": "Pango version",
-            "description": "The version of pango-designation lineages that this assignment is based on.",
+        headers["constellation_version"] = {
+            "title": "Constellation version",
+            "description": "The version of constellations that scorpio has used to curate the lineage assignment.",
             "scale": False,
             "hidden": True,
         }
@@ -219,6 +219,12 @@ class MultiqcModule(BaseMultiqcModule):
             "description": "Indicates whether the sequence passed the QC thresholds for minimum length and maximum N content.",
             "scale": False,
             "modify": lambda x: "Pass" if x == "passed_qc" else x.capitalize(),
+        }
+
+        headers["qc_notes"] = {
+            "title": "QC Note",
+            "description": "Notes specific to the QC checks run on the sequences.",
+            "scale": False,
         }
 
         headers["note"] = {
