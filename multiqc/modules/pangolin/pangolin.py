@@ -252,9 +252,7 @@ def _format_qc_notes(raw: str) -> str:
     # e.g. Ambiguous_content:0.03
     if raw.startswith("Ambiguous_content"):
         split = raw.split(":")
-        assert len(split) == 2, (
-            f"expected label of format 'Ambiguous_content:0.01', found {raw}"
-        )
+        assert len(split) == 2, f"expected label of format 'Ambiguous_content:0.01', found {raw}"
         proportion_n = float(split[1])
         percent_n = int(proportion_n * 100)
         return f"Ambiguous content: {percent_n}%"
