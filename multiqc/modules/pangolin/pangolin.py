@@ -225,6 +225,7 @@ class MultiqcModule(BaseMultiqcModule):
             "title": "QC Note",
             "description": "Notes specific to the QC checks run on the sequences.",
             "scale": False,
+            "modify": _format_qc_notes,
         }
 
         headers["note"] = {
@@ -241,3 +242,25 @@ class MultiqcModule(BaseMultiqcModule):
         }
 
         return table.plot(self.pangolin_data, headers, table_config)
+
+
+def _format_qc_notes(raw: str) -> str:
+    # parses qc notes, they appear to come from:
+    # https://github.com/cov-lineages/pangolin/blob/361f49cbffbf26eb28bed2f4a4c0e7f3d5a054cc/pangolin/utils/preprocessing.py#L91-L97
+    # https://github.com/cov-lineages/pangolin/blob/361f49cbffbf26eb28bed2f4a4c0e7f3d5a054cc/pangolin/utils/preprocessing.py#L179
+
+    # e.g. Ambiguous_content:0.03
+    if raw.startswith("Ambiguous_content"):
+        split = raw.split(":")
+        assert len(split) == 2, (
+            f"expected label of format 'Ambiguous_content:0.01', found {raw}"
+        )
+        proportion_n = float(split[1])
+        percent_n = int(proportion_n * 100)
+        return f"Ambiguous Content: {percent_n}% N"
+
+    if raw == "failed to map":
+        return "Failed to Map"
+
+    # unrecognized notes, just return them, capitalized
+    return raw.capitalize()
