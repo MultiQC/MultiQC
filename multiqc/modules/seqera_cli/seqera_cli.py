@@ -183,7 +183,7 @@ class MultiqcModule(BaseMultiqcModule):
             "cpuTime": {
                 "title": "CPU Time",
                 "description": "Total CPU time used by the workflow",
-                "format": lambda x: humanize.naturaldelta(x / 1000),
+                "format": lambda x: str(humanize.naturaldelta(x / 1000)),
                 "scale": "Greys",
             },
             "readBytes": {
