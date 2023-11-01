@@ -829,9 +829,9 @@ headers['name'] = {
     it greater than 1000. This value can be any float.
 - `to_float`
   - Lambda function to convert value to a number, to support the quantitative
-    color code and table sorting. By default, MultiQC attempt to convert each
-    value to float(), and if it fails, it will leave the value as a string without
-    color code and sorting.
+    color code. By default, MultiQC attempt to convert each
+    value to `float()`, and if it fails, it will leave the value as a string without
+    color code.
 
 The typical use for the `modify` string is to divide large numbers such as read counts,
 to make them easier to interpret. If handling read counts, there are three config variables
