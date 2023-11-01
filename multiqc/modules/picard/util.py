@@ -9,12 +9,12 @@ from multiqc.utils import config
 log = logging.getLogger(__name__)
 
 
-def read_histogram(self, program_key, headers, formats, picard_tool, sentieon_algo=None):
+def read_histogram(module, program_key, headers, formats, picard_tool, sentieon_algo=None):
     """
     Reads a Picard HISTOGRAM file.
 
     Args:
-        self: the Picard QC module
+        module: the Picard QC module
         program_key: the key used to find the program (ex. picard/quality_by_cycle)
         headers: the list of expected headers for the histogram
         formats: the list of methods to apply to re-format each field (on a given row)
@@ -26,15 +26,21 @@ def read_histogram(self, program_key, headers, formats, picard_tool, sentieon_al
     sample_data = None
 
     # Go through logs and find Metrics
-    for f in self.find_log_files(program_key, filehandles=True):
+    for f in module.find_log_files(program_key, filehandles=True):
         s_name = f["s_name"]
         for line in f["f"]:
-            maybe_s_name = self.extract_sample_name(line, f, picard_tool=picard_tool, sentieon_algo=sentieon_algo)
+            maybe_s_name = extract_sample_name(
+                module,
+                line,
+                f,
+                picard_tool=picard_tool,
+                sentieon_algo=sentieon_algo,
+            )
             if maybe_s_name:
                 s_name = maybe_s_name
                 sample_data = None
 
-            if self.is_line_right_before_table(line, sentieon_algo=sentieon_algo):
+            if is_line_right_before_table(line, sentieon_algo=sentieon_algo):
                 # check the header
                 line = f["f"].readline()
                 if line.strip().split("\t") == headers:
@@ -55,15 +61,15 @@ def read_histogram(self, program_key, headers, formats, picard_tool, sentieon_al
                 log.debug("Duplicate sample name found in {}! Overwriting: {}".format(f["fn"], s_name))
             all_data[s_name] = sample_data
 
-            self.add_data_source(f, s_name, section="Histogram")
+            module.add_data_source(f, s_name, section="Histogram")
             # Superfluous function call to confirm that it is used in this module
             # Replace None with actual version if it is available
-            self.add_software_version(None, s_name)
+            module.add_software_version(None, s_name)
 
-    data = self.ignore_samples(all_data)
+    data = module.ignore_samples(all_data)
 
     # Write data to file
-    self.write_data_file(data, f"{self.anchor}_histogram")
+    module.write_data_file(data, f"{module.anchor}_histogram")
 
     return data
 
@@ -101,8 +107,9 @@ def extract_sample_name(
     mod,
     line: str,
     f: Dict,
-    picard_tool: str,
+    picard_tool: Union[str, List[str]],
     sentieon_algo: Optional[str] = None,
+    picard_opt: Union[None, str, List[str]] = None,
 ) -> Optional[str]:
     """
     Historically, MultiQC supported Picard tools QC outputs merged together into
@@ -114,14 +121,24 @@ def extract_sample_name(
     """
     if getattr(config, "picard_config", {}).get("s_name_filenames", False):
         return None
+
+    # Name of the option that contains the name of the input file to fetch the sample name.
+    # Examples of the commands:
+    # CollectIlluminaLaneMetrics --OUTPUT_PREFIX 200908_J00178_0673_AHJ5FLBBXY
+    # picard.analysis.CollectAlignmentSummaryMetrics INPUT=/160219_0463_1_ACTTGA_GL_020516_SpHn_RNF212.mm10.bam_sorted
+    picard_opt = picard_opt or ["INPUT"]
+    picard_opts = picard_opt if isinstance(picard_opt, list) else [picard_opt]
+    picard_tools = picard_tool if isinstance(picard_tool, list) else [picard_tool]
+
     picard_command = (
         line.startswith("# ")
-        and picard_tool in line
-        and (
-            " input=" in line.lower()
-            or " --input=" in line.lower()
-            or "input" in line.lower().split()
-            or "--input" in line.lower().split()
+        and any(pt in line for pt in picard_tools)
+        and any(
+            f" {po}=" in line.upper()
+            or f" --{po}=" in line.upper()
+            or f"{po}" in line.upper().split()
+            or f"--{po}" in line.upper().split()
+            for po in picard_opts
         )
     )
     sentieon_command = (
@@ -131,13 +148,16 @@ def extract_sample_name(
         and " -i " in line
     )
     # Pull sample name from the input file name, recorded in the command line:
-    fn_search = None
+    match = None
     if picard_command:
-        fn_search = re.search(r"INPUT(?:=|\s+)(\[?[^\s]+\]?)", line, flags=re.IGNORECASE)
+        for po in picard_opts:
+            match = re.search(rf"{po}(?:=|\s+)(\[?[^\s]+\]?)", line, flags=re.IGNORECASE)
+            if match is not None:
+                break
     elif sentieon_command:
-        fn_search = re.search(r" -i\s+(\[?\S+\]?)", line, flags=re.IGNORECASE)
-    if fn_search:
-        f_name = os.path.basename(fn_search.group(1).strip("[]"))
+        match = re.search(r" -i\s+(\[?\S+\]?)", line, flags=re.IGNORECASE)
+    if match:
+        f_name = os.path.basename(match.group(1).strip("[]"))
         s_name = mod.clean_s_name(f_name, f)
         return s_name
     return None

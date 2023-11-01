@@ -10,8 +10,8 @@ from multiqc.modules.base_module import BaseMultiqcModule, ModuleNoSamplesFound
 from . import (
     AlignmentSummaryMetrics,
     BaseDistributionByCycleMetrics,
-    CollectIlluminaBasecallingMetrics,
-    CollectIlluminaLaneMetrics,
+    IlluminaBasecallingMetrics,
+    IlluminaLaneMetrics,
     CrosscheckFingerprints,
     ExtractIlluminaBarcodes,
     GcBiasMetrics,
@@ -81,8 +81,8 @@ class MultiqcModule(BaseMultiqcModule):
             "VariantCallingMetrics": VariantCallingMetrics,
             "ValidateSamFile": ValidateSamFile,
             "WgsMetrics": WgsMetrics,
-            "CollectIlluminaBasecallingMetrics": CollectIlluminaBasecallingMetrics,
-            "CollectIlluminaLaneMetrics": CollectIlluminaLaneMetrics,
+            "IlluminaBasecallingMetrics": IlluminaBasecallingMetrics,
+            "IlluminaLaneMetrics": IlluminaLaneMetrics,
             "ExtractIlluminaBarcodes": ExtractIlluminaBarcodes,
             "MarkIlluminaAdapters": MarkIlluminaAdapters,
         }.items():
@@ -95,6 +95,3 @@ class MultiqcModule(BaseMultiqcModule):
         # Exit if we didn't find anything
         if sum(n.values()) == 0:
             raise ModuleNoSamplesFound
-
-        # Add to the General Stats table (has to be called once per MultiQC module)
-        self.general_stats_addcols(self.general_stats_data, self.general_stats_headers)

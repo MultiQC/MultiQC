@@ -1,4 +1,4 @@
-""" MultiQC submodule to parse output from Picard BaseDistributionByCycleMetrics """
+""" MultiQC submodule to parse output from Picard BaseDistributionByCycleMetrics"""
 
 import logging
 from collections import defaultdict
@@ -13,7 +13,6 @@ log = logging.getLogger(__name__)
 def parse_reports(module):
     """Find Picard BaseDistributionByCycleMetrics reports and parse their data"""
 
-    # Set up vars
     data_by_sample = dict()
     samplestats_by_sample = dict()
 
@@ -21,47 +20,95 @@ def parse_reports(module):
     for f in module.find_log_files(f"{module.anchor}/basedistributionbycycle", filehandles=True):
         # Sample name from input file name by default.
         s_name = f["s_name"]
+
         # A file can be concatenated from multiple samples, so we need to keep track of
         # the current sample name and header.
         keys = None
         data_by_read_end = defaultdict(dict)
         max_cycle_r1 = 0
 
+        def _finalize_sample(data_by_read_end, s_name):
+            """
+            Populate `data_by_sample` and `samplestats_by_sample`
+            """
+            # set up the set of s_names
+            if 2 in set(data_by_read_end):
+                s_names = {1: "%s_R1" % s_name, 2: "%s_R2" % s_name}
+            else:
+                s_names = {1: s_name}
+
+            for read_end in s_names:
+                data_by_cycle = data_by_read_end[read_end]
+                s_name = s_names[read_end]
+                data_by_sample[s_name] = data_by_cycle
+                if s_name in data_by_sample:
+                    log.debug(f"Duplicate sample name found in {f['fn']}! Overwriting: {s_name}")
+                module.add_data_source(f, s_name, section="BaseDistributionByCycle")
+                sample_stats = {
+                    "sum_pct_a": 0,
+                    "sum_pct_c": 0,
+                    "sum_pct_g": 0,
+                    "sum_pct_t": 0,
+                    "sum_pct_n": 0,
+                    "cycle_count": 0,
+                }
+                samplestats_by_sample[s_name] = sample_stats
+                for c, row in data_by_cycle.items():
+                    pct_a, pct_c, pct_g, pct_t, pct_n = row
+                    sample_stats["sum_pct_a"] += pct_a
+                    sample_stats["sum_pct_c"] += pct_c
+                    sample_stats["sum_pct_g"] += pct_g
+                    sample_stats["sum_pct_t"] += pct_t
+                    sample_stats["sum_pct_n"] += pct_n
+                sample_stats["cycle_count"] += len(data_by_cycle.keys())
+
         for line in f["f"]:
             maybe_s_name = util.extract_sample_name(module, line, f, picard_tool="CollectBaseDistributionByCycle")
             if maybe_s_name:
                 # Starts information for a new sample
                 s_name = maybe_s_name
+                keys = None
 
             if s_name is None:
                 continue
 
             if util.is_line_right_before_table(line, picard_class="BaseDistributionByCycleMetrics"):
+                if data_by_read_end:
+                    # Finalize previous sample
+                    _finalize_sample(data_by_read_end, s_name)
+                    # Reset for next sample
+                    data_by_read_end = defaultdict(dict)
+                    max_cycle_r1 = 0
+
                 keys = f["f"].readline().strip("\n").split("\t")
                 assert keys == ["READ_END", "CYCLE", "PCT_A", "PCT_C", "PCT_G", "PCT_T", "PCT_N"]
 
-                new_data_by_sample, new_samplestats_by_sample = _finalise_parsing_dist(data_by_read_end, s_name)
-
-                for sn, d in new_data_by_sample.items():
-                    module.add_data_source(f, sn, section="BaseDistributionByCycle")
-                    if sn in data_by_sample:
-                        log.debug(f"Duplicate sample name found in {f['fn']}! " "Overwriting: {sn}")
-                    data_by_sample[sn] = d
-                    samplestats_by_sample[sn] = new_samplestats_by_sample[sn]
-
-                data_by_read_end = defaultdict(dict)
-                max_cycle_r1 = 0
-
             elif keys:
-                # read base distribution by cycle
-                row_data = list(map(float, line.strip().split("\t")))
-                read_end, cycle, pct_a, pct_c, pct_g, pct_t, pct_n = row_data
-                cycle = int(cycle)
+                raw_vals = line.strip("\n").split("\t")
+                if len(raw_vals) != len(keys):
+                    s_name = None
+                    continue
+
+                vals = []
+                for v in raw_vals:
+                    try:
+                        vals.append(float(v))
+                    except ValueError:
+                        vals.append(v)
+                read_end, cycle, pct_a, pct_c, pct_g, pct_t, pct_n = vals
+                try:
+                    cycle = int(cycle)
+                except ValueError:
+                    continue
                 if read_end == 1.0:
                     max_cycle_r1 = max(max_cycle_r1, cycle)
                 else:
                     cycle -= max_cycle_r1
                 data_by_read_end[read_end][cycle] = (pct_a, pct_c, pct_g, pct_t, pct_n)
+
+        if data_by_read_end:
+            # Finalize the last sample
+            _finalize_sample(data_by_read_end, s_name)
 
     # Filter to strip out ignored sample names
     data_by_sample = module.ignore_samples(data_by_sample)
@@ -117,37 +164,3 @@ def parse_reports(module):
 
     # Return the number of detected samples to the parent module
     return len(data_by_sample)
-
-
-def _finalise_parsing_dist(data_by_read_end, s_name):
-    # set up the set of s_names
-    if 2 in set(data_by_read_end):
-        s_names = {1: "%s_R1" % s_name, 2: "%s_R2" % s_name}
-    else:
-        s_names = {1: s_name}
-
-    data_by_sample = dict()
-    samplestats_by_sample = dict()
-
-    for read_end in s_names:
-        data_by_cycle = data_by_read_end[read_end]
-        s_name = s_names[read_end]
-        data_by_sample[s_name] = data_by_cycle
-        sample_stats = {
-            "sum_pct_a": 0,
-            "sum_pct_c": 0,
-            "sum_pct_g": 0,
-            "sum_pct_t": 0,
-            "sum_pct_n": 0,
-            "cycle_count": 0,
-        }
-        samplestats_by_sample[s_name] = sample_stats
-        for c, row in data_by_cycle.items():
-            pct_a, pct_c, pct_g, pct_t, pct_n = row
-            sample_stats["sum_pct_a"] += pct_a
-            sample_stats["sum_pct_c"] += pct_c
-            sample_stats["sum_pct_g"] += pct_g
-            sample_stats["sum_pct_t"] += pct_t
-            sample_stats["sum_pct_n"] += pct_n
-        sample_stats["cycle_count"] += len(data_by_cycle.keys())
-    return data_by_sample, samplestats_by_sample

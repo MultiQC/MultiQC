@@ -87,7 +87,7 @@ def parse_reports(self):
             "description": "All results for samples CrosscheckFingerprints were as expected.",
         }
     }
-    self.general_stats_addcols(general_stats_data, general_stats_headers)
+    self.general_stats_addcols(general_stats_data, general_stats_headers, namespace="CrosscheckFingerprints")
 
     # Add a table section to the report
     self.add_section(
@@ -195,9 +195,8 @@ def _get_table_headers(data):
         ]
 
     # Add Left and Right Sample names / groups, keeping it as minimal as possible
-    sample_group_are_same = (
-        lambda x: x["LEFT_SAMPLE"] == x["LEFT_GROUP_VALUE"] and x["RIGHT_SAMPLE"] == x["RIGHT_GROUP_VALUE"]
-    )
+    def sample_group_are_same(x):
+        return x["LEFT_SAMPLE"] == x["LEFT_GROUP_VALUE"] and x["RIGHT_SAMPLE"] == x["RIGHT_GROUP_VALUE"]
 
     if all(sample_group_are_same(values) for values in data.values()):
         crosscheckfingerprints_table_cols = [

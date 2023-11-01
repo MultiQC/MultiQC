@@ -638,13 +638,10 @@ picard/wgs_metrics:
   shared: true
 picard/collectilluminabasecallingmetrics:
   contents: "CollectIlluminaBasecallingMetrics"
-  shared: true
 picard/collectilluminalanemetrics:
   contents: "CollectIlluminaLaneMetrics"
-  shared: true
 picard/extractilluminabarcodes:
   contents: "ExtractIlluminaBarcodes"
-  shared: true
 picard/markilluminaadapters:
   contents: "MarkIlluminaAdapters"
   shared: true

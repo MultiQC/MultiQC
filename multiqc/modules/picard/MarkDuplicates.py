@@ -12,7 +12,7 @@ from multiqc.plots import bargraph
 log = logging.getLogger(__name__)
 
 
-def parse_reports(self, sp_key="markdups"):
+def parse_reports(module, sp_key="markdups"):
     """
     Find Picard MarkDuplicates reports and parse their data.
     Note that this function is also used by the biobambam2 module, that's why
@@ -36,16 +36,16 @@ def parse_reports(self, sp_key="markdups"):
         # User has requested each library is kept separate
         # Update the sample name to append the library name
         if not merge_multiple_libraries and len(parsed_data) > 0:
-            s_name = "{} - {}".format(s_name, parsed_data["LIBRARY"])
+            s_name = f"{s_name} - {parsed_data['LIBRARY']}"
 
         # Skip - No reads
         try:
             if parsed_data["READ_PAIRS_EXAMINED"] == 0 and parsed_data["UNPAIRED_READS_EXAMINED"] == 0:
-                log.warning("Skipping MarkDuplicates sample '{}' as log contained no reads".format(s_name))
+                log.warning(f"Skipping MarkDuplicates sample '{s_name}' as log contained no reads")
                 return
         # Skip - Missing essential fields
         except KeyError:
-            log.warning("Skipping MarkDuplicates sample '{}' as missing essential fields".format(s_name))
+            log.warning(f"Skipping MarkDuplicates sample '{s_name}' as missing essential fields")
             return
 
         # Recompute PERCENT_DUPLICATION and ESTIMATED_LIBRARY_SIZE
@@ -55,9 +55,9 @@ def parse_reports(self, sp_key="markdups"):
 
         # Save the data
         if s_name in data_by_sample:
-            log.debug("Duplicate sample name found in {}! Overwriting: {}".format(f["fn"], s_name))
+            log.debug(f"Duplicate sample name found in {f['fn']}! Overwriting: {s_name}")
         data_by_sample[s_name] = parsed_data
-        self.add_data_source(f, s_name, section="DuplicationMetrics")
+        module.add_data_source(f, s_name, section="DuplicationMetrics")
 
         # End of metrics table - reset for next sample
         if len(vals) < 6:
@@ -68,28 +68,35 @@ def parse_reports(self, sp_key="markdups"):
             return False
 
     # Go through logs and find Metrics
-    for f in self.find_log_files(f"{self.anchor}/{sp_key}", filehandles=True):
+    for f in module.find_log_files(f"{module.anchor}/{sp_key}", filehandles=True):
         s_name = f["s_name"]
         parsed_lists = defaultdict(list)
         keys = None
         in_stats_block = False
         recompute_merged_metrics = False
         for line in f["f"]:
-            # New log starting
-            maybe_s_name = util.extract_sample_name(self, line, f, picard_tool="MarkDuplicates", sentieon_algo="Dedup")
+            maybe_s_name = util.extract_sample_name(
+                module,
+                line,
+                f,
+                picard_tool="MarkDuplicates",
+                sentieon_algo="Dedup",
+            )
             if maybe_s_name:
                 s_name = maybe_s_name
                 continue
 
-            # Start of the METRICS table
-            if "UNPAIRED_READ_DUPLICATES" in line:
-                in_stats_block = True
-                keys = line.rstrip("\n").split("\t")
+            if s_name is None:
                 continue
+
+            if util.is_line_right_before_table(line, picard_class="DuplicationMetric", sentieon_algo="Dedup"):
+                if s_name in data_by_sample:
+                    log.debug(f"Duplicate sample name found in {f['fn']}! Overwriting: {s_name}")
+                in_stats_block = True
+                keys = f["f"].readline().strip("\n").split("\t")
 
             # Currently parsing the METRICS table
             if in_stats_block:
-                # Split the values columns
                 vals = line.rstrip("\n").split("\t")
 
                 # End of the METRICS table, or multiple libraries, and we're not merging them
@@ -131,19 +138,19 @@ def parse_reports(self, sp_key="markdups"):
             save_table_results(s_name, keys, parsed_data, recompute_merged_metrics)
 
     # Filter to strip out ignored sample names
-    data_by_sample = self.ignore_samples(data_by_sample)
+    data_by_sample = module.ignore_samples(data_by_sample)
     if len(data_by_sample) == 0:
         return 0
 
     # Superfluous function call to confirm that it is used in this module
     # Replace None with actual version if it is available
-    self.add_software_version(None)
+    module.add_software_version(None)
 
     # Write parsed data to a file
-    self.write_data_file(data_by_sample, f"multiqc_{self.anchor}_dups")
+    module.write_data_file(data_by_sample, f"multiqc_{module.anchor}_dups")
 
     # Add to general stats table
-    self.general_stats_headers["PERCENT_DUPLICATION"] = {
+    module.general_stats_headers["PERCENT_DUPLICATION"] = {
         "title": "% Dups",
         "description": "Mark Duplicates - Percent Duplication",
         "max": 100,
@@ -153,9 +160,9 @@ def parse_reports(self, sp_key="markdups"):
         "modify": lambda x: util.multiply_hundred(x),
     }
     for s_name in data_by_sample:
-        if s_name not in self.general_stats_data:
-            self.general_stats_data[s_name] = dict()
-        self.general_stats_data[s_name].update(data_by_sample[s_name])
+        if s_name not in module.general_stats_data:
+            module.general_stats_data[s_name] = dict()
+        module.general_stats_data[s_name].update(data_by_sample[s_name])
 
     # Make the bar plot and add to the MarkDuplicates section
     #
@@ -186,29 +193,33 @@ def parse_reports(self, sp_key="markdups"):
 
     # Config for the plot
     pconfig = {
-        "id": f"{self.anchor}_deduplication",
-        "title": f"{self.name}: Deduplication Stats",
+        "id": f"{module.anchor}_deduplication",
+        "title": f"{module.name}: Deduplication Stats",
         "ylab": "# Reads",
         "cpswitch_counts_label": "Number of Reads",
         "cpswitch_c_active": False,
     }
 
-    self.add_section(
+    module.add_section(
         name="Mark Duplicates",
-        anchor=f"{self.anchor}-markduplicates",
-        description="Number of reads, categorised by duplication state. **Pair counts are doubled** - see help text for details.",
+        anchor=f"{module.anchor}-markduplicates",
+        description="Number of reads, categorised by duplication state. **Pair counts "
+        "are doubled** - see help text for details.",
         helptext="""
         The table in the Picard metrics file contains some columns referring
         read pairs and some referring to single reads.
 
-        To make the numbers in this plot sum correctly, values referring to pairs are doubled
+        To make the numbers in this plot sum correctly, values referring to pairs are 
+        doubled
         according to the scheme below:
 
         * `READS_IN_DUPLICATE_PAIRS = 2 * READ_PAIR_DUPLICATES`
         * `READS_IN_UNIQUE_PAIRS = 2 * (READ_PAIRS_EXAMINED - READ_PAIR_DUPLICATES)`
-        * `READS_IN_UNIQUE_UNPAIRED = UNPAIRED_READS_EXAMINED - UNPAIRED_READ_DUPLICATES`
+        * `READS_IN_UNIQUE_UNPAIRED = UNPAIRED_READS_EXAMINED - 
+        UNPAIRED_READ_DUPLICATES`
         * `READS_IN_DUPLICATE_PAIRS_OPTICAL = 2 * READ_PAIR_OPTICAL_DUPLICATES`
-        * `READS_IN_DUPLICATE_PAIRS_NONOPTICAL = READS_IN_DUPLICATE_PAIRS - READS_IN_DUPLICATE_PAIRS_OPTICAL`
+        * `READS_IN_DUPLICATE_PAIRS_NONOPTICAL = READS_IN_DUPLICATE_PAIRS - 
+        READS_IN_DUPLICATE_PAIRS_OPTICAL`
         * `READS_IN_DUPLICATE_UNPAIRED = UNPAIRED_READ_DUPLICATES`
         * `READS_UNMAPPED = UNMAPPED_READS`
         """,
@@ -224,7 +235,9 @@ def calculate_percentage_duplication(d):
     Picard calculation to compute percentage duplication
 
     Taken & translated from the Picard codebase:
-    https://github.com/broadinstitute/picard/blob/78ea24466d9bcab93db89f22e6a6bf64d0ad7782/src/main/java/picard/sam/DuplicationMetrics.java#L106-L110
+    https://github.com/broadinstitute/picard/blob
+    /78ea24466d9bcab93db89f22e6a6bf64d0ad7782/src/main/java/picard/sam
+    /DuplicationMetrics.java#L106-L110
     """
     try:
         dups = d["UNPAIRED_READ_DUPLICATES"] + d["READ_PAIR_DUPLICATES"] * 2
@@ -241,12 +254,16 @@ def estimate_library_size(d):
     Picard calculation to estimate library size
 
     Taken & translated from the Picard codebase:
-    https://github.com/broadinstitute/picard/blob/78ea24466d9bcab93db89f22e6a6bf64d0ad7782/src/main/java/picard/sam/DuplicationMetrics.java#L153-L164
+    https://github.com/broadinstitute/picard/blob
+    /78ea24466d9bcab93db89f22e6a6bf64d0ad7782/src/main/java/picard/sam
+    /DuplicationMetrics.java#L153-L164
 
-    Note: Optical duplicates are contained in duplicates and therefore do not enter the calculation here.
+    Note: Optical duplicates are contained in duplicates and therefore do not enter
+    the calculation here.
     See also the computation of READ_PAIR_NOT_OPTICAL_DUPLICATES.
 
-     * Estimates the size of a library based on the number of paired end molecules observed
+     * Estimates the size of a library based on the number of paired end molecules
+     observed
      * and the number of unique pairs observed.
      * <p>
      * Based on the Lander-Waterman equation that states:
@@ -270,7 +287,7 @@ def estimate_library_size(d):
         M = 100.0
 
         if uniqueReadPairs >= readPairs or f(m * uniqueReadPairs, uniqueReadPairs, readPairs) < 0:
-            logging.warning("Picard recalculation of ESTIMATED_LIBRARY_SIZE skipped - metrics look wrong")
+            logging.warning("Picard recalculation of ESTIMATED_LIBRARY_SIZE skipped - metrics " "look wrong")
             return None
 
         # find value of M, large enough to act as other side for bisection method
@@ -298,7 +315,9 @@ def f(x, c, n):
     Picard calculation used when estimating library size
 
     Taken & translated from the Picard codebase:
-    https://github.com/broadinstitute/picard/blob/78ea24466d9bcab93db89f22e6a6bf64d0ad7782/src/main/java/picard/sam/DuplicationMetrics.java#L172-L177
+    https://github.com/broadinstitute/picard/blob
+    /78ea24466d9bcab93db89f22e6a6bf64d0ad7782/src/main/java/picard/sam
+    /DuplicationMetrics.java#L172-L177
 
     * Method that is used in the computation of estimated library size.
     """

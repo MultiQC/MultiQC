@@ -9,7 +9,7 @@ from multiqc.plots import linegraph
 log = logging.getLogger(__name__)
 
 
-def parse_reports(self):
+def parse_reports(module):
     """
     Find Picard GcBiasMetrics reports and parse their data. There are two types of
     GC bias files:
@@ -25,30 +25,23 @@ def parse_reports(self):
     summary_data_by_sample = dict()
 
     # Go through logs and find Metrics
-    for f in self.find_log_files(f"{self.anchor}/gcbias", filehandles=True):
+    for f in module.find_log_files(f"{module.anchor}/gcbias", filehandles=True):
         gc_col = None
         cov_col = None
         s_name = f["s_name"]
         for line in f["f"]:
             maybe_s_name = util.extract_sample_name(
-                self,
+                module,
                 line,
                 f,
                 picard_tool="CollectGcBiasMetrics",
                 sentieon_algo="GCBias",
             )
             if maybe_s_name:
+                # Starts information for a new sample
                 s_name = maybe_s_name
-            if gc_col is not None and cov_col is not None:
-                try:
-                    # Note that GC isn't always the first column.
-                    s = line.strip("\n").split("\t")
-                    data_by_sample[s_name][int(s[gc_col])] = float(s[cov_col])
-                except IndexError:
-                    gc_col = None
-                    cov_col = None
 
-            elif util.is_line_right_before_table(
+            if util.is_line_right_before_table(
                 line, picard_class=["GcBiasDetailMetrics", "GcBiasSummaryMetrics"], sentieon_algo="GCBias"
             ):
                 # Get header - find columns with the data we want
@@ -58,7 +51,7 @@ def parse_reports(self):
                 if "GC" in keys and "NORMALIZED_COVERAGE" in keys:
                     # Detail metrics: one line per GC percentage
                     if s_name in data_by_sample:
-                        log.debug("Duplicate sample name found in {}! Overwriting: {}".format(f["fn"], s_name))
+                        log.debug(f"Duplicate sample name found in {f['fn']}! Overwriting: {s_name}")
                     data_by_sample[s_name] = dict()
                     gc_col = keys.index("GC")
                     cov_col = keys.index("NORMALIZED_COVERAGE")
@@ -76,22 +69,31 @@ def parse_reports(self):
                         except ValueError:
                             summary_data_by_sample[s_name][k] = v
 
+            elif gc_col is not None and cov_col is not None:
+                try:
+                    # Note that GC isn't always the first column.
+                    s = line.strip("\n").split("\t")
+                    data_by_sample[s_name][int(s[gc_col])] = float(s[cov_col])
+                except IndexError:
+                    gc_col = None
+                    cov_col = None
+
         for s_name in set(data_by_sample.keys()) | set(summary_data_by_sample.keys()):
-            self.add_data_source(f, s_name, section="GcBiasMetrics")
+            module.add_data_source(f, s_name, section="GcBiasMetrics")
 
     for s_name in list(data_by_sample.keys()):
         if len(data_by_sample[s_name]) == 0:
             data_by_sample.pop(s_name, None)
-            log.debug("Removing {} as no data parsed".format(s_name))
+            log.debug(f"Removing {s_name} as no data parsed")
 
     for s_name in list(summary_data_by_sample.keys()):
         if len(summary_data_by_sample[s_name]) == 0:
             summary_data_by_sample.pop(s_name, None)
-            log.debug("Removing {} as no data parsed".format(s_name))
+            log.debug(f"Removing {s_name} as no data parsed")
 
     # Filter to strip out ignored sample names
-    data_by_sample = self.ignore_samples(data_by_sample)
-    summary_data_by_sample = self.ignore_samples(summary_data_by_sample)
+    data_by_sample = module.ignore_samples(data_by_sample)
+    summary_data_by_sample = module.ignore_samples(summary_data_by_sample)
 
     n_samples = len(data_by_sample.keys() | summary_data_by_sample.keys())
     if n_samples == 0:
@@ -99,13 +101,13 @@ def parse_reports(self):
 
     # Superfluous function call to confirm that it is used in this module
     # Replace None with actual version if it is available
-    self.add_software_version(None)
+    module.add_software_version(None)
 
     if data_by_sample:
         # Plot the graph
         pconfig = {
-            "id": f"{self.anchor}_gcbias_plot",
-            "title": f"{self.name}: GC Coverage Bias",
+            "id": f"{module.anchor}_gcbias_plot",
+            "title": f"{module.name}: GC Coverage Bias",
             "ylab": "Normalized Coverage",
             "xlab": "% GC",
             "xmin": 0,
@@ -118,9 +120,9 @@ def parse_reports(self):
                 {"value": 1, "color": "#999999", "width": 2, "dashStyle": "LongDash"},
             ],
         }
-        self.add_section(
+        module.add_section(
             name="GC Coverage Bias",
-            anchor=f"{self.anchor}-gcbias",
+            anchor=f"{module.anchor}-gcbias",
             description="This plot shows bias in coverage across regions of the genome with varying GC content."
             " A perfect library would be a flat line at <code>y = 1</code>.",
             plot=linegraph.plot(data_by_sample, pconfig),
@@ -128,7 +130,7 @@ def parse_reports(self):
 
     if summary_data_by_sample:
         # Write parsed summary data to a file
-        self.write_data_file(summary_data_by_sample, f"multiqc_{self.anchor}_gcbias")
+        module.write_data_file(summary_data_by_sample, f"multiqc_{module.anchor}_gcbias")
 
     # Return the number of detected samples to the parent module
     return n_samples

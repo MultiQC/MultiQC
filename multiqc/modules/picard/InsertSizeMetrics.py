@@ -4,6 +4,7 @@ import logging
 from collections import OrderedDict
 
 from multiqc import config
+from multiqc.modules.picard import util
 from multiqc.plots import linegraph
 
 # Initialise the logger
@@ -13,73 +14,76 @@ log = logging.getLogger(__name__)
 def parse_reports(module):
     """Find Picard InsertSizeMetrics reports and parse their data"""
 
-    # Set up vars
-    module.picard_insert_size_data = dict()
-    module.picard_insert_size_histogram = dict()
-    module.picard_insert_size_samplestats = dict()
+    data_by_sample = dict()
+    histogram_by_sample = dict()
+    samplestats_by_sample = dict()
 
     # Go through logs and find Metrics
     for f in module.find_log_files(f"{module.anchor}/insertsize", filehandles=True):
+        # Sample name from input file name by default
         s_name = f["s_name"]
         in_hist = False
-        data = dict()
-        histogram = dict()
-        samplestats = dict()
         for line in f["f"]:
-            maybe_s_name = module.extract_sample_name(
-                module, line, f, picard_tool="CollectInsertSizeMetrics", sentieon_algo="InsertSizeMetricAlgo"
+            maybe_s_name = util.extract_sample_name(
+                module,
+                line,
+                f,
+                picard_tool="CollectInsertSizeMetrics",
+                sentieon_algo="InsertSizeMetricAlgo",
             )
             if maybe_s_name:
                 # Starts information for a new sample
                 s_name = maybe_s_name
 
+            if s_name is None:
+                continue
+
             # Catch the histogram values
-            if s_name is not None and in_hist is True:
+            if in_hist:
                 try:
                     sections = line.split("\t")
                     ins = int(sections[0])
                     tot_count = sum([int(x) for x in sections[1:]])
-                    histogram[s_name][ins] = tot_count
-                    samplestats[s_name]["total_count"] += tot_count
+                    histogram_by_sample[s_name][ins] = tot_count
+                    samplestats_by_sample[s_name]["total_count"] += tot_count
                 except ValueError:
                     # Reset in case we have more in this log file
                     s_name = None
                     in_hist = False
 
-            if s_name is not None and module.is_line_right_before_table(
+            if util.is_line_right_before_table(
                 line, picard_class="InsertSizeMetrics", sentieon_algo="InsertSizeMetricAlgo"
             ):
-                if s_name in data or s_name in module.picard_insert_size_data:
-                    log.debug("Duplicate sample name found in {}! Overwriting: {}".format(f["fn"], s_name))
+                if s_name in data_by_sample:
+                    log.debug(f"Duplicate sample name found in {f['fn']}! Overwriting: {s_name}")
                 keys = f["f"].readline().strip("\n").split("\t")
                 vals = f["f"].readline().strip("\n").split("\t")
-                samplestats[s_name] = {"total_count": 0, "meansum": 0, "total_pairs": 0}
+                samplestats_by_sample[s_name] = {"total_count": 0, "meansum": 0, "total_pairs": 0}
                 orientation_idx = keys.index("PAIR_ORIENTATION")
+
                 while len(vals) == len(keys):
                     pair_orientation = vals[orientation_idx]
                     rowkey = "{}_{}".format(s_name, pair_orientation)
-                    data[rowkey] = OrderedDict()
-                    data[rowkey]["SAMPLE_NAME"] = s_name
+                    data_by_sample[rowkey] = OrderedDict()
+                    data_by_sample[rowkey]["SAMPLE_NAME"] = s_name
                     for i, k in enumerate(keys):
                         try:
-                            data[rowkey][k] = float(vals[i])
+                            data_by_sample[rowkey][k] = float(vals[i])
                         except ValueError:
                             try:
-                                data[rowkey][k] = float(vals[i].replace(",", "."))
-                                log.debug(
-                                    "Switching commas for points in '{}': {} - {}".format(
-                                        f["fn"], vals[i], vals[i].replace(",", ".")
-                                    )
-                                )
+                                unfixed = vals[i]
+                                fixed = unfixed.replace(",", ".")
+                                data_by_sample[rowkey][k] = float(fixed)
+                                log.debug(f"Switching commas for points in '{f['fn']}': {unfixed} -> {fixed}")
                             except ValueError:
-                                data[rowkey][k] = vals[i]
+                                data_by_sample[rowkey][k] = vals[i]
                         except IndexError:
                             pass  # missing data
                     # Add to mean sums
-                    rp = data[rowkey]["READ_PAIRS"]
-                    mis = data[rowkey]["MEAN_INSERT_SIZE"]
-                    samplestats[s_name]["meansum"] += rp * mis
-                    samplestats[s_name]["total_pairs"] += rp
+                    rp = data_by_sample[rowkey]["READ_PAIRS"]
+                    mis = data_by_sample[rowkey]["MEAN_INSERT_SIZE"]
+                    samplestats_by_sample[s_name]["meansum"] += rp * mis
+                    samplestats_by_sample[s_name]["total_pairs"] += rp
 
                     vals = f["f"].readline().strip("\n").split("\t")
 
@@ -87,50 +91,44 @@ def parse_reports(module):
                 f["f"].readline().strip("\n")
                 f["f"].readline().strip("\n")
 
-                histogram[s_name] = dict()
+                histogram_by_sample[s_name] = dict()
                 in_hist = True
 
-        for key in list(data.keys()):
-            if len(data[key]) == 0:
-                data.pop(key, None)
-        for s_name in list(histogram.keys()):
-            if len(histogram[s_name]) == 0:
-                histogram.pop(s_name, None)
+        for key in list(data_by_sample.keys()):
+            if len(data_by_sample[key]) == 0:
+                data_by_sample.pop(key, None)
+        for s_name in list(histogram_by_sample.keys()):
+            if len(histogram_by_sample[s_name]) == 0:
+                histogram_by_sample.pop(s_name, None)
                 log.debug("Ignoring '{}' histogram as no data parsed".format(s_name))
 
-        # When there is only one sample, using the file name to extract the sample name.
-        # if len(data) == 1:
-        #     data = {f["s_name"]: list(data.values())[0]}
-        #     histogram = {f["s_name"]: list(histogram.values())[0]} if histogram else dict()
-        #     samplestats = {f["s_name"]: list(samplestats.values())[0]} if samplestats else dict()
+        data_by_sample.update(data_by_sample)
+        histogram_by_sample.update(histogram_by_sample)
+        samplestats_by_sample.update(samplestats_by_sample)
 
-        module.picard_insert_size_data.update(data)
-        module.picard_insert_size_histogram.update(histogram)
-        module.picard_insert_size_samplestats.update(samplestats)
-
-        for s_name in data:
+        for s_name in data_by_sample:
             module.add_data_source(f, s_name, section="InsertSizeMetrics")
 
     # Calculate summed mean values for all read orientations
-    for s_name, v in module.picard_insert_size_samplestats.items():
+    for s_name, v in samplestats_by_sample.items():
         try:
-            module.picard_insert_size_samplestats[s_name]["summed_mean"] = v["meansum"] / v["total_pairs"]
+            samplestats_by_sample[s_name]["summed_mean"] = v["meansum"] / v["total_pairs"]
         except ZeroDivisionError:
             # The mean of zero elements is zero
-            module.picard_insert_size_samplestats[s_name]["summed_mean"] = 0
+            samplestats_by_sample[s_name]["summed_mean"] = 0
 
     # Calculate summed median values for all read orientations
-    for s_name in module.picard_insert_size_histogram:
+    for s_name in histogram_by_sample:
         j = 0
-        for idx, c in module.picard_insert_size_histogram[s_name].items():
+        for idx, c in histogram_by_sample[s_name].items():
             j += c
-            if j > (module.picard_insert_size_samplestats[s_name]["total_count"] / 2):
-                module.picard_insert_size_samplestats[s_name]["summed_median"] = idx
+            if j > (samplestats_by_sample[s_name]["total_count"] / 2):
+                samplestats_by_sample[s_name]["summed_median"] = idx
                 break
 
     # Filter to strip out ignored sample names
-    module.picard_insert_size_data = module.ignore_samples(module.picard_insert_size_data)
-    if len(module.picard_insert_size_data) == 0:
+    data_by_sample = module.ignore_samples(data_by_sample)
+    if len(data_by_sample) == 0:
         return 0
 
     # Superfluous function call to confirm that it is used in this module
@@ -138,16 +136,17 @@ def parse_reports(module):
     module.add_software_version(None)
 
     # Write parsed data to a file
-    module.write_data_file(module.picard_insert_size_data, f"multiqc_{module.anchor}_insertSize")
+    module.write_data_file(data_by_sample, f"multiqc_{module.anchor}_insertSize")
 
     # Do we have median insert sizes?
     missing_medians = False
-    for v in module.picard_insert_size_samplestats.values():
+    for v in samplestats_by_sample.values():
         if "summed_median" not in v:
             missing_medians = True
 
     # Add to general stats table
-    module.general_stats_headers["summed_median"] = {
+    headers = dict()
+    headers["summed_median"] = {
         "title": "Insert Size",
         "description": "Median Insert Size, all read orientations (bp)",
         "min": 0,
@@ -155,7 +154,7 @@ def parse_reports(module):
         "format": "{:,.0f}",
         "scale": "GnBu",
     }
-    module.general_stats_headers["summed_mean"] = {
+    headers["summed_mean"] = {
         "title": "Mean Insert Size",
         "description": "Mean Insert Size, all read orientations (bp)",
         "min": 0,
@@ -164,16 +163,13 @@ def parse_reports(module):
         "scale": "GnBu",
         "hidden": False if missing_medians else True,
     }
-    for s_name in module.picard_insert_size_samplestats:
-        if s_name not in module.general_stats_data:
-            module.general_stats_data[s_name] = dict()
-        module.general_stats_data[s_name].update(module.picard_insert_size_samplestats[s_name])
+    module.general_stats_addcols(samplestats_by_sample, headers, namespace="InsertSizeMetrics")
 
     # Section with histogram plot
-    if len(module.picard_insert_size_histogram) > 0:
+    if len(histogram_by_sample) > 0:
         # Make a normalised percentage version of the data
         data_percent = {}
-        for s_name, data in module.picard_insert_size_histogram.items():
+        for s_name, data in histogram_by_sample.items():
             data_percent[s_name] = OrderedDict()
             total = float(sum(data.values()))
             for k, v in data.items():
@@ -210,9 +206,10 @@ def parse_reports(module):
         module.add_section(
             name="Insert Size",
             anchor=f"{module.anchor}-insertsize",
-            description="Plot shows the number of reads at a given insert size. Reads with different orientations are summed.",
-            plot=linegraph.plot([module.picard_insert_size_histogram, data_percent], pconfig),
+            description="Plot shows the number of reads at a given insert size. Reads "
+            "with different orientations are summed.",
+            plot=linegraph.plot([histogram_by_sample, data_percent], pconfig),
         )
 
     # Return the number of detected samples to the parent module
-    return len(module.picard_insert_size_data)
+    return len(data_by_sample)

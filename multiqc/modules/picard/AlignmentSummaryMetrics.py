@@ -19,20 +19,19 @@ def parse_reports(module):
     for f in module.find_log_files(f"{module.anchor}/alignment_metrics", filehandles=True):
         # Sample name from input file name by default.
         s_name = f["s_name"]
-        # A file can be concatenated from multiple samples, so we need to keep track of
-        # the current sample name and header.
         keys = None
 
         for line in f["f"]:
             maybe_s_name = util.extract_sample_name(
-                module, line, f, picard_tool="CollectAlignmentSummaryMetrics", sentieon_algo="AlignmentStat"
+                module,
+                line,
+                f,
+                picard_tool="CollectAlignmentSummaryMetrics",
+                sentieon_algo="AlignmentStat",
             )
             if maybe_s_name:
-                # Starts information for a new sample
                 s_name = maybe_s_name
                 keys = None
-                if s_name in data_by_sample:
-                    log.debug(f"Duplicate sample name found in {f['fn']}! Overwriting: {s_name}")
 
             if s_name is None:
                 continue
@@ -40,25 +39,26 @@ def parse_reports(module):
             if util.is_line_right_before_table(
                 line, picard_class="AlignmentSummaryMetrics", sentieon_algo="AlignmentStat"
             ):
+                if s_name in data_by_sample:
+                    log.debug(f"Duplicate sample name found in {f['fn']}! Overwriting: " f"{s_name}")
+                data_by_sample[s_name] = dict()
+                module.add_data_source(f, s_name, section="AlignmentSummaryMetrics")
                 keys = f["f"].readline().strip("\n").split("\t")
+
             elif keys:
-                if s_name not in data_by_sample:
-                    data_by_sample[s_name] = dict()
                 vals = line.strip("\n").split("\t")
-                if len(vals) == len(keys):
-                    # Ignore the FIRST_OF_PAIR / SECOND_OF_PAIR data to simplify things
-                    if vals[0] == "PAIR" or vals[0] == "UNPAIRED":
-                        for i, k in enumerate(keys):
-                            try:
-                                data_by_sample[s_name][k] = float(vals[i])
-                            except ValueError:
-                                data_by_sample[s_name][k] = vals[i]
-                else:
+                if len(vals) != len(keys):
                     s_name = None
                     keys = None
+                    continue
 
-        if data_by_sample.get(s_name):
-            module.add_data_source(f, s_name, section="AlignmentSummaryMetrics")
+                # Ignore the FIRST_OF_PAIR / SECOND_OF_PAIR data to simplify things
+                if vals[0] == "PAIR" or vals[0] == "UNPAIRED":
+                    for i, k in enumerate(keys):
+                        try:
+                            data_by_sample[s_name][k] = float(vals[i])
+                        except ValueError:
+                            data_by_sample[s_name][k] = vals[i]
 
     # Remove empty dictionaries
     for s_name in list(data_by_sample.keys()):
@@ -97,7 +97,8 @@ def parse_reports(module):
     pdata = dict()
     for s_name in data_by_sample.keys():
         pdata[s_name] = dict()
-        # Picard reports both reads for PE data. Divide it by two as most people will expect # clusters
+        # Picard reports both reads for PE data. Divide it by two as most people will
+        # expect # clusters
         if data_by_sample[s_name]["CATEGORY"] == "PAIR":
             pdata[s_name]["total_reads"] = data_by_sample[s_name]["TOTAL_READS"] / 2
             pdata[s_name]["aligned_reads"] = data_by_sample[s_name]["PF_READS_ALIGNED"] / 2
@@ -134,7 +135,9 @@ def parse_reports(module):
     module.add_section(
         name="Alignment Summary",
         anchor=f"{module.anchor}-alignmentsummary",
-        description=f"Please note that {module.name}'s read counts are divided by two for paired-end data. Total bases (including unaligned) is not provided.",
+        description=f"Please note that {module.name}'s read counts are divided by two "
+        f"for paired-end data. Total bases (including unaligned) is not "
+        f"provided.",
         plot=bargraph.plot([pdata, data_by_sample], keys, pconfig),
     )
 
