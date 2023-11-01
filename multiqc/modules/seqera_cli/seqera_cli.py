@@ -158,6 +158,8 @@ class MultiqcModule(BaseMultiqcModule):
                 "title": "CPU Efficiency",
                 "description": "Percentage of CPU time used by the workflow",
                 "format": "{:,.2f}",
+                "suffix": "%",
+                "max": 100,
                 "scale": "RdYlGn",
             },
             "memoryEfficiency": {
