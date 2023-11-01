@@ -150,13 +150,13 @@ class MultiqcModule(BaseMultiqcModule):
                 "title": "Start",
                 "description": "Start time of the workflow",
                 "hidden": True,
-                "format": lambda x: humanize.naturaltime(dt.datetime.fromtimestamp(x)),
+                "format": lambda x: humanize.naturaltime(dt.datetime.fromtimestamp(x)).replace(" ", "&nbsp;"),
             },
             "complete": {
                 "title": "Complete",
                 "description": "End time of the workflow",
                 "hidden": True,
-                "format": lambda x: humanize.naturaltime(dt.datetime.fromtimestamp(x)),
+                "format": lambda x: humanize.naturaltime(dt.datetime.fromtimestamp(x)).replace(" ", "&nbsp;"),
             },
             "duration": {
                 "title": "Duration",
