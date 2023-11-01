@@ -10,7 +10,7 @@ from collections import defaultdict
 import humanize
 
 from multiqc.modules.base_module import BaseMultiqcModule, ModuleNoSamplesFound
-from multiqc.plots import bargraph
+from multiqc.plots import bargraph, table
 
 log = logging.getLogger(__name__)
 
@@ -27,41 +27,6 @@ def _read_json_from_tar_gz(tar_file, fname):
     except Exception as e:
         log.warning(f"Could parse JSON from {fname} in {tar_file}: {e}")
         return {}
-    return data
-
-
-def _parse_workflow_json(data):
-    keys = ["repository", "start", "complete", "revision"]
-    data = {k: data.get(k) for k in keys}
-    # "start" and "complete" are time stamps like time stamps like 2023-10-22T14:39:01Z
-    # parse them with a library, take the difference "complete" - "start" to get the
-    # duration, and convert the duration it to a human-readable format.
-    if "start" in data and "complete" in data:
-        start = dt.datetime.strptime(data["start"], "%Y-%m-%dT%H:%M:%SZ")
-        complete = dt.datetime.strptime(data["complete"], "%Y-%m-%dT%H:%M:%SZ")
-        duration = complete - start
-        data["duration"] = duration.total_seconds()
-        data["start"] = start.timestamp()
-        data["complete"] = complete.timestamp()
-    return data
-
-
-def _parse_workflow_load_json(data):
-    keys = [
-        "cpuEfficiency",
-        "memoryEfficiency",
-        "cpuTime",
-        "readBytes",
-        "writeBytes",
-        "cost",
-        "pending",
-        "submitted",
-        "running",
-        "succeeded",
-        "failed",
-        "cached",
-    ]
-    data = {k: data.get(k) for k in keys}
     return data
 
 
@@ -94,44 +59,45 @@ class MultiqcModule(BaseMultiqcModule):
                 if "workflow.json" not in tar_file.getnames():
                     continue
                 d = _read_json_from_tar_gz(tar_file, "workflow.json")
-                run_id = d.get("id")
-                if not run_id:
-                    continue
-                d = _parse_workflow_json(d)
-                if not d:
-                    continue
-                self.add_data_source(f)
-                self.add_software_version(d.get("revision"))
-                data_by_run[run_id].update(d)
 
-                # Check if also workflow-load.json sits next to workflow.json
+                # Check other files that sit next to workflow.json
                 if "workflow-load.json" in tar_file.getnames():
-                    d = _read_json_from_tar_gz(tar_file, "workflow-load.json")
-                    data_by_run[run_id].update(_parse_workflow_load_json(d))
+                    d.update(_read_json_from_tar_gz(tar_file, "workflow-load.json"))
+
+                if "service-info.json" in tar_file.getnames():
+                    d.update(_read_json_from_tar_gz(tar_file, "service-info.json"))
+
+                d = self._parse_data(d)
+                if d:
+                    self.add_data_source(f, s_name=d["id"])
+                    data_by_run[d["id"]].update(d)
 
         # Parsing the json files directly
         for f in self.find_log_files("seqera_cli/workflow"):
             d = json.loads(f["f"])
-            run_id = d.get("id")
-            if not run_id:
-                continue
-            d = _parse_workflow_json(d)
             if not d:
                 continue
-            self.add_data_source(f)
-            self.add_software_version(d.get("revision"))
-            data_by_run[run_id].update(d)
 
-            # Check if also workflow-load.json sits next to workflow.json
-            workflow_load_path = os.path.join(f["root"], "workflow-load.json")
-            if os.path.isfile(workflow_load_path):
-                with open(workflow_load_path) as fh:
-                    d = json.load(fh)
-                    data_by_run[run_id].update(_parse_workflow_load_json(d))
+            # Check other files that sit next to workflow.json
+            path = os.path.join(f["root"], "workflow-load.json")
+            if os.path.isfile(path):
+                self.add_data_source(source=path, s_name=d.get("id"))
+                with open(path) as fh:
+                    d.update(json.load(fh))
+
+            path = os.path.join(f["root"], "service-info.json")
+            if os.path.isfile(path):
+                self.add_data_source(source=path, s_name=d.get("id"))
+                with open(path) as fh:
+                    d.update(json.load(fh))
+
+            d = self._parse_data(d)
+            if d:
+                self.add_data_source(f, s_name=d["id"])
+                data_by_run[d["id"]].update(d)
 
         # Filter to strip out ignored sample names
         data_by_run = self.ignore_samples(data_by_run)
-
         if len(data_by_run) == 0:
             raise ModuleNoSamplesFound
         log.info(f"Found {len(data_by_run)} reports")
@@ -146,6 +112,11 @@ class MultiqcModule(BaseMultiqcModule):
                 "scale": False,
                 "modify": lambda x: f'<a href="{x}">{x.replace("https://", "").replace("http://", "").replace("github.com/", "")}</a>',
             },
+            "revision": {
+                "title": "Version",
+                "description": "Pipeline version",
+                "scale": False,
+            },
             "start": {
                 "title": "Start",
                 "description": "Start time of the workflow",
@@ -159,32 +130,22 @@ class MultiqcModule(BaseMultiqcModule):
                 "format": lambda x: humanize.naturaltime(dt.datetime.fromtimestamp(x)).replace(" ", "&nbsp;"),
             },
             "duration": {
-                "title": "Duration",
+                "title": "Wall time",
                 "description": "Duration of the workflow",
+                "format": lambda x: str(dt.timedelta(seconds=x)).replace(" ", "&nbsp;"),
                 "scale": "BuPu",
-                "format": lambda x: str(dt.timedelta(seconds=x)),
-            },
-            "cpuEfficiency": {
-                "title": "CPU Efficiency",
-                "description": "Percentage of CPU time used by the workflow",
-                "format": "{:,.2f}",
-                "suffix": "&nbsp;%",
-                "max": 100,
-                "scale": "RdYlGn",
-            },
-            "memoryEfficiency": {
-                "title": "Memory Efficiency",
-                "description": "Percentage of memory used by the workflow",
-                "format": "{:,.2f}",
-                "suffix": "&nbsp;%",
-                "max": 100,
-                "scale": "YlGn",
             },
             "cpuTime": {
-                "title": "CPU Time",
+                "title": "CPU time",
                 "description": "Total CPU time used by the workflow",
-                "format": lambda x: str(humanize.naturaldelta(x / 1000)),
+                "format": lambda x: str(dt.timedelta(seconds=x // 1000)).replace(" ", "&nbsp;"),
                 "scale": "Greys",
+            },
+            "cost": {
+                "title": "Estimated cost",
+                "description": "Estimated cost of the workflow",
+                "format": "${:,.2f}",
+                "scale": "Reds",
             },
             "readBytes": {
                 "title": "Read GB",
@@ -198,14 +159,29 @@ class MultiqcModule(BaseMultiqcModule):
                 "format": lambda x: humanize.naturalsize(x),
                 "scale": "Greens",
             },
-            "cost": {
-                "title": "Cost",
-                "description": "Cost of the workflow",
+            "cpuEfficiency": {
+                "title": "CPU efficiency",
+                "description": "Percentage of CPU time used by the workflow",
                 "format": "{:,.2f}",
-                "scale": "Reds",
+                "suffix": "&nbsp;%",
+                "max": 100,
+                "scale": "RdYlGn",
+            },
+            "memoryEfficiency": {
+                "title": "Memory efficiency",
+                "description": "Percentage of memory used by the workflow",
+                "format": "{:,.2f}",
+                "suffix": "&nbsp;%",
+                "max": 100,
+                "scale": "YlGn",
             },
         }
-        self.general_stats_addcols(data_by_run, headers)
+
+        self.add_section(
+            name="Workflow run statistics",
+            anchor="seqera_cli_run_stats_table",
+            plot=table.plot(data_by_run, headers, {"col1_header": "Run ID"}),
+        )
 
         pconfig = {
             "id": "seqera_cli_process_status",
@@ -221,7 +197,59 @@ class MultiqcModule(BaseMultiqcModule):
             "failed": {"name": "Failed", "color": "#e7363e"},
         }
         self.add_section(
-            name="Seqera Platform CLI",
+            name="Process statuses",
             anchor="seqera-platform-cli",
             plot=bargraph.plot(data_by_run, cats, pconfig),
         )
+
+    def _parse_data(self, d):
+        keys = [
+            # workflow.json
+            "id",
+            "repository",
+            "start",
+            "complete",
+            "revision",
+            "nextflow",
+            # workflow-load.json
+            "cpuEfficiency",
+            "memoryEfficiency",
+            "cpuTime",
+            "readBytes",
+            "writeBytes",
+            "cost",
+            "pending",
+            "submitted",
+            "running",
+            "succeeded",
+            "failed",
+            "cached",
+            # service-info.json
+            "version",
+        ]
+        d = {k: d.get(k) for k in keys}
+
+        run_id = d.get("id")
+        if not run_id:
+            return None
+
+        # "start" and "complete" are time stamps like time stamps like 2023-10-22T14:39:01Z
+        # parse them with a library, take the difference "complete" - "start" to get the
+        # duration, and convert the duration it to a human-readable format.
+        if "start" in d and "complete" in d:
+            start = dt.datetime.strptime(d["start"], "%Y-%m-%dT%H:%M:%SZ")
+            complete = dt.datetime.strptime(d["complete"], "%Y-%m-%dT%H:%M:%SZ")
+            duration = complete - start
+            d["duration"] = duration.total_seconds()
+            d["start"] = start.timestamp()
+            d["complete"] = complete.timestamp()
+
+        version = d.get("version")
+        if version:
+            self.add_software_version(version, sample=run_id, software_name="Seqera Platform")
+
+        nextflow_version = d.get("nextflow", {}).get("version")
+        if nextflow_version:
+            self.add_software_version(nextflow_version, sample=run_id, software_name="Nextflow")
+
+        return d
