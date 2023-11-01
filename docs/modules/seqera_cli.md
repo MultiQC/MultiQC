@@ -12,5 +12,13 @@ tw runs dump -id=SmUkr43Nul49G --workspace=seqeralabs/benchmarks --output=runs_S
 ```
 
 Expects the dump to contain a `workflow.json` file, along with `workflow-load.json`.
+
 Can also parse an uncompressed version of the dump, that is, a `workflow.json` file
 and a `workflow-load.json` sitting together in a directory.
+
+To allow reading the tar-gz archives, run with `ignore_images: false`
+in the config, e.g.:
+
+```sh
+multiqc . --cl-config 'ignore_images: false'
+```

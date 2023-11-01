@@ -1,11 +1,13 @@
 """ MultiQC module to parse output from the Seqera Platform CLI """
 
-import datetime
+import datetime as dt
 import json
 import logging
 import os
 import tarfile
 from collections import defaultdict
+
+import humanize
 
 from multiqc.modules.base_module import BaseMultiqcModule, ModuleNoSamplesFound
 from multiqc.plots import bargraph
@@ -35,9 +37,12 @@ def _parse_workflow_json(data):
     # parse them with a library, take the difference "complete" - "start" to get the
     # duration, and convert the duration it to a human-readable format.
     if "start" in data and "complete" in data:
-        start = datetime.datetime.strptime(data["start"], "%Y-%m-%dT%H:%M:%SZ")
-        complete = datetime.datetime.strptime(data["complete"], "%Y-%m-%dT%H:%M:%SZ")
-        data["duration"] = complete - start
+        start = dt.datetime.strptime(data["start"], "%Y-%m-%dT%H:%M:%SZ")
+        complete = dt.datetime.strptime(data["complete"], "%Y-%m-%dT%H:%M:%SZ")
+        duration = complete - start
+        data["duration"] = duration.total_seconds()
+        data["start"] = start.timestamp()
+        data["complete"] = complete.timestamp()
     return data
 
 
@@ -62,9 +67,14 @@ def _parse_workflow_load_json(data):
 
 class MultiqcModule(BaseMultiqcModule):
     """
-    Seqera Platform CLI module for MultiQC. Should be able to process logs dump
-    usually written in a form of a tar-gz archive, as well as its uncompressed version.
-    that is reading workflow.json and workflow-load.json files directly.
+    Seqera Platform CLI module for MultiQC. Reports stats from log dumps
+    usually written in a form of a tar-gz archive, but also their uncompressed
+    versions (that is, workflow.json and workflow-load.json files).
+    To allow reading the tar-gz archives, run with `ignore_images: false`
+    in the config, e.g.:
+    ```
+    multiqc . --cl-config 'ignore_images: false'
+    ```
     """
 
     def __init__(self):
@@ -139,26 +149,26 @@ class MultiqcModule(BaseMultiqcModule):
             "start": {
                 "title": "Start",
                 "description": "Start time of the workflow",
-                "scale": False,
                 "hidden": True,
+                "format": lambda x: humanize.naturaltime(dt.datetime.fromtimestamp(x)),
             },
             "complete": {
                 "title": "Complete",
                 "description": "End time of the workflow",
-                "scale": False,
                 "hidden": True,
+                "format": lambda x: humanize.naturaltime(dt.datetime.fromtimestamp(x)),
             },
             "duration": {
                 "title": "Duration",
                 "description": "Duration of the workflow",
                 "scale": "BuPu",
-                "to_float": lambda x: x.total_seconds(),
+                "format": lambda x: str(dt.timedelta(seconds=x)),
             },
             "cpuEfficiency": {
                 "title": "CPU Efficiency",
                 "description": "Percentage of CPU time used by the workflow",
                 "format": "{:,.2f}",
-                "suffix": "%",
+                "suffix": "&nbsp;%",
                 "max": 100,
                 "scale": "RdYlGn",
             },
@@ -166,33 +176,27 @@ class MultiqcModule(BaseMultiqcModule):
                 "title": "Memory Efficiency",
                 "description": "Percentage of memory used by the workflow",
                 "format": "{:,.2f}",
-                "suffix": "%",
-                "max": 100, 
+                "suffix": "&nbsp;%",
+                "max": 100,
                 "scale": "YlGn",
             },
             "cpuTime": {
                 "title": "CPU Time",
                 "description": "Total CPU time used by the workflow",
-                "format": "{:,.2f}",
+                "format": lambda x: humanize.naturaldelta(x / 1000),
                 "scale": "Greys",
-                "suffix": "&nbsp;h",
-                "modify": lambda x: x / 1000 / 3600,
             },
             "readBytes": {
                 "title": "Read GB",
                 "description": "Total gigabytes read by the workflow",
-                "format": "{:,.2f}",
+                "format": lambda x: humanize.naturalsize(x),
                 "scale": "Blues",
-                "suffix": "&nbsp;GB",
-                "modify": lambda x: x / 1024 / 1024 / 1024,
             },
             "writeBytes": {
                 "title": "Write GB",
                 "description": "Total gigabytes written by the workflow",
-                "format": "{:,.2f}",
+                "format": lambda x: humanize.naturalsize(x),
                 "scale": "Greens",
-                "suffix": "&nbsp;GB",
-                "modify": lambda x: x / 1024 / 1024 / 1024,
             },
             "cost": {
                 "title": "Cost",
@@ -206,6 +210,7 @@ class MultiqcModule(BaseMultiqcModule):
         pconfig = {
             "id": "seqera_cli_process_status",
             "title": "Seqera Platform CLI: processes statuses",
+            "ylab": "Number of processes",
         }
         cats = {
             "pending": {"name": "Pending", "color": "#8f4199"},

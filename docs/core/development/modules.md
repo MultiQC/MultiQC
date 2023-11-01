@@ -792,12 +792,11 @@ headers['name'] = {
     'min': None,                    # Maximum value in range, for bar / colour coding
     'scale': 'GnBu',                # Colour scale for colour coding. Set to False to disable.
     'suffix': None,                 # Suffix for value (eg. '%')
-    'format': '{:,.1f}',            # Output format() string
+    'format': '{:,.1f}',            # Output format() string. Can also be a lambda function.
     'shared_key': None,             # See below for description
     'modify': None,                 # Lambda function to modify values
     'hidden': False,                # Set to True to hide the column on page load
     'placement' : 1000.0,           # Alter the default ordering of columns in the table
-    'to_float': None,               # Lambda function to a float for coloring and sorting
 }
 ```
 
@@ -818,6 +817,9 @@ headers['name'] = {
 - `modify`
   - A python `lambda` function to change the data in some way when it is
     inserted into the table.
+- `format`
+  - A format string or a python `lambda` function to format the data to display
+    on screen.
 - `hidden`
   - Setting this to `True` will hide the column when the report loads. It can
     then be shown through the _Configure Columns_ modal in the report. This can
@@ -827,11 +829,6 @@ headers['name'] = {
   - If you feel that the results from your module should appear on the left side
     of the table set this value less than 1000. Or to move the column right, set
     it greater than 1000. This value can be any float.
-- `to_float`
-  - Lambda function to convert value to a number, to support the quantitative
-    color code. By default, MultiQC attempt to convert each
-    value to `float()`, and if it fails, it will leave the value as a string without
-    color code.
 
 The typical use for the `modify` string is to divide large numbers such as read counts,
 to make them easier to interpret. If handling read counts, there are three config variables

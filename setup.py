@@ -64,6 +64,7 @@ setup(
         "rich-click",
         "spectra>=0.0.10",
         "importlib-metadata",
+        "humanize",
     ],
     entry_points={
         "console_scripts": [

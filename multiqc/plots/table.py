@@ -130,7 +130,6 @@ def make_table(dt):
                 name=header["scale"],
                 minval=header["dmin"],
                 maxval=header["dmax"],
-                to_float_fn=header.get("to_float"),
                 id=table_id,
             )
 
@@ -159,8 +158,7 @@ def make_table(dt):
                 try:
                     dmin = header["dmin"]
                     dmax = header["dmax"]
-                    to_float = header.get("to_float", float)
-                    percentage = ((to_float(val) - dmin) / (dmax - dmin)) * 100
+                    percentage = ((float(val) - dmin) / (dmax - dmin)) * 100
                     # Treat 0 as 0-width and make bars width of absolute value
                     if header.get("bars_zero_centrepoint"):
                         dmax = max(abs(header["dmin"]), abs(header["dmax"]))
@@ -172,24 +170,29 @@ def make_table(dt):
                     percentage = 0
 
                 try:
-                    valstring = str(header["format"].format(val))
-                except ValueError:
+                    # "format" is callable?
+                    valstring = header["format"](val)
+                except TypeError:
                     try:
-                        valstring = str(header["format"].format(float(val)))
+                        # "format" is a format string?
+                        valstring = str(header["format"].format(val))
                     except ValueError:
+                        try:
+                            valstring = str(header["format"].format(float(val)))
+                        except ValueError:
+                            valstring = str(val)
+                    except Exception:
                         valstring = str(val)
-                except:
-                    valstring = str(val)
 
-                # This is horrible, but Python locale settings are worse
-                if config.thousandsSep_format is None:
-                    config.thousandsSep_format = '<span class="mqc_thousandSep"></span>'
-                if config.decimalPoint_format is None:
-                    config.decimalPoint_format = "."
-                valstring = valstring.replace(".", "DECIMAL").replace(",", "THOUSAND")
-                valstring = valstring.replace("DECIMAL", config.decimalPoint_format).replace(
-                    "THOUSAND", config.thousandsSep_format
-                )
+                    # This is horrible, but Python locale settings are worse
+                    if config.thousandsSep_format is None:
+                        config.thousandsSep_format = '<span class="mqc_thousandSep"></span>'
+                    if config.decimalPoint_format is None:
+                        config.decimalPoint_format = "."
+                    valstring = valstring.replace(".", "DECIMAL").replace(",", "THOUSAND")
+                    valstring = valstring.replace("DECIMAL", config.decimalPoint_format).replace(
+                        "THOUSAND", config.thousandsSep_format
+                    )
 
                 # Percentage suffixes etc
                 valstring += header.get("suffix", "")
@@ -241,8 +244,8 @@ def make_table(dt):
                     col = 'style="background-color:{} !important;"'.format(header["bgcols"][val])
                     if s_name not in t_rows:
                         t_rows[s_name] = dict()
-                    t_rows[s_name][rid] = '<td class="{rid} {h}" {c}>{v}</td>'.format(
-                        rid=rid, h=hide, c=col, v=valstring
+                    t_rows[s_name][rid] = '<td val="{val}" class="{rid} {h}" {c}>{v}</td>'.format(
+                        val=val, rid=rid, h=hide, c=col, v=valstring
                     )
 
                 # Build table cell background colour bar
@@ -259,8 +262,8 @@ def make_table(dt):
 
                     if s_name not in t_rows:
                         t_rows[s_name] = dict()
-                    t_rows[s_name][rid] = '<td class="data-coloured {rid} {h}">{c}</td>'.format(
-                        rid=rid, h=hide, c=wrapper_html
+                    t_rows[s_name][rid] = '<td val="{val}" class="data-coloured {rid} {h}">{c}</td>'.format(
+                        val=val, rid=rid, h=hide, c=wrapper_html
                     )
 
                 # Scale / background colours are disabled

@@ -204,15 +204,13 @@ class datatable(object):
                 setdmax = False
                 setdmin = False
                 try:
-                    to_float_fn = headers[idx][k].get("to_float", float)
-                    headers[idx][k]["dmax"] = to_float_fn(headers[idx][k]["max"])
+                    headers[idx][k]["dmax"] = float(headers[idx][k]["max"])
                 except Exception:
                     headers[idx][k]["dmax"] = 0
                     setdmax = True
 
                 try:
-                    to_float_fn = headers[idx][k].get("to_float", float)
-                    headers[idx][k]["dmin"] = to_float_fn(headers[idx][k]["min"])
+                    headers[idx][k]["dmin"] = float(headers[idx][k]["min"])
                 except Exception:
                     headers[idx][k]["dmin"] = 0
                     setdmin = True
@@ -221,17 +219,15 @@ class datatable(object):
                 if setdmax or setdmin:
                     for s_name, samp in data[idx].items():
                         try:
-                            val = samp[k]
+                            val = float(samp[k])
                             if callable(headers[idx][k]["modify"]):
                                 val = float(headers[idx][k]["modify"](val))
-                            to_float_fn = headers[idx][k].get("to_float", float)
-                            val = to_float_fn(val)
                             if setdmax:
                                 headers[idx][k]["dmax"] = max(headers[idx][k]["dmax"], val)
                             if setdmin:
                                 headers[idx][k]["dmin"] = min(headers[idx][k]["dmin"], val)
                         except (ValueError, TypeError):
-                            pass  # couldn't convert to float - keep as a string
+                            val = samp[k]  # couldn't convert to float - keep as a string
                         except KeyError:
                             pass  # missing data - skip
                     # Limit auto-generated scales with floor, ceiling and minRange.

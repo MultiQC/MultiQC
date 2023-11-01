@@ -321,23 +321,19 @@ class mqc_colour_scale(object):
         ],
     }
 
-    def __init__(self, name="GnBu", minval=0, maxval=100, to_float_fn=None, id=None):
+    def __init__(self, name="GnBu", minval=0, maxval=100, id=None):
         """Initialise class with a colour scale"""
 
         self.name = name
         self.id = id
         self.colours = self.get_colours(name)
-        self.to_float_fn = to_float_fn
 
-        # if to_float_fn is None:
         minval = re.sub(r"[^0-9\.\-e]", "", str(minval))
         maxval = re.sub(r"[^0-9\.\-e]", "", str(maxval))
         if minval == "":
             minval = 0
         if maxval == "":
             maxval = 100
-            # to_float_fn = float
-        # else:
         if float(minval) == float(maxval):
             self.minval = float(minval)
             self.maxval = float(minval) + 1.0
@@ -357,9 +353,7 @@ class mqc_colour_scale(object):
             return max(0, min(1, 1 + ((x - 1) * lighten)))
 
         try:
-            if self.name in mqc_colour_scale.qualitative_scales and (
-                isinstance(val, float) or self.to_float_fn is not None
-            ):
+            if self.name in mqc_colour_scale.qualitative_scales and isinstance(val, float):
                 if config.strict:
                     sequential_scales = [
                         s for s in mqc_colour_scale.COLORBREWER_SCALES if s not in mqc_colour_scale.qualitative_scales
@@ -389,13 +383,11 @@ class mqc_colour_scale(object):
                 return thecolour.hexcode
 
             else:
-                if self.to_float_fn is not None:
-                    val = self.to_float_fn(val)
-                else:
-                    val = re.sub(r"[^0-9\.\-e]", "", str(val))
-                    if val == "":
-                        val = self.minval
-                    val = float(val)
+                # Sanity checks
+                val = re.sub(r"[^0-9\.\-e]", "", str(val))
+                if val == "":
+                    val = self.minval
+                val = float(val)
                 val = max(val, self.minval)
                 val = min(val, self.maxval)
 
