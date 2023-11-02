@@ -6,7 +6,7 @@ import logging
 from collections import OrderedDict, defaultdict
 
 from multiqc import config
-from multiqc.modules.base_module import BaseMultiqcModule
+from multiqc.modules.base_module import BaseMultiqcModule, ModuleNoSamplesFound
 
 # Initialise the logger
 from multiqc.modules.qualimap.QM_BamQC import coverage_histogram_helptext, genome_fraction_helptext
@@ -121,46 +121,68 @@ class MultiqcModule(BaseMultiqcModule):
         )
 
         self.cfg = read_config()
-        genstats_headers = defaultdict(OrderedDict)
-        genstats = defaultdict(OrderedDict)  # mean coverage
+        genstats_headers = defaultdict(dict)
+        genstats = defaultdict(dict)  # mean coverage
 
         # Parse mean coverage
         for f in self.find_log_files("mosdepth/summary"):
             s_name = self.clean_s_name(f["fn"], f)
             for line in f["f"].splitlines():
-                if line.startswith("total\t"):
+                # The first column can be a contig name, "total", "total_region".
+                # We want to use "total_region" if available. It is available when
+                # --by is specified. It always goes after "total", so we can just
+                # assume it will override the information collected for "total":
+                if line.startswith("total\t") or line.startswith("total_region\t"):
                     contig, length, bases, mean, min_cov, max_cov = line.split("\t")
                     genstats[s_name]["mean_coverage"] = mean
                     self.add_data_source(f, s_name=s_name, section="summary")
+
+            # Superfluous function call to confirm that it is used in this module
+            # Replace None with actual version if it is available
+            self.add_software_version(None, s_name)
+
         # Filter out any samples from --ignore-samples
         genstats = defaultdict(OrderedDict, self.ignore_samples(genstats))
-        samples_found = set(genstats.keys())
+        samples_in_summary = set(genstats.keys())
 
-        data_by_scope = {}
-        for scope in "global", "region":
-            data_by_scope[scope] = self.parse_cov_dist(scope)
-            data_by_scope[scope] = [defaultdict(OrderedDict, self.ignore_samples(d)) for d in data_by_scope[scope]]
-            for d in data_by_scope[scope]:
-                samples_found.update(set(d.keys()))
+        data_dicts_global = self.parse_cov_dist("global")
+        data_dicts_region = self.parse_cov_dist("region")
+        data_dicts_global = [self.ignore_samples(d) for d in data_dicts_global]
+        data_dicts_region = [self.ignore_samples(d) for d in data_dicts_region]
 
-        # No samples found
-        if len(samples_found) == 0:
-            raise UserWarning
-        log.info(f"Found {len(samples_found)} reports")
+        samples_global = set.union(*(set(d.keys()) for d in data_dicts_global))
+        samples_region = set.union(*(set(d.keys()) for d in data_dicts_region))
+        samples_found = samples_in_summary | samples_global | samples_region
+        if not samples_found:
+            raise ModuleNoSamplesFound
+        log.info(f"Found reports for {len(samples_found)} samples")
 
-        for scope, data in data_by_scope.items():
-            if scope == "global":
-                descr_suf = ". Calculated across the entire genome length"
-                title_suf = ""
-                id_suf = ""
-                fn_suf = ""
-            else:
-                descr_suf = ". Calculated across the target regions"
-                title_suf = " (regions only)"
-                id_suf = "-regions"
-                fn_suf = "_regions"
+        descr_suf = ""
+        if any(data_dicts_global) and any(data_dicts_region):
+            descr_suf = (
+                f". Note that for {len(samples_global)} samples, a BED file was "
+                f"provided, so the data was calculated across those regions. For "
+                f"{len(samples_region)} samples, it's calculated across "
+                f"the entire genome length"
+            )
+            samples_both = samples_global & samples_region
+            if samples_both:
+                descr_suf += (
+                    f". {len(samples_both)} samples have both global and region "
+                    f"reports, and we are showing the data for regions"
+                )
+        elif samples_region:
+            descr_suf = f". Calculated across the target regions"
+        elif samples_global:
+            descr_suf = f". Calculated across the entire genome length"
 
+        if samples_region or samples_global:
+            # Prioritizing region reports if found
+            data = data_dicts_global
+            for d, d_region in zip(data, data_dicts_region):
+                d.update(d_region)
             cumcov_dist_data, cov_dist_data, perchrom_avg_data, xy_cov = data
+
             if cumcov_dist_data:
                 xmax = 0
                 for sample, data in cumcov_dist_data.items():
@@ -172,11 +194,11 @@ class MultiqcModule(BaseMultiqcModule):
                 cumcov_dist_data_writeable = {
                     sample: {str(k): v for k, v in sorted(data.items())} for sample, data in cumcov_dist_data.items()
                 }
-                self.write_data_file(cumcov_dist_data_writeable, f"mosdepth_cumcov{fn_suf}_dist")
+                self.write_data_file(cumcov_dist_data_writeable, f"mosdepth_cumcov_dist")
 
                 self.add_section(
-                    name=f"Cumulative coverage distribution{title_suf}",
-                    anchor=f"mosdepth-cumcoverage{id_suf}-dist",
+                    name=f"Cumulative coverage distribution",
+                    anchor=f"mosdepth-cumcoverage-dist",
                     description=(
                         f"Proportion of bases in the reference genome with, "
                         f"at least, a given depth of coverage{descr_suf}"
@@ -185,8 +207,8 @@ class MultiqcModule(BaseMultiqcModule):
                     plot=linegraph.plot(
                         cumcov_dist_data,
                         {
-                            "id": f"mosdepth-cumcoverage-dist{id_suf}-id",
-                            "title": f"Mosdepth: Cumulative coverage distribution{title_suf}",
+                            "id": f"mosdepth-cumcoverage-dist-id",
+                            "title": f"Mosdepth: Cumulative coverage distribution",
                             "xlab": "Cumulative Coverage (X)",
                             "ylab": "% bases in genome/regions covered by at least X reads",
                             "ymax": 100,
@@ -202,7 +224,7 @@ class MultiqcModule(BaseMultiqcModule):
                 cov_dist_data_writeable = {
                     sample: {str(k): v for k, v in sorted(data.items())} for sample, data in cov_dist_data.items()
                 }
-                self.write_data_file(cov_dist_data_writeable, f"mosdepth_cov{fn_suf}_dist")
+                self.write_data_file(cov_dist_data_writeable, f"mosdepth_cov_dist")
 
                 # Set ymax so that zero coverage values are ignored.
                 ymax = 0
@@ -212,8 +234,8 @@ class MultiqcModule(BaseMultiqcModule):
                         ymax = max(ymax, max(positive_cov))
 
                 self.add_section(
-                    name=f"Coverage distribution{title_suf}",
-                    anchor=f"mosdepth-coverage-dist{id_suf}-cov",
+                    name=f"Coverage distribution",
+                    anchor=f"mosdepth-coverage-dist-cov",
                     description=(
                         f"Proportion of bases in the reference genome with a given " f"depth of coverage{descr_suf}"
                     ),
@@ -221,8 +243,8 @@ class MultiqcModule(BaseMultiqcModule):
                     plot=linegraph.plot(
                         cov_dist_data,
                         {
-                            "id": f"mosdepth-coverage-dist{id_suf}-id",
-                            "title": f"Mosdepth: Coverage distribution{title_suf}",
+                            "id": f"mosdepth-coverage-dist-id",
+                            "title": f"Mosdepth: Coverage distribution",
                             "xlab": "Coverage (X)",
                             "ylab": "% bases in genome/regions covered by X reads",
                             "ymax": ymax * 1.05,
@@ -235,15 +257,15 @@ class MultiqcModule(BaseMultiqcModule):
                 )
             if perchrom_avg_data:
                 # Write data to file
-                self.write_data_file(perchrom_avg_data, f"mosdepth_perchrom{fn_suf}")
+                self.write_data_file(perchrom_avg_data, f"mosdepth_perchrom")
 
                 num_contigs = max([len(x.keys()) for x in perchrom_avg_data.values()])
                 if num_contigs > 1:
                     perchrom_plot = linegraph.plot(
                         perchrom_avg_data,
                         {
-                            "id": f"mosdepth-coverage-per-contig{id_suf}",
-                            "title": f"Mosdepth: Coverage per contig{title_suf}",
+                            "id": f"mosdepth-coverage-per-contig",
+                            "title": f"Mosdepth: Coverage per contig",
                             "xlab": "Region",
                             "ylab": "Average Coverage",
                             "categories": True,
@@ -258,8 +280,8 @@ class MultiqcModule(BaseMultiqcModule):
                     perchrom_plot = bargraph.plot(
                         perchrom_avg_data,
                         pconfig={
-                            "id": f"mosdepth-coverage-per-contig{id_suf}",
-                            "title": f"Mosdepth: Coverage per contig{title_suf}",
+                            "id": f"mosdepth-coverage-per-contig",
+                            "title": f"Mosdepth: Coverage per contig",
                             "xlab": "Sample",
                             "ylab": "Average Coverage",
                             "tt_suffix": "x",
@@ -268,9 +290,9 @@ class MultiqcModule(BaseMultiqcModule):
                     )
 
                 self.add_section(
-                    name=f"Average coverage per contig{title_suf}",
-                    anchor=f"mosdepth-coverage-per-contig{id_suf}-id",
-                    description=f"Average coverage per contig or chromosome{id_suf}",
+                    name=f"Average coverage per contig",
+                    anchor=f"mosdepth-coverage-per-contig-id",
+                    description=f"Average coverage per contig or chromosome",
                     plot=perchrom_plot,
                 )
 
@@ -279,16 +301,16 @@ class MultiqcModule(BaseMultiqcModule):
                 xy_keys["x"] = {"name": self.cfg.get("xchr", "Chromosome X")}
                 xy_keys["y"] = {"name": self.cfg.get("xchr", "Chromosome Y")}
                 pconfig = {
-                    "id": f"mosdepth-xy-coverage-plot{id_suf}",
-                    "title": f"Mosdepth: chrXY coverage{title_suf}",
+                    "id": f"mosdepth-xy-coverage-plot",
+                    "title": f"Mosdepth: chrXY coverage",
                     "ylab": f"Percent of X+Y coverage",
                     "cpswitch_counts_label": "Coverage",
                     "cpswitch_percent_label": "Percent of X+Y coverage",
                     "cpswitch_c_active": False,
                 }
                 self.add_section(
-                    name=f"XY coverage{title_suf}",
-                    anchor=f"mosdepth-xy-coverage{id_suf}",
+                    name=f"XY coverage",
+                    anchor=f"mosdepth-xy-coverage",
                     plot=bargraph.plot(xy_cov, xy_keys, pconfig),
                 )
 
@@ -310,9 +332,10 @@ class MultiqcModule(BaseMultiqcModule):
         self.general_stats_addcols(genstats, genstats_headers)
 
     def parse_cov_dist(self, scope):
-        cumcov_dist_data = defaultdict(OrderedDict)  # cumulative distribution
-        cov_dist_data = defaultdict(OrderedDict)  # absolute (non-cumulative) coverage
-        perchrom_avg_data = defaultdict(OrderedDict)  # per chromosome average coverage
+        cumcov_dist_data = defaultdict(dict)  # cumulative distribution
+        cov_dist_data = defaultdict(dict)  # absolute (non-cumulative) coverage
+        perchrom_avg_data = defaultdict(dict)  # per chromosome average coverage
+        xy_cov = dict()
 
         # Parse coverage distributions
         for f in self.find_log_files(f"mosdepth/{scope}_dist"):
@@ -396,7 +419,6 @@ class MultiqcModule(BaseMultiqcModule):
                 )
 
         # Additionally, collect X and Y counts if we have them
-        xy_cov = dict()
         for s_name, perchrom in perchrom_avg_data.items():
             x_cov = False
             y_cov = False

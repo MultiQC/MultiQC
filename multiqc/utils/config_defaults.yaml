@@ -47,6 +47,7 @@ prepend_dirs: false
 prepend_dirs_depth: 0
 prepend_dirs_sep: " | "
 file_list: false
+require_logs: false
 
 make_data_dir: true
 zip_data_dir: false
@@ -91,7 +92,8 @@ decimalPoint_format: null
 thousandsSep_format: null
 remove_sections: []
 section_comments: {}
-lint: False
+lint: False # Deprecated since v1.17
+strict: False
 custom_plot_config: {}
 custom_table_header_config: {}
 software_versions: {}
@@ -285,6 +287,7 @@ fn_clean_exts:
   - ".scATAC.metrics"
   - ".fastqc_metrics"
   - ".labels"
+  - ".bammetrics.metrics"
 
 # These are removed after the above, only if sample names
 # start or end with this string. Again, removed in order.
@@ -617,6 +620,10 @@ module_order:
       module_tag:
         - DNA
         - RNA
+  - truvari:
+      module_tag:
+        - DNA
+        - WGS
 
   # Alignment tool stats
   - bbmap:
@@ -738,6 +745,10 @@ module_order:
         - RNA
         - metagenomics
   - kaiju:
+      module_tag:
+        - DNA
+        - metagenomics
+  - bracken:
       module_tag:
         - DNA
         - metagenomics

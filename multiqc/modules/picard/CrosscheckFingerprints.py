@@ -4,11 +4,11 @@ import logging
 import re
 from collections import OrderedDict
 from csv import DictReader
-from distutils.util import strtobool
 from itertools import chain, groupby
 
 from multiqc import config
 from multiqc.plots import table
+from multiqc.utils.util_functions import strtobool
 
 # Initialize the logger
 log = logging.getLogger(__name__)
@@ -66,6 +66,10 @@ def parse_reports(self):
             row["LOD_THRESHOLD"] = lod_threshold
             row["TUMOR_AWARENESS"] = tumor_awareness
             self.picard_CrosscheckFingerprints_data[i] = row
+
+            # Superfluous function call to confirm that it is used in this module
+            # Replace None with actual version if it is available
+            self.add_software_version(None, i)
 
     # Only add sections if we found data
     if len(self.picard_CrosscheckFingerprints_data) > 0:

@@ -6,7 +6,7 @@ from collections import OrderedDict
 import yaml
 
 from multiqc import config
-from multiqc.modules.base_module import BaseMultiqcModule
+from multiqc.modules.base_module import BaseMultiqcModule, ModuleNoSamplesFound
 from multiqc.plots import bargraph, linegraph, table
 
 log = logging.getLogger(__name__)
@@ -31,13 +31,14 @@ class MultiqcModule(BaseMultiqcModule):
             # Function can return None if YAML parsing failed
             if data:
                 self.pycoqc_data[f["s_name"]] = data
+                self.add_software_version(data["pycoqc"]["version"], f["s_name"])
             self.add_data_source(f)
 
         self.pycoqc_data = self.ignore_samples(self.pycoqc_data)
 
         # Stop if we didn't find anything
         if len(self.pycoqc_data) == 0:
-            raise UserWarning
+            raise ModuleNoSamplesFound
 
         log.info("Found {} reports".format(len(self.pycoqc_data)))
 

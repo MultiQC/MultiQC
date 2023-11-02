@@ -4,15 +4,16 @@
 
 import logging
 
-from multiqc.modules.base_module import BaseMultiqcModule
+from multiqc.modules.base_module import BaseMultiqcModule, ModuleNoSamplesFound
 
 from .compare import CompareMixin
+from .gather import GatherMixin
 
 # Initialise the logger
 log = logging.getLogger(__name__)
 
 
-class MultiqcModule(BaseMultiqcModule, CompareMixin):
+class MultiqcModule(BaseMultiqcModule, CompareMixin, GatherMixin):
     def __init__(self):
         super(MultiqcModule, self).__init__(
             name="Sourmash",
@@ -27,5 +28,9 @@ class MultiqcModule(BaseMultiqcModule, CompareMixin):
         if n["compare"] > 0:
             log.info("Found {} compare results".format(n["compare"]))
 
+        n["gather"] = self.parse_gather()
+        if n["gather"] > 0:
+            log.info("Found {} gather results".format(n["gather"]))
+
         if sum(n.values()) == 0:
-            raise UserWarning
+            raise ModuleNoSamplesFound

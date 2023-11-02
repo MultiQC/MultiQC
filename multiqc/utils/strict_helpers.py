@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 
 """ MultiQC lint helpers. Simple additional tests to run when
---lint is specified (outside scope of normal functions) """
+--strict is specified (outside scope of normal functions) """
 
 
 import glob
@@ -16,7 +16,7 @@ logger = config.logger
 
 def run_tests():
     """Run all lint tests"""
-    if config.lint:
+    if config.strict:
         check_mods_docs_readme()
 
 
@@ -41,7 +41,7 @@ def check_mods_docs_readme():
 
     for fn in glob.glob(os.path.join(docs_dir, "*.md")):
         docs_mods.append(os.path.basename(fn)[:-3])
-    logger.info(f"Checking docs readmes in '{docs_dir}' as --lint specified")
+    logger.info(f"Checking docs readmes in '{docs_dir}' as --strict specified")
 
     # Check that installed modules are listed in docs/modules
     for m in config.avail_modules.keys():

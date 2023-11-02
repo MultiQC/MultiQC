@@ -269,8 +269,7 @@ METRICS = {
         "scale": "RdGy",
         "colour": "255, 0, 0",
     },
-    "aligned reads in region"
-    + V2: {
+    "aligned reads in region" + V2: {
         "order_priority": 0.2,
         "max": 100,
         "suffix": " %",
@@ -294,8 +293,7 @@ METRICS = {
             "scale": "Oranges",
         },
     },
-    "aligned bases in region"
-    + V2: {
+    "aligned bases in region" + V2: {
         "order_priority": 0.5,
         "max": 100,
         "colour": "0, 0, 255",
@@ -523,7 +521,7 @@ class DragenCoverageMetrics(BaseMultiqcModule):
     Other methods can be added as well to provide extra features (eg module interface, JSON).
     """
 
-    def add_coverage_metrics(self):
+    def add_coverage_metrics(self, overall_mean_cov_data):
         """The main function of the dragen coverage metrics module.
         The public members of the BaseMultiqcModule and dragen modules defined in
         MultiqcModule are available within it. Returns a set with sample names."""
@@ -543,7 +541,7 @@ class DragenCoverageMetrics(BaseMultiqcModule):
         for file in self.find_log_files("dragen/coverage_metrics"):
             out = coverage_parser(file)
             if out["success"]:
-                self.add_data_source(file, section="stats")
+                self.add_data_source(file, section="coverage_metrics")
 
                 original_sample = out["sample_name"]
                 cleaned_sample = self.clean_s_name(original_sample, file)
@@ -554,6 +552,10 @@ class DragenCoverageMetrics(BaseMultiqcModule):
                 all_samples[cleaned_sample + "." + phenotype].append(file)
                 match_overall_mean_cov[cleaned_sample][phenotype] = (original_sample, file["root"])
                 all_metrics.update(out["metric_IDs_with_original_names"])
+
+                # Superfluous function call to confirm that it is used in this module
+                # Replace None with actual version if it is available
+                self.add_software_version(None, cleaned_sample)
 
         cov_data = self.ignore_samples(cov_data)
         if not cov_data:
@@ -579,7 +581,7 @@ class DragenCoverageMetrics(BaseMultiqcModule):
 
         # Extract coverage bed/target bed/wgs from _overall_mean_cov.csv files.
         # And prepare <coverage-region-prefix>-specific texts.
-        bed_texts = make_bed_texts(self.overall_mean_cov_data_reference, match_overall_mean_cov)
+        bed_texts = make_bed_texts(overall_mean_cov_data, match_overall_mean_cov)
         coverage_sections = make_cov_sections(cov_data, cov_headers, bed_texts)
 
         for cov_section in coverage_sections:

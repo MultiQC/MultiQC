@@ -11,7 +11,7 @@ from collections import OrderedDict, defaultdict
 import yaml
 
 from multiqc import config
-from multiqc.modules.base_module import BaseMultiqcModule
+from multiqc.modules.base_module import BaseMultiqcModule, ModuleNoSamplesFound
 from multiqc.plots import bargraph, beeswarm, heatmap, linegraph, scatter, table
 from multiqc.utils import report
 
@@ -83,7 +83,7 @@ def custom_module_classes():
         mod_cust_config[c_id] = f
 
     # Now go through each of the file search patterns
-    bm = BaseMultiqcModule()
+    bm = BaseMultiqcModule(name="Custom content", anchor="custom_content")
     for k in search_patterns:
         num_sp_found_files = 0
         for f in bm.find_log_files(k):
@@ -131,11 +131,11 @@ def custom_module_classes():
                     parsed_data = {"id": f["s_name"], "plot_type": "html", "data": f["f"]}
                     parsed_data.update(_find_html_file_header(f))
 
-                if isinstance(parsed_data.get("data"), dict):
-                    # Run sample-name cleaning on the data keys
-                    parsed_data["data"] = {bm.clean_s_name(k, f): v for k, v in parsed_data["data"].items()}
-
                 if parsed_data is not None:
+                    if isinstance(parsed_data.get("data"), dict):
+                        # Run sample-name cleaning on the data keys
+                        parsed_data["data"] = {bm.clean_s_name(k, f): v for k, v in parsed_data["data"].items()}
+
                     c_id = parsed_data.get("id", k)
                     if len(parsed_data.get("data", {})) > 0:
                         if isinstance(parsed_data["data"], dict):
@@ -222,7 +222,7 @@ def custom_module_classes():
         del cust_mods[k]
 
     if len(cust_mods) == 0:
-        raise UserWarning
+        raise ModuleNoSamplesFound
 
     # Go through each data type
     parsed_modules = OrderedDict()
@@ -289,7 +289,7 @@ def custom_module_classes():
         if mod["config"].get("plot_type") == "generalstats":
             sorted_modules = [bm]
         else:
-            raise UserWarning
+            raise ModuleNoSamplesFound
 
     return sorted_modules
 

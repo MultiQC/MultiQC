@@ -5,7 +5,7 @@ import json
 import logging
 from collections import OrderedDict
 
-from multiqc.modules.base_module import BaseMultiqcModule
+from multiqc.modules.base_module import BaseMultiqcModule, ModuleNoSamplesFound
 from multiqc.plots import bargraph, table
 
 # Initialise the logger
@@ -38,7 +38,7 @@ class MultiqcModule(BaseMultiqcModule):
 
         # Return if no samples found
         if len(self.mvcf_data) == 0:
-            raise UserWarning
+            raise ModuleNoSamplesFound
 
         # Add in extra columns to data file
         self.compute_perc_hets()
@@ -82,11 +82,16 @@ class MultiqcModule(BaseMultiqcModule):
             log.warning("Could not parse MultiVCFAnalyzer JSON: '{}'".format(f["fn"]))
             return
 
+        version = data.get("metadata", {}).get("version", None)
+
         # Parse JSON data to a dict
         for s_name, metrics in data.get("metrics", {}).items():
             s_clean = self.clean_s_name(s_name, f)
             if s_clean in self.mvcf_data:
                 log.debug("Duplicate sample name found! Overwriting: {}".format(s_clean))
+
+            if version is not None:
+                self.add_software_version(version, s_clean)
 
             self.add_data_source(f, s_clean)
             self.mvcf_data[s_clean] = dict()
@@ -107,9 +112,9 @@ class MultiqcModule(BaseMultiqcModule):
     def computeSnpHom(self):
         """Computes snp(hom) for data present by MultiVCFAnalyzer"""
         for sample in self.mvcf_data:
-            self.mvcf_data[sample]["SNP Calls (hom)"] = (self.mvcf_data[sample]["SNP Calls (all)"]) - self.mvcf_data[
-                sample
-            ]["SNP Calls (het)"]
+            self.mvcf_data[sample]["SNP Calls (hom)"] = (
+                (self.mvcf_data[sample]["SNP Calls (all)"]) - self.mvcf_data[sample]["SNP Calls (het)"]
+            )
 
     def addSummaryMetrics(self):
         """Take the parsed stats from MultiVCFAnalyzer and add it to the main plot"""

@@ -2,13 +2,16 @@
 
 
 import logging
+import re
 from collections import OrderedDict
 
 from multiqc import config
-from multiqc.modules.base_module import BaseMultiqcModule
+from multiqc.modules.base_module import BaseMultiqcModule, ModuleNoSamplesFound
 from multiqc.plots import bargraph
 
 log = logging.getLogger(__name__)
+
+VERSION_REGEX = r"Version\s+MALT \(version ([\d\.]+),.*"
 
 
 class MultiqcModule(BaseMultiqcModule):
@@ -33,7 +36,7 @@ class MultiqcModule(BaseMultiqcModule):
         self.malt_data = self.ignore_samples(self.malt_data)
 
         if len(self.malt_data) == 0:
-            raise UserWarning
+            raise ModuleNoSamplesFound
 
         # Write data to file
         self.write_data_file(self.malt_data, "malt")
@@ -54,8 +57,14 @@ class MultiqcModule(BaseMultiqcModule):
             "Aligned queries",
             "Num. alignments",
         ]
+        version = None
         for line in f["f"]:
             line = line.rstrip()
+            if line.startswith("Version"):
+                version_match = re.search(VERSION_REGEX, line)
+                if version_match:
+                    version = version_match.group(1)
+
             if line.startswith("+++++ Aligning file:") and reading == False:
                 reading = True
                 s_name = line.split()[-1]
@@ -64,6 +73,9 @@ class MultiqcModule(BaseMultiqcModule):
                     log.debug("Duplicate sample name found! Overwriting: {}".format(s_name))
                 self.add_data_source(f, s_name=s_name)
                 self.malt_data[s_name] = {}
+                if version is not None:
+                    self.add_software_version(version, s_name)
+
             elif reading:
                 for k in keys:
                     if line.startswith(k):

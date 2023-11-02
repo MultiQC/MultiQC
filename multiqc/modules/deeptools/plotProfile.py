@@ -21,6 +21,10 @@ class plotProfileMixin:
             if len(parsed_data) > 0:
                 self.add_data_source(f, section="plotProfile")
 
+            # Superfluous function call to confirm that it is used in this module
+            # Replace None with actual version if it is available
+            self.add_software_version(None, f["s_name"])
+
         self.deeptools_plotProfile = self.ignore_samples(self.deeptools_plotProfile)
 
         if len(self.deeptools_plotProfile) > 0:
@@ -101,9 +105,7 @@ class plotProfileMixin:
                     Accumulated view of the distribution of sequence reads related to the closest annotated gene.
                     All annotated genes have been normalized to the same size.
 
-                    {}""".format(
-                    plotBandHelp
-                ),
+                    {}""".format(plotBandHelp),
                 plot=linegraph.plot(self.deeptools_plotProfile, config),
             )
 

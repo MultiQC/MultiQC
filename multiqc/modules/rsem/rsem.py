@@ -5,7 +5,7 @@ import logging
 from collections import OrderedDict
 
 from multiqc import config
-from multiqc.modules.base_module import BaseMultiqcModule
+from multiqc.modules.base_module import BaseMultiqcModule, ModuleNoSamplesFound
 from multiqc.plots import bargraph, linegraph
 
 # Initialise the logger
@@ -35,11 +35,15 @@ class MultiqcModule(BaseMultiqcModule):
         for f in self.find_log_files("rsem"):
             self.parse_rsem_report(f)
 
+            # Superfluous function call to confirm that it is used in this module
+            # Replace None with actual version if it is available
+            self.add_software_version(None, f["s_name"])
+
         # Filter to strip out ignored sample names
         self.rsem_mapped_data = self.ignore_samples(self.rsem_mapped_data)
 
         if len(self.rsem_mapped_data) == 0:
-            raise UserWarning
+            raise ModuleNoSamplesFound
 
         log.info("Found {} reports".format(len(self.rsem_mapped_data)))
 

@@ -6,7 +6,7 @@ import re
 from collections import OrderedDict
 
 from multiqc import config
-from multiqc.modules.base_module import BaseMultiqcModule
+from multiqc.modules.base_module import BaseMultiqcModule, ModuleNoSamplesFound
 from multiqc.plots import bargraph, beeswarm, linegraph, table
 
 # Initialize the logger
@@ -114,13 +114,17 @@ class MultiqcModule(BaseMultiqcModule):
 
                 self.mdata[k][s_name] = getattr(self, "parse_logs_{}".format(k))(f["f"], f["fn"])
 
+                # Superfluous function call to confirm that it is used in this module
+                # Replace None with actual version if it is available
+                self.add_software_version(None, s_name)
+
         for k in self.mdata:
             self.mdata[k] = self.ignore_samples(self.mdata[k])
 
         n_samples = max([len(self.mdata[k]) for k in self.mdata])
 
         if n_samples == 0:
-            raise UserWarning
+            raise ModuleNoSamplesFound
 
         log.info("Found {} samples".format(n_samples))
 

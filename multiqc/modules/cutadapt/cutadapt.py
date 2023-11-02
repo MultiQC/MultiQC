@@ -4,9 +4,10 @@
 import logging
 import re
 from collections import OrderedDict
-from distutils.version import StrictVersion
 
-from multiqc.modules.base_module import BaseMultiqcModule
+from packaging import version
+
+from multiqc.modules.base_module import BaseMultiqcModule, ModuleNoSamplesFound
 from multiqc.plots import bargraph, linegraph
 
 # Initialise the logger
@@ -49,7 +50,7 @@ class MultiqcModule(BaseMultiqcModule):
         self.cutadapt_data = self.ignore_samples(self.cutadapt_data)
 
         if len(self.cutadapt_data) == 0:
-            raise UserWarning
+            raise ModuleNoSamplesFound
 
         log.info("Found {} reports".format(len(self.cutadapt_data)))
 
@@ -112,7 +113,7 @@ class MultiqcModule(BaseMultiqcModule):
                 if c_version:
                     cutadapt_version = c_version.group(1)
                     try:
-                        assert StrictVersion(c_version.group(1)) <= StrictVersion("1.6")
+                        assert version.parse(c_version.group(1)) <= version.parse("1.6")
                         parsing_version = "1.6"
                     except:
                         parsing_version = "1.7"
@@ -139,6 +140,10 @@ class MultiqcModule(BaseMultiqcModule):
                     self.cutadapt_data[s_name]["cutadapt_version"] = cutadapt_version
 
             if s_name is not None:
+                # Add version info to module
+                if cutadapt_version is not None:
+                    self.add_software_version(cutadapt_version, s_name)
+
                 self.add_data_source(f, s_name)
 
                 # Search regexes for overview stats
@@ -204,7 +209,7 @@ class MultiqcModule(BaseMultiqcModule):
                     (float(d.get("bp_trimmed", 0)) + float(d.get("quality_trimmed", 0))) / d["bp_processed"]
                 ) * 100
             # Add missing filtering categories for pre-1.7 logs
-            if StrictVersion(d["cutadapt_version"]) > StrictVersion("1.6"):
+            if version.parse(d["cutadapt_version"]) > version.parse("1.6"):
                 if "r_processed" in d:
                     r_filtered_unexplained = (
                         d["r_processed"]
@@ -235,7 +240,7 @@ class MultiqcModule(BaseMultiqcModule):
         ):
             log.error("Something went wrong...")
             log.debug("Keys in trimmed length data differed")
-            raise UserWarning
+            raise ModuleNoSamplesFound
 
         if len(self.cutadapt_length_counts["default"]) == 0:
             self.cutadapt_length_counts.pop("default")

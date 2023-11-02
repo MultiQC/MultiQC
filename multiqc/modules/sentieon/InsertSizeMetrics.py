@@ -49,9 +49,7 @@ def parse_reports(self):
                     if s_name in self.sentieon_insertSize_data:
                         log.debug(
                             "Duplicate sample name found in {}!\
-                             Overwriting: {}".format(
-                                f["fn"], s_name
-                            )
+                             Overwriting: {}".format(f["fn"], s_name)
                         )
                     self.add_data_source(f, s_name, section="InsertSizeMetrics")
                     keys = f["f"].readline().strip("\n").split("\t")
@@ -71,9 +69,7 @@ def parse_reports(self):
                                     self.sentieon_insertSize_data[rowkey][k] = float(vals[i].replace(",", "."))
                                     log.debug(
                                         "Switching commas for points in '{}':\
-                                             {} - {}".format(
-                                            f["fn"], vals[i], vals[i].replace(",", ".")
-                                        )
+                                             {} - {}".format(f["fn"], vals[i], vals[i].replace(",", "."))
                                     )
                                 except ValueError:
                                     self.sentieon_insertSize_data[rowkey][k] = vals[i]
@@ -93,6 +89,10 @@ def parse_reports(self):
 
                     self.sentieon_insertSize_histogram[s_name] = OrderedDict()
                     in_hist = True
+
+        # Superfluous function call to confirm that it is used in this module
+        # Replace None with actual version if it is available
+        self.add_software_version(None, s_name)
 
         for key in list(self.sentieon_insertSize_data.keys()):
             if len(self.sentieon_insertSize_data[key]) == 0:
@@ -170,9 +170,7 @@ def parse_reports(self):
                 insertsize_smooth_points = int(config.sentieon_config["insertsize_smooth_points"])
                 log.debug(
                     "Custom Sentieon insert size smoothing:\
-                     {}".format(
-                        insertsize_smooth_points
-                    )
+                     {}".format(insertsize_smooth_points)
                 )
             except (AttributeError, KeyError, ValueError):
                 insertsize_smooth_points = 500

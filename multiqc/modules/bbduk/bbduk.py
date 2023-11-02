@@ -4,11 +4,13 @@ import logging
 import re
 from collections import OrderedDict
 
-from multiqc.modules.base_module import BaseMultiqcModule
+from multiqc.modules.base_module import BaseMultiqcModule, ModuleNoSamplesFound
 from multiqc.plots import bargraph
 from multiqc.utils import config
 
 log = logging.getLogger(__name__)
+
+VERSION_REGEX = r"Version ([\d\.]+)"
 
 
 class MultiqcModule(BaseMultiqcModule):
@@ -21,12 +23,12 @@ class MultiqcModule(BaseMultiqcModule):
             anchor="bbduk",
             href="https://jgi.doe.gov/data-and-tools/software-tools/bbtools/bb-tools-user-guide/bbduk-guide/",
             info="""is a tool performing common data-quality-related trimming,
-			filtering, and masking operations with a kmer based approach""",
-            ## One publication, but only for the merge tool:
+            filtering, and masking operations with a kmer based approach""",
+            # One publication, but only for the merge tool:
             # doi="10.1371/journal.pone.0185056",
         )
 
-        ## Define the main bbduk multiqc data object
+        # Define the main bbduk multiqc data object
         self.bbduk_data = dict()
 
         for f in self.find_log_files("bbduk", filehandles=True):
@@ -35,7 +37,7 @@ class MultiqcModule(BaseMultiqcModule):
         self.bbduk_data = self.ignore_samples(self.bbduk_data)
 
         if len(self.bbduk_data) == 0:
-            raise UserWarning
+            raise ModuleNoSamplesFound
 
         log.info("Found {} reports".format(len(self.bbduk_data)))
 
@@ -53,6 +55,11 @@ class MultiqcModule(BaseMultiqcModule):
             if "jgi.BBDuk" in l and "in1=" in l:
                 s_name = l.split("in1=")[1].split(" ")[0]
                 s_name = self.clean_s_name(s_name, f)
+
+            if l.startswith("Version"):
+                version_match = re.search(VERSION_REGEX, l)
+                if version_match:
+                    self.add_software_version(version_match.group(1), s_name)
 
             if "Input:" in l:
                 matches = re.search(r"Input:\s+(\d+) reads\s+(\d+) bases", l)

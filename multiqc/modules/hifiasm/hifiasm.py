@@ -1,12 +1,15 @@
 """ MultiQC module to parse output from HiFiasm """
 
 import logging
+import re
 
-from multiqc.modules.base_module import BaseMultiqcModule
+from multiqc.modules.base_module import BaseMultiqcModule, ModuleNoSamplesFound
 from multiqc.plots import linegraph
 
 # Initialise the logger
 log = logging.getLogger(__name__)
+
+VERSION_REGEX = r"\[M::main\] Version: ([\d\.r\-]+)"
 
 
 class MultiqcModule(BaseMultiqcModule):
@@ -27,7 +30,7 @@ class MultiqcModule(BaseMultiqcModule):
 
         # If we found no data
         if not self.hifiasm_data:
-            raise UserWarning
+            raise ModuleNoSamplesFound
         log.info("Found {} reports".format(len(self.hifiasm_data)))
 
         self.write_data_file(self.hifiasm_data, "multiqc_hifiasm_report")
@@ -41,6 +44,10 @@ class MultiqcModule(BaseMultiqcModule):
             data = self.extract_kmer_graph(f["f"])
             if data:
                 self.hifiasm_data[f["s_name"]] = data
+
+            version = self.extract_version(f["f"])
+            if version is not None:
+                self.add_software_version(version, f["s_name"])
 
     def add_sections(self):
         # Plot configuration
@@ -66,6 +73,17 @@ class MultiqcModule(BaseMultiqcModule):
                 """,
             plot=linegraph.plot(self.hifiasm_data, config),
         )
+
+    def extract_version(self, fin):
+        """Extract the Hifiasm version from file contents"""
+        for line in fin:
+            if not line.startswith("[M::main]"):
+                continue
+
+            version_match = re.search(VERSION_REGEX, line)
+            if version_match:
+                return version_match.group(1)
+        return None
 
     def extract_kmer_graph(self, fin):
         """Extract the kmer graph from file in"""

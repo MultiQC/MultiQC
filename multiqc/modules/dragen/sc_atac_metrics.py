@@ -1,6 +1,6 @@
 import logging
 
-from multiqc.modules.base_module import BaseMultiqcModule
+from multiqc.modules.base_module import BaseMultiqcModule, ModuleNoSamplesFound
 from multiqc.modules.dragen.utils import Metric, make_headers
 from multiqc.plots import table
 
@@ -36,8 +36,12 @@ class DragenScAtacMetrics(BaseMultiqcModule):
             s_name = f["s_name"]
             if s_name in data_by_sample:
                 log.debug("Duplicate sample name found! Overwriting: {}".format(s_name))
-            self.add_data_source(f, section="stats")
+            self.add_data_source(f, section="sc_atac_metrics")
             data_by_sample[s_name] = data
+
+            # Superfluous function call to confirm that it is used in this module
+            # Replace None with actual version if it is available
+            self.add_software_version(None, s_name)
 
         # Filter to strip out ignored sample names:
         data_by_sample = self.ignore_samples(data_by_sample)

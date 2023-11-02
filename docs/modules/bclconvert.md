@@ -1,5 +1,5 @@
 ---
-name: bclconvert
+name: BCL Convert
 url: https://support.illumina.com/sequencing/sequencing_software/bcl-convert.html
 description: >
   bclconvert can be used to both demultiplex data and convert BCL files to

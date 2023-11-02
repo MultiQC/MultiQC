@@ -1,5 +1,6 @@
 import logging
 
+from ..base_module import ModuleNoSamplesFound
 from .coverage_hist import DragenCoverageHist
 from .coverage_metrics import DragenCoverageMetrics
 from .coverage_per_contig import DragenCoveragePerContig
@@ -73,11 +74,11 @@ class MultiqcModule(
         samples_found |= self.add_ploidy_estimation_metrics()
         # <output prefix>.ploidy_estimation_metrics.csv    - add just Ploidy estimation into gen stats
 
-        self.collect_overall_mean_cov_data()
+        overall_mean_cov_data = self.collect_overall_mean_cov_data()
         # <output prefix>.<coverage region prefix>_overall_mean_cov<arbitrary suffix>.csv
         # This data will be used by in the DragenCoverageMetrics.
 
-        samples_found |= self.add_coverage_metrics()
+        samples_found |= self.add_coverage_metrics(overall_mean_cov_data)
         # <output prefix>.<coverage region prefix>_coverage_metrics<arbitrary suffix>.csv
 
         samples_found |= self.add_coverage_hist()
@@ -114,5 +115,5 @@ class MultiqcModule(
         # <output prefix>.scATAC.metrics.csv or <output prefix>.scATAC_metrics.csv
 
         if len(samples_found) == 0:
-            raise UserWarning
+            raise ModuleNoSamplesFound
         log.info("Found {} reports".format(len(samples_found)))

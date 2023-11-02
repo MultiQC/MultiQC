@@ -61,9 +61,7 @@ def parse_reports(self):
                     if s_name in self.sentieon_GCbiasSummary_data:
                         log.debug(
                             "Duplicate sample name found in {}!\
-                             Overwriting: {}".format(
-                                f["fn"], s_name
-                            )
+                             Overwriting: {}".format(f["fn"], s_name)
                         )
                     self.add_data_source(f, s_name, section="GcBiasSummaryMetrics")
                     self.sentieon_GCbiasSummary_data[s_name] = dict()
@@ -75,6 +73,10 @@ def parse_reports(self):
                             self.sentieon_GCbiasSummary_data[s_name][k] = float(vals[i])
                         except ValueError:
                             self.sentieon_GCbiasSummary_data[s_name][k] = vals[i]
+
+            # Superfluous function call to confirm that it is used in this module
+            # Replace None with actual version if it is available
+            self.add_software_version(None, s_name)
 
         for s_name in list(self.sentieon_GCbias_data.keys()):
             if len(self.sentieon_GCbias_data[s_name]) == 0:

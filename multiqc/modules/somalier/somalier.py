@@ -9,7 +9,7 @@ from math import isinf, isnan
 
 import spectra
 
-from multiqc.modules.base_module import BaseMultiqcModule
+from multiqc.modules.base_module import BaseMultiqcModule, ModuleNoSamplesFound
 from multiqc.plots import bargraph, heatmap, scatter, table
 from multiqc.utils import mqc_colour
 
@@ -51,6 +51,10 @@ class MultiqcModule(BaseMultiqcModule):
                     self.add_data_source(f, s_name)
                     self.somalier_data[s_name] = parsed_data[s_name_raw]
 
+                    # Superfluous function call to confirm that it is used in this module
+                    # Replace None with actual version if it is available
+                    self.add_software_version(None, s_name)
+
         # parse somalier CSV files
         for f in self.find_log_files("somalier/pairs"):
             parsed_data = self.parse_somalier_pairs_tsv(f)
@@ -70,7 +74,7 @@ class MultiqcModule(BaseMultiqcModule):
         self.somalier_data = self.ignore_samples(self.somalier_data)
 
         if len(self.somalier_data) == 0:
-            raise UserWarning
+            raise ModuleNoSamplesFound
 
         log.info("Found {} reports".format(len(self.somalier_data)))
 
@@ -448,18 +452,15 @@ class MultiqcModule(BaseMultiqcModule):
             colours_legend = ""
             for val in sorted(relatedness_colours.keys()):
                 name, col_rgb = relatedness_colours[val]
-                colours_legend += '<span style="color:{}">{}</span>, '.format(
-                    col_rgb.replace(str(alpha), "1.0"), name, val
-                )
+                col = col_rgb.replace(str(alpha), "1.0")
+                colours_legend += f'<span style="color:{col}">{name}</span>, '
 
             self.add_section(
                 name="Relatedness",
                 anchor="somalier-relatedness",
                 description="""
                 Shared allele rates between sample pairs.
-                Points are coloured by degree of expected-relatedness: {}""".format(
-                    colours_legend
-                ),
+                Points are coloured by degree of expected-relatedness: {}""".format(colours_legend),
                 plot=scatter.plot(data, pconfig),
             )
 

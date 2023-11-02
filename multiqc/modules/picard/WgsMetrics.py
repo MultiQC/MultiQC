@@ -24,7 +24,7 @@ def parse_reports(self):
 
     # Go through logs and find Metrics
     for f in self.find_log_files("picard/wgs_metrics", filehandles=True):
-        s_name = None
+        s_name = f["s_name"]
         in_hist = False
         for l in f["f"]:
             # Catch the histogram values
@@ -79,6 +79,10 @@ def parse_reports(self):
             if len(self.picard_wgsmetrics_histogram[s_name]) == 0:
                 self.picard_wgsmetrics_histogram.pop(s_name, None)
                 log.debug("Ignoring '{}' histogram as no data parsed".format(s_name))
+
+            # Superfluous function call to confirm that it is used in this module
+            # Replace None with actual version if it is available
+            self.add_software_version(None, s_name)
 
     # Filter to strip out ignored sample names
     self.picard_wgsmetrics_data = self.ignore_samples(self.picard_wgsmetrics_data)

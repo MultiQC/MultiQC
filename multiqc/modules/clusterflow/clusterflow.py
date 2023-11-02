@@ -8,7 +8,7 @@ import re
 import time
 from collections import OrderedDict
 
-from multiqc.modules.base_module import BaseMultiqcModule
+from multiqc.modules.base_module import BaseMultiqcModule, ModuleNoSamplesFound
 from multiqc.plots import table
 
 # Initialise the logger
@@ -37,6 +37,11 @@ class MultiqcModule(BaseMultiqcModule):
         for f in self.find_log_files("clusterflow/logs", filehandles=True):
             self.parse_clusterflow_logs(f)
             self.add_data_source(f, "log")
+
+            # Superfluous function call to confirm that it is used in this module
+            # Replace None with actual version if it is available
+            self.add_software_version(None, f["s_name"])
+
         for f in self.find_log_files("clusterflow/runfiles", filehandles=True):
             parsed_data = self.parse_clusterflow_runfiles(f)
             if parsed_data is not None:
@@ -48,7 +53,7 @@ class MultiqcModule(BaseMultiqcModule):
         self.clusterflow_runfiles = self.ignore_samples(self.clusterflow_runfiles)
 
         if len(self.clusterflow_commands) == 0 and len(self.clusterflow_runfiles) == 0:
-            raise UserWarning
+            raise ModuleNoSamplesFound
 
         # Count pipelines
         num_log_pipelines = len(self.clusterflow_commands)
@@ -350,7 +355,5 @@ class MultiqcModule(BaseMultiqcModule):
                     <div class="panel-heading"><h3 class="panel-title">Pipeline Steps: {} (<code>{}</code>)</h3></div>
                     <pre class="panel-body" style="border:0; background-color:transparent; padding:0 15px; margin:0; color:#666; font-size:90%;">{}</pre>
                 </div>
-                """.format(
-                pid, d[0], d[1]
-            )
+                """.format(pid, d[0], d[1])
         return html

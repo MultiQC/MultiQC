@@ -15,7 +15,7 @@ env:
   # To reduce code duplication between Win and Linux jobs
   core_python_dependencies: "pip setuptools beautifulsoup4"
   # No need to run test variations across all Python versions
-  latest_python: "3.11"
+  latest_python: "3.12"
 
 jobs:
   changes:
@@ -55,7 +55,8 @@ jobs:
     needs: changes
     strategy:
       matrix:
-        python-version: ["3.6", "3.7", "3.8", "3.9", "3.10", "3.11"]
+        # Just test the oldest and newest supported Python versions
+        python-version: ["3.8", "3.12"]
     timeout-minutes: 10
 
     steps:
@@ -82,7 +83,7 @@ jobs:
 
       # Run all of the tests!
       - name: All modules / Custom report filename
-        run: multiqc ${{ needs.changes.outputs.single_module }} --lint test_data/data/modules/ --filename full_report.html
+        run: multiqc ${{ needs.changes.outputs.single_module }} --strict test_data/data/modules/ --filename full_report.html
 
       # More variations of command line flags and inputs. No need to run those across all Python versions.
       - name: Special case input data
@@ -91,7 +92,7 @@ jobs:
 
       - name: All modules / Log filename as s_name, no cleaning
         if: matrix.python-version == env.latest_python
-        run: multiqc ${{ needs.changes.outputs.single_module }} --lint test_data/data/modules/ --fullnames --fn_as_s_name
+        run: multiqc ${{ needs.changes.outputs.single_module }} --strict test_data/data/modules/ --fullnames --fn_as_s_name
 
       - name: Filter out all filenames (confirm no report)
         if: matrix.python-version == env.latest_python
@@ -110,11 +111,11 @@ jobs:
 
       - name: Specific module / Force overwrite / Prepend dirnames / Name and comment / No data dir
         if: matrix.python-version == env.latest_python
-        run: multiqc --lint test_data/data/modules/ -m fastqc -f -d -dd 1 -i "Forced Report" -b "This command has lots of options" --filename custom_fn --no-data-dir
+        run: multiqc --strict test_data/data/modules/ -m fastqc -f -d -dd 1 -i "Forced Report" -b "This command has lots of options" --filename custom_fn --no-data-dir
 
       - name: For overwrite / Flat plots / Tagged modules only / Exclude module / Ignore samples / Full names / zip data dir / config file
         if: matrix.python-version == env.latest_python
-        run: multiqc ${{ needs.changes.outputs.single_module }} --lint test_data/data/modules/ -f --flat --tag methylation --exclude clusterflow --ignore-samples ngi --fullnames --zip-data-dir -c test/config_example.yaml
+        run: multiqc ${{ needs.changes.outputs.single_module }} --strict test_data/data/modules/ -f --flat --tag methylation --exclude clusterflow --ignore-samples ngi --fullnames --zip-data-dir -c test/config_example.yaml
 
       - name: Specific module / named output dir / dev template / JSON data / File list
         if: matrix.python-version == env.latest_python
@@ -154,7 +155,7 @@ jobs:
       - name: Set up Python
         uses: actions/setup-python@v3
         with:
-          python-version: "3.11"
+          python-version: "3.12"
 
       # Update core packages
       - name: Install dependencies for CI tests
@@ -174,4 +175,4 @@ jobs:
 
       # Run all of the tests! Remember the BACKslash path separator!
       - name: All modules / Custom report filename
-        run: multiqc ${{ needs.changes.outputs.single_module }} --lint test_data\MultiQC_TestData-master\data\modules\ --filename full_report.html
+        run: multiqc ${{ needs.changes.outputs.single_module }} --strict test_data\MultiQC_TestData-master\data\modules\ --filename full_report.html

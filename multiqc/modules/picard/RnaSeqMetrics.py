@@ -86,6 +86,10 @@ def parse_reports(self):
                 self.picard_RnaSeqMetrics_histogram.pop(s_name, None)
                 log.debug("Ignoring '{}' histogram as no data parsed".format(s_name))
 
+            # Superfluous function call to confirm that it is used in this module
+            # Replace None with actual version if it is available
+            self.add_software_version(None, s_name)
+
     # Filter to strip out ignored sample names
     self.picard_RnaSeqMetrics_data = self.ignore_samples(self.picard_RnaSeqMetrics_data)
 
@@ -138,9 +142,7 @@ def parse_reports(self):
               <span class="glyphicon glyphicon-warning-sign"></span>
               Picard was run without an rRNA annotation file {}, therefore the ribosomal assignment is not available. To correct, rerun with the <code>RIBOSOMAL_INTERVALS</code> parameter, as documented <a href="https://broadinstitute.github.io/picard/command-line-overview.html#CollectRnaSeqMetrics" target="_blank">here</a>.
             </div>
-            """.format(
-                missing_samples
-            )
+            """.format(missing_samples)
 
         pconfig = {
             "id": "picard_rnaseqmetrics_assignment_plot",

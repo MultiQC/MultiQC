@@ -3,7 +3,7 @@ import logging
 from collections import OrderedDict, defaultdict
 
 from multiqc import config
-from multiqc.modules.base_module import BaseMultiqcModule
+from multiqc.modules.base_module import BaseMultiqcModule, ModuleNoSamplesFound
 from multiqc.plots import boxplot, linegraph
 
 from .util import average_from_range, sortPosQualTableKeys

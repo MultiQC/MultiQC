@@ -20,6 +20,11 @@ def parse_reports(self):
     self.qualimap_bamqc_genome_results = dict()
     for f in self.find_log_files("qualimap/bamqc/genome_results"):
         parse_genome_results(self, f)
+
+        # Superfluous function call to confirm that it is used in this module
+        # Replace None with actual version if it is available
+        self.add_software_version(None, f["s_name"])
+
     self.qualimap_bamqc_genome_results = self.ignore_samples(self.qualimap_bamqc_genome_results)
     if len(self.qualimap_bamqc_genome_results) > 0:
         self.write_data_file(self.qualimap_bamqc_genome_results, "multiqc_qualimap_bamqc_genome_results")
@@ -234,7 +239,7 @@ def parse_insert_size(self, f):
 
 def parse_gc_dist(self, f):
     """Parse the contents of the Qualimap BamQC Mapped Reads GC content distribution file"""
-    # Get the sample name from the parent parent directory
+    # Get the sample name from the parent directory
     # Typical path: <sample name>/raw_data_qualimapReport/mapped_reads_gc-content_distribution.txt
     s_name = self.get_s_name(f)
 
@@ -553,7 +558,7 @@ def general_stats_headers(self):
         "max": 100,
         "min": 0,
         "suffix": "%",
-        "scale": "Set1",
+        "scale": "PuRd",
         "format": "{:,.0f}",
     }
     self.general_stats_headers["median_insert_size"] = {

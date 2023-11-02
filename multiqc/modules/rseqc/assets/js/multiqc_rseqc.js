@@ -124,7 +124,7 @@ function single_sample_plot(e) {
             <small>loading..</small> \
           </div> \
         </div> \
-      </div>'
+      </div>',
   );
   var pwrapper = rseqc_junction_saturation_plot.parent().parent();
   newplot.insertAfter(pwrapper).hide().slideDown();
