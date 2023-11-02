@@ -306,7 +306,7 @@ class MultiqcModule(BaseMultiqcModule):
                 plot_data[sn]["cost"] = data["cost"]
 
         self.add_section(
-            name="Wall Time",
+            name="Wall time",
             anchor="seqera_cli_wall_time_section",
             plot=bargraph.plot(
                 plot_data,
