@@ -890,3 +890,7 @@ verifybamid/selfsm:
 whatshap/stats:
   contents: "#sample	chromosome	file_name	variants	phased	unphased	singletons"
   num_lines: 1
+mosaicatcher:
+  contents: "# sample:  Sample (has multiple cells)"
+  num_lines: 1
+  fn: "*.mosaicatcher_info_raw.txt"

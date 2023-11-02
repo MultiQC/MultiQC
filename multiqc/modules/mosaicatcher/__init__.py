@@ -1,0 +1,1 @@
+from .mosaicatcher import MultiqcModule
