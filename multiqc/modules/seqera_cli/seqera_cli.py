@@ -74,7 +74,7 @@ class MultiqcModule(BaseMultiqcModule):
                     data_by_run[d["id"]].update(d)
 
         # Parsing the json files directly
-        for f in self.find_log_files("seqera_cli/workflow"):
+        for f in self.find_log_files("seqera_cli/json"):
             d = json.loads(f["f"])
             if not d:
                 continue
