@@ -290,7 +290,7 @@ class MultiqcModule(BaseMultiqcModule):
                 pconfig={
                     "id": "seqera_cli_process_statuses_plot",
                     "title": "Seqera platform CLI: processes statuses",
-                    "ylab": "Number of processes",
+                    "ylab": "Number of tasks",
                 },
             ),
         )
