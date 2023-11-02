@@ -106,6 +106,68 @@ class MultiqcModule(BaseMultiqcModule):
         # Write parsed report data to a file
         self.write_data_file(data_by_run, "multiqc_seqera_cli")
 
+        self._table(data_by_run)
+
+        self._plots(data_by_run)
+
+    def _parse_data(self, d):
+        keys = [
+            # workflow.json
+            "id",
+            "repository",
+            "start",
+            "complete",
+            "revision",
+            "nextflow",
+            # workflow-load.json
+            "cpuEfficiency",
+            "memoryEfficiency",
+            "cpuTime",
+            "readBytes",
+            "writeBytes",
+            "cost",
+            "pending",
+            "submitted",
+            "running",
+            "succeeded",
+            "failed",
+            "cached",
+            # service-info.json
+            "version",
+        ]
+        d = {k: d.get(k) for k in keys}
+
+        run_id = d.get("id")
+        if not run_id:
+            return None
+
+        # "start" and "complete" are time stamps like time stamps like 2023-10-22T14:39:01Z
+        # parse them with a library, take the difference "complete" - "start" to get the
+        # wall time, and convert the wall time it to a human-readable format.
+        if "start" in d and "complete" in d:
+            start = dt.datetime.strptime(d["start"], "%Y-%m-%dT%H:%M:%SZ")
+            complete = dt.datetime.strptime(d["complete"], "%Y-%m-%dT%H:%M:%SZ")
+            wall_time = complete - start
+            d["wallTime"] = wall_time.total_seconds()
+            d["start"] = start.timestamp()
+            d["complete"] = complete.timestamp()
+
+        version = d.get("version")
+        if version:
+            d["seqeraVersion"] = version
+            self.add_software_version(version, sample=run_id, software_name="Seqera Platform")
+
+        nextflow_version = d.get("nextflow", {}).get("version")
+        if nextflow_version:
+            d["nextflowVersion"] = nextflow_version
+            self.add_software_version(nextflow_version, sample=run_id, software_name="Nextflow")
+
+        return d
+
+    def _table(self, data_by_run):
+        """
+        Add the main table with run statistics.
+        """
         # Collecting categorical values into distinct lists that we want to color code
         # with badges and backgrounds:
         seqera_versions = list(set(d.get("seqeraVersion") for d in data_by_run.values()))
@@ -115,7 +177,6 @@ class MultiqcModule(BaseMultiqcModule):
             {v: scale.get_colour(i, lighten=0.5)} for i, v in enumerate(seqera_versions + nextflow_versions)
         ]
         repositories = list(set(d.get("repository") for d in data_by_run.values()))
-
         headers = {
             "repository": {
                 "title": "Repository",
@@ -141,7 +202,7 @@ class MultiqcModule(BaseMultiqcModule):
                 "hidden": True,
                 "format": lambda x: humanize.naturaltime(dt.datetime.fromtimestamp(x)).replace(" ", "&nbsp;"),
             },
-            "duration": {
+            "wallTime": {
                 "title": "Wall time",
                 "description": "Duration of the workflow",
                 "format": lambda x: str(dt.timedelta(seconds=x)).replace(" ", "&nbsp;"),
@@ -150,11 +211,12 @@ class MultiqcModule(BaseMultiqcModule):
             "cpuTime": {
                 "title": "CPU time",
                 "description": "Total CPU time used by the workflow",
-                "format": lambda x: str(dt.timedelta(seconds=x // 1000)).replace(" ", "&nbsp;"),
+                "modify": lambda x: x // 1000 / 60 / 60,  # hours
+                "suffix": "&nbsp;h",
                 "scale": "Greys",
             },
             "cost": {
-                "title": "Estimated cost",
+                "title": "Est. cost",
                 "description": "Estimated cost of the workflow",
                 "format": "${:,.2f}",
                 "scale": "Reds",
@@ -202,82 +264,98 @@ class MultiqcModule(BaseMultiqcModule):
                 "scale": False,
             },
         }
-
         self.add_section(
             name="Workflow run statistics",
             anchor="seqera_cli_run_stats_table",
             plot=table.plot(data_by_run, headers, {"col1_header": "Run ID"}),
         )
 
-        pconfig = {
-            "id": "seqera_cli_process_status",
-            "title": "Seqera Platform CLI: processes statuses",
-            "ylab": "Number of processes",
-        }
-        cats = {
-            "pending": {"name": "Pending", "color": "#8f4199"},
-            "submitted": {"name": "Submitted", "color": "#e68642"},
-            "running": {"name": "Running", "color": "#4256e7"},
-            "cached": {"name": "Cached", "color": "#939598"},
-            "succeeded": {"name": "Succeeded", "color": "#28ae61"},
-            "failed": {"name": "Failed", "color": "#e7363e"},
-        }
+    def _plots(self, data_by_run):
+        """
+        Add bar plots
+        """
         self.add_section(
-            name="Process statuses",
-            anchor="seqera-platform-cli",
-            plot=bargraph.plot(data_by_run, cats, pconfig),
+            name="Processes statuses",
+            anchor="seqera_cli_process_statuses_section",
+            plot=bargraph.plot(
+                data_by_run,
+                cats={
+                    "pending": {"name": "Pending", "color": "#8f4199"},
+                    "submitted": {"name": "Submitted", "color": "#e68642"},
+                    "running": {"name": "Running", "color": "#4256e7"},
+                    "cached": {"name": "Cached", "color": "#939598"},
+                    "succeeded": {"name": "Succeeded", "color": "#28ae61"},
+                    "failed": {"name": "Failed", "color": "#e7363e"},
+                },
+                pconfig={
+                    "id": "seqera_cli_process_statuses_plot",
+                    "title": "Seqera platform CLI: processes statuses",
+                    "ylab": "Number of processes",
+                },
+            ),
         )
 
-    def _parse_data(self, d):
-        keys = [
-            # workflow.json
-            "id",
-            "repository",
-            "start",
-            "complete",
-            "revision",
-            "nextflow",
-            # workflow-load.json
-            "cpuEfficiency",
-            "memoryEfficiency",
-            "cpuTime",
-            "readBytes",
-            "writeBytes",
-            "cost",
-            "pending",
-            "submitted",
-            "running",
-            "succeeded",
-            "failed",
-            "cached",
-            # service-info.json
-            "version",
-        ]
-        d = {k: d.get(k) for k in keys}
+        plot_data = dict()
+        for sn, data in data_by_run.items():
+            plot_data[sn] = dict()
+            if data.get("wallTime"):
+                plot_data[sn]["wallTime"] = data["wallTime"] / 60 / 60  # hours
+            if data.get("cpuTime"):
+                plot_data[sn]["cpuTime"] = data["cpuTime"] // 1000 / 60 / 60  # hours
+            if data.get("cost"):
+                plot_data[sn]["cost"] = data["cost"]
 
-        run_id = d.get("id")
-        if not run_id:
-            return None
-
-        # "start" and "complete" are time stamps like time stamps like 2023-10-22T14:39:01Z
-        # parse them with a library, take the difference "complete" - "start" to get the
-        # duration, and convert the duration it to a human-readable format.
-        if "start" in d and "complete" in d:
-            start = dt.datetime.strptime(d["start"], "%Y-%m-%dT%H:%M:%SZ")
-            complete = dt.datetime.strptime(d["complete"], "%Y-%m-%dT%H:%M:%SZ")
-            duration = complete - start
-            d["duration"] = duration.total_seconds()
-            d["start"] = start.timestamp()
-            d["complete"] = complete.timestamp()
-
-        version = d.get("version")
-        if version:
-            d["seqeraVersion"] = version
-            self.add_software_version(version, sample=run_id, software_name="Seqera Platform")
-
-        nextflow_version = d.get("nextflow", {}).get("version")
-        if nextflow_version:
-            d["nextflowVersion"] = nextflow_version
-            self.add_software_version(nextflow_version, sample=run_id, software_name="Nextflow")
-
-        return d
+        self.add_section(
+            name="Wall Time",
+            anchor="seqera_cli_wall_time_section",
+            plot=bargraph.plot(
+                plot_data,
+                {"wallTime": {"name": "Wall time"}},
+                {
+                    "id": "seqera_cli_wall_time_plot",
+                    "title": "Seqera platform CLI: wall time",
+                    "ylab": "hours",
+                    "tt_decimals": 1,
+                    "tt_suffix": "&nbsp;h",
+                    "tt_percentages": False,
+                    "cpswitch": False,
+                    "use_legend": False,
+                },
+            ),
+        )
+        self.add_section(
+            name="CPU Time",
+            anchor="seqera_cli_cpu_time_section",
+            plot=bargraph.plot(
+                plot_data,
+                {"cpuTime": {"name": "CPU time"}},
+                {
+                    "id": "seqera_cli_cpu_time_plot",
+                    "title": "Seqera platform CLI: CPU time",
+                    "ylab": "hours",
+                    "tt_decimals": 1,
+                    "tt_suffix": "&nbsp;h",
+                    "tt_percentages": False,
+                    "cpswitch": False,
+                    "use_legend": False,
+                },
+            ),
+        )
+        self.add_section(
+            name="Estimated Cost",
+            anchor="seqera_cli_cost",
+            plot=bargraph.plot(
+                plot_data,
+                {"cost": {"name": "Estimated Cost"}},
+                {
+                    "id": "seqera_cli_cost",
+                    "title": "Seqera platform CLI: estimated cost",
+                    "ylab": "$",
+                    "tt_decimals": 1,
+                    "tt_suffix": "&nbsp;$",
+                    "tt_percentages": False,
+                    "cpswitch": False,
+                    "use_legend": False,
+                },
+            ),
+        )
