@@ -4,6 +4,8 @@
 
 ### MultiQC updates
 
+- Nanostat: account for both tab and spaces in v1.41+ search pattern ([#2155](https://github.com/ewels/MultiQC/pull/2155))
+
 ### New Modules
 
 ### Module updates
