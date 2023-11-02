@@ -443,7 +443,7 @@ kallisto:
   shared: true
 nanostat:
   max_filesize: 4096
-  contents_re: "Metrics dataset\\s*"
+  contents_re: "Metrics\\s+dataset\\s*"
   num_lines: 1
 nanostat/legacy:
   max_filesize: 4096
