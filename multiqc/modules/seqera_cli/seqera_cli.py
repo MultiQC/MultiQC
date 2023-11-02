@@ -351,7 +351,7 @@ class MultiqcModule(BaseMultiqcModule):
                 {"cost": {"name": "Estimated cost"}},
                 {
                     "id": "seqera_cli_cost_plot",
-                    "title": "Seqera platform CLI: estimated cost",
+                    "title": "Seqera platform CLI: Estimated cost",
                     "ylab": "$",
                     "tt_decimals": 1,
                     "tt_suffix": "&nbsp;$",
