@@ -298,11 +298,11 @@ class MultiqcModule(BaseMultiqcModule):
         plot_data = dict()
         for sn, data in data_by_run.items():
             plot_data[sn] = dict()
-            if data.get("wallTime"):
+            if "wallTime" in data:
                 plot_data[sn]["wallTime"] = data["wallTime"] / 60 / 60  # hours
-            if data.get("cpuTime"):
+            if "cpuTime" in data is not None:
                 plot_data[sn]["cpuTime"] = data["cpuTime"] // 1000 / 60 / 60  # hours
-            if data.get("cost"):
+            if "cost" in data is not None:
                 plot_data[sn]["cost"] = data["cost"]
 
         self.add_section(
@@ -320,6 +320,7 @@ class MultiqcModule(BaseMultiqcModule):
                     "tt_percentages": False,
                     "cpswitch": False,
                     "use_legend": False,
+                    "hide_zero_cats": False,
                 },
             ),
         )
@@ -338,17 +339,18 @@ class MultiqcModule(BaseMultiqcModule):
                     "tt_percentages": False,
                     "cpswitch": False,
                     "use_legend": False,
+                    "hide_zero_cats": False,
                 },
             ),
         )
         self.add_section(
             name="Estimated Cost",
-            anchor="seqera_cli_cost",
+            anchor="seqera_cli_cost_section",
             plot=bargraph.plot(
                 plot_data,
                 {"cost": {"name": "Estimated Cost"}},
                 {
-                    "id": "seqera_cli_cost",
+                    "id": "seqera_cli_cost_plot",
                     "title": "Seqera platform CLI: estimated cost",
                     "ylab": "$",
                     "tt_decimals": 1,
@@ -356,6 +358,7 @@ class MultiqcModule(BaseMultiqcModule):
                     "tt_percentages": False,
                     "cpswitch": False,
                     "use_legend": False,
+                    "hide_zero_cats": False,
                 },
             ),
         )
