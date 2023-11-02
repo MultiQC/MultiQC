@@ -45,6 +45,14 @@ pr_title = pr_title.removesuffix(f" (#{pr_number})")
 changelog_path = workspace_path / "CHANGELOG.md"
 
 
+def _run_cmd(cmd):
+    print(cmd)
+    result = subprocess.run(cmd, shell=True, capture_output=True, text=True)
+    if result.returncode != 0:
+        raise RuntimeError(f"Error executing command: {result.stderr}")
+    return result
+
+
 def _find_module_info(py_path: Path) -> dict[str]:
     """
     Helper function to load module meta info. With current setup, can't really just
@@ -85,11 +93,7 @@ def _files_altered_by_pr(pr_number, types=None) -> set[Path]:
     if types is None:
         types = {"added"}
 
-    cmd = f"cd {workspace_path} && gh pr diff {pr_number}"
-    print(cmd)
-    result = subprocess.run(cmd, shell=True, capture_output=True, text=True)
-    if result.returncode != 0:
-        raise RuntimeError(f"Error executing command: {result.stderr}")
+    result = _run_cmd(f"cd {workspace_path} && gh pr diff {pr_number}")
 
     paths = set()
     lines = result.stdout.splitlines()
@@ -111,11 +115,7 @@ def _diff_for_a_file(pr_number, path) -> str:
     """
     Returns the diff for a specific file altered in the PR.
     """
-    cmd = f"cd {workspace_path} && gh pr diff {pr_number}"
-    print(cmd)
-    result = subprocess.run(cmd, shell=True, capture_output=True, text=True)
-    if result.returncode != 0:
-        raise RuntimeError(f"Error executing command: {result.stderr}")
+    result = _run_cmd(f"cd {workspace_path} && gh pr diff {pr_number}")
 
     lines = result.stdout.splitlines()
     while lines:
@@ -152,19 +152,9 @@ def _load_file_content_after_pr(path) -> str:
     """
     Returns the contents of the file changed by the PR.
     """
-    cmd = f"cd {workspace_path} && gh pr checkout {pr_number}"
-    print(cmd)
-    result = subprocess.run(cmd, shell=True, capture_output=True, text=True)
-    if result.returncode != 0:
-        raise RuntimeError(f"Error executing command: {result.stderr}")
-
+    _run_cmd(f"cd {workspace_path} && gh pr checkout {pr_number}")
     with (workspace_path / path).open() as f:
         text = f.read()
-
-    cmd = f"cd {workspace_path} && git checkout master"
-    print(cmd)
-    subprocess.run(cmd, shell=True, capture_output=True, text=True)
-
     return text
 
 
@@ -238,11 +228,9 @@ def _determine_change_type(pr_title, pr_number) -> tuple[str, dict]:
             mod_info = _find_module_info(mod_py_files[0])
             proper_pr_title = f"New module: {mod_info['name']}"
             if pr_title != proper_pr_title:
-                cmd = f"cd {workspace_path}; gh pr edit --title '{proper_pr_title}'"
-                print(cmd)
                 try:
-                    subprocess.run(cmd, shell=True)
-                except subprocess.CalledProcessError as e:
+                    _run_cmd(f"cd {workspace_path} && gh pr edit --title '{proper_pr_title}'")
+                except (RuntimeError, subprocess.CalledProcessError) as e:
                     print(
                         f"Error executing command: {e}. Please alter the title manually: '{proper_pr_title}'",
                         file=sys.stderr,
