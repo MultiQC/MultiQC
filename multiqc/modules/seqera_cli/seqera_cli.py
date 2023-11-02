@@ -11,6 +11,7 @@ import humanize
 
 from multiqc.modules.base_module import BaseMultiqcModule, ModuleNoSamplesFound
 from multiqc.plots import bargraph, table
+from multiqc.utils import mqc_colour
 
 log = logging.getLogger(__name__)
 
@@ -105,12 +106,24 @@ class MultiqcModule(BaseMultiqcModule):
         # Write parsed report data to a file
         self.write_data_file(data_by_run, "multiqc_seqera_cli")
 
+        seqera_versions = list(set(d.get("seqeraVersion") for d in data_by_run.values()))
+        nextflow_versions = list(set(d.get("nextflowVersion") for d in data_by_run.values()))
+        scale = mqc_colour.mqc_colour_scale("Dark2")
+        version_colors = [
+            {v: scale.get_colour(i, lighten=0.5)} for i, v in enumerate(seqera_versions + nextflow_versions)
+        ]
+
+        repositories = list(set(d.get("repository") for d in data_by_run.values()))
+        # scale = mqc_colour.mqc_colour_scale("Pastel2")
+        # repo_colors = [{v: scale.get_colour(i, lighten=0.5)} for i, v in enumerate(repositories)]
+
         headers = {
             "repository": {
                 "title": "Repository",
                 "description": "Name of the repository",
-                "scale": False,
-                "modify": lambda x: f'<a href="{x}">{x.replace("https://", "").replace("http://", "").replace("github.com/", "")}</a>',
+                "scale": "Accent",
+                "modify": lambda x: repositories.index(x),
+                "format": lambda x: f'<a href="{repositories[x]}">{repositories[x].replace("https://", "").replace("http://", "").replace("github.com/", "")}</a>',
             },
             "revision": {
                 "title": "Version",
@@ -174,6 +187,20 @@ class MultiqcModule(BaseMultiqcModule):
                 "suffix": "&nbsp;%",
                 "max": 100,
                 "scale": "YlGn",
+            },
+            "seqeraVersion": {
+                "title": "Platform",
+                "description": "Version of the Seqera Platform",
+                "cond_formatting_colours": version_colors,
+                "cond_formatting_rules": {v: [{"s_eq": v}] for v in seqera_versions},
+                "scale": False,
+            },
+            "nextflowVersion": {
+                "title": "Nextflow",
+                "description": "Version of Nextflow",
+                "cond_formatting_colours": version_colors,
+                "cond_formatting_rules": {v: [{"s_eq": v}] for v in nextflow_versions},
+                "scale": False,
             },
         }
 
@@ -246,10 +273,12 @@ class MultiqcModule(BaseMultiqcModule):
 
         version = d.get("version")
         if version:
+            d["seqeraVersion"] = version
             self.add_software_version(version, sample=run_id, software_name="Seqera Platform")
 
         nextflow_version = d.get("nextflow", {}).get("version")
         if nextflow_version:
+            d["nextflowVersion"] = nextflow_version
             self.add_software_version(nextflow_version, sample=run_id, software_name="Nextflow")
 
         return d
