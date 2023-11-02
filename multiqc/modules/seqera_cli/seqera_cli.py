@@ -344,7 +344,7 @@ class MultiqcModule(BaseMultiqcModule):
             ),
         )
         self.add_section(
-            name="Estimated Cost",
+            name="Estimated cost",
             anchor="seqera_cli_cost_section",
             plot=bargraph.plot(
                 plot_data,
