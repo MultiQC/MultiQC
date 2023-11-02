@@ -275,7 +275,7 @@ class MultiqcModule(BaseMultiqcModule):
         Add bar plots
         """
         self.add_section(
-            name="Processes statuses",
+            name="Workflow status",
             anchor="seqera_cli_process_statuses_section",
             plot=bargraph.plot(
                 data_by_run,
