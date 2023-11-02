@@ -187,18 +187,18 @@ class MultiqcModule(BaseMultiqcModule):
                 "max": 100,
                 "scale": "YlGn",
             },
-            "seqeraVersion": {
-                "title": "Platform",
-                "description": "Version of the Seqera Platform",
-                "cond_formatting_colours": version_colors,
-                "cond_formatting_rules": {v: [{"s_eq": v}] for v in seqera_versions},
-                "scale": False,
-            },
             "nextflowVersion": {
                 "title": "Nextflow",
                 "description": "Version of Nextflow",
                 "cond_formatting_colours": version_colors,
                 "cond_formatting_rules": {v: [{"s_eq": v}] for v in nextflow_versions},
+                "scale": False,
+            },
+            "seqeraVersion": {
+                "title": "Platform",
+                "description": "Version of the Seqera Platform",
+                "cond_formatting_colours": version_colors,
+                "cond_formatting_rules": {v: [{"s_eq": v}] for v in seqera_versions},
                 "scale": False,
             },
         }
