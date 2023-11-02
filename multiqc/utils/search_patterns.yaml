@@ -443,7 +443,7 @@ kallisto:
   shared: true
 nanostat:
   max_filesize: 4096
-  contents_re: "Metrics dataset\\s*"
+  contents_re: "Metrics\\s+dataset\\s*"
   num_lines: 1
 nanostat/legacy:
   max_filesize: 4096
@@ -554,6 +554,10 @@ peddy/sex_check:
   fn: "*.sex_check.csv"
 peddy/background_pca:
   fn: "*.background_pca.json"
+seqera_cli/run_dump:
+  fn: "runs_*.tar.gz"
+seqera_cli/json:
+  fn: "workflow.json"
 somalier/somalier-ancestry:
   fn: "*.somalier-ancestry.tsv"
 somalier/samples:
