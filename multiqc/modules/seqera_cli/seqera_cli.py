@@ -333,7 +333,7 @@ class MultiqcModule(BaseMultiqcModule):
                 {
                     "id": "seqera_cli_cpu_time_plot",
                     "title": "Seqera platform CLI: CPU time",
-                    "ylab": "hours",
+                    "ylab": "CPU hours",
                     "tt_decimals": 1,
                     "tt_suffix": "&nbsp;h",
                     "tt_percentages": False,
