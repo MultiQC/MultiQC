@@ -325,7 +325,7 @@ class MultiqcModule(BaseMultiqcModule):
             ),
         )
         self.add_section(
-            name="CPU Time",
+            name="CPU time",
             anchor="seqera_cli_cpu_time_section",
             plot=bargraph.plot(
                 plot_data,
