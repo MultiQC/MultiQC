@@ -348,7 +348,7 @@ class MultiqcModule(BaseMultiqcModule):
             anchor="seqera_cli_cost_section",
             plot=bargraph.plot(
                 plot_data,
-                {"cost": {"name": "Estimated Cost"}},
+                {"cost": {"name": "Estimated cost"}},
                 {
                     "id": "seqera_cli_cost_plot",
                     "title": "Seqera platform CLI: estimated cost",
