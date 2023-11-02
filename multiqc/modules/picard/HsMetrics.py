@@ -169,7 +169,7 @@ def parse_reports(module):
             data_by_sample[s_name]["FOLD_ENRICHMENT"] = -1
 
     # Add to general stats table
-    general_stats_table(module, data_by_sample)
+    _general_stats_table(module, data_by_sample)
 
     # Add report section
     module.add_section(
@@ -213,7 +213,7 @@ def parse_reports(module):
     return len(data_by_sample)
 
 
-def general_stats_table(module, data):
+def _general_stats_table(module, data):
     """
     Generate table header configs for the General Stats table,
     add config and data to the base module.
@@ -223,14 +223,15 @@ def general_stats_table(module, data):
     genstats_table_cols = picard_config.get("HsMetrics_genstats_table_cols", [])
     genstats_table_cols_hidden = picard_config.get("HsMetrics_genstats_table_cols_hidden", [])
 
+    headers = {}
     # Custom general stats columns
     if len(genstats_table_cols) or len(genstats_table_cols_hidden):
         for k, v in _generate_table_header_config(genstats_table_cols, genstats_table_cols_hidden).items():
-            module.general_stats_headers[k] = v
+            headers[k] = v
 
     # Default General Stats headers
     else:
-        module.general_stats_headers["FOLD_ENRICHMENT"] = {
+        headers["FOLD_ENRICHMENT"] = {
             "title": "Fold Enrichment",
             "min": 0,
             "format": "{:,.0f}",
@@ -246,7 +247,7 @@ def general_stats_table(module, data):
         except (KeyError, AttributeError, TypeError, AssertionError):
             covs = ["30"]
         for c in covs:
-            module.general_stats_headers["PCT_TARGET_BASES_{}X".format(c)] = {
+            headers["PCT_TARGET_BASES_{}X".format(c)] = {
                 "id": f"{module.anchor}_target_bases_{c}X",
                 "title": "% Target Bases {}X".format(c),
                 "description": "Percent of target bases with coverage &ge; {}X".format(c),
@@ -257,12 +258,7 @@ def general_stats_table(module, data):
                 "scale": "RdYlGn",
                 "modify": lambda x: util.multiply_hundred(x),
             }
-
-    # Add data to general stats table
-    for s_name in data:
-        if s_name not in module.general_stats_data:
-            module.general_stats_data[s_name] = dict()
-        module.general_stats_data[s_name].update(data[s_name])
+    module.general_stats_addcols(data, headers, namespace="HsMetrics")
 
 
 def _get_table_headers():

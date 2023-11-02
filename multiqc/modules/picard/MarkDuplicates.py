@@ -150,19 +150,18 @@ def parse_reports(module, sp_key="markdups"):
     module.write_data_file(data_by_sample, f"multiqc_{module.anchor}_dups")
 
     # Add to general stats table
-    module.general_stats_headers["PERCENT_DUPLICATION"] = {
-        "title": "% Dups",
-        "description": "Mark Duplicates - Percent Duplication",
-        "max": 100,
-        "min": 0,
-        "suffix": "%",
-        "scale": "OrRd",
-        "modify": lambda x: util.multiply_hundred(x),
+    headers = {
+        "PERCENT_DUPLICATION": {
+            "title": "% Dups",
+            "description": "Mark Duplicates - Percent Duplication",
+            "max": 100,
+            "min": 0,
+            "suffix": "%",
+            "scale": "OrRd",
+            "modify": lambda x: util.multiply_hundred(x),
+        }
     }
-    for s_name in data_by_sample:
-        if s_name not in module.general_stats_data:
-            module.general_stats_data[s_name] = dict()
-        module.general_stats_data[s_name].update(data_by_sample[s_name])
+    module.general_stats_addcols(data_by_sample, headers, namespace="Mark Duplicates")
 
     # Make the bar plot and add to the MarkDuplicates section
     #
