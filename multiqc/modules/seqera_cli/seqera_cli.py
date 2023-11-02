@@ -106,16 +106,15 @@ class MultiqcModule(BaseMultiqcModule):
         # Write parsed report data to a file
         self.write_data_file(data_by_run, "multiqc_seqera_cli")
 
+        # Collecting categorical values into distinct lists that we want to color code
+        # with badges and backgrounds:
         seqera_versions = list(set(d.get("seqeraVersion") for d in data_by_run.values()))
         nextflow_versions = list(set(d.get("nextflowVersion") for d in data_by_run.values()))
         scale = mqc_colour.mqc_colour_scale("Dark2")
         version_colors = [
             {v: scale.get_colour(i, lighten=0.5)} for i, v in enumerate(seqera_versions + nextflow_versions)
         ]
-
         repositories = list(set(d.get("repository") for d in data_by_run.values()))
-        # scale = mqc_colour.mqc_colour_scale("Pastel2")
-        # repo_colors = [{v: scale.get_colour(i, lighten=0.5)} for i, v in enumerate(repositories)]
 
         headers = {
             "repository": {

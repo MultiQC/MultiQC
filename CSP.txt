@@ -2,6 +2,8 @@
 # (Content Security Policy), you will need the following scripts allowlisted:
 
 script-src 'self'
+    # 1.18
+    'sha256-W6HVWfJ0uI4smLSf8gzVvnrHUJaXGP/HEeBvr0SYfyk=' # multiqc/templates/default/assets/js/multiqc_tables.js
 
     # 1.17
     'sha256-krKzkLmKjisEgw0YGKglUFqLmEh6sK08Qw6xPmmo/10=' # ////////////////////////////////////////////////// Base JS for MultiQC Reports//
