@@ -238,6 +238,13 @@ def _general_stats_table(module, data):
             "scale": "Blues",
             "suffix": " X",
         }
+        headers["MEDIAN_TARGET_COVERAGE"] = {
+            "title": "Median Target Coverage",
+            "description": "The median coverage of reads that mapped to target regions of an experiment.",
+            "min": 0,
+            "suffix": "X",
+            "scale": "GnBu",
+        }
         try:
             covs = picard_config["general_stats_target_coverage"]
             assert isinstance(covs, list)
@@ -249,7 +256,7 @@ def _general_stats_table(module, data):
         for c in covs:
             headers["PCT_TARGET_BASES_{}X".format(c)] = {
                 "id": f"{module.anchor}_target_bases_{c}X",
-                "title": "% Target Bases {}X".format(c),
+                "title": "Target Bases &ge; {}X".format(c),
                 "description": "Percent of target bases with coverage &ge; {}X".format(c),
                 "max": 100,
                 "min": 0,
@@ -345,7 +352,7 @@ def _generate_table_header_config(table_cols, hidden_table_cols):
                 "description": FIELD_DESCRIPTIONS[h] if h in FIELD_DESCRIPTIONS else None,
             }
             if h.find("PCT") > -1:
-                headers[h]["title"] = "% {}".format(headers[h]["title"])
+                headers[h]["title"] = headers[h]["title"]
                 headers[h]["modify"] = lambda x: x * 100.0
                 headers[h]["max"] = 100
                 headers[h]["suffix"] = "%"

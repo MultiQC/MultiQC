@@ -71,7 +71,7 @@ def parse_reports(module):
     # Add to general stats table
     headers = dict()
     headers["PCT_CPG_BASES_CONVERTED"] = {
-        "title": "% CpG Methylated",
+        "title": "CpG Methylated",
         "description": "Percentage of times a CpG cytosine was converted",
         "max": 100,
         "min": 0,
@@ -81,7 +81,7 @@ def parse_reports(module):
         "modify": lambda x: 100 - util.multiply_hundred(x),
     }
     headers["PCT_NON_CPG_BASES_CONVERTED"] = {
-        "title": "% Non-CpG Methylated",
+        "title": "Non-CpG Methylated",
         "description": "Percentage of times a non-CpG cytosine was converted",
         "max": 100,
         "min": 0,

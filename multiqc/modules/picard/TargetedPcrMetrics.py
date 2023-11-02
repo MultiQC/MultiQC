@@ -67,7 +67,7 @@ def parse_reports(module):
     # Add to general stats table
     headers = {
         "PCT_AMPLIFIED_BASES": {
-            "title": "% Amplified Bases",
+            "title": "Amplified Bases",
             "description": "The fraction of aligned bases that mapped to or near an amplicon.",
             "min": 0,
             "max": 100,

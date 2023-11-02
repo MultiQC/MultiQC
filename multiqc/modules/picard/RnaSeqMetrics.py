@@ -100,7 +100,7 @@ def parse_reports(module):
     # Add to general stats table
     headers = dict()
     headers["PCT_RIBOSOMAL_BASES"] = {
-        "title": "% rRNA",
+        "title": "rRNA",
         "description": "Percent of aligned bases overlapping ribosomal RNA regions",
         "max": 100,
         "min": 0,
@@ -108,7 +108,7 @@ def parse_reports(module):
         "scale": "Reds",
     }
     headers["PCT_MRNA_BASES"] = {
-        "title": "% mRNA",
+        "title": "mRNA",
         "description": "Percent of aligned bases overlapping UTRs and coding regions of mRNA transcripts",
         "max": 100,
         "min": 0,
@@ -130,9 +130,9 @@ def parse_reports(module):
     warn_rrna = ""
     rrna_missing = []
     for s_name, metrics in data_by_sample.items():
-        if metrics["RIBOSOMAL_BASES"] == "":
+        if metrics["RIBOSOMAL_BASES"] == "NA":
             rrna_missing.append(s_name)
-    if len(rrna_missing):
+    if rrna_missing:
         if len(rrna_missing) < 5:
             missing_samples = "for samples <code>{}</code>".format("</code>, <code>".join(rrna_missing))
         else:

@@ -152,7 +152,7 @@ def parse_reports(module, sp_key="markdups"):
     # Add to general stats table
     headers = {
         "PERCENT_DUPLICATION": {
-            "title": "% Dups",
+            "title": "Duplication",
             "description": "Mark Duplicates - Percent Duplication",
             "max": 100,
             "min": 0,

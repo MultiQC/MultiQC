@@ -96,7 +96,7 @@ def is_line_right_before_table(
         picard_classes = [picard_class]
     return (
         (line.startswith("## METRICS CLASS") or line.startswith("## HISTOGRAM"))
-        and (not picard_classes or any(c in line for c in picard_classes))
+        and (not picard_classes or any(c.upper() in line.upper() for c in picard_classes))
         or sentieon_algo
         and line.startswith("#SentieonCommandLine:")
         and f" --algo {sentieon_algo}" in line
@@ -132,7 +132,7 @@ def extract_sample_name(
 
     picard_command = (
         line.startswith("# ")
-        and any(pt in line for pt in picard_tools)
+        and any(pt.upper() in line.upper() for pt in picard_tools)
         and any(
             f" {po}=" in line.upper()
             or f" --{po}=" in line.upper()
