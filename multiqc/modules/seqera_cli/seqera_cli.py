@@ -313,7 +313,7 @@ class MultiqcModule(BaseMultiqcModule):
                 {"wallTime": {"name": "Wall time"}},
                 {
                     "id": "seqera_cli_wall_time_plot",
-                    "title": "Seqera platform CLI: wall time",
+                    "title": "Seqera platform CLI: Wall time",
                     "ylab": "hours",
                     "tt_decimals": 1,
                     "tt_suffix": "&nbsp;h",
