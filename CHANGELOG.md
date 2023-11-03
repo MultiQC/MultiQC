@@ -178,6 +178,8 @@ for more information.
   - Freyja is a tool to recover relative lineage abundances from mixed SARS-CoV-2 samples from a sequencing dataset.
 - [**Librarian**](https://github.com/DesmondWillowbrook/Librarian)
   - A tool to predict the sequencing library type from the base composition of a supplied FastQ file.
+- [**Xenome**](https://github.com/data61/gossamer/blob/master/docs/xenome.md)
+  - A tool for classifying reads from xenograft sources.
 
 ### Module updates
 
