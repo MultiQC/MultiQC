@@ -288,6 +288,8 @@ fn_clean_exts:
   - ".fastqc_metrics"
   - ".labels"
   - ".bammetrics.metrics"
+  - "_xenome_stats"
+  - ".xenome_stats"
 
 # These are removed after the above, only if sample names
 # start or end with this string. Again, removed in order.
