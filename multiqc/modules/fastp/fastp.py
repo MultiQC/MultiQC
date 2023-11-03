@@ -325,9 +325,9 @@ class MultiqcModule(BaseMultiqcModule):
             del self.fastp_all_data[s_name]
         # Don't delete dicts with subkeys, messes up multi-panel plots
 
-        # Superfluous function call to confirm that it is used in this module
-        # Replace None with actual version if it is available
-        self.add_software_version(None)
+        # Add software version if available
+        if "fastp_version" in parsed_json["summary"]:
+            self.add_software_version(parsed_json["summary"]["fastp_version"], s_name)
 
     def fastp_general_stats_table(self):
         """Take the parsed stats from the fastp report and add it to the
