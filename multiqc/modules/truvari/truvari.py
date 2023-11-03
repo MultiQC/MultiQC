@@ -5,7 +5,7 @@ from __future__ import print_function
 import logging
 from collections import OrderedDict
 
-from multiqc.modules.base_module import BaseMultiqcModule
+from multiqc.modules.base_module import BaseMultiqcModule, ModuleNoSamplesFound
 
 # Import the truvari submodules
 from .bench import BenchSummary
@@ -39,7 +39,7 @@ class MultiqcModule(BaseMultiqcModule, BenchSummary):
 
         # Exit if we didn't find anything
         if sum(n.values()) == 0:
-            raise UserWarning
+            raise ModuleNoSamplesFound
 
         # Add to the General Stats table (has to be called once per MultiQC module)
         self.general_stats_addcols(self.general_stats_data, self.general_stats_headers)

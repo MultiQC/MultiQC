@@ -205,13 +205,13 @@ class datatable(object):
                 setdmin = False
                 try:
                     headers[idx][k]["dmax"] = float(headers[idx][k]["max"])
-                except TypeError:
+                except Exception:
                     headers[idx][k]["dmax"] = 0
                     setdmax = True
 
                 try:
                     headers[idx][k]["dmin"] = float(headers[idx][k]["min"])
-                except TypeError:
+                except Exception:
                     headers[idx][k]["dmin"] = 0
                     setdmin = True
 

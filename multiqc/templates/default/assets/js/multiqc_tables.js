@@ -44,7 +44,17 @@ var brewer_scales = [
 $(function () {
   if ($(".mqc_table").length > 0) {
     // Enable tablesorter on MultiQC tables
-    var get_sort_val = function (node) {
+    let get_sort_val = function (node) {
+      // if val is defined, use it
+      if (node.getAttribute("val") !== null) {
+        let val = node.getAttribute("val");
+        let floatVal = parseFloat(val);
+        if (!isNaN(floatVal)) {
+          return floatVal;
+        }
+        return val;
+      }
+
       const text = node.innerText;
 
       // If first char is a digit, strip non-numeric
