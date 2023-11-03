@@ -115,7 +115,7 @@ class MultiqcModule(BaseMultiqcModule):
 
     def _xenome_general_stats_table(self, summary_data):
         """
-        Add the numbers of reads classified as one of the species into the genereal stats table.
+        Add the numbers of reads classified as one of the species into the general stats table.
         """
         headers: Dict[str, Dict] = {}
         table_data = defaultdict(dict)
@@ -172,16 +172,16 @@ class MultiqcModule(BaseMultiqcModule):
             code = COLORS[i % len(COLORS)]
             return _lighten_color(code, lighten)
 
-        first_ss = []
-        second_ss = []
+        grafts = []
+        hosts = []
         for sn, cnt_by_cls in summary_data.items():
             s = list(cnt_by_cls)[0]
-            if s not in first_ss:
-                first_ss.append(s)
+            if s not in grafts:
+                grafts.append(s)
             s = list(cnt_by_cls)[1]
-            if s not in second_ss:
-                second_ss.append(s)
-        all_species = first_ss + [s for s in second_ss if s not in first_ss]
+            if s not in hosts:
+                hosts.append(s)
+        all_species = grafts + [s for s in hosts if s not in grafts]
         colors = {s: _get_color(i, lighten=0.6) for i, s in enumerate(all_species)}
         definitely_colors = {s: _get_color(i, lighten=1.0) for i, s in enumerate(all_species)}
         probably_colors = {s: _get_color(i, lighten=0.3) for i, s in enumerate(all_species)}
@@ -205,8 +205,8 @@ class MultiqcModule(BaseMultiqcModule):
             description="This plot shows the number of reads classified by Xenome",
             helptext="""
             There are 5 possible categories:  
-            * Reads found in the first species, e.g. **Human**
-            * Reads found in the second species, e.g. **Mouse**  
+            * Reads found in graft species, e.g. **Human**
+            * Reads found in host species, e.g. **Mouse**  
             * **Both**: read was found in either of the species
             * **Neither**: Read was found in neither of the species
             * **Ambiguous**: Read origin could not be adequately determined.  
