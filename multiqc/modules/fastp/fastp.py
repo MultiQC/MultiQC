@@ -326,6 +326,7 @@ class MultiqcModule(BaseMultiqcModule):
         # Don't delete dicts with subkeys, messes up multi-panel plots
 
         # Add software version if available
+        # Note: this was added to fastp JSON output in v0.22, so it won't be available in older versions
         if "fastp_version" in parsed_json["summary"]:
             self.add_software_version(parsed_json["summary"]["fastp_version"], s_name)
 
