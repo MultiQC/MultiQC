@@ -105,9 +105,7 @@ class plotProfileMixin:
                     Accumulated view of the distribution of sequence reads related to the closest annotated gene.
                     All annotated genes have been normalized to the same size.
 
-                    {}""".format(
-                    plotBandHelp
-                ),
+                    {}""".format(plotBandHelp),
                 plot=linegraph.plot(self.deeptools_plotProfile, config),
             )
 

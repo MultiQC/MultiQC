@@ -143,12 +143,12 @@ tool in the maintenance of high quality software.
 
 MultiQC uses a range of tools to check the code base. The main two code formatters are:
 
-- [Black](https://github.com/psf/black) - Python Code
+- [Ruff](https://docs.astral.sh/ruff/) - Python Code
 - [Prettier](https://prettier.io/) - Everything else (almost)
 
 The easiest way to work with these is to install editor plugins that run the tools every time you save a file.
 For example, [Visual Studio Code](https://code.visualstudio.com/) has
-[built-in support for Black](https://code.visualstudio.com/docs/python/editing#_formatting) and
+[built-in support for Ruff](https://marketplace.visualstudio.com/items?itemName=charliermarsh.ruff) and
 plugins for [Prettier](https://github.com/prettier/prettier-vscode).
 
 ### Pre-commit
@@ -359,7 +359,7 @@ the meta-information that you add to the module `MultiqcModule` class.
 Please do not add anything to the `CHANGELOG.md` file!
 This is now handled by our friendly MultiQC bot 🤖
 
-For more information about how it works, see the [contributing docs](contributing.md#changelog).
+For more information about how it works, see the [contributing docs](../development/contributing.md#changelog).
 :::
 
 ## Step 1 - Find log files
@@ -792,8 +792,8 @@ headers['name'] = {
     'min': None,                    # Maximum value in range, for bar / colour coding
     'scale': 'GnBu',                # Colour scale for colour coding. Set to False to disable.
     'suffix': None,                 # Suffix for value (eg. '%')
-    'format': '{:,.1f}',            # Output format() string
-    'shared_key': None              # See below for description
+    'format': '{:,.1f}',            # Output format() string. Can also be a lambda function.
+    'shared_key': None,             # See below for description
     'modify': None,                 # Lambda function to modify values
     'hidden': False,                # Set to True to hide the column on page load
     'placement' : 1000.0,           # Alter the default ordering of columns in the table
@@ -817,13 +817,16 @@ headers['name'] = {
 - `modify`
   - A python `lambda` function to change the data in some way when it is
     inserted into the table.
+- `format`
+  - A format string or a python `lambda` function to format the data to display
+    on screen.
 - `hidden`
   - Setting this to `True` will hide the column when the report loads. It can
     then be shown through the _Configure Columns_ modal in the report. This can
     be useful when data could be sometimes useful. For example, some modules
     show "percentage aligned" on page load but hide "number of reads aligned".
 - `placement`
-  - If you feel that the results from your module should appear at the left side
+  - If you feel that the results from your module should appear on the left side
     of the table set this value less than 1000. Or to move the column right, set
     it greater than 1000. This value can be any float.
 

@@ -15,7 +15,7 @@ env:
   # To reduce code duplication between Win and Linux jobs
   core_python_dependencies: "pip setuptools beautifulsoup4"
   # No need to run test variations across all Python versions
-  latest_python: "3.11"
+  latest_python: "3.12"
 
 jobs:
   changes:
@@ -56,7 +56,7 @@ jobs:
     strategy:
       matrix:
         # Just test the oldest and newest supported Python versions
-        python-version: ["3.6", "3.11"]
+        python-version: ["3.8", "3.12"]
     timeout-minutes: 10
 
     steps:
@@ -99,7 +99,7 @@ jobs:
         run: |
           multiqc ${{ needs.changes.outputs.single_module }} test_data/data/modules/ --filename all_ignored.html --ignore-samples '*'
           if [[ -f all_ignored.html ]]; then
-            echo "No report should have been generated! Likely due to a module missing self.ignore_samples() or UserWarning when no matching files are found" >&2
+            echo "No report should have been generated! Likely due to a module missing self.ignore_samples() or ModuleNoSamplesFound when no matching files are found" >&2
             exit 1
           fi
 
@@ -155,7 +155,7 @@ jobs:
       - name: Set up Python
         uses: actions/setup-python@v3
         with:
-          python-version: "3.11"
+          python-version: "3.12"
 
       # Update core packages
       - name: Install dependencies for CI tests

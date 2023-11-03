@@ -452,18 +452,15 @@ class MultiqcModule(BaseMultiqcModule):
             colours_legend = ""
             for val in sorted(relatedness_colours.keys()):
                 name, col_rgb = relatedness_colours[val]
-                colours_legend += '<span style="color:{}">{}</span>, '.format(
-                    col_rgb.replace(str(alpha), "1.0"), name, val
-                )
+                col = col_rgb.replace(str(alpha), "1.0")
+                colours_legend += f'<span style="color:{col}">{name}</span>, '
 
             self.add_section(
                 name="Relatedness",
                 anchor="somalier-relatedness",
                 description="""
                 Shared allele rates between sample pairs.
-                Points are coloured by degree of expected-relatedness: {}""".format(
-                    colours_legend
-                ),
+                Points are coloured by degree of expected-relatedness: {}""".format(colours_legend),
                 plot=scatter.plot(data, pconfig),
             )
 

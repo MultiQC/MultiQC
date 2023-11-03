@@ -105,7 +105,7 @@ config = {
     'cpswitch': True,                       # Show the 'Counts / Percentages' switch?
     'cpswitch_c_active': True,              # Initial display with 'Counts' specified? False for percentages.
     'cpswitch_counts_label': 'Counts',      # Label for 'Counts' button
-    'cpswitch_percent_label': 'Percentages' # Label for 'Percentages' button
+    'cpswitch_percent_label': 'Percentages',# Label for 'Percentages' button
     'logswitch': False,                     # Show the 'Log10' switch?
     'logswitch_active': False,              # Initial display with 'Log10' active?
     'logswitch_label': 'Log10',             # Label for 'Log10' button

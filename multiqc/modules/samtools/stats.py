@@ -208,19 +208,24 @@ class StatsReportMixin:
     def alignment_section(self, samples_data):
         bedgraph_data = {}
         for sample_id, data in samples_data.items():
+            # Breaking up the mapped reads count into MQ0 and >MQ1 counts
+            data["reads_mapped_MQ1"] = data["reads_mapped"] - data["reads_MQ0"]
+            # Asserting the bar plot keys sum up to the total
             expected_total = data["raw_total_sequences"]
-            read_sum = data["reads_mapped"] + data["reads_unmapped"] + data["filtered_sequences"]
+            read_sum = (
+                data["reads_mapped_MQ1"] + data["reads_MQ0"] + data["reads_unmapped"] + data["filtered_sequences"]
+            )
             if read_sum == expected_total:
                 bedgraph_data[sample_id] = data
             else:
                 log.warning(
-                    "sum of mapped/unmapped reads not matching total, "
+                    "sum of mapped/unmapped/filtered reads not matching total, "
                     "skipping samtools plot for: {}".format(sample_id)
                 )
         self.add_section(
             name="Percent Mapped",
             anchor="samtools-stats-alignment",
-            description="Alignment metrics from <code>samtools stats</code>; mapped vs. unmapped reads.",
+            description="Alignment metrics from <code>samtools stats</code>; mapped vs. unmapped reads vs. reads mapped with MQ0.",
             helptext="""
             For a set of samples that have come from the same multiplexed library,
             similar numbers of reads for each sample are expected. Large differences in numbers might
@@ -231,7 +236,13 @@ class StatsReportMixin:
 
             Low alignment rates could indicate contamination of samples (e.g. adapter sequences),
             low sequencing quality or other artefacts. These can be further investigated in the
-            sequence level QC (e.g. from FastQC).""",
+            sequence level QC (e.g. from FastQC).
+            
+            Reads mapped with MQ0 often indicate that the reads are ambiguously mapped to multiple 
+            locations in the reference sequence. This can be due to repetitive regions in the genome,
+            the presence of alternative contigs in the reference, or due to reads that are too short 
+            to be uniquely mapped. These reads are often filtered out in downstream analyses.
+            """,
             plot=alignment_chart(bedgraph_data),
         )
 
@@ -239,7 +250,8 @@ class StatsReportMixin:
 def alignment_chart(data):
     """Make the HighCharts HTML to plot the alignment rates"""
     keys = OrderedDict()
-    keys["reads_mapped"] = {"color": "#437bb1", "name": "Mapped"}
+    keys["reads_mapped_MQ1"] = {"color": "#437bb1", "name": "Mapped (with MQ>0)"}
+    keys["reads_MQ0"] = {"color": "#FF9933", "name": "MQ0"}
     keys["reads_unmapped"] = {"color": "#b1084c", "name": "Unmapped"}
 
     # Config for the plot
