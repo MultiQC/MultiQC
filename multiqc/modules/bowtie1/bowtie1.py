@@ -3,7 +3,6 @@
 
 import logging
 import re
-from collections import OrderedDict
 
 from multiqc import config
 from multiqc.modules.base_module import BaseMultiqcModule, ModuleNoSamplesFound
@@ -40,6 +39,10 @@ class MultiqcModule(BaseMultiqcModule):
 
         log.info("Found {} reports".format(len(self.bowtie_data)))
 
+        # Superfluous function call to confirm that it is used in this module
+        # Replace None with actual version if it is available
+        self.add_software_version(None)
+
         # Write parsed report data to a file
         self.write_data_file(self.bowtie_data, "multiqc_bowtie1")
 
@@ -62,10 +65,6 @@ class MultiqcModule(BaseMultiqcModule):
             "multimapped": r"# reads with alignments suppressed due to -m:\s+(\d+)",
             "multimapped_percentage": r"# reads with alignments suppressed due to -m:\s+\d+\s+\(([\d\.]+)%\)",
         }
-
-        # Superfluous function call to confirm that it is used in this module
-        # Replace None with actual version if it is available
-        self.add_software_version(None, s_name)
 
         for line in f["f"].splitlines():
             # Attempt in vain to find original bowtie1 command, logged by another program
@@ -100,22 +99,23 @@ class MultiqcModule(BaseMultiqcModule):
         """Take the parsed stats from the Bowtie report and add it to the
         basic stats table at the top of the report"""
 
-        headers = OrderedDict()
-        headers["reads_aligned_percentage"] = {
-            "title": "% Aligned",
-            "description": "% reads with at least one reported alignment",
-            "max": 100,
-            "min": 0,
-            "suffix": "%",
-            "scale": "YlGn",
-        }
-        headers["reads_aligned"] = {
-            "title": "{} Aligned".format(config.read_count_prefix),
-            "description": "reads with at least one reported alignment ({})".format(config.read_count_desc),
-            "min": 0,
-            "scale": "PuRd",
-            "modify": lambda x: x * config.read_count_multiplier,
-            "shared_key": "read_count",
+        headers = {
+            "reads_aligned_percentage": {
+                "title": "% Aligned",
+                "description": "% reads with at least one reported alignment",
+                "max": 100,
+                "min": 0,
+                "suffix": "%",
+                "scale": "YlGn",
+            },
+            "reads_aligned": {
+                "title": "{} Aligned".format(config.read_count_prefix),
+                "description": "reads with at least one reported alignment ({})".format(config.read_count_desc),
+                "min": 0,
+                "scale": "PuRd",
+                "modify": lambda x: x * config.read_count_multiplier,
+                "shared_key": "read_count",
+            },
         }
         self.general_stats_addcols(self.bowtie_data, headers)
 
@@ -123,10 +123,11 @@ class MultiqcModule(BaseMultiqcModule):
         """Make the HighCharts HTML to plot the alignment rates"""
 
         # Specify the order of the different possible categories
-        keys = OrderedDict()
-        keys["reads_aligned"] = {"color": "#8bbc21", "name": "Aligned"}
-        keys["multimapped"] = {"color": "#2f7ed8", "name": "Multimapped"}
-        keys["not_aligned"] = {"color": "#0d233a", "name": "Not aligned"}
+        keys = {
+            "reads_aligned": {"color": "#8bbc21", "name": "Aligned"},
+            "multimapped": {"color": "#2f7ed8", "name": "Multimapped"},
+            "not_aligned": {"color": "#0d233a", "name": "Not aligned"},
+        }
 
         # Config for the plot
         config = {

@@ -9,7 +9,7 @@ import mimetypes
 import os
 import re
 import textwrap
-from collections import OrderedDict, defaultdict
+from collections import defaultdict
 
 import markdown
 
@@ -416,9 +416,7 @@ class BaseMultiqcModule(object):
     def ignore_samples(self, data):
         """Strip out samples which match `sample_names_ignore`"""
         try:
-            if isinstance(data, OrderedDict):
-                newdata = OrderedDict()
-            elif isinstance(data, dict):
+            if isinstance(data, dict):
                 newdata = dict()
             else:
                 return data
@@ -441,7 +439,7 @@ class BaseMultiqcModule(object):
         in required config variables if not supplied.
         :param data: A dict with the data. First key should be sample name,
                      then the data key, then the data.
-        :param headers: Dict / OrderedDict with information for the headers,
+        :param headers: Dict with information for the headers,
                         such as colour scales, min and max values etc.
                         See docs/writing_python.md for more information.
         :param namespace: Append to the module name in the table column description.
@@ -460,7 +458,7 @@ class BaseMultiqcModule(object):
                 hs.update(d.keys())
             hs = list(hs)
             hs.sort()
-            headers = OrderedDict()
+            headers = dict()
             for k in hs:
                 headers[k] = dict()
 

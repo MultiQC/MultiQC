@@ -12,7 +12,6 @@ import os
 import random
 import re
 import sys
-from collections import OrderedDict
 
 from multiqc.utils import config, mqc_colour, report, util_functions
 
@@ -49,11 +48,11 @@ def get_template_mod():
 
 def plot(data, cats=None, pconfig=None):
     """Plot a horizontal bar graph. Expects a 2D dict of sample
-    data. Also can take info about categories. There are quite a
+    data. Also, can take info about categories. There are quite a
     few variants of how to use this function, see the docs for details.
     :param data: 2D dict, first keys as sample names, then x:y data pairs
                  Can supply a list of dicts and will have buttons to switch
-    :param cats: optional list, dict or OrderedDict with plot categories
+    :param cats: optional list or dict with plot categories
     :param pconfig: optional dict with config key:value pairs
     :return: HTML and JS, ready to be inserted into the page
     """
@@ -115,7 +114,7 @@ def plot(data, cats=None, pconfig=None):
     # If we have cats in lists, turn them into dicts
     for idx, cat in enumerate(cats):
         if isinstance(cat, list):
-            newcats = OrderedDict()
+            newcats = dict()
             for c in cat:
                 newcats[c] = {"name": c}
             cats[idx] = newcats
@@ -136,10 +135,7 @@ def plot(data, cats=None, pconfig=None):
     plotsamples = list()
     plotdata = list()
     for idx, d in enumerate(data):
-        if isinstance(d, OrderedDict):
-            hc_samples = list(d.keys())
-        else:
-            hc_samples = sorted(list(d.keys()))
+        hc_samples = sorted(list(d.keys()))
         hc_data = list()
         sample_dcount = dict()
         for c in cats[idx].keys():

@@ -3,7 +3,6 @@
 
 import logging
 import re
-from collections import OrderedDict
 
 from multiqc import config
 from multiqc.modules.base_module import BaseMultiqcModule, ModuleNoSamplesFound
@@ -227,7 +226,7 @@ class MultiqcModule(BaseMultiqcModule):
                 except (IndexError, ValueError):
                     continue
 
-        # Remove empty dicts (eg. R2 for SE data)
+        # Remove empty dicts (e.g. R2 for SE data)
         for t in self.bismark_mbias_data:
             for k in self.bismark_mbias_data[t]:
                 self.bismark_mbias_data[t][k] = {
@@ -262,10 +261,10 @@ class MultiqcModule(BaseMultiqcModule):
         basic stats table at the top of the report"""
 
         headers = {
-            "alignment": OrderedDict(),
-            "dedup": OrderedDict(),
-            "methextract": OrderedDict(),
-            "bam2nuc": OrderedDict(),
+            "alignment": dict(),
+            "dedup": dict(),
+            "methextract": dict(),
+            "bam2nuc": dict(),
         }
         headers["methextract"]["percent_cpg_meth"] = {
             "title": "% mCpG",
@@ -350,11 +349,12 @@ class MultiqcModule(BaseMultiqcModule):
         """Make the alignment plot"""
 
         # Specify the order of the different possible categories
-        keys = OrderedDict()
-        keys["aligned_reads"] = {"color": "#2f7ed8", "name": "Aligned Uniquely"}
-        keys["ambig_reads"] = {"color": "#492970", "name": "Aligned Ambiguously"}
-        keys["no_alignments"] = {"color": "#0d233a", "name": "Did Not Align"}
-        keys["discarded_reads"] = {"color": "#f28f43", "name": "No Genomic Sequence"}
+        keys = {
+            "aligned_reads": {"color": "#2f7ed8", "name": "Aligned Uniquely"},
+            "ambig_reads": {"color": "#492970", "name": "Aligned Ambiguously"},
+            "no_alignments": {"color": "#0d233a", "name": "Did Not Align"},
+            "discarded_reads": {"color": "#f28f43", "name": "No Genomic Sequence"},
+        }
 
         # Config for the plot
         config = {
@@ -374,11 +374,12 @@ class MultiqcModule(BaseMultiqcModule):
         """Make the strand alignment plot"""
 
         # Specify the order of the different possible categories
-        keys = OrderedDict()
-        keys["strand_ob"] = {"name": "Original bottom strand"}
-        keys["strand_ctob"] = {"name": "Complementary to original bottom strand"}
-        keys["strand_ctot"] = {"name": "Complementary to original top strand"}
-        keys["strand_ot"] = {"name": "Original top strand"}
+        keys = {
+            "strand_ob": {"name": "Original bottom strand"},
+            "strand_ctob": {"name": "Complementary to original bottom strand"},
+            "strand_ctot": {"name": "Complementary to original top strand"},
+            "strand_ot": {"name": "Original top strand"},
+        }
 
         # See if we have any directional samples
         directional = 0
@@ -415,9 +416,10 @@ class MultiqcModule(BaseMultiqcModule):
         """Make the deduplication plot"""
 
         # Specify the order of the different possible categories
-        keys = OrderedDict()
-        keys["dedup_reads"] = {"name": "Deduplicated reads (remaining)"}
-        keys["dup_reads"] = {"name": "Duplicate reads (removed)"}
+        keys = {
+            "dedup_reads": {"name": "Deduplicated reads (remaining)"},
+            "dup_reads": {"name": "Duplicate reads (removed)"},
+        }
 
         # Config for the plot
         config = {
@@ -438,11 +440,12 @@ class MultiqcModule(BaseMultiqcModule):
         """Make the methylation plot"""
 
         # Config for the plot
-        keys = OrderedDict()
         defaults = {"max": 100, "min": 0, "suffix": "%", "decimalPlaces": 1}
-        keys["percent_cpg_meth"] = dict(defaults, **{"title": "Methylated CpG"})
-        keys["percent_chg_meth"] = dict(defaults, **{"title": "Methylated CHG"})
-        keys["percent_chh_meth"] = dict(defaults, **{"title": "Methylated CHH"})
+        keys = {
+            "percent_cpg_meth": dict(defaults, **{"title": "Methylated CpG"}),
+            "percent_chg_meth": dict(defaults, **{"title": "Methylated CHG"}),
+            "percent_chh_meth": dict(defaults, **{"title": "Methylated CHH"}),
+        }
 
         self.add_section(
             name="Cytosine Methylation",

@@ -3,7 +3,6 @@
 
 import logging
 import re
-from collections import OrderedDict
 
 from multiqc.modules.base_module import BaseMultiqcModule, ModuleNoSamplesFound
 from multiqc.plots import bargraph
@@ -83,29 +82,30 @@ class MultiqcModule(BaseMultiqcModule):
 
     def macs_general_stats(self):
         """Add columns to General Statistics table"""
-        headers = OrderedDict()
-        headers["d"] = {"title": "Fragment Length", "min": 0, "format": "{:,.0f}"}
-        headers["treatment_redundant_rate"] = {
-            "title": "Treatment Redundancy",
-            "description": "Redundant rate in treatment",
-            "max": 1,
-            "min": 0,
-            "format": "{:,.2f}",
-            "scale": "RdYlBu-rev",
-        }
-        headers["control_redundant_rate"] = {
-            "title": "Control Redundancy",
-            "description": "Redundant rate in control",
-            "max": 1,
-            "min": 0,
-            "format": "{:,.2f}",
-            "scale": "RdYlBu-rev",
-        }
-        headers["peak_count"] = {
-            "title": "Number of Peaks",
-            "description": "Total number of peaks",
-            "min": 0,
-            "format": "{:,.0f}",
+        headers = {
+            "d": {"title": "Fragment Length", "min": 0, "format": "{:,.0f}"},
+            "treatment_redundant_rate": {
+                "title": "Treatment Redundancy",
+                "description": "Redundant rate in treatment",
+                "max": 1,
+                "min": 0,
+                "format": "{:,.2f}",
+                "scale": "RdYlBu-rev",
+            },
+            "control_redundant_rate": {
+                "title": "Control Redundancy",
+                "description": "Redundant rate in control",
+                "max": 1,
+                "min": 0,
+                "format": "{:,.2f}",
+                "scale": "RdYlBu-rev",
+            },
+            "peak_count": {
+                "title": "Number of Peaks",
+                "description": "Total number of peaks",
+                "min": 0,
+                "format": "{:,.0f}",
+            },
         }
         self.general_stats_addcols(self.macs_data, headers)
 
@@ -138,9 +138,10 @@ class MultiqcModule(BaseMultiqcModule):
             return
 
         # Specify the order of the different possible categories
-        keys = OrderedDict()
-        keys["fragments_not_filtered"] = {"color": "#437BB1", "name": "Remaining fragments"}
-        keys["fragments_filtered"] = {"color": "#B1084C", "name": "Filtered fragments"}
+        keys = {
+            "fragments_not_filtered": {"color": "#437BB1", "name": "Remaining fragments"},
+            "fragments_filtered": {"color": "#B1084C", "name": "Filtered fragments"},
+        }
 
         # Config for the plot
         pconfig = {

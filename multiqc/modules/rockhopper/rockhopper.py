@@ -4,7 +4,6 @@ https://cs.wellesley.edu/~btjaden/Rockhopper/ """
 
 import logging
 import re
-from collections import OrderedDict
 
 from multiqc import config
 from multiqc.modules.base_module import BaseMultiqcModule, ModuleNoSamplesFound
@@ -190,17 +189,18 @@ class MultiqcModule(BaseMultiqcModule):
         }
 
         # Plot bar graph of groups
-        keys = OrderedDict()
-        keys["mRNA-sense"] = {"name": "mRNA (Sense)"}
-        keys["mRNA-antisense"] = {"name": "mRNA (Antisense)"}
-        keys["rRNA-sense"] = {"name": "rRNA (Sense)"}
-        keys["rRNA-antisense"] = {"name": "rRNA (Antisense)"}
-        keys["tRNA-sense"] = {"name": "tRNA (Sense)"}
-        keys["tRNA-antisense"] = {"name": "tRNA (Antisense)"}
-        keys["ncRNA-sense"] = {"name": "ncRNA (Sense)"}
-        keys["ncRNA-antisense"] = {"name": "ncRNA (Antisense)"}
-        keys["unannotated"] = {"name": "Unannotated"}
-        keys["unaligned"] = {"name": "Unaligned"}
+        keys = {
+            "mRNA-sense": {"name": "mRNA (Sense)"},
+            "mRNA-antisense": {"name": "mRNA (Antisense)"},
+            "rRNA-sense": {"name": "rRNA (Sense)"},
+            "rRNA-antisense": {"name": "rRNA (Antisense)"},
+            "tRNA-sense": {"name": "tRNA (Sense)"},
+            "tRNA-antisense": {"name": "tRNA (Antisense)"},
+            "ncRNA-sense": {"name": "ncRNA (Sense)"},
+            "ncRNA-antisense": {"name": "ncRNA (Antisense)"},
+            "unannotated": {"name": "Unannotated"},
+            "unaligned": {"name": "Unaligned"},
+        }
 
         self.add_section(
             name="Rockhopper",

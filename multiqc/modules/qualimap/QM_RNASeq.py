@@ -3,7 +3,6 @@
 
 import logging
 import re
-from collections import OrderedDict
 
 from multiqc import config
 from multiqc.plots import bargraph, linegraph
@@ -40,10 +39,6 @@ def parse_reports(self):
         else:
             log.warning("Couldn't find an input filename in genome_results file {}/{}".format(f["root"], f["fn"]))
             return None
-
-        # Superfluous function call to confirm that it is used in this module
-        # Replace None with actual version if it is available
-        self.add_software_version(None, s_name)
 
         # Check for and 'fix' European style decimal places / thousand separators
         comma_regex = re.search(r"exonic\s*=\s*[\d\.]+ \(\d{1,3},\d+%\)", f["f"], re.MULTILINE)
@@ -82,10 +77,10 @@ def parse_reports(self):
     for f in self.find_log_files("qualimap/rnaseq/coverage", filehandles=True):
         s_name = self.get_s_name(f)
         d = dict()
-        for l in f["f"]:
-            if l.startswith("#"):
+        for line in f["f"]:
+            if line.startswith("#"):
                 continue
-            coverage, count = l.split(None, 1)
+            coverage, count = line.split(None, 1)
             coverage = int(round(float(coverage)))
             count = float(count)
             d[coverage] = count
@@ -100,12 +95,15 @@ def parse_reports(self):
         self.qualimap_rnaseq_cov_hist[s_name] = d
         self.add_data_source(f, s_name=s_name, section="rna_coverage_histogram")
 
+    # Superfluous function call to confirm that it is used in this module
+    # Replace None with actual version if it is available
+    self.add_software_version(None)
+
     # Filter to strip out ignored sample names
     self.qualimap_rnaseq_genome_results = self.ignore_samples(self.qualimap_rnaseq_genome_results)
     self.qualimap_rnaseq_cov_hist = self.ignore_samples(self.qualimap_rnaseq_cov_hist)
 
     #### Plots
-
     # Genomic Origin Bar Graph
     # NB: Ignore 'Overlapping Exon' in report - these make the numbers add up to > 100%
     if len(self.qualimap_rnaseq_genome_results) > 0:
@@ -121,10 +119,11 @@ def parse_reports(self):
             # Write data to file
             self.write_data_file(self.qualimap_rnaseq_genome_results, "qualimap_rnaseq_genome_results")
 
-            gorigin_cats = OrderedDict()
-            gorigin_cats["reads_aligned_exonic"] = {"name": "Exonic"}
-            gorigin_cats["reads_aligned_intronic"] = {"name": "Intronic"}
-            gorigin_cats["reads_aligned_intergenic"] = {"name": "Intergenic"}
+            gorigin_cats = {
+                "reads_aligned_exonic": {"name": "Exonic"},
+                "reads_aligned_intronic": {"name": "Intronic"},
+                "reads_aligned_intergenic": {"name": "Intergenic"},
+            }
             gorigin_pconfig = {
                 "id": "qualimap_genomic_origin",
                 "title": "Qualimap RNAseq: Genomic Origin",
@@ -175,7 +174,7 @@ def parse_reports(self):
         # Make a normalised percentage version of the coverage data
         self.qualimap_rnaseq_cov_hist_percent = dict()
         for s_name in self.qualimap_rnaseq_cov_hist:
-            self.qualimap_rnaseq_cov_hist_percent[s_name] = OrderedDict()
+            self.qualimap_rnaseq_cov_hist_percent[s_name] = dict()
             total = sum(self.qualimap_rnaseq_cov_hist[s_name].values())
             if total == 0:
                 for k, v in self.qualimap_rnaseq_cov_hist[s_name].items():

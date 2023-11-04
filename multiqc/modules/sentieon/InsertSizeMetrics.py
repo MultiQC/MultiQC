@@ -3,7 +3,6 @@
 
 import logging
 import os
-from collections import OrderedDict
 
 from multiqc import config
 from multiqc.plots import linegraph
@@ -59,7 +58,7 @@ def parse_reports(self):
                     while len(vals) == len(keys):
                         pair_orientation = vals[orientation_idx]
                         rowkey = "{}_{}".format(s_name, pair_orientation)
-                        self.sentieon_insertSize_data[rowkey] = OrderedDict()
+                        self.sentieon_insertSize_data[rowkey] = dict()
                         self.sentieon_insertSize_data[rowkey]["SAMPLE_NAME"] = s_name
                         for i, k in enumerate(keys):
                             try:
@@ -87,7 +86,7 @@ def parse_reports(self):
                     line = f["f"].readline().strip("\n")
                     line = f["f"].readline().strip("\n")
 
-                    self.sentieon_insertSize_histogram[s_name] = OrderedDict()
+                    self.sentieon_insertSize_histogram[s_name] = dict()
                     in_hist = True
 
         # Superfluous function call to confirm that it is used in this module
@@ -160,7 +159,7 @@ def parse_reports(self):
             # Make a normalised percentage version of the data
             data_percent = {}
             for s_name, data in self.sentieon_insertSize_histogram.items():
-                data_percent[s_name] = OrderedDict()
+                data_percent[s_name] = dict()
                 total = float(sum(data.values()))
                 for k, v in data.items():
                     data_percent[s_name][k] = (v / total) * 100

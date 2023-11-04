@@ -4,7 +4,6 @@
 import json
 import logging
 import re
-from collections import OrderedDict
 from typing import Dict, Optional, Tuple
 
 from multiqc import config
@@ -333,66 +332,67 @@ class MultiqcModule(BaseMultiqcModule):
         """Take the parsed stats from the fastp report and add it to the
         General Statistics table at the top of the report"""
 
-        headers = OrderedDict()
-        headers["pct_duplication"] = {
-            "title": "% Duplication",
-            "description": "Duplication rate before filtering",
-            "max": 100,
-            "min": 0,
-            "suffix": "%",
-            "scale": "RdYlGn-rev",
-        }
-        headers["after_filtering_q30_rate"] = {
-            "title": "% > Q30",
-            "description": "Percentage of reads > Q30 after filtering",
-            "min": 0,
-            "max": 100,
-            "modify": lambda x: x * 100.0,
-            "scale": "GnBu",
-            "suffix": "%",
-            "hidden": True,
-        }
-        headers["after_filtering_q30_bases"] = {
-            "title": "{} Q30 bases".format(config.base_count_prefix),
-            "description": "Bases > Q30 after filtering ({})".format(config.base_count_desc),
-            "min": 0,
-            "modify": lambda x: x * config.base_count_multiplier,
-            "scale": "GnBu",
-            "shared_key": "base_count",
-            "hidden": True,
-        }
-        headers["filtering_result_passed_filter_reads"] = {
-            "title": "{} Reads After Filtering".format(config.read_count_prefix),
-            "description": "Total reads after filtering ({})".format(config.read_count_desc),
-            "min": 0,
-            "scale": "Blues",
-            "modify": lambda x: x * config.read_count_multiplier,
-            "shared_key": "read_count",
-        }
-        headers["after_filtering_gc_content"] = {
-            "title": "GC content",
-            "description": "GC content after filtering",
-            "max": 100,
-            "min": 0,
-            "suffix": "%",
-            "scale": "Blues",
-            "modify": lambda x: x * 100.0,
-        }
-        headers["pct_surviving"] = {
-            "title": "% PF",
-            "description": "Percent reads passing filter",
-            "max": 100,
-            "min": 0,
-            "suffix": "%",
-            "scale": "BuGn",
-        }
-        headers["pct_adapter"] = {
-            "title": "% Adapter",
-            "description": "Percentage adapter-trimmed reads",
-            "max": 100,
-            "min": 0,
-            "suffix": "%",
-            "scale": "RdYlGn-rev",
+        headers = {
+            "pct_duplication": {
+                "title": "% Duplication",
+                "description": "Duplication rate before filtering",
+                "max": 100,
+                "min": 0,
+                "suffix": "%",
+                "scale": "RdYlGn-rev",
+            },
+            "after_filtering_q30_rate": {
+                "title": "% > Q30",
+                "description": "Percentage of reads > Q30 after filtering",
+                "min": 0,
+                "max": 100,
+                "modify": lambda x: x * 100.0,
+                "scale": "GnBu",
+                "suffix": "%",
+                "hidden": True,
+            },
+            "after_filtering_q30_bases": {
+                "title": "{} Q30 bases".format(config.base_count_prefix),
+                "description": "Bases > Q30 after filtering ({})".format(config.base_count_desc),
+                "min": 0,
+                "modify": lambda x: x * config.base_count_multiplier,
+                "scale": "GnBu",
+                "shared_key": "base_count",
+                "hidden": True,
+            },
+            "filtering_result_passed_filter_reads": {
+                "title": "{} Reads After Filtering".format(config.read_count_prefix),
+                "description": "Total reads after filtering ({})".format(config.read_count_desc),
+                "min": 0,
+                "scale": "Blues",
+                "modify": lambda x: x * config.read_count_multiplier,
+                "shared_key": "read_count",
+            },
+            "after_filtering_gc_content": {
+                "title": "GC content",
+                "description": "GC content after filtering",
+                "max": 100,
+                "min": 0,
+                "suffix": "%",
+                "scale": "Blues",
+                "modify": lambda x: x * 100.0,
+            },
+            "pct_surviving": {
+                "title": "% PF",
+                "description": "Percent reads passing filter",
+                "max": 100,
+                "min": 0,
+                "suffix": "%",
+                "scale": "BuGn",
+            },
+            "pct_adapter": {
+                "title": "% Adapter",
+                "description": "Percentage adapter-trimmed reads",
+                "max": 100,
+                "min": 0,
+                "suffix": "%",
+                "scale": "RdYlGn-rev",
+            },
         }
 
         self.general_stats_addcols(self.fastp_data, headers)
@@ -400,13 +400,14 @@ class MultiqcModule(BaseMultiqcModule):
     def fastp_filtered_reads_chart(self):
         """Function to generate the fastp filtered reads bar plot"""
         # Specify the order of the different possible categories
-        keys = OrderedDict()
-        keys["filtering_result_passed_filter_reads"] = {"name": "Passed Filter"}
-        keys["filtering_result_low_quality_reads"] = {"name": "Low Quality"}
-        keys["filtering_result_too_many_N_reads"] = {"name": "Too Many N"}
-        keys["filtering_result_low_complexity_reads"] = {"name": "Low Complexity"}
-        keys["filtering_result_too_short_reads"] = {"name": "Too Short"}
-        keys["filtering_result_too_long_reads"] = {"name": "Too Long"}
+        keys = {
+            "filtering_result_passed_filter_reads": {"name": "Passed Filter"},
+            "filtering_result_low_quality_reads": {"name": "Low Quality"},
+            "filtering_result_too_many_N_reads": {"name": "Too Many N"},
+            "filtering_result_low_complexity_reads": {"name": "Low Complexity"},
+            "filtering_result_too_short_reads": {"name": "Too Short"},
+            "filtering_result_too_long_reads": {"name": "Too Long"},
+        }
 
         # Config for the plot
         pconfig = {

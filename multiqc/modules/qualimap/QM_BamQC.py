@@ -4,7 +4,6 @@
 import logging
 import math
 import re
-from collections import OrderedDict
 
 from multiqc import config
 from multiqc.plots import linegraph
@@ -20,10 +19,6 @@ def parse_reports(self):
     self.qualimap_bamqc_genome_results = dict()
     for f in self.find_log_files("qualimap/bamqc/genome_results"):
         parse_genome_results(self, f)
-
-        # Superfluous function call to confirm that it is used in this module
-        # Replace None with actual version if it is available
-        self.add_software_version(None, f["s_name"])
 
     self.qualimap_bamqc_genome_results = self.ignore_samples(self.qualimap_bamqc_genome_results)
     if len(self.qualimap_bamqc_genome_results) > 0:
@@ -58,6 +53,10 @@ def parse_reports(self):
     # Go no further if nothing found
     if num_parsed == 0:
         return 0
+
+    # Superfluous function call to confirm that it is used in this module
+    # Replace None with actual version if it is available
+    self.add_software_version(None)
 
     try:
         covs = config.qualimap_config["general_stats_coverage"]
@@ -646,8 +645,8 @@ def general_stats_headers(self):
 
 
 def _calculate_bases_within_thresholds(bases_by_depth, total_size, depth_thresholds):
-    bases_within_threshs = OrderedDict((depth, 0) for depth in depth_thresholds)
-    rates_within_threshs = OrderedDict((depth, None) for depth in depth_thresholds)
+    bases_within_threshs = {depth: 0 for depth in depth_thresholds}
+    rates_within_threshs = {depth: None for depth in depth_thresholds}
 
     dt = sorted(depth_thresholds, reverse=True)
     c = 0

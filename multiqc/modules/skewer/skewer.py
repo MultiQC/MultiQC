@@ -3,7 +3,6 @@
 
 import logging
 import re
-from collections import OrderedDict
 
 from multiqc.modules.base_module import BaseMultiqcModule, ModuleNoSamplesFound
 from multiqc.plots import linegraph
@@ -39,14 +38,15 @@ class MultiqcModule(BaseMultiqcModule):
         if len(self.skewer_data) == 0:
             raise ModuleNoSamplesFound
 
-        headers = OrderedDict()
-        headers["pct_trimmed"] = {
-            "title": "% Trimmed",
-            "description": "% of reads trimmed",
-            "scale": "RdYlGn-rev",
-            "max": 100,
-            "min": 0,
-            "suffix": "%",
+        headers = {
+            "pct_trimmed": {
+                "title": "% Trimmed",
+                "description": "% of reads trimmed",
+                "scale": "RdYlGn-rev",
+                "max": 100,
+                "min": 0,
+                "suffix": "%",
+            }
         }
 
         self.general_stats_addcols(self.skewer_data, headers)
@@ -65,10 +65,6 @@ class MultiqcModule(BaseMultiqcModule):
             for xval in all_x_values:
                 if xval not in self.skewer_readlen_dist[s_name]:
                     self.skewer_readlen_dist[s_name][xval] = 0.0
-
-            # After adding new elements, the ordereddict needs to be re-sorted
-            items = self.skewer_readlen_dist[s_name]
-            self.skewer_readlen_dist[s_name] = OrderedDict(sorted(items.items(), key=lambda x: int(x[0])))
 
         # add the histogram to the report
         self.add_readlen_dist_plot()
@@ -109,7 +105,7 @@ class MultiqcModule(BaseMultiqcModule):
             data[k] = 0
         data["fq1"] = None
         data["fq2"] = None
-        readlen_dist = OrderedDict()
+        readlen_dist = dict()
 
         for line in fh:
             if line.startswith("skewer"):

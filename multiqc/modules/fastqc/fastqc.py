@@ -16,7 +16,7 @@ import math
 import os
 import re
 import zipfile
-from collections import Counter, OrderedDict
+from collections import Counter
 
 from multiqc import config
 from multiqc.modules.base_module import BaseMultiqcModule, ModuleNoSamplesFound
@@ -280,59 +280,60 @@ class MultiqcModule(BaseMultiqcModule):
             # Zero reads
             hide_seq_length = True
 
-        headers = OrderedDict()
-        headers["percent_duplicates"] = {
-            "title": "% Dups",
-            "description": "% Duplicate Reads",
-            "max": 100,
-            "min": 0,
-            "suffix": "%",
-            "scale": "RdYlGn-rev",
-        }
-        headers["percent_gc"] = {
-            "title": "% GC",
-            "description": "Average % GC Content",
-            "max": 100,
-            "min": 0,
-            "suffix": "%",
-            "scale": "PuRd",
-            "format": "{:,.0f}",
-        }
-        headers["avg_sequence_length"] = {
-            "title": "Average Read Length",
-            "description": "Average Read Length (bp)",
-            "min": 0,
-            "suffix": " bp",
-            "scale": "RdYlGn",
-            "format": "{:,.0f}",
-            "hidden": True,
-        }
-        headers["median_sequence_length"] = {
-            "title": "Median Read Length",
-            "description": "Median Read Length (bp)",
-            "min": 0,
-            "suffix": " bp",
-            "scale": "RdYlGn",
-            "format": "{:,.0f}",
-            "hidden": hide_seq_length,
-        }
-        headers["percent_fails"] = {
-            "title": "% Failed",
-            "description": "Percentage of modules failed in FastQC report (includes those not plotted here)",
-            "max": 100,
-            "min": 0,
-            "suffix": "%",
-            "scale": "Reds",
-            "format": "{:,.0f}",
-            "hidden": True,
-        }
-        headers["total_sequences"] = {
-            "title": "{} Seqs".format(config.read_count_prefix),
-            "description": "Total Sequences ({})".format(config.read_count_desc),
-            "min": 0,
-            "scale": "Blues",
-            "modify": lambda x: x * config.read_count_multiplier,
-            "shared_key": "read_count",
+        headers = {
+            "percent_duplicates": {
+                "title": "% Dups",
+                "description": "% Duplicate Reads",
+                "max": 100,
+                "min": 0,
+                "suffix": "%",
+                "scale": "RdYlGn-rev",
+            },
+            "percent_gc": {
+                "title": "% GC",
+                "description": "Average % GC Content",
+                "max": 100,
+                "min": 0,
+                "suffix": "%",
+                "scale": "PuRd",
+                "format": "{:,.0f}",
+            },
+            "avg_sequence_length": {
+                "title": "Average Read Length",
+                "description": "Average Read Length (bp)",
+                "min": 0,
+                "suffix": " bp",
+                "scale": "RdYlGn",
+                "format": "{:,.0f}",
+                "hidden": True,
+            },
+            "median_sequence_length": {
+                "title": "Median Read Length",
+                "description": "Median Read Length (bp)",
+                "min": 0,
+                "suffix": " bp",
+                "scale": "RdYlGn",
+                "format": "{:,.0f}",
+                "hidden": hide_seq_length,
+            },
+            "percent_fails": {
+                "title": "% Failed",
+                "description": "Percentage of modules failed in FastQC report (includes those not plotted here)",
+                "max": 100,
+                "min": 0,
+                "suffix": "%",
+                "scale": "Reds",
+                "format": "{:,.0f}",
+                "hidden": True,
+            },
+            "total_sequences": {
+                "title": "{} Seqs".format(config.read_count_prefix),
+                "description": "Total Sequences ({})".format(config.read_count_desc),
+                "min": 0,
+                "scale": "Blues",
+                "modify": lambda x: x * config.read_count_multiplier,
+                "shared_key": "read_count",
+            },
         }
         self.general_stats_addcols(data, headers)
 
@@ -495,7 +496,7 @@ class MultiqcModule(BaseMultiqcModule):
         """Create the epic HTML for the FastQC sequence content heatmap"""
 
         # Prep the data
-        data = OrderedDict()
+        data = {}
         for s_name in sorted(self.fastqc_data.keys()):
             try:
                 data[s_name] = {
@@ -822,7 +823,7 @@ class MultiqcModule(BaseMultiqcModule):
                 for d in self.fastqc_data[s_name]["sequence_duplication_levels"]:
                     thisdata[d["duplication_level"]] = d["percentage_of_total"]
                     max_dupval = max(max_dupval, d["percentage_of_total"])
-                data[s_name] = OrderedDict()
+                data[s_name] = {}
                 for k in self.dup_keys:
                     try:
                         data[s_name][k] = thisdata[k]
@@ -914,9 +915,10 @@ class MultiqcModule(BaseMultiqcModule):
             log.debug("overrepresented_sequences not found in FastQC reports")
             return None
 
-        cats = OrderedDict()
-        cats["top_overrepresented"] = {"name": "Top overrepresented sequence"}
-        cats["remaining_overrepresented"] = {"name": "Sum of remaining overrepresented sequences"}
+        cats = {
+            "top_overrepresented": {"name": "Top overrepresented sequence"},
+            "remaining_overrepresented": {"name": "Sum of remaining overrepresented sequences"},
+        }
 
         # Config for the plot
         pconfig = {
@@ -1120,7 +1122,7 @@ class MultiqcModule(BaseMultiqcModule):
         status_numbers = {"pass": 1, "warn": 0.5, "fail": 0.25}
         data = []
         s_names = []
-        status_cats = OrderedDict()
+        status_cats = {}
         for s_name in sorted(self.fastqc_data.keys()):
             s_names.append(s_name)
             for status_cat, status in self.fastqc_data[s_name]["statuses"].items():

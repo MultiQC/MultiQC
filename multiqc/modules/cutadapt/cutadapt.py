@@ -3,7 +3,6 @@
 
 import logging
 import re
-from collections import OrderedDict
 
 from packaging import version
 
@@ -253,14 +252,15 @@ class MultiqcModule(BaseMultiqcModule):
         """Take the parsed stats from the Cutadapt report and add it to the
         basic stats table at the top of the report"""
 
-        headers = {}
-        headers["percent_trimmed"] = {
-            "title": "% BP Trimmed",
-            "description": "% Total Base Pairs trimmed",
-            "max": 100,
-            "min": 0,
-            "suffix": "%",
-            "scale": "RdYlBu-rev",
+        headers = {
+            "percent_trimmed": {
+                "title": "% BP Trimmed",
+                "description": "% Total Base Pairs trimmed",
+                "max": 100,
+                "min": 0,
+                "suffix": "%",
+                "scale": "RdYlBu-rev",
+            }
         }
         self.general_stats_addcols(self.cutadapt_data, headers)
 
@@ -273,17 +273,18 @@ class MultiqcModule(BaseMultiqcModule):
         # of SE and PE data then this means quite a lot of categories.
         # Usually, only a single data type is used though - in that case
         # any categories with 0 across all samples will be ignored.
-        cats = OrderedDict()
-        cats["pairs_written"] = {"name": "Pairs passing filters"}
-        cats["r_written"] = {"name": "Reads passing filters"}
-        cats["pairs_too_short"] = {"name": "Pairs that were too short"}
-        cats["r_too_short"] = {"name": "Reads that were too short"}
-        cats["pairs_too_long"] = {"name": "Pairs that were too long"}
-        cats["r_too_long"] = {"name": "Reads that were too long"}
-        cats["pairs_too_many_N"] = {"name": "Pairs with too many N"}
-        cats["r_too_many_N"] = {"name": "Reads with too many N"}
-        cats["pairs_filtered_unexplained"] = {"name": "Filtered pairs (uncategorised)"}
-        cats["r_filtered_unexplained"] = {"name": "Filtered reads (uncategorised)"}
+        cats = {
+            "pairs_written": {"name": "Pairs passing filters"},
+            "r_written": {"name": "Reads passing filters"},
+            "pairs_too_short": {"name": "Pairs that were too short"},
+            "r_too_short": {"name": "Reads that were too short"},
+            "pairs_too_long": {"name": "Pairs that were too long"},
+            "r_too_long": {"name": "Reads that were too long"},
+            "pairs_too_many_N": {"name": "Pairs with too many N"},
+            "r_too_many_N": {"name": "Reads with too many N"},
+            "pairs_filtered_unexplained": {"name": "Filtered pairs (uncategorised)"},
+            "r_filtered_unexplained": {"name": "Filtered reads (uncategorised)"},
+        }
 
         self.add_section(
             name="Filtered Reads",

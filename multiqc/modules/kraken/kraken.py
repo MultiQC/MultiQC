@@ -3,7 +3,6 @@
 
 import logging
 import re
-from collections import OrderedDict
 
 from multiqc import config
 from multiqc.modules.base_module import BaseMultiqcModule, ModuleNoSamplesFound
@@ -31,17 +30,18 @@ class MultiqcModule(BaseMultiqcModule):
             info=info,
             doi=doi,
         )
-        self.t_ranks = OrderedDict()
-        self.t_ranks["S"] = "Species"
-        self.t_ranks["G"] = "Genus"
-        self.t_ranks["F"] = "Family"
-        self.t_ranks["O"] = "Order"
-        self.t_ranks["C"] = "Class"
-        self.t_ranks["P"] = "Phylum"
-        self.t_ranks["K"] = "Kingdom"
-        self.t_ranks["D"] = "Domain"
-        self.t_ranks["R"] = "Root"
-        self.t_ranks["U"] = "Unclassified"
+        self.t_ranks = {
+            "S": "Species",
+            "G": "Genus",
+            "F": "Family",
+            "O": "Order",
+            "C": "Class",
+            "P": "Phylum",
+            "K": "Kingdom",
+            "D": "Domain",
+            "R": "Root",
+            "U": "Unclassified",
+        }
 
         self.top_n = getattr(config, "kraken", {}).get("top_n", 5)
 
@@ -49,18 +49,14 @@ class MultiqcModule(BaseMultiqcModule):
         self.kraken_raw_data = dict()
         new_report_present = False
         for f in self.find_log_files(self.anchor, filehandles=True):
-            log_version = self.get_log_version(f)
+            log_is_new = self.log_is_new(f)
             f["f"].seek(0)
-            if log_version == "old":
+            if not log_is_new:
                 self.parse_logs(f)
             else:
                 new_report_present = True
                 self.parse_logs_minimizer(f)
             self.add_data_source(f)
-
-            # Superfluous function call to confirm that it is used in this module
-            # Replace None with actual version if it is available
-            self.add_software_version(None, f["s_name"])
 
         self.kraken_raw_data = self.ignore_samples(self.kraken_raw_data)
 
@@ -68,6 +64,10 @@ class MultiqcModule(BaseMultiqcModule):
             raise ModuleNoSamplesFound
 
         log.info("Found {} reports".format(len(self.kraken_raw_data)))
+
+        # Superfluous function call to confirm that it is used in this module
+        # Replace None with actual version if it is available
+        self.add_software_version(None)
 
         self.write_data_file(self.kraken_raw_data, f"multiqc_{self.anchor}")
 
@@ -83,18 +83,20 @@ class MultiqcModule(BaseMultiqcModule):
         if new_report_present:
             self.top_taxa_duplication_heatmap()
 
-    def get_log_version(self, f):
+    @staticmethod
+    def log_is_new(f):
         """Check which version of Kraken report file is used
 
         If 6 fields are used, it's the 'old' log (without distinct minimizer)
         if 8 fields, the new log experimental log (with distinct minimizer)
         """
 
-        for l in f["f"]:
-            if len(l.split()) > 6:
-                return "new"
+        for line in f["f"]:
+            if len(line.split()) > 6:
+                return True
             else:
-                return "old"
+                return False
+        return False
 
     def parse_logs(self, f):
         """
@@ -126,8 +128,8 @@ class MultiqcModule(BaseMultiqcModule):
         # Search regexes for stats
         k2_regex = re.compile(r"^\s{0,2}(\d{1,3}\.\d{1,2})\t(\d+)\t(\d+)\t([\dUDKRPCOFGS-]{1,3})\t(\d+)(\s+)(.+)")
         data = []
-        for l in f["f"]:
-            match = k2_regex.search(l)
+        for line in f["f"]:
+            match = k2_regex.search(line)
             if match:
                 row = {
                     "percent": float(match.group(1)),
@@ -190,8 +192,8 @@ class MultiqcModule(BaseMultiqcModule):
             r"^\s{0,2}(\d{1,3}\.\d{1,2})\t(\d+)\t(\d+)\t(\d+)\t(\d+)\t([URDKPCOFGS-]\d{0,2})\t(\d+)(\s+)(.+)"
         )
         data = []
-        for l in f["f"]:
-            match = k2_regex.search(l)
+        for line in f["f"]:
+            match = k2_regex.search(line)
             if match:
                 row = {
                     "percent": float(match.group(1)),
@@ -207,7 +209,7 @@ class MultiqcModule(BaseMultiqcModule):
                 }
                 data.append(row)
             else:
-                log.debug(f"{f['s_name']}: Could not parse line: {l}")
+                log.debug(f"{f['s_name']}: Could not parse line: {line}")
 
         self.kraken_raw_data[f["s_name"]] = data
 
@@ -278,7 +280,7 @@ class MultiqcModule(BaseMultiqcModule):
                 pass
 
         # Column headers
-        headers = OrderedDict()
+        headers = dict()
 
         top_one_hkey = None
 
@@ -341,7 +343,7 @@ class MultiqcModule(BaseMultiqcModule):
         found_rank_codes = set()
 
         for rank_code in self.t_ranks:
-            rank_cats = OrderedDict()
+            rank_cats = dict()
             rank_data = dict()
 
             # Loop through the summed tax percentages to get the top-N across all samples

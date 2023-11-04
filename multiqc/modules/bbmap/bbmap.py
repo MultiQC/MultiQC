@@ -1,5 +1,4 @@
 import logging
-from collections import OrderedDict
 
 from multiqc.modules.base_module import BaseMultiqcModule, ModuleNoSamplesFound
 from multiqc.plots import table
@@ -39,10 +38,6 @@ class MultiqcModule(BaseMultiqcModule):
                     self.add_data_source(f)
                     data_found = True
 
-                    # Superfluous function call to confirm that it is used in this module
-                    # Replace None with actual version if it is available
-                    self.add_software_version(None, f["s_name"])
-
         if not data_found:
             raise ModuleNoSamplesFound
         else:
@@ -51,6 +46,10 @@ class MultiqcModule(BaseMultiqcModule):
 
         # Write data to file
         self.write_data_file(self.mod_data, "bbmap")
+
+        # Superfluous function call to confirm that it is used in this module
+        # Replace None with actual version if it is available
+        self.add_software_version(None)
 
         for file_type in section_order:
             if len(self.mod_data[file_type]) > 0:
@@ -111,7 +110,7 @@ class MultiqcModule(BaseMultiqcModule):
             return False
 
         cols = log_descr["cols"]
-        if isinstance(cols, OrderedDict):
+        if isinstance(cols, dict):
             cols = list(cols.keys())
 
         kv = {}
@@ -152,7 +151,7 @@ class MultiqcModule(BaseMultiqcModule):
                             log.error("Table headers do not match those 'on file'. %s != %s", repr(line), repr(cols))
                             return False
             else:
-                if isinstance(log_descr["cols"], OrderedDict):
+                if isinstance(log_descr["cols"], dict):
                     line = [value_type(value) for value_type, value in zip(log_descr["cols"].values(), line)]
                 else:
                     line = list(map(int, line))

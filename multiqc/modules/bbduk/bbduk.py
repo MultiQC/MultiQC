@@ -2,7 +2,6 @@
 
 import logging
 import re
-from collections import OrderedDict
 
 from multiqc.modules.base_module import BaseMultiqcModule, ModuleNoSamplesFound
 from multiqc.plots import bargraph
@@ -95,44 +94,45 @@ class MultiqcModule(BaseMultiqcModule):
 
     def bbduk_general_stats(self):
         """BBDuk read counts for general stats"""
-        headers = OrderedDict()
+        headers = {
+            "Total Removed bases percent": {
+                "title": "Bases Removed (%)",
+                "description": "Percentage of bases removed after filtering",
+                "scale": "YlOrBr",
+                "max": 100,
+            },
+            "Total Removed bases": {
+                "title": "Bases Removed ({})".format(config.base_count_prefix),
+                "description": "Total Bases removed ({})".format(config.base_count_desc),
+                "scale": "Reds",
+                "shared_key": "base_count",
+                "modify": lambda x: x * config.base_count_multiplier,
+                "hidden": True,
+            },
+            "Total Removed reads percent": {
+                "title": "Reads Removed (%)",
+                "description": "Percentage of reads removed after filtering",
+                "scale": "OrRd",
+                "max": 100,
+            },
+            "Total Removed reads": {
+                "title": "Reads Removed ({})".format(config.read_count_prefix),
+                "description": "Total Reads removed ({})".format(config.read_count_desc),
+                "scale": "Reds",
+                "shared_key": "read_count",
+                "modify": lambda x: x * config.read_count_multiplier,
+                "hidden": True,
+            },
+            "Input reads": {
+                "title": "Total Input Reads ({})".format(config.read_count_prefix),
+                "description": "Total number of input reads to BBDuk ({})".format(config.read_count_desc),
+                "scale": "Greens",
+                "shared_key": "read_count",
+                "modify": lambda x: x * config.read_count_multiplier,
+                "hidden": True,
+            },
+        }
 
-        headers["Total Removed bases percent"] = {
-            "title": "Bases Removed (%)",
-            "description": "Percentage of bases removed after filtering",
-            "scale": "YlOrBr",
-            "max": 100,
-        }
-        headers["Total Removed bases"] = {
-            "title": "Bases Removed ({})".format(config.base_count_prefix),
-            "description": "Total Bases removed ({})".format(config.base_count_desc),
-            "scale": "Reds",
-            "shared_key": "base_count",
-            "modify": lambda x: x * config.base_count_multiplier,
-            "hidden": True,
-        }
-        headers["Total Removed reads percent"] = {
-            "title": "Reads Removed (%)",
-            "description": "Percentage of reads removed after filtering",
-            "scale": "OrRd",
-            "max": 100,
-        }
-        headers["Total Removed reads"] = {
-            "title": "Reads Removed ({})".format(config.read_count_prefix),
-            "description": "Total Reads removed ({})".format(config.read_count_desc),
-            "scale": "Reds",
-            "shared_key": "read_count",
-            "modify": lambda x: x * config.read_count_multiplier,
-            "hidden": True,
-        }
-        headers["Input reads"] = {
-            "title": "Total Input Reads ({})".format(config.read_count_prefix),
-            "description": "Total number of input reads to BBDuk ({})".format(config.read_count_desc),
-            "scale": "Greens",
-            "shared_key": "read_count",
-            "modify": lambda x: x * config.read_count_multiplier,
-            "hidden": True,
-        }
         self.general_stats_addcols(self.bbduk_data, headers)
 
     def bbduk_bargraph_plot(self):

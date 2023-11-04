@@ -4,7 +4,6 @@
 import logging
 import os
 import re
-from collections import OrderedDict
 
 from multiqc import config
 from multiqc.modules.base_module import BaseMultiqcModule, ModuleNoSamplesFound
@@ -31,10 +30,6 @@ class MultiqcModule(BaseMultiqcModule):
             self.parse_sortmerna(f)
             self.add_data_source(f)
 
-            # Superfluous function call to confirm that it is used in this module
-            # Replace None with actual version if it is available
-            self.add_software_version(None, f["s_name"])
-
         # Filter to strip out ignored sample names
         self.sortmerna = self.ignore_samples(self.sortmerna)
 
@@ -42,20 +37,26 @@ class MultiqcModule(BaseMultiqcModule):
             raise ModuleNoSamplesFound
 
         log.info("Found {} logs".format(len(self.sortmerna)))
+
         self.write_data_file(self.sortmerna, "multiqc_sortmerna")
+
+        # Superfluous function call to confirm that it is used in this module
+        # Replace None with actual version if it is available
+        self.add_software_version(None)
 
         # Get custom table header, default to 'rRNA'
         tab_header = getattr(config, "sortmerna", {}).get("seqname", "% rRNA")
 
         # Add rRNA rate to the general stats table
-        headers = OrderedDict()
-        headers["rRNA_pct"] = {
-            "title": tab_header,
-            "description": "Percentage of reads matched to a SortMeRNA database",
-            "max": 100,
-            "min": 0,
-            "suffix": "%",
-            "scale": "OrRd",
+        headers = {
+            "rRNA_pct": {
+                "title": tab_header,
+                "description": "Percentage of reads matched to a SortMeRNA database",
+                "max": 100,
+                "min": 0,
+                "suffix": "%",
+                "scale": "OrRd",
+            }
         }
         self.general_stats_addcols(self.sortmerna, headers)
 

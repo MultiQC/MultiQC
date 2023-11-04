@@ -2,7 +2,6 @@
 
 
 import logging
-from collections import OrderedDict
 
 from multiqc.modules.base_module import BaseMultiqcModule, ModuleNoSamplesFound
 
@@ -34,8 +33,8 @@ class MultiqcModule(BaseMultiqcModule, AnalyzeSaturationMutagenesisMixin, BaseRe
         )
 
         # Set up class objects to hold parsed data
-        self.general_stats_headers = OrderedDict()
-        self.general_stats_data = dict()
+        self.general_stats_headers = {}
+        self.general_stats_data = {}
 
         # Call submodule functions
         n_reports_found = 0
@@ -77,17 +76,17 @@ class MultiqcModule(BaseMultiqcModule, AnalyzeSaturationMutagenesisMixin, BaseRe
         """
 
         report = dict()
-
-        lines = (l for l in lines)
+        lines = (line for line in lines)
         for line in lines:
             line = line.rstrip()
             if line in table_names.keys():
                 report[table_names[line]] = self.parse_gatk_report_table(lines)
         return report
 
-    def parse_gatk_report_table(self, lines):
+    @staticmethod
+    def parse_gatk_report_table(lines):
         headers = next(lines).rstrip().split()
-        table = OrderedDict([(h, []) for h in headers])
+        table = {h: [] for h in headers}
         for line in lines:
             line = line.rstrip()
 

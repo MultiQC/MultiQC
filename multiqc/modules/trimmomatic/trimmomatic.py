@@ -3,7 +3,6 @@
 
 import logging
 import re
-from collections import OrderedDict
 
 from multiqc import config
 from multiqc.modules.base_module import BaseMultiqcModule, ModuleNoSamplesFound
@@ -30,28 +29,29 @@ class MultiqcModule(BaseMultiqcModule):
             self.parse_trimmomatic(f)
             self.add_data_source(f)
 
-            # Superfluous function call to confirm that it is used in this module
-            # Replace None with actual version if it is available
-            self.add_software_version(None, f["s_name"])
-
         # Filter to strip out ignored sample names
         self.trimmomatic = self.ignore_samples(self.trimmomatic)
 
         if len(self.trimmomatic) == 0:
             raise ModuleNoSamplesFound
-
         log.info("Found {} logs".format(len(self.trimmomatic)))
+
         self.write_data_file(self.trimmomatic, "multiqc_trimmomatic")
 
+        # Superfluous function call to confirm that it is used in this module
+        # Replace None with actual version if it is available
+        self.add_software_version(None)
+
         # Add drop rate to the general stats table
-        headers = OrderedDict()
-        headers["dropped_pct"] = {
-            "title": "% Dropped",
-            "description": "% Dropped reads",
-            "max": 100,
-            "min": 0,
-            "suffix": "%",
-            "scale": "OrRd",
+        headers = {
+            "dropped_pct": {
+                "title": "% Dropped",
+                "description": "% Dropped reads",
+                "max": 100,
+                "min": 0,
+                "suffix": "%",
+                "scale": "OrRd",
+            }
         }
         self.general_stats_addcols(self.trimmomatic, headers)
 
@@ -62,11 +62,11 @@ class MultiqcModule(BaseMultiqcModule):
         s_name = None
         if getattr(config, "trimmomatic", {}).get("s_name_filenames", False):
             s_name = f["s_name"]
-        for l in f["f"]:
+        for line in f["f"]:
             # Get the sample name
-            if s_name is None and "Trimmomatic" in l and "Started with arguments:" in l:
+            if s_name is None and "Trimmomatic" in line and "Started with arguments:" in line:
                 # Match everything up until the first .fastq or .fq
-                match = re.search("Trimmomatic[SP]E: Started with arguments:.+?(?=\.fastq|\.fq)", l)
+                match = re.search("Trimmomatic[SP]E: Started with arguments:.+?(?=\.fastq|\.fq)", line)
                 if match:
                     # backtrack from the end to the first space
                     s_name = match.group().split()[-1]
@@ -75,8 +75,8 @@ class MultiqcModule(BaseMultiqcModule):
                         log.debug("Duplicate sample name found! Overwriting: {}".format(s_name))
                 else:
                     # Try looking on the next line instead, sometimes have a line break (see issue #212)
-                    l = next(f["f"])
-                    match = re.search(".+?(?=\.fastq|\.fq)", l)
+                    line = next(f["f"])
+                    match = re.search(".+?(?=\.fastq|\.fq)", line)
                     if match:
                         # backtrack from the end to the first space
                         s_name = match.group().split()[-1]
@@ -85,9 +85,9 @@ class MultiqcModule(BaseMultiqcModule):
                             log.debug("Duplicate sample name found! Overwriting: {}".format(s_name))
 
             # Get single end stats
-            if "Input Reads" in l and s_name is not None:
+            if "Input Reads" in line and s_name is not None:
                 match = re.search(
-                    "Input Reads: (\d+) Surviving: (\d+) \(([\d\.,]+)%\) Dropped: (\d+) \(([\d\.,]+)%\)", l
+                    "Input Reads: (\d+) Surviving: (\d+) \(([\d\.,]+)%\) Dropped: (\d+) \(([\d\.,]+)%\)", line
                 )
                 if match:
                     self.trimmomatic[s_name] = dict()
@@ -99,10 +99,10 @@ class MultiqcModule(BaseMultiqcModule):
                     s_name = None
 
             # Get paired end stats
-            if "Input Read Pairs" in l and s_name is not None:
+            if "Input Read Pairs" in line and s_name is not None:
                 match = re.search(
                     "Input Read Pairs: (\d+) Both Surviving: (\d+) \(([\d\.,]+)%\) Forward Only Surviving: (\d+) \(([\d\.,]+)%\) Reverse Only Surviving: (\d+) \(([\d\.,]+)%\) Dropped: (\d+) \(([\d\.,]+)%\)",
-                    l,
+                    line,
                 )
                 if match:
                     self.trimmomatic[s_name] = dict()
@@ -121,12 +121,13 @@ class MultiqcModule(BaseMultiqcModule):
         """Make the HighCharts HTML to plot the trimmomatic rates"""
 
         # Specify the order of the different possible categories
-        keys = OrderedDict()
-        keys["surviving"] = {"color": "#437bb1", "name": "Surviving Reads"}
-        keys["both_surviving"] = {"color": "#f7a35c", "name": "Both Surviving"}
-        keys["forward_only_surviving"] = {"color": "#e63491", "name": "Forward Only Surviving"}
-        keys["reverse_only_surviving"] = {"color": "#b1084c", "name": "Reverse Only Surviving"}
-        keys["dropped"] = {"color": "#7f0000", "name": "Dropped"}
+        keys = {
+            "surviving": {"color": "#437bb1", "name": "Surviving Reads"},
+            "both_surviving": {"color": "#f7a35c", "name": "Both Surviving"},
+            "forward_only_surviving": {"color": "#e63491", "name": "Forward Only Surviving"},
+            "reverse_only_surviving": {"color": "#b1084c", "name": "Reverse Only Surviving"},
+            "dropped": {"color": "#7f0000", "name": "Dropped"},
+        }
 
         # Config for the plot
         pconfig = {

@@ -4,7 +4,7 @@
 
 import logging
 import random
-from collections import OrderedDict, defaultdict
+from collections import defaultdict
 
 from multiqc.plots import beeswarm, table_object
 from multiqc.utils import config, mqc_colour, report, util_functions
@@ -26,7 +26,7 @@ def plot(data, headers=None, pconfig=None):
         pconfig = {}
 
     # Make a datatable object
-    dt = table_object.datatable(data, headers, pconfig)
+    dt = table_object.DataTable(data, headers, pconfig)
 
     # Collect unique sample names
     s_names = set()
@@ -48,18 +48,18 @@ def plot(data, headers=None, pconfig=None):
         return make_table(dt)
 
 
-def make_table(dt):
+def make_table(dt: table_object.DataTable):
     """
     Build the HTML needed for a MultiQC table.
-    :param data: MultiQC datatable object
+    :param dt: MultiQC datatable object
     """
 
     table_id = dt.pconfig.get("id", "table_{}".format("".join(random.sample(letters, 4))))
     table_id = report.save_htmlid(table_id)
-    t_headers = OrderedDict()
-    t_modal_headers = OrderedDict()
-    t_rows = OrderedDict()
-    t_rows_empty = OrderedDict()
+    t_headers = dict()
+    t_modal_headers = dict()
+    t_rows = dict()
+    t_rows_empty = dict()
     dt.raw_vals = defaultdict(lambda: dict())
     empty_cells = dict()
     hidden_cols = 1

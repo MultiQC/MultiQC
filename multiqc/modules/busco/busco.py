@@ -3,7 +3,6 @@
 
 import logging
 import re
-from collections import OrderedDict
 
 from multiqc.modules.base_module import BaseMultiqcModule, ModuleNoSamplesFound
 from multiqc.plots import bargraph
@@ -92,7 +91,7 @@ class MultiqcModule(BaseMultiqcModule):
 
         plot_keys = ["complete_single_copy", "fragmented", "complete_duplicated", "missing"]
         plot_cols = ["#31a354", "#fee8c8", "#fdbb84", "#e34a33"]
-        keys = OrderedDict()
+        keys = dict()
         for k, col in zip(plot_keys, plot_cols):
             keys[k] = {"name": self.busco_keys[k], "color": col}
 

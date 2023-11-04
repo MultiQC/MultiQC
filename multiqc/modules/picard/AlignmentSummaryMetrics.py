@@ -3,7 +3,6 @@
 import logging
 import os
 import re
-from collections import OrderedDict
 
 from multiqc.plots import bargraph
 
@@ -51,10 +50,6 @@ def parse_reports(self):
                         s_name = None
                         keys = None
 
-        # Superfluous function call to confirm that it is used in this module
-        # Replace None with actual version if it is available
-        self.add_software_version(None, s_name)
-
         # Remove empty dictionaries
         for s_name in list(parsed_data.keys()):
             if len(parsed_data[s_name]) == 0:
@@ -70,87 +65,95 @@ def parse_reports(self):
     # Filter to strip out ignored sample names
     self.picard_alignment_metrics = self.ignore_samples(self.picard_alignment_metrics)
 
-    if len(self.picard_alignment_metrics) > 0:
-        # Write parsed data to a file
-        self.write_data_file(self.picard_alignment_metrics, "multiqc_picard_AlignmentSummaryMetrics")
+    if len(self.picard_alignment_metrics) == 0:
+        return 0
 
-        # Add to general stats table
-        self.general_stats_headers["PCT_PF_READS_ALIGNED"] = {
-            "title": "% Aligned",
-            "description": "Percent of aligned reads",
-            "max": 100,
-            "min": 0,
-            "suffix": "%",
-            "format": "{:,.0f}",
-            "scale": "RdYlGn",
-            "modify": lambda x: self.multiply_hundred(x),
-        }
-        for s_name in self.picard_alignment_metrics:
-            if s_name not in self.general_stats_data:
-                self.general_stats_data[s_name] = dict()
-            self.general_stats_data[s_name].update(self.picard_alignment_metrics[s_name])
+    # Superfluous function call to confirm that it is used in this module
+    # Replace None with actual version if it is available
+    self.add_software_version(None)
 
-        # Make the bar plot of alignment read count + # aligned bases
-        pdata = dict()
-        for s_name in self.picard_alignment_metrics.keys():
-            pdata[s_name] = dict()
-            # Picard reports both reads for PE data. Divide it by two as most people will expect # clusters
-            if self.picard_alignment_metrics[s_name]["CATEGORY"] == "PAIR":
-                pdata[s_name]["total_reads"] = self.picard_alignment_metrics[s_name]["TOTAL_READS"] / 2
-                pdata[s_name]["aligned_reads"] = self.picard_alignment_metrics[s_name]["PF_READS_ALIGNED"] / 2
-            else:
-                pdata[s_name]["total_reads"] = self.picard_alignment_metrics[s_name]["TOTAL_READS"]
-                pdata[s_name]["aligned_reads"] = self.picard_alignment_metrics[s_name]["PF_READS_ALIGNED"]
-            pdata[s_name]["unaligned_reads"] = pdata[s_name]["total_reads"] - pdata[s_name]["aligned_reads"]
+    # Write parsed data to a file
+    self.write_data_file(self.picard_alignment_metrics, "multiqc_picard_AlignmentSummaryMetrics")
 
-        keys = [OrderedDict(), OrderedDict()]
-        keys[0]["aligned_reads"] = {"name": "Aligned Reads"}
-        keys[0]["unaligned_reads"] = {"name": "Unaligned Reads"}
-        keys[1]["PF_ALIGNED_BASES"] = {"name": "Aligned Bases"}
+    # Add to general stats table
+    self.general_stats_headers["PCT_PF_READS_ALIGNED"] = {
+        "title": "% Aligned",
+        "description": "Percent of aligned reads",
+        "max": 100,
+        "min": 0,
+        "suffix": "%",
+        "format": "{:,.0f}",
+        "scale": "RdYlGn",
+        "modify": lambda x: self.multiply_hundred(x),
+    }
+    for s_name in self.picard_alignment_metrics:
+        if s_name not in self.general_stats_data:
+            self.general_stats_data[s_name] = dict()
+        self.general_stats_data[s_name].update(self.picard_alignment_metrics[s_name])
 
-        # Config for the plot
-        pconfig = {
-            "id": "picard_alignment_summary",
-            "title": "Picard: Alignment Summary",
-            "ylab": "# Reads",
-            "data_labels": [
-                {
-                    "name": "Aligned Reads",
-                    "ylab": "# Reads",
-                    "cpswitch_counts_label": "Number of Reads",
-                },
-                {
-                    "name": "Aligned Bases",
-                    "ylab": "# Bases",
-                    "cpswitch_counts_label": "Number of Bases",
-                },
-            ],
-        }
+    # Make the bar plot of alignment read count + # aligned bases
+    pdata = dict()
+    for s_name in self.picard_alignment_metrics.keys():
+        pdata[s_name] = dict()
+        # Picard reports both reads for PE data. Divide it by two as most people will expect # clusters
+        if self.picard_alignment_metrics[s_name]["CATEGORY"] == "PAIR":
+            pdata[s_name]["total_reads"] = self.picard_alignment_metrics[s_name]["TOTAL_READS"] / 2
+            pdata[s_name]["aligned_reads"] = self.picard_alignment_metrics[s_name]["PF_READS_ALIGNED"] / 2
+        else:
+            pdata[s_name]["total_reads"] = self.picard_alignment_metrics[s_name]["TOTAL_READS"]
+            pdata[s_name]["aligned_reads"] = self.picard_alignment_metrics[s_name]["PF_READS_ALIGNED"]
+        pdata[s_name]["unaligned_reads"] = pdata[s_name]["total_reads"] - pdata[s_name]["aligned_reads"]
 
-        # The different data sets we want to plot
-        self.add_section(
-            name="Alignment Summary",
-            anchor="picard-alignmentsummary",
-            description="Please note that Picard's read counts are divided by two for paired-end data. Total bases (including unaligned) is not provided.",
-            plot=bargraph.plot([pdata, self.picard_alignment_metrics], keys, pconfig),
-        )
+    keys = [
+        {
+            "aligned_reads": {"name": "Aligned Reads"},
+            "unaligned_reads": {"name": "Unaligned Reads"},
+        },
+        {"PF_ALIGNED_BASES": {"name": "Aligned Bases"}},
+    ]
+    # Config for the plot
+    pconfig = {
+        "id": "picard_alignment_summary",
+        "title": "Picard: Alignment Summary",
+        "ylab": "# Reads",
+        "data_labels": [
+            {
+                "name": "Aligned Reads",
+                "ylab": "# Reads",
+                "cpswitch_counts_label": "Number of Reads",
+            },
+            {
+                "name": "Aligned Bases",
+                "ylab": "# Bases",
+                "cpswitch_counts_label": "Number of Bases",
+            },
+        ],
+    }
 
-        # Make a bar plot of mean read length
-        keys = {"MEAN_READ_LENGTH": {"name": "Mean Read Length"}}
-        pconfig = {
-            "id": "picard_alignment_readlength_plot",
-            "title": "Picard: Mean Read Length",
-            "ylab": "Base pairs",
-            "cpswitch": False,
-        }
+    # The different data sets we want to plot
+    self.add_section(
+        name="Alignment Summary",
+        anchor="picard-alignmentsummary",
+        description="Please note that Picard's read counts are divided by two for paired-end data. Total bases (including unaligned) is not provided.",
+        plot=bargraph.plot([pdata, self.picard_alignment_metrics], keys, pconfig),
+    )
 
-        # The different data sets we want to plot
-        self.add_section(
-            name="Mean read length",
-            anchor="picard_alignment_readlength",
-            description="The mean read length of the set of reads examined.",
-            plot=bargraph.plot(self.picard_alignment_metrics, keys, pconfig),
-        )
+    # Make a bar plot of mean read length
+    keys = {"MEAN_READ_LENGTH": {"name": "Mean Read Length"}}
+    pconfig = {
+        "id": "picard_alignment_readlength_plot",
+        "title": "Picard: Mean Read Length",
+        "ylab": "Base pairs",
+        "cpswitch": False,
+    }
+
+    # The different data sets we want to plot
+    self.add_section(
+        name="Mean read length",
+        anchor="picard_alignment_readlength",
+        description="The mean read length of the set of reads examined.",
+        plot=bargraph.plot(self.picard_alignment_metrics, keys, pconfig),
+    )
 
     # Return the number of detected samples to the parent module
     return len(self.picard_alignment_metrics)

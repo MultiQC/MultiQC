@@ -1,7 +1,6 @@
 """ MultiQC module to parse output from Snippy """
 
 import logging
-from collections import OrderedDict
 
 from multiqc.modules.base_module import BaseMultiqcModule, ModuleNoSamplesFound
 from multiqc.plots import bargraph
@@ -222,42 +221,43 @@ class MultiqcModule(BaseMultiqcModule):
         Prepare the headers for the snippy core stats table.
         """
         # General stats table headers
-        headers = OrderedDict()
-        headers["Percent_Het"] = {
-            "title": "% Het",
-            "description": "Percent of aligned sites that are heterozygous",
-            "max": 100,
-            "min": 0,
-            "scale": "RdYlGn-rev",
-            "suffix": "%",
-        }
-        headers["HET"] = {
-            "title": "# Hets",
-            "description": "Number of heterozygous sites",
-            "scale": "RdYlGn-rev",
-            "format": "{:,.0f}",
-            "hidden": True,
-        }
-        headers["VARIANT"] = {
-            "title": "# Variants",
-            "description": "Number of variants",
-            "scale": "Blues",
-            "format": "{:,.0f}",
-            "hidden": True,
-        }
-        headers["Percent_Aligned"] = {
-            "title": "% Aligned",
-            "description": "Percent of bases aligned to the reference",
-            "max": 100,
-            "min": 0,
-            "scale": "RdYlGn",
-            "suffix": "%",
-        }
-        headers["ALIGNED"] = {
-            "title": "# Aligned",
-            "description": "Number of aligned nucleotides",
-            "scale": "RdYlGn",
-            "format": "{:,.0f}",
-            "hidden": True,
+        headers = {
+            "Percent_Het": {
+                "title": "% Het",
+                "description": "Percent of aligned sites that are heterozygous",
+                "max": 100,
+                "min": 0,
+                "scale": "RdYlGn-rev",
+                "suffix": "%",
+            },
+            "HET": {
+                "title": "# Hets",
+                "description": "Number of heterozygous sites",
+                "scale": "RdYlGn-rev",
+                "format": "{:,.0f}",
+                "hidden": True,
+            },
+            "VARIANT": {
+                "title": "# Variants",
+                "description": "Number of variants",
+                "scale": "Blues",
+                "format": "{:,.0f}",
+                "hidden": True,
+            },
+            "Percent_Aligned": {
+                "title": "% Aligned",
+                "description": "Percent of bases aligned to the reference",
+                "max": 100,
+                "min": 0,
+                "scale": "RdYlGn",
+                "suffix": "%",
+            },
+            "ALIGNED": {
+                "title": "# Aligned",
+                "description": "Number of aligned nucleotides",
+                "scale": "RdYlGn",
+                "format": "{:,.0f}",
+                "hidden": True,
+            },
         }
         return headers

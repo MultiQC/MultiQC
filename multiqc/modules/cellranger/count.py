@@ -3,7 +3,6 @@
 import json
 import logging
 import re
-from collections import OrderedDict
 
 from multiqc import config
 from multiqc.modules.cellranger.utils import set_hidden_cols, update_dict, parse_bcknee_data, transform_data
@@ -24,10 +23,10 @@ class CellRangerCountMixin:
         self.cellrangercount_warnings = dict()
         self.cellrangercount_plots_conf = {"bc": dict(), "genes": dict()}
         self.cellrangercount_plots_data = {"bc": dict(), "genes": dict()}
-        self.count_general_data_headers = OrderedDict()
-        self.count_data_headers = OrderedDict()
-        self.antibody_data_headers = OrderedDict()
-        self.count_warnings_headers = OrderedDict()
+        self.count_general_data_headers = dict()
+        self.count_data_headers = dict()
+        self.antibody_data_headers = dict()
+        self.count_warnings_headers = dict()
 
         for f in self.find_log_files("cellranger/count_html", filehandles=True):
             self.parse_count_report(f)

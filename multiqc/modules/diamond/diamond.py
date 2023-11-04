@@ -2,7 +2,6 @@
 
 import logging
 import re
-from collections import OrderedDict
 
 from multiqc.modules.base_module import BaseMultiqcModule, ModuleNoSamplesFound
 
@@ -66,11 +65,12 @@ class MultiqcModule(BaseMultiqcModule):
 
     def diamond_general_stats(self):
         """Diamond General Stats Table"""
-        headers = OrderedDict()
-        headers["queries_aligned"] = {
-            "title": "Queries aligned",
-            "description": "number of queries aligned",
-            "scale": "YlGn",
-            "format": "{:,.0f}",
+        headers = {
+            "queries_aligned": {
+                "title": "Queries aligned",
+                "description": "number of queries aligned",
+                "scale": "YlGn",
+                "format": "{:,.0f}",
+            }
         }
         self.general_stats_addcols(self.diamond_data, headers)

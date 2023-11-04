@@ -2,7 +2,6 @@
 
 
 import logging
-from collections import OrderedDict
 
 import yaml
 
@@ -129,107 +128,108 @@ class MultiqcModule(BaseMultiqcModule):
         """
         Detailed odgi stats in this extra table.
         """
-        headers = OrderedDict()
-        headers["length"] = {
-            "title": "Length",
-            "description": "Graph length in nucleotides.",
-            "scale": "BuPu",
-            "format": "{:,.0f}",
-        }
-        headers["nodes"] = {
-            "title": "Nodes",
-            "description": "Number of nodes in the graph.",
-            "scale": "OrRd",
-            "format": "{:,.0f}",
-        }
-        headers["edges"] = {
-            "title": "Edges",
-            "description": "Number of edges in the graph.",
-            "scale": "PuBu",
-            "format": "{:,.0f}",
-        }
-        headers["paths"] = {
-            "title": "Paths",
-            "description": "Number of paths in the graph.",
-            "scale": "Greens",
-            "format": "{:,.0f}",
-        }
-        headers["components"] = {
-            "title": "Components",
-            "description": "Number of weakly connected components in the graph.",
-            "scale": "Oranges",
-            "format": "{:,.0f}",
-        }
-        headers["A"] = {
-            "title": "A",
-            "description": "Number of adenine bases in the graph.",
-            "scale": "Spectral",
-            "format": "{:,.0f}",
-            "shared_key": "nucleotides",
-        }
-        headers["C"] = {
-            "title": "C",
-            "description": "Number of cytosine bases in the graph.",
-            "scale": "Greys",
-            "format": "{:,.0f}",
-            "shared_key": "nucleotides",
-        }
-        headers["T"] = {
-            "title": "T",
-            "description": "Number of thymine bases in the graph.",
-            "scale": "Blues",
-            "format": "{:,.0f}",
-            "shared_key": "nucleotides",
-        }
-        headers["G"] = {
-            "title": "G",
-            "description": "Number of guanine bases in the graph.",
-            "scale": "RdPu",
-            "format": "{:,.0f}",
-            "shared_key": "nucleotides",
-        }
-        headers["N"] = {
-            "title": "N",
-            "description": "Number of `N` basis in the graph.",
-            "scale": "BuGn",
-            "format": "{:,.0f}",
-            "shared_key": "nucleotides",
-        }
-        headers["total"] = {
-            "title": "Self Loops Nodes",
-            "description": "Total number of nodes having self loops in the graph.",
-            "scale": "YlGn",
-            "hidden": True,
-            "format": "{:,.0f}",
-        }
-        headers["unique"] = {
-            "title": "Unique Self Loops Nodes",
-            "description": "Number of unique nodes having self loops in the graph.",
-            "scale": "BuGn",
-            "hidden": True,
-            "format": "{:,.0f}",
-        }
-        headers["pct_gc"] = {
-            "title": "% GC",
-            "description": "Percent of G/C bases in the graph.",
-            "scale": "Spectral",
-            "max": 100,
-            "min": 0,
-            "suffix": "%",
-            "hidden": True,
-        }
-        headers["pct_n"] = {
-            "title": "% N",
-            "description": "Percent of N bases in the graph.",
-            "scale": "Reds",
-            "max": 100,
-            "min": 0,
-            "suffix": "%",
-            "hidden": True,
+        headers = {
+            "length": {
+                "title": "Length",
+                "description": "Graph length in nucleotides.",
+                "scale": "BuPu",
+                "format": "{:,.0f}",
+            },
+            "nodes": {
+                "title": "Nodes",
+                "description": "Number of nodes in the graph.",
+                "scale": "OrRd",
+                "format": "{:,.0f}",
+            },
+            "edges": {
+                "title": "Edges",
+                "description": "Number of edges in the graph.",
+                "scale": "PuBu",
+                "format": "{:,.0f}",
+            },
+            "paths": {
+                "title": "Paths",
+                "description": "Number of paths in the graph.",
+                "scale": "Greens",
+                "format": "{:,.0f}",
+            },
+            "components": {
+                "title": "Components",
+                "description": "Number of weakly connected components in the graph.",
+                "scale": "Oranges",
+                "format": "{:,.0f}",
+            },
+            "A": {
+                "title": "A",
+                "description": "Number of adenine bases in the graph.",
+                "scale": "Spectral",
+                "format": "{:,.0f}",
+                "shared_key": "nucleotides",
+            },
+            "C": {
+                "title": "C",
+                "description": "Number of cytosine bases in the graph.",
+                "scale": "Greys",
+                "format": "{:,.0f}",
+                "shared_key": "nucleotides",
+            },
+            "T": {
+                "title": "T",
+                "description": "Number of thymine bases in the graph.",
+                "scale": "Blues",
+                "format": "{:,.0f}",
+                "shared_key": "nucleotides",
+            },
+            "G": {
+                "title": "G",
+                "description": "Number of guanine bases in the graph.",
+                "scale": "RdPu",
+                "format": "{:,.0f}",
+                "shared_key": "nucleotides",
+            },
+            "N": {
+                "title": "N",
+                "description": "Number of `N` basis in the graph.",
+                "scale": "BuGn",
+                "format": "{:,.0f}",
+                "shared_key": "nucleotides",
+            },
+            "total": {
+                "title": "Self Loops Nodes",
+                "description": "Total number of nodes having self loops in the graph.",
+                "scale": "YlGn",
+                "hidden": True,
+                "format": "{:,.0f}",
+            },
+            "unique": {
+                "title": "Unique Self Loops Nodes",
+                "description": "Number of unique nodes having self loops in the graph.",
+                "scale": "BuGn",
+                "hidden": True,
+                "format": "{:,.0f}",
+            },
+            "pct_gc": {
+                "title": "% GC",
+                "description": "Percent of G/C bases in the graph.",
+                "scale": "Spectral",
+                "max": 100,
+                "min": 0,
+                "suffix": "%",
+                "hidden": True,
+            },
+            "pct_n": {
+                "title": "% N",
+                "description": "Percent of N bases in the graph.",
+                "scale": "Reds",
+                "max": 100,
+                "min": 0,
+                "suffix": "%",
+                "hidden": True,
+            },
         }
         # Some of the headers are quite general and can clash with other modules.
         # Prepend odgi_ to keep them unique
-        prefix_headers = OrderedDict()
+        prefix_headers = dict()
         prefix_data = {}
         for h, v in headers.items():
             prefix_headers[f"odgi_{h}"] = v
@@ -253,9 +253,18 @@ class MultiqcModule(BaseMultiqcModule):
         Plot odgi path node distances bar plot.
         """
 
-        cats = [OrderedDict(), OrderedDict()]
-        cats[0]["sum_of_path_nodes_distances_in_node_space"] = {"name": "Sum of distances: node space"}
-        cats[1]["sum_of_path_nodes_distances_in_nucleotide_space"] = {"name": "Sum of distances: nucleotide space"}
+        cats = [
+            {
+                "sum_of_path_nodes_distances_in_node_space": {
+                    "name": "Sum of distances: node space",
+                }
+            },
+            {
+                "sum_of_path_nodes_distances_in_nucleotide_space": {
+                    "name": "Sum of distances: nucleotide space",
+                }
+            },
+        ]
         pconfig = {
             "id": "odgi_sum_of_path_nodes_distances_plot",
             "title": "ODGI: Sum of path node distances",
@@ -286,9 +295,18 @@ class MultiqcModule(BaseMultiqcModule):
         """
         Plot odgi path node distances bar plot.
         """
-        cats = [OrderedDict(), OrderedDict()]
-        cats[0]["mean_links_length_in_node_space"] = {"name": "Mean links length: node space"}
-        cats[1]["mean_links_length_in_nucleotide_space"] = {"name": "Mean links length: nucleotide space"}
+        cats = [
+            {
+                "mean_links_length_in_node_space": {
+                    "name": "Mean links length: node space",
+                }
+            },
+            {
+                "mean_links_length_in_nucleotide_space": {
+                    "name": "Mean links length: nucleotide space",
+                }
+            },
+        ]
         pconfig = {
             "id": "odgi_mean_links_length_plot",
             "title": "ODGI: Mean links length",
@@ -316,7 +334,8 @@ class MultiqcModule(BaseMultiqcModule):
             plot=bargraph.plot([self.odgi_stats_map, self.odgi_stats_map], cats, pconfig),
         )
 
-    def extract_sample_name(self, file_name):
+    @staticmethod
+    def extract_sample_name(file_name):
         """
         Extracts the sample name from a given file name.
         Expects and returns one of seqwish, smooth or cons@*.
@@ -333,7 +352,8 @@ class MultiqcModule(BaseMultiqcModule):
         else:
             return ".".join(file_name.split(".")[:-3])
 
-    def compress_stats_data(self, data) -> dict:
+    @staticmethod
+    def compress_stats_data(data) -> dict:
         """
         Compress odgi stats into a single dictionary to visualize.
         """

@@ -3,7 +3,6 @@
 import logging
 import os
 import re
-from collections import OrderedDict
 
 from multiqc import config
 from multiqc.plots import linegraph
@@ -59,7 +58,7 @@ def parse_reports(self):
                     while len(vals) == len(keys):
                         pair_orientation = vals[orientation_idx]
                         rowkey = "{}_{}".format(s_name, pair_orientation)
-                        self.picard_insertSize_data[rowkey] = OrderedDict()
+                        self.picard_insertSize_data[rowkey] = dict()
                         self.picard_insertSize_data[rowkey]["SAMPLE_NAME"] = s_name
                         for i, k in enumerate(keys):
                             try:
@@ -85,10 +84,10 @@ def parse_reports(self):
                         vals = f["f"].readline().strip("\n").split("\t")
 
                     # Skip lines on to histogram
-                    line = f["f"].readline().strip("\n")
-                    line = f["f"].readline().strip("\n")
+                    f["f"].readline().strip("\n")
+                    f["f"].readline().strip("\n")
 
-                    self.picard_insertSize_histogram[s_name] = OrderedDict()
+                    self.picard_insertSize_histogram[s_name] = dict()
                     in_hist = True
 
         for key in list(self.picard_insertSize_data.keys()):
@@ -98,10 +97,6 @@ def parse_reports(self):
             if len(self.picard_insertSize_histogram[s_name]) == 0:
                 self.picard_insertSize_histogram.pop(s_name, None)
                 log.debug("Ignoring '{}' histogram as no data parsed".format(s_name))
-
-            # Superfluous function call to confirm that it is used in this module
-            # Replace None with actual version if it is available
-            self.add_software_version(None, s_name)
 
     # Calculate summed mean values for all read orientations
     for s_name, v in self.picard_insertSize_samplestats.items():
@@ -119,83 +114,89 @@ def parse_reports(self):
     # Filter to strip out ignored sample names
     self.picard_insertSize_data = self.ignore_samples(self.picard_insertSize_data)
 
-    if len(self.picard_insertSize_data) > 0:
-        # Write parsed data to a file
-        self.write_data_file(self.picard_insertSize_data, "multiqc_picard_insertSize")
+    if len(self.picard_insertSize_data) == 0:
+        return 0
 
-        # Do we have median insert sizes?
-        missing_medians = False
-        for v in self.picard_insertSize_samplestats.values():
-            if "summed_median" not in v:
-                missing_medians = True
+    # Superfluous function call to confirm that it is used in this module
+    # Replace None with actual version if it is available
+    self.add_software_version(None)
 
-        # Add to general stats table
-        self.general_stats_headers["summed_median"] = {
-            "title": "Insert Size",
-            "description": "Median Insert Size, all read orientations (bp)",
-            "min": 0,
-            "suffix": " bp",
-            "format": "{:,.0f}",
-            "scale": "GnBu",
+    # Write parsed data to a file
+    self.write_data_file(self.picard_insertSize_data, "multiqc_picard_insertSize")
+
+    # Do we have median insert sizes?
+    missing_medians = False
+    for v in self.picard_insertSize_samplestats.values():
+        if "summed_median" not in v:
+            missing_medians = True
+
+    # Add to general stats table
+    self.general_stats_headers["summed_median"] = {
+        "title": "Insert Size",
+        "description": "Median Insert Size, all read orientations (bp)",
+        "min": 0,
+        "suffix": " bp",
+        "format": "{:,.0f}",
+        "scale": "GnBu",
+    }
+    self.general_stats_headers["summed_mean"] = {
+        "title": "Mean Insert Size",
+        "description": "Mean Insert Size, all read orientations (bp)",
+        "min": 0,
+        "suffix": " bp",
+        "format": "{:,.0f}",
+        "scale": "GnBu",
+        "hidden": False if missing_medians else True,
+    }
+    for s_name in self.picard_insertSize_samplestats:
+        if s_name not in self.general_stats_data:
+            self.general_stats_data[s_name] = dict()
+        self.general_stats_data[s_name].update(self.picard_insertSize_samplestats[s_name])
+
+    # Section with histogram plot
+    if len(self.picard_insertSize_histogram) > 0:
+        # Make a normalised percentage version of the data
+        data_percent = {}
+        for s_name, data in self.picard_insertSize_histogram.items():
+            data_percent[s_name] = dict()
+            total = float(sum(data.values()))
+            for k, v in data.items():
+                data_percent[s_name][k] = (v / total) * 100
+
+        # Allow customisation of how smooth the plot is
+        try:
+            insertsize_smooth_points = int(config.picard_config["insertsize_smooth_points"])
+            log.debug("Custom Picard insert size smoothing: {}".format(insertsize_smooth_points))
+        except (AttributeError, KeyError, ValueError):
+            insertsize_smooth_points = 500
+
+        # Plot the data and add section
+        pconfig = {
+            "smooth_points": insertsize_smooth_points,
+            "smooth_points_sumcounts": [True, False],
+            "id": "picard_insert_size",
+            "title": "Picard: Insert Size",
+            "ylab": "Count",
+            "xlab": "Insert Size (bp)",
+            "xDecimals": False,
+            "tt_label": "<b>{point.x} bp</b>: {point.y:.0f}",
+            "ymin": 0,
+            "data_labels": [
+                {"name": "Counts", "ylab": "Coverage"},
+                {"name": "Percentages", "ylab": "Percentage of Counts"},
+            ],
         }
-        self.general_stats_headers["summed_mean"] = {
-            "title": "Mean Insert Size",
-            "description": "Mean Insert Size, all read orientations (bp)",
-            "min": 0,
-            "suffix": " bp",
-            "format": "{:,.0f}",
-            "scale": "GnBu",
-            "hidden": False if missing_medians else True,
-        }
-        for s_name in self.picard_insertSize_samplestats:
-            if s_name not in self.general_stats_data:
-                self.general_stats_data[s_name] = dict()
-            self.general_stats_data[s_name].update(self.picard_insertSize_samplestats[s_name])
+        try:
+            pconfig["xmax"] = config.picard_config["insertsize_xmax"]
+        except (AttributeError, KeyError):
+            pass
 
-        # Section with histogram plot
-        if len(self.picard_insertSize_histogram) > 0:
-            # Make a normalised percentage version of the data
-            data_percent = {}
-            for s_name, data in self.picard_insertSize_histogram.items():
-                data_percent[s_name] = OrderedDict()
-                total = float(sum(data.values()))
-                for k, v in data.items():
-                    data_percent[s_name][k] = (v / total) * 100
-
-            # Allow customisation of how smooth the the plot is
-            try:
-                insertsize_smooth_points = int(config.picard_config["insertsize_smooth_points"])
-                log.debug("Custom Picard insert size smoothing: {}".format(insertsize_smooth_points))
-            except (AttributeError, KeyError, ValueError):
-                insertsize_smooth_points = 500
-
-            # Plot the data and add section
-            pconfig = {
-                "smooth_points": insertsize_smooth_points,
-                "smooth_points_sumcounts": [True, False],
-                "id": "picard_insert_size",
-                "title": "Picard: Insert Size",
-                "ylab": "Count",
-                "xlab": "Insert Size (bp)",
-                "xDecimals": False,
-                "tt_label": "<b>{point.x} bp</b>: {point.y:.0f}",
-                "ymin": 0,
-                "data_labels": [
-                    {"name": "Counts", "ylab": "Coverage"},
-                    {"name": "Percentages", "ylab": "Percentage of Counts"},
-                ],
-            }
-            try:
-                pconfig["xmax"] = config.picard_config["insertsize_xmax"]
-            except (AttributeError, KeyError):
-                pass
-
-            self.add_section(
-                name="Insert Size",
-                anchor="picard-insertsize",
-                description="Plot shows the number of reads at a given insert size. Reads with different orientations are summed.",
-                plot=linegraph.plot([self.picard_insertSize_histogram, data_percent], pconfig),
-            )
+        self.add_section(
+            name="Insert Size",
+            anchor="picard-insertsize",
+            description="Plot shows the number of reads at a given insert size. Reads with different orientations are summed.",
+            plot=linegraph.plot([self.picard_insertSize_histogram, data_percent], pconfig),
+        )
 
     # Return the number of detected samples to the parent module
     return len(self.picard_insertSize_data)

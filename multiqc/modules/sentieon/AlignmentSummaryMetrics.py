@@ -3,7 +3,6 @@
 
 import logging
 import os
-from collections import OrderedDict
 
 from multiqc.plots import bargraph
 
@@ -49,10 +48,6 @@ def parse_reports(self):
                         s_name = None
                         keys = None
 
-        # Superfluous function call to confirm that it is used in this module
-        # Replace None with actual version if it is available
-        self.add_software_version(None, s_name)
-
         # Remove empty dictionaries
         for s_name in list(parsed_data.keys()):
             if len(parsed_data[s_name]) == 0:
@@ -71,59 +66,66 @@ def parse_reports(self):
     # Filter to strip out ignored sample names
     self.sentieon_alignment_metrics = self.ignore_samples(self.sentieon_alignment_metrics)
 
-    if len(self.sentieon_alignment_metrics) > 0:
-        # Write parsed data to a file
-        self.write_data_file(self.sentieon_alignment_metrics, "multiqc_sentieon_AlignmentSummaryMetrics")
+    if len(self.sentieon_alignment_metrics) == 0:
+        return 0
 
-        # Add to general stats table
-        self.general_stats_headers["PCT_PF_READS_ALIGNED"] = {
-            "title": "% Aligned",
-            "description": "Percent of aligned reads",
-            "max": 100,
-            "min": 0,
-            "suffix": "%",
-            "format": "{:,.0f}",
-            "scale": "RdYlGn",
-            "modify": lambda x: self.multiply_hundred(x),
-        }
-        for s_name in self.sentieon_alignment_metrics:
-            if s_name not in self.general_stats_data:
-                self.general_stats_data[s_name] = dict()
-            self.general_stats_data[s_name].update(self.sentieon_alignment_metrics[s_name])
+    # Write parsed data to a file
+    self.write_data_file(self.sentieon_alignment_metrics, "multiqc_sentieon_AlignmentSummaryMetrics")
 
-        # Make the bar plot of alignment read count
-        pdata = dict()
-        for s_name in self.sentieon_alignment_metrics.keys():
-            pdata[s_name] = dict()
-            # Sentieon reports both reads for PE data.
-            # Divide it by two as most people will expect # clusters
-            if self.sentieon_alignment_metrics[s_name]["CATEGORY"] == "PAIR":
-                pdata[s_name]["total_reads"] = self.sentieon_alignment_metrics[s_name]["TOTAL_READS"] / 2
-                pdata[s_name]["aligned_reads"] = self.sentieon_alignment_metrics[s_name]["PF_READS_ALIGNED"] / 2
-            else:
-                pdata[s_name]["total_reads"] = self.sentieon_alignment_metrics[s_name]["TOTAL_READS"]
-                pdata[s_name]["aligned_reads"] = self.sentieon_alignment_metrics[s_name]["PF_READS_ALIGNED"]
-                pdata[s_name]["unaligned_reads"] = pdata[s_name]["total_reads"] - pdata[s_name]["aligned_reads"]
+    # Superfluous function call to confirm that it is used in this module
+    # Replace None with actual version if it is available
+    self.add_software_version(None)
 
-        keys = OrderedDict()
-        keys["aligned_reads"] = {"name": "Aligned Reads"}
-        keys["unaligned_reads"] = {"name": "Unaligned Reads"}
+    # Add to general stats table
+    self.general_stats_headers["PCT_PF_READS_ALIGNED"] = {
+        "title": "% Aligned",
+        "description": "Percent of aligned reads",
+        "max": 100,
+        "min": 0,
+        "suffix": "%",
+        "format": "{:,.0f}",
+        "scale": "RdYlGn",
+        "modify": lambda x: self.multiply_hundred(x),
+    }
+    for s_name in self.sentieon_alignment_metrics:
+        if s_name not in self.general_stats_data:
+            self.general_stats_data[s_name] = dict()
+        self.general_stats_data[s_name].update(self.sentieon_alignment_metrics[s_name])
 
-        # Config for the plot
-        pconfig = {
-            "id": "sentieon_aligned_reads",
-            "title": "Sentieon: Aligned Reads",
-            "ylab": "# Reads",
-            "cpswitch_counts_label": "Number of Reads",
-        }
+    # Make the bar plot of alignment read count
+    pdata = dict()
+    for s_name in self.sentieon_alignment_metrics.keys():
+        pdata[s_name] = dict()
+        # Sentieon reports both reads for PE data.
+        # Divide it by two as most people will expect # clusters
+        if self.sentieon_alignment_metrics[s_name]["CATEGORY"] == "PAIR":
+            pdata[s_name]["total_reads"] = self.sentieon_alignment_metrics[s_name]["TOTAL_READS"] / 2
+            pdata[s_name]["aligned_reads"] = self.sentieon_alignment_metrics[s_name]["PF_READS_ALIGNED"] / 2
+        else:
+            pdata[s_name]["total_reads"] = self.sentieon_alignment_metrics[s_name]["TOTAL_READS"]
+            pdata[s_name]["aligned_reads"] = self.sentieon_alignment_metrics[s_name]["PF_READS_ALIGNED"]
+            pdata[s_name]["unaligned_reads"] = pdata[s_name]["total_reads"] - pdata[s_name]["aligned_reads"]
 
-        self.add_section(
-            name="Alignment Summary",
-            anchor="sentieon-alignmentsummary",
-            description="Please note that Sentieon's read counts are divided \
-                 by two for paired-end data.",
-            plot=bargraph.plot(pdata, keys, pconfig),
-        )
+    keys = {
+        "aligned_reads": {"name": "Aligned Reads"},
+        "unaligned_reads": {"name": "Unaligned Reads"},
+    }
+
+    # Config for the plot
+    pconfig = {
+        "id": "sentieon_aligned_reads",
+        "title": "Sentieon: Aligned Reads",
+        "ylab": "# Reads",
+        "cpswitch_counts_label": "Number of Reads",
+    }
+
+    self.add_section(
+        name="Alignment Summary",
+        anchor="sentieon-alignmentsummary",
+        description="Please note that Sentieon's read counts are divided \
+             by two for paired-end data.",
+        plot=bargraph.plot(pdata, keys, pconfig),
+    )
 
     # Return the number of detected samples to the parent module
     return len(self.sentieon_alignment_metrics)

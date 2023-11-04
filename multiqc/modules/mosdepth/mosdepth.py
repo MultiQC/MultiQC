@@ -3,7 +3,7 @@
 
 import fnmatch
 import logging
-from collections import OrderedDict, defaultdict
+from collections import defaultdict
 
 from multiqc import config
 from multiqc.modules.base_module import BaseMultiqcModule, ModuleNoSamplesFound
@@ -137,12 +137,8 @@ class MultiqcModule(BaseMultiqcModule):
                     genstats[s_name]["mean_coverage"] = mean
                     self.add_data_source(f, s_name=s_name, section="summary")
 
-            # Superfluous function call to confirm that it is used in this module
-            # Replace None with actual version if it is available
-            self.add_software_version(None, s_name)
-
         # Filter out any samples from --ignore-samples
-        genstats = defaultdict(OrderedDict, self.ignore_samples(genstats))
+        genstats = defaultdict(dict, self.ignore_samples(genstats))
         samples_in_summary = set(genstats.keys())
 
         data_dicts_global = self.parse_cov_dist("global")
@@ -156,6 +152,10 @@ class MultiqcModule(BaseMultiqcModule):
         if not samples_found:
             raise ModuleNoSamplesFound
         log.info(f"Found reports for {len(samples_found)} samples")
+
+        # Superfluous function call to confirm that it is used in this module
+        # Replace None with actual version if it is available
+        self.add_software_version(None)
 
         descr_suf = ""
         if any(data_dicts_global) and any(data_dicts_region):
@@ -297,9 +297,10 @@ class MultiqcModule(BaseMultiqcModule):
                 )
 
             if xy_cov:
-                xy_keys = OrderedDict()
-                xy_keys["x"] = {"name": self.cfg.get("xchr", "Chromosome X")}
-                xy_keys["y"] = {"name": self.cfg.get("xchr", "Chromosome Y")}
+                xy_keys = {
+                    "x": {"name": self.cfg.get("xchr", "Chromosome X")},
+                    "y": {"name": self.cfg.get("xchr", "Chromosome Y")},
+                }
                 pconfig = {
                     "id": "mosdepth-xy-coverage-plot",
                     "title": "Mosdepth: chrXY coverage",
@@ -320,15 +321,13 @@ class MultiqcModule(BaseMultiqcModule):
                 self.genstats_mediancov(genstats, genstats_headers, cumcov_dist_data)
 
         # Add mean coverage to General Stats
-        genstats_headers["mean_coverage"] = OrderedDict(
-            {
-                "title": "Mean Cov.",
-                "description": "Mean coverage",
-                "min": 0,
-                "suffix": "X",
-                "scale": "BuPu",
-            }
-        )
+        genstats_headers["mean_coverage"] = {
+            "title": "Mean Cov.",
+            "description": "Mean coverage",
+            "min": 0,
+            "suffix": "X",
+            "scale": "BuPu",
+        }
         self.general_stats_addcols(genstats, genstats_headers)
 
     def parse_cov_dist(self, scope):
@@ -400,7 +399,7 @@ class MultiqcModule(BaseMultiqcModule):
                         passing_contigs.add(contig)
 
         rejected_contigs = set()
-        filtered_perchrom_avg_data = defaultdict(OrderedDict)
+        filtered_perchrom_avg_data = defaultdict(dict)
         for s_name, perchrom in perchrom_avg_data.items():
             for contig, cov in perchrom.items():
                 if contig not in passing_contigs:

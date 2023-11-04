@@ -4,7 +4,6 @@
 import json
 import logging
 import re
-from collections import OrderedDict
 
 from multiqc import config
 from multiqc.modules.base_module import BaseMultiqcModule, ModuleNoSamplesFound
@@ -73,7 +72,7 @@ class MultiqcModule(BaseMultiqcModule):
 
     def parse_fqscreen(self, f):
         """Parse the FastQ Screen output into a 3D dict"""
-        parsed_data = OrderedDict()
+        parsed_data = {}
         nohits_pct = None
         headers = None
         bs_headers = None
@@ -142,9 +141,9 @@ class MultiqcModule(BaseMultiqcModule):
         return parsed_data
 
     def parse_csv(self):
-        totals = OrderedDict()
+        totals = dict()
         for s in sorted(self.fq_screen_data.keys()):
-            totals[s] = OrderedDict()
+            totals[s] = dict()
             for org in self.fq_screen_data[s]:
                 if org == "total_reads":
                     totals[s]["total_reads"] = self.fq_screen_data[s][org]
@@ -176,11 +175,12 @@ class MultiqcModule(BaseMultiqcModule):
         categories = list()
         getCats = True
         data = list()
-        p_types = OrderedDict()
-        p_types["multiple_hits_multiple_libraries"] = {"col": "#7f0000", "name": "Multiple Hits, Multiple Genomes"}
-        p_types["one_hit_multiple_libraries"] = {"col": "#ff0000", "name": "One Hit, Multiple Genomes"}
-        p_types["multiple_hits_one_library"] = {"col": "#00007f", "name": "Multiple Hits, One Genome"}
-        p_types["one_hit_one_library"] = {"col": "#0000ff", "name": "One Hit, One Genome"}
+        p_types = {
+            "multiple_hits_multiple_libraries": {"col": "#7f0000", "name": "Multiple Hits, Multiple Genomes"},
+            "one_hit_multiple_libraries": {"col": "#ff0000", "name": "One Hit, Multiple Genomes"},
+            "multiple_hits_one_library": {"col": "#00007f", "name": "Multiple Hits, One Genome"},
+            "one_hit_one_library": {"col": "#0000ff", "name": "One Hit, One Genome"},
+        }
         for k, t in p_types.items():
             first = True
             for s in sorted(self.fq_screen_data.keys()):
@@ -262,7 +262,7 @@ class MultiqcModule(BaseMultiqcModule):
         data = {}
         org_counts = {}
         for s_name in sorted(self.fq_screen_data):
-            data[s_name] = OrderedDict()
+            data[s_name] = dict()
             sum_alignments = 0
             for org in self.fq_screen_data[s_name]:
                 if org == "total_reads":
@@ -288,7 +288,7 @@ class MultiqcModule(BaseMultiqcModule):
                 data[s_name]["Multiple Genomes"] = self.fq_screen_data[s_name]["total_reads"] - sum_alignments
 
         # Sort the categories by the total read counts
-        cats = OrderedDict()
+        cats = dict()
         for org in sorted(org_counts, key=org_counts.get, reverse=True):
             if org not in cats and org != "No hits":
                 cats[org] = {"name": org}
@@ -320,17 +320,18 @@ class MultiqcModule(BaseMultiqcModule):
             "data_labels": [],
         }
 
-        cats = OrderedDict()
-        cats["original_top_strand"] = {"name": "Original top strand", "color": "#80cdc1"}
-        cats["complementary_to_original_top_strand"] = {
-            "name": "Complementary to original top strand",
-            "color": "#018571",
+        cats = {
+            "original_top_strand": {"name": "Original top strand", "color": "#80cdc1"},
+            "complementary_to_original_top_strand": {
+                "name": "Complementary to original top strand",
+                "color": "#018571",
+            },
+            "complementary_to_original_bottom_strand": {
+                "name": "Complementary to original bottom strand",
+                "color": "#a6611a",
+            },
+            "original_bottom_strand": {"name": "Original bottom strand", "color": "#dfc27d"},
         }
-        cats["complementary_to_original_bottom_strand"] = {
-            "name": "Complementary to original bottom strand",
-            "color": "#a6611a",
-        }
-        cats["original_bottom_strand"] = {"name": "Original bottom strand", "color": "#dfc27d"}
 
         # Pull out the data that we want
         pdata_unsorted = {}

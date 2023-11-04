@@ -1,9 +1,8 @@
 import csv
 import logging
-import operator
 import os
 import xml.etree.ElementTree as ET
-from collections import OrderedDict, defaultdict
+from collections import defaultdict
 from itertools import islice
 
 from multiqc import config
@@ -89,14 +88,14 @@ class MultiqcModule(BaseMultiqcModule):
                 section="bclconvert-bysample",
             )
 
-            # Superfluous function call to confirm that it is used in this module
-            # Replace None with actual version if it is available
-            self.add_software_version(None, s)
-
         self.write_data_file(
             {str(k): bclconvert_by_lane[k] for k in bclconvert_by_lane.keys()}, "multiqc_bclconvert_bylane"
         )
         self.write_data_file(bclconvert_by_sample, "multiqc_bclconvert_bysample")
+
+        # Superfluous function call to confirm that it is used in this module
+        # Replace None with actual version if it is available
+        self.add_software_version(None)
 
         # Add sections for summary stats per flow cell
         self.add_section(
@@ -114,10 +113,11 @@ class MultiqcModule(BaseMultiqcModule):
         )
 
         # Add section for counts by lane
-        cats = OrderedDict()
-        cats["perfect"] = {"name": "Perfect Index Reads"}
-        cats["imperfect"] = {"name": "Mismatched Index Reads"}
-        cats["undetermined"] = {"name": "Undetermined Reads"}
+        cats = {
+            "perfect": {"name": "Perfect Index Reads"},
+            "imperfect": {"name": "Mismatched Index Reads"},
+            "undetermined": {"name": "Undetermined Reads"},
+        }
         extra = ""
         if len(demuxes) > 1 and not multiple_sequencing_runs:
             extra = """
@@ -495,9 +495,7 @@ class MultiqcModule(BaseMultiqcModule):
                     "percent_Q30": lane["percent_Q30"],
                     "percent_perfectIndex": lane["percent_perfectIndex"],
                     "percent_oneMismatch": lane["percent_oneMismatch"],
-                    "top_unknown_barcodes": self.get_unknown_barcodes(lane["top_unknown_barcodes"])
-                    if "top_unknown_barcodes" in lane
-                    else {},
+                    "top_unknown_barcodes": lane["top_unknown_barcodes"] if "top_unknown_barcodes" in lane else {},
                 }
 
                 # now set stats for each sample (across all lanes) in bclconvert_bysample dictionary
@@ -529,19 +527,6 @@ class MultiqcModule(BaseMultiqcModule):
                             source_files[sample_id] = []
                         source_files[sample_id].append(sample["filename"])
         return bclconvert_by_lane, bclconvert_by_sample, source_files
-
-    def get_unknown_barcodes(self, lane_unknown_barcode):
-        """
-        Python 2.* dictionaries are not sorted.
-        This function return an `OrderedDict` sorted by barcode count.
-        """
-        try:
-            sorted_barcodes = OrderedDict(
-                sorted(lane_unknown_barcode.items(), key=operator.itemgetter(1), reverse=True)
-            )
-        except AttributeError:
-            sorted_barcodes = None
-        return sorted_barcodes
 
     def sample_stats_table(self, bclconvert_data, bclconvert_by_sample):
         sample_stats_data = dict()
@@ -592,7 +577,7 @@ class MultiqcModule(BaseMultiqcModule):
             if sample["depth"] != "NA":
                 depth_available = True
 
-        headers = OrderedDict()
+        headers = {}
         if depth_available:
             headers["depth"] = {
                 "title": "Coverage",
@@ -693,7 +678,7 @@ class MultiqcModule(BaseMultiqcModule):
             if lane["depth"] != "NA":
                 depth_available = True
 
-        headers = OrderedDict()
+        headers = {}
         if depth_available:
             headers["depth-lane"] = {
                 "title": "Coverage",
@@ -789,7 +774,7 @@ class MultiqcModule(BaseMultiqcModule):
         return str(runId) + " - " + str(rest)
 
     def get_bar_data_from_counts(self, bclconvert_data, counts, last_run_id):
-        # For per-lane stats we fetch undetermied reads, too.
+        # For per-lane stats we fetch undetermined reads, too.
         bar_data = {}
         for key, value in counts.items():
             bar_data[key] = {
@@ -810,7 +795,8 @@ class MultiqcModule(BaseMultiqcModule):
 
         return bar_data
 
-    def get_bar_data_from_undetermined(self, flowcells):
+    @staticmethod
+    def get_bar_data_from_undetermined(flowcells):
         """
         Get data to plot for undetermined barcodes.
         """
@@ -827,5 +813,4 @@ class MultiqcModule(BaseMultiqcModule):
                 pass
 
         # sort results
-        bar_data = OrderedDict(sorted(bar_data.items(), key=lambda x: sum(x[1].values()), reverse=True))
-        return OrderedDict((key, value) for key, value in islice(bar_data.items(), 20))
+        return {key: value for key, value in islice(bar_data.items(), 20)}

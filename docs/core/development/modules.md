@@ -500,8 +500,8 @@ instead:
 ```python
 for f in self.find_log_files('mymod', filehandles=True):
     # f['f'] is now a filehandle instead of contents
-    for l in f['f']:
-        print( l )
+    for line in f['f']:
+        print(line)
 ```
 
 This is good if the file is large, as Python doesn't read the entire
@@ -525,8 +525,8 @@ class MultiqcModule(BaseMultiqcModule):
 
     def parse_logs(self, f):
         data = {}
-        for l in f.splitlines():
-            s = l.split()
+        for line in f.splitlines():
+            s = line.split()
             data[s[0]] = s[1]
         return data
 ```
@@ -764,19 +764,20 @@ To give more informative table headers and configure things like
 data scales and colour schemes, you can supply an extra dict:
 
 ```python
-headers = OrderedDict()
-headers['first_col'] = {
-    'title': 'First',
-    'description': 'My First Column',
-    'scale': 'RdYlGn-rev'
-}
-headers['second_col'] = {
-    'title': 'Second',
-    'description': 'My Second Column',
-    'max': 100,
-    'min': 0,
-    'scale': 'Blues',
-    'suffix': '%'
+headers = {
+    'first_col': {
+        'title': 'First',
+        'description': 'My First Column',
+        'scale': 'RdYlGn-rev'
+    },
+    'second_col': {
+        'title': 'Second',
+        'description': 'My Second Column',
+        'max': 100,
+        'min': 0,
+        'scale': 'Blues',
+        'suffix': '%'
+    }
 }
 self.general_stats_addcols(data, headers)
 ```

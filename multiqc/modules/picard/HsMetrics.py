@@ -3,7 +3,7 @@
 import logging
 import os
 import re
-from collections import OrderedDict, defaultdict
+from collections import defaultdict
 
 from multiqc import config
 from multiqc.plots import linegraph, table
@@ -133,10 +133,6 @@ def parse_reports(self):
             if len(parsed_data[s_name]) == 0:
                 parsed_data.pop(s_name, None)
 
-            # Superfluous function call to confirm that it is used in this module
-            # Replace None with actual version if it is available
-            self.add_software_version(None, s_name)
-
         # Manipulate sample names if multiple baits found
         for s_name in parsed_data.keys():
             for j in parsed_data[s_name].keys():
@@ -151,53 +147,59 @@ def parse_reports(self):
     # Filter to strip out ignored sample names
     self.picard_HsMetrics_data = self.ignore_samples(self.picard_HsMetrics_data)
 
-    if len(self.picard_HsMetrics_data) > 0:
-        # Write parsed data to a file
-        self.write_data_file(self.picard_HsMetrics_data, "multiqc_picard_HsMetrics")
+    if len(self.picard_HsMetrics_data) == 0:
+        return 0
 
-        # Swap question marks with -1
-        data = self.picard_HsMetrics_data
-        for s_name in data:
-            if data[s_name]["FOLD_ENRICHMENT"] == "?":
-                data[s_name]["FOLD_ENRICHMENT"] = -1
+    # Superfluous function call to confirm that it is used in this module
+    # Replace None with actual version if it is available
+    self.add_software_version(None)
 
-        # Add to general stats table
-        general_stats_table(self, data)
+    # Write parsed data to a file
+    self.write_data_file(self.picard_HsMetrics_data, "multiqc_picard_HsMetrics")
 
-        # Add report section
+    # Swap question marks with -1
+    data = self.picard_HsMetrics_data
+    for s_name in data:
+        if data[s_name]["FOLD_ENRICHMENT"] == "?":
+            data[s_name]["FOLD_ENRICHMENT"] = -1
+
+    # Add to general stats table
+    general_stats_table(self, data)
+
+    # Add report section
+    self.add_section(
+        name="HSMetrics",
+        anchor="picard_hsmetrics",
+        plot=table.plot(
+            data,
+            _get_table_headers(),
+            {
+                "id": "picard_hsmetrics_table",
+                "namespace": "HsMetrics",
+                "scale": "RdYlGn",
+                "min": 0,
+            },
+        ),
+    )
+    tbases = _add_target_bases(data)
+    self.add_section(
+        name=tbases["name"], anchor=tbases["anchor"], description=tbases["description"], plot=tbases["plot"]
+    )
+    hs_pen_plot = hs_penalty_plot(data)
+    if hs_pen_plot is not None:
         self.add_section(
-            name="HSMetrics",
-            anchor="picard_hsmetrics",
-            plot=table.plot(
-                data,
-                _get_table_headers(),
-                {
-                    "id": "picard_hsmetrics_table",
-                    "namespace": "HsMetrics",
-                    "scale": "RdYlGn",
-                    "min": 0,
-                },
-            ),
-        )
-        tbases = _add_target_bases(data)
-        self.add_section(
-            name=tbases["name"], anchor=tbases["anchor"], description=tbases["description"], plot=tbases["plot"]
-        )
-        hs_pen_plot = hs_penalty_plot(data)
-        if hs_pen_plot is not None:
-            self.add_section(
-                name="HS Penalty",
-                anchor="picard_hsmetrics_hs_penalty",
-                description='The "hybrid selection penalty" incurred to get 80% of target bases to a given coverage.',
-                helptext="""
-                    Can be used with the following formula:
+            name="HS Penalty",
+            anchor="picard_hsmetrics_hs_penalty",
+            description='The "hybrid selection penalty" incurred to get 80% of target bases to a given coverage.',
+            helptext="""
+                Can be used with the following formula:
 
-                    ```
-                    required_aligned_bases = bait_size_bp * desired_coverage * hs_penalty
-                    ```
-                """,
-                plot=hs_pen_plot,
-            )
+                ```
+                required_aligned_bases = bait_size_bp * desired_coverage * hs_penalty
+                ```
+            """,
+            plot=hs_pen_plot,
+        )
 
     # Return the number of detected samples to the parent module
     return len(self.picard_HsMetrics_data)
@@ -321,7 +323,7 @@ def _generate_table_header_config(table_cols=[], hidden_table_cols=[]):
         if c not in FIELD_DESCRIPTIONS and c[:17] != "PCT_TARGET_BASES_":
             log.error(f"Field '{c}' not found in expected Picard fields. Please check your config.")
 
-    headers = OrderedDict()
+    headers = dict()
     for h in table_cols + hidden_table_cols:
         # Set up the configuration for each column
         if h not in headers:

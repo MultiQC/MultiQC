@@ -1,7 +1,6 @@
 """ MultiQC submodule to parse output from deepTools plotFingerprint """
 
 import logging
-from collections import OrderedDict
 
 import numpy as np
 
@@ -11,7 +10,7 @@ from multiqc.plots import linegraph
 log = logging.getLogger(__name__)
 
 
-class plotFingerprintMixin:
+class PlotFingerprintMixin:
     def parse_plotFingerprint(self):
         """Find plotFingerprint output. Both --outQualityMetrics and --outRawCounts"""
         self.deeptools_plotFingerprintOutQualityMetrics = dict()
@@ -26,10 +25,6 @@ class plotFingerprintMixin:
             if len(parsed_data) > 0:
                 self.add_data_source(f, section="plotFingerprint")
 
-            # Superfluous function call to confirm that it is used in this module
-            # Replace None with actual version if it is available
-            self.add_software_version(None, f["s_name"])
-
         self.deeptools_plotFingerprintOutRawCounts = dict()
         for f in self.find_log_files("deeptools/plotFingerprintOutRawCounts"):
             parsed_data = self.parsePlotFingerprintOutRawCounts(f)
@@ -40,6 +35,10 @@ class plotFingerprintMixin:
 
             if len(parsed_data) > 0:
                 self.add_data_source(f, section="plotFingerprint")
+
+        # Superfluous function call to confirm that it is used in this module
+        # Replace None with actual version if it is available
+        self.add_software_version(None)
 
         self.deeptools_plotFingerprintOutRawCounts = self.ignore_samples(self.deeptools_plotFingerprintOutRawCounts)
         self.deeptools_plotFingerprintOutQualityMetrics = self.ignore_samples(
@@ -118,7 +117,7 @@ class plotFingerprintMixin:
             s_name = self.clean_s_name(cols[0], f)
             if s_name in d:
                 log.warning("Replacing duplicate sample {}.".format(s_name))
-            d[s_name] = OrderedDict()
+            d[s_name] = dict()
 
             try:
                 for i, c in enumerate(cols[1:]):

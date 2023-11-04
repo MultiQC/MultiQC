@@ -1,6 +1,5 @@
 import os
 import re
-from collections import OrderedDict
 
 
 def read_sample_name(line_iter, clean_fn, program_name):
@@ -39,7 +38,7 @@ def read_histogram(self, program_key, program_name, headers, formats):
         headers: the list of expected headers for the histogram
         formats: the list of methods to apply to re-format each field (on a given row)
     """
-    all_data = OrderedDict()
+    all_data = dict()
 
     assert len(formats) == len(headers)
 
@@ -50,16 +49,14 @@ def read_histogram(self, program_key, program_name, headers, formats):
 
         # read through the header of the file to obtain the
         # sample name
-        clean_fn = lambda n: self.clean_s_name(n, f)
+        def clean_fn(n):
+            return self.clean_s_name(n, f)
+
         s_name = read_sample_name(lines, clean_fn, program_name)
         if s_name is None:
             continue
 
-        # Superfluous function call to confirm that it is used in this module
-        # Replace None with actual version if it is available
-        self.add_software_version(None, s_name)
-
-        sample_data = OrderedDict()
+        sample_data = dict()
 
         try:
             # skip to the histogram
@@ -80,7 +77,7 @@ def read_histogram(self, program_key, program_name, headers, formats):
                 for i in range(len(fields)):
                     fields[i] = formats[i](fields[i])
 
-                sample_data[fields[0]] = OrderedDict(zip(headers, fields))
+                sample_data[fields[0]] = dict(zip(headers, fields))
                 line = next(lines).rstrip()
 
         except StopIteration:
@@ -91,6 +88,10 @@ def read_histogram(self, program_key, program_name, headers, formats):
             all_data[s_name] = sample_data
 
     data = self.ignore_samples(all_data)
+
+    # Superfluous function call to confirm that it is used in this module
+    # Replace None with actual version if it is available
+    self.add_software_version(None)
 
     # Write data to file
     self.write_data_file(data, "picard_histogram")

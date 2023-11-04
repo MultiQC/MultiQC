@@ -10,7 +10,6 @@ import os
 import random
 import re
 import sys
-from collections import OrderedDict
 
 from multiqc.utils import config, mqc_colour, report, util_functions
 
@@ -385,11 +384,11 @@ def matplotlib_linegraph(plotdata, pconfig=None):
 
         # Save plot data to file
         if pconfig.get("save_data_file", True):
-            fdata = OrderedDict()
+            fdata = dict()
             lastcats = None
             sharedcats = True
             for d in pdata:
-                fdata[d["name"]] = OrderedDict()
+                fdata[d["name"]] = dict()
 
                 # Check to see if all categories are the same
                 if len(d["data"]) > 0 and isinstance(d["data"][0], list):
@@ -642,7 +641,7 @@ def smooth_line_data(data, numpoints, sumcounts=True):
 
         binsize = (len(d) - 1) / (numpoints - 1)
         first_element_indices = [round(binsize * i) for i in range(numpoints)]
-        smoothed_d = OrderedDict(xy for i, xy in enumerate(d.items()) if i in first_element_indices)
+        smoothed_d = {x: y for i, (x, y) in enumerate(d.items()) if i in first_element_indices}
         smoothed_data[s_name] = smoothed_d
 
     return smoothed_data

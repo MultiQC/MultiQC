@@ -1,7 +1,6 @@
 """ MultiQC submodule to parse output from Picard CollectIlluminaBasecallingMetrics """
 
 import logging
-from collections import OrderedDict
 
 from multiqc.plots import bargraph, table
 
@@ -32,46 +31,48 @@ def parse_reports(self):
                         data.pop("MOLECULAR_BARCODE_NAME")
                         self.picard_basecalling_metrics[data["LANE"]] = data
 
-                        # Superfluous function call to confirm that it is used in this module
-                        # Replace None with actual version if it is available
-                        self.add_software_version(None, data["LANE"])
-
     # Filter to strip out ignored sample names
     self.picard_basecalling_metrics = self.ignore_samples(self.picard_basecalling_metrics)
 
-    if len(self.picard_basecalling_metrics) > 0:
-        # Write parsed data to a file
-        self.write_data_file(self.picard_basecalling_metrics, "multiqc_picard_IlluminaBasecallingMetrics")
+    if len(self.picard_basecalling_metrics) == 0:
+        return 0
 
-        self.add_section(
-            name="Basecalling Metrics",
-            anchor="picard-illuminabasecallingmetrics",
-            description="Quality control metrics for each lane of an Illumina flowcell.",
-            helptext="""
-            For full details, please see the [Picard Documentation](http://broadinstitute.github.io/picard/picard-metric-definitions.html#IlluminaBasecallingMetrics).
+    # Superfluous function call to confirm that it is used in this module
+    # Replace None with actual version if it is available
+    self.add_software_version(None)
 
-            * `PF_BASES` / `NPF_BASES` :  The total number of passing-filter / not-passing-filter bases assigned to the index.
-            * `PF_READS` / `NPF_READS` :  The total number of passing-filter / not-passing-filter reads assigned to the index.
-            * `PF_CLUSTERS` / `NPF_CLUSTERS` :  The total number of passing-filter / not-passing-filter clusters assigned to the index.
+    # Write parsed data to a file
+    self.write_data_file(self.picard_basecalling_metrics, "multiqc_picard_IlluminaBasecallingMetrics")
 
-            `NPF` stands for _"not passing filter"_ and is calculated by subtracting the `PF_` metric from the `TOTAL_` Picard metrics.
-            """,
-            plot=lane_metrics_plot(self.picard_basecalling_metrics),
-        )
+    self.add_section(
+        name="Basecalling Metrics",
+        anchor="picard-illuminabasecallingmetrics",
+        description="Quality control metrics for each lane of an Illumina flowcell.",
+        helptext="""
+        For full details, please see the [Picard Documentation](http://broadinstitute.github.io/picard/picard-metric-definitions.html#IlluminaBasecallingMetrics).
+
+        * `PF_BASES` / `NPF_BASES` :  The total number of passing-filter / not-passing-filter bases assigned to the index.
+        * `PF_READS` / `NPF_READS` :  The total number of passing-filter / not-passing-filter reads assigned to the index.
+        * `PF_CLUSTERS` / `NPF_CLUSTERS` :  The total number of passing-filter / not-passing-filter clusters assigned to the index.
+
+        `NPF` stands for _"not passing filter"_ and is calculated by subtracting the `PF_` metric from the `TOTAL_` Picard metrics.
+        """,
+        plot=lane_metrics_plot(self.picard_basecalling_metrics),
+    )
 
     # Return the number of detected samples to the parent module
     return len(self.picard_basecalling_metrics)
 
 
 def lane_metrics_table(data):
-    headers = OrderedDict()
-    headers["TOTAL_BASES"] = {"title": "Total Bases"}
-    headers["PF_BASES"] = {"title": "Passing Filter Bases"}
-    headers["TOTAL_READS"] = {"title": "Total Reads"}
-    headers["PF_READS"] = {"title": "Passing Filter Reads"}
-    headers["TOTAL_CLUSTERS"] = {"title": "Total Cluster"}
-    headers["PF_CLUSTERS"] = {"title": "Passing Filter Clusters"}
-
+    headers = {
+        "TOTAL_BASES": {"title": "Total Bases"},
+        "PF_BASES": {"title": "Passing Filter Bases"},
+        "TOTAL_READS": {"title": "Total Reads"},
+        "PF_READS": {"title": "Passing Filter Reads"},
+        "TOTAL_CLUSTERS": {"title": "Total Cluster"},
+        "PF_CLUSTERS": {"title": "Passing Filter Clusters"},
+    }
     table_config = {
         "id": "picard-illumina-basecalling-metrics-table",
         "namespace": "Picard",
@@ -95,13 +96,20 @@ def lane_metrics_plot(data):
         ],
     }
 
-    plot_cats = [OrderedDict(), OrderedDict(), OrderedDict()]
-    plot_cats[0]["PF_BASES"] = {"title": "Passing Filter Bases"}
-    plot_cats[0]["NPF_BASES"] = {"title": "Non Passing Filter Bases"}
-    plot_cats[1]["PF_READS"] = {"title": "Passing Filter Reads"}
-    plot_cats[1]["NPF_READS"] = {"title": "Non Passing Filter Reads"}
-    plot_cats[2]["PF_CLUSTERS"] = {"title": "Passing Filter Clusters"}
-    plot_cats[2]["NPF_CLUSTERS"] = {"title": "Non Passing Filter Clusters"}
+    plot_cats = [
+        {
+            "PF_BASES": {"title": "Passing Filter Bases"},
+            "NPF_BASES": {"title": "Non Passing Filter Bases"},
+        },
+        {
+            "PF_READS": {"title": "Passing Filter Reads"},
+            "NPF_READS": {"title": "Non Passing Filter Reads"},
+        },
+        {
+            "PF_CLUSTERS": {"title": "Passing Filter Clusters"},
+            "NPF_CLUSTERS": {"title": "Non Passing Filter Clusters"},
+        },
+    ]
     tdata = {}
     for lane_number, lane in data.items():
         lane["NPF_BASES"] = int(lane["TOTAL_BASES"]) - int(lane["PF_BASES"])

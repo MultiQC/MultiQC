@@ -1,5 +1,5 @@
 import logging
-from collections import OrderedDict, defaultdict
+from collections import defaultdict
 
 from multiqc.modules.base_module import BaseMultiqcModule
 from multiqc.plots import linegraph
@@ -173,14 +173,15 @@ class DragenFastqcGcMetrics(BaseMultiqcModule):
             avg_gc_content_data[s_name] = {"avg_gc_content_percent": (reads_by_gc_sum * 100) / total_reads_sum}
 
         # Add Avg. GC Content to header
-        headers = OrderedDict()
-        headers["avg_gc_content_percent"] = {
-            "title": "% GC",
-            "description": "Average % GC Content",
-            "max": 100,
-            "min": 0,
-            "suffix": "%",
-            "scale": "Set1",
-            "format": "{:,.0f}",
+        headers = {
+            "avg_gc_content_percent": {
+                "title": "% GC",
+                "description": "Average % GC Content",
+                "max": 100,
+                "min": 0,
+                "suffix": "%",
+                "scale": "Set1",
+                "format": "{:,.0f}",
+            }
         }
         self.general_stats_addcols(avg_gc_content_data, headers, namespace="FastQC")

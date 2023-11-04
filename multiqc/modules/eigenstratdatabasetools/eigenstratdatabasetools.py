@@ -3,7 +3,6 @@
 
 import json
 import logging
-from collections import OrderedDict
 
 from multiqc.modules.base_module import BaseMultiqcModule, ModuleNoSamplesFound
 
@@ -73,7 +72,7 @@ class MultiqcModule(BaseMultiqcModule):
 
             for k, v in data[s_name].items():
                 try:
-                    ## number of covered and total SNPs are integer values
+                    # number of covered and total SNPs are integer values
                     self.snp_cov_data[s_clean][k] = int(v)
                 except ValueError:
                     self.snp_cov_data[s_clean][k] = v
@@ -81,21 +80,22 @@ class MultiqcModule(BaseMultiqcModule):
     def addSummaryMetrics(self):
         """Take the parsed stats from eigenstrat_snp_coverage and add it to the main plot"""
 
-        headers = OrderedDict()
-        headers["Covered_Snps"] = {
-            "title": "Covered SNPs",
-            "description": "The number of SNPs for which a genotype has been called.",
-            "scale": "PuBuGn",
-            "format": "{:,.0f}",
-            "shared_key": "snp_call",
-        }
-        headers["Total_Snps"] = {
-            "title": "Total SNPs",
-            "description": "The total number of SNPs in the genotype dataset.",
-            "scale": "PuBuGn",
-            "format": "{:,.0f}",
-            "hidden": True,
-            "shared_key": "snp_call",
+        headers = {
+            "Covered_Snps": {
+                "title": "Covered SNPs",
+                "description": "The number of SNPs for which a genotype has been called.",
+                "scale": "PuBuGn",
+                "format": "{:,.0f}",
+                "shared_key": "snp_call",
+            },
+            "Total_Snps": {
+                "title": "Total SNPs",
+                "description": "The total number of SNPs in the genotype dataset.",
+                "scale": "PuBuGn",
+                "format": "{:,.0f}",
+                "hidden": True,
+                "shared_key": "snp_call",
+            },
         }
 
         self.general_stats_addcols(self.snp_cov_data, headers)

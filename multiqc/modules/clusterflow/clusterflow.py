@@ -6,7 +6,6 @@ import logging
 import os
 import re
 import time
-from collections import OrderedDict
 
 from multiqc.modules.base_module import BaseMultiqcModule, ModuleNoSamplesFound
 from multiqc.plots import table
@@ -38,10 +37,6 @@ class MultiqcModule(BaseMultiqcModule):
             self.parse_clusterflow_logs(f)
             self.add_data_source(f, "log")
 
-            # Superfluous function call to confirm that it is used in this module
-            # Replace None with actual version if it is available
-            self.add_software_version(None, f["s_name"])
-
         for f in self.find_log_files("clusterflow/runfiles", filehandles=True):
             parsed_data = self.parse_clusterflow_runfiles(f)
             if parsed_data is not None:
@@ -54,6 +49,10 @@ class MultiqcModule(BaseMultiqcModule):
 
         if len(self.clusterflow_commands) == 0 and len(self.clusterflow_runfiles) == 0:
             raise ModuleNoSamplesFound
+
+        # Superfluous function call to confirm that it is used in this module
+        # Replace None with actual version if it is available
+        self.add_software_version(None)
 
         # Count pipelines
         num_log_pipelines = len(self.clusterflow_commands)
@@ -114,12 +113,12 @@ class MultiqcModule(BaseMultiqcModule):
             <em>(typically input and ouput filenames)</em>. Each column is for one Cluster Flow run."""
 
         # Loop through pipelines
-        tool_cmds = OrderedDict()
+        tool_cmds = dict()
         headers = dict()
         for pipeline_id, commands in self.clusterflow_commands.items():
             headers[pipeline_id] = {"scale": False}
             self.var_html = '<span style="background-color:#dedede; color:#999;">[variable]</span>'
-            tool_cmd_parts = OrderedDict()
+            tool_cmd_parts = dict()
             for cmd in commands:
                 s = cmd.split()
                 tool = self._guess_cmd_name(s)
@@ -241,7 +240,7 @@ class MultiqcModule(BaseMultiqcModule):
                 s = line.split("\t")
                 if len(s) > 1:
                     if "files" not in data:
-                        data["files"] = OrderedDict()
+                        data["files"] = dict()
                     if s[0] not in data["files"]:
                         data["files"][s[0]] = []
                     data["files"][s[0]].append(s[1:])
@@ -314,17 +313,18 @@ class MultiqcModule(BaseMultiqcModule):
             else:
                 data[pid]["num_starting_files"] += int(num_starting_files)
 
-        headers = OrderedDict()
-        headers["pipeline_name"] = {"title": "Pipeline Name"}
-        headers["pipeline_start"] = {
-            "title": "Date Started",
-            "description": "Date and time that pipeline was started (YYYY-MM-DD HH:SS)",
-        }
-        headers["genome"] = {"title": "Genome ID", "description": "ID of reference genome used"}
-        headers["num_starting_files"] = {
-            "title": "# Starting Files",
-            "format": "{:,.0f}",
-            "description": "Number of input files at start of pipeline run.",
+        headers = {
+            "pipeline_name": {"title": "Pipeline Name"},
+            "pipeline_start": {
+                "title": "Date Started",
+                "description": "Date and time that pipeline was started (YYYY-MM-DD HH:SS)",
+            },
+            "genome": {"title": "Genome ID", "description": "ID of reference genome used"},
+            "num_starting_files": {
+                "title": "# Starting Files",
+                "format": "{:,.0f}",
+                "description": "Number of input files at start of pipeline run.",
+            },
         }
         table_config = {
             "namespace": "Cluster Flow",

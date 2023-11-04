@@ -1,7 +1,6 @@
 """MultiQC module to parse the output from SNPsplit"""
 import logging
 import re
-from collections import OrderedDict
 
 import yaml
 
@@ -56,7 +55,8 @@ class MultiqcModule(BaseMultiqcModule):
         self.add_data_source(f, s_name=s_name)
         self.add_software_version(parsed[1].get("version"), s_name)
 
-    def parse_new_snpsplit_log(self, f):
+    @staticmethod
+    def parse_new_snpsplit_log(f):
         data = next(yaml.load_all(f["f"], Loader=yaml.SafeLoader))
         flat_data = {}
         for k in data:
@@ -140,41 +140,43 @@ class MultiqcModule(BaseMultiqcModule):
 
     def add_general_stats(self):
         """Add some columns to the General Statistics table at the top of the report"""
-        headers = OrderedDict()
-        headers["tagging_SNP_annotation"] = {
-            "title": "SNP annotation",
-            "description": "Annotation file used for differentiating genomes",
-            "scale": False,
-            "modify": lambda x: "<code>{}</code>".format(x),
-            "hidden": True,
-        }
-        headers["tagging_percent_N_was_known_SNP"] = {
-            "title": "% Ns known SNP",
-            "description": "Percentage of detected SNPs in the sample that were also present in the annotation",
-            "scale": "RdYlGn",
-            "format": "{:,.2f}",
-            "max": 100,
-            "min": 0,
-            "suffix": "%",
-        }
-        headers["tagging_SNPs_stored"] = {
-            "title": "SNPs stored",
-            "description": "Total number of SNPs used for the analysis",
-            "scale": "PrGn",
-            "format": "{:,.0f}",
-            "hidden": True,
+        headers = {
+            "tagging_SNP_annotation": {
+                "title": "SNP annotation",
+                "description": "Annotation file used for differentiating genomes",
+                "scale": False,
+                "modify": lambda x: "<code>{}</code>".format(x),
+                "hidden": True,
+            },
+            "tagging_percent_N_was_known_SNP": {
+                "title": "% Ns known SNP",
+                "description": "Percentage of detected SNPs in the sample that were also present in the annotation",
+                "scale": "RdYlGn",
+                "format": "{:,.2f}",
+                "max": 100,
+                "min": 0,
+                "suffix": "%",
+            },
+            "tagging_SNPs_stored": {
+                "title": "SNPs stored",
+                "description": "Total number of SNPs used for the analysis",
+                "scale": "PrGn",
+                "format": "{:,.0f}",
+                "hidden": True,
+            },
         }
         self.general_stats_addcols(self.snpsplit_data, headers)
 
     def allele_tagging_section(self):
         """Allele-tagging report"""
-        cats = OrderedDict()
-        cats["tagging_g1"] = {"name": "Genome 1"}
-        cats["tagging_g2"] = {"name": "Genome 2"}
-        cats["tagging_unassignable"] = {"name": "Not assigned"}
-        cats["tagging_bizarre"] = {"name": "Conflicting SNPs"}
-        cats["tagging_unaligned"] = {"name": "Unaligned reads"}
-        cats["tagging_CT_positions_skipped"] = {"name": "C->T SNP"}
+        cats = {
+            "tagging_g1": {"name": "Genome 1"},
+            "tagging_g2": {"name": "Genome 2"},
+            "tagging_unassignable": {"name": "Not assigned"},
+            "tagging_bizarre": {"name": "Conflicting SNPs"},
+            "tagging_unaligned": {"name": "Unaligned reads"},
+            "tagging_CT_positions_skipped": {"name": "C->T SNP"},
+        }
 
         # Subtract C->T from unassignable
         plot_data = {}
@@ -218,18 +220,19 @@ class MultiqcModule(BaseMultiqcModule):
 
     def allele_sorting_section(self):
         """Allele-specific sorting report"""
-        cats = OrderedDict()
-        cats["sorting_genome1"] = {"name": "Genome 1"}
-        cats["sorting_genome2"] = {"name": "Genome 2"}
-        cats["sorting_unassignable"] = {"name": "Not assigned"}
-        cats["sorting_conflicting"] = {"name": "Conflicting SNPs"}
+        cats = {
+            "sorting_genome1": {"name": "Genome 1"},
+            "sorting_genome2": {"name": "Genome 2"},
+            "sorting_unassignable": {"name": "Not assigned"},
+            "sorting_conflicting": {"name": "Conflicting SNPs"},
+            "sorting_genome1_G1_G1": {"name": "Genome 1 / Genome 1"},
+            "sorting_genome2_G2_G2": {"name": "Genome 2 / Genome 2"},
+            "sorting_unassignable_UA_UA": {"name": "Unassignable / Unassignable"},
+            "sorting_G1_UA_total": {"name": "Genome 1 / unassignable"},
+            "sorting_G2_UA_total": {"name": "Genome 2 / unassignable"},
+            "sorting_G1_G2_total": {"name": "Different genomes"},
+        }
         # HiC only
-        cats["sorting_genome1_G1_G1"] = {"name": "Genome 1 / Genome 1"}
-        cats["sorting_genome2_G2_G2"] = {"name": "Genome 2 / Genome 2"}
-        cats["sorting_unassignable_UA_UA"] = {"name": "Unassignable / Unassignable"}
-        cats["sorting_G1_UA_total"] = {"name": "Genome 1 / unassignable"}
-        cats["sorting_G2_UA_total"] = {"name": "Genome 2 / unassignable"}
-        cats["sorting_G1_G2_total"] = {"name": "Different genomes"}
 
         pconfig = {
             "id": "snpsplit-sorting-plot",

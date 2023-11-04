@@ -3,7 +3,6 @@
 import logging
 import os
 import re
-from collections import OrderedDict
 
 from multiqc.plots import table
 
@@ -12,28 +11,29 @@ log = logging.getLogger(__name__)
 
 
 def lane_metrics_table(data):
-    headers = OrderedDict()
-    headers["CLUSTER_DENSITY"] = {
-        "title": "Cluster Density",
-        "description": "The number of clusters per unit area on the this lane (cluster / mm^2`)",
-        "scale": "Greens",
-    }
-    headers["TYPE_NAME"] = {
-        "title": "Read Number",
-        "description": "Defines an Illumina template read number (first or second)",
-        "modify": lambda x: x.lower(),
-    }
-    headers["PREPHASING_APPLIED"] = {
-        "title": "Prephasing Applied",
-        "description": "Median pre-phasing value across all tiles in a lane, applied to the first and second template reads",
-        "scale": "BuPu",
-        "max": 1,
-    }
-    headers["PHASING_APPLIED"] = {
-        "title": "Phasing Applied",
-        "description": "Median phasing value across all tiles in a lane, applied to the first and second template reads",
-        "scale": "BuPu",
-        "max": 1,
+    headers = {
+        "CLUSTER_DENSITY": {
+            "title": "Cluster Density",
+            "description": "The number of clusters per unit area on the this lane (cluster / mm^2`)",
+            "scale": "Greens",
+        },
+        "TYPE_NAME": {
+            "title": "Read Number",
+            "description": "Defines an Illumina template read number (first or second)",
+            "modify": lambda x: x.lower(),
+        },
+        "PREPHASING_APPLIED": {
+            "title": "Prephasing Applied",
+            "description": "Median pre-phasing value across all tiles in a lane, applied to the first and second template reads",
+            "scale": "BuPu",
+            "max": 1,
+        },
+        "PHASING_APPLIED": {
+            "title": "Phasing Applied",
+            "description": "Median phasing value across all tiles in a lane, applied to the first and second template reads",
+            "scale": "BuPu",
+            "max": 1,
+        },
     }
 
     table_config = {
@@ -83,23 +83,25 @@ def parse_reports(self):
                         self.picard_lane_metrics[run_name][lane] = {}
                     self.picard_lane_metrics[run_name][lane].update(d)
 
-        # Superfluous function call to confirm that it is used in this module
-        # Replace None with actual version if it is available
-        self.add_software_version(None, run_name)
-
     # Filter to strip out ignored sample names
     self.picard_lane_metrics = self.ignore_samples(self.picard_lane_metrics)
 
-    if len(self.picard_lane_metrics) > 0:
-        # Write parsed data to a file
-        self.write_data_file(self.picard_lane_metrics, "multiqc_picard_IlluminaLaneMetrics")
+    if len(self.picard_lane_metrics) == 0:
+        return 0
 
-        self.add_section(
-            name="Lane Metrics",
-            anchor="picard-illuminalanemetrics",
-            description="Quality control metrics on cluster density for each lane of an Illumina flowcell. For more information, see the [Picard Documentation](https://broadinstitute.github.io/picard/picard-metric-definitions.html#IlluminaLaneMetrics).",
-            plot=lane_metrics_table(self.picard_lane_metrics),
-        )
+    # Write parsed data to a file
+    self.write_data_file(self.picard_lane_metrics, "multiqc_picard_IlluminaLaneMetrics")
+
+    # Superfluous function call to confirm that it is used in this module
+    # Replace None with actual version if it is available
+    self.add_software_version(None)
+
+    self.add_section(
+        name="Lane Metrics",
+        anchor="picard-illuminalanemetrics",
+        description="Quality control metrics on cluster density for each lane of an Illumina flowcell. For more information, see the [Picard Documentation](https://broadinstitute.github.io/picard/picard-metric-definitions.html#IlluminaLaneMetrics).",
+        plot=lane_metrics_table(self.picard_lane_metrics),
+    )
 
     # Return the number of detected samples to the parent module
     return len(self.picard_lane_metrics)

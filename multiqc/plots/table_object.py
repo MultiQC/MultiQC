@@ -4,14 +4,14 @@
 
 import logging
 import re
-from collections import OrderedDict, defaultdict
+from collections import defaultdict
 
 from multiqc.utils import config, report
 
 logger = logging.getLogger(__name__)
 
 
-class datatable(object):
+class DataTable:
     """Data table class. Prepares and holds data and configuration
     for either a table or a beeswarm plot."""
 
@@ -44,7 +44,6 @@ class datatable(object):
             "247,129,191",
             "153,153,153",
         ]
-        shared_keys = defaultdict(lambda: dict())
 
         # Go through each table section
         for idx, d in enumerate(data):
@@ -69,11 +68,11 @@ class datatable(object):
                     headers[idx]
                 except IndexError:
                     headers.append(list)
-                    headers[idx] = OrderedDict()
+                    headers[idx] = dict()
                 else:
-                    # Convert the existing headers into an OrderedDict (eg. if parsed from a config)
+                    # Convert the existing headers into a dict (e.g. if parsed from a config)
                     od_tuples = [(key, headers[idx][key]) for key in headers[idx].keys()]
-                    headers[idx] = OrderedDict(od_tuples)
+                    headers[idx] = dict(od_tuples)
 
                 # Create empty header configs for each new data key
                 for k in keys:
@@ -85,7 +84,7 @@ class datatable(object):
             for k in list(headers[idx].keys()):
                 headers[idx][str(k)] = headers[idx].pop(k)
             # Ensure that all sample names are strings as well
-            cdata = OrderedDict()
+            cdata = dict()
             for k, v in data[idx].items():
                 cdata[str(k)] = v
             data[idx] = cdata
