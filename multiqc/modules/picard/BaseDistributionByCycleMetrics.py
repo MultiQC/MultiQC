@@ -71,7 +71,9 @@ def parse_reports(self):
 
             # read through the header of the file to obtain the
             # sample name
-            clean_fn = lambda n: self.clean_s_name(n, f)
+            def clean_fn(n):
+                return self.clean_s_name(n, f)
+
             s_name = read_sample_name(lines, clean_fn, "BaseDistributionByCycle")
             assert s_name is not None
 
@@ -161,7 +163,10 @@ def parse_reports(self):
         # build list of linegraphs
         linegraph_data = [{}, {}, {}, {}, {}]
         for s_name, cycles in self.picard_baseDistributionByCycle_data.items():
-            reformat_items = lambda n: {cycle: tup[n] for cycle, tup in cycles.items()}
+
+            def reformat_items(n):
+                return {cycle: tup[n] for cycle, tup in cycles.items()}
+
             for lg, index in zip(linegraph_data, range(5)):
                 lg[s_name] = reformat_items(index)
 
