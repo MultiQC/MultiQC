@@ -13,6 +13,7 @@
 
 ### Module updates
 
+- **fastp**: add version parsing ([#2159](https://github.com/ewels/MultiQC/pull/2159))
 - **fastp**: correctly parse sample name from --in1/--in2 command. Prefer file name if not `fastp.json`; fallback to file name when error ([#2139](https://github.com/ewels/MultiQC/pull/2139))
 - **Picard**: Generalize to directly support Sentieon and Parabricks outputs ([#2110](https://github.com/ewels/MultiQC/pull/2110))
 - **Sentieon**: Removed the module in favour of directly supporting the outputs in the **Picard** module. Note that `-m sentieon` will no longer work. The exported plot and data files will be prefixed as `picard` rather than `sentieon` ([#2110](https://github.com/ewels/MultiQC/pull/2110))
