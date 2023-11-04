@@ -208,6 +208,7 @@ setup(
             "vep = multiqc.modules.vep:MultiqcModule",
             "verifybamid = multiqc.modules.verifybamid:MultiqcModule",
             "whatshap = multiqc.modules.whatshap:MultiqcModule",
+            "xenome = multiqc.modules.xenome:MultiqcModule",
         ],
         "multiqc.templates.v1": [
             "default = multiqc.templates.default",
