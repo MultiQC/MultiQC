@@ -56,7 +56,7 @@ class DragenBaseMetrics(BaseMultiqcModule):
 
                     try:
                         data[r_name][pos][quantile] = qv
-                    except (KeyError, IndexError):
+                    except Exception:
                         data[r_name][pos] = {}
                         data[r_name][pos][quantile] = qv
 
