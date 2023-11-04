@@ -72,14 +72,18 @@ def parse_reports(self):
     self.add_software_version(None)
 
     # Plot junction annotations
-    keys = [dict(), dict()]
-    keys[0]["known_splicing_junctions"] = {"name": "Known Splicing Junctions"}
-    keys[0]["partial_novel_splicing_junctions"] = {"name": "Partial Novel Splicing Junctions"}
-    keys[0]["novel_splicing_junctions"] = {"name": "Novel Splicing Junctions"}
-    keys[1]["known_splicing_events"] = {"name": "Known Splicing Events"}
-    keys[1]["partial_novel_splicing_events"] = {"name": "Partial Novel Splicing Events"}
-    keys[1]["novel_splicing_events"] = {"name": "Novel Splicing Events"}
-
+    keys = [
+        {
+            "known_splicing_junctions": {"name": "Known Splicing Junctions"},
+            "partial_novel_splicing_junctions": {"name": "Partial Novel Splicing Junctions"},
+            "novel_splicing_junctions": {"name": "Novel Splicing Junctions"},
+        },
+        {
+            "known_splicing_events": {"name": "Known Splicing Events"},
+            "partial_novel_splicing_events": {"name": "Partial Novel Splicing Events"},
+            "novel_splicing_events": {"name": "Novel Splicing Events"},
+        },
+    ]
     pconfig = {
         "id": "rseqc_junction_annotation_junctions_plot",
         "title": "RSeQC: Splicing Junctions",

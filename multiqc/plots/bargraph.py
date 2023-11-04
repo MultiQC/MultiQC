@@ -272,18 +272,18 @@ def highcharts_bargraph(plotdata, plotsamples=None, pconfig=None):
             active = "active" if k == 0 else ""
             try:
                 name = pconfig["data_labels"][k]["name"]
-            except (KeyError, IndexError):
+            except Exception:
                 try:
                     name = pconfig["data_labels"][k]
-                except (KeyError, IndexError):
+                except Exception:
                     name = k + 1
             try:
                 ylab = 'data-ylab="{}"'.format(pconfig["data_labels"][k]["ylab"])
-            except (KeyError, IndexError):
+            except Exception:
                 ylab = 'data-ylab="{}"'.format(name) if name != k + 1 else ""
             try:
                 ymax = 'data-ymax="{}"'.format(pconfig["data_labels"][k]["ymax"])
-            except (KeyError, IndexError):
+            except Exception:
                 ymax = ""
             html += '<button class="btn btn-default btn-sm {a}" data-action="set_data" {y} {ym} data-newdata="{k}" data-target="{id}">{n}</button>\n'.format(
                 a=active, id=pconfig["id"], n=name, y=ylab, ym=ymax, k=k
@@ -332,7 +332,7 @@ def matplotlib_bargraph(plotdata, plotsamples, pconfig=None):
     for k in range(len(plotdata)):
         try:
             name = pconfig["data_labels"][k]
-        except (KeyError, IndexError):
+        except Exception:
             name = k + 1
         pid = "mqc_{}_{}".format(pconfig["id"], name)
         pid = report.save_htmlid(pid, skiplint=True)
@@ -371,7 +371,7 @@ def matplotlib_bargraph(plotdata, plotsamples, pconfig=None):
             active = "active" if k == 0 else ""
             try:
                 name = pconfig["data_labels"][k]
-            except (KeyError, IndexError):
+            except Exception:
                 name = k + 1
             html += '<button class="btn btn-default btn-sm {a}" data-target="#{pid}">{n}</button>\n'.format(
                 a=active, pid=pid, n=name
