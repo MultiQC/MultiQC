@@ -50,7 +50,7 @@ $(function () {
         let val = node.getAttribute("val");
         let floatVal = parseFloat(val);
         if (!isNaN(floatVal)) {
-          return floatVal;
+          return val; // expected to return a string
         }
         return val;
       }
