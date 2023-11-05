@@ -400,7 +400,7 @@ def matplotlib_linegraph(plotdata, pconfig=None):
 
                 for i, x in enumerate(d["data"]):
                     if type(x) is list:
-                        fdata[d["name"]][str(x[0])] = x[1]
+                        fdata[d["name"]][x[0]] = x[1]
                     else:
                         try:
                             fdata[d["name"]][pconfig["categories"][i]] = x

@@ -4,6 +4,8 @@
 
 ### MultiQC updates
 
+- Fix export TSV from a matplotlib linegraph plot ([#2143](https://github.com/ewels/MultiQC/pull/2143))
+
 ### New Modules
 
 ### Module updates

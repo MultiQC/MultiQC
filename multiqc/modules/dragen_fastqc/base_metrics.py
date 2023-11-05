@@ -115,7 +115,7 @@ class DragenBaseMetrics(BaseMultiqcModule):
                     counts[base][pos] = int(value)
                     totals[pos] += int(value)
 
-                # Use the the count and averages to recompute total QVs
+                # Use the count and averages to recompute total QVs
                 qv_sums = defaultdict(int)
                 for base, pos_data in counts.items():
                     for pos, count in pos_data.items():
