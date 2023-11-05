@@ -63,9 +63,7 @@ def parse_reports(self):
             if s_name in self.sentieon_alignment_metrics:
                 log.debug(
                     "Duplicate sample name found in {}!\
-                          Overwriting: {}".format(
-                        f["fn"], s_name
-                    )
+                          Overwriting: {}".format(f["fn"], s_name)
                 )
             self.add_data_source(f, s_name, section="AlignmentSummaryMetrics")
             self.sentieon_alignment_metrics[s_name] = parsed_data[s_name]

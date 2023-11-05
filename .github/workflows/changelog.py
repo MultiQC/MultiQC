@@ -23,9 +23,12 @@ import re
 import subprocess
 import sys
 from pathlib import Path
+from typing import Set
+
+import yaml
 
 REPO_URL = "https://github.com/ewels/MultiQC"
-MODULES_DIR = "multiqc/modules"
+MODULES_DIR = Path("multiqc/modules")
 
 # Assumes the environment is set by the GitHub action.
 pr_title = os.environ["PR_TITLE"]
@@ -40,6 +43,14 @@ assert pr_number, pr_number
 pr_title = pr_title.removesuffix(f" (#{pr_number})")
 
 changelog_path = workspace_path / "CHANGELOG.md"
+
+
+def _run_cmd(cmd):
+    print(cmd)
+    result = subprocess.run(cmd, shell=True, capture_output=True, text=True)
+    if result.returncode != 0:
+        raise RuntimeError(f"Error executing command: {result.stderr}")
+    return result
 
 
 def _find_module_info(py_path: Path) -> dict[str]:
@@ -82,11 +93,7 @@ def _files_altered_by_pr(pr_number, types=None) -> set[Path]:
     if types is None:
         types = {"added"}
 
-    cmd = f"cd {workspace_path} && gh pr diff {pr_number}"
-    print(cmd)
-    result = subprocess.run(cmd, shell=True, capture_output=True, text=True)
-    if result.returncode != 0:
-        raise RuntimeError(f"Error executing command: {result.stderr}")
+    result = _run_cmd(f"cd {workspace_path} && gh pr diff {pr_number}")
 
     paths = set()
     lines = result.stdout.splitlines()
@@ -104,6 +111,28 @@ def _files_altered_by_pr(pr_number, types=None) -> set[Path]:
     return paths
 
 
+def _diff_for_a_file(pr_number, path) -> str:
+    """
+    Returns the diff for a specific file altered in the PR.
+    """
+    result = _run_cmd(f"cd {workspace_path} && gh pr diff {pr_number}")
+
+    lines = result.stdout.splitlines()
+    while lines:
+        line = lines.pop(0)
+        if line.startswith("index "):
+            a = lines.pop(0)
+            b = lines.pop(0)
+            if a == f"--- a/{path}" and b == f"+++ b/{path}":
+                diff = []
+                while lines:
+                    line = lines.pop(0)
+                    if line.startswith("diff "):
+                        break
+                    diff.append(line)
+                return "\n".join(diff)
+
+
 def _modules_added_by_pr(pr_number) -> list[Path]:
     """
     Returns paths to the modules added by the PR.
@@ -119,18 +148,65 @@ def _modules_added_by_pr(pr_number) -> list[Path]:
     return mod_py_files
 
 
-def _modules_modified_by_pr(pr_number) -> list[Path]:
+def _load_file_content_after_pr(path) -> str:
     """
-    Returns paths to the modules modified by the PR.
+    Returns the contents of the file changed by the PR.
     """
-    mod_py_files = []
+    _run_cmd(f"cd {workspace_path} && gh pr checkout {pr_number}")
+    with (workspace_path / path).open() as f:
+        text = f.read()
+    return text
+
+
+def _modules_modified_by_pr(pr_number) -> Set[Path]:
+    """
+    Returns paths to the "<module>.py" files of the altered modules.
+    """
     altered_files = _files_altered_by_pr(pr_number, {"modified"})
+
+    # First, special case for search patterns.
+    modules_modified_in_search_patterns = set()
+    sp_paths = [f for f in altered_files if f.name == "search_patterns.yaml"]
+    if sp_paths:
+        sp_path = sp_paths[0]
+        # Find modules that changed, e.g. collect "htseq":
+        # htseq:
+        #   - contents_re: '^(feature\tcount|\w+\t\d+)$'
+        #   + contents_re: '^(feature\tcount|\w+.*\t\d+)$'
+        #   num_lines: 1
+        with (workspace_path / sp_path).open() as f:
+            old_text = f.read()
+        new_text = _load_file_content_after_pr(sp_path)
+        if old_text != new_text:
+            old_data = yaml.safe_load(old_text)
+            new_data = yaml.safe_load(new_text)
+            for new_mod in new_data:
+                # Added module?
+                if new_mod not in old_data:
+                    modules_modified_in_search_patterns.add(new_mod)
+            for old_mod in old_data:
+                # Removed module?
+                if old_mod not in new_data:
+                    modules_modified_in_search_patterns.add(old_mod)
+                # Modified module?
+                elif old_data.get(old_mod) != new_data.get(old_mod):
+                    modules_modified_in_search_patterns.add(old_mod)
+
+    mod_py_files = set()
+    if modules_modified_in_search_patterns:
+        mod_name = modules_modified_in_search_patterns.pop()
+        mod_py = MODULES_DIR / mod_name / f"{mod_name}.py"
+        if (mod_py := workspace_path / mod_py).exists():
+            mod_py_files.add(mod_py)
+
+    # Now adding module-specific files
     for path in altered_files:
         if str(path).startswith(f"{MODULES_DIR}/"):
-            mod_anchor = path.parent.name
-            mod_py = path.parent / f"{mod_anchor}.py"
+            mod_name = path.parent.name
+            mod_py = path.parent / f"{mod_name}.py"
             if (mod_py := workspace_path / mod_py).exists():
-                mod_py_files.append(mod_py)
+                mod_py_files.add(mod_py)
+
     return mod_py_files
 
 
@@ -152,18 +228,16 @@ def _determine_change_type(pr_title, pr_number) -> tuple[str, dict]:
             mod_info = _find_module_info(mod_py_files[0])
             proper_pr_title = f"New module: {mod_info['name']}"
             if pr_title != proper_pr_title:
-                cmd = f"cd {workspace_path}; gh pr edit --title '{proper_pr_title}'"
-                print(cmd)
                 try:
-                    subprocess.run(cmd, shell=True)
-                except subprocess.CalledProcessError as e:
+                    _run_cmd(f"cd {workspace_path} && gh pr edit --title '{proper_pr_title}'")
+                except (RuntimeError, subprocess.CalledProcessError) as e:
                     print(
                         f"Error executing command: {e}. Please alter the title manually: '{proper_pr_title}'",
                         file=sys.stderr,
                     )
             return "### New modules", mod_info
 
-    # Check what modules were changed by the PR, and if the title starts with on
+    # Check what modules were changed by the PR, and if the title starts with one
     # of the names of the changed modules, assume it's a module update.
     modified_mod_py_files = _modules_modified_by_pr(pr_number)
     if len(modified_mod_py_files) == 1:
@@ -196,7 +270,7 @@ else:
             f"- **{mod['name']}**: {descr} {pr_link}\n",
         ]
 if not new_lines:
-    if "[skip changelog]" not in pr_title:
+    if "skip changelog" not in pr_title and "no changelog" not in pr_title:
         new_lines = [
             f"- {pr_title} {pr_link}\n",
         ]
