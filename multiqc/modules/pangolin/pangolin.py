@@ -6,6 +6,7 @@
 import csv
 import logging
 from collections import OrderedDict
+from typing import Optional
 
 from multiqc.modules.base_module import BaseMultiqcModule, ModuleNoSamplesFound
 from multiqc.plots import table
@@ -103,6 +104,9 @@ class MultiqcModule(BaseMultiqcModule):
                 # Avoid generic header ID that clashes with other modules
                 if "qc_status" not in row:
                     row["qc_status"] = row.pop("status")
+                if "qc_notes" in row:
+                    row["qc_notes"] = _format_qc_notes(row["qc_notes"])
+
                 self.pangolin_data[s_name] = row
                 # Just save the lineage key for now - we will sort out the colours later
                 self.lineage_colours[row["lineage"]] = None
@@ -116,7 +120,7 @@ class MultiqcModule(BaseMultiqcModule):
                 add_version_not_none(row.get("pango_version"), s_name, "Pango")
                 add_version_not_none(row.get("pangoLEARN_version"), s_name, "PangoLEARN")
                 add_version_not_none(row.get("scorpio_version"), s_name, "Scorpio")
-                # constellation_version is someimes "TRUE" or "FALSE" - ignore these
+                # constellation_version is sometimes "TRUE" or "FALSE" - ignore these
                 constellation_version = row.get("constellation_version")
                 if constellation_version not in {None, "TRUE", "FALSE"}:
                     self.add_software_version(constellation_version, s_name, "Constellations")
@@ -225,7 +229,6 @@ class MultiqcModule(BaseMultiqcModule):
             "title": "QC Note",
             "description": "Notes specific to the QC checks run on the sequences.",
             "scale": False,
-            "modify": _format_qc_notes,
         }
 
         headers["note"] = {
@@ -244,18 +247,21 @@ class MultiqcModule(BaseMultiqcModule):
         return table.plot(self.pangolin_data, headers, table_config)
 
 
-def _format_qc_notes(raw: str) -> str:
-    # parses qc notes, they appear to come from:
-    # https://github.com/cov-lineages/pangolin/blob/361f49cbffbf26eb28bed2f4a4c0e7f3d5a054cc/pangolin/utils/preprocessing.py#L91-L97
-    # https://github.com/cov-lineages/pangolin/blob/361f49cbffbf26eb28bed2f4a4c0e7f3d5a054cc/pangolin/utils/preprocessing.py#L179
-
-    # e.g. Ambiguous_content:0.03
+def _format_qc_notes(raw: str) -> Optional[str]:
+    """
+    Parses QC notes, they appear to come from:
+    https://github.com/cov-lineages/pangolin/blob/361f49cbffbf26eb28bed2f4a4c0e7f3d5a054cc/pangolin/utils/preprocessing.py#L91-L97
+    https://github.com/cov-lineages/pangolin/blob/361f49cbffbf26eb28bed2f4a4c0e7f3d5a054cc/pangolin/utils/preprocessing.py#L179
+    """
     if raw.startswith("Ambiguous_content"):
+        # e.g. Ambiguous_content:0.03
         split = raw.split(":")
-        assert len(split) == 2, f"expected label of format 'Ambiguous_content:0.01', found {raw}"
+        if len(split) != 2:
+            logging.warning(f"Expected label of format 'Ambiguous_content:0.01', found: '{raw}'")
+            return None
         proportion_n = float(split[1])
         percent_n = int(proportion_n * 100)
         return f"Ambiguous content: {percent_n}%"
 
-    # unrecognized notes, just return them, capitalized
+    # Unrecognized notes, just return them, capitalized
     return raw.capitalize()
