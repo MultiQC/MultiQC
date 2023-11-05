@@ -812,5 +812,4 @@ class MultiqcModule(BaseMultiqcModule):
             except KeyError:
                 pass
 
-        # sort results
         return {key: value for key, value in islice(bar_data.items(), 20)}

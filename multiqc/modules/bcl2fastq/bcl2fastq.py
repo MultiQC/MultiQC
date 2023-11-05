@@ -512,5 +512,4 @@ class MultiqcModule(BaseMultiqcModule):
             except AttributeError:
                 pass
 
-        # sort results
         return {key: value for key, value in islice(bar_data.items(), 20)}
