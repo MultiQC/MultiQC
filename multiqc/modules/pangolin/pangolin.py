@@ -6,6 +6,7 @@
 import csv
 import logging
 from collections import OrderedDict
+from typing import Optional
 
 from multiqc.modules.base_module import BaseMultiqcModule, ModuleNoSamplesFound
 from multiqc.plots import table
@@ -103,6 +104,9 @@ class MultiqcModule(BaseMultiqcModule):
                 # Avoid generic header ID that clashes with other modules
                 if "qc_status" not in row:
                     row["qc_status"] = row.pop("status")
+                if "qc_notes" in row:
+                    row["qc_notes"] = _format_qc_notes(row["qc_notes"])
+
                 self.pangolin_data[s_name] = row
                 # Just save the lineage key for now - we will sort out the colours later
                 self.lineage_colours[row["lineage"]] = None
@@ -110,13 +114,13 @@ class MultiqcModule(BaseMultiqcModule):
 
                 # Version info
                 # Note: Excluded "version" field from software versions as this refers to
-                #       how the reference data was prepared. This info is still available
-                #       in the "Run table" table
+                # how the reference data was prepared. This info is still available
+                # in the "Run table" table
                 add_version_not_none(row.get("pangolin_version"), s_name, self.name)
                 add_version_not_none(row.get("pango_version"), s_name, "Pango")
                 add_version_not_none(row.get("pangoLEARN_version"), s_name, "PangoLEARN")
                 add_version_not_none(row.get("scorpio_version"), s_name, "Scorpio")
-                # constellation_version is someimes "TRUE" or "FALSE" - ignore these
+                # constellation_version is sometimes "TRUE" or "FALSE" - ignore these
                 constellation_version = row.get("constellation_version")
                 if constellation_version not in {None, "TRUE", "FALSE"}:
                     self.add_software_version(constellation_version, s_name, "Constellations")
@@ -200,16 +204,16 @@ class MultiqcModule(BaseMultiqcModule):
             "hidden": True,
         }
 
-        headers["pangoLEARN_version"] = {
-            "title": "PangoLEARN version",
-            "description": "The dated version of the pangoLEARN model installed.",
+        headers["scorpio_version"] = {
+            "title": "Scorpio version",
+            "description": "The version of the scorpio software installed.",
             "scale": False,
             "hidden": True,
         }
 
-        headers["pango_version"] = {
-            "title": "Pango version",
-            "description": "The version of pango-designation lineages that this assignment is based on.",
+        headers["constellation_version"] = {
+            "title": "Constellations version",
+            "description": "The version of Constellations that scorpio has used to curate the lineage assignment.",
             "scale": False,
             "hidden": True,
         }
@@ -219,6 +223,12 @@ class MultiqcModule(BaseMultiqcModule):
             "description": "Indicates whether the sequence passed the QC thresholds for minimum length and maximum N content.",
             "scale": False,
             "modify": lambda x: "Pass" if x == "passed_qc" else x.capitalize(),
+        }
+
+        headers["qc_notes"] = {
+            "title": "QC Note",
+            "description": "Notes specific to the QC checks run on the sequences.",
+            "scale": False,
         }
 
         headers["note"] = {
@@ -235,3 +245,23 @@ class MultiqcModule(BaseMultiqcModule):
         }
 
         return table.plot(self.pangolin_data, headers, table_config)
+
+
+def _format_qc_notes(raw: str) -> Optional[str]:
+    """
+    Parses QC notes, they appear to come from:
+    https://github.com/cov-lineages/pangolin/blob/361f49cbffbf26eb28bed2f4a4c0e7f3d5a054cc/pangolin/utils/preprocessing.py#L91-L97
+    https://github.com/cov-lineages/pangolin/blob/361f49cbffbf26eb28bed2f4a4c0e7f3d5a054cc/pangolin/utils/preprocessing.py#L179
+    """
+    if raw.startswith("Ambiguous_content"):
+        # e.g. Ambiguous_content:0.03
+        split = raw.split(":")
+        if len(split) != 2:
+            logging.warning(f"Expected label of format 'Ambiguous_content:0.01', found: '{raw}'")
+            return None
+        proportion_n = float(split[1])
+        percent_n = int(proportion_n * 100)
+        return f"Ambiguous content: {percent_n}%"
+
+    # Unrecognized notes, just return them, capitalized
+    return raw.capitalize()
