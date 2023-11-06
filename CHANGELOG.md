@@ -13,6 +13,7 @@
 
 ### Module updates
 
+- **Pangolin**: update for v4: add QC Note , update tool versions columns ([#2157](https://github.com/ewels/MultiQC/pull/2157))
 - **fastp**: add version parsing ([#2159](https://github.com/ewels/MultiQC/pull/2159))
 - **fastp**: correctly parse sample name from --in1/--in2 command. Prefer file name if not `fastp.json`; fallback to file name when error ([#2139](https://github.com/ewels/MultiQC/pull/2139))
 - **Picard**: Generalize to directly support Sentieon and Parabricks outputs ([#2110](https://github.com/ewels/MultiQC/pull/2110))
