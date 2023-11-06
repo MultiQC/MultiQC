@@ -71,7 +71,7 @@ def write_data_file(data, fn, sort_cols=False, data_format=None):
                 # Get all headers from the data, except if data is a dictionary (i.e. has >1 dimensions)
                 headers = []
                 for d in data.values():
-                    if not d or isinstance(d[0], dict):
+                    if not d or (isinstance(d, list) and isinstance(d[0], dict)):
                         continue
                     for h in d.keys():
                         if h not in headers:
