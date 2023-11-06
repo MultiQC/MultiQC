@@ -33,6 +33,7 @@ class MultiqcModule(BaseMultiqcModule):
             raise ModuleNoSamplesFound
 
         log.info(f"Found {len(data_by_sample)} reports")
+        self.write_data_file(data_by_sample, "multiqc_bamdst")
 
         self.general_stats(data_by_sample)
 
