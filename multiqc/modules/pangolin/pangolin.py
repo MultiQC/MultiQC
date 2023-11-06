@@ -114,8 +114,8 @@ class MultiqcModule(BaseMultiqcModule):
 
                 # Version info
                 # Note: Excluded "version" field from software versions as this refers to
-                #       how the reference data was prepared. This info is still available
-                #       in the "Run table" table
+                # how the reference data was prepared. This info is still available
+                # in the "Run table" table
                 add_version_not_none(row.get("pangolin_version"), s_name, self.name)
                 add_version_not_none(row.get("pango_version"), s_name, "Pango")
                 add_version_not_none(row.get("pangoLEARN_version"), s_name, "PangoLEARN")
@@ -212,8 +212,8 @@ class MultiqcModule(BaseMultiqcModule):
         }
 
         headers["constellation_version"] = {
-            "title": "Constellation version",
-            "description": "The version of constellations that scorpio has used to curate the lineage assignment.",
+            "title": "Constellations version",
+            "description": "The version of Constellations that scorpio has used to curate the lineage assignment.",
             "scale": False,
             "hidden": True,
         }
