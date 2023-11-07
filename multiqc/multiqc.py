@@ -34,6 +34,8 @@ from .utils import config, log, megaqc, plugin_hooks, report, software_versions,
 start_execution_time = time.time()
 logger = config.logger
 
+OLDEST_SUPPORTED_PYTHON_VERSION = "3.8"
+
 # Configuration for rich-click CLI help
 click.rich_click.USE_RICH_MARKUP = True
 click.rich_click.SHOW_METAVARS_COLUMN = False
@@ -367,6 +369,15 @@ def run(
         config.quiet = True
     log.init_log(logger, loglevel=loglevel, no_ansi=no_ansi)
 
+    # Throw an error if we are using an unsupported version of Python
+    if sys.version_info < tuple(map(int, OLDEST_SUPPORTED_PYTHON_VERSION.split("."))):
+        logger.critical(
+            "You are running MultiQC with Python {}. "
+            "Please upgrade Python! MultiQC does not support Python < {}, "
+            "things will break.".format(sys.version_info, OLDEST_SUPPORTED_PYTHON_VERSION)
+        )
+        return {"report": None, "config": None, "sys_exit_code": 1}
+
     console = rich.console.Console(
         stderr=True,
         highlight=False,
@@ -398,7 +409,7 @@ def run(
         try:
             response = urlopen("http://multiqc.info/version.php?v={}".format(config.short_version), timeout=5)
             remote_version = response.read().decode("utf-8").strip()
-            if version.StrictVersion(re.sub(r"[^0-9.]", "", remote_version)) > version.StrictVersion(
+            if version.parse(re.sub(r"[^0-9.]", "", remote_version)) > version.parse(
                 re.sub(r"[^0-9.]", "", config.short_version)
             ):
                 logger.warning("MultiQC Version {} now available!".format(remote_version))
@@ -501,16 +512,7 @@ def run(
     if config.strict:
         logger.info("--strict specified. Being strict with validation.")
 
-    # Throw a warning if we are running on Python 2
-    if sys.version_info[0] < 3:
-        logger.error(
-            "You are running MultiQC with Python {}.{}.{}".format(
-                sys.version_info[0], sys.version_info[1], sys.version_info[2]
-            )
-        )
-        logger.critical("Please upgrade Python! MultiQC does not support Python < 3.6, things will break.")
-    else:
-        logger.debug("Running Python {}".format(sys.version.replace("\n", " ")))
+    logger.debug("Running Python {}".format(sys.version.replace("\n", " ")))
 
     # Add files if --file-list option is given
     if file_list:
@@ -1211,8 +1213,9 @@ def _required_logs_found(modules_with_logs):
         ]
         if required_modules_with_no_logs:
             logger.critical(
-                "The following modules were explicitly requested but no log files "
-                "were found: {}".format(", ".join(required_modules_with_no_logs))
+                "The following modules were explicitly requested but no log files were found: {}".format(
+                    ", ".join(required_modules_with_no_logs)
+                )
             )
             return False
     return True
