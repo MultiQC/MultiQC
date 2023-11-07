@@ -25,29 +25,35 @@ class MultiqcModule(BaseMultiqcModule):
             doi="doi.org/10.1093/bioinformatics/bts236",
         )
 
-        self.show_pct = not getattr(config, "xenome", {}).get("show_read_counts", False)
-
         # Find and load any Xenome reports
-        self.detail_data = dict()
-        self.summary_data = dict()
+        self.detail_percents = dict()
+        self.detail_counts = dict()
+        self.summary_percents = dict()
+        self.summary_counts = dict()
         for f in self.find_log_files("xenome"):
             self._parse_xenome_logs(f)
 
         # Filter to strip out ignored sample names
-        self.detail_data = self.ignore_samples(self.detail_data)
-        self.summary_data = self.ignore_samples(self.summary_data)
-        if len(self.detail_data) == 0:
+        self.detail_percents = self.ignore_samples(self.detail_percents)
+        self.detail_counts = self.ignore_samples(self.detail_counts)
+        self.summary_percents = self.ignore_samples(self.summary_percents)
+        self.summary_counts = self.ignore_samples(self.summary_counts)
+        if len(self.detail_percents) == 0:
             raise ModuleNoSamplesFound
-        log.info(f"Found {len(self.detail_data)} reports")
+        log.info(f"Found {len(self.detail_percents)} reports")
+
+        # Superfluous function call to confirm that it is used in this module
+        # Replace None with actual version if it is available
+        self.add_software_version(None)
 
         # Write parsed report data to a file
-        self.write_data_file(self.detail_data, "multiqc_xenome_detail")
-        self.write_data_file(self.summary_data, "multiqc_xenome_summary")
+        self.write_data_file(self.detail_percents, "multiqc_xenome_detail_percent")
+        self.write_data_file(self.detail_counts, "multiqc_xenome_detail_counts")
+        self.write_data_file(self.summary_percents, "multiqc_xenome_summary_percent")
+        self.write_data_file(self.summary_counts, "multiqc_xenome_summary_counts")
 
-        self.all_species = self._collect_all_species(self.summary_data)
-
+        self.all_species = self._collect_all_species(self.summary_counts)
         self._build_table()
-
         self._xenome_stats_plot()
 
     @staticmethod
@@ -71,25 +77,22 @@ class MultiqcModule(BaseMultiqcModule):
 
         lines = iter(f["contents_lines"])
         try:
-            detail_by_class = self._parse_xenome_section(lines, "Statistics")
-            summary_by_class = self._parse_xenome_section(lines, "Summary")
+            detail_percents, detail_counts = self._parse_xenome_section(lines, "Statistics")
+            summary_percents, summary_counts = self._parse_xenome_section(lines, "Summary")
         except (AssertionError, StopIteration) as e:
             log.error(f"Error parsing Xenome log file '{f['fn']}' for sample '{s_name}': {e}")
             return
-        if detail_by_class is None or summary_by_class is None:
-            return
 
-        if s_name in self.detail_data:
+        if s_name in self.detail_counts:
             log.debug(f"Duplicate sample name found! Overwriting: {s_name}")
         self.add_data_source(f, s_name)
-        self.detail_data[s_name] = detail_by_class
-        self.summary_data[s_name] = summary_by_class
+        self.detail_counts[s_name] = detail_counts
+        self.detail_percents[s_name] = detail_percents
+        self.summary_counts[s_name] = summary_counts
+        self.summary_percents[s_name] = summary_percents
 
-        # Superfluous function call to confirm that it is used in this module
-        # Replace None with actual version if it is available
-        self.add_software_version(None, s_name)
-
-    def _parse_xenome_section(self, lines, expected_title: str):
+    @staticmethod
+    def _parse_xenome_section(lines, expected_title: str):
         """
         Parse one section, e.g.:
 
@@ -124,7 +127,7 @@ class MultiqcModule(BaseMultiqcModule):
             cls = data["class"].strip('"')
             cnt_by_class[cls] += int(data["count"])
             pct_by_class[cls] += float(data["percent"])
-        return pct_by_class if self.show_pct else cnt_by_class
+        return pct_by_class, cnt_by_class
 
     # to support multiple species, when running on logs for many unrelated runs
     COLORS = [
@@ -174,34 +177,55 @@ class MultiqcModule(BaseMultiqcModule):
         """
         headers: Dict[str, Dict] = {}
         table_data = defaultdict(dict)
-        for sn, data in self.summary_data.items():
-            for cls, cnt in data.items():
-                table_data[sn][f"{cls}_reads"] = cnt
+
+        for sn, data in self.summary_percents.items():
+            for cls, val in data.items():
+                table_data[sn][f"{cls}_reads_pct"] = val
                 if cls == "human":
-                    headers[f"{cls}_reads"] = {
-                        "title": f"Human reads",
-                        "description": f"{'share' if self.show_pct else 'number'} of human reads in the sample",
+                    headers[f"{cls}_reads_pct"] = {
+                        "title": "Human reads",
+                        "description": "share of human reads in the sample",
                         "min": 0,
-                        "suffix": "%" if self.show_pct else "",
+                        "suffix": "%",
                         "scale": self._get_color(cls, return_scale=True),
-                        "format": "{:,.1f}" if self.show_pct else "{:,d}",
+                        "format": "{:,.1f}",
                     }
                 else:
-                    headers[f"{cls}_reads"] = {
+                    headers[f"{cls}_reads_pct"] = {
                         "title": f"{cls.capitalize()} reads",
-                        "description": f"{'share' if self.show_pct else 'number'} of {cls} reads in the sample",
+                        "description": f"share of {cls} reads in the sample",
                         "min": 0,
-                        "suffix": "%" if self.show_pct else "",
+                        "suffix": "%",
                         "scale": self._get_color(cls, return_scale=True),
-                        "format": "{:,.1f}" if self.show_pct else "{:,d}",
+                        "format": "{:,.1f}",
                         "hidden": cls in ["both", "neither", "ambiguous"],
                     }
-
         self.general_stats_addcols(table_data, headers)
-
         detail_headers = headers.copy()
         for metric in headers:
             detail_headers[metric]["hidden"] = False
+
+        for sn, data in self.summary_counts.items():
+            for cls, val in data.items():
+                table_data[sn][f"{cls}_reads_cnt"] = val
+                if cls == "human":
+                    detail_headers[f"{cls}_reads_cnt"] = {
+                        "title": "Human reads",
+                        "description": "number of human reads in the sample",
+                        "min": 0,
+                        "scale": self._get_color(cls, return_scale=True),
+                        "format": "{:,d}",
+                        "hidden": True,
+                    }
+                else:
+                    detail_headers[f"{cls}_reads_cnt"] = {
+                        "title": f"{cls.capitalize()} reads",
+                        "description": f"number of {cls} reads in the sample",
+                        "min": 0,
+                        "scale": self._get_color(cls, return_scale=True),
+                        "format": "{:,d}",
+                        "hidden": True,
+                    }
 
         self.add_section(
             name="Summary table",
@@ -248,13 +272,14 @@ class MultiqcModule(BaseMultiqcModule):
             name="Summary classification",
             anchor="xenome_summary_bar_plot_section",
             plot=bargraph.plot(
-                self.summary_data,
+                self.summary_counts,
                 summary_cats,
                 {
                     "id": "xenome_summary_bar_plot",
                     "title": "Xenome: summary classification",
                     "ylab": "# Reads",
                     "cpswitch_counts_label": "Number of reads",
+                    "cpswitch_c_active": False,
                 },
             ),
         )
@@ -265,13 +290,14 @@ class MultiqcModule(BaseMultiqcModule):
             name="Detailed classification",
             anchor="xenome_detail_bar_plot_section",
             plot=bargraph.plot(
-                self.detail_data,
+                self.detail_counts,
                 detail_cats,
                 {
                     "id": "xenome_detail_bar_plot",
                     "title": "Xenome: detailed classification",
                     "ylab": "# Reads",
                     "cpswitch_counts_label": "Number of reads",
+                    "cpswitch_c_active": False,
                 },
             ),
         )
