@@ -10,7 +10,6 @@ from typing import List
 
 import packaging.version
 import yaml
-from yaml.constructor import SafeConstructor
 
 from multiqc.utils import report as mqc_report
 
