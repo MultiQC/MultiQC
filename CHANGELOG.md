@@ -5,6 +5,7 @@
 ### MultiQC updates
 
 - Nanostat: account for both tab and spaces in v1.41+ search pattern ([#2155](https://github.com/ewels/MultiQC/pull/2155))
+- Xenome: show percentages by default ([#2164](https://github.com/ewels/MultiQC/pull/2164))
 
 ### New Modules
 
