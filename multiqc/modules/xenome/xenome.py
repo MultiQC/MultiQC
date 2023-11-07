@@ -7,7 +7,7 @@ from typing import Dict, Union, List
 import spectra
 
 from multiqc.modules.base_module import BaseMultiqcModule, ModuleNoSamplesFound
-from multiqc.plots import bargraph
+from multiqc.plots import bargraph, table
 from multiqc.utils import config
 
 # Initialise the logger
@@ -46,7 +46,8 @@ class MultiqcModule(BaseMultiqcModule):
 
         self.all_species = self._collect_all_species(self.summary_data)
 
-        self._xenome_general_stats_table()
+        self._build_table()
+
         self._xenome_stats_plot()
 
     @staticmethod
@@ -70,8 +71,8 @@ class MultiqcModule(BaseMultiqcModule):
 
         lines = iter(f["contents_lines"])
         try:
-            detail_by_class = self._parse_xenome_table(lines, "Statistics")
-            summary_by_class = self._parse_xenome_table(lines, "Summary")
+            detail_by_class = self._parse_xenome_section(lines, "Statistics")
+            summary_by_class = self._parse_xenome_section(lines, "Summary")
         except (AssertionError, StopIteration) as e:
             log.error(f"Error parsing Xenome log file '{f['fn']}' for sample '{s_name}': {e}")
             return
@@ -88,7 +89,7 @@ class MultiqcModule(BaseMultiqcModule):
         # Replace None with actual version if it is available
         self.add_software_version(None, s_name)
 
-    def _parse_xenome_table(self, lines, expected_title: str):
+    def _parse_xenome_section(self, lines, expected_title: str):
         """
         Parse one section, e.g.:
 
@@ -166,9 +167,10 @@ class MultiqcModule(BaseMultiqcModule):
         else:
             return MultiqcModule._lighten_color(code, lighten)
 
-    def _xenome_general_stats_table(self):
+    def _build_table(self):
         """
-        Add the numbers of reads classified as one of the species into the general stats table.
+        Prepare headers and data for a table. Add a section with a table,
+        and add a few columns into the general stats.
         """
         headers: Dict[str, Dict] = {}
         table_data = defaultdict(dict)
@@ -194,7 +196,18 @@ class MultiqcModule(BaseMultiqcModule):
                         "format": "{:,.1f}" if self.show_pct else "{:,d}",
                         "hidden": cls in ["both", "neither", "ambiguous"],
                     }
+
         self.general_stats_addcols(table_data, headers)
+
+        detail_headers = headers.copy()
+        for metric in headers:
+            detail_headers[metric]["hidden"] = False
+
+        self.add_section(
+            name="Summary table",
+            anchor="xenome-summary-table",
+            plot=table.plot(table_data, detail_headers),
+        )
 
     def _xenome_stats_plot(self):
         """
@@ -232,11 +245,13 @@ class MultiqcModule(BaseMultiqcModule):
             * **Neither**: Read was found in neither of the species
             * **Ambiguous**: Read origin could not be adequately determined.  
             """,
+            name="Summary classification",
+            anchor="xenome_summary_bar_plot_section",
             plot=bargraph.plot(
                 self.summary_data,
                 summary_cats,
                 {
-                    "id": "xenome_stats_summary",
+                    "id": "xenome_summary_bar_plot",
                     "title": "Xenome: summary classification",
                     "ylab": "# Reads",
                     "cpswitch_counts_label": "Number of reads",
@@ -247,11 +262,13 @@ class MultiqcModule(BaseMultiqcModule):
         self.add_section(
             description="This plot shows the number of reads classified by Xenome, "
             "with a more detail certainty split than the plot above",
+            name="Detailed classification",
+            anchor="xenome_detail_bar_plot_section",
             plot=bargraph.plot(
                 self.detail_data,
                 detail_cats,
                 {
-                    "id": "xenome_stats_detail",
+                    "id": "xenome_detail_bar_plot",
                     "title": "Xenome: detailed classification",
                     "ylab": "# Reads",
                     "cpswitch_counts_label": "Number of reads",
