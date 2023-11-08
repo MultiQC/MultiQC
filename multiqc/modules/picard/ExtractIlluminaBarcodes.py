@@ -41,6 +41,7 @@ def parse_reports(module):
                     continue
 
                 data = dict(zip(keys, vals))
+                data["LANE"] = lane
                 data_by_lane[lane][data["BARCODE"]] = data
 
     data_by_lane = module.ignore_samples(data_by_lane)

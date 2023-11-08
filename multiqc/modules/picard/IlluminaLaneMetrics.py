@@ -1,7 +1,7 @@
 """ MultiQC submodule to parse output from Picard CollectIlluminaLaneMetrics """
 
 import logging
-from collections import OrderedDict
+from collections import OrderedDict, defaultdict
 
 from multiqc.modules.picard import util
 from multiqc.plots import table
@@ -53,7 +53,10 @@ def lane_metrics_table(module, data):
 def parse_reports(module):
     """Find Picard IlluminaLaneMetrics reports and parse their data"""
 
-    data_by_lane_by_run = dict()
+    # There can be two types of these files for the same sample: one with IlluminaLaneMetrics,
+    # and one with IlluminaPhasingMetrics. We want to collect both, thus using default dicts
+    # and calling .update() on them when any metrics are found.
+    data_by_lane_by_run = defaultdict(lambda: defaultdict(dict))
 
     # Go through logs and find Metrics
     for f in module.find_log_files("picard/collectilluminalanemetrics", filehandles=True):
@@ -81,7 +84,6 @@ def parse_reports(module):
                 if run_name in data_by_lane_by_run:
                     log.debug(f"Duplicate sample name found in {f['fn']}! Overwriting: {run_name}")
                 module.add_data_source(f, s_name=run_name, section="IlluminaLaneMetrics")
-                data_by_lane_by_run[run_name] = dict()
 
             elif keys:
                 vals = line.strip("\n").split("\t")
@@ -91,8 +93,6 @@ def parse_reports(module):
 
                 d = dict(zip(keys, vals))
                 lane = d["LANE"]
-                if lane not in data_by_lane_by_run[run_name]:
-                    data_by_lane_by_run[run_name][lane] = dict()
                 data_by_lane_by_run[run_name][lane].update(d)
 
     data_by_lane_by_run = module.ignore_samples(data_by_lane_by_run)
