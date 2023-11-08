@@ -4,6 +4,7 @@
 
 ### MultiQC updates
 
+- Fix column sorting in exported TSV files from a matplotlib linegraph plot ([#2143](https://github.com/ewels/MultiQC/pull/2143))
 - Nanostat: account for both tab and spaces in v1.41+ search pattern ([#2155](https://github.com/ewels/MultiQC/pull/2155))
 
 ### New Modules
