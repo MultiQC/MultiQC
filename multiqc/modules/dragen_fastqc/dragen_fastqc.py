@@ -66,7 +66,7 @@ class MultiqcModule(DragenBaseMetrics, DragenReadMetrics, DragenFastqcGcMetrics,
 
             if s_name in data_by_sample:
                 log.debug("Duplicate sample name found! Overwriting: {}".format(f["s_name"]))
-            self.add_data_source(f, section="stats")
+            self.add_data_source(f, s_name)
             data_by_sample.update(data_by_mate)
 
             # Superfluous function call to confirm that it is used in this module
