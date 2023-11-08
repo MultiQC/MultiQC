@@ -20,7 +20,7 @@
 - **fastp**: add version parsing ([#2159](https://github.com/ewels/MultiQC/pull/2159))
 - **fastp**: correctly parse sample name from --in1/--in2 command. Prefer file name if not `fastp.json`; fallback to file name when error ([#2139](https://github.com/ewels/MultiQC/pull/2139))
 - **Picard**: Generalize to directly support Sentieon and Parabricks outputs ([#2110](https://github.com/ewels/MultiQC/pull/2110))
-- **Sentieon**: Removed the module in favour of directly supporting the outputs in the **Picard** module. Note that `-m sentieon` will no longer work. The exported plot and data files will be prefixed as `picard` rather than `sentieon` ([#2110](https://github.com/ewels/MultiQC/pull/2110))
+- **Sentieon**: Removed the module in favour of directly supporting the outputs in the **Picard** module. Note that `-m sentieon` will no longer work. The exported plot and data files will be prefixed as `picard` (instead of `sentieon`). Note that the Sentieon module used to fetch the sample names from the file names by default, and now it follows the Picard module's logic, and prioritizes the commands recorded in the logs. To override, use the `use_filename_as_sample_name` config flag ([#2110](https://github.com/ewels/MultiQC/pull/2110))
 
 ## [MultiQC v1.17](https://github.com/ewels/MultiQC/releases/tag/v1.17) - 2023-10-17
 
