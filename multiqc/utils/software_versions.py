@@ -6,6 +6,7 @@
 import logging
 import os
 from collections import defaultdict
+from typing import List
 
 import packaging.version
 import yaml
@@ -61,22 +62,32 @@ def load_versions_from_config(config):
     software_versions_config, is_valid = validate_software_versions(software_versions_config)
 
     if not is_valid:
-        log.error("Software versions loaded config.software_versions is not in a valid format")
+        log.error("Software versions loaded config.software_versions is not in a valid format, ignoring the section.")
 
     software_versions_file = defaultdict(lambda: defaultdict(list))
     for f in mqc_report.files.get("software_versions", []):
         file_name = os.path.join(f["root"], f["fn"])
         with open(file_name) as f:
             try:
-                log.debug("Reading software versions settings from: {}".format(file_name))
-                software_versions_file_tmp = yaml.safe_load(f)
+                log.debug(f"Reading software versions settings from: {file_name}")
+                software_versions_file_tmp = yaml.load(
+                    f,
+                    # We need to be cautious when loading unquoted version strings from a YAML file.
+                    # For instance, the version `1.10` will be parsed as a float by default, this converted
+                    # into `1.1`. Passing yaml.BaseLoader explicitly makes YAML treat all scalar values
+                    # as strings, so `1.10` will turn into a string `"1.10"` as we want.
+                    # From https://pyyaml.org/wiki/PyYAMLDocumentation
+                    #      BaseLoader(stream) does not resolve or support any tags
+                    #      and constructs only basic Python objects: lists, dictionaries and Unicode strings.
+                    Loader=yaml.BaseLoader,
+                )
             except yaml.scanner.ScannerError as e:
-                log.error("Error parsing versions YAML: {}".format(e))
+                log.error(f"Error parsing versions YAML: {e}")
 
         software_versions_file_tmp, is_valid = validate_software_versions(software_versions_file_tmp)
 
         if not is_valid:
-            log.error("Software versions loaded from {} is not in a valid format".format(file_name))
+            log.error(f"Software versions loaded from {file_name} is not in a valid format, ignoring the file.")
             continue
 
         software_versions_file = merge(software_versions_file, software_versions_file_tmp)
@@ -128,8 +139,18 @@ def validate_software_versions(input):
     Returns a dict of dicts of list in the format (1) and a boolean indicating if the input is valid.
     """
 
-    def all_strings(lst):
-        return all(isinstance(item, str) for item in lst)
+    def _list_of_versions_is_good(lst: List[str]) -> bool:
+        good = True
+        for item in lst:
+            if not isinstance(item, str):
+                log.error(
+                    f"Version must be a string, got '{type(item).__name__}': '{item}'. Consider wrapping the value in quotes: '\"{item}\"'"
+                )
+                good = False
+            elif not packaging.version.parse(item):
+                log.error(f"Invalid version: '{item}'")
+                good = False
+        return good
 
     output = defaultdict(lambda: defaultdict(list))
     if not isinstance(input, dict):
@@ -143,29 +164,20 @@ def validate_software_versions(input):
         if isinstance(level1_values, dict):
             for level2_key, versions in level1_values.items():
                 software = level2_key
-                if isinstance(versions, str):
-                    versions = [versions]
-
                 if not isinstance(versions, list):
+                    versions = [versions]
+                if not _list_of_versions_is_good(versions):
                     return output, False
-
-                if not all_strings(versions):
-                    return output, False
-
                 output[group][software] = versions
 
         # Check if the input is in format (2)
-        elif isinstance(level1_values, (list, str)):
-            versions = level1_values
-            if isinstance(versions, str):
-                versions = [versions]
-
-            if not all_strings(versions):
-                return output, False
-
-            output[group][software] = versions
         else:
-            return output, False
+            versions = level1_values
+            if not isinstance(versions, list):
+                versions = [versions]
+            if not _list_of_versions_is_good(versions):
+                return output, False
+            output[group][software] = versions
 
     return output, True
 
