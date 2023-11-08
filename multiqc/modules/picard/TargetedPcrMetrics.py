@@ -4,6 +4,7 @@ import logging
 
 from multiqc.modules.picard import util
 from multiqc.plots import bargraph
+from multiqc.utils import config
 
 # Initialise the logger
 log = logging.getLogger(__name__)
@@ -12,14 +13,17 @@ log = logging.getLogger(__name__)
 def parse_reports(module):
     """Find Picard TargetedPcrMetrics reports and parse their data"""
 
-    # Set up vars
     data_by_sample = dict()
-    samplestats_by_sample = dict()
+    histogram_by_sample = dict()
+
+    picard_config = getattr(config, "picard_config", {})
+    skip_histo = picard_config.get("targeted_pcr_skip_histogram", False)
 
     # Go through logs and find Metrics
     for f in module.find_log_files("picard/pcr_metrics", filehandles=True):
         # Sample name from input file name by default.
         s_name = f["s_name"]
+        in_hist = False
 
         for line in f["f"]:
             maybe_s_name = util.extract_sample_name(
@@ -31,29 +35,52 @@ def parse_reports(module):
             if maybe_s_name:
                 s_name = maybe_s_name
 
+            if s_name is None:
+                continue
+
+            # Catch the histogram values
+            if in_hist and not skip_histo:
+                try:
+                    sections = line.split("\t")
+                    cov = int(sections[0])
+                    count = int(sections[1])
+                    histogram_by_sample[s_name][cov] = count
+                except ValueError:
+                    # Reset in case we have more in this log file
+                    s_name = None
+                    in_hist = False
+
             if util.is_line_right_before_table(line, picard_class="TargetedPcrMetrics"):
-                if "TargetedPcrMetrics" in line and "## METRICS CLASS" in line:
-                    keys = f["f"].readline().strip("\n").split("\t")
-                    vals = f["f"].readline().strip("\n").split("\t")
-                    if len(vals) != len(keys):
-                        continue
+                keys = f["f"].readline().strip("\n").split("\t")
+                vals = f["f"].readline().strip("\n").split("\t")
+                if len(vals) != len(keys):
+                    continue
 
-                    if s_name in data_by_sample:
-                        log.debug(f"Duplicate sample name found in {f['fn']}! Overwriting: {s_name}")
+                if s_name in data_by_sample:
+                    log.debug(f"Duplicate sample name found in {f['fn']}! Overwriting: {s_name}")
 
-                    module.add_data_source(f, s_name, section="TargetedPcrMetrics")
-                    data_by_sample[s_name] = dict()
-                    for i, k in enumerate(keys):
-                        try:
-                            # Multiply percentages by 100
-                            if k.startswith("PCT_"):
-                                vals[i] = float(vals[i]) * 100.0
-                            data_by_sample[s_name][k] = float(vals[i])
-                        except ValueError:
-                            data_by_sample[s_name][k] = vals[i]
+                module.add_data_source(f, s_name, section="TargetedPcrMetrics")
+                data_by_sample[s_name] = dict()
+                histogram_by_sample[s_name] = dict()
+
+                for k, v in zip(keys, vals):
+                    try:
+                        # Multiply percentages by 100
+                        if k.startswith("PCT_"):
+                            v = float(v) * 100.0
+                    except ValueError:
+                        pass
+                    data_by_sample[s_name][k] = v
+
+            elif line.startswith("## HISTOGRAM"):
+                keys = f["f"].readline().strip("\n").split("\t")
+                assert len(keys) >= 2, (keys, f)
+                in_hist = True
+                histogram_by_sample[s_name] = dict()
 
     # Filter to strip out ignored sample names
     data_by_sample = module.ignore_samples(data_by_sample)
+    histogram_by_sample = module.ignore_samples(histogram_by_sample)
     if len(data_by_sample) == 0:
         return 0
 
@@ -85,10 +112,11 @@ def parse_reports(module):
     module.general_stats_addcols(data_by_sample, headers, namespace="TargetedPcrMetrics")
 
     # Bar plot of ignored bases
-    keys = dict()
-    keys["ON_AMPLICON_BASES"] = {"name": "On-amplicon bases"}
-    keys["NEAR_AMPLICON_BASES"] = {"name": "Near-amplicon bases"}
-    keys["OFF_AMPLICON_BASES"] = {"name": "Off-amplicon bases", "color": "#f28f43"}
+    keys = {
+        "ON_AMPLICON_BASES": {"name": "On-amplicon bases"},
+        "NEAR_AMPLICON_BASES": {"name": "Near-amplicon bases"},
+        "OFF_AMPLICON_BASES": {"name": "Off-amplicon bases", "color": "#f28f43"},
+    }
 
     # Config for the plot
     pconfig = {

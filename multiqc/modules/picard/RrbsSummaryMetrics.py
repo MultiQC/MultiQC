@@ -42,19 +42,16 @@ def parse_reports(module):
                 vals = f["f"].readline().strip("\n").split("\t")
                 if len(vals) != len(keys):
                     continue
-                for i, k in enumerate(keys):
-                    try:
-                        val = vals[i]
-                    except IndexError:
-                        pass  # missing data
+
+                for k, v in zip(keys, vals):
+                    if not v:
+                        v = "NA"
                     else:
-                        if not val:
-                            data_by_sample[s_name][k] = "NA"
-                        else:
-                            try:
-                                data_by_sample[s_name][k] = float(val)
-                            except ValueError:
-                                data_by_sample[s_name][k] = val
+                        try:
+                            v = float(v)
+                        except ValueError:
+                            pass
+                    data_by_sample[s_name][k] = v
 
     # Filter to strip out ignored sample names
     data_by_sample = module.ignore_samples(data_by_sample)
@@ -69,31 +66,32 @@ def parse_reports(module):
     module.write_data_file(data_by_sample, "multiqc_picard_RrbsSummaryMetrics")
 
     # Add to general stats table
-    headers = dict()
-    headers["PCT_CPG_BASES_CONVERTED"] = {
-        "title": "CpG Methylated",
-        "description": "Percentage of times a CpG cytosine was converted",
-        "max": 100,
-        "min": 0,
-        "suffix": "%",
-        "format": "{:,.0f}",
-        "scale": "RdYlGn-rev",
-        "modify": lambda x: 100 - util.multiply_hundred(x),
-    }
-    headers["PCT_NON_CPG_BASES_CONVERTED"] = {
-        "title": "Non-CpG Methylated",
-        "description": "Percentage of times a non-CpG cytosine was converted",
-        "max": 100,
-        "min": 0,
-        "suffix": "%",
-        "format": "{:,.0f}",
-        "scale": "RdYlGn",
-        "modify": lambda x: 100 - util.multiply_hundred(x),
-    }
-    headers["MEDIAN_CPG_COVERAGE"] = {
-        "title": "Median CpG Cov",
-        "description": "Median coverage of CpG sites",
-        "min": 0,
+    headers = {
+        "PCT_CPG_BASES_CONVERTED": {
+            "title": "CpG Methylated",
+            "description": "Percentage of times a CpG cytosine was converted",
+            "max": 100,
+            "min": 0,
+            "suffix": "%",
+            "format": "{:,.0f}",
+            "scale": "RdYlGn-rev",
+            "modify": lambda x: 100 - util.multiply_hundred(x),
+        },
+        "PCT_NON_CPG_BASES_CONVERTED": {
+            "title": "Non-CpG Methylated",
+            "description": "Percentage of times a non-CpG cytosine was converted",
+            "max": 100,
+            "min": 0,
+            "suffix": "%",
+            "format": "{:,.0f}",
+            "scale": "RdYlGn",
+            "modify": lambda x: 100 - util.multiply_hundred(x),
+        },
+        "MEDIAN_CPG_COVERAGE": {
+            "title": "Median CpG Cov",
+            "description": "Median coverage of CpG sites",
+            "min": 0,
+        },
     }
     module.general_stats_addcols(data_by_sample, headers, namespace="RrbsSummaryMetrics")
 

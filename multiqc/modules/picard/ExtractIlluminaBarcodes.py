@@ -37,7 +37,9 @@ def parse_reports(module):
             elif keys:
                 vals = line.strip("\n").split("\t")
                 if len(vals) != len(keys):
+                    keys = None
                     continue
+
                 data = dict(zip(keys, vals))
                 data_by_lane[lane][data["BARCODE"]] = data
 

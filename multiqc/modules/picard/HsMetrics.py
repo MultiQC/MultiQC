@@ -89,7 +89,6 @@ def parse_reports(module):
                 sentieon_algo="HsMetricAlgo",
             )
             if maybe_s_name:
-                # Starts information for a new sample
                 s_name = maybe_s_name
                 keys = None
 
@@ -105,7 +104,6 @@ def parse_reports(module):
             elif keys:
                 vals = line.strip("\n").split("\t")
                 if len(vals) != len(keys):
-                    s_name = None
                     keys = None
                     continue
 

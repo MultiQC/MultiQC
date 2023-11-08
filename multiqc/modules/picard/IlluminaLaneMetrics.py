@@ -11,30 +11,31 @@ log = logging.getLogger(__name__)
 
 
 def lane_metrics_table(module, data):
-    headers = OrderedDict()
-    headers["CLUSTER_DENSITY"] = {
-        "title": "Cluster Density",
-        "description": "The number of clusters per unit area on this lane (cluster / " "mm^2`)",
-        "scale": "Greens",
-    }
-    headers["TYPE_NAME"] = {
-        "title": "Read Number",
-        "description": "Defines an Illumina template read number (first or second)",
-        "modify": lambda x: x.lower(),
-    }
-    headers["PREPHASING_APPLIED"] = {
-        "title": "Prephasing Applied",
-        "description": "Median pre-phasing value across all tiles in a lane, applied "
-        "to the first and second template reads",
-        "scale": "BuPu",
-        "max": 1,
-    }
-    headers["PHASING_APPLIED"] = {
-        "title": "Phasing Applied",
-        "description": "Median phasing value across all tiles in a lane, applied to "
-        "the first and second template reads",
-        "scale": "BuPu",
-        "max": 1,
+    headers = {
+        "CLUSTER_DENSITY": {
+            "title": "Cluster Density",
+            "description": "The number of clusters per unit area on this lane (cluster / " "mm^2`)",
+            "scale": "Greens",
+        },
+        "TYPE_NAME": {
+            "title": "Read Number",
+            "description": "Defines an Illumina template read number (first or second)",
+            "modify": lambda x: x.lower(),
+        },
+        "PREPHASING_APPLIED": {
+            "title": "Prephasing Applied",
+            "description": "Median pre-phasing value across all tiles in a lane, applied "
+            "to the first and second template reads",
+            "scale": "BuPu",
+            "max": 1,
+        },
+        "PHASING_APPLIED": {
+            "title": "Phasing Applied",
+            "description": "Median phasing value across all tiles in a lane, applied to "
+            "the first and second template reads",
+            "scale": "BuPu",
+            "max": 1,
+        },
     }
 
     table_config = {
@@ -69,7 +70,6 @@ def parse_reports(module):
                 picard_opt="OUTPUT_PREFIX",
             )
             if maybe_run_name:
-                # Starts information for a new sample
                 run_name = maybe_run_name
                 keys = None
 
@@ -87,7 +87,6 @@ def parse_reports(module):
                 vals = line.strip("\n").split("\t")
                 if len(vals) != len(keys):
                     keys = None
-                    run_name = None
                     continue
 
                 d = dict(zip(keys, vals))

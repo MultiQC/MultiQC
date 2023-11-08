@@ -26,9 +26,11 @@ def parse_reports(module):
 
     # Go through logs and find Metrics
     for f in module.find_log_files(f"{module.anchor}/gcbias", filehandles=True):
+        # Sample name from input file name by default.
+        s_name = f["s_name"]
         gc_col = None
         cov_col = None
-        s_name = f["s_name"]
+
         for line in f["f"]:
             maybe_s_name = util.extract_sample_name(
                 module,
@@ -38,8 +40,10 @@ def parse_reports(module):
                 sentieon_algo="GCBias",
             )
             if maybe_s_name:
-                # Starts information for a new sample
                 s_name = maybe_s_name
+
+            if s_name is None:
+                continue
 
             if util.is_line_right_before_table(
                 line, picard_class=["GcBiasDetailMetrics", "GcBiasSummaryMetrics"], sentieon_algo="GCBias"
@@ -62,7 +66,10 @@ def parse_reports(module):
                         log.debug(f"Duplicate sample name found in {f['fn']}! Overwriting: {s_name}")
                     summary_data_by_sample[s_name] = dict()
                     vals = f["f"].readline().rstrip("\n").split("\t")
-                    assert len(keys) == len(vals), (keys, vals, f)
+                    if len(keys) != len(vals):
+                        s_name = None
+                        continue
+
                     for k, v in zip(keys, vals):
                         try:
                             summary_data_by_sample[s_name][k] = float(v)

@@ -74,6 +74,7 @@ def parse_reports(module, sp_key="markdups"):
         keys = None
         in_stats_block = False
         recompute_merged_metrics = False
+
         for line in f["f"]:
             maybe_s_name = util.extract_sample_name(
                 module,
@@ -84,19 +85,18 @@ def parse_reports(module, sp_key="markdups"):
             )
             if maybe_s_name:
                 s_name = maybe_s_name
-                continue
 
             if s_name is None:
                 continue
 
             if util.is_line_right_before_table(line, picard_class="DuplicationMetric", sentieon_algo="Dedup"):
+                keys = f["f"].readline().strip("\n").split("\t")
                 if s_name in data_by_sample:
                     log.debug(f"Duplicate sample name found in {f['fn']}! Overwriting: {s_name}")
                 in_stats_block = True
-                keys = f["f"].readline().strip("\n").split("\t")
 
             # Currently parsing the METRICS table
-            if in_stats_block:
+            elif in_stats_block:
                 vals = line.rstrip("\n").split("\t")
 
                 # End of the METRICS table, or multiple libraries, and we're not merging them
@@ -104,26 +104,26 @@ def parse_reports(module, sp_key="markdups"):
                     parsed_data = {k: parsed_list[0] for k, parsed_list in parsed_lists.items()}
                     if save_table_results(s_name, keys, parsed_data, recompute_merged_metrics):
                         # Reset for next file if returned True
-                        s_name = f["s_name"]
+                        s_name = None
                         parsed_lists = defaultdict(list)
                         keys = None
                         in_stats_block = False
                         recompute_merged_metrics = False
+                    continue
 
                 # Parse the column values
-                if keys and vals and len(keys) == len(vals):
-                    for i, k in enumerate(keys):
-                        # More than one library present and merging stats
-                        if k in parsed_lists:
-                            recompute_merged_metrics = True
+                assert len(vals) == len(keys), (keys, vals, f)
+                for k, v in zip(keys, vals):
+                    # More than one library present and merging stats
+                    if k in parsed_lists:
+                        recompute_merged_metrics = True
 
-                        val = vals[i].strip()
-                        try:
-                            val_float = float(val)
-                        except ValueError:
-                            parsed_lists[k].append(val)
-                        else:
-                            parsed_lists[k].append(val_float)
+                    v = v.strip()
+                    try:
+                        v = float(v)
+                    except ValueError:
+                        pass
+                    parsed_lists[k].append(v)
 
         parsed_data = {}
         for k in parsed_lists:

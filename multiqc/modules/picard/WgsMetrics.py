@@ -25,6 +25,7 @@ def parse_reports(module):
         # Sample name from input file name by default
         s_name = f["s_name"]
         in_hist = False
+
         for line in f["f"]:
             maybe_s_name = util.extract_sample_name(
                 module,
@@ -33,11 +34,7 @@ def parse_reports(module):
                 picard_tool="CollectWgsMetrics",
             )
             if maybe_s_name:
-                # Starts information for a new sample
                 s_name = maybe_s_name
-
-            if s_name is None:
-                continue
 
             # Catch the histogram values
             if in_hist and not skip_histo:
@@ -51,28 +48,33 @@ def parse_reports(module):
                     s_name = None
                     in_hist = False
 
+            if s_name is None:
+                continue
+
             if util.is_line_right_before_table(line, picard_class="WgsMetrics"):
+                keys = f["f"].readline().strip("\n").split("\t")
+                vals = f["f"].readline().strip("\n").split("\t")
+                if len(vals) != len(keys):
+                    continue
+
                 if s_name in data_by_sample:
                     log.debug(f"Duplicate sample name found in {f['fn']}! Overwriting: {s_name}")
 
                 module.add_data_source(f, s_name, section="WgsMetrics")
                 data_by_sample[s_name] = dict()
+
+                for k, v in zip(keys, vals):
+                    try:
+                        v = float(v)
+                    except ValueError:
+                        pass
+                    data_by_sample[s_name][k] = v
+
+            elif line.startswith("## HISTOGRAM"):
                 keys = f["f"].readline().strip("\n").split("\t")
-                vals = f["f"].readline().strip("\n").split("\t")
-                if len(vals) == len(keys):
-                    for i, k in enumerate(keys):
-                        try:
-                            data_by_sample[s_name][k] = float(vals[i])
-                        except ValueError:
-                            data_by_sample[s_name][k] = vals[i]
-
-                # Skip lines on to histogram
-                next(f["f"])
-                next(f["f"])
-                next(f["f"])
-
-                histogram_by_sample[s_name] = dict()
+                assert len(keys) >= 2, (keys, f)
                 in_hist = True
+                histogram_by_sample[s_name] = dict()
 
     # Filter to strip out ignored sample names
     data_by_sample = module.ignore_samples(data_by_sample)

@@ -48,22 +48,17 @@ def parse_reports(module):
             elif keys:
                 vals = line.strip("\n").split("\t")
                 if len(vals) != len(keys):
-                    s_name = None
                     keys = None
                     continue
 
                 # Ignore the FIRST_OF_PAIR / SECOND_OF_PAIR data to simplify things
                 if vals[0] == "PAIR" or vals[0] == "UNPAIRED":
-                    for i, k in enumerate(keys):
+                    for k, v in zip(keys, vals):
                         try:
-                            data_by_sample[s_name][k] = float(vals[i])
+                            v = float(v)
                         except ValueError:
-                            data_by_sample[s_name][k] = vals[i]
-
-    # Remove empty dictionaries
-    for s_name in list(data_by_sample.keys()):
-        if len(data_by_sample[s_name]) == 0:
-            data_by_sample.pop(s_name, None)
+                            pass
+                        data_by_sample[s_name][k] = v
 
     # Filter to strip out ignored sample names
     data_by_sample = module.ignore_samples(data_by_sample)

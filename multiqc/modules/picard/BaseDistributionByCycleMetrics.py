@@ -27,7 +27,7 @@ def parse_reports(module):
         data_by_read_end = defaultdict(dict)
         max_cycle_r1 = 0
 
-        def _finalize_sample(data_by_read_end, s_name):
+        def _finalize_sample(data_by_read_end, s_name: str):
             """
             Populate `data_by_sample` and `samplestats_by_sample`
             """
@@ -73,28 +73,29 @@ def parse_reports(module):
                 continue
 
             if util.is_line_right_before_table(line, picard_class="BaseDistributionByCycleMetrics"):
-                if data_by_read_end:
-                    # Finalize previous sample
-                    _finalize_sample(data_by_read_end, s_name)
-                    # Reset for next sample
-                    data_by_read_end = defaultdict(dict)
-                    max_cycle_r1 = 0
-
                 keys = f["f"].readline().strip("\n").split("\t")
                 assert keys == ["READ_END", "CYCLE", "PCT_A", "PCT_C", "PCT_G", "PCT_T", "PCT_N"]
 
             elif keys:
                 raw_vals = line.strip("\n").split("\t")
                 if len(raw_vals) != len(keys):
+                    # Finalize previous sample
+                    if data_by_read_end:
+                        _finalize_sample(data_by_read_end, s_name)
+                    # Reset for next sample
+                    max_cycle_r1 = 0
                     s_name = None
+                    data_by_read_end = defaultdict(dict)
                     continue
 
                 vals = []
                 for v in raw_vals:
                     try:
-                        vals.append(float(v))
+                        v = float(v)
                     except ValueError:
-                        vals.append(v)
+                        pass
+                    vals.append(v)
+
                 read_end, cycle, pct_a, pct_c, pct_g, pct_t, pct_n = vals
                 try:
                     cycle = int(cycle)
@@ -106,8 +107,7 @@ def parse_reports(module):
                     cycle -= max_cycle_r1
                 data_by_read_end[read_end][cycle] = (pct_a, pct_c, pct_g, pct_t, pct_n)
 
-        if data_by_read_end:
-            # Finalize the last sample
+        if data_by_read_end and s_name:
             _finalize_sample(data_by_read_end, s_name)
 
     # Filter to strip out ignored sample names

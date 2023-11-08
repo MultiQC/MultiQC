@@ -188,25 +188,25 @@ def _histogram_data(iterator):
     """Yields only the row contents that contain the histogram entries"""
     histogram_started = False
     header_passed = False
-    for l in iterator:
-        if "## HISTOGRAM" in l:
+    for line in iterator:
+        if "## HISTOGRAM" in line:
             histogram_started = True
         elif histogram_started:
             if header_passed:
-                values = l.rstrip().split("\t")
+                values = line.rstrip().split("\t")
                 if len(values) == 1:
                     continue
                 try:
                     problem_type, name = values[0].split(":")
                 except ValueError:
-                    log.warn(
+                    log.warning(
                         "Line did not look like normal picard 'ERROR:NAME' format, " "" "" "ignoring: {}".format(
                             values[0]
                         )
                     )
                     continue
                 yield problem_type, name, int(values[1])
-            elif l.startswith("Error Type"):
+            elif line.startswith("Error Type"):
                 header_passed = True
 
 
@@ -259,33 +259,31 @@ def _add_section_to_report(module, data):
 
 def _get_general_stats_headers():
     """
-    Returns a header dict for the general stats collumns
+    Returns a header dict for the general stats columns
     """
-    headers = OrderedDict()
-
-    headers["file_validation_status"] = {
-        "title": "Validation",
-        "description": "ValidateSamFile (File Validation)",
-    }
-
-    headers["WARNING_count"] = {
-        "title": "# Warnings",
-        "description": "ValidateSamFile (number of warnings)",
-        "scale": "Oranges",
-        "shared_key": "ValidateSamEntries",
-        "colour": "255,237,160",
-        "format": "{:.0f}",
-        "hidden": True,
-    }
-
-    headers["ERROR_count"] = {
-        "title": "# Errors",
-        "description": "ValidateSamFile (number of errors)",
-        "scale": "Reds",
-        "shared_key": "ValidateSamEntries",
-        "colour": "252,146,114",
-        "format": "{:.0f}",
-        "hidden": True,
+    headers = {
+        "file_validation_status": {
+            "title": "Validation",
+            "description": "ValidateSamFile (File Validation)",
+        },
+        "WARNING_count": {
+            "title": "# Warnings",
+            "description": "ValidateSamFile (number of warnings)",
+            "scale": "Oranges",
+            "shared_key": "ValidateSamEntries",
+            "colour": "255,237,160",
+            "format": "{:.0f}",
+            "hidden": True,
+        },
+        "ERROR_count": {
+            "title": "# Errors",
+            "description": "ValidateSamFile (number of errors)",
+            "scale": "Reds",
+            "shared_key": "ValidateSamEntries",
+            "colour": "252,146,114",
+            "format": "{:.0f}",
+            "hidden": True,
+        },
     }
 
     return headers

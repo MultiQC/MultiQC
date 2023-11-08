@@ -17,8 +17,10 @@ def parse_reports(module):
 
     # Go through logs and find Metrics
     for f in module.find_log_files("picard/rnaseqmetrics", filehandles=True):
-        s_name = None
+        # Sample name from input file name by default.
+        s_name = f["s_name"]
         in_hist = False
+
         for line in f["f"]:
             maybe_s_name = util.extract_sample_name(
                 module,
@@ -28,13 +30,12 @@ def parse_reports(module):
             )
             if maybe_s_name:
                 s_name = maybe_s_name
-                continue
 
             if s_name is None:
                 continue
 
             # Catch the histogram values
-            if s_name is not None and in_hist is True:
+            if in_hist:
                 try:
                     sections = line.split("\t")
                     pos = int(sections[0])
@@ -46,43 +47,42 @@ def parse_reports(module):
                     in_hist = False
 
             if util.is_line_right_before_table(line, picard_class="RnaSeqMetrics"):
-                if s_name in data_by_sample:
-                    log.debug(f"Duplicate sample name found in {f['fn']}! Overwriting: {s_name}")
-                data_by_sample[s_name] = dict()
-                histogram_by_sample[s_name] = dict()
-                module.add_data_source(f, s_name, section="RnaSeqMetrics")
-
                 keys = f["f"].readline().strip("\n").split("\t")
                 vals = f["f"].readline().strip("\n").split("\t")
-                for i, k in enumerate(keys):
-                    # Multiply percentages by 100
-                    if k.startswith("PCT_"):
-                        try:
-                            vals[i] = float(vals[i]) * 100.0
-                        except (ValueError, IndexError):
-                            pass
-                    # Save the key:value pairs
-                    try:
-                        val = vals[i]
-                    except IndexError:
-                        pass  # missing data
+                if len(vals) != len(keys):
+                    continue
+
+                if s_name in data_by_sample:
+                    log.debug(f"Duplicate sample name found in {f['fn']}! Overwriting: {s_name}")
+
+                module.add_data_source(f, s_name, section="RnaSeqMetrics")
+                data_by_sample[s_name] = dict()
+                histogram_by_sample[s_name] = dict()
+
+                for k, v in zip(keys, vals):
+                    if not v:
+                        v = "NA"
                     else:
-                        if not val:
-                            data_by_sample[s_name][k] = "NA"
+                        try:
+                            v = float(v)
+                        except ValueError:
+                            pass
                         else:
-                            try:
-                                data_by_sample[s_name][k] = float(val)
-                            except ValueError:
-                                data_by_sample[s_name][k] = val
+                            # Multiply percentages by 100
+                            if k.startswith("PCT_"):
+                                v = v * 100.0
+                    data_by_sample[s_name][k] = v
                 # Calculate some extra numbers
                 if "PF_BASES" in keys and "PF_ALIGNED_BASES" in keys:
                     data_by_sample[s_name]["PF_NOT_ALIGNED_BASES"] = (
                         data_by_sample[s_name]["PF_BASES"] - data_by_sample[s_name]["PF_ALIGNED_BASES"]
                     )
 
-            if s_name is not None and "normalized_position	All_Reads.normalized_coverage" in line:
-                histogram_by_sample[s_name] = dict()
+            elif line.startswith("## HISTOGRAM"):
+                keys = f["f"].readline().strip("\n").split("\t")
+                assert len(keys) >= 2, (keys, f)
                 in_hist = True
+                histogram_by_sample[s_name] = dict()
 
     # Filter to strip out ignored sample names
     data_by_sample = module.ignore_samples(data_by_sample)
@@ -98,33 +98,35 @@ def parse_reports(module):
     module.write_data_file(data_by_sample, "multiqc_picard_RnaSeqMetrics")
 
     # Add to general stats table
-    headers = dict()
-    headers["PCT_RIBOSOMAL_BASES"] = {
-        "title": "rRNA",
-        "description": "Percent of aligned bases overlapping ribosomal RNA regions",
-        "max": 100,
-        "min": 0,
-        "suffix": "%",
-        "scale": "Reds",
-    }
-    headers["PCT_MRNA_BASES"] = {
-        "title": "mRNA",
-        "description": "Percent of aligned bases overlapping UTRs and coding regions of mRNA transcripts",
-        "max": 100,
-        "min": 0,
-        "suffix": "%",
-        "scale": "Greens",
+    headers = {
+        "PCT_RIBOSOMAL_BASES": {
+            "title": "rRNA",
+            "description": "Percent of aligned bases overlapping ribosomal RNA regions",
+            "max": 100,
+            "min": 0,
+            "suffix": "%",
+            "scale": "Reds",
+        },
+        "PCT_MRNA_BASES": {
+            "title": "mRNA",
+            "description": "Percent of aligned bases overlapping UTRs and coding regions of mRNA transcripts",
+            "max": 100,
+            "min": 0,
+            "suffix": "%",
+            "scale": "Greens",
+        },
     }
     module.general_stats_addcols(data_by_sample, headers, namespace="RnaSeqMetrics")
 
     # Bar plot of bases assignment
-    bg_cats = dict()
-    bg_cats["CODING_BASES"] = {"name": "Coding"}
-    bg_cats["UTR_BASES"] = {"name": "UTR"}
-    bg_cats["INTRONIC_BASES"] = {"name": "Intronic"}
-    bg_cats["INTERGENIC_BASES"] = {"name": "Intergenic"}
-    bg_cats["RIBOSOMAL_BASES"] = {"name": "Ribosomal"}
-    bg_cats["PF_NOT_ALIGNED_BASES"] = {"name": "PF not aligned"}
+    bg_cats = {
+        "CODING_BASES": {"name": "Coding"},
+        "UTR_BASES": {"name": "UTR"},
+        "INTRONIC_BASES": {"name": "Intronic"},
+        "INTERGENIC_BASES": {"name": "Intergenic"},
+        "RIBOSOMAL_BASES": {"name": "Ribosomal"},
+        "PF_NOT_ALIGNED_BASES": {"name": "PF not aligned"},
+    }
 
     # Warn user if any samples are missing 'RIBOSOMAL_BASES' data; ie picard was run without an rRNA interval file.
     warn_rrna = ""

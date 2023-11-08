@@ -23,6 +23,7 @@ def parse_reports(module):
         # Sample name from input file name by default
         s_name = f["s_name"]
         in_hist = False
+
         for line in f["f"]:
             maybe_s_name = util.extract_sample_name(
                 module,
@@ -32,7 +33,6 @@ def parse_reports(module):
                 sentieon_algo="InsertSizeMetricAlgo",
             )
             if maybe_s_name:
-                # Starts information for a new sample
                 s_name = maybe_s_name
 
             if s_name is None:
@@ -54,16 +54,21 @@ def parse_reports(module):
             if util.is_line_right_before_table(
                 line, picard_class="InsertSizeMetrics", sentieon_algo="InsertSizeMetricAlgo"
             ):
-                if s_name in data_by_sample:
-                    log.debug(f"Duplicate sample name found in {f['fn']}! Overwriting: {s_name}")
                 keys = f["f"].readline().strip("\n").split("\t")
                 vals = f["f"].readline().strip("\n").split("\t")
+                if len(vals) != len(keys):
+                    continue
+
+                if s_name in data_by_sample:
+                    log.debug(f"Duplicate sample name found in {f['fn']}! Overwriting: {s_name}")
+
+                module.add_data_source(f, s_name, section="InsertSizeMetrics")
                 samplestats_by_sample[s_name] = {"total_count": 0, "meansum": 0, "total_pairs": 0}
                 orientation_idx = keys.index("PAIR_ORIENTATION")
 
                 while len(vals) == len(keys):
                     pair_orientation = vals[orientation_idx]
-                    rowkey = "{}_{}".format(s_name, pair_orientation)
+                    rowkey = f"{s_name}_{pair_orientation}"
                     data_by_sample[rowkey] = OrderedDict()
                     data_by_sample[rowkey]["SAMPLE_NAME"] = s_name
                     for i, k in enumerate(keys):
@@ -87,27 +92,11 @@ def parse_reports(module):
 
                     vals = f["f"].readline().strip("\n").split("\t")
 
-                # Skip lines on to histogram
-                f["f"].readline().strip("\n")
-                f["f"].readline().strip("\n")
-
-                histogram_by_sample[s_name] = dict()
+            if line.startswith("## HISTOGRAM"):
+                keys = f["f"].readline().strip("\n").split("\t")
+                assert len(keys) >= 2, (keys, f)
                 in_hist = True
-
-        for key in list(data_by_sample.keys()):
-            if len(data_by_sample[key]) == 0:
-                data_by_sample.pop(key, None)
-        for s_name in list(histogram_by_sample.keys()):
-            if len(histogram_by_sample[s_name]) == 0:
-                histogram_by_sample.pop(s_name, None)
-                log.debug("Ignoring '{}' histogram as no data parsed".format(s_name))
-
-        data_by_sample.update(data_by_sample)
-        histogram_by_sample.update(histogram_by_sample)
-        samplestats_by_sample.update(samplestats_by_sample)
-
-        for s_name in data_by_sample:
-            module.add_data_source(f, s_name, section="InsertSizeMetrics")
+                histogram_by_sample[s_name] = dict()
 
     # Calculate summed mean values for all read orientations
     for s_name, v in samplestats_by_sample.items():
@@ -145,23 +134,24 @@ def parse_reports(module):
             missing_medians = True
 
     # Add to general stats table
-    headers = dict()
-    headers["summed_median"] = {
-        "title": "Insert Size",
-        "description": "Median Insert Size, all read orientations (bp)",
-        "min": 0,
-        "suffix": " bp",
-        "format": "{:,.0f}",
-        "scale": "GnBu",
-    }
-    headers["summed_mean"] = {
-        "title": "Mean Insert Size",
-        "description": "Mean Insert Size, all read orientations (bp)",
-        "min": 0,
-        "suffix": " bp",
-        "format": "{:,.0f}",
-        "scale": "GnBu",
-        "hidden": False if missing_medians else True,
+    headers = {
+        "summed_median": {
+            "title": "Insert Size",
+            "description": "Median Insert Size, all read orientations (bp)",
+            "min": 0,
+            "suffix": " bp",
+            "format": "{:,.0f}",
+            "scale": "GnBu",
+        },
+        "summed_mean": {
+            "title": "Mean Insert Size",
+            "description": "Mean Insert Size, all read orientations (bp)",
+            "min": 0,
+            "suffix": " bp",
+            "format": "{:,.0f}",
+            "scale": "GnBu",
+            "hidden": False if missing_medians else True,
+        },
     }
     module.general_stats_addcols(samplestats_by_sample, headers, namespace="InsertSizeMetrics")
 

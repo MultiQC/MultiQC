@@ -63,9 +63,10 @@ def parse_reports(module):
                 vals = []
                 for v in f["f"].readline().strip("\n").split("\t"):
                     try:
-                        vals.append(int(v))
+                        v = int(v)
                     except ValueError:
-                        vals.append(v)
+                        pass
+                    vals.append(v)
                 data_by_sample[s_name] = dict(zip(keys, vals))
                 s_name = None
 
