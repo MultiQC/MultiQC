@@ -76,6 +76,9 @@ def load_versions_from_config(config):
                     # For instance, the version `1.10` will be parsed as a float by default, this converted
                     # into `1.1`. Passing yaml.BaseLoader explicitly makes YAML treat all scalar values
                     # as strings, so `1.10` will turn into a string `"1.10"` as we want.
+                    # From https://pyyaml.org/wiki/PyYAMLDocumentation
+                    #      BaseLoader(stream) does not resolve or support any tags
+                    #      and constructs only basic Python objects: lists, dictionaries and Unicode strings.
                     Loader=yaml.BaseLoader,
                 )
             except yaml.scanner.ScannerError as e:
