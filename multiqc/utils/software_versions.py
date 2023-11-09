@@ -179,25 +179,6 @@ def validate_software_versions(versions_config: Dict) -> Dict[str, Dict]:
     return output
 
 
-def merge(a: dict, b: dict, path=None):
-    """Merge two dict of dicts recursively"""
-    # source: https://stackoverflow.com/a/7205107
-    if path is None:
-        path = []
-
-    for key in b:
-        if key in a:
-            if isinstance(a[key], dict) and isinstance(b[key], dict):
-                merge(a[key], b[key], path + [str(key)])
-            elif isinstance(a[key], list) and isinstance(b[key], list):
-                a[key].extend(b[key])
-            else:
-                raise Exception("Conflict at " + ".".join(path + [str(key)]))
-        else:
-            a[key] = b[key]
-    return a
-
-
 def sort_versions(versions):
     """
     Sort list of versions in descending order. Accepts list with both strings and packaging.version.Version
