@@ -897,3 +897,6 @@ whatshap/stats:
 xenome:
   contents: "B	G	H	M	count	percent	class"
   num_lines: 2
+xengsort:
+  contents: "# Xengsort classify"
+  num_lines: 2

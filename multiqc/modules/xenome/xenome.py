@@ -1,14 +1,13 @@
 """ MultiQC module to parse log output from Xenome Classify """
 
-import logging
 from collections import defaultdict
-from typing import Dict, Union, List
 
+import logging
 import spectra
+from typing import Dict, Union
 
 from multiqc.modules.base_module import BaseMultiqcModule, ModuleNoSamplesFound
 from multiqc.plots import bargraph, table
-from multiqc.utils import config
 
 # Initialise the logger
 log = logging.getLogger(__name__)
