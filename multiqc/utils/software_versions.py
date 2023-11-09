@@ -205,7 +205,7 @@ def sort_versions(versions):
     """
     version_objs = [v for v in versions if isinstance(v, packaging.version.Version)]
     version_strs = [v for v in versions if not isinstance(v, packaging.version.Version)]
-    versions = sorted(version_objs) + sorted(sorted(version_strs))
+    versions = sorted(version_objs) + sorted(version_strs)
     return versions
 
 
