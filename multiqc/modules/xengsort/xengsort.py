@@ -55,15 +55,16 @@ class MultiqcModule(BaseMultiqcModule):
                 if set(fields) == {"prefix", "host", "graft", "ambiguous", "both", "neither"}:
                     values = next(lines).strip().split("\t")
                     data = dict(zip(fields, values))
-                    sn = data.pop("prefix")
-                    f["s_name"] = sn
+                    s_name = data.pop("prefix")
+                    f["s_name"] = s_name
                     data = {k: int(v) for k, v in data.items()}
                     percents = {k: v / sum(data.values()) * 100 for k, v in data.items()}
 
-                    if sn in self.counts:
-                        log.debug(f"Duplicate sample name found! Overwriting: {sn}")
-                    self.counts[sn] = data
-                    self.percents[sn] = percents
+                    if s_name in self.counts:
+                        log.debug(f"Duplicate sample name found! Overwriting: {s_name}")
+                    self.add_data_source(f, s_name)
+                    self.counts[s_name] = data
+                    self.percents[s_name] = percents
                     break
 
     def _build_table(self):
