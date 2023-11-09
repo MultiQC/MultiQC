@@ -262,11 +262,7 @@ class MultiqcModule(BaseMultiqcModule):
                 "scale": False,
             },
         }
-        self.add_section(
-            name="Workflow run statistics",
-            anchor="seqera_cli_run_stats_table",
-            plot=table.plot(data_by_run, headers, {"col1_header": "Run ID"}),
-        )
+        self.general_stats_addcols(data_by_run, headers)
 
     def _plots(self, data_by_run):
         """
