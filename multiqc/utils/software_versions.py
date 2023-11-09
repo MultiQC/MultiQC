@@ -1,10 +1,11 @@
 #!/usr/bin/env python
 
-""" Super Special-Case MultiQC module to produce report section on software versions """
+""" Utility functions to handle software version reporting """
 
 
 import logging
 import os
+import re
 from collections import defaultdict
 from typing import List
 
@@ -142,12 +143,16 @@ def validate_software_versions(input):
     def _list_of_versions_is_good(lst: List[str]) -> bool:
         good = True
         for item in lst:
-            if not isinstance(item, str):
-                log.error(
-                    f"Version must be a string, got '{type(item).__name__}': '{item}'. Consider wrapping the value in quotes: '\"{item}\"'"
-                )
-                good = False
-            elif not packaging.version.parse(item):
+            try:
+                if not isinstance(item, str):
+                    log.error(
+                        f"Version must be a string, got '{type(item).__name__}': '{item}'. Consider wrapping the value in quotes: '\"{item}\"'"
+                    )
+                    good = False
+                elif not packaging.version.parse(item):
+                    log.error(f"Invalid version: '{item}'")
+                    good = False
+            except packaging.version.InvalidVersion:
                 log.error(f"Invalid version: '{item}'")
                 good = False
         return good
@@ -166,6 +171,10 @@ def validate_software_versions(input):
                 software = level2_key
                 if not isinstance(versions, list):
                     versions = [versions]
+
+                # Remove anything in parentheses after the version,
+                # eg. 0.9.0 (build 0cea70d) -> 0.9.0
+                versions = [re.sub(r"([\d\.]+) \(.+\)", r"\g<1>", v) for v in versions]
                 if not _list_of_versions_is_good(versions):
                     return output, False
                 output[group][software] = versions
