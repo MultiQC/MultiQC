@@ -5,9 +5,8 @@
 ### MultiQC updates
 
 - Fix column sorting in exported TSV files from a matplotlib linegraph plot ([#2143](https://github.com/ewels/MultiQC/pull/2143))
-- Nanostat: account for both tab and spaces in v1.41+ search pattern ([#2155](https://github.com/ewels/MultiQC/pull/2155))
-- Clean version strings with build IDs ([#2166](https://github.com/ewels/MultiQC/pull/2166))
-- Seqera CLI minor updates ([#2167](https://github.com/ewels/MultiQC/pull/2167))
+- Software versions: allow any string as a version tag ([#2166](https://github.com/ewels/MultiQC/pull/2166))
+- Remove position:absolute from table values ([#2169](https://github.com/ewels/MultiQC/pull/2169))
 
 ### New Modules
 
@@ -21,6 +20,7 @@
 - **Pangolin**: update for v4: add QC Note , update tool versions columns ([#2157](https://github.com/ewels/MultiQC/pull/2157))
 - **fastp**: add version parsing ([#2159](https://github.com/ewels/MultiQC/pull/2159))
 - **fastp**: correctly parse sample name from --in1/--in2 command. Prefer file name if not `fastp.json`; fallback to file name when error ([#2139](https://github.com/ewels/MultiQC/pull/2139))
+- **Nanostat**: account for both tab and spaces in v1.41+ search pattern ([#2155](https://github.com/ewels/MultiQC/pull/2155))
 
 ## [MultiQC v1.17](https://github.com/ewels/MultiQC/releases/tag/v1.17) - 2023-10-17
 
