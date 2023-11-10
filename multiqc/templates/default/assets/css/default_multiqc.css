@@ -674,8 +674,6 @@ input.form-control[type="color"] {
 .table tr td {
   font-size: 0.9em;
   height: 30px;
-  white-space: nowrap;
-  overflow: hidden;
 }
 .mqc_table tbody tr td .wrapper .val {
   z-index: -1;
