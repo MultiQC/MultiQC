@@ -68,27 +68,26 @@ def write_data_file(data, fn, sort_cols=False, data_format=None):
         if data_format not in ["json", "yaml"]:
             # attempt to reshape data to tsv
             try:
-                # Convert keys to strings
-                data = {str(k): v for k, v in data.items()}
                 # Get all headers from the data, except if data is a dictionary (i.e. has >1 dimensions)
-                h = set()
-                for values in data.values():
-                    first_sub_value = next(iter(values))
-                    if isinstance(first_sub_value, dict):
+                headers = []
+                for d in data.values():
+                    if not d or (isinstance(d, list) and isinstance(d[0], dict)):
                         continue
-                    h |= values.keys()
-                h = [str(item) for item in h]
-
-                # Add Sample header in to first element
-                h.insert(0, "Sample")
+                    for h in d.keys():
+                        if h not in headers:
+                            headers.append(h)
                 if sort_cols:
-                    h = sorted(h)
+                    headers = sorted(headers)
+
+                headers_str = [str(item) for item in headers]
+                # Add Sample header in to first element
+                headers_str.insert(0, "Sample")
 
                 # Get the rows
-                rows = ["\t".join(h)]
+                rows = ["\t".join(headers_str)]
                 for sn in sorted(data.keys()):
                     # Make a list starting with the sample name, then each field in order of the header cols
-                    line = [str(sn)] + [str(data[sn].get(k, "")) for k in h[1:]]
+                    line = [str(sn)] + [str(data[sn].get(h, "")) for h in headers]
                     rows.append("\t".join(line))
 
                 body = "\n".join(rows)

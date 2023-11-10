@@ -193,7 +193,7 @@ def plot(data, pconfig=None):
                 this_series = {"name": s, "data": pairs}
                 try:
                     this_series["color"] = series_config["colors"][s]
-                except (KeyError, IndexError):
+                except Exception:
                     pass
                 thisplotdata.append(this_series)
         plotdata.append(thisplotdata)
@@ -296,19 +296,19 @@ def highcharts_linegraph(plotdata, pconfig=None):
             active = "active" if k == 0 else ""
             try:
                 name = pconfig["data_labels"][k]["name"]
-            except (IndexError, KeyError):
+            except Exception:
                 name = k + 1
             try:
                 ylab = 'data-ylab="{}"'.format(pconfig["data_labels"][k]["ylab"])
-            except (IndexError, KeyError):
+            except Exception:
                 ylab = 'data-ylab="{}"'.format(name) if name != k + 1 else ""
             try:
                 ymax = 'data-ymax="{}"'.format(pconfig["data_labels"][k]["ymax"])
-            except (IndexError, KeyError):
+            except Exception:
                 ymax = ""
             try:
                 xlab = 'data-xlab="{}"'.format(pconfig["data_labels"][k]["xlab"])
-            except (IndexError, KeyError):
+            except Exception:
                 xlab = ""
             html += '<button class="btn btn-default btn-sm {a}" data-action="set_data" {y} {ym} {x} data-newdata="{k}" data-target="{id}">{n}</button>\n'.format(
                 a=active, id=pconfig["id"], n=name, y=ylab, ym=ymax, x=xlab, k=k
@@ -349,7 +349,7 @@ def matplotlib_linegraph(plotdata, pconfig=None):
     for k in range(len(plotdata)):
         try:
             name = pconfig["data_labels"][k]["name"]
-        except (IndexError, KeyError):
+        except Exception:
             name = k + 1
         pid = "mqc_{}_{}".format(pconfig["id"], name)
         pid = report.save_htmlid(pid, skiplint=True)
@@ -370,7 +370,7 @@ def matplotlib_linegraph(plotdata, pconfig=None):
             active = "active" if k == 0 else ""
             try:
                 name = pconfig["data_labels"][k]["name"]
-            except (IndexError, KeyError):
+            except Exception:
                 name = k + 1
             html += '<button class="btn btn-default btn-sm {a}" data-target="#{pid}">{n}</button>\n'.format(
                 a=active, pid=pid, n=name
@@ -399,7 +399,7 @@ def matplotlib_linegraph(plotdata, pconfig=None):
 
                 for i, x in enumerate(d["data"]):
                     if isinstance(x, list):
-                        fdata[d["name"]][str(x[0])] = x[1]
+                        fdata[d["name"]][x[0]] = x[1]
                     else:
                         try:
                             fdata[d["name"]][pconfig["categories"][i]] = x
@@ -468,7 +468,7 @@ def matplotlib_linegraph(plotdata, pconfig=None):
         # Dataset specific y label
         try:
             axes.set_ylabel(pconfig["data_labels"][pidx]["ylab"])
-        except (IndexError, KeyError):
+        except Exception:
             pass
 
         # Axis limits
@@ -490,7 +490,7 @@ def matplotlib_linegraph(plotdata, pconfig=None):
         # Dataset specific ymax
         try:
             axes.set_ylim((ymin, pconfig["data_labels"][pidx]["ymax"]))
-        except (IndexError, KeyError):
+        except Exception:
             pass
 
         default_xlimits = axes.get_xlim()

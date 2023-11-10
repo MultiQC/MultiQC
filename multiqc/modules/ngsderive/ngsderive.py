@@ -283,7 +283,7 @@ class MultiqcModule(BaseMultiqcModule):
             "consensusreadlength": {
                 "title": "Read Length (bp)",
                 "description": "Predicted read length from ngsderive.",
-                "format": "{:,.d}",
+                "format": "{:,d}",
             },
             "majoritypctdetected": {
                 "title": "Read Length: % Supporting",

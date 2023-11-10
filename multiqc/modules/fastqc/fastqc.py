@@ -990,14 +990,14 @@ class MultiqcModule(BaseMultiqcModule):
                 "description": "Number of samples where this sequence is overrepresented",
                 "scale": "Greens",
                 "min": 0,
-                "format": "{:,.d}",
+                "format": "{:,d}",
             },
             "total_count": {
                 "title": "Occurrences",
                 "description": "Total number of occurrences of the sequence (among the samples where the sequence is overrepresented)",
                 "scale": "Blues",
                 "min": 0,
-                "format": "{:,.d}",
+                "format": "{:,d}",
             },
             "total_percent": {
                 "title": "% of all reads",
