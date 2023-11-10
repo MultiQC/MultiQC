@@ -8,6 +8,7 @@
 - Nanostat: account for both tab and spaces in v1.41+ search pattern ([#2155](https://github.com/ewels/MultiQC/pull/2155))
 - Clean version strings with build IDs ([#2166](https://github.com/ewels/MultiQC/pull/2166))
 - Remove position:absolute from table values ([#2169](https://github.com/ewels/MultiQC/pull/2169))
+- fix custom anchors for kraken ([#2170](https://github.com/ewels/MultiQC/pull/2170))
 
 ### New Modules
 
