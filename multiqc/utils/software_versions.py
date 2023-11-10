@@ -5,9 +5,8 @@
 
 import logging
 import os
-import re
 from collections import defaultdict
-from typing import List, Dict, Union
+from typing import List, Dict
 
 import packaging.version
 import yaml
@@ -61,7 +60,7 @@ def load_versions_from_config(config):
     log.debug("Reading software versions from config.software_versions")
     versions_config = getattr(config, "software_versions", defaultdict(lambda: defaultdict(list)))
     if not isinstance(versions_config, dict):
-        log.error(f"Expected the `software_versions` config section to be a dictionary")
+        log.error("Expected the `software_versions` config section to be a dictionary")
         versions_config = {}
     else:
         versions_config = validate_software_versions(versions_config)
