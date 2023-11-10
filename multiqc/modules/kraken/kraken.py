@@ -48,7 +48,7 @@ class MultiqcModule(BaseMultiqcModule):
         # Find and load any kraken reports
         self.kraken_raw_data = dict()
         new_report_present = False
-        for f in self.find_log_files(self.anchor, filehandles=True):
+        for f in self.find_log_files("kraken", filehandles=True):
             log_version = self.get_log_version(f)
             f["f"].seek(0)
             if log_version == "old":
