@@ -1,7 +1,7 @@
 """ MultiQC submodule to parse output from Picard CollectIlluminaLaneMetrics """
 
 import logging
-from collections import OrderedDict, defaultdict
+from collections import defaultdict
 
 from multiqc.modules.picard import util
 from multiqc.plots import table
