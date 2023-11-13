@@ -15,8 +15,7 @@ Highlights:
 ### MultiQC updates
 
 - Fix column sorting in exported TSV files from a matplotlib linegraph plot ([#2143](https://github.com/ewels/MultiQC/pull/2143))
-- Nanostat: account for both tab and spaces in v1.41+ search pattern ([#2155](https://github.com/ewels/MultiQC/pull/2155))
-- Clean version strings with build IDs ([#2166](https://github.com/ewels/MultiQC/pull/2166))
+- Software versions: allow any string as a version tag ([#2166](https://github.com/ewels/MultiQC/pull/2166))
 - Remove position:absolute from table values ([#2169](https://github.com/ewels/MultiQC/pull/2169))
 - Fix custom anchors for kraken ([#2170](https://github.com/ewels/MultiQC/pull/2170))
 
@@ -32,6 +31,7 @@ Highlights:
 - **Pangolin**: update for v4: add QC Note , update tool versions columns ([#2157](https://github.com/ewels/MultiQC/pull/2157))
 - **fastp**: add version parsing ([#2159](https://github.com/ewels/MultiQC/pull/2159))
 - **fastp**: correctly parse sample name from --in1/--in2 command. Prefer file name if not `fastp.json`; fallback to file name when error ([#2139](https://github.com/ewels/MultiQC/pull/2139))
+- **Nanostat**: account for both tab and spaces in v1.41+ search pattern ([#2155](https://github.com/ewels/MultiQC/pull/2155))
 - **Picard**: Generalize to directly support Sentieon and Parabricks outputs ([#2110](https://github.com/ewels/MultiQC/pull/2110))
 - **Sentieon**: Removed the module in favour of directly supporting parsing by the **Picard** module. Note that any code that relies on the module name needs to be updated, e.g. `-m sentieon` will no longer work, the exported plot and data files will be prefixed as `picard` instead of `sentieon`, etc. Note that the Sentieon module used to fetch the sample names from the file names by default, and now it follows the Picard module's logic, and prioritizes the commands recorded in the logs. To override, use the `use_filename_as_sample_name` config flag ([#2110](https://github.com/ewels/MultiQC/pull/2110))
 
