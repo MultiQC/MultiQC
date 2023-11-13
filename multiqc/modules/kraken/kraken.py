@@ -23,6 +23,7 @@ class MultiqcModule(BaseMultiqcModule):
         href="https://ccb.jhu.edu/software/kraken/",
         info="is a taxonomic classification tool that uses exact k-mer matches to find the lowest common ancestor (LCA) of a given sequence.",
         doi="10.1186/gb-2014-15-3-r46",
+        sp_key="kraken",
     ):
         super(MultiqcModule, self).__init__(
             name=name,
@@ -48,7 +49,7 @@ class MultiqcModule(BaseMultiqcModule):
         # Find and load any kraken reports
         self.kraken_raw_data = dict()
         new_report_present = False
-        for f in self.find_log_files("kraken", filehandles=True):
+        for f in self.find_log_files(sp_key, filehandles=True):
             log_version = self.get_log_version(f)
             f["f"].seek(0)
             if log_version == "old":
