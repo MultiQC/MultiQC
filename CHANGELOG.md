@@ -7,9 +7,10 @@ Highlights:
 - Picard module refactored and better generalized for other Picard-based software, like Sentieon and Parabricks. Consequently, the standalone Sentieon module was removed. Sentieon QC files will be interpreted directly as Picard QC files. If you were using the Sentieon module in your pipelines, make sure to update any references to Sentieon accordingly:
   - Update the MultiQC command line (e.g. replace `--module sentieon` with `--module picard`),
   - Update the MultiQC configs (e.g. replace `sentieon` with `picard` in options like `run_modules`, `exclude_modules`, `module_order`, etc.),
-  - If you are using `multiqc_data` files in your pipelines, update the code that relies on them, e.g.:
+  - Update any downstream code that relies on `multiqc_data` files, e.g.:
     - `multiqc_data/multiqc_sentieon_AlignmentSummaryMetrics.txt` becomes `multiqc_data/multiqc_picard_AlignmentSummaryMetrics.txt`,
-    - any `sentieon` references in `multiqc_data/multiqc_data.json` became `picard` references, etc.
+    - `sentieon` references in `multiqc_data/multiqc_data.json` become `picard` references, etc.
+  - Note that Picard fetches sample names from the commands it finds inside the QC headers, whereas the removed Sentieon module prioritized QC file names. To revert to the old Sentieon approach, use the [`use_filename_as_sample_name` config flag](https://multiqc.info/docs/getting_started/config/#using-log-filenames-as-sample-names).
 
 ### MultiQC updates
 
