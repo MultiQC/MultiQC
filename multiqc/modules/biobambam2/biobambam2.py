@@ -30,15 +30,7 @@ class MultiqcModule(BaseMultiqcModule):
         self.general_stats_data = dict()
         n = dict()
 
-        n["bamsormadup"] = MarkDuplicates.parse_reports(
-            self,
-            log_key="biobambam2/bamsormadup",
-            section_name="bamsormadup",
-            section_anchor="biobambam2-bamsormadup",
-            plot_title="biobambam2: bamsormadup deduplication stats",
-            plot_id="biobambam2_bamsormadup_plot",
-            data_filename="bamsormadup_bamsormadup",
-        )
+        n["bamsormadup"] = MarkDuplicates.parse_reports(self, "bamsormadup")
         if n["bamsormadup"] > 0:
             log.info("Found {} bamsormadup reports".format(n["bamsormadup"]))
 

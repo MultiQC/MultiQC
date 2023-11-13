@@ -15,17 +15,25 @@ def parse_reports(self):
 
     headers = ["clipped_bases", "read_count"]
     formats = [int, int]
-    all_data = read_histogram(self, "picard/markilluminaadapters", "MarkIlluminaAdapters", headers, formats)
+    data_by_sample = read_histogram(
+        self,
+        program_key="picard/markilluminaadapters",
+        headers=headers,
+        formats=formats,
+        picard_tool="MarkIlluminaAdapters",
+    )
 
     # Filter to strip out ignored sample names
-    all_data = self.ignore_samples(all_data)
-
-    # Stop if we don't have anything
-    if not all_data or len(all_data) == 0:
+    data_by_sample = self.ignore_samples(data_by_sample)
+    if not data_by_sample:
         return 0
 
+    # Superfluous function call to confirm that it is used in this module
+    # Replace None with actual version if it is available
+    self.add_software_version(None)
+
     # Write parsed data to a file
-    self.write_data_file(all_data, "multiqc_picard_mark_illumina_adapters")
+    self.write_data_file(data_by_sample, "multiqc_picard_mark_illumina_adapters")
 
     # Plot the data and add section
     pconfig = {
@@ -39,12 +47,8 @@ def parse_reports(self):
     }
 
     lg = {}
-    for s_name in all_data:
-        lg[s_name] = {clipped_bases: data["read_count"] for clipped_bases, data in all_data[s_name].items()}
-
-        # Superfluous function call to confirm that it is used in this module
-        # Replace None with actual version if it is available
-        self.add_software_version(None, s_name)
+    for s_name in data_by_sample:
+        lg[s_name] = {clipped_bases: data["read_count"] for clipped_bases, data in data_by_sample[s_name].items()}
 
     self.add_section(
         name="Mark Illumina Adapters",
@@ -57,4 +61,4 @@ def parse_reports(self):
     )
 
     # Return the number of detected samples to the parent module
-    return len(all_data)
+    return len(data_by_sample)
