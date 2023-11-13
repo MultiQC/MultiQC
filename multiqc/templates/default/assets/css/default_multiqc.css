@@ -876,7 +876,6 @@ tbody .sorthandle {
 }
 .mqc_table .val {
   display: block;
-  position: absolute;
   padding: 5px;
   left: 0;
 }
