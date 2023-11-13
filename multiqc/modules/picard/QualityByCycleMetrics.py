@@ -15,23 +15,29 @@ def parse_reports(self):
 
     headers = ["CYCLE", "MEAN_QUALITY"]
     formats = [int, float]
-    all_data = read_histogram(self, "picard/quality_by_cycle", "MeanQualityByCycle", headers, formats)
+    all_data = read_histogram(
+        self,
+        f"{self.anchor}/quality_by_cycle",
+        headers,
+        formats,
+        picard_tool="MeanQualityByCycle",
+        sentieon_algo="MeanQualityByCycle",
+    )
 
     if not all_data:
         return 0
 
     # Superfluous function call to confirm that it is used in this module
     # Replace None with actual version if it is available
-    for s_name in all_data:
-        self.add_software_version(None, s_name)
+    self.add_software_version(None)
 
     # Write parsed data to a file
-    self.write_data_file(all_data, "multiqc_picard_quality_by_cycle")
+    self.write_data_file(all_data, f"multiqc_{self.anchor}_quality_by_cycle")
 
     # Plot the data and add section
     pconfig = {
-        "id": "picard_quality_by_cycle",
-        "title": "Picard: Mean Base Quality by Cycle",
+        "id": f"{self.anchor}_quality_by_cycle",
+        "title": f"{self.name}: Mean Base Quality by Cycle",
         "ylab": "Mean Base Quality",
         "xlab": "Cycle Number",
         "xDecimals": False,
@@ -45,7 +51,7 @@ def parse_reports(self):
 
     self.add_section(
         name="Mean Base Quality by Cycle",
-        anchor="picard-quality-by-cycle",
+        anchor=f"{self.anchor}-quality-by-cycle",
         description="Plot shows the mean base quality by cycle.",
         helptext="""
         This metric gives an overall snapshot of sequencing machine performance.
