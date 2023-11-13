@@ -4,13 +4,13 @@
 
 Highlights:
 
-- Picard module refactored and better generalized for other Picard-based software, like Sentieon and Parabricks. Consequently, the standalone Sentieon module was removed. Sentieon QC files will be interpreted directly as Picard QC files. If you were using the Sentieon module in your pipelines, make sure to update any references to Sentieon accordingly:
-  - Update the MultiQC command line (e.g. replace `--module sentieon` with `--module picard`),
-  - Update the MultiQC configs (e.g. replace `sentieon` with `picard` in options like `run_modules`, `exclude_modules`, `module_order`, etc.),
-  - Update any downstream code that relies on `multiqc_data` files, e.g.:
-    - `multiqc_data/multiqc_sentieon_AlignmentSummaryMetrics.txt` becomes `multiqc_data/multiqc_picard_AlignmentSummaryMetrics.txt`,
-    - `sentieon` references in `multiqc_data/multiqc_data.json` become `picard` references, etc.
-  - Note that Picard fetches sample names from the commands it finds inside the QC headers, whereas the removed Sentieon module prioritized QC file names. To revert to the old Sentieon approach, use the [`use_filename_as_sample_name` config flag](https://multiqc.info/docs/getting_started/config/#using-log-filenames-as-sample-names).
+- Picard module refactored and better generalized for other Picard-based software, like Sentieon and Parabricks. Consequently, the standalone Sentieon module was removed. Sentieon QC files will be interpreted directly as Picard QC files. If you were using the Sentieon module in your pipelines, make sure to update any places that reference the module name:
+  - MultiQC command line (e.g. replace `--module sentieon` with `--module picard`).
+  - MultiQC configs (e.g. replace `sentieon` with `picard` in options like `run_modules`, `exclude_modules`, `module_order`).
+  - Downstream code that relies on names of the files in `multiqc_data` or `multiqc_plots` saves (e.g., `multiqc_data/multiqc_sentieon_AlignmentSummaryMetrics.txt` becomes `multiqc_data/multiqc_picard_AlignmentSummaryMetrics.txt`).
+  - Code that parses data files like `multiqc_data/multiqc_data.json`.
+  - Custom plugins and templates that rely on HTML anchors (e.g. `#sentieon_aligned_reads` becomes `#picard_AlignmentSummaryMetrics`).
+  - Also, note that Picard fetches sample names from the commands it finds inside the QC headers (e.g. `# net.sf.picard.analysis.CollectMultipleMetrics INPUT=Szabo_160930_SN583_0215_AC9H20ACXX.bam ...` -> `Szabo_160930_SN583_0215_AC9H20ACXX`), whereas the removed Sentieon module prioritized the QC file names. To revert to the old Sentieon approach, use the [`use_filename_as_sample_name` config flag](https://multiqc.info/docs/getting_started/config/#using-log-filenames-as-sample-names).
 
 ### MultiQC updates
 
@@ -30,7 +30,7 @@ Highlights:
 - **fastp**: add version parsing ([#2159](https://github.com/ewels/MultiQC/pull/2159))
 - **fastp**: correctly parse sample name from --in1/--in2 command. Prefer file name if not `fastp.json`; fallback to file name when error ([#2139](https://github.com/ewels/MultiQC/pull/2139))
 - **Picard**: Generalize to directly support Sentieon and Parabricks outputs ([#2110](https://github.com/ewels/MultiQC/pull/2110))
-- **Sentieon**: Removed the module in favour of directly supporting the outputs in the **Picard** module. Note that `-m sentieon` will no longer work. The exported plot and data files will be prefixed as `picard` (instead of `sentieon`). Note that the Sentieon module used to fetch the sample names from the file names by default, and now it follows the Picard module's logic, and prioritizes the commands recorded in the logs. To override, use the `use_filename_as_sample_name` config flag ([#2110](https://github.com/ewels/MultiQC/pull/2110))
+- **Sentieon**: Removed the module in favour of directly supporting parsing by the **Picard** module. Note that any code that relies on the module name needs to be updated, e.g. `-m sentieon` will no longer work, the exported plot and data files will be prefixed as `picard` instead of `sentieon`, etc. Note that the Sentieon module used to fetch the sample names from the file names by default, and now it follows the Picard module's logic, and prioritizes the commands recorded in the logs. To override, use the `use_filename_as_sample_name` config flag ([#2110](https://github.com/ewels/MultiQC/pull/2110))
 
 ## [MultiQC v1.17](https://github.com/ewels/MultiQC/releases/tag/v1.17) - 2023-10-17
 
