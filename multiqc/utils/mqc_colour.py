@@ -348,6 +348,9 @@ class mqc_colour_scale(object):
     def get_colour(self, val, colformat="hex", lighten=0.3, source=None):
         """Given a value, return a colour within the colour scale"""
 
+        if val is None:
+            return ""
+
         # Ported from the original JavaScript for continuity
         # Seems to work better than adjusting brightness / saturation / luminosity
         def rgb_converter(x):
@@ -385,36 +388,32 @@ class mqc_colour_scale(object):
 
             else:
                 # Sanity checks
-                val = re.sub(r"[^0-9\.\-e]", "", str(val))
-                if val == "":
-                    val = self.minval
-                try:
-                    val = float(val)
-                except ValueError:
-                    if config.strict:
-                        msg = (
-                            f'Cannot parse a value "{val}" as `float` '
-                            f'when getting color from a sequential scale "{self.name}".\nConsider changing the scale, '
-                            f'setting background colors directly with `"bgcols"`, setting `"cond_formatting_rules"`, '
-                            f'or disabling the scale with `"scale": False`.'
-                        )
-                        if self.name == "GnBu" and source is not None:
-                            msg += (
-                                '\nNote that if you don\'t specify "scale", it is set to a default scale `"GnBu"`, '
-                                "which is sequential. You may want to set it explicitly to `False` instead."
+                val_stripped = re.sub(r"[^0-9\.\-e]", "", str(val))
+                val_float: float
+                if val_stripped == "":
+                    val_float = self.minval
+                else:
+                    try:
+                        val_float = float(val_stripped)
+                    except ValueError:
+                        if config.strict:
+                            msg = (
+                                f'{source}: Cannot interpret a value "{val}" as `float` '
+                                f'when getting color from a sequential scale "{self.name}".\nConsider changing '
+                                f'the scale, setting background colors directly with `"bgcols"`, setting '
+                                f'`"cond_formatting_rules"`, or disabling the scale with `"scale": False`.'
                             )
-                        msg = f"{source}: {msg}"
-                        logger.error(msg)
-                        report.lint_errors.append(msg)
-                    return ""
-                val = max(val, self.minval)
-                val = min(val, self.maxval)
+                            logger.error(msg)
+                            report.lint_errors.append(msg)
+                        return ""
+                    val_float = max(val_float, self.minval)
+                    val_float = min(val_float, self.maxval)
 
                 domain_nums = list(np.linspace(self.minval, self.maxval, len(self.colours)))
                 my_scale = spectra.scale(self.colours).domain(domain_nums)
 
                 # Lighten colours
-                thecolour = spectra.rgb(*[rgb_converter(v) for v in my_scale(val).rgb])
+                thecolour = spectra.rgb(*[rgb_converter(v) for v in my_scale(val_float).rgb])
 
                 return thecolour.hexcode
 
