@@ -131,7 +131,7 @@ class DataTable:
                 headers[idx][k]["namespace"] = headers[idx][k].get("namespace", pconfig.get("namespace", ""))
                 headers[idx][k]["title"] = headers[idx][k].get("title", k)
                 headers[idx][k]["description"] = headers[idx][k].get("description", headers[idx][k]["title"])
-                headers[idx][k]["scale"] = headers[idx][k].get("scale", pconfig.get("scale", None))
+                headers[idx][k]["scale"] = headers[idx][k].get("scale", pconfig.get("scale", False))
                 headers[idx][k]["format"] = headers[idx][k].get("format", pconfig.get("format", "{:,.1f}"))
                 headers[idx][k]["colour"] = headers[idx][k].get("colour", pconfig.get("colour", None))
                 headers[idx][k]["hidden"] = headers[idx][k].get("hidden", pconfig.get("hidden", None))
