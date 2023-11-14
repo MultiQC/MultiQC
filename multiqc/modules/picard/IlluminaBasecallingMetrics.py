@@ -1,7 +1,6 @@
 """ MultiQC submodule to parse output from Picard IlluminaBasecallingMetrics """
 
 import logging
-from collections import OrderedDict
 
 from multiqc.modules.picard import util
 from multiqc.plots import bargraph, table
@@ -72,13 +71,14 @@ def parse_reports(module):
 
 
 def lane_metrics_table(self, data):
-    headers = OrderedDict()
-    headers["TOTAL_BASES"] = {"title": "Total Bases"}
-    headers["PF_BASES"] = {"title": "Passing Filter Bases"}
-    headers["TOTAL_READS"] = {"title": "Total Reads"}
-    headers["PF_READS"] = {"title": "Passing Filter Reads"}
-    headers["TOTAL_CLUSTERS"] = {"title": "Total Cluster"}
-    headers["PF_CLUSTERS"] = {"title": "Passing Filter Clusters"}
+    headers = {
+        "TOTAL_BASES": {"title": "Total Bases"},
+        "PF_BASES": {"title": "Passing Filter Bases"},
+        "TOTAL_READS": {"title": "Total Reads"},
+        "PF_READS": {"title": "Passing Filter Reads"},
+        "TOTAL_CLUSTERS": {"title": "Total Cluster"},
+        "PF_CLUSTERS": {"title": "Passing Filter Clusters"},
+    }
 
     table_config = {
         "id": f"{self.anchor}-illumina-basecalling-metrics-table",
@@ -103,13 +103,20 @@ def lane_metrics_plot(self, data):
         ],
     }
 
-    plot_cats = [OrderedDict(), OrderedDict(), OrderedDict()]
-    plot_cats[0]["PF_BASES"] = {"title": "Passing Filter Bases"}
-    plot_cats[0]["NPF_BASES"] = {"title": "Non Passing Filter Bases"}
-    plot_cats[1]["PF_READS"] = {"title": "Passing Filter Reads"}
-    plot_cats[1]["NPF_READS"] = {"title": "Non Passing Filter Reads"}
-    plot_cats[2]["PF_CLUSTERS"] = {"title": "Passing Filter Clusters"}
-    plot_cats[2]["NPF_CLUSTERS"] = {"title": "Non Passing Filter Clusters"}
+    plot_cats = [
+        {
+            "PF_BASES": {"title": "Passing Filter Bases"},
+            "NPF_BASES": {"title": "Non Passing Filter Bases"},
+        },
+        {
+            "PF_READS": {"title": "Passing Filter Reads"},
+            "NPF_READS": {"title": "Non Passing Filter Reads"},
+        },
+        {
+            "PF_CLUSTERS": {"title": "Passing Filter Clusters"},
+            "NPF_CLUSTERS": {"title": "Non Passing Filter Clusters"},
+        },
+    ]
     tdata = {}
     for lane_number, lane in data.items():
         lane["NPF_BASES"] = int(lane["TOTAL_BASES"]) - int(lane["PF_BASES"])
