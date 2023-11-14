@@ -17,9 +17,17 @@ class DataTable:
 
     def __init__(self, data, headers=None, pconfig=None):
         """Prepare data for use in a table or plot"""
-        if headers is None:
+        if not headers:
+            if config.strict:
+                errmsg = "Non-empty headers must be supplied to table plot"
+                logger.error(errmsg)
+                report.lint_errors.append(errmsg)
             headers = []
-        if pconfig is None:
+        if not pconfig:
+            if config.strict:
+                errmsg = "Non-empty pconfig must be supplied to table plot"
+                logger.error(errmsg)
+                report.lint_errors.append(errmsg)
             pconfig = {}
 
         # Allow user to overwrite any given config for this plot
