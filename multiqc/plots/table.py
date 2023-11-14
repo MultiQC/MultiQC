@@ -254,7 +254,7 @@ def make_table(dt: table_object.DataTable):
                 elif header["scale"]:
                     if c_scale is not None:
                         col = " background-color:{} !important;".format(
-                            c_scale.get_colour(val, source=f"Table {table_id}, column {k}")
+                            c_scale.get_colour(val, source=f'Table "{table_id}", column "{k}"')
                         )
                     else:
                         col = ""

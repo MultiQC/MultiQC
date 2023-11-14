@@ -165,6 +165,7 @@ class MultiqcModule(BaseMultiqcModule):
             "predicted": {
                 "title": "Strandedness",
                 "description": "Predicted strandedness from ngsderive",
+                "scale": False,
             }
         }
         self.general_stats_addcols(data, headers)
@@ -193,7 +194,11 @@ class MultiqcModule(BaseMultiqcModule):
         # Write data to file
         self.write_data_file(self.instrument, "ngsderive_instrument")
 
-        bgcols = {"low confidence": "#f8d7da", "medium confidence": "#fff3cd", "high confidence": "#d1e7dd"}
+        bgcols = {
+            "low confidence": "#f8d7da",
+            "medium confidence": "#fff3cd",
+            "high confidence": "#d1e7dd",
+        }
         cond_formatting_rules = {
             "pass": [{"s_eq": "high confidence"}],
             "warn": [{"s_eq": "medium confidence"}],
@@ -211,6 +216,7 @@ class MultiqcModule(BaseMultiqcModule):
             "instrument": {
                 "title": "Predicted Instrument",
                 "description": "Predicted instrument from ngsderive",
+                "scale": False,
             },
             "confidence": {
                 "title": "Instrument: Confidence",
@@ -244,6 +250,7 @@ class MultiqcModule(BaseMultiqcModule):
         headers["basis"] = {
             "title": "Instrument: Basis",
             "description": "Basis upon which the prediction was made.",
+            "scale": False,
         }
 
         table_data = {}
@@ -345,10 +352,12 @@ class MultiqcModule(BaseMultiqcModule):
             "probable_encoding": {
                 "title": "Probable Encoding",
                 "description": "Predicted PHRED score encoding from ngsderive",
+                "scale": False,
             },
             "evidence": {
                 "title": "Encoding: Evidence",
                 "description": "Observed ASCII value ranges in PHRED score encoding",
+                "scale": False,
                 "hidden": True,
             },
         }

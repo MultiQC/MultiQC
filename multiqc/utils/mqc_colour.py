@@ -388,7 +388,25 @@ class mqc_colour_scale(object):
                 val = re.sub(r"[^0-9\.\-e]", "", str(val))
                 if val == "":
                     val = self.minval
-                val = float(val)
+                try:
+                    val = float(val)
+                except ValueError:
+                    if config.strict:
+                        msg = (
+                            f'Cannot parse a value "{val}" as `float` '
+                            f'when getting color from a sequential scale "{self.name}".\nConsider changing the scale, '
+                            f'setting background colors directly with `"bgcols"`, setting `"cond_formatting_rules"`, '
+                            f'or disabling the scale with `"scale": False`.'
+                        )
+                        if self.name == "GnBu" and source is not None:
+                            msg += (
+                                '\nNote that if you don\'t specify "scale", it is set to a default scale `"GnBu"`, '
+                                "which is sequential. You may want to set it explicitly to `False` instead."
+                            )
+                        msg = f"{source}: {msg}"
+                        logger.error(msg)
+                        report.lint_errors.append(msg)
+                    return ""
                 val = max(val, self.minval)
                 val = min(val, self.maxval)
 
