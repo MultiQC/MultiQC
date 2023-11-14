@@ -1,6 +1,5 @@
 """MultiQC module to parse the output from deepTools"""
 import logging
-from collections import OrderedDict
 
 from multiqc.modules.base_module import BaseMultiqcModule, ModuleNoSamplesFound
 
@@ -8,11 +7,11 @@ from .bamPEFragmentSizeDistribution import bamPEFragmentSizeDistributionMixin
 
 # deepTools modules
 from .bamPEFragmentSizeTable import bamPEFragmentSizeTableMixin
-from .estimateReadFiltering import estimateReadFilteringMixin
+from .estimateReadFiltering import EstimateReadFilteringMixin
 from .plotCorrelation import plotCorrelationMixin
 from .plotCoverage import plotCoverageMixin
-from .plotEnrichment import plotEnrichmentMixin
-from .plotFingerprint import plotFingerprintMixin
+from .plotEnrichment import PlotEnrichmentMixin
+from .plotFingerprint import PlotFingerprintMixin
 from .plotPCA import plotPCAMixin
 from .plotProfile import plotProfileMixin
 
@@ -24,10 +23,10 @@ class MultiqcModule(
     BaseMultiqcModule,
     bamPEFragmentSizeTableMixin,
     bamPEFragmentSizeDistributionMixin,
-    estimateReadFilteringMixin,
+    EstimateReadFilteringMixin,
     plotCoverageMixin,
-    plotEnrichmentMixin,
-    plotFingerprintMixin,
+    PlotEnrichmentMixin,
+    PlotFingerprintMixin,
     plotProfileMixin,
     plotPCAMixin,
     plotCorrelationMixin,
@@ -44,7 +43,7 @@ class MultiqcModule(
         )
 
         # Set up class objects to hold parsed data
-        self.general_stats_headers = OrderedDict()
+        self.general_stats_headers = dict()
         self.general_stats_data = dict()
         n = dict()
 
@@ -59,7 +58,7 @@ class MultiqcModule(
             log.debug("Found {} deepTools plotPCA samples".format(n["plotPCA"]))
 
         # plotEnrichment
-        n["plotEnrichment"] = self.parse_plotEnrichment()
+        n["plotEnrichment"] = self.parse_plot_enrichment()
         if n["plotEnrichment"] > 0:
             log.debug("Found {} deepTools plotEnrichment samples".format(n["plotEnrichment"]))
 
@@ -111,7 +110,7 @@ class MultiqcModule(
             )
 
         # estimateReadFiltering
-        n["estimateReadFiltering"] = self.parse_estimateReadFiltering()
+        n["estimateReadFiltering"] = self.parse_estimate_read_filtering()
         if n["estimateReadFiltering"] > 0:
             log.debug("Found {} deepTools estimateReadFiltering samples".format(n["estimateReadFiltering"]))
 

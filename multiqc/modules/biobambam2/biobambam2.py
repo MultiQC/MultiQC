@@ -2,7 +2,6 @@
 
 
 import logging
-from collections import OrderedDict
 
 from multiqc.modules.base_module import BaseMultiqcModule, ModuleNoSamplesFound
 from multiqc.modules.picard import MarkDuplicates
@@ -26,7 +25,7 @@ class MultiqcModule(BaseMultiqcModule):
         )
 
         # Set up class objects to hold parsed data
-        self.general_stats_headers = OrderedDict()
+        self.general_stats_headers = dict()
         self.general_stats_data = dict()
         n = dict()
 
@@ -42,7 +41,8 @@ class MultiqcModule(BaseMultiqcModule):
         self.general_stats_addcols(self.general_stats_data, self.general_stats_headers)
 
     # Helper functions
-    def multiply_hundred(self, val):
+    @staticmethod
+    def multiply_hundred(val):
         try:
             val = float(val) * 100
         except ValueError:

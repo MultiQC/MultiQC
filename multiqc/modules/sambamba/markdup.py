@@ -1,8 +1,6 @@
 import logging
 import re
-from collections import OrderedDict
 
-from multiqc import config
 from multiqc.plots import bargraph
 
 log = logging.getLogger(__name__)
@@ -137,12 +135,12 @@ class SambambaMarkdupMixin:
         """
 
         # plot these categories, but not duplicate rate.
-        cats = OrderedDict()
-        cats["total_sorted_paired_end_reads"] = {"name": "Total Sorted Paired End Reads"}
-        cats["total_single_end_reads"] = {"name": "Total Single End Reads"}
-        cats["total_single_unmatched_reads"] = {"name": "Total Single Unmatched Reads"}
-        cats["duplicate_reads"] = {"name": "Total Duplicate Reads"}
-
+        cats = {
+            "total_sorted_paired_end_reads": {"name": "Total Sorted Paired End Reads"},
+            "total_single_end_reads": {"name": "Total Single End Reads"},
+            "total_single_unmatched_reads": {"name": "Total Single Unmatched Reads"},
+            "duplicate_reads": {"name": "Total Duplicate Reads"},
+        }
         config = {
             "id": "SambambaMarkdupBargraph",
             "title": "Sambamba Markdup: Duplicate Counts",

@@ -60,7 +60,7 @@ def write_data_file(data, fn, sort_cols=False, data_format=None):
                 if callable(obj):
                     try:
                         return obj(1)
-                    except:
+                    except Exception:
                         return None
                 return json.JSONEncoder.default(self, obj)
 

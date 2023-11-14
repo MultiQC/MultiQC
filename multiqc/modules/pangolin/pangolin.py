@@ -5,7 +5,6 @@
 
 import csv
 import logging
-from collections import OrderedDict
 from typing import Optional
 
 from multiqc.modules.base_module import BaseMultiqcModule, ModuleNoSamplesFound
@@ -130,111 +129,104 @@ class MultiqcModule(BaseMultiqcModule):
     def pangolin_general_stats_table(self):
         """Takes the parsed sample data and adds it to the general stats table"""
 
-        headers = OrderedDict()
-        headers["lineage"] = {
-            "title": "Lineage",
-            "description": "Lineage",
-            "min": 0,
-            "scale": "RdYlGn",
-            "bgcols": self.lineage_colours,
+        headers = {
+            "lineage": {
+                "title": "Lineage",
+                "description": "Lineage",
+                "min": 0,
+                "scale": "RdYlGn",
+                "bgcols": self.lineage_colours,
+            }
         }
         self.general_stats_addcols(self.pangolin_data, headers)
 
     def pangolin_table(self):
         """Creates the table of all data for the samples"""
 
-        headers = OrderedDict()
-        headers["lineage"] = {
-            "title": "Lineage",
-            "description": """
+        headers = {
+            "lineage": {
+                "title": "Lineage",
+                "description": """
                 The most likely lineage assigned to a given sequence based on the inference engine used
-                and the SARS-CoV-2 diversity designated.
-            """,
-            "scale": False,
-            "bgcols": self.lineage_colours,
-        }
-        headers["conflict"] = {
-            "title": "Conflict",
-            "description": "Conflict between categories in decision tree",
-            "min": 0,
-            "max": 1,
-            "scale": "RdBu-rev",
-        }
-
-        headers["ambiguity_score"] = {
-            "title": "Ambiguity",
-            "description": "Quantity of missing data in a sequence",
-            "min": 0,
-            "max": 1,
-            "scale": "RdYlGn",
-        }
-        headers["scorpio_call"] = {
-            "title": "S call",
-            "description": "Scorpio: If a query is assigned a constellation by scorpio this call is output in this column",
-            "scale": False,
-            "bgcols": self.lineage_colours,
-        }
-
-        headers["scorpio_support"] = {
-            "title": "S support",
-            "description": "Scorpio: The proportion of defining variants which have the alternative allele in the sequence.",
-            "min": 0,
-            "max": 1,
-            "scale": "RdYlBu",
-        }
-
-        headers["scorpio_conflict"] = {
-            "title": "S conflict",
-            "description": "Scorpio: The proportion of defining variants which have the reference allele in the sequence.",
-            "min": 0,
-            "max": 1,
-            "scale": "RdYlGn-rev",
-        }
-        headers["version"] = {
-            "title": "Version",
-            "description": "A version number that represents both the pango-designation number and the inference engine used to assign the lineage",
-            "scale": False,
-            "hidden": True,
-        }
-
-        headers["pangolin_version"] = {
-            "title": "Pangolin version",
-            "description": "The version of pangolin software running.",
-            "scale": False,
-            "hidden": True,
-        }
-
-        headers["scorpio_version"] = {
-            "title": "Scorpio version",
-            "description": "The version of the scorpio software installed.",
-            "scale": False,
-            "hidden": True,
-        }
-
-        headers["constellation_version"] = {
-            "title": "Constellations version",
-            "description": "The version of Constellations that scorpio has used to curate the lineage assignment.",
-            "scale": False,
-            "hidden": True,
-        }
-
-        headers["qc_status"] = {
-            "title": "QC Status",
-            "description": "Indicates whether the sequence passed the QC thresholds for minimum length and maximum N content.",
-            "scale": False,
-            "modify": lambda x: "Pass" if x == "passed_qc" else x.capitalize(),
-        }
-
-        headers["qc_notes"] = {
-            "title": "QC Note",
-            "description": "Notes specific to the QC checks run on the sequences.",
-            "scale": False,
-        }
-
-        headers["note"] = {
-            "title": "Note",
-            "description": "Additional information from Pangolin",
-            "scale": False,
+                and the SARS-CoV-2 diversity designated
+                """,
+                "scale": False,
+                "bgcols": self.lineage_colours,
+            },
+            "conflict": {
+                "title": "Conflict",
+                "description": "Conflict between categories in decision tree",
+                "min": 0,
+                "max": 1,
+                "scale": "RdBu-rev",
+            },
+            "ambiguity_score": {
+                "title": "Ambiguity",
+                "description": "Quantity of missing data in a sequence",
+                "min": 0,
+                "max": 1,
+                "scale": "RdYlGn",
+            },
+            "scorpio_call": {
+                "title": "S call",
+                "description": "Scorpio: If a query is assigned a constellation by scorpio this call is output in this column",
+                "scale": False,
+                "bgcols": self.lineage_colours,
+            },
+            "scorpio_support": {
+                "title": "S support",
+                "description": "Scorpio: The proportion of defining variants which have the alternative allele in the sequence",
+                "min": 0,
+                "max": 1,
+                "scale": "RdYlBu",
+            },
+            "scorpio_conflict": {
+                "title": "S conflict",
+                "description": "Scorpio: The proportion of defining variants which have the reference allele in the sequence",
+                "min": 0,
+                "max": 1,
+                "scale": "RdYlGn-rev",
+            },
+            "version": {
+                "title": "Version",
+                "description": "A version number that represents both the pango-designation number and the inference engine used to assign the lineage",
+                "scale": False,
+                "hidden": True,
+            },
+            "pangolin_version": {
+                "title": "Pangolin version",
+                "description": "The version of pangolin software running",
+                "scale": False,
+                "hidden": True,
+            },
+            "scorpio_version": {
+                "title": "Scorpio version",
+                "description": "The version of the scorpio software installed",
+                "scale": False,
+                "hidden": True,
+            },
+            "constellation_version": {
+                "title": "Constellations version",
+                "description": "The version of Constellations that scorpio has used to curate the lineage assignment",
+                "scale": False,
+                "hidden": True,
+            },
+            "qc_status": {
+                "title": "QC Status",
+                "description": "Indicates whether the sequence passed the QC thresholds for minimum length and maximum N content",
+                "scale": False,
+                "modify": lambda x: "Pass" if x == "passed_qc" else x.capitalize(),
+            },
+            "qc_notes": {
+                "title": "QC Note",
+                "description": "Notes specific to the QC checks run on the sequences",
+                "scale": False,
+            },
+            "note": {
+                "title": "Note",
+                "description": "Additional information from Pangolin",
+                "scale": False,
+            },
         }
 
         # Main table config

@@ -48,15 +48,15 @@ class MultiqcModule(BaseMultiqcModule):
         """Loop through Librarian files and parse their data"""
         for f in self.find_log_files("librarian", filehandles=True):
             headers = f["f"].readline().strip().split("\t")
-            for l in f["f"]:
-                data = dict(zip(headers, l.strip().split("\t")))
+            for line in f["f"]:
+                data = dict(zip(headers, line.strip().split("\t")))
                 s_name = self.clean_s_name(data["sample_name"], f)
                 del data["sample_name"]
                 data_float = {}
                 for k, v in data.items():
                     try:
                         data_float[k] = float(v)
-                    except:
+                    except Exception:
                         data_float[k] = v
                 if s_name in self.librarian_data:
                     log.debug(f"Duplicate sample name found! Overwriting: {s_name}")

@@ -4,7 +4,6 @@
 
 
 import logging
-from collections import OrderedDict
 
 from multiqc.modules.base_module import BaseMultiqcModule
 from multiqc.plots import bargraph
@@ -38,8 +37,8 @@ class MultiqcModule(BaseMultiqcModule):
     def file_search_stats_section(self):
         """Count of all files iterated through by MultiQC, by category"""
 
-        pdata = OrderedDict()
-        pcats = OrderedDict()
+        pdata = dict()
+        pcats = dict()
         for key in sorted(report.file_search_stats, key=report.file_search_stats.get, reverse=True):
             if "skipped_" in key:
                 s_name = "Skipped: {}".format(key.replace("skipped_", "").replace("_", " ").capitalize())
@@ -82,7 +81,7 @@ class MultiqcModule(BaseMultiqcModule):
     def search_pattern_times_section(self):
         """Section with a bar plot showing the time spent on each search pattern"""
 
-        pdata = OrderedDict()
+        pdata = dict()
         for key in sorted(report.runtimes["sp"], key=report.runtimes["sp"].get, reverse=True):
             pdata[key] = {"time": report.runtimes["sp"][key]}
 

@@ -4,7 +4,6 @@ import logging
 import math
 import os
 import re
-from collections import OrderedDict
 
 from multiqc.plots import bargraph, linegraph
 
@@ -21,6 +20,10 @@ class TagDirReportMixin:
         self.parse_tagInfo_data()
         self.parse_FreqDistribution_data()
         self.homer_stats_table_tagInfo()
+
+        # Superfluous function call to confirm that it is used in this module
+        # Replace None with actual version if it is available
+        self.add_software_version(None)
 
         # Write data to file
         self.write_data_file(self.tagdir_data, "homer_tagdir")
@@ -41,10 +44,6 @@ class TagDirReportMixin:
 
                 self.add_data_source(f, s_name, section="GCcontent")
                 self.tagdir_data["GCcontent"][s_name] = parsed_data
-
-            # Superfluous function call to confirm that it is used in this module
-            # Replace None with actual version if it is available
-            self.add_software_version(None, s_name)
 
         ## get esimated genome content distribution:
         for f in self.find_log_files("homer/genomeGCcontent", filehandles=True):
@@ -190,59 +189,61 @@ class TagDirReportMixin:
         if len(self.tagdir_data["header"]) == 0:
             return None
 
-        headers = OrderedDict()
-        headers["UniqPositions"] = {
-            "title": "Uniq Pos",
-            "description": "Numer of Unique Di-Tags Passed Through HOMER",
-            "format": "{:,.0f}",
-            "modify": lambda x: x * 0.000001,
-            "suffix": "M",
-        }
-        headers["TotalPositions"] = {
-            "title": "Total Pos",
-            "description": "Numer of Total Di-Tags Passed Through HOMER",
-            "format": "{:,.0f}",
-            "modify": lambda x: x * 0.000001,
-            "suffix": "M",
-        }
-        headers["fragmentLengthEstimate"] = {
-            "title": "fragment Length",
-            "description": "Estimate of Fragnment Length",
-            "format": "{:,.0f}",
-        }
-        headers["peakSizeEstimate"] = {
-            "title": "Peak Size",
-            "description": "Estimate of Peak Size",
-            "format": "{:,.0f}",
-        }
-        headers["tagsPerBP"] = {
-            "title": "tagsPerBP",
-            "description": "average tags Per basepair",
-            "format": "{:,.3f}",
-        }
-        headers["TagsPerPosition"] = {
-            "title": "averageTagsPerPosition",
-            "description": "Average Tags Per Position",
-            "format": "{:,.2f}",
-        }
-        headers["averageTagLength"] = {"title": "TagLength", "description": "Average Tag Length", "format": "{:,.0f}"}
-        headers["averageFragmentGCcontent"] = {
-            "title": "GCcontent",
-            "description": "Average Fragment GC content",
-            "max": 1,
-            "min": 0,
-            "format": "{:,.2f}",
+        headers = {
+            "UniqPositions": {
+                "title": "Uniq Pos",
+                "description": "Numer of Unique Di-Tags Passed Through HOMER",
+                "format": "{:,.0f}",
+                "modify": lambda x: x * 0.000001,
+                "suffix": "M",
+            },
+            "TotalPositions": {
+                "title": "Total Pos",
+                "description": "Numer of Total Di-Tags Passed Through HOMER",
+                "format": "{:,.0f}",
+                "modify": lambda x: x * 0.000001,
+                "suffix": "M",
+            },
+            "fragmentLengthEstimate": {
+                "title": "fragment Length",
+                "description": "Estimate of Fragnment Length",
+                "format": "{:,.0f}",
+            },
+            "peakSizeEstimate": {
+                "title": "Peak Size",
+                "description": "Estimate of Peak Size",
+                "format": "{:,.0f}",
+            },
+            "tagsPerBP": {
+                "title": "tagsPerBP",
+                "description": "average tags Per basepair",
+                "format": "{:,.3f}",
+            },
+            "TagsPerPosition": {
+                "title": "averageTagsPerPosition",
+                "description": "Average Tags Per Position",
+                "format": "{:,.2f}",
+            },
+            "averageTagLength": {"title": "TagLength", "description": "Average Tag Length", "format": "{:,.0f}"},
+            "averageFragmentGCcontent": {
+                "title": "GCcontent",
+                "description": "Average Fragment GC content",
+                "max": 1,
+                "min": 0,
+                "format": "{:,.2f}",
+            },
         }
         self.general_stats_addcols(self.tagdir_data["header"], headers)
 
     def homer_stats_table_interchr(self):
         """Add core HOMER stats to the general stats table from FrequencyDistribution file"""
 
-        headers = OrderedDict()
-        headers["InterChr"] = {
-            "title": "InterChr",
-            "description": "Fraction of Reads forming inter chromosomal interactions",
-            "format": "{:,.4f}",
+        headers = {
+            "InterChr": {
+                "title": "InterChr",
+                "description": "Fraction of Reads forming inter chromosomal interactions",
+                "format": "{:,.4f}",
+            }
         }
         self.general_stats_addcols(self.tagdir_data["FreqDistribution"], headers, "InterChr")
 
@@ -255,11 +256,11 @@ class TagDirReportMixin:
         """Parse HOMER tagdirectory GCcontent file."""
         parsed_data = dict()
         firstline = True
-        for l in f["f"]:
+        for line in f["f"]:
             if firstline:  # skip first line
                 firstline = False
                 continue
-            s = l.split("\t")
+            s = line.split("\t")
             if len(s) > 1:
                 k = float(s[0].strip())
                 v = float(s[2].strip())
@@ -271,11 +272,11 @@ class TagDirReportMixin:
         """Parse HOMER tagdirectory petagRestrictionDistribution file."""
         parsed_data = dict()
         firstline = True
-        for l in f["f"]:
+        for line in f["f"]:
             if firstline:  # skip first line
                 firstline = False
                 continue
-            s = l.split("\t")
+            s = line.split("\t")
             if len(s) > 1:
                 nuc = float(s[0].strip())
                 v1 = float(s[1].strip())
@@ -290,11 +291,11 @@ class TagDirReportMixin:
         """Parse HOMER tagdirectory tagLengthDistribution file."""
         parsed_data = dict()
         firstline = True
-        for l in f["f"]:
+        for line in f["f"]:
             if firstline:  # skip first line
                 firstline = False
                 continue
-            s = l.split("\t")
+            s = line.split("\t")
             if len(s) > 1:
                 k = float(s[0].strip())
                 v = float(s[1].strip())
@@ -306,8 +307,8 @@ class TagDirReportMixin:
         """Parse HOMER tagdirectory taginfo.txt file to extract statistics in the first 11 lines."""
         # General Stats Table
         tag_info = dict()
-        for l in f["f"]:
-            s = l.split("=")
+        for line in f["f"]:
+            s = line.split("=")
             if len(s) > 1:
                 if s[0].strip() == "genome":
                     ss = s[1].split("\t")
@@ -316,7 +317,7 @@ class TagDirReportMixin:
                         try:
                             tag_info["UniqPositions"] = float(ss[1].strip())
                             tag_info["TotalPositions"] = float(ss[2].strip())
-                        except:
+                        except Exception:
                             tag_info["UniqPositions"] = ss[1].strip()
                             tag_info["TotalPositions"] = ss[2].strip()
                 try:
@@ -327,14 +328,14 @@ class TagDirReportMixin:
 
     def parse_tag_info_chrs(self, f, convChr=True):
         """Parse HOMER tagdirectory taginfo.txt file to extract chromosome coverage."""
-        parsed_data_total = OrderedDict()
-        parsed_data_uniq = OrderedDict()
+        parsed_data_total = {}
+        parsed_data_uniq = {}
         remove = ["hap", "random", "chrUn", "cmd", "EBV", "GL", "NT_"]
-        for l in f["f"]:
-            s = l.split("\t")
+        for line in f["f"]:
+            s = line.split("\t")
             key = s[0].strip()
             # skip header
-            if "=" in l or len(s) != 3:
+            if "=" in line or len(s) != 3:
                 continue
             if convChr:
                 if any(x in key for x in remove):
@@ -354,12 +355,12 @@ class TagDirReportMixin:
         """Parse HOMER tagdirectory petag.FreqDistribution_1000 file."""
         parsed_data = dict()
         firstline = True
-        for l in f["f"]:
+        for line in f["f"]:
             if firstline:
                 firstline = False
                 continue
             else:
-                s = l.split("\t")
+                s = line.split("\t")
                 if len(s) > 1:
                     k = s[0].strip()
                     if k.startswith("More than "):
@@ -374,10 +375,10 @@ class TagDirReportMixin:
         """Parse HOMER tagdirectory petag.FreqDistribution_1000 file to get inter-chromosomal interactions."""
         parsed_data = dict()
         firstline = True
-        for l in f["f"]:
+        for line in f["f"]:
             if firstline:
                 firstline = False
-                interChr = float(re.sub("\)", "", l.split(":")[1]))
+                interChr = float(re.sub("\)", "", line.split(":")[1]))
             else:
                 break
         parsed_data["interChr"] = interChr

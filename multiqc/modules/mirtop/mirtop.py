@@ -3,7 +3,6 @@
 
 import json
 import logging
-from collections import OrderedDict
 
 from multiqc import config
 from multiqc.modules.base_module import BaseMultiqcModule, ModuleNoSamplesFound
@@ -89,6 +88,8 @@ class MultiqcModule(BaseMultiqcModule):
         """Parse the mirtop log file."""
 
         content = json.loads(f["f"])
+        version = content.get("meta", {}).get("version")
+
         for s_name in content.get("metrics", {}).keys():
             cleaned_s_name = self.clean_s_name(s_name, f)
             ## Check for sample name duplicates
@@ -103,10 +104,9 @@ class MultiqcModule(BaseMultiqcModule):
                 parsed_data["isomiR_perc"] = 0.0
             self.mirtop_data[cleaned_s_name] = parsed_data
 
-        version = content.get("meta", {}).get("version")
-        if version is not None:
-            version = version.strip("v")
-            self.add_software_version(version, cleaned_s_name)
+            if version is not None:
+                version = version.strip("v")
+                self.add_software_version(version, cleaned_s_name)
 
     def aggregate_snps_in_samples(self):
         """Aggregate info for iso_snp isomiRs (for clarity). "Mean" section will be recomputed"""
@@ -136,35 +136,38 @@ class MultiqcModule(BaseMultiqcModule):
         """Take the parsed stats from the mirtop report and add them to the
         basic stats table at the top of the report"""
 
-        headers = OrderedDict()
-        headers["ref_miRNA_sum"] = {
-            "title": "{} Ref miRNA reads".format(config.read_count_prefix),
-            "description": "Read counts summed over all reference miRNAs ({})".format(config.read_count_desc),
-            "modify": lambda x: x * config.read_count_multiplier,
-            "shared_key": "read_count",
-            "scale": "PuBu",
-        }
-        headers["isomiR_perc"] = {
-            "title": "IsomiR %",
-            "description": "% of total read counts corresponding to isomiRs",
-            "min": 0,
-            "max": 100,
-            "suffix": "%",
-            "scale": "YlOrRd",
-        }
-        headers["isomiR_sum"] = {
-            "title": "{} IsomiR reads".format(config.read_count_prefix),
-            "description": "Read counts summed over all isomiRs ({})".format(config.read_count_desc),
-            "modify": lambda x: x * config.read_count_multiplier,
-            "shared_key": "read_count",
-            "scale": "Oranges",
-        }
-        headers["read_count"] = {
-            "title": "{} Reads".format(config.read_count_prefix),
-            "description": "Total read counts - both isomiRs and reference miRNA ({})".format(config.read_count_desc),
-            "modify": lambda x: x * config.read_count_multiplier,
-            "shared_key": "read_count",
-            "scale": "BuGn",
+        headers = {
+            "ref_miRNA_sum": {
+                "title": "{} Ref miRNA reads".format(config.read_count_prefix),
+                "description": "Read counts summed over all reference miRNAs ({})".format(config.read_count_desc),
+                "modify": lambda x: x * config.read_count_multiplier,
+                "shared_key": "read_count",
+                "scale": "PuBu",
+            },
+            "isomiR_perc": {
+                "title": "IsomiR %",
+                "description": "% of total read counts corresponding to isomiRs",
+                "min": 0,
+                "max": 100,
+                "suffix": "%",
+                "scale": "YlOrRd",
+            },
+            "isomiR_sum": {
+                "title": "{} IsomiR reads".format(config.read_count_prefix),
+                "description": "Read counts summed over all isomiRs ({})".format(config.read_count_desc),
+                "modify": lambda x: x * config.read_count_multiplier,
+                "shared_key": "read_count",
+                "scale": "Oranges",
+            },
+            "read_count": {
+                "title": "{} Reads".format(config.read_count_prefix),
+                "description": "Total read counts - both isomiRs and reference miRNA ({})".format(
+                    config.read_count_desc
+                ),
+                "modify": lambda x: x * config.read_count_multiplier,
+                "shared_key": "read_count",
+                "scale": "BuGn",
+            },
         }
 
         self.general_stats_addcols(self.mirtop_data, headers)
@@ -181,7 +184,7 @@ class MultiqcModule(BaseMultiqcModule):
 
     def get_plot_cats(self, plot_type):
         """Return the plot categories for the given plot"""
-        cats_section = OrderedDict()
+        cats_section = dict()
         for base_key in self.isomir_cats:
             cat_key = "{}_{}".format(base_key, plot_type)
             cats_section[cat_key] = {"name": base_key}

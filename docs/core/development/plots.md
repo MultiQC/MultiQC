@@ -6,7 +6,7 @@ description: Visualising your data
 # Plotting Functions
 
 MultiQC plotting functions are held within `multiqc.plots` submodules.
-To use them, simply import the modules you want, eg.:
+To use them, simply import the modules you want, e.g.:
 
 ```python
 from multiqc.plots import bargraph, linegraph
@@ -80,18 +80,18 @@ html_content = bargraph.plot(data, cats)
 ```
 
 If `cats` is given as a dict instead of a list, you can specify a nice name
-and a colour too. Make it an OrderedDict to specify the order:
+and a colour too:
 
 ```python
-from collections import OrderedDict
-cats = OrderedDict()
-cats['aligned'] = {
-    'name': 'Aligned Reads',
-    'color': '#8bbc21'
-}
-cats['not_aligned'] = {
-    'name': 'Unaligned Reads',
-    'color': '#f7a35c'
+cats = {
+    "aligned": {
+        'name': 'Aligned Reads',
+        'color': '#8bbc21'
+    },
+    "not_aligned": {
+        'name': 'Unaligned Reads',
+        'color': '#f7a35c'
+    }
 }
 ```
 
@@ -120,7 +120,7 @@ config = {
     'yCeiling': None,                       # Maximum value for automatic axis limit (good for percentages)
     'yFloor': None,                         # Minimum value for automatic axis limit
     'yMinRange': None,                      # Minimum range for axis
-    'yDecimals': True,                      # Set to false to only show integer labels
+    'yDecimals': True,                      # Set to False to only show integer labels
     'ylab_format': None,                    # Format string for x axis labels. Defaults to {value}
     'stacking': 'normal',                   # Set to None to have category bars side by side
     'use_legend': True,                     # Show / hide the legend
@@ -187,12 +187,16 @@ cats = [
 Or with additional customisation such as name and colour:
 
 ```python
-from collections import OrderedDict
-cats = [OrderedDict(), OrderedDict()]
-cats[0]['aligned_reads'] =        {'name': 'Aligned Reads',        'color': '#8bbc21'}
-cats[0]['unaligned_reads'] =      {'name': 'Unaligned Reads',      'color': '#f7a35c'}
-cats[1]['aligned_base_pairs'] =   {'name': 'Aligned Base Pairs',   'color': '#8bbc21'}
-cats[1]['unaligned_base_pairs'] = {'name': 'Unaligned Base Pairs', 'color': '#f7a35c'}
+cats = [
+    {
+        "aligned_reads": {"name": "Aligned Reads", "color": "#8bbc21"},
+        "unaligned_reads": {"name": "Unaligned Reads", "color": "#f7a35c"},
+    },
+    {
+        "aligned_base_pairs": {"name": "Aligned Base Pairs", "color": "#8bbc21"},
+        "unaligned_base_pairs": {"name": "Unaligned Base Pairs", "color": "#f7a35c"},
+    },
+]
 html_content = bargraph.plot([data, data], cats, config)
 ```
 
@@ -255,27 +259,27 @@ config = {
     'xmax': None,                # Max x limit
     'xmin': None,                # Min x limit
     'xLog': False,               # Use log10 x axis?
-    'xDecimals': True,           # Set to false to only show integer labels
+    'xDecimals': True,           # Set to False to only show integer labels
     'yCeiling': None,            # Maximum value for automatic axis limit (good for percentages)
     'yFloor': None,              # Minimum value for automatic axis limit
     'yMinRange': None,           # Minimum range for axis
     'ymax': None,                # Max y limit
     'ymin': None,                # Min y limit
     'yLog': False,               # Use log10 y axis?
-    'yDecimals': True,           # Set to false to only show integer labels
+    'yDecimals': True,           # Set to False to only show integer labels
     'yPlotBands': None,          # Highlighted background bands. See http://api.highcharts.com/highcharts#yAxis.plotBands
     'xPlotBands': None,          # Highlighted background bands. See http://api.highcharts.com/highcharts#xAxis.plotBands
     'yPlotLines': None,          # Highlighted background lines. See http://api.highcharts.com/highcharts#yAxis.plotLines
     'xPlotLines': None,          # Highlighted background lines. See http://api.highcharts.com/highcharts#xAxis.plotLines
     'xLabelFormat': '{value}',   # Format string for the axis labels
     'yLabelFormat': '{value}',   # Format string for the axis labels
-    'tt_label': '{point.x}: {point.y:.2f}', # Use to customise tooltip label, eg. '{point.x} base pairs'
+    'tt_label': '{point.x}: {point.y:.2f}', # Use to customise tooltip label, e.g. '{point.x} base pairs'
     'tt_decimals': None,         # Tooltip decimals when categories = True (when false use tt_label)
     'tt_suffix': None,           # Tooltip suffix when categories = True (when false use tt_label)
     'pointFormat': None,         # Replace the default HTML for the entire tooltip label
     'click_func': function(){},  # Javascript function to be called when a point is clicked
-    'cursor': None               # CSS mouse cursor type. Defaults to pointer when 'click_func' specified
-    'reversedStacks': False      # Reverse the order of the category stacks. Defaults True for plots with Log10 option
+    'cursor': None,              # CSS mouse cursor type. Defaults to pointer when 'click_func' specified
+    'reversedStacks': False,     # Reverse the order of the category stacks. Defaults True for plots with Log10 option
     'height': 512                # The default height of the plot, in pixels
 }
 html_content = linegraph.plot(data, config)
@@ -422,11 +426,10 @@ should be displayed in.
 
 For more customisation, the headers can be supplied as a dictionary. Each
 key should match the keys used in the data dictionary, but values can
-customise the output. If you want to specify the order of the columns, you
-must use an `OrderedDict`.
+customise the output.
 
 Finally, the function accepts a config dictionary as a third parameter.
-This can set global options for the table (eg. a title) and can also hold
+This can set global options for the table (e.g. a title) and can also hold
 default values to customise the output of all table columns.
 
 The default header keys are:
@@ -444,7 +447,7 @@ single_header = {
     'scale': 'GnBu',                 # Colour scale for colour coding. False to disable.
     'bgcols': None,                  # Dict with values: background colours for categorical data.
     'colour': '<auto>',              # Colour for column grouping
-    'suffix': None,                  # Suffix for value (eg. '%')
+    'suffix': None,                  # Suffix for value (e.g. '%')
     'format': '{:,.1f}',             # Value format string - default 1 decimal place
     'cond_formatting_rules': None,   # Rules for conditional formatting table cell values - see docs below
     'cond_formatting_colours': None, # Styles for conditional formatting of table cell values
@@ -491,7 +494,7 @@ table_html = table.plot(data)
 ```
 
 A more complicated version with ordered columns, defaults and column-specific
-settings (eg. no decimal places):
+settings (e.g. no decimal places):
 
 ```python
 data = {
@@ -506,24 +509,25 @@ data = {
         'aligned_percent': 14.820411484
     }
 }
-headers = OrderedDict()
-headers['aligned_percent'] = {
-    'title': '% Aligned',
-    'description': 'Percentage of reads that aligned',
-    'suffix': '%',
-    'max': 100,
-    'format': '{:,.0f}' # No decimal places please
-}
-headers['aligned'] = {
-    'title': '{} Aligned'.format(config.read_count_prefix),
-    'description': 'Aligned Reads ({})'.format(config.read_count_desc),
-    'shared_key': 'read_count',
-    'modify': lambda x: x * config.read_count_multiplier
-}
-config = {
-    'namespace': 'My Module',
-    'min': 0,
-    'scale': 'GnBu'
+headers = {
+    "aligned_percent": {
+        'title': '% Aligned',
+        'description': 'Percentage of reads that aligned',
+        'suffix': '%',
+        'max': 100,
+        'format': '{:,.0f}' # No decimal places please
+    },
+    "aligned": {
+        'title': '{} Aligned'.format(config.read_count_prefix),
+        'description': 'Aligned Reads ({})'.format(config.read_count_desc),
+        'shared_key': 'read_count',
+        'modify': lambda x: x * config.read_count_multiplier
+    },
+    "config": {
+        'namespace': 'My Module',
+        'min': 0,
+        'scale': 'GnBu'
+    }
 }
 table_html = table.plot(data, headers, config)
 ```
@@ -777,7 +781,7 @@ config = {
   yDecimals: true, // Set to false to only show integer labels
   yPlotBands: undefined, // Highlighted background bands. See http://api.highcharts.com/highcharts#yAxis.plotBands
   xPlotBands: undefined, // Highlighted background bands. See http://api.highcharts.com/highcharts#xAxis.plotBands
-  tt_label: "{point.x}: {point.y:.2f}", // Use to customise tooltip label, eg. '{point.x} base pairs'
+  tt_label: "{point.x}: {point.y:.2f}", // Use to customise tooltip label, e.g. '{point.x} base pairs'
   pointFormat: undefined, // Replace the default HTML for the entire tooltip label
   click_func: function () {}, // Javascript function to be called when a point is clicked
   cursor: undefined, // CSS mouse cursor type. Defaults to pointer when 'click_func' specified
@@ -974,7 +978,7 @@ $("#YOUR_PLOT_ID").on("mqc_original_series_click", function (e, name) {
 
 $("#YOUR_PLOT_ID").on("mqc_original_chg_source", function (e, name) {
   // A plot with original images has had a request to change the
-  // original image source (eg. pressing Prev / Next)
+  // original image source (e.g. pressing Prev / Next)
 });
 
 $("#YOUR_PLOT_ID").on("mqc_plotexport_image", function (e, cfg) {

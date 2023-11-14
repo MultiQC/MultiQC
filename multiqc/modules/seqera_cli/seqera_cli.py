@@ -10,7 +10,7 @@ from collections import defaultdict
 import humanize
 
 from multiqc.modules.base_module import BaseMultiqcModule, ModuleNoSamplesFound
-from multiqc.plots import bargraph, table
+from multiqc.plots import bargraph
 from multiqc.utils import mqc_colour
 
 log = logging.getLogger(__name__)

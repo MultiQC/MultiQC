@@ -3,7 +3,6 @@
 from __future__ import print_function
 
 import logging
-from collections import OrderedDict
 
 from multiqc.modules.base_module import BaseMultiqcModule, ModuleNoSamplesFound
 
@@ -28,7 +27,7 @@ class MultiqcModule(BaseMultiqcModule, BenchSummary):
         )
 
         # Set up class objects to hold parsed data
-        self.general_stats_headers = OrderedDict()
+        self.general_stats_headers = dict()
         self.general_stats_data = dict()
         n = dict()
 

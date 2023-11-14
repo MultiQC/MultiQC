@@ -16,7 +16,7 @@ import math
 import os
 import re
 import zipfile
-from collections import Counter, OrderedDict
+from collections import Counter
 
 from multiqc import config
 from multiqc.modules.base_module import BaseMultiqcModule, ModuleNoSamplesFound
@@ -158,21 +158,21 @@ class MultiqcModule(BaseMultiqcModule):
         section = None
         s_headers = None
         self.dup_keys = []
-        for l in file_contents.splitlines():
-            if l.startswith("##FastQC"):
-                version_match = re.search(VERSION_REGEX, l)
+        for line in file_contents.splitlines():
+            if line.startswith("##FastQC"):
+                version_match = re.search(VERSION_REGEX, line)
                 if version_match:
                     self.add_software_version(version_match.group(1), s_name)
-            if l == ">>END_MODULE":
+            if line == ">>END_MODULE":
                 section = None
                 s_headers = None
-            elif l.startswith(">>"):
-                (section, status) = l[2:].split("\t", 1)
+            elif line.startswith(">>"):
+                (section, status) = line[2:].split("\t", 1)
                 section = section.lower().replace(" ", "_")
                 self.fastqc_data[s_name]["statuses"][section] = status
             elif section is not None:
-                if l.startswith("#"):
-                    s_headers = l[1:].split("\t")
+                if line.startswith("#"):
+                    s_headers = line[1:].split("\t")
                     # Special case: Total Deduplicated Percentage header line
                     if s_headers[0] == "Total Deduplicated Percentage":
                         self.fastqc_data[s_name]["basic_statistics"].append(
@@ -186,7 +186,7 @@ class MultiqcModule(BaseMultiqcModule):
                         self.fastqc_data[s_name][section] = list()
 
                 elif s_headers is not None:
-                    s = l.split("\t")
+                    s = line.split("\t")
                     row = dict()
                     for i, v in enumerate(s):
                         v.replace("NaN", "0")
@@ -280,59 +280,60 @@ class MultiqcModule(BaseMultiqcModule):
             # Zero reads
             hide_seq_length = True
 
-        headers = OrderedDict()
-        headers["percent_duplicates"] = {
-            "title": "% Dups",
-            "description": "% Duplicate Reads",
-            "max": 100,
-            "min": 0,
-            "suffix": "%",
-            "scale": "RdYlGn-rev",
-        }
-        headers["percent_gc"] = {
-            "title": "% GC",
-            "description": "Average % GC Content",
-            "max": 100,
-            "min": 0,
-            "suffix": "%",
-            "scale": "PuRd",
-            "format": "{:,.0f}",
-        }
-        headers["avg_sequence_length"] = {
-            "title": "Average Read Length",
-            "description": "Average Read Length (bp)",
-            "min": 0,
-            "suffix": " bp",
-            "scale": "RdYlGn",
-            "format": "{:,.0f}",
-            "hidden": True,
-        }
-        headers["median_sequence_length"] = {
-            "title": "Median Read Length",
-            "description": "Median Read Length (bp)",
-            "min": 0,
-            "suffix": " bp",
-            "scale": "RdYlGn",
-            "format": "{:,.0f}",
-            "hidden": hide_seq_length,
-        }
-        headers["percent_fails"] = {
-            "title": "% Failed",
-            "description": "Percentage of modules failed in FastQC report (includes those not plotted here)",
-            "max": 100,
-            "min": 0,
-            "suffix": "%",
-            "scale": "Reds",
-            "format": "{:,.0f}",
-            "hidden": True,
-        }
-        headers["total_sequences"] = {
-            "title": "{} Seqs".format(config.read_count_prefix),
-            "description": "Total Sequences ({})".format(config.read_count_desc),
-            "min": 0,
-            "scale": "Blues",
-            "modify": lambda x: x * config.read_count_multiplier,
-            "shared_key": "read_count",
+        headers = {
+            "percent_duplicates": {
+                "title": "% Dups",
+                "description": "% Duplicate Reads",
+                "max": 100,
+                "min": 0,
+                "suffix": "%",
+                "scale": "RdYlGn-rev",
+            },
+            "percent_gc": {
+                "title": "% GC",
+                "description": "Average % GC Content",
+                "max": 100,
+                "min": 0,
+                "suffix": "%",
+                "scale": "PuRd",
+                "format": "{:,.0f}",
+            },
+            "avg_sequence_length": {
+                "title": "Average Read Length",
+                "description": "Average Read Length (bp)",
+                "min": 0,
+                "suffix": " bp",
+                "scale": "RdYlGn",
+                "format": "{:,.0f}",
+                "hidden": True,
+            },
+            "median_sequence_length": {
+                "title": "Median Read Length",
+                "description": "Median Read Length (bp)",
+                "min": 0,
+                "suffix": " bp",
+                "scale": "RdYlGn",
+                "format": "{:,.0f}",
+                "hidden": hide_seq_length,
+            },
+            "percent_fails": {
+                "title": "% Failed",
+                "description": "Percentage of modules failed in FastQC report (includes those not plotted here)",
+                "max": 100,
+                "min": 0,
+                "suffix": "%",
+                "scale": "Reds",
+                "format": "{:,.0f}",
+                "hidden": True,
+            },
+            "total_sequences": {
+                "title": "{} Seqs".format(config.read_count_prefix),
+                "description": "Total Sequences ({})".format(config.read_count_desc),
+                "min": 0,
+                "scale": "Blues",
+                "modify": lambda x: x * config.read_count_multiplier,
+                "shared_key": "read_count",
+            },
         }
         self.general_stats_addcols(data, headers)
 
@@ -495,7 +496,7 @@ class MultiqcModule(BaseMultiqcModule):
         """Create the epic HTML for the FastQC sequence content heatmap"""
 
         # Prep the data
-        data = OrderedDict()
+        data = {}
         for s_name in sorted(self.fastqc_data.keys()):
             try:
                 data[s_name] = {
@@ -651,11 +652,11 @@ class MultiqcModule(BaseMultiqcModule):
                     theoretical_gc_raw = None
         if theoretical_gc_raw is not None:
             theoretical_gc = list()
-            for l in theoretical_gc_raw.splitlines():
-                if "# FastQC theoretical GC content curve:" in l:
-                    theoretical_gc_name = l[39:]
-                elif not l.startswith("#"):
-                    s = l.split()
+            for line in theoretical_gc_raw.splitlines():
+                if "# FastQC theoretical GC content curve:" in line:
+                    theoretical_gc_name = line[39:]
+                elif not line.startswith("#"):
+                    s = line.split()
                     try:
                         theoretical_gc.append([float(s[0]), float(s[1])])
                     except (TypeError, IndexError):
@@ -782,7 +783,7 @@ class MultiqcModule(BaseMultiqcModule):
             return None
 
         if not multiple_lenths:
-            lengths = "bp , ".join([str(l) for l in list(avg_seq_lengths)])
+            lengths = "bp , ".join([str(line) for line in list(avg_seq_lengths)])
             desc = "All samples have sequences of a single length ({}bp).".format(lengths)
             if len(avg_seq_lengths) > 1:
                 desc += ' See the <a href="#general_stats">General Statistics Table</a>.'
@@ -822,7 +823,7 @@ class MultiqcModule(BaseMultiqcModule):
                 for d in self.fastqc_data[s_name]["sequence_duplication_levels"]:
                     thisdata[d["duplication_level"]] = d["percentage_of_total"]
                     max_dupval = max(max_dupval, d["percentage_of_total"])
-                data[s_name] = OrderedDict()
+                data[s_name] = {}
                 for k in self.dup_keys:
                     try:
                         data[s_name][k] = thisdata[k]
@@ -914,9 +915,10 @@ class MultiqcModule(BaseMultiqcModule):
             log.debug("overrepresented_sequences not found in FastQC reports")
             return None
 
-        cats = OrderedDict()
-        cats["top_overrepresented"] = {"name": "Top overrepresented sequence"}
-        cats["remaining_overrepresented"] = {"name": "Sum of remaining overrepresented sequences"}
+        cats = {
+            "top_overrepresented": {"name": "Top overrepresented sequence"},
+            "remaining_overrepresented": {"name": "Sum of remaining overrepresented sequences"},
+        }
 
         # Config for the plot
         pconfig = {
@@ -1032,7 +1034,7 @@ class MultiqcModule(BaseMultiqcModule):
                 headers,
                 {
                     "namespace": self.name,
-                    "id": f"fastqc_top_overrepresented_sequences_table",
+                    "id": "fastqc_top_overrepresented_sequences_table",
                     "table_title": "FastQC: Top overrepresented sequences",
                     "col1_header": "Overrepresented sequence",
                     "sortRows": False,
@@ -1120,7 +1122,7 @@ class MultiqcModule(BaseMultiqcModule):
         status_numbers = {"pass": 1, "warn": 0.5, "fail": 0.25}
         data = []
         s_names = []
-        status_cats = OrderedDict()
+        status_cats = {}
         for s_name in sorted(self.fastqc_data.keys()):
             s_names.append(s_name)
             for status_cat, status in self.fastqc_data[s_name]["statuses"].items():

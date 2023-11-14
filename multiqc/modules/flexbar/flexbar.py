@@ -3,7 +3,6 @@
 
 import logging
 import re
-from collections import OrderedDict
 
 from multiqc.modules.base_module import BaseMultiqcModule, ModuleNoSamplesFound
 from multiqc.plots import bargraph
@@ -85,15 +84,15 @@ class MultiqcModule(BaseMultiqcModule):
         s_name = f["s_name"]
         parsed_data = dict()
         version = None
-        for l in f["f"]:
+        for line in f["f"]:
             # The version appears in the before the sample name in the log so we
             # assign it to a variable for now.
-            version_match = re.search(VERSION_REGEX, l)
+            version_match = re.search(VERSION_REGEX, line)
             if version_match:
                 version = version_match.group(1)
 
             for k, r in regexes.items():
-                match = re.search(r, l)
+                match = re.search(r, line)
                 if match:
                     if k == "output_filename":
                         s_name = self.clean_s_name(match.group(1), f)
@@ -103,7 +102,7 @@ class MultiqcModule(BaseMultiqcModule):
                         parsed_data[k] = int(match.group(1))
 
             # End of log output. Save and reset in case of more logs.
-            if "Flexbar completed" in l:
+            if "Flexbar completed" in line:
                 _save_data(parsed_data)
                 s_name = f["s_name"]
                 parsed_data = dict()
@@ -115,11 +114,12 @@ class MultiqcModule(BaseMultiqcModule):
         """Make the HighCharts HTML to plot the flexbar rates"""
 
         # Specify the order of the different possible categories
-        keys = OrderedDict()
-        keys["remaining_reads"] = {"color": "#437bb1", "name": "Remaining reads"}
-        keys["skipped_due_to_uncalled_bases"] = {"color": "#e63491", "name": "Skipped due to uncalled bases"}
-        keys["short_prior_to_adapter_removal"] = {"color": "#b1084c", "name": "Short prior to adapter removal"}
-        keys["finally_skipped_short_reads"] = {"color": "#7f0000", "name": "Finally skipped short reads"}
+        keys = {
+            "remaining_reads": {"color": "#437bb1", "name": "Remaining reads"},
+            "skipped_due_to_uncalled_bases": {"color": "#e63491", "name": "Skipped due to uncalled bases"},
+            "short_prior_to_adapter_removal": {"color": "#b1084c", "name": "Short prior to adapter removal"},
+            "finally_skipped_short_reads": {"color": "#7f0000", "name": "Finally skipped short reads"},
+        }
 
         # Config for the plot
         pconfig = {

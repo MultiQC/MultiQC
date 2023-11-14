@@ -1,7 +1,6 @@
 """ MultiQC submodule to parse output from deepTools plotCoverage """
 
 import logging
-from collections import OrderedDict
 
 from multiqc.plots import linegraph, table
 
@@ -23,10 +22,6 @@ class plotCoverageMixin:
             if len(parsed_data) > 0:
                 self.add_data_source(f, section="plotCoverage")
 
-            # Superfluous function call to confirm that it is used in this module
-            # Replace None with actual version if it is available
-            self.add_software_version(None, f["s_name"])
-
         self.deeptools_plotCoverageOutRawCounts = dict()
         for f in self.find_log_files("deeptools/plotCoverageOutRawCounts"):
             parsed_data = self.parsePlotCoverageOutRawCounts(f)
@@ -41,36 +36,41 @@ class plotCoverageMixin:
         self.deeptools_plotCoverageStdout = self.ignore_samples(self.deeptools_plotCoverageStdout)
         self.deeptools_plotCoverageOutRawCounts = self.ignore_samples(self.deeptools_plotCoverageOutRawCounts)
 
+        # Superfluous function call to confirm that it is used in this module
+        # Replace None with actual version if it is available
+        self.add_software_version(None)
+
         if len(self.deeptools_plotCoverageStdout) > 0:
             # Write data to file
             self.write_data_file(self.deeptools_plotCoverageStdout, "deeptools_plot_cov_stdout")
 
-            header = OrderedDict()
-            header["min"] = {"title": "Min", "description": "Minimum Coverage", "shared_key": "coverage"}
-            header["25%"] = {
-                "rid": "first_quartile",
-                "title": "1st Quartile",
-                "description": "First quartile coverage",
-                "shared_key": "coverage",
-            }
-            header["50%"] = {
-                "rid": "median",
-                "title": "Median",
-                "description": "Median coverage (second quartile)",
-                "shared_key": "coverage",
-            }
-            header["mean"] = {"title": "Mean", "description": "Mean coverage", "shared_key": "coverage"}
-            header["75%"] = {
-                "rid": "third_quartile",
-                "title": "3rd Quartile",
-                "description": "Third quartile coverage",
-                "shared_key": "coverage",
-            }
-            header["max"] = {"title": "Max", "description": "Maximum coverage", "shared_key": "coverage"}
-            header["std"] = {
-                "title": "Std. Dev.",
-                "description": "Coverage standard deviation",
-                "shared_key": "coverage",
+            header = {
+                "min": {"title": "Min", "description": "Minimum Coverage", "shared_key": "coverage"},
+                "25%": {
+                    "rid": "first_quartile",
+                    "title": "1st Quartile",
+                    "description": "First quartile coverage",
+                    "shared_key": "coverage",
+                },
+                "50%": {
+                    "rid": "median",
+                    "title": "Median",
+                    "description": "Median coverage (second quartile)",
+                    "shared_key": "coverage",
+                },
+                "mean": {"title": "Mean", "description": "Mean coverage", "shared_key": "coverage"},
+                "75%": {
+                    "rid": "third_quartile",
+                    "title": "3rd Quartile",
+                    "description": "Third quartile coverage",
+                    "shared_key": "coverage",
+                },
+                "max": {"title": "Max", "description": "Maximum coverage", "shared_key": "coverage"},
+                "std": {
+                    "title": "Std. Dev.",
+                    "description": "Coverage standard deviation",
+                    "shared_key": "coverage",
+                },
             }
             config = {"namespace": "deepTools plotCoverage"}
             self.add_section(
@@ -128,7 +128,7 @@ class plotCoverageMixin:
                 d[s_name]["50%"] = float(cols[5])
                 d[s_name]["75%"] = float(cols[6])
                 d[s_name]["max"] = float(cols[7])
-            except:
+            except:  # noqa: E722
                 log.warning(
                     "{} was initially flagged as the standard output from plotCoverage, but that seems to not be the case. Skipping...".format(
                         f["fn"]

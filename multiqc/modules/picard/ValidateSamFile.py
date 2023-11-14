@@ -1,7 +1,6 @@
 """ MultiQC submodule to parse output from Picard ValidateSamFile """
 
 import logging
-from collections import OrderedDict
 
 from multiqc.plots import table
 

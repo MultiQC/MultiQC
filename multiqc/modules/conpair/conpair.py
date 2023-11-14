@@ -75,7 +75,7 @@ class MultiqcModule(BaseMultiqcModule):
                 match = re.search(r, f["f"])
                 if match:
                     parsed_data[k] = float(match.group(1))
-                    if k == "concordance_concordance" and not "Concordance" in r:
+                    if k == "concordance_concordance" and "Concordance" not in r:
                         parsed_data[k] = 100.0 * float(parsed_data[k])
                     break
 

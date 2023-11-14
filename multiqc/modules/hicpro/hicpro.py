@@ -6,7 +6,6 @@
 
 import logging
 import os.path
-from collections import OrderedDict
 
 from multiqc import config
 from multiqc.modules.base_module import BaseMultiqcModule, ModuleNoSamplesFound
@@ -34,10 +33,6 @@ class MultiqcModule(BaseMultiqcModule):
         for k in ["mmapstat", "mpairstat", "mergestat", "mRSstat", "assplit"]:
             for f in self.find_log_files("hicpro/{}".format(k)):
                 self.parse_hicpro_stats(f, k)
-
-                # Superfluous function call to confirm that it is used in this module
-                # Replace None with actual version if it is available
-                self.add_software_version(None, f["s_name"])
 
         # Update current statistics
         for s_name in self.hicpro_data:
@@ -67,6 +62,10 @@ class MultiqcModule(BaseMultiqcModule):
             raise ModuleNoSamplesFound
 
         log.info("Found {} HiC-Pro reports".format(len(self.hicpro_data)))
+
+        # Superfluous function call to confirm that it is used in this module
+        # Replace None with actual version if it is available
+        self.add_software_version(None)
 
         # Write parsed data to a file
         self.write_data_file(self.hicpro_data, "multiqc_hicpro")
@@ -154,9 +153,9 @@ class MultiqcModule(BaseMultiqcModule):
             self.hicpro_data[s_name] = {}
 
         self.add_data_source(f, s_name, section=rsection)
-        for l in f["f"].splitlines():
-            if not l.startswith("#"):
-                s = l.split("\t")
+        for line in f["f"].splitlines():
+            if not line.startswith("#"):
+                s = line.split("\t")
                 if s[0] in self.hicpro_data[s_name]:
                     log.debug("Duplicated keys found! Overwriting: {}".format(s[0]))
                 # Try to convert the extracted value to a number and store it in hicpro_data.
@@ -174,113 +173,105 @@ class MultiqcModule(BaseMultiqcModule):
 
     def hicpro_stats_table(self):
         """Add HiC-Pro stats to the general stats table"""
-        headers = OrderedDict()
-
-        headers["percent_duplicates"] = {
-            "title": "% Duplicates",
-            "description": "Percent of duplicated valid pairs (%)",
-            "max": 100,
-            "min": 0,
-            "suffix": "%",
-            "scale": "YlOrRd",
-            "hidden": True,
-        }
-
-        headers["valid_interaction_rmdup"] = {
-            "title": "{} Valid Pairs Unique".format(config.read_count_prefix),
-            "description": "Number of valid pairs after duplicates removal ({})".format(config.read_count_desc),
-            "min": 0,
-            "scale": "RdYlBu",
-            "modify": lambda x: x * config.read_count_multiplier,
-            "shared_key": "read_count",
-        }
-
-        headers["percent_valid"] = {
-            "title": "% Valid Pairs",
-            "description": "Percentage of valid pairs over reported ones (%)",
-            "max": 100,
-            "min": 0,
-            "suffix": "%",
-            "scale": "YlGn",
-            "hidden": True,
-        }
-
-        headers["valid_interaction"] = {
-            "title": "{} Valid Pairs".format(config.read_count_prefix),
-            "description": "Number of valid pairs ({})".format(config.read_count_desc),
-            "min": 0,
-            "scale": "RdYlBu",
-            "modify": lambda x: x * config.read_count_multiplier,
-            "shared_key": "read_count",
-            "hidden": True,
-        }
-
-        headers["percent_paired_reads"] = {
-            "title": "% Reported",
-            "description": "Percentage of paired reads (%) passing the mapping filters",
-            "max": 100,
-            "min": 0,
-            "suffix": "%",
-            "scale": "YlGn",
-            "hidden": True,
-        }
-
-        headers["paired_reads"] = {
-            "title": "Reported Read Pairs",
-            "description": "Total number of read pairs ({}) passing the mapping filters".format(config.read_count_desc),
-            "min": "0",
-            "scale": "RdYlBu",
-            "modify": lambda x: x * config.read_count_multiplier,
-            "shared_key": "read_count",
-        }
-
-        headers["percent_mapped_R2"] = {
-            "title": "% Aligned [R2]",
-            "description": "Percentage of aligned reads [R2] (%)",
-            "max": 100,
-            "min": 0,
-            "suffix": "%",
-            "scale": "YlGn",
-            "hidden": True,
-        }
-
-        headers["mapped_R2"] = {
-            "title": "Aligned [R2]",
-            "description": "Total number of aligned reads [R2] ({})".format(config.read_count_desc),
-            "min": "0",
-            "scale": "RdYlBu",
-            "modify": lambda x: x * config.read_count_multiplier,
-            "shared_key": "read_count",
-            "hidden": True,
-        }
-
-        headers["percent_mapped_R1"] = {
-            "title": "% Aligned [R1]",
-            "description": "Percentage of aligned reads [R1] (%)",
-            "max": 100,
-            "min": 0,
-            "suffix": "%",
-            "scale": "YlGn",
-            "hidden": True,
-        }
-
-        headers["mapped_R1"] = {
-            "title": "Aligned [R1]",
-            "description": "Total number of aligned reads [R1] ({})".format(config.read_count_desc),
-            "min": "0",
-            "scale": "RdYlBu",
-            "modify": lambda x: x * config.read_count_multiplier,
-            "shared_key": "read_count",
-            "hidden": True,
-        }
-
-        headers["total_R1"] = {
-            "title": "Total",
-            "description": "Total Number of Read Pairs",
-            "min": "0",
-            "scale": "RdYlBu",
-            "modify": lambda x: x * config.read_count_multiplier,
-            "shared_key": "read_count",
+        headers = {
+            "percent_duplicates": {
+                "title": "% Duplicates",
+                "description": "Percent of duplicated valid pairs (%)",
+                "max": 100,
+                "min": 0,
+                "suffix": "%",
+                "scale": "YlOrRd",
+                "hidden": True,
+            },
+            "valid_interaction_rmdup": {
+                "title": "{} Valid Pairs Unique".format(config.read_count_prefix),
+                "description": "Number of valid pairs after duplicates removal ({})".format(config.read_count_desc),
+                "min": 0,
+                "scale": "RdYlBu",
+                "modify": lambda x: x * config.read_count_multiplier,
+                "shared_key": "read_count",
+            },
+            "percent_valid": {
+                "title": "% Valid Pairs",
+                "description": "Percentage of valid pairs over reported ones (%)",
+                "max": 100,
+                "min": 0,
+                "suffix": "%",
+                "scale": "YlGn",
+                "hidden": True,
+            },
+            "valid_interaction": {
+                "title": "{} Valid Pairs".format(config.read_count_prefix),
+                "description": "Number of valid pairs ({})".format(config.read_count_desc),
+                "min": 0,
+                "scale": "RdYlBu",
+                "modify": lambda x: x * config.read_count_multiplier,
+                "shared_key": "read_count",
+                "hidden": True,
+            },
+            "percent_paired_reads": {
+                "title": "% Reported",
+                "description": "Percentage of paired reads (%) passing the mapping filters",
+                "max": 100,
+                "min": 0,
+                "suffix": "%",
+                "scale": "YlGn",
+                "hidden": True,
+            },
+            "paired_reads": {
+                "title": "Reported Read Pairs",
+                "description": "Total number of read pairs ({}) passing the mapping filters".format(
+                    config.read_count_desc
+                ),
+                "min": "0",
+                "scale": "RdYlBu",
+                "modify": lambda x: x * config.read_count_multiplier,
+                "shared_key": "read_count",
+            },
+            "percent_mapped_R2": {
+                "title": "% Aligned [R2]",
+                "description": "Percentage of aligned reads [R2] (%)",
+                "max": 100,
+                "min": 0,
+                "suffix": "%",
+                "scale": "YlGn",
+                "hidden": True,
+            },
+            "mapped_R2": {
+                "title": "Aligned [R2]",
+                "description": "Total number of aligned reads [R2] ({})".format(config.read_count_desc),
+                "min": "0",
+                "scale": "RdYlBu",
+                "modify": lambda x: x * config.read_count_multiplier,
+                "shared_key": "read_count",
+                "hidden": True,
+            },
+            "percent_mapped_R1": {
+                "title": "% Aligned [R1]",
+                "description": "Percentage of aligned reads [R1] (%)",
+                "max": 100,
+                "min": 0,
+                "suffix": "%",
+                "scale": "YlGn",
+                "hidden": True,
+            },
+            "mapped_R1": {
+                "title": "Aligned [R1]",
+                "description": "Total number of aligned reads [R1] ({})".format(config.read_count_desc),
+                "min": "0",
+                "scale": "RdYlBu",
+                "modify": lambda x: x * config.read_count_multiplier,
+                "shared_key": "read_count",
+                "hidden": True,
+            },
+            "total_R1": {
+                "title": "Total",
+                "description": "Total Number of Read Pairs",
+                "min": "0",
+                "scale": "RdYlBu",
+                "modify": lambda x: x * config.read_count_multiplier,
+                "shared_key": "read_count",
+            },
         }
 
         self.general_stats_addcols(self.hicpro_data, headers)
@@ -289,10 +280,11 @@ class MultiqcModule(BaseMultiqcModule):
         """Generate the HiC-Pro Aligned reads plot"""
 
         # Specify the order of the different possible categories
-        keys = OrderedDict()
-        keys["Full_Alignments_Read"] = {"color": "#005ce6", "name": "Full reads Alignments"}
-        keys["Trimmed_Alignments_Read"] = {"color": "#3385ff", "name": "Trimmed reads Alignments"}
-        keys["Failed_To_Align_Read"] = {"color": "#a9a2a2", "name": "Failed To Align"}
+        keys = {
+            "Full_Alignments_Read": {"color": "#005ce6", "name": "Full reads Alignments"},
+            "Trimmed_Alignments_Read": {"color": "#3385ff", "name": "Trimmed reads Alignments"},
+            "Failed_To_Align_Read": {"color": "#a9a2a2", "name": "Failed To Align"},
+        }
 
         data = [{}, {}]
         for s_name in self.hicpro_data:
@@ -324,12 +316,13 @@ class MultiqcModule(BaseMultiqcModule):
         """Generate Pairing chart"""
 
         # Specify the order of the different possible categories
-        keys = OrderedDict()
-        keys["Unique_paired_alignments"] = {"color": "#005ce6", "name": "Uniquely Aligned"}
-        keys["Low_qual_pairs"] = {"color": "#b97b35", "name": "Low Quality"}
-        keys["Pairs_with_singleton"] = {"color": "#ff9933", "name": "Singleton"}
-        keys["Multiple_pairs_alignments"] = {"color": "#e67300", "name": "Multi Aligned"}
-        keys["Unmapped_airs"] = {"color": "#a9a2a2", "name": "Failed To Align"}
+        keys = {
+            "Unique_paired_alignments": {"color": "#005ce6", "name": "Uniquely Aligned"},
+            "Low_qual_pairs": {"color": "#b97b35", "name": "Low Quality"},
+            "Pairs_with_singleton": {"color": "#ff9933", "name": "Singleton"},
+            "Multiple_pairs_alignments": {"color": "#e67300", "name": "Multi Aligned"},
+            "Unmapped_airs": {"color": "#a9a2a2", "name": "Failed To Align"},
+        }
 
         # Config for the plot
         config = {
@@ -345,16 +338,17 @@ class MultiqcModule(BaseMultiqcModule):
         """Generate the HiC-Pro filtering plot"""
 
         # Specify the order of the different possible categories
-        keys = OrderedDict()
-        keys["Valid_interaction_pairs_FF"] = {"color": "#ccddff", "name": "Valid Pairs FF"}
-        keys["Valid_interaction_pairs_RR"] = {"color": "#6699ff", "name": "Valid Pairs RR"}
-        keys["Valid_interaction_pairs_RF"] = {"color": "#0055ff", "name": "Valid Pairs RF"}
-        keys["Valid_interaction_pairs_FR"] = {"color": "#003399", "name": "Valid Pairs FR"}
-        keys["Self_Cycle_pairs"] = {"color": "#ffad99", "name": "Same Fragment - Self-Circle"}
-        keys["Dangling_end_pairs"] = {"color": "#ff5c33", "name": "Same Fragment - Dangling Ends"}
-        keys["Religation_pairs"] = {"color": "#cc2900", "name": "Re-ligation"}
-        keys["Filtered_pairs"] = {"color": "#661400", "name": "Filtered pairs"}
-        keys["Dumped_pairs"] = {"color": "#330a00", "name": "Dumped pairs"}
+        keys = {
+            "Valid_interaction_pairs_FF": {"color": "#ccddff", "name": "Valid Pairs FF"},
+            "Valid_interaction_pairs_RR": {"color": "#6699ff", "name": "Valid Pairs RR"},
+            "Valid_interaction_pairs_RF": {"color": "#0055ff", "name": "Valid Pairs RF"},
+            "Valid_interaction_pairs_FR": {"color": "#003399", "name": "Valid Pairs FR"},
+            "Self_Cycle_pairs": {"color": "#ffad99", "name": "Same Fragment - Self-Circle"},
+            "Dangling_end_pairs": {"color": "#ff5c33", "name": "Same Fragment - Dangling Ends"},
+            "Religation_pairs": {"color": "#cc2900", "name": "Re-ligation"},
+            "Filtered_pairs": {"color": "#661400", "name": "Filtered pairs"},
+            "Dumped_pairs": {"color": "#330a00", "name": "Dumped pairs"},
+        }
 
         # Config for the plot
         config = {
@@ -370,11 +364,12 @@ class MultiqcModule(BaseMultiqcModule):
         """Generate the HiC-Pro interaction plot"""
 
         # Specify the order of the different possible categories
-        keys = OrderedDict()
-        keys["cis_shortRange"] = {"color": "#0039e6", "name": "Unique: cis <= 20Kbp"}
-        keys["cis_longRange"] = {"color": "#809fff", "name": "Unique: cis > 20Kbp"}
-        keys["trans_interaction"] = {"color": "#009933", "name": "Unique: trans"}
-        keys["duplicates"] = {"color": "#a9a2a2", "name": "Duplicate read pairs"}
+        keys = {
+            "cis_shortRange": {"color": "#0039e6", "name": "Unique: cis <= 20Kbp"},
+            "cis_longRange": {"color": "#809fff", "name": "Unique: cis > 20Kbp"},
+            "trans_interaction": {"color": "#009933", "name": "Unique: trans"},
+            "duplicates": {"color": "#a9a2a2", "name": "Duplicate read pairs"},
+        }
 
         # Config for the plot
         config = {
@@ -389,25 +384,26 @@ class MultiqcModule(BaseMultiqcModule):
     def hicpro_as_chart(self):
         """Generate Allele-specific plot"""
 
-        keys = OrderedDict()
-        keys["Valid_pairs_from_ref_genome_(1-1)"] = {"color": "#e6550d", "name": "Genome1 specific read pairs (1-1)"}
-        keys["Valid_pairs_from_ref_genome_with_one_unassigned_mate_(0-1/1-0)"] = {
-            "color": "#fdae6b",
-            "name": "Genome1 with one unassigned mate (0-1/1-0)",
-        }
-        keys["Valid_pairs_from_alt_genome_(2-2)"] = {"color": "#756bb1", "name": "Genome2 specific read pairs (2-2)"}
-        keys["Valid_pairs_from_alt_genome_with_one_unassigned_mate_(0-2/2-0)"] = {
-            "color": "#bcbddc",
-            "name": "Genome2 with one unassigned mate (0-2/2-0)",
-        }
-        keys["Valid_pairs_from_alt_and_ref_genome_(1-2/2-1)"] = {
-            "color": "#a6611a",
-            "name": "Trans homologuous read pairs (1-2/2/1)",
-        }
-        keys["Valid_pairs_with_both_unassigned_mated_(0-0)"] = {"color": "#cccccc", "name": "Unassigned read pairs"}
-        keys["Valid_pairs_with_at_least_one_conflicting_mate_(3-)"] = {
-            "color": "#a9a2a2",
-            "name": "Conflicting read pairs",
+        keys = {
+            "Valid_pairs_from_ref_genome_(1-1)": {"color": "#e6550d", "name": "Genome1 specific read pairs (1-1)"},
+            "Valid_pairs_from_ref_genome_with_one_unassigned_mate_(0-1/1-0)": {
+                "color": "#fdae6b",
+                "name": "Genome1 with one unassigned mate (0-1/1-0)",
+            },
+            "Valid_pairs_from_alt_genome_(2-2)": {"color": "#756bb1", "name": "Genome2 specific read pairs (2-2)"},
+            "Valid_pairs_from_alt_genome_with_one_unassigned_mate_(0-2/2-0)": {
+                "color": "#bcbddc",
+                "name": "Genome2 with one unassigned mate (0-2/2-0)",
+            },
+            "Valid_pairs_from_alt_and_ref_genome_(1-2/2-1)": {
+                "color": "#a6611a",
+                "name": "Trans homologuous read pairs (1-2/2/1)",
+            },
+            "Valid_pairs_with_both_unassigned_mated_(0-0)": {"color": "#cccccc", "name": "Unassigned read pairs"},
+            "Valid_pairs_with_at_least_one_conflicting_mate_(3-)": {
+                "color": "#a9a2a2",
+                "name": "Conflicting read pairs",
+            },
         }
 
         # check allele-specific analysis was run
@@ -431,10 +427,11 @@ class MultiqcModule(BaseMultiqcModule):
     def hicpro_capture_chart(self):
         """Generate Capture Hi-C plot"""
 
-        keys = OrderedDict()
-        keys["valid_pairs_on_target_cap_cap"] = {"color": "#0039e6", "name": "Capture-Capture interactions"}
-        keys["valid_pairs_on_target_cap_rep"] = {"color": "#809fff", "name": "Capture-Reporter interactions"}
-        keys["valid_pairs_off_target"] = {"color": "#cccccc", "name": "Off-target valid pairs"}
+        keys = {
+            "valid_pairs_on_target_cap_cap": {"color": "#0039e6", "name": "Capture-Capture interactions"},
+            "valid_pairs_on_target_cap_rep": {"color": "#809fff", "name": "Capture-Reporter interactions"},
+            "valid_pairs_off_target": {"color": "#cccccc", "name": "Off-target valid pairs"},
+        }
 
         # Check capture info are available
         num_samples = 0

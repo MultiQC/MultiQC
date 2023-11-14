@@ -7,6 +7,7 @@ import io
 import logging
 import os
 import random
+import sys
 
 from multiqc.utils import config, report
 
@@ -96,7 +97,7 @@ def matplotlib_boxplot(plotdata, pconfig=None):
     for k in range(len(plotdata)):
         try:
             name = pconfig["data_labels"][k]["name"]
-        except:
+        except (KeyError, IndexError):
             name = k + 1
         pid = "mqc_{}_{}".format(pconfig["id"], name)
         pid = report.save_htmlid(pid, skiplint=True)
@@ -117,7 +118,7 @@ def matplotlib_boxplot(plotdata, pconfig=None):
             active = "active" if k == 0 else ""
             try:
                 name = pconfig["data_labels"][k]["name"]
-            except:
+            except (KeyError, IndexError):
                 name = k + 1
             html += '<button class="btn btn-default btn-sm {a}" data-target="#{pid}">{n}</button>\n'.format(
                 a=active, pid=pid, n=name
@@ -135,7 +136,6 @@ def matplotlib_boxplot(plotdata, pconfig=None):
         plt.xticks(rotation=90)
 
         # Go through data series
-        n_boxes = len(pdata)
         mock_ds = mock_dataset(pdata)
         box = axes.boxplot(mock_ds, whis=[0, 100], patch_artist=True)
 
@@ -161,7 +161,7 @@ def matplotlib_boxplot(plotdata, pconfig=None):
         # Dataset specific ymax
         try:
             axes.set_ylim((ymin, pconfig["data_labels"][pidx]["ymax"]))
-        except:
+        except (KeyError, IndexError):
             pass
 
         default_xlimits = axes.get_xlim()

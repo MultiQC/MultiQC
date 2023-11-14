@@ -3,7 +3,6 @@
 
 import logging
 import re
-from collections import OrderedDict
 
 from multiqc.modules.base_module import BaseMultiqcModule, ModuleNoSamplesFound
 from multiqc.plots import bargraph, linegraph
@@ -168,25 +167,25 @@ class MultiqcModule(BaseMultiqcModule):
         parsed_data = {}
         section = None
         version = None
-        for l in f["f"]:
-            l = l.strip()
+        for line in f["f"]:
+            line = line.strip()
 
             # Parse version
-            match = re.search(VERSION_REGEX, l)
+            match = re.search(VERSION_REGEX, line)
             if match:
                 version = match.group(1)
 
-            if l[:1] == "#":
-                section = l
+            if line[:1] == "#":
+                section = line
                 self.snpeff_section_totals[section] = dict()
                 continue
-            s = l.split(",")
+            s = line.split(",")
 
             # Quality values / counts
             if section == "# Quality":
-                quals = OrderedDict()
-                if l.startswith("Values"):
-                    values = [int(c) for c in l.split(",")[1:]]
+                quals = dict()
+                if line.startswith("Values"):
+                    values = [int(c) for c in line.split(",")[1:]]
                     counts = f["f"].readline()
                     counts = [int(c) for c in counts.split(",")[1:]]
                     c = 0
@@ -226,20 +225,21 @@ class MultiqcModule(BaseMultiqcModule):
     def general_stats(self):
         """Add key SnpEff stats to the general stats table"""
 
-        headers = OrderedDict()
-        headers["Change_rate"] = {"title": "Change rate", "scale": "RdYlBu-rev", "min": 0, "format": "{:,.0f}"}
-        headers["Ts_Tv_ratio"] = {
-            "title": "Ts/Tv",
-            "description": "Transitions / Transversions ratio",
-            "format": "{:,.3f}",
-        }
-        headers["Number_of_variants_before_filter"] = {
-            "title": "M Variants",
-            "description": "Number of variants before filter (millions)",
-            "scale": "PuRd",
-            "modify": lambda x: x / 1000000,
-            "min": 0,
-            "format": "{:,.2f}",
+        headers = {
+            "Change_rate": {"title": "Change rate", "scale": "RdYlBu-rev", "min": 0, "format": "{:,.0f}"},
+            "Ts_Tv_ratio": {
+                "title": "Ts/Tv",
+                "description": "Transitions / Transversions ratio",
+                "format": "{:,.3f}",
+            },
+            "Number_of_variants_before_filter": {
+                "title": "M Variants",
+                "description": "Number of variants before filter (millions)",
+                "scale": "PuRd",
+                "modify": lambda x: x / 1000000,
+                "min": 0,
+                "format": "{:,.2f}",
+            },
         }
         self.general_stats_addcols(self.snpeff_data, headers)
 
@@ -251,7 +251,7 @@ class MultiqcModule(BaseMultiqcModule):
         sorted_keys = sorted(keys, reverse=True, key=keys.get)
 
         # Make nicer label names
-        pkeys = OrderedDict()
+        pkeys = dict()
         for k in sorted_keys:
             pkeys[k] = {"name": k.replace("_", " ").title().replace("Utr", "UTR")}
 
@@ -273,7 +273,7 @@ class MultiqcModule(BaseMultiqcModule):
         sorted_keys = sorted(keys, reverse=True, key=keys.get)
 
         # Make nicer label names
-        pkeys = OrderedDict()
+        pkeys = dict()
         for k in sorted_keys:
             pkeys[k] = {"name": k.replace("_", " ").title().replace("Utr", "UTR")}
 
@@ -293,7 +293,7 @@ class MultiqcModule(BaseMultiqcModule):
         keys = ["MODIFIER", "LOW", "MODERATE", "HIGH"]
 
         # Make nicer label names
-        pkeys = OrderedDict()
+        pkeys = dict()
         for k in keys:
             pkeys[k] = {"name": k.title()}
 
@@ -314,7 +314,7 @@ class MultiqcModule(BaseMultiqcModule):
         keys = ["SILENT", "MISSENSE", "NONSENSE"]
 
         # Make nicer label names
-        pkeys = OrderedDict()
+        pkeys = dict()
         for k in keys:
             pkeys[k] = {"name": k.title()}
 

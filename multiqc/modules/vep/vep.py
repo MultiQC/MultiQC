@@ -4,7 +4,6 @@
 import ast
 import logging
 import re
-from collections import OrderedDict
 
 from multiqc.modules.base_module import BaseMultiqcModule, ModuleNoSamplesFound
 from multiqc.plots import bargraph, table
@@ -204,7 +203,7 @@ class MultiqcModule(BaseMultiqcModule):
             "Lines of input read",
         ]
         # Set up the base config for each column
-        table_cats = OrderedDict()
+        table_cats = dict()
         color_list = ["Oranges", "Reds", "Blues", "Greens"]
         for order, header in enumerate(cat_names):
             table_cats[header] = {
@@ -272,11 +271,12 @@ class MultiqcModule(BaseMultiqcModule):
             return
 
         # Customise order and colours of categories
-        p_cats = OrderedDict()
-        p_cats["tolerated"] = {"color": "#59ae61"}
-        p_cats["tolerated_low_confidence"] = {"color": "#a6db9f"}
-        p_cats["deleterious_low_confidence"] = {"color": "#fec44f"}
-        p_cats["deleterious"] = {"color": "#d53e4f"}
+        p_cats = {
+            "tolerated": {"color": "#59ae61"},
+            "tolerated_low_confidence": {"color": "#a6db9f"},
+            "deleterious_low_confidence": {"color": "#fec44f"},
+            "deleterious": {"color": "#d53e4f"},
+        }
         for c, cat in plot_cats.items():
             if c not in p_cats:
                 p_cats[c] = cat
@@ -300,11 +300,12 @@ class MultiqcModule(BaseMultiqcModule):
             return
 
         # Customise order and colours of categories
-        p_cats = OrderedDict()
-        p_cats["benign"] = {"color": "#a6db9f"}
-        p_cats["possibly_damaging"] = {"color": "#fec44f"}
-        p_cats["probably_damaging"] = {"color": "#d53e4f"}
-        p_cats["unknown"] = {"color": "#d9d9d9"}
+        p_cats = {
+            "benign": {"color": "#a6db9f"},
+            "possibly_damaging": {"color": "#fec44f"},
+            "probably_damaging": {"color": "#d53e4f"},
+            "unknown": {"color": "#d9d9d9"},
+        }
         for c, cat in plot_cats.items():
             if c not in p_cats:
                 p_cats[c] = cat
@@ -329,7 +330,7 @@ class MultiqcModule(BaseMultiqcModule):
 
         # Sort the chromosomes numerically (almost - feel free to improve)
         chrs = {chr: k["name"].replace("chr", "").split("_")[0].rjust(20, "0") for chr, k in plot_cats.items()}
-        p_cats = OrderedDict()
+        p_cats = {}
         for chr in sorted(chrs, key=chrs.get):
             p_cats[chr] = plot_cats[chr]
 
@@ -364,11 +365,11 @@ class MultiqcModule(BaseMultiqcModule):
         )
 
     def _prep_bar_graph(self, title):
-        plot_data = OrderedDict()
+        plot_data = dict()
         for s_name in self.vep_data:
             if title in self.vep_data[s_name]:
                 plot_data[s_name] = self.vep_data[s_name][title]
-        plot_cats = OrderedDict()
+        plot_cats = dict()
         htmlid = re.sub("\W+", "_", title).lower()
         plotid = "{}_plot".format(htmlid)
         plot_config = {

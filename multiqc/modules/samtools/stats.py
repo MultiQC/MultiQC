@@ -4,7 +4,6 @@
 
 import logging
 import re
-from collections import OrderedDict
 
 from multiqc import config
 from multiqc.plots import bargraph, beeswarm
@@ -77,13 +76,15 @@ class StatsReportMixin:
         # Filter to strip out ignored sample names
         self.samtools_stats = self.ignore_samples(self.samtools_stats)
 
-        if len(self.samtools_stats) > 0:
-            # Write parsed report data to a file
-            self.write_data_file(self.samtools_stats, "multiqc_samtools_stats")
+        if len(self.samtools_stats) == 0:
+            return 0
 
-            # General Stats Table
-            stats_headers = OrderedDict()
-            stats_headers["error_rate"] = {
+        # Write parsed report data to a file
+        self.write_data_file(self.samtools_stats, "multiqc_samtools_stats")
+
+        # General Stats Table
+        stats_headers = {
+            "error_rate": {
                 "title": "Error rate",
                 "description": "Error rate: mismatches (NM) / bases mapped (CIGAR)",
                 "min": 0,
@@ -92,31 +93,31 @@ class StatsReportMixin:
                 "scale": "OrRd",
                 "format": "{:,.2f}",
                 "modify": lambda x: x * 100.0,
-            }
-            stats_headers["non-primary_alignments"] = {
+            },
+            "non-primary_alignments": {
                 "title": "{} Non-Primary".format(config.read_count_prefix),
                 "description": "Non-primary alignments ({})".format(config.read_count_desc),
                 "min": 0,
                 "scale": "PuBu",
                 "modify": lambda x: x * config.read_count_multiplier,
                 "shared_key": "read_count",
-            }
-            stats_headers["reads_mapped"] = {
+            },
+            "reads_mapped": {
                 "title": "{} Reads Mapped".format(config.read_count_prefix),
                 "description": "Reads Mapped in the bam file ({})".format(config.read_count_desc),
                 "min": 0,
                 "modify": lambda x: x * config.read_count_multiplier,
                 "shared_key": "read_count",
-            }
-            stats_headers["reads_mapped_percent"] = {
+            },
+            "reads_mapped_percent": {
                 "title": "% Mapped",
                 "description": "% Mapped Reads",
                 "max": 100,
                 "min": 0,
                 "suffix": "%",
                 "scale": "RdYlGn",
-            }
-            stats_headers["reads_properly_paired_percent"] = {
+            },
+            "reads_properly_paired_percent": {
                 "title": "% Proper Pairs",
                 "description": "% Properly Paired Reads",
                 "max": 100,
@@ -126,8 +127,8 @@ class StatsReportMixin:
                 "hidden": True
                 if (max([x["reads_mapped_and_paired"] for x in self.samtools_stats.values()]) == 0)
                 else False,
-            }
-            stats_headers["reads_MQ0_percent"] = {
+            },
+            "reads_MQ0_percent": {
                 "title": "% MapQ 0 Reads",
                 "description": "% of Reads that are Ambiguously Placed (MapQ=0)",
                 "max": 100,
@@ -135,72 +136,71 @@ class StatsReportMixin:
                 "suffix": "%",
                 "scale": "OrRd",
                 "hidden": True,
-            }
-            stats_headers["raw_total_sequences"] = {
+            },
+            "raw_total_sequences": {
                 "title": "{} Total seqs".format(config.read_count_prefix),
                 "description": "Total sequences in the bam file ({})".format(config.read_count_desc),
                 "min": 0,
                 "modify": lambda x: x * config.read_count_multiplier,
                 "shared_key": "read_count",
-            }
-            self.general_stats_addcols(self.samtools_stats, stats_headers)
+            },
+        }
+        self.general_stats_addcols(self.samtools_stats, stats_headers)
 
-            # Make bargraph plot of mapped/unmapped reads
-            self.alignment_section(self.samtools_stats)
+        # Make bargraph plot of mapped/unmapped reads
+        self.alignment_section(self.samtools_stats)
 
-            # Make dot plot of counts
-            keys = OrderedDict()
-            reads = {
-                "min": 0,
-                "modify": lambda x: float(x) / 1000000.0,
-                "suffix": "M reads",
-                "decimalPlaces": 2,
-                "shared_key": "read_count",
-            }
-            bases = {
-                "min": 0,
-                "modify": lambda x: float(x) / 1000000.0,
-                "suffix": "M bases",
-                "decimalPlaces": 2,
-                "shared_key": "base_count",
-            }
-            keys["raw_total_sequences"] = dict(reads, **{"title": "Total sequences"})
-            keys["reads_mapped_and_paired"] = dict(
-                reads,
-                **{"title": "Mapped &amp; paired", "description": "Paired-end technology bit set + both mates mapped"},
-            )
-            keys["reads_properly_paired"] = dict(
-                reads, **{"title": "Properly paired", "description": "Proper-pair bit set"}
-            )
-            keys["reads_duplicated"] = dict(
-                reads, **{"title": "Duplicated", "description": "PCR or optical duplicate bit set"}
-            )
-            keys["reads_QC_failed"] = dict(reads, **{"title": "QC Failed"})
-            keys["reads_MQ0"] = dict(reads, **{"title": "Reads MQ0", "description": "Reads mapped and MQ=0"})
-            keys["bases_mapped_(cigar)"] = dict(
-                bases, **{"title": "Mapped bases (CIGAR)", "description": "Mapped bases (CIGAR)"}
-            )
-            keys["bases_trimmed"] = dict(bases, **{"title": "Bases Trimmed"})
-            keys["bases_duplicated"] = dict(bases, **{"title": "Duplicated bases"})
-            keys["pairs_on_different_chromosomes"] = dict(
-                reads, **{"title": "Diff chromosomes", "description": "Pairs on different chromosomes"}
-            )
-            keys["pairs_with_other_orientation"] = dict(
-                reads, **{"title": "Other orientation", "description": "Pairs with other orientation"}
-            )
-            keys["inward_oriented_pairs"] = dict(
-                reads, **{"title": "Inward pairs", "description": "Inward oriented pairs"}
-            )
-            keys["outward_oriented_pairs"] = dict(
-                reads, **{"title": "Outward pairs", "description": "Outward oriented pairs"}
-            )
+        # Make dot plot of counts
+        keys = {}
+        reads = {
+            "min": 0,
+            "modify": lambda x: float(x) / 1000000.0,
+            "suffix": "M reads",
+            "decimalPlaces": 2,
+            "shared_key": "read_count",
+        }
+        bases = {
+            "min": 0,
+            "modify": lambda x: float(x) / 1000000.0,
+            "suffix": "M bases",
+            "decimalPlaces": 2,
+            "shared_key": "base_count",
+        }
+        keys["raw_total_sequences"] = dict(reads, **{"title": "Total sequences"})
+        keys["reads_mapped_and_paired"] = dict(
+            reads,
+            **{"title": "Mapped &amp; paired", "description": "Paired-end technology bit set + both mates mapped"},
+        )
+        keys["reads_properly_paired"] = dict(
+            reads, **{"title": "Properly paired", "description": "Proper-pair bit set"}
+        )
+        keys["reads_duplicated"] = dict(
+            reads, **{"title": "Duplicated", "description": "PCR or optical duplicate bit set"}
+        )
+        keys["reads_QC_failed"] = dict(reads, **{"title": "QC Failed"})
+        keys["reads_MQ0"] = dict(reads, **{"title": "Reads MQ0", "description": "Reads mapped and MQ=0"})
+        keys["bases_mapped_(cigar)"] = dict(
+            bases, **{"title": "Mapped bases (CIGAR)", "description": "Mapped bases (CIGAR)"}
+        )
+        keys["bases_trimmed"] = dict(bases, **{"title": "Bases Trimmed"})
+        keys["bases_duplicated"] = dict(bases, **{"title": "Duplicated bases"})
+        keys["pairs_on_different_chromosomes"] = dict(
+            reads, **{"title": "Diff chromosomes", "description": "Pairs on different chromosomes"}
+        )
+        keys["pairs_with_other_orientation"] = dict(
+            reads, **{"title": "Other orientation", "description": "Pairs with other orientation"}
+        )
+        keys["inward_oriented_pairs"] = dict(reads, **{"title": "Inward pairs", "description": "Inward oriented pairs"})
+        keys["outward_oriented_pairs"] = dict(
+            reads, **{"title": "Outward pairs", "description": "Outward oriented pairs"}
+        )
 
-            self.add_section(
-                name="Alignment metrics",
-                anchor="samtools-stats",
-                description="This module parses the output from <code>samtools stats</code>. All numbers in millions.",
-                plot=beeswarm.plot(self.samtools_stats, keys, {"id": "samtools-stats-dp"}),
-            )
+        self.add_section(
+            name="Alignment metrics",
+            anchor="samtools-stats",
+            description="This module parses the output from <code>samtools stats</code>. All numbers in millions.",
+            plot=beeswarm.plot(self.samtools_stats, keys, {"id": "samtools-stats-dp"}),
+        )
 
         # Return the number of logs that were found
         return len(self.samtools_stats)
@@ -249,10 +249,11 @@ class StatsReportMixin:
 
 def alignment_chart(data):
     """Make the HighCharts HTML to plot the alignment rates"""
-    keys = OrderedDict()
-    keys["reads_mapped_MQ1"] = {"color": "#437bb1", "name": "Mapped (with MQ>0)"}
-    keys["reads_MQ0"] = {"color": "#FF9933", "name": "MQ0"}
-    keys["reads_unmapped"] = {"color": "#b1084c", "name": "Unmapped"}
+    keys = {
+        "reads_mapped_MQ1": {"color": "#437bb1", "name": "Mapped (with MQ>0)"},
+        "reads_MQ0": {"color": "#FF9933", "name": "MQ0"},
+        "reads_unmapped": {"color": "#b1084c", "name": "Unmapped"},
+    }
 
     # Config for the plot
     plot_conf = {

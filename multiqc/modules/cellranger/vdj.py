@@ -3,12 +3,10 @@
 import json
 import logging
 import re
-from collections import OrderedDict
 
 from multiqc import config
+from multiqc.modules.cellranger.utils import set_hidden_cols, update_dict, parse_bcknee_data, clean_title_case
 from multiqc.plots import linegraph, table
-
-from ._utils import *
 
 # Initialise the logger
 log = logging.getLogger(__name__)
@@ -24,10 +22,10 @@ class CellRangerVdjMixin:
         self.cellrangervdj_warnings = dict()
         self.cellrangervdj_plots_conf = {"bc": dict(), "genes": dict()}
         self.cellrangervdj_plots_data = {"bc": dict(), "genes": dict()}
-        self.vdj_general_data_headers = OrderedDict()
-        self.vdj_mapping_headers = OrderedDict()
-        self.vdj_annotations_headers = OrderedDict()
-        self.vdj_warnings_headers = OrderedDict()
+        self.vdj_general_data_headers = dict()
+        self.vdj_mapping_headers = dict()
+        self.vdj_annotations_headers = dict()
+        self.vdj_warnings_headers = dict()
 
         for f in self.find_log_files("cellranger/vdj_html", filehandles=True):
             self.parse_vdj_report(f)
@@ -162,7 +160,6 @@ class CellRangerVdjMixin:
         except (KeyError, AssertionError):
             log.debug("Unable to parse version for sample {}".format(s_name))
 
-        data = dict()
         data_general_stats = dict()
 
         # Store general stats from cells and sequencing tables
