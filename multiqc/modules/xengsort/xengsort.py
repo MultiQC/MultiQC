@@ -83,8 +83,8 @@ class MultiqcModule(BaseMultiqcModule):
             "neither": "Greys",
         }
         for sn, data in self.percents.items():
-            for cls, val in data.items():
-                table_data[sn][f"{cls}_reads_pct"] = val
+            for cls in ["graft", "host", "ambiguous", "both", "neither"]:
+                table_data[sn][f"{cls}_reads_pct"] = data.get(cls)
                 headers[f"{cls}_reads_pct"] = {
                     "title": f"{cls.capitalize()} reads",
                     "description": f"share of {cls} reads in the sample",
@@ -100,8 +100,8 @@ class MultiqcModule(BaseMultiqcModule):
             detail_headers[metric]["hidden"] = False
 
         for sn, data in self.counts.items():
-            for cls, val in data.items():
-                table_data[sn][f"{cls}_reads_cnt"] = val
+            for cls in ["graft", "host", "ambiguous", "both", "neither"]:
+                table_data[sn][f"{cls}_reads_cnt"] = data.get(cls)
                 detail_headers[f"{cls}_reads_cnt"] = {
                     "title": f"{cls.capitalize()} reads",
                     "description": f"number of {cls} reads in the sample",
