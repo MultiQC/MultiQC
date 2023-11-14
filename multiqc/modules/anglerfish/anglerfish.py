@@ -189,31 +189,15 @@ class MultiqcModule(BaseMultiqcModule):
         if len(data) == 0:
             return
 
-        headers = {
-            "Mean": {
-                "title": "Mean Read Length",
-                "description": "Mean read length",
-                "min": 0,
-                "scale": "RdYlGn",
-                "suffix": " bp",
-            },
-            "Standard Deviation": {
-                "title": "Length StdDev",
-                "description": "Standard deviation of the read lengths",
-                "min": 0,
-                "scale": "RdPu",
-                "suffix": " bp",
-            },
-        }
         config = {
             "id": "Sample_Stat_Read_Length",
             "title": "Anglerfish: Read Lengths Summary",
         }
         # Plot table if less than 10 samples exist, beeswarm if more
         if total_samples < 10:
-            p = table.plot(data, headers, config)
+            p = table.plot(data, None, config)
         else:
-            p = beeswarm.plot(data, headers, config)
+            p = beeswarm.plot(data, None, config)
         self.add_section(
             name="Read Lengths Summary",
             anchor="anglerfish-sample-statistics",
