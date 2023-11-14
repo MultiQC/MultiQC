@@ -131,6 +131,7 @@ class DataTable:
                 headers[idx][k]["namespace"] = headers[idx][k].get("namespace", pconfig.get("namespace", ""))
                 headers[idx][k]["title"] = headers[idx][k].get("title", k)
                 headers[idx][k]["description"] = headers[idx][k].get("description", headers[idx][k]["title"])
+                headers[idx][k]["scale"] = headers[idx][k].get("scale", pconfig.get("scale", None))
                 headers[idx][k]["format"] = headers[idx][k].get("format", pconfig.get("format", "{:,.1f}"))
                 headers[idx][k]["colour"] = headers[idx][k].get("colour", pconfig.get("colour", None))
                 headers[idx][k]["hidden"] = headers[idx][k].get("hidden", pconfig.get("hidden", None))
@@ -142,17 +143,6 @@ class DataTable:
                 headers[idx][k]["shared_key"] = headers[idx][k].get("shared_key", pconfig.get("shared_key", None))
                 headers[idx][k]["modify"] = headers[idx][k].get("modify", pconfig.get("modify", None))
                 headers[idx][k]["placement"] = float(headers[idx][k].get("placement", 1000))
-
-                if "scale" not in headers[idx][k]:
-                    errmsg = (
-                        f'"scale" is not specified for the key "{k}". Please set it explicitly to one of the '
-                        f"possible values (see https://multiqc.info/docs/development/modules/#table-colour-scales), "
-                        f"or set to `None` to disable colouring."
-                    )
-                    if config.strict:
-                        logger.error(errmsg)
-                        report.lint_errors.append(errmsg)
-                headers[idx][k]["scale"] = headers[idx][k].get("scale", pconfig.get("scale", None))
 
                 if headers[idx][k]["colour"] is None:
                     cidx = idx
