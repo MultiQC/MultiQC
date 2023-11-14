@@ -17,7 +17,7 @@ letters = "abcdefghijklmnopqrstuvwxyz"
 def plot(data, headers=None, pconfig=None):
     """Helper HTML for a beeswarm plot.
     :param data: A list of data dicts
-    :param headers: A list of Dicts / OrderedDicts with information
+    :param headers: A list of dicts with information
                     for the series, such as colour scales, min and
                     max values etc.
     :return: HTML string
@@ -33,12 +33,12 @@ def plot(data, headers=None, pconfig=None):
             pconfig[k] = v
 
     # Make a datatable object
-    dt = table_object.datatable(data, headers, pconfig)
+    dt = table_object.DataTable(data, headers, pconfig)
 
     return make_plot(dt)
 
 
-def make_plot(dt):
+def make_plot(dt: table_object.DataTable):
     bs_id = dt.pconfig.get("id", "table_{}".format("".join(random.sample(letters, 4))))
 
     # Sanitise plot ID and check for duplicates

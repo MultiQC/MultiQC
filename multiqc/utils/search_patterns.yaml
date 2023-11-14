@@ -579,72 +579,58 @@ pbmarkdup:
 phantompeakqualtools/out:
   fn: "*.spp.out"
 picard/alignment_metrics:
-  contents: "AlignmentSummaryMetrics"
-  shared: true
+  - contents: "picard.analysis.AlignmentSummaryMetrics"
+  - contents: "--algo AlignmentStat"
 picard/basedistributionbycycle:
   contents: "BaseDistributionByCycleMetrics"
-  shared: true
 picard/crosscheckfingerprints:
   contents: "CrosscheckFingerprints"
-  shared: true
 picard/gcbias:
-  contents: "GcBias"
-  shared: true
+  - contents: "GcBiasDetailMetrics"
+  - contents: "GcBiasSummaryMetrics"
+  - contents: "--algo GCBias"
 picard/hsmetrics:
-  contents: "HsMetrics"
-  shared: true
+  - contents: "HsMetrics"
+  - contents: "--algo HsMetricAlgo"
 picard/insertsize:
-  contents: "InsertSizeMetrics"
-  shared: true
+  - contents: "picard.analysis.InsertSizeMetrics"
+  - contents: "--algo InsertSizeMetricAlgo"
 picard/markdups:
-  contents: "DuplicationMetrics"
-  shared: true
+  - contents: "picard.sam.DuplicationMetrics"
+  - contents: "markduplicates.DuplicationMetrics"
+  - contents: "--algo Dedup"
 picard/oxogmetrics:
   contents: "OxoGMetrics"
-  shared: true
 picard/pcr_metrics:
   contents: "TargetedPcrMetrics"
-  shared: true
 picard/quality_by_cycle:
-  contents_re: "[Qq]uality[Bb]y[Cc]ycle"
-  contents: "MEAN_QUALITY"
-  shared: true
+  - contents_re: "[Qq]uality[Bb]y[Cc]ycle"
+    contents: "MEAN_QUALITY"
+  - contents: "--algo MeanQualityByCycle"
 picard/quality_score_distribution:
-  contents_re: "[Qq]uality[Ss]core[Dd]istribution"
-  contents: "COUNT_OF_Q"
-  shared: true
+  - contents_re: "[Qq]uality[Ss]core[Dd]istribution"
+    contents: "COUNT_OF_Q"
+  - contents: "--algo QualDistribution"
 picard/quality_yield_metrics:
   contents: "QualityYieldMetrics"
-  shared: true
 picard/rnaseqmetrics:
   contents_re: "[Rr]na[Ss]eq[Mm]etrics"
-  contents: "## METRICS CLASS"
-  shared: true
 picard/rrbs_metrics:
   contents: "RrbsSummaryMetrics"
-  shared: true
 picard/sam_file_validation:
   fn: "*[Vv]alidate[Ss]am[Ff]ile*"
 picard/variant_calling_metrics:
-  # This looks wrong, but I think it's intentional - tests fail if I "fix" it
-  fn: "*.variant_calling_detail_metrics"
-  contents: "CollectVariantCallingMetrics"
-  shared: true
+  contents: "VariantCallingDetailMetrics"
 picard/wgs_metrics:
-  contents: "WgsMetrics"
-  shared: true
+  contents_re: "## METRICS CLASS.*WgsMetrics"
 picard/collectilluminabasecallingmetrics:
   contents: "CollectIlluminaBasecallingMetrics"
-  shared: true
 picard/collectilluminalanemetrics:
   contents: "CollectIlluminaLaneMetrics"
-  shared: true
 picard/extractilluminabarcodes:
   contents: "ExtractIlluminaBarcodes"
-  shared: true
 picard/markilluminaadapters:
   contents: "MarkIlluminaAdapters"
-  shared: true
 porechop:
   contents: "Looking for known adapter sets"
   num_lines: 10
@@ -762,15 +748,6 @@ samtools/rmdup:
   shared: true
 sargasso:
   fn: "overall_filtering_summary.txt"
-sentieon/alignment_metrics:
-  contents: "--algo AlignmentStat"
-  shared: true
-sentieon/insertsize:
-  contents: "--algo InsertSizeMetricAlgo"
-  shared: true
-sentieon/gcbias:
-  contents: "--algo GCBias"
-  shared: true
 seqyclean:
   fn: "*_SummaryStatistics.tsv"
 sexdeterrmine:

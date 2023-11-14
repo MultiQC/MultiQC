@@ -1,97 +1,120 @@
 """ MultiQC submodule to parse output from Picard GcBiasMetrics """
 
 import logging
-import os
-import re
 
+from multiqc.modules.picard import util
 from multiqc.plots import linegraph
 
 # Initialise the logger
 log = logging.getLogger(__name__)
 
 
-def parse_reports(self):
-    """Find Picard GcBiasMetrics reports and parse their data"""
+def parse_reports(module):
+    """
+    Find Picard GcBiasMetrics reports and parse their data. There are two types of
+    GC bias files:
+    * detail: one set of metrics per GC percentage,
+    * summary: one set of metrics per input or sample.
+    In Picard, they are generated separately with GcBiasDetailMetrics and
+    GcBiasSummaryMetrics tools correspondingly. In Sentieon, they are produced with
+    the same command, and the summary is only written when the `--summary` option
+    is provided.
+    """
 
-    # Set up vars
-    self.picard_GCbias_data = dict()
-    self.picard_GCbiasSummary_data = dict()
+    data_by_sample = dict()
+    summary_data_by_sample = dict()
 
     # Go through logs and find Metrics
-    for f in self.find_log_files("picard/gcbias", filehandles=True):
-        s_name = None
+    for f in module.find_log_files(f"{module.anchor}/gcbias", filehandles=True):
+        # Sample name from input file name by default.
+        s_name = f["s_name"]
         gc_col = None
         cov_col = None
-        for l in f["f"]:
-            # New log starting
-            if "GcBiasMetrics" in l and "INPUT" in l:
-                s_name = None
 
-                # Pull sample name from input
-                fn_search = re.search(r"INPUT(?:=|\s+)(\[?[^\s]+\]?)", l, flags=re.IGNORECASE)
-                if fn_search:
-                    s_name = os.path.basename(fn_search.group(1).strip("[]"))
-                    s_name = self.clean_s_name(s_name, f)
+        for line in f["f"]:
+            maybe_s_name = util.extract_sample_name(
+                module,
+                line,
+                f,
+                picard_tool="CollectGcBiasMetrics",
+                sentieon_algo="GCBias",
+            )
+            if maybe_s_name:
+                s_name = maybe_s_name
 
-            if s_name is not None:
-                if gc_col is not None and cov_col is not None:
-                    try:
-                        # Note that GC isn't always the first column.
-                        s = l.strip("\n").split("\t")
-                        self.picard_GCbias_data[s_name][int(s[gc_col])] = float(s[cov_col])
-                    except IndexError:
-                        s_name = None
-                        gc_col = None
-                        cov_col = None
+            if s_name is None:
+                continue
 
-                if "GcBiasDetailMetrics" in l and "## METRICS CLASS" in l:
-                    if s_name in self.picard_GCbias_data:
-                        log.debug("Duplicate sample name found in {}! Overwriting: {}".format(f["fn"], s_name))
-                    self.add_data_source(f, s_name, section="GcBiasDetailMetrics")
-                    self.picard_GCbias_data[s_name] = dict()
-                    # Get header - find columns with the data we want
-                    l = f["f"].readline()
-                    s = l.strip("\n").split("\t")
-                    gc_col = s.index("GC")
-                    cov_col = s.index("NORMALIZED_COVERAGE")
+            if util.is_line_right_before_table(
+                line, picard_class=["GcBiasDetailMetrics", "GcBiasSummaryMetrics"], sentieon_algo="GCBias"
+            ):
+                # Get header - find columns with the data we want
+                line = f["f"].readline()
+                keys = line.strip("\n").split("\t")
 
-                if "GcBiasSummaryMetrics" in l and "## METRICS CLASS" in l:
-                    if s_name in self.picard_GCbiasSummary_data:
-                        log.debug("Duplicate sample name found in {}! Overwriting: {}".format(f["fn"], s_name))
-                    self.add_data_source(f, s_name, section="GcBiasSummaryMetrics")
-                    self.picard_GCbiasSummary_data[s_name] = dict()
+                if "GC" in keys and "NORMALIZED_COVERAGE" in keys:
+                    # Detail metrics: one line per GC percentage
+                    if s_name in data_by_sample:
+                        log.debug(f"Duplicate sample name found in {f['fn']}! Overwriting: {s_name}")
+                    data_by_sample[s_name] = dict()
+                    gc_col = keys.index("GC")
+                    cov_col = keys.index("NORMALIZED_COVERAGE")
 
-                    keys = f["f"].readline().rstrip("\n").split("\t")
+                elif "ACCUMULATION_LEVEL" in keys and "GC_DROPOUT" in keys:
+                    # Summary metrics - just one line below the header
+                    if s_name in summary_data_by_sample:
+                        log.debug(f"Duplicate sample name found in {f['fn']}! Overwriting: {s_name}")
+                    summary_data_by_sample[s_name] = dict()
                     vals = f["f"].readline().rstrip("\n").split("\t")
-                    for i, k in enumerate(keys):
+                    if len(keys) != len(vals):
+                        s_name = None
+                        continue
+
+                    for k, v in zip(keys, vals):
                         try:
-                            self.picard_GCbiasSummary_data[s_name][k] = float(vals[i])
+                            summary_data_by_sample[s_name][k] = float(v)
                         except ValueError:
-                            self.picard_GCbiasSummary_data[s_name][k] = vals[i]
+                            summary_data_by_sample[s_name][k] = v
 
-        for s_name in list(self.picard_GCbias_data.keys()):
-            if len(self.picard_GCbias_data[s_name]) == 0:
-                self.picard_GCbias_data.pop(s_name, None)
-                log.debug("Removing {} as no data parsed".format(s_name))
+            elif gc_col is not None and cov_col is not None:
+                try:
+                    # Note that GC isn't always the first column.
+                    s = line.strip("\n").split("\t")
+                    data_by_sample[s_name][int(s[gc_col])] = float(s[cov_col])
+                except IndexError:
+                    gc_col = None
+                    cov_col = None
 
-            # Superfluous function call to confirm that it is used in this module
-            # Replace None with actual version if it is available
-            self.add_software_version(None, s_name)
+        for s_name in set(data_by_sample.keys()) | set(summary_data_by_sample.keys()):
+            module.add_data_source(f, s_name, section="GcBiasMetrics")
 
-        for s_name in list(self.picard_GCbiasSummary_data.keys()):
-            if len(self.picard_GCbiasSummary_data[s_name]) == 0:
-                self.picard_GCbiasSummary_data.pop(s_name, None)
-                log.debug("Removing {} as no data parsed".format(s_name))
+    for s_name in list(data_by_sample.keys()):
+        if len(data_by_sample[s_name]) == 0:
+            data_by_sample.pop(s_name, None)
+            log.debug(f"Removing {s_name} as no data parsed")
+
+    for s_name in list(summary_data_by_sample.keys()):
+        if len(summary_data_by_sample[s_name]) == 0:
+            summary_data_by_sample.pop(s_name, None)
+            log.debug(f"Removing {s_name} as no data parsed")
 
     # Filter to strip out ignored sample names
-    self.picard_GCbias_data = self.ignore_samples(self.picard_GCbias_data)
+    data_by_sample = module.ignore_samples(data_by_sample)
+    summary_data_by_sample = module.ignore_samples(summary_data_by_sample)
 
-    if len(self.picard_GCbias_data) > 0:
+    n_samples = len(data_by_sample.keys() | summary_data_by_sample.keys())
+    if n_samples == 0:
+        return 0
+
+    # Superfluous function call to confirm that it is used in this module
+    # Replace None with actual version if it is available
+    module.add_software_version(None)
+
+    if data_by_sample:
         # Plot the graph
-
         pconfig = {
-            "id": "picard_gcbias_plot",
-            "title": "Picard: GC Coverage Bias",
+            "id": f"{module.anchor}_gcbias_plot",
+            "title": f"{module.name}: GC Coverage Bias",
             "ylab": "Normalized Coverage",
             "xlab": "% GC",
             "xmin": 0,
@@ -104,17 +127,17 @@ def parse_reports(self):
                 {"value": 1, "color": "#999999", "width": 2, "dashStyle": "LongDash"},
             ],
         }
-        self.add_section(
+        module.add_section(
             name="GC Coverage Bias",
-            anchor="picard-gcbias",
+            anchor=f"{module.anchor}-gcbias",
             description="This plot shows bias in coverage across regions of the genome with varying GC content."
             " A perfect library would be a flat line at <code>y = 1</code>.",
-            plot=linegraph.plot(self.picard_GCbias_data, pconfig),
+            plot=linegraph.plot(data_by_sample, pconfig),
         )
 
-    if len(self.picard_GCbiasSummary_data) > 0:
+    if summary_data_by_sample:
         # Write parsed summary data to a file
-        self.write_data_file(self.picard_GCbiasSummary_data, "multiqc_picard_gcbias")
+        module.write_data_file(summary_data_by_sample, f"multiqc_{module.anchor}_gcbias")
 
     # Return the number of detected samples to the parent module
-    return len(self.picard_GCbias_data)
+    return n_samples

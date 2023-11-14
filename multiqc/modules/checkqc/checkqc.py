@@ -3,7 +3,6 @@
 import json
 import logging
 import re
-from collections import OrderedDict
 from operator import itemgetter
 
 from multiqc.modules.base_module import BaseMultiqcModule, ModuleNoSamplesFound
@@ -43,15 +42,15 @@ class MultiqcModule(BaseMultiqcModule):
             self.parse_checkqc_json(raw_content, f)
             self.add_data_source(f)
 
-            # Superfluous function call to confirm that it is used in this module
-            # Replace None with actual version if it is available
-            self.add_software_version(None, f["s_name"])
-
         if not self.checkqc_data:
             raise ModuleNoSamplesFound
         log.info(f"Found {len(self.log_files)} run and {len(self.checkqc_data)} samples")
 
         self.write_data_file(self.checkqc_data, "multiqc_checkqc")
+
+        # Superfluous function call to confirm that it is used in this module
+        # Replace None with actual version if it is available
+        self.add_software_version(None)
 
         self.add_sections()
 
@@ -141,7 +140,7 @@ class MultiqcModule(BaseMultiqcModule):
 
         warning, error = self._get_warning_error(data)
 
-        cats = OrderedDict()
+        cats = dict()
         cats["read_num"] = {
             "name": "Reads",
         }
@@ -212,7 +211,7 @@ class MultiqcModule(BaseMultiqcModule):
 
         warning, error = self._get_warning_error(data)
 
-        cats = OrderedDict()
+        cats = dict()
         cats["lane_pf"] = {
             "name": "Clusters passing filters",
         }
@@ -283,7 +282,7 @@ class MultiqcModule(BaseMultiqcModule):
 
         warning, error = self._get_warning_error(data)
 
-        cats = OrderedDict()
+        cats = dict()
         cats["percent_q30"] = {
             "name": "%Q30",
         }
@@ -352,7 +351,7 @@ class MultiqcModule(BaseMultiqcModule):
 
         warning, error = self._get_warning_error(data)
 
-        cats = OrderedDict()
+        cats = dict()
         cats["threshold"] = {
             "name": "Error rate part until threshold",
         }
@@ -432,7 +431,7 @@ class MultiqcModule(BaseMultiqcModule):
         data = {f"Lane {k}": v for k, v in data.items()}
 
         warning, error = self._get_warning_error(data)
-        cats = OrderedDict()
+        cats = dict()
         cats["phix"] = {"name": r"% PhiX", "color": "#88a680"}
         cats["threshold"] = {
             "name": r"% undetermined indexes until threshold",
@@ -475,9 +474,13 @@ class MultiqcModule(BaseMultiqcModule):
             "scale": "Reds",
             "col1_header": "Run",
         }
-
-        headers = OrderedDict()
-        headers["lane"] = {"title": "Lane", "description": "Sequencing lane", "format": "{:,.0f}"}
+        headers = {
+            "lane": {
+                "title": "Lane",
+                "description": "Sequencing lane",
+                "format": "{:,.0f}",
+            },
+        }
 
         self.add_section(
             name="Lanes with zero yield",
@@ -557,15 +560,15 @@ class MultiqcModule(BaseMultiqcModule):
             for lane in data[sample]:
                 lanes.add(lane)
 
-        cats = OrderedDict()
+        cats = dict()
         for lane in sorted(lanes):
             cats[lane] = {"name": f"Lane {lane}"}
 
         pconfig = {
             "id": "checkqc_unidentified-index-plot",
-            "title": f"CheckQC: Overrepresented unidentified indexes",
-            "ylab": r"% representation",
-            "xlab": f"Overrepresented indexes",
+            "title": "CheckQC: Overrepresented unidentified indexes",
+            "ylab": "% representation",
+            "xlab": "Overrepresented indexes",
             "stacking": None,
         }
 

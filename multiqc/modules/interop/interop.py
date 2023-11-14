@@ -1,6 +1,5 @@
 import logging
 import re
-from collections import OrderedDict
 
 from multiqc import config
 from multiqc.modules.base_module import BaseMultiqcModule, ModuleNoSamplesFound
@@ -89,7 +88,8 @@ class MultiqcModule(BaseMultiqcModule):
                 plot=self.index_metrics_details_table(self.indexSummary),
             )
 
-    def parse_summary_csv(self, f):
+    @staticmethod
+    def parse_summary_csv(f):
         metrics = {"summary": {}, "details": {}}
         header = []
         section = None
@@ -149,12 +149,13 @@ class MultiqcModule(BaseMultiqcModule):
                         else:
                             linedata[header[idx]] = float(data[idx])
                     except ValueError:
-                        linedata[header[idx]] = re.sub(pattern="\+/-.*", repl="", string=data[idx])
+                        linedata[header[idx]] = re.sub(pattern=r"\+/-.*", repl="", string=data[idx])
                 metrics["details"]["Lane {} - {}".format(data[0], read)] = linedata
 
         return metrics, version
 
-    def parse_index_summary_csv(self, f):
+    @staticmethod
+    def parse_index_summary_csv(f):
         metrics = {"summary": {}, "details": {}}
         header = []
         section = None
@@ -202,48 +203,50 @@ class MultiqcModule(BaseMultiqcModule):
 
         return metrics, version
 
-    def run_metrics_summary_table(self, data):
-        headers = OrderedDict()
-        headers["Yield"] = {
-            "rid": "summary_Yield",
-            "title": "{}p Yield".format(config.base_count_prefix),
-            "description": 'The number of bases sequenced ({} base pairs over all "usable cycles"'.format(
-                config.base_count_desc
-            ),
-            "scale": "PuOr",
-            "shared_key": "base_count",
-            "modify": lambda x: (x * 1000000000.0) * config.base_count_multiplier,  # number is already in gigabases
-        }
-        headers["Aligned"] = {
-            "rid": "summary_Aligned",
-            "title": "Aligned (%)",
-            "description": "The percentage of the sample that aligned to the PhiX genome",
-            "min": 0,
-            "max": 100,
-            "suffix": "%",
-            "scale": "PiYG",
-        }
-        headers["Error Rate"] = {
-            "title": "Error Rate (%)",
-            "description": "",
-            "min": 0,
-            "max": 100,
-            "suffix": "%",
-            "scale": "OrRd",
-        }
-        headers["Intensity C1"] = {
-            "rid": "summary_Intensity_C1",
-            "title": "Intensity Cycle 1",
-            "description": "The intensity statistic at cycle 1.",
-        }
-        headers["%>=Q30"] = {
-            "rid": "summary_Q30",
-            "title": "% >= Q30",
-            "description": "Percentage of reads with quality phred score of 30 or above",
-            "min": 0,
-            "max": 100,
-            "suffix": "%",
-            "scale": "RdYlGn",
+    @staticmethod
+    def run_metrics_summary_table(data):
+        headers = {
+            "Yield": {
+                "rid": "summary_Yield",
+                "title": "{}p Yield".format(config.base_count_prefix),
+                "description": 'The number of bases sequenced ({} base pairs over all "usable cycles"'.format(
+                    config.base_count_desc
+                ),
+                "scale": "PuOr",
+                "shared_key": "base_count",
+                "modify": lambda x: (x * 1000000000.0) * config.base_count_multiplier,  # number is already in gigabases
+            },
+            "Aligned": {
+                "rid": "summary_Aligned",
+                "title": "Aligned (%)",
+                "description": "The percentage of the sample that aligned to the PhiX genome",
+                "min": 0,
+                "max": 100,
+                "suffix": "%",
+                "scale": "PiYG",
+            },
+            "Error Rate": {
+                "title": "Error Rate (%)",
+                "description": "",
+                "min": 0,
+                "max": 100,
+                "suffix": "%",
+                "scale": "OrRd",
+            },
+            "Intensity C1": {
+                "rid": "summary_Intensity_C1",
+                "title": "Intensity Cycle 1",
+                "description": "The intensity statistic at cycle 1.",
+            },
+            "%>=Q30": {
+                "rid": "summary_Q30",
+                "title": "% >= Q30",
+                "description": "Percentage of reads with quality phred score of 30 or above",
+                "min": 0,
+                "max": 100,
+                "suffix": "%",
+                "scale": "RdYlGn",
+            },
         }
         table_config = {
             "namespace": "interop",
@@ -259,122 +262,124 @@ class MultiqcModule(BaseMultiqcModule):
 
         return table.plot(tdata, headers, table_config)
 
-    def run_metrics_details_table(self, data):
-        headers = OrderedDict()
-        headers["Surface"] = {"title": "Surface", "description": ""}
-        headers["Tiles"] = {"title": "Tiles", "description": "The number of tiles per lane.", "hidden": True}
-        headers["Density"] = {
-            "title": "Density",
-            "description": "The density of clusters (in thousands per mm2) detected by image analysis, +/- 1 standard deviation.",
-            "hidden": True,
-        }
-        headers["Cluster PF"] = {
-            "title": "Cluster PF (%)",
-            "description": "The percentage of clusters passing filtering, +/- 1 standard deviation.",
-            "suffix": "%",
-        }
-        headers["% Occupied"] = {
-            "title": "Occupied (%)",
-            "description": "The percentage of nanowells occupied by clusters, +/- 1 standard deviation.",
-            "suffix": "%",
-        }
-        headers["Phased"] = {
-            "title": "Phased (%)",
-            "description": "The value used by RTA for the percentage of molecules in a cluster for which sequencing falls behind (phasing) or jumps ahead (prephasing) the current cycle within a read.",
-            "min": 0,
-            "max": 100,
-            "suffix": "%",
-            "scale": "OrRd",
-        }
-        headers["Prephased"] = {
-            "title": "Prephased (%)",
-            "description": "The value used by RTA for the percentage of molecules in a cluster for which sequencing falls behind (phasing) or jumps ahead (prephasing) the current cycle within a read.",
-            "format": "{:.,2f}",
-            "min": 0,
-            "max": 100,
-            "suffix": "%",
-            "scale": "OrRd",
-        }
-        headers["Reads"] = {
-            "title": "{} Reads".format(config.read_count_prefix),
-            "description": "The number of clusters ({})".format(config.read_count_desc),
-            "shared_key": "read_count",
-            "modify": lambda x: (x * 1000000.0) * config.read_count_multiplier,  # number is already in millions
-        }
-        headers["Reads PF"] = {
-            "title": "{} PF Reads".format(config.read_count_prefix),
-            "description": "The number of passing filter clusters ({})".format(config.read_count_desc),
-            "shared_key": "read_count",
-            "modify": lambda x: (x * 1000000.0) * config.read_count_multiplier,  # number is already in millions
-        }
-        headers["Cycles Error"] = {
-            "title": "Cycles Error",
-            "description": "The number of cycles that have been error-rated using PhiX, starting at cycle 1.",
-            "format": "{:.,0f}",
-        }
-        headers["Yield"] = {
-            "title": "{}p Yield".format(config.base_count_prefix),
-            "description": "The number of bases sequenced which passed filter ({} base pairs)".format(
-                config.base_count_desc
-            ),
-            "scale": "PuOr",
-            "shared_key": "base_count",
-            "modify": lambda x: (x * 1000000000.0) * config.base_count_multiplier,  # number is already in gigabases
-        }
-        headers["Aligned"] = {
-            "title": "Aligned (%)",
-            "description": "The percentage that aligned to the PhiX genome.",
-            "min": 0,
-            "max": 100,
-            "suffix": "%",
-            "scale": "PiYG",
-        }
-        headers["Error"] = {
-            "title": "Error Rate (%)",
-            "description": "The calculated error rate, as determined by the PhiX alignment.",
-            "min": 0,
-            "max": 100,
-            "suffix": "%",
-            "scale": "OrRd",
-        }
-        headers["Error (35)"] = {
-            "title": "Error Rate 35 Cycles (%)",
-            "description": "The calculated error rate for cycles 1-35.",
-            "min": 0,
-            "max": 100,
-            "suffix": "%",
-            "scale": "OrRd",
-            "hidden": True,
-        }
-        headers["Error (75)"] = {
-            "title": "Error Rate 75 Cycles (%)",
-            "description": "The calculated error rate for cycles 1-75.",
-            "min": 0,
-            "max": 100,
-            "suffix": "%",
-            "scale": "OrRd",
-            "hidden": True,
-        }
-        headers["Error (100)"] = {
-            "title": "Error Rate 100 Cycles (%)",
-            "description": "The calculated error rate for cycles 1-100.",
-            "min": 0,
-            "max": 100,
-            "suffix": "%",
-            "scale": "OrRd",
-            "hidden": True,
-        }
-        headers["Intensity C1"] = {
-            "title": "Intensity Cycle 1",
-            "description": "The intensity statistic at cycle 1.",
-        }
-        headers["%>=Q30"] = {
-            "title": "%>=Q30",
-            "description": "The percentage of bases with a quality score of 30 or higher, respectively.",
-            "min": 0,
-            "max": 100,
-            "suffix": "%",
-            "scale": "RdYlGn",
+    @staticmethod
+    def run_metrics_details_table(data):
+        headers = {
+            "Surface": {"title": "Surface", "description": ""},
+            "Tiles": {"title": "Tiles", "description": "The number of tiles per lane.", "hidden": True},
+            "Density": {
+                "title": "Density",
+                "description": "The density of clusters (in thousands per mm2) detected by image analysis, +/- 1 standard deviation.",
+                "hidden": True,
+            },
+            "Cluster PF": {
+                "title": "Cluster PF (%)",
+                "description": "The percentage of clusters passing filtering, +/- 1 standard deviation.",
+                "suffix": "%",
+            },
+            "% Occupied": {
+                "title": "Occupied (%)",
+                "description": "The percentage of nanowells occupied by clusters, +/- 1 standard deviation.",
+                "suffix": "%",
+            },
+            "Phased": {
+                "title": "Phased (%)",
+                "description": "The value used by RTA for the percentage of molecules in a cluster for which sequencing falls behind (phasing) or jumps ahead (prephasing) the current cycle within a read.",
+                "min": 0,
+                "max": 100,
+                "suffix": "%",
+                "scale": "OrRd",
+            },
+            "Prephased": {
+                "title": "Prephased (%)",
+                "description": "The value used by RTA for the percentage of molecules in a cluster for which sequencing falls behind (phasing) or jumps ahead (prephasing) the current cycle within a read.",
+                "format": "{:.,2f}",
+                "min": 0,
+                "max": 100,
+                "suffix": "%",
+                "scale": "OrRd",
+            },
+            "Reads": {
+                "title": "{} Reads".format(config.read_count_prefix),
+                "description": "The number of clusters ({})".format(config.read_count_desc),
+                "shared_key": "read_count",
+                "modify": lambda x: (x * 1000000.0) * config.read_count_multiplier,  # number is already in millions
+            },
+            "Reads PF": {
+                "title": "{} PF Reads".format(config.read_count_prefix),
+                "description": "The number of passing filter clusters ({})".format(config.read_count_desc),
+                "shared_key": "read_count",
+                "modify": lambda x: (x * 1000000.0) * config.read_count_multiplier,  # number is already in millions
+            },
+            "Cycles Error": {
+                "title": "Cycles Error",
+                "description": "The number of cycles that have been error-rated using PhiX, starting at cycle 1.",
+                "format": "{:.,0f}",
+            },
+            "Yield": {
+                "title": "{}p Yield".format(config.base_count_prefix),
+                "description": "The number of bases sequenced which passed filter ({} base pairs)".format(
+                    config.base_count_desc
+                ),
+                "scale": "PuOr",
+                "shared_key": "base_count",
+                "modify": lambda x: (x * 1000000000.0) * config.base_count_multiplier,  # number is already in gigabases
+            },
+            "Aligned": {
+                "title": "Aligned (%)",
+                "description": "The percentage that aligned to the PhiX genome.",
+                "min": 0,
+                "max": 100,
+                "suffix": "%",
+                "scale": "PiYG",
+            },
+            "Error": {
+                "title": "Error Rate (%)",
+                "description": "The calculated error rate, as determined by the PhiX alignment.",
+                "min": 0,
+                "max": 100,
+                "suffix": "%",
+                "scale": "OrRd",
+            },
+            "Error (35)": {
+                "title": "Error Rate 35 Cycles (%)",
+                "description": "The calculated error rate for cycles 1-35.",
+                "min": 0,
+                "max": 100,
+                "suffix": "%",
+                "scale": "OrRd",
+                "hidden": True,
+            },
+            "Error (75)": {
+                "title": "Error Rate 75 Cycles (%)",
+                "description": "The calculated error rate for cycles 1-75.",
+                "min": 0,
+                "max": 100,
+                "suffix": "%",
+                "scale": "OrRd",
+                "hidden": True,
+            },
+            "Error (100)": {
+                "title": "Error Rate 100 Cycles (%)",
+                "description": "The calculated error rate for cycles 1-100.",
+                "min": 0,
+                "max": 100,
+                "suffix": "%",
+                "scale": "OrRd",
+                "hidden": True,
+            },
+            "Intensity C1": {
+                "title": "Intensity Cycle 1",
+                "description": "The intensity statistic at cycle 1.",
+            },
+            "%>=Q30": {
+                "title": "%>=Q30",
+                "description": "The percentage of bases with a quality score of 30 or higher, respectively.",
+                "min": 0,
+                "max": 100,
+                "suffix": "%",
+                "scale": "RdYlGn",
+            },
         }
         table_config = {
             "namespace": "interop",
@@ -390,35 +395,39 @@ class MultiqcModule(BaseMultiqcModule):
 
         return table.plot(tdata, headers, table_config)
 
-    def index_metrics_summary_table(self, data):
-        headers = OrderedDict()
-        headers["Total Reads"] = {
-            "title": "{} Reads".format(config.read_count_prefix),
-            "description": "The total number of reads for this lane ({})".format(config.read_count_desc),
-            "modify": lambda x: float(x) * config.read_count_multiplier,
-            "format": "{:,.2f}",
-            "shared_key": "read_count",
+    @staticmethod
+    def index_metrics_summary_table(data):
+        headers = {
+            "Total Reads": {
+                "title": "{} Reads".format(config.read_count_prefix),
+                "description": "The total number of reads for this lane ({})".format(config.read_count_desc),
+                "modify": lambda x: float(x) * config.read_count_multiplier,
+                "format": "{:,.2f}",
+                "shared_key": "read_count",
+            },
+            "PF Reads": {
+                "title": "{} PF Reads".format(config.read_count_prefix),
+                "description": "The total number of passing filter reads for this lane ({})".format(
+                    config.read_count_desc
+                ),
+                "modify": lambda x: float(x) * config.read_count_multiplier,
+                "format": "{:,.2f}",
+                "shared_key": "read_count",
+            },
+            "% Read Identified (PF)": {
+                "rid": "summary_reads_identified_pf",
+                "title": "% Reads Identified (PF)",
+                "description": "The total fraction of passing filter reads assigned to an index.",
+                "suffix": "%",
+            },
+            "CV": {
+                "title": "CV",
+                "description": "The coefficient of variation for the number of counts across all indexes.",
+                "format": "{:.,2f}",
+            },
+            "Min": {"title": "Min", "description": "The lowest representation for any index."},
+            "Max": {"title": "Max", "description": "The highest representation for any index."},
         }
-        headers["PF Reads"] = {
-            "title": "{} PF Reads".format(config.read_count_prefix),
-            "description": "The total number of passing filter reads for this lane ({})".format(config.read_count_desc),
-            "modify": lambda x: float(x) * config.read_count_multiplier,
-            "format": "{:,.2f}",
-            "shared_key": "read_count",
-        }
-        headers["% Read Identified (PF)"] = {
-            "rid": "summary_reads_identified_pf",
-            "title": "% Reads Identified (PF)",
-            "description": "The total fraction of passing filter reads assigned to an index.",
-            "suffix": "%",
-        }
-        headers["CV"] = {
-            "title": "CV",
-            "description": "The coefficient of variation for the number of counts across all indexes.",
-            "format": "{:.,2f}",
-        }
-        headers["Min"] = {"title": "Min", "description": "The lowest representation for any index."}
-        headers["Max"] = {"title": "Max", "description": "The highest representation for any index."}
         table_config = {
             "namespace": "interop",
             "id": "interop-indexmetrics-summary-table",
@@ -433,15 +442,17 @@ class MultiqcModule(BaseMultiqcModule):
 
         return table.plot(tdata, headers, table_config)
 
-    def index_metrics_details_table(self, data):
-        headers = OrderedDict()
-        headers["% Read Identified (PF)"] = {
-            "title": "% Reads Identified (PF)",
-            "description": "The number of reads (only includes Passing Filter reads) mapped to this index.",
-            "suffix": "%",
+    @staticmethod
+    def index_metrics_details_table(data):
+        headers = {
+            "% Read Identified (PF)": {
+                "title": "% Reads Identified (PF)",
+                "description": "The number of reads (only includes Passing Filter reads) mapped to this index.",
+                "suffix": "%",
+            },
+            "Index 1 (I7)": {"title": "Index 1 (I7)", "description": "The sequence for the first Index Read."},
+            "Index 2 (I5)": {"title": "Index 2 (I5)", "description": "The sequence for the second Index Read."},
         }
-        headers["Index 1 (I7)"] = {"title": "Index 1 (I7)", "description": "The sequence for the first Index Read."}
-        headers["Index 2 (I5)"] = {"title": "Index 2 (I5)", "description": "The sequence for the second Index Read."}
 
         table_config = {
             "namespace": "interop",

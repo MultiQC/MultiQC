@@ -4,7 +4,6 @@
 config variables to be used across all other modules """
 
 
-import collections
 import inspect
 
 # Default logger will be replaced by caller
@@ -33,7 +32,7 @@ try:
     ).strip()
     git_hash_short = git_hash[:7]
     version = "{} ({})".format(version, git_hash_short)
-except:
+except Exception:
     pass
 
 # Constants
@@ -221,8 +220,8 @@ def load_sample_names(snames_file):
     try:
         with open(snames_file) as f:
             logger.debug("Loading sample renaming config settings from: {}".format(snames_file))
-            for l in f:
-                s = l.strip().split("\t")
+            for line in f:
+                s = line.strip().split("\t")
                 if len(s) > 1:
                     # Check that we have consistent numbers of columns
                     if num_cols is None:
@@ -230,7 +229,7 @@ def load_sample_names(snames_file):
                     elif num_cols != len(s):
                         logger.warning(
                             "Inconsistent number of columns found in sample names file (skipping line): '{}'".format(
-                                l.strip()
+                                line.strip()
                             )
                         )
                     # Parse the line
@@ -238,8 +237,10 @@ def load_sample_names(snames_file):
                         sample_names_rename_buttons = s
                     else:
                         sample_names_rename.append(s)
-                elif len(l.strip()) > 0:
-                    logger.warning("Sample names file line did not have columns (must use tabs): {}".format(l.strip()))
+                elif len(line.strip()) > 0:
+                    logger.warning(
+                        "Sample names file line did not have columns (must use tabs): {}".format(line.strip())
+                    )
     except (IOError, AttributeError) as e:
         logger.error("Error loading sample names file: {}".format(e))
     logger.debug("Found {} sample renaming patterns".format(len(sample_names_rename_buttons)))
@@ -250,8 +251,8 @@ def load_replace_names(rnames_file):
     try:
         with open(rnames_file) as f:
             logger.debug("Loading sample replace config settings from: {}".format(rnames_file))
-            for l in f:
-                s = l.strip().split("\t")
+            for line in f:
+                s = line.strip().split("\t")
                 if len(s) == 2:
                     sample_names_replace[s[0]] = s[1]
     except (IOError, AttributeError) as e:
@@ -260,13 +261,13 @@ def load_replace_names(rnames_file):
 
 
 def load_show_hide(sh_file):
-    global show_hide_buttons, show_hide_patterns, show_hide_mode
+    global show_hide_buttons, show_hide_patterns, show_hide_mode, show_hide_regex
     if sh_file:
         try:
             with open(sh_file, "r") as f:
                 logger.debug("Loading sample renaming config settings from: {}".format(sh_file))
-                for l in f:
-                    s = l.strip().split("\t")
+                for line in f:
+                    s = line.strip().split("\t")
                     if len(s) >= 3 and s[1] in ["show", "hide", "show_re", "hide_re"]:
                         show_hide_buttons.append(s[0])
                         show_hide_mode.append(s[1])
@@ -292,7 +293,7 @@ def update(u):
 def update_dict(d, u):
     """Recursively updates nested dict d from nested dict u"""
     for key, val in u.items():
-        if isinstance(val, collections.abc.Mapping):
+        if isinstance(val, dict):
             d[key] = update_dict(d.get(key, {}), val)
         else:
             d[key] = u[key]

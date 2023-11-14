@@ -1,69 +1,65 @@
 """ MultiQC submodule to parse output from Picard ExtractIlluminaBarcodes """
 
 import logging
-import re
-from collections import OrderedDict
+from collections import defaultdict
 
+from multiqc.modules.picard import util
 from multiqc.plots import bargraph
 
 # Initialise the logger
 log = logging.getLogger(__name__)
 
 
-def parse_reports(self):
+def parse_reports(module):
     """Find Picard ExtractIlluminaBarcodes reports and parse their data"""
 
-    # Set up vars
-    self.picard_barcode_metrics = dict()
+    data_by_lane = defaultdict(dict)
 
     # Go through logs and find Metrics
-    for f in self.find_log_files("picard/extractilluminabarcodes", filehandles=True):
-        self.add_data_source(f, section="ExtractIlluminaBarcodes")
-
-        lane = None
-        raw_data = []
+    for f in module.find_log_files(f"{module.anchor}/extractilluminabarcodes", filehandles=True):
+        # Sample name from input file name by default
+        lane = f["s_name"]
         keys = None
 
         for line in f["f"]:
-            # Pull lane number from input
-            if "ExtractIlluminaBarcodes" in line and "LANE" in line:
-                lane_search = re.findall(r"LANE(?:=|\s+)(\[?[^\s]+\]?)", line, flags=re.IGNORECASE)
-                if lane_search:
-                    lane = lane_search[0]
-                    self.picard_barcode_metrics[lane] = {}
-            if ("ExtractIlluminaBarcodes" in line or "BarcodeMetric" in line) and "## METRICS CLASS" in line:
+            maybe_lane_name = util.extract_sample_name(
+                module, line, f, picard_tool="ExtractIlluminaBarcodes", picard_opt="LANE"
+            )
+            if maybe_lane_name:
+                # Starts information for a new sample
+                lane = maybe_lane_name
+                keys = None
+
+            if util.is_line_right_before_table(line, picard_class=["ExtractIlluminaBarcodes", "BarcodeMetric"]):
                 keys = f["f"].readline().strip("\n").split("\t")
+                module.add_data_source(f, s_name=lane, section="ExtractIlluminaBarcodes")
+
             elif keys:
                 vals = line.strip("\n").split("\t")
-                if len(vals) == len(keys):
-                    data = dict(zip(keys, vals))
-                    data["LANE"] = lane
-                    raw_data.append(data)
+                if len(vals) != len(keys):
+                    keys = None
+                    continue
 
-        for bc_data in raw_data:
-            self.picard_barcode_metrics[bc_data["LANE"]][bc_data["BARCODE"]] = bc_data
+                data = dict(zip(keys, vals))
+                data["LANE"] = lane
+                data_by_lane[lane][data["BARCODE"]] = data
 
-            # Superfluous function call to confirm that it is used in this module
-            # Replace None with actual version if it is available
-            self.add_software_version(None, bc_data["LANE"])
-
-    # Filter to strip out ignored sample names
-    self.picard_barcode_metrics = self.ignore_samples(self.picard_barcode_metrics)
-
-    # Stop if we didn't find anything
-    if len(self.picard_barcode_metrics) == 0:
+    data_by_lane = module.ignore_samples(data_by_lane)
+    if len(data_by_lane) == 0:
         return 0
 
-    # Write parsed data to a file
-    self.write_data_file(self.picard_barcode_metrics, "multiqc_picard_ExtractIlluminaBarcodes")
+    # Superfluous function call to confirm that it is used in this module
+    # Replace None with actual version if it is available
+    module.add_software_version(None)
 
-    plot_data = {}
-    plot_data["per_lane"] = reads_per_lane(self.picard_barcode_metrics)
-    plot_data["per_bc"] = reads_per_barcode(self.picard_barcode_metrics)
+    # Write parsed data to a file
+    module.write_data_file(data_by_lane, f"multiqc_{module.anchor}_ExtractIlluminaBarcodes")
+
+    plot_data = {"per_lane": reads_per_lane(data_by_lane), "per_bc": reads_per_barcode(data_by_lane)}
 
     per_lane_plot_config = {
-        "id": "plot-picard-illuminabarcodemetrics-readsperlane",
-        "title": "Picard ExtractIlluminaBarcodes: Reads per lane",
+        "id": f"plot-{module.anchor}-illuminabarcodemetrics-readsperlane",
+        "title": f"{module.name} ExtractIlluminaBarcodes: Reads per lane",
         "ylab": "Lane",
         "data_labels": [
             {"name": "Reads", "ylab": "Number of Reads"},
@@ -72,8 +68,8 @@ def parse_reports(self):
         ],
     }
     per_barcode_plot_config = {
-        "id": "plot-picard-illuminabarcodemetrics-readsperbarcode",
-        "title": "Picard ExtractIlluminaBarcodes: Reads per barcode",
+        "id": f"plot-{module.anchor}-illuminabarcodemetrics-readsperbarcode",
+        "title": f"{module.name} ExtractIlluminaBarcodes: Reads per barcode",
         "ylab": "Lane",
         "data_labels": [
             {"name": "Reads", "ylab": "Number of Reads"},
@@ -82,19 +78,19 @@ def parse_reports(self):
         ],
     }
 
-    plot_cats = [OrderedDict(), OrderedDict(), OrderedDict()]
+    plot_cats = [dict(), dict(), dict()]
     plot_cats[0]["READS"] = {"name": "Reads"}
     plot_cats[1]["PERFECT_MATCHES"] = {"name": "Perfect Matching Reads"}
     plot_cats[1]["ONE_MISMATCH_MATCHES"] = {"name": "One Mismatch Reads"}
     plot_cats[2]["PF_PERFECT_MATCHES"] = {"name": "Perfect Matching Passing Filter Reads"}
     plot_cats[2]["PF_ONE_MISMATCH_MATCHES"] = {"name": "Passing Filter One Mismatch Reads"}
 
-    self.add_section(
+    module.add_section(
         name="Barcode Metrics Per Lane",
-        anchor="picard-illuminabarcodemetrics-perlane",
+        anchor=f"{module.anchor}-illuminabarcodemetrics-perlane",
         description="""
-            Indicates the number of matches (and mismatches) between the barcode reads and the actual barcodes.
-            See the [Picard Documentation](https://broadinstitute.github.io/picard/picard-metric-definitions.html#ExtractIlluminaBarcodes.BarcodeMetric) for details.
+        Indicates the number of matches (and mismatches) between the barcode reads and the actual barcodes.
+        See the [Picard Documentation](https://broadinstitute.github.io/picard/picard-metric-definitions.html#ExtractIlluminaBarcodes.BarcodeMetric) for details.
         """,
         plot=bargraph.plot(
             [plot_data["per_lane"], plot_data["per_lane"], plot_data["per_lane"]],
@@ -103,12 +99,12 @@ def parse_reports(self):
         ),
     )
 
-    self.add_section(
+    module.add_section(
         name="Barcode Metrics Per Barcode",
-        anchor="picard-illuminabarcodemetrics-perbarcode",
+        anchor=f"{module.anchor}-illuminabarcodemetrics-perbarcode",
         description="""
-            Indicates the number of matches (and mismatches) between the barcode reads and the actual barcodes.
-            See the [Picard Documentation](https://broadinstitute.github.io/picard/picard-metric-definitions.html#ExtractIlluminaBarcodes.BarcodeMetric) for details.
+        Indicates the number of matches (and mismatches) between the barcode reads and the actual barcodes.
+        See the [Picard Documentation](https://broadinstitute.github.io/picard/picard-metric-definitions.html#ExtractIlluminaBarcodes.BarcodeMetric) for details.
         """,
         plot=bargraph.plot(
             [plot_data["per_bc"], plot_data["per_bc"], plot_data["per_bc"]],
@@ -117,7 +113,7 @@ def parse_reports(self):
         ),
     )
     # Return the number of detected samples to the parent module
-    return len(self.picard_barcode_metrics)
+    return len(data_by_lane)
 
 
 def reads_per_barcode(data):
@@ -127,7 +123,7 @@ def reads_per_barcode(data):
     reads_per_barcode = {}
     for lane, barcodes in data.items():
         for barcode, barcode_data in barcodes.items():
-            if not barcode in reads_per_barcode:
+            if barcode not in reads_per_barcode:
                 reads_per_barcode[barcode] = {
                     "READS": 0,
                     "PERFECT_MATCHES": 0,

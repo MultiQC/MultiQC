@@ -2,7 +2,6 @@
 
 import logging
 import re
-from collections import OrderedDict
 
 from multiqc import config
 from multiqc.modules.base_module import BaseMultiqcModule, ModuleNoSamplesFound
@@ -45,6 +44,10 @@ class MultiqcModule(BaseMultiqcModule):
             self.write_data_file(self.lima_summary, "multiqc_lima_summary")
         if self.lima_counts:
             self.write_data_file(self.lima_counts, "multiqc_lima_counts")
+
+        # Superfluous function call to confirm that it is used in this module
+        # Replace None with actual version if it is available
+        self.add_software_version(None)
 
         # Add a graph of all filtered ZMWs
         self.plot_filter_data()
@@ -89,10 +92,6 @@ class MultiqcModule(BaseMultiqcModule):
                     log.debug(f"Duplicate summary sample name found! Overwriting: {f['s_name']}")
                 self.lima_summary[f["s_name"]] = data
                 self.add_data_source(f)
-
-                # Superfluous function call to confirm that it is used in this module
-                # Replace None with actual version if it is available
-                self.add_software_version(None, f["s_name"])
 
     def parse_counts_files(self):
         for f in self.find_log_files("lima/counts", filehandles=True):
@@ -199,19 +198,20 @@ class MultiqcModule(BaseMultiqcModule):
             "ylab": "# Reads",
         }
 
-        headers = OrderedDict()
-        headers["Counts"] = {
-            "title": f"Read Count ({config.long_read_count_prefix})",
-            "description": f"Number of reads for each sample or barcode pair ({config.long_read_count_desc})",
-            "modify": lambda x: x * config.long_read_count_multiplier,
-            "shared_key": "long_read_counts",
-            "format": "{:,.2f}",
-            "scale": "PuBuGn",
-        }
-        headers["MeanScore"] = {
-            "title": "Quality Score",
-            "description": "The mean quality score of the reads for each sample or barcode pair",
-            "scale": "Spectral",
+        headers = {
+            "Counts": {
+                "title": f"Read Count ({config.long_read_count_prefix})",
+                "description": f"Number of reads for each sample or barcode pair ({config.long_read_count_desc})",
+                "modify": lambda x: x * config.long_read_count_multiplier,
+                "shared_key": "long_read_counts",
+                "format": "{:,.2f}",
+                "scale": "PuBuGn",
+            },
+            "MeanScore": {
+                "title": "Quality Score",
+                "description": "The mean quality score of the reads for each sample or barcode pair",
+                "scale": "Spectral",
+            },
         }
         return headers, tconfig
 

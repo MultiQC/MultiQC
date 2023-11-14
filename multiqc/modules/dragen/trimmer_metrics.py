@@ -1,7 +1,7 @@
 import logging
 from collections import defaultdict
 
-from multiqc.modules.base_module import BaseMultiqcModule, ModuleNoSamplesFound
+from multiqc.modules.base_module import BaseMultiqcModule
 from multiqc.plots import table
 
 log = logging.getLogger(__name__)

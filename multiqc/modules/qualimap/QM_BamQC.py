@@ -4,7 +4,6 @@
 import logging
 import math
 import re
-from collections import OrderedDict
 
 from multiqc import config
 from multiqc.plots import linegraph
@@ -20,10 +19,6 @@ def parse_reports(self):
     self.qualimap_bamqc_genome_results = dict()
     for f in self.find_log_files("qualimap/bamqc/genome_results"):
         parse_genome_results(self, f)
-
-        # Superfluous function call to confirm that it is used in this module
-        # Replace None with actual version if it is available
-        self.add_software_version(None, f["s_name"])
 
     self.qualimap_bamqc_genome_results = self.ignore_samples(self.qualimap_bamqc_genome_results)
     if len(self.qualimap_bamqc_genome_results) > 0:
@@ -59,9 +54,13 @@ def parse_reports(self):
     if num_parsed == 0:
         return 0
 
+    # Superfluous function call to confirm that it is used in this module
+    # Replace None with actual version if it is available
+    self.add_software_version(None)
+
     try:
         covs = config.qualimap_config["general_stats_coverage"]
-        assert type(covs) == list
+        assert isinstance(covs, list)
         assert len(covs) > 0
         covs = [str(i) for i in covs]
         log.debug("Custom Qualimap thresholds: {}".format(", ".join([i for i in covs])))
@@ -120,7 +119,7 @@ def parse_genome_results(self, f):
             for k, r in regexes.get(section, {}).items():
                 r_search = re.search(r, line)
                 if r_search:
-                    if "\d" in r:
+                    if r"\d" in r:
                         try:
                             d[k] = float(r_search.group(1).replace(",", ""))
                         except ValueError:
@@ -163,15 +162,15 @@ def parse_genome_results(self, f):
 
 def parse_coverage(self, f):
     """Parse the contents of the Qualimap BamQC Coverage Histogram file"""
-    # Get the sample name from the parent parent directory
+    # Get the sample name from the parent directory
     # Typical path: <sample name>/raw_data_qualimapReport/coverage_histogram.txt
     s_name = self.get_s_name(f)
 
     d = dict()
-    for l in f["f"]:
-        if l.startswith("#"):
+    for line in f["f"]:
+        if line.startswith("#"):
             continue
-        coverage, count = l.split(None, 1)
+        coverage, count = line.split(None, 1)
         coverage = int(round(float(coverage)))
         count = float(count)
         d[coverage] = count
@@ -201,21 +200,18 @@ def parse_coverage(self, f):
 
 def parse_insert_size(self, f):
     """Parse the contents of the Qualimap BamQC Insert Size Histogram file"""
-    # Get the sample name from the parent parent directory
+    # Get the sample name from the parent directory
     # Typical path: <sample name>/raw_data_qualimapReport/insert_size_histogram.txt
     s_name = self.get_s_name(f)
 
     d = dict()
-    zero_insertsize = 0
-    for l in f["f"]:
-        if l.startswith("#"):
+    for line in f["f"]:
+        if line.startswith("#"):
             continue
-        insertsize, count = l.split(None, 1)
+        insertsize, count = line.split(None, 1)
         insertsize = int(round(float(insertsize)))
         count = float(count) / 1000000
-        if insertsize == 0:
-            zero_insertsize = count
-        else:
+        if insertsize != 0:
             d[insertsize] = count
 
     # Find median without importing anything to do it for us
@@ -247,13 +243,13 @@ def parse_gc_dist(self, f):
     reference_species = None
     reference_d = dict()
     avg_gc = 0
-    for l in f["f"]:
-        if l.startswith("#"):
-            sections = l.strip("\n").split("\t", 3)
+    for line in f["f"]:
+        if line.startswith("#"):
+            sections = line.strip("\n").split("\t", 3)
             if len(sections) > 2:
                 reference_species = sections[2]
             continue
-        sections = l.strip("\n").split("\t", 3)
+        sections = line.strip("\n").split("\t", 3)
         gc = int(round(float(sections[0])))
         content = float(sections[1])
         avg_gc += gc * content
@@ -546,7 +542,7 @@ def report_sections(self):
 def general_stats_headers(self):
     try:
         hidecovs = config.qualimap_config["general_stats_coverage_hidden"]
-        assert type(hidecovs) == list
+        assert isinstance(hidecovs, list)
         log.debug("Hiding Qualimap thresholds: {}".format(", ".join([i for i in hidecovs])))
     except (AttributeError, TypeError, KeyError, AssertionError):
         hidecovs = [1, 5, 10, 50]
@@ -649,8 +645,8 @@ def general_stats_headers(self):
 
 
 def _calculate_bases_within_thresholds(bases_by_depth, total_size, depth_thresholds):
-    bases_within_threshs = OrderedDict((depth, 0) for depth in depth_thresholds)
-    rates_within_threshs = OrderedDict((depth, None) for depth in depth_thresholds)
+    bases_within_threshs = {depth: 0 for depth in depth_thresholds}
+    rates_within_threshs = {depth: None for depth in depth_thresholds}
 
     dt = sorted(depth_thresholds, reverse=True)
     c = 0

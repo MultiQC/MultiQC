@@ -560,9 +560,6 @@ module_order:
   - vep:
       module_tag:
         - DNA
-  - sentieon:
-      module_tag:
-        - DNA
   - bakta:
       module_tag:
         - bacterial

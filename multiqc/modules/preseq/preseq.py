@@ -2,7 +2,6 @@
 
 
 import logging
-from collections import OrderedDict
 
 import numpy as np
 
@@ -47,16 +46,17 @@ class MultiqcModule(BaseMultiqcModule):
 
             self.add_data_source(f)
 
-            # Superfluous function call to confirm that it is used in this module
-            # Replace None with actual version if it is available
-            self.add_software_version(None, f["s_name"])
-
         # Filter to strip out ignored sample names
         bases_data = self.ignore_samples(bases_data)
         reads_data = self.ignore_samples(reads_data)
         all_data = {**bases_data, **reads_data}
         if not all_data:
             raise ModuleNoSamplesFound
+
+        # Superfluous function call to confirm that it is used in this module
+        # Replace None with actual version if it is available
+        self.add_software_version(None)
+
         if bases_data and reads_data:
             log.warning("Mixed 'TOTAL_READS' and 'TOTAL_BASES' reports. Will build two separate plots")
         log.info("Found {} reports".format(len(all_data)))
@@ -225,8 +225,8 @@ def _parse_preseq_logs(f):
         return None, None
 
     data = dict()
-    for l in lines:
-        s = l.split()
+    for line in lines:
+        s = line.split()
         # Sometimes the Expected_distinct count drops to 0, not helpful
         if float(s[1]) == 0 and float(s[0]) > 0:
             continue
@@ -239,9 +239,7 @@ def _modify_raw_data(sample_data, is_basepairs):
     """Modify counts or base pairs according to `read_count_multiplier`
     or `base_count_multiplier`.
     """
-    return OrderedDict(
-        (_modify_raw_val(x, is_basepairs), _modify_raw_val(y, is_basepairs)) for x, y in sample_data.items()
-    )
+    return {_modify_raw_val(x, is_basepairs): _modify_raw_val(y, is_basepairs) for x, y in sample_data.items()}
 
 
 def _modify_raw_val(val, is_basepairs):
@@ -258,9 +256,7 @@ def _counts_to_coverages(sample_data, counts_in_1x):
     if not counts_in_1x:
         return {None: None}
 
-    return OrderedDict(
-        (_count_to_coverage(x, counts_in_1x), _count_to_coverage(y, counts_in_1x)) for x, y in sample_data.items()
-    )
+    return {_count_to_coverage(x, counts_in_1x): _count_to_coverage(y, counts_in_1x) for x, y in sample_data.items()}
 
 
 def _count_to_coverage(val, counts_in_1x):
@@ -268,7 +264,7 @@ def _count_to_coverage(val, counts_in_1x):
 
 
 def _get_counts_in_1x(data_is_basepairs):
-    """Read read length and genome size from the config and calculate
+    """Read length and genome size from the config and calculate
     the approximate number of counts (or base pairs) in 1x of depth
     """
     read_length = float(getattr(config, "preseq", {}).get("read_length", 0))

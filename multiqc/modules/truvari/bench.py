@@ -5,8 +5,7 @@ import logging
 import os
 import re
 
-from multiqc.plots import bargraph, scatter, table
-from multiqc.utils.mqc_colour import mqc_colour_scale
+from multiqc.plots import bargraph, scatter
 
 # Initialise the logger
 log = logging.getLogger(__name__)

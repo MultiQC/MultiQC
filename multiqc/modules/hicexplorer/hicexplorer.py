@@ -2,7 +2,6 @@
 
 
 import logging
-from collections import OrderedDict
 
 from multiqc import config
 from multiqc.modules.base_module import BaseMultiqcModule, ModuleNoSamplesFound
@@ -70,7 +69,7 @@ class MultiqcModule(BaseMultiqcModule):
         for s_name in self.hicexplorer_data:
             # compatibility to HiCExplorer <= 1.7 version QC files
             if (
-                not "Pairs mappable, unique and high quality" in self.hicexplorer_data[s_name]
+                "Pairs mappable, unique and high quality" not in self.hicexplorer_data[s_name]
                 and "Pairs considered" in self.hicexplorer_data[s_name]
             ):
                 hicexplorer_versions.add("1.7")
@@ -228,11 +227,11 @@ class MultiqcModule(BaseMultiqcModule):
     def parse_logs(self, f):
         """Parse a given HiCExplorer log file from hicBuildMatrix."""
         data = {}
-        for l in f.splitlines():
+        for line in f.splitlines():
             # catch empty lines
-            if len(l) == 0:
+            if len(line) == 0:
                 continue
-            s = l.split("\t")
+            s = line.split("\t")
             # Skip header
             if s[0].startswith("#"):
                 continue
@@ -282,38 +281,39 @@ class MultiqcModule(BaseMultiqcModule):
                 max_distance_key: self.hicexplorer_data[s_name][max_distance_key],
             }
             data[s_name] = data_
-        headers = OrderedDict()
-        headers["Sequenced reads"] = {
-            "title": "{} Pairs".format(config.read_count_prefix),
-            "description": "Total number of read pairs ({})".format(config.read_count_desc),
-            "shared_key": "read_count",
-        }
-        headers["Hi-c contacts"] = {
-            "title": "% Used pairs",
-            "max": 100,
-            "min": 0,
-            "modify": lambda x: x * 100,
-            "suffix": "%",
-        }
-        headers["Mapped"] = {
-            "title": "% Mapped",
-            "max": 100,
-            "min": 0,
-            "modify": lambda x: (1 - x) * 100,
-            "scale": "RdYlGn",
-            "suffix": "%",
-        }
-        headers["Min rest. site distance"] = {
-            "title": "Min RE dist",
-            "description": "Minimum restriction site distance (bp)",
-            "format": "{:.0f}",
-            "suffix": " bp",
-        }
-        headers[max_distance_key] = {
-            "title": "Max RE dist",
-            "description": "{} (bp)".format(max_distance_key),
-            "format": "{:.0f}",
-            "suffix": " bp",
+        headers = {
+            "Sequenced reads": {
+                "title": "{} Pairs".format(config.read_count_prefix),
+                "description": "Total number of read pairs ({})".format(config.read_count_desc),
+                "shared_key": "read_count",
+            },
+            "Hi-c contacts": {
+                "title": "% Used pairs",
+                "max": 100,
+                "min": 0,
+                "modify": lambda x: x * 100,
+                "suffix": "%",
+            },
+            "Mapped": {
+                "title": "% Mapped",
+                "max": 100,
+                "min": 0,
+                "modify": lambda x: (1 - x) * 100,
+                "scale": "RdYlGn",
+                "suffix": "%",
+            },
+            "Min rest. site distance": {
+                "title": "Min RE dist",
+                "description": "Minimum restriction site distance (bp)",
+                "format": "{:.0f}",
+                "suffix": " bp",
+            },
+            max_distance_key: {
+                "title": "Max RE dist",
+                "description": "{} (bp)".format(max_distance_key),
+                "format": "{:.0f}",
+                "suffix": " bp",
+            },
         }
 
         self.general_stats_addcols(data, headers)
@@ -321,7 +321,7 @@ class MultiqcModule(BaseMultiqcModule):
     def hicexplorer_create_plot(self, pKeyList, pTitle, pId):
         """Create the graphics containing information about the read quality."""
 
-        keys = OrderedDict()
+        keys = dict()
         for i, key_ in enumerate(pKeyList):
             keys[key_] = {"color": self.colors[i]}
 

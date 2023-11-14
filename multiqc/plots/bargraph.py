@@ -12,7 +12,6 @@ import os
 import random
 import re
 import sys
-from collections import OrderedDict
 
 from multiqc.utils import config, mqc_colour, report, util_functions
 
@@ -49,11 +48,11 @@ def get_template_mod():
 
 def plot(data, cats=None, pconfig=None):
     """Plot a horizontal bar graph. Expects a 2D dict of sample
-    data. Also can take info about categories. There are quite a
+    data. Also, can take info about categories. There are quite a
     few variants of how to use this function, see the docs for details.
     :param data: 2D dict, first keys as sample names, then x:y data pairs
                  Can supply a list of dicts and will have buttons to switch
-    :param cats: optional list, dict or OrderedDict with plot categories
+    :param cats: optional list or dict with plot categories
     :param pconfig: optional dict with config key:value pairs
     :return: HTML and JS, ready to be inserted into the page
     """
@@ -91,23 +90,16 @@ def plot(data, cats=None, pconfig=None):
             report.lint_errors.append(errmsg)
 
     # Given one dataset - turn it into a list
-    if type(data) is not list:
+    if not isinstance(data, list):
         data = [data]
 
     # Make list of cats from different inputs
     if cats is None:
         cats = list()
-    elif type(cats) is not list:
+    elif not isinstance(cats, list):
         cats = [cats]
-    else:
-        try:  # Py2
-            if type(cats[0]) is str or type(cats[0]) is unicode:
-                cats = [cats]
-        except NameError:  # Py3
-            if type(cats[0]) is str:
-                cats = [cats]
-        except IndexError:  # Given empty list
-            pass
+    elif cats and isinstance(cats[0], str):
+        cats = [cats]
     # Generate default categories if not supplied
     for idx in range(len(data)):
         try:
@@ -121,8 +113,8 @@ def plot(data, cats=None, pconfig=None):
 
     # If we have cats in lists, turn them into dicts
     for idx, cat in enumerate(cats):
-        if type(cat) is list:
-            newcats = OrderedDict()
+        if isinstance(cat, list):
+            newcats = dict()
             for c in cat:
                 newcats[c] = {"name": c}
             cats[idx] = newcats
@@ -134,18 +126,16 @@ def plot(data, cats=None, pconfig=None):
     # Allow user to overwrite a given category config for this plot
     if "id" in pconfig and pconfig["id"] and pconfig["id"] in config.custom_plot_config:
         for k, v in config.custom_plot_config[pconfig["id"]].items():
-            if k in cats[idx].keys():
-                for kk, vv in v.items():
-                    cats[idx][k][kk] = vv
+            for idx in range(len(cats)):
+                if k in cats[idx].keys():
+                    for kk, vv in v.items():
+                        cats[idx][k][kk] = vv
 
     # Parse the data into a chart friendly format
     plotsamples = list()
     plotdata = list()
     for idx, d in enumerate(data):
-        if isinstance(d, OrderedDict):
-            hc_samples = list(d.keys())
-        else:
-            hc_samples = sorted(list(d.keys()))
+        hc_samples = sorted(list(d.keys()))
         hc_data = list()
         sample_dcount = dict()
         for c in cats[idx].keys():
@@ -196,7 +186,7 @@ def plot(data, cats=None, pconfig=None):
     if "bargraph" in mod.__dict__ and callable(mod.bargraph):
         try:
             return mod.bargraph(plotdata, plotsamples, pconfig)
-        except:
+        except:  # noqa: E722
             if config.strict:
                 # Crash quickly in the strict mode. This can be helpful for interactive
                 # debugging of modules
@@ -282,18 +272,18 @@ def highcharts_bargraph(plotdata, plotsamples=None, pconfig=None):
             active = "active" if k == 0 else ""
             try:
                 name = pconfig["data_labels"][k]["name"]
-            except:
+            except Exception:
                 try:
                     name = pconfig["data_labels"][k]
-                except:
+                except Exception:
                     name = k + 1
             try:
                 ylab = 'data-ylab="{}"'.format(pconfig["data_labels"][k]["ylab"])
-            except:
+            except Exception:
                 ylab = 'data-ylab="{}"'.format(name) if name != k + 1 else ""
             try:
                 ymax = 'data-ymax="{}"'.format(pconfig["data_labels"][k]["ymax"])
-            except:
+            except Exception:
                 ymax = ""
             html += '<button class="btn btn-default btn-sm {a}" data-action="set_data" {y} {ym} data-newdata="{k}" data-target="{id}">{n}</button>\n'.format(
                 a=active, id=pconfig["id"], n=name, y=ylab, ym=ymax, k=k
@@ -342,7 +332,7 @@ def matplotlib_bargraph(plotdata, plotsamples, pconfig=None):
     for k in range(len(plotdata)):
         try:
             name = pconfig["data_labels"][k]
-        except:
+        except Exception:
             name = k + 1
         pid = "mqc_{}_{}".format(pconfig["id"], name)
         pid = report.save_htmlid(pid, skiplint=True)
@@ -381,7 +371,7 @@ def matplotlib_bargraph(plotdata, plotsamples, pconfig=None):
             active = "active" if k == 0 else ""
             try:
                 name = pconfig["data_labels"][k]
-            except:
+            except Exception:
                 name = k + 1
             html += '<button class="btn btn-default btn-sm {a}" data-target="#{pid}">{n}</button>\n'.format(
                 a=active, pid=pid, n=name
@@ -513,7 +503,7 @@ def matplotlib_bargraph(plotdata, plotsamples, pconfig=None):
             axes.spines["top"].set_visible(False)
             axes.spines["bottom"].set_visible(False)
             axes.spines["left"].set_visible(False)
-            plt.gca().invert_yaxis()  # y axis is reverse sorted otherwise
+            plt.gca().invert_yaxis()  # y-axis is reverse sorted otherwise
 
             # Hide some labels if we have a lot of samples
             show_nth = max(1, math.ceil(len(pdata[0]["data"]) / 150))

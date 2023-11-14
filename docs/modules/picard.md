@@ -202,3 +202,26 @@ picard_config:
 This will omit that section from the report entirely, and also skip parsing the histogram data.
 By specifying this option you may speed up the run time for MultiQC with these types of files
 significantly.
+
+### Sample names
+
+MultiQC supports outputs from multiple runs of a Picard tool merged together into one
+file. In order to handle multiple sample data in on file correctly, MultiQC needed
+to take the sample name elsewhere rather than the file name. For this reason, MultiQC
+attempts to parse the command line recorded in the output header. For example, an
+output from the `GcBias` tool contains a header line like this:
+
+```
+# net.sf.picard.analysis.CollectGcBiasMetrics REFERENCE_SEQUENCE=/reference/genome.fa
+INPUT=/alignments/P0001_101/P0001_101.bam OUTPUT=P0001_101.collectGcBias.txt ...
+```
+
+MultiQC would extract the BAM file name that goes after `INPUT=` and take `P0001_101`
+as a sample name. If MultiQC fails to parse the command line for any reason, it will
+fall back to using the file name. It is also possible to force using the file names
+as sample names by enabling the following config option:
+
+```yaml
+picard_config:
+  s_name_filenames: true
+```

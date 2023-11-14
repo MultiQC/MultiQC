@@ -3,7 +3,7 @@
 
 import logging
 import os
-from collections import OrderedDict, defaultdict
+from collections import defaultdict
 
 from multiqc.modules.base_module import BaseMultiqcModule, ModuleNoSamplesFound
 
@@ -32,7 +32,7 @@ class MultiqcModule(BaseMultiqcModule):
         from . import QM_BamQC, QM_RNASeq
 
         # Set up class objects to hold parsed data()
-        self.general_stats_headers = OrderedDict()
+        self.general_stats_headers = dict()
         self.general_stats_data = defaultdict(lambda: dict())
         n = dict()
 

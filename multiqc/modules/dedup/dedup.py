@@ -2,7 +2,7 @@
 
 import json
 import logging
-from collections import OrderedDict
+from json import JSONDecodeError
 
 from multiqc.modules.base_module import BaseMultiqcModule, ModuleNoSamplesFound
 from multiqc.plots import bargraph
@@ -112,39 +112,40 @@ class MultiqcModule(BaseMultiqcModule):
         ancient_read_count_desc = getattr(config, "ancient_read_count_desc", "thousands")
         ancient_read_count_multiplier = getattr(config, "ancient_read_count_multiplier", 0.001)
 
-        headers = OrderedDict()
-        headers["dup_rate"] = {
-            "title": "Duplication Rate",
-            "description": "Percentage of reads categorised as a technical duplicate",
-            "min": 0,
-            "max": 100,
-            "suffix": "%",
-            "scale": "OrRd",
-            "format": "{:,.0f}",
-            "modify": lambda x: x * 100.0,
-        }
-        headers["clusterfactor"] = {
-            "title": "ClusterFactor",
-            "description": "CF~1 means high library complexity. Large CF means not worth sequencing deeper.",
-            "min": 1,
-            "max": 100,
-            "scale": "OrRd",
-            "format": "{:,.2f}",
-        }
-        headers["reads_removed"] = {
-            "title": "{} Reads Removed".format(ancient_read_count_prefix),
-            "description": "Non-unique reads removed after deduplication ({})".format(ancient_read_count_desc),
-            "modify": lambda x: x * ancient_read_count_multiplier,
-            "shared_key": "read_count",
-            "min": 0,
-            "hidden": True,
-        }
-        headers["mapped_after_dedup"] = {
-            "title": "{} Post-DeDup Mapped Reads".format(ancient_read_count_prefix),
-            "description": "Unique mapping reads after deduplication ({})".format(ancient_read_count_desc),
-            "modify": lambda x: x * ancient_read_count_multiplier,
-            "shared_key": "read_count",
-            "min": 0,
+        headers = {
+            "dup_rate": {
+                "title": "Duplication Rate",
+                "description": "Percentage of reads categorised as a technical duplicate",
+                "min": 0,
+                "max": 100,
+                "suffix": "%",
+                "scale": "OrRd",
+                "format": "{:,.0f}",
+                "modify": lambda x: x * 100.0,
+            },
+            "clusterfactor": {
+                "title": "ClusterFactor",
+                "description": "CF~1 means high library complexity. Large CF means not worth sequencing deeper.",
+                "min": 1,
+                "max": 100,
+                "scale": "OrRd",
+                "format": "{:,.2f}",
+            },
+            "reads_removed": {
+                "title": "{} Reads Removed".format(ancient_read_count_prefix),
+                "description": "Non-unique reads removed after deduplication ({})".format(ancient_read_count_desc),
+                "modify": lambda x: x * ancient_read_count_multiplier,
+                "shared_key": "read_count",
+                "min": 0,
+                "hidden": True,
+            },
+            "mapped_after_dedup": {
+                "title": "{} Post-DeDup Mapped Reads".format(ancient_read_count_prefix),
+                "description": "Unique mapping reads after deduplication ({})".format(ancient_read_count_desc),
+                "modify": lambda x: x * ancient_read_count_multiplier,
+                "shared_key": "read_count",
+                "min": 0,
+            },
         }
         self.general_stats_addcols(self.dedup_data, headers)
 
@@ -152,12 +153,13 @@ class MultiqcModule(BaseMultiqcModule):
         """Make the HighCharts HTML to plot the duplication rates"""
 
         # Specify the order of the different possible categories
-        keys = OrderedDict()
-        keys["mapped_after_dedup"] = {"name": "Unique Retained"}
-        keys["not_removed"] = {"name": "Not Removed"}
-        keys["reverse_removed"] = {"name": "Reverse Removed"}
-        keys["forward_removed"] = {"name": "Forward Removed"}
-        keys["merged_removed"] = {"name": "Merged Removed"}
+        keys = {
+            "mapped_after_dedup": {"name": "Unique Retained"},
+            "not_removed": {"name": "Not Removed"},
+            "reverse_removed": {"name": "Reverse Removed"},
+            "forward_removed": {"name": "Forward Removed"},
+            "merged_removed": {"name": "Merged Removed"},
+        }
 
         # Config for the plot
         config = {

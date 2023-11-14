@@ -3,7 +3,7 @@
 
 script-src 'self'
     # 1.18
-    'sha256-W6HVWfJ0uI4smLSf8gzVvnrHUJaXGP/HEeBvr0SYfyk=' # multiqc/templates/default/assets/js/multiqc_tables.js
+    'sha256-aY1YMeLr1IxkwxjBe0x60QzbuT4u5Mh/QC6brcAN9Do=' # multiqc/templates/default/assets/js/multiqc_tables.js
 
     # 1.17
     'sha256-krKzkLmKjisEgw0YGKglUFqLmEh6sK08Qw6xPmmo/10=' # ////////////////////////////////////////////////// Base JS for MultiQC Reports//

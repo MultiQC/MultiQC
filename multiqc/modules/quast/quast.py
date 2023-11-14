@@ -3,7 +3,6 @@
 
 import logging
 import re
-from collections import OrderedDict
 
 from multiqc import config
 from multiqc.modules.base_module import BaseMultiqcModule, ModuleNoSamplesFound
@@ -37,7 +36,7 @@ class MultiqcModule(BaseMultiqcModule):
         self.total_number_contigs_suffix = qconfig.get("total_number_contigs_suffix", "K")
 
         # Find and load any QUAST reports
-        self.quast_data = dict()
+        self.quast_data = {}
         for f in self.find_log_files("quast"):
             self.parse_quast_log(f)
 
@@ -104,8 +103,8 @@ class MultiqcModule(BaseMultiqcModule):
             self.quast_data[s_name] = dict()
 
         # Parse remaining stats for each sample
-        for l in lines[1:]:
-            s = l.split("\t")
+        for line in lines[1:]:
+            s = line.split("\t")
             k = s[0]
             for i, v in enumerate(s[1:]):
                 s_name = s_names[i + 1]
@@ -129,128 +128,129 @@ class MultiqcModule(BaseMultiqcModule):
         """Take the parsed stats from the QUAST report and add some to the
         General Statistics table at the top of the report"""
 
-        headers = OrderedDict()
-        headers["N50"] = {
-            "title": "N50 ({})".format(self.contig_length_suffix),
-            "description": "N50 is the contig length such that using longer or equal length contigs produces half (50%) of the bases of the assembly (kilo base pairs)",
-            "min": 0,
-            "suffix": self.contig_length_suffix,
-            "scale": "RdYlGn",
-            "modify": lambda x: x * self.contig_length_multiplier,
-        }
-        headers["Total length"] = {
-            "title": "Assembly Length ({})".format(self.total_length_suffix),
-            "description": "The total number of bases in the assembly ({}).".format(self.total_length_suffix),
-            "min": 0,
-            "suffix": self.total_length_suffix,
-            "scale": "YlGn",
-            "modify": lambda x: x * self.total_length_multiplier,
+        headers = {
+            "N50": {
+                "title": "N50 ({})".format(self.contig_length_suffix),
+                "description": "N50 is the contig length such that using longer or equal length contigs produces half (50%) of the bases of the assembly (kilo base pairs)",
+                "min": 0,
+                "suffix": self.contig_length_suffix,
+                "scale": "RdYlGn",
+                "modify": lambda x: x * self.contig_length_multiplier,
+            },
+            "Total length": {
+                "title": "Assembly Length ({})".format(self.total_length_suffix),
+                "description": "The total number of bases in the assembly ({}).".format(self.total_length_suffix),
+                "min": 0,
+                "suffix": self.total_length_suffix,
+                "scale": "YlGn",
+                "modify": lambda x: x * self.total_length_multiplier,
+            },
         }
         self.general_stats_addcols(self.quast_data, headers)
 
     def quast_table(self):
         """Write some more statistics about the assemblies in a table."""
-        headers = OrderedDict()
-
-        headers["N50"] = {
-            "title": "N50 ({})".format(self.contig_length_suffix),
-            "description": "N50 is the contig length such that using longer or equal length contigs produces half (50%) of the bases of the assembly.",
-            "min": 0,
-            "suffix": self.contig_length_suffix,
-            "scale": "RdYlGn",
-            "modify": lambda x: x * self.contig_length_multiplier,
+        headers = {
+            "N50": {
+                "title": "N50 ({})".format(self.contig_length_suffix),
+                "description": "N50 is the contig length such that using longer or equal length contigs produces half (50%) of the bases of the assembly.",
+                "min": 0,
+                "suffix": self.contig_length_suffix,
+                "scale": "RdYlGn",
+                "modify": lambda x: x * self.contig_length_multiplier,
+            },
+            "N75": {
+                "title": "N75 ({})".format(self.contig_length_suffix),
+                "description": "N75 is the contig length such that using longer or equal length contigs produces 75% of the bases of the assembly",
+                "min": 0,
+                "suffix": self.contig_length_suffix,
+                "scale": "RdYlGn",
+                "modify": lambda x: x * self.contig_length_multiplier,
+            },
+            "L50": {
+                "title": "L50 ({})".format(self.total_number_contigs_suffix)
+                if self.total_number_contigs_suffix
+                else "L50",
+                "description": "L50 is the number of contigs larger than N50, i.e. the minimum number of contigs comprising 50% of the total assembly length.",
+                "min": 0,
+                "suffix": self.total_number_contigs_suffix,
+                "scale": "RdYlGn-rev",
+                "modify": lambda x: x * self.total_number_contigs_multiplier,
+            },
+            "L75": {
+                "title": "L75 ({})".format(self.total_number_contigs_suffix)
+                if self.total_number_contigs_suffix
+                else "L75",
+                "description": "L75 is the number of contigs larger than N75, i.e. the minimum number of contigs comprising 75% of the total assembly length.",
+                "min": 0,
+                "suffix": self.total_number_contigs_suffix,
+                "scale": "RdYlGn-rev",
+                "modify": lambda x: x * self.total_number_contigs_multiplier,
+            },
+            "Largest contig": {
+                "title": "Largest contig ({})".format(self.contig_length_suffix),
+                "description": "The size of the largest contig of the assembly",
+                "min": 0,
+                "suffix": self.contig_length_suffix,
+                "scale": "YlGn",
+                "modify": lambda x: x * self.contig_length_multiplier,
+            },
+            "Total length": {
+                "title": "Length ({})".format(self.total_length_suffix),
+                "description": "The total number of bases in the assembly.",
+                "min": 0,
+                "suffix": self.total_length_suffix,
+                "scale": "YlGn",
+                "modify": lambda x: x * self.total_length_multiplier,
+            },
+            "# misassemblies": {
+                "title": "Misassemblies",
+                "description": "The number of positions in the assembled contigs where the left flanking sequence aligns over 1 kbp away from the right flanking sequence on the reference (relocation) or they overlap on more than 1 kbp (relocation) or flanking sequences align on different strands (inversion) or different chromosomes (translocation).",
+                "scale": "RdYlGn-rev",
+                "format": "{,:.0f}",
+            },
+            "# mismatches per 100 kbp": {
+                "title": "Mismatches/100kbp",
+                "description": "The number of mismatches per 100 kbp",
+                "scale": "YlOrRd",
+                "format": "{:,.2f}",
+            },
+            "# indels per 100 kbp": {
+                "title": "Indels/100kbp",
+                "description": "The number of indels per 100 kbp",
+                "scale": "YlOrRd",
+                "format": "{:,.2f}",
+            },
+            "# genes": {
+                "title": "Genes",
+                "description": "# Genes",
+                "scale": "YlGnBu",
+                "format": "{:,.0f}",
+                "shared_key": "gene_count",
+            },
+            "# genes_partial": {
+                "title": "Genes (Partial)",
+                "description": "# Genes (Partial)",
+                "scale": "YlGnBu",
+                "format": "{:,.0f}",
+                "shared_key": "gene_count",
+            },
+            "# predicted genes (unique)": {
+                "title": "Genes",
+                "description": "# Predicted Genes (Unique)",
+                "scale": "YlGnBu",
+                "format": "{:,.0f}",
+                "shared_key": "gene_count",
+            },
+            "Genome fraction (%)": {
+                "title": "Genome Fraction",
+                "description": "The total number of aligned bases in the reference, divided by the genome size.",
+                "max": 100,
+                "suffix": "%",
+                "scale": "YlGn",
+            },
         }
 
-        headers["N75"] = {
-            "title": "N75 ({})".format(self.contig_length_suffix),
-            "description": "N75 is the contig length such that using longer or equal length contigs produces 75% of the bases of the assembly",
-            "min": 0,
-            "suffix": self.contig_length_suffix,
-            "scale": "RdYlGn",
-            "modify": lambda x: x * self.contig_length_multiplier,
-        }
-
-        headers["L50"] = {
-            "title": "L50 ({})".format(self.total_number_contigs_suffix) if self.total_number_contigs_suffix else "L50",
-            "description": "L50 is the number of contigs larger than N50, i.e. the minimum number of contigs comprising 50% of the total assembly length.",
-            "min": 0,
-            "suffix": self.total_number_contigs_suffix,
-            "scale": "RdYlGn-rev",
-            "modify": lambda x: x * self.total_number_contigs_multiplier,
-        }
-
-        headers["L75"] = {
-            "title": "L75 ({})".format(self.total_number_contigs_suffix) if self.total_number_contigs_suffix else "L75",
-            "description": "L75 is the number of contigs larger than N75, i.e. the minimum number of contigs comprising 75% of the total assembly length.",
-            "min": 0,
-            "suffix": self.total_number_contigs_suffix,
-            "scale": "RdYlGn-rev",
-            "modify": lambda x: x * self.total_number_contigs_multiplier,
-        }
-        headers["Largest contig"] = {
-            "title": "Largest contig ({})".format(self.contig_length_suffix),
-            "description": "The size of the largest contig of the assembly",
-            "min": 0,
-            "suffix": self.contig_length_suffix,
-            "scale": "YlGn",
-            "modify": lambda x: x * self.contig_length_multiplier,
-        }
-
-        headers["Total length"] = {
-            "title": "Length ({})".format(self.total_length_suffix),
-            "description": "The total number of bases in the assembly.",
-            "min": 0,
-            "suffix": self.total_length_suffix,
-            "scale": "YlGn",
-            "modify": lambda x: x * self.total_length_multiplier,
-        }
-
-        headers["# misassemblies"] = {
-            "title": "Misassemblies",
-            "description": "The number of positions in the assembled contigs where the left flanking sequence aligns over 1 kbp away from the right flanking sequence on the reference (relocation) or they overlap on more than 1 kbp (relocation) or flanking sequences align on different strands (inversion) or different chromosomes (translocation).",
-            "scale": "RdYlGn-rev",
-            "format": "{,:.0f}",
-        }
-        headers["# mismatches per 100 kbp"] = {
-            "title": "Mismatches/100kbp",
-            "description": "The number of mismatches per 100 kbp",
-            "scale": "YlOrRd",
-            "format": "{:,.2f}",
-        }
-        headers["# indels per 100 kbp"] = {
-            "title": "Indels/100kbp",
-            "description": "The number of indels per 100 kbp",
-            "scale": "YlOrRd",
-            "format": "{:,.2f}",
-        }
-        headers["# genes"] = {
-            "title": "Genes",
-            "description": "# Genes",
-            "scale": "YlGnBu",
-            "format": "{:,.0f}",
-            "shared_key": "gene_count",
-        }
-        headers["# genes_partial"] = {
-            "title": "Genes (Partial)",
-            "description": "# Genes (Partial)",
-            "scale": "YlGnBu",
-            "format": "{:,.0f}",
-            "shared_key": "gene_count",
-        }
-        headers["# predicted genes (unique)"] = {
-            "title": "Genes",
-            "description": "# Predicted Genes (Unique)",
-            "scale": "YlGnBu",
-            "format": "{:,.0f}",
-            "shared_key": "gene_count",
-        }
-        headers["Genome fraction (%)"] = {
-            "title": "Genome Fraction",
-            "description": "The total number of aligned bases in the reference, divided by the genome size.",
-            "max": 100,
-            "suffix": "%",
-            "scale": "YlGn",
-        }
         config = {
             "id": "quast_table",
             "min": 0,

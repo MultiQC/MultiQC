@@ -1,10 +1,7 @@
 import logging
 
-from multiqc import config
-from multiqc.modules.base_module import BaseMultiqcModule, ModuleNoSamplesFound
-from multiqc.modules.dragen.utils import Metric
-from multiqc.plots import bargraph, boxplot, heatmap, linegraph, table
-from multiqc.utils import report
+from multiqc.modules.base_module import BaseMultiqcModule
+from multiqc.plots import linegraph
 
 from .util import average_pos_from_size
 
@@ -113,7 +110,7 @@ class DragenReadMetrics(BaseMultiqcModule):
             return None
 
         if not multiple_lenths:
-            lengths = "bp , ".join([str(l) for l in list(seq_lengths)])
+            lengths = "bp , ".join([str(line) for line in list(seq_lengths)])
             desc = "All samples have sequences within a single length bin ({}bp).".format(lengths)
             if len(seq_lengths) > 1:
                 desc += ' See the <a href="#general_stats">General Statistics Table</a>.'

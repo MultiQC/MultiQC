@@ -3,7 +3,6 @@
 
 import json
 import logging
-from collections import OrderedDict
 
 from multiqc import config
 from multiqc.modules.base_module import BaseMultiqcModule, ModuleNoSamplesFound
@@ -75,45 +74,46 @@ class MultiqcModule(BaseMultiqcModule):
         """Take the parsed stats from the mtnucratio report and add it to the
         basic stats table at the top of the report"""
 
-        headers = OrderedDict()
-        headers["mt_cov_avg"] = {
-            "title": "MT genome coverage",
-            "description": "Average coverage (X) on mitochondrial genome.",
-            "min": 0,
-            "scale": "OrRd",
-            "suffix": " X",
-            "hidden": True,
-        }
-        headers["nuc_cov_avg"] = {
-            "title": "Genome coverage",
-            "description": "Average coverage (X) on nuclear genome.",
-            "min": 0,
-            "scale": "GnBu",
-            "suffix": " X",
-            "hidden": True,
-        }
-        headers["mt_nuc_ratio"] = {
-            "title": "MT to Nuclear Ratio",
-            "description": "Mitochondrial to nuclear reads ratio (MTNUC)",
-            "min": 0,
-            "max": 100,
-            "scale": "RdYlGrn-rev",
-        }
-        headers["nucreads"] = {
-            "title": "{} Genome reads".format(config.read_count_prefix),
-            "description": "Reads on the nuclear genome ({})".format(config.read_count_desc),
-            "modify": lambda x: x * config.read_count_multiplier,
-            "shared_key": "read_count",
-            "scale": "BuPu",
-            "hidden": True,
-        }
-        headers["mtreads"] = {
-            "title": "{} MT genome reads".format(config.read_count_prefix),
-            "description": "Reads on the mitochondrial genome ({})".format(config.read_count_desc),
-            "modify": lambda x: x * config.read_count_multiplier,
-            "shared_key": "read_count",
-            "scale": "OrRd",
-            "hidden": True,
+        headers = {
+            "mt_cov_avg": {
+                "title": "MT genome coverage",
+                "description": "Average coverage (X) on mitochondrial genome.",
+                "min": 0,
+                "scale": "OrRd",
+                "suffix": " X",
+                "hidden": True,
+            },
+            "nuc_cov_avg": {
+                "title": "Genome coverage",
+                "description": "Average coverage (X) on nuclear genome.",
+                "min": 0,
+                "scale": "GnBu",
+                "suffix": " X",
+                "hidden": True,
+            },
+            "mt_nuc_ratio": {
+                "title": "MT to Nuclear Ratio",
+                "description": "Mitochondrial to nuclear reads ratio (MTNUC)",
+                "min": 0,
+                "max": 100,
+                "scale": "RdYlGrn-rev",
+            },
+            "nucreads": {
+                "title": "{} Genome reads".format(config.read_count_prefix),
+                "description": "Reads on the nuclear genome ({})".format(config.read_count_desc),
+                "modify": lambda x: x * config.read_count_multiplier,
+                "shared_key": "read_count",
+                "scale": "BuPu",
+                "hidden": True,
+            },
+            "mtreads": {
+                "title": "{} MT genome reads".format(config.read_count_prefix),
+                "description": "Reads on the mitochondrial genome ({})".format(config.read_count_desc),
+                "modify": lambda x: x * config.read_count_multiplier,
+                "shared_key": "read_count",
+                "scale": "OrRd",
+                "hidden": True,
+            },
         }
 
         self.general_stats_addcols(self.mtnuc_data, headers)

@@ -5,7 +5,6 @@
 
 import json
 import logging
-from collections import OrderedDict
 
 from multiqc.modules.base_module import BaseMultiqcModule, ModuleNoSamplesFound
 from multiqc.plots import bargraph, linegraph
@@ -29,10 +28,6 @@ class MultiqcModule(BaseMultiqcModule):
         self.summary_data = dict()
         for f in self.find_log_files("mirtrace/summary"):
             self.parse_summary(f)
-
-            # Superfluous function call to confirm that it is used in this module
-            # Replace None with actual version if it is available
-            self.add_software_version(None, f["s_name"])
 
         # Find and load miRTrace read length table
         self.length_data = dict()
@@ -61,6 +56,10 @@ class MultiqcModule(BaseMultiqcModule):
             == 0
         ):
             raise ModuleNoSamplesFound
+
+        # Superfluous function call to confirm that it is used in this module
+        # Replace None with actual version if it is available
+        self.add_software_version(None)
 
         # Write parsed data to a file
         self.write_data_file(self.summary_data, "multiqc_mirtrace_summary")
@@ -128,8 +127,8 @@ class MultiqcModule(BaseMultiqcModule):
         header = []
         body = {}
         lines = f["f"].splitlines()
-        for l in lines:
-            s = l.split("\t")
+        for line in lines:
+            s = line.split("\t")
             if len(header) == 0:
                 if s[0] != "LENGTH":
                     log.debug("No valid data {} for read length distribution".format(f["fn"]))
@@ -154,8 +153,8 @@ class MultiqcModule(BaseMultiqcModule):
         header = []
         body = {}
         lines = f["f"].splitlines()
-        for l in lines:
-            s = l.split("\t")
+        for line in lines:
+            s = line.split("\t")
             if len(header) == 0:
                 if s[0] != "CLADE":
                     log.debug("No valid data {} for contamination check".format(f["fn"]))
@@ -180,8 +179,8 @@ class MultiqcModule(BaseMultiqcModule):
         header = []
         body = {}
         lines = f["f"].splitlines()
-        for l in lines:
-            s = l.split("\t")
+        for line in lines:
+            s = line.split("\t")
             if len(header) == 0:
                 if s[0] != "DISTINCT_MIRNA_HAIRPINS_ACCUMULATED_COUNT":
                     log.debug("No valid data {} for miRNA complexity".format(f["fn"]))
@@ -206,12 +205,13 @@ class MultiqcModule(BaseMultiqcModule):
         """Generate the miRTrace QC Plot"""
 
         # Specify the order of the different possible categories
-        keys = OrderedDict()
-        keys["adapter_removed_length_ok"] = {"color": "#006837", "name": "Reads ≥ 18 nt after adapter removal"}
-        keys["adapter_not_detected"] = {"color": "#66bd63", "name": "Reads without adapter"}
-        keys["length_shorter_than_18"] = {"color": "#fdae61", "name": "Reads < 18 nt after adapter removal"}
-        keys["low_complexity"] = {"color": "#d73027", "name": "Reads with low complexity"}
-        keys["low_phred"] = {"color": "#a50026", "name": "Reads with low PHRED score"}
+        keys = {
+            "adapter_removed_length_ok": {"color": "#006837", "name": "Reads ≥ 18 nt after adapter removal"},
+            "adapter_not_detected": {"color": "#66bd63", "name": "Reads without adapter"},
+            "length_shorter_than_18": {"color": "#fdae61", "name": "Reads < 18 nt after adapter removal"},
+            "low_complexity": {"color": "#d73027", "name": "Reads with low complexity"},
+            "low_phred": {"color": "#a50026", "name": "Reads with low PHRED score"},
+        }
 
         # Config for the plot
         config = {
@@ -261,12 +261,13 @@ class MultiqcModule(BaseMultiqcModule):
         """Generate the miRTrace RNA Categories"""
 
         # Specify the order of the different possible categories
-        keys = OrderedDict()
-        keys["reads_mirna"] = {"color": "#33a02c", "name": "miRNA"}
-        keys["reads_rrna"] = {"color": "#ff7f00", "name": "rRNA"}
-        keys["reads_trna"] = {"color": "#1f78b4", "name": "tRNA"}
-        keys["reads_artifact"] = {"color": "#fb9a99", "name": "Artifact"}
-        keys["reads_unknown"] = {"color": "#d9d9d9", "name": "Unknown"}
+        keys = {
+            "reads_mirna": {"color": "#33a02c", "name": "miRNA"},
+            "reads_rrna": {"color": "#ff7f00", "name": "rRNA"},
+            "reads_trna": {"color": "#1f78b4", "name": "tRNA"},
+            "reads_artifact": {"color": "#fb9a99", "name": "Artifact"},
+            "reads_unknown": {"color": "#d9d9d9", "name": "Unknown"},
+        }
 
         # Config for the plot
         config = {
@@ -313,7 +314,7 @@ class MultiqcModule(BaseMultiqcModule):
         idx = 0
 
         # Specify the order of the different possible categories
-        keys = OrderedDict()
+        keys = {}
         for clade in self.contamination_data[list(self.contamination_data.keys())[0]]:
             keys[clade] = {"color": color_lib[idx], "name": clade}
             if idx < 23:

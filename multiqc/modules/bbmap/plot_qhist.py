@@ -23,8 +23,6 @@ def plot_qhist(samples, file_type, **plot_args):
     else:
         xmax = max(all_x)
 
-    # The columns_to_plot dictionary should be replaced with an OrderedDict,
-    # not to rely on the ordered-by-default implementation details on Python 3.6
     columns_to_plot = {
         "Linear": {0: "Read1", 3: "Read2"},
         "Logarithmic": {1: "Read1", 4: "Read2"},
