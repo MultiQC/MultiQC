@@ -216,7 +216,6 @@ class MultiqcModule(BaseMultiqcModule):
             "instrument": {
                 "title": "Predicted Instrument",
                 "description": "Predicted instrument from ngsderive",
-                "scale": False,
             },
             "confidence": {
                 "title": "Instrument: Confidence",
@@ -250,7 +249,6 @@ class MultiqcModule(BaseMultiqcModule):
         headers["basis"] = {
             "title": "Instrument: Basis",
             "description": "Basis upon which the prediction was made.",
-            "scale": False,
         }
 
         table_data = {}
@@ -352,12 +350,10 @@ class MultiqcModule(BaseMultiqcModule):
             "probable_encoding": {
                 "title": "Probable Encoding",
                 "description": "Predicted PHRED score encoding from ngsderive",
-                "scale": False,
             },
             "evidence": {
                 "title": "Encoding: Evidence",
                 "description": "Observed ASCII value ranges in PHRED score encoding",
-                "scale": False,
                 "hidden": True,
             },
         }
