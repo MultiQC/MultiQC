@@ -19,6 +19,7 @@ Highlights:
 - Remove position:absolute from table values ([#2169](https://github.com/ewels/MultiQC/pull/2169))
 - Fix custom anchors for kraken ([#2170](https://github.com/ewels/MultiQC/pull/2170))
 - Fix logging spillover ([#2174](https://github.com/ewels/MultiQC/pull/2174))
+- Lint not setting `scale=False` for non-numeric values in table ([#2176](https://github.com/ewels/MultiQC/pull/2176))
 
 ### New Modules
 
