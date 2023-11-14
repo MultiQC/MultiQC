@@ -149,7 +149,7 @@ class MultiqcModule(BaseMultiqcModule):
                         else:
                             linedata[header[idx]] = float(data[idx])
                     except ValueError:
-                        linedata[header[idx]] = re.sub(pattern="\+/-.*", repl="", string=data[idx])
+                        linedata[header[idx]] = re.sub(pattern=r"\+/-.*", repl="", string=data[idx])
                 metrics["details"]["Lane {} - {}".format(data[0], read)] = linedata
 
         return metrics, version
