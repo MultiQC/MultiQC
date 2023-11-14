@@ -1,7 +1,6 @@
 """ MultiQC submodule to parse output from Picard InsertSizeMetrics """
 
 import logging
-from collections import OrderedDict
 
 from multiqc import config
 from multiqc.modules.picard import util
@@ -69,7 +68,7 @@ def parse_reports(module):
                 while len(vals) == len(keys):
                     pair_orientation = vals[orientation_idx]
                     rowkey = f"{s_name}_{pair_orientation}"
-                    data_by_sample[rowkey] = OrderedDict()
+                    data_by_sample[rowkey] = dict()
                     data_by_sample[rowkey]["SAMPLE_NAME"] = s_name
                     for i, k in enumerate(keys):
                         try:
@@ -160,7 +159,7 @@ def parse_reports(module):
         # Make a normalised percentage version of the data
         data_percent = {}
         for s_name, data in histogram_by_sample.items():
-            data_percent[s_name] = OrderedDict()
+            data_percent[s_name] = dict()
             total = float(sum(data.values()))
             for k, v in data.items():
                 data_percent[s_name][k] = (v / total) * 100
