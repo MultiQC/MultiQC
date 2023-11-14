@@ -15,8 +15,11 @@ attempts to fetch the sample name from the file name by default.
 For example, if your xengsort command was:
 
 ```sh
-xengsort classify --index myindex --fastq single.fq.gz --prefix myresults --method count \
-> sample.txt
+xengsort classify --index myindex \
+  --fastq paired.1.fq.gz --pairs paired.2.fq.gz \
+  --prefix myresults \
+  --classification count \
+  > sample.txt
 ```
 
 Then the sample name in the report will be `sample`, which is the base name of the file.
