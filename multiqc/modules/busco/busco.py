@@ -57,7 +57,7 @@ class MultiqcModule(BaseMultiqcModule):
         for lin in lineages:
             self.add_section(
                 name="Lineage Assessment" if lin is None else "Lineage: {}".format(lin),
-                anchor="busco-lineage-{}".format(re.sub("\W+", "_", str(lin))),
+                anchor="busco-lineage-{}".format(re.sub(r"\W+", "_", str(lin))),
                 plot=self.busco_plot(lin),
             )
 
@@ -97,7 +97,7 @@ class MultiqcModule(BaseMultiqcModule):
 
         # Config for the plot
         config = {
-            "id": "busco_plot_{}".format(re.sub("\W+", "_", str(lin))),
+            "id": "busco_plot_{}".format(re.sub(r"\W+", "_", str(lin))),
             "title": "BUSCO: Assessment Results" if lin is None else "BUSCO Assessment Results: {}".format(lin),
             "ylab": "# BUSCOs",
             "cpswitch_counts_label": "Number of BUSCOs",

@@ -70,31 +70,31 @@ class MultiqcModule(BaseMultiqcModule):
         fh = f["f"]
         regexes = {
             "1.7": {
-                "bp_processed": "Total basepairs processed:\s*([\d,]+) bp",
-                "bp_written": "Total written \(filtered\):\s*([\d,]+) bp",
-                "quality_trimmed": "Quality-trimmed:\s*([\d,]+) bp",
-                "r_processed": "Total reads processed:\s*([\d,]+)",
-                "pairs_processed": "Total read pairs processed:\s*([\d,]+)",
-                "r_with_adapters": "Reads with adapters:\s*([\d,]+)",
-                "r1_with_adapters": "Read 1 with adapter:\s*([\d,]+)",
-                "r2_with_adapters": "Read 2 with adapter:\s*([\d,]+)",
-                "r_too_short": "Reads that were too short:\s*([\d,]+)",
-                "pairs_too_short": "Pairs that were too short:\s*([\d,]+)",
-                "r_too_long": "Reads that were too long:\s*([\d,]+)",
-                "pairs_too_long": "Pairs that were too long:\s*([\d,]+)",
-                "r_too_many_N": "Reads with too many N:\s*([\d,]+)",
-                "pairs_too_many_N": "Pairs with too many N:\s*([\d,]+)",
-                "r_written": "Reads written \(passing filters\):\s*([\d,]+)",
-                "pairs_written": "Pairs written \(passing filters\):\s*([\d,]+)",
+                "bp_processed": r"Total basepairs processed:\s*([\d,]+) bp",
+                "bp_written": r"Total written \(filtered\):\s*([\d,]+) bp",
+                "quality_trimmed": r"Quality-trimmed:\s*([\d,]+) bp",
+                "r_processed": r"Total reads processed:\s*([\d,]+)",
+                "pairs_processed": r"Total read pairs processed:\s*([\d,]+)",
+                "r_with_adapters": r"Reads with adapters:\s*([\d,]+)",
+                "r1_with_adapters": r"Read 1 with adapter:\s*([\d,]+)",
+                "r2_with_adapters": r"Read 2 with adapter:\s*([\d,]+)",
+                "r_too_short": r"Reads that were too short:\s*([\d,]+)",
+                "pairs_too_short": r"Pairs that were too short:\s*([\d,]+)",
+                "r_too_long": r"Reads that were too long:\s*([\d,]+)",
+                "pairs_too_long": r"Pairs that were too long:\s*([\d,]+)",
+                "r_too_many_N": r"Reads with too many N:\s*([\d,]+)",
+                "pairs_too_many_N": r"Pairs with too many N:\s*([\d,]+)",
+                "r_written": r"Reads written \(passing filters\):\s*([\d,]+)",
+                "pairs_written": r"Pairs written \(passing filters\):\s*([\d,]+)",
             },
             "1.6": {
-                "r_processed": "Processed reads:\s*([\d,]+)",
-                "bp_processed": "Processed bases:\s*([\d,]+) bp",
-                "r_trimmed": "Trimmed reads:\s*([\d,]+)",
-                "quality_trimmed": "Quality-trimmed:\s*([\d,]+) bp",
-                "bp_trimmed": "Trimmed bases:\s*([\d,]+) bp",
-                "too_short": "Too short reads:\s*([\d,]+)",
-                "too_long": "Too long reads:\s*([\d,]+)",
+                "r_processed": r"Processed reads:\s*([\d,]+)",
+                "bp_processed": r"Processed bases:\s*([\d,]+) bp",
+                "r_trimmed": r"Trimmed reads:\s*([\d,]+)",
+                "quality_trimmed": r"Quality-trimmed:\s*([\d,]+) bp",
+                "bp_trimmed": r"Trimmed bases:\s*([\d,]+) bp",
+                "too_short": r"Too short reads:\s*([\d,]+)",
+                "too_long": r"Too long reads:\s*([\d,]+)",
             },
         }
         s_name = None
@@ -156,13 +156,13 @@ class MultiqcModule(BaseMultiqcModule):
                     log_section = line.strip().strip("=").strip()
 
                 # Detect whether 3' or 5'
-                end_regex = re.search("Type: regular (\d)'", line)
+                end_regex = re.search(r"Type: regular (\d)'", line)
                 if end_regex:
                     end = end_regex.group(1)
 
                 if "Overview of removed sequences" in line:
                     if "' end" in line:
-                        res = re.search("(\d)' end", line)
+                        res = re.search(r"(\d)' end", line)
                         end = res.group(1)
 
                     # Initilise dictionaries for length data if not already done
@@ -181,8 +181,8 @@ class MultiqcModule(BaseMultiqcModule):
                     self.cutadapt_length_obsexp[end][plot_sname] = dict()
 
                     # Nested loop to read this section while the regex matches
-                    for line in fh:
-                        r_seqs = re.search("^(\d+)\s+(\d+)\s+([\d\.]+)", line)
+                    for line2 in fh:
+                        r_seqs = re.search(r"^(\d+)\s+(\d+)\s+([\d\.]+)", line2)
                         if r_seqs:
                             a_len = int(r_seqs.group(1))
                             self.cutadapt_length_counts[end][plot_sname][a_len] = int(r_seqs.group(2))

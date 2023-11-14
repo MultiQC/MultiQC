@@ -42,17 +42,14 @@ class MultiqcModule(BaseMultiqcModule):
         # Add version information
         for sample, data in self.vep_data.items():
             if "VEP run statistics" not in data:
-                print(data.keys())
                 continue
 
-            print(data["VEP run statistics"]["VEP version (API)"])
             vep_version, api_version = data["VEP run statistics"]["VEP version (API)"].strip().split(" ")
             api_version = api_version.replace("(", "").replace(")", "")
             self.add_software_version(vep_version, sample)
             # Only add API version if it's different to VEP version
             if vep_version != api_version:
                 self.add_software_version(api_version, sample, "VEP API")
-            print()
         # Filter to strip out ignored sample names
         self.vep_data = self.ignore_samples(self.vep_data)
 
@@ -102,8 +99,8 @@ class MultiqcModule(BaseMultiqcModule):
         # The tables with the titles given below have common format inside the javascript section
         titles = [
             "Variant classes",
-            "Consequences \(most severe\)",
-            "Consequences \(all\)",
+            r"Consequences \(most severe\)",
+            r"Consequences \(all\)",
             "Coding consequences",
             "SIFT summary",
             "PolyPhen summary",
@@ -228,7 +225,7 @@ class MultiqcModule(BaseMultiqcModule):
     def bar_graph_variant_classes(self):
         title = "Variant classes"
         plot_data, plot_cats, plot_config = self._prep_bar_graph(title)
-        htmlid = re.sub("\W+", "_", title).lower()
+        htmlid = re.sub(r"\W+", "_", title).lower()
         if len(plot_data) == 0:
             return
 
@@ -266,7 +263,7 @@ class MultiqcModule(BaseMultiqcModule):
     def bar_graph_sift(self):
         title = "SIFT summary"
         plot_data, plot_cats, plot_config = self._prep_bar_graph(title)
-        htmlid = re.sub("\W+", "_", title).lower()
+        htmlid = re.sub(r"\W+", "_", title).lower()
         if len(plot_data) == 0:
             return
 
@@ -295,7 +292,7 @@ class MultiqcModule(BaseMultiqcModule):
     def bar_graph_polyphen(self):
         title = "PolyPhen summary"
         plot_data, plot_cats, plot_config = self._prep_bar_graph(title)
-        htmlid = re.sub("\W+", "_", title).lower()
+        htmlid = re.sub(r"\W+", "_", title).lower()
         if len(plot_data) == 0:
             return
 
@@ -324,7 +321,7 @@ class MultiqcModule(BaseMultiqcModule):
     def bar_graph_variants_by_chromosome(self):
         title = "Variants by chromosome"
         plot_data, plot_cats, plot_config = self._prep_bar_graph(title)
-        htmlid = re.sub("\W+", "_", title).lower()
+        htmlid = re.sub(r"\W+", "_", title).lower()
         if len(plot_data) == 0:
             return
 
@@ -346,7 +343,7 @@ class MultiqcModule(BaseMultiqcModule):
     def bar_graph_position_in_protein(self):
         title = "Position in protein"
         plot_data, plot_cats, plot_config = self._prep_bar_graph(title)
-        htmlid = re.sub("\W+", "_", title).lower()
+        htmlid = re.sub(r"\W+", "_", title).lower()
         if len(plot_data) == 0:
             return
 
@@ -370,7 +367,7 @@ class MultiqcModule(BaseMultiqcModule):
             if title in self.vep_data[s_name]:
                 plot_data[s_name] = self.vep_data[s_name][title]
         plot_cats = dict()
-        htmlid = re.sub("\W+", "_", title).lower()
+        htmlid = re.sub(r"\W+", "_", title).lower()
         plotid = "{}_plot".format(htmlid)
         plot_config = {
             "id": plotid,

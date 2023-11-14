@@ -119,7 +119,7 @@ def parse_genome_results(self, f):
             for k, r in regexes.get(section, {}).items():
                 r_search = re.search(r, line)
                 if r_search:
-                    if "\d" in r:
+                    if r"\d" in r:
                         try:
                             d[k] = float(r_search.group(1).replace(",", ""))
                         except ValueError:

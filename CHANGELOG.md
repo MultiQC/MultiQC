@@ -18,6 +18,7 @@ Highlights:
 - Software versions: allow any string as a version tag ([#2166](https://github.com/ewels/MultiQC/pull/2166))
 - Remove position:absolute from table values ([#2169](https://github.com/ewels/MultiQC/pull/2169))
 - Fix custom anchors for kraken ([#2170](https://github.com/ewels/MultiQC/pull/2170))
+- Fix logging spillover ([#2174](https://github.com/ewels/MultiQC/pull/2174))
 
 ### New Modules
 

@@ -599,7 +599,7 @@ class MultiqcModule(BaseMultiqcModule):
             "q40_cpg_topgc",
         ]
         for t in targets:
-            m = re.search("{}\t([\d\.]+)\t([\d\.]+)\t([\d\.]+)".format(t), f, re.MULTILINE)
+            m = re.search(rf"{t}\t([\d\.]+)\t([\d\.]+)\t([\d\.]+)", f, re.MULTILINE)
             if m is not None:
                 data[t] = {"mu": float(m.group(1)), "sigma": float(m.group(2)), "cv": float(m.group(3))}
             else:

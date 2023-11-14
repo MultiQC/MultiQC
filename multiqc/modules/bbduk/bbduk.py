@@ -82,7 +82,7 @@ class MultiqcModule(BaseMultiqcModule):
                     "Result",
                 ]
                 for cat in cats:
-                    matches = re.search(f"{cat}:\s+(\d+) reads \(([\d\.]+)%\)\s+(\d+) bases \(([\d\.]+)%\)", line)
+                    matches = re.search(rf"{cat}:\s+(\d+) reads \(([\d\.]+)%\)\s+(\d+) bases \(([\d\.]+)%\)", line)
                     if matches:
                         self.bbduk_data[s_name][cat + " reads"] = int(matches.group(1))
                         self.bbduk_data[s_name][cat + " reads percent"] = float(matches.group(2))

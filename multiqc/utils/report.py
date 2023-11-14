@@ -26,7 +26,7 @@ from . import config
 
 logger = config.logger
 
-# Treat defaultdict as normal dict for YAML output
+# Treat defaultdict and OrderedDict as normal dicts for YAML output
 yaml.add_representer(defaultdict, Representer.represent_dict)
 yaml.add_representer(OrderedDict, Representer.represent_dict)
 
