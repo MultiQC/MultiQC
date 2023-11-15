@@ -554,18 +554,17 @@ def run(
     # Add files if --file-list option is given
     if file_list:
         if len(config.analysis_dir) > 1:
-            raise ValueError("If --file-list is giving, analysis_dir should have only one plain text file.")
+            raise ValueError("If --file-list is given, analysis_dir should have only one plain text file.")
+        file_list_path = config.analysis_dir[0]
         config.analysis_dir = []
-        with open(config.analysis_dir[0]) as in_handle:
+        with open(file_list_path) as in_handle:
             for line in in_handle:
                 if os.path.exists(line.strip()):
                     path = os.path.abspath(line.strip())
                     config.analysis_dir.append(path)
         if len(config.analysis_dir) == 0:
-            logger.error(
-                "No files or directories were added from {} using --file-list option.".format(config.analysis_dir[0])
-            )
-            logger.error("Please, check that {} contains correct paths.".format(config.analysis_dir[0]))
+            logger.error(f"No files or directories were added from {file_list_path} using --file-list option.")
+            logger.error(f"Please, check that {file_list_path} contains correct paths.")
             raise ValueError("Any files or directories to be searched.")
 
     if len(ignore) > 0:
