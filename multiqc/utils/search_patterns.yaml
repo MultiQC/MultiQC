@@ -573,6 +573,10 @@ sourmash/compare:
 sourmash/gather:
   contents: "intersect_bp,f_orig_query,f_match,f_unique_to_query,f_unique_weighted,"
   num_lines: 1
+parse_biosciences/split_pipe_csv:
+  fn: "*.csv"
+  contents: "sample_well_count"
+  num_lines: 2
 pbmarkdup:
   contents_re: "LIBRARY +READS +UNIQUE MOLECULES +DUPLICATE READS"
   num_lines: 5

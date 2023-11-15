@@ -684,6 +684,10 @@ module_order:
       module_tag:
         - RNA
         - single-cell
+  - parse_biosciences:
+      module_tag:
+        - RNA
+        - single-cell
   - snpsplit:
       module_tag:
         - DNA
