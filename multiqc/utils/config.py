@@ -18,6 +18,7 @@ import yaml
 import pyaml_env
 
 import multiqc
+from multiqc.utils.util_functions import strtobool
 
 logger = logging.getLogger("multiqc")
 
@@ -225,14 +226,8 @@ def mqc_load_userconfig(paths=()):
     if os.environ.get("MULTIQC_CONFIG_PATH") is not None:
         mqc_load_config(os.environ.get("MULTIQC_CONFIG_PATH"))
 
-    # Load separate config entries from ENV variables
-    env_config = {}
-    for k, v in os.environ.items():
-        if k.startswith("MULTIQC_") and k != "MULTIQC_CONFIG_PATH":
-            conf_key = k[len("MULTIQC_") :].lower()
-            env_config[conf_key] = v
-            logger.debug(f"Setting config.{conf_key} from the environment variable ${k}")
-    mqc_add_config(env_config)
+    # Load separate config entries from MULTIQC_* environment variables
+    mqc_add_config(mqc_env_vars_config())
 
     # Load and parse a config file in this working directory if we find it
     mqc_load_config("multiqc_config.yaml")
@@ -276,6 +271,46 @@ def mqc_cl_config(cl_config):
         else:
             logger.debug("Found command line config: {}".format(parsed_clc))
             mqc_add_config(parsed_clc)
+
+
+def mqc_env_vars_config() -> Dict:
+    """
+    Check MULTIQC_* environment variables and set to corresponding config values if they are of scalar types.
+    """
+    RESERVED_NAMES = {"MULTIQC_CONFIG_PATH"}
+    PREFIX = "MULTIQC_"  # Prefix for environment variables
+    env_config = {}
+    for k, v in os.environ.items():
+        if k.startswith(PREFIX) and k not in RESERVED_NAMES:
+            conf_key = k[len(PREFIX) :].lower()
+            if conf_key not in globals():
+                continue
+            if isinstance(globals()[conf_key], bool):
+                try:
+                    v = strtobool(v)
+                except ValueError:
+                    logger.warning(f"Could not parse a boolean value from the environment variable ${k}={v}")
+                    continue
+            elif isinstance(globals()[conf_key], int):
+                try:
+                    v = int(v)
+                except ValueError:
+                    logger.warning(f"Could not parse a int value from the environment variable ${k}={v}")
+                    continue
+            elif isinstance(globals()[conf_key], float):
+                try:
+                    v = float(v)
+                except ValueError:
+                    logger.warning(f"Could not parse a float value from the environment variable ${k}={v}")
+                    continue
+            elif not isinstance(globals()[conf_key], str):
+                logger.warning(
+                    f"Can only set scalar config entries (str, int, float, bool) with environment variable. Ignoring ${k}"
+                )
+                continue
+            env_config[conf_key] = v
+            logger.debug(f"Setting config.{conf_key} from the environment variable ${k}")
+    return env_config
 
 
 def mqc_add_config(conf: Dict, conf_path=None):

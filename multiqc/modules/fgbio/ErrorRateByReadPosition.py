@@ -59,7 +59,7 @@ def parse_reports(self):
             fields[4:11] = [float(field) for field in fields[4:11]]
             if is_new_format:
                 # Check if collapse was true or false
-                fields[-1] = bool(strtobool(fields[-1]))
+                fields[-1] = strtobool(fields[-1])
                 collapse = fields[-1]
                 if not collapse:
                     # Substitutions types were not collapsed, parse them
