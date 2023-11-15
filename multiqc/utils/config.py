@@ -2,6 +2,8 @@
 
 """ MultiQC config module. Holds a single copy of
 config variables to be used across all other modules """
+from types import NoneType
+
 from typing import List, Dict, Optional
 
 import inspect
@@ -303,9 +305,10 @@ def mqc_env_vars_config() -> Dict:
                 except ValueError:
                     logger.warning(f"Could not parse a float value from the environment variable ${k}={v}")
                     continue
-            elif not isinstance(globals()[conf_key], str):
+            elif not isinstance(globals()[conf_key], (str, NoneType)):
                 logger.warning(
-                    f"Can only set scalar config entries (str, int, float, bool) with environment variable. Ignoring ${k}"
+                    f"Can only set scalar config entries (str, int, float, bool) with environment variable, "
+                    f"but config.{conf_key} expects a type '{type(globals()[conf_key]).__name__}'. Ignoring ${k}"
                 )
                 continue
             env_config[conf_key] = v
