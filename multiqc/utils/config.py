@@ -45,7 +45,7 @@ title: str
 subtitle: str
 intro_text: str
 report_comment: str
-report_header_info: str
+report_header_info: List[Dict[str, str]]
 show_analysis_paths: bool
 show_analysis_time: bool
 config_file: str
