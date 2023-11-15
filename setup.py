@@ -65,6 +65,7 @@ setup(
         "spectra>=0.0.10",
         "importlib-metadata",
         "humanize",
+        "pyaml-env",
     ],
     entry_points={
         "console_scripts": [

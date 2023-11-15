@@ -16,11 +16,12 @@ it collects the configuration settings from the following places in this order
 3. User config in `~/.multiqc_config.yaml`
 4. File path set in environment variable `MULTIQC_CONFIG_PATH`
    - For example, define this in your `~/.bashrc` file and keep the file anywhere you like
-5. Config file in the current working directory: `multiqc_config.yaml`
-6. Config file paths specified in the command with `--config` / `-c`
+5. Environment variables prefixed with `MULTIQC_` (e.g. `MULTIQC_TITLE`, `MULTIQC_TEMPLATE`, etc.)
+6. Config file in the current working directory: `multiqc_config.yaml`
+7. Config file paths specified in the command with `--config` / `-c`
    - You can specify multiple files like this, they can have any filename.
-7. Command line config (`--cl-config`)
-8. Specific command line options (_e.g._ `--force`)
+8. Command line config (`--cl-config`)
+9. Specific command line options (_e.g._ `--force`)
 
 ## Sample name cleaning
 

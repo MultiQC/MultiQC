@@ -2,7 +2,7 @@
 
 """ MultiQC config module. Holds a single copy of
 config variables to be used across all other modules """
-
+from typing import List, Dict, Optional
 
 import inspect
 
@@ -15,6 +15,7 @@ from datetime import datetime
 
 import importlib_metadata
 import yaml
+import pyaml_env
 
 import multiqc
 
@@ -39,12 +40,116 @@ except Exception:
 MULTIQC_DIR = os.path.dirname(os.path.realpath(inspect.getfile(multiqc)))
 
 ##### MultiQC Defaults
-# Default MultiQC config
-searchp_fn = os.path.join(MULTIQC_DIR, "utils", "config_defaults.yaml")
-with open(searchp_fn) as f:
-    configs = yaml.safe_load(f)
-    for c, v in configs.items():
-        globals()[c] = v
+# Declaring variables for static typing
+title: str
+subtitle: str
+intro_text: str
+report_comment: str
+report_header_info: str
+show_analysis_paths: bool
+show_analysis_time: bool
+config_file: str
+custom_logo: str
+custom_logo_url: str
+custom_logo_title: str
+custom_css_files: List[str]
+simple_output: bool
+template: str
+profile_runtime: bool
+pandoc_template: str
+read_count_multiplier: float
+read_count_prefix: str
+read_count_desc: str
+long_read_count_multiplier: float
+long_read_count_prefix: str
+long_read_count_desc: str
+base_count_multiplier: float
+base_count_prefix: str
+base_count_desc: str
+output_fn_name: str
+data_dir_name: str
+plots_dir_name: str
+data_format: str
+module_tag: List[str]
+force: bool
+no_ansi: bool
+quiet: bool
+prepend_dirs: bool
+prepend_dirs_depth: int
+prepend_dirs_sep: str
+file_list: bool
+require_logs: bool
+
+make_data_dir: bool
+zip_data_dir: bool
+data_dump_file: bool
+megaqc_url: str
+megaqc_access_token: str
+megaqc_timeout: float
+export_plots: bool
+make_report: bool
+plots_force_flat: bool
+plots_force_interactive: bool
+plots_flat_numseries: int
+num_datasets_plot_limit: int
+collapse_tables: bool
+max_table_rows: int
+table_columns_visible: Dict
+table_columns_placement: Dict
+table_columns_name: Dict
+table_cond_formatting_colours: List[Dict[str, str]]
+table_cond_formatting_rules: Dict[str, List[Dict[str, str]]]
+decimalPoint_format: str
+thousandsSep_format: str
+remove_sections: List
+section_comments: Dict
+lint: bool  # Deprecated since v1.17
+strict: bool
+custom_plot_config: Dict
+custom_table_header_config: Dict
+software_versions: Dict
+ignore_symlinks: bool
+ignore_images: bool
+fn_ignore_dirs: List[str]
+fn_ignore_paths: List[str]
+sample_names_ignore: List[str]
+sample_names_ignore_re: List[str]
+sample_names_rename_buttons: List[str]
+sample_names_replace: Dict
+sample_names_replace_regex: bool
+sample_names_replace_exact: bool
+sample_names_replace_complete: bool
+sample_names_rename: List
+show_hide_buttons: List
+show_hide_patterns: List
+show_hide_regex: List
+show_hide_mode: List
+no_version_check: bool
+log_filesize_limit: int
+filesearch_lines_limit: int
+report_readerrors: int
+skip_generalstats: int
+skip_versions_section: int
+disable_version_detection: int
+versions_table_group_header: str
+data_format_extensions: Dict[str, str]
+export_plot_formats: List[str]
+custom_content: Dict
+fn_clean_sample_names: bool
+use_filename_as_sample_name: bool
+fn_clean_exts: List
+fn_clean_trim: List
+fn_ignore_files: List
+top_modules: List
+module_order: List
+
+# Populating the variables above from the default MultiQC config
+config_defaults_path = os.path.join(MULTIQC_DIR, "utils", "config_defaults.yaml")
+with open(config_defaults_path) as f:
+    _default_config = yaml.safe_load(f)
+for c, v in _default_config.items():
+    globals()[c] = v
+
 # Module filename search patterns
 searchp_fn = os.path.join(MULTIQC_DIR, "utils", "search_patterns.yaml")
 with open(searchp_fn) as f:
@@ -58,6 +163,17 @@ working_dir = os.getcwd()
 analysis_dir = [os.getcwd()]
 output_dir = os.path.realpath(os.getcwd())
 megaqc_access_token = os.environ.get("MEGAQC_ACCESS_TOKEN")
+
+# Other variables that set only through the CLI
+run_modules: List[str] = []
+exclude_modules: List[str] = []
+data_dir: Optional[str] = None
+plots_tmp_dir: Optional[str] = None
+plots_dir: Optional[str] = None
+custom_data: Dict = {}
+report_section_order: Dict = {}
+output_fn: Optional[str] = None
+megaqc_upload: bool = False
 
 ##### Available modules
 # Modules must be listed in setup.py under entry_points['multiqc.modules.v1']
@@ -109,6 +225,15 @@ def mqc_load_userconfig(paths=()):
     if os.environ.get("MULTIQC_CONFIG_PATH") is not None:
         mqc_load_config(os.environ.get("MULTIQC_CONFIG_PATH"))
 
+    # Load separate config entries from ENV variables
+    env_config = {}
+    for k, v in os.environ.items():
+        if k.startswith("MULTIQC_") and k != "MULTIQC_CONFIG_PATH":
+            conf_key = k[len("MULTIQC_") :].lower()
+            env_config[conf_key] = v
+            logger.debug(f"Setting config.{conf_key} from the environment variable ${k}")
+    mqc_add_config(env_config)
+
     # Load and parse a config file in this working directory if we find it
     mqc_load_config("multiqc_config.yaml")
 
@@ -117,17 +242,17 @@ def mqc_load_userconfig(paths=()):
         mqc_load_config(p)
 
 
-def mqc_load_config(yaml_config):
+def mqc_load_config(yaml_config_path: str):
     """Load and parse a config file if we find it"""
-    if not os.path.isfile(yaml_config) and os.path.isfile(yaml_config.replace(".yaml", ".yml")):
-        yaml_config = yaml_config.replace(".yaml", ".yml")
+    if not os.path.isfile(yaml_config_path) and os.path.isfile(yaml_config_path.replace(".yaml", ".yml")):
+        yaml_config_path = yaml_config_path.replace(".yaml", ".yml")
 
-    if os.path.isfile(yaml_config):
+    if os.path.isfile(yaml_config_path):
         try:
-            with open(yaml_config) as f:
-                new_config = yaml.safe_load(f)
-                logger.debug("Loading config settings from: {}".format(yaml_config))
-                mqc_add_config(new_config, yaml_config)
+            # pyaml_env allows referencing environment variables in YAML for default values
+            new_config = pyaml_env.parse_config(yaml_config_path)
+            logger.debug("Loading config settings from: {}".format(yaml_config_path))
+            mqc_add_config(new_config, yaml_config_path)
         except (IOError, AttributeError) as e:
             logger.debug("Config error: {}".format(e))
         except yaml.scanner.ScannerError as e:
@@ -153,7 +278,7 @@ def mqc_cl_config(cl_config):
             mqc_add_config(parsed_clc)
 
 
-def mqc_add_config(conf, conf_path=None):
+def mqc_add_config(conf: Dict, conf_path=None):
     """Add to the global config with given MultiQC config dict"""
     global custom_css_files, fn_clean_exts, fn_clean_trim
     log_new_config = {}
