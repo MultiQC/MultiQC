@@ -170,23 +170,22 @@ class MultiqcModule(BaseMultiqcModule):
         }
         tdata = {}
         for s_name, d in self.kaiju_sample_total_readcounts.items():
-            tdata[s_name] = {}
-            tdata[s_name]["% Unclassified"] = (
-                self.kaiju_sample_unclassified[s_name] * 100 / self.kaiju_sample_total_readcounts[s_name]
-            )
+            tdata[s_name] = {
+                # Default values in case if data is not available for this sample at this rank
+                "assigned": 0,
+                "% Assigned": 0,
+            }
+            total = self.kaiju_sample_total_readcounts[s_name]
+            if total == 0:
+                continue
+            tdata[s_name]["% Unclassified"] = self.kaiju_sample_unclassified[s_name] * 100 / total
             if s_name in self.kaiju_data[general_taxo_rank.lower()]:
                 tdata[s_name]["assigned"] = (
-                    self.kaiju_sample_total_readcounts[s_name]
+                    total
                     - self.kaiju_sample_unclassified[s_name]
                     - self.kaiju_data[general_taxo_rank.lower()][s_name]["cannot be assigned"]["count"]
                 )
-                tdata[s_name]["% Assigned"] = (
-                    tdata[s_name]["assigned"] * 100 / self.kaiju_sample_total_readcounts[s_name]
-                )
-            else:
-                # don't have the value for this samples at this rank
-                tdata[s_name]["assigned"] = 0
-                tdata[s_name]["% Assigned"] = 0
+                tdata[s_name]["% Assigned"] = tdata[s_name]["assigned"] * 100 / total
         self.general_stats_addcols(tdata, headers)
 
     def top_five_barplot(self):
