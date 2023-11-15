@@ -430,6 +430,9 @@ def run(
     if dirs_depth is not None:
         config.prepend_dirs = True
         config.prepend_dirs_depth = dirs_depth
+    # Clean up analysis_dir if a string (interactive environment only)
+    if isinstance(analysis_dir, str):
+        analysis_dir = [analysis_dir]
     config.analysis_dir = analysis_dir
     if outdir is not None:
         config.output_dir = outdir
@@ -536,10 +539,6 @@ def run(
     del profile_runtime
     del no_ansi
     del custom_css_files
-
-    # Clean up analysis_dir if a string (interactive environment only)
-    if isinstance(config.analysis_dir, str):
-        config.analysis_dir = [config.analysis_dir]
 
     plugin_hooks.mqc_trigger("execution_start")
 
