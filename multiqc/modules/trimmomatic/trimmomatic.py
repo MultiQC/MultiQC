@@ -64,25 +64,22 @@ class MultiqcModule(BaseMultiqcModule):
             s_name = f["s_name"]
         for line in f["f"]:
             # Get the sample name
-            if s_name is None and "Trimmomatic" in line and "Started with arguments:" in line:
-                # Match everything up until the first .fastq or .fq
-                match = re.search(r"Trimmomatic[SP]E: Started with arguments:.+?(?=\.fastq|\.fq)", line)
-                if match:
-                    # backtrack from the end to the first space
-                    s_name = match.group().split()[-1]
-                    s_name = self.clean_s_name(s_name, f)
-                    if s_name in self.trimmomatic:
-                        log.debug(f"Duplicate sample name found! Overwriting: {s_name}")
-                else:
+            if s_name is None and line.startswith(
+                tuple(f"Trimmomatic{x}E: Started with arguments:" for x in ["S", "P"])
+            ):
+                is_pe = line.startswith("TrimmomaticPE")
+                args = line.strip().split()
+                FQ_EXTS = ".fastq", ".fq", ".gz", ".dat"
+                if not any(x.endswith(FQ_EXTS) for x in args):
                     # Try looking on the next line instead, sometimes have a line break (see issue #212)
                     line = next(f["f"])
-                    match = re.search(r".+?(?=\.fastq|\.fq)", line)
-                    if match:
-                        # backtrack from the end to the first space
-                        s_name = match.group().split()[-1]
-                        s_name = self.clean_s_name(s_name, f)
-                        if s_name in self.trimmomatic:
-                            log.debug("Duplicate sample name found! Overwriting: {}".format(s_name))
+                    args = line.strip().split()
+                if any(x.endswith(FQ_EXTS) for x in args):
+                    # For PE, first two fastq files are the input paths; for SE, it's just the first one
+                    input_paths = [x for x in args if x.endswith(FQ_EXTS)][: 2 if is_pe else 1]
+                    s_name = self.clean_s_name(input_paths, f)
+                    if s_name in self.trimmomatic:
+                        log.debug(f"Duplicate sample name found! Overwriting: {s_name}")
 
             # Get single end stats
             if "Input Reads" in line and s_name is not None:

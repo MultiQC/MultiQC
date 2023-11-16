@@ -1,5 +1,5 @@
 """ MultiQC modules base class, contains helper functions """
-
+from typing import List
 
 import fnmatch
 import io
@@ -281,14 +281,46 @@ class BaseMultiqcModule(object):
             }
         )
 
-    def clean_s_name(self, s_name, f=None, root=None, filename=None, seach_pattern_key=None):
-        """Helper function to take a long file name and strip it
-        back to a clean sample name. Somewhat arbitrary.
-        :param s_name: The sample name to clean
+    def clean_s_name(self, s_name: str | List[str], f=None, root=None, filename=None, seach_pattern_key=None):
+        """
+        Helper function to take a long file name(s) and strip back to one clean sample name. Somewhat arbitrary.
+        :param s_name: The sample name(s) to clean.
         :param root: The directory path that this file is within
         :config.prepend_dirs: boolean, whether to prepend dir name to s_name
         :return: The cleaned sample name, ready to be used
         """
+        if isinstance(s_name, list) and len(s_name) >= 2:
+            # A list of file names - for example, FASTQ pairs. Each name is cleaned separately first,
+            # and then a common prefix is found. If the common prefix is empty, the cleaned names are
+            # dash-concatenated. Additionally, possible FASTQ suffixes are trimmed.
+            s_names = [
+                self.clean_s_name(sn, f=f, root=root, filename=filename, seach_pattern_key=seach_pattern_key)
+                for sn in s_name
+            ]
+            # Clean FASTQ suffixes (_R1, _r1, _1, .1, -1, _R1_001). Refs:
+            # https://support.illumina.com/help/BaseSpace_Sequence_Hub_OLH_009008_2/Source/Informatics/BS/NamingConvention_FASTQ-files-swBS.htm
+            # https://support.10xgenomics.com/spatial-gene-expression/software/pipelines/latest/using/fastq-input#:~:text=10x%20pipelines%20need%20files%20named,individual%20who%20demultiplexed%20your%20flowcell.
+            for i, sn in enumerate(s_names):
+                # Try trimming the conventional illumina suffix with a tail 001 ending
+                cleaned = re.sub(r"_R[12]_001$", "", sn)
+                if cleaned == sn:  # no luck
+                    # Try other variations of suffixes
+                    cleaned = re.sub(r"([_.-][rR]?[12])?$", "", sn)
+                s_names[i] = cleaned
+
+            # Find the common prefix
+            prefix = os.path.commonprefix(s_names)
+            prefix = prefix.rstrip("_.- ")
+            # If the prefix is empty, join the names with a dash
+            if prefix == "":
+                s_name = "_".join(s_names)
+            else:
+                s_name = prefix
+            return s_name
+
+        if isinstance(s_name, list) and len(s_name) == 1:
+            s_name = s_name[0]
+
         s_name_original = s_name
 
         # Backwards compatability - if f is a string, it's probably the root (this used to be the second argument)

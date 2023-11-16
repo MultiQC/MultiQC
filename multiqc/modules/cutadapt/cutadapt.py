@@ -3,6 +3,7 @@
 
 import logging
 import re
+import shlex
 
 from packaging import version
 
@@ -51,7 +52,7 @@ class MultiqcModule(BaseMultiqcModule):
         if len(self.cutadapt_data) == 0:
             raise ModuleNoSamplesFound
 
-        log.info("Found {} reports".format(len(self.cutadapt_data)))
+        log.info(f"Found {len(self.cutadapt_data)} reports")
 
         # Write parsed report data to a file
         self.write_data_file(self.cutadapt_data, "multiqc_cutadapt")
@@ -122,18 +123,23 @@ class MultiqcModule(BaseMultiqcModule):
                     # The pattern "cutadapt version XX" is only pre-1.6
                     parsing_version = "1.6"
             # Get sample name from end of command line params
-            if line.startswith("Command line parameters"):
-                for cli in reversed(line.split()):
-                    if not cli.startswith("-"):
-                        s_name = cli
-                        break
-                # Manage case where sample name is '-' (reading from stdin)
-                if s_name == "-":
-                    s_name = f["s_name"]
+            cl_pref = "Command line parameters: "
+            if line.startswith(cl_pref):
+                input_fqs = []
+                args = shlex.split(line[len(cl_pref) :])
+                for i, x in enumerate(args):
+                    if x.endswith((".fastq", ".fq", ".gz", ".dat")) and (
+                        i == 0 or args[i - 1] not in ["-o", "-p", "--output", "--paired-output"]
+                    ):
+                        input_fqs.append(x)
+                if input_fqs:
+                    s_name = self.clean_s_name(input_fqs, f)
                 else:
-                    s_name = self.clean_s_name(s_name, f)
+                    # Manage case where sample name is '-' (reading from stdin)
+                    s_name = f["s_name"]
+
                 if s_name in self.cutadapt_data:
-                    log.debug("Duplicate sample name found! Overwriting: {}".format(s_name))
+                    log.debug(f"Duplicate sample name found! Overwriting: {s_name}")
                 self.cutadapt_data[s_name] = dict()
                 if cutadapt_version:
                     self.cutadapt_data[s_name]["cutadapt_version"] = cutadapt_version
@@ -165,7 +171,7 @@ class MultiqcModule(BaseMultiqcModule):
                         res = re.search(r"(\d)' end", line)
                         end = res.group(1)
 
-                    # Initilise dictionaries for length data if not already done
+                    # Initialise dictionaries for length data if not already done
                     if end not in self.cutadapt_length_counts:
                         self.cutadapt_length_counts[end] = dict()
                         self.cutadapt_length_exp[end] = dict()
