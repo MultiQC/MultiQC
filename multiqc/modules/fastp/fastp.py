@@ -181,9 +181,15 @@ class MultiqcModule(BaseMultiqcModule):
             # It still won't work exactly right for file names with dashes following a
             # space, but that's a pretty rare case, and will still extract something
             # meaningful.
+            s_names = []
             m = re.search(r"(-i|--in1)\s(.+?)(?:\s-|$)", cmd)
             if m:
-                s_name = self.clean_s_name(m.group(2), f)
+                s_names.append(m.group(2))
+                # Second input for paired end?
+                m = re.search(r"--in2\s(.+?)(?:\s-|$)", cmd)
+                if m:
+                    s_names.append(m.group(1))
+                s_name = self.clean_s_name(s_names, f)
             else:
                 s_name = f["s_name"]
                 log.warning(

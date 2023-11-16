@@ -128,8 +128,10 @@ class MultiqcModule(BaseMultiqcModule):
                 input_fqs = []
                 args = shlex.split(line[len(cl_pref) :])
                 for i, x in enumerate(args):
-                    if x.endswith((".fastq", ".fq", ".gz", ".dat")) and (
-                        i == 0 or args[i - 1] not in ["-o", "-p", "--output", "--paired-output"]
+                    if (
+                        not x.startswith("-")
+                        and x.endswith((".fastq", ".fq", ".gz", ".dat"))
+                        and (i == 0 or args[i - 1] not in ["-o", "-p", "--output", "--paired-output"])
                     ):
                         input_fqs.append(x)
                 if input_fqs:
