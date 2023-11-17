@@ -13,15 +13,16 @@ it collects the configuration settings from the following places in this order
 1. Hardcoded defaults in MultiQC code
 2. System-wide config in `<installation_dir>/multiqc_config.yaml`
    - Manual installations only, not `pip` or `conda`
-3. User config in `~/.multiqc_config.yaml`
-4. File path set in environment variable `MULTIQC_CONFIG_PATH`
+3. User config in `$XDG_CONFIG_HOME/multiqc_config.yaml` (or `~/.config/.multiqc_config.yaml` if `$XDG_CONFIG_HOME` is not set)
+4. User config in `~/.multiqc_config.yaml`
+5. File path set in environment variable `$MULTIQC_CONFIG_PATH`
    - For example, define this in your `~/.bashrc` file and keep the file anywhere you like
-5. Environment variables prefixed with `MULTIQC_` (e.g. `MULTIQC_TITLE`, `MULTIQC_TEMPLATE`, etc.)
-6. Config file in the current working directory: `multiqc_config.yaml`
-7. Config file paths specified in the command with `--config` / `-c`
+6. Environment variables prefixed with `MULTIQC_` (e.g. `$MULTIQC_TITLE`, `$MULTIQC_TEMPLATE`, etc.)
+7. Config file in the current working directory: `multiqc_config.yaml`
+8. Config file paths specified in the command with `--config` / `-c`
    - You can specify multiple files like this, they can have any filename.
-8. Command line config (`--cl-config`)
-9. Specific command line options (_e.g._ `--force`)
+9. Command line config (`--cl-config`)
+10. Specific command line options (_e.g._ `--force`)
 
 ## Sample name cleaning
 
