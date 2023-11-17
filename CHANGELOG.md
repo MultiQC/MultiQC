@@ -37,6 +37,7 @@ Highlights:
 
 - **fastp**: add version parsing ([#2159](https://github.com/ewels/MultiQC/pull/2159))
 - **fastp**: correctly parse sample name from --in1/--in2 command. Prefer file name if not `fastp.json`; fallback to file name when error ([#2139](https://github.com/ewels/MultiQC/pull/2139))
+- **GATK**: make base recalibrator plot square ([#2189](https://github.com/ewels/MultiQC/pull/2189))
 - **Kaiju**: fix "division by zero" ([#2179](https://github.com/ewels/MultiQC/pull/2179))
 - **Nanostat**: account for both tab and spaces in v1.41+ search pattern ([#2155](https://github.com/ewels/MultiQC/pull/2155))
 - **Pangolin**: update for v4: add QC Note , update tool versions columns ([#2157](https://github.com/ewels/MultiQC/pull/2157))
