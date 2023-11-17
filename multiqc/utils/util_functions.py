@@ -141,7 +141,7 @@ def force_term_colors():
     return None
 
 
-def strtobool(val):
+def strtobool(val) -> bool:
     """
     Replaces deprecated https://docs.python.org/3.9/distutils/apiref.html#distutils.util.strtobool
     The deprecation recommendation is to re-implement the function https://peps.python.org/pep-0632/
@@ -156,8 +156,8 @@ def strtobool(val):
     """
     val = val.lower()
     if val in ("y", "yes", "t", "true", "on", "1"):
-        return 1
+        return True
     elif val in ("n", "no", "f", "false", "off", "0"):
-        return 0
+        return False
     else:
         raise ValueError("invalid truth value %r" % (val,))

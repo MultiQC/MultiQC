@@ -225,7 +225,7 @@ click.rich_click.OPTION_GROUPS = {
     "-k",
     "--data-format",
     "data_format",
-    type=click.Choice(config.data_format_extensions.keys()),
+    type=click.Choice(list(config.data_format_extensions.keys())),
     help="Output parsed data in a different format.",
 )
 @click.option("-z", "--zip-data-dir", "zip_data_dir", is_flag=True, help="Compress the data directory.")
@@ -430,6 +430,9 @@ def run(
     if dirs_depth is not None:
         config.prepend_dirs = True
         config.prepend_dirs_depth = dirs_depth
+    # Clean up analysis_dir if a string (interactive environment only)
+    if isinstance(analysis_dir, str):
+        analysis_dir = [analysis_dir]
     config.analysis_dir = analysis_dir
     if outdir is not None:
         config.output_dir = outdir
@@ -499,9 +502,43 @@ def run(
         config.custom_css_files.extend(custom_css_files)
     config.kwargs = kwargs  # Plugin command line options
 
-    # Clean up analysis_dir if a string (interactive environment only)
-    if isinstance(config.analysis_dir, str):
-        config.analysis_dir = [config.analysis_dir]
+    # Discarding the CLI variables to make sure we use only config down below.
+    del analysis_dir
+    del dirs
+    del dirs_depth
+    del no_clean_sname
+    del title
+    del report_comment
+    del template
+    del module_tag
+    del module
+    del require_logs
+    del exclude
+    del outdir
+    del use_filename_as_sample_name
+    del replace_names
+    del sample_names
+    del sample_filters
+    del make_data_dir
+    del no_data_dir
+    del data_format
+    del zip_data_dir
+    del force
+    del ignore_symlinks
+    del no_report
+    del export_plots
+    del plots_flat
+    del plots_interactive
+    del strict
+    del lint
+    del no_megaqc_upload
+    del config_file
+    del cl_config
+    del verbose
+    del quiet
+    del profile_runtime
+    del no_ansi
+    del custom_css_files
 
     plugin_hooks.mqc_trigger("execution_start")
 
@@ -516,17 +553,18 @@ def run(
 
     # Add files if --file-list option is given
     if file_list:
-        if len(analysis_dir) > 1:
-            raise ValueError("If --file-list is giving, analysis_dir should have only one plain text file.")
+        if len(config.analysis_dir) > 1:
+            raise ValueError("If --file-list is given, analysis_dir should have only one plain text file.")
+        file_list_path = config.analysis_dir[0]
         config.analysis_dir = []
-        with open(analysis_dir[0]) as in_handle:
+        with open(file_list_path) as in_handle:
             for line in in_handle:
                 if os.path.exists(line.strip()):
                     path = os.path.abspath(line.strip())
                     config.analysis_dir.append(path)
         if len(config.analysis_dir) == 0:
-            logger.error("No files or directories were added from {} using --file-list option.".format(analysis_dir[0]))
-            logger.error("Please, check that {} contains correct paths.".format(analysis_dir[0]))
+            logger.error(f"No files or directories were added from {file_list_path} using --file-list option.")
+            logger.error(f"Please, check that {file_list_path} contains correct paths.")
             raise ValueError("Any files or directories to be searched.")
 
     if len(ignore) > 0:
@@ -541,8 +579,8 @@ def run(
         config.output_fn = sys.stdout
         logger.info("Printing report to stdout")
     else:
-        if title is not None and filename is None:
-            filename = re.sub(r"[^\w.-]", "", re.sub(r"[-\s]+", "-", title)).strip()
+        if config.title is not None and filename is None:
+            filename = re.sub(r"[^\w.-]", "", re.sub(r"[-\s]+", "-", config.title)).strip()
             filename += "_multiqc_report"
         if filename is not None:
             if filename.endswith(".html"):
@@ -556,7 +594,7 @@ def run(
     # Print some status updates
     if config.title is not None:
         logger.info("Report title: {}".format(config.title))
-    if dirs:
+    if config.prepend_dirs:
         logger.info("Prepending directory to sample names")
 
     # Prep module configs
@@ -606,7 +644,7 @@ def run(
         logger.info("Only using modules: {}".format(", ".join(config.run_modules)))
     elif modules_from_tags:
         run_modules = [m for m in run_modules if list(m.keys())[0] in modules_from_tags]
-        logger.info("Only using modules with '{}' tag".format(", ".join(module_tag)))
+        logger.info("Only using modules with '{}' tag".format(", ".join(config.module_tag)))
     if len(getattr(config, "exclude_modules", {})) > 0:
         logger.info("Excluding modules '{}'".format("', '".join(config.exclude_modules)))
         if "general_stats" in config.exclude_modules:
@@ -770,7 +808,7 @@ def run(
             console = rich.console.Console(
                 stderr=True,
                 force_terminal=util_functions.force_term_colors(),
-                color_system=None if no_ansi else "auto",
+                color_system=None if config.no_ansi else "auto",
             )
             console.print(
                 rich.panel.Panel(
@@ -964,8 +1002,6 @@ def run(
             else:
                 # Set up the base names of the report and the data dir
                 report_num = 1
-                if config.make_report:
-                    report_base, report_ext = os.path.splitext(config.output_fn_name)
                 dir_base = os.path.basename(config.data_dir)
                 plots_base = os.path.basename(config.plots_dir)
 
@@ -976,6 +1012,7 @@ def run(
                     or (config.export_plots and os.path.exists(config.plots_dir))
                 ):
                     if config.make_report:
+                        report_base, report_ext = os.path.splitext(config.output_fn_name)
                         config.output_fn = os.path.join(
                             config.output_dir, "{}_{}{}".format(report_base, report_num, report_ext)
                         )
@@ -1031,7 +1068,6 @@ def run(
             config.plots_dir = os.path.join(config.output_dir, config.plots_dir_name)
             if os.path.exists(config.plots_dir):
                 if config.force:
-                    deleted_export_plots
                     shutil.rmtree(config.plots_dir)
                 else:
                     logger.error("Output directory {} already exists.".format(config.plots_dir))

@@ -19,6 +19,8 @@ Highlights:
 - Remove position:absolute from table values ([#2169](https://github.com/ewels/MultiQC/pull/2169))
 - Fix custom anchors for kraken ([#2170](https://github.com/ewels/MultiQC/pull/2170))
 - Fix logging spillover ([#2174](https://github.com/ewels/MultiQC/pull/2174))
+- Config with environment variables, and config strict typing ([#2178](https://github.com/ewels/MultiQC/pull/2178))
+- Try find config in `~/.config` or `$XDG_CONFIG_HOME` ([#2183](https://github.com/ewels/MultiQC/pull/2183))
 
 ### New Modules
 
