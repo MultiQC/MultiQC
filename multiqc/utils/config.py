@@ -221,7 +221,7 @@ def mqc_load_userconfig(paths=()):
 
     # Load and parse a config file in $XDG_CONFIG_HOME
     # Ref: https://specifications.freedesktop.org/basedir-spec/basedir-spec-latest.html
-    mqc_load_config(os.path.join(os.environ.get("XDG_CONFIG_HOME", "~/.config"), "multiqc_config.yaml"))
+    mqc_load_config(os.path.join(os.environ.get("XDG_CONFIG_HOME", os.path.expanduser("~/.config")), "multiqc_config.yaml"))
 
     # Load and parse a user config file if we find it
     mqc_load_config(os.path.expanduser("~/.multiqc_config.yaml"))
