@@ -1,5 +1,5 @@
 """ MultiQC modules base class, contains helper functions """
-from typing import List
+from typing import List, Union
 
 import fnmatch
 import io
@@ -323,7 +323,7 @@ class BaseMultiqcModule(object):
             s_name = prefix
         return s_name
 
-    def clean_s_name(self, s_name: str | List[str], f=None, root=None, filename=None, seach_pattern_key=None):
+    def clean_s_name(self, s_name: Union[str, List[str]], f=None, root=None, filename=None, seach_pattern_key=None):
         """
         Helper function to take a long file name(s) and strip back to one clean sample name. Somewhat arbitrary.
         :param s_name: The sample name(s) to clean.
