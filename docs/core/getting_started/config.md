@@ -13,7 +13,7 @@ it collects the configuration settings from the following places in this order
 1. Hardcoded defaults in MultiQC code
 2. System-wide config in `<installation_dir>/multiqc_config.yaml`
    - Manual installations only, not `pip` or `conda`
-3. User config in `$XDG_CONFIG_HOME/multiqc_config.yaml` (or `~/.config/.multiqc_config.yaml` if `$XDG_CONFIG_HOME` is not set)
+3. User config in `$XDG_CONFIG_HOME/multiqc_config.yaml` (or `~/.config/multiqc_config.yaml` if `$XDG_CONFIG_HOME` is not set)
 4. User config in `~/.multiqc_config.yaml`
 5. File path set in environment variable `$MULTIQC_CONFIG_PATH`
    - For example, define this in your `~/.bashrc` file and keep the file anywhere you like
