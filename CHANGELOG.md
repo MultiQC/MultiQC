@@ -42,6 +42,7 @@ If you were using the Sentieon module in your pipelines, make sure to update any
 - Fix column sorting in exported TSV files from a matplotlib linegraph plot ([#2143](https://github.com/ewels/MultiQC/pull/2143))
 - Fix custom anchors for kraken ([#2170](https://github.com/ewels/MultiQC/pull/2170))
 - Fix logging spillover bug ([#2174](https://github.com/ewels/MultiQC/pull/2174))
+- Tweaks to changelog for v1.18 release ([#2185](https://github.com/ewels/MultiQC/pull/2185))
 
 ### New Modules
 
