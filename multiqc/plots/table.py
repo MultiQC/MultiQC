@@ -123,7 +123,7 @@ def make_table(dt: table_object.DataTable):
         )
 
         # Make a colour scale
-        if not header.get("scale"):
+        if header["scale"] is False:
             c_scale = None
         else:
             c_scale = mqc_colour.mqc_colour_scale(
