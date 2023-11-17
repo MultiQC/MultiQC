@@ -442,6 +442,61 @@ Qualimap module: _(as [described in the docs](https://multiqc.info/modules/quali
 multiqc ./datadir --cl-config "qualimap_config: { general_stats_coverage: [20,40,200] }"
 ```
 
+## Configuring through environment variables
+
+Config parameters can be set through environment variables prefixed with `MULTIQC_`.
+For example, setting:
+
+```bash
+export MULTIQC_TITLE="My report"
+export MULTIQC_FILESEARCH_LINES_LIMIT=10
+```
+
+Is equivalent to setting these in YAML:
+
+```yaml
+title: "My report"
+filesearch_lines_limit: 10
+```
+
+:::tip
+Some variables such as `title` can be also directly set through the command line
+options: `--title "My report"`. For a list of all parameters, run `multiqc --help`.
+:::
+
+Note that it is _not_ possible to set nested config parameters through environment
+variables, such as those that expect lists or dicts as values (e.g. `fn_clean_exts`).
+
+It is also supported to interpolate environment variables with config files. For
+example, if you have a config file `multiqc_config.yaml` with the following content:
+
+```yaml
+title: !ENV "${TITLE}"
+report_header_info:
+  - Contact E-mail: !ENV "${NAME:info}@${DOMAIN:example.com}"
+```
+
+And you have the following environment variables set:
+
+```bash
+export TITLE="My report"
+export NAME="John"
+```
+
+You will get the following report header:
+
+```
+*My report*
+Contact E-mail: John@example.com
+```
+
+See that the `$DOMAIN` environment variable was not set, and the default value
+`"example.com"` is used instead.
+
+For more details on environment variable interpolation, refer to the documentation
+of [pyaml_env](https://github.com/mkaranasou/pyaml_env), that is used by MultiQC
+internally to process user YAML files.
+
 ## Optimising run-time
 
 Usually, MultiQC run time is fairly insignificant - in the order of seconds.
