@@ -21,5 +21,3 @@ xengsort classify --index myindex \
   --classification count \
   > sample.txt
 ```
-
-Then the sample name in the report will be `sample`, which is the base name of the file.
