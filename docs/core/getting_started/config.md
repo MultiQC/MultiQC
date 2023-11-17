@@ -442,7 +442,7 @@ Qualimap module: _(as [described in the docs](https://multiqc.info/modules/quali
 multiqc ./datadir --cl-config "qualimap_config: { general_stats_coverage: [20,40,200] }"
 ```
 
-## Configuring through environment variables
+## Config with environment variables
 
 Config parameters can be set through environment variables prefixed with `MULTIQC_`.
 For example, setting:
@@ -466,6 +466,8 @@ options: `--title "My report"`. For a list of all parameters, run `multiqc --hel
 
 Note that it is _not_ possible to set nested config parameters through environment
 variables, such as those that expect lists or dicts as values (e.g. `fn_clean_exts`).
+
+## Referencing environment variables in YAML configs
 
 It is also supported to interpolate environment variables with config files. For
 example, if you have a config file `multiqc_config.yaml` with the following content:
