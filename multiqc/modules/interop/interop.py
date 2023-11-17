@@ -224,13 +224,11 @@ class MultiqcModule(BaseMultiqcModule):
         headers = {
             "Yield": {
                 "rid": "summary_Yield",
-                "title": "{}p Yield".format(config.base_count_prefix),
-                "description": 'The number of bases sequenced ({} base pairs over all "usable cycles"'.format(
-                    config.base_count_desc
-                ),
+                "title": "Gbp Yield",
+                "description": 'The number of bases sequenced (Gbp base pairs over all "usable cycles")',
                 "scale": "PuOr",
-                "shared_key": "base_count",
-                "modify": lambda x: (x * 1000000000.0) * config.base_count_multiplier,  # number is already in gigabases
+                "min": 0,
+                "format": "{:,.2f}",
             },
             "Aligned": {
                 "rid": "summary_Aligned",
@@ -319,16 +317,12 @@ class MultiqcModule(BaseMultiqcModule):
                 "scale": "OrRd",
             },
             "Reads": {
-                "title": "{} Reads".format(config.read_count_prefix),
-                "description": "The number of clusters ({})".format(config.read_count_desc),
-                "shared_key": "read_count",
-                "modify": lambda x: (x * 1000000.0) * config.read_count_multiplier,  # number is already in millions
+                "title": "M Reads",
+                "description": "The number of clusters (millions)",
             },
             "Reads PF": {
-                "title": "{} PF Reads".format(config.read_count_prefix),
-                "description": "The number of passing filter clusters ({})".format(config.read_count_desc),
-                "shared_key": "read_count",
-                "modify": lambda x: (x * 1000000.0) * config.read_count_multiplier,  # number is already in millions
+                "title": "M PF Reads",
+                "description": "The number of passing filter clusters (millions)",
             },
             "Cycles Error": {
                 "title": "Cycles Error",
@@ -337,13 +331,11 @@ class MultiqcModule(BaseMultiqcModule):
                 "scale": "OrRd",
             },
             "Yield": {
-                "title": "{}p Yield".format(config.base_count_prefix),
-                "description": "The number of bases sequenced which passed filter ({} base pairs)".format(
-                    config.base_count_desc
-                ),
+                "title": "Gbp Yield",
+                "description": "The number of bases sequenced which passed filter (Gbp base pairs)",
                 "scale": "PuOr",
-                "shared_key": "base_count",
-                "modify": lambda x: (x * 1000000000.0) * config.base_count_multiplier,  # number is already in gigabases
+                "min": 0,
+                "format": "{:,.2f}",
             },
             "Aligned": {
                 "title": "Aligned (%)",
