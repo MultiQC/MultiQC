@@ -313,7 +313,7 @@ class BaseMultiqcModule(object):
             if cleaned_r1 == cleaned_r2:  # trimmed successfully
                 return cleaned_r1
 
-        # More than 2 names, so can't assume a FASTQ pair. Just trying to keep a common prefix.
+        # Couldn't clean, or more than 2 names. Just trying to keep a common prefix.
         prefix = os.path.commonprefix(clean_names)
         prefix = prefix.rstrip("_.- ")
         # If the prefix is empty, join the names with a dash.
