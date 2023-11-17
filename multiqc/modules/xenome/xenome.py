@@ -182,6 +182,7 @@ class MultiqcModule(BaseMultiqcModule):
                 table_data[sn][f"{cls}_reads_pct"] = val
                 if cls == "human":
                     headers[f"{cls}_reads_pct"] = {
+                        "rid": f"{self.anchor}_{cls}_reads_pct",  # to make the ID unique from xengsort
                         "title": "Human reads",
                         "description": "share of human reads in the sample",
                         "min": 0,
@@ -191,6 +192,7 @@ class MultiqcModule(BaseMultiqcModule):
                     }
                 else:
                     headers[f"{cls}_reads_pct"] = {
+                        "rid": f"{self.anchor}_{cls}_reads_pct",  # to make the ID unique from xengsort
                         "title": f"{cls.capitalize()} reads",
                         "description": f"share of {cls} reads in the sample",
                         "min": 0,
