@@ -86,6 +86,7 @@ class MultiqcModule(BaseMultiqcModule):
             for cls in ["graft", "host", "ambiguous", "both", "neither"]:
                 table_data[sn][f"{cls}_reads_pct"] = data.get(cls)
                 headers[f"{cls}_reads_pct"] = {
+                    "rid": f"{self.anchor}_{cls}_reads_pct",  # to make the ID unique from xenome
                     "title": f"{cls.capitalize()} reads",
                     "description": f"share of {cls} reads in the sample",
                     "min": 0,
@@ -103,6 +104,7 @@ class MultiqcModule(BaseMultiqcModule):
             for cls in ["graft", "host", "ambiguous", "both", "neither"]:
                 table_data[sn][f"{cls}_reads_cnt"] = data.get(cls)
                 detail_headers[f"{cls}_reads_cnt"] = {
+                    "rid": f"{self.anchor}_{cls}_reads_cnt",  # to make the ID unique from xenome
                     "title": f"{cls.capitalize()} reads",
                     "description": f"number of {cls} reads in the sample",
                     "min": 0,
@@ -113,7 +115,7 @@ class MultiqcModule(BaseMultiqcModule):
 
         self.add_section(
             name="Summary table",
-            anchor=f"{self.anchor}-summary-table",
+            anchor=f"{self.anchor}-summary-table-section",
             plot=table.plot(table_data, detail_headers),
         )
 
