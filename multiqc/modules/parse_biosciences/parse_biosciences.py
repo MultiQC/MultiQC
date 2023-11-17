@@ -30,6 +30,10 @@ class MultiqcModule(BaseMultiqcModule):
         if split_pipe_samples == 0:
             raise ModuleNoSamplesFound
 
+        # Superfluous function call to confirm that it is used in this module
+        # Replace None with actual version if it is available
+        self.add_software_version(None)
+
     CSV_HEADERS = {
         "sample_well_count": {
             "title": "Sample wells",
