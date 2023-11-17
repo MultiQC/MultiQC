@@ -165,6 +165,7 @@ class MultiqcModule(BaseMultiqcModule):
             "predicted": {
                 "title": "Strandedness",
                 "description": "Predicted strandedness from ngsderive",
+                "scale": False,
             }
         }
         self.general_stats_addcols(data, headers)
@@ -193,7 +194,11 @@ class MultiqcModule(BaseMultiqcModule):
         # Write data to file
         self.write_data_file(self.instrument, "ngsderive_instrument")
 
-        bgcols = {"low confidence": "#f8d7da", "medium confidence": "#fff3cd", "high confidence": "#d1e7dd"}
+        bgcols = {
+            "low confidence": "#f8d7da",
+            "medium confidence": "#fff3cd",
+            "high confidence": "#d1e7dd",
+        }
         cond_formatting_rules = {
             "pass": [{"s_eq": "high confidence"}],
             "warn": [{"s_eq": "medium confidence"}],
@@ -257,6 +262,7 @@ class MultiqcModule(BaseMultiqcModule):
         config = {
             "id": "ngsderive_instruments_plot",
             "title": "ngsderive: Instruments",
+            "scale": False,
         }
 
         self.add_section(

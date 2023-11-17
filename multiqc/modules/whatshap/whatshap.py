@@ -208,6 +208,7 @@ class MultiqcModule(BaseMultiqcModule):
                 "min": 0,
                 "max": 100,
                 "modify": lambda x: x * 100,
+                "scale": "GnBu",
                 "hidden": False,
             },
             "bp_per_block_avg": {
@@ -219,6 +220,7 @@ class MultiqcModule(BaseMultiqcModule):
                                         block with two variants at positions 2 and 5 has
                                         length 3.""",
                 "format": "{:,.0f}",
+                "scale": "Greens",
                 "hidden": False,
             },
             "block_n50": {
@@ -228,6 +230,7 @@ class MultiqcModule(BaseMultiqcModule):
                                         lengths. Interleaved blocks are cut in order to
                                         avoid artificially inflating this value.""",
                 "format": "{:,.0f}",
+                "scale": "Blues",
                 "hidden": True,
             },
         }

@@ -19,6 +19,7 @@ Highlights:
 - Remove position:absolute from table values ([#2169](https://github.com/ewels/MultiQC/pull/2169))
 - Fix custom anchors for kraken ([#2170](https://github.com/ewels/MultiQC/pull/2170))
 - Fix logging spillover ([#2174](https://github.com/ewels/MultiQC/pull/2174))
+- Unspecified `"scale"` in table headers defaults to `False`([#2176](https://github.com/ewels/MultiQC/pull/2176))
 - Config with environment variables, and config strict typing ([#2178](https://github.com/ewels/MultiQC/pull/2178))
 - Sample name cleaning with pairs of input filenames ([#2181](https://github.com/ewels/MultiQC/pull/2181))
 - Try find config in `~/.config` or `$XDG_CONFIG_HOME` ([#2183](https://github.com/ewels/MultiQC/pull/2183))

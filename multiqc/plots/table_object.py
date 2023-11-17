@@ -158,7 +158,7 @@ class DataTable:
 
                 # Overwrite hidden if set in user config
                 for ns in config.table_columns_visible.keys():
-                    # Make namespace key case insensitive
+                    # Make namespace key case-insensitive
                     if ns.lower() == headers[idx][k]["namespace"].lower():
                         # First - if config value is a bool, set all module columns to that value
                         if isinstance(config.table_columns_visible[ns], bool):
