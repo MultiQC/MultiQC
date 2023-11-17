@@ -175,7 +175,15 @@ class BaseRecalibratorMixin:
             sample_data.append(reported_empirical)
 
             # Build data label configs for this data type
-            data_labels.append({"name": "{} Reported vs. Empirical Quality", "ylab": "Empirical quality score"})
+            data_labels.append(
+                {
+                    "name": rt_type_name.replace("_", "-").capitalize(),
+                    "ylab": "Empirical quality score",
+                }
+            )
+
+        # Making sure the scatter plot is square:
+        max_val = max([max([max(d["x"], d["y"]) for d in sample_data[0][s]]) for s in sample_data[0]])
         plot = scatter.plot(
             sample_data,
             pconfig={
@@ -185,6 +193,11 @@ class BaseRecalibratorMixin:
                 "ylab": "Empirical quality score",
                 "xDecimals": False,
                 "data_labels": data_labels,
+                "xmin": 0,
+                "ymin": 0,
+                "xmax": max_val,
+                "ymax": max_val,
+                "square": True,
             },
         )
 
