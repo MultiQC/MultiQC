@@ -34,7 +34,7 @@ class MultiqcModule(BaseMultiqcModule):
 
         if len(self.trimmomatic) == 0:
             raise ModuleNoSamplesFound
-        log.info("Found {} logs".format(len(self.trimmomatic)))
+        log.info(f"Found {len(self.trimmomatic)} logs")
 
         self.write_data_file(self.trimmomatic, "multiqc_trimmomatic")
 
@@ -64,57 +64,56 @@ class MultiqcModule(BaseMultiqcModule):
             s_name = f["s_name"]
         for line in f["f"]:
             # Get the sample name
-            if s_name is None and "Trimmomatic" in line and "Started with arguments:" in line:
-                # Match everything up until the first .fastq or .fq
-                match = re.search("Trimmomatic[SP]E: Started with arguments:.+?(?=\.fastq|\.fq)", line)
-                if match:
-                    # backtrack from the end to the first space
-                    s_name = match.group().split()[-1]
-                    s_name = self.clean_s_name(s_name, f)
-                    if s_name in self.trimmomatic:
-                        log.debug("Duplicate sample name found! Overwriting: {}".format(s_name))
-                else:
+            if s_name is None and line.startswith(
+                tuple(f"Trimmomatic{x}E: Started with arguments:" for x in ["S", "P"])
+            ):
+                is_pe = line.startswith("TrimmomaticPE")
+                args = line.strip().split()
+                FQ_EXTS = ".fastq", ".fq", ".gz", ".dat"
+                if not any(x.endswith(FQ_EXTS) for x in args):
                     # Try looking on the next line instead, sometimes have a line break (see issue #212)
                     line = next(f["f"])
-                    match = re.search(".+?(?=\.fastq|\.fq)", line)
-                    if match:
-                        # backtrack from the end to the first space
-                        s_name = match.group().split()[-1]
-                        s_name = self.clean_s_name(s_name, f)
-                        if s_name in self.trimmomatic:
-                            log.debug("Duplicate sample name found! Overwriting: {}".format(s_name))
+                    args = line.strip().split()
+                if any(x.endswith(FQ_EXTS) for x in args):
+                    # For PE, first two fastq files are the input paths; for SE, it's just the first one
+                    input_paths = [x for x in args if x.endswith(FQ_EXTS)][: 2 if is_pe else 1]
+                    s_name = self.clean_s_name(input_paths, f)
+                    if s_name in self.trimmomatic:
+                        log.debug(f"Duplicate sample name found! Overwriting: {s_name}")
 
             # Get single end stats
             if "Input Reads" in line and s_name is not None:
                 match = re.search(
-                    "Input Reads: (\d+) Surviving: (\d+) \(([\d\.,]+)%\) Dropped: (\d+) \(([\d\.,]+)%\)", line
+                    r"Input Reads: (\d+) Surviving: (\d+) \(([\d\.,]+)%\) Dropped: (\d+) \(([\d\.,]+)%\)", line
                 )
                 if match:
-                    self.trimmomatic[s_name] = dict()
-                    self.trimmomatic[s_name]["input_reads"] = float(match.group(1))
-                    self.trimmomatic[s_name]["surviving"] = float(match.group(2))
-                    self.trimmomatic[s_name]["surviving_pct"] = float(match.group(3).replace(",", "."))
-                    self.trimmomatic[s_name]["dropped"] = float(match.group(4))
-                    self.trimmomatic[s_name]["dropped_pct"] = float(match.group(5).replace(",", "."))
+                    self.trimmomatic[s_name] = {
+                        "input_reads": float(match.group(1)),
+                        "surviving": float(match.group(2)),
+                        "surviving_pct": float(match.group(3).replace(",", ".")),
+                        "dropped": float(match.group(4)),
+                        "dropped_pct": float(match.group(5).replace(",", ".")),
+                    }
                     s_name = None
 
             # Get paired end stats
             if "Input Read Pairs" in line and s_name is not None:
                 match = re.search(
-                    "Input Read Pairs: (\d+) Both Surviving: (\d+) \(([\d\.,]+)%\) Forward Only Surviving: (\d+) \(([\d\.,]+)%\) Reverse Only Surviving: (\d+) \(([\d\.,]+)%\) Dropped: (\d+) \(([\d\.,]+)%\)",
+                    r"Input Read Pairs: (\d+) Both Surviving: (\d+) \(([\d\.,]+)%\) Forward Only Surviving: (\d+) \(([\d\.,]+)%\) Reverse Only Surviving: (\d+) \(([\d\.,]+)%\) Dropped: (\d+) \(([\d\.,]+)%\)",
                     line,
                 )
                 if match:
-                    self.trimmomatic[s_name] = dict()
-                    self.trimmomatic[s_name]["input_read_pairs"] = float(match.group(1))
-                    self.trimmomatic[s_name]["surviving"] = float(match.group(2))
-                    self.trimmomatic[s_name]["surviving_pct"] = float(match.group(3).replace(",", "."))
-                    self.trimmomatic[s_name]["forward_only_surviving"] = float(match.group(4))
-                    self.trimmomatic[s_name]["forward_only_surviving_pct"] = float(match.group(5).replace(",", "."))
-                    self.trimmomatic[s_name]["reverse_only_surviving"] = float(match.group(6))
-                    self.trimmomatic[s_name]["reverse_only_surviving_pct"] = float(match.group(7).replace(",", "."))
-                    self.trimmomatic[s_name]["dropped"] = float(match.group(8))
-                    self.trimmomatic[s_name]["dropped_pct"] = float(match.group(9).replace(",", "."))
+                    self.trimmomatic[s_name] = {
+                        "input_read_pairs": float(match.group(1)),
+                        "surviving": float(match.group(2)),
+                        "surviving_pct": float(match.group(3).replace(",", ".")),
+                        "forward_only_surviving": float(match.group(4)),
+                        "forward_only_surviving_pct": float(match.group(5).replace(",", ".")),
+                        "reverse_only_surviving": float(match.group(6)),
+                        "reverse_only_surviving_pct": float(match.group(7).replace(",", ".")),
+                        "dropped": float(match.group(8)),
+                        "dropped_pct": float(match.group(9).replace(",", ".")),
+                    }
                     s_name = None
 
     def trimmomatic_barplot(self):
