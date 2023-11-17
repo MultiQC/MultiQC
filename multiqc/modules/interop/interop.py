@@ -386,6 +386,7 @@ class MultiqcModule(BaseMultiqcModule):
             "id": "interop-runmetrics-detail-table",
             "table_title": "Sequencing Lane Statistics",
             "col1_header": "Run - Lane - Read",
+            "scale": False,
         }
 
         tdata = {}
