@@ -17,7 +17,7 @@ it collects the configuration settings from the following places in this order
 1. User config in `~/.multiqc_config.yaml`
 1. File path set in environment variable `$MULTIQC_CONFIG_PATH`
    - For example, define this in your `~/.bashrc` file and keep the file anywhere you like
-1. Environment variables prefixed with `MULTIQC_` (e.g. `$MULTIQC_TITLE`, `$MULTIQC_TEMPLATE`, etc.)
+1. Environment variables prefixed with `MULTIQC_` (e.g. `$MULTIQC_TITLE`, `$MULTIQC_TEMPLATE` - see ["Config with environment variables"](#config-with-environment-variables) below)
 1. Config file in the current working directory: `multiqc_config.yaml`
 1. Config file paths specified in the command with `--config` / `-c`
    - You can specify multiple files like this, they can have any filename.

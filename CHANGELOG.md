@@ -2,27 +2,46 @@
 
 ## MultiQC v1.18dev
 
-Highlights:
+### Highlights
 
-- Picard module refactored and better generalized for other Picard-based software, like Sentieon and Parabricks. Consequently, the standalone Sentieon module was removed. Sentieon QC files will be interpreted directly as Picard QC files. If you were using the Sentieon module in your pipelines, make sure to update any places that reference the module name:
-  - MultiQC command line (e.g. replace `--module sentieon` with `--module picard`).
-  - MultiQC configs (e.g. replace `sentieon` with `picard` in options like `run_modules`, `exclude_modules`, `module_order`).
-  - Downstream code that relies on names of the files in `multiqc_data` or `multiqc_plots` saves (e.g., `multiqc_data/multiqc_sentieon_AlignmentSummaryMetrics.txt` becomes `multiqc_data/multiqc_picard_AlignmentSummaryMetrics.txt`).
-  - Code that parses data files like `multiqc_data/multiqc_data.json`.
-  - Custom plugins and templates that rely on HTML anchors (e.g. `#sentieon_aligned_reads` becomes `#picard_AlignmentSummaryMetrics`).
-  - Also, note that Picard fetches sample names from the commands it finds inside the QC headers (e.g. `# net.sf.picard.analysis.CollectMultipleMetrics INPUT=Szabo_160930_SN583_0215_AC9H20ACXX.bam ...` -> `Szabo_160930_SN583_0215_AC9H20ACXX`), whereas the removed Sentieon module prioritized the QC file names. To revert to the old Sentieon approach, use the [`use_filename_as_sample_name` config flag](https://multiqc.info/docs/getting_started/config/#using-log-filenames-as-sample-names).
+#### Better configs
+
+As of this release, you can now set all of your config variables via environment variables! (see [docs]https://multiqc.info/docs/getting_started/config/#config-with-environment-variables).
+
+Better still, YAML config files can now use string interpolation to parse environment variables within strings (see [docs](https://multiqc.info/docs/getting_started/config/#referencing-environment-variables-in-yaml-configs)), eg:
+
+```yaml
+report_header_info:
+  - Contact E-mail: !ENV "${NAME:info}@${DOMAIN:example.com}"
+```
+
+#### Picard refactoring
+
+In this release, there was a significant refactoring of the Picard module.
+It has been generalized for better code sharing with other Picard-based software, like Sentieon and Parabricks.
+As a result of this, the standalone Sentieon module was removed: Sentieon QC files will be interpreted directly as Picard QC files.
+
+If you were using the Sentieon module in your pipelines, make sure to update any places that reference the module name:
+
+- MultiQC command line (e.g. replace `--module sentieon` with `--module picard`).
+- MultiQC configs (e.g. replace `sentieon` with `picard` in options like `run_modules`, `exclude_modules`, `module_order`).
+- Downstream code that relies on names of the files in `multiqc_data` or `multiqc_plots` saves (e.g., `multiqc_data/multiqc_sentieon_AlignmentSummaryMetrics.txt` becomes `multiqc_data/multiqc_picard_AlignmentSummaryMetrics.txt`).
+- Code that parses data files like `multiqc_data/multiqc_data.json`.
+- Custom plugins and templates that rely on HTML anchors (e.g. `#sentieon_aligned_reads` becomes `#picard_AlignmentSummaryMetrics`).
+- Also, note that Picard fetches sample names from the commands it finds inside the QC headers (e.g. `# net.sf.picard.analysis.CollectMultipleMetrics INPUT=Szabo_160930_SN583_0215_AC9H20ACXX.bam ...` -> `Szabo_160930_SN583_0215_AC9H20ACXX`), whereas the removed Sentieon module prioritized the QC file names. To revert to the old Sentieon approach, use the [`use_filename_as_sample_name` config flag](https://multiqc.info/docs/getting_started/config/#using-log-filenames-as-sample-names).
 
 ### MultiQC updates
 
-- Fix column sorting in exported TSV files from a matplotlib linegraph plot ([#2143](https://github.com/ewels/MultiQC/pull/2143))
-- Software versions: allow any string as a version tag ([#2166](https://github.com/ewels/MultiQC/pull/2166))
-- Remove position:absolute from table values ([#2169](https://github.com/ewels/MultiQC/pull/2169))
-- Fix custom anchors for kraken ([#2170](https://github.com/ewels/MultiQC/pull/2170))
-- Fix logging spillover ([#2174](https://github.com/ewels/MultiQC/pull/2174))
-- Unspecified `"scale"` in table headers defaults to `False`([#2176](https://github.com/ewels/MultiQC/pull/2176))
-- Config with environment variables, and config strict typing ([#2178](https://github.com/ewels/MultiQC/pull/2178))
-- Sample name cleaning with pairs of input filenames ([#2181](https://github.com/ewels/MultiQC/pull/2181))
+- Config can be set with environment variables, including env var interpolation ([#2178](https://github.com/ewels/MultiQC/pull/2178))
 - Try find config in `~/.config` or `$XDG_CONFIG_HOME` ([#2183](https://github.com/ewels/MultiQC/pull/2183))
+- Better sample name cleaning with pairs of input filenames ([#2181](https://github.com/ewels/MultiQC/pull/2181))
+- Software versions: allow any string as a version tag ([#2166](https://github.com/ewels/MultiQC/pull/2166))
+- Table columns with non-numeric values and now trigger a linting error if `scale` is set ([#2176](https://github.com/ewels/MultiQC/pull/2176))
+- Stricter config variable typing ([#2178](https://github.com/ewels/MultiQC/pull/2178))
+- Remove `position:absolute` CSS from table values ([#2169](https://github.com/ewels/MultiQC/pull/2169))
+- Fix column sorting in exported TSV files from a matplotlib linegraph plot ([#2143](https://github.com/ewels/MultiQC/pull/2143))
+- Fix custom anchors for kraken ([#2170](https://github.com/ewels/MultiQC/pull/2170))
+- Fix logging spillover bug ([#2174](https://github.com/ewels/MultiQC/pull/2174))
 
 ### New Modules
 
@@ -36,12 +55,15 @@ Highlights:
 ### Module updates
 
 - **fastp**: add version parsing ([#2159](https://github.com/ewels/MultiQC/pull/2159))
-- **fastp**: correctly parse sample name from --in1/--in2 command. Prefer file name if not `fastp.json`; fallback to file name when error ([#2139](https://github.com/ewels/MultiQC/pull/2139))
-- **Kaiju**: fix "division by zero" ([#2179](https://github.com/ewels/MultiQC/pull/2179))
-- **Nanostat**: account for both tab and spaces in v1.41+ search pattern ([#2155](https://github.com/ewels/MultiQC/pull/2155))
+- **fastp**: correctly parse sample name from `--in1`/`--in2` in bash command. Prefer file name if not `fastp.json`; fallback to file name when error ([#2139](https://github.com/ewels/MultiQC/pull/2139))
+- **Kaiju**: fix `division by zero` error ([#2179](https://github.com/ewels/MultiQC/pull/2179))
+- **Nanostat**: account for both tab and spaces in `v1.41+` search pattern ([#2155](https://github.com/ewels/MultiQC/pull/2155))
 - **Pangolin**: update for v4: add QC Note , update tool versions columns ([#2157](https://github.com/ewels/MultiQC/pull/2157))
 - **Picard**: Generalize to directly support Sentieon and Parabricks outputs ([#2110](https://github.com/ewels/MultiQC/pull/2110))
-- **Sentieon**: Removed the module in favour of directly supporting parsing by the **Picard** module. Note that any code that relies on the module name needs to be updated, e.g. `-m sentieon` will no longer work, the exported plot and data files will be prefixed as `picard` instead of `sentieon`, etc. Note that the Sentieon module used to fetch the sample names from the file names by default, and now it follows the Picard module's logic, and prioritizes the commands recorded in the logs. To override, use the `use_filename_as_sample_name` config flag ([#2110](https://github.com/ewels/MultiQC/pull/2110))
+- **Sentieon**: Removed the module in favour of directly supporting parsing by the **Picard** module ([#2110](https://github.com/ewels/MultiQC/pull/2110))
+  - Note that any code that relies on the module name needs to be updated, e.g. `-m sentieon` will no longer work
+  - The exported plot and data files will be now be prefixed as `picard` instead of `sentieon`, etc.
+  - Note that the Sentieon module used to fetch the sample names from the file names by default, and now it follows the Picard module's logic, and prioritizes the commands recorded in the logs. To override, use the `use_filename_as_sample_name` config flag
 
 ## [MultiQC v1.17](https://github.com/ewels/MultiQC/releases/tag/v1.17) - 2023-10-17
 
