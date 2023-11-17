@@ -405,7 +405,7 @@ class MultiqcModule(BaseMultiqcModule):
         return s.split()[-1]
 
     def bam_runtime_table(self):
-        config = {"id": "qc3C_bam_runtime_table", "namespace": "qc3C", "col1_header": "Sample"}
+        config = {"id": "qc3C_bam_runtime_table", "namespace": "qc3C", "col1_header": "Sample", "scale": False}
 
         headers = {
             "b_run_timestamp": {
@@ -677,7 +677,7 @@ class MultiqcModule(BaseMultiqcModule):
         return linegraph.plot(data, config)
 
     def kmer_runtime_table(self):
-        config = {"id": "qc3C_kmer_runtime_table", "namespace": "qc3C", "col1_header": "Sample"}
+        config = {"id": "qc3C_kmer_runtime_table", "namespace": "qc3C", "col1_header": "Sample", "scale": False}
 
         headers = {
             "k_run_timestamp": {

@@ -262,6 +262,7 @@ class MultiqcModule(BaseMultiqcModule):
         config = {
             "id": "ngsderive_instruments_plot",
             "title": "ngsderive: Instruments",
+            "scale": False,
         }
 
         self.add_section(
