@@ -224,7 +224,7 @@ class MultiqcModule(BaseMultiqcModule):
         headers = {
             "Yield": {
                 "rid": "summary_Yield",
-                "title": "Gbp Yield",
+                "title": "Gbp Yield",  # Numbers are rounded up to Gbp, so no point in using multiplier for smaller numbers as will be all zeroes
                 "description": 'The number of bases sequenced (Gbp base pairs over all "usable cycles")',
                 "scale": "PuOr",
                 "min": 0,
