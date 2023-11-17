@@ -4,6 +4,8 @@
 
 ### MultiQC updates
 
+- Bump version to v1.19dev ([#2187](https://github.com/ewels/MultiQC/pull/2187))
+
 ### New Modules
 
 ### Module updates
