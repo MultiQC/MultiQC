@@ -116,9 +116,12 @@ class MultiqcModule(BaseMultiqcModule):
                 metrics["summary"][data[0]] = {}
                 for idx in range(1, len(data)):
                     try:
-                        metrics["summary"][data[0]][header[idx]] = float(data[idx])
+                        metrics["summary"][data[0]][header[idx]] = int(data[idx])
                     except ValueError:
-                        metrics["summary"][data[0]][header[idx]] = data[idx]
+                        try:
+                            metrics["summary"][data[0]][header[idx]] = float(data[idx])
+                        except ValueError:
+                            metrics["summary"][data[0]][header[idx]] = data[idx]
                 if line.startswith("Total"):
                     section = None
             elif line.startswith("Read") and (section is None or section == "details"):
@@ -146,10 +149,23 @@ class MultiqcModule(BaseMultiqcModule):
                             val = data[idx].split("/")
                             linedata["Phased"] = val[0]
                             linedata["Prephased"] = val[1]
+                        elif header[idx] == "Cycles Error":
+                            vals = data[idx].split(" - ")
+                            linedata[header[idx]] = max(int(v) for v in vals)
                         else:
-                            linedata[header[idx]] = float(data[idx])
+                            try:
+                                linedata[header[idx]] = int(data[idx])
+                            except ValueError:
+                                linedata[header[idx]] = float(data[idx])
                     except ValueError:
-                        linedata[header[idx]] = re.sub(pattern=r"\+/-.*", repl="", string=data[idx])
+                        val = re.sub(pattern=r"\+/-.*", repl="", string=data[idx]).strip()
+                        try:
+                            linedata[header[idx]] = int(val)
+                        except ValueError:
+                            try:
+                                linedata[header[idx]] = float(val)
+                            except ValueError:
+                                linedata[header[idx]] = val
                 metrics["details"]["Lane {} - {}".format(data[0], read)] = linedata
 
         return metrics, version
@@ -237,6 +253,9 @@ class MultiqcModule(BaseMultiqcModule):
                 "rid": "summary_Intensity_C1",
                 "title": "Intensity Cycle 1",
                 "description": "The intensity statistic at cycle 1.",
+                "min": 0,
+                "scale": "PuOr",
+                "format": "{:,d}",
             },
             "%>=Q30": {
                 "rid": "summary_Q30",
@@ -315,6 +334,7 @@ class MultiqcModule(BaseMultiqcModule):
                 "title": "Cycles Error",
                 "description": "The number of cycles that have been error-rated using PhiX, starting at cycle 1.",
                 "format": "{:.,0f}",
+                "scale": "OrRd",
             },
             "Yield": {
                 "title": "{}p Yield".format(config.base_count_prefix),
@@ -371,6 +391,9 @@ class MultiqcModule(BaseMultiqcModule):
             "Intensity C1": {
                 "title": "Intensity Cycle 1",
                 "description": "The intensity statistic at cycle 1.",
+                "min": 0,
+                "scale": "PuOr",
+                "format": "{:,d}",
             },
             "%>=Q30": {
                 "title": "%>=Q30",
@@ -400,6 +423,7 @@ class MultiqcModule(BaseMultiqcModule):
     def index_metrics_summary_table(data):
         headers = {
             "Total Reads": {
+                "rid": "interop_reads_total",
                 "title": "{} Reads".format(config.read_count_prefix),
                 "description": "The total number of reads for this lane ({})".format(config.read_count_desc),
                 "modify": lambda x: float(x) * config.read_count_multiplier,
