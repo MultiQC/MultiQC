@@ -6,7 +6,7 @@
 
 #### Better configs
 
-As of this release, you can now set all of your config variables via environment variables! (see [docs]https://multiqc.info/docs/getting_started/config/#config-with-environment-variables).
+As of this release, you can now set all of your config variables via environment variables! (see [docs](https://multiqc.info/docs/getting_started/config/#config-with-environment-variables).
 
 Better still, YAML config files can now use string interpolation to parse environment variables within strings (see [docs](https://multiqc.info/docs/getting_started/config/#referencing-environment-variables-in-yaml-configs)), eg:
 
