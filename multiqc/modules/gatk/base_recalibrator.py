@@ -175,12 +175,7 @@ class BaseRecalibratorMixin:
             sample_data.append(reported_empirical)
 
             # Build data label configs for this data type
-            data_labels.append(
-                {
-                    "name": rt_type_name.replace("_", "-").capitalize(),
-                    "ylab": "Empirical quality score",
-                }
-            )
+            data_labels.append({"name": "{} Reported vs. Empirical Quality", "ylab": "Empirical quality score"})
 
         plot = scatter.plot(
             sample_data,
