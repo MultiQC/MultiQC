@@ -981,6 +981,7 @@ function plot_scatter_plot(target, ds) {
         allowDecimals: config["xDecimals"],
         plotBands: config["xPlotBands"],
         plotLines: config["xPlotLines"],
+        endOnTick: config["endOnTick"],
       },
       yAxis: {
         title: {
@@ -995,6 +996,7 @@ function plot_scatter_plot(target, ds) {
         allowDecimals: config["yDecimals"],
         plotBands: config["yPlotBands"],
         plotLines: config["yPlotLines"],
+        endOnTick: config["endOnTick"],
       },
       plotOptions: {
         series: {

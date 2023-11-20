@@ -182,8 +182,6 @@ class BaseRecalibratorMixin:
                 }
             )
 
-        # Making sure the scatter plot is square:
-        max_val = max([max([max(d["x"], d["y"]) for d in sample_data[0][s]]) for s in sample_data[0]])
         plot = scatter.plot(
             sample_data,
             pconfig={
@@ -195,8 +193,6 @@ class BaseRecalibratorMixin:
                 "data_labels": data_labels,
                 "xmin": 0,
                 "ymin": 0,
-                "xmax": max_val,
-                "ymax": max_val,
                 "square": True,
             },
         )
