@@ -156,6 +156,19 @@ class DataTable:
                     for cpc_k, cpc_v in config.custom_plot_config[pconfig["id"]].items():
                         headers[idx][k][cpc_k] = cpc_v
 
+                # Overwrite "name" if set in user config
+                # Key can be a column ID, a table ID, or a namespace in the general stats table.
+                for key in config.table_columns_name.keys():
+                    # Case-insensitive check if the outer key is a table ID or a namespace.
+                    if key.lower() == pconfig["id"].lower() or key.lower() == headers[idx][k]["namespace"].lower():
+                        # Assume a dict of specific column IDs
+                        headers[idx][k]["title"] = config.table_columns_name[key][k]
+
+                    # Case-insensitive check if the outer key is a column ID
+                    elif key.lower() == k.lower() or key.lower() == headers[idx][k]["title"].lower():
+                        if isinstance(config.table_columns_visible[key], bool):
+                            headers[idx][k]["title"] = config.table_columns_visible[key]
+
                 # Overwrite "hidden" if set in user config
                 # Key can be a column ID, a table ID, or a namespace in the general stats table.
                 for key in config.table_columns_visible.keys():
@@ -167,28 +180,17 @@ class DataTable:
                             headers[idx][k]["hidden"] = not config.table_columns_visible[key]
 
                         # Not a bool, assume a dict of specific column IDs
-                        elif k in config.table_columns_visible[key]:
-                            # Config has True = visible, False = Hidden. Here we're setting "hidden" which is inverse
-                            headers[idx][k]["hidden"] = not config.table_columns_visible[key][k]
+                        else:
+                            for col_key, visible in config.table_columns_visible[key].items():
+                                if col_key.lower() == k.lower() or col_key.lower() == headers[idx][k]["title"].lower():
+                                    # Config has True = visible, False = Hidden. Here we're setting "hidden" which is inverse
+                                    headers[idx][k]["hidden"] = not visible
 
                     # Case-insensitive check if the outer key is a column ID
-                    elif key.lower() == k.lower():
+                    elif key.lower() == k.lower() or key.lower() == headers[idx][k]["title"].lower():
                         if isinstance(config.table_columns_visible[key], bool):
                             # Config has True = visible, False = Hidden. Here we're setting "hidden" which is inverse
                             headers[idx][k]["hidden"] = not config.table_columns_visible[key]
-
-                # Overwrite "name" if set in user config
-                # Key can be a column ID, a table ID, or a namespace in the general stats table.
-                for key in config.table_columns_name.keys():
-                    # Case-insensitive check if the outer key is a table ID or a namespace.
-                    if key.lower() == pconfig["id"].lower() or key.lower() == headers[idx][k]["namespace"].lower():
-                        # Assume a dict of specific column IDs
-                        headers[idx][k]["title"] = config.table_columns_name[key][k]
-
-                    # Case-insensitive check if the outer key is a column ID
-                    elif key.lower() == k.lower():
-                        if isinstance(config.table_columns_visible[key], bool):
-                            headers[idx][k]["title"] = config.table_columns_visible[key]
 
                 # Also overwrite placement if set in config
                 try:
