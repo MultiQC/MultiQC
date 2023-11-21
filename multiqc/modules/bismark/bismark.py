@@ -1,15 +1,12 @@
-#!/usr/bin/env python
-
 """ MultiQC module to parse output from Bismark """
 
-from __future__ import print_function
-from collections import OrderedDict
+
 import logging
 import re
 
 from multiqc import config
-from multiqc.plots import beeswarm, linegraph, bargraph
-from multiqc.modules.base_module import BaseMultiqcModule
+from multiqc.modules.base_module import BaseMultiqcModule, ModuleNoSamplesFound
+from multiqc.plots import bargraph, beeswarm, linegraph
 
 # Initialise the logger
 log = logging.getLogger(__name__)
@@ -37,6 +34,7 @@ regexes = {
         "strand_ctob": r"GA(?:\/CT)?\/GA:\s+(\d+)\s+\(complementary to \(converted\) bottom strand\)",
         "strand_ob": r"CT(?:\/GA)?\/GA:\s+(\d+)\s+\(\(converted\) bottom strand\)",
         "strand_directional": r"Option '--(directional)' specified \(default mode\): alignments to complementary strands \(CTOT, CTOB\) were ignored \(i.e. not performed\)",
+        "version": r"Bismark report for: .+ \(version: v([\d\.]+)\)",
     },
     "dedup": {
         "aligned_reads": r"Total number of alignments analysed in .+:\s+(\d+)",
@@ -56,13 +54,13 @@ regexes = {
         "percent_cpg_meth": r"C methylated in CpG context:\s+([\d\.]+)%",
         "percent_chg_meth": r"C methylated in CHG context:\s+([\d\.]+)%",
         "percent_chh_meth": r"C methylated in CHH context:\s+([\d\.]+)%",
+        "version": r"Bismark Extractor Version: v([\d\.]+)",
     },
 }
 
 
 class MultiqcModule(BaseMultiqcModule):
     def __init__(self):
-
         # Initialise the parent object
         super(MultiqcModule, self).__init__(
             name="Bismark",
@@ -83,6 +81,9 @@ class MultiqcModule(BaseMultiqcModule):
         for f in self.find_log_files("bismark/align"):
             parsed_data = self.parse_bismark_report(f["f"], regexes["alignment"])
             if parsed_data is not None:
+                if "version" in parsed_data:
+                    self.add_software_version(parsed_data["version"], f["s_name"])
+
                 # Calculate percent_aligned - doubles as a good check that stuff has worked
                 try:
                     parsed_data["percent_aligned"] = (parsed_data["aligned_reads"] / parsed_data["total_reads"]) * 100
@@ -110,6 +111,10 @@ class MultiqcModule(BaseMultiqcModule):
             if parsed_data is not None:
                 if s_name in self.bismark_data["methextract"]:
                     log.debug("Duplicate methylation extraction sample log found! Overwriting: {}".format(s_name))
+
+                if "version" in parsed_data:
+                    self.add_software_version(parsed_data["version"], s_name)
+
                 self.add_data_source(f, s_name, section="methylation_extraction")
                 self.bismark_data["methextract"][s_name] = parsed_data
 
@@ -137,7 +142,7 @@ class MultiqcModule(BaseMultiqcModule):
         num_parsed += len(self.bismark_mbias_data["meth"]["CpG_R1"])
         num_parsed += len(self.bismark_data["bam2nuc"])
         if num_parsed == 0:
-            raise UserWarning
+            raise ModuleNoSamplesFound
 
         # Basic Stats Table
         self.bismark_stats_table()
@@ -198,22 +203,22 @@ class MultiqcModule(BaseMultiqcModule):
         self.bismark_mbias_data["cov"]["CHG_R2"][s] = {}
         self.bismark_mbias_data["cov"]["CHH_R2"][s] = {}
         key = None
-        for l in f["f"]:
-            if "context" in l:
-                if "CpG" in l:
+        for line in f["f"]:
+            if "context" in line:
+                if "CpG" in line:
                     key = "CpG"
-                elif "CHG" in l:
+                elif "CHG" in line:
                     key = "CHG"
-                elif "CHH" in l:
+                elif "CHH" in line:
                     key = "CHH"
-                if "(R1)" in l:
+                if "(R1)" in line:
                     key += "_R1"
-                elif "(R2)" in l:
+                elif "(R2)" in line:
                     key += "_R2"
                 else:
                     key += "_R1"
             if key is not None:
-                sections = l.split()
+                sections = line.split()
                 try:
                     pos = int(sections[0])
                     self.bismark_mbias_data["meth"][key][s][pos] = float(sections[3])
@@ -221,7 +226,7 @@ class MultiqcModule(BaseMultiqcModule):
                 except (IndexError, ValueError):
                     continue
 
-        # Remove empty dicts (eg. R2 for SE data)
+        # Remove empty dicts (e.g. R2 for SE data)
         for t in self.bismark_mbias_data:
             for k in self.bismark_mbias_data[t]:
                 self.bismark_mbias_data[t][k] = {
@@ -238,15 +243,16 @@ class MultiqcModule(BaseMultiqcModule):
         self.bismark_data["bam2nuc"][f["s_name"]] = dict()
 
         headers = None
-        for l in f["f"]:
-            sections = l.rstrip().split("\t")
+        for line in f["f"]:
+            sections = line.rstrip().split("\t")
             if headers is None:
                 headers = sections
             else:
+                k = None
                 for i, h in enumerate(headers):
                     if i == 0:
                         k = sections[0]
-                    else:
+                    elif k is not None:
                         key = "{}_{}".format(k, h.lower().replace(" ", "_"))
                         self.bismark_data["bam2nuc"][f["s_name"]][key] = sections[i]
 
@@ -255,10 +261,10 @@ class MultiqcModule(BaseMultiqcModule):
         basic stats table at the top of the report"""
 
         headers = {
-            "alignment": OrderedDict(),
-            "dedup": OrderedDict(),
-            "methextract": OrderedDict(),
-            "bam2nuc": OrderedDict(),
+            "alignment": dict(),
+            "dedup": dict(),
+            "methextract": dict(),
+            "bam2nuc": dict(),
         }
         headers["methextract"]["percent_cpg_meth"] = {
             "title": "% mCpG",
@@ -343,11 +349,12 @@ class MultiqcModule(BaseMultiqcModule):
         """Make the alignment plot"""
 
         # Specify the order of the different possible categories
-        keys = OrderedDict()
-        keys["aligned_reads"] = {"color": "#2f7ed8", "name": "Aligned Uniquely"}
-        keys["ambig_reads"] = {"color": "#492970", "name": "Aligned Ambiguously"}
-        keys["no_alignments"] = {"color": "#0d233a", "name": "Did Not Align"}
-        keys["discarded_reads"] = {"color": "#f28f43", "name": "No Genomic Sequence"}
+        keys = {
+            "aligned_reads": {"color": "#2f7ed8", "name": "Aligned Uniquely"},
+            "ambig_reads": {"color": "#492970", "name": "Aligned Ambiguously"},
+            "no_alignments": {"color": "#0d233a", "name": "Did Not Align"},
+            "discarded_reads": {"color": "#f28f43", "name": "No Genomic Sequence"},
+        }
 
         # Config for the plot
         config = {
@@ -367,11 +374,12 @@ class MultiqcModule(BaseMultiqcModule):
         """Make the strand alignment plot"""
 
         # Specify the order of the different possible categories
-        keys = OrderedDict()
-        keys["strand_ob"] = {"name": "Original bottom strand"}
-        keys["strand_ctob"] = {"name": "Complementary to original bottom strand"}
-        keys["strand_ctot"] = {"name": "Complementary to original top strand"}
-        keys["strand_ot"] = {"name": "Original top strand"}
+        keys = {
+            "strand_ob": {"name": "Original bottom strand"},
+            "strand_ctob": {"name": "Complementary to original bottom strand"},
+            "strand_ctot": {"name": "Complementary to original top strand"},
+            "strand_ot": {"name": "Original top strand"},
+        }
 
         # See if we have any directional samples
         directional = 0
@@ -408,9 +416,10 @@ class MultiqcModule(BaseMultiqcModule):
         """Make the deduplication plot"""
 
         # Specify the order of the different possible categories
-        keys = OrderedDict()
-        keys["dedup_reads"] = {"name": "Deduplicated reads (remaining)"}
-        keys["dup_reads"] = {"name": "Duplicate reads (removed)"}
+        keys = {
+            "dedup_reads": {"name": "Deduplicated reads (remaining)"},
+            "dup_reads": {"name": "Duplicate reads (removed)"},
+        }
 
         # Config for the plot
         config = {
@@ -431,11 +440,12 @@ class MultiqcModule(BaseMultiqcModule):
         """Make the methylation plot"""
 
         # Config for the plot
-        keys = OrderedDict()
         defaults = {"max": 100, "min": 0, "suffix": "%", "decimalPlaces": 1}
-        keys["percent_cpg_meth"] = dict(defaults, **{"title": "Methylated CpG"})
-        keys["percent_chg_meth"] = dict(defaults, **{"title": "Methylated CHG"})
-        keys["percent_chh_meth"] = dict(defaults, **{"title": "Methylated CHH"})
+        keys = {
+            "percent_cpg_meth": dict(defaults, **{"title": "Methylated CpG"}),
+            "percent_chg_meth": dict(defaults, **{"title": "Methylated CHG"}),
+            "percent_chh_meth": dict(defaults, **{"title": "Methylated CHH"}),
+        }
 
         self.add_section(
             name="Cytosine Methylation",

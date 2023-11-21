@@ -1,14 +1,11 @@
-#!/usr/bin/env python
-
 """ MultiQC module to parse output from DamageProfiler """
 
-from __future__ import print_function
-from collections import OrderedDict
-import logging
-import json
 
+import json
+import logging
+
+from multiqc.modules.base_module import BaseMultiqcModule, ModuleNoSamplesFound
 from multiqc.plots import linegraph
-from multiqc.modules.base_module import BaseMultiqcModule
 
 # Initialise the logger
 log = logging.getLogger(__name__)
@@ -30,7 +27,6 @@ class MultiqcModule(BaseMultiqcModule):
         )
 
         # Init empty dictionaries
-
         self.threepGtoAfreq_data = dict()
         self.fivepCtoTfreq_data = dict()
         self.lgdist_fw_data = dict()
@@ -49,7 +45,7 @@ class MultiqcModule(BaseMultiqcModule):
         self.summary_metrics_data = self.ignore_samples(self.summary_metrics_data)
 
         if len(self.summary_metrics_data) == 0:
-            raise UserWarning
+            raise ModuleNoSamplesFound
 
         # Write parsed report data to a file
         self.write_data_file(self.summary_metrics_data, "multiqc_damageprofiler_metrics")
@@ -57,7 +53,7 @@ class MultiqcModule(BaseMultiqcModule):
         # Basic Stats Table, use generic function to add data to general table
         self.dmgprof_misinc_stats(self.threepGtoAfreq_data, "3 Prime", "G>A")
         self.dmgprof_misinc_stats(self.fivepCtoTfreq_data, "5 Prime", "C>T")
-        self.addSummaryMetrics(self.summary_metrics_data)
+        self.add_summary_metrics(self.summary_metrics_data)
 
         # Add plots
         if len(self.threepGtoAfreq_data) > 0:
@@ -110,6 +106,10 @@ class MultiqcModule(BaseMultiqcModule):
         s_name = self.clean_s_name(parsed_json["metadata"]["sample_name"], f)
         self.add_data_source(f, s_name)
 
+        # Add version info
+        version = parsed_json["metadata"]["version"]
+        self.add_software_version(version, s_name)
+
         # Add 3' G to A data
         self.threepGtoAfreq_data[s_name] = parsed_json["dmg_3p"]
 
@@ -131,32 +131,32 @@ class MultiqcModule(BaseMultiqcModule):
         """Take the parsed stats from the DamageProfiler and add it to the
         basic stats table at the top of the report"""
 
-        headers = OrderedDict()
-        headers["{}1".format(readend)] = {
-            "id": "misinc-stats-1st-{}-{}".format(readend, substitution),
-            "title": "{} {} 1st base".format(readend, substitution),
-            "description": "{} 1st base substitution frequency for {}".format(readend, substitution),
-            "max": 100,
-            "min": 0,
-            "suffix": "%",
-            "scale": "YlGnBu",
-            "modify": lambda x: x * 100.0,
-        }
-        headers["{}2".format(readend)] = {
-            "id": "misinc-stats-2nd-{}-{}".format(readend, substitution),
-            "title": "{} {} 2nd base".format(readend, substitution),
-            "description": "{} 2nd base substitution frequency for {}".format(readend, substitution),
-            "max": 100,
-            "min": 0,
-            "suffix": "%",
-            "scale": "BuGn",
-            "hidden": True,
-            "modify": lambda x: x * 100.0,
+        headers = {
+            "{}1".format(readend): {
+                "id": "misinc-stats-1st-{}-{}".format(readend, substitution),
+                "title": "{} {} 1st base".format(readend, substitution),
+                "description": "{} 1st base substitution frequency for {}".format(readend, substitution),
+                "max": 100,
+                "min": 0,
+                "suffix": "%",
+                "scale": "YlGnBu",
+                "modify": lambda x: x * 100.0,
+            },
+            "{}2".format(readend): {
+                "id": "misinc-stats-2nd-{}-{}".format(readend, substitution),
+                "title": "{} {} 2nd base".format(readend, substitution),
+                "description": "{} 2nd base substitution frequency for {}".format(readend, substitution),
+                "max": 100,
+                "min": 0,
+                "suffix": "%",
+                "scale": "BuGn",
+                "hidden": True,
+                "modify": lambda x: x * 100.0,
+            },
         }
 
         # Create new small subset dictionary for entries (we need just the first two data (k,v) pairs from each report)
         # Only the first two parts are informative from both 3' and 5' ends of reads (1st, 2nd base damage pattern)
-        data = OrderedDict()
         dict_to_add = dict()
 
         for key in dict_to_plot.keys():
@@ -170,38 +170,37 @@ class MultiqcModule(BaseMultiqcModule):
 
         self.general_stats_addcols(dict_to_add, headers)
 
-    def addSummaryMetrics(self, dict_to_plot):
+    def add_summary_metrics(self, dict_to_plot):
         """Take the parsed stats from the DamageProfiler and add it to the
         basic stats table at the top of the report"""
 
-        headers = OrderedDict()
-
-        headers["std"] = {
-            "title": "Read length std. dev.",
-            "description": "Read length std. dev.",
-            "suffix": "bp",
-            "scale": "PuBu",
-            "format": "{:,.2f}",
-            "shared_key": "read_length",
-            "hidden": True,
-        }
-
-        headers["median"] = {
-            "title": "Median read length",
-            "description": "Median read length",
-            "suffix": "bp",
-            "scale": "YlGnBu",
-            "format": "{:,.2f}",
-            "shared_key": "read_length",
-        }
-        headers["mean_readlength"] = {
-            "title": "Mean read length",
-            "description": "Mean read length",
-            "suffix": "bp",
-            "scale": "PuBuGn",
-            "format": "{:,.2f}",
-            "shared_key": "read_length",
-            "hidden": True,
+        headers = {
+            "std": {
+                "title": "Read length std. dev.",
+                "description": "Read length std. dev.",
+                "suffix": "bp",
+                "scale": "PuBu",
+                "format": "{:,.2f}",
+                "shared_key": "read_length",
+                "hidden": True,
+            },
+            "median": {
+                "title": "Median read length",
+                "description": "Median read length",
+                "suffix": "bp",
+                "scale": "YlGnBu",
+                "format": "{:,.2f}",
+                "shared_key": "read_length",
+            },
+            "mean_readlength": {
+                "title": "Mean read length",
+                "description": "Mean read length",
+                "suffix": "bp",
+                "scale": "PuBuGn",
+                "format": "{:,.2f}",
+                "shared_key": "read_length",
+                "hidden": True,
+            },
         }
 
         self.general_stats_addcols(dict_to_plot, headers)
@@ -238,7 +237,6 @@ class MultiqcModule(BaseMultiqcModule):
     def threeprime_plot(self):
         """Generate a 3' G>A linegraph plot"""
 
-        data = dict()
         dict_to_add = dict()
         # Create tuples out of entries
         for key in self.threepGtoAfreq_data:
@@ -266,7 +264,6 @@ class MultiqcModule(BaseMultiqcModule):
     def fiveprime_plot(self):
         """Generate a 5' C>T linegraph plot"""
 
-        data = dict()
         dict_to_add = dict()
         # Create tuples out of entries
         for key in self.fivepCtoTfreq_data:

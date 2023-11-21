@@ -1,10 +1,10 @@
-#!/usr/bin/env python
-
 """ MultiQC module to parse output from vcftools """
 
-from __future__ import print_function
+
 import logging
-from multiqc.modules.base_module import BaseMultiqcModule
+
+from multiqc.modules.base_module import BaseMultiqcModule, ModuleNoSamplesFound
+
 from .relatedness2 import Relatedness2Mixin
 from .tstv_by_count import TsTvByCountMixin
 from .tstv_by_qual import TsTvByQualMixin
@@ -40,4 +40,4 @@ class MultiqcModule(BaseMultiqcModule, Relatedness2Mixin, TsTvByCountMixin, TsTv
             log.info("Found {} TsTv.summary reports".format(n["tstv_summary"]))
 
         if sum(n.values()) == 0:
-            raise UserWarning
+            raise ModuleNoSamplesFound

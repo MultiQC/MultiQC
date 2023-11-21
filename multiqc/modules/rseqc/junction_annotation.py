@@ -1,9 +1,6 @@
-#!/usr/bin/env python
-
 """ MultiQC submodule to parse output from RSeQC junction_annotation.py
 http://rseqc.sourceforge.net/#junction-annotation-py """
 
-from collections import OrderedDict
 import logging
 import re
 
@@ -64,36 +61,45 @@ def parse_reports(self):
     # Filter to strip out ignored sample names
     self.junction_annotation_data = self.ignore_samples(self.junction_annotation_data)
 
-    if len(self.junction_annotation_data) > 0:
+    if len(self.junction_annotation_data) == 0:
+        return 0
 
-        # Write to file
-        self.write_data_file(self.junction_annotation_data, "multiqc_rseqc_junction_annotation")
+    # Write to file
+    self.write_data_file(self.junction_annotation_data, "multiqc_rseqc_junction_annotation")
 
-        # Plot junction annotations
-        keys = [OrderedDict(), OrderedDict()]
-        keys[0]["known_splicing_junctions"] = {"name": "Known Splicing Junctions"}
-        keys[0]["partial_novel_splicing_junctions"] = {"name": "Partial Novel Splicing Junctions"}
-        keys[0]["novel_splicing_junctions"] = {"name": "Novel Splicing Junctions"}
-        keys[1]["known_splicing_events"] = {"name": "Known Splicing Events"}
-        keys[1]["partial_novel_splicing_events"] = {"name": "Partial Novel Splicing Events"}
-        keys[1]["novel_splicing_events"] = {"name": "Novel Splicing Events"}
+    # Superfluous function call to confirm that it is used in this module
+    # Replace None with actual version if it is available
+    self.add_software_version(None)
 
-        pconfig = {
-            "id": "rseqc_junction_annotation_junctions_plot",
-            "title": "RSeQC: Splicing Junctions",
-            "ylab": "% Junctions",
-            "cpswitch_c_active": False,
-            "data_labels": ["Junctions", "Events"],
-        }
-        self.add_section(
-            name="Junction Annotation",
-            anchor="rseqc_junction_annotation",
-            description='<a href="http://rseqc.sourceforge.net/#junction-annotation-py" target="_blank">Junction annotation</a>'
-            " compares detected splice junctions to"
-            " a reference gene model. An RNA read can be spliced 2"
-            " or more times, each time is called a splicing event.",
-            plot=bargraph.plot([self.junction_annotation_data, self.junction_annotation_data], keys, pconfig),
-        )
+    # Plot junction annotations
+    keys = [
+        {
+            "known_splicing_junctions": {"name": "Known Splicing Junctions"},
+            "partial_novel_splicing_junctions": {"name": "Partial Novel Splicing Junctions"},
+            "novel_splicing_junctions": {"name": "Novel Splicing Junctions"},
+        },
+        {
+            "known_splicing_events": {"name": "Known Splicing Events"},
+            "partial_novel_splicing_events": {"name": "Partial Novel Splicing Events"},
+            "novel_splicing_events": {"name": "Novel Splicing Events"},
+        },
+    ]
+    pconfig = {
+        "id": "rseqc_junction_annotation_junctions_plot",
+        "title": "RSeQC: Splicing Junctions",
+        "ylab": "% Junctions",
+        "cpswitch_c_active": False,
+        "data_labels": ["Junctions", "Events"],
+    }
+    self.add_section(
+        name="Junction Annotation",
+        anchor="rseqc_junction_annotation",
+        description='<a href="http://rseqc.sourceforge.net/#junction-annotation-py" target="_blank">Junction annotation</a>'
+        " compares detected splice junctions to"
+        " a reference gene model. An RNA read can be spliced 2"
+        " or more times, each time is called a splicing event.",
+        plot=bargraph.plot([self.junction_annotation_data, self.junction_annotation_data], keys, pconfig),
+    )
 
     # Return number of samples found
     return len(self.junction_annotation_data)

@@ -1,7 +1,7 @@
 ---
-Name: SeqyClean
-URL: https://github.com/ibest/seqyclean
-Description: >
+name: SeqyClean
+url: https://github.com/ibest/seqyclean
+description: >
   SeqyClean is a comprehensive preprocessing software application for NGS reads.
 ---
 

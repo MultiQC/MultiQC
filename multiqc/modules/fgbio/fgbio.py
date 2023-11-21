@@ -1,12 +1,10 @@
 """ MultiQC module to parse output from fgbio """
 import logging
-from collections import OrderedDict
 
-from multiqc.modules.base_module import BaseMultiqcModule
+from multiqc.modules.base_module import BaseMultiqcModule, ModuleNoSamplesFound
 
-from .groupreadsbyumi import GroupReadsByUmiMixin
 from . import ErrorRateByReadPosition
-
+from .groupreadsbyumi import GroupReadsByUmiMixin
 
 # Initialise the logger
 log = logging.getLogger(__name__)
@@ -30,7 +28,7 @@ class MultiqcModule(BaseMultiqcModule, GroupReadsByUmiMixin):
         )
 
         # Set up class objects to hold parsed data
-        self.general_stats_headers = OrderedDict()
+        self.general_stats_headers = dict()
         self.general_stats_data = dict()
 
         # GroupReadsByUmi
@@ -46,7 +44,7 @@ class MultiqcModule(BaseMultiqcModule, GroupReadsByUmiMixin):
 
         # Exit if we didn't find anything
         if sum(n.values()) == 0:
-            raise UserWarning
+            raise ModuleNoSamplesFound
 
         # Add to the General Stats table (has to be called once per MultiQC module)
         self.general_stats_addcols(self.general_stats_data, self.general_stats_headers)

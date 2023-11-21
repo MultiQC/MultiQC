@@ -1,5 +1,3 @@
-#!/usr/bin/env python
-
 """ MultiQC submodule to parse output from deepTools plotCorrelation """
 
 import logging
@@ -22,6 +20,10 @@ class plotCorrelationMixin:
                 self.deeptools_plotCorrelationData[k] = v
             if len(parsed_data) > 0:
                 self.add_data_source(f, section="plotCorrelation")
+
+            # Superfluous function call to confirm that it is used in this module
+            # Replace None with actual version if it is available
+            self.add_software_version(None, f["s_name"])
 
         self.deeptools_plotCorrelationData = self.ignore_samples(self.deeptools_plotCorrelationData)
 

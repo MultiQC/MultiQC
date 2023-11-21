@@ -2,16 +2,18 @@
 
 """ MultiQC code to export data to MegaQC / flat JSON files """
 
-from __future__ import print_function
+
 import gzip
 import io
 import json
 import os
+
 import requests
 
-from multiqc import config
+from . import config
 
 log = config.logger
+
 
 # Custom encoder to handle lambda functions
 class MQCJSONEncoder(json.JSONEncoder):
@@ -19,7 +21,7 @@ class MQCJSONEncoder(json.JSONEncoder):
         if callable(obj):
             try:
                 return obj(1)
-            except:
+            except Exception:
                 return None
         return json.JSONEncoder.default(self, obj)
 
@@ -52,12 +54,14 @@ def multiqc_dump_json(report):
     for s in export_vars:
         for k in export_vars[s]:
             try:
+                d = None
                 if s == "config":
                     d = {"{}_{}".format(s, k): getattr(config, k)}
                 elif s == "report":
                     d = {"{}_{}".format(s, k): getattr(report, k)}
-                json.dumps(d, cls=MQCJSONEncoder, ensure_ascii=False)  # Test that exporting to JSON works
-                exported_data.update(d)
+                if d:
+                    json.dumps(d, cls=MQCJSONEncoder, ensure_ascii=False)  # Test that exporting to JSON works
+                    exported_data.update(d)
             except (TypeError, KeyError, AttributeError):
                 log.warning("Couldn't export data key '{}.{}'".format(s, k))
         # Get the absolute paths of analysis directories
@@ -65,7 +69,7 @@ def multiqc_dump_json(report):
         for d in exported_data.get("config_analysis_dir", []):
             try:
                 exported_data["config_analysis_dir_abs"].append(os.path.abspath(d))
-            except:
+            except Exception:
                 pass
     return exported_data
 
@@ -97,7 +101,7 @@ def multiqc_api_post(exported_data):
     else:
         try:
             api_r = json.loads(r.text)
-        except Exception as e:
+        except Exception:
             log.error("Error: JSON response could not be parsed (status code: {})".format(r.status_code))
             return None
         if r.status_code == 200:

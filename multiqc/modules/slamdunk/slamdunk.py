@@ -1,18 +1,17 @@
-#!/usr/bin/env python
-
 """ MultiQC module to parse output from Slamdunk """
 
-from __future__ import print_function
+
 import logging
 import re
-from collections import OrderedDict
 
 from multiqc import config
-from multiqc.modules.base_module import BaseMultiqcModule
-from multiqc.plots import table, bargraph, linegraph, scatter
+from multiqc.modules.base_module import BaseMultiqcModule, ModuleNoSamplesFound
+from multiqc.plots import bargraph, linegraph, scatter, table
 
 # Initialise the logger
 log = logging.getLogger(__name__)
+
+VERSION_REGEX = r"# slamdunk summary v([\d\.]+)"
 
 
 class MultiqcModule(BaseMultiqcModule):
@@ -21,7 +20,6 @@ class MultiqcModule(BaseMultiqcModule):
     """
 
     def __init__(self):
-
         # Initialise the parent object
         super(MultiqcModule, self).__init__(
             name="Slamdunk",
@@ -135,12 +133,11 @@ class MultiqcModule(BaseMultiqcModule):
             num_reports = max(num_reports, len(self.nontc_per_utrpos_plus))
 
         if num_reports == 0:
-            raise UserWarning
+            raise ModuleNoSamplesFound
         else:
             log.info("Found {} reports".format(num_reports))
 
     def parsePCA(self, f):
-
         # Skip header
         next(f["f"])
 
@@ -154,7 +151,6 @@ class MultiqcModule(BaseMultiqcModule):
             self.PCA_data[sample] = [{"x": float(PC1), "y": float(PC2)}]
 
     def parseUtrRates(self, f):
-
         # Skip comment line #
         next(f["f"])
 
@@ -162,9 +158,8 @@ class MultiqcModule(BaseMultiqcModule):
         line = next(f["f"])
 
         if "Conversions=" in line:
-
             sample = f["s_name"]
-            self.utrates_data[sample] = OrderedDict()
+            self.utrates_data[sample] = dict()
 
             conversions = re.sub(".*Conversions=", "", line.rstrip()).split(",")
 
@@ -176,7 +171,6 @@ class MultiqcModule(BaseMultiqcModule):
             log.warning("Malformed UTR rates header. Conversion rates per UTR plot will be affected.")
 
     def parseSlamdunkRates(self, f):
-
         sample = f["s_name"]
 
         # Skip comment line #
@@ -203,11 +197,11 @@ class MultiqcModule(BaseMultiqcModule):
         for fromBase in baseDict:
             for toBase in baseDict[fromBase]:
                 if toBase.islower():
-                    if not fromBase.lower() in divisor:
+                    if fromBase.lower() not in divisor:
                         divisor[fromBase.lower()] = 0
                     divisor[fromBase.lower()] += baseDict[fromBase][toBase]
                 else:
-                    if not fromBase in divisor:
+                    if fromBase not in divisor:
                         divisor[fromBase] = 0
                     divisor[fromBase] += baseDict[fromBase][toBase]
 
@@ -236,7 +230,6 @@ class MultiqcModule(BaseMultiqcModule):
                         self.rates_data_plus[sample][fromBase + ">" + toBase] = baseDict[fromBase][toBase]
 
     def parseSlamdunkTCPerReadpos(self, f):
-
         sample = f["s_name"]
 
         # Skip comment line #
@@ -269,7 +262,6 @@ class MultiqcModule(BaseMultiqcModule):
             pos += 1
 
     def parseSlamdunkTCPerUtrpos(self, f):
-
         sample = f["s_name"]
 
         # Skip comment line #
@@ -302,15 +294,17 @@ class MultiqcModule(BaseMultiqcModule):
             pos += 1
 
     def parseSummary(self, f):
-
-        # Skip comment line #
-        next(f["f"])
+        # Parse version form first line
+        first = next(f["f"])
+        version = None
+        match = re.search(VERSION_REGEX, first)
+        if match:
+            version = match.group(1)
 
         # Skip header line "FileName..."
         columnCount = next(f["f"]).count("\t") + 1
 
         for line in f["f"]:
-
             fields = line.rstrip().split("\t")
             s_name = self.clean_s_name(fields[0], f)
             self.slamdunk_data[s_name] = dict()
@@ -327,48 +321,51 @@ class MultiqcModule(BaseMultiqcModule):
             if columnCount == 14:
                 self.slamdunk_data[s_name]["counted"] = int(fields[12])
 
-        self.add_data_source(f)
+        for s_name in self.slamdunk_data.keys():
+            self.add_software_version(version, s_name)
+            self.add_data_source(f, s_name=s_name)
 
     def slamdunkGeneralStatsTable(self):
         """Take the parsed summary stats from Slamdunk and add it to the
         basic stats table at the top of the report"""
 
-        headers = OrderedDict()
-        headers["counted"] = {
-            "title": "{} Counted".format(config.read_count_prefix),
-            "description": "# reads counted within 3'UTRs ({})".format(config.read_count_desc),
-            "shared_key": "read_count",
-            "min": 0,
-            "format": "{:,.2f}",
-            "scale": "YlGn",
-            "modify": lambda x: float(x) * config.read_count_multiplier,
-        }
-        headers["retained"] = {
-            "title": "{} Retained".format(config.read_count_prefix),
-            "description": "# retained reads after filtering ({})".format(config.read_count_desc),
-            "shared_key": "read_count",
-            "min": 0,
-            "format": "{:,.2f}",
-            "scale": "YlGn",
-            "modify": lambda x: float(x) * config.read_count_multiplier,
-        }
-        headers["mapped"] = {
-            "title": "{} Mapped".format(config.read_count_prefix),
-            "description": "# mapped reads ({})".format(config.read_count_desc),
-            "shared_key": "read_count",
-            "min": 0,
-            "format": "{:,.2f}",
-            "scale": "YlGn",
-            "modify": lambda x: float(x) * config.read_count_multiplier,
-        }
-        headers["sequenced"] = {
-            "title": "{} Sequenced".format(config.read_count_prefix),
-            "description": "# sequenced reads ({})".format(config.read_count_desc),
-            "shared_key": "read_count",
-            "min": 0,
-            "format": "{:,.2f}",
-            "scale": "YlGn",
-            "modify": lambda x: float(x) * config.read_count_multiplier,
+        headers = {
+            "counted": {
+                "title": "{} Counted".format(config.read_count_prefix),
+                "description": "# reads counted within 3'UTRs ({})".format(config.read_count_desc),
+                "shared_key": "read_count",
+                "min": 0,
+                "format": "{:,.2f}",
+                "scale": "YlGn",
+                "modify": lambda x: float(x) * config.read_count_multiplier,
+            },
+            "retained": {
+                "title": "{} Retained".format(config.read_count_prefix),
+                "description": "# retained reads after filtering ({})".format(config.read_count_desc),
+                "shared_key": "read_count",
+                "min": 0,
+                "format": "{:,.2f}",
+                "scale": "YlGn",
+                "modify": lambda x: float(x) * config.read_count_multiplier,
+            },
+            "mapped": {
+                "title": "{} Mapped".format(config.read_count_prefix),
+                "description": "# mapped reads ({})".format(config.read_count_desc),
+                "shared_key": "read_count",
+                "min": 0,
+                "format": "{:,.2f}",
+                "scale": "YlGn",
+                "modify": lambda x: float(x) * config.read_count_multiplier,
+            },
+            "sequenced": {
+                "title": "{} Sequenced".format(config.read_count_prefix),
+                "description": "# sequenced reads ({})".format(config.read_count_desc),
+                "shared_key": "read_count",
+                "min": 0,
+                "format": "{:,.2f}",
+                "scale": "YlGn",
+                "modify": lambda x: float(x) * config.read_count_multiplier,
+            },
         }
 
         self.general_stats_addcols(self.slamdunk_data, headers)
@@ -376,61 +373,62 @@ class MultiqcModule(BaseMultiqcModule):
     def slamdunkFilterStatsTable(self):
         """Take the parsed filter stats from Slamdunk and add it to a separate table"""
 
-        headers = OrderedDict()
-        headers["mapped"] = {
-            "namespace": "Slamdunk",
-            "title": "{} Mapped".format(config.read_count_prefix),
-            "description": "# mapped reads ({})".format(config.read_count_desc),
-            "shared_key": "read_count",
-            "min": 0,
-            "format": "{:,.2f}",
-            "suffix": config.read_count_prefix,
-            "scale": "YlGn",
-            "modify": lambda x: float(x) * config.read_count_multiplier,
-        }
-        headers["multimapper"] = {
-            "namespace": "Slamdunk",
-            "title": "{} Multimap-Filtered".format(config.read_count_prefix),
-            "description": "# multimap-filtered reads ({})".format(config.read_count_desc),
-            "shared_key": "read_count",
-            "min": 0,
-            "format": "{:,.2f}",
-            "suffix": config.read_count_prefix,
-            "scale": "OrRd",
-            "modify": lambda x: float(x) * config.read_count_multiplier,
-        }
-        headers["nmfiltered"] = {
-            "namespace": "Slamdunk",
-            "title": "{} NM-Filtered".format(config.read_count_prefix),
-            "description": "# NM-filtered reads ({})".format(config.read_count_desc),
-            "shared_key": "read_count",
-            "min": 0,
-            "format": "{:,.2f}",
-            "suffix": config.read_count_prefix,
-            "scale": "OrRd",
-            "modify": lambda x: float(x) * config.read_count_multiplier,
-        }
-        headers["idfiltered"] = {
-            "namespace": "Slamdunk",
-            "title": "{} Identity-Filtered".format(config.read_count_prefix),
-            "description": "# identity-filtered reads ({})".format(config.read_count_desc),
-            "shared_key": "read_count",
-            "min": 0,
-            "format": "{:,.2f}",
-            "suffix": config.read_count_prefix,
-            "scale": "OrRd",
-            "modify": lambda x: float(x) * config.read_count_multiplier,
-        }
-        headers["mqfiltered"] = {
-            "namespace": "Slamdunk",
-            "title": "{} MQ-Filtered".format(config.read_count_prefix),
-            "description": "# MQ-filtered reads ({})".format(config.read_count_desc),
-            "shared_key": "read_count",
-            "min": 0,
-            "format": "{:,.2f}",
-            "suffix": config.read_count_prefix,
-            "scale": "OrRd",
-            "modify": lambda x: float(x) * config.read_count_multiplier,
+        headers = {
+            "mapped": {
+                "namespace": "Slamdunk",
+                "title": "{} Mapped".format(config.read_count_prefix),
+                "description": "# mapped reads ({})".format(config.read_count_desc),
+                "shared_key": "read_count",
+                "min": 0,
+                "format": "{:,.2f}",
+                "suffix": config.read_count_prefix,
+                "scale": "YlGn",
+                "modify": lambda x: float(x) * config.read_count_multiplier,
+            },
+            "multimapper": {
+                "namespace": "Slamdunk",
+                "title": "{} Multimap-Filtered".format(config.read_count_prefix),
+                "description": "# multimap-filtered reads ({})".format(config.read_count_desc),
+                "shared_key": "read_count",
+                "min": 0,
+                "format": "{:,.2f}",
+                "suffix": config.read_count_prefix,
+                "scale": "OrRd",
+                "modify": lambda x: float(x) * config.read_count_multiplier,
+            },
+            "nmfiltered": {
+                "namespace": "Slamdunk",
+                "title": "{} NM-Filtered".format(config.read_count_prefix),
+                "description": "# NM-filtered reads ({})".format(config.read_count_desc),
+                "shared_key": "read_count",
+                "min": 0,
+                "format": "{:,.2f}",
+                "suffix": config.read_count_prefix,
+                "scale": "OrRd",
+                "modify": lambda x: float(x) * config.read_count_multiplier,
+            },
+            "idfiltered": {
+                "namespace": "Slamdunk",
+                "title": "{} Identity-Filtered".format(config.read_count_prefix),
+                "description": "# identity-filtered reads ({})".format(config.read_count_desc),
+                "shared_key": "read_count",
+                "min": 0,
+                "format": "{:,.2f}",
+                "suffix": config.read_count_prefix,
+                "scale": "OrRd",
+                "modify": lambda x: float(x) * config.read_count_multiplier,
+            },
+            "mqfiltered": {
+                "namespace": "Slamdunk",
+                "title": "{} MQ-Filtered".format(config.read_count_prefix),
+                "description": "# MQ-filtered reads ({})".format(config.read_count_desc),
+                "shared_key": "read_count",
+                "min": 0,
+                "format": "{:,.2f}",
+                "suffix": config.read_count_prefix,
+                "scale": "OrRd",
+                "modify": lambda x: float(x) * config.read_count_multiplier,
+            },
         }
         pconfig = {
             "id": "slamdunk_filtering_table",
@@ -464,7 +462,7 @@ class MultiqcModule(BaseMultiqcModule):
             ],
         }
 
-        cats = [OrderedDict(), OrderedDict()]
+        cats = [dict(), dict()]
         keys = [
             ["T>C", "A>T", "A>G", "A>C", "T>A", "T>G", "G>A", "G>T", "G>C", "C>A", "C>T", "C>G"],
             ["A>G", "A>T", "A>C", "T>A", "T>G", "T>C", "G>A", "G>T", "G>C", "C>A", "C>T", "C>G"],
@@ -486,7 +484,7 @@ class MultiqcModule(BaseMultiqcModule):
     def slamdunkUtrRatesPlot(self):
         """Generate the UTR rates plot"""
 
-        cats = OrderedDict()
+        cats = dict()
         keys = ["T>C", "A>T", "A>G", "A>C", "T>A", "T>G", "G>A", "G>T", "G>C", "C>A", "C>T", "C>G"]
         for i, v in enumerate(keys):
             cats[v] = {"color": self.plot_cols[i]}

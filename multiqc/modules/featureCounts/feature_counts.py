@@ -1,15 +1,12 @@
-#!/usr/bin/env python
-
 """ MultiQC module to parse output from featureCounts """
 
-from __future__ import print_function
-from collections import OrderedDict
+
 import logging
 import re
 
 from multiqc import config
+from multiqc.modules.base_module import BaseMultiqcModule, ModuleNoSamplesFound
 from multiqc.plots import bargraph
-from multiqc.modules.base_module import BaseMultiqcModule
 
 # Initialise the logger
 log = logging.getLogger(__name__)
@@ -17,7 +14,6 @@ log = logging.getLogger(__name__)
 
 class MultiqcModule(BaseMultiqcModule):
     def __init__(self):
-
         # Initialise the parent object
         super(MultiqcModule, self).__init__(
             name="featureCounts",
@@ -40,9 +36,13 @@ class MultiqcModule(BaseMultiqcModule):
         self.featurecounts_data = self.ignore_samples(self.featurecounts_data)
 
         if len(self.featurecounts_data) == 0:
-            raise UserWarning
+            raise ModuleNoSamplesFound
 
         log.info("Found {} reports".format(len(self.featurecounts_data)))
+
+        # Superfluous function call to confirm that it is used in this module
+        # Replace None with actual version if it is available
+        self.add_software_version(None)
 
         # Write parsed report data to a file
         self.write_data_file(self.featurecounts_data, "multiqc_featureCounts")
@@ -59,17 +59,17 @@ class MultiqcModule(BaseMultiqcModule):
         file_names = list()
         parsed_data = dict()
         split_sep = "\t"
-        for l in f["f"].splitlines():
+        for line in f["f"].splitlines():
             thisrow = list()
 
             # If this is from Rsubread then the formatting can be very variable
             # Default search pattern is quite generic, so f
-            if len(file_names) == 0 and len(l.split(split_sep)) < 2:
+            if len(file_names) == 0 and len(line.split(split_sep)) < 2:
                 # Split by whitespace and strip quote marks
                 # NB: Will break if sample names have whitespace. RSubread output is so variable that this is difficult to avoid
                 split_sep = None
 
-            s = l.split(split_sep)
+            s = line.split(split_sep)
             s = [sv.strip('"') for sv in s]
 
             if len(s) < 2:
@@ -94,7 +94,6 @@ class MultiqcModule(BaseMultiqcModule):
             return None
 
         for idx, f_name in enumerate(file_names):
-
             # Clean up sample name
             s_name = self.clean_s_name(f_name, f)
 
@@ -123,32 +122,33 @@ class MultiqcModule(BaseMultiqcModule):
         """Take the parsed stats from the featureCounts report and add them to the
         basic stats table at the top of the report"""
 
-        headers = OrderedDict()
-        headers["percent_assigned"] = {
-            "title": "% Assigned",
-            "description": "% Assigned reads",
-            "max": 100,
-            "min": 0,
-            "suffix": "%",
-            "scale": "RdYlGn",
-        }
-        headers["Assigned"] = {
-            "title": "{} Assigned".format(config.read_count_prefix),
-            "description": "Assigned reads ({})".format(config.read_count_desc),
-            "min": 0,
-            "scale": "PuBu",
-            "modify": lambda x: float(x) * config.read_count_multiplier,
-            "shared_key": "read_count",
+        headers = {
+            "percent_assigned": {
+                "title": "% Assigned",
+                "description": "% Assigned reads",
+                "max": 100,
+                "min": 0,
+                "suffix": "%",
+                "scale": "RdYlGn",
+            },
+            "Assigned": {
+                "title": "{} Assigned".format(config.read_count_prefix),
+                "description": "Assigned reads ({})".format(config.read_count_desc),
+                "min": 0,
+                "scale": "PuBu",
+                "modify": lambda x: float(x) * config.read_count_multiplier,
+                "shared_key": "read_count",
+            },
         }
         self.general_stats_addcols(self.featurecounts_data, headers)
 
     def featureCounts_chart(self):
         """Make the featureCounts assignment rates plot"""
 
-        headers = OrderedDict()
+        headers = {}
         for h in self.featurecounts_keys:
             nice_name = h.replace("Unassigned_", "Unassigned: ").replace("_", " ")
-            nice_name = re.sub(r"([a-z])([A-Z])", "\g<1> \g<2>", nice_name)
+            nice_name = re.sub(r"([a-z])([A-Z])", r"\g<1> \g<2>", nice_name)
             headers[h] = {"name": nice_name}
 
         # Config for the plot

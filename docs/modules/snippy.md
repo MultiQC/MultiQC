@@ -1,7 +1,7 @@
 ---
-Name: Snippy
-URL: https://github.com/tseemann/snippy
-Description: >
+name: Snippy
+url: https://github.com/tseemann/snippy
+description: >
   Rapid haploid variant calling and core genome alignment.
 ---
 

@@ -1,7 +1,7 @@
 ---
-Name: Samtools
-URL: http://www.htslib.org
-Description: >
+name: Samtools
+url: http://www.htslib.org
+description: >
   Samtools is a suite of programs for interacting with high-throughput
   sequencing data.
 ---

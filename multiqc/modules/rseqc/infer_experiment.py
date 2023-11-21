@@ -1,9 +1,6 @@
-#!/usr/bin/env python
-
 """ MultiQC submodule to parse output from RSeQC infer_experiment.py
 http://rseqc.sourceforge.net/#infer-experiment-py """
 
-from collections import OrderedDict
 import logging
 import re
 
@@ -43,47 +40,52 @@ def parse_reports(self):
     # Filter to strip out ignored sample names
     self.infer_exp = self.ignore_samples(self.infer_exp)
 
-    if len(self.infer_exp) > 0:
+    if len(self.infer_exp) == 0:
+        return 0
 
-        # Write to file
-        self.write_data_file(self.infer_exp, "multiqc_rseqc_infer_experiment")
+    # Superfluous function call to confirm that it is used in this module
+    # Replace None with actual version if it is available
+    self.add_software_version(None)
 
-        # Merge PE and SE for plot
-        pdata = dict()
-        for s_name, vals in self.infer_exp.items():
-            pdata[s_name] = dict()
-            for k, v in vals.items():
-                v *= 100.0  # Multiply to get percentage
-                if k[:2] == "pe" or k[:2] == "se":
-                    k = k[3:]
-                pdata[s_name][k] = v + pdata[s_name].get(k, 0)
+    # Write to file
+    self.write_data_file(self.infer_exp, "multiqc_rseqc_infer_experiment")
 
-        # Plot bar graph of groups
-        keys = OrderedDict()
-        keys["sense"] = {"name": "Sense"}
-        keys["antisense"] = {"name": "Antisense"}
-        keys["failed"] = {"name": "Undetermined"}
+    # Merge PE and SE for plot
+    pdata = dict()
+    for s_name, vals in self.infer_exp.items():
+        pdata[s_name] = dict()
+        for k, v in vals.items():
+            v *= 100.0  # Multiply to get percentage
+            if k[:2] == "pe" or k[:2] == "se":
+                k = k[3:]
+            pdata[s_name][k] = v + pdata[s_name].get(k, 0)
 
-        # Config for the plot
-        pconfig = {
-            "id": "rseqc_infer_experiment_plot",
-            "title": "RSeQC: Infer experiment",
-            "ylab": "% Tags",
-            "ymin": 0,
-            "ymax": 100,
-            "tt_percentages": False,
-            "ylab_format": "{value}%",
-            "cpswitch": False,
-        }
+    # Plot bar graph of groups
+    keys = {
+        "sense": {"name": "Sense"},
+        "antisense": {"name": "Antisense"},
+        "failed": {"name": "Undetermined"},
+    }
+    # Config for the plot
+    pconfig = {
+        "id": "rseqc_infer_experiment_plot",
+        "title": "RSeQC: Infer experiment",
+        "ylab": "% Tags",
+        "ymin": 0,
+        "ymax": 100,
+        "tt_percentages": False,
+        "ylab_format": "{value}%",
+        "cpswitch": False,
+    }
 
-        self.add_section(
-            name="Infer experiment",
-            anchor="rseqc-infer_experiment",
-            description='<a href="http://rseqc.sourceforge.net/#infer-experiment-py" target="_blank">Infer experiment</a>'
-            " counts the percentage of reads and read pairs that match the strandedness of overlapping transcripts."
-            " It can be used to infer whether RNA-seq library preps are stranded (sense or antisense).",
-            plot=bargraph.plot(pdata, keys, pconfig),
-        )
+    self.add_section(
+        name="Infer experiment",
+        anchor="rseqc-infer_experiment",
+        description='<a href="http://rseqc.sourceforge.net/#infer-experiment-py" target="_blank">Infer experiment</a>'
+        " counts the percentage of reads and read pairs that match the strandedness of overlapping transcripts."
+        " It can be used to infer whether RNA-seq library preps are stranded (sense or antisense).",
+        plot=bargraph.plot(pdata, keys, pconfig),
+    )
 
     # Return number of samples found
     return len(self.infer_exp)

@@ -1,36 +1,22 @@
-#!/usr/bin/env python
-
 """ Core MultiQC module to parse output from custom script output """
 
-from __future__ import print_function
+
 import base64
-from collections import defaultdict, OrderedDict
-import logging
 import json
+import logging
 import os
 import re
+from collections import defaultdict
+
 import yaml
 
 from multiqc import config
+from multiqc.modules.base_module import BaseMultiqcModule, ModuleNoSamplesFound
+from multiqc.plots import bargraph, beeswarm, heatmap, linegraph, scatter, table
 from multiqc.utils import report
-from multiqc.modules.base_module import BaseMultiqcModule
-from multiqc.plots import table, bargraph, linegraph, scatter, heatmap, beeswarm
 
 # Initialise the logger
 log = logging.getLogger(__name__)
-
-# Load YAML as an ordered dict
-# From https://stackoverflow.com/a/21912744
-def yaml_ordered_load(stream):
-    class OrderedLoader(yaml.SafeLoader):
-        pass
-
-    def construct_mapping(loader, node):
-        loader.flatten_mapping(node)
-        return OrderedDict(loader.construct_pairs(node))
-
-    OrderedLoader.add_constructor(yaml.resolver.BaseResolver.DEFAULT_MAPPING_TAG, construct_mapping)
-    return yaml.load(stream, OrderedLoader)
 
 
 def custom_module_classes():
@@ -42,11 +28,11 @@ def custom_module_classes():
     """
 
     # Dict to hold parsed data. Each key should contain a custom data type
-    # eg. output from a particular script. Note that this script may pick
+    # e.g. output from a particular script. Note that this script may pick
     # up many different types of data from many different sources.
     # Second level keys should be 'config' and 'data'. Data key should then
     # contain sample names, and finally data.
-    cust_mods = defaultdict(lambda: defaultdict(lambda: OrderedDict()))
+    cust_mods = defaultdict(lambda: defaultdict(lambda: dict()))
 
     # Dictionary to hold search patterns - start with those defined in the config
     search_patterns = ["custom_content"]
@@ -55,14 +41,13 @@ def custom_module_classes():
     config_data = getattr(config, "custom_data", {})
     mod_cust_config = {}
     for k, f in config_data.items():
-
         # Check that we have a dictionary
-        if type(f) != dict:
+        if not isinstance(f, dict):
             log.debug("config.custom_data row was not a dictionary: {}".format(k))
             continue
         c_id = f.get("id", k)
 
-        # Data supplied in with config (eg. from a multiqc_config.yaml file in working directory)
+        # Data supplied in with config (e.g. from a multiqc_config.yaml file in working directory)
         if "data" in f:
             try:
                 cust_mods[c_id]["data"].update(f["data"])
@@ -84,7 +69,7 @@ def custom_module_classes():
         mod_cust_config[c_id] = f
 
     # Now go through each of the file search patterns
-    bm = BaseMultiqcModule()
+    bm = BaseMultiqcModule(name="Custom content", anchor="custom_content")
     for k in search_patterns:
         num_sp_found_files = 0
         for f in bm.find_log_files(k):
@@ -97,29 +82,20 @@ def custom_module_classes():
                 parsed_data = None
                 if f_extension == ".yaml" or f_extension == ".yml":
                     try:
-                        parsed_data = yaml_ordered_load(f["f"])
+                        parsed_data = yaml.safe_load(f["f"])
                     except Exception as e:
                         log.warning("Error parsing YAML file '{}' (probably invalid YAML)".format(f["fn"]))
                         log.debug("YAML error: {}".format(e), exc_info=True)
                         break
                     parsed_data["id"] = parsed_data.get("id", f["s_name"])
-                    # Run sample-name cleaning on the data keys
-                    try:
-                        parsed_data["data"] = {bm.clean_s_name(k, f): v for k, v in parsed_data.get("data", {}).items()}
-                    except AttributeError as e:
-                        # If parsed_data["data"] is a string, this won't work - but that's fine
-                        pass
                 elif f_extension == ".json":
                     try:
-                        # Use OrderedDict for objects so that column order is honoured
-                        parsed_data = json.loads(f["f"], object_pairs_hook=OrderedDict)
+                        parsed_data = json.loads(f["f"])
                     except Exception as e:
                         log.warning("Error parsing JSON file '{}' (probably invalid JSON)".format(f["fn"]))
                         log.warning("JSON error: {}".format(e))
                         break
                     parsed_data["id"] = parsed_data.get("id", f["s_name"])
-                    # Run sample-name cleaning on the data keys
-                    parsed_data["data"] = {bm.clean_s_name(k, f): v for k, v in parsed_data.get("data", {}).items()}
                 elif f_extension == ".png" or f_extension == ".jpeg" or f_extension == ".jpg":
                     image_string = base64.b64encode(f["f"].read()).decode("utf-8")
                     image_format = "png" if f_extension == ".png" else "jpg"
@@ -139,13 +115,18 @@ def custom_module_classes():
                 elif f_extension == ".html":
                     parsed_data = {"id": f["s_name"], "plot_type": "html", "data": f["f"]}
                     parsed_data.update(_find_html_file_header(f))
+
                 if parsed_data is not None:
+                    if isinstance(parsed_data.get("data"), dict):
+                        # Run sample-name cleaning on the data keys
+                        parsed_data["data"] = {bm.clean_s_name(k, f): v for k, v in parsed_data["data"].items()}
+
                     c_id = parsed_data.get("id", k)
                     if len(parsed_data.get("data", {})) > 0:
-                        if type(parsed_data["data"]) == str:
-                            cust_mods[c_id]["data"] = parsed_data["data"]
-                        else:
+                        if isinstance(parsed_data["data"], dict):
                             cust_mods[c_id]["data"].update(parsed_data["data"])
+                        else:
+                            cust_mods[c_id]["data"] = parsed_data["data"]
                         cust_mods[c_id]["config"].update({j: k for j, k in parsed_data.items() if j != "data"})
                     else:
                         log.warning("No data found in {}".format(f["fn"]))
@@ -198,7 +179,7 @@ def custom_module_classes():
                             if conf.get("id") is not None:
                                 c_id = conf.get("id")
                             # heatmap - special data type
-                            if type(parsed_data) == list:
+                            if isinstance(parsed_data, list):
                                 cust_mods[c_id]["data"] = parsed_data
                             elif conf.get("plot_type") == "html":
                                 cust_mods[c_id]["data"] = parsed_data
@@ -226,12 +207,11 @@ def custom_module_classes():
         del cust_mods[k]
 
     if len(cust_mods) == 0:
-        raise UserWarning
+        raise ModuleNoSamplesFound
 
     # Go through each data type
-    parsed_modules = OrderedDict()
+    parsed_modules = dict()
     for c_id, mod in cust_mods.items():
-
         # General Stats
         if mod["config"].get("plot_type") == "generalstats":
             gsheaders = mod["config"].get("pconfig")
@@ -241,13 +221,13 @@ def custom_module_classes():
                     headers.update(d.keys())
                 headers = list(headers)
                 headers.sort()
-                gsheaders = OrderedDict()
+                gsheaders = dict()
                 for h in headers:
                     gsheaders[h] = dict()
 
             # Headers is a list of dicts
-            if type(gsheaders) == list:
-                gsheaders_dict = OrderedDict()
+            if isinstance(gsheaders, list):
+                gsheaders_dict = dict()
                 for gsheader in gsheaders:
                     for col_id, col_data in gsheader.items():
                         gsheaders_dict[col_id] = col_data
@@ -291,7 +271,10 @@ def custom_module_classes():
 
     # If we only have General Stats columns then there are no module outputs
     if len(sorted_modules) == 0:
-        raise UserWarning
+        if mod["config"].get("plot_type") == "generalstats":
+            sorted_modules = [bm]
+        else:
+            raise ModuleNoSamplesFound
 
     return sorted_modules
 
@@ -300,7 +283,6 @@ class MultiqcModule(BaseMultiqcModule):
     """Module class, used for each custom content type"""
 
     def __init__(self, c_id, mod):
-
         modname = c_id.replace("_", " ").title()
         mod_info = mod["config"].get("description")
         if "parent_name" in mod["config"]:
@@ -344,7 +326,6 @@ class MultiqcModule(BaseMultiqcModule):
             self.intro = "<p>{}</p>{}".format(self.info, self.extra)
 
     def add_cc_section(self, c_id, mod):
-
         section_name = mod["config"].get("section_name", c_id.replace("_", " ").title())
         if section_name == "" or section_name is None:
             section_name = "Custom Content"
@@ -364,6 +345,13 @@ class MultiqcModule(BaseMultiqcModule):
         if not isinstance(mod["data"], str):
             self.write_data_file(mod["data"], "multiqc_{}".format(pconfig["id"]))
             pconfig["save_data_file"] = False
+
+        # Try to cooerce x-axis to numeric
+        if mod["config"].get("plot_type") in ["linegraph", "scatter"]:
+            try:
+                mod["data"] = {k: {float(x): v[x] for x in v} for k, v in mod["data"].items()}
+            except ValueError:
+                pass
 
         # Table
         if mod["config"].get("plot_type") == "table":
@@ -401,7 +389,7 @@ class MultiqcModule(BaseMultiqcModule):
             content = mod["data"]
 
         # Not supplied
-        elif mod["config"].get("plot_type") == None:
+        elif mod["config"].get("plot_type") is None:
             log.warning("Plot type not found for content ID '{}'".format(c_id))
 
         # Not recognised
@@ -415,7 +403,7 @@ class MultiqcModule(BaseMultiqcModule):
         # Don't use exactly the same title / description text as the main module
         if section_name == self.name:
             section_name = None
-        if section_description.strip(".") == self.info.strip("."):
+        if self.info and section_description.strip(".") == self.info.strip("."):
             section_description = ""
 
         self.add_section(name=section_name, anchor=c_id, description=section_description, plot=plot, content=content)
@@ -424,9 +412,9 @@ class MultiqcModule(BaseMultiqcModule):
 def _find_file_header(f):
     # Collect commented out header lines
     hlines = []
-    for l in f["f"].splitlines():
-        if l.startswith("#"):
-            hlines.append(l[1:])
+    for line in f["f"].splitlines():
+        if line.startswith("#"):
+            hlines.append(line[1:])
     if len(hlines) == 0:
         return None
     hconfig = None
@@ -448,11 +436,14 @@ def _find_html_file_header(f):
         match = re.search(r"^\<\!\-\-((?:.|\n|\r)*?)-->", f["f"].lstrip())
         if match:
             comment = match.group(1)
-            try:
-                return yaml_ordered_load(comment)
-            except Exception as e:
-                log.debug("Found Custom Content HTML comment, but couldn't load as YAML: {}".format(e), exc_info=True)
-                log.debug("Comment:\n{}".format(comment))
+            if comment:
+                try:
+                    return yaml.load(comment, Loader=yaml.SafeLoader)
+                except Exception as e:
+                    log.debug(
+                        "Found Custom Content HTML comment, but couldn't load as YAML: {}".format(e), exc_info=True
+                    )
+                    log.debug("Comment:\n{}".format(comment))
     return {}
 
 
@@ -461,8 +452,8 @@ def _guess_file_format(f):
     Tries to guess file format, first based on file extension (csv / tsv),
     then by looking for common column separators in the first 10 non-commented lines.
     Splits by tab / comma / space and counts resulting number of columns. Finds the most
-    common column count, then comparsed how many lines had this number.
-    eg. if tab, all 10 lines should have x columns when split by tab.
+    common column count, then compared how many lines had this number.
+    e.g. if tab, all 10 lines should have x columns when split by tab.
     Returns: csv | tsv | spaces   (spaces by default if all else fails)
     """
     filename, file_extension = os.path.splitext(f["fn"])
@@ -470,12 +461,12 @@ def _guess_file_format(f):
     commas = []
     spaces = []
     j = 0
-    for l in f["f"].splitlines():
-        if not l.startswith("#"):
+    for line in f["f"].splitlines():
+        if not line.startswith("#"):
             j += 1
-            tabs.append(len(l.split("\t")))
-            commas.append(len(l.split(",")))
-            spaces.append(len(l.split()))
+            tabs.append(len(line.split("\t")))
+            commas.append(len(line.split(",")))
+            spaces.append(len(line.split()))
         if j == 10:
             break
     tab_mode = max(set(tabs), key=tabs.count)
@@ -516,47 +507,50 @@ def _parse_txt(f, conf):
 
     # Check for special case - HTML
     if conf.get("plot_type") == "html":
-        for l in lines:
-            if l and not l.startswith("#"):
-                d.append(l)
-        return ("\n".join(d), conf)
+        for line in lines:
+            if line and not line.startswith("#"):
+                d.append(line)
+        return "\n".join(d), conf
 
     # Not HTML, need to parse data
     ncols = None
-    for l in lines:
-        if l and not l.startswith("#"):
-            sections = l.split(sep)
+    for line in lines:
+        if line and not line.startswith("#"):
+            sections = line.split(sep)
             d.append(sections)
             if ncols is None:
                 ncols = len(sections)
             elif ncols != len(sections):
                 log.warning("Inconsistent number of columns found in {}! Skipping..".format(f["fn"]))
-                return (None, conf)
+                return None, conf
 
     # Convert values to floats if we can
     first_row_str = 0
-    for i, l in enumerate(d):
-        for j, v in enumerate(l):
-            try:
-                d[i][j] = float(v)
-            except ValueError:
+    for i, line in enumerate(d):
+        for j, v in enumerate(line):
+            if j != 0:  # we don't want to convert sample names to numbers
+                try:
+                    v = float(v)
+                except ValueError:
+                    pass
+            if isinstance(v, str):
                 if (v.startswith('"') and v.endswith('"')) or (v.startswith("'") and v.endswith("'")):
                     v = v[1:-1]
-                d[i][j] = v
                 # Count strings in first row (header?)
                 if i == 0:
                     first_row_str += 1
+            d[i][j] = v
 
-    all_numeric = all([type(l) == float for l in d[i][1:] for i in range(1, len(d))])
+    all_numeric = all([isinstance(line, float) for i in range(1, len(d)) for line in d[i][1:]])
 
-    # General stat info files - expected to be have atleast 2 rows (first row always being the header)
-    # and have atleast 2 columns (first column always being sample name)
+    # General stat info files - expected to have at least 2 rows (first row always being the header)
+    # and have at least 2 columns (first column always being sample name)
     if conf.get("plot_type") == "generalstats" and len(d) >= 2 and ncols >= 2:
         data = defaultdict(dict)
-        for i, l in enumerate(d[1:], 1):
-            for j, v in enumerate(l[1:], 1):
-                data[l[0]][d[0][j]] = v
-        return (data, conf)
+        for i, line in enumerate(d[1:], 1):
+            for j, v in enumerate(line[1:], 1):
+                data[line[0]][d[0][j]] = v
+        return data, conf
 
     # Heatmap: Number of headers == number of lines
     if conf.get("plot_type") is None and first_row_str == len(lines) and all_numeric:
@@ -565,13 +559,13 @@ def _parse_txt(f, conf):
         conf["xcats"] = d[0][1:]
         conf["ycats"] = [s[0] for s in d[1:]]
         data = [s[1:] for s in d[1:]]
-        return (data, conf)
+        return data, conf
 
     # Header row of strings, or configured as table
     if first_row_str == len(d[0]) or conf.get("plot_type") == "table":
-        data = OrderedDict()
+        data = dict()
         for s in d[1:]:
-            data[s[0]] = OrderedDict()
+            data[s[0]] = dict()
             for i, v in enumerate(s[1:]):
                 cat = str(d[0][i + 1])
                 data[s[0]][cat] = v
@@ -580,7 +574,7 @@ def _parse_txt(f, conf):
             allfloats = True
             for r in d[1:]:
                 for v in r[1:]:
-                    allfloats = allfloats and type(v) == float
+                    allfloats = allfloats and isinstance(v, float)
             if allfloats:
                 conf["plot_type"] = "bargraph"
             else:
@@ -592,17 +586,17 @@ def _parse_txt(f, conf):
                 conf["pconfig"]["col1_header"] = d[0][0].strip()
         # Return parsed data
         if conf.get("plot_type") == "bargraph" or conf.get("plot_type") == "table":
-            return (data, conf)
+            return data, conf
         else:
-            data = OrderedDict()  # reset
+            data = dict()  # reset
 
     # Scatter plot: First row is  str : num : num
     if (
         conf.get("plot_type") is None
         and len(d[0]) == 3
-        and type(d[0][0]) != float
-        and type(d[0][1]) == float
-        and type(d[0][2]) == float
+        and not isinstance(d[0][0], float)
+        and isinstance(d[0][1], float)
+        and isinstance(d[0][2], float)
     ):
         conf["plot_type"] = "scatter"
 
@@ -613,15 +607,15 @@ def _parse_txt(f, conf):
                 data[s[0]] = {"x": float(s[1]), "y": float(s[2])}
             except (IndexError, ValueError):
                 pass
-        return (data, conf)
+        return data, conf
 
     # Single sample line / bar graph - first row has two columns
     if len(d[0]) == 2:
         # Line graph - num : num
-        if conf.get("plot_type") is None and type(d[0][0]) == float and type(d[0][1]) == float:
+        if conf.get("plot_type") is None and isinstance(d[0][0], float) and isinstance(d[0][1], float):
             conf["plot_type"] = "linegraph"
         # Bar graph - str : num
-        if conf.get("plot_type") is None and type(d[0][0]) != float and type(d[0][1]) == float:
+        if conf.get("plot_type") is None and not isinstance(d[0][0], float) and isinstance(d[0][1], float):
             conf["plot_type"] = "bargraph"
 
         # Data structure is the same
@@ -629,10 +623,10 @@ def _parse_txt(f, conf):
             # Set section id based on directory if not known
             if conf.get("id") is None:
                 conf["id"] = os.path.basename(f["root"])
-            data = OrderedDict()
+            data = dict()
             for s in d:
                 data[s[0]] = s[1]
-            return ({f["s_name"]: data}, conf)
+            return {f["s_name"]: data}, conf
 
     # Multi-sample line graph: No header row, str : lots of num columns
     if conf.get("plot_type") is None and len(d[0]) > 4 and all_numeric:
@@ -640,13 +634,24 @@ def _parse_txt(f, conf):
 
     if conf.get("plot_type") == "linegraph":
         data = dict()
+        # If the first row has no header, use it as axis labels
+        x_labels = []
+        if d[0][0].strip() == "":
+            x_labels = d.pop(0)[1:]
         # Use 1..n range for x values
         for s in d:
             data[s[0]] = dict()
             for i, v in enumerate(s[1:]):
-                j = i + 1
-                data[s[0]][i + 1] = v
-        return (data, conf)
+                try:
+                    x_val = x_labels[i]
+                    try:
+                        x_val = float(x_val)
+                    except ValueError:
+                        pass
+                except IndexError:
+                    x_val = i + 1
+                data[s[0]][x_val] = v
+        return data, conf
 
     # Got to the end and haven't returned. It's a mystery, capn'!
     log.debug(
@@ -655,4 +660,4 @@ def _parse_txt(f, conf):
             conf.get("plot_type"), all_numeric, first_row_str
         )
     )
-    return (None, conf)
+    return None, conf

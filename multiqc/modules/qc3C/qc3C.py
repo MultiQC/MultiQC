@@ -1,18 +1,17 @@
-#!/usr/bin/env python
-
 """ MultiQC module to parse output from qc3C """
 
-from __future__ import print_function
-from collections import OrderedDict, defaultdict
+
 import itertools
 import json
 import logging
-import numpy as np
 import os
 import re
+from collections import defaultdict
 
-from multiqc.modules.base_module import BaseMultiqcModule
-from multiqc.plots import table, bargraph, linegraph
+import numpy as np
+
+from multiqc.modules.base_module import BaseMultiqcModule, ModuleNoSamplesFound
+from multiqc.plots import bargraph, linegraph, table
 
 log = logging.getLogger(__name__)
 
@@ -156,12 +155,11 @@ class MultiqcModule(BaseMultiqcModule):
         # check that any non-empty records were stored under one of the two analysis modes
         n_reports = len(self.qc3c_data["kmer"]) + len(self.qc3c_data["bam"])
         if n_reports == 0:
-            raise UserWarning("No reports found")
+            raise ModuleNoSamplesFound
 
         log.info("Found {} reports".format(n_reports))
 
         if len(self.qc3c_data["bam"]) > 0:
-
             self.write_data_file(self.qc3c_data["bam"], "multiqc_qc3c_bam")
             log.debug("Found {} BAM analysis reports".format(len(self.qc3c_data["bam"])))
 
@@ -316,7 +314,6 @@ class MultiqcModule(BaseMultiqcModule):
                 )
 
         if len(self.qc3c_data["kmer"]) > 0:
-
             self.write_data_file(self.qc3c_data["kmer"], "multiqc_qc3c_kmer")
             log.debug("Found {} k-mer analysis reports".format(len(self.qc3c_data["kmer"])))
 
@@ -408,97 +405,94 @@ class MultiqcModule(BaseMultiqcModule):
         return s.split()[-1]
 
     def bam_runtime_table(self):
+        config = {"id": "qc3C_bam_runtime_table", "namespace": "qc3C", "col1_header": "Sample", "scale": False}
 
-        config = {"id": "qc3C_bam_runtime_table", "namespace": "qc3C", "col1_header": "Sample"}
-
-        headers = OrderedDict(
-            {
-                "b_run_timestamp": {
-                    "title": "Date",
-                    "description": "Analysis time stamp",
-                    "modify": MultiqcModule._drop_time,
-                    "hidden": True,
-                },
-                "b_mode": {"title": "Run Mode", "description": "Analysis mode used", "hidden": True},
-                "b_min_mapq": {
-                    "title": "Min MapQ",
-                    "description": "Minimum accepted mapping quality",
-                    "min": 0,
-                    "format": "{:d}",
-                    "scale": False,
-                },
-                "b_enzymes": {"title": "Digest", "description": "Enzymes used in digest"},
-                # 'b_seed': {
-                #     'title': 'Seed',
-                #     'description': 'Random seed',
-                #     'format': '{:d}',
-                #     'scale': False,
-                #     'hidden': True,
-                # },
-                # 'b_max_obs': {
-                #     'title': 'Max obs',
-                #     'description': 'User specified maximum number of observations',
-                #     'min': 0,
-                #     'format': '{:,d}',
-                #     'scale': 'OrRd',
-                #     'modify': lambda x: 'n/a' if x == -1 else x
-                # },
-                "b_n_accepted_pairs": {
-                    "title": "Accepted pairs",
-                    "description": "Number of pairs accepted for analysis",
-                    "min": 0,
-                    "format": "{:,d}",
-                    "scale": "Oranges",
-                },
-                # 'b_sample_rate': {
-                #     'title': 'Sample rate',
-                #     'description': 'Sub-sampling probability',
-                #     'min': 0,
-                #     'max': 1,
-                #     'format': '{:g}',
-                #     'scale': 'Greys'
-                # },
-                # 'b_obs_insert_median': {
-                #     'title': 'Insert median',
-                #     'description': 'Estimated median insert size',
-                #     'min': 0,
-                #     'format': '{:,.0f}',
-                #     'suffix': 'bp',
-                #     'scale': 'Greens'
-                # },
-                "b_mean_readlen": {
-                    "title": "Read length",
-                    "description": "Average observed read length",
-                    "format": "{:,.0f}",
-                    "suffix": "bp",
-                    "scale": "Blues",
-                },
-                "b_obs_insert_mean": {
-                    "title": "Insert length",
-                    "description": "Inferred insert size",
-                    "min": 0,
-                    "format": "{:,.0f}",
-                    "suffix": "bp",
-                    "scale": "Purples",
-                },
-                "b_unobs_fraction": {
-                    "title": "Unobserved",
-                    "description": "Fraction of total insert extent that was unobservable",
-                    "min": 0,
-                    "max": 100,
-                    "suffix": "%",
-                    "scale": "Reds",
-                },
-                "b_p_read_thru": {
-                    "title": "Read-thru",
-                    "description": "Fraction of reads whose alignments end in a cutsite and whose sequence continues for the full junction",
-                    "min": 0,
-                    "max": 100,
-                    "suffix": "%",
-                    "scale": "Greens",
-                },
-            }
-        )
+        headers = {
+            "b_run_timestamp": {
+                "title": "Date",
+                "description": "Analysis time stamp",
+                "modify": MultiqcModule._drop_time,
+                "hidden": True,
+            },
+            "b_mode": {"title": "Run Mode", "description": "Analysis mode used", "hidden": True},
+            "b_min_mapq": {
+                "title": "Min MapQ",
+                "description": "Minimum accepted mapping quality",
+                "min": 0,
+                "format": "{:d}",
+                "scale": False,
+            },
+            "b_enzymes": {"title": "Digest", "description": "Enzymes used in digest"},
+            # 'b_seed': {
+            #     'title': 'Seed',
+            #     'description': 'Random seed',
+            #     'format': '{:d}',
+            #     'scale': False,
+            #     'hidden': True,
+            # },
+            # 'b_max_obs': {
+            #     'title': 'Max obs',
+            #     'description': 'User specified maximum number of observations',
+            #     'min': 0,
+            #     'format': '{:,d}',
+            #     'scale': 'OrRd',
+            #     'modify': lambda x: 'n/a' if x == -1 else x
+            # },
+            "b_n_accepted_pairs": {
+                "title": "Accepted pairs",
+                "description": "Number of pairs accepted for analysis",
+                "min": 0,
+                "format": "{:,d}",
+                "scale": "Oranges",
+            },
+            # 'b_sample_rate': {
+            #     'title': 'Sample rate',
+            #     'description': 'Sub-sampling probability',
+            #     'min': 0,
+            #     'max': 1,
+            #     'format': '{:g}',
+            #     'scale': 'Greys'
+            # },
+            # 'b_obs_insert_median': {
+            #     'title': 'Insert median',
+            #     'description': 'Estimated median insert size',
+            #     'min': 0,
+            #     'format': '{:,.0f}',
+            #     'suffix': 'bp',
+            #     'scale': 'Greens'
+            # },
+            "b_mean_readlen": {
+                "title": "Read length",
+                "description": "Average observed read length",
+                "format": "{:,.0f}",
+                "suffix": "bp",
+                "scale": "Blues",
+            },
+            "b_obs_insert_mean": {
+                "title": "Insert length",
+                "description": "Inferred insert size",
+                "min": 0,
+                "format": "{:,.0f}",
+                "suffix": "bp",
+                "scale": "Purples",
+            },
+            "b_unobs_fraction": {
+                "title": "Unobserved",
+                "description": "Fraction of total insert extent that was unobservable",
+                "min": 0,
+                "max": 100,
+                "suffix": "%",
+                "scale": "Reds",
+            },
+            "b_p_read_thru": {
+                "title": "Read-thru",
+                "description": "Fraction of reads whose alignments end in a cutsite and whose sequence continues for the full junction",
+                "min": 0,
+                "max": 100,
+                "suffix": "%",
+                "scale": "Greens",
+            },
+        }
 
         return table.plot(self.qc3c_data["bam"], headers, config)
 
@@ -511,15 +505,13 @@ class MultiqcModule(BaseMultiqcModule):
             "cpswitch_counts_label": "Number of Reads",
         }
 
-        categories = OrderedDict(
-            {
-                "b_n_10k_": {"name": "10000 and further bp", "color": "#118AB2"},
-                "b_n_5k_10k": {"name": "from 5000 to 10000 bp", "color": "#0CABAA"},
-                "b_n_1k_5k": {"name": "from 1000 to 5000 bp", "color": "#07D1A1"},
-                "b_n_short_inserts": {"name": "less than 1000 bp", "color": "#FFD166"},
-                "b_n_trans_pairs": {"name": "trans pairs", "color": "#F78C6B"},
-            }
-        )
+        categories = {
+            "b_n_10k_": {"name": "10000 and further bp", "color": "#118AB2"},
+            "b_n_5k_10k": {"name": "from 5000 to 10000 bp", "color": "#0CABAA"},
+            "b_n_1k_5k": {"name": "from 1000 to 5000 bp", "color": "#07D1A1"},
+            "b_n_short_inserts": {"name": "less than 1000 bp", "color": "#FFD166"},
+            "b_n_trans_pairs": {"name": "trans pairs", "color": "#F78C6B"},
+        }
 
         return bargraph.plot(self.qc3c_data["bam"], categories, config)
 
@@ -533,155 +525,83 @@ class MultiqcModule(BaseMultiqcModule):
             "cpswitch_counts_label": "Number of Reads",
         }
 
-        categories = OrderedDict(
-            {
-                "b_n_accepted_reads": {"name": "Accepted", "color": rev_8[-1]},
-                "b_n_ref_term_reads": {"name": "Truncated", "color": rev_8[6]},
-                "b_n_weak_mapping_reads": {"name": "Weak mapping", "color": rev_8[5]},
-                "b_n_supplementary_reads": {"name": "Supplementary", "color": rev_8[4]},
-                "b_n_secondary_reads": {"name": "Secondary", "color": rev_8[3]},
-                "b_n_low_mapq_reads": {"name": "Low mapq", "color": rev_8[2]},
-                "b_n_unmapped_reads": {"name": "Unmapped", "color": rev_8[1]},
-                "b_n_skipped_reads": {"name": "Skipped", "color": rev_8[0]},
-            }
-        )
+        categories = {
+            "b_n_accepted_reads": {"name": "Accepted", "color": rev_8[-1]},
+            "b_n_ref_term_reads": {"name": "Truncated", "color": rev_8[6]},
+            "b_n_weak_mapping_reads": {"name": "Weak mapping", "color": rev_8[5]},
+            "b_n_supplementary_reads": {"name": "Supplementary", "color": rev_8[4]},
+            "b_n_secondary_reads": {"name": "Secondary", "color": rev_8[3]},
+            "b_n_low_mapq_reads": {"name": "Low mapq", "color": rev_8[2]},
+            "b_n_unmapped_reads": {"name": "Unmapped", "color": rev_8[1]},
+            "b_n_skipped_reads": {"name": "Skipped", "color": rev_8[0]},
+        }
         return bargraph.plot(self.qc3c_data["bam"], categories, config)
 
     def bam_signal_table(self):
-
         config = {"id": "qc3C_bam_signal_table", "namespace": "qc3C", "hide_zero_cats": False, "col1_header": "Sample"}
 
-        headers = OrderedDict(
-            {
-                # 'b_p_trans_pairs': {
-                #     'title': 'Trans pairs',
-                #     'description': 'Fraction of pairs mapping between reference sequences',
-                #     'min': 0,
-                #     'max': 100,
-                #     'suffix': '%',
-                #     'scale': 'Greens'
-                # },
-                # 'b_p_cis_pairs': {
-                #     'title': 'Cis pairs',
-                #     'description': 'Fraction of pairs mapping to the same reference sequence',
-                #     'min': 0,
-                #     'max': 100,
-                #     'suffix': '%',
-                #     'scale': 'Greens'
-                # },
-                # 'b_p_short_inserts': {
-                #     'title': 'Short range',
-                #     'description': 'Fraction of pairs with small separation (< 1000bp)',
-                #     'min': 0,
-                #     'max': 100,
-                #     'suffix': '%',
-                #     'scale': 'Reds'
-                # },
-                "b_unobs_fraction": {
-                    "title": "Unobservable extent",
-                    "description": "Estimated fraction of total fragment extent that was unobservable",
-                    "min": 0,
-                    "max": 100,
-                    "suffix": "%",
-                    "scale": "Reds",
-                },
-                # 'b_p_cs_start': {
-                #     'title': 'CS start',
-                #     'description': 'Fraction of aligned reads that began with a cutsite',
-                #     'min': 0,
-                #     'max': 100,
-                #     'suffix': '%',
-                #     'scale': 'Greens'
-                # },
-                # 'b_p_cs_term': {
-                #     'title': 'CS term',
-                #     'description': 'Fraction of reads where the alignment ends in a cutsite',
-                #     'min': 0,
-                #     'max': 100,
-                #     'suffix': '%',
-                #     'scale': 'Greens'
-                # },
-                # 'b_p_cs_full': {
-                #     'title': 'CS full',
-                #     'description': 'Fraction of reads fully aligned and ending in a cutsite',
-                #     'min': 0,
-                #     'max': 100,
-                #     'suffix': '%',
-                #     'scale': 'Greens'
-                # },
-                "b_p_read_thru": {
-                    "title": "Read-thru",
-                    "description": "Fraction of reads whose alignments end in a cutsite and whose sequence continues for the full junction",
-                    "min": 0,
-                    "max": 100,
-                    "suffix": "%",
-                    "scale": "Greens",
-                },
-                # 'b_p_is_split': {
-                #     'title': 'Split',
-                #     'description': 'Fraction of read-thru reads further split aligned',
-                #     'min': 0,
-                #     'max': 100,
-                #     'suffix': '%',
-                #     'scale': 'Greens'
-                # },
-                # 'b_adj_read_thru': {
-                #     'title': 'Adj read-thru',
-                #     'description': 'Fraction of read-thru events adjusted for unobservable extent',
-                #     'min': 0,
-                #     'max': 100,
-                #     'suffix': '%',
-                #     'scale': 'Greens'
-                # },
-            }
-        )
+        headers = {
+            "b_unobs_fraction": {
+                "title": "Unobservable extent",
+                "description": "Estimated fraction of total fragment extent that was unobservable",
+                "min": 0,
+                "max": 100,
+                "suffix": "%",
+                "scale": "Reds",
+            },
+            "b_p_read_thru": {
+                "title": "Read-thru",
+                "description": "Fraction of reads whose alignments end in a cutsite and whose sequence continues for the full junction",
+                "min": 0,
+                "max": 100,
+                "suffix": "%",
+                "scale": "Greens",
+            },
+        }
         return table.plot(self.qc3c_data["bam"], headers, config)
 
     def bam_hicpro_table(self):
-
         config = {"id": "qc3C_bam_hicpro_table", "namespace": "qc3C", "hide_zero_cats": False, "col1_header": "Sample"}
 
-        headers = OrderedDict(
-            {
-                "b_p_informative_fr": {"title": "Valid FR", "min": 0, "max": 100, "suffix": "%", "scale": "Greens"},
-                "b_p_informative_rf": {"title": "Valid RF", "min": 0, "max": 100, "suffix": "%", "scale": "Greens"},
-                "b_p_informative_ffrr": {
-                    "title": "Valid FF|RR",
-                    "min": 0,
-                    "max": 100,
-                    "suffix": "%",
-                    "scale": "Greens",
-                },
-                "b_p_uninformative_religation": {
-                    "title": "Religation",
-                    "min": 0,
-                    "max": 100,
-                    "suffix": "%",
-                    "scale": "Blues",
-                },
-                "b_p_uninformative_dangling_ends": {
-                    "title": "Dangling End",
-                    "min": 0,
-                    "max": 100,
-                    "suffix": "%",
-                    "scale": "Reds",
-                },
-                "b_p_uninformative_self_circle": {
-                    "title": "Self-circle",
-                    "min": 0,
-                    "max": 100,
-                    "suffix": "%",
-                    "scale": "Reds",
-                },
-                "b_p_uninformative_ffrr": {
-                    "title": "Invalid FF|RR",
-                    "min": 0,
-                    "max": 100,
-                    "suffix": "%",
-                    "scale": "Reds",
-                },
-            }
-        )
+        headers = {
+            "b_p_informative_fr": {"title": "Valid FR", "min": 0, "max": 100, "suffix": "%", "scale": "Greens"},
+            "b_p_informative_rf": {"title": "Valid RF", "min": 0, "max": 100, "suffix": "%", "scale": "Greens"},
+            "b_p_informative_ffrr": {
+                "title": "Valid FF|RR",
+                "min": 0,
+                "max": 100,
+                "suffix": "%",
+                "scale": "Greens",
+            },
+            "b_p_uninformative_religation": {
+                "title": "Religation",
+                "min": 0,
+                "max": 100,
+                "suffix": "%",
+                "scale": "Blues",
+            },
+            "b_p_uninformative_dangling_ends": {
+                "title": "Dangling End",
+                "min": 0,
+                "max": 100,
+                "suffix": "%",
+                "scale": "Reds",
+            },
+            "b_p_uninformative_self_circle": {
+                "title": "Self-circle",
+                "min": 0,
+                "max": 100,
+                "suffix": "%",
+                "scale": "Reds",
+            },
+            "b_p_uninformative_ffrr": {
+                "title": "Invalid FF|RR",
+                "min": 0,
+                "max": 100,
+                "suffix": "%",
+                "scale": "Reds",
+            },
+        }
         return table.plot(self.qc3c_data["bam"], headers, config)
 
     def bam_valid_plot(self):
@@ -694,17 +614,15 @@ class MultiqcModule(BaseMultiqcModule):
             "cpswitch_counts_label": "Number of Reads",
         }
 
-        categories = OrderedDict(
-            {
-                "b_n_informative_fr": {"name": "Valid FR", "color": "#41ab5d"},
-                "b_n_informative_rf": {"name": "Valid RF", "color": "#74c476"},
-                "b_n_informative_ffrr": {"name": "Valid FF|RR", "color": "#a1d99b"},
-                "b_n_uninformative_religation": {"name": "Religation", "color": "#fcbba1"},
-                "b_n_uninformative_dangling_ends": {"name": "Dangling End", "color": "#fc9272"},
-                "b_n_uninformative_self_circle": {"name": "Self-circle", "color": "#fb6a4a"},
-                "b_n_uninformative_ffrr": {"name": "Invalid FF|RR", "color": "#ef3b2c"},
-            }
-        )
+        categories = {
+            "b_n_informative_fr": {"name": "Valid FR", "color": "#41ab5d"},
+            "b_n_informative_rf": {"name": "Valid RF", "color": "#74c476"},
+            "b_n_informative_ffrr": {"name": "Valid FF|RR", "color": "#a1d99b"},
+            "b_n_uninformative_religation": {"name": "Religation", "color": "#fcbba1"},
+            "b_n_uninformative_dangling_ends": {"name": "Dangling End", "color": "#fc9272"},
+            "b_n_uninformative_self_circle": {"name": "Self-circle", "color": "#fb6a4a"},
+            "b_n_uninformative_ffrr": {"name": "Invalid FF|RR", "color": "#ef3b2c"},
+        }
         return bargraph.plot(self.qc3c_data["bam"], categories, config)
 
     def bam_junction_plot(self):
@@ -717,7 +635,7 @@ class MultiqcModule(BaseMultiqcModule):
             "use_legend": False,
         }
 
-        categories = OrderedDict()
+        categories = dict()
         for v in self.digest_junctions["bam"].values():
             for vi in v:
                 categories[vi["name"]] = vi
@@ -725,7 +643,6 @@ class MultiqcModule(BaseMultiqcModule):
         return bargraph.plot(self.qc3c_data["bam"], categories, config)
 
     def bam_fragment_histogram(self):
-
         median_lines = []
         for smpl in self.qc3c_data["bam"]:
             median_lines.append(
@@ -760,134 +677,80 @@ class MultiqcModule(BaseMultiqcModule):
         return linegraph.plot(data, config)
 
     def kmer_runtime_table(self):
+        config = {"id": "qc3C_kmer_runtime_table", "namespace": "qc3C", "col1_header": "Sample", "scale": False}
 
-        config = {"id": "qc3C_kmer_runtime_table", "namespace": "qc3C", "col1_header": "Sample"}
-
-        headers = OrderedDict(
-            {
-                "k_run_timestamp": {
-                    "title": "Date",
-                    "description": "Analysis time stamp",
-                    "modify": MultiqcModule._drop_time,
-                    "hidden": True,
-                },
-                "k_mode": {"title": "Run Mode", "description": "Analysis mode used", "hidden": True},
-                "k_kmer_size": {
-                    "title": "k",
-                    "description": "Library k-mer size",
-                    "min": 0,
-                    "format": "{:d}",
-                    "scale": False,
-                    "hidden": True,
-                },
-                "k_enzymes": {"title": "Digest", "description": "Enzymes used in digest"},
-                # 'k_seed': {
-                #     'title': 'Seed',
-                #     'description': 'Random seed',
-                #     # 'format': '{:d}',
-                #     'scale': False,
-                #     'hidden': True,
-                #     'modify': lambda x: 'None' if x is None else x
-                # },
-                # 'k_max_obs': {
-                #     'title': 'Max obs',
-                #     'description': 'User specified maximum number of observations',
-                #     'min': 0,
-                #     'format': '{:,d}',
-                #     'scale': 'OrRd',
-                #     'modify': lambda x: 'n/a' if x == -1 else x
-                # },
-                "k_n_accepted_reads": {
-                    "title": "Accepted reads",
-                    "description": "Number of reads accepted for analysis",
-                    "min": 0,
-                    "format": "{:,d}",
-                    "scale": "BuGn",
-                },
-                # 'k_sample_rate': {
-                #     'title': 'Sample rate',
-                #     'description': 'Sub-sampling probability',
-                #     'min': 0,
-                #     'max': 1,
-                #     'format': '{:g}',
-                #     'scale': 'Greys'
-                # },
-                # 'k_max_freq_quantile': {
-                #     'title': 'Quantile',
-                #     'description': 'Quantile cut-off for low-pass k-mer frequency filter',
-                #     'min': 0,
-                #     'max': 1,
-                #     'format': '{:g}',
-                #     'scale': 'Purples'
-                # },
-                # 'k_max_freq': {
-                #     'title': 'Max freq',
-                #     'description': 'Maximum k-mer frequency after quantile filtering',
-                #     'min': 0,
-                #     'format': '{:,d}',
-                #     'scale': 'Blues'
-                # },
-                "k_mean_insert": {
-                    "title": "Insert length",
-                    "description": "User-specified insert size",
-                    "min": 0,
-                    "format": "{:,.0f}",
-                    "suffix": "bp",
-                    "scale": "Greens",
-                },
-                "k_mean_readlen": {
-                    "title": "Read length",
-                    "description": "Observed average read length",
-                    "format": "{:,.0f}",
-                    "suffix": "bp",
-                    "scale": "Blues",
-                },
-                "k_unobs_fraction": {
-                    "title": "Unobservable extent",
-                    "description": "Estimated mean of the unobservable portion of fragments",
-                    "shared_key": "unobs_mean",
-                    "min": 0,
-                    "max": 100,
-                    "suffix": "%",
-                    "scale": "Reds",
-                },
-            }
-        )
+        headers = {
+            "k_run_timestamp": {
+                "title": "Date",
+                "description": "Analysis time stamp",
+                "modify": MultiqcModule._drop_time,
+                "hidden": True,
+            },
+            "k_mode": {"title": "Run Mode", "description": "Analysis mode used", "hidden": True},
+            "k_kmer_size": {
+                "title": "k",
+                "description": "Library k-mer size",
+                "min": 0,
+                "format": "{:d}",
+                "scale": False,
+                "hidden": True,
+            },
+            "k_enzymes": {"title": "Digest", "description": "Enzymes used in digest"},
+            "k_n_accepted_reads": {
+                "title": "Accepted reads",
+                "description": "Number of reads accepted for analysis",
+                "min": 0,
+                "format": "{:,d}",
+                "scale": "BuGn",
+            },
+            "k_mean_insert": {
+                "title": "Insert length",
+                "description": "User-specified insert size",
+                "min": 0,
+                "format": "{:,.0f}",
+                "suffix": "bp",
+                "scale": "Greens",
+            },
+            "k_mean_readlen": {
+                "title": "Read length",
+                "description": "Observed average read length",
+                "format": "{:,.0f}",
+                "suffix": "bp",
+                "scale": "Blues",
+            },
+            "k_unobs_fraction": {
+                "title": "Unobservable extent",
+                "description": "Estimated mean of the unobservable portion of fragments",
+                "shared_key": "unobs_mean",
+                "min": 0,
+                "max": 100,
+                "suffix": "%",
+                "scale": "Reds",
+            },
+        }
         return table.plot(self.qc3c_data["kmer"], headers, config)
 
     def kmer_signal_table(self):
-
         config = {"id": "qc3C_kmer_signal_table", "namespace": "qc3C", "col1_header": "Sample"}
 
-        headers = OrderedDict(
-            {
-                # 'k_unobs_fraction': {
-                #     'title': 'Unobservable extent',
-                #     'description': 'Estimated mean of the unobservable portion of fragments',
-                #     'shared_key': 'unobs_mean',
-                #     'min': 0,
-                #     'max': 100,
-                #     'suffix': '%',
-                #     'scale': 'Reds'
-                # },
-                "k_raw_fraction": {
-                    "title": "Mean raw Hi-C fraction",
-                    "description": "Estimated mean of Hi-C fraction from only the observable extent",
-                    "min": 0,
-                    "max": 100,
-                    "suffix": "%",
-                    "scale": "Greens",
-                },
-                "k_adj_fraction": {
-                    "title": "Mean adjusted Hi-C fraction",
-                    "description": "Estimated mean of Hi-C fraction adjusted for unobservable extent",
-                    "min": 0,
-                    "max": 100,
-                    "suffix": "%",
-                    "scale": "Blues",
-                },
-            }
-        )
+        headers = {
+            "k_raw_fraction": {
+                "title": "Mean raw Hi-C fraction",
+                "description": "Estimated mean of Hi-C fraction from only the observable extent",
+                "min": 0,
+                "max": 100,
+                "suffix": "%",
+                "scale": "Greens",
+            },
+            "k_adj_fraction": {
+                "title": "Mean adjusted Hi-C fraction",
+                "description": "Estimated mean of Hi-C fraction adjusted for unobservable extent",
+                "min": 0,
+                "max": 100,
+                "suffix": "%",
+                "scale": "Blues",
+            },
+        }
         return table.plot(self.qc3c_data["kmer"], headers, config)
 
     def kmer_acceptance_plot(self):
@@ -900,18 +763,16 @@ class MultiqcModule(BaseMultiqcModule):
             "cpswitch_counts_label": "Number of Reads",
         }
 
-        categories = OrderedDict(
-            {
-                "k_n_accepted_reads": {"name": "Accepted", "color": rev_8[-1]},
-                "k_n_low_cov": {"name": "Low cov", "color": rev_8[6]},
-                "k_n_zero_cov": {"name": "Zero cov", "color": rev_8[5]},
-                "k_n_high_cov": {"name": "High cov", "color": rev_8[4]},
-                "k_n_ambiguous": {"name": "Ambiguous", "color": rev_8[3]},
-                "k_n_no_flank": {"name": "No flank", "color": rev_8[2]},
-                "k_n_too_short": {"name": "Too short", "color": rev_8[1]},
-                "k_n_skipped": {"name": "Skipped", "color": rev_8[0]},
-            }
-        )
+        categories = {
+            "k_n_accepted_reads": {"name": "Accepted", "color": rev_8[-1]},
+            "k_n_low_cov": {"name": "Low cov", "color": rev_8[6]},
+            "k_n_zero_cov": {"name": "Zero cov", "color": rev_8[5]},
+            "k_n_high_cov": {"name": "High cov", "color": rev_8[4]},
+            "k_n_ambiguous": {"name": "Ambiguous", "color": rev_8[3]},
+            "k_n_no_flank": {"name": "No flank", "color": rev_8[2]},
+            "k_n_too_short": {"name": "Too short", "color": rev_8[1]},
+            "k_n_skipped": {"name": "Skipped", "color": rev_8[0]},
+        }
         return bargraph.plot(self.qc3c_data["kmer"], categories, config)
 
     def kmer_signal_plot(self):
@@ -927,12 +788,10 @@ class MultiqcModule(BaseMultiqcModule):
             "cpswitch_counts_label": "Number of Reads",
         }
 
-        categories = OrderedDict(
-            {
-                "k_raw_fraction": {"name": "Raw Hi-C fraction", "color": "#ef3b2c"},
-                "k_adj_fraction": {"name": "Adjusted Hi-C fraction", "color": "#41ab5d"},
-            }
-        )
+        categories = {
+            "k_raw_fraction": {"name": "Raw Hi-C fraction", "color": "#ef3b2c"},
+            "k_adj_fraction": {"name": "Adjusted Hi-C fraction", "color": "#41ab5d"},
+        }
         return bargraph.plot(self.qc3c_data["kmer"], categories, config)
 
     def kmer_junction_plot(self):
@@ -945,7 +804,7 @@ class MultiqcModule(BaseMultiqcModule):
             "use_legend": False,
         }
 
-        categories = OrderedDict()
+        categories = dict()
         for _cat in self.digest_junctions["kmer"].values():
             for vi in _cat:
                 categories[vi["name"]] = vi
@@ -972,6 +831,10 @@ class MultiqcModule(BaseMultiqcModule):
         s_name = self.clean_s_name(os.path.basename(f["root"]), f, root=os.path.dirname(f["root"]))
         if s_name in self.qc3c_data:
             log.debug("Duplicate sample name found! Overwriting: {}".format(f["s_name"]))
+
+        # Add version info
+        version = parsed["runtime_info"]["qc3C_version"].split()[-1]
+        self.add_software_version(version, f["s_name"])
 
         try:
             analysis_mode = parsed["mode"]
@@ -1064,7 +927,6 @@ class MultiqcModule(BaseMultiqcModule):
                 self.qc3c_data["bam"][s_name]["frag_hist"] = fhist
 
             elif analysis_mode == "kmer":
-
                 for k in "raw_fraction", "adj_fraction", "unobs_fraction":
                     if parsed[k] is None:
                         parsed[k] = "Error - adjusted value would exceed 100"
@@ -1116,8 +978,6 @@ class MultiqcModule(BaseMultiqcModule):
                     "{}/{}".format(v["enz5p"], v["enz3p"]): 4 ** v["junction"].count("N")
                     for k, v in parsed["digestion"]["junctions"].items()
                 }
-                # sort these by "enzyme combo + junction"
-                degen_count = OrderedDict(sorted(degen_count.items(), key=lambda x: x[0]))
                 # get a palette for this series
                 cols = color_picker(list(degen_count.values()))
                 # sort these in accordance with that above
@@ -1137,8 +997,8 @@ class MultiqcModule(BaseMultiqcModule):
 
         except KeyError as ex:
             log.error(
-                "The entry {} was not found in the qc3C JSON file '{}'".format(
-                    str(ex), os.path.join(f["root"], f["fn"])
+                "The entry {} was not found in the qc3C JSON file '{}', skipping sample {}".format(
+                    str(ex), os.path.join(f["root"], f["fn"]), f["s_name"]
                 )
             )
             return

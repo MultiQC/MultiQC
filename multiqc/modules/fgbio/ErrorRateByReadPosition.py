@@ -1,10 +1,8 @@
-#!/usr/bin/env python
-
 """ MultiQC submodule to parse output from fgbio ErrorRateByReadPosition """
 
 
-from distutils.util import strtobool
 from multiqc.plots import linegraph
+from multiqc.utils.util_functions import strtobool
 
 
 def parse_reports(self):
@@ -61,7 +59,7 @@ def parse_reports(self):
             fields[4:11] = [float(field) for field in fields[4:11]]
             if is_new_format:
                 # Check if collapse was true or false
-                fields[-1] = bool(strtobool(fields[-1]))
+                fields[-1] = strtobool(fields[-1])
                 collapse = fields[-1]
                 if not collapse:
                     # Substitutions types were not collapsed, parse them
@@ -83,6 +81,10 @@ def parse_reports(self):
             all_data[s_name] = s_data
             error_rate = 0.0 if bases_total == 0 else errors / float(bases_total)
             error_rates[s_name] = {"error_rate": error_rate}
+
+        # Superfluous function call to confirm that it is used in this module
+        # Replace None with actual version if it is available
+        self.add_software_version(None, f["s_name"])
 
     # ignore samples
     all_data = self.ignore_samples(all_data)
@@ -173,7 +175,7 @@ def parse_reports(self):
             "description": "Percent error across all read positions",
             "min": 0,
             "max": 100.0,
-            "scale": "GnYlRd",
+            "scale": "RdYlGn-rev",
             "suffix": "%",
             "format": "{:,.2f}",
             "modify": lambda x: 100.0 * x,

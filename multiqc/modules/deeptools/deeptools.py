@@ -1,20 +1,19 @@
-#!/usr/bin/env python
 """MultiQC module to parse the output from deepTools"""
-from collections import OrderedDict
 import logging
 
-from multiqc.modules.base_module import BaseMultiqcModule
+from multiqc.modules.base_module import BaseMultiqcModule, ModuleNoSamplesFound
+
+from .bamPEFragmentSizeDistribution import bamPEFragmentSizeDistributionMixin
 
 # deepTools modules
 from .bamPEFragmentSizeTable import bamPEFragmentSizeTableMixin
-from .bamPEFragmentSizeDistribution import bamPEFragmentSizeDistributionMixin
-from .estimateReadFiltering import estimateReadFilteringMixin
-from .plotCoverage import plotCoverageMixin
-from .plotEnrichment import plotEnrichmentMixin
-from .plotFingerprint import plotFingerprintMixin
-from .plotProfile import plotProfileMixin
-from .plotPCA import plotPCAMixin
+from .estimateReadFiltering import EstimateReadFilteringMixin
 from .plotCorrelation import plotCorrelationMixin
+from .plotCoverage import plotCoverageMixin
+from .plotEnrichment import PlotEnrichmentMixin
+from .plotFingerprint import PlotFingerprintMixin
+from .plotPCA import plotPCAMixin
+from .plotProfile import plotProfileMixin
 
 # Initialise the logger
 log = logging.getLogger(__name__)
@@ -24,16 +23,15 @@ class MultiqcModule(
     BaseMultiqcModule,
     bamPEFragmentSizeTableMixin,
     bamPEFragmentSizeDistributionMixin,
-    estimateReadFilteringMixin,
+    EstimateReadFilteringMixin,
     plotCoverageMixin,
-    plotEnrichmentMixin,
-    plotFingerprintMixin,
+    PlotEnrichmentMixin,
+    PlotFingerprintMixin,
     plotProfileMixin,
     plotPCAMixin,
     plotCorrelationMixin,
 ):
     def __init__(self):
-
         # Initialise the parent object
         super(MultiqcModule, self).__init__(
             name="deepTools",
@@ -45,7 +43,7 @@ class MultiqcModule(
         )
 
         # Set up class objects to hold parsed data
-        self.general_stats_headers = OrderedDict()
+        self.general_stats_headers = dict()
         self.general_stats_data = dict()
         n = dict()
 
@@ -60,7 +58,7 @@ class MultiqcModule(
             log.debug("Found {} deepTools plotPCA samples".format(n["plotPCA"]))
 
         # plotEnrichment
-        n["plotEnrichment"] = self.parse_plotEnrichment()
+        n["plotEnrichment"] = self.parse_plot_enrichment()
         if n["plotEnrichment"] > 0:
             log.debug("Found {} deepTools plotEnrichment samples".format(n["plotEnrichment"]))
 
@@ -112,7 +110,7 @@ class MultiqcModule(
             )
 
         # estimateReadFiltering
-        n["estimateReadFiltering"] = self.parse_estimateReadFiltering()
+        n["estimateReadFiltering"] = self.parse_estimate_read_filtering()
         if n["estimateReadFiltering"] > 0:
             log.debug("Found {} deepTools estimateReadFiltering samples".format(n["estimateReadFiltering"]))
 
@@ -120,7 +118,7 @@ class MultiqcModule(
         if tot > 0:
             log.info("Found {} total deepTools samples".format(tot))
         else:
-            raise UserWarning
+            raise ModuleNoSamplesFound
 
     def _int(self, val):
         """Avoids Python3 error:

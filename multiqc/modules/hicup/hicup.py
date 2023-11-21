@@ -1,13 +1,11 @@
-#!/usr/bin/env python
-
 """ MultiQC module to parse output from HiCUP """
 
-from __future__ import print_function
-from collections import OrderedDict
+
 import logging
+
 from multiqc import config
+from multiqc.modules.base_module import BaseMultiqcModule, ModuleNoSamplesFound
 from multiqc.plots import bargraph
-from multiqc.modules.base_module import BaseMultiqcModule
 
 # Initialise the logger
 log = logging.getLogger(__name__)
@@ -17,7 +15,6 @@ class MultiqcModule(BaseMultiqcModule):
     """HiCUP module, parses log files saved by HiCUP."""
 
     def __init__(self):
-
         # Initialise the parent object
         super(MultiqcModule, self).__init__(
             name="HiCUP",
@@ -36,9 +33,13 @@ class MultiqcModule(BaseMultiqcModule):
         self.hicup_data = self.ignore_samples(self.hicup_data)
 
         if len(self.hicup_data) == 0:
-            raise UserWarning
+            raise ModuleNoSamplesFound
 
         log.info("Found {} reports".format(len(self.hicup_data)))
+
+        # Superfluous function call to confirm that it is used in this module
+        # Replace None with actual version if it is available
+        self.add_software_version(None)
 
         # Write parsed data to a file
         self.write_data_file(self.hicup_data, "multiqc_hicup")
@@ -69,8 +70,8 @@ class MultiqcModule(BaseMultiqcModule):
             return None
         header = []
         lines = f["f"].splitlines()
-        for l in lines:
-            s = l.split("\t")
+        for line in lines:
+            s = line.split("\t")
             if len(header) == 0:
                 if s[0] != "File":
                     return None
@@ -83,7 +84,7 @@ class MultiqcModule(BaseMultiqcModule):
                 for idx, num in enumerate(s[1:]):
                     try:
                         parsed_data[header[idx]] = float(num)
-                    except:
+                    except ValueError:
                         parsed_data[header[idx]] = num
                 parsed_data["Duplicate_Read_Pairs"] = (
                     parsed_data["Valid_Pairs"] - parsed_data["Deduplication_Read_Pairs_Uniques"]
@@ -95,73 +96,75 @@ class MultiqcModule(BaseMultiqcModule):
 
     def hicup_stats_table(self):
         """Add core HiCUP stats to the general stats table"""
-        headers = OrderedDict()
-        headers["Percentage_Ditags_Passed_Through_HiCUP"] = {
-            "title": "% Passed",
-            "description": "Percentage Di-Tags Passed Through HiCUP",
-            "max": 100,
-            "min": 0,
-            "suffix": "%",
-            "scale": "YlGn",
+        headers = {
+            "Percentage_Ditags_Passed_Through_HiCUP": {
+                "title": "% Passed",
+                "description": "Percentage Di-Tags Passed Through HiCUP",
+                "max": 100,
+                "min": 0,
+                "suffix": "%",
+                "scale": "YlGn",
+            },
+            "Deduplication_Read_Pairs_Uniques": {
+                "title": "{} Unique".format(config.read_count_prefix),
+                "description": "Unique Di-Tags ({})".format(config.read_count_desc),
+                "min": 0,
+                "scale": "PuRd",
+                "modify": lambda x: x * config.read_count_multiplier,
+                "shared_key": "read_count",
+            },
+            "Percentage_Uniques": {
+                "title": "% Duplicates",
+                "description": "Percent Duplicate Di-Tags",
+                "max": 100,
+                "min": 0,
+                "suffix": "%",
+                "scale": "YlGn-rev",
+                "modify": lambda x: 100 - x,
+            },
+            "Valid_Pairs": {
+                "title": "{} Valid".format(config.read_count_prefix),
+                "description": "Valid Pairs ({})".format(config.read_count_desc),
+                "min": 0,
+                "scale": "PuRd",
+                "modify": lambda x: x * config.read_count_multiplier,
+                "shared_key": "read_count",
+            },
+            "Percentage_Valid": {
+                "title": "% Valid",
+                "description": "Percent Valid Pairs",
+                "max": 100,
+                "min": 0,
+                "suffix": "%",
+                "scale": "YlGn",
+            },
+            "Paired_Read_1": {
+                "title": "{} Pairs Aligned".format(config.read_count_prefix),
+                "description": "Paired Alignments ({})".format(config.read_count_desc),
+                "min": 0,
+                "scale": "PuRd",
+                "modify": lambda x: x * config.read_count_multiplier,
+                "shared_key": "read_count",
+            },
+            "Percentage_Mapped": {
+                "title": "% Aligned",
+                "description": "Percentage of Paired Alignments",
+                "max": 100,
+                "min": 0,
+                "suffix": "%",
+                "scale": "YlGn",
+            },
         }
-        headers["Deduplication_Read_Pairs_Uniques"] = {
-            "title": "{} Unique".format(config.read_count_prefix),
-            "description": "Unique Di-Tags ({})".format(config.read_count_desc),
-            "min": 0,
-            "scale": "PuRd",
-            "modify": lambda x: x * config.read_count_multiplier,
-            "shared_key": "read_count",
-        }
-        headers["Percentage_Uniques"] = {
-            "title": "% Duplicates",
-            "description": "Percent Duplicate Di-Tags",
-            "max": 100,
-            "min": 0,
-            "suffix": "%",
-            "scale": "YlGn-rev",
-            "modify": lambda x: 100 - x,
-        }
-        headers["Valid_Pairs"] = {
-            "title": "{} Valid".format(config.read_count_prefix),
-            "description": "Valid Pairs ({})".format(config.read_count_desc),
-            "min": 0,
-            "scale": "PuRd",
-            "modify": lambda x: x * config.read_count_multiplier,
-            "shared_key": "read_count",
-        }
-        headers["Percentage_Valid"] = {
-            "title": "% Valid",
-            "description": "Percent Valid Pairs",
-            "max": 100,
-            "min": 0,
-            "suffix": "%",
-            "scale": "YlGn",
-        }
-        headers["Paired_Read_1"] = {
-            "title": "{} Pairs Aligned".format(config.read_count_prefix),
-            "description": "Paired Alignments ({})".format(config.read_count_desc),
-            "min": 0,
-            "scale": "PuRd",
-            "modify": lambda x: x * config.read_count_multiplier,
-            "shared_key": "read_count",
-        }
-        headers["Percentage_Mapped"] = {
-            "title": "% Aligned",
-            "description": "Percentage of Paired Alignments",
-            "max": 100,
-            "min": 0,
-            "suffix": "%",
-            "scale": "YlGn",
-        }
-        self.general_stats_addcols(self.hicup_data, headers, "HiCUP")
+        self.general_stats_addcols(self.hicup_data, headers)
 
     def hicup_truncating_chart(self):
         """Generate the HiCUP Truncated reads plot"""
 
         # Specify the order of the different possible categories
-        keys = OrderedDict()
-        keys["Not_Truncated_Reads"] = {"color": "#2f7ed8", "name": "Not Truncated"}
-        keys["Truncated_Read"] = {"color": "#0d233a", "name": "Truncated"}
+        keys = {
+            "Not_Truncated_Reads": {"color": "#2f7ed8", "name": "Not Truncated"},
+            "Truncated_Read": {"color": "#0d233a", "name": "Truncated"},
+        }
 
         # Construct a data structure for the plot - duplicate the samples for read 1 and read 2
         data = {}
@@ -187,11 +190,12 @@ class MultiqcModule(BaseMultiqcModule):
         """Generate the HiCUP Aligned reads plot"""
 
         # Specify the order of the different possible categories
-        keys = OrderedDict()
-        keys["Unique_Alignments_Read"] = {"color": "#2f7ed8", "name": "Unique Alignments"}
-        keys["Multiple_Alignments_Read"] = {"color": "#492970", "name": "Multiple Alignments"}
-        keys["Failed_To_Align_Read"] = {"color": "#0d233a", "name": "Failed To Align"}
-        keys["Too_Short_To_Map_Read"] = {"color": "#f28f43", "name": "Too short to map"}
+        keys = {
+            "Unique_Alignments_Read": {"color": "#2f7ed8", "name": "Unique Alignments"},
+            "Multiple_Alignments_Read": {"color": "#492970", "name": "Multiple Alignments"},
+            "Failed_To_Align_Read": {"color": "#0d233a", "name": "Failed To Align"},
+            "Too_Short_To_Map_Read": {"color": "#f28f43", "name": "Too short to map"},
+        }
 
         # Construct a data structure for the plot - duplicate the samples for read 1 and read 2
         data = {}
@@ -233,14 +237,15 @@ class MultiqcModule(BaseMultiqcModule):
         """Generate the HiCUP filtering plot"""
 
         # Specify the order of the different possible categories
-        keys = OrderedDict()
-        keys["Valid_Pairs"] = {"color": "#2f7ed8", "name": "Valid Pairs"}
-        keys["Same_Fragment_Internal"] = {"color": "#0d233a", "name": "Same Fragment - Internal"}
-        keys["Same_Circularised"] = {"color": "#910000", "name": "Same Fragment - Circularised"}
-        keys["Same_Dangling_Ends"] = {"color": "#8bbc21", "name": "Same Fragment - Dangling Ends"}
-        keys["Re_Ligation"] = {"color": "#1aadce", "name": "Re-ligation"}
-        keys["Contiguous_Sequence"] = {"color": "#f28f43", "name": "Contiguous Sequence"}
-        keys["Wrong_Size"] = {"color": "#492970", "name": "Wrong Size"}
+        keys = {
+            "Valid_Pairs": {"color": "#2f7ed8", "name": "Valid Pairs"},
+            "Same_Fragment_Internal": {"color": "#0d233a", "name": "Same Fragment - Internal"},
+            "Same_Circularised": {"color": "#910000", "name": "Same Fragment - Circularised"},
+            "Same_Dangling_Ends": {"color": "#8bbc21", "name": "Same Fragment - Dangling Ends"},
+            "Re_Ligation": {"color": "#1aadce", "name": "Re-ligation"},
+            "Contiguous_Sequence": {"color": "#f28f43", "name": "Contiguous Sequence"},
+            "Wrong_Size": {"color": "#492970", "name": "Wrong Size"},
+        }
 
         # Config for the plot
         config = {
@@ -257,11 +262,12 @@ class MultiqcModule(BaseMultiqcModule):
         """Generate the HiCUP Deduplication plot"""
 
         # Specify the order of the different possible categories
-        keys = OrderedDict()
-        keys["Deduplication_Cis_Close_Uniques"] = {"color": "#2f7ed8", "name": "Unique: cis < 10Kbp"}
-        keys["Deduplication_Cis_Far_Uniques"] = {"color": "#0d233a", "name": "Unique: cis > 10Kbp"}
-        keys["Deduplication_Trans_Uniques"] = {"color": "#492970", "name": "Unique: trans"}
-        keys["Duplicate_Read_Pairs"] = {"color": "#f28f43", "name": "Duplicate read pairs"}
+        keys = {
+            "Deduplication_Cis_Close_Uniques": {"color": "#2f7ed8", "name": "Unique: cis < 10Kbp"},
+            "Deduplication_Cis_Far_Uniques": {"color": "#0d233a", "name": "Unique: cis > 10Kbp"},
+            "Deduplication_Trans_Uniques": {"color": "#492970", "name": "Unique: trans"},
+            "Duplicate_Read_Pairs": {"color": "#f28f43", "name": "Duplicate read pairs"},
+        }
 
         # Config for the plot
         config = {

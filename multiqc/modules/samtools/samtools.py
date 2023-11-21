@@ -1,16 +1,16 @@
-#!/usr/bin/env python
 """ MultiQC module to parse output from Samtools """
-from __future__ import print_function
-from collections import OrderedDict
+
+
 import logging
 
-from multiqc.modules.base_module import BaseMultiqcModule
+from multiqc.modules.base_module import BaseMultiqcModule, ModuleNoSamplesFound
 
-# Import the Samtools submodules
-from .stats import StatsReportMixin
 from .flagstat import FlagstatReportMixin
 from .idxstats import IdxstatsReportMixin
 from .rmdup import RmdupReportMixin
+
+# Import the Samtools submodules
+from .stats import StatsReportMixin
 
 # Initialise the logger
 log = logging.getLogger(__name__)
@@ -23,7 +23,6 @@ class MultiqcModule(BaseMultiqcModule, StatsReportMixin, FlagstatReportMixin, Id
     the module output if logs are found."""
 
     def __init__(self):
-
         # Initialise the parent object
         super(MultiqcModule, self).__init__(
             name="Samtools",
@@ -35,7 +34,7 @@ class MultiqcModule(BaseMultiqcModule, StatsReportMixin, FlagstatReportMixin, Id
         )
 
         # Set up class objects to hold parsed data
-        self.general_stats_headers = OrderedDict()
+        self.general_stats_headers = dict()
         self.general_stats_data = dict()
         n = dict()
 
@@ -58,7 +57,7 @@ class MultiqcModule(BaseMultiqcModule, StatsReportMixin, FlagstatReportMixin, Id
 
         # Exit if we didn't find anything
         if sum(n.values()) == 0:
-            raise UserWarning
+            raise ModuleNoSamplesFound
 
         # Add to the General Stats table (has to be called once per MultiQC module)
         self.general_stats_addcols(self.general_stats_data, self.general_stats_headers)

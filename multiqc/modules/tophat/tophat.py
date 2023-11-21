@@ -1,16 +1,13 @@
-#!/usr/bin/env python
-
 """ MultiQC module to parse output from Tophat """
 
-from __future__ import print_function
-from collections import OrderedDict
+
 import logging
 import os
 import re
 
 from multiqc import config
+from multiqc.modules.base_module import BaseMultiqcModule, ModuleNoSamplesFound
 from multiqc.plots import bargraph
-from multiqc.modules.base_module import BaseMultiqcModule
 
 # Initialise the logger
 log = logging.getLogger(__name__)
@@ -18,7 +15,6 @@ log = logging.getLogger(__name__)
 
 class MultiqcModule(BaseMultiqcModule):
     def __init__(self):
-
         # Initialise the parent object
         super(MultiqcModule, self).__init__(
             name="Tophat",
@@ -48,9 +44,13 @@ class MultiqcModule(BaseMultiqcModule):
         self.tophat_data = self.ignore_samples(self.tophat_data)
 
         if len(self.tophat_data) == 0:
-            raise UserWarning
+            raise ModuleNoSamplesFound
 
         log.info("Found {} reports".format(len(self.tophat_data)))
+
+        # Superfluous function call to confirm that it is used in this module
+        # Replace None with actual version if it is available
+        self.add_software_version(None)
 
         # Write parsed report data to a file
         self.write_data_file(self.tophat_data, "multiqc_tophat.txt")
@@ -108,22 +108,23 @@ class MultiqcModule(BaseMultiqcModule):
         """Take the parsed stats from the Tophat report and add it to the
         basic stats table at the top of the report"""
 
-        headers = OrderedDict()
-        headers["overall_aligned_percent"] = {
-            "title": "% Aligned",
-            "description": "overall read mapping rate",
-            "max": 100,
-            "min": 0,
-            "suffix": "%",
-            "scale": "YlGn",
-        }
-        headers["aligned_not_multimapped_discordant"] = {
-            "title": "{} Aligned".format(config.read_count_prefix),
-            "description": "Aligned reads, not multimapped or discordant ({})".format(config.read_count_desc),
-            "min": 0,
-            "scale": "PuRd",
-            "modify": lambda x: x * config.read_count_multiplier,
-            "shared_key": "read_count",
+        headers = {
+            "overall_aligned_percent": {
+                "title": "% Aligned",
+                "description": "overall read mapping rate",
+                "max": 100,
+                "min": 0,
+                "suffix": "%",
+                "scale": "YlGn",
+            },
+            "aligned_not_multimapped_discordant": {
+                "title": "{} Aligned".format(config.read_count_prefix),
+                "description": "Aligned reads, not multimapped or discordant ({})".format(config.read_count_desc),
+                "min": 0,
+                "scale": "PuRd",
+                "modify": lambda x: x * config.read_count_multiplier,
+                "shared_key": "read_count",
+            },
         }
         self.general_stats_addcols(self.tophat_data, headers)
 
@@ -131,11 +132,12 @@ class MultiqcModule(BaseMultiqcModule):
         """Make the HighCharts HTML to plot the alignment rates"""
 
         # Specify the order of the different possible categories
-        keys = OrderedDict()
-        keys["aligned_not_multimapped_discordant"] = {"color": "#437bb1", "name": "Aligned"}
-        keys["aligned_multimap"] = {"color": "#f7a35c", "name": "Multimapped"}
-        keys["aligned_discordant"] = {"color": "#e63491", "name": "Discordant mappings"}
-        keys["unaligned_total"] = {"color": "#7f0000", "name": "Not aligned"}
+        keys = {
+            "aligned_not_multimapped_discordant": {"color": "#437bb1", "name": "Aligned"},
+            "aligned_multimap": {"color": "#f7a35c", "name": "Multimapped"},
+            "aligned_discordant": {"color": "#e63491", "name": "Discordant mappings"},
+            "unaligned_total": {"color": "#7f0000", "name": "Not aligned"},
+        }
 
         # Config for the plot
         config = {

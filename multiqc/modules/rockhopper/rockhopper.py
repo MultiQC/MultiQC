@@ -1,16 +1,13 @@
-#!/usr/bin/env python
-
 """ MultiQC submodule to parse output from Rockhopper summary files
 https://cs.wellesley.edu/~btjaden/Rockhopper/ """
 
-from __future__ import print_function
+
 import logging
 import re
-from collections import OrderedDict
 
 from multiqc import config
+from multiqc.modules.base_module import BaseMultiqcModule, ModuleNoSamplesFound
 from multiqc.plots import bargraph
-from multiqc.modules.base_module import BaseMultiqcModule
 
 # Initialise the logger
 log = logging.getLogger(__name__)
@@ -18,7 +15,6 @@ log = logging.getLogger(__name__)
 
 class MultiqcModule(BaseMultiqcModule):
     def __init__(self):
-
         # Initialize the parent object
         super(MultiqcModule, self).__init__(
             name="Rockhopper",
@@ -41,11 +37,15 @@ class MultiqcModule(BaseMultiqcModule):
         for f in self.find_log_files("rockhopper"):
             self.parse_rockhopper_summary(f)
 
+            # Superfluous function call to confirm that it is used in this module
+            # Replace None with actual version if it is available
+            self.add_software_version(None, f["s_name"])
+
         # Filter to strip out ignored sample names
         self.rh_data = self.ignore_samples(self.rh_data)
 
         if len(self.rh_data) == 0:
-            raise UserWarning
+            raise ModuleNoSamplesFound
 
         log.info("Found {} reports".format(len(self.rh_data)))
 
@@ -72,7 +72,6 @@ class MultiqcModule(BaseMultiqcModule):
         self.rh_data[s_name] = results
 
     def parse_rockhopper_summary(self, f):
-
         s_name = None
 
         # Initialize stats fields
@@ -96,7 +95,6 @@ class MultiqcModule(BaseMultiqcModule):
         # Parse rockhopper output line-by-line since there may be many genomes
         lines = f["f"].split("\n")
         for i, line in enumerate(lines):
-
             # Get sample name
             if line.startswith("Aligning sequencing reads from file:"):
                 # When reaching a new sample add the previous sample to
@@ -122,7 +120,6 @@ class MultiqcModule(BaseMultiqcModule):
 
             # Get number of reads aligned to each genome
             elif line.startswith("Successfully aligned reads"):
-
                 # Get number of aligned reads
                 genome_reads = int(re.search("Successfully aligned reads:\s*(\d*)", line).group(1))
 
@@ -192,17 +189,18 @@ class MultiqcModule(BaseMultiqcModule):
         }
 
         # Plot bar graph of groups
-        keys = OrderedDict()
-        keys["mRNA-sense"] = {"name": "mRNA (Sense)"}
-        keys["mRNA-antisense"] = {"name": "mRNA (Antisense)"}
-        keys["rRNA-sense"] = {"name": "rRNA (Sense)"}
-        keys["rRNA-antisense"] = {"name": "rRNA (Antisense)"}
-        keys["tRNA-sense"] = {"name": "tRNA (Sense)"}
-        keys["tRNA-antisense"] = {"name": "tRNA (Antisense)"}
-        keys["ncRNA-sense"] = {"name": "ncRNA (Sense)"}
-        keys["ncRNA-antisense"] = {"name": "ncRNA (Antisense)"}
-        keys["unannotated"] = {"name": "Unannotated"}
-        keys["unaligned"] = {"name": "Unaligned"}
+        keys = {
+            "mRNA-sense": {"name": "mRNA (Sense)"},
+            "mRNA-antisense": {"name": "mRNA (Antisense)"},
+            "rRNA-sense": {"name": "rRNA (Sense)"},
+            "rRNA-antisense": {"name": "rRNA (Antisense)"},
+            "tRNA-sense": {"name": "tRNA (Sense)"},
+            "tRNA-antisense": {"name": "tRNA (Antisense)"},
+            "ncRNA-sense": {"name": "ncRNA (Sense)"},
+            "ncRNA-antisense": {"name": "ncRNA (Antisense)"},
+            "unannotated": {"name": "Unannotated"},
+            "unaligned": {"name": "Unaligned"},
+        }
 
         self.add_section(
             name="Rockhopper",

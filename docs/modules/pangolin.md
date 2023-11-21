@@ -1,7 +1,7 @@
 ---
-Name: Pangolin
-URL: https://github.com/cov-lineages/pangolin
-Description: Pangolin uses variant calls to assign SARS-CoV-2 genome sequences to global lineages.
+name: Pangolin
+url: https://github.com/cov-lineages/pangolin
+description: Pangolin uses variant calls to assign SARS-CoV-2 genome sequences to global lineages.
 ---
 
 Pangolin _(Phylogenetic Assignment of Named Global Outbreak LINeages)_ was developed to implement

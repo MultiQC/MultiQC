@@ -1,7 +1,7 @@
 ---
-Name: GATK
-URL: https://www.broadinstitute.org/gatk/
-Description: Variant Discovery in High-Throughput Sequencing Data
+name: GATK
+url: https://www.broadinstitute.org/gatk/
+description: Variant Discovery in High-Throughput Sequencing Data
 ---
 
 Developed by the [Data Science and Data Engineering](http://www.broadinstitute.org/dsde)
@@ -12,8 +12,15 @@ of taking on projects of any size.
 
 Supported tools:
 
+- `AnalyzeSaturationMutagenesis`
 - `BaseRecalibrator`
 - `VariantEval`
+
+### AnalyzeSaturationMutagenesis
+
+[AnalyzeSaturationMutagenesis](https://gatk.broadinstitute.org/hc/en-us/articles/4404604903451-AnalyzeSaturationMutagenesis-BETA-)
+is a (beta!) tool for counting variants in saturation mutagenesis experiments. It accepts mapped reads and a reference sequence and outputs
+a number of files for further analysis.
 
 ### BaseRecalibrator
 

@@ -1,15 +1,12 @@
-#!/usr/bin/env python
-
 """ MultiQC module to parse output from Bowtie 1 """
 
-from __future__ import print_function
-from collections import OrderedDict
+
 import logging
 import re
 
 from multiqc import config
+from multiqc.modules.base_module import BaseMultiqcModule, ModuleNoSamplesFound
 from multiqc.plots import bargraph
-from multiqc.modules.base_module import BaseMultiqcModule
 
 # Initialise the logger
 log = logging.getLogger(__name__)
@@ -19,7 +16,6 @@ class MultiqcModule(BaseMultiqcModule):
     """Bowtie 1 module, parses stderr logs."""
 
     def __init__(self):
-
         # Initialise the parent object
         super(MultiqcModule, self).__init__(
             name="Bowtie 1",
@@ -39,9 +35,13 @@ class MultiqcModule(BaseMultiqcModule):
         self.bowtie_data = self.ignore_samples(self.bowtie_data)
 
         if len(self.bowtie_data) == 0:
-            raise UserWarning
+            raise ModuleNoSamplesFound
 
         log.info("Found {} reports".format(len(self.bowtie_data)))
+
+        # Superfluous function call to confirm that it is used in this module
+        # Replace None with actual version if it is available
+        self.add_software_version(None)
 
         # Write parsed report data to a file
         self.write_data_file(self.bowtie_data, "multiqc_bowtie1")
@@ -65,16 +65,17 @@ class MultiqcModule(BaseMultiqcModule):
             "multimapped": r"# reads with alignments suppressed due to -m:\s+(\d+)",
             "multimapped_percentage": r"# reads with alignments suppressed due to -m:\s+\d+\s+\(([\d\.]+)%\)",
         }
-        for l in f["f"].splitlines():
+
+        for line in f["f"].splitlines():
             # Attempt in vain to find original bowtie1 command, logged by another program
-            if "bowtie" in l and "q.gz" in l:
-                fqmatch = re.search(r"([^\s,]+\.f(ast)?q.gz)", l)
+            if "bowtie" in line and "q.gz" in line:
+                fqmatch = re.search(r"([^\s,]+\.f(ast)?q.gz)", line)
                 if fqmatch:
                     s_name = self.clean_s_name(fqmatch.group(1), f)
                     log.debug("Found a bowtie command, updating sample name to '{}'".format(s_name))
 
             # End of log, reset in case there is another in this file
-            if "Overall time:" in l:
+            if "Overall time:" in line:
                 if len(parsed_data) > 0:
                     if s_name in self.bowtie_data:
                         log.debug("Duplicate sample name found! Overwriting: {}".format(s_name))
@@ -84,7 +85,7 @@ class MultiqcModule(BaseMultiqcModule):
                 parsed_data = {}
 
             for k, r in regexes.items():
-                match = re.search(r, l)
+                match = re.search(r, line)
                 if match:
                     parsed_data[k] = float(match.group(1).replace(",", ""))
 
@@ -98,22 +99,23 @@ class MultiqcModule(BaseMultiqcModule):
         """Take the parsed stats from the Bowtie report and add it to the
         basic stats table at the top of the report"""
 
-        headers = OrderedDict()
-        headers["reads_aligned_percentage"] = {
-            "title": "% Aligned",
-            "description": "% reads with at least one reported alignment",
-            "max": 100,
-            "min": 0,
-            "suffix": "%",
-            "scale": "YlGn",
-        }
-        headers["reads_aligned"] = {
-            "title": "{} Aligned".format(config.read_count_prefix),
-            "description": "reads with at least one reported alignment ({})".format(config.read_count_desc),
-            "min": 0,
-            "scale": "PuRd",
-            "modify": lambda x: x * config.read_count_multiplier,
-            "shared_key": "read_count",
+        headers = {
+            "reads_aligned_percentage": {
+                "title": "% Aligned",
+                "description": "% reads with at least one reported alignment",
+                "max": 100,
+                "min": 0,
+                "suffix": "%",
+                "scale": "YlGn",
+            },
+            "reads_aligned": {
+                "title": "{} Aligned".format(config.read_count_prefix),
+                "description": "reads with at least one reported alignment ({})".format(config.read_count_desc),
+                "min": 0,
+                "scale": "PuRd",
+                "modify": lambda x: x * config.read_count_multiplier,
+                "shared_key": "read_count",
+            },
         }
         self.general_stats_addcols(self.bowtie_data, headers)
 
@@ -121,10 +123,11 @@ class MultiqcModule(BaseMultiqcModule):
         """Make the HighCharts HTML to plot the alignment rates"""
 
         # Specify the order of the different possible categories
-        keys = OrderedDict()
-        keys["reads_aligned"] = {"color": "#8bbc21", "name": "Aligned"}
-        keys["multimapped"] = {"color": "#2f7ed8", "name": "Multimapped"}
-        keys["not_aligned"] = {"color": "#0d233a", "name": "Not aligned"}
+        keys = {
+            "reads_aligned": {"color": "#8bbc21", "name": "Aligned"},
+            "multimapped": {"color": "#2f7ed8", "name": "Multimapped"},
+            "not_aligned": {"color": "#0d233a", "name": "Not aligned"},
+        }
 
         # Config for the plot
         config = {

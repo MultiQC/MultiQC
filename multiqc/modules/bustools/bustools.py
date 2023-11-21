@@ -1,16 +1,13 @@
-#!/usr/bin/env python
-
 """ MultiQC module to parse output from bustools inspect """
 
-from __future__ import print_function
-from collections import OrderedDict
+
+import json
 import logging
 import os
-import json
 
+from multiqc.modules.base_module import BaseMultiqcModule, ModuleNoSamplesFound
 from multiqc.plots import bargraph, table
 from multiqc.utils import config
-from multiqc.modules.base_module import BaseMultiqcModule
 
 # Initialise the logger
 log = logging.getLogger(__name__)
@@ -18,7 +15,6 @@ log = logging.getLogger(__name__)
 
 class MultiqcModule(BaseMultiqcModule):
     def __init__(self):
-
         # Initialise the parent object
         super(MultiqcModule, self).__init__(
             name="Bustools",
@@ -51,149 +47,166 @@ class MultiqcModule(BaseMultiqcModule):
         self.bustools_data = self.ignore_samples(self.bustools_data)
 
         if len(self.bustools_data) == 0:
-            raise UserWarning
+            raise ModuleNoSamplesFound
+
+        # Superfluous function call to confirm that it is used in this module
+        # Replace None with actual version if it is available
+        self.add_software_version(None)
 
         # now fill out the table(s) headers
-        self.headers = OrderedDict()
-        self.headers["numRecords"] = {
-            "title": "{} Bus Records".format(config.read_count_prefix),
-            "description": "The number of Bus Records ({})".format(config.read_count_desc),
-            "scale": "BuGn",
-            "min": 0,
-            "shared_key": "read_count",
-            "modify": lambda x: x * config.read_count_multiplier,
-            "format": "{:,.2f}",
-        }
-        self.headers["numReads"] = {
-            "title": "{} Reads".format(config.read_count_prefix),
-            "description": "Total number of reads ({})".format(config.read_count_desc),
-            "min": 0,
-            "scale": "Greens",
-            "shared_key": "read_count",
-            "modify": lambda x: x * config.read_count_multiplier,
-            "format": "{:,.2f}",
-        }
-        self.headers["numBarcodes"] = {
-            "title": "Barcodes",
-            "description": "Number of distinct barcodes",
-            "min": 0,
-            "scale": "YlGn",
-            "format": "{:,.0f}",
-            "shared_key": "barcodes",
-        }
-        self.headers["meanReadsPerBarcode"] = {
-            "title": "Mean reads per barcode",
-            "scale": "BuGn",
-            "min": 0,
-            "format": "{:,.2f}",
-        }
-        self.headers["numUMIs"] = {
-            "title": "{} Distinct UMIs".format(config.read_count_prefix),
-            "description": "Number of distinct Unique Molecular Identifiers (UMIs) ({})".format(config.read_count_desc),
-            "scale": "Purples",
-            "min": 0,
-            "shared_key": "read_count",
-            "modify": lambda x: x * config.read_count_multiplier,
-            "format": "{:,.2f}",
-        }
-        self.headers["numBarcodeUMIs"] = {
-            "title": "{} Distinct barcode-UMI".format(config.read_count_prefix),
-            "description": "Number of distinct barcode and Unique Molecular Identifiers (UMIs) pairs ({})".format(
-                config.read_count_desc
-            ),
-            "scale": "Greens",
-            "min": 0,
-            "shared_key": "read_count",
-            "modify": lambda x: x * config.read_count_multiplier,
-            "format": "{:,.2f}",
-        }
-        self.headers["meanUMIsPerBarcode"] = {
-            "title": "Mean UMIs per barcode",
-            "scale": "PuBnGn",
-            "min": 0,
-            "format": "{:,.2f}",
-        }
-        self.headers["gtRecords"] = {
-            "title": "{} 2xdepth records".format(config.read_count_prefix),
-            "description": "Estimated number of new records at 2x sequencing depth ({})".format(config.read_count_desc),
-            "min": 0,
-            "scale": "Oranges",
-            "format": "{:,.2f}",
-            "shared_key": "read_count",
-            "modify": lambda x: x * config.read_count_multiplier,
-        }
-        self.headers["numTargets"] = {
-            "title": "{} Distinct targets".format(config.read_count_prefix),
-            "description": "Number of distinct targets detected ({})".format(config.read_count_desc),
-            "min": 0,
-            "scale": "BuGn",
-            "hidden": True,
-            "format": "{:,.2f}",
-            "shared_key": "read_count",
-            "modify": lambda x: x * config.read_count_multiplier,
-        }
-        self.headers["meanTargetsPerSet"] = {
-            "title": "Mean targets",
-            "description": "Mean number of targets per set",
-            "min": 0,
-            "scale": "Greens",
-            "hidden": True,
-            "format": "{:,.2f}",
-        }
-        self.headers["numSingleton"] = {
-            "title": "{} Singleton targets".format(config.read_count_prefix),
-            "description": "Number of reads with singleton target ({})".format(config.read_count_desc),
-            "min": 0,
-            "scale": "Blues",
-            "hidden": True,
-            "format": "{:,.2f}",
-            "shared_key": "read_count",
-            "modify": lambda x: x * config.read_count_multiplier,
-        }
-        self.headers["gtTargets"] = {
-            "title": "{} 2xdepth targets".format(config.read_count_prefix),
-            "description": "Estimated number of new targets at 2x sequencing depth ({})".format(config.read_count_desc),
-            "min": 0,
-            "scale": "BuGn",
-            "hidden": True,
-            "format": "{:,.2f}",
-            "shared_key": "read_count",
-            "modify": lambda x: x * config.read_count_multiplier,
-        }
-        self.headers["numBarcodesOnWhitelist"] = {
-            "title": "Whitelisted barcodes",
-            "description": "Number of barcodes in agreement with whitelist",
-            "min": 0,
-            "scale": "Greens",
-            "hidden": True,
-            "format": "{:,.0f}",
-            "shared_key": "barcodes",
-        }
-        self.headers["percentageBarcodesOnWhitelist"] = {
-            "title": "% Whitelisted barcodes",
-            "min": 0,
-            "max": 100,
-            "suffix": "%",
-            "scale": "RdYlGn",
-        }
-        self.headers["numReadsOnWhitelist"] = {
-            "title": "{} Whitelisted reads".format(config.read_count_prefix),
-            "description": "Number of reads with barcode in agreement with whitelist ({})".format(
-                config.read_count_desc
-            ),
-            "scale": "PuBu",
-            "min": 0,
-            "hidden": True,
-            "format": "{:,.2f}",
-            "shared_key": "read_count",
-            "modify": lambda x: x * config.read_count_multiplier,
-        }
-        self.headers["percentageReadsOnWhitelist"] = {
-            "title": "% Whitelisted reads",
-            "min": 0,
-            "max": 100,
-            "suffix": "%",
-            "scale": "RdYlGn",
+        self.headers = {
+            "numRecords": {
+                "title": "{} Bus Records".format(config.read_count_prefix),
+                "description": "The number of Bus Records ({})".format(config.read_count_desc),
+                "scale": "BuGn",
+                "min": 0,
+                "shared_key": "read_count",
+                "modify": lambda x: x * config.read_count_multiplier,
+                "format": "{:,.2f}",
+            },
+            "numReads": {
+                "title": "{} Reads".format(config.read_count_prefix),
+                "description": "Total number of reads ({})".format(config.read_count_desc),
+                "min": 0,
+                "scale": "Greens",
+                "shared_key": "read_count",
+                "modify": lambda x: x * config.read_count_multiplier,
+                "format": "{:,.2f}",
+            },
+            "numBarcodes": {
+                "title": "Barcodes",
+                "description": "Number of distinct barcodes",
+                "min": 0,
+                "scale": "YlGn",
+                "format": "{:,.0f}",
+                "shared_key": "barcodes",
+            },
+            "medianReadsPerBarcode": {
+                "title": "Median reads per barcode",
+                "scale": "RdYlGn",
+                "min": 0,
+                "format": "{:,.2f}",
+            },
+            "meanReadsPerBarcode": {
+                "title": "Mean reads per barcode",
+                "scale": "BuGn",
+                "min": 0,
+                "format": "{:,.2f}",
+            },
+            "numUMIs": {
+                "title": "{} Distinct UMIs".format(config.read_count_prefix),
+                "description": "Number of distinct Unique Molecular Identifiers (UMIs) ({})".format(
+                    config.read_count_desc
+                ),
+                "scale": "Purples",
+                "min": 0,
+                "shared_key": "read_count",
+                "modify": lambda x: x * config.read_count_multiplier,
+                "format": "{:,.2f}",
+            },
+            "numBarcodeUMIs": {
+                "title": "{} Distinct barcode-UMI".format(config.read_count_prefix),
+                "description": "Number of distinct barcode and Unique Molecular Identifiers (UMIs) pairs ({})".format(
+                    config.read_count_desc
+                ),
+                "scale": "Greens",
+                "min": 0,
+                "shared_key": "read_count",
+                "modify": lambda x: x * config.read_count_multiplier,
+                "format": "{:,.2f}",
+            },
+            "meanUMIsPerBarcode": {
+                "title": "Mean UMIs per barcode",
+                "scale": "PuBuGn",
+                "min": 0,
+                "format": "{:,.2f}",
+            },
+            "gtRecords": {
+                "title": "{} 2xdepth records".format(config.read_count_prefix),
+                "description": "Estimated number of new records at 2x sequencing depth ({})".format(
+                    config.read_count_desc
+                ),
+                "min": 0,
+                "scale": "Oranges",
+                "format": "{:,.2f}",
+                "shared_key": "read_count",
+                "modify": lambda x: x * config.read_count_multiplier,
+            },
+            "numTargets": {
+                "title": "{} Distinct targets".format(config.read_count_prefix),
+                "description": "Number of distinct targets detected ({})".format(config.read_count_desc),
+                "min": 0,
+                "scale": "BuGn",
+                "hidden": True,
+                "format": "{:,.2f}",
+                "shared_key": "read_count",
+                "modify": lambda x: x * config.read_count_multiplier,
+            },
+            "meanTargetsPerSet": {
+                "title": "Mean targets",
+                "description": "Mean number of targets per set",
+                "min": 0,
+                "scale": "Greens",
+                "hidden": True,
+                "format": "{:,.2f}",
+            },
+            "numSingleton": {
+                "title": "{} Singleton targets".format(config.read_count_prefix),
+                "description": "Number of reads with singleton target ({})".format(config.read_count_desc),
+                "min": 0,
+                "scale": "Blues",
+                "hidden": True,
+                "format": "{:,.2f}",
+                "shared_key": "read_count",
+                "modify": lambda x: x * config.read_count_multiplier,
+            },
+            "gtTargets": {
+                "title": "{} 2xdepth targets".format(config.read_count_prefix),
+                "description": "Estimated number of new targets at 2x sequencing depth ({})".format(
+                    config.read_count_desc
+                ),
+                "min": 0,
+                "scale": "BuGn",
+                "hidden": True,
+                "format": "{:,.2f}",
+                "shared_key": "read_count",
+                "modify": lambda x: x * config.read_count_multiplier,
+            },
+            "numBarcodesOnWhitelist": {
+                "title": "Whitelisted barcodes",
+                "description": "Number of barcodes in agreement with whitelist",
+                "min": 0,
+                "scale": "Greens",
+                "hidden": True,
+                "format": "{:,.0f}",
+                "shared_key": "barcodes",
+            },
+            "percentageBarcodesOnWhitelist": {
+                "title": "% Whitelisted barcodes",
+                "min": 0,
+                "max": 100,
+                "suffix": "%",
+                "scale": "RdYlGn",
+            },
+            "numReadsOnWhitelist": {
+                "title": "{} Whitelisted reads".format(config.read_count_prefix),
+                "description": "Number of reads with barcode in agreement with whitelist ({})".format(
+                    config.read_count_desc
+                ),
+                "scale": "PuBu",
+                "min": 0,
+                "hidden": True,
+                "format": "{:,.2f}",
+                "shared_key": "read_count",
+                "modify": lambda x: x * config.read_count_multiplier,
+            },
+            "percentageReadsOnWhitelist": {
+                "title": "% Whitelisted reads",
+                "min": 0,
+                "max": 100,
+                "suffix": "%",
+                "scale": "RdYlGn",
+            },
         }
 
     def bustools_general_stats(self):
@@ -206,7 +219,7 @@ class MultiqcModule(BaseMultiqcModule):
             "gtRecords",
             "percentageReadsOnWhitelist",
         ]
-        headers = OrderedDict()
+        headers = {}
         for header, v in self.headers.items():
             if header in general_stats_headers:
                 headers[header] = {key: value for key, value in v.items()}  # deep copy

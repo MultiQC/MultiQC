@@ -1,13 +1,10 @@
-#!/usr/bin/env python
-
 """ MultiQC module to parse output from THetA2 """
 
-from __future__ import print_function
-from collections import OrderedDict
+
 import logging
 
+from multiqc.modules.base_module import BaseMultiqcModule, ModuleNoSamplesFound
 from multiqc.plots import bargraph
-from multiqc.modules.base_module import BaseMultiqcModule
 
 # Initialise the logger
 log = logging.getLogger(__name__)
@@ -15,7 +12,6 @@ log = logging.getLogger(__name__)
 
 class MultiqcModule(BaseMultiqcModule):
     def __init__(self):
-
         # Initialise the parent object
         super(MultiqcModule, self).__init__(
             name="THetA2",
@@ -40,9 +36,13 @@ class MultiqcModule(BaseMultiqcModule):
         self.theta2_data = self.ignore_samples(self.theta2_data)
 
         if len(self.theta2_data) == 0:
-            raise UserWarning
+            raise ModuleNoSamplesFound
 
         log.info("Found {} reports".format(len(self.theta2_data)))
+
+        # Superfluous function call to confirm that it is used in this module
+        # Replace None with actual version if it is available
+        self.add_software_version(None)
 
         # Write parsed report data to a file
         self.write_data_file(self.theta2_data, "multiqc_theta2")
@@ -58,11 +58,11 @@ class MultiqcModule(BaseMultiqcModule):
     def parse_theta2_report(self, fh):
         """Parse the final THetA2 log file."""
         parsed_data = {}
-        for l in fh:
-            if l.startswith("#"):
+        for line in fh:
+            if line.startswith("#"):
                 continue
             else:
-                s = l.split("\t")
+                s = line.split("\t")
                 purities = s[1].split(",")
                 parsed_data["proportion_germline"] = float(purities[0]) * 100.0
                 for i, v in enumerate(purities[1:]):
@@ -79,14 +79,15 @@ class MultiqcModule(BaseMultiqcModule):
         """Make the plot showing alignment rates"""
 
         # Specify the order of the different possible categories
-        keys = OrderedDict()
-        keys["proportion_germline"] = {"name": "Germline"}
-        keys["proportion_tumour_1"] = {"name": "Tumour Subclone 1"}
-        keys["proportion_tumour_2"] = {"name": "Tumour Subclone 2"}
-        keys["proportion_tumour_3"] = {"name": "Tumour Subclone 3"}
-        keys["proportion_tumour_4"] = {"name": "Tumour Subclone 4"}
-        keys["proportion_tumour_5"] = {"name": "Tumour Subclone 5"}
-        keys["proportion_tumour_gt5"] = {"name": "Tumour Subclones > 5"}
+        keys = {
+            "proportion_germline": {"name": "Germline"},
+            "proportion_tumour_1": {"name": "Tumour Subclone 1"},
+            "proportion_tumour_2": {"name": "Tumour Subclone 2"},
+            "proportion_tumour_3": {"name": "Tumour Subclone 3"},
+            "proportion_tumour_4": {"name": "Tumour Subclone 4"},
+            "proportion_tumour_5": {"name": "Tumour Subclone 5"},
+            "proportion_tumour_gt5": {"name": "Tumour Subclones > 5"},
+        }
 
         # Config for the plot
         pconfig = {

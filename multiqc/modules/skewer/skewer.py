@@ -1,17 +1,16 @@
-#!/usr/bin/env python
-
 """ MultiQC module to parse logs from Skewer """
 
-from __future__ import print_function
 
-from collections import OrderedDict
 import logging
 import re
+
+from multiqc.modules.base_module import BaseMultiqcModule, ModuleNoSamplesFound
 from multiqc.plots import linegraph
-from multiqc.modules.base_module import BaseMultiqcModule
 
 # Initialise the logger
 log = logging.getLogger(__name__)
+
+VERSION_REGEX = r"skewer v([\d\.]+) \[.+\]"
 
 
 class MultiqcModule(BaseMultiqcModule):
@@ -37,16 +36,17 @@ class MultiqcModule(BaseMultiqcModule):
         self.skewer_data = self.ignore_samples(self.skewer_data)
 
         if len(self.skewer_data) == 0:
-            raise UserWarning
+            raise ModuleNoSamplesFound
 
-        headers = OrderedDict()
-        headers["pct_trimmed"] = {
-            "title": "% Trimmed",
-            "description": "% of reads trimmed",
-            "scale": "RdYlGn-rev",
-            "max": 100,
-            "min": 0,
-            "suffix": "%",
+        headers = {
+            "pct_trimmed": {
+                "title": "% Trimmed",
+                "description": "% of reads trimmed",
+                "scale": "RdYlGn-rev",
+                "max": 100,
+                "min": 0,
+                "suffix": "%",
+            }
         }
 
         self.general_stats_addcols(self.skewer_data, headers)
@@ -63,12 +63,8 @@ class MultiqcModule(BaseMultiqcModule):
 
         for s_name in self.skewer_readlen_dist:
             for xval in all_x_values:
-                if not xval in self.skewer_readlen_dist[s_name]:
+                if xval not in self.skewer_readlen_dist[s_name]:
                     self.skewer_readlen_dist[s_name][xval] = 0.0
-
-            # After adding new elements, the ordereddict needs to be re-sorted
-            items = self.skewer_readlen_dist[s_name]
-            self.skewer_readlen_dist[s_name] = OrderedDict(sorted(items.items(), key=lambda x: int(x[0])))
 
         # add the histogram to the report
         self.add_readlen_dist_plot()
@@ -109,15 +105,20 @@ class MultiqcModule(BaseMultiqcModule):
             data[k] = 0
         data["fq1"] = None
         data["fq2"] = None
-        readlen_dist = OrderedDict()
+        readlen_dist = dict()
 
-        for l in fh:
+        for line in fh:
+            if line.startswith("skewer"):
+                match = re.search(VERSION_REGEX, line)
+                if match:
+                    data["version"] = match.group(1)
+
             for k, r in regexes.items():
-                match = re.search(r, l)
+                match = re.search(r, line)
                 if match:
                     data[k] = match.group(1).replace(",", "")
 
-            match = re.search(regex_hist, l)
+            match = re.search(regex_hist, line)
             if match:
                 read_length = int(match.group(1))
                 pct_at_rl = float(match.group(3))
@@ -130,6 +131,7 @@ class MultiqcModule(BaseMultiqcModule):
             self.add_data_source(f, s_name)
             self.add_skewer_data(s_name, data, f)
             self.skewer_readlen_dist[s_name] = readlen_dist
+            self.add_software_version(data.get("version"), s_name)
 
         if data["fq2"] is not None:
             s_name = self.clean_s_name(data["fq1"], f)
@@ -138,6 +140,7 @@ class MultiqcModule(BaseMultiqcModule):
             self.add_data_source(f, s_name)
             self.add_skewer_data(s_name, data, f)
             self.skewer_readlen_dist[s_name] = readlen_dist
+            self.add_software_version(data.get("version"), s_name)
 
     def add_skewer_data(self, s_name, data, f):
         stats = ["r_processed", "r_short_filtered", "r_empty_filtered", "r_avail", "r_trimmed", "r_untrimmed"]

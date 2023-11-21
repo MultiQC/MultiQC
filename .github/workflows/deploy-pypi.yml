@@ -8,11 +8,11 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
         name: Check out source-code repository
 
       - name: Set up Python 3.7
-        uses: actions/setup-python@v1
+        uses: actions/setup-python@v3
         with:
           python-version: 3.7
 
@@ -26,7 +26,19 @@ jobs:
 
       - name: Publish MultiQC to PyPI
         if: github.repository == 'ewels/MultiQC'
-        uses: pypa/gh-action-pypi-publish@master
+        uses: pypa/gh-action-pypi-publish@release/v1
         with:
-          user: __token__
           password: ${{ secrets.PYPI_API_TOKEN }}
+#      - name: Tweet
+#        if: github.repository == 'ewels/MultiQC'
+#        uses: snow-actions/tweet@v1.3.0
+#        with:
+#          status: |
+#            A new version of @MultiQC has just been released! ${{ github.event.release.name }}
+#
+#            Read the changelog here: ${{ github.event.release.html_url }}
+#        env:
+#          CONSUMER_API_KEY: ${{ secrets.TWITTER_CONSUMER_API_KEY }}
+#          CONSUMER_API_SECRET_KEY: ${{ secrets.TWITTER_CONSUMER_API_SECRET_KEY }}
+#          ACCESS_TOKEN: ${{ secrets.TWITTER_ACCESS_TOKEN }}
+#          ACCESS_TOKEN_SECRET: ${{ secrets.TWITTER_ACCESS_TOKEN_SECRET }}

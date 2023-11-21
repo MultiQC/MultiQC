@@ -1,9 +1,6 @@
-#!/usr/bin/env python
-
 """ MultiQC Submodule to parse output from Qualimap RNASeq """
 
-from __future__ import print_function
-from collections import OrderedDict
+
 import logging
 import re
 
@@ -80,10 +77,10 @@ def parse_reports(self):
     for f in self.find_log_files("qualimap/rnaseq/coverage", filehandles=True):
         s_name = self.get_s_name(f)
         d = dict()
-        for l in f["f"]:
-            if l.startswith("#"):
+        for line in f["f"]:
+            if line.startswith("#"):
                 continue
-            coverage, count = l.split(None, 1)
+            coverage, count = line.split(None, 1)
             coverage = int(round(float(coverage)))
             count = float(count)
             d[coverage] = count
@@ -98,12 +95,15 @@ def parse_reports(self):
         self.qualimap_rnaseq_cov_hist[s_name] = d
         self.add_data_source(f, s_name=s_name, section="rna_coverage_histogram")
 
+    # Superfluous function call to confirm that it is used in this module
+    # Replace None with actual version if it is available
+    self.add_software_version(None)
+
     # Filter to strip out ignored sample names
     self.qualimap_rnaseq_genome_results = self.ignore_samples(self.qualimap_rnaseq_genome_results)
     self.qualimap_rnaseq_cov_hist = self.ignore_samples(self.qualimap_rnaseq_cov_hist)
 
     #### Plots
-
     # Genomic Origin Bar Graph
     # NB: Ignore 'Overlapping Exon' in report - these make the numbers add up to > 100%
     if len(self.qualimap_rnaseq_genome_results) > 0:
@@ -116,14 +116,14 @@ def parse_reports(self):
             )
             > 0
         ):
-
             # Write data to file
             self.write_data_file(self.qualimap_rnaseq_genome_results, "qualimap_rnaseq_genome_results")
 
-            gorigin_cats = OrderedDict()
-            gorigin_cats["reads_aligned_exonic"] = {"name": "Exonic"}
-            gorigin_cats["reads_aligned_intronic"] = {"name": "Intronic"}
-            gorigin_cats["reads_aligned_intergenic"] = {"name": "Intergenic"}
+            gorigin_cats = {
+                "reads_aligned_exonic": {"name": "Exonic"},
+                "reads_aligned_intronic": {"name": "Intronic"},
+                "reads_aligned_intergenic": {"name": "Intergenic"},
+            }
             gorigin_pconfig = {
                 "id": "qualimap_genomic_origin",
                 "title": "Qualimap RNAseq: Genomic Origin",
@@ -168,14 +168,13 @@ def parse_reports(self):
             log.warning("Found zero aligned reads. Skipping 'Genomic origin of reads' plot.")
 
     if len(self.qualimap_rnaseq_cov_hist) > 0:
-
         # Write data to file
         self.write_data_file(self.qualimap_rnaseq_cov_hist, "qualimap_rnaseq_cov_hist")
 
         # Make a normalised percentage version of the coverage data
         self.qualimap_rnaseq_cov_hist_percent = dict()
         for s_name in self.qualimap_rnaseq_cov_hist:
-            self.qualimap_rnaseq_cov_hist_percent[s_name] = OrderedDict()
+            self.qualimap_rnaseq_cov_hist_percent[s_name] = dict()
             total = sum(self.qualimap_rnaseq_cov_hist[s_name].values())
             if total == 0:
                 for k, v in self.qualimap_rnaseq_cov_hist[s_name].items():

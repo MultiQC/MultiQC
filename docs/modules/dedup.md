@@ -1,7 +1,7 @@
 ---
-Name: DeDup
-URL: http://www.github.com/apeltzer/DeDup
-Description: >
+name: DeDup
+url: http://www.github.com/apeltzer/DeDup
+description: >
   Improved Duplicate Removal for merged/collapsed reads in ancient DNA analysis
 ---
 
