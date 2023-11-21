@@ -254,7 +254,6 @@ class MultiqcModule(BaseMultiqcModule):
         config = {
             "id": "quast_table",
             "min": 0,
-            "namespace": "QUAST",
         }
         return table.plot(self.quast_data, headers, config)
 
