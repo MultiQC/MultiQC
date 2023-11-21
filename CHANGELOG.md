@@ -6,8 +6,8 @@
 
 - Fix the `"square": True` flag to scatter plot to actually make the plot square ([#2189](https://github.com/ewels/MultiQC/pull/2189))
 - Config `table_columns_visible` and `table_columns_name`: support flat config and `table_id` as a group ([#2191](https://github.com/ewels/MultiQC/pull/2191))
-- Upgrade the jQuery tablesorter plugin to v2
-- Add `defaultsort` config option to set default table sort order
+- Upgrade the jQuery tablesorter plugin to v2 ([#1666](https://github.com/ewels/MultiQC/pull/1666))
+- Allow specifying default sort columns for tables with `defaultsort` ([#1667](https://github.com/ewels/MultiQC/pull/1667))
 
 ### New Modules
 
