@@ -158,39 +158,43 @@ class DataTable:
 
                 # Overwrite "name" if set in user config
                 # Key can be a column ID, a table ID, or a namespace in the general stats table.
-                for key in config.table_columns_name.keys():
+                for key, val in config.table_columns_name.items():
+                    key = key.lower()
                     # Case-insensitive check if the outer key is a table ID or a namespace.
-                    if key.lower() == pconfig["id"].lower() or key.lower() == headers[idx][k]["namespace"].lower():
+                    if key in [pconfig["id"].lower(), headers[idx][k]["namespace"].lower()] and isinstance(val, dict):
                         # Assume a dict of specific column IDs
-                        headers[idx][k]["title"] = config.table_columns_name[key][k]
+                        for key2, new_title in val.items():
+                            key2 = key2.lower()
+                            if key2 in [k.lower(), headers[idx][k]["title"].lower()]:
+                                headers[idx][k]["title"] = new_title
 
                     # Case-insensitive check if the outer key is a column ID
-                    elif key.lower() == k.lower() or key.lower() == headers[idx][k]["title"].lower():
-                        if isinstance(config.table_columns_visible[key], bool):
-                            headers[idx][k]["title"] = config.table_columns_visible[key]
+                    elif key in [k.lower(), headers[idx][k]["title"].lower()] and isinstance(val, str):
+                        headers[idx][k]["title"] = val
 
                 # Overwrite "hidden" if set in user config
                 # Key can be a column ID, a table ID, or a namespace in the general stats table.
-                for key in config.table_columns_visible.keys():
+                for key, val in config.table_columns_visible.items():
+                    key = key.lower()
                     # Case-insensitive check if the outer key is a table ID or a namespace.
-                    if key.lower() == pconfig["id"].lower() or key.lower() == headers[idx][k]["namespace"].lower():
+                    if key in [pconfig["id"].lower(), headers[idx][k]["namespace"].lower()]:
                         # First - if config value is a bool, set all module columns to that value
-                        if isinstance(config.table_columns_visible[key], bool):
+                        if isinstance(val, bool):
                             # Config has True = visible, False = Hidden. Here we're setting "hidden" which is inverse
-                            headers[idx][k]["hidden"] = not config.table_columns_visible[key]
+                            headers[idx][k]["hidden"] = not val
 
                         # Not a bool, assume a dict of specific column IDs
-                        else:
-                            for col_key, visible in config.table_columns_visible[key].items():
-                                if col_key.lower() == k.lower() or col_key.lower() == headers[idx][k]["title"].lower():
+                        elif isinstance(val, dict):
+                            for key2, visible in val.items():
+                                key2 = key2.lower()
+                                if key2 in [k.lower(), headers[idx][k]["title"].lower()] and isinstance(visible, bool):
                                     # Config has True = visible, False = Hidden. Here we're setting "hidden" which is inverse
                                     headers[idx][k]["hidden"] = not visible
 
                     # Case-insensitive check if the outer key is a column ID
-                    elif key.lower() == k.lower() or key.lower() == headers[idx][k]["title"].lower():
-                        if isinstance(config.table_columns_visible[key], bool):
-                            # Config has True = visible, False = Hidden. Here we're setting "hidden" which is inverse
-                            headers[idx][k]["hidden"] = not config.table_columns_visible[key]
+                    elif key in [k.lower(), headers[idx][k]["title"].lower()] and isinstance(val, bool):
+                        # Config has True = visible, False = Hidden. Here we're setting "hidden" which is inverse
+                        headers[idx][k]["hidden"] = not val
 
                 # Also overwrite placement if set in config
                 try:
