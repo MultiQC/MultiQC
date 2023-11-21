@@ -116,7 +116,7 @@ class MultiqcModule(BaseMultiqcModule):
         cats = {}
         for k in keys:
             name = k.replace("ReadPairs_", "").replace("_", ": ")
-            name = re.sub("([a-z])([A-Z])", "\g<1> \g<2>", name)
+            name = re.sub("([a-z])([A-Z])", r"\g<1> \g<2>", name)
             cats[k] = {"name": name}
 
         # Config for the plot
@@ -168,7 +168,7 @@ class MultiqcModule(BaseMultiqcModule):
         cats = {}
         for k in keys:
             name = k.replace("SpliceLoci_", "").replace("_", ": ")
-            name = re.sub("([a-z])([A-Z])", "\g<1> \g<2>", name)
+            name = re.sub("([a-z])([A-Z])", r"\g<1> \g<2>", name)
             cats[k] = {"name": name}
 
         # Config for the plot
@@ -224,7 +224,7 @@ class MultiqcModule(BaseMultiqcModule):
         cats = {}
         for k in keys:
             name = k.replace("SpliceEvents_", "")
-            name = re.sub("([a-z])([A-Z])", "\g<1> \g<2>", name)
+            name = re.sub("([a-z])([A-Z])", r"\g<1> \g<2>", name)
             cats[k] = {"name": name}
 
         # Config for the plot
@@ -277,7 +277,7 @@ class MultiqcModule(BaseMultiqcModule):
         cats = {}
         for k in keys:
             name = k.replace("StrandTest_", "").replace("_", " ").replace("ambig", "ambig:")
-            name = re.sub("([a-z])([A-Z])", "\g<1> \g<2>", name)
+            name = re.sub("([a-z])([A-Z])", r"\g<1> \g<2>", name)
             cats[k] = {"name": name.title()}
 
         # Config for the plot

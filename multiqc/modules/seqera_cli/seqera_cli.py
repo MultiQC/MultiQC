@@ -10,7 +10,7 @@ from collections import defaultdict
 import humanize
 
 from multiqc.modules.base_module import BaseMultiqcModule, ModuleNoSamplesFound
-from multiqc.plots import bargraph, table
+from multiqc.plots import bargraph
 from multiqc.utils import mqc_colour
 
 log = logging.getLogger(__name__)
@@ -70,8 +70,8 @@ class MultiqcModule(BaseMultiqcModule):
 
                 d = self._parse_data(d)
                 if d:
-                    self.add_data_source(f, s_name=d["id"])
-                    data_by_run[d["id"]].update(d)
+                    self.add_data_source(f, s_name=d["id_repository"])
+                    data_by_run[d["id_repository"]].update(d)
 
         # Parsing the json files directly
         for f in self.find_log_files("seqera_cli/json"):
@@ -80,22 +80,24 @@ class MultiqcModule(BaseMultiqcModule):
                 continue
 
             # Check other files that sit next to workflow.json
-            path = os.path.join(f["root"], "workflow-load.json")
-            if os.path.isfile(path):
-                self.add_data_source(source=path, s_name=d.get("id"))
-                with open(path) as fh:
+            load_path = os.path.join(f["root"], "workflow-load.json")
+            if os.path.isfile(load_path):
+                with open(load_path) as fh:
                     d.update(json.load(fh))
 
-            path = os.path.join(f["root"], "service-info.json")
-            if os.path.isfile(path):
-                self.add_data_source(source=path, s_name=d.get("id"))
-                with open(path) as fh:
+            service_info_path = os.path.join(f["root"], "service-info.json")
+            if os.path.isfile(service_info_path):
+                with open(service_info_path) as fh:
                     d.update(json.load(fh))
 
             d = self._parse_data(d)
             if d:
-                self.add_data_source(f, s_name=d["id"])
-                data_by_run[d["id"]].update(d)
+                self.add_data_source(f, s_name=d["id_repository"])
+                data_by_run[d["id_repository"]].update(d)
+                if os.path.isfile(load_path):
+                    self.add_data_source(source=load_path, s_name=d["id_repository"])
+                if os.path.isfile(service_info_path):
+                    self.add_data_source(source=service_info_path, s_name=d["id_repository"])
 
         # Filter to strip out ignored sample names
         data_by_run = self.ignore_samples(data_by_run)
@@ -137,9 +139,12 @@ class MultiqcModule(BaseMultiqcModule):
         ]
         d = {k: d.get(k) for k in keys}
 
-        run_id = d.get("id")
-        if not run_id:
+        if not d.get("id") or not d.get("repository"):
             return None
+
+        repo = d["repository"]
+        repo = repo.replace("https://", "").replace("http://", "").replace("github.com/", "")
+        d["id_repository"] = f"{repo}_{d['id']}"
 
         # "start" and "complete" are time stamps like time stamps like 2023-10-22T14:39:01Z
         # parse them with a library, take the difference "complete" - "start" to get the
@@ -155,12 +160,12 @@ class MultiqcModule(BaseMultiqcModule):
         version = d.get("version")
         if version:
             d["seqeraVersion"] = version
-            self.add_software_version(version, sample=run_id, software_name="Seqera Platform")
+            self.add_software_version(version, sample=d["id_repository"], software_name="Seqera Platform")
 
         nextflow_version = d.get("nextflow", {}).get("version")
         if nextflow_version:
             d["nextflowVersion"] = nextflow_version
-            self.add_software_version(nextflow_version, sample=run_id, software_name="Nextflow")
+            self.add_software_version(nextflow_version, sample=d["id_repository"], software_name="Nextflow")
 
         return d
 
@@ -256,19 +261,8 @@ class MultiqcModule(BaseMultiqcModule):
                 "cond_formatting_rules": {v: [{"s_eq": v}] for v in nextflow_versions},
                 "scale": False,
             },
-            "seqeraVersion": {
-                "title": "Platform",
-                "description": "Version of the Seqera Platform",
-                "cond_formatting_colours": version_colors,
-                "cond_formatting_rules": {v: [{"s_eq": v}] for v in seqera_versions},
-                "scale": False,
-            },
         }
-        self.add_section(
-            name="Workflow run statistics",
-            anchor="seqera_cli_run_stats_table",
-            plot=table.plot(data_by_run, headers, {"col1_header": "Run ID"}),
-        )
+        self.general_stats_addcols(data_by_run, headers)
 
     def _plots(self, data_by_run):
         """

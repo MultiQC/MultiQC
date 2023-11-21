@@ -13,7 +13,7 @@ import mimetypes
 import os
 import re
 import time
-from collections import defaultdict
+from collections import defaultdict, OrderedDict
 
 import rich
 import rich.progress
@@ -26,8 +26,9 @@ from . import config
 
 logger = config.logger
 
-# Treat defaultdict as normal dict for YAML output
+# Treat defaultdict and OrderedDict as normal dicts for YAML output
 yaml.add_representer(defaultdict, Representer.represent_dict)
+yaml.add_representer(OrderedDict, Representer.represent_dict)
 
 
 # Set up global variables shared across modules

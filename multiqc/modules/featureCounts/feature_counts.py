@@ -148,7 +148,7 @@ class MultiqcModule(BaseMultiqcModule):
         headers = {}
         for h in self.featurecounts_keys:
             nice_name = h.replace("Unassigned_", "Unassigned: ").replace("_", " ")
-            nice_name = re.sub(r"([a-z])([A-Z])", "\g<1> \g<2>", nice_name)
+            nice_name = re.sub(r"([a-z])([A-Z])", r"\g<1> \g<2>", nice_name)
             headers[h] = {"name": nice_name}
 
         # Config for the plot

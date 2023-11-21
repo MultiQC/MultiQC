@@ -1,5 +1,5 @@
 """ MultiQC modules base class, contains helper functions """
-
+from typing import List, Union, Optional
 
 import fnmatch
 import io
@@ -142,7 +142,7 @@ class BaseMultiqcModule(object):
 
             # Filter out files based on exclusion patterns
             if path_filters_exclude and len(path_filters_exclude) > 0:
-                # Try both the given path and also the path prefixed with the analyis dirs
+                # Try both the given path and also the path prefixed with the analysis dirs
                 exlusion_hits = itertools.chain(
                     (fnmatch.fnmatch(report.last_found_file, pfe) for pfe in path_filters_exclude),
                     *(
@@ -281,14 +281,64 @@ class BaseMultiqcModule(object):
             }
         )
 
-    def clean_s_name(self, s_name, f=None, root=None, filename=None, seach_pattern_key=None):
-        """Helper function to take a long file name and strip it
-        back to a clean sample name. Somewhat arbitrary.
-        :param s_name: The sample name to clean
+    @staticmethod
+    def _clean_fastq_pair(r1: str, r2: str) -> Optional[str]:
+        """
+        Try trimming r1 and r2 as paired FASTQ file names.
+        """
+        # Try trimming the conventional illumina suffix with a tail 001 ending. Refs:
+        # https://support.illumina.com/help/BaseSpace_Sequence_Hub_OLH_009008_2/Source/Informatics/BS/NamingConvention_FASTQ-files-swBS.htm
+        # https://support.10xgenomics.com/spatial-gene-expression/software/pipelines/latest/using/fastq-input#:~:text=10x%20pipelines%20need%20files%20named,individual%20who%20demultiplexed%20your%20flowcell.
+        cleaned_r1 = re.sub(r"_R1_\d{3}$", "", r1)
+        cleaned_r2 = re.sub(r"_R2_\d{3}$", "", r2)
+        if cleaned_r1 == cleaned_r2:  # trimmed successfully
+            return cleaned_r1
+
+        # Try removing _R1 and _R2 from the middle.
+        cleaned_r1 = re.sub(r"_R1_", "_", r1)
+        cleaned_r2 = re.sub(r"_R2_", "_", r2)
+        if cleaned_r1 == cleaned_r2:  # trimmed successfully
+            return cleaned_r1
+
+        # Try trimming other variations from the end (-R1, _r1, _1, .1, etc).
+        cleaned_r1 = re.sub(r"([_.-][rR]?1)?$", "", r1)
+        cleaned_r2 = re.sub(r"([_.-][rR]?2)?$", "", r2)
+        if cleaned_r1 == cleaned_r2:  # trimmed successfully
+            return cleaned_r1
+
+        return None
+
+    def clean_s_name(self, s_name: Union[str, List[str]], f=None, root=None, filename=None, seach_pattern_key=None):
+        """
+        Helper function to take a long file name(s) and strip back to one clean sample name. Somewhat arbitrary.
+        :param s_name: The sample name(s) to clean.
         :param root: The directory path that this file is within
         :config.prepend_dirs: boolean, whether to prepend dir name to s_name
         :return: The cleaned sample name, ready to be used
         """
+        if isinstance(s_name, list):
+            if len(s_name) == 0:
+                raise ValueError("Empty list of sample names passed to clean_s_name()")
+
+            # Extract a sample name from a list of file names (for example, FASTQ pairs).
+            # Each name is cleaned separately first:
+            clean_names = [
+                self.clean_s_name(sn, f=f, root=root, filename=filename, seach_pattern_key=seach_pattern_key)
+                for sn in s_name
+            ]
+            if len(set(clean_names)) == 1:
+                # All the same, returning the first one.
+                return clean_names[0]
+
+            if len(clean_names) == 2:
+                # Checking if it's a FASTQ pair.
+                fastq_s_name = self._clean_fastq_pair(*clean_names)
+                if fastq_s_name is not None:
+                    return fastq_s_name
+
+            # Couldn't clean as FASTQ. Just concatenating the clean names.
+            return "_".join(clean_names)
+
         s_name_original = s_name
 
         # Backwards compatability - if f is a string, it's probably the root (this used to be the second argument)

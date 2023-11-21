@@ -23,7 +23,7 @@ MultiQC was written by Phil Ewels (http://phil.ewels.co.uk) at Seqera Labs (http
 
 from setuptools import find_packages, setup
 
-version = "1.18dev"
+version = "1.19dev"
 dl_version = "master" if "dev" in version else "v{}".format(version)
 
 print(
@@ -65,6 +65,7 @@ setup(
         "spectra>=0.0.10",
         "importlib-metadata",
         "humanize",
+        "pyaml-env",
     ],
     entry_points={
         "console_scripts": [
@@ -184,7 +185,6 @@ setup(
             "samblaster = multiqc.modules.samblaster:MultiqcModule",
             "samtools = multiqc.modules.samtools:MultiqcModule",
             "sargasso = multiqc.modules.sargasso:MultiqcModule",
-            "sentieon = multiqc.modules.sentieon:MultiqcModule",
             "seqyclean = multiqc.modules.seqyclean:MultiqcModule",
             "sexdeterrmine = multiqc.modules.sexdeterrmine:MultiqcModule",
             "sickle = multiqc.modules.sickle:MultiqcModule",
@@ -210,6 +210,7 @@ setup(
             "verifybamid = multiqc.modules.verifybamid:MultiqcModule",
             "whatshap = multiqc.modules.whatshap:MultiqcModule",
             "xenome = multiqc.modules.xenome:MultiqcModule",
+            "xengsort = multiqc.modules.xengsort:MultiqcModule",
         ],
         "multiqc.templates.v1": [
             "default = multiqc.templates.default",

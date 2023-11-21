@@ -149,7 +149,7 @@ class MultiqcModule(BaseMultiqcModule):
                 "format": "{:.0f}",
             },
             "mean_read_len": {
-                "title": "Read  Length",
+                "title": "Read Length",
                 "description": "Mean read length",
                 "min": 0,
                 "scale": "RdYlGn",

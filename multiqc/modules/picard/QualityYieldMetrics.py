@@ -4,8 +4,7 @@ import logging
 from collections import OrderedDict
 
 from multiqc import config
-
-from .util import read_sample_name
+from multiqc.modules.picard import util
 
 # Initialise the logger
 log = logging.getLogger(__name__)
@@ -27,61 +26,60 @@ DESC = OrderedDict(
 )
 
 
-def parse_reports(self):
+def parse_reports(module):
     """Find Picard QualityYieldMetrics reports and parse their data"""
 
     # Set up vars
-    all_data = OrderedDict()
-    header = list(DESC.keys())
+    data_by_sample = dict()
+    expected_header = list(DESC.keys())
 
     # Go through logs and find Metrics
-    for f in self.find_log_files("picard/quality_yield_metrics", filehandles=True):
-        self.add_data_source(f, section="QualityYieldMetrics")
+    for f in module.find_log_files(f"{module.anchor}/quality_yield_metrics", filehandles=True):
+        # Sample name from input file name by default.
+        s_name = f["s_name"]
 
-        lines = iter(f["f"])
+        for line in f["f"]:
+            maybe_s_name = util.extract_sample_name(
+                module,
+                line,
+                f,
+                picard_tool="CollectQualityYieldMetrics",
+            )
+            if maybe_s_name:
+                s_name = maybe_s_name
 
-        def clean_fn(n):
-            return self.clean_s_name(n, f)
-
-        s_name = read_sample_name(lines, clean_fn, "CollectQualityYieldMetrics")
-
-        if s_name is None:
-            continue
-
-        # Superfluous function call to confirm that it is used in this module
-        # Replace None with actual version if it is available
-        self.add_software_version(None, s_name)
-
-        sample_data = dict()
-        try:
-            # skip to the histogram
-            line = next(lines)
-            while not line.startswith("## METRICS CLASS"):
-                line = next(lines)
-
-            # check the header
-            line = next(lines)
-            if header != line.strip().split("\t"):
+            if s_name is None:
                 continue
 
-            # one row
-            line = next(lines)
-            fields = [int(field) for field in line.strip("\n").split("\t")]
-            sample_data = OrderedDict(zip(header, fields))
-        except StopIteration:
-            pass
+            if util.is_line_right_before_table(line, picard_class="QualityYieldMetrics"):
+                keys = f["f"].readline().strip("\n").split("\t")
+                if keys != expected_header:
+                    continue
 
-        if sample_data:
-            all_data[s_name] = OrderedDict(zip(header, fields))
+                if s_name in data_by_sample:
+                    log.debug(f"Duplicate sample name found in {f['fn']}! Overwriting: {s_name}")
+                module.add_data_source(f, s_name, section="QualityYieldMetrics")
 
-    # Filter to strip out ignored sample names
-    all_data = self.ignore_samples(all_data)
+                vals = []
+                for v in f["f"].readline().strip("\n").split("\t"):
+                    try:
+                        v = int(v)
+                    except ValueError:
+                        pass
+                    vals.append(v)
+                data_by_sample[s_name] = dict(zip(keys, vals))
+                s_name = None
 
-    if not all_data:
+    data_by_sample = module.ignore_samples(data_by_sample)
+    if not data_by_sample:
         return 0
 
+    # Superfluous function call to confirm that it is used in this module
+    # Replace None with actual version if it is available
+    module.add_software_version(None)
+
     # Write parsed data to a file
-    self.write_data_file(all_data, "multiqc_picard_QualityYieldMetrics")
+    module.write_data_file(data_by_sample, f"multiqc_{module.anchor}_QualityYieldMetrics")
 
     # Add to the general stats table
     headers = {
@@ -93,6 +91,6 @@ def parse_reports(self):
             "shared_key": "read_count",
         }
     }
-    self.general_stats_addcols(all_data, headers)
+    module.general_stats_addcols(data_by_sample, headers, namespace="QualityYieldMetrics")
 
-    return len(all_data)
+    return len(data_by_sample)

@@ -637,6 +637,28 @@ headers[tablecol] = {
 }
 ```
 
+### Specifying sorting of columns
+
+By default, each table is sorted by sample name alphabetically. You can override the
+sorting order using the `defaultsort` option. Here is an example:
+
+```yaml
+custom_plot_config:
+  general_stats_table:
+    defaultsort:
+      - column: "Mean Insert Length"
+        direction: asc
+      - column: "Starting Amount (ng)"
+  quast_table:
+    defaultsort:
+      - column: "Largest contig"
+```
+
+In this case, the general stats table will be sorted by "Mean Insert Length" first,
+in ascending order, then by "Starting Amount (ng)", in descending (default) order. The
+table with the ID `quast_table` (which you can find by clicking the "Configure Columns"
+button above the table in the report) will be sorted by "Largest contig".
+
 ## Beeswarm plots (dot plots)
 
 Beeswarm plots work from the exact same data structure as tables, so the

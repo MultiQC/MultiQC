@@ -318,12 +318,17 @@ class MultiqcModule(BaseMultiqcModule):
             "pipeline_start": {
                 "title": "Date Started",
                 "description": "Date and time that pipeline was started (YYYY-MM-DD HH:SS)",
+                "scale": False,
             },
-            "genome": {"title": "Genome ID", "description": "ID of reference genome used"},
+            "genome": {
+                "title": "Genome ID",
+                "description": "ID of reference genome used",
+            },
             "num_starting_files": {
                 "title": "# Starting Files",
                 "format": "{:,.0f}",
                 "description": "Number of input files at start of pipeline run.",
+                "scale": False,
             },
         }
         table_config = {

@@ -374,7 +374,7 @@ while orig_lines:
                 updated_lines.append("\n")
                 _updated_lines = [_l for _l in section_lines + new_lines if _l.strip()]
                 if section == "### Module updates":
-                    _updated_lines = sorted(_updated_lines)
+                    _updated_lines = sorted(_updated_lines, key=lambda x: x.lower())
                 updated_lines.extend(_updated_lines)
                 updated_lines.append("\n")
                 if new_lines:

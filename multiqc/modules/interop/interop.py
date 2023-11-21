@@ -116,9 +116,12 @@ class MultiqcModule(BaseMultiqcModule):
                 metrics["summary"][data[0]] = {}
                 for idx in range(1, len(data)):
                     try:
-                        metrics["summary"][data[0]][header[idx]] = float(data[idx])
+                        metrics["summary"][data[0]][header[idx]] = int(data[idx])
                     except ValueError:
-                        metrics["summary"][data[0]][header[idx]] = data[idx]
+                        try:
+                            metrics["summary"][data[0]][header[idx]] = float(data[idx])
+                        except ValueError:
+                            metrics["summary"][data[0]][header[idx]] = data[idx]
                 if line.startswith("Total"):
                     section = None
             elif line.startswith("Read") and (section is None or section == "details"):
@@ -146,10 +149,23 @@ class MultiqcModule(BaseMultiqcModule):
                             val = data[idx].split("/")
                             linedata["Phased"] = val[0]
                             linedata["Prephased"] = val[1]
+                        elif header[idx] == "Cycles Error":
+                            vals = data[idx].split(" - ")
+                            linedata[header[idx]] = max(int(v) for v in vals)
                         else:
-                            linedata[header[idx]] = float(data[idx])
+                            try:
+                                linedata[header[idx]] = int(data[idx])
+                            except ValueError:
+                                linedata[header[idx]] = float(data[idx])
                     except ValueError:
-                        linedata[header[idx]] = re.sub(pattern="\+/-.*", repl="", string=data[idx])
+                        val = re.sub(pattern=r"\+/-.*", repl="", string=data[idx]).strip()
+                        try:
+                            linedata[header[idx]] = int(val)
+                        except ValueError:
+                            try:
+                                linedata[header[idx]] = float(val)
+                            except ValueError:
+                                linedata[header[idx]] = val
                 metrics["details"]["Lane {} - {}".format(data[0], read)] = linedata
 
         return metrics, version
@@ -208,13 +224,11 @@ class MultiqcModule(BaseMultiqcModule):
         headers = {
             "Yield": {
                 "rid": "summary_Yield",
-                "title": "{}p Yield".format(config.base_count_prefix),
-                "description": 'The number of bases sequenced ({} base pairs over all "usable cycles"'.format(
-                    config.base_count_desc
-                ),
+                "title": "Gbp Yield",  # Numbers are rounded up to Gbp, so no point in using multiplier for smaller numbers as will be all zeroes
+                "description": 'The number of bases sequenced (Gbp base pairs over all "usable cycles")',
                 "scale": "PuOr",
-                "shared_key": "base_count",
-                "modify": lambda x: (x * 1000000000.0) * config.base_count_multiplier,  # number is already in gigabases
+                "min": 0,
+                "format": "{:,.2f}",
             },
             "Aligned": {
                 "rid": "summary_Aligned",
@@ -237,6 +251,9 @@ class MultiqcModule(BaseMultiqcModule):
                 "rid": "summary_Intensity_C1",
                 "title": "Intensity Cycle 1",
                 "description": "The intensity statistic at cycle 1.",
+                "min": 0,
+                "scale": "PuOr",
+                "format": "{:,d}",
             },
             "%>=Q30": {
                 "rid": "summary_Q30",
@@ -300,30 +317,25 @@ class MultiqcModule(BaseMultiqcModule):
                 "scale": "OrRd",
             },
             "Reads": {
-                "title": "{} Reads".format(config.read_count_prefix),
-                "description": "The number of clusters ({})".format(config.read_count_desc),
-                "shared_key": "read_count",
-                "modify": lambda x: (x * 1000000.0) * config.read_count_multiplier,  # number is already in millions
+                "title": "M Reads",
+                "description": "The number of clusters (millions)",
             },
             "Reads PF": {
-                "title": "{} PF Reads".format(config.read_count_prefix),
-                "description": "The number of passing filter clusters ({})".format(config.read_count_desc),
-                "shared_key": "read_count",
-                "modify": lambda x: (x * 1000000.0) * config.read_count_multiplier,  # number is already in millions
+                "title": "M PF Reads",
+                "description": "The number of passing filter clusters (millions)",
             },
             "Cycles Error": {
                 "title": "Cycles Error",
                 "description": "The number of cycles that have been error-rated using PhiX, starting at cycle 1.",
                 "format": "{:.,0f}",
+                "scale": "OrRd",
             },
             "Yield": {
-                "title": "{}p Yield".format(config.base_count_prefix),
-                "description": "The number of bases sequenced which passed filter ({} base pairs)".format(
-                    config.base_count_desc
-                ),
+                "title": "Gbp Yield",
+                "description": "The number of bases sequenced which passed filter (Gbp base pairs)",
                 "scale": "PuOr",
-                "shared_key": "base_count",
-                "modify": lambda x: (x * 1000000000.0) * config.base_count_multiplier,  # number is already in gigabases
+                "min": 0,
+                "format": "{:,.2f}",
             },
             "Aligned": {
                 "title": "Aligned (%)",
@@ -371,6 +383,9 @@ class MultiqcModule(BaseMultiqcModule):
             "Intensity C1": {
                 "title": "Intensity Cycle 1",
                 "description": "The intensity statistic at cycle 1.",
+                "min": 0,
+                "scale": "PuOr",
+                "format": "{:,d}",
             },
             "%>=Q30": {
                 "title": "%>=Q30",
@@ -386,6 +401,7 @@ class MultiqcModule(BaseMultiqcModule):
             "id": "interop-runmetrics-detail-table",
             "table_title": "Sequencing Lane Statistics",
             "col1_header": "Run - Lane - Read",
+            "scale": False,
         }
 
         tdata = {}
@@ -399,6 +415,7 @@ class MultiqcModule(BaseMultiqcModule):
     def index_metrics_summary_table(data):
         headers = {
             "Total Reads": {
+                "rid": "interop_reads_total",
                 "title": "{} Reads".format(config.read_count_prefix),
                 "description": "The total number of reads for this lane ({})".format(config.read_count_desc),
                 "modify": lambda x: float(x) * config.read_count_multiplier,

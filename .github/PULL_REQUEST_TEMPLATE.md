@@ -4,7 +4,6 @@ Please fill in the appropriate checklist below (delete whatever is not relevant)
 -->
 
 - [ ] This comment contains a description of changes (with reason)
-- [ ] `CHANGELOG.md` has been updated
 
 <!-- If this PR is for a NEW module - delete if not -->
 

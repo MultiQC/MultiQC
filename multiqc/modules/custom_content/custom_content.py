@@ -179,7 +179,7 @@ def custom_module_classes():
                             if conf.get("id") is not None:
                                 c_id = conf.get("id")
                             # heatmap - special data type
-                            if not isinstance(parsed_data, list):
+                            if isinstance(parsed_data, list):
                                 cust_mods[c_id]["data"] = parsed_data
                             elif conf.get("plot_type") == "html":
                                 cust_mods[c_id]["data"] = parsed_data

@@ -70,6 +70,18 @@ def plot(data, pconfig=None):
                 d.append(this_series)
         plotdata.append(d)
 
+    if pconfig.get("square"):
+        # Find the max value
+        max_val = 0
+        for d in plotdata:
+            for s in d:
+                max_val = max(max_val, s["x"], s["y"])
+        max_val = 1.02 * max_val  # add 2% padding
+        pconfig["xmax"] = max_val
+        pconfig["ymax"] = max_val
+        # Making sure HighCharts doesn't get creative in adding different paddings
+        pconfig["endOnTick"] = False
+
     # Add on annotation data series
     try:
         if pconfig.get("extra_series"):

@@ -378,7 +378,7 @@ class TagDirReportMixin:
         for line in f["f"]:
             if firstline:
                 firstline = False
-                interChr = float(re.sub("\)", "", line.split(":")[1]))
+                interChr = float(re.sub(r"\)", "", line.split(":")[1]))
             else:
                 break
         parsed_data["interChr"] = interChr
