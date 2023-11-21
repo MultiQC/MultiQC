@@ -5,6 +5,7 @@
 import logging
 import re
 from collections import defaultdict
+from typing import List, Tuple, Dict
 
 from multiqc.utils import config, report
 
@@ -292,13 +293,14 @@ class DataTable:
         self.headers = headers
         self.pconfig = pconfig
 
-    def get_headers_in_order(self):
-        """Gets the headers in the order they want to be displayed.
-        Returns a list of triplets: (idx, key, header_info)
+    def get_headers_in_order(self) -> List[Tuple[int, str, Dict]]:
+        """
+        Gets the headers in the order they want to be displayed.
+        Returns a list of triplets: (bucket_idx, key, header_info)
         """
         res = list()
         # Scan through self.headers_in_order and just bolt on the actual header info
         for bucket in sorted(self.headers_in_order):
-            for idx, k in self.headers_in_order[bucket]:
-                res.append((idx, k, self.headers[idx][k]))
+            for bucket_idx, k in self.headers_in_order[bucket]:
+                res.append((bucket_idx, k, self.headers[bucket_idx][k]))
         return res

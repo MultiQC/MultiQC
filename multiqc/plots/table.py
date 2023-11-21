@@ -433,12 +433,14 @@ def _get_sortlist(dt: table_object.DataTable) -> str:
 
     ```yaml
     custom_plot_config:
-      table_data-plot:
+      general_stats_table:
         defaultsort:
-          - column: "Starting Amount (ng)"
-            direction: desc
           - column: "Mean Insert Length"
             direction: asc
+          - column: "Starting Amount (ng)"
+      quast_table:
+        defaultsort:
+        - column: "Largest contig"
     ```
 
     It is returned in a form os a list literal, as expected by the jQuery tablesorter plugin.
@@ -452,10 +454,14 @@ def _get_sortlist(dt: table_object.DataTable) -> str:
 
     # defaultsort is a list of {column, direction} objects
     for d in defaultsort:
-        # The first element of the triple is not actually unique, it's the bucket
-        # so we must enumerate ourselves here
         try:
-            idx = next(idx for idx, (_, k, header) in enumerate(headers) if k == d["column"])
+            # The first element of the triple is not actually unique, it's a bucket index,
+            # so we must re-enumerate ourselves here
+            idx = next(
+                idx
+                for idx, (_, k, header) in enumerate(headers)
+                if d["column"].lower() in [k.lower(), header["title"].lower()]
+            )
         except StopIteration:
             logger.warning(
                 "Tried to sort by column '%s', but column was not found. Available columns: %s",
@@ -464,7 +470,7 @@ def _get_sortlist(dt: table_object.DataTable) -> str:
             )
             return ""
         idx += 1  # to account for col1_header
-        direction = 0 if d["direction"] == "asc" else 1
+        direction = 0 if d.get("direction", "").startswith("asc") else 1
         sortlist.append([idx, direction])
 
     return str(sortlist)
