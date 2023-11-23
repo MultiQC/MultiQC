@@ -98,6 +98,7 @@ class MultiqcModule(BaseMultiqcModule):
         for sample_id, sample in bclconvert_by_sample.items():
             if sample["yield"] > 0:
                 sample["mean_quality"] = sample["_quality_score_sum"] / sample["yield"]
+            del sample["_quality_score_sum"]
 
         self.write_data_file(bclconvert_by_lane, "multiqc_bclconvert_bylane")
         self.write_data_file(bclconvert_by_sample, "multiqc_bclconvert_bysample")
@@ -667,8 +668,8 @@ class MultiqcModule(BaseMultiqcModule):
             "suffix": "%",
         }
         headers["mean_quality"] = {
-            "title": "Mean Quality Score (PF)",
-            "description": "Mean quality score of bases passing filter",
+            "title": "Mean Quality Score",
+            "description": "Mean quality score of bases",
             "min": 0,
             "max": 40,
             "scale": "RdYlGn",
