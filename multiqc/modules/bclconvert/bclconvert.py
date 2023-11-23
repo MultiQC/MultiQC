@@ -3,7 +3,7 @@ import logging
 import os
 import xml.etree.ElementTree as ET
 from collections import defaultdict
-from functools import lru_cache
+import functools
 from itertools import islice
 from typing import Tuple, Dict, Optional
 
@@ -204,7 +204,7 @@ class MultiqcModule(BaseMultiqcModule):
             )
 
     @staticmethod
-    @lru_cache()
+    @functools.cache
     def _get_genome_size() -> Optional[int]:
         gs = getattr(config, "bclconvert", {}).get("genome_size")
         if gs:
