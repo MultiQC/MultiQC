@@ -210,7 +210,7 @@ class MultiqcModule(BaseMultiqcModule):
         gs = getattr(config, "bclconvert", {}).get("genome_size")
         if gs:
             try:
-                gs = int(gs)
+                gs = int(float(gs))
             except ValueError:
                 presets = {"hg19_genome": 2897310462, "hg38_genome": 3049315783, "mm10_genome": 2652783500}
                 if gs in presets:
