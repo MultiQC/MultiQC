@@ -205,7 +205,7 @@ class MultiqcModule(BaseMultiqcModule):
             )
 
     @staticmethod
-    @functools.cache
+    @functools.lru_cache
     def _get_genome_size() -> Optional[int]:
         gs = getattr(config, "bclconvert", {}).get("genome_size")
         if gs:
