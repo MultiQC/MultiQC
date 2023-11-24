@@ -9,7 +9,7 @@ import logging
 import re
 from collections import defaultdict
 
-from multiqc.modules.base_module import BaseMultiqcModule, ModuleNoSamplesFound
+from multiqc.modules.base_module import BaseMultiqcModule
 
 from .utils import make_log_report
 
@@ -79,15 +79,15 @@ log_data = {
 
 # Official structure of files:   _overall_mean_cov.csv
 # Accepted structure of files: .+_overall_mean_cov.*.csv
-GEN_FILE_RGX = re.compile("(.+)_overall_mean_cov(.*)\.csv$")
+GEN_FILE_RGX = re.compile(r"(.+)_overall_mean_cov(.*)\.csv$")
 
 # Special case. Coverage metrics files have the following structure:
 # <output-prefix>.<coverage-region-prefix>_overall_mean_cov<arbitrary-suffix>.csv
-COV_FILE_RGX = re.compile("(.+)\.(.+)_overall_mean_cov(.*)\.csv$")
+COV_FILE_RGX = re.compile(r"(.+)\.(.+)_overall_mean_cov(.*)\.csv$")
 
 # General structure of lines is not defined.
 # Currently only 1 metric is present in the standard. It substitutes the line's regex.
-AVG_RGX = re.compile("Average alignment coverage over ([^,]+),([^,]+)$", re.IGNORECASE)
+AVG_RGX = re.compile(r"Average alignment coverage over ([^,]+),([^,]+)$", re.IGNORECASE)
 
 
 def parse_overall_mean_cov(file_handler):
@@ -126,7 +126,7 @@ def parse_overall_mean_cov(file_handler):
 
         # Otherwise check if line is empty. If not then report it and go to the next line.
         else:
-            if not re.search("^\s*$", line):
+            if not re.search(r"^\s*$", line):
                 log_data["unknown_metrics"].append(line)
             continue
 

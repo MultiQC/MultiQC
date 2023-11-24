@@ -1,7 +1,6 @@
 """ MultiQC module to parse output from ngs-disambiguate. """
 
 import logging
-from collections import OrderedDict
 
 from multiqc.modules.base_module import BaseMultiqcModule, ModuleNoSamplesFound
 from multiqc.plots import bargraph
@@ -37,10 +36,6 @@ class MultiqcModule(BaseMultiqcModule):
                 self.data[sample] = counts
                 self.add_data_source(f, s_name=sample)
 
-                # Superfluous function call to confirm that it is used in this module
-                # Replace None with actual version if it is available
-                self.add_software_version(None, sample)
-
         self.data = self.ignore_samples(self.data)
 
         if len(self.data) == 0:
@@ -48,11 +43,16 @@ class MultiqcModule(BaseMultiqcModule):
 
         log.info("Found %d reports", len(self.data))
 
+        # Superfluous function call to confirm that it is used in this module
+        # Replace None with actual version if it is available
+        self.add_software_version(None)
+
         self.add_stats_table()
         self.add_stats_plot()
         self.write_stats_to_file()
 
-    def parse_summary(self, contents):
+    @staticmethod
+    def parse_summary(contents):
         """Parses summary file into a dictionary of counts."""
 
         lines = contents.strip().split("\n")
@@ -96,10 +96,11 @@ class MultiqcModule(BaseMultiqcModule):
     def add_stats_plot(self):
         """Plots alignment stats as bargraph."""
 
-        keys = OrderedDict()
-        keys["species_a"] = {"color": "#437bb1", "name": "Species a"}
-        keys["species_b"] = {"color": "#b1084c", "name": "Species b"}
-        keys["ambiguous"] = {"color": "#333333", "name": "Ambiguous"}
+        keys = {
+            "species_a": {"color": "#437bb1", "name": "Species a"},
+            "species_b": {"color": "#b1084c", "name": "Species b"},
+            "ambiguous": {"color": "#333333", "name": "Ambiguous"},
+        }
 
         plot_config = {
             "id": "disambiguated_alignments",

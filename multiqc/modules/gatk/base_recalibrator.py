@@ -176,6 +176,7 @@ class BaseRecalibratorMixin:
 
             # Build data label configs for this data type
             data_labels.append({"name": "{} Reported vs. Empirical Quality", "ylab": "Empirical quality score"})
+
         plot = scatter.plot(
             sample_data,
             pconfig={
@@ -185,6 +186,9 @@ class BaseRecalibratorMixin:
                 "ylab": "Empirical quality score",
                 "xDecimals": False,
                 "data_labels": data_labels,
+                "xmin": 0,
+                "ymin": 0,
+                "square": True,
             },
         )
 

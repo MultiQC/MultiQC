@@ -4,7 +4,6 @@
 import logging
 import os
 import re
-from collections import OrderedDict
 
 from multiqc.modules.base_module import BaseMultiqcModule, ModuleNoSamplesFound
 from multiqc.plots import bargraph
@@ -30,10 +29,6 @@ class MultiqcModule(BaseMultiqcModule):
             self.parse_qorts(f)
             self.add_data_source(f)
 
-            # Superfluous function call to confirm that it is used in this module
-            # Replace None with actual version if it is available
-            self.add_software_version(None, f["s_name"])
-
         # Remove empty samples
         self.qorts_data = {s: v for s, v in self.qorts_data.items() if len(v) > 0}
 
@@ -44,6 +39,11 @@ class MultiqcModule(BaseMultiqcModule):
             raise ModuleNoSamplesFound
 
         log.info("Found {} logs".format(len(self.qorts_data)))
+
+        # Superfluous function call to confirm that it is used in this module
+        # Replace None with actual version if it is available
+        self.add_software_version(None)
+
         self.write_data_file(self.qorts_data, "multiqc_qorts")
 
         # Make plots
@@ -55,8 +55,8 @@ class MultiqcModule(BaseMultiqcModule):
 
     def parse_qorts(self, f):
         s_names = None
-        for l in f["f"]:
-            s = l.split("\t")
+        for line in f["f"]:
+            s = line.split("\t")
             if s_names is None:
                 raw_s_names = s[1:]
                 s_names = [self.clean_s_name(s_name, f) for s_name in raw_s_names]
@@ -84,19 +84,20 @@ class MultiqcModule(BaseMultiqcModule):
 
     def qorts_general_stats(self):
         """Add columns to the General Statistics table"""
-        headers = OrderedDict()
-        headers["Genes_PercentWithNonzeroCounts"] = {
-            "title": "% Genes with Counts",
-            "description": "Percent of Genes with Non-Zero Counts",
-            "max": 100,
-            "min": 0,
-            "suffix": "%",
-            "scale": "YlGn",
-        }
-        headers["NumberOfChromosomesCovered"] = {
-            "title": "Chrs Covered",
-            "description": "Number of Chromosomes Covered",
-            "format": "{:,.0f}",
+        headers = {
+            "Genes_PercentWithNonzeroCounts": {
+                "title": "% Genes with Counts",
+                "description": "Percent of Genes with Non-Zero Counts",
+                "max": 100,
+                "min": 0,
+                "suffix": "%",
+                "scale": "YlGn",
+            },
+            "NumberOfChromosomesCovered": {
+                "title": "Chrs Covered",
+                "description": "Number of Chromosomes Covered",
+                "format": "{:,.0f}",
+            },
         }
         self.general_stats_addcols(self.qorts_data, headers)
 
@@ -112,10 +113,10 @@ class MultiqcModule(BaseMultiqcModule):
             "ReadPairs_NoGene_TenKbFromGene",
             "ReadPairs_NoGene_MiddleOfNowhere",
         ]
-        cats = OrderedDict()
+        cats = {}
         for k in keys:
             name = k.replace("ReadPairs_", "").replace("_", ": ")
-            name = re.sub("([a-z])([A-Z])", "\g<1> \g<2>", name)
+            name = re.sub("([a-z])([A-Z])", r"\g<1> \g<2>", name)
             cats[k] = {"name": name}
 
         # Config for the plot
@@ -164,10 +165,10 @@ class MultiqcModule(BaseMultiqcModule):
             "SpliceLoci_Novel_ManyReads",
             "SpliceLoci_Novel_FewReads",
         ]
-        cats = OrderedDict()
+        cats = {}
         for k in keys:
             name = k.replace("SpliceLoci_", "").replace("_", ": ")
-            name = re.sub("([a-z])([A-Z])", "\g<1> \g<2>", name)
+            name = re.sub("([a-z])([A-Z])", r"\g<1> \g<2>", name)
             cats[k] = {"name": name}
 
         # Config for the plot
@@ -220,10 +221,10 @@ class MultiqcModule(BaseMultiqcModule):
             "SpliceEvents_NovelLociWithManyReads",
             "SpliceEvents_NovelLociWithFewReads",
         ]
-        cats = OrderedDict()
+        cats = {}
         for k in keys:
             name = k.replace("SpliceEvents_", "")
-            name = re.sub("([a-z])([A-Z])", "\g<1> \g<2>", name)
+            name = re.sub("([a-z])([A-Z])", r"\g<1> \g<2>", name)
             cats[k] = {"name": name}
 
         # Config for the plot
@@ -273,10 +274,10 @@ class MultiqcModule(BaseMultiqcModule):
             "StrandTest_ambig_noGenes",
             "StrandTest_ambig_other",
         ]
-        cats = OrderedDict()
+        cats = {}
         for k in keys:
             name = k.replace("StrandTest_", "").replace("_", " ").replace("ambig", "ambig:")
-            name = re.sub("([a-z])([A-Z])", "\g<1> \g<2>", name)
+            name = re.sub("([a-z])([A-Z])", r"\g<1> \g<2>", name)
             cats[k] = {"name": name.title()}
 
         # Config for the plot

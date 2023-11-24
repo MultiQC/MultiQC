@@ -4,10 +4,8 @@ import json
 import logging
 from collections import defaultdict
 
-from multiqc import config
-from multiqc.modules.base_module import BaseMultiqcModule, ModuleNoSamplesFound
-from multiqc.modules.dragen.utils import Metric
-from multiqc.plots import bargraph, boxplot, heatmap, linegraph, table
+from multiqc.modules.base_module import BaseMultiqcModule
+from multiqc.plots import linegraph
 from multiqc.utils import report
 
 from .util import average_from_range, average_pos_from_metric
@@ -134,7 +132,7 @@ class DragenContentMetrics(BaseMultiqcModule):
                     for base in "acgt":
                         try:
                             data[r_name][pos][base] = (float(data[r_name][pos][base]) / float(total)) * 100.0
-                        except:
+                        except Exception:
                             pass
                     data[r_name][pos]["base"] = pos
 

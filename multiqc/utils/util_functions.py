@@ -60,7 +60,7 @@ def write_data_file(data, fn, sort_cols=False, data_format=None):
                 if callable(obj):
                     try:
                         return obj(1)
-                    except:
+                    except Exception:
                         return None
                 return json.JSONEncoder.default(self, obj)
 
@@ -68,32 +68,31 @@ def write_data_file(data, fn, sort_cols=False, data_format=None):
         if data_format not in ["json", "yaml"]:
             # attempt to reshape data to tsv
             try:
-                # Convert keys to strings
-                data = {str(k): v for k, v in data.items()}
                 # Get all headers from the data, except if data is a dictionary (i.e. has >1 dimensions)
-                h = set()
-                for values in data.values():
-                    first_sub_value = next(iter(values))
-                    if isinstance(first_sub_value, dict):
+                headers = []
+                for d in data.values():
+                    if not d or (isinstance(d, list) and isinstance(d[0], dict)):
                         continue
-                    h |= values.keys()
-                h = [str(item) for item in h]
-
-                # Add Sample header in to first element
-                h.insert(0, "Sample")
+                    for h in d.keys():
+                        if h not in headers:
+                            headers.append(h)
                 if sort_cols:
-                    h = sorted(h)
+                    headers = sorted(headers)
+
+                headers_str = [str(item) for item in headers]
+                # Add Sample header in to first element
+                headers_str.insert(0, "Sample")
 
                 # Get the rows
-                rows = ["\t".join(h)]
+                rows = ["\t".join(headers_str)]
                 for sn in sorted(data.keys()):
                     # Make a list starting with the sample name, then each field in order of the header cols
-                    l = [str(sn)] + [str(data[sn].get(k, "")) for k in h[1:]]
-                    rows.append("\t".join(l))
+                    line = [str(sn)] + [str(data[sn].get(h, "")) for h in headers]
+                    rows.append("\t".join(line))
 
                 body = "\n".join(rows)
 
-            except:
+            except Exception:
                 data_format = "yaml"
                 config.logger.debug(f"{fn} could not be saved as tsv/csv. Falling back to YAML.")
 
@@ -142,7 +141,7 @@ def force_term_colors():
     return None
 
 
-def strtobool(val):
+def strtobool(val) -> bool:
     """
     Replaces deprecated https://docs.python.org/3.9/distutils/apiref.html#distutils.util.strtobool
     The deprecation recommendation is to re-implement the function https://peps.python.org/pep-0632/
@@ -157,8 +156,8 @@ def strtobool(val):
     """
     val = val.lower()
     if val in ("y", "yes", "t", "true", "on", "1"):
-        return 1
+        return True
     elif val in ("n", "no", "f", "false", "off", "0"):
-        return 0
+        return False
     else:
         raise ValueError("invalid truth value %r" % (val,))

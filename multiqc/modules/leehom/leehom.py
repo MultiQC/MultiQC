@@ -65,10 +65,10 @@ class MultiqcModule(BaseMultiqcModule):
             "failed_key": r"Failed Key\s+(\d+)",
         }
         parsed_data = dict()
-        for l in f["f"]:
+        for line in f["f"]:
             # Search regexes for overview stats
             for k, r in regexes.items():
-                match = re.search(r, l)
+                match = re.search(r, line)
                 if match:
                     parsed_data[k] = int(match.group(1))
         return parsed_data

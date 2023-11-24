@@ -315,6 +315,8 @@ fn_clean_trim:
   - ".stats"
   - ".hist"
   - ".phased"
+  - ".tar"
+  - "runs_"
 
 # Files to ignore when indexing files.
 # Grep file match patterns.
@@ -558,9 +560,6 @@ module_order:
   - vep:
       module_tag:
         - DNA
-  - sentieon:
-      module_tag:
-        - DNA
   - bakta:
       module_tag:
         - bacterial
@@ -589,6 +588,10 @@ module_order:
   - sexdeterrmine:
       module_tag:
         - DNA
+  - seqera_cli:
+      module_tag:
+        - DNA
+        - RNA
   - eigenstratdatabasetools:
       module_tag:
         - DNA
@@ -878,5 +881,11 @@ module_order:
         - RNA
         - HLATyping
   - whatshap:
+      module_tag:
+        - DNA
+  - xenome:
+      module_tag:
+        - DNA
+  - xengsort:
       module_tag:
         - DNA

@@ -3,10 +3,10 @@
 
 import json
 import logging
+from json import JSONDecodeError
 
 from multiqc.modules.base_module import BaseMultiqcModule, ModuleNoSamplesFound
 from multiqc.plots import heatmap
-from multiqc.utils import config
 
 log = logging.getLogger(__name__)
 
@@ -72,8 +72,6 @@ class MultiqcModule(BaseMultiqcModule):
 
     def hops_heatmap(self):
         """Heatmap showing all statuses for every sample"""
-        heatmap_numbers = {"none": 1, "edit_only": 2, "damage_only": 3, "edit_and_damage": 4}
-
         samples = []
         for s in self.hops_data:
             samples.append(s)

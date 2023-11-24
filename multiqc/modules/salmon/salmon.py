@@ -4,7 +4,6 @@
 import json
 import logging
 import os
-from collections import OrderedDict
 
 from multiqc.modules.base_module import BaseMultiqcModule, ModuleNoSamplesFound
 from multiqc.plots import linegraph
@@ -40,7 +39,7 @@ class MultiqcModule(BaseMultiqcModule):
             if os.path.basename(f["root"]) == "libParams":
                 s_name = os.path.basename(os.path.dirname(f["root"]))
                 s_name = self.clean_s_name(s_name, f)
-                parsed = OrderedDict()
+                parsed = dict()
                 for i, v in enumerate(f["f"].split()):
                     parsed[i] = float(v)
                 if len(parsed) > 0:
@@ -63,22 +62,23 @@ class MultiqcModule(BaseMultiqcModule):
             log.info("Found {} fragment length distributions".format(len(self.salmon_fld)))
 
         # Add alignment rate to the general stats table
-        headers = OrderedDict()
-        headers["percent_mapped"] = {
-            "title": "% Aligned",
-            "description": "% Mapped reads",
-            "max": 100,
-            "min": 0,
-            "suffix": "%",
-            "scale": "YlGn",
-        }
-        headers["num_mapped"] = {
-            "title": "M Aligned",
-            "description": "Mapped reads (millions)",
-            "min": 0,
-            "scale": "PuRd",
-            "modify": lambda x: float(x) / 1000000,
-            "shared_key": "read_count",
+        headers = {
+            "percent_mapped": {
+                "title": "% Aligned",
+                "description": "% Mapped reads",
+                "max": 100,
+                "min": 0,
+                "suffix": "%",
+                "scale": "YlGn",
+            },
+            "num_mapped": {
+                "title": "M Aligned",
+                "description": "Mapped reads (millions)",
+                "min": 0,
+                "scale": "PuRd",
+                "modify": lambda x: float(x) / 1000000,
+                "shared_key": "read_count",
+            },
         }
         self.general_stats_addcols(self.salmon_meta, headers)
 

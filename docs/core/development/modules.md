@@ -143,12 +143,12 @@ tool in the maintenance of high quality software.
 
 MultiQC uses a range of tools to check the code base. The main two code formatters are:
 
-- [Black](https://github.com/psf/black) - Python Code
+- [Ruff](https://docs.astral.sh/ruff/) - Python Code
 - [Prettier](https://prettier.io/) - Everything else (almost)
 
 The easiest way to work with these is to install editor plugins that run the tools every time you save a file.
 For example, [Visual Studio Code](https://code.visualstudio.com/) has
-[built-in support for Black](https://code.visualstudio.com/docs/python/editing#_formatting) and
+[built-in support for Ruff](https://marketplace.visualstudio.com/items?itemName=charliermarsh.ruff) and
 plugins for [Prettier](https://github.com/prettier/prettier-vscode).
 
 ### Pre-commit
@@ -500,8 +500,8 @@ instead:
 ```python
 for f in self.find_log_files('mymod', filehandles=True):
     # f['f'] is now a filehandle instead of contents
-    for l in f['f']:
-        print( l )
+    for line in f['f']:
+        print(line)
 ```
 
 This is good if the file is large, as Python doesn't read the entire
@@ -525,8 +525,8 @@ class MultiqcModule(BaseMultiqcModule):
 
     def parse_logs(self, f):
         data = {}
-        for l in f.splitlines():
-            s = l.split()
+        for line in f.splitlines():
+            s = line.split()
             data[s[0]] = s[1]
         return data
 ```
@@ -764,19 +764,20 @@ To give more informative table headers and configure things like
 data scales and colour schemes, you can supply an extra dict:
 
 ```python
-headers = OrderedDict()
-headers['first_col'] = {
-    'title': 'First',
-    'description': 'My First Column',
-    'scale': 'RdYlGn-rev'
-}
-headers['second_col'] = {
-    'title': 'Second',
-    'description': 'My Second Column',
-    'max': 100,
-    'min': 0,
-    'scale': 'Blues',
-    'suffix': '%'
+headers = {
+    'first_col': {
+        'title': 'First',
+        'description': 'My First Column',
+        'scale': 'RdYlGn-rev'
+    },
+    'second_col': {
+        'title': 'Second',
+        'description': 'My Second Column',
+        'max': 100,
+        'min': 0,
+        'scale': 'Blues',
+        'suffix': '%'
+    }
 }
 self.general_stats_addcols(data, headers)
 ```
@@ -792,8 +793,8 @@ headers['name'] = {
     'min': None,                    # Maximum value in range, for bar / colour coding
     'scale': 'GnBu',                # Colour scale for colour coding. Set to False to disable.
     'suffix': None,                 # Suffix for value (eg. '%')
-    'format': '{:,.1f}',            # Output format() string
-    'shared_key': None              # See below for description
+    'format': '{:,.1f}',            # Output format() string. Can also be a lambda function.
+    'shared_key': None,             # See below for description
     'modify': None,                 # Lambda function to modify values
     'hidden': False,                # Set to True to hide the column on page load
     'placement' : 1000.0,           # Alter the default ordering of columns in the table
@@ -817,13 +818,16 @@ headers['name'] = {
 - `modify`
   - A python `lambda` function to change the data in some way when it is
     inserted into the table.
+- `format`
+  - A format string or a python `lambda` function to format the data to display
+    on screen.
 - `hidden`
   - Setting this to `True` will hide the column when the report loads. It can
     then be shown through the _Configure Columns_ modal in the report. This can
     be useful when data could be sometimes useful. For example, some modules
     show "percentage aligned" on page load but hide "number of reads aligned".
 - `placement`
-  - If you feel that the results from your module should appear at the left side
+  - If you feel that the results from your module should appear on the left side
     of the table set this value less than 1000. Or to move the column right, set
     it greater than 1000. This value can be any float.
 

@@ -4,7 +4,6 @@
 import logging
 import os
 import re
-from collections import OrderedDict
 
 from multiqc import config
 from multiqc.modules.base_module import BaseMultiqcModule, ModuleNoSamplesFound
@@ -38,10 +37,6 @@ class MultiqcModule(BaseMultiqcModule):
                 self.add_data_source(f, section="SummaryLog")
                 self.star_data[s_name] = parsed_data
 
-                # Superfluous function call to confirm that it is used in this module
-                # Replace None with actual version if it is available
-                self.add_software_version(None, s_name)
-
         # Find and load any STAR gene count tables
         self.star_genecounts_unstranded = dict()
         self.star_genecounts_first_strand = dict()
@@ -67,6 +62,10 @@ class MultiqcModule(BaseMultiqcModule):
 
         if len(self.star_data) == 0 and len(self.star_genecounts_unstranded) == 0:
             raise ModuleNoSamplesFound
+
+        # Superfluous function call to confirm that it is used in this module
+        # Replace None with actual version if it is available
+        self.add_software_version(None)
 
         if len(self.star_data) > 0:
             if len(self.star_genecounts_unstranded) > 0:
@@ -174,8 +173,8 @@ class MultiqcModule(BaseMultiqcModule):
         second_strand = {"N_genes": 0}
         num_errors = 0
         num_genes = 0
-        for l in f["f"]:
-            s = l.split("\t")
+        for line in f["f"]:
+            s = line.split("\t")
             try:
                 for i in [1, 2, 3]:
                     s[i] = float(s[i])
@@ -203,22 +202,23 @@ class MultiqcModule(BaseMultiqcModule):
         """Take the parsed stats from the STAR report and add them to the
         basic stats table at the top of the report"""
 
-        headers = OrderedDict()
-        headers["uniquely_mapped_percent"] = {
-            "title": "% Aligned",
-            "description": "% Uniquely mapped reads",
-            "max": 100,
-            "min": 0,
-            "suffix": "%",
-            "scale": "YlGn",
-        }
-        headers["uniquely_mapped"] = {
-            "title": "{} Aligned".format(config.read_count_prefix),
-            "description": "Uniquely mapped reads ({})".format(config.read_count_desc),
-            "min": 0,
-            "scale": "PuRd",
-            "modify": lambda x: x * config.read_count_multiplier,
-            "shared_key": "read_count",
+        headers = {
+            "uniquely_mapped_percent": {
+                "title": "% Aligned",
+                "description": "% Uniquely mapped reads",
+                "max": 100,
+                "min": 0,
+                "suffix": "%",
+                "scale": "YlGn",
+            },
+            "uniquely_mapped": {
+                "title": "{} Aligned".format(config.read_count_prefix),
+                "description": "Uniquely mapped reads ({})".format(config.read_count_desc),
+                "min": 0,
+                "scale": "PuRd",
+                "modify": lambda x: x * config.read_count_multiplier,
+                "shared_key": "read_count",
+            },
         }
         self.general_stats_addcols(self.star_data, headers)
 
@@ -226,13 +226,14 @@ class MultiqcModule(BaseMultiqcModule):
         """Make the plot showing alignment rates"""
 
         # Specify the order of the different possible categories
-        keys = OrderedDict()
-        keys["uniquely_mapped"] = {"color": "#437bb1", "name": "Uniquely mapped"}
-        keys["multimapped"] = {"color": "#7cb5ec", "name": "Mapped to multiple loci"}
-        keys["multimapped_toomany"] = {"color": "#f7a35c", "name": "Mapped to too many loci"}
-        keys["unmapped_mismatches"] = {"color": "#e63491", "name": "Unmapped: too many mismatches"}
-        keys["unmapped_tooshort"] = {"color": "#b1084c", "name": "Unmapped: too short"}
-        keys["unmapped_other"] = {"color": "#7f0000", "name": "Unmapped: other"}
+        keys = {
+            "uniquely_mapped": {"color": "#437bb1", "name": "Uniquely mapped"},
+            "multimapped": {"color": "#7cb5ec", "name": "Mapped to multiple loci"},
+            "multimapped_toomany": {"color": "#f7a35c", "name": "Mapped to too many loci"},
+            "unmapped_mismatches": {"color": "#e63491", "name": "Unmapped: too many mismatches"},
+            "unmapped_tooshort": {"color": "#b1084c", "name": "Unmapped: too short"},
+            "unmapped_other": {"color": "#7f0000", "name": "Unmapped: other"},
+        }
 
         # Config for the plot
         pconfig = {
@@ -248,12 +249,13 @@ class MultiqcModule(BaseMultiqcModule):
         """Make a plot for the ReadsPerGene output"""
 
         # Specify the order of the different possible categories
-        keys = OrderedDict()
-        keys["N_genes"] = {"color": "#2f7ed8", "name": "Overlapping Genes"}
-        keys["N_noFeature"] = {"color": "#0d233a", "name": "No Feature"}
-        keys["N_ambiguous"] = {"color": "#492970", "name": "Ambiguous Features"}
-        keys["N_multimapping"] = {"color": "#f28f43", "name": "Multimapping"}
-        keys["N_unmapped"] = {"color": "#7f0000", "name": "Unmapped"}
+        keys = {
+            "N_genes": {"color": "#2f7ed8", "name": "Overlapping Genes"},
+            "N_noFeature": {"color": "#0d233a", "name": "No Feature"},
+            "N_ambiguous": {"color": "#492970", "name": "Ambiguous Features"},
+            "N_multimapping": {"color": "#f28f43", "name": "Multimapping"},
+            "N_unmapped": {"color": "#7f0000", "name": "Unmapped"},
+        }
 
         # Config for the plot
         pconfig = {

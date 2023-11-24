@@ -1,6 +1,5 @@
 """ MultiQC module to parse output from fgbio """
 import logging
-from collections import OrderedDict
 
 from multiqc.modules.base_module import BaseMultiqcModule, ModuleNoSamplesFound
 
@@ -29,7 +28,7 @@ class MultiqcModule(BaseMultiqcModule, GroupReadsByUmiMixin):
         )
 
         # Set up class objects to hold parsed data
-        self.general_stats_headers = OrderedDict()
+        self.general_stats_headers = dict()
         self.general_stats_data = dict()
 
         # GroupReadsByUmi

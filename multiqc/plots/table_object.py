@@ -4,14 +4,15 @@
 
 import logging
 import re
-from collections import OrderedDict, defaultdict
+from collections import defaultdict
+from typing import List, Tuple, Dict
 
 from multiqc.utils import config, report
 
 logger = logging.getLogger(__name__)
 
 
-class datatable(object):
+class DataTable:
     """Data table class. Prepares and holds data and configuration
     for either a table or a beeswarm plot."""
 
@@ -28,9 +29,9 @@ class datatable(object):
                 pconfig[k] = v
 
         # Given one dataset - turn it into a list
-        if type(data) is not list:
+        if not isinstance(data, list):
             data = [data]
-        if type(headers) is not list:
+        if not isinstance(headers, list):
             headers = [headers]
 
         sectcols = [
@@ -44,7 +45,6 @@ class datatable(object):
             "247,129,191",
             "153,153,153",
         ]
-        shared_keys = defaultdict(lambda: dict())
 
         # Go through each table section
         for idx, d in enumerate(data):
@@ -69,11 +69,11 @@ class datatable(object):
                     headers[idx]
                 except IndexError:
                     headers.append(list)
-                    headers[idx] = OrderedDict()
+                    headers[idx] = dict()
                 else:
-                    # Convert the existing headers into an OrderedDict (eg. if parsed from a config)
+                    # Convert the existing headers into a dict (e.g. if parsed from a config)
                     od_tuples = [(key, headers[idx][key]) for key in headers[idx].keys()]
-                    headers[idx] = OrderedDict(od_tuples)
+                    headers[idx] = dict(od_tuples)
 
                 # Create empty header configs for each new data key
                 for k in keys:
@@ -85,7 +85,7 @@ class datatable(object):
             for k in list(headers[idx].keys()):
                 headers[idx][str(k)] = headers[idx].pop(k)
             # Ensure that all sample names are strings as well
-            cdata = OrderedDict()
+            cdata = dict()
             for k, v in data[idx].items():
                 cdata[str(k)] = v
             data[idx] = cdata
@@ -157,33 +157,47 @@ class datatable(object):
                     for cpc_k, cpc_v in config.custom_plot_config[pconfig["id"]].items():
                         headers[idx][k][cpc_k] = cpc_v
 
-                # Overwrite hidden if set in user config
-                for ns in config.table_columns_visible.keys():
-                    # Make namespace key case insensitive
-                    if ns.lower() == headers[idx][k]["namespace"].lower():
+                # Overwrite "name" if set in user config
+                # Key can be a column ID, a table ID, or a namespace in the general stats table.
+                for key, val in config.table_columns_name.items():
+                    key = key.lower()
+                    # Case-insensitive check if the outer key is a table ID or a namespace.
+                    if key in [pconfig["id"].lower(), headers[idx][k]["namespace"].lower()] and isinstance(val, dict):
+                        # Assume a dict of specific column IDs
+                        for key2, new_title in val.items():
+                            key2 = key2.lower()
+                            if key2 in [k.lower(), headers[idx][k]["title"].lower()]:
+                                headers[idx][k]["title"] = new_title
+
+                    # Case-insensitive check if the outer key is a column ID
+                    elif key in [k.lower(), headers[idx][k]["title"].lower()] and isinstance(val, str):
+                        headers[idx][k]["title"] = val
+
+                # Overwrite "hidden" if set in user config
+                # Key can be a column ID, a table ID, or a namespace in the general stats table.
+                for key, val in config.table_columns_visible.items():
+                    key = key.lower()
+                    # Case-insensitive check if the outer key is a table ID or a namespace.
+                    if key in [pconfig["id"].lower(), headers[idx][k]["namespace"].lower()]:
                         # First - if config value is a bool, set all module columns to that value
-                        if isinstance(config.table_columns_visible[ns], bool):
-                            headers[idx][k]["hidden"] = not config.table_columns_visible[ns]
+                        if isinstance(val, bool):
+                            # Config has True = visible, False = Hidden. Here we're setting "hidden" which is inverse
+                            headers[idx][k]["hidden"] = not val
 
-                        # Not a bool, assume a dict of the specific column IDs
-                        else:
-                            try:
-                                # Config has True = visibile, False = Hidden. Here we're setting "hidden" which is inverse
-                                headers[idx][k]["hidden"] = not config.table_columns_visible[ns][k]
-                            except KeyError:
-                                pass
+                        # Not a bool, assume a dict of specific column IDs
+                        elif isinstance(val, dict):
+                            for key2, visible in val.items():
+                                key2 = key2.lower()
+                                if key2 in [k.lower(), headers[idx][k]["title"].lower()] and isinstance(visible, bool):
+                                    # Config has True = visible, False = Hidden. Here we're setting "hidden" which is inverse
+                                    headers[idx][k]["hidden"] = not visible
 
-                # Overwrite name if set in user config
-                for ns in config.table_columns_name.keys():
-                    # Make namespace key case insensitive
-                    if ns.lower() == headers[idx][k]["namespace"].lower():
-                        # Assume a dict of the specific column IDs
-                        try:
-                            headers[idx][k]["title"] = config.table_columns_name[ns][k]
-                        except KeyError:
-                            pass
+                    # Case-insensitive check if the outer key is a column ID
+                    elif key in [k.lower(), headers[idx][k]["title"].lower()] and isinstance(val, bool):
+                        # Config has True = visible, False = Hidden. Here we're setting "hidden" which is inverse
+                        headers[idx][k]["hidden"] = not val
 
-                # Also overwite placement if set in config
+                # Also overwrite placement if set in config
                 try:
                     headers[idx][k]["placement"] = float(
                         config.table_columns_placement[headers[idx][k]["namespace"]][k]
@@ -205,13 +219,13 @@ class datatable(object):
                 setdmin = False
                 try:
                     headers[idx][k]["dmax"] = float(headers[idx][k]["max"])
-                except TypeError:
+                except Exception:
                     headers[idx][k]["dmax"] = 0
                     setdmax = True
 
                 try:
                     headers[idx][k]["dmin"] = float(headers[idx][k]["min"])
-                except TypeError:
+                except Exception:
                     headers[idx][k]["dmin"] = 0
                     setdmin = True
 
@@ -279,13 +293,14 @@ class datatable(object):
         self.headers = headers
         self.pconfig = pconfig
 
-    def get_headers_in_order(self):
-        """Gets the headers in the order they want to be displayed.
-        Returns a list of triplets: (idx, key, header_info)
+    def get_headers_in_order(self) -> List[Tuple[int, str, Dict]]:
+        """
+        Gets the headers in the order they want to be displayed.
+        Returns a list of triplets: (bucket_idx, key, header_info)
         """
         res = list()
         # Scan through self.headers_in_order and just bolt on the actual header info
         for bucket in sorted(self.headers_in_order):
-            for idx, k in self.headers_in_order[bucket]:
-                res.append((idx, k, self.headers[idx][k]))
+            for bucket_idx, k in self.headers_in_order[bucket]:
+                res.append((bucket_idx, k, self.headers[bucket_idx][k]))
         return res

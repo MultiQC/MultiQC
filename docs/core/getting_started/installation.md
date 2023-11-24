@@ -59,7 +59,7 @@ docker run -t -v `pwd`:`pwd` -w `pwd` ewels/multiqc multiqc .
 MultiQC is written in Python and needs a Python installation to run.
 
 To run MultiQC manually install, you'll typically install it into a local Python environment.
-MultiQC requires Python version 3.6 or above.
+MultiQC requires Python version 3.8 or above.
 
 ### System Python
 
@@ -72,7 +72,7 @@ If you find yourself prepending `sudo` to any MultiQC commands, take a step back
 ### Python with Conda
 
 To see if you have python installed, run `python --version` on the command line.
-MultiQC needs Python version 3.6+.
+MultiQC needs Python version 3.8+.
 
 We recommend using virtual environments to manage your Python installation.
 Our favourite is _conda_, a cross-platform tool to manage Python environments.
@@ -165,7 +165,7 @@ pip install --user multiqc
 
 ### Spack
 
-MultiQC [is available](https://spack.readthedocs.io/en/latest/package_list.html#py-multiqc) on [Spack](https://spack.io/) as `py-multiqc`:
+MultiQC [is available on spack](https://packages.spack.io/package.html?name=py-multiqc) as `py-multiqc`:
 
 ```
 spack install py-multiqc

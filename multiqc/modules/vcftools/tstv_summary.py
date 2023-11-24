@@ -1,7 +1,6 @@
 """ MultiQC module to parse TsTv by summary output from vcftools TsTv-summary """
 
 import logging
-from collections import OrderedDict
 
 from multiqc.plots import bargraph
 
@@ -23,21 +22,19 @@ class TsTvSummaryMixin:
             self.vcftools_tstv_summary[f["s_name"]] = d
             self.add_data_source(f, "Summary")
 
-            # Superfluous function call to confirm that it is used in this module
-            # Replace None with actual version if it is available
-            self.add_software_version(None, f["s_name"])
-
         # Filter out ignored sample names
         self.vcftools_tstv_summary = self.ignore_samples(self.vcftools_tstv_summary)
-
         if len(self.vcftools_tstv_summary) == 0:
             return 0
 
         # Write data to file
         self.write_data_file(self.vcftools_tstv_summary, "vcftools_tstv_summary")
 
+        # Superfluous function call to confirm that it is used in this module
+        # Replace None with actual version if it is available
+        self.add_software_version(None)
+
         # Specifying the categories of the bargraph
-        keys = OrderedDict()
         keys = ["AC", "AG", "AT", "CG", "CT", "GT", "Ts", "Tv"]
 
         pconfig = {

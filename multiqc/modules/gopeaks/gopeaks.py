@@ -2,7 +2,6 @@
 
 import json
 import logging
-from collections import OrderedDict
 from pathlib import Path
 
 from multiqc.modules.base_module import BaseMultiqcModule, ModuleNoSamplesFound
@@ -79,13 +78,14 @@ class MultiqcModule(BaseMultiqcModule):
         Put peak counts to the general table.
         """
 
-        headers = OrderedDict()
-        headers["peak_counts"] = {
-            "title": "Peak Counts",
-            "description": "Number of peaks per sample",
-            "min": 0,
-            "scale": "YlGnBu",
-            "format": "{:,.0f}",
+        headers = {
+            "peak_counts": {
+                "title": "Peak Counts",
+                "description": "Number of peaks per sample",
+                "min": 0,
+                "scale": "YlGnBu",
+                "format": "{:,.0f}",
+            }
         }
         self.general_stats_addcols(self.gopeaks_data, headers)
 

@@ -4,7 +4,7 @@
 import csv
 import logging
 import random
-from collections import OrderedDict, defaultdict
+from collections import defaultdict
 from math import isinf, isnan
 
 import spectra
@@ -51,10 +51,6 @@ class MultiqcModule(BaseMultiqcModule):
                     self.add_data_source(f, s_name)
                     self.somalier_data[s_name] = parsed_data[s_name_raw]
 
-                    # Superfluous function call to confirm that it is used in this module
-                    # Replace None with actual version if it is available
-                    self.add_software_version(None, s_name)
-
         # parse somalier CSV files
         for f in self.find_log_files("somalier/pairs"):
             parsed_data = self.parse_somalier_pairs_tsv(f)
@@ -78,6 +74,10 @@ class MultiqcModule(BaseMultiqcModule):
 
         log.info("Found {} reports".format(len(self.somalier_data)))
 
+        # Superfluous function call to confirm that it is used in this module
+        # Replace None with actual version if it is available
+        self.add_software_version(None)
+
         # Write parsed report data to a file
         self.write_data_file(self.somalier_data, "multiqc_somalier")
 
@@ -99,13 +99,14 @@ class MultiqcModule(BaseMultiqcModule):
 
         self.somalier_ancestry_pca_plot()
 
-    def parse_somalier_samples(self, f):
+    @staticmethod
+    def parse_somalier_samples(f):
         """Go through log file looking for somalier output"""
         parsed_data = dict()
         headers = None
         sample_i = -100
-        for l in f["f"].splitlines():
-            s = l.split("\t")
+        for line in f["f"].splitlines():
+            s = line.split("\t")
             if headers is None:
                 s[0] = s[0].lstrip("#")
                 headers = s
@@ -122,13 +123,14 @@ class MultiqcModule(BaseMultiqcModule):
             return None
         return parsed_data
 
-    def parse_somalier_pairs_tsv(self, f):
+    @staticmethod
+    def parse_somalier_pairs_tsv(f):
         """Parse csv output from somalier"""
         parsed_data = dict()
         headers = None
         s_name_idx = None
-        for l in f["f"].splitlines():
-            s = l.lstrip("#").split("\t")
+        for line in f["f"].splitlines():
+            s = line.lstrip("#").split("\t")
             if headers is None:
                 headers = s
                 try:
@@ -165,7 +167,7 @@ class MultiqcModule(BaseMultiqcModule):
         bg_pc2 = []
         bg_ancestry = []
 
-        reader = csv.DictReader(f["f"], dialect="excel-tab")
+        reader: csv.DictReader = csv.DictReader(f["f"], dialect="excel-tab")
         idx = "#sample_id"
 
         # check file not empty, else parse file
@@ -232,162 +234,162 @@ class MultiqcModule(BaseMultiqcModule):
 
         Bigger table within the somalier module, showing more stats"""
 
-        headers = OrderedDict()
-
-        headers["phenotype"] = {
-            "title": "Phenotype",
-            "description": "Sample's phenotype from pedigree info",
-            "hidden": True,
-        }
-        headers["original_pedigree_sex"] = {
-            "title": "Sex",
-            "description": "Sample's sex from pedigree info",
-            "scale": False,
-        }
-        headers["paternal_id"] = {
-            "title": "Father ID",
-            "description": "ID of sample's father ",
-            "scale": False,
-            "hidden": True,
-        }
-        headers["maternal_id"] = {
-            "title": "Mother ID",
-            "description": "ID of sample's mother",
-            "scale": False,
-            "hidden": True,
-        }
-        headers["family_id"] = {
-            "title": "Family ID",
-            "description": "ID of sample's family",
-            "scale": False,
-            "hidden": True,
-        }
-        headers["sex"] = {
-            "title": "Inferred sex",
-            "description": "Sample's inferred sex",
-            "scale": False,
-            "hidden": True,
-        }
-        headers["ancestry"] = {"title": "Ancestry", "description": "Most probable ancestry background", "scale": False}
-        headers["p_ancestry"] = {
-            "title": "P(Ancestry)",
-            "description": "Ancestry probablitty",
-            "max": 1,
-            "min": 0,
-            "scale": "RdYlGn",
-            "format": "{:,.2f}",
-        }
-        headers["n_het"] = {
-            "title": "HetVar",
-            "description": "Heterozygous variants",
-            "shared_key": "variant_count",
-            "format": "{:,.0f}",
-        }
-        headers["n_hom_ref"] = {
-            "title": "HomRefVar",
-            "description": "Homozygous reference variants",
-            "shared_key": "variant_count",
-            "format": "{:,.0f}",
-            "hidden": True,
-        }
-        headers["n_hom_alt"] = {
-            "title": "HomAltVar",
-            "description": "Homozygous alternate variants",
-            "shared_key": "variant_count",
-            "format": "{:,.0f}",
-            "hidden": True,
-        }
-        headers["n_unknown"] = {"title": "NA sites", "description": "Unknown sites", "format": "{:,.0f}"}
-        headers["depth_mean"] = {
-            "title": "Mean depth",
-            "description": "Mean depth of all sites",
-            "scale": "RdYlGn",
-            "suffix": " X",
-            "hidden": True,
-        }
-        headers["depth_sd"] = {
-            "title": "Depth std",
-            "description": "Depth's standard deviation of all sites",
-            "scale": "RdYlGn",
-            "hidden": True,
-        }
-        headers["gt_depth_mean"] = {
-            "title": "Sites depth",
-            "description": "Mean depth of genotyped sites",
-            "scale": "RdYlGn",
-            "suffix": " X",
-        }
-        headers["gt_depth_sd"] = {
-            "title": "Genot depth std",
-            "description": "Depth's standard deviation of genotype sites",
-            "scale": "RdYlGn",
-            "suffix": " X",
-            "hidden": True,
-        }
-        headers["ab_mean"] = {
-            "title": "Allele balance",
-            "description": "Mean allele balance",
-            "scale": "RdYlGn",
-        }
-        headers["ab_std"] = {
-            "title": "Allele balance std",
-            "description": "Standard deviation of allele balance",
-            "scale": "RdYlGn",
-            "hidden": True,
-        }
-        headers["p_middling_ab"] = {
-            "title": "Allele balance < 0.2, > 0.8",
-            "description": "Proportion of sites with allele balance < 0.2 or > 0.8",
-            "max": 1,
-            "min": 0,
-            "scale": "RdYlGn",
-            "format": "{:,.2f}",
-        }
-        headers["X_het"] = {
-            "title": "HetVar X",
-            "description": "Heterozygous variants on X chromosome",
-            "shared_key": "variant_count_xy",
-            "format": "{:,.0f}",
-        }
-        headers["X_hom_ref"] = {
-            "title": "HomRefVar X",
-            "description": "Homozygous reference variants on X chromosome",
-            "shared_key": "variant_count_xy",
-            "format": "{:,.0f}",
-            "hidden": True,
-        }
-        headers["X_hom_alt"] = {
-            "title": "HomAltVar X",
-            "description": "Homozygous alternate variants on X chromosome",
-            "shared_key": "variant_count_xy",
-            "format": "{:,.0f}",
-            "hidden": True,
-        }
-        headers["X_n"] = {
-            "title": "Sites X",
-            "description": "Total sites on X chromosome",
-            "shared_key": "variant_count_xy",
-            "format": "{:,.0f}",
-            "hidden": True,
-        }
-        headers["X_depth_mean"] = {
-            "title": "Mean depth X",
-            "description": "Mean depth of sites on X chromosome",
-            "scale": "RdYlGn",
-            "suffix": " X",
-        }
-        headers["Y_n"] = {
-            "title": "Sites Y",
-            "description": "Total sites on Y chromosome",
-            "shared_key": "variant_count_xy",
-            "format": "{:,.0f}",
-            "hidden": True,
-        }
-        headers["Y_depth_mean"] = {
-            "title": "Mean depth Y",
-            "description": "Mean depth of sites on Y chromosome",
-            "scale": "RdYlGn",
-            "suffix": " X",
+        headers = {
+            "phenotype": {
+                "title": "Phenotype",
+                "description": "Sample's phenotype from pedigree info",
+                "hidden": True,
+            },
+            "original_pedigree_sex": {
+                "title": "Sex",
+                "description": "Sample's sex from pedigree info",
+                "scale": False,
+            },
+            "paternal_id": {
+                "title": "Father ID",
+                "description": "ID of sample's father ",
+                "scale": False,
+                "hidden": True,
+            },
+            "maternal_id": {
+                "title": "Mother ID",
+                "description": "ID of sample's mother",
+                "scale": False,
+                "hidden": True,
+            },
+            "family_id": {
+                "title": "Family ID",
+                "description": "ID of sample's family",
+                "scale": False,
+                "hidden": True,
+            },
+            "sex": {
+                "title": "Inferred sex",
+                "description": "Sample's inferred sex",
+                "scale": False,
+                "hidden": True,
+            },
+            "ancestry": {"title": "Ancestry", "description": "Most probable ancestry background", "scale": False},
+            "p_ancestry": {
+                "title": "P(Ancestry)",
+                "description": "Ancestry probablitty",
+                "max": 1,
+                "min": 0,
+                "scale": "RdYlGn",
+                "format": "{:,.2f}",
+            },
+            "n_het": {
+                "title": "HetVar",
+                "description": "Heterozygous variants",
+                "shared_key": "variant_count",
+                "format": "{:,.0f}",
+            },
+            "n_hom_ref": {
+                "title": "HomRefVar",
+                "description": "Homozygous reference variants",
+                "shared_key": "variant_count",
+                "format": "{:,.0f}",
+                "hidden": True,
+            },
+            "n_hom_alt": {
+                "title": "HomAltVar",
+                "description": "Homozygous alternate variants",
+                "shared_key": "variant_count",
+                "format": "{:,.0f}",
+                "hidden": True,
+            },
+            "n_unknown": {"title": "NA sites", "description": "Unknown sites", "format": "{:,.0f}"},
+            "depth_mean": {
+                "title": "Mean depth",
+                "description": "Mean depth of all sites",
+                "scale": "RdYlGn",
+                "suffix": " X",
+                "hidden": True,
+            },
+            "depth_sd": {
+                "title": "Depth std",
+                "description": "Depth's standard deviation of all sites",
+                "scale": "RdYlGn",
+                "hidden": True,
+            },
+            "gt_depth_mean": {
+                "title": "Sites depth",
+                "description": "Mean depth of genotyped sites",
+                "scale": "RdYlGn",
+                "suffix": " X",
+            },
+            "gt_depth_sd": {
+                "title": "Genot depth std",
+                "description": "Depth's standard deviation of genotype sites",
+                "scale": "RdYlGn",
+                "suffix": " X",
+                "hidden": True,
+            },
+            "ab_mean": {
+                "title": "Allele balance",
+                "description": "Mean allele balance",
+                "scale": "RdYlGn",
+            },
+            "ab_std": {
+                "title": "Allele balance std",
+                "description": "Standard deviation of allele balance",
+                "scale": "RdYlGn",
+                "hidden": True,
+            },
+            "p_middling_ab": {
+                "title": "Allele balance < 0.2, > 0.8",
+                "description": "Proportion of sites with allele balance < 0.2 or > 0.8",
+                "max": 1,
+                "min": 0,
+                "scale": "RdYlGn",
+                "format": "{:,.2f}",
+            },
+            "X_het": {
+                "title": "HetVar X",
+                "description": "Heterozygous variants on X chromosome",
+                "shared_key": "variant_count_xy",
+                "format": "{:,.0f}",
+            },
+            "X_hom_ref": {
+                "title": "HomRefVar X",
+                "description": "Homozygous reference variants on X chromosome",
+                "shared_key": "variant_count_xy",
+                "format": "{:,.0f}",
+                "hidden": True,
+            },
+            "X_hom_alt": {
+                "title": "HomAltVar X",
+                "description": "Homozygous alternate variants on X chromosome",
+                "shared_key": "variant_count_xy",
+                "format": "{:,.0f}",
+                "hidden": True,
+            },
+            "X_n": {
+                "title": "Sites X",
+                "description": "Total sites on X chromosome",
+                "shared_key": "variant_count_xy",
+                "format": "{:,.0f}",
+                "hidden": True,
+            },
+            "X_depth_mean": {
+                "title": "Mean depth X",
+                "description": "Mean depth of sites on X chromosome",
+                "scale": "RdYlGn",
+                "suffix": " X",
+            },
+            "Y_n": {
+                "title": "Sites Y",
+                "description": "Total sites on Y chromosome",
+                "shared_key": "variant_count_xy",
+                "format": "{:,.0f}",
+                "hidden": True,
+            },
+            "Y_depth_mean": {
+                "title": "Mean depth Y",
+                "description": "Mean depth of sites on Y chromosome",
+                "scale": "RdYlGn",
+                "suffix": " X",
+            },
         }
 
         t_config = {
@@ -452,18 +454,15 @@ class MultiqcModule(BaseMultiqcModule):
             colours_legend = ""
             for val in sorted(relatedness_colours.keys()):
                 name, col_rgb = relatedness_colours[val]
-                colours_legend += '<span style="color:{}">{}</span>, '.format(
-                    col_rgb.replace(str(alpha), "1.0"), name, val
-                )
+                col = col_rgb.replace(str(alpha), "1.0")
+                colours_legend += f'<span style="color:{col}">{name}</span>, '
 
             self.add_section(
                 name="Relatedness",
                 anchor="somalier-relatedness",
                 description="""
                 Shared allele rates between sample pairs.
-                Points are coloured by degree of expected-relatedness: {}""".format(
-                    colours_legend
-                ),
+                Points are coloured by degree of expected-relatedness: {}""".format(colours_legend),
                 plot=scatter.plot(data, pconfig),
             )
 
@@ -576,7 +575,7 @@ class MultiqcModule(BaseMultiqcModule):
     def somalier_ancestry_barplot(self):
         data = dict()
         c_scale = mqc_colour.mqc_colour_scale(name="Paired").colours
-        cats = OrderedDict()
+        cats = dict()
         anc_cats = self.somalier_ancestry_cats
 
         # use Paired color scale, unless number of categories exceed colors
@@ -622,7 +621,7 @@ class MultiqcModule(BaseMultiqcModule):
             )
 
     def somalier_ancestry_pca_plot(self):
-        data = OrderedDict()
+        data = dict()
 
         # cycle over samples and add PC coordinates to data dict
         for s_name, d in self.somalier_data.items():
@@ -679,7 +678,7 @@ class MultiqcModule(BaseMultiqcModule):
 
 
 def _make_col_alpha(cols, alpha):
-    """Take a HTML colour value and return a rgba string with alpha"""
+    """Take an HTML colour value and return a rgba string with alpha"""
     cols_return = []
     for col in cols:
         col_srgb = spectra.html(col)
