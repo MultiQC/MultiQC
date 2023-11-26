@@ -341,7 +341,7 @@ function plot_xy_line_graph(target, ds) {
     config["tt_label"] = "{point.x}: {point.y:.2f}";
     if (config["categories"]) {
       config["tt_formatter"] = function () {
-        yval =
+        var yval =
           Highcharts.numberFormat(this.y, config["tt_decimals"] == undefined ? 0 : config["tt_decimals"]) +
           (config["tt_suffix"] || "");
         return (

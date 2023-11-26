@@ -1,5 +1,5 @@
 ////////////////////////////////////////////////
-// HighCharts Plotting Code
+// Plotly Plotting Code
 ////////////////////////////////////////////////
 
 // Global plot data variable
@@ -70,9 +70,9 @@ $(function () {
 
   $("button.switch_percent").click(function (e) {
     e.preventDefault();
-    var target = $(this).data("target");
-    var active_dataset_idx = mqc_plots[target].active_dataset_idx;
-    var dataset = mqc_plots[target].datasets[active_dataset_idx];
+    let target = $(this).data("target");
+    let active_dataset_idx = mqc_plots[target].active_dataset_idx;
+    let dataset = mqc_plots[target].datasets[active_dataset_idx];
 
     // Toggling flags
     mqc_plots[target].p_active = !$(this).hasClass("active");
@@ -117,7 +117,7 @@ $(function () {
     }
     Plotly.restyle(target, "x", x);
 
-    var ymax = $(this).data("xmax");
+    const ymax = $(this).data("xmax");
     if (ymax) {
       Plotly.relayout(target, "yaxis.range", [null, ymax]);
     }
@@ -213,20 +213,20 @@ function plot_graph(target, dataset_idx, max_num) {
   }
 
   // If log status is not set and button is there, check whether it's active by default
-  var config = plot["config"];
+  let config = plot["config"];
   if (config === undefined) {
     plot["config"] = {};
     config = {};
   }
   if (config["ytype"] === undefined) {
-    var log_btn = $('.hc_switch_group button[data-action="set_log"][data-target="' + target + '"]');
+    const log_btn = $('.hc_switch_group button[data-action="set_log"][data-target="' + target + '"]');
     if (log_btn.length && log_btn.hasClass("active")) {
       config["ytype"] = "logarithmic";
     }
   }
 
   // XY Line charts
-  if (plot.plot_type == "xy_line") {
+  if (plot.plot_type === "xy_line") {
     if (max_num === undefined || plot["datasets"][0].length < max_num) {
       plot_xy_line_graph(plot, target, dataset_idx);
       $("#" + target).removeClass("not_rendered");
@@ -237,7 +237,7 @@ function plot_graph(target, dataset_idx, max_num) {
     }
   }
   // Bar graphs
-  else if (plot.plot_type == "bar_graph") {
+  else if (plot.plot_type === "bar_graph") {
     if (max_num === undefined || plot["samples"][0].length < max_num) {
       plot_stacked_bar_graph(plot, target, dataset_idx);
       $("#" + target).removeClass("not_rendered");
@@ -248,7 +248,7 @@ function plot_graph(target, dataset_idx, max_num) {
     }
   }
   // Scatter plots
-  else if (plot["plot_type"] == "scatter") {
+  else if (plot["plot_type"] === "scatter") {
     if (max_num === undefined || Object.keys(plot["datasets"][0]).length < max_num) {
       plot_scatter_plot(plot, target, dataset_idx);
       $("#" + target).removeClass("not_rendered");
@@ -259,7 +259,7 @@ function plot_graph(target, dataset_idx, max_num) {
     }
   }
   // Beeswarm graphs
-  else if (plot["plot_type"] == "beeswarm") {
+  else if (plot["plot_type"] === "beeswarm") {
     if (max_num === undefined || plot["samples"][0].length < max_num) {
       plot_beeswarm_graph(plot, target, dataset_idx);
       $("#" + target).removeClass("not_rendered");
@@ -270,7 +270,7 @@ function plot_graph(target, dataset_idx, max_num) {
     }
   }
   // Heatmap plots
-  else if (plot["plot_type"] == "heatmap") {
+  else if (plot["plot_type"] === "heatmap") {
     if (max_num === undefined || plot["xcats"][0].length < max_num) {
       plot_heatmap(plot, target, dataset_idx);
       $("#" + target).removeClass("not_rendered");

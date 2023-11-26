@@ -10,6 +10,7 @@ import os
 import random
 import re
 import sys
+from typing import List, Dict
 
 from multiqc.utils import config, mqc_colour, report, util_functions
 
@@ -90,13 +91,8 @@ def plot(data, pconfig=None):
 
     # Smooth dataset if requested in config
     if pconfig.get("smooth_points", None) is not None:
-        sumcounts = pconfig.get("smooth_points_sumcounts", True)
         for i, d in enumerate(data):
-            if isinstance(sumcounts, list):
-                sumc = sumcounts[i]
-            else:
-                sumc = sumcounts
-            data[i] = smooth_line_data(d, pconfig["smooth_points"], sumc)
+            data[i] = smooth_line_data(d, pconfig["smooth_points"])
 
     # Add sane plotting config defaults
     for idx, yp in enumerate(pconfig.get("yPlotLines", [])):
@@ -115,9 +111,9 @@ def plot(data, pconfig=None):
             pass
 
     # Generate the data dict structure expected by HighCharts series
-    plotdata = list()
+    plotdata: List[List[Dict]] = []
     for data_index, d in enumerate(data):
-        thisplotdata = list()
+        thisplotdata: List[Dict] = []
 
         for s in sorted(d.keys()):
             # Ensure any overwritten conditionals from data_labels (e.g. ymax) are taken in consideration
@@ -127,7 +123,7 @@ def plot(data, pconfig=None):
             ):  # if not a dict: only dataset name is provided
                 series_config.update(pconfig["data_labels"][data_index])
 
-            pairs = list()
+            pairs = []
             maxval = 0
             if "categories" in series_config:
                 if "categories" not in pconfig or not isinstance(pconfig["categories"], list):
@@ -190,7 +186,7 @@ def plot(data, pconfig=None):
                     except TypeError:
                         pass
             if maxval > 0 or series_config.get("hide_empty") is not True:
-                this_series = {"name": s, "data": pairs}
+                this_series: Dict = {"name": s, "data": pairs}
                 try:
                     this_series["color"] = series_config["colors"][s]
                 except Exception:
@@ -608,7 +604,7 @@ def matplotlib_linegraph(plotdata, pconfig=None):
     return html
 
 
-def smooth_line_data(data, numpoints, sumcounts=True):
+def smooth_line_data(data: Dict[str, Dict], numpoints: int) -> Dict[str, Dict[int, int]]:
     """
     Function to take an x-y dataset and use binning to smooth to a maximum number of datapoints.
     Each datapoint in a smoothed dataset corresponds to the first point in a bin.
@@ -629,7 +625,7 @@ def smooth_line_data(data, numpoints, sumcounts=True):
 
     d=[0 1 2 3 4 5 6 7 8 9], numpoints=3
     binsize = len(d)/numpoints = 9/2 = 4.5
-    incides: [0.0, 4.5, 9] -> [0, 5, 9]
+    indices: [0.0, 4.5, 9] -> [0, 5, 9]
     picking up the elements: [0 _ _ _ _ 5 _ _ _ 9]
     """
     smoothed_data = dict()

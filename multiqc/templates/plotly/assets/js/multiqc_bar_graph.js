@@ -12,6 +12,7 @@ function plot_stacked_bar_graph(plot, target, dataset_idx) {
   let data = JSON.parse(JSON.stringify(plot["datasets"][dataset_idx]));
   let samples = JSON.parse(JSON.stringify(plot["samples"][dataset_idx]));
   let layout = JSON.parse(JSON.stringify(plot["layout"]));
+  let settings = JSON.parse(JSON.stringify(plot["settings"]));
 
   // Rename samples
   if (window.mqc_rename_f_texts.length > 0) {
@@ -97,7 +98,7 @@ function plot_stacked_bar_graph(plot, target, dataset_idx) {
   }
 
   // Render the plotly plot
-  let series = [];
+  let traces = [];
   for (let cat of data) {
     let trace = {
       type: "bar",
@@ -113,10 +114,10 @@ function plot_stacked_bar_graph(plot, target, dataset_idx) {
       },
       marker_color: cat.color,
     };
-    series.push(trace);
+    traces.push(trace);
   }
-  plot.datasets[dataset_idx].series = series;
-  Plotly.newPlot(target, series, layout, {
+  plot.datasets[dataset_idx].series = traces;
+  Plotly.newPlot(target, traces, layout, {
     displayModeBar: true,
     displaylogo: false,
     modeBarButtonsToRemove: [
