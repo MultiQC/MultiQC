@@ -1,4 +1,3 @@
-"""Plotly bargraph functionality."""
 import base64
 import io
 import logging
@@ -6,14 +5,14 @@ import os
 import random
 import string
 from pathlib import Path
-from typing import Dict, List, Union, cast
+from typing import Dict, List, Union
 
 import math
 import plotly.graph_objects as go
 
 from multiqc.templates.plotly.plots import get_template_mod
-from multiqc.templates.plotly.plots.plot import View, PlotSettings, base_layout
-from multiqc.utils import config, report, util_functions
+from multiqc.templates.plotly.plots.plot import View, PConfig, base_layout
+from multiqc.utils import util_functions, config
 
 logger = logging.getLogger(__name__)
 
@@ -32,35 +31,42 @@ def linegraph(
     :param pconfig: dict with config key:value pairs. See CONTRIBUTING.md
     :return: HTML and JS, ready to be inserted into the page
     """
-    return add_to_report(datasets, PlotSettings(pconfig, len(datasets)))
+    from multiqc.utils import report
+
+    return add_to_report(
+        datasets=datasets,
+        pconfig=PConfig(pconfig, len(datasets)),
+        report=report,
+    )
 
 
 def add_to_report(
     datasets: List[List[SampleLineT]],
-    settings: PlotSettings,
+    pconfig: PConfig,
+    report,
 ) -> str:
     """
     Build and add the plot data to the report, return an HTML wrapper.
     """
     uniq_suffix = "".join(random.sample(string.ascii_lowercase, 10))
     is_static_suf = "static_" if config.plots_force_flat else ""
-    pid = report.save_htmlid(settings.id)
+    pid = report.save_htmlid(pconfig.id)
     if pid is None:  # ID of the plot group
         pid = report.save_htmlid(f"mqc_{is_static_suf}plot_{uniq_suffix}")
 
     if config.plots_force_flat:
         return _datasets_to_flat_imgs(
             datasets,
-            settings,
+            pconfig,
             pid,
             # Can't use interactivity, so we will have to generate separate flat images for each
             # dataset and view. So have to make sure the individual image IDs are unique across the report:
-            pids=[report.save_htmlid(f"{pid}_{dl['name']}", skiplint=True) for dl in settings.data_labels],
+            pids=[report.save_htmlid(f"{pid}_{dl['name']}", skiplint=True) for dl in pconfig.data_labels],
         )
     else:
         html = _datasets_to_interactive_imgs(
             datasets,
-            settings,
+            pconfig,
             pid,
         )
         # Saving compressed data for JavaScript to pick up and uncompress.
@@ -68,26 +74,26 @@ def add_to_report(
         report.plot_data[pid] = {
             "plot_type": "xy_line",
             "datasets": datasets,
-            "layout": _layout(settings).to_plotly_json(),
+            "layout": _layout(pconfig).to_plotly_json(),
             "active_dataset_idx": 0,
-            "l_active": settings.l_active,
-            "settings": settings.__dict__,
+            "l_active": pconfig.l_active,
+            "pconfig": pconfig.__dict__,
         }
         return html
 
 
-def _layout(settings: PlotSettings) -> go.Layout:
+def _layout(pconfig: PConfig) -> go.Layout:
     """
     Layout object for the line plot.
     """
-    layout = base_layout(settings)
+    layout = base_layout(pconfig)
     layout["showlegend"] = False
     return layout
 
 
 def _datasets_to_interactive_imgs(
     datasets: List[List[SampleLineT]],
-    settings: PlotSettings,
+    pconfig: PConfig,
     pid: str,
 ) -> str:
     html = '<div class="mqc_hcplot_plotgroup">'
@@ -95,12 +101,12 @@ def _datasets_to_interactive_imgs(
         f'<button class="{{cls}} btn btn-default btn-sm {{active}}" data-target="{pid}">{{label}}' f"</button> \n"
     )
     # Counts / Percentages / Log Switches
-    if settings.add_log_tab:
+    if pconfig.add_log_tab:
         # html += '<div class="btn-group hc_switch_group"> \n'
-        if settings.add_log_tab:
+        if pconfig.add_log_tab:
             html += btn_tmpl.format(
-                active=settings.l_active,
-                label=settings.l_label,
+                active=pconfig.l_active,
+                label=pconfig.l_label,
                 cls="switch_log10",
             )
         # html += "</div> "
@@ -112,7 +118,7 @@ def _datasets_to_interactive_imgs(
         html += '<div class="btn-group dataset_switch_group">\n'
         for k, ds in enumerate(datasets):
             active = "active" if k == 0 else ""
-            dl: Dict[str, str] = settings.data_labels[k]
+            dl: Dict[str, str] = pconfig.data_labels[k]
             name = dl["name"]
             ylab = f'data-ylab="{dl["ylab"]}"' if "ylab" in dl else ""
             ymax = f'data-ylab="{dl["ymax"]}"' if "ymax" in dl else ""
@@ -128,7 +134,7 @@ def _datasets_to_interactive_imgs(
         <div id="{id}" class="hc-plot not_rendered hc-bar-plot"></div>
     </div></div>""".format(
         id=pid,
-        height=f' style="height:{settings.height}px"' if settings.height else "",
+        height=f' style="height:{pconfig.height}px"' if pconfig.height else "",
     )
 
     return html
@@ -136,9 +142,10 @@ def _datasets_to_interactive_imgs(
 
 def _datasets_to_flat_imgs(
     datasets: List[List[SampleLineT]],
-    settings: PlotSettings,
+    pconfig: PConfig,
     pid: str,
     pids: List[str],
+    no_js: bool = False,
 ) -> str:
     """
     Create an HTML for a static plot version.
@@ -151,75 +158,87 @@ def _datasets_to_flat_imgs(
     html += f'<div class="mqc_mplplot_plotgroup" id="{pid}">'
 
     # Buttons to cycle through different datasets
-    if len(datasets) > 1 and not config.simple_output:
+    if len(datasets) > 1 and not no_js:
         html += '<div class="btn-group mpl_switch_group mqc_mplplot_bargraph_switchds">\n'
         for k, p in enumerate(datasets):
             pid = pids[k]
             active = "active" if k == 0 else ""
-            name = settings.data_labels[k]["name"]
+            name = pconfig.data_labels[k]["name"]
             html += f'<button class="btn btn-default btn-sm {active}" data-target="#{pid}">{name}</button>\n'
         html += "</div>\n\n"
 
     # Go through datasets creating plots
     for pidx, (pid, dataset) in enumerate(zip(pids, datasets)):
-        html += _dataset_to_imgs(pidx, pid, dataset, settings)
+        html += _dataset_to_imgs(pidx, pid, dataset, pconfig)
 
     # Close wrapping div
     html += "</div>"
     return html
 
 
+def _save_data_file(
+    pid: str,
+    dataset: List[SampleLineT],
+    pconfig: PConfig,
+) -> None:
+    fdata = dict()
+    last_cats = None
+    shared_cats = True
+    for ds in dataset:
+        fdata[ds["name"]] = dict()
+
+        # Check to see if all categories are the same
+        if len(ds["data"]) > 0 and isinstance(ds["data"][0], list):
+            if last_cats is None:
+                last_cats = [x[0] for x in ds["data"]]
+            elif last_cats != [x[0] for x in ds["data"]]:
+                shared_cats = False
+
+        for i, x in enumerate(ds["data"]):
+            if isinstance(x, list):
+                fdata[ds["name"]][x[0]] = x[1]
+            else:
+                try:
+                    fdata[ds["name"]][pconfig.categories[i]] = x
+                except Exception:
+                    fdata[ds["name"]][str(i)] = x
+
+    # Custom tsv output if the x-axis varies
+    if not shared_cats and config.data_format == "tsv":
+        fout = ""
+        for ds in dataset:
+            fout += "\t" + "\t".join([str(x[0]) for x in ds["data"]])
+            fout += "\n{}\t".format(ds["name"])
+            fout += "\t".join([str(x[1]) for x in ds["data"]])
+            fout += "\n"
+        with io.open(os.path.join(config.data_dir, f"{pid}.txt"), "w", encoding="utf-8") as f:
+            print(fout.encode("utf-8", "ignore").decode("utf-8"), file=f)
+    else:
+        util_functions.write_data_file(fdata, pid)
+
+
 def _dataset_to_imgs(
     pidx: int,
     pid: str,
     dataset: List[SampleLineT],
-    settings: PlotSettings,
+    pconfig: PConfig,
 ) -> str:
     """
     Build a static images for different views of a dataset (counts, log scale),
     return an HTML wrapper.
     """
+    # Save plot data to file
+    if pconfig.save_data_file:
+        _save_data_file(
+            pid,
+            dataset,
+            pconfig,
+        )
+
     html = ""
 
-    # Save plot data to file
-    if settings.save_data_file:
-        fdata = dict()
-        last_cats = None
-        shared_cats = True
-        for ds in dataset:
-            fdata[ds["name"]] = dict()
-
-            # Check to see if all categories are the same
-            if len(ds["data"]) > 0 and isinstance(ds["data"][0], list):
-                if last_cats is None:
-                    last_cats = [x[0] for x in ds["data"]]
-                elif last_cats != [x[0] for x in ds["data"]]:
-                    shared_cats = False
-
-            for i, x in enumerate(ds["data"]):
-                if isinstance(x, list):
-                    fdata[ds["name"]][x[0]] = x[1]
-                else:
-                    try:
-                        fdata[ds["name"]][settings.categories[i]] = x
-                    except Exception:
-                        fdata[ds["name"]][str(i)] = x
-
-        # Custom tsv output if the x-axis varies
-        if not shared_cats and config.data_format == "tsv":
-            fout = ""
-            for ds in dataset:
-                fout += "\t" + "\t".join([str(x[0]) for x in ds["data"]])
-                fout += "\n{}\t".format(ds["name"])
-                fout += "\t".join([str(x[1]) for x in ds["data"]])
-                fout += "\n"
-            with io.open(os.path.join(config.data_dir, "{}.txt".format(pid)), "w", encoding="utf-8") as f:
-                print(fout.encode("utf-8", "ignore").decode("utf-8"), file=f)
-        else:
-            util_functions.write_data_file(fdata, pid)
-
     # Calculate log10 values
-    if settings.add_log_tab:
+    if pconfig.add_log_tab:
         for ds in dataset:
             ds["data_log"] = []
             for x, y in ds["data"]:
@@ -232,13 +251,13 @@ def _dataset_to_imgs(
     views = [
         View(
             dataset,
-            active=not settings.l_active,
+            active=not pconfig.l_active,
             suffix="",
-            label=settings.c_label,
+            label=pconfig.c_label,
             xaxis_tickformat="",
         ),
     ]
-    if settings.add_log_tab:
+    if pconfig.add_log_tab:
         views.append(
             View(
                 [
@@ -251,7 +270,7 @@ def _dataset_to_imgs(
                 ],
                 active=False,
                 suffix="_log",
-                label=settings.l_label,
+                label=pconfig.l_label,
                 xaxis_tickformat="",
             )
         )
@@ -261,7 +280,8 @@ def _dataset_to_imgs(
             view,
             pidx,
             f"{pid}{view.suffix}",
-            settings,
+            pconfig,
+            config,
         )
 
     return html
@@ -271,7 +291,8 @@ def _view_to_img(
     view: View,
     pidx: int,
     pid: str,
-    settings: PlotSettings,
+    pconfig: PConfig,
+    config,
 ) -> str:
     """
     Build one static image, return an HTML wrapper.
@@ -283,11 +304,7 @@ def _view_to_img(
     if pidx > 0 or not view.active:
         hide_div = ' style="display:none;"'
 
-    fig = go.Figure()
-    fig.update_layout(
-        # The function expects a dict, even though go.Layout works just fine
-        cast(dict, _layout(settings)),
-    )
+    fig = go.Figure(layout=_layout(pconfig))
     for sdata in view.data:
         if len(sdata["data"]) > 0 and isinstance(sdata["data"][0], list):
             x = [x[0] for x in sdata["data"]]

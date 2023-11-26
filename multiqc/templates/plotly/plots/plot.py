@@ -26,7 +26,7 @@ View = namedtuple(
 logger = logging.getLogger(__name__)
 
 
-class PlotSettings:
+class PConfig:
     """
     Build a structured object from the plot configuration dictionary.
     """

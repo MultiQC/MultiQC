@@ -6,14 +6,14 @@ import os
 import random
 import string
 from pathlib import Path
-from typing import Dict, List, cast
+from typing import Dict, List
 
 import math
 import plotly.graph_objects as go
 
 from multiqc.templates.plotly.plots import get_template_mod
-from multiqc.templates.plotly.plots.plot import View, PlotSettings, base_layout
-from multiqc.utils import config, report, util_functions
+from multiqc.templates.plotly.plots.plot import View, PConfig, base_layout
+from multiqc.utils import config, util_functions
 
 logger = logging.getLogger(__name__)
 
@@ -34,32 +34,40 @@ def bargraph(
     :param pconfig: Plot configuration dictionary
     :return: Plotly HTML
     """
-    return add_to_report(datasets, samples_lists, PlotSettings(pconfig, len(datasets)))
+    from multiqc.utils import report
+
+    return add_to_report(
+        datasets=datasets,
+        samples_lists=samples_lists,
+        pconfig=PConfig(pconfig, len(datasets)),
+        report=report,
+    )
 
 
 def add_to_report(
     datasets: List[List[Dict]],
     samples_lists: List[List[str]],
-    settings: PlotSettings,
+    pconfig: PConfig,
+    report,
 ) -> str:
     """
     Build and add the plot data to the report, return an HTML wrapper.
     """
-    if not settings.height:
+    if not pconfig.height:
         max_n_samples = max(len(samples) for samples in samples_lists)
         # Height has a default, then adjusted by the number of samples
-        settings.height = max_n_samples // 186  # Default, empirically determined
-        settings.height = max(600, settings.height)
-        settings.height = min(2560, settings.height)
+        pconfig.height = max_n_samples // 186  # Default, empirically determined
+        pconfig.height = max(600, pconfig.height)
+        pconfig.height = min(2560, pconfig.height)
 
     uniq_suffix = "".join(random.sample(string.ascii_lowercase, 10))
     is_static_suf = "static_" if config.plots_force_flat else ""
-    pid = report.save_htmlid(settings.id)
+    pid = report.save_htmlid(pconfig.id)
     if pid is None:  # ID of the plot group
         pid = report.save_htmlid(f"mqc_{is_static_suf}plot_{uniq_suffix}")
 
     # Calculate and save percentages
-    if settings.add_pct_tab:
+    if pconfig.add_pct_tab:
         for pidx, (samples, data_by_cat) in enumerate(zip(samples_lists, datasets)):
             # # Switch out NaN for 0s
             # for idx, d in enumerate(data_by_cat):
@@ -87,16 +95,16 @@ def add_to_report(
         html = _datasets_to_flat_imgs(
             datasets,
             samples_lists,
-            settings,
+            pconfig,
             pid,
             # Can't use interactivity, so we will have to generate separate flat images for each
             # dataset and view. So have to make sure the individual image IDs are unique across the report:
-            pids=[report.save_htmlid(f"{pid}_{dl['name']}", skiplint=True) for dl in settings.data_labels],
+            pids=[report.save_htmlid(f"{pid}_{dl['name']}", skiplint=True) for dl in pconfig.data_labels],
         )
     else:
         html = _datasets_to_interactive_imgs(
             datasets,
-            settings,
+            pconfig,
             pid,
         )
 
@@ -106,35 +114,35 @@ def add_to_report(
             "plot_type": "bar_graph",
             "samples": samples_lists,
             "datasets": datasets,
-            "layout": _layout(settings).to_plotly_json(),
+            "layout": _layout(pconfig).to_plotly_json(),
             "active_dataset_idx": 0,
-            "p_active": settings.p_active,
-            "l_active": settings.l_active,
-            "settings": settings.__dict__,
+            "p_active": pconfig.p_active,
+            "l_active": pconfig.l_active,
+            "pconfig": pconfig.__dict__,
         }
 
     return html
 
 
-def _layout(settings) -> go.Layout:
+def _layout(pconfig) -> go.Layout:
     """
     Layout object for the bar plot.
     """
-    layout: go.Layout = base_layout(settings)
+    layout: go.Layout = base_layout(pconfig)
     layout.update(
         {
-            "barmode": settings.stacking,
+            "barmode": pconfig.stacking,
             "hovermode": "y unified",
             "showlegend": True,
             "yaxis": dict(
                 # the plot is "transposed", so yaxis corresponds to the horizontal axis
-                title=dict(text=settings.xlab),
+                title=dict(text=pconfig.xlab),
                 showgrid=False,
                 categoryorder="category descending",
                 automargin=True,
             ),
             "xaxis": dict(
-                title=dict(text=settings.ylab),
+                title=dict(text=pconfig.ylab),
             ),
             "legend": dict(
                 orientation="h",
@@ -150,7 +158,7 @@ def _layout(settings) -> go.Layout:
 
 def _datasets_to_interactive_imgs(
     datasets: List[List[Dict]],
-    settings: PlotSettings,
+    pconfig: PConfig,
     pid: str,
 ) -> str:
     html = '<div class="mqc_hcplot_plotgroup">'
@@ -159,18 +167,18 @@ def _datasets_to_interactive_imgs(
         f'<button class="{{cls}} btn btn-default btn-sm {{active}}" data-target="{pid}">{{label}}' f"</button> \n"
     )
     # Counts / Percentages / Log Switches
-    if settings.add_pct_tab or settings.add_log_tab:
+    if pconfig.add_pct_tab or pconfig.add_log_tab:
         # html += '<div class="btn-group hc_switch_group"> \n'
-        if settings.add_pct_tab:
+        if pconfig.add_pct_tab:
             html += btn_tmpl.format(
-                active=settings.p_active,
-                label=settings.p_label,
+                active=pconfig.p_active,
+                label=pconfig.p_label,
                 cls="switch_percent",
             )
-        if settings.add_log_tab:
+        if pconfig.add_log_tab:
             html += btn_tmpl.format(
-                active=settings.l_active,
-                label=settings.l_label,
+                active=pconfig.l_active,
+                label=pconfig.l_label,
                 cls="switch_log10",
             )
         # html += "</div> "
@@ -182,7 +190,7 @@ def _datasets_to_interactive_imgs(
         html += '<div class="btn-group dataset_switch_group">\n'
         for k, ds in enumerate(datasets):
             active = "active" if k == 0 else ""
-            dl: Dict[str, str] = settings.data_labels[k]
+            dl: Dict[str, str] = pconfig.data_labels[k]
             name = dl["name"]
             ylab = f'data-ylab="{dl["ylab"]}"' if "ylab" in dl else ""
             ymax = f'data-ylab="{dl["ymax"]}"' if "ymax" in dl else ""
@@ -194,7 +202,7 @@ def _datasets_to_interactive_imgs(
         <div id="{id}" class="hc-plot not_rendered hc-bar-plot"></div>
     </div>""".format(
         id=pid,
-        height=f' style="height:{settings.height}px"' if settings.height else "",
+        height=f' style="height:{pconfig.height}px"' if pconfig.height else "",
     )
     # Close wrapping div
     html += "</div>"
@@ -204,7 +212,7 @@ def _datasets_to_interactive_imgs(
 def _datasets_to_flat_imgs(
     datasets: List,
     samples_lists: List,
-    settings: PlotSettings,
+    pconfig: PConfig,
     pid: str,
     pids: List[str],
 ) -> str:
@@ -219,10 +227,10 @@ def _datasets_to_flat_imgs(
     html += f'<div class="mqc_mplplot_plotgroup" id="{pid}">'
 
     # Counts / Percentages Switch
-    if settings.add_pct_tab and not config.simple_output:
+    if pconfig.add_pct_tab and not config.simple_output:
         html += f'<div class="btn-group mpl_switch_group mqc_mplplot_bargraph_setcountspcnt"> \n\
-            <button class="btn btn-default btn-sm {settings.c_active} counts">{settings.c_label}</button> \n\
-            <button class="btn btn-default btn-sm {settings.p_active} pcnt">{settings.p_label}</button> \n\
+            <button class="btn btn-default btn-sm {pconfig.c_active} counts">{pconfig.c_label}</button> \n\
+            <button class="btn btn-default btn-sm {pconfig.p_active} pcnt">{pconfig.p_label}</button> \n\
         </div> '
         if len(datasets) > 1:
             html += " &nbsp; &nbsp; "
@@ -233,7 +241,7 @@ def _datasets_to_flat_imgs(
         for pidx, ds in enumerate(datasets):
             pid = pids[pidx]
             active = "active" if pidx == 0 else ""
-            name = settings.data_labels[pidx]["name"]
+            name = pconfig.data_labels[pidx]["name"]
             html += f'<button class="btn btn-default btn-sm {active}" data-target="#{pid}">{name}</button>\n'
         html += "</div>\n\n"
 
@@ -261,37 +269,42 @@ def _datasets_to_flat_imgs(
 
     # Finally, build and save plots
     for pidx, (pid, samples, data_by_cat) in enumerate(zip(pids, samples_lists, datasets)):
-        html += _dataset_to_imgs(pidx, pid, samples, data_by_cat, settings)
+        html += _dataset_to_imgs(pidx, pid, samples, data_by_cat, pconfig)
 
     # Close wrapping div
     html += "</div>"
     return html
 
 
-def _dataset_to_imgs(pidx, pid, samples, data_by_cat, settings) -> str:
+def _save_data_file(pid, data_by_cat, samples):
+    """
+    Save plot data to file.
+    """
+    fdata = {}
+    for d in data_by_cat:
+        for didx, dval in enumerate(d["data"]):
+            s_name = samples[didx]
+            if s_name not in fdata:
+                fdata[s_name] = dict()
+            fdata[s_name][d["name"]] = dval
+    util_functions.write_data_file(fdata, pid)
+
+
+def _dataset_to_imgs(pidx, pid, samples, data_by_cat, pconfig) -> str:
     """
     Build a static images for different views of a dataset (counts, percentages, log scale),
     return an HTML wrapper.
     """
-    html = ""
-
     # Save plot data to file
-    if settings.save_data_file:
-        fdata = {}
-        for d in data_by_cat:
-            for didx, dval in enumerate(d["data"]):
-                s_name = samples[didx]
-                if s_name not in fdata:
-                    fdata[s_name] = dict()
-                fdata[s_name][d["name"]] = dval
-        util_functions.write_data_file(fdata, pid)
+    if pconfig.save_data_file:
+        _save_data_file(pid, data_by_cat, samples)
 
-    # Switch out NaN for 0s
-    for idx, d in enumerate(data_by_cat):
-        data_by_cat[idx]["data"] = [x if not math.isnan(x) else 0 for x in d["data"]]
+    # # Switch out NaN for 0s
+    # for idx, d in enumerate(data_by_cat):
+    #     data_by_cat[idx]["data"] = [x if not math.isnan(x) else 0 for x in d["data"]]
 
     # Calculate log10 values
-    if settings.add_log_tab:
+    if pconfig.add_log_tab:
         for cat_idx, d in enumerate(data_by_cat):
             values = [x for x in d["data"]]
             if len(values) < len(samples):
@@ -306,13 +319,13 @@ def _dataset_to_imgs(pidx, pid, samples, data_by_cat, settings) -> str:
     views = [
         View(
             data_by_cat,
-            active=not settings.p_active,
+            active=not pconfig.p_active,
             suffix="",
-            label=settings.c_label,
+            label=pconfig.c_label,
             xaxis_tickformat="",
         ),
     ]
-    if settings.add_pct_tab:
+    if pconfig.add_pct_tab:
         views.append(
             View(
                 [
@@ -323,13 +336,13 @@ def _dataset_to_imgs(pidx, pid, samples, data_by_cat, settings) -> str:
                     }
                     for d in data_by_cat
                 ],
-                active=settings.p_active,
+                active=pconfig.p_active,
                 suffix="_pc",
-                label=settings.p_label,
+                label=pconfig.p_label,
                 xaxis_tickformat=".0%",
             )
         )
-    if settings.add_log_tab:
+    if pconfig.add_log_tab:
         views.append(
             View(
                 [
@@ -342,20 +355,20 @@ def _dataset_to_imgs(pidx, pid, samples, data_by_cat, settings) -> str:
                 ],
                 active=False,
                 suffix="_log",
-                label=settings.l_label,
+                label=pconfig.l_label,
                 xaxis_tickformat="",
             )
         )
 
+    html = ""
     for view in views:
         html += _view_to_img(
             view,
             pidx,
             f"{pid}{view.suffix}",
             samples,
-            settings,
+            pconfig,
         )
-
     return html
 
 
@@ -364,7 +377,7 @@ def _view_to_img(
     pidx: int,
     pid: str,
     samples: List[str],
-    settings: PlotSettings,
+    pconfig: PConfig,
 ) -> str:
     """
     Build one static image, return an HTML wrapper.
@@ -376,11 +389,7 @@ def _view_to_img(
     if pidx > 0 or not view.active:
         hide_div = ' style="display:none;"'
 
-    fig = go.Figure()
-    fig.update_layout(
-        # The function expects a dict, even though go.Layout works just fine
-        cast(dict, _layout(settings)),
-    )
+    fig = go.Figure(layout=_layout(pconfig))
     for d in view.data:
         fig.add_trace(
             go.Bar(
