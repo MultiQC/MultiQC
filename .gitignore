@@ -46,3 +46,5 @@ venv
 test_data/
 website/
 usage/
+
+multiqc/templates/plotly/assets/js/packages/plotly-2.27.0.js

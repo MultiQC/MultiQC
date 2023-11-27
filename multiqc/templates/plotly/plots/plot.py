@@ -7,7 +7,7 @@
 import logging
 from collections import namedtuple
 from pprint import pprint
-from typing import Dict, Union, List, Optional
+from typing import Dict, Union, List
 import plotly.graph_objects as go
 
 from multiqc.utils import mqc_colour, config
@@ -56,8 +56,6 @@ class PConfig:
                 self.p_active = "active"
                 self.stacking = "relative"
 
-        self.categories: Optional[List[str]] = pconfig.get("categories")
-
         data_labels: List[Union[str, Dict[str, str]]] = pconfig.get("data_labels", [])
         for idx in range(num_datasets):
             if len(data_labels) <= idx:
@@ -79,32 +77,32 @@ class PConfig:
         self.ylab = pconfig.get("ylab") or self.data_labels[0].get("ylab")
         self.xlab = pconfig.get("xlab") or self.data_labels[0].get("xlab")
 
-        self.xmax = pconfig.get("xmax")
-        self.ymax = pconfig.get("ymax")
         self.xmin = pconfig.get("xmin")
+        self.xmax = pconfig.get("xmax")
         self.ymin = pconfig.get("ymin")
+        self.ymax = pconfig.get("ymax")
 
     def __repr__(self):
         return f"<{self.__class__.__name__} {pprint(self.__dict__)}>"
 
 
-def base_layout(settings) -> go.Layout:
+def base_layout(pconfig) -> go.Layout:
     """
     Layout object for the line plot.
     """
-    return go.Layout(
+    layout = go.Layout(
         title=dict(
-            text=settings.title,
+            text=pconfig.title,
             xanchor="center",
             x=0.5,
             font=dict(size=20),
         ),
         yaxis=dict(
-            title=dict(text=settings.ylab),
+            title=dict(text=pconfig.ylab),
             gridcolor="rgba(0,0,0,0.1)",
         ),
         xaxis=dict(
-            title=dict(text=settings.xlab),
+            title=dict(text=pconfig.xlab),
             gridcolor="rgba(0,0,0,0.1)",
         ),
         paper_bgcolor="rgba(0,0,0,0)",
@@ -139,6 +137,11 @@ def base_layout(settings) -> go.Layout:
             activecolor="rgba(0, 0, 0, 1)",
         ),
     )
+    if pconfig.xmin is not None or pconfig.xmax is not None:
+        layout.xaxis.range = [pconfig.xmin, pconfig.xmax]
+    if pconfig.ymin is not None or pconfig.ymax is not None:
+        layout.yaxis.range = [pconfig.ymin, pconfig.ymax]
+    return layout
 
 
 # class AbstractPlot(ABC):

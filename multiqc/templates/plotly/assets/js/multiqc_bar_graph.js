@@ -12,11 +12,10 @@ function plot_stacked_bar_graph(plot, target, dataset_idx) {
   let data = JSON.parse(JSON.stringify(plot["datasets"][dataset_idx]));
   let samples = JSON.parse(JSON.stringify(plot["samples"][dataset_idx]));
   let layout = JSON.parse(JSON.stringify(plot["layout"]));
-  let settings = JSON.parse(JSON.stringify(plot["settings"]));
 
   // Rename samples
   if (window.mqc_rename_f_texts.length > 0) {
-    $.each(samples, function (sample_idx, s_name) {
+    $.each(samples, function (sample_idx) {
       $.each(window.mqc_rename_f_texts, function (idx, f_text) {
         if (window.mqc_rename_regex_mode) {
           const re = new RegExp(f_text, "g");
@@ -31,7 +30,7 @@ function plot_stacked_bar_graph(plot, target, dataset_idx) {
   // Highlight samples
   let highlight_colors = [];
   if (window.mqc_highlight_f_texts.length > 0) {
-    $.each(samples, function (sample_idx, s_name) {
+    $.each(samples, function (sample_idx) {
       highlight_colors[sample_idx] = null;
       $.each(window.mqc_highlight_f_texts, function (idx, f_text) {
         if (f_text === "") {

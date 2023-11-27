@@ -258,7 +258,6 @@ class StatsReportMixin:
                     "xDecimals": False,
                     "ymin": 0,
                     "smooth_points": 600,
-                    # 'tt_label': '<b>{point.x} bp trimmed</b>: {point.y:.0f}',
                     "data_labels": [
                         {"name": "Count SNP", "ylab": "Quality"},
                         {"name": "Count Transitions", "ylab": "Quality"},
@@ -305,6 +304,7 @@ class StatsReportMixin:
                     "ymin": 0,
                     "ymax": 100,
                     "categories": True,
+                    "tt_decimals": 1,
                 }
                 self.add_section(
                     name="Variant depths",

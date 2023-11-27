@@ -10,32 +10,11 @@ function plot_xy_line_graph(plot, target, dataset_idx) {
   // while keeping the original data intact
   let data = JSON.parse(JSON.stringify(plot["datasets"][dataset_idx]));
   let layout = JSON.parse(JSON.stringify(plot["layout"]));
-  let settings = JSON.parse(JSON.stringify(plot["settings"]));
-
-  // if (config["tt_label"] === undefined) {
-  //   config["tt_label"] = "{point.x}: {point.y:.2f}";
-  //   if (config["categories"]) {
-  //     config["tt_formatter"] = function () {
-  //       yval =
-  //         Highcharts.numberFormat(this.y, config["tt_decimals"] == undefined ? 0 : config["tt_decimals"]) +
-  //         (config["tt_suffix"] || "");
-  //       return (
-  //         '<div style="background-color:' +
-  //         this.series.color +
-  //         '; display:inline-block; height: 10px; width: 10px; border:1px solid #333;"></div> <span style="text-decoration:underline; font-weight:bold;">' +
-  //         this.series.name +
-  //         "</span><br><strong>" +
-  //         this.key +
-  //         ":</strong> " +
-  //         yval
-  //       );
-  //     };
-  //   }
-  // }
+  let pconfig = JSON.parse(JSON.stringify(plot["pconfig"]));
 
   // Rename samples
   if (window.mqc_rename_f_texts.length > 0) {
-    $.each(data, function (sample_idx, s_name) {
+    $.each(data, function (sample_idx) {
       $.each(window.mqc_rename_f_texts, function (idx, f_text) {
         if (window.mqc_rename_regex_mode) {
           const re = new RegExp(f_text, "g");
@@ -50,7 +29,7 @@ function plot_xy_line_graph(plot, target, dataset_idx) {
   // Highlight samples
   let highlight_colors = [];
   if (window.mqc_highlight_f_texts.length > 0) {
-    $.each(data, function (sample_idx, s_name) {
+    $.each(data, function (sample_idx) {
       highlight_colors[sample_idx] = null;
       $.each(window.mqc_highlight_f_texts, function (idx, f_text) {
         if (f_text === "") {
@@ -114,42 +93,30 @@ function plot_xy_line_graph(plot, target, dataset_idx) {
 
   // Toggle buttons for y-axis limis
   // Handler for this is at top, so doesn't get created multiple times
-  if (settings.ymax !== undefined || settings.ymin !== undefined) {
-    let pgroup = $("#" + target).closest(".mqc_hcplot_plotgroup");
-    let wrapper = $('<div class="mqc_hcplot_yaxis_limit_toggle hidden-xs" />').prependTo(pgroup);
+  let ymax_is_set = pconfig.ymax !== "undefined" && pconfig.ymax !== null;
+  let ymin_is_set = pconfig.ymin !== "undefined" && pconfig.ymin !== null;
+  // Only create if there is a y-axis limit
+  if (ymax_is_set || (ymin_is_set && pconfig.ymin !== 0)) {
+    let wrapper = $('<div class="mqc_hcplot_yaxis_limit_toggle hidden-xs" />').prependTo(plot_group_div);
     wrapper.append(
-      '<span class="mqc_switch_wrapper" data-ymax="' +
-        settings.ymax +
-        '" data-ymin="' +
-        settings.ymin +
-        '" data-target="#' +
+      '<span class="mqc_switch_wrapper"' +
+        '"' +
+        ' data-ymax="' +
+        pconfig.ymax +
+        '"' +
+        ' data-ymin="' +
+        pconfig.ymin +
+        '"' +
+        ' data-target="' +
         target +
         '">Y-Limits: <span class="mqc_switch on">on</span></span>',
     );
     wrapper.after('<div class="clearfix" />');
   }
 
-  // Translate this into JavaScript:
-  // for sdata in view.data:
-  //   if len(sdata["data"]) > 0 and isinstance(sdata["data"][0], list):
-  //       x = [x[0] for x in sdata["data"]]
-  //       y = [x[1] for x in sdata["data"]]
-  //   else:
-  //       x = [x for x in range(len(sdata["data"]))]
-  //       y = sdata["data"]
-  //
-  //   fig.add_trace(
-  //       go.Scatter(
-  //           x=x,
-  //           y=y,
-  //           name=sdata["name"],
-  //           mode="lines+markers",
-  //           marker=dict(size=5),
-  //       )
-  //   )
-
   let traces = [];
   for (let sdata of data) {
+    let x, y;
     if (sdata.data.length > 0 && Array.isArray(sdata.data[0])) {
       x = sdata.data.map((x) => x[0]);
       y = sdata.data.map((x) => x[1]);
@@ -163,16 +130,20 @@ function plot_xy_line_graph(plot, target, dataset_idx) {
       y: y,
       name: sdata.name,
       orientation: "h",
+      mode: "lines",
       marker: {
+        size: 5,
         line: {
           color: highlight_colors,
           width: highlight_colors.map((x) => (x ? 2 : 0)),
         },
       },
       marker_color: sdata.color,
+      // hovertemplate: pconfig["tt_label"]
     };
     traces.push(trace);
   }
+
   plot.datasets[dataset_idx].series = traces;
   Plotly.newPlot(target, traces, layout, {
     displayModeBar: true,

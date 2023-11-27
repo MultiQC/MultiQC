@@ -88,7 +88,7 @@ $(function () {
 
   $("button.switch_log10").click(function (e) {
     e.preventDefault();
-    var target = $(this).data("target");
+    let target = $(this).data("target");
 
     // Toggling flags
     mqc_plots[target].l_active = !$(this).hasClass("active");
@@ -102,24 +102,49 @@ $(function () {
     e.preventDefault();
     $(this).siblings("button.active").removeClass("active");
     $(this).addClass("active");
-    var target = $(this).data("target");
-    var active_dataset_idx = mqc_plots[target].active_dataset_idx;
-    var new_dataset_idx = $(this).data("dataset_index");
+    let target = $(this).data("target");
+    let active_dataset_idx = mqc_plots[target].active_dataset_idx;
+    let new_dataset_idx = $(this).data("dataset_index");
     mqc_plots[target].active_dataset_idx = new_dataset_idx;
     if (active_dataset_idx === new_dataset_idx) {
       return;
     }
-    var dataset = mqc_plots[target]["datasets"][new_dataset_idx];
+    let dataset = mqc_plots[target]["datasets"][new_dataset_idx];
 
-    let x = [];
-    for (let cat of dataset) {
-      x.push(dataset.p_active ? cat.data_pct : cat.data);
-    }
-    Plotly.restyle(target, "x", x);
+    if (mqc_plots[target].plot_type === "xy_line") {
+      let xs = [];
+      let ys = [];
+      for (let sdata of dataset) {
+        let x, y;
+        if (sdata.data.length > 0 && Array.isArray(sdata.data[0])) {
+          x = sdata.data.map((x) => x[0]);
+          y = sdata.data.map((x) => x[1]);
+        } else {
+          x = [...Array(sdata.data.length).keys()];
+          y = sdata.data;
+        }
+        xs.push(x);
+        ys.push(y);
+      }
+      Plotly.restyle(target, "x", xs);
+      Plotly.restyle(target, "y", ys);
 
-    const ymax = $(this).data("xmax");
-    if (ymax) {
-      Plotly.relayout(target, "yaxis.range", [null, ymax]);
+      // No need to restyle because the data is already limited to requested xmax and ymax in Python
+      // if ($(this).data("xmax") || $(this).data("ymax")) {
+      //   Plotly.relayout(target, "yaxis.range", [$(this).data("xmax") || null, $(this).data("ymax") || null]);
+      // }
+    } else if (mqc_plots[target].plot_type === "bar_graph") {
+      let x = [];
+      for (let cat of dataset) {
+        x.push(dataset.p_active ? cat.data_pct : cat.data);
+      }
+      Plotly.restyle(target, "x", x);
+
+      // No need because the data is already limited to requested xmax and ymax in Python
+      // if ($(this).data("xmax")) {
+      //   // Bar graph has X and Y inverted
+      //   Plotly.relayout(target, "yaxis.range", [null, $(this).data("xmax")]);
+      // }
     }
   });
 
@@ -166,18 +191,31 @@ $(function () {
 
   // Switch a y-axis limit on or off
   $(".mqc_hcplot_plotgroup").on("click", ".mqc_hcplot_yaxis_limit_toggle .mqc_switch_wrapper", function () {
-    var target = $($(this).data("target")).highcharts();
-    var ymax = $(this).data("ymax");
-    var ymin = $(this).data("ymin");
-    ymax = ymax == "undefined" ? null : ymax;
-    ymin = ymin == "undefined" ? null : ymin;
-    var mqc_switch = $(this).find(".mqc_switch");
-    if (mqc_switch.hasClass("on")) {
-      target.yAxis[0].update({ max: null, min: null });
-      mqc_switch.removeClass("on").addClass("off").text("off");
-    } else {
-      target.yAxis[0].update({ max: ymax, min: ymin });
-      mqc_switch.removeClass("off").addClass("on").text("on");
+    let target = $(this).data("target");
+    let ymax = $(this).data("ymax");
+    let ymin = $(this).data("ymin");
+    // if limits are not set, don't do anything
+    let ymax_is_set = ymax !== "undefined" && ymax !== null;
+    let ymin_is_set = ymin !== "undefined" && ymin !== null;
+    if (ymax_is_set || (ymin_is_set && ymin !== 0)) {
+      let y_limits_switch = $(this).find(".mqc_switch");
+      if (y_limits_switch.hasClass("on")) {
+        y_limits_switch.removeClass("on").addClass("off").text("off");
+        Plotly.relayout(target, "yaxis.autorange", true);
+        if (ymin === 0) {
+          // for plots with only positive numbers we want to keep the ymin=0 limit
+          Plotly.relayout(target, "yaxis.range[0]", 0);
+        }
+      } else {
+        y_limits_switch.removeClass("off").addClass("on").text("on");
+        Plotly.relayout(target, "yaxis.autorange", false);
+        if (ymin_is_set) {
+          Plotly.relayout(target, "yaxis.range[0]", ymin);
+        }
+        if (ymax_is_set) {
+          Plotly.relayout(target, "yaxis.range[1]", ymax);
+        }
+      }
     }
   });
 

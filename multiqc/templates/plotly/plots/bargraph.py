@@ -115,10 +115,11 @@ def add_to_report(
             "samples": samples_lists,
             "datasets": datasets,
             "layout": _layout(pconfig).to_plotly_json(),
+            "pconfig": pconfig.__dict__,
+            # Parameters to be toggled by switch buttons:
             "active_dataset_idx": 0,
             "p_active": pconfig.p_active,
             "l_active": pconfig.l_active,
-            "pconfig": pconfig.__dict__,
         }
 
     return html

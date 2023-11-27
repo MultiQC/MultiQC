@@ -5,7 +5,7 @@ import os
 import random
 import string
 from pathlib import Path
-from typing import Dict, List, Union
+from typing import Dict, List, Union, Optional
 
 import math
 import plotly.graph_objects as go
@@ -19,6 +19,17 @@ logger = logging.getLogger(__name__)
 
 # {"name": "SAMPLE1", "color": "#111111", "data": [[x, y], [x, y], ...]}
 SampleLineT = Dict[str, Union[str, List]]
+
+
+class LineGraphPConfig(PConfig):
+    def __init__(self, pconfig: Dict, *args):
+        super().__init__(pconfig, *args)
+        self.tt_decimals: Optional[int] = pconfig.get("tt_decimals")
+        self.tt_suffix: str = pconfig.get("tt_suffix", "")
+        # self.tt_label: str = pconfig.get(
+        #     "tt_label",
+        #     f"%{{x}}: %{{y:,.{self.tt_decimals}f}}{self.tt_suffix}"
+        # )
 
 
 def linegraph(
@@ -35,14 +46,14 @@ def linegraph(
 
     return add_to_report(
         datasets=datasets,
-        pconfig=PConfig(pconfig, len(datasets)),
+        pconfig=LineGraphPConfig(pconfig, len(datasets)),
         report=report,
     )
 
 
 def add_to_report(
     datasets: List[List[SampleLineT]],
-    pconfig: PConfig,
+    pconfig: LineGraphPConfig,
     report,
 ) -> str:
     """
@@ -75,25 +86,36 @@ def add_to_report(
             "plot_type": "xy_line",
             "datasets": datasets,
             "layout": _layout(pconfig).to_plotly_json(),
+            "pconfig": pconfig.__dict__,
+            # Parameters to be toggled by switch buttons:
             "active_dataset_idx": 0,
             "l_active": pconfig.l_active,
-            "pconfig": pconfig.__dict__,
         }
         return html
 
 
-def _layout(pconfig: PConfig) -> go.Layout:
+def _layout(pconfig: LineGraphPConfig) -> go.Layout:
     """
-    Layout object for the line plot.
+    Customise plot layout.
     """
     layout = base_layout(pconfig)
-    layout["showlegend"] = False
+
+    layout.showlegend = False
+
+    # Make a tooltip always show on hover over any point on plot
+    layout.hoverdistance = -1
+    # A tooltip will show numbers for all lines crossing this vertical line
+    layout.hovermode = "x"
+    # Default precision for floating numbers is too high - allowing to override it
+    if pconfig.tt_decimals is not None:
+        layout.yaxis.hoverformat = f".{pconfig.tt_decimals}f"
+
     return layout
 
 
 def _datasets_to_interactive_imgs(
     datasets: List[List[SampleLineT]],
-    pconfig: PConfig,
+    pconfig: LineGraphPConfig,
     pid: str,
 ) -> str:
     html = '<div class="mqc_hcplot_plotgroup">'
@@ -142,7 +164,7 @@ def _datasets_to_interactive_imgs(
 
 def _datasets_to_flat_imgs(
     datasets: List[List[SampleLineT]],
-    pconfig: PConfig,
+    pconfig: LineGraphPConfig,
     pid: str,
     pids: List[str],
     no_js: bool = False,
@@ -179,7 +201,7 @@ def _datasets_to_flat_imgs(
 def _save_data_file(
     pid: str,
     dataset: List[SampleLineT],
-    pconfig: PConfig,
+    pconfig: LineGraphPConfig,
 ) -> None:
     fdata = dict()
     last_cats = None
@@ -221,7 +243,7 @@ def _dataset_to_imgs(
     pidx: int,
     pid: str,
     dataset: List[SampleLineT],
-    pconfig: PConfig,
+    pconfig: LineGraphPConfig,
 ) -> str:
     """
     Build a static images for different views of a dataset (counts, log scale),
@@ -291,7 +313,7 @@ def _view_to_img(
     view: View,
     pidx: int,
     pid: str,
-    pconfig: PConfig,
+    pconfig: LineGraphPConfig,
     config,
 ) -> str:
     """
