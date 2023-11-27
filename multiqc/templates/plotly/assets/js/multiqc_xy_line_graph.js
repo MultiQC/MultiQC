@@ -1,11 +1,9 @@
 // Basic Line Graph
 function plot_xy_line_graph(plot, target, dataset_idx) {
-  if (plot === undefined || plot["plot_type"] !== "xy_line") {
-    return false;
-  }
-  if (dataset_idx === undefined) {
-    dataset_idx = 0;
-  }
+  if (plot === undefined || plot["plot_type"] !== "xy_line") return false;
+
+  if (dataset_idx === undefined) dataset_idx = 0;
+
   // Make a clone of the data, so that we can mess with it,
   // while keeping the original data intact
   let data = JSON.parse(JSON.stringify(plot["datasets"][dataset_idx]));
@@ -13,18 +11,13 @@ function plot_xy_line_graph(plot, target, dataset_idx) {
   let pconfig = JSON.parse(JSON.stringify(plot["pconfig"]));
 
   // Rename samples
-  if (window.mqc_rename_f_texts.length > 0) {
-    $.each(data, function (sample_idx) {
-      $.each(window.mqc_rename_f_texts, function (idx, f_text) {
-        if (window.mqc_rename_regex_mode) {
-          const re = new RegExp(f_text, "g");
-          data[sample_idx]["name"] = data[sample_idx]["name"].replace(re, window.mqc_rename_t_texts[idx]);
-        } else {
-          data[sample_idx]["name"] = data[sample_idx]["name"].replace(f_text, window.mqc_rename_t_texts[idx]);
-        }
-      });
-    });
+  let _s_names = [];
+  for (let sdata of data) {
+    _s_names.push(sdata.name);
   }
+  rename_samples(_s_names, function (sample_idx, new_name) {
+    data[sample_idx]["name"] = new_name;
+  });
 
   // Highlight samples
   let highlight_colors = [];
@@ -114,8 +107,8 @@ function plot_xy_line_graph(plot, target, dataset_idx) {
     wrapper.after('<div class="clearfix" />');
   }
 
-  let traces = [];
-  for (let sdata of data) {
+  function sdata_to_xy(sdata) {
+    // Utility function to convert data for one trace into x and y arrays
     let x, y;
     if (sdata.data.length > 0 && Array.isArray(sdata.data[0])) {
       x = sdata.data.map((x) => x[0]);
@@ -124,6 +117,12 @@ function plot_xy_line_graph(plot, target, dataset_idx) {
       x = [...Array(sdata.data.length).keys()];
       y = sdata.data;
     }
+    return [x, y];
+  }
+
+  let traces = [];
+  for (let sdata of data) {
+    let [x, y] = sdata_to_xy(sdata);
     let trace = {
       type: "scatter",
       x: x,
@@ -143,7 +142,6 @@ function plot_xy_line_graph(plot, target, dataset_idx) {
     };
     traces.push(trace);
   }
-
   plot.datasets[dataset_idx].series = traces;
   Plotly.newPlot(target, traces, layout, {
     displayModeBar: true,
@@ -159,4 +157,25 @@ function plot_xy_line_graph(plot, target, dataset_idx) {
       "resetScale2d",
     ],
   });
+
+  // Function to re-render plot with new data
+  plot.replot = function () {
+    // Updates plot given new underlying data
+    let dataset = plot.datasets[plot.active_dataset_idx];
+
+    let xs = [];
+    let ys = [];
+    for (let sdata of dataset) {
+      let [x, y] = sdata_to_xy(sdata);
+      xs.push(x);
+      ys.push(y);
+    }
+    Plotly.restyle(target, "x", xs);
+    Plotly.restyle(target, "y", ys);
+
+    // No need to restyle because the data is already limited to requested xmax and ymax in Python
+    // if ($(this).data("xmax") || $(this).data("ymax")) {
+    //   Plotly.relayout(target, "yaxis.range", [$(this).data("xmax") || null, $(this).data("ymax") || null]);
+    // }
+  };
 }

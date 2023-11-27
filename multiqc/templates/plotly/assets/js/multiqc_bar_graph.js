@@ -1,11 +1,8 @@
 // Stacked Bar Graph
 function plot_stacked_bar_graph(plot, target, dataset_idx) {
-  if (plot === undefined || plot["plot_type"] !== "bar_graph") {
-    return false;
-  }
-  if (dataset_idx === undefined) {
-    dataset_idx = 0;
-  }
+  if (plot === undefined || plot["plot_type"] !== "bar_graph") return false;
+
+  if (dataset_idx === undefined) dataset_idx = 0;
 
   // Make a clone of everything, so that we can mess with it,
   // while keeping the original data intact
@@ -14,18 +11,9 @@ function plot_stacked_bar_graph(plot, target, dataset_idx) {
   let layout = JSON.parse(JSON.stringify(plot["layout"]));
 
   // Rename samples
-  if (window.mqc_rename_f_texts.length > 0) {
-    $.each(samples, function (sample_idx) {
-      $.each(window.mqc_rename_f_texts, function (idx, f_text) {
-        if (window.mqc_rename_regex_mode) {
-          const re = new RegExp(f_text, "g");
-          samples[sample_idx] = samples[sample_idx].replace(re, window.mqc_rename_t_texts[idx]);
-        } else {
-          samples[sample_idx] = samples[sample_idx].replace(f_text, window.mqc_rename_t_texts[idx]);
-        }
-      });
-    });
-  }
+  rename_samples(samples, function (sample_idx, new_name) {
+    samples[sample_idx] = new_name;
+  });
 
   // Highlight samples
   let highlight_colors = [];
@@ -96,13 +84,24 @@ function plot_stacked_bar_graph(plot, target, dataset_idx) {
     }
   }
 
+  function cat_to_x(cat) {
+    // Utility function to convert data for one trace into x array
+    if (mqc_plots[target].p_active && cat["data_pct"] !== undefined) {
+      // If percentage data is available, use it
+      return cat["data_pct"];
+    } else {
+      // Otherwise use the absolute data
+      return cat.data;
+    }
+  }
+
   // Render the plotly plot
   let traces = [];
   for (let cat of data) {
     let trace = {
       type: "bar",
       y: samples,
-      x: cat.data,
+      x: cat_to_x(cat),
       name: cat.name,
       orientation: "h",
       marker: {
@@ -130,4 +129,14 @@ function plot_stacked_bar_graph(plot, target, dataset_idx) {
       "resetScale2d",
     ],
   });
+
+  plot.replot = function () {
+    // Updates plot given new underlying data
+    let dataset = plot.datasets[plot.active_dataset_idx];
+
+    let x = [];
+    for (let cat of dataset) x.push(cat_to_x(cat));
+
+    Plotly.restyle(target, "x", x);
+  };
 }

@@ -18,42 +18,49 @@ window.mqc_hide_regex_mode = false;
 
 // Execute when page load has finished loading
 $(function () {
+  let warning = $(".mqc_loading_warning");
+
   // Show loading warning
-  $(".mqc_loading_warning").show();
+  warning.show();
 
   // Decompress the JSON plot data
   mqc_plots = JSON.parse(LZString.decompressFromBase64(mqc_compressed_plotdata));
 
   // Render plots on page load
+  // suppress "duplicated selector" warning - this time will return a different result:
+  // noinspection JSJQueryEfficiency
   $(".hc-plot.not_rendered:visible:not(.gt_max_num_ds)").each(function () {
-    var target = $(this).attr("id");
+    let target = $(this).attr("id");
     // Only one point per dataset, so multiply limit by arbitrary number.
-    var max_num = mqc_config["num_datasets_plot_limit"] * 50;
+    let max_num = mqc_config["num_datasets_plot_limit"] * 50;
     // Deferring each plot call prevents browser from locking up
     setTimeout(function () {
       plot_graph(target, undefined, max_num);
-      if ($(".hc-plot.not_rendered:visible:not(.gt_max_num_ds)").length == 0) {
-        $(".mqc_loading_warning").hide();
+      if ($(".hc-plot.not_rendered:visible:not(.gt_max_num_ds)").length === 0) {
+        warning.hide();
       }
     }, 50);
   });
-  if ($(".hc-plot.not_rendered:visible:not(.gt_max_num_ds)").length == 0) {
-    $(".mqc_loading_warning").hide();
+  // suppress "duplicated selector" warning - this time will return a different result:
+  // noinspection JSJQueryEfficiency -
+  if ($(".hc-plot.not_rendered:visible:not(.gt_max_num_ds)").length === 0) {
+    warning.hide();
   }
 
   // Render a plot when clicked
+  let not_rendered = $(".hc-plot.not_rendered");
   $("body").on("click", ".render_plot", function (e) {
-    var target = $(this).parent().attr("id");
+    let target = $(this).parent().attr("id");
     plot_graph(target);
-    if ($(".hc-plot.not_rendered").length == 0) {
+    if (not_rendered.length === 0) {
       $("#mqc-warning-many-samples").hide();
     }
   });
 
   // Render all plots from header
   $("#mqc-render-all-plots").click(function () {
-    $(".hc-plot.not_rendered").each(function () {
-      var target = $(this).attr("id");
+    not_rendered.each(function () {
+      let target = $(this).attr("id");
       plot_graph(target);
     });
     $("#mqc-warning-many-samples").hide();
@@ -63,7 +70,7 @@ $(function () {
   $(document).on("mqc_highlights mqc_renamesamples mqc_hidesamples", function () {
     // Replot graphs
     $(".hc-plot:not(.not_rendered)").each(function () {
-      var target = $(this).attr("id");
+      let target = $(this).attr("id");
       plot_graph(target);
     });
   });
@@ -71,18 +78,13 @@ $(function () {
   $("button.switch_percent").click(function (e) {
     e.preventDefault();
     let target = $(this).data("target");
-    let active_dataset_idx = mqc_plots[target].active_dataset_idx;
-    let dataset = mqc_plots[target].datasets[active_dataset_idx];
 
     // Toggling flags
     mqc_plots[target].p_active = !$(this).hasClass("active");
     $(this).toggleClass("active");
 
-    let x = [];
-    for (let cat of dataset) {
-      x.push(mqc_plots[target].p_active ? cat.data_pct : cat.data);
-    }
-    Plotly.restyle(target, "x", x);
+    // Replot graphs
+    mqc_plots[target].replot();
     Plotly.relayout(target, "xaxis.tickformat", mqc_plots[target].p_active ? ".0%" : "");
   });
 
@@ -106,46 +108,8 @@ $(function () {
     let active_dataset_idx = mqc_plots[target].active_dataset_idx;
     let new_dataset_idx = $(this).data("dataset_index");
     mqc_plots[target].active_dataset_idx = new_dataset_idx;
-    if (active_dataset_idx === new_dataset_idx) {
-      return;
-    }
-    let dataset = mqc_plots[target]["datasets"][new_dataset_idx];
-
-    if (mqc_plots[target].plot_type === "xy_line") {
-      let xs = [];
-      let ys = [];
-      for (let sdata of dataset) {
-        let x, y;
-        if (sdata.data.length > 0 && Array.isArray(sdata.data[0])) {
-          x = sdata.data.map((x) => x[0]);
-          y = sdata.data.map((x) => x[1]);
-        } else {
-          x = [...Array(sdata.data.length).keys()];
-          y = sdata.data;
-        }
-        xs.push(x);
-        ys.push(y);
-      }
-      Plotly.restyle(target, "x", xs);
-      Plotly.restyle(target, "y", ys);
-
-      // No need to restyle because the data is already limited to requested xmax and ymax in Python
-      // if ($(this).data("xmax") || $(this).data("ymax")) {
-      //   Plotly.relayout(target, "yaxis.range", [$(this).data("xmax") || null, $(this).data("ymax") || null]);
-      // }
-    } else if (mqc_plots[target].plot_type === "bar_graph") {
-      let x = [];
-      for (let cat of dataset) {
-        x.push(dataset.p_active ? cat.data_pct : cat.data);
-      }
-      Plotly.restyle(target, "x", x);
-
-      // No need because the data is already limited to requested xmax and ymax in Python
-      // if ($(this).data("xmax")) {
-      //   // Bar graph has X and Y inverted
-      //   Plotly.relayout(target, "yaxis.range", [null, $(this).data("xmax")]);
-      // }
-    }
+    if (active_dataset_idx === new_dataset_idx) return;
+    mqc_plots[target].replot();
   });
 
   // Make divs height-draggable
@@ -234,6 +198,24 @@ $(function () {
     plot_heatmap(target);
   });
 });
+
+function rename_samples(sample_names, rename_sample_func) {
+  if (window.mqc_rename_f_texts.length > 0) {
+    $.each(sample_names, function (sample_idx, sample_name) {
+      $.each(window.mqc_rename_f_texts, function (idx, f_text) {
+        let new_name;
+        let t_text = window.mqc_rename_t_texts[idx];
+        if (window.mqc_rename_regex_mode) {
+          const re = new RegExp(f_text, "g");
+          new_name = sample_name.replace(re, t_text);
+        } else {
+          new_name = sample_name.replace(f_text, t_text);
+        }
+        rename_sample_func(sample_idx, new_name);
+      });
+    });
+  }
+}
 
 // Call to render any plot
 function plot_graph(target, dataset_idx, max_num) {
