@@ -16,63 +16,85 @@ window.mqc_hide_mode = "hide";
 window.mqc_hide_f_texts = [];
 window.mqc_hide_regex_mode = false;
 
+class Plot {
+  constructor(target, data) {
+    this.target = target;
+    this.plot_type = data.plot_type;
+    this.datasets = data.datasets;
+    this.pconfig = data.pconfig;
+    this.layout = data.layout;
+    // Dynamic fields
+    this.active_dataset_idx = 0;
+    this.p_active = data.pconfig.p_active;
+    this.l_active = data.pconfig.l_active;
+  }
+}
+
+function init_plot(target, data) {
+  if (data.plot_type === "xy_line") {
+    return new LinePlot(target, data);
+  }
+  if (data.plot_type === "bar_graph") {
+    return new BarPlot(target, data);
+  }
+  console.log("Did not recognise plot type: " + data.plot_type);
+  return null;
+}
+
 // Execute when page load has finished loading
 $(function () {
   // Show loading warning
-  let warning = $(".mqc_loading_warning").show();
+  let loading_warning = $(".mqc_loading_warning").show();
 
-  // Decompress the JSON plot data
-  mqc_plots = JSON.parse(LZString.decompressFromBase64(mqc_compressed_plotdata));
+  // Decompress the JSON plot data and init plot objects
+  let mqc_plotdata = JSON.parse(LZString.decompressFromBase64(mqc_compressed_plotdata));
+  mqc_plots = Object.fromEntries(
+    Object.entries(mqc_plotdata).map(([target, data]) => [target, init_plot(target, data)]),
+  );
+
+  let should_render = $(".hc-plot.not_rendered:visible:not(.gt_max_num_ds)");
 
   // Render plots on page load
-  // (line below suppresses the "duplicated selector" linting inspection, as this time the
-  // selector will return a different result)
-  // noinspection JSJQueryEfficiency
-  $(".hc-plot.not_rendered:visible:not(.gt_max_num_ds)").each(function () {
+  should_render.each(function () {
     let target = $(this).attr("id");
     // Only one point per dataset, so multiply limit by arbitrary number.
     let max_num = mqc_config["num_datasets_plot_limit"] * 50;
     // Deferring each plot call prevents browser from locking up
     setTimeout(function () {
-      plot_graph(target, undefined, max_num);
-      if ($(".hc-plot.not_rendered:visible:not(.gt_max_num_ds)").length === 0) {
-        // All plots rendered successfully, so hiding the "loading" warning
-        warning.hide();
+      let plot = mqc_plots[target];
+      if (plot.active_dataset_size() > max_num) {
+        $("#" + target)
+          .addClass("not_rendered gt_max_num_ds")
+          .html('<button class="btn btn-default btn-lg render_plot">Show plot</button>');
+      } else {
+        render_plot(target);
+        if ($(".hc-plot.not_rendered:visible:not(.gt_max_num_ds)").length === 0)
+          // All plots rendered successfully (or hidden with gt_max_num_ds), so hiding the warning
+          $(".mqc_loading_warning").hide();
       }
     }, 50);
   });
 
-  // All plots already rendered successfully, so hiding the "loading" warning
-  // noinspection JSJQueryEfficiency
-  if ($(".hc-plot.not_rendered:visible:not(.gt_max_num_ds)").length === 0) {
-    warning.hide();
-  }
+  // All plots rendered successfully (or hidden with gt_max_num_ds), so hiding the warning
+  if (should_render.length === 0) loading_warning.hide();
 
   // Render a plot when clicked (heavy plots are not automatically rendered by default)
-  let not_rendered = $(".hc-plot.not_rendered");
   $("body").on("click", ".render_plot", function (e) {
-    let target = $(this).parent().attr("id");
-    plot_graph(target);
-    if (not_rendered.length === 0) {
-      $("#mqc-warning-many-samples").hide();
-    }
+    render_plot($(this).parent().attr("id"));
   });
 
-  // Render all plots from header
+  // Render all plots from header, even those that are hidden
   $("#mqc-render-all-plots").click(function () {
-    not_rendered.each(function () {
-      let target = $(this).attr("id");
-      plot_graph(target);
+    $(".hc-plot.not_rendered").each(function () {
+      render_plot($(this).attr("id"));
     });
-    $("#mqc-warning-many-samples").hide();
   });
 
   // Replot graphs when something changed in filters
   $(document).on("mqc_highlights mqc_renamesamples mqc_hidesamples", function () {
     // Replot graphs
     $(".hc-plot:not(.not_rendered)").each(function () {
-      let target = $(this).attr("id");
-      plot_graph(target);
+      render_plot($(this).attr("id"));
     });
   });
 
@@ -86,7 +108,8 @@ $(function () {
     $(this).toggleClass("active");
 
     // Replot graphs
-    mqc_plots[target].replot();
+    render_plot(target);
+    // mqc_plots[target].replot();
     Plotly.relayout(target, "xaxis.tickformat", mqc_plots[target].p_active ? ".0%" : "");
   });
 
@@ -112,7 +135,8 @@ $(function () {
     let new_dataset_idx = $(this).data("dataset_index");
     mqc_plots[target].active_dataset_idx = new_dataset_idx;
     if (active_dataset_idx === new_dataset_idx) return;
-    mqc_plots[target].replot();
+    render_plot(target);
+    // mqc_plots[target].replot();
   });
 
   // Make divs height-draggable
@@ -187,11 +211,11 @@ $(function () {
   $(".mqc_heatmap_sortHighlight").click(function (e) {
     e.preventDefault();
     let target = $(this).data("target").substr(1);
-    if (mqc_plots[target]["config"]["sortHighlights"] === true) {
-      mqc_plots[target]["config"]["sortHighlights"] = false;
+    if (mqc_plots[target].sort_highlights === true) {
+      mqc_plots[target].sort_highlights = false;
       $(this).removeClass("active");
     } else {
-      mqc_plots[target]["config"]["sortHighlights"] = true;
+      mqc_plots[target].sort_highlights = true;
       $(this).addClass("active");
     }
     $(this).blur();
@@ -201,21 +225,17 @@ $(function () {
 
 // General function to rename samples. Takes a list of samples and a callback from
 // plot-specific functions like plot_bar_graph() or plot_xy_line_graph()
-function rename_samples(sample_names, rename_sample_func) {
+function rename_samples(samples, rename_sample_func) {
   if (window.mqc_rename_f_texts.length > 0) {
-    $.each(sample_names, function (sample_idx, sample_name) {
-      $.each(window.mqc_rename_f_texts, function (idx, f_text) {
-        let new_name;
-        let t_text = window.mqc_rename_t_texts[idx];
-        if (window.mqc_rename_regex_mode) {
-          const re = new RegExp(f_text, "g");
-          new_name = sample_name.replace(re, t_text);
-        } else {
-          new_name = sample_name.replace(f_text, t_text);
-        }
-        rename_sample_func(sample_idx, new_name);
-      });
-    });
+    for (let s_idx = 0; s_idx < samples.length; s_idx++) {
+      for (let p_idx = 0; p_idx < window.mqc_rename_f_texts.length; p_idx++) {
+        let pattern = window.mqc_rename_f_texts[p_idx];
+        if (window.mqc_rename_regex_mode) pattern = new RegExp(pattern, "g");
+        let new_text = window.mqc_rename_t_texts[p_idx];
+        let new_name = samples[s_idx].replace(pattern, new_text);
+        rename_sample_func(s_idx, new_name);
+      }
+    }
   }
 }
 
@@ -239,132 +259,76 @@ function get_highlight_colors(samples) {
   return highlight_colors;
 }
 
-// General function to hide samples
-function hide_samples(plot_group_div, samples, data) {
+// Hiding samples. Returns indices of samples in the "samples" array
+function hide_samples(plot_group_div, samples) {
   plot_group_div.parent().find(".samples-hidden-warning").remove();
   plot_group_div.show();
-  if (window.mqc_hide_f_texts.length > 0) {
-    let num_hidden = 0;
-    let num_total = samples.length;
-    let j = samples.length;
-    while (j--) {
-      let match = false;
-      for (let i = 0; i < window.mqc_hide_f_texts.length; i++) {
-        const f_text = window.mqc_hide_f_texts[i];
-        if (window.mqc_hide_regex_mode) {
-          if (samples[j].match(f_text)) match = true;
-        } else {
-          if (samples[j].indexOf(f_text) > -1) match = true;
-        }
-      }
-      if (window.mqc_hide_mode === "show") {
-        match = !match;
-      }
-      if (match) {
-        samples.splice(j, 1);
-        $.each(data, function (k, d) {
-          data.splice(j, 1);
-        });
-        num_hidden += 1;
+
+  if (window.mqc_hide_f_texts.length === 0) return [];
+
+  let result = [];
+  for (let j = 0; j < samples.length; j++) {
+    let match = false;
+    for (let i = 0; i < window.mqc_hide_f_texts.length; i++) {
+      const f_text = window.mqc_hide_f_texts[i];
+      if (window.mqc_hide_regex_mode) {
+        if (samples[j].match(f_text)) match = true;
+      } else {
+        if (samples[j].indexOf(f_text) > -1) match = true;
       }
     }
-    // Some series hidden. Show a warning text string.
-    if (num_hidden > 0) {
-      const alert =
-        '<div class="samples-hidden-warning alert alert-warning"><span class="glyphicon glyphicon-info-sign"></span> <strong>Warning:</strong> ' +
-        num_hidden +
-        ' samples hidden. <a href="#mqc_hidesamples" class="alert-link" onclick="mqc_toolbox_openclose(\'#mqc_hidesamples\', true); return false;">See toolbox.</a></div>';
-      plot_group_div.before(alert);
+    if (window.mqc_hide_mode === "show") {
+      match = !match;
     }
-    // All series hidden. Hide the graph.
-    if (num_hidden === num_total) {
-      plot_group_div.hide();
-      return false;
+    if (match) {
+      result.push(j);
     }
   }
+  // Some series hidden. Show a warning text string.
+  if (result.length > 0) {
+    const alert =
+      '<div class="samples-hidden-warning alert alert-warning"><span class="glyphicon glyphicon-info-sign"></span> <strong>Warning:</strong> ' +
+      result.length +
+      ' samples hidden. <a href="#mqc_hidesamples" class="alert-link" onclick="mqc_toolbox_openclose(\'#mqc_hidesamples\', true); return false;">See toolbox.</a></div>';
+    plot_group_div.before(alert);
+  }
+  // All series hidden. Hide the graph.
+  if (result.length === samples.length) plot_group_div.hide();
+
+  return result;
 }
 
 // Call to render any plot
-function plot_graph(target, dataset_idx, max_num) {
+function render_plot(target) {
   let plot = mqc_plots[target];
   if (plot === undefined) return false;
 
-  // If no dataset specified, check if there is an active button and set automatically
-  if (dataset_idx === undefined) {
-    let ds_buttons = $('.hc_switch_group button[data-action="set_data"][data-target="' + target + '"]');
-    if (ds_buttons.length) dataset_idx = ds_buttons.filter(".active").data("dataset_index");
-  }
+  // If there is an active dataset button and set automatically
+  let ds_buttons = $('.hc_switch_group button[data-action="set_data"][data-target="' + plot.target + '"]');
+  if (ds_buttons.length) plot.active_dataset_idx = ds_buttons.filter(".active").data("dataset_index");
 
-  // If log status is not set and button is there, check whether it's active by default
-  let config = plot["config"];
-  if (config === undefined) {
-    plot["config"] = {};
-    config = {};
-  }
-  if (config["ytype"] === undefined) {
-    const log_btn = $('.hc_switch_group button[data-action="set_log"][data-target="' + target + '"]');
-    if (log_btn.length && log_btn.hasClass("active")) config["ytype"] = "logarithmic";
-  }
+  // If Log10 button is there, check whether it's active by default
+  const log_btn = $('.hc_switch_group button[data-action="set_log"][data-target="' + plot.target + '"]');
+  if (log_btn.length && log_btn.hasClass("active")) plot.l_active = true;
 
-  // XY Line charts
-  if (plot.plot_type === "xy_line") {
-    if (max_num === undefined || plot["datasets"][0].length < max_num) {
-      plot_xy_line_graph(plot, target, dataset_idx);
-      $("#" + target).removeClass("not_rendered");
-    } else {
-      $("#" + target)
-        .addClass("not_rendered gt_max_num_ds")
-        .html('<button class="btn btn-default btn-lg render_plot">Show plot</button>');
-    }
-  }
-  // Bar graphs
-  else if (plot.plot_type === "bar_graph") {
-    if (max_num === undefined || plot["samples"][0].length < max_num) {
-      plot_stacked_bar_graph(plot, target, dataset_idx);
-      $("#" + target).removeClass("not_rendered");
-    } else {
-      $("#" + target)
-        .addClass("not_rendered gt_max_num_ds")
-        .html('<button class="btn btn-default btn-lg render_plot">Show plot</button>');
-    }
-  }
-  // Scatter plots
-  else if (plot["plot_type"] === "scatter") {
-    if (max_num === undefined || Object.keys(plot["datasets"][0]).length < max_num) {
-      plot_scatter_plot(plot, target, dataset_idx);
-      $("#" + target).removeClass("not_rendered");
-    } else {
-      $("#" + target)
-        .addClass("not_rendered gt_max_num_ds")
-        .html('<button class="btn btn-default btn-lg render_plot">Show plot</button>');
-    }
-  }
-  // Beeswarm graphs
-  else if (plot["plot_type"] === "beeswarm") {
-    if (max_num === undefined || plot["samples"][0].length < max_num) {
-      plot_beeswarm_graph(plot, target, dataset_idx);
-      $("#" + target).removeClass("not_rendered");
-    } else {
-      $("#" + target)
-        .addClass("not_rendered gt_max_num_ds")
-        .html('<button class="btn btn-default btn-lg render_plot">Show plot</button>');
-    }
-  }
-  // Heatmap plots
-  else if (plot["plot_type"] === "heatmap") {
-    if (max_num === undefined || plot["xcats"][0].length < max_num) {
-      plot_heatmap(plot, target, dataset_idx);
-      $("#" + target).removeClass("not_rendered");
-    } else {
-      $("#" + target)
-        .addClass("not_rendered gt_max_num_ds")
-        .html('<button class="btn btn-default btn-lg render_plot">Show plot</button>');
-    }
-  }
-  // Not recognised
-  else {
-    console.log("Did not recognise plot type: " + plot["plot_type"]);
-  }
+  let traces = plot.build_traces();
+  Plotly.newPlot(target, traces, plot.layout, {
+    displayModeBar: true,
+    displaylogo: false,
+    modeBarButtonsToRemove: [
+      "lasso2d",
+      "autoScale2d",
+      "pan2d",
+      "select2d",
+      "zoom2d",
+      "zoomIn2d",
+      "zoomOut2d",
+      "resetScale2d",
+    ],
+  });
+
+  $("#" + target).removeClass("not_rendered");
+  if ($(".hc-plot.not_rendered").length === 0) $("#mqc-warning-many-samples").hide();
 }
 
 // Highlight text with a fadeout background colour highlight

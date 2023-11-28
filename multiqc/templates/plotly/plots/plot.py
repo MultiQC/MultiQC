@@ -90,6 +90,10 @@ def base_layout(pconfig) -> go.Layout:
     """
     Layout object for the line plot.
     """
+    # if pconfig.xmin is not None or pconfig.xmax is not None:
+    #     xrange = [pconfig.xmin, pconfig.xmax]
+    # if pconfig.ymin is not None or pconfig.ymax is not None:
+    #     yrange = [pconfig.ymin, pconfig.ymax]
     layout = go.Layout(
         title=dict(
             text=pconfig.title,
@@ -97,13 +101,17 @@ def base_layout(pconfig) -> go.Layout:
             x=0.5,
             font=dict(size=20),
         ),
-        yaxis=dict(
-            title=dict(text=pconfig.ylab),
-            gridcolor="rgba(0,0,0,0.1)",
-        ),
         xaxis=dict(
             title=dict(text=pconfig.xlab),
             gridcolor="rgba(0,0,0,0.1)",
+            rangemode="tozero" if pconfig.xmin == 0 else "normal",
+            range=[pconfig.xmin, pconfig.xmax],
+        ),
+        yaxis=dict(
+            title=dict(text=pconfig.ylab),
+            gridcolor="rgba(0,0,0,0.1)",
+            rangemode="tozero" if pconfig.ymin == 0 else "normal",
+            range=[pconfig.ymin, pconfig.ymax],
         ),
         paper_bgcolor="rgba(0,0,0,0)",
         plot_bgcolor="rgba(0,0,0,0)",
@@ -137,10 +145,6 @@ def base_layout(pconfig) -> go.Layout:
             activecolor="rgba(0, 0, 0, 1)",
         ),
     )
-    if pconfig.xmin is not None or pconfig.xmax is not None:
-        layout.xaxis.range = [pconfig.xmin, pconfig.xmax]
-    if pconfig.ymin is not None or pconfig.ymax is not None:
-        layout.yaxis.range = [pconfig.ymin, pconfig.ymax]
     return layout
 
 

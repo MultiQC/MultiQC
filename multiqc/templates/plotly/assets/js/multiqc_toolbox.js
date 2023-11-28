@@ -870,13 +870,13 @@ function apply_mqc_renamesamples() {
 function apply_mqc_hidesamples(mode) {
   // Collect the filters into an array
   if (mode === undefined) {
-    mode = $(".mqc_hidesamples_showhide:checked").val() == "show" ? "show" : "hide";
+    mode = $(".mqc_hidesamples_showhide:checked").val() === "show" ? "show" : "hide";
   }
-  var regex_mode = $("#mqc_hidesamples .mqc_regex_mode .re_mode").hasClass("on");
-  var f_texts = [];
-  var num_errors = 0;
+  let regex_mode = $("#mqc_hidesamples .mqc_regex_mode .re_mode").hasClass("on");
+  let f_texts = [];
+  let num_errors = 0;
   $("#mqc_hidesamples_filters li").each(function () {
-    var pattern = $(this).find(".f_text").val();
+    let pattern = $(this).find(".f_text").val();
     // Validate RegExp
     $(this).removeClass("bg-danger");
     if (regex_mode && !validate_regexp(pattern)) {
