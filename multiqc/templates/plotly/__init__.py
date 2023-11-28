@@ -9,7 +9,7 @@ from HighCharts to Plotly.
 """
 import os
 
-from .plots import bargraph, linegraph
+from .plots import bar_plot, line_plot, scatter_plot
 
 template_parent = "default"
 
@@ -19,5 +19,8 @@ base_fn = "base.html"
 base64_plots = False
 
 
-bargraph = bargraph.bargraph
-linegraph = linegraph.linegraph
+bargraph = bar_plot.bar_plot
+linegraph = line_plot.line_plot
+scatter_plot = scatter_plot.scatter_plot
+
+__all__ = ["bargraph", "linegraph", "scatter_plot"]

@@ -25,8 +25,8 @@ class Plot {
     this.layout = data.layout;
     // Dynamic fields
     this.active_dataset_idx = 0;
-    this.p_active = data.pconfig.p_active;
-    this.l_active = data.pconfig.l_active;
+    this.p_active = data.p_active;
+    this.l_active = data.l_active;
   }
 }
 
@@ -36,6 +36,9 @@ function init_plot(target, data) {
   }
   if (data.plot_type === "bar_graph") {
     return new BarPlot(target, data);
+  }
+  if (data.plot_type === "scatter") {
+    return new ScatterPlot(target, data);
   }
   console.log("Did not recognise plot type: " + data.plot_type);
   return null;
@@ -62,7 +65,7 @@ $(function () {
     // Deferring each plot call prevents browser from locking up
     setTimeout(function () {
       let plot = mqc_plots[target];
-      if (plot.active_dataset_size() > max_num) {
+      if (plot.activeDatasetSize() > max_num) {
         $("#" + target)
           .addClass("not_rendered gt_max_num_ds")
           .html('<button class="btn btn-default btn-lg render_plot">Show plot</button>');
@@ -311,7 +314,7 @@ function render_plot(target) {
   const log_btn = $('.hc_switch_group button[data-action="set_log"][data-target="' + plot.target + '"]');
   if (log_btn.length && log_btn.hasClass("active")) plot.l_active = true;
 
-  let traces = plot.build_traces();
+  let traces = plot.buildTraces();
   Plotly.newPlot(target, traces, plot.layout, {
     displayModeBar: true,
     displaylogo: false,

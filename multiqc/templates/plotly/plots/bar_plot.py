@@ -18,7 +18,7 @@ from multiqc.utils import config, util_functions
 logger = logging.getLogger(__name__)
 
 
-def bargraph(
+def bar_plot(
     datasets: List[List[Dict]],
     samples_lists: List[List[str]],
     pconfig: Dict,

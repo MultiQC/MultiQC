@@ -4,13 +4,13 @@ class LinePlot extends Plot {
     this.datasets = data.datasets;
   }
 
-  active_dataset_size() {
+  activeDatasetSize() {
     if (this.datasets.length === 0) return 0;
     return this.datasets[this.active_dataset_idx].length;
   }
 
   // Constructs and returns traces for the Plotly plot
-  build_traces() {
+  buildTraces() {
     let dataset = this.datasets[this.active_dataset_idx];
 
     // Samples for active dataset
@@ -110,15 +110,8 @@ class LinePlot extends Plot {
 //     }
 //     Plotly.restyle(this.target, "x", xs);
 //     Plotly.restyle(this.target, "y", ys);
-//     // For some reason range breaks when restyling with new x and y
-//     // Figure out why?
-//     // let ymax_is_set = this.pconfig.ymax !== "undefined" && this.pconfig.ymax !== null;
-//     // let ymin_is_set = this.pconfig.ymin !== "undefined" && this.pconfig.ymin !== null;
-//     // let xmax_is_set = this.pconfig.xmax !== "undefined" && this.pconfig.xmax !== null;
-//     // let xmin_is_set = this.pconfig.xmin !== "undefined" && this.pconfig.xmin !== null;
-//     // if (ymin_is_set) Plotly.relayout(target, "yaxis.range[0]", this.pconfig.ymin);
-//     // if (ymax_is_set) Plotly.relayout(target, "yaxis.range[0]", this.pconfig.ymax);
-//     // if (xmin_is_set) Plotly.relayout(target, "xaxis.range[0]", this.pconfig.xmin);
-//     // if (xmax_is_set) Plotly.relayout(target, "xaxis.range[0]", this.pconfig.xmax);
+//     // Perhaps below is not needed:
+//     // Plotly.relayout(target, "yaxis.range", [this.pconfig.ymin, this.pconfig.ymax]);
+//     // Plotly.relayout(target, "xaxis.range", [this.pconfig.xmin, this.pconfig.xmax]);
 //   }
 // }

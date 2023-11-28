@@ -21,18 +21,14 @@ logger = logging.getLogger(__name__)
 SampleLineT = Dict[str, Union[str, List]]
 
 
-class LineGraphPConfig(PConfig):
+class ScatterPlotConfig(PConfig):
     def __init__(self, pconfig: Dict, *args):
         super().__init__(pconfig, *args)
         self.tt_decimals: Optional[int] = pconfig.get("tt_decimals")
         self.tt_suffix: str = pconfig.get("tt_suffix", "")
-        # self.tt_label: str = pconfig.get(
-        #     "tt_label",
-        #     f"%{{x}}: %{{y:,.{self.tt_decimals}f}}{self.tt_suffix}"
-        # )
 
 
-def linegraph(
+def scatter_plot(
     datasets: List[List[SampleLineT]],
     pconfig: Dict,
 ) -> str:
@@ -46,14 +42,14 @@ def linegraph(
 
     return add_to_report(
         datasets=datasets,
-        pconfig=LineGraphPConfig(pconfig, len(datasets)),
+        pconfig=ScatterPlotConfig(pconfig, len(datasets)),
         report=report,
     )
 
 
 def add_to_report(
     datasets: List[List[SampleLineT]],
-    pconfig: LineGraphPConfig,
+    pconfig: ScatterPlotConfig,
     report,
 ) -> str:
     """
@@ -94,7 +90,7 @@ def add_to_report(
         return html
 
 
-def _layout(pconfig: LineGraphPConfig) -> go.Layout:
+def _layout(pconfig: ScatterPlotConfig) -> go.Layout:
     """
     Customise plot layout.
     """
@@ -115,7 +111,7 @@ def _layout(pconfig: LineGraphPConfig) -> go.Layout:
 
 def _datasets_to_interactive_imgs(
     datasets: List[List[SampleLineT]],
-    pconfig: LineGraphPConfig,
+    pconfig: ScatterPlotConfig,
     pid: str,
 ) -> str:
     html = '<div class="mqc_hcplot_plotgroup">'
@@ -164,7 +160,7 @@ def _datasets_to_interactive_imgs(
 
 def _datasets_to_flat_imgs(
     datasets: List[List[SampleLineT]],
-    pconfig: LineGraphPConfig,
+    pconfig: ScatterPlotConfig,
     pid: str,
     pids: List[str],
     no_js: bool = False,
@@ -201,7 +197,7 @@ def _datasets_to_flat_imgs(
 def _save_data_file(
     pid: str,
     dataset: List[SampleLineT],
-    pconfig: LineGraphPConfig,
+    pconfig: ScatterPlotConfig,
 ) -> None:
     fdata = dict()
     last_cats = None
@@ -243,7 +239,7 @@ def _dataset_to_imgs(
     pidx: int,
     pid: str,
     dataset: List[SampleLineT],
-    pconfig: LineGraphPConfig,
+    pconfig: ScatterPlotConfig,
 ) -> str:
     """
     Build a static images for different views of a dataset (counts, log scale),
@@ -313,7 +309,7 @@ def _view_to_img(
     view: View,
     pidx: int,
     pid: str,
-    pconfig: LineGraphPConfig,
+    pconfig: ScatterPlotConfig,
     config,
 ) -> str:
     """

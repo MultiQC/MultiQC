@@ -6,13 +6,13 @@ class BarPlot extends Plot {
     }
   }
 
-  active_dataset_size() {
+  activeDatasetSize() {
     if (this.datasets.length === 0) return 0;
     return this.datasets[this.active_dataset_idx].samples.length;
   }
 
   // Constructs and returns traces for the Plotly plot
-  build_traces() {
+  buildTraces() {
     let dataset = this.datasets[this.active_dataset_idx];
 
     // Rename samples
@@ -59,6 +59,7 @@ class BarPlot extends Plot {
     return traces;
   }
 
+  // TODO: perhaps use it or Plotly.react
   // replot() {
   //   // Updates plot given new underlying data
   //   let dataset = this.datasets[this.active_dataset_idx];
