@@ -1,37 +1,34 @@
 class BarPlot extends Plot {
-  constructor(target, data) {
-    super(target, data);
-    for (let i = 0; i < data.datasets.length; i++) {
-      data.datasets[i].samples = data.samples[i];
-    }
-  }
-
-  activeDatasetSize() {
-    if (this.datasets.length === 0) return 0;
-    return this.datasets[this.active_dataset_idx].samples.length;
+  activeDatasetSamples() {
+    if (this.datasets.length === 0) return [];
+    let ds = this.datasets[this.active_dataset_idx];
+    if (ds.length === 0) return []; // no categories
+    let cat = ds[0]; // samples should be same in every category
+    return cat["samples"];
   }
 
   // Constructs and returns traces for the Plotly plot
   buildTraces() {
     let dataset = this.datasets[this.active_dataset_idx];
+    let samples = this.activeDatasetSamples();
 
     // Rename samples
-    rename_samples(dataset.samples, function (sample_idx, new_name) {
-      dataset.samples[sample_idx] = new_name;
+    renameSamples(samples, function (sample_idx, new_name) {
+      for (let cat of dataset) cat["samples"][sample_idx] = new_name;
     });
 
     // Hide samples
     let plot_group_div = $("#" + this.target).closest(".mqc_hcplot_plotgroup");
-    let idx_to_hide = hide_samples(plot_group_div, dataset.samples);
-    if (idx_to_hide.length === dataset.samples.length)
+    let idx_to_hide = hideSamples(plot_group_div, samples);
+    if (idx_to_hide.length === samples.length)
       // All series are hidden. Do not render the graph.
       return;
 
     // Filter out hidden samples
-    let visible_samples = dataset.samples.filter((x, i) => !idx_to_hide.includes(i));
+    let visible_samples = samples.filter((x, i) => !idx_to_hide.includes(i));
 
     // Highlight samples
-    let highlight_colors = get_highlight_colors(visible_samples);
+    let highlight_colors = getHighlightColors(visible_samples);
     // Remove grey, as we don't need to remove default coloring of background samples
     highlight_colors = highlight_colors.map((x) => (x === "#cccccc" ? null : x));
 

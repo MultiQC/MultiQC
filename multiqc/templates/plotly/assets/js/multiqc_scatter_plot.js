@@ -1,9 +1,5 @@
 // Scatter plot
 class ScatterPlot extends Plot {
-  constructor(target, data) {
-    super(target, data);
-  }
-
   activeDatasetSize() {}
 
   // Constructs and returns traces for the Plotly plot
@@ -15,13 +11,13 @@ class ScatterPlot extends Plot {
     for (let sdata of dataset) samples.push(sdata.name);
 
     // Rename samples
-    rename_samples(dataset.samples, function (sample_idx, new_name) {
+    renameSamples(dataset.samples, function (sample_idx, new_name) {
       dataset.samples[sample_idx] = new_name;
     });
 
     // Hide samples
     let plot_group_div = $("#" + this.target).closest(".mqc_hcplot_plotgroup");
-    let idx_to_hide = hide_samples(plot_group_div, samples);
+    let idx_to_hide = hideSamples(plot_group_div, samples);
     if (idx_to_hide.length === samples.length)
       // All series hidden. Hide the graph.
       return;
@@ -29,7 +25,7 @@ class ScatterPlot extends Plot {
     let visible_dataset = dataset.filter((x, i) => !idx_to_hide.includes(i));
 
     // Highlight samples
-    let highlight_colors = get_highlight_colors(visible_samples);
+    let highlight_colors = getHighlightColors(visible_samples);
 
     // // Highlight samples
     // if (window.mqc_highlight_f_texts.length > 0) {

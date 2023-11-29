@@ -65,12 +65,12 @@ $(function () {
     // Deferring each plot call prevents browser from locking up
     setTimeout(function () {
       let plot = mqc_plots[target];
-      if (plot.activeDatasetSize() > max_num) {
+      if (plot.activeDatasetSamples().length > max_num) {
         $("#" + target)
           .addClass("not_rendered gt_max_num_ds")
           .html('<button class="btn btn-default btn-lg render_plot">Show plot</button>');
       } else {
-        render_plot(target);
+        renderPlot(target);
         if ($(".hc-plot.not_rendered:visible:not(.gt_max_num_ds)").length === 0)
           // All plots rendered successfully (or hidden with gt_max_num_ds), so hiding the warning
           $(".mqc_loading_warning").hide();
@@ -83,13 +83,13 @@ $(function () {
 
   // Render a plot when clicked (heavy plots are not automatically rendered by default)
   $("body").on("click", ".render_plot", function (e) {
-    render_plot($(this).parent().attr("id"));
+    renderPlot($(this).parent().attr("id"));
   });
 
   // Render all plots from header, even those that are hidden
   $("#mqc-render-all-plots").click(function () {
     $(".hc-plot.not_rendered").each(function () {
-      render_plot($(this).attr("id"));
+      renderPlot($(this).attr("id"));
     });
   });
 
@@ -97,7 +97,7 @@ $(function () {
   $(document).on("mqc_highlights mqc_renamesamples mqc_hidesamples", function () {
     // Replot graphs
     $(".hc-plot:not(.not_rendered)").each(function () {
-      render_plot($(this).attr("id"));
+      renderPlot($(this).attr("id"));
     });
   });
 
@@ -111,7 +111,7 @@ $(function () {
     $(this).toggleClass("active");
 
     // Replot graphs
-    render_plot(target);
+    renderPlot(target);
     // mqc_plots[target].replot();
     Plotly.relayout(target, "xaxis.tickformat", mqc_plots[target].p_active ? ".0%" : "");
   });
@@ -138,7 +138,7 @@ $(function () {
     let new_dataset_idx = $(this).data("dataset_index");
     mqc_plots[target].active_dataset_idx = new_dataset_idx;
     if (active_dataset_idx === new_dataset_idx) return;
-    render_plot(target);
+    renderPlot(target);
     // mqc_plots[target].replot();
   });
 
@@ -228,7 +228,7 @@ $(function () {
 
 // General function to rename samples. Takes a list of samples and a callback from
 // plot-specific functions like plot_bar_graph() or plot_xy_line_graph()
-function rename_samples(samples, rename_sample_func) {
+function renameSamples(samples, rename_sample_func) {
   if (window.mqc_rename_f_texts.length > 0) {
     for (let s_idx = 0; s_idx < samples.length; s_idx++) {
       for (let p_idx = 0; p_idx < window.mqc_rename_f_texts.length; p_idx++) {
@@ -243,7 +243,7 @@ function rename_samples(samples, rename_sample_func) {
 }
 
 // General function to highlight samples
-function get_highlight_colors(samples) {
+function getHighlightColors(samples) {
   let highlight_colors = [];
   if (window.mqc_highlight_f_texts.length > 0) {
     $.each(samples, function (sample_idx, s_name) {
@@ -263,7 +263,7 @@ function get_highlight_colors(samples) {
 }
 
 // Hiding samples. Returns indices of samples in the "samples" array
-function hide_samples(plot_group_div, samples) {
+function hideSamples(plot_group_div, samples) {
   plot_group_div.parent().find(".samples-hidden-warning").remove();
   plot_group_div.show();
 
@@ -302,9 +302,10 @@ function hide_samples(plot_group_div, samples) {
 }
 
 // Call to render any plot
-function render_plot(target) {
+function renderPlot(target) {
   let plot = mqc_plots[target];
   if (plot === undefined) return false;
+  if (plot.datasets.length === 0) return false;
 
   // If there is an active dataset button and set automatically
   let ds_buttons = $('.hc_switch_group button[data-action="set_data"][data-target="' + plot.target + '"]');

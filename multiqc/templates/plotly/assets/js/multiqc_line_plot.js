@@ -1,30 +1,23 @@
 class LinePlot extends Plot {
-  constructor(target, data) {
-    super(target, data);
-    this.datasets = data.datasets;
-  }
-
-  activeDatasetSize() {
-    if (this.datasets.length === 0) return 0;
-    return this.datasets[this.active_dataset_idx].length;
+  activeDatasetSamples() {
+    if (this.datasets.length === 0) return [];
+    let dataset = this.datasets[this.active_dataset_idx];
+    return dataset.map((sdata) => sdata.name);
   }
 
   // Constructs and returns traces for the Plotly plot
   buildTraces() {
     let dataset = this.datasets[this.active_dataset_idx];
-
-    // Samples for active dataset
-    let samples = [];
-    for (let sdata of dataset) samples.push(sdata.name);
+    let samples = this.activeDatasetSamples();
 
     // Rename samples
-    rename_samples(samples, function (sample_idx, new_name) {
+    renameSamples(samples, function (sample_idx, new_name) {
       dataset[sample_idx]["name"] = new_name;
     });
 
     // Hide samples
     let plot_group_div = $("#" + this.target).closest(".mqc_hcplot_plotgroup");
-    let idx_to_hide = hide_samples(plot_group_div, samples);
+    let idx_to_hide = hideSamples(plot_group_div, samples);
     if (idx_to_hide.length === samples.length)
       // All series hidden. Hide the graph.
       return;
@@ -32,7 +25,7 @@ class LinePlot extends Plot {
     let visible_dataset = dataset.filter((x, i) => !idx_to_hide.includes(i));
 
     // Highlight samples
-    let highlight_colors = get_highlight_colors(visible_samples);
+    let highlight_colors = getHighlightColors(visible_samples);
 
     // Toggle buttons for Y-axis limis
     // Handler for this is at top, so doesn't get created multiple times
