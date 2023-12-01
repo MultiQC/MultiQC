@@ -11,6 +11,7 @@
 - Create CODE_OF_CONDUCT.md ([#2195](https://github.com/ewels/MultiQC/pull/2195))
 - BCLConvert: fix mean quality, fix count-per-lane barplot ([#2197](https://github.com/ewels/MultiQC/pull/2197))
 - Re-add `run()` into the `multiqc` namespace ([#2202](https://github.com/ewels/MultiQC/pull/2202))
+- change header keys in genstats for kraken module ([#2205](https://github.com/ewels/MultiQC/pull/2205))
 
 ### New Modules
 
