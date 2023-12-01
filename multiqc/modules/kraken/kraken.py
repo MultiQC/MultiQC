@@ -289,7 +289,7 @@ class MultiqcModule(BaseMultiqcModule):
         # unclassified is included separately, so also don't include twice
         if top_rank_code != "U":
             top_one = "% {}".format(top_taxa[0])
-            headers['pct_top_one'] = {
+            headers["pct_top_one"] = {
                 "title": top_one,
                 "description": "Percentage of reads that were the top {} over all samples - {}".format(
                     top_rank_name, top_taxa[0]
@@ -328,10 +328,10 @@ class MultiqcModule(BaseMultiqcModule):
                 if row["rank_code"] == top_rank_code and row["classif"] in top_taxa:
                     tdata[s_name]["pct_top_n"] = percent + tdata[s_name].get("pct_top_n", 0)
                 if row["rank_code"] == top_rank_code and row["classif"] == top_taxa[0]:
-                    tdata[s_name]['pct_top_one'] = percent
+                    tdata[s_name]["pct_top_one"] = percent
 
-            if top_one is not None and 'pct_top_one' not in tdata[s_name]:
-                tdata[s_name]['pct_top_one'] = 0
+            if top_one is not None and "pct_top_one" not in tdata[s_name]:
+                tdata[s_name]["pct_top_one"] = 0
 
         self.general_stats_addcols(tdata, headers)
 
