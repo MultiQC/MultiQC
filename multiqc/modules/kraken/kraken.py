@@ -283,14 +283,14 @@ class MultiqcModule(BaseMultiqcModule):
         # Column headers
         headers = dict()
 
-        top_one_hkey = None
+        top_one = None
 
         # don't include top-N % in general stats if all is unclassified.
         # unclassified is included separately, so also don't include twice
         if top_rank_code != "U":
-            top_one_hkey = "% {}".format(top_taxa[0])
-            headers[top_one_hkey] = {
-                "title": top_one_hkey,
+            top_one = "% {}".format(top_taxa[0])
+            headers['pct_top_one'] = {
+                "title": top_one,
                 "description": "Percentage of reads that were the top {} over all samples - {}".format(
                     top_rank_name, top_taxa[0]
                 ),
@@ -298,7 +298,7 @@ class MultiqcModule(BaseMultiqcModule):
                 "max": 100,
                 "scale": "PuBuGn",
             }
-            headers["% Top"] = {
+            headers["pct_top_n"] = {
                 "title": f"% Top {self.top_n} {top_rank_name}",
                 "description": f"Percentage of reads that were classified by one of the top-{self.top_n} {top_rank_name} ({', '.join(top_taxa)})",
                 "suffix": "%",
@@ -306,7 +306,7 @@ class MultiqcModule(BaseMultiqcModule):
                 "scale": "PuBu",
             }
 
-        headers["% Unclassified"] = {
+        headers["pct_unclassified"] = {
             "title": "% Unclassified",
             "description": "Percentage of reads that were unclassified",
             "suffix": "%",
@@ -324,14 +324,14 @@ class MultiqcModule(BaseMultiqcModule):
                 except ZeroDivisionError:
                     percent = 0
                 if row["rank_code"] == "U":
-                    tdata[s_name]["% Unclassified"] = percent
+                    tdata[s_name]["pct_unclassified"] = percent
                 if row["rank_code"] == top_rank_code and row["classif"] in top_taxa:
-                    tdata[s_name]["% Top"] = percent + tdata[s_name].get("% Top", 0)
+                    tdata[s_name]["pct_top_n"] = percent + tdata[s_name].get("pct_top_n", 0)
                 if row["rank_code"] == top_rank_code and row["classif"] == top_taxa[0]:
-                    tdata[s_name][top_one_hkey] = percent
+                    tdata[s_name]['pct_top_one'] = percent
 
-            if top_one_hkey is not None and top_one_hkey not in tdata[s_name]:
-                tdata[s_name][top_one_hkey] = 0
+            if top_one is not None and 'pct_top_one' not in tdata[s_name]:
+                tdata[s_name]['pct_top_one'] = 0
 
         self.general_stats_addcols(tdata, headers)
 
