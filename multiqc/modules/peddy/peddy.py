@@ -63,7 +63,7 @@ class MultiqcModule(BaseMultiqcModule):
                         except KeyError:
                             self.peddy_data[s_name] = parsed_data[s_name]
 
-        # parse background PCA JSON file, this is identitical for all peddy runs,
+        # parse background PCA JSON file, this is identical for all peddy runs,
         # so just parse the first one we find
         for f in self.find_log_files("peddy/background_pca"):
             background = json.loads(f["f"])
@@ -201,8 +201,19 @@ class MultiqcModule(BaseMultiqcModule):
         d = self.peddy_data.pop("background_pca", {})
         if d:
             background = [
-                {"x": pc1, "y": pc2, "color": default_background_color, "name": ancestry, "marker_size": 1}
-                for pc1, pc2, ancestry in zip(d["PC1"], d["PC2"], d["ancestry"])
+                {
+                    "x": pc1,
+                    "y": pc2,
+                    "name": ancestry,
+                    "color": default_background_color,
+                    "opacity": 0.5,
+                    "marker_size": 3,
+                }
+                for pc1, pc2, ancestry in zip(
+                    d["PC1"],
+                    d["PC2"],
+                    d["ancestry"],
+                )
             ]
             data["background"] = background
 
@@ -219,7 +230,7 @@ class MultiqcModule(BaseMultiqcModule):
             "title": "Peddy: PCA Plot",
             "xlab": "PC1",
             "ylab": "PC2",
-            "marker_size": 5,
+            "marker_size": 10,
             "marker_line_width": 0,
         }
 
@@ -295,7 +306,10 @@ class MultiqcModule(BaseMultiqcModule):
 
         for s_name, d in self.peddy_data.items():
             if "sex_het_ratio" in d and "ped_sex_sex_check" in d:
-                data[s_name] = {"x": sex_index.get(d["ped_sex_sex_check"], 2), "y": d["sex_het_ratio"]}
+                data[s_name] = {
+                    "x": sex_index.get(d["ped_sex_sex_check"], 2),
+                    "y": d["sex_het_ratio"],
+                }
 
         pconfig = {
             "id": "peddy_sex_check_plot",

@@ -34,8 +34,8 @@ def plot(data, pconfig=None):
 
     # Allow user to overwrite any given config for this plot
     if "id" in pconfig and pconfig["id"] and pconfig["id"] in config.custom_plot_config:
-        for k, v in config.custom_plot_config[pconfig["id"]].items():
-            pconfig[k] = v
+        for point, v in config.custom_plot_config[pconfig["id"]].items():
+            pconfig[point] = v
 
     # Given one dataset - turn it into a list
     if not isinstance(data, list):
@@ -55,29 +55,32 @@ def plot(data, pconfig=None):
 
             if not isinstance(ds[s_name], list):
                 ds[s_name] = [ds[s_name]]
-            for k in ds[s_name]:
-                if k["x"] is not None:
-                    if "xmax" in series_config and float(k["x"]) > float(series_config["xmax"]):
+            for point in ds[s_name]:
+                if point["x"] is not None:
+                    if "xmax" in series_config and float(point["x"]) > float(series_config["xmax"]):
                         continue
-                    if "xmin" in series_config and float(k["x"]) < float(series_config["xmin"]):
+                    if "xmin" in series_config and float(point["x"]) < float(series_config["xmin"]):
                         continue
-                if k["y"] is not None:
-                    if "ymax" in series_config and float(k["y"]) > float(series_config["ymax"]):
+                if point["y"] is not None:
+                    if "ymax" in series_config and float(point["y"]) > float(series_config["ymax"]):
                         continue
-                    if "ymin" in series_config and float(k["y"]) < float(series_config["ymin"]):
+                    if "ymin" in series_config and float(point["y"]) < float(series_config["ymin"]):
                         continue
-                this_series = {"x": k["x"], "y": k["y"]}
+                this_series = {"x": point["x"], "y": point["y"]}
                 try:
-                    this_series["name"] = "{}: {}".format(s_name, k["name"])
+                    this_series["name"] = "{}: {}".format(s_name, point["name"])
                 except KeyError:
                     this_series["name"] = s_name
-                try:
-                    this_series["color"] = k["color"]
-                except KeyError:
-                    try:
-                        this_series["color"] = series_config["colors"][s_name]
-                    except KeyError:
-                        pass
+
+                for k in ["color", "opacity", "marker_size", "marker_line_width"]:
+                    if k in point:
+                        this_series[k] = point[k]
+                    elif k in series_config:
+                        v = series_config[k]
+                        if isinstance(v, dict) and s_name in v:
+                            this_series[k] = v[s_name]
+                        else:
+                            this_series[k] = v
                 d.append(this_series)
         plotdata.append(d)
 

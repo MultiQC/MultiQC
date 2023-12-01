@@ -33,6 +33,7 @@ class Plot(ABC):
             self.id = f"mqc_{is_static_suf}plot_{uniq_suffix}"
         self.height = pconfig.get("height")
         self.do_save_data_file: bool = pconfig.get("save_data_file", True)
+        self.categories = pconfig.get("categories", [])
 
         # Counts / Percentages / Log10 switch
         self.add_log_tab = pconfig.get("logswitch", False)
@@ -63,7 +64,9 @@ class Plot(ABC):
                     f"Invalid data_labels type: {type(data_labels[idx])}. " f"Must be a string or a dictionary."
                 )
                 data_labels[idx] = {"name": str(idx + 1)}
-            data_labels[idx]["uid"] = f"{self.id}_{idx + 1}"
+            data_labels[idx]["uid"] = self.id
+            if num_datasets > 1:
+                data_labels[idx]["uid"] += f"_{idx + 1}"
         self.data_labels: List[Dict[str, str]] = data_labels
 
         # Add initial axis labels if defined in `data_labels` but not main config
@@ -81,10 +84,6 @@ class Plot(ABC):
         """
         Layout object for the line plot.
         """
-        # if pconfig.xmin is not None or pconfig.xmax is not None:
-        #     xrange = [pconfig.xmin, pconfig.xmax]
-        # if pconfig.ymin is not None or pconfig.ymax is not None:
-        #     yrange = [pconfig.ymin, pconfig.ymax]
         layout = go.Layout(
             title=dict(
                 text=self.title,
@@ -95,12 +94,14 @@ class Plot(ABC):
             xaxis=dict(
                 title=dict(text=self.xlab),
                 gridcolor="rgba(0,0,0,0.1)",
+                zerolinecolor="rgba(0,0,0,0.1)",
                 rangemode="tozero" if self.xmin == 0 else "normal",
                 range=[self.xmin, self.xmax],
             ),
             yaxis=dict(
                 title=dict(text=self.ylab),
                 gridcolor="rgba(0,0,0,0.1)",
+                zerolinecolor="rgba(0,0,0,0.1)",
                 rangemode="tozero" if self.ymin == 0 else "normal",
                 range=[self.ymin, self.ymax],
             ),
@@ -110,9 +111,8 @@ class Plot(ABC):
             colorway=mqc_colour.mqc_colour_scale.COLORBREWER_SCALES["plot_defaults"],
             showlegend=False,
             autosize=True,
-            margin=dict(
-                pad=10,  # pad sample names a bit
-            ),
+            margin_pad=10,  # pad sample names a bit
+            hoverlabel_namelength=-1,  # do not crop sample names in hover labels
             annotations=[
                 dict(
                     text="Created with MultiQC",
@@ -148,7 +148,9 @@ class Plot(ABC):
         """
         self.id = report.save_htmlid(self.id)
         for dl in self.data_labels:
-            dl["uid"] = report.save_htmlid(f"{self.id}_{dl['name']}", skiplint=True)
+            dl["uid"] = self.id
+            if len(datasets) > 1:  # for flat plots, each dataset will have its own unique ID
+                dl["uid"] = report.save_htmlid(f"{self.id}_{dl['name']}", skiplint=True)
 
         if config.plots_force_flat:
             html = self.flat_plot(datasets)
@@ -165,7 +167,7 @@ class Plot(ABC):
         html += f'<div class="mqc_mplplot_plotgroup" id="{self.id}">'
 
         if not config.simple_output:
-            html += self.buttons(datasets, cls="mpl_switch_group")
+            html += self._buttons(datasets, cls="mpl_switch_group")
 
         # Go through datasets creating plots
         for ds_idx, dataset in enumerate(datasets):
@@ -174,41 +176,34 @@ class Plot(ABC):
             if self.do_save_data_file:
                 self.save_data_file(dataset, uid=uid)
 
-            html += self.write_img(
+            html += self._fig_to_static_html(
+                self._make_fig(dataset),
                 active=self.c_active != "" and ds_idx == 0,
                 fname=uid,
-                fig=self.make_fig(dataset),
             )
             if self.add_pct_tab:
-                html += self.write_img(
+                html += self._fig_to_static_html(
+                    self._make_fig(dataset, is_pct=True),
                     active=self.p_active != "" and ds_idx == 0,
                     fname=f"{uid}_pc",
-                    fig=self.make_fig(dataset, is_pct=True),
                 )
             if self.add_log_tab:
-                html += self.write_img(
+                html += self._fig_to_static_html(
+                    self._make_fig(dataset, is_log=True),
                     active=self.l_active != "" and ds_idx == 0,
                     fname=f"{uid}_log",
-                    fig=self.make_fig(dataset, is_log=True),
                 )
             if self.add_pct_tab and self.add_log_tab:
-                html += self.write_img(
+                html += self._fig_to_static_html(
+                    self._make_fig(dataset, is_pct=True, is_log=True),
                     active=self.p_active != "" and self.l_active != "" and ds_idx == 0,
                     fname=f"{uid}_pc_log",
-                    fig=self.make_fig(dataset, is_pct=True, is_log=True),
                 )
 
         html += "</div>"
         return html
 
-    @abstractmethod
-    def save_data_file(self, dataset: List, uid: str) -> None:
-        """
-        Save dataset to disk.
-        """
-
-    @abstractmethod
-    def make_fig(self, dataset: List, is_log=False, is_pct=False) -> go.Figure:
+    def _make_fig(self, dataset: List, is_log=False, is_pct=False) -> go.Figure:
         """
         Create a Plotly Figure object.
         """
@@ -228,9 +223,23 @@ class Plot(ABC):
                 }
             )
         fig = go.Figure(layout=layout)
+        self.populate_figure(fig, dataset, is_log, is_pct)
         return fig
 
-    def buttons(self, datasets, cls=""):
+    @abstractmethod
+    def populate_figure(self, fig: go.Figure, dataset: List, is_log=False, is_pct=False):
+        """
+        To be overridden by specific plots: add traces, updated layout if needed.
+        """
+        pass
+
+    @abstractmethod
+    def save_data_file(self, dataset: List, uid: str) -> None:
+        """
+        Save dataset to disk.
+        """
+
+    def _buttons(self, datasets, cls=""):
         """
         Add buttons: percentage on/off, log scale on/off, datasets switch panel
         """
@@ -285,7 +294,7 @@ class Plot(ABC):
 
     def interactive_plot(self, report, datasets) -> str:
         html = '<div class="mqc_hcplot_plotgroup">'
-        html += self.buttons(datasets, cls="interactive-switch-group")
+        html += self._buttons(datasets, cls="interactive-switch-group")
 
         # Plot HTML
         html += """
@@ -316,26 +325,26 @@ class Plot(ABC):
         return html
 
     @staticmethod
-    def write_img(
+    def _fig_to_static_html(
+        fig: go.Figure,
         active: bool,
         fname: str,
-        fig: go.Figure,
     ) -> str:
         """
         Build one static image, return an HTML wrapper.
         """
         # Save the plot to the data directory if export is requested
         if config.export_plots:
-            for fformat in config.export_plot_formats:
+            for file_ext in config.export_plot_formats:
                 # Make the directory if it doesn't already exist
-                plot_dir = Path(config.plots_dir) / fformat
+                plot_dir = Path(config.plots_dir) / file_ext
                 if not plot_dir.exists():
                     plot_dir.mkdir(parents=True, exist_ok=True)
                 # Save the plot
-                plot_fn = Path(plot_dir) / f"{fname}.{fformat}"
+                plot_fn = Path(plot_dir) / f"{fname}.{file_ext}"
                 fig.write_image(
                     plot_fn,
-                    format=fformat,
+                    format=file_ext,
                     width=fig.layout.width,
                     height=fig.layout.height,
                     scale=1,

@@ -1,77 +1,47 @@
-// Scatter plot
 class ScatterPlot extends Plot {
-  activeDatasetSize() {}
+  activeDatasetSamples() {
+    if (this.datasets.length === 0) return [];
+    let dataset = this.datasets[this.active_dataset_idx];
+    return dataset.map((element) => element.name);
+  }
 
   // Constructs and returns traces for the Plotly plot
   buildTraces() {
     let dataset = this.datasets[this.active_dataset_idx];
 
-    // Samples for active dataset
-    let samples = [];
-    for (let sdata of dataset) samples.push(sdata.name);
+    let samples = applyToolboxSettings(this.activeDatasetSamples());
+
+    // All series are hidden, do not render the graph.
+    if (samples == null) return;
 
     // Rename samples
-    renameSamples(dataset.samples, function (sample_idx, new_name) {
-      dataset.samples[sample_idx] = new_name;
-    });
+    dataset.map((element) => (element.name = samples[element.name].name));
 
-    // Hide samples
-    let plot_group_div = $("#" + this.target).closest(".mqc_hcplot_plotgroup");
-    let idx_to_hide = hideSamples(plot_group_div, samples);
-    if (idx_to_hide.length === samples.length)
-      // All series hidden. Hide the graph.
-      return;
-    let visible_samples = samples.filter((x, i) => !idx_to_hide.includes(i));
-    let visible_dataset = dataset.filter((x, i) => !idx_to_hide.includes(i));
+    // Filter out hidden samples
+    let visibleDataset = dataset.filter((element) => !samples[element.name].hidden);
 
-    // Highlight samples
-    let highlight_colors = getHighlightColors(visible_samples);
+    return visibleDataset.map((element) => {
+      let x = element.x;
+      if (this.pconfig["categories"] && Number.isInteger(x) && x < this.pconfig["categories"].length)
+        x = this.pconfig["categories"][x];
 
-    // // Highlight samples
-    // if (window.mqc_highlight_f_texts.length > 0) {
-    //   $.each(data, function (j, s) {
-    //     if ("marker" in data[j]) {
-    //       data[j]["marker"]["lineWidth"] = 0;
-    //     } else {
-    //       data[j]["marker"] = { lineWidth: 0 };
-    //     }
-    //     var match = false;
-    //     $.each(window.mqc_highlight_f_texts, function (idx, f_text) {
-    //       if (f_text == "") {
-    //         return true;
-    //       }
-    //       if (
-    //         (window.mqc_highlight_regex_mode && data[j]["name"].match(f_text)) ||
-    //         (!window.mqc_highlight_regex_mode && data[j]["name"].indexOf(f_text) > -1)
-    //       ) {
-    //         data[j]["color"] = window.mqc_highlight_f_cols[idx];
-    //         match = true;
-    //       }
-    //     });
-    //     if (!match) {
-    //       data[j]["color"] = "rgba(100,100,100,0.2)";
-    //     }
-    //   });
-    // }
-
-    return visible_dataset.map((sdata, si) => {
-      // let [x, y] = this.sdata_to_xy(dataset[i]);
-      let x, y;
-      if (sdata.data.length > 0 && Array.isArray(sdata.data[0])) {
-        x = sdata.data.map((x) => x[0]);
-        y = sdata.data.map((x) => x[1]);
-      } else {
-        x = [...Array(sdata.data.length).keys()];
-        y = sdata.data;
-      }
       return {
         type: "scatter",
-        x: x,
-        y: y,
-        name: sdata.name,
+        x: [x],
+        y: [element.y],
+        name: element.name,
         mode: "markers",
         marker: {
-          color: highlight_colors[si] || sdata.color,
+          // TODO: default size, width, color, etc are repetead here and in flat plotting python code
+          // we need to put these values into a plot config and reuse them here
+          // we can also sync python class and JS class by building the same pconfig and putting
+          // those values there, insted of saving __dict__ in python and then parsing it in JS as pconfig
+          size: element["marker_size"] ?? 10,
+          line: {
+            width: element["marker_line_width"] ?? 1,
+          },
+          color: samples[element.name].highlight ?? element["color"] ?? "rgba(124, 181, 236, .5)",
+          opacity: element["opacity"] ?? 1,
         },
         // hovertemplate: pconfig["tt_label"]
       };

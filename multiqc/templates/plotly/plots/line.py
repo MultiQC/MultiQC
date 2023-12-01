@@ -13,7 +13,7 @@ logger = logging.getLogger(__name__)
 
 
 # {"name": "SAMPLE1", "color": "#111111", "data": [[x, y], [x, y], ...]}
-SampleLineT = Dict[str, Union[str, List]]
+SampleLineT = Dict[str, Union[str, List[List[float]]]]
 
 
 def plot(
@@ -61,16 +61,14 @@ class LinePlot(Plot):
 
         return layout
 
-    def make_fig(self, dataset, is_log=False, is_pct=False):
-        fig = super().make_fig(dataset, is_log, is_pct)
-
-        for d in dataset:
-            if len(d["data"]) > 0 and isinstance(d["data"][0], list):
-                xs = [x[0] for x in d["data"]]
-                ys = [x[1] for x in d["data"]]
+    def populate_figure(self, fig: go.Figure, dataset: List[SampleLineT], is_log=False, is_pct=False):
+        for sample in dataset:
+            if len(sample["data"]) > 0 and isinstance(sample["data"][0], list):
+                xs = [x[0] for x in sample["data"]]
+                ys = [x[1] for x in sample["data"]]
             else:
-                xs = [x for x in range(len(d["data"]))]
-                ys = d["data"]
+                xs = [x for x in range(len(sample["data"]))]
+                ys = sample["data"]
             if is_log:
                 ys = [math.log10(y) if y else 0 for y in ys]
 
@@ -78,14 +76,14 @@ class LinePlot(Plot):
                 go.Scatter(
                     x=xs,
                     y=ys,
-                    name=d["name"],
+                    name=sample["name"],
                     mode="lines+markers",
                     marker=dict(size=5),
                 )
             )
         return fig
 
-    def save_data_file(self, dataset: List, uid: str) -> None:
+    def save_data_file(self, dataset: List[SampleLineT], uid: str) -> None:
         fdata = dict()
         last_cats = None
         shared_cats = True

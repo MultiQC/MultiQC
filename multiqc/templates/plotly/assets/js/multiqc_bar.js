@@ -10,50 +10,37 @@ class BarPlot extends Plot {
   // Constructs and returns traces for the Plotly plot
   buildTraces() {
     let dataset = this.datasets[this.active_dataset_idx];
-    let samples = this.activeDatasetSamples();
+
+    let samples = applyToolboxSettings(this.activeDatasetSamples());
+
+    // All series are hidden, do not render the graph.
+    if (samples == null) return;
 
     // Rename samples
-    renameSamples(samples, function (sample_idx, new_name) {
-      for (let cat of dataset) cat["samples"][sample_idx] = new_name;
-    });
-
-    // Hide samples
-    let plot_group_div = $("#" + this.target).closest(".mqc_hcplot_plotgroup");
-    let idx_to_hide = hideSamples(plot_group_div, samples);
-    if (idx_to_hide.length === samples.length)
-      // All series are hidden. Do not render the graph.
-      return;
+    dataset.each((cat) => cat["samples"].each((sn, i) => (cat["samples"][i] = samples[sn].name)));
 
     // Filter out hidden samples
-    let visible_samples = samples.filter((x, i) => !idx_to_hide.includes(i));
+    let visibleSamples = samples.filter((sn) => !samples[sn].hidden);
 
-    // Highlight samples
-    let highlight_colors = getHighlightColors(visible_samples);
-    // Remove grey, as we don't need to remove default coloring of background samples
-    highlight_colors = highlight_colors.map((x) => (x === "#cccccc" ? null : x));
-
-    // Render the plotly plot
-    let traces = [];
-    for (let cat of dataset) {
+    return dataset.map((cat) => {
       let data = this.p_active ? cat.data_pct : cat.data;
-      let visible_data = data.filter((x, i) => !idx_to_hide.includes(i));
-      let trace = {
+      let visibleData = data.filter((x, i) => !samples[d["samples"][i]].hidden);
+      return {
         type: "bar",
-        x: visible_data,
-        y: visible_samples,
+        x: visibleData,
+        y: visibleSamples,
         name: cat.name,
         orientation: "h",
         marker: {
           line: {
-            color: highlight_colors,
-            width: highlight_colors.map((x) => (x ? 2 : 0)),
+            // Remove grey from highlights, as we don't need to remove default coloring of background samples
+            color: samples.map((x) => (x.highlight && x.highlight !== "#cccccc" ? x.highlight : null)),
+            width: samples.map((x) => (x.highlight && x.highlight !== "#cccccc" ? 2 : 0)),
           },
         },
         marker_color: cat.color,
       };
-      traces.push(trace);
-    }
-    return traces;
+    });
   }
 
   // TODO: perhaps use it or Plotly.react

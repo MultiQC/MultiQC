@@ -826,21 +826,25 @@ function apply_mqc_highlights() {
 //////////////////////////////////////////////////////
 
 function apply_mqc_renamesamples() {
-  var valid_from_texts = [];
-  var valid_to_texts = [];
-  var regex_mode = $("#mqc_renamesamples .mqc_regex_mode .re_mode").hasClass("on");
-  var num_errors = 0;
+  let valid_from_texts = [];
+  let valid_to_texts = [];
+  let regex_mode = $("#mqc_renamesamples .mqc_regex_mode .re_mode").hasClass("on");
+  let num_errors = 0;
   // Collect filters
-  var f_texts = $("#mqc_renamesamples_filters > li").each(function () {
-    var from_text = $(this).find(".from_text").val();
-    var to_text = $(this).find(".to_text").val();
+  $("#mqc_renamesamples_filters > li").each(function () {
+    let from_text = $(this).find(".from_text").val();
     // Validate RegExp
     $(this).removeClass("bg-danger");
-    if (regex_mode && !validate_regexp(from_text)) {
-      $(this).addClass("bg-danger");
-      num_errors++;
+    if (regex_mode) {
+      if (!validate_regexp(from_text)) {
+        $(this).addClass("bg-danger");
+        num_errors++;
+        return;
+      }
+      from_text = new RegExp(from_text, "g");
     }
     valid_from_texts.push(from_text);
+    let to_text = $(this).find(".to_text").val();
     valid_to_texts.push(to_text);
   });
   if (num_errors > 0) {
@@ -856,10 +860,9 @@ function apply_mqc_renamesamples() {
 
   window.mqc_rename_f_texts = valid_from_texts;
   window.mqc_rename_t_texts = valid_to_texts;
-  window.mqc_rename_regex_mode = regex_mode;
 
   // Fire off a custom jQuery event for other javascript chunks to tie into
-  $(document).trigger("mqc_renamesamples", [window.mqc_rename_f_texts, window.mqc_rename_t_texts, regex_mode]);
+  $(document).trigger("mqc_renamesamples", [window.mqc_rename_f_texts, window.mqc_rename_t_texts]);
 
   return true;
 }

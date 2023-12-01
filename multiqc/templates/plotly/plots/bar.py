@@ -157,8 +157,8 @@ class BarPlot(Plot):
     #     html += "</div>"
     #     return html
 
-    def make_fig(self, dataset: List, is_log=False, is_pct=False) -> go.Figure:
-        fig = super().make_fig(dataset, is_log, is_pct)
+    def populate_figure(self, fig: go.Figure, dataset: List[Dict], is_log=False, is_pct=False) -> go.Figure:
+        fig = super()._make_fig(dataset, is_log, is_pct)
 
         categories: List[Dict] = dataset
         for cat in categories:
@@ -177,7 +177,7 @@ class BarPlot(Plot):
             )
         return fig
 
-    def save_data_file(self, dataset: List, uid: str) -> None:
+    def save_data_file(self, dataset: List[Dict], uid: str) -> None:
         fdata = {}
         for d in dataset:
             for d_idx, d_val in enumerate(d["data"]):

@@ -28,6 +28,12 @@ class Plot {
     this.p_active = data.p_active;
     this.l_active = data.l_active;
   }
+
+  dataSize() {
+    if (this.datasets.length === 0) return 0;
+    let dataset = this.datasets[this.active_dataset_idx];
+    return dataset.length;
+  }
 }
 
 function init_plot(target, data) {
@@ -65,7 +71,7 @@ $(function () {
     // Deferring each plot call prevents browser from locking up
     setTimeout(function () {
       let plot = mqc_plots[target];
-      if (plot.activeDatasetSamples().length > max_num) {
+      if (plot.dataSize() > max_num) {
         $("#" + target)
           .addClass("not_rendered gt_max_num_ds")
           .html('<button class="btn btn-default btn-lg render_plot">Show plot</button>');
@@ -227,80 +233,122 @@ $(function () {
   });
 });
 
-// General function to rename samples. Takes a list of samples and a callback from
-// plot-specific functions like plot_bar_graph() or plot_xy_line_graph()
-function renameSamples(samples, rename_sample_func) {
-  if (window.mqc_rename_f_texts.length > 0) {
-    for (let s_idx = 0; s_idx < samples.length; s_idx++) {
+// Highlighting, hiding and renaming samples. Takes a list of samples, returns
+// an object indexed by sample: {"name": "new_name", "highlight": "#cccccc", "hidden": false}
+function applyToolboxSettings(samples, target) {
+  // init object with default values
+  let d = Object.fromEntries(samples.map((name) => [name, { name: name, highlight: null, hidden: false }]));
+
+  // Rename samples
+  if (window.mqc_rename_f_texts) {
+    for (let name in samples) {
       for (let p_idx = 0; p_idx < window.mqc_rename_f_texts.length; p_idx++) {
         let pattern = window.mqc_rename_f_texts[p_idx];
-        if (window.mqc_rename_regex_mode) pattern = new RegExp(pattern, "g");
         let new_text = window.mqc_rename_t_texts[p_idx];
-        let new_name = samples[s_idx].replace(pattern, new_text);
-        rename_sample_func(s_idx, new_name);
+        d[name] = name.replace(pattern, new_text);
       }
     }
   }
-}
 
-// General function to highlight samples
-function getHighlightColors(samples) {
-  let highlight_colors = [];
-  if (window.mqc_highlight_f_texts.length > 0) {
-    $.each(samples, function (sample_idx, s_name) {
-      highlight_colors[sample_idx] = null;
-      $.each(window.mqc_highlight_f_texts, function (idx, f_text) {
-        if (
-          (window.mqc_highlight_regex_mode && s_name.match(f_text)) ||
-          (!window.mqc_highlight_regex_mode && s_name.indexOf(f_text) > -1)
-        ) {
-          // Make the data point in each series with this index have a border colour
-          highlight_colors[sample_idx] = window.mqc_highlight_f_cols[idx];
+  // Highlight samples
+  if (window.mqc_highlight_f_texts) {
+    for (let name in samples) {
+      for (let i = 0; i < window.mqc_highlight_f_texts.length; i++) {
+        const f_text = window.mqc_highlight_f_texts[i];
+        const f_col = window.mqc_highlight_f_cols[i];
+        let match = false;
+        if (window.mqc_highlight_regex_mode) {
+          if (name.match(f_text)) match = true;
+        } else {
+          if (name.indexOf(f_text) > -1) match = true;
         }
-      });
-    });
-  }
-  return highlight_colors;
-}
-
-// Hiding samples. Returns indices of samples in the "samples" array
-function hideSamples(plot_group_div, samples) {
-  plot_group_div.parent().find(".samples-hidden-warning").remove();
-  plot_group_div.show();
-
-  if (window.mqc_hide_f_texts.length === 0) return [];
-
-  let result = [];
-  for (let j = 0; j < samples.length; j++) {
-    let match = false;
-    for (let i = 0; i < window.mqc_hide_f_texts.length; i++) {
-      const f_text = window.mqc_hide_f_texts[i];
-      if (window.mqc_hide_regex_mode) {
-        if (samples[j].match(f_text)) match = true;
-      } else {
-        if (samples[j].indexOf(f_text) > -1) match = true;
+        if (match) d[name].highlight = f_col;
       }
     }
-    if (window.mqc_hide_mode === "show") {
-      match = !match;
-    }
-    if (match) {
-      result.push(j);
-    }
   }
-  // Some series hidden. Show a warning text string.
-  if (result.length > 0) {
-    const alert =
-      '<div class="samples-hidden-warning alert alert-warning"><span class="glyphicon glyphicon-info-sign"></span> <strong>Warning:</strong> ' +
-      result.length +
-      ' samples hidden. <a href="#mqc_hidesamples" class="alert-link" onclick="mqc_toolbox_openclose(\'#mqc_hidesamples\', true); return false;">See toolbox.</a></div>';
-    plot_group_div.before(alert);
-  }
-  // All series hidden. Hide the graph.
-  if (result.length === samples.length) plot_group_div.hide();
 
-  return result;
+  // Hide samples
+  if (window.mqc_hide_f_texts) {
+    let groupDiv = $("#" + target).closest(".mqc_hcplot_plotgroup");
+    groupDiv.parent().find(".samples-hidden-warning").remove();
+    groupDiv.show();
+
+    for (let name in samples) {
+      let match = false;
+      for (let i = 0; i < window.mqc_hide_f_texts.length; i++) {
+        const f_text = window.mqc_hide_f_texts[i];
+        if (window.mqc_hide_regex_mode) {
+          if (name.match(f_text)) match = true;
+        } else {
+          if (name.indexOf(f_text) > -1) match = true;
+        }
+      }
+      if (window.mqc_hide_mode === "show") match = !match;
+      if (match) d[name].hidden = true;
+    }
+
+    // Some series hidden. Show a warning text string.
+    let hidden = samples.filter((name) => d[name].hidden).length;
+    if (hidden > 0) {
+      const alert =
+        '<div class="samples-hidden-warning alert alert-warning">' +
+        '<span class="glyphicon glyphicon-info-sign"></span>' +
+        "<strong>Warning:</strong> " +
+        hidden +
+        " samples hidden. " +
+        '<a href="#mqc_hidesamples" class="alert-link" onclick="mqc_toolbox_openclose(\'#mqc_hidesamples\', true); return false;">See toolbox.</a>' +
+        "</div>";
+      groupDiv.before(alert);
+    }
+    // All series hidden. Hide the graph.
+    if (hidden === samples.length) {
+      groupDiv.hide();
+      return null;
+    }
+  }
+
+  // Return the object indexed by sample names
+  return d;
 }
+
+// // Hiding samples. Returns indices of samples in the "samples" array
+// function hideSamples(target, samples) {
+//   let plot_group_div = $("#" + target).closest(".mqc_hcplot_plotgroup");
+//   plot_group_div.parent().find(".samples-hidden-warning").remove();
+//   plot_group_div.show();
+//
+//   if (window.mqc_hide_f_texts.length === 0) return [];
+//
+//   let result = [];
+//   for (let j = 0; j < samples.length; j++) {
+//     let match = false;
+//     for (let i = 0; i < window.mqc_hide_f_texts.length; i++) {
+//       const f_text = window.mqc_hide_f_texts[i];
+//       if (window.mqc_hide_regex_mode) {
+//         if (samples[j].match(f_text)) match = true;
+//       } else {
+//         if (samples[j].indexOf(f_text) > -1) match = true;
+//       }
+//     }
+//     if (window.mqc_hide_mode === "show") {
+//       match = !match;
+//     }
+//     if (match) {
+//       result.push(j);
+//     }
+//   }
+//   // Some series hidden. Show a warning text string.
+//   if (result.length > 0) {
+//     const alert =
+//       '<div class="samples-hidden-warning alert alert-warning"><span class="glyphicon glyphicon-info-sign"></span> <strong>Warning:</strong> ' +
+//       result.length +
+//       ' samples hidden. <a href="#mqc_hidesamples" class="alert-link" onclick="mqc_toolbox_openclose(\'#mqc_hidesamples\', true); return false;">See toolbox.</a></div>';
+//     plot_group_div.before(alert);
+//   }
+//   // All series hidden. Hide the graph.
+//   if (result.length === samples.length) plot_group_div.hide();
+//   return result;
+// }
 
 // Call to render any plot
 function renderPlot(target) {
