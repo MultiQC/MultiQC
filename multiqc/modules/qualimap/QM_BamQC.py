@@ -143,13 +143,12 @@ def parse_genome_results(self, f):
         self.general_stats_data[s_name]["mean_coverage"] = d["mean_coverage"]
         self.general_stats_data[s_name]["regions_size"] = d["regions_size"]
         self.general_stats_data[s_name]["regions_mapped_reads"] = d["regions_mapped_reads"]
-        try:
+        if d["total_reads"] > 0:
             d["percentage_aligned"] = (d["mapped_reads"] / d["total_reads"]) * 100.0
-            self.general_stats_data[s_name]["percentage_aligned"] = d["percentage_aligned"]
+        self.general_stats_data[s_name]["percentage_aligned"] = d["percentage_aligned"]
+        if d["mapped_reads"] > 0:
             d["percentage_aligned_on_target"] = (d["regions_mapped_reads"] / d["mapped_reads"]) * 100.0
-            self.general_stats_data[s_name]["percentage_aligned_on_target"] = d["percentage_aligned_on_target"]
-        except ZeroDivisionError:
-            pass
+        self.general_stats_data[s_name]["percentage_aligned_on_target"] = d["percentage_aligned_on_target"]
     except KeyError:
         pass
 
