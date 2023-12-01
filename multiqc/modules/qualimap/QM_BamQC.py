@@ -135,22 +135,26 @@ def parse_genome_results(self, f):
     # Get a nice sample name
     s_name = self.clean_s_name(d["bam_file"], f)
 
+    if "general_error_rate" in d:
+        d["general_error_rate"] = d["general_error_rate"] * 100.0
+    if "mapped_reads" in d and "total_reads" in d and d["total_reads"] > 0:
+        d["percentage_aligned"] = (d["mapped_reads"] / d["total_reads"]) * 100.0
+    if "regions_mapped_reads" in d and "mapped_reads" in d and d["mapped_reads"] > 0:
+        d["percentage_aligned_on_target"] = (d["regions_mapped_reads"] / d["mapped_reads"]) * 100.0
+
     # Add to general stats table & calculate a nice % aligned
-    try:
-        self.general_stats_data[s_name]["total_reads"] = d["total_reads"]
-        self.general_stats_data[s_name]["mapped_reads"] = d["mapped_reads"]
-        self.general_stats_data[s_name]["general_error_rate"] = d["general_error_rate"] * 100.0
-        self.general_stats_data[s_name]["mean_coverage"] = d["mean_coverage"]
-        self.general_stats_data[s_name]["regions_size"] = d["regions_size"]
-        self.general_stats_data[s_name]["regions_mapped_reads"] = d["regions_mapped_reads"]
-        if d["total_reads"] > 0:
-            d["percentage_aligned"] = (d["mapped_reads"] / d["total_reads"]) * 100.0
-        self.general_stats_data[s_name]["percentage_aligned"] = d["percentage_aligned"]
-        if d["mapped_reads"] > 0:
-            d["percentage_aligned_on_target"] = (d["regions_mapped_reads"] / d["mapped_reads"]) * 100.0
-        self.general_stats_data[s_name]["percentage_aligned_on_target"] = d["percentage_aligned_on_target"]
-    except KeyError:
-        pass
+    for k in [
+        "total_reads",
+        "mapped_reads",
+        "general_error_rate",
+        "mean_coverage",
+        "regions_size",
+        "regions_mapped_reads",
+        "percentage_aligned",
+        "percentage_aligned_on_target",
+    ]:
+        if k in d:
+            self.general_stats_data[s_name][k] = d[k]
 
     # Save results
     if s_name in self.qualimap_bamqc_genome_results:
