@@ -10,6 +10,7 @@ import logging
 import random
 import string
 from abc import abstractmethod, ABC
+from enum import Enum
 from pathlib import Path
 from pprint import pprint
 from typing import Dict, Union, List
@@ -22,31 +23,36 @@ from multiqc.utils import mqc_colour, config
 logger = logging.getLogger(__name__)
 
 
+class PlotType(Enum):
+    LINE = "xy_line"
+    BAR = "bar_graph"
+    SCATTER = "scatter"
+    HEATMAP = "heatmap"
+
+
 class Plot(ABC):
-    def __init__(self, plot_type: str, pconfig: Dict, num_datasets: int):
-        self.plot_type = plot_type
-        self.title = pconfig.get("title")
+    """Structured version of plot config dictionary"""
+
+    def __init__(self, plot_type: PlotType, pconfig: Dict, num_datasets: int):
         self.id = pconfig.get("id")
         if self.id is None:  # ID of the plot group
             uniq_suffix = "".join(random.sample(string.ascii_lowercase, 10))
             is_static_suf = "static_" if config.plots_force_flat else ""
             self.id = f"mqc_{is_static_suf}plot_{uniq_suffix}"
+
+        self.plot_type = plot_type
+        self.title = pconfig.get("title")
         self.height = pconfig.get("height")
         self.do_save_data_file: bool = pconfig.get("save_data_file", True)
-        self.categories = pconfig.get("categories", [])
 
         # Counts / Percentages / Log10 switch
-        self.add_log_tab = pconfig.get("logswitch", False)
-        self.add_pct_tab = False
+        self.add_log_tab = pconfig.get("logswitch", False) and plot_type in [PlotType.BAR, PlotType.LINE]
+        self.add_pct_tab = pconfig.get("cpswitch", True) is not False and plot_type == PlotType.BAR
         self.c_label = pconfig.get("cpswitch_counts_label", "Counts")
         self.l_label = pconfig.get("logswitch_label", "Log10")
         self.p_label = pconfig.get("cpswitch_percent_label", "Percentages")
-        self.c_active = "active"
-        self.l_active = ""
-        self.p_active = ""
-        if self.add_log_tab and not config.simple_output and pconfig.get("logswitch_active") is True:
-            self.c_active = ""
-            self.l_active = "active"
+        self.l_active = self.add_log_tab and pconfig.get("logswitch_active") is True
+        self.p_active = self.add_pct_tab and pconfig.get("cpswitch_c_active", True) is not True
 
         # Per-dataset configurations
         data_labels: List[Union[str, Dict[str, str]]] = pconfig.get("data_labels", [])
@@ -77,6 +83,12 @@ class Plot(ABC):
         self.ymin = pconfig.get("ymin")
         self.ymax = pconfig.get("ymax")
 
+        # Default state to dump to JSON to load with plotly.js
+        self.config = {
+            "p_active": self.p_active,
+            "l_active": self.l_active,
+        }
+
     def __repr__(self):
         return f"<{self.__class__.__name__} {pprint(self.__dict__)}>"
 
@@ -105,6 +117,7 @@ class Plot(ABC):
                 rangemode="tozero" if self.ymin == 0 else "normal",
                 range=[self.ymin, self.ymax],
             ),
+            height=self.height,
             paper_bgcolor="rgba(0,0,0,0)",
             plot_bgcolor="rgba(0,0,0,0)",
             font={"color": "Black", "family": "Lucida Grande"},
@@ -138,11 +151,7 @@ class Plot(ABC):
         )
         return layout
 
-    def add_to_report(
-        self,
-        datasets: List[List[Dict]],
-        report,
-    ) -> str:
+    def add_to_report(self, datasets: List[List[Dict]], report) -> str:
         """
         Build and add the plot data to the report, return an HTML wrapper.
         """
@@ -178,26 +187,26 @@ class Plot(ABC):
 
             html += self._fig_to_static_html(
                 self._make_fig(dataset),
-                active=self.c_active != "" and ds_idx == 0,
-                fname=uid,
+                active=ds_idx == 0 and not self.p_active and not self.l_active,
+                uid=uid,
             )
             if self.add_pct_tab:
                 html += self._fig_to_static_html(
                     self._make_fig(dataset, is_pct=True),
-                    active=self.p_active != "" and ds_idx == 0,
-                    fname=f"{uid}_pc",
+                    active=ds_idx == 0 and self.p_active,
+                    uid=f"{uid}_pc",
                 )
             if self.add_log_tab:
                 html += self._fig_to_static_html(
                     self._make_fig(dataset, is_log=True),
-                    active=self.l_active != "" and ds_idx == 0,
-                    fname=f"{uid}_log",
+                    active=ds_idx == 0 and self.l_active,
+                    uid=f"{uid}_log",
                 )
             if self.add_pct_tab and self.add_log_tab:
                 html += self._fig_to_static_html(
                     self._make_fig(dataset, is_pct=True, is_log=True),
-                    active=self.p_active != "" and self.l_active != "" and ds_idx == 0,
-                    fname=f"{uid}_pc_log",
+                    active=ds_idx == 0 and self.p_active and self.l_active,
+                    uid=f"{uid}_pc_log",
                 )
 
         html += "</div>"
@@ -244,12 +253,12 @@ class Plot(ABC):
         Add buttons: percentage on/off, log scale on/off, datasets switch panel
         """
 
-        def _btn(cls: str, pid: str, active: str, label: str, data_attrs: Dict[str, str] = None) -> str:
+        def _btn(cls: str, pid: str, active: bool, label: str, data_attrs: Dict[str, str] = None) -> str:
             """Build a switch button for the plot."""
             data_attrs = data_attrs.copy() if data_attrs else {}
             data_attrs["pid"] = pid
             data_attrs = " ".join([f'data-{k}="{v}"' for k, v in data_attrs.items()])
-            return f'<button class="btn btn-default btn-sm {cls} {active}" ' f"{data_attrs}>" f"{label}" "</button>\n"
+            return f'<button class="btn btn-default btn-sm {cls} {"active" if active else ""}" {data_attrs}>{label}</button>\n'
 
         html = ""
         # Counts / percentages / log10 switches
@@ -275,7 +284,6 @@ class Plot(ABC):
         if len(datasets) > 1:
             html += f'<div class="btn-group {cls} dataset-switch-group">\n'
             for ds_idx, ds in enumerate(datasets):
-                active = "active" if ds_idx == 0 else ""
                 dl: Dict[str, str] = self.data_labels[ds_idx]
                 data_attrs = {k: dl[k] for k in ["ylab", "ymax", "xlab"] if k in dl}
                 data_attrs["dataset-index"] = ds_idx
@@ -285,12 +293,23 @@ class Plot(ABC):
                 html += _btn(
                     cls="",
                     pid=self.id,
-                    active=active,
+                    active=ds_idx == 0,
                     label=dl["name"],
                     data_attrs=data_attrs,
                 )
             html += "</div>\n\n"
         return html
+
+    def serialise(self) -> Dict:
+        """Serialise the plot data to pick up in JavaScript"""
+        return {
+            "id": self.id,
+            "plot_type": self.plot_type.value,
+            "layout": self.layout().to_plotly_json(),
+            # TODO: save figures to JSON, not datasets?
+            # "figures": [self._make_fig(dataset).to_plotly_json() for dataset in datasets],
+            "config": self.config,
+        }
 
     def interactive_plot(self, report, datasets) -> str:
         html = '<div class="mqc_hcplot_plotgroup">'
@@ -305,30 +324,19 @@ class Plot(ABC):
             height=f' style="height:{self.height}px"' if self.height else "",
             plot_type=self.plot_type,
         )
-        # Close wrapping div
         html += "</div>"
 
         # Saving compressed data for JavaScript to pick up and uncompress.
-        report.num_hc_plots += 1
-        report.plot_data[self.id] = {
-            "plot_type": self.plot_type,
-            "datasets": datasets,
-            "layout": self.layout().to_plotly_json(),
-            "pconfig": self.__dict__,
-        }
-        # Parameters to be toggled by switch buttons:
-        report.plot_data[self.id]["active_dataset_idx"] = 0
-        if self.add_log_tab:
-            report.plot_data[self.id]["l_active"] = self.l_active
-        if self.add_pct_tab:
-            report.plot_data[self.id]["p_active"] = self.p_active
+        d = self.serialise()
+        d["datasets"] = datasets
+        report.plot_data[self.id] = d
         return html
 
     @staticmethod
     def _fig_to_static_html(
         fig: go.Figure,
         active: bool,
-        fname: str,
+        uid: str,
     ) -> str:
         """
         Build one static image, return an HTML wrapper.
@@ -341,7 +349,7 @@ class Plot(ABC):
                 if not plot_dir.exists():
                     plot_dir.mkdir(parents=True, exist_ok=True)
                 # Save the plot
-                plot_fn = Path(plot_dir) / f"{fname}.{file_ext}"
+                plot_fn = Path(plot_dir) / f"{uid}.{file_ext}"
                 fig.write_image(
                     plot_fn,
                     format=file_ext,
@@ -367,13 +375,11 @@ class Plot(ABC):
             )
             b64_img = base64.b64encode(img_buffer.getvalue()).decode("utf8")
             img_buffer.close()
-            html = (
-                f'<div class="mqc_mplplot" id="{fname}"{hide_div}><img src="data:image/png;base64,{b64_img}" /></div>'
-            )
+            html = f'<div class="mqc_mplplot" id="flat-{uid}"{hide_div}><img src="data:image/png;base64,{b64_img}" /></div>'
 
         # Link to the saved image
         else:
-            plot_relpath = Path(config.plots_dir_name) / "png" / f"{fname}.png"
+            plot_relpath = Path(config.plots_dir_name) / "png" / f"{uid}.png"
             plot_relpath.parent.mkdir(parents=True, exist_ok=True)
             fig.write_image(
                 plot_relpath,
@@ -382,5 +388,5 @@ class Plot(ABC):
                 height=fig.layout.height,
                 scale=1,
             )
-            html = f'<div class="mqc_mplplot" id="{fname}"{hide_div}><img src="{plot_relpath}" /></div>'
+            html = f'<div class="mqc_mplplot" id="flat-{uid}"{hide_div}><img src="{plot_relpath}" /></div>'
         return html

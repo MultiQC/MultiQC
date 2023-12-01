@@ -6,7 +6,7 @@ from typing import Dict, List, Union, Optional
 import math
 import plotly.graph_objects as go
 
-from multiqc.templates.plotly.plots.plot import Plot
+from multiqc.templates.plotly.plots.plot import Plot, PlotType
 from multiqc.utils import util_functions, config
 
 logger = logging.getLogger(__name__)
@@ -35,12 +35,12 @@ def plot(
 
 class LinePlot(Plot):
     def __init__(self, pconfig: Dict, *args):
-        super().__init__("xy_line", pconfig, *args)
+        super().__init__(PlotType.LINE, pconfig, *args)
 
         self.categories: List[str] = pconfig.get("categories", [])
 
         self.tt_decimals: Optional[int] = pconfig.get("tt_decimals")
-        self.tt_suffix: str = pconfig.get("tt_suffix", "")
+        # self.tt_suffix: str = pconfig.get("tt_suffix", "")
         # self.tt_label: str = pconfig.get(
         #     "tt_label",
         #     f"%{{x}}: %{{y:,.{self.tt_decimals}f}}{self.tt_suffix}"

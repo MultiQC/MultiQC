@@ -3,7 +3,7 @@ from typing import Dict, List, Union
 
 from plotly import graph_objects as go
 
-from multiqc.templates.plotly.plots.plot import Plot
+from multiqc.templates.plotly.plots.plot import Plot, PlotType
 
 logger = logging.getLogger(__name__)
 
@@ -12,10 +12,7 @@ logger = logging.getLogger(__name__)
 ElementT = Dict[str, Union[str, float, int]]
 
 
-def plot(
-    datasets: List[List[ElementT]],
-    pconfig: Dict,
-) -> str:
+def plot(datasets: List[List[ElementT]], pconfig: Dict) -> str:
     """
     Build and add the plot data to the report, return an HTML wrapper.
     :param datasets: each dataset is a 2D dict, first keys as sample names, then x:y data pairs
@@ -31,11 +28,27 @@ def plot(
 
 class ScatterPlot(Plot):
     def __init__(self, pconfig: Dict, *args):
-        super().__init__("scatter", pconfig, *args)
+        super().__init__(PlotType.SCATTER, pconfig, *args)
+
+        self.categories = pconfig.get("categories", [])
+        self.default_marker = {
+            "size": 10,
+            "line": {"width": 1},
+            "color": "rgba(124, 181, 236, .5)",
+            "opacity": 1,
+        }
+
+    def serialise(self) -> Dict:
+        """Serialise the plot data to pick up in JavaScript"""
+        d = super().serialise()
+        d["categories"] = self.categories
+        d["default_marker"] = self.default_marker
+        return d
 
     def populate_figure(self, fig: go.Figure, dataset: List[ElementT], is_log=False, is_pct=False) -> go.Figure:
         for element in dataset:
             x = element["x"]
+
             if self.categories:
                 if isinstance(x, int) and (0 <= x < len(self.categories)):
                     x = self.categories[x]
@@ -45,6 +58,16 @@ class ScatterPlot(Plot):
                     )
                     continue
 
+            marker = self.default_marker.copy()
+            if "marker_size" in element:
+                marker["size"] = element["marker_size"]
+            if "marker_line_width" in element:
+                marker["line"]["width"] = element["marker_line_width"]
+            if "color" in element:
+                marker["color"] = element["color"]
+            if "opacity" in element:
+                marker["opacity"] = element["opacity"]
+
             fig.add_trace(
                 go.Scatter(
                     x=[x],
@@ -52,24 +75,10 @@ class ScatterPlot(Plot):
                     text=element["name"],
                     hoverinfo="text",
                     mode="markers",
-                    marker=dict(
-                        size=element.get("marker_size", 20),
-                        line_width=element.get("marker_line_width", 1),
-                        color=element.get("color", "rgba(124, 181, 236, .5)"),
-                        opacity=element.get("opacity", 1),
-                    ),
+                    marker=marker,
                 )
             )
         return fig
 
     def save_data_file(self, dataset: List, uid: str) -> None:
         pass
-
-    def layout(self) -> go.Layout:
-        layout: go.Layout = super().layout()
-        layout.update(
-            {
-                # "marker": {"color": "rgba(124, 181, 236, .5)"},
-            }
-        )
-        return layout

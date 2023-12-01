@@ -1,4 +1,11 @@
 class LinePlot extends Plot {
+  constructor(data) {
+    super(data);
+    // Saving user-defined Y-axis limits to support the "Y-Limits" toggle button
+    this.ymin = this.layout.yaxis.range[0];
+    this.ymax = this.layout.yaxis.range[1];
+  }
+
   activeDatasetSamples() {
     if (this.datasets.length === 0) return [];
     let dataset = this.datasets[this.active_dataset_idx];
@@ -15,7 +22,7 @@ class LinePlot extends Plot {
     if (samples == null) return;
 
     // Rename samples
-    dataset.map((sdata) => (sdata.name = samples[sdata.name].name));
+    dataset.map((sdata, si) => (sdata.name = samples[si].name));
 
     // // Hide samples
     // let idx_to_hide = hideSamples(this.target, samples);
@@ -30,19 +37,20 @@ class LinePlot extends Plot {
 
     // Toggle buttons for Y-axis limis
     // Handler for this is at top, so doesn't get created multiple times
-    let ymaxSet = this.pconfig.ymax !== "undefined" && this.pconfig.ymax !== null;
-    let yminSet = this.pconfig.ymin !== "undefined" && this.pconfig.ymin !== null;
+    let ymaxSet = this.ymax !== "undefined" && this.ymax !== null;
+    let yminSet = this.ymin !== "undefined" && this.ymin !== null;
     // Only create if there is a y-axis limit
-    if (ymaxSet || (yminSet && this.pconfig.ymin !== 0)) {
-      let wrapper = $('<div class="mqc_hcplot_yaxis_limit_toggle hidden-xs" />').prependTo(plot_group_div);
+    let groupDiv = $("#" + this.target).closest(".mqc_hcplot_plotgroup");
+    if (ymaxSet || (yminSet && this.ymin !== 0)) {
+      let wrapper = $('<div class="mqc_hcplot_yaxis_limit_toggle hidden-xs" />').prependTo(groupDiv);
       wrapper.append(
         '<span class="mqc_switch_wrapper"' +
           '"' +
           ' data-ymax="' +
-          this.pconfig.ymax +
+          this.ymax +
           '"' +
           ' data-ymin="' +
-          this.pconfig.ymin +
+          this.ymin +
           '"' +
           ' data-target="' +
           this.target +
@@ -52,7 +60,8 @@ class LinePlot extends Plot {
     }
 
     // Filter out hidden samples
-    let visibleDataset = dataset.filter((sdata) => !samples[sdata.name].hidden);
+    let visibleDataset = dataset.filter((sdata, si) => !samples[si].hidden);
+    let visibleSamples = samples.filter((s) => !s.hidden);
 
     return visibleDataset.map((sdata, si) => {
       let x, y;
@@ -71,7 +80,7 @@ class LinePlot extends Plot {
         orientation: "h",
         mode: "lines",
         line: {
-          color: samples[sdata.name].highlight ?? sdata.color,
+          color: visibleSamples[si].highlight ?? sdata.color,
         },
         // hovertemplate: pconfig["tt_label"]
       };

@@ -11,41 +11,24 @@ window.mqc_highlight_f_cols = [];
 window.mqc_highlight_regex_mode = false;
 window.mqc_rename_f_texts = [];
 window.mqc_rename_t_texts = [];
-window.mqc_rename_regex_mode = false;
 window.mqc_hide_mode = "hide";
 window.mqc_hide_f_texts = [];
 window.mqc_hide_regex_mode = false;
 
 class Plot {
-  constructor(target, data) {
-    this.target = target;
+  constructor(data) {
+    this.target = data.id;
     this.plot_type = data.plot_type;
     this.datasets = data.datasets;
-    this.pconfig = data.pconfig;
     this.layout = data.layout;
-    // Dynamic fields
     this.active_dataset_idx = 0;
-    this.p_active = data.p_active;
-    this.l_active = data.l_active;
-  }
-
-  dataSize() {
-    if (this.datasets.length === 0) return 0;
-    let dataset = this.datasets[this.active_dataset_idx];
-    return dataset.length;
   }
 }
 
-function init_plot(target, data) {
-  if (data.plot_type === "xy_line") {
-    return new LinePlot(target, data);
-  }
-  if (data.plot_type === "bar_graph") {
-    return new BarPlot(target, data);
-  }
-  if (data.plot_type === "scatter") {
-    return new ScatterPlot(target, data);
-  }
+function initPlot(data) {
+  if (data.plot_type === "xy_line") return new LinePlot(data);
+  if (data.plot_type === "bar_graph") return new BarPlot(data);
+  if (data.plot_type === "scatter") return new ScatterPlot(data);
   console.log("Did not recognise plot type: " + data.plot_type);
   return null;
 }
@@ -57,9 +40,7 @@ $(function () {
 
   // Decompress the JSON plot data and init plot objects
   let mqc_plotdata = JSON.parse(LZString.decompressFromBase64(mqc_compressed_plotdata));
-  mqc_plots = Object.fromEntries(
-    Object.entries(mqc_plotdata).map(([target, data]) => [target, init_plot(target, data)]),
-  );
+  mqc_plots = Object.fromEntries(Object.values(mqc_plotdata).map((data) => [data.id, initPlot(data)]));
 
   let should_render = $(".hc-plot.not_rendered:visible:not(.gt_max_num_ds)");
 
@@ -71,7 +52,7 @@ $(function () {
     // Deferring each plot call prevents browser from locking up
     setTimeout(function () {
       let plot = mqc_plots[target];
-      if (plot.dataSize() > max_num) {
+      if (plot.activeDatasetSamples().length > max_num) {
         $("#" + target)
           .addClass("not_rendered gt_max_num_ds")
           .html('<button class="btn btn-default btn-lg render_plot">Show plot</button>');
@@ -177,7 +158,7 @@ $(function () {
       $(wrapper.parent().find(".hc-plot, .beeswarm-plot")).trigger("mqc_plotresize");
     });
     $(document).on("mousemove", function (me) {
-      var newHeight = startHeight + (me.pageY - pY);
+      let newHeight = startHeight + (me.pageY - pY);
       // container.css("height", newHeight);
       wrapper.css("height", newHeight);
       Plotly.relayout(target, { height: newHeight });
@@ -234,81 +215,81 @@ $(function () {
 });
 
 // Highlighting, hiding and renaming samples. Takes a list of samples, returns
-// an object indexed by sample: {"name": "new_name", "highlight": "#cccccc", "hidden": false}
+// a list of objects: {"name": "new_name", "highlight": "#cccccc", "hidden": false}
 function applyToolboxSettings(samples, target) {
   // init object with default values
-  let d = Object.fromEntries(samples.map((name) => [name, { name: name, highlight: null, hidden: false }]));
+  let objects = samples.map((name) => ({ name: name, highlight: null, hidden: false }));
 
   // Rename samples
-  if (window.mqc_rename_f_texts) {
-    for (let name in samples) {
+  if (window.mqc_rename_f_texts.length > 0) {
+    objects.map((obj) => {
       for (let p_idx = 0; p_idx < window.mqc_rename_f_texts.length; p_idx++) {
         let pattern = window.mqc_rename_f_texts[p_idx];
         let new_text = window.mqc_rename_t_texts[p_idx];
-        d[name] = name.replace(pattern, new_text);
+        obj.name = obj.name.replace(pattern, new_text);
       }
-    }
+    });
   }
 
   // Highlight samples
-  if (window.mqc_highlight_f_texts) {
-    for (let name in samples) {
+  if (window.mqc_highlight_f_texts.length > 0) {
+    objects.map((obj) => {
       for (let i = 0; i < window.mqc_highlight_f_texts.length; i++) {
         const f_text = window.mqc_highlight_f_texts[i];
         const f_col = window.mqc_highlight_f_cols[i];
         let match = false;
         if (window.mqc_highlight_regex_mode) {
-          if (name.match(f_text)) match = true;
+          if (obj.name.match(f_text)) match = true;
         } else {
-          if (name.indexOf(f_text) > -1) match = true;
+          if (obj.name.indexOf(f_text) > -1) match = true;
         }
-        if (match) d[name].highlight = f_col;
+        if (match) obj.highlight = f_col;
       }
-    }
+    });
   }
 
   // Hide samples
-  if (window.mqc_hide_f_texts) {
+  if (window.mqc_hide_f_texts.length > 0) {
     let groupDiv = $("#" + target).closest(".mqc_hcplot_plotgroup");
     groupDiv.parent().find(".samples-hidden-warning").remove();
     groupDiv.show();
 
-    for (let name in samples) {
+    objects.map((obj) => {
       let match = false;
       for (let i = 0; i < window.mqc_hide_f_texts.length; i++) {
         const f_text = window.mqc_hide_f_texts[i];
         if (window.mqc_hide_regex_mode) {
-          if (name.match(f_text)) match = true;
+          if (obj.name.match(f_text)) match = true;
         } else {
-          if (name.indexOf(f_text) > -1) match = true;
+          if (obj.name.indexOf(f_text) > -1) match = true;
         }
       }
       if (window.mqc_hide_mode === "show") match = !match;
-      if (match) d[name].hidden = true;
-    }
+      if (match) obj.hidden = true;
+    });
 
     // Some series hidden. Show a warning text string.
-    let hidden = samples.filter((name) => d[name].hidden).length;
-    if (hidden > 0) {
+    let nHidden = objects.filter((obj) => obj.hidden).length;
+    if (nHidden > 0) {
       const alert =
         '<div class="samples-hidden-warning alert alert-warning">' +
         '<span class="glyphicon glyphicon-info-sign"></span>' +
         "<strong>Warning:</strong> " +
-        hidden +
+        nHidden +
         " samples hidden. " +
         '<a href="#mqc_hidesamples" class="alert-link" onclick="mqc_toolbox_openclose(\'#mqc_hidesamples\', true); return false;">See toolbox.</a>' +
         "</div>";
       groupDiv.before(alert);
     }
     // All series hidden. Hide the graph.
-    if (hidden === samples.length) {
+    if (nHidden === objects.length) {
       groupDiv.hide();
       return null;
     }
   }
 
   // Return the object indexed by sample names
-  return d;
+  return objects;
 }
 
 // // Hiding samples. Returns indices of samples in the "samples" array
@@ -380,7 +361,11 @@ function renderPlot(target) {
     ],
   });
 
-  $("#" + target).removeClass("not_rendered");
+  $("#" + target)
+    .removeClass("not_rendered")
+    .parent()
+    .find(".render_plot")
+    .remove();
   if ($(".hc-plot.not_rendered").length === 0) $("#mqc-warning-many-samples").hide();
 }
 

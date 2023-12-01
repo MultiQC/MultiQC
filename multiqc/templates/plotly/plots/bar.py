@@ -5,8 +5,8 @@ from typing import Dict, List
 import math
 import plotly.graph_objects as go
 
-from multiqc.templates.plotly.plots.plot import Plot
-from multiqc.utils import config, util_functions
+from multiqc.templates.plotly.plots.plot import Plot, PlotType
+from multiqc.utils import util_functions
 
 logger = logging.getLogger(__name__)
 
@@ -40,7 +40,11 @@ def plot(
             if len(cat["data"]) < len(cat["samples"]):
                 cat["data"].extend([0] * (len(cat["samples"]) - len(cat["data"])))
 
-    p = BarPlot(pconfig, len(datasets), max(len(samples) for samples in samples_lists))
+    p = BarPlot(
+        pconfig,
+        num_datasets=len(datasets),
+        max_n_samples=max([len(samples) for samples in samples_lists]),
+    )
 
     # Calculate and save percentages
     if p.add_pct_tab:
@@ -67,23 +71,16 @@ def plot(
 
 
 class BarPlot(Plot):
-    def __init__(self, pconfig: Dict, max_n_samples: int, *args):
-        super().__init__("bar_graph", pconfig, *args)
-
-        self.add_pct_tab = pconfig.get("cpswitch", True) is not False
-        self.p_label = pconfig.get("cpswitch_percent_label", "Percentages")
-        self.p_active = ""
-        self.stacking = pconfig.get("stacking", "stack")
-        if self.add_pct_tab and pconfig.get("cpswitch_c_active", True) is not True and not config.simple_output:
-            self.c_active = ""
-            self.p_active = "active"
-            self.stacking = "relative"
+    def __init__(self, pconfig: Dict, max_n_samples: int, num_datasets: int):
+        super().__init__(PlotType.BAR, pconfig, num_datasets=num_datasets)
 
         if not self.height:
             # Height has a default, then adjusted by the number of samples
-            self.height = max_n_samples // 186  # Default, empirically determined
-            self.height = max(600, self.height)
+            self.height = max_n_samples * 10
+            self.height = max(500, self.height)
             self.height = min(2560, self.height)
+
+        self.stacking = pconfig.get("stacking", "stack" if self.p_active else "relative")
 
     def layout(self) -> go.Layout:
         layout: go.Layout = super().layout()
@@ -158,8 +155,6 @@ class BarPlot(Plot):
     #     return html
 
     def populate_figure(self, fig: go.Figure, dataset: List[Dict], is_log=False, is_pct=False) -> go.Figure:
-        fig = super()._make_fig(dataset, is_log, is_pct)
-
         categories: List[Dict] = dataset
         for cat in categories:
             data = cat["data"]

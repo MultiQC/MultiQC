@@ -1,4 +1,10 @@
 class ScatterPlot extends Plot {
+  constructor(data) {
+    super(data);
+    this.categories = data.categories;
+    this.default_marker = data.default_marker;
+  }
+
   activeDatasetSamples() {
     if (this.datasets.length === 0) return [];
     let dataset = this.datasets[this.active_dataset_idx];
@@ -15,15 +21,22 @@ class ScatterPlot extends Plot {
     if (samples == null) return;
 
     // Rename samples
-    dataset.map((element) => (element.name = samples[element.name].name));
+    dataset.map((element, si) => (element.name = samples[si].name));
 
     // Filter out hidden samples
-    let visibleDataset = dataset.filter((element) => !samples[element.name].hidden);
+    let visibleSamples = samples.filter((s) => !s.hidden);
+    let visibleDataset = dataset.filter((element, si) => !samples[si].hidden);
 
-    return visibleDataset.map((element) => {
+    return visibleDataset.map((element, si) => {
       let x = element.x;
-      if (this.pconfig["categories"] && Number.isInteger(x) && x < this.pconfig["categories"].length)
-        x = this.pconfig["categories"][x];
+      if (this.categories && Number.isInteger(x) && x < this.categories.length) x = this.categories[x];
+
+      // Shallow copy of default marker
+      let marker = Object.assign({}, this.default_marker);
+      marker.size = element["marker_size"] ?? marker.size;
+      marker.line.width = element["marker_line_width"] ?? marker.line.width;
+      marker.color = visibleSamples[si].highlight ?? element["color"] ?? marker.color;
+      marker.opacity = element["opacity"] ?? marker.opacity;
 
       return {
         type: "scatter",
@@ -31,18 +44,19 @@ class ScatterPlot extends Plot {
         y: [element.y],
         name: element.name,
         mode: "markers",
-        marker: {
-          // TODO: default size, width, color, etc are repetead here and in flat plotting python code
-          // we need to put these values into a plot config and reuse them here
-          // we can also sync python class and JS class by building the same pconfig and putting
-          // those values there, insted of saving __dict__ in python and then parsing it in JS as pconfig
-          size: element["marker_size"] ?? 10,
-          line: {
-            width: element["marker_line_width"] ?? 1,
-          },
-          color: samples[element.name].highlight ?? element["color"] ?? "rgba(124, 181, 236, .5)",
-          opacity: element["opacity"] ?? 1,
-        },
+        marker: marker,
+        // marker: {
+        //   // TODO: default size, width, color, etc are repetead here and in flat plotting python code
+        //   // we need to put these values into a plot config and reuse them here
+        //   // we can also sync python class and JS class by building the same pconfig and putting
+        //   // those values there, insted of saving __dict__ in python and then parsing it in JS as pconfig
+        //   size: element["marker_size"] ?? this.layout.marker.size,
+        //   line: {
+        //     width: element["marker_line_width"] ?? marker["line"].width,
+        //   },
+        //   color: samples[element.name].highlight ?? element["color"] ?? marker["color"],
+        //   opacity: element["opacity"] ?? marker["opacity"],
+        // },
         // hovertemplate: pconfig["tt_label"]
       };
     });

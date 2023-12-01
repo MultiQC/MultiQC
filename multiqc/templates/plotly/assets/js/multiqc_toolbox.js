@@ -1106,7 +1106,7 @@ function load_mqc_config(name) {
 
   // Apply config - rename samples
   if (notEmptyObj(config["rename_regex"])) {
-    if (config["rename_regex"] == true) {
+    if (config["rename_regex"] === true) {
       $("#mqc_renamesamples .mqc_regex_mode .re_mode").removeClass("off").addClass("on").text("on");
       window.mqc_rename_regex_mode = true;
     }
@@ -1116,7 +1116,7 @@ function load_mqc_config(name) {
     window.mqc_rename_t_texts = [];
     $.each(config["rename_from_texts"], function (idx, from_text) {
       var to_text = config["rename_to_texts"][idx];
-      if (from_text.length == 0) {
+      if (from_text.length === 0) {
         return true;
       }
       var li = '<li><input class="f_text from_text" value="' + from_text + '" />';
@@ -1139,7 +1139,7 @@ function load_mqc_config(name) {
 
   // Apply config - highlights
   if (notEmptyObj(config["highlight_regex"])) {
-    if (config["highlight_regex"] == true) {
+    if (config["highlight_regex"] === true) {
       $("#mqc_cols .mqc_regex_mode .re_mode").removeClass("off").addClass("on").text("on");
       window.mqc_highlight_regex_mode = true;
     }

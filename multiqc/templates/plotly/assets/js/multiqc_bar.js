@@ -11,31 +11,32 @@ class BarPlot extends Plot {
   buildTraces() {
     let dataset = this.datasets[this.active_dataset_idx];
 
-    let samples = applyToolboxSettings(this.activeDatasetSamples());
+    let sampleNames = this.activeDatasetSamples();
+    let samples = applyToolboxSettings(sampleNames);
 
     // All series are hidden, do not render the graph.
     if (samples == null) return;
 
     // Rename samples
-    dataset.each((cat) => cat["samples"].each((sn, i) => (cat["samples"][i] = samples[sn].name)));
+    dataset.map((cat) => cat["samples"].map((sn, si) => (cat["samples"][si] = samples[si].name)));
 
     // Filter out hidden samples
-    let visibleSamples = samples.filter((sn) => !samples[sn].hidden);
+    let visibleSamples = samples.filter((s) => !s.hidden);
 
     return dataset.map((cat) => {
       let data = this.p_active ? cat.data_pct : cat.data;
-      let visibleData = data.filter((x, i) => !samples[d["samples"][i]].hidden);
+      let visibleData = data.filter((_, si) => !samples[si].hidden);
       return {
         type: "bar",
         x: visibleData,
-        y: visibleSamples,
+        y: visibleSamples.map((s) => s.name),
         name: cat.name,
         orientation: "h",
         marker: {
           line: {
             // Remove grey from highlights, as we don't need to remove default coloring of background samples
-            color: samples.map((x) => (x.highlight && x.highlight !== "#cccccc" ? x.highlight : null)),
-            width: samples.map((x) => (x.highlight && x.highlight !== "#cccccc" ? 2 : 0)),
+            color: visibleSamples.map((x) => (x.highlight && x.highlight !== "#cccccc" ? x.highlight : null)),
+            width: visibleSamples.map((x) => (x.highlight && x.highlight !== "#cccccc" ? 2 : 0)),
           },
         },
         marker_color: cat.color,
