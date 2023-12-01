@@ -102,9 +102,9 @@ $(function () {
   });
 
   // A "Percentages" button above a plot is clicked
-  $("button.switch_percent").click(function (e) {
+  $("button.interactive-switch-group.percent-switch").click(function (e) {
     e.preventDefault();
-    let target = $(this).data("target");
+    let target = $(this).data("pid");
 
     // Toggling flags
     mqc_plots[target].p_active = !$(this).hasClass("active");
@@ -117,9 +117,9 @@ $(function () {
   });
 
   // A "Log" button above a plot is clicked
-  $("button.switch_log10").click(function (e) {
+  $("button.interactive-switch-group.log10-switch").click(function (e) {
     e.preventDefault();
-    let target = $(this).data("target");
+    let target = $(this).data("pid");
 
     // Toggling flags
     mqc_plots[target].l_active = !$(this).hasClass("active");
@@ -129,13 +129,14 @@ $(function () {
   });
 
   // Switch data source
-  $(".dataset_switch_group button").click(function (e) {
+  $(".interactive-switch-group.dataset-switch-group button").click(function (e) {
     e.preventDefault();
+    if ($(this).hasClass("active")) return;
     $(this).siblings("button.active").removeClass("active");
     $(this).addClass("active");
-    let target = $(this).data("target");
+    let target = $(this).data("pid");
     let active_dataset_idx = mqc_plots[target].active_dataset_idx;
-    let new_dataset_idx = $(this).data("dataset_index");
+    let new_dataset_idx = $(this).data("datasetIndex");
     mqc_plots[target].active_dataset_idx = new_dataset_idx;
     if (active_dataset_idx === new_dataset_idx) return;
     renderPlot(target);

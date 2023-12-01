@@ -1,15 +1,12 @@
-import base64
 import io
 import logging
 import os
-from pathlib import Path
 from typing import Dict, List, Union, Optional
 
 import math
 import plotly.graph_objects as go
 
-from multiqc.templates.plotly.plots import get_template_mod
-from multiqc.templates.plotly.plots.plot import View, Plot
+from multiqc.templates.plotly.plots.plot import Plot
 from multiqc.utils import util_functions, config
 
 logger = logging.getLogger(__name__)
@@ -64,11 +61,31 @@ class LinePlot(Plot):
 
         return layout
 
-    def _save_data_file(
-        self,
-        pid: str,
-        dataset: List[SampleLineT],
-    ) -> None:
+    def make_fig(self, dataset, is_log=False, is_pct=False):
+        fig = super().make_fig(dataset, is_log, is_pct)
+
+        for d in dataset:
+            if len(d["data"]) > 0 and isinstance(d["data"][0], list):
+                xs = [x[0] for x in d["data"]]
+                ys = [x[1] for x in d["data"]]
+            else:
+                xs = [x for x in range(len(d["data"]))]
+                ys = d["data"]
+            if is_log:
+                ys = [math.log10(y) if y else 0 for y in ys]
+
+            fig.add_trace(
+                go.Scatter(
+                    x=xs,
+                    y=ys,
+                    name=d["name"],
+                    mode="lines+markers",
+                    marker=dict(size=5),
+                )
+            )
+        return fig
+
+    def save_data_file(self, dataset: List, uid: str) -> None:
         fdata = dict()
         last_cats = None
         shared_cats = True
@@ -99,147 +116,7 @@ class LinePlot(Plot):
                 fout += "\n{}\t".format(ds["name"])
                 fout += "\t".join([str(x[1]) for x in ds["data"]])
                 fout += "\n"
-            with io.open(os.path.join(config.data_dir, f"{pid}.txt"), "w", encoding="utf-8") as f:
-                print(fout.encode("utf-8", "ignore").decode("utf-8"), file=f)
+            with io.open(os.path.join(config.data_dir, f"{uid}.txt"), "w", encoding="utf-8") as f:
+                f.write(fout.encode("utf-8", "ignore").decode("utf-8"))
         else:
-            util_functions.write_data_file(fdata, pid)
-
-    def _flat_imgs_for_dataset(
-        self,
-        pidx: int,
-        pid: str,
-        dataset: List[SampleLineT],
-    ) -> str:
-        """
-        Build a static images for different views of a dataset (counts, log scale),
-        return an HTML wrapper.
-        """
-        # Save plot data to file
-        if self.save_data_file:
-            self._save_data_file(pid, dataset)
-
-        # Calculate log10 values
-        if self.add_log_tab:
-            for ds in dataset:
-                ds["data_log"] = []
-                for x, y in ds["data"]:
-                    if y == 0:
-                        y = 0
-                    else:
-                        y = math.log10(y)
-                    ds["data_log"].append([x, y])
-
-        views = [
-            View(
-                dataset,
-                active=not self.l_active,
-                suffix="",
-                label=self.c_label,
-                xaxis_tickformat="",
-            ),
-        ]
-        if self.add_log_tab:
-            views.append(
-                View(
-                    [
-                        {
-                            "data": ds["data_log"],
-                            "name": ds["name"],
-                            "color": ds["color"],
-                        }
-                        for ds in dataset
-                    ],
-                    active=False,
-                    suffix="_log",
-                    label=self.l_label,
-                    xaxis_tickformat="",
-                )
-            )
-
-        html = ""
-        for view in views:
-            html += self._flat_img_for_view(
-                view,
-                pidx,
-                f"{pid}{view.suffix}",
-            )
-        return html
-
-    def _flat_img_for_view(
-        self,
-        view: View,
-        pidx: int,
-        pid: str,
-    ) -> str:
-        """
-        Build one static image, return an HTML wrapper.
-        """
-        pid = f"{pid}{view.suffix}"
-
-        # Should this plot be hidden on report load?
-        hide_div = ""
-        if pidx > 0 or not view.active:
-            hide_div = ' style="display:none;"'
-
-        fig = go.Figure(layout=self.layout())
-        for sdata in view.data:
-            if len(sdata["data"]) > 0 and isinstance(sdata["data"][0], list):
-                x = [x[0] for x in sdata["data"]]
-                y = [x[1] for x in sdata["data"]]
-            else:
-                x = [x for x in range(len(sdata["data"]))]
-                y = sdata["data"]
-
-            fig.add_trace(
-                go.Scatter(
-                    x=x,
-                    y=y,
-                    name=sdata["name"],
-                    mode="lines+markers",
-                    marker=dict(size=5),
-                )
-            )
-
-        # Save the plot to the data directory if export is requested
-        if config.export_plots:
-            for fformat in config.export_plot_formats:
-                # Make the directory if it doesn't already exist
-                plot_dir = os.path.join(config.plots_dir, fformat)
-                if not os.path.exists(plot_dir):
-                    os.makedirs(plot_dir)
-                # Save the plot
-                plot_fn = os.path.join(plot_dir, f"{pid}.{fformat}")
-                fig.write_image(
-                    plot_fn,
-                    format=fformat,
-                    width=fig.layout.width,
-                    height=fig.layout.height,
-                    scale=1,
-                )
-
-        # Output the figure to a base64 encoded string
-        if getattr(get_template_mod(), "base64_plots", True) is True:
-            img_buffer = io.BytesIO()
-            fig.write_image(
-                img_buffer,
-                format="png",
-                width=fig.layout.width,
-                height=fig.layout.height,
-                scale=1,
-            )
-            b64_img = base64.b64encode(img_buffer.getvalue()).decode("utf8")
-            img_buffer.close()
-            return f'<div class="mqc_mplplot" id="{pid}"{hide_div}><img src="data:image/png;base64,{b64_img}" /></div>'
-
-        # Link to the saved image
-        else:
-            plot_relpath = Path(config.plots_dir_name) / "png" / f"{pid}.png"
-            plot_relpath.parent.mkdir(parents=True, exist_ok=True)
-            fig.write_image(
-                plot_relpath,
-                format="png",
-                width=900,
-                height=fig.layout.height,
-                scale=1,
-            )
-            return f'<div class="mqc_mplplot" id="{pid}"{hide_div}><img src="{plot_relpath}" /></div>'
+            util_functions.write_data_file(fdata, uid)
