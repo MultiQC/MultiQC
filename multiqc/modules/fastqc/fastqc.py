@@ -340,7 +340,7 @@ class MultiqcModule(BaseMultiqcModule):
     def read_count_plot(self):
         """Stacked bar plot showing counts of reads"""
         pconfig = {
-            "id": "fastqc_sequence_counts_plot",
+            "id": f"{self.anchor}_sequence_counts_plot",
             "title": "FastQC: Sequence Counts",
             "ylab": "Number of reads",
             "cpswitch_counts_label": "Number of reads",
@@ -413,7 +413,7 @@ class MultiqcModule(BaseMultiqcModule):
             return None
 
         pconfig = {
-            "id": "fastqc_per_base_sequence_quality_plot",
+            "id": f"{self.anchor}_per_base_sequence_quality_plot",
             "title": "FastQC: Mean Quality Scores",
             "ylab": "Phred Score",
             "xlab": "Position (bp)",
@@ -462,7 +462,7 @@ class MultiqcModule(BaseMultiqcModule):
             return None
 
         pconfig = {
-            "id": "fastqc_per_sequence_quality_scores_plot",
+            "id": f"{self.anchor}_per_sequence_quality_scores_plot",
             "title": "FastQC: Per Sequence Quality Scores",
             "ylab": "Count",
             "xlab": "Mean Sequence Quality (Phred Score)",
@@ -525,7 +525,7 @@ class MultiqcModule(BaseMultiqcModule):
             log.debug("sequence_content not found in FastQC reports")
             return None
 
-        html = """<div id="fastqc_per_base_sequence_content_plot_div">
+        html = f"""<div id="fastqc_per_base_sequence_content_plot_div">
             <div class="alert alert-info">
                <span class="glyphicon glyphicon-hand-up"></span>
                Click a sample row to see a line plot for that dataset.
@@ -540,18 +540,15 @@ class MultiqcModule(BaseMultiqcModule):
                 <div><span id="fastqc_seq_heatmap_key_g"> %G: <span>-</span></span></div>
             </div>
             <div id="fastqc_seq_heatmap_div" class="fastqc-overlay-plot">
-                <div id="{id}" class="fastqc_per_base_sequence_content_plot hc-plot has-custom-export">
+                <div id="{report.save_htmlid(self.anchor + "_per_base_sequence_content_plot")}" 
+                     class="fastqc_per_base_sequence_content_plot hc-plot has-custom-export">
                     <canvas id="fastqc_seq_heatmap" height="100%" width="800px" style="width:100%;"></canvas>
                 </div>
             </div>
             <div class="clearfix"></div>
         </div>
-        <script type="application/json" class="fastqc_seq_content">{d}</script>
-        """.format(
-            # Generate unique plot ID, needed in mqc_export_selectplots
-            id=report.save_htmlid("fastqc_per_base_sequence_content_plot"),
-            d=json.dumps([self.anchor.replace("-", "_"), data]),
-        )
+        <script type="application/json" class="fastqc_seq_content">{json.dumps([self.anchor.replace("-", "_"), data])}</script>
+        """
 
         self.add_section(
             name="Per Base Sequence Content",
@@ -614,7 +611,7 @@ class MultiqcModule(BaseMultiqcModule):
             return None
 
         pconfig = {
-            "id": "fastqc_per_sequence_gc_content_plot",
+            "id": f"{self.anchor}_per_sequence_gc_content_plot",
             "title": "FastQC: Per Sequence GC Content",
             "xlab": "% GC",
             "ylab": "Percentage",
@@ -724,7 +721,7 @@ class MultiqcModule(BaseMultiqcModule):
             return None
 
         pconfig = {
-            "id": "fastqc_per_base_n_content_plot",
+            "id": f"{self.anchor}_per_base_n_content_plot",
             "title": "FastQC: Per Base N Content",
             "ylab": "Percentage N-Count",
             "xlab": "Position in Read (bp)",
@@ -794,7 +791,7 @@ class MultiqcModule(BaseMultiqcModule):
             )
         else:
             pconfig = {
-                "id": "fastqc_sequence_length_distribution_plot",
+                "id": f"{self.anchor}_sequence_length_distribution_plot",
                 "title": "FastQC: Sequence Length Distribution",
                 "ylab": "Read Count",
                 "xlab": "Sequence Length (bp)",
@@ -835,7 +832,7 @@ class MultiqcModule(BaseMultiqcModule):
             log.debug("sequence_length_distribution not found in FastQC reports")
             return None
         pconfig = {
-            "id": "fastqc_sequence_duplication_levels_plot",
+            "id": f"{self.anchor}_sequence_duplication_levels_plot",
             "title": "FastQC: Sequence Duplication Levels",
             "categories": True,
             "ylab": "% of Library",
@@ -922,7 +919,7 @@ class MultiqcModule(BaseMultiqcModule):
 
         # Config for the plot
         pconfig = {
-            "id": "fastqc_overrepresented_sequences_plot",
+            "id": f"{self.anchor}_overrepresented_sequences_plot",
             "title": "FastQC: Overrepresented sequences sample summary",
             "ymin": 0,
             "yCeiling": 100,
@@ -1034,7 +1031,7 @@ class MultiqcModule(BaseMultiqcModule):
                 headers,
                 {
                     "namespace": self.name,
-                    "id": "fastqc_top_overrepresented_sequences_table",
+                    "id": f"{self.anchor}_top_overrepresented_sequences_table",
                     "table_title": "FastQC: Top overrepresented sequences",
                     "col1_header": "Overrepresented sequence",
                     "sortRows": False,
@@ -1068,7 +1065,7 @@ class MultiqcModule(BaseMultiqcModule):
         data = {k: d for k, d in data.items() if max(data[k].values()) >= 0.1}
 
         pconfig = {
-            "id": "fastqc_adapter_content_plot",
+            "id": f"{self.anchor}_adapter_content_plot",
             "title": "FastQC: Adapter Content",
             "ylab": "% of Sequences",
             "xlab": "Position (bp)",
@@ -1138,7 +1135,7 @@ class MultiqcModule(BaseMultiqcModule):
             data.append(row)
 
         pconfig = {
-            "id": "fastqc-status-check-heatmap",
+            "id": f"{self.anchor}-status-check-heatmap",
             "title": "FastQC: Status Checks",
             "xTitle": "Section Name",
             "yTitle": "Sample",
