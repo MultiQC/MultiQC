@@ -528,11 +528,10 @@ def _parse_txt(f, conf):
     first_row_str = 0
     for i, line in enumerate(d):
         for j, v in enumerate(line):
-            if j != 0:  # we don't want to convert sample names to numbers
-                try:
-                    v = float(v)
-                except ValueError:
-                    pass
+            try:
+                v = float(v)
+            except ValueError:
+                pass
             if isinstance(v, str):
                 if (v.startswith('"') and v.endswith('"')) or (v.startswith("'") and v.endswith("'")):
                     v = v[1:-1]
