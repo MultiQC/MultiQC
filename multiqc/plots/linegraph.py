@@ -106,12 +106,12 @@ def plot(data, pconfig=None):
     if pconfig.get("ylab") is None:
         try:
             pconfig["ylab"] = pconfig["data_labels"][0]["ylab"]
-        except Exception:
+        except (KeyError, IndexError):
             pass
     if pconfig.get("xlab") is None:
         try:
             pconfig["xlab"] = pconfig["data_labels"][0]["xlab"]
-        except Exception:
+        except (KeyError, IndexError):
             pass
 
     # Generate the data dict structure expected by HighCharts series
@@ -209,7 +209,7 @@ def plot(data, pconfig=None):
             for i, es in enumerate(extra_series):
                 for s in es:
                     plotdata[i].append(s)
-    except Exception:
+    except (KeyError, IndexError):
         pass
 
     # Add colors to the categories if not set. Since the "plot_defaults" scale is
@@ -403,7 +403,7 @@ def matplotlib_linegraph(plotdata, pconfig=None):
                     else:
                         try:
                             fdata[d["name"]][pconfig["categories"][i]] = x
-                        except Exception:
+                        except (KeyError, IndexError):
                             fdata[d["name"]][str(i)] = x
 
             # Custom tsv output if the x-axis varies

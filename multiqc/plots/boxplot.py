@@ -97,7 +97,7 @@ def matplotlib_boxplot(plotdata, pconfig=None):
     for k in range(len(plotdata)):
         try:
             name = pconfig["data_labels"][k]["name"]
-        except Exception:
+        except (KeyError, IndexError):
             name = k + 1
         pid = "mqc_{}_{}".format(pconfig["id"], name)
         pid = report.save_htmlid(pid, skiplint=True)
@@ -118,7 +118,7 @@ def matplotlib_boxplot(plotdata, pconfig=None):
             active = "active" if k == 0 else ""
             try:
                 name = pconfig["data_labels"][k]["name"]
-            except Exception:
+            except (KeyError, IndexError):
                 name = k + 1
             html += '<button class="btn btn-default btn-sm {a}" data-target="#{pid}">{n}</button>\n'.format(
                 a=active, pid=pid, n=name
@@ -161,7 +161,7 @@ def matplotlib_boxplot(plotdata, pconfig=None):
         # Dataset specific ymax
         try:
             axes.set_ylim((ymin, pconfig["data_labels"][pidx]["ymax"]))
-        except Exception:
+        except (KeyError, IndexError):
             pass
 
         default_xlimits = axes.get_xlim()
