@@ -1,4 +1,10 @@
 class BarPlot extends Plot {
+  constructor(data) {
+    super(data);
+
+    this.layout.showlegend = true;
+  }
+
   activeDatasetSamples() {
     if (this.datasets.length === 0) return [];
     let ds = this.datasets[this.active_dataset_idx];
@@ -33,13 +39,13 @@ class BarPlot extends Plot {
         name: cat.name,
         orientation: "h",
         marker: {
+          color: cat.color,
           line: {
             // Remove grey from highlights, as we don't need to remove default coloring of background samples
             color: visibleSamples.map((x) => (x.highlight && x.highlight !== "#cccccc" ? x.highlight : null)),
             width: visibleSamples.map((x) => (x.highlight && x.highlight !== "#cccccc" ? 2 : 0)),
           },
         },
-        marker_color: cat.color,
       };
     });
   }

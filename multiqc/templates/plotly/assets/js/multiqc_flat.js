@@ -4,25 +4,33 @@
 
 // On page load
 $(function () {
+  function switchPlot(button) {
+    let plotgroup = $(button).closest(".mqc_mplplot_plotgroup");
+    let pid = plotgroup.data("pid");
+    let activeDs = plotgroup.find(".dataset-switch-group button.active");
+    if (activeDs !== undefined && activeDs.length > 0) pid = activeDs.data("datasetUid");
+
+    let target = "#" + pid;
+
+    let p = plotgroup.children(".percent-switch");
+    let l = plotgroup.children(".log10-switch");
+    if (p.length > 0 || l.length > 0) {
+      let pActive = p.length > 0 && p.hasClass("active");
+      let lActive = l.length > 0 && l.hasClass("active");
+      if (pActive) target += "-pct";
+      if (lActive) target += "-log";
+      if (!pActive && !lActive) target += "-cnt";
+    }
+
+    plotgroup.find(".mqc_mplplot").hide();
+    $(target).show();
+  }
+
   // Switch between counts and percentages in a bar plot
   $(".mpl_switch_group.percent-switch,.mpl_switch_group.log10-switch").click(function (e) {
     e.preventDefault();
     $(this).toggleClass("active");
-
-    let plotgroup = $(this).closest(".mqc_mplplot_plotgroup");
-    let percent_switch = plotgroup.children(".percent-switch");
-    let log10_switch = plotgroup.children(".log10-switch");
-
-    let pid = plotgroup[0].id;
-    let activeDatasetId = plotgroup.find(".dataset-switch-group button.active").data("datasetUid");
-    if (activeDatasetId !== undefined) pid = activeDatasetId;
-    let target = "#flat-" + pid;
-
-    if (percent_switch.hasClass("active")) target += "_pc";
-    if (log10_switch.hasClass("active")) target += "_log";
-
-    plotgroup.find(".mqc_mplplot").hide();
-    $(target).show();
+    switchPlot(this);
   });
 
   // Switch datasets in a bar plot
@@ -31,13 +39,6 @@ $(function () {
     if ($(this).hasClass("active")) return;
     $(this).siblings("button.active").removeClass("active");
     $(this).addClass("active");
-
-    let plotgroup = $(this).closest(".mqc_mplplot_plotgroup");
-    let target = "#flat-" + $(this).data("datasetUid");
-    if (plotgroup.children(".percent-switch").hasClass("active")) target += "_pc";
-    if (plotgroup.children(".log10-switch").hasClass("active")) target += "_log";
-
-    plotgroup.find(".mqc_mplplot").hide();
-    $(target).show();
+    switchPlot(this);
   });
 });

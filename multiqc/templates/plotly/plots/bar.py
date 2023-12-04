@@ -89,7 +89,6 @@ class BarPlot(Plot):
             {
                 "barmode": self.stacking,
                 "hovermode": "y unified",
-                "showlegend": True,
                 "yaxis": dict(
                     # the plot is "transposed", so yaxis corresponds to the horizontal axis
                     title=dict(text=self.xlab),
@@ -99,14 +98,6 @@ class BarPlot(Plot):
                 ),
                 "xaxis": dict(
                     title=dict(text=self.ylab),
-                ),
-                "legend": dict(
-                    orientation="h",
-                    yanchor="top",
-                    y=-0.2,
-                    xanchor="center",
-                    x=0.5,
-                    traceorder="normal",
                 ),
             }
         )

@@ -211,7 +211,6 @@ class MultiqcModule(BaseMultiqcModule):
             "id": "gffcompare_novel_plot",
             "title": "Gffcompare: Novel features",
             "ylab": "Reads",
-            "ymin": 0,
             "data_labels": datasets,
         }
 
@@ -246,7 +245,6 @@ class MultiqcModule(BaseMultiqcModule):
             "id": "gffcompare_missing_plot",
             "title": "Gffcompare: Missing features",
             "ylab": "Reads",
-            "ymin": 0,
             "data_labels": datasets,
         }
 

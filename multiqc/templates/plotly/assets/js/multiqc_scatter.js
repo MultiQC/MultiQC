@@ -2,7 +2,7 @@ class ScatterPlot extends Plot {
   constructor(data) {
     super(data);
     this.categories = data.categories;
-    this.default_marker = data.default_marker;
+    this.marker_shape = data.marker_shape;
   }
 
   activeDatasetSamples() {
@@ -27,15 +27,18 @@ class ScatterPlot extends Plot {
     let visibleSamples = samples.filter((s) => !s.hidden);
     let visibleDataset = dataset.filter((element, si) => !samples[si].hidden);
 
-    return visibleDataset.map((element, si) => {
+    let traces = visibleDataset.map((element, si) => {
       let x = element.x;
       if (this.categories && Number.isInteger(x) && x < this.categories.length) x = this.categories[x];
 
       // Shallow copy of default marker
-      let marker = Object.assign({}, this.default_marker);
+      let marker = Object.assign({}, this.marker_shape);
       marker.size = element["marker_size"] ?? marker.size;
-      marker.line.width = element["marker_line_width"] ?? marker.line.width;
-      marker.color = visibleSamples[si].highlight ?? element["color"] ?? marker.color;
+      marker.line = {
+        width: element["marker_line_width"] ?? marker.line.width,
+      };
+      console.log(element.name + ": " + marker.line.width);
+      marker.color = visibleSamples[si].highlight ?? element["color"] ?? "rgba(124, 181, 236, .5)";
       marker.opacity = element["opacity"] ?? marker.opacity;
 
       return {
@@ -45,21 +48,10 @@ class ScatterPlot extends Plot {
         name: element.name,
         mode: "markers",
         marker: marker,
-        // marker: {
-        //   // TODO: default size, width, color, etc are repetead here and in flat plotting python code
-        //   // we need to put these values into a plot config and reuse them here
-        //   // we can also sync python class and JS class by building the same pconfig and putting
-        //   // those values there, insted of saving __dict__ in python and then parsing it in JS as pconfig
-        //   size: element["marker_size"] ?? this.layout.marker.size,
-        //   line: {
-        //     width: element["marker_line_width"] ?? marker["line"].width,
-        //   },
-        //   color: samples[element.name].highlight ?? element["color"] ?? marker["color"],
-        //   opacity: element["opacity"] ?? marker["opacity"],
-        // },
         // hovertemplate: pconfig["tt_label"]
       };
     });
+    return traces;
   }
 }
 // // Make the highcharts plot

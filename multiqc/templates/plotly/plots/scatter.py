@@ -31,10 +31,9 @@ class ScatterPlot(Plot):
         super().__init__(PlotType.SCATTER, pconfig, *args)
 
         self.categories = pconfig.get("categories", [])
-        self.default_marker = {
+        self.marker_shape = {
             "size": 10,
             "line": {"width": 1},
-            "color": "rgba(124, 181, 236, .5)",
             "opacity": 1,
         }
 
@@ -42,10 +41,23 @@ class ScatterPlot(Plot):
         """Serialise the plot data to pick up in JavaScript"""
         d = super().serialise()
         d["categories"] = self.categories
-        d["default_marker"] = self.default_marker
+        d["marker_shape"] = self.marker_shape
         return d
 
-    def populate_figure(self, fig: go.Figure, dataset: List[ElementT], is_log=False, is_pct=False) -> go.Figure:
+    def populate_figure(
+        self,
+        fig: go.Figure,
+        dataset: List[ElementT],
+        is_log=False,
+        is_pct=False,
+        # is_flat=True,
+    ) -> go.Figure:
+        """
+        Add traces to the figure
+        """
+        # Keeping track of element names, so we list them in legend only once
+        met_names = set()
+
         for element in dataset:
             x = element["x"]
 
@@ -58,7 +70,7 @@ class ScatterPlot(Plot):
                     )
                     continue
 
-            marker = self.default_marker.copy()
+            marker = self.marker_shape.copy()
             if "marker_size" in element:
                 marker["size"] = element["marker_size"]
             if "marker_line_width" in element:
@@ -68,14 +80,19 @@ class ScatterPlot(Plot):
             if "opacity" in element:
                 marker["opacity"] = element["opacity"]
 
+            show_in_legend = element["name"] not in met_names
+            met_names.add(element["name"])
+
             fig.add_trace(
                 go.Scatter(
                     x=[x],
                     y=[element["y"]],
                     text=element["name"],
+                    name=element["name"],
                     hoverinfo="text",
                     mode="markers",
                     marker=marker,
+                    showlegend=show_in_legend,
                 )
             )
         return fig

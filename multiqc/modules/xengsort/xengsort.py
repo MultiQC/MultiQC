@@ -151,6 +151,7 @@ class MultiqcModule(BaseMultiqcModule):
                     "ylab": "# Reads",
                     "cpswitch_counts_label": "Number of reads",
                     "cpswitch_c_active": False,
+                    "logswitch": True,
                 },
             ),
         )

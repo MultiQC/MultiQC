@@ -1,6 +1,7 @@
 class LinePlot extends Plot {
   constructor(data) {
     super(data);
+
     // Saving user-defined Y-axis limits to support the "Y-Limits" toggle button
     this.ymin = this.layout.yaxis.range[0];
     this.ymax = this.layout.yaxis.range[1];

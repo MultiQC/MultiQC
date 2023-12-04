@@ -4,6 +4,7 @@
 import json
 import logging
 
+
 from multiqc.modules.base_module import BaseMultiqcModule, ModuleNoSamplesFound
 from multiqc.plots import scatter
 
@@ -195,6 +196,7 @@ class MultiqcModule(BaseMultiqcModule):
         }
         default_color = "#000000"
         default_background_color = "rgb(211,211,211,0.05)"
+
         data = {}
 
         # plot the background data first, so it doesn't hide the actual data points
@@ -205,9 +207,10 @@ class MultiqcModule(BaseMultiqcModule):
                     "x": pc1,
                     "y": pc2,
                     "name": ancestry,
-                    "color": default_background_color,
-                    "opacity": 0.5,
+                    "color": ancestry_colors.get(ancestry, default_background_color),
+                    "opacity": 0.3,
                     "marker_size": 3,
+                    "marker_line_width": 0,
                 }
                 for pc1, pc2, ancestry in zip(
                     d["PC1"],
@@ -219,7 +222,11 @@ class MultiqcModule(BaseMultiqcModule):
 
         for s_name, d in self.peddy_data.items():
             if "PC1_het_check" in d and "PC2_het_check" in d:
-                data[s_name] = {"x": d["PC1_het_check"], "y": d["PC2_het_check"]}
+                data[s_name] = {
+                    "x": d["PC1_het_check"],
+                    "y": d["PC2_het_check"],
+                    "marker_line_width": 1,
+                }
                 try:
                     data[s_name]["color"] = ancestry_colors.get(d["ancestry-prediction"], default_color)
                 except KeyError:
@@ -230,8 +237,6 @@ class MultiqcModule(BaseMultiqcModule):
             "title": "Peddy: PCA Plot",
             "xlab": "PC1",
             "ylab": "PC2",
-            "marker_size": 10,
-            "marker_line_width": 0,
         }
 
         if len(data) > 0:
@@ -278,7 +283,10 @@ class MultiqcModule(BaseMultiqcModule):
             # check the sample contains the required columns
             if "median_depth_het_check" in d and "het_ratio_het_check" in d:
                 # add sample to dictionary with value as a dictionary of points to plot
-                data[s_name] = {"x": d["median_depth_het_check"], "y": d["het_ratio_het_check"]}
+                data[s_name] = {
+                    "x": d["median_depth_het_check"],
+                    "y": d["het_ratio_het_check"],
+                }
 
         pconfig = {
             "id": "peddy_het_check_plot",

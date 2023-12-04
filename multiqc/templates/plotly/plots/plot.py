@@ -41,6 +41,10 @@ class Plot(ABC):
             self.id = f"mqc_{is_static_suf}plot_{uniq_suffix}"
 
         self.plot_type = plot_type
+        self.flat = config.plots_force_flat or (
+            not config.plots_force_interactive and num_datasets > config.plots_flat_numseries
+        )
+
         self.title = pconfig.get("title")
         self.height = pconfig.get("height")
         self.do_save_data_file: bool = pconfig.get("save_data_file", True)
@@ -122,7 +126,6 @@ class Plot(ABC):
             plot_bgcolor="rgba(0,0,0,0)",
             font={"color": "Black", "family": "Lucida Grande"},
             colorway=mqc_colour.mqc_colour_scale.COLORBREWER_SCALES["plot_defaults"],
-            showlegend=False,
             autosize=True,
             margin_pad=10,  # pad sample names a bit
             hoverlabel_namelength=-1,  # do not crop sample names in hover labels
@@ -148,6 +151,15 @@ class Plot(ABC):
                 color="rgba(0, 0, 0, 0.5)",
                 activecolor="rgba(0, 0, 0, 1)",
             ),
+            showlegend=self.flat,
+            legend=dict(
+                orientation="h",
+                yanchor="top",
+                y=-0.2,
+                xanchor="center",
+                x=0.5,
+                traceorder="normal",
+            ),
         )
         return layout
 
@@ -161,7 +173,7 @@ class Plot(ABC):
             if len(datasets) > 1:  # for flat plots, each dataset will have its own unique ID
                 dl["uid"] = report.save_htmlid(f"{self.id}_{dl['name']}", skiplint=True)
 
-        if config.plots_force_flat:
+        if self.flat:
             html = self.flat_plot(datasets)
         else:
             html = self.interactive_plot(report, datasets)
@@ -173,7 +185,7 @@ class Plot(ABC):
             + "Flat image plot. Toolbox functions such as highlighting / hiding samples will not work "
             + '(see the <a href="http://multiqc.info/docs/#flat--interactive-plots" target="_blank">docs</a>).</small></p>'
         )
-        html += f'<div class="mqc_mplplot_plotgroup" id="{self.id}">'
+        html += f'<div class="mqc_mplplot_plotgroup" id="plotgroup-{self.id}" data-pid={self.id}>'
 
         if not config.simple_output:
             html += self._buttons(datasets, cls="mpl_switch_group")
@@ -188,25 +200,25 @@ class Plot(ABC):
             html += self._fig_to_static_html(
                 self._make_fig(dataset),
                 active=ds_idx == 0 and not self.p_active and not self.l_active,
-                uid=uid,
+                uid=uid if not self.add_log_tab and not self.add_pct_tab else f"{uid}-cnt",
             )
             if self.add_pct_tab:
                 html += self._fig_to_static_html(
                     self._make_fig(dataset, is_pct=True),
                     active=ds_idx == 0 and self.p_active,
-                    uid=f"{uid}_pc",
+                    uid=f"{uid}-pct",
                 )
             if self.add_log_tab:
                 html += self._fig_to_static_html(
                     self._make_fig(dataset, is_log=True),
                     active=ds_idx == 0 and self.l_active,
-                    uid=f"{uid}_log",
+                    uid=f"{uid}-log",
                 )
             if self.add_pct_tab and self.add_log_tab:
                 html += self._fig_to_static_html(
                     self._make_fig(dataset, is_pct=True, is_log=True),
                     active=ds_idx == 0 and self.p_active and self.l_active,
-                    uid=f"{uid}_pc_log",
+                    uid=f"{uid}-pct-log",
                 )
 
         html += "</div>"
@@ -381,5 +393,5 @@ class Plot(ABC):
             img_src = plot_relpath
 
         # Should this plot be hidden on report load?
-        hide_div = "" if active else ' style="display:none;"'
-        return f'<div class="mqc_mplplot" id="flat-{uid}"{hide_div}><img src="{img_src}" /></div>'
+        hiding = "" if active else ' style="display:none;"'
+        return f'<div class="mqc_mplplot" id="{uid}"{hiding}><img src="{img_src}" /></div>'
