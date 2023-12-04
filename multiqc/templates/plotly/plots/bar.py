@@ -29,10 +29,6 @@ def plot(
     """
     from multiqc.utils import report
 
-    # Sorting from small to large so the log switch makes sense
-    for categories in datasets:
-        categories.sort(key=lambda x: sum(x["data"]))
-
     for samples, categories in zip(samples_lists, datasets):
         for cat in categories:
             cat["samples"] = samples
@@ -66,6 +62,11 @@ def plot(
                     else:
                         values[key] = float(var + 0.0) / float(sum_for_cat)
                 cat["data_pct"] = values
+
+    if p.add_log_tab:
+        # Sorting from small to large so the log switch makes sense
+        for categories in datasets:
+            categories.sort(key=lambda x: sum(x["data"]))
 
     return p.add_to_report(datasets, report)
 
@@ -105,54 +106,11 @@ class BarPlot(Plot):
                     y=-0.2,
                     xanchor="center",
                     x=0.5,
+                    traceorder="normal",
                 ),
             }
         )
         return layout
-
-    # def flat_plot(
-    #     self,
-    #     datasets: List,
-    #     pid: str,
-    #     pids: List[str],
-    # ) -> str:
-    #     """
-    #     Create an HTML for a static plot version.
-    #     """
-    #     html = super().flat_plot(datasets, pid, pids)
-    #
-    #     # Buttons to cycle through different datasets
-    #     if len(datasets) > 1 and not config.simple_output:
-    #         # Collect all categories, and fill in with zeroes for samples that having
-    #         # any of cats missing
-    #         cat_to_color = dict()
-    #         for ds in datasets:
-    #             for d in ds:
-    #                 cat_to_color[d["name"]] = d["color"]
-    #         for data_by_cat in datasets:
-    #             for cat, color in cat_to_color.items():
-    #                 samples = data_by_cat[0]["samples"]
-    #                 if cat not in [d["name"] for d in data_by_cat]:
-    #                     data_by_cat.append(
-    #                         {
-    #                             "name": cat,
-    #                             "color": color,
-    #                             "data": [0 for _ in samples],
-    #                             "data_pct": [0.0 for _ in samples],
-    #                             "data_log": [0.0 for _ in samples],
-    #                         }
-    #                     )
-    #         # Sort categories by name
-    #         for data_by_cat in datasets:
-    #             data_by_cat.sort(key=lambda x: x["name"])
-    #
-    #     # Finally, build and save plots
-    #     for pidx, (pid, data_by_cat) in enumerate(zip(pids, datasets)):
-    #         html += self.dataset_to_imgs(pidx, pid, data_by_cat)
-    #
-    #     # Close wrapping div
-    #     html += "</div>"
-    #     return html
 
     def populate_figure(self, fig: go.Figure, dataset: List[Dict], is_log=False, is_pct=False) -> go.Figure:
         categories: List[Dict] = dataset
@@ -167,7 +125,10 @@ class BarPlot(Plot):
                     x=data,
                     name=cat["name"],
                     orientation="h",
-                    marker=dict(color=cat.get("color"), line=dict(width=0)),
+                    marker=dict(
+                        color=cat.get("color"),
+                        line=dict(width=0),
+                    ),
                 ),
             )
         return fig

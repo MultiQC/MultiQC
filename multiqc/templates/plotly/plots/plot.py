@@ -358,35 +358,28 @@ class Plot(ABC):
                     scale=1,
                 )
 
-        # Should this plot be hidden on report load?
-        hide_div = ""
-        if not active:
-            hide_div = ' style="display:none;"'
+        fig_write_args = dict(
+            format="png",
+            width=1100,
+            height=fig.layout.height,
+            scale=1,
+        )
 
         # Output the figure to a base64 encoded string
         if getattr(get_template_mod(), "base64_plots", True) is True:
             img_buffer = io.BytesIO()
-            fig.write_image(
-                img_buffer,
-                format="png",
-                width=fig.layout.width,
-                height=fig.layout.height,
-                scale=1,
-            )
+            fig.write_image(img_buffer, **fig_write_args)
             b64_img = base64.b64encode(img_buffer.getvalue()).decode("utf8")
             img_buffer.close()
-            html = f'<div class="mqc_mplplot" id="flat-{uid}"{hide_div}><img src="data:image/png;base64,{b64_img}" /></div>'
+            img_src = f"data:image/png;base64,{b64_img}"
 
         # Link to the saved image
         else:
             plot_relpath = Path(config.plots_dir_name) / "png" / f"{uid}.png"
             plot_relpath.parent.mkdir(parents=True, exist_ok=True)
-            fig.write_image(
-                plot_relpath,
-                format="png",
-                width=900,
-                height=fig.layout.height,
-                scale=1,
-            )
-            html = f'<div class="mqc_mplplot" id="flat-{uid}"{hide_div}><img src="{plot_relpath}" /></div>'
-        return html
+            fig.write_image(plot_relpath, **fig_write_args)
+            img_src = plot_relpath
+
+        # Should this plot be hidden on report load?
+        hide_div = "" if active else ' style="display:none;"'
+        return f'<div class="mqc_mplplot" id="flat-{uid}"{hide_div}><img src="{img_src}" /></div>'
