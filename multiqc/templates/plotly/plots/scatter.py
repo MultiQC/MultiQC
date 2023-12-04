@@ -50,18 +50,19 @@ class ScatterPlot(Plot):
         dataset: List[ElementT],
         is_log=False,
         is_pct=False,
-        # is_flat=True,
     ) -> go.Figure:
         """
         Add traces to the figure
         """
-        # Keeping track of element names, so we list them in legend only once
-        met_names = set()
+        # Keeping track of colors, so we list them in legend only once
+        met_colors = set()
 
         for element in dataset:
             x = element["x"]
 
             if self.categories:
+                if isinstance(x, float):
+                    x = int(round(x))
                 if isinstance(x, int) and (0 <= x < len(self.categories)):
                     x = self.categories[x]
                 else:
@@ -69,6 +70,11 @@ class ScatterPlot(Plot):
                         f"Scatter plot {self.id}: x={x} must be an index in the list of categories: {self.categories}"
                     )
                     continue
+
+            color = element.get("color")
+            show_in_legend = color and not element.get("hide_in_legend") and color not in met_colors
+            if show_in_legend:
+                met_colors.add(element["color"])
 
             marker = self.marker_shape.copy()
             if "marker_size" in element:
@@ -79,9 +85,6 @@ class ScatterPlot(Plot):
                 marker["color"] = element["color"]
             if "opacity" in element:
                 marker["opacity"] = element["opacity"]
-
-            show_in_legend = element["name"] not in met_names
-            met_names.add(element["name"])
 
             fig.add_trace(
                 go.Scatter(

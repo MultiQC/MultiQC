@@ -3,7 +3,7 @@
 
 import json
 import logging
-
+import random
 
 from multiqc.modules.base_module import BaseMultiqcModule, ModuleNoSamplesFound
 from multiqc.plots import scatter
@@ -315,7 +315,7 @@ class MultiqcModule(BaseMultiqcModule):
         for s_name, d in self.peddy_data.items():
             if "sex_het_ratio" in d and "ped_sex_sex_check" in d:
                 data[s_name] = {
-                    "x": sex_index.get(d["ped_sex_sex_check"], 2),
+                    "x": sex_index.get(d["ped_sex_sex_check"], 2) + (random.random() - 0.5) * 0.1,
                     "y": d["sex_het_ratio"],
                 }
 

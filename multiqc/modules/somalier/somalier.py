@@ -441,6 +441,8 @@ class MultiqcModule(BaseMultiqcModule):
 
                 # Assign colour
                 data[s_name]["color"] = relatedness_colours[relatedness][1]
+                if relatedness_colours[relatedness][0] == "Unrelated":
+                    data[s_name]["hide_in_legend"] = True
 
         if len(data) > 0:
             pconfig = {
@@ -551,7 +553,7 @@ class MultiqcModule(BaseMultiqcModule):
                 else:
                     y = 2 * d["X_depth_mean"] / d["gt_depth_mean"]
                 data[s_name] = {
-                    "x": (random.random() - 0.5) * 0.1 + sex_index.get(d["original_pedigree_sex"], 2),
+                    "x": sex_index.get(d["original_pedigree_sex"], 2) + (random.random() - 0.5) * 0.1,
                     "y": y,
                 }
 
@@ -646,7 +648,12 @@ class MultiqcModule(BaseMultiqcModule):
             ancestry_colors = dict(zip(ancestry_colors.keys(), _make_col_alpha(ancestry_colors.values(), 0.3)))
 
             background = [
-                {"x": pc1, "y": pc2, "color": ancestry_colors.get(ancestry, default_background_color), "name": ancestry}
+                {
+                    "x": pc1,
+                    "y": pc2,
+                    "color": ancestry_colors.get(ancestry, default_background_color),
+                    "name": ancestry,
+                }
                 for pc1, pc2, ancestry in zip(d["PC1"], d["PC2"], d["ancestry"])
             ]
             data["background"] = background
