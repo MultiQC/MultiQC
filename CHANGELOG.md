@@ -11,6 +11,7 @@
 - Create CODE_OF_CONDUCT.md ([#2195](https://github.com/ewels/MultiQC/pull/2195))
 - BCLConvert: fix mean quality, fix count-per-lane barplot ([#2197](https://github.com/ewels/MultiQC/pull/2197))
 - Re-add `run()` into the `multiqc` namespace ([#2202](https://github.com/ewels/MultiQC/pull/2202))
+- Fix running `--no-report` ([#2212](https://github.com/ewels/MultiQC/pull/2212))
 
 ### New Modules
 
