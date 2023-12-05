@@ -5,6 +5,7 @@
 #
 # from multiqc.utils import config, report
 import base64
+import dataclasses
 import io
 import logging
 import random
@@ -13,7 +14,7 @@ from abc import abstractmethod, ABC
 from enum import Enum
 from pathlib import Path
 from pprint import pprint
-from typing import Dict, Union, List
+from typing import Dict, Union, List, Any, Optional
 
 import plotly.graph_objects as go
 
@@ -24,16 +25,34 @@ logger = logging.getLogger(__name__)
 
 
 class PlotType(Enum):
+    """
+    Plot labels used in custom content, as well as in JS to load plot into Plotly-js
+    """
+
     LINE = "xy_line"
     BAR = "bar_graph"
     SCATTER = "scatter"
     HEATMAP = "heatmap"
 
 
+@dataclasses.dataclass
+class Dataset:
+    """
+    Structured version of dataset config dictionary
+    """
+
+    data: Any = dataclasses.field(repr=False)
+    name: str
+    uid: str
+    ylab: Optional[str] = None
+    xlab: Optional[str] = None
+    ymax: Optional[int] = None
+
+
 class Plot(ABC):
     """Structured version of plot config dictionary"""
 
-    def __init__(self, plot_type: PlotType, pconfig: Dict, num_datasets: int):
+    def __init__(self, plot_type: PlotType, pconfig: Dict, datasets: List):
         self.id = pconfig.get("id")
         if self.id is None:  # ID of the plot group
             uniq_suffix = "".join(random.sample(string.ascii_lowercase, 10))
@@ -42,11 +61,12 @@ class Plot(ABC):
 
         self.plot_type = plot_type
         self.flat = config.plots_force_flat or (
-            not config.plots_force_interactive and num_datasets > config.plots_flat_numseries
+            not config.plots_force_interactive and len(datasets) > config.plots_flat_numseries
         )
 
         self.title = pconfig.get("title")
         self.height = pconfig.get("height")
+        self.width = pconfig.get("width")
         self.do_save_data_file: bool = pconfig.get("save_data_file", True)
 
         # Counts / Percentages / Log10 switch
@@ -59,29 +79,27 @@ class Plot(ABC):
         self.p_active = self.add_pct_tab and pconfig.get("cpswitch_c_active", True) is not True
 
         # Per-dataset configurations
+        self.datasets: List[Dataset] = [Dataset(data, name=str(i + 1), uid=self.id) for i, data in enumerate(datasets)]
         data_labels: List[Union[str, Dict[str, str]]] = pconfig.get("data_labels", [])
-        for idx in range(num_datasets):
-            if len(data_labels) <= idx:
-                data_labels.append({})
+        for idx, ds in enumerate(self.datasets):
+            if idx >= len(data_labels):
+                continue
             dl = data_labels[idx]
             if isinstance(dl, str):
-                data_labels[idx] = {"name": dl}
+                ds.name = dl
             elif isinstance(dl, dict):
-                data_labels[idx]["name"] = dl.get("name", idx + 1)
-                data_labels[idx]["ylab"] = dl.get("ylab") or dl.get("name") or None
+                ds.name = dl.get("name", idx + 1)
             else:
-                logger.warning(
-                    f"Invalid data_labels type: {type(data_labels[idx])}. " f"Must be a string or a dictionary."
-                )
-                data_labels[idx] = {"name": str(idx + 1)}
-            data_labels[idx]["uid"] = self.id
-            if num_datasets > 1:
-                data_labels[idx]["uid"] += f"_{idx + 1}"
-        self.data_labels: List[Dict[str, str]] = data_labels
+                logger.warning(f"Invalid data_labels type: {type(dl)}. Must be a string or a dict.")
+            if len(datasets) > 1:
+                ds.uid += f"_{idx + 1}"
+            if isinstance(dl, dict):
+                ds.ylab = dl.get("ylab") or dl.get("name") or None
+                ds.xlab = dl.get("xlab") or None
 
         # Add initial axis labels if defined in `data_labels` but not main config
-        self.ylab = pconfig.get("ylab") or self.data_labels[0].get("ylab")
-        self.xlab = pconfig.get("xlab") or self.data_labels[0].get("xlab")
+        self.ylab = pconfig.get("ylab") or (self.datasets[0].ylab if self.datasets else None)
+        self.xlab = pconfig.get("xlab") or (self.datasets[0].xlab if self.datasets else None)
         self.xmin = pconfig.get("xmin")
         self.xmax = pconfig.get("xmax")
         self.ymin = pconfig.get("ymin")
@@ -94,7 +112,8 @@ class Plot(ABC):
         }
 
     def __repr__(self):
-        return f"<{self.__class__.__name__} {pprint(self.__dict__)}>"
+        d = {k: v for k, v in self.__dict__ if k != "datasets"}
+        return f"<{self.__class__.__name__} {pprint(d)}>"
 
     def layout(self) -> go.Layout:
         """
@@ -122,6 +141,7 @@ class Plot(ABC):
                 range=[self.ymin, self.ymax],
             ),
             height=self.height,
+            width=self.width,
             paper_bgcolor="rgba(0,0,0,0)",
             plot_bgcolor="rgba(0,0,0,0)",
             font={"color": "Black", "family": "Lucida Grande"},
@@ -163,23 +183,24 @@ class Plot(ABC):
         )
         return layout
 
-    def add_to_report(self, datasets: List[List[Dict]], report) -> str:
+    def add_to_report(self, report) -> str:
         """
         Build and add the plot data to the report, return an HTML wrapper.
         """
+        # Setting IDs again now that we have "report" object to guarantee uniqueness
         self.id = report.save_htmlid(self.id)
-        for dl in self.data_labels:
-            dl["uid"] = self.id
-            if len(datasets) > 1:  # for flat plots, each dataset will have its own unique ID
-                dl["uid"] = report.save_htmlid(f"{self.id}_{dl['name']}", skiplint=True)
+        for ds in self.datasets:
+            ds.uid = self.id
+            if len(self.datasets) > 1:  # for flat plots, each dataset will have its own unique ID
+                ds.uid = report.save_htmlid(f"{self.id}_{ds.name}", skiplint=True)
 
         if self.flat:
-            html = self.flat_plot(datasets)
+            html = self.flat_plot()
         else:
-            html = self.interactive_plot(report, datasets)
+            html = self.interactive_plot(report)
         return html
 
-    def flat_plot(self, datasets: List[List]) -> str:
+    def flat_plot(self) -> str:
         html = (
             '<p class="text-info"><small><span class="glyphicon glyphicon-picture" aria-hidden="true"></span> '
             + "Flat image plot. Toolbox functions such as highlighting / hiding samples will not work "
@@ -188,43 +209,41 @@ class Plot(ABC):
         html += f'<div class="mqc_mplplot_plotgroup" id="plotgroup-{self.id}" data-pid={self.id}>'
 
         if not config.simple_output:
-            html += self._buttons(datasets, cls="mpl_switch_group")
+            html += self._buttons(cls="mpl_switch_group")
 
         # Go through datasets creating plots
-        for ds_idx, dataset in enumerate(datasets):
-            uid = self.data_labels[ds_idx]["uid"]
-
+        for ds_idx, dataset in enumerate(self.datasets):
             if self.do_save_data_file:
-                self.save_data_file(dataset, uid=uid)
+                self.save_data_file(dataset)
 
             html += self._fig_to_static_html(
                 self._make_fig(dataset),
                 active=ds_idx == 0 and not self.p_active and not self.l_active,
-                uid=uid if not self.add_log_tab and not self.add_pct_tab else f"{uid}-cnt",
+                uid=dataset.uid if not self.add_log_tab and not self.add_pct_tab else f"{dataset.uid}-cnt",
             )
             if self.add_pct_tab:
                 html += self._fig_to_static_html(
                     self._make_fig(dataset, is_pct=True),
                     active=ds_idx == 0 and self.p_active,
-                    uid=f"{uid}-pct",
+                    uid=f"{dataset.uid}-pct",
                 )
             if self.add_log_tab:
                 html += self._fig_to_static_html(
                     self._make_fig(dataset, is_log=True),
                     active=ds_idx == 0 and self.l_active,
-                    uid=f"{uid}-log",
+                    uid=f"{dataset.uid}-log",
                 )
             if self.add_pct_tab and self.add_log_tab:
                 html += self._fig_to_static_html(
                     self._make_fig(dataset, is_pct=True, is_log=True),
                     active=ds_idx == 0 and self.p_active and self.l_active,
-                    uid=f"{uid}-pct-log",
+                    uid=f"{dataset.uid}-pct-log",
                 )
 
         html += "</div>"
         return html
 
-    def _make_fig(self, dataset: List, is_log=False, is_pct=False) -> go.Figure:
+    def _make_fig(self, dataset: Dataset, is_log=False, is_pct=False) -> go.Figure:
         """
         Create a Plotly Figure object.
         """
@@ -243,24 +262,22 @@ class Plot(ABC):
                     # "xaxis.title.text": layout.xaxis.title.text + " " + self.l_label
                 }
             )
-        fig = go.Figure(layout=layout)
-        self.populate_figure(fig, dataset, is_log, is_pct)
-        return fig
+        return self.create_figure(layout, dataset, is_log, is_pct)
 
     @abstractmethod
-    def populate_figure(self, fig: go.Figure, dataset: List, is_log=False, is_pct=False):
+    def create_figure(self, layout: go.Layout, dataset: Dataset, is_log=False, is_pct=False):
         """
-        To be overridden by specific plots: add traces, updated layout if needed.
+        To be overridden by specific plots: create a Plotly figure for a dataset, update layout if needed.
         """
         pass
 
     @abstractmethod
-    def save_data_file(self, dataset: List, uid: str) -> None:
+    def save_data_file(self, data: Dataset) -> None:
         """
         Save dataset to disk.
         """
 
-    def _buttons(self, datasets, cls=""):
+    def _buttons(self, cls=""):
         """
         Add buttons: percentage on/off, log scale on/off, datasets switch panel
         """
@@ -289,24 +306,27 @@ class Plot(ABC):
                     active=self.l_active,
                     label=self.l_label,
                 )
-            if len(datasets) > 1:
+            if len(self.datasets) > 1:
                 html += " &nbsp; &nbsp; "
 
         # Buttons to cycle through different datasets
-        if len(datasets) > 1:
+        if len(self.datasets) > 1:
             html += f'<div class="btn-group {cls} dataset-switch-group">\n'
-            for ds_idx, ds in enumerate(datasets):
-                dl: Dict[str, str] = self.data_labels[ds_idx]
-                data_attrs = {k: dl[k] for k in ["ylab", "ymax", "xlab"] if k in dl}
-                data_attrs["dataset-index"] = ds_idx
-                # For flat plots, we will generate separate flat images for each
-                # dataset and view, so have to save individual image IDs.
-                data_attrs["dataset-uid"] = dl["uid"]
+            for ds_idx, ds in enumerate(self.datasets):
+                data_attrs = {
+                    "ylab": ds.ylab,
+                    "ymax": ds.ymax,
+                    "xlab": ds.xlab,
+                    "dataset-index": ds_idx,
+                    # For flat plots, we will generate separate flat images for each
+                    # dataset and view, so have to save individual image IDs.
+                    "dataset-uid": ds.uid,
+                }
                 html += _btn(
                     cls="",
                     pid=self.id,
                     active=ds_idx == 0,
-                    label=dl["name"],
+                    label=ds.name,
                     data_attrs=data_attrs,
                 )
             html += "</div>\n\n"
@@ -318,14 +338,15 @@ class Plot(ABC):
             "id": self.id,
             "plot_type": self.plot_type.value,
             "layout": self.layout().to_plotly_json(),
+            "datasets": [d.data for d in self.datasets],
             # TODO: save figures to JSON, not datasets?
             # "figures": [self._make_fig(dataset).to_plotly_json() for dataset in datasets],
             "config": self.config,
         }
 
-    def interactive_plot(self, report, datasets) -> str:
+    def interactive_plot(self, report) -> str:
         html = '<div class="mqc_hcplot_plotgroup">'
-        html += self._buttons(datasets, cls="interactive-switch-group")
+        html += self._buttons(cls="interactive-switch-group")
 
         # Plot HTML
         html += """
@@ -339,9 +360,8 @@ class Plot(ABC):
         html += "</div>"
 
         # Saving compressed data for JavaScript to pick up and uncompress.
-        d = self.serialise()
-        d["datasets"] = datasets
-        report.plot_data[self.id] = d
+        dump = self.serialise()
+        report.plot_data[self.id] = dump
         return html
 
     @staticmethod
@@ -353,6 +373,14 @@ class Plot(ABC):
         """
         Build one static image, return an HTML wrapper.
         """
+        write_kwargs = dict(
+            # While interactive plots take the width of screen, but flat plots we have to
+            # set it to a wider number explicitly, otherwise the picture will be too small.
+            width=fig.layout.width or 1100,
+            height=fig.layout.height,
+            scale=1,
+        )
+
         # Save the plot to the data directory if export is requested
         if config.export_plots:
             for file_ext in config.export_plot_formats:
@@ -362,25 +390,15 @@ class Plot(ABC):
                     plot_dir.mkdir(parents=True, exist_ok=True)
                 # Save the plot
                 plot_fn = Path(plot_dir) / f"{uid}.{file_ext}"
-                fig.write_image(
-                    plot_fn,
-                    format=file_ext,
-                    width=fig.layout.width,
-                    height=fig.layout.height,
-                    scale=1,
-                )
+                fig.write_image(plot_fn, **write_kwargs)
 
-        fig_write_args = dict(
-            format="png",
-            width=1100,
-            height=fig.layout.height,
-            scale=1,
-        )
+        # Now writing the PNGs for the HTML
+        write_kwargs["format"] = "png"
 
         # Output the figure to a base64 encoded string
         if getattr(get_template_mod(), "base64_plots", True) is True:
             img_buffer = io.BytesIO()
-            fig.write_image(img_buffer, **fig_write_args)
+            fig.write_image(img_buffer, **write_kwargs)
             b64_img = base64.b64encode(img_buffer.getvalue()).decode("utf8")
             img_buffer.close()
             img_src = f"data:image/png;base64,{b64_img}"
@@ -389,7 +407,7 @@ class Plot(ABC):
         else:
             plot_relpath = Path(config.plots_dir_name) / "png" / f"{uid}.png"
             plot_relpath.parent.mkdir(parents=True, exist_ok=True)
-            fig.write_image(plot_relpath, **fig_write_args)
+            fig.write_image(plot_relpath, **write_kwargs)
             img_src = plot_relpath
 
         # Should this plot be hidden on report load?

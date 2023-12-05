@@ -5,7 +5,7 @@ from typing import Dict, List
 import math
 import plotly.graph_objects as go
 
-from multiqc.templates.plotly.plots.plot import Plot, PlotType
+from multiqc.templates.plotly.plots.plot import Plot, PlotType, Dataset
 from multiqc.utils import util_functions
 
 logger = logging.getLogger(__name__)
@@ -27,53 +27,21 @@ def plot(
     :param pconfig: Plot configuration dictionary
     :return: HTML with JS, ready to be inserted into the page
     """
-    from multiqc.utils import report
-
-    for samples, categories in zip(samples_lists, datasets):
-        for cat in categories:
-            cat["samples"] = samples
-            # Extend with zeroes if there are fewer values than samples
-            if len(cat["data"]) < len(cat["samples"]):
-                cat["data"].extend([0] * (len(cat["samples"]) - len(cat["data"])))
-
     p = BarPlot(
         pconfig,
-        num_datasets=len(datasets),
+        datasets,
+        samples_lists,
         max_n_samples=max([len(samples) for samples in samples_lists]),
     )
 
-    # Calculate and save percentages
-    if p.add_pct_tab:
-        for pidx, categories in enumerate(datasets):
-            # Count totals for each category
-            sums = [0 for _ in categories[0]["data"]]
-            for cat in categories:
-                for sample_idx, val in enumerate(cat["data"]):
-                    if not math.isnan(val):
-                        sums[sample_idx] += val
+    from multiqc.utils import report
 
-            # Now, calculate percentages for each category
-            for cat in categories:
-                values = [x for x in cat["data"]]
-                for key, var in enumerate(values):
-                    sum_for_cat = sums[key]
-                    if sum_for_cat == 0:
-                        values[key] = 0
-                    else:
-                        values[key] = float(var + 0.0) / float(sum_for_cat)
-                cat["data_pct"] = values
-
-    if p.add_log_tab:
-        # Sorting from small to large so the log switch makes sense
-        for categories in datasets:
-            categories.sort(key=lambda x: sum(x["data"]))
-
-    return p.add_to_report(datasets, report)
+    return p.add_to_report(report)
 
 
 class BarPlot(Plot):
-    def __init__(self, pconfig: Dict, max_n_samples: int, num_datasets: int):
-        super().__init__(PlotType.BAR, pconfig, num_datasets=num_datasets)
+    def __init__(self, pconfig: Dict, datasets: List, samples_lists: List, max_n_samples: int):
+        super().__init__(PlotType.BAR, pconfig, datasets)
 
         if not self.height:
             # Height has a default, then adjusted by the number of samples
@@ -82,6 +50,39 @@ class BarPlot(Plot):
             self.height = min(2560, self.height)
 
         self.stacking = pconfig.get("stacking", "stack" if self.p_active else "relative")
+
+        # Extend with zeroes if there are fewer values than samples
+        for samples, dataset in zip(samples_lists, self.datasets):
+            for cat in dataset.data:
+                cat["samples"] = samples
+                if len(cat["data"]) < len(samples):
+                    cat["data"].extend([0] * (len(samples) - len(cat["data"])))
+
+        # Calculate and save percentages
+        if self.add_pct_tab:
+            for pidx, categories in enumerate(datasets):
+                # Count totals for each category
+                sums = [0 for _ in categories[0]["data"]]
+                for cat in categories:
+                    for sample_idx, val in enumerate(cat["data"]):
+                        if not math.isnan(val):
+                            sums[sample_idx] += val
+
+                # Now, calculate percentages for each category
+                for cat in categories:
+                    values = [x for x in cat["data"]]
+                    for key, var in enumerate(values):
+                        sum_for_cat = sums[key]
+                        if sum_for_cat == 0:
+                            values[key] = 0
+                        else:
+                            values[key] = float(var + 0.0) / float(sum_for_cat)
+                    cat["data_pct"] = values
+
+        if self.add_log_tab:
+            # Sorting from small to large so the log switch makes sense
+            for categories in datasets:
+                categories.sort(key=lambda x: sum(x["data"]))
 
     def layout(self) -> go.Layout:
         layout: go.Layout = super().layout()
@@ -103,8 +104,18 @@ class BarPlot(Plot):
         )
         return layout
 
-    def populate_figure(self, fig: go.Figure, dataset: List[Dict], is_log=False, is_pct=False) -> go.Figure:
-        categories: List[Dict] = dataset
+    def create_figure(
+        self,
+        layout: go.Layout,
+        dataset: Dataset,
+        is_log=False,
+        is_pct=False,
+    ) -> go.Figure:
+        """
+        Create a Plotly figure for a dataset
+        """
+        fig = go.Figure(layout=layout)
+        categories: List[Dict] = dataset.data
         for cat in categories:
             data = cat["data"]
             if is_pct:
@@ -124,12 +135,13 @@ class BarPlot(Plot):
             )
         return fig
 
-    def save_data_file(self, dataset: List[Dict], uid: str) -> None:
+    def save_data_file(self, dataset: Dataset) -> None:
         fdata = {}
-        for d in dataset:
+        data: List[Dict] = dataset.data
+        for d in data:
             for d_idx, d_val in enumerate(d["data"]):
                 s_name = d["samples"][d_idx]
                 if s_name not in fdata:
                     fdata[s_name] = dict()
                 fdata[s_name][d["name"]] = d_val
-        util_functions.write_data_file(fdata, uid)
+        util_functions.write_data_file(fdata, dataset.uid)

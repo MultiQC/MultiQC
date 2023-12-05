@@ -12,6 +12,17 @@ logger = logging.getLogger(__name__)
 
 letters = "abcdefghijklmnopqrstuvwxyz"
 
+# Load the template so that we can access its configuration
+# Do this lazily to mitigate import-spaghetti when running unit tests
+_template_mod = None
+
+
+def get_template_mod():
+    global _template_mod
+    if not _template_mod:
+        _template_mod = config.avail_templates[config.template].load()
+    return _template_mod
+
 
 def plot(data, xcats, ycats=None, pconfig=None):
     """Plot a 2D heatmap.
@@ -21,7 +32,6 @@ def plot(data, xcats, ycats=None, pconfig=None):
     :param pconfig: optional dict with config key:value pairs.
     :return: HTML and JS, ready to be inserted into the page
     """
-
     if pconfig is None:
         pconfig = {}
 
@@ -34,6 +44,15 @@ def plot(data, xcats, ycats=None, pconfig=None):
         ycats = xcats
 
     # Make a plot
+    mod = get_template_mod()
+    if "heatmap" in mod.__dict__ and callable(mod.heatmap):
+        try:
+            return mod.heatmap(data, xcats, ycats, pconfig)
+        except:  # noqa: E722
+            if config.strict:
+                # Crash quickly in the strict mode. This can be helpful for interactive
+                # debugging of modules
+                raise
     return highcharts_heatmap(data, xcats, ycats, pconfig)
 
 

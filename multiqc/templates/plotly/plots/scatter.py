@@ -3,7 +3,7 @@ from typing import Dict, List, Union
 
 from plotly import graph_objects as go
 
-from multiqc.templates.plotly.plots.plot import Plot, PlotType
+from multiqc.templates.plotly.plots.plot import Plot, PlotType, Dataset
 
 logger = logging.getLogger(__name__)
 
@@ -19,16 +19,16 @@ def plot(datasets: List[List[ElementT]], pconfig: Dict) -> str:
     :param pconfig: dict with config key:value pairs. See CONTRIBUTING.md
     :return: HTML with JS, ready to be inserted into the page
     """
+    p = ScatterPlot(pconfig, datasets)
+
     from multiqc.utils import report
 
-    p = ScatterPlot(pconfig, len(datasets))
-
-    return p.add_to_report(datasets, report)
+    return p.add_to_report(report)
 
 
 class ScatterPlot(Plot):
-    def __init__(self, pconfig: Dict, *args):
-        super().__init__(PlotType.SCATTER, pconfig, *args)
+    def __init__(self, pconfig: Dict, datasets: List):
+        super().__init__(PlotType.SCATTER, pconfig, datasets)
 
         self.categories = pconfig.get("categories", [])
         self.marker_shape = {
@@ -44,20 +44,23 @@ class ScatterPlot(Plot):
         d["marker_shape"] = self.marker_shape
         return d
 
-    def populate_figure(
+    def create_figure(
         self,
-        fig: go.Figure,
-        dataset: List[ElementT],
+        layout: go.Layout,
+        dataset: Dataset,
         is_log=False,
         is_pct=False,
     ) -> go.Figure:
         """
-        Add traces to the figure
+        Create a Plotly figure for a dataset
         """
+        fig = go.Figure(layout=layout)
+
         # Keeping track of colors, so we list them in legend only once
         met_colors = set()
 
-        for element in dataset:
+        data: List[ElementT] = dataset.data
+        for element in data:
             x = element["x"]
 
             if self.categories:
@@ -100,5 +103,5 @@ class ScatterPlot(Plot):
             )
         return fig
 
-    def save_data_file(self, dataset: List, uid: str) -> None:
+    def save_data_file(self, dataset: Dataset) -> None:
         pass
