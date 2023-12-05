@@ -29,6 +29,7 @@ function initPlot(data) {
   if (data.plot_type === "xy_line") return new LinePlot(data);
   if (data.plot_type === "bar_graph") return new BarPlot(data);
   if (data.plot_type === "scatter") return new ScatterPlot(data);
+  if (data.plot_type === "heatmap") return new HeatmapPlot(data);
   console.log("Did not recognise plot type: " + data.plot_type);
   return null;
 }

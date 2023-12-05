@@ -2,7 +2,7 @@ class ScatterPlot extends Plot {
   constructor(data) {
     super(data);
     this.categories = data.categories;
-    this.marker_shape = data.marker_shape;
+    this.default_marker = data.default_marker;
   }
 
   activeDatasetSamples() {
@@ -32,13 +32,13 @@ class ScatterPlot extends Plot {
       if (this.categories && Number.isInteger(x) && x < this.categories.length) x = this.categories[x];
 
       // Shallow copy of default marker
-      let marker = Object.assign({}, this.marker_shape);
+      let marker = Object.assign({}, this.default_marker);
       marker.size = element["marker_size"] ?? marker.size;
       marker.line = {
         width: element["marker_line_width"] ?? marker.line.width,
       };
       console.log(element.name + ": " + marker.line.width);
-      marker.color = visibleSamples[si].highlight ?? element["color"] ?? "rgba(124, 181, 236, .5)";
+      marker.color = visibleSamples[si].highlight ?? element["color"] ?? marker.color;
       marker.opacity = element["opacity"] ?? marker.opacity;
 
       return {

@@ -625,15 +625,6 @@ class MultiqcModule(BaseMultiqcModule):
     def somalier_ancestry_pca_plot(self):
         data = dict()
 
-        # cycle over samples and add PC coordinates to data dict
-        for s_name, d in self.somalier_data.items():
-            if "PC1" in d and "PC2" in d:
-                data[s_name] = {
-                    "x": d["PC1"],
-                    "y": d["PC2"],
-                    "color": "rgba(0, 0, 0, 0.6)",
-                }
-
         # add background
         # N.B. this must be done after samples to have samples on top
         d = self.somalier_background_pcs.pop("background_pcs", {})
@@ -653,10 +644,20 @@ class MultiqcModule(BaseMultiqcModule):
                     "y": pc2,
                     "color": ancestry_colors.get(ancestry, default_background_color),
                     "name": ancestry,
+                    "opacity": 0.5,
                 }
                 for pc1, pc2, ancestry in zip(d["PC1"], d["PC2"], d["ancestry"])
             ]
             data["background"] = background
+
+        # cycle over samples and add PC coordinates to data dict
+        for s_name, d in self.somalier_data.items():
+            if "PC1" in d and "PC2" in d:
+                data[s_name] = {
+                    "x": d["PC1"],
+                    "y": d["PC2"],
+                    "color": "rgba(0, 0, 0, 0.6)",
+                }
 
         # generate section and plot
         if len(data) > 0:
