@@ -559,9 +559,7 @@ ngsderive/junction_annotation:
   num_lines: 1
 nonpareil:
   fn: "*.json"
-  contents: "consistent"
   contents: "LRstar"
-  contents: "modelR"
   num_lines: 500
   max_filesize: 1048576
 optitype:
