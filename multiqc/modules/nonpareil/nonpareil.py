@@ -2,7 +2,6 @@
 
 
 import logging
-from collections import defaultdict
 
 from multiqc import config
 from multiqc.modules.base_module import BaseMultiqcModule, ModuleNoSamplesFound
