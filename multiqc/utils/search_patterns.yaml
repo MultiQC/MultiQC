@@ -557,6 +557,13 @@ ngsderive/encoding:
 ngsderive/junction_annotation:
   contents: "File	total_junctions	total_splice_events	known_junctions	partial_novel_junctions	complete_novel_junctions	known_spliced_reads	partial_novel_spliced_reads	complete_novel_spliced_reads"
   num_lines: 1
+nonpareil:
+  fn: "*.json"
+  contents: "consistent"
+  contents: "LRstar"
+  contents: "modelR"
+  num_lines: 500
+  max_filesize: 1048576
 optitype:
   contents: "	A1	A2	B1	B2	C1	C2	Reads	Objective"
   num_lines: 1

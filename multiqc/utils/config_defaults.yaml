@@ -728,6 +728,10 @@ module_order:
       module_tag:
         - RNA
         - DNA
+  - nonpareil:
+      module_tag:
+        - DNA
+        - metagenomics
   - adapterRemoval:
       module_tag:
         - RNA
