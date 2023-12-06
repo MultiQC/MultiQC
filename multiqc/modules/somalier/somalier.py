@@ -408,65 +408,80 @@ class MultiqcModule(BaseMultiqcModule):
         )
 
     def somalier_relatedness_plot(self):
-        data = dict()
         alpha = 0.6
-        relatedness_colours = {
-            0: ["Unrelated", "rgba(74, 124, 182, {})".format(alpha)],
-            0.49: ["Sib-sib", "rgba(243, 123, 40, {})".format(alpha)],
-            0.5: ["Parent-child", "rgba(159, 84, 47, {})".format(alpha)],
+        relatedness_groups = {
+            0: {
+                "name": "Unrelated",
+                "color": f"rgba(74, 124, 182, {alpha})",
+            },
+            0.49: {
+                "name": "Sib-sib",
+                "color": f"rgba(243, 123, 40, {alpha})",
+            },
+            0.5: {
+                "name": "Parent-child",
+                "color": f"rgba(159, 84, 47, {alpha})",
+            },
         }
 
         # Get index colour scale
         cscale = mqc_colour.mqc_colour_scale()
         extra_colours = cscale.get_colours("Dark2")
         extra_colours = _make_col_alpha(extra_colours, alpha)
-
         extra_colour_idx = 0
-        for s_name, d in self.somalier_data.items():
-            if "ibs0" in d and "ibs2" in d:
-                data[s_name] = {"x": d["ibs0"], "y": d["ibs2"]}
-            if "relatedness" in d:
-                relatedness = d["expected_relatedness"]
-                # -1 is not the same family, 0 is same family but unreleaed
-                # @brentp says he usually bundles them together
-                if relatedness == -1:
-                    relatedness = 0
+        data = dict()
+        for pair, d in self.somalier_data.items():
+            if "relatedness" not in d:
+                continue
 
-                # New unique value that we've not seen before
-                if relatedness not in relatedness_colours:
-                    relatedness_colours[relatedness] = [str(relatedness), extra_colours[extra_colour_idx]]
-                    extra_colour_idx += 0
-                    if extra_colour_idx > len(extra_colours):
-                        extra_colour_idx = 0
+            relatedness = d["expected_relatedness"]
+            # -1 is not the same family, 0 is same family but unrelated
+            # @brentp says he usually bundles them together
+            if relatedness == -1:
+                relatedness = 0
 
-                # Assign colour
-                data[s_name]["color"] = relatedness_colours[relatedness][1]
-                if relatedness_colours[relatedness][0] == "Unrelated":
-                    data[s_name]["hide_in_legend"] = True
+            # New unique value that we've not seen before
+            if relatedness not in relatedness_groups:
+                relatedness_groups[relatedness] = {
+                    "name": str(relatedness),
+                    "color": extra_colours[extra_colour_idx],
+                }
+                extra_colour_idx += 0
+                if extra_colour_idx > len(extra_colours):
+                    extra_colour_idx = 0
 
-        if len(data) > 0:
-            pconfig = {
-                "id": "somalier_relatedness_plot",
-                "title": "Somalier: Sample Shared Allele Rates (IBS)",
-                "xlab": "IBS0 (no alleles shared)",
-                "ylab": "IBS2 (both alleles shared)",
-                "marker_line_width": 0,
+            data[pair] = {
+                "x": d["ibs0"],
+                "y": d["ibs2"],
+                "color": relatedness_groups[relatedness]["color"],
+                "group": relatedness_groups[relatedness]["name"],
             }
 
-            colours_legend = ""
-            for val in sorted(relatedness_colours.keys()):
-                name, col_rgb = relatedness_colours[val]
-                col = col_rgb.replace(str(alpha), "1.0")
-                colours_legend += f'<span style="color:{col}">{name}</span>, '
+        if len(data) == 0:
+            return
 
-            self.add_section(
-                name="Relatedness",
-                anchor="somalier-relatedness",
-                description="""
-                Shared allele rates between sample pairs.
-                Points are coloured by degree of expected-relatedness: {}""".format(colours_legend),
-                plot=scatter.plot(data, pconfig),
-            )
+        pconfig = {
+            "id": "somalier_relatedness_plot",
+            "title": "Somalier: Sample Shared Allele Rates (IBS)",
+            "xlab": "IBS0 (no alleles shared)",
+            "ylab": "IBS2 (both alleles shared)",
+            "marker_line_width": 0,
+        }
+
+        colours_legend = ""
+        for val in sorted(relatedness_groups.keys()):
+            name, col_rgb = relatedness_groups[val]
+            col = col_rgb.replace(str(alpha), "1.0")
+            colours_legend += f'<span style="color:{col}">{name}</span>, '
+
+        self.add_section(
+            name="Relatedness",
+            anchor="somalier-relatedness",
+            description=f"""
+            Shared allele rates between sample pairs.
+            Points are coloured by degree of expected-relatedness: {colours_legend}""",
+            plot=scatter.plot(data, pconfig),
+        )
 
     def somalier_relatedness_heatmap_plot(self):
         # inspiration: MultiQC/modules/vcftools/relatedness2.py
@@ -644,7 +659,9 @@ class MultiqcModule(BaseMultiqcModule):
                     "y": pc2,
                     "color": ancestry_colors.get(ancestry, default_background_color),
                     "name": ancestry,
-                    "opacity": 0.5,
+                    "opacity": 0.3,
+                    "marker_size": 3,
+                    "annotate": False,
                 }
                 for pc1, pc2, ancestry in zip(d["PC1"], d["PC2"], d["ancestry"])
             ]
@@ -667,7 +684,6 @@ class MultiqcModule(BaseMultiqcModule):
                 "xlab": "PC1",
                 "ylab": "PC2",
                 "marker_size": 5,
-                "marker_line_width": 0,
             }
 
             self.add_section(

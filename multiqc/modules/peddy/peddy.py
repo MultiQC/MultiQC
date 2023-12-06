@@ -206,11 +206,11 @@ class MultiqcModule(BaseMultiqcModule):
                 {
                     "x": pc1,
                     "y": pc2,
-                    "name": ancestry,
                     "color": ancestry_colors.get(ancestry, default_background_color),
+                    "name": ancestry,
                     "opacity": 0.3,
                     "marker_size": 3,
-                    "marker_line_width": 0,
+                    "annotate": False,
                 }
                 for pc1, pc2, ancestry in zip(
                     d["PC1"],
@@ -225,7 +225,6 @@ class MultiqcModule(BaseMultiqcModule):
                 data[s_name] = {
                     "x": d["PC1_het_check"],
                     "y": d["PC2_het_check"],
-                    "marker_line_width": 1,
                 }
                 try:
                     data[s_name]["color"] = ancestry_colors.get(d["ancestry-prediction"], default_color)
@@ -240,7 +239,11 @@ class MultiqcModule(BaseMultiqcModule):
         }
 
         if len(data) > 0:
-            self.add_section(name="PCA Plot", anchor="peddy-pca-plot", plot=scatter.plot(data, pconfig))
+            self.add_section(
+                name="PCA Plot",
+                anchor="peddy-pca-plot",
+                plot=scatter.plot(data, pconfig),
+            )
 
     def peddy_relatedness_plot(self):
         data = dict()

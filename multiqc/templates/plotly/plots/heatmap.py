@@ -40,6 +40,7 @@ class HeatmapPlot(Plot):
         if not self.height:
             self.height = len(self.ycats) * 17
             self.height = max(500, self.height)
+            self.height = min(1000, self.height)
         if not self.width:
             self.width = self.height
 
@@ -55,8 +56,8 @@ class HeatmapPlot(Plot):
         layout.update(
             {
                 "xaxis_tickangle": 45,
-                "xaxis_nticks": len(self.xcats),
-                "yaxis_nticks": len(self.ycats),
+                # "xaxis_nticks": len(self.xcats),
+                # "yaxis_nticks": len(self.ycats),
             }
         )
         return layout

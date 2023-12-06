@@ -46,7 +46,7 @@ def plot(data, pconfig=None):
     for data_index, ds in enumerate(data):
         d = list()
         for s_name in ds:
-            # Ensure any overwritting conditionals from data_labels (e.g. ymax) are taken in consideration
+            # Ensure any overwriting conditionals from data_labels (e.g. ymax) are taken in consideration
             series_config = pconfig.copy()
             if "data_labels" in pconfig and isinstance(
                 pconfig["data_labels"][data_index], dict
@@ -66,22 +66,19 @@ def plot(data, pconfig=None):
                         continue
                     if "ymin" in series_config and float(point["y"]) < float(series_config["ymin"]):
                         continue
-                this_series = {"x": point["x"], "y": point["y"]}
-                try:
-                    this_series["name"] = "{}: {}".format(s_name, point["name"])
-                except KeyError:
-                    this_series["name"] = s_name
+                if "name" in point:
+                    point["name"] = f'{s_name}: {point["name"]}'
+                else:
+                    point["name"] = s_name
 
                 for k in ["color", "opacity", "marker_size", "marker_line_width"]:
-                    if k in point:
-                        this_series[k] = point[k]
-                    elif k in series_config:
+                    if k not in point and k in series_config:
                         v = series_config[k]
                         if isinstance(v, dict) and s_name in v:
-                            this_series[k] = v[s_name]
+                            point[k] = v[s_name]
                         else:
-                            this_series[k] = v
-                d.append(this_series)
+                            point[k] = v
+                d.append(point)
         plotdata.append(d)
 
     if pconfig.get("square"):

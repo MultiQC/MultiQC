@@ -70,42 +70,41 @@ class ScatterPlot(Plot):
 
         fig = go.Figure(layout=layout)
 
-        # On flat plots, we try to annotate some points directly on the plot: outliers of if there are only few
-        show_annotations = False
-
-        names_by_color = defaultdict(set)
-        for el in data:
-            names_by_color[el.get("color")].add(el["name"])
-
-        if len(data) <= 10:
-            # Only few data points: we can annotate all elements directly on the plot.
-            layout.showlegend = False  # No need to add a legend
-            show_annotations = True
-            for element in data:
-                element["annotation"] = element["name"]
-        else:
-            # Too many data points, finding and marking outliers to only label them
-            show_annotations = True
-
-            # Finding outliers: calculate Z-scores
-            x_values = np.array([point["x"] for point in data])
-            y_values = np.array([point["y"] for point in data])
+        MAX_ANNOTATIONS = 10  # Maximum number of dots to be annotated directly on the plot
+        n_annotated = len([el for el in data if "annotation" in el])
+        if n_annotated < MAX_ANNOTATIONS:
+            # Finding and marking outliers to only label them
+            # 1. Calculate Z-scores
+            points = [(i, x) for i, x in enumerate(data) if x.get("annotate", True) is not False]
+            x_values = np.array([x["x"] for (i, x) in points])
+            y_values = np.array([x["y"] for (i, x) in points])
             x_z_scores = np.abs((x_values - np.mean(x_values)) / np.std(x_values))
             y_z_scores = np.abs((y_values - np.mean(y_values)) / np.std(y_values))
 
-            # Somewhat arbitrary threshold for outliers
-            OUTLIER_THRESHOLD = 2
+            # 2. Find a reasonable threshold so there are not too many outliers
+            threshold = 1.0
+            while threshold <= 6.0:
+                n_outliers = np.count_nonzero((x_z_scores > threshold) | (y_z_scores > threshold))
+                logger.debug(f"Scatter plot outlier threshold: {threshold}, outliers: {n_outliers}")
+                if n_annotated + n_outliers <= MAX_ANNOTATIONS:
+                    break
+                # If there are too many outliers, we increase the threshold until we have less than 10
+                threshold += 0.2
 
-            for i, element in enumerate(data):
+            # 3. Annotate outliers that pass the threshold
+            for (i, point), x_z_score, y_z_score in zip(points, x_z_scores, y_z_scores):
                 # Check if point is an outlier or if total points are less than 10
-                if x_z_scores[i] > OUTLIER_THRESHOLD or y_z_scores[i] > OUTLIER_THRESHOLD:
-                    element["annotation"] = element["name"]
+                if x_z_score > threshold or y_z_score > threshold:
+                    point["annotation"] = point["name"]
+            n_annotated = len([point for point in data if "annotation" in point])
 
-            if len(names_by_color) <= 10:
-                # There are a lot of dots, but few unique colors. We can additionally put
-                # a unique list into a legend (even though some color might belong to many
-                # distinct names - we will just crop the list)
-                layout.showlegend = True
+        # If there are few unique colors, we can additionally put a unique list into a legend
+        # (even though some color might belong to many distinct names - we will just crop the list)
+        names_by_legend_key = defaultdict(set)
+        for el in data:
+            legend_key = (el.get("color"), el.get("marker_size"), el.get("marker_line_width"), el.get("group"))
+            names_by_legend_key[legend_key].add(el["name"])
+        layout.showlegend = True
 
         in_legend = set()
         for element in data:
@@ -122,25 +121,28 @@ class ScatterPlot(Plot):
                     continue
 
             name = element["name"]
-            annotation = element.get("annotation")
+            group = element.get("group")
             color = element.get("color")
+            annotation = element.get("annotation")
 
             show_in_legend = False
             if layout.showlegend and not element.get("hide_in_legend"):
-                if color not in in_legend:
-                    in_legend.add(color)
+                key = (color, element.get("marker_size"), element.get("marker_line_width"), group)
+                if key not in in_legend:
+                    in_legend.add(key)
+                    names = sorted(names_by_legend_key.get(key))
+                    label = ", ".join(names)
+                    if group:
+                        label = f"{group}: {label}"
+                    if len(label) > 70:  # Crop long labels
+                        label = label[:70] + "..."
                     show_in_legend = True
-                    name = ", ".join(sorted(names_by_color[color]))
-                    if len(name) > 50:  # Crop long names
-                        name = name[:50] + "..."
+                    name = label
 
             marker = self.default_marker.copy()
-            # if not show_annotations:
-            #     # Removing default color to make sure Plotly assigns distinct colors to distinct names
-            #     del marker["color"]
             if color:
                 marker["color"] = color
-            if show_annotations:
+            if n_annotated > 0:
                 marker["line"]["width"] = 0  # Remove the borders that clutter the annotations
             elif "marker_line_width" in element:
                 marker["line"]["width"] = element["marker_line_width"]
