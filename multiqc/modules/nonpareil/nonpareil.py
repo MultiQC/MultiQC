@@ -13,7 +13,6 @@ from multiqc.plots import linegraph
 log = logging.getLogger(__name__)
 
 
-
 class MultiqcModule(BaseMultiqcModule):
     """ """
 
@@ -25,7 +24,6 @@ class MultiqcModule(BaseMultiqcModule):
             href="https://github.com/lmrodriguezr/nonpareil",
             info="Estimate metagenomic coverage and sequence diversity ",
             doi="10.1093/bioinformatics/btt584",
-
         )
         # Config options
         self.disp_type = getattr(config, "nonpareil", {}).get("plot_dispersion", False)
@@ -38,9 +36,7 @@ class MultiqcModule(BaseMultiqcModule):
             json_parsed = self.parse_nonpareil_json(f)
             common_samples = set(json_parsed).intersection(self.data_by_sample)
             if common_samples:
-                log.debug(
-                    f"Duplicate sample names found ({common_samples})! Overwriting..."
-                )
+                log.debug(f"Duplicate sample names found ({common_samples})! Overwriting...")
             self.data_by_sample = self.data_by_sample | json_parsed
         # Register samples
         for s_name in self.data_by_sample.keys():
@@ -66,8 +62,6 @@ class MultiqcModule(BaseMultiqcModule):
         # Add plots
         self.nonpareil_redundancy_plot()
 
-
-
     def parse_nonpareil_json(self, f):
         """Parse the JSON output from nonpareil"""
         import json
@@ -75,9 +69,7 @@ class MultiqcModule(BaseMultiqcModule):
         try:
             json_raw = json.load(f["f"])
         except json.JSONDecodeError as e:
-            log.warning(
-                f"Could not parse nonpareil JSON: '{f['fn']}': {e}, skipping file"
-            )
+            log.warning(f"Could not parse nonpareil JSON: '{f['fn']}': {e}, skipping file")
             return None, {}
 
         # x.obs Rarefied sequencing effort.
@@ -90,11 +82,12 @@ class MultiqcModule(BaseMultiqcModule):
         # y.p75 Percentile 75 (3rd quartile) of rarefied coverage
 
         import numpy as np
+
         for s_name, data in json_raw.items():
             # Conbert base pairs to gigabase pairs
             data["LR"] = data["LR"] / 1000 / 1000
             data["LRstar"] = data["LRstar"] / 1000 / 1000
-            data["x.adj"] = [(1 if x==0 else x) / 1000 / 1000 for x in data["x.adj"]]
+            data["x.adj"] = [(1 if x == 0 else x) / 1000 / 1000 for x in data["x.adj"]]
             data["x.model"] = [x / 1000 / 1000 for x in data["x.model"]]
             data["observed"] = {x: y for x, y in zip(data["x.adj"], data["y.cov"])}
             data["model"] = {x: y for x, y in zip(data["x.model"], data["y.model"])}
@@ -113,8 +106,12 @@ class MultiqcModule(BaseMultiqcModule):
                 data[f"{self.disp_type}_lower"] = {x: y for x, y in zip(data["x.adj"], data["y.p25"])}
 
             if disp_add:
-                data[f"{self.disp_type}_upper"] = {x: y for x, y in zip(data["x.adj"], list(np.array(data["y.cov"]) + np.array(disp_add)))}
-                data[f"{self.disp_type}_lower"] = {x: y for x, y in zip(data["x.adj"], list(np.array(data["y.cov"]) - np.array(disp_add)))}
+                data[f"{self.disp_type}_upper"] = {
+                    x: y for x, y in zip(data["x.adj"], list(np.array(data["y.cov"]) + np.array(disp_add)))
+                }
+                data[f"{self.disp_type}_lower"] = {
+                    x: y for x, y in zip(data["x.adj"], list(np.array(data["y.cov"]) - np.array(disp_add)))
+                }
 
         return json_raw
 
@@ -128,7 +125,7 @@ class MultiqcModule(BaseMultiqcModule):
                 "min": 0,
                 "suffix": " bps",
                 "scale": "GnBu",
-                "format": '{:,.3f}',
+                "format": "{:,.3f}",
                 "hidden": True,
             },
             "AL": {
@@ -137,14 +134,14 @@ class MultiqcModule(BaseMultiqcModule):
                 "min": 0,
                 "scale": "GnBu",
                 "suffix": " bps",
-                "format": '{:,.3f}',
+                "format": "{:,.3f}",
                 "hidden": True,
             },
             "R": {
                 "title": "Number of reads",
                 "min": 0,
                 "scale": "GnBu",
-                "format": '{:,.0f}',
+                "format": "{:,.0f}",
                 "hidden": True,
             },
             "LR": {
@@ -153,7 +150,7 @@ class MultiqcModule(BaseMultiqcModule):
                 "min": 0,
                 "suffix": " Mbps",
                 "scale": "Blues",
-                "format": '{:,.2f}',
+                "format": "{:,.2f}",
             },
             "overlap": {
                 "title": "Read overlap",
@@ -162,7 +159,7 @@ class MultiqcModule(BaseMultiqcModule):
                 "suffix": " bps",
                 "scale": "Blues",
                 "hidden": True,
-                "format": '{:,.0f}',
+                "format": "{:,.0f}",
             },
             "log.sample": {
                 "title": "Log sampling",
@@ -171,7 +168,7 @@ class MultiqcModule(BaseMultiqcModule):
                 "min": 0,
                 "scale": "BuGn",
                 "hidden": True,
-                "format": '{:,.2f}',
+                "format": "{:,.2f}",
             },
             "kappa": {
                 "title": "Redundancy",
@@ -179,7 +176,7 @@ class MultiqcModule(BaseMultiqcModule):
                 "max": 1,
                 "min": 0,
                 "scale": "RdYlGn-rev",
-                "format": '{:,.2f}',
+                "format": "{:,.2f}",
             },
             "C": {
                 "title": "Coverage",
@@ -187,7 +184,7 @@ class MultiqcModule(BaseMultiqcModule):
                 "max": 1,
                 "min": 0,
                 "scale": "RdYlGn",
-                "format": '{:,.2f}',
+                "format": "{:,.2f}",
             },
             "consistent": {
                 "title": "Consistent Data?",
@@ -210,7 +207,7 @@ class MultiqcModule(BaseMultiqcModule):
                 "min": 0,
                 "suffix": " Mbps",
                 "scale": "RdYlGn-rev",
-                "format": '{:,.2f}',
+                "format": "{:,.2f}",
             },
             "modelR": {
                 "title": "Model correlation",
@@ -218,7 +215,7 @@ class MultiqcModule(BaseMultiqcModule):
                 "max": 1,
                 "min": 0,
                 "scale": "RdYlGn",
-                "format": '{:,.3f}',
+                "format": "{:,.3f}",
                 "hidden": True,
             },
             "diversity": {
@@ -226,7 +223,7 @@ class MultiqcModule(BaseMultiqcModule):
                 "description": "Dataset Nd index of sequence diversity",
                 "min": 0,
                 "scale": "RdYlGn",
-                "format": '{:,.2f}',
+                "format": "{:,.2f}",
             },
         }
 
