@@ -208,7 +208,7 @@ class MultiqcModule(BaseMultiqcModule):
                     "y": pc2,
                     "color": ancestry_colors.get(ancestry, default_background_color),
                     "name": ancestry,
-                    "opacity": 0.3,
+                    "opacity": 0.5,
                     "marker_size": 3,
                     "annotate": False,
                 }

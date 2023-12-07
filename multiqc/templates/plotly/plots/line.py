@@ -1,7 +1,7 @@
 import io
 import logging
 import os
-from typing import Dict, List, Union, Optional
+from typing import Dict, List, Union
 
 import math
 import plotly.graph_objects as go
@@ -36,27 +36,19 @@ class LinePlot(Plot):
 
         self.categories: List[str] = pconfig.get("categories", [])
 
-        self.tt_decimals: Optional[int] = pconfig.get("tt_decimals")
+        self.layout.showlegend = False
+        # Make a tooltip always show on hover over any point on plot
+        self.layout.hoverdistance = -1
+        # A tooltip will show numbers for all lines crossing this vertical line
+        self.layout.hovermode = "x"
+        # Default precision for floating numbers is too high - allowing to override it
+        if "tt_decimals" in pconfig:
+            self.layout.yaxis.hoverformat = f".{pconfig['tt_decimals']}f"
         # self.tt_suffix: str = pconfig.get("tt_suffix", "")
         # self.tt_label: str = pconfig.get(
         #     "tt_label",
         #     f"%{{x}}: %{{y:,.{self.tt_decimals}f}}{self.tt_suffix}"
         # )
-
-    def layout(self) -> go.Layout:
-        layout: go.Layout = super().layout()
-
-        layout.showlegend = False
-
-        # Make a tooltip always show on hover over any point on plot
-        layout.hoverdistance = -1
-        # A tooltip will show numbers for all lines crossing this vertical line
-        layout.hovermode = "x"
-        # Default precision for floating numbers is too high - allowing to override it
-        if self.tt_decimals is not None:
-            layout.yaxis.hoverformat = f".{self.tt_decimals}f"
-
-        return layout
 
     def create_figure(self, layout: go.Layout, dataset: Dataset, is_log=False, is_pct=False):
         """

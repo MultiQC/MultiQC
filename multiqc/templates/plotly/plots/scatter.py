@@ -32,7 +32,7 @@ class ScatterPlot(Plot):
     def __init__(self, pconfig: Dict, datasets: List):
         super().__init__(PlotType.SCATTER, pconfig, datasets)
 
-        self.height = pconfig.get("height", 600)
+        self.layout.height = self.layout.height or 600
         self.categories = pconfig.get("categories", [])
         self.default_marker = {
             "size": 10,
@@ -59,12 +59,12 @@ class ScatterPlot(Plot):
         Create a Plotly figure for a dataset
         """
 
-        import json
-
-        with open(f"/Users/vlad/git/playground/{self.id}-layout.json", "w") as f:
-            f.write(json.dumps(layout.to_plotly_json()))
-        with open(f"/Users/vlad/git/playground/{self.id}-data.json", "w") as f:
-            f.write(json.dumps(dataset.data))
+        # import json
+        #
+        # with open(f"/Users/vlad/git/playground/{self.id}-layout.json", "w") as f:
+        #     f.write(json.dumps(layout.to_plotly_json()))
+        # with open(f"/Users/vlad/git/playground/{self.id}-data.json", "w") as f:
+        #     f.write(json.dumps(dataset.data))
 
         data: List[ElementT] = dataset.data
 

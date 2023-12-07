@@ -199,7 +199,7 @@ $(function () {
     }
   });
 
-  // Sort a heatmap by highlighted names
+  // Sort a heatmap by highlighted names  // TODO: fix for Plotly
   $(".mqc_heatmap_sortHighlight").click(function (e) {
     e.preventDefault();
     let target = $(this).data("target").substr(1);

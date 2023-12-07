@@ -5,11 +5,11 @@ class HeatmapPlot extends Plot {
     this.ycats = data.ycats;
   }
 
-  // activeDatasetSamples() {
-  //   if (this.datasets.length === 0) return [];
-  //   let dataset = this.datasets[this.active_dataset_idx];
-  //   return dataset.map((element) => element.name);
-  // }
+  activeDatasetSamples() {
+    if (this.datasets.length === 0) return [];
+    let dataset = this.datasets[this.active_dataset_idx];
+    return dataset.map((element) => element.name);
+  }
 
   // Constructs and returns traces for the Plotly plot
   buildTraces() {

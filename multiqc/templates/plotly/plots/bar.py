@@ -43,13 +43,30 @@ class BarPlot(Plot):
     def __init__(self, pconfig: Dict, datasets: List, samples_lists: List, max_n_samples: int):
         super().__init__(PlotType.BAR, pconfig, datasets)
 
-        if not self.height:
-            # Height has a default, then adjusted by the number of samples
-            self.height = max_n_samples * 10
-            self.height = max(500, self.height)
-            self.height = min(2560, self.height)
+        if not self.layout.height:
+            MIN_PLOT_HEIGHT = 500
+            MAX_PLOT_HEIGHT = 2560
+            height = max_n_samples * 10
+            height = max(MIN_PLOT_HEIGHT, height)
+            height = min(MAX_PLOT_HEIGHT, height)
+            self.layout.height = height
 
-        self.stacking = pconfig.get("stacking", "stack" if self.p_active else "relative")
+        self.layout.update(
+            dict(
+                barmode=pconfig.get("stacking", "stack" if self.p_active else "relative"),
+                hovermode="y unified",
+                yaxis=dict(
+                    # the plot is "transposed", so yaxis corresponds to the horizontal axis
+                    title=dict(text=self.layout.xaxis.title.text),
+                    showgrid=False,
+                    categoryorder="category descending",
+                    automargin=True,
+                ),
+                xaxis=dict(
+                    title=dict(text=self.layout.yaxis.title.text),
+                ),
+            )
+        )
 
         # Extend with zeroes if there are fewer values than samples
         for samples, dataset in zip(samples_lists, self.datasets):
@@ -83,26 +100,6 @@ class BarPlot(Plot):
             # Sorting from small to large so the log switch makes sense
             for categories in datasets:
                 categories.sort(key=lambda x: sum(x["data"]))
-
-    def layout(self) -> go.Layout:
-        layout: go.Layout = super().layout()
-        layout.update(
-            {
-                "barmode": self.stacking,
-                "hovermode": "y unified",
-                "yaxis": dict(
-                    # the plot is "transposed", so yaxis corresponds to the horizontal axis
-                    title=dict(text=self.xlab),
-                    showgrid=False,
-                    categoryorder="category descending",
-                    automargin=True,
-                ),
-                "xaxis": dict(
-                    title=dict(text=self.ylab),
-                ),
-            }
-        )
-        return layout
 
     def create_figure(
         self,

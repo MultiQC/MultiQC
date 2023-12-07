@@ -64,17 +64,11 @@ class Plot(ABC):
             not config.plots_force_interactive and len(datasets) > config.plots_flat_numseries
         )
 
-        self.title = pconfig.get("title")
-        self.height = pconfig.get("height")
-        self.width = pconfig.get("width")
-        self.do_save_data_file: bool = pconfig.get("save_data_file", True)
+        self.pconfig = pconfig
 
         # Counts / Percentages / Log10 switch
         self.add_log_tab = pconfig.get("logswitch", False) and plot_type in [PlotType.BAR, PlotType.LINE]
         self.add_pct_tab = pconfig.get("cpswitch", True) is not False and plot_type == PlotType.BAR
-        self.c_label = pconfig.get("cpswitch_counts_label", "Counts")
-        self.l_label = pconfig.get("logswitch_label", "Log10")
-        self.p_label = pconfig.get("cpswitch_percent_label", "Percentages")
         self.l_active = self.add_log_tab and pconfig.get("logswitch_active") is True
         self.p_active = self.add_pct_tab and pconfig.get("cpswitch_c_active", True) is not True
 
@@ -97,54 +91,32 @@ class Plot(ABC):
                 ds.ylab = dl.get("ylab") or dl.get("name") or None
                 ds.xlab = dl.get("xlab") or None
 
-        # Add initial axis labels if defined in `data_labels` but not main config
-        self.ylab = pconfig.get("ylab") or (self.datasets[0].ylab if self.datasets else None)
-        self.xlab = pconfig.get("xlab") or (self.datasets[0].xlab if self.datasets else None)
-        self.xmin = pconfig.get("xmin")
-        self.xmax = pconfig.get("xmax")
-        self.ymin = pconfig.get("ymin")
-        self.ymax = pconfig.get("ymax")
-
-        # Default state to dump to JSON to load with plotly.js
-        self.config = {
-            "p_active": self.p_active,
-            "l_active": self.l_active,
-        }
-
-    def __repr__(self):
-        d = {k: v for k, v in self.__dict__ if k != "datasets"}
-        return f"<{self.__class__.__name__} {pprint(d)}>"
-
-    def layout(self) -> go.Layout:
-        """
-        Layout object for the line plot.
-        """
-        layout = go.Layout(
+        self.layout = go.Layout(
             title=dict(
-                text=self.title,
+                text=self.pconfig.get("title"),
                 xanchor="center",
                 x=0.5,
                 font=dict(size=20),
             ),
             xaxis=dict(
-                title=dict(text=self.xlab),
+                title=dict(text=self.pconfig.get("xlab") or (self.datasets[0].xlab if self.datasets else None)),
                 gridcolor="rgba(0,0,0,0.1)",
                 zerolinecolor="rgba(0,0,0,0.1)",
-                rangemode="tozero" if self.xmin == 0 else "normal",
-                range=[self.xmin, self.xmax],
+                rangemode="tozero" if self.pconfig.get("xmin") == 0 else "normal",
+                range=[self.pconfig.get("xmin"), self.pconfig.get("xmax")],
             ),
             yaxis=dict(
-                title=dict(text=self.ylab),
+                title=dict(text=self.pconfig.get("ylab") or (self.datasets[0].ylab if self.datasets else None)),
                 gridcolor="rgba(0,0,0,0.1)",
                 zerolinecolor="rgba(0,0,0,0.1)",
-                rangemode="tozero" if self.ymin == 0 else "normal",
-                range=[self.ymin, self.ymax],
+                rangemode="tozero" if self.pconfig.get("ymin") == 0 else "normal",
+                range=[self.pconfig.get("ymin"), self.pconfig.get("ymax")],
             ),
-            height=self.height,
-            width=self.width,
+            height=self.pconfig.get("height"),
+            width=self.pconfig.get("width"),
             paper_bgcolor="rgba(0,0,0,0)",
             plot_bgcolor="rgba(0,0,0,0)",
-            font={"color": "Black", "family": "Lucida Grande"},
+            font=dict(color="Black", family="Lucida Grande"),
             colorway=mqc_colour.mqc_colour_scale.COLORBREWER_SCALES["plot_defaults"],
             autosize=True,
             margin_pad=10,  # pad sample names a bit
@@ -181,7 +153,10 @@ class Plot(ABC):
                 traceorder="normal",
             ),
         )
-        return layout
+
+    def __repr__(self):
+        d = {k: v for k, v in self.__dict__ if k not in ("datasets", "layout")}
+        return f"<{self.__class__.__name__} {pprint(d)}>"
 
     def add_to_report(self, report) -> str:
         """
@@ -209,11 +184,11 @@ class Plot(ABC):
         html += f'<div class="mqc_mplplot_plotgroup" id="plotgroup-{self.id}" data-pid={self.id}>'
 
         if not config.simple_output:
-            html += self._buttons(cls="mpl_switch_group")
+            html += self.control_panel()
 
         # Go through datasets creating plots
         for ds_idx, dataset in enumerate(self.datasets):
-            if self.do_save_data_file:
+            if self.pconfig.get("save_data_file", True):
                 self.save_data_file(dataset)
 
             html += self._fig_to_static_html(
@@ -247,7 +222,7 @@ class Plot(ABC):
         """
         Create a Plotly Figure object.
         """
-        layout = self.layout()
+        layout = go.Layout(**self.layout.to_plotly_json())  # make a copy
         if is_pct:
             layout.update(
                 {
@@ -277,7 +252,7 @@ class Plot(ABC):
         Save dataset to disk.
         """
 
-    def _buttons(self, cls=""):
+    def control_panel(self):
         """
         Add buttons: percentage on/off, log scale on/off, datasets switch panel
         """
@@ -289,6 +264,7 @@ class Plot(ABC):
             data_attrs = " ".join([f'data-{k}="{v}"' for k, v in data_attrs.items()])
             return f'<button class="btn btn-default btn-sm {cls} {"active" if active else ""}" {data_attrs}>{label}</button>\n'
 
+        cls = "mpl_switch_group" if self.flat else "interactive-switch-group"
         html = ""
         # Counts / percentages / log10 switches
         if self.add_pct_tab or self.add_log_tab:
@@ -297,14 +273,14 @@ class Plot(ABC):
                     cls=f"{cls} percent-switch",
                     pid=self.id,
                     active=self.p_active,
-                    label=self.p_label,
+                    label=self.pconfig.get("cpswitch_percent_label", "Percentages"),
                 )
             if self.add_log_tab:
                 html += _btn(
                     cls=f"{cls} log10-switch",
                     pid=self.id,
                     active=self.l_active,
-                    label=self.l_label,
+                    label=self.pconfig.get("logswitch_label", "Log10"),
                 )
             if len(self.datasets) > 1:
                 html += " &nbsp; &nbsp; "
@@ -337,16 +313,19 @@ class Plot(ABC):
         return {
             "id": self.id,
             "plot_type": self.plot_type.value,
-            "layout": self.layout().to_plotly_json(),
+            "layout": self.layout.to_plotly_json(),
             "datasets": [d.data for d in self.datasets],
             # TODO: save figures to JSON, not datasets?
             # "figures": [self._make_fig(dataset).to_plotly_json() for dataset in datasets],
-            "config": self.config,
+            "config": {
+                "p_active": self.p_active,
+                "l_active": self.l_active,
+            },
         }
 
     def interactive_plot(self, report) -> str:
         html = '<div class="mqc_hcplot_plotgroup">'
-        html += self._buttons(cls="interactive-switch-group")
+        html += self.control_panel()
 
         # Plot HTML
         html += """
@@ -354,7 +333,7 @@ class Plot(ABC):
             <div id="{id}" class="hc-plot not_rendered hc-{plot_type}-plot"></div>
         </div>""".format(
             id=self.id,
-            height=f' style="height:{self.height}px"' if self.height else "",
+            height=f' style="height:{self.layout.height}px"' if self.layout.height else "",
             plot_type=self.plot_type,
         )
         html += "</div>"
@@ -374,11 +353,10 @@ class Plot(ABC):
         Build one static image, return an HTML wrapper.
         """
         write_kwargs = dict(
-            # While interactive plots take the width of screen, but flat plots we have to
-            # set it to a wider number explicitly, otherwise the picture will be too small.
-            width=fig.layout.width or 1100,
+            width=fig.layout.width or 1100,  # While interactive plots take full width of screen,
+            # for the flat plots we explicitly set width
             height=fig.layout.height,
-            scale=1,
+            scale=2,  # higher detail (retina display)
         )
 
         # Save the plot to the data directory if export is requested
