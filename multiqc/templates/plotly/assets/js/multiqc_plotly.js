@@ -22,6 +22,8 @@ class Plot {
     this.datasets = data.datasets;
     this.layout = data.layout;
     this.active_dataset_idx = 0;
+    this.xcats_samples = data.xcats_samples;
+    this.ycats_samples = data.ycats_samples;
   }
 }
 
@@ -53,7 +55,7 @@ $(function () {
     // Deferring each plot call prevents browser from locking up
     setTimeout(function () {
       let plot = mqc_plots[target];
-      if (plot.activeDatasetSamples().length > max_num) {
+      if (plot.activeDatasetSize() > max_num) {
         $("#" + target)
           .addClass("not_rendered gt_max_num_ds")
           .html('<button class="btn btn-default btn-lg render_plot">Show plot</button>');
@@ -211,7 +213,7 @@ $(function () {
       $(this).addClass("active");
     }
     $(this).blur();
-    plot_heatmap(target);
+    renderPlot(target);
   });
 });
 

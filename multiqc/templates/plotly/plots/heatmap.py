@@ -74,6 +74,8 @@ class HeatmapPlot(Plot):
         d = super().serialise()
         d["xcats"] = self.xcats
         d["ycats"] = self.ycats
+        d["xcats_samples"] = self.pconfig.get("xcats_samples", True)
+        d["ycats_samples"] = self.pconfig.get("ycats_samples", True)
         return d
 
     def control_panel(self) -> str:

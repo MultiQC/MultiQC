@@ -5,38 +5,45 @@ class HeatmapPlot extends Plot {
     this.ycats = data.ycats;
   }
 
-  activeDatasetSamples() {
-    if (this.datasets.length === 0) return [];
-    let dataset = this.datasets[this.active_dataset_idx];
-    return dataset.map((element) => element.name);
+  activeDatasetSize() {
+    return this.datasets[this.active_dataset_idx].length;
   }
 
   // Constructs and returns traces for the Plotly plot
   buildTraces() {
     let dataset = this.datasets[this.active_dataset_idx];
 
-    let samples = applyToolboxSettings(this.activeDatasetSamples());
+    let xcats = this.xcats;
+    let ycats = this.ycats;
 
-    // All series are hidden, do not render the graph.
-    if (samples == null) return;
+    if (this.xcats_samples) {
+      let samples = applyToolboxSettings(this.xcats);
+      // All series are hidden, do not render the graph.
+      if (samples == null) return;
+      // Rename and filter
+      xcats = samples.filter((s) => !s.hidden).map((s) => s.name);
+      // dataset = dataset.filter((element, si) => !samples[si].hidden);
+      // TODO: properly apply filters for dataset, handle when both xcats_samples and ycats_samples are set
+    }
 
-    // Rename samples
-    dataset.map((element, si) => (element.name = samples[si].name));
+    if (this.ycats_samples) {
+      let samples = applyToolboxSettings(this.ycats);
+      // All series are hidden, do not render the graph.
+      if (samples == null) return;
+      // Rename and filter
+      ycats = samples.filter((s) => !s.hidden).map((s) => s.name);
+      // dataset = dataset.filter((element, si) => !samples[si].hidden);
+      // TODO: properly apply filters for dataset, handle when both xcats_samples and ycats_samples are set
+    }
 
-    // Filter out hidden samples
-    let visibleSamples = samples.filter((s) => !s.hidden);
-    let visibleDataset = dataset.filter((element, si) => !samples[si].hidden);
-
-    // data: List[List[ElemT]] = dataset.data
-    // fig = go.Figure(
-    //     data=go.Heatmap(
-    //         z=data,
-    //         x=self.xcats,
-    //         y=self.ycats,
-    //     ),
-    //     layout=layout,
-    // )
-    // return fig
+    return [
+      {
+        z: dataset,
+        x: xcats,
+        y: ycats,
+        type: "heatmap",
+      },
+    ];
   }
 }
 
