@@ -134,8 +134,9 @@ class ScatterPlot(Plot):
                     label = ", ".join(names)
                     if group:
                         label = f"{group}: {label}"
-                    if len(label) > 70:  # Crop long labels
-                        label = label[:70] + "..."
+                    MAX_WIDTH = 60
+                    if len(label) > MAX_WIDTH:  # Crop long labels
+                        label = label[:MAX_WIDTH] + "..."
                     show_in_legend = True
                     name = label
 
@@ -163,6 +164,7 @@ class ScatterPlot(Plot):
                     showlegend=show_in_legend,
                 )
             )
+        fig.layout.height += len(in_legend) * 5  # extra space for legend
         return fig
 
     def save_data_file(self, dataset: Dataset) -> None:

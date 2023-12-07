@@ -36,7 +36,6 @@ class LinePlot(Plot):
 
         self.categories: List[str] = pconfig.get("categories", [])
 
-        self.layout.showlegend = False
         # Make a tooltip always show on hover over any point on plot
         self.layout.hoverdistance = -1
         # A tooltip will show numbers for all lines crossing this vertical line
@@ -49,11 +48,21 @@ class LinePlot(Plot):
         #     "tt_label",
         #     f"%{{x}}: %{{y:,.{self.tt_decimals}f}}{self.tt_suffix}"
         # )
+        if self.flat and self.datasets:
+            self.layout.height += len(self.datasets[0].data) * 5  # extra space for legend
 
     def create_figure(self, layout: go.Layout, dataset: Dataset, is_log=False, is_pct=False):
         """
         Create a Plotly figure for a dataset
         """
+
+        # import json
+        #
+        # with open(f"/Users/vlad/git/playground/{self.id}-layout.json", "w") as f:
+        #     f.write(json.dumps(layout.to_plotly_json()))
+        # with open(f"/Users/vlad/git/playground/{self.id}-data.json", "w") as f:
+        #     f.write(json.dumps(dataset.data))
+
         fig = go.Figure(layout=layout)
         data: List[SampleLineT] = dataset.data
         for sample in data:

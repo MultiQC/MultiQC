@@ -112,7 +112,7 @@ class Plot(ABC):
                 rangemode="tozero" if self.pconfig.get("ymin") == 0 else "normal",
                 range=[self.pconfig.get("ymin"), self.pconfig.get("ymax")],
             ),
-            height=self.pconfig.get("height"),
+            height=self.pconfig.get("height", 600),
             width=self.pconfig.get("width"),
             paper_bgcolor="rgba(0,0,0,0)",
             plot_bgcolor="rgba(0,0,0,0)",
