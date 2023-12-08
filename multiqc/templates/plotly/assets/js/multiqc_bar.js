@@ -1,49 +1,49 @@
 class BarPlot extends Plot {
-  constructor(data) {
-    super(data);
-
+  constructor(dump) {
+    super(dump);
     this.layout.showlegend = true;
   }
 
-  activeDatasetSamples() {
-    if (this.datasets.length === 0) return [];
-    let ds = this.datasets[this.active_dataset_idx];
-    if (ds.length === 0) return []; // no categories
-    let cat = ds[0]; // samples should be same in every category
-    return cat["samples"];
+  activeDatasetSize() {
+    if (this.datasets.length === 0) return 0; // no datasets
+    let cats = this.datasets[this.active_dataset_idx].cats;
+    if (cats.length === 0) return 0; // no categories
+    return cats[0].data.length; // no data for a category
   }
 
   // Constructs and returns traces for the Plotly plot
   buildTraces() {
-    let dataset = this.datasets[this.active_dataset_idx];
+    let cats = this.datasets[this.active_dataset_idx].cats;
+    let samples = this.datasets[this.active_dataset_idx].samples;
+    if (cats === 0 || samples === 0) return [];
 
-    let sampleNames = this.activeDatasetSamples();
-    let samples = applyToolboxSettings(sampleNames);
+    let samplesSettings = applyToolboxSettings(samples);
+    if (samplesSettings == null) return []; // All series are hidden, do not render the graph.
 
-    // All series are hidden, do not render the graph.
-    if (samples == null) return;
+    // Rename and filter samples:
+    let filteredSettings = samplesSettings.filter((s) => !s.hidden);
+    samples = filteredSettings.map((s) => s.name);
 
-    // Rename samples
-    dataset.map((cat) => cat["samples"].map((sn, si) => (cat["samples"][si] = samples[si].name)));
-
-    // Filter out hidden samples
-    let visibleSamples = samples.filter((s) => !s.hidden);
-
-    return dataset.map((cat) => {
+    return cats.map((cat) => {
       let data = this.p_active ? cat.data_pct : cat.data;
-      let visibleData = data.filter((_, si) => !samples[si].hidden);
+      data = data.filter((_, si) => !samplesSettings[si].hidden);
+      let highlightColors = filteredSettings.map((s) =>
+        s.highlight && s.highlight !== "#cccccc" ? s.highlight : null,
+      );
+      let highlightWidths = filteredSettings.map((s) => (s.highlight && s.highlight !== "#cccccc" ? 2 : 0));
+
       return {
         type: "bar",
-        x: visibleData,
-        y: visibleSamples.map((s) => s.name),
+        x: data,
+        y: samples,
         name: cat.name,
         orientation: "h",
         marker: {
           color: cat.color,
           line: {
             // Remove grey from highlights, as we don't need to remove default coloring of background samples
-            color: visibleSamples.map((x) => (x.highlight && x.highlight !== "#cccccc" ? x.highlight : null)),
-            width: visibleSamples.map((x) => (x.highlight && x.highlight !== "#cccccc" ? 2 : 0)),
+            color: highlightColors,
+            width: highlightWidths,
           },
         },
       };

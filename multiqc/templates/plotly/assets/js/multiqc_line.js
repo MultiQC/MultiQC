@@ -1,43 +1,27 @@
 class LinePlot extends Plot {
-  constructor(data) {
-    super(data);
+  constructor(dump) {
+    super(dump);
 
-    // Saving user-defined Y-axis limits to support the "Y-Limits" toggle button
+    // Tracking Y-axis range to maintain the "Y-Limits" toggle button
     this.ymin = this.layout.yaxis.range[0];
     this.ymax = this.layout.yaxis.range[1];
   }
 
-  activeDatasetSamples() {
-    if (this.datasets.length === 0) return [];
-    let dataset = this.datasets[this.active_dataset_idx];
-    return dataset.map((sdata) => sdata.name);
+  activeDatasetSize() {
+    if (this.datasets.length === 0) return 0; // no datasets
+    return this.datasets[this.active_dataset_idx].lines.length; // no samples in a dataset
   }
 
   // Constructs and returns traces for the Plotly plot
   buildTraces() {
-    let dataset = this.datasets[this.active_dataset_idx];
+    let lines = this.datasets[this.active_dataset_idx].lines;
+    if (lines.length === 0) return [];
 
-    let samples = applyToolboxSettings(this.activeDatasetSamples());
-
-    // All series are hidden, do not render the graph.
-    if (samples == null) return;
-
-    // Rename samples
-    dataset.map((sdata, si) => (sdata.name = samples[si].name));
-
-    // // Hide samples
-    // let idx_to_hide = hideSamples(this.target, samples);
-    // if (idx_to_hide.length === samples.length)
-    //   // All series hidden. Hide the graph.
-    //   return;
-    // let visible_samples = samples.filter((x, i) => !idx_to_hide.includes(i));
-    // let visible_dataset = dataset.filter((x, i) => !idx_to_hide.includes(i));
-    //
-    // // Highlight samples
-    // let highlight_colors = getHighlightColors(visible_samples);
+    let samples = lines.map((line) => line.name);
+    let sampleSettings = applyToolboxSettings(samples);
+    if (sampleSettings == null) return; // All series are hidden, do not render the graph.
 
     // Toggle buttons for Y-axis limis
-    // Handler for this is at top, so doesn't get created multiple times
     let ymaxSet = this.ymax !== "undefined" && this.ymax !== null;
     let yminSet = this.ymin !== "undefined" && this.ymin !== null;
     // Only create if there is a y-axis limit
@@ -60,28 +44,26 @@ class LinePlot extends Plot {
       wrapper.after('<div class="clearfix" />');
     }
 
-    // Filter out hidden samples
-    let visibleDataset = dataset.filter((sdata, si) => !samples[si].hidden);
-    let visibleSamples = samples.filter((s) => !s.hidden);
+    return lines.map((line, idx) => {
+      if (sampleSettings[idx].hidden) return {};
 
-    return visibleDataset.map((sdata, si) => {
       let x, y;
-      if (sdata.data.length > 0 && Array.isArray(sdata.data[0])) {
-        x = sdata.data.map((x) => x[0]);
-        y = sdata.data.map((x) => x[1]);
+      if (line.data.length > 0 && Array.isArray(line.data[0])) {
+        x = line.data.map((x) => x[0]);
+        y = line.data.map((x) => x[1]);
       } else {
-        x = [...Array(sdata.data.length).keys()];
-        y = sdata.data;
+        x = [...Array(line.data.length).keys()];
+        y = line.data;
       }
       return {
         type: "scatter",
         x: x,
         y: y,
-        name: sdata.name,
+        name: sampleSettings[idx].name,
         orientation: "h",
         mode: "lines",
         line: {
-          color: visibleSamples[si].highlight ?? sdata.color,
+          color: sampleSettings[idx].highlight ?? line.color,
         },
         // hovertemplate: pconfig["tt_label"]
       };

@@ -1,3 +1,4 @@
+import dataclasses
 import logging
 from collections import defaultdict
 from typing import Dict, List, Union
@@ -11,28 +12,39 @@ logger = logging.getLogger(__name__)
 
 
 # {'color': 'rgb(211,211,211,0.05)', 'name': 'background: EUR', 'x': -0.294, 'y': -1.527}
-ElementT = Dict[str, Union[str, float, int]]
+PointT = Dict[str, Union[str, float, int]]
 
 
-def plot(datasets: List[List[ElementT]], pconfig: Dict) -> str:
+def plot(points_lists: List[List[PointT]], pconfig: Dict) -> str:
     """
     Build and add the plot data to the report, return an HTML wrapper.
-    :param datasets: each dataset is a 2D dict, first keys as sample names, then x:y data pairs
+    :param points_lists: each dataset is a 2D dict, first keys as sample names, then x:y data pairs
     :param pconfig: dict with config key:value pairs. See CONTRIBUTING.md
     :return: HTML with JS, ready to be inserted into the page
     """
-    p = ScatterPlot(pconfig, datasets)
+    p = ScatterPlot(pconfig, points_lists)
 
     from multiqc.utils import report
 
     return p.add_to_report(report)
 
 
-class ScatterPlot(Plot):
-    def __init__(self, pconfig: Dict, datasets: List):
-        super().__init__(PlotType.SCATTER, pconfig, datasets)
+@dataclasses.dataclass
+class ScatterDataset(Dataset):
+    """Bar dataset should also carry the list of samples"""
 
-        self.layout.height = self.layout.height or 600
+    points: List[PointT]
+
+
+class ScatterPlot(Plot):
+    def __init__(self, pconfig: Dict, points_lists: List[List[PointT]]):
+        super().__init__(PlotType.SCATTER, pconfig, len(points_lists))
+
+        # Extend each dataset object with a list of samples
+        self.datasets: List[ScatterDataset] = [
+            ScatterDataset(**d.__dict__, points=points) for d, points in zip(self.datasets, points_lists)
+        ]
+
         self.categories = pconfig.get("categories", [])
         self.default_marker = {
             "size": 10,
@@ -41,9 +53,13 @@ class ScatterPlot(Plot):
             "color": "rgba(124, 181, 236, .5)",
         }
 
-    def serialise(self) -> Dict:
+        self.layout.height = self.layout.height or 600
+        # Make a tooltip always show on hover over nearest point on plot
+        self.layout.hoverdistance = -1
+
+    def dump_for_javascript(self) -> Dict:
         """Serialise the plot data to pick up in JavaScript"""
-        d = super().serialise()
+        d = super().dump_for_javascript()
         d["categories"] = self.categories
         d["default_marker"] = self.default_marker
         return d
@@ -51,7 +67,7 @@ class ScatterPlot(Plot):
     def create_figure(
         self,
         layout: go.Layout,
-        dataset: Dataset,
+        dataset: ScatterDataset,
         is_log=False,
         is_pct=False,
     ) -> go.Figure:
@@ -66,16 +82,14 @@ class ScatterPlot(Plot):
         # with open(f"/Users/vlad/git/playground/{self.id}-data.json", "w") as f:
         #     f.write(json.dumps(dataset.data))
 
-        data: List[ElementT] = dataset.data
-
         fig = go.Figure(layout=layout)
 
         MAX_ANNOTATIONS = 10  # Maximum number of dots to be annotated directly on the plot
-        n_annotated = len([el for el in data if "annotation" in el])
+        n_annotated = len([el for el in dataset.points if "annotation" in el])
         if n_annotated < MAX_ANNOTATIONS:
             # Finding and marking outliers to only label them
             # 1. Calculate Z-scores
-            points = [(i, x) for i, x in enumerate(data) if x.get("annotate", True) is not False]
+            points = [(i, x) for i, x in enumerate(dataset.points) if x.get("annotate", True) is not False]
             x_values = np.array([x["x"] for (i, x) in points])
             y_values = np.array([x["y"] for (i, x) in points])
             x_z_scores = np.abs((x_values - np.mean(x_values)) / np.std(x_values))
@@ -96,18 +110,18 @@ class ScatterPlot(Plot):
                 # Check if point is an outlier or if total points are less than 10
                 if x_z_score > threshold or y_z_score > threshold:
                     point["annotation"] = point["name"]
-            n_annotated = len([point for point in data if "annotation" in point])
+            n_annotated = len([point for point in dataset.points if "annotation" in point])
 
         # If there are few unique colors, we can additionally put a unique list into a legend
         # (even though some color might belong to many distinct names - we will just crop the list)
         names_by_legend_key = defaultdict(set)
-        for el in data:
+        for el in dataset.points:
             legend_key = (el.get("color"), el.get("marker_size"), el.get("marker_line_width"), el.get("group"))
             names_by_legend_key[legend_key].add(el["name"])
         layout.showlegend = True
 
         in_legend = set()
-        for element in data:
+        for element in dataset.points:
             x = element["x"]
             if self.categories:
                 if isinstance(x, float):

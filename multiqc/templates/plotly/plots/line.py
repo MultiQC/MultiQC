@@ -1,3 +1,4 @@
+import dataclasses
 import io
 import logging
 import os
@@ -13,26 +14,44 @@ logger = logging.getLogger(__name__)
 
 
 # {"name": "SAMPLE1", "color": "#111111", "data": [[x, y], [x, y], ...]}
-SampleLineT = Dict[str, Union[str, List[List[float]]]]
+LineT = Dict[str, Union[str, List[List[float]]]]
 
 
-def plot(datasets: List[List[SampleLineT]], pconfig: Dict) -> str:
+def plot(lists_of_lines: List[List[LineT]], pconfig: Dict) -> str:
     """
     Build and add the plot data to the report, return an HTML wrapper.
-    :param datasets: each dataset is a 2D dict, first keys as sample names, then x:y data pairs
+    :param lists_of_lines: each dataset is a 2D dict, first keys as sample names, then x:y data pairs
     :param pconfig: dict with config key:value pairs. See CONTRIBUTING.md
     :return: HTML with JS, ready to be inserted into the page
     """
-    p = LinePlot(pconfig, datasets)
+    p = LinePlot(pconfig, lists_of_lines)
 
     from multiqc.utils import report
 
     return p.add_to_report(report)
 
 
+@dataclasses.dataclass
+class LineDataset(Dataset):
+    """Bar dataset should also carry the list of samples"""
+
+    lines: List[Dict]
+
+    # def dump_for_javascript(self):
+    #     """Serialise the data to pick up in plotly-js"""
+    #     d = super().dump_for_javascript()
+    #     d["lines"] = self.lines
+    #     return d
+
+
 class LinePlot(Plot):
-    def __init__(self, pconfig: Dict, datasets: List):
-        super().__init__(PlotType.LINE, pconfig, datasets)
+    def __init__(self, pconfig: Dict, lists_of_lines: List[List[LineT]]):
+        super().__init__(PlotType.LINE, pconfig, len(lists_of_lines))
+
+        # Extend each dataset object with a list of samples
+        self.datasets: List[LineDataset] = [
+            LineDataset(**d.__dict__, lines=lines) for d, lines in zip(self.datasets, lists_of_lines)
+        ]
 
         self.categories: List[str] = pconfig.get("categories", [])
 
@@ -49,9 +68,15 @@ class LinePlot(Plot):
         #     f"%{{x}}: %{{y:,.{self.tt_decimals}f}}{self.tt_suffix}"
         # )
         if self.flat and self.datasets:
-            self.layout.height += len(self.datasets[0].data) * 5  # extra space for legend
+            self.layout.height += len(self.datasets[0].lines) * 5  # extra space for legend
 
-    def create_figure(self, layout: go.Layout, dataset: Dataset, is_log=False, is_pct=False):
+    def dump_for_javascript(self):
+        """Serialise the data to pick up in plotly-js"""
+        d = super().dump_for_javascript()
+        d["categories"] = self.categories
+        return d
+
+    def create_figure(self, layout: go.Layout, dataset: LineDataset, is_log=False, is_pct=False):
         """
         Create a Plotly figure for a dataset
         """
@@ -64,14 +89,13 @@ class LinePlot(Plot):
         #     f.write(json.dumps(dataset.data))
 
         fig = go.Figure(layout=layout)
-        data: List[SampleLineT] = dataset.data
-        for sample in data:
-            if len(sample["data"]) > 0 and isinstance(sample["data"][0], list):
-                xs = [x[0] for x in sample["data"]]
-                ys = [x[1] for x in sample["data"]]
+        for line in dataset.lines:
+            if len(line["data"]) > 0 and isinstance(line["data"][0], list):
+                xs = [x[0] for x in line["data"]]
+                ys = [x[1] for x in line["data"]]
             else:
-                xs = [x for x in range(len(sample["data"]))]
-                ys = sample["data"]
+                xs = [x for x in range(len(line["data"]))]
+                ys = line["data"]
             if is_log:
                 ys = [math.log10(y) if y else 0 for y in ys]
 
@@ -79,43 +103,43 @@ class LinePlot(Plot):
                 go.Scatter(
                     x=xs,
                     y=ys,
-                    name=sample["name"],
+                    name=line["name"],
                     mode="lines+markers",
                     marker=dict(size=5),
                 )
             )
         return fig
 
-    def save_data_file(self, dataset: Dataset) -> None:
+    def save_data_file(self, dataset: LineDataset) -> None:
         fdata = dict()
         last_cats = None
         shared_cats = True
-        for sample in dataset.data:
-            fdata[sample["name"]] = dict()
+        for line in dataset.lines:
+            fdata[line["name"]] = dict()
 
             # Check to see if all categories are the same
-            if len(sample["data"]) > 0 and isinstance(sample["data"][0], list):
+            if len(line["data"]) > 0 and isinstance(line["data"][0], list):
                 if last_cats is None:
-                    last_cats = [x[0] for x in sample["data"]]
-                elif last_cats != [x[0] for x in sample["data"]]:
+                    last_cats = [x[0] for x in line["data"]]
+                elif last_cats != [x[0] for x in line["data"]]:
                     shared_cats = False
 
-            for i, x in enumerate(sample["data"]):
+            for i, x in enumerate(line["data"]):
                 if isinstance(x, list):
-                    fdata[sample["name"]][x[0]] = x[1]
+                    fdata[line["name"]][x[0]] = x[1]
                 else:
                     try:
-                        fdata[sample["name"]][self.categories[i]] = x
-                    except Exception:
-                        fdata[sample["name"]][str(i)] = x
+                        fdata[line["name"]][self.categories[i]] = x
+                    except (ValueError, KeyError, IndexError):
+                        fdata[line["name"]][str(i)] = x
 
         # Custom tsv output if the x-axis varies
         if not shared_cats and config.data_format == "tsv":
             fout = ""
-            for sample in dataset.data:
-                fout += "\t" + "\t".join([str(x[0]) for x in sample["data"]])
-                fout += "\n{}\t".format(sample["name"])
-                fout += "\t".join([str(x[1]) for x in sample["data"]])
+            for line in dataset.lines:
+                fout += "\t" + "\t".join([str(x[0]) for x in line["data"]])
+                fout += "\n{}\t".format(line["name"])
+                fout += "\t".join([str(x[1]) for x in line["data"]])
                 fout += "\n"
             with io.open(os.path.join(config.data_dir, f"{dataset.uid}.txt"), "w", encoding="utf-8") as f:
                 f.write(fout.encode("utf-8", "ignore").decode("utf-8"))

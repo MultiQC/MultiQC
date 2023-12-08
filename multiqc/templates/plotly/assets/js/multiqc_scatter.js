@@ -5,53 +5,52 @@ class ScatterPlot extends Plot {
     this.default_marker = data.default_marker;
   }
 
-  activeDatasetSamples() {
-    if (this.datasets.length === 0) return [];
-    let dataset = this.datasets[this.active_dataset_idx];
-    return dataset.map((element) => element.name);
+  activeDatasetSize() {
+    if (this.datasets.length === 0) return 0; // no datasets
+    return this.datasets[this.active_dataset_idx].points; // no data points in a dataset
   }
 
   // Constructs and returns traces for the Plotly plot
   buildTraces() {
-    let dataset = this.datasets[this.active_dataset_idx];
+    let points = this.datasets[this.active_dataset_idx].points;
+    if (points.length === 0) return [];
 
-    let samples = applyToolboxSettings(this.activeDatasetSamples());
+    let samples = points.map((point) => point.name);
+    let sampleSettings = applyToolboxSettings(samples);
+    if (sampleSettings == null) return; // All series are hidden, do not render the graph
 
-    // All series are hidden, do not render the graph.
-    if (samples == null) return;
+    // // Rename samples
+    // dataset.map((element, si) => (element.name = samples[si].name));
+    //
+    // // Filter out hidden samples
+    // let visibleSamples = samples.filter((s) => !s.hidden);
+    // let visibleDataset = dataset.filter((element, si) => !samples[si].hidden);
 
-    // Rename samples
-    dataset.map((element, si) => (element.name = samples[si].name));
+    return points.map((point, idx) => {
+      if (sampleSettings[idx].hidden) return {};
 
-    // Filter out hidden samples
-    let visibleSamples = samples.filter((s) => !s.hidden);
-    let visibleDataset = dataset.filter((element, si) => !samples[si].hidden);
-
-    let traces = visibleDataset.map((element, si) => {
-      let x = element.x;
+      let x = point.x;
       if (this.categories && Number.isInteger(x) && x < this.categories.length) x = this.categories[x];
 
       // Shallow copy of default marker
       let marker = Object.assign({}, this.default_marker);
-      marker.size = element["marker_size"] ?? marker.size;
+      marker.size = point["marker_size"] ?? marker.size;
       marker.line = {
-        width: element["marker_line_width"] ?? marker.line.width,
+        width: point["marker_line_width"] ?? marker.line.width,
       };
-      console.log(element.name + ": " + marker.line.width);
-      marker.color = visibleSamples[si].highlight ?? element["color"] ?? marker.color;
-      marker.opacity = element["opacity"] ?? marker.opacity;
+      marker.color = sampleSettings[idx].highlight ?? point["color"] ?? marker.color;
+      marker.opacity = point["opacity"] ?? marker.opacity;
 
       return {
         type: "scatter",
         x: [x],
-        y: [element.y],
-        name: element.name,
+        y: [point.y],
+        name: sampleSettings[idx].name,
         mode: "markers",
         marker: marker,
         // hovertemplate: pconfig["tt_label"]
       };
     });
-    return traces;
   }
 }
 // // Make the highcharts plot

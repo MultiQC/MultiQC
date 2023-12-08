@@ -1,3 +1,4 @@
+import dataclasses
 import logging
 from typing import Dict, List, Union
 import plotly.graph_objects as go
@@ -11,35 +12,63 @@ ElemT = Union[str, float, int]
 
 
 def plot(
-    dataset: List[List[ElemT]],
+    rows: List[List[ElemT]],
     xcats: List[str],
     ycats: List[str],
     pconfig: Dict,
 ) -> str:
     """
     Build and add the plot data to the report, return an HTML wrapper.
-    :param dataset: One dataset. A dataset is a list of rows of values
+    :param rows: One dataset. A dataset is a list of rows of values
     :param xcats: Labels for X axis
     :param ycats: Labels for Y axis
     :param pconfig: dict with config key:value pairs. See CONTRIBUTING.md
     :return: HTML with JS, ready to be inserted into the page
     """
-    p = HeatmapPlot(pconfig, [dataset], xcats, ycats)
+    p = HeatmapPlot(pconfig, [rows], [xcats], [ycats])
 
     from multiqc.utils import report
 
     return p.add_to_report(report)
 
 
+@dataclasses.dataclass
+class HeatmapDataset(Dataset):
+    """Bar dataset should also carry the list of samples"""
+
+    rows: List[List[ElemT]]
+    xcats: List[str]
+    ycats: List[str]
+
+    # def dump_for_javascript(self):
+    #     """Serialise the data to pick up in plotly-js"""
+    #     d = super().dump_for_javascript()
+    #     d["xcats"] = self.xcats
+    #     d["ycats"] = self.ycats
+    #     return d
+
+
 class HeatmapPlot(Plot):
-    def __init__(self, pconfig: Dict, datasets: List, xcats: List[str], ycats: List[str]):
-        super().__init__(PlotType.HEATMAP, pconfig, datasets)
-        self.xcats = xcats
-        self.ycats = ycats
+    def __init__(
+        self,
+        pconfig: Dict,
+        rows_lists: List[List[List[ElemT]]],
+        xcats_lists: List[List[str]],
+        ycats_lists: List[List[str]],
+    ):
+        super().__init__(PlotType.HEATMAP, pconfig, len(rows_lists))
+        if len(rows_lists) != len(xcats_lists) != len(ycats_lists):
+            raise ValueError("Number of datasets must match number of xcats and ycats")
+
+        # Extend each dataset object with a list of samples
+        self.datasets: List[HeatmapDataset] = [
+            HeatmapDataset(**d.__dict__, rows=rows, xcats=xcats, ycats=ycats)
+            for d, rows, xcats, ycats in zip(self.datasets, rows_lists, xcats_lists, ycats_lists)
+        ]
 
         # Determining the size of the plot to reasonably display data
         # without cluttering too much
-        n = len(self.xcats)
+        n = max(len(cat) for cat in self.datasets[0].rows)
         MIN_PLOT_HEIGHT = 500
         MAX_PLOT_HEIGHT = 2560
         height = MIN_PLOT_HEIGHT
@@ -69,11 +98,9 @@ class HeatmapPlot(Plot):
         self.layout.height = self.layout.height or height
         self.layout.width = self.layout.width or height
 
-    def serialise(self) -> Dict:
+    def dump_for_javascript(self) -> Dict:
         """Serialise the plot data to pick up in JavaScript"""
-        d = super().serialise()
-        d["xcats"] = self.xcats
-        d["ycats"] = self.ycats
+        d = super().dump_for_javascript()
         d["xcats_samples"] = self.pconfig.get("xcats_samples", True)
         d["ycats_samples"] = self.pconfig.get("ycats_samples", True)
         return d
@@ -88,10 +115,10 @@ class HeatmapPlot(Plot):
         # find min val across all datasets across all cols and rows
         minval = self.pconfig.get("min", None)
         if minval is None:
-            minval = min(min(min(row) for row in dataset.data) for dataset in self.datasets)
+            minval = min(min(min(row) for row in dataset.rows) for dataset in self.datasets)
         maxval = self.pconfig.get("max", None)
         if maxval is None:
-            maxval = max(max(max(row) for row in dataset.data) for dataset in self.datasets)
+            maxval = max(max(max(row) for row in dataset.rows) for dataset in self.datasets)
         return f"""
         <div class="btn-group hc_switch_group">
             <button type="button" class="mqc_heatmap_sortHighlight btn btn-default btn-sm" data-target="#{self.id}" disabled="disabled">
@@ -119,19 +146,18 @@ class HeatmapPlot(Plot):
     def create_figure(
         self,
         layout: go.Layout,
-        dataset: Dataset,
+        dataset: HeatmapDataset,
         is_log=False,
         is_pct=False,
     ) -> go.Figure:
         """
         Create a Plotly figure for a dataset
         """
-        data: List[List[ElemT]] = dataset.data
         return go.Figure(
             data=go.Heatmap(
-                z=data,
-                x=self.xcats,
-                y=self.ycats,
+                z=dataset.rows,
+                x=dataset.xcats,
+                y=dataset.ycats,
             ),
             layout=layout,
         )

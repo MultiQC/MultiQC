@@ -14,7 +14,7 @@ from abc import abstractmethod, ABC
 from enum import Enum
 from pathlib import Path
 from pprint import pprint
-from typing import Dict, Union, List, Any, Optional
+from typing import Dict, Union, List, Optional
 
 import plotly.graph_objects as go
 
@@ -36,23 +36,29 @@ class PlotType(Enum):
 
 
 @dataclasses.dataclass
-class Dataset:
+class Dataset(ABC):
     """
     Structured version of dataset config dictionary
     """
 
-    data: Any = dataclasses.field(repr=False)
-    name: str
+    label: str
     uid: str
-    ylab: Optional[str] = None
-    xlab: Optional[str] = None
-    ymax: Optional[int] = None
+    xlab: Optional[str]
+    ylab: Optional[str]
+    ymax: Optional[float]
+
+    def dump_for_javascript(self) -> Dict:
+        """Only dump data added in subclasses. No need to pass all attributes to the dataset"""
+        return {k: v for k, v in self.__dict__.items() if k not in Dataset.__annotations__.keys()}
 
 
 class Plot(ABC):
     """Structured version of plot config dictionary"""
 
-    def __init__(self, plot_type: PlotType, pconfig: Dict, datasets: List):
+    def __init__(self, plot_type: PlotType, pconfig: Dict, n_datasets: int):
+        if n_datasets == 0:
+            raise ValueError("No datasets to plot")
+
         self.id = pconfig.get("id")
         if self.id is None:  # ID of the plot group
             uniq_suffix = "".join(random.sample(string.ascii_lowercase, 10))
@@ -61,7 +67,7 @@ class Plot(ABC):
 
         self.plot_type = plot_type
         self.flat = config.plots_force_flat or (
-            not config.plots_force_interactive and len(datasets) > config.plots_flat_numseries
+            not config.plots_force_interactive and n_datasets > config.plots_flat_numseries
         )
 
         self.pconfig = pconfig
@@ -73,22 +79,31 @@ class Plot(ABC):
         self.p_active = self.add_pct_tab and pconfig.get("cpswitch_c_active", True) is not True
 
         # Per-dataset configurations
-        self.datasets: List[Dataset] = [Dataset(data, name=str(i + 1), uid=self.id) for i, data in enumerate(datasets)]
+        self.datasets: List[Dataset] = [
+            Dataset(
+                label=str(i + 1),
+                uid=self.id,
+                xlab=None,
+                ylab=None,
+                ymax=None,
+            )
+            for i in range(n_datasets)
+        ]
         data_labels: List[Union[str, Dict[str, str]]] = pconfig.get("data_labels", [])
         for idx, ds in enumerate(self.datasets):
             if idx >= len(data_labels):
                 continue
             dl = data_labels[idx]
             if isinstance(dl, str):
-                ds.name = dl
+                ds.label = dl
             elif isinstance(dl, dict):
-                ds.name = dl.get("name", idx + 1)
+                ds.label = dl.get("name", idx + 1)
             else:
                 logger.warning(f"Invalid data_labels type: {type(dl)}. Must be a string or a dict.")
-            if len(datasets) > 1:
+            if n_datasets > 1:
                 ds.uid += f"_{idx + 1}"
             if isinstance(dl, dict):
-                ds.ylab = dl.get("ylab") or dl.get("name") or None
+                ds.ylab = dl.get("ylab") or ds.label or None
                 ds.xlab = dl.get("xlab") or None
 
         self.layout = go.Layout(
@@ -119,8 +134,8 @@ class Plot(ABC):
             font=dict(color="Black", family="Lucida Grande"),
             colorway=mqc_colour.mqc_colour_scale.COLORBREWER_SCALES["plot_defaults"],
             autosize=True,
-            margin_pad=10,  # pad sample names a bit
-            hoverlabel_namelength=-1,  # do not crop sample names in hover labels
+            margin=dict(pad=10),  # pad sample names a bit
+            hoverlabel=dict(namelength=-1),  # do not crop sample names in hover labels
             annotations=[
                 dict(
                     text="Created with MultiQC",
@@ -167,7 +182,7 @@ class Plot(ABC):
         for ds in self.datasets:
             ds.uid = self.id
             if len(self.datasets) > 1:  # for flat plots, each dataset will have its own unique ID
-                ds.uid = report.save_htmlid(f"{self.id}_{ds.name}", skiplint=True)
+                ds.uid = report.save_htmlid(f"{self.id}_{ds.label}", skiplint=True)
 
         if self.flat:
             html = self.flat_plot()
@@ -302,19 +317,19 @@ class Plot(ABC):
                     cls="",
                     pid=self.id,
                     active=ds_idx == 0,
-                    label=ds.name,
+                    label=ds.label,
                     data_attrs=data_attrs,
                 )
             html += "</div>\n\n"
         return html
 
-    def serialise(self) -> Dict:
-        """Serialise the plot data to pick up in JavaScript"""
+    def dump_for_javascript(self) -> Dict:
+        """Serialise the plot data to pick up in plotly-js"""
         return {
             "id": self.id,
             "plot_type": self.plot_type.value,
             "layout": self.layout.to_plotly_json(),
-            "datasets": [d.data for d in self.datasets],
+            "datasets": [d.dump_for_javascript() for d in self.datasets],
             # TODO: save figures to JSON, not datasets?
             # "figures": [self._make_fig(dataset).to_plotly_json() for dataset in datasets],
             "config": {
@@ -339,7 +354,7 @@ class Plot(ABC):
         html += "</div>"
 
         # Saving compressed data for JavaScript to pick up and uncompress.
-        dump = self.serialise()
+        dump = self.dump_for_javascript()
         report.plot_data[self.id] = dump
         return html
 

@@ -1,44 +1,42 @@
 class HeatmapPlot extends Plot {
-  constructor(data) {
-    super(data);
-    this.xcats = data.xcats;
-    this.ycats = data.ycats;
+  constructor(dump) {
+    super(dump);
+    this.xcats_samples = dump.xcats_samples;
+    this.ycats_samples = dump.ycats_samples;
   }
 
   activeDatasetSize() {
-    return this.datasets[this.active_dataset_idx].length;
+    if (this.datasets.length === 0) return 0; // no datasets
+    let rows = this.datasets[this.active_dataset_idx].rows;
+    if (rows.length === 0) return 0; // no rows
+    return rows[0].length; // no columns in a row
   }
 
   // Constructs and returns traces for the Plotly plot
   buildTraces() {
-    let dataset = this.datasets[this.active_dataset_idx];
-
-    let xcats = this.xcats;
-    let ycats = this.ycats;
+    let rows = this.datasets[this.active_dataset_idx].rows;
+    let xcats = this.datasets[this.active_dataset_idx].xcats;
+    let ycats = this.datasets[this.active_dataset_idx].ycats;
 
     if (this.xcats_samples) {
-      let samples = applyToolboxSettings(this.xcats);
-      // All series are hidden, do not render the graph.
-      if (samples == null) return;
-      // Rename and filter
-      xcats = samples.filter((s) => !s.hidden).map((s) => s.name);
-      // dataset = dataset.filter((element, si) => !samples[si].hidden);
-      // TODO: properly apply filters for dataset, handle when both xcats_samples and ycats_samples are set
+      let xcatsSettings = applyToolboxSettings(xcats);
+      if (xcatsSettings == null) return; // All series are hidden, do not render the graph.
+      // Rename and filter samples:
+      xcats = xcatsSettings.filter((s) => !s.hidden).map((s) => s.name);
+      rows = rows.map((row) => row.filter((val, i) => !xcatsSettings[i].hidden));
     }
 
     if (this.ycats_samples) {
-      let samples = applyToolboxSettings(this.ycats);
-      // All series are hidden, do not render the graph.
-      if (samples == null) return;
-      // Rename and filter
-      ycats = samples.filter((s) => !s.hidden).map((s) => s.name);
-      // dataset = dataset.filter((element, si) => !samples[si].hidden);
-      // TODO: properly apply filters for dataset, handle when both xcats_samples and ycats_samples are set
+      let ycatsSettings = applyToolboxSettings(ycats);
+      if (ycatsSettings == null) return; // All series are hidden, do not render the graph.
+      // Rename and filter samples:
+      ycats = ycatsSettings.filter((s) => !s.hidden).map((s) => s.name);
+      rows = rows.filter((row, i) => !ycatsSettings[i].hidden);
     }
 
     return [
       {
-        z: dataset,
+        z: rows,
         x: xcats,
         y: ycats,
         type: "heatmap",

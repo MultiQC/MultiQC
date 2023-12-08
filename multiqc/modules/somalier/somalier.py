@@ -661,6 +661,7 @@ class MultiqcModule(BaseMultiqcModule):
                     "name": ancestry,
                     "opacity": 0.5,
                     "marker_size": 3,
+                    "marker_line_width": 0,
                     "annotate": False,
                 }
                 for pc1, pc2, ancestry in zip(d["PC1"], d["PC2"], d["ancestry"])

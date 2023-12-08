@@ -16,23 +16,22 @@ window.mqc_hide_f_texts = [];
 window.mqc_hide_regex_mode = false;
 
 class Plot {
-  constructor(data) {
-    this.target = data.id;
-    this.plot_type = data.plot_type;
-    this.datasets = data.datasets;
-    this.layout = data.layout;
+  constructor(dump) {
+    this.target = dump.id;
+    this.plot_type = dump.plot_type;
+    this.layout = dump.layout;
+    this.datasets = dump.datasets;
+    this.config = dump.config;
     this.active_dataset_idx = 0;
-    this.xcats_samples = data.xcats_samples;
-    this.ycats_samples = data.ycats_samples;
   }
 }
 
-function initPlot(data) {
-  if (data.plot_type === "xy_line") return new LinePlot(data);
-  if (data.plot_type === "bar_graph") return new BarPlot(data);
-  if (data.plot_type === "scatter") return new ScatterPlot(data);
-  if (data.plot_type === "heatmap") return new HeatmapPlot(data);
-  console.log("Did not recognise plot type: " + data.plot_type);
+function initPlot(dump) {
+  if (dump.plot_type === "xy_line") return new LinePlot(dump);
+  if (dump.plot_type === "bar_graph") return new BarPlot(dump);
+  if (dump.plot_type === "scatter") return new ScatterPlot(dump);
+  if (dump.plot_type === "heatmap") return new HeatmapPlot(dump);
+  console.log("Did not recognise plot type: " + dump.plot_type);
   return null;
 }
 
