@@ -151,6 +151,7 @@ class MultiqcModule(BaseMultiqcModule):
                 "suffix": " Mbps",
                 "scale": "Blues",
                 "format": "{:,.2f}",
+                "hidden": True,
             },
             "overlap": {
                 "title": "Read overlap",
