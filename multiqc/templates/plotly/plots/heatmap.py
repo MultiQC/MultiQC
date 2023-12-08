@@ -119,11 +119,33 @@ class HeatmapPlot(Plot):
             f"Heatmap size: {width}x{height}, px per element: {px_per_elem}, font: {font_size}px, xticks: {x_nticks}, yticks: {y_nticks}"
         )
 
+        self.heatmap_config = {
+            "colorscale": self.pconfig.get(
+                "colstops",
+                [
+                    [0, "#313695"],
+                    [0.1, "#4575b4"],
+                    [0.2, "#74add1"],
+                    [0.3, "#abd9e9"],
+                    [0.4, "#e0f3f8"],
+                    [0.5, "#ffffbf"],
+                    [0.6, "#fee090"],
+                    [0.7, "#fdae61"],
+                    [0.8, "#f46d43"],
+                    [0.9, "#d73027"],
+                    [1, "#a50026"],
+                ],
+            ),
+            "reversescale": self.pconfig.get("reverseColors", False),
+            "showscale": self.pconfig.get("showlegend", True),
+        }
+
     def dump_for_javascript(self) -> Dict:
         """Serialise the plot data to pick up in JavaScript"""
         d = super().dump_for_javascript()
         d["xcats_samples"] = self.pconfig.get("xcats_samples", True)
         d["ycats_samples"] = self.pconfig.get("ycats_samples", True)
+        d["heatmap_config"] = self.heatmap_config
         return d
 
     def control_panel(self) -> str:
@@ -179,6 +201,7 @@ class HeatmapPlot(Plot):
                 z=dataset.rows,
                 x=dataset.xcats,
                 y=dataset.ycats,
+                **self.heatmap_config,
             ),
             layout=layout,
         )

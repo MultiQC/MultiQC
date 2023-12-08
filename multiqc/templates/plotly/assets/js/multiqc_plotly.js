@@ -151,12 +151,10 @@ $(function () {
     }
     $(this).css({ height: "auto", top: 0, bottom: "10px", position: "absolute" });
   });
+
   $(".hc-plot-handle").on("mousedown", function (e) {
     let wrapper = $(this).parent();
     let target = wrapper.children()[0].id;
-    // $("#" + plot_id).find(".svg-container").height();
-    // var plot_svg = $("#" + plot_id + " > .plot_container > .svg-container");
-    // find .svg-container which is an immediate child of wrapper
     let startHeight = wrapper.height();
     let pY = e.pageY;
 
@@ -176,12 +174,12 @@ $(function () {
     });
   });
 
-  // Special case for the beeswarm plot. TODO: fix for Plotly
-  $(".hc-plot, .beeswarm-plot").on("mqc_plotresize", function (e) {
-    if ($(this).highcharts()) {
-      $(this).highcharts().reflow();
-    }
-  });
+  // // Special case for the beeswarm plot. TODO: fix for Plotly
+  // $(".hc-plot, .beeswarm-plot").on("mqc_plotresize", function (e) {
+  //   if ($(this).highcharts()) {
+  //     $(this).highcharts().reflow();
+  //   }
+  // });
 
   // Switch the Y-axis limits on or off
   $(".mqc_hcplot_plotgroup").on("click", ".mqc_hcplot_yaxis_limit_toggle .mqc_switch_wrapper", function () {
@@ -358,6 +356,7 @@ function renderPlot(target) {
 
   let traces = plot.buildTraces();
   Plotly.newPlot(target, traces, plot.layout, {
+    responsive: true,
     displayModeBar: true,
     displaylogo: false,
     modeBarButtonsToRemove: [
