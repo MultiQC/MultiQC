@@ -37,12 +37,6 @@ class LineDataset(Dataset):
 
     lines: List[Dict]
 
-    # def dump_for_javascript(self):
-    #     """Serialise the data to pick up in plotly-js"""
-    #     d = super().dump_for_javascript()
-    #     d["lines"] = self.lines
-    #     return d
-
 
 class LinePlot(Plot):
     def __init__(self, pconfig: Dict, lists_of_lines: List[List[LineT]]):

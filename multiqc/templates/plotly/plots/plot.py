@@ -55,6 +55,9 @@ class Dataset(ABC):
 class Plot(ABC):
     """Structured version of plot config dictionary"""
 
+    # Default width for flat plots
+    FLAT_PLOT_WIDTH = 1100
+
     def __init__(self, plot_type: PlotType, pconfig: Dict, n_datasets: int):
         if n_datasets == 0:
             raise ValueError("No datasets to plot")
@@ -368,7 +371,7 @@ class Plot(ABC):
         Build one static image, return an HTML wrapper.
         """
         write_kwargs = dict(
-            width=fig.layout.width or 1100,  # While interactive plots take full width of screen,
+            width=fig.layout.width or Plot.FLAT_PLOT_WIDTH,  # While interactive plots take full width of screen,
             # for the flat plots we explicitly set width
             height=fig.layout.height,
             scale=2,  # higher detail (retina display)

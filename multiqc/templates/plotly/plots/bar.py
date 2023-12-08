@@ -47,13 +47,6 @@ class BarDataset(Dataset):
     cats: List[Dict]
     samples: List[str]
 
-    # def dump_for_javascript(self):
-    #     """Serialise the data to pick up in plotly-js"""
-    #     d = super().dump_for_javascript()
-    #     d["samples"] = self.samples
-    #     d["cats"] = self.cats
-    #     return d
-
 
 class BarPlot(Plot):
     def __init__(self, pconfig: Dict, cats_lists: List, samples_lists: List, max_n_samples: int):

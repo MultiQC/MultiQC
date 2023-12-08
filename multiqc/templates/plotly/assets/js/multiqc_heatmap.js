@@ -12,6 +12,21 @@ class HeatmapPlot extends Plot {
     return rows[0].length; // no columns in a row
   }
 
+  resize(newHeight) {
+    let xcats = this.datasets[this.active_dataset_idx].xcats;
+    let ycats = this.datasets[this.active_dataset_idx].ycats;
+
+    let pxPerElem = newHeight / ycats.length;
+    let newWidth = pxPerElem * xcats.length;
+
+    if (newHeight < this.layout.height) {
+      this.layout.xaxis.nticks = null;
+      this.layout.yaxis.nticks = null;
+    }
+
+    Plotly.relayout(this.target, { height: newHeight, width: newWidth });
+  }
+
   // Constructs and returns traces for the Plotly plot
   buildTraces() {
     let rows = this.datasets[this.active_dataset_idx].rows;
@@ -33,6 +48,17 @@ class HeatmapPlot extends Plot {
       ycats = ycatsSettings.filter((s) => !s.hidden).map((s) => s.name);
       rows = rows.filter((row, i) => !ycatsSettings[i].hidden);
     }
+
+    // if height > MAX_PLOT_HEIGHT:
+    //     # Cap and allow skipping ticks at this point
+    //     height = MAX_PLOT_HEIGHT
+    //     nticks = None
+    //
+    // self.layout.xaxis.tickangle = 45
+    // self.layout.font.size = font_size
+    // self.layout.xaxis.nticks = self.layout.yaxis.nticks = nticks
+    // self.layout.height = self.layout.height or height
+    // self.layout.width = self.layout.width or height
 
     return [
       {

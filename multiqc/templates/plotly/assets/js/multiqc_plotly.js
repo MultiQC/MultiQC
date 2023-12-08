@@ -24,6 +24,14 @@ class Plot {
     this.config = dump.config;
     this.active_dataset_idx = 0;
   }
+
+  activeDatasetSize() {
+    throw new Error("activeDatasetSize() not implemented");
+  }
+
+  resize(newHeight) {
+    Plotly.relayout(this.target, { height: newHeight });
+  }
 }
 
 function initPlot(dump) {
@@ -151,6 +159,7 @@ $(function () {
     // find .svg-container which is an immediate child of wrapper
     let startHeight = wrapper.height();
     let pY = e.pageY;
+
     $(document).on("mouseup", function () {
       // Clear listeners now that we've let go
       $(document).off("mousemove");
@@ -159,11 +168,11 @@ $(function () {
       // Bind to the plot div, which should have a custom ID
       $(wrapper.parent().find(".hc-plot, .beeswarm-plot")).trigger("mqc_plotresize");
     });
+
     $(document).on("mousemove", function (me) {
       let newHeight = startHeight + (me.pageY - pY);
-      // container.css("height", newHeight);
       wrapper.css("height", newHeight);
-      Plotly.relayout(target, { height: newHeight });
+      mqc_plots[target].resize(newHeight);
     });
   });
 

@@ -25,7 +25,7 @@ def plot(
     :param pconfig: dict with config key:value pairs. See CONTRIBUTING.md
     :return: HTML with JS, ready to be inserted into the page
     """
-    p = HeatmapPlot(pconfig, [rows], [xcats], [ycats])
+    p = HeatmapPlot(pconfig, rows, xcats, ycats)
 
     from multiqc.utils import report
 
@@ -40,63 +40,84 @@ class HeatmapDataset(Dataset):
     xcats: List[str]
     ycats: List[str]
 
-    # def dump_for_javascript(self):
-    #     """Serialise the data to pick up in plotly-js"""
-    #     d = super().dump_for_javascript()
-    #     d["xcats"] = self.xcats
-    #     d["ycats"] = self.ycats
-    #     return d
-
 
 class HeatmapPlot(Plot):
     def __init__(
         self,
         pconfig: Dict,
-        rows_lists: List[List[List[ElemT]]],
-        xcats_lists: List[List[str]],
-        ycats_lists: List[List[str]],
+        rows: List[List[ElemT]],
+        xcats: List[str],
+        ycats: List[str],
     ):
-        super().__init__(PlotType.HEATMAP, pconfig, len(rows_lists))
-        if len(rows_lists) != len(xcats_lists) != len(ycats_lists):
-            raise ValueError("Number of datasets must match number of xcats and ycats")
+        super().__init__(PlotType.HEATMAP, pconfig, n_datasets=1)
 
         # Extend each dataset object with a list of samples
         self.datasets: List[HeatmapDataset] = [
-            HeatmapDataset(**d.__dict__, rows=rows, xcats=xcats, ycats=ycats)
-            for d, rows, xcats, ycats in zip(self.datasets, rows_lists, xcats_lists, ycats_lists)
+            HeatmapDataset(**self.datasets[0].__dict__, rows=rows, xcats=xcats, ycats=ycats)
         ]
 
-        # Determining the size of the plot to reasonably display data
-        # without cluttering too much
-        n = max(len(cat) for cat in self.datasets[0].rows)
-        MIN_PLOT_HEIGHT = 500
-        MAX_PLOT_HEIGHT = 2560
-        height = MIN_PLOT_HEIGHT
+        # Determining the size of the plot to reasonably display data without cluttering it too much.
+        # For flat plots, we try to make the image large enough to display all samples, but to a limit
+        # For interactive plots, we set a lower default height, as it will possible to resize the plot
+        num_rows = len(ycats)
+        num_cols = len(xcats)
+        MIN_SIZE = 300
+        MAX_HEIGHT = 900 if self.flat else 500  # smaller number for interactive, as it's resizable
+        MAX_WIDTH = 900  # default interactive width can be bigger
+
         font_size = 12
-        nticks = n  # Making sure all ticks are displayed
-        if n < 15:
-            pass
-        elif n < 20:
-            height = max(height, n * 30)
-        elif n < 30:
-            height = max(height, n * 26)
-        elif n < 50:
-            height = max(height, n * 18)
+        # Making sure all ticks are displayed
+        x_nticks = num_cols
+        y_nticks = num_rows
+
+        # Number of samples to the desired size in pixel one sample will take on a screen
+        def n_elements_to_size(n: int):
+            if n >= 50:
+                return 11
+            if n >= 30:
+                return 18
+            if n >= 20:
+                return 26
+            if n >= 15:
+                return 30
+
+        x_px_per_elem = n_elements_to_size(num_cols) or MIN_SIZE / num_cols
+        y_px_per_elem = n_elements_to_size(num_rows) or MIN_SIZE / num_rows
+        px_per_elem = min(x_px_per_elem, y_px_per_elem)
+        if px_per_elem and px_per_elem <= 18:
             font_size = 10
-        else:
-            height = max(height, n * 13)
+        if px_per_elem and px_per_elem <= 13:
             font_size = 8
 
-        if height > MAX_PLOT_HEIGHT:
-            # Cap and allow skipping ticks at this point
-            height = MAX_PLOT_HEIGHT
-            nticks = None
+        height = num_rows * px_per_elem
+        width = num_cols * px_per_elem
+
+        if width < MIN_SIZE and height < MIN_SIZE:
+            logger.debug(f"Resizing from {width}x{height} to fit the minimum size {MIN_SIZE}")
+            px_per_elem = MIN_SIZE / max(num_rows, num_cols)
+            width = num_cols * px_per_elem
+            height = num_rows * px_per_elem
+            logger.debug(f"Resized to {width}x{height}")
+        if height > MAX_HEIGHT or width > MAX_WIDTH:
+            logger.debug(f"Resizing from {width}x{height} to fit the maximum size {MAX_WIDTH}x{MAX_HEIGHT}")
+            # if height > MAX_HEIGHT:
+            y_nticks = None  # allow skipping ticks to avoid making the font even smaller
+            # if width > MAX_WIDTH:
+            x_nticks = None  # allow skipping ticks to avoid making the font even smaller
+            px_per_elem = min(MAX_WIDTH / num_cols, MAX_HEIGHT / num_rows)
+            width = num_cols * px_per_elem
+            height = num_rows * px_per_elem
+            logger.debug(f"Resized to {width}x{height}")
 
         self.layout.xaxis.tickangle = 45
         self.layout.font.size = font_size
-        self.layout.xaxis.nticks = self.layout.yaxis.nticks = nticks
-        self.layout.height = self.layout.height or height
-        self.layout.width = self.layout.width or height
+        self.layout.xaxis.nticks = x_nticks
+        self.layout.yaxis.nticks = y_nticks
+        self.layout.height = self.pconfig.get("height") or (200 + height)
+        self.layout.width = self.pconfig.get("width") or (200 + width)
+        logger.debug(
+            f"Heatmap size: {width}x{height}, px per element: {px_per_elem}, font: {font_size}px, xticks: {x_nticks}, yticks: {y_nticks}"
+        )
 
     def dump_for_javascript(self) -> Dict:
         """Serialise the plot data to pick up in JavaScript"""
