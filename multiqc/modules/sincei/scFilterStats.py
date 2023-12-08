@@ -1,6 +1,7 @@
 """ MultiQC submodule to parse output from sincei scFilterStats """
 
 import logging
+import csv
 from collections import OrderedDict
 
 from multiqc.plots import table
@@ -40,6 +41,7 @@ class scFilterStatsMixin:
             }
             header["pct_Filtered"] = {
                 "title": "% Tot. Filtered",
+                "suffix": "%",
                 "description": "Percent of alignment that would be filtered for any reason.",
                 "scale": "OrRd",
                 "min": 0,
@@ -47,6 +49,7 @@ class scFilterStatsMixin:
             }
             header["pct_Blacklisted"] = {
                 "title": "% Blacklisted",
+                "suffix": "%",
                 "description": "Percent of alignments falling (at least partially) inside a blacklisted region",
                 "scale": "YlOrRd",
                 "min": 0,
@@ -54,6 +57,7 @@ class scFilterStatsMixin:
             }
             header["pct_MAPQ"] = {
                 "title": "% MAPQ",
+                "suffix": "%",
                 "description": "Percent of alignments having MAPQ scores below the specified threshold",
                 "scale": "YlOrBn",
                 "min": 0,
@@ -61,6 +65,7 @@ class scFilterStatsMixin:
             }
             header["pct_Missing_Flags"] = {
                 "title": "% Missing Flags",
+                "suffix": "%",
                 "description": "Percent of alignments lacking at least on flag specified by --samFlagInclude",
                 "scale": "PuRd",
                 "min": 0,
@@ -68,6 +73,7 @@ class scFilterStatsMixin:
             }
             header["pct_Forbidden_Flags"] = {
                 "title": "% Forbidden Flags",
+                "suffix": "%",
                 "description": "Percent of alignments having at least one flag specified by --samFlagExclude",
                 "scale": "OrRd",
                 "min": 0,
@@ -75,6 +81,7 @@ class scFilterStatsMixin:
             }
             header["pct_sincei_Dupes"] = {
                 "title": "% sincei Duplicates",
+                "suffix": "%",
                 "description": "Percent of alignments marked by sincei as being duplicates",
                 "scale": "PuRd",
                 "min": 0,
@@ -82,6 +89,7 @@ class scFilterStatsMixin:
             }
             header["pct_Duplication"] = {
                 "title": "% Duplication",
+                "suffix": "%",
                 "description": "Percent of alignments originally marked as being duplicates",
                 "scale": "OrRd",
                 "min": 0,
@@ -89,6 +97,7 @@ class scFilterStatsMixin:
             }
             header["pct_Singletons"] = {
                 "title": "% Singletons",
+                "suffix": "%",
                 "description": "Percent of alignments that are singletons (i.e., paired-end reads where the mates don't align as a pair",
                 "scale": "OrRd",
                 "min": 0,
@@ -96,6 +105,7 @@ class scFilterStatsMixin:
             }
             header["pct_Excluded_Strand"] = {
                 "title": "% Strand Filtered",
+                "suffix": "%",
                 "description": "Percent of alignments arising from the excluded strand",
                 "scale": "OrRd",
                 "min": 0,
@@ -103,6 +113,7 @@ class scFilterStatsMixin:
             }
             header["pct_Excluded_Motif"] = {
                 "title": "% Motif Filtered",
+                "suffix": "%",
                 "description": "Percent of alignments lacking the expected sequence motif",
                 "scale": "OrRd",
                 "min": 0,
@@ -110,6 +121,7 @@ class scFilterStatsMixin:
             }
             header["pct_Excluded_GC"] = {
                 "title": "% GC Filtered",
+                "suffix": "%",
                 "description": "Percent of alignments lacking the expected GC content",
                 "scale": "OrRd",
                 "min": 0,
@@ -117,6 +129,7 @@ class scFilterStatsMixin:
             }
             header["pct_Low_Aligned_Fraction"] = {
                 "title": "% Low_Aligned_Fraction",
+                "suffix": "%",
                 "description": "Percent of alignments where the number of bases that match the reference were lower then desired",
                 "scale": "OrRd",
                 "min": 0,
@@ -125,19 +138,19 @@ class scFilterStatsMixin:
             tdata = dict()
             for k, v in self.sincei_scFilterStats.items():
                 tdata[k] = {
-                    "N Entries": v["total"],
-                    "pct_Filtered": v["filtered"],
-                    "pct_Blacklisted": v["blacklisted"],
-                    "pct_Below_MAPQ": v["mapq"],
-                    "pct_Missing_Flags": v["required_flags"],
-                    "pct_Forbidden_Flags": v["excluded_flags"],
-                    "pct_sincei_Dupes": v["internal_dupes"],
-                    "pct_Duplication": v["external_dupes"],
-                    "pct_Singletons": v["singletons"],
-                    "pct_Excluded_Strand": v["wrong_strand"],
-                    "pct_Excluded_Motif": v["wrong_motif"],
-                    "pct_Excluded_GC": v["unwanted_gc"],
-                    "pct_Low_Aligned_Fraction": v["low_alignedfrac"],
+                    "N Entries": v["Total_sampled"],
+                    "pct_Filtered": v["Filtered"],
+                    "pct_Blacklisted": v["Blacklisted"],
+                    "pct_Below_MAPQ": v["Low_MAPQ"],
+                    "pct_Missing_Flags": v["Missing_Flags"],
+                    "pct_Forbidden_Flags": v["Excluded_Flags"],
+                    "pct_sincei_Dupes": v["Internal_Duplicates"],
+                    "pct_Duplication": v["Marked_Duplicates"],
+                    "pct_Singletons": v["Singletons"],
+                    "pct_Excluded_Strand": v["Wrong_strand"],
+                    "pct_Excluded_Motif": v["Wrong_motif"],
+                    "pct_Excluded_GC": v["Unwanted_GC_content"],
+                    "pct_Low_Aligned_Fraction": v["Low_aligned_fraction"],
                 }
             config = {"namespace": "sincei scFilterStats", "max_table_rows": 10000}
             self.add_section(
@@ -150,42 +163,29 @@ class scFilterStatsMixin:
         return len(self.sincei_scFilterStats)
 
     def parsescFilterStatsFile(self, f):
-        d = {}
-        firstLine = True
-        for line in f["f"].splitlines():
-            if firstLine:
-                firstLine = False
-                continue
-            cols = line.strip().split("\t")
 
-            if len(cols) != 14:
-                # This is not really the output from scFilterStats!
-                log.warning(
-                    "{} was initially flagged as the tabular output from scFilterStats, but that seems to not be the case. Skipping...".format(
-                        f["fn"]
-                    )
+        reader = csv.DictReader(f, delimiter="\t")
+        if len(set(['Total_sampled', 'Filtered', 'Blacklisted', 'Wrong_motif']).difference(
+        set(reader.fieldnames))) == 0:
+            # This is not really the output from scFilterStats!
+            log.warning(
+                "{} was initially flagged as the tabular output from scFilterStats, but that seems to not be the case. Skipping...".format(
+                    f["fn"]
                 )
-                return dict()
+            )
 
-            s_name = self.clean_s_name(cols[0], f)
+        d = {}
+        #firstLine = True
+        for cols in reader:
+            print(cols)
+            s_name = self.clean_s_name(cols['Cell_ID'], f)
             if s_name in d:
                 log.debug("Replacing duplicate sample {}.".format(s_name))
             d[s_name] = dict()
 
             try:
-                d[s_name]["total"] = self._int(cols[1])
-                d[s_name]["filtered"] = float(cols[2])
-                d[s_name]["blacklisted"] = self._int(cols[3])
-                d[s_name]["mapq"] = float(cols[4])
-                d[s_name]["required_flags"] = float(cols[5])
-                d[s_name]["excluded_flags"] = float(cols[6])
-                d[s_name]["internal_dupes"] = float(cols[7])
-                d[s_name]["external_dupes"] = float(cols[8])
-                d[s_name]["singletons"] = float(cols[9])
-                d[s_name]["wrong_strand"] = float(cols[10])
-                d[s_name]["wrong_motif"] = float(cols[11])
-                d[s_name]["unwanted_gc"] = float(cols[12])
-                d[s_name]["low_alignedfrac"] = float(cols[13])
+                for key in reader.fieldnames:
+                                    d[s_name][key] = cols[key]
             except:
                 # Obviously this isn't really the output from scFilterStats
                 log.warning(
