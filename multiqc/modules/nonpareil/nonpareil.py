@@ -25,9 +25,9 @@ class MultiqcModule(BaseMultiqcModule):
             doi="10.1093/bioinformatics/btt584",
         )
         # Config options
-        self.disp_type = getattr(config, "nonpareil", {}).get("plot_dispersion", False)
         self.plot_observed = getattr(config, "nonpareil", {}).get("plot_observed", True)
         self.plot_model = getattr(config, "nonpareil", {}).get("plot_model", True)
+        self.disp_type = getattr(config, "nonpareil", {}).get("plot_dispersion", "ci95")
 
         # Read JSON file
         self.data_by_sample = dict()
@@ -86,11 +86,12 @@ class MultiqcModule(BaseMultiqcModule):
             # Conbert base pairs to gigabase pairs
             data["LR"] = data["LR"] / 1000 / 1000
             data["LRstar"] = data["LRstar"] / 1000 / 1000
-            data["x.adj"] = [(1 if x == 0 else x) / 1000 / 1000 for x in data["x.adj"]]
+            data["x.adj"] = [(1e-6 if x == 0 else x) / 1000 / 1000 for x in data["x.adj"]]
             data["x.model"] = [x / 1000 / 1000 for x in data["x.model"]]
             data["observed"] = {x: y for x, y in zip(data["x.adj"], data["y.cov"])}
             data["model"] = {x: y for x, y in zip(data["x.model"], data["y.model"])}
             # Calculate dispersion
+            # from https://github.com/lmrodriguezr/nonpareil/blob/162f1697ab1a21128e1857dd87fa93011e30c1ba/utils/Nonpareil/R/Nonpareil.R#L306-L318
             disp_add = False
             if self.disp_type == "sd":
                 disp_add = data["y.sd"]
@@ -231,24 +232,9 @@ class MultiqcModule(BaseMultiqcModule):
     def nonpareil_redundancy_plot(self):
         """Make the redundancy plot for nonpareil"""
 
-        pconfig = {
-            "id": "nonpareil-redundancy-plot",
-            "title": "Nonpareil: Redundancy levels",
-            "xlab": "Sequencing effort (Mbps)",
-            "ylab": "Estimated Average Coverage",
-            "ymax": 1,
-            "ymin": 0,
-            "yCeiling": 1,
-            "xDecimals": True,
-            "yDecimals": True,
-            "xLog": True,
-            "tt_label": "{point.x:.2f} Mbps: {point.y:.2f}",
-            "data_labels": [{"name": sample} for sample in self.data_by_sample.keys()],
-        }
-        log.debug(pconfig)
-
         data_plot = list()
-        for s_name, data in self.data_by_sample.items():
+        data_labels = list()
+        for s_name, data in sorted(self.data_by_sample.items()):
             data_plot.append(dict())
             if self.plot_observed:
                 data_plot[-1]["observed"] = data["observed"]
@@ -257,8 +243,27 @@ class MultiqcModule(BaseMultiqcModule):
             if self.disp_type:
                 data_plot[-1][f"{self.disp_type}_upper"] = data[f"{self.disp_type}_upper"]
                 data_plot[-1][f"{self.disp_type}_lower"] = data[f"{self.disp_type}_lower"]
+            data_labels.append({"name": s_name})
 
-        log.debug(data_plot)
+        log.debug(data_labels)
+
+        pconfig = {
+            "id": "nonpareil-redundancy-plot",
+            "title": "Nonpareil: Redundancy levels",
+            "xlab": "Sequencing effort (Mbps)",
+            "ylab": "Estimated Average Coverage",
+            "ymax": 1,
+            "ymin": 0,
+            "xmin": 1e-3,
+            "yCeiling": 1,
+            "xDecimals": True,
+            "yDecimals": True,
+            "xLog": True,
+            "tt_label": "{point.x:.2f} Mbps: {point.y:.2f}",
+            "data_labels": data_labels,
+        }
+        log.debug(pconfig)
+
 
         self.add_section(
             name="Redundancy levels",
