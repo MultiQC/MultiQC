@@ -265,7 +265,6 @@ class MultiqcModule(BaseMultiqcModule):
         }
         log.debug(pconfig)
 
-
         self.add_section(
             name="Redundancy levels",
             anchor="nonpareil-redundancy",
