@@ -36,16 +36,16 @@ class MultiqcModule(
         # scFilterStats
         n["scFilterStats"] = self.parse_scFilterStats()
         if n["scFilterStats"] > 0:
-            log.debug("Found {} sincei scFilterStats samples".format(n["scFilterStats"]))
+            log.debug("Found {} sincei scFilterStats reports".format(n["scFilterStats"]))
 
         # scCountQC
         n["scCountQC"] = self.parse_scCountQC()
         if n["scCountQC"] > 0:
-            log.debug("Found {} sincei scCountQC samples".format(n["scCountQC"]))
+            log.debug("Found {} sincei scCountQC reports".format(n["scCountQC"]))
 
         tot = sum(n.values())
         if tot > 0:
-            log.info("Found {} total sincei samples".format(tot))
+            log.info("Found {} total sincei reports".format(tot))
         else:
             raise UserWarning
 
