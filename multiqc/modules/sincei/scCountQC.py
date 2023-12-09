@@ -83,8 +83,15 @@ class scCountQCMixin:
                 "min": 0,
                 "max": 1,
             }
-            kys = ['n_genes_by_counts', 'log1p_total_counts', 'pct_counts_in_top_50_genes', 'pct_counts_in_top_100_genes',
-                    'pct_counts_in_top_200_genes', 'pct_counts_in_top_500_genes', 'gini_coefficient']
+            kys = [
+                "n_genes_by_counts",
+                "log1p_total_counts",
+                "pct_counts_in_top_50_genes",
+                "pct_counts_in_top_100_genes",
+                "pct_counts_in_top_200_genes",
+                "pct_counts_in_top_500_genes",
+                "gini_coefficient",
+            ]
 
             test_dict = self.getDictVal(self.sincei_scCountQC, kys[0])
             out = {}
@@ -97,7 +104,7 @@ class scCountQCMixin:
             tdata = dict()
             for k, v in out.items():
                 tdata[k] = {
-                    "SampleName": k,#v["sample"],
+                    "SampleName": k,  # v["sample"],
                     "n_genes": v["n_genes_by_counts"],
                     "n_counts_log": v["log1p_total_counts"],
                     "pct_50": v["pct_counts_in_top_50_genes"],
@@ -119,28 +126,39 @@ class scCountQCMixin:
 
     def parsescCountQCFile(self, f):
         reader = csv.DictReader(f["f"], delimiter="\t")
-        if len(set(['barcodes', 'sample', 'n_genes_by_counts', 'log1p_n_genes_by_counts']).difference(
-        set(reader.fieldnames))) != 0:
-                # This is not really the output from scCountQC!
-                log.warning(
-                    "{} was initially flagged as the tabular output from scCountQC, but that seems to not be the case. Skipping...".format(
-                        f["fn"]
-                    )
+        if (
+            len(
+                set(
+                    [
+                        "barcodes",
+                        "sample",
+                        "n_genes_by_counts",
+                        "log1p_n_genes_by_counts",
+                    ]
+                ).difference(set(reader.fieldnames))
+            )
+            != 0
+        ):
+            # This is not really the output from scCountQC!
+            log.warning(
+                "{} was initially flagged as the tabular output from scCountQC, but that seems to not be the case. Skipping...".format(
+                    f["fn"]
                 )
-                return dict()
+            )
+            return dict()
 
         d = {}
         print(reader.fieldnames)
         # collect data
         for row in reader:
-            s_name = self.clean_s_name(row['Cell_ID'], f) #f["s_name"]
+            s_name = self.clean_s_name(row["Cell_ID"], f)  # f["s_name"]
             if s_name in d:
                 log.debug("Replacing duplicate cell_id {}.".format(s_name))
             d[s_name] = dict()
 
             try:
                 for key in reader.fieldnames:
-                                    d[s_name][key] = row[key]
+                    d[s_name][key] = row[key]
             except:
                 # Obviously this isn't really the output from scCountQC
                 log.warning(
@@ -152,7 +170,9 @@ class scCountQCMixin:
         return d
 
     def getDictVal(self, dat, val):
-        dc = groupby(sorted(dat.items(), key = lambda x : x[1]['Cell_ID'].split("::")[0]),
-        lambda x : x[1]['Cell_ID'].split("::")[0])
-        out = {i: {val: np.median([float(j[1][val]) for j in j]) } for i, j in dc}
+        dc = groupby(
+            sorted(dat.items(), key=lambda x: x[1]["Cell_ID"].split("::")[0]),
+            lambda x: x[1]["Cell_ID"].split("::")[0],
+        )
+        out = {i: {val: np.median([float(j[1][val]) for j in j])} for i, j in dc}
         return out

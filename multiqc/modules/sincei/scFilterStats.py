@@ -35,8 +35,8 @@ class scFilterStatsMixin:
             header = OrderedDict()
             header["N Entries"] = {
                 "title": "N entries",
-                "description": "Median number of entries sampled from the file"
-                }
+                "description": "Median number of entries sampled from the file",
+            }
             header["pct_Aligned"] = {
                 "title": "% Aligned",
                 "description": "Percent of aligned entries (Median of cells)",
@@ -180,8 +180,14 @@ class scFilterStatsMixin:
 
     def parsescFilterStatsFile(self, f):
         reader = csv.DictReader(f["f"], delimiter="\t")
-        if len(set(['Total_sampled', 'Filtered', 'Blacklisted', 'Wrong_motif']).difference(
-        set(reader.fieldnames))) != 0:
+        if (
+            len(
+                set(
+                    ["Total_sampled", "Filtered", "Blacklisted", "Wrong_motif"]
+                ).difference(set(reader.fieldnames))
+            )
+            != 0
+        ):
             # This is not really the output from scFilterStats!
             log.warning(
                 "{} was initially flagged as the tabular output from scFilterStats, but that seems to not be the case. Skipping...".format(
@@ -192,14 +198,14 @@ class scFilterStatsMixin:
         d = {}
         print(reader.fieldnames)
         for row in reader:
-            s_name = self.clean_s_name(row['Cell_ID'], f)
+            s_name = self.clean_s_name(row["Cell_ID"], f)
             if s_name in d:
                 log.debug("Replacing duplicate cell_id {}.".format(s_name))
             d[s_name] = dict()
 
             try:
                 for key in reader.fieldnames:
-                                    d[s_name][key] = row[key]
+                    d[s_name][key] = row[key]
             except:
                 # Obviously this isn't really the output from scFilterStats
                 log.warning(
@@ -211,7 +217,9 @@ class scFilterStatsMixin:
         return d
 
     def getDictVal(self, dat, val):
-        dc = groupby(sorted(dat.items(), key = lambda x : x[1]['Cell_ID'].split("::")[0]),
-        lambda x : x[1]['Cell_ID'].split("::")[0])
-        out = {i: {val: np.median([float(j[1][val]) for j in j]) } for i, j in dc}
+        dc = groupby(
+            sorted(dat.items(), key=lambda x: x[1]["Cell_ID"].split("::")[0]),
+            lambda x: x[1]["Cell_ID"].split("::")[0],
+        )
+        out = {i: {val: np.median([float(j[1][val]) for j in j])} for i, j in dc}
         return out
