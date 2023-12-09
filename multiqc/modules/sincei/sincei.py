@@ -36,7 +36,9 @@ class MultiqcModule(
         # scFilterStats
         n["scFilterStats"] = self.parse_scFilterStats()
         if n["scFilterStats"] > 0:
-            log.debug("Found {} sincei scFilterStats reports".format(n["scFilterStats"]))
+            log.debug(
+                "Found {} sincei scFilterStats reports".format(n["scFilterStats"])
+            )
 
         # scCountQC
         n["scCountQC"] = self.parse_scCountQC()
