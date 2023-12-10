@@ -22,7 +22,9 @@ class scFilterStatsMixin:
                 if k in self.sincei_scFilterStats:
                     log.warning("Replacing duplicate sample {}.".format(k))
                 self.sincei_scFilterStats[k] = v
-
+                # Superfluous function call to confirm that it is used in this module
+                # Replace None with actual version if it is available
+                self.add_software_version(None)
             if len(parsed_data) > 0:
                 self.add_data_source(f, section="scFilterStats")
 
