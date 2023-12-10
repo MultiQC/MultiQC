@@ -204,7 +204,7 @@ class scFilterStatsMixin:
             try:
                 for key in reader.fieldnames:
                     d[s_name][key] = row[key]
-            except:
+            except: # noqa: E722
                 # Obviously this isn't really the output from scFilterStats
                 log.warning(
                     "{} was initially flagged as the output from scFilterStats, but that seems to not be the case. Skipping...".format(
