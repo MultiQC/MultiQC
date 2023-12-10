@@ -183,11 +183,7 @@ class scFilterStatsMixin:
     def parsescFilterStatsFile(self, f):
         reader = csv.DictReader(f["f"], delimiter="\t")
         if (
-            len(
-                set(
-                    ["Total_sampled", "Filtered", "Blacklisted", "Wrong_motif"]
-                ).difference(set(reader.fieldnames))
-            )
+            len(set(["Total_sampled", "Filtered", "Blacklisted", "Wrong_motif"]).difference(set(reader.fieldnames)))
             != 0
         ):
             # This is not really the output from scFilterStats!
