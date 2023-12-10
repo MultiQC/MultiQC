@@ -3,6 +3,7 @@ class HeatmapPlot extends Plot {
     super(dump);
     this.xcats_samples = dump.xcats_samples;
     this.ycats_samples = dump.ycats_samples;
+    this.square = dump.square;
     this.heatmap_config = dump.heatmap_config;
   }
 
@@ -51,6 +52,7 @@ class HeatmapPlot extends Plot {
 
     let pxPerElem = newHeight / ycats.length;
     let newWidth = pxPerElem * xcats.length;
+    newWidth = this.square ? newWidth : null;
 
     if (newHeight < this.layout.height) {
       // We're shrinking the plot, so we need to allow plotly to skip ticks

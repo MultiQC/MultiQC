@@ -50,13 +50,17 @@ class BarPlot extends Plot {
     });
   }
 
-  // TODO: perhaps use it or Plotly.react
-  // replot() {
+  // // TODO: perhaps use it or Plotly.react
+  // reloadWithNewData() {
   //   // Updates plot given new underlying data
-  //   let dataset = this.datasets[this.active_dataset_idx];
-  //   let x = dataset.map(
-  //     (cat) => this.p_active ? cat.data_pct : cat.data
-  //   );
+  //   let cats = this.datasets[this.active_dataset_idx].cats;
+  //   let samples = this.datasets[this.active_dataset_idx].samples;
+  //   let samplesSettings = applyToolboxSettings(samples);
+  //
+  //   let x = cats.map((cat) => {
+  //     let data = this.p_active ? cat.data_pct : cat.data;
+  //     data.filter((_, si) => !samplesSettings[si].hidden);
+  //   });
   //   Plotly.restyle(this.target, "x", x);
   // };
 }

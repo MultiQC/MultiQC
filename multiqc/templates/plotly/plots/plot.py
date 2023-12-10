@@ -117,18 +117,20 @@ class Plot(ABC):
                 font=dict(size=20),
             ),
             xaxis=dict(
-                title=dict(text=self.pconfig.get("xlab") or (self.datasets[0].xlab if self.datasets else None)),
                 gridcolor="rgba(0,0,0,0.1)",
                 zerolinecolor="rgba(0,0,0,0.1)",
+                title=dict(text=self.pconfig.get("xlab") or (self.datasets[0].xlab if self.datasets else None)),
                 rangemode="tozero" if self.pconfig.get("xmin") == 0 else "normal",
                 range=[self.pconfig.get("xmin"), self.pconfig.get("xmax")],
+                type=("log" if self.l_active else "linear") if self.add_log_tab else None,
+                tickformat=".0%" if self.p_active and self.add_pct_tab else None,
             ),
             yaxis=dict(
-                title=dict(text=self.pconfig.get("ylab") or (self.datasets[0].ylab if self.datasets else None)),
                 gridcolor="rgba(0,0,0,0.1)",
                 zerolinecolor="rgba(0,0,0,0.1)",
+                title=dict(text=self.pconfig.get("ylab") or (self.datasets[0].ylab if self.datasets else None)),
                 rangemode="tozero" if self.pconfig.get("ymin") == 0 else "normal",
-                range=[self.pconfig.get("ymin"), self.pconfig.get("ymax")],
+                range=[self.pconfig.get("ymin"), self.pconfig.get("ymax", self.pconfig.get("yCeiling"))],
             ),
             height=self.pconfig.get("height", 600),
             width=self.pconfig.get("width"),
@@ -139,23 +141,6 @@ class Plot(ABC):
             autosize=True,
             margin=dict(pad=10),  # pad sample names a bit
             hoverlabel=dict(namelength=-1),  # do not crop sample names in hover labels
-            annotations=[
-                dict(
-                    text="Created with MultiQC",
-                    font=dict(size=10, color="rgba(0,0,0,0.5)"),
-                    xanchor="right",
-                    yanchor="top",
-                    x=1.05,
-                    y=1.05,
-                    textangle=-90,
-                    # yanchor="bottom",
-                    # x=1.07,
-                    # y=-0.35,
-                    xref="paper",
-                    yref="paper",
-                    showarrow=False,
-                )
-            ],
             modebar=dict(
                 bgcolor="rgba(0, 0, 0, 0)",
                 color="rgba(0, 0, 0, 0.5)",
@@ -191,6 +176,26 @@ class Plot(ABC):
             html = self.flat_plot()
         else:
             html = self.interactive_plot(report)
+        return html
+
+    def interactive_plot(self, report) -> str:
+        html = '<div class="mqc_hcplot_plotgroup">'
+        html += self.control_panel()
+
+        # Plot HTML
+        html += """
+        <div class="hc-plot-wrapper"{height}>
+            <div id="{id}" class="hc-plot not_rendered hc-{plot_type}-plot"></div>
+        </div>""".format(
+            id=self.id,
+            height=f' style="height:{self.layout.height}px"' if self.layout.height else "",
+            plot_type=self.plot_type,
+        )
+        html += "</div>"
+
+        # Saving compressed data for JavaScript to pick up and uncompress.
+        dump = self.dump_for_javascript()
+        report.plot_data[self.id] = dump
         return html
 
     def flat_plot(self) -> str:
@@ -235,40 +240,6 @@ class Plot(ABC):
 
         html += "</div>"
         return html
-
-    def _make_fig(self, dataset: Dataset, is_log=False, is_pct=False) -> go.Figure:
-        """
-        Create a Plotly Figure object.
-        """
-        layout = go.Layout(**self.layout.to_plotly_json())  # make a copy
-        if is_pct:
-            layout.update(
-                {
-                    "xaxis.tickformat": ".0%",
-                    # "xaxis.title.text": self.p_label,
-                }
-            )
-        if is_log:
-            layout.update(
-                {
-                    "xaxis.type": "log",
-                    # "xaxis.title.text": layout.xaxis.title.text + " " + self.l_label
-                }
-            )
-        return self.create_figure(layout, dataset, is_log, is_pct)
-
-    @abstractmethod
-    def create_figure(self, layout: go.Layout, dataset: Dataset, is_log=False, is_pct=False):
-        """
-        To be overridden by specific plots: create a Plotly figure for a dataset, update layout if needed.
-        """
-        pass
-
-    @abstractmethod
-    def save_data_file(self, data: Dataset) -> None:
-        """
-        Save dataset to disk.
-        """
 
     def control_panel(self):
         """
@@ -341,25 +312,39 @@ class Plot(ABC):
             },
         }
 
-    def interactive_plot(self, report) -> str:
-        html = '<div class="mqc_hcplot_plotgroup">'
-        html += self.control_panel()
+    @abstractmethod
+    def create_figure(self, layout: go.Layout, dataset: Dataset, is_log=False, is_pct=False):
+        """
+        To be overridden by specific plots: create a Plotly figure for a dataset, update layout if needed.
+        """
+        pass
 
-        # Plot HTML
-        html += """
-        <div class="hc-plot-wrapper"{height}>
-            <div id="{id}" class="hc-plot not_rendered hc-{plot_type}-plot"></div>
-        </div>""".format(
-            id=self.id,
-            height=f' style="height:{self.layout.height}px"' if self.layout.height else "",
-            plot_type=self.plot_type,
-        )
-        html += "</div>"
+    @abstractmethod
+    def save_data_file(self, data: Dataset) -> None:
+        """
+        Save dataset to disk.
+        """
 
-        # Saving compressed data for JavaScript to pick up and uncompress.
-        dump = self.dump_for_javascript()
-        report.plot_data[self.id] = dump
-        return html
+    def _make_fig(self, dataset: Dataset, is_log=False, is_pct=False) -> go.Figure:
+        """
+        Create a Plotly Figure object.
+        """
+        layout = go.Layout(**self.layout.to_plotly_json())  # make a copy
+        if is_pct:
+            layout.update(
+                {
+                    "xaxis.tickformat": ".0%",
+                    # "xaxis.title.text": self.p_label,
+                }
+            )
+        if is_log:
+            layout.update(
+                {
+                    "xaxis.type": "log",
+                    # "xaxis.title.text": layout.xaxis.title.text + " " + self.l_label
+                }
+            )
+        return self.create_figure(layout, dataset, is_log, is_pct)
 
     @staticmethod
     def _fig_to_static_html(
@@ -408,4 +393,8 @@ class Plot(ABC):
 
         # Should this plot be hidden on report load?
         hiding = "" if active else ' style="display:none;"'
-        return f'<div class="mqc_mplplot" id="{uid}"{hiding}><img src="{img_src}" /></div>'
+        return (
+            f'<div class="mqc_mplplot" id="{uid}"{hiding}>'
+            f'<img src="{img_src}" height="{fig.layout.height}" width="{fig.layout.width}" />'
+            f"</div>"
+        )

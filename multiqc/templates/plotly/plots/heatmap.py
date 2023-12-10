@@ -56,6 +56,8 @@ class HeatmapPlot(Plot):
             HeatmapDataset(**self.datasets[0].__dict__, rows=rows, xcats=xcats, ycats=ycats)
         ]
 
+        self.square = self.pconfig.get("square", True)  # Keep heatmap cells square
+
         # Determining the size of the plot to reasonably display data without cluttering it too much.
         # For flat plots, we try to make the image large enough to display all samples, but to a limit
         # For interactive plots, we set a lower default height, as it will possible to resize the plot
@@ -100,24 +102,33 @@ class HeatmapPlot(Plot):
             logger.debug(f"Resized to {width}x{height}")
         if height > MAX_HEIGHT or width > MAX_WIDTH:
             logger.debug(f"Resizing from {width}x{height} to fit the maximum size {MAX_WIDTH}x{MAX_HEIGHT}")
-            # if height > MAX_HEIGHT:
             y_nticks = None  # allow skipping ticks to avoid making the font even smaller
-            # if width > MAX_WIDTH:
             x_nticks = None  # allow skipping ticks to avoid making the font even smaller
             px_per_elem = min(MAX_WIDTH / num_cols, MAX_HEIGHT / num_rows)
             width = num_cols * px_per_elem
             height = num_rows * px_per_elem
             logger.debug(f"Resized to {width}x{height}")
 
+        logger.debug(
+            f"Heatmap size: {width}x{height}, px per element: {px_per_elem}, font: {font_size}px, xticks: {x_nticks}, yticks: {y_nticks}"
+        )
         self.layout.xaxis.tickangle = 45
         self.layout.font.size = font_size
         self.layout.xaxis.nticks = x_nticks
         self.layout.yaxis.nticks = y_nticks
         self.layout.height = self.pconfig.get("height") or (200 + height)
-        self.layout.width = self.pconfig.get("width") or (200 + width)
-        logger.debug(
-            f"Heatmap size: {width}x{height}, px per element: {px_per_elem}, font: {font_size}px, xticks: {x_nticks}, yticks: {y_nticks}"
-        )
+        self.layout.width = self.pconfig.get("width") or (200 + width) if self.square else None
+        self.layout.xaxis.automargin = True  # to make sure there is enough space for ticks labels
+        self.layout.yaxis.automargin = True  # to make sure there is enough space for ticks labels
+        self.layout.xaxis.showgrid = False
+        self.layout.yaxis.showgrid = False
+
+        self.min = self.pconfig.get("min", None)
+        if self.min is None:
+            self.min = min(min(min(filter(None, row)) for row in dataset.rows) for dataset in self.datasets)
+        self.max = self.pconfig.get("max", None)
+        if self.max is None:
+            self.max = max(max(max(filter(None, row)) for row in dataset.rows) for dataset in self.datasets)
 
         self.heatmap_config = {
             "colorscale": self.pconfig.get(
@@ -137,7 +148,9 @@ class HeatmapPlot(Plot):
                 ],
             ),
             "reversescale": self.pconfig.get("reverseColors", False),
-            "showscale": self.pconfig.get("showlegend", True),
+            "showscale": self.pconfig.get("legend", True),
+            "zmin": self.pconfig.get("min", None),
+            "zmax": self.pconfig.get("max", None),
         }
 
     def dump_for_javascript(self) -> Dict:
@@ -145,6 +158,7 @@ class HeatmapPlot(Plot):
         d = super().dump_for_javascript()
         d["xcats_samples"] = self.pconfig.get("xcats_samples", True)
         d["ycats_samples"] = self.pconfig.get("ycats_samples", True)
+        d["square"] = self.square
         d["heatmap_config"] = self.heatmap_config
         return d
 
@@ -156,12 +170,6 @@ class HeatmapPlot(Plot):
             return ""
 
         # find min val across all datasets across all cols and rows
-        minval = self.pconfig.get("min", None)
-        if minval is None:
-            minval = min(min(min(row) for row in dataset.rows) for dataset in self.datasets)
-        maxval = self.pconfig.get("max", None)
-        if maxval is None:
-            maxval = max(max(max(row) for row in dataset.rows) for dataset in self.datasets)
         return f"""
         <div class="btn-group hc_switch_group">
             <button type="button" class="mqc_heatmap_sortHighlight btn btn-default btn-sm" data-target="#{self.id}" disabled="disabled">
@@ -172,16 +180,16 @@ class HeatmapPlot(Plot):
             <div>
                 <label for="{self.id}_range_slider_min_txt">Min:</label>
                 <input id="{self.id}_range_slider_min_txt" type="number" class="form-control" 
-                    value="{minval}" data-target="{self.id}" data-minmax="min" min="{minval}" max="{maxval}" />
+                    value="{self.min}" data-target="{self.id}" data-minmax="min" min="{self.min}" max="{self.max}" />
                 <input id="{self.id}_range_slider_min" type="range" 
-                    value="{minval}" data-target="{self.id}" data-minmax="min" min="{minval}" max="{maxval}" step="any" />
+                    value="{self.min}" data-target="{self.id}" data-minmax="min" min="{self.min}" max="{self.max}" step="any" />
             </div>
             <div>
                 <label for="{self.id}_range_slider_max_txt">Max:</label>
                 <input id="{self.id}_range_slider_max_txt" type="number" class="form-control" 
-                    value="{maxval}" data-target="{self.id}" data-minmax="max" min="{minval}" max="{maxval}" />
+                    value="{self.max}" data-target="{self.id}" data-minmax="max" min="{self.min}" max="{self.max}" />
                 <input id="{self.id}_range_slider_max" type="range" 
-                    value="{maxval}" data-target="{self.id}" data-minmax="max" min="{minval}" max="{maxval}" step="any" />
+                    value="{self.max}" data-target="{self.id}" data-minmax="max" min="{self.min}" max="{self.max}" step="any" />
             </div>
         </div>
         """
@@ -196,6 +204,19 @@ class HeatmapPlot(Plot):
         """
         Create a Plotly figure for a dataset
         """
+        import json
+
+        with open(f"/Users/vlad/git/playground/{self.id}-layout.json", "w") as f:
+            f.write(json.dumps(layout.to_plotly_json()))
+        with open(f"/Users/vlad/git/playground/{self.id}-data.json", "w") as f:
+            f.write(json.dumps(dataset.rows))
+        with open(f"/Users/vlad/git/playground/{self.id}-ycats.json", "w") as f:
+            f.write(json.dumps(dataset.ycats))
+        with open(f"/Users/vlad/git/playground/{self.id}-xcats.json", "w") as f:
+            f.write(json.dumps(dataset.xcats))
+        with open(f"/Users/vlad/git/playground/{self.id}-heatmap_config.json", "w") as f:
+            f.write(json.dumps(self.heatmap_config))
+
         return go.Figure(
             data=go.Heatmap(
                 z=dataset.rows,

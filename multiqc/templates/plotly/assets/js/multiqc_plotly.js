@@ -22,7 +22,12 @@ class Plot {
     this.layout = dump.layout;
     this.datasets = dump.datasets;
     this.config = dump.config;
+    // To make sure we only render plot once
+    this.rendered = false;
+    // State of toggles
     this.active_dataset_idx = 0;
+    this.p_active = dump.config.p_active;
+    this.l_active = dump.config.l_active;
   }
 
   activeDatasetSize() {
@@ -107,10 +112,7 @@ $(function () {
     mqc_plots[target].p_active = !$(this).hasClass("active");
     $(this).toggleClass("active");
 
-    // Replot graphs
     renderPlot(target);
-    // mqc_plots[target].replot();
-    Plotly.relayout(target, "xaxis.tickformat", mqc_plots[target].p_active ? ".0%" : "");
   });
 
   // A "Log" button above a plot is clicked
@@ -136,8 +138,8 @@ $(function () {
     let new_dataset_idx = $(this).data("datasetIndex");
     mqc_plots[target].active_dataset_idx = new_dataset_idx;
     if (active_dataset_idx === new_dataset_idx) return;
+
     renderPlot(target);
-    // mqc_plots[target].replot();
   });
 
   // Make divs height-draggable
@@ -346,16 +348,27 @@ function renderPlot(target) {
   if (plot === undefined) return false;
   if (plot.datasets.length === 0) return false;
 
-  // If there is an active dataset button and set automatically
-  let ds_buttons = $('.hc_switch_group button[data-action="set_data"][data-target="' + plot.target + '"]');
-  if (ds_buttons.length) plot.active_dataset_idx = ds_buttons.filter(".active").data("dataset_index");
+  // When the plot was already rendered, it's faster to call react, using the same signature
+  // https://plotly.com/javascript/plotlyjs-function-reference/#plotlyreact
+  let func;
+  if (!plot.rendered) {
+    func = Plotly.newPlot;
+    plot.rendered = true;
+    $("#" + target)
+      .removeClass("not_rendered")
+      .parent()
+      .find(".render_plot")
+      .remove();
+    if ($(".hc-plot.not_rendered").length === 0) $("#mqc-warning-many-samples").hide();
+  } else {
+    func = Plotly.react;
+  }
 
-  // If Log10 button is there, check whether it's active by default
-  const log_btn = $('.hc_switch_group button[data-action="set_log"][data-target="' + plot.target + '"]');
-  if (log_btn.length && log_btn.hasClass("active")) plot.l_active = true;
+  // Apply toggle states
+  plot.layout.xaxis.tickformat = plot.p_active ? ".0%" : "";
+  plot.layout.xaxis.type = plot.l_active ? "log" : null;
 
-  let traces = plot.buildTraces();
-  Plotly.newPlot(target, traces, plot.layout, {
+  func(target, plot.buildTraces(), plot.layout, {
     responsive: true,
     displayModeBar: true,
     displaylogo: false,
@@ -370,13 +383,6 @@ function renderPlot(target) {
       "resetScale2d",
     ],
   });
-
-  $("#" + target)
-    .removeClass("not_rendered")
-    .parent()
-    .find(".render_plot")
-    .remove();
-  if ($(".hc-plot.not_rendered").length === 0) $("#mqc-warning-many-samples").hide();
 }
 
 // Highlight text with a fadeout background colour highlight

@@ -144,15 +144,12 @@ class MultiqcModule(BaseMultiqcModule):
                 for i, v in enumerate(s):
                     if i not in s_name_idx:  # Skip if (i == 0 or 1); i.e. sample_a, sample_b
                         if isnan(float(v)) or isinf(float(v)):
-                            # TODO: find better solution
-                            log.debug("Found Inf or NaN value. Overwriting with -2.")
-                            v = -2
-                        try:
+                            # Inf or NaN indicate the absence of data
+                            v = None
+                        else:
                             # add the pattern as a suffix to key
-                            parsed_data[s_name][headers[i]] = float(v)
-                        except ValueError:
-                            # add the pattern as a suffix to key
-                            parsed_data[s_name][headers[i]] = v
+                            v = float(v)
+                        parsed_data[s_name][headers[i]] = v
 
         if len(parsed_data) == 0:
             return None
@@ -431,7 +428,7 @@ class MultiqcModule(BaseMultiqcModule):
         extra_colour_idx = 0
         data = dict()
         for pair, d in self.somalier_data.items():
-            if "relatedness" not in d:
+            if "expected_relatedness" not in d:
                 continue
 
             relatedness = d["expected_relatedness"]
@@ -469,17 +466,16 @@ class MultiqcModule(BaseMultiqcModule):
         }
 
         colours_legend = ""
-        for val in sorted(relatedness_groups.keys()):
-            name, col_rgb = relatedness_groups[val]
-            col = col_rgb.replace(str(alpha), "1.0")
-            colours_legend += f'<span style="color:{col}">{name}</span>, '
+        for rel, group in relatedness_groups.items():
+            col = group["color"].replace(str(alpha), "1.0")
+            colours_legend += f'<span style="color:{col}">{group["name"]}</span>, '
 
         self.add_section(
             name="Relatedness",
             anchor="somalier-relatedness",
             description=f"""
             Shared allele rates between sample pairs.
-            Points are coloured by degree of expected-relatedness: {colours_legend}""",
+            Points are coloured by degree of expected relatedness: {colours_legend}""",
             plot=scatter.plot(data, pconfig),
         )
 
@@ -494,8 +490,8 @@ class MultiqcModule(BaseMultiqcModule):
                 a, b = s_name.split("*")
                 labels.add(a)
                 labels.add(b)
-                rels[a][b] = rels[b][a] = float(d["relatedness"])
-                rels[a][a] = rels[b][b] = float(1)
+                rels[a][b] = rels[b][a] = d["relatedness"]
+                rels[a][a] = rels[b][b] = 1.0
 
         # impose alphabetical order and avoid json serialisation errors in utils.report
         labels = sorted(labels)
@@ -506,7 +502,7 @@ class MultiqcModule(BaseMultiqcModule):
                 try:
                     line.append(rels[x][y])
                 except KeyError:
-                    line.append(-2)
+                    line.append(None)
             data.append(line)
 
         if len(data) > 0:
