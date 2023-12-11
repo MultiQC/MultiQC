@@ -857,7 +857,7 @@ Data and configuration must be added to the document level
 `mqc_plots` variable on page load, using the target as the key.
 The variables used are as follows:
 
-```javascript
+```js
 mqc_plots[target]["plot_type"] = "bar_graph";
 mqc_plots[target]["config"];
 mqc_plots[target]["datasets"];
@@ -866,7 +866,7 @@ mqc_plots[target]["samples"];
 
 All available config options with default vars:
 
-```javascript
+```js
 config = {
   title: undefined, // Plot title
   xlab: undefined, // X axis label
@@ -882,6 +882,7 @@ config = {
   cursor: undefined, // CSS mouse cursor type. Defaults to pointer when 'click_func' specified
   tt_percentages: true, // Show the percentages of each count in the tooltip
   reversedStacks: false, // Reverse the order of the categories in the stack.
+  sort_samples: true, // Sort samples alphanumerically
 };
 ```
 

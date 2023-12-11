@@ -12,7 +12,7 @@
 - BCLConvert: fix mean quality, fix count-per-lane barplot ([#2197](https://github.com/ewels/MultiQC/pull/2197))
 - Re-add `run()` into the `multiqc` namespace ([#2202](https://github.com/ewels/MultiQC/pull/2202))
 - Add `.cram` to sample name cleaning defaults ([#2209](https://github.com/ewels/MultiQC/pull/2209))
-- Remove sorting of bar graph data ([#2210](https://github.com/ewels/MultiQC/pull/2210))
+- Bar graphs: add `sort_samples: false` config option, also do not sort OrderedDict data ([#2210](https://github.com/ewels/MultiQC/pull/2210))
 
 ### New Modules
 
