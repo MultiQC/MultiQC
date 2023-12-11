@@ -323,7 +323,7 @@ eigenstratdatabasetools:
 fastp:
   fn: "*.json"
   contents: '"before_filtering": {'
-  num_lines: 10
+  num_lines: 3
 fastq_screen:
   fn: "*_screen.txt"
 fastqc/data:
