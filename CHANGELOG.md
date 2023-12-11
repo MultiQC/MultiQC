@@ -11,9 +11,11 @@
 - Create CODE_OF_CONDUCT.md ([#2195](https://github.com/ewels/MultiQC/pull/2195))
 - BCLConvert: fix mean quality, fix count-per-lane barplot ([#2197](https://github.com/ewels/MultiQC/pull/2197))
 - Re-add `run()` into the `multiqc` namespace ([#2202](https://github.com/ewels/MultiQC/pull/2202))
+- When trying indexing lists/dicts while accessing config parameters, catch TypeError as well ([#2211](https://github.com/ewels/MultiQC/pull/2211))
 - Fix running `--no-report` ([#2212](https://github.com/ewels/MultiQC/pull/2212))
 - Add `.cram` to sample name cleaning defaults ([#2209](https://github.com/ewels/MultiQC/pull/2209))
 - Custom content plot: do not assume first row are samples ([#2208](https://github.com/ewels/MultiQC/pull/2208))
+
 
 ### New Modules
 
