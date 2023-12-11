@@ -206,15 +206,15 @@ class HeatmapPlot(Plot):
         """
         import json
 
-        with open(f"/Users/vlad/git/playground/{self.id}-layout.json", "w") as f:
+        with open(f"/Users/vlad/git/playground/dumps/{self.id}-layout.json", "w") as f:
             f.write(json.dumps(layout.to_plotly_json()))
-        with open(f"/Users/vlad/git/playground/{self.id}-data.json", "w") as f:
+        with open(f"/Users/vlad/git/playground/dumps/{self.id}-data.json", "w") as f:
             f.write(json.dumps(dataset.rows))
-        with open(f"/Users/vlad/git/playground/{self.id}-ycats.json", "w") as f:
+        with open(f"/Users/vlad/git/playground/dumps/{self.id}-ycats.json", "w") as f:
             f.write(json.dumps(dataset.ycats))
-        with open(f"/Users/vlad/git/playground/{self.id}-xcats.json", "w") as f:
+        with open(f"/Users/vlad/git/playground/dumps/{self.id}-xcats.json", "w") as f:
             f.write(json.dumps(dataset.xcats))
-        with open(f"/Users/vlad/git/playground/{self.id}-heatmap_config.json", "w") as f:
+        with open(f"/Users/vlad/git/playground/dumps/{self.id}-heatmap_config.json", "w") as f:
             f.write(json.dumps(self.heatmap_config))
 
         return go.Figure(

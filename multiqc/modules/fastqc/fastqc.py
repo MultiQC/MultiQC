@@ -418,6 +418,7 @@ class MultiqcModule(BaseMultiqcModule):
             "ylab": "Phred Score",
             "xlab": "Position (bp)",
             "ymin": 0,
+            "xmin": 0,
             "xDecimals": False,
             "tt_label": "<b>Base {point.x}</b>: {point.y:.2f}",
             "colors": self.get_status_cols("per_base_sequence_quality"),

@@ -13,12 +13,10 @@ import string
 from abc import abstractmethod, ABC
 from enum import Enum
 from pathlib import Path
-from pprint import pprint
 from typing import Dict, Union, List, Optional
 
 import plotly.graph_objects as go
 
-from multiqc.plots.bargraph import get_template_mod
 from multiqc.utils import mqc_colour, config
 
 logger = logging.getLogger(__name__)
@@ -158,8 +156,8 @@ class Plot(ABC):
         )
 
     def __repr__(self):
-        d = {k: v for k, v in self.__dict__ if k not in ("datasets", "layout")}
-        return f"<{self.__class__.__name__} {pprint(d)}>"
+        d = {k: v for k, v in self.__dict__.items() if k not in ("datasets", "layout")}
+        return f"<{self.__class__.__name__} {self.id} {d}>"
 
     def add_to_report(self, report) -> str:
         """
@@ -377,19 +375,11 @@ class Plot(ABC):
         write_kwargs["format"] = "png"
 
         # Output the figure to a base64 encoded string
-        if getattr(get_template_mod(), "base64_plots", True) is True:
-            img_buffer = io.BytesIO()
-            fig.write_image(img_buffer, **write_kwargs)
-            b64_img = base64.b64encode(img_buffer.getvalue()).decode("utf8")
-            img_buffer.close()
-            img_src = f"data:image/png;base64,{b64_img}"
-
-        # Link to the saved image
-        else:
-            plot_relpath = Path(config.plots_dir_name) / "png" / f"{uid}.png"
-            plot_relpath.parent.mkdir(parents=True, exist_ok=True)
-            fig.write_image(plot_relpath, **write_kwargs)
-            img_src = plot_relpath
+        img_buffer = io.BytesIO()
+        fig.write_image(img_buffer, **write_kwargs)
+        b64_img = base64.b64encode(img_buffer.getvalue()).decode("utf8")
+        img_buffer.close()
+        img_src = f"data:image/png;base64,{b64_img}"
 
         # Should this plot be hidden on report load?
         hiding = "" if active else ' style="display:none;"'

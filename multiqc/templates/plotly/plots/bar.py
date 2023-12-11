@@ -51,9 +51,9 @@ class BarDataset(Dataset):
 class BarPlot(Plot):
     def __init__(self, pconfig: Dict, cats_lists: List, samples_lists: List, max_n_samples: int):
         # swap x and y axes parameters: the bar plot is "transposed", so yaxis corresponds to the horizontal axis
-        # for x_param in ["xmin", "xmax", "xlab"]:
-        #     y_param = "y" + x_param[1:]
-        #     pconfig[x_param], pconfig[y_param] = pconfig.get(y_param), pconfig.get(x_param)
+        for x_param in ["xmin", "xmax", "xCeiling"]:
+            y_param = "y" + x_param[1:]
+            pconfig[x_param], pconfig[y_param] = pconfig.get(y_param), pconfig.get(x_param)
 
         super().__init__(PlotType.BAR, pconfig, len(cats_lists))
         if len(cats_lists) != len(samples_lists):
@@ -85,6 +85,8 @@ class BarPlot(Plot):
                     categoryorder="category descending",  # otherwise the bars will be in reversed order to sample order
                     automargin=True,  # to make sure there is enough space for ticks labels
                     title=None,
+                    nticks=max(len(ds.samples) for ds in self.datasets),
+                    # range=[None, None],
                 ),
                 # the barplot is sort tof "transposed" and y corresponds to the horizontal axis
                 xaxis=dict(
@@ -139,11 +141,11 @@ class BarPlot(Plot):
         """
         import json
 
-        with open(f"/Users/vlad/git/playground/{self.id}-layout.json", "w") as f:
+        with open(f"/Users/vlad/git/playground/dumps/{self.id}-layout.json", "w") as f:
             f.write(json.dumps(layout.to_plotly_json()))
-        with open(f"/Users/vlad/git/playground/{self.id}-data.json", "w") as f:
+        with open(f"/Users/vlad/git/playground/dumps/{self.id}-data.json", "w") as f:
             f.write(json.dumps(dataset.cats))
-        with open(f"/Users/vlad/git/playground/{self.id}-samples.json", "w") as f:
+        with open(f"/Users/vlad/git/playground/dumps/{self.id}-samples.json", "w") as f:
             f.write(json.dumps(dataset.samples))
 
         fig = go.Figure(layout=layout)

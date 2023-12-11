@@ -52,7 +52,7 @@ class LinePlot(Plot):
         # Make a tooltip always show on hover over any point on plot
         self.layout.hoverdistance = -1
         # A tooltip will show numbers for all lines crossing this vertical line
-        self.layout.hovermode = "x"
+        # self.layout.hovermode = "x"
         # Default precision for floating numbers is too high - allowing to override it
         if "tt_decimals" in pconfig:
             self.layout.yaxis.hoverformat = f".{pconfig['tt_decimals']}f"
@@ -63,6 +63,54 @@ class LinePlot(Plot):
         # )
         if self.flat and self.datasets:
             self.layout.height += len(self.datasets[0].lines) * 5  # extra space for legend
+
+        y_bands = self.pconfig.get("yPlotBands")
+        x_bands = self.pconfig.get("xPlotBands")
+        if y_bands or x_bands:
+            # We don't want the bands to affect the calculated y-axis range. So we
+            # call `fig.full_figure_for_development` to force-calculate the figure size
+            # before we add the bands, and then force set the calculated range.
+            dev_figs = [self.create_figure(self.layout, d) for d in self.datasets]
+            dev_figs = [fig.full_figure_for_development(warn=False) for fig in dev_figs]
+            self.layout.yaxis.range = [
+                min([fig.layout.yaxis.range[0] for fig in dev_figs]),
+                max([fig.layout.yaxis.range[1] for fig in dev_figs]),
+            ]
+            self.layout.xaxis.range = [
+                min([fig.layout.xaxis.range[0] for fig in dev_figs]),
+                max([fig.layout.xaxis.range[1] for fig in dev_figs]),
+            ]
+            self.layout.shapes = [
+                dict(
+                    type="rect",
+                    y0=band["from"],
+                    y1=band["to"],
+                    x0=0,
+                    x1=1,
+                    xref="paper",  # make x coords are relative to the plot paper [0,1]
+                    fillcolor=band["color"],
+                    line={
+                        "width": 0,
+                    },
+                    layer="below",
+                )
+                for band in self.pconfig.get("yPlotBands", [])
+            ] + [
+                dict(
+                    type="rect",
+                    x0=band["from"],
+                    x1=band["to"],
+                    y0=0,
+                    y1=1,
+                    yref="paper",  # make y coords are relative to the plot paper [0,1]
+                    fillcolor=band["color"],
+                    line={
+                        "width": 0,
+                    },
+                    layer="below",
+                )
+                for band in self.pconfig.get("xPlotBands", [])
+            ]
 
     def dump_for_javascript(self):
         """Serialise the data to pick up in plotly-js"""
@@ -75,12 +123,17 @@ class LinePlot(Plot):
         Create a Plotly figure for a dataset
         """
 
-        # import json
-        #
-        # with open(f"/Users/vlad/git/playground/{self.id}-layout.json", "w") as f:
-        #     f.write(json.dumps(layout.to_plotly_json()))
-        # with open(f"/Users/vlad/git/playground/{self.id}-data.json", "w") as f:
-        #     f.write(json.dumps(dataset.data))
+        import json
+
+        with open(f"/Users/vlad/git/playground/dumps/{self.id}-layout.json", "w") as f:
+            f.write(json.dumps(layout.to_plotly_json()))
+        with open(f"/Users/vlad/git/playground/dumps/{self.id}-lines.json", "w") as f:
+            f.write(json.dumps(dataset.lines))
+        with open(f"/Users/vlad/git/playground/dumps/{self.id}-pconfig.json", "w") as f:
+            f.write(json.dumps(self.pconfig))
+
+        if self.id == "fastqc_per_base_n_content_plot":
+            print()
 
         fig = go.Figure(layout=layout)
         for line in dataset.lines:
@@ -99,7 +152,13 @@ class LinePlot(Plot):
                     y=ys,
                     name=line["name"],
                     mode="lines+markers",
-                    marker=dict(size=5),
+                    line=dict(
+                        width=0.6,
+                    ),
+                    marker=dict(
+                        size=4,
+                        color=line.get("color"),
+                    ),
                 )
             )
         return fig

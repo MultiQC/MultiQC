@@ -980,6 +980,8 @@ def run(
             config.output_fn = os.path.join(config.output_dir, config.output_fn_name)
         config.data_dir = os.path.join(config.output_dir, config.data_dir_name)
         config.plots_dir = os.path.join(config.output_dir, config.plots_dir_name)
+        # del config.data_dir_name
+        # del config.plots_dir_name
         deleted_report = False
         deleted_data_dir = False
         deleted_export_plots = False

@@ -77,9 +77,9 @@ class ScatterPlot(Plot):
 
         # import json
         #
-        # with open(f"/Users/vlad/git/playground/{self.id}-layout.json", "w") as f:
+        # with open(f"/Users/vlad/git/playground/dumps/{self.id}-layout.json", "w") as f:
         #     f.write(json.dumps(layout.to_plotly_json()))
-        # with open(f"/Users/vlad/git/playground/{self.id}-data.json", "w") as f:
+        # with open(f"/Users/vlad/git/playground/dumps/{self.id}-data.json", "w") as f:
         #     f.write(json.dumps(dataset.data))
 
         fig = go.Figure(layout=layout)
