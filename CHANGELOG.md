@@ -16,7 +16,7 @@
 - Add `.cram` to sample name cleaning defaults ([#2209](https://github.com/ewels/MultiQC/pull/2209))
 - Custom content plot: do not assume first row are samples ([#2208](https://github.com/ewels/MultiQC/pull/2208))
 - Fastp: search pattern: look at content instead of file name ([#2213](https://github.com/ewels/MultiQC/pull/2213))
-- Bar graphs: add `sort_samples: false` config option, also do not sort OrderedDict data ([#2210](https://github.com/ewels/MultiQC/pull/2210))
+- Bar graphs: add `sort_samples: false` config option, also do not sort `OrderedDict` data ([#2210](https://github.com/ewels/MultiQC/pull/2210))
 
 ### New Modules
 
