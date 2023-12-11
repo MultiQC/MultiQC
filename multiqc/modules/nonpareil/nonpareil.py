@@ -27,7 +27,7 @@ class MultiqcModule(BaseMultiqcModule):
         # Config options
         self.plot_observed = getattr(config, "nonpareil", {}).get("plot_observed", True)
         self.plot_model = getattr(config, "nonpareil", {}).get("plot_model", True)
-        self.disp_type = getattr(config, "nonpareil", {}).get("plot_dispersion", "ci95")
+        self.disp_type = getattr(config, "nonpareil", {}).get("plot_dispersion", False)
 
         # Read JSON file
         self.data_by_sample = dict()
@@ -253,9 +253,9 @@ class MultiqcModule(BaseMultiqcModule):
             "title": "Nonpareil: Redundancy levels",
             "xlab": "Sequencing effort (Mbps)",
             "ylab": "Estimated Average Coverage",
-            "ymax": 1,
-            "ymin": 0,
             "xmin": 1e-3,
+            "ymin": 0,
+            "ymax": 1,
             "yCeiling": 1,
             "xDecimals": True,
             "yDecimals": True,
