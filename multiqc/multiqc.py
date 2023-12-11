@@ -1061,7 +1061,8 @@ def run(
             )
             shutil.rmtree(config.data_tmp_dir)
 
-        logger.debug("Full report path: {}".format(os.path.realpath(config.output_fn)))
+        if config.output_fn is not None:
+            logger.debug(f"Full report path: {os.path.realpath(config.output_fn)}")
 
         # Copy across the static plot images if requested
         if config.export_plots:
