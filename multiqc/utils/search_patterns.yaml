@@ -322,8 +322,8 @@ eigenstratdatabasetools:
   fn: "*_eigenstrat_coverage.json"
 fastp:
   fn: "*.json"
-  contents: '"read1_before_filtering": {'
-  num_lines: 100
+  contents: '"before_filtering": {'
+  num_lines: 10
 fastq_screen:
   fn: "*_screen.txt"
 fastqc/data:
