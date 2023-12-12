@@ -1,7 +1,5 @@
 #!/usr/bin/env python
 """ MultiQC module to parse output from truvari """
-from __future__ import print_function
-
 import logging
 
 from multiqc.modules.base_module import BaseMultiqcModule, ModuleNoSamplesFound

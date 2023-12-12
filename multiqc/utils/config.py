@@ -33,7 +33,7 @@ try:
         ["git", "rev-parse", "HEAD"], cwd=script_path, stderr=subprocess.STDOUT, universal_newlines=True
     ).strip()
     git_hash_short = git_hash[:7]
-    version = "{} ({})".format(version, git_hash_short)
+    version = f"{version} ({git_hash_short})"
 except Exception:
     pass
 
@@ -252,12 +252,12 @@ def mqc_load_config(yaml_config_path: str):
         try:
             # pyaml_env allows referencing environment variables in YAML for default values
             new_config = pyaml_env.parse_config(yaml_config_path)
-            logger.debug("Loading config settings from: {}".format(yaml_config_path))
+            logger.debug(f"Loading config settings from: {yaml_config_path}")
             mqc_add_config(new_config, yaml_config_path)
         except (IOError, AttributeError) as e:
-            logger.debug("Config error: {}".format(e))
+            logger.debug(f"Config error: {e}")
         except yaml.scanner.ScannerError as e:
-            logger.error("Error parsing config YAML: {}".format(e))
+            logger.error(f"Error parsing config YAML: {e}")
             sys.exit(1)
 
 
