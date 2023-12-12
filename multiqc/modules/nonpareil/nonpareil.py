@@ -39,7 +39,7 @@ class MultiqcModule(BaseMultiqcModule):
             common_samples = set(json_parsed).intersection(self.data_by_sample)
             if common_samples:
                 log.debug(f"Duplicate sample names found ({common_samples})! Overwriting...")
-            self.data_by_sample = self.data_by_sample | json_parsed
+            self.data_by_sample.update(json_parsed)
         # Register samples
         for s_name in self.data_by_sample.keys():
             self.add_data_source(f, s_name)
