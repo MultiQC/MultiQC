@@ -20,6 +20,9 @@
 
 ### New Modules
 
+- [**MEGAHIT**](https://github.com/voutcn/megahit) ([#2222](https://github.com/ewels/MultiQC/pull/2222))
+  - MEGAHIT is an ultra-fast and memory-efficient NGS assembler
+
 ### Module updates
 
 - **GATK**: square the BaseRecalibrator scatter plot ([#2189](https://github.com/ewels/MultiQC/pull/2189))
