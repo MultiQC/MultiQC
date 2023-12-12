@@ -51,8 +51,6 @@ class MultiqcModule(BaseMultiqcModule):
         log.info(f"Found {len(self.data_by_sample)} reports")
         self.write_data_file(self.data_by_sample, "nonpareil")
 
-        # Superfluous function call to confirm that it is used in this module
-        # Replace None with actual version if it is available
         version = set([data["version"] for sample, data in self.data_by_sample.items()])
         if len(version) != 1:
             raise ValueError("several versions found.")
