@@ -13,7 +13,10 @@ log = logging.getLogger(__name__)
 
 
 class MultiqcModule(BaseMultiqcModule):
-    """ """
+    """Nonpareil analysis is split into two parts: the first (written in C++)
+    performs the subsampling, while the second (written in R) performs the
+    statistical analyses. As such, this model requires the user to post-process
+    the R object from the second part."""
 
     def __init__(self):
         # Initialise the parent object
