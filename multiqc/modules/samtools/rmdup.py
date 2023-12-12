@@ -26,7 +26,7 @@ class RmdupReportMixin:
                     if library_name != "":
                         s_name = library_name
                     if s_name in self.samtools_rmdup:
-                        log.debug("Duplicate sample name found in {}! Overwriting: {}".format(f["fn"], s_name))
+                        log.debug(f"Duplicate sample name found in {f['fn']}! Overwriting: {s_name}")
                     self.add_data_source(f, s_name)
                     self.samtools_rmdup[s_name] = {}
                     self.samtools_rmdup[s_name]["n_dups"] = int(match.group(1))

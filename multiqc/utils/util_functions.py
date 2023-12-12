@@ -97,7 +97,7 @@ def write_data_file(data, fn, sort_cols=False, data_format=None):
                 config.logger.debug(f"{fn} could not be saved as tsv/csv. Falling back to YAML.")
 
         # Add relevant file extension to filename, save file.
-        fn = "{}.{}".format(fn, config.data_format_extensions[data_format])
+        fn = f"{fn}.{config.data_format_extensions[data_format]}"
         with io.open(os.path.join(config.data_dir, fn), "w", encoding="utf-8") as f:
             if data_format == "json":
                 jsonstr = json.dumps(data, indent=4, cls=MQCJSONEncoder, ensure_ascii=False)
@@ -126,9 +126,9 @@ def view_all_tags(ctx, param, value):
                 avail_tags[t] = []
             avail_tags[t].append(mod_key)
     for t in sorted(avail_tags.keys(), key=lambda s: s.lower()):
-        print(" - {}:".format(t))
+        print(f" - {t}:")
         for ttgs in avail_tags[t]:
-            print("   - {}".format(ttgs))
+            print(f"   - {ttgs}")
     ctx.exit()
 
 
@@ -160,4 +160,4 @@ def strtobool(val) -> bool:
     elif val in ("n", "no", "f", "false", "off", "0"):
         return False
     else:
-        raise ValueError("invalid truth value %r" % (val,))
+        raise ValueError(f"invalid truth value {val!r}")

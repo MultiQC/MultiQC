@@ -99,7 +99,7 @@ class MultiqcModule(BaseMultiqcModule):
             parsed_json = json.load(f["f"])
         except Exception as e:
             print(e)
-            log.warning("Could not parse DamageProfiler JSON: '{}'".format(f["fn"]))
+            log.warning(f"Could not parse DamageProfiler JSON: '{f['fn']}'")
             return None
 
         # Get sample name from JSON first
@@ -132,20 +132,20 @@ class MultiqcModule(BaseMultiqcModule):
         basic stats table at the top of the report"""
 
         headers = {
-            "{}1".format(readend): {
-                "id": "misinc-stats-1st-{}-{}".format(readend, substitution),
-                "title": "{} {} 1st base".format(readend, substitution),
-                "description": "{} 1st base substitution frequency for {}".format(readend, substitution),
+            f"{readend}1": {
+                "id": f"misinc-stats-1st-{readend}-{substitution}",
+                "title": f"{readend} {substitution} 1st base",
+                "description": f"{readend} 1st base substitution frequency for {substitution}",
                 "max": 100,
                 "min": 0,
                 "suffix": "%",
                 "scale": "YlGnBu",
                 "modify": lambda x: x * 100.0,
             },
-            "{}2".format(readend): {
-                "id": "misinc-stats-2nd-{}-{}".format(readend, substitution),
-                "title": "{} {} 2nd base".format(readend, substitution),
-                "description": "{} 2nd base substitution frequency for {}".format(readend, substitution),
+            f"{readend}2": {
+                "id": f"misinc-stats-2nd-{readend}-{substitution}",
+                "title": f"{readend} {substitution} 2nd base",
+                "description": f"{readend} 2nd base substitution frequency for {substitution}",
                 "max": 100,
                 "min": 0,
                 "suffix": "%",
@@ -222,8 +222,8 @@ class MultiqcModule(BaseMultiqcModule):
             return None
 
         config = {
-            "id": "length-distribution-{}".format(orientation),
-            "title": "DamageProfiler: Read length distribution - {} ".format(orientation),
+            "id": f"length-distribution-{orientation}",
+            "title": f"DamageProfiler: Read length distribution - {orientation} ",
             "ylab": "Number of reads",
             "xlab": "Readlength (bp)",
             "xDecimals": False,

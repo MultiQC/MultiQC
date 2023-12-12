@@ -27,10 +27,10 @@ def parse_reports(self):
                 parsed[r.group(1)] = [float(i) for i in r.group(2).split(",")]
         if len(parsed) == 4:
             if parsed["z"][-1] == 0:
-                log.warning("Junction saturation data all zeroes, skipping: '{}'".format(f["s_name"]))
+                log.warning(f"Junction saturation data all zeroes, skipping: '{f['s_name']}'")
             else:
                 if f["s_name"] in self.junction_saturation_all:
-                    log.debug("Duplicate sample name found! Overwriting: {}".format(f["s_name"]))
+                    log.debug(f"Duplicate sample name found! Overwriting: {f['s_name']}")
                 self.add_data_source(f, section="junction_saturation")
                 self.junction_saturation_all[f["s_name"]] = dict()
                 self.junction_saturation_known[f["s_name"]] = dict()

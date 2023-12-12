@@ -41,7 +41,7 @@ class MultiqcModule(BaseMultiqcModule):
         if len(self.snpeff_data) == 0:
             raise ModuleNoSamplesFound
 
-        log.info("Found {} reports".format(len(self.snpeff_data)))
+        log.info(f"Found {len(self.snpeff_data)} reports")
 
         # Write parsed report data to a file
         self.write_data_file(self.snpeff_data, "multiqc_snpeff")
@@ -213,11 +213,11 @@ class MultiqcModule(BaseMultiqcModule):
                         except KeyError:
                             self.snpeff_section_totals[section][s[0].strip()] = parsed_data[s[0].strip()]
                     if len(s) > 2 and s[2][-1:] == "%":
-                        parsed_data["{}_percent".format(s[0].strip())] = float(s[2][:-1])
+                        parsed_data[f"{s[0].strip()}_percent"] = float(s[2][:-1])
 
         if len(parsed_data) > 0:
             if f["s_name"] in self.snpeff_data:
-                log.debug("Duplicate sample name found! Overwriting: {}".format(f["s_name"]))
+                log.debug(f"Duplicate sample name found! Overwriting: {f['s_name']}")
             self.add_data_source(f)
             self.snpeff_data[f["s_name"]] = parsed_data
             self.add_software_version(version, f["s_name"])

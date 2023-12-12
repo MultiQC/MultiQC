@@ -47,7 +47,7 @@ class MultiqcModule(BaseMultiqcModule):
         if len(self.busco_data) == 0:
             raise ModuleNoSamplesFound
 
-        log.info("Found {} reports".format(len(self.busco_data)))
+        log.info(f"Found {len(self.busco_data)} reports")
 
         # Write parsed report data to a file
         self.write_data_file(self.busco_data, "multiqc_busco")
@@ -56,8 +56,8 @@ class MultiqcModule(BaseMultiqcModule):
         lineages = set([self.busco_data[s_name].get("lineage_dataset") for s_name in self.busco_data.keys()])
         for lin in lineages:
             self.add_section(
-                name="Lineage Assessment" if lin is None else "Lineage: {}".format(lin),
-                anchor="busco-lineage-{}".format(re.sub(r"\W+", "_", str(lin))),
+                name="Lineage Assessment" if lin is None else f"Lineage: {lin}",
+                anchor=f"busco-lineage-{re.sub('\\\\W+', '_', str(lin))}",
                 plot=self.busco_plot(lin),
             )
 
@@ -97,8 +97,8 @@ class MultiqcModule(BaseMultiqcModule):
 
         # Config for the plot
         config = {
-            "id": "busco_plot_{}".format(re.sub(r"\W+", "_", str(lin))),
-            "title": "BUSCO: Assessment Results" if lin is None else "BUSCO Assessment Results: {}".format(lin),
+            "id": f"busco_plot_{re.sub('\\\\W+', '_', str(lin))}",
+            "title": "BUSCO: Assessment Results" if lin is None else f"BUSCO Assessment Results: {lin}",
             "ylab": "# BUSCOs",
             "cpswitch_counts_label": "Number of BUSCOs",
         }

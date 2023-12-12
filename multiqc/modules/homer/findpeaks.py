@@ -77,6 +77,6 @@ class FindPeaksReportMixin:
 
         if len(parsed_data) > 0:
             if s_name in self.homer_findpeaks:
-                log.debug("Duplicate sample name found in {}! Overwriting: {}".format(f["fn"], s_name))
+                log.debug(f"Duplicate sample name found in {f['fn']}! Overwriting: {s_name}")
             self.add_data_source(f, s_name, section="findPeaks")
             self.homer_findpeaks[s_name] = parsed_data

@@ -37,7 +37,7 @@ class MultiqcModule(BaseMultiqcModule, StatsReportMixin):
         # Call submodule functions
         n["stats"] = self.parse_bcftools_stats()
         if n["stats"] > 0:
-            log.info("Found {} stats reports".format(n["stats"]))
+            log.info(f"Found {n['stats']} stats reports")
 
         # Exit if we didn't find anything
         if sum(n.values()) == 0:

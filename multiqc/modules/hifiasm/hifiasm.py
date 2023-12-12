@@ -31,7 +31,7 @@ class MultiqcModule(BaseMultiqcModule):
         # If we found no data
         if not self.hifiasm_data:
             raise ModuleNoSamplesFound
-        log.info("Found {} reports".format(len(self.hifiasm_data)))
+        log.info(f"Found {len(self.hifiasm_data)} reports")
 
         self.write_data_file(self.hifiasm_data, "multiqc_hifiasm_report")
         self.add_sections()

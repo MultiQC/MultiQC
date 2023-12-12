@@ -50,7 +50,7 @@ class MultiqcModule(BaseMultiqcModule):
 
         # parse peddy CSV files
         for pattern in ["het_check", "ped_check", "sex_check"]:
-            sp_key = "peddy/{}".format(pattern)
+            sp_key = f"peddy/{pattern}"
             for f in self.find_log_files(sp_key):
                 # some columns have the same name in het_check and sex_check (median_depth)
                 # pass pattern to parse_peddy_csv so the column names can include pattern to
@@ -79,7 +79,7 @@ class MultiqcModule(BaseMultiqcModule):
         if len(self.peddy_data) == 0:
             raise ModuleNoSamplesFound
 
-        log.info("Found {} reports".format(len(self.peddy_data)))
+        log.info(f"Found {len(self.peddy_data)} reports")
 
         # Write parsed report data to a file
         self.write_data_file(self.peddy_data, "multiqc_peddy")
@@ -135,7 +135,7 @@ class MultiqcModule(BaseMultiqcModule):
                     try:
                         s_name_idx = [headers.index("sample_a"), headers.index("sample_b")]
                     except ValueError:
-                        log.warning("Could not find sample name in Peddy output: {}".format(f["fn"]))
+                        log.warning(f"Could not find sample name in Peddy output: {f['fn']}")
                         return None
             else:
                 s_name = "-".join([s[idx] for idx in s_name_idx])
