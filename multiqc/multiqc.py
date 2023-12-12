@@ -549,7 +549,7 @@ def run(
     if config.strict:
         logger.info("--strict specified. Being strict with validation.")
 
-    logger.debug(f"Running Python {sys.version.replace('\\n', ' ')}")
+    logger.debug("Running Python " + sys.version.replace("\n", " "))
 
     # Add files if --file-list option is given
     if file_list:
