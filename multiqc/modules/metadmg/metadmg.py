@@ -44,7 +44,6 @@ class MultiqcModule(BaseMultiqcModule, StatReportMixin, DfitReportMixin):
         if n["dfit"] > 0:
             log.info("Found {} dfit reports".format(n["dfit"]))
 
-
         # Exit if we didn't find anything
         if sum(n.values()) == 0:
             raise ModuleNoSamplesFound

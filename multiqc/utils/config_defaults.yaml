@@ -378,6 +378,10 @@ module_order:
   - peddy:
       module_tag:
         - DNA
+  - metadmg:
+      module_tag:
+        - DNA
+        - metagenomics
   - somalier:
       module_tag:
         - DNA
