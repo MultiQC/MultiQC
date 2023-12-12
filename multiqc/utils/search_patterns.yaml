@@ -494,7 +494,7 @@ mapdamage:
   - fn: "lgdistribution.txt"
 metadmg/dfit:
   fn: "*.dfit.gz"
-metadmg/stat
+metadmg/stat:
   fn: "*.stat.gz"
 methylQA:
   fn: "*.report"

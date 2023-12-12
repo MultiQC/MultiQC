@@ -2,16 +2,18 @@
 
 
 import logging
+
+from multiqc import config
 from multiqc.modules.base_module import BaseMultiqcModule, ModuleNoSamplesFound
 
-from .dfit import DfitReportMixin
 from .stat import StatReportMixin
+from .dfit import DfitReportMixin
 
 # Initialise the logger
 log = logging.getLogger(__name__)
 
 
-class MultiqcModule(BaseMultiqcModule):
+class MultiqcModule(BaseMultiqcModule, StatReportMixin, DfitReportMixin):
     """ """
 
     def __init__(self):
@@ -34,13 +36,14 @@ class MultiqcModule(BaseMultiqcModule):
         n = dict()
 
         # Call submodule functions
+        n["stat"] = self.parse_metadmg_stat()
+        if n["stat"] > 0:
+            log.info("Found {} stat reports".format(n["stat"]))
+
         n["dfit"] = self.parse_metadmg_dfit()
         if n["dfit"] > 0:
             log.info("Found {} dfit reports".format(n["dfit"]))
 
-        n["stat"] = self.parse_metadmg_stat()
-        if n["stat"] > 0:
-            log.info("Found {} stat reports".format(n["stat"]))
 
         # Exit if we didn't find anything
         if sum(n.values()) == 0:

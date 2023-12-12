@@ -5,7 +5,6 @@
 import logging
 import pandas as pd
 
-from multiqc import config
 from multiqc.plots import bargraph, beeswarm
 
 # Initialise the logger
