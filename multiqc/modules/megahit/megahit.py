@@ -36,10 +36,10 @@ class MultiqcModule(BaseMultiqcModule):
                     self.add_software_version(version, sample=f["s_name"])
                 elif " - Memory used: " in line:
                     mem = line.split(" - Memory used: ")[1].strip()
-                    data[f["s_name"]] = {"mem": mem}
+                    data[f["s_name"]] = {"megahit_mem": mem}
                 elif " - ALL DONE. Time elapsed: " in line:
                     time = line.split(" - ALL DONE. Time elapsed: ")[1].strip().replace(" seconds", "")
-                    data[f["s_name"]]["time"] = time
+                    data[f["s_name"]]["megahit_time"] = time
                 elif " contigs, total " in line:
                     # Parse line like this:
                     # 2022-06-13 14:22:47 - 64408 contigs, total 46322050 bp, min 200 bp, max 94571 bp, avg 719 bp, N50 831 bp
@@ -48,12 +48,12 @@ class MultiqcModule(BaseMultiqcModule):
                     )
                     match = regex.search(line)
                     if match:
-                        data[f["s_name"]]["contigs"] = int(match.group(1))
-                        data[f["s_name"]]["bases"] = int(match.group(2))
-                        data[f["s_name"]]["min"] = int(match.group(3))
-                        data[f["s_name"]]["max"] = int(match.group(4))
-                        data[f["s_name"]]["avg"] = int(match.group(5))
-                        data[f["s_name"]]["n50"] = int(match.group(6))
+                        data[f["s_name"]]["megahit_contigs"] = int(match.group(1))
+                        data[f["s_name"]]["megahit_bases"] = int(match.group(2))
+                        data[f["s_name"]]["megahit_min_contig"] = int(match.group(3))
+                        data[f["s_name"]]["megahit_max_contig"] = int(match.group(4))
+                        data[f["s_name"]]["megahit_avg_contig"] = int(match.group(5))
+                        data[f["s_name"]]["megahit_n50"] = int(match.group(6))
 
         # Filter to strip out ignored sample names
         data = self.ignore_samples(data)
@@ -65,21 +65,21 @@ class MultiqcModule(BaseMultiqcModule):
         self.write_data_file(data, f"multiqc_{self.anchor}")
 
         headers = {
-            "mem": {
+            "megahit_mem": {
                 "title": "Memory",
                 "description": "Memory used",
                 "min": 0,
                 "scale": "Reds",
                 "format": lambda x: humanize.naturalsize(x),
             },
-            "time": {
+            "megahit_time": {
                 "title": "Time",
                 "description": "Time elapsed",
                 "min": 0,
                 "suffix": "&nbsp;s",
                 "scale": "Greys",
             },
-            "contigs": {
+            "megahit_contigs": {
                 "title": "Contigs",
                 "description": "Number of contigs",
                 "min": 0,
@@ -87,7 +87,7 @@ class MultiqcModule(BaseMultiqcModule):
                 "hidden": True,
                 "format": "{:,d}",
             },
-            "bases": {
+            "megahit_bases": {
                 "title": f"Bases, {config.base_count_prefix}",
                 "description": f"Total number of bases ({config.base_count_desc})",
                 "shared_key": "base_count",
@@ -95,7 +95,7 @@ class MultiqcModule(BaseMultiqcModule):
                 "scale": "Blues",
                 "hidden": True,
             },
-            "min": {
+            "megahit_min_contig": {
                 "title": "Min contig",
                 "description": "Minimum contig length",
                 "min": 0,
@@ -104,7 +104,7 @@ class MultiqcModule(BaseMultiqcModule):
                 "suffix": "&nbsp;bp",
                 "format": "{:,d}",
             },
-            "max": {
+            "megahit_max_contig": {
                 "title": "Max contig",
                 "description": "Maximum contig length",
                 "min": 0,
@@ -113,7 +113,7 @@ class MultiqcModule(BaseMultiqcModule):
                 "suffix": "&nbsp;bp",
                 "format": "{:,d}",
             },
-            "avg": {
+            "megahit_avg_contig": {
                 "title": "Avg",
                 "description": "Average contig length",
                 "min": 0,
@@ -122,7 +122,7 @@ class MultiqcModule(BaseMultiqcModule):
                 "suffix": "&nbsp;bp",
                 "format": "{:,d}",
             },
-            "n50": {
+            "megahit_n50": {
                 "title": "N50",
                 "description": "N50 contig length",
                 "min": 0,
