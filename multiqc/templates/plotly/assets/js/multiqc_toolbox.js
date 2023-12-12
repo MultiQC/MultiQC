@@ -805,7 +805,7 @@ function apply_mqc_highlights() {
   // Also highlight toolbox drawer icon
   if (f_texts.length > 0 && f_texts.indexOf("") < 0) {
     f_texts.unshift("");
-    f_cols.unshift("#cccccc");
+    f_cols.unshift(null);
     $('.mqc-toolbox-buttons a[href="#mqc_cols"]').addClass("in_use");
   } else {
     $('.mqc-toolbox-buttons a[href="#mqc_cols"]').removeClass("in_use");

@@ -18,17 +18,18 @@ class ScatterPlot extends Plot {
     let samples = points.map((point) => point.name);
     let sampleSettings = applyToolboxSettings(samples);
     if (sampleSettings == null) return; // All series are hidden, do not render the graph
+    points = points.map((point, idx) => {
+      point.name = sampleSettings[idx].name ?? point.name;
+      point.highlight = sampleSettings[idx].highlight;
+      if (!sampleSettings[idx].hidden) return point;
+    });
 
-    // // Rename samples
-    // dataset.map((element, si) => (element.name = samples[si].name));
-    //
-    // // Filter out hidden samples
-    // let visibleSamples = samples.filter((s) => !s.hidden);
-    // let visibleDataset = dataset.filter((element, si) => !samples[si].hidden);
+    // Reorder points so highlighted points are on top
+    let highlighted = points.filter((p) => p.highlight);
+    let nonHighlighted = points.filter((p) => !p.highlight);
+    points = nonHighlighted.concat(highlighted);
 
-    return points.map((point, idx) => {
-      if (sampleSettings[idx].hidden) return {};
-
+    return points.map((point) => {
       let x = point.x;
       if (this.categories && Number.isInteger(x) && x < this.categories.length) x = this.categories[x];
 
@@ -38,14 +39,15 @@ class ScatterPlot extends Plot {
       marker.line = {
         width: point["marker_line_width"] ?? marker.line.width,
       };
-      marker.color = sampleSettings[idx].highlight ?? point["color"] ?? marker.color;
       marker.opacity = point["opacity"] ?? marker.opacity;
+      marker.color = point["color"] ?? marker.color;
+      if (highlighted.length > 0) marker.color = point.highlight ?? "#cccccc";
 
       return {
         type: "scatter",
         x: [x],
         y: [point.y],
-        name: sampleSettings[idx].name,
+        name: point.name,
         mode: "markers",
         marker: marker,
         // hovertemplate: pconfig["tt_label"]

@@ -20,6 +20,16 @@ class LinePlot extends Plot {
     let samples = lines.map((line) => line.name);
     let sampleSettings = applyToolboxSettings(samples);
     if (sampleSettings == null) return; // All series are hidden, do not render the graph.
+    lines = lines.map((line, idx) => {
+      line.name = sampleSettings[idx].name ?? line.name;
+      line.highlight = sampleSettings[idx].highlight;
+      if (!sampleSettings[idx].hidden) return line;
+    });
+
+    // Reorder points so highlighted points are on top
+    let highlighted = lines.filter((p) => p.highlight);
+    let nonHighlighted = lines.filter((p) => !p.highlight);
+    lines = nonHighlighted.concat(highlighted);
 
     // Toggle buttons for Y-axis limis
     let ymaxSet = this.ymax !== "undefined" && this.ymax !== null;
@@ -44,9 +54,7 @@ class LinePlot extends Plot {
       wrapper.after('<div class="clearfix" />');
     }
 
-    return lines.map((line, idx) => {
-      if (sampleSettings[idx].hidden) return {};
-
+    return lines.map((line) => {
       let x, y;
       if (line.data.length > 0 && Array.isArray(line.data[0])) {
         x = line.data.map((x) => x[0]);
@@ -55,15 +63,17 @@ class LinePlot extends Plot {
         x = [...Array(line.data.length).keys()];
         y = line.data;
       }
+      if (highlighted.length > 0) line.color = line.highlight ?? "#cccccc";
+
       return {
         type: "scatter",
         x: x,
         y: y,
-        name: sampleSettings[idx].name,
+        name: line.name,
         orientation: "h",
         mode: "lines",
         line: {
-          color: sampleSettings[idx].highlight ?? line.color,
+          color: line.color,
         },
         // hovertemplate: pconfig["tt_label"]
       };
