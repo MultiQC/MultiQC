@@ -37,7 +37,7 @@ class MultiqcModule(BaseMultiqcModule):
                     mem = line.split(" - Memory used: ")[1].strip()
                     data[f["s_name"]] = {"mem": mem}
                 elif " - ALL DONE. Time elapsed: " in line:
-                    time = line.split(" - ALL DONE. Time elapsed: ")[1].strip()
+                    time = line.split(" - ALL DONE. Time elapsed: ")[1].strip().replace(" seconds", "")
                     data[f["s_name"]]["time"] = time
                 elif " contigs, total " in line:
                     # Parse line like this:
@@ -77,7 +77,6 @@ class MultiqcModule(BaseMultiqcModule):
                 "min": 0,
                 "suffix": "&nbsp;s",
                 "scale": "Greys",
-                "modify": lambda x: float(x.split(" ")[0]),
             },
             "contigs": {
                 "title": "Contigs",
@@ -85,6 +84,7 @@ class MultiqcModule(BaseMultiqcModule):
                 "min": 0,
                 "scale": "Greens",
                 "hidden": True,
+                "format": "{:,d}",
             },
             "bases": {
                 "title": f"Bases, {config.base_count_prefix}",
@@ -100,6 +100,8 @@ class MultiqcModule(BaseMultiqcModule):
                 "min": 0,
                 "scale": "YlGn",
                 "hidden": True,
+                "suffix": "&nbsp;bp",
+                "format": "{:,d}",
             },
             "max": {
                 "title": "Max contig",
@@ -107,6 +109,8 @@ class MultiqcModule(BaseMultiqcModule):
                 "min": 0,
                 "scale": "YlGn",
                 "hidden": True,
+                "suffix": "&nbsp;bp",
+                "format": "{:,d}",
             },
             "avg": {
                 "title": "Avg",
@@ -114,12 +118,16 @@ class MultiqcModule(BaseMultiqcModule):
                 "min": 0,
                 "scale": "YlGn",
                 "hidden": True,
+                "suffix": "&nbsp;bp",
+                "format": "{:,d}",
             },
             "n50": {
                 "title": "N50",
                 "description": "N50 contig length",
                 "min": 0,
                 "scale": "Greens",
+                "suffix": "&nbsp;bp",
+                "format": "{:,d}",
             },
         }
 
