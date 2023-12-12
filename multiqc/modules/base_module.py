@@ -232,7 +232,7 @@ class BaseMultiqcModule(object):
         # Append custom module anchor to the section if set
         mod_cust_config = getattr(self, "mod_cust_config", {})
         if "anchor" in mod_cust_config:
-            anchor = f"{mod_cust_config["anchor"]}_{anchor}"
+            anchor = f"{mod_cust_config['anchor']}_{anchor}"
 
         # Sanitise anchor ID and check for duplicates
         anchor = report.save_htmlid(anchor)
