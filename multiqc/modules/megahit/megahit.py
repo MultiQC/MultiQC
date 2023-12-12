@@ -30,6 +30,7 @@ class MultiqcModule(BaseMultiqcModule):
         data = dict()
         for f in self.find_log_files("megahit", filehandles=True):
             for line in f["f"]:
+                self.add_data_source(f, f["s_name"])
                 if " - MEGAHIT v" in line:
                     version = line.split(" - MEGAHIT v")[1].strip()
                     self.add_software_version(version, sample=f["s_name"])
