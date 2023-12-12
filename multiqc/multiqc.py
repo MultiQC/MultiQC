@@ -17,6 +17,7 @@ import subprocess
 import sys
 import tempfile
 import time
+import json
 import traceback
 from urllib.request import urlopen
 
@@ -113,6 +114,7 @@ click.rich_click.OPTION_GROUPS = {
                 "--verbose",
                 "--quiet",
                 "--strict",
+                "--development",
                 "--require-logs",
                 "--profile-runtime",
                 "--no-megaqc-upload",
@@ -249,6 +251,13 @@ click.rich_click.OPTION_GROUPS = {
 )
 @click.option("--lint", "lint", is_flag=True, hidden=True, help="DEPRECATED: use --strict instead")
 @click.option(
+    "--dev",
+    "--development",
+    "development",
+    is_flag=True,
+    help="Development mode. Do not compress and minimise JS, export uncompressed plot data",
+)
+@click.option(
     "--pdf",
     "make_pdf",
     is_flag=True,
@@ -337,6 +346,7 @@ def run(
     plots_interactive=False,
     strict=False,
     lint=False,  # Deprecated since v1.17
+    development=False,
     make_pdf=False,
     no_megaqc_upload=False,
     config_file=(),
@@ -472,6 +482,8 @@ def run(
         config.strict = True
         config.lint = True  # Deprecated since v1.17
         strict_helpers.run_tests()
+    if development:
+        config.development = True
     if make_pdf:
         config.template = "simple"
     if no_megaqc_upload:
@@ -974,6 +986,10 @@ def run(
         if config.megaqc_url:
             megaqc.multiqc_api_post(multiqc_json_dump)
 
+    if config.development:
+        with open(os.path.join(config.data_dir, "multiqc_plots.js"), "w") as f:
+            f.write(json.dumps(report.plot_data))
+
     # Make the final report path & data directories
     if filename != "stdout":
         if config.make_report:
@@ -1117,11 +1133,15 @@ def run(
             try:
                 if fdir is None:
                     fdir = ""
+                path = os.path.join(fdir, name)
+                path_dev = os.path.splitext(path)[0] + "_dev" + os.path.splitext(path)[1]
+                if os.path.exists(path_dev):
+                    path = path_dev
                 if b64:
-                    with io.open(os.path.join(fdir, name), "rb") as f:
+                    with io.open(path, "rb") as f:
                         return base64.b64encode(f.read()).decode("utf-8")
                 else:
-                    with io.open(os.path.join(fdir, name), "r", encoding="utf-8") as f:
+                    with io.open(path, "r", encoding="utf-8") as f:
                         return f.read()
             except (OSError, IOError) as e:
                 logger.error("Could not include file '{}': {}".format(name, e))
@@ -1130,7 +1150,7 @@ def run(
         try:
             env = jinja2.Environment(loader=jinja2.FileSystemLoader(tmp_dir))
             env.globals["include_file"] = include_file
-            j_template = env.get_template(template_mod.base_fn)
+            j_template = env.get_template(template_mod.base_fn, globals={"development": config.development})
         except:  # noqa: E722
             raise IOError("Could not load {} template file '{}'".format(config.template, template_mod.base_fn))
 
@@ -1151,7 +1171,7 @@ def run(
                 for f in template_mod.copy_files:
                     fn = os.path.join(tmp_dir, f)
                     dest_dir = os.path.join(os.path.dirname(config.output_fn), f)
-                    shutil.copytree(fn, dest_dir)
+                    shutil.copytree(fn, dest_dir, dirs_exist_ok=True)
             except AttributeError:
                 pass  # No files to copy
 

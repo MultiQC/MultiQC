@@ -106,6 +106,7 @@ remove_sections: List
 section_comments: Dict
 lint: bool  # Deprecated since v1.17
 strict: bool
+development: bool
 custom_plot_config: Dict
 custom_table_header_config: Dict
 software_versions: Dict

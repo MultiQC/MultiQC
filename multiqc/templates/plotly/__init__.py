@@ -8,16 +8,13 @@ from HighCharts to Plotly.
 
 """
 import os
-
 from .plots import bar, line, scatter, heatmap
+from ...utils import config
 
 template_parent = "default"
 
 template_dir = os.path.dirname(__file__)
 base_fn = "base.html"
-
-base64_plots = False
-
 
 bargraph = bar.plot
 linegraph = line.plot
@@ -25,3 +22,6 @@ scatter = scatter.plot
 heatmap = heatmap.plot
 
 __all__ = ["bargraph", "linegraph", "scatter", "heatmap"]
+
+if config.development:
+    copy_files = ["assets"]

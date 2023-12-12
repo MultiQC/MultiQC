@@ -139,15 +139,6 @@ class BarPlot(Plot):
         """
         Create a Plotly figure for a dataset
         """
-        import json
-
-        with open(f"/Users/vlad/git/playground/dumps/{self.id}-layout.json", "w") as f:
-            f.write(json.dumps(layout.to_plotly_json()))
-        with open(f"/Users/vlad/git/playground/dumps/{self.id}-data.json", "w") as f:
-            f.write(json.dumps(dataset.cats))
-        with open(f"/Users/vlad/git/playground/dumps/{self.id}-samples.json", "w") as f:
-            f.write(json.dumps(dataset.samples))
-
         fig = go.Figure(layout=layout)
         for cat in dataset.cats:
             data = cat["data"]
