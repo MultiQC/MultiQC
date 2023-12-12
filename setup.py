@@ -51,6 +51,7 @@ setup(
     install_requires=[
         "matplotlib>=2.1.1",
         "networkx>=2.5.1",
+        "pandas",
         "numpy",
         "click",
         "coloredlogs",

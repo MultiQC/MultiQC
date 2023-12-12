@@ -1,4 +1,4 @@
-""" MultiQC module to parse output from metadmg """
+""" MultiQC module to plot output from metadmg """
 
 
 import logging
@@ -14,12 +14,18 @@ log = logging.getLogger(__name__)
 
 
 class MultiqcModule(BaseMultiqcModule, StatReportMixin, DfitReportMixin):
-    """ """
+    """
+    To allow reading gzip archives, run with `ignore_images: false`
+    in the config, e.g.:
+    ```
+    multiqc . --cl-config 'ignore_images: false'
+    ```
+    """
 
     def __init__(self):
         # Initialise the parent object
         super(MultiqcModule, self).__init__(
-            name="metadmg",
+            name="metaDMG",
             anchor="metadmg",
             href="https://github.com/metaDMG-dev/metaDMG-cpp",
             info="Taxonomic classification of reads and estimation of damage rates in ancient DNA data",
@@ -28,8 +34,7 @@ class MultiqcModule(BaseMultiqcModule, StatReportMixin, DfitReportMixin):
 
         # Read config
         self.rank = getattr(config, "metadmg", {}).get("rank", "genus")
-        self.n_taxa = getattr(config, "metadmg", {}).get("n_taxa", 10)
-        self.index = getattr(config, "metadmg", {}).get("index", "name")
+        self.n_taxa = getattr(config, "metadmg", {}).get("n_taxa", 20)
         self.sort_by = getattr(config, "metadmg", {}).get("sort_by", "nreads")
 
         # Set up class objects to hold parsed data
@@ -40,13 +45,10 @@ class MultiqcModule(BaseMultiqcModule, StatReportMixin, DfitReportMixin):
         if n["stat"] > 0:
             log.info("Found {} stat reports".format(n["stat"]))
 
-        n["dfit"] = self.parse_metadmg_dfit()
-        if n["dfit"] > 0:
-            log.info("Found {} dfit reports".format(n["dfit"]))
+        # n["dfit"] = self.parse_metadmg_dfit()
+        # if n["dfit"] > 0:
+        #    log.info("Found {} dfit reports".format(n["dfit"]))
 
         # Exit if we didn't find anything
         if sum(n.values()) == 0:
             raise ModuleNoSamplesFound
-
-        # Add to the General Stats table (has to be called once per MultiQC module)
-        self.general_stats_addcols(self.general_stats_data, self.general_stats_headers)

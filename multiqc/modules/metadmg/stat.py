@@ -5,7 +5,7 @@
 import logging
 import pandas as pd
 
-from multiqc.plots import bargraph, beeswarm
+from multiqc.plots import bargraph
 
 # Initialise the logger
 log = logging.getLogger(__name__)
@@ -17,21 +17,22 @@ class StatReportMixin:
     def parse_metadmg_stat(self):
         """Find metadmg stat file and parse their data"""
 
+        self.stat_types = ["nreads", "nalign", "mean_rlen", "var_rlen", "mean_gc", "var_gc"]
+
         self.metadmg_stat = dict()
         for f in self.find_log_files("metadmg/stat", filecontents=False, filehandles=False):
             # Read DF
             df = pd.read_table(
                 f["fn"],
                 sep="\t",
-                usecols=["name", "rank", "nalign", "nreads", "mean_rlen", "var_rlen", "mean_gc", "var_gc"],
-                index_col=self.index,
-                comment="#",
+                usecols=["name", "rank"] + self.stat_types,
+                index_col="name",
+                comment=None,
             ).sort_values(by=self.sort_by, ascending=False)
             # Filter DF
             df = df[df["rank"] == self.rank].head(n=self.n_taxa).drop(columns="rank")
 
             parsed_data = df.to_dict()
-            log.debug(parsed_data)
 
             if len(parsed_data) > 0:
                 if f["s_name"] in self.metadmg_stat:
@@ -41,7 +42,6 @@ class StatReportMixin:
 
         # Filter to strip out ignored sample names
         self.metadmg_stat = self.ignore_samples(self.metadmg_stat)
-        log.debug(self.metadmg_stat)
 
         if len(self.metadmg_stat) == 0:
             return 0
@@ -50,10 +50,7 @@ class StatReportMixin:
         self.write_data_file(self.metadmg_stat, "multiqc_metadmg_stat")
 
         # Add version
-        self.add_software_version("0.0")
-
-        # Make dot-plot section
-        self.dotplot_section()
+        self.add_software_version(None)
 
         # Make bargraph section
         self.barplot_section()
@@ -61,48 +58,37 @@ class StatReportMixin:
         # Return the number of logs that were found
         return len(self.metadmg_stat)
 
-    def dotplot_section(self):
-        # Make dot plot of counts
-        n_reads = {
-            "min": 0,
-            "suffix": "reads",
-        }
-        read_len = {
-            "min": 0,
-            "decimalPlaces": 4,
-        }
-        read_gc = {
-            "min": 0,
-            "max": 100,
-            "decimalPlaces": 4,
-        }
-        keys = dict()
-        keys["nreads"] = dict(n_reads, **{"title": "Total number of reads"})
-        keys["nalign"] = dict(n_reads, **{"title": "Total number of alignments"})
-        keys["mean_rlen"] = dict(read_len, **{"title": "Reads length mean"})
-        keys["var_rlen"] = dict(read_len, **{"title": "Reads length variance"})
-        keys["mean_gc"] = dict(read_gc, **{"title": "Reads GC mean"})
-        keys["var_gc"] = dict(read_gc, **{"title": "Reads GC varaince"})
-
-        self.add_section(
-            name="Statistics",
-            anchor="metadmg-stat",
-            description="This module parses the output from <code>metadmg</code>.",
-            plot=beeswarm.plot(self.metadmg_stat, keys, {"id": "metadmg-stat-dp"}),
-        )
-
     def barplot_section(self):
+        # Convert data
+        stat_labels = {
+            "nreads": "Number of reads",
+            "nalign": "Number of alignments",
+            "mean_rlen": "Mean read length",
+            "var_rlen": "Read length variance",
+            "mean_gc": "Mean GC content",
+            "var_gc": "GC content variance",
+        }
+
+        data_plot = list()
+        data_labels = list()
+        for stat_type in self.stat_types:
+            data_plot.append({s_name: data[stat_type] for s_name, data in self.metadmg_stat.items()})
+            data_labels.append({"name": stat_labels[stat_type]})
+
         # Config for the plot
         pconfig = {
             "id": "metadmg_rank_plot",
-            "title": f"metaDMG top {self.rank}",
-            "ylab": self.rank.title(),
-            "cpswitch_counts_label": "Number of Reads",
+            "hide_zero_cats": False,
+            "title": "metaDMG: read statistics",
+            "ylab": None,
+            "use_legend": False,
+            "tt_percentages": False,
+            "data_labels": data_labels,
         }
 
         self.add_section(
-            name="Rank distribution",
-            anchor="metadmg-stat-rank",
-            description=f"Top {self.n_taxa} {self.rank} by {self.sort_by}",
-            plot=bargraph.plot(self.metadmg_stat[self.sort_by], pconfig=pconfig),
+            name="Read statistics by taxonomic rank",
+            anchor="metadmg-rank",
+            description=f"Read abundance statistics for top {self.n_taxa} {self.rank}",
+            plot=bargraph.plot(data_plot, pconfig=pconfig),
         )

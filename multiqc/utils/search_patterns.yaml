@@ -493,9 +493,15 @@ mapdamage:
   - fn: "5p*_freq.txt"
   - fn: "lgdistribution.txt"
 metadmg/dfit:
-  fn: "*.dfit.gz"
+  - fn: "*.dfit.gz"
+  - fn: "*.dfit"
+    contents: "A	q	c	phi	llh	ncall	sigmaD"
+    num_lines: 1
 metadmg/stat:
-  fn: "*.stat.gz"
+  - fn: "*.stat.gz"
+  - fn: "*.stat"
+    contents: "taxid	name	rank	nalign	nreads	mean_rlen	var_rlen	mean_gc var_gc"
+    num_lines: 1
 methylQA:
   fn: "*.report"
   shared: true

@@ -378,10 +378,6 @@ module_order:
   - peddy:
       module_tag:
         - DNA
-  - metadmg:
-      module_tag:
-        - DNA
-        - metagenomics
   - somalier:
       module_tag:
         - DNA
@@ -497,6 +493,10 @@ module_order:
   - macs2:
       module_tag:
         - chip
+  - metadmg:
+      module_tag:
+        - DNA
+        - metagenomics
   - theta2:
       module_tag:
         - DNA
