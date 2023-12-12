@@ -748,6 +748,11 @@ module_order:
         - DNA
         - RNA
         - metagenomics
+  - megahit:
+      module_tag:
+        - DNA
+        - Denovo
+        - metagenomics
   - kaiju:
       module_tag:
         - DNA
