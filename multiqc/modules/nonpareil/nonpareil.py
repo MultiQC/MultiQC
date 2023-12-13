@@ -51,10 +51,9 @@ class MultiqcModule(BaseMultiqcModule):
         log.info(f"Found {len(self.data_by_sample)} reports")
         self.write_data_file(self.data_by_sample, "nonpareil")
 
-        version = set([data["version"] for sample, data in self.data_by_sample.items()])
-        if len(version) != 1:
-            raise ValueError("several versions found.")
-        self.add_software_version(str(version.pop()))
+        # Add versions
+        for s_name, data in self.data_by_sample.items():
+            self.add_software_version(str(data["version"]), s_name)
 
         # Add general stats
         self.nonpareil_general_stats_table()
