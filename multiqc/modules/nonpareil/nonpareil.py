@@ -214,7 +214,9 @@ class MultiqcModule(BaseMultiqcModule):
             },
             "LRstar": {
                 "title": "{} Sequencing effort for ideal coverage".format(config.base_count_prefix),
-                "description": "Projected sequencing effort for nearly complete coverage ({})".format(config.base_count_desc),
+                "description": "Projected sequencing effort for nearly complete coverage ({})".format(
+                    config.base_count_desc
+                ),
                 "modify": lambda x: x * config.base_count_multiplier,
                 "min": 0,
                 "scale": "Blues",
