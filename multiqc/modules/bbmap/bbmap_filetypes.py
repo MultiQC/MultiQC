@@ -46,7 +46,7 @@ file_types = {
             "Total": (
                 "Total number of reads processed",
                 {
-                    "description": "Aligned Reads ({})".format(config.read_count_desc),
+                    "description": f"Aligned Reads ({config.read_count_desc})",
                     "shared_key": "read_count",
                     "modify": lambda x: x * config.read_count_multiplier,
                     "scale": "PuBu",
@@ -56,7 +56,7 @@ file_types = {
             "Matched": (
                 "Total number of reads matching adapters/contaminants",
                 {
-                    "description": "Aligned Reads ({})".format(config.read_count_desc),
+                    "description": f"Aligned Reads ({config.read_count_desc})",
                     "shared_key": "read_count",
                     "modify": lambda x: x * config.read_count_multiplier,
                     "scale": "Reds",

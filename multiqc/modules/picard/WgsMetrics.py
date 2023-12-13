@@ -119,14 +119,14 @@ def parse_reports(module):
         assert isinstance(covs, list)
         assert len(covs) > 0
         covs = [str(i) for i in covs]
-        log.debug("Custom Picard coverage thresholds: {}".format(", ".join([i for i in covs])))
+        log.debug(f"Custom Picard coverage thresholds: {', '.join([i for i in covs])}")
     except (AttributeError, TypeError, AssertionError, KeyError):
         covs = ["30"]
     for c in covs:
-        headers["PCT_{}X".format(c)] = {
-            "id": "picard_target_bases_{}X".format(c),
-            "title": "Bases &ge; {}X".format(c),
-            "description": "Percent of target bases with coverage &ge; {}X".format(c),
+        headers[f"PCT_{c}X"] = {
+            "id": f"picard_target_bases_{c}X",
+            "title": f"Bases &ge; {c}X",
+            "description": f"Percent of target bases with coverage &ge; {c}X",
             "max": 100,
             "min": 0,
             "suffix": "%",

@@ -63,7 +63,7 @@ class MultiqcModule(DragenBaseMetrics, DragenReadMetrics, DragenFastqcGcMetrics,
             del new_s_name
 
             if s_name in data_by_sample:
-                log.debug("Duplicate sample name found! Overwriting: {}".format(f["s_name"]))
+                log.debug(f"Duplicate sample name found! Overwriting: {f['s_name']}")
             self.add_data_source(f, s_name)
             data_by_sample.update(data_by_mate)
 
@@ -94,4 +94,4 @@ class MultiqcModule(DragenBaseMetrics, DragenReadMetrics, DragenFastqcGcMetrics,
 
         if len(samples_found) == 0:
             raise ModuleNoSamplesFound
-        log.info("Found {} reports".format(len(samples_found)))
+        log.info(f"Found {len(samples_found)} reports")

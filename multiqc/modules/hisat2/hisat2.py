@@ -37,7 +37,7 @@ class MultiqcModule(BaseMultiqcModule):
         if len(self.hisat2_data) == 0:
             raise ModuleNoSamplesFound
 
-        log.info("Found {} reports".format(len(self.hisat2_data)))
+        log.info(f"Found {len(self.hisat2_data)} reports")
 
         # Superfluous function call to confirm that it is used in this module
         # Replace None with actual version if it is available
@@ -83,7 +83,7 @@ class MultiqcModule(BaseMultiqcModule):
             hscmd = re.search(r"hisat2 .+ -[1U] ([^\s,]+)", line)
             if hscmd:
                 s_name = self.clean_s_name(hscmd.group(1), f)
-                log.debug("Found a HISAT2 command, updating sample name to '{}'".format(s_name))
+                log.debug(f"Found a HISAT2 command, updating sample name to '{s_name}'")
 
             # Run through all regexes
             for k, r in regexes.items():
@@ -98,7 +98,7 @@ class MultiqcModule(BaseMultiqcModule):
 
                 # Save parsed data
                 if s_name in self.hisat2_data:
-                    log.debug("Duplicate sample name found! Overwriting: {}".format(s_name))
+                    log.debug(f"Duplicate sample name found! Overwriting: {s_name}")
                 self.add_data_source(f, s_name)
                 self.hisat2_data[s_name] = parsed_data
 

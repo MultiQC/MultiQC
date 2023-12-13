@@ -37,13 +37,13 @@ def read_config():
         cfg["ychr"] = None
 
     if cfg["include_contigs"]:
-        log.debug("Trying to include these contigs in mosdepth: {}".format(", ".join(cfg["include_contigs"])))
+        log.debug(f"Trying to include these contigs in mosdepth: {', '.join(cfg['include_contigs'])}")
     if cfg["exclude_contigs"]:
-        log.debug("Excluding these contigs from mosdepth: {}".format(", ".join(cfg["exclude_contigs"])))
+        log.debug(f"Excluding these contigs from mosdepth: {', '.join(cfg['exclude_contigs'])}")
     if cfg["xchr"]:
-        log.debug('Using "{}" as X chromosome name'.format(cfg["xchr"]))
+        log.debug(f"Using \"{cfg['xchr']}\" as X chromosome name")
     if cfg["ychr"]:
-        log.debug('Using "{}" as Y chromosome name'.format(cfg["ychr"]))
+        log.debug(f"Using \"{cfg['ychr']}\" as Y chromosome name")
 
     cutoff = cfg.get("perchrom_fraction_cutoff", 0.0)
     try:
@@ -511,15 +511,15 @@ def get_cov_thresholds():
         assert isinstance(threshs, list)
         assert len(threshs) > 0
         threshs = [int(t) for t in threshs]
-        log.debug("Custom coverage thresholds: {}".format(", ".join([str(t) for t in threshs])))
+        log.debug(f"Custom coverage thresholds: {', '.join([str(t) for t in threshs])}")
     except (KeyError, AttributeError, TypeError, AssertionError):
         threshs = [1, 5, 10, 30, 50]
-        log.debug("Using default coverage thresholds: {}".format(", ".join([str(t) for t in threshs])))
+        log.debug(f"Using default coverage thresholds: {', '.join([str(t) for t in threshs])}")
 
     try:
         hidden_threshs = config.mosdepth_config["general_stats_coverage_hidden"]
         assert isinstance(hidden_threshs, list)
-        log.debug("Hiding coverage thresholds: {}".format(", ".join([str(t) for t in hidden_threshs])))
+        log.debug(f"Hiding coverage thresholds: {', '.join([str(t) for t in hidden_threshs])}")
     except (KeyError, AttributeError, TypeError, AssertionError):
         hidden_threshs = [t for t in threshs if t != 30]
 

@@ -33,7 +33,7 @@ try:
         ["git", "rev-parse", "HEAD"], cwd=script_path, stderr=subprocess.STDOUT, universal_newlines=True
     ).strip()
     git_hash_short = git_hash[:7]
-    version = "{} ({})".format(version, git_hash_short)
+    version = f"{version} ({git_hash_short})"
 except Exception:
     pass
 
@@ -252,12 +252,12 @@ def mqc_load_config(yaml_config_path: str):
         try:
             # pyaml_env allows referencing environment variables in YAML for default values
             new_config = pyaml_env.parse_config(yaml_config_path)
-            logger.debug("Loading config settings from: {}".format(yaml_config_path))
+            logger.debug(f"Loading config settings from: {yaml_config_path}")
             mqc_add_config(new_config, yaml_config_path)
         except (IOError, AttributeError) as e:
-            logger.debug("Config error: {}".format(e))
+            logger.debug(f"Config error: {e}")
         except yaml.scanner.ScannerError as e:
-            logger.error("Error parsing config YAML: {}".format(e))
+            logger.error(f"Error parsing config YAML: {e}")
             sys.exit(1)
 
 
@@ -271,11 +271,11 @@ def mqc_cl_config(cl_config):
                 parsed_clc = yaml.safe_load(clc_str)
             assert isinstance(parsed_clc, dict)
         except yaml.scanner.ScannerError as e:
-            logger.error("Could not parse command line config: {}\n{}".format(clc_str, e))
+            logger.error(f"Could not parse command line config: {clc_str}\n{e}")
         except AssertionError:
-            logger.error("Could not parse command line config: {}".format(clc_str))
+            logger.error(f"Could not parse command line config: {clc_str}")
         else:
-            logger.debug("Found command line config: {}".format(parsed_clc))
+            logger.debug(f"Found command line config: {parsed_clc}")
             mqc_add_config(parsed_clc)
 
 
@@ -348,7 +348,7 @@ def mqc_add_config(conf: Dict, conf_path=None):
             elif conf_path is not None and os.path.exists(os.path.join(os.path.dirname(conf_path), v)):
                 fpath = os.path.abspath(os.path.join(os.path.dirname(conf_path), v))
             else:
-                logger.error("Config '{}' path not found, skipping ({})".format(c, fpath))
+                logger.error(f"Config '{c}' path not found, skipping ({fpath})")
                 continue
             log_new_config[c] = fpath
             update({c: fpath})
@@ -359,9 +359,9 @@ def mqc_add_config(conf: Dict, conf_path=None):
                 elif conf_path is not None and os.path.exists(os.path.join(os.path.dirname(conf_path), fpath)):
                     fpath = os.path.abspath(os.path.join(os.path.dirname(conf_path), fpath))
                 else:
-                    logger.error("CSS path '{}' path not found, skipping ({})".format(c, fpath))
+                    logger.error(f"CSS path '{c}' path not found, skipping ({fpath})")
                     continue
-                logger.debug("Adding css file '{}': {}".format(c, fpath))
+                logger.debug(f"Adding css file '{c}': {fpath}")
                 if not custom_css_files:
                     custom_css_files = []
                 custom_css_files.append(fpath)
@@ -386,7 +386,7 @@ def load_sample_names(snames_file):
     num_cols = None
     try:
         with open(snames_file) as f:
-            logger.debug("Loading sample renaming config settings from: {}".format(snames_file))
+            logger.debug(f"Loading sample renaming config settings from: {snames_file}")
             for line in f:
                 s = line.strip().split("\t")
                 if len(s) > 1:
@@ -405,26 +405,24 @@ def load_sample_names(snames_file):
                     else:
                         sample_names_rename.append(s)
                 elif len(line.strip()) > 0:
-                    logger.warning(
-                        "Sample names file line did not have columns (must use tabs): {}".format(line.strip())
-                    )
+                    logger.warning(f"Sample names file line did not have columns (must use tabs): {line.strip()}")
     except (IOError, AttributeError) as e:
-        logger.error("Error loading sample names file: {}".format(e))
-    logger.debug("Found {} sample renaming patterns".format(len(sample_names_rename_buttons)))
+        logger.error(f"Error loading sample names file: {e}")
+    logger.debug(f"Found {len(sample_names_rename_buttons)} sample renaming patterns")
 
 
 def load_replace_names(rnames_file):
     global sample_names_replace
     try:
         with open(rnames_file) as f:
-            logger.debug("Loading sample replace config settings from: {}".format(rnames_file))
+            logger.debug(f"Loading sample replace config settings from: {rnames_file}")
             for line in f:
                 s = line.strip().split("\t")
                 if len(s) == 2:
                     sample_names_replace[s[0]] = s[1]
     except (IOError, AttributeError) as e:
-        logger.error("Error loading sample names replacement file: {}".format(e))
-    logger.debug("Found {} sample replacing patterns".format(len(sample_names_replace)))
+        logger.error(f"Error loading sample names replacement file: {e}")
+    logger.debug(f"Found {len(sample_names_replace)} sample replacing patterns")
 
 
 def load_show_hide(sh_file):
@@ -432,7 +430,7 @@ def load_show_hide(sh_file):
     if sh_file:
         try:
             with open(sh_file, "r") as f:
-                logger.debug("Loading sample renaming config settings from: {}".format(sh_file))
+                logger.debug(f"Loading sample renaming config settings from: {sh_file}")
                 for line in f:
                     s = line.strip().split("\t")
                     if len(s) >= 3 and s[1] in ["show", "hide", "show_re", "hide_re"]:
@@ -441,12 +439,12 @@ def load_show_hide(sh_file):
                         show_hide_patterns.append(s[2:])
                         show_hide_regex.append(s[1] not in ["show", "hide"])  # flag whether or not regex is turned on
         except AttributeError as e:
-            logger.error("Error loading show patterns file: {}".format(e))
+            logger.error(f"Error loading show patterns file: {e}")
 
     # Prepend a "Show all" button if we have anything
     # Do this outside of the file load block in case it was set in the config
     if len(show_hide_buttons) > 0:
-        logger.debug("Found {} show/hide patterns".format(len(show_hide_buttons)))
+        logger.debug(f"Found {len(show_hide_buttons)} show/hide patterns")
         show_hide_buttons.insert(0, "Show all")
         show_hide_mode.insert(0, "hide")
         show_hide_patterns.insert(0, [])

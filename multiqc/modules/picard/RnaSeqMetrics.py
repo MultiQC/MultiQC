@@ -136,7 +136,7 @@ def parse_reports(module):
             rrna_missing.append(s_name)
     if rrna_missing:
         if len(rrna_missing) < 5:
-            missing_samples = "for samples <code>{}</code>".format("</code>, <code>".join(rrna_missing))
+            missing_samples = f"for samples <code>{'</code>, <code>'.join(rrna_missing)}</code>"
         else:
             missing_samples = f"<strong>{len(rrna_missing)} samples</strong>"
         warn_rrna = f"""

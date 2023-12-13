@@ -54,7 +54,7 @@ def parse_reports(self):
         errors = 0
         for line in fh:
             fields = line.rstrip("\r\n").split("\t")
-            assert len(fields) == len(header), "Missing fields in line: `{}`".format(line)
+            assert len(fields) == len(header), f"Missing fields in line: `{line}`"
             fields[1:4] = [int(field) for field in fields[1:4]]
             fields[4:11] = [float(field) for field in fields[4:11]]
             if is_new_format:

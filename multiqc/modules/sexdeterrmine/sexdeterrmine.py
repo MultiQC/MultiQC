@@ -55,7 +55,7 @@ class MultiqcModule(BaseMultiqcModule):
             data = json.load(f["f"])
         except Exception as e:
             log.debug(e)
-            log.warning("Could not parse SexDeterrmine JSON: '{}'".format(f["fn"]))
+            log.warning(f"Could not parse SexDeterrmine JSON: '{f['fn']}'")
             return
 
         # Get the version
@@ -68,7 +68,7 @@ class MultiqcModule(BaseMultiqcModule):
 
             s_clean = self.clean_s_name(s_name, f)
             if s_clean in self.sexdet_data:
-                log.debug("Duplicate sample name found! Overwriting: {}".format(s_clean))
+                log.debug(f"Duplicate sample name found! Overwriting: {s_clean}")
 
             self.add_data_source(f, s_clean)
             self.add_software_version(version, s_clean)

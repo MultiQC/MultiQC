@@ -37,7 +37,7 @@ class MultiqcModule(BaseMultiqcModule):
                 f["s_name"] = self.clean_s_name(input_fname, f)
                 # Log a warning if the log file matches an existing sample name
                 if f["s_name"] in self.umitools_data:
-                    log.debug("Duplicate sample name found! Overwriting: {}".format(f["s_name"]))
+                    log.debug(f"Duplicate sample name found! Overwriting: {f['s_name']}")
                 # Store the data in the overall data dictionary
                 self.umitools_data[f["s_name"]] = data
                 # Add the log file information to the multiqc_sources.txt
@@ -53,7 +53,7 @@ class MultiqcModule(BaseMultiqcModule):
             raise ModuleNoSamplesFound
 
         # Log the number of reports found
-        log.info("Found {} reports".format(len(self.umitools_data)))
+        log.info(f"Found {len(self.umitools_data)} reports")
 
         # Write parsed report data to a file
         self.write_data_file(self.umitools_data, "multiqc_umitools")
@@ -138,8 +138,8 @@ class MultiqcModule(BaseMultiqcModule):
 
         headers = {
             "output_reads": {
-                "title": "{} Unique Reads".format(config.read_count_prefix),
-                "description": "Reads remaining after deduplication ({})".format(config.read_count_desc),
+                "title": f"{config.read_count_prefix} Unique Reads",
+                "description": f"Reads remaining after deduplication ({config.read_count_desc})",
                 "min": 0,
                 "modify": lambda x: x * config.read_count_multiplier,
                 "shared_key": "read_count",

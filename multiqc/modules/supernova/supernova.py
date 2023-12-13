@@ -196,29 +196,29 @@ class MultiqcModule(BaseMultiqcModule):
         # Parse the input log files
         # report.txt files
         for f in self.find_log_files("supernova/report"):
-            log.debug("Found report in: {}".format(f["root"]))
+            log.debug(f"Found report in: {f['root']}")
             sid, data = self.parse_report(f["f"])
             s_name = self.clean_s_name(sid, f)
             if s_name in reports.keys():
-                log.debug("Duplicate sample name found! Overwriting: {}".format(s_name))
+                log.debug(f"Duplicate sample name found! Overwriting: {s_name}")
             reports[s_name] = data
             self.add_data_source(f, s_name=s_name, section="supernova-table")
 
         # summary.json files
         for f in self.find_log_files("supernova/summary"):
-            log.debug("Found summary.json in: {}".format(f["root"]))
+            log.debug(f"Found summary.json in: {f['root']}")
             try:
                 sid, data = self.parse_summary(f["f"])
             except ValueError:
-                log.debug("Error parsing JSON file in {}".format(f["root"]))
+                log.debug(f"Error parsing JSON file in {f['root']}")
                 continue
             except RuntimeError:
-                log.debug("Could not find sample_id in JSON file in {}".format(f["root"]))
+                log.debug(f"Could not find sample_id in JSON file in {f['root']}")
                 continue
 
             s_name = self.clean_s_name(sid, f)
             if s_name in summaries.keys():
-                log.debug("Duplicate sample name found! Overwriting: {}".format(s_name))
+                log.debug(f"Duplicate sample name found! Overwriting: {s_name}")
             summaries[s_name] = data
             self.add_data_source(f, s_name=s_name, section="supernova-table")
             # The plot json files do not contain sample IDs, sadly. So we need to store it somewhere.
@@ -226,7 +226,7 @@ class MultiqcModule(BaseMultiqcModule):
 
         # histogram_molecules.json files
         for f in self.find_log_files("supernova/molecules"):
-            log.debug("Found histogram_molecules.json in: {}".format(f["root"]))
+            log.debug(f"Found histogram_molecules.json in: {f['root']}")
             try:
                 if f["root"] in root_summary.keys():
                     data = self.parse_histogram(f["f"])
@@ -235,12 +235,12 @@ class MultiqcModule(BaseMultiqcModule):
                     molecules[s_name] = data
                     self.add_data_source(f, s_name=s_name, section="supernova-molecules")
             except RuntimeError:
-                log.debug("Could not parse JSON file in {}".format(f["root"]))
+                log.debug(f"Could not parse JSON file in {f['root']}")
                 continue
 
         # histogram_kmer_count.json files
         for f in self.find_log_files("supernova/kmers"):
-            log.debug("Found histogram_kmer_count.json in: {}".format(f["root"]))
+            log.debug(f"Found histogram_kmer_count.json in: {f['root']}")
             try:
                 if f["root"] in root_summary.keys():
                     data = self.parse_histogram(f["f"], 400)
@@ -249,13 +249,13 @@ class MultiqcModule(BaseMultiqcModule):
                     kmers[s_name] = data
                     self.add_data_source(f, s_name=s_name, section="supernova-kmers")
             except RuntimeError:
-                log.debug("Could not parse JSON file in {}".format(f["root"]))
+                log.debug(f"Could not parse JSON file in {f['root']}")
                 continue
 
         # Data from summary.json supersedes data from report.txt
         for sample_id, sum_data in summaries.items():
             if sample_id in reports.keys():
-                log.debug("Found summary data for sample {} which supersedes report data".format(sample_id))
+                log.debug(f"Found summary data for sample {sample_id} which supersedes report data")
                 reports[sample_id] = sum_data
         # Ignore cmd-line specified samples
         reports = self.ignore_samples(reports)
@@ -265,7 +265,7 @@ class MultiqcModule(BaseMultiqcModule):
         if len(reports) == 0:
             raise ModuleNoSamplesFound
         else:
-            log.info("Found {} reports".format(len(reports.keys())))
+            log.info(f"Found {len(reports.keys())} reports")
 
         # Superfluous function call to confirm that it is used in this module
         # Replace None with actual version if it is available
@@ -492,7 +492,7 @@ class MultiqcModule(BaseMultiqcModule):
                     else:
                         data[stats[stat_type]] = float(stat_val[0])
                 except ValueError:
-                    log.debug('Error in parsing sample {}, on line "{}"'.format(sid, stat_val))
+                    log.debug(f'Error in parsing sample {sid}, on line "{stat_val}"')
 
         return sid, data
 

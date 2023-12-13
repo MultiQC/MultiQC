@@ -54,7 +54,7 @@ def parse_reports(self):
 
         if len(d) > 0:
             if f["s_name"] in self.junction_annotation_data:
-                log.debug("Duplicate sample name found! Overwriting: {}".format(f["s_name"]))
+                log.debug(f"Duplicate sample name found! Overwriting: {f['s_name']}")
             self.add_data_source(f, section="junction_annotation")
             self.junction_annotation_data[f["s_name"]] = d
 

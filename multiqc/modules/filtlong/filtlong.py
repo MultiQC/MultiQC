@@ -65,7 +65,7 @@ class MultiqcModule(BaseMultiqcModule):
         """Filtlong General Stats Table"""
         headers = {
             "Target bases": {
-                "title": "Target bases ({})".format(config.read_count_prefix),
+                "title": f"Target bases ({config.read_count_prefix})",
                 "description": "Keep only the best reads up to this many total bases ({})".format(
                     config.read_count_desc
                 ),
@@ -74,8 +74,8 @@ class MultiqcModule(BaseMultiqcModule):
                 "modify": lambda x: x * config.read_count_multiplier,
             },
             "Bases kept": {
-                "title": "Bases kept ({})".format(config.read_count_prefix),
-                "description": "Bases kept ({})".format(config.read_count_desc),
+                "title": f"Bases kept ({config.read_count_prefix})",
+                "description": f"Bases kept ({config.read_count_desc})",
                 "scale": "Purples",
                 "shared_key": "read_count",
                 "modify": lambda x: x * config.read_count_multiplier,

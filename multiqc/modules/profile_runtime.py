@@ -41,7 +41,7 @@ class MultiqcModule(BaseMultiqcModule):
         pcats = dict()
         for key in sorted(report.file_search_stats, key=report.file_search_stats.get, reverse=True):
             if "skipped_" in key:
-                s_name = "Skipped: {}".format(key.replace("skipped_", "").replace("_", " ").capitalize())
+                s_name = f"Skipped: {key.replace('skipped_', '').replace('_', ' ').capitalize()}"
                 pcats[key] = {"name": key, "color": "#999999"}
             else:
                 s_name = key

@@ -42,7 +42,7 @@ class MultiqcModule(BaseMultiqcModule):
         if len(self.minionqc_data) == 0:
             raise ModuleNoSamplesFound
 
-        log.info("Found {} reports".format(len(self.minionqc_data)))
+        log.info(f"Found {len(self.minionqc_data)} reports")
 
         # Superfluous function call to confirm that it is used in this module
         # Replace None with actual version if it is available
@@ -90,12 +90,12 @@ class MultiqcModule(BaseMultiqcModule):
         for q_key in ["all", "q_filt"]:
             for key_1 in ["reads", "gigabases"]:
                 for key_2 in data_dict[q_key][key_1]:
-                    new_key = "{} {}".format(key_1, key_2)
+                    new_key = f"{key_1} {key_2}"
                     data_dict[q_key][new_key] = data_dict[q_key][key_1][key_2]
                 data_dict[q_key].pop(key_1)  # removes key after flattening
 
         if s_name in self.minionqc_data:
-            log.debug("Duplicate sample name found! Overwriting: {}".format(f["s_name"]))
+            log.debug(f"Duplicate sample name found! Overwriting: {f['s_name']}")
 
         self.minionqc_data[s_name] = data_dict["all"]  # stats for all reads
         self.qfilt_data[s_name] = data_dict["q_filt"]  # stats for q-filtered reads
@@ -160,7 +160,7 @@ class MultiqcModule(BaseMultiqcModule):
         # Add row ID to avoid duplicates
         for k in headers:
             h_id = re.sub("[^0-9a-zA-Z]+", "_", headers[k]["title"])
-            headers[k]["rid"] = "rid_{}".format(h_id)
+            headers[k]["rid"] = f"rid_{h_id}"
 
         return headers
 
@@ -241,8 +241,8 @@ class MultiqcModule(BaseMultiqcModule):
                 )
                 pconfig["data_labels"].extend(
                     [
-                        {"name": "{}: Num reads".format(qfilt), "ylab": "# reads"},
-                        {"name": "{}: Num gigabases".format(qfilt), "ylab": "# gigabases"},
+                        {"name": f"{qfilt}: Num reads", "ylab": "# reads"},
+                        {"name": f"{qfilt}: Num gigabases", "ylab": "# gigabases"},
                     ]
                 )
             except KeyError:

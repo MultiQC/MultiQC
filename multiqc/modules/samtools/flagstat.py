@@ -20,7 +20,7 @@ class FlagstatReportMixin:
             parsed_data = parse_single_report(f["f"])
             if len(parsed_data) > 0:
                 if f["s_name"] in self.samtools_flagstat:
-                    log.debug("Duplicate sample name found! Overwriting: {}".format(f["s_name"]))
+                    log.debug(f"Duplicate sample name found! Overwriting: {f['s_name']}")
                 self.add_data_source(f, section="flagstat")
                 self.samtools_flagstat[f["s_name"]] = parsed_data
 
@@ -40,16 +40,16 @@ class FlagstatReportMixin:
         # General Stats Table
         flagstats_headers = {
             "flagstat_total": {
-                "title": "{} Reads".format(config.read_count_prefix),
-                "description": "Total reads in the bam file ({})".format(config.read_count_desc),
+                "title": f"{config.read_count_prefix} Reads",
+                "description": f"Total reads in the bam file ({config.read_count_desc})",
                 "min": 0,
                 "modify": lambda x: x * config.read_count_multiplier,
                 "shared_key": "read_count",
                 "hidden": True,
             },
             "mapped_passed": {
-                "title": "{} Reads Mapped".format(config.read_count_prefix),
-                "description": "Reads Mapped in the bam file ({})".format(config.read_count_desc),
+                "title": f"{config.read_count_prefix} Reads Mapped",
+                "description": f"Reads Mapped in the bam file ({config.read_count_desc})",
                 "min": 0,
                 "modify": lambda x: x * config.read_count_multiplier,
                 "shared_key": "read_count",
@@ -71,7 +71,7 @@ class FlagstatReportMixin:
         reads = {
             "min": 0,
             "modify": lambda x: float(x) * config.read_count_multiplier,
-            "suffix": "{} reads".format(config.read_count_prefix),
+            "suffix": f"{config.read_count_prefix} reads",
             "decimalPlaces": 2,
             "shared_key": "read_count",
         }
@@ -142,7 +142,7 @@ def parse_single_report(file_obj):
         if r_search:
             for i, j in enumerate(re_groups):
                 try:
-                    key = "{}_{}".format(k, j)
+                    key = f"{k}_{j}"
                     val = r_search.group(i + 1).strip("% ")
                     parsed_data[key] = float(val) if ("." in val) else int(val)
                 except IndexError:

@@ -123,6 +123,16 @@ jobs:
           cd test_data
           multiqc -m star -o tests/multiqc_report_dev -t default_dev -k json --file-list data/special_cases/file_list.txt
 
+      - name: No report
+        if: matrix.python-version == env.latest_python
+        run: |
+          cd test_data
+          multiqc -m star data/modules/star --no-report -n no-report
+          if [[ -f no-report.html ]]; then
+            echo "Running with the --no-report flag should not produce an HTML" >&2
+            exit 1
+          fi
+
       - name: Empty directory (confirm no report)
         if: matrix.python-version == env.latest_python
         run: |

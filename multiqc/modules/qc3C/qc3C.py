@@ -119,13 +119,13 @@ def color_picker(degen):
     if len(degen) == 1:
         # a single non-ambiguous enzyme, lets make this blue
         if degen[0] not in {1, 4, 16}:
-            raise ValueError("got {} junc_degen values can only be 1, 4 or 16".format(degen[0]))
+            raise ValueError(f"got {degen[0]} junc_degen values can only be 1, 4 or 16")
         return grad64[0 :: 64 // degen[0]]
     else:
         cols = []
         for n, jd in enumerate(degen):
             if jd not in {1, 4, 16}:
-                raise ValueError("got {} when junc_degen values can only be 1, 4 or 16".format(jd))
+                raise ValueError(f"got {jd} when junc_degen values can only be 1, 4 or 16")
             cols += grad64[16 * n : 16 * n + 16 : 16 // jd]
         return cols
 
@@ -157,11 +157,11 @@ class MultiqcModule(BaseMultiqcModule):
         if n_reports == 0:
             raise ModuleNoSamplesFound
 
-        log.info("Found {} reports".format(n_reports))
+        log.info(f"Found {n_reports} reports")
 
         if len(self.qc3c_data["bam"]) > 0:
             self.write_data_file(self.qc3c_data["bam"], "multiqc_qc3c_bam")
-            log.debug("Found {} BAM analysis reports".format(len(self.qc3c_data["bam"])))
+            log.debug(f"Found {len(self.qc3c_data['bam'])} BAM analysis reports")
 
             self.add_section(
                 name="BAM mode analysis details",
@@ -315,7 +315,7 @@ class MultiqcModule(BaseMultiqcModule):
 
         if len(self.qc3c_data["kmer"]) > 0:
             self.write_data_file(self.qc3c_data["kmer"], "multiqc_qc3c_kmer")
-            log.debug("Found {} k-mer analysis reports".format(len(self.qc3c_data["kmer"])))
+            log.debug(f"Found {len(self.qc3c_data['kmer'])} k-mer analysis reports")
 
             self.add_section(
                 name="K-mer mode runtime details",
@@ -825,12 +825,12 @@ class MultiqcModule(BaseMultiqcModule):
                 )
             parsed = parsed[-1]
         except json.JSONDecodeError:
-            log.warning("Could not parse qc3C JSON: '{}'".format(f["fn"]))
+            log.warning(f"Could not parse qc3C JSON: '{f['fn']}'")
             return
 
         s_name = self.clean_s_name(os.path.basename(f["root"]), f, root=os.path.dirname(f["root"]))
         if s_name in self.qc3c_data:
-            log.debug("Duplicate sample name found! Overwriting: {}".format(f["s_name"]))
+            log.debug(f"Duplicate sample name found! Overwriting: {f['s_name']}")
 
         # Add version info
         version = parsed["runtime_info"]["qc3C_version"].split()[-1]
@@ -968,14 +968,14 @@ class MultiqcModule(BaseMultiqcModule):
             # to render the junction frequency plot
             if len(parsed["junction_frequency"]) > 1:
                 self.do_digest_plot = True
-                log.debug("Enabled junction frequency plot for non-trivial digest: {}".format(f["root"]))
+                log.debug(f"Enabled junction frequency plot for non-trivial digest: {f['root']}")
                 # include the junction frequencies (1 or many depending on digest)
                 self.qc3c_data[analysis_mode][s_name].update(parsed["junction_frequency"])
 
                 # calculate the degeneracy of junction sequences per enzymatic combination (5p end =/= 3p end)
                 # this can vary due to ambiguous bases in restriction site
                 degen_count = {
-                    "{}/{}".format(v["enz5p"], v["enz3p"]): 4 ** v["junction"].count("N")
+                    f"{v['enz5p']}/{v['enz3p']}": 4 ** v["junction"].count("N")
                     for k, v in parsed["digestion"]["junctions"].items()
                 }
                 # get a palette for this series

@@ -33,7 +33,7 @@ class MultiqcModule(BaseMultiqcModule):
         if len(self.jcvi) == 0:
             raise ModuleNoSamplesFound
 
-        log.info("Found {} logs".format(len(self.jcvi)))
+        log.info(f"Found {len(self.jcvi)} logs")
         self.write_data_file(self.jcvi, "multiqc_jcvi")
 
         # Superfluous function call to confirm that it is used in this module
@@ -131,7 +131,7 @@ class MultiqcModule(BaseMultiqcModule):
         # Set up sample dict
         s_name = f["s_name"]
         if s_name in self.jcvi:
-            log.debug("Duplicate sample name found! Overwriting: {}".format(s_name))
+            log.debug(f"Duplicate sample name found! Overwriting: {s_name}")
         self.jcvi[s_name] = dict()
 
         # Define parsing regexes

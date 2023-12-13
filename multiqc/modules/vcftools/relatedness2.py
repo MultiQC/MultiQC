@@ -28,7 +28,7 @@ class Relatedness2Mixin:
         if len(matrices) == 0:
             return 0
 
-        log.info("Found {} valid relatedness2 matrices".format(len(matrices)))
+        log.info(f"Found {len(matrices)} valid relatedness2 matrices")
 
         # The matrices cannot be written to a file in their current format
         # self.write_data_file(matrices, "vcftools_relatedness")
@@ -44,7 +44,7 @@ class Relatedness2Mixin:
             idx += 1
             self.add_section(
                 name="Relatedness2",
-                anchor="vcftools-relatedness2-{}".format(idx),
+                anchor=f"vcftools-relatedness2-{idx}",
                 description="**Input:** `{}`.\n\n Heatmap of `RELATEDNESS_PHI` values from the output of vcftools relatedness2.".format(
                     name
                 ),
@@ -54,7 +54,7 @@ class Relatedness2Mixin:
                     xcats=m.x_labels,
                     ycats=m.y_labels,
                     pconfig={
-                        "id": "vcftools-relatedness2-heatmap-{}".format(idx),
+                        "id": f"vcftools-relatedness2-heatmap-{idx}",
                         "title": "VCFTools: Relatedness2",
                         "square": True,
                         "decimalPlaces": 7,

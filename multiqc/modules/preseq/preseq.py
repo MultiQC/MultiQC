@@ -37,7 +37,7 @@ class MultiqcModule(BaseMultiqcModule):
                 continue
 
             if f["s_name"] in sample_data_raw:
-                log.debug("Duplicate sample name found! Overwriting: {}".format(f["s_name"]))
+                log.debug(f"Duplicate sample name found! Overwriting: {f['s_name']}")
 
             if sample_data_is_bases:
                 bases_data[f["s_name"]] = sample_data_raw
@@ -59,7 +59,7 @@ class MultiqcModule(BaseMultiqcModule):
 
         if bases_data and reads_data:
             log.warning("Mixed 'TOTAL_READS' and 'TOTAL_BASES' reports. Will build two separate plots")
-        log.info("Found {} reports".format(len(all_data)))
+        log.info(f"Found {len(all_data)} reports")
         # Write data to file
         self.write_data_file(all_data, "preseq")
 
@@ -177,7 +177,7 @@ class MultiqcModule(BaseMultiqcModule):
         real_counts_file_name = None
         for f in self.find_log_files("preseq/real_counts"):
             if real_counts_file_raw is not None:
-                log.warning("Multiple Preseq real counts files found, now using {}".format(f["fn"]))
+                log.warning(f"Multiple Preseq real counts files found, now using {f['fn']}")
             real_counts_file_raw = f["f"]
             real_counts_file_name = f["fn"]
 
@@ -198,11 +198,9 @@ class MultiqcModule(BaseMultiqcModule):
                                 if cols[2].isdigit():
                                     real_counts_unique[sn] = int(cols[2])
             except IOError as e:
-                log.error("Error loading real counts file {}: {}".format(real_counts_file_name, str(e)))
+                log.error(f"Error loading real counts file {real_counts_file_name}: {str(e)}")
             else:
-                log.debug(
-                    "Found {} matching sets of counts from {}".format(len(real_counts_total), real_counts_file_name)
-                )
+                log.debug(f"Found {len(real_counts_total)} matching sets of counts from {real_counts_file_name}")
 
         return real_counts_total, real_counts_unique
 
@@ -221,7 +219,7 @@ def _parse_preseq_logs(f):
     elif header.startswith("total_reads	distinct_reads"):
         pass
     else:
-        log.debug("First line of preseq file {} did not look right".format(f["fn"]))
+        log.debug(f"First line of preseq file {f['fn']} did not look right")
         return None, None
 
     data = dict()

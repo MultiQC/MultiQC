@@ -60,6 +60,9 @@ def _find_module_info(py_path: Path) -> dict[str]:
     initialization. But that's actually alright: we avoid installing and importing
     MultiQC and the action runs faster.
     """
+    if py_path.name == "custom_content.py":
+        return {"name": "Custom content", "anchor": "custom-content", "url": "", "info": ""}
+
     with py_path.open("r") as f:
         contents = f.read()
 

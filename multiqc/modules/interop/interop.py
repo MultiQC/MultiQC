@@ -52,7 +52,7 @@ class MultiqcModule(BaseMultiqcModule):
         if num_samples == 0:
             raise ModuleNoSamplesFound
 
-        log.info("Found {} reports".format(num_samples))
+        log.info(f"Found {num_samples} reports")
 
         # Create report Sections
         if len(self.runSummary) > 0:
@@ -140,7 +140,7 @@ class MultiqcModule(BaseMultiqcModule):
                 linedata = {}
                 # Check if "surface" is total (-) else skip
                 if data[1] == "-":
-                    metrics["details"]["{} - Lane {}".format(read, data[0])] = {}
+                    metrics["details"][f"{read} - Lane {data[0]}"] = {}
                 else:
                     continue
                 for idx in range(2, len(data)):
@@ -166,7 +166,7 @@ class MultiqcModule(BaseMultiqcModule):
                                 linedata[header[idx]] = float(val)
                             except ValueError:
                                 linedata[header[idx]] = val
-                metrics["details"]["Lane {} - {}".format(data[0], read)] = linedata
+                metrics["details"][f"Lane {data[0]} - {read}"] = linedata
 
         return metrics, version
 
@@ -209,9 +209,9 @@ class MultiqcModule(BaseMultiqcModule):
                 continue
             if section == "details":
                 data = line.split(",")
-                details["{} - {}".format(data[1], lane)] = {}
+                details[f"{data[1]} - {lane}"] = {}
                 for idx in range(2, len(data)):
-                    details["{} - {}".format(data[1], lane)][header[idx]] = data[idx]
+                    details[f"{data[1]} - {lane}"][header[idx]] = data[idx]
                 continue
 
         metrics["summary"] = summary
@@ -275,7 +275,7 @@ class MultiqcModule(BaseMultiqcModule):
         tdata = {}
         for s_name in data:
             for key in data[s_name]["summary"]:
-                tdata["{} - {}".format(s_name, key)] = data[s_name]["summary"][key]
+                tdata[f"{s_name} - {key}"] = data[s_name]["summary"][key]
 
         return table.plot(tdata, headers, table_config)
 
@@ -407,7 +407,7 @@ class MultiqcModule(BaseMultiqcModule):
         tdata = {}
         for s_name in data:
             for key in data[s_name]["details"]:
-                tdata["{} - {}".format(s_name, key)] = data[s_name]["details"][key]
+                tdata[f"{s_name} - {key}"] = data[s_name]["details"][key]
 
         return table.plot(tdata, headers, table_config)
 
@@ -416,14 +416,14 @@ class MultiqcModule(BaseMultiqcModule):
         headers = {
             "Total Reads": {
                 "rid": "interop_reads_total",
-                "title": "{} Reads".format(config.read_count_prefix),
-                "description": "The total number of reads for this lane ({})".format(config.read_count_desc),
+                "title": f"{config.read_count_prefix} Reads",
+                "description": f"The total number of reads for this lane ({config.read_count_desc})",
                 "modify": lambda x: float(x) * config.read_count_multiplier,
                 "format": "{:,.2f}",
                 "shared_key": "read_count",
             },
             "PF Reads": {
-                "title": "{} PF Reads".format(config.read_count_prefix),
+                "title": f"{config.read_count_prefix} PF Reads",
                 "description": "The total number of passing filter reads for this lane ({})".format(
                     config.read_count_desc
                 ),
@@ -455,7 +455,7 @@ class MultiqcModule(BaseMultiqcModule):
         tdata = {}
         for s_name in data:
             for key in data[s_name]["summary"]:
-                tdata["{} - {}".format(s_name, key)] = data[s_name]["summary"][key]
+                tdata[f"{s_name} - {key}"] = data[s_name]["summary"][key]
 
         return table.plot(tdata, headers, table_config)
 
@@ -481,6 +481,6 @@ class MultiqcModule(BaseMultiqcModule):
         tdata = {}
         for s_name in data:
             for key in data[s_name]["details"]:
-                tdata["{} - {}".format(s_name, key)] = data[s_name]["details"][key]
+                tdata[f"{s_name} - {key}"] = data[s_name]["details"][key]
 
         return table.plot(tdata, headers, table_config)

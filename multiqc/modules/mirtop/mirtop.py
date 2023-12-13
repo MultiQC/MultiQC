@@ -36,7 +36,7 @@ class MultiqcModule(BaseMultiqcModule):
         if len(self.mirtop_data) == 0:
             raise ModuleNoSamplesFound
 
-        log.info("Found {} reports".format(len(self.mirtop_data)))
+        log.info(f"Found {len(self.mirtop_data)} reports")
 
         # Write parsed report data to a file
         self.write_data_file(self.mirtop_data, "multiqc_mirtop")
@@ -94,7 +94,7 @@ class MultiqcModule(BaseMultiqcModule):
             cleaned_s_name = self.clean_s_name(s_name, f)
             ## Check for sample name duplicates
             if cleaned_s_name in self.mirtop_data:
-                log.debug("Duplicate sample name found! Overwriting: {}".format(cleaned_s_name))
+                log.debug(f"Duplicate sample name found! Overwriting: {cleaned_s_name}")
             parsed_data = content["metrics"][s_name]
             # Sum the isomiR and ref_miRNA counts if present.
             parsed_data["read_count"] = parsed_data.get("isomiR_sum", 0) + parsed_data.get("ref_miRNA_sum", 0)
@@ -138,8 +138,8 @@ class MultiqcModule(BaseMultiqcModule):
 
         headers = {
             "ref_miRNA_sum": {
-                "title": "{} Ref miRNA reads".format(config.read_count_prefix),
-                "description": "Read counts summed over all reference miRNAs ({})".format(config.read_count_desc),
+                "title": f"{config.read_count_prefix} Ref miRNA reads",
+                "description": f"Read counts summed over all reference miRNAs ({config.read_count_desc})",
                 "modify": lambda x: x * config.read_count_multiplier,
                 "shared_key": "read_count",
                 "scale": "PuBu",
@@ -153,14 +153,14 @@ class MultiqcModule(BaseMultiqcModule):
                 "scale": "YlOrRd",
             },
             "isomiR_sum": {
-                "title": "{} IsomiR reads".format(config.read_count_prefix),
-                "description": "Read counts summed over all isomiRs ({})".format(config.read_count_desc),
+                "title": f"{config.read_count_prefix} IsomiR reads",
+                "description": f"Read counts summed over all isomiRs ({config.read_count_desc})",
                 "modify": lambda x: x * config.read_count_multiplier,
                 "shared_key": "read_count",
                 "scale": "Oranges",
             },
             "read_count": {
-                "title": "{} Reads".format(config.read_count_prefix),
+                "title": f"{config.read_count_prefix} Reads",
                 "description": "Total read counts - both isomiRs and reference miRNA ({})".format(
                     config.read_count_desc
                 ),
@@ -186,7 +186,7 @@ class MultiqcModule(BaseMultiqcModule):
         """Return the plot categories for the given plot"""
         cats_section = dict()
         for base_key in self.isomir_cats:
-            cat_key = "{}_{}".format(base_key, plot_type)
+            cat_key = f"{base_key}_{plot_type}"
             cats_section[cat_key] = {"name": base_key}
         return cats_section
 

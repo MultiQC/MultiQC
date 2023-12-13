@@ -15,7 +15,7 @@ class DragenTimeMetrics(BaseMultiqcModule):
             data = parse_time_metrics_file(f)
             s_name = f["s_name"]
             if s_name in data_by_sample:
-                log.debug("Duplicate sample name found! Overwriting: {}".format(s_name))
+                log.debug(f"Duplicate sample name found! Overwriting: {s_name}")
             self.add_data_source(f, section="time_metrics")
             data_by_sample[s_name] = data
 

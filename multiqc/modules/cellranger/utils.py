@@ -23,7 +23,7 @@ def update_dict(table, headers, rows_list, col_map, colours, namespace):
             col_id = col_map[col_name]
             table[col_id] = col_data
             headers[col_id] = {
-                "rid": "{}_{}".format(namespace, col_id.replace(" ", "_").replace("/", "_")).lower(),
+                "rid": f"{namespace}_{col_id.replace(' ', '_').replace('/', '_')}".lower(),
                 "title": clean_title_case(col_id),
                 "description": col_name,
                 "namespace": namespace,

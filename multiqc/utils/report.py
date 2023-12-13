@@ -137,7 +137,7 @@ def get_filelist(run_module_names):
         ]
         unrecognised_keys = [y for x in sps for y in x.keys() if y not in expected_sp_keys]
         if len(unrecognised_keys) > 0:
-            logger.warning("Unrecognised search pattern keys for '{}': {}".format(key, ", ".join(unrecognised_keys)))
+            logger.warning(f"Unrecognised search pattern keys for '{key}': {', '.join(unrecognised_keys)}")
 
         # Check if we are skipping this search key
         if any([x.get("skip") for x in sps]):
@@ -162,11 +162,11 @@ def get_filelist(run_module_names):
             spatterns[0][key] = sps
 
     if len(ignored_patterns) > 0:
-        logger.debug("Ignored {} search patterns as didn't match running modules.".format(len(ignored_patterns)))
+        logger.debug(f"Ignored {len(ignored_patterns)} search patterns as didn't match running modules.")
 
     if len(skipped_patterns) > 0:
-        logger.info("Skipping {} file search patterns".format(len(skipped_patterns)))
-        logger.debug("Skipping search patterns: {}".format(", ".join(skipped_patterns)))
+        logger.info(f"Skipping {len(skipped_patterns)} file search patterns")
+        logger.debug(f"Skipping search patterns: {', '.join(skipped_patterns)}")
 
     def add_file(fn, root):
         """
@@ -191,7 +191,7 @@ def get_filelist(run_module_names):
         try:
             f["filesize"] = os.path.getsize(os.path.join(root, fn))
         except (IOError, OSError, ValueError, UnicodeDecodeError):
-            logger.debug("Couldn't read file when checking filesize: {}".format(fn))
+            logger.debug(f"Couldn't read file when checking filesize: {fn}")
         else:
             if f["filesize"] > config.log_filesize_limit:
                 file_search_stats["skipped_filesize_limit"] += 1
@@ -282,7 +282,7 @@ def get_filelist(run_module_names):
 
                 # Sanity check - make sure that we're not just running in the installation directory
                 if len(filenames) > 0 and all([fn in filenames for fn in multiqc_installation_dir_files]):
-                    logger.error("Error: MultiQC is running in source code directory! {}".format(root))
+                    logger.error(f"Error: MultiQC is running in source code directory! {root}")
                     logger.warning(
                         "Please see the docs for how to use MultiQC: https://multiqc.info/docs/#running-multiqc"
                     )
@@ -451,7 +451,7 @@ def exclude_file(sp, f):
 
 
 def data_sources_tofile():
-    fn = "multiqc_sources.{}".format(config.data_format_extensions[config.data_format])
+    fn = f"multiqc_sources.{config.data_format_extensions[config.data_format]}"
     with io.open(os.path.join(config.data_dir, fn), "w", encoding="utf-8") as f:
         if config.data_format == "json":
             jsonstr = json.dumps(data_sources, indent=4, ensure_ascii=False)
@@ -476,7 +476,7 @@ def dois_tofile(modules_output):
         if mod.doi is not None and mod.doi != "" and mod.doi != []:
             dois[mod.anchor] = mod.doi
     # Write to a file
-    fn = "multiqc_citations.{}".format(config.data_format_extensions[config.data_format])
+    fn = f"multiqc_citations.{config.data_format_extensions[config.data_format]}"
     with io.open(os.path.join(config.data_dir, fn), "w", encoding="utf-8") as f:
         if config.data_format == "json":
             jsonstr = json.dumps(dois, indent=4, ensure_ascii=False)
@@ -487,7 +487,7 @@ def dois_tofile(modules_output):
             body = ""
             for mod, dois in dois.items():
                 for doi in dois:
-                    body += "{}{} # {}\n".format(doi, " " * (50 - len(doi)), mod)
+                    body += f"{doi}{' ' * (50 - len(doi))} # {mod}\n"
             print(body.encode("utf-8", "ignore").decode("utf-8"), file=f)
 
 
@@ -505,7 +505,7 @@ def save_htmlid(html_id, skiplint=False):
 
     # Must begin with a letter
     if re.match(r"^[a-zA-Z]", html_id_clean) is None:
-        html_id_clean = "mqc_{}".format(html_id_clean)
+        html_id_clean = f"mqc_{html_id_clean}"
 
     # Replace illegal characters
     html_id_clean = re.sub("[^a-zA-Z0-9_-]+", "_", html_id_clean)
@@ -518,11 +518,11 @@ def save_htmlid(html_id, skiplint=False):
         for n in callstack:
             if "multiqc/modules/" in n[1] and "base_module.py" not in n[1]:
                 callpath = n[1].split("multiqc/modules/", 1)[-1]
-                modname = ">{}< ".format(callpath)
+                modname = f">{callpath}< "
                 codeline = n[4][0].strip()
                 break
     if config.strict and not skiplint and html_id != html_id_clean:
-        errmsg = "LINT: {}HTML ID was not clean ('{}' -> '{}') ## {}".format(modname, html_id, html_id_clean, codeline)
+        errmsg = f"LINT: {modname}HTML ID was not clean ('{html_id}' -> '{html_id_clean}') ## {codeline}"
         logger.error(errmsg)
         lint_errors.append(errmsg)
 
@@ -530,10 +530,10 @@ def save_htmlid(html_id, skiplint=False):
     i = 1
     html_id_base = html_id_clean
     while html_id_clean in html_ids:
-        html_id_clean = "{}-{}".format(html_id_base, i)
+        html_id_clean = f"{html_id_base}-{i}"
         i += 1
         if config.strict and not skiplint:
-            errmsg = "LINT: {}HTML ID was a duplicate ({}) ## {}".format(modname, html_id_clean, codeline)
+            errmsg = f"LINT: {modname}HTML ID was a duplicate ({html_id_clean}) ## {codeline}"
             logger.error(errmsg)
             lint_errors.append(errmsg)
 

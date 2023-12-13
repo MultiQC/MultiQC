@@ -31,7 +31,7 @@ class MultiqcModule(BaseMultiqcModule):
         if len(self.porechop_data) == 0:
             raise ModuleNoSamplesFound
 
-        log.info("Found {} reports".format(len(self.porechop_data)))
+        log.info(f"Found {len(self.porechop_data)} reports")
 
         # Superfluous function call to confirm that it is used in this module
         # Replace None with actual version if it is available
@@ -139,14 +139,14 @@ class MultiqcModule(BaseMultiqcModule):
         """Porechop General Stats Table"""
         headers = {
             "Input Reads": {
-                "title": "Input Reads ({})".format(config.read_count_prefix),
-                "description": "Number of reads loaded into Porechop ({})".format(config.read_count_prefix),
+                "title": f"Input Reads ({config.read_count_prefix})",
+                "description": f"Number of reads loaded into Porechop ({config.read_count_prefix})",
                 "scale": "Greens",
                 "shared_key": "read_count",
                 "modify": lambda x: x * config.read_count_multiplier,
             },
             "Start Trimmed": {
-                "title": "Start Trimmed ({})".format(config.read_count_prefix),
+                "title": f"Start Trimmed ({config.read_count_prefix})",
                 "description": "Number of reads that had adapters trimmed from the start ({})".format(
                     config.read_count_prefix
                 ),
@@ -163,7 +163,7 @@ class MultiqcModule(BaseMultiqcModule):
                 "scale": "RdYlGn",
             },
             "End Trimmed": {
-                "title": "End Trimmed ({})".format(config.read_count_prefix),
+                "title": f"End Trimmed ({config.read_count_prefix})",
                 "description": "Number of reads that had adapters trimmed from the end ({})".format(
                     config.read_count_prefix
                 ),
@@ -180,8 +180,8 @@ class MultiqcModule(BaseMultiqcModule):
                 "scale": "RdYlGn",
             },
             "Middle Split": {
-                "title": "Middle Split ({})".format(config.read_count_prefix),
-                "description": "Number of reads split based on middle adapters ({})".format(config.read_count_prefix),
+                "title": f"Middle Split ({config.read_count_prefix})",
+                "description": f"Number of reads split based on middle adapters ({config.read_count_prefix})",
                 "scale": "Purples",
                 "shared_key": "read_count",
                 "modify": lambda x: x * config.read_count_multiplier,

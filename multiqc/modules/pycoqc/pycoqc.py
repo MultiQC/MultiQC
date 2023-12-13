@@ -25,7 +25,7 @@ class MultiqcModule(BaseMultiqcModule):
         self.pycoqc_data = {}
         for f in self.find_log_files("pycoqc"):
             if f["s_name"] in self.pycoqc_data:
-                log.debug("Duplicate sample name found in {}! Overwriting: {}".format(f["fn"], f["s_name"]))
+                log.debug(f"Duplicate sample name found in {f['fn']}! Overwriting: {f['s_name']}")
             data = self.load_data(f["f"])
             # Function can return None if YAML parsing failed
             if data:
@@ -39,7 +39,7 @@ class MultiqcModule(BaseMultiqcModule):
         if len(self.pycoqc_data) == 0:
             raise ModuleNoSamplesFound
 
-        log.info("Found {} reports".format(len(self.pycoqc_data)))
+        log.info(f"Found {len(self.pycoqc_data)} reports")
 
         # Write data to file
         self.write_data_file(self.pycoqc_data, "pycoqc")
@@ -62,7 +62,7 @@ class MultiqcModule(BaseMultiqcModule):
         try:
             return yaml.load(f, Loader=yaml.SafeLoader)
         except Exception as e:
-            log.warning("Could not parse YAML for '{}': \n  {}".format(f, e))
+            log.warning(f"Could not parse YAML for '{f}': \n  {e}")
             return None
 
     def parse_data(self):
@@ -146,30 +146,30 @@ class MultiqcModule(BaseMultiqcModule):
                 "hidden": True,
             },
             "passed_reads": {
-                "title": "{} Reads - Pass".format(config.long_read_count_prefix),
-                "description": "Number of reads - passing reads ({})".format(config.long_read_count_desc),
+                "title": f"{config.long_read_count_prefix} Reads - Pass",
+                "description": f"Number of reads - passing reads ({config.long_read_count_desc})",
                 "scale": "BuGn",
                 "modify": lambda x: x * config.long_read_count_multiplier,
                 "shared_key": "long_read_count",
             },
             "all_reads": {
-                "title": "{} Reads - All".format(config.long_read_count_prefix),
-                "description": "Number of reads - all reads ({})".format(config.long_read_count_desc),
+                "title": f"{config.long_read_count_prefix} Reads - All",
+                "description": f"Number of reads - all reads ({config.long_read_count_desc})",
                 "scale": "BuGn",
                 "modify": lambda x: x * config.long_read_count_multiplier,
                 "shared_key": "long_read_count",
                 "hidden": True,
             },
             "passed_bases": {
-                "title": "{} Bases - Pass".format(config.base_count_prefix),
-                "description": "Number of bases - passing reads ({} of base pairs)".format(config.base_count_desc),
+                "title": f"{config.base_count_prefix} Bases - Pass",
+                "description": f"Number of bases - passing reads ({config.base_count_desc} of base pairs)",
                 "scale": "OrRd",
                 "modify": lambda x: x * config.base_count_multiplier,
                 "shared_key": "base_count",
             },
             "all_bases": {
-                "title": "{} Bases - All".format(config.base_count_prefix),
-                "description": "Number of bases - all reads ({} of base pairs)".format(config.base_count_desc),
+                "title": f"{config.base_count_prefix} Bases - All",
+                "description": f"Number of bases - all reads ({config.base_count_desc} of base pairs)",
                 "scale": "OrRd",
                 "modify": lambda x: x * config.base_count_multiplier,
                 "shared_key": "base_count",

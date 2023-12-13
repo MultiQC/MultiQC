@@ -18,7 +18,7 @@ class PlotFingerprintMixin:
             parsed_data = self.parsePlotFingerprintOutQualityMetrics(f)
             for k, v in parsed_data.items():
                 if k in self.deeptools_plotFingerprintOutQualityMetrics:
-                    log.warning("Replacing duplicate sample {}.".format(k))
+                    log.warning(f"Replacing duplicate sample {k}.")
                 # Values are fractions - convert to percentages for consistency with other MultiQC output
                 self.deeptools_plotFingerprintOutQualityMetrics[k] = {i: float(j) * 100.0 for i, j in v.items()}
 
@@ -30,7 +30,7 @@ class PlotFingerprintMixin:
             parsed_data = self.parsePlotFingerprintOutRawCounts(f)
             for k, v in parsed_data.items():
                 if k in self.deeptools_plotFingerprintOutRawCounts:
-                    log.warning("Replacing duplicate sample {}.".format(k))
+                    log.warning(f"Replacing duplicate sample {k}.")
                 self.deeptools_plotFingerprintOutRawCounts[k] = v
 
             if len(parsed_data) > 0:
@@ -116,7 +116,7 @@ class PlotFingerprintMixin:
 
             s_name = self.clean_s_name(cols[0], f)
             if s_name in d:
-                log.warning("Replacing duplicate sample {}.".format(s_name))
+                log.warning(f"Replacing duplicate sample {s_name}.")
             d[s_name] = dict()
 
             try:

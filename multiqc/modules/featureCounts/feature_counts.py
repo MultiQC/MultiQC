@@ -38,7 +38,7 @@ class MultiqcModule(BaseMultiqcModule):
         if len(self.featurecounts_data) == 0:
             raise ModuleNoSamplesFound
 
-        log.info("Found {} reports".format(len(self.featurecounts_data)))
+        log.info(f"Found {len(self.featurecounts_data)} reports")
 
         # Superfluous function call to confirm that it is used in this module
         # Replace None with actual version if it is available
@@ -114,7 +114,7 @@ class MultiqcModule(BaseMultiqcModule):
             # Add to the main dictionary
             if len(data) > 1:
                 if s_name in self.featurecounts_data:
-                    log.debug("Duplicate sample name found! Overwriting: {}".format(s_name))
+                    log.debug(f"Duplicate sample name found! Overwriting: {s_name}")
                 self.add_data_source(f, s_name)
                 self.featurecounts_data[s_name] = data
 
@@ -132,8 +132,8 @@ class MultiqcModule(BaseMultiqcModule):
                 "scale": "RdYlGn",
             },
             "Assigned": {
-                "title": "{} Assigned".format(config.read_count_prefix),
-                "description": "Assigned reads ({})".format(config.read_count_desc),
+                "title": f"{config.read_count_prefix} Assigned",
+                "description": f"Assigned reads ({config.read_count_desc})",
                 "min": 0,
                 "scale": "PuBu",
                 "modify": lambda x: float(x) * config.read_count_multiplier,

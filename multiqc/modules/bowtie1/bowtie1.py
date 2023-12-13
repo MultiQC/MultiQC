@@ -37,7 +37,7 @@ class MultiqcModule(BaseMultiqcModule):
         if len(self.bowtie_data) == 0:
             raise ModuleNoSamplesFound
 
-        log.info("Found {} reports".format(len(self.bowtie_data)))
+        log.info(f"Found {len(self.bowtie_data)} reports")
 
         # Superfluous function call to confirm that it is used in this module
         # Replace None with actual version if it is available
@@ -72,13 +72,13 @@ class MultiqcModule(BaseMultiqcModule):
                 fqmatch = re.search(r"([^\s,]+\.f(ast)?q.gz)", line)
                 if fqmatch:
                     s_name = self.clean_s_name(fqmatch.group(1), f)
-                    log.debug("Found a bowtie command, updating sample name to '{}'".format(s_name))
+                    log.debug(f"Found a bowtie command, updating sample name to '{s_name}'")
 
             # End of log, reset in case there is another in this file
             if "Overall time:" in line:
                 if len(parsed_data) > 0:
                     if s_name in self.bowtie_data:
-                        log.debug("Duplicate sample name found! Overwriting: {}".format(s_name))
+                        log.debug(f"Duplicate sample name found! Overwriting: {s_name}")
                     self.add_data_source(f, s_name)
                     self.bowtie_data[s_name] = parsed_data
                 s_name = f["s_name"]
@@ -91,7 +91,7 @@ class MultiqcModule(BaseMultiqcModule):
 
         if len(parsed_data) > 0:
             if s_name in self.bowtie_data:
-                log.debug("Duplicate sample name found! Overwriting: {}".format(s_name))
+                log.debug(f"Duplicate sample name found! Overwriting: {s_name}")
             self.add_data_source(f, s_name)
             self.bowtie_data[s_name] = parsed_data
 
@@ -109,8 +109,8 @@ class MultiqcModule(BaseMultiqcModule):
                 "scale": "YlGn",
             },
             "reads_aligned": {
-                "title": "{} Aligned".format(config.read_count_prefix),
-                "description": "reads with at least one reported alignment ({})".format(config.read_count_desc),
+                "title": f"{config.read_count_prefix} Aligned",
+                "description": f"reads with at least one reported alignment ({config.read_count_desc})",
                 "min": 0,
                 "scale": "PuRd",
                 "modify": lambda x: x * config.read_count_multiplier,

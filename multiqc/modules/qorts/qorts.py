@@ -38,7 +38,7 @@ class MultiqcModule(BaseMultiqcModule):
         if len(self.qorts_data) == 0:
             raise ModuleNoSamplesFound
 
-        log.info("Found {} logs".format(len(self.qorts_data)))
+        log.info(f"Found {len(self.qorts_data)} logs")
 
         # Superfluous function call to confirm that it is used in this module
         # Replace None with actual version if it is available
@@ -67,7 +67,7 @@ class MultiqcModule(BaseMultiqcModule):
                         s_names = [f["s_name"]]
                 for s_name in s_names:
                     if s_name in self.qorts_data:
-                        log.debug("Duplicate sample name found! Overwriting: {}".format(s_name))
+                        log.debug(f"Duplicate sample name found! Overwriting: {s_name}")
                     self.qorts_data[s_name] = dict()
             else:
                 for i, s_name in enumerate(s_names):

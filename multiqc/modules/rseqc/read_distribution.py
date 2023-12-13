@@ -43,9 +43,9 @@ def parse_reports(self):
         for k, r in second_regexes.items():
             r_search = re.search(r, f["f"], re.MULTILINE)
             if r_search:
-                d["{}_total_bases".format(k)] = int(r_search.group(1))
-                d["{}_tag_count".format(k)] = int(r_search.group(2))
-                d["{}_tags_kb".format(k)] = float(r_search.group(3))
+                d[f"{k}_total_bases"] = int(r_search.group(1))
+                d[f"{k}_tag_count"] = int(r_search.group(2))
+                d[f"{k}_tags_kb"] = float(r_search.group(3))
 
         d["other_intergenic_tag_count"] = d["total_tags"] - d["total_assigned_tags"]
 
@@ -55,7 +55,7 @@ def parse_reports(self):
             pcts = dict()
             for k in d:
                 if k.endswith("_tag_count"):
-                    pk = "{}_tag_pct".format(k[:-10])
+                    pk = f"{k[:-10]}_tag_pct"
                     try:
                         pcts[pk] = (float(d[k]) / t) * 100.0
                     except ZeroDivisionError:
@@ -64,7 +64,7 @@ def parse_reports(self):
 
         if len(d) > 0:
             if f["s_name"] in self.read_dist:
-                log.debug("Duplicate sample name found! Overwriting: {}".format(f["s_name"]))
+                log.debug(f"Duplicate sample name found! Overwriting: {f['s_name']}")
             self.add_data_source(f, section="read_distribution")
             self.read_dist[f["s_name"]] = d
 

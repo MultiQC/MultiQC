@@ -35,7 +35,7 @@ class MultiqcModule(BaseMultiqcModule):
         # Call submodule functions
         n["stats"] = stats.parse_reports(self)
         if n["stats"] > 0:
-            log.info("Found {} bamtools stats reports".format(n["stats"]))
+            log.info(f"Found {n['stats']} bamtools stats reports")
 
         # Exit if we didn't find anything
         if sum(n.values()) == 0:

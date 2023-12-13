@@ -16,7 +16,7 @@ class plotPCAMixin:
             parsed_data = self.parsePlotPCAData(f)
             for k, v in parsed_data.items():
                 if k in self.deeptools_plotPCAData:
-                    log.warning("Replacing duplicate sample {}.".format(k))
+                    log.warning(f"Replacing duplicate sample {k}.")
                 self.deeptools_plotPCAData[k] = v
             if len(parsed_data) > 0:
                 self.add_data_source(f, section="plotPCA")

@@ -36,7 +36,7 @@ class MultiqcModule(BaseMultiqcModule):
         if len(self.flexbar_data) == 0:
             raise ModuleNoSamplesFound
 
-        log.info("Found {} logs".format(len(self.flexbar_data)))
+        log.info(f"Found {len(self.flexbar_data)} logs")
         self.write_data_file(self.flexbar_data, "multiqc_flexbar")
 
         # Add drop rate to the general stats table
@@ -67,7 +67,7 @@ class MultiqcModule(BaseMultiqcModule):
                     except ZeroDivisionError:
                         parsed_data["removed_bases_pct"] = 0
                 if s_name in self.flexbar_data:
-                    log.debug("Duplicate sample name found! Overwriting: {}".format(s_name))
+                    log.debug(f"Duplicate sample name found! Overwriting: {s_name}")
                 self.flexbar_data[s_name] = parsed_data
 
         regexes = {

@@ -33,7 +33,7 @@ class MultiqcModule(BaseMultiqcModule):
                 if s_name == "" or s_name == "Log.final.out":
                     s_name = self.clean_s_name(os.path.basename(f["root"]), f, root=os.path.dirname(f["root"]))
                 if s_name in self.star_data:
-                    log.debug("Duplicate sample name found! Overwriting: {}".format(s_name))
+                    log.debug(f"Duplicate sample name found! Overwriting: {s_name}")
                 self.add_data_source(f, section="SummaryLog")
                 self.star_data[s_name] = parsed_data
 
@@ -48,7 +48,7 @@ class MultiqcModule(BaseMultiqcModule):
                 if s_name == "" or s_name == "ReadsPerGene.out.tab":
                     s_name = self.clean_s_name(os.path.basename(f["root"]), f, root=os.path.dirname(f["root"]))
                 if s_name in self.star_data:
-                    log.debug("Duplicate ReadsPerGene sample name found! Overwriting: {}".format(s_name))
+                    log.debug(f"Duplicate ReadsPerGene sample name found! Overwriting: {s_name}")
                 self.add_data_source(f, section="ReadsPerGene")
                 self.star_genecounts_unstranded[s_name] = parsed_data["unstranded"]
                 self.star_genecounts_first_strand[s_name] = parsed_data["first_strand"]
@@ -75,9 +75,9 @@ class MultiqcModule(BaseMultiqcModule):
                     )
                 )
             else:
-                log.info("Found {} reports".format(len(self.star_data)))
+                log.info(f"Found {len(self.star_data)} reports")
         else:
-            log.info("Found {} gene count files".format(len(self.star_genecounts_unstranded)))
+            log.info(f"Found {len(self.star_genecounts_unstranded)} gene count files")
 
         if len(self.star_data) > 0:
             # Write parsed report data to a file
@@ -191,7 +191,7 @@ class MultiqcModule(BaseMultiqcModule):
                 # Tolerate a few errors in case there is something random added at the top of the file
                 num_errors += 1
                 if num_errors > 10 and num_genes == 0:
-                    log.warning("Error parsing {}".format(f["fn"]))
+                    log.warning(f"Error parsing {f['fn']}")
                     return None
         if num_genes > 0:
             return {"unstranded": unstranded, "first_strand": first_strand, "second_strand": second_strand}
@@ -212,8 +212,8 @@ class MultiqcModule(BaseMultiqcModule):
                 "scale": "YlGn",
             },
             "uniquely_mapped": {
-                "title": "{} Aligned".format(config.read_count_prefix),
-                "description": "Uniquely mapped reads ({})".format(config.read_count_desc),
+                "title": f"{config.read_count_prefix} Aligned",
+                "description": f"Uniquely mapped reads ({config.read_count_desc})",
                 "min": 0,
                 "scale": "PuRd",
                 "modify": lambda x: x * config.read_count_multiplier,

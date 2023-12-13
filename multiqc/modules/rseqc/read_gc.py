@@ -32,7 +32,7 @@ def parse_reports(self):
                 sorted_gc_keys = sorted(range(len(gc)), key=lambda k: gc[k])
                 total = sum(counts)
                 if f["s_name"] in self.read_gc:
-                    log.debug("Duplicate sample name found! Overwriting: {}".format(f["s_name"]))
+                    log.debug(f"Duplicate sample name found! Overwriting: {f['s_name']}")
                 self.add_data_source(f, section="read_GC")
                 self.read_gc[f["s_name"]] = dict()
                 self.read_gc_pct[f["s_name"]] = dict()

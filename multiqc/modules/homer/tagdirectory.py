@@ -40,7 +40,7 @@ class TagDirReportMixin:
             parsed_data = self.parse_twoCol_file(f)
             if parsed_data is not None:
                 if s_name in self.tagdir_data["GCcontent"]:
-                    log.debug("Duplicate GCcontent sample log found! Overwriting: {}".format(s_name))
+                    log.debug(f"Duplicate GCcontent sample log found! Overwriting: {s_name}")
 
                 self.add_data_source(f, s_name, section="GCcontent")
                 self.tagdir_data["GCcontent"][s_name] = parsed_data
@@ -50,7 +50,7 @@ class TagDirReportMixin:
             parsed_data = self.parse_twoCol_file(f)
             if parsed_data is not None:
                 if s_name + "_genome" in self.tagdir_data["GCcontent"]:
-                    log.debug("Duplicate genome GCcontent sample log found! Overwriting: {}".format(s_name + "_genome"))
+                    log.debug(f"Duplicate genome GCcontent sample log found! Overwriting: {s_name + '_genome'}")
 
                 self.add_data_source(f, s_name + "_genome", section="GCcontent")
                 self.tagdir_data["GCcontent"][s_name + "_genome"] = parsed_data
@@ -74,7 +74,7 @@ class TagDirReportMixin:
             parsed_data = self.parse_restriction_dist(f)
             if parsed_data is not None:
                 if s_name in self.tagdir_data["restriction"]:
-                    log.debug("Duplicate Restriction Distribution sample log found! Overwriting: {}".format(s_name))
+                    log.debug(f"Duplicate Restriction Distribution sample log found! Overwriting: {s_name}")
 
                 self.add_data_source(f, s_name, section="restriction")
                 self.tagdir_data["restriction"][s_name] = parsed_data
@@ -103,7 +103,7 @@ class TagDirReportMixin:
             parsed_data = self.parse_length_dist(f)
             if parsed_data is not None:
                 if s_name in self.tagdir_data["length"]:
-                    log.debug("Duplicate Length Distribution sample log found! Overwriting: {}".format(s_name))
+                    log.debug(f"Duplicate Length Distribution sample log found! Overwriting: {s_name}")
                 self.add_data_source(f, s_name, section="length")
                 self.tagdir_data["length"][s_name] = parsed_data
 
@@ -126,7 +126,7 @@ class TagDirReportMixin:
             parsed_data = self.parse_tag_info_chrs(f)
             if parsed_data is not None:
                 if s_name in self.tagdir_data["taginfo_total"]:
-                    log.debug("Duplicate tag info sample log found! Overwriting: {}".format(s_name))
+                    log.debug(f"Duplicate tag info sample log found! Overwriting: {s_name}")
                 self.add_data_source(f, s_name, section="taginfo")
                 self.tagdir_data["taginfo_total"][s_name] = parsed_data[0]
                 self.tagdir_data["taginfo_total_norm"][s_name] = self.normalize(parsed_data[0])
@@ -165,7 +165,7 @@ class TagDirReportMixin:
             parsed_data = self.parse_FreqDist(f)
             if parsed_data is not None:
                 if s_name in self.tagdir_data["FreqDistribution"]:
-                    log.debug("Duplicate Freq Distribution sample log found! Overwriting: {}".format(s_name))
+                    log.debug(f"Duplicate Freq Distribution sample log found! Overwriting: {s_name}")
 
                 self.add_data_source(f, s_name, section="FreqDistribution")
                 self.tagdir_data["FreqDistribution"][s_name] = parsed_data

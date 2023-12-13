@@ -39,7 +39,7 @@ class MultiqcModule(BaseMultiqcModule):
         if len(self.htseq_data) == 0:
             raise ModuleNoSamplesFound
 
-        log.info("Found {} reports".format(len(self.htseq_data)))
+        log.info(f"Found {len(self.htseq_data)} reports")
 
         # Superfluous function call to confirm that it is used in this module
         # Replace None with actual version if it is available
@@ -95,8 +95,8 @@ class MultiqcModule(BaseMultiqcModule):
                 "scale": "RdYlGn",
             },
             "assigned": {
-                "title": "{} Assigned".format(config.read_count_prefix),
-                "description": "Assigned Reads ({})".format(config.read_count_desc),
+                "title": f"{config.read_count_prefix} Assigned",
+                "description": f"Assigned Reads ({config.read_count_desc})",
                 "min": 0,
                 "scale": "PuBu",
                 "modify": lambda x: float(x) * config.read_count_multiplier,

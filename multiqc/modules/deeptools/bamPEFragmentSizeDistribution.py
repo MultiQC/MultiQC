@@ -16,7 +16,7 @@ class bamPEFragmentSizeDistributionMixin:
             parsed_data = self.parseBamPEFDistributionFile(f)
             for k, v in parsed_data.items():
                 if k in self.deeptools_bamPEFragmentSizeDistribution:
-                    log.warning("Replacing duplicate sample {}.".format(k))
+                    log.warning(f"Replacing duplicate sample {k}.")
                 self.deeptools_bamPEFragmentSizeDistribution[k] = v
             if len(parsed_data) > 0:
                 self.add_data_source(f, section="bamPEFragmentSizeDistribution")
