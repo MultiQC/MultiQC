@@ -560,7 +560,7 @@ ngsderive/junction_annotation:
 nonpareil:
   - fn: "*.json"
     contents: "LRstar"
-    num_lines: 500
+    num_lines: 50
     max_filesize: 1048576
 optitype:
   contents: "	A1	A2	B1	B2	C1	C2	Reads	Objective"

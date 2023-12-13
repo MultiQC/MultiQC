@@ -2,6 +2,7 @@
 
 
 import logging
+import numpy as np
 
 from multiqc import config
 from multiqc.modules.base_module import BaseMultiqcModule, ModuleNoSamplesFound
@@ -80,14 +81,16 @@ class MultiqcModule(BaseMultiqcModule):
         # y.p50 Percentile 50 (median) of rarefied coverage.
         # y.p75 Percentile 75 (3rd quartile) of rarefied coverage
 
-        import numpy as np
-
         for s_name, data in json_raw.items():
-            # Conbert base pairs to gigabase pairs
+            # Convert base pairs to megabase pairs
             data["LR"] = data["LR"] / 1000 / 1000
             data["LRstar"] = data["LRstar"] / 1000 / 1000
             data["x.adj"] = [(1e-6 if x == 0 else x) / 1000 / 1000 for x in data["x.adj"]]
             data["x.model"] = [x / 1000 / 1000 for x in data["x.model"]]
+            # Convert fraction to percentage
+            data["y.cov"] = [x * 100 for x in data["y.cov"]]
+            data["y.model"] = [x * 100 for x in data["y.model"]]
+            # Prepare plot data
             data["observed"] = {x: y for x, y in zip(data["x.adj"], data["y.cov"])}
             data["model"] = {x: y for x, y in zip(data["x.model"], data["y.model"])}
             # Calculate dispersion
@@ -102,15 +105,15 @@ class MultiqcModule(BaseMultiqcModule):
             elif self.disp_type == "ci50":
                 disp_add = list(np.array(data["y.sd"]) * 0.67)
             elif self.disp_type == "iq":
-                data[f"{self.disp_type}_upper"] = {x: y for x, y in zip(data["x.adj"], data["y.p75"])}
-                data[f"{self.disp_type}_lower"] = {x: y for x, y in zip(data["x.adj"], data["y.p25"])}
+                data[f"{self.disp_type}_upper"] = {x: y for x, y in zip(data["x.adj"], data["y.p75"] * 100)}
+                data[f"{self.disp_type}_lower"] = {x: y for x, y in zip(data["x.adj"], data["y.p25"] * 100)}
 
             if disp_add:
                 data[f"{self.disp_type}_upper"] = {
-                    x: y for x, y in zip(data["x.adj"], list(np.array(data["y.cov"]) + np.array(disp_add)))
+                    x: y for x, y in zip(data["x.adj"], list(np.array(data["y.cov"]) + np.array(disp_add) * 100))
                 }
                 data[f"{self.disp_type}_lower"] = {
-                    x: y for x, y in zip(data["x.adj"], list(np.array(data["y.cov"]) - np.array(disp_add)))
+                    x: y for x, y in zip(data["x.adj"], list(np.array(data["y.cov"]) - np.array(disp_add) * 100))
                 }
 
         return json_raw
@@ -174,29 +177,33 @@ class MultiqcModule(BaseMultiqcModule):
             "kappa": {
                 "title": "Redundancy",
                 "description": "Dataset redundancy",
-                "max": 1,
+                "modify": lambda x: x * 100,
+                "max": 100,
                 "min": 0,
+                "suffix": "%",
                 "scale": "RdYlGn-rev",
                 "format": "{:,.2f}",
             },
             "C": {
                 "title": "Coverage",
                 "description": "Dataset coverage",
-                "max": 1,
+                "modify": lambda x: x * 100,
+                "max": 100,
                 "min": 0,
+                "suffix": "%",
                 "scale": "RdYlGn",
                 "format": "{:,.2f}",
             },
             "consistent": {
                 "title": "Consistent Data?",
                 "description": "Is the data sufficient for accurate estimation?",
-                "modify": lambda x: "Yes" if x == 1 else "No",
+                "modify": lambda x: True if x == 1 else False,
                 "scale": False,
                 "hidden": True,
             },
             "star": {
                 "title": "Ideal coverage",
-                "description": "Coverage considered ’nearly complete’.",
+                "description": "Objective coverage in percentage; i.e., coverage value considered near-complete.",
                 "min": 0,
                 "suffix": "%",
                 "scale": False,
@@ -255,8 +262,8 @@ class MultiqcModule(BaseMultiqcModule):
             "ylab": "Estimated Average Coverage",
             "xmin": 1e-3,
             "ymin": 0,
-            "ymax": 1,
-            "yCeiling": 1,
+            "ymax": 100,
+            "yCeiling": 100,
             "xDecimals": True,
             "yDecimals": True,
             "xLog": True,
