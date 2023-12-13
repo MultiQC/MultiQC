@@ -83,8 +83,6 @@ class MultiqcModule(BaseMultiqcModule):
 
         for s_name, data in json_raw.items():
             # Convert base pairs to megabase pairs
-            data["LR"] = data["LR"] / 1000 / 1000
-            data["LRstar"] = data["LRstar"] / 1000 / 1000
             data["x.adj"] = [(1e-6 if x == 0 else x) / 1000 / 1000 for x in data["x.adj"]]
             data["x.model"] = [x / 1000 / 1000 for x in data["x.model"]]
             # Convert fraction to percentage
@@ -141,19 +139,23 @@ class MultiqcModule(BaseMultiqcModule):
                 "hidden": True,
             },
             "R": {
-                "title": "Number of reads",
+                "title": "{} Reads".format(config.read_count_prefix),
+                "description": "Total raw sequences ({})".format(config.read_count_desc),
+                "modify": lambda x: x * config.read_count_multiplier,
                 "min": 0,
                 "scale": "GnBu",
-                "format": "{:,.0f}",
+                "format": "{:,.2f} " + config.read_count_prefix,
+                "shared_key": "read_count",
                 "hidden": True,
             },
             "LR": {
-                "title": "Sequencing effort",
-                "description": "Effective sequencing effort used",
+                "title": "{} Sequencing effort".format(config.base_count_prefix),
+                "description": "Total base pairs sequenced ({})".format(config.base_count_desc),
+                "modify": lambda x: x * config.base_count_multiplier,
                 "min": 0,
-                "suffix": " Mbps",
                 "scale": "Blues",
-                "format": "{:,.2f}",
+                "format": "{:,.2f} " + config.base_count_prefix,
+                "shared_key": "base_count",
                 "hidden": True,
             },
             "overlap": {
@@ -204,18 +206,20 @@ class MultiqcModule(BaseMultiqcModule):
             "star": {
                 "title": "Ideal coverage",
                 "description": "Objective coverage in percentage; i.e., coverage value considered near-complete.",
+                "max": 100,
                 "min": 0,
                 "suffix": "%",
                 "scale": False,
                 "hidden": True,
             },
             "LRstar": {
-                "title": "Sequencing effort for ideal coverage",
-                "description": "Projected sequencing effort for nearly complete coverage",
+                "title": "{} Sequencing effort for ideal coverage".format(config.base_count_prefix),
+                "description": "Projected sequencing effort for nearly complete coverage ({})".format(config.base_count_desc),
+                "modify": lambda x: x * config.base_count_multiplier,
                 "min": 0,
-                "suffix": " Mbps",
-                "scale": "RdYlGn-rev",
-                "format": "{:,.2f}",
+                "scale": "Blues",
+                "format": "{:,.2f} " + config.base_count_prefix,
+                "shared_key": "base_count",
             },
             "modelR": {
                 "title": "Model correlation",
