@@ -46,14 +46,10 @@ def _read_config():
         cfg["exclude_contigs"] = []
 
     if cfg["include_contigs"]:
-        log.debug(
-            "Configuration: would try to include only these contigs: {}".format(", ".join(cfg["include_contigs"]))
-        )
+        log.debug(f"Configuration: would try to include only these contigs: {', '.join(cfg['include_contigs'])}")
     if cfg["exclude_contigs"]:
         log.debug(
-            "Configuration: would exclude these contigs, unless all would be filtered: {}".format(
-                ", ".join(cfg["exclude_contigs"])
-            )
+            f"Configuration: would exclude these contigs, unless all would be filtered: {', '.join(cfg['exclude_contigs'])}"
         )
 
     cutoff = cfg.get("perchrom_fraction_cutoff", 0.0)
