@@ -7,6 +7,8 @@ import base64
 import inspect
 import io
 import logging
+from collections import OrderedDict
+
 import math
 import os
 import random
@@ -135,7 +137,13 @@ def plot(data, cats=None, pconfig=None):
     plotsamples = list()
     plotdata = list()
     for idx, d in enumerate(data):
-        hc_samples = sorted(list(d.keys()))
+        hc_samples = list(d.keys())
+        if isinstance(d, OrderedDict):
+            # Legacy: users assumed that passing an OrderedDict indicates that we
+            # want to keep the sample order https://github.com/ewels/MultiQC/issues/2204
+            pass
+        elif pconfig.get("sort_samples", True):
+            hc_samples = sorted(list(d.keys()))
         hc_data = list()
         sample_dcount = dict()
         for c in cats[idx].keys():

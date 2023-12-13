@@ -3,7 +3,9 @@ import logging
 import os
 import xml.etree.ElementTree as ET
 from collections import defaultdict
+import functools
 from itertools import islice
+from typing import Tuple, Dict, Optional
 
 from multiqc import config
 from multiqc.modules.base_module import BaseMultiqcModule, ModuleNoSamplesFound
@@ -66,18 +68,22 @@ class MultiqcModule(BaseMultiqcModule):
             self._parse_top_unknown_barcodes(bclconvert_data, last_run_id)
 
         # Collect counts by lane and sample
-        bclconvert_by_sample_lane = dict()
-        bclconvert_by_lane, bclconvert_by_sample, source_files = self._split_data_by_lane_and_sample(bclconvert_data)
+        (
+            bclconvert_by_lane,
+            bclconvert_by_sample,
+            counts_by_sample_by_lane,
+            source_files,
+        ) = self._split_data_by_lane_and_sample(bclconvert_data)
 
         # Filter to strip out ignored sample names
         bclconvert_by_lane = self.ignore_samples(bclconvert_by_lane)
         bclconvert_by_sample = self.ignore_samples(bclconvert_by_sample)
-        bclconvert_by_sample_lane = self.ignore_samples(bclconvert_by_sample_lane)
+        counts_by_sample_by_lane = self.ignore_samples(counts_by_sample_by_lane)
 
         # Return with Warning if no files are found
         if len(bclconvert_by_lane) == 0 and len(bclconvert_by_sample) == 0:
             raise ModuleNoSamplesFound
-        log.info("{} lanes and {} samples found".format(len(bclconvert_by_lane), len(bclconvert_by_sample)))
+        log.info(f"{len(bclconvert_by_lane)} lanes and {len(bclconvert_by_sample)} samples found")
 
         # Print source files
         for s in source_files.keys():
@@ -88,9 +94,13 @@ class MultiqcModule(BaseMultiqcModule):
                 section="bclconvert-bysample",
             )
 
-        self.write_data_file(
-            {str(k): bclconvert_by_lane[k] for k in bclconvert_by_lane.keys()}, "multiqc_bclconvert_bylane"
-        )
+        # Calculate mean quality scores
+        for sample_id, sample in bclconvert_by_sample.items():
+            if sample["yield"] > 0:
+                sample["mean_quality"] = sample["_quality_score_sum"] / sample["yield"]
+            del sample["_quality_score_sum"]
+
+        self.write_data_file(bclconvert_by_lane, "multiqc_bclconvert_bylane")
         self.write_data_file(bclconvert_by_sample, "multiqc_bclconvert_bysample")
 
         # Superfluous function call to confirm that it is used in this module
@@ -151,12 +161,6 @@ class MultiqcModule(BaseMultiqcModule):
             ),
         )
 
-        # Add section for counts by sample
-        # get cats for per-lane tab
-        lcats = set()
-        for s_name in bclconvert_by_sample_lane:
-            lcats.update(bclconvert_by_sample_lane[s_name].keys())
-        lcats = sorted(list(lcats))
         self.add_section(
             name="Clusters by sample",
             anchor="bclconvert-bysample",
@@ -167,9 +171,9 @@ class MultiqcModule(BaseMultiqcModule):
             plot=bargraph.plot(
                 [
                     self.get_bar_data_from_counts(bclconvert_data, bclconvert_by_sample, last_run_id),
-                    bclconvert_by_sample_lane,
+                    counts_by_sample_by_lane,
                 ],
-                [cats, lcats],
+                [cats, sorted(bclconvert_by_lane.keys())],
                 {
                     "id": "bclconvert_sample_counts",
                     "title": "bclconvert: Clusters by sample",
@@ -200,26 +204,24 @@ class MultiqcModule(BaseMultiqcModule):
                 ),
             )
 
-    def _get_genome_size(self):
+    @staticmethod
+    @functools.lru_cache
+    def _get_genome_size() -> Optional[int]:
         gs = getattr(config, "bclconvert", {}).get("genome_size")
         if gs:
             try:
-                gs = float(gs)
+                gs = int(float(gs))
             except ValueError:
                 presets = {"hg19_genome": 2897310462, "hg38_genome": 3049315783, "mm10_genome": 2652783500}
                 if gs in presets:
                     gs = presets[gs]
                 else:
                     log.warning(
-                        "The size for genome "
-                        + gs
-                        + " is unknown to MultiQC, "
-                        + "please specify it explicitly or choose one of the following: "
-                        + ", ".join(presets.keys())
-                        + "."
+                        f"Genome '{gs}' is unknown to MultiQC, please specify size explicitly or choose one of the "
+                        f"following: {', '.join(presets.keys())}."
                     )
                     gs = None
-        log.debug("Determined genome size as " + str(gs))
+        log.debug(f"Determined genome size as: {gs}")
         return gs
 
     @staticmethod
@@ -230,7 +232,8 @@ class MultiqcModule(BaseMultiqcModule):
             "perfect_index_reads": 0,
             "one_mismatch_index_reads": 0,
             "basesQ30": 0,
-            "mean_quality": 0,
+            "depth": 0,
+            "_quality_score_sum": 0,  # used to re-calculate mean_quality
         }
 
     @staticmethod
@@ -354,7 +357,8 @@ class MultiqcModule(BaseMultiqcModule):
         run_data = bclconvert_data.get(demux_file["run_id"], dict())
         bclconvert_data[demux_file["run_id"]] = run_data
         with open(filename) as fh:
-            for row in csv.DictReader(fh, delimiter=","):
+            reader: csv.DictReader = csv.DictReader(fh, delimiter=",")
+            for row in reader:
                 lane_id = "L{}".format(row["Lane"])
                 lane = run_data.get(lane_id)
                 if lane is None:
@@ -384,10 +388,11 @@ class MultiqcModule(BaseMultiqcModule):
                     sample["yield"] += int(row["# Reads"]) * demux_file["cluster_length"]
                     sample["perfect_index_reads"] += int(row["# Perfect Index Reads"])
                     sample["one_mismatch_index_reads"] += int(row["# One Mismatch Index Reads"])
-                    # Column only present pre v3.9.3
+
+                    # columns only present pre v3.9.3, after they moved to quality_metrics
                     sample["basesQ30"] += int(row.get("# of >= Q30 Bases (PF)", 0))
-                    # Column only present pre v3.9.3
-                    sample["mean_quality"] += float(row.get("Mean Quality Score (PF)", 0))
+                    # Collecting to re-calculate mean_quality:
+                    sample["_quality_score_sum"] += float(row.get("Mean Quality Score (PF)", 0)) * sample["yield"]
 
                 if lane_id not in total_reads_in_lane:
                     total_reads_in_lane[lane_id] = 0
@@ -407,7 +412,7 @@ class MultiqcModule(BaseMultiqcModule):
         filename = str(os.path.join(qmetrics_file["root"], qmetrics_file["fn"]))
         self.total_reads_in_lane_per_file[filename] = dict()
 
-        reader = csv.DictReader(open(filename), delimiter=",")
+        reader: csv.DictReader = csv.DictReader(open(filename), delimiter=",")
         for row in reader:
             run_data = bclconvert_data[qmetrics_file["run_id"]]
             lane_id = "L{}".format(row["Lane"])
@@ -424,8 +429,10 @@ class MultiqcModule(BaseMultiqcModule):
 
                 # Parse the stats that moved to this file in v3.9.3
                 lane["basesQ30"] += int(row["YieldQ30"])
+                lane_sample["yield"] += int(row["Yield"])
                 lane_sample["basesQ30"] += int(row["YieldQ30"])
-                lane_sample["mean_quality"] += float(row["Mean Quality Score (PF)"])
+                # Collecting to re-calculate mean_quality:
+                lane_sample["_quality_score_sum"] += float(row["QualityScoreSum"])
 
     def _parse_top_unknown_barcodes(self, bclconvert_data, last_run_id):
         run_data = bclconvert_data[last_run_id]
@@ -439,13 +446,15 @@ class MultiqcModule(BaseMultiqcModule):
                 thisbarcode = str(unknown_barcode_row["index"]) + "-" + str(unknown_barcode_row["index2"])
                 run_data[thislane]["top_unknown_barcodes"][thisbarcode] = int(unknown_barcode_row["# Reads"])
 
-    def _total_reads_for_run(self, bclconvert_data, run_id):
+    @staticmethod
+    def _total_reads_for_run(bclconvert_data, run_id):
         totalreads = 0
         for lane_id, lane in bclconvert_data[run_id].items():
             totalreads += lane["clusters"]
         return totalreads
 
-    def _total_reads_all_runs(self, bclconvert_data):
+    @staticmethod
+    def _total_reads_all_runs(bclconvert_data):
         totalreads = 0
         for key, run_data in bclconvert_data.items():
             for lane_id, lane in run_data.items():
@@ -465,19 +474,18 @@ class MultiqcModule(BaseMultiqcModule):
             data["percent_oneMismatch"] = float(data["one_mismatch_index_reads"]) / float(data["clusters"]) * 100.0
         except ZeroDivisionError:
             data["percent_oneMismatch"] = "NA"
-        try:
-            data["depth"] = float(data["basesQ30"]) / float(self._get_genome_size())
-        except ZeroDivisionError:
-            data["depth"] = "NA"
-        except TypeError:
+        if self._get_genome_size():
+            data["depth"] = float(data["basesQ30"]) / self._get_genome_size()
+        else:
             data["depth"] = "NA"
 
-    def _split_data_by_lane_and_sample(self, bclconvert_data):
+    def _split_data_by_lane_and_sample(self, bclconvert_data) -> Tuple[Dict, Dict, Dict, Dict]:
         """
         Populate a collection of "stats across all lanes" and "stats across all samples"
         """
         bclconvert_by_lane = dict()
         bclconvert_by_sample = dict()
+        count_by_sample_by_lane = defaultdict(lambda: defaultdict(int))  # counts only - used for a stacked bargraph
         source_files = dict()
         for run_id, r in bclconvert_data.items():
             # set stats for each lane (across all samples) in bclconvert_bylane dictionary
@@ -504,29 +512,27 @@ class MultiqcModule(BaseMultiqcModule):
                         bclconvert_by_sample[sample_id] = self._reads_dictionary()
 
                     s = bclconvert_by_sample[sample_id]
-
                     s["clusters"] += int(sample["clusters"])
                     s["yield"] += int(sample["yield"])
                     s["perfect_index_reads"] += int(sample["perfect_index_reads"])
                     s["one_mismatch_index_reads"] += int(sample["one_mismatch_index_reads"])
                     s["basesQ30"] += int(sample["basesQ30"])
-                    s["mean_quality"] += float(sample["mean_quality"])
                     s["cluster_length"] = lane["cluster_length"]
+                    s["_quality_score_sum"] += sample["_quality_score_sum"]
 
-                    try:
-                        if "depth" not in s:
-                            s["depth"] = 0
-                        s["depth"] += float(sample["basesQ30"]) / float(self._get_genome_size())
-                    except ZeroDivisionError:
+                    if not self._get_genome_size():
                         s["depth"] = "NA"
-                    except TypeError:
-                        s["depth"] = "NA"
+                    else:
+                        s["depth"] += float(sample["basesQ30"]) / self._get_genome_size()
 
                     if sample_id not in ["top_unknown_barcodes"]:
                         if sample_id not in source_files:
                             source_files[sample_id] = []
                         source_files[sample_id].append(sample["filename"])
-        return bclconvert_by_lane, bclconvert_by_sample, source_files
+
+                    count_by_sample_by_lane[sample_id][lane_key_name] += sample["clusters"]
+
+        return bclconvert_by_lane, bclconvert_by_sample, count_by_sample_by_lane, source_files
 
     def sample_stats_table(self, bclconvert_data, bclconvert_by_sample):
         sample_stats_data = dict()
@@ -573,6 +579,7 @@ class MultiqcModule(BaseMultiqcModule):
                 # "one_mismatch_index_reads": sample['one_mismatch_index_reads'],
                 "perfect_pecent": perfect_percent,
                 "one_mismatch_pecent": one_mismatch_pecent,
+                "mean_quality": sample["mean_quality"],
             }
             if sample["depth"] != "NA":
                 depth_available = True
@@ -583,7 +590,11 @@ class MultiqcModule(BaseMultiqcModule):
                 "title": "Coverage",
                 "description": (
                     "Estimated sequencing depth based on the number of bases with quality score greater or equal to Q30, "
-                    "assuming the genome size is {}, as provided in config".format(self._get_genome_size())
+                    + (
+                        f", assuming the genome size is {self._get_genome_size()} as provided in config"
+                        if self._get_genome_size() is not None
+                        else ""
+                    )
                 ),
                 "min": 0,
                 "suffix": "X",
@@ -656,6 +667,13 @@ class MultiqcModule(BaseMultiqcModule):
             "scale": "RdYlGn",
             "suffix": "%",
         }
+        headers["mean_quality"] = {
+            "title": "Mean Quality Score",
+            "description": "Mean quality score of bases",
+            "min": 0,
+            "max": 40,
+            "scale": "RdYlGn",
+        }
 
         # Table config
         table_config = {
@@ -683,8 +701,12 @@ class MultiqcModule(BaseMultiqcModule):
             headers["depth-lane"] = {
                 "title": "Coverage",
                 "description": (
-                    "Estimated sequencing depth based on the number of bases with quality score greater or equal to Q30, "
-                    "assuming the genome size is {}, as provided in config".format(self._get_genome_size())
+                    "Estimated sequencing depth based on the number of bases with quality score greater or equal to Q30"
+                    + (
+                        f", assuming the genome size is {self._get_genome_size()} as provided in config"
+                        if self._get_genome_size() is not None
+                        else ""
+                    )
                 ),
                 "suffix": "X",
                 "scale": "BuPu",
@@ -770,10 +792,11 @@ class MultiqcModule(BaseMultiqcModule):
 
         return table.plot(bclconvert_bylane_foroutput, headers, table_config)
 
-    def prepend_runid(self, runId, rest):
-        return str(runId) + " - " + str(rest)
+    @staticmethod
+    def prepend_runid(runid, rest):
+        return str(runid) + " - " + str(rest)
 
-    def get_bar_data_from_counts(self, bclconvert_data, counts, last_run_id):
+    def get_bar_data_from_counts(self, bclconvert_data, counts, last_run_id) -> Dict[str, Dict[str, int]]:
         # For per-lane stats we fetch undetermined reads, too.
         bar_data = {}
         for key, value in counts.items():
