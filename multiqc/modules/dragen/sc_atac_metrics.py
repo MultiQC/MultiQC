@@ -69,6 +69,10 @@ class DragenScAtacMetrics(BaseMultiqcModule):
                     for sample_name, metric in data_by_sample.items()
                 },
                 table_headers,
+                pconfig={
+                    "namespace": "Single-Cell ATAC Metrics",
+                    "id": "dragen-sc-atac-metrics-table",
+                },
             ),
         )
 

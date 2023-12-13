@@ -40,7 +40,13 @@ class DragenTrimmerMetrics(BaseMultiqcModule):
             description="""
             Metrics on trimmed reads.
             """,
-            plot=table.plot(table_data),
+            plot=table.plot(
+                table_data,
+                pconfig={
+                    "id": "dragen-trimmer-metrics-table",
+                    "namespace": "Trimmer Metrics",
+                },
+            ),
         )
 
         return data_by_sample.keys()

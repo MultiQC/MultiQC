@@ -69,7 +69,13 @@ class DragenGcMetrics(BaseMultiqcModule):
             description="""
             Summary GC metrics shown on the sample level.
             """,
-            plot=table.plot(table_data, pconfig={"namespace": DragenGcMetrics.NAMESPACE}),
+            plot=table.plot(
+                table_data,
+                pconfig={
+                    "id": "dragen-gc-metrics-summary-table",
+                    "namespace": DragenGcMetrics.NAMESPACE,
+                },
+            ),
         )
 
         return data_by_sample.keys()
