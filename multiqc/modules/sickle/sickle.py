@@ -26,7 +26,7 @@ class MultiqcModule(BaseMultiqcModule):
             parsed_data = self.parse_logs(f["f"])
             if len(parsed_data):
                 if f["s_name"] in self.sickle_data:
-                    log.debug("Duplicate sample name found! Overwriting: {}".format(f["s_name"]))
+                    log.debug(f"Duplicate sample name found! Overwriting: {f['s_name']}")
                 self.sickle_data[f["s_name"]] = parsed_data
                 self.add_data_source(f)
 
@@ -95,8 +95,8 @@ class MultiqcModule(BaseMultiqcModule):
                 "scale": "OrRd",
             },
             "reads_total_kept": {
-                "title": "{} Reads kept".format(config.read_count_prefix),
-                "description": "Number of reads kept ({})".format(config.read_count_desc),
+                "title": f"{config.read_count_prefix} Reads kept",
+                "description": f"Number of reads kept ({config.read_count_desc})",
                 "modify": lambda x: x * config.read_count_multiplier,
                 "scale": "BuGn",
             },

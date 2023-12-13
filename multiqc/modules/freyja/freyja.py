@@ -91,7 +91,7 @@ class MultiqcModule(BaseMultiqcModule):
             # There is no sample name in the log, so we use the root of the
             # file as sample name (since the filename is always stats.dat
             if s_name in self.freyja_data:
-                log.debug("Duplicate sample name found! Overwriting: {}".format(s_name))
+                log.debug(f"Duplicate sample name found! Overwriting: {s_name}")
             self.freyja_data[s_name] = d
             self.add_data_source(f, s_name)
 

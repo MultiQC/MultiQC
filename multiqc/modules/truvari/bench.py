@@ -43,7 +43,7 @@ class BenchSummary:
                         version = match.group(1)
 
             if not json_text:
-                log.warning("Could not find the 'Stats' JSON block in file: {}".format(f["fn"]))
+                log.warning(f"Could not find the 'Stats' JSON block in file: {f['fn']}")
                 continue
 
             # Load stats
@@ -51,14 +51,14 @@ class BenchSummary:
                 stats = json.loads(str(json_text))
             except json.decoder.JSONDecodeError as e:
                 log.debug(e)
-                log.warning("Could not parse the 'Stats' JSON block in file: {}".format(f["fn"]))
+                log.warning(f"Could not parse the 'Stats' JSON block in file: {f['fn']}")
                 continue
 
             # Use output directory as sample name
             f["s_name"] = os.path.basename(f["root"])
             f["s_name"] = self.clean_s_name(f["s_name"], f, root=os.path.dirname(f["root"]))
             if f["s_name"] in data:
-                log.debug("Duplicate sample name found! Overwriting: {}".format(f["s_name"]))
+                log.debug(f"Duplicate sample name found! Overwriting: {f['s_name']}")
 
             # Some stats were renamed in truvari 4.0.0 (commit 6e37058)
             # This renames them back to the old names for backwards compatibility

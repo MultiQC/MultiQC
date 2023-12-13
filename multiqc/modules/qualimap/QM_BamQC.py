@@ -63,11 +63,11 @@ def parse_reports(self):
         assert isinstance(covs, list)
         assert len(covs) > 0
         covs = [str(i) for i in covs]
-        log.debug("Custom Qualimap thresholds: {}".format(", ".join([i for i in covs])))
+        log.debug(f"Custom Qualimap thresholds: {', '.join([i for i in covs])}")
     except (AttributeError, TypeError, AssertionError):
         covs = [1, 5, 10, 30, 50]
         covs = [str(i) for i in covs]
-        log.debug("Using default Qualimap thresholds: {}".format(", ".join([i for i in covs])))
+        log.debug(f"Using default Qualimap thresholds: {', '.join([i for i in covs])}")
     self.covs = covs
 
     # Make the plots for the report
@@ -129,7 +129,7 @@ def parse_genome_results(self, f):
 
     # Check we have an input filename
     if "bam_file" not in d:
-        log.debug("Couldn't find an input filename in genome_results file {}".format(f["fn"]))
+        log.debug(f"Couldn't find an input filename in genome_results file {f['fn']}")
         return None
 
     # Get a nice sample name
@@ -158,7 +158,7 @@ def parse_genome_results(self, f):
 
     # Save results
     if s_name in self.qualimap_bamqc_genome_results:
-        log.debug("Duplicate genome results sample name found! Overwriting: {}".format(s_name))
+        log.debug(f"Duplicate genome results sample name found! Overwriting: {s_name}")
     self.qualimap_bamqc_genome_results[s_name] = d
     self.add_data_source(f, s_name=s_name, section="genome_results")
 
@@ -179,7 +179,7 @@ def parse_coverage(self, f):
         d[coverage] = count
 
     if len(d) == 0:
-        log.debug("Couldn't parse contents of coverage histogram file {}".format(f["fn"]))
+        log.debug(f"Couldn't parse contents of coverage histogram file {f['fn']}")
         return None
 
     # Find median without importing anything to do it for us
@@ -196,7 +196,7 @@ def parse_coverage(self, f):
     self.general_stats_data[s_name]["median_coverage"] = median_coverage
     # Save results
     if s_name in self.qualimap_bamqc_coverage_hist:
-        log.debug("Duplicate coverage histogram sample name found! Overwriting: {}".format(s_name))
+        log.debug(f"Duplicate coverage histogram sample name found! Overwriting: {s_name}")
     self.qualimap_bamqc_coverage_hist[s_name] = d
     self.add_data_source(f, s_name=s_name, section="coverage_histogram")
 
@@ -231,7 +231,7 @@ def parse_insert_size(self, f):
 
     # Save results
     if s_name in self.qualimap_bamqc_insert_size_hist:
-        log.debug("Duplicate insert size histogram sample name found! Overwriting: {}".format(s_name))
+        log.debug(f"Duplicate insert size histogram sample name found! Overwriting: {s_name}")
     self.qualimap_bamqc_insert_size_hist[s_name] = d
     self.add_data_source(f, s_name=s_name, section="insert_size_histogram")
 
@@ -266,7 +266,7 @@ def parse_gc_dist(self, f):
 
     # Save results
     if s_name in self.qualimap_bamqc_gc_content_dist:
-        log.debug("Duplicate Mapped Reads GC content distribution sample name found! Overwriting: {}".format(s_name))
+        log.debug(f"Duplicate Mapped Reads GC content distribution sample name found! Overwriting: {s_name}")
     self.qualimap_bamqc_gc_content_dist[s_name] = d
     if reference_species and reference_species not in self.qualimap_bamqc_gc_by_species:
         self.qualimap_bamqc_gc_by_species[reference_species] = reference_d
@@ -371,9 +371,9 @@ def report_sections(self):
             # Add requested coverage levels to the General Statistics table
             for c in self.covs:
                 if int(c) in rates_within_threshs[s_name]:
-                    self.general_stats_data[s_name]["{}_x_pc".format(c)] = rates_within_threshs[s_name][int(c)]
+                    self.general_stats_data[s_name][f"{c}_x_pc"] = rates_within_threshs[s_name][int(c)]
                 else:
-                    self.general_stats_data[s_name]["{}_x_pc".format(c)] = 0
+                    self.general_stats_data[s_name][f"{c}_x_pc"] = 0
 
         # Section 1 - BamQC Coverage Histogram
         self.add_section(
@@ -546,7 +546,7 @@ def general_stats_headers(self):
     try:
         hidecovs = config.qualimap_config["general_stats_coverage_hidden"]
         assert isinstance(hidecovs, list)
-        log.debug("Hiding Qualimap thresholds: {}".format(", ".join([i for i in hidecovs])))
+        log.debug(f"Hiding Qualimap thresholds: {', '.join([i for i in hidecovs])}")
     except (AttributeError, TypeError, KeyError, AssertionError):
         hidecovs = [1, 5, 10, 50]
     hidecovs = [str(i) for i in hidecovs]
@@ -568,9 +568,9 @@ def general_stats_headers(self):
         "format": "{:,.0f}",
     }
     for c in self.covs:
-        self.general_stats_headers["{}_x_pc".format(c)] = {
-            "title": "&ge; {}X".format(c),
-            "description": "Fraction of genome with at least {}X coverage".format(c),
+        self.general_stats_headers[f"{c}_x_pc"] = {
+            "title": f"&ge; {c}X",
+            "description": f"Fraction of genome with at least {c}X coverage",
             "max": 100,
             "min": 0,
             "suffix": "%",
@@ -600,15 +600,15 @@ def general_stats_headers(self):
         "scale": "YlGn",
     }
     self.general_stats_headers["regions_size"] = {
-        "title": "{} Region size".format(config.read_count_prefix),
+        "title": f"{config.read_count_prefix} Region size",
         "description": "Size of target region",
         "suffix": " bp",
         "scale": "PuBuGn",
         "hidden": True,
     }
     self.general_stats_headers["regions_mapped_reads"] = {
-        "title": "{} On target".format(config.read_count_prefix),
-        "description": "Number of mapped reads on target region ({})".format(config.read_count_desc),
+        "title": f"{config.read_count_prefix} On target",
+        "description": f"Number of mapped reads on target region ({config.read_count_desc})",
         "scale": "RdYlGn",
         "shared_key": "read_count",
         "hidden": True,
@@ -632,15 +632,15 @@ def general_stats_headers(self):
         "scale": "YlGn",
     }
     self.general_stats_headers["mapped_reads"] = {
-        "title": "{} Aligned".format(config.read_count_prefix),
-        "description": "Number of mapped reads ({})".format(config.read_count_desc),
+        "title": f"{config.read_count_prefix} Aligned",
+        "description": f"Number of mapped reads ({config.read_count_desc})",
         "scale": "RdYlGn",
         "shared_key": "read_count",
         "hidden": True,
     }
     self.general_stats_headers["total_reads"] = {
-        "title": "{} Total reads".format(config.read_count_prefix),
-        "description": "Number of reads ({})".format(config.read_count_desc),
+        "title": f"{config.read_count_prefix} Total reads",
+        "description": f"Number of reads ({config.read_count_desc})",
         "scale": "Blues",
         "shared_key": "read_count",
         "hidden": True,

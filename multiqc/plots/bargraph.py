@@ -26,7 +26,7 @@ try:
     matplotlib.use("Agg")
     import matplotlib.pyplot as plt
 
-    logger.debug("Using matplotlib version {}".format(matplotlib.__version__))
+    logger.debug(f"Using matplotlib version {matplotlib.__version__}")
 except Exception as e:
     # MatPlotLib can break in a variety of ways. Fake an error message and continue without it if so.
     # The lack of the library will be handled when plots are attempted
@@ -75,12 +75,12 @@ def plot(data, cats=None, pconfig=None):
         for n in callstack:
             if "multiqc/modules/" in n[1] and "base_module.py" not in n[1]:
                 callpath = n[1].split("multiqc/modules/", 1)[-1]
-                modname = ">{}< ".format(callpath)
+                modname = f">{callpath}< "
                 break
         # Look for essential missing pconfig keys
         for k in ["id", "title", "ylab"]:
             if k not in pconfig:
-                errmsg = "LINT: {}Bargraph pconfig was missing key '{}'".format(modname, k)
+                errmsg = f"LINT: {modname}Bargraph pconfig was missing key '{k}'"
                 logger.error(errmsg)
                 report.lint_errors.append(errmsg)
         # Check plot title format
@@ -286,11 +286,11 @@ def highcharts_bargraph(plotdata, plotsamples=None, pconfig=None):
                 except Exception:
                     name = k + 1
             try:
-                ylab = 'data-ylab="{}"'.format(pconfig["data_labels"][k]["ylab"])
+                ylab = f"data-ylab=\"{pconfig['data_labels'][k]['ylab']}\""
             except Exception:
-                ylab = 'data-ylab="{}"'.format(name) if name != k + 1 else ""
+                ylab = f'data-ylab="{name}"' if name != k + 1 else ""
             try:
-                ymax = 'data-ymax="{}"'.format(pconfig["data_labels"][k]["ymax"])
+                ymax = f"data-ymax=\"{pconfig['data_labels'][k]['ymax']}\""
             except Exception:
                 ymax = ""
             html += '<button class="btn btn-default btn-sm {a}" data-action="set_data" {y} {ym} data-newdata="{k}" data-target="{id}">{n}</button>\n'.format(
@@ -342,7 +342,7 @@ def matplotlib_bargraph(plotdata, plotsamples, pconfig=None):
             name = pconfig["data_labels"][k]
         except Exception:
             name = k + 1
-        pid = "mqc_{}_{}".format(pconfig["id"], name)
+        pid = f"mqc_{pconfig['id']}_{name}"
         pid = report.save_htmlid(pid, skiplint=True)
         pids.append(pid)
 
@@ -351,7 +351,7 @@ def matplotlib_bargraph(plotdata, plotsamples, pconfig=None):
         + "Flat image plot. Toolbox functions such as highlighting / hiding samples will not work "
         + '(see the <a href="http://multiqc.info/docs/#flat--interactive-plots" target="_blank">docs</a>).</small></p>'
     )
-    html += '<div class="mqc_mplplot_plotgroup" id="{}">'.format(pconfig["id"])
+    html += f"<div class=\"mqc_mplplot_plotgroup\" id=\"{pconfig['id']}\">"
 
     # Counts / Percentages Switch
     if pconfig.get("cpswitch") is not False and not config.simple_output:
@@ -413,7 +413,7 @@ def matplotlib_bargraph(plotdata, plotsamples, pconfig=None):
             pid = pids[pidx]
             hide_plot = False
             if plot_pct is True:
-                pid = "{}_pc".format(pid)
+                pid = f"{pid}_pc"
                 if pconfig.get("cpswitch_c_active", True) is True:
                     hide_plot = True
             else:
@@ -496,7 +496,7 @@ def matplotlib_bargraph(plotdata, plotsamples, pconfig=None):
                 # Add percent symbols
                 vals = axes.get_xticks()
                 axes.set_xticks(axes.get_xticks())
-                axes.set_xticklabels(["{:.0f}%".format(x) for x in vals])
+                axes.set_xticklabels([f"{x:.0f}%" for x in vals])
             else:
                 default_xlimits = axes.get_xlim()
                 axes.set_xlim((pconfig.get("ymin", default_xlimits[0]), pconfig.get("ymax", default_xlimits[1])))
@@ -544,7 +544,7 @@ def matplotlib_bargraph(plotdata, plotsamples, pconfig=None):
                     if not os.path.exists(plot_dir):
                         os.makedirs(plot_dir)
                     # Save the plot
-                    plot_fn = os.path.join(plot_dir, "{}.{}".format(pid, fformat))
+                    plot_fn = os.path.join(plot_dir, f"{pid}.{fformat}")
                     fig.savefig(plot_fn, format=fformat, bbox_extra_artists=(lgd,), bbox_inches="tight")
 
             # Output the figure to a base64 encoded string
@@ -559,8 +559,8 @@ def matplotlib_bargraph(plotdata, plotsamples, pconfig=None):
 
             # Link to the saved image
             else:
-                plot_relpath = os.path.join(config.plots_dir_name, "png", "{}.png".format(pid))
-                html += '<div class="mqc_mplplot" id="{}"{}><img src="{}" /></div>'.format(pid, hidediv, plot_relpath)
+                plot_relpath = os.path.join(config.plots_dir_name, "png", f"{pid}.png")
+                html += f'<div class="mqc_mplplot" id="{pid}"{hidediv}><img src="{plot_relpath}" /></div>'
 
             plt.close(fig)
 

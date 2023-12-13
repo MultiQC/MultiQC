@@ -37,13 +37,13 @@ def parse_reports(self):
             d["bam_file"] = s_name_regex.group(1)
             s_name = self.clean_s_name(d["bam_file"], f)
         else:
-            log.warning("Couldn't find an input filename in genome_results file {}/{}".format(f["root"], f["fn"]))
+            log.warning(f"Couldn't find an input filename in genome_results file {f['root']}/{f['fn']}")
             return None
 
         # Check for and 'fix' European style decimal places / thousand separators
         comma_regex = re.search(r"exonic\s*=\s*[\d\.]+ \(\d{1,3},\d+%\)", f["f"], re.MULTILINE)
         if comma_regex:
-            log.debug("Trying to fix European comma style syntax in Qualimap report {}/{}".format(f["root"], f["fn"]))
+            log.debug(f"Trying to fix European comma style syntax in Qualimap report {f['root']}/{f['fn']}")
             f["f"] = f["f"].replace(".", "")
             f["f"] = f["f"].replace(",", ".")
 
@@ -68,7 +68,7 @@ def parse_reports(self):
 
         # Save results
         if s_name in self.qualimap_rnaseq_genome_results:
-            log.debug("Duplicate genome results sample name found! Overwriting: {}".format(s_name))
+            log.debug(f"Duplicate genome results sample name found! Overwriting: {s_name}")
         self.qualimap_rnaseq_genome_results[s_name] = d
         self.add_data_source(f, s_name=s_name, section="rna_genome_results")
 
@@ -86,12 +86,12 @@ def parse_reports(self):
             d[coverage] = count
 
         if len(d) == 0:
-            log.debug("Couldn't parse contents of coverage histogram file {}".format(f["fn"]))
+            log.debug(f"Couldn't parse contents of coverage histogram file {f['fn']}")
             return None
 
         # Save results
         if s_name in self.qualimap_rnaseq_cov_hist:
-            log.debug("Duplicate coverage histogram sample name found! Overwriting: {}".format(s_name))
+            log.debug(f"Duplicate coverage histogram sample name found! Overwriting: {s_name}")
         self.qualimap_rnaseq_cov_hist[s_name] = d
         self.add_data_source(f, s_name=s_name, section="rna_coverage_histogram")
 
@@ -245,8 +245,8 @@ def parse_reports(self):
         "format": "{:,.2f}",
     }
     self.general_stats_headers["reads_aligned"] = {
-        "title": "{} Aligned".format(config.read_count_prefix),
-        "description": "Reads Aligned ({})".format(config.read_count_desc),
+        "title": f"{config.read_count_prefix} Aligned",
+        "description": f"Reads Aligned ({config.read_count_desc})",
         "min": 0,
         "scale": "RdBu",
         "shared_key": "read_count",
