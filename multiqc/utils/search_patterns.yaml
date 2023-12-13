@@ -602,6 +602,7 @@ picard/markdups:
   - contents: "picard.sam.DuplicationMetrics"
   - contents: "picard.sam.markduplicates.MarkDuplicates"
   - contents: "markduplicates.DuplicationMetrics"
+  - contents: "MarkDuplicatesSpark"
   - contents: "markduplicates.GATKDuplicationMetrics"
   - contents: "--algo Dedup"
 picard/oxogmetrics:
