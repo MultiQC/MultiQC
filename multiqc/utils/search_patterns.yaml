@@ -680,15 +680,14 @@ qualimap/rnaseq/coverage:
   fn: "coverage_profile_along_genes_(total).txt"
 quast:
   fn: "report.tsv"
-  shared: true
+  contents: "Assembly	"
+  num_lines: 1
 rna_seqc/metrics_v1:
   fn: "*metrics.tsv"
   contents: "Sample	Note	"
-  shared: true
 rna_seqc/metrics_v2:
   fn: "*metrics.tsv"
   contents: "High Quality Ambiguous Alignment Rate"
-  shared: true
 rna_seqc/coverage:
   fn_re: 'meanCoverageNorm_(high|medium|low)\.txt'
 rna_seqc/correlation:
