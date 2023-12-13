@@ -34,7 +34,7 @@ class MultiqcModule(BaseMultiqcModule):
         if len(self.nextclade_data) == 0:
             raise ModuleNoSamplesFound
 
-        log.info("Found {} samples".format(len(self.nextclade_data)))
+        log.info(f"Found {len(self.nextclade_data)} samples")
 
         # Superfluous function call to confirm that it is used in this module
         # Replace None with actual version if it is available

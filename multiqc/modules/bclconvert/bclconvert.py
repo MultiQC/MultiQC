@@ -359,7 +359,7 @@ class MultiqcModule(BaseMultiqcModule):
         with open(filename) as fh:
             reader: csv.DictReader = csv.DictReader(fh, delimiter=",")
             for row in reader:
-                lane_id = "L{}".format(row["Lane"])
+                lane_id = f"L{row['Lane']}"
                 lane = run_data.get(lane_id)
                 if lane is None:
                     lane = dict(samples={}, cluster_length=demux_file["cluster_length"], **self._reads_dictionary())
@@ -415,7 +415,7 @@ class MultiqcModule(BaseMultiqcModule):
         reader: csv.DictReader = csv.DictReader(open(filename), delimiter=",")
         for row in reader:
             run_data = bclconvert_data[qmetrics_file["run_id"]]
-            lane_id = "L{}".format(row["Lane"])
+            lane_id = f"L{row['Lane']}"
             if lane_id not in run_data:
                 log.warning(f"Found unrecognised lane {lane_id} in Quality Metrics file, skipping")
                 continue
@@ -542,7 +542,7 @@ class MultiqcModule(BaseMultiqcModule):
         for sample_id, sample in bclconvert_by_sample.items():
             # Percent stats for bclconvert-bysample i.e. stats for sample across all lanes
             try:
-                perfect_percent = "{0:.1f}".format(float(100.0 * sample["perfect_index_reads"] / sample["clusters"]))
+                perfect_percent = f"{float(100.0 * sample['perfect_index_reads'] / sample['clusters']):.1f}"
             except ZeroDivisionError:
                 perfect_percent = "0.0"
             try:
@@ -553,7 +553,7 @@ class MultiqcModule(BaseMultiqcModule):
                 one_mismatch_pecent = "0.0"
 
             try:
-                yield_q30_percent = "{0:.1f}".format(float(100.0 * (sample["basesQ30"] / sample["yield"])))
+                yield_q30_percent = f"{float(100.0 * (sample['basesQ30'] / sample['yield'])):.1f}"
             except ZeroDivisionError:
                 yield_q30_percent = "0.0"  #
 
@@ -602,7 +602,7 @@ class MultiqcModule(BaseMultiqcModule):
             }
 
         headers["clusters"] = {
-            "title": "{} Clusters".format(config.read_count_prefix),
+            "title": f"{config.read_count_prefix} Clusters",
             "description": "Total number of clusters (read pairs) for this sample as determined by bclconvert demultiplexing ({})".format(
                 config.read_count_desc
             ),
@@ -610,7 +610,7 @@ class MultiqcModule(BaseMultiqcModule):
             "shared_key": "read_count",
         }
         headers["yield"] = {
-            "title": "Yield ({})".format(config.base_count_prefix),
+            "title": f"Yield ({config.base_count_prefix})",
             "description": "Total number of bases for this sample as determined by bclconvert demultiplexing ({})".format(
                 config.base_count_desc
             ),
@@ -634,7 +634,7 @@ class MultiqcModule(BaseMultiqcModule):
             "suffix": "%",
         }
         headers["basesQ30"] = {
-            "title": "Bases ({}) &ge; Q30 (PF)".format(config.base_count_prefix),
+            "title": f"Bases ({config.base_count_prefix}) &ge; Q30 (PF)",
             "description": "Number of bases with a Phred score of 30 or higher, passing filter ({})".format(
                 config.base_count_desc
             ),
@@ -689,7 +689,7 @@ class MultiqcModule(BaseMultiqcModule):
         depth_available = False
         for lane_id, lane in bclconvert_by_lane.items():
             try:
-                yield_q30_percent = "{0:.1f}".format(float(100.0 * (lane["basesQ30"] / lane["yield"])))
+                yield_q30_percent = f"{float(100.0 * (lane['basesQ30'] / lane['yield'])):.1f}"
             except ZeroDivisionError:
                 yield_q30_percent = "0.0"
             bclconvert_by_lane[lane_id]["yield_q30_percent"] = yield_q30_percent
@@ -713,7 +713,7 @@ class MultiqcModule(BaseMultiqcModule):
             }
 
         headers["reads-lane"] = {
-            "title": "{} Clusters".format(config.read_count_prefix),
+            "title": f"{config.read_count_prefix} Clusters",
             "description": "Total number of clusters (read pairs) for this sample as determined by bclconvert demultiplexing ({})".format(
                 config.read_count_desc
             ),
@@ -721,7 +721,7 @@ class MultiqcModule(BaseMultiqcModule):
             "shared_key": "read_count",
         }
         headers["yield-lane"] = {
-            "title": "Yield ({})".format(config.base_count_prefix),
+            "title": f"Yield ({config.base_count_prefix})",
             "description": "Total number of bases for this sample as determined by bclconvert demultiplexing ({})".format(
                 config.base_count_desc
             ),
@@ -729,7 +729,7 @@ class MultiqcModule(BaseMultiqcModule):
             "shared_key": "base_count",
         }
         headers["basesQ30-lane"] = {
-            "title": "Bases ({}) &ge; Q30 (PF)".format(config.base_count_prefix),
+            "title": f"Bases ({config.base_count_prefix}) &ge; Q30 (PF)",
             "description": "Number of bases with a Phred score of 30 or higher, passing filter ({})".format(
                 config.base_count_desc
             ),
@@ -744,15 +744,15 @@ class MultiqcModule(BaseMultiqcModule):
             "scale": "Greens",
         }
         headers["perfect_index_reads-lane"] = {
-            "title": "{} Perfect Index".format(config.read_count_prefix),
-            "description": "Reads with perfect index - 0 mismatches ({})".format(config.read_count_desc),
+            "title": f"{config.read_count_prefix} Perfect Index",
+            "description": f"Reads with perfect index - 0 mismatches ({config.read_count_desc})",
             "scale": "Blues",
             "shared_key": "read_count",
         }
 
         headers["one_mismatch_index_reads-lane"] = {
-            "title": "{} One Mismatch".format(config.read_count_prefix),
-            "description": "Reads with one mismatch index ({})".format(config.read_count_desc),
+            "title": f"{config.read_count_prefix} One Mismatch",
+            "description": f"Reads with one mismatch index ({config.read_count_desc})",
             "scale": "Spectral",
             "shared_key": "read_count",
         }

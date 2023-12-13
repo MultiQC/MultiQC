@@ -34,7 +34,7 @@ class MultiqcModule(BaseMultiqcModule):
         if len(self.diamond_data) == 0:
             raise ModuleNoSamplesFound
 
-        log.info("Found {} reports".format(len(self.diamond_data)))
+        log.info(f"Found {len(self.diamond_data)} reports")
 
         # Write parsed report data to file
         self.write_data_file(self.diamond_data, "diamond")
@@ -60,7 +60,7 @@ class MultiqcModule(BaseMultiqcModule):
             if "queries aligned" in line:
                 self.add_data_source(f)
                 if s_name in self.diamond_data:
-                    log.debug("Duplicate sample name found! Overwriting: {}".format(s_name))
+                    log.debug(f"Duplicate sample name found! Overwriting: {s_name}")
                 self.diamond_data[s_name] = {"queries_aligned": int(line.split(" ")[0])}
 
     def diamond_general_stats(self):

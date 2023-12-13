@@ -19,7 +19,7 @@ class VariantEvalMixin:
             parsed_data = parse_single_report(f["f"])
             if len(parsed_data) > 1:
                 if f["s_name"] in self.gatk_varianteval:
-                    log.debug("Duplicate sample name found! Overwriting: {}".format(f["s_name"]))
+                    log.debug(f"Duplicate sample name found! Overwriting: {f['s_name']}")
                 self.add_data_source(f, section="varianteval")
                 self.gatk_varianteval[f["s_name"]] = parsed_data
 
@@ -30,7 +30,7 @@ class VariantEvalMixin:
         if n_reports_found == 0:
             return 0
 
-        log.info("Found {} VariantEval reports".format(n_reports_found))
+        log.info(f"Found {n_reports_found} VariantEval reports")
 
         # Superfluous function call to confirm that it is used in this module
         # Replace None with actual version if it is available
@@ -52,28 +52,28 @@ class VariantEvalMixin:
         varianteval_headers = dict()
         varianteval_headers["known_titv"] = {
             "title": "TiTV ratio (known)",
-            "description": "TiTV ratio from variants found in '{}'".format(titv_ref),
+            "description": f"TiTV ratio from variants found in '{titv_ref}'",
             "min": 0,
             "scale": "Blues",
             "shared_key": "titv_ratio",
         }
         varianteval_headers["novel_titv"] = {
             "title": "TiTV ratio (novel)",
-            "description": "TiTV ratio from variants NOT found in '{}'".format(titv_ref),
+            "description": f"TiTV ratio from variants NOT found in '{titv_ref}'",
             "min": 0,
             "scale": "Blues",
             "shared_key": "titv_ratio",
         }
         varianteval_headers["called_titv"] = {
             "title": "TiTV ratio (called)",
-            "description": "TiTV ratio from variants found in '{}'".format(titv_ref),
+            "description": f"TiTV ratio from variants found in '{titv_ref}'",
             "min": 0,
             "scale": "Blues",
             "shared_key": "titv_ratio",
         }
         varianteval_headers["filtered_titv"] = {
             "title": "TiTV ratio (filtered)",
-            "description": "TiTV ratio from variants NOT found in '{}'".format(titv_ref),
+            "description": f"TiTV ratio from variants NOT found in '{titv_ref}'",
             "min": 0,
             "scale": "Blues",
             "shared_key": "titv_ratio",

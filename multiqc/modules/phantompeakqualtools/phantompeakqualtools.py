@@ -35,7 +35,7 @@ class MultiqcModule(BaseMultiqcModule):
             raise ModuleNoSamplesFound
 
         # Log
-        log.info("Found {} logs".format(len(self.phantompeakqualtools_data)))
+        log.info(f"Found {len(self.phantompeakqualtools_data)} logs")
 
         # Superfluous function call to confirm that it is used in this module
         # Replace None with actual version if it is available
@@ -58,7 +58,7 @@ class MultiqcModule(BaseMultiqcModule):
             parsed_data["RSC"] = float(s[9])
         if len(parsed_data) > 0:
             if f["s_name"] in self.phantompeakqualtools_data:
-                log.debug("Duplicate sample name found! Overwriting: {}".format(f["s_name"]))
+                log.debug(f"Duplicate sample name found! Overwriting: {f['s_name']}")
             self.add_data_source(f)
             self.phantompeakqualtools_data[f["s_name"]] = parsed_data
 
